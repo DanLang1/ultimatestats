@@ -1,59 +1,80 @@
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import AntDesign from '@expo/vector-icons/AntDesign';
 import { useState } from 'react';
-import { Pressable, StyleSheet, useColorScheme } from 'react-native';
+import { Pressable, StyleSheet } from 'react-native';
 
 export default function BasicScoreboard() {
-  const colorScheme = useColorScheme();
-  const [darkScore, setDarkScore] = useState(0);
-  const [lightScore, setLightScore] = useState(0);
+  const [team1Score, setTeam1Score] = useState(0);
+  const [team2Score, setTeam2Score] = useState(0);
 
   return (
     <>
-      {/* Dark Team */}
-      <ThemedView style={styles.container}>
-        <ThemedText type="title">Dark</ThemedText>
+      <ThemedView style={styles.team1}>
+        <ThemedText style={styles.team1Text} type="title">
+          Team 1
+        </ThemedText>
+        <ThemedView style={[styles.scoreContainer, { backgroundColor: 'powderblue' }]}>
+          <Pressable onPress={() => setTeam1Score(Math.max(0, team1Score - 1))}>
+            <AntDesign name="caret-down" size={50} color="black" />
+          </Pressable>
+          <ThemedText style={[styles.scoreText, { color: 'black' }]} type="title">
+            {team1Score}
+          </ThemedText>
+          <Pressable onPress={() => setTeam1Score(team1Score + 1)}>
+            <AntDesign name="caret-up" size={50} color="black" />
+          </Pressable>
+        </ThemedView>
       </ThemedView>
-      <ThemedView style={styles.team}>
-        <Pressable onPress={() => setDarkScore(Math.max(0, lightScore - 1))}>
-          <ThemedText type="title">-</ThemedText>
-        </Pressable>
-
-        <ThemedText type="title">{darkScore}</ThemedText>
-
-        <Pressable onPress={() => setDarkScore(darkScore + 1)}>
-          <ThemedText type="title">+</ThemedText>
-        </Pressable>
-      </ThemedView>
-
-      {/* Light Team */}
-      <ThemedView style={styles.container}>
-        <ThemedText type="title">Light</ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.team}>
-        <Pressable onPress={() => setLightScore(Math.max(0, lightScore - 1))}>
-          <ThemedText type="title">-</ThemedText>
-        </Pressable>
-
-        <ThemedText type="title">{lightScore}</ThemedText>
-
-        <Pressable onPress={() => setLightScore(lightScore + 1)}>
-          <ThemedText type="title">+</ThemedText>
-        </Pressable>
+      <ThemedView style={styles.team2}>
+        <ThemedText style={styles.team2Text} type="title">
+          Team 2
+        </ThemedText>
+        <ThemedView style={[styles.scoreContainer, { backgroundColor: 'black' }]}>
+          <Pressable onPress={() => setTeam2Score(Math.max(0, team2Score - 1))}>
+            <AntDesign name="caret-down" size={50} color="white" />
+          </Pressable>
+          <ThemedText style={styles.scoreText} type="title">
+            {team2Score}
+          </ThemedText>
+          <Pressable onPress={() => setTeam2Score(team2Score + 1)}>
+            <AntDesign name="caret-up" size={50} color="white" />
+          </Pressable>
+        </ThemedView>
       </ThemedView>
     </>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  team1: {
     alignItems: 'center',
-    marginVertical: 10,
+    backgroundColor: 'powderblue',
+    flex: 3,
   },
-  team: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
+  team1Text: {
+    flex: 1,
+    marginTop: 15,
+    color: 'black',
+  },
+  scoreText: {
+    fontSize: 150,
+    lineHeight: 150,
+  },
+  team2: {
     alignItems: 'center',
-    marginVertical: 10,
+    backgroundColor: 'black',
+    flex: 3,
+  },
+  team2Text: {
+    marginTop: 15,
+    flex: 1,
+  },
+  scoreContainer: {
+    flex: 4,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 20,
   },
 });
