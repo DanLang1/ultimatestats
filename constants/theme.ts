@@ -14,6 +14,8 @@ export const palette = {
   accent: '#08A045',
   white: '#ffff',
   silver: '#BFC0C0',
+  blue: '#3A506B',
+  blueLighter: '#4A6FA5',
 };
 
 export const Colors = {

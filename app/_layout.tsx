@@ -4,6 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
 
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export const unstable_settings = {
@@ -22,12 +23,14 @@ export default function RootLayout() {
             colorScheme === 'dark' ? DarkTheme.colors.background : DefaultTheme.colors.background,
         }}
         edges={['left', 'right', 'top']}>
-        <Stack>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
-        </Stack>
+        <GestureHandlerRootView>
+          <Stack>
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
+          </Stack>
 
-        <StatusBar style="auto" />
+          <StatusBar style="auto" />
+        </GestureHandlerRootView>
       </SafeAreaView>
     </ThemeProvider>
   );
