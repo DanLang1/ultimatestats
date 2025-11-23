@@ -1,16 +1,13 @@
-import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { ThemedText } from './ThemedText';
 
 interface TeamTextProps {
-  initialTeamName: string;
+  teamName: string;
   color: string;
 }
 
-export default function TeamText({ initialTeamName, color }: TeamTextProps) {
-  const [teamName, setTeamName] = useState<string>(initialTeamName);
-
+export default function TeamText({ teamName, color }: TeamTextProps) {
   return (
     <>
       <View style={styles.teamView}>

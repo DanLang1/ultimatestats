@@ -7,10 +7,6 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-export const unstable_settings = {
-  anchor: '(tabs)',
-};
-
 export default function RootLayout() {
   const colorScheme = useColorScheme();
 
@@ -23,10 +19,9 @@ export default function RootLayout() {
             colorScheme === 'dark' ? DarkTheme.colors.background : DefaultTheme.colors.background,
         }}
         edges={['left', 'right', 'top']}>
-        <GestureHandlerRootView>
+        <GestureHandlerRootView style={{ flex: 1 }}>
           <Stack>
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
+            <Stack.Screen name="index" options={{ headerShown: false }} />
           </Stack>
 
           <StatusBar style="auto" />
