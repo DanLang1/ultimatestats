@@ -21,8 +21,8 @@ export default function TeamText({ teamName, color }: TeamTextProps) {
 
 const styles = StyleSheet.create({
   teamView: {
-    flex: 1,
-
-    justifyContent: 'flex-end',
+    // flex: 1,
+    // justifyContent: 'flex-end',
+    paddingTop: 20,
   },
 });

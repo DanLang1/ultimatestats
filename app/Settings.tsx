@@ -3,13 +3,34 @@ import { router, useLocalSearchParams } from 'expo-router';
 import React, { useState } from 'react';
 import { Button, StyleSheet, TextInput, View } from 'react-native';
 
+export type SettingsScreenSearchParams = {
+  team1: string;
+  team2: string;
+  gameTo: string;
+  team1Score: string;
+  team2Score: string;
+  team1Timeouts: string;
+  team2Timeouts: string;
+};
+
 export default function SettingsScreen() {
-  const params = useLocalSearchParams<{ team1: string; team2: string }>();
+  const params = useLocalSearchParams<SettingsScreenSearchParams>();
+  const { team1Score, team2Score, team1Timeouts, team2Timeouts } = params;
   const [team1, setTeam1] = useState(params.team1 || 'Team 1');
   const [team2, setTeam2] = useState(params.team2 || 'Team 2');
+  const [gameTo, setGameTo] = useState(params.gameTo || '15');
 
   const handleSave = () => {
-    router.navigate({ pathname: '/', params: { team1, team2 } });
+    const settings: SettingsScreenSearchParams = {
+      team1,
+      team2,
+      gameTo: gameTo.toString(),
+      team1Score,
+      team2Score,
+      team1Timeouts,
+      team2Timeouts,
+    };
+    router.navigate({ pathname: '/', params: settings });
   };
 
   return (
@@ -26,6 +47,13 @@ export default function SettingsScreen() {
           value={team2}
           onChangeText={setTeam2}
           placeholder="Team 2 Name"
+        />
+        <TextInput
+          keyboardType="numeric"
+          style={styles.input}
+          value={gameTo}
+          onChangeText={setGameTo}
+          placeholder="Game To"
         />
         <View style={styles.buttons}>
           <Button title="Cancel" onPress={() => router.back()} color="red" />

@@ -7,29 +7,52 @@ import { router, useLocalSearchParams } from 'expo-router';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
+import { SettingsScreenSearchParams } from './Settings';
 
 export default function BasicScoreboard() {
-  const params = useLocalSearchParams<{ team1: string; team2: string }>();
+  const params = useLocalSearchParams<SettingsScreenSearchParams>();
   const team1 = params.team1 || 'Team 1';
   const team2 = params.team2 || 'Team 2';
+  const gameTo = params.gameTo || 15;
+  const team1ScoreInitial = params.team1Score || 0;
+  const team2ScoreInitial = params.team2Score || 0;
+  const [team1Timeouts, setTeam1Timeouts] = useState(Number(params.team1Timeouts ?? 2));
+  const [team2Timeouts, setTeam2Timeouts] = useState(Number(params.team2Timeouts ?? 2));
 
   const orientation = useScreenOrientation();
   const isLandscape =
     orientation === ScreenOrientation.Orientation.LANDSCAPE_LEFT ||
     orientation === ScreenOrientation.Orientation.LANDSCAPE_RIGHT;
 
-  const [team1Score, setTeam1Score] = useState(0);
-  const [team2Score, setTeam2Score] = useState(0);
+  const [team1Score, setTeam1Score] = useState(Number(team1ScoreInitial));
+  const [team2Score, setTeam2Score] = useState(Number(team2ScoreInitial));
 
   const openSettings = () => {
-    router.push({ pathname: '/Settings', params: { team1, team2 } });
+    const settings: SettingsScreenSearchParams = {
+      team1,
+      team2,
+      gameTo: gameTo.toString(),
+      team1Score: team1Score.toString(),
+      team2Score: team2Score.toString(),
+      team1Timeouts: team1Timeouts.toString(),
+      team2Timeouts: team2Timeouts.toString(),
+    };
+    router.push({ pathname: '/Settings', params: settings });
+  };
+
+  const handleTimeoutUse = (isTeam1: boolean) => {
+    if (isTeam1) {
+      setTeam1Timeouts((prev) => Math.max(0, prev - 1));
+    } else {
+      setTeam2Timeouts((prev) => Math.max(0, prev - 1));
+    }
   };
 
   const incrementScore = (isTeam1: boolean) => {
     if (isTeam1) {
-      setTeam1Score((prev) => prev + 1);
+      setTeam1Score((prev) => Math.min(Number(gameTo), prev + 1));
     } else {
-      setTeam2Score((prev) => prev + 1);
+      setTeam2Score((prev) => Math.min(Number(gameTo), prev + 1));
     }
   };
 
@@ -44,6 +67,14 @@ export default function BasicScoreboard() {
   const reset = () => {
     setTeam1Score(0);
     setTeam2Score(0);
+    setTeam1Timeouts(2);
+    setTeam2Timeouts(2);
+    router.setParams({
+      team1Score: '0',
+      team2Score: '0',
+      team1Timeouts: '2',
+      team2Timeouts: '2',
+    });
   };
 
   return (
@@ -61,6 +92,8 @@ export default function BasicScoreboard() {
         textColor={palette.primary}
         backgroundColor={palette.white}
         onSettingsPress={openSettings}
+        timeouts={team1Timeouts}
+        onTimeoutUse={() => handleTimeoutUse(true)}
       />
 
       {/* Mid section that holds the button */}
@@ -82,6 +115,8 @@ export default function BasicScoreboard() {
         onDecrement={() => decrementScore(false)}
         textColor={palette.white}
         backgroundColor={palette.primary}
+        timeouts={team2Timeouts}
+        onTimeoutUse={() => handleTimeoutUse(false)}
       />
     </ThemedView>
   );
