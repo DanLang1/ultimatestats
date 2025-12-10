@@ -1,12 +1,12 @@
 import TeamScoreSection from '@/components/TeamScoreSection';
 import { ThemedView } from '@/components/ThemedView';
+import TimerBar from '@/components/TimerBar';
 import { palette } from '@/constants/theme';
 import { useScreenOrientation } from '@/hooks/useScreenOrientation';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router, useLocalSearchParams } from 'expo-router';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import { useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { SettingsScreenSearchParams } from './Settings';
 
 export default function BasicScoreboard() {
@@ -102,9 +102,7 @@ export default function BasicScoreboard() {
           styles.buttonRow,
           isLandscape ? styles.buttonRowLandscape : styles.buttonRowPortrait,
         ]}>
-        <Pressable onPress={reset}>
-          <MaterialCommunityIcons name="restart" size={48} color={palette.accent} />
-        </Pressable>
+        <TimerBar onReset={reset} />
       </View>
 
       {/* Bottom half */}
