@@ -1,36 +1,39 @@
 import { ThemedView } from '@/components/ThemedView';
-import { router, useLocalSearchParams } from 'expo-router';
+import { useGameStore } from '@/store/gameStore';
+import { router } from 'expo-router';
 import React, { useState } from 'react';
 import { Button, StyleSheet, TextInput, View } from 'react-native';
 
-export type SettingsScreenSearchParams = {
-  team1: string;
-  team2: string;
-  gameTo: string;
-  team1Score: string;
-  team2Score: string;
-  team1Timeouts: string;
-  team2Timeouts: string;
-};
-
 export default function SettingsScreen() {
-  const params = useLocalSearchParams<SettingsScreenSearchParams>();
-  const { team1Score, team2Score, team1Timeouts, team2Timeouts } = params;
-  const [team1, setTeam1] = useState(params.team1 || 'Team 1');
-  const [team2, setTeam2] = useState(params.team2 || 'Team 2');
-  const [gameTo, setGameTo] = useState(params.gameTo || '15');
+  const {
+    team1Name,
+    team2Name,
+    gameTo: gameToStore,
+    team1Timeouts,
+    setTeamNames,
+    setGameTo: setGameToStore,
+    resetTimeouts,
+  } = useGameStore();
+
+  const [team1, setTeam1] = useState(team1Name);
+  const [team2, setTeam2] = useState(team2Name);
+  const [gameTo, setGameTo] = useState(gameToStore.toString());
+  const [timeoutsCount, setTimeoutsCount] = useState(team1Timeouts.length.toString());
+
+  // Initialize timeouts count from the team1Timeouts array length or default to 2
 
   const handleSave = () => {
-    const settings: SettingsScreenSearchParams = {
-      team1,
-      team2,
-      gameTo: gameTo.toString(),
-      team1Score,
-      team2Score,
-      team1Timeouts,
-      team2Timeouts,
-    };
-    router.navigate({ pathname: '/', params: settings });
+    setTeamNames(team1, team2);
+    setGameToStore(Number(gameTo) || 15);
+
+    const newCount = parseInt(timeoutsCount, 10);
+    const currentCount = team1Timeouts.length;
+
+    if (!isNaN(newCount) && newCount !== currentCount) {
+      resetTimeouts(newCount);
+    }
+
+    router.back();
   };
 
   return (
@@ -54,6 +57,13 @@ export default function SettingsScreen() {
           value={gameTo}
           onChangeText={setGameTo}
           placeholder="Game To"
+        />
+        <TextInput
+          keyboardType="numeric"
+          style={styles.input}
+          value={timeoutsCount}
+          onChangeText={setTimeoutsCount}
+          placeholder="Number of Timeouts"
         />
         <View style={styles.buttons}>
           <Button title="Cancel" onPress={() => router.back()} color="red" />

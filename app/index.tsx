@@ -3,86 +3,44 @@ import TeamScoreSection from '@/components/TeamScoreSection';
 import { ThemedView } from '@/components/ThemedView';
 import { palette } from '@/constants/theme';
 
-import { router, useLocalSearchParams } from 'expo-router';
-import { useState } from 'react';
+import { useGameStore } from '@/store/gameStore';
+import { router } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
-import { SettingsScreenSearchParams } from './Settings';
 
 export default function BasicScoreboard() {
-  const params = useLocalSearchParams<SettingsScreenSearchParams>();
-  const team1 = params.team1 || 'Team 1';
-  const team2 = params.team2 || 'Team 2';
-  const gameTo = params.gameTo || 15;
-  const team1ScoreInitial = params.team1Score || 0;
-  const team2ScoreInitial = params.team2Score || 0;
-  const [team1Timeouts, setTeam1Timeouts] = useState(Number(params.team1Timeouts ?? 2));
-  const [team2Timeouts, setTeam2Timeouts] = useState(Number(params.team2Timeouts ?? 2));
-
-  const [team1Score, setTeam1Score] = useState(Number(team1ScoreInitial));
-  const [team2Score, setTeam2Score] = useState(Number(team2ScoreInitial));
+  const {
+    team1Name,
+    team2Name,
+    team1Score,
+    team2Score,
+    team1Timeouts,
+    team2Timeouts,
+    incrementScore,
+    decrementScore,
+    toggleTimeout,
+    resetGame,
+  } = useGameStore();
 
   const openSettings = () => {
-    const settings: SettingsScreenSearchParams = {
-      team1,
-      team2,
-      gameTo: gameTo.toString(),
-      team1Score: team1Score.toString(),
-      team2Score: team2Score.toString(),
-      team1Timeouts: team1Timeouts.toString(),
-      team2Timeouts: team2Timeouts.toString(),
-    };
-    router.push({ pathname: '/Settings', params: settings });
-  };
-
-  const handleTimeoutUse = (isTeam1: boolean) => {
-    if (isTeam1) {
-      setTeam1Timeouts((prev) => Math.max(0, prev - 1));
-    } else {
-      setTeam2Timeouts((prev) => Math.max(0, prev - 1));
-    }
-  };
-
-  const incrementScore = (isTeam1: boolean) => {
-    if (isTeam1) {
-      setTeam1Score((prev) => Math.min(Number(gameTo), prev + 1));
-    } else {
-      setTeam2Score((prev) => Math.min(Number(gameTo), prev + 1));
-    }
-  };
-
-  const decrementScore = (isTeam1: boolean) => {
-    if (isTeam1) {
-      setTeam1Score((prev) => Math.max(0, prev - 1));
-    } else {
-      setTeam2Score((prev) => Math.max(0, prev - 1));
-    }
+    router.push('/Settings');
   };
 
   const reset = () => {
-    setTeam1Score(0);
-    setTeam2Score(0);
-    setTeam1Timeouts(2);
-    setTeam2Timeouts(2);
-    router.setParams({
-      team1Score: '0',
-      team2Score: '0',
-      team1Timeouts: '2',
-      team2Timeouts: '2',
-    });
+    resetGame();
   };
 
   return (
     <ThemedView style={styles.container}>
       {/* Top half */}
       <TeamScoreSection
-        teamName={team1}
+        teamName={team1Name}
         score={team1Score}
         onIncrement={() => incrementScore(true)}
         onDecrement={() => decrementScore(true)}
         textColor={palette.primary}
         backgroundColor={palette.white}
         timeouts={team1Timeouts}
-        onTimeoutUse={() => handleTimeoutUse(true)}
+        onTimeoutUse={(index) => toggleTimeout(true, index)}
       />
 
       {/* Timer Bar Overlay */}
@@ -92,14 +50,14 @@ export default function BasicScoreboard() {
 
       {/* Bottom half */}
       <TeamScoreSection
-        teamName={team2}
+        teamName={team2Name}
         score={team2Score}
         onIncrement={() => incrementScore(false)}
         onDecrement={() => decrementScore(false)}
         textColor={palette.white}
         backgroundColor={palette.primary}
         timeouts={team2Timeouts}
-        onTimeoutUse={() => handleTimeoutUse(false)}
+        onTimeoutUse={(index) => toggleTimeout(false, index)}
       />
     </ThemedView>
   );
