@@ -1,45 +1,20 @@
 import { palette } from '@/constants/theme';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
-import React, { useEffect, useState } from 'react';
-import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useGameTimer } from '@/hooks/useGameTimer';
+import React from 'react';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-interface TimerBarProps {
+interface SettingsBarProps {
   onReset: () => void;
+  onSettingsPress: () => void;
 }
 
-export default function TimerBar({ onReset }: TimerBarProps) {
-  const [timeLeft, setTimeLeft] = useState(90 * 60);
-  const [isActive, setIsActive] = useState(false);
-
-  useEffect(() => {
-    let interval: number;
-    if (isActive) {
-      interval = setInterval(() => {
-        setTimeLeft((prev) => {
-          if (prev <= 1) {
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-    }
-    return () => clearInterval(interval);
-  }, [isActive]);
-
-  useEffect(() => {
-    if (timeLeft === 0 && isActive) {
-      setIsActive(false);
-    }
-  }, [timeLeft, isActive]);
-
-  const toggleTimer = () => {
-    setIsActive(!isActive);
-  };
+export default function SettingsBar({ onReset, onSettingsPress }: SettingsBarProps) {
+  const { timeLeft, isActive, toggleTimer, resetTimer } = useGameTimer();
 
   const handleReset = () => {
-    setIsActive(false);
-    setTimeLeft(90 * 60);
+    resetTimer();
     onReset();
   };
 
@@ -50,7 +25,7 @@ export default function TimerBar({ onReset }: TimerBarProps) {
   };
 
   return (
-    <View style={[styles.container, styles.containerLandscape]}>
+    <View style={styles.container}>
       {/* Play/Pause */}
       <Pressable onPress={toggleTimer} style={styles.iconButton}>
         <MaterialCommunityIcons
@@ -63,6 +38,11 @@ export default function TimerBar({ onReset }: TimerBarProps) {
       {/* Timer Text */}
       <Text style={styles.timerText}>{formatTime(timeLeft)}</Text>
 
+      {/* Settings */}
+      <Pressable onPress={onSettingsPress} style={styles.iconButton}>
+        <MaterialCommunityIcons name="cog" size={24} color={palette.white} />
+      </Pressable>
+
       {/* Reset */}
       <Pressable onPress={handleReset} style={styles.iconButton}>
         <MaterialCommunityIcons name="restart" size={24} color={palette.white} />
@@ -74,24 +54,19 @@ export default function TimerBar({ onReset }: TimerBarProps) {
 const styles = StyleSheet.create({
   container: {
     backgroundColor: palette.secondary,
-    borderRadius: 50,
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
     alignItems: 'center',
     justifyContent: 'space-between',
     shadowRadius: 3.84,
-  },
-  containerLandscape: {
-    flexDirection: 'column',
-    paddingHorizontal: 10,
-    paddingVertical: 20,
-    minHeight: 200,
+    flexDirection: 'row',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    minHeight: 50,
+    minWidth: 300,
     gap: 15,
   },
   timerText: {
-    fontFamily: Platform.select({
-      ios: 'Courier',
-      android: 'monospace',
-      default: 'monospace',
-    }),
     fontSize: 20,
     fontWeight: 'bold',
     color: palette.white,

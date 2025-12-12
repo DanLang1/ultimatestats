@@ -1,7 +1,6 @@
 import ScoreDisplay from '@/components/ScoreDisplay';
 import TeamText from '@/components/TeamText';
 import { ThemedView } from '@/components/ThemedView';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { Directions, Gesture, GestureDetector } from 'react-native-gesture-handler';
@@ -14,7 +13,7 @@ interface TeamScoreSectionProps {
   onDecrement: () => void;
   textColor: string;
   backgroundColor: string;
-  onSettingsPress?: () => void;
+
   timeouts?: number;
   onTimeoutUse?: () => void;
 }
@@ -26,7 +25,6 @@ export default function TeamScoreSection({
   onDecrement,
   textColor,
   backgroundColor,
-  onSettingsPress,
   timeouts = 0,
   onTimeoutUse,
 }: TeamScoreSectionProps) {
@@ -46,12 +44,6 @@ export default function TeamScoreSection({
 
   return (
     <ThemedView style={[styles.container, { backgroundColor }]}>
-      {onSettingsPress && (
-        <Pressable onPress={onSettingsPress} style={styles.settingsIcon}>
-          <MaterialCommunityIcons name="cog" size={24} color={textColor} />
-        </Pressable>
-      )}
-
       {/* Top 1/3: Timeouts */}
       <View style={styles.timeoutArea}>
         <View style={styles.timeoutContainer}>
@@ -85,6 +77,7 @@ export default function TeamScoreSection({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    paddingTop: 30,
   },
   settingsIcon: {
     position: 'absolute',

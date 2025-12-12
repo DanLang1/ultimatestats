@@ -1,6 +1,6 @@
+import SettingsBar from '@/components/SettingsBar';
 import TeamScoreSection from '@/components/TeamScoreSection';
 import { ThemedView } from '@/components/ThemedView';
-import TimerBar from '@/components/TimerBar';
 import { palette } from '@/constants/theme';
 
 import { router, useLocalSearchParams } from 'expo-router';
@@ -81,14 +81,13 @@ export default function BasicScoreboard() {
         onDecrement={() => decrementScore(true)}
         textColor={palette.primary}
         backgroundColor={palette.white}
-        onSettingsPress={openSettings}
         timeouts={team1Timeouts}
         onTimeoutUse={() => handleTimeoutUse(true)}
       />
 
-      {/* Mid section that holds the button */}
-      <View style={styles.buttonRow}>
-        <TimerBar onReset={reset} />
+      {/* Timer Bar Overlay */}
+      <View style={styles.timerBarContainer}>
+        <SettingsBar onReset={reset} onSettingsPress={openSettings} />
       </View>
 
       {/* Bottom half */}
@@ -111,26 +110,12 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
   },
-  buttonRow: {
-    justifyContent: 'center',
+  timerBarContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
     alignItems: 'center',
-    zIndex: 10,
-    gap: 10,
-    flexDirection: 'column',
-    width: 60,
-    marginHorizontal: -30,
-    height: '100%',
-  },
-  button: {
-    backgroundColor: palette.secondary,
-    borderWidth: 2,
-    borderColor: palette.accent,
-    borderRadius: 999,
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    marginHorizontal: 5,
-    justifyContent: 'center',
-    alignItems: 'center',
-    elevation: 10,
+    zIndex: 100,
   },
 });

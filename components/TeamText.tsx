@@ -9,20 +9,16 @@ interface TeamTextProps {
 
 export default function TeamText({ teamName, color }: TeamTextProps) {
   return (
-    <>
-      <View style={styles.teamView}>
-        <ThemedText style={{ color: color, fontSize: 40 }} type="title">
-          {teamName}
-        </ThemedText>
-      </View>
-    </>
+    <View style={styles.teamView}>
+      <ThemedText style={{ color: color, fontSize: 40 }} type="title">
+        {teamName}
+      </ThemedText>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   teamView: {
-    // flex: 1,
-    // justifyContent: 'flex-end',
     paddingTop: 20,
   },
 });

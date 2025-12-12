@@ -18,13 +18,13 @@ export default function RootLayout() {
           backgroundColor:
             colorScheme === 'dark' ? DarkTheme.colors.background : DefaultTheme.colors.background,
         }}
-        edges={['left', 'right', 'top']}>
+        edges={['left', 'right']}>
         <GestureHandlerRootView style={{ flex: 1 }}>
           <Stack>
             <Stack.Screen name="index" options={{ headerShown: false }} />
           </Stack>
 
-          <StatusBar style="auto" />
+          <StatusBar style="auto" hidden />
         </GestureHandlerRootView>
       </SafeAreaView>
     </ThemeProvider>
