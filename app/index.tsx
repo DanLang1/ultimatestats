@@ -2,9 +2,8 @@ import TeamScoreSection from '@/components/TeamScoreSection';
 import { ThemedView } from '@/components/ThemedView';
 import TimerBar from '@/components/TimerBar';
 import { palette } from '@/constants/theme';
-import { useScreenOrientation } from '@/hooks/useScreenOrientation';
+
 import { router, useLocalSearchParams } from 'expo-router';
-import * as ScreenOrientation from 'expo-screen-orientation';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { SettingsScreenSearchParams } from './Settings';
@@ -18,11 +17,6 @@ export default function BasicScoreboard() {
   const team2ScoreInitial = params.team2Score || 0;
   const [team1Timeouts, setTeam1Timeouts] = useState(Number(params.team1Timeouts ?? 2));
   const [team2Timeouts, setTeam2Timeouts] = useState(Number(params.team2Timeouts ?? 2));
-
-  const orientation = useScreenOrientation();
-  const isLandscape =
-    orientation === ScreenOrientation.Orientation.LANDSCAPE_LEFT ||
-    orientation === ScreenOrientation.Orientation.LANDSCAPE_RIGHT;
 
   const [team1Score, setTeam1Score] = useState(Number(team1ScoreInitial));
   const [team2Score, setTeam2Score] = useState(Number(team2ScoreInitial));
@@ -78,11 +72,7 @@ export default function BasicScoreboard() {
   };
 
   return (
-    <ThemedView
-      style={[
-        styles.container,
-        isLandscape ? styles.containerLandscape : styles.containerPortrait,
-      ]}>
+    <ThemedView style={styles.container}>
       {/* Top half */}
       <TeamScoreSection
         teamName={team1}
@@ -97,11 +87,7 @@ export default function BasicScoreboard() {
       />
 
       {/* Mid section that holds the button */}
-      <View
-        style={[
-          styles.buttonRow,
-          isLandscape ? styles.buttonRowLandscape : styles.buttonRowPortrait,
-        ]}>
+      <View style={styles.buttonRow}>
         <TimerBar onReset={reset} />
       </View>
 
@@ -123,11 +109,6 @@ export default function BasicScoreboard() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  containerPortrait: {
-    flexDirection: 'column',
-  },
-  containerLandscape: {
     flexDirection: 'row',
   },
   buttonRow: {
@@ -135,14 +116,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     zIndex: 10,
     gap: 10,
-  },
-  buttonRowPortrait: {
-    flexDirection: 'row',
-    height: 60,
-    marginVertical: -30,
-    width: '100%',
-  },
-  buttonRowLandscape: {
     flexDirection: 'column',
     width: 60,
     marginHorizontal: -30,

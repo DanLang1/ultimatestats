@@ -3,7 +3,7 @@
     "name": "ultimatestats",
     "slug": "ultimatestats",
     "version": "1.0.0",
-    "orientation": "default",
+    "orientation": "landscape",
     "icon": "./assets/images/icon.png",
     "scheme": "ultimatestats",
     "userInterfaceStyle": "automatic",

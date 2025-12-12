@@ -1,7 +1,6 @@
 import { palette } from '@/constants/theme';
-import { useScreenOrientation } from '@/hooks/useScreenOrientation';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import * as ScreenOrientation from 'expo-screen-orientation';
+
 import React, { useEffect, useState } from 'react';
 import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 
@@ -12,11 +11,6 @@ interface TimerBarProps {
 export default function TimerBar({ onReset }: TimerBarProps) {
   const [timeLeft, setTimeLeft] = useState(90 * 60);
   const [isActive, setIsActive] = useState(false);
-
-  const orientation = useScreenOrientation();
-  const isLandscape =
-    orientation === ScreenOrientation.Orientation.LANDSCAPE_LEFT ||
-    orientation === ScreenOrientation.Orientation.LANDSCAPE_RIGHT;
 
   useEffect(() => {
     let interval: number;
@@ -56,11 +50,7 @@ export default function TimerBar({ onReset }: TimerBarProps) {
   };
 
   return (
-    <View
-      style={[
-        styles.container,
-        isLandscape ? styles.containerLandscape : styles.containerPortrait,
-      ]}>
+    <View style={[styles.container, styles.containerLandscape]}>
       {/* Play/Pause */}
       <Pressable onPress={toggleTimer} style={styles.iconButton}>
         <MaterialCommunityIcons
@@ -87,18 +77,7 @@ const styles = StyleSheet.create({
     borderRadius: 50,
     alignItems: 'center',
     justifyContent: 'space-between',
-    elevation: 5, // Shadow for Android
-    shadowColor: '#000', // Shadow for iOS
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
     shadowRadius: 3.84,
-  },
-  containerPortrait: {
-    flexDirection: 'row',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    minWidth: 200,
-    gap: 15,
   },
   containerLandscape: {
     flexDirection: 'column',
