@@ -14,7 +14,7 @@ interface TeamScoreSectionProps {
   textColor: string;
   backgroundColor: string;
 
-  timeouts?: boolean[];
+  timeouts?: { active: boolean; isFloater: boolean }[];
   onTimeoutUse?: (index: number) => void;
 }
 
@@ -25,7 +25,7 @@ export default function TeamScoreSection({
   onDecrement,
   textColor,
   backgroundColor,
-  timeouts = [true, true],
+  timeouts = [],
   onTimeoutUse,
 }: TeamScoreSectionProps) {
   const flingUp = Gesture.Fling()
@@ -47,15 +47,23 @@ export default function TeamScoreSection({
       {/* Top 1/3: Timeouts */}
       <View style={styles.timeoutArea}>
         <View style={styles.timeoutContainer}>
-          {timeouts.map((isActive, index) => (
+          {timeouts.map((timeout, index) => (
             <Pressable
               key={index}
               onPress={() => onTimeoutUse?.(index)}
               style={[
                 styles.timeoutIndicator,
+                timeout.isFloater && {
+                  borderColor: timeout.active ? '#FFD700' : textColor, // Gold border for floater
+                  borderWidth: 2,
+                },
                 {
-                  backgroundColor: isActive ? textColor : 'transparent',
-                  borderColor: textColor,
+                  backgroundColor: timeout.active
+                    ? timeout.isFloater
+                      ? '#FFD700' // Gold for active floater
+                      : textColor
+                    : 'transparent',
+                  borderColor: timeout.isFloater ? '#FFD700' : textColor,
                 },
               ]}
             />

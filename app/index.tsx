@@ -15,6 +15,9 @@ export default function BasicScoreboard() {
     team2Score,
     team1Timeouts,
     team2Timeouts,
+    team1Floater,
+    team2Floater,
+    floaterEnabled,
     incrementScore,
     decrementScore,
     toggleTimeout,
@@ -29,6 +32,32 @@ export default function BasicScoreboard() {
     resetGame();
   };
 
+  const team1Combined = [
+    ...team1Timeouts.map((active) => ({ active, isFloater: false })),
+    ...(floaterEnabled
+      ? [
+          {
+            active: team1Floater,
+            isFloater: true,
+            disabled: team1Timeouts.some((active) => active),
+          },
+        ]
+      : []),
+  ];
+
+  const team2Combined = [
+    ...team2Timeouts.map((active) => ({ active, isFloater: false })),
+    ...(floaterEnabled
+      ? [
+          {
+            active: team2Floater,
+            isFloater: true,
+            disabled: team2Timeouts.some((active) => active),
+          },
+        ]
+      : []),
+  ];
+
   return (
     <ThemedView style={styles.container}>
       {/* Top half */}
@@ -39,7 +68,7 @@ export default function BasicScoreboard() {
         onDecrement={() => decrementScore(true)}
         textColor={palette.primary}
         backgroundColor={palette.white}
-        timeouts={team1Timeouts}
+        timeouts={team1Combined}
         onTimeoutUse={(index) => toggleTimeout(true, index)}
       />
 
@@ -56,7 +85,7 @@ export default function BasicScoreboard() {
         onDecrement={() => decrementScore(false)}
         textColor={palette.white}
         backgroundColor={palette.primary}
-        timeouts={team2Timeouts}
+        timeouts={team2Combined}
         onTimeoutUse={(index) => toggleTimeout(false, index)}
       />
     </ThemedView>

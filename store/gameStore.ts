@@ -8,10 +8,15 @@ interface GameState {
   team2Score: number;
   team1Timeouts: boolean[];
   team2Timeouts: boolean[];
+  team1Floater: boolean;
+  team2Floater: boolean;
+  floaterEnabled: boolean;
+  gameHalf: number;
   gameTo: number;
 
   // Actions
   setTeamNames: (team1: string, team2: string) => void;
+  setFloaterEnabled: (enabled: boolean) => void;
   setGameTo: (score: number) => void;
   incrementScore: (isTeam1: boolean) => void;
   decrementScore: (isTeam1: boolean) => void;
@@ -27,9 +32,14 @@ export const useGameStore = create<GameState>((set) => ({
   team2Score: 0,
   team1Timeouts: [true, true],
   team2Timeouts: [true, true],
+  team1Floater: true,
+  team2Floater: true,
+  floaterEnabled: true,
+  gameHalf: 1,
   gameTo: 15,
 
   setTeamNames: (team1, team2) => set({ team1Name: team1, team2Name: team2 }),
+  setFloaterEnabled: (enabled) => set({ floaterEnabled: enabled }),
 
   setGameTo: (gameTo) => set({ gameTo }),
 
@@ -37,7 +47,25 @@ export const useGameStore = create<GameState>((set) => ({
     set((state) => {
       const targetScore = isTeam1 ? state.team1Score : state.team2Score;
       if (targetScore >= state.gameTo) return {};
-      return isTeam1 ? { team1Score: state.team1Score + 1 } : { team2Score: state.team2Score + 1 };
+
+      const newScore = targetScore + 1;
+      const halftimeScore = Math.ceil(state.gameTo / 2);
+
+      let newState: Partial<GameState> = isTeam1
+        ? { team1Score: newScore }
+        : { team2Score: newScore };
+
+      // Automatic Halftime Logic
+      if (state.gameHalf === 1 && newScore === halftimeScore) {
+        newState = {
+          ...newState,
+          gameHalf: 2,
+          team1Timeouts: new Array(state.team1Timeouts.length).fill(true),
+          team2Timeouts: new Array(state.team2Timeouts.length).fill(true),
+        };
+      }
+
+      return newState;
     }),
 
   decrementScore: (isTeam1) =>
@@ -49,14 +77,35 @@ export const useGameStore = create<GameState>((set) => ({
 
   toggleTimeout: (isTeam1, index) =>
     set((state) => {
-      if (isTeam1) {
-        const newTimeouts = [...state.team1Timeouts];
-        newTimeouts[index] = !newTimeouts[index];
-        return { team1Timeouts: newTimeouts };
+      const timeouts = isTeam1 ? state.team1Timeouts : state.team2Timeouts;
+      const isFloaterActive = isTeam1 ? state.team1Floater : state.team2Floater;
+
+      // Logic: Index < Length -> Standard Timeout
+      if (index < timeouts.length) {
+        if (isTeam1) {
+          const newTimeouts = [...state.team1Timeouts];
+          newTimeouts[index] = !newTimeouts[index];
+          return { team1Timeouts: newTimeouts };
+        } else {
+          const newTimeouts = [...state.team2Timeouts];
+          newTimeouts[index] = !newTimeouts[index];
+          return { team2Timeouts: newTimeouts };
+        }
       } else {
-        const newTimeouts = [...state.team2Timeouts];
-        newTimeouts[index] = !newTimeouts[index];
-        return { team2Timeouts: newTimeouts };
+        // Logic: Length -> Floater Timeout
+        // Restriction: Cannot USE floater (turn active -> inactive) if any standard timeout is Active (true)
+        const hasAvailableStandard = timeouts.some((t) => t === true);
+
+        if (isFloaterActive && hasAvailableStandard) {
+          // Attempting to consume floater while standard exists -> Block
+          return {};
+        }
+
+        if (isTeam1) {
+          return { team1Floater: !state.team1Floater };
+        } else {
+          return { team2Floater: !state.team2Floater };
+        }
       }
     }),
 
@@ -72,5 +121,8 @@ export const useGameStore = create<GameState>((set) => ({
       team2Score: 0,
       team1Timeouts: new Array(state.team1Timeouts.length).fill(true),
       team2Timeouts: new Array(state.team2Timeouts.length).fill(true),
+      team1Floater: true,
+      team2Floater: true,
+      gameHalf: 1,
     })),
 }));
