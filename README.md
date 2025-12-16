@@ -2,7 +2,8 @@
 
 This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
 
-Goal is to learn React Native and eventually create a complete stat tracking app for Ultimate that works on both Android and Apple
+Goal is to learn React Native and eventually create a complete stat tracking app for Ultimate that works on both Android and Apple.
+For now this will just have very basic score tracking and maybe goal / assist tracking. I think a complete stat tracking UI would involve a much more complex layout than what I have currently.
 
 ## Get started
 
