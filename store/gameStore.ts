@@ -13,11 +13,13 @@ interface GameState {
   floaterEnabled: boolean;
   gameHalf: number;
   gameTo: number;
+  gameLength: number;
 
   // Actions
   setTeamNames: (team1: string, team2: string) => void;
   setFloaterEnabled: (enabled: boolean) => void;
   setGameTo: (score: number) => void;
+  setGameLength: (minutes: number) => void;
   incrementScore: (isTeam1: boolean) => void;
   decrementScore: (isTeam1: boolean) => void;
   toggleTimeout: (isTeam1: boolean, index: number) => void;
@@ -37,11 +39,13 @@ export const useGameStore = create<GameState>((set) => ({
   floaterEnabled: true,
   gameHalf: 1,
   gameTo: 15,
+  gameLength: 90,
 
   setTeamNames: (team1, team2) => set({ team1Name: team1, team2Name: team2 }),
   setFloaterEnabled: (enabled) => set({ floaterEnabled: enabled }),
 
   setGameTo: (gameTo) => set({ gameTo }),
+  setGameLength: (minutes) => set({ gameLength: minutes }),
 
   incrementScore: (isTeam1) =>
     set((state) => {

@@ -1,6 +1,7 @@
 import ScoreDisplay from '@/components/ScoreDisplay';
 import TeamText from '@/components/TeamText';
 import { ThemedView } from '@/components/ThemedView';
+import { palette } from '@/constants/theme';
 import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { Directions, Gesture, GestureDetector } from 'react-native-gesture-handler';
@@ -54,16 +55,16 @@ export default function TeamScoreSection({
               style={[
                 styles.timeoutIndicator,
                 timeout.isFloater && {
-                  borderColor: timeout.active ? '#FFD700' : textColor, // Gold border for floater
+                  borderColor: timeout.active ? palette.accent : textColor,
                   borderWidth: 2,
                 },
                 {
                   backgroundColor: timeout.active
                     ? timeout.isFloater
-                      ? '#FFD700' // Gold for active floater
+                      ? palette.accent
                       : textColor
                     : 'transparent',
-                  borderColor: timeout.isFloater ? '#FFD700' : textColor,
+                  borderColor: timeout.isFloater ? palette.accent : textColor,
                 },
               ]}
             />

@@ -1,8 +1,9 @@
 import { ThemedView } from '@/components/ThemedView';
+import { palette } from '@/constants/theme';
 import { useGameStore } from '@/store/gameStore';
 import { router, Stack } from 'expo-router';
 import React, { useState } from 'react';
-import { Button, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
+import { Button, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
 
 export default function SettingsScreen() {
   const {
@@ -15,6 +16,8 @@ export default function SettingsScreen() {
     resetTimeouts,
     floaterEnabled: floaterEnabledStore,
     setFloaterEnabled,
+    gameLength: gameLengthStore,
+    setGameLength,
     resetGame,
   } = useGameStore();
 
@@ -23,11 +26,13 @@ export default function SettingsScreen() {
   const [gameTo, setGameTo] = useState(gameToStore.toString());
   const [timeoutsCount, setTimeoutsCount] = useState(team1Timeouts.length.toString());
   const [floaterEnabled, setFloaterEnabledLocal] = useState(floaterEnabledStore);
+  const [gameLength, setGameLengthLocal] = useState((gameLengthStore || 90).toString());
 
   const handleSave = () => {
     setTeamNames(team1, team2);
     setGameToStore(Number(gameTo) || 15);
     setFloaterEnabled(floaterEnabled);
+    setGameLength(Number(gameLength) || 90);
 
     const newCount = parseInt(timeoutsCount, 10);
     const currentCount = team1Timeouts.length;
@@ -47,74 +52,88 @@ export default function SettingsScreen() {
   return (
     <ThemedView style={styles.container}>
       <Stack.Screen options={{ headerShown: false }} />
-      <View style={styles.card}>
-        <Text style={styles.headerTitle}>Game Settings</Text>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <View style={styles.card}>
+          <Text style={styles.headerTitle}>Game Settings</Text>
 
-        <View style={styles.columnsContainer}>
-          {/* Left Column: Teams */}
-          <View style={styles.column}>
-            <Text style={styles.sectionTitle}>Teams</Text>
-            <TextInput
-              style={styles.input}
-              value={team1}
-              onChangeText={setTeam1}
-              placeholder="Team 1 Name"
-              placeholderTextColor="#999"
-            />
-            <TextInput
-              style={styles.input}
-              value={team2}
-              onChangeText={setTeam2}
-              placeholder="Team 2 Name"
-              placeholderTextColor="#999"
-            />
-          </View>
-
-          {/* Right Column: Rules */}
-          <View style={styles.column}>
-            <Text style={styles.sectionTitle}>Rules</Text>
-            <View style={styles.inputRow}>
-              <Text style={styles.inputLabel}>Game To:</Text>
+          <View style={styles.columnsContainer}>
+            {/* Left Column: Teams */}
+            <View style={styles.column}>
+              <Text style={styles.sectionTitle}>Teams</Text>
               <TextInput
-                keyboardType="numeric"
-                style={styles.inputSmall}
-                value={gameTo}
-                onChangeText={setGameTo}
-                placeholder="15"
+                style={styles.input}
+                value={team1}
+                onChangeText={setTeam1}
+                placeholder="Team 1 Name"
+                placeholderTextColor="#999"
+              />
+              <TextInput
+                style={styles.input}
+                value={team2}
+                onChangeText={setTeam2}
+                placeholder="Team 2 Name"
                 placeholderTextColor="#999"
               />
             </View>
 
-            <View style={styles.inputRow}>
-              <Text style={styles.inputLabel}>Timeouts per Half:</Text>
-              <TextInput
-                keyboardType="numeric"
-                style={styles.inputSmall}
-                value={timeoutsCount}
-                onChangeText={setTimeoutsCount}
-                placeholder="2"
-                placeholderTextColor="#999"
-              />
-            </View>
+            {/* Right Column: Rules */}
+            <View style={styles.column}>
+              <Text style={styles.sectionTitle}>Rules</Text>
+              <View style={styles.inputRow}>
+                <Text style={styles.inputLabel}>Game To:</Text>
+                <TextInput
+                  keyboardType="numeric"
+                  style={styles.inputSmall}
+                  value={gameTo}
+                  onChangeText={setGameTo}
+                  placeholder="15"
+                  placeholderTextColor="#999"
+                />
+              </View>
 
-            <View style={styles.switchContainer}>
-              <Text style={styles.label}>Enable Floater Timeout</Text>
-              <Switch
-                trackColor={{ false: '#767577', true: '#81b0ff' }}
-                thumbColor={floaterEnabled ? '#f5dd4b' : '#f4f3f4'}
-                onValueChange={setFloaterEnabledLocal}
-                value={floaterEnabled}
-              />
+              <View style={styles.inputRow}>
+                <Text style={styles.inputLabel}>Game Length (mins):</Text>
+                <TextInput
+                  keyboardType="numeric"
+                  style={styles.inputSmall}
+                  value={gameLength}
+                  onChangeText={setGameLengthLocal}
+                  placeholder="90"
+                  placeholderTextColor="#999"
+                />
+              </View>
+
+              <View style={styles.inputRow}>
+                <Text style={styles.inputLabel}>Timeouts per Half:</Text>
+                <TextInput
+                  keyboardType="numeric"
+                  style={styles.inputSmall}
+                  value={timeoutsCount}
+                  onChangeText={setTimeoutsCount}
+                  placeholder="2"
+                  placeholderTextColor="#999"
+                />
+              </View>
+
+              <View style={styles.switchContainer}>
+                <Text style={styles.label}>Enable Floater Timeout</Text>
+                <Switch
+                  trackColor={{ false: '#767577', true: palette.accent }}
+                  thumbColor={floaterEnabled ? palette.accent : '#f4f3f4'}
+                  onValueChange={setFloaterEnabledLocal}
+                  value={floaterEnabled}
+                />
+              </View>
             </View>
           </View>
-        </View>
 
-        <View style={styles.buttons}>
-          <Button title="Cancel" onPress={() => router.back()} color="red" />
-          <Button title="New Game" onPress={handleNewGame} color="orange" />
-          <Button title="Save" onPress={handleSave} />
+          <View style={styles.buttons}>
+            <Button title="Cancel" onPress={() => router.back()} color="red" />
+            <Button title="New Game" onPress={handleNewGame} color="orange" />
+            <Button title="Save" onPress={handleSave} />
+          </View>
         </View>
-      </View>
+      </ScrollView>
     </ThemedView>
   );
 }
@@ -122,9 +141,11 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+  },
+  scrollContent: {
+    flexGrow: 1,
     padding: 20,
+    justifyContent: 'center',
   },
   card: {
     width: '100%',
