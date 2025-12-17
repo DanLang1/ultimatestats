@@ -2,8 +2,10 @@ import { palette } from '@/constants/theme';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
 import { useGameTimer } from '@/hooks/useGameTimer';
-import React from 'react';
+import { useGameStore } from '@/store/gameStore';
+import React, { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import GameInfoModal from './GameInfoModal';
 
 interface SettingsBarProps {
   onReset: () => void;
@@ -12,6 +14,8 @@ interface SettingsBarProps {
 
 export default function SettingsBar({ onReset, onSettingsPress }: SettingsBarProps) {
   const { timeLeft, isActive, toggleTimer, resetTimer } = useGameTimer();
+  const { isSoftCap, softCapPending } = useGameStore();
+  const [infoVisible, setInfoVisible] = useState(false);
 
   const handleReset = () => {
     resetTimer();
@@ -36,7 +40,22 @@ export default function SettingsBar({ onReset, onSettingsPress }: SettingsBarPro
       </Pressable>
 
       {/* Timer Text */}
-      <Text style={styles.timerText}>{formatTime(timeLeft)}</Text>
+      <View style={styles.timerContainer}>
+        <Text style={styles.timerText}>{formatTime(timeLeft)}</Text>
+        {timeLeft === 0 ? (
+          // <Text style={styles.softcapText}>Hardcap</Text>
+          <MaterialCommunityIcons name="hard-hat" size={24} color={palette.white} />
+        ) : isSoftCap || softCapPending ? (
+          <MaterialCommunityIcons name="hat-fedora" size={24} color={palette.white} />
+        ) : null}
+      </View>
+
+      {/* Info */}
+      <Pressable onPress={() => setInfoVisible(true)} style={styles.iconButton}>
+        <MaterialCommunityIcons name="information" size={24} color={palette.white} />
+      </Pressable>
+
+      <GameInfoModal visible={infoVisible} onClose={() => setInfoVisible(false)} />
 
       {/* Settings */}
       <Pressable onPress={onSettingsPress} style={styles.iconButton}>
@@ -66,10 +85,21 @@ const styles = StyleSheet.create({
     minWidth: 300,
     gap: 15,
   },
+  timerContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    gap: 5,
+  },
   timerText: {
     fontSize: 20,
     fontWeight: 'bold',
     color: palette.white,
+  },
+  softcapText: {
+    fontSize: 10,
+    color: palette.white,
+    fontWeight: '600',
+    marginTop: -2,
   },
   iconButton: {
     padding: 5,

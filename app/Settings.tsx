@@ -1,4 +1,5 @@
 import { ThemedView } from '@/components/ThemedView';
+import { InputNumber } from '@/components/ui/InputNumber';
 import { palette } from '@/constants/theme';
 import { useGameStore } from '@/store/gameStore';
 import { router, Stack } from 'expo-router';
@@ -79,41 +80,26 @@ export default function SettingsScreen() {
             {/* Right Column: Rules */}
             <View style={styles.column}>
               <Text style={styles.sectionTitle}>Rules</Text>
-              <View style={styles.inputRow}>
-                <Text style={styles.inputLabel}>Game To:</Text>
-                <TextInput
-                  keyboardType="numeric"
-                  style={styles.inputSmall}
-                  value={gameTo}
-                  onChangeText={setGameTo}
-                  placeholder="15"
-                  placeholderTextColor="#999"
-                />
-              </View>
+              <InputNumber
+                label="Game To:"
+                value={gameTo}
+                onChangeText={setGameTo}
+                placeholder="15"
+              />
 
-              <View style={styles.inputRow}>
-                <Text style={styles.inputLabel}>Game Length (mins):</Text>
-                <TextInput
-                  keyboardType="numeric"
-                  style={styles.inputSmall}
-                  value={gameLength}
-                  onChangeText={setGameLengthLocal}
-                  placeholder="90"
-                  placeholderTextColor="#999"
-                />
-              </View>
+              <InputNumber
+                label="Game Length (mins):"
+                value={gameLength}
+                onChangeText={setGameLengthLocal}
+                placeholder="90"
+              />
 
-              <View style={styles.inputRow}>
-                <Text style={styles.inputLabel}>Timeouts per Half:</Text>
-                <TextInput
-                  keyboardType="numeric"
-                  style={styles.inputSmall}
-                  value={timeoutsCount}
-                  onChangeText={setTimeoutsCount}
-                  placeholder="2"
-                  placeholderTextColor="#999"
-                />
-              </View>
+              <InputNumber
+                label="Timeouts per Half:"
+                value={timeoutsCount}
+                onChangeText={setTimeoutsCount}
+                placeholder="2"
+              />
 
               <View style={styles.switchContainer}>
                 <Text style={styles.label}>Enable Floater Timeout</Text>
@@ -199,27 +185,7 @@ const styles = StyleSheet.create({
     color: 'black',
     backgroundColor: '#f9f9f9',
   },
-  inputRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    height: 45,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    backgroundColor: '#f9f9f9',
-  },
-  inputLabel: {
-    fontSize: 14,
-    color: '#333',
-  },
-  inputSmall: {
-    width: 50,
-    textAlign: 'right',
-    color: 'black',
-    fontSize: 16,
-  },
+
   switchContainer: {
     flexDirection: 'row',
     alignItems: 'center',

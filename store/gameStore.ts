@@ -13,7 +13,12 @@ interface GameState {
   floaterEnabled: boolean;
   gameHalf: number;
   gameTo: number;
+  baseGameTo: number;
   gameLength: number;
+
+  isSoftCap: boolean;
+  softCapPending: boolean;
+  softCapMins: number;
 
   // Actions
   setTeamNames: (team1: string, team2: string) => void;
@@ -25,6 +30,8 @@ interface GameState {
   toggleTimeout: (isTeam1: boolean, index: number) => void;
   resetTimeouts: (count: number) => void;
   resetGame: () => void;
+  triggerSoftCap: () => void;
+  setSoftCapPending: (pending: boolean) => void;
 }
 
 export const useGameStore = create<GameState>((set) => ({
@@ -39,12 +46,16 @@ export const useGameStore = create<GameState>((set) => ({
   floaterEnabled: true,
   gameHalf: 1,
   gameTo: 15,
+  baseGameTo: 15,
   gameLength: 90,
+  isSoftCap: false,
+  softCapPending: false,
+  softCapMins: 20,
 
   setTeamNames: (team1, team2) => set({ team1Name: team1, team2Name: team2 }),
   setFloaterEnabled: (enabled) => set({ floaterEnabled: enabled }),
 
-  setGameTo: (gameTo) => set({ gameTo }),
+  setGameTo: (gameTo) => set({ gameTo, baseGameTo: gameTo }),
   setGameLength: (minutes) => set({ gameLength: minutes }),
 
   incrementScore: (isTeam1) =>
@@ -66,6 +77,26 @@ export const useGameStore = create<GameState>((set) => ({
           gameHalf: 2,
           team1Timeouts: new Array(state.team1Timeouts.length).fill(true),
           team2Timeouts: new Array(state.team2Timeouts.length).fill(true),
+        };
+      }
+
+      // Soft Cap Logic
+      if (state.softCapPending && !state.isSoftCap) {
+        // Calculate new Game To based on the HIGHER score after this point
+        const currentHigherScore = Math.max(
+          isTeam1 ? newScore : state.team1Score,
+          !isTeam1 ? newScore : state.team2Score,
+        );
+
+        // If the game isn't already over (reached existing gameTo), apply cap
+        // If it JUST ended (reached gameTo), we arguably don't need soft cap, but rule says "add one to higher score"
+        // typically soft cap makes it win by 1 or 2. Rule: "Add one to higher score"
+
+        newState = {
+          ...newState,
+          isSoftCap: true,
+          softCapPending: false,
+          gameTo: Math.min(currentHigherScore + 1, state.gameTo),
         };
       }
 
@@ -128,5 +159,20 @@ export const useGameStore = create<GameState>((set) => ({
       team1Floater: true,
       team2Floater: true,
       gameHalf: 1,
+      isSoftCap: false,
+      softCapPending: false,
+      gameTo: state.baseGameTo,
     })),
+
+  triggerSoftCap: () =>
+    set((state) => {
+      if (state.isSoftCap) return {}; // Already active
+      const highestScore = Math.max(state.team1Score, state.team2Score);
+      return {
+        isSoftCap: true,
+        gameTo: highestScore + 1,
+      };
+    }),
+
+  setSoftCapPending: (pending) => set({ softCapPending: pending }),
 }));

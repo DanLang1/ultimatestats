@@ -2,7 +2,7 @@ import { useGameStore } from '@/store/gameStore';
 import { useEffect, useState } from 'react';
 
 export function useGameTimer() {
-  const { gameLength } = useGameStore();
+  const { gameLength, setSoftCapPending, softCapPending, softCapMins } = useGameStore();
 
   const [timeLeft, setTimeLeft] = useState(gameLength * 60);
   const [isActive, setIsActive] = useState(false);
@@ -30,6 +30,12 @@ export function useGameTimer() {
         const remaining = Math.max(0, Math.ceil((endTime - now) / 1000));
         setTimeLeft(remaining);
 
+        // Check for Softcap
+        const elapsedSeconds = gameLength * 60 - remaining;
+        if (!softCapPending && elapsedSeconds >= softCapMins * 60) {
+          setSoftCapPending(true);
+        }
+
         if (remaining === 0) {
           setIsActive(false);
           setEndTime(null);
@@ -37,7 +43,7 @@ export function useGameTimer() {
       }, 500);
     }
     return () => clearInterval(interval);
-  }, [isActive, endTime]);
+  }, [isActive, endTime, softCapPending, gameLength, softCapMins, setSoftCapPending]);
 
   const toggleTimer = () => {
     if (!isActive) {
