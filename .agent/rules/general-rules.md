@@ -6,3 +6,5 @@ trigger: always_on
 - If have to use a useEffect, abstract it into a hook
 - Refer to https://docs.expo.dev/llms.txt for expo documentation. Prefer this when possible over outside sources
 - Cite sources when creating summary if not coming from official docs (eg stackOverflow, medium, etc)
+- Do not use useCallback or useMemo, already using React Compiler
+- When updating anything regarding StatEntrySheet, also update stat-tracking.md

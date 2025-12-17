@@ -1,4 +1,5 @@
 import SettingsBar from '@/components/SettingsBar';
+import StatEntrySheet from '@/components/StatEntrySheet';
 import TeamScoreSection from '@/components/TeamScoreSection';
 import { ThemedView } from '@/components/ThemedView';
 import { palette } from '@/constants/theme';
@@ -88,6 +89,9 @@ export default function BasicScoreboard() {
         timeouts={team2Combined}
         onTimeoutUse={(index) => toggleTimeout(false, index)}
       />
+
+      {/* Stat Entry Modal */}
+      <StatEntrySheet />
     </ThemedView>
   );
 }

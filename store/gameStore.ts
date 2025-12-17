@@ -1,5 +1,14 @@
 import { create } from 'zustand';
 
+export interface StatRecord {
+  pointNumber: number;
+  team: 'team1' | 'team2';
+  goal: string | null;
+  assist: string | null;
+}
+
+export type StatTrackingMode = 'off' | 'team1' | 'both';
+
 interface GameState {
   // State
   team1Name: string;
@@ -20,6 +29,13 @@ interface GameState {
   softCapPending: boolean;
   softCapMins: number;
 
+  // Stat Tracking
+  statTrackingMode: StatTrackingMode;
+  team1Roster: string[];
+  team2Roster: string[];
+  statRecords: StatRecord[];
+  pendingStatEntry: { team: 'team1' | 'team2'; pointNumber: number } | null;
+
   // Actions
   setTeamNames: (team1: string, team2: string) => void;
   setFloaterEnabled: (enabled: boolean) => void;
@@ -32,6 +48,13 @@ interface GameState {
   resetGame: () => void;
   triggerSoftCap: () => void;
   setSoftCapPending: (pending: boolean) => void;
+
+  // Stat Tracking Actions
+  setStatTrackingMode: (mode: StatTrackingMode) => void;
+  addPlayer: (team: 'team1' | 'team2', name: string) => void;
+  addStatRecord: (record: Omit<StatRecord, 'pointNumber'>) => void;
+  clearPendingStatEntry: () => void;
+  clearRosters: () => void;
 }
 
 export const useGameStore = create<GameState>((set) => ({
@@ -51,6 +74,13 @@ export const useGameStore = create<GameState>((set) => ({
   isSoftCap: false,
   softCapPending: false,
   softCapMins: 20,
+
+  // Stat Tracking Initial State
+  statTrackingMode: 'off',
+  team1Roster: [],
+  team2Roster: [],
+  statRecords: [],
+  pendingStatEntry: null,
 
   setTeamNames: (team1, team2) => set({ team1Name: team1, team2Name: team2 }),
   setFloaterEnabled: (enabled) => set({ floaterEnabled: enabled }),
@@ -99,6 +129,17 @@ export const useGameStore = create<GameState>((set) => ({
           gameTo: Math.min(currentHigherScore + 1, state.gameTo),
         };
       }
+      // Stat Tracking: Set pending entry if tracking is enabled for this team
+      const team = isTeam1 ? 'team1' : 'team2';
+      const shouldTrack =
+        state.statTrackingMode === 'both' || (state.statTrackingMode === 'team1' && isTeam1);
+
+      if (shouldTrack) {
+        newState = {
+          ...newState,
+          pendingStatEntry: { team, pointNumber: newScore },
+        };
+      }
 
       return newState;
     }),
@@ -107,7 +148,21 @@ export const useGameStore = create<GameState>((set) => ({
     set((state) => {
       const targetScore = isTeam1 ? state.team1Score : state.team2Score;
       if (targetScore <= 0) return {};
-      return isTeam1 ? { team1Score: state.team1Score - 1 } : { team2Score: state.team2Score - 1 };
+
+      const team = isTeam1 ? 'team1' : 'team2';
+      // Remove the last stat record for this team (if any)
+      const teamRecords = state.statRecords.filter((r) => r.team === team);
+      let newStatRecords = state.statRecords;
+      if (teamRecords.length > 0) {
+        const lastRecord = teamRecords[teamRecords.length - 1];
+        newStatRecords = state.statRecords.filter((r) => r !== lastRecord);
+      }
+
+      return {
+        ...(isTeam1 ? { team1Score: state.team1Score - 1 } : { team2Score: state.team2Score - 1 }),
+        statRecords: newStatRecords,
+        pendingStatEntry: null, // Clear any pending entry
+      };
     }),
 
   toggleTimeout: (isTeam1, index) =>
@@ -162,6 +217,11 @@ export const useGameStore = create<GameState>((set) => ({
       isSoftCap: false,
       softCapPending: false,
       gameTo: state.baseGameTo,
+      // Reset stat tracking for new game
+      statRecords: [],
+      pendingStatEntry: null,
+      team1Roster: [],
+      team2Roster: [],
     })),
 
   triggerSoftCap: () =>
@@ -175,4 +235,32 @@ export const useGameStore = create<GameState>((set) => ({
     }),
 
   setSoftCapPending: (pending) => set({ softCapPending: pending }),
+
+  // Stat Tracking Actions
+  setStatTrackingMode: (mode) => set({ statTrackingMode: mode }),
+
+  addPlayer: (team, name) =>
+    set((state) => {
+      const trimmedName = name.trim();
+      if (!trimmedName) return {};
+      const roster = team === 'team1' ? state.team1Roster : state.team2Roster;
+      if (roster.includes(trimmedName)) return {}; // Already exists
+      return team === 'team1'
+        ? { team1Roster: [...state.team1Roster, trimmedName] }
+        : { team2Roster: [...state.team2Roster, trimmedName] };
+    }),
+
+  addStatRecord: (record) =>
+    set((state) => {
+      const pointNumber = state.statRecords.filter((r) => r.team === record.team).length + 1;
+      const newRecord: StatRecord = { ...record, pointNumber };
+      return {
+        statRecords: [...state.statRecords, newRecord],
+        pendingStatEntry: null,
+      };
+    }),
+
+  clearPendingStatEntry: () => set({ pendingStatEntry: null }),
+
+  clearRosters: () => set({ team1Roster: [], team2Roster: [], statRecords: [] }),
 }));

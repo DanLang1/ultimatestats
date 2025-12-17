@@ -1,10 +1,19 @@
 import { ThemedView } from '@/components/ThemedView';
 import { InputNumber } from '@/components/ui/InputNumber';
 import { palette } from '@/constants/theme';
-import { useGameStore } from '@/store/gameStore';
+import { StatTrackingMode, useGameStore } from '@/store/gameStore';
 import { router, Stack } from 'expo-router';
 import React, { useState } from 'react';
-import { Button, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
+import {
+  Button,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 
 export default function SettingsScreen() {
   const {
@@ -20,6 +29,11 @@ export default function SettingsScreen() {
     gameLength: gameLengthStore,
     setGameLength,
     resetGame,
+    statTrackingMode: statTrackingModeStore,
+    setStatTrackingMode,
+    team1Roster,
+    team2Roster,
+    clearRosters,
   } = useGameStore();
 
   const [team1, setTeam1] = useState(team1Name);
@@ -28,12 +42,17 @@ export default function SettingsScreen() {
   const [timeoutsCount, setTimeoutsCount] = useState(team1Timeouts.length.toString());
   const [floaterEnabled, setFloaterEnabledLocal] = useState(floaterEnabledStore);
   const [gameLength, setGameLengthLocal] = useState((gameLengthStore || 90).toString());
+  const [statTrackingMode, setStatTrackingModeLocal] =
+    useState<StatTrackingMode>(statTrackingModeStore);
+
+  const hasRoster = team1Roster.length > 0 || team2Roster.length > 0;
 
   const handleSave = () => {
     setTeamNames(team1, team2);
     setGameToStore(Number(gameTo) || 15);
     setFloaterEnabled(floaterEnabled);
     setGameLength(Number(gameLength) || 90);
+    setStatTrackingMode(statTrackingMode);
 
     const newCount = parseInt(timeoutsCount, 10);
     const currentCount = team1Timeouts.length;
@@ -110,6 +129,34 @@ export default function SettingsScreen() {
                   value={floaterEnabled}
                 />
               </View>
+
+              {/* Stat Tracking Mode */}
+              <Text style={[styles.sectionTitle, { marginTop: 15 }]}>Stat Tracking</Text>
+              <View style={styles.segmentedControl}>
+                {(['off', 'team1', 'both'] as StatTrackingMode[]).map((mode) => (
+                  <Pressable
+                    key={mode}
+                    style={[
+                      styles.segmentButton,
+                      statTrackingMode === mode && styles.segmentButtonActive,
+                    ]}
+                    onPress={() => setStatTrackingModeLocal(mode)}>
+                    <Text
+                      style={[
+                        styles.segmentText,
+                        statTrackingMode === mode && styles.segmentTextActive,
+                      ]}>
+                      {mode === 'off' ? 'Off' : mode === 'team1' ? 'My Team' : 'Both'}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+
+              {hasRoster && (
+                <Pressable style={styles.clearRosterButton} onPress={clearRosters}>
+                  <Text style={styles.clearRosterText}>Clear Player Rosters</Text>
+                </Pressable>
+              )}
             </View>
           </View>
 
@@ -205,5 +252,41 @@ const styles = StyleSheet.create({
     paddingTop: 10, // Reduced from 20
     borderTopWidth: 1,
     borderTopColor: '#eee',
+  },
+  segmentedControl: {
+    flexDirection: 'row',
+    borderRadius: 8,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#ddd',
+  },
+  segmentButton: {
+    flex: 1,
+    paddingVertical: 10,
+    alignItems: 'center',
+    backgroundColor: '#f9f9f9',
+  },
+  segmentButtonActive: {
+    backgroundColor: palette.primary,
+  },
+  segmentText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#666',
+  },
+  segmentTextActive: {
+    color: 'white',
+  },
+  clearRosterButton: {
+    marginTop: 10,
+    padding: 10,
+    alignItems: 'center',
+    borderRadius: 8,
+    backgroundColor: '#fee',
+  },
+  clearRosterText: {
+    color: '#c00',
+    fontSize: 14,
+    fontWeight: '500',
   },
 });
