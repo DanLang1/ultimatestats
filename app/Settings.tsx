@@ -26,8 +26,10 @@ export default function SettingsScreen() {
     resetTimeouts,
     floaterEnabled: floaterEnabledStore,
     setFloaterEnabled,
-    gameLength: gameLengthStore,
     setGameLength,
+    gameLength: gameLengthStore,
+    softCapMins: softCapMinsStore,
+    setSoftCapMins,
     resetGame,
     statTrackingMode: statTrackingModeStore,
     setStatTrackingMode,
@@ -42,16 +44,23 @@ export default function SettingsScreen() {
   const [timeoutsCount, setTimeoutsCount] = useState(team1Timeouts.length.toString());
   const [floaterEnabled, setFloaterEnabledLocal] = useState(floaterEnabledStore);
   const [gameLength, setGameLengthLocal] = useState((gameLengthStore || 90).toString());
+  const [softCapTime, setSoftCapTimeLocal] = useState(
+    ((gameLengthStore || 90) - (softCapMinsStore || 20)).toString(),
+  );
   const [statTrackingMode, setStatTrackingModeLocal] =
     useState<StatTrackingMode>(statTrackingModeStore);
 
   const hasRoster = team1Roster.length > 0 || team2Roster.length > 0;
 
   const handleSave = () => {
+    const gLength = Number(gameLength) || 90;
+    const sCapTime = Number(softCapTime) || gLength - 20;
+
     setTeamNames(team1, team2);
     setGameToStore(Number(gameTo) || 15);
     setFloaterEnabled(floaterEnabled);
-    setGameLength(Number(gameLength) || 90);
+    setGameLength(gLength);
+    setSoftCapMins(Math.max(0, gLength - sCapTime));
     setStatTrackingMode(statTrackingMode);
 
     const newCount = parseInt(timeoutsCount, 10);
@@ -111,6 +120,13 @@ export default function SettingsScreen() {
                 value={gameLength}
                 onChangeText={setGameLengthLocal}
                 placeholder="90"
+              />
+
+              <InputNumber
+                label="Soft Cap (mins):"
+                value={softCapTime}
+                onChangeText={setSoftCapTimeLocal}
+                placeholder="70"
               />
 
               <InputNumber

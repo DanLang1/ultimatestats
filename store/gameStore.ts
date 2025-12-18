@@ -48,6 +48,7 @@ interface GameState {
   resetGame: () => void;
   triggerSoftCap: () => void;
   setSoftCapPending: (pending: boolean) => void;
+  setSoftCapMins: (minutes: number) => void;
 
   // Stat Tracking Actions
   setStatTrackingMode: (mode: StatTrackingMode) => void;
@@ -235,6 +236,8 @@ export const useGameStore = create<GameState>((set) => ({
     }),
 
   setSoftCapPending: (pending) => set({ softCapPending: pending }),
+
+  setSoftCapMins: (minutes) => set({ softCapMins: minutes }),
 
   // Stat Tracking Actions
   setStatTrackingMode: (mode) => set({ statTrackingMode: mode }),
