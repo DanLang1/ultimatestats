@@ -173,6 +173,12 @@ export default function SettingsScreen() {
                   <Text style={styles.clearRosterText}>Clear Player Rosters</Text>
                 </Pressable>
               )}
+
+              {statTrackingMode !== 'off' && (
+                <Pressable style={styles.viewStatsButton} onPress={() => router.push('/ViewStats')}>
+                  <Text style={styles.viewStatsText}>View Stats</Text>
+                </Pressable>
+              )}
             </View>
           </View>
 
@@ -302,6 +308,20 @@ const styles = StyleSheet.create({
   },
   clearRosterText: {
     color: '#c00',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  viewStatsButton: {
+    marginTop: 10,
+    padding: 10,
+    alignItems: 'center',
+    borderRadius: 8,
+    backgroundColor: '#eefeff',
+    borderWidth: 1,
+    borderColor: palette.primary,
+  },
+  viewStatsText: {
+    color: palette.primary,
     fontSize: 14,
     fontWeight: '500',
   },

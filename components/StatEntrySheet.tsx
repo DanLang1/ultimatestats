@@ -1,9 +1,8 @@
 import { PlayerChip } from '@/components/ui/PlayerChip';
 import { palette } from '@/constants/theme';
 import { useGameStore } from '@/store/gameStore';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useState } from 'react';
 import {
-  Animated,
   Keyboard,
   Modal,
   Pressable,
@@ -13,8 +12,120 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import Animated, { FadeIn, LinearTransition, SlideInDown } from 'react-native-reanimated';
 
 type EntryStep = 'goal' | 'assist';
+
+interface StatEntryInnerProps {
+  team: 'team1' | 'team2';
+  teamName: string;
+  roster: string[];
+  onSkip: () => void;
+  onComplete: (goal: string | null, assist: string | null) => void;
+  onAddPlayer: (name: string) => void;
+}
+
+function StatEntryInner({
+  team,
+  teamName,
+  roster,
+  onSkip,
+  onComplete,
+  onAddPlayer,
+}: StatEntryInnerProps) {
+  const [step, setStep] = useState<EntryStep>('goal');
+  const [selectedGoal, setSelectedGoal] = useState<string | null>(null);
+  const [newPlayerName, setNewPlayerName] = useState('');
+
+  const handlePlayerSelect = (playerName: string) => {
+    if (step === 'goal') {
+      setSelectedGoal(playerName);
+      setStep('assist');
+    } else {
+      onComplete(selectedGoal, playerName);
+    }
+  };
+
+  const handleAddPlayer = () => {
+    const trimmed = newPlayerName.trim();
+    if (!trimmed) return;
+
+    onAddPlayer(trimmed);
+    setNewPlayerName('');
+    Keyboard.dismiss();
+
+    // Auto-select the new player
+    handlePlayerSelect(trimmed);
+  };
+
+  return (
+    <Animated.View
+      entering={SlideInDown.duration(400)}
+      style={styles.sheet}
+      onStartShouldSetResponder={() => true}>
+      <Pressable onPress={() => {}} style={styles.sheetContent}>
+        {/* Header */}
+        <View style={styles.header}>
+          <Text style={styles.teamName}>{teamName}</Text>
+          <Animated.Text key={step} entering={FadeIn.duration(300)} style={styles.stepLabel}>
+            {step === 'goal' ? 'Who scored?' : 'Who threw the assist?'}
+          </Animated.Text>
+        </View>
+
+        {/* Player Chips */}
+        <Animated.View layout={LinearTransition}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.chipsContainer}
+            keyboardShouldPersistTaps="handled">
+            {roster.map((player) => (
+              <PlayerChip
+                key={player}
+                name={player}
+                selected={step === 'goal' ? false : player === selectedGoal}
+                onPress={() => handlePlayerSelect(player)}
+              />
+            ))}
+          </ScrollView>
+        </Animated.View>
+
+        {/* Add New Player */}
+        <View style={styles.addPlayerRow}>
+          <TextInput
+            style={styles.input}
+            value={newPlayerName}
+            onChangeText={setNewPlayerName}
+            placeholder="Add new player..."
+            placeholderTextColor="#999"
+            onSubmitEditing={handleAddPlayer}
+            returnKeyType="done"
+          />
+          <Pressable
+            style={[styles.addButton, !newPlayerName.trim() && styles.addButtonDisabled]}
+            onPress={handleAddPlayer}
+            disabled={!newPlayerName.trim()}>
+            <Text style={styles.addButtonText}>Add</Text>
+          </Pressable>
+        </View>
+
+        {/* Footer Actions */}
+        <Animated.View layout={LinearTransition} style={styles.footer}>
+          <Pressable style={styles.skipButton} onPress={onSkip}>
+            <Text style={styles.skipText}>Skip</Text>
+          </Pressable>
+          {step === 'goal' ? null : (
+            <Animated.View entering={FadeIn}>
+              <Pressable style={styles.skipButton} onPress={() => setStep('goal')}>
+                <Text style={styles.skipText}>Back</Text>
+              </Pressable>
+            </Animated.View>
+          )}
+        </Animated.View>
+      </Pressable>
+    </Animated.View>
+  );
+}
 
 export default function StatEntrySheet() {
   const {
@@ -27,32 +138,10 @@ export default function StatEntrySheet() {
     addStatRecord,
   } = useGameStore();
 
-  const [step, setStep] = useState<EntryStep>('goal');
-  const [selectedGoal, setSelectedGoal] = useState<string | null>(null);
-  const [newPlayerName, setNewPlayerName] = useState('');
-  const slideAnim = useRef(new Animated.Value(300)).current;
-
   const visible = pendingStatEntry !== null;
   const team = pendingStatEntry?.team ?? 'team1';
   const teamName = team === 'team1' ? team1Name : team2Name;
   const roster = team === 'team1' ? team1Roster : team2Roster;
-
-  // Reset state when sheet opens
-  useEffect(() => {
-    if (visible) {
-      setStep('goal');
-      setSelectedGoal(null);
-      setNewPlayerName('');
-      Animated.spring(slideAnim, {
-        toValue: 0,
-        useNativeDriver: true,
-        tension: 65,
-        friction: 11,
-      }).start();
-    } else {
-      slideAnim.setValue(300);
-    }
-  }, [visible, slideAnim]);
 
   const handleSkip = () => {
     addStatRecord({
@@ -62,30 +151,16 @@ export default function StatEntrySheet() {
     });
   };
 
-  const handlePlayerSelect = (playerName: string) => {
-    if (step === 'goal') {
-      setSelectedGoal(playerName);
-      setStep('assist');
-    } else {
-      // Assist selection - complete the record
-      addStatRecord({
-        team,
-        goal: selectedGoal,
-        assist: playerName,
-      });
-    }
+  const handleComplete = (goal: string | null, assist: string | null) => {
+    addStatRecord({
+      team,
+      goal,
+      assist,
+    });
   };
 
-  const handleAddPlayer = () => {
-    const trimmed = newPlayerName.trim();
-    if (!trimmed) return;
-
-    addPlayer(team, trimmed);
-    setNewPlayerName('');
-    Keyboard.dismiss();
-
-    // Auto-select the new player
-    handlePlayerSelect(trimmed);
+  const handleAddPlayer = (name: string) => {
+    addPlayer(team, name);
   };
 
   if (!visible) return null;
@@ -93,61 +168,15 @@ export default function StatEntrySheet() {
   return (
     <Modal transparent visible={visible} animationType="none" onRequestClose={handleSkip}>
       <Pressable style={styles.overlay} onPress={handleSkip}>
-        <Animated.View
-          style={[styles.sheet, { transform: [{ translateY: slideAnim }] }]}
-          onStartShouldSetResponder={() => true}>
-          <Pressable onPress={() => {}} style={styles.sheetContent}>
-            {/* Header */}
-            <View style={styles.header}>
-              <Text style={styles.teamName}>{teamName}</Text>
-              <Text style={styles.stepLabel}>
-                {step === 'goal' ? 'Who scored?' : 'Who threw the assist?'}
-              </Text>
-            </View>
-
-            {/* Player Chips */}
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.chipsContainer}
-              keyboardShouldPersistTaps="handled">
-              {roster.map((player) => (
-                <PlayerChip
-                  key={player}
-                  name={player}
-                  selected={step === 'goal' ? false : player === selectedGoal}
-                  onPress={() => handlePlayerSelect(player)}
-                />
-              ))}
-            </ScrollView>
-
-            {/* Add New Player */}
-            <View style={styles.addPlayerRow}>
-              <TextInput
-                style={styles.input}
-                value={newPlayerName}
-                onChangeText={setNewPlayerName}
-                placeholder="Add new player..."
-                placeholderTextColor="#999"
-                onSubmitEditing={handleAddPlayer}
-                returnKeyType="done"
-              />
-              <Pressable
-                style={[styles.addButton, !newPlayerName.trim() && styles.addButtonDisabled]}
-                onPress={handleAddPlayer}
-                disabled={!newPlayerName.trim()}>
-                <Text style={styles.addButtonText}>Add</Text>
-              </Pressable>
-            </View>
-
-            {/* Footer Actions */}
-            <View style={styles.footer}>
-              <Pressable style={styles.skipButton} onPress={handleSkip}>
-                <Text style={styles.skipText}>Skip</Text>
-              </Pressable>
-            </View>
-          </Pressable>
-        </Animated.View>
+        <StatEntryInner
+          key={`${team}-${pendingStatEntry.pointNumber}`}
+          team={team}
+          teamName={teamName}
+          roster={roster}
+          onSkip={handleSkip}
+          onComplete={handleComplete}
+          onAddPlayer={handleAddPlayer}
+        />
       </Pressable>
     </Modal>
   );

@@ -8,3 +8,6 @@ trigger: always_on
 - Cite sources when creating summary if not coming from official docs (eg stackOverflow, medium, etc)
 - Do not use useCallback or useMemo, already using React Compiler
 - When updating anything regarding StatEntrySheet, also update stat-tracking.md
+- When updating anything regarding ViewStats, also update view-stats.md
+- For quick documentation reference, see the docs folder
+- Never run rm command without explicit user permission

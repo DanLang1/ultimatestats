@@ -60,8 +60,10 @@ sequenceDiagram
 ### `StatEntrySheet.tsx`
 
 - Bottom sheet modal triggered by `pendingStatEntry !== null`
+- Uses a `key` prop based on the point ID to automatically reset local state between entries
 - Two-step flow: Goal → Assist
 - User must explicitly skip or complete entry
+- If user is on assist step, they can go back to goal step
 - Shows roster as tappable chips
 - Inline "Add new player" input
 
@@ -76,6 +78,7 @@ In Settings screen (`app/Settings.tsx`):
 
 - **Stat Tracking Mode**: Segmented control with Off / My Team / Both
 - **Clear Player Rosters**: Button to reset roster (appears when roster has players)
+- **View Stats**: access the [View Stats](view-stats.md) screen to see player breakdowns and export data
 
 ## Decrement Behavior
 

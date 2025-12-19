@@ -77,7 +77,7 @@ export const useGameStore = create<GameState>((set) => ({
   softCapMins: 20,
 
   // Stat Tracking Initial State
-  statTrackingMode: 'off',
+  statTrackingMode: 'team1',
   team1Roster: [],
   team2Roster: [],
   statRecords: [],
