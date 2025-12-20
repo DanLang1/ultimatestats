@@ -59,13 +59,19 @@ sequenceDiagram
 
 ### `StatEntrySheet.tsx`
 
-- Bottom sheet modal triggered by `pendingStatEntry !== null`
-- Uses a `key` prop based on the point ID to automatically reset local state between entries
-- Two-step flow: Goal → Assist
-- User must explicitly skip or complete entry
-- If user is on assist step, they can go back to goal step
-- Shows roster as tappable chips
-- Inline "Add new player" input
+- Bottom sheet modal optimized for permanent landscape orientation
+- Orchestrates the entry flow with ultra-compact layout
+- Uses sub-components from `components/stat-entry/`
+
+### `components/stat-entry/StatEntryHeader.tsx`
+
+- Displays team name and current step label
+- Shows professional "GOAL" badge with player name during assist step
+
+### `components/stat-entry/StatEntryRoster.tsx`
+
+- Displays roster as a scrollable vertical grid of `PlayerChip`s
+- Compact vertical sizing specifically for landscape (maxHeight: 120px)
 
 ### `PlayerChip.tsx`
 

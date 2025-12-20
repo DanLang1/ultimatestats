@@ -1,23 +1,14 @@
-import { PlayerChip } from '@/components/ui/PlayerChip';
 import { palette } from '@/constants/theme';
 import { useGameStore } from '@/store/gameStore';
 import React, { useState } from 'react';
-import {
-  Keyboard,
-  Modal,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
+import { Keyboard, Modal, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import Animated, { FadeIn, LinearTransition, SlideInDown } from 'react-native-reanimated';
+import { StatEntryHeader } from './stat-entry/StatEntryHeader';
+import { StatEntryRoster } from './stat-entry/StatEntryRoster';
 
 type EntryStep = 'goal' | 'assist';
 
 interface StatEntryInnerProps {
-  team: 'team1' | 'team2';
   teamName: string;
   roster: string[];
   onSkip: () => void;
@@ -26,7 +17,6 @@ interface StatEntryInnerProps {
 }
 
 function StatEntryInner({
-  team,
   teamName,
   roster,
   onSkip,
@@ -41,6 +31,7 @@ function StatEntryInner({
     if (step === 'goal') {
       setSelectedGoal(playerName);
       setStep('assist');
+      setNewPlayerName(''); // Clear filter after selection
     } else {
       onComplete(selectedGoal, playerName);
     }
@@ -64,33 +55,16 @@ function StatEntryInner({
       style={styles.sheet}
       onStartShouldSetResponder={() => true}>
       <Pressable onPress={() => {}} style={styles.sheetContent}>
-        {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.teamName}>{teamName}</Text>
-          <Animated.Text key={step} entering={FadeIn.duration(300)} style={styles.stepLabel}>
-            {step === 'goal' ? 'Who scored?' : 'Who threw the assist?'}
-          </Animated.Text>
-        </View>
+        <StatEntryHeader teamName={teamName} step={step} selectedGoal={selectedGoal} />
 
-        {/* Player Chips */}
-        <Animated.View layout={LinearTransition}>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.chipsContainer}
-            keyboardShouldPersistTaps="handled">
-            {roster.map((player) => (
-              <PlayerChip
-                key={player}
-                name={player}
-                selected={step === 'goal' ? false : player === selectedGoal}
-                onPress={() => handlePlayerSelect(player)}
-              />
-            ))}
-          </ScrollView>
-        </Animated.View>
+        <StatEntryRoster
+          roster={roster}
+          step={step}
+          selectedGoal={selectedGoal}
+          onSelect={handlePlayerSelect}
+        />
 
-        {/* Add New Player */}
+        {/* Add New Player Row */}
         <View style={styles.addPlayerRow}>
           <TextInput
             style={styles.input}
@@ -116,7 +90,12 @@ function StatEntryInner({
           </Pressable>
           {step === 'goal' ? null : (
             <Animated.View entering={FadeIn}>
-              <Pressable style={styles.skipButton} onPress={() => setStep('goal')}>
+              <Pressable
+                style={styles.skipButton}
+                onPress={() => {
+                  setStep('goal');
+                  setSelectedGoal(null);
+                }}>
                 <Text style={styles.skipText}>Back</Text>
               </Pressable>
             </Animated.View>
@@ -139,13 +118,12 @@ export default function StatEntrySheet() {
   } = useGameStore();
 
   const visible = pendingStatEntry !== null;
-  const team = pendingStatEntry?.team ?? 'team1';
-  const teamName = team === 'team1' ? team1Name : team2Name;
-  const roster = team === 'team1' ? team1Roster : team2Roster;
+  const teamName = pendingStatEntry?.team === 'team1' ? team1Name : team2Name;
+  const roster = pendingStatEntry?.team === 'team1' ? team1Roster : team2Roster;
 
   const handleSkip = () => {
     addStatRecord({
-      team,
+      team: pendingStatEntry?.team ?? 'team1',
       goal: null,
       assist: null,
     });
@@ -153,14 +131,14 @@ export default function StatEntrySheet() {
 
   const handleComplete = (goal: string | null, assist: string | null) => {
     addStatRecord({
-      team,
+      team: pendingStatEntry?.team ?? 'team1',
       goal,
       assist,
     });
   };
 
   const handleAddPlayer = (name: string) => {
-    addPlayer(team, name);
+    addPlayer(pendingStatEntry?.team ?? 'team1', name);
   };
 
   if (!visible) return null;
@@ -169,8 +147,7 @@ export default function StatEntrySheet() {
     <Modal transparent visible={visible} animationType="none" onRequestClose={handleSkip}>
       <Pressable style={styles.overlay} onPress={handleSkip}>
         <StatEntryInner
-          key={`${team}-${pendingStatEntry.pointNumber}`}
-          team={team}
+          key={`${teamName}-${pendingStatEntry.pointNumber}`}
           teamName={teamName}
           roster={roster}
           onSkip={handleSkip}
@@ -188,11 +165,14 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.4)',
     justifyContent: 'flex-end',
   },
+  keyboardView: {
+    justifyContent: 'flex-end',
+  },
   sheet: {
     backgroundColor: 'white',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    paddingBottom: 40,
+    paddingBottom: 10,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: -4 },
     shadowOpacity: 0.15,
@@ -200,32 +180,12 @@ const styles = StyleSheet.create({
     elevation: 10,
   },
   sheetContent: {
-    padding: 20,
-  },
-  header: {
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  teamName: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 4,
-  },
-  stepLabel: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  chipsContainer: {
-    flexDirection: 'row',
-    gap: 10,
-    paddingVertical: 10,
-    minHeight: 60,
+    padding: 12,
   },
   addPlayerRow: {
     flexDirection: 'row',
     gap: 10,
-    marginTop: 15,
+    marginTop: 8,
   },
   input: {
     flex: 1,
@@ -257,7 +217,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     gap: 15,
-    marginTop: 20,
+    marginTop: 10,
   },
   skipButton: {
     paddingVertical: 12,

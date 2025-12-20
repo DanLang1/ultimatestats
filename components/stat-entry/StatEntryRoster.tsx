@@ -1,0 +1,59 @@
+import { PlayerChip } from '@/components/ui/PlayerChip';
+import React from 'react';
+import { ScrollView, StyleSheet, View } from 'react-native';
+
+type EntryStep = 'goal' | 'assist';
+
+interface StatEntryRosterProps {
+  roster: string[];
+  step: EntryStep;
+  selectedGoal: string | null;
+  onSelect: (name: string) => void;
+  maxHeight?: number;
+}
+
+export function StatEntryRoster({
+  roster,
+  step,
+  selectedGoal,
+  onSelect,
+  maxHeight = 120,
+}: StatEntryRosterProps) {
+  return (
+    <View style={[styles.scrollWrapper, { maxHeight }]}>
+      <ScrollView
+        showsVerticalScrollIndicator={true}
+        contentContainerStyle={styles.chipsContainer}
+        keyboardShouldPersistTaps="handled">
+        {roster.map((player) => (
+          <PlayerChip
+            key={player}
+            name={player}
+            selected={step === 'goal' ? false : player === selectedGoal}
+            onPress={() => onSelect(player)}
+          />
+        ))}
+      </ScrollView>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  scrollWrapper: {
+    width: '100%',
+  },
+  chipsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    paddingVertical: 10,
+  },
+  emptyText: {
+    fontSize: 14,
+    color: '#999',
+    fontStyle: 'italic',
+    width: '100%',
+    textAlign: 'center',
+    marginTop: 10,
+  },
+});
