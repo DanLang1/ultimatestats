@@ -140,7 +140,10 @@ export default function SettingsScreen() {
 
           {/* Right Column: Rules */}
           <View style={styles.column}>
-            <Text style={styles.sectionTitle}>Rules</Text>
+            <View style={styles.sectionHeaderRow}>
+              <Text style={styles.sectionTitle}>Rules</Text>
+              {gameActive && <Text style={styles.helperText}>* Cannot edit during game</Text>}
+            </View>
             <InputNumber
               label="Game To:"
               value={gameTo}
@@ -195,16 +198,15 @@ export default function SettingsScreen() {
                 disabled={gameActive}
               />
             </View>
-            {gameActive && <Text style={styles.helperText}>* Cannot edit during game</Text>}
           </View>
         </View>
-
-        <View style={styles.buttons}>
-          <Button title="Cancel" onPress={() => router.back()} color="red" />
-          <Button title="New Game" onPress={handleNewGame} color="orange" />
-          <Button title="Save" onPress={handleSave} />
-        </View>
       </ScrollView>
+
+      <View style={styles.buttons}>
+        <Button title="Cancel" onPress={() => router.back()} color="red" />
+        <Button title="New Game" onPress={handleNewGame} color="orange" />
+        <Button title="Save" onPress={handleSave} />
+      </View>
     </ThemedView>
   );
 }
@@ -238,8 +240,13 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
-    marginBottom: 5,
     color: '#666',
+  },
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: 8,
+    marginBottom: 5,
   },
   input: {
     height: 45,
@@ -277,10 +284,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     width: '100%',
-    marginTop: 10, // Reduced from 30
-    paddingTop: 10, // Reduced from 20
+    paddingTop: 15,
+    paddingBottom: 24,
+    paddingHorizontal: 24,
     borderTopWidth: 1,
     borderTopColor: '#eee',
+    backgroundColor: 'white',
   },
   segmentedControl: {
     flexDirection: 'row',
@@ -321,8 +330,5 @@ const styles = StyleSheet.create({
   helperText: {
     fontSize: 12,
     color: '#999',
-    marginTop: -5,
-    marginBottom: 5,
-    marginLeft: 5,
   },
 });
