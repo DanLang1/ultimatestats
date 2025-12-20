@@ -75,68 +75,66 @@ export default function ViewStatsScreen() {
     <ThemedView style={styles.container}>
       <Stack.Screen options={{ headerShown: false }} />
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.card}>
-          <Text style={styles.headerTitle}>Game Stats</Text>
+        <Text style={styles.headerTitle}>Game Stats</Text>
 
-          {/* Team Tabs */}
-          <View style={styles.tabContainer}>
-            <Pressable
-              style={[styles.tab, activeTab === 'team1' && styles.tabActive]}
-              onPress={() => setActiveTab('team1')}>
-              <Text style={[styles.tabText, activeTab === 'team1' && styles.tabTextActive]}>
-                {team1Name}
-              </Text>
-            </Pressable>
-            <Pressable
-              style={[styles.tab, activeTab === 'team2' && styles.tabActive]}
-              onPress={() => setActiveTab('team2')}>
-              <Text style={[styles.tabText, activeTab === 'team2' && styles.tabTextActive]}>
-                {team2Name}
-              </Text>
-            </Pressable>
-          </View>
-
-          {/* Summary */}
-          <View style={styles.summary}>
-            <Text style={styles.summaryText}>
-              {teamName}: {teamRecords.length} point{teamRecords.length !== 1 ? 's' : ''}
+        {/* Team Tabs */}
+        <View style={styles.tabContainer}>
+          <Pressable
+            style={[styles.tab, activeTab === 'team1' && styles.tabActive]}
+            onPress={() => setActiveTab('team1')}>
+            <Text style={[styles.tabText, activeTab === 'team1' && styles.tabTextActive]}>
+              {team1Name}
             </Text>
-          </View>
+          </Pressable>
+          <Pressable
+            style={[styles.tab, activeTab === 'team2' && styles.tabActive]}
+            onPress={() => setActiveTab('team2')}>
+            <Text style={[styles.tabText, activeTab === 'team2' && styles.tabTextActive]}>
+              {team2Name}
+            </Text>
+          </Pressable>
+        </View>
 
-          {/* Player Stats List */}
-          {playerStats.length === 0 ? (
-            <View style={styles.emptyState}>
-              <Text style={styles.emptyText}>No stats recorded yet</Text>
-            </View>
-          ) : (
-            <View style={styles.statsList}>
-              {playerStats.map((player) => (
-                <View key={player.name} style={styles.playerCard}>
-                  <Text style={styles.playerName}>{player.name}</Text>
-                  <View style={styles.statBadges}>
-                    <View style={styles.badge}>
-                      <Text style={styles.badgeNumber}>{player.goals}</Text>
-                      <Text style={styles.badgeLabel}>Goals</Text>
-                    </View>
-                    <View style={styles.badge}>
-                      <Text style={styles.badgeNumber}>{player.assists}</Text>
-                      <Text style={styles.badgeLabel}>Assists</Text>
-                    </View>
+        {/* Summary */}
+        <View style={styles.summary}>
+          <Text style={styles.summaryText}>
+            {teamName}: {teamRecords.length} point{teamRecords.length !== 1 ? 's' : ''}
+          </Text>
+        </View>
+
+        {/* Player Stats List */}
+        {playerStats.length === 0 ? (
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyText}>No stats recorded yet</Text>
+          </View>
+        ) : (
+          <View style={styles.statsList}>
+            {playerStats.map((player) => (
+              <View key={player.name} style={styles.playerCard}>
+                <Text style={styles.playerName}>{player.name}</Text>
+                <View style={styles.statBadges}>
+                  <View style={styles.badge}>
+                    <Text style={styles.badgeNumber}>{player.goals}</Text>
+                    <Text style={styles.badgeLabel}>Goals</Text>
+                  </View>
+                  <View style={styles.badge}>
+                    <Text style={styles.badgeNumber}>{player.assists}</Text>
+                    <Text style={styles.badgeLabel}>Assists</Text>
                   </View>
                 </View>
-              ))}
-            </View>
-          )}
-
-          {/* Actions */}
-          <View style={styles.actions}>
-            <Pressable style={styles.backButton} onPress={() => router.back()}>
-              <Text style={styles.backButtonText}>Back</Text>
-            </Pressable>
-            <Pressable style={styles.exportButton} onPress={handleExport}>
-              <Text style={styles.exportButtonText}>Export CSV</Text>
-            </Pressable>
+              </View>
+            ))}
           </View>
+        )}
+
+        {/* Actions */}
+        <View style={styles.actions}>
+          <Pressable style={styles.backButton} onPress={() => router.back()}>
+            <Text style={styles.backButtonText}>Back</Text>
+          </Pressable>
+          <Pressable style={styles.exportButton} onPress={handleExport}>
+            <Text style={styles.exportButtonText}>Export CSV</Text>
+          </Pressable>
         </View>
       </ScrollView>
     </ThemedView>
@@ -146,22 +144,10 @@ export default function ViewStatsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: 'white',
   },
   scrollContent: {
-    flexGrow: 1,
-    padding: 20,
-    justifyContent: 'center',
-  },
-  card: {
-    width: '100%',
-    backgroundColor: 'white',
-    borderRadius: 20,
-    padding: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
+    padding: 24,
   },
   headerTitle: {
     fontSize: 24,

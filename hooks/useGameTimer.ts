@@ -2,20 +2,25 @@ import { useGameStore } from '@/store/gameStore';
 import { useEffect, useState } from 'react';
 
 export function useGameTimer() {
-  const { gameLength, setSoftCapPending, softCapPending, softCapMins } = useGameStore();
+  const {
+    gameLength,
+    setSoftCapPending,
+    softCapPending,
+    softCapMins,
+    timerIsActive: isActive,
+    setTimerActive: setIsActive,
+    timerEndTime: endTime,
+    setTimerEndTime: setEndTime,
+    timerTimeLeft: timeLeft,
+    setTimerTimeLeft: setTimeLeft,
+  } = useGameStore();
 
-  const [timeLeft, setTimeLeft] = useState(gameLength * 60);
-  const [isActive, setIsActive] = useState(false);
-  const [endTime, setEndTime] = useState<number | null>(null);
   const [prevGameLength, setPrevGameLength] = useState(gameLength);
 
   // https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes
   // may seem weird to set state during render, but this is actually the correct way to do it - as long as you're adjusting state within the component
   if (gameLength !== prevGameLength) {
     setPrevGameLength(gameLength);
-    setTimeLeft(gameLength * 60);
-    setIsActive(false);
-    setEndTime(null);
   }
 
   /**
@@ -31,8 +36,7 @@ export function useGameTimer() {
         setTimeLeft(remaining);
 
         // Check for Softcap
-        const elapsedSeconds = gameLength * 60 - remaining;
-        if (!softCapPending && elapsedSeconds >= softCapMins * 60) {
+        if (!softCapPending && remaining <= softCapMins * 60) {
           setSoftCapPending(true);
         }
 
@@ -43,7 +47,16 @@ export function useGameTimer() {
       }, 500);
     }
     return () => clearInterval(interval);
-  }, [isActive, endTime, softCapPending, gameLength, softCapMins, setSoftCapPending]);
+  }, [
+    isActive,
+    endTime,
+    softCapPending,
+    softCapMins,
+    setSoftCapPending,
+    setIsActive,
+    setEndTime,
+    setTimeLeft,
+  ]);
 
   const toggleTimer = () => {
     if (!isActive) {

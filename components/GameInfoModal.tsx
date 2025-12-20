@@ -1,5 +1,6 @@
 import { palette } from '@/constants/theme';
 import { useGameStore } from '@/store/gameStore';
+import { router } from 'expo-router';
 import React from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 
@@ -9,8 +10,16 @@ interface GameInfoModalProps {
 }
 
 export default function GameInfoModal({ visible, onClose }: GameInfoModalProps) {
-  const { gameTo, team1Name, team2Name, team1Timeouts, team2Timeouts, team1Floater, team2Floater } =
-    useGameStore();
+  const {
+    gameTo,
+    team1Name,
+    team2Name,
+    team1Timeouts,
+    team2Timeouts,
+    team1Floater,
+    team2Floater,
+    statTrackingMode,
+  } = useGameStore();
 
   const countTimeouts = (timeouts: boolean[]) => timeouts.filter((t) => t).length;
 
@@ -44,6 +53,17 @@ export default function GameInfoModal({ visible, onClose }: GameInfoModalProps) 
               </Text>
             </View>
           </View>
+
+          {statTrackingMode !== 'off' && (
+            <Pressable
+              style={styles.viewStatsButton}
+              onPress={() => {
+                onClose();
+                router.push('/ViewStats');
+              }}>
+              <Text style={styles.viewStatsText}>View Stats</Text>
+            </Pressable>
+          )}
 
           <Pressable style={styles.closeButton} onPress={onClose}>
             <Text style={styles.closeText}>Close</Text>
@@ -127,5 +147,19 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
     fontSize: 16,
+  },
+  viewStatsButton: {
+    marginTop: 10,
+    padding: 12,
+    alignItems: 'center',
+    borderRadius: 10,
+    backgroundColor: '#eefeff',
+    borderWidth: 1,
+    borderColor: palette.primary,
+  },
+  viewStatsText: {
+    color: palette.primary,
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });

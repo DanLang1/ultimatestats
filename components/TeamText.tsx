@@ -1,4 +1,4 @@
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 
 import { ThemedText } from './ThemedText';
 
@@ -9,16 +9,10 @@ interface TeamTextProps {
 
 export default function TeamText({ teamName, color }: TeamTextProps) {
   return (
-    <View style={styles.teamView}>
-      <ThemedText style={{ color: color, fontSize: 40 }} type="title">
+    <View>
+      <ThemedText style={{ color: color, fontSize: 40, lineHeight: 48 }} type="title">
         {teamName}
       </ThemedText>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  teamView: {
-    paddingTop: 20,
-  },
-});

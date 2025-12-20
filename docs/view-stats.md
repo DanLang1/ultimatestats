@@ -8,9 +8,8 @@ The View Stats page allows users to see a breakdown of player statistics (goals 
 
 ## Access
 
-1. Open **Settings** (tap the timer bar).
-2. Scroll to the "Stat Tracking" section.
-3. Tap **View Stats**.
+1. Tap the **Information (i)** icon in the timer bar on the main screen.
+2. Tap **View Stats**.
    - Note: This button is only visible if Stat Tracking is enabled (set to "My Team" or "Both").
 
 ## Screen Layout

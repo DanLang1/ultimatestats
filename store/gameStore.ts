@@ -28,6 +28,9 @@ interface GameState {
   isSoftCap: boolean;
   softCapPending: boolean;
   softCapMins: number;
+  timerIsActive: boolean;
+  timerEndTime: number | null;
+  timerTimeLeft: number;
 
   // Stat Tracking
   statTrackingMode: StatTrackingMode;
@@ -49,6 +52,9 @@ interface GameState {
   triggerSoftCap: () => void;
   setSoftCapPending: (pending: boolean) => void;
   setSoftCapMins: (minutes: number) => void;
+  setTimerActive: (active: boolean) => void;
+  setTimerEndTime: (time: number | null) => void;
+  setTimerTimeLeft: (seconds: number) => void;
 
   // Stat Tracking Actions
   setStatTrackingMode: (mode: StatTrackingMode) => void;
@@ -75,6 +81,9 @@ export const useGameStore = create<GameState>((set) => ({
   isSoftCap: false,
   softCapPending: false,
   softCapMins: 20,
+  timerIsActive: false,
+  timerEndTime: null,
+  timerTimeLeft: 90 * 60,
 
   // Stat Tracking Initial State
   statTrackingMode: 'team1',
@@ -87,7 +96,7 @@ export const useGameStore = create<GameState>((set) => ({
   setFloaterEnabled: (enabled) => set({ floaterEnabled: enabled }),
 
   setGameTo: (gameTo) => set({ gameTo, baseGameTo: gameTo }),
-  setGameLength: (minutes) => set({ gameLength: minutes }),
+  setGameLength: (minutes) => set({ gameLength: minutes, timerTimeLeft: minutes * 60 }),
 
   incrementScore: (isTeam1) =>
     set((state) => {
@@ -223,6 +232,10 @@ export const useGameStore = create<GameState>((set) => ({
       pendingStatEntry: null,
       team1Roster: [],
       team2Roster: [],
+      // Reset timer
+      timerIsActive: false,
+      timerEndTime: null,
+      timerTimeLeft: state.gameLength * 60,
     })),
 
   triggerSoftCap: () =>
@@ -238,6 +251,9 @@ export const useGameStore = create<GameState>((set) => ({
   setSoftCapPending: (pending) => set({ softCapPending: pending }),
 
   setSoftCapMins: (minutes) => set({ softCapMins: minutes }),
+  setTimerActive: (active) => set({ timerIsActive: active }),
+  setTimerEndTime: (time) => set({ timerEndTime: time }),
+  setTimerTimeLeft: (seconds) => set({ timerTimeLeft: seconds }),
 
   // Stat Tracking Actions
   setStatTrackingMode: (mode) => set({ statTrackingMode: mode }),

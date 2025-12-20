@@ -1,6 +1,6 @@
 import { PlayerChip } from '@/components/ui/PlayerChip';
 import React from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 type EntryStep = 'goal' | 'assist';
 
@@ -25,14 +25,18 @@ export function StatEntryRoster({
         showsVerticalScrollIndicator={true}
         contentContainerStyle={styles.chipsContainer}
         keyboardShouldPersistTaps="handled">
-        {roster.map((player) => (
-          <PlayerChip
-            key={player}
-            name={player}
-            selected={step === 'goal' ? false : player === selectedGoal}
-            onPress={() => onSelect(player)}
-          />
-        ))}
+        {roster.length === 0 ? (
+          <Text style={styles.emptyText}>No players yet. Add one!</Text>
+        ) : (
+          roster.map((player) => (
+            <PlayerChip
+              key={player}
+              name={player}
+              selected={step === 'goal' ? false : player === selectedGoal}
+              onPress={() => onSelect(player)}
+            />
+          ))
+        )}
       </ScrollView>
     </View>
   );

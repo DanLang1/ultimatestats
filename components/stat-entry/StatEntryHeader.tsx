@@ -14,12 +14,10 @@ interface StatEntryHeaderProps {
 export function StatEntryHeader({ teamName, step, selectedGoal }: StatEntryHeaderProps) {
   return (
     <View style={styles.container}>
-      <View style={styles.leftGroup}>
-        <Text style={styles.teamName}>{teamName}</Text>
-        <Animated.Text key={step} entering={FadeIn.duration(300)} style={styles.stepLabel}>
-          {step === 'goal' ? 'Who scored?' : 'Who threw the assist?'}
-        </Animated.Text>
-      </View>
+      <Text style={styles.teamName}>{teamName}</Text>
+      <Animated.Text key={step} entering={FadeIn.duration(300)} style={styles.stepLabel}>
+        {step === 'goal' ? 'Who scored?' : 'Who threw the assist?'}
+      </Animated.Text>
 
       {selectedGoal && (
         <Animated.View entering={FadeIn} style={styles.badge}>
@@ -33,12 +31,9 @@ export function StatEntryHeader({ teamName, step, selectedGoal }: StatEntryHeade
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-end', // Align step label and badge better
     width: '100%',
-    marginBottom: 12,
-    paddingHorizontal: 4,
+    marginBottom: 8,
+    gap: 8,
   },
   leftGroup: {
     flex: 1,
@@ -58,14 +53,15 @@ const styles = StyleSheet.create({
   },
   badge: {
     backgroundColor: '#f0f0f0',
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
     borderWidth: 1,
     borderColor: '#e0e0e0',
+    alignSelf: 'flex-start',
   },
   badgeLabel: {
     fontSize: 10,

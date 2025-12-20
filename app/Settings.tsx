@@ -2,6 +2,7 @@ import { ThemedView } from '@/components/ThemedView';
 import { InputNumber } from '@/components/ui/InputNumber';
 import { palette } from '@/constants/theme';
 import { StatTrackingMode, useGameStore } from '@/store/gameStore';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router, Stack } from 'expo-router';
 import React, { useState } from 'react';
 import {
@@ -36,6 +37,9 @@ export default function SettingsScreen() {
     team1Roster,
     team2Roster,
     clearRosters,
+    timerIsActive,
+    team1Score,
+    team2Score,
   } = useGameStore();
 
   const [team1, setTeam1] = useState(team1Name);
@@ -78,115 +82,127 @@ export default function SettingsScreen() {
     router.back();
   };
 
+  const gameActive = timerIsActive || team1Score !== 0 || team2Score !== 0;
+
   return (
     <ThemedView style={styles.container}>
       <Stack.Screen options={{ headerShown: false }} />
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.card}>
-          <Text style={styles.headerTitle}>Game Settings</Text>
+        <Text style={styles.headerTitle}>Game Settings</Text>
 
-          <View style={styles.columnsContainer}>
-            {/* Left Column: Teams */}
-            <View style={styles.column}>
-              <Text style={styles.sectionTitle}>Teams</Text>
-              <TextInput
-                style={styles.input}
-                value={team1}
-                onChangeText={setTeam1}
-                placeholder="Team 1 Name"
-                placeholderTextColor="#999"
-              />
-              <TextInput
-                style={styles.input}
-                value={team2}
-                onChangeText={setTeam2}
-                placeholder="Team 2 Name"
-                placeholderTextColor="#999"
-              />
-            </View>
+        <View style={styles.columnsContainer}>
+          {/* Left Column: Teams */}
+          <View style={styles.column}>
+            <Text style={styles.sectionTitle}>Teams</Text>
+            <TextInput
+              style={styles.input}
+              value={team1}
+              onChangeText={setTeam1}
+              placeholder="Team 1 Name"
+              placeholderTextColor="#999"
+            />
+            <TextInput
+              style={styles.input}
+              value={team2}
+              onChangeText={setTeam2}
+              placeholder="Team 2 Name"
+              placeholderTextColor="#999"
+            />
 
-            {/* Right Column: Rules */}
-            <View style={styles.column}>
-              <Text style={styles.sectionTitle}>Rules</Text>
-              <InputNumber
-                label="Game To:"
-                value={gameTo}
-                onChangeText={setGameTo}
-                placeholder="15"
-              />
-
-              <InputNumber
-                label="Game Length (mins):"
-                value={gameLength}
-                onChangeText={setGameLengthLocal}
-                placeholder="90"
-              />
-
-              <InputNumber
-                label="Soft Cap (mins):"
-                value={softCapTime}
-                onChangeText={setSoftCapTimeLocal}
-                placeholder="70"
-              />
-
-              <InputNumber
-                label="Timeouts per Half:"
-                value={timeoutsCount}
-                onChangeText={setTimeoutsCount}
-                placeholder="2"
-              />
-
-              <View style={styles.switchContainer}>
-                <Text style={styles.label}>Enable Floater Timeout</Text>
-                <Switch
-                  trackColor={{ false: '#767577', true: palette.accent }}
-                  thumbColor={floaterEnabled ? palette.accent : '#f4f3f4'}
-                  onValueChange={setFloaterEnabledLocal}
-                  value={floaterEnabled}
-                />
-              </View>
-
-              {/* Stat Tracking Mode */}
-              <Text style={[styles.sectionTitle, { marginTop: 15 }]}>Stat Tracking</Text>
-              <View style={styles.segmentedControl}>
-                {(['off', 'team1', 'both'] as StatTrackingMode[]).map((mode) => (
-                  <Pressable
-                    key={mode}
+            {/* Stat Tracking Mode */}
+            <Text style={[styles.sectionTitle, { marginTop: 15 }]}>Stat Tracking</Text>
+            <View style={styles.segmentedControl}>
+              {(['off', 'team1', 'both'] as StatTrackingMode[]).map((mode) => (
+                <Pressable
+                  key={mode}
+                  style={[
+                    styles.segmentButton,
+                    statTrackingMode === mode && styles.segmentButtonActive,
+                  ]}
+                  onPress={() => setStatTrackingModeLocal(mode)}>
+                  <Text
                     style={[
-                      styles.segmentButton,
-                      statTrackingMode === mode && styles.segmentButtonActive,
-                    ]}
-                    onPress={() => setStatTrackingModeLocal(mode)}>
-                    <Text
-                      style={[
-                        styles.segmentText,
-                        statTrackingMode === mode && styles.segmentTextActive,
-                      ]}>
-                      {mode === 'off' ? 'Off' : mode === 'team1' ? 'My Team' : 'Both'}
-                    </Text>
-                  </Pressable>
-                ))}
-              </View>
-
-              {hasRoster && (
-                <Pressable style={styles.clearRosterButton} onPress={clearRosters}>
-                  <Text style={styles.clearRosterText}>Clear Player Rosters</Text>
+                      styles.segmentText,
+                      statTrackingMode === mode && styles.segmentTextActive,
+                    ]}>
+                    {mode === 'off' ? 'Off' : mode === 'team1' ? 'My Team' : 'Both'}
+                  </Text>
                 </Pressable>
-              )}
-
-              {statTrackingMode !== 'off' && (
-                <Pressable style={styles.viewStatsButton} onPress={() => router.push('/ViewStats')}>
-                  <Text style={styles.viewStatsText}>View Stats</Text>
-                </Pressable>
-              )}
+              ))}
             </View>
+
+            {hasRoster && (
+              <Pressable style={styles.clearRosterButton} onPress={clearRosters}>
+                <Text style={styles.clearRosterText}>Clear Player Rosters</Text>
+              </Pressable>
+            )}
           </View>
 
-          <View style={styles.buttons}>
-            <Button title="Cancel" onPress={() => router.back()} color="red" />
-            <Button title="New Game" onPress={handleNewGame} color="orange" />
-            <Button title="Save" onPress={handleSave} />
+          {/* Right Column: Rules */}
+          <View style={styles.column}>
+            <Text style={styles.sectionTitle}>Rules</Text>
+            <InputNumber
+              label="Game To:"
+              value={gameTo}
+              onChangeText={setGameTo}
+              placeholder="15"
+              editable={!gameActive}
+            />
+
+            <InputNumber
+              label="Game Length (mins):"
+              value={gameLength}
+              onChangeText={setGameLengthLocal}
+              placeholder="90"
+              editable={!gameActive}
+            />
+
+            <InputNumber
+              label="Soft Cap (mins):"
+              value={softCapTime}
+              onChangeText={setSoftCapTimeLocal}
+              placeholder="70"
+              editable={!gameActive}
+            />
+
+            <InputNumber
+              label="Timeouts per Half:"
+              value={timeoutsCount}
+              onChangeText={setTimeoutsCount}
+              placeholder="2"
+              editable={!gameActive}
+            />
+
+            <View style={[styles.switchContainer, gameActive && styles.disabledContainer]}>
+              <View style={styles.labelContainer}>
+                {gameActive && (
+                  <MaterialCommunityIcons
+                    name="lock"
+                    size={14}
+                    color="#999"
+                    style={{ marginRight: 4 }}
+                  />
+                )}
+                <Text style={[styles.label, gameActive && styles.disabledLabel]}>
+                  Enable Floater Timeout
+                </Text>
+              </View>
+              <Switch
+                trackColor={{ false: '#767577', true: gameActive ? '#ccc' : palette.accent }}
+                thumbColor={floaterEnabled ? (gameActive ? '#eee' : palette.accent) : '#f4f3f4'}
+                onValueChange={setFloaterEnabledLocal}
+                value={floaterEnabled}
+                disabled={gameActive}
+              />
+            </View>
+            {gameActive && <Text style={styles.helperText}>* Cannot edit during game</Text>}
           </View>
+        </View>
+
+        <View style={styles.buttons}>
+          <Button title="Cancel" onPress={() => router.back()} color="red" />
+          <Button title="New Game" onPress={handleNewGame} color="orange" />
+          <Button title="Save" onPress={handleSave} />
         </View>
       </ScrollView>
     </ThemedView>
@@ -196,28 +212,10 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: 'white',
   },
   scrollContent: {
-    flexGrow: 1,
-    padding: 20,
-    justifyContent: 'center',
-  },
-  card: {
-    width: '100%',
-    maxHeight: '100%',
-    backgroundColor: 'white',
-    borderRadius: 20,
-    padding: 20,
-    // justifyContent: 'space-between', // Removed to let columns flex
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
-    flex: 1,
+    padding: 24,
   },
   headerTitle: {
     fontSize: 24,
@@ -231,7 +229,6 @@ const styles = StyleSheet.create({
     width: '100%',
     gap: 20,
     flex: 1, // Take available vertical space
-    // alignItems: 'center', // Optional: Center vertically?
   },
   column: {
     flex: 1,
@@ -265,6 +262,16 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 16,
     color: '#333',
+  },
+  labelContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  disabledContainer: {
+    opacity: 0.8,
+  },
+  disabledLabel: {
+    color: '#999',
   },
   buttons: {
     flexDirection: 'row',
@@ -311,18 +318,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
   },
-  viewStatsButton: {
-    marginTop: 10,
-    padding: 10,
-    alignItems: 'center',
-    borderRadius: 8,
-    backgroundColor: '#eefeff',
-    borderWidth: 1,
-    borderColor: palette.primary,
-  },
-  viewStatsText: {
-    color: palette.primary,
-    fontSize: 14,
-    fontWeight: '500',
+  helperText: {
+    fontSize: 12,
+    color: '#999',
+    marginTop: -5,
+    marginBottom: 5,
+    marginLeft: 5,
   },
 });

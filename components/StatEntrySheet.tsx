@@ -55,52 +55,59 @@ function StatEntryInner({
       style={styles.sheet}
       onStartShouldSetResponder={() => true}>
       <Pressable onPress={() => {}} style={styles.sheetContent}>
-        <StatEntryHeader teamName={teamName} step={step} selectedGoal={selectedGoal} />
+        <View style={styles.sideBySideContainer}>
+          {/* Left Column: Info, Add Player, Actions */}
+          <View style={styles.leftColumn}>
+            <StatEntryHeader teamName={teamName} step={step} selectedGoal={selectedGoal} />
 
-        <StatEntryRoster
-          roster={roster}
-          step={step}
-          selectedGoal={selectedGoal}
-          onSelect={handlePlayerSelect}
-        />
-
-        {/* Add New Player Row */}
-        <View style={styles.addPlayerRow}>
-          <TextInput
-            style={styles.input}
-            value={newPlayerName}
-            onChangeText={setNewPlayerName}
-            placeholder="Add new player..."
-            placeholderTextColor="#999"
-            onSubmitEditing={handleAddPlayer}
-            returnKeyType="done"
-          />
-          <Pressable
-            style={[styles.addButton, !newPlayerName.trim() && styles.addButtonDisabled]}
-            onPress={handleAddPlayer}
-            disabled={!newPlayerName.trim()}>
-            <Text style={styles.addButtonText}>Add</Text>
-          </Pressable>
-        </View>
-
-        {/* Footer Actions */}
-        <Animated.View layout={LinearTransition} style={styles.footer}>
-          <Pressable style={styles.skipButton} onPress={onSkip}>
-            <Text style={styles.skipText}>Skip</Text>
-          </Pressable>
-          {step === 'goal' ? null : (
-            <Animated.View entering={FadeIn}>
+            <View style={styles.addPlayerRow}>
+              <TextInput
+                style={styles.input}
+                value={newPlayerName}
+                onChangeText={setNewPlayerName}
+                placeholder="Add player..."
+                placeholderTextColor="#999"
+                onSubmitEditing={handleAddPlayer}
+                returnKeyType="done"
+              />
               <Pressable
-                style={styles.skipButton}
-                onPress={() => {
-                  setStep('goal');
-                  setSelectedGoal(null);
-                }}>
-                <Text style={styles.skipText}>Back</Text>
+                style={[styles.addButton, !newPlayerName.trim() && styles.addButtonDisabled]}
+                onPress={handleAddPlayer}
+                disabled={!newPlayerName.trim()}>
+                <Text style={styles.addButtonText}>Add</Text>
               </Pressable>
+            </View>
+
+            <Animated.View layout={LinearTransition} style={styles.footer}>
+              <Pressable style={styles.skipButton} onPress={onSkip}>
+                <Text style={styles.skipText}>Skip</Text>
+              </Pressable>
+              {step === 'goal' ? null : (
+                <Animated.View entering={FadeIn}>
+                  <Pressable
+                    style={styles.skipButton}
+                    onPress={() => {
+                      setStep('goal');
+                      setSelectedGoal(null);
+                    }}>
+                    <Text style={styles.skipText}>Back</Text>
+                  </Pressable>
+                </Animated.View>
+              )}
             </Animated.View>
-          )}
-        </Animated.View>
+          </View>
+
+          {/* Right Column: Roster Selection */}
+          <View style={styles.rightColumn}>
+            <StatEntryRoster
+              roster={roster}
+              step={step}
+              selectedGoal={selectedGoal}
+              onSelect={handlePlayerSelect}
+              maxHeight={280}
+            />
+          </View>
+        </View>
       </Pressable>
     </Animated.View>
   );
@@ -180,28 +187,39 @@ const styles = StyleSheet.create({
     elevation: 10,
   },
   sheetContent: {
-    padding: 12,
+    padding: 16,
+  },
+  sideBySideContainer: {
+    flexDirection: 'row',
+    gap: 24,
+    alignItems: 'flex-start',
+  },
+  leftColumn: {
+    flex: 1,
+    gap: 12,
+  },
+  rightColumn: {
+    flex: 1,
   },
   addPlayerRow: {
     flexDirection: 'row',
-    gap: 10,
-    marginTop: 8,
+    gap: 8,
   },
   input: {
     flex: 1,
-    height: 48,
+    height: 44,
     borderWidth: 1,
     borderColor: '#ddd',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    fontSize: 16,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    fontSize: 15,
     color: '#333',
     backgroundColor: '#f9f9f9',
   },
   addButton: {
     backgroundColor: palette.accent,
-    paddingHorizontal: 20,
-    borderRadius: 12,
+    paddingHorizontal: 16,
+    borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -211,23 +229,23 @@ const styles = StyleSheet.create({
   addButtonText: {
     color: 'white',
     fontWeight: '600',
-    fontSize: 16,
+    fontSize: 15,
   },
   footer: {
     flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 15,
-    marginTop: 10,
+    justifyContent: 'flex-start',
+    gap: 12,
+    marginTop: 8,
   },
   skipButton: {
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 8,
     backgroundColor: '#eee',
   },
   skipText: {
     color: '#666',
     fontWeight: '600',
-    fontSize: 16,
+    fontSize: 15,
   },
 });

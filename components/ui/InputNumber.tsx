@@ -1,3 +1,4 @@
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
 import { StyleSheet, Text, TextInput, TextStyle, View, ViewStyle } from 'react-native';
 
@@ -9,6 +10,7 @@ interface InputNumberProps {
   containerStyle?: ViewStyle;
   inputStyle?: TextStyle;
   labelStyle?: TextStyle;
+  editable?: boolean;
 }
 
 export function InputNumber({
@@ -19,17 +21,24 @@ export function InputNumber({
   containerStyle,
   inputStyle,
   labelStyle,
+  editable = true,
 }: InputNumberProps) {
   return (
-    <View style={[styles.container, containerStyle]}>
-      <Text style={[styles.label, labelStyle]}>{label}</Text>
+    <View style={[styles.container, containerStyle, !editable && styles.disabledContainer]}>
+      <View style={styles.labelContainer}>
+        {!editable && (
+          <MaterialCommunityIcons name="lock" size={14} color="#999" style={{ marginRight: 4 }} />
+        )}
+        <Text style={[styles.label, labelStyle, !editable && styles.disabledLabel]}>{label}</Text>
+      </View>
       <TextInput
         keyboardType="numeric"
-        style={[styles.input, inputStyle]}
+        style={[styles.input, inputStyle, !editable && styles.disabledInput]}
         value={value}
         onChangeText={onChangeText}
         placeholder={placeholder}
         placeholderTextColor="#999"
+        editable={editable}
       />
     </View>
   );
@@ -52,9 +61,24 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   input: {
-    width: 50,
+    width: 60,
     textAlign: 'right',
     color: 'black',
     fontSize: 16,
+  },
+  labelContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  disabledContainer: {
+    backgroundColor: '#f2f2f2',
+    borderColor: '#eee',
+    opacity: 0.8,
+  },
+  disabledLabel: {
+    color: '#999',
+  },
+  disabledInput: {
+    color: '#aaa',
   },
 });
