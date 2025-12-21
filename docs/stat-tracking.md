@@ -23,13 +23,13 @@ type StatTrackingMode = 'off' | 'team1' | 'both';
 
 ## State
 
-| Property           | Type                            | Description                              |
-| ------------------ | ------------------------------- | ---------------------------------------- |
-| `statTrackingMode` | `'off' \| 'team1' \| 'both'`    | Which teams to track stats for           |
-| `team1Roster`      | `string[]`                      | Built progressively as players are added |
-| `team2Roster`      | `string[]`                      | Built progressively as players are added |
-| `statRecords`      | `StatRecord[]`                  | All recorded stats for the game          |
-| `pendingStatEntry` | `{ team, pointNumber } \| null` | Triggers stat entry sheet                |
+| Property              | Type                            | Description                                    |
+| --------------------- | ------------------------------- | ---------------------------------------------- |
+| `statTrackingEnabled` | `boolean`                       | Whether stat tracking is enabled (for my team) |
+| `team1Roster`         | `string[]`                      | Built progressively as players are added       |
+| `team2Roster`         | `string[]`                      | Built progressively as players are added       |
+| `statRecords`         | `StatRecord[]`                  | All recorded stats for the game                |
+| `pendingStatEntry`    | `{ team, pointNumber } \| null` | Triggers stat entry sheet                      |
 
 ## Flow
 

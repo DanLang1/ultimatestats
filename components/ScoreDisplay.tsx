@@ -24,13 +24,7 @@ const styles = StyleSheet.create({
     lineHeight: 150,
     marginBottom: 50,
   },
-  textAdjust: {
-    marginBottom: 50,
-  },
-
   scoreContainer: {
-    flex: 3,
-
     flexDirection: 'row',
     alignItems: 'center',
     gap: 20,

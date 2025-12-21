@@ -5,6 +5,7 @@ import { palette } from '@/constants/theme';
 import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { Directions, Gesture, GestureDetector } from 'react-native-gesture-handler';
+import Animated from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 
 interface TeamScoreSectionProps {
@@ -17,6 +18,11 @@ interface TeamScoreSectionProps {
 
   timeouts?: { active: boolean; isFloater: boolean }[];
   onTimeoutUse?: (index: number) => void;
+
+  // Possession tracking (optional - only when stat tracking is enabled)
+  hasPossession?: boolean;
+  onTurnover?: () => void;
+  side?: 'left' | 'right';
 }
 
 export default function TeamScoreSection({
@@ -28,6 +34,9 @@ export default function TeamScoreSection({
   backgroundColor,
   timeouts = [],
   onTimeoutUse,
+  hasPossession,
+  onTurnover,
+  side,
 }: TeamScoreSectionProps) {
   const flingUp = Gesture.Fling()
     .direction(Directions.UP)
@@ -43,8 +52,29 @@ export default function TeamScoreSection({
 
   const composedGesture = Gesture.Simultaneous(flingDown, flingUp);
 
+  // Determine what happens on tap
+  // If possession tracking is enabled (hasPossession is defined):
+  //   - If this team HAS possession: tap = score (they scored)
+  //   - If this team does NOT have possession: tap = turnover (flip possession)
+  // If possession tracking is disabled (hasPossession is undefined): tap = score (original behavior)
+  const handleTap = () => {
+    if (hasPossession === undefined) {
+      // Possession tracking disabled - original behavior
+      onIncrement();
+    } else if (hasPossession) {
+      // This team has the disc - they scored
+      onIncrement();
+    } else if (onTurnover) {
+      // This team doesn't have the disc - turnover
+      onTurnover();
+    }
+  };
+
   return (
     <ThemedView style={[styles.container, { backgroundColor }]}>
+      {/* Static border overlay when team has possession */}
+      {hasPossession && <Animated.View pointerEvents="none" />}
+
       {/* Top 1/3: Timeouts */}
       <View style={styles.timeoutArea}>
         <View style={styles.timeoutContainer}>
@@ -74,8 +104,8 @@ export default function TeamScoreSection({
 
       {/* Bottom 2/3: Gestures & Score */}
       <GestureDetector gesture={composedGesture}>
-        <Pressable onPress={onIncrement} style={styles.scoreArea}>
-          <TeamText color={textColor} teamName={teamName} />
+        <Pressable onPress={handleTap} style={styles.scoreArea}>
+          <TeamText color={textColor} teamName={teamName} hasPossession={hasPossession} />
           <ScoreDisplay bgColor={backgroundColor} textColor={textColor} score={score} />
         </Pressable>
       </GestureDetector>
@@ -87,6 +117,16 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingTop: 30,
+    position: 'relative',
+  },
+  possessionBorder: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 0,
+    zIndex: 10,
   },
   settingsIcon: {
     position: 'absolute',
@@ -104,6 +144,7 @@ const styles = StyleSheet.create({
   timeoutContainer: {
     flexDirection: 'row',
     gap: 15,
+    alignItems: 'center',
   },
   timeoutIndicator: {
     width: 20,

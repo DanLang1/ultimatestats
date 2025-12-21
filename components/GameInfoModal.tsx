@@ -18,7 +18,7 @@ export default function GameInfoModal({ visible, onClose }: GameInfoModalProps) 
     team2Timeouts,
     team1Floater,
     team2Floater,
-    statTrackingMode,
+    statTrackingEnabled,
   } = useGameStore();
 
   const countTimeouts = (timeouts: boolean[]) => timeouts.filter((t) => t).length;
@@ -54,7 +54,7 @@ export default function GameInfoModal({ visible, onClose }: GameInfoModalProps) 
             </View>
           </View>
 
-          {statTrackingMode !== 'off' && (
+          {statTrackingEnabled && (
             <Pressable
               style={styles.viewStatsButton}
               onPress={() => {

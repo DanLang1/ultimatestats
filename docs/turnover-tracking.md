@@ -1,0 +1,167 @@
+# Turnover Tracking System
+
+> Design documentation for the turnover event tracking feature (blocks, throwaways, drops).
+
+## Overview
+
+The turnover tracking system records turnovers (blocks, throwaways, drops) during gameplay using a possession-aware approach. When a user taps the team that doesn't have the disc, a turnover is recorded and possession flips.
+
+This feature integrates with the existing stat tracking setting—turnover tracking is enabled when stat tracking is on.
+
+## Plus/Minus System
+
+| Event     | Value | Attribution               |
+| --------- | ----- | ------------------------- |
+| Goal      | +1    | Scoring player            |
+| Assist    | +1    | Assisting player          |
+| Block     | +1    | Player who made the block |
+| Throwaway | -1    | Player who threw it away  |
+| Drop      | -1    | Player who dropped it     |
+
+## Data Model
+
+```typescript
+// In store/gameStore.ts
+
+type TurnoverType = 'block' | 'throwaway' | 'drop';
+
+interface TurnoverRecord {
+  team: 'team1' | 'team2'; // Team responsible for the action
+  type: TurnoverType;
+  player: string | null; // Player responsible (or null if unknown)
+}
+```
+
+## State
+
+| Property               | Type                         | Description                         |
+| ---------------------- | ---------------------------- | ----------------------------------- |
+| `possession`           | `'team1' \| 'team2' \| null` | Which team currently has the disc   |
+| `turnoverRecords`      | `TurnoverRecord[]`           | All recorded turnovers for the game |
+| `pendingTurnoverEntry` | `{ receivingTeam } \| null`  | Triggers turnover entry sheet       |
+
+## Flow
+
+### Initial Possession (Pull Prompt)
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant PullPrompt
+    participant Store
+
+    Note over User,Store: Game starts / New Game
+    Store->>Store: possession = null
+    PullPrompt-->>User: "Who is receiving the pull?"
+    User->>PullPrompt: Taps Team 1
+    PullPrompt->>Store: setPossession('team1')
+    Store->>Store: possession = 'team1'
+```
+
+### Turnover Recording
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant TeamSection
+    participant Store
+    participant Sheet
+
+    Note over User: Team 1 has possession
+    User->>TeamSection: Taps Team 2 (no disc)
+    TeamSection->>Store: triggerTurnover()
+    Store->>Store: Set pendingTurnoverEntry
+    Store-->>Sheet: Sheet becomes visible
+    Sheet->>User: "What happened?"
+    User->>Sheet: Selects "Throwaway"
+    Sheet->>User: "Who threw it away?"
+    User->>Sheet: Selects player
+    Sheet->>Store: addTurnoverRecord()
+    Store->>Store: Flip possession to Team 2
+    Store->>Store: Clear pendingTurnoverEntry
+```
+
+### Score After Goal
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant TeamSection
+    participant Store
+
+    Note over User: Team 1 has possession
+    User->>TeamSection: Taps Team 1 (has disc)
+    TeamSection->>Store: incrementScore(true)
+    Store->>Store: team1Score++
+    Store->>Store: possession = 'team2' (they receive pull)
+```
+
+## Tap Behavior
+
+The tap behavior depends on the stat tracking mode setting:
+
+| Stat Tracking Mode | Tap Team WITH Disc | Tap Team WITHOUT Disc |
+| ------------------ | ------------------ | --------------------- |
+| **Off**            | Increment score    | Increment score       |
+| **My Team / Both** | Increment score    | Trigger turnover flow |
+
+## Components
+
+### `PullPrompt.tsx`
+
+Modal that appears when:
+
+- Stat tracking is enabled (`statTrackingEnabled`)
+- Possession is `null` (start of game or after "New Game")
+
+Shows two team buttons. Tapping a team calls `setPossession(team)` and sets that team as having the disc (they're receiving the pull).
+
+### `TurnoverEntrySheet.tsx`
+
+Bottom sheet modal that appears when `pendingTurnoverEntry` is set.
+
+**Two-step flow:**
+
+1. **Select event type**: Block, Throwaway, or Drop
+2. **Select player** (optional): Choose from roster who caused the event
+
+**Attribution logic:**
+
+- **Block**: Attributed to the _receiving_ team (+1 for blocker)
+- **Throwaway/Drop**: Attributed to the team that _had possession_ (-1 for player)
+
+### `TeamScoreSection.tsx` (Modified)
+
+**New Props:**
+
+- `hasPossession?: boolean` — Whether this team has the disc
+- `onTurnover?: () => void` — Called when user taps to trigger turnover
+
+**Visual:**
+
+- Small circular indicator (●) appears next to timeouts when team has possession
+- Animates in/out with fade transition
+
+**Tap behavior:**
+
+- If `hasPossession === undefined`: Original behavior (increment score)
+- If `hasPossession === true`: Increment score (goal)
+- If `hasPossession === false`: Call `onTurnover()` (turnover)
+
+## Settings Integration
+
+The existing stat tracking setting controls turnover tracking:
+
+- **Off**: No possession tracking, original tap behavior
+- **On**: Possession tracking enabled, tracks my team stats
+
+No additional settings required.
+
+## Reset Behavior
+
+On "New Game":
+
+- `turnoverRecords` cleared
+- `pendingTurnoverEntry` cleared
+- `possession` reset to `null` (triggers pull prompt)
+- `statRecords` cleared (as before)

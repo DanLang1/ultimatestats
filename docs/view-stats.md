@@ -10,21 +10,16 @@ The View Stats page allows users to see a breakdown of player statistics (goals 
 
 1. Tap the **Information (i)** icon in the timer bar on the main screen.
 2. Tap **View Stats**.
-   - Note: This button is only visible if Stat Tracking is enabled (set to "My Team" or "Both").
+   - Note: This button is only visible if Stat Tracking is enabled.
 
 ## Screen Layout
 
-### 1. Team Tabs
+### 1. Summary
 
-- Switch between **Team 1** and **Team 2** rosters.
-- The summary and player list update to reflect the selected team.
+- Displays the team name and total number of points recorded.
+- Shows stats for your team (Team 1).
 
-### 2. Summary
-
-- Displays the total number of points recorded for the selected team.
-- Helps verify that the stats match the scoreboard score.
-
-### 3. Player Stats List
+### 2. Player Stats List
 
 - Scrollable list of players who have recorded at least one stat.
 - Sorted by total involvement (Goals + Assists) descending.
@@ -33,7 +28,7 @@ The View Stats page allows users to see a breakdown of player statistics (goals 
   - **Goals**: Count of goals scored.
   - **Assists**: Count of assists thrown.
 
-### 4. Actions
+### 3. Actions
 
 - **Back**: returns to Settings.
 - **Export CSV**: Generates a CSV file and opens the system share sheet.

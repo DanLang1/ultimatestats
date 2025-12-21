@@ -7,7 +7,15 @@ export interface StatRecord {
   assist: string | null;
 }
 
-export type StatTrackingMode = 'off' | 'team1' | 'both';
+// Stat tracking is either enabled (tracking team1/my team) or disabled
+
+export type TurnoverType = 'block' | 'throwaway' | 'drop';
+
+export interface TurnoverRecord {
+  team: 'team1' | 'team2'; // Team responsible for the action
+  type: TurnoverType;
+  player: string | null;
+}
 
 interface GameState {
   // State
@@ -33,11 +41,16 @@ interface GameState {
   timerTimeLeft: number;
 
   // Stat Tracking
-  statTrackingMode: StatTrackingMode;
+  statTrackingEnabled: boolean;
   team1Roster: string[];
   team2Roster: string[];
   statRecords: StatRecord[];
   pendingStatEntry: { team: 'team1' | 'team2'; pointNumber: number } | null;
+
+  // Turnover Tracking
+  possession: 'team1' | 'team2' | null;
+  turnoverRecords: TurnoverRecord[];
+  pendingTurnoverEntry: { receivingTeam: 'team1' | 'team2' } | null;
 
   // Actions
   setTeamNames: (team1: string, team2: string) => void;
@@ -57,11 +70,17 @@ interface GameState {
   setTimerTimeLeft: (seconds: number) => void;
 
   // Stat Tracking Actions
-  setStatTrackingMode: (mode: StatTrackingMode) => void;
+  setStatTrackingEnabled: (enabled: boolean) => void;
   addPlayer: (team: 'team1' | 'team2', name: string) => void;
   addStatRecord: (record: Omit<StatRecord, 'pointNumber'>) => void;
   clearPendingStatEntry: () => void;
   clearRosters: () => void;
+
+  // Turnover Tracking Actions
+  setPossession: (team: 'team1' | 'team2') => void;
+  triggerTurnover: () => void;
+  addTurnoverRecord: (record: TurnoverRecord) => void;
+  clearPendingTurnoverEntry: () => void;
 }
 
 export const useGameStore = create<GameState>((set) => ({
@@ -86,11 +105,16 @@ export const useGameStore = create<GameState>((set) => ({
   timerTimeLeft: 90 * 60,
 
   // Stat Tracking Initial State
-  statTrackingMode: 'team1',
+  statTrackingEnabled: true,
   team1Roster: [],
   team2Roster: [],
   statRecords: [],
   pendingStatEntry: null,
+
+  // Turnover Tracking Initial State
+  possession: null,
+  turnoverRecords: [],
+  pendingTurnoverEntry: null,
 
   setTeamNames: (team1, team2) => set({ team1Name: team1, team2Name: team2 }),
   setFloaterEnabled: (enabled) => set({ floaterEnabled: enabled }),
@@ -139,15 +163,22 @@ export const useGameStore = create<GameState>((set) => ({
           gameTo: Math.min(currentHigherScore + 1, state.gameTo),
         };
       }
-      // Stat Tracking: Set pending entry if tracking is enabled for this team
+      // Stat Tracking: Set pending entry if tracking is enabled and it's team1
       const team = isTeam1 ? 'team1' : 'team2';
-      const shouldTrack =
-        state.statTrackingMode === 'both' || (state.statTrackingMode === 'team1' && isTeam1);
+      const shouldTrack = state.statTrackingEnabled && isTeam1;
 
       if (shouldTrack) {
         newState = {
           ...newState,
           pendingStatEntry: { team, pointNumber: newScore },
+        };
+      }
+
+      // After a goal, possession goes to the other team (they receive the pull)
+      if (state.statTrackingEnabled) {
+        newState = {
+          ...newState,
+          possession: isTeam1 ? 'team2' : 'team1',
         };
       }
 
@@ -232,6 +263,10 @@ export const useGameStore = create<GameState>((set) => ({
       pendingStatEntry: null,
       team1Roster: [],
       team2Roster: [],
+      // Reset turnover tracking for new game
+      possession: null,
+      turnoverRecords: [],
+      pendingTurnoverEntry: null,
       // Reset timer
       timerIsActive: false,
       timerEndTime: null,
@@ -256,7 +291,7 @@ export const useGameStore = create<GameState>((set) => ({
   setTimerTimeLeft: (seconds) => set({ timerTimeLeft: seconds }),
 
   // Stat Tracking Actions
-  setStatTrackingMode: (mode) => set({ statTrackingMode: mode }),
+  setStatTrackingEnabled: (enabled) => set({ statTrackingEnabled: enabled }),
 
   addPlayer: (team, name) =>
     set((state) => {
@@ -281,5 +316,39 @@ export const useGameStore = create<GameState>((set) => ({
 
   clearPendingStatEntry: () => set({ pendingStatEntry: null }),
 
-  clearRosters: () => set({ team1Roster: [], team2Roster: [], statRecords: [] }),
+  clearRosters: () =>
+    set({ team1Roster: [], team2Roster: [], statRecords: [], turnoverRecords: [] }),
+
+  // Turnover Tracking Actions
+  setPossession: (team) => set({ possession: team }),
+
+  triggerTurnover: () =>
+    set((state) => {
+      if (state.possession === null) return {};
+      const receivingTeam = state.possession === 'team1' ? 'team2' : 'team1';
+      return {
+        pendingTurnoverEntry: { receivingTeam },
+      };
+    }),
+
+  addTurnoverRecord: (record) =>
+    set((state) => {
+      // Flip possession to the receiving team
+      const newPossession = state.possession === 'team1' ? 'team2' : 'team1';
+      return {
+        turnoverRecords: [...state.turnoverRecords, record],
+        possession: newPossession,
+        pendingTurnoverEntry: null,
+      };
+    }),
+
+  clearPendingTurnoverEntry: () =>
+    set((state) => {
+      // Still flip possession even if skipped (turnover happened)
+      const newPossession = state.possession === 'team1' ? 'team2' : 'team1';
+      return {
+        pendingTurnoverEntry: null,
+        possession: newPossession,
+      };
+    }),
 }));

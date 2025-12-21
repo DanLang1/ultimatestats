@@ -1,7 +1,7 @@
 import { ThemedView } from '@/components/ThemedView';
 import { InputNumber } from '@/components/ui/InputNumber';
 import { palette } from '@/constants/theme';
-import { StatTrackingMode, useGameStore } from '@/store/gameStore';
+import { useGameStore } from '@/store/gameStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router, Stack } from 'expo-router';
 import React, { useState } from 'react';
@@ -32,8 +32,8 @@ export default function SettingsScreen() {
     softCapMins: softCapMinsStore,
     setSoftCapMins,
     resetGame,
-    statTrackingMode: statTrackingModeStore,
-    setStatTrackingMode,
+    statTrackingEnabled: statTrackingEnabledStore,
+    setStatTrackingEnabled,
     team1Roster,
     team2Roster,
     clearRosters,
@@ -51,8 +51,7 @@ export default function SettingsScreen() {
   const [softCapTime, setSoftCapTimeLocal] = useState(
     ((gameLengthStore || 90) - (softCapMinsStore || 20)).toString(),
   );
-  const [statTrackingMode, setStatTrackingModeLocal] =
-    useState<StatTrackingMode>(statTrackingModeStore);
+  const [statTrackingEnabled, setStatTrackingEnabledLocal] = useState(statTrackingEnabledStore);
 
   const hasRoster = team1Roster.length > 0 || team2Roster.length > 0;
 
@@ -65,7 +64,7 @@ export default function SettingsScreen() {
     setFloaterEnabled(floaterEnabled);
     setGameLength(gLength);
     setSoftCapMins(Math.max(0, gLength - sCapTime));
-    setStatTrackingMode(statTrackingMode);
+    setStatTrackingEnabled(statTrackingEnabled);
 
     const newCount = parseInt(timeoutsCount, 10);
     const currentCount = team1Timeouts.length;
@@ -111,24 +110,16 @@ export default function SettingsScreen() {
 
             {/* Stat Tracking Mode */}
             <Text style={[styles.sectionTitle, { marginTop: 15 }]}>Stat Tracking</Text>
-            <View style={styles.segmentedControl}>
-              {(['off', 'team1', 'both'] as StatTrackingMode[]).map((mode) => (
-                <Pressable
-                  key={mode}
-                  style={[
-                    styles.segmentButton,
-                    statTrackingMode === mode && styles.segmentButtonActive,
-                  ]}
-                  onPress={() => setStatTrackingModeLocal(mode)}>
-                  <Text
-                    style={[
-                      styles.segmentText,
-                      statTrackingMode === mode && styles.segmentTextActive,
-                    ]}>
-                    {mode === 'off' ? 'Off' : mode === 'team1' ? 'My Team' : 'Both'}
-                  </Text>
-                </Pressable>
-              ))}
+            <View style={[styles.switchContainer, { marginTop: 0 }]}>
+              <View style={styles.labelContainer}>
+                <Text style={styles.label}>Track My Team Stats</Text>
+              </View>
+              <Switch
+                trackColor={{ false: '#767577', true: palette.accent }}
+                thumbColor={statTrackingEnabled ? palette.accent : '#f4f3f4'}
+                onValueChange={setStatTrackingEnabledLocal}
+                value={statTrackingEnabled}
+              />
             </View>
 
             {hasRoster && (

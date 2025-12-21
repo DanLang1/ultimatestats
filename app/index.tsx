@@ -1,7 +1,9 @@
+import PullPrompt from '@/components/PullPrompt';
 import SettingsBar from '@/components/SettingsBar';
 import StatEntrySheet from '@/components/StatEntrySheet';
 import TeamScoreSection from '@/components/TeamScoreSection';
 import { ThemedView } from '@/components/ThemedView';
+import TurnoverEntrySheet from '@/components/TurnoverEntrySheet';
 import { palette } from '@/constants/theme';
 
 import { useGameStore } from '@/store/gameStore';
@@ -23,6 +25,10 @@ export default function BasicScoreboard() {
     decrementScore,
     toggleTimeout,
     resetGame,
+    // Possession tracking
+    statTrackingEnabled,
+    possession,
+    triggerTurnover,
   } = useGameStore();
 
   const openSettings = () => {
@@ -32,6 +38,9 @@ export default function BasicScoreboard() {
   const reset = () => {
     resetGame();
   };
+
+  // Possession tracking is enabled when stat tracking is on
+  const possessionTrackingEnabled = statTrackingEnabled;
 
   const team1Combined = [
     ...team1Timeouts.map((active) => ({ active, isFloater: false })),
@@ -71,6 +80,10 @@ export default function BasicScoreboard() {
         backgroundColor={palette.white}
         timeouts={team1Combined}
         onTimeoutUse={(index) => toggleTimeout(true, index)}
+        // Possession tracking props (only when enabled)
+        hasPossession={possessionTrackingEnabled ? possession === 'team1' : undefined}
+        onTurnover={possessionTrackingEnabled ? triggerTurnover : undefined}
+        side="left"
       />
 
       {/* Timer Bar Overlay */}
@@ -88,10 +101,20 @@ export default function BasicScoreboard() {
         backgroundColor={palette.primary}
         timeouts={team2Combined}
         onTimeoutUse={(index) => toggleTimeout(false, index)}
+        // Possession tracking props (only when enabled)
+        hasPossession={possessionTrackingEnabled ? possession === 'team2' : undefined}
+        onTurnover={possessionTrackingEnabled ? triggerTurnover : undefined}
+        side="right"
       />
+
+      {/* Pull Prompt Modal */}
+      <PullPrompt />
 
       {/* Stat Entry Modal */}
       <StatEntrySheet />
+
+      {/* Turnover Entry Modal */}
+      <TurnoverEntrySheet />
     </ThemedView>
   );
 }

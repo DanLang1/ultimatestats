@@ -4,10 +4,8 @@ import { StatRecord, useGameStore } from '@/store/gameStore';
 import { File, Paths } from 'expo-file-system';
 import { router, Stack } from 'expo-router';
 import * as Sharing from 'expo-sharing';
-import React, { useState } from 'react';
+import React from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-
-type TeamTab = 'team1' | 'team2';
 
 interface PlayerStats {
   name: string;
@@ -15,7 +13,7 @@ interface PlayerStats {
   assists: number;
 }
 
-function computePlayerStats(records: StatRecord[], team: TeamTab): PlayerStats[] {
+function computePlayerStats(records: StatRecord[], team: 'team1' | 'team2'): PlayerStats[] {
   const statsMap = new Map<string, PlayerStats>();
 
   for (const record of records) {
@@ -48,11 +46,10 @@ function generateCSV(records: StatRecord[], team1Name: string, team2Name: string
 
 export default function ViewStatsScreen() {
   const { team1Name, team2Name, statRecords } = useGameStore();
-  const [activeTab, setActiveTab] = useState<TeamTab>('team1');
 
-  const playerStats = computePlayerStats(statRecords, activeTab);
-  const teamName = activeTab === 'team1' ? team1Name : team2Name;
-  const teamRecords = statRecords.filter((r) => r.team === activeTab);
+  // Only show team1 (my team) stats
+  const playerStats = computePlayerStats(statRecords, 'team1');
+  const teamRecords = statRecords.filter((r) => r.team === 'team1');
 
   const handleExport = async () => {
     try {
@@ -77,28 +74,10 @@ export default function ViewStatsScreen() {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <Text style={styles.headerTitle}>Game Stats</Text>
 
-        {/* Team Tabs */}
-        <View style={styles.tabContainer}>
-          <Pressable
-            style={[styles.tab, activeTab === 'team1' && styles.tabActive]}
-            onPress={() => setActiveTab('team1')}>
-            <Text style={[styles.tabText, activeTab === 'team1' && styles.tabTextActive]}>
-              {team1Name}
-            </Text>
-          </Pressable>
-          <Pressable
-            style={[styles.tab, activeTab === 'team2' && styles.tabActive]}
-            onPress={() => setActiveTab('team2')}>
-            <Text style={[styles.tabText, activeTab === 'team2' && styles.tabTextActive]}>
-              {team2Name}
-            </Text>
-          </Pressable>
-        </View>
-
-        {/* Summary */}
+        {/* Team Name Header */}
         <View style={styles.summary}>
           <Text style={styles.summaryText}>
-            {teamName}: {teamRecords.length} point{teamRecords.length !== 1 ? 's' : ''}
+            {team1Name}: {teamRecords.length} point{teamRecords.length !== 1 ? 's' : ''}
           </Text>
         </View>
 
