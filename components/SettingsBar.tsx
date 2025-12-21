@@ -35,7 +35,7 @@ export default function SettingsBar({ onReset, onSettingsPress }: SettingsBarPro
         <MaterialCommunityIcons
           name={isActive ? 'pause' : 'play'}
           size={24}
-          color={palette.white}
+          color={palette.textInverse}
         />
       </Pressable>
 
@@ -44,27 +44,27 @@ export default function SettingsBar({ onReset, onSettingsPress }: SettingsBarPro
         <Text style={styles.timerText}>{formatTime(timeLeft)}</Text>
         {timeLeft === 0 ? (
           // <Text style={styles.softcapText}>Hardcap</Text>
-          <MaterialCommunityIcons name="hard-hat" size={24} color={palette.white} />
+          <MaterialCommunityIcons name="hard-hat" size={24} color={palette.textInverse} />
         ) : isSoftCap || softCapPending ? (
-          <MaterialCommunityIcons name="hat-fedora" size={24} color={palette.white} />
+          <MaterialCommunityIcons name="hat-fedora" size={24} color={palette.textInverse} />
         ) : null}
       </View>
 
       {/* Info */}
       <Pressable onPress={() => setInfoVisible(true)} style={styles.iconButton}>
-        <MaterialCommunityIcons name="information" size={24} color={palette.white} />
+        <MaterialCommunityIcons name="information" size={24} color={palette.textInverse} />
       </Pressable>
 
       <GameInfoModal visible={infoVisible} onClose={() => setInfoVisible(false)} />
 
       {/* Settings */}
       <Pressable onPress={onSettingsPress} style={styles.iconButton}>
-        <MaterialCommunityIcons name="cog" size={24} color={palette.white} />
+        <MaterialCommunityIcons name="cog" size={24} color={palette.textInverse} />
       </Pressable>
 
       {/* Reset */}
       <Pressable onPress={handleReset} style={styles.iconButton}>
-        <MaterialCommunityIcons name="restart" size={24} color={palette.white} />
+        <MaterialCommunityIcons name="restart" size={24} color={palette.textInverse} />
       </Pressable>
     </View>
   );
@@ -72,7 +72,7 @@ export default function SettingsBar({ onReset, onSettingsPress }: SettingsBarPro
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: palette.secondary,
+    backgroundColor: palette.accent,
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
     alignItems: 'center',
@@ -93,11 +93,11 @@ const styles = StyleSheet.create({
   timerText: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: palette.white,
+    color: palette.textInverse,
   },
   softcapText: {
     fontSize: 10,
-    color: palette.white,
+    color: palette.textInverse,
     fontWeight: '600',
     marginTop: -2,
   },

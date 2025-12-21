@@ -66,7 +66,7 @@ function StatEntryInner({
                 value={newPlayerName}
                 onChangeText={setNewPlayerName}
                 placeholder="Add player..."
-                placeholderTextColor="#999"
+                placeholderTextColor={palette.textMuted}
                 onSubmitEditing={handleAddPlayer}
                 returnKeyType="done"
               />
@@ -176,11 +176,11 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   sheet: {
-    backgroundColor: 'white',
+    backgroundColor: palette.surface,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     paddingBottom: 10,
-    shadowColor: '#000',
+    shadowColor: palette.shadow,
     shadowOffset: { width: 0, height: -4 },
     shadowOpacity: 0.15,
     shadowRadius: 12,
@@ -209,12 +209,12 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 44,
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: palette.border,
     borderRadius: 10,
     paddingHorizontal: 12,
     fontSize: 15,
-    color: '#333',
-    backgroundColor: '#f9f9f9',
+    color: palette.textPrimary,
+    backgroundColor: palette.inputBg,
   },
   addButton: {
     backgroundColor: palette.accent,
@@ -227,7 +227,7 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   addButtonText: {
-    color: 'white',
+    color: palette.textInverse,
     fontWeight: '600',
     fontSize: 15,
   },
@@ -241,10 +241,10 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 8,
-    backgroundColor: '#eee',
+    backgroundColor: palette.cardBgAlt,
   },
   skipText: {
-    color: '#666',
+    color: palette.textSecondary,
     fontWeight: '600',
     fontSize: 15,
   },

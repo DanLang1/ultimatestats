@@ -83,11 +83,11 @@ const styles = StyleSheet.create({
   },
   modalView: {
     margin: 20,
-    backgroundColor: 'white',
+    backgroundColor: palette.surface,
     borderRadius: 20,
     padding: 25,
     alignItems: 'stretch',
-    shadowColor: '#000',
+    shadowColor: palette.shadow,
     shadowOffset: {
       width: 0,
       height: 2,
@@ -111,7 +111,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     marginBottom: 10,
-    color: '#666',
+    color: palette.textSecondary,
   },
   row: {
     flexDirection: 'row',
@@ -121,17 +121,17 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 16,
-    color: '#333',
+    color: palette.textPrimary,
     flex: 1,
   },
   value: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#333',
+    color: palette.textPrimary,
   },
   divider: {
     height: 1,
-    backgroundColor: '#eee',
+    backgroundColor: palette.border,
     marginVertical: 15,
   },
   closeButton: {
@@ -143,7 +143,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   closeText: {
-    color: 'white',
+    color: palette.textInverse,
     fontWeight: 'bold',
     textAlign: 'center',
     fontSize: 16,
@@ -153,7 +153,7 @@ const styles = StyleSheet.create({
     padding: 12,
     alignItems: 'center',
     borderRadius: 10,
-    backgroundColor: '#eefeff',
+    backgroundColor: palette.cardBgAlt,
     borderWidth: 1,
     borderColor: palette.primary,
   },

@@ -1,4 +1,5 @@
 import { PlayerChip } from '@/components/ui/PlayerChip';
+import { palette } from '@/constants/theme';
 import React from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
@@ -54,7 +55,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 14,
-    color: '#999',
+    color: palette.textMuted,
     fontStyle: 'italic',
     width: '100%',
     textAlign: 'center',

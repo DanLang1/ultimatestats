@@ -123,7 +123,7 @@ function TurnoverEntryInner({
             {step === 'type' ? (
               <View style={styles.typeButtons}>
                 <Pressable
-                  style={[styles.typeButton, { borderColor: palette.accent }]}
+                  style={[styles.typeButton, { borderColor: palette.success }]}
                   onPress={() => handleTypeSelect('block')}>
                   <Text style={styles.typeButtonText}>{getTypeLabel('block')}</Text>
                 </Pressable>
@@ -131,12 +131,12 @@ function TurnoverEntryInner({
                 {!isOpponentTurnover && (
                   <>
                     <Pressable
-                      style={[styles.typeButton, { borderColor: '#e74c3c' }]}
+                      style={[styles.typeButton, { borderColor: palette.danger }]}
                       onPress={() => handleTypeSelect('throwaway')}>
                       <Text style={styles.typeButtonText}>{getTypeLabel('throwaway')}</Text>
                     </Pressable>
                     <Pressable
-                      style={[styles.typeButton, { borderColor: '#e67e22' }]}
+                      style={[styles.typeButton, { borderColor: palette.warning }]}
                       onPress={() => handleTypeSelect('drop')}>
                       <Text style={styles.typeButtonText}>{getTypeLabel('drop')}</Text>
                     </Pressable>
@@ -150,7 +150,7 @@ function TurnoverEntryInner({
                   value={newPlayerName}
                   onChangeText={setNewPlayerName}
                   placeholder="Add player..."
-                  placeholderTextColor="#999"
+                  placeholderTextColor={palette.textMuted}
                   onSubmitEditing={handleAddPlayer}
                   returnKeyType="done"
                 />
@@ -294,11 +294,11 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   sheet: {
-    backgroundColor: 'white',
+    backgroundColor: palette.surface,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     paddingBottom: 10,
-    shadowColor: '#000',
+    shadowColor: palette.shadow,
     shadowOffset: { width: 0, height: -4 },
     shadowOpacity: 0.15,
     shadowRadius: 12,
@@ -335,10 +335,10 @@ const styles = StyleSheet.create({
   stepLabel: {
     fontSize: 22,
     fontWeight: 'bold',
-    color: '#333',
+    color: palette.textPrimary,
   },
   badge: {
-    backgroundColor: '#f0f0f0',
+    backgroundColor: palette.inputBg,
     borderRadius: 8,
     paddingHorizontal: 10,
     paddingVertical: 4,
@@ -346,20 +346,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
     borderWidth: 1,
-    borderColor: '#e0e0e0',
+    borderColor: palette.border,
     alignSelf: 'flex-start',
   },
   badgeLabel: {
     fontSize: 10,
     fontWeight: 'bold',
-    color: '#999',
+    color: palette.textMuted,
     letterSpacing: 1,
     marginTop: 2,
   },
   badgeValue: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#333',
+    color: palette.textPrimary,
   },
   typeButtons: {
     flexDirection: 'row',
@@ -371,12 +371,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     borderRadius: 10,
     borderWidth: 2,
-    backgroundColor: '#f9f9f9',
+    backgroundColor: palette.inputBg,
   },
   typeButtonText: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#333',
+    color: palette.textPrimary,
   },
   addPlayerRow: {
     flexDirection: 'row',
@@ -386,12 +386,12 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 44,
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: palette.border,
     borderRadius: 10,
     paddingHorizontal: 12,
     fontSize: 15,
-    color: '#333',
-    backgroundColor: '#f9f9f9',
+    color: palette.textPrimary,
+    backgroundColor: palette.inputBg,
   },
   addButton: {
     backgroundColor: palette.accent,
@@ -404,7 +404,7 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   addButtonText: {
-    color: 'white',
+    color: palette.textInverse,
     fontWeight: '600',
     fontSize: 15,
   },
@@ -418,10 +418,10 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 8,
-    backgroundColor: '#eee',
+    backgroundColor: palette.cardBgAlt,
   },
   skipText: {
-    color: '#666',
+    color: palette.textSecondary,
     fontWeight: '600',
     fontSize: 15,
   },

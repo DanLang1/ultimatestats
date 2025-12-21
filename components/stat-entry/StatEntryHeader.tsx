@@ -49,10 +49,10 @@ const styles = StyleSheet.create({
   stepLabel: {
     fontSize: 22,
     fontWeight: 'bold',
-    color: '#333',
+    color: palette.textPrimary,
   },
   badge: {
-    backgroundColor: '#f0f0f0',
+    backgroundColor: palette.inputBg,
     borderRadius: 8,
     paddingHorizontal: 10,
     paddingVertical: 4,
@@ -60,19 +60,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
     borderWidth: 1,
-    borderColor: '#e0e0e0',
+    borderColor: palette.border,
     alignSelf: 'flex-start',
   },
   badgeLabel: {
     fontSize: 10,
     fontWeight: 'bold',
-    color: '#999',
+    color: palette.textMuted,
     letterSpacing: 1,
     marginTop: 2,
   },
   badgeValue: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#333',
+    color: palette.textPrimary,
   },
 });

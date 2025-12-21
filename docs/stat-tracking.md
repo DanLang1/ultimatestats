@@ -18,18 +18,25 @@ interface StatRecord {
   assist: string | null;
 }
 
-type StatTrackingMode = 'off' | 'team1' | 'both';
+interface TurnoverRecord {
+  team: 'team1' | 'team2'; // Team responsible for the action
+  type: 'block' | 'throwaway' | 'drop';
+  player: string | null;
+}
 ```
 
 ## State
 
-| Property              | Type                            | Description                                    |
-| --------------------- | ------------------------------- | ---------------------------------------------- |
-| `statTrackingEnabled` | `boolean`                       | Whether stat tracking is enabled (for my team) |
-| `team1Roster`         | `string[]`                      | Built progressively as players are added       |
-| `team2Roster`         | `string[]`                      | Built progressively as players are added       |
-| `statRecords`         | `StatRecord[]`                  | All recorded stats for the game                |
-| `pendingStatEntry`    | `{ team, pointNumber } \| null` | Triggers stat entry sheet                      |
+| Property               | Type                            | Description                                    |
+| ---------------------- | ------------------------------- | ---------------------------------------------- |
+| `statTrackingEnabled`  | `boolean`                       | Whether stat tracking is enabled (for my team) |
+| `team1Roster`          | `string[]`                      | Built progressively as players are added       |
+| `team2Roster`          | `string[]`                      | Built progressively as players are added       |
+| `statRecords`          | `StatRecord[]`                  | All recorded stats for the game                |
+| `pendingStatEntry`     | `{ team, pointNumber } \| null` | Triggers stat entry sheet                      |
+| `turnoverRecords`      | `TurnoverRecord[]`              | All recorded turnovers for the game            |
+| `pendingTurnoverEntry` | `{ receivingTeam } \| null`     | Triggers turnover entry sheet                  |
+| `possession`           | `'team1' \| 'team2' \| null`    | Current team with the disc                     |
 
 ## Flow
 
@@ -60,31 +67,31 @@ sequenceDiagram
 ### `StatEntrySheet.tsx`
 
 - Bottom sheet modal optimized for permanent landscape orientation
-- Orchestrates the entry flow with ultra-compact layout
+- Orchestrates the entry flow with side-by-side layout (info + roster)
 - Uses sub-components from `components/stat-entry/`
 
 ### `components/stat-entry/StatEntryHeader.tsx`
 
 - Displays team name and current step label
-- Shows professional "GOAL" badge with player name during assist step
+- Shows "GOAL" badge with player name during assist step
 
 ### `components/stat-entry/StatEntryRoster.tsx`
 
-- Displays roster as a scrollable vertical grid of `PlayerChip`s
-- Compact vertical sizing specifically for landscape (maxHeight: 120px)
+- Displays roster as a scrollable grid of `PlayerChip`s
+- Compact sizing for landscape (maxHeight: 280px)
 
-### `PlayerChip.tsx`
+### `components/ui/PlayerChip.tsx`
 
 - Reusable chip for player selection
-- Selected/unselected states with accent color
+- Selected/unselected states using palette colors
 
 ## Settings
 
 In Settings screen (`app/Settings.tsx`):
 
-- **Stat Tracking Mode**: Segmented control with Off / My Team / Both
-- **Clear Player Rosters**: Button to reset roster (appears when roster has players)
-- **View Stats**: access the [View Stats](view-stats.md) screen to see player breakdowns and export data
+- **Track My Team Stats**: Toggle switch to enable/disable stat tracking
+- **Clear Player Rosters**: Button to reset rosters (appears when roster has players)
+- **View Stats**: Access the [View Stats](view-stats.md) screen to see player breakdowns and export data
 
 ## Decrement Behavior
 
@@ -101,4 +108,6 @@ On "New Game":
 - `statRecords` cleared
 - `pendingStatEntry` cleared
 - `team1Roster` and `team2Roster` cleared
-- Mode setting persists
+- `turnoverRecords` cleared
+- `possession` and `startingPossession` reset to null
+- `statTrackingEnabled` setting persists

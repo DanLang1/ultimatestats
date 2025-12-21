@@ -1,3 +1,4 @@
+import { palette } from '@/constants/theme';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
 import { StyleSheet, Text, TextInput, TextStyle, View, ViewStyle } from 'react-native';
@@ -27,7 +28,12 @@ export function InputNumber({
     <View style={[styles.container, containerStyle, !editable && styles.disabledContainer]}>
       <View style={styles.labelContainer}>
         {!editable && (
-          <MaterialCommunityIcons name="lock" size={14} color="#999" style={{ marginRight: 4 }} />
+          <MaterialCommunityIcons
+            name="lock"
+            size={14}
+            color={palette.textMuted}
+            style={{ marginRight: 4 }}
+          />
         )}
         <Text style={[styles.label, labelStyle, !editable && styles.disabledLabel]}>{label}</Text>
       </View>
@@ -37,7 +43,7 @@ export function InputNumber({
         value={value}
         onChangeText={onChangeText}
         placeholder={placeholder}
-        placeholderTextColor="#999"
+        placeholderTextColor={palette.textMuted}
         editable={editable}
       />
     </View>
@@ -51,19 +57,19 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     height: 45,
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: palette.border,
     borderRadius: 8,
     paddingHorizontal: 10,
-    backgroundColor: '#f9f9f9',
+    backgroundColor: palette.inputBg,
   },
   label: {
     fontSize: 14,
-    color: '#333',
+    color: palette.textPrimary,
   },
   input: {
     width: 60,
     textAlign: 'right',
-    color: 'black',
+    color: palette.textPrimary,
     fontSize: 16,
   },
   labelContainer: {
@@ -71,14 +77,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   disabledContainer: {
-    backgroundColor: '#f2f2f2',
-    borderColor: '#eee',
+    backgroundColor: palette.cardBgAlt,
+    borderColor: palette.borderLight,
     opacity: 0.8,
   },
   disabledLabel: {
-    color: '#999',
+    color: palette.textMuted,
   },
   disabledInput: {
-    color: '#aaa',
+    color: palette.disabled,
   },
 });

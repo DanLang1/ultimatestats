@@ -98,14 +98,14 @@ export default function SettingsScreen() {
               value={team1}
               onChangeText={setTeam1}
               placeholder="Team 1 Name"
-              placeholderTextColor="#999"
+              placeholderTextColor={palette.textMuted}
             />
             <TextInput
               style={styles.input}
               value={team2}
               onChangeText={setTeam2}
               placeholder="Team 2 Name"
-              placeholderTextColor="#999"
+              placeholderTextColor={palette.textMuted}
             />
 
             {/* Stat Tracking Mode */}
@@ -115,8 +115,8 @@ export default function SettingsScreen() {
                 <Text style={styles.label}>Track My Team Stats</Text>
               </View>
               <Switch
-                trackColor={{ false: '#767577', true: palette.accent }}
-                thumbColor={statTrackingEnabled ? palette.accent : '#f4f3f4'}
+                trackColor={{ false: palette.disabled, true: palette.accent }}
+                thumbColor={statTrackingEnabled ? palette.accent : palette.cardBgAlt}
                 onValueChange={setStatTrackingEnabledLocal}
                 value={statTrackingEnabled}
               />
@@ -173,7 +173,7 @@ export default function SettingsScreen() {
                   <MaterialCommunityIcons
                     name="lock"
                     size={14}
-                    color="#999"
+                    color={palette.textMuted}
                     style={{ marginRight: 4 }}
                   />
                 )}
@@ -182,8 +182,17 @@ export default function SettingsScreen() {
                 </Text>
               </View>
               <Switch
-                trackColor={{ false: '#767577', true: gameActive ? '#ccc' : palette.accent }}
-                thumbColor={floaterEnabled ? (gameActive ? '#eee' : palette.accent) : '#f4f3f4'}
+                trackColor={{
+                  false: palette.disabled,
+                  true: gameActive ? palette.border : palette.accent,
+                }}
+                thumbColor={
+                  floaterEnabled
+                    ? gameActive
+                      ? palette.border
+                      : palette.accent
+                    : palette.cardBgAlt
+                }
                 onValueChange={setFloaterEnabledLocal}
                 value={floaterEnabled}
                 disabled={gameActive}
@@ -194,9 +203,9 @@ export default function SettingsScreen() {
       </ScrollView>
 
       <View style={styles.buttons}>
-        <Button title="Cancel" onPress={() => router.back()} color="red" />
-        <Button title="New Game" onPress={handleNewGame} color="orange" />
-        <Button title="Save" onPress={handleSave} />
+        <Button title="Cancel" onPress={() => router.back()} color={palette.danger} />
+        <Button title="New Game" onPress={handleNewGame} color={palette.warning} />
+        <Button title="Save" onPress={handleSave} color={palette.accent} />
       </View>
     </ThemedView>
   );
@@ -205,7 +214,7 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'white',
+    backgroundColor: palette.surface,
   },
   scrollContent: {
     padding: 24,
@@ -214,7 +223,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 10, // Reduced from 20
-    color: '#333',
+    color: palette.textPrimary,
     textAlign: 'center',
   },
   columnsContainer: {
@@ -231,7 +240,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#666',
+    color: palette.textSecondary,
   },
   sectionHeaderRow: {
     flexDirection: 'row',
@@ -242,12 +251,12 @@ const styles = StyleSheet.create({
   input: {
     height: 45,
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: palette.border,
     borderRadius: 8,
     padding: 10,
     width: '100%',
-    color: 'black',
-    backgroundColor: '#f9f9f9',
+    color: palette.textPrimary,
+    backgroundColor: palette.inputBg,
   },
 
   switchContainer: {
@@ -259,7 +268,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 16,
-    color: '#333',
+    color: palette.textPrimary,
   },
   labelContainer: {
     flexDirection: 'row',
@@ -269,7 +278,7 @@ const styles = StyleSheet.create({
     opacity: 0.8,
   },
   disabledLabel: {
-    color: '#999',
+    color: palette.textMuted,
   },
   buttons: {
     flexDirection: 'row',
@@ -279,21 +288,21 @@ const styles = StyleSheet.create({
     paddingBottom: 24,
     paddingHorizontal: 24,
     borderTopWidth: 1,
-    borderTopColor: '#eee',
-    backgroundColor: 'white',
+    borderTopColor: palette.borderLight,
+    backgroundColor: palette.surface,
   },
   segmentedControl: {
     flexDirection: 'row',
     borderRadius: 8,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: palette.border,
   },
   segmentButton: {
     flex: 1,
     paddingVertical: 10,
     alignItems: 'center',
-    backgroundColor: '#f9f9f9',
+    backgroundColor: palette.inputBg,
   },
   segmentButtonActive: {
     backgroundColor: palette.primary,
@@ -301,25 +310,27 @@ const styles = StyleSheet.create({
   segmentText: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#666',
+    color: palette.textSecondary,
   },
   segmentTextActive: {
-    color: 'white',
+    color: palette.textInverse,
   },
   clearRosterButton: {
     marginTop: 10,
     padding: 10,
     alignItems: 'center',
     borderRadius: 8,
-    backgroundColor: '#fee',
+    backgroundColor: palette.cardBgAlt,
+    borderWidth: 1,
+    borderColor: palette.danger,
   },
   clearRosterText: {
-    color: '#c00',
+    color: palette.danger,
     fontSize: 14,
     fontWeight: '500',
   },
   helperText: {
     fontSize: 12,
-    color: '#999',
+    color: palette.textMuted,
   },
 });

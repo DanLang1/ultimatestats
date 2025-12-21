@@ -21,7 +21,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 20,
-    backgroundColor: '#f0f0f0',
+    backgroundColor: palette.inputBg,
     borderWidth: 2,
     borderColor: 'transparent',
   },
@@ -31,10 +31,10 @@ const styles = StyleSheet.create({
   },
   chipText: {
     fontSize: 16,
-    color: '#333',
+    color: palette.textPrimary,
     fontWeight: '500',
   },
   chipTextSelected: {
-    color: 'white',
+    color: palette.textInverse,
   },
 });

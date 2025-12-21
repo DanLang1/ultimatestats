@@ -1,8 +1,9 @@
 import { palette } from '@/constants/theme';
-import { useGameStore } from '@/store/gameStore';
 import React from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeIn, SlideInDown } from 'react-native-reanimated';
+
+import { useGameStore } from '@/store/gameStore';
 
 export default function PullPrompt() {
   const { possession, statTrackingEnabled, team1Name, team2Name, setPossession } = useGameStore();
@@ -22,7 +23,7 @@ export default function PullPrompt() {
 
           <View style={styles.buttonRow}>
             <Pressable
-              style={[styles.teamButton, { backgroundColor: palette.white }]}
+              style={[styles.teamButton, { backgroundColor: palette.surface }]}
               onPress={() => setPossession('team1')}>
               <Text style={[styles.teamButtonText, { color: palette.primary }]}>{team1Name}</Text>
             </Pressable>
@@ -30,7 +31,9 @@ export default function PullPrompt() {
             <Pressable
               style={[styles.teamButton, { backgroundColor: palette.primary }]}
               onPress={() => setPossession('team2')}>
-              <Text style={[styles.teamButtonText, { color: palette.white }]}>{team2Name}</Text>
+              <Text style={[styles.teamButtonText, { color: palette.textInverse }]}>
+                {team2Name}
+              </Text>
             </Pressable>
           </View>
         </Animated.View>
@@ -47,12 +50,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   sheet: {
-    backgroundColor: 'white',
+    backgroundColor: palette.surface,
     borderRadius: 20,
     padding: 24,
     minWidth: 300,
     alignItems: 'center',
-    shadowColor: '#000',
+    shadowColor: palette.shadow,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.25,
     shadowRadius: 12,
@@ -61,7 +64,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#333',
+    color: palette.textPrimary,
     marginBottom: 20,
     textAlign: 'center',
   },

@@ -221,7 +221,7 @@ export default function ViewStatsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'white',
+    backgroundColor: palette.surface,
   },
   scrollContent: {
     padding: 24,
@@ -230,11 +230,11 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 15,
-    color: '#333',
+    color: palette.textPrimary,
     textAlign: 'center',
   },
   summary: {
-    backgroundColor: '#f5f5f5',
+    backgroundColor: palette.cardBgAlt,
     borderRadius: 8,
     padding: 12,
     marginBottom: 15,
@@ -243,7 +243,7 @@ const styles = StyleSheet.create({
   summaryText: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#333',
+    color: palette.textPrimary,
   },
   emptyState: {
     padding: 40,
@@ -251,14 +251,14 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 16,
-    color: '#999',
+    color: palette.textMuted,
   },
   // Table styles
   tableContainer: {
     borderRadius: 8,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: palette.border,
   },
   tableHeader: {
     flexDirection: 'row',
@@ -270,22 +270,22 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 13,
     fontWeight: '600',
-    color: 'white',
+    color: palette.textInverse,
     textAlign: 'center',
   },
   tableRow: {
     flexDirection: 'row',
     paddingVertical: 10,
     paddingHorizontal: 8,
-    backgroundColor: 'white',
+    backgroundColor: palette.surface,
   },
   tableRowAlt: {
-    backgroundColor: '#f9f9f9',
+    backgroundColor: palette.cardBgAlt,
   },
   cell: {
     flex: 1,
     fontSize: 14,
-    color: '#333',
+    color: palette.textPrimary,
     textAlign: 'center',
   },
   nameCell: {
@@ -296,10 +296,10 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   plusMinusPositive: {
-    color: palette.accent,
+    color: palette.success,
   },
   plusMinusNegative: {
-    color: '#e53935',
+    color: palette.danger,
   },
   // Actions
   actions: {
@@ -312,13 +312,13 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 14,
     borderRadius: 10,
-    backgroundColor: '#eee',
+    backgroundColor: palette.cardBgAlt,
     alignItems: 'center',
   },
   backButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#666',
+    color: palette.textSecondary,
   },
   exportButton: {
     flex: 1,
@@ -330,6 +330,6 @@ const styles = StyleSheet.create({
   exportButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: 'white',
+    color: palette.textInverse,
   },
 });

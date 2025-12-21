@@ -77,7 +77,7 @@ export default function BasicScoreboard() {
         onIncrement={() => incrementScore(true)}
         onDecrement={() => decrementScore(true)}
         textColor={palette.primary}
-        backgroundColor={palette.white}
+        backgroundColor={palette.surface}
         timeouts={team1Combined}
         onTimeoutUse={(index) => toggleTimeout(true, index)}
         // Possession tracking props (only when enabled)
@@ -97,7 +97,7 @@ export default function BasicScoreboard() {
         score={team2Score}
         onIncrement={() => incrementScore(false)}
         onDecrement={() => decrementScore(false)}
-        textColor={palette.white}
+        textColor={palette.textInverse}
         backgroundColor={palette.primary}
         timeouts={team2Combined}
         onTimeoutUse={(index) => toggleTimeout(false, index)}
