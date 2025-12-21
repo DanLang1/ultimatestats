@@ -7,8 +7,6 @@ export interface StatRecord {
   assist: string | null;
 }
 
-// Stat tracking is either enabled (tracking team1/my team) or disabled
-
 export type TurnoverType = 'block' | 'throwaway' | 'drop';
 
 export interface TurnoverRecord {
@@ -49,6 +47,7 @@ interface GameState {
 
   // Turnover Tracking
   possession: 'team1' | 'team2' | null;
+  startingPossession: 'team1' | 'team2' | null; // Who received first (to determine halftime)
   turnoverRecords: TurnoverRecord[];
   pendingTurnoverEntry: { receivingTeam: 'team1' | 'team2' } | null;
 
@@ -113,6 +112,7 @@ export const useGameStore = create<GameState>((set) => ({
 
   // Turnover Tracking Initial State
   possession: null,
+  startingPossession: null,
   turnoverRecords: [],
   pendingTurnoverEntry: null,
 
@@ -136,11 +136,15 @@ export const useGameStore = create<GameState>((set) => ({
 
       // Automatic Halftime Logic
       if (state.gameHalf === 1 && newScore === halftimeScore) {
+        // At halftime, the team that received first now pulls
+        // So the OTHER team receives (gets possession)
+        const halftimePossession = state.startingPossession === 'team1' ? 'team2' : 'team1';
         newState = {
           ...newState,
           gameHalf: 2,
           team1Timeouts: new Array(state.team1Timeouts.length).fill(true),
           team2Timeouts: new Array(state.team2Timeouts.length).fill(true),
+          possession: state.statTrackingEnabled ? halftimePossession : state.possession,
         };
       }
 
@@ -265,6 +269,7 @@ export const useGameStore = create<GameState>((set) => ({
       team2Roster: [],
       // Reset turnover tracking for new game
       possession: null,
+      startingPossession: null,
       turnoverRecords: [],
       pendingTurnoverEntry: null,
       // Reset timer
@@ -320,7 +325,15 @@ export const useGameStore = create<GameState>((set) => ({
     set({ team1Roster: [], team2Roster: [], statRecords: [], turnoverRecords: [] }),
 
   // Turnover Tracking Actions
-  setPossession: (team) => set({ possession: team }),
+  setPossession: (team) =>
+    set((state) => {
+      // Only set startingPossession if it hasn't been set yet (first pull of the game)
+      const updates: Partial<GameState> = { possession: team };
+      if (state.startingPossession === null) {
+        updates.startingPossession = team;
+      }
+      return updates;
+    }),
 
   triggerTurnover: () =>
     set((state) => {

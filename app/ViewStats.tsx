@@ -1,6 +1,6 @@
 import { ThemedView } from '@/components/ThemedView';
 import { palette } from '@/constants/theme';
-import { StatRecord, useGameStore } from '@/store/gameStore';
+import { StatRecord, TurnoverRecord, useGameStore } from '@/store/gameStore';
 import { File, Paths } from 'expo-file-system';
 import { router, Stack } from 'expo-router';
 import * as Sharing from 'expo-sharing';
@@ -11,50 +11,127 @@ interface PlayerStats {
   name: string;
   goals: number;
   assists: number;
+  blocks: number;
+  throwaways: number;
+  drops: number;
+  plusMinus: number;
 }
 
-function computePlayerStats(records: StatRecord[], team: 'team1' | 'team2'): PlayerStats[] {
+function computePlayerStats(
+  statRecords: StatRecord[],
+  turnoverRecords: TurnoverRecord[],
+  team: 'team1' | 'team2',
+): PlayerStats[] {
   const statsMap = new Map<string, PlayerStats>();
 
-  for (const record of records) {
+  const getOrCreate = (name: string): PlayerStats =>
+    statsMap.get(name) || {
+      name,
+      goals: 0,
+      assists: 0,
+      blocks: 0,
+      throwaways: 0,
+      drops: 0,
+      plusMinus: 0,
+    };
+
+  // Process stat records (goals/assists)
+  for (const record of statRecords) {
     if (record.team !== team) continue;
 
     if (record.goal) {
-      const existing = statsMap.get(record.goal) || { name: record.goal, goals: 0, assists: 0 };
-      existing.goals++;
-      statsMap.set(record.goal, existing);
+      const stats = getOrCreate(record.goal);
+      stats.goals++;
+      statsMap.set(record.goal, stats);
     }
 
     if (record.assist) {
-      const existing = statsMap.get(record.assist) || { name: record.assist, goals: 0, assists: 0 };
-      existing.assists++;
-      statsMap.set(record.assist, existing);
+      const stats = getOrCreate(record.assist);
+      stats.assists++;
+      statsMap.set(record.assist, stats);
     }
   }
 
-  return Array.from(statsMap.values()).sort((a, b) => b.goals + b.assists - (a.goals + a.assists));
+  // Process turnover records (blocks/throwaways/drops)
+  for (const record of turnoverRecords) {
+    if (record.team !== team || !record.player) continue;
+
+    const stats = getOrCreate(record.player);
+    switch (record.type) {
+      case 'block':
+        stats.blocks++;
+        break;
+      case 'throwaway':
+        stats.throwaways++;
+        break;
+      case 'drop':
+        stats.drops++;
+        break;
+    }
+    statsMap.set(record.player, stats);
+  }
+
+  // Calculate plusMinus for each player
+  for (const stats of statsMap.values()) {
+    stats.plusMinus = stats.goals + stats.assists + stats.blocks - stats.throwaways - stats.drops;
+  }
+
+  // Sort by plusMinus descending, then by name
+  return Array.from(statsMap.values()).sort(
+    (a, b) => b.plusMinus - a.plusMinus || a.name.localeCompare(b.name),
+  );
 }
 
-function generateCSV(records: StatRecord[], team1Name: string, team2Name: string): string {
-  const header = 'Point Number,Team,Goal,Assist\n';
-  const rows = records.map((r) => {
-    const teamName = r.team === 'team1' ? team1Name : team2Name;
-    return `${r.pointNumber},${teamName},${r.goal || ''},${r.assist || ''}`;
-  });
-  return header + rows.join('\n');
+function generateCSV(
+  statRecords: StatRecord[],
+  turnoverRecords: TurnoverRecord[],
+  playerStats: PlayerStats[],
+  team1Name: string,
+  team2Name: string,
+): string {
+  // Section 1: Play-by-play
+  let csv = '# Play-by-Play\n';
+  csv += 'Point Number,Team,Goal,Assist\n';
+  csv += statRecords
+    .map((r) => {
+      const teamName = r.team === 'team1' ? team1Name : team2Name;
+      return `${r.pointNumber},${teamName},${r.goal || ''},${r.assist || ''}`;
+    })
+    .join('\n');
+
+  // Section 2: Turnovers
+  csv += '\n\n# Turnovers\n';
+  csv += 'Team,Type,Player\n';
+  csv += turnoverRecords
+    .map((r) => {
+      const teamName = r.team === 'team1' ? team1Name : team2Name;
+      return `${teamName},${r.type},${r.player || ''}`;
+    })
+    .join('\n');
+
+  // Section 3: Player Summary
+  csv += '\n\n# Player Summary\n';
+  csv += 'Player,Goals,Assists,Blocks,Throwaways,Drops,Plus/Minus\n';
+  csv += playerStats
+    .map(
+      (p) =>
+        `${p.name},${p.goals},${p.assists},${p.blocks},${p.throwaways},${p.drops},${p.plusMinus}`,
+    )
+    .join('\n');
+
+  return csv;
 }
 
 export default function ViewStatsScreen() {
-  const { team1Name, team2Name, statRecords } = useGameStore();
+  const { team1Name, team2Name, statRecords, turnoverRecords } = useGameStore();
 
   // Only show team1 (my team) stats
-  const playerStats = computePlayerStats(statRecords, 'team1');
+  const playerStats = computePlayerStats(statRecords, turnoverRecords, 'team1');
   const teamRecords = statRecords.filter((r) => r.team === 'team1');
 
   const handleExport = async () => {
     try {
-      const csv = generateCSV(statRecords, team1Name, team2Name);
-      // Use cacheDirectory and writeAsStringAsync directly from FileSystem namespace
+      const csv = generateCSV(statRecords, turnoverRecords, playerStats, team1Name, team2Name);
       const file = new File(Paths.cache, 'game_stats.csv');
       file.write(csv);
 
@@ -81,26 +158,47 @@ export default function ViewStatsScreen() {
           </Text>
         </View>
 
-        {/* Player Stats List */}
+        {/* Player Stats Table */}
         {playerStats.length === 0 ? (
           <View style={styles.emptyState}>
             <Text style={styles.emptyText}>No stats recorded yet</Text>
           </View>
         ) : (
-          <View style={styles.statsList}>
-            {playerStats.map((player) => (
-              <View key={player.name} style={styles.playerCard}>
-                <Text style={styles.playerName}>{player.name}</Text>
-                <View style={styles.statBadges}>
-                  <View style={styles.badge}>
-                    <Text style={styles.badgeNumber}>{player.goals}</Text>
-                    <Text style={styles.badgeLabel}>Goals</Text>
-                  </View>
-                  <View style={styles.badge}>
-                    <Text style={styles.badgeNumber}>{player.assists}</Text>
-                    <Text style={styles.badgeLabel}>Assists</Text>
-                  </View>
-                </View>
+          <View style={styles.tableContainer}>
+            {/* Table Header */}
+            <View style={styles.tableHeader}>
+              <Text style={[styles.headerCell, styles.nameCell]}>Player</Text>
+              <Text style={styles.headerCell}>Goals</Text>
+              <Text style={styles.headerCell}>Assists</Text>
+              <Text style={styles.headerCell}>Blocks</Text>
+              <Text style={styles.headerCell}>Throwaways</Text>
+              <Text style={styles.headerCell}>Drops</Text>
+              <Text style={styles.headerCell}>+/-</Text>
+            </View>
+
+            {/* Table Rows */}
+            {playerStats.map((player, index) => (
+              <View
+                key={player.name}
+                style={[styles.tableRow, index % 2 === 1 && styles.tableRowAlt]}>
+                <Text style={[styles.cell, styles.nameCell]} numberOfLines={1}>
+                  {player.name}
+                </Text>
+                <Text style={styles.cell}>{player.goals}</Text>
+                <Text style={styles.cell}>{player.assists}</Text>
+                <Text style={styles.cell}>{player.blocks}</Text>
+                <Text style={styles.cell}>{player.throwaways}</Text>
+                <Text style={styles.cell}>{player.drops}</Text>
+                <Text
+                  style={[
+                    styles.cell,
+                    styles.plusMinusCell,
+                    player.plusMinus > 0 && styles.plusMinusPositive,
+                    player.plusMinus < 0 && styles.plusMinusNegative,
+                  ]}>
+                  {player.plusMinus > 0 ? '+' : ''}
+                  {player.plusMinus}
+                </Text>
               </View>
             ))}
           </View>
@@ -135,31 +233,6 @@ const styles = StyleSheet.create({
     color: '#333',
     textAlign: 'center',
   },
-  tabContainer: {
-    flexDirection: 'row',
-    borderRadius: 8,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: '#ddd',
-    marginBottom: 15,
-  },
-  tab: {
-    flex: 1,
-    paddingVertical: 12,
-    alignItems: 'center',
-    backgroundColor: '#f9f9f9',
-  },
-  tabActive: {
-    backgroundColor: palette.primary,
-  },
-  tabText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#666',
-  },
-  tabTextActive: {
-    color: 'white',
-  },
   summary: {
     backgroundColor: '#f5f5f5',
     borderRadius: 8,
@@ -180,45 +253,55 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#999',
   },
-  statsList: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    gap: 12,
-  },
-  playerCard: {
-    width: '48.5%',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: '#fafafa',
-    borderRadius: 10,
-    padding: 12,
+  // Table styles
+  tableContainer: {
+    borderRadius: 8,
+    overflow: 'hidden',
     borderWidth: 1,
-    borderColor: '#eee',
+    borderColor: '#ddd',
   },
-  playerName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-    flex: 1,
-  },
-  statBadges: {
+  tableHeader: {
     flexDirection: 'row',
-    gap: 15,
+    backgroundColor: palette.primary,
+    paddingVertical: 10,
+    paddingHorizontal: 8,
   },
-  badge: {
-    alignItems: 'center',
+  headerCell: {
+    flex: 1,
+    fontSize: 13,
+    fontWeight: '600',
+    color: 'white',
+    textAlign: 'center',
   },
-  badgeNumber: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: palette.primary,
+  tableRow: {
+    flexDirection: 'row',
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+    backgroundColor: 'white',
   },
-  badgeLabel: {
-    fontSize: 12,
-    color: '#999',
+  tableRowAlt: {
+    backgroundColor: '#f9f9f9',
   },
+  cell: {
+    flex: 1,
+    fontSize: 14,
+    color: '#333',
+    textAlign: 'center',
+  },
+  nameCell: {
+    flex: 2.5,
+    textAlign: 'left',
+  },
+  plusMinusCell: {
+    fontWeight: '600',
+  },
+  plusMinusPositive: {
+    color: palette.accent,
+  },
+  plusMinusNegative: {
+    color: '#e53935',
+  },
+  // Actions
   actions: {
     flexDirection: 'row',
     justifyContent: 'space-between',

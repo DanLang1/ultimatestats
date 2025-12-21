@@ -96,6 +96,25 @@ sequenceDiagram
     Store->>Store: possession = 'team2' (they receive pull)
 ```
 
+### Halftime Possession
+
+At halftime, the team that received the first pull of the game now pulls (the other team receives):
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant TeamSection
+    participant Store
+
+    Note over User: Team 1 received first pull
+    Note over User: Team 1 scores halftime point
+    User->>TeamSection: Taps Team 1
+    TeamSection->>Store: incrementScore(true)
+    Store->>Store: gameHalf = 2
+    Store->>Store: possession = 'team1' (they receive at halftime)
+    Note over Store: Team 2 now pulls (they received first)
+```
+
 ## Tap Behavior
 
 The tap behavior depends on the stat tracking mode setting:

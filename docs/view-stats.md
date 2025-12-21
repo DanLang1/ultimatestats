@@ -4,7 +4,7 @@
 
 ## Overview
 
-The View Stats page allows users to see a breakdown of player statistics (goals and assists) for the current game and export the raw data.
+The View Stats page displays a table of player statistics (goals, assists, blocks, throwaways, drops, and plus/minus) for the current game, with the ability to export raw data.
 
 ## Access
 
@@ -19,14 +19,23 @@ The View Stats page allows users to see a breakdown of player statistics (goals 
 - Displays the team name and total number of points recorded.
 - Shows stats for your team (Team 1).
 
-### 2. Player Stats List
+### 2. Player Stats Table
 
-- Scrollable list of players who have recorded at least one stat.
-- Sorted by total involvement (Goals + Assists) descending.
-- **Player Card**:
-  - **Name**: Player name.
-  - **Goals**: Count of goals scored.
-  - **Assists**: Count of assists thrown.
+Scrollable table with the following columns:
+
+| Column | Description                                    |
+| ------ | ---------------------------------------------- |
+| Player | Player name                                    |
+| G      | Goals scored (+1)                              |
+| A      | Assists thrown (+1)                            |
+| Blk    | Blocks made (+1)                               |
+| TO     | Throwaways committed (-1)                      |
+| D      | Drops committed (-1)                           |
+| +/-    | Plus/Minus (G + A + Blk - TO - D), color-coded |
+
+- Sorted by Plus/Minus descending, then by name.
+- Alternating row colors for readability.
+- Plus/Minus is **green** for positive, **red** for negative.
 
 ### 3. Actions
 
@@ -35,18 +44,31 @@ The View Stats page allows users to see a breakdown of player statistics (goals 
 
 ## CSV Export
 
-The exported file (`game_stats.csv`) contains the raw play-by-play stat records.
+The exported file (`game_stats.csv`) contains three sections:
 
-### Format
+### Section 1: Play-by-Play
 
 ```csv
+# Play-by-Play
 Point Number,Team,Goal,Assist
 1,Team Rocket,Alice,Bob
 2,Team Rocket,Charlie,Alice
-...
 ```
 
-- **Point Number**: Sequential number of the point for that team (1st point scored, 2nd point scored, etc.).
-- **Team**: The name of the team at the time of export.
-- **Goal**: Name of the player who scored (or empty/null if unknown).
-- **Assist**: Name of the player who assisted (or empty/null if unknown).
+### Section 2: Turnovers
+
+```csv
+# Turnovers
+Team,Type,Player
+Team Rocket,throwaway,Dan
+Team Rocket,block,Alice
+```
+
+### Section 3: Player Summary
+
+```csv
+# Player Summary
+Player,Goals,Assists,Blocks,Throwaways,Drops,Plus/Minus
+Alice,3,2,1,0,0,6
+Bob,2,1,0,1,0,2
+```
