@@ -3,9 +3,9 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
 import { useGameTimer } from '@/hooks/useGameTimer';
 import { useGameStore } from '@/store/gameStore';
-import React, { useState } from 'react';
+import { router } from 'expo-router';
+import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import GameInfoModal from './GameInfoModal';
 
 interface SettingsBarProps {
   onReset: () => void;
@@ -15,7 +15,6 @@ interface SettingsBarProps {
 export default function SettingsBar({ onReset, onSettingsPress }: SettingsBarProps) {
   const { timeLeft, isActive, toggleTimer, resetTimer } = useGameTimer();
   const { isSoftCap, softCapPending } = useGameStore();
-  const [infoVisible, setInfoVisible] = useState(false);
 
   const handleReset = () => {
     resetTimer();
@@ -43,19 +42,16 @@ export default function SettingsBar({ onReset, onSettingsPress }: SettingsBarPro
       <View style={styles.timerContainer}>
         <Text style={styles.timerText}>{formatTime(timeLeft)}</Text>
         {timeLeft === 0 ? (
-          // <Text style={styles.softcapText}>Hardcap</Text>
           <MaterialCommunityIcons name="hard-hat" size={24} color={palette.textInverse} />
         ) : isSoftCap || softCapPending ? (
           <MaterialCommunityIcons name="hat-fedora" size={24} color={palette.textInverse} />
         ) : null}
       </View>
 
-      {/* Info */}
-      <Pressable onPress={() => setInfoVisible(true)} style={styles.iconButton}>
+      {/* Info - now navigates to page */}
+      <Pressable onPress={() => router.push('/GameInfo')} style={styles.iconButton}>
         <MaterialCommunityIcons name="information" size={24} color={palette.textInverse} />
       </Pressable>
-
-      <GameInfoModal visible={infoVisible} onClose={() => setInfoVisible(false)} />
 
       {/* Settings */}
       <Pressable onPress={onSettingsPress} style={styles.iconButton}>
@@ -72,7 +68,7 @@ export default function SettingsBar({ onReset, onSettingsPress }: SettingsBarPro
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: palette.accent,
+    backgroundColor: palette.secondary,
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
     alignItems: 'center',

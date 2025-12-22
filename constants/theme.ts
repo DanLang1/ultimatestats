@@ -19,6 +19,11 @@ const midnightElectric = {
   surface: '#F8FAFC', // Off White - light backgrounds
 
   // UI Accents
+  // secondary: '#1E3A8A', // Blue 900 - secondary UI elements (SettingsBar)
+  // secondary: '#475569', // Slate 600 - medium slate-blue
+  // secondary: '#334155', // Slate 700 - slightly lighter than primary
+  // secondary: '#3730A3', // Indigo 800 - deep indigo with warmth
+  secondary: '#3A506B', // Indigo 700 - slightly lighter than primary
   accent: '#3B82F6', // Electric Blue - primary interactive
   success: '#10B981', // Emerald - positive stats, goals
   danger: '#F43F5E', // Rose - negative stats, errors

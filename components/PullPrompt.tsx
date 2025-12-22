@@ -14,7 +14,7 @@ export default function PullPrompt() {
   if (!visible) return null;
 
   return (
-    <Modal transparent visible={visible} animationType="none">
+    <Modal transparent visible={visible} animationType="fade">
       <View style={styles.overlay}>
         <Animated.View entering={SlideInDown.duration(400)} style={styles.sheet}>
           <Animated.Text entering={FadeIn.delay(200)} style={styles.title}>
