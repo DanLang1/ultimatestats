@@ -1,3 +1,4 @@
+import { TimeoutCounter } from '@/components/game-info/TimeoutCounter';
 import { ThemedView } from '@/components/ThemedView';
 import { palette } from '@/constants/theme';
 import { useGameStore } from '@/store/gameStore';
@@ -5,21 +6,6 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router, Stack } from 'expo-router';
 import React from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-
-// Compact Timeout Display
-function TimeoutCounter({ count, hasFloater }: { count: number; hasFloater: boolean }) {
-  return (
-    <View style={styles.timeoutContainer}>
-      <Text style={styles.timeoutNumber}>{count}</Text>
-      <Text style={styles.timeoutLabel}>left</Text>
-      {hasFloater && (
-        <View style={styles.floaterChip}>
-          <Text style={styles.floaterText}>+1</Text>
-        </View>
-      )}
-    </View>
-  );
-}
 
 export default function GameInfoScreen() {
   const {
@@ -30,7 +16,7 @@ export default function GameInfoScreen() {
     team2Timeouts,
     team1Floater,
     team2Floater,
-    statTrackingEnabled,
+
     team1Score,
     team2Score,
   } = useGameStore();
@@ -103,28 +89,6 @@ export default function GameInfoScreen() {
           <Text style={styles.placeholderText}>More features coming soon...</Text>
         </View>
       </ScrollView>
-
-      {/* Footer Actions */}
-      <View style={styles.footer}>
-        {statTrackingEnabled && (
-          <Pressable
-            style={({ pressed }) => [
-              styles.statsButton,
-              pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
-            ]}
-            onPress={() => router.push('/ViewStats')}>
-            <View style={styles.statsContent}>
-              <MaterialCommunityIcons
-                name="chart-box-outline"
-                size={22}
-                color={palette.textInverse}
-              />
-              <Text style={styles.statsButtonText}>View Full Stats</Text>
-            </View>
-            <MaterialCommunityIcons name="chevron-right" size={20} color={palette.textInverse} />
-          </Pressable>
-        )}
-      </View>
     </ThemedView>
   );
 }
@@ -244,34 +208,6 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
 
-  // Timeout Counter
-  timeoutContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  timeoutNumber: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: palette.success,
-  },
-  timeoutLabel: {
-    fontSize: 14,
-    color: palette.textMuted,
-    fontWeight: '500',
-  },
-  floaterChip: {
-    backgroundColor: palette.success,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 10,
-  },
-  floaterText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: palette.primary,
-  },
-
   // Placeholder
   placeholderSection: {
     alignItems: 'center',
@@ -282,34 +218,5 @@ const styles = StyleSheet.create({
   placeholderText: {
     fontSize: 14,
     color: palette.textMuted,
-  },
-
-  // Footer
-  footer: {
-    padding: 20,
-    paddingBottom: 32,
-  },
-  statsButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: palette.accent,
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-    borderRadius: 16,
-    shadowColor: palette.accent,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-  },
-  statsContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  statsButtonText: {
-    color: palette.textInverse,
-    fontSize: 16,
-    fontWeight: '700',
   },
 });

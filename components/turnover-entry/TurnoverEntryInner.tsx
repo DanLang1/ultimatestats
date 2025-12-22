@@ -1,0 +1,338 @@
+import { palette } from '@/constants/theme';
+import { TurnoverType } from '@/store/gameStore';
+import React, { useState } from 'react';
+import { Keyboard, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import Animated, { FadeIn, LinearTransition, SlideInDown } from 'react-native-reanimated';
+import { StatEntryRoster } from '../stat-entry/StatEntryRoster';
+
+type EntryStep = 'type' | 'player';
+
+export interface TurnoverEntryInnerProps {
+  teamName: string;
+  roster: string[];
+  onSkip: () => void;
+  onComplete: (type: TurnoverType, player: string | null) => void;
+  onAddPlayer: (name: string) => void;
+  receivingTeam: 'team1' | 'team2';
+  // When true, my team had possession and lost it (throwaway/drop = my fault, block = opponent's play)
+  isMyTeamTurnover: boolean;
+  // When true, opponent had possession and lost it (we only care about blocks by my team)
+  isOpponentTurnover: boolean;
+}
+
+export function TurnoverEntryInner({
+  teamName,
+  roster,
+  onSkip,
+  onComplete,
+  onAddPlayer,
+  isMyTeamTurnover,
+  isOpponentTurnover,
+}: TurnoverEntryInnerProps) {
+  const [step, setStep] = useState<EntryStep>('type');
+  const [selectedType, setSelectedType] = useState<TurnoverType | null>(null);
+  const [newPlayerName, setNewPlayerName] = useState('');
+
+  const handleTypeSelect = (type: TurnoverType) => {
+    // For blocks when my team lost possession: opponent made the block, skip player selection
+    if (type === 'block' && isMyTeamTurnover) {
+      onComplete(type, null);
+      return;
+    }
+
+    setSelectedType(type);
+    setStep('player');
+  };
+
+  const handlePlayerSelect = (playerName: string) => {
+    if (selectedType) {
+      onComplete(selectedType, playerName);
+    }
+  };
+
+  const handleAddPlayer = () => {
+    const trimmed = newPlayerName.trim();
+    if (!trimmed) return;
+
+    onAddPlayer(trimmed);
+    setNewPlayerName('');
+    Keyboard.dismiss();
+
+    // Auto-select the new player
+    handlePlayerSelect(trimmed);
+  };
+
+  const handleSkipPlayer = () => {
+    if (selectedType) {
+      onComplete(selectedType, null);
+    }
+  };
+
+  const getTypeLabel = (type: TurnoverType) => {
+    switch (type) {
+      case 'block':
+        // If my team lost possession, it's the opponent's block
+        // If opponent lost possession (in My Team mode), it's our block
+        if (isMyTeamTurnover) return 'Opponent Block';
+        if (isOpponentTurnover) return 'My Team Block';
+        return 'Block';
+      case 'throwaway':
+        return 'Throwaway';
+      case 'drop':
+        return 'Drop';
+    }
+  };
+
+  const getStepQuestion = () => {
+    if (step === 'type') return 'What happened?';
+    switch (selectedType) {
+      case 'block':
+        return 'Who made the block?';
+      case 'throwaway':
+        return 'Who threw it away?';
+      case 'drop':
+        return 'Who dropped it?';
+      default:
+        return 'Who?';
+    }
+  };
+
+  return (
+    <Animated.View
+      entering={SlideInDown.duration(400)}
+      style={styles.sheet}
+      onStartShouldSetResponder={() => true}>
+      <Pressable onPress={() => {}} style={styles.sheetContent}>
+        <View style={styles.sideBySideContainer}>
+          {/* Left Column: Info, Type Selection, Actions */}
+          <View style={styles.leftColumn}>
+            <View style={styles.header}>
+              <Text style={styles.teamName}>{teamName}</Text>
+              <Animated.Text key={step} entering={FadeIn.duration(300)} style={styles.stepLabel}>
+                {getStepQuestion()}
+              </Animated.Text>
+
+              {selectedType && step === 'player' && (
+                <Animated.View entering={FadeIn} style={styles.badge}>
+                  <Text style={styles.badgeLabel}>EVENT</Text>
+                  <Text style={styles.badgeValue}>{getTypeLabel(selectedType)}</Text>
+                </Animated.View>
+              )}
+            </View>
+
+            {step === 'type' ? (
+              <View style={styles.typeButtons}>
+                <Pressable
+                  style={[styles.typeButton, { borderColor: palette.success }]}
+                  onPress={() => handleTypeSelect('block')}>
+                  <Text style={styles.typeButtonText}>{getTypeLabel('block')}</Text>
+                </Pressable>
+                {/* Only show throwaway/drop if NOT opponent turnover in My Team mode */}
+                {!isOpponentTurnover && (
+                  <>
+                    <Pressable
+                      style={[styles.typeButton, { borderColor: palette.danger }]}
+                      onPress={() => handleTypeSelect('throwaway')}>
+                      <Text style={styles.typeButtonText}>{getTypeLabel('throwaway')}</Text>
+                    </Pressable>
+                    <Pressable
+                      style={[styles.typeButton, { borderColor: palette.danger }]}
+                      onPress={() => handleTypeSelect('drop')}>
+                      <Text style={styles.typeButtonText}>{getTypeLabel('drop')}</Text>
+                    </Pressable>
+                  </>
+                )}
+              </View>
+            ) : (
+              <View style={styles.addPlayerRow}>
+                <TextInput
+                  style={styles.input}
+                  value={newPlayerName}
+                  onChangeText={setNewPlayerName}
+                  placeholder="Add player..."
+                  placeholderTextColor={palette.textMuted}
+                  onSubmitEditing={handleAddPlayer}
+                  returnKeyType="done"
+                />
+                <Pressable
+                  style={[styles.addButton, !newPlayerName.trim() && styles.addButtonDisabled]}
+                  onPress={handleAddPlayer}
+                  disabled={!newPlayerName.trim()}>
+                  <Text style={styles.addButtonText}>Add</Text>
+                </Pressable>
+              </View>
+            )}
+
+            <Animated.View layout={LinearTransition} style={styles.footer}>
+              <Pressable
+                style={styles.skipButton}
+                onPress={step === 'type' ? onSkip : handleSkipPlayer}>
+                <Text style={styles.skipText}>Skip</Text>
+              </Pressable>
+              {step === 'player' && (
+                <Animated.View entering={FadeIn}>
+                  <Pressable
+                    style={styles.skipButton}
+                    onPress={() => {
+                      setStep('type');
+                      setSelectedType(null);
+                    }}>
+                    <Text style={styles.skipText}>Back</Text>
+                  </Pressable>
+                </Animated.View>
+              )}
+            </Animated.View>
+          </View>
+
+          {/* Right Column: Roster Selection (only in player step) */}
+          {step === 'player' && (
+            <Animated.View entering={FadeIn} style={styles.rightColumn}>
+              <StatEntryRoster
+                roster={roster}
+                step="goal" // Reusing the step type, just means no player is "disabled"
+                selectedGoal={null}
+                onSelect={handlePlayerSelect}
+                maxHeight={280}
+              />
+            </Animated.View>
+          )}
+        </View>
+      </Pressable>
+    </Animated.View>
+  );
+}
+
+const styles = StyleSheet.create({
+  sheet: {
+    backgroundColor: palette.surface,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingBottom: 10,
+    shadowColor: palette.shadow,
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 10,
+  },
+  sheetContent: {
+    padding: 16,
+  },
+  sideBySideContainer: {
+    flexDirection: 'row',
+    gap: 24,
+    alignItems: 'flex-start',
+  },
+  leftColumn: {
+    flex: 1,
+    gap: 12,
+  },
+  rightColumn: {
+    flex: 1,
+  },
+  header: {
+    width: '100%',
+    marginBottom: 8,
+    gap: 8,
+  },
+  teamName: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: palette.primary,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 2,
+  },
+  stepLabel: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: palette.textPrimary,
+  },
+  badge: {
+    backgroundColor: palette.inputBg,
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    borderWidth: 1,
+    borderColor: palette.border,
+    alignSelf: 'flex-start',
+  },
+  badgeLabel: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    color: palette.textMuted,
+    letterSpacing: 1,
+    marginTop: 2,
+  },
+  badgeValue: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: palette.textPrimary,
+  },
+  typeButtons: {
+    flexDirection: 'row',
+    gap: 10,
+    flexWrap: 'wrap',
+  },
+  typeButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 10,
+    borderWidth: 2,
+    backgroundColor: palette.inputBg,
+  },
+  typeButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: palette.textPrimary,
+  },
+  addPlayerRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  input: {
+    flex: 1,
+    height: 44,
+    borderWidth: 1,
+    borderColor: palette.border,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    fontSize: 15,
+    color: palette.textPrimary,
+    backgroundColor: palette.inputBg,
+  },
+  addButton: {
+    backgroundColor: palette.accent,
+    paddingHorizontal: 16,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  addButtonDisabled: {
+    opacity: 0.5,
+  },
+  addButtonText: {
+    color: palette.textInverse,
+    fontWeight: '600',
+    fontSize: 15,
+  },
+  footer: {
+    flexDirection: 'row',
+    justifyContent: 'flex-start',
+    gap: 12,
+    marginTop: 8,
+  },
+  skipButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    backgroundColor: palette.cardBgAlt,
+  },
+  skipText: {
+    color: palette.textSecondary,
+    fontWeight: '600',
+    fontSize: 15,
+  },
+});

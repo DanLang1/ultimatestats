@@ -11,3 +11,4 @@ trigger: always_on
 - When updating anything regarding ViewStats, also update view-stats.md
 - For quick documentation reference, see the docs folder
 - Never run rm command without explicit user permission
+- No sub components in files. Each component should be in its own file.

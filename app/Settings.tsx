@@ -1,20 +1,11 @@
 import { ThemedView } from '@/components/ThemedView';
-import { InputNumber } from '@/components/ui/InputNumber';
+import { Switch } from '@/components/ui/Switch';
 import { palette } from '@/constants/theme';
 import { useGameStore } from '@/store/gameStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router, Stack } from 'expo-router';
 import React, { useState } from 'react';
-import {
-  Button,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Switch,
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 export default function SettingsScreen() {
   const {
@@ -86,41 +77,51 @@ export default function SettingsScreen() {
   return (
     <ThemedView style={styles.container}>
       <Stack.Screen options={{ headerShown: false }} />
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <Text style={styles.headerTitle}>Game Settings</Text>
 
+      {/* Header */}
+      <View style={styles.header}>
+        <Pressable onPress={() => router.back()} style={styles.backButton} hitSlop={12}>
+          <MaterialCommunityIcons name="arrow-left" size={24} color={palette.textInverse} />
+        </Pressable>
+        <Text style={styles.headerTitle}>SETTINGS</Text>
+        <View style={styles.headerSpacer} />
+      </View>
+
+      <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.columnsContainer}>
           {/* Left Column: Teams */}
           <View style={styles.column}>
-            <Text style={styles.sectionTitle}>Teams</Text>
-            <TextInput
-              style={styles.input}
-              value={team1}
-              onChangeText={setTeam1}
-              placeholder="Team 1 Name"
-              placeholderTextColor={palette.textMuted}
-            />
-            <TextInput
-              style={styles.input}
-              value={team2}
-              onChangeText={setTeam2}
-              placeholder="Team 2 Name"
-              placeholderTextColor={palette.textMuted}
-            />
-
-            {/* Stat Tracking Mode */}
-            <Text style={[styles.sectionTitle, { marginTop: 15 }]}>Stat Tracking</Text>
-            <View style={[styles.switchContainer, { marginTop: 0 }]}>
-              <View style={styles.labelContainer}>
-                <Text style={styles.label}>Track My Team Stats</Text>
-              </View>
-              <Switch
-                trackColor={{ false: palette.disabled, true: palette.accent }}
-                thumbColor={statTrackingEnabled ? palette.accent : palette.cardBgAlt}
-                onValueChange={setStatTrackingEnabledLocal}
-                value={statTrackingEnabled}
+            <Text style={styles.sectionTitle}>TEAMS</Text>
+            <View style={styles.inputGroupFullWidth}>
+              <Text style={styles.inputLabel}>TEAM 1 NAME</Text>
+              <TextInput
+                style={[styles.inputStacked, { textAlign: 'left' }]}
+                value={team1}
+                onChangeText={setTeam1}
+                placeholder="Team 1 Name"
+                placeholderTextColor={palette.textMuted}
               />
             </View>
+            <View style={styles.inputGroupFullWidth}>
+              <Text style={styles.inputLabel}>TEAM 2 NAME</Text>
+              <TextInput
+                style={[styles.inputStacked, { textAlign: 'left' }]}
+                value={team2}
+                onChangeText={setTeam2}
+                placeholder="Team 2 Name"
+                placeholderTextColor={palette.textMuted}
+              />
+            </View>
+
+            <View style={styles.divider} />
+
+            {/* Stat Tracking Mode */}
+            <Text style={styles.sectionTitle}>STAT TRACKING</Text>
+            <Switch
+              label="Track Stats"
+              value={statTrackingEnabled}
+              onValueChange={setStatTrackingEnabledLocal}
+            />
 
             {hasRoster && (
               <Pressable style={styles.clearRosterButton} onPress={clearRosters}>
@@ -132,80 +133,142 @@ export default function SettingsScreen() {
           {/* Right Column: Rules */}
           <View style={styles.column}>
             <View style={styles.sectionHeaderRow}>
-              <Text style={styles.sectionTitle}>Rules</Text>
-              {gameActive && <Text style={styles.helperText}>* Cannot edit during game</Text>}
+              <Text style={styles.sectionTitle}>RULES</Text>
+              {gameActive && <Text style={styles.helperText}>* Locked during game</Text>}
             </View>
-            <InputNumber
-              label="Game To:"
-              value={gameTo}
-              onChangeText={setGameTo}
-              placeholder="15"
-              editable={!gameActive}
-            />
 
-            <InputNumber
-              label="Game Length (mins):"
-              value={gameLength}
-              onChangeText={setGameLengthLocal}
-              placeholder="90"
-              editable={!gameActive}
-            />
-
-            <InputNumber
-              label="Soft Cap (mins):"
-              value={softCapTime}
-              onChangeText={setSoftCapTimeLocal}
-              placeholder="70"
-              editable={!gameActive}
-            />
-
-            <InputNumber
-              label="Timeouts per Half:"
-              value={timeoutsCount}
-              onChangeText={setTimeoutsCount}
-              placeholder="2"
-              editable={!gameActive}
-            />
-
-            <View style={[styles.switchContainer, gameActive && styles.disabledContainer]}>
-              <View style={styles.labelContainer}>
-                {gameActive && (
-                  <MaterialCommunityIcons
-                    name="lock"
-                    size={14}
-                    color={palette.textMuted}
-                    style={{ marginRight: 4 }}
-                  />
-                )}
-                <Text style={[styles.label, gameActive && styles.disabledLabel]}>
-                  Enable Floater Timeout
+            <View style={styles.inputsGrid}>
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>
+                  {gameActive && (
+                    <MaterialCommunityIcons name="lock" size={10} color={palette.textMuted} />
+                  )}{' '}
+                  GAME TO
                 </Text>
+                <TextInput
+                  style={[styles.inputStacked, gameActive && styles.inputDisabled]}
+                  value={gameTo}
+                  onChangeText={setGameTo}
+                  placeholder="15"
+                  placeholderTextColor={palette.textMuted}
+                  keyboardType="numeric"
+                  editable={!gameActive}
+                />
               </View>
-              <Switch
-                trackColor={{
-                  false: palette.disabled,
-                  true: gameActive ? palette.border : palette.accent,
-                }}
-                thumbColor={
-                  floaterEnabled
-                    ? gameActive
-                      ? palette.border
-                      : palette.accent
-                    : palette.cardBgAlt
-                }
-                onValueChange={setFloaterEnabledLocal}
-                value={floaterEnabled}
-                disabled={gameActive}
-              />
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>
+                  {gameActive && (
+                    <MaterialCommunityIcons name="lock" size={10} color={palette.textMuted} />
+                  )}{' '}
+                  GAME LENGTH
+                </Text>
+                <View style={styles.inputWithSuffix}>
+                  <TextInput
+                    style={[
+                      styles.inputStacked,
+                      styles.inputWithSuffixInput,
+                      gameActive && styles.inputDisabled,
+                    ]}
+                    value={gameLength}
+                    onChangeText={setGameLengthLocal}
+                    placeholder="90"
+                    placeholderTextColor={palette.textMuted}
+                    keyboardType="numeric"
+                    editable={!gameActive}
+                  />
+                  <Text style={[styles.inputSuffix, gameActive && styles.inputDisabled]}>min</Text>
+                </View>
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>
+                  {gameActive && (
+                    <MaterialCommunityIcons name="lock" size={10} color={palette.textMuted} />
+                  )}{' '}
+                  SOFT CAP
+                </Text>
+                <View style={styles.inputWithSuffix}>
+                  <TextInput
+                    style={[
+                      styles.inputStacked,
+                      styles.inputWithSuffixInput,
+                      gameActive && styles.inputDisabled,
+                    ]}
+                    value={softCapTime}
+                    onChangeText={setSoftCapTimeLocal}
+                    placeholder="70"
+                    placeholderTextColor={palette.textMuted}
+                    keyboardType="numeric"
+                    editable={!gameActive}
+                  />
+                  <Text style={[styles.inputSuffix, gameActive && styles.inputDisabled]}>min</Text>
+                </View>
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>
+                  {gameActive && (
+                    <MaterialCommunityIcons name="lock" size={10} color={palette.textMuted} />
+                  )}{' '}
+                  TIMEOUTS/HALF
+                </Text>
+                <TextInput
+                  style={[styles.inputStacked, gameActive && styles.inputDisabled]}
+                  value={timeoutsCount}
+                  onChangeText={setTimeoutsCount}
+                  placeholder="2"
+                  placeholderTextColor={palette.textMuted}
+                  keyboardType="numeric"
+                  editable={!gameActive}
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Switch
+                  label="Floater"
+                  value={floaterEnabled}
+                  onValueChange={setFloaterEnabledLocal}
+                  disabled={gameActive}
+                  locked={gameActive}
+                />
+              </View>
             </View>
           </View>
         </View>
       </ScrollView>
 
-      <View style={styles.buttons}>
-        <Button title="Cancel" onPress={() => router.back()} color={palette.danger} />
-        <Button title="New Game" onPress={handleNewGame} color={palette.warning} />
-        <Button title="Save" onPress={handleSave} color={palette.accent} />
+      {/* Footer Actions */}
+      <View style={styles.footer}>
+        <Pressable
+          style={({ pressed }) => [
+            styles.footerButton,
+            styles.cancelButton,
+            pressed && styles.buttonPressed,
+          ]}
+          onPress={() => router.back()}>
+          <Text style={styles.cancelButtonText}>Cancel</Text>
+        </Pressable>
+
+        <Pressable
+          style={({ pressed }) => [
+            styles.footerButton,
+            styles.newGameButton,
+            pressed && styles.buttonPressed,
+          ]}
+          onPress={handleNewGame}>
+          <Text style={styles.newGameButtonText}>New Game</Text>
+        </Pressable>
+
+        <Pressable
+          style={({ pressed }) => [
+            styles.footerButton,
+            styles.saveButton,
+            pressed && styles.buttonPressed,
+          ]}
+          onPress={handleSave}>
+          <Text style={styles.saveButtonText}>Save</Text>
+        </Pressable>
       </View>
     </ThemedView>
   );
@@ -214,123 +277,212 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: palette.surface,
+    backgroundColor: palette.primary,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 12,
+  },
+  backButton: {
+    padding: 8,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 20,
+  },
+  headerTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    letterSpacing: 2,
+    color: palette.textMuted,
+    textTransform: 'uppercase',
+  },
+  headerSpacer: {
+    width: 40,
   },
   scrollContent: {
     padding: 24,
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 10, // Reduced from 20
-    color: palette.textPrimary,
-    textAlign: 'center',
+    paddingTop: 8,
   },
   columnsContainer: {
     flexDirection: 'row',
-    width: '100%',
-    gap: 20,
-    flex: 1, // Take available vertical space
+    gap: 24,
+    alignItems: 'flex-start',
   },
   column: {
     flex: 1,
-    gap: 10,
-    justifyContent: 'flex-start', // Align content to top
+    gap: 12,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: palette.textSecondary,
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: 1.5,
+    color: palette.accent,
+    marginBottom: 4,
   },
   sectionHeaderRow: {
     flexDirection: 'row',
     alignItems: 'baseline',
     gap: 8,
-    marginBottom: 5,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    marginVertical: 12,
   },
   input: {
-    height: 45,
+    height: 48,
     borderWidth: 1,
-    borderColor: palette.border,
-    borderRadius: 8,
-    padding: 10,
-    width: '100%',
-    color: palette.textPrimary,
-    backgroundColor: palette.inputBg,
+    borderColor: 'rgba(255,255,255,0.2)',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    fontSize: 16,
+    color: palette.textInverse,
+    backgroundColor: 'rgba(255,255,255,0.08)',
   },
-
+  // Stacked inputs grid
+  inputsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  inputGroup: {
+    width: '47%',
+  },
+  inputGroupFullWidth: {
+    width: '100%',
+    marginBottom: 0,
+  },
+  inputLabel: {
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 1,
+    color: palette.textMuted,
+    marginBottom: 6,
+  },
+  inputStacked: {
+    height: 48,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    fontSize: 18,
+    fontWeight: '600',
+    color: palette.textInverse,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    textAlign: 'center',
+  },
+  inputWithSuffix: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  inputWithSuffixInput: {
+    flex: 1,
+    borderTopRightRadius: 0,
+    borderBottomRightRadius: 0,
+    borderRightWidth: 0,
+  },
+  inputSuffix: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: palette.textMuted,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    paddingHorizontal: 12,
+    height: 48,
+    lineHeight: 48,
+    borderWidth: 1,
+    borderLeftWidth: 0,
+    borderColor: 'rgba(255,255,255,0.2)',
+    borderTopRightRadius: 10,
+    borderBottomRightRadius: 10,
+  },
+  inputDisabled: {
+    opacity: 0.5,
+  },
   switchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    height: 45,
-    paddingHorizontal: 5,
+    paddingVertical: 8,
   },
   label: {
-    fontSize: 16,
-    color: palette.textPrimary,
+    fontSize: 15,
+    color: palette.textInverse,
+    fontWeight: '500',
   },
-  labelContainer: {
+  labelRow: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   disabledContainer: {
-    opacity: 0.8,
+    opacity: 0.6,
   },
   disabledLabel: {
     color: palette.textMuted,
   },
-  buttons: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    width: '100%',
-    paddingTop: 15,
-    paddingBottom: 24,
-    paddingHorizontal: 24,
-    borderTopWidth: 1,
-    borderTopColor: palette.borderLight,
-    backgroundColor: palette.surface,
-  },
-  segmentedControl: {
-    flexDirection: 'row',
-    borderRadius: 8,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: palette.border,
-  },
-  segmentButton: {
-    flex: 1,
-    paddingVertical: 10,
-    alignItems: 'center',
-    backgroundColor: palette.inputBg,
-  },
-  segmentButtonActive: {
-    backgroundColor: palette.primary,
-  },
-  segmentText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: palette.textSecondary,
-  },
-  segmentTextActive: {
-    color: palette.textInverse,
+  helperText: {
+    fontSize: 11,
+    color: palette.textMuted,
   },
   clearRosterButton: {
-    marginTop: 10,
-    padding: 10,
+    marginTop: 8,
+    padding: 12,
     alignItems: 'center',
-    borderRadius: 8,
-    backgroundColor: palette.cardBgAlt,
+    borderRadius: 10,
+    backgroundColor: 'rgba(244, 63, 94, 0.15)',
     borderWidth: 1,
     borderColor: palette.danger,
   },
   clearRosterText: {
     color: palette.danger,
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: '600',
   },
-  helperText: {
-    fontSize: 12,
-    color: palette.textMuted,
+  footer: {
+    flexDirection: 'row',
+    gap: 12,
+    padding: 20,
+    paddingBottom: 32,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.1)',
+  },
+  footerButton: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  buttonPressed: {
+    opacity: 0.8,
+    transform: [{ scale: 0.98 }],
+  },
+  cancelButton: {
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+  },
+  cancelButtonText: {
+    color: palette.textInverse,
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  newGameButton: {
+    backgroundColor: palette.success,
+  },
+  newGameButtonText: {
+    color: palette.primary,
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  saveButton: {
+    backgroundColor: palette.accent,
+  },
+  saveButtonText: {
+    color: palette.textInverse,
+    fontSize: 15,
+    fontWeight: '700',
   },
 });

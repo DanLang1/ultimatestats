@@ -48,6 +48,10 @@ export default function SettingsBar({ onReset, onSettingsPress }: SettingsBarPro
         ) : null}
       </View>
 
+      <Pressable onPress={() => router.push('/ViewStats')} style={styles.iconButton}>
+        <MaterialCommunityIcons name="chart-bar" size={24} color={palette.textInverse} />
+      </Pressable>
+
       {/* Info - now navigates to page */}
       <Pressable onPress={() => router.push('/GameInfo')} style={styles.iconButton}>
         <MaterialCommunityIcons name="information" size={24} color={palette.textInverse} />

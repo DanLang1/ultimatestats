@@ -1,6 +1,7 @@
 import { ThemedView } from '@/components/ThemedView';
 import { palette } from '@/constants/theme';
 import { StatRecord, TurnoverRecord, useGameStore } from '@/store/gameStore';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { File, Paths } from 'expo-file-system';
 import { router, Stack } from 'expo-router';
 import * as Sharing from 'expo-sharing';
@@ -148,71 +149,114 @@ export default function ViewStatsScreen() {
   return (
     <ThemedView style={styles.container}>
       <Stack.Screen options={{ headerShown: false }} />
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <Text style={styles.headerTitle}>Game Stats</Text>
 
-        {/* Team Name Header */}
-        <View style={styles.summary}>
-          <Text style={styles.summaryText}>
-            {team1Name}: {teamRecords.length} point{teamRecords.length !== 1 ? 's' : ''}
-          </Text>
+      {/* Header */}
+      <View style={styles.header}>
+        <Pressable onPress={() => router.back()} style={styles.backButton} hitSlop={12}>
+          <MaterialCommunityIcons name="arrow-left" size={24} color={palette.textInverse} />
+        </Pressable>
+        <Text style={styles.headerTitle}>GAME STATS</Text>
+        <View style={styles.headerSpacer} />
+      </View>
+
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        {/* Team Summary Card */}
+        <View style={styles.summaryCard}>
+          <View style={styles.summaryColumns}>
+            {/* Left Column: Team Info */}
+            <View style={styles.summaryLeft}>
+              <Text style={styles.summaryLabel}>MY TEAM</Text>
+              <Text style={styles.summaryTeamName}>{team1Name}</Text>
+              <View style={styles.summaryBadge}>
+                <Text style={styles.summaryBadgeText}>
+                  {teamRecords.length} Point{teamRecords.length !== 1 ? 's' : ''}
+                </Text>
+              </View>
+            </View>
+
+            {/* Right Column: Top Performers */}
+            {playerStats.length > 0 && (
+              <View style={styles.summaryRight}>
+                <Text style={styles.topPerformersTitle}>TOP PERFORMERS</Text>
+                <View style={styles.topPerformersList}>
+                  {playerStats.slice(0, 3).map((player, index) => (
+                    <View key={player.name} style={styles.topPerformerRow}>
+                      <Text style={styles.topPerformerRank}>{index + 1}.</Text>
+                      <Text style={styles.topPerformerName} numberOfLines={1}>
+                        {player.name}
+                      </Text>
+                      <Text
+                        style={[
+                          styles.topPerformerPlusMinus,
+                          player.plusMinus > 0 && styles.plusMinusPositive,
+                          player.plusMinus < 0 && styles.plusMinusNegative,
+                        ]}>
+                        {player.plusMinus > 0 ? '+' : ''}
+                        {player.plusMinus}
+                      </Text>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            )}
+          </View>
         </View>
 
         {/* Player Stats Table */}
         {playerStats.length === 0 ? (
           <View style={styles.emptyState}>
+            <MaterialCommunityIcons name="chart-bar-stacked" size={48} color={palette.textMuted} />
             <Text style={styles.emptyText}>No stats recorded yet</Text>
           </View>
         ) : (
-          <View style={styles.tableContainer}>
-            {/* Table Header */}
-            <View style={styles.tableHeader}>
-              <Text style={[styles.headerCell, styles.nameCell]}>Player</Text>
-              <Text style={styles.headerCell}>Goals</Text>
-              <Text style={styles.headerCell}>Assists</Text>
-              <Text style={styles.headerCell}>Blocks</Text>
-              <Text style={styles.headerCell}>Throwaways</Text>
-              <Text style={styles.headerCell}>Drops</Text>
-              <Text style={styles.headerCell}>+/-</Text>
+          <View>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>PLAYER STATS</Text>
+              <Pressable style={styles.headerExportButton} onPress={handleExport}>
+                <MaterialCommunityIcons name="export-variant" size={16} color={palette.accent} />
+                <Text style={styles.headerExportText}>Export CSV</Text>
+              </Pressable>
             </View>
-
-            {/* Table Rows */}
-            {playerStats.map((player, index) => (
-              <View
-                key={player.name}
-                style={[styles.tableRow, index % 2 === 1 && styles.tableRowAlt]}>
-                <Text style={[styles.cell, styles.nameCell]} numberOfLines={1}>
-                  {player.name}
-                </Text>
-                <Text style={styles.cell}>{player.goals}</Text>
-                <Text style={styles.cell}>{player.assists}</Text>
-                <Text style={styles.cell}>{player.blocks}</Text>
-                <Text style={styles.cell}>{player.throwaways}</Text>
-                <Text style={styles.cell}>{player.drops}</Text>
-                <Text
-                  style={[
-                    styles.cell,
-                    styles.plusMinusCell,
-                    player.plusMinus > 0 && styles.plusMinusPositive,
-                    player.plusMinus < 0 && styles.plusMinusNegative,
-                  ]}>
-                  {player.plusMinus > 0 ? '+' : ''}
-                  {player.plusMinus}
-                </Text>
+            <View style={styles.tableContainer}>
+              {/* Table Header */}
+              <View style={styles.tableHeader}>
+                <Text style={[styles.headerCell, styles.nameCell]}>PLAYER</Text>
+                <Text style={styles.headerCell}>G</Text>
+                <Text style={styles.headerCell}>A</Text>
+                <Text style={styles.headerCell}>D</Text>
+                <Text style={styles.headerCell}>T</Text>
+                <Text style={styles.headerCell}>Dr</Text>
+                <Text style={styles.headerCell}>+/-</Text>
               </View>
-            ))}
+
+              {/* Table Rows */}
+              {playerStats.map((player, index) => (
+                <View
+                  key={player.name}
+                  style={[styles.tableRow, index % 2 === 1 && styles.tableRowAlt]}>
+                  <Text style={[styles.cell, styles.nameCell]} numberOfLines={1}>
+                    {player.name}
+                  </Text>
+                  <Text style={styles.cell}>{player.goals || '-'}</Text>
+                  <Text style={styles.cell}>{player.assists || '-'}</Text>
+                  <Text style={styles.cell}>{player.blocks || '-'}</Text>
+                  <Text style={styles.cell}>{player.throwaways || '-'}</Text>
+                  <Text style={styles.cell}>{player.drops || '-'}</Text>
+                  <Text
+                    style={[
+                      styles.cell,
+                      styles.plusMinusCell,
+                      player.plusMinus > 0 && styles.plusMinusPositive,
+                      player.plusMinus < 0 && styles.plusMinusNegative,
+                    ]}>
+                    {player.plusMinus > 0 ? '+' : ''}
+                    {player.plusMinus}
+                  </Text>
+                </View>
+              ))}
+            </View>
           </View>
         )}
-
-        {/* Actions */}
-        <View style={styles.actions}>
-          <Pressable style={styles.backButton} onPress={() => router.back()}>
-            <Text style={styles.backButtonText}>Back</Text>
-          </Pressable>
-          <Pressable style={styles.exportButton} onPress={handleExport}>
-            <Text style={styles.exportButtonText}>Export CSV</Text>
-          </Pressable>
-        </View>
       </ScrollView>
     </ThemedView>
   );
@@ -221,115 +265,217 @@ export default function ViewStatsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: palette.surface,
+    backgroundColor: palette.primary,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 12,
+  },
+  backButton: {
+    padding: 8,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 20,
+  },
+  headerTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    letterSpacing: 2,
+    color: palette.textMuted,
+    textTransform: 'uppercase',
+  },
+  headerSpacer: {
+    width: 40,
   },
   scrollContent: {
     padding: 24,
+    paddingTop: 8,
+    paddingBottom: 40,
   },
-  headerTitle: {
+  summaryCard: {
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+    position: 'relative',
+  },
+  summaryColumns: {
+    flexDirection: 'row',
+    width: '100%',
+    gap: 16,
+  },
+  summaryLeft: {
+    flex: 1,
+    alignItems: 'flex-start',
+  },
+  summaryRight: {
+    flex: 1,
+    paddingLeft: 16,
+    borderLeftWidth: 1,
+    borderLeftColor: 'rgba(255,255,255,0.1)',
+  },
+  summaryLabel: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: palette.textMuted,
+    letterSpacing: 1,
+    marginBottom: 4,
+    textTransform: 'uppercase',
+  },
+  summaryTeamName: {
     fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 15,
-    color: palette.textPrimary,
-    textAlign: 'center',
+    fontWeight: '700',
+    color: palette.textInverse,
+    marginBottom: 12,
   },
-  summary: {
-    backgroundColor: palette.cardBgAlt,
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 15,
+  summaryBadge: {
+    backgroundColor: 'rgba(99, 102, 241, 0.2)',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: palette.accent,
+  },
+  summaryBadgeText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: palette.accent,
+  },
+  topPerformersTitle: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: palette.textMuted,
+    letterSpacing: 1,
+    marginBottom: 10,
+    textAlign: 'left',
+  },
+  topPerformersList: {
+    gap: 6,
+  },
+  topPerformerRow: {
+    flexDirection: 'row',
     alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 8,
   },
-  summaryText: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: palette.textPrimary,
+  topPerformerRank: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: palette.textMuted,
+    width: 20,
   },
+  topPerformerName: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: '600',
+    color: palette.textInverse,
+  },
+  topPerformerPlusMinus: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: palette.textMuted,
+    width: 36,
+    textAlign: 'right',
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  sectionTitle: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: palette.textMuted,
+    letterSpacing: 1,
+  },
+  headerExportButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    backgroundColor: 'rgba(99, 102, 241, 0.1)',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(99, 102, 241, 0.3)',
+  },
+  headerExportText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: palette.accent,
+  },
+
   emptyState: {
     padding: 40,
     alignItems: 'center',
+    gap: 16,
+    marginTop: 40,
   },
   emptyText: {
     fontSize: 16,
     color: palette.textMuted,
+    textAlign: 'center',
   },
-  // Table styles
   tableContainer: {
-    borderRadius: 8,
+    borderRadius: 12,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: palette.border,
+    borderColor: 'rgba(255,255,255,0.1)',
   },
   tableHeader: {
     flexDirection: 'row',
-    backgroundColor: palette.primary,
-    paddingVertical: 10,
-    paddingHorizontal: 8,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.1)',
   },
   headerCell: {
     flex: 1,
-    fontSize: 13,
-    fontWeight: '600',
-    color: palette.textInverse,
+    fontSize: 10,
+    fontWeight: '800',
+    color: palette.textMuted,
     textAlign: 'center',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   tableRow: {
     flexDirection: 'row',
-    paddingVertical: 10,
-    paddingHorizontal: 8,
-    backgroundColor: palette.surface,
+    paddingVertical: 14,
+    paddingHorizontal: 12,
+    backgroundColor: 'transparent',
+    alignItems: 'center',
   },
   tableRowAlt: {
-    backgroundColor: palette.cardBgAlt,
+    backgroundColor: 'rgba(255,255,255,0.02)',
   },
   cell: {
     flex: 1,
-    fontSize: 14,
-    color: palette.textPrimary,
+    fontSize: 13,
+    color: palette.textInverse,
     textAlign: 'center',
+    fontWeight: '500',
   },
   nameCell: {
     flex: 2.5,
     textAlign: 'left',
+    fontSize: 13,
+    fontWeight: '600',
+    paddingRight: 8,
   },
   plusMinusCell: {
-    fontWeight: '600',
+    fontWeight: '800',
   },
   plusMinusPositive: {
     color: palette.success,
   },
   plusMinusNegative: {
     color: palette.danger,
-  },
-  // Actions
-  actions: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 20,
-    gap: 10,
-  },
-  backButton: {
-    flex: 1,
-    paddingVertical: 14,
-    borderRadius: 10,
-    backgroundColor: palette.cardBgAlt,
-    alignItems: 'center',
-  },
-  backButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: palette.textSecondary,
-  },
-  exportButton: {
-    flex: 1,
-    paddingVertical: 14,
-    borderRadius: 10,
-    backgroundColor: palette.accent,
-    alignItems: 'center',
-  },
-  exportButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: palette.textInverse,
   },
 });
