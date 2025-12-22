@@ -1,10 +1,11 @@
 import { ThemedView } from '@/components/ThemedView';
+import { Dropdown } from '@/components/ui/Dropdown';
 import { Switch } from '@/components/ui/Switch';
 import { palette } from '@/constants/theme';
 import { useGameStore } from '@/store/gameStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router, Stack } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 export default function SettingsScreen() {
@@ -26,11 +27,13 @@ export default function SettingsScreen() {
     statTrackingEnabled: statTrackingEnabledStore,
     setStatTrackingEnabled,
     team1Roster,
-    team2Roster,
     clearRosters,
     timerIsActive,
     team1Score,
     team2Score,
+    savedTeams,
+    loadSavedTeams,
+    loadTeamRoster,
   } = useGameStore();
 
   const [team1, setTeam1] = useState(team1Name);
@@ -44,7 +47,12 @@ export default function SettingsScreen() {
   );
   const [statTrackingEnabled, setStatTrackingEnabledLocal] = useState(statTrackingEnabledStore);
 
-  const hasRoster = team1Roster.length > 0 || team2Roster.length > 0;
+  // Load saved teams on mount
+  useEffect(() => {
+    loadSavedTeams();
+  }, [loadSavedTeams]);
+
+  const hasRoster = team1Roster.length > 0;
 
   const handleSave = () => {
     const gLength = Number(gameLength) || 90;
@@ -72,6 +80,19 @@ export default function SettingsScreen() {
     router.back();
   };
 
+  const handleClearRosters = () => {
+    clearRosters();
+  };
+
+  const handleEditRoster = () => {
+    router.push({ pathname: '/EditRoster', params: { teamName: team1 } });
+  };
+
+  const handleLoadTeam = (option: { id: string; label: string }) => {
+    loadTeamRoster(option.id, 'team1');
+    setTeam1(option.label); // Update local state to match
+  };
+
   const gameActive = timerIsActive || team1Score !== 0 || team2Score !== 0;
 
   return (
@@ -94,13 +115,31 @@ export default function SettingsScreen() {
             <Text style={styles.sectionTitle}>TEAMS</Text>
             <View style={styles.inputGroupFullWidth}>
               <Text style={styles.inputLabel}>TEAM 1 NAME</Text>
-              <TextInput
-                style={[styles.inputStacked, { textAlign: 'left' }]}
-                value={team1}
-                onChangeText={setTeam1}
-                placeholder="Team 1 Name"
-                placeholderTextColor={palette.textMuted}
-              />
+              <View style={styles.teamInputRow}>
+                <TextInput
+                  style={[styles.inputStacked, styles.teamNameInput, { textAlign: 'left' }]}
+                  value={team1}
+                  onChangeText={setTeam1}
+                  placeholder="Team 1 Name"
+                  placeholderTextColor={palette.textMuted}
+                />
+                <Dropdown
+                  options={savedTeams.map((t) => ({ id: t.id, label: t.name }))}
+                  placeholder="Load"
+                  onSelect={handleLoadTeam}
+                />
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.editRosterButton,
+                    pressed && styles.buttonPressed,
+                  ]}
+                  onPress={handleEditRoster}>
+                  <MaterialCommunityIcons name="account-group" size={20} color={palette.accent} />
+                  <Text style={styles.editRosterButtonText}>
+                    {team1Roster.length > 0 ? team1Roster.length : 'Roster'}
+                  </Text>
+                </Pressable>
+              </View>
             </View>
             <View style={styles.inputGroupFullWidth}>
               <Text style={styles.inputLabel}>TEAM 2 NAME</Text>
@@ -124,7 +163,7 @@ export default function SettingsScreen() {
             />
 
             {hasRoster && (
-              <Pressable style={styles.clearRosterButton} onPress={clearRosters}>
+              <Pressable style={styles.clearRosterButton} onPress={handleClearRosters}>
                 <Text style={styles.clearRosterText}>Clear Player Rosters</Text>
               </Pressable>
             )}
@@ -354,6 +393,29 @@ const styles = StyleSheet.create({
   inputGroupFullWidth: {
     width: '100%',
     marginBottom: 0,
+  },
+  teamInputRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  teamNameInput: {
+    flex: 1,
+  },
+  editRosterButton: {
+    height: 48,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+    backgroundColor: 'rgba(59, 130, 246, 0.15)',
+    borderWidth: 1,
+    borderColor: palette.accent,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  editRosterButtonText: {
+    color: palette.accent,
+    fontSize: 14,
+    fontWeight: '600',
   },
   inputLabel: {
     fontSize: 10,

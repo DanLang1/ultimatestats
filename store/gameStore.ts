@@ -74,6 +74,7 @@ interface GameState {
   // Stat Tracking Actions
   setStatTrackingEnabled: (enabled: boolean) => void;
   addPlayer: (team: 'team1' | 'team2', name: string) => void;
+  setRoster: (team: 'team1' | 'team2', roster: string[]) => void;
   addStatRecord: (record: Omit<StatRecord, 'pointNumber'>) => void;
   clearPendingStatEntry: () => void;
   clearRosters: () => void;
@@ -284,11 +285,9 @@ export const useGameStore = create<GameState>()(
           isSoftCap: false,
           softCapPending: false,
           gameTo: state.baseGameTo,
-          // Reset stat tracking for new game
+          // Reset stat tracking for new game (keep rosters)
           statRecords: [],
           pendingStatEntry: null,
-          team1Roster: [],
-          team2Roster: [],
           // Reset turnover tracking for new game
           possession: null,
           startingPossession: null,
@@ -345,6 +344,9 @@ export const useGameStore = create<GameState>()(
 
       clearRosters: () =>
         set({ team1Roster: [], team2Roster: [], statRecords: [], turnoverRecords: [] }),
+
+      setRoster: (team, roster) =>
+        set(team === 'team1' ? { team1Roster: roster } : { team2Roster: roster }),
 
       // Turnover Tracking Actions
       setPossession: (team) =>
