@@ -38,12 +38,15 @@ export default function TeamScoreSection({
   onTurnover,
   side,
 }: TeamScoreSectionProps) {
+  // Fling up = score, only allowed if this team has possession (or possession tracking is disabled)
   const flingUp = Gesture.Fling()
     .direction(Directions.UP)
+    .enabled(hasPossession === undefined || hasPossession === true)
     .onEnd(() => {
       scheduleOnRN(onIncrement);
     });
 
+  // Fling down = decrement score, always allowed (for corrections)
   const flingDown = Gesture.Fling()
     .direction(Directions.DOWN)
     .onEnd(() => {
