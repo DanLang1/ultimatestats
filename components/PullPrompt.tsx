@@ -1,4 +1,4 @@
-import { palette } from '@/constants/theme';
+import { palette } from '@/theme/theme';
 import React from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeIn, SlideInDown } from 'react-native-reanimated';
@@ -45,7 +45,7 @@ export default function PullPrompt() {
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    backgroundColor: palette.overlayDark60,
     justifyContent: 'center',
     alignItems: 'center',
   },

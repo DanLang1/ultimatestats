@@ -1,4 +1,4 @@
-import { palette } from '@/constants/theme';
+import { palette } from '@/theme/theme';
 import { StyleSheet, Text, type TextProps } from 'react-native';
 
 export type ThemedTextProps = TextProps & {

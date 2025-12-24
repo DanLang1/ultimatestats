@@ -1,22 +1,16 @@
 import { useGameStore } from '@/store/gameStore';
+import { palette } from '@/theme/theme';
 import React from 'react';
 import { Modal, Pressable, StyleSheet } from 'react-native';
 import { StatEntryInner } from './stat-entry/StatEntryInner';
 
 export default function StatEntrySheet() {
-  const {
-    pendingStatEntry,
-    team1Name,
-    team2Name,
-    team1Roster,
-    team2Roster,
-    addPlayer,
-    addStatRecord,
-  } = useGameStore();
+  const { pendingStatEntry, team1Name, team2Name, team1Roster, addPlayer, addStatRecord } =
+    useGameStore();
 
   const visible = pendingStatEntry !== null;
   const teamName = pendingStatEntry?.team === 'team1' ? team1Name : team2Name;
-  const roster = pendingStatEntry?.team === 'team1' ? team1Roster : team2Roster;
+  const roster = team1Roster;
 
   const handleSkip = () => {
     addStatRecord({
@@ -59,7 +53,7 @@ export default function StatEntrySheet() {
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    backgroundColor: palette.overlayDark40,
     justifyContent: 'flex-end',
   },
 });

@@ -1,7 +1,7 @@
 import { TimeoutCounter } from '@/components/game-info/TimeoutCounter';
 import { ThemedView } from '@/components/ThemedView';
-import { palette } from '@/constants/theme';
 import { useGameStore } from '@/store/gameStore';
+import { palette } from '@/theme/theme';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router, Stack } from 'expo-router';
 import React from 'react';
@@ -108,7 +108,7 @@ const styles = StyleSheet.create({
   },
   backButton: {
     padding: 8,
-    backgroundColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: palette.overlay10,
     borderRadius: 20,
   },
   headerTitle: {
@@ -176,7 +176,7 @@ const styles = StyleSheet.create({
 
   divider: {
     height: 1,
-    backgroundColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: palette.overlay10,
     marginVertical: 20,
   },
 
@@ -198,7 +198,7 @@ const styles = StyleSheet.create({
   },
   verticalDivider: {
     width: 1,
-    backgroundColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: palette.overlay10,
     marginHorizontal: 16,
   },
   teamName: {

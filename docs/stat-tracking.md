@@ -31,7 +31,6 @@ interface TurnoverRecord {
 | ---------------------- | ------------------------------- | ---------------------------------------------- |
 | `statTrackingEnabled`  | `boolean`                       | Whether stat tracking is enabled (for my team) |
 | `team1Roster`          | `string[]`                      | Built progressively as players are added       |
-| `team2Roster`          | `string[]`                      | Built progressively as players are added       |
 | `statRecords`          | `StatRecord[]`                  | All recorded stats for the game                |
 | `pendingStatEntry`     | `{ team, pointNumber } \| null` | Triggers stat entry sheet                      |
 | `turnoverRecords`      | `TurnoverRecord[]`              | All recorded turnovers for the game            |
@@ -107,7 +106,7 @@ On "New Game":
 
 - `statRecords` cleared
 - `pendingStatEntry` cleared
-- `team1Roster` and `team2Roster` cleared
+- `team1Roster` cleared
 - `turnoverRecords` cleared
 - `possession` and `startingPossession` reset to null
 - `statTrackingEnabled` setting persists

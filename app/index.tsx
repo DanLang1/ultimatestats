@@ -4,7 +4,7 @@ import StatEntrySheet from '@/components/StatEntrySheet';
 import TeamScoreSection from '@/components/TeamScoreSection';
 import { ThemedView } from '@/components/ThemedView';
 import TurnoverEntrySheet from '@/components/TurnoverEntrySheet';
-import { palette } from '@/constants/theme';
+import { palette } from '@/theme/theme';
 
 import { useGameStore } from '@/store/gameStore';
 import { router } from 'expo-router';

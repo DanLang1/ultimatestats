@@ -1,5 +1,5 @@
-import { palette } from '@/constants/theme';
 import { useGameStore } from '@/store/gameStore';
+import { palette } from '@/theme/theme';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import React, { useState } from 'react';
@@ -7,12 +7,14 @@ import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 
 
 export default function EditRosterScreen() {
   const { teamName } = useLocalSearchParams<{ teamName: string }>();
-  const { team1Roster, team1Name, setRoster, addPlayer, saveTeam } = useGameStore();
+  const { team1Roster, team1Name, setRoster, addPlayer, saveTeam, clearRoster } = useGameStore();
 
   const [newPlayerName, setNewPlayerName] = useState('');
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [editingPlayer, setEditingPlayer] = useState('');
   const [editPlayerName, setEditPlayerName] = useState('');
+
+  const isDuplicateName = newPlayerName.trim() !== '' && team1Roster.includes(newPlayerName.trim());
 
   const handleAddPlayer = () => {
     const trimmed = newPlayerName.trim();
@@ -57,6 +59,10 @@ export default function EditRosterScreen() {
     router.back();
   };
 
+  const handleClearAll = () => {
+    clearRoster();
+  };
+
   return (
     <View style={styles.container}>
       <Stack.Screen options={{ headerShown: false }} />
@@ -67,21 +73,32 @@ export default function EditRosterScreen() {
           <MaterialCommunityIcons name="arrow-left" size={24} color={palette.textInverse} />
         </Pressable>
         <Text style={styles.headerTitle}>{(teamName || 'TEAM').toUpperCase()} ROSTER</Text>
-        <View style={styles.headerSpacer} />
+        {team1Roster.length > 0 ? (
+          <Pressable onPress={handleClearAll} style={styles.clearButton} hitSlop={12}>
+            <MaterialCommunityIcons name="delete-sweep-outline" size={22} color={palette.danger} />
+          </Pressable>
+        ) : (
+          <View style={styles.headerSpacer} />
+        )}
       </View>
 
       {/* Add Player Input */}
       <View style={styles.addPlayerSection}>
-        <TextInput
-          style={styles.addPlayerInput}
-          placeholder="Add player..."
-          placeholderTextColor={palette.textMuted}
-          value={newPlayerName}
-          onChangeText={setNewPlayerName}
-          onSubmitEditing={handleAddPlayer}
-          returnKeyType="done"
-          autoCapitalize="words"
-        />
+        <View style={styles.inputWrapper}>
+          <TextInput
+            style={[styles.addPlayerInput, isDuplicateName && styles.inputError]}
+            placeholder="Add player..."
+            placeholderTextColor={palette.textMuted}
+            value={newPlayerName}
+            onChangeText={setNewPlayerName}
+            onSubmitEditing={handleAddPlayer}
+            returnKeyType="done"
+            autoCapitalize="words"
+          />
+          {isDuplicateName && (
+            <Text style={styles.errorText}>{`${newPlayerName} is already on your team`}</Text>
+          )}
+        </View>
         <Pressable
           style={({ pressed }) => [styles.addButton, pressed && styles.buttonPressed]}
           onPress={handleAddPlayer}>
@@ -183,7 +200,7 @@ const styles = StyleSheet.create({
   },
   backButton: {
     padding: 8,
-    backgroundColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: palette.overlay10,
     borderRadius: 20,
   },
   headerTitle: {
@@ -195,9 +212,14 @@ const styles = StyleSheet.create({
   headerSpacer: {
     width: 40,
   },
+  clearButton: {
+    padding: 8,
+    backgroundColor: palette.dangerOverlay15,
+    borderRadius: 20,
+  },
   saveTeamButton: {
     padding: 8,
-    backgroundColor: 'rgba(59, 130, 246, 0.15)',
+    backgroundColor: palette.accentOverlay15,
     borderRadius: 20,
   },
   addPlayerSection: {
@@ -206,18 +228,29 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     gap: 12,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.1)',
+    borderBottomColor: palette.overlay10,
+  },
+  inputWrapper: {
+    flex: 1,
   },
   addPlayerInput: {
-    flex: 1,
     height: 48,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
+    borderColor: palette.overlay20,
     borderRadius: 12,
     paddingHorizontal: 16,
     fontSize: 16,
     color: palette.textInverse,
-    backgroundColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: palette.overlay08,
+  },
+  inputError: {
+    borderColor: palette.danger,
+  },
+  errorText: {
+    fontSize: 12,
+    color: palette.danger,
+    marginTop: 4,
+    marginLeft: 4,
   },
   addButton: {
     width: 48,
@@ -265,7 +298,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingLeft: 14,
     paddingRight: 6,
-    backgroundColor: 'rgba(255,255,255,0.12)',
+    backgroundColor: palette.overlay12,
     borderRadius: 20,
     gap: 6,
   },
@@ -284,11 +317,11 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   chipRemoveButtonPressed: {
-    backgroundColor: 'rgba(255,255,255,0.15)',
+    backgroundColor: palette.overlay15,
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    backgroundColor: palette.overlayDark60,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 40,
@@ -300,7 +333,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 20,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.15)',
+    borderColor: palette.overlay15,
   },
   modalTitle: {
     fontSize: 12,
@@ -313,12 +346,12 @@ const styles = StyleSheet.create({
   modalInput: {
     height: 48,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
+    borderColor: palette.overlay20,
     borderRadius: 10,
     paddingHorizontal: 14,
     fontSize: 16,
     color: palette.textInverse,
-    backgroundColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: palette.overlay08,
     marginBottom: 16,
   },
   modalButtons: {
@@ -332,9 +365,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   modalCancelButton: {
-    backgroundColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: palette.overlay10,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
+    borderColor: palette.overlay20,
   },
   modalCancelText: {
     color: palette.textInverse,

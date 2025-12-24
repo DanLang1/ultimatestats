@@ -1,4 +1,4 @@
-import { palette } from '@/constants/theme';
+import { palette } from '@/theme/theme';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React, { useState } from 'react';
 import { Alert, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -120,9 +120,9 @@ const styles = StyleSheet.create({
     height: 48,
     paddingHorizontal: 12,
     borderRadius: 10,
-    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+    backgroundColor: palette.accentOverlay10,
     borderWidth: 1,
-    borderColor: 'rgba(59, 130, 246, 0.3)',
+    borderColor: palette.accentOverlay30,
   },
   buttonPressed: {
     opacity: 0.8,
@@ -135,7 +135,7 @@ const styles = StyleSheet.create({
   },
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    backgroundColor: palette.overlayDark60,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 40,
@@ -147,7 +147,7 @@ const styles = StyleSheet.create({
     backgroundColor: palette.primary,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.15)',
+    borderColor: palette.overlay15,
     overflow: 'hidden',
   },
   dropdownHeader: {
@@ -157,7 +157,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 14,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.1)',
+    borderBottomColor: palette.overlay10,
   },
   dropdownTitle: {
     fontSize: 12,
@@ -191,7 +191,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   optionPressed: {
-    backgroundColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: palette.overlay08,
   },
   optionText: {
     flex: 1,
@@ -203,12 +203,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.05)',
+    borderBottomColor: palette.overlay05,
   },
   deleteButton: {
     padding: 14,
   },
   deleteButtonPressed: {
-    backgroundColor: 'rgba(244, 63, 94, 0.15)',
+    backgroundColor: palette.dangerOverlay15,
   },
 });

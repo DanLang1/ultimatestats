@@ -1,4 +1,4 @@
-import { palette } from '@/constants/theme';
+import { palette } from '@/theme/theme';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
 import { Switch as RNSwitch, StyleSheet, Text, View } from 'react-native';
@@ -29,7 +29,7 @@ export function Switch({ label, value, onValueChange, disabled, locked }: Switch
       <View style={styles.switchWrapper}>
         <RNSwitch
           trackColor={{
-            false: 'rgba(255,255,255,0.2)',
+            false: palette.overlay20,
             true: disabled ? palette.textMuted : palette.accent,
           }}
           thumbColor={

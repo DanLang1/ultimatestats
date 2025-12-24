@@ -1,4 +1,4 @@
-import { palette } from '@/constants/theme';
+import { palette } from '@/theme/theme';
 import React from 'react';
 import { Pressable, StyleSheet, Text } from 'react-native';
 

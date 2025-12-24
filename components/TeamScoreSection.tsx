@@ -1,7 +1,7 @@
 import ScoreDisplay from '@/components/ScoreDisplay';
 import TeamText from '@/components/TeamText';
 import { ThemedView } from '@/components/ThemedView';
-import { palette } from '@/constants/theme';
+import { palette } from '@/theme/theme';
 import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { Directions, Gesture, GestureDetector } from 'react-native-gesture-handler';

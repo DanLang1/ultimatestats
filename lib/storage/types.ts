@@ -8,7 +8,6 @@ export interface SavedGame {
   team1Score: number;
   team2Score: number;
   team1Roster: string[];
-  team2Roster: string[];
   statRecords: {
     pointNumber: number;
     team: 'team1' | 'team2';

@@ -1,6 +1,6 @@
 import { View, type ViewProps } from 'react-native';
 
-import { palette } from '@/constants/theme';
+import { palette } from '@/theme/theme';
 
 export type ThemedViewProps = ViewProps;
 

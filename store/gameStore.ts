@@ -45,7 +45,6 @@ interface GameState {
   // Stat Tracking
   statTrackingEnabled: boolean;
   team1Roster: string[];
-  team2Roster: string[];
   statRecords: StatRecord[];
   pendingStatEntry: { team: 'team1' | 'team2'; pointNumber: number } | null;
 
@@ -78,7 +77,7 @@ interface GameState {
   setRoster: (team: 'team1' | 'team2', roster: string[]) => void;
   addStatRecord: (record: Omit<StatRecord, 'pointNumber'>) => void;
   clearPendingStatEntry: () => void;
-  clearRosters: () => void;
+  clearRoster: () => void;
 
   // Turnover Tracking Actions
   setPossession: (team: 'team1' | 'team2') => void;
@@ -124,7 +123,6 @@ export const useGameStore = create<GameState>()(
       // Stat Tracking Initial State
       statTrackingEnabled: true,
       team1Roster: [],
-      team2Roster: [],
       statRecords: [],
       pendingStatEntry: null,
 
@@ -323,12 +321,9 @@ export const useGameStore = create<GameState>()(
       addPlayer: (team, name) =>
         set((state) => {
           const trimmedName = name.trim();
-          if (!trimmedName) return {};
-          const roster = team === 'team1' ? state.team1Roster : state.team2Roster;
-          if (roster.includes(trimmedName)) return {}; // Already exists
-          return team === 'team1'
-            ? { team1Roster: [...state.team1Roster, trimmedName] }
-            : { team2Roster: [...state.team2Roster, trimmedName] };
+          if (!trimmedName || team !== 'team1') return {};
+          if (state.team1Roster.includes(trimmedName)) return {}; // Already exists
+          return { team1Roster: [...state.team1Roster, trimmedName] };
         }),
 
       addStatRecord: (record) =>
@@ -343,11 +338,9 @@ export const useGameStore = create<GameState>()(
 
       clearPendingStatEntry: () => set({ pendingStatEntry: null }),
 
-      clearRosters: () =>
-        set({ team1Roster: [], team2Roster: [], statRecords: [], turnoverRecords: [] }),
+      clearRoster: () => set({ team1Roster: [], statRecords: [], turnoverRecords: [] }),
 
-      setRoster: (team, roster) =>
-        set(team === 'team1' ? { team1Roster: roster } : { team2Roster: roster }),
+      setRoster: (team, roster) => set(team === 'team1' ? { team1Roster: roster } : {}),
 
       // Turnover Tracking Actions
       setPossession: (team) =>
@@ -411,7 +404,6 @@ export const useGameStore = create<GameState>()(
           team1Score: state.team1Score,
           team2Score: state.team2Score,
           team1Roster: state.team1Roster,
-          team2Roster: state.team2Roster,
           statRecords: state.statRecords,
           turnoverRecords: state.turnoverRecords,
           gameTo: state.gameTo,
@@ -451,12 +443,8 @@ export const useGameStore = create<GameState>()(
 
       loadTeamRoster: (teamId, targetTeam) => {
         const team = get().savedTeams.find((t) => t.id === teamId);
-        if (!team) return;
-        if (targetTeam === 'team1') {
-          set({ team1Roster: team.roster, team1Name: team.name });
-        } else {
-          set({ team2Roster: team.roster, team2Name: team.name });
-        }
+        if (!team || targetTeam !== 'team1') return;
+        set({ team1Roster: team.roster, team1Name: team.name });
       },
     }),
     {
@@ -483,7 +471,6 @@ export const useGameStore = create<GameState>()(
         timerTimeLeft: state.timerTimeLeft,
         statTrackingEnabled: state.statTrackingEnabled,
         team1Roster: state.team1Roster,
-        team2Roster: state.team2Roster,
         statRecords: state.statRecords,
         possession: state.possession,
         startingPossession: state.startingPossession,

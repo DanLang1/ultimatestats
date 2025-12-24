@@ -1,6 +1,6 @@
 import { ThemedView } from '@/components/ThemedView';
-import { palette } from '@/constants/theme';
 import { StatRecord, TurnoverRecord, useGameStore } from '@/store/gameStore';
+import { palette } from '@/theme/theme';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { File, Paths } from 'expo-file-system';
 import { router, Stack } from 'expo-router';
@@ -277,7 +277,7 @@ const styles = StyleSheet.create({
   },
   backButton: {
     padding: 8,
-    backgroundColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: palette.overlay10,
     borderRadius: 20,
   },
   headerTitle: {
@@ -296,12 +296,12 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   summaryCard: {
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: palette.overlay05,
     borderRadius: 16,
     padding: 20,
     marginBottom: 24,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
+    borderColor: palette.overlay10,
     position: 'relative',
   },
   summaryColumns: {
@@ -317,7 +317,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingLeft: 16,
     borderLeftWidth: 1,
-    borderLeftColor: 'rgba(255,255,255,0.1)',
+    borderLeftColor: palette.overlay10,
   },
   summaryLabel: {
     fontSize: 10,
@@ -334,7 +334,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   summaryBadge: {
-    backgroundColor: 'rgba(99, 102, 241, 0.2)',
+    backgroundColor: palette.indigoOverlay20,
     paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 12,
@@ -400,10 +400,10 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingVertical: 4,
     paddingHorizontal: 8,
-    backgroundColor: 'rgba(99, 102, 241, 0.1)',
+    backgroundColor: palette.indigoOverlay10,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: 'rgba(99, 102, 241, 0.3)',
+    borderColor: palette.indigoOverlay30,
   },
   headerExportText: {
     fontSize: 12,
@@ -426,15 +426,15 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
+    borderColor: palette.overlay10,
   },
   tableHeader: {
     flexDirection: 'row',
-    backgroundColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: palette.overlay08,
     paddingVertical: 12,
     paddingHorizontal: 12,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.1)',
+    borderBottomColor: palette.overlay10,
   },
   headerCell: {
     flex: 1,
@@ -453,7 +453,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   tableRowAlt: {
-    backgroundColor: 'rgba(255,255,255,0.02)',
+    backgroundColor: palette.overlay02,
   },
   cell: {
     flex: 1,

@@ -1,4 +1,5 @@
 import { TurnoverType, useGameStore } from '@/store/gameStore';
+import { palette } from '@/theme/theme';
 import React from 'react';
 import { Modal, Pressable, StyleSheet } from 'react-native';
 import { TurnoverEntryInner } from './turnover-entry/TurnoverEntryInner';
@@ -11,7 +12,6 @@ export default function TurnoverEntrySheet() {
     team1Name,
     team2Name,
     team1Roster,
-    team2Roster,
     addPlayer,
     addTurnoverRecord,
     clearPendingTurnoverEntry,
@@ -25,7 +25,7 @@ export default function TurnoverEntrySheet() {
   // For simplicity, we'll show the team that had possession and let the user pick
   const teamWithError = possession; // The team that had the disc before turnover
   const teamName = teamWithError === 'team1' ? team1Name : team2Name;
-  const roster = teamWithError === 'team1' ? team1Roster : team2Roster;
+  const roster = team1Roster; // Only tracking team1 roster
 
   // Determine if this is "my team" losing possession
   // - We only track team1 stats, so isMyTeamTurnover = team1 had possession
@@ -91,7 +91,7 @@ export default function TurnoverEntrySheet() {
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    backgroundColor: palette.overlayDark40,
     justifyContent: 'flex-end',
   },
 });

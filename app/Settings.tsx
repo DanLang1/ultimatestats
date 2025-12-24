@@ -1,12 +1,12 @@
 import { ThemedView } from '@/components/ThemedView';
 import { Dropdown } from '@/components/ui/Dropdown';
 import { Switch } from '@/components/ui/Switch';
-import { palette } from '@/constants/theme';
 import { useGameStore } from '@/store/gameStore';
+import { palette } from '@/theme/theme';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router, Stack } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 export default function SettingsScreen() {
   const {
@@ -27,7 +27,8 @@ export default function SettingsScreen() {
     statTrackingEnabled: statTrackingEnabledStore,
     setStatTrackingEnabled,
     team1Roster,
-    clearRosters,
+    clearRoster,
+    setRoster,
     timerIsActive,
     team1Score,
     team2Score,
@@ -56,23 +57,15 @@ export default function SettingsScreen() {
 
   const hasRoster = team1Roster.length > 0;
 
-  // Track if team name is changing
-  const [renameModalVisible, setRenameModalVisible] = useState(false);
-  const [pendingTeamName, setPendingTeamName] = useState('');
-
   const handleSave = () => {
     performSave(team1);
   };
 
   const handleTeamNameBlur = () => {
-    // Check if team name is changing and there's an existing roster
-    if (team1 !== team1Name && hasRoster) {
-      setPendingTeamName(team1);
-      setRenameModalVisible(true);
-    }
+    // No-op - team change handling moved to handleEditRoster for proper async timing
   };
 
-  const performSave = (newTeamName: string, clearRoster = false) => {
+  const performSave = (newTeamName: string) => {
     const gLength = Number(gameLength) || 90;
     const sCapTime = Number(softCapTime) || gLength - 20;
 
@@ -84,12 +77,8 @@ export default function SettingsScreen() {
     setStatTrackingEnabled(statTrackingEnabled);
 
     // If keeping players with new name, save the team
-    if (hasRoster && !clearRoster) {
+    if (hasRoster) {
       saveTeam(newTeamName, team1Roster);
-    }
-    // If clearing roster for new team
-    if (clearRoster) {
-      clearRosters();
     }
 
     const newCount = parseInt(timeoutsCount, 10);
@@ -108,7 +97,7 @@ export default function SettingsScreen() {
   };
 
   const handleClearRosters = () => {
-    clearRosters();
+    clearRoster();
   };
 
   const handleEditRoster = () => {
@@ -145,7 +134,7 @@ export default function SettingsScreen() {
           <View style={styles.column}>
             <Text style={styles.sectionTitle}>TEAMS</Text>
             <View style={styles.inputGroupFullWidth}>
-              <Text style={styles.inputLabel}>TEAM 1 NAME</Text>
+              <Text style={styles.inputLabel}>My Team</Text>
               <View style={styles.teamInputRow}>
                 <TextInput
                   style={[styles.inputStacked, styles.teamNameInput, { textAlign: 'left' }]}
@@ -156,7 +145,9 @@ export default function SettingsScreen() {
                   placeholderTextColor={palette.textMuted}
                 />
                 <Dropdown
-                  options={savedTeams.map((t) => ({ id: t.id, label: t.name }))}
+                  options={savedTeams
+                    .filter((t) => t.name !== team1)
+                    .map((t) => ({ id: t.id, label: t.name }))}
                   placeholder="Load"
                   onSelect={handleLoadTeam}
                   onDelete={handleDeleteTeam}
@@ -175,7 +166,7 @@ export default function SettingsScreen() {
               </View>
             </View>
             <View style={styles.inputGroupFullWidth}>
-              <Text style={styles.inputLabel}>TEAM 2 NAME</Text>
+              <Text style={styles.inputLabel}>Opposing Team</Text>
               <TextInput
                 style={[styles.inputStacked, { textAlign: 'left' }]}
                 value={team2}
@@ -342,46 +333,6 @@ export default function SettingsScreen() {
           <Text style={styles.saveButtonText}>Save</Text>
         </Pressable>
       </View>
-
-      {/* Rename Team Modal */}
-      <Modal visible={renameModalVisible} transparent animationType="fade">
-        <Pressable style={styles.modalOverlay} onPress={() => setRenameModalVisible(false)}>
-          <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
-            <Text style={styles.modalTitle}>TEAM NAME CHANGE</Text>
-            <Text style={styles.modalSubtitle}>
-              {`You're changing the team name from "${team1Name}" to "${pendingTeamName}". What would you like to do with the current roster (${team1Roster.length} players)?`}
-            </Text>
-            <View style={styles.modalButtons}>
-              <Pressable
-                style={({ pressed }) => [
-                  styles.modalButton,
-                  styles.modalCancelButton,
-                  pressed && styles.buttonPressed,
-                ]}
-                onPress={() => {
-                  setRenameModalVisible(false);
-                  performSave(pendingTeamName, true);
-                  router.back();
-                }}>
-                <Text style={styles.modalCancelText}>Start Fresh</Text>
-              </Pressable>
-              <Pressable
-                style={({ pressed }) => [
-                  styles.modalButton,
-                  styles.modalSaveButton,
-                  pressed && styles.buttonPressed,
-                ]}
-                onPress={() => {
-                  setRenameModalVisible(false);
-                  performSave(pendingTeamName, false);
-                  router.back();
-                }}>
-                <Text style={styles.modalSaveText}>Keep Players</Text>
-              </Pressable>
-            </View>
-          </View>
-        </Pressable>
-      </Modal>
     </ThemedView>
   );
 }
@@ -401,7 +352,7 @@ const styles = StyleSheet.create({
   },
   backButton: {
     padding: 8,
-    backgroundColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: palette.overlay10,
     borderRadius: 20,
   },
   headerTitle: {
@@ -441,18 +392,18 @@ const styles = StyleSheet.create({
   },
   divider: {
     height: 1,
-    backgroundColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: palette.overlay10,
     marginVertical: 12,
   },
   input: {
     height: 48,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
+    borderColor: palette.overlay20,
     borderRadius: 12,
     paddingHorizontal: 16,
     fontSize: 16,
     color: palette.textInverse,
-    backgroundColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: palette.overlay08,
   },
   // Stacked inputs grid
   inputsGrid: {
@@ -478,7 +429,7 @@ const styles = StyleSheet.create({
     height: 48,
     paddingHorizontal: 12,
     borderRadius: 10,
-    backgroundColor: 'rgba(59, 130, 246, 0.15)',
+    backgroundColor: palette.accentOverlay15,
     borderWidth: 1,
     borderColor: palette.accent,
     flexDirection: 'row',
@@ -500,13 +451,13 @@ const styles = StyleSheet.create({
   inputStacked: {
     height: 48,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
+    borderColor: palette.overlay20,
     borderRadius: 10,
     paddingHorizontal: 14,
     fontSize: 18,
     fontWeight: '600',
     color: palette.textInverse,
-    backgroundColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: palette.overlay08,
     textAlign: 'center',
   },
   inputWithSuffix: {
@@ -523,13 +474,13 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: palette.textMuted,
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: palette.overlay05,
     paddingHorizontal: 12,
     height: 48,
     lineHeight: 48,
     borderWidth: 1,
     borderLeftWidth: 0,
-    borderColor: 'rgba(255,255,255,0.2)',
+    borderColor: palette.overlay20,
     borderTopRightRadius: 10,
     borderBottomRightRadius: 10,
   },
@@ -566,7 +517,7 @@ const styles = StyleSheet.create({
     padding: 12,
     alignItems: 'center',
     borderRadius: 10,
-    backgroundColor: 'rgba(244, 63, 94, 0.15)',
+    backgroundColor: palette.dangerOverlay15,
     borderWidth: 1,
     borderColor: palette.danger,
   },
@@ -581,7 +532,7 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingBottom: 32,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.1)',
+    borderTopColor: palette.overlay10,
   },
   footerButton: {
     flex: 1,
@@ -595,9 +546,9 @@ const styles = StyleSheet.create({
     transform: [{ scale: 0.98 }],
   },
   cancelButton: {
-    backgroundColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: palette.overlay10,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
+    borderColor: palette.overlay20,
   },
   cancelButtonText: {
     color: palette.textInverse,
@@ -618,65 +569,6 @@ const styles = StyleSheet.create({
   saveButtonText: {
     color: palette.textInverse,
     fontSize: 15,
-    fontWeight: '700',
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 40,
-  },
-  modalContent: {
-    width: '100%',
-    maxWidth: 340,
-    backgroundColor: palette.primary,
-    borderRadius: 16,
-    padding: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.15)',
-  },
-  modalTitle: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: palette.textMuted,
-    letterSpacing: 1,
-    marginBottom: 12,
-    textAlign: 'center',
-  },
-  modalSubtitle: {
-    fontSize: 14,
-    color: palette.textInverse,
-    lineHeight: 20,
-    marginBottom: 20,
-    textAlign: 'center',
-  },
-  modalButtons: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  modalButton: {
-    flex: 1,
-    paddingVertical: 12,
-    borderRadius: 10,
-    alignItems: 'center',
-  },
-  modalCancelButton: {
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
-  },
-  modalCancelText: {
-    color: palette.textInverse,
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  modalSaveButton: {
-    backgroundColor: palette.accent,
-  },
-  modalSaveText: {
-    color: palette.textInverse,
-    fontSize: 14,
     fontWeight: '700',
   },
 });

@@ -1,5 +1,5 @@
 import { PlayerChip } from '@/components/ui/PlayerChip';
-import { palette } from '@/constants/theme';
+import { palette } from '@/theme/theme';
 import React from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
