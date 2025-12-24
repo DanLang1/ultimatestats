@@ -4,7 +4,7 @@ import { ThemedView } from '@/components/ThemedView';
 import { useHaptics } from '@/hooks/useHaptics';
 import { palette } from '@/theme/theme';
 import React from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Directions, Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { scheduleOnRN } from 'react-native-worklets';
 
@@ -81,8 +81,14 @@ export default function TeamScoreSection({
     }
   };
 
+  // Possession tracking is active when hasPossession is defined (not undefined)
+  const possessionTrackingActive = hasPossession !== undefined;
+
   return (
     <ThemedView style={[styles.container, { backgroundColor }]}>
+      {/* Static possession border - only shown when this team has possession */}
+      {hasPossession && <View style={styles.possessionBorder} pointerEvents="none" />}
+
       {/* Top 1/3: Timeouts */}
       <View style={styles.timeoutArea}>
         <View style={styles.timeoutContainer}>
@@ -117,6 +123,11 @@ export default function TeamScoreSection({
           <ScoreDisplay bgColor={backgroundColor} textColor={textColor} score={score} />
         </Pressable>
       </GestureDetector>
+
+      {/* Turnover hint - positioned at bottom, shown when this team does NOT have possession */}
+      {possessionTrackingActive && !hasPossession && (
+        <Text style={[styles.turnoverHint, { color: textColor }]}>Tap for turnover</Text>
+      )}
     </ThemedView>
   );
 }
@@ -126,6 +137,16 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingTop: 30,
     position: 'relative',
+  },
+  possessionBorder: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderWidth: 4,
+    borderColor: palette.accent,
+    zIndex: 10,
   },
   timeoutArea: {
     flex: 1,
@@ -149,5 +170,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'flex-start',
     paddingTop: 10,
+  },
+  turnoverHint: {
+    position: 'absolute',
+    bottom: 30,
+    alignSelf: 'center',
+    fontSize: 12,
+    fontWeight: '500',
+    fontStyle: 'italic',
+    opacity: 0.4,
   },
 });
