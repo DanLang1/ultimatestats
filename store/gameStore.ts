@@ -1,5 +1,6 @@
 import { SavedGame, SavedTeam, storage } from '@/lib/storage';
 import { generateId } from '@/lib/utils';
+import { palette } from '@/theme/theme';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
@@ -23,6 +24,8 @@ interface GameState {
   // State
   team1Name: string;
   team2Name: string;
+  team1BgColor: string;
+  team2BgColor: string;
   team1Score: number;
   team2Score: number;
   team1Timeouts: boolean[];
@@ -56,6 +59,7 @@ interface GameState {
 
   // Actions
   setTeamNames: (team1: string, team2: string) => void;
+  setTeamBgColor: (team: 'team1' | 'team2', color: string) => void;
   setFloaterEnabled: (enabled: boolean) => void;
   setGameTo: (score: number) => void;
   setGameLength: (minutes: number) => void;
@@ -102,6 +106,8 @@ export const useGameStore = create<GameState>()(
     (set, get) => ({
       team1Name: 'Team 1',
       team2Name: 'Team 2',
+      team1BgColor: palette.surface,
+      team2BgColor: palette.primary,
       team1Score: 0,
       team2Score: 0,
       team1Timeouts: [true, true],
@@ -137,6 +143,8 @@ export const useGameStore = create<GameState>()(
       savedTeams: [],
 
       setTeamNames: (team1, team2) => set({ team1Name: team1, team2Name: team2 }),
+      setTeamBgColor: (team, color) =>
+        set(team === 'team1' ? { team1BgColor: color } : { team2BgColor: color }),
       setFloaterEnabled: (enabled) => set({ floaterEnabled: enabled }),
 
       setGameTo: (gameTo) => set({ gameTo, baseGameTo: gameTo }),
@@ -454,6 +462,8 @@ export const useGameStore = create<GameState>()(
       partialize: (state) => ({
         team1Name: state.team1Name,
         team2Name: state.team2Name,
+        team1BgColor: state.team1BgColor,
+        team2BgColor: state.team2BgColor,
         team1Score: state.team1Score,
         team2Score: state.team2Score,
         team1Timeouts: state.team1Timeouts,

@@ -15,3 +15,4 @@ trigger: always_on
 - No raw colors - everything should be abstracted into theme.ts
 - Early return in logic whenever possible
 - See AlertProvider when making alerts - do NOT use native alert
+- Do NOT use `runOnJs`, it's deprecated - use `scheduleOnRn` instead

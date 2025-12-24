@@ -4,7 +4,7 @@ import StatEntrySheet from '@/components/StatEntrySheet';
 import TeamScoreSection from '@/components/TeamScoreSection';
 import { ThemedView } from '@/components/ThemedView';
 import TurnoverEntrySheet from '@/components/TurnoverEntrySheet';
-import { palette } from '@/theme/theme';
+import { getContrastingTextColor } from '@/lib/colorUtils';
 
 import { useGameStore } from '@/store/gameStore';
 import { router } from 'expo-router';
@@ -14,6 +14,8 @@ export default function BasicScoreboard() {
   const {
     team1Name,
     team2Name,
+    team1BgColor,
+    team2BgColor,
     team1Score,
     team2Score,
     team1Timeouts,
@@ -76,8 +78,8 @@ export default function BasicScoreboard() {
         score={team1Score}
         onIncrement={() => incrementScore(true)}
         onDecrement={() => decrementScore(true)}
-        textColor={palette.primary}
-        backgroundColor={palette.surface}
+        textColor={getContrastingTextColor(team1BgColor)}
+        backgroundColor={team1BgColor}
         timeouts={team1Combined}
         onTimeoutUse={(index) => toggleTimeout(true, index)}
         // Possession tracking props (only when enabled)
@@ -96,8 +98,8 @@ export default function BasicScoreboard() {
         score={team2Score}
         onIncrement={() => incrementScore(false)}
         onDecrement={() => decrementScore(false)}
-        textColor={palette.textInverse}
-        backgroundColor={palette.primary}
+        textColor={getContrastingTextColor(team2BgColor)}
+        backgroundColor={team2BgColor}
         timeouts={team2Combined}
         onTimeoutUse={(index) => toggleTimeout(false, index)}
         // Possession tracking props (only when enabled)

@@ -2,7 +2,6 @@ import ScoreDisplay from '@/components/ScoreDisplay';
 import TeamText from '@/components/TeamText';
 import { ThemedView } from '@/components/ThemedView';
 import { useHaptics } from '@/hooks/useHaptics';
-import { palette } from '@/theme/theme';
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Directions, Gesture, GestureDetector } from 'react-native-gesture-handler';
@@ -86,9 +85,6 @@ export default function TeamScoreSection({
 
   return (
     <ThemedView style={[styles.container, { backgroundColor }]}>
-      {/* Static possession border - only shown when this team has possession */}
-      {hasPossession && <View style={styles.possessionBorder} pointerEvents="none" />}
-
       {/* Top 1/3: Timeouts */}
       <View style={styles.timeoutArea}>
         <View style={styles.timeoutContainer}>
@@ -99,16 +95,15 @@ export default function TeamScoreSection({
               style={[
                 styles.timeoutIndicator,
                 timeout.isFloater && {
-                  borderColor: timeout.active ? palette.accent : textColor,
+                  width: 14,
+                  height: 14,
                   borderWidth: 2,
+                  borderRadius: 0,
+                  transform: [{ rotate: '45deg' }],
                 },
                 {
-                  backgroundColor: timeout.active
-                    ? timeout.isFloater
-                      ? palette.accent
-                      : textColor
-                    : 'transparent',
-                  borderColor: timeout.isFloater ? palette.accent : textColor,
+                  backgroundColor: timeout.active ? textColor : 'transparent',
+                  borderColor: textColor,
                 },
               ]}
             />
@@ -137,16 +132,6 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingTop: 30,
     position: 'relative',
-  },
-  possessionBorder: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    borderWidth: 4,
-    borderColor: palette.accent,
-    zIndex: 10,
   },
   timeoutArea: {
     flex: 1,

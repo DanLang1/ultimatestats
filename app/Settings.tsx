@@ -1,4 +1,5 @@
 import { ThemedView } from '@/components/ThemedView';
+import { TeamColorPicker } from '@/components/ui/ColorPicker';
 import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import { Switch } from '@/components/ui/Switch';
 import { TeamDropdown } from '@/components/ui/TeamDropdown';
@@ -13,9 +14,12 @@ export default function SettingsScreen() {
   const {
     team1Name,
     team2Name,
+    team1BgColor,
+    team2BgColor,
     gameTo: gameToStore,
     team1Timeouts,
     setTeamNames,
+    setTeamBgColor,
     setGameTo: setGameToStore,
     resetTimeouts,
     floaterEnabled: floaterEnabledStore,
@@ -201,6 +205,30 @@ export default function SettingsScreen() {
                 maxLength={20}
               />
             </View>
+
+            <View style={styles.divider} />
+
+            {/* Team Colors */}
+            <Text style={styles.sectionTitle}>COLORS</Text>
+            <TeamColorPicker
+              label="MY TEAM COLOR"
+              value={team1BgColor}
+              onChange={(color) => setTeamBgColor('team1', color)}
+            />
+            <View style={{ height: 12 }} />
+            <TeamColorPicker
+              label="OPPOSING TEAM COLOR"
+              value={team2BgColor}
+              onChange={(color) => setTeamBgColor('team2', color)}
+            />
+            <Pressable
+              style={({ pressed }) => [styles.resetColorsButton, pressed && { opacity: 0.7 }]}
+              onPress={() => {
+                setTeamBgColor('team1', palette.surface);
+                setTeamBgColor('team2', palette.primary);
+              }}>
+              <Text style={styles.resetColorsButtonText}>Reset to Default</Text>
+            </Pressable>
 
             <View style={styles.divider} />
 
@@ -609,5 +637,15 @@ const styles = StyleSheet.create({
     color: palette.textInverse,
     fontSize: 15,
     fontWeight: '700',
+  },
+  resetColorsButton: {
+    marginTop: 12,
+    paddingVertical: 8,
+    alignItems: 'center',
+  },
+  resetColorsButtonText: {
+    color: palette.textMuted,
+    fontSize: 12,
+    fontWeight: '500',
   },
 });
