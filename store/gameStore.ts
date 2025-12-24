@@ -1,4 +1,5 @@
 import { SavedGame, SavedTeam, storage } from '@/lib/storage';
+import { generateId } from '@/lib/utils';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
@@ -403,7 +404,7 @@ export const useGameStore = create<GameState>()(
       saveCurrentGame: async () => {
         const state = get();
         const game: SavedGame = {
-          id: Date.now().toString(36) + Math.random().toString(36).substring(2),
+          id: generateId(),
           createdAt: Date.now(),
           team1Name: state.team1Name,
           team2Name: state.team2Name,
@@ -428,8 +429,11 @@ export const useGameStore = create<GameState>()(
       },
 
       saveTeam: async (name, roster) => {
+        const existingTeams = await storage.loadTeams();
+        const existingTeam = existingTeams.find((t) => t.name.toLowerCase() === name.toLowerCase());
+
         const team: SavedTeam = {
-          id: Date.now().toString(36) + Math.random().toString(36).substring(2),
+          id: existingTeam?.id || generateId(),
           name,
           roster,
           lastUsed: Date.now(),

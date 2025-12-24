@@ -1,4 +1,3 @@
-import { Toast } from '@/components/ui/Toast';
 import { palette } from '@/constants/theme';
 import { useGameStore } from '@/store/gameStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
@@ -11,9 +10,6 @@ export default function EditRosterScreen() {
   const { team1Roster, team1Name, setRoster, addPlayer, saveTeam } = useGameStore();
 
   const [newPlayerName, setNewPlayerName] = useState('');
-  const [saveModalVisible, setSaveModalVisible] = useState(false);
-  const [saveTeamName, setSaveTeamName] = useState('');
-  const [showToast, setShowToast] = useState(false);
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [editingPlayer, setEditingPlayer] = useState('');
   const [editPlayerName, setEditPlayerName] = useState('');
@@ -23,6 +19,11 @@ export default function EditRosterScreen() {
     if (trimmed && !team1Roster.includes(trimmed)) {
       addPlayer('team1', trimmed);
       setNewPlayerName('');
+      // Auto-save team with current name
+      if (team1Name) {
+        const newRoster = [...team1Roster, trimmed];
+        saveTeam(team1Name, newRoster);
+      }
     }
   };
 
@@ -44,25 +45,16 @@ export default function EditRosterScreen() {
     if (newName && newName !== editingPlayer && !team1Roster.includes(newName)) {
       const updatedRoster = team1Roster.map((p) => (p === editingPlayer ? newName : p));
       setRoster('team1', updatedRoster);
+      // Auto-save team
+      if (team1Name) {
+        saveTeam(team1Name, updatedRoster);
+      }
     }
     setEditModalVisible(false);
   };
 
   const handleBack = () => {
     router.back();
-  };
-
-  const handleSaveTeam = () => {
-    setSaveTeamName(team1Name || teamName || '');
-    setSaveModalVisible(true);
-  };
-
-  const handleConfirmSave = () => {
-    if (saveTeamName.trim()) {
-      saveTeam(saveTeamName.trim(), team1Roster);
-      setSaveModalVisible(false);
-      setShowToast(true);
-    }
   };
 
   return (
@@ -75,13 +67,7 @@ export default function EditRosterScreen() {
           <MaterialCommunityIcons name="arrow-left" size={24} color={palette.textInverse} />
         </Pressable>
         <Text style={styles.headerTitle}>{(teamName || 'TEAM').toUpperCase()} ROSTER</Text>
-        {team1Roster.length > 0 ? (
-          <Pressable onPress={handleSaveTeam} style={styles.saveTeamButton} hitSlop={12}>
-            <MaterialCommunityIcons name="content-save-outline" size={20} color={palette.accent} />
-          </Pressable>
-        ) : (
-          <View style={styles.headerSpacer} />
-        )}
+        <View style={styles.headerSpacer} />
       </View>
 
       {/* Add Player Input */}
@@ -142,43 +128,6 @@ export default function EditRosterScreen() {
         )}
       </ScrollView>
 
-      {/* Save Team Modal */}
-      <Modal visible={saveModalVisible} transparent animationType="fade">
-        <Pressable style={styles.modalOverlay} onPress={() => setSaveModalVisible(false)}>
-          <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
-            <Text style={styles.modalTitle}>SAVE TEAM</Text>
-            <TextInput
-              style={styles.modalInput}
-              placeholder="Team name..."
-              placeholderTextColor={palette.textMuted}
-              value={saveTeamName}
-              onChangeText={setSaveTeamName}
-              autoFocus
-            />
-            <View style={styles.modalButtons}>
-              <Pressable
-                style={({ pressed }) => [
-                  styles.modalButton,
-                  styles.modalCancelButton,
-                  pressed && styles.buttonPressed,
-                ]}
-                onPress={() => setSaveModalVisible(false)}>
-                <Text style={styles.modalCancelText}>Cancel</Text>
-              </Pressable>
-              <Pressable
-                style={({ pressed }) => [
-                  styles.modalButton,
-                  styles.modalSaveButton,
-                  pressed && styles.buttonPressed,
-                ]}
-                onPress={handleConfirmSave}>
-                <Text style={styles.modalSaveText}>Save</Text>
-              </Pressable>
-            </View>
-          </View>
-        </Pressable>
-      </Modal>
-
       {/* Edit Player Modal */}
       <Modal visible={editModalVisible} transparent animationType="fade">
         <Pressable style={styles.modalOverlay} onPress={() => setEditModalVisible(false)}>
@@ -215,13 +164,6 @@ export default function EditRosterScreen() {
           </View>
         </Pressable>
       </Modal>
-
-      <Toast
-        visible={showToast}
-        message="Team saved successfully!"
-        onHide={() => setShowToast(false)}
-        type="success"
-      />
     </View>
   );
 }

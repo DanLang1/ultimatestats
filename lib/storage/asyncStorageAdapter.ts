@@ -1,13 +1,9 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { generateId } from '../utils';
 import type { SavedGame, SavedTeam, Storage } from './types';
 
 const GAMES_KEY = 'ultimatestats_games';
 const TEAMS_KEY = 'ultimatestats_teams';
-
-// Generate a simple unique ID
-const generateId = (): string => {
-  return Date.now().toString(36) + Math.random().toString(36).substring(2);
-};
 
 export const asyncStorageAdapter: Storage = {
   // Game Storage

@@ -6,7 +6,7 @@ import { useGameStore } from '@/store/gameStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router, Stack } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 export default function SettingsScreen() {
   const {
@@ -34,6 +34,8 @@ export default function SettingsScreen() {
     savedTeams,
     loadSavedTeams,
     loadTeamRoster,
+    deleteTeam,
+    saveTeam,
   } = useGameStore();
 
   const [team1, setTeam1] = useState(team1Name);
@@ -54,16 +56,41 @@ export default function SettingsScreen() {
 
   const hasRoster = team1Roster.length > 0;
 
+  // Track if team name is changing
+  const [renameModalVisible, setRenameModalVisible] = useState(false);
+  const [pendingTeamName, setPendingTeamName] = useState('');
+
   const handleSave = () => {
+    performSave(team1);
+  };
+
+  const handleTeamNameBlur = () => {
+    // Check if team name is changing and there's an existing roster
+    if (team1 !== team1Name && hasRoster) {
+      setPendingTeamName(team1);
+      setRenameModalVisible(true);
+    }
+  };
+
+  const performSave = (newTeamName: string, clearRoster = false) => {
     const gLength = Number(gameLength) || 90;
     const sCapTime = Number(softCapTime) || gLength - 20;
 
-    setTeamNames(team1, team2);
+    setTeamNames(newTeamName, team2);
     setGameToStore(Number(gameTo) || 15);
     setFloaterEnabled(floaterEnabled);
     setGameLength(gLength);
     setSoftCapMins(Math.max(0, gLength - sCapTime));
     setStatTrackingEnabled(statTrackingEnabled);
+
+    // If keeping players with new name, save the team
+    if (hasRoster && !clearRoster) {
+      saveTeam(newTeamName, team1Roster);
+    }
+    // If clearing roster for new team
+    if (clearRoster) {
+      clearRosters();
+    }
 
     const newCount = parseInt(timeoutsCount, 10);
     const currentCount = team1Timeouts.length;
@@ -93,6 +120,10 @@ export default function SettingsScreen() {
     setTeam1(option.label); // Update local state to match
   };
 
+  const handleDeleteTeam = (option: { id: string; label: string }) => {
+    deleteTeam(option.id);
+  };
+
   const gameActive = timerIsActive || team1Score !== 0 || team2Score !== 0;
 
   return (
@@ -120,6 +151,7 @@ export default function SettingsScreen() {
                   style={[styles.inputStacked, styles.teamNameInput, { textAlign: 'left' }]}
                   value={team1}
                   onChangeText={setTeam1}
+                  onBlur={handleTeamNameBlur}
                   placeholder="Team 1 Name"
                   placeholderTextColor={palette.textMuted}
                 />
@@ -127,6 +159,7 @@ export default function SettingsScreen() {
                   options={savedTeams.map((t) => ({ id: t.id, label: t.name }))}
                   placeholder="Load"
                   onSelect={handleLoadTeam}
+                  onDelete={handleDeleteTeam}
                 />
                 <Pressable
                   style={({ pressed }) => [
@@ -309,6 +342,46 @@ export default function SettingsScreen() {
           <Text style={styles.saveButtonText}>Save</Text>
         </Pressable>
       </View>
+
+      {/* Rename Team Modal */}
+      <Modal visible={renameModalVisible} transparent animationType="fade">
+        <Pressable style={styles.modalOverlay} onPress={() => setRenameModalVisible(false)}>
+          <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
+            <Text style={styles.modalTitle}>TEAM NAME CHANGE</Text>
+            <Text style={styles.modalSubtitle}>
+              {`You're changing the team name from "${team1Name}" to "${pendingTeamName}". What would you like to do with the current roster (${team1Roster.length} players)?`}
+            </Text>
+            <View style={styles.modalButtons}>
+              <Pressable
+                style={({ pressed }) => [
+                  styles.modalButton,
+                  styles.modalCancelButton,
+                  pressed && styles.buttonPressed,
+                ]}
+                onPress={() => {
+                  setRenameModalVisible(false);
+                  performSave(pendingTeamName, true);
+                  router.back();
+                }}>
+                <Text style={styles.modalCancelText}>Start Fresh</Text>
+              </Pressable>
+              <Pressable
+                style={({ pressed }) => [
+                  styles.modalButton,
+                  styles.modalSaveButton,
+                  pressed && styles.buttonPressed,
+                ]}
+                onPress={() => {
+                  setRenameModalVisible(false);
+                  performSave(pendingTeamName, false);
+                  router.back();
+                }}>
+                <Text style={styles.modalSaveText}>Keep Players</Text>
+              </Pressable>
+            </View>
+          </View>
+        </Pressable>
+      </Modal>
     </ThemedView>
   );
 }
@@ -545,6 +618,65 @@ const styles = StyleSheet.create({
   saveButtonText: {
     color: palette.textInverse,
     fontSize: 15,
+    fontWeight: '700',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 40,
+  },
+  modalContent: {
+    width: '100%',
+    maxWidth: 340,
+    backgroundColor: palette.primary,
+    borderRadius: 16,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.15)',
+  },
+  modalTitle: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: palette.textMuted,
+    letterSpacing: 1,
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  modalSubtitle: {
+    fontSize: 14,
+    color: palette.textInverse,
+    lineHeight: 20,
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  modalButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  modalCancelButton: {
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+  },
+  modalCancelText: {
+    color: palette.textInverse,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  modalSaveButton: {
+    backgroundColor: palette.accent,
+  },
+  modalSaveText: {
+    color: palette.textInverse,
+    fontSize: 14,
     fontWeight: '700',
   },
 });

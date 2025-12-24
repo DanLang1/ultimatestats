@@ -1,7 +1,7 @@
 import { palette } from '@/constants/theme';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React, { useState } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 export interface DropdownOption {
   id: string;
@@ -12,6 +12,7 @@ interface DropdownProps {
   options: DropdownOption[];
   placeholder?: string;
   onSelect: (option: DropdownOption) => void;
+  onDelete?: (option: DropdownOption) => void;
   buttonStyle?: object;
 }
 
@@ -19,6 +20,7 @@ export function Dropdown({
   options,
   placeholder = 'Select...',
   onSelect,
+  onDelete,
   buttonStyle,
 }: DropdownProps) {
   const [visible, setVisible] = useState(false);
@@ -26,6 +28,19 @@ export function Dropdown({
   const handleSelect = (option: DropdownOption) => {
     onSelect(option);
     setVisible(false);
+  };
+
+  const handleDelete = (option: DropdownOption) => {
+    Alert.alert('Delete Team', `Are you sure you want to delete "${option.label}"?`, [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: () => {
+          onDelete?.(option);
+        },
+      },
+    ]);
   };
 
   return (
@@ -60,17 +75,33 @@ export function Dropdown({
             ) : (
               <ScrollView style={styles.optionsList}>
                 {options.map((option) => (
-                  <Pressable
-                    key={option.id}
-                    style={({ pressed }) => [styles.option, pressed && styles.optionPressed]}
-                    onPress={() => handleSelect(option)}>
-                    <MaterialCommunityIcons
-                      name="account-group"
-                      size={20}
-                      color={palette.textMuted}
-                    />
-                    <Text style={styles.optionText}>{option.label}</Text>
-                  </Pressable>
+                  <View key={option.id} style={styles.optionRow}>
+                    <Pressable
+                      style={({ pressed }) => [styles.option, pressed && styles.optionPressed]}
+                      onPress={() => handleSelect(option)}>
+                      <MaterialCommunityIcons
+                        name="account-group"
+                        size={20}
+                        color={palette.textMuted}
+                      />
+                      <Text style={styles.optionText}>{option.label}</Text>
+                    </Pressable>
+                    {onDelete && (
+                      <Pressable
+                        style={({ pressed }) => [
+                          styles.deleteButton,
+                          pressed && styles.deleteButtonPressed,
+                        ]}
+                        onPress={() => handleDelete(option)}
+                        hitSlop={8}>
+                        <MaterialCommunityIcons
+                          name="trash-can-outline"
+                          size={18}
+                          color={palette.danger}
+                        />
+                      </Pressable>
+                    )}
+                  </View>
                 ))}
               </ScrollView>
             )}
@@ -152,13 +183,12 @@ const styles = StyleSheet.create({
     maxHeight: 300,
   },
   option: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
     paddingVertical: 14,
     paddingHorizontal: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.05)',
   },
   optionPressed: {
     backgroundColor: 'rgba(255,255,255,0.08)',
@@ -168,5 +198,17 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '500',
     color: palette.textInverse,
+  },
+  optionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.05)',
+  },
+  deleteButton: {
+    padding: 14,
+  },
+  deleteButtonPressed: {
+    backgroundColor: 'rgba(244, 63, 94, 0.15)',
   },
 });
