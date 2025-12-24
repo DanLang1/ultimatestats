@@ -1,3 +1,4 @@
+import { AlertProvider } from '@/components/ui/AlertProvider';
 import { palette } from '@/theme/theme';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -8,19 +9,21 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function RootLayout() {
   return (
-    <SafeAreaView
-      style={{
-        flex: 1,
-        backgroundColor: palette.primary,
-      }}
-      edges={['left', 'right']}>
-      <GestureHandlerRootView style={{ flex: 1 }}>
-        <Stack>
-          <Stack.Screen name="index" options={{ headerShown: false }} />
-        </Stack>
+    <AlertProvider>
+      <SafeAreaView
+        style={{
+          flex: 1,
+          backgroundColor: palette.primary,
+        }}
+        edges={['left', 'right']}>
+        <GestureHandlerRootView style={{ flex: 1 }}>
+          <Stack>
+            <Stack.Screen name="index" options={{ headerShown: false }} />
+          </Stack>
 
-        <StatusBar style="auto" hidden />
-      </GestureHandlerRootView>
-    </SafeAreaView>
+          <StatusBar style="auto" hidden />
+        </GestureHandlerRootView>
+      </SafeAreaView>
+    </AlertProvider>
   );
 }

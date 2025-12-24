@@ -1,46 +1,52 @@
+import { useAlert } from '@/components/ui/AlertProvider';
 import { palette } from '@/theme/theme';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React, { useState } from 'react';
-import { Alert, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
-export interface DropdownOption {
+export interface TeamDropdownOption {
   id: string;
   label: string;
 }
 
-interface DropdownProps {
-  options: DropdownOption[];
+interface TeamDropdownProps {
+  options: TeamDropdownOption[];
   placeholder?: string;
-  onSelect: (option: DropdownOption) => void;
-  onDelete?: (option: DropdownOption) => void;
+  onSelect: (option: TeamDropdownOption) => void;
+  onDelete?: (option: TeamDropdownOption) => void;
   buttonStyle?: object;
 }
 
-export function Dropdown({
+export function TeamDropdown({
   options,
   placeholder = 'Select...',
   onSelect,
   onDelete,
   buttonStyle,
-}: DropdownProps) {
+}: TeamDropdownProps) {
   const [visible, setVisible] = useState(false);
+  const { showAlert } = useAlert();
 
-  const handleSelect = (option: DropdownOption) => {
+  const handleSelect = (option: TeamDropdownOption) => {
     onSelect(option);
     setVisible(false);
   };
 
-  const handleDelete = (option: DropdownOption) => {
-    Alert.alert('Delete Team', `Are you sure you want to delete "${option.label}"?`, [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: () => {
-          onDelete?.(option);
+  const handleDelete = (option: TeamDropdownOption) => {
+    showAlert({
+      title: 'Delete Team',
+      message: `Are you sure you want to delete "${option.label}"?`,
+      buttons: [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => {
+            onDelete?.(option);
+          },
         },
-      },
-    ]);
+      ],
+    });
   };
 
   return (

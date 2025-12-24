@@ -1,4 +1,5 @@
 import { ThemedView } from '@/components/ThemedView';
+import { useAlert } from '@/components/ui/AlertProvider';
 import { StatRecord, TurnoverRecord, useGameStore } from '@/store/gameStore';
 import { palette } from '@/theme/theme';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
@@ -6,7 +7,7 @@ import { File, Paths } from 'expo-file-system';
 import { router, Stack } from 'expo-router';
 import * as Sharing from 'expo-sharing';
 import React from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 interface PlayerStats {
   name: string;
@@ -125,6 +126,7 @@ function generateCSV(
 
 export default function ViewStatsScreen() {
   const { team1Name, team2Name, statRecords, turnoverRecords } = useGameStore();
+  const { showAlert } = useAlert();
 
   // Only show team1 (my team) stats
   const playerStats = computePlayerStats(statRecords, turnoverRecords, 'team1');
@@ -139,10 +141,16 @@ export default function ViewStatsScreen() {
       if (await Sharing.isAvailableAsync()) {
         await Sharing.shareAsync(file.uri);
       } else {
-        Alert.alert('Sharing not available', 'Sharing is not available on this device.');
+        showAlert({
+          title: 'Sharing not available',
+          message: 'Sharing is not available on this device.',
+        });
       }
     } catch {
-      Alert.alert('Export failed', 'Could not export stats to CSV.');
+      showAlert({
+        title: 'Export failed',
+        message: 'Could not export stats to CSV.',
+      });
     }
   };
 

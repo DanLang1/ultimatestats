@@ -83,7 +83,6 @@ export default function BasicScoreboard() {
         // Possession tracking props (only when enabled)
         hasPossession={possessionTrackingEnabled ? possession === 'team1' : undefined}
         onTurnover={possessionTrackingEnabled ? triggerTurnover : undefined}
-        side="left"
       />
 
       {/* Timer Bar Overlay */}
@@ -104,7 +103,6 @@ export default function BasicScoreboard() {
         // Possession tracking props (only when enabled)
         hasPossession={possessionTrackingEnabled ? possession === 'team2' : undefined}
         onTurnover={possessionTrackingEnabled ? triggerTurnover : undefined}
-        side="right"
       />
 
       {/* Pull Prompt Modal */}

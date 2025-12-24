@@ -14,3 +14,4 @@ trigger: always_on
 - No sub components in files. Each component should be in its own file
 - No raw colors - everything should be abstracted into theme.ts
 - Early return in logic whenever possible
+- See AlertProvider when making alerts - do NOT use native alert

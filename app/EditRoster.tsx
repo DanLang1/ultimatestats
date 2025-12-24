@@ -1,22 +1,15 @@
+import { useAlert } from '@/components/ui/AlertProvider';
 import { useGameStore } from '@/store/gameStore';
 import { palette } from '@/theme/theme';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import React, { useState } from 'react';
-import {
-  Alert,
-  Modal,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
+import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 export default function EditRosterScreen() {
   const { teamName } = useLocalSearchParams<{ teamName: string }>();
   const { team1Roster, team1Name, setRoster, addPlayer, saveTeam, clearRoster } = useGameStore();
+  const { showAlert } = useAlert();
 
   const [newPlayerName, setNewPlayerName] = useState('');
   const [editModalVisible, setEditModalVisible] = useState(false);
@@ -69,14 +62,18 @@ export default function EditRosterScreen() {
   };
 
   const handleClearAll = () => {
-    Alert.alert('Clear Roster', `Remove all ${team1Roster.length} players from the roster?`, [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Clear All',
-        style: 'destructive',
-        onPress: () => clearRoster(),
-      },
-    ]);
+    showAlert({
+      title: 'Clear Roster',
+      message: 'Remove all players from the roster?',
+      buttons: [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Clear All',
+          style: 'destructive',
+          onPress: () => clearRoster(),
+        },
+      ],
+    });
   };
 
   return (

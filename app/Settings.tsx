@@ -1,6 +1,7 @@
 import { ThemedView } from '@/components/ThemedView';
-import { Dropdown } from '@/components/ui/Dropdown';
+import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import { Switch } from '@/components/ui/Switch';
+import { TeamDropdown } from '@/components/ui/TeamDropdown';
 import { useGameStore } from '@/store/gameStore';
 import { palette } from '@/theme/theme';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
@@ -66,10 +67,6 @@ export default function SettingsScreen() {
     performSave(team1);
   };
 
-  const handleTeamNameBlur = () => {
-    // No-op - team change handling moved to handleEditRoster for proper async timing
-  };
-
   const performSave = (newTeamName: string) => {
     const gLength = Number(gameLength) || 90;
     const sCapTime = Number(softCapTime) || gLength - 20;
@@ -99,10 +96,6 @@ export default function SettingsScreen() {
   const handleNewGame = () => {
     resetGame();
     router.back();
-  };
-
-  const handleClearRosters = () => {
-    clearRoster();
   };
 
   const handleEditRoster = () => {
@@ -159,15 +152,15 @@ export default function SettingsScreen() {
                     ]}
                     value={team1}
                     onChangeText={setTeam1}
-                    onBlur={handleTeamNameBlur}
                     placeholder="Team 1 Name"
                     placeholderTextColor={palette.textMuted}
+                    maxLength={20}
                   />
                   {teamNameConflict && (
                     <Text style={styles.errorText}>{team1.trim()} already exists</Text>
                   )}
                 </View>
-                <Dropdown
+                <TeamDropdown
                   options={[
                     { id: 'new-team', label: '+ New Team' },
                     ...savedTeams
@@ -205,6 +198,7 @@ export default function SettingsScreen() {
                 onChangeText={setTeam2}
                 placeholder="Team 2 Name"
                 placeholderTextColor={palette.textMuted}
+                maxLength={20}
               />
             </View>
 
@@ -217,12 +211,6 @@ export default function SettingsScreen() {
               value={statTrackingEnabled}
               onValueChange={setStatTrackingEnabledLocal}
             />
-
-            {hasRoster && (
-              <Pressable style={styles.clearRosterButton} onPress={handleClearRosters}>
-                <Text style={styles.clearRosterText}>Clear Player Rosters</Text>
-              </Pressable>
-            )}
           </View>
 
           {/* Right Column: Rules */}
@@ -248,6 +236,7 @@ export default function SettingsScreen() {
                   placeholderTextColor={palette.textMuted}
                   keyboardType="numeric"
                   editable={!gameActive}
+                  maxLength={3}
                 />
               </View>
 
@@ -271,6 +260,7 @@ export default function SettingsScreen() {
                     placeholderTextColor={palette.textMuted}
                     keyboardType="numeric"
                     editable={!gameActive}
+                    maxLength={4}
                   />
                   <Text style={[styles.inputSuffix, gameActive && styles.inputDisabled]}>min</Text>
                 </View>
@@ -296,26 +286,22 @@ export default function SettingsScreen() {
                     placeholderTextColor={palette.textMuted}
                     keyboardType="numeric"
                     editable={!gameActive}
+                    maxLength={gameLength.length || 4}
                   />
                   <Text style={[styles.inputSuffix, gameActive && styles.inputDisabled]}>min</Text>
                 </View>
               </View>
 
               <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>
-                  {gameActive && (
-                    <MaterialCommunityIcons name="lock" size={10} color={palette.textMuted} />
-                  )}{' '}
-                  TIMEOUTS/HALF
-                </Text>
-                <TextInput
-                  style={[styles.inputStacked, gameActive && styles.inputDisabled]}
+                <SegmentedControl
+                  label="TIMEOUTS/HALF"
+                  options={[
+                    { value: '1', label: '1' },
+                    { value: '2', label: '2' },
+                  ]}
                   value={timeoutsCount}
-                  onChangeText={setTimeoutsCount}
-                  placeholder="2"
-                  placeholderTextColor={palette.textMuted}
-                  keyboardType="numeric"
-                  editable={!gameActive}
+                  onChange={setTimeoutsCount}
+                  disabled={gameActive}
                 />
               </View>
 
