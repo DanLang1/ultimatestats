@@ -74,35 +74,40 @@ export function Dropdown({
               </View>
             ) : (
               <ScrollView style={styles.optionsList}>
-                {options.map((option) => (
-                  <View key={option.id} style={styles.optionRow}>
-                    <Pressable
-                      style={({ pressed }) => [styles.option, pressed && styles.optionPressed]}
-                      onPress={() => handleSelect(option)}>
-                      <MaterialCommunityIcons
-                        name="account-group"
-                        size={20}
-                        color={palette.textMuted}
-                      />
-                      <Text style={styles.optionText}>{option.label}</Text>
-                    </Pressable>
-                    {onDelete && (
+                {options.map((option) => {
+                  const isNewTeam = option.id === 'new-team';
+                  return (
+                    <View key={option.id} style={styles.optionRow}>
                       <Pressable
-                        style={({ pressed }) => [
-                          styles.deleteButton,
-                          pressed && styles.deleteButtonPressed,
-                        ]}
-                        onPress={() => handleDelete(option)}
-                        hitSlop={8}>
+                        style={({ pressed }) => [styles.option, pressed && styles.optionPressed]}
+                        onPress={() => handleSelect(option)}>
                         <MaterialCommunityIcons
-                          name="trash-can-outline"
-                          size={18}
-                          color={palette.danger}
+                          name={isNewTeam ? 'plus-circle-outline' : 'account-group'}
+                          size={20}
+                          color={isNewTeam ? palette.success : palette.textMuted}
                         />
+                        <Text style={[styles.optionText, isNewTeam && styles.newTeamText]}>
+                          {isNewTeam ? 'New Team' : option.label}
+                        </Text>
                       </Pressable>
-                    )}
-                  </View>
-                ))}
+                      {onDelete && !isNewTeam && (
+                        <Pressable
+                          style={({ pressed }) => [
+                            styles.deleteButton,
+                            pressed && styles.deleteButtonPressed,
+                          ]}
+                          onPress={() => handleDelete(option)}
+                          hitSlop={8}>
+                          <MaterialCommunityIcons
+                            name="trash-can-outline"
+                            size={18}
+                            color={palette.danger}
+                          />
+                        </Pressable>
+                      )}
+                    </View>
+                  );
+                })}
               </ScrollView>
             )}
           </View>
@@ -198,6 +203,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '500',
     color: palette.textInverse,
+  },
+  newTeamText: {
+    color: palette.success,
+    fontWeight: '600',
   },
   optionRow: {
     flexDirection: 'row',

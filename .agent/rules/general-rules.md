@@ -13,3 +13,4 @@ trigger: always_on
 - Never run rm command without explicit user permission
 - No sub components in files. Each component should be in its own file
 - No raw colors - everything should be abstracted into theme.ts
+- Early return in logic whenever possible

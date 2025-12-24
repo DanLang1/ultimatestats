@@ -28,7 +28,6 @@ export default function SettingsScreen() {
     setStatTrackingEnabled,
     team1Roster,
     clearRoster,
-    setRoster,
     timerIsActive,
     team1Score,
     team2Score,
@@ -56,6 +55,12 @@ export default function SettingsScreen() {
   }, [loadSavedTeams]);
 
   const hasRoster = team1Roster.length > 0;
+
+  // Check if team name conflicts with an existing saved team (case-insensitive)
+  const teamNameConflict =
+    team1.trim() !== '' &&
+    team1.trim().toLowerCase() !== team1Name.toLowerCase() &&
+    savedTeams.some((t) => t.name.toLowerCase() === team1.trim().toLowerCase());
 
   const handleSave = () => {
     performSave(team1);
@@ -105,8 +110,16 @@ export default function SettingsScreen() {
   };
 
   const handleLoadTeam = (option: { id: string; label: string }) => {
-    loadTeamRoster(option.id, 'team1');
-    setTeam1(option.label); // Update local state to match
+    if (option.id === 'new-team') {
+      // Create new team
+      clearRoster();
+      setTeam1('New Team');
+      setTeamNames('New Team', team2);
+    } else {
+      // Load existing team
+      loadTeamRoster(option.id, 'team1');
+      setTeam1(option.label);
+    }
   };
 
   const handleDeleteTeam = (option: { id: string; label: string }) => {
@@ -136,28 +149,47 @@ export default function SettingsScreen() {
             <View style={styles.inputGroupFullWidth}>
               <Text style={styles.inputLabel}>My Team</Text>
               <View style={styles.teamInputRow}>
-                <TextInput
-                  style={[styles.inputStacked, styles.teamNameInput, { textAlign: 'left' }]}
-                  value={team1}
-                  onChangeText={setTeam1}
-                  onBlur={handleTeamNameBlur}
-                  placeholder="Team 1 Name"
-                  placeholderTextColor={palette.textMuted}
-                />
+                <View style={styles.teamNameInputWrapper}>
+                  <TextInput
+                    style={[
+                      styles.inputStacked,
+                      styles.teamNameInput,
+                      { textAlign: 'left' },
+                      teamNameConflict && styles.inputError,
+                    ]}
+                    value={team1}
+                    onChangeText={setTeam1}
+                    onBlur={handleTeamNameBlur}
+                    placeholder="Team 1 Name"
+                    placeholderTextColor={palette.textMuted}
+                  />
+                  {teamNameConflict && (
+                    <Text style={styles.errorText}>{team1.trim()} already exists</Text>
+                  )}
+                </View>
                 <Dropdown
-                  options={savedTeams
-                    .filter((t) => t.name !== team1)
-                    .map((t) => ({ id: t.id, label: t.name }))}
-                  placeholder="Load"
+                  options={[
+                    { id: 'new-team', label: '+ New Team' },
+                    ...savedTeams
+                      .filter((t) => t.name !== team1)
+                      .map((t) => ({ id: t.id, label: t.name })),
+                  ]}
+                  placeholder="Teams"
                   onSelect={handleLoadTeam}
                   onDelete={handleDeleteTeam}
                 />
+
                 <Pressable
                   style={({ pressed }) => [
                     styles.editRosterButton,
-                    pressed && styles.buttonPressed,
+                    teamNameConflict && styles.buttonDisabled,
+                    pressed && !teamNameConflict && styles.buttonPressed,
                   ]}
-                  onPress={handleEditRoster}>
+                  onPress={handleEditRoster}
+                  disabled={teamNameConflict}>
+                  {teamNameConflict && (
+                    <MaterialCommunityIcons name="lock" size={14} color={palette.textMuted} />
+                  )}
                   <MaterialCommunityIcons name="account-group" size={20} color={palette.accent} />
                   <Text style={styles.editRosterButtonText}>
                     {team1Roster.length > 0 ? team1Roster.length : 'Roster'}
@@ -327,9 +359,14 @@ export default function SettingsScreen() {
           style={({ pressed }) => [
             styles.footerButton,
             styles.saveButton,
-            pressed && styles.buttonPressed,
+            teamNameConflict && styles.buttonDisabled,
+            pressed && !teamNameConflict && styles.buttonPressed,
           ]}
-          onPress={handleSave}>
+          onPress={handleSave}
+          disabled={teamNameConflict}>
+          {teamNameConflict && (
+            <MaterialCommunityIcons name="lock" size={14} color={palette.textMuted} />
+          )}
           <Text style={styles.saveButtonText}>Save</Text>
         </Pressable>
       </View>
@@ -422,8 +459,22 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 8,
   },
+  teamNameInputWrapper: {
+    flex: 1,
+  },
   teamNameInput: {
     flex: 1,
+  },
+  inputError: {
+    borderColor: palette.danger,
+  },
+  errorText: {
+    fontSize: 12,
+    color: palette.danger,
+    marginTop: 4,
+  },
+  buttonDisabled: {
+    opacity: 0.5,
   },
   editRosterButton: {
     height: 48,
@@ -536,6 +587,8 @@ const styles = StyleSheet.create({
   },
   footerButton: {
     flex: 1,
+    flexDirection: 'row',
+    gap: 6,
     paddingVertical: 14,
     borderRadius: 12,
     alignItems: 'center',

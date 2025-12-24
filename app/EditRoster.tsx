@@ -3,7 +3,16 @@ import { palette } from '@/theme/theme';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import React, { useState } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import {
+  Alert,
+  Modal,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 
 export default function EditRosterScreen() {
   const { teamName } = useLocalSearchParams<{ teamName: string }>();
@@ -60,7 +69,14 @@ export default function EditRosterScreen() {
   };
 
   const handleClearAll = () => {
-    clearRoster();
+    Alert.alert('Clear Roster', `Remove all ${team1Roster.length} players from the roster?`, [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Clear All',
+        style: 'destructive',
+        onPress: () => clearRoster(),
+      },
+    ]);
   };
 
   return (

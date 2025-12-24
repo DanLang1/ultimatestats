@@ -64,6 +64,9 @@ const midnightElectric = {
   // Danger color overlays
   dangerOverlay15: 'rgba(244,63,94,0.15)', // danger button bg
 
+  // Success color overlays
+  successOverlay15: 'rgba(16,185,129,0.15)', // success button bg
+
   // Indigo overlays (stats)
   indigoOverlay10: 'rgba(99,102,241,0.1)', // stat row bg
   indigoOverlay20: 'rgba(99,102,241,0.2)', // stat highlight bg
