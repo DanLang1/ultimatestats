@@ -31,7 +31,7 @@ const TUTORIAL_STEPS = [
     icon: 'cog-outline' as const,
     title: 'Top Controls',
     description:
-      'The bar at the top has your game timer, stats view, match info, settings, and reset. Long press reset for a fresh game.',
+      'The bar at the top has your game timer, stats view, match info, settings, and reset',
   },
 ];
 

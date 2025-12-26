@@ -21,6 +21,7 @@ export default function BasicScoreboard() {
     team1Floater,
     team2Floater,
     floaterEnabled,
+    gameTo,
     incrementScore,
     decrementScore,
     toggleTimeout,
@@ -73,6 +74,14 @@ export default function BasicScoreboard() {
 
   const handleIncrement = (isTeam1: boolean) => {
     incrementScore(isTeam1);
+
+    // Check if this score wins the game
+    const newScore = isTeam1 ? team1Score + 1 : team2Score + 1;
+    if (newScore >= gameTo) {
+      router.push('/WinModal');
+      return;
+    }
+
     if (statTrackingEnabled) {
       router.push('/StatEntryModal');
     }

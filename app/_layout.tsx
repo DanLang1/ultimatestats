@@ -46,6 +46,15 @@ export default function RootLayout() {
                 contentStyle: { backgroundColor: 'transparent' },
               }}
             />
+            <Stack.Screen
+              name="WinModal"
+              options={{
+                presentation: 'transparentModal',
+                animation: 'fade',
+                gestureEnabled: false,
+                contentStyle: { backgroundColor: 'transparent' },
+              }}
+            />
           </Stack>
 
           <StatusBar style="auto" hidden />
