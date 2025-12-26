@@ -1,5 +1,5 @@
 import { useAlert } from '@/components/ui/AlertProvider';
-import { palette } from '@/theme/theme';
+import { useTheme } from '@/context/ThemeContext';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React, { useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -26,6 +26,7 @@ export function TeamDropdown({
 }: TeamDropdownProps) {
   const [visible, setVisible] = useState(false);
   const { showAlert } = useAlert();
+  const { palette } = useTheme();
 
   const handleSelect = (option: TeamDropdownOption) => {
     onSelect(option);
@@ -52,10 +53,15 @@ export function TeamDropdown({
   return (
     <>
       <Pressable
-        style={({ pressed }) => [styles.button, buttonStyle, pressed && styles.buttonPressed]}
+        style={({ pressed }) => [
+          styles.button,
+          { backgroundColor: palette.accentOverlay10, borderColor: palette.accentOverlay30 },
+          buttonStyle,
+          pressed && styles.buttonPressed,
+        ]}
         onPress={() => setVisible(true)}>
         <MaterialCommunityIcons name="folder-account-outline" size={18} color={palette.accent} />
-        <Text style={styles.buttonText}>{placeholder}</Text>
+        <Text style={[styles.buttonText, { color: palette.accent }]}>{placeholder}</Text>
         <MaterialCommunityIcons name="chevron-down" size={16} color={palette.textMuted} />
       </Pressable>
 
@@ -64,10 +70,16 @@ export function TeamDropdown({
         transparent
         animationType="fade"
         onRequestClose={() => setVisible(false)}>
-        <Pressable style={styles.overlay} onPress={() => setVisible(false)}>
-          <View style={styles.dropdown}>
-            <View style={styles.dropdownHeader}>
-              <Text style={styles.dropdownTitle}>SAVED TEAMS</Text>
+        <Pressable
+          style={[styles.overlay, { backgroundColor: palette.overlayDark60 }]}
+          onPress={() => setVisible(false)}>
+          <View
+            style={[
+              styles.dropdown,
+              { backgroundColor: palette.primary, borderColor: palette.overlay15 },
+            ]}>
+            <View style={[styles.dropdownHeader, { borderBottomColor: palette.overlay10 }]}>
+              <Text style={[styles.dropdownTitle, { color: palette.textMuted }]}>SAVED TEAMS</Text>
               <Pressable onPress={() => setVisible(false)} hitSlop={12}>
                 <MaterialCommunityIcons name="close" size={20} color={palette.textMuted} />
               </Pressable>
@@ -75,24 +87,38 @@ export function TeamDropdown({
 
             {options.length === 0 ? (
               <View style={styles.emptyState}>
-                <Text style={styles.emptyText}>No saved teams yet</Text>
-                <Text style={styles.emptyHint}>Save a team from the roster editor</Text>
+                <Text style={[styles.emptyText, { color: palette.textMuted }]}>
+                  No saved teams yet
+                </Text>
+                <Text style={[styles.emptyHint, { color: palette.textMuted }]}>
+                  Save a team from the roster editor
+                </Text>
               </View>
             ) : (
               <ScrollView style={styles.optionsList}>
                 {options.map((option) => {
                   const isNewTeam = option.id === 'new-team';
                   return (
-                    <View key={option.id} style={styles.optionRow}>
+                    <View
+                      key={option.id}
+                      style={[styles.optionRow, { borderBottomColor: palette.overlay05 }]}>
                       <Pressable
-                        style={({ pressed }) => [styles.option, pressed && styles.optionPressed]}
+                        style={({ pressed }) => [
+                          styles.option,
+                          pressed && [styles.optionPressed, { backgroundColor: palette.overlay08 }],
+                        ]}
                         onPress={() => handleSelect(option)}>
                         <MaterialCommunityIcons
                           name={isNewTeam ? 'plus-circle-outline' : 'account-group'}
                           size={20}
                           color={isNewTeam ? palette.success : palette.textMuted}
                         />
-                        <Text style={[styles.optionText, isNewTeam && styles.newTeamText]}>
+                        <Text
+                          style={[
+                            styles.optionText,
+                            { color: palette.textInverse },
+                            isNewTeam && [styles.newTeamText, { color: palette.success }],
+                          ]}>
                           {isNewTeam ? 'New Team' : option.label}
                         </Text>
                       </Pressable>
@@ -100,7 +126,10 @@ export function TeamDropdown({
                         <Pressable
                           style={({ pressed }) => [
                             styles.deleteButton,
-                            pressed && styles.deleteButtonPressed,
+                            pressed && [
+                              styles.deleteButtonPressed,
+                              { backgroundColor: palette.dangerOverlay15 },
+                            ],
                           ]}
                           onPress={() => handleDelete(option)}
                           hitSlop={8}>
@@ -131,22 +160,22 @@ const styles = StyleSheet.create({
     height: 48,
     paddingHorizontal: 12,
     borderRadius: 10,
-    backgroundColor: palette.accentOverlay10,
+    // backgroundColor: palette.accentOverlay10, // Dynamic
     borderWidth: 1,
-    borderColor: palette.accentOverlay30,
+    // borderColor: palette.accentOverlay30, // Dynamic
   },
   buttonPressed: {
     opacity: 0.8,
   },
   buttonText: {
     flex: 1,
-    color: palette.accent,
+    // color: palette.accent, // Dynamic
     fontSize: 13,
     fontWeight: '600',
   },
   overlay: {
     flex: 1,
-    backgroundColor: palette.overlayDark60,
+    // backgroundColor: palette.overlayDark60, // Dynamic
     justifyContent: 'center',
     alignItems: 'center',
     padding: 40,
@@ -155,10 +184,10 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 320,
     maxHeight: 400,
-    backgroundColor: palette.primary,
+    // backgroundColor: palette.primary, // Dynamic
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: palette.overlay15,
+    // borderColor: palette.overlay15, // Dynamic
     overflow: 'hidden',
   },
   dropdownHeader: {
@@ -168,12 +197,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 14,
     borderBottomWidth: 1,
-    borderBottomColor: palette.overlay10,
+    // borderBottomColor: palette.overlay10, // Dynamic
   },
   dropdownTitle: {
     fontSize: 12,
     fontWeight: '700',
-    color: palette.textMuted,
+    // color: palette.textMuted, // Dynamic
     letterSpacing: 1,
   },
   emptyState: {
@@ -184,11 +213,11 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 15,
     fontWeight: '600',
-    color: palette.textMuted,
+    // color: palette.textMuted, // Dynamic
   },
   emptyHint: {
     fontSize: 13,
-    color: palette.textMuted,
+    // color: palette.textMuted, // Dynamic
   },
   optionsList: {
     maxHeight: 300,
@@ -202,28 +231,28 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   optionPressed: {
-    backgroundColor: palette.overlay08,
+    // backgroundColor: palette.overlay08, // Dynamic
   },
   optionText: {
     flex: 1,
     fontSize: 16,
     fontWeight: '500',
-    color: palette.textInverse,
+    // color: palette.textInverse, // Dynamic
   },
   newTeamText: {
-    color: palette.success,
+    // color: palette.success, // Dynamic
     fontWeight: '600',
   },
   optionRow: {
     flexDirection: 'row',
     alignItems: 'center',
     borderBottomWidth: 1,
-    borderBottomColor: palette.overlay05,
+    // borderBottomColor: palette.overlay05, // Dynamic
   },
   deleteButton: {
     padding: 14,
   },
   deleteButtonPressed: {
-    backgroundColor: palette.dangerOverlay15,
+    // backgroundColor: palette.dangerOverlay15, // Dynamic
   },
 });

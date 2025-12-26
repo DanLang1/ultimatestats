@@ -1,4 +1,5 @@
-import { palette } from '@/theme/theme';
+import { AnimatedThemedView } from '@/components/ThemedView';
+import { useTheme } from '@/context/ThemeContext';
 import React, { useState } from 'react';
 import { Keyboard, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import Animated, { FadeIn, LinearTransition, SlideInDown } from 'react-native-reanimated';
@@ -25,6 +26,7 @@ export function StatEntryInner({
   const [step, setStep] = useState<EntryStep>('goal');
   const [selectedGoal, setSelectedGoal] = useState<string | null>(null);
   const [newPlayerName, setNewPlayerName] = useState('');
+  const { palette } = useTheme();
 
   const handlePlayerSelect = (playerName: string) => {
     if (step === 'goal') {
@@ -49,9 +51,9 @@ export function StatEntryInner({
   };
 
   return (
-    <Animated.View
+    <AnimatedThemedView
       entering={SlideInDown.duration(400)}
-      style={styles.sheet}
+      style={[styles.sheet, { shadowColor: palette.shadow }]}
       onStartShouldSetResponder={() => true}>
       <Pressable onPress={() => {}} style={styles.sheetContent}>
         <View style={styles.sideBySideContainer}>
@@ -61,7 +63,14 @@ export function StatEntryInner({
 
             <View style={styles.addPlayerRow}>
               <TextInput
-                style={styles.input}
+                style={[
+                  styles.input,
+                  {
+                    borderColor: palette.border,
+                    color: palette.modalText,
+                    backgroundColor: palette.inputBg,
+                  },
+                ]}
                 value={newPlayerName}
                 onChangeText={setNewPlayerName}
                 placeholder="Add player..."
@@ -70,26 +79,32 @@ export function StatEntryInner({
                 returnKeyType="done"
               />
               <Pressable
-                style={[styles.addButton, !newPlayerName.trim() && styles.addButtonDisabled]}
+                style={[
+                  styles.addButton,
+                  { backgroundColor: palette.accent },
+                  !newPlayerName.trim() && styles.addButtonDisabled,
+                ]}
                 onPress={handleAddPlayer}
                 disabled={!newPlayerName.trim()}>
-                <Text style={styles.addButtonText}>Add</Text>
+                <Text style={[styles.addButtonText, { color: palette.textInverse }]}>Add</Text>
               </Pressable>
             </View>
 
             <Animated.View layout={LinearTransition} style={styles.footer}>
-              <Pressable style={styles.skipButton} onPress={onSkip}>
-                <Text style={styles.skipText}>Skip</Text>
+              <Pressable
+                style={[styles.skipButton, { backgroundColor: palette.cardBgAlt }]}
+                onPress={onSkip}>
+                <Text style={[styles.skipText, { color: palette.textSecondary }]}>Skip</Text>
               </Pressable>
               {step === 'goal' ? null : (
                 <Animated.View entering={FadeIn}>
                   <Pressable
-                    style={styles.skipButton}
+                    style={[styles.skipButton, { backgroundColor: palette.cardBgAlt }]}
                     onPress={() => {
                       setStep('goal');
                       setSelectedGoal(null);
                     }}>
-                    <Text style={styles.skipText}>Back</Text>
+                    <Text style={[styles.skipText, { color: palette.textSecondary }]}>Back</Text>
                   </Pressable>
                 </Animated.View>
               )}
@@ -108,17 +123,17 @@ export function StatEntryInner({
           </View>
         </View>
       </Pressable>
-    </Animated.View>
+    </AnimatedThemedView>
   );
 }
 
 const styles = StyleSheet.create({
   sheet: {
-    backgroundColor: palette.surface,
+    // backgroundColor: palette.modalBg, // Dynamic now
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     paddingBottom: 10,
-    shadowColor: palette.shadow,
+    // shadowColor: palette.shadow, // Dynamic now
     shadowOffset: { width: 0, height: -4 },
     shadowOpacity: 0.15,
     shadowRadius: 12,
@@ -147,15 +162,15 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 44,
     borderWidth: 1,
-    borderColor: palette.border,
+    // borderColor: palette.border, // Dynamic now
     borderRadius: 10,
     paddingHorizontal: 12,
     fontSize: 15,
-    color: palette.textPrimary,
-    backgroundColor: palette.inputBg,
+    // color: palette.modalText, // Dynamic now
+    // backgroundColor: palette.inputBg, // Dynamic now
   },
   addButton: {
-    backgroundColor: palette.accent,
+    // backgroundColor: palette.accent, // Dynamic now
     paddingHorizontal: 16,
     borderRadius: 10,
     justifyContent: 'center',
@@ -165,7 +180,7 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   addButtonText: {
-    color: palette.textInverse,
+    // color: palette.textInverse, // Dynamic now
     fontWeight: '600',
     fontSize: 15,
   },
@@ -179,10 +194,10 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 8,
-    backgroundColor: palette.cardBgAlt,
+    // backgroundColor: palette.cardBgAlt, // Dynamic now
   },
   skipText: {
-    color: palette.textSecondary,
+    // color: palette.textSecondary, // Dynamic now
     fontWeight: '600',
     fontSize: 15,
   },

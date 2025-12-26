@@ -1,8 +1,8 @@
 import { TimeoutCounter } from '@/components/game-info/TimeoutCounter';
 import { ThemedView } from '@/components/ThemedView';
+import { useTheme } from '@/context/ThemeContext';
 import { useGameStore } from '@/store/gameStore';
 import { useTutorialStore } from '@/store/tutorialStore';
-import { palette } from '@/theme/theme';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router, Stack } from 'expo-router';
 import React from 'react';
@@ -22,58 +22,63 @@ export default function GameInfoScreen() {
     team2Score,
   } = useGameStore();
 
+  const { palette } = useTheme();
+
   const countTimeoutsRemaining = (timeouts: boolean[]) => timeouts.filter((t) => t).length;
 
   return (
-    <ThemedView style={styles.container}>
+    <ThemedView style={[styles.container, { backgroundColor: palette.primary }]}>
       <Stack.Screen options={{ headerShown: false }} />
 
       {/* Header */}
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.backButton} hitSlop={12}>
+        <Pressable
+          onPress={() => router.back()}
+          style={[styles.backButton, { backgroundColor: palette.overlay10 }]}
+          hitSlop={12}>
           <MaterialCommunityIcons name="arrow-left" size={24} color={palette.textInverse} />
         </Pressable>
-        <Text style={styles.headerTitle}>MATCH STATUS</Text>
+        <Text style={[styles.headerTitle, { color: palette.textMuted }]}>MATCH STATUS</Text>
         <View style={styles.headerSpacer} />
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Game To Section */}
         <View style={styles.targetSection}>
-          <Text style={styles.targetLabel}>GAME TO</Text>
-          <Text style={styles.targetNumber}>{gameTo}</Text>
+          <Text style={[styles.targetLabel, { color: palette.accent }]}>GAME TO</Text>
+          <Text style={[styles.targetNumber, { color: palette.textInverse }]}>{gameTo}</Text>
         </View>
 
         {/* Current Score */}
         <View style={styles.scoreSection}>
           <View style={styles.scoreTeam}>
-            <Text style={styles.scoreTeamName}>{team1Name}</Text>
-            <Text style={styles.scoreValue}>{team1Score}</Text>
+            <Text style={[styles.scoreTeamName, { color: palette.textMuted }]}>{team1Name}</Text>
+            <Text style={[styles.scoreValue, { color: palette.textInverse }]}>{team1Score}</Text>
           </View>
-          <Text style={styles.scoreDivider}>-</Text>
+          <Text style={[styles.scoreDivider, { color: palette.textMuted }]}>-</Text>
           <View style={styles.scoreTeam}>
-            <Text style={styles.scoreValue}>{team2Score}</Text>
-            <Text style={styles.scoreTeamName}>{team2Name}</Text>
+            <Text style={[styles.scoreValue, { color: palette.textInverse }]}>{team2Score}</Text>
+            <Text style={[styles.scoreTeamName, { color: palette.textMuted }]}>{team2Name}</Text>
           </View>
         </View>
 
-        <View style={styles.divider} />
+        <View style={[styles.divider, { backgroundColor: palette.overlay10 }]} />
 
         {/* Timeouts Section */}
-        <Text style={styles.sectionTitle}>TIMEOUTS REMAINING</Text>
+        <Text style={[styles.sectionTitle, { color: palette.textMuted }]}>TIMEOUTS REMAINING</Text>
         <View style={styles.teamsGrid}>
           <View style={styles.teamColumn}>
-            <Text style={styles.teamName}>{team1Name}</Text>
+            <Text style={[styles.teamName, { color: palette.textInverse }]}>{team1Name}</Text>
             <TimeoutCounter
               count={countTimeoutsRemaining(team1Timeouts)}
               hasFloater={team1Floater}
             />
           </View>
 
-          <View style={styles.verticalDivider} />
+          <View style={[styles.verticalDivider, { backgroundColor: palette.overlay10 }]} />
 
           <View style={styles.teamColumn}>
-            <Text style={styles.teamName}>{team2Name}</Text>
+            <Text style={[styles.teamName, { color: palette.textInverse }]}>{team2Name}</Text>
             <TimeoutCounter
               count={countTimeoutsRemaining(team2Timeouts)}
               hasFloater={team2Floater}
@@ -81,20 +86,24 @@ export default function GameInfoScreen() {
           </View>
         </View>
 
-        <View style={styles.divider} />
+        <View style={[styles.divider, { backgroundColor: palette.overlay10 }]} />
 
         {/* Quick Actions */}
-        <Text style={styles.sectionTitle}>HELP</Text>
+        <Text style={[styles.sectionTitle, { color: palette.textMuted }]}>HELP</Text>
         <Pressable
-          style={styles.tutorialButton}
+          style={[styles.tutorialButton, { backgroundColor: palette.overlay08 }]}
           onPress={() => {
             useTutorialStore.getState().triggerOnboarding();
             router.back();
           }}>
           <MaterialCommunityIcons name="school-outline" size={24} color={palette.accent} />
           <View style={styles.tutorialButtonContent}>
-            <Text style={styles.tutorialButtonTitle}>View Tutorial</Text>
-            <Text style={styles.tutorialButtonSubtitle}>Learn how to use UltimateStats</Text>
+            <Text style={[styles.tutorialButtonTitle, { color: palette.textInverse }]}>
+              View Tutorial
+            </Text>
+            <Text style={[styles.tutorialButtonSubtitle, { color: palette.textMuted }]}>
+              Learn how to use UltimateStats
+            </Text>
           </View>
           <MaterialCommunityIcons name="chevron-right" size={24} color={palette.textMuted} />
         </Pressable>
@@ -106,7 +115,7 @@ export default function GameInfoScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: palette.primary,
+    // backgroundColor: palette.primary, // Dynamic
   },
   header: {
     flexDirection: 'row',
@@ -118,14 +127,14 @@ const styles = StyleSheet.create({
   },
   backButton: {
     padding: 8,
-    backgroundColor: palette.overlay10,
+    // backgroundColor: palette.overlay10, // Dynamic
     borderRadius: 20,
   },
   headerTitle: {
     fontSize: 14,
     fontWeight: '700',
     letterSpacing: 2,
-    color: palette.textMuted,
+    // color: palette.textMuted, // Dynamic
     textTransform: 'uppercase',
   },
   headerSpacer: {
@@ -143,14 +152,14 @@ const styles = StyleSheet.create({
   },
   targetLabel: {
     fontSize: 12,
-    color: palette.accent,
+    // color: palette.accent, // Dynamic
     fontWeight: '700',
     letterSpacing: 1,
   },
   targetNumber: {
     fontSize: 56,
     fontWeight: '800',
-    color: palette.textInverse,
+    // color: palette.textInverse, // Dynamic
     includeFontPadding: false,
     lineHeight: 64,
   },
@@ -170,23 +179,23 @@ const styles = StyleSheet.create({
   },
   scoreTeamName: {
     fontSize: 14,
-    color: palette.textMuted,
+    // color: palette.textMuted, // Dynamic
     fontWeight: '600',
   },
   scoreValue: {
     fontSize: 32,
     fontWeight: '800',
-    color: palette.textInverse,
+    // color: palette.textInverse, // Dynamic
   },
   scoreDivider: {
     fontSize: 24,
-    color: palette.textMuted,
+    // color: palette.textMuted, // Dynamic
     fontWeight: '300',
   },
 
   divider: {
     height: 1,
-    backgroundColor: palette.overlay10,
+    // backgroundColor: palette.overlay10, // Dynamic
     marginVertical: 20,
   },
 
@@ -194,7 +203,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '700',
     letterSpacing: 1.5,
-    color: palette.textMuted,
+    // color: palette.textMuted, // Dynamic
     marginBottom: 16,
   },
 
@@ -208,13 +217,13 @@ const styles = StyleSheet.create({
   },
   verticalDivider: {
     width: 1,
-    backgroundColor: palette.overlay10,
+    // backgroundColor: palette.overlay10, // Dynamic
     marginHorizontal: 16,
   },
   teamName: {
     fontSize: 16,
     fontWeight: '600',
-    color: palette.textInverse,
+    // color: palette.textInverse, // Dynamic
     marginBottom: 12,
   },
 
@@ -222,7 +231,7 @@ const styles = StyleSheet.create({
   tutorialButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: palette.overlay08,
+    // backgroundColor: palette.overlay08, // Dynamic
     borderRadius: 12,
     padding: 16,
     gap: 12,
@@ -233,11 +242,11 @@ const styles = StyleSheet.create({
   tutorialButtonTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: palette.textInverse,
+    // color: palette.textInverse, // Dynamic
   },
   tutorialButtonSubtitle: {
     fontSize: 13,
-    color: palette.textMuted,
+    // color: palette.textMuted, // Dynamic
     marginTop: 2,
   },
 });

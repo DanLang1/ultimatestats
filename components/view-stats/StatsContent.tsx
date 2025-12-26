@@ -1,6 +1,6 @@
+import { useTheme } from '@/context/ThemeContext';
 import { computePlayerStats } from '@/lib/statsUtils';
 import { StatRecord, TurnoverRecord } from '@/store/gameStore';
-import { palette } from '@/theme/theme';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
@@ -25,27 +25,42 @@ export default function StatsContent({
   onExport,
   isSavedGame,
 }: StatsContentProps) {
+  const { palette } = useTheme();
   const playerStats = computePlayerStats(statRecords, turnoverRecords, 'team1');
   const teamRecords = statRecords.filter((r) => r.team === 'team1');
 
   return (
     <>
       {/* Team Summary Card */}
-      <View style={styles.summaryCard}>
+      <View
+        style={[
+          styles.summaryCard,
+          { backgroundColor: palette.overlay05, borderColor: palette.overlay10 },
+        ]}>
         <View style={styles.summaryColumns}>
           {/* Left Column: Team Info */}
           <View style={styles.summaryLeft}>
-            <Text style={styles.summaryLabel}>MY TEAM</Text>
-            <Text style={styles.summaryTeamName}>{team1Name}</Text>
+            <Text style={[styles.summaryLabel, { color: palette.textMuted }]}>MY TEAM</Text>
+            <Text style={[styles.summaryTeamName, { color: palette.textInverse }]}>
+              {team1Name}
+            </Text>
             {team1Score !== undefined && team2Score !== undefined ? (
-              <View style={styles.scoreBadge}>
-                <Text style={styles.scoreBadgeText}>
+              <View
+                style={[
+                  styles.scoreBadge,
+                  { backgroundColor: palette.successOverlay15, borderColor: palette.success },
+                ]}>
+                <Text style={[styles.scoreBadgeText, { color: palette.success }]}>
                   {team1Score} - {team2Score}
                 </Text>
               </View>
             ) : (
-              <View style={styles.summaryBadge}>
-                <Text style={styles.summaryBadgeText}>
+              <View
+                style={[
+                  styles.summaryBadge,
+                  { backgroundColor: palette.indigoOverlay20, borderColor: palette.accent },
+                ]}>
+                <Text style={[styles.summaryBadgeText, { color: palette.accent }]}>
                   {teamRecords.length} Point{teamRecords.length !== 1 ? 's' : ''}
                 </Text>
               </View>
@@ -54,20 +69,27 @@ export default function StatsContent({
 
           {/* Right Column: Top Performers */}
           {playerStats.length > 0 && (
-            <View style={styles.summaryRight}>
-              <Text style={styles.topPerformersTitle}>TOP PERFORMERS</Text>
+            <View style={[styles.summaryRight, { borderLeftColor: palette.overlay10 }]}>
+              <Text style={[styles.topPerformersTitle, { color: palette.textMuted }]}>
+                TOP PERFORMERS
+              </Text>
               <View style={styles.topPerformersList}>
                 {playerStats.slice(0, 3).map((player, index) => (
                   <View key={player.name} style={styles.topPerformerRow}>
-                    <Text style={styles.topPerformerRank}>{index + 1}.</Text>
-                    <Text style={styles.topPerformerName} numberOfLines={1}>
+                    <Text style={[styles.topPerformerRank, { color: palette.textMuted }]}>
+                      {index + 1}.
+                    </Text>
+                    <Text
+                      style={[styles.topPerformerName, { color: palette.textInverse }]}
+                      numberOfLines={1}>
                       {player.name}
                     </Text>
                     <Text
                       style={[
                         styles.topPerformerPlusMinus,
-                        player.plusMinus > 0 && styles.plusMinusPositive,
-                        player.plusMinus < 0 && styles.plusMinusNegative,
+                        { color: palette.textMuted },
+                        player.plusMinus > 0 && { color: palette.success },
+                        player.plusMinus < 0 && { color: palette.danger },
                       ]}>
                       {player.plusMinus > 0 ? '+' : ''}
                       {player.plusMinus}
@@ -84,50 +106,77 @@ export default function StatsContent({
       {playerStats.length === 0 ? (
         <View style={styles.emptyState}>
           <MaterialCommunityIcons name="chart-bar-stacked" size={48} color={palette.textMuted} />
-          <Text style={styles.emptyText}>
+          <Text style={[styles.emptyText, { color: palette.textMuted }]}>
             {isSavedGame ? 'No player stats recorded for this game' : 'No stats recorded yet'}
           </Text>
         </View>
       ) : (
         <View>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>PLAYER STATS</Text>
-            <Pressable style={styles.headerExportButton} onPress={onExport}>
+            <Text style={[styles.sectionTitle, { color: palette.textMuted }]}>PLAYER STATS</Text>
+            <Pressable
+              style={[
+                styles.headerExportButton,
+                { backgroundColor: palette.indigoOverlay10, borderColor: palette.indigoOverlay30 },
+              ]}
+              onPress={onExport}>
               <MaterialCommunityIcons name="export-variant" size={16} color={palette.accent} />
-              <Text style={styles.headerExportText}>Export CSV</Text>
+              <Text style={[styles.headerExportText, { color: palette.accent }]}>Export CSV</Text>
             </Pressable>
           </View>
-          <View style={styles.tableContainer}>
+          <View style={[styles.tableContainer, { borderColor: palette.overlay10 }]}>
             {/* Table Header */}
-            <View style={styles.tableHeader}>
-              <Text style={[styles.headerCell, styles.nameCell]}>PLAYER</Text>
-              <Text style={styles.headerCell}>G</Text>
-              <Text style={styles.headerCell}>A</Text>
-              <Text style={styles.headerCell}>D</Text>
-              <Text style={styles.headerCell}>T</Text>
-              <Text style={styles.headerCell}>Dr</Text>
-              <Text style={styles.headerCell}>+/-</Text>
+            <View
+              style={[
+                styles.tableHeader,
+                { backgroundColor: palette.overlay08, borderBottomColor: palette.overlay10 },
+              ]}>
+              <Text style={[styles.headerCell, styles.nameCell, { color: palette.textMuted }]}>
+                PLAYER
+              </Text>
+              <Text style={[styles.headerCell, { color: palette.textMuted }]}>G</Text>
+              <Text style={[styles.headerCell, { color: palette.textMuted }]}>A</Text>
+              <Text style={[styles.headerCell, { color: palette.textMuted }]}>D</Text>
+              <Text style={[styles.headerCell, { color: palette.textMuted }]}>T</Text>
+              <Text style={[styles.headerCell, { color: palette.textMuted }]}>Dr</Text>
+              <Text style={[styles.headerCell, { color: palette.textMuted }]}>+/-</Text>
             </View>
 
             {/* Table Rows */}
             {playerStats.map((player, index) => (
               <View
                 key={player.name}
-                style={[styles.tableRow, index % 2 === 1 && styles.tableRowAlt]}>
-                <Text style={[styles.cell, styles.nameCell]} numberOfLines={1}>
+                style={[
+                  styles.tableRow,
+                  index % 2 === 1 && [styles.tableRowAlt, { backgroundColor: palette.overlay02 }],
+                ]}>
+                <Text
+                  style={[styles.cell, styles.nameCell, { color: palette.textInverse }]}
+                  numberOfLines={1}>
                   {player.name}
                 </Text>
-                <Text style={styles.cell}>{player.goals || '-'}</Text>
-                <Text style={styles.cell}>{player.assists || '-'}</Text>
-                <Text style={styles.cell}>{player.blocks || '-'}</Text>
-                <Text style={styles.cell}>{player.throwaways || '-'}</Text>
-                <Text style={styles.cell}>{player.drops || '-'}</Text>
+                <Text style={[styles.cell, { color: palette.textInverse }]}>
+                  {player.goals || '-'}
+                </Text>
+                <Text style={[styles.cell, { color: palette.textInverse }]}>
+                  {player.assists || '-'}
+                </Text>
+                <Text style={[styles.cell, { color: palette.textInverse }]}>
+                  {player.blocks || '-'}
+                </Text>
+                <Text style={[styles.cell, { color: palette.textInverse }]}>
+                  {player.throwaways || '-'}
+                </Text>
+                <Text style={[styles.cell, { color: palette.textInverse }]}>
+                  {player.drops || '-'}
+                </Text>
                 <Text
                   style={[
                     styles.cell,
                     styles.plusMinusCell,
-                    player.plusMinus > 0 && styles.plusMinusPositive,
-                    player.plusMinus < 0 && styles.plusMinusNegative,
+                    { color: palette.textInverse },
+                    player.plusMinus > 0 && { color: palette.success },
+                    player.plusMinus < 0 && { color: palette.danger },
                   ]}>
                   {player.plusMinus > 0 ? '+' : ''}
                   {player.plusMinus}
@@ -143,12 +192,12 @@ export default function StatsContent({
 
 const styles = StyleSheet.create({
   summaryCard: {
-    backgroundColor: palette.overlay05,
+    // backgroundColor: palette.overlay05, // Dynamic
     borderRadius: 16,
     padding: 20,
     marginBottom: 24,
     borderWidth: 1,
-    borderColor: palette.overlay10,
+    // borderColor: palette.overlay10, // Dynamic
     position: 'relative',
   },
   summaryColumns: {
@@ -164,12 +213,12 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingLeft: 16,
     borderLeftWidth: 1,
-    borderLeftColor: palette.overlay10,
+    // borderLeftColor: palette.overlay10, // Dynamic
   },
   summaryLabel: {
     fontSize: 10,
     fontWeight: '700',
-    color: palette.textMuted,
+    // color: palette.textMuted, // Dynamic
     letterSpacing: 1,
     marginBottom: 4,
     textTransform: 'uppercase',
@@ -177,39 +226,39 @@ const styles = StyleSheet.create({
   summaryTeamName: {
     fontSize: 24,
     fontWeight: '700',
-    color: palette.textInverse,
+    // color: palette.textInverse, // Dynamic
     marginBottom: 12,
   },
   summaryBadge: {
-    backgroundColor: palette.indigoOverlay20,
+    // backgroundColor: palette.indigoOverlay20, // Dynamic
     paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: palette.accent,
+    // borderColor: palette.accent, // Dynamic
   },
   summaryBadgeText: {
     fontSize: 12,
     fontWeight: '600',
-    color: palette.accent,
+    // color: palette.accent, // Dynamic
   },
   scoreBadge: {
-    backgroundColor: palette.successOverlay15,
+    // backgroundColor: palette.successOverlay15, // Dynamic
     paddingHorizontal: 14,
     paddingVertical: 6,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: palette.success,
+    // borderColor: palette.success, // Dynamic
   },
   scoreBadgeText: {
     fontSize: 16,
     fontWeight: '700',
-    color: palette.success,
+    // color: palette.success, // Dynamic
   },
   topPerformersTitle: {
     fontSize: 10,
     fontWeight: '700',
-    color: palette.textMuted,
+    // color: palette.textMuted, // Dynamic
     letterSpacing: 1,
     marginBottom: 10,
     textAlign: 'left',
@@ -226,19 +275,19 @@ const styles = StyleSheet.create({
   topPerformerRank: {
     fontSize: 12,
     fontWeight: '700',
-    color: palette.textMuted,
+    // color: palette.textMuted, // Dynamic
     width: 20,
   },
   topPerformerName: {
     flex: 1,
     fontSize: 14,
     fontWeight: '600',
-    color: palette.textInverse,
+    // color: palette.textInverse, // Dynamic
   },
   topPerformerPlusMinus: {
     fontSize: 14,
     fontWeight: '800',
-    color: palette.textMuted,
+    // color: palette.textMuted, // Dynamic
     width: 36,
     textAlign: 'right',
   },
@@ -251,7 +300,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 12,
     fontWeight: '700',
-    color: palette.textMuted,
+    // color: palette.textMuted, // Dynamic
     letterSpacing: 1,
   },
   headerExportButton: {
@@ -260,15 +309,15 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingVertical: 4,
     paddingHorizontal: 8,
-    backgroundColor: palette.indigoOverlay10,
+    // backgroundColor: palette.indigoOverlay10, // Dynamic
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: palette.indigoOverlay30,
+    // borderColor: palette.indigoOverlay30, // Dynamic
   },
   headerExportText: {
     fontSize: 12,
     fontWeight: '600',
-    color: palette.accent,
+    // color: palette.accent, // Dynamic
   },
   emptyState: {
     padding: 40,
@@ -278,28 +327,28 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 16,
-    color: palette.textMuted,
+    // color: palette.textMuted, // Dynamic
     textAlign: 'center',
   },
   tableContainer: {
     borderRadius: 12,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: palette.overlay10,
+    // borderColor: palette.overlay10, // Dynamic
   },
   tableHeader: {
     flexDirection: 'row',
-    backgroundColor: palette.overlay08,
+    // backgroundColor: palette.overlay08, // Dynamic
     paddingVertical: 12,
     paddingHorizontal: 12,
     borderBottomWidth: 1,
-    borderBottomColor: palette.overlay10,
+    // borderBottomColor: palette.overlay10, // Dynamic
   },
   headerCell: {
     flex: 1,
     fontSize: 10,
     fontWeight: '800',
-    color: palette.textMuted,
+    // color: palette.textMuted, // Dynamic
     textAlign: 'center',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
@@ -312,12 +361,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   tableRowAlt: {
-    backgroundColor: palette.overlay02,
+    // backgroundColor: palette.overlay02, // Dynamic
   },
   cell: {
     flex: 1,
     fontSize: 13,
-    color: palette.textInverse,
+    // color: palette.textInverse, // Dynamic
     textAlign: 'center',
     fontWeight: '500',
   },
@@ -332,9 +381,9 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   plusMinusPositive: {
-    color: palette.success,
+    // color: palette.success, // Dynamic
   },
   plusMinusNegative: {
-    color: palette.danger,
+    // color: palette.danger, // Dynamic
   },
 });

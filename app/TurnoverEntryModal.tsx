@@ -1,6 +1,6 @@
 import { TurnoverEntryInner } from '@/components/turnover-entry/TurnoverEntryInner';
+import { useTheme } from '@/context/ThemeContext';
 import { TurnoverType, useGameStore } from '@/store/gameStore';
-import { palette } from '@/theme/theme';
 import { router } from 'expo-router';
 import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
@@ -17,6 +17,7 @@ export default function TurnoverEntryScreen() {
     addTurnoverRecord,
     clearPendingTurnoverEntry,
   } = useGameStore();
+  const { palette } = useTheme();
 
   // If no pending entry, just render nothing
   if (!pendingTurnoverEntry) {
@@ -60,7 +61,9 @@ export default function TurnoverEntryScreen() {
 
   return (
     <View style={StyleSheet.absoluteFill}>
-      <Pressable style={styles.overlay} onPress={handleSkip}>
+      <Pressable
+        style={[styles.overlay, { backgroundColor: palette.overlayDark40 }]}
+        onPress={handleSkip}>
         <TurnoverEntryInner
           key={`turnover-${possession}`}
           teamName={displayTeamName}
@@ -80,7 +83,7 @@ export default function TurnoverEntryScreen() {
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: palette.overlayDark40,
+    // backgroundColor: palette.overlayDark40, // Dynamic
     justifyContent: 'flex-end',
   },
 });

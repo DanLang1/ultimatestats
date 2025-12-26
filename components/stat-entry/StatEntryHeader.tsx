@@ -1,4 +1,4 @@
-import { palette } from '@/theme/theme';
+import { useTheme } from '@/context/ThemeContext';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
@@ -12,17 +12,27 @@ interface StatEntryHeaderProps {
 }
 
 export function StatEntryHeader({ teamName, step, selectedGoal }: StatEntryHeaderProps) {
+  const { palette } = useTheme();
+
   return (
     <View style={styles.container}>
-      <Text style={styles.teamName}>{teamName}</Text>
-      <Animated.Text key={step} entering={FadeIn.duration(300)} style={styles.stepLabel}>
+      <Text style={[styles.teamName, { color: palette.modalText }]}>{teamName}</Text>
+      <Animated.Text
+        key={step}
+        entering={FadeIn.duration(300)}
+        style={[styles.stepLabel, { color: palette.modalText }]}>
         {step === 'goal' ? 'Who scored?' : 'Who threw the assist?'}
       </Animated.Text>
 
       {selectedGoal && (
-        <Animated.View entering={FadeIn} style={styles.badge}>
-          <Text style={styles.badgeLabel}>GOAL</Text>
-          <Text style={styles.badgeValue}>{selectedGoal}</Text>
+        <Animated.View
+          entering={FadeIn}
+          style={[
+            styles.badge,
+            { backgroundColor: palette.accentOverlay15, borderColor: palette.accent },
+          ]}>
+          <Text style={[styles.badgeLabel, { color: palette.accent }]}>GOAL</Text>
+          <Text style={[styles.badgeValue, { color: palette.accent }]}>{selectedGoal}</Text>
         </Animated.View>
       )}
     </View>
@@ -41,7 +51,7 @@ const styles = StyleSheet.create({
   teamName: {
     fontSize: 12,
     fontWeight: '600',
-    color: palette.primary,
+    // color: palette.primary, // Dynamic
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginBottom: 2,
@@ -49,10 +59,10 @@ const styles = StyleSheet.create({
   stepLabel: {
     fontSize: 22,
     fontWeight: 'bold',
-    color: palette.textPrimary,
+    // color: palette.modalText, // Dynamic
   },
   badge: {
-    backgroundColor: palette.inputBg,
+    // backgroundColor: palette.inputBg, // Dynamic
     borderRadius: 8,
     paddingHorizontal: 10,
     paddingVertical: 4,
@@ -60,19 +70,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
     borderWidth: 1,
-    borderColor: palette.border,
+    // borderColor: palette.border, // Dynamic
     alignSelf: 'flex-start',
   },
   badgeLabel: {
     fontSize: 10,
     fontWeight: 'bold',
-    color: palette.textMuted,
+    // color: palette.textMuted, // Dynamic
     letterSpacing: 1,
     marginTop: 2,
   },
   badgeValue: {
     fontSize: 14,
     fontWeight: '600',
-    color: palette.textPrimary,
+    // color: palette.modalText, // Dynamic
   },
 });

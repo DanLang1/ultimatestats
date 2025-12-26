@@ -1,4 +1,4 @@
-import { palette } from '@/theme/theme';
+import { useTheme } from '@/context/ThemeContext';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
@@ -8,13 +8,15 @@ interface TimeoutCounterProps {
 }
 
 export function TimeoutCounter({ count, hasFloater }: TimeoutCounterProps) {
+  const { palette } = useTheme();
+
   return (
     <View style={styles.timeoutContainer}>
-      <Text style={styles.timeoutNumber}>{count}</Text>
-      <Text style={styles.timeoutLabel}>left</Text>
+      <Text style={[styles.timeoutNumber, { color: palette.success }]}>{count}</Text>
+      <Text style={[styles.timeoutLabel, { color: palette.textMuted }]}>left</Text>
       {hasFloater && (
-        <View style={styles.floaterChip}>
-          <Text style={styles.floaterText}>+1</Text>
+        <View style={[styles.floaterChip, { backgroundColor: palette.success }]}>
+          <Text style={[styles.floaterText, { color: palette.primary }]}>+1</Text>
         </View>
       )}
     </View>
@@ -30,15 +32,15 @@ const styles = StyleSheet.create({
   timeoutNumber: {
     fontSize: 28,
     fontWeight: '700',
-    color: palette.success,
+    // color: palette.success, // Dynamic
   },
   timeoutLabel: {
     fontSize: 14,
-    color: palette.textMuted,
+    // color: palette.textMuted, // Dynamic
     fontWeight: '500',
   },
   floaterChip: {
-    backgroundColor: palette.success,
+    // backgroundColor: palette.success, // Dynamic
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 10,
@@ -46,6 +48,6 @@ const styles = StyleSheet.create({
   floaterText: {
     fontSize: 12,
     fontWeight: '700',
-    color: palette.primary,
+    // color: palette.primary, // Dynamic
   },
 });

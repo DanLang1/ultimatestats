@@ -1,5 +1,5 @@
+import { useTheme } from '@/context/ThemeContext';
 import { useGameStore } from '@/store/gameStore';
-import { palette } from '@/theme/theme';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router } from 'expo-router';
 import React from 'react';
@@ -9,6 +9,7 @@ import Animated, { FadeIn, SlideInUp } from 'react-native-reanimated';
 export default function WinModal() {
   const { team1Score, team2Score, gameTo, team1Name, team2Name, saveCurrentGame, resetGame } =
     useGameStore();
+  const { palette } = useTheme();
 
   const isGameOver = team1Score >= gameTo || team2Score >= gameTo;
 
@@ -36,26 +37,40 @@ export default function WinModal() {
 
   return (
     <View style={StyleSheet.absoluteFill}>
-      <View style={styles.overlay}>
-        <Animated.View entering={SlideInUp.springify().damping(50)} style={styles.card}>
+      <View style={[styles.overlay, { backgroundColor: palette.overlayDark60 }]}>
+        <Animated.View
+          entering={SlideInUp.springify().damping(50)}
+          style={[
+            styles.card,
+            {
+              backgroundColor: palette.primary,
+              borderColor: palette.overlay15,
+              shadowColor: palette.shadow,
+            },
+          ]}>
           {/* Trophy Icon - Centered */}
           <Animated.View entering={FadeIn.delay(200)} style={styles.iconContainer}>
             <MaterialCommunityIcons name="trophy" size={48} color={palette.warning} />
           </Animated.View>
 
           {/* Winner Text */}
-          <Animated.Text entering={FadeIn.delay(300)} style={styles.winnerText} numberOfLines={1}>
+          <Animated.Text
+            entering={FadeIn.delay(300)}
+            style={[styles.winnerText, { color: palette.textInverse }]}
+            numberOfLines={1}>
             {winnerName}
           </Animated.Text>
-          <Animated.Text entering={FadeIn.delay(400)} style={styles.winsText}>
+          <Animated.Text
+            entering={FadeIn.delay(400)}
+            style={[styles.winsText, { color: palette.textMuted }]}>
             WINS!
           </Animated.Text>
 
           {/* Score */}
           <Animated.View entering={FadeIn.delay(500)} style={styles.scoreContainer}>
-            <Text style={styles.score}>{winnerScore}</Text>
-            <Text style={styles.scoreDivider}>-</Text>
-            <Text style={styles.score}>{loserScore}</Text>
+            <Text style={[styles.score, { color: palette.textInverse }]}>{winnerScore}</Text>
+            <Text style={[styles.scoreDivider, { color: palette.textMuted }]}>-</Text>
+            <Text style={[styles.score, { color: palette.textInverse }]}>{loserScore}</Text>
           </Animated.View>
 
           {/* Action Buttons */}
@@ -63,18 +78,41 @@ export default function WinModal() {
             <View style={styles.buttonRow}>
               {/* View Stats Button */}
               <Pressable
-                style={[styles.button, styles.rowButton, styles.statsButton]}
+                style={[
+                  styles.button,
+                  styles.rowButton,
+                  styles.statsButton,
+                  {
+                    backgroundColor: palette.accentOverlay15,
+                    borderColor: palette.accentOverlay30,
+                  },
+                ]}
                 onPress={handleViewStats}>
                 <MaterialCommunityIcons name="chart-bar" size={18} color={palette.accent} />
-                <Text style={[styles.buttonText, styles.statsButtonText]}>View Stats</Text>
+                <Text
+                  style={[styles.buttonText, styles.statsButtonText, { color: palette.accent }]}>
+                  View Stats
+                </Text>
               </Pressable>
 
               {/* New Game Button */}
               <Pressable
-                style={[styles.button, styles.rowButton, styles.newGameButton]}
+                style={[
+                  styles.button,
+                  styles.rowButton,
+                  styles.newGameButton,
+                  { backgroundColor: palette.overlay10 },
+                ]}
                 onPress={handleNewGame}>
                 <MaterialCommunityIcons name="restart" size={18} color={palette.textMuted} />
-                <Text style={[styles.buttonText, styles.newGameButtonText]}>New Game</Text>
+                <Text
+                  style={[
+                    styles.buttonText,
+                    styles.newGameButtonText,
+                    { color: palette.textMuted },
+                  ]}>
+                  New Game
+                </Text>
               </Pressable>
             </View>
           </View>
@@ -87,25 +125,25 @@ export default function WinModal() {
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: palette.overlayDark60,
+    // backgroundColor: palette.overlayDark60, // Dynamic
     justifyContent: 'center',
     alignItems: 'center',
     padding: 24,
   },
   card: {
-    backgroundColor: palette.primary,
+    // backgroundColor: palette.primary, // Dynamic
     borderRadius: 20,
     padding: 24,
     width: '100%',
     maxWidth: 320,
     alignItems: 'center',
-    shadowColor: palette.shadow,
+    // shadowColor: palette.shadow, // Dynamic
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.3,
     shadowRadius: 16,
     elevation: 12,
     borderWidth: 1,
-    borderColor: palette.overlay15,
+    // borderColor: palette.overlay15, // Dynamic
   },
   iconContainer: {
     marginBottom: 12,
@@ -113,13 +151,13 @@ const styles = StyleSheet.create({
   winnerText: {
     fontSize: 24,
     fontWeight: '800',
-    color: palette.textInverse,
+    // color: palette.textInverse, // Dynamic
     textAlign: 'center',
   },
   winsText: {
     fontSize: 12,
     fontWeight: '700',
-    color: palette.textMuted,
+    // color: palette.textMuted, // Dynamic
     letterSpacing: 3,
     marginTop: 2,
     marginBottom: 16,
@@ -133,12 +171,12 @@ const styles = StyleSheet.create({
   score: {
     fontSize: 40,
     fontWeight: '800',
-    color: palette.textInverse,
+    // color: palette.textInverse, // Dynamic
   },
   scoreDivider: {
     fontSize: 28,
     fontWeight: '300',
-    color: palette.textMuted,
+    // color: palette.textMuted, // Dynamic
   },
   buttonContainer: {
     width: '100%',
@@ -165,17 +203,17 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   statsButton: {
-    backgroundColor: palette.accentOverlay15,
+    // backgroundColor: palette.accentOverlay15, // Dynamic
     borderWidth: 1,
-    borderColor: palette.accentOverlay30,
+    // borderColor: palette.accentOverlay30, // Dynamic
   },
   statsButtonText: {
-    color: palette.accent,
+    // color: palette.accent, // Dynamic
   },
   newGameButton: {
-    backgroundColor: palette.overlay10,
+    // backgroundColor: palette.overlay10, // Dynamic
   },
   newGameButtonText: {
-    color: palette.textMuted,
+    // color: palette.textMuted, // Dynamic
   },
 });

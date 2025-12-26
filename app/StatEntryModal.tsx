@@ -1,6 +1,6 @@
 import { StatEntryInner } from '@/components/stat-entry/StatEntryInner';
+import { useTheme } from '@/context/ThemeContext';
 import { useGameStore } from '@/store/gameStore';
-import { palette } from '@/theme/theme';
 import { router } from 'expo-router';
 import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
@@ -8,6 +8,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 export default function StatEntryScreen() {
   const { pendingStatEntry, team1Name, team2Name, team1Roster, addPlayer, addStatRecord } =
     useGameStore();
+  const { palette } = useTheme();
 
   // If no pending entry, just render nothing - the useEffect in index.tsx won't push here
   if (!pendingStatEntry) {
@@ -42,7 +43,9 @@ export default function StatEntryScreen() {
 
   return (
     <View style={StyleSheet.absoluteFill}>
-      <Pressable style={styles.overlay} onPress={handleSkip}>
+      <Pressable
+        style={[styles.overlay, { backgroundColor: palette.overlayDark40 }]}
+        onPress={handleSkip}>
         <StatEntryInner
           key={`${teamName}-${pendingStatEntry.pointNumber}`}
           teamName={teamName}
@@ -59,7 +62,7 @@ export default function StatEntryScreen() {
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: palette.overlayDark40,
+    // backgroundColor: palette.overlayDark40, // Dynamic
     justifyContent: 'flex-end',
   },
 });

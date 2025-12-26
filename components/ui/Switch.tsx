@@ -1,4 +1,4 @@
-import { palette } from '@/theme/theme';
+import { useTheme } from '@/context/ThemeContext';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
 import { Switch as RNSwitch, StyleSheet, Text, View } from 'react-native';
@@ -12,9 +12,11 @@ interface SwitchProps {
 }
 
 export function Switch({ label, value, onValueChange, disabled, locked }: SwitchProps) {
+  const { palette } = useTheme();
+
   return (
     <View style={[styles.container, disabled && styles.disabled]}>
-      <Text style={styles.label}>
+      <Text style={[styles.label, { color: palette.textMuted }]}>
         {locked && (
           <MaterialCommunityIcons
             name="lock"
@@ -58,7 +60,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '700',
     letterSpacing: 1,
-    color: palette.textMuted,
+    // color: palette.textMuted, // Dynamic
     textTransform: 'uppercase',
   },
   lockIcon: {

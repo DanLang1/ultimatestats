@@ -1,7 +1,7 @@
 import { useAlert } from '@/components/ui/AlertProvider';
+import { useTheme } from '@/context/ThemeContext';
 import { formatDate } from '@/lib/statsUtils';
 import { SavedGame } from '@/lib/storage';
-import { palette } from '@/theme/theme';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
@@ -14,6 +14,7 @@ interface SavedGamesListProps {
 
 export default function SavedGamesList({ games, onSelectGame, onDeleteGame }: SavedGamesListProps) {
   const { showAlert } = useAlert();
+  const { palette } = useTheme();
 
   const handleDelete = (game: SavedGame) => {
     showAlert({
@@ -30,8 +31,10 @@ export default function SavedGamesList({ games, onSelectGame, onDeleteGame }: Sa
     return (
       <View style={styles.emptyState}>
         <MaterialCommunityIcons name="history" size={48} color={palette.textMuted} />
-        <Text style={styles.emptyText}>No saved games yet</Text>
-        <Text style={styles.emptySubtext}>Save games from the win screen to see them here</Text>
+        <Text style={[styles.emptyText, { color: palette.textMuted }]}>No saved games yet</Text>
+        <Text style={[styles.emptySubtext, { color: palette.textMuted }]}>
+          Save games from the win screen to see them here
+        </Text>
       </View>
     );
   }
@@ -41,29 +44,45 @@ export default function SavedGamesList({ games, onSelectGame, onDeleteGame }: Sa
       {[...games]
         .sort((a, b) => b.createdAt - a.createdAt)
         .map((game) => (
-          <Pressable key={game.id} style={styles.savedGameCard} onPress={() => onSelectGame(game)}>
+          <Pressable
+            key={game.id}
+            style={[
+              styles.savedGameCard,
+              { backgroundColor: palette.overlay05, borderColor: palette.overlay10 },
+            ]}
+            onPress={() => onSelectGame(game)}>
             <View style={styles.savedGameHeader}>
-              <Text style={styles.savedGameDate}>{formatDate(game.createdAt)}</Text>
+              <Text style={[styles.savedGameDate, { color: palette.textMuted }]}>
+                {formatDate(game.createdAt)}
+              </Text>
               <Pressable onPress={() => handleDelete(game)} hitSlop={8}>
                 <MaterialCommunityIcons name="delete-outline" size={20} color={palette.textMuted} />
               </Pressable>
             </View>
             <View style={styles.savedGameTeams}>
-              <Text style={styles.savedGameTeamName} numberOfLines={1}>
+              <Text
+                style={[styles.savedGameTeamName, { color: palette.textInverse }]}
+                numberOfLines={1}>
                 {game.team1Name}
               </Text>
-              <View style={styles.savedGameScore}>
-                <Text style={styles.savedGameScoreText}>
+              <View style={[styles.savedGameScore, { backgroundColor: palette.overlay10 }]}>
+                <Text style={[styles.savedGameScoreText, { color: palette.textInverse }]}>
                   {game.team1Score} - {game.team2Score}
                 </Text>
               </View>
-              <Text style={[styles.savedGameTeamName, styles.savedGameTeamRight]} numberOfLines={1}>
+              <Text
+                style={[
+                  styles.savedGameTeamName,
+                  styles.savedGameTeamRight,
+                  { color: palette.textInverse },
+                ]}
+                numberOfLines={1}>
                 {game.team2Name}
               </Text>
             </View>
-            <View style={styles.savedGameMeta}>
+            <View style={[styles.savedGameMeta, { borderTopColor: palette.overlay08 }]}>
               <MaterialCommunityIcons name="account-multiple" size={14} color={palette.textMuted} />
-              <Text style={styles.savedGameMetaText}>
+              <Text style={[styles.savedGameMetaText, { color: palette.textMuted }]}>
                 {game.statRecords.length} point{game.statRecords.length !== 1 ? 's' : ''} tracked
               </Text>
             </View>
@@ -82,12 +101,12 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 16,
-    color: palette.textMuted,
+    // color: palette.textMuted, // Dynamic
     textAlign: 'center',
   },
   emptySubtext: {
     fontSize: 14,
-    color: palette.textMuted,
+    // color: palette.textMuted, // Dynamic
     textAlign: 'center',
     opacity: 0.7,
   },
@@ -95,11 +114,11 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   savedGameCard: {
-    backgroundColor: palette.overlay05,
+    // backgroundColor: palette.overlay05, // Dynamic
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
-    borderColor: palette.overlay10,
+    // borderColor: palette.overlay10, // Dynamic
   },
   savedGameHeader: {
     flexDirection: 'row',
@@ -110,7 +129,7 @@ const styles = StyleSheet.create({
   savedGameDate: {
     fontSize: 12,
     fontWeight: '600',
-    color: palette.textMuted,
+    // color: palette.textMuted, // Dynamic
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
@@ -123,13 +142,13 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 16,
     fontWeight: '600',
-    color: palette.textInverse,
+    // color: palette.textInverse, // Dynamic
   },
   savedGameTeamRight: {
     textAlign: 'right',
   },
   savedGameScore: {
-    backgroundColor: palette.overlay10,
+    // backgroundColor: palette.overlay10, // Dynamic
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 8,
@@ -137,7 +156,7 @@ const styles = StyleSheet.create({
   savedGameScoreText: {
     fontSize: 16,
     fontWeight: '800',
-    color: palette.textInverse,
+    // color: palette.textInverse, // Dynamic
   },
   savedGameMeta: {
     flexDirection: 'row',
@@ -146,10 +165,10 @@ const styles = StyleSheet.create({
     marginTop: 12,
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: palette.overlay08,
+    // borderTopColor: palette.overlay08, // Dynamic
   },
   savedGameMetaText: {
     fontSize: 12,
-    color: palette.textMuted,
+    // color: palette.textMuted, // Dynamic
   },
 });

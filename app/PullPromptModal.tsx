@@ -1,5 +1,5 @@
+import { useTheme } from '@/context/ThemeContext';
 import { useGameStore } from '@/store/gameStore';
-import { palette } from '@/theme/theme';
 import { router } from 'expo-router';
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
@@ -7,6 +7,7 @@ import Animated, { FadeIn, SlideInDown } from 'react-native-reanimated';
 
 export default function PullPromptScreen() {
   const { possession, statTrackingEnabled, team1Name, team2Name, setPossession } = useGameStore();
+  const { palette } = useTheme();
 
   // If possession is already set or tracking disabled, just render nothing
   if (possession !== null || !statTrackingEnabled) {
@@ -20,21 +21,33 @@ export default function PullPromptScreen() {
 
   return (
     <View style={StyleSheet.absoluteFill}>
-      <View style={styles.overlay}>
-        <Animated.View entering={SlideInDown.duration(400)} style={styles.sheet}>
-          <Animated.Text entering={FadeIn.delay(200)} style={styles.title}>
+      <View style={[styles.overlay, { backgroundColor: palette.overlayDark60 }]}>
+        <Animated.View
+          entering={SlideInDown.duration(400)}
+          style={[styles.sheet, { backgroundColor: palette.modalBg, shadowColor: palette.shadow }]}>
+          <Animated.Text
+            entering={FadeIn.delay(200)}
+            style={[styles.title, { color: palette.modalText }]}>
             Who is receiving the pull?
           </Animated.Text>
 
           <View style={styles.buttonRow}>
             <Pressable
-              style={[styles.teamButton, { backgroundColor: palette.surface }]}
+              style={[
+                styles.teamButton,
+                { backgroundColor: palette.accent, borderColor: palette.accent },
+              ]}
               onPress={() => handleSelect('team1')}>
-              <Text style={[styles.teamButtonText, { color: palette.primary }]}>{team1Name}</Text>
+              <Text style={[styles.teamButtonText, { color: palette.textInverse }]}>
+                {team1Name}
+              </Text>
             </Pressable>
 
             <Pressable
-              style={[styles.teamButton, { backgroundColor: palette.primary }]}
+              style={[
+                styles.teamButton,
+                { backgroundColor: palette.accent, borderColor: palette.accent },
+              ]}
               onPress={() => handleSelect('team2')}>
               <Text style={[styles.teamButtonText, { color: palette.textInverse }]}>
                 {team2Name}
@@ -50,17 +63,17 @@ export default function PullPromptScreen() {
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: palette.overlayDark60,
+    // backgroundColor: palette.overlayDark60, // Dynamic
     justifyContent: 'center',
     alignItems: 'center',
   },
   sheet: {
-    backgroundColor: palette.surface,
+    // backgroundColor: palette.surface, // Dynamic
     borderRadius: 20,
     padding: 24,
     minWidth: 300,
     alignItems: 'center',
-    shadowColor: palette.shadow,
+    // shadowColor: palette.shadow, // Dynamic
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.25,
     shadowRadius: 12,
@@ -69,7 +82,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: palette.textPrimary,
+    // color: palette.modalText, // Dynamic
     marginBottom: 20,
     textAlign: 'center',
   },
@@ -84,7 +97,7 @@ const styles = StyleSheet.create({
     minWidth: 120,
     alignItems: 'center',
     borderWidth: 2,
-    borderColor: palette.primary,
+    // borderColor: palette.primary, // Dynamic
   },
   teamButtonText: {
     fontSize: 16,

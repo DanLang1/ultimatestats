@@ -1,5 +1,5 @@
+import { useTheme } from '@/context/ThemeContext';
 import { useTutorialStore } from '@/store/tutorialStore';
-import { palette } from '@/theme/theme';
 import React, { useState } from 'react';
 import { Dimensions, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeIn, SlideInRight, SlideOutLeft } from 'react-native-reanimated';
@@ -38,6 +38,7 @@ const TUTORIAL_STEPS = [
 export default function TutorialOverlay() {
   const { hasSeenOnboarding, showOnboarding, closeOnboarding } = useTutorialStore();
   const [currentStep, setCurrentStep] = useState(0);
+  const { palette } = useTheme();
 
   // Show on first launch OR when manually triggered
   const visible = !hasSeenOnboarding || showOnboarding;
@@ -74,11 +75,18 @@ export default function TutorialOverlay() {
   return (
     <Modal transparent visible={visible} animationType="fade">
       <SafeAreaProvider>
-        <SafeAreaView style={styles.overlay} edges={['top', 'bottom', 'left', 'right']}>
-          <Animated.View entering={FadeIn.duration(300)} style={styles.container}>
+        <SafeAreaView
+          style={[styles.overlay, { backgroundColor: palette.overlayDark60 }]}
+          edges={['top', 'bottom', 'left', 'right']}>
+          <Animated.View
+            entering={FadeIn.duration(300)}
+            style={[
+              styles.container,
+              { backgroundColor: palette.surface, borderColor: palette.overlay20 },
+            ]}>
             {/* Skip button */}
             <Pressable onPress={handleClose} style={styles.skipButton}>
-              <Text style={styles.skipText}>Skip</Text>
+              <Text style={[styles.skipText, { color: palette.textMuted }]}>Skip</Text>
             </Pressable>
 
             {/* Step content with animation */}
@@ -95,21 +103,39 @@ export default function TutorialOverlay() {
             {/* Progress dots */}
             <View style={styles.dotsContainer}>
               {TUTORIAL_STEPS.map((_, index) => (
-                <View key={index} style={[styles.dot, index === currentStep && styles.dotActive]} />
+                <View
+                  key={index}
+                  style={[
+                    styles.dot,
+                    { backgroundColor: palette.overlay20 },
+                    index === currentStep && [
+                      styles.dotActive,
+                      { backgroundColor: palette.accent },
+                    ],
+                  ]}
+                />
               ))}
             </View>
 
             {/* Navigation buttons */}
             <View style={styles.buttonRow}>
               {!isFirstStep && (
-                <Pressable onPress={handleBack} style={styles.backButton}>
-                  <Text style={styles.backButtonText}>Back</Text>
+                <Pressable
+                  onPress={handleBack}
+                  style={[styles.backButton, { borderColor: palette.accent }]}>
+                  <Text style={[styles.backButtonText, { color: palette.accent }]}>Back</Text>
                 </Pressable>
               )}
               <Pressable
                 onPress={handleNext}
-                style={[styles.nextButton, isFirstStep && styles.nextButtonFull]}>
-                <Text style={styles.nextButtonText}>{isLastStep ? 'Get Started' : 'Next'}</Text>
+                style={[
+                  styles.nextButton,
+                  { backgroundColor: palette.accent },
+                  isFirstStep && styles.nextButtonFull,
+                ]}>
+                <Text style={[styles.nextButtonText, { color: palette.textInverse }]}>
+                  {isLastStep ? 'Get Started' : 'Next'}
+                </Text>
               </Pressable>
             </View>
           </Animated.View>
@@ -122,19 +148,19 @@ export default function TutorialOverlay() {
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: palette.overlayDark60,
+    // backgroundColor: palette.overlayDark60, // Dynamic
     justifyContent: 'center',
     alignItems: 'center',
   },
   container: {
-    backgroundColor: palette.secondary,
+    // backgroundColor: palette.secondary, // Dynamic -> changed to palette.surface for better contrast in light mode
     borderRadius: 24,
     paddingVertical: 16,
     paddingHorizontal: 16,
     maxWidth: Math.min(SCREEN_WIDTH - 48, 600),
     maxHeight: '90%', // Ensure it doesn't overflow screen height
     borderWidth: 1,
-    borderColor: palette.overlay20,
+    // borderColor: palette.overlay20, // Dynamic
   },
   skipButton: {
     position: 'absolute',
@@ -145,7 +171,7 @@ const styles = StyleSheet.create({
   },
   skipText: {
     fontSize: 14,
-    color: palette.textMuted,
+    // color: palette.textMuted, // Dynamic
     fontWeight: '500',
   },
   contentContainer: {
@@ -165,10 +191,10 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: palette.overlay20,
+    // backgroundColor: palette.overlay20, // Dynamic
   },
   dotActive: {
-    backgroundColor: palette.accent,
+    // backgroundColor: palette.accent, // Dynamic
     width: 24,
   },
   buttonRow: {
@@ -183,17 +209,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     borderRadius: 12,
     borderWidth: 2,
-    borderColor: palette.accent,
+    // borderColor: palette.accent, // Dynamic
     alignItems: 'center',
   },
   backButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: palette.accent,
+    // color: palette.accent, // Dynamic
   },
   nextButton: {
     flex: 1,
-    backgroundColor: palette.accent,
+    // backgroundColor: palette.accent, // Dynamic
     paddingVertical: 14,
     paddingHorizontal: 24,
     borderRadius: 12,
@@ -205,6 +231,6 @@ const styles = StyleSheet.create({
   nextButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: palette.textInverse,
+    // color: palette.textInverse, // Dynamic
   },
 });

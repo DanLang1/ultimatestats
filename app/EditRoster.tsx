@@ -1,6 +1,6 @@
 import { useAlert } from '@/components/ui/AlertProvider';
+import { useTheme } from '@/context/ThemeContext';
 import { useGameStore } from '@/store/gameStore';
-import { palette } from '@/theme/theme';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import React, { useState } from 'react';
@@ -10,6 +10,7 @@ export default function EditRosterScreen() {
   const { teamName } = useLocalSearchParams<{ teamName: string }>();
   const { team1Roster, team1Name, setRoster, addPlayer, saveTeam, clearRoster } = useGameStore();
   const { showAlert } = useAlert();
+  const { palette } = useTheme();
 
   const [newPlayerName, setNewPlayerName] = useState('');
   const [editModalVisible, setEditModalVisible] = useState(false);
@@ -77,17 +78,25 @@ export default function EditRosterScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: palette.primary }]}>
       <Stack.Screen options={{ headerShown: false }} />
 
       {/* Header */}
       <View style={styles.header}>
-        <Pressable onPress={handleBack} style={styles.backButton} hitSlop={12}>
+        <Pressable
+          onPress={handleBack}
+          style={[styles.backButton, { backgroundColor: palette.overlay10 }]}
+          hitSlop={12}>
           <MaterialCommunityIcons name="arrow-left" size={24} color={palette.textInverse} />
         </Pressable>
-        <Text style={styles.headerTitle}>{(teamName || 'TEAM').toUpperCase()} ROSTER</Text>
+        <Text style={[styles.headerTitle, { color: palette.textMuted }]}>
+          {(teamName || 'TEAM').toUpperCase()} ROSTER
+        </Text>
         {team1Roster.length > 0 ? (
-          <Pressable onPress={handleClearAll} style={styles.clearButton} hitSlop={12}>
+          <Pressable
+            onPress={handleClearAll}
+            style={[styles.clearButton, { backgroundColor: palette.dangerOverlay15 }]}
+            hitSlop={12}>
             <MaterialCommunityIcons name="delete-sweep-outline" size={22} color={palette.danger} />
           </Pressable>
         ) : (
@@ -96,10 +105,18 @@ export default function EditRosterScreen() {
       </View>
 
       {/* Add Player Input */}
-      <View style={styles.addPlayerSection}>
+      <View style={[styles.addPlayerSection, { borderBottomColor: palette.overlay10 }]}>
         <View style={styles.inputWrapper}>
           <TextInput
-            style={[styles.addPlayerInput, isDuplicateName && styles.inputError]}
+            style={[
+              styles.addPlayerInput,
+              {
+                borderColor: palette.overlay20,
+                color: palette.textInverse,
+                backgroundColor: palette.overlay08,
+              },
+              isDuplicateName && { borderColor: palette.danger },
+            ]}
             placeholder="Add player..."
             placeholderTextColor={palette.textMuted}
             value={newPlayerName}
@@ -109,11 +126,19 @@ export default function EditRosterScreen() {
             autoCapitalize="words"
           />
           {isDuplicateName && (
-            <Text style={styles.errorText}>{`${newPlayerName} is already on your team`}</Text>
+            <Text
+              style={[
+                styles.errorText,
+                { color: palette.danger },
+              ]}>{`${newPlayerName} is already on your team`}</Text>
           )}
         </View>
         <Pressable
-          style={({ pressed }) => [styles.addButton, pressed && styles.buttonPressed]}
+          style={({ pressed }) => [
+            styles.addButton,
+            { backgroundColor: palette.accent },
+            pressed && styles.buttonPressed,
+          ]}
           onPress={handleAddPlayer}>
           <MaterialCommunityIcons name="plus" size={24} color={palette.textInverse} />
         </Pressable>
@@ -128,17 +153,21 @@ export default function EditRosterScreen() {
               size={48}
               color={palette.textMuted}
             />
-            <Text style={styles.emptyStateText}>No players yet</Text>
-            <Text style={styles.emptyStateHint}>Add players using the input above</Text>
+            <Text style={[styles.emptyStateText, { color: palette.textMuted }]}>
+              No players yet
+            </Text>
+            <Text style={[styles.emptyStateHint, { color: palette.textMuted }]}>
+              Add players using the input above
+            </Text>
           </View>
         ) : (
           <View style={styles.playerGrid}>
             {team1Roster.map((player) => (
-              <View key={player} style={styles.chip}>
+              <View key={player} style={[styles.chip, { backgroundColor: palette.overlay12 }]}>
                 <Pressable
                   onPress={() => handleEditPlayer(player)}
                   style={styles.chipTextPressable}>
-                  <Text style={styles.chipText} numberOfLines={1}>
+                  <Text style={[styles.chipText, { color: palette.textInverse }]} numberOfLines={1}>
                     {player}
                   </Text>
                   <MaterialCommunityIcons name="pencil" size={12} color={palette.textMuted} />
@@ -146,7 +175,10 @@ export default function EditRosterScreen() {
                 <Pressable
                   style={({ pressed }) => [
                     styles.chipRemoveButton,
-                    pressed && styles.chipRemoveButtonPressed,
+                    pressed && [
+                      styles.chipRemoveButtonPressed,
+                      { backgroundColor: palette.overlay15 },
+                    ],
                   ]}
                   onPress={() => handleRemovePlayer(player)}
                   hitSlop={4}>
@@ -160,11 +192,25 @@ export default function EditRosterScreen() {
 
       {/* Edit Player Modal */}
       <Modal visible={editModalVisible} transparent animationType="fade">
-        <Pressable style={styles.modalOverlay} onPress={() => setEditModalVisible(false)}>
-          <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
-            <Text style={styles.modalTitle}>EDIT PLAYER</Text>
+        <Pressable
+          style={[styles.modalOverlay, { backgroundColor: palette.overlayDark60 }]}
+          onPress={() => setEditModalVisible(false)}>
+          <View
+            style={[
+              styles.modalContent,
+              { backgroundColor: palette.primary, borderColor: palette.overlay15 },
+            ]}
+            onStartShouldSetResponder={() => true}>
+            <Text style={[styles.modalTitle, { color: palette.textMuted }]}>EDIT PLAYER</Text>
             <TextInput
-              style={styles.modalInput}
+              style={[
+                styles.modalInput,
+                {
+                  borderColor: palette.overlay20,
+                  color: palette.textInverse,
+                  backgroundColor: palette.overlay08,
+                },
+              ]}
               placeholder="Player name..."
               placeholderTextColor={palette.textMuted}
               value={editPlayerName}
@@ -176,19 +222,21 @@ export default function EditRosterScreen() {
                 style={({ pressed }) => [
                   styles.modalButton,
                   styles.modalCancelButton,
+                  { backgroundColor: palette.overlay10, borderColor: palette.overlay20 },
                   pressed && styles.buttonPressed,
                 ]}
                 onPress={() => setEditModalVisible(false)}>
-                <Text style={styles.modalCancelText}>Cancel</Text>
+                <Text style={[styles.modalCancelText, { color: palette.textInverse }]}>Cancel</Text>
               </Pressable>
               <Pressable
                 style={({ pressed }) => [
                   styles.modalButton,
                   styles.modalSaveButton,
+                  { backgroundColor: palette.accent },
                   pressed && styles.buttonPressed,
                 ]}
                 onPress={handleConfirmEdit}>
-                <Text style={styles.modalSaveText}>Save</Text>
+                <Text style={[styles.modalSaveText, { color: palette.textInverse }]}>Save</Text>
               </Pressable>
             </View>
           </View>
@@ -201,7 +249,7 @@ export default function EditRosterScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: palette.primary,
+    // backgroundColor: palette.primary, // Dynamic
   },
   header: {
     flexDirection: 'row',
@@ -213,26 +261,26 @@ const styles = StyleSheet.create({
   },
   backButton: {
     padding: 8,
-    backgroundColor: palette.overlay10,
+    // backgroundColor: palette.overlay10, // Dynamic
     borderRadius: 20,
   },
   headerTitle: {
     fontSize: 14,
     fontWeight: '700',
     letterSpacing: 2,
-    color: palette.textMuted,
+    // color: palette.textMuted, // Dynamic
   },
   headerSpacer: {
     width: 40,
   },
   clearButton: {
     padding: 8,
-    backgroundColor: palette.dangerOverlay15,
+    // backgroundColor: palette.dangerOverlay15, // Dynamic
     borderRadius: 20,
   },
   saveTeamButton: {
     padding: 8,
-    backgroundColor: palette.accentOverlay15,
+    // backgroundColor: palette.accentOverlay15, // Dynamic
     borderRadius: 20,
   },
   addPlayerSection: {
@@ -241,7 +289,7 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     gap: 12,
     borderBottomWidth: 1,
-    borderBottomColor: palette.overlay10,
+    // borderBottomColor: palette.overlay10, // Dynamic
   },
   inputWrapper: {
     flex: 1,
@@ -249,19 +297,19 @@ const styles = StyleSheet.create({
   addPlayerInput: {
     height: 48,
     borderWidth: 1,
-    borderColor: palette.overlay20,
+    // borderColor: palette.overlay20, // Dynamic
     borderRadius: 12,
     paddingHorizontal: 16,
     fontSize: 16,
-    color: palette.textInverse,
-    backgroundColor: palette.overlay08,
+    // color: palette.textInverse, // Dynamic
+    // backgroundColor: palette.overlay08, // Dynamic
   },
   inputError: {
-    borderColor: palette.danger,
+    // borderColor: palette.danger, // Dynamic
   },
   errorText: {
     fontSize: 12,
-    color: palette.danger,
+    // color: palette.danger, // Dynamic
     marginTop: 4,
     marginLeft: 4,
   },
@@ -269,7 +317,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 12,
-    backgroundColor: palette.accent,
+    // backgroundColor: palette.accent, // Dynamic
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -292,12 +340,12 @@ const styles = StyleSheet.create({
   emptyStateText: {
     fontSize: 18,
     fontWeight: '600',
-    color: palette.textMuted,
+    // color: palette.textMuted, // Dynamic
     marginTop: 16,
   },
   emptyStateHint: {
     fontSize: 14,
-    color: palette.textMuted,
+    // color: palette.textMuted, // Dynamic
     marginTop: 4,
   },
   playerGrid: {
@@ -311,14 +359,14 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingLeft: 14,
     paddingRight: 6,
-    backgroundColor: palette.overlay12,
+    // backgroundColor: palette.overlay12, // Dynamic
     borderRadius: 20,
     gap: 6,
   },
   chipText: {
     fontSize: 15,
     fontWeight: '500',
-    color: palette.textInverse,
+    // color: palette.textInverse, // Dynamic
   },
   chipTextPressable: {
     flexDirection: 'row',
@@ -330,11 +378,11 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   chipRemoveButtonPressed: {
-    backgroundColor: palette.overlay15,
+    // backgroundColor: palette.overlay15, // Dynamic
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: palette.overlayDark60,
+    // backgroundColor: palette.overlayDark60, // Dynamic
     justifyContent: 'center',
     alignItems: 'center',
     padding: 40,
@@ -342,16 +390,16 @@ const styles = StyleSheet.create({
   modalContent: {
     width: '100%',
     maxWidth: 320,
-    backgroundColor: palette.primary,
+    // backgroundColor: palette.primary, // Dynamic
     borderRadius: 16,
     padding: 20,
     borderWidth: 1,
-    borderColor: palette.overlay15,
+    // borderColor: palette.overlay15, // Dynamic
   },
   modalTitle: {
     fontSize: 12,
     fontWeight: '700',
-    color: palette.textMuted,
+    // color: palette.textMuted, // Dynamic
     letterSpacing: 1,
     marginBottom: 16,
     textAlign: 'center',
@@ -359,12 +407,12 @@ const styles = StyleSheet.create({
   modalInput: {
     height: 48,
     borderWidth: 1,
-    borderColor: palette.overlay20,
+    // borderColor: palette.overlay20, // Dynamic
     borderRadius: 10,
     paddingHorizontal: 14,
     fontSize: 16,
-    color: palette.textInverse,
-    backgroundColor: palette.overlay08,
+    // color: palette.textInverse, // Dynamic
+    // backgroundColor: palette.overlay08, // Dynamic
     marginBottom: 16,
   },
   modalButtons: {
@@ -378,20 +426,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   modalCancelButton: {
-    backgroundColor: palette.overlay10,
+    // backgroundColor: palette.overlay10, // Dynamic
     borderWidth: 1,
-    borderColor: palette.overlay20,
+    // borderColor: palette.overlay20, // Dynamic
   },
   modalCancelText: {
-    color: palette.textInverse,
+    // color: palette.textInverse, // Dynamic
     fontSize: 14,
     fontWeight: '600',
   },
   modalSaveButton: {
-    backgroundColor: palette.accent,
+    // backgroundColor: palette.accent, // Dynamic
   },
   modalSaveText: {
-    color: palette.textInverse,
+    // color: palette.textInverse, // Dynamic
     fontSize: 14,
     fontWeight: '700',
   },

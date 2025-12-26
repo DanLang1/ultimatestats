@@ -1,4 +1,4 @@
-import { palette } from '@/theme/theme';
+import { useTheme } from '@/context/ThemeContext';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
@@ -10,13 +10,15 @@ interface TutorialStepProps {
 }
 
 export default function TutorialStep({ icon, title, description }: TutorialStepProps) {
+  const { palette } = useTheme();
+
   return (
     <View style={styles.container}>
-      <View style={styles.iconContainer}>
+      <View style={[styles.iconContainer, { backgroundColor: palette.accentOverlay15 }]}>
         <MaterialCommunityIcons name={icon} size={40} color={palette.accent} />
       </View>
-      <Text style={styles.title}>{title}</Text>
-      <Text style={styles.description}>{description}</Text>
+      <Text style={[styles.title, { color: palette.textInverse }]}>{title}</Text>
+      <Text style={[styles.description, { color: palette.textMuted }]}>{description}</Text>
     </View>
   );
 }
@@ -31,7 +33,7 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: palette.accentOverlay15,
+    // backgroundColor: palette.accentOverlay15, // Dynamic
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 16,
@@ -39,13 +41,13 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: '700',
-    color: palette.textInverse,
+    // color: palette.textInverse, // Dynamic
     textAlign: 'center',
     marginBottom: 8,
   },
   description: {
     fontSize: 15,
-    color: palette.textMuted,
+    // color: palette.textMuted, // Dynamic
     textAlign: 'center',
     lineHeight: 22,
   },

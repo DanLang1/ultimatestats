@@ -1,5 +1,5 @@
+import { useTheme } from '@/context/ThemeContext';
 import { TurnoverType, useGameStore } from '@/store/gameStore';
-import { palette } from '@/theme/theme';
 import React from 'react';
 import { Modal, Pressable, StyleSheet } from 'react-native';
 import { TurnoverEntryInner } from './turnover-entry/TurnoverEntryInner';
@@ -17,12 +17,14 @@ export default function TurnoverEntrySheet() {
     clearPendingTurnoverEntry,
   } = useGameStore();
 
+  const { palette } = useTheme();
+
   const visible = pendingTurnoverEntry !== null;
 
   // Determine which team's roster to show based on the event type:
   // - Block: show receiving team's roster (they made the block)
   // - Throwaway/Drop: show the team that HAD possession (they made the error)
-  // For simplicity, we'll show the team that had possession and let the user pick
+  // - For simplicity, we'll show the team that had possession and let the user pick
   const teamWithError = possession; // The team that had the disc before turnover
   const teamName = teamWithError === 'team1' ? team1Name : team2Name;
   const roster = team1Roster; // Only tracking team1 roster
@@ -71,7 +73,9 @@ export default function TurnoverEntrySheet() {
 
   return (
     <Modal transparent visible={visible} animationType="none" onRequestClose={handleSkip}>
-      <Pressable style={styles.overlay} onPress={handleSkip}>
+      <Pressable
+        style={[styles.overlay, { backgroundColor: palette.overlayModal }]}
+        onPress={handleSkip}>
         <TurnoverEntryInner
           key={`turnover-${possession}`}
           teamName={displayTeamName}
@@ -91,7 +95,6 @@ export default function TurnoverEntrySheet() {
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: palette.overlayDark40,
     justifyContent: 'flex-end',
   },
 });

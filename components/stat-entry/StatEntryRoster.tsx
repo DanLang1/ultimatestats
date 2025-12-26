@@ -1,5 +1,5 @@
 import { PlayerChip } from '@/components/ui/PlayerChip';
-import { palette } from '@/theme/theme';
+import { useTheme } from '@/context/ThemeContext';
 import React from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
@@ -20,6 +20,8 @@ export function StatEntryRoster({
   onSelect,
   maxHeight = 120,
 }: StatEntryRosterProps) {
+  const { palette } = useTheme();
+
   return (
     <View style={[styles.scrollWrapper, { maxHeight }]}>
       <ScrollView
@@ -27,7 +29,9 @@ export function StatEntryRoster({
         contentContainerStyle={styles.chipsContainer}
         keyboardShouldPersistTaps="handled">
         {roster.length === 0 ? (
-          <Text style={styles.emptyText}>No players yet. Add one!</Text>
+          <Text style={[styles.emptyText, { color: palette.textMuted }]}>
+            No players yet. Add one!
+          </Text>
         ) : (
           roster.map((player) => (
             <PlayerChip
@@ -55,7 +59,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 14,
-    color: palette.textMuted,
+    // color: palette.textMuted, // Dynamic
     fontStyle: 'italic',
     width: '100%',
     textAlign: 'center',

@@ -1,4 +1,4 @@
-import { palette } from '@/theme/theme';
+import { useTheme } from '@/context/ThemeContext';
 import { StyleSheet, Text, type TextProps } from 'react-native';
 
 export type ThemedTextProps = TextProps & {
@@ -6,15 +6,17 @@ export type ThemedTextProps = TextProps & {
 };
 
 export function ThemedText({ style, type = 'default', ...rest }: ThemedTextProps) {
+  const { palette } = useTheme();
+
   return (
     <Text
       style={[
         { color: palette.textPrimary },
-        type === 'default' ? styles.default : undefined,
-        type === 'title' ? styles.title : undefined,
-        type === 'defaultSemiBold' ? styles.defaultSemiBold : undefined,
-        type === 'subtitle' ? styles.subtitle : undefined,
-        type === 'link' ? styles.link : undefined,
+        type === 'default' && styles.default,
+        type === 'title' && styles.title,
+        type === 'defaultSemiBold' && styles.defaultSemiBold,
+        type === 'subtitle' && styles.subtitle,
+        type === 'link' && [styles.link, { color: palette.accent }],
         style,
       ]}
       {...rest}
@@ -44,6 +46,6 @@ const styles = StyleSheet.create({
   link: {
     lineHeight: 30,
     fontSize: 16,
-    color: palette.accent,
+    // color: palette.accent, // Dynamic
   },
 });

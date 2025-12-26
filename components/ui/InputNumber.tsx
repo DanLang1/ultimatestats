@@ -1,4 +1,4 @@
-import { palette } from '@/theme/theme';
+import { useTheme } from '@/context/ThemeContext';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
 import { StyleSheet, Text, TextInput, TextStyle, View, ViewStyle } from 'react-native';
@@ -24,8 +24,23 @@ export function InputNumber({
   labelStyle,
   editable = true,
 }: InputNumberProps) {
+  const { palette } = useTheme();
+
   return (
-    <View style={[styles.container, containerStyle, !editable && styles.disabledContainer]}>
+    <View
+      style={[
+        styles.container,
+        {
+          borderColor: palette.overlay15,
+          backgroundColor: palette.overlay08,
+        },
+        containerStyle,
+        !editable && {
+          backgroundColor: palette.overlay02,
+          borderColor: palette.overlay05,
+          opacity: 0.8,
+        },
+      ]}>
       <View style={styles.labelContainer}>
         {!editable && (
           <MaterialCommunityIcons
@@ -35,11 +50,24 @@ export function InputNumber({
             style={{ marginRight: 4 }}
           />
         )}
-        <Text style={[styles.label, labelStyle, !editable && styles.disabledLabel]}>{label}</Text>
+        <Text
+          style={[
+            styles.label,
+            { color: palette.textPrimary },
+            labelStyle,
+            !editable && { color: palette.textMuted },
+          ]}>
+          {label}
+        </Text>
       </View>
       <TextInput
         keyboardType="numeric"
-        style={[styles.input, inputStyle, !editable && styles.disabledInput]}
+        style={[
+          styles.input,
+          { color: palette.textPrimary },
+          inputStyle,
+          !editable && { color: palette.textMuted },
+        ]}
         value={value}
         onChangeText={onChangeText}
         placeholder={placeholder}
@@ -57,19 +85,19 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     height: 45,
     borderWidth: 1,
-    borderColor: palette.border,
+    // borderColor: palette.border, // Dynamic
     borderRadius: 8,
     paddingHorizontal: 10,
-    backgroundColor: palette.inputBg,
+    // backgroundColor: palette.inputBg, // Dynamic
   },
   label: {
     fontSize: 14,
-    color: palette.textPrimary,
+    // color: palette.textPrimary, // Dynamic
   },
   input: {
     width: 60,
     textAlign: 'right',
-    color: palette.textPrimary,
+    // color: palette.textPrimary, // Dynamic
     fontSize: 16,
   },
   labelContainer: {
@@ -77,14 +105,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   disabledContainer: {
-    backgroundColor: palette.cardBgAlt,
-    borderColor: palette.borderLight,
+    // backgroundColor: palette.cardBgAlt, // Dynamic
+    // borderColor: palette.borderLight, // Dynamic
     opacity: 0.8,
   },
   disabledLabel: {
-    color: palette.textMuted,
+    // color: palette.textMuted, // Dynamic
   },
   disabledInput: {
-    color: palette.disabled,
+    // color: palette.disabled, // Dynamic
   },
 });
