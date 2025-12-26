@@ -62,7 +62,6 @@ export default function StatEntryScreen() {
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    // backgroundColor: palette.overlayDark40, // Dynamic
     justifyContent: 'flex-end',
   },
 });

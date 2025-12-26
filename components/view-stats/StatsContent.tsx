@@ -148,7 +148,7 @@ export default function StatsContent({
                 key={player.name}
                 style={[
                   styles.tableRow,
-                  index % 2 === 1 && [styles.tableRowAlt, { backgroundColor: palette.overlay02 }],
+                  index % 2 === 1 && [{ backgroundColor: palette.overlay02 }],
                 ]}>
                 <Text
                   style={[styles.cell, styles.nameCell, { color: palette.textInverse }]}
@@ -192,12 +192,10 @@ export default function StatsContent({
 
 const styles = StyleSheet.create({
   summaryCard: {
-    // backgroundColor: palette.overlay05, // Dynamic
     borderRadius: 16,
     padding: 20,
     marginBottom: 24,
     borderWidth: 1,
-    // borderColor: palette.overlay10, // Dynamic
     position: 'relative',
   },
   summaryColumns: {
@@ -213,12 +211,10 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingLeft: 16,
     borderLeftWidth: 1,
-    // borderLeftColor: palette.overlay10, // Dynamic
   },
   summaryLabel: {
     fontSize: 10,
     fontWeight: '700',
-    // color: palette.textMuted, // Dynamic
     letterSpacing: 1,
     marginBottom: 4,
     textTransform: 'uppercase',
@@ -226,39 +222,31 @@ const styles = StyleSheet.create({
   summaryTeamName: {
     fontSize: 24,
     fontWeight: '700',
-    // color: palette.textInverse, // Dynamic
     marginBottom: 12,
   },
   summaryBadge: {
-    // backgroundColor: palette.indigoOverlay20, // Dynamic
     paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 12,
     borderWidth: 1,
-    // borderColor: palette.accent, // Dynamic
   },
   summaryBadgeText: {
     fontSize: 12,
     fontWeight: '600',
-    // color: palette.accent, // Dynamic
   },
   scoreBadge: {
-    // backgroundColor: palette.successOverlay15, // Dynamic
     paddingHorizontal: 14,
     paddingVertical: 6,
     borderRadius: 12,
     borderWidth: 1,
-    // borderColor: palette.success, // Dynamic
   },
   scoreBadgeText: {
     fontSize: 16,
     fontWeight: '700',
-    // color: palette.success, // Dynamic
   },
   topPerformersTitle: {
     fontSize: 10,
     fontWeight: '700',
-    // color: palette.textMuted, // Dynamic
     letterSpacing: 1,
     marginBottom: 10,
     textAlign: 'left',
@@ -275,19 +263,16 @@ const styles = StyleSheet.create({
   topPerformerRank: {
     fontSize: 12,
     fontWeight: '700',
-    // color: palette.textMuted, // Dynamic
     width: 20,
   },
   topPerformerName: {
     flex: 1,
     fontSize: 14,
     fontWeight: '600',
-    // color: palette.textInverse, // Dynamic
   },
   topPerformerPlusMinus: {
     fontSize: 14,
     fontWeight: '800',
-    // color: palette.textMuted, // Dynamic
     width: 36,
     textAlign: 'right',
   },
@@ -300,7 +285,6 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 12,
     fontWeight: '700',
-    // color: palette.textMuted, // Dynamic
     letterSpacing: 1,
   },
   headerExportButton: {
@@ -309,15 +293,12 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingVertical: 4,
     paddingHorizontal: 8,
-    // backgroundColor: palette.indigoOverlay10, // Dynamic
     borderRadius: 8,
     borderWidth: 1,
-    // borderColor: palette.indigoOverlay30, // Dynamic
   },
   headerExportText: {
     fontSize: 12,
     fontWeight: '600',
-    // color: palette.accent, // Dynamic
   },
   emptyState: {
     padding: 40,
@@ -327,28 +308,23 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 16,
-    // color: palette.textMuted, // Dynamic
     textAlign: 'center',
   },
   tableContainer: {
     borderRadius: 12,
     overflow: 'hidden',
     borderWidth: 1,
-    // borderColor: palette.overlay10, // Dynamic
   },
   tableHeader: {
     flexDirection: 'row',
-    // backgroundColor: palette.overlay08, // Dynamic
     paddingVertical: 12,
     paddingHorizontal: 12,
     borderBottomWidth: 1,
-    // borderBottomColor: palette.overlay10, // Dynamic
   },
   headerCell: {
     flex: 1,
     fontSize: 10,
     fontWeight: '800',
-    // color: palette.textMuted, // Dynamic
     textAlign: 'center',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
@@ -360,13 +336,9 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
     alignItems: 'center',
   },
-  tableRowAlt: {
-    // backgroundColor: palette.overlay02, // Dynamic
-  },
   cell: {
     flex: 1,
     fontSize: 13,
-    // color: palette.textInverse, // Dynamic
     textAlign: 'center',
     fontWeight: '500',
   },
@@ -379,11 +351,5 @@ const styles = StyleSheet.create({
   },
   plusMinusCell: {
     fontWeight: '800',
-  },
-  plusMinusPositive: {
-    // color: palette.success, // Dynamic
-  },
-  plusMinusNegative: {
-    // color: palette.danger, // Dynamic
   },
 });

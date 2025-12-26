@@ -234,11 +234,9 @@ export function TurnoverEntryInner({
 
 const styles = StyleSheet.create({
   sheet: {
-    // backgroundColor: palette.modalBg, // Dynamic
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     paddingBottom: 10,
-    // shadowColor: palette.shadow, // Dynamic
     shadowOffset: { width: 0, height: -4 },
     shadowOpacity: 0.15,
     shadowRadius: 12,
@@ -267,7 +265,6 @@ const styles = StyleSheet.create({
   teamName: {
     fontSize: 12,
     fontWeight: '600',
-    // color: palette.modalText, // Dynamic
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginBottom: 2,
@@ -275,10 +272,8 @@ const styles = StyleSheet.create({
   stepLabel: {
     fontSize: 22,
     fontWeight: 'bold',
-    // color: palette.modalText, // Dynamic
   },
   badge: {
-    // backgroundColor: palette.inputBg, // Dynamic
     borderRadius: 8,
     paddingHorizontal: 10,
     paddingVertical: 4,
@@ -286,20 +281,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
     borderWidth: 1,
-    // borderColor: palette.border, // Dynamic
     alignSelf: 'flex-start',
   },
   badgeLabel: {
     fontSize: 10,
     fontWeight: 'bold',
-    // color: palette.textMuted, // Dynamic
     letterSpacing: 1,
     marginTop: 2,
   },
   badgeValue: {
     fontSize: 14,
     fontWeight: '600',
-    // color: palette.modalText, // Dynamic
   },
   typeButtons: {
     flexDirection: 'row',
@@ -311,12 +303,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     borderRadius: 10,
     borderWidth: 2,
-    // backgroundColor: palette.inputBg, // Dynamic
   },
   typeButtonText: {
     fontSize: 15,
     fontWeight: '600',
-    // color: palette.modalText, // Dynamic
   },
   addPlayerRow: {
     flexDirection: 'row',
@@ -326,15 +316,11 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 44,
     borderWidth: 1,
-    // borderColor: palette.border, // Dynamic
     borderRadius: 10,
     paddingHorizontal: 12,
     fontSize: 15,
-    // color: palette.modalText, // Dynamic
-    // backgroundColor: palette.inputBg, // Dynamic
   },
   addButton: {
-    // backgroundColor: palette.accent, // Dynamic
     paddingHorizontal: 16,
     borderRadius: 10,
     justifyContent: 'center',
@@ -344,7 +330,6 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   addButtonText: {
-    // color: palette.textInverse, // Dynamic
     fontWeight: '600',
     fontSize: 15,
   },
@@ -358,10 +343,8 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 8,
-    // backgroundColor: palette.cardBgAlt, // Dynamic
   },
   skipText: {
-    // color: palette.textSecondary, // Dynamic
     fontWeight: '600',
     fontSize: 15,
   },

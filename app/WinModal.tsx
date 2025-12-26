@@ -89,30 +89,15 @@ export default function WinModal() {
                 ]}
                 onPress={handleViewStats}>
                 <MaterialCommunityIcons name="chart-bar" size={18} color={palette.accent} />
-                <Text
-                  style={[styles.buttonText, styles.statsButtonText, { color: palette.accent }]}>
-                  View Stats
-                </Text>
+                <Text style={[styles.buttonText, { color: palette.accent }]}>View Stats</Text>
               </Pressable>
 
               {/* New Game Button */}
               <Pressable
-                style={[
-                  styles.button,
-                  styles.rowButton,
-                  styles.newGameButton,
-                  { backgroundColor: palette.overlay10 },
-                ]}
+                style={[styles.button, styles.rowButton, { backgroundColor: palette.overlay10 }]}
                 onPress={handleNewGame}>
                 <MaterialCommunityIcons name="restart" size={18} color={palette.textMuted} />
-                <Text
-                  style={[
-                    styles.buttonText,
-                    styles.newGameButtonText,
-                    { color: palette.textMuted },
-                  ]}>
-                  New Game
-                </Text>
+                <Text style={[styles.buttonText, { color: palette.textMuted }]}>New Game</Text>
               </Pressable>
             </View>
           </View>
@@ -125,25 +110,21 @@ export default function WinModal() {
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    // backgroundColor: palette.overlayDark60, // Dynamic
     justifyContent: 'center',
     alignItems: 'center',
     padding: 24,
   },
   card: {
-    // backgroundColor: palette.primary, // Dynamic
     borderRadius: 20,
     padding: 24,
     width: '100%',
     maxWidth: 320,
     alignItems: 'center',
-    // shadowColor: palette.shadow, // Dynamic
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.3,
     shadowRadius: 16,
     elevation: 12,
     borderWidth: 1,
-    // borderColor: palette.overlay15, // Dynamic
   },
   iconContainer: {
     marginBottom: 12,
@@ -151,13 +132,11 @@ const styles = StyleSheet.create({
   winnerText: {
     fontSize: 24,
     fontWeight: '800',
-    // color: palette.textInverse, // Dynamic
     textAlign: 'center',
   },
   winsText: {
     fontSize: 12,
     fontWeight: '700',
-    // color: palette.textMuted, // Dynamic
     letterSpacing: 3,
     marginTop: 2,
     marginBottom: 16,
@@ -171,12 +150,10 @@ const styles = StyleSheet.create({
   score: {
     fontSize: 40,
     fontWeight: '800',
-    // color: palette.textInverse, // Dynamic
   },
   scoreDivider: {
     fontSize: 28,
     fontWeight: '300',
-    // color: palette.textMuted, // Dynamic
   },
   buttonContainer: {
     width: '100%',
@@ -203,17 +180,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   statsButton: {
-    // backgroundColor: palette.accentOverlay15, // Dynamic
     borderWidth: 1,
-    // borderColor: palette.accentOverlay30, // Dynamic
-  },
-  statsButtonText: {
-    // color: palette.accent, // Dynamic
-  },
-  newGameButton: {
-    // backgroundColor: palette.overlay10, // Dynamic
-  },
-  newGameButtonText: {
-    // color: palette.textMuted, // Dynamic
   },
 });

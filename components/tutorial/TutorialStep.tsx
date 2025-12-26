@@ -33,7 +33,6 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    // backgroundColor: palette.accentOverlay15, // Dynamic
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 16,
@@ -41,13 +40,11 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: '700',
-    // color: palette.textInverse, // Dynamic
     textAlign: 'center',
     marginBottom: 8,
   },
   description: {
     fontSize: 15,
-    // color: palette.textMuted, // Dynamic
     textAlign: 'center',
     lineHeight: 22,
   },

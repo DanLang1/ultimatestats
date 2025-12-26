@@ -85,19 +85,15 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     height: 45,
     borderWidth: 1,
-    // borderColor: palette.border, // Dynamic
     borderRadius: 8,
     paddingHorizontal: 10,
-    // backgroundColor: palette.inputBg, // Dynamic
   },
   label: {
     fontSize: 14,
-    // color: palette.textPrimary, // Dynamic
   },
   input: {
     width: 60,
     textAlign: 'right',
-    // color: palette.textPrimary, // Dynamic
     fontSize: 16,
   },
   labelContainer: {
@@ -105,14 +101,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   disabledContainer: {
-    // backgroundColor: palette.cardBgAlt, // Dynamic
-    // borderColor: palette.borderLight, // Dynamic
     opacity: 0.8,
   },
-  disabledLabel: {
-    // color: palette.textMuted, // Dynamic
-  },
-  disabledInput: {
-    // color: palette.disabled, // Dynamic
-  },
+  disabledLabel: {},
+  disabledInput: {},
 });

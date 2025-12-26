@@ -51,7 +51,6 @@ const styles = StyleSheet.create({
   teamName: {
     fontSize: 12,
     fontWeight: '600',
-    // color: palette.primary, // Dynamic
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginBottom: 2,
@@ -59,10 +58,8 @@ const styles = StyleSheet.create({
   stepLabel: {
     fontSize: 22,
     fontWeight: 'bold',
-    // color: palette.modalText, // Dynamic
   },
   badge: {
-    // backgroundColor: palette.inputBg, // Dynamic
     borderRadius: 8,
     paddingHorizontal: 10,
     paddingVertical: 4,
@@ -70,19 +67,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
     borderWidth: 1,
-    // borderColor: palette.border, // Dynamic
     alignSelf: 'flex-start',
   },
   badgeLabel: {
     fontSize: 10,
     fontWeight: 'bold',
-    // color: palette.textMuted, // Dynamic
     letterSpacing: 1,
     marginTop: 2,
   },
   badgeValue: {
     fontSize: 14,
     fontWeight: '600',
-    // color: palette.modalText, // Dynamic
   },
 });

@@ -60,7 +60,6 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '700',
     letterSpacing: 1,
-    // color: palette.textMuted, // Dynamic
     textTransform: 'uppercase',
   },
   lockIcon: {

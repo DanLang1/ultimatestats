@@ -141,10 +141,7 @@ export default function ViewStatsScreen() {
       {!selectedGame && (
         <View style={[styles.tabContainer, { backgroundColor: palette.overlay05 }]}>
           <Pressable
-            style={[
-              styles.tab,
-              viewMode === 'current' && [styles.tabActive, { backgroundColor: palette.overlay10 }],
-            ]}
+            style={[styles.tab, viewMode === 'current' && { backgroundColor: palette.overlay10 }]}
             onPress={() => handleTabPress('current')}>
             <MaterialCommunityIcons
               name="play-circle"
@@ -161,10 +158,7 @@ export default function ViewStatsScreen() {
             </Text>
           </Pressable>
           <Pressable
-            style={[
-              styles.tab,
-              viewMode === 'saved' && [styles.tabActive, { backgroundColor: palette.overlay10 }],
-            ]}
+            style={[styles.tab, viewMode === 'saved' && { backgroundColor: palette.overlay10 }]}
             onPress={() => handleTabPress('saved')}>
             <MaterialCommunityIcons
               name="history"
@@ -210,7 +204,6 @@ export default function ViewStatsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    // backgroundColor: palette.primary, // Dynamic
   },
   header: {
     flexDirection: 'row',
@@ -222,14 +215,12 @@ const styles = StyleSheet.create({
   },
   backButton: {
     padding: 8,
-    // backgroundColor: palette.overlay10, // Dynamic
     borderRadius: 20,
   },
   headerTitle: {
     fontSize: 14,
     fontWeight: '700',
     letterSpacing: 2,
-    // color: palette.textMuted, // Dynamic
     textTransform: 'uppercase',
   },
   headerSpacer: {
@@ -239,7 +230,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     marginHorizontal: 24,
     marginBottom: 8,
-    // backgroundColor: palette.overlay05, // Dynamic
     borderRadius: 12,
     padding: 4,
   },
@@ -252,17 +242,11 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 10,
   },
-  tabActive: {
-    // backgroundColor: palette.overlay10, // Dynamic
-  },
   tabText: {
     fontSize: 14,
     fontWeight: '600',
-    // color: palette.textMuted, // Dynamic
   },
-  tabTextActive: {
-    // color: palette.accent, // Dynamic - Handled inline
-  },
+
   scrollContent: {
     padding: 24,
     paddingTop: 8,

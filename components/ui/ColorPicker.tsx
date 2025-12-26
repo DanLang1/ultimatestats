@@ -121,11 +121,7 @@ export function TeamColorPicker({ label, value, onChange }: ColorPickerProps) {
                   </Text>
                 </Pressable>
                 <Pressable
-                  style={[
-                    styles.modalButton,
-                    styles.confirmButton,
-                    { backgroundColor: palette.accent },
-                  ]}
+                  style={[styles.modalButton, { backgroundColor: palette.accent }]}
                   onPress={handleAdvancedConfirm}>
                   <Text style={[styles.confirmButtonText, { color: palette.textInverse }]}>
                     Apply
@@ -148,7 +144,6 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '700',
     letterSpacing: 1,
-    // color: palette.textMuted, // Dynamic
   },
   presetGrid: {
     flexDirection: 'row',
@@ -160,13 +155,11 @@ const styles = StyleSheet.create({
     height: 32,
     borderRadius: 8,
     borderWidth: 1,
-    // borderColor: palette.overlay20, // Dynamic
     alignItems: 'center',
     justifyContent: 'center',
   },
   presetSwatchSelected: {
     borderWidth: 2,
-    // borderColor: palette.accent, // Dynamic
   },
   customButton: {
     flexDirection: 'row',
@@ -174,10 +167,8 @@ const styles = StyleSheet.create({
     gap: 10,
     paddingVertical: 10,
     paddingHorizontal: 12,
-    // backgroundColor: palette.overlay08, // Dynamic
     borderRadius: 10,
     borderWidth: 1,
-    // borderColor: palette.overlay20, // Dynamic
   },
   buttonPressed: {
     opacity: 0.8,
@@ -187,34 +178,28 @@ const styles = StyleSheet.create({
     height: 24,
     borderRadius: 6,
     borderWidth: 1,
-    // borderColor: palette.overlay20, // Dynamic
   },
   customButtonText: {
     flex: 1,
-    // color: palette.textInverse, // Dynamic
     fontSize: 14,
     fontWeight: '500',
   },
   modalBackdrop: {
     flex: 1,
-    // backgroundColor: palette.overlayDark60, // Dynamic
     justifyContent: 'center',
     alignItems: 'center',
     padding: 24,
   },
   modalContent: {
-    // backgroundColor: palette.primary, // Dynamic
     borderRadius: 16,
     padding: 20,
     width: '100%',
     maxWidth: 340,
     borderWidth: 1,
-    // borderColor: palette.overlay15, // Dynamic
   },
   modalTitle: {
     fontSize: 16,
     fontWeight: '700',
-    // color: palette.textInverse, // Dynamic
     textAlign: 'center',
     marginBottom: 16,
   },
@@ -245,20 +230,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   cancelButton: {
-    // backgroundColor: palette.overlay10, // Dynamic
     borderWidth: 1,
-    // borderColor: palette.overlay20, // Dynamic
   },
   cancelButtonText: {
-    // color: palette.textInverse, // Dynamic
     fontSize: 14,
     fontWeight: '600',
   },
-  confirmButton: {
-    // backgroundColor: palette.accent, // Dynamic
-  },
   confirmButtonText: {
-    // color: palette.textInverse, // Dynamic
     fontSize: 14,
     fontWeight: '700',
   },

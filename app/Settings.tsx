@@ -170,7 +170,7 @@ export default function SettingsScreen() {
                       borderStyle,
                       textInverseStyle,
                       inputBgStyle,
-                      teamNameConflict && styles.inputError,
+                      teamNameConflict && { borderColor: palette.danger },
                     ]}
                     value={team1}
                     onChangeText={setTeam1}
@@ -435,11 +435,7 @@ export default function SettingsScreen() {
         </Pressable>
 
         <Pressable
-          style={({ pressed }) => [
-            styles.footerButton,
-            styles.newGameButton,
-            pressed && styles.buttonPressed,
-          ]}
+          style={({ pressed }) => [styles.footerButton, pressed && styles.buttonPressed]}
           onPress={handleNewGame}>
           <Text style={[styles.newGameButtonText, { color: palette.primary }]}>New Game</Text>
         </Pressable>
@@ -447,7 +443,6 @@ export default function SettingsScreen() {
         <Pressable
           style={({ pressed }) => [
             styles.footerButton,
-            styles.saveButton,
             teamNameConflict && styles.buttonDisabled,
             pressed && !teamNameConflict && styles.buttonPressed,
           ]}
@@ -466,7 +461,6 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    // backgroundColor: palette.primary, // Dynamic
   },
   header: {
     flexDirection: 'row',
@@ -478,14 +472,12 @@ const styles = StyleSheet.create({
   },
   backButton: {
     padding: 8,
-    // backgroundColor: palette.overlay10, // Dynamic
     borderRadius: 20,
   },
   headerTitle: {
     fontSize: 14,
     fontWeight: '700',
     letterSpacing: 2,
-    // color: palette.textMuted, // Dynamic
     textTransform: 'uppercase',
   },
   headerSpacer: {
@@ -508,7 +500,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '700',
     letterSpacing: 1.5,
-    // color: palette.accent, // Dynamic
     marginBottom: 4,
   },
   sectionHeaderRow: {
@@ -518,18 +509,14 @@ const styles = StyleSheet.create({
   },
   divider: {
     height: 1,
-    // backgroundColor: palette.overlay10, // Dynamic
     marginVertical: 12,
   },
   input: {
     height: 48,
     borderWidth: 1,
-    // borderColor: palette.overlay20, // Dynamic
     borderRadius: 12,
     paddingHorizontal: 16,
     fontSize: 16,
-    // color: palette.textInverse, // Dynamic
-    // backgroundColor: palette.overlay08, // Dynamic
   },
   // Stacked inputs grid
   inputsGrid: {
@@ -554,12 +541,8 @@ const styles = StyleSheet.create({
   teamNameInput: {
     flex: 1,
   },
-  inputError: {
-    // borderColor: palette.danger, // Dynamic
-  },
   errorText: {
     fontSize: 12,
-    // color: palette.danger, // Dynamic
     marginTop: 4,
   },
   buttonDisabled: {
@@ -569,15 +552,12 @@ const styles = StyleSheet.create({
     height: 48,
     paddingHorizontal: 12,
     borderRadius: 10,
-    // backgroundColor: palette.accentOverlay15, // Dynamic
     borderWidth: 1,
-    // borderColor: palette.accent, // Dynamic
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
   },
   editRosterButtonText: {
-    // color: palette.accent, // Dynamic
     fontSize: 14,
     fontWeight: '600',
   },
@@ -585,19 +565,15 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '700',
     letterSpacing: 1,
-    // color: palette.textMuted, // Dynamic
     marginBottom: 6,
   },
   inputStacked: {
     height: 48,
     borderWidth: 1,
-    // borderColor: palette.overlay20, // Dynamic
     borderRadius: 10,
     paddingHorizontal: 14,
     fontSize: 18,
     fontWeight: '600',
-    // color: palette.textInverse, // Dynamic
-    // backgroundColor: palette.overlay08, // Dynamic
     textAlign: 'center',
   },
   inputWithSuffix: {
@@ -613,58 +589,19 @@ const styles = StyleSheet.create({
   inputSuffix: {
     fontSize: 14,
     fontWeight: '600',
-    // color: palette.textMuted, // Dynamic
-    // backgroundColor: palette.overlay05, // Dynamic
     paddingHorizontal: 12,
     height: 48,
     lineHeight: 48,
     borderWidth: 1,
     borderLeftWidth: 0,
-    // borderColor: palette.overlay20, // Dynamic
     borderTopRightRadius: 10,
     borderBottomRightRadius: 10,
   },
   inputDisabled: {
     opacity: 0.5,
   },
-  switchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 8,
-  },
-  label: {
-    fontSize: 15,
-    // color: palette.textInverse, // Dynamic
-    fontWeight: '500',
-  },
-  labelRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  disabledContainer: {
-    opacity: 0.6,
-  },
-  disabledLabel: {
-    // color: palette.textMuted, // Dynamic
-  },
   helperText: {
     fontSize: 11,
-    // color: palette.textMuted, // Dynamic
-  },
-  clearRosterButton: {
-    marginTop: 8,
-    padding: 12,
-    alignItems: 'center',
-    borderRadius: 10,
-    // backgroundColor: palette.dangerOverlay15, // Dynamic
-    borderWidth: 1,
-    // borderColor: palette.danger, // Dynamic
-  },
-  clearRosterText: {
-    // color: palette.danger, // Dynamic
-    fontSize: 14,
-    fontWeight: '600',
   },
   footer: {
     flexDirection: 'row',
@@ -672,7 +609,6 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingBottom: 32,
     borderTopWidth: 1,
-    // borderTopColor: palette.overlay10, // Dynamic
   },
   footerButton: {
     flex: 1,
@@ -688,28 +624,17 @@ const styles = StyleSheet.create({
     transform: [{ scale: 0.98 }],
   },
   cancelButton: {
-    // backgroundColor: palette.overlay10, // Dynamic
     borderWidth: 1,
-    // borderColor: palette.overlay20, // Dynamic
   },
   cancelButtonText: {
-    // color: palette.textInverse, // Dynamic
     fontSize: 15,
     fontWeight: '600',
   },
-  newGameButton: {
-    // backgroundColor: palette.success, // Dynamic
-  },
   newGameButtonText: {
-    // color: palette.primary, // Dynamic
     fontSize: 15,
     fontWeight: '700',
   },
-  saveButton: {
-    // backgroundColor: palette.accent, // Dynamic
-  },
   saveButtonText: {
-    // color: palette.textInverse, // Dynamic
     fontSize: 15,
     fontWeight: '700',
   },
@@ -719,7 +644,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   resetColorsButtonText: {
-    // color: palette.textMuted, // Dynamic
     fontSize: 12,
     fontWeight: '500',
   },

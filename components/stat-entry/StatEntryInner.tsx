@@ -129,11 +129,9 @@ export function StatEntryInner({
 
 const styles = StyleSheet.create({
   sheet: {
-    // backgroundColor: palette.modalBg, // Dynamic now
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     paddingBottom: 10,
-    // shadowColor: palette.shadow, // Dynamic now
     shadowOffset: { width: 0, height: -4 },
     shadowOpacity: 0.15,
     shadowRadius: 12,
@@ -162,15 +160,11 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 44,
     borderWidth: 1,
-    // borderColor: palette.border, // Dynamic now
     borderRadius: 10,
     paddingHorizontal: 12,
     fontSize: 15,
-    // color: palette.modalText, // Dynamic now
-    // backgroundColor: palette.inputBg, // Dynamic now
   },
   addButton: {
-    // backgroundColor: palette.accent, // Dynamic now
     paddingHorizontal: 16,
     borderRadius: 10,
     justifyContent: 'center',
@@ -180,7 +174,6 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   addButtonText: {
-    // color: palette.textInverse, // Dynamic now
     fontWeight: '600',
     fontSize: 15,
   },
@@ -194,10 +187,8 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 8,
-    // backgroundColor: palette.cardBgAlt, // Dynamic now
   },
   skipText: {
-    // color: palette.textSecondary, // Dynamic now
     fontWeight: '600',
     fontSize: 15,
   },

@@ -101,12 +101,10 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 16,
-    // color: palette.textMuted, // Dynamic
     textAlign: 'center',
   },
   emptySubtext: {
     fontSize: 14,
-    // color: palette.textMuted, // Dynamic
     textAlign: 'center',
     opacity: 0.7,
   },
@@ -114,11 +112,9 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   savedGameCard: {
-    // backgroundColor: palette.overlay05, // Dynamic
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
-    // borderColor: palette.overlay10, // Dynamic
   },
   savedGameHeader: {
     flexDirection: 'row',
@@ -129,7 +125,6 @@ const styles = StyleSheet.create({
   savedGameDate: {
     fontSize: 12,
     fontWeight: '600',
-    // color: palette.textMuted, // Dynamic
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
@@ -142,13 +137,11 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 16,
     fontWeight: '600',
-    // color: palette.textInverse, // Dynamic
   },
   savedGameTeamRight: {
     textAlign: 'right',
   },
   savedGameScore: {
-    // backgroundColor: palette.overlay10, // Dynamic
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 8,
@@ -156,7 +149,6 @@ const styles = StyleSheet.create({
   savedGameScoreText: {
     fontSize: 16,
     fontWeight: '800',
-    // color: palette.textInverse, // Dynamic
   },
   savedGameMeta: {
     flexDirection: 'row',
@@ -165,10 +157,8 @@ const styles = StyleSheet.create({
     marginTop: 12,
     paddingTop: 12,
     borderTopWidth: 1,
-    // borderTopColor: palette.overlay08, // Dynamic
   },
   savedGameMetaText: {
     fontSize: 12,
-    // color: palette.textMuted, // Dynamic
   },
 });

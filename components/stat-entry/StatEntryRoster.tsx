@@ -59,7 +59,6 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 14,
-    // color: palette.textMuted, // Dynamic
     fontStyle: 'italic',
     width: '100%',
     textAlign: 'center',

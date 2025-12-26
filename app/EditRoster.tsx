@@ -249,7 +249,6 @@ export default function EditRosterScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    // backgroundColor: palette.primary, // Dynamic
   },
   header: {
     flexDirection: 'row',
@@ -261,26 +260,22 @@ const styles = StyleSheet.create({
   },
   backButton: {
     padding: 8,
-    // backgroundColor: palette.overlay10, // Dynamic
     borderRadius: 20,
   },
   headerTitle: {
     fontSize: 14,
     fontWeight: '700',
     letterSpacing: 2,
-    // color: palette.textMuted, // Dynamic
   },
   headerSpacer: {
     width: 40,
   },
   clearButton: {
     padding: 8,
-    // backgroundColor: palette.dangerOverlay15, // Dynamic
     borderRadius: 20,
   },
   saveTeamButton: {
     padding: 8,
-    // backgroundColor: palette.accentOverlay15, // Dynamic
     borderRadius: 20,
   },
   addPlayerSection: {
@@ -289,7 +284,6 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     gap: 12,
     borderBottomWidth: 1,
-    // borderBottomColor: palette.overlay10, // Dynamic
   },
   inputWrapper: {
     flex: 1,
@@ -297,19 +291,12 @@ const styles = StyleSheet.create({
   addPlayerInput: {
     height: 48,
     borderWidth: 1,
-    // borderColor: palette.overlay20, // Dynamic
     borderRadius: 12,
     paddingHorizontal: 16,
     fontSize: 16,
-    // color: palette.textInverse, // Dynamic
-    // backgroundColor: palette.overlay08, // Dynamic
-  },
-  inputError: {
-    // borderColor: palette.danger, // Dynamic
   },
   errorText: {
     fontSize: 12,
-    // color: palette.danger, // Dynamic
     marginTop: 4,
     marginLeft: 4,
   },
@@ -317,7 +304,6 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 12,
-    // backgroundColor: palette.accent, // Dynamic
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -340,12 +326,10 @@ const styles = StyleSheet.create({
   emptyStateText: {
     fontSize: 18,
     fontWeight: '600',
-    // color: palette.textMuted, // Dynamic
     marginTop: 16,
   },
   emptyStateHint: {
     fontSize: 14,
-    // color: palette.textMuted, // Dynamic
     marginTop: 4,
   },
   playerGrid: {
@@ -359,14 +343,12 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingLeft: 14,
     paddingRight: 6,
-    // backgroundColor: palette.overlay12, // Dynamic
     borderRadius: 20,
     gap: 6,
   },
   chipText: {
     fontSize: 15,
     fontWeight: '500',
-    // color: palette.textInverse, // Dynamic
   },
   chipTextPressable: {
     flexDirection: 'row',
@@ -377,12 +359,9 @@ const styles = StyleSheet.create({
     padding: 4,
     borderRadius: 12,
   },
-  chipRemoveButtonPressed: {
-    // backgroundColor: palette.overlay15, // Dynamic
-  },
+  chipRemoveButtonPressed: {},
   modalOverlay: {
     flex: 1,
-    // backgroundColor: palette.overlayDark60, // Dynamic
     justifyContent: 'center',
     alignItems: 'center',
     padding: 40,
@@ -390,16 +369,13 @@ const styles = StyleSheet.create({
   modalContent: {
     width: '100%',
     maxWidth: 320,
-    // backgroundColor: palette.primary, // Dynamic
     borderRadius: 16,
     padding: 20,
     borderWidth: 1,
-    // borderColor: palette.overlay15, // Dynamic
   },
   modalTitle: {
     fontSize: 12,
     fontWeight: '700',
-    // color: palette.textMuted, // Dynamic
     letterSpacing: 1,
     marginBottom: 16,
     textAlign: 'center',
@@ -407,12 +383,9 @@ const styles = StyleSheet.create({
   modalInput: {
     height: 48,
     borderWidth: 1,
-    // borderColor: palette.overlay20, // Dynamic
     borderRadius: 10,
     paddingHorizontal: 14,
     fontSize: 16,
-    // color: palette.textInverse, // Dynamic
-    // backgroundColor: palette.overlay08, // Dynamic
     marginBottom: 16,
   },
   modalButtons: {
@@ -426,20 +399,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   modalCancelButton: {
-    // backgroundColor: palette.overlay10, // Dynamic
     borderWidth: 1,
-    // borderColor: palette.overlay20, // Dynamic
   },
   modalCancelText: {
-    // color: palette.textInverse, // Dynamic
     fontSize: 14,
     fontWeight: '600',
   },
-  modalSaveButton: {
-    // backgroundColor: palette.accent, // Dynamic
-  },
+  modalSaveButton: {},
   modalSaveText: {
-    // color: palette.textInverse, // Dynamic
     fontSize: 14,
     fontWeight: '700',
   },

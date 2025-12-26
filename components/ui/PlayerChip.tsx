@@ -16,17 +16,14 @@ export function PlayerChip({ name, selected = false, onPress }: PlayerChipProps)
       style={[
         styles.chip,
         { backgroundColor: palette.modalBg, borderColor: palette.border },
-        selected && [
-          styles.chipSelected,
-          { backgroundColor: palette.accent, borderColor: palette.accent },
-        ],
+        selected && { backgroundColor: palette.accent, borderColor: palette.accent },
       ]}
       onPress={onPress}>
       <Text
         style={[
           styles.chipText,
           { color: palette.modalText },
-          selected && [styles.chipTextSelected, { color: palette.textInverse }],
+          selected && { color: palette.textInverse },
         ]}>
         {name}
       </Text>
@@ -39,20 +36,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 20,
-    // backgroundColor: palette.inputBg, // Dynamic
     borderWidth: 2,
     borderColor: 'transparent',
   },
-  chipSelected: {
-    // backgroundColor: palette.accent, // Dynamic
-    // borderColor: palette.accent, // Dynamic
-  },
   chipText: {
     fontSize: 16,
-    // color: textColor, // Dynamic
     fontWeight: '500',
-  },
-  chipTextSelected: {
-    // color: palette.textInverse, // Dynamic
   },
 });

@@ -105,7 +105,7 @@ export function TeamDropdown({
                       <Pressable
                         style={({ pressed }) => [
                           styles.option,
-                          pressed && [styles.optionPressed, { backgroundColor: palette.overlay08 }],
+                          pressed && { backgroundColor: palette.overlay08 },
                         ]}
                         onPress={() => handleSelect(option)}>
                         <MaterialCommunityIcons
@@ -126,10 +126,7 @@ export function TeamDropdown({
                         <Pressable
                           style={({ pressed }) => [
                             styles.deleteButton,
-                            pressed && [
-                              styles.deleteButtonPressed,
-                              { backgroundColor: palette.dangerOverlay15 },
-                            ],
+                            pressed && { backgroundColor: palette.dangerOverlay15 },
                           ]}
                           onPress={() => handleDelete(option)}
                           hitSlop={8}>
@@ -160,22 +157,18 @@ const styles = StyleSheet.create({
     height: 48,
     paddingHorizontal: 12,
     borderRadius: 10,
-    // backgroundColor: palette.accentOverlay10, // Dynamic
     borderWidth: 1,
-    // borderColor: palette.accentOverlay30, // Dynamic
   },
   buttonPressed: {
     opacity: 0.8,
   },
   buttonText: {
     flex: 1,
-    // color: palette.accent, // Dynamic
     fontSize: 13,
     fontWeight: '600',
   },
   overlay: {
     flex: 1,
-    // backgroundColor: palette.overlayDark60, // Dynamic
     justifyContent: 'center',
     alignItems: 'center',
     padding: 40,
@@ -184,10 +177,8 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 320,
     maxHeight: 400,
-    // backgroundColor: palette.primary, // Dynamic
     borderRadius: 16,
     borderWidth: 1,
-    // borderColor: palette.overlay15, // Dynamic
     overflow: 'hidden',
   },
   dropdownHeader: {
@@ -197,12 +188,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 14,
     borderBottomWidth: 1,
-    // borderBottomColor: palette.overlay10, // Dynamic
   },
   dropdownTitle: {
     fontSize: 12,
     fontWeight: '700',
-    // color: palette.textMuted, // Dynamic
     letterSpacing: 1,
   },
   emptyState: {
@@ -213,11 +202,9 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 15,
     fontWeight: '600',
-    // color: palette.textMuted, // Dynamic
   },
   emptyHint: {
     fontSize: 13,
-    // color: palette.textMuted, // Dynamic
   },
   optionsList: {
     maxHeight: 300,
@@ -230,29 +217,20 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     paddingHorizontal: 16,
   },
-  optionPressed: {
-    // backgroundColor: palette.overlay08, // Dynamic
-  },
   optionText: {
     flex: 1,
     fontSize: 16,
     fontWeight: '500',
-    // color: palette.textInverse, // Dynamic
   },
   newTeamText: {
-    // color: palette.success, // Dynamic
     fontWeight: '600',
   },
   optionRow: {
     flexDirection: 'row',
     alignItems: 'center',
     borderBottomWidth: 1,
-    // borderBottomColor: palette.overlay05, // Dynamic
   },
   deleteButton: {
     padding: 14,
-  },
-  deleteButtonPressed: {
-    // backgroundColor: palette.dangerOverlay15, // Dynamic
   },
 });

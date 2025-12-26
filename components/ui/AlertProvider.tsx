@@ -73,25 +73,13 @@ export function AlertProvider({ children }: { children: React.ReactNode }) {
                       styles.cancelButton,
                       { backgroundColor: palette.overlay10, borderColor: palette.overlay20 },
                     ],
-                    button.style === 'destructive' && [
-                      styles.destructiveButton,
-                      { backgroundColor: palette.danger },
-                    ],
-                    button.style === 'default' && [
-                      styles.defaultButton,
-                      { backgroundColor: palette.accent },
-                    ],
-                    !button.style && [styles.defaultButton, { backgroundColor: palette.accent }],
+                    button.style === 'destructive' && { backgroundColor: palette.danger },
+                    button.style === 'default' && { backgroundColor: palette.accent },
+                    !button.style && { backgroundColor: palette.accent },
                     pressed && styles.buttonPressed,
                   ]}
                   onPress={() => handleButtonPress(button)}>
-                  <Text
-                    style={[
-                      styles.buttonText,
-                      { color: palette.textInverse },
-                      button.style === 'cancel' && styles.cancelButtonText,
-                      button.style === 'destructive' && styles.destructiveButtonText,
-                    ]}>
+                  <Text style={[styles.buttonText, { color: palette.textInverse }]}>
                     {button.text}
                   </Text>
                 </Pressable>
@@ -113,24 +101,20 @@ const styles = StyleSheet.create({
     padding: 32,
   },
   container: {
-    // backgroundColor: palette.secondary, // Dynamic
     borderRadius: 16,
     padding: 24,
     width: '100%',
     maxWidth: 320,
     borderWidth: 1,
-    // borderColor: palette.overlay20, // Dynamic
   },
   title: {
     fontSize: 18,
     fontWeight: '700',
-    // color: palette.textInverse, // Dynamic
     textAlign: 'center',
     marginBottom: 8,
   },
   message: {
     fontSize: 14,
-    // color: palette.textMuted, // Dynamic
     textAlign: 'center',
     marginBottom: 20,
     lineHeight: 20,
@@ -145,16 +129,8 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: 'center',
   },
-  defaultButton: {
-    // backgroundColor: palette.accent, // Dynamic
-  },
   cancelButton: {
-    // backgroundColor: palette.overlay10, // Dynamic
     borderWidth: 1,
-    // borderColor: palette.overlay20, // Dynamic
-  },
-  destructiveButton: {
-    // backgroundColor: palette.danger, // Dynamic
   },
   buttonPressed: {
     opacity: 0.8,
@@ -163,12 +139,5 @@ const styles = StyleSheet.create({
   buttonText: {
     fontSize: 15,
     fontWeight: '600',
-    // color: palette.textInverse, // Dynamic
-  },
-  cancelButtonText: {
-    // color: palette.textInverse, // Dynamic
-  },
-  destructiveButtonText: {
-    // color: palette.textInverse, // Dynamic
   },
 });

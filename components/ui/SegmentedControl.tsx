@@ -77,7 +77,6 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '700',
     letterSpacing: 1,
-    // color: palette.textMuted, // Dynamic
     marginBottom: 6,
   },
   container: {
@@ -88,9 +87,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    // backgroundColor: palette.overlay08, // Dynamic
     borderWidth: 1,
-    // borderColor: palette.overlay20, // Dynamic
   },
   buttonFirst: {
     borderTopLeftRadius: 10,
@@ -104,19 +101,13 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 10,
     borderBottomRightRadius: 10,
   },
-  buttonActive: {
-    // backgroundColor: palette.accent, // Dynamic
-    // borderColor: palette.accent, // Dynamic
-  },
+  buttonActive: {},
   buttonDisabled: {
     opacity: 0.5,
   },
   buttonText: {
     fontSize: 18,
     fontWeight: '600',
-    // color: palette.textMuted, // Dynamic
   },
-  buttonTextActive: {
-    // color: palette.textInverse, // Dynamic
-  },
+  buttonTextActive: {},
 });

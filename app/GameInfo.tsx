@@ -115,7 +115,6 @@ export default function GameInfoScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    // backgroundColor: palette.primary, // Dynamic
   },
   header: {
     flexDirection: 'row',
@@ -127,14 +126,12 @@ const styles = StyleSheet.create({
   },
   backButton: {
     padding: 8,
-    // backgroundColor: palette.overlay10, // Dynamic
     borderRadius: 20,
   },
   headerTitle: {
     fontSize: 14,
     fontWeight: '700',
     letterSpacing: 2,
-    // color: palette.textMuted, // Dynamic
     textTransform: 'uppercase',
   },
   headerSpacer: {
@@ -152,14 +149,12 @@ const styles = StyleSheet.create({
   },
   targetLabel: {
     fontSize: 12,
-    // color: palette.accent, // Dynamic
     fontWeight: '700',
     letterSpacing: 1,
   },
   targetNumber: {
     fontSize: 56,
     fontWeight: '800',
-    // color: palette.textInverse, // Dynamic
     includeFontPadding: false,
     lineHeight: 64,
   },
@@ -179,23 +174,19 @@ const styles = StyleSheet.create({
   },
   scoreTeamName: {
     fontSize: 14,
-    // color: palette.textMuted, // Dynamic
     fontWeight: '600',
   },
   scoreValue: {
     fontSize: 32,
     fontWeight: '800',
-    // color: palette.textInverse, // Dynamic
   },
   scoreDivider: {
     fontSize: 24,
-    // color: palette.textMuted, // Dynamic
     fontWeight: '300',
   },
 
   divider: {
     height: 1,
-    // backgroundColor: palette.overlay10, // Dynamic
     marginVertical: 20,
   },
 
@@ -203,7 +194,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '700',
     letterSpacing: 1.5,
-    // color: palette.textMuted, // Dynamic
     marginBottom: 16,
   },
 
@@ -217,13 +207,11 @@ const styles = StyleSheet.create({
   },
   verticalDivider: {
     width: 1,
-    // backgroundColor: palette.overlay10, // Dynamic
     marginHorizontal: 16,
   },
   teamName: {
     fontSize: 16,
     fontWeight: '600',
-    // color: palette.textInverse, // Dynamic
     marginBottom: 12,
   },
 
@@ -231,7 +219,6 @@ const styles = StyleSheet.create({
   tutorialButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    // backgroundColor: palette.overlay08, // Dynamic
     borderRadius: 12,
     padding: 16,
     gap: 12,
@@ -242,11 +229,9 @@ const styles = StyleSheet.create({
   tutorialButtonTitle: {
     fontSize: 16,
     fontWeight: '600',
-    // color: palette.textInverse, // Dynamic
   },
   tutorialButtonSubtitle: {
     fontSize: 13,
-    // color: palette.textMuted, // Dynamic
     marginTop: 2,
   },
 });

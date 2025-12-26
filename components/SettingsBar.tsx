@@ -78,7 +78,6 @@ export default function SettingsBar({ onReset, onSettingsPress }: SettingsBarPro
 
 const styles = StyleSheet.create({
   container: {
-    // backgroundColor: palette.secondary, // Dynamic now
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
     alignItems: 'center',
@@ -99,13 +98,6 @@ const styles = StyleSheet.create({
   timerText: {
     fontSize: 20,
     fontWeight: 'bold',
-    // color: palette.textInverse, // Dynamic now
-  },
-  softcapText: {
-    fontSize: 10,
-    // color: palette.textInverse, // Unused? But if used, needs dynamic
-    fontWeight: '600',
-    marginTop: -2,
   },
   iconButton: {
     padding: 5,

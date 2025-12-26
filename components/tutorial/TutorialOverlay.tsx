@@ -148,19 +148,16 @@ export default function TutorialOverlay() {
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    // backgroundColor: palette.overlayDark60, // Dynamic
     justifyContent: 'center',
     alignItems: 'center',
   },
   container: {
-    // backgroundColor: palette.secondary, // Dynamic -> changed to palette.surface for better contrast in light mode
     borderRadius: 24,
     paddingVertical: 16,
     paddingHorizontal: 16,
     maxWidth: Math.min(SCREEN_WIDTH - 48, 600),
     maxHeight: '90%', // Ensure it doesn't overflow screen height
     borderWidth: 1,
-    // borderColor: palette.overlay20, // Dynamic
   },
   skipButton: {
     position: 'absolute',
@@ -171,7 +168,6 @@ const styles = StyleSheet.create({
   },
   skipText: {
     fontSize: 14,
-    // color: palette.textMuted, // Dynamic
     fontWeight: '500',
   },
   contentContainer: {
@@ -191,10 +187,8 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    // backgroundColor: palette.overlay20, // Dynamic
   },
   dotActive: {
-    // backgroundColor: palette.accent, // Dynamic
     width: 24,
   },
   buttonRow: {
@@ -209,17 +203,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     borderRadius: 12,
     borderWidth: 2,
-    // borderColor: palette.accent, // Dynamic
     alignItems: 'center',
   },
   backButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    // color: palette.accent, // Dynamic
   },
   nextButton: {
     flex: 1,
-    // backgroundColor: palette.accent, // Dynamic
     paddingVertical: 14,
     paddingHorizontal: 24,
     borderRadius: 12,
@@ -231,6 +222,5 @@ const styles = StyleSheet.create({
   nextButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    // color: palette.textInverse, // Dynamic
   },
 });

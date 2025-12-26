@@ -32,15 +32,12 @@ const styles = StyleSheet.create({
   timeoutNumber: {
     fontSize: 28,
     fontWeight: '700',
-    // color: palette.success, // Dynamic
   },
   timeoutLabel: {
     fontSize: 14,
-    // color: palette.textMuted, // Dynamic
     fontWeight: '500',
   },
   floaterChip: {
-    // backgroundColor: palette.success, // Dynamic
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 10,
@@ -48,6 +45,5 @@ const styles = StyleSheet.create({
   floaterText: {
     fontSize: 12,
     fontWeight: '700',
-    // color: palette.primary, // Dynamic
   },
 });

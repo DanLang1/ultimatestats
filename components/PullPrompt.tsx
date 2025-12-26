@@ -57,17 +57,14 @@ export default function PullPrompt() {
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    // backgroundColor: palette.overlayDark60, // Dynamic
     justifyContent: 'center',
     alignItems: 'center',
   },
   sheet: {
-    // backgroundColor: palette.surface, // Dynamic
     borderRadius: 20,
     padding: 24,
     minWidth: 300,
     alignItems: 'center',
-    // shadowColor: palette.shadow, // Dynamic
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.25,
     shadowRadius: 12,
@@ -76,7 +73,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: 'bold',
-    // color: palette.modalText, // Dynamic
     marginBottom: 20,
     textAlign: 'center',
   },
@@ -91,7 +87,6 @@ const styles = StyleSheet.create({
     minWidth: 120,
     alignItems: 'center',
     borderWidth: 2,
-    // borderColor: palette.primary, // Dynamic
   },
   teamButtonText: {
     fontSize: 16,
