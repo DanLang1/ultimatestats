@@ -1,6 +1,7 @@
 import { TimeoutCounter } from '@/components/game-info/TimeoutCounter';
 import { ThemedView } from '@/components/ThemedView';
 import { useGameStore } from '@/store/gameStore';
+import { useTutorialStore } from '@/store/tutorialStore';
 import { palette } from '@/theme/theme';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router, Stack } from 'expo-router';
@@ -82,12 +83,21 @@ export default function GameInfoScreen() {
 
         <View style={styles.divider} />
 
-        {/* Placeholder for future content */}
-        <Text style={styles.sectionTitle}>GAME EVENTS</Text>
-        <View style={styles.placeholderSection}>
-          <MaterialCommunityIcons name="clock-outline" size={32} color={palette.textMuted} />
-          <Text style={styles.placeholderText}>More features coming soon...</Text>
-        </View>
+        {/* Quick Actions */}
+        <Text style={styles.sectionTitle}>HELP</Text>
+        <Pressable
+          style={styles.tutorialButton}
+          onPress={() => {
+            useTutorialStore.getState().triggerOnboarding();
+            router.back();
+          }}>
+          <MaterialCommunityIcons name="school-outline" size={24} color={palette.accent} />
+          <View style={styles.tutorialButtonContent}>
+            <Text style={styles.tutorialButtonTitle}>View Tutorial</Text>
+            <Text style={styles.tutorialButtonSubtitle}>Learn how to use UltimateStats</Text>
+          </View>
+          <MaterialCommunityIcons name="chevron-right" size={24} color={palette.textMuted} />
+        </Pressable>
       </ScrollView>
     </ThemedView>
   );
@@ -208,15 +218,26 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
 
-  // Placeholder
-  placeholderSection: {
+  // Tutorial Button
+  tutorialButton: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 40,
+    backgroundColor: palette.overlay08,
+    borderRadius: 12,
+    padding: 16,
     gap: 12,
   },
-  placeholderText: {
-    fontSize: 14,
+  tutorialButtonContent: {
+    flex: 1,
+  },
+  tutorialButtonTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: palette.textInverse,
+  },
+  tutorialButtonSubtitle: {
+    fontSize: 13,
     color: palette.textMuted,
+    marginTop: 2,
   },
 });

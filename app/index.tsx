@@ -4,6 +4,7 @@ import StatEntrySheet from '@/components/StatEntrySheet';
 import TeamScoreSection from '@/components/TeamScoreSection';
 import { ThemedView } from '@/components/ThemedView';
 import TurnoverEntrySheet from '@/components/TurnoverEntrySheet';
+import TutorialOverlay from '@/components/tutorial/TutorialOverlay';
 import { getContrastingTextColor } from '@/lib/colorUtils';
 
 import { useGameStore } from '@/store/gameStore';
@@ -115,6 +116,9 @@ export default function BasicScoreboard() {
 
       {/* Turnover Entry Modal */}
       <TurnoverEntrySheet />
+
+      {/* Tutorial Overlay - shows on first launch or when triggered */}
+      <TutorialOverlay />
     </ThemedView>
   );
 }
