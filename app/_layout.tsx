@@ -17,8 +17,35 @@ export default function RootLayout() {
         }}
         edges={['left', 'right']}>
         <GestureHandlerRootView style={{ flex: 1 }}>
-          <Stack>
-            <Stack.Screen name="index" options={{ headerShown: false }} />
+          <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="index" />
+            <Stack.Screen
+              name="StatEntryModal"
+              options={{
+                presentation: 'transparentModal',
+                animation: 'fade',
+                gestureEnabled: false,
+                contentStyle: { backgroundColor: 'transparent' },
+              }}
+            />
+            <Stack.Screen
+              name="TurnoverEntryModal"
+              options={{
+                presentation: 'transparentModal',
+                animation: 'fade',
+                gestureEnabled: false,
+                contentStyle: { backgroundColor: 'transparent' },
+              }}
+            />
+            <Stack.Screen
+              name="PullPromptModal"
+              options={{
+                presentation: 'transparentModal',
+                animation: 'fade',
+                gestureEnabled: false,
+                contentStyle: { backgroundColor: 'transparent' },
+              }}
+            />
           </Stack>
 
           <StatusBar style="auto" hidden />

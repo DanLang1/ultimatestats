@@ -1,12 +1,9 @@
-import PullPrompt from '@/components/PullPrompt';
 import SettingsBar from '@/components/SettingsBar';
-import StatEntrySheet from '@/components/StatEntrySheet';
 import TeamScoreSection from '@/components/TeamScoreSection';
 import { ThemedView } from '@/components/ThemedView';
-import TurnoverEntrySheet from '@/components/TurnoverEntrySheet';
 import TutorialOverlay from '@/components/tutorial/TutorialOverlay';
+import { usePullPromptNavigation } from '@/hooks/usePullPromptNavigation';
 import { getContrastingTextColor } from '@/lib/colorUtils';
-
 import { useGameStore } from '@/store/gameStore';
 import { router } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
@@ -71,21 +68,37 @@ export default function BasicScoreboard() {
       : []),
   ];
 
+  // Show PullPrompt modal when stat tracking enabled and no possession set
+  usePullPromptNavigation();
+
+  const handleIncrement = (isTeam1: boolean) => {
+    incrementScore(isTeam1);
+    if (statTrackingEnabled) {
+      router.push('/StatEntryModal');
+    }
+  };
+
+  const handleTurnover = () => {
+    triggerTurnover();
+    if (statTrackingEnabled) {
+      router.push('/TurnoverEntryModal');
+    }
+  };
+
   return (
     <ThemedView style={styles.container}>
       {/* Top half */}
       <TeamScoreSection
         teamName={team1Name}
         score={team1Score}
-        onIncrement={() => incrementScore(true)}
+        onIncrement={() => handleIncrement(true)}
         onDecrement={() => decrementScore(true)}
         textColor={getContrastingTextColor(team1BgColor)}
         backgroundColor={team1BgColor}
         timeouts={team1Combined}
         onTimeoutUse={(index) => toggleTimeout(true, index)}
-        // Possession tracking props (only when enabled)
         hasPossession={possessionTrackingEnabled ? possession === 'team1' : undefined}
-        onTurnover={possessionTrackingEnabled ? triggerTurnover : undefined}
+        onTurnover={possessionTrackingEnabled ? handleTurnover : undefined}
       />
 
       {/* Timer Bar Overlay */}
@@ -97,25 +110,15 @@ export default function BasicScoreboard() {
       <TeamScoreSection
         teamName={team2Name}
         score={team2Score}
-        onIncrement={() => incrementScore(false)}
+        onIncrement={() => handleIncrement(false)}
         onDecrement={() => decrementScore(false)}
         textColor={getContrastingTextColor(team2BgColor)}
         backgroundColor={team2BgColor}
         timeouts={team2Combined}
         onTimeoutUse={(index) => toggleTimeout(false, index)}
-        // Possession tracking props (only when enabled)
         hasPossession={possessionTrackingEnabled ? possession === 'team2' : undefined}
-        onTurnover={possessionTrackingEnabled ? triggerTurnover : undefined}
+        onTurnover={possessionTrackingEnabled ? handleTurnover : undefined}
       />
-
-      {/* Pull Prompt Modal */}
-      <PullPrompt />
-
-      {/* Stat Entry Modal */}
-      <StatEntrySheet />
-
-      {/* Turnover Entry Modal */}
-      <TurnoverEntrySheet />
 
       {/* Tutorial Overlay - shows on first launch or when triggered */}
       <TutorialOverlay />

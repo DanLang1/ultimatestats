@@ -3,6 +3,7 @@ import { palette } from '@/theme/theme';
 import React, { useState } from 'react';
 import { Dimensions, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeIn, SlideInRight, SlideOutLeft } from 'react-native-reanimated';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import TutorialStep from './TutorialStep';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -16,9 +17,9 @@ const TUTORIAL_STEPS = [
   },
   {
     icon: 'gesture-tap' as const,
-    title: 'Tap to Score',
+    title: 'Score with Gestures',
     description:
-      "Tap either team's side to add a point. Swipe down to correct a mistake and remove a point.",
+      "Tap or swipe up on either team's side to add a point. Swipe down to correct a mistake and remove a point.",
   },
   {
     icon: 'timer-outline' as const,
@@ -56,6 +57,14 @@ export default function TutorialOverlay() {
     closeOnboarding();
   };
 
+  const handleBack = () => {
+    if (currentStep > 0) {
+      setCurrentStep((prev) => prev - 1);
+    }
+  };
+
+  const isFirstStep = currentStep === 0;
+
   if (!visible) {
     return null;
   }
@@ -64,37 +73,48 @@ export default function TutorialOverlay() {
 
   return (
     <Modal transparent visible={visible} animationType="fade">
-      <View style={styles.overlay}>
-        <Animated.View entering={FadeIn.duration(300)} style={styles.container}>
-          {/* Skip button */}
-          <Pressable onPress={handleClose} style={styles.skipButton}>
-            <Text style={styles.skipText}>Skip</Text>
-          </Pressable>
+      <SafeAreaProvider>
+        <SafeAreaView style={styles.overlay} edges={['top', 'bottom', 'left', 'right']}>
+          <Animated.View entering={FadeIn.duration(300)} style={styles.container}>
+            {/* Skip button */}
+            <Pressable onPress={handleClose} style={styles.skipButton}>
+              <Text style={styles.skipText}>Skip</Text>
+            </Pressable>
 
-          {/* Step content with animation */}
-          <View style={styles.contentContainer}>
-            <Animated.View
-              key={currentStep}
-              entering={SlideInRight.duration(300)}
-              exiting={SlideOutLeft.duration(200)}
-              style={styles.stepWrapper}>
-              <TutorialStep icon={step.icon} title={step.title} description={step.description} />
-            </Animated.View>
-          </View>
+            {/* Step content with animation */}
+            <View style={styles.contentContainer}>
+              <Animated.View
+                key={currentStep}
+                entering={SlideInRight.duration(300)}
+                exiting={SlideOutLeft.duration(200)}
+                style={styles.stepWrapper}>
+                <TutorialStep icon={step.icon} title={step.title} description={step.description} />
+              </Animated.View>
+            </View>
 
-          {/* Progress dots */}
-          <View style={styles.dotsContainer}>
-            {TUTORIAL_STEPS.map((_, index) => (
-              <View key={index} style={[styles.dot, index === currentStep && styles.dotActive]} />
-            ))}
-          </View>
+            {/* Progress dots */}
+            <View style={styles.dotsContainer}>
+              {TUTORIAL_STEPS.map((_, index) => (
+                <View key={index} style={[styles.dot, index === currentStep && styles.dotActive]} />
+              ))}
+            </View>
 
-          {/* Next/Done button */}
-          <Pressable onPress={handleNext} style={styles.nextButton}>
-            <Text style={styles.nextButtonText}>{isLastStep ? 'Get Started' : 'Next'}</Text>
-          </Pressable>
-        </Animated.View>
-      </View>
+            {/* Navigation buttons */}
+            <View style={styles.buttonRow}>
+              {!isFirstStep && (
+                <Pressable onPress={handleBack} style={styles.backButton}>
+                  <Text style={styles.backButtonText}>Back</Text>
+                </Pressable>
+              )}
+              <Pressable
+                onPress={handleNext}
+                style={[styles.nextButton, isFirstStep && styles.nextButtonFull]}>
+                <Text style={styles.nextButtonText}>{isLastStep ? 'Get Started' : 'Next'}</Text>
+              </Pressable>
+            </View>
+          </Animated.View>
+        </SafeAreaView>
+      </SafeAreaProvider>
     </Modal>
   );
 }
@@ -109,17 +129,17 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: palette.secondary,
     borderRadius: 24,
-    paddingVertical: 24,
+    paddingVertical: 16,
     paddingHorizontal: 16,
-    width: Math.min(SCREEN_WIDTH - 48, 400),
-    maxWidth: 400,
+    maxWidth: Math.min(SCREEN_WIDTH - 48, 600),
+    maxHeight: '90%', // Ensure it doesn't overflow screen height
     borderWidth: 1,
     borderColor: palette.overlay20,
   },
   skipButton: {
     position: 'absolute',
-    top: 16,
-    right: 16,
+    top: 12,
+    right: 12,
     padding: 8,
     zIndex: 10,
   },
@@ -129,7 +149,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   contentContainer: {
-    minHeight: 280,
+    minHeight: 200,
     justifyContent: 'center',
   },
   stepWrapper: {
@@ -151,13 +171,36 @@ const styles = StyleSheet.create({
     backgroundColor: palette.accent,
     width: 24,
   },
+  buttonRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginHorizontal: 16,
+  },
+  backButton: {
+    flex: 1,
+    backgroundColor: 'transparent',
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: palette.accent,
+    alignItems: 'center',
+  },
+  backButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: palette.accent,
+  },
   nextButton: {
+    flex: 1,
     backgroundColor: palette.accent,
     paddingVertical: 14,
-    paddingHorizontal: 32,
+    paddingHorizontal: 24,
     borderRadius: 12,
     alignItems: 'center',
-    marginHorizontal: 16,
+  },
+  nextButtonFull: {
+    flex: 1,
   },
   nextButtonText: {
     fontSize: 16,

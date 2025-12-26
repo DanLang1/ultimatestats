@@ -13,7 +13,7 @@ export default function TutorialStep({ icon, title, description }: TutorialStepP
   return (
     <View style={styles.container}>
       <View style={styles.iconContainer}>
-        <MaterialCommunityIcons name={icon} size={64} color={palette.accent} />
+        <MaterialCommunityIcons name={icon} size={40} color={palette.accent} />
       </View>
       <Text style={styles.title}>{title}</Text>
       <Text style={styles.description}>{description}</Text>
@@ -24,29 +24,29 @@ export default function TutorialStep({ icon, title, description }: TutorialStepP
 const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
-    paddingHorizontal: 32,
-    paddingVertical: 24,
+    paddingHorizontal: 24,
+    paddingVertical: 16,
   },
   iconContainer: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
     backgroundColor: palette.accentOverlay15,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 24,
+    marginBottom: 16,
   },
   title: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: '700',
     color: palette.textInverse,
     textAlign: 'center',
-    marginBottom: 12,
+    marginBottom: 8,
   },
   description: {
-    fontSize: 16,
+    fontSize: 15,
     color: palette.textMuted,
     textAlign: 'center',
-    lineHeight: 24,
+    lineHeight: 22,
   },
 });
