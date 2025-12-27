@@ -38,7 +38,7 @@ export default function PullPromptScreen() {
                 { backgroundColor: palette.accent, borderColor: palette.accent },
               ]}
               onPress={() => handleSelect('team1')}>
-              <Text style={[styles.teamButtonText, { color: palette.textInverse }]}>
+              <Text style={[styles.teamButtonText, { color: palette.textOnAccent }]}>
                 {team1Name}
               </Text>
             </Pressable>
@@ -49,7 +49,7 @@ export default function PullPromptScreen() {
                 { backgroundColor: palette.accent, borderColor: palette.accent },
               ]}
               onPress={() => handleSelect('team2')}>
-              <Text style={[styles.teamButtonText, { color: palette.textInverse }]}>
+              <Text style={[styles.teamButtonText, { color: palette.textOnAccent }]}>
                 {team2Name}
               </Text>
             </Pressable>

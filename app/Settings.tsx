@@ -1,39 +1,39 @@
 import { ThemedView } from '@/components/ThemedView';
+import { useAlert } from '@/components/ui/AlertProvider';
 import { TeamColorPicker } from '@/components/ui/ColorPicker';
 import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import { Switch } from '@/components/ui/Switch';
 import { TeamDropdown } from '@/components/ui/TeamDropdown';
 import { useTheme } from '@/context/ThemeContext';
 import { useGameStore } from '@/store/gameStore';
-// import { palette } from '@/theme/theme';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router, Stack } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 export default function SettingsScreen() {
   const { palette, themeMode, setThemeMode } = useTheme();
+  const { showAlert } = useAlert();
 
   const {
     team1Name,
     team2Name,
-    // ... (rest of store)
     team1BgColor,
     team2BgColor,
-    gameTo: gameToStore,
+    gameTo,
     team1Timeouts,
     setTeamNames,
     setTeamBgColor,
-    setGameTo: setGameToStore,
+    setGameTo,
     resetTimeouts,
-    floaterEnabled: floaterEnabledStore,
+    floaterEnabled,
     setFloaterEnabled,
     setGameLength,
-    gameLength: gameLengthStore,
-    softCapMins: softCapMinsStore,
+    gameLength,
+    softCapMins,
     setSoftCapMins,
     resetGame,
-    statTrackingEnabled: statTrackingEnabledStore,
+    statTrackingEnabled,
     setStatTrackingEnabled,
     team1Roster,
     clearRoster,
@@ -47,84 +47,90 @@ export default function SettingsScreen() {
     saveTeam,
   } = useGameStore();
 
-  const [team1, setTeam1] = useState(team1Name);
-  const [team2, setTeam2] = useState(team2Name);
-  const [gameTo, setGameTo] = useState(gameToStore.toString());
-  const [timeoutsCount, setTimeoutsCount] = useState(team1Timeouts.length.toString());
-  const [floaterEnabled, setFloaterEnabledLocal] = useState(floaterEnabledStore);
-  const [gameLength, setGameLengthLocal] = useState((gameLengthStore || 90).toString());
-  const [softCapTime, setSoftCapTimeLocal] = useState(
-    ((gameLengthStore || 90) - (softCapMinsStore || 20)).toString(),
-  );
-  const [statTrackingEnabled, setStatTrackingEnabledLocal] = useState(statTrackingEnabledStore);
-
   // Load saved teams on mount
   useEffect(() => {
     loadSavedTeams();
   }, [loadSavedTeams]);
 
   const hasRoster = team1Roster.length > 0;
-
-  // Check if team name conflicts with an existing saved team (case-insensitive)
-  const teamNameConflict =
-    team1.trim() !== '' &&
-    team1.trim().toLowerCase() !== team1Name.toLowerCase() &&
-    savedTeams.some((t) => t.name.toLowerCase() === team1.trim().toLowerCase());
-
-  const handleSave = () => {
-    performSave(team1);
-  };
-
-  const performSave = (newTeamName: string) => {
-    const gLength = Number(gameLength) || 90;
-    const sCapTime = Number(softCapTime) || gLength - 20;
-
-    setTeamNames(newTeamName, team2);
-    setGameToStore(Number(gameTo) || 15);
-    setFloaterEnabled(floaterEnabled);
-    setGameLength(gLength);
-    setSoftCapMins(Math.max(0, gLength - sCapTime));
-    setStatTrackingEnabled(statTrackingEnabled);
-
-    // If keeping players with new name, save the team
-    if (hasRoster) {
-      saveTeam(newTeamName, team1Roster);
-    }
-
-    const newCount = parseInt(timeoutsCount, 10);
-    const currentCount = team1Timeouts.length;
-
-    if (!isNaN(newCount) && newCount !== currentCount) {
-      resetTimeouts(newCount);
-    }
-
-    router.back();
-  };
+  const timeoutsCount = team1Timeouts.length;
+  const softCapTime = gameLength - softCapMins;
 
   const handleNewGame = () => {
-    resetGame();
-    router.back();
+    showAlert({
+      title: 'Start New Game?',
+      message: 'This will reset the score, timer, and all stats.',
+      buttons: [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'New Game',
+          style: 'success',
+          onPress: () => {
+            router.back();
+            setImmediate(() => {
+              resetGame();
+            });
+          },
+        },
+      ],
+    });
   };
 
   const handleEditRoster = () => {
-    router.push({ pathname: '/EditRoster', params: { teamName: team1 } });
+    router.push({ pathname: '/EditRoster', params: { teamName: team1Name } });
   };
 
   const handleLoadTeam = (option: { id: string; label: string }) => {
     if (option.id === 'new-team') {
-      // Create new team
       clearRoster();
-      setTeam1('New Team');
-      setTeamNames('New Team', team2);
+      setTeamNames('New Team', team2Name);
     } else {
-      // Load existing team
       loadTeamRoster(option.id, 'team1');
-      setTeam1(option.label);
     }
   };
 
   const handleDeleteTeam = (option: { id: string; label: string }) => {
     deleteTeam(option.id);
+  };
+
+  // Auto-save team when name changes and has roster
+  const handleTeam1NameChange = (name: string) => {
+    setTeamNames(name, team2Name);
+    if (hasRoster && name.trim()) {
+      saveTeam(name, team1Roster);
+    }
+  };
+
+  const handleTeam2NameChange = (name: string) => {
+    setTeamNames(team1Name, name);
+  };
+
+  const handleGameToChange = (value: string) => {
+    const num = parseInt(value, 10);
+    if (!isNaN(num) && num > 0) {
+      setGameTo(num);
+    }
+  };
+
+  const handleGameLengthChange = (value: string) => {
+    const num = parseInt(value, 10);
+    if (!isNaN(num) && num > 0) {
+      setGameLength(num);
+    }
+  };
+
+  const handleSoftCapTimeChange = (value: string) => {
+    const num = parseInt(value, 10);
+    if (!isNaN(num) && num >= 0) {
+      setSoftCapMins(Math.max(0, gameLength - num));
+    }
+  };
+
+  const handleTimeoutsChange = (value: string) => {
+    const num = parseInt(value, 10);
+    if (!isNaN(num) && num !== timeoutsCount) {
+      resetTimeouts(num);
+    }
   };
 
   const gameActive = timerIsActive || team1Score !== 0 || team2Score !== 0;
@@ -150,14 +156,23 @@ export default function SettingsScreen() {
           <MaterialCommunityIcons name="arrow-left" size={24} color={palette.textInverse} />
         </Pressable>
         <Text style={[styles.headerTitle, { color: palette.textMuted }]}>SETTINGS</Text>
-        <View style={styles.headerSpacer} />
+        <Pressable
+          onPress={handleNewGame}
+          style={({ pressed }) => [
+            styles.newGameButton,
+            { backgroundColor: palette.overlay10 },
+            pressed && styles.buttonPressed,
+          ]}
+          hitSlop={12}>
+          <Text style={[styles.newGameButtonText, { color: palette.success }]}>New Game</Text>
+        </Pressable>
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.columnsContainer}>
           {/* Left Column: Teams */}
           <View style={styles.column}>
-            <Text style={styles.sectionTitle}>TEAMS</Text>
+            <Text style={[styles.sectionTitle, textInverseStyle]}>TEAMS</Text>
             <View style={styles.inputGroupFullWidth}>
               <Text style={[styles.inputLabel, textMutedStyle]}>My Team</Text>
               <View style={styles.teamInputRow}>
@@ -170,23 +185,19 @@ export default function SettingsScreen() {
                       borderStyle,
                       textInverseStyle,
                       inputBgStyle,
-                      teamNameConflict && { borderColor: palette.danger },
                     ]}
-                    value={team1}
-                    onChangeText={setTeam1}
+                    value={team1Name}
+                    onChangeText={handleTeam1NameChange}
                     placeholder="Team 1 Name"
                     placeholderTextColor={palette.textMuted}
                     maxLength={20}
                   />
-                  {teamNameConflict && (
-                    <Text style={styles.errorText}>{team1.trim()} already exists</Text>
-                  )}
                 </View>
                 <TeamDropdown
                   options={[
                     { id: 'new-team', label: '+ New Team' },
                     ...savedTeams
-                      .filter((t) => t.name !== team1)
+                      .filter((t) => t.name !== team1Name)
                       .map((t) => ({ id: t.id, label: t.name })),
                   ]}
                   placeholder="Teams"
@@ -197,16 +208,15 @@ export default function SettingsScreen() {
                 <Pressable
                   style={({ pressed }) => [
                     styles.editRosterButton,
-                    teamNameConflict && styles.buttonDisabled,
-                    pressed && !teamNameConflict && styles.buttonPressed,
+                    {
+                      backgroundColor: palette.accentOverlay10,
+                      borderColor: palette.accentOverlay30,
+                    },
+                    pressed && styles.buttonPressed,
                   ]}
-                  onPress={handleEditRoster}
-                  disabled={teamNameConflict}>
-                  {teamNameConflict && (
-                    <MaterialCommunityIcons name="lock" size={14} color={palette.textMuted} />
-                  )}
+                  onPress={handleEditRoster}>
                   <MaterialCommunityIcons name="account-group" size={20} color={palette.accent} />
-                  <Text style={styles.editRosterButtonText}>
+                  <Text style={[styles.editRosterButtonText, { color: palette.accent }]}>
                     {team1Roster.length > 0 ? team1Roster.length : 'Roster'}
                   </Text>
                 </Pressable>
@@ -222,8 +232,8 @@ export default function SettingsScreen() {
                   textInverseStyle,
                   inputBgStyle,
                 ]}
-                value={team2}
-                onChangeText={setTeam2}
+                value={team2Name}
+                onChangeText={handleTeam2NameChange}
                 placeholder="Team 2 Name"
                 placeholderTextColor={palette.textMuted}
                 maxLength={20}
@@ -233,7 +243,7 @@ export default function SettingsScreen() {
             <View style={[styles.divider, dividerStyle]} />
 
             {/* Team Colors */}
-            <Text style={styles.sectionTitle}>COLORS</Text>
+            <Text style={[styles.sectionTitle, textInverseStyle]}>COLORS</Text>
             <TeamColorPicker
               label="MY TEAM COLOR"
               value={team1BgColor}
@@ -249,27 +259,13 @@ export default function SettingsScreen() {
               style={({ pressed }) => [styles.resetColorsButton, pressed && { opacity: 0.7 }]}
               onPress={() => {
                 setTeamBgColor('team1', palette.surface);
-                setTeamBgColor('team2', palette.primary); // Note: This sets colors to current theme defaults actually.
-                // To be strictly correct, we might want reference to original defaults or dynamic defaults.
-                // But for now, this uses the ACTIVE palette which is better than hardcoded.
+                setTeamBgColor('team2', palette.primary);
               }}>
               <Text style={[styles.resetColorsButtonText, textMutedStyle]}>Reset to Default</Text>
             </Pressable>
 
-            <View style={[styles.divider, dividerStyle]} />
-
-            {/* Stat Tracking Mode */}
-            <Text style={styles.sectionTitle}>STAT TRACKING</Text>
-            <Switch
-              label="Track Stats"
-              value={statTrackingEnabled}
-              onValueChange={setStatTrackingEnabledLocal}
-            />
-
-            <View style={[styles.divider, dividerStyle]} />
-
             {/* Theme */}
-            <Text style={styles.sectionTitle}>DISPLAY</Text>
+            <Text style={[styles.sectionTitle, textInverseStyle]}>DISPLAY</Text>
             <Switch
               label="Light Theme"
               value={themeMode === 'light'}
@@ -277,10 +273,10 @@ export default function SettingsScreen() {
             />
           </View>
 
-          {/* Right Column: Rules */}
+          {/* Right Column: Game Settings */}
           <View style={styles.column}>
             <View style={styles.sectionHeaderRow}>
-              <Text style={styles.sectionTitle}>RULES</Text>
+              <Text style={[styles.sectionTitle, textInverseStyle]}>GAME SETTINGS</Text>
               {gameActive && (
                 <Text style={[styles.helperText, textMutedStyle]}>* Locked during game</Text>
               )}
@@ -302,8 +298,8 @@ export default function SettingsScreen() {
                     textInverseStyle,
                     inputBgStyle,
                   ]}
-                  value={gameTo}
-                  onChangeText={setGameTo}
+                  value={gameTo.toString()}
+                  onChangeText={handleGameToChange}
                   placeholder="15"
                   placeholderTextColor={palette.textMuted}
                   keyboardType="numeric"
@@ -329,8 +325,8 @@ export default function SettingsScreen() {
                       textInverseStyle,
                       inputBgStyle,
                     ]}
-                    value={gameLength}
-                    onChangeText={setGameLengthLocal}
+                    value={gameLength.toString()}
+                    onChangeText={handleGameLengthChange}
                     placeholder="90"
                     placeholderTextColor={palette.textMuted}
                     keyboardType="numeric"
@@ -370,13 +366,13 @@ export default function SettingsScreen() {
                       textInverseStyle,
                       inputBgStyle,
                     ]}
-                    value={softCapTime}
-                    onChangeText={setSoftCapTimeLocal}
+                    value={softCapTime.toString()}
+                    onChangeText={handleSoftCapTimeChange}
                     placeholder="70"
                     placeholderTextColor={palette.textMuted}
                     keyboardType="numeric"
                     editable={!gameActive}
-                    maxLength={gameLength.length || 4}
+                    maxLength={4}
                   />
                   <Text
                     style={[
@@ -401,8 +397,8 @@ export default function SettingsScreen() {
                     { value: '1', label: '1' },
                     { value: '2', label: '2' },
                   ]}
-                  value={timeoutsCount}
-                  onChange={setTimeoutsCount}
+                  value={timeoutsCount.toString()}
+                  onChange={handleTimeoutsChange}
                   disabled={gameActive}
                 />
               </View>
@@ -411,7 +407,17 @@ export default function SettingsScreen() {
                 <Switch
                   label="Floater"
                   value={floaterEnabled}
-                  onValueChange={setFloaterEnabledLocal}
+                  onValueChange={setFloaterEnabled}
+                  disabled={gameActive}
+                  locked={gameActive}
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Switch
+                  label="Track Stats"
+                  value={statTrackingEnabled}
+                  onValueChange={setStatTrackingEnabled}
                   disabled={gameActive}
                   locked={gameActive}
                 />
@@ -420,40 +426,6 @@ export default function SettingsScreen() {
           </View>
         </View>
       </ScrollView>
-
-      {/* Footer Actions */}
-      <View style={[styles.footer, { borderTopColor: palette.overlay10 }]}>
-        <Pressable
-          style={({ pressed }) => [
-            styles.footerButton,
-            styles.cancelButton,
-            { borderColor: palette.overlay20, backgroundColor: palette.overlay10 },
-            pressed && styles.buttonPressed,
-          ]}
-          onPress={() => router.back()}>
-          <Text style={[styles.cancelButtonText, { color: palette.textInverse }]}>Cancel</Text>
-        </Pressable>
-
-        <Pressable
-          style={({ pressed }) => [styles.footerButton, pressed && styles.buttonPressed]}
-          onPress={handleNewGame}>
-          <Text style={[styles.newGameButtonText, { color: palette.primary }]}>New Game</Text>
-        </Pressable>
-
-        <Pressable
-          style={({ pressed }) => [
-            styles.footerButton,
-            teamNameConflict && styles.buttonDisabled,
-            pressed && !teamNameConflict && styles.buttonPressed,
-          ]}
-          onPress={handleSave}
-          disabled={teamNameConflict}>
-          {teamNameConflict && (
-            <MaterialCommunityIcons name="lock" size={14} color={palette.textMuted} />
-          )}
-          <Text style={[styles.saveButtonText, { color: palette.textInverse }]}>Save</Text>
-        </Pressable>
-      </View>
     </ThemedView>
   );
 }
@@ -511,14 +483,6 @@ const styles = StyleSheet.create({
     height: 1,
     marginVertical: 12,
   },
-  input: {
-    height: 48,
-    borderWidth: 1,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    fontSize: 16,
-  },
-  // Stacked inputs grid
   inputsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -540,10 +504,6 @@ const styles = StyleSheet.create({
   },
   teamNameInput: {
     flex: 1,
-  },
-  errorText: {
-    fontSize: 12,
-    marginTop: 4,
   },
   buttonDisabled: {
     opacity: 0.5,
@@ -603,40 +563,19 @@ const styles = StyleSheet.create({
   helperText: {
     fontSize: 11,
   },
-  footer: {
-    flexDirection: 'row',
-    gap: 12,
-    padding: 20,
-    paddingBottom: 32,
-    borderTopWidth: 1,
-  },
-  footerButton: {
-    flex: 1,
-    flexDirection: 'row',
-    gap: 6,
-    paddingVertical: 14,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   buttonPressed: {
     opacity: 0.8,
     transform: [{ scale: 0.98 }],
   },
-  cancelButton: {
-    borderWidth: 1,
-  },
-  cancelButtonText: {
-    fontSize: 15,
-    fontWeight: '600',
+  newGameButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 16,
   },
   newGameButtonText: {
-    fontSize: 15,
+    fontSize: 12,
     fontWeight: '700',
-  },
-  saveButtonText: {
-    fontSize: 15,
-    fontWeight: '700',
+    letterSpacing: 0.5,
   },
   resetColorsButton: {
     marginTop: 12,

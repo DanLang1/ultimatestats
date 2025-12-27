@@ -8,24 +8,21 @@ import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 interface SettingsBarProps {
-  onReset: () => void;
+  onUndo: () => void;
   onSettingsPress: () => void;
 }
 
-export default function SettingsBar({ onReset, onSettingsPress }: SettingsBarProps) {
-  const { timeLeft, isActive, toggleTimer, resetTimer } = useGameTimer();
-  const { isSoftCap, softCapPending } = useGameStore();
+export default function SettingsBar({ onUndo, onSettingsPress }: SettingsBarProps) {
+  const { timeLeft, isActive, toggleTimer } = useGameTimer();
+  const { isSoftCap, softCapPending, actionHistory } = useGameStore();
   const { palette, themeMode } = useTheme();
+
+  const canUndo = (actionHistory?.length ?? 0) > 0;
 
   // In Light Mode, we want a dark bar for contrast (surface=Navy, textPrimary=White).
   // In Dark Mode, we want the distinct Indigo bar (secondary=Indigo, textInverse=White).
   const barBg = themeMode === 'light' ? palette.surface : palette.secondary;
   const barContentColor = themeMode === 'light' ? palette.textPrimary : palette.textInverse;
-
-  const handleReset = () => {
-    resetTimer();
-    onReset();
-  };
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -68,9 +65,12 @@ export default function SettingsBar({ onReset, onSettingsPress }: SettingsBarPro
         <MaterialCommunityIcons name="cog" size={24} color={barContentColor} />
       </Pressable>
 
-      {/* Reset */}
-      <Pressable onPress={handleReset} style={styles.iconButton}>
-        <MaterialCommunityIcons name="restart" size={24} color={barContentColor} />
+      {/* Undo */}
+      <Pressable
+        onPress={onUndo}
+        style={[styles.iconButton, !canUndo && styles.iconButtonDisabled]}
+        disabled={!canUndo}>
+        <MaterialCommunityIcons name="undo" size={24} color={barContentColor} />
       </Pressable>
     </View>
   );
@@ -101,5 +101,8 @@ const styles = StyleSheet.create({
   },
   iconButton: {
     padding: 5,
+  },
+  iconButtonDisabled: {
+    opacity: 0.3,
   },
 });

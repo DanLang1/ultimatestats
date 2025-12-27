@@ -23,7 +23,7 @@ export function PlayerChip({ name, selected = false, onPress }: PlayerChipProps)
         style={[
           styles.chipText,
           { color: palette.modalText },
-          selected && { color: palette.textInverse },
+          selected && { color: palette.textOnAccent },
         ]}>
         {name}
       </Text>

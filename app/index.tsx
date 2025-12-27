@@ -25,7 +25,7 @@ export default function BasicScoreboard() {
     incrementScore,
     decrementScore,
     toggleTimeout,
-    resetGame,
+    undoLastAction,
     // Possession tracking
     statTrackingEnabled,
     possession,
@@ -36,8 +36,8 @@ export default function BasicScoreboard() {
     router.push('/Settings');
   };
 
-  const reset = () => {
-    resetGame();
+  const undo = () => {
+    undoLastAction();
   };
 
   // Possession tracking is enabled when stat tracking is on
@@ -112,7 +112,7 @@ export default function BasicScoreboard() {
 
       {/* Timer Bar Overlay */}
       <View style={styles.timerBarContainer}>
-        <SettingsBar onReset={reset} onSettingsPress={openSettings} />
+        <SettingsBar onUndo={undo} onSettingsPress={openSettings} />
       </View>
 
       {/* Bottom half */}

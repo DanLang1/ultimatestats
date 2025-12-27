@@ -20,6 +20,9 @@ export interface TurnoverRecord {
   player: string | null;
 }
 
+// Action history for undo functionality
+export type GameAction = { type: 'goal'; team: 'team1' | 'team2' } | { type: 'turnover' };
+
 interface GameState {
   // State
   team1Name: string;
@@ -55,6 +58,9 @@ interface GameState {
   possession: 'team1' | 'team2' | null;
   startingPossession: 'team1' | 'team2' | null; // Who received first (to determine halftime)
   turnoverRecords: TurnoverRecord[];
+
+  // Action History (for undo)
+  actionHistory: GameAction[];
   pendingTurnoverEntry: { receivingTeam: 'team1' | 'team2' } | null;
 
   // Actions
@@ -65,6 +71,7 @@ interface GameState {
   setGameLength: (minutes: number) => void;
   incrementScore: (isTeam1: boolean) => void;
   decrementScore: (isTeam1: boolean) => void;
+  undoLastAction: () => boolean; // Returns true if something was undone
   toggleTimeout: (isTeam1: boolean, index: number) => void;
   resetTimeouts: (count: number) => void;
   resetGame: () => void;
@@ -137,6 +144,9 @@ export const useGameStore = create<GameState>()(
       startingPossession: null,
       turnoverRecords: [],
       pendingTurnoverEntry: null,
+
+      // Action History (for undo)
+      actionHistory: [],
 
       // Saved Games & Teams Initial State
       savedGames: [],
@@ -214,6 +224,12 @@ export const useGameStore = create<GameState>()(
             };
           }
 
+          // Track this goal in action history
+          newState = {
+            ...newState,
+            actionHistory: [...state.actionHistory, { type: 'goal', team }],
+          };
+
           return newState;
         }),
 
@@ -239,6 +255,64 @@ export const useGameStore = create<GameState>()(
             pendingStatEntry: null, // Clear any pending entry
           };
         }),
+
+      undoLastAction: () => {
+        const state = get();
+        const lastAction = state.actionHistory[state.actionHistory.length - 1];
+
+        if (!lastAction) return false;
+
+        const newActionHistory = state.actionHistory.slice(0, -1);
+
+        if (lastAction.type === 'goal') {
+          const isTeam1 = lastAction.team === 'team1';
+          const targetScore = isTeam1 ? state.team1Score : state.team2Score;
+
+          if (targetScore <= 0) return false;
+
+          // Remove the last stat record for this team (if any)
+          const teamRecords = state.statRecords.filter((r) => r.team === lastAction.team);
+          let newStatRecords = state.statRecords;
+          if (teamRecords.length > 0) {
+            const lastRecord = teamRecords[teamRecords.length - 1];
+            newStatRecords = state.statRecords.filter((r) => r !== lastRecord);
+          }
+
+          // Flip possession back (goal caused it to flip to the scoring team's opponent)
+          const restoredPossession = lastAction.team;
+
+          set({
+            ...(isTeam1
+              ? { team1Score: state.team1Score - 1 }
+              : { team2Score: state.team2Score - 1 }),
+            statRecords: newStatRecords,
+            possession: restoredPossession,
+            pendingStatEntry: null,
+            actionHistory: newActionHistory,
+          });
+
+          return true;
+        }
+
+        if (lastAction.type === 'turnover') {
+          // Remove the last turnover record
+          const newTurnoverRecords = state.turnoverRecords.slice(0, -1);
+
+          // Flip possession back
+          const restoredPossession = state.possession === 'team1' ? 'team2' : 'team1';
+
+          set({
+            turnoverRecords: newTurnoverRecords,
+            possession: restoredPossession,
+            pendingTurnoverEntry: null,
+            actionHistory: newActionHistory,
+          });
+
+          return true;
+        }
+
+        return false;
+      },
 
       toggleTimeout: (isTeam1, index) =>
         set((state) => {
@@ -300,6 +374,8 @@ export const useGameStore = create<GameState>()(
           startingPossession: null,
           turnoverRecords: [],
           pendingTurnoverEntry: null,
+          // Reset action history
+          actionHistory: [],
           // Reset timer
           timerIsActive: false,
           timerEndTime: null,
@@ -378,6 +454,7 @@ export const useGameStore = create<GameState>()(
             turnoverRecords: [...state.turnoverRecords, record],
             possession: newPossession,
             pendingTurnoverEntry: null,
+            actionHistory: [...state.actionHistory, { type: 'turnover' }],
           };
         }),
 
@@ -388,6 +465,7 @@ export const useGameStore = create<GameState>()(
           return {
             pendingTurnoverEntry: null,
             possession: newPossession,
+            actionHistory: [...state.actionHistory, { type: 'turnover' }],
           };
         }),
 
@@ -485,6 +563,7 @@ export const useGameStore = create<GameState>()(
         possession: state.possession,
         startingPossession: state.startingPossession,
         turnoverRecords: state.turnoverRecords,
+        actionHistory: state.actionHistory,
         savedGames: state.savedGames,
         savedTeams: state.savedTeams,
       }),

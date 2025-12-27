@@ -71,7 +71,6 @@ export default function TurnoverEntryScreen() {
           onSkip={handleSkip}
           onComplete={handleComplete}
           onAddPlayer={handleAddPlayer}
-          receivingTeam={pendingTurnoverEntry.receivingTeam}
           isMyTeamTurnover={isMyTeamTurnover}
           isOpponentTurnover={isOpponentTurnover}
         />

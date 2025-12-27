@@ -14,7 +14,6 @@ export interface TurnoverEntryInnerProps {
   onSkip: () => void;
   onComplete: (type: TurnoverType, player: string | null) => void;
   onAddPlayer: (name: string) => void;
-  receivingTeam: 'team1' | 'team2';
   isMyTeamTurnover: boolean;
   isOpponentTurnover: boolean;
 }
@@ -28,10 +27,17 @@ export function TurnoverEntryInner({
   isMyTeamTurnover,
   isOpponentTurnover,
 }: TurnoverEntryInnerProps) {
-  const [step, setStep] = useState<EntryStep>('type');
-  const [selectedType, setSelectedType] = useState<TurnoverType | null>(null);
+  // For opponent turnovers, skip directly to player selection with 'block' pre-selected
+  const [step, setStep] = useState<EntryStep>(isOpponentTurnover ? 'player' : 'type');
+  const [selectedType, setSelectedType] = useState<TurnoverType | null>(
+    isOpponentTurnover ? 'block' : null,
+  );
   const [newPlayerName, setNewPlayerName] = useState('');
-  const { palette } = useTheme();
+  const { palette, themeMode } = useTheme();
+
+  // Skip button colors - darker in light mode for visibility
+  const skipButtonBorder = themeMode === 'light' ? palette.textMuted : palette.overlay20;
+  const skipButtonText = themeMode === 'light' ? palette.modalText : palette.textSecondary;
 
   const handleTypeSelect = (type: TurnoverType) => {
     if (type === 'block' && isMyTeamTurnover) {
@@ -188,18 +194,27 @@ export function TurnoverEntryInner({
                   ]}
                   onPress={handleAddPlayer}
                   disabled={!newPlayerName.trim()}>
-                  <Text style={[styles.addButtonText, { color: palette.textInverse }]}>Add</Text>
+                  <Text style={[styles.addButtonText, { color: palette.textOnAccent }]}>Add</Text>
                 </Pressable>
               </View>
             )}
 
             <Animated.View layout={LinearTransition} style={styles.footer}>
               <Pressable
-                style={[styles.skipButton, { backgroundColor: palette.cardBgAlt }]}
+                style={[
+                  styles.skipButton,
+                  {
+                    backgroundColor: palette.cardBgAlt,
+                    borderWidth: 1,
+                    borderColor: skipButtonBorder,
+                  },
+                ]}
                 onPress={step === 'type' ? onSkip : handleSkipPlayer}>
-                <Text style={[styles.skipText, { color: palette.textSecondary }]}>Skip</Text>
+                <Text style={[styles.skipText, { color: skipButtonText }]}>
+                  {step === 'player' && isOpponentTurnover ? 'No Block' : 'Skip'}
+                </Text>
               </Pressable>
-              {step === 'player' && (
+              {step === 'player' && !isOpponentTurnover && (
                 <Animated.View entering={FadeIn}>
                   <Pressable
                     style={[styles.skipButton, { backgroundColor: palette.cardBgAlt }]}

@@ -74,6 +74,9 @@ const midnightElectric = {
 
   // Semantic
   disabled: '#94A3B8', // Slate 400 - disabled state
+
+  // Contrast labels
+  textOnAccent: '#FFFFFF',
 } as const;
 
 // =============================================================================
@@ -236,6 +239,9 @@ export const lightPalette = {
 
   // Semantic
   disabled: '#9CA3AF', // Gray 400 - disabled state
+
+  // Contrast labels
+  textOnAccent: '#FFFFFF',
 } as const;
 
 // Default palette export (for backwards compatibility during migration)
@@ -248,6 +254,7 @@ export type Palette = {
   modalBg: string;
   modalText: string;
   overlayModal: string;
+  textOnAccent: string;
 };
 
 // =============================================================================

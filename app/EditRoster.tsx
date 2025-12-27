@@ -140,7 +140,7 @@ export default function EditRosterScreen() {
             pressed && styles.buttonPressed,
           ]}
           onPress={handleAddPlayer}>
-          <MaterialCommunityIcons name="plus" size={24} color={palette.textInverse} />
+          <MaterialCommunityIcons name="plus" size={24} color={palette.textOnAccent} />
         </Pressable>
       </View>
 
@@ -236,7 +236,7 @@ export default function EditRosterScreen() {
                   pressed && styles.buttonPressed,
                 ]}
                 onPress={handleConfirmEdit}>
-                <Text style={[styles.modalSaveText, { color: palette.textInverse }]}>Save</Text>
+                <Text style={[styles.modalSaveText, { color: palette.textOnAccent }]}>Save</Text>
               </Pressable>
             </View>
           </View>

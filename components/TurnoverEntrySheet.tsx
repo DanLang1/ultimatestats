@@ -83,7 +83,6 @@ export default function TurnoverEntrySheet() {
           onSkip={handleSkip}
           onComplete={handleComplete}
           onAddPlayer={handleAddPlayer}
-          receivingTeam={pendingTurnoverEntry.receivingTeam}
           isMyTeamTurnover={isMyTeamTurnover}
           isOpponentTurnover={isOpponentTurnover}
         />

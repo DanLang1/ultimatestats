@@ -35,7 +35,7 @@ export function Switch({ label, value, onValueChange, disabled, locked }: Switch
             true: disabled ? palette.textMuted : palette.accent,
           }}
           thumbColor={
-            value ? (disabled ? palette.textMuted : palette.textInverse) : palette.textMuted
+            value ? (disabled ? palette.textMuted : palette.textOnAccent) : palette.textMuted
           }
           onValueChange={onValueChange}
           value={value}

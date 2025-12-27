@@ -123,7 +123,7 @@ export function TeamColorPicker({ label, value, onChange }: ColorPickerProps) {
                 <Pressable
                   style={[styles.modalButton, { backgroundColor: palette.accent }]}
                   onPress={handleAdvancedConfirm}>
-                  <Text style={[styles.confirmButtonText, { color: palette.textInverse }]}>
+                  <Text style={[styles.confirmButtonText, { color: palette.textOnAccent }]}>
                     Apply
                   </Text>
                 </Pressable>

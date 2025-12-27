@@ -4,7 +4,7 @@ import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 
 interface AlertButton {
   text: string;
-  style?: 'default' | 'cancel' | 'destructive';
+  style?: 'default' | 'cancel' | 'destructive' | 'success';
   onPress?: () => void;
 }
 
@@ -74,6 +74,7 @@ export function AlertProvider({ children }: { children: React.ReactNode }) {
                       { backgroundColor: palette.overlay10, borderColor: palette.overlay20 },
                     ],
                     button.style === 'destructive' && { backgroundColor: palette.danger },
+                    button.style === 'success' && { backgroundColor: palette.success },
                     button.style === 'default' && { backgroundColor: palette.accent },
                     !button.style && { backgroundColor: palette.accent },
                     pressed && styles.buttonPressed,

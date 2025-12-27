@@ -86,7 +86,7 @@ export function StatEntryInner({
                 ]}
                 onPress={handleAddPlayer}
                 disabled={!newPlayerName.trim()}>
-                <Text style={[styles.addButtonText, { color: palette.textInverse }]}>Add</Text>
+                <Text style={[styles.addButtonText, { color: palette.textOnAccent }]}>Add</Text>
               </Pressable>
             </View>
 

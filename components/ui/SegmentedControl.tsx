@@ -60,7 +60,7 @@ export function SegmentedControl({
                 style={[
                   styles.buttonText,
                   { color: palette.textMuted },
-                  isActive && [styles.buttonTextActive, { color: palette.textInverse }],
+                  isActive && [styles.buttonTextActive, { color: palette.textOnAccent }],
                 ]}>
                 {option.label}
               </Text>
