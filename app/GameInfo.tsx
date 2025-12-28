@@ -107,6 +107,26 @@ export default function GameInfoScreen() {
           </View>
           <MaterialCommunityIcons name="chevron-right" size={24} color={palette.textMuted} />
         </Pressable>
+
+        <View style={{ height: 12 }} />
+
+        <Pressable
+          style={[styles.tutorialButton, { backgroundColor: palette.overlay08 }]}
+          onPress={() => {
+            useTutorialStore.getState().triggerStatsTutorial();
+            router.back();
+          }}>
+          <MaterialCommunityIcons name="chart-line" size={24} color={palette.accent} />
+          <View style={styles.tutorialButtonContent}>
+            <Text style={[styles.tutorialButtonTitle, { color: palette.textInverse }]}>
+              Stats Guide
+            </Text>
+            <Text style={[styles.tutorialButtonSubtitle, { color: palette.textMuted }]}>
+              How to track player statistics
+            </Text>
+          </View>
+          <MaterialCommunityIcons name="chevron-right" size={24} color={palette.textMuted} />
+        </Pressable>
       </ScrollView>
     </ThemedView>
   );

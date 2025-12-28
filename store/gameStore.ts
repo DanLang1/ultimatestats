@@ -134,7 +134,7 @@ export const useGameStore = create<GameState>()(
       timerTimeLeft: 90 * 60,
 
       // Stat Tracking Initial State
-      statTrackingEnabled: true,
+      statTrackingEnabled: false,
       team1Roster: [],
       statRecords: [],
       pendingStatEntry: null,

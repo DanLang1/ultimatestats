@@ -48,7 +48,6 @@ export function Switch({ label, value, onValueChange, disabled, locked }: Switch
 
 const styles = StyleSheet.create({
   container: {
-    width: '100%',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'flex-start',

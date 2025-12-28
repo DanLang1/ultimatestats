@@ -6,6 +6,7 @@ import { useGameStore } from '@/store/gameStore';
 import { router } from 'expo-router';
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import FlashingIcon from './ui/FlashingIcon';
 
 interface SettingsBarProps {
   onUndo: () => void;
@@ -47,7 +48,12 @@ export default function SettingsBar({ onUndo, onSettingsPress }: SettingsBarProp
         {timeLeft === 0 ? (
           <MaterialCommunityIcons name="hard-hat" size={24} color={barContentColor} />
         ) : isSoftCap || softCapPending ? (
-          <MaterialCommunityIcons name="hat-fedora" size={24} color={barContentColor} />
+          <FlashingIcon
+            name="hat-fedora"
+            size={24}
+            color={barContentColor}
+            isFlashing={softCapPending && !isSoftCap}
+          />
         ) : null}
       </View>
 

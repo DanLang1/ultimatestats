@@ -1,0 +1,37 @@
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { useEffect } from 'react';
+import Animated, {
+  cancelAnimation,
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withTiming,
+} from 'react-native-reanimated';
+
+interface FlashingIconProps {
+  name: React.ComponentProps<typeof MaterialCommunityIcons>['name'];
+  size: number;
+  color: string;
+  isFlashing: boolean;
+}
+
+const AnimatedIcon = Animated.createAnimatedComponent(MaterialCommunityIcons);
+
+export default function FlashingIcon({ name, size, color, isFlashing }: FlashingIconProps) {
+  const opacity = useSharedValue(1);
+
+  useEffect(() => {
+    if (isFlashing) {
+      opacity.value = withRepeat(withTiming(0.2, { duration: 800 }), -1, true);
+    } else {
+      cancelAnimation(opacity);
+      opacity.value = 1;
+    }
+  }, [isFlashing, opacity]);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+  }));
+
+  return <AnimatedIcon name={name} size={size} color={color} style={animatedStyle} />;
+}

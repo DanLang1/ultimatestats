@@ -1,6 +1,7 @@
 import SettingsBar from '@/components/SettingsBar';
 import TeamScoreSection from '@/components/TeamScoreSection';
 import { ThemedView } from '@/components/ThemedView';
+import StatsTrackingTutorial from '@/components/tutorial/StatsTrackingTutorial';
 import TutorialOverlay from '@/components/tutorial/TutorialOverlay';
 import { usePullPromptNavigation } from '@/hooks/usePullPromptNavigation';
 import { getContrastingTextColor } from '@/lib/colorUtils';
@@ -131,6 +132,7 @@ export default function BasicScoreboard() {
 
       {/* Tutorial Overlay - shows on first launch or when triggered */}
       <TutorialOverlay />
+      <StatsTrackingTutorial />
     </ThemedView>
   );
 }

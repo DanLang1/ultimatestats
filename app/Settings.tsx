@@ -6,6 +6,7 @@ import { Switch } from '@/components/ui/Switch';
 import { TeamDropdown } from '@/components/ui/TeamDropdown';
 import { useTheme } from '@/context/ThemeContext';
 import { useGameStore } from '@/store/gameStore';
+import { useTutorialStore } from '@/store/tutorialStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router, Stack } from 'expo-router';
 import React, { useEffect } from 'react';
@@ -14,6 +15,7 @@ import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-
 export default function SettingsScreen() {
   const { palette, themeMode, setThemeMode } = useTheme();
   const { showAlert } = useAlert();
+  const { hasSeenStatsTutorial, triggerStatsTutorial } = useTutorialStore();
 
   const {
     team1Name,
@@ -54,7 +56,27 @@ export default function SettingsScreen() {
 
   const hasRoster = team1Roster.length > 0;
   const timeoutsCount = team1Timeouts.length;
+
+  // Soft Cap displays as time (when soft cap triggers), converts to softCapMins for storage
   const softCapTime = gameLength - softCapMins;
+
+  const handleGameLengthEndEditing = (e: { nativeEvent: { text: string } }) => {
+    const num = parseInt(e.nativeEvent.text, 10);
+    if (isNaN(num) || num < 1) return;
+    // Clamp softCapMins if it would exceed new game length
+    // This preserves "minutes before end" - only adjusting if necessary
+    if (softCapMins > num) {
+      setSoftCapMins(num);
+    }
+    setGameLength(num);
+  };
+
+  const handleSoftCapEndEditing = (e: { nativeEvent: { text: string } }) => {
+    const num = parseInt(e.nativeEvent.text, 10);
+    if (isNaN(num)) return;
+    const clamped = Math.max(0, Math.min(gameLength, num));
+    setSoftCapMins(Math.max(0, gameLength - clamped));
+  };
 
   const handleNewGame = () => {
     showAlert({
@@ -107,30 +129,18 @@ export default function SettingsScreen() {
 
   const handleGameToChange = (value: string) => {
     const num = parseInt(value, 10);
-    if (!isNaN(num) && num > 0) {
-      setGameTo(num);
+    if (isNaN(num)) {
+      return;
     }
-  };
-
-  const handleGameLengthChange = (value: string) => {
-    const num = parseInt(value, 10);
-    if (!isNaN(num) && num > 0) {
-      setGameLength(num);
-    }
-  };
-
-  const handleSoftCapTimeChange = (value: string) => {
-    const num = parseInt(value, 10);
-    if (!isNaN(num) && num >= 0) {
-      setSoftCapMins(Math.max(0, gameLength - num));
-    }
+    setGameTo(num);
   };
 
   const handleTimeoutsChange = (value: string) => {
     const num = parseInt(value, 10);
-    if (!isNaN(num) && num !== timeoutsCount) {
-      resetTimeouts(num);
+    if (isNaN(num)) {
+      return;
     }
+    resetTimeouts(num);
   };
 
   const gameActive = timerIsActive || team1Score !== 0 || team2Score !== 0;
@@ -325,8 +335,8 @@ export default function SettingsScreen() {
                       textInverseStyle,
                       inputBgStyle,
                     ]}
-                    value={gameLength.toString()}
-                    onChangeText={handleGameLengthChange}
+                    defaultValue={gameLength.toString()}
+                    onEndEditing={handleGameLengthEndEditing}
                     placeholder="90"
                     placeholderTextColor={palette.textMuted}
                     keyboardType="numeric"
@@ -366,8 +376,8 @@ export default function SettingsScreen() {
                       textInverseStyle,
                       inputBgStyle,
                     ]}
-                    value={softCapTime.toString()}
-                    onChangeText={handleSoftCapTimeChange}
+                    defaultValue={softCapTime.toString()}
+                    onEndEditing={handleSoftCapEndEditing}
                     placeholder="70"
                     placeholderTextColor={palette.textMuted}
                     keyboardType="numeric"
@@ -414,13 +424,30 @@ export default function SettingsScreen() {
               </View>
 
               <View style={styles.inputGroup}>
-                <Switch
-                  label="Track Stats"
-                  value={statTrackingEnabled}
-                  onValueChange={setStatTrackingEnabled}
-                  disabled={gameActive}
-                  locked={gameActive}
-                />
+                <View style={styles.switchWithHelp}>
+                  <Switch
+                    label="Track Stats"
+                    value={statTrackingEnabled}
+                    onValueChange={(enabled) => {
+                      setStatTrackingEnabled(enabled);
+                      if (enabled && !hasSeenStatsTutorial) {
+                        triggerStatsTutorial();
+                      }
+                    }}
+                    disabled={gameActive}
+                    locked={gameActive}
+                  />
+                  <Pressable
+                    onPress={triggerStatsTutorial}
+                    hitSlop={8}
+                    style={[styles.helpButton, { backgroundColor: palette.overlay08 }]}>
+                    <MaterialCommunityIcons
+                      name="help-circle-outline"
+                      size={18}
+                      color={palette.textMuted}
+                    />
+                  </Pressable>
+                </View>
               </View>
             </View>
           </View>
@@ -585,5 +612,13 @@ const styles = StyleSheet.create({
   resetColorsButtonText: {
     fontSize: 12,
     fontWeight: '500',
+  },
+  switchWithHelp: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  helpButton: {
+    padding: 4,
+    borderRadius: 12,
   },
 });
