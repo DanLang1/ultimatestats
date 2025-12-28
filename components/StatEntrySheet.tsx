@@ -30,7 +30,7 @@ export default function StatEntrySheet() {
   };
 
   const handleAddPlayer = (name: string) => {
-    addPlayer(pendingStatEntry?.team ?? 'team1', name);
+    addPlayer(name);
   };
 
   if (!visible) return null;

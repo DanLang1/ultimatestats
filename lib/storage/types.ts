@@ -16,8 +16,9 @@ export interface SavedGame {
   }[];
   turnoverRecords: {
     team: 'team1' | 'team2';
-    type: 'block' | 'throwaway' | 'drop';
+    type: 'block' | 'throwaway' | 'drop' | 'fiftyfifty';
     player: string | null;
+    player2?: string | null;
   }[];
   gameTo: number;
   gameLength: number;

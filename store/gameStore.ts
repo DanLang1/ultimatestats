@@ -12,12 +12,13 @@ export interface StatRecord {
   assist: string | null;
 }
 
-export type TurnoverType = 'block' | 'throwaway' | 'drop';
+export type TurnoverType = 'block' | 'throwaway' | 'drop' | 'fiftyfifty';
 
 export interface TurnoverRecord {
   team: 'team1' | 'team2'; // Team responsible for the action
   type: TurnoverType;
   player: string | null;
+  player2?: string | null; // Second player for 50/50 turnovers
 }
 
 // Action history for undo functionality
@@ -70,7 +71,6 @@ interface GameState {
   setGameTo: (score: number) => void;
   setGameLength: (minutes: number) => void;
   incrementScore: (isTeam1: boolean) => void;
-  decrementScore: (isTeam1: boolean) => void;
   undoLastAction: () => boolean; // Returns true if something was undone
   toggleTimeout: (isTeam1: boolean, index: number) => void;
   resetTimeouts: (count: number) => void;
@@ -84,7 +84,7 @@ interface GameState {
 
   // Stat Tracking Actions
   setStatTrackingEnabled: (enabled: boolean) => void;
-  addPlayer: (team: 'team1' | 'team2', name: string) => void;
+  addPlayer: (name: string) => void;
   setRoster: (team: 'team1' | 'team2', roster: string[]) => void;
   addStatRecord: (record: Omit<StatRecord, 'pointNumber'>) => void;
   clearPendingStatEntry: () => void;
@@ -217,7 +217,9 @@ export const useGameStore = create<GameState>()(
           }
 
           // After a goal, possession goes to the other team (they receive the pull)
-          if (state.statTrackingEnabled) {
+          // But NOT if this goal triggered halftime (halftime logic already set possession)
+          const justReachedHalftime = state.gameHalf === 1 && newScore === halftimeScore;
+          if (state.statTrackingEnabled && !justReachedHalftime) {
             newState = {
               ...newState,
               possession: isTeam1 ? 'team2' : 'team1',
@@ -231,29 +233,6 @@ export const useGameStore = create<GameState>()(
           };
 
           return newState;
-        }),
-
-      decrementScore: (isTeam1) =>
-        set((state) => {
-          const targetScore = isTeam1 ? state.team1Score : state.team2Score;
-          if (targetScore <= 0) return {};
-
-          const team = isTeam1 ? 'team1' : 'team2';
-          // Remove the last stat record for this team (if any)
-          const teamRecords = state.statRecords.filter((r) => r.team === team);
-          let newStatRecords = state.statRecords;
-          if (teamRecords.length > 0) {
-            const lastRecord = teamRecords[teamRecords.length - 1];
-            newStatRecords = state.statRecords.filter((r) => r !== lastRecord);
-          }
-
-          return {
-            ...(isTeam1
-              ? { team1Score: state.team1Score - 1 }
-              : { team2Score: state.team2Score - 1 }),
-            statRecords: newStatRecords,
-            pendingStatEntry: null, // Clear any pending entry
-          };
         }),
 
       undoLastAction: () => {
@@ -402,10 +381,10 @@ export const useGameStore = create<GameState>()(
       // Stat Tracking Actions
       setStatTrackingEnabled: (enabled) => set({ statTrackingEnabled: enabled }),
 
-      addPlayer: (team, name) =>
+      addPlayer: (name) =>
         set((state) => {
           const trimmedName = name.trim();
-          if (!trimmedName || team !== 'team1') return {};
+          if (!trimmedName) return {};
           if (state.team1Roster.includes(trimmedName)) return {}; // Already exists
           return { team1Roster: [...state.team1Roster, trimmedName] };
         }),

@@ -12,7 +12,7 @@ export interface TurnoverEntryInnerProps {
   teamName: string;
   roster: string[];
   onSkip: () => void;
-  onComplete: (type: TurnoverType, player: string | null) => void;
+  onComplete: (type: TurnoverType, player: string | null, player2?: string | null) => void;
   onAddPlayer: (name: string) => void;
   isMyTeamTurnover: boolean;
   isOpponentTurnover: boolean;
@@ -33,7 +33,11 @@ export function TurnoverEntryInner({
     isOpponentTurnover ? 'block' : null,
   );
   const [newPlayerName, setNewPlayerName] = useState('');
+  // For 50/50: track first selected player (thrower)
+  const [fiftyFiftyFirstPlayer, setFiftyFiftyFirstPlayer] = useState<string | null>(null);
   const { palette, themeMode } = useTheme();
+
+  const isFiftyFiftyMode = selectedType === 'fiftyfifty';
 
   // Skip button colors - darker in light mode for visibility
   const skipButtonBorder = themeMode === 'light' ? palette.textMuted : palette.overlay20;
@@ -50,9 +54,22 @@ export function TurnoverEntryInner({
   };
 
   const handlePlayerSelect = (playerName: string) => {
-    if (selectedType) {
-      onComplete(selectedType, playerName);
+    if (!selectedType) return;
+
+    // For 50/50: first tap = thrower, second tap = receiver
+    if (selectedType === 'fiftyfifty') {
+      if (!fiftyFiftyFirstPlayer) {
+        // First player selection (thrower)
+        setFiftyFiftyFirstPlayer(playerName);
+      } else {
+        // Second player selection (receiver) - complete the entry
+        onComplete(selectedType, fiftyFiftyFirstPlayer, playerName);
+      }
+      return;
     }
+
+    // Normal single-player turnover
+    onComplete(selectedType, playerName);
   };
 
   const handleAddPlayer = () => {
@@ -81,6 +98,8 @@ export function TurnoverEntryInner({
         return 'Throwaway';
       case 'drop':
         return 'Drop';
+      case 'fiftyfifty':
+        return '50/50';
     }
   };
 
@@ -93,6 +112,8 @@ export function TurnoverEntryInner({
         return 'Who threw it away?';
       case 'drop':
         return 'Who dropped it?';
+      case 'fiftyfifty':
+        return fiftyFiftyFirstPlayer ? 'Who dropped it?' : 'Who threw it?';
       default:
         return 'Who?';
     }
@@ -121,11 +142,26 @@ export function TurnoverEntryInner({
                   entering={FadeIn}
                   style={[
                     styles.badge,
-                    { backgroundColor: palette.successOverlay15, borderColor: palette.success },
+                    { backgroundColor: palette.dangerOverlay15, borderColor: palette.danger },
                   ]}>
-                  <Text style={[styles.badgeLabel, { color: palette.success }]}>EVENT</Text>
-                  <Text style={[styles.badgeValue, { color: palette.success }]}>
+                  <Text style={[styles.badgeLabel, { color: palette.danger }]}>EVENT</Text>
+                  <Text style={[styles.badgeValue, { color: palette.danger }]}>
                     {getTypeLabel(selectedType)}
+                  </Text>
+                </Animated.View>
+              )}
+
+              {/* Show first selected player for 50/50 */}
+              {isFiftyFiftyMode && fiftyFiftyFirstPlayer && (
+                <Animated.View
+                  entering={FadeIn}
+                  style={[
+                    styles.badge,
+                    { backgroundColor: palette.indigoOverlay20, borderColor: palette.accent },
+                  ]}>
+                  <Text style={[styles.badgeLabel, { color: palette.accent }]}>THROWER</Text>
+                  <Text style={[styles.badgeValue, { color: palette.accent }]}>
+                    {fiftyFiftyFirstPlayer}
                   </Text>
                 </Animated.View>
               )}
@@ -136,7 +172,7 @@ export function TurnoverEntryInner({
                 <Pressable
                   style={[
                     styles.typeButton,
-                    { borderColor: palette.success, backgroundColor: palette.successOverlay15 },
+                    { borderColor: palette.danger, backgroundColor: palette.dangerOverlay15 },
                   ]}
                   onPress={() => handleTypeSelect('block')}>
                   <Text style={[styles.typeButtonText, { color: palette.modalText }]}>
@@ -163,6 +199,16 @@ export function TurnoverEntryInner({
                       onPress={() => handleTypeSelect('drop')}>
                       <Text style={[styles.typeButtonText, { color: palette.modalText }]}>
                         {getTypeLabel('drop')}
+                      </Text>
+                    </Pressable>
+                    <Pressable
+                      style={[
+                        styles.typeButton,
+                        { borderColor: palette.danger, backgroundColor: palette.dangerOverlay15 },
+                      ]}
+                      onPress={() => handleTypeSelect('fiftyfifty')}>
+                      <Text style={[styles.typeButtonText, { color: palette.modalText }]}>
+                        {getTypeLabel('fiftyfifty')}
                       </Text>
                     </Pressable>
                   </>
@@ -219,8 +265,14 @@ export function TurnoverEntryInner({
                   <Pressable
                     style={[styles.skipButton, { backgroundColor: palette.cardBgAlt }]}
                     onPress={() => {
-                      setStep('type');
-                      setSelectedType(null);
+                      if (isFiftyFiftyMode && fiftyFiftyFirstPlayer) {
+                        // Go back to first player selection
+                        setFiftyFiftyFirstPlayer(null);
+                      } else {
+                        setStep('type');
+                        setSelectedType(null);
+                        setFiftyFiftyFirstPlayer(null);
+                      }
                     }}>
                     <Text style={[styles.skipText, { color: palette.textSecondary }]}>Back</Text>
                   </Pressable>
@@ -233,7 +285,9 @@ export function TurnoverEntryInner({
           {step === 'player' && (
             <Animated.View entering={FadeIn} style={styles.rightColumn}>
               <StatEntryRoster
-                roster={roster}
+                roster={
+                  isFiftyFiftyMode ? roster.filter((p) => p !== fiftyFiftyFirstPlayer) : roster
+                }
                 step="goal"
                 selectedGoal={null}
                 onSelect={handlePlayerSelect}

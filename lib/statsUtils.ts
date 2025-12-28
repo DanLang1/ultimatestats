@@ -45,9 +45,26 @@ export function computePlayerStats(
     }
   }
 
-  // Process turnover records (blocks/throwaways/drops)
+  // Process turnover records (blocks/throwaways/drops/fiftyfifties)
   for (const record of turnoverRecords) {
-    if (record.team !== team || !record.player) continue;
+    if (record.team !== team) continue;
+
+    // Handle fiftyfifty - player1 gets 0.5 throwaway, player2 gets 0.5 drop
+    if (record.type === 'fiftyfifty') {
+      if (record.player) {
+        const stats = getOrCreate(record.player);
+        stats.throwaways += 0.5; // Thrower gets half a throwaway
+        statsMap.set(record.player, stats);
+      }
+      if (record.player2) {
+        const stats = getOrCreate(record.player2);
+        stats.drops += 0.5; // Receiver gets half a drop
+        statsMap.set(record.player2, stats);
+      }
+      continue;
+    }
+
+    if (!record.player) continue;
 
     const stats = getOrCreate(record.player);
     switch (record.type) {
@@ -94,11 +111,11 @@ export function generateCSV(
 
   // Section 2: Turnovers
   csv += '\n\n# Turnovers\n';
-  csv += 'Team,Type,Player\n';
+  csv += 'Team,Type,Player,Player2\n';
   csv += turnoverRecords
     .map((r) => {
       const teamName = r.team === 'team1' ? team1Name : team2Name;
-      return `${teamName},${r.type},${r.player || ''}`;
+      return `${teamName},${r.type},${r.player || ''},${r.player2 || ''}`;
     })
     .join('\n');
 

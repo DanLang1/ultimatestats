@@ -24,7 +24,6 @@ export default function BasicScoreboard() {
     floaterEnabled,
     gameTo,
     incrementScore,
-    decrementScore,
     toggleTimeout,
     undoLastAction,
     // Possession tracking
@@ -83,7 +82,8 @@ export default function BasicScoreboard() {
       return;
     }
 
-    if (statTrackingEnabled) {
+    // Only open stat entry for team1 (my team) goals
+    if (statTrackingEnabled && isTeam1) {
       router.push('/StatEntryModal');
     }
   };
@@ -102,7 +102,6 @@ export default function BasicScoreboard() {
         teamName={team1Name}
         score={team1Score}
         onIncrement={() => handleIncrement(true)}
-        onDecrement={() => decrementScore(true)}
         textColor={getContrastingTextColor(team1BgColor)}
         backgroundColor={team1BgColor}
         timeouts={team1Combined}
@@ -121,7 +120,6 @@ export default function BasicScoreboard() {
         teamName={team2Name}
         score={team2Score}
         onIncrement={() => handleIncrement(false)}
-        onDecrement={() => decrementScore(false)}
         textColor={getContrastingTextColor(team2BgColor)}
         backgroundColor={team2BgColor}
         timeouts={team2Combined}

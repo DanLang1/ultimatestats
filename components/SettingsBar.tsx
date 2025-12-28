@@ -15,7 +15,7 @@ interface SettingsBarProps {
 
 export default function SettingsBar({ onUndo, onSettingsPress }: SettingsBarProps) {
   const { timeLeft, isActive, toggleTimer } = useGameTimer();
-  const { isSoftCap, softCapPending, actionHistory } = useGameStore();
+  const { isSoftCap, softCapPending, actionHistory, statTrackingEnabled } = useGameStore();
   const { palette, themeMode } = useTheme();
 
   const canUndo = (actionHistory?.length ?? 0) > 0;
@@ -57,9 +57,11 @@ export default function SettingsBar({ onUndo, onSettingsPress }: SettingsBarProp
         ) : null}
       </View>
 
-      <Pressable onPress={() => router.push('/ViewStats')} style={styles.iconButton}>
-        <MaterialCommunityIcons name="chart-bar" size={24} color={barContentColor} />
-      </Pressable>
+      {statTrackingEnabled && (
+        <Pressable onPress={() => router.push('/ViewStats')} style={styles.iconButton}>
+          <MaterialCommunityIcons name="chart-bar" size={24} color={barContentColor} />
+        </Pressable>
+      )}
 
       {/* Info - now navigates to page */}
       <Pressable onPress={() => router.push('/GameInfo')} style={styles.iconButton}>

@@ -41,7 +41,7 @@ export default function TurnoverEntryScreen() {
     router.dismissTo('/');
   };
 
-  const handleComplete = (type: TurnoverType, player: string | null) => {
+  const handleComplete = (type: TurnoverType, player: string | null, player2?: string | null) => {
     const team =
       type === 'block' ? (possession === 'team1' ? 'team2' : 'team1') : (possession ?? 'team1');
 
@@ -49,14 +49,14 @@ export default function TurnoverEntryScreen() {
       team,
       type,
       player,
+      player2,
     });
     router.dismissTo('/');
   };
 
   const handleAddPlayer = (name: string) => {
-    if (teamWithError) {
-      addPlayer(teamWithError, name);
-    }
+    // Always add to team1 roster since that's the only roster we track
+    addPlayer(name);
   };
 
   return (

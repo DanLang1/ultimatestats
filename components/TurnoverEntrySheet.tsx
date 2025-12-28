@@ -45,10 +45,10 @@ export default function TurnoverEntrySheet() {
     clearPendingTurnoverEntry();
   };
 
-  const handleComplete = (type: TurnoverType, player: string | null) => {
+  const handleComplete = (type: TurnoverType, player: string | null, player2?: string | null) => {
     // Determine which team to attribute the record to
     // Block: attribute to receiving team (+1 for them)
-    // Throwaway/Drop: attribute to team with possession (-1 for them)
+    // Throwaway/Drop/50-50: attribute to team with possession (-1 for them)
     const team =
       type === 'block'
         ? possession === 'team1'
@@ -60,12 +60,13 @@ export default function TurnoverEntrySheet() {
       team,
       type,
       player,
+      player2,
     });
   };
 
   const handleAddPlayer = (name: string) => {
     if (teamWithError) {
-      addPlayer(teamWithError, name);
+      addPlayer(name);
     }
   };
 

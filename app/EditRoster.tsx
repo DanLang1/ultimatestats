@@ -22,7 +22,7 @@ export default function EditRosterScreen() {
   const handleAddPlayer = () => {
     const trimmed = newPlayerName.trim();
     if (trimmed && !team1Roster.includes(trimmed)) {
-      addPlayer('team1', trimmed);
+      addPlayer(trimmed);
       setNewPlayerName('');
       // Auto-save team with current name
       if (team1Name) {

@@ -4,14 +4,11 @@ import { ThemedView } from '@/components/ThemedView';
 import { useHaptics } from '@/hooks/useHaptics';
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { Directions, Gesture, GestureDetector } from 'react-native-gesture-handler';
-import { scheduleOnRN } from 'react-native-worklets';
 
 interface TeamScoreSectionProps {
   teamName: string;
   score: number;
   onIncrement: () => void;
-  onDecrement: () => void;
   textColor: string;
   backgroundColor: string;
 
@@ -27,7 +24,6 @@ export default function TeamScoreSection({
   teamName,
   score,
   onIncrement,
-  onDecrement,
   textColor,
   backgroundColor,
   timeouts = [],
@@ -37,46 +33,30 @@ export default function TeamScoreSection({
 }: TeamScoreSectionProps) {
   const { triggerScoreHaptic, triggerTurnoverHaptic } = useHaptics();
 
-  // Fling up = score, only allowed if this team has possession (or possession tracking is disabled)
-  // Note: No haptics here as this runs in worklet context
-  const flingUp = Gesture.Fling()
-    .direction(Directions.UP)
-    .enabled(hasPossession === undefined || hasPossession === true)
-    .onEnd(() => {
-      scheduleOnRN(onIncrement);
-      scheduleOnRN(triggerScoreHaptic);
-    });
-
-  // Fling down = decrement score, always allowed (for corrections)
-  // Note: No haptics here as this runs in worklet context
-  const flingDown = Gesture.Fling()
-    .direction(Directions.DOWN)
-    .onEnd(() => {
-      scheduleOnRN(onDecrement);
-      scheduleOnRN(triggerScoreHaptic);
-    });
-
-  const composedGesture = Gesture.Simultaneous(flingDown, flingUp);
-
   // Determine what happens on tap
   // If possession tracking is enabled (hasPossession is defined):
   //   - If this team HAS possession: tap = score (they scored)
   //   - If this team does NOT have possession: tap = turnover (flip possession)
   // If possession tracking is disabled (hasPossession is undefined): tap = score (original behavior)
-  // Haptics work here because this runs on the JS thread, not worklet
   const handleTap = () => {
+    console.log('handleTap called', { hasPossession, teamName, onTurnover: !!onTurnover });
     if (hasPossession === undefined) {
       // Possession tracking disabled - original behavior
+      console.log('branch: possession tracking disabled');
       triggerScoreHaptic();
       onIncrement();
     } else if (hasPossession) {
       // This team has the disc - they scored
+      console.log('branch: has possession - scoring');
       triggerScoreHaptic();
       onIncrement();
     } else if (onTurnover) {
       // This team doesn't have the disc - turnover
+      console.log('branch: no possession - turnover');
       triggerTurnoverHaptic();
       onTurnover();
+    } else {
+      console.log('branch: fell through - no action');
     }
   };
 
@@ -111,13 +91,11 @@ export default function TeamScoreSection({
         </View>
       </View>
 
-      {/* Bottom 2/3: Gestures & Score */}
-      <GestureDetector gesture={composedGesture}>
-        <Pressable onPress={handleTap} style={styles.scoreArea}>
-          <TeamText color={textColor} teamName={teamName} hasPossession={hasPossession} />
-          <ScoreDisplay bgColor={backgroundColor} textColor={textColor} score={score} />
-        </Pressable>
-      </GestureDetector>
+      {/* Bottom 2/3: Score Area */}
+      <Pressable onPress={handleTap} style={styles.scoreArea}>
+        <TeamText color={textColor} teamName={teamName} hasPossession={hasPossession} />
+        <ScoreDisplay bgColor={backgroundColor} textColor={textColor} score={score} />
+      </Pressable>
 
       {/* Turnover hint - positioned at bottom, shown when this team does NOT have possession */}
       {possessionTrackingActive && !hasPossession && (

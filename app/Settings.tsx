@@ -127,11 +127,9 @@ export default function SettingsScreen() {
     setTeamNames(team1Name, name);
   };
 
-  const handleGameToChange = (value: string) => {
-    const num = parseInt(value, 10);
-    if (isNaN(num)) {
-      return;
-    }
+  const handleGameToEndEditing = (e: { nativeEvent: { text: string } }) => {
+    const num = parseInt(e.nativeEvent.text, 10);
+    if (isNaN(num) || num < 1) return;
     setGameTo(num);
   };
 
@@ -184,7 +182,15 @@ export default function SettingsScreen() {
           <View style={styles.column}>
             <Text style={[styles.sectionTitle, textInverseStyle]}>TEAMS</Text>
             <View style={styles.inputGroupFullWidth}>
-              <Text style={[styles.inputLabel, textMutedStyle]}>My Team</Text>
+              <View style={styles.sectionHeaderRow}>
+                <Text style={[styles.inputLabel, textMutedStyle]}>My Team</Text>
+                {gameActive && (
+                  <Text style={[styles.helperText, textMutedStyle]}>
+                    <MaterialCommunityIcons name="lock" size={10} color={palette.textMuted} /> *
+                    Locked during game
+                  </Text>
+                )}
+              </View>
               <View style={styles.teamInputRow}>
                 <View style={styles.teamNameInputWrapper}>
                   <TextInput
@@ -195,12 +201,14 @@ export default function SettingsScreen() {
                       borderStyle,
                       textInverseStyle,
                       inputBgStyle,
+                      gameActive && styles.inputDisabled,
                     ]}
                     value={team1Name}
                     onChangeText={handleTeam1NameChange}
                     placeholder="Team 1 Name"
                     placeholderTextColor={palette.textMuted}
                     maxLength={20}
+                    editable={!gameActive}
                   />
                 </View>
                 <TeamDropdown
@@ -213,6 +221,7 @@ export default function SettingsScreen() {
                   placeholder="Teams"
                   onSelect={handleLoadTeam}
                   onDelete={handleDeleteTeam}
+                  disabled={gameActive}
                 />
 
                 <Pressable
@@ -288,32 +297,20 @@ export default function SettingsScreen() {
             <View style={styles.sectionHeaderRow}>
               <Text style={[styles.sectionTitle, textInverseStyle]}>GAME SETTINGS</Text>
               {gameActive && (
-                <Text style={[styles.helperText, textMutedStyle]}>* Locked during game</Text>
+                <Text style={[styles.helperText, textMutedStyle]}>* Some locked during game</Text>
               )}
             </View>
 
             <View style={styles.inputsGrid}>
               <View style={styles.inputGroup}>
-                <Text style={[styles.inputLabel, textMutedStyle]}>
-                  {gameActive && (
-                    <MaterialCommunityIcons name="lock" size={10} color={palette.textMuted} />
-                  )}{' '}
-                  GAME TO
-                </Text>
+                <Text style={[styles.inputLabel, textMutedStyle]}>GAME TO</Text>
                 <TextInput
-                  style={[
-                    styles.inputStacked,
-                    gameActive && styles.inputDisabled,
-                    borderStyle,
-                    textInverseStyle,
-                    inputBgStyle,
-                  ]}
-                  value={gameTo.toString()}
-                  onChangeText={handleGameToChange}
+                  style={[styles.inputStacked, borderStyle, textInverseStyle, inputBgStyle]}
+                  defaultValue={gameTo.toString()}
+                  onEndEditing={handleGameToEndEditing}
                   placeholder="15"
                   placeholderTextColor={palette.textMuted}
                   keyboardType="numeric"
-                  editable={!gameActive}
                   maxLength={3}
                 />
               </View>

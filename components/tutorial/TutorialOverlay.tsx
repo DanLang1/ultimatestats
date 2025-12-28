@@ -10,28 +10,21 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 const TUTORIAL_STEPS = [
   {
-    icon: 'disc' as const,
-    title: 'Welcome to UltimateStats!',
-    description:
-      "The easiest way to keep score for your ultimate frisbee games. Let's show you around.",
-  },
-  {
     icon: 'gesture-tap' as const,
-    title: 'Score with Gestures',
+    title: 'Score with a Tap',
     description:
-      "Tap or swipe up on either team's side to add a point. Swipe down to correct a mistake and remove a point.",
+      "Tap on either team's side to add a point. Use the undo button in the top bar to correct any mistakes.",
   },
   {
     icon: 'timer-outline' as const,
     title: 'Track Timeouts',
     description:
-      'Tap the circles at the top of each team to mark timeouts as used. Tap again to restore.',
+      'Tap the circles at the top of each team to mark timeouts as used. Diamonds are floating timeouts.',
   },
   {
     icon: 'cog-outline' as const,
     title: 'Top Controls',
-    description:
-      'The bar at the top has your game timer, stats view, match info, settings, and reset',
+    description: 'To enable stats, and view more info, tap the settings icon.',
   },
 ];
 

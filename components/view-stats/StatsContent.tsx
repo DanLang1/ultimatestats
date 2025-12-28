@@ -28,6 +28,7 @@ export default function StatsContent({
   const { palette } = useTheme();
   const playerStats = computePlayerStats(statRecords, turnoverRecords, 'team1');
   const teamRecords = statRecords.filter((r) => r.team === 'team1');
+  const topPerformers = playerStats.filter((p) => p.plusMinus > 0).slice(0, 3);
 
   return (
     <>
@@ -68,13 +69,13 @@ export default function StatsContent({
           </View>
 
           {/* Right Column: Top Performers */}
-          {playerStats.length > 0 && (
+          {topPerformers.length > 0 && (
             <View style={[styles.summaryRight, { borderLeftColor: palette.overlay10 }]}>
               <Text style={[styles.topPerformersTitle, { color: palette.textMuted }]}>
                 TOP PERFORMERS
               </Text>
               <View style={styles.topPerformersList}>
-                {playerStats.slice(0, 3).map((player, index) => (
+                {topPerformers.map((player, index) => (
                   <View key={player.name} style={styles.topPerformerRow}>
                     <Text style={[styles.topPerformerRank, { color: palette.textMuted }]}>
                       {index + 1}.
@@ -84,15 +85,8 @@ export default function StatsContent({
                       numberOfLines={1}>
                       {player.name}
                     </Text>
-                    <Text
-                      style={[
-                        styles.topPerformerPlusMinus,
-                        { color: palette.textMuted },
-                        player.plusMinus > 0 && { color: palette.success },
-                        player.plusMinus < 0 && { color: palette.danger },
-                      ]}>
-                      {player.plusMinus > 0 ? '+' : ''}
-                      {player.plusMinus}
+                    <Text style={[styles.topPerformerPlusMinus, { color: palette.success }]}>
+                      +{player.plusMinus}
                     </Text>
                   </View>
                 ))}

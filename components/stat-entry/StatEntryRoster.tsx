@@ -22,18 +22,21 @@ export function StatEntryRoster({
 }: StatEntryRosterProps) {
   const { palette } = useTheme();
 
+  // Sort roster alphabetically
+  const sortedRoster = [...roster].sort((a, b) => a.localeCompare(b));
+
   return (
     <View style={[styles.scrollWrapper, { maxHeight }]}>
       <ScrollView
         showsVerticalScrollIndicator={true}
         contentContainerStyle={styles.chipsContainer}
         keyboardShouldPersistTaps="handled">
-        {roster.length === 0 ? (
+        {sortedRoster.length === 0 ? (
           <Text style={[styles.emptyText, { color: palette.textMuted }]}>
             No players yet. Add one!
           </Text>
         ) : (
-          roster.map((player) => (
+          sortedRoster.map((player) => (
             <PlayerChip
               key={player}
               name={player}

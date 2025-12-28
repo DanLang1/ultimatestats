@@ -15,6 +15,7 @@ interface TeamDropdownProps {
   onSelect: (option: TeamDropdownOption) => void;
   onDelete?: (option: TeamDropdownOption) => void;
   buttonStyle?: object;
+  disabled?: boolean;
 }
 
 export function TeamDropdown({
@@ -23,6 +24,7 @@ export function TeamDropdown({
   onSelect,
   onDelete,
   buttonStyle,
+  disabled = false,
 }: TeamDropdownProps) {
   const [visible, setVisible] = useState(false);
   const { showAlert } = useAlert();
@@ -57,9 +59,10 @@ export function TeamDropdown({
           styles.button,
           { backgroundColor: palette.accentOverlay10, borderColor: palette.accentOverlay30 },
           buttonStyle,
-          pressed && styles.buttonPressed,
+          pressed && !disabled && styles.buttonPressed,
+          disabled && styles.buttonDisabled,
         ]}
-        onPress={() => setVisible(true)}>
+        onPress={() => !disabled && setVisible(true)}>
         <MaterialCommunityIcons name="folder-account-outline" size={18} color={palette.accent} />
         <Text style={[styles.buttonText, { color: palette.accent }]}>{placeholder}</Text>
         <MaterialCommunityIcons name="chevron-down" size={16} color={palette.textMuted} />
@@ -161,6 +164,9 @@ const styles = StyleSheet.create({
   },
   buttonPressed: {
     opacity: 0.8,
+  },
+  buttonDisabled: {
+    opacity: 0.5,
   },
   buttonText: {
     flex: 1,

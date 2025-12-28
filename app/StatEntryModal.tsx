@@ -38,7 +38,7 @@ export default function StatEntryScreen() {
   };
 
   const handleAddPlayer = (name: string) => {
-    addPlayer(pendingStatEntry.team, name);
+    addPlayer(name);
   };
 
   return (
