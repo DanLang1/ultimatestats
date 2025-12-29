@@ -177,20 +177,24 @@ export default function SettingsScreen() {
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
+        {gameActive && (
+          <View
+            style={[
+              styles.activeGameBanner,
+              { backgroundColor: palette.warning + '15', borderColor: palette.warning + '30' },
+            ]}>
+            <MaterialCommunityIcons name="lock-outline" size={16} color={palette.warning} />
+            <Text style={[styles.activeGameBannerText, { color: palette.warning }]}>
+              Game in progress: some settings are locked
+            </Text>
+          </View>
+        )}
         <View style={styles.columnsContainer}>
           {/* Left Column: Teams */}
           <View style={styles.column}>
             <Text style={[styles.sectionTitle, textInverseStyle]}>TEAMS</Text>
             <View style={styles.inputGroupFullWidth}>
-              <View style={styles.sectionHeaderRow}>
-                <Text style={[styles.inputLabel, textMutedStyle]}>My Team</Text>
-                {gameActive && (
-                  <Text style={[styles.helperText, textMutedStyle]}>
-                    <MaterialCommunityIcons name="lock" size={10} color={palette.textMuted} /> *
-                    Locked during game
-                  </Text>
-                )}
-              </View>
+              <Text style={[styles.inputLabel, textMutedStyle]}>My Team</Text>
               <View style={styles.teamInputRow}>
                 <View style={styles.teamNameInputWrapper}>
                   <TextInput
@@ -211,18 +215,35 @@ export default function SettingsScreen() {
                     editable={!gameActive}
                   />
                 </View>
-                <TeamDropdown
-                  options={[
-                    { id: 'new-team', label: '+ New Team' },
-                    ...savedTeams
-                      .filter((t) => t.name !== team1Name)
-                      .map((t) => ({ id: t.id, label: t.name })),
-                  ]}
-                  placeholder="Teams"
-                  onSelect={handleLoadTeam}
-                  onDelete={handleDeleteTeam}
-                  disabled={gameActive}
-                />
+                {savedTeams.filter((t) => t.name !== team1Name).length > 0 ? (
+                  <TeamDropdown
+                    options={[
+                      { id: 'new-team', label: '+ New Team' },
+                      ...savedTeams
+                        .filter((t) => t.name !== team1Name)
+                        .map((t) => ({ id: t.id, label: t.name })),
+                    ]}
+                    placeholder="Teams"
+                    onSelect={handleLoadTeam}
+                    onDelete={handleDeleteTeam}
+                    disabled={gameActive}
+                  />
+                ) : (
+                  <Pressable
+                    style={({ pressed }) => [
+                      styles.newTeamButton,
+                      { backgroundColor: palette.overlay10 },
+                      pressed && styles.buttonPressed,
+                      gameActive && styles.buttonDisabled,
+                    ]}
+                    onPress={() => handleLoadTeam({ id: 'new-team', label: '+ New Team' })}
+                    disabled={gameActive}>
+                    <MaterialCommunityIcons name="plus" size={18} color={palette.textInverse} />
+                    <Text style={[styles.newTeamButtonText, { color: palette.textInverse }]}>
+                      New
+                    </Text>
+                  </Pressable>
+                )}
 
                 <Pressable
                   style={({ pressed }) => [
@@ -294,12 +315,7 @@ export default function SettingsScreen() {
 
           {/* Right Column: Game Settings */}
           <View style={styles.column}>
-            <View style={styles.sectionHeaderRow}>
-              <Text style={[styles.sectionTitle, textInverseStyle]}>GAME SETTINGS</Text>
-              {gameActive && (
-                <Text style={[styles.helperText, textMutedStyle]}>* Some locked during game</Text>
-              )}
-            </View>
+            <Text style={[styles.sectionTitle, textInverseStyle]}>GAME SETTINGS</Text>
 
             <View style={styles.inputsGrid}>
               <View style={styles.inputGroup}>
@@ -532,6 +548,18 @@ const styles = StyleSheet.create({
   buttonDisabled: {
     opacity: 0.5,
   },
+  newTeamButton: {
+    height: 48,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  newTeamButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
   editRosterButton: {
     height: 48,
     paddingHorizontal: 12,
@@ -617,5 +645,20 @@ const styles = StyleSheet.create({
   helpButton: {
     padding: 4,
     borderRadius: 12,
+  },
+  activeGameBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    marginBottom: 20,
+  },
+  activeGameBannerText: {
+    fontSize: 13,
+    fontWeight: '600',
+    flex: 1,
   },
 });

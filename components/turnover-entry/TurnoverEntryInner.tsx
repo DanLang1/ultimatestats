@@ -16,6 +16,7 @@ export interface TurnoverEntryInnerProps {
   onAddPlayer: (name: string) => void;
   isMyTeamTurnover: boolean;
   isOpponentTurnover: boolean;
+  preselectedType?: TurnoverType;
 }
 
 export function TurnoverEntryInner({
@@ -26,11 +27,13 @@ export function TurnoverEntryInner({
   onAddPlayer,
   isMyTeamTurnover,
   isOpponentTurnover,
+  preselectedType,
 }: TurnoverEntryInnerProps) {
-  // For opponent turnovers, skip directly to player selection with 'block' pre-selected
-  const [step, setStep] = useState<EntryStep>(isOpponentTurnover ? 'player' : 'type');
+  // For opponent turnovers or preselected types, skip directly to player selection
+  const shouldStartAtPlayer = isOpponentTurnover || !!preselectedType;
+  const [step, setStep] = useState<EntryStep>(shouldStartAtPlayer ? 'player' : 'type');
   const [selectedType, setSelectedType] = useState<TurnoverType | null>(
-    isOpponentTurnover ? 'block' : null,
+    preselectedType ?? (isOpponentTurnover ? 'block' : null),
   );
   const [newPlayerName, setNewPlayerName] = useState('');
   // For 50/50: track first selected player (thrower)

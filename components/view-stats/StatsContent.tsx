@@ -14,6 +14,7 @@ interface StatsContentProps {
   turnoverRecords: TurnoverRecord[];
   onExport: () => void;
   isSavedGame?: boolean;
+  aggregateInfo?: { teamName: string; gameCount: number };
 }
 
 export default function StatsContent({
@@ -24,6 +25,7 @@ export default function StatsContent({
   turnoverRecords,
   onExport,
   isSavedGame,
+  aggregateInfo,
 }: StatsContentProps) {
   const { palette } = useTheme();
   const playerStats = computePlayerStats(statRecords, turnoverRecords, 'team1');
@@ -45,7 +47,17 @@ export default function StatsContent({
             <Text style={[styles.summaryTeamName, { color: palette.textInverse }]}>
               {team1Name}
             </Text>
-            {team1Score !== undefined && team2Score !== undefined ? (
+            {aggregateInfo ? (
+              <View
+                style={[
+                  styles.summaryBadge,
+                  { backgroundColor: palette.indigoOverlay20, borderColor: palette.accent },
+                ]}>
+                <Text style={[styles.summaryBadgeText, { color: palette.accent }]}>
+                  {aggregateInfo.gameCount} Game{aggregateInfo.gameCount !== 1 ? 's' : ''} Combined
+                </Text>
+              </View>
+            ) : team1Score !== undefined && team2Score !== undefined ? (
               <View
                 style={[
                   styles.scoreBadge,

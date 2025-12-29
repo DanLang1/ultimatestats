@@ -1,11 +1,12 @@
 import { TurnoverEntryInner } from '@/components/turnover-entry/TurnoverEntryInner';
 import { useTheme } from '@/context/ThemeContext';
 import { TurnoverType, useGameStore } from '@/store/gameStore';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 export default function TurnoverEntryScreen() {
+  const { type: preselectedType } = useLocalSearchParams<{ type?: TurnoverType }>();
   const {
     pendingTurnoverEntry,
     possession,
@@ -65,7 +66,7 @@ export default function TurnoverEntryScreen() {
         style={[styles.overlay, { backgroundColor: palette.overlayDark40 }]}
         onPress={handleSkip}>
         <TurnoverEntryInner
-          key={`turnover-${possession}`}
+          key={`turnover-${possession}-${preselectedType}`}
           teamName={displayTeamName}
           roster={displayRoster}
           onSkip={handleSkip}
@@ -73,6 +74,7 @@ export default function TurnoverEntryScreen() {
           onAddPlayer={handleAddPlayer}
           isMyTeamTurnover={isMyTeamTurnover}
           isOpponentTurnover={isOpponentTurnover}
+          preselectedType={preselectedType}
         />
       </Pressable>
     </View>

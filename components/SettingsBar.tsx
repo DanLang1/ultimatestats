@@ -16,14 +16,13 @@ interface SettingsBarProps {
 export default function SettingsBar({ onUndo, onSettingsPress }: SettingsBarProps) {
   const { timeLeft, isActive, toggleTimer } = useGameTimer();
   const { isSoftCap, softCapPending, actionHistory, statTrackingEnabled } = useGameStore();
-  const { palette, themeMode } = useTheme();
+  const { palette } = useTheme();
 
   const canUndo = (actionHistory?.length ?? 0) > 0;
 
-  // In Light Mode, we want a dark bar for contrast (surface=Navy, textPrimary=White).
-  // In Dark Mode, we want the distinct Indigo bar (secondary=Indigo, textInverse=White).
-  const barBg = themeMode === 'light' ? palette.surface : palette.secondary;
-  const barContentColor = themeMode === 'light' ? palette.textPrimary : palette.textInverse;
+  // Match the floating action bar's glassmorphic background
+  const barBg = palette.glassBg;
+  const barContentColor = palette.textInverse;
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -90,7 +89,14 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 20,
     alignItems: 'center',
     justifyContent: 'space-between',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
     shadowRadius: 3.84,
+    elevation: 5,
     flexDirection: 'row',
     paddingHorizontal: 20,
     paddingVertical: 10,

@@ -1,6 +1,6 @@
 import { useTheme } from '@/context/ThemeContext';
 import React, { createContext, useContext, useState } from 'react';
-import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Modal, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 interface AlertButton {
   text: string;
@@ -12,6 +12,12 @@ interface AlertOptions {
   title: string;
   message?: string;
   buttons?: AlertButton[];
+  // For prompt mode
+  prompt?: {
+    placeholder?: string;
+    defaultValue?: string;
+    onSubmit: (value: string) => void;
+  };
 }
 
 interface AlertContextType {
@@ -31,10 +37,12 @@ export function useAlert() {
 export function AlertProvider({ children }: { children: React.ReactNode }) {
   const [visible, setVisible] = useState(false);
   const [options, setOptions] = useState<AlertOptions | null>(null);
+  const [inputValue, setInputValue] = useState('');
   const { palette } = useTheme();
 
   const showAlert = (alertOptions: AlertOptions) => {
     setOptions(alertOptions);
+    setInputValue(alertOptions.prompt?.defaultValue || '');
     setVisible(true);
   };
 
@@ -43,11 +51,17 @@ export function AlertProvider({ children }: { children: React.ReactNode }) {
     button.onPress?.();
   };
 
+  const handlePromptSubmit = () => {
+    setVisible(false);
+    options?.prompt?.onSubmit(inputValue);
+  };
+
   const handleDismiss = () => {
     setVisible(false);
   };
 
-  const buttons = options?.buttons ?? [{ text: 'OK', style: 'default' }];
+  const buttons =
+    options?.buttons ?? (options?.prompt ? [] : [{ text: 'OK', style: 'default' as const }]);
 
   return (
     <AlertContext.Provider value={{ showAlert }}>
@@ -63,28 +77,70 @@ export function AlertProvider({ children }: { children: React.ReactNode }) {
             {options?.message && (
               <Text style={[styles.message, { color: palette.textMuted }]}>{options.message}</Text>
             )}
+            {options?.prompt && (
+              <TextInput
+                style={[
+                  styles.input,
+                  {
+                    color: palette.textInverse,
+                    borderColor: palette.overlay20,
+                    backgroundColor: palette.overlay05,
+                  },
+                ]}
+                value={inputValue}
+                onChangeText={setInputValue}
+                placeholder={options.prompt.placeholder}
+                placeholderTextColor={palette.textMuted}
+                autoFocus
+                selectTextOnFocus
+              />
+            )}
             <View style={styles.buttonContainer}>
-              {buttons.map((button, index) => (
-                <Pressable
-                  key={index}
-                  style={({ pressed }) => [
-                    styles.button,
-                    button.style === 'cancel' && [
-                      styles.cancelButton,
+              {options?.prompt ? (
+                <>
+                  <Pressable
+                    style={({ pressed }) => [
+                      styles.button,
                       { backgroundColor: palette.overlay10, borderColor: palette.overlay20 },
-                    ],
-                    button.style === 'destructive' && { backgroundColor: palette.danger },
-                    button.style === 'success' && { backgroundColor: palette.success },
-                    button.style === 'default' && { backgroundColor: palette.accent },
-                    !button.style && { backgroundColor: palette.accent },
-                    pressed && styles.buttonPressed,
-                  ]}
-                  onPress={() => handleButtonPress(button)}>
-                  <Text style={[styles.buttonText, { color: palette.textInverse }]}>
-                    {button.text}
-                  </Text>
-                </Pressable>
-              ))}
+                      styles.cancelButton,
+                      pressed && styles.buttonPressed,
+                    ]}
+                    onPress={handleDismiss}>
+                    <Text style={[styles.buttonText, { color: palette.textInverse }]}>Cancel</Text>
+                  </Pressable>
+                  <Pressable
+                    style={({ pressed }) => [
+                      styles.button,
+                      { backgroundColor: palette.accent },
+                      pressed && styles.buttonPressed,
+                    ]}
+                    onPress={handlePromptSubmit}>
+                    <Text style={[styles.buttonText, { color: palette.textInverse }]}>Export</Text>
+                  </Pressable>
+                </>
+              ) : (
+                buttons.map((button, index) => (
+                  <Pressable
+                    key={index}
+                    style={({ pressed }) => [
+                      styles.button,
+                      button.style === 'cancel' && [
+                        styles.cancelButton,
+                        { backgroundColor: palette.overlay10, borderColor: palette.overlay20 },
+                      ],
+                      button.style === 'destructive' && { backgroundColor: palette.danger },
+                      button.style === 'success' && { backgroundColor: palette.success },
+                      button.style === 'default' && { backgroundColor: palette.accent },
+                      !button.style && { backgroundColor: palette.accent },
+                      pressed && styles.buttonPressed,
+                    ]}
+                    onPress={() => handleButtonPress(button)}>
+                    <Text style={[styles.buttonText, { color: palette.textInverse }]}>
+                      {button.text}
+                    </Text>
+                  </Pressable>
+                ))
+              )}
             </View>
           </View>
         </View>
@@ -119,6 +175,14 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 20,
     lineHeight: 20,
+  },
+  input: {
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontSize: 16,
+    marginBottom: 20,
   },
   buttonContainer: {
     flexDirection: 'row',

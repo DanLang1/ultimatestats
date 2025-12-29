@@ -1,3 +1,4 @@
+import { ActionBarAction, ScoreboardActionBar } from '@/components/ScoreboardActionBar';
 import SettingsBar from '@/components/SettingsBar';
 import TeamScoreSection from '@/components/TeamScoreSection';
 import { ThemedView } from '@/components/ThemedView';
@@ -5,7 +6,7 @@ import StatsTrackingTutorial from '@/components/tutorial/StatsTrackingTutorial';
 import TutorialOverlay from '@/components/tutorial/TutorialOverlay';
 import { usePullPromptNavigation } from '@/hooks/usePullPromptNavigation';
 import { getContrastingTextColor } from '@/lib/colorUtils';
-import { useGameStore } from '@/store/gameStore';
+import { TurnoverType, useGameStore } from '@/store/gameStore';
 import { router } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 
@@ -30,6 +31,7 @@ export default function BasicScoreboard() {
     statTrackingEnabled,
     possession,
     triggerTurnover,
+    addTurnoverRecord,
   } = useGameStore();
 
   const openSettings = () => {
@@ -87,12 +89,30 @@ export default function BasicScoreboard() {
       router.push('/StatEntryModal');
     }
   };
-
-  const handleTurnover = () => {
+  const handleActionBarAction = (action: ActionBarAction) => {
     triggerTurnover();
-    if (statTrackingEnabled) {
-      router.push('/TurnoverEntryModal');
+
+    if (action.type === 'oppBlock') {
+      // Opponent blocked us - no player selection needed
+      addTurnoverRecord({ team: 'team2', type: 'block', player: null });
+      return;
     }
+
+    if (action.type === 'turn') {
+      // Opponent turned it over - no player selection needed
+      addTurnoverRecord({ team: 'team2', type: 'throwaway', player: null });
+      return;
+    }
+
+    // For other actions, open the modal with preselected type
+    const typeMap: Record<string, TurnoverType> = {
+      drop: 'drop',
+      throwaway: 'throwaway',
+      block: 'block',
+      fiftyfifty: 'fiftyfifty',
+    };
+
+    router.push({ pathname: '/TurnoverEntryModal', params: { type: typeMap[action.type] } });
   };
 
   return (
@@ -107,7 +127,6 @@ export default function BasicScoreboard() {
         timeouts={team1Combined}
         onTimeoutUse={(index) => toggleTimeout(true, index)}
         hasPossession={possessionTrackingEnabled ? possession === 'team1' : undefined}
-        onTurnover={possessionTrackingEnabled ? handleTurnover : undefined}
       />
 
       {/* Timer Bar Overlay */}
@@ -125,8 +144,12 @@ export default function BasicScoreboard() {
         timeouts={team2Combined}
         onTimeoutUse={(index) => toggleTimeout(false, index)}
         hasPossession={possessionTrackingEnabled ? possession === 'team2' : undefined}
-        onTurnover={possessionTrackingEnabled ? handleTurnover : undefined}
       />
+
+      {/* Action Bar for stat tracking */}
+      {statTrackingEnabled && (
+        <ScoreboardActionBar possession={possession} onAction={handleActionBarAction} />
+      )}
 
       {/* Tutorial Overlay - shows on first launch or when triggered */}
       <TutorialOverlay />

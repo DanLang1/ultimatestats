@@ -171,6 +171,8 @@ export const darkPalette = {
   modalBg: '#0F172A', // Navy - same as primary
   modalText: '#FFFFFF', // White text on navy
   overlayModal: 'rgba(0,0,0,0.6)', // Darker backdrop for dark theme
+  // Glass/floating bar backgrounds
+  glassBg: 'rgba(15, 23, 42, 0.92)', // Dark slate with transparency
 };
 
 /**
@@ -242,6 +244,9 @@ export const lightPalette = {
 
   // Contrast labels
   textOnAccent: '#FFFFFF',
+
+  // Glass/floating bar backgrounds
+  glassBg: 'rgba(255, 255, 255, 0.95)', // White with transparency
 } as const;
 
 // Default palette export (for backwards compatibility during migration)
@@ -255,6 +260,7 @@ export type Palette = {
   modalText: string;
   overlayModal: string;
   textOnAccent: string;
+  glassBg: string;
 };
 
 // =============================================================================

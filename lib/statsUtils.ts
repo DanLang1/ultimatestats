@@ -1,3 +1,4 @@
+import { SavedGame } from '@/lib/storage';
 import { StatRecord, TurnoverRecord } from '@/store/gameStore';
 
 export interface PlayerStats {
@@ -98,38 +99,104 @@ export function generateCSV(
   playerStats: PlayerStats[],
   team1Name: string,
   team2Name: string,
+  gamesList?: SavedGame[],
 ): string {
-  // Section 1: Play-by-play
+  // --- AGGREGATED EXPORT ---
+  if (gamesList) {
+    let csv = `# Aggregated Stats: ${team1Name} (${gamesList.length} games)\n`;
+
+    // Section 1: Combined Player Summary
+    csv += '\n# Combined Player Summary\n';
+    csv += playerSummaryCSV(playerStats);
+
+    // Section 2: Game Log
+    csv += '\n\n# Game Log\n';
+    csv += 'Date,Opponent,Result,Score,Our Score,Their Score\n';
+    csv += gamesList
+      .sort((a, b) => b.createdAt - a.createdAt)
+      .map((g) => {
+        const date = formatDateForCSV(g.createdAt);
+        const win = g.team1Score > g.team2Score;
+        const result = win ? 'Win' : 'Loss';
+        return `${date},${g.team2Name},${result},${g.team1Score}-${g.team2Score},${g.team1Score},${g.team2Score}`;
+      })
+      .join('\n');
+
+    // Section 3: Individual Games (with full details)
+    csv += '\n\n# Individual Game Details';
+    for (const game of gamesList) {
+      csv += `\n\nGame: vs ${game.team2Name} - ${formatDateForCSV(game.createdAt)}`;
+
+      // Player stats for this game
+      const gameStats = computePlayerStats(
+        game.statRecords as StatRecord[],
+        game.turnoverRecords as TurnoverRecord[],
+        'team1',
+      );
+      csv += '\n\n# Player Summary\n';
+      csv += playerSummaryCSV(gameStats);
+
+      // Play-by-play for this game
+      csv += '\n\n# Play-by-Play\n';
+      csv += playByPlayCSV(game.statRecords as StatRecord[], game.team1Name, game.team2Name);
+
+      // Turnovers for this game
+      csv += '\n\n# Turnovers\n';
+      csv += turnoversCSV(game.turnoverRecords as TurnoverRecord[], game.team1Name, game.team2Name);
+    }
+
+    return csv;
+  }
+
+  // --- SINGLE GAME EXPORT ---
   let csv = '# Play-by-Play\n';
-  csv += 'Point Number,Team,Goal,Assist\n';
-  csv += statRecords
-    .map((r) => {
-      const teamName = r.team === 'team1' ? team1Name : team2Name;
-      return `${r.pointNumber},${teamName},${r.goal || ''},${r.assist || ''}`;
-    })
-    .join('\n');
+  csv += playByPlayCSV(statRecords, team1Name, team2Name);
 
-  // Section 2: Turnovers
   csv += '\n\n# Turnovers\n';
-  csv += 'Team,Type,Player,Player2\n';
-  csv += turnoverRecords
-    .map((r) => {
-      const teamName = r.team === 'team1' ? team1Name : team2Name;
-      return `${teamName},${r.type},${r.player || ''},${r.player2 || ''}`;
-    })
-    .join('\n');
+  csv += turnoversCSV(turnoverRecords, team1Name, team2Name);
 
-  // Section 3: Player Summary
   csv += '\n\n# Player Summary\n';
-  csv += 'Player,Goals,Assists,Blocks,Throwaways,Drops,Plus/Minus\n';
-  csv += playerStats
-    .map(
-      (p) =>
-        `${p.name},${p.goals},${p.assists},${p.blocks},${p.throwaways},${p.drops},${p.plusMinus}`,
-    )
-    .join('\n');
+  csv += playerSummaryCSV(playerStats);
 
   return csv;
+}
+
+// --- CSV Helper Functions ---
+
+function playerSummaryCSV(stats: PlayerStats[]): string {
+  return (
+    'Player,Goals,Assists,Blocks,Throwaways,Drops,Plus/Minus\n' +
+    stats
+      .map(
+        (p) =>
+          `${p.name},${p.goals},${p.assists},${p.blocks},${p.throwaways},${p.drops},${p.plusMinus}`,
+      )
+      .join('\n')
+  );
+}
+
+function playByPlayCSV(records: StatRecord[], team1Name: string, team2Name: string): string {
+  return (
+    'Point Number,Team,Goal,Assist\n' +
+    records
+      .map((r) => {
+        const teamName = r.team === 'team1' ? team1Name : team2Name;
+        return `${r.pointNumber},${teamName},${r.goal || ''},${r.assist || ''}`;
+      })
+      .join('\n')
+  );
+}
+
+function turnoversCSV(records: TurnoverRecord[], team1Name: string, team2Name: string): string {
+  return (
+    'Team,Type,Player,Player2\n' +
+    records
+      .map((r) => {
+        const teamName = r.team === 'team1' ? team1Name : team2Name;
+        return `${teamName},${r.type},${r.player || ''},${r.player2 || ''}`;
+      })
+      .join('\n')
+  );
 }
 
 export function formatDate(timestamp: number): string {
@@ -141,4 +208,24 @@ export function formatDate(timestamp: number): string {
     hour: 'numeric',
     minute: '2-digit',
   });
+}
+
+// CSV-safe date format (no commas or special chars)
+function formatDateForCSV(timestamp: number): string {
+  const date = new Date(timestamp);
+  const months = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ];
+  return `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`;
 }

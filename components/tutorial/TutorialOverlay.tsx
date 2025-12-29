@@ -75,7 +75,7 @@ export default function TutorialOverlay() {
             entering={FadeIn.duration(300)}
             style={[
               styles.container,
-              { backgroundColor: palette.surface, borderColor: palette.overlay20 },
+              { backgroundColor: palette.modalBg, borderColor: palette.overlay20 },
             ]}>
             {/* Skip button */}
             <Pressable onPress={handleClose} style={styles.skipButton}>
@@ -126,7 +126,7 @@ export default function TutorialOverlay() {
                   { backgroundColor: palette.accent },
                   isFirstStep && styles.nextButtonFull,
                 ]}>
-                <Text style={[styles.nextButtonText, { color: palette.textInverse }]}>
+                <Text style={[styles.nextButtonText, { color: palette.textOnAccent }]}>
                   {isLastStep ? 'Get Started' : 'Next'}
                 </Text>
               </Pressable>

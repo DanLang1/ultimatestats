@@ -3,7 +3,7 @@ import TeamText from '@/components/TeamText';
 import { ThemedView } from '@/components/ThemedView';
 import { useHaptics } from '@/hooks/useHaptics';
 import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 interface TeamScoreSectionProps {
   teamName: string;
@@ -39,29 +39,20 @@ export default function TeamScoreSection({
   //   - If this team does NOT have possession: tap = turnover (flip possession)
   // If possession tracking is disabled (hasPossession is undefined): tap = score (original behavior)
   const handleTap = () => {
-    console.log('handleTap called', { hasPossession, teamName, onTurnover: !!onTurnover });
     if (hasPossession === undefined) {
       // Possession tracking disabled - original behavior
-      console.log('branch: possession tracking disabled');
       triggerScoreHaptic();
       onIncrement();
     } else if (hasPossession) {
       // This team has the disc - they scored
-      console.log('branch: has possession - scoring');
       triggerScoreHaptic();
       onIncrement();
     } else if (onTurnover) {
       // This team doesn't have the disc - turnover
-      console.log('branch: no possession - turnover');
       triggerTurnoverHaptic();
       onTurnover();
-    } else {
-      console.log('branch: fell through - no action');
     }
   };
-
-  // Possession tracking is active when hasPossession is defined (not undefined)
-  const possessionTrackingActive = hasPossession !== undefined;
 
   return (
     <ThemedView style={[styles.container, { backgroundColor }]}>
@@ -96,11 +87,6 @@ export default function TeamScoreSection({
         <TeamText color={textColor} teamName={teamName} hasPossession={hasPossession} />
         <ScoreDisplay bgColor={backgroundColor} textColor={textColor} score={score} />
       </Pressable>
-
-      {/* Turnover hint - positioned at bottom, shown when this team does NOT have possession */}
-      {possessionTrackingActive && !hasPossession && (
-        <Text style={[styles.turnoverHint, { color: textColor }]}>Tap for turnover</Text>
-      )}
     </ThemedView>
   );
 }
@@ -133,14 +119,5 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'flex-start',
     paddingTop: 10,
-  },
-  turnoverHint: {
-    position: 'absolute',
-    bottom: 30,
-    alignSelf: 'center',
-    fontSize: 12,
-    fontWeight: '500',
-    fontStyle: 'italic',
-    opacity: 0.4,
   },
 });
