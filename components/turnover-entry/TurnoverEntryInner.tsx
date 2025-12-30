@@ -1,6 +1,6 @@
 import { AnimatedThemedView } from '@/components/ThemedView';
 import { useTheme } from '@/context/ThemeContext';
-import { TurnoverType } from '@/store/gameStore';
+import { TurnoverType } from '@/store/gameStore.types';
 import React, { useState } from 'react';
 import { Keyboard, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import Animated, { FadeIn, LinearTransition, SlideInDown } from 'react-native-reanimated';

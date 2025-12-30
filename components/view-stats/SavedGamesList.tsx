@@ -1,4 +1,5 @@
 import { useAlert } from '@/components/ui/AlertProvider';
+import { ScoreBadge } from '@/components/ui/ScoreBadge';
 import { useTheme } from '@/context/ThemeContext';
 import { formatDate } from '@/lib/statsUtils';
 import { SavedGame } from '@/lib/storage';
@@ -65,11 +66,7 @@ export default function SavedGamesList({ games, onSelectGame, onDeleteGame }: Sa
                 numberOfLines={1}>
                 {game.team1Name}
               </Text>
-              <View style={[styles.savedGameScore, { backgroundColor: palette.overlay10 }]}>
-                <Text style={[styles.savedGameScoreText, { color: palette.textInverse }]}>
-                  {game.team1Score} - {game.team2Score}
-                </Text>
-              </View>
+              <ScoreBadge score1={game.team1Score} score2={game.team2Score} />
               <Text
                 style={[
                   styles.savedGameTeamName,
@@ -83,7 +80,8 @@ export default function SavedGamesList({ games, onSelectGame, onDeleteGame }: Sa
             <View style={[styles.savedGameMeta, { borderTopColor: palette.overlay08 }]}>
               <MaterialCommunityIcons name="account-multiple" size={14} color={palette.textMuted} />
               <Text style={[styles.savedGameMetaText, { color: palette.textMuted }]}>
-                {game.statRecords.length} point{game.statRecords.length !== 1 ? 's' : ''} tracked
+                {game.events.filter((e) => e.type === 'goal').length} point
+                {game.events.filter((e) => e.type === 'goal').length !== 1 ? 's' : ''} tracked
               </Text>
             </View>
           </Pressable>
@@ -140,15 +138,6 @@ const styles = StyleSheet.create({
   },
   savedGameTeamRight: {
     textAlign: 'right',
-  },
-  savedGameScore: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
-  },
-  savedGameScoreText: {
-    fontSize: 16,
-    fontWeight: '800',
   },
   savedGameMeta: {
     flexDirection: 'row',

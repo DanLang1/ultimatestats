@@ -6,7 +6,8 @@ import StatsTrackingTutorial from '@/components/tutorial/StatsTrackingTutorial';
 import TutorialOverlay from '@/components/tutorial/TutorialOverlay';
 import { usePullPromptNavigation } from '@/hooks/usePullPromptNavigation';
 import { getContrastingTextColor } from '@/lib/colorUtils';
-import { TurnoverType, useGameStore } from '@/store/gameStore';
+import { useGameStore } from '@/store/gameStore';
+import { TurnoverType } from '@/store/gameStore.types';
 import { router } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 
@@ -23,7 +24,6 @@ export default function BasicScoreboard() {
     team1Floater,
     team2Floater,
     floaterEnabled,
-    gameTo,
     incrementScore,
     toggleTimeout,
     undoLastAction,
@@ -31,7 +31,7 @@ export default function BasicScoreboard() {
     statTrackingEnabled,
     possession,
     triggerTurnover,
-    addTurnoverRecord,
+    addTurnoverEvent,
   } = useGameStore();
 
   const openSettings = () => {
@@ -74,19 +74,24 @@ export default function BasicScoreboard() {
   // Show PullPrompt modal when stat tracking enabled and no possession set
   usePullPromptNavigation();
 
+  // Show PullPrompt modal when stat tracking enabled and no possession set
+  usePullPromptNavigation();
+
   const handleIncrement = (isTeam1: boolean) => {
     incrementScore(isTeam1);
-
-    // Check if this score wins the game
-    const newScore = isTeam1 ? team1Score + 1 : team2Score + 1;
-    if (newScore >= gameTo) {
-      router.push('/WinModal');
-      return;
-    }
 
     // Only open stat entry for team1 (my team) goals
     if (statTrackingEnabled && isTeam1) {
       router.push('/StatEntryModal');
+      return;
+    }
+
+    // If no stat entry needed, check if game ended
+    const state = useGameStore.getState();
+    const isGameOver = state.team1Score >= state.gameTo || state.team2Score >= state.gameTo;
+
+    if (isGameOver) {
+      router.push('/WinModal');
     }
   };
   const handleActionBarAction = (action: ActionBarAction) => {
@@ -94,13 +99,13 @@ export default function BasicScoreboard() {
 
     if (action.type === 'oppBlock') {
       // Opponent blocked us - no player selection needed
-      addTurnoverRecord({ team: 'team2', type: 'block', player: null });
+      addTurnoverEvent({ team: 'team2', subtype: 'block', player: null });
       return;
     }
 
     if (action.type === 'turn') {
       // Opponent turned it over - no player selection needed
-      addTurnoverRecord({ team: 'team2', type: 'throwaway', player: null });
+      addTurnoverEvent({ team: 'team2', subtype: 'throwaway', player: null });
       return;
     }
 

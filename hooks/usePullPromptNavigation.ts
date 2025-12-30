@@ -11,10 +11,12 @@ export function usePullPromptNavigation() {
   const { statTrackingEnabled, possession } = useGameStore();
   const pathname = usePathname();
 
+  // DERIVED LOGIC: Calculate if we should show the prompt
+  const shouldShowPullPrompt = pathname === '/' && statTrackingEnabled && possession === null;
+
   useEffect(() => {
-    // Only show the pull prompt when on the main scoreboard page
-    if (pathname === '/' && statTrackingEnabled && possession === null) {
-      router.push('/PullPromptModal');
-    }
-  }, [statTrackingEnabled, possession, pathname]);
+    if (!shouldShowPullPrompt) return;
+
+    router.push('/PullPromptModal');
+  }, [shouldShowPullPrompt]);
 }

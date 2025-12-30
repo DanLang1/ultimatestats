@@ -5,7 +5,7 @@ import { Modal, Pressable, StyleSheet } from 'react-native';
 import { StatEntryInner } from './stat-entry/StatEntryInner';
 
 export default function StatEntrySheet() {
-  const { pendingStatEntry, team1Name, team2Name, team1Roster, addPlayer, addStatRecord } =
+  const { pendingStatEntry, team1Name, team2Name, team1Roster, addPlayer, addGoalEvent } =
     useGameStore();
   const { palette } = useTheme();
 
@@ -14,7 +14,7 @@ export default function StatEntrySheet() {
   const roster = team1Roster;
 
   const handleSkip = () => {
-    addStatRecord({
+    addGoalEvent({
       team: pendingStatEntry?.team ?? 'team1',
       goal: null,
       assist: null,
@@ -22,7 +22,7 @@ export default function StatEntrySheet() {
   };
 
   const handleComplete = (goal: string | null, assist: string | null) => {
-    addStatRecord({
+    addGoalEvent({
       team: pendingStatEntry?.team ?? 'team1',
       goal,
       assist,

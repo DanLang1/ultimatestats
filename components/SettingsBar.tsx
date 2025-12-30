@@ -15,10 +15,10 @@ interface SettingsBarProps {
 
 export default function SettingsBar({ onUndo, onSettingsPress }: SettingsBarProps) {
   const { timeLeft, isActive, toggleTimer } = useGameTimer();
-  const { isSoftCap, softCapPending, actionHistory, statTrackingEnabled } = useGameStore();
+  const { isSoftCap, softCapPending, events, statTrackingEnabled } = useGameStore();
   const { palette } = useTheme();
 
-  const canUndo = (actionHistory?.length ?? 0) > 0;
+  const canUndo = (events?.length ?? 0) > 0;
 
   // Match the floating action bar's glassmorphic background
   const barBg = palette.glassBg;

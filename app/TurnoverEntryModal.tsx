@@ -1,6 +1,7 @@
 import { TurnoverEntryInner } from '@/components/turnover-entry/TurnoverEntryInner';
 import { useTheme } from '@/context/ThemeContext';
-import { TurnoverType, useGameStore } from '@/store/gameStore';
+import { useGameStore } from '@/store/gameStore';
+import { TurnoverType } from '@/store/gameStore.types';
 import { router, useLocalSearchParams } from 'expo-router';
 import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
@@ -15,7 +16,7 @@ export default function TurnoverEntryScreen() {
     team2Name,
     team1Roster,
     addPlayer,
-    addTurnoverRecord,
+    addTurnoverEvent,
     clearPendingTurnoverEntry,
   } = useGameStore();
   const { palette } = useTheme();
@@ -46,9 +47,9 @@ export default function TurnoverEntryScreen() {
     const team =
       type === 'block' ? (possession === 'team1' ? 'team2' : 'team1') : (possession ?? 'team1');
 
-    addTurnoverRecord({
+    addTurnoverEvent({
       team,
-      type,
+      subtype: type,
       player,
       player2,
     });

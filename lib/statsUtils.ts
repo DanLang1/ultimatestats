@@ -1,5 +1,4 @@
-import { SavedGame } from '@/lib/storage';
-import { StatRecord, TurnoverRecord } from '@/store/gameStore';
+import { GameEvent, SavedGame } from '@/lib/storage';
 
 export interface PlayerStats {
   name: string;
@@ -11,11 +10,7 @@ export interface PlayerStats {
   plusMinus: number;
 }
 
-export function computePlayerStats(
-  statRecords: StatRecord[],
-  turnoverRecords: TurnoverRecord[],
-  team: 'team1' | 'team2',
-): PlayerStats[] {
+export function computePlayerStats(events: GameEvent[], team: 'team1' | 'team2'): PlayerStats[] {
   const statsMap = new Map<string, PlayerStats>();
 
   const getOrCreate = (name: string): PlayerStats =>
@@ -29,57 +24,55 @@ export function computePlayerStats(
       plusMinus: 0,
     };
 
-  // Process stat records (goals/assists)
-  for (const record of statRecords) {
-    if (record.team !== team) continue;
+  for (const event of events) {
+    if (event.type === 'goal') {
+      if (event.team !== team) continue;
 
-    if (record.goal) {
-      const stats = getOrCreate(record.goal);
-      stats.goals++;
-      statsMap.set(record.goal, stats);
-    }
-
-    if (record.assist) {
-      const stats = getOrCreate(record.assist);
-      stats.assists++;
-      statsMap.set(record.assist, stats);
-    }
-  }
-
-  // Process turnover records (blocks/throwaways/drops/fiftyfifties)
-  for (const record of turnoverRecords) {
-    if (record.team !== team) continue;
-
-    // Handle fiftyfifty - player1 gets 0.5 throwaway, player2 gets 0.5 drop
-    if (record.type === 'fiftyfifty') {
-      if (record.player) {
-        const stats = getOrCreate(record.player);
-        stats.throwaways += 0.5; // Thrower gets half a throwaway
-        statsMap.set(record.player, stats);
+      if (event.goal) {
+        const stats = getOrCreate(event.goal);
+        stats.goals++;
+        statsMap.set(event.goal, stats);
       }
-      if (record.player2) {
-        const stats = getOrCreate(record.player2);
-        stats.drops += 0.5; // Receiver gets half a drop
-        statsMap.set(record.player2, stats);
+
+      if (event.assist) {
+        const stats = getOrCreate(event.assist);
+        stats.assists++;
+        statsMap.set(event.assist, stats);
       }
-      continue;
-    }
+    } else if (event.type === 'turnover') {
+      if (event.team !== team) continue;
 
-    if (!record.player) continue;
+      // Handle fiftyfifty - player1 gets 0.5 throwaway, player2 gets 0.5 drop
+      if (event.subtype === 'fiftyfifty') {
+        if (event.player) {
+          const stats = getOrCreate(event.player);
+          stats.throwaways += 0.5; // Thrower gets half a throwaway
+          statsMap.set(event.player, stats);
+        }
+        if (event.player2) {
+          const stats = getOrCreate(event.player2);
+          stats.drops += 0.5; // Receiver gets half a drop
+          statsMap.set(event.player2, stats);
+        }
+        continue;
+      }
 
-    const stats = getOrCreate(record.player);
-    switch (record.type) {
-      case 'block':
-        stats.blocks++;
-        break;
-      case 'throwaway':
-        stats.throwaways++;
-        break;
-      case 'drop':
-        stats.drops++;
-        break;
+      if (!event.player) continue;
+
+      const stats = getOrCreate(event.player);
+      switch (event.subtype) {
+        case 'block':
+          stats.blocks++;
+          break;
+        case 'throwaway':
+          stats.throwaways++;
+          break;
+        case 'drop':
+          stats.drops++;
+          break;
+      }
+      statsMap.set(event.player, stats);
     }
-    statsMap.set(record.player, stats);
   }
 
   // Calculate plusMinus for each player
@@ -94,8 +87,7 @@ export function computePlayerStats(
 }
 
 export function generateCSV(
-  statRecords: StatRecord[],
-  turnoverRecords: TurnoverRecord[],
+  events: GameEvent[],
   playerStats: PlayerStats[],
   team1Name: string,
   team2Name: string,
@@ -128,21 +120,17 @@ export function generateCSV(
       csv += `\n\nGame: vs ${game.team2Name} - ${formatDateForCSV(game.createdAt)}`;
 
       // Player stats for this game
-      const gameStats = computePlayerStats(
-        game.statRecords as StatRecord[],
-        game.turnoverRecords as TurnoverRecord[],
-        'team1',
-      );
+      const gameStats = computePlayerStats(game.events, 'team1');
       csv += '\n\n# Player Summary\n';
       csv += playerSummaryCSV(gameStats);
 
       // Play-by-play for this game
       csv += '\n\n# Play-by-Play\n';
-      csv += playByPlayCSV(game.statRecords as StatRecord[], game.team1Name, game.team2Name);
+      csv += playByPlayCSV(game.events, game.team1Name, game.team2Name);
 
       // Turnovers for this game
       csv += '\n\n# Turnovers\n';
-      csv += turnoversCSV(game.turnoverRecords as TurnoverRecord[], game.team1Name, game.team2Name);
+      csv += turnoversCSV(game.events, game.team1Name, game.team2Name);
     }
 
     return csv;
@@ -150,10 +138,10 @@ export function generateCSV(
 
   // --- SINGLE GAME EXPORT ---
   let csv = '# Play-by-Play\n';
-  csv += playByPlayCSV(statRecords, team1Name, team2Name);
+  csv += playByPlayCSV(events, team1Name, team2Name);
 
   csv += '\n\n# Turnovers\n';
-  csv += turnoversCSV(turnoverRecords, team1Name, team2Name);
+  csv += turnoversCSV(events, team1Name, team2Name);
 
   csv += '\n\n# Player Summary\n';
   csv += playerSummaryCSV(playerStats);
@@ -175,28 +163,32 @@ function playerSummaryCSV(stats: PlayerStats[]): string {
   );
 }
 
-function playByPlayCSV(records: StatRecord[], team1Name: string, team2Name: string): string {
-  return (
-    'Point Number,Team,Goal,Assist\n' +
-    records
-      .map((r) => {
-        const teamName = r.team === 'team1' ? team1Name : team2Name;
-        return `${r.pointNumber},${teamName},${r.goal || ''},${r.assist || ''}`;
-      })
-      .join('\n')
-  );
+function playByPlayCSV(events: GameEvent[], team1Name: string, team2Name: string): string {
+  let csv = 'Point Number,Team,Goal,Assist\n';
+  let pointNumber = 0;
+
+  for (const event of events) {
+    if (event.type === 'goal') {
+      pointNumber++;
+      const teamName = event.team === 'team1' ? team1Name : team2Name;
+      csv += `${pointNumber},${teamName},${event.goal || ''},${event.assist || ''}\n`;
+    }
+  }
+
+  return csv.trimEnd();
 }
 
-function turnoversCSV(records: TurnoverRecord[], team1Name: string, team2Name: string): string {
-  return (
-    'Team,Type,Player,Player2\n' +
-    records
-      .map((r) => {
-        const teamName = r.team === 'team1' ? team1Name : team2Name;
-        return `${teamName},${r.type},${r.player || ''},${r.player2 || ''}`;
-      })
-      .join('\n')
-  );
+function turnoversCSV(events: GameEvent[], team1Name: string, team2Name: string): string {
+  let csv = 'Team,Type,Player,Player2\n';
+
+  for (const event of events) {
+    if (event.type === 'turnover') {
+      const teamName = event.team === 'team1' ? team1Name : team2Name;
+      csv += `${teamName},${event.subtype},${event.player || ''},${event.player2 || ''}\n`;
+    }
+  }
+
+  return csv.trimEnd();
 }
 
 export function formatDate(timestamp: number): string {

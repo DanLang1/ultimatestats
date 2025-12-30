@@ -1,5 +1,6 @@
 import { useTheme } from '@/context/ThemeContext';
-import { TurnoverType, useGameStore } from '@/store/gameStore';
+import { useGameStore } from '@/store/gameStore';
+import { TurnoverType } from '@/store/gameStore.types';
 import React from 'react';
 import { Modal, Pressable, StyleSheet } from 'react-native';
 import { TurnoverEntryInner } from './turnover-entry/TurnoverEntryInner';
@@ -13,7 +14,7 @@ export default function TurnoverEntrySheet() {
     team2Name,
     team1Roster,
     addPlayer,
-    addTurnoverRecord,
+    addTurnoverEvent,
     clearPendingTurnoverEntry,
   } = useGameStore();
 
@@ -56,9 +57,9 @@ export default function TurnoverEntrySheet() {
           : 'team1' // Receiving team gets the block credit
         : (possession ?? 'team1'); // Team with error
 
-    addTurnoverRecord({
+    addTurnoverEvent({
       team,
-      type,
+      subtype: type,
       player,
       player2,
     });

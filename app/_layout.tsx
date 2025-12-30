@@ -62,6 +62,7 @@ function RootLayoutInner() {
               contentStyle: { backgroundColor: 'transparent' },
             }}
           />
+          <Stack.Screen name="GameTimeline" />
         </Stack>
 
         <StatusBar style={themeMode === 'dark' ? 'light' : 'dark'} hidden />

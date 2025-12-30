@@ -5,8 +5,8 @@ import SavedGamesList from '@/components/view-stats/SavedGamesList';
 import StatsContent from '@/components/view-stats/StatsContent';
 import { useTheme } from '@/context/ThemeContext';
 import { computePlayerStats, formatDate, generateCSV } from '@/lib/statsUtils';
-import { SavedGame } from '@/lib/storage';
-import { StatRecord, TurnoverRecord, useGameStore } from '@/store/gameStore';
+import { GameEvent, SavedGame } from '@/lib/storage';
+import { useGameStore } from '@/store/gameStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { File, Paths } from 'expo-file-system';
 import { router, Stack } from 'expo-router';
@@ -20,8 +20,9 @@ export default function ViewStatsScreen() {
   const {
     team1Name,
     team2Name,
-    statRecords,
-    turnoverRecords,
+    team1Score,
+    team2Score,
+    events,
     savedGames,
     loadSavedGames,
     deleteSavedGame,
@@ -49,27 +50,22 @@ export default function ViewStatsScreen() {
         team2Name: selectedGame.team2Name,
         team1Score: selectedGame.team1Score,
         team2Score: selectedGame.team2Score,
-        statRecords: selectedGame.statRecords as StatRecord[],
-        turnoverRecords: selectedGame.turnoverRecords as TurnoverRecord[],
+        events: selectedGame.events,
       }
     : {
         team1Name,
         team2Name,
-        statRecords,
-        turnoverRecords,
+        team1Score,
+        team2Score,
+        events,
       };
 
-  const playerStats = computePlayerStats(
-    displayData.statRecords,
-    displayData.turnoverRecords,
-    'team1',
-  );
+  const playerStats = computePlayerStats(displayData.events, 'team1');
 
   const handleExport = async () => {
     try {
       const csv = generateCSV(
-        displayData.statRecords,
-        displayData.turnoverRecords,
+        displayData.events,
         playerStats,
         displayData.team1Name,
         displayData.team2Name,
@@ -126,24 +122,20 @@ export default function ViewStatsScreen() {
   };
 
   // Compute aggregated data for selected games
-  // Compute aggregated data for selected games
   let aggregatedData: {
     teamName: string;
     gameCount: number;
-    statRecords: StatRecord[];
-    turnoverRecords: TurnoverRecord[];
+    events: GameEvent[];
     games: SavedGame[];
   } | null = null;
 
   if (selectedGameIds.size > 0) {
     const games = savedGames.filter((g) => selectedGameIds.has(g.id));
-    const mergedStatRecords = games.flatMap((g) => g.statRecords as StatRecord[]);
-    const mergedTurnoverRecords = games.flatMap((g) => g.turnoverRecords as TurnoverRecord[]);
+    const mergedEvents = games.flatMap((g) => g.events);
     aggregatedData = {
       teamName: selectedTeam || 'Combined',
       gameCount: games.length,
-      statRecords: mergedStatRecords,
-      turnoverRecords: mergedTurnoverRecords,
+      events: mergedEvents,
       games: games, // Pass the games list for CSV
     };
   }
@@ -214,30 +206,51 @@ export default function ViewStatsScreen() {
           <MaterialCommunityIcons name="arrow-left" size={24} color={palette.textInverse} />
         </Pressable>
         <Text style={[styles.headerTitle, { color: palette.textMuted }]}>{getHeaderTitle()}</Text>
-        {selectedGame ? (
-          <Pressable
-            onPress={handleBackToList}
-            style={[styles.backButton, { backgroundColor: palette.overlay10 }]}
-            hitSlop={12}>
-            <MaterialCommunityIcons name="close" size={24} color={palette.textInverse} />
-          </Pressable>
-        ) : showingAggregatedStats ? (
-          <Pressable
-            onPress={handleBackFromAggregated}
-            style={[styles.backButton, { backgroundColor: palette.overlay10 }]}
-            hitSlop={12}>
-            <MaterialCommunityIcons name="close" size={24} color={palette.textInverse} />
-          </Pressable>
-        ) : viewMode === 'aggregate' && selectedTeam ? (
-          <Pressable
-            onPress={handleBackToTeams}
-            style={[styles.backButton, { backgroundColor: palette.overlay10 }]}
-            hitSlop={12}>
-            <MaterialCommunityIcons name="close" size={24} color={palette.textInverse} />
-          </Pressable>
-        ) : (
-          <View style={styles.headerSpacer} />
-        )}
+        <View style={styles.headerRight}>
+          {/* Timeline button - show for current game or saved game */}
+          {(viewMode === 'current' || selectedGame) && (
+            <Pressable
+              onPress={() =>
+                router.push({
+                  pathname: '/GameTimeline',
+                  params: selectedGame ? { gameId: selectedGame.id } : {},
+                })
+              }
+              style={[styles.backButton, { backgroundColor: palette.overlay10 }]}
+              hitSlop={12}>
+              <MaterialCommunityIcons
+                name="chart-timeline-variant"
+                size={24}
+                color={palette.accent}
+              />
+            </Pressable>
+          )}
+          {/* Close buttons for various states */}
+          {selectedGame ? (
+            <Pressable
+              onPress={handleBackToList}
+              style={[styles.backButton, { backgroundColor: palette.overlay10 }]}
+              hitSlop={12}>
+              <MaterialCommunityIcons name="close" size={24} color={palette.textInverse} />
+            </Pressable>
+          ) : showingAggregatedStats ? (
+            <Pressable
+              onPress={handleBackFromAggregated}
+              style={[styles.backButton, { backgroundColor: palette.overlay10 }]}
+              hitSlop={12}>
+              <MaterialCommunityIcons name="close" size={24} color={palette.textInverse} />
+            </Pressable>
+          ) : viewMode === 'aggregate' && selectedTeam ? (
+            <Pressable
+              onPress={handleBackToTeams}
+              style={[styles.backButton, { backgroundColor: palette.overlay10 }]}
+              hitSlop={12}>
+              <MaterialCommunityIcons name="close" size={24} color={palette.textInverse} />
+            </Pressable>
+          ) : (
+            <View style={styles.headerSpacer} />
+          )}
+        </View>
       </View>
 
       {/* Tab Switcher */}
@@ -304,8 +317,7 @@ export default function ViewStatsScreen() {
             team2Name={displayData.team2Name}
             team1Score={'team1Score' in displayData ? displayData.team1Score : undefined}
             team2Score={'team2Score' in displayData ? displayData.team2Score : undefined}
-            statRecords={displayData.statRecords}
-            turnoverRecords={displayData.turnoverRecords}
+            events={displayData.events}
             onExport={handleExport}
             isSavedGame={!!selectedGame}
           />
@@ -314,8 +326,7 @@ export default function ViewStatsScreen() {
             <StatsContent
               team1Name={aggregatedData.teamName}
               team2Name=""
-              statRecords={aggregatedData.statRecords}
-              turnoverRecords={aggregatedData.turnoverRecords}
+              events={aggregatedData.events}
               onExport={handleExport}
               aggregateInfo={{
                 teamName: aggregatedData.teamName,
@@ -370,6 +381,11 @@ const styles = StyleSheet.create({
   },
   headerSpacer: {
     width: 40,
+  },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   tabContainer: {
     flexDirection: 'row',

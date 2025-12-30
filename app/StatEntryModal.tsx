@@ -6,7 +6,7 @@ import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 export default function StatEntryScreen() {
-  const { pendingStatEntry, team1Name, team2Name, team1Roster, addPlayer, addStatRecord } =
+  const { pendingStatEntry, team1Name, team2Name, team1Roster, addPlayer, addGoalEvent } =
     useGameStore();
   const { palette } = useTheme();
 
@@ -19,22 +19,42 @@ export default function StatEntryScreen() {
   const roster = team1Roster; // Only track team1 roster
 
   const handleComplete = (goal: string | null, assist: string | null) => {
-    addStatRecord({
+    addGoalEvent({
       team: pendingStatEntry.team,
       goal,
       assist,
     });
-    router.dismissTo('/');
+    router.dismiss();
+
+    // Check if game ended
+    const state = useGameStore.getState();
+    const isGameOver = state.team1Score >= state.gameTo || state.team2Score >= state.gameTo;
+
+    if (isGameOver) {
+      setTimeout(() => {
+        router.push('/WinModal');
+      }, 100);
+    }
   };
 
   const handleSkip = () => {
     // Record with null goal/assist
-    addStatRecord({
+    addGoalEvent({
       team: pendingStatEntry.team,
       goal: null,
       assist: null,
     });
-    router.dismissTo('/');
+    router.dismiss();
+
+    // Check if game ended
+    const state = useGameStore.getState();
+    const isGameOver = state.team1Score >= state.gameTo || state.team2Score >= state.gameTo;
+
+    if (isGameOver) {
+      setTimeout(() => {
+        router.push('/WinModal');
+      }, 100);
+    }
   };
 
   const handleAddPlayer = (name: string) => {

@@ -33,9 +33,9 @@ Scrollable table with the following columns:
 | D      | Drops committed (-1)                           |
 | +/-    | Plus/Minus (G + A + Blk - TO - D), color-coded |
 
-- Sorted by Plus/Minus descending, then by name.
-- Alternating row colors for readability.
+- sorted by Plus/Minus descending, then by name.
 - Plus/Minus is **green** for positive, **red** for negative.
+- Non-integer values (from 50/50 turnovers) are displayed with single decimal (e.g. 0.5).
 
 ### 3. Actions
 
@@ -44,27 +44,26 @@ Scrollable table with the following columns:
 
 ## CSV Export
 
-The exported file (`game_stats.csv`) contains three sections:
+The exported file (`[Game Date]_[Teams].csv`) contains several sections:
 
-### Section 1: Play-by-Play
+### Section 1: Summary
 
-```csv
-# Play-by-Play
-Point Number,Team,Goal,Assist
-1,Team Rocket,Alice,Bob
-2,Team Rocket,Charlie,Alice
-```
+General game information including teams, scores, and date.
 
-### Section 2: Turnovers
+### Section 2: Play-by-Play (Events)
+
+Unified chronological log of all recorded events:
 
 ```csv
-# Turnovers
-Team,Type,Player
-Team Rocket,throwaway,Dan
-Team Rocket,block,Alice
+Point,Team,Type,Subtype,Player 1,Player 2
+1,Team 1,goal,,Alice,Bob
+2,Team 1,turnover,throwaway,Charlie,
+3,Team 2,goal,,,
 ```
 
-### Section 3: Player Summary
+### Section 3: Player Stats Summary
+
+Aggregated statistics for your team:
 
 ```csv
 # Player Summary

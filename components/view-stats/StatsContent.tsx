@@ -1,6 +1,7 @@
+import { ScoreBadge } from '@/components/ui/ScoreBadge';
 import { useTheme } from '@/context/ThemeContext';
 import { computePlayerStats } from '@/lib/statsUtils';
-import { StatRecord, TurnoverRecord } from '@/store/gameStore';
+import { GameEvent } from '@/lib/storage';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
@@ -10,8 +11,7 @@ interface StatsContentProps {
   team2Name: string;
   team1Score?: number;
   team2Score?: number;
-  statRecords: StatRecord[];
-  turnoverRecords: TurnoverRecord[];
+  events: GameEvent[];
   onExport: () => void;
   isSavedGame?: boolean;
   aggregateInfo?: { teamName: string; gameCount: number };
@@ -21,15 +21,14 @@ export default function StatsContent({
   team1Name,
   team1Score,
   team2Score,
-  statRecords,
-  turnoverRecords,
+  events,
   onExport,
   isSavedGame,
   aggregateInfo,
 }: StatsContentProps) {
   const { palette } = useTheme();
-  const playerStats = computePlayerStats(statRecords, turnoverRecords, 'team1');
-  const teamRecords = statRecords.filter((r) => r.team === 'team1');
+  const playerStats = computePlayerStats(events, 'team1');
+  const goalCount = events.filter((e) => e.type === 'goal' && e.team === 'team1').length;
   const topPerformers = playerStats.filter((p) => p.plusMinus > 0).slice(0, 3);
 
   return (
@@ -58,15 +57,7 @@ export default function StatsContent({
                 </Text>
               </View>
             ) : team1Score !== undefined && team2Score !== undefined ? (
-              <View
-                style={[
-                  styles.scoreBadge,
-                  { backgroundColor: palette.successOverlay15, borderColor: palette.success },
-                ]}>
-                <Text style={[styles.scoreBadgeText, { color: palette.success }]}>
-                  {team1Score} - {team2Score}
-                </Text>
-              </View>
+              <ScoreBadge score1={team1Score} score2={team2Score} size="large" />
             ) : (
               <View
                 style={[
@@ -74,7 +65,7 @@ export default function StatsContent({
                   { backgroundColor: palette.indigoOverlay20, borderColor: palette.accent },
                 ]}>
                 <Text style={[styles.summaryBadgeText, { color: palette.accent }]}>
-                  {teamRecords.length} Point{teamRecords.length !== 1 ? 's' : ''}
+                  {goalCount} Point{goalCount !== 1 ? 's' : ''}
                 </Text>
               </View>
             )}
@@ -239,16 +230,6 @@ const styles = StyleSheet.create({
   summaryBadgeText: {
     fontSize: 12,
     fontWeight: '600',
-  },
-  scoreBadge: {
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 12,
-    borderWidth: 1,
-  },
-  scoreBadgeText: {
-    fontSize: 16,
-    fontWeight: '700',
   },
   topPerformersTitle: {
     fontSize: 10,

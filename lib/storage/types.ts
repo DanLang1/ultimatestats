@@ -1,5 +1,8 @@
 // Types for persistent storage - designed for easy migration to SQLite later
 
+import { GameEvent, TurnoverType } from '@/store/gameStore.types';
+export type { GameEvent, TurnoverType };
+
 export interface SavedGame {
   id: string;
   createdAt: number; // timestamp
@@ -8,18 +11,7 @@ export interface SavedGame {
   team1Score: number;
   team2Score: number;
   team1Roster: string[];
-  statRecords: {
-    pointNumber: number;
-    team: 'team1' | 'team2';
-    goal: string | null;
-    assist: string | null;
-  }[];
-  turnoverRecords: {
-    team: 'team1' | 'team2';
-    type: 'block' | 'throwaway' | 'drop' | 'fiftyfifty';
-    player: string | null;
-    player2?: string | null;
-  }[];
+  events: GameEvent[];
   gameTo: number;
   gameLength: number;
 }

@@ -88,10 +88,7 @@ export default function SettingsScreen() {
           text: 'New Game',
           style: 'success',
           onPress: () => {
-            router.back();
-            setImmediate(() => {
-              resetGame();
-            });
+            resetGame();
           },
         },
       ],

@@ -21,15 +21,24 @@ This feature integrates with the existing stat tracking setting—turnover track
 ## Data Model
 
 ```typescript
-// In store/gameStore.ts
+// In store/gameStore.types.ts
 
-type TurnoverType = 'block' | 'throwaway' | 'drop';
+export type TurnoverType = 'block' | 'throwaway' | 'drop' | 'fiftyfifty';
 
-interface TurnoverRecord {
-  team: 'team1' | 'team2'; // Team responsible for the action
-  type: TurnoverType;
-  player: string | null; // Player responsible (or null if unknown)
-}
+export type GameEvent =
+  | {
+      type: 'goal';
+      team: 'team1' | 'team2';
+      goal: string | null;
+      assist: string | null;
+    }
+  | {
+      type: 'turnover';
+      team: 'team1' | 'team2';
+      subtype: TurnoverType;
+      player: string | null;
+      player2?: string | null;
+    };
 ```
 
 ## State
@@ -37,7 +46,7 @@ interface TurnoverRecord {
 | Property               | Type                         | Description                         |
 | ---------------------- | ---------------------------- | ----------------------------------- |
 | `possession`           | `'team1' \| 'team2' \| null` | Which team currently has the disc   |
-| `turnoverRecords`      | `TurnoverRecord[]`           | All recorded turnovers for the game |
+| `events`               | `GameEvent[]`                | Unified chronological log of events |
 | `pendingTurnoverEntry` | `{ receivingTeam } \| null`  | Triggers turnover entry sheet       |
 
 ## Flow
@@ -76,7 +85,7 @@ sequenceDiagram
     User->>Sheet: Selects "Throwaway"
     Sheet->>User: "Who threw it away?"
     User->>Sheet: Selects player
-    Sheet->>Store: addTurnoverRecord()
+    Sheet->>Store: addTurnoverEvent()
     Store->>Store: Flip possession to Team 2
     Store->>Store: Clear pendingTurnoverEntry
 ```
@@ -180,7 +189,6 @@ No additional settings required.
 
 On "New Game":
 
-- `turnoverRecords` cleared
+- `events` array cleared
 - `pendingTurnoverEntry` cleared
 - `possession` reset to `null` (triggers pull prompt)
-- `statRecords` cleared (as before)

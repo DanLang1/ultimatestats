@@ -67,6 +67,9 @@ const midnightElectric = {
   // Success color overlays
   successOverlay15: 'rgba(16,185,129,0.25)', // success button bg
 
+  // Warning color overlays
+  warningOverlay15: 'rgba(245,158,11,0.15)', // warning badge bg
+
   // Indigo overlays (stats)
   indigoOverlay10: 'rgba(99,102,241,0.1)', // stat row bg
   indigoOverlay20: 'rgba(99,102,241,0.2)', // stat highlight bg
@@ -233,6 +236,9 @@ export const lightPalette = {
 
   // Success color overlays
   successOverlay15: 'rgba(5,150,105,0.15)', // success button bg
+
+  // Warning color overlays
+  warningOverlay15: 'rgba(217,119,6,0.15)', // warning badge bg
 
   // Indigo overlays (stats)
   indigoOverlay10: 'rgba(79,70,229,0.1)', // stat row bg

@@ -1,3 +1,4 @@
+import { ScoreBadge } from '@/components/ui/ScoreBadge';
 import { useTheme } from '@/context/ThemeContext';
 import { formatDate } from '@/lib/statsUtils';
 import { SavedGame } from '@/lib/storage';
@@ -36,14 +37,15 @@ export default function AggregateGamesList({
   // Group games by team1Name
   const groupMap = new Map<string, { gameCount: number; totalPoints: number }>();
   for (const game of games) {
+    const goalCount = game.events.filter((e) => e.type === 'goal').length;
     const existing = groupMap.get(game.team1Name);
     if (existing) {
       existing.gameCount++;
-      existing.totalPoints += game.statRecords.length;
+      existing.totalPoints += goalCount;
     } else {
       groupMap.set(game.team1Name, {
         gameCount: 1,
-        totalPoints: game.statRecords.length,
+        totalPoints: goalCount,
       });
     }
   }
@@ -118,11 +120,7 @@ export default function AggregateGamesList({
                     vs {game.team2Name}
                   </Text>
                   <View style={styles.gameDetails}>
-                    <View style={[styles.scoreBadge, { backgroundColor: palette.overlay10 }]}>
-                      <Text style={[styles.scoreText, { color: palette.textInverse }]}>
-                        {game.team1Score} - {game.team2Score}
-                      </Text>
-                    </View>
+                    <ScoreBadge score1={game.team1Score} score2={game.team2Score} size="small" />
                     <Text style={[styles.dateText, { color: palette.textMuted }]}>
                       {formatDate(game.createdAt)}
                     </Text>
@@ -266,15 +264,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-  },
-  scoreBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 6,
-  },
-  scoreText: {
-    fontSize: 13,
-    fontWeight: '700',
   },
   dateText: {
     fontSize: 12,

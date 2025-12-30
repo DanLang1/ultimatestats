@@ -9,33 +9,37 @@ The stat tracking system allows recording who scored goals and threw assists dur
 ## Data Model
 
 ```typescript
-// In store/gameStore.ts
+// In store/gameStore.types.ts
 
-interface StatRecord {
-  pointNumber: number; // Sequential point # for this team
-  team: 'team1' | 'team2';
-  goal: string | null; // Player name or null (unknown)
-  assist: string | null;
-}
+export type TurnoverType = 'block' | 'throwaway' | 'drop' | 'fiftyfifty';
 
-interface TurnoverRecord {
-  team: 'team1' | 'team2'; // Team responsible for the action
-  type: 'block' | 'throwaway' | 'drop';
-  player: string | null;
-}
+export type GameEvent =
+  | {
+      type: 'goal';
+      team: 'team1' | 'team2';
+      goal: string | null; // Player who scored
+      assist: string | null; // Player who assisted
+    }
+  | {
+      type: 'turnover';
+      team: 'team1' | 'team2'; // Team that committed the turnover
+      subtype: TurnoverType;
+      player: string | null;
+      player2?: string | null; // Second player for 50/50 turnovers
+    };
 ```
 
 ## State
 
 | Property               | Type                            | Description                                    |
 | ---------------------- | ------------------------------- | ---------------------------------------------- |
-| `statTrackingEnabled`  | `boolean`                       | Whether stat tracking is enabled (for my team) |
+| `statTrackingEnabled`  | `boolean`                       | Whether stat tracking is enabled               |
 | `team1Roster`          | `string[]`                      | Built progressively as players are added       |
-| `statRecords`          | `StatRecord[]`                  | All recorded stats for the game                |
+| `events`               | `GameEvent[]`                   | Unified chronological log of all game events   |
 | `pendingStatEntry`     | `{ team, pointNumber } \| null` | Triggers stat entry sheet                      |
-| `turnoverRecords`      | `TurnoverRecord[]`              | All recorded turnovers for the game            |
 | `pendingTurnoverEntry` | `{ receivingTeam } \| null`     | Triggers turnover entry sheet                  |
 | `possession`           | `'team1' \| 'team2' \| null`    | Current team with the disc                     |
+| `startingPossession`   | `'team1' \| 'team2' \| null`    | Team that started with the disc (for halftime) |
 
 ## Flow
 
@@ -48,7 +52,7 @@ sequenceDiagram
 
     User->>Score: Tap to increment
     Score->>Store: incrementScore(isTeam1)
-    Store->>Store: Check if tracking enabled for team
+    Store->>Store: Check if tracking enabled
     alt Tracking enabled
         Store->>Store: Set pendingStatEntry
         Store-->>Sheet: Sheet becomes visible
@@ -56,7 +60,7 @@ sequenceDiagram
         User->>Sheet: Select/add player
         Sheet->>User: "Who threw assist?"
         User->>Sheet: Select/add player
-        Sheet->>Store: addStatRecord()
+        Sheet->>Store: addGoalEvent()
         Store->>Store: Clear pendingStatEntry
     end
 ```
@@ -92,21 +96,26 @@ In Settings screen (`app/Settings.tsx`):
 - **Clear Player Rosters**: Button to reset rosters (appears when roster has players)
 - **View Stats**: Access the [View Stats](view-stats.md) screen to see player breakdowns and export data
 
-## Decrement Behavior
+## Undo Behavior
 
-When score is decremented:
+When an action is undone (via `undoLastAction`):
 
-1. Score reduced by 1
-2. Last `StatRecord` for that team is removed
-3. Any `pendingStatEntry` is cleared
+1. The last `GameEvent` is removed from the `events` array.
+2. If it was a `goal`:
+   - Score for the respective team is reduced by 1.
+   - Possession is returned to the scoring team.
+   - `pendingStatEntry` is cleared.
+   - `currentPoint` is decremented.
+3. If it was a `turnover`:
+   - Possession is flipped back to the previous team.
+   - `pendingTurnoverEntry` is cleared.
 
 ## Reset Behavior
 
 On "New Game":
 
-- `statRecords` cleared
-- `pendingStatEntry` cleared
+- `events` array cleared
+- `pendingStatEntry` and `pendingTurnoverEntry` cleared
 - `team1Roster` cleared
-- `turnoverRecords` cleared
 - `possession` and `startingPossession` reset to null
 - `statTrackingEnabled` setting persists

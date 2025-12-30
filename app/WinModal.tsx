@@ -7,8 +7,17 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeIn, SlideInUp } from 'react-native-reanimated';
 
 export default function WinModal() {
-  const { team1Score, team2Score, gameTo, team1Name, team2Name, saveCurrentGame, resetGame } =
-    useGameStore();
+  const {
+    team1Score,
+    team2Score,
+    gameTo,
+    team1Name,
+    team2Name,
+    saveCurrentGame,
+    resetGame,
+    statTrackingEnabled,
+    undoLastAction,
+  } = useGameStore();
   const { palette } = useTheme();
 
   const isGameOver = team1Score >= gameTo || team2Score >= gameTo;
@@ -77,20 +86,22 @@ export default function WinModal() {
           <View style={styles.buttonContainer}>
             <View style={styles.buttonRow}>
               {/* View Stats Button */}
-              <Pressable
-                style={[
-                  styles.button,
-                  styles.rowButton,
-                  styles.statsButton,
-                  {
-                    backgroundColor: palette.accentOverlay15,
-                    borderColor: palette.accentOverlay30,
-                  },
-                ]}
-                onPress={handleViewStats}>
-                <MaterialCommunityIcons name="chart-bar" size={18} color={palette.accent} />
-                <Text style={[styles.buttonText, { color: palette.accent }]}>View Stats</Text>
-              </Pressable>
+              {statTrackingEnabled && (
+                <Pressable
+                  style={[
+                    styles.button,
+                    styles.rowButton,
+                    styles.statsButton,
+                    {
+                      backgroundColor: palette.accentOverlay15,
+                      borderColor: palette.accentOverlay30,
+                    },
+                  ]}
+                  onPress={handleViewStats}>
+                  <MaterialCommunityIcons name="chart-bar" size={18} color={palette.accent} />
+                  <Text style={[styles.buttonText, { color: palette.accent }]}>View Stats</Text>
+                </Pressable>
+              )}
 
               {/* New Game Button */}
               <Pressable
@@ -100,6 +111,22 @@ export default function WinModal() {
                 <Text style={[styles.buttonText, { color: palette.textMuted }]}>New Game</Text>
               </Pressable>
             </View>
+
+            {/* Undo Button - Full width below other buttons */}
+            <Pressable
+              style={[
+                styles.button,
+                { backgroundColor: 'transparent', borderColor: palette.overlay15, borderWidth: 1 },
+              ]}
+              onPress={() => {
+                undoLastAction();
+                router.back();
+              }}>
+              <MaterialCommunityIcons name="undo" size={18} color={palette.textMuted} />
+              <Text style={[styles.buttonText, { color: palette.textMuted }]}>
+                Undo Winning Point
+              </Text>
+            </Pressable>
           </View>
         </Animated.View>
       </View>
