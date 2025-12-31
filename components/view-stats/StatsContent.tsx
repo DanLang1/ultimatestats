@@ -1,7 +1,7 @@
 import { ScoreBadge } from '@/components/ui/ScoreBadge';
 import { useTheme } from '@/context/ThemeContext';
 import { computePlayerStats } from '@/lib/statsUtils';
-import { GameEvent } from '@/lib/storage';
+import { GameEvent, SavedGame } from '@/lib/storage';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
@@ -18,6 +18,7 @@ interface StatsContentProps {
   aggregateInfo?: { teamName: string; gameCount: number };
   startingPossession?: 'team1' | 'team2' | null;
   gameTo?: number;
+  games?: SavedGame[];
 }
 
 export default function StatsContent({
@@ -29,6 +30,7 @@ export default function StatsContent({
   aggregateInfo,
   startingPossession = null,
   gameTo = 15,
+  games,
 }: StatsContentProps) {
   const { palette } = useTheme();
   const playerStats = computePlayerStats(events, 'team1');
@@ -115,7 +117,13 @@ export default function StatsContent({
           </Text>
         </View>
       ) : (
-        <StatsTable playerStats={playerStats} palette={palette} />
+        <StatsTable
+          playerStats={playerStats}
+          palette={palette}
+          events={events} // revert to events
+          team="team1"
+          games={games}
+        />
       )}
     </>
   );

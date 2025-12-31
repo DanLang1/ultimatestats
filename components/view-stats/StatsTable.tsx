@@ -1,18 +1,32 @@
 import { computePlayerStats } from '@/lib/statsUtils';
+import { SavedGame } from '@/lib/storage';
+import { GameEvent } from '@/store/gameStore.types';
+import { usePlayerStatsStore } from '@/store/playerStatsStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { router } from 'expo-router';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 interface StatsTableProps {
   playerStats: ReturnType<typeof computePlayerStats>;
   palette: any;
+  events: GameEvent[];
+  team: 'team1' | 'team2';
+  games?: SavedGame[];
 }
 
-export default function StatsTable({ playerStats, palette }: StatsTableProps) {
+export default function StatsTable({ playerStats, palette, events, team, games }: StatsTableProps) {
   const [sortConfig, setSortConfig] = React.useState<{
     key: keyof (typeof playerStats)[0] | 'plusMinus';
     direction: 'asc' | 'desc';
   }>({ key: 'plusMinus', direction: 'desc' });
+
+  const { openPlayerStats } = usePlayerStatsStore();
+
+  const handlePlayerPress = (playerName: string) => {
+    openPlayerStats(playerName, events, team, games);
+    router.push('/PlayerStats');
+  };
 
   const sortedStats = [...playerStats].sort((a, b) => {
     const aValue = a[sortConfig.key];
@@ -184,14 +198,15 @@ export default function StatsTable({ playerStats, palette }: StatsTableProps) {
 
         {/* Table Rows */}
         {sortedStats.map((player, index) => (
-          <View
+          <TouchableOpacity
             key={player.name}
             style={[
               styles.tableRow,
               { borderBottomColor: palette.overlay10 },
               index === sortedStats.length - 1 && { borderBottomWidth: 0 },
               index % 2 === 1 && { backgroundColor: palette.overlay02 },
-            ]}>
+            ]}
+            onPress={() => handlePlayerPress(player.name)}>
             <Text
               style={[styles.cell, styles.nameCell, { color: palette.textInverse }]}
               numberOfLines={1}>
@@ -219,7 +234,7 @@ export default function StatsTable({ playerStats, palette }: StatsTableProps) {
               {player.plusMinus > 0 ? '+' : ''}
               {player.plusMinus}
             </Text>
-          </View>
+          </TouchableOpacity>
         ))}
       </View>
     </View>

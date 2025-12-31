@@ -53,6 +53,7 @@ function RootLayoutInner() {
               contentStyle: { backgroundColor: 'transparent' },
             }}
           />
+          <Stack.Screen name="PlayerStats" />
           <Stack.Screen
             name="WinModal"
             options={{

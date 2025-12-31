@@ -87,6 +87,299 @@ export function computePlayerStats(events: GameEvent[], team: 'team1' | 'team2')
   );
 }
 
+// --- Visualization Helpers ---
+
+export interface ChemistryConnection {
+  playerName: string;
+  goalsFrom: number; // How many goals did I catch from this person?
+  assistsTo: number; // How many assists did I throw to this person?
+  totalConnections: number;
+}
+
+export function getChemistryStats(
+  player: string,
+  events: GameEvent[],
+  team: 'team1' | 'team2',
+): ChemistryConnection[] {
+  const connections = new Map<
+    string,
+    { goalsFrom: number; assistsTo: number; totalConnections: number }
+  >();
+
+  const getOrCreate = (name: string) =>
+    connections.get(name) || { goalsFrom: 0, assistsTo: 0, totalConnections: 0 };
+
+  for (const event of events) {
+    if (event.type === 'goal' && event.team === team) {
+      // Did I catch a goal?
+      if (event.goal === player && event.assist) {
+        const stats = getOrCreate(event.assist);
+        stats.goalsFrom++;
+        stats.totalConnections++;
+        connections.set(event.assist, stats);
+      }
+      // Did I throw an assist?
+      if (event.assist === player && event.goal) {
+        const stats = getOrCreate(event.goal);
+        stats.assistsTo++;
+        stats.totalConnections++;
+        connections.set(event.goal, stats);
+      }
+    }
+  }
+
+  return Array.from(connections.entries())
+    .map(([name, stats]) => ({
+      playerName: name,
+      ...stats,
+    }))
+    .sort((a, b) => b.totalConnections - a.totalConnections);
+}
+
+export interface ImpactPoint {
+  eventIndex: number;
+  cumulativePlusMinus: number;
+  description?: string; // e.g. "Goal (+1)" or "Drop (-1)"
+  score: string; // e.g. "0-0", "1-0", "3-2"
+}
+
+export function getImpactStats(
+  player: string,
+  events: GameEvent[],
+  team: 'team1' | 'team2',
+): ImpactPoint[] {
+  // Track score throughout the game
+  let team1Score = 0;
+  let team2Score = 0;
+  const getScore = () => `${team1Score}-${team2Score}`;
+
+  const points: ImpactPoint[] = [
+    { eventIndex: 0, cumulativePlusMinus: 0, description: 'Start', score: '0-0' },
+  ];
+  let currentPlusMinus = 0;
+  let eventIndex = 0;
+
+  for (const event of events) {
+    // Track ALL goals for score (including opponent)
+    if (event.type === 'goal') {
+      if (event.team === 'team1') team1Score++;
+      else team2Score++;
+    }
+
+    // Skip opponent events for impact calculation
+    if (event.team !== team) {
+      eventIndex++;
+      continue;
+    }
+
+    let change = 0;
+    let desc = '';
+
+    if (event.type === 'goal') {
+      if (event.goal === player) {
+        change = 1;
+        desc = 'Goal';
+      } else if (event.assist === player) {
+        change = 1;
+        desc = 'Assist';
+      }
+    } else if (event.type === 'turnover') {
+      if (event.player === player) {
+        // If it's a 50/50 throwaway, it's -0.5 ??
+        // Technically statsUtils computes it as half.
+        // But for a visual "Game Flow", seeing a line drop by 0.5 might be weird?
+        // Actually, let's match the Stat Table.
+        if (event.subtype === 'fiftyfifty') {
+          change = -0.5;
+          desc = '50/50 Throwaway';
+        } else if (event.subtype === 'block') {
+          change = 1;
+          desc = 'Block';
+        } else {
+          change = -1;
+          desc = event.subtype === 'drop' ? 'Drop' : 'Throwaway';
+        }
+      } else if (event.player2 === player && event.subtype === 'fiftyfifty') {
+        change = -0.5;
+        desc = '50/50 Drop';
+      }
+    }
+
+    if (change !== 0) {
+      currentPlusMinus += change;
+      points.push({
+        eventIndex,
+        cumulativePlusMinus: currentPlusMinus,
+        description: `${desc} (${change > 0 ? '+' : ''}${change})`,
+        score: getScore(),
+      });
+    }
+    eventIndex++;
+  }
+
+  // If no events, just return the start
+  if (points.length === 1 && events.length > 0) {
+    // Maybe add a point at the end so the graph spans the game?
+    points.push({
+      eventIndex: events.length,
+      cumulativePlusMinus: 0,
+      description: 'End',
+      score: getScore(),
+    });
+  } else if (points.length > 1) {
+    // Add an endpoint to show the final state sustained purely for visual length?
+    // Actually, VictoryLine handles this fine.
+    points.push({
+      eventIndex: events.length,
+      cumulativePlusMinus: currentPlusMinus,
+      description: 'End',
+      score: getScore(),
+    });
+  }
+
+  return points;
+}
+
+export interface RoleStats {
+  goals: number; // Normalized Goals (0-1)
+  assists: number; // Normalized Assists (0-1)
+  blocks: number; // Normalized Blocks (0-1)
+  plusMinus: number; // Normalized +/- (0-1 where 0.5 = 0 +/-)
+  turnovers: number; // Normalized Total Turnovers (0-1)
+  throwaways: number; // Normalized Throwaways (0-1)
+  drops: number; // Normalized Drops (0-1)
+  rawDrops: number; // Raw drop count
+  rawThrowaways: number; // Raw throwaway count
+  totalEvents: number; // Raw count of total events
+}
+
+export type PlayerRoleLabel =
+  | 'MVP'
+  | 'Front Cone'
+  | 'Reliable'
+  | 'Hybrid'
+  | 'Lockdown'
+  | 'Shooter'
+  | 'Glue Guy'
+  | 'Butter Fingers'
+  | 'Green Light'
+  | null;
+
+export function getRoleStats(
+  player: string,
+  events: GameEvent[],
+  team: 'team1' | 'team2',
+): RoleStats {
+  const allPlayerStats = computePlayerStats(events, team);
+
+  // Find Team Maxes for normalization
+  const maxGoals = Math.max(...allPlayerStats.map((p) => p.goals), 1);
+  const maxAssists = Math.max(...allPlayerStats.map((p) => p.assists), 1);
+  const maxBlocks = Math.max(...allPlayerStats.map((p) => p.blocks), 1);
+  const maxThrowaways = Math.max(...allPlayerStats.map((p) => p.throwaways), 1);
+  const maxDrops = Math.max(...allPlayerStats.map((p) => p.drops), 1);
+  const maxTurns = Math.max(...allPlayerStats.map((p) => p.throwaways + p.drops), 1);
+  const plusMinusValues = allPlayerStats.map((p) => p.plusMinus);
+  const minPlusMinus = Math.min(...plusMinusValues, 0);
+  const maxPlusMinus = Math.max(...plusMinusValues, 0);
+  const plusMinusRange = Math.max(maxPlusMinus - minPlusMinus, 1);
+
+  const myStats = allPlayerStats.find((p) => p.name === player);
+
+  if (!myStats) {
+    return {
+      goals: 0,
+      assists: 0,
+      blocks: 0,
+      plusMinus: 0.5,
+      turnovers: 0,
+      throwaways: 0,
+      drops: 0,
+      rawDrops: 0,
+      rawThrowaways: 0,
+      totalEvents: 0,
+    };
+  }
+
+  const myTurns = myStats.throwaways + myStats.drops;
+  const totalEvents = myStats.goals + myStats.assists + myStats.blocks + myTurns;
+
+  return {
+    goals: myStats.goals / maxGoals,
+    assists: myStats.assists / maxAssists,
+    blocks: myStats.blocks / maxBlocks,
+    plusMinus: (myStats.plusMinus - minPlusMinus) / plusMinusRange,
+    turnovers: maxTurns === 0 ? 0 : myTurns / maxTurns,
+    throwaways: myStats.throwaways / maxThrowaways,
+    drops: myStats.drops / maxDrops,
+    rawDrops: myStats.drops,
+    rawThrowaways: myStats.throwaways,
+    totalEvents,
+  };
+}
+
+export function getPlayerRoleLabel(roleStats: RoleStats, isMVP = false): PlayerRoleLabel {
+  const {
+    goals,
+    assists,
+    blocks,
+    plusMinus,
+    throwaways,
+    totalEvents,
+    drops,
+    rawDrops,
+    rawThrowaways,
+  } = roleStats;
+  // Minimum threshold: need at least 2 events to get a label
+  if (totalEvents < 2) return null;
+
+  // MVP takes priority
+  if (isMVP && plusMinus > 0.5) {
+    return 'MVP';
+  }
+
+  // Priority order matters - check more specific conditions first
+
+  // Shooter: High assists but high throwaways (risky handler)
+  if (assists >= 0.5 && throwaways >= 0.5) {
+    return 'Shooter';
+  }
+
+  // D-Liner: Has blocks
+  if (blocks >= 0.6) {
+    return 'Lockdown';
+  }
+
+  // Goal Getter: High goals, low assists
+  if (goals >= 0.7 && assists < 0.2 && drops < 0.2) {
+    return 'Front Cone';
+  }
+
+  // Handler: High assists, low goals
+  if (assists >= 0.6 && throwaways < 0.2) {
+    return 'Reliable';
+  }
+
+  // Hybrid: Has both goals and assists
+  if (goals >= 0.5 && assists >= 0.5) {
+    return 'Hybrid';
+  }
+
+  // Glue Guy: Positive impact but quiet stats
+  if (plusMinus >= 0.75 && goals < 0.5 && assists < 0.5 && blocks < 0.5) {
+    return 'Glue Guy';
+  }
+
+  if (drops === 1 && rawDrops > 2) {
+    return 'Butter Fingers';
+  }
+  if (throwaways === 1 && rawThrowaways > 2) {
+    return 'Green Light';
+  }
+
+  return null;
+}
+
 /**
  * Generate CSV for the current (live) game.
  * Note: Team stats require startingPossession and gameTo from the store.

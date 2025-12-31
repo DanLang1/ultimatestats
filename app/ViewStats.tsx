@@ -357,6 +357,7 @@ export default function ViewStatsScreen() {
             isSavedGame={!!selectedGame}
             startingPossession={displayData.startingPossession}
             gameTo={displayData.gameTo}
+            games={selectedGame ? [selectedGame] : undefined}
           />
         ) : viewMode === 'aggregate' ? (
           showingAggregatedStats && aggregatedData ? (
@@ -370,6 +371,7 @@ export default function ViewStatsScreen() {
               }}
               startingPossession={null}
               gameTo={15}
+              games={aggregatedData.games}
             />
           ) : (
             <AggregateGamesList

@@ -84,18 +84,17 @@ export const useGameStore = create<GameState>()(
 
             const newScore = currentScore + 1;
             const halftimeScore = Math.ceil(state.gameTo / 2);
+            const isHalftimeGoal = state.gameHalf === 1 && newScore === halftimeScore;
 
+            // Update score
             if (isTeam1) state.team1Score = newScore;
             else state.team2Score = newScore;
 
-            // Automatic Halftime Logic
-            if (state.gameHalf === 1 && newScore === halftimeScore) {
+            // Halftime: reset timeouts
+            if (isHalftimeGoal) {
               state.gameHalf = 2;
               state.team1Timeouts.fill(true);
               state.team2Timeouts.fill(true);
-              if (state.statTrackingEnabled) {
-                state.possession = state.startingPossession === 'team1' ? 'team2' : 'team1';
-              }
             }
 
             // Soft Cap Logic
@@ -106,26 +105,40 @@ export const useGameStore = create<GameState>()(
               state.gameTo = Math.min(highestScore + 1, state.gameTo);
             }
 
-            // Stat Tracking: Set pending entry if tracking is enabled and it's team1
-            if (state.statTrackingEnabled && isTeam1) {
-              state.pendingStatEntry = { team: 'team1', pointNumber: newScore };
-            } else {
-              // Record goal immediately (no player details needed or stat tracking off)
+            state.currentPoint++;
+
+            // Early return if stat tracking is disabled
+            if (!state.statTrackingEnabled) {
               state.events.push({
                 type: 'goal',
                 team: isTeam1 ? 'team1' : 'team2',
                 goal: null,
                 assist: null,
               });
+              return;
             }
 
-            // After a goal, possession goes to the other team (they receive the pull)
-            const justReachedHalftime = state.gameHalf === 1 && newScore === halftimeScore;
-            if (state.statTrackingEnabled && !justReachedHalftime) {
+            // --- Stat tracking enabled below ---
+
+            // Set possession: halftime flips to non-starting team, otherwise to non-scoring team
+            if (isHalftimeGoal) {
+              state.possession = state.startingPossession === 'team1' ? 'team2' : 'team1';
+            } else {
               state.possession = isTeam1 ? 'team2' : 'team1';
             }
 
-            state.currentPoint++;
+            // Team1 goal: open stat entry sheet to record goal/assist
+            if (isTeam1) {
+              state.pendingStatEntry = { team: 'team1', pointNumber: newScore };
+            } else {
+              // Team2 goal: record immediately (no player details needed)
+              state.events.push({
+                type: 'goal',
+                team: 'team2',
+                goal: null,
+                assist: null,
+              });
+            }
           }),
 
         undoLastAction: () => {

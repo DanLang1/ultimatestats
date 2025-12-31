@@ -91,18 +91,18 @@ export function computeTeamStats(
     ).length;
     opponentTurnovers += opponentTurnoversThisPoint;
 
-    // D-point specific stats
+    // D-point specific stats (only on D-points)
     if (!isTeam1Offense) {
       if (opponentTurnoversThisPoint > 0 || team1Scored) {
         dPointsWithTurnover++;
       }
-
-      // Count blocks team1 got
-      const blocksThisPoint = point.turnovers.filter(
-        (t) => t.team === 'team1' && t.type === 'block',
-      ).length;
-      team1Blocks += blocksThisPoint;
     }
+
+    // Count ALL blocks team1 got (regardless of O-point or D-point)
+    const blocksThisPoint = point.turnovers.filter(
+      (t) => t.team === 'team1' && t.type === 'block',
+    ).length;
+    team1Blocks += blocksThisPoint;
 
     // Classify the point outcome
     if (isTeam1Offense && team1Scored) {
