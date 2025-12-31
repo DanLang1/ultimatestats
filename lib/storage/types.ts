@@ -3,8 +3,11 @@
 import { GameEvent, TurnoverType } from '@/store/gameStore.types';
 export type { GameEvent, TurnoverType };
 
+export const CURRENT_SCHEMA_VERSION = 1;
+
 export interface SavedGame {
   id: string;
+  schemaVersion: number; // For future migrations - always set to CURRENT_SCHEMA_VERSION on save
   createdAt: number; // timestamp
   team1Name: string;
   team2Name: string;

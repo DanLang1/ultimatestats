@@ -1,4 +1,4 @@
-import { SavedGame, SavedTeam, storage } from '@/lib/storage';
+import { CURRENT_SCHEMA_VERSION, SavedGame, SavedTeam, storage } from '@/lib/storage';
 import { generateId } from '@/lib/utils';
 import { palette } from '@/theme/theme';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -368,6 +368,7 @@ export const useGameStore = create<GameState>()(
           }));
           const game: SavedGame = {
             id: gameId,
+            schemaVersion: CURRENT_SCHEMA_VERSION,
             createdAt: Date.now(),
             team1Name: state.team1Name,
             team2Name: state.team2Name,

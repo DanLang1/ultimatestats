@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "ultimatestats",
+    "name": "Ulti Stats",
     "slug": "ultimatestats",
     "version": "1.0.0",
     "orientation": "landscape",
@@ -20,7 +20,8 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.langdk.ultimatestats"
+      "package": "com.langdk.ultimatestats",
+      "versionCode": 1
     },
     "web": {
       "output": "static",

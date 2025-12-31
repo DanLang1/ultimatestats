@@ -62,6 +62,16 @@ export default function PlayerStats() {
     : '';
   const gameLabel = selectedGame ? `${gameDate} vs ${selectedGame.team2Name}` : 'All Games';
 
+  // Calculate aggregate impact across all games (for multi-game view)
+  const aggregateImpact =
+    games && games.length > 1 && player
+      ? games.reduce((total, g) => {
+          const gameImpact = getImpactStats(player, g.events, team);
+          const finalValue = gameImpact[gameImpact.length - 1]?.cumulativePlusMinus ?? 0;
+          return total + finalValue;
+        }, 0)
+      : null;
+
   const stats =
     player && events.length && roleStats
       ? {
@@ -136,77 +146,139 @@ export default function PlayerStats() {
               ]}>
               {/* Game Selector (only if aggregate) */}
               {games && games.length > 1 && (
-                <View style={{ marginBottom: 16, zIndex: 10, paddingHorizontal: 16 }}>
+                <View style={{ marginBottom: 12, paddingHorizontal: 16 }}>
+                  {/* Aggregate Summary */}
+                  <View
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      marginBottom: 12,
+                      gap: 8,
+                    }}>
+                    <View
+                      style={{
+                        backgroundColor:
+                          aggregateImpact && aggregateImpact > 0
+                            ? palette.successOverlay15
+                            : aggregateImpact && aggregateImpact < 0
+                              ? palette.dangerOverlay15
+                              : palette.overlay05,
+                        paddingHorizontal: 12,
+                        paddingVertical: 6,
+                        borderRadius: 8,
+                      }}>
+                      <Text
+                        style={{
+                          color:
+                            aggregateImpact && aggregateImpact > 0
+                              ? palette.success
+                              : aggregateImpact && aggregateImpact < 0
+                                ? palette.danger
+                                : palette.textMuted,
+                          fontSize: 16,
+                          fontWeight: '800',
+                        }}>
+                        {aggregateImpact && aggregateImpact > 0 ? '+' : ''}
+                        {aggregateImpact ?? 0}
+                      </Text>
+                    </View>
+                    <Text style={{ color: palette.textMuted, fontSize: 12, fontWeight: '600' }}>
+                      TOTAL ACROSS {games.length} GAMES
+                    </Text>
+                  </View>
+
+                  {/* Per-game selector */}
+                  <Text
+                    style={{
+                      color: palette.textMuted,
+                      fontSize: 10,
+                      fontWeight: '600',
+                      marginBottom: 6,
+                      letterSpacing: 0.5,
+                    }}>
+                    VIEW GAME DETAILS
+                  </Text>
                   <Pressable
-                    onPress={() => setShowGameSelector(true)}
+                    onPress={() => setShowGameSelector((prev) => !prev)}
                     style={{
                       flexDirection: 'row',
                       alignItems: 'center',
                       backgroundColor: palette.overlay05,
                       paddingHorizontal: 12,
-                      paddingVertical: 8,
+                      paddingVertical: 10,
                       borderRadius: 8,
                       alignSelf: 'flex-start',
-                      gap: 4,
+                      gap: 6,
                     }}>
                     <MaterialCommunityIcons name="calendar" size={16} color={palette.textMuted} />
-                    <Text style={{ color: palette.textInverse, fontWeight: '600', fontSize: 13 }}>
+                    <Text style={{ color: palette.textInverse, fontWeight: '600', fontSize: 14 }}>
                       {gameLabel}
                     </Text>
                     <MaterialCommunityIcons
-                      name="chevron-down"
-                      size={16}
+                      name={showGameSelector ? 'chevron-up' : 'chevron-down'}
+                      size={18}
                       color={palette.textMuted}
                     />
                   </Pressable>
+                </View>
+              )}
 
-                  {/* Quick Modal for selection */}
-                  {showGameSelector && (
-                    <View
-                      style={{
-                        position: 'absolute',
-                        top: 40,
-                        left: 16,
-                        backgroundColor: palette.overlay02,
-                        borderRadius: 12,
-                        borderWidth: 1,
-                        borderColor: palette.overlay10,
-                        padding: 6,
-                        elevation: 10,
-                        zIndex: 200,
-                        width: 220,
-                        shadowColor: '#000',
-                        shadowOffset: { width: 0, height: 4 },
-                        shadowOpacity: 0.3,
-                        shadowRadius: 8,
-                      }}>
-                      <ScrollView style={{ maxHeight: 300 }}>
-                        {(games ? [...games].sort((a, b) => b.createdAt - a.createdAt) : []).map(
-                          (g) => (
+              {/* Game selector dropdown - rendered outside the card to avoid overflow clipping */}
+              {showGameSelector && games && games.length > 1 && (
+                <>
+                  {/* Backdrop to dismiss */}
+                  <Pressable
+                    onPress={() => setShowGameSelector(false)}
+                    style={StyleSheet.absoluteFill}
+                  />
+                  <View
+                    style={{
+                      position: 'absolute',
+                      top: 50,
+                      left: 32,
+                      backgroundColor: palette.primary,
+                      borderRadius: 12,
+                      borderWidth: 1,
+                      borderColor: palette.overlay15,
+                      padding: 8,
+                      elevation: 20,
+                      zIndex: 1000,
+                      width: 240,
+                      maxHeight: 350,
+                      shadowColor: '#000',
+                      shadowOffset: { width: 0, height: 6 },
+                      shadowOpacity: 0.4,
+                      shadowRadius: 12,
+                    }}>
+                    <ScrollView bounces={false}>
+                      {[...games]
+                        .sort((a, b) => b.createdAt - a.createdAt)
+                        .map((g) => {
+                          const isSelected = effectiveGameId === g.id;
+                          return (
                             <Pressable
                               key={g.id}
                               onPress={() => {
                                 setSelectedGameId(g.id);
                                 setShowGameSelector(false);
                               }}
-                              hitSlop={8}
                               style={({ pressed }) => ({
-                                paddingVertical: 12,
-                                paddingHorizontal: 12,
-                                backgroundColor:
-                                  effectiveGameId === g.id
-                                    ? palette.overlay10
-                                    : pressed
-                                      ? palette.overlay05
-                                      : 'transparent',
+                                paddingVertical: 14,
+                                paddingHorizontal: 14,
+                                backgroundColor: isSelected
+                                  ? palette.accentOverlay10
+                                  : pressed
+                                    ? palette.overlay05
+                                    : 'transparent',
                                 borderRadius: 8,
-                                marginBottom: 2,
+                                borderLeftWidth: isSelected ? 3 : 0,
+                                borderLeftColor: palette.accent,
                               })}>
                               <Text
                                 style={{
-                                  color: palette.textInverse,
-                                  fontSize: 14,
-                                  fontWeight: '500',
+                                  color: isSelected ? palette.accent : palette.textInverse,
+                                  fontSize: 15,
+                                  fontWeight: isSelected ? '700' : '500',
                                 }}>
                                 {new Date(g.createdAt).toLocaleDateString(undefined, {
                                   month: 'short',
@@ -215,26 +287,11 @@ export default function PlayerStats() {
                                 vs {g.team2Name}
                               </Text>
                             </Pressable>
-                          ),
-                        )}
-                      </ScrollView>
-                      <Pressable
-                        onPress={() => setShowGameSelector(false)}
-                        hitSlop={12}
-                        style={{
-                          padding: 12,
-                          alignItems: 'center',
-                          borderTopWidth: 1,
-                          borderTopColor: palette.overlay05,
-                          marginTop: 4,
-                        }}>
-                        <Text style={{ color: palette.textMuted, fontSize: 12, fontWeight: '700' }}>
-                          CLOSE
-                        </Text>
-                      </Pressable>
-                    </View>
-                  )}
-                </View>
+                          );
+                        })}
+                    </ScrollView>
+                  </View>
+                </>
               )}
 
               <ImpactTimeline data={stats.impact} palette={palette} />
