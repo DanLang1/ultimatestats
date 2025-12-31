@@ -5,6 +5,7 @@ import { GameEvent } from '@/lib/storage';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import StatsTable from './StatsTable';
 import TeamStatsSection from './TeamStatsSection';
 
 interface StatsContentProps {
@@ -114,71 +115,7 @@ export default function StatsContent({
           </Text>
         </View>
       ) : (
-        <View>
-          <View style={styles.sectionHeader}>
-            <Text style={[styles.sectionTitle, { color: palette.textMuted }]}>PLAYER STATS</Text>
-          </View>
-          <View style={[styles.tableContainer, { borderColor: palette.overlay10 }]}>
-            {/* Table Header */}
-            <View
-              style={[
-                styles.tableHeader,
-                { backgroundColor: palette.overlay08, borderBottomColor: palette.overlay10 },
-              ]}>
-              <Text style={[styles.headerCell, styles.nameCell, { color: palette.textMuted }]}>
-                PLAYER
-              </Text>
-              <Text style={[styles.headerCell, { color: palette.textMuted }]}>G</Text>
-              <Text style={[styles.headerCell, { color: palette.textMuted }]}>A</Text>
-              <Text style={[styles.headerCell, { color: palette.textMuted }]}>D</Text>
-              <Text style={[styles.headerCell, { color: palette.textMuted }]}>T</Text>
-              <Text style={[styles.headerCell, { color: palette.textMuted }]}>Dr</Text>
-              <Text style={[styles.headerCell, { color: palette.textMuted }]}>+/-</Text>
-            </View>
-
-            {/* Table Rows */}
-            {playerStats.map((player, index) => (
-              <View
-                key={player.name}
-                style={[
-                  styles.tableRow,
-                  index % 2 === 1 && [{ backgroundColor: palette.overlay02 }],
-                ]}>
-                <Text
-                  style={[styles.cell, styles.nameCell, { color: palette.textInverse }]}
-                  numberOfLines={1}>
-                  {player.name}
-                </Text>
-                <Text style={[styles.cell, { color: palette.textInverse }]}>
-                  {player.goals || '-'}
-                </Text>
-                <Text style={[styles.cell, { color: palette.textInverse }]}>
-                  {player.assists || '-'}
-                </Text>
-                <Text style={[styles.cell, { color: palette.textInverse }]}>
-                  {player.blocks || '-'}
-                </Text>
-                <Text style={[styles.cell, { color: palette.textInverse }]}>
-                  {player.throwaways || '-'}
-                </Text>
-                <Text style={[styles.cell, { color: palette.textInverse }]}>
-                  {player.drops || '-'}
-                </Text>
-                <Text
-                  style={[
-                    styles.cell,
-                    styles.plusMinusCell,
-                    { color: palette.textInverse },
-                    player.plusMinus > 0 && { color: palette.success },
-                    player.plusMinus < 0 && { color: palette.danger },
-                  ]}>
-                  {player.plusMinus > 0 ? '+' : ''}
-                  {player.plusMinus}
-                </Text>
-              </View>
-            ))}
-          </View>
-        </View>
+        <StatsTable playerStats={playerStats} palette={palette} />
       )}
     </>
   );
@@ -293,47 +230,5 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 16,
     textAlign: 'center',
-  },
-  tableContainer: {
-    borderRadius: 12,
-    overflow: 'hidden',
-    borderWidth: 1,
-  },
-  tableHeader: {
-    flexDirection: 'row',
-    paddingVertical: 12,
-    paddingHorizontal: 12,
-    borderBottomWidth: 1,
-  },
-  headerCell: {
-    flex: 1,
-    fontSize: 10,
-    fontWeight: '800',
-    textAlign: 'center',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  tableRow: {
-    flexDirection: 'row',
-    paddingVertical: 14,
-    paddingHorizontal: 12,
-    backgroundColor: 'transparent',
-    alignItems: 'center',
-  },
-  cell: {
-    flex: 1,
-    fontSize: 13,
-    textAlign: 'center',
-    fontWeight: '500',
-  },
-  nameCell: {
-    flex: 2.5,
-    textAlign: 'left',
-    fontSize: 13,
-    fontWeight: '600',
-    paddingRight: 8,
-  },
-  plusMinusCell: {
-    fontWeight: '800',
   },
 });
