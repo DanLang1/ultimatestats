@@ -4,7 +4,12 @@ import AggregateGamesList from '@/components/view-stats/AggregateGamesList';
 import SavedGamesList from '@/components/view-stats/SavedGamesList';
 import StatsContent from '@/components/view-stats/StatsContent';
 import { useTheme } from '@/context/ThemeContext';
-import { computePlayerStats, formatDate, generateCSV } from '@/lib/statsUtils';
+import {
+  formatDate,
+  generateAggregateCSV,
+  generateCurrentGameCSV,
+  generateSavedGameCSV,
+} from '@/lib/statsUtils';
 import { GameEvent, SavedGame } from '@/lib/storage';
 import { useGameStore } from '@/store/gameStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
@@ -26,6 +31,8 @@ export default function ViewStatsScreen() {
     savedGames,
     loadSavedGames,
     deleteSavedGame,
+    startingPossession,
+    gameTo,
   } = useGameStore();
   const { showAlert } = useAlert();
   const { palette } = useTheme();
@@ -51,6 +58,8 @@ export default function ViewStatsScreen() {
         team1Score: selectedGame.team1Score,
         team2Score: selectedGame.team2Score,
         events: selectedGame.events,
+        startingPossession: selectedGame.startingPossession,
+        gameTo: selectedGame.gameTo,
       }
     : {
         team1Name,
@@ -58,43 +67,61 @@ export default function ViewStatsScreen() {
         team1Score,
         team2Score,
         events,
+        startingPossession,
+        gameTo,
       };
 
-  const playerStats = computePlayerStats(displayData.events, 'team1');
+  const handleExport = () => {
+    const defaultFilename = selectedGame
+      ? `game_${formatDate(selectedGame.createdAt).replace(/[^a-zA-Z0-9]/g, '_')}`
+      : showingAggregatedStats && aggregatedData
+        ? `${aggregatedData.teamName.replace(/[^a-zA-Z0-9]/g, '_')}_${aggregatedData.gameCount}_games`
+        : 'game_stats';
 
-  const handleExport = async () => {
-    try {
-      const csv = generateCSV(
-        displayData.events,
-        playerStats,
-        displayData.team1Name,
-        displayData.team2Name,
-        selectedGame
-          ? undefined
-          : showingAggregatedStats && aggregatedData
-            ? aggregatedData.games
-            : undefined,
-      );
-      const filename = selectedGame
-        ? `game_${formatDate(selectedGame.createdAt).replace(/[^a-zA-Z0-9]/g, '_')}.csv`
-        : 'game_stats.csv';
-      const file = new File(Paths.cache, filename);
-      file.write(csv);
+    showAlert({
+      title: 'Export CSV',
+      message: 'Enter a filename for the export:',
+      prompt: {
+        placeholder: 'filename',
+        defaultValue: defaultFilename,
+        onSubmit: async (filename: string) => {
+          try {
+            // Use appropriate export function based on context
+            let csv: string;
+            if (selectedGame) {
+              csv = generateSavedGameCSV(selectedGame);
+            } else if (showingAggregatedStats && aggregatedData) {
+              csv = generateAggregateCSV(aggregatedData.games, aggregatedData.teamName);
+            } else {
+              csv = generateCurrentGameCSV(
+                events,
+                team1Name,
+                team2Name,
+                startingPossession,
+                gameTo,
+              );
+            }
+            const sanitizedFilename = filename.replace(/[^a-zA-Z0-9_-]/g, '_');
+            const file = new File(Paths.cache, `${sanitizedFilename}.csv`);
+            file.write(csv);
 
-      if (await Sharing.isAvailableAsync()) {
-        await Sharing.shareAsync(file.uri);
-      } else {
-        showAlert({
-          title: 'Sharing not available',
-          message: 'Sharing is not available on this device.',
-        });
-      }
-    } catch {
-      showAlert({
-        title: 'Export failed',
-        message: 'Could not export stats to CSV.',
-      });
-    }
+            if (await Sharing.isAvailableAsync()) {
+              await Sharing.shareAsync(file.uri);
+            } else {
+              showAlert({
+                title: 'Sharing not available',
+                message: 'Sharing is not available on this device.',
+              });
+            }
+          } catch {
+            showAlert({
+              title: 'Export failed',
+              message: 'Could not export stats to CSV.',
+            });
+          }
+        },
+      },
+    });
   };
 
   const handleSelectGame = (game: SavedGame) => {
@@ -225,6 +252,15 @@ export default function ViewStatsScreen() {
               />
             </Pressable>
           )}
+          {/* Export button - show when stats are visible */}
+          {(viewMode === 'current' || selectedGame || showingAggregatedStats) && (
+            <Pressable
+              onPress={handleExport}
+              style={[styles.backButton, { backgroundColor: palette.overlay10 }]}
+              hitSlop={12}>
+              <MaterialCommunityIcons name="export-variant" size={24} color={palette.accent} />
+            </Pressable>
+          )}
           {/* Close buttons for various states */}
           {selectedGame ? (
             <Pressable
@@ -318,8 +354,9 @@ export default function ViewStatsScreen() {
             team1Score={'team1Score' in displayData ? displayData.team1Score : undefined}
             team2Score={'team2Score' in displayData ? displayData.team2Score : undefined}
             events={displayData.events}
-            onExport={handleExport}
             isSavedGame={!!selectedGame}
+            startingPossession={displayData.startingPossession}
+            gameTo={displayData.gameTo}
           />
         ) : viewMode === 'aggregate' ? (
           showingAggregatedStats && aggregatedData ? (
@@ -327,11 +364,12 @@ export default function ViewStatsScreen() {
               team1Name={aggregatedData.teamName}
               team2Name=""
               events={aggregatedData.events}
-              onExport={handleExport}
               aggregateInfo={{
                 teamName: aggregatedData.teamName,
                 gameCount: aggregatedData.gameCount,
               }}
+              startingPossession={null}
+              gameTo={15}
             />
           ) : (
             <AggregateGamesList

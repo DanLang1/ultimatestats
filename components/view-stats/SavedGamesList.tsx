@@ -6,6 +6,7 @@ import { SavedGame } from '@/lib/storage';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import Animated, { LinearTransition } from 'react-native-reanimated';
 
 interface SavedGamesListProps {
   games: SavedGame[];
@@ -45,46 +46,55 @@ export default function SavedGamesList({ games, onSelectGame, onDeleteGame }: Sa
       {[...games]
         .sort((a, b) => b.createdAt - a.createdAt)
         .map((game) => (
-          <Pressable
-            key={game.id}
-            style={[
-              styles.savedGameCard,
-              { backgroundColor: palette.overlay05, borderColor: palette.overlay10 },
-            ]}
-            onPress={() => onSelectGame(game)}>
-            <View style={styles.savedGameHeader}>
-              <Text style={[styles.savedGameDate, { color: palette.textMuted }]}>
-                {formatDate(game.createdAt)}
-              </Text>
-              <Pressable onPress={() => handleDelete(game)} hitSlop={8}>
-                <MaterialCommunityIcons name="delete-outline" size={20} color={palette.textMuted} />
-              </Pressable>
-            </View>
-            <View style={styles.savedGameTeams}>
-              <Text
-                style={[styles.savedGameTeamName, { color: palette.textInverse }]}
-                numberOfLines={1}>
-                {game.team1Name}
-              </Text>
-              <ScoreBadge score1={game.team1Score} score2={game.team2Score} />
-              <Text
-                style={[
-                  styles.savedGameTeamName,
-                  styles.savedGameTeamRight,
-                  { color: palette.textInverse },
-                ]}
-                numberOfLines={1}>
-                {game.team2Name}
-              </Text>
-            </View>
-            <View style={[styles.savedGameMeta, { borderTopColor: palette.overlay08 }]}>
-              <MaterialCommunityIcons name="account-multiple" size={14} color={palette.textMuted} />
-              <Text style={[styles.savedGameMetaText, { color: palette.textMuted }]}>
-                {game.events.filter((e) => e.type === 'goal').length} point
-                {game.events.filter((e) => e.type === 'goal').length !== 1 ? 's' : ''} tracked
-              </Text>
-            </View>
-          </Pressable>
+          <Animated.View key={game.id} layout={LinearTransition}>
+            <Pressable
+              style={[
+                styles.savedGameCard,
+                { backgroundColor: palette.overlay05, borderColor: palette.overlay10 },
+              ]}
+              onPress={() => onSelectGame(game)}>
+              <View style={styles.savedGameHeader}>
+                <Text style={[styles.savedGameDate, { color: palette.textMuted }]}>
+                  {formatDate(game.createdAt)}
+                </Text>
+                <Pressable onPress={() => handleDelete(game)} hitSlop={8}>
+                  <MaterialCommunityIcons
+                    name="delete-outline"
+                    size={20}
+                    color={palette.textMuted}
+                  />
+                </Pressable>
+              </View>
+              <View style={styles.savedGameTeams}>
+                <Text
+                  style={[styles.savedGameTeamName, { color: palette.textInverse }]}
+                  numberOfLines={1}>
+                  {game.team1Name}
+                </Text>
+                <ScoreBadge score1={game.team1Score} score2={game.team2Score} />
+                <Text
+                  style={[
+                    styles.savedGameTeamName,
+                    styles.savedGameTeamRight,
+                    { color: palette.textInverse },
+                  ]}
+                  numberOfLines={1}>
+                  {game.team2Name}
+                </Text>
+              </View>
+              <View style={[styles.savedGameMeta, { borderTopColor: palette.overlay08 }]}>
+                <MaterialCommunityIcons
+                  name="account-multiple"
+                  size={14}
+                  color={palette.textMuted}
+                />
+                <Text style={[styles.savedGameMetaText, { color: palette.textMuted }]}>
+                  {game.events.filter((e) => e.type === 'goal').length} point
+                  {game.events.filter((e) => e.type === 'goal').length !== 1 ? 's' : ''} tracked
+                </Text>
+              </View>
+            </Pressable>
+          </Animated.View>
         ))}
     </View>
   );

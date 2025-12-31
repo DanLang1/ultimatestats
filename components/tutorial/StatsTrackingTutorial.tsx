@@ -11,21 +11,20 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const TUTORIAL_STEPS = [
   {
     icon: 'chart-line' as const,
-    title: 'Track Player Stats',
+    title: 'Record Goals / Assists',
     description:
-      'Record goals, assists, and turnovers for each player. See who scored and who made the assist on every point.',
-  },
-  {
-    icon: 'account-group' as const,
-    title: 'Set Up Your Roster',
-    description:
-      "Go to Settings and tap the Roster button to add your players. You'll select from this list when recording stats.",
+      "Tap to score, and you'll be prompted to select who scored the goal and who threw the assist.",
   },
   {
     icon: 'gesture-tap' as const,
-    title: 'Record During Game',
+    title: 'Track Turnovers',
+    description: 'Use the floating action bar to record turnovers. Move or resize to your comfort',
+  },
+  {
+    icon: 'account-group' as const,
+    title: 'Build Roster Incrementally',
     description:
-      "After each goal, you'll be prompted to select the scorer and assister. Turnovers can be logged with the disc button.",
+      'After each event, you can add new players to your team or select from your existing roster. Roster can also be edited from the Settings screen.',
   },
   {
     icon: 'chart-bar' as const,

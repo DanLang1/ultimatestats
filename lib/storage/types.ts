@@ -14,6 +14,7 @@ export interface SavedGame {
   events: GameEvent[];
   gameTo: number;
   gameLength: number;
+  startingPossession: 'team1' | 'team2';
 }
 
 export interface SavedTeam {

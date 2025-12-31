@@ -1,4 +1,5 @@
 import { useTheme } from '@/context/ThemeContext';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
@@ -12,38 +13,61 @@ export function TimeoutCounter({ count, hasFloater }: TimeoutCounterProps) {
 
   return (
     <View style={styles.timeoutContainer}>
-      <Text style={[styles.timeoutNumber, { color: palette.success }]}>{count}</Text>
-      <Text style={[styles.timeoutLabel, { color: palette.textMuted }]}>left</Text>
-      {hasFloater && (
-        <View style={[styles.floaterChip, { backgroundColor: palette.success }]}>
-          <Text style={[styles.floaterText, { color: palette.primary }]}>+1</Text>
+      <View style={styles.countRow}>
+        <Text style={[styles.timeoutNumber, { color: palette.success }]}>{count}</Text>
+        <View style={styles.floaterBadge}>
+          <Text
+            style={[
+              styles.floaterText,
+              { color: hasFloater ? palette.success : palette.textMuted },
+            ]}>
+            (
+          </Text>
+          <MaterialCommunityIcons
+            name={hasFloater ? 'rhombus' : 'rhombus-outline'}
+            size={14}
+            color={hasFloater ? palette.success : palette.textMuted}
+          />
+          <Text
+            style={[
+              styles.floaterText,
+              { color: hasFloater ? palette.success : palette.textMuted },
+            ]}>
+            {hasFloater ? '+1' : '0'})
+          </Text>
         </View>
-      )}
+      </View>
+      <Text style={[styles.floaterLabel, { color: palette.textMuted }]}>
+        {hasFloater ? 'floater available' : 'floater used'}
+      </Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   timeoutContainer: {
+    alignItems: 'center',
+    gap: 4,
+  },
+  countRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 4,
   },
   timeoutNumber: {
     fontSize: 28,
     fontWeight: '700',
   },
-  timeoutLabel: {
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  floaterChip: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 10,
+  floaterBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   floaterText: {
-    fontSize: 12,
-    fontWeight: '700',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  floaterLabel: {
+    fontSize: 11,
+    fontWeight: '500',
   },
 });

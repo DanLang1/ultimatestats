@@ -4,7 +4,8 @@ import { computePlayerStats } from '@/lib/statsUtils';
 import { GameEvent } from '@/lib/storage';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
+import TeamStatsSection from './TeamStatsSection';
 
 interface StatsContentProps {
   team1Name: string;
@@ -12,9 +13,10 @@ interface StatsContentProps {
   team1Score?: number;
   team2Score?: number;
   events: GameEvent[];
-  onExport: () => void;
   isSavedGame?: boolean;
   aggregateInfo?: { teamName: string; gameCount: number };
+  startingPossession?: 'team1' | 'team2' | null;
+  gameTo?: number;
 }
 
 export default function StatsContent({
@@ -22,9 +24,10 @@ export default function StatsContent({
   team1Score,
   team2Score,
   events,
-  onExport,
   isSavedGame,
   aggregateInfo,
+  startingPossession = null,
+  gameTo = 15,
 }: StatsContentProps) {
   const { palette } = useTheme();
   const playerStats = computePlayerStats(events, 'team1');
@@ -99,6 +102,9 @@ export default function StatsContent({
         </View>
       </View>
 
+      {/* Team Stats Section */}
+      <TeamStatsSection events={events} startingPossession={startingPossession} gameTo={gameTo} />
+
       {/* Player Stats Table */}
       {playerStats.length === 0 ? (
         <View style={styles.emptyState}>
@@ -111,15 +117,6 @@ export default function StatsContent({
         <View>
           <View style={styles.sectionHeader}>
             <Text style={[styles.sectionTitle, { color: palette.textMuted }]}>PLAYER STATS</Text>
-            <Pressable
-              style={[
-                styles.headerExportButton,
-                { backgroundColor: palette.indigoOverlay10, borderColor: palette.indigoOverlay30 },
-              ]}
-              onPress={onExport}>
-              <MaterialCommunityIcons name="export-variant" size={16} color={palette.accent} />
-              <Text style={[styles.headerExportText, { color: palette.accent }]}>Export CSV</Text>
-            </Pressable>
           </View>
           <View style={[styles.tableContainer, { borderColor: palette.overlay10 }]}>
             {/* Table Header */}

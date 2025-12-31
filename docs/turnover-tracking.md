@@ -25,12 +25,14 @@ This feature integrates with the existing stat tracking setting—turnover track
 
 export type TurnoverType = 'block' | 'throwaway' | 'drop' | 'fiftyfifty';
 
+// gameId is optional - populated when game is saved (for future flat DB migration)
 export type GameEvent =
   | {
       type: 'goal';
       team: 'team1' | 'team2';
       goal: string | null;
       assist: string | null;
+      gameId?: string; // Links to SavedGame.id
     }
   | {
       type: 'turnover';
@@ -38,6 +40,7 @@ export type GameEvent =
       subtype: TurnoverType;
       player: string | null;
       player2?: string | null;
+      gameId?: string; // Links to SavedGame.id
     };
 ```
 

@@ -112,8 +112,9 @@ export default function SettingsScreen() {
     deleteTeam(option.id);
   };
 
-  // Auto-save team when name changes and has roster
-  const handleTeam1NameChange = (name: string) => {
+  // Save team when name editing finishes (not on every keystroke)
+  const handleTeam1NameEndEditing = (e: { nativeEvent: { text: string } }) => {
+    const name = e.nativeEvent.text;
     setTeamNames(name, team2Name);
     if (hasRoster && name.trim()) {
       saveTeam(name, team1Roster);
@@ -204,8 +205,8 @@ export default function SettingsScreen() {
                       inputBgStyle,
                       gameActive && styles.inputDisabled,
                     ]}
-                    value={team1Name}
-                    onChangeText={handleTeam1NameChange}
+                    defaultValue={team1Name}
+                    onEndEditing={handleTeam1NameEndEditing}
                     placeholder="Team 1 Name"
                     placeholderTextColor={palette.textMuted}
                     maxLength={20}

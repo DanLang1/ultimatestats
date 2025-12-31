@@ -142,7 +142,7 @@ export function ScoreboardActionBar({ possession, onAction }: ScoreboardActionBa
           emoji: '🧈',
         },
         {
-          label: 'THROW',
+          label: 'T/A',
           action: { type: 'throwaway' as const },
           color: palette.danger,
           emoji: '🗑️',
@@ -174,9 +174,6 @@ export function ScoreboardActionBar({ possession, onAction }: ScoreboardActionBa
       <Animated.View
         onLayout={(e) => {
           const { width, height } = e.nativeEvent.layout;
-          console.log(
-            `FAB dimensions (${actionBarOrientation}): ${width.toFixed(1)}x${height.toFixed(1)}`,
-          );
           boxWidth.value = width;
           boxHeight.value = height;
         }}

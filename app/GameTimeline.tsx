@@ -25,7 +25,7 @@ export default function GameTimelineScreen() {
           events: game.events,
           team1Score: game.team1Score,
           team2Score: game.team2Score,
-          startingPossession: game.startingPossession ?? null,
+          startingPossession: game.startingPossession,
           gameTo: game.gameTo,
         };
       })()

@@ -17,3 +17,4 @@ trigger: always_on
 - See AlertProvider when making alerts - do NOT use native alert
 - Do NOT use `runOnJs`, it's deprecated - use `scheduleOnRn` instead
 - For modals, follow the patterns in docs/modals.md
+- Use Immer when updating object state for simplicity

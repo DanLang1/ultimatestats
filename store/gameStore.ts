@@ -273,11 +273,17 @@ export const useGameStore = create<GameState>()(
             state.pendingStatEntry = null;
           }),
 
-        clearRoster: () =>
+        clearRoster: async () => {
+          const { team1Name, saveTeam } = get();
           set((state: GameState) => {
             state.team1Roster = [];
             state.events = [];
-          }),
+          });
+          // Update saved team with empty roster
+          if (team1Name) {
+            await saveTeam(team1Name, []);
+          }
+        },
 
         setRoster: (team: 'team1' | 'team2', roster: string[]) =>
           set((state: GameState) => {
@@ -341,17 +347,24 @@ export const useGameStore = create<GameState>()(
 
         saveCurrentGame: async () => {
           const state = get();
+          const gameId = generateId();
+          // Stamp gameId on all events for aggregation lookups
+          const eventsWithGameId = state.events.map((event) => ({
+            ...event,
+            gameId,
+          }));
           const game: SavedGame = {
-            id: generateId(),
+            id: gameId,
             createdAt: Date.now(),
             team1Name: state.team1Name,
             team2Name: state.team2Name,
             team1Score: state.team1Score,
             team2Score: state.team2Score,
             team1Roster: state.team1Roster,
-            events: state.events,
+            events: eventsWithGameId,
             gameTo: state.gameTo,
             gameLength: state.gameLength,
+            startingPossession: state.startingPossession ?? 'team1',
           };
           await storage.saveGame(game);
           const games = await storage.loadGames();

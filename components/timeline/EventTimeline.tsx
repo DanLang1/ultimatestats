@@ -97,15 +97,8 @@ export default function EventTimeline({
                 {/* Turnovers (in order) */}
                 {point.turnovers.map((turnover, index) => {
                   const isOpponent = turnover.team === 'team2';
-                  const emoji = isOpponent
-                    ? turnover.type === 'block'
-                      ? '💀'
-                      : '🎁'
-                    : turnover.type === 'block'
-                      ? '✋'
-                      : turnover.type === 'drop'
-                        ? '🧈'
-                        : '🗑️';
+                  // Emojis removed for cleaner look
+                  // Original: 💀🎁 for opponent, ✋🧈🗑️ for team
 
                   const label =
                     turnover.type === 'block'
@@ -127,7 +120,6 @@ export default function EventTimeline({
                           styles.eventRow,
                           { backgroundColor: isOpponent ? palette.overlay10 : bgColor },
                         ]}>
-                        <Text style={styles.eventEmoji}>{emoji}</Text>
                         <Text
                           style={[
                             styles.eventLabel,
@@ -157,7 +149,6 @@ export default function EventTimeline({
 
                 {/* Goal */}
                 <View style={[styles.eventRow, { backgroundColor: palette.overlay05 }]}>
-                  <Text style={styles.eventEmoji}>⭐</Text>
                   <Text style={[styles.eventLabel, { color: teamColor }]}>GOAL</Text>
                   <Text style={[styles.eventPlayer, { color: palette.textInverse }]}>
                     {isTeam1 ? point.goal || 'Unknown' : team2Name}
@@ -172,7 +163,6 @@ export default function EventTimeline({
                 {/* Assist */}
                 {isTeam1 && point.assist && (
                   <View style={[styles.eventRow, { backgroundColor: palette.overlay05 }]}>
-                    <Text style={styles.eventEmoji}>🎯</Text>
                     <Text style={[styles.eventLabel, { color: palette.accent }]}>ASSIST</Text>
                     <Text style={[styles.eventPlayer, { color: palette.textInverse }]}>
                       {point.assist}

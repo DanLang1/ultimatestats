@@ -13,12 +13,14 @@ The stat tracking system allows recording who scored goals and threw assists dur
 
 export type TurnoverType = 'block' | 'throwaway' | 'drop' | 'fiftyfifty';
 
+// gameId is optional - populated when game is saved (for future flat DB migration)
 export type GameEvent =
   | {
       type: 'goal';
       team: 'team1' | 'team2';
       goal: string | null; // Player who scored
       assist: string | null; // Player who assisted
+      gameId?: string; // Links to SavedGame.id
     }
   | {
       type: 'turnover';
@@ -26,6 +28,7 @@ export type GameEvent =
       subtype: TurnoverType;
       player: string | null;
       player2?: string | null; // Second player for 50/50 turnovers
+      gameId?: string; // Links to SavedGame.id
     };
 ```
 

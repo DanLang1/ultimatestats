@@ -3,12 +3,18 @@ import { SavedGame, SavedTeam } from '@/lib/storage';
 export type TurnoverType = 'block' | 'throwaway' | 'drop' | 'fiftyfifty';
 
 // Unified event model - all game events in chronological order
+// NOTE: gameId is optional because events are created during live gameplay before the game is saved.
+// When a game is saved, gameId is stamped on all events for future-proofing:
+// - Currently events are nested in SavedGame.events[], so gameId is redundant
+// - But if we later migrate to a flat database table (e.g. SQLite), we'll need gameId as a foreign key
+// - Pre-populating it now avoids a data migration when that happens
 export type GameEvent =
   | {
       type: 'goal';
       team: 'team1' | 'team2';
       goal: string | null; // Player who scored
       assist: string | null; // Player who assisted
+      gameId?: string; // Populated on save - links to SavedGame.id
     }
   | {
       type: 'turnover';
@@ -16,6 +22,7 @@ export type GameEvent =
       subtype: TurnoverType;
       player: string | null;
       player2?: string | null; // Second player for 50/50 turnovers
+      gameId?: string; // Populated on save - links to SavedGame.id
     };
 
 export interface GameState {
@@ -85,7 +92,7 @@ export interface GameState {
     assist: string | null;
   }) => void;
   clearPendingStatEntry: () => void;
-  clearRoster: () => void;
+  clearRoster: () => Promise<void>;
 
   // Turnover Tracking Actions
   setPossession: (team: 'team1' | 'team2') => void;
