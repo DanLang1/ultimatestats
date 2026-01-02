@@ -62,6 +62,7 @@ export default function SettingsScreen() {
 
   const timeoutsCount = team1Timeouts.length;
   const [team1NameResetKey, setTeam1NameResetKey] = useState(0);
+  const [team2NameResetKey, setTeam2NameResetKey] = useState(0);
 
   // Soft Cap displays as time (when soft cap triggers), converts to softCapMins for storage
   const softCapTime = gameLength - softCapMins;
@@ -134,6 +135,12 @@ export default function SettingsScreen() {
   const handleTeam1NameEndEditing = (e: { nativeEvent: { text: string } }) => {
     const newName = e.nativeEvent.text.trim();
 
+    // Prevent empty name
+    if (!newName) {
+      setTeam1NameResetKey((k) => k + 1);
+      return;
+    }
+
     // Check if name already exists (case-insensitive, excluding current team)
     const existingTeam = savedTeams.find(
       (t) => t.name.toLowerCase() === newName.toLowerCase() && t.id !== currentTeam?.id,
@@ -155,15 +162,17 @@ export default function SettingsScreen() {
 
     const updatedTeam: SavedTeam = { ...currentTeam, name: newName };
     setCurrentTeam(updatedTeam);
-
-    // Save the team when name is updated
-    if (newName) {
-      saveCurrentTeam();
-    }
+    saveCurrentTeam();
   };
 
-  const handleTeam2NameChange = (name: string) => {
-    setTeam2Name(name);
+  const handleTeam2NameEndEditing = (e: { nativeEvent: { text: string } }) => {
+    const newName = e.nativeEvent.text.trim();
+    if (!newName) {
+      // Revert to previous value if empty
+      setTeam2NameResetKey((k) => k + 1);
+      return;
+    }
+    setTeam2Name(newName);
   };
 
   const handleGameToEndEditing = (e: { nativeEvent: { text: string } }) => {
@@ -312,8 +321,9 @@ export default function SettingsScreen() {
                   textInverseStyle,
                   inputBgStyle,
                 ]}
-                value={team2Name}
-                onChangeText={handleTeam2NameChange}
+                key={team2NameResetKey}
+                defaultValue={team2Name}
+                onEndEditing={handleTeam2NameEndEditing}
                 placeholder="Team 2 Name"
                 placeholderTextColor={palette.textMuted}
                 maxLength={20}

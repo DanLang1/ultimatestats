@@ -6,6 +6,7 @@ interface PlayerStatsStore {
   events: GameEvent[];
   team: 'team1' | 'team2';
   games?: SavedGame[] | null;
+  selectedGameId: string | null;
   openPlayerStats: (
     player: string,
     events: GameEvent[],
@@ -13,6 +14,7 @@ interface PlayerStatsStore {
     games?: SavedGame[],
   ) => void;
   closePlayerStats: () => void;
+  setSelectedGameId: (id: string | null) => void;
 }
 
 export const usePlayerStatsStore = create<PlayerStatsStore>((set) => ({
@@ -20,6 +22,10 @@ export const usePlayerStatsStore = create<PlayerStatsStore>((set) => ({
   events: [],
   team: 'team1',
   games: null,
-  openPlayerStats: (player, events, team, games) => set({ player, events, team, games }),
-  closePlayerStats: () => set({ player: null, events: [], team: 'team1', games: null }),
+  selectedGameId: null,
+  openPlayerStats: (player, events, team, games) =>
+    set({ player, events, team, games, selectedGameId: null }),
+  closePlayerStats: () =>
+    set({ player: null, events: [], team: 'team1', games: null, selectedGameId: null }),
+  setSelectedGameId: (id) => set({ selectedGameId: id }),
 }));

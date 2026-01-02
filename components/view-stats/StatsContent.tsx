@@ -186,8 +186,8 @@ const styles = StyleSheet.create({
   topPerformerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    paddingHorizontal: 8,
+    gap: 6,
+    paddingHorizontal: 4,
   },
   topPerformerRank: {
     fontSize: 12,
@@ -202,7 +202,7 @@ const styles = StyleSheet.create({
   topPerformerPlusMinus: {
     fontSize: 14,
     fontWeight: '800',
-    width: 36,
+    minWidth: 44,
     textAlign: 'right',
   },
   sectionHeader: {

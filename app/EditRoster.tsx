@@ -8,7 +8,16 @@ import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 
 
 export default function EditRosterScreen() {
   const { teamName } = useLocalSearchParams<{ teamName: string }>();
-  const { currentTeam, setCurrentTeam, addPlayer, saveCurrentTeam, clearRoster } = useGameStore();
+  const {
+    currentTeam,
+    setCurrentTeam,
+    addPlayer,
+    saveCurrentTeam,
+    clearRoster,
+    timerIsActive,
+    team1Score,
+    team2Score,
+  } = useGameStore();
   const { showAlert } = useAlert();
   const { palette } = useTheme();
 
@@ -60,9 +69,12 @@ export default function EditRosterScreen() {
   };
 
   const handleClearAll = () => {
+    const gameActive = timerIsActive || team1Score !== 0 || team2Score !== 0;
     showAlert({
       title: 'Clear Roster',
-      message: 'Remove all players from the roster?',
+      message: gameActive
+        ? 'There is a game in progress. Clearing the roster will affect stat tracking and may cause issues with the current game. Are you sure?'
+        : 'Remove all players from the roster?',
       buttons: [
         { text: 'Cancel', style: 'cancel' },
         {

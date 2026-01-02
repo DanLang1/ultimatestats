@@ -18,7 +18,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function PlayerStats() {
-  const { player, events, team, games } = usePlayerStatsStore();
+  const { player, events, team, games, selectedGameId } = usePlayerStatsStore();
   const { palette } = useTheme();
 
   const handleDismiss = () => {
@@ -33,10 +33,6 @@ export default function PlayerStats() {
     ? Math.max(...allPlayerStats.map((p) => p.plusMinus))
     : 0;
   const isMVP = summary?.plusMinus === highestPlusMinus && highestPlusMinus > 0;
-
-  // State for selected game in aggregate view
-  const [selectedGameId, setSelectedGameId] = React.useState<string | null>(null);
-  const [showGameSelector, setShowGameSelector] = React.useState(false);
 
   // Derive the effective selected game ID (default to latest if none selected)
   const defaultGameId =
@@ -199,7 +195,7 @@ export default function PlayerStats() {
                     VIEW GAME DETAILS
                   </Text>
                   <Pressable
-                    onPress={() => setShowGameSelector((prev) => !prev)}
+                    onPress={() => router.push('/GameSelectorModal')}
                     style={{
                       flexDirection: 'row',
                       alignItems: 'center',
@@ -215,83 +211,12 @@ export default function PlayerStats() {
                       {gameLabel}
                     </Text>
                     <MaterialCommunityIcons
-                      name={showGameSelector ? 'chevron-up' : 'chevron-down'}
+                      name="chevron-down"
                       size={18}
                       color={palette.textMuted}
                     />
                   </Pressable>
                 </View>
-              )}
-
-              {/* Game selector dropdown - rendered outside the card to avoid overflow clipping */}
-              {showGameSelector && games && games.length > 1 && (
-                <>
-                  {/* Backdrop to dismiss */}
-                  <Pressable
-                    onPress={() => setShowGameSelector(false)}
-                    style={StyleSheet.absoluteFill}
-                  />
-                  <View
-                    style={{
-                      position: 'absolute',
-                      top: 50,
-                      left: 32,
-                      backgroundColor: palette.primary,
-                      borderRadius: 12,
-                      borderWidth: 1,
-                      borderColor: palette.overlay15,
-                      padding: 8,
-                      elevation: 20,
-                      zIndex: 1000,
-                      width: 240,
-                      maxHeight: 350,
-                      shadowColor: '#000',
-                      shadowOffset: { width: 0, height: 6 },
-                      shadowOpacity: 0.4,
-                      shadowRadius: 12,
-                    }}>
-                    <ScrollView bounces={false}>
-                      {[...games]
-                        .sort((a, b) => b.createdAt - a.createdAt)
-                        .map((g) => {
-                          const isSelected = effectiveGameId === g.id;
-                          return (
-                            <Pressable
-                              key={g.id}
-                              onPress={() => {
-                                setSelectedGameId(g.id);
-                                setShowGameSelector(false);
-                              }}
-                              style={({ pressed }) => ({
-                                paddingVertical: 14,
-                                paddingHorizontal: 14,
-                                backgroundColor: isSelected
-                                  ? palette.accentOverlay10
-                                  : pressed
-                                    ? palette.overlay05
-                                    : 'transparent',
-                                borderRadius: 8,
-                                borderLeftWidth: isSelected ? 3 : 0,
-                                borderLeftColor: palette.accent,
-                              })}>
-                              <Text
-                                style={{
-                                  color: isSelected ? palette.accent : palette.textInverse,
-                                  fontSize: 15,
-                                  fontWeight: isSelected ? '700' : '500',
-                                }}>
-                                {new Date(g.createdAt).toLocaleDateString(undefined, {
-                                  month: 'short',
-                                  day: 'numeric',
-                                })}{' '}
-                                vs {g.team2Name}
-                              </Text>
-                            </Pressable>
-                          );
-                        })}
-                    </ScrollView>
-                  </View>
-                </>
               )}
 
               <ImpactTimeline data={stats.impact} palette={palette} />

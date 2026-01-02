@@ -39,85 +39,82 @@ export default function RoleDiamond({ roleStats, palette }: RoleDiamondProps) {
   return (
     <View style={styles.container}>
       <Text style={[styles.title, { color: palette.textMuted }]}>PROFILE</Text>
-      <View style={{ width: size, height: size }}>
-        <Svg width={size} height={size}>
-          {/* Axis lines */}
-          <SvgLine
-            x1={center}
-            y1={center - maxRadius}
-            x2={center}
-            y2={center + maxRadius}
-            stroke={palette.overlay10}
-            strokeWidth="1"
-          />
-          <SvgLine
-            x1={center - maxRadius}
-            y1={center}
-            x2={center + maxRadius}
-            y2={center}
-            stroke={palette.overlay10}
-            strokeWidth="1"
-          />
 
-          {/* Max outline */}
-          <Polygon
-            points={outlinePoints}
-            fill="none"
-            stroke={palette.overlay10}
-            strokeWidth="1"
-            strokeDasharray="4,4"
-          />
+      {/* Diamond with external labels */}
+      <View style={styles.diamondWrapper}>
+        {/* Left label: BLOCKS */}
+        <Text style={[styles.sideLabel, styles.leftLabel, { color: palette.textMuted }]}>
+          BLOCKS
+        </Text>
 
-          {/* Player shape */}
-          <Polygon
-            points={points}
-            fill={palette.accent}
-            fillOpacity={0.3}
-            stroke={palette.accent}
-            strokeWidth="2"
-          />
+        {/* SVG Diamond */}
+        <View style={{ width: size, height: size }}>
+          <Svg width={size} height={size}>
+            {/* Axis lines */}
+            <SvgLine
+              x1={center}
+              y1={center - maxRadius}
+              x2={center}
+              y2={center + maxRadius}
+              stroke={palette.overlay10}
+              strokeWidth="1"
+            />
+            <SvgLine
+              x1={center - maxRadius}
+              y1={center}
+              x2={center + maxRadius}
+              y2={center}
+              stroke={palette.overlay10}
+              strokeWidth="1"
+            />
 
-          {/* Center dot */}
-          <Circle cx={center} cy={center} r="3" fill={palette.textMuted} />
+            {/* Max outline */}
+            <Polygon
+              points={outlinePoints}
+              fill="none"
+              stroke={palette.overlay10}
+              strokeWidth="1"
+              strokeDasharray="4,4"
+            />
 
-          {/* Labels */}
-          <SvgText
-            x={center}
-            y={12}
-            fill={palette.textMuted}
-            fontSize="9"
-            fontWeight="600"
-            textAnchor="middle">
-            GOALS
-          </SvgText>
-          <SvgText
-            x={size - 8}
-            y={center + 3}
-            fill={palette.textMuted}
-            fontSize="9"
-            fontWeight="600"
-            textAnchor="end">
-            ASSISTS
-          </SvgText>
-          <SvgText
-            x={center}
-            y={size - 4}
-            fill={palette.danger}
-            fontSize="9"
-            fontWeight="600"
-            textAnchor="middle">
-            TURNS
-          </SvgText>
-          <SvgText
-            x={8}
-            y={center + 3}
-            fill={palette.textMuted}
-            fontSize="9"
-            fontWeight="600"
-            textAnchor="start">
-            BLOCKS
-          </SvgText>
-        </Svg>
+            {/* Player shape */}
+            <Polygon
+              points={points}
+              fill={palette.accent}
+              fillOpacity={0.3}
+              stroke={palette.accent}
+              strokeWidth="2"
+            />
+
+            {/* Center dot */}
+            <Circle cx={center} cy={center} r="3" fill={palette.textMuted} />
+
+            {/* Top/Bottom labels stay in SVG since they don't overlap */}
+            <SvgText
+              x={center}
+              y={12}
+              fill={palette.textMuted}
+              fontSize="9"
+              fontWeight="600"
+              textAnchor="middle">
+              GOALS
+            </SvgText>
+            <SvgText
+              x={center}
+              y={size - 4}
+              fill={palette.danger}
+              fontSize="9"
+              fontWeight="600"
+              textAnchor="middle">
+              TURNS
+            </SvgText>
+          </Svg>
+        </View>
+
+        {/* Right label: ASSISTS */}
+        <Text style={[styles.sideLabel, styles.rightLabel, { color: palette.textMuted }]}>
+          ASSISTS
+        </Text>
       </View>
     </View>
   );
@@ -134,5 +131,20 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
     marginBottom: 8,
     textTransform: 'uppercase',
+  },
+  diamondWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  sideLabel: {
+    fontSize: 9,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+  },
+  leftLabel: {
+    marginRight: 4,
+  },
+  rightLabel: {
+    marginLeft: 4,
   },
 });
