@@ -1,5 +1,5 @@
 import { useTheme } from '@/context/ThemeContext';
-import { normalizeHexColor, TEAM_COLOR_PRESETS } from '@/lib/colorUtils';
+import { getContrastingTextColor, normalizeHexColor, TEAM_COLOR_PRESETS } from '@/lib/colorUtils';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React, { useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -61,7 +61,7 @@ export function TeamColorPicker({ label, value, onChange }: ColorPickerProps) {
               <MaterialCommunityIcons
                 name="check"
                 size={16}
-                color={preset.hex === '#FFFFFF' || preset.hex === '#FFD700' ? '#000' : '#FFF'}
+                color={getContrastingTextColor(preset.hex)}
               />
             )}
           </Pressable>

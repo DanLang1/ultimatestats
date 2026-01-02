@@ -93,9 +93,6 @@ export default function GameTimelineScreen() {
             <Text style={[styles.emptyText, { color: palette.textMuted }]}>
               No events to display
             </Text>
-            <Text style={[styles.emptySubtext, { color: palette.textSecondary }]}>
-              Events will appear here as they occur
-            </Text>
           </View>
         )}
       </ScrollView>

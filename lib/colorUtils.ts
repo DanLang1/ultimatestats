@@ -6,25 +6,27 @@
  * Common team colors for the preset picker
  */
 export const TEAM_COLOR_PRESETS = [
-  // Light colors (will have dark text)
+  // Neutrals
   { name: 'White', hex: '#FFFFFF' },
-  { name: 'Silver', hex: '#C0C0C0' },
-  { name: 'Gold', hex: '#FFD700' },
-  { name: 'Yellow', hex: '#FFEB3B' },
-  { name: 'Lime', hex: '#8BC34A' },
-  { name: 'Sky', hex: '#87CEEB' },
-
-  // Dark colors (will have light text)
+  { name: 'Gray', hex: '#6B7280' },
   { name: 'Black', hex: '#1A1A1A' },
-  { name: 'Navy', hex: '#0F172A' },
-  { name: 'Blue', hex: '#1E40AF' },
-  { name: 'Red', hex: '#B91C1C' },
-  { name: 'Green', hex: '#15803D' },
-  { name: 'Purple', hex: '#7C3AED' },
+
+  // ROYGBIV spectrum
+  { name: 'Red', hex: '#DC2626' },
+  { name: 'Orange', hex: '#EA580C' },
+  { name: 'Yellow', hex: '#EAB308' },
+  { name: 'Green', hex: '#16A34A' },
+  { name: 'Blue', hex: '#2563EB' },
+  { name: 'Indigo', hex: '#4F46E5' },
+  { name: 'Violet', hex: '#7C3AED' },
+
+  // Popular team colors
+  { name: 'Navy', hex: '#1E3A5F' },
   { name: 'Maroon', hex: '#7F1D1D' },
   { name: 'Teal', hex: '#0D9488' },
-  { name: 'Orange', hex: '#EA580C' },
   { name: 'Pink', hex: '#DB2777' },
+  { name: 'Sky', hex: '#38BDF8' },
+  { name: 'Lime', hex: '#84CC16' },
 ] as const;
 
 /**
