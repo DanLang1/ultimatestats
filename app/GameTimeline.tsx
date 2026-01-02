@@ -12,7 +12,8 @@ export default function GameTimelineScreen() {
   const { palette } = useTheme();
   const params = useLocalSearchParams<{ gameId?: string }>();
 
-  const { team1Name, team2Name, events, savedGames, startingPossession, gameTo } = useGameStore();
+  const { currentTeam, team2Name, events, savedGames, startingPossession, gameTo } = useGameStore();
+  const team1Name = currentTeam?.name ?? 'Team 1';
 
   // If a gameId is passed, load that saved game; otherwise use current game
   const gameData = params.gameId
@@ -20,7 +21,7 @@ export default function GameTimelineScreen() {
         const game = savedGames.find((g) => g.id === params.gameId);
         if (!game) return null;
         return {
-          team1Name: game.team1Name,
+          team1Name: game.team1.name,
           team2Name: game.team2Name,
           events: game.events,
           team1Score: game.team1Score,

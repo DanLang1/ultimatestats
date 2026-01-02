@@ -5,11 +5,13 @@ import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import { Switch } from '@/components/ui/Switch';
 import { TeamDropdown } from '@/components/ui/TeamDropdown';
 import { useTheme } from '@/context/ThemeContext';
+import { SavedTeam } from '@/lib/storage';
+import { generateId } from '@/lib/utils';
 import { useGameStore } from '@/store/gameStore';
 import { useTutorialStore } from '@/store/tutorialStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router, Stack } from 'expo-router';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 export default function SettingsScreen() {
@@ -18,13 +20,14 @@ export default function SettingsScreen() {
   const { hasSeenStatsTutorial, triggerStatsTutorial } = useTutorialStore();
 
   const {
-    team1Name,
+    currentTeam,
+    setCurrentTeam,
     team2Name,
+    setTeam2Name,
     team1BgColor,
     team2BgColor,
     gameTo,
     team1Timeouts,
-    setTeamNames,
     setTeamBgColor,
     setGameTo,
     resetTimeouts,
@@ -37,25 +40,28 @@ export default function SettingsScreen() {
     resetGame,
     statTrackingEnabled,
     setStatTrackingEnabled,
-    team1Roster,
-    clearRoster,
     timerIsActive,
     team1Score,
     team2Score,
     savedTeams,
     loadSavedTeams,
-    loadTeamRoster,
+    loadTeam,
     deleteTeam,
-    saveTeam,
+    saveCurrentTeam,
   } = useGameStore();
+
+  // Derived values from currentTeam
+  const team1Name = currentTeam?.name ?? 'Team 1';
+  const team1Roster = currentTeam?.roster ?? [];
+  const hasRoster = team1Roster.length > 0;
 
   // Load saved teams on mount
   useEffect(() => {
     loadSavedTeams();
   }, [loadSavedTeams]);
 
-  const hasRoster = team1Roster.length > 0;
   const timeoutsCount = team1Timeouts.length;
+  const [team1NameResetKey, setTeam1NameResetKey] = useState(0);
 
   // Soft Cap displays as time (when soft cap triggers), converts to softCapMins for storage
   const softCapTime = gameLength - softCapMins;
@@ -99,12 +105,24 @@ export default function SettingsScreen() {
     router.push({ pathname: '/EditRoster', params: { teamName: team1Name } });
   };
 
-  const handleLoadTeam = (option: { id: string; label: string }) => {
+  const handleLoadTeam = async (option: { id: string; label: string }) => {
     if (option.id === 'new-team') {
-      clearRoster();
-      setTeamNames('New Team', team2Name);
+      // Save the current team's roster before switching to a new team
+      if (hasRoster && currentTeam) {
+        await saveCurrentTeam();
+      }
+      // Create a new empty team
+      setCurrentTeam({
+        id: generateId(),
+        name: 'New Team',
+        roster: [],
+      });
     } else {
-      loadTeamRoster(option.id, 'team1');
+      // Save current team before loading a different one
+      if (hasRoster && currentTeam) {
+        await saveCurrentTeam();
+      }
+      loadTeam(option.id);
     }
   };
 
@@ -114,15 +132,38 @@ export default function SettingsScreen() {
 
   // Save team when name editing finishes (not on every keystroke)
   const handleTeam1NameEndEditing = (e: { nativeEvent: { text: string } }) => {
-    const name = e.nativeEvent.text;
-    setTeamNames(name, team2Name);
-    if (hasRoster && name.trim()) {
-      saveTeam(name, team1Roster);
+    const newName = e.nativeEvent.text.trim();
+
+    // Check if name already exists (case-insensitive, excluding current team)
+    const existingTeam = savedTeams.find(
+      (t) => t.name.toLowerCase() === newName.toLowerCase() && t.id !== currentTeam?.id,
+    );
+
+    if (existingTeam) {
+      showAlert({
+        title: 'Team Name Exists',
+        message: `A team named "${existingTeam.name}" already exists. Please choose a different name.`,
+        buttons: [{ text: 'I will not try to break the app again', style: 'default' }],
+      });
+      // Force TextInput to re-render with original name
+      setTeam1NameResetKey((k) => k + 1);
+      return;
+    }
+
+    // currentTeam should always exist by this point (set on load or when creating new team)
+    if (!currentTeam) return;
+
+    const updatedTeam: SavedTeam = { ...currentTeam, name: newName };
+    setCurrentTeam(updatedTeam);
+
+    // Save the team when name is updated
+    if (newName) {
+      saveCurrentTeam();
     }
   };
 
   const handleTeam2NameChange = (name: string) => {
-    setTeamNames(team1Name, name);
+    setTeam2Name(name);
   };
 
   const handleGameToEndEditing = (e: { nativeEvent: { text: string } }) => {
@@ -205,6 +246,7 @@ export default function SettingsScreen() {
                       inputBgStyle,
                       gameActive && styles.inputDisabled,
                     ]}
+                    key={team1NameResetKey}
                     defaultValue={team1Name}
                     onEndEditing={handleTeam1NameEndEditing}
                     placeholder="Team 1 Name"
@@ -213,12 +255,12 @@ export default function SettingsScreen() {
                     editable={!gameActive}
                   />
                 </View>
-                {savedTeams.filter((t) => t.name !== team1Name).length > 0 ? (
+                {savedTeams.filter((t) => t.id !== currentTeam?.id).length > 0 ? (
                   <TeamDropdown
                     options={[
                       { id: 'new-team', label: '+ New Team' },
                       ...savedTeams
-                        .filter((t) => t.name !== team1Name)
+                        .filter((t) => t.id !== currentTeam?.id)
                         .map((t) => ({ id: t.id, label: t.name })),
                     ]}
                     placeholder="Teams"

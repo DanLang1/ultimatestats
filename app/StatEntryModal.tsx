@@ -6,9 +6,11 @@ import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 export default function StatEntryScreen() {
-  const { pendingStatEntry, team1Name, team2Name, team1Roster, addPlayer, addGoalEvent } =
-    useGameStore();
+  const { pendingStatEntry, currentTeam, team2Name, addPlayer, addGoalEvent } = useGameStore();
   const { palette } = useTheme();
+
+  const team1Name = currentTeam?.name ?? 'Team 1';
+  const team1Roster = currentTeam?.roster ?? [];
 
   // If no pending entry, just render nothing - the useEffect in index.tsx won't push here
   if (!pendingStatEntry) {

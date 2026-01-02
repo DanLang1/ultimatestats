@@ -11,8 +11,11 @@ export const useGameStore = create<GameState>()(
   immer(
     persist(
       (set, get) => ({
-        team1Name: 'Team 1',
+        // Teams - default to Team 1 so addPlayer always has a team to work with
+        currentTeam: { id: generateId(), name: 'Team 1', roster: [] },
         team2Name: 'Team 2',
+
+        // Team colors and game state
         team1BgColor: palette.surface,
         team2BgColor: palette.primary,
         team1Score: 0,
@@ -35,7 +38,6 @@ export const useGameStore = create<GameState>()(
 
         // Stat Tracking Initial State
         statTrackingEnabled: false,
-        team1Roster: [],
         events: [], // Unified event log
         pendingStatEntry: null,
 
@@ -51,16 +53,22 @@ export const useGameStore = create<GameState>()(
         savedGames: [],
         savedTeams: [],
 
-        setTeamNames: (team1: string, team2: string) =>
+        setCurrentTeam: (team: SavedTeam) =>
           set((state: GameState) => {
-            state.team1Name = team1;
-            state.team2Name = team2;
+            state.currentTeam = team;
           }),
+
+        setTeam2Name: (name: string) =>
+          set((state: GameState) => {
+            state.team2Name = name;
+          }),
+
         setTeamBgColor: (team: 'team1' | 'team2', color: string) =>
           set((state: GameState) => {
             if (team === 'team1') state.team1BgColor = color;
             else state.team2BgColor = color;
           }),
+
         setFloaterEnabled: (enabled: boolean) =>
           set((state: GameState) => {
             state.floaterEnabled = enabled;
@@ -71,6 +79,7 @@ export const useGameStore = create<GameState>()(
             state.gameTo = gameTo;
             state.baseGameTo = gameTo;
           }),
+
         setGameLength: (minutes: number) =>
           set((state: GameState) => {
             state.gameLength = minutes;
@@ -239,14 +248,17 @@ export const useGameStore = create<GameState>()(
           set((state: GameState) => {
             state.softCapMins = minutes;
           }),
+
         setTimerActive: (active: boolean) =>
           set((state: GameState) => {
             state.timerIsActive = active;
           }),
+
         setTimerEndTime: (time: number | null) =>
           set((state: GameState) => {
             state.timerEndTime = time;
           }),
+
         setTimerTimeLeft: (seconds: number) =>
           set((state: GameState) => {
             state.timerTimeLeft = seconds;
@@ -262,8 +274,8 @@ export const useGameStore = create<GameState>()(
           set((state: GameState) => {
             const trimmedName = name.trim();
             if (!trimmedName) return;
-            if (state.team1Roster.includes(trimmedName)) return;
-            state.team1Roster.push(trimmedName);
+            if (state.currentTeam.roster.includes(trimmedName)) return;
+            state.currentTeam.roster.push(trimmedName);
           }),
 
         addGoalEvent: (event: {
@@ -286,21 +298,11 @@ export const useGameStore = create<GameState>()(
             state.pendingStatEntry = null;
           }),
 
-        clearRoster: async () => {
-          const { team1Name, saveTeam } = get();
+        clearRoster: () =>
           set((state: GameState) => {
-            state.team1Roster = [];
+            if (!state.currentTeam) return;
+            state.currentTeam.roster = [];
             state.events = [];
-          });
-          // Update saved team with empty roster
-          if (team1Name) {
-            await saveTeam(team1Name, []);
-          }
-        },
-
-        setRoster: (team: 'team1' | 'team2', roster: string[]) =>
-          set((state: GameState) => {
-            if (team === 'team1') state.team1Roster = roster;
           }),
 
         // Turnover Tracking Actions
@@ -370,11 +372,10 @@ export const useGameStore = create<GameState>()(
             id: gameId,
             schemaVersion: CURRENT_SCHEMA_VERSION,
             createdAt: Date.now(),
-            team1Name: state.team1Name,
+            team1: state.currentTeam,
             team2Name: state.team2Name,
             team1Score: state.team1Score,
             team2Score: state.team2Score,
-            team1Roster: state.team1Roster,
             events: eventsWithGameId,
             gameTo: state.gameTo,
             gameLength: state.gameLength,
@@ -395,18 +396,10 @@ export const useGameStore = create<GameState>()(
           });
         },
 
-        saveTeam: async (name: string, roster: string[]) => {
-          const existingTeams = await storage.loadTeams();
-          const existingTeam = existingTeams.find(
-            (t) => t.name.toLowerCase() === name.toLowerCase(),
-          );
+        saveCurrentTeam: async () => {
+          const state = get();
+          const team = state.currentTeam;
 
-          const team: SavedTeam = {
-            id: existingTeam?.id || generateId(),
-            name,
-            roster,
-            lastUsed: Date.now(),
-          };
           await storage.saveTeam(team);
           const teams = await storage.loadTeams();
           set((state: GameState) => {
@@ -422,12 +415,16 @@ export const useGameStore = create<GameState>()(
           });
         },
 
-        loadTeamRoster: (teamId: string, targetTeam: 'team1' | 'team2') => {
+        loadTeam: (teamId: string) => {
           const team = get().savedTeams.find((t) => t.id === teamId);
-          if (!team || targetTeam !== 'team1') return;
+          if (!team) return;
           set((state: GameState) => {
-            state.team1Roster = team.roster;
-            state.team1Name = team.name;
+            // Deep copy to avoid mutating savedTeams
+            state.currentTeam = {
+              id: team.id,
+              name: team.name,
+              roster: [...team.roster],
+            };
           });
         },
       }),
@@ -436,7 +433,7 @@ export const useGameStore = create<GameState>()(
         storage: createJSONStorage(() => AsyncStorage),
         // Only persist game-related state, not UI state like pending entries
         partialize: (state: GameState) => ({
-          team1Name: state.team1Name,
+          currentTeam: state.currentTeam,
           team2Name: state.team2Name,
           team1BgColor: state.team1BgColor,
           team2BgColor: state.team2BgColor,
@@ -456,7 +453,6 @@ export const useGameStore = create<GameState>()(
           softCapMins: state.softCapMins,
           timerTimeLeft: state.timerTimeLeft,
           statTrackingEnabled: state.statTrackingEnabled,
-          team1Roster: state.team1Roster,
           events: state.events,
           currentPoint: state.currentPoint,
           possession: state.possession,

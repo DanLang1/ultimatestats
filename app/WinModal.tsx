@@ -11,7 +11,7 @@ export default function WinModal() {
     team1Score,
     team2Score,
     gameTo,
-    team1Name,
+    currentTeam,
     team2Name,
     saveCurrentGame,
     resetGame,
@@ -19,6 +19,8 @@ export default function WinModal() {
     undoLastAction,
   } = useGameStore();
   const { palette } = useTheme();
+
+  const team1Name = currentTeam?.name ?? 'Team 1';
 
   const isGameOver = team1Score >= gameTo || team2Score >= gameTo;
 

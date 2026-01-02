@@ -21,7 +21,7 @@ export default function SavedGamesList({ games, onSelectGame, onDeleteGame }: Sa
   const handleDelete = (game: SavedGame) => {
     showAlert({
       title: 'Delete Game?',
-      message: `Delete ${game.team1Name} vs ${game.team2Name} (${game.team1Score}-${game.team2Score})?`,
+      message: `Delete ${game.team1.name} vs ${game.team2Name} (${game.team1Score}-${game.team2Score})?`,
       buttons: [
         { text: 'Cancel', style: 'cancel' },
         { text: 'Delete', style: 'destructive', onPress: () => onDeleteGame(game.id) },
@@ -69,7 +69,7 @@ export default function SavedGamesList({ games, onSelectGame, onDeleteGame }: Sa
                 <Text
                   style={[styles.savedGameTeamName, { color: palette.textInverse }]}
                   numberOfLines={1}>
-                  {game.team1Name}
+                  {game.team1.name}
                 </Text>
                 <ScoreBadge score1={game.team1Score} score2={game.team2Score} />
                 <Text

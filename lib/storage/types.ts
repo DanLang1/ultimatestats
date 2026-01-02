@@ -9,11 +9,10 @@ export interface SavedGame {
   id: string;
   schemaVersion: number; // For future migrations - always set to CURRENT_SCHEMA_VERSION on save
   createdAt: number; // timestamp
-  team1Name: string;
+  team1: SavedTeam; // My team (id, name, roster)
   team2Name: string;
   team1Score: number;
   team2Score: number;
-  team1Roster: string[];
   events: GameEvent[];
   gameTo: number;
   gameLength: number;
@@ -24,7 +23,6 @@ export interface SavedTeam {
   id: string;
   name: string;
   roster: string[];
-  lastUsed: number; // timestamp
 }
 
 // Storage interface - implement this for different storage backends

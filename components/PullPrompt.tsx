@@ -5,8 +5,9 @@ import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeIn, SlideInDown } from 'react-native-reanimated';
 
 export default function PullPrompt() {
-  const { possession, statTrackingEnabled, team1Name, team2Name, setPossession } = useGameStore();
+  const { possession, statTrackingEnabled, currentTeam, team2Name, setPossession } = useGameStore();
   const { palette } = useTheme();
+  const team1Name = currentTeam?.name ?? 'Team 1';
 
   // Only show when stat tracking is enabled and possession is null
   const visible = statTrackingEnabled && possession === null;

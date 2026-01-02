@@ -13,7 +13,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 export default function GameInfoScreen() {
   const {
     gameTo,
-    team1Name,
+    currentTeam,
     team2Name,
     team1Timeouts,
     team2Timeouts,
@@ -24,6 +24,8 @@ export default function GameInfoScreen() {
     isSoftCap,
     softCapPending,
   } = useGameStore();
+
+  const team1Name = currentTeam?.name ?? 'Team 1';
 
   const { timeLeft } = useGameTimer();
   const isHardcap = timeLeft === 0;

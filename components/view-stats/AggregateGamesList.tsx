@@ -34,16 +34,16 @@ export default function AggregateGamesList({
 }: AggregateGamesListProps) {
   const { palette } = useTheme();
 
-  // Group games by team1Name
+  // Group games by team1.name
   const groupMap = new Map<string, { gameCount: number; totalPoints: number }>();
   for (const game of games) {
     const goalCount = game.events.filter((e) => e.type === 'goal').length;
-    const existing = groupMap.get(game.team1Name);
+    const existing = groupMap.get(game.team1.name);
     if (existing) {
       existing.gameCount++;
       existing.totalPoints += goalCount;
     } else {
-      groupMap.set(game.team1Name, {
+      groupMap.set(game.team1.name, {
         gameCount: 1,
         totalPoints: goalCount,
       });
@@ -55,7 +55,7 @@ export default function AggregateGamesList({
 
   // Games for the selected team
   const gamesForTeam = selectedTeam
-    ? games.filter((g) => g.team1Name === selectedTeam).sort((a, b) => b.createdAt - a.createdAt)
+    ? games.filter((g) => g.team1.name === selectedTeam).sort((a, b) => b.createdAt - a.createdAt)
     : [];
 
   // Empty state

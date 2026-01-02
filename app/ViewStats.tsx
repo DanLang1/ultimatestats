@@ -23,7 +23,7 @@ type ViewMode = 'current' | 'saved' | 'aggregate';
 
 export default function ViewStatsScreen() {
   const {
-    team1Name,
+    currentTeam,
     team2Name,
     team1Score,
     team2Score,
@@ -36,6 +36,8 @@ export default function ViewStatsScreen() {
   } = useGameStore();
   const { showAlert } = useAlert();
   const { palette } = useTheme();
+
+  const team1Name = currentTeam?.name ?? 'Team 1';
 
   const [viewMode, setViewMode] = useState<ViewMode>('current');
   const [selectedGame, setSelectedGame] = useState<SavedGame | null>(null);
@@ -53,7 +55,7 @@ export default function ViewStatsScreen() {
   // Derive which data to display
   const displayData = selectedGame
     ? {
-        team1Name: selectedGame.team1Name,
+        team1Name: selectedGame.team1.name,
         team2Name: selectedGame.team2Name,
         team1Score: selectedGame.team1Score,
         team2Score: selectedGame.team2Score,
@@ -194,7 +196,7 @@ export default function ViewStatsScreen() {
     if (!selectedTeam) return;
     if (select) {
       // Select all games for this team
-      const games = savedGames.filter((g) => g.team1Name === selectedTeam);
+      const games = savedGames.filter((g) => g.team1.name === selectedTeam);
       setSelectedGameIds(new Set(games.map((g) => g.id)));
     } else {
       // Deselect all

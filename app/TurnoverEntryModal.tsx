@@ -12,14 +12,16 @@ export default function TurnoverEntryScreen() {
     pendingTurnoverEntry,
     possession,
     statTrackingEnabled,
-    team1Name,
+    currentTeam,
     team2Name,
-    team1Roster,
     addPlayer,
     addTurnoverEvent,
     clearPendingTurnoverEntry,
   } = useGameStore();
   const { palette } = useTheme();
+
+  const team1Name = currentTeam?.name ?? 'Team 1';
+  const team1Roster = currentTeam?.roster ?? [];
 
   // If no pending entry, just render nothing
   if (!pendingTurnoverEntry) {

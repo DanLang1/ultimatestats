@@ -13,7 +13,7 @@ import { StyleSheet, View } from 'react-native';
 
 export default function BasicScoreboard() {
   const {
-    team1Name,
+    currentTeam,
     team2Name,
     team1BgColor,
     team2BgColor,
@@ -33,6 +33,8 @@ export default function BasicScoreboard() {
     triggerTurnover,
     addTurnoverEvent,
   } = useGameStore();
+
+  const team1Name = currentTeam?.name ?? 'Team 1';
 
   const openSettings = () => {
     router.push('/Settings');

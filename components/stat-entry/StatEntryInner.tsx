@@ -77,6 +77,7 @@ export function StatEntryInner({
                 placeholderTextColor={palette.textMuted}
                 onSubmitEditing={handleAddPlayer}
                 returnKeyType="done"
+                maxLength={20}
               />
               <Pressable
                 style={[

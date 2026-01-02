@@ -5,9 +5,11 @@ import { Modal, Pressable, StyleSheet } from 'react-native';
 import { StatEntryInner } from './stat-entry/StatEntryInner';
 
 export default function StatEntrySheet() {
-  const { pendingStatEntry, team1Name, team2Name, team1Roster, addPlayer, addGoalEvent } =
-    useGameStore();
+  const { pendingStatEntry, currentTeam, team2Name, addPlayer, addGoalEvent } = useGameStore();
   const { palette } = useTheme();
+
+  const team1Name = currentTeam?.name ?? 'Team 1';
+  const team1Roster = currentTeam?.roster ?? [];
 
   const visible = pendingStatEntry !== null;
   const teamName = pendingStatEntry?.team === 'team1' ? team1Name : team2Name;

@@ -26,9 +26,11 @@ export type GameEvent =
     };
 
 export interface GameState {
-  // State
-  team1Name: string;
-  team2Name: string;
+  // Teams
+  currentTeam: SavedTeam; // My team (id, name, roster) - defaults to Team 1
+  team2Name: string; // Opposing team name (no roster/ID needed)
+
+  // Team colors and game state
   team1BgColor: string;
   team2BgColor: string;
   team1Score: number;
@@ -52,7 +54,6 @@ export interface GameState {
 
   // Stat Tracking
   statTrackingEnabled: boolean;
-  team1Roster: string[];
   events: GameEvent[]; // Unified event log
   pendingStatEntry: { team: 'team1' | 'team2'; pointNumber: number } | null;
 
@@ -65,7 +66,8 @@ export interface GameState {
   currentPoint: number;
 
   // Actions
-  setTeamNames: (team1: string, team2: string) => void;
+  setCurrentTeam: (team: SavedTeam) => void;
+  setTeam2Name: (name: string) => void;
   setTeamBgColor: (team: 'team1' | 'team2', color: string) => void;
   setFloaterEnabled: (enabled: boolean) => void;
   setGameTo: (score: number) => void;
@@ -85,14 +87,13 @@ export interface GameState {
   // Stat Tracking Actions
   setStatTrackingEnabled: (enabled: boolean) => void;
   addPlayer: (name: string) => void;
-  setRoster: (team: 'team1' | 'team2', roster: string[]) => void;
   addGoalEvent: (event: {
     team: 'team1' | 'team2';
     goal: string | null;
     assist: string | null;
   }) => void;
   clearPendingStatEntry: () => void;
-  clearRoster: () => Promise<void>;
+  clearRoster: () => void;
 
   // Turnover Tracking Actions
   setPossession: (team: 'team1' | 'team2') => void;
@@ -112,7 +113,7 @@ export interface GameState {
   loadSavedTeams: () => Promise<void>;
   saveCurrentGame: () => Promise<void>;
   deleteSavedGame: (id: string) => Promise<void>;
-  saveTeam: (name: string, roster: string[]) => Promise<void>;
+  saveCurrentTeam: () => Promise<void>;
   deleteTeam: (id: string) => Promise<void>;
-  loadTeamRoster: (teamId: string, targetTeam: 'team1' | 'team2') => void;
+  loadTeam: (teamId: string) => void;
 }

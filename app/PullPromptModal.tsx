@@ -6,8 +6,9 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeIn, SlideInDown } from 'react-native-reanimated';
 
 export default function PullPromptScreen() {
-  const { possession, statTrackingEnabled, team1Name, team2Name, setPossession } = useGameStore();
+  const { possession, statTrackingEnabled, currentTeam, team2Name, setPossession } = useGameStore();
   const { palette } = useTheme();
+  const team1Name = currentTeam?.name ?? 'Team 1';
 
   // If possession is already set or tracking disabled, just render nothing
   if (possession !== null || !statTrackingEnabled) {

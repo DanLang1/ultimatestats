@@ -8,9 +8,12 @@ import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 
 
 export default function EditRosterScreen() {
   const { teamName } = useLocalSearchParams<{ teamName: string }>();
-  const { team1Roster, team1Name, setRoster, addPlayer, saveTeam, clearRoster } = useGameStore();
+  const { currentTeam, setCurrentTeam, addPlayer, saveCurrentTeam, clearRoster } = useGameStore();
   const { showAlert } = useAlert();
   const { palette } = useTheme();
+
+  // Derived values
+  const team1Roster = currentTeam?.roster ?? [];
 
   const [newPlayerName, setNewPlayerName] = useState('');
   const [editModalVisible, setEditModalVisible] = useState(false);
@@ -24,19 +27,15 @@ export default function EditRosterScreen() {
     if (trimmed && !team1Roster.includes(trimmed)) {
       addPlayer(trimmed);
       setNewPlayerName('');
-      // Auto-save team with current name
-      if (team1Name) {
-        const newRoster = [...team1Roster, trimmed];
-        saveTeam(team1Name, newRoster);
-      }
+      // Auto-save team
+      saveCurrentTeam();
     }
   };
 
   const handleRemovePlayer = (playerName: string) => {
-    setRoster(
-      'team1',
-      team1Roster.filter((p) => p !== playerName),
-    );
+    if (!currentTeam) return;
+    const newRoster = team1Roster.filter((p: string) => p !== playerName);
+    setCurrentTeam({ ...currentTeam, roster: newRoster });
   };
 
   const handleEditPlayer = (playerName: string) => {
@@ -47,13 +46,11 @@ export default function EditRosterScreen() {
 
   const handleConfirmEdit = () => {
     const newName = editPlayerName.trim();
-    if (newName && newName !== editingPlayer && !team1Roster.includes(newName)) {
-      const updatedRoster = team1Roster.map((p) => (p === editingPlayer ? newName : p));
-      setRoster('team1', updatedRoster);
+    if (newName && newName !== editingPlayer && !team1Roster.includes(newName) && currentTeam) {
+      const updatedRoster = team1Roster.map((p: string) => (p === editingPlayer ? newName : p));
+      setCurrentTeam({ ...currentTeam, roster: updatedRoster });
       // Auto-save team
-      if (team1Name) {
-        saveTeam(team1Name, updatedRoster);
-      }
+      saveCurrentTeam();
     }
     setEditModalVisible(false);
   };
@@ -71,7 +68,13 @@ export default function EditRosterScreen() {
         {
           text: 'Clear All',
           style: 'destructive',
-          onPress: () => clearRoster(),
+          onPress: () => {
+            clearRoster();
+            // Clear the saved version too
+            if (currentTeam) {
+              setCurrentTeam({ ...currentTeam, roster: [] });
+            }
+          },
         },
       ],
     });
@@ -124,6 +127,7 @@ export default function EditRosterScreen() {
             onSubmitEditing={handleAddPlayer}
             returnKeyType="done"
             autoCapitalize="words"
+            maxLength={20}
           />
           {isDuplicateName && (
             <Text
@@ -162,7 +166,7 @@ export default function EditRosterScreen() {
           </View>
         ) : (
           <View style={styles.playerGrid}>
-            {team1Roster.map((player) => (
+            {team1Roster.map((player: string) => (
               <View key={player} style={[styles.chip, { backgroundColor: palette.overlay12 }]}>
                 <Pressable
                   onPress={() => handleEditPlayer(player)}
@@ -216,6 +220,7 @@ export default function EditRosterScreen() {
               value={editPlayerName}
               onChangeText={setEditPlayerName}
               autoFocus
+              maxLength={20}
             />
             <View style={styles.modalButtons}>
               <Pressable

@@ -414,13 +414,13 @@ export function generateCurrentGameCSV(
 export function generateSavedGameCSV(game: SavedGame): string {
   const playerStats = computePlayerStats(game.events, 'team1');
 
-  let csv = `# Game: ${game.team1Name} vs ${game.team2Name} - ${formatDateForCSV(game.createdAt)}\n`;
+  let csv = `# Game: ${game.team1.name} vs ${game.team2Name} - ${formatDateForCSV(game.createdAt)}\n`;
 
   csv += '\n# Play-by-Play\n';
-  csv += playByPlayCSV(game.events, game.team1Name, game.team2Name);
+  csv += playByPlayCSV(game.events, game.team1.name, game.team2Name);
 
   csv += '\n\n# Turnovers\n';
-  csv += turnoversCSV(game.events, game.team1Name, game.team2Name);
+  csv += turnoversCSV(game.events, game.team1.name, game.team2Name);
 
   csv += '\n\n# Player Summary\n';
   csv += playerSummaryCSV(playerStats);
@@ -473,10 +473,10 @@ export function generateAggregateCSV(games: SavedGame[], teamName: string): stri
     csv += playerSummaryCSV(computePlayerStats(game.events, 'team1'));
 
     csv += '\n\n# Play-by-Play\n';
-    csv += playByPlayCSV(game.events, game.team1Name, game.team2Name);
+    csv += playByPlayCSV(game.events, game.team1.name, game.team2Name);
 
     csv += '\n\n# Turnovers\n';
-    csv += turnoversCSV(game.events, game.team1Name, game.team2Name);
+    csv += turnoversCSV(game.events, game.team1.name, game.team2Name);
   }
 
   return csv;
