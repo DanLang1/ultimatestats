@@ -8,7 +8,7 @@ import TutorialStep from './TutorialStep';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
-const PRIVACY_URL = 'https://ultimatestats.netlify.app/privacy/';
+const PRIVACY_URL = 'https://ustat.netlify.app/privacy/';
 
 const TUTORIAL_STEPS = [
   {

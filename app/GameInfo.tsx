@@ -331,7 +331,7 @@ export default function GameInfoScreen() {
         <Pressable
           style={[styles.tutorialButton, { backgroundColor: palette.overlay08 }]}
           onPress={() => {
-            Linking.openURL('https://ultimatestats.netlify.app/privacy/');
+            Linking.openURL('https://ustat.netlify.app/privacy/');
           }}>
           <MaterialCommunityIcons name="shield-lock-outline" size={24} color={palette.accent} />
           <View style={styles.tutorialButtonContent}>
