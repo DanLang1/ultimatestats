@@ -6,7 +6,7 @@ import { StyleSheet, Text, View } from 'react-native';
 interface TutorialStepProps {
   icon: keyof typeof MaterialCommunityIcons.glyphMap;
   title: string;
-  description: string;
+  description: React.ReactNode;
 }
 
 export default function TutorialStep({ icon, title, description }: TutorialStepProps) {

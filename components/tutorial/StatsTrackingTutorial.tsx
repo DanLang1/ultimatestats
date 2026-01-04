@@ -2,7 +2,14 @@ import { useTheme } from '@/context/ThemeContext';
 import { useTutorialStore } from '@/store/tutorialStore';
 import React, { useState } from 'react';
 import { Dimensions, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
-import Animated, { FadeIn, SlideInRight, SlideOutLeft } from 'react-native-reanimated';
+import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
+import Animated, {
+  FadeIn,
+  SlideInLeft,
+  SlideInRight,
+  SlideOutLeft,
+  SlideOutRight,
+} from 'react-native-reanimated';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import TutorialStep from './TutorialStep';
 
@@ -24,19 +31,20 @@ const TUTORIAL_STEPS = [
     icon: 'account-group' as const,
     title: 'Build Roster Incrementally',
     description:
-      'After each event, you can add new players to your team or select from your existing roster. Roster can also be edited from the Settings screen.',
+      'Add players to your team as you go. Rosters can also be edited from the Settings screen.',
   },
   {
     icon: 'chart-bar' as const,
     title: 'View Your Stats',
     description:
-      'Tap the stats icon in the top bar to see player statistics. Export to CSV to analyze your data.',
+      'Tap the stats icon in the top bar to see team and player statistics. Export to CSV to analyze your data.',
   },
 ];
 
 export default function StatsTrackingTutorial() {
   const { showStatsTutorial, closeStatsTutorial } = useTutorialStore();
   const [currentStep, setCurrentStep] = useState(0);
+  const [slideDirection, setSlideDirection] = useState<'left' | 'right'>('right');
   const { palette } = useTheme();
 
   const isLastStep = currentStep === TUTORIAL_STEPS.length - 1;
@@ -46,6 +54,7 @@ export default function StatsTrackingTutorial() {
     if (isLastStep) {
       handleClose();
     } else {
+      setSlideDirection('right');
       setCurrentStep((prev) => prev + 1);
     }
   };
@@ -57,9 +66,24 @@ export default function StatsTrackingTutorial() {
 
   const handleBack = () => {
     if (currentStep > 0) {
+      setSlideDirection('left');
       setCurrentStep((prev) => prev - 1);
     }
   };
+
+  // Pan gesture to detect horizontal swipes
+  const SWIPE_THRESHOLD = 50;
+  const panGesture = Gesture.Pan()
+    .runOnJS(true)
+    .onEnd((event) => {
+      if (event.translationX < -SWIPE_THRESHOLD && !isLastStep) {
+        // Swiped left - go next
+        handleNext();
+      } else if (event.translationX > SWIPE_THRESHOLD && !isFirstStep) {
+        // Swiped right - go back
+        handleBack();
+      }
+    });
 
   if (!showStatsTutorial) {
     return null;
@@ -67,75 +91,87 @@ export default function StatsTrackingTutorial() {
 
   const step = TUTORIAL_STEPS[currentStep];
 
+  // Choose animations based on slide direction
+  const enteringAnimation = slideDirection === 'right' ? SlideInRight : SlideInLeft;
+  const exitingAnimation = slideDirection === 'right' ? SlideOutLeft : SlideOutRight;
+
   return (
     <Modal transparent visible={showStatsTutorial} animationType="fade">
-      <SafeAreaProvider>
-        <SafeAreaView
-          style={[styles.overlay, { backgroundColor: palette.overlayDark60 }]}
-          edges={['top', 'bottom', 'left', 'right']}>
-          <Animated.View
-            entering={FadeIn.duration(300)}
-            style={[
-              styles.container,
-              { backgroundColor: palette.modalBg, borderColor: palette.overlay20 },
-            ]}>
-            {/* Skip button */}
-            <Pressable onPress={handleClose} style={styles.skipButton}>
-              <Text style={[styles.skipText, { color: palette.textMuted }]}>Skip</Text>
-            </Pressable>
-
-            {/* Step content with animation */}
-            <View style={styles.contentContainer}>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <SafeAreaProvider>
+          <SafeAreaView
+            style={[styles.overlay, { backgroundColor: palette.overlayDark60 }]}
+            edges={['top', 'bottom', 'left', 'right']}>
+            <GestureDetector gesture={panGesture}>
               <Animated.View
-                key={currentStep}
-                entering={SlideInRight.duration(300)}
-                exiting={SlideOutLeft.duration(200)}
-                style={styles.stepWrapper}>
-                <TutorialStep icon={step.icon} title={step.title} description={step.description} />
-              </Animated.View>
-            </View>
-
-            {/* Progress dots */}
-            <View style={styles.dotsContainer}>
-              {TUTORIAL_STEPS.map((_, index) => (
-                <View
-                  key={index}
-                  style={[
-                    styles.dot,
-                    { backgroundColor: palette.overlay20 },
-                    index === currentStep && [
-                      styles.dotActive,
-                      { backgroundColor: palette.accent },
-                    ],
-                  ]}
-                />
-              ))}
-            </View>
-
-            {/* Navigation buttons */}
-            <View style={styles.buttonRow}>
-              {!isFirstStep && (
-                <Pressable
-                  onPress={handleBack}
-                  style={[styles.backButton, { borderColor: palette.accent }]}>
-                  <Text style={[styles.backButtonText, { color: palette.accent }]}>Back</Text>
-                </Pressable>
-              )}
-              <Pressable
-                onPress={handleNext}
+                entering={FadeIn.duration(300)}
                 style={[
-                  styles.nextButton,
-                  { backgroundColor: palette.accent },
-                  isFirstStep && styles.nextButtonFull,
+                  styles.container,
+                  { backgroundColor: palette.modalBg, borderColor: palette.overlay20 },
                 ]}>
-                <Text style={[styles.nextButtonText, { color: palette.textOnAccent }]}>
-                  {isLastStep ? 'Got It' : 'Next'}
-                </Text>
-              </Pressable>
-            </View>
-          </Animated.View>
-        </SafeAreaView>
-      </SafeAreaProvider>
+                {/* Skip button */}
+                <Pressable onPress={handleClose} style={styles.skipButton}>
+                  <Text style={[styles.skipText, { color: palette.textMuted }]}>Skip</Text>
+                </Pressable>
+
+                {/* Step content with animation */}
+                <View style={styles.contentContainer}>
+                  <Animated.View
+                    key={currentStep}
+                    entering={enteringAnimation.duration(300)}
+                    exiting={exitingAnimation.duration(200)}
+                    style={styles.stepWrapper}>
+                    <TutorialStep
+                      icon={step.icon}
+                      title={step.title}
+                      description={step.description}
+                    />
+                  </Animated.View>
+                </View>
+
+                {/* Progress dots */}
+                <View style={styles.dotsContainer}>
+                  {TUTORIAL_STEPS.map((_, index) => (
+                    <View
+                      key={index}
+                      style={[
+                        styles.dot,
+                        { backgroundColor: palette.overlay20 },
+                        index === currentStep && [
+                          styles.dotActive,
+                          { backgroundColor: palette.accent },
+                        ],
+                      ]}
+                    />
+                  ))}
+                </View>
+
+                {/* Navigation buttons */}
+                <View style={styles.buttonRow}>
+                  {!isFirstStep && (
+                    <Pressable
+                      onPress={handleBack}
+                      style={[styles.backButton, { borderColor: palette.accent }]}>
+                      <Text style={[styles.backButtonText, { color: palette.accent }]}>Back</Text>
+                    </Pressable>
+                  )}
+                  <Pressable
+                    onPress={handleNext}
+                    style={[
+                      styles.nextButton,
+                      { backgroundColor: palette.accent },
+                      isFirstStep && styles.nextButtonFull,
+                    ]}>
+                    <Text style={[styles.nextButtonText, { color: palette.textOnAccent }]}>
+                      {isLastStep ? 'Got It' : 'Next'}
+                    </Text>
+                  </Pressable>
+                </View>
+              </Animated.View>
+            </GestureDetector>
+          </SafeAreaView>
+        </SafeAreaProvider>
+      </GestureHandlerRootView>
     </Modal>
   );
 }
