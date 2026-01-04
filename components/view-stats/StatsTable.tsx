@@ -1,5 +1,5 @@
 import { computePlayerStats } from '@/lib/statsUtils';
-import { SavedGame } from '@/lib/storage';
+import { Player, SavedGame } from '@/lib/storage';
 import { GameEvent } from '@/store/gameStore.types';
 import { usePlayerStatsStore } from '@/store/playerStatsStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
@@ -12,10 +12,18 @@ interface StatsTableProps {
   palette: any;
   events: GameEvent[];
   team: 'team1' | 'team2';
+  roster?: Player[];
   games?: SavedGame[];
 }
 
-export default function StatsTable({ playerStats, palette, events, team, games }: StatsTableProps) {
+export default function StatsTable({
+  playerStats,
+  palette,
+  events,
+  team,
+  roster,
+  games,
+}: StatsTableProps) {
   const [sortConfig, setSortConfig] = React.useState<{
     key: keyof (typeof playerStats)[0] | 'plusMinus';
     direction: 'asc' | 'desc';
@@ -24,7 +32,7 @@ export default function StatsTable({ playerStats, palette, events, team, games }
   const { openPlayerStats } = usePlayerStatsStore();
 
   const handlePlayerPress = (playerName: string) => {
-    openPlayerStats(playerName, events, team, games);
+    openPlayerStats(playerName, events, team, roster || undefined, games);
     router.push('/PlayerStats');
   };
 

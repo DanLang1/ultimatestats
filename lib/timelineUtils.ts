@@ -4,8 +4,8 @@ import { GameEvent, TurnoverType } from '@/store/gameStore.types';
 export interface DisplayTurnover {
   team: 'team1' | 'team2';
   type: TurnoverType;
-  player: string | null;
-  player2?: string | null;
+  playerId: string | null;
+  player2Id?: string | null;
 }
 
 // Represents all events that occurred during a single point
@@ -13,9 +13,9 @@ export interface PointEvents {
   pointNumber: number; // The point number (1, 2, 3...)
   scoringTeam: 'team1' | 'team2';
   scoreAfter: { team1: number; team2: number };
-  // Goal info (if team1 scored)
-  goal: string | null;
-  assist: string | null;
+  // Goal info (if team1 scored) - now stores player IDs
+  goalPlayerId: string | null;
+  assistPlayerId: string | null;
   // Turnovers that happened during this point
   turnovers: DisplayTurnover[];
   // Possession data
@@ -51,8 +51,8 @@ export function computePointByPointEvents(
       currentTurnovers.push({
         team: event.team,
         type: event.subtype,
-        player: event.player,
-        player2: event.player2,
+        playerId: event.playerId,
+        player2Id: event.player2Id,
       });
     } else if (event.type === 'goal') {
       pointNumber++;
@@ -73,8 +73,8 @@ export function computePointByPointEvents(
         pointNumber,
         scoringTeam: event.team,
         scoreAfter: { team1: team1Score, team2: team2Score },
-        goal: event.goal,
-        assist: event.assist,
+        goalPlayerId: event.goalPlayerId,
+        assistPlayerId: event.assistPlayerId,
         turnovers: currentTurnovers,
         offensiveTeam: offensiveTeamForThisPoint,
         possessionType,

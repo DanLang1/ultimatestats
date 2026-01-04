@@ -12,16 +12,16 @@ export type GameEvent =
   | {
       type: 'goal';
       team: 'team1' | 'team2';
-      goal: string | null; // Player who scored
-      assist: string | null; // Player who assisted
+      goalPlayerId: string | null; // Player ID who scored
+      assistPlayerId: string | null; // Player ID who assisted
       gameId?: string; // Populated on save - links to SavedGame.id
     }
   | {
       type: 'turnover';
       team: 'team1' | 'team2'; // Team that committed the turnover
       subtype: TurnoverType;
-      player: string | null;
-      player2?: string | null; // Second player for 50/50 turnovers
+      playerId: string | null;
+      player2Id?: string | null; // Second player ID for 50/50 turnovers
       gameId?: string; // Populated on save - links to SavedGame.id
     };
 
@@ -51,6 +51,7 @@ export interface GameState {
   timerIsActive: boolean;
   timerEndTime: number | null;
   timerTimeLeft: number;
+  gameLocked: boolean;
 
   // Stat Tracking
   statTrackingEnabled: boolean;
@@ -77,20 +78,20 @@ export interface GameState {
   toggleTimeout: (isTeam1: boolean, index: number) => void;
   resetTimeouts: (count: number) => void;
   resetGame: () => void;
-  triggerSoftCap: () => void;
   setSoftCapPending: (pending: boolean) => void;
   setSoftCapMins: (minutes: number) => void;
   setTimerActive: (active: boolean) => void;
   setTimerEndTime: (time: number | null) => void;
   setTimerTimeLeft: (seconds: number) => void;
+  setGameLocked: (locked: boolean) => void;
 
   // Stat Tracking Actions
   setStatTrackingEnabled: (enabled: boolean) => void;
-  addPlayer: (name: string) => void;
+  addPlayer: (name: string) => string | null;
   addGoalEvent: (event: {
     team: 'team1' | 'team2';
-    goal: string | null;
-    assist: string | null;
+    goalPlayerId: string | null;
+    assistPlayerId: string | null;
   }) => void;
   clearPendingStatEntry: () => void;
   clearRoster: () => void;
@@ -101,8 +102,8 @@ export interface GameState {
   addTurnoverEvent: (event: {
     team: 'team1' | 'team2';
     subtype: TurnoverType;
-    player: string | null;
-    player2?: string | null;
+    playerId: string | null;
+    player2Id?: string | null;
   }) => void;
   clearPendingTurnoverEntry: () => void;
 

@@ -1,5 +1,7 @@
 import { AnimatedThemedView } from '@/components/ThemedView';
 import { useTheme } from '@/context/ThemeContext';
+import { getActiveRoster, getPlayerName } from '@/lib/playerUtils';
+import { Player } from '@/lib/storage/types';
 import React, { useState } from 'react';
 import { Keyboard, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import Animated, { FadeIn, LinearTransition, SlideInDown } from 'react-native-reanimated';
@@ -10,10 +12,10 @@ type EntryStep = 'goal' | 'assist';
 
 export interface StatEntryInnerProps {
   teamName: string;
-  roster: string[];
+  roster: Player[];
   onSkip: () => void;
-  onComplete: (goal: string | null, assist: string | null) => void;
-  onAddPlayer: (name: string) => void;
+  onComplete: (goalPlayerId: string | null, assistPlayerId: string | null) => void;
+  onAddPlayer: (name: string) => string | null;
 }
 
 export function StatEntryInner({
@@ -24,17 +26,27 @@ export function StatEntryInner({
   onAddPlayer,
 }: StatEntryInnerProps) {
   const [step, setStep] = useState<EntryStep>('goal');
-  const [selectedGoal, setSelectedGoal] = useState<string | null>(null);
+  const [selectedGoalId, setSelectedGoalId] = useState<string | null>(null);
   const [newPlayerName, setNewPlayerName] = useState('');
-  const { palette } = useTheme();
+  const { palette, themeMode } = useTheme();
 
-  const handlePlayerSelect = (playerName: string) => {
+  // Only show active players
+  const activeRoster = getActiveRoster(roster);
+
+  // Get player name for display
+  const selectedGoalName = getPlayerName(roster, selectedGoalId);
+
+  // Skip button colors - darker in light mode for visibility
+  const skipButtonBorder = themeMode === 'light' ? palette.textMuted : palette.overlay20;
+  const skipButtonText = themeMode === 'light' ? palette.modalText : palette.textSecondary;
+
+  const handlePlayerSelect = (playerId: string) => {
     if (step === 'goal') {
-      setSelectedGoal(playerName);
+      setSelectedGoalId(playerId);
       setStep('assist');
       setNewPlayerName(''); // Clear filter after selection
     } else {
-      onComplete(selectedGoal, playerName);
+      onComplete(selectedGoalId, playerId);
     }
   };
 
@@ -42,12 +54,30 @@ export function StatEntryInner({
     const trimmed = newPlayerName.trim();
     if (!trimmed) return;
 
-    onAddPlayer(trimmed);
+    const newPlayerId = onAddPlayer(trimmed);
     setNewPlayerName('');
     Keyboard.dismiss();
 
-    // Auto-select the new player
-    handlePlayerSelect(trimmed);
+    // Determine which player ID to use
+    let playerIdToSelect = newPlayerId;
+
+    // If player wasn't added (duplicate), find the existing player
+    if (!playerIdToSelect) {
+      const lowerName = trimmed.toLowerCase();
+      const existingPlayer = activeRoster.find((p) => p.name.toLowerCase() === lowerName);
+      playerIdToSelect = existingPlayer?.id ?? null;
+    }
+
+    // Auto-select the player (new or existing)
+    if (playerIdToSelect) {
+      if (step === 'goal') {
+        setSelectedGoalId(playerIdToSelect);
+        setStep('assist');
+      } else {
+        // On assist step, complete with current goal and this player as assist
+        onComplete(selectedGoalId, playerIdToSelect);
+      }
+    }
   };
 
   return (
@@ -59,7 +89,7 @@ export function StatEntryInner({
         <View style={styles.sideBySideContainer}>
           {/* Left Column: Info, Add Player, Actions */}
           <View style={styles.leftColumn}>
-            <StatEntryHeader teamName={teamName} step={step} selectedGoal={selectedGoal} />
+            <StatEntryHeader teamName={teamName} step={step} selectedGoal={selectedGoalName} />
 
             <View style={styles.addPlayerRow}>
               <TextInput
@@ -93,19 +123,33 @@ export function StatEntryInner({
 
             <Animated.View layout={LinearTransition} style={styles.footer}>
               <Pressable
-                style={[styles.skipButton, { backgroundColor: palette.cardBgAlt }]}
+                style={[
+                  styles.skipButton,
+                  {
+                    backgroundColor: palette.cardBgAlt,
+                    borderWidth: 1,
+                    borderColor: skipButtonBorder,
+                  },
+                ]}
                 onPress={onSkip}>
-                <Text style={[styles.skipText, { color: palette.textSecondary }]}>Skip</Text>
+                <Text style={[styles.skipText, { color: skipButtonText }]}>Skip</Text>
               </Pressable>
               {step === 'goal' ? null : (
                 <Animated.View entering={FadeIn}>
                   <Pressable
-                    style={[styles.skipButton, { backgroundColor: palette.cardBgAlt }]}
+                    style={[
+                      styles.skipButton,
+                      {
+                        backgroundColor: palette.cardBgAlt,
+                        borderWidth: 1,
+                        borderColor: skipButtonBorder,
+                      },
+                    ]}
                     onPress={() => {
                       setStep('goal');
-                      setSelectedGoal(null);
+                      setSelectedGoalId(null);
                     }}>
-                    <Text style={[styles.skipText, { color: palette.textSecondary }]}>Back</Text>
+                    <Text style={[styles.skipText, { color: skipButtonText }]}>Back</Text>
                   </Pressable>
                 </Animated.View>
               )}
@@ -115,9 +159,9 @@ export function StatEntryInner({
           {/* Right Column: Roster Selection */}
           <View style={styles.rightColumn}>
             <StatEntryRoster
-              roster={roster}
+              roster={activeRoster}
               step={step}
-              selectedGoal={selectedGoal}
+              selectedGoalId={selectedGoalId}
               onSelect={handlePlayerSelect}
               maxHeight={280}
             />

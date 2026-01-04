@@ -18,21 +18,21 @@ export default function StatEntrySheet() {
   const handleSkip = () => {
     addGoalEvent({
       team: pendingStatEntry?.team ?? 'team1',
-      goal: null,
-      assist: null,
+      goalPlayerId: null,
+      assistPlayerId: null,
     });
   };
 
-  const handleComplete = (goal: string | null, assist: string | null) => {
+  const handleComplete = (goalPlayerId: string | null, assistPlayerId: string | null) => {
     addGoalEvent({
       team: pendingStatEntry?.team ?? 'team1',
-      goal,
-      assist,
+      goalPlayerId,
+      assistPlayerId,
     });
   };
 
   const handleAddPlayer = (name: string) => {
-    addPlayer(name);
+    return addPlayer(name);
   };
 
   if (!visible) return null;

@@ -6,7 +6,7 @@ import { useState } from 'react';
 import 'react-native-reanimated';
 
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
 function RootLayoutInner() {
   const { palette, themeMode } = useTheme();
@@ -24,13 +24,16 @@ function RootLayoutInner() {
       }}
       edges={['left', 'right']}>
       <GestureHandlerRootView style={{ flex: 1 }}>
-        <Stack screenOptions={{ headerShown: false }}>
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            contentStyle: { backgroundColor: palette.primary },
+          }}>
           <Stack.Screen name="index" />
           <Stack.Screen
             name="StatEntryModal"
             options={{
               presentation: 'transparentModal',
-              animation: 'fade',
               gestureEnabled: false,
               contentStyle: { backgroundColor: 'transparent' },
             }}
@@ -39,7 +42,6 @@ function RootLayoutInner() {
             name="TurnoverEntryModal"
             options={{
               presentation: 'transparentModal',
-              animation: 'fade',
               gestureEnabled: false,
               contentStyle: { backgroundColor: 'transparent' },
             }}
@@ -48,7 +50,6 @@ function RootLayoutInner() {
             name="PullPromptModal"
             options={{
               presentation: 'transparentModal',
-              animation: 'fade',
               gestureEnabled: false,
               contentStyle: { backgroundColor: 'transparent' },
             }}
@@ -57,22 +58,31 @@ function RootLayoutInner() {
             name="GameSelectorModal"
             options={{
               presentation: 'transparentModal',
-              animation: 'fade',
               gestureEnabled: false,
               contentStyle: { backgroundColor: 'transparent' },
             }}
           />
-          <Stack.Screen name="PlayerStats" />
+          <Stack.Screen name="PlayerStats" options={{ animation: 'none' }} />
+          <Stack.Screen name="ViewStats" />
+          <Stack.Screen name="Settings" />
+          <Stack.Screen name="EditRoster" />
+          <Stack.Screen name="GameInfo" />
           <Stack.Screen
             name="WinModal"
             options={{
               presentation: 'transparentModal',
-              animation: 'fade',
               gestureEnabled: false,
               contentStyle: { backgroundColor: 'transparent' },
             }}
           />
-          <Stack.Screen name="GameTimeline" />
+          <Stack.Screen
+            name="GameTimeline"
+            options={{
+              presentation: 'transparentModal',
+              gestureEnabled: false,
+              contentStyle: { backgroundColor: 'transparent' },
+            }}
+          />
         </Stack>
 
         <StatusBar style={themeMode === 'dark' ? 'light' : 'dark'} hidden />
@@ -99,10 +109,12 @@ export default function RootLayout() {
   }
 
   return (
-    <ThemeProvider initialTheme={initialTheme}>
-      <AlertProvider>
-        <RootLayoutInner />
-      </AlertProvider>
-    </ThemeProvider>
+    <SafeAreaProvider>
+      <ThemeProvider initialTheme={initialTheme}>
+        <AlertProvider>
+          <RootLayoutInner />
+        </AlertProvider>
+      </ThemeProvider>
+    </SafeAreaProvider>
   );
 }

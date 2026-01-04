@@ -1,4 +1,5 @@
-import { GameEvent, SavedGame } from '@/lib/storage';
+import { GameEvent, Player, SavedGame } from '@/lib/storage';
+import { getPlayerName } from './playerUtils';
 import { computeTeamStats, TeamStats } from './teamStatsUtils';
 
 export interface PlayerStats {
@@ -11,8 +12,21 @@ export interface PlayerStats {
   plusMinus: number;
 }
 
-export function computePlayerStats(events: GameEvent[], team: 'team1' | 'team2'): PlayerStats[] {
+/**
+ * Compute player stats from events.
+ * @param events - Game events
+ * @param team - Which team's stats to compute
+ * @param roster - Optional roster to resolve player IDs to names. If not provided, IDs are used as names.
+ */
+export function computePlayerStats(
+  events: GameEvent[],
+  team: 'team1' | 'team2',
+  roster?: Player[],
+): PlayerStats[] {
   const statsMap = new Map<string, PlayerStats>();
+
+  // Helper to resolve playerId to name (falls back to ID if no roster or not found)
+  const resolveName = (playerId: string | null) => getPlayerName(roster, playerId);
 
   const getOrCreate = (name: string): PlayerStats =>
     statsMap.get(name) || {
@@ -29,38 +43,43 @@ export function computePlayerStats(events: GameEvent[], team: 'team1' | 'team2')
     if (event.type === 'goal') {
       if (event.team !== team) continue;
 
-      if (event.goal) {
-        const stats = getOrCreate(event.goal);
+      const goalName = resolveName(event.goalPlayerId);
+      if (goalName) {
+        const stats = getOrCreate(goalName);
         stats.goals++;
-        statsMap.set(event.goal, stats);
+        statsMap.set(goalName, stats);
       }
 
-      if (event.assist) {
-        const stats = getOrCreate(event.assist);
+      const assistName = resolveName(event.assistPlayerId);
+      if (assistName) {
+        const stats = getOrCreate(assistName);
         stats.assists++;
-        statsMap.set(event.assist, stats);
+        statsMap.set(assistName, stats);
       }
     } else if (event.type === 'turnover') {
       if (event.team !== team) continue;
 
       // Handle fiftyfifty - player1 gets 0.5 throwaway, player2 gets 0.5 drop
       if (event.subtype === 'fiftyfifty') {
-        if (event.player) {
-          const stats = getOrCreate(event.player);
+        const player1Name = resolveName(event.playerId);
+        if (player1Name) {
+          const stats = getOrCreate(player1Name);
           stats.throwaways += 0.5; // Thrower gets half a throwaway
-          statsMap.set(event.player, stats);
+          statsMap.set(player1Name, stats);
         }
-        if (event.player2) {
-          const stats = getOrCreate(event.player2);
+        const player2Name = resolveName(event.player2Id ?? null);
+        if (player2Name) {
+          const stats = getOrCreate(player2Name);
           stats.drops += 0.5; // Receiver gets half a drop
-          statsMap.set(event.player2, stats);
+          statsMap.set(player2Name, stats);
         }
         continue;
       }
 
-      if (!event.player) continue;
+      const playerName = resolveName(event.playerId);
+      if (!playerName) continue;
 
-      const stats = getOrCreate(event.player);
+      const stats = getOrCreate(playerName);
       switch (event.subtype) {
         case 'block':
           stats.blocks++;
@@ -72,7 +91,7 @@ export function computePlayerStats(events: GameEvent[], team: 'team1' | 'team2')
           stats.drops++;
           break;
       }
-      statsMap.set(event.player, stats);
+      statsMap.set(playerName, stats);
     }
   }
 
@@ -100,30 +119,36 @@ export function getChemistryStats(
   player: string,
   events: GameEvent[],
   team: 'team1' | 'team2',
+  roster?: Player[],
 ): ChemistryConnection[] {
   const connections = new Map<
     string,
     { goalsFrom: number; assistsTo: number; totalConnections: number }
   >();
 
+  const resolveName = (playerId: string | null) => getPlayerName(roster, playerId);
+
   const getOrCreate = (name: string) =>
     connections.get(name) || { goalsFrom: 0, assistsTo: 0, totalConnections: 0 };
 
   for (const event of events) {
     if (event.type === 'goal' && event.team === team) {
-      // Did I catch a goal?
-      if (event.goal === player && event.assist) {
-        const stats = getOrCreate(event.assist);
+      const goalName = resolveName(event.goalPlayerId);
+      const assistName = resolveName(event.assistPlayerId);
+
+      // Did I catch a goal? (player is the goal scorer, check if assist exists)
+      if (goalName === player && assistName) {
+        const stats = getOrCreate(assistName);
         stats.goalsFrom++;
         stats.totalConnections++;
-        connections.set(event.assist, stats);
+        connections.set(assistName, stats);
       }
-      // Did I throw an assist?
-      if (event.assist === player && event.goal) {
-        const stats = getOrCreate(event.goal);
+      // Did I throw an assist? (player is the assister, check if goal scorer exists)
+      if (assistName === player && goalName) {
+        const stats = getOrCreate(goalName);
         stats.assistsTo++;
         stats.totalConnections++;
-        connections.set(event.goal, stats);
+        connections.set(goalName, stats);
       }
     }
   }
@@ -147,6 +172,7 @@ export function getImpactStats(
   player: string,
   events: GameEvent[],
   team: 'team1' | 'team2',
+  roster?: Player[],
 ): ImpactPoint[] {
   // Track score throughout the game
   let team1Score = 0;
@@ -174,34 +200,37 @@ export function getImpactStats(
 
     let change = 0;
     let desc = '';
+    const resolveName = (playerId: string | null) => getPlayerName(roster, playerId);
 
     if (event.type === 'goal') {
-      if (event.goal === player) {
+      const goalName = resolveName(event.goalPlayerId);
+      const assistName = resolveName(event.assistPlayerId);
+
+      if (goalName === player) {
         change = 1;
-        desc = 'Goal';
-      } else if (event.assist === player) {
+        desc = 'Goal (+1)';
+      } else if (assistName === player) {
         change = 1;
-        desc = 'Assist';
+        desc = 'Assist (+1)';
       }
     } else if (event.type === 'turnover') {
-      if (event.player === player) {
-        // If it's a 50/50 throwaway, it's -0.5 ??
-        // Technically statsUtils computes it as half.
-        // But for a visual "Game Flow", seeing a line drop by 0.5 might be weird?
-        // Actually, let's match the Stat Table.
-        if (event.subtype === 'fiftyfifty') {
-          change = -0.5;
-          desc = '50/50 Throwaway';
-        } else if (event.subtype === 'block') {
+      const p1Name = resolveName(event.playerId);
+      const p2Name = resolveName(event.player2Id || null);
+
+      if (p1Name === player) {
+        if (event.subtype === 'block') {
           change = 1;
-          desc = 'Block';
+          desc = 'Block (+1)';
+        } else if (event.subtype === 'fiftyfifty') {
+          change = -0.5;
+          desc = '50/50 (-0.5)';
         } else {
           change = -1;
-          desc = event.subtype === 'drop' ? 'Drop' : 'Throwaway';
+          desc = `${event.subtype.charAt(0).toUpperCase() + event.subtype.slice(1)} (-1)`;
         }
-      } else if (event.player2 === player && event.subtype === 'fiftyfifty') {
+      } else if (p2Name === player && event.subtype === 'fiftyfifty') {
         change = -0.5;
-        desc = '50/50 Drop';
+        desc = '50/50 (-0.5)';
       }
     }
 
@@ -269,8 +298,9 @@ export function getRoleStats(
   player: string,
   events: GameEvent[],
   team: 'team1' | 'team2',
+  roster?: Player[],
 ): RoleStats {
-  const allPlayerStats = computePlayerStats(events, team);
+  const allPlayerStats = computePlayerStats(events, team, roster);
 
   // Find Team Maxes for normalization
   const maxGoals = Math.max(...allPlayerStats.map((p) => p.goals), 1);
@@ -390,14 +420,15 @@ export function generateCurrentGameCSV(
   team2Name: string,
   startingPossession: 'team1' | 'team2' | null,
   gameTo: number,
+  roster?: Player[],
 ): string {
-  const playerStats = computePlayerStats(events, 'team1');
+  const playerStats = computePlayerStats(events, 'team1', roster);
 
   let csv = '# Play-by-Play\n';
-  csv += playByPlayCSV(events, team1Name, team2Name);
+  csv += playByPlayCSV(events, team1Name, team2Name, roster);
 
   csv += '\n\n# Turnovers\n';
-  csv += turnoversCSV(events, team1Name, team2Name);
+  csv += turnoversCSV(events, team1Name, team2Name, roster);
 
   csv += '\n\n# Player Summary\n';
   csv += playerSummaryCSV(playerStats);
@@ -412,15 +443,15 @@ export function generateCurrentGameCSV(
  * Generate CSV for a single saved game.
  */
 export function generateSavedGameCSV(game: SavedGame): string {
-  const playerStats = computePlayerStats(game.events, 'team1');
+  const playerStats = computePlayerStats(game.events, 'team1', game.team1.roster);
 
   let csv = `# Game: ${game.team1.name} vs ${game.team2Name} - ${formatDateForCSV(game.createdAt)}\n`;
 
   csv += '\n# Play-by-Play\n';
-  csv += playByPlayCSV(game.events, game.team1.name, game.team2Name);
+  csv += playByPlayCSV(game.events, game.team1.name, game.team2Name, game.team1.roster);
 
   csv += '\n\n# Turnovers\n';
-  csv += turnoversCSV(game.events, game.team1.name, game.team2Name);
+  csv += turnoversCSV(game.events, game.team1.name, game.team2Name, game.team1.roster);
 
   csv += '\n\n# Player Summary\n';
   csv += playerSummaryCSV(playerStats);
@@ -434,9 +465,13 @@ export function generateSavedGameCSV(game: SavedGame): string {
 /**
  * Generate CSV for aggregated stats across multiple saved games.
  */
-export function generateAggregateCSV(games: SavedGame[], teamName: string): string {
+export function generateAggregateCSV(
+  games: SavedGame[],
+  teamName: string,
+  roster?: Player[],
+): string {
   const mergedEvents = games.flatMap((g) => g.events);
-  const playerStats = computePlayerStats(mergedEvents, 'team1');
+  const playerStats = computePlayerStats(mergedEvents, 'team1', roster);
 
   let csv = `# Aggregated Stats: ${teamName} (${games.length} games)\n`;
 
@@ -470,13 +505,13 @@ export function generateAggregateCSV(games: SavedGame[], teamName: string): stri
     csv += teamStatsCSV(computeTeamStats(game.events, game.startingPossession, game.gameTo));
 
     csv += '\n\n# Player Summary\n';
-    csv += playerSummaryCSV(computePlayerStats(game.events, 'team1'));
+    csv += playerSummaryCSV(computePlayerStats(game.events, 'team1', game.team1.roster));
 
     csv += '\n\n# Play-by-Play\n';
-    csv += playByPlayCSV(game.events, game.team1.name, game.team2Name);
+    csv += playByPlayCSV(game.events, game.team1.name, game.team2Name, game.team1.roster);
 
     csv += '\n\n# Turnovers\n';
-    csv += turnoversCSV(game.events, game.team1.name, game.team2Name);
+    csv += turnoversCSV(game.events, game.team1.name, game.team2Name, game.team1.roster);
   }
 
   return csv;
@@ -576,28 +611,46 @@ function teamStatsCSV(stats: TeamStats): string {
   );
 }
 
-function playByPlayCSV(events: GameEvent[], team1Name: string, team2Name: string): string {
+function playByPlayCSV(
+  events: GameEvent[],
+  team1Name: string,
+  team2Name: string,
+  roster?: Player[],
+): string {
   let csv = 'Point Number,Team,Goal,Assist\n';
   let pointNumber = 0;
+
+  const resolveName = (playerId: string | null) => getPlayerName(roster, playerId);
 
   for (const event of events) {
     if (event.type === 'goal') {
       pointNumber++;
       const teamName = event.team === 'team1' ? team1Name : team2Name;
-      csv += `${pointNumber},${teamName},${event.goal || ''},${event.assist || ''}\n`;
+      const goalName = resolveName(event.goalPlayerId);
+      const assistName = resolveName(event.assistPlayerId);
+      csv += `${pointNumber},${teamName},${goalName || ''},${assistName || ''}\n`;
     }
   }
 
   return csv.trimEnd();
 }
 
-function turnoversCSV(events: GameEvent[], team1Name: string, team2Name: string): string {
+function turnoversCSV(
+  events: GameEvent[],
+  team1Name: string,
+  team2Name: string,
+  roster?: Player[],
+): string {
   let csv = 'Team,Type,Player,Player2\n';
+
+  const resolveName = (playerId: string | null) => getPlayerName(roster, playerId);
 
   for (const event of events) {
     if (event.type === 'turnover') {
       const teamName = event.team === 'team1' ? team1Name : team2Name;
-      csv += `${teamName},${event.subtype},${event.player || ''},${event.player2 || ''}\n`;
+      const p1Name = resolveName(event.playerId);
+      const p2Name = resolveName(event.player2Id || null);
+      csv += `${teamName},${event.subtype},${p1Name || ''},${p2Name || ''}\n`;
     }
   }
 

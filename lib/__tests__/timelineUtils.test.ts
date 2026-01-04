@@ -3,18 +3,22 @@ import { computePointByPointEvents, getTurnoverSummary } from '../timelineUtils'
 
 describe('timelineUtils', () => {
   describe('computePointByPointEvents', () => {
-    const goal = (team: 'team1' | 'team2', goal?: string, assist?: string): GameEvent => ({
+    const goal = (
+      team: 'team1' | 'team2',
+      goalPlayerId?: string,
+      assistPlayerId?: string,
+    ): GameEvent => ({
       type: 'goal',
       team,
-      goal: goal ?? null,
-      assist: assist ?? null,
+      goalPlayerId: goalPlayerId ?? null,
+      assistPlayerId: assistPlayerId ?? null,
     });
 
     const turnover = (team: 'team1' | 'team2', subtype: any): GameEvent => ({
       type: 'turnover',
       team,
       subtype,
-      player: null,
+      playerId: null,
     });
 
     it('should correctly group turnovers into points', () => {

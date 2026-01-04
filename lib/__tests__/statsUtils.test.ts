@@ -1,20 +1,28 @@
-import { GameEvent } from '@/store/gameStore.types';
+import { GameEvent, TurnoverType } from '@/store/gameStore.types';
 import { computePlayerStats, formatDateForCSV, generateCurrentGameCSV } from '../statsUtils';
 
 describe('statsUtils', () => {
-  const goal = (team: 'team1' | 'team2', goal: string, assist: string): GameEvent => ({
+  const goal = (
+    team: 'team1' | 'team2',
+    goalPlayerId: string,
+    assistPlayerId: string,
+  ): GameEvent => ({
     type: 'goal',
     team,
-    goal,
-    assist,
+    goalPlayerId,
+    assistPlayerId,
   });
 
-  const turnover = (team: 'team1' | 'team2', subtype: any, player: string): GameEvent => ({
+  const turnover = (
+    team: 'team1' | 'team2',
+    subtype: TurnoverType,
+    playerId: string,
+  ): GameEvent => ({
     type: 'turnover',
     team,
     subtype,
-    player,
-    player2: null,
+    playerId,
+    player2Id: null,
   });
 
   describe('computePlayerStats', () => {

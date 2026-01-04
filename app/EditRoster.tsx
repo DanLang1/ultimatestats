@@ -1,10 +1,21 @@
 import { useAlert } from '@/components/ui/AlertProvider';
 import { useTheme } from '@/context/ThemeContext';
+import { hasPlayerWithName } from '@/lib/playerUtils';
+import { Player } from '@/lib/storage/types';
 import { useGameStore } from '@/store/gameStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import React, { useState } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import {
+  Modal,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 
 export default function EditRosterScreen() {
   const { teamName } = useLocalSearchParams<{ teamName: string }>();
@@ -17,23 +28,27 @@ export default function EditRosterScreen() {
     timerIsActive,
     team1Score,
     team2Score,
+    events,
+    savedGames,
   } = useGameStore();
   const { showAlert } = useAlert();
   const { palette } = useTheme();
 
   // Derived values
-  const team1Roster = currentTeam?.roster ?? [];
+  const roster = currentTeam?.roster ?? [];
 
   const [newPlayerName, setNewPlayerName] = useState('');
   const [editModalVisible, setEditModalVisible] = useState(false);
-  const [editingPlayer, setEditingPlayer] = useState('');
+  const [editingPlayer, setEditingPlayer] = useState<Player | null>(null);
   const [editPlayerName, setEditPlayerName] = useState('');
+  const [editPlayerActive, setEditPlayerActive] = useState(true);
 
-  const isDuplicateName = newPlayerName.trim() !== '' && team1Roster.includes(newPlayerName.trim());
+  const isDuplicateName =
+    newPlayerName.trim() !== '' && hasPlayerWithName(roster, newPlayerName.trim());
 
   const handleAddPlayer = () => {
     const trimmed = newPlayerName.trim();
-    if (trimmed && !team1Roster.includes(trimmed)) {
+    if (trimmed && !hasPlayerWithName(roster, trimmed)) {
       addPlayer(trimmed);
       setNewPlayerName('');
       // Auto-save team
@@ -41,22 +56,91 @@ export default function EditRosterScreen() {
     }
   };
 
-  const handleRemovePlayer = (playerName: string) => {
+  const handleRemovePlayer = (playerId: string) => {
     if (!currentTeam) return;
-    const newRoster = team1Roster.filter((p: string) => p !== playerName);
-    setCurrentTeam({ ...currentTeam, roster: newRoster });
+
+    // Check if player has any stats in the current game
+    const hasCurrentGameStats = events.some((e) => {
+      if (e.type === 'goal') {
+        return e.goalPlayerId === playerId || e.assistPlayerId === playerId;
+      }
+      if (e.type === 'turnover') {
+        return e.playerId === playerId || e.player2Id === playerId;
+      }
+      return false;
+    });
+
+    if (hasCurrentGameStats) {
+      showAlert({
+        title: 'Cannot Delete Player',
+        message:
+          "Sorry, you can't delete players with stats in an active game. Mark them as inactive instead.",
+      });
+      return;
+    }
+
+    // Check if player has stats in any saved games
+    const hasStatsInSavedGames = savedGames.some((game) =>
+      game.events.some((e) => {
+        if (e.type === 'goal') {
+          return e.goalPlayerId === playerId || e.assistPlayerId === playerId;
+        }
+        if (e.type === 'turnover') {
+          return e.playerId === playerId || e.player2Id === playerId;
+        }
+        return false;
+      }),
+    );
+
+    const doDelete = () => {
+      const newRoster = roster.filter((p) => p.id !== playerId);
+      setCurrentTeam({ ...currentTeam, roster: newRoster });
+      saveCurrentTeam();
+    };
+
+    if (hasStatsInSavedGames) {
+      showAlert({
+        title: 'Delete Player?',
+        message:
+          'This player has stats saved in previous games. Are you sure you want to delete them?',
+        buttons: [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Delete Anyway',
+            style: 'destructive',
+            onPress: doDelete,
+          },
+        ],
+      });
+      return;
+    }
+
+    doDelete();
   };
 
-  const handleEditPlayer = (playerName: string) => {
-    setEditingPlayer(playerName);
-    setEditPlayerName(playerName);
+  const handleEditPlayer = (player: Player) => {
+    setEditingPlayer(player);
+    setEditPlayerName(player.name);
+    setEditPlayerActive(player.isActive);
     setEditModalVisible(true);
   };
 
   const handleConfirmEdit = () => {
+    if (!editingPlayer || !currentTeam) {
+      setEditModalVisible(false);
+      return;
+    }
+
     const newName = editPlayerName.trim();
-    if (newName && newName !== editingPlayer && !team1Roster.includes(newName) && currentTeam) {
-      const updatedRoster = team1Roster.map((p: string) => (p === editingPlayer ? newName : p));
+    // Check if name is valid (not empty and not duplicate unless same player)
+    const isDuplicate = roster.some(
+      (p) => p.name.toLowerCase() === newName.toLowerCase() && p.id !== editingPlayer.id,
+    );
+
+    if (newName && !isDuplicate) {
+      const updatedRoster = roster.map((p) =>
+        p.id === editingPlayer.id ? { ...p, name: newName, isActive: editPlayerActive } : p,
+      );
       setCurrentTeam({ ...currentTeam, roster: updatedRoster });
       // Auto-save team
       saveCurrentTeam();
@@ -92,6 +176,14 @@ export default function EditRosterScreen() {
     });
   };
 
+  // Sort roster: active players first, then inactive, alphabetically within each group
+  const sortedRoster = [...roster].sort((a, b) => {
+    if (a.isActive !== b.isActive) {
+      return a.isActive ? -1 : 1;
+    }
+    return a.name.localeCompare(b.name);
+  });
+
   return (
     <View style={[styles.container, { backgroundColor: palette.primary }]}>
       <Stack.Screen options={{ headerShown: false }} />
@@ -107,7 +199,7 @@ export default function EditRosterScreen() {
         <Text style={[styles.headerTitle, { color: palette.textMuted }]}>
           {(teamName || 'TEAM').toUpperCase()} ROSTER
         </Text>
-        {team1Roster.length > 0 ? (
+        {roster.length > 0 ? (
           <Pressable
             onPress={handleClearAll}
             style={[styles.clearButton, { backgroundColor: palette.dangerOverlay15 }]}
@@ -162,7 +254,7 @@ export default function EditRosterScreen() {
 
       {/* Player List - 2 Column Grid */}
       <ScrollView style={styles.playerList} contentContainerStyle={styles.playerListContent}>
-        {team1Roster.length === 0 ? (
+        {roster.length === 0 ? (
           <View style={styles.emptyState}>
             <MaterialCommunityIcons
               name="account-group-outline"
@@ -178,15 +270,30 @@ export default function EditRosterScreen() {
           </View>
         ) : (
           <View style={styles.playerGrid}>
-            {team1Roster.map((player: string) => (
-              <View key={player} style={[styles.chip, { backgroundColor: palette.overlay12 }]}>
+            {sortedRoster.map((player) => (
+              <View
+                key={player.id}
+                style={[
+                  styles.chip,
+                  { backgroundColor: palette.overlay12 },
+                  !player.isActive && styles.chipInactive,
+                ]}>
                 <Pressable
                   onPress={() => handleEditPlayer(player)}
                   style={styles.chipTextPressable}>
-                  <Text style={[styles.chipText, { color: palette.textInverse }]} numberOfLines={1}>
-                    {player}
+                  <Text
+                    style={[
+                      styles.chipText,
+                      { color: player.isActive ? palette.textInverse : palette.textMuted },
+                    ]}
+                    numberOfLines={1}>
+                    {player.name}
                   </Text>
-                  <MaterialCommunityIcons name="pencil" size={12} color={palette.textMuted} />
+                  <MaterialCommunityIcons
+                    name="pencil"
+                    size={12}
+                    color={player.isActive ? palette.textMuted : palette.overlay20}
+                  />
                 </Pressable>
                 <Pressable
                   style={({ pressed }) => [
@@ -196,9 +303,13 @@ export default function EditRosterScreen() {
                       { backgroundColor: palette.overlay15 },
                     ],
                   ]}
-                  onPress={() => handleRemovePlayer(player)}
+                  onPress={() => handleRemovePlayer(player.id)}
                   hitSlop={4}>
-                  <MaterialCommunityIcons name="close" size={14} color={palette.textMuted} />
+                  <MaterialCommunityIcons
+                    name="close"
+                    size={14}
+                    color={player.isActive ? palette.textMuted : palette.overlay20}
+                  />
                 </Pressable>
               </View>
             ))}
@@ -234,6 +345,23 @@ export default function EditRosterScreen() {
               autoFocus
               maxLength={20}
             />
+
+            {/* Active Toggle */}
+            <View style={styles.activeToggleRow}>
+              <Text style={[styles.activeToggleLabel, { color: palette.textInverse }]}>
+                Active for games
+              </Text>
+              <Switch
+                value={editPlayerActive}
+                onValueChange={setEditPlayerActive}
+                trackColor={{ false: palette.overlay20, true: palette.accent }}
+                thumbColor={palette.textInverse}
+              />
+            </View>
+            <Text style={[styles.activeToggleHint, { color: palette.textMuted }]}>
+              Inactive players won&apos;t appear during stat tracking
+            </Text>
+
             <View style={styles.modalButtons}>
               <Pressable
                 style={({ pressed }) => [
@@ -363,6 +491,9 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     gap: 6,
   },
+  chipInactive: {
+    opacity: 0.5,
+  },
   chipText: {
     fontSize: 15,
     fontWeight: '500',
@@ -403,6 +534,20 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     paddingHorizontal: 14,
     fontSize: 16,
+    marginBottom: 16,
+  },
+  activeToggleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 4,
+  },
+  activeToggleLabel: {
+    fontSize: 15,
+    fontWeight: '500',
+  },
+  activeToggleHint: {
+    fontSize: 12,
     marginBottom: 16,
   },
   modalButtons: {

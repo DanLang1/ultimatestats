@@ -1,5 +1,6 @@
 import { ThemedView } from '@/components/ThemedView';
 import { useAlert } from '@/components/ui/AlertProvider';
+import AggregateBottomBar from '@/components/view-stats/AggregateBottomBar';
 import AggregateGamesList from '@/components/view-stats/AggregateGamesList';
 import SavedGamesList from '@/components/view-stats/SavedGamesList';
 import StatsContent from '@/components/view-stats/StatsContent';
@@ -10,7 +11,7 @@ import {
   generateCurrentGameCSV,
   generateSavedGameCSV,
 } from '@/lib/statsUtils';
-import { GameEvent, SavedGame } from '@/lib/storage';
+import { GameEvent, Player, SavedGame } from '@/lib/storage';
 import { useGameStore } from '@/store/gameStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { File, Paths } from 'expo-file-system';
@@ -52,6 +53,9 @@ export default function ViewStatsScreen() {
     loadSavedGames();
   }, [loadSavedGames]);
 
+  // Derive unique key for scroll view to force reset
+  const scrollKey = `stats-${viewMode}-${selectedGame?.id ?? 'current'}-${showingAggregatedStats ? 'agg' : 'list'}-${selectedTeam ?? ''}`;
+
   // Derive which data to display
   const displayData = selectedGame
     ? {
@@ -62,6 +66,7 @@ export default function ViewStatsScreen() {
         events: selectedGame.events,
         startingPossession: selectedGame.startingPossession,
         gameTo: selectedGame.gameTo,
+        roster: selectedGame.team1.roster,
       }
     : {
         team1Name,
@@ -71,6 +76,7 @@ export default function ViewStatsScreen() {
         events,
         startingPossession,
         gameTo,
+        roster: currentTeam?.roster,
       };
 
   const handleExport = () => {
@@ -93,7 +99,11 @@ export default function ViewStatsScreen() {
             if (selectedGame) {
               csv = generateSavedGameCSV(selectedGame);
             } else if (showingAggregatedStats && aggregatedData) {
-              csv = generateAggregateCSV(aggregatedData.games, aggregatedData.teamName);
+              csv = generateAggregateCSV(
+                aggregatedData.games,
+                aggregatedData.teamName,
+                aggregatedData.roster,
+              );
             } else {
               csv = generateCurrentGameCSV(
                 events,
@@ -101,6 +111,7 @@ export default function ViewStatsScreen() {
                 team2Name,
                 startingPossession,
                 gameTo,
+                currentTeam?.roster,
               );
             }
             const sanitizedFilename = filename.replace(/[^a-zA-Z0-9_-]/g, '_');
@@ -156,16 +167,22 @@ export default function ViewStatsScreen() {
     gameCount: number;
     events: GameEvent[];
     games: SavedGame[];
+    roster: Player[];
   } | null = null;
 
   if (selectedGameIds.size > 0) {
     const games = savedGames.filter((g) => selectedGameIds.has(g.id));
     const mergedEvents = games.flatMap((g) => g.events);
+    // Merge rosters from all games, deduplicating by player id
+    const rosterMap = new Map<string, Player>();
+    games.forEach((g) => g.team1.roster.forEach((p) => rosterMap.set(p.id, p)));
+    const mergedRoster = Array.from(rosterMap.values());
     aggregatedData = {
       teamName: selectedTeam || 'Combined',
       gameCount: games.length,
       events: mergedEvents,
       games: games, // Pass the games list for CSV
+      roster: mergedRoster,
     };
   }
 
@@ -348,7 +365,7 @@ export default function ViewStatsScreen() {
         </View>
       )}
 
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView key={scrollKey} contentContainerStyle={styles.scrollContent}>
         {viewMode === 'current' || selectedGame ? (
           <StatsContent
             team1Name={displayData.team1Name}
@@ -356,6 +373,7 @@ export default function ViewStatsScreen() {
             team1Score={'team1Score' in displayData ? displayData.team1Score : undefined}
             team2Score={'team2Score' in displayData ? displayData.team2Score : undefined}
             events={displayData.events}
+            roster={displayData.roster}
             isSavedGame={!!selectedGame}
             startingPossession={displayData.startingPossession}
             gameTo={displayData.gameTo}
@@ -367,6 +385,7 @@ export default function ViewStatsScreen() {
               team1Name={aggregatedData.teamName}
               team2Name=""
               events={aggregatedData.events}
+              roster={aggregatedData.roster}
               aggregateInfo={{
                 teamName: aggregatedData.teamName,
                 gameCount: aggregatedData.gameCount,
@@ -395,6 +414,12 @@ export default function ViewStatsScreen() {
           />
         )}
       </ScrollView>
+
+      <AggregateBottomBar
+        isVisible={viewMode === 'aggregate' && !!selectedTeam && !showingAggregatedStats}
+        selectedCount={selectedGameIds.size}
+        onViewAggregated={handleViewAggregated}
+      />
     </ThemedView>
   );
 }
@@ -453,6 +478,6 @@ const styles = StyleSheet.create({
   scrollContent: {
     padding: 24,
     paddingTop: 8,
-    paddingBottom: 40,
+    paddingBottom: 100, // Extra padding for bottom bar
   },
 });

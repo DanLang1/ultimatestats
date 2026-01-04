@@ -1,4 +1,6 @@
 import { useTheme } from '@/context/ThemeContext';
+import { getPlayerName } from '@/lib/playerUtils';
+import { Player } from '@/lib/storage/types';
 import { PointEvents } from '@/lib/timelineUtils';
 import React from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -8,6 +10,7 @@ interface EventTimelineProps {
   team1Name: string;
   team2Name: string;
   gameTo: number;
+  roster: Player[];
 }
 
 export default function EventTimeline({
@@ -15,6 +18,7 @@ export default function EventTimeline({
   team1Name,
   team2Name,
   gameTo,
+  roster,
 }: EventTimelineProps) {
   const { palette } = useTheme();
 
@@ -40,6 +44,10 @@ export default function EventTimeline({
         {points.map((point) => {
           const isTeam1 = point.scoringTeam === 'team1';
           const teamColor = isTeam1 ? palette.success : palette.danger;
+
+          // Resolve player IDs to names
+          const goalName = getPlayerName(roster, point.goalPlayerId);
+          const assistName = getPlayerName(roster, point.assistPlayerId);
 
           return (
             <View
@@ -97,15 +105,17 @@ export default function EventTimeline({
                 {/* Turnovers (in order) */}
                 {point.turnovers.map((turnover, index) => {
                   const isOpponent = turnover.team === 'team2';
-                  // Emojis removed for cleaner look
-                  // Original: 💀🎁 for opponent, ✋🧈🗑️ for team
+                  const turnoverPlayerName = getPlayerName(roster, turnover.playerId);
+                  const turnoverPlayer2Name = getPlayerName(roster, turnover.player2Id ?? null);
 
                   const label =
                     turnover.type === 'block'
                       ? 'Block'
                       : turnover.type === 'drop'
                         ? 'Drop'
-                        : 'Throwaway';
+                        : turnover.type === 'fiftyfifty'
+                          ? '50/50'
+                          : 'Throwaway';
 
                   const bgColor =
                     turnover.type === 'block' ? palette.success + '20' : palette.danger + '20';
@@ -127,14 +137,17 @@ export default function EventTimeline({
                           ]}>
                           {isOpponent ? `OPP ${label.toUpperCase()}` : label.toUpperCase()}
                         </Text>
-                        {turnover.player && (
+                        {turnoverPlayerName && (
                           <Text
                             style={[
                               styles.eventPlayer,
                               { color: isOpponent ? palette.textMuted : palette.textInverse },
                             ]}
                             numberOfLines={1}>
-                            {turnover.player}
+                            {turnoverPlayerName}
+                            {turnover.type === 'fiftyfifty' && turnoverPlayer2Name && (
+                              <Text style={{ opacity: 0.8 }}> & {turnoverPlayer2Name}</Text>
+                            )}
                           </Text>
                         )}
                       </View>
@@ -150,22 +163,26 @@ export default function EventTimeline({
                 {/* Goal */}
                 <View style={[styles.eventRow, { backgroundColor: palette.overlay05 }]}>
                   <Text style={[styles.eventLabel, { color: teamColor }]}>GOAL</Text>
-                  <Text style={[styles.eventPlayer, { color: palette.textInverse }]}>
-                    {isTeam1 ? point.goal || 'Unknown' : team2Name}
+                  <Text
+                    style={[styles.eventPlayer, { color: palette.textInverse }]}
+                    numberOfLines={1}>
+                    {isTeam1 ? goalName || 'Unknown' : team2Name}
                   </Text>
                 </View>
 
                 {/* Arrow before Assist */}
-                {isTeam1 && point.assist && (
+                {isTeam1 && assistName && (
                   <Text style={[styles.arrow, { color: palette.textMuted }]}>→</Text>
                 )}
 
                 {/* Assist */}
-                {isTeam1 && point.assist && (
+                {isTeam1 && assistName && (
                   <View style={[styles.eventRow, { backgroundColor: palette.overlay05 }]}>
                     <Text style={[styles.eventLabel, { color: palette.accent }]}>ASSIST</Text>
-                    <Text style={[styles.eventPlayer, { color: palette.textInverse }]}>
-                      {point.assist}
+                    <Text
+                      style={[styles.eventPlayer, { color: palette.textInverse }]}
+                      numberOfLines={1}>
+                      {assistName}
                     </Text>
                   </View>
                 )}
@@ -286,6 +303,8 @@ const styles = StyleSheet.create({
   eventPlayer: {
     fontSize: 12,
     fontWeight: '500',
+    maxWidth: 100,
+    flexShrink: 1,
   },
   arrow: {
     fontSize: 14,

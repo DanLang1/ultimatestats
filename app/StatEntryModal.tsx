@@ -1,5 +1,6 @@
 import { StatEntryInner } from '@/components/stat-entry/StatEntryInner';
 import { useTheme } from '@/context/ThemeContext';
+import { checkGameOver } from '@/lib/gameUtils';
 import { useGameStore } from '@/store/gameStore';
 import { router } from 'expo-router';
 import React from 'react';
@@ -20,17 +21,22 @@ export default function StatEntryScreen() {
   const teamName = pendingStatEntry.team === 'team1' ? team1Name : team2Name;
   const roster = team1Roster; // Only track team1 roster
 
-  const handleComplete = (goal: string | null, assist: string | null) => {
+  const handleComplete = (goalPlayerId: string | null, assistPlayerId: string | null) => {
     addGoalEvent({
       team: pendingStatEntry.team,
-      goal,
-      assist,
+      goalPlayerId,
+      assistPlayerId,
     });
     router.dismiss();
 
     // Check if game ended
     const state = useGameStore.getState();
-    const isGameOver = state.team1Score >= state.gameTo || state.team2Score >= state.gameTo;
+    const isGameOver = checkGameOver({
+      team1Score: state.team1Score,
+      team2Score: state.team2Score,
+      gameTo: state.gameTo,
+      timerTimeLeft: state.timerTimeLeft,
+    });
 
     if (isGameOver) {
       setTimeout(() => {
@@ -43,14 +49,19 @@ export default function StatEntryScreen() {
     // Record with null goal/assist
     addGoalEvent({
       team: pendingStatEntry.team,
-      goal: null,
-      assist: null,
+      goalPlayerId: null,
+      assistPlayerId: null,
     });
     router.dismiss();
 
     // Check if game ended
     const state = useGameStore.getState();
-    const isGameOver = state.team1Score >= state.gameTo || state.team2Score >= state.gameTo;
+    const isGameOver = checkGameOver({
+      team1Score: state.team1Score,
+      team2Score: state.team2Score,
+      gameTo: state.gameTo,
+      timerTimeLeft: state.timerTimeLeft,
+    });
 
     if (isGameOver) {
       setTimeout(() => {
@@ -60,7 +71,7 @@ export default function StatEntryScreen() {
   };
 
   const handleAddPlayer = (name: string) => {
-    addPlayer(name);
+    return addPlayer(name);
   };
 
   return (

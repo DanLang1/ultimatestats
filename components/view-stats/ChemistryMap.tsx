@@ -135,7 +135,10 @@ export default function ChemistryMap({ playerName, connections, palette }: Chemi
           fontSize="10"
           fontWeight="bold"
           textAnchor="middle">
-          {playerName.split(' ')[0].toUpperCase()}
+          {(() => {
+            const firstName = playerName.split(' ')[0].toUpperCase();
+            return firstName.length > 8 ? firstName.substring(0, 7) + '…' : firstName;
+          })()}
         </SvgText>
 
         {/* Feeder Nodes (Left Side) */}

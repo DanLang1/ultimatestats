@@ -45,22 +45,26 @@ export default function TurnoverEntryScreen() {
     router.dismissTo('/');
   };
 
-  const handleComplete = (type: TurnoverType, player: string | null, player2?: string | null) => {
+  const handleComplete = (
+    type: TurnoverType,
+    playerId: string | null,
+    player2Id?: string | null,
+  ) => {
     const team =
       type === 'block' ? (possession === 'team1' ? 'team2' : 'team1') : (possession ?? 'team1');
 
     addTurnoverEvent({
       team,
       subtype: type,
-      player,
-      player2,
+      playerId,
+      player2Id,
     });
     router.dismissTo('/');
   };
 
   const handleAddPlayer = (name: string) => {
     // Always add to team1 roster since that's the only roster we track
-    addPlayer(name);
+    return addPlayer(name);
   };
 
   return (

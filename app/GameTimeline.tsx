@@ -28,6 +28,7 @@ export default function GameTimelineScreen() {
           team2Score: game.team2Score,
           startingPossession: game.startingPossession,
           gameTo: game.gameTo,
+          roster: game.team1.roster,
         };
       })()
     : {
@@ -38,6 +39,7 @@ export default function GameTimelineScreen() {
         team2Score: events.filter((e) => e.type === 'goal' && e.team === 'team2').length,
         startingPossession,
         gameTo,
+        roster: currentTeam?.roster ?? [],
       };
 
   if (!gameData) {
@@ -86,6 +88,7 @@ export default function GameTimelineScreen() {
             team1Name={gameData.team1Name}
             team2Name={gameData.team2Name}
             gameTo={gameData.gameTo}
+            roster={gameData.roster}
           />
         ) : (
           <View style={styles.emptyState}>

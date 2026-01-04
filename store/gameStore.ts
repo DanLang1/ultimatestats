@@ -35,6 +35,7 @@ export const useGameStore = create<GameState>()(
         timerIsActive: false,
         timerEndTime: null,
         timerTimeLeft: 90 * 60,
+        gameLocked: false,
 
         // Stat Tracking Initial State
         statTrackingEnabled: false,
@@ -95,23 +96,28 @@ export const useGameStore = create<GameState>()(
             const halftimeScore = Math.ceil(state.gameTo / 2);
             const isHalftimeGoal = state.gameHalf === 1 && newScore === halftimeScore;
 
-            // Update score
+            // Update score FIRST
             if (isTeam1) state.team1Score = newScore;
             else state.team2Score = newScore;
+
+            // Soft Cap Logic - per USAU 6.D.1:
+            // "At the soft cap, play continues until the current scoring attempt is completed.
+            //  If, after the current scoring attempt is completed, the game total has not yet
+            //  been reached by one team, one is added to the higher score and the resulting
+            //  number is the new game total."
+            // gameTo is calculated AFTER the point completes (after score increment)
+            if (state.softCapPending && !state.isSoftCap) {
+              state.isSoftCap = true;
+              state.softCapPending = false;
+              const highestScore = Math.max(state.team1Score, state.team2Score);
+              state.gameTo = highestScore + 1;
+            }
 
             // Halftime: reset timeouts
             if (isHalftimeGoal) {
               state.gameHalf = 2;
               state.team1Timeouts.fill(true);
               state.team2Timeouts.fill(true);
-            }
-
-            // Soft Cap Logic
-            if (state.softCapPending && !state.isSoftCap) {
-              const highestScore = Math.max(state.team1Score, state.team2Score);
-              state.isSoftCap = true;
-              state.softCapPending = false;
-              state.gameTo = Math.min(highestScore + 1, state.gameTo);
             }
 
             state.currentPoint++;
@@ -121,8 +127,8 @@ export const useGameStore = create<GameState>()(
               state.events.push({
                 type: 'goal',
                 team: isTeam1 ? 'team1' : 'team2',
-                goal: null,
-                assist: null,
+                goalPlayerId: null,
+                assistPlayerId: null,
               });
               return;
             }
@@ -144,8 +150,8 @@ export const useGameStore = create<GameState>()(
               state.events.push({
                 type: 'goal',
                 team: 'team2',
-                goal: null,
-                assist: null,
+                goalPlayerId: null,
+                assistPlayerId: null,
               });
             }
           }),
@@ -180,6 +186,7 @@ export const useGameStore = create<GameState>()(
               state.pendingTurnoverEntry = null;
             }
 
+            state.gameLocked = false;
             state.events.pop();
             result = true;
           });
@@ -229,16 +236,8 @@ export const useGameStore = create<GameState>()(
             state.timerIsActive = false;
             state.timerEndTime = null;
             state.timerTimeLeft = state.gameLength * 60;
+            state.gameLocked = false;
           }),
-
-        triggerSoftCap: () =>
-          set((state: GameState) => {
-            if (state.isSoftCap) return;
-            const highestScore = Math.max(state.team1Score, state.team2Score);
-            state.isSoftCap = true;
-            state.gameTo = highestScore + 1;
-          }),
-
         setSoftCapPending: (pending: boolean) =>
           set((state: GameState) => {
             state.softCapPending = pending;
@@ -264,31 +263,46 @@ export const useGameStore = create<GameState>()(
             state.timerTimeLeft = seconds;
           }),
 
+        setGameLocked: (locked: boolean) =>
+          set((state: GameState) => {
+            state.gameLocked = locked;
+          }),
+
         // Stat Tracking Actions
         setStatTrackingEnabled: (enabled: boolean) =>
           set((state: GameState) => {
             state.statTrackingEnabled = enabled;
           }),
 
-        addPlayer: (name: string) =>
-          set((state: GameState) => {
-            const trimmedName = name.trim();
-            if (!trimmedName) return;
-            if (state.currentTeam.roster.includes(trimmedName)) return;
-            state.currentTeam.roster.push(trimmedName);
-          }),
+        addPlayer: (name: string) => {
+          const trimmedName = name.trim();
+          if (!trimmedName) return null;
+          // Check if name already exists (case-insensitive)
+          const state = get();
+          const lowerName = trimmedName.toLowerCase();
+          if (state.currentTeam.roster.some((p) => p.name.toLowerCase() === lowerName)) return null;
+          const newId = generateId();
+          set((s: GameState) => {
+            s.currentTeam.roster.push({
+              id: newId,
+              name: trimmedName,
+              isActive: true,
+            });
+          });
+          return newId;
+        },
 
         addGoalEvent: (event: {
           team: 'team1' | 'team2';
-          goal: string | null;
-          assist: string | null;
+          goalPlayerId: string | null;
+          assistPlayerId: string | null;
         }) =>
           set((state: GameState) => {
             state.events.push({
               type: 'goal',
               team: event.team,
-              goal: event.goal,
-              assist: event.assist,
+              goalPlayerId: event.goalPlayerId,
+              assistPlayerId: event.assistPlayerId,
             });
             state.pendingStatEntry = null;
           }),
@@ -324,16 +338,16 @@ export const useGameStore = create<GameState>()(
         addTurnoverEvent: (event: {
           team: 'team1' | 'team2';
           subtype: TurnoverType;
-          player: string | null;
-          player2?: string | null;
+          playerId: string | null;
+          player2Id?: string | null;
         }) =>
           set((state: GameState) => {
             state.events.push({
               type: 'turnover',
               team: event.team,
               subtype: event.subtype,
-              player: event.player,
-              player2: event.player2,
+              playerId: event.playerId,
+              player2Id: event.player2Id,
             });
             state.possession = state.possession === 'team1' ? 'team2' : 'team1';
             state.pendingTurnoverEntry = null;
@@ -423,7 +437,7 @@ export const useGameStore = create<GameState>()(
             state.currentTeam = {
               id: team.id,
               name: team.name,
-              roster: [...team.roster],
+              roster: team.roster.map((p) => ({ ...p })),
             };
           });
         },
@@ -452,6 +466,7 @@ export const useGameStore = create<GameState>()(
           softCapPending: state.softCapPending,
           softCapMins: state.softCapMins,
           timerTimeLeft: state.timerTimeLeft,
+          gameLocked: state.gameLocked,
           statTrackingEnabled: state.statTrackingEnabled,
           events: state.events,
           currentPoint: state.currentPoint,

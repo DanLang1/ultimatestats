@@ -8,7 +8,7 @@ import { useTutorialStore } from '@/store/tutorialStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router, Stack } from 'expo-router';
 import React from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 export default function GameInfoScreen() {
   const {
@@ -23,6 +23,7 @@ export default function GameInfoScreen() {
     team2Score,
     isSoftCap,
     softCapPending,
+    statTrackingEnabled,
   } = useGameStore();
 
   const team1Name = currentTeam?.name ?? 'Team 1';
@@ -53,33 +54,75 @@ export default function GameInfoScreen() {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Game To Section */}
         <View style={styles.targetSection}>
-          <Text style={[styles.targetLabel, { color: palette.accent }]}>GAME TO</Text>
-          <Text style={[styles.targetNumber, { color: palette.textInverse }]}>
-            {isSoftCap ? Math.max(team1Score, team2Score) + 1 : gameTo}
-          </Text>
-          {isSoftCap && !isHardcap && (
-            <View style={styles.capStatusBadge}>
-              <MaterialCommunityIcons name="hat-fedora" size={16} color={palette.textInverse} />
-              <Text style={[styles.capStatusText, { color: palette.textInverse }]}>
-                Softcap Active
-              </Text>
-            </View>
-          )}
-          {softCapPending && !isSoftCap && !isHardcap && (
-            <View style={styles.capStatusBadge}>
-              <FlashingIcon name="hat-fedora" size={16} color={palette.textInverse} isFlashing />
-              <Text style={[styles.capStatusText, { color: palette.textInverse }]}>
-                Softcap Pending
-              </Text>
-            </View>
-          )}
-          {isHardcap && (
-            <View style={styles.capStatusBadge}>
-              <MaterialCommunityIcons name="hard-hat" size={16} color={palette.textInverse} />
-              <Text style={[styles.capStatusText, { color: palette.textInverse }]}>
-                Hardcap Active
-              </Text>
-            </View>
+          {isHardcap ? (
+            <>
+              <View style={styles.hardcapLabelRow}>
+                <MaterialCommunityIcons name="hard-hat" size={18} color={palette.accent} />
+                <Text style={[styles.targetLabel, { color: palette.accent }]}>HARDCAP</Text>
+              </View>
+              {/* Under hardcap: show what happens after current point */}
+              {team1Score === team2Score ? (
+                // Tied at hardcap = universe point
+                <View style={[styles.capStatusBadge, { marginTop: 8 }]}>
+                  <MaterialCommunityIcons
+                    name="sword-cross"
+                    size={20}
+                    color={palette.textInverse}
+                  />
+                  <Text style={[styles.universePointText, { color: palette.textInverse }]}>
+                    Universe Point
+                  </Text>
+                </View>
+              ) : (
+                // Not tied - show who wins and how
+                <>
+                  {(() => {
+                    const leadingTeam = team1Score > team2Score ? team1Name : team2Name;
+                    const trailingTeam = team1Score > team2Score ? team2Name : team1Name;
+                    const scoreDiff = Math.abs(team1Score - team2Score);
+                    const canTie = scoreDiff === 1;
+
+                    return (
+                      <>
+                        <Text style={[styles.hardcapWinnerText, { color: palette.textInverse }]}>
+                          {leadingTeam}
+                        </Text>
+                        <Text style={[styles.capStatusText, { color: palette.textMuted }]}>
+                          {canTie ? `wins unless ${trailingTeam} scores` : 'wins after this point'}
+                        </Text>
+                      </>
+                    );
+                  })()}
+                </>
+              )}
+            </>
+          ) : (
+            // Normal or softcap display
+            <>
+              <Text style={[styles.targetLabel, { color: palette.accent }]}>GAME TO</Text>
+              <Text style={[styles.targetNumber, { color: palette.textInverse }]}>{gameTo}</Text>
+              {isSoftCap && (
+                <View style={styles.capStatusBadge}>
+                  <MaterialCommunityIcons name="hat-fedora" size={16} color={palette.textInverse} />
+                  <Text style={[styles.capStatusText, { color: palette.textInverse }]}>
+                    Softcap Active
+                  </Text>
+                </View>
+              )}
+              {softCapPending && !isSoftCap && (
+                <View style={styles.capStatusBadge}>
+                  <FlashingIcon
+                    name="hat-fedora"
+                    size={16}
+                    color={palette.textInverse}
+                    isFlashing
+                  />
+                  <Text style={[styles.capStatusText, { color: palette.textInverse }]}>
+                    Softcap Pending
+                  </Text>
+                </View>
+              )}
+            </>
           )}
         </View>
 
@@ -122,76 +165,82 @@ export default function GameInfoScreen() {
 
         <View style={[styles.divider, { backgroundColor: palette.overlay10 }]} />
 
-        {/* Action Bar Legend */}
-        <Text style={[styles.sectionTitle, { color: palette.textMuted }]}>ACTION BAR LEGEND</Text>
-        <View style={[styles.legendContainer, { backgroundColor: palette.overlay08 }]}>
-          <Text style={[styles.legendCategoryTitle, { color: palette.danger }]}>
-            When Your Team Has Possession
-          </Text>
-          <View style={styles.legendItem}>
-            <Text style={styles.legendEmoji}>💀</Text>
-            <View style={styles.legendTextContainer}>
-              <Text style={[styles.legendLabel, { color: palette.textInverse }]}>OPP D</Text>
-              <Text style={[styles.legendDescription, { color: palette.textMuted }]}>
-                Opponent made a defensive play
+        {/* Action Bar Legend - only show when stat tracking enabled */}
+        {statTrackingEnabled && (
+          <>
+            <Text style={[styles.sectionTitle, { color: palette.textMuted }]}>
+              ACTION BAR LEGEND
+            </Text>
+            <View style={[styles.legendContainer, { backgroundColor: palette.overlay08 }]}>
+              <Text style={[styles.legendCategoryTitle, { color: palette.danger }]}>
+                When Your Team Has Possession
               </Text>
-            </View>
-          </View>
-          <View style={styles.legendItem}>
-            <Text style={styles.legendEmoji}>🧈</Text>
-            <View style={styles.legendTextContainer}>
-              <Text style={[styles.legendLabel, { color: palette.textInverse }]}>DROP</Text>
-              <Text style={[styles.legendDescription, { color: palette.textMuted }]}>
-                Your team dropped the disc
-              </Text>
-            </View>
-          </View>
-          <View style={styles.legendItem}>
-            <Text style={styles.legendEmoji}>🗑️</Text>
-            <View style={styles.legendTextContainer}>
-              <Text style={[styles.legendLabel, { color: palette.textInverse }]}>T/A</Text>
-              <Text style={[styles.legendDescription, { color: palette.textMuted }]}>
-                Your team threw it away (incomplete pass)
-              </Text>
-            </View>
-          </View>
+              <View style={styles.legendItem}>
+                <Text style={styles.legendEmoji}>💀</Text>
+                <View style={styles.legendTextContainer}>
+                  <Text style={[styles.legendLabel, { color: palette.textInverse }]}>OPP D</Text>
+                  <Text style={[styles.legendDescription, { color: palette.textMuted }]}>
+                    Opponent made a defensive play
+                  </Text>
+                </View>
+              </View>
+              <View style={styles.legendItem}>
+                <Text style={styles.legendEmoji}>🧈</Text>
+                <View style={styles.legendTextContainer}>
+                  <Text style={[styles.legendLabel, { color: palette.textInverse }]}>DROP</Text>
+                  <Text style={[styles.legendDescription, { color: palette.textMuted }]}>
+                    Your team dropped the disc
+                  </Text>
+                </View>
+              </View>
+              <View style={styles.legendItem}>
+                <Text style={styles.legendEmoji}>🗑️</Text>
+                <View style={styles.legendTextContainer}>
+                  <Text style={[styles.legendLabel, { color: palette.textInverse }]}>T/A</Text>
+                  <Text style={[styles.legendDescription, { color: palette.textMuted }]}>
+                    Your team threw it away (incomplete pass)
+                  </Text>
+                </View>
+              </View>
 
-          <View style={styles.legendItem}>
-            <Text style={styles.legendEmoji}>⚖️</Text>
-            <View style={styles.legendTextContainer}>
-              <Text style={[styles.legendLabel, { color: palette.textInverse }]}>50/50</Text>
-              <Text style={[styles.legendDescription, { color: palette.textMuted }]}>
-                Partial blame on thrower and receiver
-              </Text>
-            </View>
-          </View>
+              <View style={styles.legendItem}>
+                <Text style={styles.legendEmoji}>⚖️</Text>
+                <View style={styles.legendTextContainer}>
+                  <Text style={[styles.legendLabel, { color: palette.textInverse }]}>50/50</Text>
+                  <Text style={[styles.legendDescription, { color: palette.textMuted }]}>
+                    Partial blame on thrower and receiver
+                  </Text>
+                </View>
+              </View>
 
-          <View style={[styles.legendDivider, { backgroundColor: palette.overlay10 }]} />
+              <View style={[styles.legendDivider, { backgroundColor: palette.overlay10 }]} />
 
-          <Text style={[styles.legendCategoryTitle, { color: palette.success }]}>
-            When Opponent Has Possession
-          </Text>
-          <View style={styles.legendItem}>
-            <Text style={styles.legendEmoji}>✋</Text>
-            <View style={styles.legendTextContainer}>
-              <Text style={[styles.legendLabel, { color: palette.textInverse }]}>BLOCK</Text>
-              <Text style={[styles.legendDescription, { color: palette.textMuted }]}>
-                Your team got a block
+              <Text style={[styles.legendCategoryTitle, { color: palette.success }]}>
+                When Opponent Has Possession
               </Text>
+              <View style={styles.legendItem}>
+                <Text style={styles.legendEmoji}>✋</Text>
+                <View style={styles.legendTextContainer}>
+                  <Text style={[styles.legendLabel, { color: palette.textInverse }]}>BLOCK</Text>
+                  <Text style={[styles.legendDescription, { color: palette.textMuted }]}>
+                    Your team got a block
+                  </Text>
+                </View>
+              </View>
+              <View style={styles.legendItem}>
+                <Text style={styles.legendEmoji}>🎁</Text>
+                <View style={styles.legendTextContainer}>
+                  <Text style={[styles.legendLabel, { color: palette.textInverse }]}>OPP TURN</Text>
+                  <Text style={[styles.legendDescription, { color: palette.textMuted }]}>
+                    Opponent made an unforced error
+                  </Text>
+                </View>
+              </View>
             </View>
-          </View>
-          <View style={styles.legendItem}>
-            <Text style={styles.legendEmoji}>🎁</Text>
-            <View style={styles.legendTextContainer}>
-              <Text style={[styles.legendLabel, { color: palette.textInverse }]}>OPP TURN</Text>
-              <Text style={[styles.legendDescription, { color: palette.textMuted }]}>
-                Opponent made an unforced error
-              </Text>
-            </View>
-          </View>
-        </View>
 
-        <View style={[styles.divider, { backgroundColor: palette.overlay10 }]} />
+            <View style={[styles.divider, { backgroundColor: palette.overlay10 }]} />
+          </>
+        )}
 
         {/* Cap Status Legend */}
         <Text style={[styles.sectionTitle, { color: palette.textMuted }]}>CAP STATUS LEGEND</Text>
@@ -276,6 +325,25 @@ export default function GameInfoScreen() {
           </View>
           <MaterialCommunityIcons name="chevron-right" size={24} color={palette.textMuted} />
         </Pressable>
+
+        <View style={{ height: 12 }} />
+
+        <Pressable
+          style={[styles.tutorialButton, { backgroundColor: palette.overlay08 }]}
+          onPress={() => {
+            Linking.openURL('https://ultimatestats.netlify.app/privacy/');
+          }}>
+          <MaterialCommunityIcons name="shield-lock-outline" size={24} color={palette.accent} />
+          <View style={styles.tutorialButtonContent}>
+            <Text style={[styles.tutorialButtonTitle, { color: palette.textInverse }]}>
+              Privacy Policy
+            </Text>
+            <Text style={[styles.tutorialButtonSubtitle, { color: palette.textMuted }]}>
+              TLDR: Everything is stored locally on your device
+            </Text>
+          </View>
+          <MaterialCommunityIcons name="open-in-new" size={24} color={palette.textMuted} />
+        </Pressable>
       </ScrollView>
     </ThemedView>
   );
@@ -327,6 +395,16 @@ const styles = StyleSheet.create({
     includeFontPadding: false,
     lineHeight: 64,
   },
+  hardcapWinnerText: {
+    fontSize: 32,
+    fontWeight: '800',
+    textAlign: 'center',
+  },
+  hardcapLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
   capStatusBadge: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -336,6 +414,10 @@ const styles = StyleSheet.create({
   capStatusText: {
     fontSize: 14,
     fontWeight: '600',
+  },
+  universePointText: {
+    fontSize: 24,
+    fontWeight: '700',
   },
 
   // Current Score

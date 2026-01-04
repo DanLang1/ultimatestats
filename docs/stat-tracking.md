@@ -18,16 +18,16 @@ export type GameEvent =
   | {
       type: 'goal';
       team: 'team1' | 'team2';
-      goal: string | null; // Player who scored
-      assist: string | null; // Player who assisted
+      goalPlayerId: string | null; // Player who scored
+      assistPlayerId: string | null; // Player who assisted
       gameId?: string; // Links to SavedGame.id
     }
   | {
       type: 'turnover';
       team: 'team1' | 'team2'; // Team that committed the turnover
       subtype: TurnoverType;
-      player: string | null;
-      player2?: string | null; // Second player for 50/50 turnovers
+      playerId: string | null;
+      player2Id?: string | null; // Second player for 50/50 turnovers
       gameId?: string; // Links to SavedGame.id
     };
 ```
@@ -37,7 +37,7 @@ export type GameEvent =
 | Property               | Type                            | Description                                    |
 | ---------------------- | ------------------------------- | ---------------------------------------------- |
 | `statTrackingEnabled`  | `boolean`                       | Whether stat tracking is enabled               |
-| `team1Roster`          | `string[]`                      | Built progressively as players are added       |
+| `currentTeam`          | `SavedTeam`                     | Includes roster (built progressively)          |
 | `events`               | `GameEvent[]`                   | Unified chronological log of all game events   |
 | `pendingStatEntry`     | `{ team, pointNumber } \| null` | Triggers stat entry sheet                      |
 | `pendingTurnoverEntry` | `{ receivingTeam } \| null`     | Triggers turnover entry sheet                  |

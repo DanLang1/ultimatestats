@@ -1,7 +1,7 @@
 import { ScoreBadge } from '@/components/ui/ScoreBadge';
 import { useTheme } from '@/context/ThemeContext';
 import { computePlayerStats } from '@/lib/statsUtils';
-import { GameEvent, SavedGame } from '@/lib/storage';
+import { GameEvent, Player, SavedGame } from '@/lib/storage';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
@@ -14,6 +14,7 @@ interface StatsContentProps {
   team1Score?: number;
   team2Score?: number;
   events: GameEvent[];
+  roster?: Player[];
   isSavedGame?: boolean;
   aggregateInfo?: { teamName: string; gameCount: number };
   startingPossession?: 'team1' | 'team2' | null;
@@ -26,6 +27,7 @@ export default function StatsContent({
   team1Score,
   team2Score,
   events,
+  roster,
   isSavedGame,
   aggregateInfo,
   startingPossession = null,
@@ -33,7 +35,7 @@ export default function StatsContent({
   games,
 }: StatsContentProps) {
   const { palette } = useTheme();
-  const playerStats = computePlayerStats(events, 'team1');
+  const playerStats = computePlayerStats(events, 'team1', roster);
   const goalCount = events.filter((e) => e.type === 'goal' && e.team === 'team1').length;
   const topPerformers = playerStats.filter((p) => p.plusMinus > 0).slice(0, 3);
 
@@ -122,6 +124,7 @@ export default function StatsContent({
           palette={palette}
           events={events} // revert to events
           team="team1"
+          roster={roster}
           games={games}
         />
       )}

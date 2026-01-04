@@ -1,12 +1,14 @@
 import { useTheme } from '@/context/ThemeContext';
 import { useTutorialStore } from '@/store/tutorialStore';
 import React, { useState } from 'react';
-import { Dimensions, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Dimensions, Linking, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeIn, SlideInRight, SlideOutLeft } from 'react-native-reanimated';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import TutorialStep from './TutorialStep';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
+const PRIVACY_URL = 'https://ultimatestats.netlify.app/privacy/';
 
 const TUTORIAL_STEPS = [
   {
@@ -23,8 +25,8 @@ const TUTORIAL_STEPS = [
   },
   {
     icon: 'cog-outline' as const,
-    title: 'Top Controls',
-    description: 'To enable stats, and view more info, tap the settings icon.',
+    title: 'Customizable',
+    description: 'To enable stats, and set game settings, tap the settings icon.',
   },
 ];
 
@@ -131,6 +133,15 @@ export default function TutorialOverlay() {
                 </Text>
               </Pressable>
             </View>
+
+            {/* Privacy link footer - only on first step */}
+            {isFirstStep && (
+              <Pressable onPress={() => Linking.openURL(PRIVACY_URL)} style={styles.privacyFooter}>
+                <Text style={[styles.privacyFooterText, { color: palette.accent }]}>
+                  Privacy Policy
+                </Text>
+              </Pressable>
+            )}
           </Animated.View>
         </SafeAreaView>
       </SafeAreaProvider>
@@ -146,10 +157,10 @@ const styles = StyleSheet.create({
   },
   container: {
     borderRadius: 24,
-    paddingVertical: 16,
+    paddingTop: 16,
+    paddingBottom: 16,
     paddingHorizontal: 16,
     maxWidth: Math.min(SCREEN_WIDTH - 48, 600),
-    maxHeight: '90%', // Ensure it doesn't overflow screen height
     borderWidth: 1,
   },
   skipButton: {
@@ -164,7 +175,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   contentContainer: {
-    minHeight: 200,
+    minHeight: 150,
     justifyContent: 'center',
   },
   stepWrapper: {
@@ -215,5 +226,13 @@ const styles = StyleSheet.create({
   nextButtonText: {
     fontSize: 16,
     fontWeight: '600',
+  },
+  privacyFooter: {
+    alignItems: 'center',
+    paddingTop: 12,
+  },
+  privacyFooterText: {
+    fontSize: 12,
+    textDecorationLine: 'underline',
   },
 });

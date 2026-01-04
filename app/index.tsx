@@ -4,12 +4,16 @@ import TeamScoreSection from '@/components/TeamScoreSection';
 import { ThemedView } from '@/components/ThemedView';
 import StatsTrackingTutorial from '@/components/tutorial/StatsTrackingTutorial';
 import TutorialOverlay from '@/components/tutorial/TutorialOverlay';
+import { useTheme } from '@/context/ThemeContext';
 import { usePullPromptNavigation } from '@/hooks/usePullPromptNavigation';
 import { getContrastingTextColor } from '@/lib/colorUtils';
+import { checkGameOver } from '@/lib/gameUtils';
 import { useGameStore } from '@/store/gameStore';
 import { TurnoverType } from '@/store/gameStore.types';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import Animated, { FadeIn } from 'react-native-reanimated';
 
 export default function BasicScoreboard() {
   const {
@@ -32,7 +36,12 @@ export default function BasicScoreboard() {
     possession,
     triggerTurnover,
     addTurnoverEvent,
+    resetGame,
+    gameTo,
+    timerTimeLeft,
+    gameLocked,
   } = useGameStore();
+  const { palette } = useTheme();
 
   const team1Name = currentTeam?.name ?? 'Team 1';
 
@@ -87,10 +96,12 @@ export default function BasicScoreboard() {
       router.push('/StatEntryModal');
       return;
     }
-
-    // If no stat entry needed, check if game ended
-    const state = useGameStore.getState();
-    const isGameOver = state.team1Score >= state.gameTo || state.team2Score >= state.gameTo;
+    const isGameOver = checkGameOver({
+      team1Score: useGameStore.getState().team1Score,
+      team2Score: useGameStore.getState().team2Score,
+      gameTo: useGameStore.getState().gameTo,
+      timerTimeLeft: useGameStore.getState().timerTimeLeft,
+    });
 
     if (isGameOver) {
       router.push('/WinModal');
@@ -101,13 +112,13 @@ export default function BasicScoreboard() {
 
     if (action.type === 'oppBlock') {
       // Opponent blocked us - no player selection needed
-      addTurnoverEvent({ team: 'team2', subtype: 'block', player: null });
+      addTurnoverEvent({ team: 'team2', subtype: 'block', playerId: null });
       return;
     }
 
     if (action.type === 'turn') {
       // Opponent turned it over - no player selection needed
-      addTurnoverEvent({ team: 'team2', subtype: 'throwaway', player: null });
+      addTurnoverEvent({ team: 'team2', subtype: 'throwaway', playerId: null });
       return;
     }
 
@@ -158,9 +169,58 @@ export default function BasicScoreboard() {
         <ScoreboardActionBar possession={possession} onAction={handleActionBarAction} />
       )}
 
-      {/* Tutorial Overlay - shows on first launch or when triggered */}
       <TutorialOverlay />
       <StatsTrackingTutorial />
+
+      {/* Game Locked Overlay */}
+      {/* We only lock IF the game is actually over AND the user has "finalized" it by viewing stats */}
+      {checkGameOver({ team1Score, team2Score, gameTo, timerTimeLeft }) && gameLocked && (
+        <View style={[styles.lockedOverlay, { backgroundColor: palette.overlayDark60 }]}>
+          <Animated.View entering={FadeIn} style={styles.lockedContent}>
+            <MaterialCommunityIcons name="lock" size={64} color={palette.lockScreenText} />
+            <Text style={[styles.lockedTitle, { color: palette.lockScreenText }]}>
+              Game Complete
+            </Text>
+            <Text style={[styles.lockedSubtitle, { color: palette.lockScreenText }]}>
+              Start a new game to continue
+            </Text>
+
+            <View style={styles.lockedButtons}>
+              <Pressable
+                style={[styles.lockedButton, { backgroundColor: palette.lockScreenBtnPrimaryBg }]}
+                onPress={() => {
+                  resetGame();
+                }}>
+                <MaterialCommunityIcons
+                  name="restart"
+                  size={20}
+                  color={palette.lockScreenBtnPrimaryText}
+                />
+                <Text
+                  style={[styles.lockedButtonText, { color: palette.lockScreenBtnPrimaryText }]}>
+                  Start New Game
+                </Text>
+              </Pressable>
+
+              <Pressable
+                style={[
+                  styles.lockedButton,
+                  {
+                    backgroundColor: palette.lockScreenBtnSecondaryBg,
+                    borderWidth: 1,
+                    borderColor: palette.lockScreenBtnSecondaryBorder,
+                  },
+                ]}
+                onPress={undo}>
+                <MaterialCommunityIcons name="undo" size={20} color={palette.lockScreenText} />
+                <Text style={[styles.lockedButtonText, { color: palette.lockScreenText }]}>
+                  Undo
+                </Text>
+              </Pressable>
+            </View>
+          </Animated.View>
+        </View>
+      )}
     </ThemedView>
   );
 }
@@ -177,5 +237,44 @@ const styles = StyleSheet.create({
     right: 0,
     alignItems: 'center',
     zIndex: 100,
+  },
+  lockedOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000,
+    padding: 24,
+  },
+  lockedContent: {
+    alignItems: 'center',
+    gap: 16,
+  },
+  lockedTitle: {
+    fontSize: 28,
+    fontWeight: '800',
+    marginTop: 8,
+  },
+  lockedSubtitle: {
+    fontSize: 16,
+    opacity: 0.8,
+    marginBottom: 16,
+  },
+  lockedButtons: {
+    gap: 12,
+    width: '100%',
+    maxWidth: 280,
+  },
+  lockedButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+  },
+  lockedButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
   },
 });

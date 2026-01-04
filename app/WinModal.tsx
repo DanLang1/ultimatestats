@@ -1,4 +1,5 @@
 import { useTheme } from '@/context/ThemeContext';
+import { checkGameOver, getWinner } from '@/lib/gameUtils';
 import { useGameStore } from '@/store/gameStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router } from 'expo-router';
@@ -17,31 +18,48 @@ export default function WinModal() {
     resetGame,
     statTrackingEnabled,
     undoLastAction,
+    timerTimeLeft,
+    setTimerActive,
+    setGameLocked,
   } = useGameStore();
   const { palette } = useTheme();
 
   const team1Name = currentTeam?.name ?? 'Team 1';
 
-  const isGameOver = team1Score >= gameTo || team2Score >= gameTo;
+  // Game is over when checkGameOver returns true
+  const isGameOver = checkGameOver({
+    team1Score,
+    team2Score,
+    gameTo,
+    timerTimeLeft,
+  });
 
   // If game isn't over, don't render
   if (!isGameOver) {
     return null;
   }
 
-  const team1Won = team1Score >= gameTo;
+  // Determine winner: whoever has more points wins
+  const winnerTeam = getWinner(team1Score, team2Score);
+  const team1Won = winnerTeam === 'team1';
   const winnerName = team1Won ? team1Name : team2Name;
   const winnerScore = team1Won ? team1Score : team2Score;
   const loserScore = team1Won ? team2Score : team1Score;
 
   const handleViewStats = () => {
-    saveCurrentGame();
+    setTimerActive(false);
+    setGameLocked(true);
+    if (statTrackingEnabled) {
+      saveCurrentGame();
+    }
     router.dismissTo('/');
     router.push('/ViewStats');
   };
 
   const handleNewGame = () => {
-    saveCurrentGame();
+    if (statTrackingEnabled) {
+      saveCurrentGame();
+    }
     resetGame();
     router.dismissTo('/');
   };

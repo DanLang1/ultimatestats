@@ -2,23 +2,27 @@ import { GameEvent } from '@/store/gameStore.types';
 import { computeTeamStats } from '../teamStatsUtils';
 
 // Helper to create goal events
-const goal = (team: 'team1' | 'team2', goal?: string, assist?: string): GameEvent => ({
+const goal = (
+  team: 'team1' | 'team2',
+  goalPlayerId?: string,
+  assistPlayerId?: string,
+): GameEvent => ({
   type: 'goal',
   team,
-  goal: goal ?? null,
-  assist: assist ?? null,
+  goalPlayerId: goalPlayerId ?? null,
+  assistPlayerId: assistPlayerId ?? null,
 });
 
 // Helper to create turnover events
 const turnover = (
   team: 'team1' | 'team2',
   subtype: 'block' | 'throwaway' | 'drop' | 'fiftyfifty',
-  player?: string,
+  playerId?: string,
 ): GameEvent => ({
   type: 'turnover',
   team,
   subtype,
-  player: player ?? null,
+  playerId: playerId ?? null,
 });
 
 describe('computeTeamStats', () => {

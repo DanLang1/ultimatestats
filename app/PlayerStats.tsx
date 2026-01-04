@@ -15,10 +15,9 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router } from 'expo-router';
 import React from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function PlayerStats() {
-  const { player, events, team, games, selectedGameId } = usePlayerStatsStore();
+  const { player, events, team, games, selectedGameId, roster } = usePlayerStatsStore();
   const { palette } = useTheme();
 
   const handleDismiss = () => {
@@ -26,8 +25,10 @@ export default function PlayerStats() {
   };
 
   // Compute stats directly (React Compiler handles memoization)
-  const allPlayerStats = player && events.length ? computePlayerStats(events, team) : [];
-  const roleStats = player && events.length ? getRoleStats(player, events, team) : null;
+  const allPlayerStats =
+    player && events.length ? computePlayerStats(events, team, roster || undefined) : [];
+  const roleStats =
+    player && events.length ? getRoleStats(player, events, team, roster || undefined) : null;
   const summary = allPlayerStats.find((p) => p.name === player);
   const highestPlusMinus = allPlayerStats.length
     ? Math.max(...allPlayerStats.map((p) => p.plusMinus))
@@ -47,7 +48,7 @@ export default function PlayerStats() {
   }
 
   // Calculate impact for the specific game selected (React Compiler handles memoization)
-  const impactData = player ? getImpactStats(player, impactEvents, team) : [];
+  const impactData = player ? getImpactStats(player, impactEvents, team, roster || undefined) : [];
 
   const selectedGame = games?.find((g) => g.id === effectiveGameId);
   const gameDate = selectedGame
@@ -62,7 +63,7 @@ export default function PlayerStats() {
   const aggregateImpact =
     games && games.length > 1 && player
       ? games.reduce((total, g) => {
-          const gameImpact = getImpactStats(player, g.events, team);
+          const gameImpact = getImpactStats(player, g.events, team, roster || undefined);
           const finalValue = gameImpact[gameImpact.length - 1]?.cumulativePlusMinus ?? 0;
           return total + finalValue;
         }, 0)
@@ -71,7 +72,7 @@ export default function PlayerStats() {
   const stats =
     player && events.length && roleStats
       ? {
-          chemistry: getChemistryStats(player, events, team),
+          chemistry: getChemistryStats(player, events, team, roster || undefined),
           impact: impactData,
           summary,
           role: roleStats,
@@ -95,17 +96,43 @@ export default function PlayerStats() {
   }
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: palette.primary }]} edges={['top']}>
-      {/* Header */}
+    <View style={[styles.container, { backgroundColor: palette.primary }]}>
+      {/* Header - just back button */}
       <View style={[styles.header, { borderBottomColor: palette.overlay10 }]}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-          <Pressable
-            onPress={handleDismiss}
-            style={[styles.backButton, { backgroundColor: palette.overlay05 }]}>
-            <MaterialCommunityIcons name="arrow-left" size={24} color={palette.textInverse} />
-          </Pressable>
-          <View>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+        <Pressable
+          onPress={handleDismiss}
+          style={[styles.backButton, { backgroundColor: palette.overlay05 }]}>
+          <MaterialCommunityIcons name="arrow-left" size={24} color={palette.textInverse} />
+        </Pressable>
+        <Text style={[styles.headerTitle, { color: palette.textMuted }]}>PLAYER STATS</Text>
+      </View>
+
+      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
+        {/* Top Row: Profile Diamond + Player Summary Cards */}
+        <View style={styles.topCardsRow}>
+          {/* Profile Diamond Card */}
+          <View
+            style={[
+              styles.profileCard,
+              { backgroundColor: palette.overlay02, borderColor: palette.overlay05 },
+            ]}>
+            <RoleDiamond roleStats={stats.role} palette={palette} />
+          </View>
+
+          {/* Player Summary Card */}
+          <View
+            style={[
+              styles.summaryCard,
+              { backgroundColor: palette.overlay02, borderColor: palette.overlay05 },
+            ]}>
+            {/* Player Name + Label */}
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 8,
+                justifyContent: 'center',
+              }}>
               <Text style={[styles.playerName, { color: palette.textInverse }]}>{player}</Text>
               {stats.roleLabel && (
                 <View style={[styles.labelBadge, { backgroundColor: palette.accent }]}>
@@ -113,129 +140,123 @@ export default function PlayerStats() {
                 </View>
               )}
             </View>
-            <Text style={[styles.playerDetail, { color: palette.textMuted }]}>
+            {/* Net Impact */}
+            <Text style={[styles.playerDetail, { color: palette.textMuted, textAlign: 'center' }]}>
               {stats.summary?.plusMinus !== undefined && stats.summary.plusMinus > 0 ? '+' : ''}
               {stats.summary?.plusMinus ?? 0} Net Impact
             </Text>
+            {/* Divider */}
+            <View
+              style={{
+                height: 1,
+                backgroundColor: palette.overlay10,
+                marginVertical: 12,
+                alignSelf: 'stretch',
+              }}
+            />
+            {/* Stats Summary */}
+            {stats.summary && (
+              <PlayerStatsSummary stats={stats.summary} palette={palette} variant="vertical" />
+            )}
           </View>
         </View>
-      </View>
-
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
-        {/* Stats Summary Row */}
-        {stats.summary && <PlayerStatsSummary stats={stats.summary} palette={palette} />}
 
         <View style={styles.grid}>
-          {/* Row 1: Role Diamond + Impact Timeline / Bars */}
-          <View style={styles.row}>
-            <View
-              style={[
-                styles.card,
-                { backgroundColor: palette.overlay02, borderColor: palette.overlay05 },
-              ]}>
-              <RoleDiamond roleStats={stats.role} palette={palette} />
-            </View>
-            <View
-              style={[
-                styles.card,
-                { backgroundColor: palette.overlay02, borderColor: palette.overlay05, flex: 1 },
-              ]}>
-              {/* Game Selector (only if aggregate) */}
-              {games && games.length > 1 && (
-                <View style={{ marginBottom: 12, paddingHorizontal: 16 }}>
-                  {/* Aggregate Summary */}
+          {/* Full-width Impact Timeline */}
+          <View
+            style={[
+              styles.card,
+              { backgroundColor: palette.overlay02, borderColor: palette.overlay05 },
+            ]}>
+            {/* Game Selector (only if aggregate) */}
+            {games && games.length > 1 && (
+              <View style={{ marginBottom: 12, paddingHorizontal: 16 }}>
+                {/* Aggregate Summary */}
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    marginBottom: 12,
+                    gap: 8,
+                  }}>
                   <View
                     style={{
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      marginBottom: 12,
-                      gap: 8,
+                      backgroundColor:
+                        aggregateImpact && aggregateImpact > 0
+                          ? palette.successOverlay15
+                          : aggregateImpact && aggregateImpact < 0
+                            ? palette.dangerOverlay15
+                            : palette.overlay05,
+                      paddingHorizontal: 12,
+                      paddingVertical: 6,
+                      borderRadius: 8,
                     }}>
-                    <View
+                    <Text
                       style={{
-                        backgroundColor:
+                        color:
                           aggregateImpact && aggregateImpact > 0
-                            ? palette.successOverlay15
+                            ? palette.success
                             : aggregateImpact && aggregateImpact < 0
-                              ? palette.dangerOverlay15
-                              : palette.overlay05,
-                        paddingHorizontal: 12,
-                        paddingVertical: 6,
-                        borderRadius: 8,
+                              ? palette.danger
+                              : palette.textMuted,
+                        fontSize: 16,
+                        fontWeight: '800',
                       }}>
-                      <Text
-                        style={{
-                          color:
-                            aggregateImpact && aggregateImpact > 0
-                              ? palette.success
-                              : aggregateImpact && aggregateImpact < 0
-                                ? palette.danger
-                                : palette.textMuted,
-                          fontSize: 16,
-                          fontWeight: '800',
-                        }}>
-                        {aggregateImpact && aggregateImpact > 0 ? '+' : ''}
-                        {aggregateImpact ?? 0}
-                      </Text>
-                    </View>
-                    <Text style={{ color: palette.textMuted, fontSize: 12, fontWeight: '600' }}>
-                      TOTAL ACROSS {games.length} GAMES
+                      {aggregateImpact && aggregateImpact > 0 ? '+' : ''}
+                      {aggregateImpact ?? 0}
                     </Text>
                   </View>
-
-                  {/* Per-game selector */}
-                  <Text
-                    style={{
-                      color: palette.textMuted,
-                      fontSize: 10,
-                      fontWeight: '600',
-                      marginBottom: 6,
-                      letterSpacing: 0.5,
-                    }}>
-                    VIEW GAME DETAILS
+                  <Text style={{ color: palette.textMuted, fontSize: 12, fontWeight: '600' }}>
+                    TOTAL ACROSS {games.length} GAMES
                   </Text>
-                  <Pressable
-                    onPress={() => router.push('/GameSelectorModal')}
-                    style={{
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      backgroundColor: palette.overlay05,
-                      paddingHorizontal: 12,
-                      paddingVertical: 10,
-                      borderRadius: 8,
-                      alignSelf: 'flex-start',
-                      gap: 6,
-                    }}>
-                    <MaterialCommunityIcons name="calendar" size={16} color={palette.textMuted} />
-                    <Text style={{ color: palette.textInverse, fontWeight: '600', fontSize: 14 }}>
-                      {gameLabel}
-                    </Text>
-                    <MaterialCommunityIcons
-                      name="chevron-down"
-                      size={18}
-                      color={palette.textMuted}
-                    />
-                  </Pressable>
                 </View>
-              )}
 
-              <ImpactTimeline data={stats.impact} palette={palette} />
-            </View>
+                {/* Per-game selector */}
+                <Text
+                  style={{
+                    color: palette.textMuted,
+                    fontSize: 10,
+                    fontWeight: '600',
+                    marginBottom: 6,
+                    letterSpacing: 0.5,
+                  }}>
+                  VIEW GAME DETAILS
+                </Text>
+                <Pressable
+                  onPress={() => router.push('/GameSelectorModal')}
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    backgroundColor: palette.overlay05,
+                    paddingHorizontal: 12,
+                    paddingVertical: 10,
+                    borderRadius: 8,
+                    alignSelf: 'flex-start',
+                    gap: 6,
+                  }}>
+                  <MaterialCommunityIcons name="calendar" size={16} color={palette.textMuted} />
+                  <Text style={{ color: palette.textInverse, fontWeight: '600', fontSize: 14 }}>
+                    {gameLabel}
+                  </Text>
+                  <MaterialCommunityIcons name="chevron-down" size={18} color={palette.textMuted} />
+                </Pressable>
+              </View>
+            )}
+
+            <ImpactTimeline data={stats.impact} palette={palette} />
           </View>
 
-          {/* Row 2: Chemistry Map */}
-          <View style={styles.row}>
-            <View
-              style={[
-                styles.card,
-                { backgroundColor: palette.overlay02, borderColor: palette.overlay05, flex: 1 },
-              ]}>
-              <ChemistryMap playerName={player} connections={stats.chemistry} palette={palette} />
-            </View>
+          {/* Full-width Chemistry Map */}
+          <View
+            style={[
+              styles.card,
+              { backgroundColor: palette.overlay02, borderColor: palette.overlay05 },
+            ]}>
+            <ChemistryMap playerName={player} connections={stats.chemistry} palette={palette} />
           </View>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -267,13 +288,14 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   playerName: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '800',
     letterSpacing: 0.5,
   },
   playerDetail: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '600',
+    marginTop: 4,
   },
   scrollView: {
     flex: 1,
@@ -285,10 +307,29 @@ const styles = StyleSheet.create({
   grid: {
     gap: 16,
   },
-  row: {
+  topCardsRow: {
     flexDirection: 'row',
-    gap: 16,
-    alignItems: 'flex-start',
+    gap: 12,
+    marginBottom: 16,
+  },
+  profileCard: {
+    borderRadius: 16,
+    borderWidth: 1,
+    overflow: 'hidden',
+  },
+  summaryCard: {
+    flex: 1,
+    borderRadius: 16,
+    borderWidth: 1,
+    padding: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerTitle: {
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: 1,
+    marginLeft: 12,
   },
   card: {
     borderRadius: 16,

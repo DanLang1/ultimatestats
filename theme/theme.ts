@@ -79,7 +79,15 @@ const midnightElectric = {
   disabled: '#94A3B8', // Slate 400 - disabled state
 
   // Contrast labels
+  // Contrast labels
   textOnAccent: '#FFFFFF',
+
+  // Lock Screen (Fixed Contrast)
+  lockScreenText: '#FFFFFF',
+  lockScreenBtnPrimaryBg: '#FFFFFF',
+  lockScreenBtnPrimaryText: '#0F172A',
+  lockScreenBtnSecondaryBg: 'rgba(255, 255, 255, 0.1)',
+  lockScreenBtnSecondaryBorder: 'rgba(255, 255, 255, 0.5)',
 } as const;
 
 // =============================================================================
@@ -252,7 +260,15 @@ export const lightPalette = {
   textOnAccent: '#FFFFFF',
 
   // Glass/floating bar backgrounds
+  // Glass/floating bar backgrounds
   glassBg: 'rgba(255, 255, 255, 0.95)', // White with transparency
+
+  // Lock Screen (Fixed Contrast)
+  lockScreenText: '#FFFFFF',
+  lockScreenBtnPrimaryBg: '#FFFFFF',
+  lockScreenBtnPrimaryText: '#0F172A',
+  lockScreenBtnSecondaryBg: 'rgba(255, 255, 255, 0.1)',
+  lockScreenBtnSecondaryBorder: 'rgba(255, 255, 255, 0.5)',
 } as const;
 
 // Default palette export (for backwards compatibility during migration)
@@ -267,6 +283,11 @@ export type Palette = {
   overlayModal: string;
   textOnAccent: string;
   glassBg: string;
+  lockScreenText: string;
+  lockScreenBtnPrimaryBg: string;
+  lockScreenBtnPrimaryText: string;
+  lockScreenBtnSecondaryBg: string;
+  lockScreenBtnSecondaryBorder: string;
 };
 
 // =============================================================================

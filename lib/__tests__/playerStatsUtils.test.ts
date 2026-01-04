@@ -4,18 +4,18 @@ import { getChemistryStats, getImpactStats } from '../statsUtils';
 describe('Player Stats Visualization Logic', () => {
   const mockEvents: GameEvent[] = [
     // Point 1: Player A throws to Player B
-    { type: 'goal', team: 'team1', goal: 'Player B', assist: 'Player A' },
+    { type: 'goal', team: 'team1', goalPlayerId: 'Player B', assistPlayerId: 'Player A' },
     // Point 2: Player B throws to Player A
-    { type: 'goal', team: 'team1', goal: 'Player A', assist: 'Player B' },
+    { type: 'goal', team: 'team1', goalPlayerId: 'Player A', assistPlayerId: 'Player B' },
     // Point 3: Player A throws to Player C
-    { type: 'goal', team: 'team1', goal: 'Player C', assist: 'Player A' },
+    { type: 'goal', team: 'team1', goalPlayerId: 'Player C', assistPlayerId: 'Player A' },
     // Point 4: Player A block
-    { type: 'turnover', team: 'team1', subtype: 'block', player: 'Player A' },
+    { type: 'turnover', team: 'team1', subtype: 'block', playerId: 'Player A' },
     // Point 5: Player A throwaway
-    { type: 'turnover', team: 'team1', subtype: 'throwaway', player: 'Player A' },
+    { type: 'turnover', team: 'team1', subtype: 'throwaway', playerId: 'Player A' },
     // Point 6: Player D throwaway (team max turns setter)
-    { type: 'turnover', team: 'team1', subtype: 'throwaway', player: 'Player D' },
-    { type: 'turnover', team: 'team1', subtype: 'throwaway', player: 'Player D' },
+    { type: 'turnover', team: 'team1', subtype: 'throwaway', playerId: 'Player D' },
+    { type: 'turnover', team: 'team1', subtype: 'throwaway', playerId: 'Player D' },
   ];
 
   describe('getChemistryStats', () => {

@@ -1,5 +1,7 @@
 import { AnimatedThemedView } from '@/components/ThemedView';
 import { useTheme } from '@/context/ThemeContext';
+import { getActiveRoster, getPlayerName } from '@/lib/playerUtils';
+import { Player } from '@/lib/storage/types';
 import { TurnoverType } from '@/store/gameStore.types';
 import React, { useState } from 'react';
 import { Keyboard, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
@@ -10,10 +12,10 @@ type EntryStep = 'type' | 'player';
 
 export interface TurnoverEntryInnerProps {
   teamName: string;
-  roster: string[];
+  roster: Player[];
   onSkip: () => void;
-  onComplete: (type: TurnoverType, player: string | null, player2?: string | null) => void;
-  onAddPlayer: (name: string) => void;
+  onComplete: (type: TurnoverType, playerId: string | null, player2Id?: string | null) => void;
+  onAddPlayer: (name: string) => string | null;
   isMyTeamTurnover: boolean;
   isOpponentTurnover: boolean;
   preselectedType?: TurnoverType;
@@ -36,11 +38,17 @@ export function TurnoverEntryInner({
     preselectedType ?? (isOpponentTurnover ? 'block' : null),
   );
   const [newPlayerName, setNewPlayerName] = useState('');
-  // For 50/50: track first selected player (thrower)
-  const [fiftyFiftyFirstPlayer, setFiftyFiftyFirstPlayer] = useState<string | null>(null);
+  // For 50/50: track first selected player ID (thrower)
+  const [fiftyFiftyFirstPlayerId, setFiftyFiftyFirstPlayerId] = useState<string | null>(null);
   const { palette, themeMode } = useTheme();
 
+  // Only show active players
+  const activeRoster = getActiveRoster(roster);
+
   const isFiftyFiftyMode = selectedType === 'fiftyfifty';
+
+  // Get player name for display
+  const fiftyFiftyFirstPlayerName = getPlayerName(roster, fiftyFiftyFirstPlayerId);
 
   // Skip button colors - darker in light mode for visibility
   const skipButtonBorder = themeMode === 'light' ? palette.textMuted : palette.overlay20;
@@ -56,33 +64,57 @@ export function TurnoverEntryInner({
     setStep('player');
   };
 
-  const handlePlayerSelect = (playerName: string) => {
+  const handlePlayerSelect = (playerId: string) => {
     if (!selectedType) return;
 
     // For 50/50: first tap = thrower, second tap = receiver
     if (selectedType === 'fiftyfifty') {
-      if (!fiftyFiftyFirstPlayer) {
+      if (!fiftyFiftyFirstPlayerId) {
         // First player selection (thrower)
-        setFiftyFiftyFirstPlayer(playerName);
+        setFiftyFiftyFirstPlayerId(playerId);
       } else {
         // Second player selection (receiver) - complete the entry
-        onComplete(selectedType, fiftyFiftyFirstPlayer, playerName);
+        onComplete(selectedType, fiftyFiftyFirstPlayerId, playerId);
       }
       return;
     }
 
     // Normal single-player turnover
-    onComplete(selectedType, playerName);
+    onComplete(selectedType, playerId);
   };
 
   const handleAddPlayer = () => {
     const trimmed = newPlayerName.trim();
     if (!trimmed) return;
 
-    onAddPlayer(trimmed);
+    const newPlayerId = onAddPlayer(trimmed);
     setNewPlayerName('');
     Keyboard.dismiss();
-    handlePlayerSelect(trimmed);
+
+    // Determine which player ID to use
+    let playerIdToSelect = newPlayerId;
+
+    // If player wasn't added (duplicate), find the existing player
+    if (!playerIdToSelect) {
+      const lowerName = trimmed.toLowerCase();
+      const existingPlayer = activeRoster.find((p) => p.name.toLowerCase() === lowerName);
+      playerIdToSelect = existingPlayer?.id ?? null;
+    }
+
+    // Auto-select the player (new or existing)
+    if (playerIdToSelect && selectedType) {
+      // For 50/50, handle first/second player logic
+      if (selectedType === 'fiftyfifty') {
+        if (!fiftyFiftyFirstPlayerId) {
+          setFiftyFiftyFirstPlayerId(playerIdToSelect);
+        } else {
+          onComplete(selectedType, fiftyFiftyFirstPlayerId, playerIdToSelect);
+        }
+      } else {
+        // Normal turnover - complete with this player
+        onComplete(selectedType, playerIdToSelect);
+      }
+    }
   };
 
   const handleSkipPlayer = () => {
@@ -107,7 +139,6 @@ export function TurnoverEntryInner({
   };
 
   const getStepQuestion = () => {
-    if (step === 'type') return 'What happened?';
     switch (selectedType) {
       case 'block':
         return 'Who made the block?';
@@ -116,11 +147,16 @@ export function TurnoverEntryInner({
       case 'drop':
         return 'Who dropped it?';
       case 'fiftyfifty':
-        return fiftyFiftyFirstPlayer ? 'Who dropped it?' : 'Who threw it?';
+        return fiftyFiftyFirstPlayerId ? 'Who dropped it?' : 'Who threw it?';
       default:
-        return 'Who?';
+        return 'What happened?';
     }
   };
+
+  // Filter out first player for 50/50 mode
+  const displayRoster = isFiftyFiftyMode
+    ? activeRoster.filter((p) => p.id !== fiftyFiftyFirstPlayerId)
+    : activeRoster;
 
   return (
     <AnimatedThemedView
@@ -155,7 +191,7 @@ export function TurnoverEntryInner({
               )}
 
               {/* Show first selected player for 50/50 */}
-              {isFiftyFiftyMode && fiftyFiftyFirstPlayer && (
+              {isFiftyFiftyMode && fiftyFiftyFirstPlayerName && (
                 <Animated.View
                   entering={FadeIn}
                   style={[
@@ -164,7 +200,7 @@ export function TurnoverEntryInner({
                   ]}>
                   <Text style={[styles.badgeLabel, { color: palette.accent }]}>THROWER</Text>
                   <Text style={[styles.badgeValue, { color: palette.accent }]}>
-                    {fiftyFiftyFirstPlayer}
+                    {fiftyFiftyFirstPlayerName}
                   </Text>
                 </Animated.View>
               )}
@@ -261,27 +297,9 @@ export function TurnoverEntryInner({
                 ]}
                 onPress={step === 'type' ? onSkip : handleSkipPlayer}>
                 <Text style={[styles.skipText, { color: skipButtonText }]}>
-                  {step === 'player' && isOpponentTurnover ? 'No Block' : 'Skip'}
+                  {step === 'player' && 'Skip'}
                 </Text>
               </Pressable>
-              {step === 'player' && !isOpponentTurnover && (
-                <Animated.View entering={FadeIn}>
-                  <Pressable
-                    style={[styles.skipButton, { backgroundColor: palette.cardBgAlt }]}
-                    onPress={() => {
-                      if (isFiftyFiftyMode && fiftyFiftyFirstPlayer) {
-                        // Go back to first player selection
-                        setFiftyFiftyFirstPlayer(null);
-                      } else {
-                        setStep('type');
-                        setSelectedType(null);
-                        setFiftyFiftyFirstPlayer(null);
-                      }
-                    }}>
-                    <Text style={[styles.skipText, { color: palette.textSecondary }]}>Back</Text>
-                  </Pressable>
-                </Animated.View>
-              )}
             </Animated.View>
           </View>
 
@@ -289,11 +307,8 @@ export function TurnoverEntryInner({
           {step === 'player' && (
             <Animated.View entering={FadeIn} style={styles.rightColumn}>
               <StatEntryRoster
-                roster={
-                  isFiftyFiftyMode ? roster.filter((p) => p !== fiftyFiftyFirstPlayer) : roster
-                }
+                roster={displayRoster}
                 step="goal"
-                selectedGoal={null}
                 onSelect={handlePlayerSelect}
                 maxHeight={280}
               />

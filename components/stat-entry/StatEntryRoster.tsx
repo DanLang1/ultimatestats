@@ -1,29 +1,30 @@
 import { PlayerChip } from '@/components/ui/PlayerChip';
 import { useTheme } from '@/context/ThemeContext';
+import { Player } from '@/lib/storage/types';
 import React from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 type EntryStep = 'goal' | 'assist';
 
 interface StatEntryRosterProps {
-  roster: string[];
+  roster: Player[];
   step: EntryStep;
-  selectedGoal: string | null;
-  onSelect: (name: string) => void;
+  selectedGoalId?: string | null;
+  onSelect: (playerId: string) => void;
   maxHeight?: number;
 }
 
 export function StatEntryRoster({
   roster,
   step,
-  selectedGoal,
+  selectedGoalId,
   onSelect,
   maxHeight = 120,
 }: StatEntryRosterProps) {
   const { palette } = useTheme();
 
-  // Sort roster alphabetically
-  const sortedRoster = [...roster].sort((a, b) => a.localeCompare(b));
+  // Sort roster alphabetically by name
+  const sortedRoster = [...roster].sort((a, b) => a.name.localeCompare(b.name));
 
   return (
     <View style={[styles.scrollWrapper, { maxHeight }]}>
@@ -38,10 +39,10 @@ export function StatEntryRoster({
         ) : (
           sortedRoster.map((player) => (
             <PlayerChip
-              key={player}
-              name={player}
-              selected={step === 'goal' ? false : player === selectedGoal}
-              onPress={() => onSelect(player)}
+              key={player.id}
+              name={player.name}
+              selected={step === 'goal' ? false : player.id === selectedGoalId}
+              onPress={() => onSelect(player.id)}
             />
           ))
         )}

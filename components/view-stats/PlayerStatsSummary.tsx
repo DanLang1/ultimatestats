@@ -5,49 +5,81 @@ import { StyleSheet, Text, View } from 'react-native';
 interface PlayerStatsSummaryProps {
   stats: PlayerStatsType;
   palette: any;
+  variant?: 'horizontal' | 'vertical';
 }
 
 // Helper for singular/plural labels
 const pluralize = (count: number, singular: string, plural: string) =>
   count === 1 ? singular : plural;
 
-export default function PlayerStatsSummary({ stats, palette }: PlayerStatsSummaryProps) {
+interface StatPillProps {
+  value: number;
+  label: string;
+  type: 'positive' | 'negative';
+  palette: any;
+}
+
+function StatPill({ value, label, type, palette }: StatPillProps) {
+  const bgColor = type === 'positive' ? palette.successOverlay15 : palette.dangerOverlay15;
+  const textColor = type === 'positive' ? palette.success : palette.danger;
+
+  return (
+    <View style={[styles.pill, { backgroundColor: bgColor }]}>
+      <Text style={[styles.pillValue, { color: textColor }]}>{value}</Text>
+      <Text style={[styles.pillLabel, { color: textColor }]}>{label}</Text>
+    </View>
+  );
+}
+
+export default function PlayerStatsSummary({
+  stats,
+  palette,
+  variant = 'horizontal',
+}: PlayerStatsSummaryProps) {
+  const isVertical = variant === 'vertical';
+
   return (
     <View
       style={[
-        styles.container,
-        { backgroundColor: palette.overlay02, borderColor: palette.overlay05 },
+        isVertical ? styles.containerVertical : styles.container,
+        !isVertical && { backgroundColor: palette.overlay02, borderColor: palette.overlay05 },
       ]}>
-      <View style={styles.statCell}>
-        <Text style={[styles.statValue, { color: palette.success }]}>{stats.goals}</Text>
-        <Text style={[styles.statLabel, { color: palette.textMuted }]}>
-          {pluralize(stats.goals, 'Goal', 'Goals')}
-        </Text>
-      </View>
-      <View style={styles.statCell}>
-        <Text style={[styles.statValue, { color: palette.success }]}>{stats.assists}</Text>
-        <Text style={[styles.statLabel, { color: palette.textMuted }]}>
-          {pluralize(stats.assists, 'Assist', 'Assists')}
-        </Text>
-      </View>
-      <View style={styles.statCell}>
-        <Text style={[styles.statValue, { color: palette.success }]}>{stats.blocks}</Text>
-        <Text style={[styles.statLabel, { color: palette.textMuted }]}>
-          {pluralize(stats.blocks, 'Block', 'Blocks')}
-        </Text>
-      </View>
-      <View style={styles.statCell}>
-        <Text style={[styles.statValue, { color: palette.danger }]}>{stats.throwaways}</Text>
-        <Text style={[styles.statLabel, { color: palette.textMuted }]}>
-          {pluralize(stats.throwaways, 'Throwaway', 'Throwaways')}
-        </Text>
-      </View>
-      <View style={styles.statCell}>
-        <Text style={[styles.statValue, { color: palette.danger }]}>{stats.drops}</Text>
-        <Text style={[styles.statLabel, { color: palette.textMuted }]}>
-          {pluralize(stats.drops, 'Drop', 'Drops')}
-        </Text>
-      </View>
+      <StatPill
+        value={stats.goals}
+        label={pluralize(stats.goals, 'Goal', 'Goals')}
+        type="positive"
+        palette={palette}
+      />
+      <StatPill
+        value={stats.assists}
+        label={pluralize(stats.assists, 'Assist', 'Assists')}
+        type="positive"
+        palette={palette}
+      />
+      <StatPill
+        value={stats.blocks}
+        label={pluralize(stats.blocks, 'Block', 'Blocks')}
+        type="positive"
+        palette={palette}
+      />
+      <StatPill
+        value={stats.throwaways}
+        label={pluralize(stats.throwaways, 'Throwaway', 'Throwaways')}
+        type="negative"
+        palette={palette}
+      />
+      <StatPill
+        value={stats.drops}
+        label={pluralize(stats.drops, 'Drop', 'Drops')}
+        type="negative"
+        palette={palette}
+      />
+      <StatPill
+        value={stats.throwaways + stats.drops}
+        label={pluralize(stats.throwaways + stats.drops, 'Turn', 'Turns')}
+        type="negative"
+        palette={palette}
+      />
     </View>
   );
 }
@@ -61,18 +93,28 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1,
     marginBottom: 16,
+    gap: 8,
   },
-  statCell: {
+  containerVertical: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  pill: {
+    flexDirection: 'row',
     alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 16,
+    gap: 4,
   },
-  statValue: {
-    fontSize: 18,
+  pillValue: {
+    fontSize: 14,
     fontWeight: '800',
   },
-  statLabel: {
-    fontSize: 10,
+  pillLabel: {
+    fontSize: 11,
     fontWeight: '600',
-    textTransform: 'uppercase',
-    marginTop: 2,
   },
 });

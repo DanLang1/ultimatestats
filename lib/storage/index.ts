@@ -1,4 +1,4 @@
 // Storage singleton - swap implementation here to migrate to SQLite later
 export { asyncStorageAdapter as storage } from './asyncStorageAdapter';
 export { CURRENT_SCHEMA_VERSION } from './types';
-export type { GameEvent, SavedGame, SavedTeam, Storage, TurnoverType } from './types';
+export type { GameEvent, Player, SavedGame, SavedTeam, Storage, TurnoverType } from './types';

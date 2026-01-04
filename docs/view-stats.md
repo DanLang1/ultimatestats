@@ -37,7 +37,14 @@ Scrollable table with the following columns:
 - Plus/Minus is **green** for positive, **red** for negative.
 - Non-integer values (from 50/50 turnovers) are displayed with single decimal (e.g. 0.5).
 
-### 3. Actions
+### 3. Game Timeline
+
+- Linear view of every point and event.
+- Turnovers are highlighted by type (Block, Drop, Throwaway, 50/50).
+- **50/50 Turnovers**: Labeled specifically and display both players involved (Thrower & Receiver).
+- Possession flips (Holds/Breaks) are clearly marked.
+
+### 4. Actions
 
 - **Back**: returns to Settings.
 - **Export CSV**: Generates a CSV file and opens the system share sheet.

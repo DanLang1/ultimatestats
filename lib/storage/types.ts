@@ -19,10 +19,16 @@ export interface SavedGame {
   startingPossession: 'team1' | 'team2';
 }
 
+export interface Player {
+  id: string;
+  name: string;
+  isActive: boolean;
+}
+
 export interface SavedTeam {
   id: string;
   name: string;
-  roster: string[];
+  roster: Player[];
 }
 
 // Storage interface - implement this for different storage backends

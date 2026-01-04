@@ -130,18 +130,6 @@ export default function AggregateGamesList({
             );
           })}
         </View>
-
-        {/* View Combined button (appears when games are selected) */}
-        {selectedGameIds.size > 0 && (
-          <Pressable
-            style={[styles.viewCombinedButton, { backgroundColor: palette.accent }]}
-            onPress={onViewAggregated}>
-            <MaterialCommunityIcons name="chart-box" size={20} color={palette.textOnAccent} />
-            <Text style={[styles.viewCombinedText, { color: palette.textOnAccent }]}>
-              View Combined ({selectedGameIds.size} game{selectedGameIds.size !== 1 ? 's' : ''})
-            </Text>
-          </Pressable>
-        )}
       </View>
     );
   }
@@ -267,18 +255,5 @@ const styles = StyleSheet.create({
   },
   dateText: {
     fontSize: 12,
-  },
-  viewCombinedButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    padding: 16,
-    borderRadius: 12,
-    marginTop: 8,
-  },
-  viewCombinedText: {
-    fontSize: 16,
-    fontWeight: '700',
   },
 });
