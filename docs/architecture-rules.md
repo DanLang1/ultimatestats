@@ -17,6 +17,7 @@
 
 ## Navigation & Layout Rules
 
+- **App is locked to landscape mode** - all screens designed for horizontal orientation
 - Use `router.dismissTo('/')` not `router.back()` in modals (avoids "action not handled" errors)
 - Single `SafeAreaProvider` at root only - don't add `SafeAreaView` in individual screens
 - Apply consistent `contentStyle` background in `_layout.tsx` to prevent screen flickering
