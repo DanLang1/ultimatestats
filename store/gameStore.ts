@@ -1,3 +1,4 @@
+import { checkGameOver } from '@/lib/gameUtils';
 import { CURRENT_SCHEMA_VERSION, SavedGame, SavedTeam, storage } from '@/lib/storage';
 import { generateId } from '@/lib/utils';
 import { palette } from '@/theme/theme';
@@ -87,11 +88,20 @@ export const useGameStore = create<GameState>()(
             state.timerTimeLeft = minutes * 60;
           }),
 
-        incrementScore: (isTeam1: boolean) =>
+        incrementScore: (isTeam1: boolean) => {
+          let didIncrement = false;
           set((state: GameState) => {
-            const currentScore = isTeam1 ? state.team1Score : state.team2Score;
-            if (currentScore >= state.gameTo) return;
+            // Guard: If game is already over, don't allow any more scoring
+            // This prevents race conditions where rapid taps could let both teams reach gameTo
+            const gameOver = checkGameOver({
+              team1Score: state.team1Score,
+              team2Score: state.team2Score,
+              gameTo: state.gameTo,
+              timerTimeLeft: state.timerTimeLeft,
+            });
+            if (gameOver) return;
 
+            const currentScore = isTeam1 ? state.team1Score : state.team2Score;
             const newScore = currentScore + 1;
             const halftimeScore = Math.ceil(state.gameTo / 2);
             const isHalftimeGoal = state.gameHalf === 1 && newScore === halftimeScore;
@@ -99,6 +109,8 @@ export const useGameStore = create<GameState>()(
             // Update score FIRST
             if (isTeam1) state.team1Score = newScore;
             else state.team2Score = newScore;
+
+            didIncrement = true;
 
             // Soft Cap Logic - per USAU 6.D.1:
             // "At the soft cap, play continues until the current scoring attempt is completed.
@@ -154,7 +166,9 @@ export const useGameStore = create<GameState>()(
                 assistPlayerId: null,
               });
             }
-          }),
+          });
+          return didIncrement;
+        },
 
         undoLastAction: () => {
           let result = false;

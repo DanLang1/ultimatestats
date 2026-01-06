@@ -89,7 +89,10 @@ export default function BasicScoreboard() {
   usePullPromptNavigation();
 
   const handleIncrement = (isTeam1: boolean) => {
-    incrementScore(isTeam1);
+    const didIncrement = incrementScore(isTeam1);
+
+    // If game was already over, don't navigate anywhere
+    if (!didIncrement) return;
 
     // Only open stat entry for team1 (my team) goals
     if (statTrackingEnabled && isTeam1) {

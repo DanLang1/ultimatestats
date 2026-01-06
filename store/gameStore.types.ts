@@ -73,7 +73,7 @@ export interface GameState {
   setFloaterEnabled: (enabled: boolean) => void;
   setGameTo: (score: number) => void;
   setGameLength: (minutes: number) => void;
-  incrementScore: (isTeam1: boolean) => void;
+  incrementScore: (isTeam1: boolean) => boolean; // Returns true if score was incremented
   undoLastAction: () => boolean; // Returns true if something was undone
   toggleTimeout: (isTeam1: boolean, index: number) => void;
   resetTimeouts: (count: number) => void;
