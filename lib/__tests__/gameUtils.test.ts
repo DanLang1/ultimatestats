@@ -34,6 +34,7 @@ describe('checkGameOver', () => {
   });
 
   describe('Hardcap game (timer = 0)', () => {
+    // At hardcap, game ends immediately if one team is ahead (universe point rule)
     const hardcapState = { ...baseState, timerTimeLeft: 0 };
 
     it('returns true when one team is ahead (even if below gameTo)', () => {

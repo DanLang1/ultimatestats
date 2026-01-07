@@ -1,4 +1,3 @@
-import { checkGameOver } from '@/lib/gameUtils';
 import { CURRENT_SCHEMA_VERSION, SavedGame, SavedTeam, storage } from '@/lib/storage';
 import { generateId } from '@/lib/utils';
 import { palette } from '@/theme/theme';
@@ -97,15 +96,13 @@ export const useGameStore = create<GameState>()(
         incrementScore: (isTeam1: boolean) => {
           let didIncrement = false;
           set((state: GameState) => {
-            // Guard: If game is already over, don't allow any more scoring
-            // This prevents race conditions where rapid taps could let both teams reach gameTo
-            const gameOver = checkGameOver({
-              team1Score: state.team1Score,
-              team2Score: state.team2Score,
-              gameTo: state.gameTo,
-              timerTimeLeft: state.timerTimeLeft,
-            });
-            if (gameOver) return;
+            // Guard: Prevent scoring past gameTo (race condition prevention)
+            // This is a simpler check than checkGameOver to allow mid-point scoring at hardcap.
+            // The full game-over logic (including hardcap) is checked by consumers after the score.
+            const team1AtTarget = state.team1Score >= state.gameTo;
+            const team2AtTarget = state.team2Score >= state.gameTo;
+            const notTied = state.team1Score !== state.team2Score;
+            if ((team1AtTarget || team2AtTarget) && notTied) return;
 
             const currentScore = isTeam1 ? state.team1Score : state.team2Score;
             const newScore = currentScore + 1;
@@ -125,7 +122,11 @@ export const useGameStore = create<GameState>()(
             //  been reached by one team, one is added to the higher score and the resulting
             //  number is the new game total."
             // gameTo is calculated AFTER the point completes (after score increment)
-            if (state.softCapPending && !state.isSoftCap) {
+            //
+            // At hardcap (timer=0), we skip soft cap adjustment - game ends immediately
+            // when one team is ahead (universe point rule).
+            const isHardcap = state.timerTimeLeft === 0;
+            if (state.softCapPending && !state.isSoftCap && !isHardcap) {
               state.isSoftCap = true;
               state.softCapPending = false;
               const highestScore = Math.max(state.team1Score, state.team2Score);

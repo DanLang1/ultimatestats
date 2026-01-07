@@ -13,7 +13,8 @@ export interface GameOverState {
  * Check if the game is over based on current state.
  * Per USAU rules:
  * - Normal: game ends when one team reaches gameTo and is ahead
- * - Hardcap (timer = 0): game ends after any score unless tied
+ * - Softcap: gameTo is adjusted to higherScore + 1 after point completes
+ * - Hardcap (timer = 0): game ends if one team is ahead (universe point rule)
  */
 export function checkGameOver(state: GameOverState): boolean {
   const { team1Score, team2Score, gameTo, timerTimeLeft } = state;
@@ -21,7 +22,7 @@ export function checkGameOver(state: GameOverState): boolean {
   const isHardcap = timerTimeLeft === 0;
   const notTied = team1Score !== team2Score;
 
-  // Hardcap: game ends after any score unless tied
+  // Hardcap: game ends immediately if one team is ahead
   if (isHardcap && notTied) {
     return true;
   }
