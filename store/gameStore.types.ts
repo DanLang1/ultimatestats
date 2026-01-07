@@ -40,6 +40,7 @@ export interface GameState {
   team1Floater: boolean;
   team2Floater: boolean;
   floaterEnabled: boolean;
+  autoHalftimeEnabled: boolean;
   gameHalf: number;
   gameTo: number;
   baseGameTo: number;
@@ -71,6 +72,7 @@ export interface GameState {
   setTeam2Name: (name: string) => void;
   setTeamBgColor: (team: 'team1' | 'team2', color: string) => void;
   setFloaterEnabled: (enabled: boolean) => void;
+  setAutoHalftimeEnabled: (enabled: boolean) => void;
   setGameTo: (score: number) => void;
   setGameLength: (minutes: number) => void;
   incrementScore: (isTeam1: boolean) => boolean; // Returns true if score was incremented

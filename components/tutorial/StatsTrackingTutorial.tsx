@@ -25,8 +25,10 @@ const TUTORIAL_STEPS = [
   {
     icon: 'gesture-tap' as const,
     title: 'Track Turnovers',
-    description: 'Use the floating action bar to record turnovers. Move or resize to your comfort',
+    description:
+      'Use the floating action bar to record turnovers. Tap the info icon (ⓘ) in the top bar for a legend of the floating action bar icons.',
   },
+
   {
     icon: 'account-group' as const,
     title: 'Build Roster Incrementally',

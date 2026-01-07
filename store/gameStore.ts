@@ -26,6 +26,7 @@ export const useGameStore = create<GameState>()(
         team1Floater: true,
         team2Floater: true,
         floaterEnabled: true,
+        autoHalftimeEnabled: true,
         gameHalf: 1,
         gameTo: 15,
         baseGameTo: 15,
@@ -76,6 +77,11 @@ export const useGameStore = create<GameState>()(
             state.floaterEnabled = enabled;
           }),
 
+        setAutoHalftimeEnabled: (enabled: boolean) =>
+          set((state: GameState) => {
+            state.autoHalftimeEnabled = enabled;
+          }),
+
         setGameTo: (gameTo: number) =>
           set((state: GameState) => {
             state.gameTo = gameTo;
@@ -104,7 +110,8 @@ export const useGameStore = create<GameState>()(
             const currentScore = isTeam1 ? state.team1Score : state.team2Score;
             const newScore = currentScore + 1;
             const halftimeScore = Math.ceil(state.gameTo / 2);
-            const isHalftimeGoal = state.gameHalf === 1 && newScore === halftimeScore;
+            const isHalftimeGoal =
+              state.autoHalftimeEnabled && state.gameHalf === 1 && newScore === halftimeScore;
 
             // Update score FIRST
             if (isTeam1) state.team1Score = newScore;
@@ -472,6 +479,7 @@ export const useGameStore = create<GameState>()(
           team1Floater: state.team1Floater,
           team2Floater: state.team2Floater,
           floaterEnabled: state.floaterEnabled,
+          autoHalftimeEnabled: state.autoHalftimeEnabled,
           gameHalf: state.gameHalf,
           gameTo: state.gameTo,
           baseGameTo: state.baseGameTo,

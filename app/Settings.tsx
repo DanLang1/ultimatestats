@@ -33,6 +33,8 @@ export default function SettingsScreen() {
     resetTimeouts,
     floaterEnabled,
     setFloaterEnabled,
+    autoHalftimeEnabled,
+    setAutoHalftimeEnabled,
     setGameLength,
     gameLength,
     softCapMins,
@@ -465,11 +467,20 @@ export default function SettingsScreen() {
 
               <View style={styles.inputGroup}>
                 <SegmentedControl
-                  label="TIMEOUTS/HALF"
-                  options={[
-                    { value: '1', label: '1' },
-                    { value: '2', label: '2' },
-                  ]}
+                  label={autoHalftimeEnabled ? 'TIMEOUTS/HALF' : 'TIMEOUTS'}
+                  options={
+                    autoHalftimeEnabled
+                      ? [
+                          { value: '1', label: '1' },
+                          { value: '2', label: '2' },
+                        ]
+                      : [
+                          { value: '1', label: '1' },
+                          { value: '2', label: '2' },
+                          { value: '3', label: '3' },
+                          { value: '4', label: '4' },
+                        ]
+                  }
                   value={timeoutsCount.toString()}
                   onChange={handleTimeoutsChange}
                   disabled={gameActive}
@@ -478,13 +489,29 @@ export default function SettingsScreen() {
 
               <View style={styles.inputGroup}>
                 <Switch
-                  label="Floater"
-                  value={floaterEnabled}
-                  onValueChange={setFloaterEnabled}
+                  label="Halftime"
+                  value={autoHalftimeEnabled}
+                  onValueChange={(enabled) => {
+                    setAutoHalftimeEnabled(enabled);
+                    if (!enabled) {
+                      setFloaterEnabled(false);
+                    }
+                  }}
                   disabled={gameActive}
                   locked={gameActive}
                 />
               </View>
+              {autoHalftimeEnabled && (
+                <View style={styles.inputGroup}>
+                  <Switch
+                    label="Floater"
+                    value={floaterEnabled}
+                    onValueChange={setFloaterEnabled}
+                    disabled={gameActive}
+                    locked={gameActive}
+                  />
+                </View>
+              )}
 
               <View style={styles.inputGroup}>
                 <View style={styles.switchWithHelp}>

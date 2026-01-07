@@ -33,38 +33,38 @@ export function SegmentedControl({
           {label}
         </Text>
       )}
-      <View style={styles.container}>
+      <View
+        style={[
+          styles.container,
+          { borderColor: palette.overlay20, backgroundColor: palette.overlay08 },
+        ]}>
         {options.map((option, index) => {
           const isFirst = index === 0;
-          const isLast = index === options.length - 1;
           const isActive = value === option.value;
 
           return (
-            <Pressable
-              key={option.value}
-              style={[
-                styles.button,
-                { backgroundColor: palette.overlay08, borderColor: palette.overlay20 },
-                isFirst && styles.buttonFirst,
-                isLast && styles.buttonLast,
-                !isFirst && !isLast && styles.buttonMiddle,
-                isActive && [
-                  styles.buttonActive,
-                  { backgroundColor: palette.accent, borderColor: palette.accent },
-                ],
-                disabled && styles.buttonDisabled,
-              ]}
-              onPress={() => onChange(option.value)}
-              disabled={disabled}>
-              <Text
+            <React.Fragment key={option.value}>
+              {!isFirst && (
+                <View style={[styles.separator, { backgroundColor: palette.overlay20 }]} />
+              )}
+              <Pressable
                 style={[
-                  styles.buttonText,
-                  { color: palette.textMuted },
-                  isActive && [styles.buttonTextActive, { color: palette.textOnAccent }],
-                ]}>
-                {option.label}
-              </Text>
-            </Pressable>
+                  styles.button,
+                  isActive && { backgroundColor: palette.accent },
+                  disabled && styles.buttonDisabled,
+                ]}
+                onPress={() => onChange(option.value)}
+                disabled={disabled}>
+                <Text
+                  style={[
+                    styles.buttonText,
+                    { color: palette.textMuted },
+                    isActive && { color: palette.textOnAccent },
+                  ]}>
+                  {option.label}
+                </Text>
+              </Pressable>
+            </React.Fragment>
           );
         })}
       </View>
@@ -82,26 +82,18 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     height: 48,
+    borderRadius: 10,
+    borderWidth: 1,
+    overflow: 'hidden',
+  },
+  separator: {
+    width: 1,
   },
   button: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
   },
-  buttonFirst: {
-    borderTopLeftRadius: 10,
-    borderBottomLeftRadius: 10,
-    borderRightWidth: 0,
-  },
-  buttonMiddle: {
-    borderRightWidth: 0,
-  },
-  buttonLast: {
-    borderTopRightRadius: 10,
-    borderBottomRightRadius: 10,
-  },
-  buttonActive: {},
   buttonDisabled: {
     opacity: 0.5,
   },
@@ -109,5 +101,4 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
   },
-  buttonTextActive: {},
 });
