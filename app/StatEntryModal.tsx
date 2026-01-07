@@ -41,6 +41,7 @@ export default function StatEntryScreen() {
     if (isGameOver) {
       setTimeout(() => {
         router.push('/WinModal');
+        useGameStore.getState().setGameLocked(true);
       }, 100);
     }
   };
@@ -65,6 +66,7 @@ export default function StatEntryScreen() {
 
     if (isGameOver) {
       setTimeout(() => {
+        useGameStore.getState().setGameLocked(true);
         router.push('/WinModal');
       }, 100);
     }

@@ -37,8 +37,6 @@ export default function BasicScoreboard() {
     triggerTurnover,
     addTurnoverEvent,
     resetGame,
-    gameTo,
-    timerTimeLeft,
     gameLocked,
   } = useGameStore();
   const { palette } = useTheme();
@@ -108,6 +106,7 @@ export default function BasicScoreboard() {
 
     if (isGameOver) {
       router.push('/WinModal');
+      useGameStore.getState().setGameLocked(true);
     }
   };
   const handleActionBarAction = (action: ActionBarAction) => {
@@ -175,9 +174,8 @@ export default function BasicScoreboard() {
       <TutorialOverlay />
       <StatsTrackingTutorial />
 
-      {/* Game Locked Overlay */}
-      {/* We only lock IF the game is actually over AND the user has "finalized" it by viewing stats */}
-      {checkGameOver({ team1Score, team2Score, gameTo, timerTimeLeft }) && gameLocked && (
+      {/* Game Locked Overlay - shows when WinModal has appeared (sets gameLocked=true) */}
+      {gameLocked && (
         <View style={[styles.lockedOverlay, { backgroundColor: palette.overlayDark60 }]}>
           <Animated.View entering={FadeIn} style={styles.lockedContent}>
             <MaterialCommunityIcons name="lock" size={64} color={palette.lockScreenText} />
