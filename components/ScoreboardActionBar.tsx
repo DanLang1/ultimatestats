@@ -1,5 +1,6 @@
 import { useTheme } from '@/context/ThemeContext';
 import { useUIStore } from '@/store/uiStore';
+import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
 import { Pressable, StyleSheet, Text, useWindowDimensions } from 'react-native';
@@ -127,45 +128,63 @@ export function ScoreboardActionBar({ possession, onAction }: ScoreboardActionBa
 
   const barBackgroundColor = palette.glassBg;
 
-  const buttons = isMyTeam
+  type ButtonConfig = {
+    label: string;
+    action: ActionBarAction;
+    renderIcon: () => React.ReactNode;
+  };
+
+  const buttons: ButtonConfig[] = isMyTeam
     ? [
         {
           label: 'OPP D',
           action: { type: 'oppBlock' as const },
-          color: palette.warning,
-          emoji: '💀',
+          renderIcon: () => (
+            <MaterialCommunityIcons
+              name="hand-front-left-outline"
+              size={20}
+              color={palette.danger}
+            />
+          ),
         },
         {
           label: 'DROP',
           action: { type: 'drop' as const },
-          color: palette.danger,
-          emoji: '🧈',
+          renderIcon: () => <FontAwesome5 name="hands-wash" size={20} color={palette.danger} />,
         },
         {
           label: 'T/A',
           action: { type: 'throwaway' as const },
-          color: palette.danger,
-          emoji: '🗑️',
+          renderIcon: () => (
+            <MaterialCommunityIcons name="trash-can-outline" size={20} color={palette.danger} />
+          ),
         },
         {
           label: '50/50',
           action: { type: 'fiftyfifty' as const },
-          color: palette.danger,
-          emoji: '⚖️',
+          renderIcon: () => (
+            <MaterialCommunityIcons name="scale-balance" size={20} color={palette.danger} />
+          ),
         },
       ]
     : [
         {
           label: 'BLOCK',
           action: { type: 'block' as const },
-          color: palette.success,
-          emoji: '✋',
+          renderIcon: () => (
+            <MaterialCommunityIcons
+              name="hand-back-left-outline"
+              size={20}
+              color={palette.success}
+            />
+          ),
         },
         {
           label: 'OPP TURN',
           action: { type: 'turn' as const },
-          color: palette.accent,
-          emoji: '🎁',
+          renderIcon: () => (
+            <MaterialCommunityIcons name="gift-outline" size={20} color={palette.accent} />
+          ),
         },
       ];
 
@@ -201,12 +220,7 @@ export function ScoreboardActionBar({ possession, onAction }: ScoreboardActionBa
             key={btn.label}
             style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
             onPress={() => onAction(btn.action)}>
-            {'emoji' in btn ? (
-              <Text style={{ fontSize: 18 }}>{btn.emoji}</Text>
-            ) : (
-              // @ts-ignore
-              <MaterialCommunityIcons name={btn.icon} size={20} color={btn.color} />
-            )}
+            {btn.renderIcon()}
             {!isVertical && (
               <Text style={[styles.buttonText, { color: palette.textInverse }]}>{btn.label}</Text>
             )}

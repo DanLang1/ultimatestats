@@ -5,6 +5,7 @@ import { useTheme } from '@/context/ThemeContext';
 import { useGameTimer } from '@/hooks/useGameTimer';
 import { useGameStore } from '@/store/gameStore';
 import { useTutorialStore } from '@/store/tutorialStore';
+import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router, Stack } from 'expo-router';
 import React from 'react';
@@ -176,7 +177,13 @@ export default function GameInfoScreen() {
                 When Your Team Has Possession
               </Text>
               <View style={styles.legendItem}>
-                <Text style={styles.legendEmoji}>💀</Text>
+                <View style={styles.legendIconContainer}>
+                  <MaterialCommunityIcons
+                    name="hand-front-left-outline"
+                    size={20}
+                    color={palette.danger}
+                  />
+                </View>
                 <View style={styles.legendTextContainer}>
                   <Text style={[styles.legendLabel, { color: palette.textInverse }]}>OPP D</Text>
                   <Text style={[styles.legendDescription, { color: palette.textMuted }]}>
@@ -185,7 +192,9 @@ export default function GameInfoScreen() {
                 </View>
               </View>
               <View style={styles.legendItem}>
-                <Text style={styles.legendEmoji}>🧈</Text>
+                <View style={styles.legendIconContainer}>
+                  <FontAwesome5 name="hands-wash" size={16} color={palette.danger} />
+                </View>
                 <View style={styles.legendTextContainer}>
                   <Text style={[styles.legendLabel, { color: palette.textInverse }]}>DROP</Text>
                   <Text style={[styles.legendDescription, { color: palette.textMuted }]}>
@@ -194,7 +203,13 @@ export default function GameInfoScreen() {
                 </View>
               </View>
               <View style={styles.legendItem}>
-                <Text style={styles.legendEmoji}>🗑️</Text>
+                <View style={styles.legendIconContainer}>
+                  <MaterialCommunityIcons
+                    name="trash-can-outline"
+                    size={20}
+                    color={palette.danger}
+                  />
+                </View>
                 <View style={styles.legendTextContainer}>
                   <Text style={[styles.legendLabel, { color: palette.textInverse }]}>T/A</Text>
                   <Text style={[styles.legendDescription, { color: palette.textMuted }]}>
@@ -204,7 +219,9 @@ export default function GameInfoScreen() {
               </View>
 
               <View style={styles.legendItem}>
-                <Text style={styles.legendEmoji}>⚖️</Text>
+                <View style={styles.legendIconContainer}>
+                  <MaterialCommunityIcons name="scale-balance" size={20} color={palette.danger} />
+                </View>
                 <View style={styles.legendTextContainer}>
                   <Text style={[styles.legendLabel, { color: palette.textInverse }]}>50/50</Text>
                   <Text style={[styles.legendDescription, { color: palette.textMuted }]}>
@@ -219,7 +236,13 @@ export default function GameInfoScreen() {
                 When Opponent Has Possession
               </Text>
               <View style={styles.legendItem}>
-                <Text style={styles.legendEmoji}>✋</Text>
+                <View style={styles.legendIconContainer}>
+                  <MaterialCommunityIcons
+                    name="hand-back-left-outline"
+                    size={20}
+                    color={palette.success}
+                  />
+                </View>
                 <View style={styles.legendTextContainer}>
                   <Text style={[styles.legendLabel, { color: palette.textInverse }]}>BLOCK</Text>
                   <Text style={[styles.legendDescription, { color: palette.textMuted }]}>
@@ -228,7 +251,9 @@ export default function GameInfoScreen() {
                 </View>
               </View>
               <View style={styles.legendItem}>
-                <Text style={styles.legendEmoji}>🎁</Text>
+                <View style={styles.legendIconContainer}>
+                  <MaterialCommunityIcons name="gift-outline" size={20} color={palette.accent} />
+                </View>
                 <View style={styles.legendTextContainer}>
                   <Text style={[styles.legendLabel, { color: palette.textInverse }]}>OPP TURN</Text>
                   <Text style={[styles.legendDescription, { color: palette.textMuted }]}>
