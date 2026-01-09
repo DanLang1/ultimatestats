@@ -2,6 +2,7 @@ import { AnimatedThemedView } from '@/components/ThemedView';
 import { useTheme } from '@/context/ThemeContext';
 import { getActiveRoster, getPlayerName } from '@/lib/playerUtils';
 import { Player } from '@/lib/storage/types';
+import { useGameStore } from '@/store/gameStore';
 import React, { useState } from 'react';
 import { Keyboard, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import Animated, { FadeIn, LinearTransition, SlideInDown } from 'react-native-reanimated';
@@ -29,12 +30,20 @@ export function StatEntryInner({
   const [selectedGoalId, setSelectedGoalId] = useState<string | null>(null);
   const [newPlayerName, setNewPlayerName] = useState('');
   const { palette, themeMode } = useTheme();
+  const { events } = useGameStore();
 
   // Only show active players
   const activeRoster = getActiveRoster(roster);
 
   // Get player name for display
   const selectedGoalName = getPlayerName(roster, selectedGoalId);
+
+  // Check if Callahan is possible: last event was a block by this player
+  const lastEvent = events[events.length - 1];
+  const canShowCallahan =
+    lastEvent?.type === 'turnover' &&
+    lastEvent?.subtype === 'block' &&
+    lastEvent?.playerId === selectedGoalId;
 
   // Skip button colors - darker in light mode for visibility
   const skipButtonBorder = themeMode === 'light' ? palette.textMuted : palette.overlay20;
@@ -135,23 +144,43 @@ export function StatEntryInner({
                 <Text style={[styles.skipText, { color: skipButtonText }]}>Skip</Text>
               </Pressable>
               {step === 'goal' ? null : (
-                <Animated.View entering={FadeIn}>
-                  <Pressable
-                    style={[
-                      styles.skipButton,
-                      {
-                        backgroundColor: palette.cardBgAlt,
-                        borderWidth: 1,
-                        borderColor: skipButtonBorder,
-                      },
-                    ]}
-                    onPress={() => {
-                      setStep('goal');
-                      setSelectedGoalId(null);
-                    }}>
-                    <Text style={[styles.skipText, { color: skipButtonText }]}>Back</Text>
-                  </Pressable>
-                </Animated.View>
+                <>
+                  <Animated.View entering={FadeIn}>
+                    <Pressable
+                      style={[
+                        styles.skipButton,
+                        {
+                          backgroundColor: palette.cardBgAlt,
+                          borderWidth: 1,
+                          borderColor: skipButtonBorder,
+                        },
+                      ]}
+                      onPress={() => {
+                        setStep('goal');
+                        setSelectedGoalId(null);
+                      }}>
+                      <Text style={[styles.skipText, { color: skipButtonText }]}>Back</Text>
+                    </Pressable>
+                  </Animated.View>
+                  {canShowCallahan && (
+                    <Animated.View entering={FadeIn}>
+                      <Pressable
+                        style={[
+                          styles.skipButton,
+                          {
+                            backgroundColor: palette.success,
+                            borderWidth: 1,
+                            borderColor: palette.success,
+                          },
+                        ]}
+                        onPress={() => onComplete(selectedGoalId, 'OTHER_TEAM')}>
+                        <Text style={[styles.skipText, { color: palette.textOnAccent }]}>
+                          Callahan
+                        </Text>
+                      </Pressable>
+                    </Animated.View>
+                  )}
+                </>
               )}
             </Animated.View>
           </View>

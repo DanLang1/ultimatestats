@@ -1,3 +1,4 @@
+import { useTheme } from '@/context/ThemeContext';
 import { computePlayerStats } from '@/lib/statsUtils';
 import { Player, SavedGame } from '@/lib/storage';
 import { GameEvent } from '@/store/gameStore.types';
@@ -9,21 +10,14 @@ import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 interface StatsTableProps {
   playerStats: ReturnType<typeof computePlayerStats>;
-  palette: any;
   events: GameEvent[];
   team: 'team1' | 'team2';
   roster?: Player[];
   games?: SavedGame[];
 }
 
-export default function StatsTable({
-  playerStats,
-  palette,
-  events,
-  team,
-  roster,
-  games,
-}: StatsTableProps) {
+export default function StatsTable({ playerStats, events, team, roster, games }: StatsTableProps) {
+  const { palette } = useTheme();
   const [sortConfig, setSortConfig] = React.useState<{
     key: keyof (typeof playerStats)[0] | 'plusMinus';
     direction: 'asc' | 'desc';

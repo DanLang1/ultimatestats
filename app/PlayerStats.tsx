@@ -116,7 +116,7 @@ export default function PlayerStats() {
               styles.profileCard,
               { backgroundColor: palette.overlay02, borderColor: palette.overlay05 },
             ]}>
-            <RoleDiamond roleStats={stats.role} palette={palette} />
+            <RoleDiamond roleStats={stats.role} />
           </View>
 
           {/* Player Summary Card */}
@@ -134,11 +134,35 @@ export default function PlayerStats() {
                 justifyContent: 'center',
               }}>
               <Text style={[styles.playerName, { color: palette.textInverse }]}>{player}</Text>
-              {stats.roleLabel && (
-                <View style={[styles.labelBadge, { backgroundColor: palette.accent }]}>
-                  <Text style={[styles.labelText, { color: '#FFF' }]}>{stats.roleLabel}</Text>
-                </View>
-              )}
+              <View
+                style={{
+                  flexDirection: 'row',
+                  gap: 6,
+                  flexWrap: 'wrap',
+                  justifyContent: 'center',
+                }}>
+                {stats.roleLabel && (
+                  <View style={[styles.labelBadge, { backgroundColor: palette.accent }]}>
+                    <Text style={[styles.labelText, { color: '#FFF' }]}>{stats.roleLabel}</Text>
+                  </View>
+                )}
+                {stats.summary && stats.summary.callahans > 0 && (
+                  <View
+                    style={[
+                      styles.labelBadge,
+                      {
+                        backgroundColor: palette.successOverlay15,
+                        borderColor: palette.success,
+                        borderWidth: 1,
+                      },
+                    ]}>
+                    <Text style={[styles.labelText, { color: palette.success }]}>
+                      {stats.summary.callahans > 1 ? `${stats.summary.callahans} ` : ''}
+                      CALLAHAN
+                    </Text>
+                  </View>
+                )}
+              </View>
             </View>
             {/* Net Impact */}
             <Text style={[styles.playerDetail, { color: palette.textMuted, textAlign: 'center' }]}>
@@ -155,9 +179,7 @@ export default function PlayerStats() {
               }}
             />
             {/* Stats Summary */}
-            {stats.summary && (
-              <PlayerStatsSummary stats={stats.summary} palette={palette} variant="vertical" />
-            )}
+            {stats.summary && <PlayerStatsSummary stats={stats.summary} variant="vertical" />}
           </View>
         </View>
 
@@ -243,7 +265,7 @@ export default function PlayerStats() {
               </View>
             )}
 
-            <ImpactTimeline data={stats.impact} palette={palette} />
+            <ImpactTimeline data={stats.impact} />
           </View>
 
           {/* Full-width Chemistry Map */}
@@ -252,7 +274,7 @@ export default function PlayerStats() {
               styles.card,
               { backgroundColor: palette.overlay02, borderColor: palette.overlay05 },
             ]}>
-            <ChemistryMap playerName={player} connections={stats.chemistry} palette={palette} />
+            <ChemistryMap playerName={player} connections={stats.chemistry} />
           </View>
         </View>
       </ScrollView>

@@ -1,3 +1,4 @@
+import { useTheme } from '@/context/ThemeContext';
 import { ChemistryConnection } from '@/lib/statsUtils';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
@@ -6,10 +7,10 @@ import Svg, { Circle, G, Line, Text as SvgText } from 'react-native-svg';
 interface ChemistryMapProps {
   playerName: string;
   connections: ChemistryConnection[];
-  palette: any;
 }
 
-export default function ChemistryMap({ playerName, connections, palette }: ChemistryMapProps) {
+export default function ChemistryMap({ playerName, connections }: ChemistryMapProps) {
+  const { palette } = useTheme();
   // Filter top connections to avoid clutter
   const feeders = connections
     .filter((c) => c.goalsFrom > 0)

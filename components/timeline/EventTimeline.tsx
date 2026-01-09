@@ -49,6 +49,13 @@ export default function EventTimeline({
           const goalName = getPlayerName(roster, point.goalPlayerId);
           const assistName = getPlayerName(roster, point.assistPlayerId);
 
+          const isCallahan = isTeam1 && point.assistPlayerId === 'OTHER_TEAM';
+          const callahanBlockIndex = isCallahan
+            ? point.turnovers.findLastIndex(
+                (t) => t.type === 'block' && t.playerId === point.goalPlayerId,
+              )
+            : -1;
+
           return (
             <View
               key={point.pointNumber}
@@ -104,6 +111,8 @@ export default function EventTimeline({
               <View style={styles.cardBody}>
                 {/* Turnovers (in order) */}
                 {point.turnovers.map((turnover, index) => {
+                  if (index === callahanBlockIndex) return null;
+
                   const isOpponent = turnover.team === 'team2';
                   const turnoverPlayerName = getPlayerName(roster, turnover.playerId);
                   const turnoverPlayer2Name = getPlayerName(roster, turnover.player2Id ?? null);
@@ -120,9 +129,14 @@ export default function EventTimeline({
                   const bgColor =
                     turnover.type === 'block' ? palette.success + '20' : palette.danger + '20';
 
+                  // Show arrow if not the first non-null turnover
+                  const isFirstVisible =
+                    (index === 0 && callahanBlockIndex !== 0) ||
+                    (index === 1 && callahanBlockIndex === 0);
+
                   return (
                     <React.Fragment key={`turnover-${index}`}>
-                      {index > 0 && (
+                      {index > 0 && !isFirstVisible && (
                         <Text style={[styles.arrow, { color: palette.textMuted }]}>→</Text>
                       )}
                       <View
@@ -155,36 +169,55 @@ export default function EventTimeline({
                   );
                 })}
 
-                {/* Arrow before Goal */}
-                {point.turnovers.length > 0 && (
+                {/* Arrow before Goal/Callahan - only show if there are visible turnovers */}
+                {point.turnovers.length > 0 && !(isCallahan && point.turnovers.length === 1) && (
                   <Text style={[styles.arrow, { color: palette.textMuted }]}>→</Text>
                 )}
 
-                {/* Goal */}
-                <View style={[styles.eventRow, { backgroundColor: palette.overlay05 }]}>
-                  <Text style={[styles.eventLabel, { color: teamColor }]}>GOAL</Text>
-                  <Text
-                    style={[styles.eventPlayer, { color: palette.textInverse }]}
-                    numberOfLines={1}>
-                    {isTeam1 ? goalName || 'Unknown' : team2Name}
-                  </Text>
-                </View>
-
-                {/* Arrow before Assist */}
-                {isTeam1 && assistName && (
-                  <Text style={[styles.arrow, { color: palette.textMuted }]}>→</Text>
-                )}
-
-                {/* Assist */}
-                {isTeam1 && assistName && (
-                  <View style={[styles.eventRow, { backgroundColor: palette.overlay05 }]}>
-                    <Text style={[styles.eventLabel, { color: palette.accent }]}>ASSIST</Text>
+                {isCallahan ? (
+                  <View
+                    style={[
+                      styles.eventRow,
+                      {
+                        backgroundColor: palette.successOverlay15,
+                        borderColor: palette.success,
+                        borderWidth: 1,
+                      },
+                    ]}>
+                    <Text style={[styles.eventLabel, { color: palette.success }]}>CALLAHAN</Text>
                     <Text
                       style={[styles.eventPlayer, { color: palette.textInverse }]}
                       numberOfLines={1}>
-                      {assistName}
+                      {goalName}
                     </Text>
                   </View>
+                ) : (
+                  <>
+                    {/* Goal */}
+                    <View style={[styles.eventRow, { backgroundColor: palette.overlay05 }]}>
+                      <Text style={[styles.eventLabel, { color: teamColor }]}>GOAL</Text>
+                      <Text
+                        style={[styles.eventPlayer, { color: palette.textInverse }]}
+                        numberOfLines={1}>
+                        {isTeam1 ? goalName || 'Unknown' : team2Name}
+                      </Text>
+                    </View>
+
+                    {/* Arrow before Assist */}
+                    {isTeam1 && assistName && (
+                      <>
+                        <Text style={[styles.arrow, { color: palette.textMuted }]}>→</Text>
+                        <View style={[styles.eventRow, { backgroundColor: palette.overlay05 }]}>
+                          <Text style={[styles.eventLabel, { color: palette.accent }]}>ASSIST</Text>
+                          <Text
+                            style={[styles.eventPlayer, { color: palette.textInverse }]}
+                            numberOfLines={1}>
+                            {assistName}
+                          </Text>
+                        </View>
+                      </>
+                    )}
+                  </>
                 )}
               </View>
             </View>

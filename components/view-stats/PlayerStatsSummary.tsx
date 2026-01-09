@@ -1,10 +1,10 @@
+import { useTheme } from '@/context/ThemeContext';
 import { PlayerStats as PlayerStatsType } from '@/lib/statsUtils';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 interface PlayerStatsSummaryProps {
   stats: PlayerStatsType;
-  palette: any;
   variant?: 'horizontal' | 'vertical';
 }
 
@@ -16,13 +16,11 @@ interface StatPillProps {
   value: number;
   label: string;
   type: 'positive' | 'negative';
-  palette: any;
+  bgColor: string;
+  textColor: string;
 }
 
-function StatPill({ value, label, type, palette }: StatPillProps) {
-  const bgColor = type === 'positive' ? palette.successOverlay15 : palette.dangerOverlay15;
-  const textColor = type === 'positive' ? palette.success : palette.danger;
-
+function StatPill({ value, label, bgColor, textColor }: StatPillProps) {
   return (
     <View style={[styles.pill, { backgroundColor: bgColor }]}>
       <Text style={[styles.pillValue, { color: textColor }]}>{value}</Text>
@@ -33,10 +31,15 @@ function StatPill({ value, label, type, palette }: StatPillProps) {
 
 export default function PlayerStatsSummary({
   stats,
-  palette,
   variant = 'horizontal',
 }: PlayerStatsSummaryProps) {
+  const { palette } = useTheme();
   const isVertical = variant === 'vertical';
+
+  const positiveBg = palette.successOverlay15;
+  const positiveText = palette.success;
+  const negativeBg = palette.dangerOverlay15;
+  const negativeText = palette.danger;
 
   return (
     <View
@@ -48,37 +51,44 @@ export default function PlayerStatsSummary({
         value={stats.goals}
         label={pluralize(stats.goals, 'Goal', 'Goals')}
         type="positive"
-        palette={palette}
+        bgColor={positiveBg}
+        textColor={positiveText}
       />
       <StatPill
         value={stats.assists}
         label={pluralize(stats.assists, 'Assist', 'Assists')}
         type="positive"
-        palette={palette}
+        bgColor={positiveBg}
+        textColor={positiveText}
       />
       <StatPill
         value={stats.blocks}
         label={pluralize(stats.blocks, 'Block', 'Blocks')}
         type="positive"
-        palette={palette}
+        bgColor={positiveBg}
+        textColor={positiveText}
       />
+
       <StatPill
         value={stats.throwaways}
         label={pluralize(stats.throwaways, 'Throwaway', 'Throwaways')}
         type="negative"
-        palette={palette}
+        bgColor={negativeBg}
+        textColor={negativeText}
       />
       <StatPill
         value={stats.drops}
         label={pluralize(stats.drops, 'Drop', 'Drops')}
         type="negative"
-        palette={palette}
+        bgColor={negativeBg}
+        textColor={negativeText}
       />
       <StatPill
         value={stats.throwaways + stats.drops}
-        label={pluralize(stats.throwaways + stats.drops, 'Turn', 'Turns')}
+        label={pluralize(stats.throwaways + stats.drops, 'Total Turn', 'Total Turns')}
         type="negative"
-        palette={palette}
+        bgColor={negativeBg}
+        textColor={negativeText}
       />
     </View>
   );

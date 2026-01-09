@@ -1,3 +1,4 @@
+import { useTheme } from '@/context/ThemeContext';
 import { RoleStats } from '@/lib/statsUtils';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
@@ -5,10 +6,10 @@ import Svg, { Circle, Polygon, Line as SvgLine, Text as SvgText } from 'react-na
 
 interface RoleDiamondProps {
   roleStats: RoleStats;
-  palette: any;
 }
 
-export default function RoleDiamond({ roleStats, palette }: RoleDiamondProps) {
+export default function RoleDiamond({ roleStats }: RoleDiamondProps) {
+  const { palette } = useTheme();
   const { goals, assists, blocks, turnovers } = roleStats;
 
   const size = 140;

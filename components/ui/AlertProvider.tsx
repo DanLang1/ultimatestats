@@ -1,4 +1,5 @@
 import { useTheme } from '@/context/ThemeContext';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React, { createContext, useContext, useState } from 'react';
 import { Modal, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
@@ -6,6 +7,7 @@ interface AlertButton {
   text: string;
   style?: 'default' | 'cancel' | 'destructive' | 'success';
   onPress?: () => void;
+  icon?: React.ReactNode;
 }
 
 interface AlertOptions {
@@ -73,6 +75,14 @@ export function AlertProvider({ children }: { children: React.ReactNode }) {
               styles.container,
               { backgroundColor: palette.secondary, borderColor: palette.overlay20 },
             ]}>
+            {/* Close icon */}
+            <Pressable
+              style={[styles.closeButton, { backgroundColor: palette.overlay10 }]}
+              onPress={handleDismiss}
+              hitSlop={8}>
+              <MaterialCommunityIcons name="close" size={18} color={palette.textMuted} />
+            </Pressable>
+
             <Text style={[styles.title, { color: palette.textInverse }]}>{options?.title}</Text>
             {options?.message && (
               <Text style={[styles.message, { color: palette.textMuted }]}>{options.message}</Text>
@@ -115,31 +125,41 @@ export function AlertProvider({ children }: { children: React.ReactNode }) {
                       pressed && styles.buttonPressed,
                     ]}
                     onPress={handlePromptSubmit}>
-                    <Text style={[styles.buttonText, { color: palette.textInverse }]}>Export</Text>
+                    <Text style={[styles.buttonText, { color: palette.textOnAccent }]}>Export</Text>
                   </Pressable>
                 </>
               ) : (
-                buttons.map((button, index) => (
-                  <Pressable
-                    key={index}
-                    style={({ pressed }) => [
-                      styles.button,
-                      button.style === 'cancel' && [
-                        styles.cancelButton,
-                        { backgroundColor: palette.overlay10, borderColor: palette.overlay20 },
-                      ],
-                      button.style === 'destructive' && { backgroundColor: palette.danger },
-                      button.style === 'success' && { backgroundColor: palette.success },
-                      button.style === 'default' && { backgroundColor: palette.accent },
-                      !button.style && { backgroundColor: palette.accent },
-                      pressed && styles.buttonPressed,
-                    ]}
-                    onPress={() => handleButtonPress(button)}>
-                    <Text style={[styles.buttonText, { color: palette.textInverse }]}>
-                      {button.text}
-                    </Text>
-                  </Pressable>
-                ))
+                buttons.map((button, index) => {
+                  const isCancel = button.style === 'cancel';
+                  return (
+                    <Pressable
+                      key={index}
+                      style={({ pressed }) => [
+                        styles.button,
+                        isCancel && [
+                          styles.cancelButton,
+                          { backgroundColor: palette.overlay10, borderColor: palette.overlay20 },
+                        ],
+                        button.style === 'destructive' && { backgroundColor: palette.danger },
+                        button.style === 'success' && { backgroundColor: palette.success },
+                        button.style === 'default' && { backgroundColor: palette.accent },
+                        !button.style && { backgroundColor: palette.accent },
+                        pressed && styles.buttonPressed,
+                      ]}
+                      onPress={() => handleButtonPress(button)}>
+                      <View style={styles.buttonContent}>
+                        {button.icon}
+                        <Text
+                          style={[
+                            styles.buttonText,
+                            { color: isCancel ? palette.textInverse : palette.textOnAccent },
+                          ]}>
+                          {button.text}
+                        </Text>
+                      </View>
+                    </Pressable>
+                  );
+                })
               )}
             </View>
           </View>
@@ -163,6 +183,14 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 320,
     borderWidth: 1,
+    position: 'relative',
+  },
+  closeButton: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    padding: 4,
+    borderRadius: 12,
   },
   title: {
     fontSize: 18,
@@ -193,6 +221,12 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 10,
     alignItems: 'center',
+    justifyContent: 'center',
+  },
+  buttonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
   cancelButton: {
     borderWidth: 1,

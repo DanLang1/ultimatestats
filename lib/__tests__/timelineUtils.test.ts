@@ -1,5 +1,5 @@
-import { GameEvent } from '@/store/gameStore.types';
-import { computePointByPointEvents, getTurnoverSummary } from '../timelineUtils';
+import { GameEvent, TurnoverType } from '@/store/gameStore.types';
+import { computePointByPointEvents, DisplayTurnover, getTurnoverSummary } from '../timelineUtils';
 
 describe('timelineUtils', () => {
   describe('computePointByPointEvents', () => {
@@ -14,7 +14,7 @@ describe('timelineUtils', () => {
       assistPlayerId: assistPlayerId ?? null,
     });
 
-    const turnover = (team: 'team1' | 'team2', subtype: any): GameEvent => ({
+    const turnover = (team: 'team1' | 'team2', subtype: TurnoverType): GameEvent => ({
       type: 'turnover',
       team,
       subtype,
@@ -89,12 +89,12 @@ describe('timelineUtils', () => {
 
   describe('getTurnoverSummary', () => {
     it('summarizes different turnover types', () => {
-      const turnovers: any[] = [
-        { type: 'block' },
-        { type: 'block' },
-        { type: 'throwaway' },
-        { type: 'fiftyfifty' },
-        { type: 'drop' },
+      const turnovers: DisplayTurnover[] = [
+        { team: 'team1', type: 'block', playerId: null },
+        { team: 'team1', type: 'block', playerId: null },
+        { team: 'team1', type: 'throwaway', playerId: null },
+        { team: 'team1', type: 'fiftyfifty', playerId: null },
+        { team: 'team1', type: 'drop', playerId: null },
       ];
 
       const summary = getTurnoverSummary(turnovers);

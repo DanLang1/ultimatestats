@@ -1,5 +1,10 @@
 import { View, type ViewProps } from 'react-native';
-import Animated from 'react-native-reanimated';
+import Animated, {
+  AnimatedProps,
+  BaseAnimationBuilder,
+  EntryExitAnimationFunction,
+  LayoutAnimationFunction,
+} from 'react-native-reanimated';
 
 import { useTheme } from '@/context/ThemeContext';
 
@@ -10,12 +15,17 @@ export function ThemedView({ style, ...otherProps }: ThemedViewProps) {
   return <View style={[{ backgroundColor: palette.modalBg }, style]} {...otherProps} />;
 }
 
-export type AnimatedThemedViewProps = ViewProps & {
-  entering?: any;
+type AnimationProp =
+  | BaseAnimationBuilder
+  | typeof BaseAnimationBuilder
+  | EntryExitAnimationFunction
+  | undefined;
+type LayoutProp = BaseAnimationBuilder | typeof BaseAnimationBuilder | LayoutAnimationFunction;
 
-  exiting?: any;
-
-  layout?: any;
+export type AnimatedThemedViewProps = AnimatedProps<ViewProps> & {
+  entering?: AnimationProp;
+  exiting?: AnimationProp;
+  layout?: LayoutProp;
   onStartShouldSetResponder?: () => boolean;
 };
 

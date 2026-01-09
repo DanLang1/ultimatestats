@@ -5,6 +5,7 @@ import AggregateGamesList from '@/components/view-stats/AggregateGamesList';
 import SavedGamesList from '@/components/view-stats/SavedGamesList';
 import StatsContent from '@/components/view-stats/StatsContent';
 import { useTheme } from '@/context/ThemeContext';
+import { generateAggregatePDF, generateGamePDF } from '@/lib/pdfGenerator';
 import {
   formatDate,
   generateAggregateCSV,
@@ -13,6 +14,7 @@ import {
 } from '@/lib/statsUtils';
 import { GameEvent, Player, SavedGame } from '@/lib/storage';
 import { useGameStore } from '@/store/gameStore';
+import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { File, Paths } from 'expo-file-system';
 import { router, Stack } from 'expo-router';
@@ -78,63 +80,112 @@ export default function ViewStatsScreen() {
         gameTo,
         roster: currentTeam?.roster,
       };
+  // Helper to generate filename for single game exports
+  const generateGameFilename = (t1Name: string, t2Name: string, date?: number) => {
+    const sanitize = (s: string) => s.replace(/[^a-zA-Z0-9]/g, '_');
+    const dateStr = date ? formatDate(date).replace(/[^a-zA-Z0-9]/g, '_') : 'current';
+    return `${sanitize(t1Name)}_vs_${sanitize(t2Name)}_${dateStr}`;
+  };
 
-  const handleExport = () => {
-    const defaultFilename = selectedGame
-      ? `game_${formatDate(selectedGame.createdAt).replace(/[^a-zA-Z0-9]/g, '_')}`
-      : showingAggregatedStats && aggregatedData
-        ? `${aggregatedData.teamName.replace(/[^a-zA-Z0-9]/g, '_')}_${aggregatedData.gameCount}_games`
-        : 'game_stats';
+  const handleExportCSV = async () => {
+    try {
+      let csv: string;
+      let filename: string;
 
-    showAlert({
-      title: 'Export CSV',
-      message: 'Enter a filename for the export:',
-      prompt: {
-        placeholder: 'filename',
-        defaultValue: defaultFilename,
-        onSubmit: async (filename: string) => {
-          try {
-            // Use appropriate export function based on context
-            let csv: string;
-            if (selectedGame) {
-              csv = generateSavedGameCSV(selectedGame);
-            } else if (showingAggregatedStats && aggregatedData) {
-              csv = generateAggregateCSV(
-                aggregatedData.games,
-                aggregatedData.teamName,
-                aggregatedData.roster,
-              );
-            } else {
-              csv = generateCurrentGameCSV(
-                events,
-                team1Name,
-                team2Name,
-                startingPossession,
-                gameTo,
-                currentTeam?.roster,
-              );
-            }
-            const sanitizedFilename = filename.replace(/[^a-zA-Z0-9_-]/g, '_');
-            const file = new File(Paths.cache, `${sanitizedFilename}.csv`);
-            file.write(csv);
+      if (showingAggregatedStats && aggregatedData) {
+        csv = generateAggregateCSV(
+          aggregatedData.games,
+          aggregatedData.teamName,
+          aggregatedData.roster,
+        );
+        filename = `${aggregatedData.teamName.replace(/[^a-zA-Z0-9]/g, '_')}_${aggregatedData.gameCount}_games`;
+      } else if (selectedGame) {
+        csv = generateSavedGameCSV(selectedGame);
+        filename = generateGameFilename(
+          selectedGame.team1.name,
+          selectedGame.team2Name,
+          selectedGame.createdAt,
+        );
+      } else {
+        csv = generateCurrentGameCSV(
+          events,
+          team1Name,
+          team2Name,
+          startingPossession,
+          gameTo,
+          currentTeam?.roster,
+        );
+        filename = generateGameFilename(team1Name, team2Name);
+      }
 
-            if (await Sharing.isAvailableAsync()) {
-              await Sharing.shareAsync(file.uri);
-            } else {
-              showAlert({
-                title: 'Sharing not available',
-                message: 'Sharing is not available on this device.',
-              });
-            }
-          } catch {
-            showAlert({
-              title: 'Export failed',
-              message: 'Could not export stats to CSV.',
-            });
-          }
-        },
-      },
-    });
+      const file = new File(Paths.cache, `${filename}.csv`);
+      file.write(csv);
+
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(file.uri);
+      } else {
+        showAlert({
+          title: 'Sharing not available',
+          message: 'Sharing is not available on this device.',
+        });
+      }
+    } catch {
+      showAlert({
+        title: 'Export failed',
+        message: 'Could not export stats to CSV.',
+      });
+    }
+  };
+
+  const handleExportPDF = async () => {
+    try {
+      let uri: string;
+
+      if (showingAggregatedStats && aggregatedData) {
+        uri = await generateAggregatePDF({
+          teamName: aggregatedData.teamName,
+          games: aggregatedData.games,
+          roster: aggregatedData.roster,
+        });
+      } else if (selectedGame) {
+        uri = await generateGamePDF({
+          team1Name: selectedGame.team1.name,
+          team2Name: selectedGame.team2Name,
+          team1Score: selectedGame.team1Score,
+          team2Score: selectedGame.team2Score,
+          events: selectedGame.events,
+          roster: selectedGame.team1.roster,
+          startingPossession: selectedGame.startingPossession,
+          gameTo: selectedGame.gameTo,
+          date: selectedGame.createdAt,
+        });
+      } else {
+        uri = await generateGamePDF({
+          team1Name,
+          team2Name,
+          team1Score,
+          team2Score,
+          events,
+          roster: currentTeam?.roster,
+          startingPossession,
+          gameTo,
+        });
+      }
+
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(uri, { mimeType: 'application/pdf' });
+      } else {
+        showAlert({
+          title: 'Sharing not available',
+          message: 'Sharing is not available on this device.',
+        });
+      }
+    } catch {
+      showAlert({
+        title: 'Export failed',
+        message: 'Could not generate PDF report.',
+      });
+    }
   };
 
   const handleSelectGame = (game: SavedGame) => {
@@ -271,14 +322,22 @@ export default function ViewStatsScreen() {
               />
             </Pressable>
           )}
-          {/* Export button - show when stats are visible */}
+          {/* Export buttons - show when stats are visible */}
           {(viewMode === 'current' || selectedGame || showingAggregatedStats) && (
-            <Pressable
-              onPress={handleExport}
-              style={[styles.backButton, { backgroundColor: palette.overlay10 }]}
-              hitSlop={12}>
-              <MaterialCommunityIcons name="export-variant" size={24} color={palette.accent} />
-            </Pressable>
+            <>
+              <Pressable
+                onPress={handleExportCSV}
+                style={[styles.backButton, { backgroundColor: palette.overlay10 }]}
+                hitSlop={12}>
+                <FontAwesome6 name="file-csv" size={20} color={palette.accent} />
+              </Pressable>
+              <Pressable
+                onPress={handleExportPDF}
+                style={[styles.backButton, { backgroundColor: palette.overlay10 }]}
+                hitSlop={12}>
+                <FontAwesome6 name="file-pdf" size={20} color={palette.accent} />
+              </Pressable>
+            </>
           )}
           {/* Close buttons for various states */}
           {selectedGame ? (

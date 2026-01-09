@@ -121,7 +121,6 @@ export default function StatsContent({
       ) : (
         <StatsTable
           playerStats={playerStats}
-          palette={palette}
           events={events} // revert to events
           team="team1"
           roster={roster}

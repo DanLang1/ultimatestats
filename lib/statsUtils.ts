@@ -1,6 +1,6 @@
 import { GameEvent, Player, SavedGame } from '@/lib/storage';
 import { getPlayerName } from './playerUtils';
-import { computeTeamStats, TeamStats } from './teamStatsUtils';
+import { aggregateTeamStats, computeTeamStats, TeamStats } from './teamStatsUtils';
 
 export interface PlayerStats {
   name: string;
@@ -10,6 +10,7 @@ export interface PlayerStats {
   throwaways: number;
   drops: number;
   plusMinus: number;
+  callahans: number;
 }
 
 /**
@@ -37,6 +38,7 @@ export function computePlayerStats(
       throwaways: 0,
       drops: 0,
       plusMinus: 0,
+      callahans: 0,
     };
 
   for (const event of events) {
@@ -47,14 +49,21 @@ export function computePlayerStats(
       if (goalName) {
         const stats = getOrCreate(goalName);
         stats.goals++;
+        // Check for Callahan: assistPlayerId is 'OTHER_TEAM'
+        if (event.assistPlayerId === 'OTHER_TEAM') {
+          stats.callahans++;
+        }
         statsMap.set(goalName, stats);
       }
 
-      const assistName = resolveName(event.assistPlayerId);
-      if (assistName) {
-        const stats = getOrCreate(assistName);
-        stats.assists++;
-        statsMap.set(assistName, stats);
+      // Don't count 'OTHER_TEAM' as an assist to any player
+      if (event.assistPlayerId && event.assistPlayerId !== 'OTHER_TEAM') {
+        const assistName = resolveName(event.assistPlayerId);
+        if (assistName) {
+          const stats = getOrCreate(assistName);
+          stats.assists++;
+          statsMap.set(assistName, stats);
+        }
       }
     } else if (event.type === 'turnover') {
       if (event.team !== team) continue;
@@ -206,7 +215,20 @@ export function getImpactStats(
       const goalName = resolveName(event.goalPlayerId);
       const assistName = resolveName(event.assistPlayerId);
 
-      if (goalName === player) {
+      // Check for Callahan: goal with 'OTHER_TEAM' assist AND same player got the block
+      const isCallahan =
+        goalName === player &&
+        event.assistPlayerId === 'OTHER_TEAM' &&
+        points.length > 1 &&
+        points[points.length - 1].description?.includes('Block');
+
+      if (isCallahan) {
+        // Merge with the block - remove the block point and add a Callahan
+        points.pop();
+        currentPlusMinus -= 1; // Undo the block +1
+        change = 2; // Callahan is worth +2 (block + goal)
+        desc = 'Callahan (+2)';
+      } else if (goalName === player) {
         change = 1;
         desc = 'Goal (+1)';
       } else if (assistName === player) {
@@ -477,7 +499,11 @@ export function generateAggregateCSV(
 
   // Section 1: Combined Team Stats
   csv += '\n# Combined Team Stats\n';
-  csv += teamStatsCSV(aggregateTeamStats(games));
+  csv += teamStatsCSV(
+    aggregateTeamStats(
+      games.map((g) => computeTeamStats(g.events, g.startingPossession, g.gameTo)),
+    ),
+  );
 
   // Section 2: Combined Player Summary
   csv += '\n\n# Combined Player Summary\n';
@@ -517,70 +543,21 @@ export function generateAggregateCSV(
   return csv;
 }
 
-/**
- * Aggregates team stats from multiple games by summing individual game stats.
- * This properly handles different gameTo values per game.
- */
-function aggregateTeamStats(games: SavedGame[]): TeamStats {
-  const allStats = games.map((g) => computeTeamStats(g.events, g.startingPossession, g.gameTo));
-
-  const sum = (key: keyof TeamStats) => allStats.reduce((acc, s) => acc + s[key], 0);
-
-  const offensivePoints = sum('offensivePoints');
-  const defensivePoints = sum('defensivePoints');
-  const holds = sum('holds');
-  const breaks = sum('breaks');
-  const dPointsWithTurnover = sum('dPointsWithTurnover');
-  const totalTurnovers = sum('totalTurnovers');
-  const opponentTurnovers = sum('opponentTurnovers');
-
-  // Recalculate percentages from sums
-  const totalPoints = offensivePoints + defensivePoints;
-  const team1Goals = holds + breaks;
-
-  return {
-    offensivePoints,
-    holds,
-    cleanHolds: sum('cleanHolds'),
-    dirtyHolds: sum('dirtyHolds'),
-    holdPercentage: offensivePoints > 0 ? (holds / offensivePoints) * 100 : 0,
-    defensivePoints,
-    breaks,
-    dPointsWithTurnover,
-    breakEfficiency: dPointsWithTurnover > 0 ? (breaks / dPointsWithTurnover) * 100 : 0,
-    dEfficiency: defensivePoints > 0 ? (breaks / defensivePoints) * 100 : 0,
-    timesBroken: sum('timesBroken'),
-    totalTurnovers,
-    longestScoringRun: Math.max(...allStats.map((s) => s.longestScoringRun)),
-    longestDrought: Math.max(...allStats.map((s) => s.longestDrought)),
-    turnoversPerPoint: totalPoints > 0 ? totalTurnovers / totalPoints : 0,
-    pointsPerTurnover: totalTurnovers > 0 ? team1Goals / totalTurnovers : team1Goals,
-    blocksPerDPoint:
-      defensivePoints > 0
-        ? allStats.reduce((acc, s) => acc + s.blocksPerDPoint * s.defensivePoints, 0) /
-          defensivePoints
-        : 0,
-    totalBlocks: sum('totalBlocks'),
-    opponentTurnovers,
-    conversionRate:
-      offensivePoints + opponentTurnovers > 0
-        ? (team1Goals / (offensivePoints + opponentTurnovers)) * 100
-        : 0,
-  };
-}
-
 // --- CSV Helper Functions ---
 
 function playerSummaryCSV(stats: PlayerStats[]): string {
-  return (
-    'Player,Goals,Assists,Blocks,Throwaways,Drops,Plus/Minus\n' +
-    stats
-      .map(
-        (p) =>
-          `${p.name},${p.goals},${p.assists},${p.blocks},${p.throwaways},${p.drops},${p.plusMinus}`,
-      )
-      .join('\n')
+  const hasCallahans = stats.some((p) => p.callahans > 0);
+  const header = hasCallahans
+    ? 'Player,Goals,Assists,Blocks,Throwaways,Drops,Callahans,Plus/Minus'
+    : 'Player,Goals,Assists,Blocks,Throwaways,Drops,Plus/Minus';
+
+  const rows = stats.map((p) =>
+    hasCallahans
+      ? `${p.name},${p.goals},${p.assists},${p.blocks},${p.throwaways},${p.drops},${p.callahans},${p.plusMinus}`
+      : `${p.name},${p.goals},${p.assists},${p.blocks},${p.throwaways},${p.drops},${p.plusMinus}`,
   );
+
+  return header + '\n' + rows.join('\n');
 }
 
 function teamStatsCSV(stats: TeamStats): string {

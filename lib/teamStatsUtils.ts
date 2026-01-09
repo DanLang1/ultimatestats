@@ -173,3 +173,76 @@ export function computeTeamStats(
     conversionRate,
   };
 }
+
+/**
+ * Aggregates multiple TeamStats objects into a single combined TeamStats.
+ * Percentages are recalculated from the summed raw values.
+ */
+export function aggregateTeamStats(allStats: TeamStats[]): TeamStats {
+  if (allStats.length === 0) {
+    return {
+      offensivePoints: 0,
+      holds: 0,
+      cleanHolds: 0,
+      dirtyHolds: 0,
+      holdPercentage: 0,
+      defensivePoints: 0,
+      breaks: 0,
+      dPointsWithTurnover: 0,
+      breakEfficiency: 0,
+      dEfficiency: 0,
+      timesBroken: 0,
+      totalTurnovers: 0,
+      longestScoringRun: 0,
+      longestDrought: 0,
+      turnoversPerPoint: 0,
+      pointsPerTurnover: 0,
+      blocksPerDPoint: 0,
+      totalBlocks: 0,
+      opponentTurnovers: 0,
+      conversionRate: 0,
+    };
+  }
+
+  const sum = (key: keyof TeamStats) => allStats.reduce((acc, s) => acc + s[key], 0);
+
+  const offensivePoints = sum('offensivePoints');
+  const defensivePoints = sum('defensivePoints');
+  const holds = sum('holds');
+  const breaks = sum('breaks');
+  const dPointsWithTurnover = sum('dPointsWithTurnover');
+  const totalTurnovers = sum('totalTurnovers');
+  const opponentTurnovers = sum('opponentTurnovers');
+  const totalPoints = offensivePoints + defensivePoints;
+  const team1Goals = holds + breaks;
+
+  return {
+    offensivePoints,
+    holds,
+    cleanHolds: sum('cleanHolds'),
+    dirtyHolds: sum('dirtyHolds'),
+    holdPercentage: offensivePoints > 0 ? (holds / offensivePoints) * 100 : 0,
+    defensivePoints,
+    breaks,
+    dPointsWithTurnover,
+    breakEfficiency: dPointsWithTurnover > 0 ? (breaks / dPointsWithTurnover) * 100 : 0,
+    dEfficiency: defensivePoints > 0 ? (breaks / defensivePoints) * 100 : 0,
+    timesBroken: sum('timesBroken'),
+    totalTurnovers,
+    longestScoringRun: Math.max(...allStats.map((s) => s.longestScoringRun)),
+    longestDrought: Math.max(...allStats.map((s) => s.longestDrought)),
+    turnoversPerPoint: totalPoints > 0 ? totalTurnovers / totalPoints : 0,
+    pointsPerTurnover: totalTurnovers > 0 ? team1Goals / totalTurnovers : team1Goals,
+    blocksPerDPoint:
+      defensivePoints > 0
+        ? allStats.reduce((acc, s) => acc + s.blocksPerDPoint * s.defensivePoints, 0) /
+          defensivePoints
+        : 0,
+    totalBlocks: sum('totalBlocks'),
+    opponentTurnovers,
+    conversionRate:
+      offensivePoints + opponentTurnovers > 0
+        ? (team1Goals / (offensivePoints + opponentTurnovers)) * 100
+        : 0,
+  };
+}

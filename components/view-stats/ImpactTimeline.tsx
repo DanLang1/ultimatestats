@@ -1,3 +1,4 @@
+import { useTheme } from '@/context/ThemeContext';
 import { ImpactPoint } from '@/lib/statsUtils';
 import { Circle } from '@shopify/react-native-skia';
 import React from 'react';
@@ -6,10 +7,10 @@ import { CartesianChart, Line } from 'victory-native';
 
 interface ImpactTimelineProps {
   data: ImpactPoint[];
-  palette: any;
 }
 
-export default function ImpactTimeline({ data, palette }: ImpactTimelineProps) {
+export default function ImpactTimeline({ data }: ImpactTimelineProps) {
+  const { palette } = useTheme();
   const hasImpact = data.some((d) => d.cumulativePlusMinus !== 0);
 
   if (!hasImpact && data.length <= 2) {

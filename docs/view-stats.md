@@ -29,6 +29,7 @@ Scrollable table with the following columns:
 | G      | Goals scored (+1)                              |
 | A      | Assists thrown (+1)                            |
 | Blk    | Blocks made (+1)                               |
+| Calh   | Callahans made (+1, only appears if > 0)       |
 | TO     | Throwaways committed (-1)                      |
 | D      | Drops committed (-1)                           |
 | +/-    | Plus/Minus (G + A + Blk - TO - D), color-coded |
@@ -42,6 +43,7 @@ Scrollable table with the following columns:
 - Linear view of every point and event.
 - Turnovers are highlighted by type (Block, Drop, Throwaway, 50/50).
 - **50/50 Turnovers**: Labeled specifically and display both players involved (Thrower & Receiver).
+- **Callahans**: Detected automatically (Block + Goal by same player) and displayed as a single high-contrast badge.
 - Possession flips (Holds/Breaks) are clearly marked.
 
 ### 4. Actions
@@ -74,7 +76,7 @@ Aggregated statistics for your team:
 
 ```csv
 # Player Summary
-Player,Goals,Assists,Blocks,Throwaways,Drops,Plus/Minus
-Alice,3,2,1,0,0,6
-Bob,2,1,0,1,0,2
+Player,Goals,Assists,Blocks,Throwaways,Drops,Callahans,Plus/Minus
+Alice,3,2,1,0,0,6,1
+Bob,2,1,0,1,0,2,0
 ```

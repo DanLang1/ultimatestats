@@ -19,7 +19,7 @@ export type GameEvent =
       type: 'goal';
       team: 'team1' | 'team2';
       goalPlayerId: string | null; // Player who scored
-      assistPlayerId: string | null; // Player who assisted
+      assistPlayerId: string | null; // Player who assisted (or 'OTHER_TEAM' for Callahans)
       gameId?: string; // Links to SavedGame.id
     }
   | {

@@ -21,12 +21,14 @@ export function getPlayerById(roster: Player[], id: string): Player | undefined 
  * 1. Returns null if no ID provided.
  * 2. Returns ID if no roster provided.
  * 3. Returns "Deleted Player (xxxx)" if not found in roster.
+ * 4. Returns "Other Team" if ID is "OTHER_TEAM" (Callahan).
  */
 export function getPlayerName(
   roster: Player[] | null | undefined,
   id: string | null,
 ): string | null {
   if (!id) return null;
+  if (id === 'OTHER_TEAM') return 'Other Team';
   if (!roster) return id;
   return roster.find((p) => p.id === id)?.name ?? `Deleted Player (${id.slice(0, 4)})`;
 }
