@@ -55,6 +55,8 @@ export default function EditRosterScreen() {
   const [editPlayerActive, setEditPlayerActive] = useState(true);
   const [renameModalVisible, setRenameModalVisible] = useState(false);
   const [editTeamName, setEditTeamName] = useState('');
+  const [newTeamModalVisible, setNewTeamModalVisible] = useState(false);
+  const [newTeamName, setNewTeamName] = useState('');
 
   const isDuplicateName =
     newPlayerName.trim() !== '' && hasPlayerWithName(roster, newPlayerName.trim());
@@ -70,6 +72,11 @@ export default function EditRosterScreen() {
         t.name.toLowerCase() === editTeamName.trim().toLowerCase() && t.id !== currentTeam?.id,
     );
 
+  // Derived: check if new team name already exists
+  const newTeamNameExists =
+    newTeamName.trim() !== '' &&
+    savedTeams.some((t: SavedTeam) => t.name.toLowerCase() === newTeamName.trim().toLowerCase());
+
   const handleRenameTeam = () => {
     const newName = editTeamName.trim();
     if (!newName || !currentTeam || teamNameExists) {
@@ -83,15 +90,28 @@ export default function EditRosterScreen() {
     setRenameModalVisible(false);
   };
 
-  const handleNewTeam = async () => {
+  const handleNewTeam = () => {
+    setNewTeamName('');
+    setNewTeamModalVisible(true);
+  };
+
+  const handleConfirmNewTeam = async () => {
+    const trimmedName = newTeamName.trim();
+    if (!trimmedName || newTeamNameExists) return;
+
+    // Save current team first if it has a roster
     if (hasRoster && currentTeam) {
       await saveCurrentTeam();
     }
-    setCurrentTeam({
+
+    const newTeam: SavedTeam = {
       id: generateId(),
-      name: 'New Team',
+      name: trimmedName,
       roster: [],
-    });
+    };
+    setCurrentTeam(newTeam);
+    setNewTeamModalVisible(false);
+    await saveCurrentTeam();
   };
 
   const handleAddPlayer = () => {
@@ -121,8 +141,7 @@ export default function EditRosterScreen() {
     if (hasCurrentGameStats) {
       showAlert({
         title: 'Cannot Delete Player',
-        message:
-          "Sorry, you can't delete players with stats in an active game. Mark them as inactive instead.",
+        message: "Sorry, you can't delete players with stats in an active game",
       });
       return;
     }
@@ -534,6 +553,81 @@ export default function EditRosterScreen() {
                     { color: teamNameExists ? palette.textMuted : palette.textOnAccent },
                   ]}>
                   Save
+                </Text>
+              </Pressable>
+            </View>
+          </View>
+        </Pressable>
+      </Modal>
+
+      {/* New Team Modal */}
+      <Modal visible={newTeamModalVisible} transparent animationType="fade">
+        <Pressable style={styles.modalOverlay} onPress={() => setNewTeamModalVisible(false)}>
+          <View
+            style={[styles.modalContent, { backgroundColor: palette.surface }]}
+            onStartShouldSetResponder={() => true}>
+            <Text style={[styles.modalTitle, { color: palette.textPrimary }]}>New Team</Text>
+            <TextInput
+              style={[
+                styles.modalInput,
+                {
+                  borderColor: newTeamNameExists ? palette.danger : palette.overlay20,
+                  color: palette.inputText,
+                  backgroundColor: palette.inputBg,
+                },
+              ]}
+              value={newTeamName}
+              onChangeText={setNewTeamName}
+              placeholder="Team name"
+              placeholderTextColor={palette.textMuted}
+              autoFocus
+              maxLength={20}
+            />
+            {newTeamNameExists && (
+              <Text style={[styles.errorText, { color: palette.danger }]}>
+                A team with this name already exists
+              </Text>
+            )}
+            <View style={styles.modalButtons}>
+              <Pressable
+                style={({ pressed }) => [
+                  styles.modalButton,
+                  styles.modalCancelButton,
+                  {
+                    backgroundColor: 'transparent',
+                    borderColor: palette.accent,
+                    borderWidth: 1,
+                  },
+                  pressed && styles.buttonPressed,
+                ]}
+                onPress={() => setNewTeamModalVisible(false)}>
+                <Text style={[styles.modalCancelText, { color: palette.textOnAccent }]}>
+                  Cancel
+                </Text>
+              </Pressable>
+              <Pressable
+                style={({ pressed }) => [
+                  styles.modalButton,
+                  styles.modalSaveButton,
+                  {
+                    backgroundColor:
+                      newTeamNameExists || !newTeamName.trim() ? palette.overlay20 : palette.accent,
+                  },
+                  pressed && styles.buttonPressed,
+                ]}
+                onPress={handleConfirmNewTeam}
+                disabled={newTeamNameExists || !newTeamName.trim()}>
+                <Text
+                  style={[
+                    styles.modalSaveText,
+                    {
+                      color:
+                        newTeamNameExists || !newTeamName.trim()
+                          ? palette.textMuted
+                          : palette.textOnAccent,
+                    },
+                  ]}>
+                  Create
                 </Text>
               </Pressable>
             </View>

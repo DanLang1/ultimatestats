@@ -45,12 +45,12 @@ export default function TeamManagementModal() {
     <View style={StyleSheet.absoluteFill}>
       <Pressable style={styles.overlay} onPress={handleDismiss}>
         <View
-          style={[styles.sheet, { backgroundColor: palette.surface }]}
+          style={[styles.sheet, { backgroundColor: palette.modalBg }]}
           onStartShouldSetResponder={() => true}>
           <View style={[styles.handle, { backgroundColor: palette.overlay20 }]} />
           <View style={styles.headerRow}>
             <View style={styles.headerSpacer} />
-            <Text style={[styles.title, { color: palette.textPrimary }]}>Switch Team</Text>
+            <Text style={[styles.title, { color: palette.modalText }]}>Switch Team</Text>
             <Pressable onPress={handleDismiss} hitSlop={12} style={styles.closeButton}>
               <MaterialCommunityIcons name="close" size={24} color={palette.textMuted} />
             </Pressable>
@@ -72,9 +72,7 @@ export default function TeamManagementModal() {
                     size={22}
                     color={palette.textMuted}
                   />
-                  <Text style={[styles.optionText, { color: palette.textPrimary }]}>
-                    {team.name}
-                  </Text>
+                  <Text style={[styles.optionText, { color: palette.modalText }]}>{team.name}</Text>
                   <Pressable
                     style={styles.deleteButton}
                     onPress={() => handleDeleteTeam(team.id, team.name)}
