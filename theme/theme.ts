@@ -39,6 +39,7 @@ const midnightElectric = {
   border: '#E2E8F0', // Slate 200 - input borders, dividers
   borderLight: '#F1F5F9', // Slate 100 - subtle dividers
   inputBg: '#F1F5F9', // Slate 100 - input backgrounds
+  inputText: '#0F172A', // Slate 900 - text in inputs (always dark)
   cardBg: '#F8FAFC', // Slate 50 - card backgrounds
   cardBgAlt: '#F1F5F9', // Slate 100 - alternating rows
   shadow: '#000000', // Shadow color (use with opacity)
@@ -88,6 +89,11 @@ const midnightElectric = {
   lockScreenBtnPrimaryText: '#0F172A',
   lockScreenBtnSecondaryBg: 'rgba(255, 255, 255, 0.1)',
   lockScreenBtnSecondaryBorder: 'rgba(255, 255, 255, 0.5)',
+
+  // Brand Colors (Discord)
+  discordBg: '#5865F2',
+  discordText: '#FFFFFF',
+  discordTextMuted: 'rgba(255, 255, 255, 0.7)',
 } as const;
 
 // =============================================================================
@@ -216,6 +222,7 @@ export const lightPalette = {
   border: '#CBD5E1', // Slate 300 - input borders, dividers
   borderLight: '#E2E8F0', // Slate 200 - subtle dividers
   inputBg: '#F1F5F9', // Slate 100 - input backgrounds
+  inputText: '#0F172A', // Slate 900 - text in inputs (always dark)
   cardBg: '#FFFFFF', // White - card backgrounds
   cardBgAlt: '#F8FAFC', // Slate 50 - alternating rows
   shadow: '#000000', // Shadow color (use with opacity)
@@ -269,6 +276,11 @@ export const lightPalette = {
   lockScreenBtnPrimaryText: '#0F172A',
   lockScreenBtnSecondaryBg: 'rgba(255, 255, 255, 0.1)',
   lockScreenBtnSecondaryBorder: 'rgba(255, 255, 255, 0.5)',
+
+  // Brand Colors (Discord)
+  discordBg: '#5865F2',
+  discordText: '#FFFFFF',
+  discordTextMuted: 'rgba(255, 255, 255, 0.7)',
 } as const;
 
 // Default palette export (for backwards compatibility during migration)

@@ -43,10 +43,6 @@ export default function BasicScoreboard() {
 
   const team1Name = currentTeam?.name ?? 'Team 1';
 
-  const openSettings = () => {
-    router.push('/Settings');
-  };
-
   const undo = () => {
     undoLastAction();
   };
@@ -151,8 +147,17 @@ export default function BasicScoreboard() {
 
       {/* Timer Bar Overlay */}
       <View style={styles.timerBarContainer}>
-        <SettingsBar onUndo={undo} onSettingsPress={openSettings} />
+        <SettingsBar onUndo={undo} />
       </View>
+
+      {/* Floating Home Button - Top Left */}
+      <Pressable onPress={() => router.push('/Dashboard')} style={styles.floatingHomeButton}>
+        <MaterialCommunityIcons
+          name="home"
+          size={30}
+          color={getContrastingTextColor(team1BgColor)}
+        />
+      </Pressable>
 
       {/* Bottom half */}
       <TeamScoreSection
@@ -238,6 +243,13 @@ const styles = StyleSheet.create({
     right: 0,
     alignItems: 'center',
     zIndex: 100,
+  },
+  floatingHomeButton: {
+    position: 'absolute',
+    top: 12,
+    left: 12,
+    padding: 10,
+    zIndex: 200,
   },
   lockedOverlay: {
     ...StyleSheet.absoluteFillObject,

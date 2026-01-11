@@ -17,7 +17,7 @@ import { useGameStore } from '@/store/gameStore';
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { File, Paths } from 'expo-file-system';
-import { router, Stack } from 'expo-router';
+import { router, Stack, useLocalSearchParams } from 'expo-router';
 import * as Sharing from 'expo-sharing';
 import React, { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -25,6 +25,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 type ViewMode = 'current' | 'saved' | 'aggregate';
 
 export default function ViewStatsScreen() {
+  const { tab } = useLocalSearchParams<{ tab?: ViewMode }>();
   const {
     currentTeam,
     team2Name,
@@ -42,7 +43,7 @@ export default function ViewStatsScreen() {
 
   const team1Name = currentTeam?.name ?? 'Team 1';
 
-  const [viewMode, setViewMode] = useState<ViewMode>('current');
+  const [viewMode, setViewMode] = useState<ViewMode>(tab ?? 'current');
   const [selectedGame, setSelectedGame] = useState<SavedGame | null>(null);
 
   // Aggregate mode state

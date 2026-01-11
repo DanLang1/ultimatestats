@@ -1,11 +1,13 @@
 import { useAlert } from '@/components/ui/AlertProvider';
 import { useTheme } from '@/context/ThemeContext';
 import { hasPlayerWithName } from '@/lib/playerUtils';
+import { SavedTeam } from '@/lib/storage';
 import { Player } from '@/lib/storage/types';
+import { generateId } from '@/lib/utils';
 import { useGameStore } from '@/store/gameStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Modal,
   Pressable,
@@ -19,6 +21,7 @@ import {
 
 export default function EditRosterScreen() {
   const { teamName } = useLocalSearchParams<{ teamName: string }>();
+
   const {
     currentTeam,
     setCurrentTeam,
@@ -30,21 +33,66 @@ export default function EditRosterScreen() {
     team2Score,
     events,
     savedGames,
+    savedTeams,
+    loadSavedTeams,
   } = useGameStore();
   const { showAlert } = useAlert();
   const { palette } = useTheme();
 
   // Derived values
   const roster = currentTeam?.roster ?? [];
+  const gameActive = timerIsActive || team1Score > 0 || team2Score > 0 || events.length > 0;
+
+  // Load saved teams on mount
+  useEffect(() => {
+    loadSavedTeams();
+  }, [loadSavedTeams]);
 
   const [newPlayerName, setNewPlayerName] = useState('');
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [editingPlayer, setEditingPlayer] = useState<Player | null>(null);
   const [editPlayerName, setEditPlayerName] = useState('');
   const [editPlayerActive, setEditPlayerActive] = useState(true);
+  const [renameModalVisible, setRenameModalVisible] = useState(false);
+  const [editTeamName, setEditTeamName] = useState('');
 
   const isDuplicateName =
     newPlayerName.trim() !== '' && hasPlayerWithName(roster, newPlayerName.trim());
+
+  const hasOtherTeams = savedTeams.filter((t) => t.id !== currentTeam?.id).length > 0;
+  const hasRoster = roster.length > 0;
+
+  // Derived: check if edited team name already exists
+  const teamNameExists =
+    editTeamName.trim() !== '' &&
+    savedTeams.some(
+      (t: SavedTeam) =>
+        t.name.toLowerCase() === editTeamName.trim().toLowerCase() && t.id !== currentTeam?.id,
+    );
+
+  const handleRenameTeam = () => {
+    const newName = editTeamName.trim();
+    if (!newName || !currentTeam || teamNameExists) {
+      if (!newName) setRenameModalVisible(false);
+      return;
+    }
+
+    const updatedTeam: SavedTeam = { ...currentTeam, name: newName };
+    setCurrentTeam(updatedTeam);
+    saveCurrentTeam();
+    setRenameModalVisible(false);
+  };
+
+  const handleNewTeam = async () => {
+    if (hasRoster && currentTeam) {
+      await saveCurrentTeam();
+    }
+    setCurrentTeam({
+      id: generateId(),
+      name: 'New Team',
+      roster: [],
+    });
+  };
 
   const handleAddPlayer = () => {
     const trimmed = newPlayerName.trim();
@@ -196,19 +244,59 @@ export default function EditRosterScreen() {
           hitSlop={12}>
           <MaterialCommunityIcons name="arrow-left" size={24} color={palette.textInverse} />
         </Pressable>
-        <Text style={[styles.headerTitle, { color: palette.textMuted }]}>
-          {(teamName || 'TEAM').toUpperCase()} ROSTER
-        </Text>
-        {roster.length > 0 ? (
+
+        {!gameActive ? (
           <Pressable
-            onPress={handleClearAll}
-            style={[styles.clearButton, { backgroundColor: palette.dangerOverlay15 }]}
-            hitSlop={12}>
-            <MaterialCommunityIcons name="delete-sweep-outline" size={22} color={palette.danger} />
+            style={styles.teamHeaderRow}
+            onPress={() => {
+              setEditTeamName(currentTeam?.name ?? '');
+              setRenameModalVisible(true);
+            }}>
+            <Text style={[styles.headerTitle, { color: palette.textMuted }]}>
+              {(currentTeam?.name ?? teamName ?? 'TEAM').toUpperCase()}
+            </Text>
+            <MaterialCommunityIcons name="pencil-outline" size={17} color={palette.textMuted} />
           </Pressable>
         ) : (
-          <View style={styles.headerSpacer} />
+          <Text style={[styles.headerTitle, { color: palette.textMuted }]}>
+            {(currentTeam?.name ?? teamName ?? 'TEAM').toUpperCase()}
+          </Text>
         )}
+
+        <View style={styles.headerActions}>
+          {!gameActive && hasOtherTeams && (
+            <Pressable
+              onPress={() => router.push('/TeamManagementModal')}
+              style={[styles.headerActionButton, { backgroundColor: palette.overlay10 }]}
+              hitSlop={8}>
+              <MaterialCommunityIcons
+                name="swap-horizontal"
+                size={20}
+                color={palette.textInverse}
+              />
+            </Pressable>
+          )}
+          {!gameActive && (
+            <Pressable
+              onPress={handleNewTeam}
+              style={[styles.headerActionButton, { backgroundColor: palette.overlay10 }]}
+              hitSlop={8}>
+              <MaterialCommunityIcons name="plus" size={20} color={palette.textInverse} />
+            </Pressable>
+          )}
+          {roster.length > 0 && (
+            <Pressable
+              onPress={handleClearAll}
+              style={[styles.clearButton, { backgroundColor: palette.dangerOverlay15 }]}
+              hitSlop={8}>
+              <MaterialCommunityIcons
+                name="delete-sweep-outline"
+                size={20}
+                color={palette.danger}
+              />
+            </Pressable>
+          )}
+        </View>
       </View>
 
       {/* Add Player Input */}
@@ -298,10 +386,7 @@ export default function EditRosterScreen() {
                 <Pressable
                   style={({ pressed }) => [
                     styles.chipRemoveButton,
-                    pressed && [
-                      styles.chipRemoveButtonPressed,
-                      { backgroundColor: palette.overlay15 },
-                    ],
+                    pressed && [{ backgroundColor: palette.overlay15 }],
                   ]}
                   onPress={() => handleRemovePlayer(player.id)}
                   hitSlop={4}>
@@ -387,6 +472,74 @@ export default function EditRosterScreen() {
           </View>
         </Pressable>
       </Modal>
+
+      {/* Rename Team Modal */}
+      <Modal visible={renameModalVisible} transparent animationType="fade">
+        <Pressable style={styles.modalOverlay} onPress={() => setRenameModalVisible(false)}>
+          <View
+            style={[styles.modalContent, { backgroundColor: palette.surface }]}
+            onStartShouldSetResponder={() => true}>
+            <Text style={[styles.modalTitle, { color: palette.textPrimary }]}>Rename Team</Text>
+            <TextInput
+              style={[
+                styles.modalInput,
+                {
+                  borderColor: teamNameExists ? palette.danger : palette.overlay20,
+                  color: palette.inputText,
+                  backgroundColor: palette.inputBg,
+                },
+              ]}
+              value={editTeamName}
+              onChangeText={setEditTeamName}
+              placeholder="Team name"
+              placeholderTextColor={palette.textMuted}
+              autoFocus
+              maxLength={20}
+            />
+            {teamNameExists && (
+              <Text style={[styles.errorText, { color: palette.danger }]}>
+                A team with this name already exists
+              </Text>
+            )}
+            <View style={styles.modalButtons}>
+              <Pressable
+                style={({ pressed }) => [
+                  styles.modalButton,
+                  styles.modalCancelButton,
+                  {
+                    backgroundColor: 'transparent',
+                    borderColor: palette.accent,
+                    borderWidth: 1,
+                    color: palette.textOnAccent,
+                  },
+                  pressed && styles.buttonPressed,
+                ]}
+                onPress={() => setRenameModalVisible(false)}>
+                <Text style={[styles.modalCancelText, { color: palette.textOnAccent }]}>
+                  Cancel
+                </Text>
+              </Pressable>
+              <Pressable
+                style={({ pressed }) => [
+                  styles.modalButton,
+                  styles.modalSaveButton,
+                  { backgroundColor: teamNameExists ? palette.overlay20 : palette.accent },
+                  pressed && styles.buttonPressed,
+                ]}
+                onPress={handleRenameTeam}
+                disabled={teamNameExists}>
+                <Text
+                  style={[
+                    styles.modalSaveText,
+                    { color: teamNameExists ? palette.textMuted : palette.textOnAccent },
+                  ]}>
+                  Save
+                </Text>
+              </Pressable>
+            </View>
+          </View>
+        </Pressable>
+      </Modal>
     </View>
   );
 }
@@ -419,10 +572,6 @@ const styles = StyleSheet.create({
     padding: 8,
     borderRadius: 20,
   },
-  saveTeamButton: {
-    padding: 8,
-    borderRadius: 20,
-  },
   addPlayerSection: {
     flexDirection: 'row',
     paddingHorizontal: 20,
@@ -442,7 +591,6 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 12,
-    marginTop: 4,
     marginLeft: 4,
   },
   addButton: {
@@ -507,7 +655,6 @@ const styles = StyleSheet.create({
     padding: 4,
     borderRadius: 12,
   },
-  chipRemoveButtonPressed: {},
   modalOverlay: {
     flex: 1,
     justifyContent: 'center',
@@ -534,7 +681,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     paddingHorizontal: 14,
     fontSize: 16,
-    marginBottom: 16,
+    marginBottom: 4,
   },
   activeToggleRow: {
     flexDirection: 'row',
@@ -556,6 +703,7 @@ const styles = StyleSheet.create({
   },
   modalButton: {
     flex: 1,
+    marginTop: 12,
     paddingVertical: 12,
     borderRadius: 10,
     alignItems: 'center',
@@ -571,5 +719,19 @@ const styles = StyleSheet.create({
   modalSaveText: {
     fontSize: 14,
     fontWeight: '700',
+  },
+  teamHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  headerActionButton: {
+    padding: 8,
+    borderRadius: 20,
   },
 });

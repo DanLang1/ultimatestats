@@ -1,15 +1,14 @@
 import { TimeoutCounter } from '@/components/game-info/TimeoutCounter';
+import HelpContent from '@/components/HelpContent';
 import { ThemedView } from '@/components/ThemedView';
 import FlashingIcon from '@/components/ui/FlashingIcon';
 import { useTheme } from '@/context/ThemeContext';
 import { useGameTimer } from '@/hooks/useGameTimer';
 import { useGameStore } from '@/store/gameStore';
-import { useTutorialStore } from '@/store/tutorialStore';
-import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router, Stack } from 'expo-router';
 import React from 'react';
-import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 export default function GameInfoScreen() {
   const {
@@ -166,209 +165,8 @@ export default function GameInfoScreen() {
 
         <View style={[styles.divider, { backgroundColor: palette.overlay10 }]} />
 
-        {/* Action Bar Legend - only show when stat tracking enabled */}
-        {statTrackingEnabled && (
-          <>
-            <Text style={[styles.sectionTitle, { color: palette.textMuted }]}>
-              ACTION BAR LEGEND
-            </Text>
-            <View style={[styles.legendContainer, { backgroundColor: palette.overlay08 }]}>
-              <Text style={[styles.legendCategoryTitle, { color: palette.danger }]}>
-                When Your Team Has Possession
-              </Text>
-              <View style={styles.legendItem}>
-                <View style={styles.legendIconContainer}>
-                  <MaterialCommunityIcons
-                    name="hand-front-left-outline"
-                    size={20}
-                    color={palette.danger}
-                  />
-                </View>
-                <View style={styles.legendTextContainer}>
-                  <Text style={[styles.legendLabel, { color: palette.textInverse }]}>OPP D</Text>
-                  <Text style={[styles.legendDescription, { color: palette.textMuted }]}>
-                    Opponent made a defensive play
-                  </Text>
-                </View>
-              </View>
-              <View style={styles.legendItem}>
-                <View style={styles.legendIconContainer}>
-                  <FontAwesome5 name="hands-wash" size={16} color={palette.danger} />
-                </View>
-                <View style={styles.legendTextContainer}>
-                  <Text style={[styles.legendLabel, { color: palette.textInverse }]}>DROP</Text>
-                  <Text style={[styles.legendDescription, { color: palette.textMuted }]}>
-                    Your team dropped the disc
-                  </Text>
-                </View>
-              </View>
-              <View style={styles.legendItem}>
-                <View style={styles.legendIconContainer}>
-                  <MaterialCommunityIcons
-                    name="trash-can-outline"
-                    size={20}
-                    color={palette.danger}
-                  />
-                </View>
-                <View style={styles.legendTextContainer}>
-                  <Text style={[styles.legendLabel, { color: palette.textInverse }]}>T/A</Text>
-                  <Text style={[styles.legendDescription, { color: palette.textMuted }]}>
-                    Your team threw it away (incomplete pass)
-                  </Text>
-                </View>
-              </View>
-
-              <View style={styles.legendItem}>
-                <View style={styles.legendIconContainer}>
-                  <MaterialCommunityIcons name="scale-balance" size={20} color={palette.danger} />
-                </View>
-                <View style={styles.legendTextContainer}>
-                  <Text style={[styles.legendLabel, { color: palette.textInverse }]}>50/50</Text>
-                  <Text style={[styles.legendDescription, { color: palette.textMuted }]}>
-                    Partial blame on thrower and receiver
-                  </Text>
-                </View>
-              </View>
-
-              <View style={[styles.legendDivider, { backgroundColor: palette.overlay10 }]} />
-
-              <Text style={[styles.legendCategoryTitle, { color: palette.success }]}>
-                When Opponent Has Possession
-              </Text>
-              <View style={styles.legendItem}>
-                <View style={styles.legendIconContainer}>
-                  <MaterialCommunityIcons
-                    name="hand-back-left-outline"
-                    size={20}
-                    color={palette.success}
-                  />
-                </View>
-                <View style={styles.legendTextContainer}>
-                  <Text style={[styles.legendLabel, { color: palette.textInverse }]}>BLOCK</Text>
-                  <Text style={[styles.legendDescription, { color: palette.textMuted }]}>
-                    Your team got a block
-                  </Text>
-                </View>
-              </View>
-              <View style={styles.legendItem}>
-                <View style={styles.legendIconContainer}>
-                  <MaterialCommunityIcons name="gift-outline" size={20} color={palette.accent} />
-                </View>
-                <View style={styles.legendTextContainer}>
-                  <Text style={[styles.legendLabel, { color: palette.textInverse }]}>OPP TURN</Text>
-                  <Text style={[styles.legendDescription, { color: palette.textMuted }]}>
-                    Opponent made an unforced error
-                  </Text>
-                </View>
-              </View>
-            </View>
-
-            <View style={[styles.divider, { backgroundColor: palette.overlay10 }]} />
-          </>
-        )}
-
-        {/* Cap Status Legend */}
-        <Text style={[styles.sectionTitle, { color: palette.textMuted }]}>CAP STATUS LEGEND</Text>
-        <View style={[styles.legendContainer, { backgroundColor: palette.overlay08 }]}>
-          <View style={styles.legendItem}>
-            <View style={styles.legendIconContainer}>
-              <FlashingIcon name="hat-fedora" size={20} color={palette.textMuted} isFlashing />
-            </View>
-            <View style={styles.legendTextContainer}>
-              <Text style={[styles.legendLabel, { color: palette.textInverse }]}>
-                Softcap Pending
-              </Text>
-              <Text style={[styles.legendDescription, { color: palette.textMuted }]}>
-                Softcap has not activated yet but will after the next score
-              </Text>
-            </View>
-          </View>
-          <View style={styles.legendItem}>
-            <View style={styles.legendIconContainer}>
-              <MaterialCommunityIcons name="hat-fedora" size={20} color={palette.textInverse} />
-            </View>
-            <View style={styles.legendTextContainer}>
-              <Text style={[styles.legendLabel, { color: palette.textInverse }]}>
-                Softcap Active
-              </Text>
-              <Text style={[styles.legendDescription, { color: palette.textMuted }]}>
-                Softcap is in effect - game is to current score + 1
-              </Text>
-            </View>
-          </View>
-          <View style={styles.legendItem}>
-            <View style={styles.legendIconContainer}>
-              <MaterialCommunityIcons name="hard-hat" size={20} color={palette.textInverse} />
-            </View>
-            <View style={styles.legendTextContainer}>
-              <Text style={[styles.legendLabel, { color: palette.textInverse }]}>Hardcap</Text>
-              <Text style={[styles.legendDescription, { color: palette.textMuted }]}>
-                Timer reached zero - game ends after next score unless tied
-              </Text>
-            </View>
-          </View>
-        </View>
-
-        <View style={[styles.divider, { backgroundColor: palette.overlay10 }]} />
-
-        {/* Quick Actions */}
-        <Text style={[styles.sectionTitle, { color: palette.textMuted }]}>HELP</Text>
-        <Pressable
-          style={[styles.tutorialButton, { backgroundColor: palette.overlay08 }]}
-          onPress={() => {
-            useTutorialStore.getState().triggerOnboarding();
-            router.back();
-          }}>
-          <MaterialCommunityIcons name="school-outline" size={24} color={palette.accent} />
-          <View style={styles.tutorialButtonContent}>
-            <Text style={[styles.tutorialButtonTitle, { color: palette.textInverse }]}>
-              View Tutorial
-            </Text>
-            <Text style={[styles.tutorialButtonSubtitle, { color: palette.textMuted }]}>
-              Learn how to use UltimateStats
-            </Text>
-          </View>
-          <MaterialCommunityIcons name="chevron-right" size={24} color={palette.textMuted} />
-        </Pressable>
-
-        <View style={{ height: 12 }} />
-
-        <Pressable
-          style={[styles.tutorialButton, { backgroundColor: palette.overlay08 }]}
-          onPress={() => {
-            useTutorialStore.getState().triggerStatsTutorial();
-            router.back();
-          }}>
-          <MaterialCommunityIcons name="chart-line" size={24} color={palette.accent} />
-          <View style={styles.tutorialButtonContent}>
-            <Text style={[styles.tutorialButtonTitle, { color: palette.textInverse }]}>
-              Stats Guide
-            </Text>
-            <Text style={[styles.tutorialButtonSubtitle, { color: palette.textMuted }]}>
-              How to track player statistics
-            </Text>
-          </View>
-          <MaterialCommunityIcons name="chevron-right" size={24} color={palette.textMuted} />
-        </Pressable>
-
-        <View style={{ height: 12 }} />
-
-        <Pressable
-          style={[styles.tutorialButton, { backgroundColor: palette.overlay08 }]}
-          onPress={() => {
-            Linking.openURL('https://ustat.netlify.app/privacy/');
-          }}>
-          <MaterialCommunityIcons name="shield-lock-outline" size={24} color={palette.accent} />
-          <View style={styles.tutorialButtonContent}>
-            <Text style={[styles.tutorialButtonTitle, { color: palette.textInverse }]}>
-              Privacy Policy
-            </Text>
-            <Text style={[styles.tutorialButtonSubtitle, { color: palette.textMuted }]}>
-              TLDR: Everything is stored locally on your device
-            </Text>
-          </View>
-          <MaterialCommunityIcons name="open-in-new" size={24} color={palette.textMuted} />
-        </Pressable>
+        {/* Use shared HelpContent component */}
+        <HelpContent showActionBarLegend={statTrackingEnabled} />
       </ScrollView>
     </ThemedView>
   );

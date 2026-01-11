@@ -10,10 +10,9 @@ import FlashingIcon from './ui/FlashingIcon';
 
 interface SettingsBarProps {
   onUndo: () => void;
-  onSettingsPress: () => void;
 }
 
-export default function SettingsBar({ onUndo, onSettingsPress }: SettingsBarProps) {
+export default function SettingsBar({ onUndo }: SettingsBarProps) {
   const { timeLeft, isActive, toggleTimer } = useGameTimer();
   const { isSoftCap, softCapPending, events, statTrackingEnabled } = useGameStore();
   const { palette } = useTheme();
@@ -56,19 +55,20 @@ export default function SettingsBar({ onUndo, onSettingsPress }: SettingsBarProp
         ) : null}
       </View>
 
+      {/* Stats - only show when stat tracking enabled */}
       {statTrackingEnabled && (
         <Pressable onPress={() => router.push('/ViewStats')} style={styles.iconButton}>
           <MaterialCommunityIcons name="chart-bar" size={24} color={barContentColor} />
         </Pressable>
       )}
 
-      {/* Info - now navigates to page */}
+      {/* Info */}
       <Pressable onPress={() => router.push('/GameInfo')} style={styles.iconButton}>
         <MaterialCommunityIcons name="information" size={24} color={barContentColor} />
       </Pressable>
 
       {/* Settings */}
-      <Pressable onPress={onSettingsPress} style={styles.iconButton}>
+      <Pressable onPress={() => router.push('/Settings')} style={styles.iconButton}>
         <MaterialCommunityIcons name="cog" size={24} color={barContentColor} />
       </Pressable>
 
@@ -101,7 +101,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 10,
     minHeight: 50,
-    minWidth: 300,
+    minWidth: 220,
     gap: 15,
   },
   timerContainer: {

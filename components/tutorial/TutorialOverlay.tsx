@@ -178,7 +178,7 @@ export default function TutorialOverlay() {
                     onPress={() => Linking.openURL(PRIVACY_URL)}
                     style={styles.privacyFooter}>
                     <Text style={[styles.privacyFooterText, { color: palette.accent }]}>
-                      Privacy Policy
+                      Privacy
                     </Text>
                   </Pressable>
                 )}

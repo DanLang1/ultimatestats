@@ -106,7 +106,7 @@ export function StatEntryInner({
                   styles.input,
                   {
                     borderColor: palette.border,
-                    color: palette.modalText,
+                    color: palette.inputText,
                     backgroundColor: palette.inputBg,
                   },
                 ]}

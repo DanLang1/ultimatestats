@@ -3,15 +3,14 @@ import { useAlert } from '@/components/ui/AlertProvider';
 import { TeamColorPicker } from '@/components/ui/ColorPicker';
 import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import { Switch } from '@/components/ui/Switch';
-import { TeamDropdown } from '@/components/ui/TeamDropdown';
 import { useTheme } from '@/context/ThemeContext';
+import { useNewGame } from '@/hooks/useNewGame';
 import { SavedTeam } from '@/lib/storage';
-import { generateId } from '@/lib/utils';
 import { useGameStore } from '@/store/gameStore';
 import { useTutorialStore } from '@/store/tutorialStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router, Stack } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 export default function SettingsScreen() {
@@ -39,28 +38,20 @@ export default function SettingsScreen() {
     gameLength,
     softCapMins,
     setSoftCapMins,
-    resetGame,
     statTrackingEnabled,
     setStatTrackingEnabled,
     timerIsActive,
     team1Score,
     team2Score,
     savedTeams,
-    loadSavedTeams,
-    loadTeam,
-    deleteTeam,
     saveCurrentTeam,
   } = useGameStore();
+
+  const { confirmNewGame } = useNewGame();
 
   // Derived values from currentTeam
   const team1Name = currentTeam?.name ?? 'Team 1';
   const team1Roster = currentTeam?.roster ?? [];
-  const hasRoster = team1Roster.length > 0;
-
-  // Load saved teams on mount
-  useEffect(() => {
-    loadSavedTeams();
-  }, [loadSavedTeams]);
 
   const timeoutsCount = team1Timeouts.length;
   const [team1NameResetKey, setTeam1NameResetKey] = useState(0);
@@ -87,50 +78,8 @@ export default function SettingsScreen() {
     setSoftCapMins(Math.max(0, gameLength - clamped));
   };
 
-  const handleNewGame = () => {
-    showAlert({
-      title: 'Start New Game?',
-      message: 'This will reset the score, timer, and all stats.',
-      buttons: [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'New Game',
-          style: 'success',
-          onPress: () => {
-            resetGame();
-          },
-        },
-      ],
-    });
-  };
-
   const handleEditRoster = () => {
     router.push({ pathname: '/EditRoster', params: { teamName: team1Name } });
-  };
-
-  const handleLoadTeam = async (option: { id: string; label: string }) => {
-    if (option.id === 'new-team') {
-      // Save the current team's roster before switching to a new team
-      if (hasRoster && currentTeam) {
-        await saveCurrentTeam();
-      }
-      // Create a new empty team
-      setCurrentTeam({
-        id: generateId(),
-        name: 'New Team',
-        roster: [],
-      });
-    } else {
-      // Save current team before loading a different one
-      if (hasRoster && currentTeam) {
-        await saveCurrentTeam();
-      }
-      loadTeam(option.id);
-    }
-  };
-
-  const handleDeleteTeam = (option: { id: string; label: string }) => {
-    deleteTeam(option.id);
   };
 
   // Save team when name editing finishes (not on every keystroke)
@@ -215,7 +164,7 @@ export default function SettingsScreen() {
         </Pressable>
         <Text style={[styles.headerTitle, { color: palette.textMuted }]}>SETTINGS</Text>
         <Pressable
-          onPress={handleNewGame}
+          onPress={confirmNewGame}
           style={({ pressed }) => [
             styles.newGameButton,
             { backgroundColor: palette.overlay10 },
@@ -266,35 +215,6 @@ export default function SettingsScreen() {
                     editable={!gameActive}
                   />
                 </View>
-                {savedTeams.filter((t) => t.id !== currentTeam?.id).length > 0 ? (
-                  <TeamDropdown
-                    options={[
-                      { id: 'new-team', label: '+ New Team' },
-                      ...savedTeams
-                        .filter((t) => t.id !== currentTeam?.id)
-                        .map((t) => ({ id: t.id, label: t.name })),
-                    ]}
-                    placeholder="Teams"
-                    onSelect={handleLoadTeam}
-                    onDelete={handleDeleteTeam}
-                    disabled={gameActive}
-                  />
-                ) : (
-                  <Pressable
-                    style={({ pressed }) => [
-                      styles.newTeamButton,
-                      { backgroundColor: palette.overlay10 },
-                      pressed && styles.buttonPressed,
-                      gameActive && styles.buttonDisabled,
-                    ]}
-                    onPress={() => handleLoadTeam({ id: 'new-team', label: '+ New Team' })}
-                    disabled={gameActive}>
-                    <MaterialCommunityIcons name="plus" size={18} color={palette.textInverse} />
-                    <Text style={[styles.newTeamButtonText, { color: palette.textInverse }]}>
-                      New
-                    </Text>
-                  </Pressable>
-                )}
 
                 <Pressable
                   style={({ pressed }) => [
