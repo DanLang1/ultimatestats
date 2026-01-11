@@ -1,9 +1,11 @@
 import { ThemedView } from '@/components/ThemedView';
 import { useTheme } from '@/context/ThemeContext';
 import { useNewGame } from '@/hooks/useNewGame';
+import { useVersionCheck } from '@/hooks/useVersionCheck';
 import { useGameStore } from '@/store/gameStore';
 import { MaterialIcons } from '@expo/vector-icons';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router, Stack } from 'expo-router';
 import React from 'react';
 import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -14,6 +16,7 @@ interface MenuItem {
   description: string;
   onPress: () => void;
   disabled?: boolean;
+  showBadge?: boolean;
 }
 
 interface MenuSection {
@@ -25,6 +28,7 @@ export default function DashboardScreen() {
   const { palette } = useTheme();
   const { statTrackingEnabled, currentTeam, savedGames } = useGameStore();
   const { confirmNewGame } = useNewGame({ onSuccess: () => router.back() });
+  const { hasNewVersion } = useVersionCheck();
 
   const team1Name = currentTeam?.name ?? 'Team 1';
   const rosterCount = currentTeam?.roster?.length ?? 0;
@@ -106,6 +110,13 @@ export default function DashboardScreen() {
           description: 'Tutorials, legends, privacy',
           onPress: () => router.push('/Help'),
         },
+        {
+          icon: 'information-outline',
+          label: 'About',
+          description: 'Version info & changelog',
+          onPress: () => router.push('/About'),
+          showBadge: hasNewVersion,
+        },
       ],
     },
   ];
@@ -151,13 +162,22 @@ export default function DashboardScreen() {
                     />
                   </View>
                   <View style={styles.menuItemText}>
-                    <Text
-                      style={[
-                        styles.menuItemLabel,
-                        { color: item.disabled ? palette.textMuted : palette.textInverse },
-                      ]}>
-                      {item.label}
-                    </Text>
+                    <View style={styles.menuItemLabelRow}>
+                      <Text
+                        style={[
+                          styles.menuItemLabel,
+                          { color: item.disabled ? palette.textMuted : palette.textInverse },
+                        ]}>
+                        {item.label}
+                      </Text>
+                      {item.showBadge && (
+                        <View style={[styles.newBadge, { backgroundColor: palette.accent }]}>
+                          <Text style={[styles.newBadgeText, { color: palette.primary }]}>
+                            New!
+                          </Text>
+                        </View>
+                      )}
+                    </View>
                     <Text style={[styles.menuItemDescription, { color: palette.textMuted }]}>
                       {item.disabled ? 'Enable stat tracking first' : item.description}
                     </Text>
@@ -192,6 +212,29 @@ export default function DashboardScreen() {
           </View>
           <MaterialCommunityIcons name="chevron-right" size={22} color={palette.discordTextMuted} />
         </Pressable>
+
+        {/* Dev tools - only visible in development */}
+        {__DEV__ && (
+          <Pressable
+            onPress={() => {
+              AsyncStorage.removeItem('ultimatestats_last_seen_version').then(() => {
+                console.log('Version check reset - reload app to see badge');
+              });
+            }}
+            style={({ pressed }) => [
+              styles.discordBanner,
+              { backgroundColor: '#e53935' },
+              pressed && styles.menuItemPressed,
+            ]}>
+            <MaterialCommunityIcons name="bug" size={24} color="white" />
+            <View style={styles.discordText}>
+              <Text style={[styles.discordTitle, { color: 'white' }]}>Reset Version Check</Text>
+              <Text style={[styles.discordSubtitle, { color: 'rgba(255,255,255,0.7)' }]}>
+                DEV ONLY - Reload app after tapping
+              </Text>
+            </View>
+          </Pressable>
+        )}
       </ScrollView>
     </ThemedView>
   );
@@ -271,6 +314,20 @@ const styles = StyleSheet.create({
   menuItemLabel: {
     fontSize: 16,
     fontWeight: '600',
+  },
+  menuItemLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  newBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  newBadgeText: {
+    fontSize: 10,
+    fontWeight: '700',
   },
   menuItemDescription: {
     fontSize: 12,

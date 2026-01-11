@@ -53,6 +53,7 @@ export interface GameState {
   timerEndTime: number | null;
   timerTimeLeft: number;
   gameLocked: boolean;
+  currentGameId: string | null; // ID of saved game for current session (prevents duplicates on undo+re-win)
 
   // Stat Tracking
   statTrackingEnabled: boolean;

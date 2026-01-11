@@ -11,7 +11,13 @@ export const asyncStorageAdapter: Storage = {
     const games = await this.loadGames();
     // Add ID if not present
     const gameToSave = game.id ? game : { ...game, id: generateId() };
-    games.push(gameToSave);
+    // Update existing game or add new
+    const existingIndex = games.findIndex((g) => g.id === gameToSave.id);
+    if (existingIndex >= 0) {
+      games[existingIndex] = gameToSave;
+    } else {
+      games.push(gameToSave);
+    }
     await AsyncStorage.setItem(GAMES_KEY, JSON.stringify(games));
   },
 

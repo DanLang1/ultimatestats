@@ -37,6 +37,7 @@ export const useGameStore = create<GameState>()(
         timerEndTime: null,
         timerTimeLeft: 90 * 60,
         gameLocked: false,
+        currentGameId: null,
 
         // Stat Tracking Initial State
         statTrackingEnabled: false,
@@ -259,6 +260,7 @@ export const useGameStore = create<GameState>()(
             state.timerEndTime = null;
             state.timerTimeLeft = state.gameLength * 60;
             state.gameLocked = false;
+            state.currentGameId = null;
           }),
         setSoftCapPending: (pending: boolean) =>
           set((state: GameState) => {
@@ -398,7 +400,8 @@ export const useGameStore = create<GameState>()(
 
         saveCurrentGame: async () => {
           const state = get();
-          const gameId = generateId();
+          // Use existing gameId if we've already saved this game (e.g., after undo+re-win)
+          const gameId = state.currentGameId ?? generateId();
           // Stamp gameId on all events for aggregation lookups
           const eventsWithGameId = state.events.map((event) => ({
             ...event,
@@ -421,6 +424,7 @@ export const useGameStore = create<GameState>()(
           const games = await storage.loadGames();
           set((state: GameState) => {
             state.savedGames = games;
+            state.currentGameId = gameId; // Remember ID for subsequent saves
           });
         },
 
@@ -490,6 +494,7 @@ export const useGameStore = create<GameState>()(
           softCapMins: state.softCapMins,
           timerTimeLeft: state.timerTimeLeft,
           gameLocked: state.gameLocked,
+          currentGameId: state.currentGameId,
           statTrackingEnabled: state.statTrackingEnabled,
           events: state.events,
           currentPoint: state.currentPoint,

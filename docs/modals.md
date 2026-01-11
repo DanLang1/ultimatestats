@@ -117,3 +117,52 @@ export function useMyFeatureNavigation() {
 - `app/StatEntryModal.tsx` - Goal/assist entry after scoring
 - `app/TurnoverEntryModal.tsx` - Turnover type selection
 - `app/PullPromptModal.tsx` - Initial possession selection
+
+---
+
+## Popup Modals (Inline `<Modal>`)
+
+For simple confirmation dialogs or quick input modals, you can use React Native's `<Modal>` component directly. These are distinct from screen modals above.
+
+### Theming Tokens
+
+Always use these palette tokens for proper dark/light mode support:
+
+| Token                  | Usage                                   |
+| ---------------------- | --------------------------------------- |
+| `palette.overlayModal` | Backdrop (semi-transparent)             |
+| `palette.modalBg`      | Modal content background                |
+| `palette.modalText`    | Primary text color inside modal         |
+| `palette.overlay15`    | Modal border color                      |
+| `palette.accent`       | Cancel button text (outline style)      |
+| `palette.textOnAccent` | Save/confirm button text (filled style) |
+
+**⚠️ Do NOT use:** `palette.surface` or `palette.textPrimary` for modals - they invert between dark/light mode and will cause visibility issues.
+
+### Example
+
+```tsx
+<Modal visible={visible} transparent animationType="fade">
+  <Pressable
+    style={[styles.overlay, { backgroundColor: palette.overlayModal }]}
+    onPress={onDismiss}>
+    <View
+      style={[styles.content, { backgroundColor: palette.modalBg, borderColor: palette.overlay15 }]}
+      onStartShouldSetResponder={() => true}>
+      <Text style={{ color: palette.modalText }}>Modal Title</Text>
+      {/* Cancel button: outline style */}
+      <Pressable style={{ borderColor: palette.accent, borderWidth: 1 }}>
+        <Text style={{ color: palette.accent }}>Cancel</Text>
+      </Pressable>
+      {/* Save button: filled style */}
+      <Pressable style={{ backgroundColor: palette.accent }}>
+        <Text style={{ color: palette.textOnAccent }}>Save</Text>
+      </Pressable>
+    </View>
+  </Pressable>
+</Modal>
+```
+
+### Existing Popup Modals
+
+- `app/EditRoster.tsx` - Rename Team, New Team, Edit Player modals

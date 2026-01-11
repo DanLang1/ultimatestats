@@ -291,15 +291,27 @@ export default function SettingsScreen() {
 
             <View style={styles.inputsGrid}>
               <View style={styles.inputGroup}>
-                <Text style={[styles.inputLabel, textMutedStyle]}>GAME TO</Text>
+                <Text style={[styles.inputLabel, textMutedStyle]}>
+                  {gameActive && (
+                    <MaterialCommunityIcons name="lock" size={10} color={palette.textMuted} />
+                  )}{' '}
+                  GAME TO
+                </Text>
                 <TextInput
-                  style={[styles.inputStacked, borderStyle, textInverseStyle, inputBgStyle]}
+                  style={[
+                    styles.inputStacked,
+                    borderStyle,
+                    textInverseStyle,
+                    inputBgStyle,
+                    gameActive && styles.inputDisabled,
+                  ]}
                   defaultValue={gameTo.toString()}
                   onEndEditing={handleGameToEndEditing}
                   placeholder="15"
                   placeholderTextColor={palette.textMuted}
                   keyboardType="numeric"
                   maxLength={3}
+                  editable={!gameActive}
                 />
               </View>
 
@@ -308,7 +320,7 @@ export default function SettingsScreen() {
                   {gameActive && (
                     <MaterialCommunityIcons name="lock" size={10} color={palette.textMuted} />
                   )}{' '}
-                  GAME LENGTH
+                  HARD CAP
                 </Text>
                 <View style={styles.inputWithSuffix}>
                   <TextInput

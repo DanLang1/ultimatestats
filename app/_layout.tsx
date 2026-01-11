@@ -67,6 +67,7 @@ function RootLayoutInner() {
           <Stack.Screen name="Settings" />
           <Stack.Screen name="EditRoster" />
           <Stack.Screen name="GameInfo" />
+          <Stack.Screen name="About" />
           <Stack.Screen
             name="WinModal"
             options={{

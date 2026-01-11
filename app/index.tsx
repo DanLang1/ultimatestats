@@ -208,21 +208,41 @@ export default function BasicScoreboard() {
                 </Text>
               </Pressable>
 
-              <Pressable
-                style={[
-                  styles.lockedButton,
-                  {
-                    backgroundColor: palette.lockScreenBtnSecondaryBg,
-                    borderWidth: 1,
-                    borderColor: palette.lockScreenBtnSecondaryBorder,
-                  },
-                ]}
-                onPress={undo}>
-                <MaterialCommunityIcons name="undo" size={20} color={palette.lockScreenText} />
-                <Text style={[styles.lockedButtonText, { color: palette.lockScreenText }]}>
-                  Undo
-                </Text>
-              </Pressable>
+              <View style={styles.lockedButtonsRow}>
+                <Pressable
+                  style={[
+                    styles.lockedButton,
+                    styles.lockedButtonHalf,
+                    {
+                      backgroundColor: palette.lockScreenBtnSecondaryBg,
+                      borderWidth: 1,
+                      borderColor: palette.lockScreenBtnSecondaryBorder,
+                    },
+                  ]}
+                  onPress={() => router.push('/Dashboard')}>
+                  <MaterialCommunityIcons name="home" size={20} color={palette.lockScreenText} />
+                  <Text style={[styles.lockedButtonText, { color: palette.lockScreenText }]}>
+                    Home
+                  </Text>
+                </Pressable>
+
+                <Pressable
+                  style={[
+                    styles.lockedButton,
+                    styles.lockedButtonHalf,
+                    {
+                      backgroundColor: palette.lockScreenBtnSecondaryBg,
+                      borderWidth: 1,
+                      borderColor: palette.lockScreenBtnSecondaryBorder,
+                    },
+                  ]}
+                  onPress={undo}>
+                  <MaterialCommunityIcons name="undo" size={20} color={palette.lockScreenText} />
+                  <Text style={[styles.lockedButtonText, { color: palette.lockScreenText }]}>
+                    Undo
+                  </Text>
+                </Pressable>
+              </View>
             </View>
           </Animated.View>
         </View>
@@ -276,6 +296,13 @@ const styles = StyleSheet.create({
     gap: 12,
     width: '100%',
     maxWidth: 280,
+  },
+  lockedButtonsRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  lockedButtonHalf: {
+    flex: 1,
   },
   lockedButton: {
     flexDirection: 'row',

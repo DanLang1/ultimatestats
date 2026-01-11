@@ -494,11 +494,16 @@ export default function EditRosterScreen() {
 
       {/* Rename Team Modal */}
       <Modal visible={renameModalVisible} transparent animationType="fade">
-        <Pressable style={styles.modalOverlay} onPress={() => setRenameModalVisible(false)}>
+        <Pressable
+          style={[styles.modalOverlay, { backgroundColor: palette.overlayModal }]}
+          onPress={() => setRenameModalVisible(false)}>
           <View
-            style={[styles.modalContent, { backgroundColor: palette.surface }]}
+            style={[
+              styles.modalContent,
+              { backgroundColor: palette.modalBg, borderColor: palette.overlay15 },
+            ]}
             onStartShouldSetResponder={() => true}>
-            <Text style={[styles.modalTitle, { color: palette.textPrimary }]}>Rename Team</Text>
+            <Text style={[styles.modalTitle, { color: palette.modalText }]}>Rename Team</Text>
             <TextInput
               style={[
                 styles.modalInput,
@@ -529,14 +534,11 @@ export default function EditRosterScreen() {
                     backgroundColor: 'transparent',
                     borderColor: palette.accent,
                     borderWidth: 1,
-                    color: palette.textOnAccent,
                   },
                   pressed && styles.buttonPressed,
                 ]}
                 onPress={() => setRenameModalVisible(false)}>
-                <Text style={[styles.modalCancelText, { color: palette.textOnAccent }]}>
-                  Cancel
-                </Text>
+                <Text style={[styles.modalCancelText, { color: palette.accent }]}>Cancel</Text>
               </Pressable>
               <Pressable
                 style={({ pressed }) => [
@@ -562,11 +564,16 @@ export default function EditRosterScreen() {
 
       {/* New Team Modal */}
       <Modal visible={newTeamModalVisible} transparent animationType="fade">
-        <Pressable style={styles.modalOverlay} onPress={() => setNewTeamModalVisible(false)}>
+        <Pressable
+          style={[styles.modalOverlay, { backgroundColor: palette.overlayModal }]}
+          onPress={() => setNewTeamModalVisible(false)}>
           <View
-            style={[styles.modalContent, { backgroundColor: palette.surface }]}
+            style={[
+              styles.modalContent,
+              { backgroundColor: palette.modalBg, borderColor: palette.overlay15 },
+            ]}
             onStartShouldSetResponder={() => true}>
-            <Text style={[styles.modalTitle, { color: palette.textPrimary }]}>New Team</Text>
+            <Text style={[styles.modalTitle, { color: palette.modalText }]}>New Team</Text>
             <TextInput
               style={[
                 styles.modalInput,
@@ -601,9 +608,7 @@ export default function EditRosterScreen() {
                   pressed && styles.buttonPressed,
                 ]}
                 onPress={() => setNewTeamModalVisible(false)}>
-                <Text style={[styles.modalCancelText, { color: palette.textOnAccent }]}>
-                  Cancel
-                </Text>
+                <Text style={[styles.modalCancelText, { color: palette.accent }]}>Cancel</Text>
               </Pressable>
               <Pressable
                 style={({ pressed }) => [
