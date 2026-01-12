@@ -98,6 +98,7 @@ export default function BasicScoreboard() {
       team2Score: useGameStore.getState().team2Score,
       gameTo: useGameStore.getState().gameTo,
       timerTimeLeft: useGameStore.getState().timerTimeLeft,
+      isGameForcedOver: useGameStore.getState().isGameForcedOver,
     });
 
     if (isGameOver) {

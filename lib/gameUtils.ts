@@ -7,6 +7,7 @@ export interface GameOverState {
   team2Score: number;
   gameTo: number;
   timerTimeLeft: number;
+  isGameForcedOver?: boolean;
 }
 
 /**
@@ -15,9 +16,14 @@ export interface GameOverState {
  * - Normal: game ends when one team reaches gameTo and is ahead
  * - Softcap: gameTo is adjusted to higherScore + 1 after point completes
  * - Hardcap (timer = 0): game ends if one team is ahead (universe point rule)
+ * - Forced: game ends if isGameForcedOver is true
  */
 export function checkGameOver(state: GameOverState): boolean {
-  const { team1Score, team2Score, gameTo, timerTimeLeft } = state;
+  const { team1Score, team2Score, gameTo, timerTimeLeft, isGameForcedOver } = state;
+
+  if (isGameForcedOver) {
+    return true;
+  }
 
   const isHardcap = timerTimeLeft === 0;
   const notTied = team1Score !== team2Score;

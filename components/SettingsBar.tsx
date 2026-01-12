@@ -68,7 +68,7 @@ export default function SettingsBar({ onUndo }: SettingsBarProps) {
       </Pressable>
 
       {/* Settings */}
-      <Pressable onPress={() => router.push('/Settings')} style={styles.iconButton}>
+      <Pressable onPress={() => router.push('/Settings')} style={styles.iconButton} testID="settings-button">
         <MaterialCommunityIcons name="cog" size={24} color={barContentColor} />
       </Pressable>
 

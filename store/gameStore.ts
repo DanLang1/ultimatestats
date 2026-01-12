@@ -36,6 +36,7 @@ export const useGameStore = create<GameState>()(
         timerIsActive: false,
         timerEndTime: null,
         timerTimeLeft: 90 * 60,
+        isGameForcedOver: false,
         gameLocked: false,
         currentGameId: null,
 
@@ -182,6 +183,13 @@ export const useGameStore = create<GameState>()(
         undoLastAction: () => {
           let result = false;
           set((state: GameState) => {
+            // If the game was forced over, undoing just unlocks it
+            if (state.isGameForcedOver) {
+              state.isGameForcedOver = false;
+              state.gameLocked = false;
+              return;
+            }
+
             const lastEvent = state.events[state.events.length - 1];
             if (!lastEvent) {
               result = false;
@@ -259,9 +267,17 @@ export const useGameStore = create<GameState>()(
             state.timerIsActive = false;
             state.timerEndTime = null;
             state.timerTimeLeft = state.gameLength * 60;
+            state.isGameForcedOver = false;
             state.gameLocked = false;
             state.currentGameId = null;
           }),
+
+        forceGameOver: () =>
+          set((state: GameState) => {
+            state.isGameForcedOver = true;
+            state.gameLocked = true;
+          }),
+
         setSoftCapPending: (pending: boolean) =>
           set((state: GameState) => {
             state.softCapPending = pending;

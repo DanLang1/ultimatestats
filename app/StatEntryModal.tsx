@@ -36,6 +36,7 @@ export default function StatEntryScreen() {
       team2Score: state.team2Score,
       gameTo: state.gameTo,
       timerTimeLeft: state.timerTimeLeft,
+      isGameForcedOver: state.isGameForcedOver,
     });
 
     if (isGameOver) {
@@ -62,6 +63,7 @@ export default function StatEntryScreen() {
       team2Score: state.team2Score,
       gameTo: state.gameTo,
       timerTimeLeft: state.timerTimeLeft,
+      isGameForcedOver: state.isGameForcedOver,
     });
 
     if (isGameOver) {

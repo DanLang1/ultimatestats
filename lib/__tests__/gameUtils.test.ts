@@ -63,6 +63,14 @@ describe('checkGameOver', () => {
     it('handles game to 1', () => {
       expect(checkGameOver({ ...baseState, gameTo: 1, team1Score: 1, team2Score: 0 })).toBe(true);
     });
+
+    it('returns true when game is forced over', () => {
+      expect(checkGameOver({ ...baseState, isGameForcedOver: true })).toBe(true);
+    });
+
+    it('returns true when game is forced over even if scores are 0-0', () => {
+      expect(checkGameOver({ ...baseState, team1Score: 0, team2Score: 0, isGameForcedOver: true })).toBe(true);
+    });
   });
 });
 

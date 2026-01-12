@@ -32,6 +32,7 @@ export default function WinModal() {
     team2Score,
     gameTo,
     timerTimeLeft,
+    isGameForcedOver: useGameStore((state) => state.isGameForcedOver),
   });
 
   // If game isn't over, don't render

@@ -45,6 +45,7 @@ export default function SettingsScreen() {
     team2Score,
     savedTeams,
     saveCurrentTeam,
+    forceGameOver,
   } = useGameStore();
 
   const { confirmNewGame } = useNewGame();
@@ -140,6 +141,24 @@ export default function SettingsScreen() {
     resetTimeouts(num);
   };
 
+  const handleEndGameEarly = () => {
+    showAlert({
+      title: 'End Game Early?',
+      message: 'This will end the current game with the score as-is. This action cannot be undone.',
+      buttons: [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'End Game',
+          style: 'destructive',
+          onPress: () => {
+            forceGameOver();
+            router.push('/WinModal');
+          },
+        },
+      ],
+    });
+  };
+
   const gameActive = timerIsActive || team1Score !== 0 || team2Score !== 0;
 
   // Dynamic Styles
@@ -177,15 +196,29 @@ export default function SettingsScreen() {
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {gameActive && (
-          <View
-            style={[
-              styles.activeGameBanner,
-              { backgroundColor: palette.warning + '15', borderColor: palette.warning + '30' },
-            ]}>
-            <MaterialCommunityIcons name="lock-outline" size={16} color={palette.warning} />
-            <Text style={[styles.activeGameBannerText, { color: palette.warning }]}>
-              Game in progress: some settings are locked
-            </Text>
+          <View style={styles.bannerContainer}>
+            <View
+              style={[
+                styles.activeGameBanner,
+                { backgroundColor: palette.warning + '15', borderColor: palette.warning + '30' },
+              ]}>
+              <MaterialCommunityIcons name="lock-outline" size={16} color={palette.warning} />
+              <Text style={[styles.activeGameBannerText, { color: palette.warning }]}>
+                Game in progress: some settings are locked
+              </Text>
+            </View>
+            <Pressable
+              onPress={handleEndGameEarly}
+              style={({ pressed }) => [
+                styles.endGameButton,
+                { backgroundColor: palette.error + '15', borderColor: palette.error + '30' },
+                pressed && styles.buttonPressed,
+              ]}>
+              <MaterialCommunityIcons name="flag-checkered" size={16} color={palette.error} />
+              <Text style={[styles.endGameButtonText, { color: palette.error }]}>
+                End Game Early
+              </Text>
+            </Pressable>
           </View>
         )}
         <View style={styles.columnsContainer}>
@@ -646,6 +679,10 @@ const styles = StyleSheet.create({
     padding: 4,
     borderRadius: 12,
   },
+  bannerContainer: {
+    gap: 12,
+    marginBottom: 20,
+  },
   activeGameBanner: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -654,11 +691,24 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     borderRadius: 12,
     borderWidth: 1,
-    marginBottom: 20,
   },
   activeGameBannerText: {
     fontSize: 13,
     fontWeight: '600',
     flex: 1,
+  },
+  endGameButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  endGameButtonText: {
+    fontSize: 13,
+    fontWeight: '700',
   },
 });
