@@ -1,8 +1,8 @@
 # Project Overview
 
-> Quick reference for the UltimateStats codebase.
+> Quick reference for the U-Stat codebase.
 
-## What is UltimateStats?
+## What is U-Stat?
 
 A mobile app for tracking Ultimate Frisbee game scores and player statistics, built with React Native + Expo.
 
