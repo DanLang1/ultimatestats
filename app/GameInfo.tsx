@@ -3,6 +3,7 @@ import HelpContent from '@/components/HelpContent';
 import { ThemedView } from '@/components/ThemedView';
 import FlashingIcon from '@/components/ui/FlashingIcon';
 import { useTheme } from '@/context/ThemeContext';
+import { useEndGame } from '@/hooks/useEndGame';
 import { useGameTimer } from '@/hooks/useGameTimer';
 import { useGameStore } from '@/store/gameStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
@@ -19,6 +20,7 @@ export default function GameInfoScreen() {
     team2Timeouts,
     team1Floater,
     team2Floater,
+    floaterEnabled,
     team1Score,
     team2Score,
     isSoftCap,
@@ -32,6 +34,7 @@ export default function GameInfoScreen() {
   const isHardcap = timeLeft === 0;
 
   const { palette } = useTheme();
+  const { confirmEndGame } = useEndGame();
 
   const countTimeoutsRemaining = (timeouts: boolean[]) => timeouts.filter((t) => t).length;
 
@@ -139,6 +142,20 @@ export default function GameInfoScreen() {
           </View>
         </View>
 
+        {/* End Game Button */}
+        <Pressable
+          style={({ pressed }) => [
+            styles.endGameButton,
+            { borderColor: palette.overlay20 },
+            pressed && styles.endGameButtonPressed,
+          ]}
+          onPress={confirmEndGame}>
+          <MaterialCommunityIcons name="flag-checkered" size={18} color={palette.textMuted} />
+          <Text style={[styles.endGameButtonText, { color: palette.textMuted }]}>
+            End Game Early
+          </Text>
+        </Pressable>
+
         <View style={[styles.divider, { backgroundColor: palette.overlay10 }]} />
 
         {/* Timeouts Section */}
@@ -149,6 +166,7 @@ export default function GameInfoScreen() {
             <TimeoutCounter
               count={countTimeoutsRemaining(team1Timeouts)}
               hasFloater={team1Floater}
+              floaterEnabled={floaterEnabled}
             />
           </View>
 
@@ -159,6 +177,7 @@ export default function GameInfoScreen() {
             <TimeoutCounter
               count={countTimeoutsRemaining(team2Timeouts)}
               hasFloater={team2Floater}
+              floaterEnabled={floaterEnabled}
             />
           </View>
         </View>
@@ -267,6 +286,28 @@ const styles = StyleSheet.create({
   scoreDivider: {
     fontSize: 24,
     fontWeight: '300',
+  },
+
+  // End Game Button
+  endGameButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 10,
+    borderWidth: 1,
+    alignSelf: 'center',
+    marginBottom: 8,
+  },
+  endGameButtonPressed: {
+    opacity: 0.7,
+    transform: [{ scale: 0.98 }],
+  },
+  endGameButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
   },
 
   divider: {

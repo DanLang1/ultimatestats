@@ -6,40 +6,45 @@ import { StyleSheet, Text, View } from 'react-native';
 interface TimeoutCounterProps {
   count: number;
   hasFloater: boolean;
+  floaterEnabled: boolean;
 }
 
-export function TimeoutCounter({ count, hasFloater }: TimeoutCounterProps) {
+export function TimeoutCounter({ count, hasFloater, floaterEnabled }: TimeoutCounterProps) {
   const { palette } = useTheme();
 
   return (
     <View style={styles.timeoutContainer}>
       <View style={styles.countRow}>
         <Text style={[styles.timeoutNumber, { color: palette.success }]}>{count}</Text>
-        <View style={styles.floaterBadge}>
-          <Text
-            style={[
-              styles.floaterText,
-              { color: hasFloater ? palette.success : palette.textMuted },
-            ]}>
-            (
-          </Text>
-          <MaterialCommunityIcons
-            name={hasFloater ? 'rhombus' : 'rhombus-outline'}
-            size={14}
-            color={hasFloater ? palette.success : palette.textMuted}
-          />
-          <Text
-            style={[
-              styles.floaterText,
-              { color: hasFloater ? palette.success : palette.textMuted },
-            ]}>
-            {hasFloater ? '+1' : '0'})
-          </Text>
-        </View>
+        {floaterEnabled && (
+          <View style={styles.floaterBadge}>
+            <Text
+              style={[
+                styles.floaterText,
+                { color: hasFloater ? palette.success : palette.textMuted },
+              ]}>
+              (
+            </Text>
+            <MaterialCommunityIcons
+              name={hasFloater ? 'rhombus' : 'rhombus-outline'}
+              size={14}
+              color={hasFloater ? palette.success : palette.textMuted}
+            />
+            <Text
+              style={[
+                styles.floaterText,
+                { color: hasFloater ? palette.success : palette.textMuted },
+              ]}>
+              {hasFloater ? '+1' : '0'})
+            </Text>
+          </View>
+        )}
       </View>
-      <Text style={[styles.floaterLabel, { color: palette.textMuted }]}>
-        {hasFloater ? 'floater available' : 'floater used'}
-      </Text>
+      {floaterEnabled && (
+        <Text style={[styles.floaterLabel, { color: palette.textMuted }]}>
+          {hasFloater ? 'floater available' : 'floater used'}
+        </Text>
+      )}
     </View>
   );
 }
