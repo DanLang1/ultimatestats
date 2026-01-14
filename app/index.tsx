@@ -5,6 +5,7 @@ import { ThemedView } from '@/components/ThemedView';
 import StatsTrackingTutorial from '@/components/tutorial/StatsTrackingTutorial';
 import TutorialOverlay from '@/components/tutorial/TutorialOverlay';
 import { useTheme } from '@/context/ThemeContext';
+import { useHalftimeNavigation } from '@/hooks/useHalftimeNavigation';
 import { usePullPromptNavigation } from '@/hooks/usePullPromptNavigation';
 import { getContrastingTextColor } from '@/lib/colorUtils';
 import { checkGameOver } from '@/lib/gameUtils';
@@ -79,14 +80,20 @@ export default function BasicScoreboard() {
   // Show PullPrompt modal when stat tracking enabled and no possession set
   usePullPromptNavigation();
 
-  // Show PullPrompt modal when stat tracking enabled and no possession set
-  usePullPromptNavigation();
+  // Show HalftimeModal when halftime break is active
+  useHalftimeNavigation();
 
   const handleIncrement = (isTeam1: boolean) => {
-    const didIncrement = incrementScore(isTeam1);
+    const { didIncrement, isHalftime } = incrementScore(isTeam1);
 
     // If game was already over, don't navigate anywhere
     if (!didIncrement) return;
+
+    // Halftime reached - show halftime modal
+    if (isHalftime) {
+      router.push('/HalftimeModal');
+      return;
+    }
 
     // Only open stat entry for team1 (my team) goals
     if (statTrackingEnabled && isTeam1) {

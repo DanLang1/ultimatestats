@@ -55,6 +55,11 @@ export interface GameState {
   gameLocked: boolean;
   currentGameId: string | null; // ID of saved game for current session (prevents duplicates on undo+re-win)
 
+  // Halftime Break
+  isHalftimeBreak: boolean;
+  halftimeEndTime: number | null; // Absolute timestamp when halftime timer ends
+  halftimeTimeLeft: number; // Seconds remaining in halftime break
+
   // Stat Tracking
   statTrackingEnabled: boolean;
   events: GameEvent[]; // Unified event log
@@ -76,7 +81,7 @@ export interface GameState {
   setAutoHalftimeEnabled: (enabled: boolean) => void;
   setGameTo: (score: number) => void;
   setGameLength: (minutes: number) => void;
-  incrementScore: (isTeam1: boolean) => boolean; // Returns true if score was incremented
+  incrementScore: (isTeam1: boolean) => { didIncrement: boolean; isHalftime: boolean };
   undoLastAction: () => boolean; // Returns true if something was undone
   toggleTimeout: (isTeam1: boolean, index: number) => void;
   resetTimeouts: (count: number) => void;
@@ -87,6 +92,10 @@ export interface GameState {
   setTimerEndTime: (time: number | null) => void;
   setTimerTimeLeft: (seconds: number) => void;
   setGameLocked: (locked: boolean) => void;
+  setHalftimeBreak: (active: boolean) => void;
+  setHalftimeEndTime: (time: number | null) => void;
+  setHalftimeTimeLeft: (seconds: number) => void;
+  clearHalftimeBreak: () => void;
 
   // Stat Tracking Actions
   setStatTrackingEnabled: (enabled: boolean) => void;

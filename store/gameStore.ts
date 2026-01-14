@@ -39,6 +39,11 @@ export const useGameStore = create<GameState>()(
         gameLocked: false,
         currentGameId: null,
 
+        // Halftime Break Initial State
+        isHalftimeBreak: false,
+        halftimeEndTime: null,
+        halftimeTimeLeft: 7 * 60, // 7 minutes default
+
         // Stat Tracking Initial State
         statTrackingEnabled: false,
         events: [], // Unified event log
@@ -96,6 +101,7 @@ export const useGameStore = create<GameState>()(
 
         incrementScore: (isTeam1: boolean) => {
           let didIncrement = false;
+          let isHalftime = false;
           set((state: GameState) => {
             // Guard: Prevent scoring past gameTo (race condition prevention)
             // This is a simpler check than checkGameOver to allow mid-point scoring at hardcap.
@@ -116,6 +122,7 @@ export const useGameStore = create<GameState>()(
             else state.team2Score = newScore;
 
             didIncrement = true;
+            isHalftime = isHalftimeGoal;
 
             // Soft Cap Logic - per USAU 6.D.1:
             // "At the soft cap, play continues until the current scoring attempt is completed.
@@ -134,11 +141,12 @@ export const useGameStore = create<GameState>()(
               state.gameTo = highestScore + 1;
             }
 
-            // Halftime: reset timeouts
+            // Halftime: reset timeouts and set halftime break
             if (isHalftimeGoal) {
               state.gameHalf = 2;
               state.team1Timeouts.fill(true);
               state.team2Timeouts.fill(true);
+              state.isHalftimeBreak = true;
             }
 
             state.currentPoint++;
@@ -176,7 +184,7 @@ export const useGameStore = create<GameState>()(
               });
             }
           });
-          return didIncrement;
+          return { didIncrement, isHalftime };
         },
 
         undoLastAction: () => {
@@ -261,6 +269,9 @@ export const useGameStore = create<GameState>()(
             state.timerTimeLeft = state.gameLength * 60;
             state.gameLocked = false;
             state.currentGameId = null;
+            state.isHalftimeBreak = false;
+            state.halftimeEndTime = null;
+            state.halftimeTimeLeft = 7 * 60;
           }),
         setSoftCapPending: (pending: boolean) =>
           set((state: GameState) => {
@@ -290,6 +301,28 @@ export const useGameStore = create<GameState>()(
         setGameLocked: (locked: boolean) =>
           set((state: GameState) => {
             state.gameLocked = locked;
+          }),
+
+        setHalftimeBreak: (active: boolean) =>
+          set((state: GameState) => {
+            state.isHalftimeBreak = active;
+          }),
+
+        setHalftimeEndTime: (time: number | null) =>
+          set((state: GameState) => {
+            state.halftimeEndTime = time;
+          }),
+
+        setHalftimeTimeLeft: (seconds: number) =>
+          set((state: GameState) => {
+            state.halftimeTimeLeft = seconds;
+          }),
+
+        clearHalftimeBreak: () =>
+          set((state: GameState) => {
+            state.isHalftimeBreak = false;
+            state.halftimeEndTime = null;
+            state.halftimeTimeLeft = 7 * 60;
           }),
 
         // Stat Tracking Actions
@@ -495,6 +528,9 @@ export const useGameStore = create<GameState>()(
           timerTimeLeft: state.timerTimeLeft,
           gameLocked: state.gameLocked,
           currentGameId: state.currentGameId,
+          isHalftimeBreak: state.isHalftimeBreak,
+          halftimeEndTime: state.halftimeEndTime,
+          halftimeTimeLeft: state.halftimeTimeLeft,
           statTrackingEnabled: state.statTrackingEnabled,
           events: state.events,
           currentPoint: state.currentPoint,
