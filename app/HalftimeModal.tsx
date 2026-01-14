@@ -140,22 +140,33 @@ export default function HalftimeModal() {
               </View>
 
               {!hasStats && (
-                <Pressable
-                  onPress={onContinue}
-                  style={({ pressed }) => [
-                    styles.continueBtnCompact,
-                    { backgroundColor: palette.accent, marginTop: 24, width: '80%' },
-                    pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
-                  ]}>
-                  <Text style={[styles.continueBtnTextCompact, { color: palette.textOnAccent }]}>
-                    START 2ND HALF
-                  </Text>
-                  <MaterialCommunityIcons
-                    name="arrow-right"
-                    size={16}
-                    color={palette.textOnAccent}
-                  />
-                </Pressable>
+                <View style={[styles.buttonRow, { marginTop: 24 }]}>
+                  <Pressable
+                    onPress={() => router.navigate('/Dashboard')}
+                    style={({ pressed }) => [
+                      styles.homeBtn,
+                      { borderColor: palette.textMuted },
+                      pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
+                    ]}>
+                    <MaterialCommunityIcons name="home" size={20} color={palette.textInverse} />
+                  </Pressable>
+                  <Pressable
+                    onPress={onContinue}
+                    style={({ pressed }) => [
+                      styles.continueBtnCompact,
+                      { backgroundColor: palette.accent, flex: 1 },
+                      pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
+                    ]}>
+                    <Text style={[styles.continueBtnTextCompact, { color: palette.textOnAccent }]}>
+                      START 2ND HALF
+                    </Text>
+                    <MaterialCommunityIcons
+                      name="arrow-right"
+                      size={16}
+                      color={palette.textOnAccent}
+                    />
+                  </Pressable>
+                </View>
               )}
             </View>
 
@@ -218,22 +229,33 @@ export default function HalftimeModal() {
                   ))}
                 </View>
 
-                <Pressable
-                  onPress={onContinue}
-                  style={({ pressed }) => [
-                    styles.continueBtnCompact,
-                    { backgroundColor: palette.accent, marginTop: 16 },
-                    pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
-                  ]}>
-                  <Text style={[styles.continueBtnTextCompact, { color: palette.textOnAccent }]}>
-                    START 2ND HALF
-                  </Text>
-                  <MaterialCommunityIcons
-                    name="arrow-right"
-                    size={16}
-                    color={palette.textOnAccent}
-                  />
-                </Pressable>
+                <View style={[styles.buttonRow, { marginTop: 16 }]}>
+                  <Pressable
+                    onPress={() => router.navigate('/Dashboard')}
+                    style={({ pressed }) => [
+                      styles.homeBtn,
+                      { borderColor: palette.textMuted },
+                      pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
+                    ]}>
+                    <MaterialCommunityIcons name="home" size={20} color={palette.textInverse} />
+                  </Pressable>
+                  <Pressable
+                    onPress={onContinue}
+                    style={({ pressed }) => [
+                      styles.continueBtnCompact,
+                      { backgroundColor: palette.accent, flex: 1 },
+                      pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
+                    ]}>
+                    <Text style={[styles.continueBtnTextCompact, { color: palette.textOnAccent }]}>
+                      START 2ND HALF
+                    </Text>
+                    <MaterialCommunityIcons
+                      name="arrow-right"
+                      size={16}
+                      color={palette.textOnAccent}
+                    />
+                  </Pressable>
+                </View>
               </View>
             )}
           </View>
@@ -431,5 +453,16 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '800',
     letterSpacing: 1,
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    width: '80%',
+  },
+  homeBtn: {
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
   },
 });

@@ -208,6 +208,12 @@ export const useGameStore = create<GameState>()(
               if (isTeam1) state.team1Score--;
               else state.team2Score--;
 
+              // Reset gameHalf to 1 if undo brings both scores below halftime threshold
+              const halftimeScore = Math.ceil(state.gameTo / 2);
+              if (state.team1Score < halftimeScore && state.team2Score < halftimeScore) {
+                state.gameHalf = 1;
+              }
+
               state.possession = lastEvent.team;
               state.pendingStatEntry = null;
               state.currentPoint = Math.max(1, state.currentPoint - 1);

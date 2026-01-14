@@ -1,18 +1,23 @@
 import { useGameStore } from '@/store/gameStore';
-import { router } from 'expo-router';
-import { useEffect } from 'react';
+import { router, useFocusEffect } from 'expo-router';
+import { useCallback } from 'react';
 
 /**
  * Navigates to HalftimeModal when isHalftimeBreak is true.
- * This handles the case where user navigates away during halftime
- * and returns to the scoreboard - the modal will re-show.
+ * Uses useFocusEffect to ensure the modal shows every time the
+ * scoreboard gains focus (e.g., after completing stat entry).
+ *
+ * Waits for pendingStatEntry to be cleared first - stat entry takes priority.
  */
 export function useHalftimeNavigation() {
-  const { isHalftimeBreak } = useGameStore();
+  const { isHalftimeBreak, pendingStatEntry } = useGameStore();
 
-  useEffect(() => {
-    if (isHalftimeBreak) {
-      router.push('/HalftimeModal');
-    }
-  }, [isHalftimeBreak]);
+  useFocusEffect(
+    useCallback(() => {
+      // Only show halftime modal after stat entry is complete
+      if (isHalftimeBreak && !pendingStatEntry) {
+        router.push('/HalftimeModal');
+      }
+    }, [isHalftimeBreak, pendingStatEntry]),
+  );
 }

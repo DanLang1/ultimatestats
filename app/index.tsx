@@ -89,17 +89,20 @@ export default function BasicScoreboard() {
     // If game was already over, don't navigate anywhere
     if (!didIncrement) return;
 
-    // Halftime reached - show halftime modal
+    // Team1 goals with stat tracking: always go to stat entry first
+    // After stat entry completes, halftime modal will show via useHalftimeNavigation
+    // (since isHalftimeBreak is already set in incrementScore)
+    if (statTrackingEnabled && isTeam1) {
+      router.push('/StatEntryModal');
+      return;
+    }
+
+    // Halftime reached (team2 goal or no stat tracking) - show halftime modal
     if (isHalftime) {
       router.push('/HalftimeModal');
       return;
     }
 
-    // Only open stat entry for team1 (my team) goals
-    if (statTrackingEnabled && isTeam1) {
-      router.push('/StatEntryModal');
-      return;
-    }
     const isGameOver = checkGameOver({
       team1Score: useGameStore.getState().team1Score,
       team2Score: useGameStore.getState().team2Score,

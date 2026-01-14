@@ -131,14 +131,24 @@ export default function GameInfoScreen() {
 
         {/* Current Score */}
         <View style={styles.scoreSection}>
-          <View style={styles.scoreTeam}>
-            <Text style={[styles.scoreTeamName, { color: palette.textMuted }]}>{team1Name}</Text>
+          <View style={[styles.scoreTeam, { justifyContent: 'flex-end' }]}>
+            <Text
+              style={[styles.scoreTeamName, { color: palette.textMuted, textAlign: 'right' }]}
+              numberOfLines={1}
+              ellipsizeMode="tail">
+              {team1Name}
+            </Text>
             <Text style={[styles.scoreValue, { color: palette.textInverse }]}>{team1Score}</Text>
           </View>
           <Text style={[styles.scoreDivider, { color: palette.textMuted }]}>-</Text>
-          <View style={styles.scoreTeam}>
+          <View style={[styles.scoreTeam, { justifyContent: 'flex-start' }]}>
             <Text style={[styles.scoreValue, { color: palette.textInverse }]}>{team2Score}</Text>
-            <Text style={[styles.scoreTeamName, { color: palette.textMuted }]}>{team2Name}</Text>
+            <Text
+              style={[styles.scoreTeamName, { color: palette.textMuted, textAlign: 'left' }]}
+              numberOfLines={1}
+              ellipsizeMode="tail">
+              {team2Name}
+            </Text>
           </View>
         </View>
 
@@ -266,7 +276,6 @@ const styles = StyleSheet.create({
   scoreSection: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
     marginBottom: 24,
     gap: 16,
   },
@@ -274,10 +283,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
+    flex: 1,
   },
   scoreTeamName: {
     fontSize: 14,
     fontWeight: '600',
+    flexShrink: 1,
   },
   scoreValue: {
     fontSize: 32,

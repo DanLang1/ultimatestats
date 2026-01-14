@@ -1,7 +1,6 @@
 import { useGameStore } from '@/store/gameStore';
 import { useEffect } from 'react';
 
-const DEFAULT_HALFTIME_SECONDS = 7 * 60;
 const MIN_SECONDS = 0;
 const MAX_SECONDS = 15 * 60;
 
