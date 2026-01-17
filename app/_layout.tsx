@@ -27,6 +27,7 @@ function RootLayoutInner() {
         <Stack
           screenOptions={{
             headerShown: false,
+            animation: 'none',
             contentStyle: { backgroundColor: palette.primary },
           }}>
           <Stack.Screen name="index" />
@@ -62,7 +63,7 @@ function RootLayoutInner() {
               contentStyle: { backgroundColor: 'transparent' },
             }}
           />
-          <Stack.Screen name="PlayerStats" options={{ animation: 'none' }} />
+          <Stack.Screen name="PlayerStats" />
           <Stack.Screen name="ViewStats" />
           <Stack.Screen name="Settings" />
           <Stack.Screen name="EditRoster" />
@@ -94,6 +95,14 @@ function RootLayoutInner() {
           />
           <Stack.Screen
             name="HalftimeModal"
+            options={{
+              presentation: 'transparentModal',
+              gestureEnabled: false,
+              contentStyle: { backgroundColor: 'transparent' },
+            }}
+          />
+          <Stack.Screen
+            name="EditEventModal"
             options={{
               presentation: 'transparentModal',
               gestureEnabled: false,

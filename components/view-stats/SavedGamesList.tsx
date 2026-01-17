@@ -1,8 +1,10 @@
 import { useAlert } from '@/components/ui/AlertProvider';
 import { ScoreBadge } from '@/components/ui/ScoreBadge';
 import { useTheme } from '@/context/ThemeContext';
+import { resolveTeamName } from '@/lib/playerUtils';
 import { formatDate } from '@/lib/statsUtils';
 import { SavedGame } from '@/lib/storage';
+import { useGameStore } from '@/store/gameStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
@@ -17,11 +19,17 @@ interface SavedGamesListProps {
 export default function SavedGamesList({ games, onSelectGame, onDeleteGame }: SavedGamesListProps) {
   const { showAlert } = useAlert();
   const { palette } = useTheme();
+  const { savedTeams } = useGameStore();
+
+  // Helper to get live team name with snapshot fallback
+  const getTeamName = (game: SavedGame) =>
+    resolveTeamName(game.team1.id, game.team1.name, savedTeams);
 
   const handleDelete = (game: SavedGame) => {
+    const teamName = getTeamName(game);
     showAlert({
       title: 'Delete Game?',
-      message: `Delete ${game.team1.name} vs ${game.team2Name} (${game.team1Score}-${game.team2Score})?`,
+      message: `Delete ${teamName} vs ${game.team2Name} (${game.team1Score}-${game.team2Score})?`,
       buttons: [
         { text: 'Cancel', style: 'cancel' },
         { text: 'Delete', style: 'destructive', onPress: () => onDeleteGame(game.id) },
@@ -69,7 +77,7 @@ export default function SavedGamesList({ games, onSelectGame, onDeleteGame }: Sa
                 <Text
                   style={[styles.savedGameTeamName, { color: palette.textInverse }]}
                   numberOfLines={1}>
-                  {game.team1.name}
+                  {getTeamName(game)}
                 </Text>
                 <ScoreBadge score1={game.team1Score} score2={game.team2Score} />
                 <Text

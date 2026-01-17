@@ -1,9 +1,10 @@
 import { useTheme } from '@/context/ThemeContext';
 import { getPlayerName } from '@/lib/playerUtils';
 import { Player } from '@/lib/storage/types';
-import { PointEvents } from '@/lib/timelineUtils';
+import { DisplayTurnover, PointEvents } from '@/lib/timelineUtils';
+import * as Haptics from 'expo-haptics';
 import React from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 interface EventTimelineProps {
   points: PointEvents[];
@@ -11,6 +12,13 @@ interface EventTimelineProps {
   team2Name: string;
   gameTo: number;
   roster: Player[];
+  currentPoint?: number; // For live games: disable editing of current point
+  onEditEvent?: (eventIndex: number, turnover: DisplayTurnover) => void;
+  onEditGoal?: (
+    eventIndex: number,
+    playerId: string | null,
+    editField: 'scorer' | 'assist',
+  ) => void;
 }
 
 export default function EventTimeline({
@@ -19,8 +27,16 @@ export default function EventTimeline({
   team2Name,
   gameTo,
   roster,
+  currentPoint,
+  onEditEvent,
+  onEditGoal,
 }: EventTimelineProps) {
   const { palette } = useTheme();
+
+  const handleLongPressTurnover = (turnover: DisplayTurnover) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+    onEditEvent?.(turnover.eventIndex, turnover);
+  };
 
   const finalScore =
     points.length > 0 ? points[points.length - 1].scoreAfter : { team1: 0, team2: 0 };
@@ -134,37 +150,46 @@ export default function EventTimeline({
                     (index === 0 && callahanBlockIndex !== 0) ||
                     (index === 1 && callahanBlockIndex === 0);
 
+                  // Disable editing for current point in live games
+                  const isCurrentPoint =
+                    currentPoint !== undefined && point.pointNumber === currentPoint;
+                  const canEdit = onEditEvent && !isCurrentPoint && !isOpponent;
+
                   return (
                     <React.Fragment key={`turnover-${index}`}>
                       {index > 0 && !isFirstVisible && (
                         <Text style={[styles.arrow, { color: palette.textMuted }]}>→</Text>
                       )}
-                      <View
-                        style={[
-                          styles.eventRow,
-                          { backgroundColor: isOpponent ? palette.overlay10 : bgColor },
-                        ]}>
-                        <Text
+                      <Pressable
+                        onLongPress={canEdit ? () => handleLongPressTurnover(turnover) : undefined}
+                        delayLongPress={400}>
+                        <View
                           style={[
-                            styles.eventLabel,
-                            { color: isOpponent ? palette.textMuted : palette.textInverse },
+                            styles.eventRow,
+                            { backgroundColor: isOpponent ? palette.overlay10 : bgColor },
                           ]}>
-                          {isOpponent ? `OPP ${label.toUpperCase()}` : label.toUpperCase()}
-                        </Text>
-                        {turnoverPlayerName && (
                           <Text
                             style={[
-                              styles.eventPlayer,
+                              styles.eventLabel,
                               { color: isOpponent ? palette.textMuted : palette.textInverse },
-                            ]}
-                            numberOfLines={1}>
-                            {turnoverPlayerName}
-                            {turnover.type === 'fiftyfifty' && turnoverPlayer2Name && (
-                              <Text style={{ opacity: 0.8 }}> & {turnoverPlayer2Name}</Text>
-                            )}
+                            ]}>
+                            {isOpponent ? `OPP ${label.toUpperCase()}` : label.toUpperCase()}
                           </Text>
-                        )}
-                      </View>
+                          {turnoverPlayerName && (
+                            <Text
+                              style={[
+                                styles.eventPlayer,
+                                { color: isOpponent ? palette.textMuted : palette.textInverse },
+                              ]}
+                              numberOfLines={1}>
+                              {turnoverPlayerName}
+                              {turnover.type === 'fiftyfifty' && turnoverPlayer2Name && (
+                                <Text style={{ opacity: 0.8 }}> & {turnoverPlayer2Name}</Text>
+                              )}
+                            </Text>
+                          )}
+                        </View>
+                      </Pressable>
                     </React.Fragment>
                   );
                 })}
@@ -175,46 +200,81 @@ export default function EventTimeline({
                 )}
 
                 {isCallahan ? (
-                  <View
-                    style={[
-                      styles.eventRow,
-                      {
-                        backgroundColor: palette.successOverlay15,
-                        borderColor: palette.success,
-                        borderWidth: 1,
-                      },
-                    ]}>
-                    <Text style={[styles.eventLabel, { color: palette.success }]}>CALLAHAN</Text>
-                    <Text
-                      style={[styles.eventPlayer, { color: palette.textInverse }]}
-                      numberOfLines={1}>
-                      {goalName}
-                    </Text>
-                  </View>
-                ) : (
-                  <>
-                    {/* Goal */}
-                    <View style={[styles.eventRow, { backgroundColor: palette.overlay05 }]}>
-                      <Text style={[styles.eventLabel, { color: teamColor }]}>GOAL</Text>
+                  <Pressable
+                    onLongPress={
+                      onEditGoal && currentPoint !== point.pointNumber
+                        ? () => {
+                            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+                            onEditGoal(point.goalEventIndex, point.goalPlayerId, 'scorer');
+                          }
+                        : undefined
+                    }
+                    delayLongPress={400}>
+                    <View
+                      style={[
+                        styles.eventRow,
+                        {
+                          backgroundColor: palette.successOverlay15,
+                          borderColor: palette.success,
+                          borderWidth: 1,
+                        },
+                      ]}>
+                      <Text style={[styles.eventLabel, { color: palette.success }]}>CALLAHAN</Text>
                       <Text
                         style={[styles.eventPlayer, { color: palette.textInverse }]}
                         numberOfLines={1}>
-                        {isTeam1 ? goalName || 'Unknown' : team2Name}
+                        {goalName}
                       </Text>
                     </View>
+                  </Pressable>
+                ) : (
+                  <>
+                    {/* Goal */}
+                    <Pressable
+                      onLongPress={
+                        onEditGoal && isTeam1 && currentPoint !== point.pointNumber
+                          ? () => {
+                              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+                              onEditGoal(point.goalEventIndex, point.goalPlayerId, 'scorer');
+                            }
+                          : undefined
+                      }
+                      delayLongPress={400}>
+                      <View style={[styles.eventRow, { backgroundColor: palette.overlay05 }]}>
+                        <Text style={[styles.eventLabel, { color: teamColor }]}>GOAL</Text>
+                        <Text
+                          style={[styles.eventPlayer, { color: palette.textInverse }]}
+                          numberOfLines={1}>
+                          {isTeam1 ? goalName || 'Unknown' : team2Name}
+                        </Text>
+                      </View>
+                    </Pressable>
 
                     {/* Arrow before Assist */}
                     {isTeam1 && assistName && (
                       <>
                         <Text style={[styles.arrow, { color: palette.textMuted }]}>→</Text>
-                        <View style={[styles.eventRow, { backgroundColor: palette.overlay05 }]}>
-                          <Text style={[styles.eventLabel, { color: palette.accent }]}>ASSIST</Text>
-                          <Text
-                            style={[styles.eventPlayer, { color: palette.textInverse }]}
-                            numberOfLines={1}>
-                            {assistName}
-                          </Text>
-                        </View>
+                        <Pressable
+                          onLongPress={
+                            onEditGoal && currentPoint !== point.pointNumber
+                              ? () => {
+                                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+                                  onEditGoal(point.goalEventIndex, point.assistPlayerId, 'assist');
+                                }
+                              : undefined
+                          }
+                          delayLongPress={400}>
+                          <View style={[styles.eventRow, { backgroundColor: palette.overlay05 }]}>
+                            <Text style={[styles.eventLabel, { color: palette.accent }]}>
+                              ASSIST
+                            </Text>
+                            <Text
+                              style={[styles.eventPlayer, { color: palette.textInverse }]}
+                              numberOfLines={1}>
+                              {assistName}
+                            </Text>
+                          </View>
+                        </Pressable>
                       </>
                     )}
                   </>

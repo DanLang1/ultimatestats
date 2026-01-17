@@ -6,6 +6,7 @@ import SavedGamesList from '@/components/view-stats/SavedGamesList';
 import StatsContent from '@/components/view-stats/StatsContent';
 import { useTheme } from '@/context/ThemeContext';
 import { generateAggregatePDF, generateGamePDF } from '@/lib/pdfGenerator';
+import { resolveTeamName } from '@/lib/playerUtils';
 import {
   formatDate,
   generateAggregateCSV,
@@ -33,6 +34,7 @@ export default function ViewStatsScreen() {
     team2Score,
     events,
     savedGames,
+    savedTeams,
     loadSavedGames,
     deleteSavedGame,
     startingPossession,
@@ -44,7 +46,12 @@ export default function ViewStatsScreen() {
   const team1Name = currentTeam?.name ?? 'Team 1';
 
   const [viewMode, setViewMode] = useState<ViewMode>(tab ?? 'current');
-  const [selectedGame, setSelectedGame] = useState<SavedGame | null>(null);
+  const [selectedGameId, setSelectedGameId] = useState<string | null>(null);
+
+  // Derive selectedGame from store to ensure fresh data after edits
+  const selectedGame = selectedGameId
+    ? (savedGames.find((g) => g.id === selectedGameId) ?? null)
+    : null;
 
   // Aggregate mode state
   const [selectedTeam, setSelectedTeam] = useState<string | null>(null);
@@ -62,7 +69,7 @@ export default function ViewStatsScreen() {
   // Derive which data to display
   const displayData = selectedGame
     ? {
-        team1Name: selectedGame.team1.name,
+        team1Name: resolveTeamName(selectedGame.team1.id, selectedGame.team1.name, savedTeams),
         team2Name: selectedGame.team2Name,
         team1Score: selectedGame.team1Score,
         team2Score: selectedGame.team2Score,
@@ -101,9 +108,14 @@ export default function ViewStatsScreen() {
         );
         filename = `${aggregatedData.teamName.replace(/[^a-zA-Z0-9]/g, '_')}_${aggregatedData.gameCount}_games`;
       } else if (selectedGame) {
+        const gameTeamName = resolveTeamName(
+          selectedGame.team1.id,
+          selectedGame.team1.name,
+          savedTeams,
+        );
         csv = generateSavedGameCSV(selectedGame);
         filename = generateGameFilename(
-          selectedGame.team1.name,
+          gameTeamName,
           selectedGame.team2Name,
           selectedGame.createdAt,
         );
@@ -149,8 +161,13 @@ export default function ViewStatsScreen() {
           roster: aggregatedData.roster,
         });
       } else if (selectedGame) {
+        const gameTeamName = resolveTeamName(
+          selectedGame.team1.id,
+          selectedGame.team1.name,
+          savedTeams,
+        );
         uri = await generateGamePDF({
-          team1Name: selectedGame.team1.name,
+          team1Name: gameTeamName,
           team2Name: selectedGame.team2Name,
           team1Score: selectedGame.team1Score,
           team2Score: selectedGame.team2Score,
@@ -190,23 +207,23 @@ export default function ViewStatsScreen() {
   };
 
   const handleSelectGame = (game: SavedGame) => {
-    setSelectedGame(game);
+    setSelectedGameId(game.id);
   };
 
   const handleBackToList = () => {
-    setSelectedGame(null);
+    setSelectedGameId(null);
   };
 
   const handleDeleteGame = async (id: string) => {
     await deleteSavedGame(id);
     if (selectedGame?.id === id) {
-      setSelectedGame(null);
+      setSelectedGameId(null);
     }
   };
 
   const handleTabPress = (mode: ViewMode) => {
     setViewMode(mode);
-    setSelectedGame(null);
+    setSelectedGameId(null);
     // Reset aggregate state when switching tabs
     setSelectedTeam(null);
     setSelectedGameIds(new Set());
@@ -264,8 +281,8 @@ export default function ViewStatsScreen() {
   const handleToggleAllGames = (select: boolean) => {
     if (!selectedTeam) return;
     if (select) {
-      // Select all games for this team
-      const games = savedGames.filter((g) => g.team1.name === selectedTeam);
+      // Select all games for this team (by ID)
+      const games = savedGames.filter((g) => g.team1.id === selectedTeam);
       setSelectedGameIds(new Set(games.map((g) => g.id)));
     } else {
       // Deselect all

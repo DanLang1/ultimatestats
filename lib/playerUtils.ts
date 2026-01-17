@@ -1,4 +1,20 @@
-import { Player } from './storage/types';
+import { Player, SavedTeam } from './storage/types';
+
+/**
+ * Resolve the current team name using ID lookup with snapshot fallback.
+ * - If team is found in savedTeams by ID, returns the live name
+ * - Otherwise falls back to the snapshot name from the saved game
+ * This allows name changes to propagate to past games while preserving
+ * data integrity if the team is deleted.
+ */
+export function resolveTeamName(
+  teamId: string,
+  snapshotName: string,
+  savedTeams: SavedTeam[],
+): string {
+  const liveTeam = savedTeams.find((t) => t.id === teamId);
+  return liveTeam?.name ?? snapshotName;
+}
 
 /**
  * Get only active players from a roster

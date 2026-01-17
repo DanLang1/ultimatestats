@@ -422,6 +422,153 @@ export const useGameStore = create<GameState>()(
             state.possession = state.possession === 'team1' ? 'team2' : 'team1';
           }),
 
+        // Event Editing Actions
+        updateEvent: (
+          eventIndex: number,
+          updates: {
+            playerId?: string | null;
+            player2Id?: string | null;
+            subtype?: TurnoverType;
+            goalPlayerId?: string | null;
+            assistPlayerId?: string | null;
+          },
+        ) =>
+          set((state: GameState) => {
+            const event = state.events[eventIndex];
+            if (!event) return;
+
+            if (event.type === 'turnover') {
+              if (updates.playerId !== undefined) event.playerId = updates.playerId;
+              if (updates.player2Id !== undefined) event.player2Id = updates.player2Id;
+              if (updates.subtype !== undefined) event.subtype = updates.subtype;
+            } else if (event.type === 'goal') {
+              // Check if this is a Callahan (goal with OTHER_TEAM assist)
+              const isCallahan = event.assistPlayerId === 'OTHER_TEAM';
+
+              if (updates.goalPlayerId !== undefined) event.goalPlayerId = updates.goalPlayerId;
+              if (updates.assistPlayerId !== undefined)
+                event.assistPlayerId = updates.assistPlayerId;
+
+              // For Callahans: also update the associated block event (always immediately before)
+              if (isCallahan && updates.goalPlayerId !== undefined && eventIndex > 0) {
+                const prevEvent = state.events[eventIndex - 1];
+                if (prevEvent.type === 'turnover' && prevEvent.subtype === 'block') {
+                  prevEvent.playerId = updates.goalPlayerId;
+                }
+              }
+            }
+          }),
+
+        deleteEvent: (eventIndex: number) => {
+          let result = false;
+          set((state: GameState) => {
+            const event = state.events[eventIndex];
+            if (!event) {
+              result = false;
+              return;
+            }
+
+            // Block deletion of goals (and implicitly assists, since they're part of goal events)
+            if (event.type === 'goal') {
+              result = false;
+              return;
+            }
+
+            // Safe to delete turnovers
+            state.events.splice(eventIndex, 1);
+            result = true;
+          });
+          return result;
+        },
+
+        // Saved Game Event Editing Actions
+        updateSavedGameEvent: async (
+          gameId: string,
+          eventIndex: number,
+          updates: {
+            playerId?: string | null;
+            player2Id?: string | null;
+            subtype?: TurnoverType;
+            goalPlayerId?: string | null;
+            assistPlayerId?: string | null;
+          },
+        ) => {
+          const game = get().savedGames.find((g) => g.id === gameId);
+          if (!game) return;
+
+          const event = game.events[eventIndex];
+          if (!event) return;
+
+          // Create updated events array
+          const updatedEvents = [...game.events];
+
+          // Create updated event based on type
+          let updatedEvent;
+          if (event.type === 'turnover') {
+            updatedEvent = { ...event };
+            if (updates.playerId !== undefined) updatedEvent.playerId = updates.playerId;
+            if (updates.player2Id !== undefined) updatedEvent.player2Id = updates.player2Id;
+            if (updates.subtype !== undefined) updatedEvent.subtype = updates.subtype;
+          } else if (event.type === 'goal') {
+            updatedEvent = { ...event };
+            const isCallahan = event.assistPlayerId === 'OTHER_TEAM';
+
+            if (updates.goalPlayerId !== undefined)
+              updatedEvent.goalPlayerId = updates.goalPlayerId;
+            if (updates.assistPlayerId !== undefined)
+              updatedEvent.assistPlayerId = updates.assistPlayerId;
+
+            // For Callahans: also update the associated block event (always immediately before)
+            if (isCallahan && updates.goalPlayerId !== undefined && eventIndex > 0) {
+              const prevEvent = game.events[eventIndex - 1];
+              if (prevEvent.type === 'turnover' && prevEvent.subtype === 'block') {
+                updatedEvents[eventIndex - 1] = { ...prevEvent, playerId: updates.goalPlayerId };
+              }
+            }
+          } else {
+            return;
+          }
+
+          // Update the main event
+          updatedEvents[eventIndex] = updatedEvent;
+          const updatedGame: SavedGame = { ...game, events: updatedEvents };
+
+          // Persist and update state
+          await storage.saveGame(updatedGame);
+          set((state: GameState) => {
+            const idx = state.savedGames.findIndex((g) => g.id === gameId);
+            if (idx !== -1) {
+              state.savedGames[idx] = updatedGame;
+            }
+          });
+        },
+
+        deleteSavedGameEvent: async (gameId: string, eventIndex: number): Promise<boolean> => {
+          const game = get().savedGames.find((g) => g.id === gameId);
+          if (!game) return false;
+
+          const event = game.events[eventIndex];
+          if (!event) return false;
+
+          // Block deletion of goals
+          if (event.type === 'goal') return false;
+
+          // Create updated game with event removed
+          const updatedEvents = [...game.events];
+          updatedEvents.splice(eventIndex, 1);
+          const updatedGame: SavedGame = { ...game, events: updatedEvents };
+
+          // Persist and update state
+          await storage.saveGame(updatedGame);
+          set((state: GameState) => {
+            const idx = state.savedGames.findIndex((g) => g.id === gameId);
+            if (idx !== -1) {
+              state.savedGames[idx] = updatedGame;
+            }
+          });
+          return true;
+        },
+
         // Saved Games & Teams Actions
         loadSavedGames: async () => {
           const games = await storage.loadGames();

@@ -1,16 +1,18 @@
 import { ScoreBadge } from '@/components/ui/ScoreBadge';
 import { useTheme } from '@/context/ThemeContext';
+import { resolveTeamName } from '@/lib/playerUtils';
 import { formatDate } from '@/lib/statsUtils';
 import { SavedGame } from '@/lib/storage';
+import { useGameStore } from '@/store/gameStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 interface AggregateGamesListProps {
   games: SavedGame[];
-  selectedTeam: string | null;
+  selectedTeam: string | null; // Team ID (not name)
   selectedGameIds: Set<string>;
-  onSelectTeam: (teamName: string) => void;
+  onSelectTeam: (teamId: string) => void; // Pass team ID
   onBackToTeams: () => void;
   onToggleGameSelection: (gameId: string) => void;
   onViewAggregated: () => void;
@@ -18,14 +20,15 @@ interface AggregateGamesListProps {
 }
 
 interface TeamGroup {
-  name: string;
+  id: string; // Team ID for selection
+  name: string; // Display name (resolved live)
   gameCount: number;
   totalPoints: number;
 }
 
 export default function AggregateGamesList({
   games,
-  selectedTeam,
+  selectedTeam, // This is now team ID
   selectedGameIds,
   onSelectTeam,
   onToggleGameSelection,
@@ -33,29 +36,37 @@ export default function AggregateGamesList({
   onToggleAllGames,
 }: AggregateGamesListProps) {
   const { palette } = useTheme();
+  const { savedTeams } = useGameStore();
 
-  // Group games by team1.name
-  const groupMap = new Map<string, { gameCount: number; totalPoints: number }>();
+  // Helper to get live team name with snapshot fallback
+  const getTeamName = (game: SavedGame) =>
+    resolveTeamName(game.team1.id, game.team1.name, savedTeams);
+
+  // Group games by team1.id (not name)
+  const groupMap = new Map<string, { name: string; gameCount: number; totalPoints: number }>();
   for (const game of games) {
     const goalCount = game.events.filter((e) => e.type === 'goal').length;
-    const existing = groupMap.get(game.team1.name);
+    const teamId = game.team1.id;
+    const teamName = getTeamName(game);
+    const existing = groupMap.get(teamId);
     if (existing) {
       existing.gameCount++;
       existing.totalPoints += goalCount;
     } else {
-      groupMap.set(game.team1.name, {
+      groupMap.set(teamId, {
+        name: teamName,
         gameCount: 1,
         totalPoints: goalCount,
       });
     }
   }
   const teamGroups: TeamGroup[] = Array.from(groupMap.entries())
-    .map(([name, data]) => ({ name, ...data }))
+    .map(([id, data]) => ({ id, ...data }))
     .sort((a, b) => b.gameCount - a.gameCount);
 
-  // Games for the selected team
+  // Games for the selected team (by ID)
   const gamesForTeam = selectedTeam
-    ? games.filter((g) => g.team1.name === selectedTeam).sort((a, b) => b.createdAt - a.createdAt)
+    ? games.filter((g) => g.team1.id === selectedTeam).sort((a, b) => b.createdAt - a.createdAt)
     : [];
 
   // Empty state
@@ -144,12 +155,12 @@ export default function AggregateGamesList({
       <View style={styles.teamsList}>
         {teamGroups.map((team) => (
           <Pressable
-            key={team.name}
+            key={team.id}
             style={[
               styles.teamCard,
               { backgroundColor: palette.overlay05, borderColor: palette.overlay10 },
             ]}
-            onPress={() => onSelectTeam(team.name)}>
+            onPress={() => onSelectTeam(team.id)}>
             <View style={styles.teamInfo}>
               <Text style={[styles.teamName, { color: palette.textInverse }]}>{team.name}</Text>
               <Text style={[styles.teamMeta, { color: palette.textMuted }]}>

@@ -1,9 +1,11 @@
 import { ThemedView } from '@/components/ThemedView';
 import EventTimeline from '@/components/timeline/EventTimeline';
 import { useTheme } from '@/context/ThemeContext';
+import { resolveTeamName } from '@/lib/playerUtils';
 import { computePointByPointEvents } from '@/lib/timelineUtils';
 import { useGameStore } from '@/store/gameStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import * as Haptics from 'expo-haptics';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import React from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -12,7 +14,8 @@ export default function GameTimelineScreen() {
   const { palette } = useTheme();
   const params = useLocalSearchParams<{ gameId?: string }>();
 
-  const { currentTeam, team2Name, events, savedGames, startingPossession, gameTo } = useGameStore();
+  const { currentTeam, team2Name, events, savedGames, savedTeams, startingPossession, gameTo } =
+    useGameStore();
   const team1Name = currentTeam?.name ?? 'Team 1';
 
   // If a gameId is passed, load that saved game; otherwise use current game
@@ -21,7 +24,7 @@ export default function GameTimelineScreen() {
         const game = savedGames.find((g) => g.id === params.gameId);
         if (!game) return null;
         return {
-          team1Name: game.team1.name,
+          team1Name: resolveTeamName(game.team1.id, game.team1.name, savedTeams),
           team2Name: game.team2Name,
           events: game.events,
           team1Score: game.team1Score,
@@ -89,6 +92,33 @@ export default function GameTimelineScreen() {
             team2Name={gameData.team2Name}
             gameTo={gameData.gameTo}
             roster={gameData.roster}
+            onEditEvent={(eventIndex, turnover) => {
+              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+              router.push({
+                pathname: '/EditEventModal',
+                params: {
+                  eventIndex: String(eventIndex),
+                  eventType: 'turnover',
+                  playerId: String(turnover.playerId ?? 'null'),
+                  player2Id: String(turnover.player2Id ?? 'null'),
+                  subtype: turnover.type,
+                  gameId: params.gameId ?? 'current',
+                },
+              });
+            }}
+            onEditGoal={(eventIndex, playerId, editField) => {
+              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+              router.push({
+                pathname: '/EditEventModal',
+                params: {
+                  eventIndex: String(eventIndex),
+                  eventType: 'goal',
+                  playerId: String(playerId ?? 'null'),
+                  editField,
+                  gameId: params.gameId ?? 'current',
+                },
+              });
+            }}
           />
         ) : (
           <View style={styles.emptyState}>

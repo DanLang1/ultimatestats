@@ -119,6 +119,33 @@ export interface GameState {
   }) => void;
   clearPendingTurnoverEntry: () => void;
 
+  // Event Editing Actions
+  updateEvent: (
+    eventIndex: number,
+    updates: {
+      playerId?: string | null;
+      player2Id?: string | null;
+      subtype?: TurnoverType;
+      goalPlayerId?: string | null;
+      assistPlayerId?: string | null;
+    },
+  ) => void;
+  deleteEvent: (eventIndex: number) => boolean; // Returns false if deletion blocked (goal/assist)
+
+  // Saved Game Event Editing Actions
+  updateSavedGameEvent: (
+    gameId: string,
+    eventIndex: number,
+    updates: {
+      playerId?: string | null;
+      player2Id?: string | null;
+      subtype?: TurnoverType;
+      goalPlayerId?: string | null;
+      assistPlayerId?: string | null;
+    },
+  ) => Promise<void>;
+  deleteSavedGameEvent: (gameId: string, eventIndex: number) => Promise<boolean>;
+
   // Saved Games & Teams
   savedGames: SavedGame[];
   savedTeams: SavedTeam[];

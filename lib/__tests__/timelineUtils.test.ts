@@ -90,11 +90,11 @@ describe('timelineUtils', () => {
   describe('getTurnoverSummary', () => {
     it('summarizes different turnover types', () => {
       const turnovers: DisplayTurnover[] = [
-        { team: 'team1', type: 'block', playerId: null },
-        { team: 'team1', type: 'block', playerId: null },
-        { team: 'team1', type: 'throwaway', playerId: null },
-        { team: 'team1', type: 'fiftyfifty', playerId: null },
-        { team: 'team1', type: 'drop', playerId: null },
+        { team: 'team1', type: 'block', playerId: null, eventIndex: 0 },
+        { team: 'team1', type: 'block', playerId: null, eventIndex: 1 },
+        { team: 'team1', type: 'throwaway', playerId: null, eventIndex: 2 },
+        { team: 'team1', type: 'fiftyfifty', playerId: null, eventIndex: 3 },
+        { team: 'team1', type: 'drop', playerId: null, eventIndex: 4 },
       ];
 
       const summary = getTurnoverSummary(turnovers);

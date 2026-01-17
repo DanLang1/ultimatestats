@@ -2,77 +2,86 @@
 
 ## Overview
 
-Allow users to edit game events (goals, turnovers) from the GameTimeline screen after a game is saved.
+Allow users to edit game events (goals, turnovers, blocks) from the GameTimeline screen after a game is saved or during a live game.
 
-## Status: Archived
+## Status: Active Design (Revived Jan 2026)
 
-Archived on 2026-01-11 due to complexity around event deletion (deleting a goal orphans turnovers, shifts point numbers, and breaks hold/break logic).
-
----
-
-## Implementation Progress (Partially Complete)
-
-### Completed Work
-
-#### Store Layer
-
-- **`gameStore.types.ts`**: Added `updateSavedGameEvent` and `deleteSavedGameEvent` action signatures
-- **`gameStore.ts`**: Implemented both actions with automatic score recalculation
-
-#### Timeline Utilities
-
-- **`timelineUtils.ts`**: Added `eventIndex` to `DisplayTurnover` and `goalEventIndex` to `PointEvents` for mapping displayed items back to raw events array
-
-#### UI Components
-
-- **`EditEventModal.tsx`**: New modal for editing/deleting events with:
-  - Player selection for goal scorer/assister
-  - Turnover type picker
-  - Delete button
-- **`EventTimeline.tsx`**: Added `onEditEvent` prop, wrapped event rows in `Pressable`
-- **`GameTimeline.tsx`**: Added handler to navigate to EditEventModal for saved games
-- **`_layout.tsx`**: Registered EditEventModal route
+Revisiting the feature with a simplified approach to avoid previous complexity pitfalls regarding game state cascading.
 
 ---
 
-## Open Issues to Resolve
+## 2026 Proposed Simplification
 
-### 1. Event Deletion Side Effects
+### 1. Interaction Model: Long Press
 
-Deleting a goal causes:
+- **Action**: User **long presses** on any event row in the Game Timeline/Action Log.
+- **Feedback**:
+  - **Haptic Feedback**: Essential 'heavy' click feel to confirm selection.
+  - **Visual**: Context menu or modal appears.
 
-- Point numbers to shift (point 6 becomes point 5)
-- Orphaned turnovers get absorbed into next point
-- Hold/break logic becomes incorrect
+### 2. Live Game vs. Saved Game Scope
 
-**Potential solutions:**
+| Context        | Editable Scope                                                                                                |
+| :------------- | :------------------------------------------------------------------------------------------------------------ |
+| **Live Game**  | All _completed_ points can be edited. Current point should use Undo instead (more intuitive for quick fixes). |
+| **Saved Game** | All points can be edited.                                                                                     |
 
-- Cascade delete turnovers since previous goal
-- Show confirmation warning about orphaned turnovers
-- Disallow deleting goals, only allow editing player attribution
+### 3. Editing Scope
 
-### 2. UX Decisions Needed
+Users should be able to correct mistakes without needing to "undo" everything back to that point.
 
-- Should editing be available during live games too?
-- Should there be an "undo to this point" feature instead?
+- **What can be edited?**
+  - **Player Attribution**: Change who committed the turnover, who got the block, etc.
+  - **Event Details**: Change "Throwaway" to "Drop".
+  - _Example_: "Joe throwing it away" can be changed to "Kyle drops it".
+
+### 4. Deletion Strategy (The "Safe" Approach)
+
+- **Rule**: Users **CANNOT** delete the **Goal** or **Assist** events.
+  - _Why?_ The Goal event defines the end of a point. Deleting it merges two points.
+- **Rule**: Users **CAN** delete intermediate events (Turnovers, Blocks, etc.).
+- **Confirmation**: Show a confirmation dialog before deletion:
+  > "Delete this Throwaway by Kyle?"  
+  > `[Cancel]` `[Delete]`
+- **Philosophy**: "Trust the User". We allow possession inconsistencies rather than building a complex validator.
 
 ---
 
-## Files Changed (to be reverted)
+## Edge Cases & Notes
+
+### Callahan Editing
+
+If a Callahan is edited to add an assister (was `assistPlayerId: 'OTHER_TEAM'`, now a real player), the timeline should just display it as a normal Goal + Assist flow.
+
+> **Testing Note**: This may "just work" without special handling. Verify during implementation.
+
+---
+
+## Implementation Plan
+
+### UI Components
+
+1.  **`EventTimeline.tsx`**:
+    - Add `onLongPress` handler to event rows with haptic feedback.
+    - **Live Game Guard**: Disable long-press for events in the _current_ (in-progress) point.
+
+2.  **`EditEventModal.tsx`**:
+    - **Edit View**: Dropdowns for Player and Event Type.
+    - **Delete Action**: Only show if `!isGoal && !isAssist`. Show confirmation dialog.
+
+### State Management (`gameStore.ts`)
+
+1.  **`updateEvent(pointIndex, eventIndex, newDetails)`**
+
+2.  **`deleteEvent(pointIndex, eventIndex)`** with goal/assist validation.
+
+---
+
+## Files to Modify
 
 ```
-app/EditEventModal.tsx         [NEW - DELETE]
-app/_layout.tsx                [MODIFIED]
-app/GameTimeline.tsx           [MODIFIED]
-components/timeline/EventTimeline.tsx  [MODIFIED]
-lib/timelineUtils.ts           [MODIFIED]
-lib/__tests__/timelineUtils.test.ts    [MODIFIED]
-store/gameStore.ts             [MODIFIED]
-store/gameStore.types.ts       [MODIFIED]
-```
-
-## Revert Command
-
-```bash
-git checkout -- .
+app/EditEventModal.tsx                 [NEW/MODIFY]
+app/GameTimeline.tsx                   [MODIFY]
+components/timeline/EventTimeline.tsx  [MODIFY]
+store/gameStore.ts                     [MODIFY]
 ```

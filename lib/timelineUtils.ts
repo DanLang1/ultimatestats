@@ -6,6 +6,7 @@ export interface DisplayTurnover {
   type: TurnoverType;
   playerId: string | null;
   player2Id?: string | null;
+  eventIndex: number; // Index in raw events array for editing
 }
 
 // Represents all events that occurred during a single point
@@ -16,6 +17,7 @@ export interface PointEvents {
   // Goal info (if team1 scored) - now stores player IDs
   goalPlayerId: string | null;
   assistPlayerId: string | null;
+  goalEventIndex: number; // Index in raw events array for editing
   // Turnovers that happened during this point
   turnovers: DisplayTurnover[];
   // Possession data
@@ -45,7 +47,8 @@ export function computePointByPointEvents(
   // Track who is ON OFFENSE (receiving the pull) for the current point
   let currentOffensiveTeam: 'team1' | 'team2' = startingPossession || 'team1';
 
-  for (const event of events) {
+  for (let eventIdx = 0; eventIdx < events.length; eventIdx++) {
+    const event = events[eventIdx];
     if (event.type === 'turnover') {
       // Collect turnovers for the current point
       currentTurnovers.push({
@@ -53,6 +56,7 @@ export function computePointByPointEvents(
         type: event.subtype,
         playerId: event.playerId,
         player2Id: event.player2Id,
+        eventIndex: eventIdx,
       });
     } else if (event.type === 'goal') {
       pointNumber++;
@@ -75,6 +79,7 @@ export function computePointByPointEvents(
         scoreAfter: { team1: team1Score, team2: team2Score },
         goalPlayerId: event.goalPlayerId,
         assistPlayerId: event.assistPlayerId,
+        goalEventIndex: eventIdx,
         turnovers: currentTurnovers,
         offensiveTeam: offensiveTeamForThisPoint,
         possessionType,
