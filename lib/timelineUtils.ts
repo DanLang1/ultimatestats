@@ -7,6 +7,7 @@ export interface DisplayTurnover {
   playerId: string | null;
   player2Id?: string | null;
   eventIndex: number; // Index in raw events array for editing
+  timestamp?: number; // When this event occurred
 }
 
 // Represents all events that occurred during a single point
@@ -18,6 +19,7 @@ export interface PointEvents {
   goalPlayerId: string | null;
   assistPlayerId: string | null;
   goalEventIndex: number; // Index in raw events array for editing
+  goalTimestamp?: number; // When the goal was scored
   // Turnovers that happened during this point
   turnovers: DisplayTurnover[];
   // Possession data
@@ -25,6 +27,9 @@ export interface PointEvents {
   possessionType: 'hold' | 'break' | null; // scoringTeam === offensiveTeam ? hold : break, null if in progress
   // Point in progress (turnovers recorded but no goal yet)
   isInProgress?: boolean;
+  // Timing info
+  pointStartTimestamp?: number; // When point started (from Start Point button)
+  pointDurationMs?: number; // Time from point start (or first event) to goal
 }
 
 /**
@@ -35,6 +40,8 @@ export function computePointByPointEvents(
   events: GameEvent[],
   startingPossession: 'team1' | 'team2' | null,
   gameTo: number,
+  pointStartTimestamps?: Record<number, number>,
+  currentPointStartTime?: number | null, // For in-progress points
 ): PointEvents[] {
   const result: PointEvents[] = [];
   let currentTurnovers: DisplayTurnover[] = [];
@@ -59,6 +66,7 @@ export function computePointByPointEvents(
         playerId: event.playerId,
         player2Id: event.player2Id,
         eventIndex: eventIdx,
+        timestamp: event.timestamp,
       });
     } else if (event.type === 'goal') {
       pointNumber++;
@@ -74,6 +82,11 @@ export function computePointByPointEvents(
         team2Score++;
       }
 
+      // Calculate point duration from pointStartTimestamp (if user used point timer)
+      const pointStartTimestamp = pointStartTimestamps?.[pointNumber];
+      const pointDurationMs =
+        pointStartTimestamp && event.timestamp ? event.timestamp - pointStartTimestamp : undefined;
+
       // Record the point
       result.push({
         pointNumber,
@@ -82,9 +95,12 @@ export function computePointByPointEvents(
         goalPlayerId: event.goalPlayerId,
         assistPlayerId: event.assistPlayerId,
         goalEventIndex: eventIdx,
+        goalTimestamp: event.timestamp,
         turnovers: currentTurnovers,
         offensiveTeam: offensiveTeamForThisPoint,
         possessionType,
+        pointStartTimestamp,
+        pointDurationMs,
       });
 
       // Reset turnovers for next point
@@ -104,8 +120,12 @@ export function computePointByPointEvents(
 
   // If there are pending turnovers after the loop, show them as an in-progress point
   if (currentTurnovers.length > 0) {
+    const inProgressPointNumber = pointNumber + 1;
+    // Use working timestamp OR historical (from before undo)
+    const effectiveStartTime =
+      currentPointStartTime ?? pointStartTimestamps?.[inProgressPointNumber];
     result.push({
-      pointNumber: pointNumber + 1,
+      pointNumber: inProgressPointNumber,
       scoringTeam: 'team1', // placeholder - point not scored yet
       scoreAfter: { team1: team1Score, team2: team2Score },
       goalPlayerId: null,
@@ -115,6 +135,7 @@ export function computePointByPointEvents(
       offensiveTeam: currentOffensiveTeam,
       possessionType: null, // Unknown until point completes
       isInProgress: true,
+      pointStartTimestamp: effectiveStartTime,
     });
   }
 

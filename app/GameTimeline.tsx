@@ -16,8 +16,17 @@ export default function GameTimelineScreen() {
   // If gameId is present, it's a saved game
   const isSavedGame = !!params.gameId;
 
-  const { currentTeam, team2Name, events, savedGames, savedTeams, startingPossession, gameTo } =
-    useGameStore();
+  const {
+    currentTeam,
+    team2Name,
+    events,
+    savedGames,
+    savedTeams,
+    startingPossession,
+    gameTo,
+    pointStartTimestamps,
+    currentPointStartTime,
+  } = useGameStore();
   const team1Name = currentTeam?.name ?? 'Team 1';
 
   // If a gameId is passed, load that saved game; otherwise use current game
@@ -34,6 +43,7 @@ export default function GameTimelineScreen() {
           startingPossession: game.startingPossession,
           gameTo: game.gameTo,
           roster: game.team1.roster,
+          pointStartTimestamps: game.pointStartTimestamps,
         };
       })()
     : {
@@ -45,6 +55,7 @@ export default function GameTimelineScreen() {
         startingPossession,
         gameTo,
         roster: currentTeam?.roster ?? [],
+        pointStartTimestamps,
       };
 
   if (!gameData) {
@@ -60,7 +71,9 @@ export default function GameTimelineScreen() {
     gameData.events,
     gameData.startingPossession,
     gameData.gameTo,
-  ); // Fix ordering: show points in chronological order (first point at top)
+    gameData.pointStartTimestamps,
+    isSavedGame ? undefined : currentPointStartTime,
+  );
   const hasData = pointEvents.length > 0;
 
   return (
@@ -91,7 +104,6 @@ export default function GameTimelineScreen() {
           <EventTimeline
             points={pointEvents}
             isSavedGame={isSavedGame}
-            team1Name={gameData.team1Name}
             team2Name={gameData.team2Name}
             gameTo={gameData.gameTo}
             roster={gameData.roster}

@@ -41,6 +41,8 @@ export default function SettingsScreen() {
     setSoftCapMins,
     statTrackingEnabled,
     setStatTrackingEnabled,
+    pointTimerEnabled,
+    setPointTimerEnabled,
     timerIsActive,
     team1Score,
     team2Score,
@@ -493,22 +495,27 @@ export default function SettingsScreen() {
                       if (enabled && !hasSeenStatsTutorial) {
                         triggerStatsTutorial();
                       }
+                      // Disable point timer if stat tracking is disabled
+                      if (!enabled) {
+                        setPointTimerEnabled(false);
+                      }
                     }}
                     disabled={gameActive}
                     locked={gameActive}
                   />
-                  <Pressable
-                    onPress={triggerStatsTutorial}
-                    hitSlop={8}
-                    style={[styles.helpButton, { backgroundColor: palette.overlay08 }]}>
-                    <MaterialCommunityIcons
-                      name="help-circle-outline"
-                      size={18}
-                      color={palette.textMuted}
-                    />
-                  </Pressable>
                 </View>
               </View>
+              {statTrackingEnabled && (
+                <View style={styles.inputGroup}>
+                  <Switch
+                    label="Point Timer"
+                    value={pointTimerEnabled}
+                    onValueChange={setPointTimerEnabled}
+                    disabled={gameActive}
+                    locked={gameActive}
+                  />
+                </View>
+              )}
             </View>
           </View>
         </View>

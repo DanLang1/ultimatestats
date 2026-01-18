@@ -39,6 +39,12 @@ export default function BasicScoreboard() {
     addTurnoverEvent,
     resetGame,
     gameLocked,
+    // Point timer
+    pointTimerEnabled,
+    currentPointStartTime,
+    pointStartTimestamps,
+    currentPoint,
+    startPoint,
   } = useGameStore();
   const { palette } = useTheme();
 
@@ -141,6 +147,13 @@ export default function BasicScoreboard() {
     router.push({ pathname: '/TurnoverEntryModal', params: { type: typeMap[action.type] } });
   };
 
+  const showStartButton =
+    pointTimerEnabled &&
+    statTrackingEnabled &&
+    currentPointStartTime === null &&
+    pointStartTimestamps[currentPoint] === undefined &&
+    !gameLocked;
+
   return (
     <ThemedView style={styles.container}>
       {/* Top half */}
@@ -184,6 +197,16 @@ export default function BasicScoreboard() {
       {/* Action Bar for stat tracking */}
       {statTrackingEnabled && (
         <ScoreboardActionBar possession={possession} onAction={handleActionBarAction} />
+      )}
+
+      {/* Start Point Button - shows when point timer enabled and NO timing data exists for current point */}
+      {showStartButton && (
+        <Pressable
+          onPress={startPoint}
+          style={[styles.startPointButton, { backgroundColor: palette.accent }]}>
+          <MaterialCommunityIcons name="timer-outline" size={20} color={palette.textOnAccent} />
+          <Text style={[styles.startPointButtonText, { color: palette.textOnAccent }]}>START</Text>
+        </Pressable>
       )}
 
       <TutorialOverlay />
@@ -326,5 +349,23 @@ const styles = StyleSheet.create({
   lockedButtonText: {
     fontSize: 16,
     fontWeight: '600',
+  },
+  startPointButton: {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: [{ translateX: -45 }, { translateY: -20 }],
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    zIndex: 150,
+  },
+  startPointButtonText: {
+    fontSize: 14,
+    fontWeight: '700',
+    letterSpacing: 1,
   },
 });

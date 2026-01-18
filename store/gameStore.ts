@@ -48,6 +48,9 @@ export const useGameStore = create<GameState>()(
         statTrackingEnabled: false,
         events: [], // Unified event log
         pendingStatEntry: null,
+        pointTimerEnabled: false, // Optional: show "Start Point" button for accurate timing
+        currentPointStartTime: null, // Working timestamp for current point
+        pointStartTimestamps: {}, // Finalized timestamps for completed points
 
         // Turnover Tracking Initial State
         possession: null,
@@ -176,12 +179,18 @@ export const useGameStore = create<GameState>()(
               state.pendingStatEntry = { team: 'team1', pointNumber: newScore };
             } else {
               // Team2 goal: record immediately (no player details needed)
+              // Save point start timestamp to the record (currentPoint was already incremented)
+              if (state.currentPointStartTime !== null) {
+                state.pointStartTimestamps[state.currentPoint - 1] = state.currentPointStartTime;
+              }
               state.events.push({
                 type: 'goal',
                 team: 'team2',
                 goalPlayerId: null,
                 assistPlayerId: null,
+                timestamp: Date.now(),
               });
+              state.currentPointStartTime = null;
             }
           });
           return { didIncrement, isHalftime };
@@ -217,6 +226,8 @@ export const useGameStore = create<GameState>()(
               state.possession = lastEvent.team;
               state.pendingStatEntry = null;
               state.currentPoint = Math.max(1, state.currentPoint - 1);
+              // Clear working timestamp - we'll use historical data from pointStartTimestamps
+              state.currentPointStartTime = null;
             } else {
               // Turnover: flip possession back
               state.possession = state.possession === 'team1' ? 'team2' : 'team1';
@@ -278,6 +289,8 @@ export const useGameStore = create<GameState>()(
             state.isHalftimeBreak = false;
             state.halftimeEndTime = null;
             state.halftimeTimeLeft = 7 * 60;
+            state.currentPointStartTime = null;
+            state.pointStartTimestamps = {};
           }),
         setSoftCapPending: (pending: boolean) =>
           set((state: GameState) => {
@@ -362,13 +375,21 @@ export const useGameStore = create<GameState>()(
           assistPlayerId: string | null;
         }) =>
           set((state: GameState) => {
+            // Save point start timestamp to the record
+            // Note: currentPoint has already been incremented in incrementScore,
+            // so we use currentPoint - 1 for the point that just ended
+            if (state.currentPointStartTime !== null) {
+              state.pointStartTimestamps[state.currentPoint - 1] = state.currentPointStartTime;
+            }
             state.events.push({
               type: 'goal',
               team: event.team,
               goalPlayerId: event.goalPlayerId,
               assistPlayerId: event.assistPlayerId,
+              timestamp: Date.now(),
             });
             state.pendingStatEntry = null;
+            state.currentPointStartTime = null;
           }),
 
         clearPendingStatEntry: () =>
@@ -381,6 +402,16 @@ export const useGameStore = create<GameState>()(
             if (!state.currentTeam) return;
             state.currentTeam.roster = [];
             state.events = [];
+          }),
+
+        setPointTimerEnabled: (enabled: boolean) =>
+          set((state: GameState) => {
+            state.pointTimerEnabled = enabled;
+          }),
+
+        startPoint: () =>
+          set((state: GameState) => {
+            state.currentPointStartTime = Date.now();
           }),
 
         // Turnover Tracking Actions
@@ -412,6 +443,7 @@ export const useGameStore = create<GameState>()(
               subtype: event.subtype,
               playerId: event.playerId,
               player2Id: event.player2Id,
+              timestamp: Date.now(),
             });
             state.possession = state.possession === 'team1' ? 'team2' : 'team1';
             state.pendingTurnoverEntry = null;
@@ -606,6 +638,7 @@ export const useGameStore = create<GameState>()(
             gameTo: state.gameTo,
             gameLength: state.gameLength,
             startingPossession: state.startingPossession ?? 'team1',
+            pointStartTimestamps: state.pointStartTimestamps,
           };
           await storage.saveGame(game);
           const games = await storage.loadGames();
@@ -692,6 +725,9 @@ export const useGameStore = create<GameState>()(
           startingPossession: state.startingPossession,
           savedGames: state.savedGames,
           savedTeams: state.savedTeams,
+          pointTimerEnabled: state.pointTimerEnabled,
+          currentPointStartTime: state.currentPointStartTime,
+          pointStartTimestamps: state.pointStartTimestamps,
         }),
       },
     ),

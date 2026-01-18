@@ -2,14 +2,25 @@ import { useTheme } from '@/context/ThemeContext';
 import { getPlayerName } from '@/lib/playerUtils';
 import { Player } from '@/lib/storage/types';
 import { DisplayTurnover, PointEvents } from '@/lib/timelineUtils';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import * as Haptics from 'expo-haptics';
 import React from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
+// Format milliseconds to "Xm Ys" or just "Xs" for short durations
+const formatDuration = (ms: number): string => {
+  const totalSeconds = Math.round(ms / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  if (minutes === 0) {
+    return `${seconds}s`;
+  }
+  return `${minutes}m ${seconds}s`;
+};
+
 interface EventTimelineProps {
   points: PointEvents[];
   isSavedGame?: boolean;
-  team1Name: string;
   team2Name: string;
   gameTo: number;
   roster: Player[];
@@ -25,7 +36,6 @@ interface EventTimelineProps {
 export default function EventTimeline({
   points,
   isSavedGame,
-  team1Name,
   team2Name,
   gameTo,
   roster,
@@ -111,41 +121,57 @@ export default function EventTimeline({
                     </Text>
                   </View>
                 ) : (
-                  point.possessionType && (
-                    <View
-                      style={[
-                        styles.statusChip,
-                        {
-                          backgroundColor:
-                            point.possessionType === 'break'
-                              ? isTeam1
-                                ? palette.success
-                                : palette.danger
-                              : palette.overlay15,
-                        },
-                      ]}>
-                      <Text
+                  <View style={styles.headerRight}>
+                    {/* Point Duration */}
+                    {point.pointDurationMs !== undefined && point.pointDurationMs > 0 && (
+                      <View style={[styles.durationChip, { backgroundColor: palette.overlay10 }]}>
+                        <MaterialCommunityIcons
+                          name="timer-outline"
+                          size={12}
+                          color={palette.textMuted}
+                        />
+                        <Text style={[styles.durationText, { color: palette.textMuted }]}>
+                          {formatDuration(point.pointDurationMs)}
+                        </Text>
+                      </View>
+                    )}
+                    {/* Hold/Break Chip */}
+                    {point.possessionType && (
+                      <View
                         style={[
-                          styles.statusChipText,
+                          styles.statusChip,
                           {
-                            color:
+                            backgroundColor:
                               point.possessionType === 'break'
-                                ? palette.textOnAccent
-                                : isTeam1
+                                ? isTeam1
                                   ? palette.success
-                                  : palette.danger,
+                                  : palette.danger
+                                : palette.overlay15,
                           },
                         ]}>
-                        {point.possessionType === 'break'
-                          ? isTeam1
-                            ? 'BROKE'
-                            : 'BROKEN'
-                          : isTeam1
-                            ? 'HOLD'
-                            : 'OPP HOLD'}
-                      </Text>
-                    </View>
-                  )
+                        <Text
+                          style={[
+                            styles.statusChipText,
+                            {
+                              color:
+                                point.possessionType === 'break'
+                                  ? palette.textOnAccent
+                                  : isTeam1
+                                    ? palette.success
+                                    : palette.danger,
+                            },
+                          ]}>
+                          {point.possessionType === 'break'
+                            ? isTeam1
+                              ? 'BROKE'
+                              : 'BROKEN'
+                            : isTeam1
+                              ? 'HOLD'
+                              : 'OPP HOLD'}
+                        </Text>
+                      </View>
+                    )}
+                  </View>
                 )}
               </View>
 
@@ -180,6 +206,12 @@ export default function EventTimeline({
                   const isCurrentPoint =
                     currentPoint !== undefined && point.pointNumber === currentPoint;
                   const canEdit = onEditEvent && !isCurrentPoint && !isOpponent;
+
+                  // Calculate relative time since point start
+                  const relativeTime =
+                    point.pointStartTimestamp && turnover.timestamp
+                      ? formatDuration(turnover.timestamp - point.pointStartTimestamp)
+                      : undefined;
 
                   return (
                     <React.Fragment key={`turnover-${index}`}>
@@ -251,6 +283,12 @@ export default function EventTimeline({
                               </Text>
                             </>
                           )}
+                          {/* Relative timestamp */}
+                          {relativeTime && (
+                            <Text style={[styles.eventTimestamp, { color: palette.textMuted }]}>
+                              +{relativeTime}
+                            </Text>
+                          )}
                         </View>
                       </Pressable>
                     </React.Fragment>
@@ -294,6 +332,12 @@ export default function EventTimeline({
                           numberOfLines={1}>
                           {goalName}
                         </Text>
+                        {/* Point duration timestamp */}
+                        {point.pointDurationMs !== undefined && point.pointDurationMs > 0 && (
+                          <Text style={[styles.eventTimestamp, { color: palette.textMuted }]}>
+                            +{formatDuration(point.pointDurationMs)}
+                          </Text>
+                        )}
                       </View>
                     </Pressable>
                   ) : (
@@ -326,6 +370,12 @@ export default function EventTimeline({
                             numberOfLines={1}>
                             {isTeam1 ? goalName || 'Unknown' : team2Name}
                           </Text>
+                          {/* Point duration timestamp */}
+                          {point.pointDurationMs !== undefined && point.pointDurationMs > 0 && (
+                            <Text style={[styles.eventTimestamp, { color: palette.textMuted }]}>
+                              +{formatDuration(point.pointDurationMs)}
+                            </Text>
+                          )}
                         </View>
                       </Pressable>
 
@@ -365,6 +415,12 @@ export default function EventTimeline({
                                 numberOfLines={1}>
                                 {assistName}
                               </Text>
+                              {/* Point duration timestamp */}
+                              {point.pointDurationMs !== undefined && point.pointDurationMs > 0 && (
+                                <Text style={[styles.eventTimestamp, { color: palette.textMuted }]}>
+                                  +{formatDuration(point.pointDurationMs)}
+                                </Text>
+                              )}
                             </View>
                           </Pressable>
                         </>
@@ -460,6 +516,23 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     letterSpacing: 0.5,
   },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  durationChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  durationText: {
+    fontSize: 11,
+    fontWeight: '600',
+  },
   // Body
   cardBody: {
     flexDirection: 'row',
@@ -488,6 +561,12 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     maxWidth: 100,
     flexShrink: 1,
+  },
+  eventTimestamp: {
+    fontSize: 10,
+    fontWeight: '500',
+    marginLeft: 4,
+    opacity: 0.7,
   },
   arrow: {
     fontSize: 14,

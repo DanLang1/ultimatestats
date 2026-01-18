@@ -17,6 +17,7 @@ export interface SavedGame {
   gameTo: number;
   gameLength: number;
   startingPossession: 'team1' | 'team2';
+  pointStartTimestamps?: Record<number, number>; // { [pointNumber]: timestamp when point started }
 }
 
 export type MatchingType = 'fmp' | 'mmp';
