@@ -8,6 +8,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 interface EventTimelineProps {
   points: PointEvents[];
+  isSavedGame?: boolean;
   team1Name: string;
   team2Name: string;
   gameTo: number;
@@ -23,6 +24,7 @@ interface EventTimelineProps {
 
 export default function EventTimeline({
   points,
+  isSavedGame,
   team1Name,
   team2Name,
   gameTo,
@@ -41,7 +43,7 @@ export default function EventTimeline({
   const finalScore =
     points.length > 0 ? points[points.length - 1].scoreAfter : { team1: 0, team2: 0 };
 
-  const isGameComplete = finalScore.team1 >= gameTo || finalScore.team2 >= gameTo;
+  const isGameComplete = finalScore.team1 >= gameTo || finalScore.team2 >= gameTo || isSavedGame;
 
   return (
     <View style={styles.container}>
@@ -57,9 +59,23 @@ export default function EventTimeline({
 
       {/* Timeline */}
       <ScrollView contentContainerStyle={styles.listContent} showsVerticalScrollIndicator={false}>
+        {/* Edit hint */}
+        {onEditEvent && (
+          <View style={styles.editHint}>
+            <Text style={[styles.editHintText, { color: palette.textMuted }]}>
+              Long press bordered events to edit
+            </Text>
+          </View>
+        )}
+
         {points.map((point) => {
+          const isInProgress = point.isInProgress === true;
           const isTeam1 = point.scoringTeam === 'team1';
-          const teamColor = isTeam1 ? palette.success : palette.danger;
+          const teamColor = isInProgress
+            ? palette.accent
+            : isTeam1
+              ? palette.success
+              : palette.danger;
 
           // Resolve player IDs to names
           const goalName = getPlayerName(roster, point.goalPlayerId);
@@ -80,46 +96,56 @@ export default function EventTimeline({
               <View style={[styles.cardHeader, { borderBottomColor: palette.overlay10 }]}>
                 <View style={styles.headerLeft}>
                   <View style={[styles.pointBadge, { backgroundColor: teamColor }]}>
-                    <Text style={styles.pointBadgeText}>{point.pointNumber}</Text>
+                    <Text style={[styles.pointBadgeText, { color: palette.textOnAccent }]}>
+                      {point.pointNumber}
+                    </Text>
                   </View>
                   <Text style={[styles.scoreText, { color: palette.textInverse }]}>
                     {point.scoreAfter.team1} – {point.scoreAfter.team2}
                   </Text>
                 </View>
-                {point.possessionType && (
-                  <View
-                    style={[
-                      styles.statusChip,
-                      {
-                        backgroundColor:
-                          point.possessionType === 'break'
-                            ? isTeam1
-                              ? palette.success
-                              : palette.danger
-                            : palette.overlay15,
-                      },
-                    ]}>
-                    <Text
-                      style={[
-                        styles.statusChipText,
-                        {
-                          color:
-                            point.possessionType === 'break'
-                              ? '#FFFFFF'
-                              : isTeam1
-                                ? palette.success
-                                : palette.danger,
-                        },
-                      ]}>
-                      {point.possessionType === 'break'
-                        ? isTeam1
-                          ? 'BROKE'
-                          : 'BROKEN'
-                        : isTeam1
-                          ? 'HOLD'
-                          : 'OPP HOLD'}
+                {isInProgress ? (
+                  <View style={[styles.statusChip, { backgroundColor: palette.accent }]}>
+                    <Text style={[styles.statusChipText, { color: palette.textOnAccent }]}>
+                      IN PROGRESS
                     </Text>
                   </View>
+                ) : (
+                  point.possessionType && (
+                    <View
+                      style={[
+                        styles.statusChip,
+                        {
+                          backgroundColor:
+                            point.possessionType === 'break'
+                              ? isTeam1
+                                ? palette.success
+                                : palette.danger
+                              : palette.overlay15,
+                        },
+                      ]}>
+                      <Text
+                        style={[
+                          styles.statusChipText,
+                          {
+                            color:
+                              point.possessionType === 'break'
+                                ? palette.textOnAccent
+                                : isTeam1
+                                  ? palette.success
+                                  : palette.danger,
+                          },
+                        ]}>
+                        {point.possessionType === 'break'
+                          ? isTeam1
+                            ? 'BROKE'
+                            : 'BROKEN'
+                          : isTeam1
+                            ? 'HOLD'
+                            : 'OPP HOLD'}
+                      </Text>
+                    </View>
+                  )
                 )}
               </View>
 
@@ -167,6 +193,11 @@ export default function EventTimeline({
                           style={[
                             styles.eventRow,
                             { backgroundColor: isOpponent ? palette.overlay10 : bgColor },
+                            canEdit && {
+                              borderColor:
+                                turnover.type === 'block' ? palette.success : palette.danger,
+                              borderWidth: 1,
+                            },
                           ]}>
                           <Text
                             style={[
@@ -179,14 +210,46 @@ export default function EventTimeline({
                             <Text
                               style={[
                                 styles.eventPlayer,
-                                { color: isOpponent ? palette.textMuted : palette.textInverse },
+                                {
+                                  color: isOpponent ? palette.textMuted : palette.textInverse,
+                                  flexShrink:
+                                    turnover.type === 'fiftyfifty' && turnoverPlayer2Name ? 1 : 0,
+                                  maxWidth:
+                                    turnover.type === 'fiftyfifty' && turnoverPlayer2Name
+                                      ? '40%'
+                                      : undefined,
+                                },
                               ]}
                               numberOfLines={1}>
                               {turnoverPlayerName}
-                              {turnover.type === 'fiftyfifty' && turnoverPlayer2Name && (
-                                <Text style={{ opacity: 0.8 }}> & {turnoverPlayer2Name}</Text>
-                              )}
                             </Text>
+                          )}
+                          {turnover.type === 'fiftyfifty' && turnoverPlayer2Name && (
+                            <>
+                              <Text
+                                style={[
+                                  styles.eventLabel,
+                                  {
+                                    color: isOpponent ? palette.textMuted : palette.textInverse,
+                                    opacity: 0.7,
+                                  },
+                                ]}>
+                                &
+                              </Text>
+                              <Text
+                                style={[
+                                  styles.eventPlayer,
+                                  {
+                                    color: isOpponent ? palette.textMuted : palette.textInverse,
+                                    opacity: 0.9,
+                                    flexShrink: 1,
+                                    maxWidth: '40%',
+                                  },
+                                ]}
+                                numberOfLines={1}>
+                                {turnoverPlayer2Name}
+                              </Text>
+                            </>
                           )}
                         </View>
                       </Pressable>
@@ -194,45 +257,19 @@ export default function EventTimeline({
                   );
                 })}
 
-                {/* Arrow before Goal/Callahan - only show if there are visible turnovers */}
-                {point.turnovers.length > 0 && !(isCallahan && point.turnovers.length === 1) && (
-                  <Text style={[styles.arrow, { color: palette.textMuted }]}>→</Text>
-                )}
+                {/* Arrow before Goal/Callahan - only show if there are visible turnovers and point is complete */}
+                {!isInProgress &&
+                  point.turnovers.length > 0 &&
+                  !(isCallahan && point.turnovers.length === 1) && (
+                    <Text style={[styles.arrow, { color: palette.textMuted }]}>→</Text>
+                  )}
 
-                {isCallahan ? (
-                  <Pressable
-                    onLongPress={
-                      onEditGoal && currentPoint !== point.pointNumber
-                        ? () => {
-                            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-                            onEditGoal(point.goalEventIndex, point.goalPlayerId, 'scorer');
-                          }
-                        : undefined
-                    }
-                    delayLongPress={400}>
-                    <View
-                      style={[
-                        styles.eventRow,
-                        {
-                          backgroundColor: palette.successOverlay15,
-                          borderColor: palette.success,
-                          borderWidth: 1,
-                        },
-                      ]}>
-                      <Text style={[styles.eventLabel, { color: palette.success }]}>CALLAHAN</Text>
-                      <Text
-                        style={[styles.eventPlayer, { color: palette.textInverse }]}
-                        numberOfLines={1}>
-                        {goalName}
-                      </Text>
-                    </View>
-                  </Pressable>
-                ) : (
-                  <>
-                    {/* Goal */}
+                {/* Goal/Assist section - only for completed points */}
+                {!isInProgress &&
+                  (isCallahan ? (
                     <Pressable
                       onLongPress={
-                        onEditGoal && isTeam1 && currentPoint !== point.pointNumber
+                        onEditGoal && currentPoint !== point.pointNumber
                           ? () => {
                               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
                               onEditGoal(point.goalEventIndex, point.goalPlayerId, 'scorer');
@@ -240,45 +277,100 @@ export default function EventTimeline({
                           : undefined
                       }
                       delayLongPress={400}>
-                      <View style={[styles.eventRow, { backgroundColor: palette.overlay05 }]}>
-                        <Text style={[styles.eventLabel, { color: teamColor }]}>GOAL</Text>
+                      <View
+                        style={[
+                          styles.eventRow,
+                          {
+                            backgroundColor: palette.successOverlay15,
+                            borderColor: palette.success,
+                            borderWidth: 1,
+                          },
+                        ]}>
+                        <Text style={[styles.eventLabel, { color: palette.success }]}>
+                          CALLAHAN
+                        </Text>
                         <Text
                           style={[styles.eventPlayer, { color: palette.textInverse }]}
                           numberOfLines={1}>
-                          {isTeam1 ? goalName || 'Unknown' : team2Name}
+                          {goalName}
                         </Text>
                       </View>
                     </Pressable>
+                  ) : (
+                    <>
+                      {/* Goal */}
+                      <Pressable
+                        onLongPress={
+                          onEditGoal && isTeam1 && currentPoint !== point.pointNumber
+                            ? () => {
+                                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+                                onEditGoal(point.goalEventIndex, point.goalPlayerId, 'scorer');
+                              }
+                            : undefined
+                        }
+                        delayLongPress={400}>
+                        <View
+                          style={[
+                            styles.eventRow,
+                            { backgroundColor: palette.overlay05 },
+                            onEditGoal &&
+                              isTeam1 &&
+                              currentPoint !== point.pointNumber && {
+                                borderColor: teamColor,
+                                borderWidth: 1,
+                              },
+                          ]}>
+                          <Text style={[styles.eventLabel, { color: teamColor }]}>GOAL</Text>
+                          <Text
+                            style={[styles.eventPlayer, { color: palette.textInverse }]}
+                            numberOfLines={1}>
+                            {isTeam1 ? goalName || 'Unknown' : team2Name}
+                          </Text>
+                        </View>
+                      </Pressable>
 
-                    {/* Arrow before Assist */}
-                    {isTeam1 && assistName && (
-                      <>
-                        <Text style={[styles.arrow, { color: palette.textMuted }]}>→</Text>
-                        <Pressable
-                          onLongPress={
-                            onEditGoal && currentPoint !== point.pointNumber
-                              ? () => {
-                                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-                                  onEditGoal(point.goalEventIndex, point.assistPlayerId, 'assist');
-                                }
-                              : undefined
-                          }
-                          delayLongPress={400}>
-                          <View style={[styles.eventRow, { backgroundColor: palette.overlay05 }]}>
-                            <Text style={[styles.eventLabel, { color: palette.accent }]}>
-                              ASSIST
-                            </Text>
-                            <Text
-                              style={[styles.eventPlayer, { color: palette.textInverse }]}
-                              numberOfLines={1}>
-                              {assistName}
-                            </Text>
-                          </View>
-                        </Pressable>
-                      </>
-                    )}
-                  </>
-                )}
+                      {/* Arrow before Assist */}
+                      {isTeam1 && assistName && (
+                        <>
+                          <Text style={[styles.arrow, { color: palette.textMuted }]}>→</Text>
+                          <Pressable
+                            onLongPress={
+                              onEditGoal && currentPoint !== point.pointNumber
+                                ? () => {
+                                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+                                    onEditGoal(
+                                      point.goalEventIndex,
+                                      point.assistPlayerId,
+                                      'assist',
+                                    );
+                                  }
+                                : undefined
+                            }
+                            delayLongPress={400}>
+                            <View
+                              style={[
+                                styles.eventRow,
+                                { backgroundColor: palette.overlay05 },
+                                onEditGoal &&
+                                  currentPoint !== point.pointNumber && {
+                                    borderColor: palette.accent,
+                                    borderWidth: 1,
+                                  },
+                              ]}>
+                              <Text style={[styles.eventLabel, { color: palette.accent }]}>
+                                ASSIST
+                              </Text>
+                              <Text
+                                style={[styles.eventPlayer, { color: palette.textInverse }]}
+                                numberOfLines={1}>
+                                {assistName}
+                              </Text>
+                            </View>
+                          </Pressable>
+                        </>
+                      )}
+                    </>
+                  ))}
               </View>
             </View>
           );
@@ -353,7 +445,6 @@ const styles = StyleSheet.create({
   pointBadgeText: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#FFFFFF',
   },
   scoreText: {
     fontSize: 16,
@@ -367,7 +458,6 @@ const styles = StyleSheet.create({
   statusChipText: {
     fontSize: 10,
     fontWeight: '700',
-    color: '#FFFFFF',
     letterSpacing: 0.5,
   },
   // Body
@@ -403,5 +493,13 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     lineHeight: 30,
+  },
+  editHint: {
+    alignItems: 'flex-start',
+    marginBottom: -4,
+  },
+  editHintText: {
+    fontSize: 11,
+    fontStyle: 'italic',
   },
 });

@@ -22,7 +22,9 @@ export interface PointEvents {
   turnovers: DisplayTurnover[];
   // Possession data
   offensiveTeam: 'team1' | 'team2'; // Who started with the disk
-  possessionType: 'hold' | 'break'; // scoringTeam === offensiveTeam ? hold : break
+  possessionType: 'hold' | 'break' | null; // scoringTeam === offensiveTeam ? hold : break, null if in progress
+  // Point in progress (turnovers recorded but no goal yet)
+  isInProgress?: boolean;
 }
 
 /**
@@ -98,6 +100,22 @@ export function computePointByPointEvents(
         currentOffensiveTeam = event.team === 'team1' ? 'team2' : 'team1';
       }
     }
+  }
+
+  // If there are pending turnovers after the loop, show them as an in-progress point
+  if (currentTurnovers.length > 0) {
+    result.push({
+      pointNumber: pointNumber + 1,
+      scoringTeam: 'team1', // placeholder - point not scored yet
+      scoreAfter: { team1: team1Score, team2: team2Score },
+      goalPlayerId: null,
+      assistPlayerId: null,
+      goalEventIndex: -1, // No goal yet
+      turnovers: currentTurnovers,
+      offensiveTeam: currentOffensiveTeam,
+      possessionType: null, // Unknown until point completes
+      isInProgress: true,
+    });
   }
 
   return result;

@@ -120,13 +120,46 @@ export function useMyFeatureNavigation() {
 
 ---
 
-## Popup Modals (Inline `<Modal>`)
+## Inline Modals (Simple Dialogs)
 
-For simple confirmation dialogs or quick input modals, you can use React Native's `<Modal>` component directly. These are distinct from screen modals above.
+For simple confirmation dialogs, input prompts, or settings that don't need a full-screen modal, use inline modals. There are two approaches:
 
-### Theming Tokens
+### Approach 1: AlertModal Component (Preferred)
 
-Always use these palette tokens for proper dark/light mode support:
+Use `AlertModal` from `@/components/ui/AlertModal` for simple dialogs with a few input fields or controls. It provides consistent AlertProvider-style theming automatically.
+
+```tsx
+import { AlertModal } from '@/components/ui/AlertModal';
+
+<AlertModal visible={isVisible} title="Edit Player" onClose={() => setIsVisible(false)}>
+  {/* Custom content: inputs, switches, buttons */}
+  <TextInput
+    style={[styles.input, { backgroundColor: palette.overlay05, color: palette.textInverse }]}
+    value={value}
+    onChangeText={setValue}
+  />
+  <View style={styles.buttonRow}>
+    <Pressable onPress={handleCancel}>
+      <Text>Cancel</Text>
+    </Pressable>
+    <Pressable onPress={handleSave}>
+      <Text>Save</Text>
+    </Pressable>
+  </View>
+</AlertModal>;
+```
+
+**Use AlertModal when:**
+
+- You need 1-3 input fields or toggles
+- Simple confirmation with custom content
+- Consistent styling matching AlertProvider is desired
+
+**Examples:** Edit Player, Rename Team, New Team modals in `EditRoster.tsx`
+
+### Approach 2: Raw `<Modal>` (Custom Styling)
+
+For modals needing completely custom styling, use React Native's `<Modal>` directly with these theming tokens:
 
 | Token                  | Usage                                   |
 | ---------------------- | --------------------------------------- |
@@ -138,31 +171,3 @@ Always use these palette tokens for proper dark/light mode support:
 | `palette.textOnAccent` | Save/confirm button text (filled style) |
 
 **⚠️ Do NOT use:** `palette.surface` or `palette.textPrimary` for modals - they invert between dark/light mode and will cause visibility issues.
-
-### Example
-
-```tsx
-<Modal visible={visible} transparent animationType="fade">
-  <Pressable
-    style={[styles.overlay, { backgroundColor: palette.overlayModal }]}
-    onPress={onDismiss}>
-    <View
-      style={[styles.content, { backgroundColor: palette.modalBg, borderColor: palette.overlay15 }]}
-      onStartShouldSetResponder={() => true}>
-      <Text style={{ color: palette.modalText }}>Modal Title</Text>
-      {/* Cancel button: outline style */}
-      <Pressable style={{ borderColor: palette.accent, borderWidth: 1 }}>
-        <Text style={{ color: palette.accent }}>Cancel</Text>
-      </Pressable>
-      {/* Save button: filled style */}
-      <Pressable style={{ backgroundColor: palette.accent }}>
-        <Text style={{ color: palette.textOnAccent }}>Save</Text>
-      </Pressable>
-    </View>
-  </Pressable>
-</Modal>
-```
-
-### Existing Popup Modals
-
-- `app/EditRoster.tsx` - Rename Team, New Team, Edit Player modals

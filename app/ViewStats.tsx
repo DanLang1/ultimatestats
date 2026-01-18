@@ -246,8 +246,15 @@ export default function ViewStatsScreen() {
     const rosterMap = new Map<string, Player>();
     games.forEach((g) => g.team1.roster.forEach((p) => rosterMap.set(p.id, p)));
     const mergedRoster = Array.from(rosterMap.values());
+
+    // Resolve team name
+    const firstGame = games[0];
+    const resolvedName = selectedTeam
+      ? resolveTeamName(selectedTeam, firstGame.team1.name, savedTeams)
+      : 'Combined';
+
     aggregatedData = {
-      teamName: selectedTeam || 'Combined',
+      teamName: resolvedName,
       gameCount: games.length,
       events: mergedEvents,
       games: games, // Pass the games list for CSV
@@ -255,8 +262,8 @@ export default function ViewStatsScreen() {
     };
   }
 
-  const handleSelectTeam = (teamName: string) => {
-    setSelectedTeam(teamName);
+  const handleSelectTeam = (teamId: string) => {
+    setSelectedTeam(teamId);
     setSelectedGameIds(new Set());
   };
 
@@ -303,7 +310,17 @@ export default function ViewStatsScreen() {
     if (showingAggregatedStats) return 'COMBINED STATS';
     if (viewMode === 'current') return 'CURRENT GAME';
     if (viewMode === 'aggregate') {
-      return selectedTeam ? selectedTeam.toUpperCase() : 'AGGREGATE';
+      if (selectedTeam) {
+        // Try to find a game for this team to get a fallback name
+        const gameForTeam = savedGames.find((g) => g.team1.id === selectedTeam);
+        const name = resolveTeamName(
+          selectedTeam,
+          gameForTeam?.team1.name ?? 'Unknown Team',
+          savedTeams,
+        );
+        return name.toUpperCase();
+      }
+      return 'AGGREGATE';
     }
     return 'SAVED GAMES';
   };

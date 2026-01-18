@@ -4,6 +4,7 @@ import { TeamColorPicker } from '@/components/ui/ColorPicker';
 import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import { Switch } from '@/components/ui/Switch';
 import { useTheme } from '@/context/ThemeContext';
+import { useKeyboardDidHide } from '@/hooks/useKeyboardDidHide';
 import { useNewGame } from '@/hooks/useNewGame';
 import { SavedTeam } from '@/lib/storage';
 import { useGameStore } from '@/store/gameStore';
@@ -47,48 +48,102 @@ export default function SettingsScreen() {
     saveCurrentTeam,
   } = useGameStore();
 
-  const { confirmNewGame } = useNewGame();
+  const { confirmNewGame } = useNewGame({ onSuccess: () => router.replace('/') });
 
   // Derived values from currentTeam
   const team1Name = currentTeam?.name ?? 'Team 1';
   const team1Roster = currentTeam?.roster ?? [];
 
   const timeoutsCount = team1Timeouts.length;
-  const [team1NameResetKey, setTeam1NameResetKey] = useState(0);
-  const [team2NameResetKey, setTeam2NameResetKey] = useState(0);
+  // Local draft state for controlled inputs (needed for validation or string->number conversion)
+  const [team1NameDraft, setTeam1NameDraft] = useState(team1Name);
+  const [gameToInput, setGameToInput] = useState(gameTo.toString());
+  const [gameLengthInput, setGameLengthInput] = useState(gameLength.toString());
+  const [softCapInput, setSoftCapInput] = useState((gameLength - softCapMins).toString());
 
   // Soft Cap displays as time (when soft cap triggers), converts to softCapMins for storage
   const softCapTime = gameLength - softCapMins;
 
-  const handleGameLengthEndEditing = (e: { nativeEvent: { text: string } }) => {
-    const num = parseInt(e.nativeEvent.text, 10);
-    if (isNaN(num) || num < 1) return;
+  // Save all draft inputs - called on keyboard hide (for Android back button)
+  const saveAllDrafts = () => {
+    // Team 1 name
+    const newTeam1Name = team1NameDraft.trim();
+    if (newTeam1Name && currentTeam) {
+      const existingTeam = savedTeams.find(
+        (t) => t.name.toLowerCase() === newTeam1Name.toLowerCase() && t.id !== currentTeam.id,
+      );
+      if (!existingTeam && newTeam1Name !== team1Name) {
+        const updatedTeam: SavedTeam = { ...currentTeam, name: newTeam1Name };
+        setCurrentTeam(updatedTeam);
+        saveCurrentTeam();
+      }
+    }
+
+    // Game To
+    const gameToNum = parseInt(gameToInput, 10);
+    if (!isNaN(gameToNum) && gameToNum >= 1 && gameToNum !== gameTo) {
+      setGameTo(gameToNum);
+    }
+
+    // Game Length
+    const gameLengthNum = parseInt(gameLengthInput, 10);
+    if (!isNaN(gameLengthNum) && gameLengthNum >= 1 && gameLengthNum !== gameLength) {
+      if (softCapMins > gameLengthNum) {
+        setSoftCapMins(gameLengthNum);
+      }
+      setGameLength(gameLengthNum);
+    }
+
+    // Soft Cap
+    const softCapNum = parseInt(softCapInput, 10);
+    if (!isNaN(softCapNum)) {
+      const clamped = Math.max(0, Math.min(gameLength, softCapNum));
+      const newSoftCapMins = Math.max(0, gameLength - clamped);
+      if (newSoftCapMins !== softCapMins) {
+        setSoftCapMins(newSoftCapMins);
+      }
+    }
+  };
+
+  // Handle Android back button dismissing keyboard (doesn't trigger onBlur)
+  useKeyboardDidHide(saveAllDrafts);
+
+  const handleGameLengthBlur = () => {
+    const num = parseInt(gameLengthInput, 10);
+    if (isNaN(num) || num < 1) {
+      setGameLengthInput(gameLength.toString()); // Revert to valid value
+      return;
+    }
     // Clamp softCapMins if it would exceed new game length
-    // This preserves "minutes before end" - only adjusting if necessary
     if (softCapMins > num) {
       setSoftCapMins(num);
+      setSoftCapInput('0');
     }
     setGameLength(num);
   };
 
-  const handleSoftCapEndEditing = (e: { nativeEvent: { text: string } }) => {
-    const num = parseInt(e.nativeEvent.text, 10);
-    if (isNaN(num)) return;
+  const handleSoftCapBlur = () => {
+    const num = parseInt(softCapInput, 10);
+    if (isNaN(num)) {
+      setSoftCapInput(softCapTime.toString()); // Revert to valid value
+      return;
+    }
     const clamped = Math.max(0, Math.min(gameLength, num));
     setSoftCapMins(Math.max(0, gameLength - clamped));
+    setSoftCapInput(clamped.toString());
   };
 
   const handleEditRoster = () => {
     router.push({ pathname: '/EditRoster', params: { teamName: team1Name } });
   };
 
-  // Save team when name editing finishes (not on every keystroke)
-  const handleTeam1NameEndEditing = (e: { nativeEvent: { text: string } }) => {
-    const newName = e.nativeEvent.text.trim();
+  // Save team when name editing finishes (on blur)
+  const handleTeam1NameBlur = () => {
+    const newName = team1NameDraft.trim();
 
-    // Prevent empty name
+    // Prevent empty name - revert to current
     if (!newName) {
-      setTeam1NameResetKey((k) => k + 1);
+      setTeam1NameDraft(team1Name);
       return;
     }
 
@@ -103,8 +158,7 @@ export default function SettingsScreen() {
         message: `A team named "${existingTeam.name}" already exists. Please choose a different name.`,
         buttons: [{ text: 'I will not try to break the app again', style: 'default' }],
       });
-      // Force TextInput to re-render with original name
-      setTeam1NameResetKey((k) => k + 1);
+      setTeam1NameDraft(team1Name); // Revert to current name
       return;
     }
 
@@ -116,19 +170,12 @@ export default function SettingsScreen() {
     saveCurrentTeam();
   };
 
-  const handleTeam2NameEndEditing = (e: { nativeEvent: { text: string } }) => {
-    const newName = e.nativeEvent.text.trim();
-    if (!newName) {
-      // Revert to previous value if empty
-      setTeam2NameResetKey((k) => k + 1);
+  const handleGameToBlur = () => {
+    const num = parseInt(gameToInput, 10);
+    if (isNaN(num) || num < 1) {
+      setGameToInput(gameTo.toString()); // Revert to valid value
       return;
     }
-    setTeam2Name(newName);
-  };
-
-  const handleGameToEndEditing = (e: { nativeEvent: { text: string } }) => {
-    const num = parseInt(e.nativeEvent.text, 10);
-    if (isNaN(num) || num < 1) return;
     setGameTo(num);
   };
 
@@ -204,15 +251,13 @@ export default function SettingsScreen() {
                       borderStyle,
                       textInverseStyle,
                       inputBgStyle,
-                      gameActive && styles.inputDisabled,
                     ]}
-                    key={team1NameResetKey}
-                    defaultValue={team1Name}
-                    onEndEditing={handleTeam1NameEndEditing}
+                    value={team1NameDraft}
+                    onChangeText={setTeam1NameDraft}
+                    onBlur={handleTeam1NameBlur}
                     placeholder="Team 1 Name"
                     placeholderTextColor={palette.textMuted}
                     maxLength={20}
-                    editable={!gameActive}
                   />
                 </View>
 
@@ -243,9 +288,8 @@ export default function SettingsScreen() {
                   textInverseStyle,
                   inputBgStyle,
                 ]}
-                key={team2NameResetKey}
-                defaultValue={team2Name}
-                onEndEditing={handleTeam2NameEndEditing}
+                value={team2Name}
+                onChangeText={setTeam2Name}
                 placeholder="Team 2 Name"
                 placeholderTextColor={palette.textMuted}
                 maxLength={20}
@@ -305,8 +349,9 @@ export default function SettingsScreen() {
                     inputBgStyle,
                     gameActive && styles.inputDisabled,
                   ]}
-                  defaultValue={gameTo.toString()}
-                  onEndEditing={handleGameToEndEditing}
+                  value={gameToInput}
+                  onChangeText={setGameToInput}
+                  onBlur={handleGameToBlur}
                   placeholder="15"
                   placeholderTextColor={palette.textMuted}
                   keyboardType="numeric"
@@ -332,8 +377,9 @@ export default function SettingsScreen() {
                       textInverseStyle,
                       inputBgStyle,
                     ]}
-                    defaultValue={gameLength.toString()}
-                    onEndEditing={handleGameLengthEndEditing}
+                    value={gameLengthInput}
+                    onChangeText={setGameLengthInput}
+                    onBlur={handleGameLengthBlur}
                     placeholder="90"
                     placeholderTextColor={palette.textMuted}
                     keyboardType="numeric"
@@ -373,8 +419,9 @@ export default function SettingsScreen() {
                       textInverseStyle,
                       inputBgStyle,
                     ]}
-                    defaultValue={softCapTime.toString()}
-                    onEndEditing={handleSoftCapEndEditing}
+                    value={softCapInput}
+                    onChangeText={setSoftCapInput}
+                    onBlur={handleSoftCapBlur}
                     placeholder="70"
                     placeholderTextColor={palette.textMuted}
                     keyboardType="numeric"

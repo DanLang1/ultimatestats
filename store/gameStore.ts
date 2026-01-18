@@ -350,6 +350,7 @@ export const useGameStore = create<GameState>()(
               id: newId,
               name: trimmedName,
               isActive: true,
+              matchingType: null,
             });
           });
           return newId;

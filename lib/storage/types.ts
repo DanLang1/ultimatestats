@@ -19,10 +19,13 @@ export interface SavedGame {
   startingPossession: 'team1' | 'team2';
 }
 
+export type MatchingType = 'fmp' | 'mmp';
+
 export interface Player {
   id: string;
   name: string;
   isActive: boolean;
+  matchingType: MatchingType | null; // null = not set, 'fmp' = female matching, 'mmp' = male matching
 }
 
 export interface SavedTeam {

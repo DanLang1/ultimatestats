@@ -6,6 +6,19 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.1.0',
+    date: 'January 17, 2026',
+    changes: [
+      'Added halftime modal',
+      'Added event editing in timeline (long press events with a border)',
+      'Game timeline now tracks each event during a point instead of only after a point is scored',
+      'Made 50/50 badges longer to show both player names',
+      'Team name can now be edited during a game',
+      'Added FMP/MMP designation to players, can be set in the roster management screen. Currently no stats attached to this, but allows it in the future',
+      'Starting a new game from settings now takes you directly to the begin game modal',
+    ],
+  },
+  {
     version: '1.0.2',
     date: 'January 11, 2026',
     changes: [

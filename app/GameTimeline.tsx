@@ -13,6 +13,8 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 export default function GameTimelineScreen() {
   const { palette } = useTheme();
   const params = useLocalSearchParams<{ gameId?: string }>();
+  // If gameId is present, it's a saved game
+  const isSavedGame = !!params.gameId;
 
   const { currentTeam, team2Name, events, savedGames, savedTeams, startingPossession, gameTo } =
     useGameStore();
@@ -88,6 +90,7 @@ export default function GameTimelineScreen() {
         {hasData ? (
           <EventTimeline
             points={pointEvents}
+            isSavedGame={isSavedGame}
             team1Name={gameData.team1Name}
             team2Name={gameData.team2Name}
             gameTo={gameData.gameTo}

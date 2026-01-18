@@ -99,9 +99,23 @@ export default function PullPromptScreen() {
         <Animated.View
           entering={SlideInDown.duration(400)}
           style={[styles.sheet, { backgroundColor: palette.modalBg, shadowColor: palette.shadow }]}>
+          {/* Close button - top right */}
+          <Pressable
+            onPress={() => router.replace('/Dashboard')}
+            style={({ pressed }) => [styles.closeBtn, pressed && { opacity: 0.7 }]}
+            hitSlop={12}>
+            <MaterialCommunityIcons name="close" size={20} color={palette.textMuted} />
+          </Pressable>
+
           {/* Top Bar: Settings Pills */}
           <Animated.View entering={FadeIn.delay(100)} style={styles.headerContainer}>
             <View style={styles.settingsBar}>
+              <Pressable
+                onPress={handleChangeSettings}
+                hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+                style={({ pressed }) => [styles.editIconBtn, pressed && { opacity: 0.5 }]}>
+                <MaterialCommunityIcons name="pencil" size={14} color={palette.accent} />
+              </Pressable>
               {settingsBadges.map((badge, index) => (
                 <View
                   key={index}
@@ -109,12 +123,6 @@ export default function PullPromptScreen() {
                   {badge}
                 </View>
               ))}
-              <Pressable
-                onPress={handleChangeSettings}
-                hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-                style={({ pressed }) => [styles.editIconBtn, pressed && { opacity: 0.5 }]}>
-                <MaterialCommunityIcons name="pencil" size={14} color={palette.accent} />
-              </Pressable>
             </View>
 
             <View style={styles.lockInfo}>
@@ -276,5 +284,12 @@ const styles = StyleSheet.create({
   lockText: {
     fontSize: 12,
     fontWeight: '700',
+  },
+  closeBtn: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    padding: 4,
+    zIndex: 20,
   },
 });

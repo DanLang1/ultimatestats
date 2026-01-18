@@ -1,23 +1,15 @@
+import { AlertModal } from '@/components/ui/AlertModal';
 import { useAlert } from '@/components/ui/AlertProvider';
 import { useTheme } from '@/context/ThemeContext';
 import { hasPlayerWithName } from '@/lib/playerUtils';
 import { SavedTeam } from '@/lib/storage';
-import { Player } from '@/lib/storage/types';
+import { MatchingType, Player } from '@/lib/storage/types';
 import { generateId } from '@/lib/utils';
 import { useGameStore } from '@/store/gameStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import {
-  Modal,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Switch,
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
 
 export default function EditRosterScreen() {
   const { teamName } = useLocalSearchParams<{ teamName: string }>();
@@ -53,6 +45,7 @@ export default function EditRosterScreen() {
   const [editingPlayer, setEditingPlayer] = useState<Player | null>(null);
   const [editPlayerName, setEditPlayerName] = useState('');
   const [editPlayerActive, setEditPlayerActive] = useState(true);
+  const [editPlayerMatchingType, setEditPlayerMatchingType] = useState<MatchingType | null>(null);
   const [renameModalVisible, setRenameModalVisible] = useState(false);
   const [editTeamName, setEditTeamName] = useState('');
   const [newTeamModalVisible, setNewTeamModalVisible] = useState(false);
@@ -76,6 +69,14 @@ export default function EditRosterScreen() {
   const newTeamNameExists =
     newTeamName.trim() !== '' &&
     savedTeams.some((t: SavedTeam) => t.name.toLowerCase() === newTeamName.trim().toLowerCase());
+
+  // Derived: check if edited player name already exists (excluding current player)
+  const editPlayerNameExists =
+    editPlayerName.trim() !== '' &&
+    roster.some(
+      (p) =>
+        p.name.toLowerCase() === editPlayerName.trim().toLowerCase() && p.id !== editingPlayer?.id,
+    );
 
   const handleRenameTeam = () => {
     const newName = editTeamName.trim();
@@ -189,6 +190,7 @@ export default function EditRosterScreen() {
     setEditingPlayer(player);
     setEditPlayerName(player.name);
     setEditPlayerActive(player.isActive);
+    setEditPlayerMatchingType(player.matchingType ?? null);
     setEditModalVisible(true);
   };
 
@@ -206,7 +208,14 @@ export default function EditRosterScreen() {
 
     if (newName && !isDuplicate) {
       const updatedRoster = roster.map((p) =>
-        p.id === editingPlayer.id ? { ...p, name: newName, isActive: editPlayerActive } : p,
+        p.id === editingPlayer.id
+          ? {
+              ...p,
+              name: newName,
+              isActive: editPlayerActive,
+              matchingType: editPlayerMatchingType,
+            }
+          : p,
       );
       setCurrentTeam({ ...currentTeam, roster: updatedRoster });
       // Auto-save team
@@ -264,23 +273,17 @@ export default function EditRosterScreen() {
           <MaterialCommunityIcons name="arrow-left" size={24} color={palette.textInverse} />
         </Pressable>
 
-        {!gameActive ? (
-          <Pressable
-            style={styles.teamHeaderRow}
-            onPress={() => {
-              setEditTeamName(currentTeam?.name ?? '');
-              setRenameModalVisible(true);
-            }}>
-            <Text style={[styles.headerTitle, { color: palette.textMuted }]}>
-              {(currentTeam?.name ?? teamName ?? 'TEAM').toUpperCase()}
-            </Text>
-            <MaterialCommunityIcons name="pencil-outline" size={17} color={palette.textMuted} />
-          </Pressable>
-        ) : (
+        <Pressable
+          style={styles.teamHeaderRow}
+          onPress={() => {
+            setEditTeamName(currentTeam?.name ?? '');
+            setRenameModalVisible(true);
+          }}>
           <Text style={[styles.headerTitle, { color: palette.textMuted }]}>
             {(currentTeam?.name ?? teamName ?? 'TEAM').toUpperCase()}
           </Text>
-        )}
+          <MaterialCommunityIcons name="pencil-outline" size={17} color={palette.textMuted} />
+        </Pressable>
 
         <View style={styles.headerActions}>
           {!gameActive && hasOtherTeams && (
@@ -360,7 +363,13 @@ export default function EditRosterScreen() {
       </View>
 
       {/* Player List - 2 Column Grid */}
+
       <ScrollView style={styles.playerList} contentContainerStyle={styles.playerListContent}>
+        {roster.length > 0 && (
+          <View style={styles.listHeader}>
+            <Text style={[styles.listHint, { color: palette.textMuted }]}>Tap player to edit</Text>
+          </View>
+        )}
         {roster.length === 0 ? (
           <View style={styles.emptyState}>
             <MaterialCommunityIcons
@@ -396,11 +405,6 @@ export default function EditRosterScreen() {
                     numberOfLines={1}>
                     {player.name}
                   </Text>
-                  <MaterialCommunityIcons
-                    name="pencil"
-                    size={12}
-                    color={player.isActive ? palette.textMuted : palette.overlay20}
-                  />
                 </Pressable>
                 <Pressable
                   style={({ pressed }) => [
@@ -422,223 +426,248 @@ export default function EditRosterScreen() {
       </ScrollView>
 
       {/* Edit Player Modal */}
-      <Modal visible={editModalVisible} transparent animationType="fade">
-        <Pressable
-          style={[styles.modalOverlay, { backgroundColor: palette.overlayDark60 }]}
-          onPress={() => setEditModalVisible(false)}>
-          <View
-            style={[
-              styles.modalContent,
-              { backgroundColor: palette.primary, borderColor: palette.overlay15 },
-            ]}
-            onStartShouldSetResponder={() => true}>
-            <Text style={[styles.modalTitle, { color: palette.textMuted }]}>EDIT PLAYER</Text>
-            <TextInput
+      <AlertModal
+        visible={editModalVisible}
+        title="Edit Player"
+        onClose={() => setEditModalVisible(false)}>
+        <TextInput
+          style={[
+            styles.alertInput,
+            {
+              borderColor: editPlayerNameExists ? palette.danger : palette.overlay20,
+              color: palette.textInverse,
+              backgroundColor: palette.overlay05,
+            },
+          ]}
+          placeholder="Player name..."
+          placeholderTextColor={palette.textMuted}
+          value={editPlayerName}
+          onChangeText={setEditPlayerName}
+          autoFocus
+          maxLength={20}
+        />
+        {editPlayerNameExists && (
+          <Text style={[styles.errorText, { color: palette.danger }]}>
+            A player with this name already exists
+          </Text>
+        )}
+
+        {/* Active Toggle */}
+        <View style={styles.activeToggleRow}>
+          <Text style={[styles.activeToggleLabel, { color: palette.textInverse }]}>
+            Active for games
+          </Text>
+          <Switch
+            value={editPlayerActive}
+            onValueChange={setEditPlayerActive}
+            trackColor={{ false: palette.overlay20, true: palette.accent }}
+            thumbColor={editPlayerActive ? palette.textOnAccent : palette.textMuted}
+          />
+        </View>
+        <Text style={[styles.activeToggleHint, { color: palette.textMuted }]}>
+          Inactive players won&apos;t appear during stat tracking
+        </Text>
+
+        {/* Matching Type Toggle */}
+        <View style={[styles.activeToggleRow, { marginBottom: 24 }]}>
+          <Text style={[styles.activeToggleLabel, { color: palette.textInverse }]}>
+            Matching preference
+          </Text>
+          <View style={styles.matchingTypeRow}>
+            <Pressable
               style={[
-                styles.modalInput,
-                {
-                  borderColor: palette.overlay20,
-                  color: palette.textInverse,
-                  backgroundColor: palette.overlay08,
+                styles.matchingTypePill,
+                { borderColor: palette.overlay20 },
+                editPlayerMatchingType === 'fmp' && {
+                  backgroundColor: palette.accent,
+                  borderColor: palette.accent,
                 },
               ]}
-              placeholder="Player name..."
-              placeholderTextColor={palette.textMuted}
-              value={editPlayerName}
-              onChangeText={setEditPlayerName}
-              autoFocus
-              maxLength={20}
-            />
-
-            {/* Active Toggle */}
-            <View style={styles.activeToggleRow}>
-              <Text style={[styles.activeToggleLabel, { color: palette.textInverse }]}>
-                Active for games
+              onPress={() => setEditPlayerMatchingType('fmp')}>
+              <Text
+                style={[
+                  styles.matchingTypePillText,
+                  {
+                    color:
+                      editPlayerMatchingType === 'fmp' ? palette.textOnAccent : palette.textMuted,
+                  },
+                ]}>
+                FMP
               </Text>
-              <Switch
-                value={editPlayerActive}
-                onValueChange={setEditPlayerActive}
-                trackColor={{ false: palette.overlay20, true: palette.accent }}
-                thumbColor={palette.textInverse}
-              />
-            </View>
-            <Text style={[styles.activeToggleHint, { color: palette.textMuted }]}>
-              Inactive players won&apos;t appear during stat tracking
-            </Text>
-
-            <View style={styles.modalButtons}>
-              <Pressable
-                style={({ pressed }) => [
-                  styles.modalButton,
-                  styles.modalCancelButton,
-                  { backgroundColor: palette.overlay10, borderColor: palette.overlay20 },
-                  pressed && styles.buttonPressed,
-                ]}
-                onPress={() => setEditModalVisible(false)}>
-                <Text style={[styles.modalCancelText, { color: palette.textInverse }]}>Cancel</Text>
-              </Pressable>
-              <Pressable
-                style={({ pressed }) => [
-                  styles.modalButton,
-                  styles.modalSaveButton,
-                  { backgroundColor: palette.accent },
-                  pressed && styles.buttonPressed,
-                ]}
-                onPress={handleConfirmEdit}>
-                <Text style={[styles.modalSaveText, { color: palette.textOnAccent }]}>Save</Text>
-              </Pressable>
-            </View>
+            </Pressable>
+            <Pressable
+              style={[
+                styles.matchingTypePill,
+                { borderColor: palette.overlay20 },
+                editPlayerMatchingType === 'mmp' && {
+                  backgroundColor: palette.accent,
+                  borderColor: palette.accent,
+                },
+              ]}
+              onPress={() => setEditPlayerMatchingType('mmp')}>
+              <Text
+                style={[
+                  styles.matchingTypePillText,
+                  {
+                    color:
+                      editPlayerMatchingType === 'mmp' ? palette.textOnAccent : palette.textMuted,
+                  },
+                ]}>
+                MMP
+              </Text>
+            </Pressable>
           </View>
-        </Pressable>
-      </Modal>
+        </View>
+
+        <View style={styles.alertButtonContainer}>
+          <Pressable
+            style={({ pressed }) => [
+              styles.alertButton,
+              styles.alertCancelButton,
+              { backgroundColor: palette.overlay10, borderColor: palette.overlay20 },
+              pressed && styles.buttonPressed,
+            ]}
+            onPress={() => setEditModalVisible(false)}>
+            <Text style={[styles.alertButtonText, { color: palette.textInverse }]}>Cancel</Text>
+          </Pressable>
+          <Pressable
+            style={({ pressed }) => [
+              styles.alertButton,
+              { backgroundColor: editPlayerNameExists ? palette.overlay20 : palette.accent },
+              pressed && styles.buttonPressed,
+            ]}
+            onPress={handleConfirmEdit}
+            disabled={editPlayerNameExists}>
+            <Text
+              style={[
+                styles.alertButtonText,
+                { color: editPlayerNameExists ? palette.textMuted : palette.textOnAccent },
+              ]}>
+              Save
+            </Text>
+          </Pressable>
+        </View>
+      </AlertModal>
 
       {/* Rename Team Modal */}
-      <Modal visible={renameModalVisible} transparent animationType="fade">
-        <Pressable
-          style={[styles.modalOverlay, { backgroundColor: palette.overlayModal }]}
-          onPress={() => setRenameModalVisible(false)}>
-          <View
-            style={[
-              styles.modalContent,
-              { backgroundColor: palette.modalBg, borderColor: palette.overlay15 },
+      <AlertModal
+        visible={renameModalVisible}
+        title="Rename Team"
+        onClose={() => setRenameModalVisible(false)}>
+        <TextInput
+          style={[
+            styles.alertInput,
+            {
+              borderColor: teamNameExists ? palette.danger : palette.overlay20,
+              color: palette.textInverse,
+              backgroundColor: palette.overlay05,
+            },
+          ]}
+          value={editTeamName}
+          onChangeText={setEditTeamName}
+          placeholder="Team name"
+          placeholderTextColor={palette.textMuted}
+          autoFocus
+          maxLength={20}
+        />
+        {teamNameExists && (
+          <Text style={[styles.errorText, { color: palette.danger }]}>
+            A team with this name already exists
+          </Text>
+        )}
+        <View style={styles.alertButtonContainer}>
+          <Pressable
+            style={({ pressed }) => [
+              styles.alertButton,
+              styles.alertCancelButton,
+              { backgroundColor: palette.overlay10, borderColor: palette.overlay20 },
+              pressed && styles.buttonPressed,
             ]}
-            onStartShouldSetResponder={() => true}>
-            <Text style={[styles.modalTitle, { color: palette.modalText }]}>Rename Team</Text>
-            <TextInput
+            onPress={() => setRenameModalVisible(false)}>
+            <Text style={[styles.alertButtonText, { color: palette.textInverse }]}>Cancel</Text>
+          </Pressable>
+          <Pressable
+            style={({ pressed }) => [
+              styles.alertButton,
+              { backgroundColor: teamNameExists ? palette.overlay20 : palette.accent },
+              pressed && styles.buttonPressed,
+            ]}
+            onPress={handleRenameTeam}
+            disabled={teamNameExists}>
+            <Text
               style={[
-                styles.modalInput,
-                {
-                  borderColor: teamNameExists ? palette.danger : palette.overlay20,
-                  color: palette.inputText,
-                  backgroundColor: palette.inputBg,
-                },
-              ]}
-              value={editTeamName}
-              onChangeText={setEditTeamName}
-              placeholder="Team name"
-              placeholderTextColor={palette.textMuted}
-              autoFocus
-              maxLength={20}
-            />
-            {teamNameExists && (
-              <Text style={[styles.errorText, { color: palette.danger }]}>
-                A team with this name already exists
-              </Text>
-            )}
-            <View style={styles.modalButtons}>
-              <Pressable
-                style={({ pressed }) => [
-                  styles.modalButton,
-                  styles.modalCancelButton,
-                  {
-                    backgroundColor: 'transparent',
-                    borderColor: palette.accent,
-                    borderWidth: 1,
-                  },
-                  pressed && styles.buttonPressed,
-                ]}
-                onPress={() => setRenameModalVisible(false)}>
-                <Text style={[styles.modalCancelText, { color: palette.accent }]}>Cancel</Text>
-              </Pressable>
-              <Pressable
-                style={({ pressed }) => [
-                  styles.modalButton,
-                  styles.modalSaveButton,
-                  { backgroundColor: teamNameExists ? palette.overlay20 : palette.accent },
-                  pressed && styles.buttonPressed,
-                ]}
-                onPress={handleRenameTeam}
-                disabled={teamNameExists}>
-                <Text
-                  style={[
-                    styles.modalSaveText,
-                    { color: teamNameExists ? palette.textMuted : palette.textOnAccent },
-                  ]}>
-                  Save
-                </Text>
-              </Pressable>
-            </View>
-          </View>
-        </Pressable>
-      </Modal>
+                styles.alertButtonText,
+                { color: teamNameExists ? palette.textMuted : palette.textOnAccent },
+              ]}>
+              Save
+            </Text>
+          </Pressable>
+        </View>
+      </AlertModal>
 
       {/* New Team Modal */}
-      <Modal visible={newTeamModalVisible} transparent animationType="fade">
-        <Pressable
-          style={[styles.modalOverlay, { backgroundColor: palette.overlayModal }]}
-          onPress={() => setNewTeamModalVisible(false)}>
-          <View
-            style={[
-              styles.modalContent,
-              { backgroundColor: palette.modalBg, borderColor: palette.overlay15 },
+      <AlertModal
+        visible={newTeamModalVisible}
+        title="New Team"
+        onClose={() => setNewTeamModalVisible(false)}>
+        <TextInput
+          style={[
+            styles.alertInput,
+            {
+              borderColor: newTeamNameExists ? palette.danger : palette.overlay20,
+              color: palette.textInverse,
+              backgroundColor: palette.overlay05,
+            },
+          ]}
+          value={newTeamName}
+          onChangeText={setNewTeamName}
+          placeholder="Team name"
+          placeholderTextColor={palette.textMuted}
+          autoFocus
+          maxLength={20}
+        />
+        {newTeamNameExists && (
+          <Text style={[styles.errorText, { color: palette.danger }]}>
+            A team with this name already exists
+          </Text>
+        )}
+        <View style={styles.alertButtonContainer}>
+          <Pressable
+            style={({ pressed }) => [
+              styles.alertButton,
+              styles.alertCancelButton,
+              { backgroundColor: palette.overlay10, borderColor: palette.overlay20 },
+              pressed && styles.buttonPressed,
             ]}
-            onStartShouldSetResponder={() => true}>
-            <Text style={[styles.modalTitle, { color: palette.modalText }]}>New Team</Text>
-            <TextInput
+            onPress={() => setNewTeamModalVisible(false)}>
+            <Text style={[styles.alertButtonText, { color: palette.textInverse }]}>Cancel</Text>
+          </Pressable>
+          <Pressable
+            style={({ pressed }) => [
+              styles.alertButton,
+              {
+                backgroundColor:
+                  newTeamNameExists || !newTeamName.trim() ? palette.overlay20 : palette.accent,
+              },
+              pressed && styles.buttonPressed,
+            ]}
+            onPress={handleConfirmNewTeam}
+            disabled={newTeamNameExists || !newTeamName.trim()}>
+            <Text
               style={[
-                styles.modalInput,
+                styles.alertButtonText,
                 {
-                  borderColor: newTeamNameExists ? palette.danger : palette.overlay20,
-                  color: palette.inputText,
-                  backgroundColor: palette.inputBg,
+                  color:
+                    newTeamNameExists || !newTeamName.trim()
+                      ? palette.textMuted
+                      : palette.textOnAccent,
                 },
-              ]}
-              value={newTeamName}
-              onChangeText={setNewTeamName}
-              placeholder="Team name"
-              placeholderTextColor={palette.textMuted}
-              autoFocus
-              maxLength={20}
-            />
-            {newTeamNameExists && (
-              <Text style={[styles.errorText, { color: palette.danger }]}>
-                A team with this name already exists
-              </Text>
-            )}
-            <View style={styles.modalButtons}>
-              <Pressable
-                style={({ pressed }) => [
-                  styles.modalButton,
-                  styles.modalCancelButton,
-                  {
-                    backgroundColor: 'transparent',
-                    borderColor: palette.accent,
-                    borderWidth: 1,
-                  },
-                  pressed && styles.buttonPressed,
-                ]}
-                onPress={() => setNewTeamModalVisible(false)}>
-                <Text style={[styles.modalCancelText, { color: palette.accent }]}>Cancel</Text>
-              </Pressable>
-              <Pressable
-                style={({ pressed }) => [
-                  styles.modalButton,
-                  styles.modalSaveButton,
-                  {
-                    backgroundColor:
-                      newTeamNameExists || !newTeamName.trim() ? palette.overlay20 : palette.accent,
-                  },
-                  pressed && styles.buttonPressed,
-                ]}
-                onPress={handleConfirmNewTeam}
-                disabled={newTeamNameExists || !newTeamName.trim()}>
-                <Text
-                  style={[
-                    styles.modalSaveText,
-                    {
-                      color:
-                        newTeamNameExists || !newTeamName.trim()
-                          ? palette.textMuted
-                          : palette.textOnAccent,
-                    },
-                  ]}>
-                  Create
-                </Text>
-              </Pressable>
-            </View>
-          </View>
-        </Pressable>
-      </Modal>
+              ]}>
+              Create
+            </Text>
+          </Pressable>
+        </View>
+      </AlertModal>
     </View>
   );
 }
@@ -691,6 +720,8 @@ const styles = StyleSheet.create({
   errorText: {
     fontSize: 12,
     marginLeft: 4,
+    marginTop: -8,
+    marginBottom: 4,
   },
   addButton: {
     width: 48,
@@ -708,6 +739,15 @@ const styles = StyleSheet.create({
   },
   playerListContent: {
     padding: 20,
+  },
+
+  listHeader: {
+    marginBottom: 8,
+    alignItems: 'flex-end',
+  },
+  listHint: {
+    fontSize: 11,
+    fontStyle: 'italic',
   },
   emptyState: {
     flex: 1,
@@ -832,5 +872,48 @@ const styles = StyleSheet.create({
   headerActionButton: {
     padding: 8,
     borderRadius: 20,
+  },
+  // Alert modal content styles
+  alertInput: {
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontSize: 16,
+    marginBottom: 8,
+  },
+  alertButtonContainer: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  alertButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  alertCancelButton: {
+    borderWidth: 1,
+  },
+  alertButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  matchingTypeRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  matchingTypePill: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 16,
+    borderWidth: 1,
+    minWidth: 50,
+    alignItems: 'center',
+  },
+  matchingTypePillText: {
+    fontSize: 12,
+    fontWeight: '600',
   },
 });

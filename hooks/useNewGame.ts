@@ -2,7 +2,7 @@ import { useAlert } from '@/components/ui/AlertProvider';
 import { useGameStore } from '@/store/gameStore';
 
 interface UseNewGameOptions {
-  onSuccess?: () => void;
+  onSuccess: () => void;
 }
 
 export function useNewGame(options?: UseNewGameOptions) {
