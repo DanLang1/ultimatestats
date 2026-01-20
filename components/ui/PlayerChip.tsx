@@ -5,10 +5,11 @@ import { Pressable, StyleSheet, Text } from 'react-native';
 interface PlayerChipProps {
   name: string;
   selected?: boolean;
+  disabled?: boolean;
   onPress: () => void;
 }
 
-export function PlayerChip({ name, selected = false, onPress }: PlayerChipProps) {
+export function PlayerChip({ name, selected = false, disabled = false, onPress }: PlayerChipProps) {
   const { palette } = useTheme();
 
   return (
@@ -17,8 +18,10 @@ export function PlayerChip({ name, selected = false, onPress }: PlayerChipProps)
         styles.chip,
         { backgroundColor: palette.modalBg, borderColor: palette.border },
         selected && { backgroundColor: palette.accent, borderColor: palette.accent },
+        disabled && { opacity: 0.4 },
       ]}
-      onPress={onPress}>
+      onPress={disabled ? undefined : onPress}
+      disabled={disabled}>
       <Text
         style={[
           styles.chipText,

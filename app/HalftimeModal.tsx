@@ -131,7 +131,7 @@ export default function HalftimeModal() {
                     {formattedTime}
                   </Text>
                   <Text style={[styles.timerStateCompact, { color: palette.textMuted }]}>
-                    {isRunning ? 'PAUSE' : 'RESUME'}
+                    {isRunning ? 'PAUSE' : 'START'}
                   </Text>
                 </Pressable>
 

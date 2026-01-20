@@ -73,7 +73,7 @@ export default function EventTimeline({
         {onEditEvent && (
           <View style={styles.editHint}>
             <Text style={[styles.editHintText, { color: palette.textMuted }]}>
-              Long press bordered events to edit
+              Long press event to edit
             </Text>
           </View>
         )}
@@ -205,7 +205,8 @@ export default function EventTimeline({
                   // Disable editing for current point in live games
                   const isCurrentPoint =
                     currentPoint !== undefined && point.pointNumber === currentPoint;
-                  const canEdit = onEditEvent && !isCurrentPoint && !isOpponent;
+                  // Allow editing our turnovers, our blocks, and opponent turnovers (to convert to blocks)
+                  const canEdit = onEditEvent && !isCurrentPoint;
 
                   // Calculate relative time since point start
                   const relativeTime =
@@ -224,26 +225,37 @@ export default function EventTimeline({
                         <View
                           style={[
                             styles.eventRow,
-                            { backgroundColor: isOpponent ? palette.overlay10 : bgColor },
+                            {
+                              backgroundColor: isOpponent
+                                ? turnover.type === 'block'
+                                  ? palette.danger + '20' // OPP BLOCK = bad for us
+                                  : palette.success + '20' // OPP TURN = good for us
+                                : bgColor,
+                            },
                             canEdit && {
-                              borderColor:
-                                turnover.type === 'block' ? palette.success : palette.danger,
+                              borderColor: isOpponent
+                                ? turnover.type === 'block'
+                                  ? palette.danger // OPP BLOCK = red border
+                                  : palette.success // OPP TURN = green border
+                                : turnover.type === 'block'
+                                  ? palette.success
+                                  : palette.danger,
                               borderWidth: 1,
                             },
                           ]}>
-                          <Text
-                            style={[
-                              styles.eventLabel,
-                              { color: isOpponent ? palette.textMuted : palette.textInverse },
-                            ]}>
-                            {isOpponent ? `OPP ${label.toUpperCase()}` : label.toUpperCase()}
+                          <Text style={[styles.eventLabel, { color: palette.textInverse }]}>
+                            {isOpponent
+                              ? turnover.type === 'block'
+                                ? 'OPP BLOCK'
+                                : 'OPP TURN'
+                              : label.toUpperCase()}
                           </Text>
-                          {turnoverPlayerName && (
+                          {!isOpponent && (
                             <Text
                               style={[
                                 styles.eventPlayer,
                                 {
-                                  color: isOpponent ? palette.textMuted : palette.textInverse,
+                                  color: palette.textInverse,
                                   flexShrink:
                                     turnover.type === 'fiftyfifty' && turnoverPlayer2Name ? 1 : 0,
                                   maxWidth:
@@ -253,7 +265,7 @@ export default function EventTimeline({
                                 },
                               ]}
                               numberOfLines={1}>
-                              {turnoverPlayerName}
+                              {turnoverPlayerName || 'Unknown'}
                             </Text>
                           )}
                           {turnover.type === 'fiftyfifty' && turnoverPlayer2Name && (

@@ -117,6 +117,7 @@ export default function GameTimelineScreen() {
                   playerId: String(turnover.playerId ?? 'null'),
                   player2Id: String(turnover.player2Id ?? 'null'),
                   subtype: turnover.type,
+                  originalTeam: turnover.team,
                   gameId: params.gameId ?? 'current',
                 },
               });

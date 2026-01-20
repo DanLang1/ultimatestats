@@ -1,3 +1,4 @@
+import { useAlert } from '@/components/ui/AlertProvider';
 import { PlayerChip } from '@/components/ui/PlayerChip';
 import { useTheme } from '@/context/ThemeContext';
 import { getPlayerName } from '@/lib/playerUtils';
@@ -6,23 +7,34 @@ import { TurnoverType } from '@/store/gameStore.types';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import React, { useState } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
-const TURNOVER_TYPES: { value: TurnoverType; label: string }[] = [
-  { value: 'throwaway', label: 'Throwaway' },
-  { value: 'drop', label: 'Drop' },
-  { value: 'block', label: 'Block' },
-  { value: 'fiftyfifty', label: '50/50' },
+// Extended type to include opponent turnover and opponent block for editing
+type EditableTurnoverType = TurnoverType | 'opponentTurn' | 'opponentBlock';
+
+const ALL_TURNOVER_TYPES: {
+  value: EditableTurnoverType;
+  label: string;
+  category: 'ourTurnover' | 'ourBlock' | 'oppTurnover' | 'oppBlock';
+}[] = [
+  { value: 'throwaway', label: 'Throwaway', category: 'ourTurnover' },
+  { value: 'drop', label: 'Drop', category: 'ourTurnover' },
+  { value: 'fiftyfifty', label: '50/50', category: 'ourTurnover' },
+  { value: 'opponentBlock', label: 'OPP BLOCK', category: 'oppBlock' },
+  { value: 'block', label: 'Block', category: 'ourBlock' },
+  { value: 'opponentTurn', label: 'OPP TURN', category: 'oppTurnover' },
 ];
 
 export default function EditEventModal() {
   const { palette } = useTheme();
+  const { showAlert } = useAlert();
   const params = useLocalSearchParams<{
     eventIndex: string;
     eventType: string;
     playerId: string;
     player2Id: string;
     subtype: string;
+    originalTeam: string; // 'team1' or 'team2' - which team the original event was by
     editField: 'scorer' | 'assist'; // For goals: which field is being edited
     gameId: string; // 'current' or saved game ID
   }>();
@@ -49,6 +61,20 @@ export default function EditEventModal() {
   // Use params for event type since saved games don't have events in store
   const eventType = params.eventType as 'turnover' | 'goal' | undefined;
 
+  // Map stored subtype to editable subtype based on team
+  // Opponent events are stored with regular subtypes but displayed as opponentBlock/opponentTurn
+  const getInitialSubtype = (): EditableTurnoverType => {
+    const storedSubtype = params.subtype as EditableTurnoverType;
+    const team = params.originalTeam as 'team1' | 'team2';
+
+    if (team === 'team2') {
+      // Opponent event - map to opponent-specific types
+      if (storedSubtype === 'block') return 'opponentBlock';
+      return 'opponentTurn'; // throwaway, drop, etc. from opponent = OPP TURN
+    }
+    return storedSubtype ?? 'throwaway';
+  };
+
   // Local state for editing
   const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(
     params.playerId === 'null' ? null : (params.playerId ?? null),
@@ -56,10 +82,36 @@ export default function EditEventModal() {
   const [selectedPlayer2Id, setSelectedPlayer2Id] = useState<string | null>(
     params.player2Id === 'null' ? null : (params.player2Id ?? null),
   );
-  const [selectedSubtype, setSelectedSubtype] = useState<TurnoverType>(
-    (params.subtype as TurnoverType) ?? 'throwaway',
-  );
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [selectedSubtype, setSelectedSubtype] = useState<EditableTurnoverType>(getInitialSubtype);
+
+  const originalSubtype = params.subtype as EditableTurnoverType;
+  const originalTeam = params.originalTeam as 'team1' | 'team2';
+  const isOriginalOpponentEvent = originalTeam === 'team2';
+
+  // OPP BLOCK = opponent blocked us (team2, subtype block) - we lost the disc via their block
+  // OPP TURN = opponent's unforced turnover (team2, subtype throwaway) - we gained the disc via their error
+  const isOriginalOppBlock =
+    isOriginalOpponentEvent && (originalSubtype === 'block' || originalSubtype === 'opponentBlock');
+  const isOriginalOppTurn = isOriginalOpponentEvent && !isOriginalOppBlock;
+
+  const availableTypes = ALL_TURNOVER_TYPES.filter((type) => {
+    if (isOriginalOppTurn) {
+      // OPP TURN (opponent's unforced error) can become our block OR stay as opp turn
+      return type.value === 'block' || type.value === 'opponentTurn';
+    }
+    if (originalSubtype === 'block' && !isOriginalOpponentEvent) {
+      // Our block can become opponent turnover OR stay as block
+      return type.value === 'opponentTurn' || type.value === 'block';
+    }
+    if (isOriginalOppBlock) {
+      // OPP BLOCK (opponent blocked us) can become our turnover OR stay as opp block
+      return type.category === 'ourTurnover' || type.category === 'oppBlock';
+    }
+    // Our turnovers (throwaway, drop, 50/50) can become other our turnovers OR opp block
+    // (opp block = opponent blocked us, which is a valid correction)
+    // Cannot become OPP TURN - that's a fundamentally different possession change
+    return type.category === 'ourTurnover' || type.category === 'oppBlock';
+  });
 
   // For 50/50: always start on step 1 when editing, so user can review/change thrower first
   const [fiftyFiftyStep, setFiftyFiftyStep] = useState<1 | 2>(1);
@@ -76,10 +128,38 @@ export default function EditEventModal() {
 
   const handleSave = async () => {
     if (isTurnover) {
+      // Handle team change based on subtype
+      // - opponentTurn/opponentBlock: convert to team2 (opponent event)
+      // - our turnovers (drop/throwaway/50-50): if originally opponent event, convert to team1
+      // - block: if originally opponent event, convert to team1 (we blocked them)
+      const isOurTurnover =
+        selectedSubtype === 'throwaway' ||
+        selectedSubtype === 'drop' ||
+        selectedSubtype === 'fiftyfifty';
+
+      const oppEvent = selectedSubtype === 'opponentTurn' || selectedSubtype === 'opponentBlock';
+
+      const newTeam = oppEvent
+        ? 'team2'
+        : (selectedSubtype === 'block' || isOurTurnover) && isOriginalOpponentEvent
+          ? 'team1'
+          : undefined; // Don't change team
+
+      // Map virtual types to storage types:
+      // - opponentTurn -> throwaway (opponent's unforced error)
+      // - opponentBlock -> block (opponent blocked us, stored as opponent's block)
+      const actualSubtype =
+        selectedSubtype === 'opponentTurn'
+          ? 'throwaway'
+          : selectedSubtype === 'opponentBlock'
+            ? 'block'
+            : (selectedSubtype as TurnoverType);
+
       const updates = {
-        playerId: selectedPlayerId,
+        playerId: oppEvent ? null : selectedPlayerId,
         player2Id: selectedSubtype === 'fiftyfifty' ? selectedPlayer2Id : null,
-        subtype: selectedSubtype,
+        subtype: actualSubtype,
+        ...(newTeam && { team: newTeam }),
       };
 
       if (isSavedGame && params.gameId) {
@@ -104,20 +184,36 @@ export default function EditEventModal() {
   };
 
   const handleDelete = () => {
-    setShowDeleteConfirm(true);
-  };
+    const subtypeLabel =
+      selectedSubtype === 'opponentTurn'
+        ? 'OPP TURN'
+        : selectedSubtype === 'opponentBlock'
+          ? 'OPP BLOCK'
+          : selectedSubtype;
 
-  const confirmDelete = async () => {
-    let success: boolean;
-    if (isSavedGame && params.gameId) {
-      success = await deleteSavedGameEvent(params.gameId, eventIndex);
-    } else {
-      success = deleteEvent(eventIndex);
-    }
+    showAlert({
+      title: 'Delete Event?',
+      message: `Delete this ${subtypeLabel}${playerName ? ` by ${playerName}` : ''}?`,
+      buttons: [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            let success: boolean;
+            if (isSavedGame && params.gameId) {
+              success = await deleteSavedGameEvent(params.gameId, eventIndex);
+            } else {
+              success = deleteEvent(eventIndex);
+            }
 
-    if (success) {
-      router.back();
-    }
+            if (success) {
+              router.back();
+            }
+          },
+        },
+      ],
+    });
   };
 
   const handleDismiss = () => {
@@ -189,7 +285,7 @@ export default function EditEventModal() {
                   EVENT TYPE
                 </Text>
                 <View style={styles.typeGrid}>
-                  {TURNOVER_TYPES.map((type) => (
+                  {availableTypes.map((type) => (
                     <Pressable
                       key={type.value}
                       style={[
@@ -228,42 +324,46 @@ export default function EditEventModal() {
             )}
 
             {/* Player Selection - For 50/50, this becomes Step 1 (Thrower) or Step 2 (Receiver) */}
-            {isTurnover && (!isFiftyFifty || fiftyFiftyStep === 1) && (
-              <View style={styles.section}>
-                <Text style={[styles.sectionLabel, { color: palette.textSecondary }]}>
-                  {selectedSubtype === 'block'
-                    ? 'BLOCKED BY'
-                    : isFiftyFifty
-                      ? 'STEP 1: THROWER (Who threw it?)'
-                      : 'PLAYER'}
-                </Text>
-                <View style={styles.chipsContainer}>
-                  <PlayerChip
-                    name="Unknown"
-                    selected={selectedPlayerId === null}
-                    onPress={() => {
-                      setSelectedPlayerId(null);
-                      if (isFiftyFifty) {
-                        setFiftyFiftyStep(2);
-                      }
-                    }}
-                  />
-                  {sortedRoster.map((player) => (
+            {/* Hide for OPP TURN and OPP BLOCK since those don't have player attribution */}
+            {isTurnover &&
+              selectedSubtype !== 'opponentTurn' &&
+              selectedSubtype !== 'opponentBlock' &&
+              (!isFiftyFifty || fiftyFiftyStep === 1) && (
+                <View style={styles.section}>
+                  <Text style={[styles.sectionLabel, { color: palette.textSecondary }]}>
+                    {selectedSubtype === 'block'
+                      ? 'BLOCKED BY'
+                      : isFiftyFifty
+                        ? 'STEP 1: THROWER (Who threw it?)'
+                        : 'PLAYER'}
+                  </Text>
+                  <View style={styles.chipsContainer}>
                     <PlayerChip
-                      key={player.id}
-                      name={player.name}
-                      selected={selectedPlayerId === player.id}
+                      name="Unknown"
+                      selected={selectedPlayerId === null}
                       onPress={() => {
-                        setSelectedPlayerId(player.id);
+                        setSelectedPlayerId(null);
                         if (isFiftyFifty) {
                           setFiftyFiftyStep(2);
                         }
                       }}
                     />
-                  ))}
+                    {sortedRoster.map((player) => (
+                      <PlayerChip
+                        key={player.id}
+                        name={player.name}
+                        selected={selectedPlayerId === player.id}
+                        onPress={() => {
+                          setSelectedPlayerId(player.id);
+                          if (isFiftyFifty) {
+                            setFiftyFiftyStep(2);
+                          }
+                        }}
+                      />
+                    ))}
+                  </View>
                 </View>
-              </View>
-            )}
+              )}
 
             {/* Step 2 for 50/50: Receiver selection */}
             {isTurnover && isFiftyFifty && fiftyFiftyStep === 2 && (
@@ -296,16 +396,15 @@ export default function EditEventModal() {
                     selected={selectedPlayer2Id === null}
                     onPress={() => setSelectedPlayer2Id(null)}
                   />
-                  {sortedRoster
-                    .filter((p) => p.id !== selectedPlayerId)
-                    .map((player) => (
-                      <PlayerChip
-                        key={player.id}
-                        name={player.name}
-                        selected={selectedPlayer2Id === player.id}
-                        onPress={() => setSelectedPlayer2Id(player.id)}
-                      />
-                    ))}
+                  {sortedRoster.map((player) => (
+                    <PlayerChip
+                      key={player.id}
+                      name={player.name}
+                      selected={selectedPlayer2Id === player.id}
+                      disabled={player.id === selectedPlayerId}
+                      onPress={() => setSelectedPlayer2Id(player.id)}
+                    />
+                  ))}
                 </View>
               </View>
             )}
@@ -337,38 +436,6 @@ export default function EditEventModal() {
           </ScrollView>
         </Pressable>
       </Pressable>
-
-      {/* Delete Confirmation Modal */}
-      <Modal visible={showDeleteConfirm} transparent animationType="fade">
-        <Pressable
-          style={[styles.confirmOverlay, { backgroundColor: palette.overlayModal }]}
-          onPress={() => setShowDeleteConfirm(false)}>
-          <View
-            style={[
-              styles.confirmDialog,
-              { backgroundColor: palette.modalBg, borderColor: palette.overlay15 },
-            ]}
-            onStartShouldSetResponder={() => true}>
-            <Text style={[styles.confirmTitle, { color: palette.modalText }]}>Delete Event?</Text>
-            <Text style={[styles.confirmMessage, { color: palette.textSecondary }]}>
-              Delete this {selectedSubtype}
-              {playerName ? ` by ${playerName}` : ''}?
-            </Text>
-            <View style={styles.confirmActions}>
-              <Pressable
-                style={[styles.confirmButton, { borderColor: palette.accent }]}
-                onPress={() => setShowDeleteConfirm(false)}>
-                <Text style={[styles.confirmButtonText, { color: palette.accent }]}>Cancel</Text>
-              </Pressable>
-              <Pressable
-                style={[styles.confirmButton, { backgroundColor: palette.danger }]}
-                onPress={confirmDelete}>
-                <Text style={[styles.confirmButtonText, { color: '#FFFFFF' }]}>Delete</Text>
-              </Pressable>
-            </View>
-          </View>
-        </Pressable>
-      </Modal>
     </View>
   );
 }
@@ -434,51 +501,6 @@ const styles = StyleSheet.create({
   },
   typeChipText: {
     fontSize: 14,
-    fontWeight: '600',
-  },
-  goalInfo: {
-    fontSize: 14,
-    lineHeight: 20,
-    textAlign: 'center',
-    fontStyle: 'italic',
-  },
-  // Confirmation Dialog
-  confirmOverlay: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  confirmDialog: {
-    width: '80%',
-    maxWidth: 320,
-    borderRadius: 16,
-    padding: 24,
-    borderWidth: 1,
-  },
-  confirmTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    textAlign: 'center',
-    marginBottom: 8,
-  },
-  confirmMessage: {
-    fontSize: 14,
-    textAlign: 'center',
-    marginBottom: 24,
-  },
-  confirmActions: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  confirmButton: {
-    flex: 1,
-    paddingVertical: 12,
-    borderRadius: 10,
-    alignItems: 'center',
-    borderWidth: 1,
-  },
-  confirmButtonText: {
-    fontSize: 15,
     fontWeight: '600',
   },
   // 50/50 Thrower Badge

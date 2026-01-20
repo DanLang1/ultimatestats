@@ -462,6 +462,7 @@ export const useGameStore = create<GameState>()(
             playerId?: string | null;
             player2Id?: string | null;
             subtype?: TurnoverType;
+            team?: 'team1' | 'team2';
             goalPlayerId?: string | null;
             assistPlayerId?: string | null;
           },
@@ -474,6 +475,7 @@ export const useGameStore = create<GameState>()(
               if (updates.playerId !== undefined) event.playerId = updates.playerId;
               if (updates.player2Id !== undefined) event.player2Id = updates.player2Id;
               if (updates.subtype !== undefined) event.subtype = updates.subtype;
+              if (updates.team !== undefined) event.team = updates.team;
             } else if (event.type === 'goal') {
               // Check if this is a Callahan (goal with OTHER_TEAM assist)
               const isCallahan = event.assistPlayerId === 'OTHER_TEAM';
@@ -522,6 +524,7 @@ export const useGameStore = create<GameState>()(
             playerId?: string | null;
             player2Id?: string | null;
             subtype?: TurnoverType;
+            team?: 'team1' | 'team2';
             goalPlayerId?: string | null;
             assistPlayerId?: string | null;
           },
@@ -542,6 +545,7 @@ export const useGameStore = create<GameState>()(
             if (updates.playerId !== undefined) updatedEvent.playerId = updates.playerId;
             if (updates.player2Id !== undefined) updatedEvent.player2Id = updates.player2Id;
             if (updates.subtype !== undefined) updatedEvent.subtype = updates.subtype;
+            if (updates.team !== undefined) updatedEvent.team = updates.team;
           } else if (event.type === 'goal') {
             updatedEvent = { ...event };
             const isCallahan = event.assistPlayerId === 'OTHER_TEAM';
