@@ -74,6 +74,11 @@ export default function StatsTable({ playerStats, events, team, roster, games }:
     <View>
       <View style={styles.sectionHeader}>
         <Text style={[styles.sectionTitle, { color: palette.textMuted }]}>PLAYER STATS</Text>
+        <View style={styles.headerHint}>
+          <Text style={[styles.headerHintText, { color: palette.textMuted }]}>
+            Tap player for details
+          </Text>
+        </View>
       </View>
       <View style={[styles.tableContainer, { borderColor: palette.overlay10 }]}>
         {/* Table Header */}
@@ -209,9 +214,7 @@ export default function StatsTable({ playerStats, events, team, roster, games }:
               index % 2 === 1 && { backgroundColor: palette.overlay02 },
             ]}
             onPress={() => handlePlayerPress(player.name)}>
-            <Text
-              style={[styles.cell, styles.nameCell, { color: palette.textInverse }]}
-              numberOfLines={1}>
+            <Text style={[styles.cell, styles.nameCell, { color: palette.textInverse }]}>
               {player.name}
             </Text>
             <Text style={[styles.cell, { color: palette.textInverse }]}>{player.goals || '-'}</Text>
@@ -305,7 +308,18 @@ const styles = StyleSheet.create({
     textAlign: 'left',
     fontSize: 13,
     fontWeight: '600',
-    paddingRight: 8,
+  },
+  headerHint: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    opacity: 0.6,
+  },
+  headerHintText: {
+    fontSize: 10,
+    fontWeight: '600',
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
   },
   headerThrowawaysCell: {
     flex: 1.5,

@@ -7,8 +7,15 @@ import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 export default function StatEntryScreen() {
-  const { pendingStatEntry, currentTeam, team2Name, addPlayer, addGoalEvent, pointTimerEnabled } =
-    useGameStore();
+  const {
+    pendingStatEntry,
+    currentTeam,
+    team2Name,
+    addPlayer,
+    addGoalEvent,
+    pointTimerEnabled,
+    isHalftimeBreak,
+  } = useGameStore();
   const { palette } = useTheme();
 
   const team1Name = currentTeam?.name ?? 'Team 1';
@@ -47,6 +54,13 @@ export default function StatEntryScreen() {
       return;
     }
 
+    // Skip point summary for halftime goals - let useHalftimeNavigation handle it
+    // (PointSummaryModal returns null when isHalftimeBreak is true anyway)
+    if (isHalftimeBreak) {
+      router.dismiss();
+      return;
+    }
+
     // Show point summary modal when point timer enabled
     if (pointTimerEnabled) {
       router.replace('/PointSummaryModal');
@@ -78,6 +92,13 @@ export default function StatEntryScreen() {
         useGameStore.getState().setGameLocked(true);
         router.push('/WinModal');
       }, 100);
+      return;
+    }
+
+    // Skip point summary for halftime goals - let useHalftimeNavigation handle it
+    // (PointSummaryModal returns null when isHalftimeBreak is true anyway)
+    if (isHalftimeBreak) {
+      router.dismiss();
       return;
     }
 

@@ -56,11 +56,12 @@ When a goal is scored (`incrementScore`):
 
 When a goal is undone (`undoLastAction`):
 
-1.  The goal event is removed.
-2.  `currentPointStartTime` is reset to `null`.
-    - **Why?** This prevents a specific edge case: if a user finishes point 1, starts point 2 (setting `currentPointStartTime`), then realizes they made a mistake and undos the goal from point 1. We don't want the "point 2" start time to persist while they are fixing point 1.
-3.  The **Historical Timestamp** (`pointStartTimestamps[1]`) remains intact.
-4.  The "START" button logic checks for _both_ working and historical timestamps. If a historical timestamp exists for the current point, the button does not reappear, preventing duplicate start times.
+1.  The goal event is removed from the event log.
+2.  **Timer Resumes Running**: If the goal had `elapsedMs` stored, `currentPointStartTime` is set to `Date.now() - elapsedMs`. This makes the timer continue running from where it was when the goal was scored.
+3.  **History Cleaned Up**: The entry in `pointStartTimestamps` for the undone point is deleted since that point is now in-progress again.
+4.  **Pause State Cleared**: `pointTimerPausedElapsed` is set to `null`, so the timer is always running after undo.
+
+**Example**: If you scored at 2:34 elapsed, then immediately undo, the timer will show ~2:34 and keep counting up. All turnover events recorded during that point retain their correct `elapsedMs` values.
 
 ## Timeline Integration
 

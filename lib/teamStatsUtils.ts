@@ -246,3 +246,129 @@ export function aggregateTeamStats(allStats: TeamStats[]): TeamStats {
         : 0,
   };
 }
+
+// --- Timing Stats (separate for easy testing) ---
+
+export interface TimingStats {
+  /** Whether any timing data is available */
+  hasTimingData: boolean;
+  /** Average duration of all completed points (ms) */
+  avgPointDurationMs: number;
+  /** Average duration of offensive points (ms) */
+  avgOPointDurationMs: number;
+  /** Average duration of defensive points (ms) */
+  avgDPointDurationMs: number;
+  /** Duration of the longest point (ms) */
+  longestPointDurationMs: number;
+  /** Duration of the shortest point (ms) */
+  shortestPointDurationMs: number;
+  /** Number of points with timing data */
+  timedPointCount: number;
+  /** Number of O-points with timing data */
+  timedOPointCount: number;
+  /** Number of D-points with timing data */
+  timedDPointCount: number;
+}
+
+/**
+ * Computes timing statistics from game events.
+ * Returns null-like stats (hasTimingData=false) if no points have duration data.
+ */
+export function computeTimingStats(
+  events: GameEvent[],
+  startingPossession: 'team1' | 'team2' | null,
+  gameTo: number,
+): TimingStats {
+  const pointEvents = computePointByPointEvents(events, startingPossession, gameTo);
+
+  const allDurations: number[] = [];
+  const oDurations: number[] = [];
+  const dDurations: number[] = [];
+
+  for (const point of pointEvents) {
+    // Skip in-progress points
+    if (point.isInProgress) continue;
+
+    const isTeam1Offense = point.offensiveTeam === 'team1';
+
+    // Only track points with valid duration
+    if (point.pointDurationMs !== undefined && point.pointDurationMs > 0) {
+      allDurations.push(point.pointDurationMs);
+      if (isTeam1Offense) {
+        oDurations.push(point.pointDurationMs);
+      } else {
+        dDurations.push(point.pointDurationMs);
+      }
+    }
+  }
+
+  const hasTimingData = allDurations.length > 0;
+
+  return {
+    hasTimingData,
+    avgPointDurationMs: hasTimingData
+      ? allDurations.reduce((a, b) => a + b, 0) / allDurations.length
+      : 0,
+    avgOPointDurationMs:
+      oDurations.length > 0 ? oDurations.reduce((a, b) => a + b, 0) / oDurations.length : 0,
+    avgDPointDurationMs:
+      dDurations.length > 0 ? dDurations.reduce((a, b) => a + b, 0) / dDurations.length : 0,
+    longestPointDurationMs: hasTimingData ? Math.max(...allDurations) : 0,
+    shortestPointDurationMs: hasTimingData ? Math.min(...allDurations) : 0,
+    timedPointCount: allDurations.length,
+    timedOPointCount: oDurations.length,
+    timedDPointCount: dDurations.length,
+  };
+}
+
+/**
+ * Aggregates multiple TimingStats into a combined TimingStats.
+ * Durations are weighted by point count to get accurate averages.
+ */
+export function aggregateTimingStats(allStats: TimingStats[]): TimingStats {
+  const statsWithData = allStats.filter((s) => s.hasTimingData);
+
+  if (statsWithData.length === 0) {
+    return {
+      hasTimingData: false,
+      avgPointDurationMs: 0,
+      avgOPointDurationMs: 0,
+      avgDPointDurationMs: 0,
+      longestPointDurationMs: 0,
+      shortestPointDurationMs: 0,
+      timedPointCount: 0,
+      timedOPointCount: 0,
+      timedDPointCount: 0,
+    };
+  }
+
+  const totalPoints = statsWithData.reduce((acc, s) => acc + s.timedPointCount, 0);
+  const totalOPoints = statsWithData.reduce((acc, s) => acc + s.timedOPointCount, 0);
+  const totalDPoints = statsWithData.reduce((acc, s) => acc + s.timedDPointCount, 0);
+
+  // Weighted average: sum(avg * count) / totalCount
+  const weightedAvgAll = statsWithData.reduce(
+    (acc, s) => acc + s.avgPointDurationMs * s.timedPointCount,
+    0,
+  );
+  const weightedAvgO = statsWithData.reduce(
+    (acc, s) => acc + s.avgOPointDurationMs * s.timedOPointCount,
+    0,
+  );
+  const weightedAvgD = statsWithData.reduce(
+    (acc, s) => acc + s.avgDPointDurationMs * s.timedDPointCount,
+    0,
+  );
+
+  return {
+    hasTimingData: true,
+    avgPointDurationMs: totalPoints > 0 ? weightedAvgAll / totalPoints : 0,
+    avgOPointDurationMs: totalOPoints > 0 ? weightedAvgO / totalOPoints : 0,
+    avgDPointDurationMs: totalDPoints > 0 ? weightedAvgD / totalDPoints : 0,
+    longestPointDurationMs: Math.max(...statsWithData.map((s) => s.longestPointDurationMs)),
+    shortestPointDurationMs: Math.min(...statsWithData.map((s) => s.shortestPointDurationMs)),
+    timedPointCount: totalPoints,
+    timedOPointCount: totalOPoints,
+    timedDPointCount: totalDPoints,
+  };
+}

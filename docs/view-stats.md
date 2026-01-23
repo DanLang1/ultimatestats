@@ -37,6 +37,7 @@ Scrollable table with the following columns:
 - sorted by Plus/Minus descending, then by name.
 - Plus/Minus is **green** for positive, **red** for negative.
 - Non-integer values (from 50/50 turnovers) are displayed with single decimal (e.g. 0.5).
+- **Interactive Rows**: Tap any player row to view a detailed breakdown of their individual stats.
 
 ### 3. Game Timeline
 
@@ -61,13 +62,13 @@ General game information including teams, scores, and date.
 
 ### Section 2: Play-by-Play (Events)
 
-Unified chronological log of all recorded events:
+Unified chronological log of all point results and timing:
 
 ```csv
-Point,Team,Type,Subtype,Player 1,Player 2
-1,Team 1,goal,,Alice,Bob
-2,Team 1,turnover,throwaway,Charlie,
-3,Team 2,goal,,,
+Point,Score Before,Pulling Team,Goal Team,Goal,Assist,Duration
+1,0-0,Team 2,Team 1,Alice,Bob,1:15
+2,1-0,Team 1,Team 2,,,0:45
+3,1-1,Team 2,Team 1,Charlie,,2:10
 ```
 
 ### Section 3: Player Stats Summary
@@ -80,3 +81,35 @@ Player,Goals,Assists,Blocks,Throwaways,Drops,Callahans,Plus/Minus
 Alice,3,2,1,0,0,6,1
 Bob,2,1,0,1,0,2,0
 ```
+
+### Section 4: Team Stats
+
+Team performance metrics including hold%, break efficiency, conversion rate, etc.
+
+### Section 5: Timing Stats (Conditional)
+
+If the game was played with the point timer enabled, timing statistics are included:
+
+```csv
+# Timing Stats
+Stat,Value,Detail
+Avg Point Duration,1:23,12 points
+Avg O-Point Duration,1:15,6 O-points
+Avg D-Point Duration,1:31,6 D-points
+Longest Point,2:45,
+Shortest Point,0:32,
+```
+
+> **Note**: This section only appears if timing data was recorded during the game.
+
+## Team Performance Section
+
+The Team Performance section displays key efficiency metrics. If timing data is available, a **TIMING** subsection appears with:
+
+| Stat     | Description                              |
+| -------- | ---------------------------------------- |
+| Avg Pt   | Average duration of all completed points |
+| Avg O-Pt | Average duration of offensive points     |
+| Avg D-Pt | Average duration of defensive points     |
+| Longest  | Duration of the longest point            |
+| Shortest | Duration of the shortest point           |

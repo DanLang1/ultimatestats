@@ -1,10 +1,21 @@
 import { useTheme } from '@/context/ThemeContext';
 import { GameEvent } from '@/lib/storage';
-import { computeTeamStats } from '@/lib/teamStatsUtils';
+import { computeTeamStats, computeTimingStats } from '@/lib/teamStatsUtils';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import StatRing from './StatRing';
 import StatsGrid from './StatsGrid';
+
+// Format milliseconds to "Xm Ys" or just "Xs" for short durations
+const formatDuration = (ms: number): string => {
+  const totalSeconds = Math.round(ms / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  if (minutes === 0) {
+    return `${seconds}s`;
+  }
+  return `${minutes}m ${seconds}s`;
+};
 
 interface TeamStatsSectionProps {
   events: GameEvent[];
@@ -25,6 +36,7 @@ export default function TeamStatsSection({
   const { palette } = useTheme();
 
   const stats = computeTeamStats(events, startingPossession, gameTo);
+  const timingStats = computeTimingStats(events, startingPossession, gameTo);
 
   // Don't render if no events
   if (events.length === 0) {
@@ -129,6 +141,23 @@ export default function TeamStatsSection({
         <Text style={[styles.subsectionTitle, { color: palette.textMuted }]}>EFFICIENCY</Text>
         <StatsGrid stats={efficiencyStats} columns={4} />
       </View>
+
+      {/* Timing Section - only show if timing data exists */}
+      {timingStats.hasTimingData && (
+        <View style={styles.subsectionContainer}>
+          <Text style={[styles.subsectionTitle, { color: palette.textMuted }]}>POINT LENGTH</Text>
+          <StatsGrid
+            stats={[
+              { label: 'Avg Pt', value: formatDuration(timingStats.avgPointDurationMs) },
+              { label: 'Avg O-Pt', value: formatDuration(timingStats.avgOPointDurationMs) },
+              { label: 'Avg D-Pt', value: formatDuration(timingStats.avgDPointDurationMs) },
+              { label: 'Longest', value: formatDuration(timingStats.longestPointDurationMs) },
+              { label: 'Shortest', value: formatDuration(timingStats.shortestPointDurationMs) },
+            ]}
+            columns={5}
+          />
+        </View>
+      )}
     </View>
   );
 }

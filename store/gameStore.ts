@@ -117,7 +117,7 @@ export const useGameStore = create<GameState>()(
 
             const currentScore = isTeam1 ? state.team1Score : state.team2Score;
             const newScore = currentScore + 1;
-            const halftimeScore = Math.ceil(state.gameTo / 2);
+            const halftimeScore = Math.ceil(state.baseGameTo / 2);
             const isHalftimeGoal =
               state.autoHalftimeEnabled && state.gameHalf === 1 && newScore === halftimeScore;
 
@@ -225,7 +225,7 @@ export const useGameStore = create<GameState>()(
               else state.team2Score--;
 
               // Reset gameHalf to 1 if undo brings both scores below halftime threshold
-              const halftimeScore = Math.ceil(state.gameTo / 2);
+              const halftimeScore = Math.ceil(state.baseGameTo / 2);
               if (state.team1Score < halftimeScore && state.team2Score < halftimeScore) {
                 state.gameHalf = 1;
               }
@@ -233,8 +233,18 @@ export const useGameStore = create<GameState>()(
               state.possession = lastEvent.team;
               state.pendingStatEntry = null;
               state.currentPoint = Math.max(1, state.currentPoint - 1);
-              // Clear working timestamp - we'll use historical data from pointStartTimestamps
-              state.currentPointStartTime = null;
+              // Restore point timer state from the undone point
+              // Resume timer running from where it left off by adjusting start time
+              if (lastEvent.elapsedMs !== undefined) {
+                // Set start time so elapsed = elapsedMs (timer resumes running)
+                state.currentPointStartTime = Date.now() - lastEvent.elapsedMs;
+                state.pointTimerPausedElapsed = null;
+              } else {
+                state.currentPointStartTime = null;
+                state.pointTimerPausedElapsed = null;
+              }
+              // Remove entry from pointStartTimestamps since point is in-progress again
+              delete state.pointStartTimestamps[state.currentPoint];
             } else {
               // Turnover: flip possession back
               state.possession = state.possession === 'team1' ? 'team2' : 'team1';
