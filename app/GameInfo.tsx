@@ -1,10 +1,10 @@
-import { TimeoutCounter } from '@/components/game-info/TimeoutCounter';
 import HelpContent from '@/components/HelpContent';
 import { ThemedView } from '@/components/ThemedView';
 import FlashingIcon from '@/components/ui/FlashingIcon';
 import { useTheme } from '@/context/ThemeContext';
 import { useEndGame } from '@/hooks/useEndGame';
 import { useGameTimer } from '@/hooks/useGameTimer';
+import { usePointTimer } from '@/hooks/usePointTimer';
 import { useGameStore } from '@/store/gameStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router, Stack } from 'expo-router';
@@ -35,8 +35,32 @@ export default function GameInfoScreen() {
 
   const { palette } = useTheme();
   const { confirmEndGame } = useEndGame();
+  const {
+    elapsedSeconds,
+    isActive: pointIsActive,
+    isPaused,
+    togglePause,
+    isEnabled: pointTimerEnabled,
+  } = usePointTimer();
 
   const countTimeoutsRemaining = (timeouts: boolean[]) => timeouts.filter((t) => t).length;
+
+  // Format elapsed seconds as MM:SS
+  const formatElapsed = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  // Format compact timeout/floater string
+  const formatTimeoutStats = (timeouts: boolean[], hasFloater: boolean) => {
+    const toCount = countTimeoutsRemaining(timeouts);
+    const toText = `${toCount} TO`;
+    if (!floaterEnabled) return toText;
+    return hasFloater ? `${toText} • 1 Floater` : `${toText} • 0 Floater`;
+  };
+
+  const showPointTimer = pointTimerEnabled && pointIsActive;
 
   return (
     <ThemedView style={[styles.container, { backgroundColor: palette.primary }]}>
@@ -51,145 +75,163 @@ export default function GameInfoScreen() {
           <MaterialCommunityIcons name="arrow-left" size={24} color={palette.textInverse} />
         </Pressable>
         <Text style={[styles.headerTitle, { color: palette.textMuted }]}>MATCH STATUS</Text>
-        <View style={styles.headerSpacer} />
+        <View style={styles.headerRightSpacer} />
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Game To Section */}
-        <View style={styles.targetSection}>
-          {isHardcap ? (
-            <>
-              <View style={styles.hardcapLabelRow}>
-                <MaterialCommunityIcons name="hard-hat" size={18} color={palette.accent} />
-                <Text style={[styles.targetLabel, { color: palette.accent }]}>HARDCAP</Text>
-              </View>
-              {/* Under hardcap: show what happens after current point */}
-              {team1Score === team2Score ? (
-                // Tied at hardcap = universe point
-                <View style={[styles.capStatusBadge, { marginTop: 8 }]}>
-                  <MaterialCommunityIcons
-                    name="sword-cross"
-                    size={20}
-                    color={palette.textInverse}
-                  />
-                  <Text style={[styles.universePointText, { color: palette.textInverse }]}>
-                    Universe Point
-                  </Text>
-                </View>
-              ) : (
-                // Not tied - show who wins and how
-                <>
-                  {(() => {
-                    const leadingTeam = team1Score > team2Score ? team1Name : team2Name;
-                    const trailingTeam = team1Score > team2Score ? team2Name : team1Name;
-                    const scoreDiff = Math.abs(team1Score - team2Score);
-                    const canTie = scoreDiff === 1;
-
-                    return (
-                      <>
-                        <Text style={[styles.hardcapWinnerText, { color: palette.textInverse }]}>
-                          {leadingTeam}
-                        </Text>
-                        <Text style={[styles.capStatusText, { color: palette.textMuted }]}>
-                          {canTie ? `wins unless ${trailingTeam} scores` : 'wins after this point'}
-                        </Text>
-                      </>
-                    );
-                  })()}
-                </>
-              )}
-            </>
-          ) : (
-            // Normal or softcap display
-            <>
-              <Text style={[styles.targetLabel, { color: palette.accent }]}>GAME TO</Text>
-              <Text style={[styles.targetNumber, { color: palette.textInverse }]}>{gameTo}</Text>
-              {isSoftCap && (
-                <View style={styles.capStatusBadge}>
-                  <MaterialCommunityIcons name="hat-fedora" size={16} color={palette.textInverse} />
-                  <Text style={[styles.capStatusText, { color: palette.textInverse }]}>
-                    Softcap Active
-                  </Text>
-                </View>
-              )}
-              {softCapPending && !isSoftCap && (
-                <View style={styles.capStatusBadge}>
-                  <FlashingIcon
-                    name="hat-fedora"
-                    size={16}
-                    color={palette.textInverse}
-                    isFlashing
-                  />
-                  <Text style={[styles.capStatusText, { color: palette.textInverse }]}>
-                    Softcap Pending
-                  </Text>
-                </View>
-              )}
-            </>
-          )}
-        </View>
-
-        {/* Current Score */}
-        <View style={styles.scoreSection}>
-          <View style={[styles.scoreTeam, { justifyContent: 'flex-end' }]}>
+        {/* Three-Column Hero Section */}
+        <View style={styles.heroSection}>
+          {/* Left Column - Team 1 */}
+          <View style={styles.teamColumn}>
             <Text
-              style={[styles.scoreTeamName, { color: palette.textMuted, textAlign: 'right' }]}
+              style={[styles.teamColumnName, { color: palette.textMuted }]}
               numberOfLines={1}
               ellipsizeMode="tail">
               {team1Name}
             </Text>
-            <Text style={[styles.scoreValue, { color: palette.textInverse }]}>{team1Score}</Text>
+            <Text style={[styles.teamColumnScore, { color: palette.textInverse }]}>
+              {team1Score}
+            </Text>
+            <Text style={[styles.teamColumnStats, { color: palette.textMuted }]}>
+              {formatTimeoutStats(team1Timeouts, team1Floater)}
+            </Text>
           </View>
-          <Text style={[styles.scoreDivider, { color: palette.textMuted }]}>-</Text>
-          <View style={[styles.scoreTeam, { justifyContent: 'flex-start' }]}>
-            <Text style={[styles.scoreValue, { color: palette.textInverse }]}>{team2Score}</Text>
+
+          {/* Center Column - Game Status + Point Timer */}
+          <View style={styles.centerColumn}>
+            {/* Game To / Cap Status */}
+            {isHardcap ? (
+              <>
+                <View style={styles.hardcapLabelRow}>
+                  <MaterialCommunityIcons name="hard-hat" size={18} color={palette.accent} />
+                  <Text style={[styles.centerLabel, { color: palette.accent }]}>HARDCAP</Text>
+                </View>
+                {team1Score === team2Score ? (
+                  <View style={styles.capStatusBadge}>
+                    <MaterialCommunityIcons
+                      name="sword-cross"
+                      size={20}
+                      color={palette.textInverse}
+                    />
+                    <Text style={[styles.universePointText, { color: palette.textInverse }]}>
+                      Universe Point
+                    </Text>
+                  </View>
+                ) : (
+                  <>
+                    {(() => {
+                      const leadingTeam = team1Score > team2Score ? team1Name : team2Name;
+                      const trailingTeam = team1Score > team2Score ? team2Name : team1Name;
+                      const scoreDiff = Math.abs(team1Score - team2Score);
+                      const canTie = scoreDiff === 1;
+
+                      return (
+                        <>
+                          <Text style={[styles.hardcapWinnerText, { color: palette.textInverse }]}>
+                            {leadingTeam}
+                          </Text>
+                          <Text style={[styles.capStatusText, { color: palette.textMuted }]}>
+                            {canTie
+                              ? `wins unless ${trailingTeam} scores`
+                              : 'wins after this point'}
+                          </Text>
+                        </>
+                      );
+                    })()}
+                  </>
+                )}
+              </>
+            ) : (
+              <>
+                <Text style={[styles.centerLabel, { color: palette.accent }]}>GAME TO</Text>
+                <Text style={[styles.centerNumber, { color: palette.textInverse }]}>{gameTo}</Text>
+                {isSoftCap && (
+                  <View style={styles.capStatusBadge}>
+                    <MaterialCommunityIcons
+                      name="hat-fedora"
+                      size={16}
+                      color={palette.textInverse}
+                    />
+                    <Text style={[styles.capStatusText, { color: palette.textInverse }]}>
+                      Softcap Active
+                    </Text>
+                  </View>
+                )}
+                {softCapPending && !isSoftCap && (
+                  <View style={styles.capStatusBadge}>
+                    <FlashingIcon
+                      name="hat-fedora"
+                      size={16}
+                      color={palette.textInverse}
+                      isFlashing
+                    />
+                    <Text style={[styles.capStatusText, { color: palette.textInverse }]}>
+                      Softcap Pending
+                    </Text>
+                  </View>
+                )}
+              </>
+            )}
+
+            {/* Point Timer (integrated) */}
+            {showPointTimer && (
+              <View style={styles.pointTimerContainer}>
+                <View style={[styles.pointTimerDivider, { backgroundColor: palette.overlay10 }]} />
+                <Pressable
+                  onPress={togglePause}
+                  style={({ pressed }) => [
+                    styles.pointTimerPod,
+                    pressed && { backgroundColor: palette.overlay10 },
+                  ]}>
+                  <Text style={[styles.centerLabel, { color: palette.accent }]}>POINT LENGTH</Text>
+                  <View style={styles.pointTimerRow}>
+                    <MaterialCommunityIcons
+                      name={isPaused ? 'play' : 'pause'}
+                      size={24}
+                      color={isPaused ? palette.warning : palette.textMuted}
+                    />
+                    <Text
+                      style={[
+                        styles.pointTimerValue,
+                        { color: isPaused ? palette.warning : palette.textInverse },
+                      ]}>
+                      {formatElapsed(elapsedSeconds)}
+                    </Text>
+                  </View>
+                </Pressable>
+              </View>
+            )}
+          </View>
+
+          {/* Right Column - Team 2 */}
+          <View style={styles.teamColumn}>
             <Text
-              style={[styles.scoreTeamName, { color: palette.textMuted, textAlign: 'left' }]}
+              style={[styles.teamColumnName, { color: palette.textMuted }]}
               numberOfLines={1}
               ellipsizeMode="tail">
               {team2Name}
             </Text>
+            <Text style={[styles.teamColumnScore, { color: palette.textInverse }]}>
+              {team2Score}
+            </Text>
+            <Text style={[styles.teamColumnStats, { color: palette.textMuted }]}>
+              {formatTimeoutStats(team2Timeouts, team2Floater)}
+            </Text>
           </View>
         </View>
 
-        {/* End Game Button */}
-        <Pressable
-          style={({ pressed }) => [
-            styles.endGameButton,
-            { borderColor: palette.overlay20 },
-            pressed && styles.endGameButtonPressed,
-          ]}
-          onPress={confirmEndGame}>
-          <MaterialCommunityIcons name="flag-checkered" size={18} color={palette.textMuted} />
-          <Text style={[styles.endGameButtonText, { color: palette.textMuted }]}>
-            End Game Early
-          </Text>
-        </Pressable>
-
-        <View style={[styles.divider, { backgroundColor: palette.overlay10 }]} />
-
-        {/* Timeouts Section */}
-        <Text style={[styles.sectionTitle, { color: palette.textMuted }]}>TIMEOUTS REMAINING</Text>
-        <View style={styles.teamsGrid}>
-          <View style={styles.teamColumn}>
-            <Text style={[styles.teamName, { color: palette.textInverse }]}>{team1Name}</Text>
-            <TimeoutCounter
-              count={countTimeoutsRemaining(team1Timeouts)}
-              hasFloater={team1Floater}
-              floaterEnabled={floaterEnabled}
-            />
-          </View>
-
-          <View style={[styles.verticalDivider, { backgroundColor: palette.overlay10 }]} />
-
-          <View style={styles.teamColumn}>
-            <Text style={[styles.teamName, { color: palette.textInverse }]}>{team2Name}</Text>
-            <TimeoutCounter
-              count={countTimeoutsRemaining(team2Timeouts)}
-              hasFloater={team2Floater}
-              floaterEnabled={floaterEnabled}
-            />
-          </View>
+        {/* Action Section */}
+        <View style={styles.actionSection}>
+          <Pressable
+            onPress={confirmEndGame}
+            style={({ pressed }) => [
+              styles.endGameButton,
+              { backgroundColor: palette.danger + '10', borderColor: palette.danger + '20' },
+              pressed && { backgroundColor: palette.danger + '20' },
+            ]}>
+            <MaterialCommunityIcons name="flag-checkered" size={20} color={palette.danger} />
+            <Text style={[styles.endGameText, { color: palette.danger }]}>END GAME EARLY</Text>
+          </Pressable>
         </View>
 
         <View style={[styles.divider, { backgroundColor: palette.overlay10 }]} />
@@ -223,7 +265,7 @@ const styles = StyleSheet.create({
     letterSpacing: 2,
     textTransform: 'uppercase',
   },
-  headerSpacer: {
+  headerRightSpacer: {
     width: 40,
   },
   scrollContent: {
@@ -231,94 +273,101 @@ const styles = StyleSheet.create({
     paddingTop: 8,
   },
 
-  // Game To
-  targetSection: {
+  // Three-Column Hero Section
+  heroSection: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+  },
+  teamColumn: {
+    flex: 1,
     alignItems: 'center',
-    marginBottom: 24,
   },
-  targetLabel: {
-    fontSize: 12,
-    fontWeight: '700',
-    letterSpacing: 1,
+  teamColumnName: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 4,
   },
-  targetNumber: {
+  teamColumnScore: {
     fontSize: 56,
     fontWeight: '800',
     includeFontPadding: false,
     lineHeight: 64,
   },
-  hardcapWinnerText: {
-    fontSize: 32,
+  teamColumnStats: {
+    fontSize: 13,
+    fontWeight: '500',
+    marginTop: 4,
+  },
+  centerColumn: {
+    flex: 1.2,
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    paddingHorizontal: 16,
+  },
+  centerLabel: {
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: 1,
+  },
+  centerNumber: {
+    fontSize: 48,
     fontWeight: '800',
-    textAlign: 'center',
+    includeFontPadding: false,
+    lineHeight: 56,
   },
   hardcapLabelRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
   },
+  hardcapWinnerText: {
+    fontSize: 24,
+    fontWeight: '800',
+    textAlign: 'center',
+  },
   capStatusBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    marginTop: 8,
+    marginTop: 4,
   },
   capStatusText: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600',
   },
   universePointText: {
-    fontSize: 24,
+    fontSize: 16,
     fontWeight: '700',
   },
 
-  // Current Score
-  scoreSection: {
+  // Point Timer (integrated in center column)
+  pointTimerContainer: {
+    alignItems: 'center',
+    marginTop: 12,
+  },
+  pointTimerDivider: {
+    width: 24,
+    height: 1,
+    marginBottom: 16,
+  },
+  pointTimerPod: {
+    alignItems: 'center',
+    paddingVertical: 4,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+  },
+  pointTimerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 24,
-    gap: 16,
+    gap: 8,
+    marginTop: 2,
   },
-  scoreTeam: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    flex: 1,
-  },
-  scoreTeamName: {
-    fontSize: 14,
-    fontWeight: '600',
-    flexShrink: 1,
-  },
-  scoreValue: {
+  pointTimerValue: {
     fontSize: 32,
     fontWeight: '800',
-  },
-  scoreDivider: {
-    fontSize: 24,
-    fontWeight: '300',
-  },
-
-  // End Game Button
-  endGameButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 10,
-    borderWidth: 1,
-    alignSelf: 'center',
-    marginBottom: 8,
-  },
-  endGameButtonPressed: {
-    opacity: 0.7,
-    transform: [{ scale: 0.98 }],
-  },
-  endGameButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontVariant: ['tabular-nums'],
+    includeFontPadding: false,
+    lineHeight: 38,
   },
 
   divider: {
@@ -332,87 +381,23 @@ const styles = StyleSheet.create({
     letterSpacing: 1.5,
     marginBottom: 16,
   },
-
-  // Teams Grid
-  teamsGrid: {
-    flexDirection: 'row',
-  },
-  teamColumn: {
-    flex: 1,
+  actionSection: {
+    paddingTop: 24,
     alignItems: 'center',
+    paddingVertical: 8,
   },
-  verticalDivider: {
-    width: 1,
-    marginHorizontal: 16,
-  },
-  teamName: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 12,
-  },
-
-  // Tutorial Button
-  tutorialButton: {
+  endGameButton: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 28,
     borderRadius: 12,
-    padding: 16,
-    gap: 12,
+    borderWidth: 1,
   },
-  tutorialButtonContent: {
-    flex: 1,
-  },
-  tutorialButtonTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  tutorialButtonSubtitle: {
-    fontSize: 13,
-    marginTop: 2,
-  },
-
-  // Legend
-  legendContainer: {
-    borderRadius: 12,
-    padding: 16,
-    gap: 12,
-  },
-  legendCategoryTitle: {
-    fontSize: 13,
-    fontWeight: '700',
-    marginBottom: 4,
-  },
-  legendItem: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 12,
-  },
-  legendEmoji: {
-    fontSize: 20,
-    width: 28,
-    textAlign: 'center',
-  },
-  legendTextContainer: {
-    flex: 1,
-  },
-  legendLabel: {
+  endGameText: {
     fontSize: 14,
     fontWeight: '700',
-  },
-  legendDescription: {
-    fontSize: 13,
-    marginTop: 2,
-  },
-  legendDivider: {
-    height: 1,
-    marginVertical: 8,
-  },
-  legendIconContainer: {
-    width: 28,
-    alignItems: 'center',
-  },
-  legendFlashingNote: {
-    fontSize: 9,
-    marginTop: 2,
+    letterSpacing: 1,
   },
 });

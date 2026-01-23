@@ -2,8 +2,6 @@ import { ActionBarAction, ScoreboardActionBar } from '@/components/ScoreboardAct
 import SettingsBar from '@/components/SettingsBar';
 import TeamScoreSection from '@/components/TeamScoreSection';
 import { ThemedView } from '@/components/ThemedView';
-import StatsTrackingTutorial from '@/components/tutorial/StatsTrackingTutorial';
-import TutorialOverlay from '@/components/tutorial/TutorialOverlay';
 import { useTheme } from '@/context/ThemeContext';
 import { useHalftimeNavigation } from '@/hooks/useHalftimeNavigation';
 import { usePullPromptNavigation } from '@/hooks/usePullPromptNavigation';
@@ -119,6 +117,12 @@ export default function BasicScoreboard() {
     if (isGameOver) {
       router.push('/WinModal');
       useGameStore.getState().setGameLocked(true);
+      return;
+    }
+
+    // Team2 goal (not halftime, not game over): show point summary modal when point timer enabled
+    if (pointTimerEnabled && statTrackingEnabled) {
+      router.push('/PointSummaryModal');
     }
   };
   const handleActionBarAction = (action: ActionBarAction) => {
@@ -196,21 +200,13 @@ export default function BasicScoreboard() {
 
       {/* Action Bar for stat tracking */}
       {statTrackingEnabled && (
-        <ScoreboardActionBar possession={possession} onAction={handleActionBarAction} />
+        <ScoreboardActionBar
+          possession={possession}
+          onAction={handleActionBarAction}
+          showStartPoint={showStartButton}
+          onStartPoint={startPoint}
+        />
       )}
-
-      {/* Start Point Button - shows when point timer enabled and NO timing data exists for current point */}
-      {showStartButton && (
-        <Pressable
-          onPress={startPoint}
-          style={[styles.startPointButton, { backgroundColor: palette.accent }]}>
-          <MaterialCommunityIcons name="timer-outline" size={20} color={palette.textOnAccent} />
-          <Text style={[styles.startPointButtonText, { color: palette.textOnAccent }]}>START</Text>
-        </Pressable>
-      )}
-
-      <TutorialOverlay />
-      <StatsTrackingTutorial />
 
       {/* Game Locked Overlay - shows when WinModal has appeared (sets gameLocked=true) */}
       {gameLocked && (
@@ -349,23 +345,5 @@ const styles = StyleSheet.create({
   lockedButtonText: {
     fontSize: 16,
     fontWeight: '600',
-  },
-  startPointButton: {
-    position: 'absolute',
-    top: '50%',
-    left: '50%',
-    transform: [{ translateX: -45 }, { translateY: -20 }],
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 20,
-    zIndex: 150,
-  },
-  startPointButtonText: {
-    fontSize: 14,
-    fontWeight: '700',
-    letterSpacing: 1,
   },
 });

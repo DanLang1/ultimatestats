@@ -1,4 +1,5 @@
 import { useTheme } from '@/context/ThemeContext';
+import { useGameStore } from '@/store/gameStore';
 import { useUIStore } from '@/store/uiStore';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
@@ -20,6 +21,8 @@ export type ActionBarAction =
 interface ScoreboardActionBarProps {
   possession: 'team1' | 'team2' | null;
   onAction: (action: ActionBarAction) => void;
+  showStartPoint?: boolean;
+  onStartPoint?: () => void;
 }
 
 const BAR_WIDTH_INITIAL = 280;
@@ -29,7 +32,12 @@ const BAR_WIDTH_HORIZONTAL = 420;
 const BAR_HEIGHT_VERTICAL = 230;
 const BAR_WIDTH_VERTICAL = 60;
 
-export function ScoreboardActionBar({ possession, onAction }: ScoreboardActionBarProps) {
+export function ScoreboardActionBar({
+  possession,
+  onAction,
+  showStartPoint,
+  onStartPoint,
+}: ScoreboardActionBarProps) {
   const { palette } = useTheme();
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const insets = useSafeAreaInsets();
@@ -39,6 +47,17 @@ export function ScoreboardActionBar({ possession, onAction }: ScoreboardActionBa
     setActionBarPosition,
     toggleActionBarOrientation,
   } = useUIStore();
+
+  const {
+    pointTimerEnabled,
+    statTrackingEnabled,
+    pointTimerPausedElapsed,
+    gameLocked,
+    togglePointTimerPause,
+  } = useGameStore();
+
+  const showResumePoint =
+    pointTimerEnabled && statTrackingEnabled && pointTimerPausedElapsed !== null && !gameLocked;
 
   const isVertical = actionBarOrientation === 'vertical';
   const isMyTeam = possession === 'team1';
@@ -214,18 +233,40 @@ export function ScoreboardActionBar({ possession, onAction }: ScoreboardActionBa
           />
         </Pressable>
 
-        {/* Action buttons */}
-        {buttons.map((btn) => (
+        {/* Start Point Button - shows when point needs to be started */}
+        {showStartPoint && onStartPoint ? (
           <Pressable
-            key={btn.label}
-            style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
-            onPress={() => onAction(btn.action)}>
-            {btn.renderIcon()}
+            style={({ pressed }) => [styles.startPointButton, pressed && styles.buttonPressed]}
+            onPress={onStartPoint}>
+            <MaterialCommunityIcons name="timer-outline" size={22} color={palette.accent} />
             {!isVertical && (
-              <Text style={[styles.buttonText, { color: palette.textInverse }]}>{btn.label}</Text>
+              <Text style={[styles.startPointText, { color: palette.accent }]}>START POINT</Text>
             )}
           </Pressable>
-        ))}
+        ) : showResumePoint ? (
+          /* Resume Point Button - shows when timer is paused */
+          <Pressable
+            style={({ pressed }) => [styles.startPointButton, pressed && styles.buttonPressed]}
+            onPress={togglePointTimerPause}>
+            <MaterialCommunityIcons name="play" size={22} color={palette.success} />
+            {!isVertical && (
+              <Text style={[styles.startPointText, { color: palette.success }]}>RESUME POINT</Text>
+            )}
+          </Pressable>
+        ) : (
+          /* Action buttons */
+          buttons.map((btn) => (
+            <Pressable
+              key={btn.label}
+              style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
+              onPress={() => onAction(btn.action)}>
+              {btn.renderIcon()}
+              {!isVertical && (
+                <Text style={[styles.buttonText, { color: palette.textInverse }]}>{btn.label}</Text>
+              )}
+            </Pressable>
+          ))
+        )}
       </Animated.View>
     </GestureDetector>
   );
@@ -270,5 +311,18 @@ const styles = StyleSheet.create({
   buttonPressed: {
     opacity: 0.7,
     transform: [{ scale: 0.95 }],
+  },
+  startPointButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    gap: 8,
+    borderRadius: 12,
+  },
+  startPointText: {
+    fontSize: 13,
+    fontWeight: '800',
+    letterSpacing: 0.5,
   },
 });

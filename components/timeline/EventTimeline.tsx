@@ -208,10 +208,10 @@ export default function EventTimeline({
                   // Allow editing our turnovers, our blocks, and opponent turnovers (to convert to blocks)
                   const canEdit = onEditEvent && !isCurrentPoint;
 
-                  // Calculate relative time since point start
+                  // Relative time is simply the turnover's elapsedMs
                   const relativeTime =
-                    point.pointStartTimestamp && turnover.timestamp
-                      ? formatDuration(turnover.timestamp - point.pointStartTimestamp)
+                    turnover.elapsedMs !== undefined
+                      ? formatDuration(turnover.elapsedMs)
                       : undefined;
 
                   return (

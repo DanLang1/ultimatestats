@@ -15,6 +15,8 @@ export function useHalftimeTimer() {
     halftimeTimeLeft: timeLeft,
     setHalftimeTimeLeft: setTimeLeft,
     clearHalftimeBreak,
+    startPoint,
+    pointTimerEnabled,
   } = useGameStore();
 
   const isRunning = endTime !== null;
@@ -67,6 +69,10 @@ export function useHalftimeTimer() {
   };
 
   const handleContinue = () => {
+    // Start point timer for first point of 2nd half
+    if (pointTimerEnabled) {
+      startPoint();
+    }
     clearHalftimeBreak();
   };
 

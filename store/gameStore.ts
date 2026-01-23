@@ -51,6 +51,7 @@ export const useGameStore = create<GameState>()(
         pointTimerEnabled: false, // Optional: show "Start Point" button for accurate timing
         currentPointStartTime: null, // Working timestamp for current point
         pointStartTimestamps: {}, // Finalized timestamps for completed points
+        pointTimerPausedElapsed: null, // Elapsed ms when paused (null = running)
 
         // Turnover Tracking Initial State
         possession: null,
@@ -183,14 +184,20 @@ export const useGameStore = create<GameState>()(
               if (state.currentPointStartTime !== null) {
                 state.pointStartTimestamps[state.currentPoint - 1] = state.currentPointStartTime;
               }
+              // Calculate elapsed game time (ms since point start)
+              const elapsedMs =
+                state.currentPointStartTime !== null
+                  ? (state.pointTimerPausedElapsed ?? Date.now() - state.currentPointStartTime)
+                  : undefined;
               state.events.push({
                 type: 'goal',
                 team: 'team2',
                 goalPlayerId: null,
                 assistPlayerId: null,
-                timestamp: Date.now(),
+                elapsedMs,
               });
               state.currentPointStartTime = null;
+              state.pointTimerPausedElapsed = null;
             }
           });
           return { didIncrement, isHalftime };
@@ -291,6 +298,7 @@ export const useGameStore = create<GameState>()(
             state.halftimeTimeLeft = 7 * 60;
             state.currentPointStartTime = null;
             state.pointStartTimestamps = {};
+            state.pointTimerPausedElapsed = null;
           }),
         setSoftCapPending: (pending: boolean) =>
           set((state: GameState) => {
@@ -381,15 +389,21 @@ export const useGameStore = create<GameState>()(
             if (state.currentPointStartTime !== null) {
               state.pointStartTimestamps[state.currentPoint - 1] = state.currentPointStartTime;
             }
+            // Calculate elapsed game time (ms since point start)
+            const elapsedMs =
+              state.currentPointStartTime !== null
+                ? (state.pointTimerPausedElapsed ?? Date.now() - state.currentPointStartTime)
+                : undefined;
             state.events.push({
               type: 'goal',
               team: event.team,
               goalPlayerId: event.goalPlayerId,
               assistPlayerId: event.assistPlayerId,
-              timestamp: Date.now(),
+              elapsedMs,
             });
             state.pendingStatEntry = null;
             state.currentPointStartTime = null;
+            state.pointTimerPausedElapsed = null;
           }),
 
         clearPendingStatEntry: () =>
@@ -412,6 +426,21 @@ export const useGameStore = create<GameState>()(
         startPoint: () =>
           set((state: GameState) => {
             state.currentPointStartTime = Date.now();
+            state.pointTimerPausedElapsed = null;
+          }),
+
+        togglePointTimerPause: () =>
+          set((state: GameState) => {
+            if (state.currentPointStartTime === null) return;
+
+            if (state.pointTimerPausedElapsed === null) {
+              // Currently running -> pause: store elapsed time
+              state.pointTimerPausedElapsed = Date.now() - state.currentPointStartTime;
+            } else {
+              // Currently paused -> resume: adjust start time to maintain elapsed
+              state.currentPointStartTime = Date.now() - state.pointTimerPausedElapsed;
+              state.pointTimerPausedElapsed = null;
+            }
           }),
 
         // Turnover Tracking Actions
@@ -437,13 +466,18 @@ export const useGameStore = create<GameState>()(
           player2Id?: string | null;
         }) =>
           set((state: GameState) => {
+            // Turnovers can only be recorded when timer is running (UI shows Resume when paused)
+            const elapsedMs =
+              state.currentPointStartTime !== null
+                ? Date.now() - state.currentPointStartTime
+                : undefined;
             state.events.push({
               type: 'turnover',
               team: event.team,
               subtype: event.subtype,
               playerId: event.playerId,
               player2Id: event.player2Id,
-              timestamp: Date.now(),
+              elapsedMs,
             });
             state.possession = state.possession === 'team1' ? 'team2' : 'team1';
             state.pendingTurnoverEntry = null;
@@ -732,6 +766,7 @@ export const useGameStore = create<GameState>()(
           pointTimerEnabled: state.pointTimerEnabled,
           currentPointStartTime: state.currentPointStartTime,
           pointStartTimestamps: state.pointStartTimestamps,
+          pointTimerPausedElapsed: state.pointTimerPausedElapsed,
         }),
       },
     ),

@@ -109,6 +109,14 @@ function RootLayoutInner() {
               contentStyle: { backgroundColor: 'transparent' },
             }}
           />
+          <Stack.Screen
+            name="PointSummaryModal"
+            options={{
+              presentation: 'transparentModal',
+              gestureEnabled: false,
+              contentStyle: { backgroundColor: 'transparent' },
+            }}
+          />
         </Stack>
 
         <StatusBar style={themeMode === 'dark' ? 'light' : 'dark'} hidden />

@@ -7,7 +7,8 @@ import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 export default function StatEntryScreen() {
-  const { pendingStatEntry, currentTeam, team2Name, addPlayer, addGoalEvent } = useGameStore();
+  const { pendingStatEntry, currentTeam, team2Name, addPlayer, addGoalEvent, pointTimerEnabled } =
+    useGameStore();
   const { palette } = useTheme();
 
   const team1Name = currentTeam?.name ?? 'Team 1';
@@ -27,7 +28,6 @@ export default function StatEntryScreen() {
       goalPlayerId,
       assistPlayerId,
     });
-    router.dismiss();
 
     // Check if game ended
     const state = useGameStore.getState();
@@ -39,10 +39,19 @@ export default function StatEntryScreen() {
     });
 
     if (isGameOver) {
+      router.dismiss();
       setTimeout(() => {
         router.push('/WinModal');
         useGameStore.getState().setGameLocked(true);
       }, 100);
+      return;
+    }
+
+    // Show point summary modal when point timer enabled
+    if (pointTimerEnabled) {
+      router.replace('/PointSummaryModal');
+    } else {
+      router.dismiss();
     }
   };
 
@@ -53,7 +62,6 @@ export default function StatEntryScreen() {
       goalPlayerId: null,
       assistPlayerId: null,
     });
-    router.dismiss();
 
     // Check if game ended
     const state = useGameStore.getState();
@@ -65,10 +73,19 @@ export default function StatEntryScreen() {
     });
 
     if (isGameOver) {
+      router.dismiss();
       setTimeout(() => {
         useGameStore.getState().setGameLocked(true);
         router.push('/WinModal');
       }, 100);
+      return;
+    }
+
+    // Show point summary modal when point timer enabled
+    if (pointTimerEnabled) {
+      router.replace('/PointSummaryModal');
+    } else {
+      router.dismiss();
     }
   };
 

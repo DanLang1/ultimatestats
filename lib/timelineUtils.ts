@@ -7,7 +7,7 @@ export interface DisplayTurnover {
   playerId: string | null;
   player2Id?: string | null;
   eventIndex: number; // Index in raw events array for editing
-  timestamp?: number; // When this event occurred
+  elapsedMs?: number; // Elapsed game time when this event occurred
 }
 
 // Represents all events that occurred during a single point
@@ -19,7 +19,7 @@ export interface PointEvents {
   goalPlayerId: string | null;
   assistPlayerId: string | null;
   goalEventIndex: number; // Index in raw events array for editing
-  goalTimestamp?: number; // When the goal was scored
+  goalElapsedMs?: number; // Elapsed game time when the goal was scored
   // Turnovers that happened during this point
   turnovers: DisplayTurnover[];
   // Possession data
@@ -66,7 +66,7 @@ export function computePointByPointEvents(
         playerId: event.playerId,
         player2Id: event.player2Id,
         eventIndex: eventIdx,
-        timestamp: event.timestamp,
+        elapsedMs: event.elapsedMs,
       });
     } else if (event.type === 'goal') {
       pointNumber++;
@@ -82,10 +82,8 @@ export function computePointByPointEvents(
         team2Score++;
       }
 
-      // Calculate point duration from pointStartTimestamp (if user used point timer)
-      const pointStartTimestamp = pointStartTimestamps?.[pointNumber];
-      const pointDurationMs =
-        pointStartTimestamp && event.timestamp ? event.timestamp - pointStartTimestamp : undefined;
+      // Point duration is simply the goal's elapsedMs (already is the duration)
+      const pointDurationMs = event.elapsedMs;
 
       // Record the point
       result.push({
@@ -95,11 +93,10 @@ export function computePointByPointEvents(
         goalPlayerId: event.goalPlayerId,
         assistPlayerId: event.assistPlayerId,
         goalEventIndex: eventIdx,
-        goalTimestamp: event.timestamp,
+        goalElapsedMs: event.elapsedMs,
         turnovers: currentTurnovers,
         offensiveTeam: offensiveTeamForThisPoint,
         possessionType,
-        pointStartTimestamp,
         pointDurationMs,
       });
 
@@ -145,9 +142,11 @@ export function computePointByPointEvents(
 /**
  * Get total turnovers by type
  */
-export function getTurnoverSummary(turnovers: DisplayTurnover[]) {
+export function getTurnoverSummary(turnovers: DisplayTurnover[], teamFilter?: 'team1' | 'team2') {
   return {
-    blocks: turnovers.filter((t) => t.type === 'block').length,
+    blocks: turnovers.filter(
+      (t) => t.type === 'block' && (teamFilter ? t.team === teamFilter : true),
+    ).length,
     throwaways: turnovers.filter((t) => t.type === 'throwaway' || t.type === 'fiftyfifty').length,
     drops: turnovers.filter((t) => t.type === 'drop').length,
   };

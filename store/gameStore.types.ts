@@ -15,7 +15,7 @@ export type GameEvent =
       goalPlayerId: string | null; // Player ID who scored
       assistPlayerId: string | null; // Player ID who assisted
       gameId?: string; // Populated on save - links to SavedGame.id
-      timestamp?: number; // Date.now() when goal was scored
+      elapsedMs?: number; // Elapsed game time in ms when goal was scored
     }
   | {
       type: 'turnover';
@@ -24,7 +24,7 @@ export type GameEvent =
       playerId: string | null;
       player2Id?: string | null; // Second player ID for 50/50 turnovers
       gameId?: string; // Populated on save - links to SavedGame.id
-      timestamp?: number; // Date.now() when event was recorded
+      elapsedMs?: number; // Elapsed game time in ms when event was recorded
     };
 
 export interface GameState {
@@ -69,6 +69,7 @@ export interface GameState {
   pointTimerEnabled: boolean; // Optional: show "Start Point" button for accurate timing
   currentPointStartTime: number | null; // Working timestamp for current point
   pointStartTimestamps: Record<number, number>; // Finalized timestamps for completed points
+  pointTimerPausedElapsed: number | null; // Elapsed ms when paused (null = running)
 
   // Turnover Tracking
   possession: 'team1' | 'team2' | null;
@@ -114,6 +115,7 @@ export interface GameState {
   clearRoster: () => void;
   setPointTimerEnabled: (enabled: boolean) => void;
   startPoint: () => void;
+  togglePointTimerPause: () => void;
 
   // Turnover Tracking Actions
   setPossession: (team: 'team1' | 'team2') => void;
