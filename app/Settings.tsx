@@ -8,6 +8,7 @@ import { useKeyboardDidHide } from '@/hooks/useKeyboardDidHide';
 import { useNewGame } from '@/hooks/useNewGame';
 import { SavedTeam } from '@/lib/storage';
 import { useGameStore } from '@/store/gameStore';
+import { useSettingsStore } from '@/store/settingsStore';
 import { useTutorialStore } from '@/store/tutorialStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router, Stack } from 'expo-router';
@@ -18,6 +19,8 @@ export default function SettingsScreen() {
   const { palette, themeMode, setThemeMode } = useTheme();
   const { showAlert } = useAlert();
   const { hasSeenStatsTutorial, triggerStatsTutorial } = useTutorialStore();
+  const { mmpColor, fmpColor, setMmpColor, setFmpColor, resetMatchingTypeColors } =
+    useSettingsStore();
 
   const {
     currentTeam,
@@ -300,8 +303,18 @@ export default function SettingsScreen() {
 
             <View style={[styles.divider, dividerStyle]} />
 
+            {/* Theme */}
+            <Text style={[styles.sectionTitle, textInverseStyle]}>DISPLAY</Text>
+            <Switch
+              label="Light Theme"
+              value={themeMode === 'light'}
+              onValueChange={(val) => setThemeMode(val ? 'light' : 'dark')}
+            />
+
+            <View style={[styles.divider, dividerStyle]} />
+
             {/* Team Colors */}
-            <Text style={[styles.sectionTitle, textInverseStyle]}>COLORS</Text>
+            <Text style={[styles.sectionTitle, textInverseStyle]}>TEAM COLORS</Text>
             <TeamColorPicker
               label="MY TEAM COLOR"
               value={team1BgColor}
@@ -322,13 +335,22 @@ export default function SettingsScreen() {
               <Text style={[styles.resetColorsButtonText, textMutedStyle]}>Reset to Default</Text>
             </Pressable>
 
-            {/* Theme */}
-            <Text style={[styles.sectionTitle, textInverseStyle]}>DISPLAY</Text>
-            <Switch
-              label="Light Theme"
-              value={themeMode === 'light'}
-              onValueChange={(val) => setThemeMode(val ? 'light' : 'dark')}
+            <View style={[styles.divider, dividerStyle]} />
+
+            {/* Matching Type Colors */}
+            <Text style={[styles.sectionTitle, textInverseStyle]}>PLAYER NAME COLORS</Text>
+            <TeamColorPicker label="MMP (MALE MATCHING)" value={mmpColor} onChange={setMmpColor} />
+            <View style={{ height: 12 }} />
+            <TeamColorPicker
+              label="FMP (FEMALE MATCHING)"
+              value={fmpColor}
+              onChange={setFmpColor}
             />
+            <Pressable
+              style={({ pressed }) => [styles.resetColorsButton, pressed && { opacity: 0.7 }]}
+              onPress={resetMatchingTypeColors}>
+              <Text style={[styles.resetColorsButtonText, textMutedStyle]}>Reset to Default</Text>
+            </Pressable>
           </View>
 
           {/* Right Column: Game Settings */}

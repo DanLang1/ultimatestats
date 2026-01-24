@@ -79,6 +79,10 @@ const midnightElectric = {
   // Semantic
   disabled: '#94A3B8', // Slate 400 - disabled state
 
+  // Player matching type colors
+  mmpColor: '#60A5FA', // Blue 400 - male matching player names
+  fmpColor: '#F472B6', // Pink 400 - female matching player names
+
   // Contrast labels
   // Contrast labels
   textOnAccent: '#FFFFFF',
@@ -262,6 +266,10 @@ export const lightPalette = {
 
   // Semantic
   disabled: '#9CA3AF', // Gray 400 - disabled state
+
+  // Player matching type colors
+  mmpColor: '#2563EB', // Blue 600 - male matching player names (darker for light bg)
+  fmpColor: '#DB2777', // Pink 600 - female matching player names (darker for light bg)
 
   // Contrast labels
   textOnAccent: '#FFFFFF',

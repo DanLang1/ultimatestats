@@ -1,4 +1,4 @@
-import { Player, SavedTeam } from './storage/types';
+import { MatchingType, Player, SavedTeam } from './storage/types';
 
 /**
  * Resolve the current team name using ID lookup with snapshot fallback.
@@ -62,4 +62,16 @@ export function getPlayerByName(roster: Player[], name: string): Player | undefi
 export function hasPlayerWithName(roster: Player[], name: string): boolean {
   const searchName = name.trim().toLowerCase();
   return roster.some((p) => p.name.toLowerCase() === searchName);
+}
+
+/**
+ * Get a player's matching type by their ID.
+ * Returns null if player not found or matching type not set.
+ */
+export function getPlayerMatchingType(
+  roster: Player[] | null | undefined,
+  id: string | null,
+): MatchingType | null {
+  if (!id || !roster) return null;
+  return roster.find((p) => p.id === id)?.matchingType ?? null;
 }

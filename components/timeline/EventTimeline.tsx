@@ -1,7 +1,8 @@
 import { useTheme } from '@/context/ThemeContext';
-import { getPlayerName } from '@/lib/playerUtils';
+import { getPlayerMatchingType, getPlayerName } from '@/lib/playerUtils';
 import { Player } from '@/lib/storage/types';
 import { DisplayTurnover, PointEvents } from '@/lib/timelineUtils';
+import { useSettingsStore } from '@/store/settingsStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import * as Haptics from 'expo-haptics';
 import React from 'react';
@@ -44,6 +45,7 @@ export default function EventTimeline({
   onEditGoal,
 }: EventTimelineProps) {
   const { palette } = useTheme();
+  const { mmpColor, fmpColor } = useSettingsStore();
 
   const handleLongPressTurnover = (turnover: DisplayTurnover) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
@@ -87,9 +89,11 @@ export default function EventTimeline({
               ? palette.success
               : palette.danger;
 
-          // Resolve player IDs to names
+          // Resolve player IDs to names and matching types
           const goalName = getPlayerName(roster, point.goalPlayerId);
           const assistName = getPlayerName(roster, point.assistPlayerId);
+          const goalMatchingType = getPlayerMatchingType(roster, point.goalPlayerId);
+          const assistMatchingType = getPlayerMatchingType(roster, point.assistPlayerId);
 
           const isCallahan = isTeam1 && point.assistPlayerId === 'OTHER_TEAM';
           const callahanBlockIndex = isCallahan
@@ -184,6 +188,11 @@ export default function EventTimeline({
                   const isOpponent = turnover.team === 'team2';
                   const turnoverPlayerName = getPlayerName(roster, turnover.playerId);
                   const turnoverPlayer2Name = getPlayerName(roster, turnover.player2Id ?? null);
+                  const turnoverMatchingType = getPlayerMatchingType(roster, turnover.playerId);
+                  const turnover2MatchingType = getPlayerMatchingType(
+                    roster,
+                    turnover.player2Id ?? null,
+                  );
 
                   const label =
                     turnover.type === 'block'
@@ -255,7 +264,12 @@ export default function EventTimeline({
                               style={[
                                 styles.eventPlayer,
                                 {
-                                  color: palette.textInverse,
+                                  color:
+                                    turnoverMatchingType === 'mmp'
+                                      ? mmpColor
+                                      : turnoverMatchingType === 'fmp'
+                                        ? fmpColor
+                                        : palette.textInverse,
                                   flexShrink:
                                     turnover.type === 'fiftyfifty' && turnoverPlayer2Name ? 1 : 0,
                                   maxWidth:
@@ -284,7 +298,13 @@ export default function EventTimeline({
                                 style={[
                                   styles.eventPlayer,
                                   {
-                                    color: isOpponent ? palette.textMuted : palette.textInverse,
+                                    color: isOpponent
+                                      ? palette.textMuted
+                                      : turnover2MatchingType === 'mmp'
+                                        ? mmpColor
+                                        : turnover2MatchingType === 'fmp'
+                                          ? fmpColor
+                                          : palette.textInverse,
                                     opacity: 0.9,
                                     flexShrink: 1,
                                     maxWidth: '40%',
@@ -340,7 +360,17 @@ export default function EventTimeline({
                           CALLAHAN
                         </Text>
                         <Text
-                          style={[styles.eventPlayer, { color: palette.textInverse }]}
+                          style={[
+                            styles.eventPlayer,
+                            {
+                              color:
+                                goalMatchingType === 'mmp'
+                                  ? mmpColor
+                                  : goalMatchingType === 'fmp'
+                                    ? fmpColor
+                                    : palette.textInverse,
+                            },
+                          ]}
                           numberOfLines={1}>
                           {goalName}
                         </Text>
@@ -378,7 +408,18 @@ export default function EventTimeline({
                           ]}>
                           <Text style={[styles.eventLabel, { color: teamColor }]}>GOAL</Text>
                           <Text
-                            style={[styles.eventPlayer, { color: palette.textInverse }]}
+                            style={[
+                              styles.eventPlayer,
+                              {
+                                color: isTeam1
+                                  ? goalMatchingType === 'mmp'
+                                    ? mmpColor
+                                    : goalMatchingType === 'fmp'
+                                      ? fmpColor
+                                      : palette.textInverse
+                                  : palette.textInverse,
+                              },
+                            ]}
                             numberOfLines={1}>
                             {isTeam1 ? goalName || 'Unknown' : team2Name}
                           </Text>
@@ -423,7 +464,17 @@ export default function EventTimeline({
                                 ASSIST
                               </Text>
                               <Text
-                                style={[styles.eventPlayer, { color: palette.textInverse }]}
+                                style={[
+                                  styles.eventPlayer,
+                                  {
+                                    color:
+                                      assistMatchingType === 'mmp'
+                                        ? mmpColor
+                                        : assistMatchingType === 'fmp'
+                                          ? fmpColor
+                                          : palette.textInverse,
+                                  },
+                                ]}
                                 numberOfLines={1}>
                                 {assistName}
                               </Text>
