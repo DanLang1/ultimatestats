@@ -1,6 +1,7 @@
 import { ThemedView } from '@/components/ThemedView';
 import { useAlert } from '@/components/ui/AlertProvider';
 import { TeamColorPicker } from '@/components/ui/ColorPicker';
+import { NumberPicker } from '@/components/ui/NumberPicker';
 import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import { Switch } from '@/components/ui/Switch';
 import { useTheme } from '@/context/ThemeContext';
@@ -75,12 +76,11 @@ function SettingsContent() {
   const timeoutsCount = team1Timeouts.length;
   // Local draft state for controlled inputs (needed for validation or string->number conversion)
   const [team1NameDraft, setTeam1NameDraft] = useState(team1Name);
-  const [gameToInput, setGameToInput] = useState(gameTo.toString());
-  const [gameLengthInput, setGameLengthInput] = useState(gameLength.toString());
-  const [softCapInput, setSoftCapInput] = useState((gameLength - softCapMins).toString());
 
   // Soft Cap displays as time (when soft cap triggers), converts to softCapMins for storage
   const softCapTime = gameLength - softCapMins;
+
+  const gameActive = timerIsActive || team1Score !== 0 || team2Score !== 0;
 
   // Save all draft inputs - called on keyboard hide (for Android back button)
   const saveAllDrafts = () => {
@@ -96,62 +96,10 @@ function SettingsContent() {
         saveCurrentTeam();
       }
     }
-
-    // Game To
-    const gameToNum = parseInt(gameToInput, 10);
-    if (!isNaN(gameToNum) && gameToNum >= 1 && gameToNum !== gameTo) {
-      setGameTo(gameToNum);
-    }
-
-    // Game Length
-    const gameLengthNum = parseInt(gameLengthInput, 10);
-    if (!isNaN(gameLengthNum) && gameLengthNum >= 1 && gameLengthNum !== gameLength) {
-      if (softCapMins > gameLengthNum) {
-        setSoftCapMins(gameLengthNum);
-      }
-      setGameLength(gameLengthNum);
-    }
-
-    // Soft Cap
-    const softCapNum = parseInt(softCapInput, 10);
-    console.log(softCapNum);
-    if (!isNaN(softCapNum)) {
-      const clamped = Math.max(0, Math.min(gameLength, softCapNum));
-      const newSoftCapMins = Math.max(0, gameLength - clamped);
-      if (newSoftCapMins !== softCapMins) {
-        setSoftCapMins(newSoftCapMins);
-      }
-    }
   };
 
   // Handle Android back button dismissing keyboard (doesn't trigger onBlur)
   useKeyboardDidHide(saveAllDrafts);
-
-  const handleGameLengthBlur = () => {
-    const num = parseInt(gameLengthInput, 10);
-    if (isNaN(num) || num < 1) {
-      setGameLengthInput(gameLength.toString()); // Revert to valid value
-      return;
-    }
-    // Clamp softCapMins if it would exceed new game length
-    if (softCapMins > num) {
-      setSoftCapMins(num);
-      setSoftCapInput('0');
-    }
-    setGameLength(num);
-  };
-
-  const handleSoftCapBlur = () => {
-    const num = parseInt(softCapInput, 10);
-    // console.log(num);
-    if (isNaN(num)) {
-      setSoftCapInput(softCapTime.toString()); // Revert to valid value
-      return;
-    }
-    const clamped = Math.max(0, Math.min(gameLength, num));
-    setSoftCapMins(Math.max(0, gameLength - clamped));
-    setSoftCapInput(clamped.toString());
-  };
 
   const handleEditRoster = () => {
     router.push({ pathname: '/EditRoster', params: { teamName: team1Name } });
@@ -189,25 +137,6 @@ function SettingsContent() {
     setCurrentTeam(updatedTeam);
     saveCurrentTeam();
   };
-
-  const handleGameToBlur = () => {
-    const num = parseInt(gameToInput, 10);
-    if (isNaN(num) || num < 1) {
-      setGameToInput(gameTo.toString()); // Revert to valid value
-      return;
-    }
-    setGameTo(num);
-  };
-
-  const handleTimeoutsChange = (value: string) => {
-    const num = parseInt(value, 10);
-    if (isNaN(num)) {
-      return;
-    }
-    resetTimeouts(num);
-  };
-
-  const gameActive = timerIsActive || team1Score !== 0 || team2Score !== 0;
 
   // Dynamic Styles
   const containerStyle = { backgroundColor: palette.primary };
@@ -372,113 +301,52 @@ function SettingsContent() {
 
             <View style={styles.inputsGrid}>
               <View style={styles.inputGroup}>
-                <Text style={[styles.inputLabel, textMutedStyle]}>
-                  {gameActive && (
-                    <MaterialCommunityIcons name="lock" size={10} color={palette.textMuted} />
-                  )}{' '}
-                  GAME TO
-                </Text>
-                <TextInput
-                  style={[
-                    styles.inputStacked,
-                    borderStyle,
-                    textInverseStyle,
-                    inputBgStyle,
-                    gameActive && styles.inputDisabled,
-                  ]}
-                  value={gameToInput}
-                  onChangeText={setGameToInput}
-                  onBlur={handleGameToBlur}
-                  placeholder="15"
-                  placeholderTextColor={palette.textMuted}
-                  keyboardType="numeric"
-                  maxLength={3}
-                  editable={!gameActive}
+                <NumberPicker
+                  label="GAME TO"
+                  value={gameTo}
+                  onChange={setGameTo}
+                  min={1}
+                  max={99}
+                  quickOptions={[13, 15]}
+                  disabled={gameActive}
                 />
               </View>
 
               <View style={styles.inputGroup}>
-                <Text style={[styles.inputLabel, textMutedStyle]}>
-                  {gameActive && (
-                    <MaterialCommunityIcons name="lock" size={10} color={palette.textMuted} />
-                  )}{' '}
-                  HARD CAP
-                </Text>
-                <View style={styles.inputWithSuffix}>
-                  <TextInput
-                    style={[
-                      styles.inputStacked,
-                      styles.inputWithSuffixInput,
-                      gameActive && styles.inputDisabled,
-                      borderStyle,
-                      textInverseStyle,
-                      inputBgStyle,
-                    ]}
-                    value={gameLengthInput}
-                    onChangeText={setGameLengthInput}
-                    onBlur={handleGameLengthBlur}
-                    placeholder="90"
-                    placeholderTextColor={palette.textMuted}
-                    keyboardType="numeric"
-                    editable={!gameActive}
-                    maxLength={4}
-                  />
-                  <Text
-                    style={[
-                      styles.inputSuffix,
-                      gameActive && styles.inputDisabled,
-                      borderStyle,
-                      {
-                        color: palette.textMuted,
-                        borderLeftWidth: 0,
-                        backgroundColor: palette.overlay05,
-                      },
-                    ]}>
-                    min
-                  </Text>
-                </View>
+                <NumberPicker
+                  label="HARD CAP"
+                  value={gameLength}
+                  onChange={(val) => {
+                    setGameLength(val);
+                    // Clamp soft cap if needed
+                    if (softCapTime > val) {
+                      setSoftCapMins(Math.max(0, val - softCapTime));
+                    }
+                  }}
+                  min={1}
+                  max={180}
+                  suffix="min"
+                  quickOptions={[90, 105, 110, 120]}
+                  disabled={gameActive}
+                />
               </View>
 
               <View style={styles.inputGroup}>
-                <Text style={[styles.inputLabel, textMutedStyle]}>
-                  {gameActive && (
-                    <MaterialCommunityIcons name="lock" size={10} color={palette.textMuted} />
-                  )}{' '}
-                  SOFT CAP
-                </Text>
-                <View style={styles.inputWithSuffix}>
-                  <TextInput
-                    style={[
-                      styles.inputStacked,
-                      styles.inputWithSuffixInput,
-                      gameActive && styles.inputDisabled,
-                      borderStyle,
-                      textInverseStyle,
-                      inputBgStyle,
-                    ]}
-                    value={softCapInput}
-                    onChangeText={setSoftCapInput}
-                    onBlur={handleSoftCapBlur}
-                    placeholder="70"
-                    placeholderTextColor={palette.textMuted}
-                    keyboardType="numeric"
-                    editable={!gameActive}
-                    maxLength={4}
-                  />
-                  <Text
-                    style={[
-                      styles.inputSuffix,
-                      gameActive && styles.inputDisabled,
-                      borderStyle,
-                      {
-                        color: palette.textMuted,
-                        borderLeftWidth: 0,
-                        backgroundColor: palette.overlay05,
-                      },
-                    ]}>
-                    min
-                  </Text>
-                </View>
+                <NumberPicker
+                  label="SOFT CAP"
+                  value={softCapTime}
+                  onChange={(val) => setSoftCapMins(gameLength - val)}
+                  min={0}
+                  max={gameLength}
+                  suffix="min"
+                  quickOptions={[
+                    Math.max(0, gameLength - 30),
+                    Math.max(0, gameLength - 20),
+                    Math.max(0, gameLength - 15),
+                    Math.max(0, gameLength - 10),
+                  ]}
+                  disabled={gameActive}
+                />
               </View>
 
               <View style={styles.inputGroup}>
@@ -489,7 +357,10 @@ function SettingsContent() {
                     { value: '2', label: '2' },
                   ]}
                   value={timeoutsCount.toString()}
-                  onChange={handleTimeoutsChange}
+                  onChange={(val) => {
+                    const num = parseInt(val, 10);
+                    if (!isNaN(num)) resetTimeouts(num);
+                  }}
                   disabled={gameActive}
                 />
               </View>

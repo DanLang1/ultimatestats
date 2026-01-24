@@ -117,6 +117,15 @@ function RootLayoutInner() {
               contentStyle: { backgroundColor: 'transparent' },
             }}
           />
+          <Stack.Screen
+            name="NumberPickerModal"
+            options={{
+              presentation: 'transparentModal',
+              animation: 'fade',
+              gestureEnabled: false,
+              contentStyle: { backgroundColor: 'transparent' },
+            }}
+          />
         </Stack>
 
         <StatusBar style={themeMode === 'dark' ? 'light' : 'dark'} hidden />
