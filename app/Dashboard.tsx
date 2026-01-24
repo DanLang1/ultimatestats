@@ -27,7 +27,7 @@ interface MenuSection {
 export default function DashboardScreen() {
   const { palette } = useTheme();
   const { statTrackingEnabled, currentTeam, savedGames } = useGameStore();
-  const { confirmNewGame } = useNewGame({ onSuccess: () => router.back() });
+  const { confirmNewGame } = useNewGame({ onSuccess: () => router.push('/') });
   const { hasNewVersion } = useVersionCheck();
 
   const team1Name = currentTeam?.name ?? 'Team 1';

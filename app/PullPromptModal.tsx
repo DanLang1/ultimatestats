@@ -1,9 +1,11 @@
 import { useTheme } from '@/context/ThemeContext';
 import { getContrastingTextColor } from '@/lib/colorUtils';
+import { formatRatioFull, GenderRatio } from '@/lib/genderRatioUtils';
 import { useGameStore } from '@/store/gameStore';
+import { useSettingsStore } from '@/store/settingsStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router } from 'expo-router';
-import React from 'react';
+import React, { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeIn, SlideInDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -24,16 +26,25 @@ export default function PullPromptScreen() {
     team1BgColor,
     team2BgColor,
   } = useGameStore();
+  const { genderRatioEnabled, setFirstPointRatio, firstPointRatio } = useSettingsStore();
   const { palette } = useTheme();
   const insets = useSafeAreaInsets();
   const team1Name = currentTeam?.name ?? 'Team 1';
+
+  // Determine what's needed
+  const needPossession = statTrackingEnabled && possession === null;
+  const needRatio = genderRatioEnabled && firstPointRatio === null;
+
+  // Two-step flow: possession first (if needed), then ratio (if needed)
+  const [step, setStep] = useState<'possession' | 'ratio'>(needPossession ? 'possession' : 'ratio');
+  const [selectedTeam, setSelectedTeam] = useState<'team1' | 'team2' | null>(null);
 
   // Calculate contrasting text colors for team cards
   const team1TextColor = getContrastingTextColor(team1BgColor || palette.primary);
   const team2TextColor = getContrastingTextColor(team2BgColor || palette.accent);
 
-  // If possession is already set or tracking disabled, just render nothing
-  if (possession !== null || !statTrackingEnabled) {
+  // If nothing is needed, don't show the modal
+  if (!needPossession && !needRatio) {
     return null;
   }
 
@@ -42,7 +53,22 @@ export default function PullPromptScreen() {
   const timeoutsLabel = `${team1Timeouts.length} TOs${autoHalftimeEnabled ? '/Half' : ''}`;
 
   const handleSelect = (team: 'team1' | 'team2') => {
-    setPossession(team);
+    if (genderRatioEnabled) {
+      // Don't set possession yet - wait until ratio is selected
+      setSelectedTeam(team);
+      setStep('ratio');
+    } else {
+      setPossession(team);
+      router.dismissTo('/');
+    }
+  };
+
+  const handleRatioSelect = (ratio: GenderRatio) => {
+    // Only set possession if we went through possession step
+    if (needPossession && selectedTeam) {
+      setPossession(selectedTeam);
+    }
+    setFirstPointRatio(ratio);
     router.dismissTo('/');
   };
 
@@ -133,45 +159,90 @@ export default function PullPromptScreen() {
             </View>
           </Animated.View>
 
-          {/* Main Matchup Stage */}
-          <View style={styles.matchupContainer}>
-            {/* My Team Card */}
-            <Pressable
-              style={({ pressed }) => [
-                styles.teamCard,
-                {
-                  backgroundColor: team1BgColor || palette.primary,
-                  borderColor: palette.overlay10,
-                },
-                pressed && styles.cardPressed,
-              ]}
-              onPress={() => handleSelect('team1')}>
-              <Text style={[styles.teamNameLarge, { color: team1TextColor }]}>{team1Name}</Text>
-            </Pressable>
+          {step === 'possession' ? (
+            <>
+              {/* Main Matchup Stage */}
+              <View style={styles.matchupContainer}>
+                {/* My Team Card */}
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.teamCard,
+                    {
+                      backgroundColor: team1BgColor || palette.primary,
+                      borderColor: palette.overlay10,
+                    },
+                    pressed && styles.cardPressed,
+                  ]}
+                  onPress={() => handleSelect('team1')}>
+                  <Text style={[styles.teamNameLarge, { color: team1TextColor }]}>{team1Name}</Text>
+                </Pressable>
 
-            {/* VS Badge */}
-            <View style={styles.vsBadge}>
-              <Text style={[styles.vsText, { color: palette.textMuted }]}>VS</Text>
-            </View>
+                {/* VS Badge */}
+                <View style={styles.vsBadge}>
+                  <Text style={[styles.vsText, { color: palette.textMuted }]}>VS</Text>
+                </View>
 
-            {/* Opponent Card */}
-            <Pressable
-              style={({ pressed }) => [
-                styles.teamCard,
-                { backgroundColor: team2BgColor || palette.accent, borderColor: palette.overlay10 },
-                pressed && styles.cardPressed,
-              ]}
-              onPress={() => handleSelect('team2')}>
-              <Text style={[styles.teamNameLarge, { color: team2TextColor }]}>{team2Name}</Text>
-            </Pressable>
-          </View>
+                {/* Opponent Card */}
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.teamCard,
+                    {
+                      backgroundColor: team2BgColor || palette.accent,
+                      borderColor: palette.overlay10,
+                    },
+                    pressed && styles.cardPressed,
+                  ]}
+                  onPress={() => handleSelect('team2')}>
+                  <Text style={[styles.teamNameLarge, { color: team2TextColor }]}>{team2Name}</Text>
+                </Pressable>
+              </View>
 
-          {/* Footer Heading */}
-          <Animated.View entering={FadeIn.delay(100)} style={styles.footer}>
-            <Text style={[styles.mainQuestion, { color: palette.modalText }]}>
-              Who is receiving?
-            </Text>
-          </Animated.View>
+              {/* Footer Heading */}
+              <Animated.View entering={FadeIn.delay(100)} style={styles.footer}>
+                <Text style={[styles.mainQuestion, { color: palette.modalText }]}>
+                  Who is receiving?
+                </Text>
+              </Animated.View>
+            </>
+          ) : (
+            <>
+              {/* Ratio Selection Stage */}
+              <View style={styles.ratioContainer}>
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.ratioCard,
+                    { backgroundColor: palette.accent, borderColor: palette.overlay10 },
+                    pressed && styles.cardPressed,
+                  ]}
+                  onPress={() => handleRatioSelect('more-women')}>
+                  <Text
+                    style={[styles.ratioText, { color: getContrastingTextColor(palette.accent) }]}>
+                    {formatRatioFull('more-women')}
+                  </Text>
+                </Pressable>
+
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.ratioCard,
+                    { backgroundColor: palette.primary, borderColor: palette.overlay10 },
+                    pressed && styles.cardPressed,
+                  ]}
+                  onPress={() => handleRatioSelect('more-men')}>
+                  <Text
+                    style={[styles.ratioText, { color: getContrastingTextColor(palette.primary) }]}>
+                    {formatRatioFull('more-men')}
+                  </Text>
+                </Pressable>
+              </View>
+
+              {/* Footer Heading */}
+              <Animated.View entering={FadeIn.delay(100)} style={styles.footer}>
+                <Text style={[styles.mainQuestion, { color: palette.modalText }]}>
+                  Select ratio for Point 1
+                </Text>
+              </Animated.View>
+            </>
+          )}
         </Animated.View>
       </View>
     </View>
@@ -291,5 +362,35 @@ const styles = StyleSheet.create({
     right: 12,
     padding: 4,
     zIndex: 20,
+  },
+  ratioContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+    gap: 16,
+    marginBottom: 20,
+  },
+  ratioCard: {
+    flex: 1,
+    height: 100,
+    borderRadius: 20,
+    padding: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    maxWidth: 200,
+    minWidth: 120,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  ratioText: {
+    fontSize: 24,
+    fontWeight: '800',
+    textAlign: 'center',
+    letterSpacing: 1,
   },
 });

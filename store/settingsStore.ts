@@ -1,3 +1,4 @@
+import { GenderRatio } from '@/lib/genderRatioUtils';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
@@ -11,10 +12,16 @@ interface SettingsState {
   mmpColor: string;
   fmpColor: string;
 
+  // Gender Ratio Settings
+  genderRatioEnabled: boolean;
+  firstPointRatio: GenderRatio | null;
+
   // Actions
   setMmpColor: (color: string) => void;
   setFmpColor: (color: string) => void;
   resetMatchingTypeColors: () => void;
+  setGenderRatioEnabled: (enabled: boolean) => void;
+  setFirstPointRatio: (ratio: GenderRatio | null) => void;
 }
 
 export const useSettingsStore = create<SettingsState>()(
@@ -22,6 +29,8 @@ export const useSettingsStore = create<SettingsState>()(
     (set) => ({
       mmpColor: DEFAULT_MMP_COLOR,
       fmpColor: DEFAULT_FMP_COLOR,
+      genderRatioEnabled: false,
+      firstPointRatio: null,
 
       setMmpColor: (color) => set({ mmpColor: color }),
       setFmpColor: (color) => set({ fmpColor: color }),
@@ -30,6 +39,8 @@ export const useSettingsStore = create<SettingsState>()(
           mmpColor: DEFAULT_MMP_COLOR,
           fmpColor: DEFAULT_FMP_COLOR,
         }),
+      setGenderRatioEnabled: (enabled) => set({ genderRatioEnabled: enabled }),
+      setFirstPointRatio: (ratio) => set({ firstPointRatio: ratio }),
     }),
     {
       name: 'ultimatestats-settings',

@@ -11,6 +11,7 @@ import { useGameStore } from '@/store/gameStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useTutorialStore } from '@/store/tutorialStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { router, Stack } from 'expo-router';
 import React, { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
@@ -19,8 +20,15 @@ export default function SettingsScreen() {
   const { palette, themeMode, setThemeMode } = useTheme();
   const { showAlert } = useAlert();
   const { hasSeenStatsTutorial, triggerStatsTutorial } = useTutorialStore();
-  const { mmpColor, fmpColor, setMmpColor, setFmpColor, resetMatchingTypeColors } =
-    useSettingsStore();
+  const {
+    mmpColor,
+    fmpColor,
+    setMmpColor,
+    setFmpColor,
+    resetMatchingTypeColors,
+    genderRatioEnabled,
+    setGenderRatioEnabled,
+  } = useSettingsStore();
 
   const {
     currentTeam,
@@ -53,7 +61,7 @@ export default function SettingsScreen() {
     saveCurrentTeam,
   } = useGameStore();
 
-  const { confirmNewGame } = useNewGame({ onSuccess: () => router.replace('/') });
+  const { confirmNewGame } = useNewGame({ onSuccess: () => router.push('/') });
 
   // Derived values from currentTeam
   const team1Name = currentTeam?.name ?? 'Team 1';
@@ -211,20 +219,28 @@ export default function SettingsScreen() {
         <Pressable
           onPress={() => router.back()}
           style={[styles.backButton, { backgroundColor: palette.overlay10 }]}
-          hitSlop={12}>
+          hitSlop={24}>
           <MaterialCommunityIcons name="arrow-left" size={24} color={palette.textInverse} />
         </Pressable>
         <Text style={[styles.headerTitle, { color: palette.textMuted }]}>SETTINGS</Text>
-        <Pressable
-          onPress={confirmNewGame}
-          style={({ pressed }) => [
-            styles.newGameButton,
-            { backgroundColor: palette.overlay10 },
-            pressed && styles.buttonPressed,
-          ]}
-          hitSlop={12}>
-          <Text style={[styles.newGameButtonText, { color: palette.success }]}>New Game</Text>
-        </Pressable>
+        <View style={styles.headerRight}>
+          <Pressable
+            onPress={() => setThemeMode(themeMode === 'light' ? 'dark' : 'light')}
+            style={({ pressed }) => [styles.themeButton, pressed && styles.buttonPressed]}
+            hitSlop={12}>
+            <MaterialIcons
+              name={themeMode === 'light' ? 'dark-mode' : 'light-mode'}
+              size={20}
+              color={palette.textInverse}
+            />
+          </Pressable>
+          <Pressable
+            onPress={confirmNewGame}
+            style={({ pressed }) => [styles.newGameButton, pressed && styles.buttonPressed]}
+            hitSlop={12}>
+            <Text style={[styles.newGameButtonText, { color: palette.success }]}>New Game</Text>
+          </Pressable>
+        </View>
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
@@ -300,16 +316,6 @@ export default function SettingsScreen() {
                 maxLength={20}
               />
             </View>
-
-            <View style={[styles.divider, dividerStyle]} />
-
-            {/* Theme */}
-            <Text style={[styles.sectionTitle, textInverseStyle]}>DISPLAY</Text>
-            <Switch
-              label="Light Theme"
-              value={themeMode === 'light'}
-              onValueChange={(val) => setThemeMode(val ? 'light' : 'dark')}
-            />
 
             <View style={[styles.divider, dividerStyle]} />
 
@@ -538,6 +544,15 @@ export default function SettingsScreen() {
                   />
                 </View>
               )}
+              <View style={styles.inputGroup}>
+                <Switch
+                  label="Gender Ratio"
+                  value={genderRatioEnabled}
+                  onValueChange={setGenderRatioEnabled}
+                  disabled={gameActive}
+                  locked={gameActive}
+                />
+              </View>
             </View>
           </View>
         </View>
@@ -563,13 +578,26 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   headerTitle: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    textAlign: 'center',
     fontSize: 14,
     fontWeight: '700',
     letterSpacing: 2,
     textTransform: 'uppercase',
+    pointerEvents: 'none',
   },
   headerSpacer: {
     width: 40,
+  },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+  },
+  themeButton: {
+    padding: 8,
   },
   scrollContent: {
     padding: 24,
@@ -696,9 +724,8 @@ const styles = StyleSheet.create({
     transform: [{ scale: 0.98 }],
   },
   newGameButton: {
-    paddingHorizontal: 12,
+    paddingHorizontal: 8,
     paddingVertical: 8,
-    borderRadius: 16,
   },
   newGameButtonText: {
     fontSize: 12,

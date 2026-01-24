@@ -6,6 +6,7 @@ import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 import { GameState, TurnoverType } from './gameStore.types';
+import { useSettingsStore } from './settingsStore';
 
 export const useGameStore = create<GameState>()(
   immer(
@@ -309,6 +310,9 @@ export const useGameStore = create<GameState>()(
             state.currentPointStartTime = null;
             state.pointStartTimestamps = {};
             state.pointTimerPausedElapsed = null;
+
+            // Reset game-specific settings in settingsStore
+            useSettingsStore.getState().setFirstPointRatio(null);
           }),
         setSoftCapPending: (pending: boolean) =>
           set((state: GameState) => {

@@ -83,9 +83,9 @@ export default function HalftimeModal() {
             </Text>
           </View>
 
-          <View style={styles.contentRow}>
+          <View style={[styles.contentRow, !hasStats && styles.contentRowCompact]}>
             {/* LEFT SIDE: Game State (Score + Timer) */}
-            <View style={styles.leftColumn}>
+            <View style={[styles.leftColumn, !hasStats && styles.leftColumnCompact]}>
               <View style={styles.scoreCompact}>
                 <View style={styles.scoreGroup}>
                   <Text
@@ -152,7 +152,7 @@ export default function HalftimeModal() {
                   onPress={onContinue}
                   style={({ pressed }) => [
                     styles.continueBtnCompact,
-                    { backgroundColor: palette.accent, marginTop: 24 },
+                    { backgroundColor: palette.accent },
                     pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
                   ]}>
                   <Text style={[styles.continueBtnTextCompact, { color: palette.textOnAccent }]}>
@@ -273,11 +273,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     height: 240, // Fixed modest height for content
   },
+  contentRowCompact: {
+    height: 'auto', // Let content determine height when no stats
+  },
   leftColumn: {
     flex: 1,
     padding: 24,
     justifyContent: 'space-between',
     alignItems: 'center',
+  },
+  leftColumnCompact: {
+    justifyContent: 'center', // Center content vertically when no stats
+    gap: 16, // Add consistent spacing between elements
   },
   rightColumn: {
     flex: 1.1, // Give stats slightly more width

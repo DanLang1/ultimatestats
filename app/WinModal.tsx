@@ -125,10 +125,10 @@ export default function WinModal() {
 
               {/* New Game Button */}
               <Pressable
-                style={[styles.button, styles.rowButton, { backgroundColor: palette.overlay10 }]}
+                style={[styles.button, styles.rowButton, { backgroundColor: palette.success }]}
                 onPress={handleNewGame}>
-                <MaterialCommunityIcons name="restart" size={18} color={palette.textMuted} />
-                <Text style={[styles.buttonText, { color: palette.textMuted }]}>New Game</Text>
+                <MaterialCommunityIcons name="restart" size={18} color={palette.textOnAccent} />
+                <Text style={[styles.buttonText, { color: palette.textOnAccent }]}>New Game</Text>
               </Pressable>
             </View>
 

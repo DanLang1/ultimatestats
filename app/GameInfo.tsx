@@ -1,15 +1,18 @@
 import HelpContent from '@/components/HelpContent';
 import { ThemedView } from '@/components/ThemedView';
+import { AlertModal } from '@/components/ui/AlertModal';
 import FlashingIcon from '@/components/ui/FlashingIcon';
 import { useTheme } from '@/context/ThemeContext';
 import { useEndGame } from '@/hooks/useEndGame';
 import { useGameTimer } from '@/hooks/useGameTimer';
 import { usePointTimer } from '@/hooks/usePointTimer';
+import { formatRatioFull, getExpectedRatio } from '@/lib/genderRatioUtils';
 import { useGameStore } from '@/store/gameStore';
+import { useSettingsStore } from '@/store/settingsStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router, Stack } from 'expo-router';
-import React from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import React, { useState } from 'react';
+import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 export default function GameInfoScreen() {
   const {
@@ -26,7 +29,12 @@ export default function GameInfoScreen() {
     isSoftCap,
     softCapPending,
     statTrackingEnabled,
+    currentPoint,
   } = useGameStore();
+
+  const { genderRatioEnabled, firstPointRatio } = useSettingsStore();
+
+  const [showAbbaModal, setShowAbbaModal] = useState(false);
 
   const team1Name = currentTeam?.name ?? 'Team 1';
 
@@ -220,6 +228,33 @@ export default function GameInfoScreen() {
           </View>
         </View>
 
+        {/* Gender Ratio Section */}
+        {genderRatioEnabled && firstPointRatio && (
+          <View style={styles.ratioSection}>
+            <View style={[styles.ratioDivider, { backgroundColor: palette.overlay10 }]} />
+            <View style={styles.ratioRow}>
+              <Text style={[styles.ratioLabel, { color: palette.accent }]}>
+                POINT {currentPoint} RATIO
+              </Text>
+              <View style={styles.ratioValueRow}>
+                <Text style={[styles.ratioValue, { color: palette.textInverse }]}>
+                  {formatRatioFull(getExpectedRatio(currentPoint, firstPointRatio))}
+                </Text>
+                <Pressable
+                  onPress={() => setShowAbbaModal(true)}
+                  style={({ pressed }) => [styles.helpButton, pressed && { opacity: 0.7 }]}
+                  hitSlop={8}>
+                  <MaterialCommunityIcons
+                    name="information-outline"
+                    size={18}
+                    color={palette.textMuted}
+                  />
+                </Pressable>
+              </View>
+            </View>
+          </View>
+        )}
+
         {/* Action Section */}
         <View style={styles.actionSection}>
           <Pressable
@@ -239,6 +274,24 @@ export default function GameInfoScreen() {
         {/* Use shared HelpContent component */}
         <HelpContent showActionBarLegend={statTrackingEnabled} />
       </ScrollView>
+
+      {/* ABBA Rule Explanation Modal */}
+      <AlertModal
+        visible={showAbbaModal}
+        title="Ratio Rule A (ABBA)"
+        onClose={() => setShowAbbaModal(false)}>
+        <Text style={[styles.abbaText, { color: palette.textInverse }]}>
+          Gender ratio is tracked by the Ratio Rule A or ABBA method. For details see Appendix B1.B
+          in the link below.
+        </Text>
+        <Pressable
+          onPress={() => Linking.openURL('https://usaultimate.org/rules/')}
+          style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}>
+          <Text style={[styles.abbaSource, { color: palette.accent }]}>
+            USAU Rules of Ultimate, Appendix B1.B
+          </Text>
+        </Pressable>
+      </AlertModal>
     </ThemedView>
   );
 }
@@ -399,5 +452,50 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '700',
     letterSpacing: 1,
+  },
+
+  // Gender Ratio Section
+  ratioSection: {
+    alignItems: 'center',
+    marginTop: 16,
+  },
+  ratioDivider: {
+    width: 40,
+    height: 1,
+    marginBottom: 16,
+  },
+  ratioRow: {
+    alignItems: 'center',
+    gap: 4,
+  },
+  ratioLabel: {
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: 1,
+  },
+  ratioValueRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  ratioValue: {
+    fontSize: 28,
+    fontWeight: '800',
+  },
+  helpButton: {
+    padding: 4,
+    borderRadius: 12,
+  },
+
+  // ABBA Modal
+  abbaText: {
+    fontSize: 14,
+    lineHeight: 20,
+    marginBottom: 12,
+  },
+  abbaSource: {
+    fontSize: 12,
+    fontStyle: 'italic',
+    marginTop: 4,
   },
 });

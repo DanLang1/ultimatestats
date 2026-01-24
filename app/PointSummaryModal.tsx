@@ -1,6 +1,8 @@
 import { useTheme } from '@/context/ThemeContext';
+import { formatRatioFull, getExpectedRatio } from '@/lib/genderRatioUtils';
 import { computePointByPointEvents, getTurnoverSummary } from '@/lib/timelineUtils';
 import { useGameStore } from '@/store/gameStore';
+import { useSettingsStore } from '@/store/settingsStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router } from 'expo-router';
 import React from 'react';
@@ -60,6 +62,8 @@ export default function PointSummaryModal() {
     isHalftimeBreak,
     gameLocked,
   } = useGameStore();
+
+  const { genderRatioEnabled, firstPointRatio } = useSettingsStore();
 
   // Don't show if point timer is off, no stat tracking, halftime is active, or game ended
   if (!pointTimerEnabled || !statTrackingEnabled || isHalftimeBreak || gameLocked) {
@@ -190,6 +194,15 @@ export default function PointSummaryModal() {
                 />
                 <Text style={[styles.statValue, { color: palette.modalText }]}>
                   {turnoverSummary.blocks} block{turnoverSummary.blocks !== 1 ? 's' : ''}
+                </Text>
+              </View>
+            )}
+
+            {/* Next Point Ratio */}
+            {genderRatioEnabled && firstPointRatio && (
+              <View style={[styles.statCard, { backgroundColor: palette.overlay05 }]}>
+                <Text style={[styles.statValue, { color: palette.modalText }]}>
+                  {`Next Point: ${formatRatioFull(getExpectedRatio(lastPoint.pointNumber + 1, firstPointRatio))}`}
                 </Text>
               </View>
             )}

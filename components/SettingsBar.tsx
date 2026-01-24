@@ -2,7 +2,9 @@ import { useTheme } from '@/context/ThemeContext';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
 import { useGameTimer } from '@/hooks/useGameTimer';
+import { formatRatio, getExpectedRatio } from '@/lib/genderRatioUtils';
 import { useGameStore } from '@/store/gameStore';
+import { useSettingsStore } from '@/store/settingsStore';
 import { router } from 'expo-router';
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
@@ -14,7 +16,9 @@ interface SettingsBarProps {
 
 export default function SettingsBar({ onUndo }: SettingsBarProps) {
   const { timeLeft, isActive, toggleTimer } = useGameTimer();
-  const { isSoftCap, softCapPending, events, statTrackingEnabled } = useGameStore();
+  const { isSoftCap, softCapPending, events, statTrackingEnabled, currentPoint } = useGameStore();
+
+  const { genderRatioEnabled, firstPointRatio } = useSettingsStore();
   const { palette } = useTheme();
 
   const canUndo = (events?.length ?? 0) > 0;
@@ -54,6 +58,15 @@ export default function SettingsBar({ onUndo }: SettingsBarProps) {
           />
         ) : null}
       </View>
+
+      {/* Gender Ratio Indicator */}
+      {genderRatioEnabled && firstPointRatio && (
+        <View style={styles.ratioContainer}>
+          <Text style={[styles.ratioText, { color: barContentColor }]}>
+            {formatRatio(getExpectedRatio(currentPoint, firstPointRatio))}
+          </Text>
+        </View>
+      )}
 
       {/* Stats - only show when stat tracking enabled */}
       {statTrackingEnabled && (
@@ -118,5 +131,15 @@ const styles = StyleSheet.create({
   },
   iconButtonDisabled: {
     opacity: 0.3,
+  },
+  ratioContainer: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  ratioText: {
+    fontSize: 16,
+    fontWeight: '700',
   },
 });

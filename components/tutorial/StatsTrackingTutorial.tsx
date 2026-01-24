@@ -18,7 +18,7 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const TUTORIAL_STEPS = [
   {
     icon: 'chart-line' as const,
-    title: 'Track Possession 🥏',
+    title: 'Track Possession',
     description:
       'Follow the Frisbee to track which team has the disc. Tap either team to record a goal and switch possession.',
   },

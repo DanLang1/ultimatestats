@@ -2,6 +2,8 @@ import { ActionBarAction, ScoreboardActionBar } from '@/components/ScoreboardAct
 import SettingsBar from '@/components/SettingsBar';
 import TeamScoreSection from '@/components/TeamScoreSection';
 import { ThemedView } from '@/components/ThemedView';
+import StatsTrackingTutorial from '@/components/tutorial/StatsTrackingTutorial';
+import TutorialOverlay from '@/components/tutorial/TutorialOverlay';
 import { useTheme } from '@/context/ThemeContext';
 import { useHalftimeNavigation } from '@/hooks/useHalftimeNavigation';
 import { usePullPromptNavigation } from '@/hooks/usePullPromptNavigation';
@@ -276,6 +278,10 @@ export default function BasicScoreboard() {
           </Animated.View>
         </View>
       )}
+
+      {/* Tutorial Overlays */}
+      <TutorialOverlay />
+      <StatsTrackingTutorial />
     </ThemedView>
   );
 }
