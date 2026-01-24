@@ -1,3 +1,4 @@
+import { checkGameOver } from '@/lib/gameUtils';
 import { CURRENT_SCHEMA_VERSION, SavedGame, SavedTeam, storage } from '@/lib/storage';
 import { generateId } from '@/lib/utils';
 import { palette } from '@/theme/theme';
@@ -147,11 +148,21 @@ export const useGameStore = create<GameState>()(
             }
 
             // Halftime: reset timeouts and set halftime break
-            if (isHalftimeGoal) {
+            // Skip if game is won (soft cap may have reduced gameTo to halftime score,
+            // or hardcap means game ends when one team is ahead)
+            const gameWon = checkGameOver({
+              team1Score: state.team1Score,
+              team2Score: state.team2Score,
+              gameTo: state.gameTo,
+              timerTimeLeft: state.timerTimeLeft,
+            });
+            if (isHalftimeGoal && !gameWon) {
               state.gameHalf = 2;
               state.team1Timeouts.fill(true);
               state.team2Timeouts.fill(true);
               state.isHalftimeBreak = true;
+            } else if (gameWon) {
+              isHalftime = false;
             }
 
             state.currentPoint++;

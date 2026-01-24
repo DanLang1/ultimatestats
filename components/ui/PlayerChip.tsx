@@ -1,4 +1,6 @@
 import { useTheme } from '@/context/ThemeContext';
+import { MatchingType } from '@/lib/storage/types';
+import { useSettingsStore } from '@/store/settingsStore';
 import React from 'react';
 import { Pressable, StyleSheet, Text } from 'react-native';
 
@@ -6,17 +8,27 @@ interface PlayerChipProps {
   name: string;
   selected?: boolean;
   disabled?: boolean;
+  matchingType?: MatchingType | null;
   onPress: () => void;
 }
 
-export function PlayerChip({ name, selected = false, disabled = false, onPress }: PlayerChipProps) {
+export function PlayerChip({
+  name,
+  selected = false,
+  disabled = false,
+  matchingType,
+  onPress,
+}: PlayerChipProps) {
   const { palette } = useTheme();
+  const { mmpColor, fmpColor } = useSettingsStore();
 
   return (
     <Pressable
       style={[
         styles.chip,
         { backgroundColor: palette.modalBg, borderColor: palette.border },
+        !selected && matchingType === 'mmp' && { borderColor: mmpColor },
+        !selected && matchingType === 'fmp' && { borderColor: fmpColor },
         selected && { backgroundColor: palette.accent, borderColor: palette.accent },
         disabled && { opacity: 0.4 },
       ]}

@@ -103,12 +103,6 @@ export default function BasicScoreboard() {
       return;
     }
 
-    // Halftime reached (team2 goal or no stat tracking) - show halftime modal
-    if (isHalftime) {
-      router.push('/HalftimeModal');
-      return;
-    }
-
     const isGameOver = checkGameOver({
       team1Score: useGameStore.getState().team1Score,
       team2Score: useGameStore.getState().team2Score,
@@ -119,6 +113,12 @@ export default function BasicScoreboard() {
     if (isGameOver) {
       router.push('/WinModal');
       useGameStore.getState().setGameLocked(true);
+      return;
+    }
+
+    // Halftime reached (team2 goal or no stat tracking) - show halftime modal
+    if (isHalftime) {
+      router.push('/HalftimeModal');
       return;
     }
 

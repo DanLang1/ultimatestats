@@ -6,6 +6,7 @@ import { SavedTeam } from '@/lib/storage';
 import { MatchingType, Player } from '@/lib/storage/types';
 import { generateId } from '@/lib/utils';
 import { useGameStore } from '@/store/gameStore';
+import { useSettingsStore } from '@/store/settingsStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useState } from 'react';
@@ -30,6 +31,7 @@ export default function EditRosterScreen() {
   } = useGameStore();
   const { showAlert } = useAlert();
   const { palette } = useTheme();
+  const { mmpColor, fmpColor } = useSettingsStore();
 
   // Derived values
   const roster = currentTeam?.roster ?? [];
@@ -393,6 +395,14 @@ export default function EditRosterScreen() {
                   styles.chip,
                   { backgroundColor: palette.overlay12 },
                   !player.isActive && styles.chipInactive,
+                  player.matchingType === 'mmp' && {
+                    borderWidth: 2,
+                    borderColor: mmpColor,
+                  },
+                  player.matchingType === 'fmp' && {
+                    borderWidth: 2,
+                    borderColor: fmpColor,
+                  },
                 ]}>
                 <Pressable
                   onPress={() => handleEditPlayer(player)}

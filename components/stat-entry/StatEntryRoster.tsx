@@ -41,6 +41,7 @@ export function StatEntryRoster({
             <PlayerChip
               key={player.id}
               name={player.name}
+              matchingType={player.matchingType}
               selected={step === 'goal' ? false : player.id === selectedGoalId}
               onPress={() => onSelect(player.id)}
             />

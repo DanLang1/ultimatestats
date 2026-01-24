@@ -17,6 +17,11 @@ import React, { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 export default function SettingsScreen() {
+  const { currentTeam } = useGameStore();
+  return <SettingsContent key={currentTeam?.id} />;
+}
+
+function SettingsContent() {
   const { palette, themeMode, setThemeMode } = useTheme();
   const { showAlert } = useAlert();
   const { hasSeenStatsTutorial, triggerStatsTutorial } = useTutorialStore();
@@ -109,6 +114,7 @@ export default function SettingsScreen() {
 
     // Soft Cap
     const softCapNum = parseInt(softCapInput, 10);
+    console.log(softCapNum);
     if (!isNaN(softCapNum)) {
       const clamped = Math.max(0, Math.min(gameLength, softCapNum));
       const newSoftCapMins = Math.max(0, gameLength - clamped);
@@ -137,6 +143,7 @@ export default function SettingsScreen() {
 
   const handleSoftCapBlur = () => {
     const num = parseInt(softCapInput, 10);
+    // console.log(num);
     if (isNaN(num)) {
       setSoftCapInput(softCapTime.toString()); // Revert to valid value
       return;
@@ -576,6 +583,7 @@ const styles = StyleSheet.create({
   backButton: {
     padding: 8,
     borderRadius: 20,
+    zIndex: 10,
   },
   headerTitle: {
     position: 'absolute',
@@ -586,7 +594,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     letterSpacing: 2,
     textTransform: 'uppercase',
-    pointerEvents: 'none',
   },
   headerSpacer: {
     width: 40,

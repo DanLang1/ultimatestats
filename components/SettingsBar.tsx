@@ -133,10 +133,7 @@ const styles = StyleSheet.create({
     opacity: 0.3,
   },
   ratioContainer: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    justifyContent: 'center',
   },
   ratioText: {
     fontSize: 16,
