@@ -208,7 +208,7 @@ export default function PointSummaryModal() {
             )}
           </Animated.View>
 
-          {/* CTA Button */}
+          {/* CTA Buttons */}
           <Animated.View entering={FadeIn.delay(200)} style={styles.ctaContainer}>
             <Pressable
               onPress={handleStartNextPoint}
@@ -217,9 +217,21 @@ export default function PointSummaryModal() {
                 { backgroundColor: palette.accent },
                 pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
               ]}>
-              <MaterialCommunityIcons name="timer-outline" size={18} color={palette.textOnAccent} />
+              <MaterialCommunityIcons name="timer-outline" size={16} color={palette.textOnAccent} />
               <Text style={[styles.ctaText, { color: palette.textOnAccent }]}>
-                START NEXT POINT
+                START NEXT POINT TIMER
+              </Text>
+            </Pressable>
+
+            <Pressable
+              onPress={handleDismiss}
+              style={({ pressed }) => [
+                styles.secondaryButton,
+                { borderColor: palette.border },
+                pressed && { opacity: 0.7 },
+              ]}>
+              <Text style={[styles.secondaryButtonText, { color: palette.textMuted }]}>
+                CONTINUE WITHOUT STARTING TIMER
               </Text>
             </Pressable>
           </Animated.View>
@@ -293,7 +305,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   ctaContainer: {
-    alignItems: 'center',
+    gap: 10,
   },
   ctaButton: {
     flexDirection: 'row',
@@ -301,13 +313,22 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
     paddingVertical: 14,
-    paddingHorizontal: 32,
     borderRadius: 12,
-    width: '100%',
   },
   ctaText: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '800',
-    letterSpacing: 0.5,
+    letterSpacing: 0.3,
+  },
+  secondaryButton: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  secondaryButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
   },
 });

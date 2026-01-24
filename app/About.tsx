@@ -41,7 +41,7 @@ export default function AboutScreen() {
           <View style={styles.appInfo}>
             <MaterialCommunityIcons name="disc" size={48} color={palette.accent} />
             <View style={styles.appInfoText}>
-              <Text style={[styles.appName, { color: palette.textInverse }]}>U-Stat</Text>
+              <Text style={[styles.appName, { color: palette.textInverse }]}>UStat</Text>
               <Text style={[styles.appVersion, { color: palette.textMuted }]}>
                 Version {currentVersion}
               </Text>

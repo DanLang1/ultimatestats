@@ -167,7 +167,7 @@ export default function HelpContent({ showActionBarLegend = true }: HelpContentP
             View Tutorial
           </Text>
           <Text style={[styles.tutorialButtonSubtitle, { color: palette.textMuted }]}>
-            Learn how to use U-Stat
+            Learn how to use UStat
           </Text>
         </View>
         <MaterialCommunityIcons name="chevron-right" size={24} color={palette.textMuted} />
