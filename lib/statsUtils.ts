@@ -200,7 +200,7 @@ export function getImpactStats(
     { eventIndex: 0, cumulativePlusMinus: 0, description: 'Start', score: '0-0' },
   ];
   let currentPlusMinus = 0;
-  let eventIndex = 0;
+  let eventIndex = 1; // Start at 1 so first event doesn't overlap with Start point
 
   for (const event of events) {
     // Track ALL goals for score (including opponent)
@@ -253,14 +253,14 @@ export function getImpactStats(
           desc = 'Block (+1)';
         } else if (event.subtype === 'fiftyfifty') {
           change = -0.5;
-          desc = '50/50 (-0.5)';
+          desc = '50/50 Throw (-0.5)';
         } else {
           change = -1;
           desc = `${event.subtype.charAt(0).toUpperCase() + event.subtype.slice(1)} (-1)`;
         }
       } else if (p2Name === player && event.subtype === 'fiftyfifty') {
         change = -0.5;
-        desc = '50/50 (-0.5)';
+        desc = '50/50 Drop (-0.5)';
       }
     }
 
@@ -280,7 +280,7 @@ export function getImpactStats(
   if (points.length === 1 && events.length > 0) {
     // Maybe add a point at the end so the graph spans the game?
     points.push({
-      eventIndex: events.length,
+      eventIndex,
       cumulativePlusMinus: 0,
       description: 'End',
       score: getScore(),
@@ -289,7 +289,7 @@ export function getImpactStats(
     // Add an endpoint to show the final state sustained purely for visual length?
     // Actually, VictoryLine handles this fine.
     points.push({
-      eventIndex: events.length,
+      eventIndex,
       cumulativePlusMinus: currentPlusMinus,
       description: 'End',
       score: getScore(),

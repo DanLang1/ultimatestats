@@ -234,7 +234,7 @@ export default function GameInfoScreen() {
             <View style={[styles.ratioDivider, { backgroundColor: palette.overlay10 }]} />
             <View style={styles.ratioRow}>
               <Text style={[styles.ratioLabel, { color: palette.accent }]}>
-                POINT {currentPoint} RATIO
+                CURRENT POINT RATIO
               </Text>
               <View style={styles.ratioValueRow}>
                 <Text style={[styles.ratioValue, { color: palette.textInverse }]}>

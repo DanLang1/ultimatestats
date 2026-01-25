@@ -119,16 +119,63 @@ export default function ImpactTimeline({ data }: ImpactTimelineProps) {
 
       {/* X-Axis Score Labels */}
       <View style={styles.xAxisLabel}>
-        <View style={styles.scoreLabels}>
-          {/* Show first and last score, plus any in between if space allows */}
-          <Text style={[styles.scoreText, { color: palette.textMuted }]}>
-            {data[0]?.score ?? '0-0'}
-          </Text>
-          <Text style={[styles.xAxisText, { color: palette.textMuted }]}>Score →</Text>
-          <Text style={[styles.scoreText, { color: palette.textMuted }]}>
-            {data[data.length - 1]?.score ?? '0-0'}
-          </Text>
-        </View>
+        {(() => {
+          // Get unique scores with their eventIndex positions (skip Start/End markers)
+          const scorePositions: { score: string; eventIndex: number }[] = [];
+          data.forEach((d) => {
+            if (
+              d.score &&
+              d.description !== 'Start' &&
+              d.description !== 'End' &&
+              !scorePositions.some((s) => s.score === d.score)
+            ) {
+              scorePositions.push({ score: d.score, eventIndex: d.eventIndex });
+            }
+          });
+
+          const minIdx = data[0]?.eventIndex ?? 0;
+          const maxIdx = data[data.length - 1]?.eventIndex ?? 1;
+          const range = maxIdx - minIdx || 1;
+
+          // Calculate percentage positions for all scores
+          const scoresWithPct = scorePositions.map((item) => ({
+            ...item,
+            pct: ((item.eventIndex - minIdx) / range) * 100,
+          }));
+
+          // Filter to avoid overlapping labels (minimum 10% gap)
+          // Always keep first and last labels
+          const MIN_GAP = 5;
+          const filteredScores: typeof scoresWithPct = [];
+
+          scoresWithPct.forEach((item, i) => {
+            const isFirst = i === 0;
+            const isLast = i === scoresWithPct.length - 1;
+            const lastShown = filteredScores[filteredScores.length - 1];
+
+            if (isFirst) {
+              filteredScores.push(item);
+            } else if (isLast) {
+              // Always show last, but remove previous if too close
+              if (lastShown && item.pct - lastShown.pct < MIN_GAP && filteredScores.length > 1) {
+                filteredScores.pop();
+              }
+              filteredScores.push(item);
+            } else if (!lastShown || item.pct - lastShown.pct >= MIN_GAP) {
+              filteredScores.push(item);
+            }
+          });
+
+          return (
+            <View style={styles.scoreLabelsPositioned}>
+              {filteredScores.map((item, i) => (
+                <View key={i} style={[styles.scoreLabelWrapper, { left: `${item.pct}%` }]}>
+                  <Text style={[styles.scoreText, { color: palette.textMuted }]}>{item.score}</Text>
+                </View>
+              ))}
+            </View>
+          );
+        })()}
       </View>
 
       {/* Legend */}
@@ -232,24 +279,23 @@ const styles = StyleSheet.create({
   },
   xAxisLabel: {
     width: '100%',
-    alignItems: 'center',
     marginTop: 4,
+    paddingLeft: 30, // Match y-axis width
   },
-  scoreLabels: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    width: '90%',
+  scoreLabelsPositioned: {
+    position: 'relative',
+    height: 16,
+    marginHorizontal: 10, // Match chart's domainPadding left/right
   },
   scoreText: {
     fontSize: 11,
     fontWeight: '700',
   },
-  xAxisText: {
-    fontSize: 9,
-    fontWeight: '600',
-    letterSpacing: 0.5,
-    textTransform: 'uppercase',
+  scoreLabelWrapper: {
+    position: 'absolute',
+    alignItems: 'center',
+    width: 40,
+    marginLeft: -20, // Half of width to center
   },
   eventLog: {
     width: '100%',

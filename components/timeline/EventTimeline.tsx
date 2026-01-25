@@ -260,27 +260,38 @@ export default function EventTimeline({
                               : label.toUpperCase()}
                           </Text>
                           {!isOpponent && (
-                            <Text
-                              style={[
-                                styles.eventPlayer,
-                                {
-                                  color:
-                                    turnoverMatchingType === 'mmp'
-                                      ? mmpColor
-                                      : turnoverMatchingType === 'fmp'
-                                        ? fmpColor
-                                        : palette.textInverse,
-                                  flexShrink:
-                                    turnover.type === 'fiftyfifty' && turnoverPlayer2Name ? 1 : 0,
-                                  maxWidth:
-                                    turnover.type === 'fiftyfifty' && turnoverPlayer2Name
-                                      ? '40%'
-                                      : undefined,
-                                },
-                              ]}
-                              numberOfLines={1}>
-                              {turnoverPlayerName || 'Unknown'}
-                            </Text>
+                            <>
+                              {turnover.type === 'fiftyfifty' && turnoverPlayer2Name && (
+                                <Text
+                                  style={[
+                                    styles.eventLabel,
+                                    { color: palette.textInverse, opacity: 0.7 },
+                                  ]}>
+                                  Thr:
+                                </Text>
+                              )}
+                              <Text
+                                style={[
+                                  styles.eventPlayer,
+                                  {
+                                    color:
+                                      turnoverMatchingType === 'mmp'
+                                        ? mmpColor
+                                        : turnoverMatchingType === 'fmp'
+                                          ? fmpColor
+                                          : palette.textInverse,
+                                    flexShrink:
+                                      turnover.type === 'fiftyfifty' && turnoverPlayer2Name ? 1 : 0,
+                                    maxWidth:
+                                      turnover.type === 'fiftyfifty' && turnoverPlayer2Name
+                                        ? '40%'
+                                        : undefined,
+                                  },
+                                ]}
+                                numberOfLines={1}>
+                                {turnoverPlayerName || 'Unknown'}
+                              </Text>
+                            </>
                           )}
                           {turnover.type === 'fiftyfifty' && turnoverPlayer2Name && (
                             <>
@@ -292,7 +303,7 @@ export default function EventTimeline({
                                     opacity: 0.7,
                                   },
                                 ]}>
-                                &
+                                Drop:
                               </Text>
                               <Text
                                 style={[

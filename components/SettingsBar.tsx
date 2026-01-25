@@ -136,10 +136,10 @@ const styles = StyleSheet.create({
     opacity: 0.3,
   },
   ratioContainer: {
-    justifyContent: 'center',
+    alignSelf: 'center',
   },
   ratioText: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '700',
   },
 });
