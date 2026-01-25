@@ -1,5 +1,5 @@
 import { useTheme } from '@/context/ThemeContext';
-import { formatRatioFull, getExpectedRatio } from '@/lib/genderRatioUtils';
+import { formatRatio, getExpectedRatio, getSequenceNumber } from '@/lib/genderRatioUtils';
 import { computePointByPointEvents, getTurnoverSummary } from '@/lib/timelineUtils';
 import { useGameStore } from '@/store/gameStore';
 import { useSettingsStore } from '@/store/settingsStore';
@@ -202,7 +202,7 @@ export default function PointSummaryModal() {
             {genderRatioEnabled && firstPointRatio && (
               <View style={[styles.statCard, { backgroundColor: palette.overlay05 }]}>
                 <Text style={[styles.statValue, { color: palette.modalText }]}>
-                  {`Next Point: ${formatRatioFull(getExpectedRatio(lastPoint.pointNumber + 1, firstPointRatio))}`}
+                  {`Next Point: ${formatRatio(getExpectedRatio(lastPoint.pointNumber + 1, firstPointRatio), getSequenceNumber(lastPoint.pointNumber + 1))}`}
                 </Text>
               </View>
             )}

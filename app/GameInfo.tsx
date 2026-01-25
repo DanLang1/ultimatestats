@@ -6,7 +6,7 @@ import { useTheme } from '@/context/ThemeContext';
 import { useEndGame } from '@/hooks/useEndGame';
 import { useGameTimer } from '@/hooks/useGameTimer';
 import { usePointTimer } from '@/hooks/usePointTimer';
-import { formatRatioFull, getExpectedRatio } from '@/lib/genderRatioUtils';
+import { formatRatioFull, getExpectedRatio, getSequenceNumber } from '@/lib/genderRatioUtils';
 import { useGameStore } from '@/store/gameStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
@@ -238,7 +238,10 @@ export default function GameInfoScreen() {
               </Text>
               <View style={styles.ratioValueRow}>
                 <Text style={[styles.ratioValue, { color: palette.textInverse }]}>
-                  {formatRatioFull(getExpectedRatio(currentPoint, firstPointRatio))}
+                  {formatRatioFull(
+                    getExpectedRatio(currentPoint, firstPointRatio),
+                    getSequenceNumber(currentPoint),
+                  )}
                 </Text>
                 <Pressable
                   onPress={() => setShowAbbaModal(true)}
@@ -281,8 +284,11 @@ export default function GameInfoScreen() {
         title="Ratio Rule A (ABBA)"
         onClose={() => setShowAbbaModal(false)}>
         <Text style={[styles.abbaText, { color: palette.textInverse }]}>
-          Gender ratio is tracked by the Ratio Rule A or ABBA method. For details see Appendix B1.B
-          in the link below.
+          Gender ratio is tracked by the Ratio Rule A or ABBA method.
+        </Text>
+        <Text style={[styles.abbaText, { color: palette.textInverse }]}>
+          Prefix F or M indicate gender majority, the number indicates if it is the first or second
+          sequence.
         </Text>
         <Pressable
           onPress={() => Linking.openURL('https://usaultimate.org/rules/')}

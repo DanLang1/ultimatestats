@@ -2,7 +2,7 @@ import { useTheme } from '@/context/ThemeContext';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
 import { useGameTimer } from '@/hooks/useGameTimer';
-import { formatRatio, getExpectedRatio } from '@/lib/genderRatioUtils';
+import { formatRatio, getExpectedRatio, getSequenceNumber } from '@/lib/genderRatioUtils';
 import { useGameStore } from '@/store/gameStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { router } from 'expo-router';
@@ -63,7 +63,10 @@ export default function SettingsBar({ onUndo }: SettingsBarProps) {
       {genderRatioEnabled && firstPointRatio && (
         <View style={styles.ratioContainer}>
           <Text style={[styles.ratioText, { color: barContentColor }]}>
-            {formatRatio(getExpectedRatio(currentPoint, firstPointRatio))}
+            {formatRatio(
+              getExpectedRatio(currentPoint, firstPointRatio),
+              getSequenceNumber(currentPoint),
+            )}
           </Text>
         </View>
       )}
