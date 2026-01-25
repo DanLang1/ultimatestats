@@ -9,13 +9,13 @@ export const CHANGELOG: ChangelogEntry[] = [
     version: '1.2.0',
     date: 'January 24, 2026',
     changes: [
-      'Added gender ratio tracking for Gender Ratio A (ABBA) format',
+      'Added gender ratio tracking for Ratio Rule A (ABBA) format',
       'Added FMP/MMP coloring to players, customizable from settings',
       'Added optional point timer for tracking point duration',
       'Added avg point duration and other timing related stats when point timer is used',
       'Added event timestamps in game timeline, made more events editable',
       'Revamped game info screen to show current point length, gender ratio, and other info',
-      'Added custom numeric input for game to, hard cap, and softcap in Settings',
+      'Added custom numeric input for game to, hard cap, and soft cap in Settings',
     ],
   },
   {
