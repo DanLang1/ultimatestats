@@ -1,8 +1,6 @@
 export type GenderRatio = 'more-women' | 'more-men';
 
 export function getExpectedRatio(pointNumber: number, firstPointRatio: GenderRatio): GenderRatio {
-  if (pointNumber === 1) return firstPointRatio;
-
   // Points 2-3 → pair 1 (reverse)
   // Points 4-5 → pair 2 (same)
   // Points 6-7 → pair 3 (reverse)
@@ -33,7 +31,8 @@ export function formatRatio(ratio: GenderRatio, sequenceNumber: 1 | 2): string {
 export function formatRatioFull(ratio: GenderRatio, sequenceNumber?: 1 | 2): string {
   const abbrev = ratio === 'more-women' ? 'FMP' : 'MMP';
   if (sequenceNumber !== undefined) {
-    return `${abbrev} (${sequenceNumber})`;
+    const ordinal = sequenceNumber === 1 ? '1st' : '2nd';
+    return `${ordinal} ${abbrev} POINT`;
   }
   return `${abbrev} Majority`;
 }

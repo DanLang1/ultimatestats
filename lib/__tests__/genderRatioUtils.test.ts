@@ -116,13 +116,13 @@ describe('formatRatioFull', () => {
 
   describe('with sequence number', () => {
     it('formats more-women with sequence', () => {
-      expect(formatRatioFull('more-women', 1)).toBe('FMP (1)');
-      expect(formatRatioFull('more-women', 2)).toBe('FMP (2)');
+      expect(formatRatioFull('more-women', 1)).toBe('1st FMP POINT');
+      expect(formatRatioFull('more-women', 2)).toBe('2nd FMP POINT');
     });
 
     it('formats more-men with sequence', () => {
-      expect(formatRatioFull('more-men', 1)).toBe('MMP (1)');
-      expect(formatRatioFull('more-men', 2)).toBe('MMP (2)');
+      expect(formatRatioFull('more-men', 1)).toBe('1st MMP POINT');
+      expect(formatRatioFull('more-men', 2)).toBe('2nd MMP POINT');
     });
   });
 });

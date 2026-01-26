@@ -1,10 +1,10 @@
 import { ActionBarAction, ScoreboardActionBar } from '@/components/ScoreboardActionBar';
+import GameLockedOverlay from '@/components/GameLockedOverlay';
 import SettingsBar from '@/components/SettingsBar';
 import TeamScoreSection from '@/components/TeamScoreSection';
 import { ThemedView } from '@/components/ThemedView';
 import StatsTrackingTutorial from '@/components/tutorial/StatsTrackingTutorial';
 import TutorialOverlay from '@/components/tutorial/TutorialOverlay';
-import { useTheme } from '@/context/ThemeContext';
 import { useHalftimeNavigation } from '@/hooks/useHalftimeNavigation';
 import { usePullPromptNavigation } from '@/hooks/usePullPromptNavigation';
 import { getContrastingTextColor } from '@/lib/colorUtils';
@@ -13,8 +13,7 @@ import { useGameStore } from '@/store/gameStore';
 import { TurnoverType } from '@/store/gameStore.types';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
-import Animated, { FadeIn } from 'react-native-reanimated';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 export default function BasicScoreboard() {
   const {
@@ -37,7 +36,6 @@ export default function BasicScoreboard() {
     possession,
     triggerTurnover,
     addTurnoverEvent,
-    resetGame,
     gameLocked,
     // Point timer
     pointTimerEnabled,
@@ -46,7 +44,6 @@ export default function BasicScoreboard() {
     currentPoint,
     startPoint,
   } = useGameStore();
-  const { palette } = useTheme();
 
   const team1Name = currentTeam?.name ?? 'Team 1';
 
@@ -211,73 +208,7 @@ export default function BasicScoreboard() {
       )}
 
       {/* Game Locked Overlay - shows when WinModal has appeared (sets gameLocked=true) */}
-      {gameLocked && (
-        <View style={[styles.lockedOverlay, { backgroundColor: palette.overlayDark60 }]}>
-          <Animated.View entering={FadeIn} style={styles.lockedContent}>
-            <MaterialCommunityIcons name="lock" size={64} color={palette.lockScreenText} />
-            <Text style={[styles.lockedTitle, { color: palette.lockScreenText }]}>
-              Game Complete
-            </Text>
-            <Text style={[styles.lockedSubtitle, { color: palette.lockScreenText }]}>
-              Start a new game to continue
-            </Text>
-
-            <View style={styles.lockedButtons}>
-              <Pressable
-                style={[styles.lockedButton, { backgroundColor: palette.lockScreenBtnPrimaryBg }]}
-                onPress={() => {
-                  resetGame();
-                }}>
-                <MaterialCommunityIcons
-                  name="restart"
-                  size={20}
-                  color={palette.lockScreenBtnPrimaryText}
-                />
-                <Text
-                  style={[styles.lockedButtonText, { color: palette.lockScreenBtnPrimaryText }]}>
-                  Start New Game
-                </Text>
-              </Pressable>
-
-              <View style={styles.lockedButtonsRow}>
-                <Pressable
-                  style={[
-                    styles.lockedButton,
-                    styles.lockedButtonHalf,
-                    {
-                      backgroundColor: palette.lockScreenBtnSecondaryBg,
-                      borderWidth: 1,
-                      borderColor: palette.lockScreenBtnSecondaryBorder,
-                    },
-                  ]}
-                  onPress={() => router.push('/Dashboard')}>
-                  <MaterialCommunityIcons name="home" size={20} color={palette.lockScreenText} />
-                  <Text style={[styles.lockedButtonText, { color: palette.lockScreenText }]}>
-                    Home
-                  </Text>
-                </Pressable>
-
-                <Pressable
-                  style={[
-                    styles.lockedButton,
-                    styles.lockedButtonHalf,
-                    {
-                      backgroundColor: palette.lockScreenBtnSecondaryBg,
-                      borderWidth: 1,
-                      borderColor: palette.lockScreenBtnSecondaryBorder,
-                    },
-                  ]}
-                  onPress={undo}>
-                  <MaterialCommunityIcons name="undo" size={20} color={palette.lockScreenText} />
-                  <Text style={[styles.lockedButtonText, { color: palette.lockScreenText }]}>
-                    Undo
-                  </Text>
-                </Pressable>
-              </View>
-            </View>
-          </Animated.View>
-        </View>
-      )}
+      <GameLockedOverlay />
 
       {/* Tutorial Overlays */}
       <TutorialOverlay />
@@ -305,51 +236,5 @@ const styles = StyleSheet.create({
     left: 12,
     padding: 10,
     zIndex: 200,
-  },
-  lockedOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 1000,
-    padding: 24,
-  },
-  lockedContent: {
-    alignItems: 'center',
-    gap: 16,
-  },
-  lockedTitle: {
-    fontSize: 28,
-    fontWeight: '800',
-    marginTop: 8,
-  },
-  lockedSubtitle: {
-    fontSize: 16,
-    opacity: 0.8,
-    marginBottom: 16,
-  },
-  lockedButtons: {
-    gap: 12,
-    width: '100%',
-    maxWidth: 280,
-  },
-  lockedButtonsRow: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  lockedButtonHalf: {
-    flex: 1,
-  },
-  lockedButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 14,
-    paddingHorizontal: 20,
-    borderRadius: 12,
-  },
-  lockedButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
   },
 });

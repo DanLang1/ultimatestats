@@ -6,8 +6,9 @@ import { formatRatio, getExpectedRatio, getSequenceNumber } from '@/lib/genderRa
 import { useGameStore } from '@/store/gameStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { router } from 'expo-router';
-import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import React, { useState } from 'react';
+import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
+import { AlertModal } from './ui/AlertModal';
 import FlashingIcon from './ui/FlashingIcon';
 
 interface SettingsBarProps {
@@ -20,6 +21,8 @@ export default function SettingsBar({ onUndo }: SettingsBarProps) {
 
   const { genderRatioEnabled, firstPointRatio } = useSettingsStore();
   const { palette } = useTheme();
+
+  const [showAbbaModal, setShowAbbaModal] = useState(false);
 
   const canUndo = (events?.length ?? 0) > 0;
 
@@ -61,14 +64,14 @@ export default function SettingsBar({ onUndo }: SettingsBarProps) {
 
       {/* Gender Ratio Indicator */}
       {genderRatioEnabled && firstPointRatio && (
-        <View style={styles.ratioContainer}>
+        <Pressable onPress={() => setShowAbbaModal(true)} style={styles.ratioContainer}>
           <Text style={[styles.ratioText, { color: barContentColor }]}>
             {formatRatio(
               getExpectedRatio(currentPoint, firstPointRatio),
               getSequenceNumber(currentPoint),
             )}
           </Text>
-        </View>
+        </Pressable>
       )}
 
       {/* Stats - only show when stat tracking enabled */}
@@ -95,6 +98,27 @@ export default function SettingsBar({ onUndo }: SettingsBarProps) {
         disabled={!canUndo}>
         <MaterialCommunityIcons name="undo" size={24} color={barContentColor} />
       </Pressable>
+
+      {/* ABBA Rule Explanation Modal */}
+      <AlertModal
+        visible={showAbbaModal}
+        title="Ratio Rule A (ABBA)"
+        onClose={() => setShowAbbaModal(false)}>
+        <Text style={[styles.abbaText, { color: palette.textInverse }]}>
+          Gender ratio is tracked by the Ratio Rule A or ABBA method.
+        </Text>
+        <Text style={[styles.abbaText, { color: palette.textInverse }]}>
+          Prefix F or M indicate gender majority, the number indicates if it is the first or second
+          point with this gender majority.
+        </Text>
+        <Pressable
+          onPress={() => Linking.openURL('https://usaultimate.org/rules/')}
+          style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}>
+          <Text style={[styles.abbaSource, { color: palette.accent }]}>
+            USAU Rules of Ultimate, Appendix B1.B
+          </Text>
+        </Pressable>
+      </AlertModal>
     </View>
   );
 }
@@ -141,5 +165,15 @@ const styles = StyleSheet.create({
   ratioText: {
     fontSize: 18,
     fontWeight: '700',
+  },
+  abbaText: {
+    fontSize: 14,
+    lineHeight: 20,
+    marginBottom: 12,
+  },
+  abbaSource: {
+    fontSize: 12,
+    fontStyle: 'italic',
+    marginTop: 4,
   },
 });

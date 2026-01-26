@@ -12,7 +12,7 @@ import { useSettingsStore } from '@/store/settingsStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router, Stack } from 'expo-router';
 import React, { useState } from 'react';
-import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 export default function GameInfoScreen() {
   const {
@@ -234,26 +234,23 @@ export default function GameInfoScreen() {
             <View style={[styles.ratioDivider, { backgroundColor: palette.overlay10 }]} />
             <View style={styles.ratioRow}>
               <Text style={[styles.ratioLabel, { color: palette.accent }]}>
-                CURRENT POINT RATIO
+                CURRENT GENDER RATIO
               </Text>
-              <View style={styles.ratioValueRow}>
+              <Pressable
+                onPress={() => setShowAbbaModal(true)}
+                style={({ pressed }) => [styles.ratioValueRow, pressed && { opacity: 0.7 }]}>
                 <Text style={[styles.ratioValue, { color: palette.textInverse }]}>
                   {formatRatioFull(
                     getExpectedRatio(currentPoint, firstPointRatio),
                     getSequenceNumber(currentPoint),
                   )}
                 </Text>
-                <Pressable
-                  onPress={() => setShowAbbaModal(true)}
-                  style={({ pressed }) => [styles.helpButton, pressed && { opacity: 0.7 }]}
-                  hitSlop={8}>
-                  <MaterialCommunityIcons
-                    name="information-outline"
-                    size={18}
-                    color={palette.textMuted}
-                  />
-                </Pressable>
-              </View>
+                <MaterialCommunityIcons
+                  name="information-outline"
+                  size={18}
+                  color={palette.textMuted}
+                />
+              </Pressable>
             </View>
           </View>
         )}
@@ -278,25 +275,32 @@ export default function GameInfoScreen() {
         <HelpContent showActionBarLegend={statTrackingEnabled} />
       </ScrollView>
 
-      {/* ABBA Rule Explanation Modal */}
+      {/* Gender Ratio Info Modal */}
       <AlertModal
-        visible={showAbbaModal}
-        title="Ratio Rule A (ABBA)"
+        visible={showAbbaModal && genderRatioEnabled && !!firstPointRatio}
+        title="Gender Ratio Info"
         onClose={() => setShowAbbaModal(false)}>
-        <Text style={[styles.abbaText, { color: palette.textInverse }]}>
-          Gender ratio is tracked by the Ratio Rule A or ABBA method.
-        </Text>
-        <Text style={[styles.abbaText, { color: palette.textInverse }]}>
-          Prefix F or M indicate gender majority, the number indicates if it is the first or second
-          sequence.
-        </Text>
-        <Pressable
-          onPress={() => Linking.openURL('https://usaultimate.org/rules/')}
-          style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}>
-          <Text style={[styles.abbaSource, { color: palette.accent }]}>
-            USAU Rules of Ultimate, Appendix B1.B
-          </Text>
-        </Pressable>
+        {firstPointRatio && (
+          <>
+            <View style={styles.ratioInfoRow}>
+              <Text style={[styles.ratioInfoLabel, { color: palette.textMuted }]}>
+                INITIAL MAJORITY
+              </Text>
+              <Text style={[styles.ratioInfoValue, { color: palette.textInverse }]}>
+                {firstPointRatio === 'more-women' ? 'FMP' : 'MMP'}
+              </Text>
+            </View>
+            <View style={styles.ratioInfoRow}>
+              <Text style={[styles.ratioInfoLabel, { color: palette.textMuted }]}>NEXT POINT</Text>
+              <Text style={[styles.ratioInfoValue, { color: palette.textInverse }]}>
+                {formatRatioFull(
+                  getExpectedRatio(currentPoint + 1, firstPointRatio),
+                  getSequenceNumber(currentPoint + 1),
+                )}
+              </Text>
+            </View>
+          </>
+        )}
       </AlertModal>
     </ThemedView>
   );
@@ -488,20 +492,21 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: '800',
   },
-  helpButton: {
-    padding: 4,
-    borderRadius: 12,
-  },
 
-  // ABBA Modal
-  abbaText: {
-    fontSize: 14,
-    lineHeight: 20,
-    marginBottom: 12,
+  // Gender Ratio Info Modal
+  ratioInfoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 12,
   },
-  abbaSource: {
+  ratioInfoLabel: {
     fontSize: 12,
-    fontStyle: 'italic',
-    marginTop: 4,
+    fontWeight: '600',
+    letterSpacing: 1,
+  },
+  ratioInfoValue: {
+    fontSize: 16,
+    fontWeight: '700',
   },
 });
