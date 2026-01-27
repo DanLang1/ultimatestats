@@ -1,5 +1,5 @@
-import { ActionBarAction, ScoreboardActionBar } from '@/components/ScoreboardActionBar';
 import GameLockedOverlay from '@/components/GameLockedOverlay';
+import { ActionBarAction, ScoreboardActionBar } from '@/components/ScoreboardActionBar';
 import SettingsBar from '@/components/SettingsBar';
 import TeamScoreSection from '@/components/TeamScoreSection';
 import { ThemedView } from '@/components/ThemedView';
@@ -167,7 +167,10 @@ export default function BasicScoreboard() {
         textColor={getContrastingTextColor(team1BgColor)}
         backgroundColor={team1BgColor}
         timeouts={team1Combined}
-        onTimeoutUse={(index) => toggleTimeout(true, index)}
+        onTimeoutUse={(index) => {
+          toggleTimeout(true, index);
+          router.push('/TimeoutModal');
+        }}
         hasPossession={possessionTrackingEnabled ? possession === 'team1' : undefined}
       />
 
@@ -193,7 +196,10 @@ export default function BasicScoreboard() {
         textColor={getContrastingTextColor(team2BgColor)}
         backgroundColor={team2BgColor}
         timeouts={team2Combined}
-        onTimeoutUse={(index) => toggleTimeout(false, index)}
+        onTimeoutUse={(index) => {
+          toggleTimeout(false, index);
+          router.push('/TimeoutModal');
+        }}
         hasPossession={possessionTrackingEnabled ? possession === 'team2' : undefined}
       />
 

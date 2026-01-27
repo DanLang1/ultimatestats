@@ -2,7 +2,7 @@ import { useTheme } from '@/context/ThemeContext';
 import { useNumberPickerStore } from '@/store/numberPickerStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 export default function NumberPickerModal() {
@@ -10,14 +10,7 @@ export default function NumberPickerModal() {
   const { isActive, value, min, max, label, suffix, quickOptions, save, close } =
     useNumberPickerStore();
 
-  const [inputString, setInputString] = useState('');
-
-  // Initialize input string when modal opens
-  useEffect(() => {
-    if (isActive) {
-      setInputString(value > 0 ? value.toString() : '');
-    }
-  }, [isActive, value]);
+  const [inputString, setInputString] = useState(value > 0 ? value.toString() : '');
 
   if (!isActive) {
     return null;

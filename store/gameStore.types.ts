@@ -74,6 +74,11 @@ export interface GameState {
   halftimeEndTime: number | null; // Absolute timestamp when halftime timer ends
   halftimeTimeLeft: number; // Seconds remaining in halftime break
 
+  // Timeout Modal
+  pendingTimeoutModal: boolean; // Whether to show the timeout modal
+  timeoutEndTime: number | null; // Absolute timestamp when timeout timer ends
+  timeoutTimeLeft: number; // Seconds remaining in timeout (default 70)
+
   // Stat Tracking
   statTrackingEnabled: boolean;
   events: GameEvent[]; // Unified event log
@@ -114,6 +119,12 @@ export interface GameState {
   setHalftimeEndTime: (time: number | null) => void;
   setHalftimeTimeLeft: (seconds: number) => void;
   clearHalftimeBreak: () => void;
+
+  // Timeout Modal Actions
+  setPendingTimeoutModal: (pending: boolean) => void;
+  setTimeoutEndTime: (time: number | null) => void;
+  setTimeoutTimeLeft: (seconds: number) => void;
+  clearTimeoutModal: () => void;
 
   // Stat Tracking Actions
   setStatTrackingEnabled: (enabled: boolean) => void;

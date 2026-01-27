@@ -47,6 +47,11 @@ export const useGameStore = create<GameState>()(
         halftimeEndTime: null,
         halftimeTimeLeft: 7 * 60, // 7 minutes default
 
+        // Timeout Modal Initial State
+        pendingTimeoutModal: false,
+        timeoutEndTime: null,
+        timeoutTimeLeft: 70, // 70 seconds default
+
         // Stat Tracking Initial State
         statTrackingEnabled: false,
         events: [], // Unified event log
@@ -343,6 +348,9 @@ export const useGameStore = create<GameState>()(
             } else {
               timeouts[index] = false;
             }
+
+            // Flag for modal rendering
+            state.pendingTimeoutModal = true;
           }),
 
         resetTimeouts: (count: number) =>
@@ -377,6 +385,9 @@ export const useGameStore = create<GameState>()(
             state.isHalftimeBreak = false;
             state.halftimeEndTime = null;
             state.halftimeTimeLeft = 7 * 60;
+            state.pendingTimeoutModal = false;
+            state.timeoutEndTime = null;
+            state.timeoutTimeLeft = 70;
             state.currentPointStartTime = null;
             state.pointStartTimestamps = {};
             state.pointTimerPausedElapsed = null;
@@ -434,6 +445,29 @@ export const useGameStore = create<GameState>()(
             state.isHalftimeBreak = false;
             state.halftimeEndTime = null;
             state.halftimeTimeLeft = 7 * 60;
+          }),
+
+        // Timeout Modal Actions
+        setPendingTimeoutModal: (pending: boolean) =>
+          set((state: GameState) => {
+            state.pendingTimeoutModal = pending;
+          }),
+
+        setTimeoutEndTime: (time: number | null) =>
+          set((state: GameState) => {
+            state.timeoutEndTime = time;
+          }),
+
+        setTimeoutTimeLeft: (seconds: number) =>
+          set((state: GameState) => {
+            state.timeoutTimeLeft = seconds;
+          }),
+
+        clearTimeoutModal: () =>
+          set((state: GameState) => {
+            state.pendingTimeoutModal = false;
+            state.timeoutEndTime = null;
+            state.timeoutTimeLeft = 70;
           }),
 
         // Stat Tracking Actions
