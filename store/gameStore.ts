@@ -1,5 +1,6 @@
 import { checkGameOver } from '@/lib/gameUtils';
 import { CURRENT_SCHEMA_VERSION, SavedGame, SavedTeam, storage } from '@/lib/storage';
+import { deriveTimeoutState } from '@/lib/timeoutUtils';
 import { generateId } from '@/lib/utils';
 import { palette } from '@/theme/theme';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -160,6 +161,7 @@ export const useGameStore = create<GameState>()(
               state.gameHalf = 2;
               state.team1Timeouts.fill(true);
               state.team2Timeouts.fill(true);
+              // Note: Floaters are NOT reset - they're once per game, not per half
               state.isHalftimeBreak = true;
             } else if (gameWon) {
               isHalftime = false;
@@ -224,7 +226,15 @@ export const useGameStore = create<GameState>()(
               return;
             }
 
-            if (lastEvent.type === 'goal') {
+            if (lastEvent.type === 'timeout') {
+              // Resume point timer if it was running before the timeout
+              const pausedElapsed = state.pointTimerPausedElapsed;
+              if (lastEvent.pointTimerWasPaused === false && pausedElapsed !== null) {
+                state.currentPointStartTime = Date.now() - pausedElapsed;
+                state.pointTimerPausedElapsed = null;
+              }
+              state.events.pop();
+            } else if (lastEvent.type === 'goal') {
               const isTeam1 = lastEvent.team === 'team1';
               const targetScore = isTeam1 ? state.team1Score : state.team2Score;
 
@@ -257,14 +267,27 @@ export const useGameStore = create<GameState>()(
               }
               // Remove entry from pointStartTimestamps since point is in-progress again
               delete state.pointStartTimestamps[state.currentPoint];
+              state.events.pop();
             } else {
               // Turnover: flip possession back
               state.possession = state.possession === 'team1' ? 'team2' : 'team1';
               state.pendingTurnoverEntry = null;
+              state.events.pop();
             }
 
+            // Re-derive timeout state from remaining events
+            // This ensures correct state after undoing across halftime
+            const derived = deriveTimeoutState(
+              state.events,
+              state.baseGameTo,
+              state.autoHalftimeEnabled,
+            );
+            state.team1Timeouts = derived.team1Timeouts;
+            state.team2Timeouts = derived.team2Timeouts;
+            state.team1Floater = derived.team1Floater;
+            state.team2Floater = derived.team2Floater;
+
             state.gameLocked = false;
-            state.events.pop();
             result = true;
           });
           return result;
@@ -273,16 +296,52 @@ export const useGameStore = create<GameState>()(
         toggleTimeout: (isTeam1: boolean, index: number) =>
           set((state: GameState) => {
             const timeouts = isTeam1 ? state.team1Timeouts : state.team2Timeouts;
-            const isFloaterActive = isTeam1 ? state.team1Floater : state.team2Floater;
+            const isFloater = index >= timeouts.length;
 
-            if (index < timeouts.length) {
-              timeouts[index] = !timeouts[index];
+            // Check if timeout is available
+            const isAvailable = isFloater
+              ? isTeam1
+                ? state.team1Floater
+                : state.team2Floater
+              : timeouts[index];
+
+            if (!isAvailable) return; // Already used - must undo to restore
+
+            // Floater rule: can't use if regular timeouts remain
+            if (isFloater && timeouts.some((t) => t)) return;
+
+            // Check point timer state before pausing
+            const startTime = state.currentPointStartTime;
+            const pointTimerWasRunning =
+              startTime !== null && state.pointTimerPausedElapsed === null;
+
+            // Pause point timer if running
+            if (pointTimerWasRunning && startTime !== null) {
+              state.pointTimerPausedElapsed = Date.now() - startTime;
+            }
+
+            // Calculate elapsed for timeline positioning
+            const elapsedMs =
+              state.currentPointStartTime !== null
+                ? (state.pointTimerPausedElapsed ?? Date.now() - state.currentPointStartTime)
+                : undefined;
+
+            // Push timeout event
+            state.events.push({
+              type: 'timeout',
+              team: isTeam1 ? 'team1' : 'team2',
+              index: isFloater ? 0 : index,
+              isFloater,
+              elapsedMs,
+              pointTimerWasPaused: !pointTimerWasRunning,
+            });
+
+            // Update cached state for immediate UI feedback
+            if (isFloater) {
+              if (isTeam1) state.team1Floater = false;
+              else state.team2Floater = false;
             } else {
-              const hasAvailableStandard = timeouts.some((t) => t === true);
-              if (isFloaterActive && hasAvailableStandard) return;
-
-              if (isTeam1) state.team1Floater = !state.team1Floater;
-              else state.team2Floater = !state.team2Floater;
+              timeouts[index] = false;
             }
           }),
 

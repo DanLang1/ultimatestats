@@ -1,12 +1,38 @@
 import { useTheme } from '@/context/ThemeContext';
 import { getPlayerMatchingType, getPlayerName } from '@/lib/playerUtils';
 import { Player } from '@/lib/storage/types';
-import { DisplayTurnover, PointEvents } from '@/lib/timelineUtils';
+import { DisplayTimeout, DisplayTurnover, PointEvents } from '@/lib/timelineUtils';
 import { useSettingsStore } from '@/store/settingsStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import * as Haptics from 'expo-haptics';
 import React from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+
+// Union type for timeline events (turnovers and timeouts)
+type TimelineEvent =
+  | { kind: 'turnover'; data: DisplayTurnover; originalIndex: number }
+  | { kind: 'timeout'; data: DisplayTimeout; originalIndex: number };
+
+// Merge turnovers and timeouts into a single sorted list by elapsedMs
+function mergeTimelineEvents(
+  turnovers: DisplayTurnover[],
+  timeouts: DisplayTimeout[],
+): TimelineEvent[] {
+  const events: TimelineEvent[] = [
+    ...turnovers.map((t, i) => ({ kind: 'turnover' as const, data: t, originalIndex: i })),
+    ...timeouts.map((t, i) => ({ kind: 'timeout' as const, data: t, originalIndex: i })),
+  ];
+
+  // Sort by elapsedMs if available, otherwise maintain relative order
+  events.sort((a, b) => {
+    const aMs = a.data.elapsedMs ?? Infinity;
+    const bMs = b.data.elapsedMs ?? Infinity;
+    if (aMs === bMs) return 0;
+    return aMs - bMs;
+  });
+
+  return events;
+}
 
 // Format milliseconds to "Xm Ys" or just "Xs" for short durations
 const formatDuration = (ms: number): string => {
@@ -181,167 +207,213 @@ export default function EventTimeline({
 
               {/* Card Body - Linearized Events */}
               <View style={styles.cardBody}>
-                {/* Turnovers (in order) */}
-                {point.turnovers.map((turnover, index) => {
-                  if (index === callahanBlockIndex) return null;
-
-                  const isOpponent = turnover.team === 'team2';
-                  const turnoverPlayerName = getPlayerName(roster, turnover.playerId);
-                  const turnoverPlayer2Name = getPlayerName(roster, turnover.player2Id ?? null);
-                  const turnoverMatchingType = getPlayerMatchingType(roster, turnover.playerId);
-                  const turnover2MatchingType = getPlayerMatchingType(
-                    roster,
-                    turnover.player2Id ?? null,
-                  );
-
-                  const label =
-                    turnover.type === 'block'
-                      ? 'Block'
-                      : turnover.type === 'drop'
-                        ? 'Drop'
-                        : turnover.type === 'fiftyfifty'
-                          ? '50/50'
-                          : 'Throwaway';
-
-                  const bgColor =
-                    turnover.type === 'block' ? palette.success + '20' : palette.danger + '20';
-
-                  // Show arrow if not the first non-null turnover
-                  const isFirstVisible =
-                    (index === 0 && callahanBlockIndex !== 0) ||
-                    (index === 1 && callahanBlockIndex === 0);
-
-                  // Disable editing for current point in live games
-                  const isCurrentPoint =
-                    currentPoint !== undefined && point.pointNumber === currentPoint;
-                  // Allow editing our turnovers, our blocks, and opponent turnovers (to convert to blocks)
-                  const canEdit = onEditEvent && !isCurrentPoint;
-
-                  // Relative time is simply the turnover's elapsedMs
-                  const relativeTime =
-                    turnover.elapsedMs !== undefined
-                      ? formatDuration(turnover.elapsedMs)
+                {/* Merged turnovers and timeouts (in chronological order) */}
+                {(() => {
+                  const mergedEvents = mergeTimelineEvents(point.turnovers, point.timeouts);
+                  // Filter out the callahan block from merged events
+                  const callahanBlockEventIndex =
+                    callahanBlockIndex >= 0
+                      ? point.turnovers[callahanBlockIndex]?.eventIndex
                       : undefined;
 
-                  return (
-                    <React.Fragment key={`turnover-${index}`}>
-                      {index > 0 && !isFirstVisible && (
-                        <Text style={[styles.arrow, { color: palette.textMuted }]}>→</Text>
-                      )}
-                      <Pressable
-                        onLongPress={canEdit ? () => handleLongPressTurnover(turnover) : undefined}
-                        delayLongPress={400}>
-                        <View
-                          style={[
-                            styles.eventRow,
-                            {
-                              backgroundColor: isOpponent
+                  let visibleEventCount = 0;
+
+                  return mergedEvents.map((event, mergedIndex) => {
+                    // Skip the callahan block turnover
+                    if (
+                      event.kind === 'turnover' &&
+                      event.data.eventIndex === callahanBlockEventIndex
+                    ) {
+                      return null;
+                    }
+
+                    const isFirst = visibleEventCount === 0;
+                    visibleEventCount++;
+
+                    const relativeTime =
+                      event.data.elapsedMs !== undefined
+                        ? formatDuration(event.data.elapsedMs)
+                        : undefined;
+
+                    // Render timeout
+                    if (event.kind === 'timeout') {
+                      const timeout = event.data;
+                      const isOurTimeout = timeout.team === 'team1';
+
+                      return (
+                        <React.Fragment key={`timeout-${event.originalIndex}`}>
+                          {!isFirst && (
+                            <Text style={[styles.arrow, { color: palette.textMuted }]}>→</Text>
+                          )}
+                          <View
+                            style={[styles.eventRow, { backgroundColor: palette.warning + '20' }]}>
+                            <Text style={[styles.eventLabel, { color: palette.warning }]}>
+                              {timeout.isFloater ? 'FLOATER' : 'TIMEOUT'}
+                            </Text>
+                            <Text style={[styles.eventPlayer, { color: palette.textMuted }]}>
+                              {isOurTimeout ? 'Us' : 'Opp'}
+                            </Text>
+                            {relativeTime && (
+                              <Text style={[styles.eventTimestamp, { color: palette.textMuted }]}>
+                                +{relativeTime}
+                              </Text>
+                            )}
+                          </View>
+                        </React.Fragment>
+                      );
+                    }
+
+                    // Render turnover
+                    const turnover = event.data;
+                    const isOpponent = turnover.team === 'team2';
+                    const turnoverPlayerName = getPlayerName(roster, turnover.playerId);
+                    const turnoverPlayer2Name = getPlayerName(roster, turnover.player2Id ?? null);
+                    const turnoverMatchingType = getPlayerMatchingType(roster, turnover.playerId);
+                    const turnover2MatchingType = getPlayerMatchingType(
+                      roster,
+                      turnover.player2Id ?? null,
+                    );
+
+                    const label =
+                      turnover.type === 'block'
+                        ? 'Block'
+                        : turnover.type === 'drop'
+                          ? 'Drop'
+                          : turnover.type === 'fiftyfifty'
+                            ? '50/50'
+                            : 'Throwaway';
+
+                    const bgColor =
+                      turnover.type === 'block' ? palette.success + '20' : palette.danger + '20';
+
+                    // Disable editing for current point in live games
+                    const isCurrentPoint =
+                      currentPoint !== undefined && point.pointNumber === currentPoint;
+                    const canEdit = onEditEvent && !isCurrentPoint;
+
+                    return (
+                      <React.Fragment key={`turnover-${event.originalIndex}`}>
+                        {!isFirst && (
+                          <Text style={[styles.arrow, { color: palette.textMuted }]}>→</Text>
+                        )}
+                        <Pressable
+                          onLongPress={
+                            canEdit ? () => handleLongPressTurnover(turnover) : undefined
+                          }
+                          delayLongPress={400}>
+                          <View
+                            style={[
+                              styles.eventRow,
+                              {
+                                backgroundColor: isOpponent
+                                  ? turnover.type === 'block'
+                                    ? palette.danger + '20'
+                                    : palette.success + '20'
+                                  : bgColor,
+                              },
+                              canEdit && {
+                                borderColor: isOpponent
+                                  ? turnover.type === 'block'
+                                    ? palette.danger
+                                    : palette.success
+                                  : turnover.type === 'block'
+                                    ? palette.success
+                                    : palette.danger,
+                                borderWidth: 1,
+                              },
+                            ]}>
+                            <Text style={[styles.eventLabel, { color: palette.textInverse }]}>
+                              {isOpponent
                                 ? turnover.type === 'block'
-                                  ? palette.danger + '20' // OPP BLOCK = bad for us
-                                  : palette.success + '20' // OPP TURN = good for us
-                                : bgColor,
-                            },
-                            canEdit && {
-                              borderColor: isOpponent
-                                ? turnover.type === 'block'
-                                  ? palette.danger // OPP BLOCK = red border
-                                  : palette.success // OPP TURN = green border
-                                : turnover.type === 'block'
-                                  ? palette.success
-                                  : palette.danger,
-                              borderWidth: 1,
-                            },
-                          ]}>
-                          <Text style={[styles.eventLabel, { color: palette.textInverse }]}>
-                            {isOpponent
-                              ? turnover.type === 'block'
-                                ? 'OPP BLOCK'
-                                : 'OPP TURN'
-                              : label.toUpperCase()}
-                          </Text>
-                          {!isOpponent && (
-                            <>
-                              {turnover.type === 'fiftyfifty' && turnoverPlayer2Name && (
+                                  ? 'OPP BLOCK'
+                                  : 'OPP TURN'
+                                : label.toUpperCase()}
+                            </Text>
+                            {!isOpponent && (
+                              <>
+                                {turnover.type === 'fiftyfifty' && turnoverPlayer2Name && (
+                                  <Text
+                                    style={[
+                                      styles.eventLabel,
+                                      { color: palette.textInverse, opacity: 0.7 },
+                                    ]}>
+                                    Thr:
+                                  </Text>
+                                )}
+                                <Text
+                                  style={[
+                                    styles.eventPlayer,
+                                    {
+                                      color:
+                                        turnoverMatchingType === 'mmp'
+                                          ? mmpColor
+                                          : turnoverMatchingType === 'fmp'
+                                            ? fmpColor
+                                            : palette.textInverse,
+                                      flexShrink:
+                                        turnover.type === 'fiftyfifty' && turnoverPlayer2Name
+                                          ? 1
+                                          : 0,
+                                      maxWidth:
+                                        turnover.type === 'fiftyfifty' && turnoverPlayer2Name
+                                          ? '40%'
+                                          : undefined,
+                                    },
+                                  ]}
+                                  numberOfLines={1}>
+                                  {turnoverPlayerName || 'Unknown'}
+                                </Text>
+                              </>
+                            )}
+                            {turnover.type === 'fiftyfifty' && turnoverPlayer2Name && (
+                              <>
                                 <Text
                                   style={[
                                     styles.eventLabel,
-                                    { color: palette.textInverse, opacity: 0.7 },
+                                    {
+                                      color: isOpponent ? palette.textMuted : palette.textInverse,
+                                      opacity: 0.7,
+                                    },
                                   ]}>
-                                  Thr:
+                                  Drop:
                                 </Text>
-                              )}
-                              <Text
-                                style={[
-                                  styles.eventPlayer,
-                                  {
-                                    color:
-                                      turnoverMatchingType === 'mmp'
-                                        ? mmpColor
-                                        : turnoverMatchingType === 'fmp'
-                                          ? fmpColor
-                                          : palette.textInverse,
-                                    flexShrink:
-                                      turnover.type === 'fiftyfifty' && turnoverPlayer2Name ? 1 : 0,
-                                    maxWidth:
-                                      turnover.type === 'fiftyfifty' && turnoverPlayer2Name
-                                        ? '40%'
-                                        : undefined,
-                                  },
-                                ]}
-                                numberOfLines={1}>
-                                {turnoverPlayerName || 'Unknown'}
+                                <Text
+                                  style={[
+                                    styles.eventPlayer,
+                                    {
+                                      color: isOpponent
+                                        ? palette.textMuted
+                                        : turnover2MatchingType === 'mmp'
+                                          ? mmpColor
+                                          : turnover2MatchingType === 'fmp'
+                                            ? fmpColor
+                                            : palette.textInverse,
+                                      opacity: 0.9,
+                                      flexShrink: 1,
+                                      maxWidth: '40%',
+                                    },
+                                  ]}
+                                  numberOfLines={1}>
+                                  {turnoverPlayer2Name}
+                                </Text>
+                              </>
+                            )}
+                            {relativeTime && (
+                              <Text style={[styles.eventTimestamp, { color: palette.textMuted }]}>
+                                +{relativeTime}
                               </Text>
-                            </>
-                          )}
-                          {turnover.type === 'fiftyfifty' && turnoverPlayer2Name && (
-                            <>
-                              <Text
-                                style={[
-                                  styles.eventLabel,
-                                  {
-                                    color: isOpponent ? palette.textMuted : palette.textInverse,
-                                    opacity: 0.7,
-                                  },
-                                ]}>
-                                Drop:
-                              </Text>
-                              <Text
-                                style={[
-                                  styles.eventPlayer,
-                                  {
-                                    color: isOpponent
-                                      ? palette.textMuted
-                                      : turnover2MatchingType === 'mmp'
-                                        ? mmpColor
-                                        : turnover2MatchingType === 'fmp'
-                                          ? fmpColor
-                                          : palette.textInverse,
-                                    opacity: 0.9,
-                                    flexShrink: 1,
-                                    maxWidth: '40%',
-                                  },
-                                ]}
-                                numberOfLines={1}>
-                                {turnoverPlayer2Name}
-                              </Text>
-                            </>
-                          )}
-                          {/* Relative timestamp */}
-                          {relativeTime && (
-                            <Text style={[styles.eventTimestamp, { color: palette.textMuted }]}>
-                              +{relativeTime}
-                            </Text>
-                          )}
-                        </View>
-                      </Pressable>
-                    </React.Fragment>
-                  );
-                })}
+                            )}
+                          </View>
+                        </Pressable>
+                      </React.Fragment>
+                    );
+                  });
+                })()}
 
-                {/* Arrow before Goal/Callahan - only show if there are visible turnovers and point is complete */}
+                {/* Arrow before Goal/Callahan - only show if there are visible events and point is complete */}
                 {!isInProgress &&
-                  point.turnovers.length > 0 &&
-                  !(isCallahan && point.turnovers.length === 1) && (
+                  (point.turnovers.length > 0 || point.timeouts.length > 0) &&
+                  !(isCallahan && point.turnovers.length === 1 && point.timeouts.length === 0) && (
                     <Text style={[styles.arrow, { color: palette.textMuted }]}>→</Text>
                   )}
 

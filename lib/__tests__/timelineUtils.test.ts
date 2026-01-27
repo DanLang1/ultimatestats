@@ -21,6 +21,13 @@ describe('timelineUtils', () => {
       playerId: null,
     });
 
+    const timeout = (team: 'team1' | 'team2', isFloater = false): GameEvent => ({
+      type: 'timeout',
+      team,
+      index: 0,
+      isFloater,
+    });
+
     it('should correctly group turnovers into points', () => {
       const events: GameEvent[] = [
         turnover('team1', 'throwaway'),
@@ -84,6 +91,56 @@ describe('timelineUtils', () => {
 
       // Point 3: Team that started on defense (team2) receives 2nd half
       expect(points[2].offensiveTeam).toBe('team2');
+    });
+
+    it('should correctly group timeouts into points', () => {
+      const events: GameEvent[] = [
+        timeout('team1'),
+        turnover('team1', 'throwaway'),
+        timeout('team2'),
+        goal('team1'),
+        timeout('team1', true), // floater
+        goal('team2'),
+      ];
+
+      const points = computePointByPointEvents(events, 'team1', 15);
+
+      expect(points).toHaveLength(2);
+
+      // Point 1: has 2 timeouts
+      expect(points[0].timeouts).toHaveLength(2);
+      expect(points[0].timeouts[0].team).toBe('team1');
+      expect(points[0].timeouts[0].isFloater).toBe(false);
+      expect(points[0].timeouts[1].team).toBe('team2');
+
+      // Point 2: has 1 floater timeout
+      expect(points[1].timeouts).toHaveLength(1);
+      expect(points[1].timeouts[0].team).toBe('team1');
+      expect(points[1].timeouts[0].isFloater).toBe(true);
+    });
+
+    it('should include timeouts in in-progress points', () => {
+      const events: GameEvent[] = [goal('team1'), timeout('team1'), turnover('team1', 'drop')];
+
+      const points = computePointByPointEvents(events, 'team1', 15);
+
+      expect(points).toHaveLength(2);
+
+      // Point 2 is in progress with 1 timeout and 1 turnover
+      expect(points[1].isInProgress).toBe(true);
+      expect(points[1].timeouts).toHaveLength(1);
+      expect(points[1].turnovers).toHaveLength(1);
+    });
+
+    it('should show in-progress point with only timeout', () => {
+      const events: GameEvent[] = [goal('team1'), timeout('team2')];
+
+      const points = computePointByPointEvents(events, 'team1', 15);
+
+      expect(points).toHaveLength(2);
+      expect(points[1].isInProgress).toBe(true);
+      expect(points[1].timeouts).toHaveLength(1);
+      expect(points[1].turnovers).toHaveLength(0);
     });
   });
 

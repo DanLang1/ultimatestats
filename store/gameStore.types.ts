@@ -8,24 +8,36 @@ export type TurnoverType = 'block' | 'throwaway' | 'drop' | 'fiftyfifty';
 // - Currently events are nested in SavedGame.events[], so gameId is redundant
 // - But if we later migrate to a flat database table (e.g. SQLite), we'll need gameId as a foreign key
 // - Pre-populating it now avoids a data migration when that happens
-export type GameEvent =
-  | {
-      type: 'goal';
-      team: 'team1' | 'team2';
-      goalPlayerId: string | null; // Player ID who scored
-      assistPlayerId: string | null; // Player ID who assisted
-      gameId?: string; // Populated on save - links to SavedGame.id
-      elapsedMs?: number; // Elapsed game time in ms when goal was scored
-    }
-  | {
-      type: 'turnover';
-      team: 'team1' | 'team2'; // Team that committed the turnover
-      subtype: TurnoverType;
-      playerId: string | null;
-      player2Id?: string | null; // Second player ID for 50/50 turnovers
-      gameId?: string; // Populated on save - links to SavedGame.id
-      elapsedMs?: number; // Elapsed game time in ms when event was recorded
-    };
+export type GoalEvent = {
+  type: 'goal';
+  team: 'team1' | 'team2';
+  goalPlayerId: string | null; // Player ID who scored
+  assistPlayerId: string | null; // Player ID who assisted
+  gameId?: string; // Populated on save - links to SavedGame.id
+  elapsedMs?: number; // Elapsed game time in ms when goal was scored
+};
+
+export type TurnoverEvent = {
+  type: 'turnover';
+  team: 'team1' | 'team2'; // Team that committed the turnover
+  subtype: TurnoverType;
+  playerId: string | null;
+  player2Id?: string | null; // Second player ID for 50/50 turnovers
+  gameId?: string; // Populated on save - links to SavedGame.id
+  elapsedMs?: number; // Elapsed game time in ms when event was recorded
+};
+
+export type TimeoutEvent = {
+  type: 'timeout';
+  team: 'team1' | 'team2'; // Team that called the timeout
+  index: number; // Which timeout slot (0, 1 for regular timeouts)
+  isFloater: boolean; // Whether this was a floater timeout
+  gameId?: string; // Populated on save - links to SavedGame.id
+  elapsedMs?: number; // Elapsed game time in ms when timeout was called
+  pointTimerWasPaused?: boolean; // Timer state BEFORE timeout (for undo restoration)
+};
+
+export type GameEvent = GoalEvent | TurnoverEvent | TimeoutEvent;
 
 export interface GameState {
   // Teams

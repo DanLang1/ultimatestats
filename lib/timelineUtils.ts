@@ -10,6 +10,14 @@ export interface DisplayTurnover {
   elapsedMs?: number; // Elapsed game time when this event occurred
 }
 
+// Represents a timeout for display purposes
+export interface DisplayTimeout {
+  team: 'team1' | 'team2';
+  isFloater: boolean;
+  eventIndex: number; // Index in raw events array
+  elapsedMs?: number; // Elapsed game time when timeout was called
+}
+
 // Represents all events that occurred during a single point
 export interface PointEvents {
   pointNumber: number; // The point number (1, 2, 3...)
@@ -22,6 +30,8 @@ export interface PointEvents {
   goalElapsedMs?: number; // Elapsed game time when the goal was scored
   // Turnovers that happened during this point
   turnovers: DisplayTurnover[];
+  // Timeouts that happened during this point
+  timeouts: DisplayTimeout[];
   // Possession data
   offensiveTeam: 'team1' | 'team2'; // Who started with the disk
   possessionType: 'hold' | 'break' | null; // scoringTeam === offensiveTeam ? hold : break, null if in progress
@@ -45,6 +55,7 @@ export function computePointByPointEvents(
 ): PointEvents[] {
   const result: PointEvents[] = [];
   let currentTurnovers: DisplayTurnover[] = [];
+  let currentTimeouts: DisplayTimeout[] = [];
   let pointNumber = 0;
   let team1Score = 0;
   let team2Score = 0;
@@ -65,6 +76,14 @@ export function computePointByPointEvents(
         type: event.subtype,
         playerId: event.playerId,
         player2Id: event.player2Id,
+        eventIndex: eventIdx,
+        elapsedMs: event.elapsedMs,
+      });
+    } else if (event.type === 'timeout') {
+      // Collect timeouts for the current point
+      currentTimeouts.push({
+        team: event.team,
+        isFloater: event.isFloater,
         eventIndex: eventIdx,
         elapsedMs: event.elapsedMs,
       });
@@ -95,13 +114,15 @@ export function computePointByPointEvents(
         goalEventIndex: eventIdx,
         goalElapsedMs: event.elapsedMs,
         turnovers: currentTurnovers,
+        timeouts: currentTimeouts,
         offensiveTeam: offensiveTeamForThisPoint,
         possessionType,
         pointDurationMs,
       });
 
-      // Reset turnovers for next point
+      // Reset for next point
       currentTurnovers = [];
+      currentTimeouts = [];
 
       // Update offensive team for NEXT point
       if (!hasReachedHalftime && (team1Score === halftimeScore || team2Score === halftimeScore)) {
@@ -115,8 +136,8 @@ export function computePointByPointEvents(
     }
   }
 
-  // If there are pending turnovers after the loop, show them as an in-progress point
-  if (currentTurnovers.length > 0) {
+  // If there are pending turnovers or timeouts after the loop, show them as an in-progress point
+  if (currentTurnovers.length > 0 || currentTimeouts.length > 0) {
     const inProgressPointNumber = pointNumber + 1;
     // Use working timestamp OR historical (from before undo)
     const effectiveStartTime =
@@ -129,6 +150,7 @@ export function computePointByPointEvents(
       assistPlayerId: null,
       goalEventIndex: -1, // No goal yet
       turnovers: currentTurnovers,
+      timeouts: currentTimeouts,
       offensiveTeam: currentOffensiveTeam,
       possessionType: null, // Unknown until point completes
       isInProgress: true,
