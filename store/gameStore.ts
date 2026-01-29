@@ -885,6 +885,10 @@ export const useGameStore = create<GameState>()(
           currentPointStartTime: state.currentPointStartTime,
           pointStartTimestamps: state.pointStartTimestamps,
           pointTimerPausedElapsed: state.pointTimerPausedElapsed,
+          // Timeout state
+          pendingTimeoutModal: state.pendingTimeoutModal,
+          timeoutEndTime: state.timeoutEndTime,
+          timeoutTimeLeft: state.timeoutTimeLeft,
         }),
       },
     ),

@@ -6,6 +6,15 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.3.0',
+    date: 'January 28, 2026',
+    changes: [
+      'Added timeouts to game events, they now show in game timeline and can be restored by pressing undo',
+      'Added popup modal when timeout is taken with timer',
+      'Added timeout counter to the floating action bar',
+    ],
+  },
+  {
     version: '1.2.0',
     date: 'January 24, 2026',
     changes: [

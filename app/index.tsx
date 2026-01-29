@@ -5,6 +5,7 @@ import TeamScoreSection from '@/components/TeamScoreSection';
 import { ThemedView } from '@/components/ThemedView';
 import StatsTrackingTutorial from '@/components/tutorial/StatsTrackingTutorial';
 import TutorialOverlay from '@/components/tutorial/TutorialOverlay';
+import { useTimeoutTimer } from '@/hooks/useTimeoutTimer';
 import { useHalftimeNavigation } from '@/hooks/useHalftimeNavigation';
 import { usePullPromptNavigation } from '@/hooks/usePullPromptNavigation';
 import { getContrastingTextColor } from '@/lib/colorUtils';
@@ -43,7 +44,11 @@ export default function BasicScoreboard() {
     pointStartTimestamps,
     currentPoint,
     startPoint,
+    // Timeout
+    pendingTimeoutModal,
   } = useGameStore();
+
+  const { handleContinue: endTimeout } = useTimeoutTimer();
 
   const team1Name = currentTeam?.name ?? 'Team 1';
 
@@ -87,6 +92,11 @@ export default function BasicScoreboard() {
   useHalftimeNavigation();
 
   const handleIncrement = (isTeam1: boolean) => {
+    // Auto-end timeout if active
+    if (pendingTimeoutModal) {
+      endTimeout();
+    }
+
     const { didIncrement, isHalftime } = incrementScore(isTeam1);
 
     // If game was already over, don't navigate anywhere
@@ -203,8 +213,8 @@ export default function BasicScoreboard() {
         hasPossession={possessionTrackingEnabled ? possession === 'team2' : undefined}
       />
 
-      {/* Action Bar for stat tracking */}
-      {statTrackingEnabled && (
+      {/* Action Bar for stat tracking or active timeout */}
+      {(statTrackingEnabled || pendingTimeoutModal) && (
         <ScoreboardActionBar
           possession={possession}
           onAction={handleActionBarAction}

@@ -1,5 +1,5 @@
 /**
- * Theme configuration for UStat app
+ * Theme configuration for U-Stat app
  * Switch between color schemes by changing the `palette` export below
  */
 

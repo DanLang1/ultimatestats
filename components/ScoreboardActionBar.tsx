@@ -1,10 +1,12 @@
 import { useTheme } from '@/context/ThemeContext';
+import { useTimeoutTimer } from '@/hooks/useTimeoutTimer';
 import { useGameStore } from '@/store/gameStore';
 import { useUIStore } from '@/store/uiStore';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { router } from 'expo-router';
 import React from 'react';
-import { Pressable, StyleSheet, Text, useWindowDimensions } from 'react-native';
+import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -54,7 +56,10 @@ export function ScoreboardActionBar({
     pointTimerPausedElapsed,
     gameLocked,
     togglePointTimerPause,
+    pendingTimeoutModal,
   } = useGameStore();
+
+  const { formattedTime, isRunning, isComplete, toggleTimer, handleContinue } = useTimeoutTimer();
 
   const showResumePoint =
     pointTimerEnabled && statTrackingEnabled && pointTimerPausedElapsed !== null && !gameLocked;
@@ -143,7 +148,8 @@ export function ScoreboardActionBar({
     opacity: withSpring(isDragging.value ? 0.8 : 1),
   }));
 
-  if (!possession) return null;
+  // Show bar if there's possession OR if there's an active timeout
+  if (!possession && !pendingTimeoutModal) return null;
 
   const barBackgroundColor = palette.glassBg;
 
@@ -224,17 +230,43 @@ export function ScoreboardActionBar({
             flexDirection: isVertical ? 'column' : 'row',
           },
         ]}>
-        {/* Drag handle / orientation toggle */}
-        <Pressable style={styles.dragHandle} onPress={toggleActionBarOrientation}>
+        {/* Drag handle - opens modal during timeout, toggles orientation otherwise */}
+        <Pressable
+          style={styles.dragHandle}
+          onPress={
+            pendingTimeoutModal ? () => router.push('/TimeoutModal') : toggleActionBarOrientation
+          }>
           <MaterialCommunityIcons
-            name={isVertical ? 'arrow-expand-horizontal' : 'arrow-expand-vertical'}
-            size={14}
+            name={
+              pendingTimeoutModal
+                ? 'arrow-expand'
+                : isVertical
+                  ? 'arrow-expand-horizontal'
+                  : 'arrow-expand-vertical'
+            }
+            size={pendingTimeoutModal ? 20 : 14}
             color={palette.textMuted}
           />
         </Pressable>
 
-        {/* Start Point Button - shows when point needs to be started */}
-        {showStartPoint && onStartPoint ? (
+        {/* Timeout UI - shows when timeout is active and timer still running */}
+        {pendingTimeoutModal && !isComplete ? (
+          <View style={styles.timeoutContainer}>
+            <Pressable
+              style={({ pressed }) => [styles.timeoutPlayPause, pressed && styles.buttonPressed]}
+              onPress={toggleTimer}>
+              <MaterialCommunityIcons
+                name={isRunning ? 'pause' : 'play'}
+                size={24}
+                color={palette.accent}
+              />
+            </Pressable>
+            <Text style={[styles.timeoutTime, { color: palette.textInverse }]}>
+              {formattedTime}
+            </Text>
+          </View>
+        ) : showStartPoint && onStartPoint ? (
+          /* Start Point Button - shows when point needs to be started */
           <Pressable
             style={({ pressed }) => [styles.startPointButton, pressed && styles.buttonPressed]}
             onPress={onStartPoint}>
@@ -243,11 +275,11 @@ export function ScoreboardActionBar({
               <Text style={[styles.startPointText, { color: palette.accent }]}>START POINT</Text>
             )}
           </Pressable>
-        ) : showResumePoint ? (
-          /* Resume Point Button - shows when timer is paused */
+        ) : showResumePoint || (pendingTimeoutModal && isComplete) ? (
+          /* Resume Point Button - shows when timer is paused or timeout complete */
           <Pressable
             style={({ pressed }) => [styles.startPointButton, pressed && styles.buttonPressed]}
-            onPress={togglePointTimerPause}>
+            onPress={pendingTimeoutModal ? handleContinue : togglePointTimerPause}>
             <MaterialCommunityIcons name="play" size={22} color={palette.success} />
             {!isVertical && (
               <Text style={[styles.startPointText, { color: palette.success }]}>RESUME POINT</Text>
@@ -324,5 +356,22 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '800',
     letterSpacing: 0.5,
+  },
+  timeoutContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+    paddingRight: 6,
+  },
+  timeoutPlayPause: {
+    padding: 8,
+    borderRadius: 20,
+  },
+  timeoutTime: {
+    fontSize: 22,
+    fontWeight: '800',
+    fontVariant: ['tabular-nums'],
+    minWidth: 50,
+    textAlign: 'center',
   },
 });

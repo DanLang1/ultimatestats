@@ -9,7 +9,7 @@ import Animated, { FadeIn } from 'react-native-reanimated';
 
 export default function TimeoutModal() {
   const { palette } = useTheme();
-  const { pendingTimeoutModal, clearTimeoutModal, events } = useGameStore();
+  const { pendingTimeoutModal, events } = useGameStore();
   const {
     formattedTime,
     isRunning,
@@ -31,8 +31,8 @@ export default function TimeoutModal() {
   }
 
   const onClose = () => {
-    // User closed modal - don't show again for this timeout
-    clearTimeoutModal();
+    // User closed modal - keep timeout state so banner shows on main screen
+    // They can reopen the modal or let the timer continue in the background
     router.dismissTo('/');
   };
 
@@ -116,7 +116,7 @@ export default function TimeoutModal() {
                 pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
               ]}>
               <Text style={[styles.continueBtnTextCompact, { color: palette.textOnAccent }]}>
-                CONTINUE
+                END TIMEOUT
               </Text>
               <MaterialCommunityIcons name="arrow-right" size={16} color={palette.textOnAccent} />
             </Pressable>
