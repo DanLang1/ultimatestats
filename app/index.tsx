@@ -5,11 +5,12 @@ import TeamScoreSection from '@/components/TeamScoreSection';
 import { ThemedView } from '@/components/ThemedView';
 import StatsTrackingTutorial from '@/components/tutorial/StatsTrackingTutorial';
 import TutorialOverlay from '@/components/tutorial/TutorialOverlay';
-import { useTimeoutTimer } from '@/hooks/useTimeoutTimer';
 import { useHalftimeNavigation } from '@/hooks/useHalftimeNavigation';
 import { usePullPromptNavigation } from '@/hooks/usePullPromptNavigation';
+import { useTimeoutTimer } from '@/hooks/useTimeoutTimer';
 import { getContrastingTextColor } from '@/lib/colorUtils';
 import { checkGameOver } from '@/lib/gameUtils';
+import { shouldShowLinePrompt } from '@/lib/linePromptUtils';
 import { useGameStore } from '@/store/gameStore';
 import { TurnoverType } from '@/store/gameStore.types';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -130,8 +131,12 @@ export default function BasicScoreboard() {
     }
 
     // Team2 goal (not halftime, not game over): show point summary modal when point timer enabled
+    // PointSummaryModal will chain to LinePromptModal if needed
     if (pointTimerEnabled && statTrackingEnabled) {
       router.push('/PointSummaryModal');
+    } else if (shouldShowLinePrompt()) {
+      // No point timer, but line calling enabled - go to line prompt
+      router.push('/LinePromptModal');
     }
   };
   const handleActionBarAction = (action: ActionBarAction) => {

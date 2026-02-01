@@ -1,6 +1,7 @@
 import { useTheme } from '@/context/ThemeContext';
 import { getContrastingTextColor } from '@/lib/colorUtils';
 import { formatRatioFull, GenderRatio } from '@/lib/genderRatioUtils';
+import { shouldShowLinePrompt } from '@/lib/linePromptUtils';
 import { useGameStore } from '@/store/gameStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
@@ -59,7 +60,12 @@ export default function PullPromptScreen() {
       setStep('ratio');
     } else {
       setPossession(team);
-      router.dismissTo('/');
+      // Chain to LinePromptModal for first point line selection
+      if (shouldShowLinePrompt()) {
+        router.replace('/LinePromptModal');
+      } else {
+        router.dismissTo('/');
+      }
     }
   };
 
@@ -69,7 +75,12 @@ export default function PullPromptScreen() {
       setPossession(selectedTeam);
     }
     setFirstPointRatio(ratio);
-    router.dismissTo('/');
+    // Chain to LinePromptModal for first point line selection
+    if (shouldShowLinePrompt()) {
+      router.replace('/LinePromptModal');
+    } else {
+      router.dismissTo('/');
+    }
   };
 
   const handleChangeSettings = () => {

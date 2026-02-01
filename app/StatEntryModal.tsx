@@ -1,6 +1,7 @@
 import { StatEntryInner } from '@/components/stat-entry/StatEntryInner';
 import { useTheme } from '@/context/ThemeContext';
 import { checkGameOver } from '@/lib/gameUtils';
+import { shouldShowLinePrompt } from '@/lib/linePromptUtils';
 import { useGameStore } from '@/store/gameStore';
 import { router } from 'expo-router';
 import React from 'react';
@@ -15,11 +16,17 @@ export default function StatEntryScreen() {
     addGoalEvent,
     pointTimerEnabled,
     isHalftimeBreak,
+    currentLine,
   } = useGameStore();
   const { palette } = useTheme();
 
   const team1Name = currentTeam?.name ?? 'Team 1';
   const team1Roster = currentTeam?.roster ?? [];
+
+  // Filter roster by current line if set
+  const currentLineSet = new Set(currentLine);
+  const lineFilteredRoster =
+    currentLine.length > 0 ? team1Roster.filter((p) => currentLineSet.has(p.id)) : team1Roster;
 
   // If no pending entry, just render nothing - the useEffect in index.tsx won't push here
   if (!pendingStatEntry) {
@@ -27,7 +34,7 @@ export default function StatEntryScreen() {
   }
 
   const teamName = pendingStatEntry.team === 'team1' ? team1Name : team2Name;
-  const roster = team1Roster; // Only track team1 roster
+  const roster = lineFilteredRoster; // Filter by current line if set
 
   const handleComplete = (goalPlayerId: string | null, assistPlayerId: string | null) => {
     addGoalEvent({
@@ -62,8 +69,12 @@ export default function StatEntryScreen() {
     }
 
     // Show point summary modal when point timer enabled
+    // PointSummaryModal will chain to LinePromptModal if needed
     if (pointTimerEnabled) {
       router.replace('/PointSummaryModal');
+    } else if (shouldShowLinePrompt()) {
+      // No point timer, but line calling enabled - go to line prompt
+      router.replace('/LinePromptModal');
     } else {
       router.dismiss();
     }
@@ -103,8 +114,12 @@ export default function StatEntryScreen() {
     }
 
     // Show point summary modal when point timer enabled
+    // PointSummaryModal will chain to LinePromptModal if needed
     if (pointTimerEnabled) {
       router.replace('/PointSummaryModal');
+    } else if (shouldShowLinePrompt()) {
+      // No point timer, but line calling enabled - go to line prompt
+      router.replace('/LinePromptModal');
     } else {
       router.dismiss();
     }

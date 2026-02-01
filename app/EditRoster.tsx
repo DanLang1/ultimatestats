@@ -1,16 +1,17 @@
 import { AlertModal } from '@/components/ui/AlertModal';
 import { useAlert } from '@/components/ui/AlertProvider';
+import { PlayerChip } from '@/components/ui/PlayerChip';
 import { useTheme } from '@/context/ThemeContext';
 import { hasPlayerWithName } from '@/lib/playerUtils';
 import { SavedTeam } from '@/lib/storage';
-import { MatchingType, Player } from '@/lib/storage/types';
+import { Player } from '@/lib/storage/types';
 import { generateId } from '@/lib/utils';
 import { useGameStore } from '@/store/gameStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 export default function EditRosterScreen() {
   const { teamName } = useLocalSearchParams<{ teamName: string }>();
@@ -25,13 +26,12 @@ export default function EditRosterScreen() {
     team1Score,
     team2Score,
     events,
-    savedGames,
     savedTeams,
     loadSavedTeams,
   } = useGameStore();
   const { showAlert } = useAlert();
   const { palette } = useTheme();
-  const { mmpColor, fmpColor } = useSettingsStore();
+  const { lineCallingEnabled } = useSettingsStore();
 
   // Derived values
   const roster = currentTeam?.roster ?? [];
@@ -43,11 +43,6 @@ export default function EditRosterScreen() {
   }, [loadSavedTeams]);
 
   const [newPlayerName, setNewPlayerName] = useState('');
-  const [editModalVisible, setEditModalVisible] = useState(false);
-  const [editingPlayer, setEditingPlayer] = useState<Player | null>(null);
-  const [editPlayerName, setEditPlayerName] = useState('');
-  const [editPlayerActive, setEditPlayerActive] = useState(true);
-  const [editPlayerMatchingType, setEditPlayerMatchingType] = useState<MatchingType | null>(null);
   const [renameModalVisible, setRenameModalVisible] = useState(false);
   const [editTeamName, setEditTeamName] = useState('');
   const [newTeamModalVisible, setNewTeamModalVisible] = useState(false);
@@ -71,14 +66,6 @@ export default function EditRosterScreen() {
   const newTeamNameExists =
     newTeamName.trim() !== '' &&
     savedTeams.some((t: SavedTeam) => t.name.toLowerCase() === newTeamName.trim().toLowerCase());
-
-  // Derived: check if edited player name already exists (excluding current player)
-  const editPlayerNameExists =
-    editPlayerName.trim() !== '' &&
-    roster.some(
-      (p) =>
-        p.name.toLowerCase() === editPlayerName.trim().toLowerCase() && p.id !== editingPlayer?.id,
-    );
 
   const handleRenameTeam = () => {
     const newName = editTeamName.trim();
@@ -127,103 +114,8 @@ export default function EditRosterScreen() {
     }
   };
 
-  const handleRemovePlayer = (playerId: string) => {
-    if (!currentTeam) return;
-
-    // Check if player has any stats in the current game
-    const hasCurrentGameStats = events.some((e) => {
-      if (e.type === 'goal') {
-        return e.goalPlayerId === playerId || e.assistPlayerId === playerId;
-      }
-      if (e.type === 'turnover') {
-        return e.playerId === playerId || e.player2Id === playerId;
-      }
-      return false;
-    });
-
-    if (hasCurrentGameStats) {
-      showAlert({
-        title: 'Cannot Delete Player',
-        message: "Sorry, you can't delete players with stats in an active game",
-      });
-      return;
-    }
-
-    // Check if player has stats in any saved games
-    const hasStatsInSavedGames = savedGames.some((game) =>
-      game.events.some((e) => {
-        if (e.type === 'goal') {
-          return e.goalPlayerId === playerId || e.assistPlayerId === playerId;
-        }
-        if (e.type === 'turnover') {
-          return e.playerId === playerId || e.player2Id === playerId;
-        }
-        return false;
-      }),
-    );
-
-    const doDelete = () => {
-      const newRoster = roster.filter((p) => p.id !== playerId);
-      setCurrentTeam({ ...currentTeam, roster: newRoster });
-      saveCurrentTeam();
-    };
-
-    if (hasStatsInSavedGames) {
-      showAlert({
-        title: 'Delete Player?',
-        message:
-          'This player has stats saved in previous games. Are you sure you want to delete them?',
-        buttons: [
-          { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Delete Anyway',
-            style: 'destructive',
-            onPress: doDelete,
-          },
-        ],
-      });
-      return;
-    }
-
-    doDelete();
-  };
-
   const handleEditPlayer = (player: Player) => {
-    setEditingPlayer(player);
-    setEditPlayerName(player.name);
-    setEditPlayerActive(player.isActive);
-    setEditPlayerMatchingType(player.matchingType ?? null);
-    setEditModalVisible(true);
-  };
-
-  const handleConfirmEdit = () => {
-    if (!editingPlayer || !currentTeam) {
-      setEditModalVisible(false);
-      return;
-    }
-
-    const newName = editPlayerName.trim();
-    // Check if name is valid (not empty and not duplicate unless same player)
-    const isDuplicate = roster.some(
-      (p) => p.name.toLowerCase() === newName.toLowerCase() && p.id !== editingPlayer.id,
-    );
-
-    if (newName && !isDuplicate) {
-      const updatedRoster = roster.map((p) =>
-        p.id === editingPlayer.id
-          ? {
-              ...p,
-              name: newName,
-              isActive: editPlayerActive,
-              matchingType: editPlayerMatchingType,
-            }
-          : p,
-      );
-      setCurrentTeam({ ...currentTeam, roster: updatedRoster });
-      // Auto-save team
-      saveCurrentTeam();
-    }
-    setEditModalVisible(false);
+    router.push({ pathname: '/EditPlayerModal', params: { playerId: player.id } });
   };
 
   const handleBack = () => {
@@ -288,6 +180,14 @@ export default function EditRosterScreen() {
         </Pressable>
 
         <View style={styles.headerActions}>
+          {lineCallingEnabled && roster.length > 0 && (
+            <Pressable
+              onPress={() => router.push('/LinePresetEditor')}
+              style={[styles.headerActionButton, { backgroundColor: palette.overlay10 }]}
+              hitSlop={8}>
+              <MaterialCommunityIcons name="playlist-edit" size={20} color={palette.accent} />
+            </Pressable>
+          )}
           {!gameActive && hasOtherTeams && (
             <Pressable
               onPress={() => router.push('/TeamManagementModal')}
@@ -367,11 +267,6 @@ export default function EditRosterScreen() {
       {/* Player List - 2 Column Grid */}
 
       <ScrollView style={styles.playerList} contentContainerStyle={styles.playerListContent}>
-        {roster.length > 0 && (
-          <View style={styles.listHeader}>
-            <Text style={[styles.listHint, { color: palette.textMuted }]}>Tap player to edit</Text>
-          </View>
-        )}
         {roster.length === 0 ? (
           <View style={styles.emptyState}>
             <MaterialCommunityIcons
@@ -389,175 +284,18 @@ export default function EditRosterScreen() {
         ) : (
           <View style={styles.playerGrid}>
             {sortedRoster.map((player) => (
-              <View
+              <PlayerChip
                 key={player.id}
-                style={[
-                  styles.chip,
-                  { backgroundColor: palette.overlay12 },
-                  !player.isActive && styles.chipInactive,
-                  player.matchingType === 'mmp' && {
-                    borderWidth: 2,
-                    borderColor: mmpColor,
-                  },
-                  player.matchingType === 'fmp' && {
-                    borderWidth: 2,
-                    borderColor: fmpColor,
-                  },
-                ]}>
-                <Pressable
-                  onPress={() => handleEditPlayer(player)}
-                  style={styles.chipTextPressable}>
-                  <Text
-                    style={[
-                      styles.chipText,
-                      { color: player.isActive ? palette.textInverse : palette.textMuted },
-                    ]}
-                    numberOfLines={1}>
-                    {player.name}
-                  </Text>
-                </Pressable>
-                <Pressable
-                  style={({ pressed }) => [
-                    styles.chipRemoveButton,
-                    pressed && [{ backgroundColor: palette.overlay15 }],
-                  ]}
-                  onPress={() => handleRemovePlayer(player.id)}
-                  hitSlop={4}>
-                  <MaterialCommunityIcons
-                    name="close"
-                    size={14}
-                    color={player.isActive ? palette.textMuted : palette.overlay20}
-                  />
-                </Pressable>
-              </View>
+                name={player.name}
+                isActive={player.isActive}
+                matchingType={player.matchingType}
+                role={player.role}
+                onPress={() => handleEditPlayer(player)}
+              />
             ))}
           </View>
         )}
       </ScrollView>
-
-      {/* Edit Player Modal */}
-      <AlertModal
-        visible={editModalVisible}
-        title="Edit Player"
-        onClose={() => setEditModalVisible(false)}>
-        <TextInput
-          style={[
-            styles.alertInput,
-            {
-              borderColor: editPlayerNameExists ? palette.danger : palette.overlay20,
-              color: palette.textInverse,
-              backgroundColor: palette.overlay05,
-            },
-          ]}
-          placeholder="Player name..."
-          placeholderTextColor={palette.textMuted}
-          value={editPlayerName}
-          onChangeText={setEditPlayerName}
-          autoFocus
-          maxLength={20}
-        />
-        {editPlayerNameExists && (
-          <Text style={[styles.errorText, { color: palette.danger }]}>
-            A player with this name already exists
-          </Text>
-        )}
-
-        {/* Active Toggle */}
-        <View style={styles.activeToggleRow}>
-          <Text style={[styles.activeToggleLabel, { color: palette.textInverse }]}>
-            Active for games
-          </Text>
-          <Switch
-            value={editPlayerActive}
-            onValueChange={setEditPlayerActive}
-            trackColor={{ false: palette.overlay20, true: palette.accent }}
-            thumbColor={editPlayerActive ? palette.textOnAccent : palette.textMuted}
-          />
-        </View>
-        <Text style={[styles.activeToggleHint, { color: palette.textMuted }]}>
-          Inactive players won&apos;t appear during stat tracking
-        </Text>
-
-        {/* Matching Type Toggle */}
-        <View style={[styles.activeToggleRow, { marginBottom: 24 }]}>
-          <Text style={[styles.activeToggleLabel, { color: palette.textInverse }]}>
-            Matching preference
-          </Text>
-          <View style={styles.matchingTypeRow}>
-            <Pressable
-              style={[
-                styles.matchingTypePill,
-                { borderColor: palette.overlay20 },
-                editPlayerMatchingType === 'fmp' && {
-                  backgroundColor: palette.accent,
-                  borderColor: palette.accent,
-                },
-              ]}
-              onPress={() => setEditPlayerMatchingType('fmp')}>
-              <Text
-                style={[
-                  styles.matchingTypePillText,
-                  {
-                    color:
-                      editPlayerMatchingType === 'fmp' ? palette.textOnAccent : palette.textMuted,
-                  },
-                ]}>
-                FMP
-              </Text>
-            </Pressable>
-            <Pressable
-              style={[
-                styles.matchingTypePill,
-                { borderColor: palette.overlay20 },
-                editPlayerMatchingType === 'mmp' && {
-                  backgroundColor: palette.accent,
-                  borderColor: palette.accent,
-                },
-              ]}
-              onPress={() => setEditPlayerMatchingType('mmp')}>
-              <Text
-                style={[
-                  styles.matchingTypePillText,
-                  {
-                    color:
-                      editPlayerMatchingType === 'mmp' ? palette.textOnAccent : palette.textMuted,
-                  },
-                ]}>
-                MMP
-              </Text>
-            </Pressable>
-          </View>
-        </View>
-
-        <View style={styles.alertButtonContainer}>
-          <Pressable
-            style={({ pressed }) => [
-              styles.alertButton,
-              styles.alertCancelButton,
-              { backgroundColor: palette.overlay10, borderColor: palette.overlay20 },
-              pressed && styles.buttonPressed,
-            ]}
-            onPress={() => setEditModalVisible(false)}>
-            <Text style={[styles.alertButtonText, { color: palette.textInverse }]}>Cancel</Text>
-          </Pressable>
-          <Pressable
-            style={({ pressed }) => [
-              styles.alertButton,
-              { backgroundColor: editPlayerNameExists ? palette.overlay20 : palette.accent },
-              pressed && styles.buttonPressed,
-            ]}
-            onPress={handleConfirmEdit}
-            disabled={editPlayerNameExists}>
-            <Text
-              style={[
-                styles.alertButtonText,
-                { color: editPlayerNameExists ? palette.textMuted : palette.textOnAccent },
-              ]}>
-              Save
-            </Text>
-          </Pressable>
-        </View>
-      </AlertModal>
 
       {/* Rename Team Modal */}
       <AlertModal
@@ -730,8 +468,7 @@ const styles = StyleSheet.create({
   errorText: {
     fontSize: 12,
     marginLeft: 4,
-    marginTop: -8,
-    marginBottom: 4,
+    marginTop: 4,
   },
   addButton: {
     width: 48,
@@ -779,96 +516,6 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: 10,
   },
-  chip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 8,
-    paddingLeft: 14,
-    paddingRight: 6,
-    borderRadius: 20,
-    gap: 6,
-  },
-  chipInactive: {
-    opacity: 0.5,
-  },
-  chipText: {
-    fontSize: 15,
-    fontWeight: '500',
-  },
-  chipTextPressable: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  chipRemoveButton: {
-    padding: 4,
-    borderRadius: 12,
-  },
-  modalOverlay: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 40,
-  },
-  modalContent: {
-    width: '100%',
-    maxWidth: 320,
-    borderRadius: 16,
-    padding: 20,
-    borderWidth: 1,
-  },
-  modalTitle: {
-    fontSize: 12,
-    fontWeight: '700',
-    letterSpacing: 1,
-    marginBottom: 16,
-    textAlign: 'center',
-  },
-  modalInput: {
-    height: 48,
-    borderWidth: 1,
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    fontSize: 16,
-    marginBottom: 4,
-  },
-  activeToggleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 4,
-  },
-  activeToggleLabel: {
-    fontSize: 15,
-    fontWeight: '500',
-  },
-  activeToggleHint: {
-    fontSize: 12,
-    marginBottom: 16,
-  },
-  modalButtons: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  modalButton: {
-    flex: 1,
-    marginTop: 12,
-    paddingVertical: 12,
-    borderRadius: 10,
-    alignItems: 'center',
-  },
-  modalCancelButton: {
-    borderWidth: 1,
-  },
-  modalCancelText: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  modalSaveButton: {},
-  modalSaveText: {
-    fontSize: 14,
-    fontWeight: '700',
-  },
   teamHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -910,20 +557,36 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600',
   },
-  matchingTypeRow: {
+  // Line Presets Section
+  presetsSection: {
+    marginTop: 24,
+    gap: 16,
+  },
+  sectionDivider: {
+    height: 1,
+  },
+  presetsButton: {
     flexDirection: 'row',
-    gap: 8,
-  },
-  matchingTypePill: {
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 16,
-    borderWidth: 1,
-    minWidth: 50,
     alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
   },
-  matchingTypePillText: {
-    fontSize: 12,
+  presetsButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    flex: 1,
+  },
+  presetsButtonText: {
+    gap: 2,
+  },
+  presetsButtonTitle: {
+    fontSize: 15,
     fontWeight: '600',
+  },
+  presetsButtonSubtitle: {
+    fontSize: 12,
   },
 });

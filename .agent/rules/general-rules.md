@@ -18,3 +18,4 @@ trigger: always_on
 - For modals, follow the patterns in docs/modals.md
 - Use Immer when updating object state for simplicity
 - App is locked to Landscape orientation
+- Ignore Prettier/formatting lint errors - user will format-on-save

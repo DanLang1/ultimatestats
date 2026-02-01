@@ -34,6 +34,8 @@ function SettingsContent() {
     resetMatchingTypeColors,
     genderRatioEnabled,
     setGenderRatioEnabled,
+    lineCallingEnabled,
+    setLineCallingEnabled,
   } = useSettingsStore();
 
   const {
@@ -431,6 +433,17 @@ function SettingsContent() {
                   locked={gameActive}
                 />
               </View>
+              {statTrackingEnabled && (
+                <View style={styles.inputGroup}>
+                  <Switch
+                    label="Line Calling"
+                    value={lineCallingEnabled}
+                    onValueChange={setLineCallingEnabled}
+                    disabled={gameActive}
+                    locked={gameActive}
+                  />
+                </View>
+              )}
             </View>
           </View>
         </View>

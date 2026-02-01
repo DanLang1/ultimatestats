@@ -1,5 +1,6 @@
 import { useTheme } from '@/context/ThemeContext';
 import { formatRatio, getExpectedRatio, getSequenceNumber } from '@/lib/genderRatioUtils';
+import { shouldShowLinePrompt } from '@/lib/linePromptUtils';
 import { computePointByPointEvents, getTurnoverSummary } from '@/lib/timelineUtils';
 import { useGameStore } from '@/store/gameStore';
 import { useSettingsStore } from '@/store/settingsStore';
@@ -99,11 +100,21 @@ export default function PointSummaryModal() {
 
   const handleStartNextPoint = () => {
     startPoint();
-    router.dismissTo('/');
+    // Chain to LinePromptModal if conditions are met
+    if (shouldShowLinePrompt()) {
+      router.replace('/LinePromptModal');
+    } else {
+      router.dismissTo('/');
+    }
   };
 
   const handleDismiss = () => {
-    router.dismissTo('/');
+    // Chain to LinePromptModal if conditions are met
+    if (shouldShowLinePrompt()) {
+      router.replace('/LinePromptModal');
+    } else {
+      router.dismissTo('/');
+    }
   };
 
   // Format duration if available
@@ -218,8 +229,8 @@ export default function PointSummaryModal() {
                 pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
               ]}>
               <MaterialCommunityIcons name="timer-outline" size={16} color={palette.textOnAccent} />
-              <Text style={[styles.ctaText, { color: palette.textOnAccent }]}>
-                START NEXT POINT TIMER
+              <Text style={[styles.ctaText, { color: palette.textOnAccent }]} numberOfLines={1}>
+                START TIMER
               </Text>
             </Pressable>
 
@@ -230,8 +241,10 @@ export default function PointSummaryModal() {
                 { borderColor: palette.border },
                 pressed && { opacity: 0.7 },
               ]}>
-              <Text style={[styles.secondaryButtonText, { color: palette.textMuted }]}>
-                CONTINUE WITHOUT STARTING TIMER
+              <Text
+                style={[styles.secondaryButtonText, { color: palette.textMuted }]}
+                numberOfLines={1}>
+                SKIP TIMER
               </Text>
             </Pressable>
           </Animated.View>
@@ -319,6 +332,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '800',
     letterSpacing: 0.3,
+    flexShrink: 1,
   },
   secondaryButton: {
     alignItems: 'center',
@@ -330,5 +344,6 @@ const styles = StyleSheet.create({
   secondaryButtonText: {
     fontSize: 14,
     fontWeight: '600',
+    flexShrink: 1,
   },
 });

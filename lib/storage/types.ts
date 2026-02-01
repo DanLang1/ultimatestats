@@ -21,12 +21,14 @@ export interface SavedGame {
 }
 
 export type MatchingType = 'fmp' | 'mmp';
+export type PlayerRole = 'handler' | 'cutter' | 'hybrid';
 
 export interface Player {
   id: string;
   name: string;
   isActive: boolean;
   matchingType: MatchingType | null; // null = not set, 'fmp' = female matching, 'mmp' = male matching
+  role: PlayerRole | null; // null = not set
 }
 
 export interface SavedTeam {
@@ -52,3 +54,18 @@ export interface TeamStorage {
 
 // Combined storage interface
 export interface Storage extends GameStorage, TeamStorage {}
+
+// Line Calling Types
+export interface LinePreset {
+  id: string;
+  name: string; // "O-Line", "D-Line", "Pod A"
+  playerIds: string[];
+  teamId: string;
+}
+
+export interface PointLineRecord {
+  pointNumber: number;
+  playerIds: string[];
+  timestamp: number;
+  isSubstitution?: boolean; // true if mid-point sub
+}

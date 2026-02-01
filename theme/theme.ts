@@ -191,6 +191,7 @@ export const darkPalette = {
   // Modal colors now match app theme (Navy in dark mode)
   modalBg: '#0F172A', // Navy - same as primary
   modalText: '#FFFFFF', // White text on navy
+  modalTextMuted: '#94A3B8', // Slate 400 - muted text on navy
   overlayModal: 'rgba(0,0,0,0.6)', // Darker backdrop for dark theme
   // Glass/floating bar backgrounds
   glassBg: 'rgba(15, 23, 42, 0.92)', // Dark slate with transparency
@@ -208,6 +209,7 @@ export const lightPalette = {
   // Modal colors now match app theme (White in light mode)
   modalBg: '#FFFFFF', // White - same as primary
   modalText: '#0F172A', // Dark text on white
+  modalTextMuted: '#64748B', // Slate 500 - muted text on white
 
   // UI Accents
   secondary: '#E2E8F0', // Slate 200 - secondary UI elements
@@ -300,6 +302,7 @@ export type Palette = {
 } & {
   modalBg: string;
   modalText: string;
+  modalTextMuted: string;
   overlayModal: string;
   textOnAccent: string;
   glassBg: string;

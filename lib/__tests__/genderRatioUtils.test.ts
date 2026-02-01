@@ -1,4 +1,5 @@
 import {
+  checkLineRatio,
   formatRatio,
   formatRatioFull,
   GenderRatio,
@@ -171,6 +172,147 @@ describe('integration: full ABBA sequence with FMP first', () => {
       const ratio = getExpectedRatio(point, firstRatio);
       const seq = getSequenceNumber(point);
       expect(formatRatio(ratio, seq)).toBe(display);
+    });
+  });
+});
+
+describe('checkLineRatio', () => {
+  // Helper to create a roster with specific gender composition
+  const createRoster = (fmpIds: string[], mmpIds: string[], unassignedIds: string[] = []) => [
+    ...fmpIds.map((id) => ({ id, matchingType: 'fmp' as const })),
+    ...mmpIds.map((id) => ({ id, matchingType: 'mmp' as const })),
+    ...unassignedIds.map((id) => ({ id, matchingType: null })),
+  ];
+
+  describe('when expected ratio is more-women (FMP)', () => {
+    const expectedRatio: GenderRatio = 'more-women';
+
+    it('returns isCorrect: true when FMP > MMP (4F/3M)', () => {
+      const roster = createRoster(['f1', 'f2', 'f3', 'f4'], ['m1', 'm2', 'm3']);
+      const playerIds = ['f1', 'f2', 'f3', 'f4', 'm1', 'm2', 'm3'];
+
+      const result = checkLineRatio(playerIds, roster, expectedRatio);
+
+      expect(result).not.toBeNull();
+      expect(result!.isCorrect).toBe(true);
+      expect(result!.fmpCount).toBe(4);
+      expect(result!.mmpCount).toBe(3);
+      expect(result!.expectedRatio).toBe('more-women');
+    });
+
+    it('returns isCorrect: false when MMP > FMP (3F/4M)', () => {
+      const roster = createRoster(['f1', 'f2', 'f3'], ['m1', 'm2', 'm3', 'm4']);
+      const playerIds = ['f1', 'f2', 'f3', 'm1', 'm2', 'm3', 'm4'];
+
+      const result = checkLineRatio(playerIds, roster, expectedRatio);
+
+      expect(result).not.toBeNull();
+      expect(result!.isCorrect).toBe(false);
+      expect(result!.fmpCount).toBe(3);
+      expect(result!.mmpCount).toBe(4);
+    });
+
+    it('returns isCorrect: false when equal (3F/3M)', () => {
+      const roster = createRoster(['f1', 'f2', 'f3'], ['m1', 'm2', 'm3']);
+      const playerIds = ['f1', 'f2', 'f3', 'm1', 'm2', 'm3'];
+
+      const result = checkLineRatio(playerIds, roster, expectedRatio);
+
+      expect(result).not.toBeNull();
+      expect(result!.isCorrect).toBe(false); // equal is not "more women"
+    });
+  });
+
+  describe('when expected ratio is more-men (MMP)', () => {
+    const expectedRatio: GenderRatio = 'more-men';
+
+    it('returns isCorrect: true when MMP > FMP (4M/3F)', () => {
+      const roster = createRoster(['f1', 'f2', 'f3'], ['m1', 'm2', 'm3', 'm4']);
+      const playerIds = ['f1', 'f2', 'f3', 'm1', 'm2', 'm3', 'm4'];
+
+      const result = checkLineRatio(playerIds, roster, expectedRatio);
+
+      expect(result).not.toBeNull();
+      expect(result!.isCorrect).toBe(true);
+      expect(result!.fmpCount).toBe(3);
+      expect(result!.mmpCount).toBe(4);
+      expect(result!.expectedRatio).toBe('more-men');
+    });
+
+    it('returns isCorrect: false when FMP > MMP (4F/3M)', () => {
+      const roster = createRoster(['f1', 'f2', 'f3', 'f4'], ['m1', 'm2', 'm3']);
+      const playerIds = ['f1', 'f2', 'f3', 'f4', 'm1', 'm2', 'm3'];
+
+      const result = checkLineRatio(playerIds, roster, expectedRatio);
+
+      expect(result).not.toBeNull();
+      expect(result!.isCorrect).toBe(false);
+    });
+
+    it('returns isCorrect: false when equal (3F/3M)', () => {
+      const roster = createRoster(['f1', 'f2', 'f3'], ['m1', 'm2', 'm3']);
+      const playerIds = ['f1', 'f2', 'f3', 'm1', 'm2', 'm3'];
+
+      const result = checkLineRatio(playerIds, roster, expectedRatio);
+
+      expect(result).not.toBeNull();
+      expect(result!.isCorrect).toBe(false); // equal is not "more men"
+    });
+  });
+
+  describe('edge cases', () => {
+    it('returns null when no players have matching type set', () => {
+      const roster = createRoster([], [], ['u1', 'u2', 'u3']);
+      const playerIds = ['u1', 'u2', 'u3'];
+
+      const result = checkLineRatio(playerIds, roster, 'more-women');
+
+      expect(result).toBeNull();
+    });
+
+    it('returns null for empty player list', () => {
+      const roster = createRoster(['f1', 'f2'], ['m1', 'm2']);
+      const playerIds: string[] = [];
+
+      const result = checkLineRatio(playerIds, roster, 'more-women');
+
+      expect(result).toBeNull();
+    });
+
+    it('ignores players with null matching type in count', () => {
+      const roster = createRoster(['f1', 'f2', 'f3', 'f4'], ['m1', 'm2'], ['u1']);
+      const playerIds = ['f1', 'f2', 'f3', 'f4', 'm1', 'm2', 'u1'];
+
+      const result = checkLineRatio(playerIds, roster, 'more-women');
+
+      expect(result).not.toBeNull();
+      expect(result!.fmpCount).toBe(4);
+      expect(result!.mmpCount).toBe(2);
+      expect(result!.isCorrect).toBe(true); // 4F > 2M
+    });
+
+    it('handles players not in roster gracefully', () => {
+      const roster = createRoster(['f1'], ['m1']);
+      const playerIds = ['f1', 'm1', 'unknown1', 'unknown2'];
+
+      const result = checkLineRatio(playerIds, roster, 'more-women');
+
+      expect(result).not.toBeNull();
+      expect(result!.fmpCount).toBe(1);
+      expect(result!.mmpCount).toBe(1);
+      expect(result!.isCorrect).toBe(false); // 1F not > 1M
+    });
+
+    it('works with partial line selection', () => {
+      const roster = createRoster(['f1', 'f2', 'f3'], ['m1', 'm2']);
+      const playerIds = ['f1', 'f2', 'm1']; // Only 3 players selected
+
+      const result = checkLineRatio(playerIds, roster, 'more-women');
+
+      expect(result).not.toBeNull();
+      expect(result!.fmpCount).toBe(2);
+      expect(result!.mmpCount).toBe(1);
+      expect(result!.isCorrect).toBe(true); // 2F > 1M
     });
   });
 });

@@ -16,12 +16,16 @@ interface SettingsState {
   genderRatioEnabled: boolean;
   firstPointRatio: GenderRatio | null;
 
+  // Line Calling Settings
+  lineCallingEnabled: boolean;
+
   // Actions
   setMmpColor: (color: string) => void;
   setFmpColor: (color: string) => void;
   resetMatchingTypeColors: () => void;
   setGenderRatioEnabled: (enabled: boolean) => void;
   setFirstPointRatio: (ratio: GenderRatio | null) => void;
+  setLineCallingEnabled: (enabled: boolean) => void;
 }
 
 export const useSettingsStore = create<SettingsState>()(
@@ -31,6 +35,7 @@ export const useSettingsStore = create<SettingsState>()(
       fmpColor: DEFAULT_FMP_COLOR,
       genderRatioEnabled: false,
       firstPointRatio: null,
+      lineCallingEnabled: false,
 
       setMmpColor: (color) => set({ mmpColor: color }),
       setFmpColor: (color) => set({ fmpColor: color }),
@@ -41,6 +46,7 @@ export const useSettingsStore = create<SettingsState>()(
         }),
       setGenderRatioEnabled: (enabled) => set({ genderRatioEnabled: enabled }),
       setFirstPointRatio: (ratio) => set({ firstPointRatio: ratio }),
+      setLineCallingEnabled: (enabled) => set({ lineCallingEnabled: enabled }),
     }),
     {
       name: 'ultimatestats-settings',

@@ -69,6 +69,7 @@ function RootLayoutInner() {
           <Stack.Screen name="EditRoster" />
           <Stack.Screen name="GameInfo" />
           <Stack.Screen name="About" />
+          <Stack.Screen name="LinePresetEditor" />
           <Stack.Screen
             name="WinModal"
             options={{
@@ -119,6 +120,24 @@ function RootLayoutInner() {
           />
           <Stack.Screen
             name="NumberPickerModal"
+            options={{
+              presentation: 'transparentModal',
+              animation: 'fade',
+              gestureEnabled: false,
+              contentStyle: { backgroundColor: 'transparent' },
+            }}
+          />
+          <Stack.Screen
+            name="EditPlayerModal"
+            options={{
+              presentation: 'transparentModal',
+              animation: 'fade',
+              gestureEnabled: false,
+              contentStyle: { backgroundColor: 'transparent' },
+            }}
+          />
+          <Stack.Screen
+            name="LinePromptModal"
             options={{
               presentation: 'transparentModal',
               animation: 'fade',

@@ -2,6 +2,28 @@
 
 This project uses **Expo Router transparent modals** for overlay-style UI elements (stat entry, turnover entry, pull prompt). These behave like traditional React Native `Modal` components but work correctly with Android edge-to-edge mode.
 
+## Modal Theming (IMPORTANT)
+
+**All modals must use these palette tokens for proper dark/light mode support:**
+
+| Token                    | Usage                            |
+| ------------------------ | -------------------------------- |
+| `palette.overlayDark40`  | Backdrop overlay                 |
+| `palette.modalBg`        | Modal content background         |
+| `palette.modalText`      | Primary text color               |
+| `palette.modalTextMuted` | Secondary/muted text color       |
+| `palette.overlay15`      | Border color                     |
+| `palette.overlay05`      | Input background                 |
+| `palette.accent`         | Primary action button background |
+| `palette.textOnAccent`   | Primary action button text       |
+
+**DO NOT USE these tokens in modals - they invert between modes and cause visibility issues:**
+
+- `palette.surface`
+- `palette.textPrimary`
+- `palette.textInverse`
+- `palette.textMuted` (use `palette.modalTextMuted` instead)
+
 ## Creating a New Modal
 
 ### 1. Create the Route File
@@ -9,13 +31,14 @@ This project uses **Expo Router transparent modals** for overlay-style UI elemen
 Create a new file in `app/` with `Modal` suffix (e.g., `app/MyFeatureModal.tsx`):
 
 ```tsx
-import { useGameStore } from '@/store/gameStore';
-import { palette } from '@/theme/theme';
+import { useTheme } from '@/context/ThemeContext';
 import { router } from 'expo-router';
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 export default function MyFeatureModal() {
+  const { palette } = useTheme();
+
   // Early return if conditions not met (user shouldn't be here)
   // Don't navigate here - just return null
   if (!someCondition) {
@@ -34,10 +57,16 @@ export default function MyFeatureModal() {
 
   return (
     <View style={StyleSheet.absoluteFill}>
-      <Pressable style={styles.overlay} onPress={handleDismiss}>
-        {/* Your modal content here */}
-        <View style={styles.sheet}>
-          <Text>Modal Content</Text>
+      <Pressable
+        style={[styles.overlay, { backgroundColor: palette.overlayDark40 }]}
+        onPress={handleDismiss}>
+        <View
+          style={[
+            styles.sheet,
+            { backgroundColor: palette.modalBg, borderColor: palette.overlay15 },
+          ]}>
+          <Text style={{ color: palette.modalText }}>Modal Content</Text>
+          <Text style={{ color: palette.modalTextMuted }}>Secondary text</Text>
         </View>
       </Pressable>
     </View>
@@ -47,13 +76,12 @@ export default function MyFeatureModal() {
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: palette.overlayDark40, // Semi-transparent background
     justifyContent: 'center', // or 'flex-end' for bottom sheet
     alignItems: 'center',
   },
   sheet: {
-    backgroundColor: palette.surface,
     borderRadius: 16,
+    borderWidth: 1,
     padding: 24,
   },
 });
@@ -111,12 +139,57 @@ export function useMyFeatureNavigation() {
 | Set `gestureEnabled: false`                            | Prevents swipe-to-dismiss (handle dismissal explicitly) |
 | Set `contentStyle: { backgroundColor: 'transparent' }` | Shows your overlay background correctly                 |
 | Prefer declarative navigation                          | Avoids useEffect complexity and timing issues           |
+| Use `palette.modalBg` and `palette.modalText`          | Correct colors in both dark and light mode              |
+
+### Modal Navigation from Non-Root Screens
+
+When a modal is opened from a screen other than the root (`/`), **always use `router.dismissTo('/SpecificScreen')` with the explicit parent screen path** instead of `router.back()` or `router.dismissTo('/')`.
+
+```tsx
+// ❌ BAD: Can cause "failed to insert view into parent" errors
+router.back();
+router.dismissTo('/'); // Dismisses multiple screens at once
+
+// ✅ GOOD: Explicit destination prevents view hierarchy issues
+router.dismissTo('/GameInfo'); // Return to the screen that opened this modal
+```
+
+**Why:** Using `router.back()` or dismissing to root when the modal was opened from an intermediate screen (e.g., `/` → `/GameInfo` → `/LinePromptModal`) can cause React Native view hierarchy errors during simultaneous screen transitions.
+
+## Conditional Redirects (When Data Becomes Unavailable)
+
+When a modal's required data becomes unavailable (e.g., after deleting the item being edited), use the `<Redirect>` component for declarative navigation:
+
+```tsx
+import { Redirect, router } from 'expo-router';
+
+export default function EditPlayerModal() {
+  const player = roster.find((p) => p.id === playerId);
+
+  // ✅ CORRECT: Declarative redirect
+  if (!player) {
+    return <Redirect href="/EditRoster" />;
+  }
+
+  // ❌ WRONG: Imperative navigation during render
+  // This causes "cannot update a component while rendering a different component"
+  if (!player) {
+    router.dismissTo('/EditRoster'); // DON'T DO THIS
+    return null;
+  }
+
+  // ... rest of component
+}
+```
+
+**Why this matters:** Calling `router.navigate()` or `router.dismissTo()` during render is a side effect that triggers React's warning. The `<Redirect>` component is the React-way to handle this declaratively.
 
 ## Existing Modal Routes
 
 - `app/StatEntryModal.tsx` - Goal/assist entry after scoring
 - `app/TurnoverEntryModal.tsx` - Turnover type selection
 - `app/PullPromptModal.tsx` - Initial possession selection
+- `app/EditPlayerModal.tsx` - Edit player details
 
 ---
 
@@ -131,19 +204,20 @@ Use `AlertModal` from `@/components/ui/AlertModal` for simple dialogs with a few
 ```tsx
 import { AlertModal } from '@/components/ui/AlertModal';
 
-<AlertModal visible={isVisible} title="Edit Player" onClose={() => setIsVisible(false)}>
+<AlertModal visible={isVisible} title="Rename Team" onClose={() => setIsVisible(false)}>
   {/* Custom content: inputs, switches, buttons */}
   <TextInput
-    style={[styles.input, { backgroundColor: palette.overlay05, color: palette.textInverse }]}
+    style={[styles.input, { backgroundColor: palette.overlay05, color: palette.modalText }]}
     value={value}
     onChangeText={setValue}
+    placeholderTextColor={palette.modalTextMuted}
   />
   <View style={styles.buttonRow}>
     <Pressable onPress={handleCancel}>
-      <Text>Cancel</Text>
+      <Text style={{ color: palette.modalText }}>Cancel</Text>
     </Pressable>
     <Pressable onPress={handleSave}>
-      <Text>Save</Text>
+      <Text style={{ color: palette.textOnAccent }}>Save</Text>
     </Pressable>
   </View>
 </AlertModal>;
@@ -155,19 +229,8 @@ import { AlertModal } from '@/components/ui/AlertModal';
 - Simple confirmation with custom content
 - Consistent styling matching AlertProvider is desired
 
-**Examples:** Edit Player, Rename Team, New Team modals in `EditRoster.tsx`
+**Examples:** Rename Team, New Team modals in `EditRoster.tsx`
 
 ### Approach 2: Raw `<Modal>` (Custom Styling)
 
-For modals needing completely custom styling, use React Native's `<Modal>` directly with these theming tokens:
-
-| Token                  | Usage                                   |
-| ---------------------- | --------------------------------------- |
-| `palette.overlayModal` | Backdrop (semi-transparent)             |
-| `palette.modalBg`      | Modal content background                |
-| `palette.modalText`    | Primary text color inside modal         |
-| `palette.overlay15`    | Modal border color                      |
-| `palette.accent`       | Cancel button text (outline style)      |
-| `palette.textOnAccent` | Save/confirm button text (filled style) |
-
-**⚠️ Do NOT use:** `palette.surface` or `palette.textPrimary` for modals - they invert between dark/light mode and will cause visibility issues.
+For modals needing completely custom styling, use React Native's `<Modal>` directly. Apply the same theming tokens as Expo Router modals (see "Modal Theming" section above).

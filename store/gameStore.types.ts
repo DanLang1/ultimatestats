@@ -1,4 +1,4 @@
-import { SavedGame, SavedTeam } from '@/lib/storage';
+import { PointLineRecord, SavedGame, SavedTeam } from '@/lib/storage';
 
 export type TurnoverType = 'block' | 'throwaway' | 'drop' | 'fiftyfifty';
 
@@ -96,6 +96,10 @@ export interface GameState {
   // Point tracking for timeline
   currentPoint: number;
 
+  // Line Calling
+  currentLine: string[]; // 7 playerIds on field now
+  pointLines: PointLineRecord[]; // Line records per point
+
   // Actions
   setCurrentTeam: (team: SavedTeam) => void;
   setTeam2Name: (name: string) => void;
@@ -177,6 +181,10 @@ export interface GameState {
     },
   ) => Promise<void>;
   deleteSavedGameEvent: (gameId: string, eventIndex: number) => Promise<boolean>;
+
+  // Line Calling Actions
+  setCurrentLine: (playerIds: string[]) => void;
+  recordLineForPoint: (pointNumber: number, isSubstitution?: boolean) => void;
 
   // Saved Games & Teams
   savedGames: SavedGame[];

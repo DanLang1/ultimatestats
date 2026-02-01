@@ -32,7 +32,7 @@ export default function GameInfoScreen() {
     currentPoint,
   } = useGameStore();
 
-  const { genderRatioEnabled, firstPointRatio } = useSettingsStore();
+  const { genderRatioEnabled, firstPointRatio, lineCallingEnabled } = useSettingsStore();
 
   const [showAbbaModal, setShowAbbaModal] = useState(false);
 
@@ -257,15 +257,32 @@ export default function GameInfoScreen() {
 
         {/* Action Section */}
         <View style={styles.actionSection}>
+          {lineCallingEnabled && (
+            <Pressable
+              onPress={() =>
+                router.push({ pathname: '/LinePromptModal', params: { mode: 'substitution' } })
+              }
+              style={({ pressed }) => [
+                styles.actionButton,
+                { backgroundColor: palette.overlay05, borderColor: palette.overlay20 },
+                pressed && { backgroundColor: palette.overlay10 },
+              ]}>
+              <MaterialCommunityIcons name="account-switch" size={20} color={palette.textInverse} />
+              <Text style={[styles.actionButtonText, { color: palette.textInverse }]}>
+                EDIT LINE
+              </Text>
+            </Pressable>
+          )}
+
           <Pressable
             onPress={confirmEndGame}
             style={({ pressed }) => [
-              styles.endGameButton,
+              styles.actionButton,
               { backgroundColor: palette.danger + '10', borderColor: palette.danger + '20' },
               pressed && { backgroundColor: palette.danger + '20' },
             ]}>
             <MaterialCommunityIcons name="flag-checkered" size={20} color={palette.danger} />
-            <Text style={[styles.endGameText, { color: palette.danger }]}>END GAME EARLY</Text>
+            <Text style={[styles.actionButtonText, { color: palette.danger }]}>END GAME EARLY</Text>
           </Pressable>
         </View>
 
@@ -283,8 +300,8 @@ export default function GameInfoScreen() {
         {firstPointRatio && (
           <>
             <View style={styles.ratioInfoRow}>
-              <Text style={[styles.ratioInfoLabel, { color: palette.textMuted }]}>
-                INITIAL MAJORITY
+              <Text style={[styles.ratioInfoLabel, { color: palette.textMuted }]} numberOfLines={1}>
+                1ST MAJORITY
               </Text>
               <Text style={[styles.ratioInfoValue, { color: palette.textInverse }]}>
                 {firstPointRatio === 'more-women' ? 'FMP' : 'MMP'}
@@ -445,20 +462,22 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   actionSection: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 12,
     paddingTop: 24,
-    alignItems: 'center',
     paddingVertical: 8,
   },
-  endGameButton: {
+  actionButton: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
     paddingVertical: 12,
-    paddingHorizontal: 28,
+    paddingHorizontal: 20,
     borderRadius: 12,
     borderWidth: 1,
   },
-  endGameText: {
+  actionButtonText: {
     fontSize: 14,
     fontWeight: '700',
     letterSpacing: 1,

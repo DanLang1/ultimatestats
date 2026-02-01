@@ -19,6 +19,7 @@
 
 - **App is locked to landscape mode** - all screens designed for horizontal orientation
 - Use `router.dismissTo('/')` not `router.back()` in modals (avoids "action not handled" errors)
+- **Use `<Redirect href="..." />` for conditional navigation** - never call `router.navigate()` or `router.dismissTo()` during render (causes "cannot update a component while rendering" error). The `<Redirect>` component is declarative and React-safe.
 - Single `SafeAreaProvider` at root only - don't add `SafeAreaView` in individual screens
 - Apply consistent `contentStyle` background in `_layout.tsx` to prevent screen flickering
 - For modals, set `gestureEnabled: false` and handle dismissal explicitly

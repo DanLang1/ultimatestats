@@ -69,6 +69,10 @@ export const useGameStore = create<GameState>()(
         // Point tracking for timeline
         currentPoint: 1,
 
+        // Line Calling Initial State
+        currentLine: [],
+        pointLines: [],
+
         // Saved Games & Teams Initial State
         savedGames: [],
         savedTeams: [],
@@ -272,6 +276,10 @@ export const useGameStore = create<GameState>()(
               }
               // Remove entry from pointStartTimestamps since point is in-progress again
               delete state.pointStartTimestamps[state.currentPoint];
+              // Remove any line records for the undone point
+              state.pointLines = state.pointLines.filter(
+                (record) => record.pointNumber !== state.currentPoint,
+              );
               state.events.pop();
             } else {
               // Turnover: flip possession back
@@ -392,6 +400,10 @@ export const useGameStore = create<GameState>()(
             state.pointStartTimestamps = {};
             state.pointTimerPausedElapsed = null;
 
+            // Reset line calling state
+            state.currentLine = [];
+            state.pointLines = [];
+
             // Reset game-specific settings in settingsStore
             useSettingsStore.getState().setFirstPointRatio(null);
           }),
@@ -490,6 +502,7 @@ export const useGameStore = create<GameState>()(
               name: trimmedName,
               isActive: true,
               matchingType: null,
+              role: null,
             });
           });
           return newId;
@@ -605,6 +618,22 @@ export const useGameStore = create<GameState>()(
           set((state: GameState) => {
             state.pendingTurnoverEntry = null;
             state.possession = state.possession === 'team1' ? 'team2' : 'team1';
+          }),
+
+        // Line Calling Actions
+        setCurrentLine: (playerIds: string[]) =>
+          set((state: GameState) => {
+            state.currentLine = playerIds;
+          }),
+
+        recordLineForPoint: (pointNumber: number, isSubstitution?: boolean) =>
+          set((state: GameState) => {
+            state.pointLines.push({
+              pointNumber,
+              playerIds: [...state.currentLine],
+              timestamp: Date.now(),
+              isSubstitution,
+            });
           }),
 
         // Event Editing Actions
@@ -889,6 +918,9 @@ export const useGameStore = create<GameState>()(
           pendingTimeoutModal: state.pendingTimeoutModal,
           timeoutEndTime: state.timeoutEndTime,
           timeoutTimeLeft: state.timeoutTimeLeft,
+          // Line calling state
+          currentLine: state.currentLine,
+          pointLines: state.pointLines,
         }),
       },
     ),

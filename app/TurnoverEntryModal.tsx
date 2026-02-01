@@ -17,11 +17,17 @@ export default function TurnoverEntryScreen() {
     addPlayer,
     addTurnoverEvent,
     clearPendingTurnoverEntry,
+    currentLine,
   } = useGameStore();
   const { palette } = useTheme();
 
   const team1Name = currentTeam?.name ?? 'Team 1';
   const team1Roster = currentTeam?.roster ?? [];
+
+  // Filter roster by current line if set
+  const currentLineSet = new Set(currentLine);
+  const lineFilteredRoster =
+    currentLine.length > 0 ? team1Roster.filter((p) => currentLineSet.has(p.id)) : team1Roster;
 
   // If no pending entry, just render nothing
   if (!pendingTurnoverEntry) {
@@ -31,14 +37,14 @@ export default function TurnoverEntryScreen() {
   // Determine which team's roster to show based on the event type
   const teamWithError = possession;
   const teamName = teamWithError === 'team1' ? team1Name : team2Name;
-  const roster = team1Roster;
+  const roster = lineFilteredRoster; // Filter by current line if set
 
   const isMyTeamTurnover = statTrackingEnabled && possession === 'team1';
   const isOpponentTurnover = statTrackingEnabled && possession === 'team2';
 
   // For opponent turnovers, show my team's roster (for block attribution)
   const displayTeamName = isOpponentTurnover ? team1Name : teamName;
-  const displayRoster = isOpponentTurnover ? team1Roster : roster;
+  const displayRoster = isOpponentTurnover ? lineFilteredRoster : roster;
 
   const handleSkip = () => {
     clearPendingTurnoverEntry();
