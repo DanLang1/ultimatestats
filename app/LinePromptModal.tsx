@@ -13,7 +13,7 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router, useLocalSearchParams } from 'expo-router';
 import React, { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import Animated, { SlideInUp } from 'react-native-reanimated';
+
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function LinePromptModal() {
@@ -97,13 +97,15 @@ export default function LinePromptModal() {
   };
 
   const handleConfirm = () => {
-    setCurrentLine(selectedIds);
-    // Record as substitution if in substitution mode, otherwise normal line record
-    recordLineForPoint(currentPoint, isSubstitutionMode);
+    requestIdleCallback(() => {
+      setCurrentLine(selectedIds);
+      recordLineForPoint(currentPoint, isSubstitutionMode);
+    });
+
     // In substitution mode (from GameInfo), dismiss back to GameInfo
     // In normal mode (after point), dismiss to root
     if (isSubstitutionMode) {
-      router.dismissTo('/GameInfo');
+      router.back();
     } else {
       router.dismissTo('/');
     }
@@ -113,7 +115,7 @@ export default function LinePromptModal() {
     // In substitution mode (from GameInfo), dismiss back to GameInfo
     // In normal mode (after point), dismiss to root
     if (isSubstitutionMode) {
-      router.dismissTo('/GameInfo');
+      router.back();
     } else {
       router.dismissTo('/');
     }
@@ -126,19 +128,15 @@ export default function LinePromptModal() {
     genderRatioEnabled && firstPointRatio ? getExpectedRatio(currentPoint, firstPointRatio) : null;
   const ratioCheck =
     expectedRatio && roster.length > 0 ? checkLineRatio(selectedIds, roster, expectedRatio) : null;
-  const showRatioWarning = ratioCheck && !ratioCheck.isCorrect && selectedIds.length > 0;
+  // Only warn if ratio is wrong AND there's a clear majority (not a tie)
+  const hasClearMajority = ratioCheck && ratioCheck.fmpCount !== ratioCheck.mmpCount;
+  const showRatioWarning =
+    ratioCheck && !ratioCheck.isCorrect && selectedIds.length > 0 && hasClearMajority;
+  const actualMajorityLabel = (ratioCheck?.fmpCount ?? 0) > (ratioCheck?.mmpCount ?? 0) ? 'F' : 'M';
 
   // Format expected ratio for display (F1, F2, M1, M2)
   const expectedRatioLabel = expectedRatio
     ? formatRatio(expectedRatio, getSequenceNumber(currentPoint))
-    : null;
-  // Format actual majority for warning (F or M)
-  const actualMajorityLabel = ratioCheck
-    ? ratioCheck.fmpCount > ratioCheck.mmpCount
-      ? 'F'
-      : ratioCheck.mmpCount > ratioCheck.fmpCount
-        ? 'M'
-        : 'TIE'
     : null;
 
   return (
@@ -153,9 +151,7 @@ export default function LinePromptModal() {
             paddingHorizontal: 12,
           },
         ]}>
-        <Animated.View
-          entering={SlideInUp.duration(300)}
-          style={[styles.sheet, { backgroundColor: palette.modalBg }]}>
+        <View style={[styles.sheet, { backgroundColor: palette.modalBg }]}>
           {/* Header Row */}
           <View style={styles.headerRow}>
             {/* Close button */}
@@ -266,7 +262,7 @@ export default function LinePromptModal() {
                 disabled={!canConfirm}
                 style={({ pressed }) => [
                   styles.confirmBtn,
-                  { backgroundColor: canConfirm ? palette.accent : palette.overlay10 },
+                  { backgroundColor: canConfirm ? palette.success : palette.overlay10 },
                   pressed && canConfirm && { opacity: 0.8 },
                 ]}
                 hitSlop={8}>
@@ -292,7 +288,7 @@ export default function LinePromptModal() {
               gameActive={gameActive}
             />
           </View>
-        </Animated.View>
+        </View>
       </View>
     </View>
   );
@@ -361,8 +357,9 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   sortBtn: {
-    padding: 4,
-    borderRadius: 6,
+    paddingVertical: 3,
+    paddingHorizontal: 6,
+    borderRadius: 8,
     borderWidth: 1,
   },
   pointLabel: {
@@ -388,6 +385,8 @@ const styles = StyleSheet.create({
     paddingVertical: 3,
     paddingHorizontal: 6,
     borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'transparent',
   },
   ratioWarningText: {
     fontSize: 9,

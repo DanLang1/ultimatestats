@@ -225,7 +225,7 @@ export default function PointSummaryModal() {
               onPress={handleStartNextPoint}
               style={({ pressed }) => [
                 styles.ctaButton,
-                { backgroundColor: palette.accent },
+                { backgroundColor: palette.success },
                 pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
               ]}>
               <MaterialCommunityIcons name="timer-outline" size={16} color={palette.textOnAccent} />

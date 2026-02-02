@@ -110,7 +110,7 @@ export function PresetEditView({
             disabled={!canSave}
             style={({ pressed }) => [
               styles.saveBtn,
-              { backgroundColor: canSave ? palette.accent : palette.overlay20 },
+              { backgroundColor: canSave ? palette.success : palette.overlay20 },
               pressed && canSave && { opacity: 0.8 },
             ]}
             hitSlop={8}>
@@ -181,9 +181,9 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   actionBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
+    paddingVertical: 3,
+    paddingHorizontal: 6,
+    borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
   },
