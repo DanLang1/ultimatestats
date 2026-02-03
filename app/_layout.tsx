@@ -70,6 +70,7 @@ function RootLayoutInner() {
           <Stack.Screen name="GameInfo" />
           <Stack.Screen name="About" />
           <Stack.Screen name="LinePresetEditor" />
+          <Stack.Screen name="PointTransition" />
           <Stack.Screen
             name="WinModal"
             options={{

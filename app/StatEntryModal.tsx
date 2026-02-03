@@ -68,13 +68,11 @@ export default function StatEntryScreen() {
       return;
     }
 
-    // Show point summary modal when point timer enabled
-    // PointSummaryModal will chain to LinePromptModal if needed
-    if (pointTimerEnabled) {
+    // Show PointTransition page for summary + line selection
+    if (shouldShowLinePrompt()) {
+      router.replace('/PointTransition');
+    } else if (pointTimerEnabled) {
       router.replace('/PointSummaryModal');
-    } else if (shouldShowLinePrompt()) {
-      // No point timer, but line calling enabled - go to line prompt
-      router.replace('/LinePromptModal');
     } else {
       router.dismiss();
     }
@@ -113,16 +111,22 @@ export default function StatEntryScreen() {
       return;
     }
 
-    // Show point summary modal when point timer enabled
-    // PointSummaryModal will chain to LinePromptModal if needed
-    if (pointTimerEnabled) {
+    // Show PointTransition page for summary + line selection
+    if (shouldShowLinePrompt()) {
+      router.replace('/PointTransition');
+    } else if (pointTimerEnabled) {
       router.replace('/PointSummaryModal');
-    } else if (shouldShowLinePrompt()) {
-      // No point timer, but line calling enabled - go to line prompt
-      router.replace('/LinePromptModal');
     } else {
       router.dismiss();
     }
+    // OLD MODAL FLOW:
+    // if (pointTimerEnabled) {
+    //   router.replace('/PointSummaryModal');
+    // } else if (shouldShowLinePrompt()) {
+    //   router.replace('/LinePromptModal');
+    // } else {
+    //   router.dismiss();
+    // }
   };
 
   const handleAddPlayer = (name: string) => {

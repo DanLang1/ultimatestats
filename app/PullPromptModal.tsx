@@ -60,9 +60,9 @@ export default function PullPromptScreen() {
       setStep('ratio');
     } else {
       setPossession(team);
-      // Chain to LinePromptModal for first point line selection
+      // Chain to PointTransition for first point line selection
       if (shouldShowLinePrompt()) {
-        router.replace('/LinePromptModal');
+        router.replace('/PointTransition');
       } else {
         router.dismissTo('/');
       }
@@ -75,9 +75,9 @@ export default function PullPromptScreen() {
       setPossession(selectedTeam);
     }
     setFirstPointRatio(ratio);
-    // Chain to LinePromptModal for first point line selection
+    // Chain to PointTransition for first point line selection
     if (shouldShowLinePrompt()) {
-      router.replace('/LinePromptModal');
+      router.replace('/PointTransition');
     } else {
       router.dismissTo('/');
     }

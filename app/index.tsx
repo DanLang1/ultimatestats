@@ -130,13 +130,11 @@ export default function BasicScoreboard() {
       return;
     }
 
-    // Team2 goal (not halftime, not game over): show point summary modal when point timer enabled
-    // PointSummaryModal will chain to LinePromptModal if needed
-    if (pointTimerEnabled && statTrackingEnabled) {
+    // Team2 goal (not halftime, not game over): show PointTransition for summary + line selection
+    if (shouldShowLinePrompt()) {
+      router.push('/PointTransition');
+    } else if (pointTimerEnabled && statTrackingEnabled) {
       router.push('/PointSummaryModal');
-    } else if (shouldShowLinePrompt()) {
-      // No point timer, but line calling enabled - go to line prompt
-      router.push('/LinePromptModal');
     }
   };
   const handleActionBarAction = (action: ActionBarAction) => {

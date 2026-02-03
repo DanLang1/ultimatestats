@@ -254,8 +254,7 @@ export default function LinePromptModal() {
                 </View>
               )}
               <Text style={[styles.pointLabel, { color: palette.modalTextMuted }]}>
-                Pt {currentPoint}
-                {expectedRatioLabel ? ` · ${expectedRatioLabel}` : ''}
+                {expectedRatioLabel ? `${expectedRatioLabel}` : ''}
               </Text>
               <Pressable
                 onPress={handleConfirm}
