@@ -18,6 +18,10 @@ interface SettingsState {
 
   // Line Calling Settings
   lineCallingEnabled: boolean;
+  numPlayers: number;
+
+  // Sidebar Settings
+  sidebarCollapsed: boolean;
 
   // Actions
   setMmpColor: (color: string) => void;
@@ -26,6 +30,8 @@ interface SettingsState {
   setGenderRatioEnabled: (enabled: boolean) => void;
   setFirstPointRatio: (ratio: GenderRatio | null) => void;
   setLineCallingEnabled: (enabled: boolean) => void;
+  setNumPlayers: (num: number) => void;
+  setSidebarCollapsed: (collapsed: boolean) => void;
 }
 
 export const useSettingsStore = create<SettingsState>()(
@@ -36,6 +42,8 @@ export const useSettingsStore = create<SettingsState>()(
       genderRatioEnabled: false,
       firstPointRatio: null,
       lineCallingEnabled: false,
+      numPlayers: 7,
+      sidebarCollapsed: false,
 
       setMmpColor: (color) => set({ mmpColor: color }),
       setFmpColor: (color) => set({ fmpColor: color }),
@@ -47,6 +55,8 @@ export const useSettingsStore = create<SettingsState>()(
       setGenderRatioEnabled: (enabled) => set({ genderRatioEnabled: enabled }),
       setFirstPointRatio: (ratio) => set({ firstPointRatio: ratio }),
       setLineCallingEnabled: (enabled) => set({ lineCallingEnabled: enabled }),
+      setNumPlayers: (num) => set({ numPlayers: num }),
+      setSidebarCollapsed: (collapsed) => set({ sidebarCollapsed: collapsed }),
     }),
     {
       name: 'ultimatestats-settings',

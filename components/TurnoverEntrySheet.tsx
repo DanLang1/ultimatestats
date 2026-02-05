@@ -1,6 +1,7 @@
 import { useTheme } from '@/context/ThemeContext';
 import { useGameStore } from '@/store/gameStore';
 import { TurnoverType } from '@/store/gameStore.types';
+import { useSettingsStore } from '@/store/settingsStore';
 import React from 'react';
 import { Modal, Pressable, StyleSheet } from 'react-native';
 import { TurnoverEntryInner } from './turnover-entry/TurnoverEntryInner';
@@ -15,7 +16,9 @@ export default function TurnoverEntrySheet() {
     addPlayer,
     addTurnoverEvent,
     clearPendingTurnoverEntry,
+    currentLine,
   } = useGameStore();
+  const { lineCallingEnabled } = useSettingsStore();
 
   const { palette } = useTheme();
 
@@ -94,6 +97,7 @@ export default function TurnoverEntrySheet() {
           onAddPlayer={handleAddPlayer}
           isMyTeamTurnover={isMyTeamTurnover}
           isOpponentTurnover={isOpponentTurnover}
+          showAddPlayer={!lineCallingEnabled || currentLine.length === 0}
         />
       </Pressable>
     </Modal>

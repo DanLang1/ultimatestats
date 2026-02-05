@@ -8,6 +8,7 @@ import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 import { GameState, TurnoverType } from './gameStore.types';
+import { useLinePresetsStore } from './linePresetsStore';
 import { useSettingsStore } from './settingsStore';
 
 export const useGameStore = create<GameState>()(
@@ -276,9 +277,10 @@ export const useGameStore = create<GameState>()(
               }
               // Remove entry from pointStartTimestamps since point is in-progress again
               delete state.pointStartTimestamps[state.currentPoint];
-              // Remove any line records for the undone point
+              // Remove any line records for the undone point and any future points
+              // (user may have set a line for the next point before undoing)
               state.pointLines = state.pointLines.filter(
-                (record) => record.pointNumber !== state.currentPoint,
+                (record) => record.pointNumber < state.currentPoint,
               );
               state.events.pop();
             } else {
@@ -545,8 +547,12 @@ export const useGameStore = create<GameState>()(
         clearRoster: () =>
           set((state: GameState) => {
             if (!state.currentTeam) return;
+            const teamId = state.currentTeam.id;
             state.currentTeam.roster = [];
             state.events = [];
+
+            // Side effect: clear presets for this team as roster is gone
+            useLinePresetsStore.getState().clearPresetsForTeam(teamId);
           }),
 
         setPointTimerEnabled: (enabled: boolean) =>

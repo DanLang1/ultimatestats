@@ -245,6 +245,7 @@ export default function EditPlayerModal() {
                   <Pressable
                     style={[
                       styles.pill,
+                      styles.pillWithIcon,
                       { borderColor: palette.overlay20 },
                       role === 'handler' && {
                         backgroundColor: palette.accent,
@@ -252,6 +253,11 @@ export default function EditPlayerModal() {
                       },
                     ]}
                     onPress={() => setRole(role === 'handler' ? null : 'handler')}>
+                    <MaterialCommunityIcons
+                      name="bullseye-arrow"
+                      size={14}
+                      color={role === 'handler' ? palette.textOnAccent : palette.modalTextMuted}
+                    />
                     <Text
                       style={[
                         styles.pillText,
@@ -265,6 +271,7 @@ export default function EditPlayerModal() {
                   <Pressable
                     style={[
                       styles.pill,
+                      styles.pillWithIcon,
                       { borderColor: palette.overlay20 },
                       role === 'hybrid' && {
                         backgroundColor: palette.accent,
@@ -272,6 +279,11 @@ export default function EditPlayerModal() {
                       },
                     ]}
                     onPress={() => setRole(role === 'hybrid' ? null : 'hybrid')}>
+                    <MaterialCommunityIcons
+                      name="star-three-points"
+                      size={14}
+                      color={role === 'hybrid' ? palette.textOnAccent : palette.modalTextMuted}
+                    />
                     <Text
                       style={[
                         styles.pillText,
@@ -285,6 +297,7 @@ export default function EditPlayerModal() {
                   <Pressable
                     style={[
                       styles.pill,
+                      styles.pillWithIcon,
                       { borderColor: palette.overlay20 },
                       role === 'cutter' && {
                         backgroundColor: palette.accent,
@@ -292,6 +305,11 @@ export default function EditPlayerModal() {
                       },
                     ]}
                     onPress={() => setRole(role === 'cutter' ? null : 'cutter')}>
+                    <MaterialCommunityIcons
+                      name="shoe-print"
+                      size={14}
+                      color={role === 'cutter' ? palette.textOnAccent : palette.modalTextMuted}
+                    />
                     <Text
                       style={[
                         styles.pillText,
@@ -408,6 +426,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     minWidth: 50,
     alignItems: 'center',
+  },
+  pillWithIcon: {
+    flexDirection: 'row',
+    gap: 4,
   },
   pillText: {
     fontSize: 12,

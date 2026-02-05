@@ -227,6 +227,8 @@ interface LinePresetsState {
   addPreset: (name: string, playerIds: string[], teamId: string) => string;
   updatePreset: (id: string, updates: Partial<Omit<LinePreset, 'id'>>) => void;
   deletePreset: (id: string) => void;
+  removePlayerFromPresets: (playerId: string) => void;
+  clearPresetsForTeam: (teamId: string) => void;
 }
 ```
 

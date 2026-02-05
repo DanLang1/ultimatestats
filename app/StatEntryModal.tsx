@@ -3,6 +3,7 @@ import { useTheme } from '@/context/ThemeContext';
 import { checkGameOver } from '@/lib/gameUtils';
 import { shouldShowLinePrompt } from '@/lib/linePromptUtils';
 import { useGameStore } from '@/store/gameStore';
+import { useSettingsStore } from '@/store/settingsStore';
 import { router } from 'expo-router';
 import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
@@ -18,6 +19,7 @@ export default function StatEntryScreen() {
     isHalftimeBreak,
     currentLine,
   } = useGameStore();
+  const { lineCallingEnabled } = useSettingsStore();
   const { palette } = useTheme();
 
   const team1Name = currentTeam?.name ?? 'Team 1';
@@ -145,6 +147,7 @@ export default function StatEntryScreen() {
           onSkip={handleSkip}
           onComplete={handleComplete}
           onAddPlayer={handleAddPlayer}
+          showAddPlayer={!lineCallingEnabled || currentLine.length === 0}
         />
       </Pressable>
     </View>

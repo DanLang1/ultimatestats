@@ -13,6 +13,7 @@ export interface PresetEditViewProps {
   presetName: string;
   selectedIds: string[];
   gameActive: boolean;
+  numPlayers: number;
   onPresetNameChange: (name: string) => void;
   onTogglePlayer: (playerId: string) => void;
   onSave: () => void;
@@ -27,6 +28,7 @@ export function PresetEditView({
   presetName,
   selectedIds,
   gameActive,
+  numPlayers,
   onPresetNameChange,
   onTogglePlayer,
   onSave,
@@ -40,6 +42,7 @@ export function PresetEditView({
   const toggleSort = () => setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
 
   const canSave = presetName.trim().length > 0 && selectedIds.length > 0;
+  const showSizeWarning = selectedIds.length > numPlayers;
 
   return (
     <View
@@ -103,6 +106,15 @@ export function PresetEditView({
               ]}>
               <MaterialCommunityIcons name="delete-outline" size={18} color={palette.danger} />
             </Pressable>
+          )}
+
+          {showSizeWarning && (
+            <View style={[styles.sizeWarningChip, { backgroundColor: palette.warning + '20' }]}>
+              <MaterialCommunityIcons name="alert" size={14} color={palette.warning} />
+              <Text style={[styles.sizeWarningText, { color: palette.warning }]}>
+                {selectedIds.length}/{numPlayers}
+              </Text>
+            </View>
           )}
 
           <Pressable
@@ -198,6 +210,18 @@ const styles = StyleSheet.create({
   },
   saveBtnText: {
     fontSize: 14,
+    fontWeight: '700',
+  },
+  sizeWarningChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    paddingVertical: 3,
+    paddingHorizontal: 6,
+    borderRadius: 8,
+  },
+  sizeWarningText: {
+    fontSize: 9,
     fontWeight: '700',
   },
   playersSection: {

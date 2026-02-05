@@ -5,6 +5,7 @@ import { NumberPicker } from '@/components/ui/NumberPicker';
 import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import { Switch } from '@/components/ui/Switch';
 import { useTheme } from '@/context/ThemeContext';
+import { useIsGameActive } from '@/hooks/useIsGameActive';
 import { useKeyboardDidHide } from '@/hooks/useKeyboardDidHide';
 import { useNewGame } from '@/hooks/useNewGame';
 import { SavedTeam } from '@/lib/storage';
@@ -36,6 +37,8 @@ function SettingsContent() {
     setGenderRatioEnabled,
     lineCallingEnabled,
     setLineCallingEnabled,
+    numPlayers,
+    setNumPlayers,
   } = useSettingsStore();
 
   const {
@@ -62,9 +65,6 @@ function SettingsContent() {
     setStatTrackingEnabled,
     pointTimerEnabled,
     setPointTimerEnabled,
-    timerIsActive,
-    team1Score,
-    team2Score,
     savedTeams,
     saveCurrentTeam,
   } = useGameStore();
@@ -82,7 +82,7 @@ function SettingsContent() {
   // Soft Cap displays as time (when soft cap triggers), converts to softCapMins for storage
   const softCapTime = gameLength - softCapMins;
 
-  const gameActive = timerIsActive || team1Score !== 0 || team2Score !== 0;
+  const gameActive = useIsGameActive();
 
   // Save all draft inputs - called on keyboard hide (for Android back button)
   const saveAllDrafts = () => {
@@ -352,6 +352,18 @@ function SettingsContent() {
               </View>
 
               <View style={styles.inputGroup}>
+                <NumberPicker
+                  label="NUM PLAYERS"
+                  value={numPlayers}
+                  onChange={setNumPlayers}
+                  min={1}
+                  max={7}
+                  quickOptions={[3, 5, 7]}
+                  disabled={gameActive}
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
                 <SegmentedControl
                   label={autoHalftimeEnabled ? 'TIMEOUTS/HALF' : 'TIMEOUTS'}
                   options={[
@@ -366,6 +378,8 @@ function SettingsContent() {
                   disabled={gameActive}
                 />
               </View>
+
+              <View style={styles.inputGroup} />
 
               <View style={styles.inputGroup}>
                 <Switch
@@ -524,7 +538,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   inputGroup: {
-    width: '47%',
+    width: '48%',
   },
   inputGroupFullWidth: {
     width: '100%',

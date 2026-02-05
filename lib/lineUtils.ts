@@ -1,5 +1,7 @@
 import { Player, PointLineRecord } from '@/lib/storage/types';
 
+export const MAX_LINE_SIZE = 14;
+
 export type GenderRoleGroup =
   | 'mmp-handler'
   | 'mmp-cutter'

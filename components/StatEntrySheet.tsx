@@ -1,11 +1,14 @@
 import { useTheme } from '@/context/ThemeContext';
 import { useGameStore } from '@/store/gameStore';
+import { useSettingsStore } from '@/store/settingsStore';
 import React from 'react';
 import { Modal, Pressable, StyleSheet } from 'react-native';
 import { StatEntryInner } from './stat-entry/StatEntryInner';
 
 export default function StatEntrySheet() {
-  const { pendingStatEntry, currentTeam, team2Name, addPlayer, addGoalEvent } = useGameStore();
+  const { pendingStatEntry, currentTeam, team2Name, addPlayer, addGoalEvent, currentLine } =
+    useGameStore();
+  const { lineCallingEnabled } = useSettingsStore();
   const { palette } = useTheme();
 
   const team1Name = currentTeam?.name ?? 'Team 1';
@@ -49,6 +52,7 @@ export default function StatEntrySheet() {
           onSkip={handleSkip}
           onComplete={handleComplete}
           onAddPlayer={handleAddPlayer}
+          showAddPlayer={!lineCallingEnabled || currentLine.length === 0}
         />
       </Pressable>
     </Modal>

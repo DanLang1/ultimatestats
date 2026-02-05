@@ -2,9 +2,9 @@ import { useGameStore } from '@/store/gameStore';
 import { useSettingsStore } from '@/store/settingsStore';
 
 /**
- * Checks if the LinePromptModal should be shown.
+ * Checks if the PointTransition modal should be shown.
  * Call this after a point completes (from PointSummaryModal, StatEntryModal, etc.)
- * to determine if we should navigate to LinePromptModal.
+ * to determine if we should navigate to PointTransition.
  *
  * Returns true if:
  * - Line calling is enabled

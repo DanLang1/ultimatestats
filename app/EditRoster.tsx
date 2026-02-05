@@ -1,7 +1,9 @@
+import { EditRosterSidebar } from '@/components/EditRosterSidebar';
 import { AlertModal } from '@/components/ui/AlertModal';
 import { useAlert } from '@/components/ui/AlertProvider';
 import { PlayerChip } from '@/components/ui/PlayerChip';
 import { useTheme } from '@/context/ThemeContext';
+import { useIsGameActive } from '@/hooks/useIsGameActive';
 import { hasPlayerWithName } from '@/lib/playerUtils';
 import { SavedTeam } from '@/lib/storage';
 import { Player } from '@/lib/storage/types';
@@ -22,20 +24,16 @@ export default function EditRosterScreen() {
     addPlayer,
     saveCurrentTeam,
     clearRoster,
-    timerIsActive,
-    team1Score,
-    team2Score,
-    events,
     savedTeams,
     loadSavedTeams,
   } = useGameStore();
   const { showAlert } = useAlert();
   const { palette } = useTheme();
-  const { lineCallingEnabled } = useSettingsStore();
+  const { lineCallingEnabled, sidebarCollapsed, setSidebarCollapsed } = useSettingsStore();
 
   // Derived values
   const roster = currentTeam?.roster ?? [];
-  const gameActive = timerIsActive || team1Score > 0 || team2Score > 0 || events.length > 0;
+  const gameActive = useIsGameActive();
 
   // Load saved teams on mount
   useEffect(() => {
@@ -123,7 +121,6 @@ export default function EditRosterScreen() {
   };
 
   const handleClearAll = () => {
-    const gameActive = timerIsActive || team1Score !== 0 || team2Score !== 0;
     showAlert({
       title: 'Clear Roster',
       message: gameActive
@@ -158,144 +155,130 @@ export default function EditRosterScreen() {
     <View style={[styles.container, { backgroundColor: palette.primary }]}>
       <Stack.Screen options={{ headerShown: false }} />
 
-      {/* Header */}
-      <View style={styles.header}>
-        <Pressable
-          onPress={handleBack}
-          style={[styles.backButton, { backgroundColor: palette.overlay10 }]}
-          hitSlop={12}>
-          <MaterialCommunityIcons name="arrow-left" size={24} color={palette.textInverse} />
-        </Pressable>
-
-        <Pressable
-          style={styles.teamHeaderRow}
-          onPress={() => {
+      <View style={styles.mainLayout}>
+        {/* Sidebar */}
+        <EditRosterSidebar
+          collapsed={sidebarCollapsed}
+          onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
+          onBack={handleBack}
+          onRenameTeam={() => {
             setEditTeamName(currentTeam?.name ?? '');
             setRenameModalVisible(true);
-          }}>
-          <Text style={[styles.headerTitle, { color: palette.textMuted }]}>
-            {(currentTeam?.name ?? teamName ?? 'TEAM').toUpperCase()}
-          </Text>
-          <MaterialCommunityIcons name="pencil-outline" size={17} color={palette.textMuted} />
-        </Pressable>
+          }}
+          onNewTeam={handleNewTeam}
+          onSwitchTeam={() => router.push('/TeamManagementModal')}
+          onEditPresets={() => router.push('/LinePresetEditor')}
+          onClearRoster={handleClearAll}
+          showNewTeam={!gameActive}
+          showSwitchTeam={!gameActive && hasOtherTeams}
+          showEditPresets={lineCallingEnabled && roster.length > 0}
+          showClearRoster={roster.length > 0}
+        />
 
-        <View style={styles.headerActions}>
-          {lineCallingEnabled && roster.length > 0 && (
-            <Pressable
-              onPress={() => router.push('/LinePresetEditor')}
-              style={[styles.headerActionButton, { backgroundColor: palette.overlay10 }]}
-              hitSlop={8}>
-              <MaterialCommunityIcons name="playlist-edit" size={20} color={palette.accent} />
-            </Pressable>
-          )}
-          {!gameActive && hasOtherTeams && (
-            <Pressable
-              onPress={() => router.push('/TeamManagementModal')}
-              style={[styles.headerActionButton, { backgroundColor: palette.overlay10 }]}
-              hitSlop={8}>
-              <MaterialCommunityIcons
-                name="swap-horizontal"
-                size={20}
-                color={palette.textInverse}
+        {/* Main Content */}
+        <View style={styles.mainContent}>
+          {/* Header */}
+          <View style={styles.header}>
+            {/* Back button - only show when sidebar is collapsed */}
+            {sidebarCollapsed && (
+              <Pressable
+                onPress={handleBack}
+                style={[styles.backButton, { backgroundColor: palette.overlay10 }]}
+                hitSlop={12}>
+                <MaterialCommunityIcons name="arrow-left" size={24} color={palette.textInverse} />
+              </Pressable>
+            )}
+
+            {/* Team name (display only) */}
+            <View style={styles.teamHeaderCenterWrapper} pointerEvents="none">
+              <Text style={[styles.headerTitle, { color: palette.textMuted }]}>
+                {(currentTeam?.name ?? teamName ?? 'TEAM').toUpperCase()}
+              </Text>
+            </View>
+
+            {/* Empty spacer for layout balance when back button is shown */}
+            {sidebarCollapsed && <View style={styles.headerSpacer} />}
+          </View>
+
+          {/* Add Player Input */}
+          <View style={[styles.addPlayerSection, { borderBottomColor: palette.overlay10 }]}>
+            <View style={styles.inputWrapper}>
+              <TextInput
+                style={[
+                  styles.addPlayerInput,
+                  {
+                    borderColor: palette.overlay20,
+                    color: palette.textInverse,
+                    backgroundColor: palette.overlay08,
+                  },
+                  isDuplicateName && { borderColor: palette.danger },
+                ]}
+                placeholder="Add player..."
+                placeholderTextColor={palette.textMuted}
+                value={newPlayerName}
+                onChangeText={setNewPlayerName}
+                onSubmitEditing={handleAddPlayer}
+                returnKeyType="done"
+                autoCapitalize="words"
+                maxLength={20}
               />
-            </Pressable>
-          )}
-          {!gameActive && (
+              {isDuplicateName && (
+                <Text
+                  style={[
+                    styles.errorText,
+                    { color: palette.danger },
+                  ]}>{`${newPlayerName} is already on your team`}</Text>
+              )}
+            </View>
             <Pressable
-              onPress={handleNewTeam}
-              style={[styles.headerActionButton, { backgroundColor: palette.overlay10 }]}
-              hitSlop={8}>
-              <MaterialCommunityIcons name="plus" size={20} color={palette.textInverse} />
+              style={({ pressed }) => [
+                styles.addButton,
+                { backgroundColor: palette.accent },
+                pressed && styles.buttonPressed,
+              ]}
+              onPress={handleAddPlayer}>
+              <MaterialCommunityIcons name="plus" size={24} color={palette.textOnAccent} />
             </Pressable>
-          )}
-          {roster.length > 0 && (
-            <Pressable
-              onPress={handleClearAll}
-              style={[styles.clearButton, { backgroundColor: palette.dangerOverlay15 }]}
-              hitSlop={8}>
-              <MaterialCommunityIcons
-                name="delete-sweep-outline"
-                size={20}
-                color={palette.danger}
-              />
-            </Pressable>
-          )}
+          </View>
+
+          {/* Player List - 2 Column Grid */}
+          <ScrollView style={styles.playerList} contentContainerStyle={styles.playerListContent}>
+            {roster.length === 0 ? (
+              <View style={styles.emptyState}>
+                <MaterialCommunityIcons
+                  name="account-group-outline"
+                  size={48}
+                  color={palette.textMuted}
+                />
+                <Text style={[styles.emptyStateText, { color: palette.textMuted }]}>
+                  No players yet
+                </Text>
+                <Text style={[styles.emptyStateHint, { color: palette.textMuted }]}>
+                  Add players using the input above
+                </Text>
+              </View>
+            ) : (
+              <>
+                <View style={styles.listHeader}>
+                  <Text style={[styles.listHint, { color: palette.textMuted }]}>Tap to edit</Text>
+                </View>
+                <View style={styles.playerGrid}>
+                  {sortedRoster.map((player) => (
+                    <PlayerChip
+                      key={player.id}
+                      name={player.name}
+                      isActive={player.isActive}
+                      matchingType={player.matchingType}
+                      role={player.role}
+                      onPress={() => handleEditPlayer(player)}
+                    />
+                  ))}
+                </View>
+              </>
+            )}
+          </ScrollView>
         </View>
       </View>
-
-      {/* Add Player Input */}
-      <View style={[styles.addPlayerSection, { borderBottomColor: palette.overlay10 }]}>
-        <View style={styles.inputWrapper}>
-          <TextInput
-            style={[
-              styles.addPlayerInput,
-              {
-                borderColor: palette.overlay20,
-                color: palette.textInverse,
-                backgroundColor: palette.overlay08,
-              },
-              isDuplicateName && { borderColor: palette.danger },
-            ]}
-            placeholder="Add player..."
-            placeholderTextColor={palette.textMuted}
-            value={newPlayerName}
-            onChangeText={setNewPlayerName}
-            onSubmitEditing={handleAddPlayer}
-            returnKeyType="done"
-            autoCapitalize="words"
-            maxLength={20}
-          />
-          {isDuplicateName && (
-            <Text
-              style={[
-                styles.errorText,
-                { color: palette.danger },
-              ]}>{`${newPlayerName} is already on your team`}</Text>
-          )}
-        </View>
-        <Pressable
-          style={({ pressed }) => [
-            styles.addButton,
-            { backgroundColor: palette.accent },
-            pressed && styles.buttonPressed,
-          ]}
-          onPress={handleAddPlayer}>
-          <MaterialCommunityIcons name="plus" size={24} color={palette.textOnAccent} />
-        </Pressable>
-      </View>
-
-      {/* Player List - 2 Column Grid */}
-
-      <ScrollView style={styles.playerList} contentContainerStyle={styles.playerListContent}>
-        {roster.length === 0 ? (
-          <View style={styles.emptyState}>
-            <MaterialCommunityIcons
-              name="account-group-outline"
-              size={48}
-              color={palette.textMuted}
-            />
-            <Text style={[styles.emptyStateText, { color: palette.textMuted }]}>
-              No players yet
-            </Text>
-            <Text style={[styles.emptyStateHint, { color: palette.textMuted }]}>
-              Add players using the input above
-            </Text>
-          </View>
-        ) : (
-          <View style={styles.playerGrid}>
-            {sortedRoster.map((player) => (
-              <PlayerChip
-                key={player.id}
-                name={player.name}
-                isActive={player.isActive}
-                matchingType={player.matchingType}
-                role={player.role}
-                onPress={() => handleEditPlayer(player)}
-              />
-            ))}
-          </View>
-        )}
-      </ScrollView>
 
       {/* Rename Team Modal */}
       <AlertModal
@@ -424,10 +407,16 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  mainLayout: {
+    flex: 1,
+    flexDirection: 'row',
+  },
+  mainContent: {
+    flex: 1,
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
     paddingHorizontal: 20,
     paddingTop: 16,
     paddingBottom: 12,
@@ -443,6 +432,11 @@ const styles = StyleSheet.create({
   },
   headerSpacer: {
     width: 40,
+  },
+  teamHeaderCenterWrapper: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   clearButton: {
     padding: 8,
@@ -485,11 +479,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   playerListContent: {
-    padding: 20,
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+    paddingTop: 8,
   },
 
   listHeader: {
-    marginBottom: 8,
+    marginBottom: 4,
     alignItems: 'flex-end',
   },
   listHint: {
@@ -500,7 +496,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingTop: 60,
+    paddingTop: 30,
   },
   emptyStateText: {
     fontSize: 18,
@@ -515,20 +511,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 10,
-  },
-  teamHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  headerActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  headerActionButton: {
-    padding: 8,
-    borderRadius: 20,
   },
   // Alert modal content styles
   alertInput: {

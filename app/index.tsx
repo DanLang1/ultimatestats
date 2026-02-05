@@ -13,6 +13,7 @@ import { checkGameOver } from '@/lib/gameUtils';
 import { shouldShowLinePrompt } from '@/lib/linePromptUtils';
 import { useGameStore } from '@/store/gameStore';
 import { TurnoverType } from '@/store/gameStore.types';
+import { useLinePresetsStore } from '@/store/linePresetsStore';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { Pressable, StyleSheet, View } from 'react-native';
@@ -99,6 +100,11 @@ export default function BasicScoreboard() {
     }
 
     const { didIncrement, isHalftime } = incrementScore(isTeam1);
+
+    // Reset line confirmation for the new point
+    if (didIncrement) {
+      useLinePresetsStore.getState().setLineConfirmedForNextPoint(false);
+    }
 
     // If game was already over, don't navigate anywhere
     if (!didIncrement) return;

@@ -1,9 +1,12 @@
 import { PresetEditView } from '@/components/lines/PresetEditView';
 import { PresetListView } from '@/components/lines/PresetListView';
 import { useAlert } from '@/components/ui/AlertProvider';
+import { useIsGameActive } from '@/hooks/useIsGameActive';
+import { MAX_LINE_SIZE } from '@/lib/lineUtils';
 import { LinePreset } from '@/lib/storage/types';
 import { useGameStore } from '@/store/gameStore';
 import { useLinePresetsStore } from '@/store/linePresetsStore';
+import { useSettingsStore } from '@/store/settingsStore';
 import { router, useLocalSearchParams } from 'expo-router';
 import React, { useState } from 'react';
 
@@ -11,8 +14,9 @@ export default function LinePresetEditor() {
   const { presetId } = useLocalSearchParams<{ presetId?: string }>();
   const { showAlert } = useAlert();
 
-  const { currentTeam, pointLines, timerIsActive, team1Score, team2Score } = useGameStore();
-  const gameActive = timerIsActive || team1Score !== 0 || team2Score !== 0;
+  const { currentTeam, pointLines } = useGameStore();
+  const { numPlayers } = useSettingsStore();
+  const gameActive = useIsGameActive();
   const { presets, addPreset, updatePreset, deletePreset } = useLinePresetsStore();
 
   const teamId = currentTeam?.id ?? '';
@@ -51,7 +55,7 @@ export default function LinePresetEditor() {
       if (prev.includes(playerId)) {
         return prev.filter((id) => id !== playerId);
       }
-      if (prev.length >= 7) {
+      if (prev.length >= MAX_LINE_SIZE) {
         return prev;
       }
       return [...prev, playerId];
@@ -153,6 +157,7 @@ export default function LinePresetEditor() {
       presetName={presetName}
       selectedIds={selectedIds}
       gameActive={gameActive}
+      numPlayers={numPlayers}
       onPresetNameChange={setPresetName}
       onTogglePlayer={handleTogglePlayer}
       onSave={handleSave}

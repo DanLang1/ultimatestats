@@ -3,6 +3,8 @@ import { useHalftimeTimer } from '@/hooks/useHalftimeTimer';
 import { computePlayerStats } from '@/lib/statsUtils';
 import { computeTeamStats } from '@/lib/teamStatsUtils';
 import { useGameStore } from '@/store/gameStore';
+import { useLinePresetsStore } from '@/store/linePresetsStore';
+import { useSettingsStore } from '@/store/settingsStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router } from 'expo-router';
 import React from 'react';
@@ -43,13 +45,20 @@ export default function HalftimeModal() {
 
   const hasStats = statTrackingEnabled && events.length > 0;
 
+  const lineConfirmedForNextPoint = useLinePresetsStore((state) => state.lineConfirmedForNextPoint);
+  const lineCallingEnabled = useSettingsStore((state) => state.lineCallingEnabled);
+
   if (!isHalftimeBreak) {
     return null;
   }
 
   const onContinue = () => {
     handleContinue();
-    router.dismissTo('/');
+    if (lineConfirmedForNextPoint || !lineCallingEnabled) {
+      router.dismissTo('/');
+    } else {
+      router.replace('/PointTransition');
+    }
   };
 
   return (
@@ -81,6 +90,20 @@ export default function HalftimeModal() {
             <Text style={[styles.receivingText, { color: palette.textMuted }]}>
               {receivingTeam} receives
             </Text>
+
+            {lineCallingEnabled && (
+              <>
+                <MaterialCommunityIcons name="disc" size={12} color={palette.accent} />
+                <Pressable
+                  onPress={() => router.push('/PointTransition')}
+                  style={({ pressed }) => [styles.setLineBtn, pressed && { opacity: 0.5 }]}>
+                  <MaterialCommunityIcons name="account-switch" size={12} color={palette.accent} />
+                  <Text style={[styles.setLineBtnText, { color: palette.textMuted }]}>
+                    Set Line
+                  </Text>
+                </Pressable>
+              </>
+            )}
           </View>
 
           <View style={[styles.contentRow, !hasStats && styles.contentRowCompact]}>
@@ -369,6 +392,16 @@ const styles = StyleSheet.create({
     fontSize: 9,
     fontWeight: '700',
     letterSpacing: 0.5,
+  },
+  setLineBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingVertical: 4,
+  },
+  setLineBtnText: {
+    fontSize: 12,
+    fontWeight: '600',
   },
 
   // Right Side Styles

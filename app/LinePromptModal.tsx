@@ -1,5 +1,6 @@
 import { ModalPlayerGrid, SortDirection } from '@/components/lines/ModalPlayerGrid';
 import { useTheme } from '@/context/ThemeContext';
+import { useIsGameActive } from '@/hooks/useIsGameActive';
 import {
   checkLineRatio,
   formatRatio,
@@ -22,7 +23,8 @@ export default function LinePromptModal() {
 
   const { palette } = useTheme();
   const insets = useSafeAreaInsets();
-  const { lineCallingEnabled, genderRatioEnabled, firstPointRatio } = useSettingsStore();
+  const { lineCallingEnabled, genderRatioEnabled, firstPointRatio, numPlayers } =
+    useSettingsStore();
   const {
     currentTeam,
     currentPoint,
@@ -32,12 +34,9 @@ export default function LinePromptModal() {
     recordLineForPoint,
     gameLocked,
     isHalftimeBreak,
-    timerIsActive,
-    team1Score,
-    team2Score,
   } = useGameStore();
 
-  const gameActive = timerIsActive || team1Score !== 0 || team2Score !== 0;
+  const gameActive = useIsGameActive();
 
   // Get presets for the team
   const allPresets = useLinePresetsStore((state) => state.presets);
@@ -47,8 +46,13 @@ export default function LinePromptModal() {
   const [selectedIds, setSelectedIds] = useState<string[]>(isSubstitutionMode ? currentLine : []);
   const [selectedPresetId, setSelectedPresetId] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+  // Increment sortKey to trigger a re-sort (initial load, preset selection, sort toggle)
+  const [sortKey, setSortKey] = useState(0);
 
-  const toggleSort = () => setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+  const toggleSort = () => {
+    setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+    setSortKey((k) => k + 1);
+  };
 
   // Don't show if line calling is disabled, game is over, or at halftime
   // Exception: substitution mode always shows (but still respects gameLocked)
@@ -74,11 +78,12 @@ export default function LinePromptModal() {
 
   const handleTogglePlayer = (playerId: string) => {
     setSelectedPresetId(null);
+    // No sortKey change - manual selection doesn't trigger re-sort
     setSelectedIds((prev) => {
       if (prev.includes(playerId)) {
         return prev.filter((id) => id !== playerId);
       }
-      if (prev.length >= 7) {
+      if (prev.length >= numPlayers) {
         return prev;
       }
       return [...prev, playerId];
@@ -90,10 +95,12 @@ export default function LinePromptModal() {
     if (selectedPresetId === preset.id) {
       setSelectedPresetId(null);
       setSelectedIds([]);
+      setSortKey((k) => k + 1);
       return;
     }
     setSelectedPresetId(preset.id);
     setSelectedIds(preset.playerIds);
+    setSortKey((k) => k + 1);
   };
 
   const handleConfirm = () => {
@@ -121,7 +128,7 @@ export default function LinePromptModal() {
     }
   };
 
-  const canConfirm = selectedIds.length === 7;
+  const canConfirm = selectedIds.length === numPlayers;
 
   // Check gender ratio if enabled
   const expectedRatio =
@@ -269,7 +276,7 @@ export default function LinePromptModal() {
                   <MaterialCommunityIcons name="check" size={16} color={palette.textOnAccent} />
                 ) : (
                   <Text style={[styles.countText, { color: palette.modalTextMuted }]}>
-                    {selectedIds.length}/7
+                    {selectedIds.length}/{numPlayers}
                   </Text>
                 )}
               </Pressable>
@@ -284,6 +291,8 @@ export default function LinePromptModal() {
               selectedIds={selectedIds}
               onTogglePlayer={handleTogglePlayer}
               sortDirection={sortDirection}
+              sortSelectedFirst={selectedPresetId !== null || isSubstitutionMode}
+              sortKey={sortKey}
               gameActive={gameActive}
             />
           </View>

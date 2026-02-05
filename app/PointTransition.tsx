@@ -1,5 +1,7 @@
 import { ModalPlayerGrid, SortDirection } from '@/components/lines/ModalPlayerGrid';
+import { PresetPickerModal } from '@/components/lines/PresetPickerModal';
 import { useTheme } from '@/context/ThemeContext';
+import { useIsGameActive } from '@/hooks/useIsGameActive';
 import {
   checkLineRatio,
   formatRatio,
@@ -13,7 +15,7 @@ import { useSettingsStore } from '@/store/settingsStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
-import { InteractionManager, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type PointOutcome = {
@@ -58,25 +60,37 @@ export default function PointTransition() {
     pointLines,
     setCurrentLine,
     recordLineForPoint,
-    timerIsActive,
-    team1Score,
-    team2Score,
   } = useGameStore();
 
-  const { genderRatioEnabled, firstPointRatio } = useSettingsStore();
+  const { genderRatioEnabled, firstPointRatio, numPlayers } = useSettingsStore();
 
   // Get presets for the team
   const allPresets = useLinePresetsStore((state) => state.presets);
+  const setLineConfirmedForNextPoint = useLinePresetsStore(
+    (state) => state.setLineConfirmedForNextPoint,
+  );
   const presets = allPresets.filter((p) => p.teamId === (currentTeam?.id ?? ''));
 
   // Local selection state
   const [selectedIds, setSelectedIds] = useState<string[]>(currentLine);
   const [selectedPresetId, setSelectedPresetId] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+  const [showPresetPicker, setShowPresetPicker] = useState(false);
+  // Increment sortKey to trigger a re-sort (initial load, preset selection, sort toggle)
+  const [sortKey, setSortKey] = useState(0);
 
-  const toggleSort = () => setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+  // Presets display config
+  const MAX_VISIBLE_PRESETS = 3;
+  const validPresets = presets.filter((p) => p.playerIds.length >= numPlayers);
+  const visiblePresets = validPresets.slice(0, MAX_VISIBLE_PRESETS);
+  const overflowCount = validPresets.length - MAX_VISIBLE_PRESETS;
 
-  const gameActive = timerIsActive || team1Score !== 0 || team2Score !== 0;
+  const toggleSort = () => {
+    setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+    setSortKey((k) => k + 1);
+  };
+
+  const gameActive = useIsGameActive();
 
   // Compute the last completed point for summary
   const pointEvents = computePointByPointEvents(
@@ -104,11 +118,12 @@ export default function PointTransition() {
 
   const handleTogglePlayer = (playerId: string) => {
     setSelectedPresetId(null);
+    // No sortKey change - manual selection doesn't trigger re-sort
     setSelectedIds((prev) => {
       if (prev.includes(playerId)) {
         return prev.filter((id) => id !== playerId);
       }
-      if (prev.length >= 7) {
+      if (prev.length >= numPlayers) {
         return prev;
       }
       return [...prev, playerId];
@@ -119,24 +134,36 @@ export default function PointTransition() {
     if (selectedPresetId === preset.id) {
       setSelectedPresetId(null);
       setSelectedIds([]);
+      setSortKey((k) => k + 1);
       return;
     }
     setSelectedPresetId(preset.id);
     setSelectedIds(preset.playerIds);
+    setSortKey((k) => k + 1);
   };
 
   const handleDone = () => {
     router.dismissTo('/');
 
-    InteractionManager.runAfterInteractions(() => {
-      if (selectedIds.length === 7) {
+    requestIdleCallback(() => {
+      if (selectedIds.length === numPlayers) {
         setCurrentLine(selectedIds);
         recordLineForPoint(currentPoint, false);
+        setLineConfirmedForNextPoint(true);
       }
     });
   };
 
-  const canConfirm = selectedIds.length === 7;
+  const handleSkip = () => {
+    router.dismissTo('/');
+  };
+
+  const handleGoToEditRoster = () => {
+    router.dismissTo('/');
+    router.push('/EditRoster');
+  };
+
+  const canConfirm = selectedIds.length === numPlayers;
 
   // Check gender ratio if enabled
   const expectedRatio =
@@ -172,6 +199,16 @@ export default function PointTransition() {
       <View style={[styles.header, { borderBottomColor: palette.border }]}>
         <View style={styles.headerTop}>
           <View style={styles.headerTitleRow}>
+            <Pressable
+              onPress={handleSkip}
+              style={({ pressed }) => [
+                styles.skipBtn,
+                { borderColor: palette.overlay15, marginRight: 4 },
+                pressed && { opacity: 0.7 },
+              ]}
+              hitSlop={8}>
+              <MaterialCommunityIcons name="close" size={18} color={palette.textMuted} />
+            </Pressable>
             {lastPoint ? (
               <>
                 <Text style={[styles.headerTitle, { color: palette.textInverse }]}>
@@ -204,9 +241,11 @@ export default function PointTransition() {
 
           {/* Next Point Info + Confirm Button */}
           <View style={styles.headerRight}>
-            <Text style={[styles.nextPointLabel, { color: palette.textMuted }]}>
-              Next Point{expectedRatioLabel ? ` · ${expectedRatioLabel}` : ''}
-            </Text>
+            {genderRatioEnabled && (
+              <Text style={[styles.nextPointLabel, { color: palette.textMuted }]}>
+                Next Point{expectedRatioLabel ? ` · ${expectedRatioLabel}` : ''}
+              </Text>
+            )}
             {showRatioWarning && (
               <View style={[styles.ratioWarningChip, { backgroundColor: palette.warning + '20' }]}>
                 <MaterialCommunityIcons name="alert" size={12} color={palette.warning} />
@@ -215,8 +254,10 @@ export default function PointTransition() {
                 </Text>
               </View>
             )}
+
             <Pressable
               onPress={handleDone}
+              disabled={!canConfirm}
               style={({ pressed }) => [
                 styles.confirmBtn,
                 { backgroundColor: canConfirm ? palette.success : palette.overlay10 },
@@ -227,17 +268,18 @@ export default function PointTransition() {
                 <MaterialCommunityIcons name="check" size={18} color={palette.textOnAccent} />
               ) : (
                 <Text style={[styles.countText, { color: palette.textMuted }]}>
-                  {selectedIds.length}/7
+                  {selectedIds.length}/{numPlayers}
                 </Text>
               )}
             </Pressable>
           </View>
         </View>
 
-        {/* Stats Row */}
-        {lastPoint && (
-          <View style={styles.statsRow}>
-            {lastPoint.pointDurationMs && (
+        {/* Stats + Presets Row */}
+        <View style={styles.statsRow}>
+          {/* Stats (left) */}
+          <View style={styles.statsLeft}>
+            {lastPoint?.pointDurationMs && (
               <View style={[styles.statChip, { backgroundColor: palette.overlay05 }]}>
                 <MaterialCommunityIcons name="timer-outline" size={14} color={palette.textMuted} />
                 <Text style={[styles.statText, { color: palette.textInverse }]}>
@@ -270,72 +312,54 @@ export default function PointTransition() {
               </View>
             )}
           </View>
-        )}
-      </View>
 
-      {/* Line Selection Section */}
-      <View style={styles.lineSection}>
-        {/* Presets + Controls Row */}
-        <View style={[styles.controlsRow, { borderBottomColor: palette.border }]}>
-          <View style={styles.presetsContainer}>
-            {presets.length > 0 ? (
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.presetsScrollContent}>
-                {presets.map((preset) => {
-                  const isValid = preset.playerIds.length === 7;
-                  return (
-                    <Pressable
-                      key={preset.id}
-                      onPress={() => isValid && handleSelectPreset(preset)}
-                      style={({ pressed }) => [
-                        styles.presetChip,
-                        {
-                          backgroundColor:
-                            selectedPresetId === preset.id ? palette.accent : palette.overlay08,
-                          borderColor:
-                            selectedPresetId === preset.id ? palette.accent : palette.overlay15,
-                          opacity: isValid ? 1 : 0.5,
-                        },
-
-                        pressed && isValid && { opacity: 0.8 },
-                      ]}>
-                      {selectedPresetId === preset.id && (
-                        <MaterialCommunityIcons
-                          name="check"
-                          size={12}
-                          color={palette.textOnAccent}
-                        />
-                      )}
-                      <Text
-                        style={[
-                          styles.presetChipText,
-                          {
-                            color:
-                              selectedPresetId === preset.id
-                                ? palette.textOnAccent
-                                : palette.textInverse,
-                          },
-                        ]}
-                        numberOfLines={1}>
-                        {preset.name}
-                      </Text>
-                    </Pressable>
-                  );
-                })}
-                <Pressable
-                  onPress={() => router.push('/LinePresetEditor')}
-                  style={({ pressed }) => [
-                    styles.presetChip,
-                    styles.editPresetsChip,
-                    { borderColor: palette.overlay15 },
-                    pressed && { opacity: 0.8 },
-                  ]}>
-                  <MaterialCommunityIcons name="pencil" size={12} color={palette.textMuted} />
-                </Pressable>
-              </ScrollView>
-            ) : (
+          {/* Presets + Sort (right) */}
+          <View style={styles.statsRight}>
+            {visiblePresets.map((preset) => (
+              <Pressable
+                key={preset.id}
+                onPress={() => handleSelectPreset(preset)}
+                style={({ pressed }) => [
+                  styles.presetChip,
+                  {
+                    backgroundColor:
+                      selectedPresetId === preset.id ? palette.accent : palette.overlay08,
+                    borderColor:
+                      selectedPresetId === preset.id ? palette.accent : palette.overlay15,
+                  },
+                  pressed && { opacity: 0.8 },
+                ]}>
+                {selectedPresetId === preset.id && (
+                  <MaterialCommunityIcons name="check" size={10} color={palette.textOnAccent} />
+                )}
+                <Text
+                  style={[
+                    styles.presetChipText,
+                    {
+                      color:
+                        selectedPresetId === preset.id ? palette.textOnAccent : palette.textInverse,
+                    },
+                  ]}
+                  numberOfLines={1}>
+                  {preset.name}
+                </Text>
+              </Pressable>
+            ))}
+            {overflowCount > 0 && (
+              <Pressable
+                onPress={() => setShowPresetPicker(true)}
+                style={({ pressed }) => [
+                  styles.presetChip,
+                  styles.overflowChip,
+                  { backgroundColor: palette.overlay08, borderColor: palette.overlay15 },
+                  pressed && { opacity: 0.8 },
+                ]}>
+                <Text style={[styles.presetChipText, { color: palette.textMuted }]}>
+                  +{overflowCount}
+                </Text>
+              </Pressable>
+            )}
+            {validPresets.length === 0 && (
               <Pressable
                 onPress={() => router.push('/LinePresetEditor')}
                 style={({ pressed }) => [
@@ -343,13 +367,10 @@ export default function PointTransition() {
                   { borderColor: palette.overlay15, backgroundColor: palette.overlay08 },
                   pressed && { opacity: 0.8 },
                 ]}>
-                <MaterialCommunityIcons name="plus" size={12} color={palette.textMuted} />
+                <MaterialCommunityIcons name="plus" size={10} color={palette.textMuted} />
                 <Text style={[styles.presetChipText, { color: palette.textMuted }]}>Preset</Text>
               </Pressable>
             )}
-          </View>
-
-          <View style={styles.rightControls}>
             <Pressable
               onPress={toggleSort}
               style={({ pressed }) => [
@@ -359,25 +380,88 @@ export default function PointTransition() {
               ]}>
               <MaterialCommunityIcons
                 name={sortDirection === 'asc' ? 'sort-ascending' : 'sort-descending'}
-                size={16}
+                size={14}
                 color={palette.textMuted}
               />
             </Pressable>
           </View>
         </View>
+      </View>
 
-        {/* Player Grid */}
-        <View style={styles.gridContainer}>
+      {/* Player Grid or Empty State */}
+      <View style={styles.gridContainer}>
+        {activePlayers.length === 0 ? (
+          <View style={styles.emptyState}>
+            <MaterialCommunityIcons
+              name="account-group-outline"
+              size={48}
+              color={palette.textMuted}
+            />
+            <Text style={[styles.emptyStateTitle, { color: palette.textInverse }]}>
+              No Active Players
+            </Text>
+            <Text style={[styles.emptyStateText, { color: palette.textMuted }]}>
+              Add players to your roster to set a line for the next point
+            </Text>
+            <View style={styles.emptyStateButtons}>
+              <Pressable
+                onPress={handleGoToEditRoster}
+                style={({ pressed }) => [
+                  styles.emptyStateBtn,
+                  { backgroundColor: palette.accent },
+                  pressed && { opacity: 0.8 },
+                ]}>
+                <MaterialCommunityIcons
+                  name="account-plus"
+                  size={18}
+                  color={palette.textOnAccent}
+                />
+                <Text style={[styles.emptyStateBtnText, { color: palette.textOnAccent }]}>
+                  Edit Roster
+                </Text>
+              </Pressable>
+              <Pressable
+                onPress={handleSkip}
+                style={({ pressed }) => [
+                  styles.emptyStateBtn,
+                  { backgroundColor: palette.overlay10 },
+                  pressed && { opacity: 0.8 },
+                ]}>
+                <Text style={[styles.emptyStateBtnText, { color: palette.textMuted }]}>
+                  Skip for Now
+                </Text>
+              </Pressable>
+            </View>
+          </View>
+        ) : (
           <ModalPlayerGrid
             roster={activePlayers}
             pointLines={pointLines}
             selectedIds={selectedIds}
             onTogglePlayer={handleTogglePlayer}
             sortDirection={sortDirection}
+            sortSelectedFirst={selectedPresetId !== null || selectedIds.length > 0}
+            sortKey={sortKey}
             gameActive={gameActive}
           />
-        </View>
+        )}
       </View>
+
+      {/* Preset Picker Bottom Sheet */}
+      <PresetPickerModal
+        visible={showPresetPicker}
+        onClose={() => setShowPresetPicker(false)}
+        presets={validPresets}
+        selectedPresetId={selectedPresetId}
+        onSelectPreset={(preset) => {
+          handleSelectPreset(preset);
+          setShowPresetPicker(false);
+        }}
+        onEditPresets={() => {
+          setShowPresetPicker(false);
+          router.push('/LinePresetEditor');
+        }}
+      />
     </View>
   );
 }
@@ -415,11 +499,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
+    marginTop: 4,
   },
   outcomeText: {
     fontSize: 11,
     fontWeight: '800',
     letterSpacing: 0.5,
+  },
+  skipBtn: {
+    paddingVertical: 8,
+    paddingHorizontal: 8,
+    borderRadius: 12,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   confirmBtn: {
     paddingVertical: 8,
@@ -433,77 +526,58 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '700',
   },
-  reminderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  reminderText: {
-    fontSize: 11,
-    fontWeight: '500',
-  },
   statsRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
+    alignItems: 'center',
+    justifyContent: 'space-between',
     marginTop: 10,
+    gap: 8,
+  },
+  statsLeft: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    flex: 1,
+  },
+  statsRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    flexShrink: 0,
   },
   statChip: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    borderRadius: 10,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 8,
   },
   statText: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '600',
-  },
-  lineSection: {
-    flex: 1,
-  },
-  controlsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-  },
-  presetsContainer: {
-    flex: 1,
-    marginRight: 12,
-  },
-  presetsScrollContent: {
-    gap: 6,
   },
   presetChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    borderRadius: 10,
-    borderWidth: 1,
-    gap: 4,
-  },
-  presetChipText: {
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  editPresetsChip: {
-    paddingHorizontal: 8,
-    backgroundColor: 'transparent',
-  },
-  rightControls: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  sortBtn: {
     paddingVertical: 4,
     paddingHorizontal: 8,
     borderRadius: 8,
+    borderWidth: 1,
+    gap: 3,
+    maxWidth: 80,
+  },
+  presetChipText: {
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  overflowChip: {
+    paddingHorizontal: 6,
+  },
+  sortBtn: {
+    paddingVertical: 4,
+    paddingHorizontal: 6,
+    borderRadius: 6,
     borderWidth: 1,
   },
   ratioWarningChip: {
@@ -526,5 +600,39 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 12,
     paddingTop: 8,
+  },
+  emptyState: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 32,
+    gap: 12,
+  },
+  emptyStateTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    marginTop: 8,
+  },
+  emptyStateText: {
+    fontSize: 14,
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  emptyStateButtons: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 16,
+  },
+  emptyStateBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+  },
+  emptyStateBtnText: {
+    fontSize: 14,
+    fontWeight: '600',
   },
 });

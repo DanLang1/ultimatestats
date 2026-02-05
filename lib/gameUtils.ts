@@ -2,6 +2,39 @@
  * Game logic utilities for determining game state
  */
 
+import { GenderRatio } from '@/lib/genderRatioUtils';
+
+export interface GameActiveState {
+  timerIsActive: boolean;
+  team1Score: number;
+  team2Score: number;
+  firstPointRatio: GenderRatio | null;
+  currentLine: string[];
+  pointLines: { pointNumber: number }[];
+}
+
+/**
+ * Check if a game is considered "in progress" based on current state.
+ * A game is active if any of the following are true:
+ * - Timer is running
+ * - Either team has scored
+ * - FMP/MMP ratio has been selected for first point
+ * - A line has been set for the current point
+ * - Lines have been recorded for previous points
+ */
+export function isGameActive(state: GameActiveState): boolean {
+  const { timerIsActive, team1Score, team2Score, firstPointRatio, currentLine, pointLines } = state;
+
+  return (
+    timerIsActive ||
+    team1Score !== 0 ||
+    team2Score !== 0 ||
+    firstPointRatio !== null ||
+    currentLine.length > 0 ||
+    pointLines.length > 0
+  );
+}
+
 export interface GameOverState {
   team1Score: number;
   team2Score: number;

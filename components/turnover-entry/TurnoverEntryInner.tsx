@@ -19,6 +19,7 @@ export interface TurnoverEntryInnerProps {
   isMyTeamTurnover: boolean;
   isOpponentTurnover: boolean;
   preselectedType?: TurnoverType;
+  showAddPlayer?: boolean;
 }
 
 export function TurnoverEntryInner({
@@ -30,6 +31,7 @@ export function TurnoverEntryInner({
   isMyTeamTurnover,
   isOpponentTurnover,
   preselectedType,
+  showAddPlayer = true,
 }: TurnoverEntryInnerProps) {
   // For opponent turnovers or preselected types, skip directly to player selection
   const shouldStartAtPlayer = isOpponentTurnover || !!preselectedType;
@@ -158,6 +160,142 @@ export function TurnoverEntryInner({
     ? activeRoster.filter((p) => p.id !== fiftyFiftyFirstPlayerId)
     : activeRoster;
 
+  // Render header content (team name, question, badges)
+  const renderHeader = () => (
+    <View style={styles.header}>
+      <Text style={[styles.teamName, { color: palette.modalText }]}>{teamName}</Text>
+      <Animated.Text
+        key={step}
+        entering={FadeIn.duration(300)}
+        style={[styles.stepLabel, { color: palette.modalText }]}>
+        {getStepQuestion()}
+      </Animated.Text>
+
+      {selectedType && step === 'player' && (
+        <Animated.View
+          entering={FadeIn}
+          style={[
+            styles.badge,
+            { backgroundColor: palette.dangerOverlay15, borderColor: palette.danger },
+          ]}>
+          <Text style={[styles.badgeLabel, { color: palette.danger }]}>EVENT</Text>
+          <Text style={[styles.badgeValue, { color: palette.danger }]}>
+            {getTypeLabel(selectedType)}
+          </Text>
+        </Animated.View>
+      )}
+
+      {/* Show first selected player for 50/50 */}
+      {isFiftyFiftyMode && fiftyFiftyFirstPlayerName && (
+        <Animated.View
+          entering={FadeIn}
+          style={[
+            styles.badge,
+            { backgroundColor: palette.indigoOverlay20, borderColor: palette.accent },
+          ]}>
+          <Text style={[styles.badgeLabel, { color: palette.accent }]}>THROWER</Text>
+          <Text style={[styles.badgeValue, { color: palette.accent }]}>
+            {fiftyFiftyFirstPlayerName}
+          </Text>
+        </Animated.View>
+      )}
+    </View>
+  );
+
+  // Render type selection buttons
+  const renderTypeButtons = () => (
+    <View style={styles.typeButtons}>
+      <Pressable
+        style={[
+          styles.typeButton,
+          { borderColor: palette.danger, backgroundColor: palette.dangerOverlay15 },
+        ]}
+        onPress={() => handleTypeSelect('block')}>
+        <Text style={[styles.typeButtonText, { color: palette.modalText }]}>
+          {getTypeLabel('block')}
+        </Text>
+      </Pressable>
+      {!isOpponentTurnover && (
+        <>
+          <Pressable
+            style={[
+              styles.typeButton,
+              { borderColor: palette.danger, backgroundColor: palette.dangerOverlay15 },
+            ]}
+            onPress={() => handleTypeSelect('throwaway')}>
+            <Text style={[styles.typeButtonText, { color: palette.modalText }]}>
+              {getTypeLabel('throwaway')}
+            </Text>
+          </Pressable>
+          <Pressable
+            style={[
+              styles.typeButton,
+              { borderColor: palette.danger, backgroundColor: palette.dangerOverlay15 },
+            ]}
+            onPress={() => handleTypeSelect('drop')}>
+            <Text style={[styles.typeButtonText, { color: palette.modalText }]}>
+              {getTypeLabel('drop')}
+            </Text>
+          </Pressable>
+          <Pressable
+            style={[
+              styles.typeButton,
+              { borderColor: palette.danger, backgroundColor: palette.dangerOverlay15 },
+            ]}
+            onPress={() => handleTypeSelect('fiftyfifty')}>
+            <Text style={[styles.typeButtonText, { color: palette.modalText }]}>
+              {getTypeLabel('fiftyfifty')}
+            </Text>
+          </Pressable>
+        </>
+      )}
+    </View>
+  );
+
+  // Render skip button
+  const renderSkipButton = () => (
+    <Animated.View layout={LinearTransition} style={styles.footer}>
+      <Pressable
+        style={[
+          styles.skipButton,
+          {
+            backgroundColor: palette.cardBgAlt,
+            borderWidth: 1,
+            borderColor: skipButtonBorder,
+          },
+        ]}
+        onPress={step === 'type' ? onSkip : handleSkipPlayer}>
+        <Text style={[styles.skipText, { color: skipButtonText }]}>
+          {step === 'player' && 'Skip'}
+        </Text>
+      </Pressable>
+    </Animated.View>
+  );
+
+  // Compact layout for player step without add player input
+  if (step === 'player' && !showAddPlayer) {
+    return (
+      <AnimatedThemedView
+        entering={SlideInDown.duration(400)}
+        style={[styles.sheet, { shadowColor: palette.shadow }]}
+        onStartShouldSetResponder={() => true}>
+        <Pressable onPress={() => {}} style={styles.sheetContent}>
+          <View style={styles.compactContainer}>
+            {renderHeader()}
+            <StatEntryRoster
+              roster={displayRoster}
+              step="goal"
+              onSelect={handlePlayerSelect}
+              maxHeight={220}
+            />
+            {renderSkipButton()}
+          </View>
+        </Pressable>
+      </AnimatedThemedView>
+    );
+  }
+
+  // Standard side-by-side layout
   return (
     <AnimatedThemedView
       entering={SlideInDown.duration(400)}
@@ -167,92 +305,10 @@ export function TurnoverEntryInner({
         <View style={styles.sideBySideContainer}>
           {/* Left Column: Info, Type Selection, Actions */}
           <View style={styles.leftColumn}>
-            <View style={styles.header}>
-              <Text style={[styles.teamName, { color: palette.modalText }]}>{teamName}</Text>
-              <Animated.Text
-                key={step}
-                entering={FadeIn.duration(300)}
-                style={[styles.stepLabel, { color: palette.modalText }]}>
-                {getStepQuestion()}
-              </Animated.Text>
-
-              {selectedType && step === 'player' && (
-                <Animated.View
-                  entering={FadeIn}
-                  style={[
-                    styles.badge,
-                    { backgroundColor: palette.dangerOverlay15, borderColor: palette.danger },
-                  ]}>
-                  <Text style={[styles.badgeLabel, { color: palette.danger }]}>EVENT</Text>
-                  <Text style={[styles.badgeValue, { color: palette.danger }]}>
-                    {getTypeLabel(selectedType)}
-                  </Text>
-                </Animated.View>
-              )}
-
-              {/* Show first selected player for 50/50 */}
-              {isFiftyFiftyMode && fiftyFiftyFirstPlayerName && (
-                <Animated.View
-                  entering={FadeIn}
-                  style={[
-                    styles.badge,
-                    { backgroundColor: palette.indigoOverlay20, borderColor: palette.accent },
-                  ]}>
-                  <Text style={[styles.badgeLabel, { color: palette.accent }]}>THROWER</Text>
-                  <Text style={[styles.badgeValue, { color: palette.accent }]}>
-                    {fiftyFiftyFirstPlayerName}
-                  </Text>
-                </Animated.View>
-              )}
-            </View>
+            {renderHeader()}
 
             {step === 'type' ? (
-              <View style={styles.typeButtons}>
-                <Pressable
-                  style={[
-                    styles.typeButton,
-                    { borderColor: palette.danger, backgroundColor: palette.dangerOverlay15 },
-                  ]}
-                  onPress={() => handleTypeSelect('block')}>
-                  <Text style={[styles.typeButtonText, { color: palette.modalText }]}>
-                    {getTypeLabel('block')}
-                  </Text>
-                </Pressable>
-                {!isOpponentTurnover && (
-                  <>
-                    <Pressable
-                      style={[
-                        styles.typeButton,
-                        { borderColor: palette.danger, backgroundColor: palette.dangerOverlay15 },
-                      ]}
-                      onPress={() => handleTypeSelect('throwaway')}>
-                      <Text style={[styles.typeButtonText, { color: palette.modalText }]}>
-                        {getTypeLabel('throwaway')}
-                      </Text>
-                    </Pressable>
-                    <Pressable
-                      style={[
-                        styles.typeButton,
-                        { borderColor: palette.danger, backgroundColor: palette.dangerOverlay15 },
-                      ]}
-                      onPress={() => handleTypeSelect('drop')}>
-                      <Text style={[styles.typeButtonText, { color: palette.modalText }]}>
-                        {getTypeLabel('drop')}
-                      </Text>
-                    </Pressable>
-                    <Pressable
-                      style={[
-                        styles.typeButton,
-                        { borderColor: palette.danger, backgroundColor: palette.dangerOverlay15 },
-                      ]}
-                      onPress={() => handleTypeSelect('fiftyfifty')}>
-                      <Text style={[styles.typeButtonText, { color: palette.modalText }]}>
-                        {getTypeLabel('fiftyfifty')}
-                      </Text>
-                    </Pressable>
-                  </>
-                )}
-              </View>
+              renderTypeButtons()
             ) : (
               <View style={styles.addPlayerRow}>
                 <TextInput
@@ -285,22 +341,7 @@ export function TurnoverEntryInner({
               </View>
             )}
 
-            <Animated.View layout={LinearTransition} style={styles.footer}>
-              <Pressable
-                style={[
-                  styles.skipButton,
-                  {
-                    backgroundColor: palette.cardBgAlt,
-                    borderWidth: 1,
-                    borderColor: skipButtonBorder,
-                  },
-                ]}
-                onPress={step === 'type' ? onSkip : handleSkipPlayer}>
-                <Text style={[styles.skipText, { color: skipButtonText }]}>
-                  {step === 'player' && 'Skip'}
-                </Text>
-              </Pressable>
-            </Animated.View>
+            {renderSkipButton()}
           </View>
 
           {/* Right Column: Roster Selection */}
@@ -333,6 +374,11 @@ const styles = StyleSheet.create({
   sheetContent: {
     padding: 16,
   },
+  // Compact vertical layout (no add player)
+  compactContainer: {
+    gap: 12,
+  },
+  // Side-by-side layout (with add player)
   sideBySideContainer: {
     flexDirection: 'row',
     gap: 24,

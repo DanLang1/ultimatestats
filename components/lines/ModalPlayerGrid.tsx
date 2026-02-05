@@ -3,24 +3,26 @@ import { useTheme } from '@/context/ThemeContext';
 import { computePlayingTime, formatPlayingTime } from '@/lib/lineUtils';
 import { Player, PointLineRecord } from '@/lib/storage/types';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import React from 'react';
+import React, { useRef } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 function sortPlayers(
   players: Player[],
   playingTime: Map<string, number>,
   direction: SortDirection,
-  selectedIds: Set<string>,
+  selectedIds?: Set<string>,
 ): Player[] {
   return [...players].sort((a, b) => {
-    // Selected players come first
-    const aSelected = selectedIds.has(a.id);
-    const bSelected = selectedIds.has(b.id);
-    if (aSelected !== bSelected) {
-      return aSelected ? -1 : 1;
+    // If selectedIds provided, sort selected players first
+    if (selectedIds) {
+      const aSelected = selectedIds.has(a.id);
+      const bSelected = selectedIds.has(b.id);
+      if (aSelected !== bSelected) {
+        return aSelected ? -1 : 1;
+      }
     }
 
-    // Then sort by playing time
+    // Sort by playing time
     const aPoints = playingTime.get(a.id) ?? 0;
     const bPoints = playingTime.get(b.id) ?? 0;
     if (aPoints !== bPoints) {
@@ -42,6 +44,10 @@ export interface ModalPlayerGridProps {
   useModalColors?: boolean;
   /** Whether a game is currently active (shows pts played) */
   gameActive?: boolean;
+  /** Sort selected players to top (use for preset selection, not manual selection) */
+  sortSelectedFirst?: boolean;
+  /** Change this value to trigger a re-sort (e.g., increment on preset selection) */
+  sortKey?: number;
 }
 
 type ColumnKey =
@@ -95,6 +101,8 @@ export function ModalPlayerGrid({
   sortDirection = 'asc',
   useModalColors: useModalColorsProp = true,
   gameActive = false,
+  sortSelectedFirst = false,
+  sortKey = 0,
 }: ModalPlayerGridProps) {
   const { palette } = useTheme();
 
@@ -104,7 +112,22 @@ export function ModalPlayerGrid({
 
   const playingTime = computePlayingTime(pointLines);
   const selectedSet = new Set(selectedIds);
-  const sortedRoster = sortPlayers(roster, playingTime, sortDirection, selectedSet);
+
+  // Use ref to store sorted roster - only re-sort when sortKey changes
+  const sortedRosterRef = useRef<Player[]>([]);
+  const lastSortKeyRef = useRef<number>(-1);
+
+  if (sortKey !== lastSortKeyRef.current || sortedRosterRef.current.length === 0) {
+    sortedRosterRef.current = sortPlayers(
+      roster,
+      playingTime,
+      sortDirection,
+      sortSelectedFirst ? selectedSet : undefined,
+    );
+    lastSortKeyRef.current = sortKey;
+  }
+
+  const sortedRoster = sortedRosterRef.current;
 
   // Group players by column
   const columns = new Map<ColumnKey, Player[]>();
@@ -169,6 +192,23 @@ export function ModalPlayerGrid({
     );
   };
 
+  // Render a single category split into two columns for compactness
+  const renderSplitColumn = (players: Player[], label: string) => {
+    const midpoint = Math.ceil(players.length / 2);
+    const leftPlayers = players.slice(0, midpoint);
+    const rightPlayers = players.slice(midpoint);
+
+    return (
+      <View style={styles.splitColumnWrapper}>
+        <Text style={[styles.columnLabel, { color: labelColor }]}>{label}</Text>
+        <View style={styles.splitColumnsRow}>
+          <View style={styles.splitColumn}>{leftPlayers.map(renderPlayerChip)}</View>
+          <View style={styles.splitColumn}>{rightPlayers.map(renderPlayerChip)}</View>
+        </View>
+      </View>
+    );
+  };
+
   if (roster.length === 0) {
     return (
       <View style={styles.emptyState}>
@@ -185,6 +225,22 @@ export function ModalPlayerGrid({
   if (!isMixedTeam) {
     const activeKeys: GenericColumnKey[] = ['handler', 'cutter', 'hybrid', 'unassigned'];
     const activeGenericColumns = activeKeys.filter((k) => (genericColumns.get(k)?.length ?? 0) > 0);
+    const isSingleColumn = activeGenericColumns.length === 1;
+
+    // For single column, split into two columns for compactness
+    if (isSingleColumn) {
+      const key = activeGenericColumns[0];
+      const players = genericColumns.get(key) ?? [];
+      return (
+        <ScrollView
+          style={styles.container}
+          showsVerticalScrollIndicator
+          contentContainerStyle={styles.scrollContent}
+          nestedScrollEnabled>
+          {renderSplitColumn(players, GENERIC_COLUMN_LABELS[key])}
+        </ScrollView>
+      );
+    }
 
     return (
       <ScrollView
@@ -202,9 +258,11 @@ export function ModalPlayerGrid({
   // Mixed team: show only columns with players
   const primaryKeys: ColumnKey[] = ['mmp-handler', 'fmp-handler', 'fmp-cutter', 'mmp-cutter'];
   const activePrimaryColumns = primaryKeys.filter((k) => (columns.get(k)?.length ?? 0) > 0);
+  const isSinglePrimary = activePrimaryColumns.length === 1;
 
   const secondaryKeys: ColumnKey[] = ['mmp-hybrid', 'fmp-hybrid', 'unassigned'];
   const activeSecondaryColumns = secondaryKeys.filter((k) => (columns.get(k)?.length ?? 0) > 0);
+  const isSingleSecondary = activeSecondaryColumns.length === 1;
 
   return (
     <ScrollView
@@ -213,18 +271,32 @@ export function ModalPlayerGrid({
       contentContainerStyle={styles.scrollContent}
       nestedScrollEnabled>
       {/* Main columns */}
-      {activePrimaryColumns.length > 0 && (
-        <View style={styles.fourColumnContainer}>
-          {activePrimaryColumns.map(renderMixedColumn)}
-        </View>
-      )}
+      {activePrimaryColumns.length > 0 &&
+        (isSinglePrimary ? (
+          renderSplitColumn(
+            columns.get(activePrimaryColumns[0]) ?? [],
+            MIXED_COLUMN_LABELS[activePrimaryColumns[0]],
+          )
+        ) : (
+          <View style={styles.fourColumnContainer}>
+            {activePrimaryColumns.map(renderMixedColumn)}
+          </View>
+        ))}
 
       {/* Secondary columns */}
-      {activeSecondaryColumns.length > 0 && (
-        <View style={styles.threeColumnContainer}>
-          {activeSecondaryColumns.map(renderMixedColumn)}
-        </View>
-      )}
+      {activeSecondaryColumns.length > 0 &&
+        (isSingleSecondary ? (
+          <View style={styles.secondarySplitWrapper}>
+            {renderSplitColumn(
+              columns.get(activeSecondaryColumns[0]) ?? [],
+              MIXED_COLUMN_LABELS[activeSecondaryColumns[0]],
+            )}
+          </View>
+        ) : (
+          <View style={styles.threeColumnContainer}>
+            {activeSecondaryColumns.map(renderMixedColumn)}
+          </View>
+        ))}
     </ScrollView>
   );
 }
@@ -245,6 +317,21 @@ const styles = StyleSheet.create({
   threeColumnContainer: {
     flexDirection: 'row',
     gap: 6,
+    marginTop: 14,
+  },
+  splitColumnWrapper: {
+    gap: 5,
+  },
+  splitColumnsRow: {
+    flexDirection: 'row',
+    gap: 6,
+  },
+  splitColumn: {
+    flex: 1,
+    gap: 6,
+    alignItems: 'stretch',
+  },
+  secondarySplitWrapper: {
     marginTop: 14,
   },
   column: {
