@@ -32,6 +32,13 @@ export const asyncStorageAdapter: Storage = {
     await AsyncStorage.setItem(GAMES_KEY, JSON.stringify(filtered));
   },
 
+  async deleteGames(ids: string[]): Promise<void> {
+    const games = await this.loadGames();
+    const idSet = new Set(ids);
+    const filtered = games.filter((g) => !idSet.has(g.id));
+    await AsyncStorage.setItem(GAMES_KEY, JSON.stringify(filtered));
+  },
+
   async getGame(id: string): Promise<SavedGame | null> {
     const games = await this.loadGames();
     return games.find((g) => g.id === id) || null;

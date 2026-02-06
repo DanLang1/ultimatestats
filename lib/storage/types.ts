@@ -42,6 +42,7 @@ export interface GameStorage {
   saveGame(game: SavedGame): Promise<void>;
   loadGames(): Promise<SavedGame[]>;
   deleteGame(id: string): Promise<void>;
+  deleteGames(ids: string[]): Promise<void>;
   getGame(id: string): Promise<SavedGame | null>;
 }
 

@@ -17,7 +17,7 @@ export default function LinePresetEditor() {
   const { currentTeam, pointLines } = useGameStore();
   const { numPlayers } = useSettingsStore();
   const gameActive = useIsGameActive();
-  const { presets, addPreset, updatePreset, deletePreset } = useLinePresetsStore();
+  const { presets, addPreset, updatePreset, deletePreset, reorderPresets } = useLinePresetsStore();
 
   const teamId = currentTeam?.id ?? '';
   const teamPresets = presets.filter((p) => p.teamId === teamId);
@@ -88,20 +88,21 @@ export default function LinePresetEditor() {
     setMode('list');
   };
 
-  const handleDelete = () => {
-    if (!editingPreset) return;
+  const handleReorderPresets = (fromIndex: number, toIndex: number) => {
+    reorderPresets(teamId, fromIndex, toIndex);
+  };
 
+  const handleDeletePreset = (preset: LinePreset) => {
     showAlert({
       title: 'Delete Preset',
-      message: `Delete "${editingPreset.name}"? This cannot be undone.`,
+      message: `Delete "${preset.name}"? This cannot be undone.`,
       buttons: [
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Delete',
           style: 'destructive',
           onPress: () => {
-            deletePreset(editingPreset.id);
-            setMode('list');
+            deletePreset(preset.id);
           },
         },
       ],
@@ -145,6 +146,8 @@ export default function LinePresetEditor() {
         onClose={handleClose}
         onCreateNew={handleCreateNew}
         onEditPreset={handleEditPreset}
+        onDeletePreset={handleDeletePreset}
+        onReorderPresets={handleReorderPresets}
       />
     );
   }
@@ -161,7 +164,6 @@ export default function LinePresetEditor() {
       onPresetNameChange={setPresetName}
       onTogglePlayer={handleTogglePlayer}
       onSave={handleSave}
-      onDelete={handleDelete}
       onBack={handleBack}
     />
   );

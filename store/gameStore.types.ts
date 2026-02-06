@@ -138,7 +138,6 @@ export interface GameState {
     goalPlayerId: string | null;
     assistPlayerId: string | null;
   }) => void;
-  clearPendingStatEntry: () => void;
   clearRoster: () => void;
   setPointTimerEnabled: (enabled: boolean) => void;
   startPoint: () => void;
@@ -193,6 +192,7 @@ export interface GameState {
   loadSavedTeams: () => Promise<void>;
   saveCurrentGame: () => Promise<void>;
   deleteSavedGame: (id: string) => Promise<void>;
+  deleteSavedGames: (ids: string[]) => Promise<void>;
   saveCurrentTeam: () => Promise<void>;
   deleteTeam: (id: string) => Promise<void>;
   loadTeam: (teamId: string) => void;

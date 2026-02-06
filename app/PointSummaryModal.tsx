@@ -1,6 +1,5 @@
 import { useTheme } from '@/context/ThemeContext';
 import { formatRatio, getExpectedRatio, getSequenceNumber } from '@/lib/genderRatioUtils';
-import { shouldShowLinePrompt } from '@/lib/linePromptUtils';
 import { computePointByPointEvents, getTurnoverSummary } from '@/lib/timelineUtils';
 import { useGameStore } from '@/store/gameStore';
 import { useSettingsStore } from '@/store/settingsStore';
@@ -100,21 +99,11 @@ export default function PointSummaryModal() {
 
   const handleStartNextPoint = () => {
     startPoint();
-    // Chain to LinePromptModal if conditions are met
-    if (shouldShowLinePrompt()) {
-      router.replace('/LinePromptModal');
-    } else {
-      router.dismissTo('/');
-    }
+    router.dismissTo('/');
   };
 
   const handleDismiss = () => {
-    // Chain to LinePromptModal if conditions are met
-    if (shouldShowLinePrompt()) {
-      router.replace('/LinePromptModal');
-    } else {
-      router.dismissTo('/');
-    }
+    router.dismissTo('/');
   };
 
   // Format duration if available

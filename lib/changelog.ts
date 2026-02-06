@@ -6,6 +6,14 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.4.0',
+    date: 'February 5, 2026',
+    changes: [
+      'Added line management - enable in settings and set lines from the team management screen',
+      'Added bulk delete and filters/search for saved games',
+    ],
+  },
+  {
     version: '1.3.0',
     date: 'January 28, 2026',
     changes: [

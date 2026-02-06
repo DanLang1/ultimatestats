@@ -1,7 +1,7 @@
 import { useTheme } from '@/context/ThemeContext';
 import { LinePreset, Player, PointLineRecord } from '@/lib/storage/types';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ModalPlayerGrid, SortDirection } from './ModalPlayerGrid';
@@ -17,32 +17,32 @@ export interface PresetEditViewProps {
   onPresetNameChange: (name: string) => void;
   onTogglePlayer: (playerId: string) => void;
   onSave: () => void;
-  onDelete: () => void;
   onBack: () => void;
 }
 
 export function PresetEditView({
   roster,
   pointLines,
-  editingPreset,
   presetName,
   selectedIds,
   gameActive,
-  numPlayers,
   onPresetNameChange,
   onTogglePlayer,
   onSave,
-  onDelete,
   onBack,
 }: PresetEditViewProps) {
   const { palette } = useTheme();
   const insets = useSafeAreaInsets();
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+  const [sortKey, setSortKey] = useState(0);
+  const nameInputRef = useRef<TextInput>(null);
 
-  const toggleSort = () => setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+  const toggleSort = () => {
+    setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+    setSortKey((k) => k + 1);
+  };
 
   const canSave = presetName.trim().length > 0 && selectedIds.length > 0;
-  const showSizeWarning = selectedIds.length > numPlayers;
 
   return (
     <View
@@ -59,8 +59,9 @@ export function PresetEditView({
 
         {/* Preset Name Input */}
         <View style={styles.nameSection}>
-          <Pressable style={styles.nameInputRow}>
+          <Pressable style={styles.nameInputRow} onPress={() => nameInputRef.current?.focus()}>
             <TextInput
+              ref={nameInputRef}
               style={[styles.presetNameInput, { color: palette.textInverse }]}
               value={presetName}
               onChangeText={onPresetNameChange}
@@ -90,31 +91,10 @@ export function PresetEditView({
               ]}>
               <MaterialCommunityIcons
                 name={sortDirection === 'asc' ? 'sort-ascending' : 'sort-descending'}
-                size={18}
+                size={16}
                 color={palette.textMuted}
               />
             </Pressable>
-          )}
-
-          {editingPreset && (
-            <Pressable
-              onPress={onDelete}
-              style={({ pressed }) => [
-                styles.actionBtn,
-                { backgroundColor: palette.dangerOverlay15 },
-                pressed && { opacity: 0.7 },
-              ]}>
-              <MaterialCommunityIcons name="delete-outline" size={18} color={palette.danger} />
-            </Pressable>
-          )}
-
-          {showSizeWarning && (
-            <View style={[styles.sizeWarningChip, { backgroundColor: palette.warning + '20' }]}>
-              <MaterialCommunityIcons name="alert" size={14} color={palette.warning} />
-              <Text style={[styles.sizeWarningText, { color: palette.warning }]}>
-                {selectedIds.length}/{numPlayers}
-              </Text>
-            </View>
           )}
 
           <Pressable
@@ -148,6 +128,8 @@ export function PresetEditView({
           selectedIds={selectedIds}
           onTogglePlayer={onTogglePlayer}
           sortDirection={sortDirection}
+          sortKey={sortKey}
+          sortSelectedFirst={selectedIds.length > 0}
           useModalColors={false}
           gameActive={gameActive}
         />
@@ -193,9 +175,9 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   actionBtn: {
-    paddingVertical: 3,
-    paddingHorizontal: 6,
-    borderRadius: 8,
+    height: 36,
+    width: 36,
+    borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
   },

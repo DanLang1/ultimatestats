@@ -11,30 +11,17 @@ import { useGameStore } from '@/store/gameStore';
 import { useLinePresetsStore } from '@/store/linePresetsStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { router, useLocalSearchParams } from 'expo-router';
+import { router } from 'expo-router';
 import React, { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function LinePromptModal() {
-  const { mode } = useLocalSearchParams<{ mode?: string }>();
-  const isSubstitutionMode = mode === 'substitution';
-
   const { palette } = useTheme();
   const insets = useSafeAreaInsets();
-  const { lineCallingEnabled, genderRatioEnabled, firstPointRatio, numPlayers } =
-    useSettingsStore();
-  const {
-    currentTeam,
-    currentPoint,
-    currentLine,
-    pointLines,
-    setCurrentLine,
-    recordLineForPoint,
-    gameLocked,
-    isHalftimeBreak,
-  } = useGameStore();
+  const { genderRatioEnabled, firstPointRatio, numPlayers } = useSettingsStore();
+  const { currentTeam, currentPoint, currentLine, pointLines, setCurrentLine, recordLineForPoint } =
+    useGameStore();
 
   const gameActive = useIsGameActive();
 
@@ -42,8 +29,8 @@ export default function LinePromptModal() {
   const allPresets = useLinePresetsStore((state) => state.presets);
   const presets = allPresets.filter((p) => p.teamId === (currentTeam?.id ?? ''));
 
-  // Local selection state - initialize with current line if in substitution mode
-  const [selectedIds, setSelectedIds] = useState<string[]>(isSubstitutionMode ? currentLine : []);
+  // Local selection state - initialize with current line for substitutions
+  const [selectedIds, setSelectedIds] = useState<string[]>(currentLine);
   const [selectedPresetId, setSelectedPresetId] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   // Increment sortKey to trigger a re-sort (initial load, preset selection, sort toggle)
@@ -53,25 +40,6 @@ export default function LinePromptModal() {
     setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
     setSortKey((k) => k + 1);
   };
-
-  // Don't show if line calling is disabled, game is over, or at halftime
-  // Exception: substitution mode always shows (but still respects gameLocked)
-  if (gameLocked) {
-    return null;
-  }
-  if (!isSubstitutionMode && (!lineCallingEnabled || isHalftimeBreak)) {
-    return null;
-  }
-
-  // Check if line is already set for the upcoming point
-  const hasLineForPoint = pointLines.some(
-    (record) => record.pointNumber === currentPoint && !record.isSubstitution,
-  );
-
-  // Don't show if line already set (unless in substitution mode)
-  if (hasLineForPoint && !isSubstitutionMode) {
-    return null;
-  }
 
   const roster = currentTeam?.roster ?? [];
   const activePlayers = roster.filter((p) => p.isActive !== false);
@@ -106,26 +74,16 @@ export default function LinePromptModal() {
   const handleConfirm = () => {
     requestIdleCallback(() => {
       setCurrentLine(selectedIds);
-      recordLineForPoint(currentPoint, isSubstitutionMode);
+      recordLineForPoint(currentPoint, true);
     });
 
-    // In substitution mode (from GameInfo), dismiss back to GameInfo
-    // In normal mode (after point), dismiss to root
-    if (isSubstitutionMode) {
-      router.back();
-    } else {
-      router.dismissTo('/');
-    }
+    // Dismiss back to GameInfo
+    router.back();
   };
 
   const handleSkip = () => {
-    // In substitution mode (from GameInfo), dismiss back to GameInfo
-    // In normal mode (after point), dismiss to root
-    if (isSubstitutionMode) {
-      router.back();
-    } else {
-      router.dismissTo('/');
-    }
+    // Dismiss back to GameInfo
+    router.back();
   };
 
   const canConfirm = selectedIds.length === numPlayers;
@@ -291,7 +249,7 @@ export default function LinePromptModal() {
               selectedIds={selectedIds}
               onTogglePlayer={handleTogglePlayer}
               sortDirection={sortDirection}
-              sortSelectedFirst={selectedPresetId !== null || isSubstitutionMode}
+              sortSelectedFirst
               sortKey={sortKey}
               gameActive={gameActive}
             />

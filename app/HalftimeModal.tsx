@@ -83,27 +83,36 @@ export default function HalftimeModal() {
           </Pressable>
 
           <View style={styles.headerCenteredRow}>
-            <MaterialCommunityIcons name="timer-sand" size={16} color={palette.accent} />
-            <Text style={[styles.headerText, { color: palette.textMuted }]}>HALFTIME</Text>
+            <View style={styles.headerSection}>
+              <MaterialCommunityIcons name="timer-sand" size={16} color={palette.accent} />
+              <Text style={[styles.headerText, { color: palette.textMuted }]}>HALFTIME</Text>
+            </View>
 
             <MaterialCommunityIcons name="disc" size={12} color={palette.accent} />
-            <Text style={[styles.receivingText, { color: palette.textMuted }]}>
-              {receivingTeam} receives
-            </Text>
 
-            {lineCallingEnabled && (
-              <>
-                <MaterialCommunityIcons name="disc" size={12} color={palette.accent} />
-                <Pressable
-                  onPress={() => router.push('/PointTransition')}
-                  style={({ pressed }) => [styles.setLineBtn, pressed && { opacity: 0.5 }]}>
-                  <MaterialCommunityIcons name="account-switch" size={12} color={palette.accent} />
-                  <Text style={[styles.setLineBtnText, { color: palette.textMuted }]}>
-                    Set Line
-                  </Text>
-                </Pressable>
-              </>
-            )}
+            <View style={styles.headerSection}>
+              <Text style={[styles.receivingText, { color: palette.textMuted }]}>
+                {receivingTeam} receives
+              </Text>
+
+              {lineCallingEnabled && (
+                <>
+                  <MaterialCommunityIcons name="disc" size={12} color={palette.accent} />
+                  <Pressable
+                    onPress={() => router.push('/PointTransition')}
+                    style={({ pressed }) => [styles.setLineBtn, pressed && { opacity: 0.5 }]}>
+                    <MaterialCommunityIcons
+                      name="account-switch"
+                      size={12}
+                      color={palette.accent}
+                    />
+                    <Text style={[styles.setLineBtnText, { color: palette.textMuted }]}>
+                      Set Line
+                    </Text>
+                  </Pressable>
+                </>
+              )}
+            </View>
           </View>
 
           <View style={[styles.contentRow, !hasStats && styles.contentRowCompact]}>
@@ -326,8 +335,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     alignSelf: 'center',
-    gap: 12,
+    gap: 16,
     zIndex: 10,
+  },
+  headerSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   receivingText: {
     fontSize: 13,

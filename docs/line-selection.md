@@ -21,8 +21,10 @@ app/
 ├── LinePresetEditor.tsx     # Full-page preset management (list + edit)
 
 components/lines/
-├── PresetListView.tsx       # List of existing presets
+├── PresetListView.tsx       # List of existing presets (grid + reorder mode)
 ├── PresetEditView.tsx       # Edit/create a single preset
+├── DraggablePresetList.tsx  # Container for drag-to-reorder mode
+├── DraggablePresetItem.tsx  # Individual draggable preset row
 ├── ModalPlayerGrid.tsx      # 4-column player selection grid
 
 store/
@@ -120,12 +122,17 @@ interface PresetEditViewProps {
 
 **File**: [PresetListView.tsx](file:///home/langd/coding/ultimatestats/components/lines/PresetListView.tsx)
 
-Simple list of existing presets for a team.
+List of existing presets with two display modes: grid view and reorder mode.
 
 #### Features
 
+- **2-column grid**: Presets displayed as cards in a responsive 2-column layout (48% width each)
+- **Order badges**: Each card shows its position number (1, 2, 3...)
+- **Reorder mode**: Toggle via swap-vertical icon in header (only shown with 2+ presets)
+  - Switches to single-column draggable list
+  - Shows info text explaining that order affects in-game display
+  - Presets can be edited/deleted directly in reorder mode
 - **Empty state**: Shows "No presets yet" message with hint
-- **Preset cards**: Name + player count, tappable to edit
 - **Add button**: Creates new preset via header button
 
 #### Props
@@ -136,8 +143,32 @@ interface PresetListViewProps {
   onClose: () => void;
   onCreateNew: () => void;
   onEditPreset: (preset: LinePreset) => void;
+  onDeletePreset: (preset: LinePreset) => void;
+  onReorderPresets: (fromIndex: number, toIndex: number) => void;
 }
 ```
+
+---
+
+### DraggablePresetList
+
+**File**: [DraggablePresetList.tsx](file:///home/langd/coding/ultimatestats/components/lines/DraggablePresetList.tsx)
+
+Container that manages shared animation values and drag state for the reorder view.
+
+#### Responsibilities
+
+- Creates and owns reanimated `SharedValue`s for gesture tracking (`draggingId`, `dragTranslateY`, `dragOriginIndex`, `dragCurrentIndex`)
+- Tracks which preset is being dragged via React state (`draggingPresetId`) to conditionally disable `LinearTransition` on the active item
+- Bridges drag callbacks between UI thread gestures and JS thread state updates
+
+---
+
+### DraggablePresetItem
+
+**File**: [DraggablePresetItem.tsx](file:///home/langd/coding/ultimatestats/components/lines/DraggablePresetItem.tsx)
+
+Individual draggable row in the reorder view. See [Drag-to-Reorder](#drag-to-reorder-implementation) for detailed architecture.
 
 ---
 
@@ -228,6 +259,7 @@ interface LinePresetsState {
   updatePreset: (id: string, updates: Partial<Omit<LinePreset, 'id'>>) => void;
   deletePreset: (id: string) => void;
   removePlayerFromPresets: (playerId: string) => void;
+  reorderPresets: (teamId: string, fromIndex: number, toIndex: number) => void;
   clearPresetsForTeam: (teamId: string) => void;
 }
 ```
@@ -315,6 +347,79 @@ router.push(`/LinePresetEditor?presetId=${preset.id}`);
 
 ```typescript
 const teamPresets = presets.filter((p) => p.teamId === currentTeam?.id);
+```
+
+---
+
+## Drag-to-Reorder Implementation
+
+### Overview
+
+Presets can be reordered via drag-and-drop in the PresetListView reorder mode. The order determines how presets appear in `PointTransition.tsx` and `LinePromptModal.tsx` during games.
+
+### Architecture: Real-Time Swap with LinearTransition
+
+The implementation uses a **"commit during drag"** approach rather than "commit on drop". Items swap positions in the Zustand store in real-time as the user drags, and `LinearTransition` layout animations handle the visual transitions for non-dragged items.
+
+This was chosen over an absolute-positioning approach to avoid a visual flicker/pop on drop caused by the timing gap between resetting shared values on the UI thread and React re-rendering new positions on the JS thread.
+
+### How It Works
+
+1. **Gesture starts** (`onStart`): Records the item's initial index, sets `draggingId` to the preset ID
+2. **During drag** (`onUpdate`): Calculates the desired index from `dragOriginIndex + round(translationY / ROW_HEIGHT)`. When the desired index crosses a threshold, triggers a **single-step swap** via `scheduleOnRN(onSwap, from, to)` which calls `reorderPresets` in the store
+3. **Gesture ends** (`onEnd`): Resets all shared values. Since all swaps already happened during drag, items are at their final positions — no post-drop repositioning needed
+
+### Key Techniques
+
+#### Compensating translateY for layout changes
+
+When the dragged item swaps with neighbors, its flex layout position changes (because the store array order changed). To keep the item visually glued to the user's finger:
+
+```typescript
+const layoutOffset = (dragCurrentIndex.value - dragOriginIndex.value) * ROW_HEIGHT;
+transform: [{ translateY: dragTranslateY.value - layoutOffset }]
+```
+
+`layoutOffset` accounts for how far the item's natural position has shifted from swaps.
+
+#### Conditional LinearTransition
+
+`LinearTransition.duration(150)` is applied to all items **except** the one being dragged:
+
+```typescript
+layout={isDraggingProp ? undefined : LinearTransition.duration(150)}
+```
+
+Without this, `LinearTransition` would fight the gesture-driven `translateY` on the dragged item.
+
+#### Single-step swaps
+
+Instead of jumping directly to the desired index (which would skip items), swaps happen one step at a time:
+
+```typescript
+const to = from + (clamped > from ? 1 : -1);
+```
+
+This ensures every intermediate item animates smoothly via `LinearTransition`.
+
+#### scheduleOnRN bridge
+
+`scheduleOnRN` (from `react-native-worklets`) bridges gesture callbacks running on the UI thread to JS-thread state updates (Zustand store, React setState). This replaces the deprecated `runOnJS`.
+
+### Store: reorderPresets
+
+The `reorderPresets` method in `linePresetsStore.ts` filters presets by team, splices the moved item, and reconstructs the full array:
+
+```typescript
+reorderPresets: (teamId, fromIndex, toIndex) => {
+  set((state) => {
+    const teamPresets = state.presets.filter((p) => p.teamId === teamId);
+    const others = state.presets.filter((p) => p.teamId !== teamId);
+    const [moved] = teamPresets.splice(fromIndex, 1);
+    teamPresets.splice(toIndex, 0, moved);
+    state.presets = [...others, ...teamPresets];
+  });
+},
 ```
 
 ---

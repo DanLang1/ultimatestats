@@ -2,6 +2,7 @@ import { ThemedView } from '@/components/ThemedView';
 import { useAlert } from '@/components/ui/AlertProvider';
 import AggregateBottomBar from '@/components/view-stats/AggregateBottomBar';
 import AggregateGamesList from '@/components/view-stats/AggregateGamesList';
+import SavedGamesBulkActions from '@/components/view-stats/SavedGamesBulkActions';
 import SavedGamesList from '@/components/view-stats/SavedGamesList';
 import StatsContent from '@/components/view-stats/StatsContent';
 import { useTheme } from '@/context/ThemeContext';
@@ -36,7 +37,7 @@ export default function ViewStatsScreen() {
     savedGames,
     savedTeams,
     loadSavedGames,
-    deleteSavedGame,
+    deleteSavedGames,
     startingPossession,
     gameTo,
   } = useGameStore();
@@ -57,6 +58,9 @@ export default function ViewStatsScreen() {
   const [selectedTeam, setSelectedTeam] = useState<string | null>(null);
   const [selectedGameIds, setSelectedGameIds] = useState<Set<string>>(new Set());
   const [showingAggregatedStats, setShowingAggregatedStats] = useState(false);
+
+  // Saved Games Selection
+  const [selectedSavedGameIds, setSelectedSavedGameIds] = useState<Set<string>>(new Set());
 
   // Load saved games on mount
   useEffect(() => {
@@ -214,11 +218,34 @@ export default function ViewStatsScreen() {
     setSelectedGameId(null);
   };
 
-  const handleDeleteGame = async (id: string) => {
-    await deleteSavedGame(id);
-    if (selectedGame?.id === id) {
-      setSelectedGameId(null);
-    }
+  const handleBulkDeleteGames = async () => {
+    const count = selectedSavedGameIds.size;
+    if (count === 0) return;
+
+    showAlert({
+      title: 'Delete Games?',
+      message: `Are you sure you want to delete ${count} selected game${count !== 1 ? 's' : ''}?`,
+      buttons: [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            await deleteSavedGames(Array.from(selectedSavedGameIds));
+            setSelectedSavedGameIds(new Set());
+          },
+        },
+      ],
+    });
+  };
+
+  const handleToggleSavedGameSelection = (gameId: string) => {
+    setSelectedSavedGameIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(gameId)) next.delete(gameId);
+      else next.add(gameId);
+      return next;
+    });
   };
 
   const handleTabPress = (mode: ViewMode) => {
@@ -228,6 +255,8 @@ export default function ViewStatsScreen() {
     setSelectedTeam(null);
     setSelectedGameIds(new Set());
     setShowingAggregatedStats(false);
+    // Reset saved selection
+    setSelectedSavedGameIds(new Set());
   };
 
   // Compute aggregated data for selected games
@@ -504,7 +533,9 @@ export default function ViewStatsScreen() {
           <SavedGamesList
             games={savedGames}
             onSelectGame={handleSelectGame}
-            onDeleteGame={handleDeleteGame}
+            selectedGameIds={selectedSavedGameIds}
+            onToggleGameSelection={handleToggleSavedGameSelection}
+            onClearSelection={() => setSelectedSavedGameIds(new Set())}
           />
         )}
       </ScrollView>
@@ -513,6 +544,13 @@ export default function ViewStatsScreen() {
         isVisible={viewMode === 'aggregate' && !!selectedTeam && !showingAggregatedStats}
         selectedCount={selectedGameIds.size}
         onViewAggregated={handleViewAggregated}
+      />
+
+      <SavedGamesBulkActions
+        isVisible={viewMode === 'saved' && selectedSavedGameIds.size > 0}
+        selectedCount={selectedSavedGameIds.size}
+        onDelete={handleBulkDeleteGames}
+        onCancel={() => setSelectedSavedGameIds(new Set())}
       />
     </ThemedView>
   );
@@ -573,5 +611,14 @@ const styles = StyleSheet.create({
     padding: 24,
     paddingTop: 8,
     paddingBottom: 100, // Extra padding for bottom bar
+  },
+  selectButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    borderRadius: 16,
+  },
+  selectButtonText: {
+    fontSize: 14,
+    fontWeight: '700',
   },
 });

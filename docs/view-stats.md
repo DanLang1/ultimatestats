@@ -47,10 +47,42 @@ Scrollable table with the following columns:
 - **Callahans**: Detected automatically (Block + Goal by same player) and displayed as a single high-contrast badge.
 - Possession flips (Holds/Breaks) are clearly marked.
 
-### 4. Actions
+## Saved Games List
+
+The **Saved** tab displays a history of games recorded on this device.
+
+### 1. Searching & Filtering
+
+- **Search**: Use the search bar at the top to filter games by team name (yours or opponent) or by date (e.g., "Feb 5").
+- **Sorting**: Tap the **Sort** button next to the search bar to choose a display order from the modal:
+  - **Newest**: Latest games first (default).
+  - **Oldest**: Original games first.
+  - **Team A-Z**: Alphabetical by team name.
+  - **Team Z-A**: Reverse alphabetical by team name.
+  - **High Score**: Games with the most total points tracked.
+
+### 2. Bulk Actions
+
+- **Implicit Selection**: Tap the checkbox on the left of any game card to start selecting multiple games.
+- **Bulk Actions Bar**: Once a game is selected, a floating bar will appear at the bottom with:
+  - **Cancel (X)**: Clear all selections and hide the bar.
+  - **Delete (N)**: Delete all selected games after confirmation.
+- **Individual vs. Bulk**: Tapping the main area of a game card opens its full stats, while tapping the checkbox toggles its selection state. Individual deletion via the trash icon is hidden once multiple games are selected to focus on bulk operations.
+
+## Aggregate Mode
+
+The **Aggregate** tab allows you to combine stats from multiple games for a single team.
+
+1. Select your team from the list.
+2. Select one or more games to combine.
+3. Tap **View Combined** to see aggregated player and team statistics.
+
+## Actions
 
 - **Back**: returns to Settings.
 - **Export CSV**: Generates a CSV file and opens the system share sheet.
+- **Export PDF**: Generates a professional PDF report.
+- **Timeline**: Opens the Game Timeline view for the selected game.
 
 ## CSV Export
 

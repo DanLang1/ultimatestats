@@ -29,7 +29,7 @@ export default function EditRosterScreen() {
   } = useGameStore();
   const { showAlert } = useAlert();
   const { palette } = useTheme();
-  const { lineCallingEnabled, sidebarCollapsed, setSidebarCollapsed } = useSettingsStore();
+  const { sidebarCollapsed, setSidebarCollapsed } = useSettingsStore();
 
   // Derived values
   const roster = currentTeam?.roster ?? [];
@@ -171,7 +171,7 @@ export default function EditRosterScreen() {
           onClearRoster={handleClearAll}
           showNewTeam={!gameActive}
           showSwitchTeam={!gameActive && hasOtherTeams}
-          showEditPresets={lineCallingEnabled && roster.length > 0}
+          showEditPresets={roster.length > 0}
           showClearRoster={roster.length > 0}
         />
 

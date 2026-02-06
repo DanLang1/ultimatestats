@@ -847,6 +847,14 @@ export const useGameStore = create<GameState>()(
           });
         },
 
+        deleteSavedGames: async (ids: string[]) => {
+          await storage.deleteGames(ids);
+          const games = await storage.loadGames();
+          set((state: GameState) => {
+            state.savedGames = games;
+          });
+        },
+
         saveCurrentTeam: async () => {
           const state = get();
           const team = state.currentTeam;

@@ -80,7 +80,7 @@ export default function PointTransition() {
   const [sortKey, setSortKey] = useState(0);
 
   // Presets display config
-  const MAX_VISIBLE_PRESETS = 3;
+  const MAX_VISIBLE_PRESETS = 5;
   const validPresets = presets.filter((p) => p.playerIds.length >= numPlayers);
   const visiblePresets = validPresets.slice(0, MAX_VISIBLE_PRESETS);
   const overflowCount = validPresets.length - MAX_VISIBLE_PRESETS;
@@ -243,12 +243,12 @@ export default function PointTransition() {
           <View style={styles.headerRight}>
             {genderRatioEnabled && (
               <Text style={[styles.nextPointLabel, { color: palette.textMuted }]}>
-                Next Point{expectedRatioLabel ? ` · ${expectedRatioLabel}` : ''}
+                Ratio{expectedRatioLabel ? ` · ${expectedRatioLabel}` : ''}
               </Text>
             )}
             {showRatioWarning && (
               <View style={[styles.ratioWarningChip, { backgroundColor: palette.warning + '20' }]}>
-                <MaterialCommunityIcons name="alert" size={12} color={palette.warning} />
+                <MaterialCommunityIcons name="alert" size={14} color={palette.warning} />
                 <Text style={[styles.ratioWarningText, { color: palette.warning }]}>
                   Expecting {expectedRatio === 'more-women' ? 'F' : 'M'} majority
                 </Text>
@@ -515,7 +515,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   confirmBtn: {
-    paddingVertical: 8,
+    height: 36,
     paddingHorizontal: 12,
     borderRadius: 12,
     minWidth: 44,
@@ -583,13 +583,13 @@ const styles = StyleSheet.create({
   ratioWarningChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 3,
-    paddingVertical: 4,
-    paddingHorizontal: 6,
-    borderRadius: 8,
+    gap: 4,
+    height: 36,
+    paddingHorizontal: 12,
+    borderRadius: 12,
   },
   ratioWarningText: {
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '700',
   },
   nextPointLabel: {

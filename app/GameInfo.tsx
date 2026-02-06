@@ -30,6 +30,7 @@ export default function GameInfoScreen() {
     softCapPending,
     statTrackingEnabled,
     currentPoint,
+    gameLocked,
   } = useGameStore();
 
   const { genderRatioEnabled, firstPointRatio, lineCallingEnabled } = useSettingsStore();
@@ -257,11 +258,9 @@ export default function GameInfoScreen() {
 
         {/* Action Section */}
         <View style={styles.actionSection}>
-          {lineCallingEnabled && (
+          {lineCallingEnabled && !gameLocked && (
             <Pressable
-              onPress={() =>
-                router.push({ pathname: '/LinePromptModal', params: { mode: 'substitution' } })
-              }
+              onPress={() => router.push('/LinePromptModal')}
               style={({ pressed }) => [
                 styles.actionButton,
                 { backgroundColor: palette.overlay05, borderColor: palette.overlay20 },
