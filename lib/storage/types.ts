@@ -3,7 +3,7 @@
 import { GameEvent, TurnoverType } from '@/store/gameStore.types';
 export type { GameEvent, TurnoverType };
 
-export const CURRENT_SCHEMA_VERSION = 1;
+export const CURRENT_SCHEMA_VERSION = 2;
 
 export interface SavedGame {
   id: string;
@@ -18,6 +18,7 @@ export interface SavedGame {
   gameLength: number;
   startingPossession: 'team1' | 'team2';
   pointStartTimestamps?: Record<number, number>; // { [pointNumber]: timestamp when point started }
+  pointLines?: PointLineRecord[]; // Line records per point - added in schema v2
 }
 
 export type MatchingType = 'fmp' | 'mmp';

@@ -1,7 +1,7 @@
 import { useTheme } from '@/context/ThemeContext';
 import { useTutorialStore } from '@/store/tutorialStore';
 import React, { useState } from 'react';
-import { Dimensions, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Dimensions, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import Animated, {
   FadeIn,
@@ -117,36 +117,41 @@ export default function StatsTrackingTutorial() {
                 </Pressable>
 
                 {/* Step content with animation */}
-                <View style={styles.contentContainer}>
-                  <Animated.View
-                    key={currentStep}
-                    entering={enteringAnimation.duration(300)}
-                    exiting={exitingAnimation.duration(200)}
-                    style={styles.stepWrapper}>
-                    <TutorialStep
-                      icon={step.icon}
-                      title={step.title}
-                      description={step.description}
-                    />
-                  </Animated.View>
-                </View>
+                <ScrollView
+                  style={styles.scrollContainer}
+                  contentContainerStyle={styles.scrollContent}
+                  showsVerticalScrollIndicator={false}>
+                  <View style={styles.contentContainer}>
+                    <Animated.View
+                      key={currentStep}
+                      entering={enteringAnimation.duration(300)}
+                      exiting={exitingAnimation.duration(200)}
+                      style={styles.stepWrapper}>
+                      <TutorialStep
+                        icon={step.icon}
+                        title={step.title}
+                        description={step.description}
+                      />
+                    </Animated.View>
+                  </View>
 
-                {/* Progress dots */}
-                <View style={styles.dotsContainer}>
-                  {TUTORIAL_STEPS.map((_, index) => (
-                    <View
-                      key={index}
-                      style={[
-                        styles.dot,
-                        { backgroundColor: palette.overlay20 },
-                        index === currentStep && [
-                          styles.dotActive,
-                          { backgroundColor: palette.accent },
-                        ],
-                      ]}
-                    />
-                  ))}
-                </View>
+                  {/* Progress dots */}
+                  <View style={styles.dotsContainer}>
+                    {TUTORIAL_STEPS.map((_, index) => (
+                      <View
+                        key={index}
+                        style={[
+                          styles.dot,
+                          { backgroundColor: palette.overlay20 },
+                          index === currentStep && [
+                            styles.dotActive,
+                            { backgroundColor: palette.accent },
+                          ],
+                        ]}
+                      />
+                    ))}
+                  </View>
+                </ScrollView>
 
                 {/* Navigation buttons */}
                 <View style={styles.buttonRow}>
@@ -204,7 +209,15 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   contentContainer: {
-    minHeight: 200,
+    minHeight: 180,
+    justifyContent: 'center',
+    paddingTop: 24, // Space for skip button
+  },
+  scrollContainer: {
+    maxHeight: 450,
+  },
+  scrollContent: {
+    flexGrow: 1,
     justifyContent: 'center',
   },
   stepWrapper: {
@@ -228,6 +241,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 12,
     marginHorizontal: 16,
+    marginTop: 8,
+    paddingBottom: 4,
   },
   backButton: {
     flex: 1,

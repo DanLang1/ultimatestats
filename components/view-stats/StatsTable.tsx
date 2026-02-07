@@ -1,12 +1,30 @@
 import { useTheme } from '@/context/ThemeContext';
+import {
+  computePlayingTimeStats,
+  formatEfficiency,
+  PlayingTimeStats,
+} from '@/lib/playingTimeStatsUtils';
 import { computePlayerStats } from '@/lib/statsUtils';
-import { Player, SavedGame } from '@/lib/storage';
+import { Player, PointLineRecord, SavedGame } from '@/lib/storage';
 import { GameEvent } from '@/store/gameStore.types';
 import { usePlayerStatsStore } from '@/store/playerStatsStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router } from 'expo-router';
-import React from 'react';
+import React, { useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+
+type SortKey =
+  | 'name'
+  | 'goals'
+  | 'assists'
+  | 'blocks'
+  | 'throwaways'
+  | 'drops'
+  | 'plusMinus'
+  | 'callahans'
+  | 'pointsPlayed'
+  | 'oEfficiency'
+  | 'dEfficiency';
 
 interface StatsTableProps {
   playerStats: ReturnType<typeof computePlayerStats>;
@@ -14,32 +32,83 @@ interface StatsTableProps {
   team: 'team1' | 'team2';
   roster?: Player[];
   games?: SavedGame[];
+  pointLines?: PointLineRecord[];
+  startingPossession?: 'team1' | 'team2' | null;
+  gameTo?: number;
 }
 
-export default function StatsTable({ playerStats, events, team, roster, games }: StatsTableProps) {
+export default function StatsTable({
+  playerStats,
+  events,
+  team,
+  roster,
+  games,
+  pointLines,
+  startingPossession,
+  gameTo = 15,
+}: StatsTableProps) {
   const { palette } = useTheme();
-  const [sortConfig, setSortConfig] = React.useState<{
-    key: keyof (typeof playerStats)[0] | 'plusMinus';
+  const [sortConfig, setSortConfig] = useState<{
+    key: SortKey;
     direction: 'asc' | 'desc';
   }>({ key: 'plusMinus', direction: 'desc' });
+
+  // Compute playing time stats if pointLines are available
+  const playingTimeStats = pointLines?.length
+    ? computePlayingTimeStats(pointLines, events, startingPossession ?? null, gameTo, roster)
+    : null;
+
+  // Only show playing time columns if we have data
+  const hasPlayingTimeData = playingTimeStats !== null && playingTimeStats.size > 0;
+
+  // Helper to get playing time stats for a player
+  const getPlayingTimeStats = (playerName: string): PlayingTimeStats | null => {
+    return playingTimeStats?.get(playerName) ?? null;
+  };
 
   const { openPlayerStats } = usePlayerStatsStore();
 
   const handlePlayerPress = (playerName: string) => {
-    openPlayerStats(playerName, events, team, roster || undefined, games);
+    openPlayerStats(
+      playerName,
+      events,
+      team,
+      roster || undefined,
+      games,
+      pointLines,
+      startingPossession,
+      gameTo,
+    );
     router.push('/PlayerStats');
   };
 
   const sortedStats = [...playerStats].sort((a, b) => {
-    const aValue = a[sortConfig.key];
-    const bValue = b[sortConfig.key];
+    // Handle playing time keys
+    if (
+      sortConfig.key === 'pointsPlayed' ||
+      sortConfig.key === 'oEfficiency' ||
+      sortConfig.key === 'dEfficiency'
+    ) {
+      const aStats = getPlayingTimeStats(a.name);
+      const bStats = getPlayingTimeStats(b.name);
+      const aValue = aStats?.[sortConfig.key] ?? 0;
+      const bValue = bStats?.[sortConfig.key] ?? 0;
+
+      if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
+      if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
+      return 0;
+    }
+
+    // Handle regular player stats keys
+    const aValue = a[sortConfig.key as keyof typeof a];
+    const bValue = b[sortConfig.key as keyof typeof b];
 
     if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
     if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
     return 0;
   });
 
-  const handleSort = (key: keyof (typeof playerStats)[0] | 'plusMinus') => {
+  const handleSort = (key: SortKey) => {
     setSortConfig((current) => {
       if (current.key === key) {
         return { key, direction: current.direction === 'desc' ? 'asc' : 'desc' };
@@ -104,6 +173,65 @@ export default function StatsTable({ playerStats, events, team, roster, games }:
             </Text>
             {renderSortIcon('name')}
           </TouchableOpacity>
+          {/* Playing Time Columns - only show if data exists */}
+          {hasPlayingTimeData && (
+            <>
+              <TouchableOpacity
+                style={[
+                  styles.headerCell,
+                  styles.sortableHeader,
+                  sortConfig.key === 'pointsPlayed' && { backgroundColor: palette.overlay05 },
+                ]}
+                onPress={() => handleSort('pointsPlayed')}>
+                <Text
+                  style={[
+                    styles.headerText,
+                    {
+                      color: sortConfig.key === 'pointsPlayed' ? palette.accent : palette.textMuted,
+                    },
+                  ]}>
+                  Pts
+                </Text>
+                {renderSortIcon('pointsPlayed')}
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.headerCell,
+                  styles.sortableHeader,
+                  sortConfig.key === 'oEfficiency' && { backgroundColor: palette.overlay05 },
+                ]}
+                onPress={() => handleSort('oEfficiency')}>
+                <Text
+                  style={[
+                    styles.headerText,
+                    {
+                      color: sortConfig.key === 'oEfficiency' ? palette.accent : palette.textMuted,
+                    },
+                  ]}>
+                  O-Eff
+                </Text>
+                {renderSortIcon('oEfficiency')}
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.headerCell,
+                  styles.sortableHeader,
+                  sortConfig.key === 'dEfficiency' && { backgroundColor: palette.overlay05 },
+                ]}
+                onPress={() => handleSort('dEfficiency')}>
+                <Text
+                  style={[
+                    styles.headerText,
+                    {
+                      color: sortConfig.key === 'dEfficiency' ? palette.accent : palette.textMuted,
+                    },
+                  ]}>
+                  D-Eff
+                </Text>
+                {renderSortIcon('dEfficiency')}
+              </TouchableOpacity>
+            </>
+          )}
           <TouchableOpacity
             style={[
               styles.headerCell,
@@ -217,6 +345,46 @@ export default function StatsTable({ playerStats, events, team, roster, games }:
             <Text style={[styles.cell, styles.nameCell, { color: palette.textInverse }]}>
               {player.name}
             </Text>
+            {/* Playing Time Cells - only show if data exists */}
+            {hasPlayingTimeData && (
+              <>
+                <Text style={[styles.cell, { color: palette.textInverse }]}>
+                  {getPlayingTimeStats(player.name)?.pointsPlayed ?? '-'}
+                </Text>
+                <Text
+                  style={[
+                    styles.cell,
+                    { color: palette.textInverse },
+                    (getPlayingTimeStats(player.name)?.oEfficiency ?? 0) >= 0.6 && {
+                      color: palette.success,
+                    },
+                    (getPlayingTimeStats(player.name)?.oEfficiency ?? 0) <= 0.4 &&
+                      (getPlayingTimeStats(player.name)?.oPoints ?? 0) > 0 && {
+                        color: palette.danger,
+                      },
+                  ]}>
+                  {getPlayingTimeStats(player.name)
+                    ? formatEfficiency(getPlayingTimeStats(player.name)!.oEfficiency)
+                    : '-'}
+                </Text>
+                <Text
+                  style={[
+                    styles.cell,
+                    { color: palette.textInverse },
+                    (getPlayingTimeStats(player.name)?.dEfficiency ?? 0) >= 0.6 && {
+                      color: palette.success,
+                    },
+                    (getPlayingTimeStats(player.name)?.dEfficiency ?? 0) <= 0.4 &&
+                      (getPlayingTimeStats(player.name)?.dPoints ?? 0) > 0 && {
+                        color: palette.danger,
+                      },
+                  ]}>
+                  {getPlayingTimeStats(player.name)
+                    ? formatEfficiency(getPlayingTimeStats(player.name)!.dEfficiency)
+                    : '-'}
+                </Text>
+              </>
+            )}
             <Text style={[styles.cell, { color: palette.textInverse }]}>{player.goals || '-'}</Text>
             <Text style={[styles.cell, { color: palette.textInverse }]}>
               {player.assists || '-'}

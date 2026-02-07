@@ -830,6 +830,7 @@ export const useGameStore = create<GameState>()(
             gameLength: state.gameLength,
             startingPossession: state.startingPossession ?? 'team1',
             pointStartTimestamps: state.pointStartTimestamps,
+            pointLines: state.pointLines,
           };
           await storage.saveGame(game);
           const games = await storage.loadGames();

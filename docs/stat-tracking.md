@@ -32,6 +32,8 @@ export type GameEvent =
     };
 ```
 
+> See [Data Structure Decisions](data-structure-decisions.md) for architectural trade-offs regarding this flat structure vs. a nested point model.
+
 ## State
 
 | Property               | Type                            | Description                                    |
@@ -98,6 +100,7 @@ In Settings screen (`app/Settings.tsx`):
 - **Track My Team Stats**: Toggle switch to enable/disable stat tracking
 - **Clear Player Rosters**: Button to reset rosters (appears when roster has players)
 - **View Stats**: Access the [View Stats](view-stats.md) screen to see player breakdowns and export data
+- **Reset Stats Tutorial** (Dev Only): Available at the bottom of the Dashboard in dev builds to reset the tutorial acknowledgement flag.
 
 ## Undo Behavior
 

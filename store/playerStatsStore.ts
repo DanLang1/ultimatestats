@@ -1,4 +1,4 @@
-import { GameEvent, Player, SavedGame } from '@/lib/storage';
+import { GameEvent, Player, PointLineRecord, SavedGame } from '@/lib/storage';
 import { create } from 'zustand';
 
 interface PlayerStatsStore {
@@ -8,14 +8,20 @@ interface PlayerStatsStore {
   roster?: Player[] | null;
   games?: SavedGame[] | null;
   selectedGameId: string | null;
+  // Playing time data
+  pointLines?: PointLineRecord[] | null;
+  startingPossession?: 'team1' | 'team2' | null;
+  gameTo?: number;
   openPlayerStats: (
     player: string,
     events: GameEvent[],
     team: 'team1' | 'team2',
     roster?: Player[],
     games?: SavedGame[],
+    pointLines?: PointLineRecord[],
+    startingPossession?: 'team1' | 'team2' | null,
+    gameTo?: number,
   ) => void;
-  closePlayerStats: () => void;
   setSelectedGameId: (id: string | null) => void;
 }
 
@@ -26,16 +32,20 @@ export const usePlayerStatsStore = create<PlayerStatsStore>((set) => ({
   roster: null,
   games: null,
   selectedGameId: null,
-  openPlayerStats: (player, events, team, roster, games) =>
-    set({ player, events, team, roster, games, selectedGameId: null }),
-  closePlayerStats: () =>
+  pointLines: null,
+  startingPossession: null,
+  gameTo: 15,
+  openPlayerStats: (player, events, team, roster, games, pointLines, startingPossession, gameTo) =>
     set({
-      player: null,
-      events: [],
-      team: 'team1',
-      roster: null,
-      games: null,
+      player,
+      events,
+      team,
+      roster,
+      games,
       selectedGameId: null,
+      pointLines,
+      startingPossession,
+      gameTo: gameTo ?? 15,
     }),
   setSelectedGameId: (id) => set({ selectedGameId: id }),
 }));

@@ -44,13 +44,7 @@ export default function ChemistryMap({ playerName, connections }: ChemistryMapPr
     allConnections.length > 0 ? allConnections.sort((a, b) => b.count - a.count)[0] : null;
 
   if (feeders.length === 0 && targets.length === 0) {
-    return (
-      <View style={[styles.container, { height: 120, justifyContent: 'center' }]}>
-        <Text style={{ color: palette.textMuted, textAlign: 'center' }}>
-          No connections recorded yet.
-        </Text>
-      </View>
-    );
+    return null;
   }
 
   return (

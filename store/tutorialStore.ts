@@ -17,6 +17,7 @@ interface TutorialState {
   closeOnboarding: () => void;
   triggerStatsTutorial: () => void;
   closeStatsTutorial: () => void;
+  resetStatsTutorial: () => void;
 }
 
 export const useTutorialStore = create<TutorialState>()(
@@ -43,6 +44,12 @@ export const useTutorialStore = create<TutorialState>()(
         set({
           showStatsTutorial: false,
           hasSeenStatsTutorial: true,
+        }),
+
+      resetStatsTutorial: () =>
+        set({
+          hasSeenStatsTutorial: false,
+          showStatsTutorial: false,
         }),
     }),
     {

@@ -23,20 +23,24 @@ The View Stats page displays a table of player statistics (goals, assists, block
 
 Scrollable table with the following columns:
 
-| Column | Description                                    |
-| ------ | ---------------------------------------------- |
-| Player | Player name                                    |
-| G      | Goals scored (+1)                              |
-| A      | Assists thrown (+1)                            |
-| Blk    | Blocks made (+1)                               |
-| Calh   | Callahans made (+1, only appears if > 0)       |
-| TO     | Throwaways committed (-1)                      |
-| D      | Drops committed (-1)                           |
-| +/-    | Plus/Minus (G + A + Blk - TO - D), color-coded |
+| Column | Description                                              |
+| ------ | -------------------------------------------------------- |
+| Player | Player name                                              |
+| Pts    | Points played (requires line tracking data)              |
+| O-Eff  | O-line Efficiency: +1 hold, -1 broken (green/red)        |
+| D-Eff  | D-line Efficiency: +1 break, -1 held against (green/red) |
+| G      | Goals scored (+1)                                        |
+| A      | Assists thrown (+1)                                      |
+| Blk    | Blocks made (+1)                                         |
+| Calh   | Callahans made (+1, only appears if > 0)                 |
+| TO     | Throwaways committed (-1)                                |
+| D      | Drops committed (-1)                                     |
+| +/-    | Plus/Minus (G + A + Blk - TO - D), color-coded           |
 
 - sorted by Plus/Minus descending, then by name.
-- Plus/Minus is **green** for positive, **red** for negative.
+- Plus/Minus, O-Eff, D-Eff are **green** for positive, **red** for negative.
 - Non-integer values (from 50/50 turnovers) are displayed with single decimal (e.g. 0.5).
+- Pts, O-Eff, D-Eff columns are hidden for games without line tracking data.
 - **Interactive Rows**: Tap any player row to view a detailed breakdown of their individual stats.
 
 ### 3. Game Timeline

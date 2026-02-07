@@ -1,6 +1,7 @@
 import ChemistryMap from '@/components/view-stats/ChemistryMap';
 import ImpactTimeline from '@/components/view-stats/ImpactTimeline';
 import PlayerStatsSummary from '@/components/view-stats/PlayerStatsSummary';
+import PlayingTimeSection from '@/components/view-stats/PlayingTimeSection';
 import RoleDiamond from '@/components/view-stats/RoleDiamond';
 import { useTheme } from '@/context/ThemeContext';
 import {
@@ -17,7 +18,17 @@ import React from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 export default function PlayerStats() {
-  const { player, events, team, games, selectedGameId, roster } = usePlayerStatsStore();
+  const {
+    player,
+    events,
+    team,
+    games,
+    selectedGameId,
+    roster,
+    pointLines,
+    startingPossession,
+    gameTo,
+  } = usePlayerStatsStore();
   const { palette } = useTheme();
 
   const handleDismiss = () => {
@@ -268,14 +279,32 @@ export default function PlayerStats() {
             <ImpactTimeline data={stats.impact} />
           </View>
 
-          {/* Full-width Chemistry Map */}
-          <View
-            style={[
-              styles.card,
-              { backgroundColor: palette.overlay02, borderColor: palette.overlay05 },
-            ]}>
-            <ChemistryMap playerName={player} connections={stats.chemistry} />
-          </View>
+          {/* Full-width Chemistry Map - only show if connections exist */}
+          {stats.chemistry.some((c) => c.goalsFrom > 0 || c.assistsTo > 0) && (
+            <View
+              style={[
+                styles.card,
+                { backgroundColor: palette.overlay02, borderColor: palette.overlay05 },
+              ]}>
+              <ChemistryMap playerName={player} connections={stats.chemistry} />
+            </View>
+          )}
+
+          {/* Playing Time Section */}
+          <PlayingTimeSection
+            playerName={player}
+            events={events}
+            pointLines={pointLines}
+            startingPossession={startingPossession}
+            gameTo={gameTo}
+            roster={roster}
+            goals={stats.summary?.goals}
+            assists={stats.summary?.assists}
+            blocks={stats.summary?.blocks}
+            turnovers={(stats.summary?.throwaways ?? 0) + (stats.summary?.drops ?? 0)}
+            throwaways={stats.summary?.throwaways}
+            drops={stats.summary?.drops}
+          />
         </View>
       </ScrollView>
     </View>

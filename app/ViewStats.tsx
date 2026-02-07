@@ -40,6 +40,7 @@ export default function ViewStatsScreen() {
     deleteSavedGames,
     startingPossession,
     gameTo,
+    pointLines,
   } = useGameStore();
   const { showAlert } = useAlert();
   const { palette } = useTheme();
@@ -81,6 +82,7 @@ export default function ViewStatsScreen() {
         startingPossession: selectedGame.startingPossession,
         gameTo: selectedGame.gameTo,
         roster: selectedGame.team1.roster,
+        pointLines: selectedGame.pointLines,
       }
     : {
         team1Name,
@@ -91,6 +93,7 @@ export default function ViewStatsScreen() {
         startingPossession,
         gameTo,
         roster: currentTeam?.roster,
+        pointLines,
       };
   // Helper to generate filename for single game exports
   const generateGameFilename = (t1Name: string, t2Name: string, date?: number) => {
@@ -501,6 +504,7 @@ export default function ViewStatsScreen() {
             startingPossession={displayData.startingPossession}
             gameTo={displayData.gameTo}
             games={selectedGame ? [selectedGame] : undefined}
+            pointLines={displayData.pointLines}
           />
         ) : viewMode === 'aggregate' ? (
           showingAggregatedStats && aggregatedData ? (
@@ -516,6 +520,7 @@ export default function ViewStatsScreen() {
               startingPossession={null}
               gameTo={15}
               games={aggregatedData.games}
+              pointLines={aggregatedData.games.flatMap((g) => g.pointLines ?? [])}
             />
           ) : (
             <AggregateGamesList

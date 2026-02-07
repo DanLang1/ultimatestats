@@ -3,6 +3,7 @@ import { useTheme } from '@/context/ThemeContext';
 import { useNewGame } from '@/hooks/useNewGame';
 import { useVersionCheck } from '@/hooks/useVersionCheck';
 import { useGameStore } from '@/store/gameStore';
+import { useTutorialStore } from '@/store/tutorialStore';
 import { MaterialIcons } from '@expo/vector-icons';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -27,6 +28,7 @@ interface MenuSection {
 export default function DashboardScreen() {
   const { palette } = useTheme();
   const { statTrackingEnabled, currentTeam, savedGames } = useGameStore();
+  const { resetStatsTutorial } = useTutorialStore();
   const { confirmNewGame } = useNewGame({ onSuccess: () => router.push('/') });
   const { hasNewVersion } = useVersionCheck();
 
@@ -215,25 +217,45 @@ export default function DashboardScreen() {
 
         {/* Dev tools - only visible in development */}
         {__DEV__ && (
-          <Pressable
-            onPress={() => {
-              AsyncStorage.removeItem('ultimatestats_last_seen_version').then(() => {
-                console.log('Version check reset - reload app to see badge');
-              });
-            }}
-            style={({ pressed }) => [
-              styles.discordBanner,
-              { backgroundColor: '#e53935' },
-              pressed && styles.menuItemPressed,
-            ]}>
-            <MaterialCommunityIcons name="bug" size={24} color="white" />
-            <View style={styles.discordText}>
-              <Text style={[styles.discordTitle, { color: 'white' }]}>Reset Version Check</Text>
-              <Text style={[styles.discordSubtitle, { color: 'rgba(255,255,255,0.7)' }]}>
-                DEV ONLY - Reload app after tapping
-              </Text>
-            </View>
-          </Pressable>
+          <>
+            <Pressable
+              onPress={() => {
+                AsyncStorage.removeItem('ultimatestats_last_seen_version').then(() => {
+                  console.log('Version check reset - reload app to see badge');
+                });
+              }}
+              style={({ pressed }) => [
+                styles.discordBanner,
+                { backgroundColor: palette.danger },
+                pressed && styles.menuItemPressed,
+              ]}>
+              <MaterialCommunityIcons name="bug" size={24} color="white" />
+              <View style={styles.discordText}>
+                <Text style={[styles.discordTitle, { color: 'white' }]}>Reset Version Check</Text>
+                <Text style={[styles.discordSubtitle, { color: 'rgba(255,255,255,0.7)' }]}>
+                  DEV ONLY - Reload app after tapping
+                </Text>
+              </View>
+            </Pressable>
+
+            <Pressable
+              onPress={() => {
+                resetStatsTutorial();
+              }}
+              style={({ pressed }) => [
+                styles.discordBanner,
+                { backgroundColor: palette.danger, marginTop: 12 },
+                pressed && styles.menuItemPressed,
+              ]}>
+              <MaterialCommunityIcons name="gesture-tap-button" size={24} color="white" />
+              <View style={styles.discordText}>
+                <Text style={[styles.discordTitle, { color: 'white' }]}>Reset Stats Tutorial</Text>
+                <Text style={[styles.discordSubtitle, { color: 'rgba(255,255,255,0.7)' }]}>
+                  DEV ONLY - Reset the has seen flag
+                </Text>
+              </View>
+            </Pressable>
+          </>
         )}
       </ScrollView>
     </ThemedView>
