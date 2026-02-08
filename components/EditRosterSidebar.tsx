@@ -11,15 +11,16 @@ const ANIMATION_DURATION = 200;
 export interface EditRosterSidebarProps {
   collapsed: boolean;
   onToggleCollapse: () => void;
-  onBack: () => void;
   onRenameTeam: () => void;
   onNewTeam: () => void;
   onSwitchTeam: () => void;
   onEditPresets: () => void;
+  onShareTeam: () => void;
   onClearRoster: () => void;
   // Conditional visibility
   showSwitchTeam: boolean;
   showEditPresets: boolean;
+  showShareTeam: boolean;
   showClearRoster: boolean;
   showNewTeam: boolean;
 }
@@ -65,14 +66,15 @@ function SidebarButton({
 export function EditRosterSidebar({
   collapsed,
   onToggleCollapse,
-  onBack,
   onRenameTeam,
   onNewTeam,
   onSwitchTeam,
   onEditPresets,
+  onShareTeam,
   onClearRoster,
   showSwitchTeam,
   showEditPresets,
+  showShareTeam,
   showClearRoster,
   showNewTeam,
 }: EditRosterSidebarProps) {
@@ -91,13 +93,6 @@ export function EditRosterSidebar({
         { backgroundColor: palette.overlay05, borderRightColor: palette.overlay10 },
         animatedStyle,
       ]}>
-      {/* Top section - Back button only when expanded */}
-      {!collapsed && (
-        <View style={styles.topSection}>
-          <SidebarButton icon="arrow-left" label="Back" onPress={onBack} collapsed={collapsed} />
-        </View>
-      )}
-
       {/* Actions section */}
       <View style={styles.actionsSection}>
         <SidebarButton
@@ -125,11 +120,17 @@ export function EditRosterSidebar({
             collapsed={collapsed}
           />
         )}
+        {showShareTeam && (
+          <SidebarButton
+            icon="share-variant"
+            label="Share Team"
+            onPress={onShareTeam}
+            collapsed={collapsed}
+          />
+        )}
 
-        {/* Divider before danger action */}
         {showClearRoster && (
           <>
-            <View style={[styles.divider, { backgroundColor: palette.overlay15 }]} />
             <SidebarButton
               icon="delete-sweep-outline"
               label="Clear Roster"
@@ -171,12 +172,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     justifyContent: 'space-between',
   },
-  topSection: {
-    marginBottom: 8,
-  },
   actionsSection: {
     flex: 1,
-    gap: 4,
+    gap: 2,
   },
   bottomSection: {
     marginTop: 16,

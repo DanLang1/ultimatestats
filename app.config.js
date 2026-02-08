@@ -23,6 +23,30 @@ export default {
     edgeToEdgeEnabled: true,
     predictiveBackGestureEnabled: false,
     package: IS_DEV ? 'com.langdk.ultimatestats.dev' : 'com.langdk.ultimatestats',
+    intentFilters: [
+      {
+        action: 'VIEW',
+        autoVerify: true,
+        data: [
+          {
+            scheme: 'https',
+            host: 'u-stat.app',
+            pathPrefix: '/s/game/',
+          },
+          {
+            scheme: 'https',
+            host: 'u-stat.app',
+            pathPrefix: '/s/team/',
+          },
+          {
+            scheme: 'https',
+            host: 'u-stat.app',
+            pathPrefix: '/s/games/',
+          },
+        ],
+        category: ['BROWSABLE', 'DEFAULT'],
+      },
+    ],
   },
   web: {
     output: 'static',

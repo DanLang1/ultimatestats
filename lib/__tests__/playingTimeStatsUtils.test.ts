@@ -10,14 +10,8 @@ import {
 
 describe('playingTimeStatsUtils', () => {
   describe('computePlayingTimeStats', () => {
-    const roster = [
-      { id: 'p1', name: 'Alice', isActive: true, matchingType: null, role: null },
-      { id: 'p2', name: 'Bob', isActive: true, matchingType: null, role: null },
-      { id: 'p3', name: 'Charlie', isActive: true, matchingType: null, role: null },
-    ];
-
     it('returns empty map when no point lines', () => {
-      const result = computePlayingTimeStats([], [], 'team1', 15, roster);
+      const result = computePlayingTimeStats([], [], 'team1', 15);
       expect(result.size).toBe(0);
     });
 
@@ -34,11 +28,11 @@ describe('playingTimeStatsUtils', () => {
         { type: 'goal', team: 'team1', goalPlayerId: 'p2', assistPlayerId: 'p3' },
       ];
 
-      const result = computePlayingTimeStats(pointLines, events, 'team1', 15, roster);
+      const result = computePlayingTimeStats(pointLines, events, 'team1', 15);
 
-      expect(result.get('Alice')?.pointsPlayed).toBe(2);
-      expect(result.get('Bob')?.pointsPlayed).toBe(2);
-      expect(result.get('Charlie')?.pointsPlayed).toBe(2);
+      expect(result.get('p1')?.pointsPlayed).toBe(2);
+      expect(result.get('p2')?.pointsPlayed).toBe(2);
+      expect(result.get('p3')?.pointsPlayed).toBe(2);
     });
 
     it('computes O-line efficiency correctly for holds', () => {
@@ -51,11 +45,11 @@ describe('playingTimeStatsUtils', () => {
         { type: 'goal', team: 'team1', goalPlayerId: 'p1', assistPlayerId: null },
       ];
 
-      const result = computePlayingTimeStats(pointLines, events, 'team1', 15, roster);
+      const result = computePlayingTimeStats(pointLines, events, 'team1', 15);
 
-      expect(result.get('Alice')?.oEfficiency).toBe(1); // 1/1 = 100% hold rate
-      expect(result.get('Alice')?.oLineHolds).toBe(1);
-      expect(result.get('Alice')?.oPoints).toBe(1);
+      expect(result.get('p1')?.oEfficiency).toBe(1); // 1/1 = 100% hold rate
+      expect(result.get('p1')?.oLineHolds).toBe(1);
+      expect(result.get('p1')?.oPoints).toBe(1);
     });
 
     it('computes O-line efficiency correctly for breaks against', () => {
@@ -68,11 +62,11 @@ describe('playingTimeStatsUtils', () => {
         { type: 'goal', team: 'team2', goalPlayerId: null, assistPlayerId: null },
       ];
 
-      const result = computePlayingTimeStats(pointLines, events, 'team1', 15, roster);
+      const result = computePlayingTimeStats(pointLines, events, 'team1', 15);
 
-      expect(result.get('Alice')?.oEfficiency).toBe(0); // 0/1 = 0% hold rate
-      expect(result.get('Alice')?.oLineBreaksAgainst).toBe(1);
-      expect(result.get('Alice')?.pointLosses).toBe(1);
+      expect(result.get('p1')?.oEfficiency).toBe(0); // 0/1 = 0% hold rate
+      expect(result.get('p1')?.oLineBreaksAgainst).toBe(1);
+      expect(result.get('p1')?.pointLosses).toBe(1);
     });
 
     it('computes D-line efficiency correctly for breaks', () => {
@@ -86,11 +80,11 @@ describe('playingTimeStatsUtils', () => {
       ];
 
       // startingPossession is team2, so team1 is on D-line
-      const result = computePlayingTimeStats(pointLines, events, 'team2', 15, roster);
+      const result = computePlayingTimeStats(pointLines, events, 'team2', 15);
 
-      expect(result.get('Alice')?.dEfficiency).toBe(1); // 1/1 = 100% break rate
-      expect(result.get('Alice')?.dLineBreaks).toBe(1);
-      expect(result.get('Alice')?.dPoints).toBe(1);
+      expect(result.get('p1')?.dEfficiency).toBe(1); // 1/1 = 100% break rate
+      expect(result.get('p1')?.dLineBreaks).toBe(1);
+      expect(result.get('p1')?.dPoints).toBe(1);
     });
 
     it('computes D-line efficiency correctly for holds against', () => {
@@ -104,11 +98,11 @@ describe('playingTimeStatsUtils', () => {
       ];
 
       // startingPossession is team2, so team1 is on D-line
-      const result = computePlayingTimeStats(pointLines, events, 'team2', 15, roster);
+      const result = computePlayingTimeStats(pointLines, events, 'team2', 15);
 
-      expect(result.get('Alice')?.dEfficiency).toBe(0); // 0/1 = 0% break rate
-      expect(result.get('Alice')?.dLineHoldsAgainst).toBe(1);
-      expect(result.get('Alice')?.pointLosses).toBe(1);
+      expect(result.get('p1')?.dEfficiency).toBe(0); // 0/1 = 0% break rate
+      expect(result.get('p1')?.dLineHoldsAgainst).toBe(1);
+      expect(result.get('p1')?.pointLosses).toBe(1);
     });
 
     it('uses final line for substitutions', () => {
@@ -122,12 +116,12 @@ describe('playingTimeStatsUtils', () => {
         { type: 'goal', team: 'team1', goalPlayerId: 'p2', assistPlayerId: null },
       ];
 
-      const result = computePlayingTimeStats(pointLines, events, 'team1', 15, roster);
+      const result = computePlayingTimeStats(pointLines, events, 'team1', 15);
 
       // Only p2 should get credit for this point (final line)
-      expect(result.has('Alice')).toBe(false);
-      expect(result.get('Bob')?.pointsPlayed).toBe(1);
-      expect(result.get('Bob')?.oEfficiency).toBe(1);
+      expect(result.has('p1')).toBe(false);
+      expect(result.get('p2')?.pointsPlayed).toBe(1);
+      expect(result.get('p2')?.oEfficiency).toBe(1);
     });
 
     it('computes playing time percent correctly', () => {
@@ -145,11 +139,11 @@ describe('playingTimeStatsUtils', () => {
         { type: 'goal', team: 'team1', goalPlayerId: 'p2', assistPlayerId: null },
       ];
 
-      const result = computePlayingTimeStats(pointLines, events, 'team1', 15, roster);
+      const result = computePlayingTimeStats(pointLines, events, 'team1', 15);
 
       // Each player played 2 of 4 points = 50%
-      expect(result.get('Alice')?.playingTimePercent).toBe(50);
-      expect(result.get('Bob')?.playingTimePercent).toBe(50);
+      expect(result.get('p1')?.playingTimePercent).toBe(50);
+      expect(result.get('p2')?.playingTimePercent).toBe(50);
     });
   });
 

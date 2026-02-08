@@ -1,19 +1,22 @@
 import { EditRosterSidebar } from '@/components/EditRosterSidebar';
 import { AlertModal } from '@/components/ui/AlertModal';
 import { useAlert } from '@/components/ui/AlertProvider';
+import { ShareConfirmModal } from '@/components/ui/ShareConfirmModal';
 import { PlayerChip } from '@/components/ui/PlayerChip';
 import { useTheme } from '@/context/ThemeContext';
 import { useIsGameActive } from '@/hooks/useIsGameActive';
 import { hasPlayerWithName } from '@/lib/playerUtils';
+import { serializeTeam, uploadPayload } from '@/lib/sharing';
 import { SavedTeam } from '@/lib/storage';
 import { Player } from '@/lib/storage/types';
 import { generateId } from '@/lib/utils';
 import { useGameStore } from '@/store/gameStore';
+import { useLinePresetsStore } from '@/store/linePresetsStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, Share, StyleSheet, Text, TextInput, View } from 'react-native';
 
 export default function EditRosterScreen() {
   const { teamName } = useLocalSearchParams<{ teamName: string }>();
@@ -40,6 +43,7 @@ export default function EditRosterScreen() {
     loadSavedTeams();
   }, [loadSavedTeams]);
 
+  const [showShareConfirm, setShowShareConfirm] = useState(false);
   const [newPlayerName, setNewPlayerName] = useState('');
   const [renameModalVisible, setRenameModalVisible] = useState(false);
   const [editTeamName, setEditTeamName] = useState('');
@@ -102,6 +106,11 @@ export default function EditRosterScreen() {
     await saveCurrentTeam();
   };
 
+  const handleShareTeam = () => {
+    if (!currentTeam) return;
+    setShowShareConfirm(true);
+  };
+
   const handleAddPlayer = () => {
     const trimmed = newPlayerName.trim();
     if (trimmed && !hasPlayerWithName(roster, trimmed)) {
@@ -160,7 +169,6 @@ export default function EditRosterScreen() {
         <EditRosterSidebar
           collapsed={sidebarCollapsed}
           onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
-          onBack={handleBack}
           onRenameTeam={() => {
             setEditTeamName(currentTeam?.name ?? '');
             setRenameModalVisible(true);
@@ -168,10 +176,12 @@ export default function EditRosterScreen() {
           onNewTeam={handleNewTeam}
           onSwitchTeam={() => router.push('/TeamManagementModal')}
           onEditPresets={() => router.push('/LinePresetEditor')}
+          onShareTeam={handleShareTeam}
           onClearRoster={handleClearAll}
           showNewTeam={!gameActive}
           showSwitchTeam={!gameActive && hasOtherTeams}
           showEditPresets={roster.length > 0}
+          showShareTeam={roster.length > 0}
           showClearRoster={roster.length > 0}
         />
 
@@ -179,15 +189,12 @@ export default function EditRosterScreen() {
         <View style={styles.mainContent}>
           {/* Header */}
           <View style={styles.header}>
-            {/* Back button - only show when sidebar is collapsed */}
-            {sidebarCollapsed && (
-              <Pressable
-                onPress={handleBack}
-                style={[styles.backButton, { backgroundColor: palette.overlay10 }]}
-                hitSlop={12}>
-                <MaterialCommunityIcons name="arrow-left" size={24} color={palette.textInverse} />
-              </Pressable>
-            )}
+            <Pressable
+              onPress={handleBack}
+              style={[styles.backButton, { backgroundColor: palette.overlay10 }]}
+              hitSlop={12}>
+              <MaterialCommunityIcons name="arrow-left" size={24} color={palette.textInverse} />
+            </Pressable>
 
             {/* Team name (display only) */}
             <View style={styles.teamHeaderCenterWrapper} pointerEvents="none">
@@ -196,8 +203,7 @@ export default function EditRosterScreen() {
               </Text>
             </View>
 
-            {/* Empty spacer for layout balance when back button is shown */}
-            {sidebarCollapsed && <View style={styles.headerSpacer} />}
+            <View style={styles.headerSpacer} />
           </View>
 
           {/* Add Player Input */}
@@ -399,6 +405,25 @@ export default function EditRosterScreen() {
           </Pressable>
         </View>
       </AlertModal>
+
+      <ShareConfirmModal
+        visible={showShareConfirm}
+        onConfirm={async () => {
+          try {
+            const payload = serializeTeam(currentTeam!, useLinePresetsStore.getState().presets);
+            const { url } = await uploadPayload(payload);
+            setShowShareConfirm(false);
+            await Share.share({ message: url });
+          } catch {
+            showAlert({
+              title: 'Share failed',
+              message: 'Could not upload team for sharing. Please try again.',
+            });
+            throw new Error('share failed');
+          }
+        }}
+        onCancel={() => setShowShareConfirm(false)}
+      />
     </View>
   );
 }

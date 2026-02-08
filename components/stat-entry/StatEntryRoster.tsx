@@ -4,20 +4,16 @@ import { Player } from '@/lib/storage/types';
 import React from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
-type EntryStep = 'goal' | 'assist';
-
 interface StatEntryRosterProps {
   roster: Player[];
-  step: EntryStep;
-  selectedGoalId?: string | null;
+  selectedPlayerId?: string | null;
   onSelect: (playerId: string) => void;
   maxHeight?: number;
 }
 
 export function StatEntryRoster({
   roster,
-  step,
-  selectedGoalId,
+  selectedPlayerId,
   onSelect,
   maxHeight = 120,
 }: StatEntryRosterProps) {
@@ -42,7 +38,7 @@ export function StatEntryRoster({
               key={player.id}
               name={player.name}
               matchingType={player.matchingType}
-              selected={step === 'goal' ? false : player.id === selectedGoalId}
+              selected={player.id === selectedPlayerId}
               onPress={() => onSelect(player.id)}
             />
           ))

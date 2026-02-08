@@ -39,6 +39,8 @@ function SettingsContent() {
     setLineCallingEnabled,
     numPlayers,
     setNumPlayers,
+    statEntryOrder,
+    setStatEntryOrder,
   } = useSettingsStore();
 
   const {
@@ -417,9 +419,10 @@ function SettingsContent() {
                       if (enabled && !hasSeenStatsTutorial) {
                         triggerStatsTutorial();
                       }
-                      // Disable point timer if stat tracking is disabled
+                      // Disable point timer and line calling if stat tracking is disabled
                       if (!enabled) {
                         setPointTimerEnabled(false);
+                        setLineCallingEnabled(false);
                       }
                     }}
                     disabled={gameActive}
@@ -428,15 +431,26 @@ function SettingsContent() {
                 </View>
               </View>
               {statTrackingEnabled && (
-                <View style={styles.inputGroup}>
-                  <Switch
-                    label="Point Timer"
-                    value={pointTimerEnabled}
-                    onValueChange={setPointTimerEnabled}
-                    disabled={gameActive}
-                    locked={gameActive}
-                  />
-                </View>
+                <>
+                  <View style={styles.inputGroup}>
+                    <Switch
+                      label="Track Goal First"
+                      value={statEntryOrder === 'goal_first'}
+                      onValueChange={(enabled) =>
+                        setStatEntryOrder(enabled ? 'goal_first' : 'assist_first')
+                      }
+                    />
+                  </View>
+                  <View style={styles.inputGroup}>
+                    <Switch
+                      label="Point Timer"
+                      value={pointTimerEnabled}
+                      onValueChange={setPointTimerEnabled}
+                      disabled={gameActive}
+                      locked={gameActive}
+                    />
+                  </View>
+                </>
               )}
               <View style={styles.inputGroup}>
                 <Switch

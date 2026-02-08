@@ -1,6 +1,6 @@
 import { AnimatedThemedView } from '@/components/ThemedView';
 import { useTheme } from '@/context/ThemeContext';
-import { getActiveRoster, getPlayerName } from '@/lib/playerUtils';
+import { getActiveRoster, getPlayerName, UNKNOWN_PLAYER_ID } from '@/lib/playerUtils';
 import { Player } from '@/lib/storage/types';
 import { TurnoverType } from '@/store/gameStore.types';
 import React, { useState } from 'react';
@@ -13,7 +13,7 @@ type EntryStep = 'type' | 'player';
 export interface TurnoverEntryInnerProps {
   teamName: string;
   roster: Player[];
-  onSkip: () => void;
+  onCancel: () => void;
   onComplete: (type: TurnoverType, playerId: string | null, player2Id?: string | null) => void;
   onAddPlayer: (name: string) => string | null;
   isMyTeamTurnover: boolean;
@@ -25,7 +25,7 @@ export interface TurnoverEntryInnerProps {
 export function TurnoverEntryInner({
   teamName,
   roster,
-  onSkip,
+  onCancel,
   onComplete,
   onAddPlayer,
   isMyTeamTurnover,
@@ -116,12 +116,6 @@ export function TurnoverEntryInner({
         // Normal turnover - complete with this player
         onComplete(selectedType, playerIdToSelect);
       }
-    }
-  };
-
-  const handleSkipPlayer = () => {
-    if (selectedType) {
-      onComplete(selectedType, null);
     }
   };
 
@@ -252,9 +246,10 @@ export function TurnoverEntryInner({
     </View>
   );
 
-  // Render skip button
-  const renderSkipButton = () => (
+  // Render cancel button (available on all steps) or unknown button (player step)
+  const renderCancelButton = () => (
     <Animated.View layout={LinearTransition} style={styles.footer}>
+      {/* Cancel button - always visible */}
       <Pressable
         style={[
           styles.skipButton,
@@ -264,11 +259,25 @@ export function TurnoverEntryInner({
             borderColor: skipButtonBorder,
           },
         ]}
-        onPress={step === 'type' ? onSkip : handleSkipPlayer}>
-        <Text style={[styles.skipText, { color: skipButtonText }]}>
-          {step === 'player' && 'Skip'}
-        </Text>
+        onPress={onCancel}>
+        <Text style={[styles.skipText, { color: skipButtonText }]}>Cancel</Text>
       </Pressable>
+
+      {/* Unknown button - shows only on player step */}
+      {step === 'player' && (
+        <Pressable
+          style={[
+            styles.skipButton,
+            {
+              backgroundColor: palette.cardBgAlt,
+              borderWidth: 1,
+              borderColor: palette.overlay20,
+            },
+          ]}
+          onPress={() => handlePlayerSelect(UNKNOWN_PLAYER_ID)}>
+          <Text style={[styles.skipText, { color: palette.textMuted }]}>Unknown</Text>
+        </Pressable>
+      )}
     </Animated.View>
   );
 
@@ -282,13 +291,8 @@ export function TurnoverEntryInner({
         <Pressable onPress={() => {}} style={styles.sheetContent}>
           <View style={styles.compactContainer}>
             {renderHeader()}
-            <StatEntryRoster
-              roster={displayRoster}
-              step="goal"
-              onSelect={handlePlayerSelect}
-              maxHeight={220}
-            />
-            {renderSkipButton()}
+            <StatEntryRoster roster={displayRoster} onSelect={handlePlayerSelect} maxHeight={220} />
+            {renderCancelButton()}
           </View>
         </Pressable>
       </AnimatedThemedView>
@@ -341,7 +345,7 @@ export function TurnoverEntryInner({
               </View>
             )}
 
-            {renderSkipButton()}
+            {renderCancelButton()}
           </View>
 
           {/* Right Column: Roster Selection */}
@@ -349,7 +353,6 @@ export function TurnoverEntryInner({
             <Animated.View entering={FadeIn} style={styles.rightColumn}>
               <StatEntryRoster
                 roster={displayRoster}
-                step="goal"
                 onSelect={handlePlayerSelect}
                 maxHeight={280}
               />

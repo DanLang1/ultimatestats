@@ -48,7 +48,7 @@ export default function TurnoverEntryScreen() {
   const displayTeamName = isOpponentTurnover ? team1Name : teamName;
   const displayRoster = isOpponentTurnover ? lineFilteredRoster : roster;
 
-  const handleSkip = () => {
+  const handleCancel = () => {
     clearPendingTurnoverEntry();
     router.dismissTo('/');
   };
@@ -79,12 +79,12 @@ export default function TurnoverEntryScreen() {
     <View style={StyleSheet.absoluteFill}>
       <Pressable
         style={[styles.overlay, { backgroundColor: palette.overlayDark40 }]}
-        onPress={handleSkip}>
+        onPress={handleCancel}>
         <TurnoverEntryInner
           key={`turnover-${possession}-${preselectedType}`}
           teamName={displayTeamName}
           roster={displayRoster}
-          onSkip={handleSkip}
+          onCancel={handleCancel}
           onComplete={handleComplete}
           onAddPlayer={handleAddPlayer}
           isMyTeamTurnover={isMyTeamTurnover}

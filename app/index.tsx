@@ -15,10 +15,13 @@ import { useGameStore } from '@/store/gameStore';
 import { TurnoverType } from '@/store/gameStore.types';
 import { useLinePresetsStore } from '@/store/linePresetsStore';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useKeepAwake } from 'expo-keep-awake';
 import { router } from 'expo-router';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 export default function BasicScoreboard() {
+  useKeepAwake();
+
   const {
     currentTeam,
     team2Name,

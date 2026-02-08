@@ -8,10 +8,11 @@ type EntryStep = 'goal' | 'assist';
 interface StatEntryHeaderProps {
   teamName: string;
   step: EntryStep;
-  selectedGoal: string | null;
+  badgeValue: string | null;
+  badgeLabel: string | null;
 }
 
-export function StatEntryHeader({ teamName, step, selectedGoal }: StatEntryHeaderProps) {
+export function StatEntryHeader({ teamName, step, badgeValue, badgeLabel }: StatEntryHeaderProps) {
   const { palette } = useTheme();
 
   return (
@@ -24,15 +25,17 @@ export function StatEntryHeader({ teamName, step, selectedGoal }: StatEntryHeade
         {step === 'goal' ? 'Who scored?' : 'Who threw the assist?'}
       </Animated.Text>
 
-      {selectedGoal && (
+      {badgeValue && (
         <Animated.View
           entering={FadeIn}
           style={[
             styles.badge,
             { backgroundColor: palette.accentOverlay15, borderColor: palette.accent },
           ]}>
-          <Text style={[styles.badgeLabel, { color: palette.accent }]}>GOAL</Text>
-          <Text style={[styles.badgeValue, { color: palette.accent }]}>{selectedGoal}</Text>
+          <Text style={[styles.badgeLabel, { color: palette.accent }]}>
+            {badgeLabel || 'SELECTED'}
+          </Text>
+          <Text style={[styles.badgeValue, { color: palette.accent }]}>{badgeValue}</Text>
         </Animated.View>
       )}
     </View>

@@ -1,5 +1,6 @@
 import { AlertProvider } from '@/components/ui/AlertProvider';
 import { loadPersistedTheme, ThemeProvider, useTheme } from '@/context/ThemeContext';
+import { useShareLink } from '@/hooks/useShareLink';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useState } from 'react';
@@ -10,6 +11,7 @@ import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
 function RootLayoutInner() {
   const { palette, themeMode } = useTheme();
+  useShareLink();
 
   // Safe area background should always be dark for contrast
   // In dark mode: use primary (Navy)
@@ -128,6 +130,7 @@ function RootLayoutInner() {
               contentStyle: { backgroundColor: 'transparent' },
             }}
           />
+          <Stack.Screen name="Import" />
           <Stack.Screen
             name="EditPlayerModal"
             options={{

@@ -32,6 +32,8 @@ interface SettingsState {
   setLineCallingEnabled: (enabled: boolean) => void;
   setNumPlayers: (num: number) => void;
   setSidebarCollapsed: (collapsed: boolean) => void;
+  statEntryOrder: 'goal_first' | 'assist_first';
+  setStatEntryOrder: (order: 'goal_first' | 'assist_first') => void;
 }
 
 export const useSettingsStore = create<SettingsState>()(
@@ -57,6 +59,8 @@ export const useSettingsStore = create<SettingsState>()(
       setLineCallingEnabled: (enabled) => set({ lineCallingEnabled: enabled }),
       setNumPlayers: (num) => set({ numPlayers: num }),
       setSidebarCollapsed: (collapsed) => set({ sidebarCollapsed: collapsed }),
+      statEntryOrder: 'goal_first',
+      setStatEntryOrder: (order) => set({ statEntryOrder: order }),
     }),
     {
       name: 'ultimatestats-settings',

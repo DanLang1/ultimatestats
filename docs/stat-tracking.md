@@ -61,9 +61,9 @@ sequenceDiagram
     alt Tracking enabled
         Store->>Store: Set pendingStatEntry
         Store-->>Sheet: Sheet becomes visible
-        Sheet->>User: "Who scored?"
+        Sheet->>User: "Who scored?" (or "Who threw assist?" if configured)
         User->>Sheet: Select/add player
-        Sheet->>User: "Who threw assist?"
+        Sheet->>User: "Who threw assist?" (or "Who scored?" if configured)
         User->>Sheet: Select/add player
         Sheet->>Store: addGoalEvent()
         Store->>Store: Clear pendingStatEntry
@@ -98,6 +98,7 @@ sequenceDiagram
 In Settings screen (`app/Settings.tsx`):
 
 - **Track My Team Stats**: Toggle switch to enable/disable stat tracking
+- **Track Goal First**: Toggle switch to configure stat entry order (Goal -> Assist vs. Assist -> Goal)
 - **Clear Player Rosters**: Button to reset rosters (appears when roster has players)
 - **View Stats**: Access the [View Stats](view-stats.md) screen to see player breakdowns and export data
 - **Reset Stats Tutorial** (Dev Only): Available at the bottom of the Dashboard in dev builds to reset the tutorial acknowledgement flag.
@@ -125,3 +126,29 @@ On "New Game":
 - `team1Roster` cleared
 - `possession` and `startingPossession` reset to null
 - `statTrackingEnabled` setting persists
+
+## Cancel Behavior
+
+Users can cancel out of stat entry modals without recording any data:
+
+### StatEntrySheet (Goal/Assist Entry)
+
+When the user taps **Cancel** (or outside the modal):
+
+1. The score increment is reverted (undoes the point).
+2. The pending goal event is removed from `events` array.
+3. Possession is restored to team1.
+4. Point timer is restored to its previous state.
+5. `pendingStatEntry` is cleared.
+
+This differs from selecting **Unknown**, which still records the goal with null player IDs.
+
+### TurnoverEntrySheet (Turnover Entry)
+
+When the user taps **Cancel** (or outside the modal):
+
+1. `pendingTurnoverEntry` is cleared.
+2. No turnover event is recorded.
+3. Possession remains unchanged (no flip).
+
+Since turnovers don't increment the score, cancel simply dismisses without side effects.

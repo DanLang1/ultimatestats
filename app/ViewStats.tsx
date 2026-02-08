@@ -1,13 +1,14 @@
 import { ThemedView } from '@/components/ThemedView';
 import { useAlert } from '@/components/ui/AlertProvider';
+import { ShareConfirmModal } from '@/components/ui/ShareConfirmModal';
 import AggregateBottomBar from '@/components/view-stats/AggregateBottomBar';
 import AggregateGamesList from '@/components/view-stats/AggregateGamesList';
 import SavedGamesBulkActions from '@/components/view-stats/SavedGamesBulkActions';
 import SavedGamesList from '@/components/view-stats/SavedGamesList';
 import StatsContent from '@/components/view-stats/StatsContent';
 import { useTheme } from '@/context/ThemeContext';
-import { generateAggregatePDF, generateGamePDF } from '@/lib/pdfGenerator';
 import { resolveTeamName } from '@/lib/playerUtils';
+import { serializeGame, serializeGames, uploadPayload } from '@/lib/sharing';
 import {
   formatDate,
   generateAggregateCSV,
@@ -22,12 +23,12 @@ import { File, Paths } from 'expo-file-system';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import * as Sharing from 'expo-sharing';
 import React, { useEffect, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
 
 type ViewMode = 'current' | 'saved' | 'aggregate';
 
 export default function ViewStatsScreen() {
-  const { tab } = useLocalSearchParams<{ tab?: ViewMode }>();
+  const { tab, gameId } = useLocalSearchParams<{ tab?: ViewMode; gameId?: string }>();
   const {
     currentTeam,
     team2Name,
@@ -47,8 +48,8 @@ export default function ViewStatsScreen() {
 
   const team1Name = currentTeam?.name ?? 'Team 1';
 
-  const [viewMode, setViewMode] = useState<ViewMode>(tab ?? 'current');
-  const [selectedGameId, setSelectedGameId] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<ViewMode>(gameId ? 'saved' : (tab ?? 'current'));
+  const [selectedGameId, setSelectedGameId] = useState<string | null>(gameId ?? null);
 
   // Derive selectedGame from store to ensure fresh data after edits
   const selectedGame = selectedGameId
@@ -157,60 +158,18 @@ export default function ViewStatsScreen() {
     }
   };
 
-  const handleExportPDF = async () => {
-    try {
-      let uri: string;
+  const [pendingShareAction, setPendingShareAction] = useState<(() => Promise<string>) | null>(
+    null,
+  );
 
-      if (showingAggregatedStats && aggregatedData) {
-        uri = await generateAggregatePDF({
-          teamName: aggregatedData.teamName,
-          games: aggregatedData.games,
-          roster: aggregatedData.roster,
-        });
-      } else if (selectedGame) {
-        const gameTeamName = resolveTeamName(
-          selectedGame.team1.id,
-          selectedGame.team1.name,
-          savedTeams,
-        );
-        uri = await generateGamePDF({
-          team1Name: gameTeamName,
-          team2Name: selectedGame.team2Name,
-          team1Score: selectedGame.team1Score,
-          team2Score: selectedGame.team2Score,
-          events: selectedGame.events,
-          roster: selectedGame.team1.roster,
-          startingPossession: selectedGame.startingPossession,
-          gameTo: selectedGame.gameTo,
-          date: selectedGame.createdAt,
-        });
-      } else {
-        uri = await generateGamePDF({
-          team1Name,
-          team2Name,
-          team1Score,
-          team2Score,
-          events,
-          roster: currentTeam?.roster,
-          startingPossession,
-          gameTo,
-        });
-      }
-
-      if (await Sharing.isAvailableAsync()) {
-        await Sharing.shareAsync(uri, { mimeType: 'application/pdf' });
-      } else {
-        showAlert({
-          title: 'Sharing not available',
-          message: 'Sharing is not available on this device.',
-        });
-      }
-    } catch {
-      showAlert({
-        title: 'Export failed',
-        message: 'Could not generate PDF report.',
-      });
-    }
+  const handleShareGame = () => {
+    if (!selectedGame) return;
+    const game = selectedGame;
+    setPendingShareAction(() => async () => {
+      const payload = serializeGame(game);
+      const { url } = await uploadPayload(payload);
+      return url;
+    });
   };
 
   const handleSelectGame = (game: SavedGame) => {
@@ -239,6 +198,27 @@ export default function ViewStatsScreen() {
           },
         },
       ],
+    });
+  };
+
+  const handleBulkShareGames = () => {
+    const count = selectedSavedGameIds.size;
+    if (count === 0) return;
+
+    if (count > 10) {
+      showAlert({
+        title: 'Too many games',
+        message: 'You can share up to 10 games at a time.',
+      });
+      return;
+    }
+
+    const gameIds = new Set(selectedSavedGameIds);
+    setPendingShareAction(() => async () => {
+      const games = savedGames.filter((g) => gameIds.has(g.id));
+      const payload = serializeGames(games);
+      const { url } = await uploadPayload(payload);
+      return url;
     });
   };
 
@@ -389,6 +369,15 @@ export default function ViewStatsScreen() {
               />
             </Pressable>
           )}
+          {/* Share button - only for saved games */}
+          {selectedGame && (
+            <Pressable
+              onPress={handleShareGame}
+              style={[styles.backButton, { backgroundColor: palette.overlay10 }]}
+              hitSlop={12}>
+              <MaterialCommunityIcons name="share-variant" size={20} color={palette.accent} />
+            </Pressable>
+          )}
           {/* Export buttons - show when stats are visible */}
           {(viewMode === 'current' || selectedGame || showingAggregatedStats) && (
             <>
@@ -397,12 +386,6 @@ export default function ViewStatsScreen() {
                 style={[styles.backButton, { backgroundColor: palette.overlay10 }]}
                 hitSlop={12}>
                 <FontAwesome6 name="file-csv" size={20} color={palette.accent} />
-              </Pressable>
-              <Pressable
-                onPress={handleExportPDF}
-                style={[styles.backButton, { backgroundColor: palette.overlay10 }]}
-                hitSlop={12}>
-                <FontAwesome6 name="file-pdf" size={20} color={palette.accent} />
               </Pressable>
             </>
           )}
@@ -555,7 +538,26 @@ export default function ViewStatsScreen() {
         isVisible={viewMode === 'saved' && selectedSavedGameIds.size > 0}
         selectedCount={selectedSavedGameIds.size}
         onDelete={handleBulkDeleteGames}
+        onShare={handleBulkShareGames}
         onCancel={() => setSelectedSavedGameIds(new Set())}
+      />
+
+      <ShareConfirmModal
+        visible={pendingShareAction !== null}
+        onConfirm={async () => {
+          try {
+            const url = await pendingShareAction!();
+            setPendingShareAction(null);
+            await Share.share({ message: url });
+          } catch {
+            showAlert({
+              title: 'Share failed',
+              message: 'Could not upload data for sharing. Please try again.',
+            });
+            throw new Error('share failed');
+          }
+        }}
+        onCancel={() => setPendingShareAction(null)}
       />
     </ThemedView>
   );

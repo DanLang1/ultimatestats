@@ -214,6 +214,13 @@ export default function SavedGamesList({
                     <Text style={[styles.savedGameDate, { color: palette.textMuted }]}>
                       {formatDate(game.createdAt)}
                     </Text>
+                    {game.importedAt && (
+                      <MaterialCommunityIcons
+                        name="cloud-download-outline"
+                        size={14}
+                        color={palette.textMuted}
+                      />
+                    )}
                   </View>
                   <View style={styles.savedGameTeams}>
                     <Text

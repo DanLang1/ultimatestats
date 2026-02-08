@@ -1,5 +1,4 @@
-import { GameEvent, Player, PointLineRecord } from '@/lib/storage';
-import { getPlayerName } from './playerUtils';
+import { GameEvent, PointLineRecord } from '@/lib/storage';
 import { computePointByPointEvents } from './timelineUtils';
 
 /**
@@ -45,16 +44,16 @@ function getFinalLinesByPoint(pointLines: PointLineRecord[]): Map<number, Set<st
 
 /**
  * Compute playing time-based stats for all players
- * Returns a map from player name to their PlayingTimeStats
+ * Returns a map from player ID to their PlayingTimeStats
  */
 export function computePlayingTimeStats(
   pointLines: PointLineRecord[],
   events: GameEvent[],
   startingPossession: 'team1' | 'team2' | null,
   gameTo: number,
-  roster?: Player[],
   pointStartTimestamps?: Record<number, number>,
 ): Map<string, PlayingTimeStats> {
+  // Key by player ID instead of name
   const statsMap = new Map<string, PlayingTimeStats>();
 
   // If no point lines, return empty stats
@@ -73,15 +72,12 @@ export function computePlayingTimeStats(
     pointStartTimestamps,
   );
 
-  // Helper to get or create stats for a player
+  // Helper to get or create stats for a player by ID
   const getOrCreate = (playerId: string): PlayingTimeStats => {
-    const name = getPlayerName(roster, playerId);
-    if (!name) return createEmptyStats();
-
-    if (!statsMap.has(name)) {
-      statsMap.set(name, createEmptyStats());
+    if (!statsMap.has(playerId)) {
+      statsMap.set(playerId, createEmptyStats());
     }
-    return statsMap.get(name)!;
+    return statsMap.get(playerId)!;
   };
 
   // Process each completed point

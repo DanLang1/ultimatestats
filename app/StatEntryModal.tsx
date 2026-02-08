@@ -15,6 +15,7 @@ export default function StatEntryScreen() {
     team2Name,
     addPlayer,
     addGoalEvent,
+    cancelPendingGoal,
     pointTimerEnabled,
     isHalftimeBreak,
     currentLine,
@@ -40,7 +41,6 @@ export default function StatEntryScreen() {
 
   const handleComplete = (goalPlayerId: string | null, assistPlayerId: string | null) => {
     addGoalEvent({
-      team: pendingStatEntry.team,
       goalPlayerId,
       assistPlayerId,
     });
@@ -80,55 +80,10 @@ export default function StatEntryScreen() {
     }
   };
 
-  const handleSkip = () => {
-    // Record with null goal/assist
-    addGoalEvent({
-      team: pendingStatEntry.team,
-      goalPlayerId: null,
-      assistPlayerId: null,
-    });
-
-    // Check if game ended
-    const state = useGameStore.getState();
-    const isGameOver = checkGameOver({
-      team1Score: state.team1Score,
-      team2Score: state.team2Score,
-      gameTo: state.gameTo,
-      timerTimeLeft: state.timerTimeLeft,
-    });
-
-    if (isGameOver) {
-      router.dismiss();
-      setTimeout(() => {
-        useGameStore.getState().setGameLocked(true);
-        router.push('/WinModal');
-      }, 100);
-      return;
-    }
-
-    // Skip point summary for halftime goals - let useHalftimeNavigation handle it
-    // (PointSummaryModal returns null when isHalftimeBreak is true anyway)
-    if (isHalftimeBreak) {
-      router.dismiss();
-      return;
-    }
-
-    // Show PointTransition page for summary + line selection
-    if (shouldShowLinePrompt()) {
-      router.replace('/PointTransition');
-    } else if (pointTimerEnabled) {
-      router.replace('/PointSummaryModal');
-    } else {
-      router.dismiss();
-    }
-    // OLD MODAL FLOW:
-    // if (pointTimerEnabled) {
-    //   router.replace('/PointSummaryModal');
-    // } else if (shouldShowLinePrompt()) {
-    //   router.replace('/LinePromptModal');
-    // } else {
-    //   router.dismiss();
-    // }
+  const handleCancel = () => {
+    // Revert the score and remove the goal event
+    cancelPendingGoal();
+    router.dismiss();
   };
 
   const handleAddPlayer = (name: string) => {
@@ -139,14 +94,15 @@ export default function StatEntryScreen() {
     <View style={StyleSheet.absoluteFill}>
       <Pressable
         style={[styles.overlay, { backgroundColor: palette.overlayDark40 }]}
-        onPress={handleSkip}>
+        onPress={handleCancel}>
         <StatEntryInner
           key={`${teamName}-${pendingStatEntry.pointNumber}`}
           teamName={teamName}
           roster={roster}
-          onSkip={handleSkip}
+          onCancel={handleCancel}
           onComplete={handleComplete}
           onAddPlayer={handleAddPlayer}
+          entryOrder={useSettingsStore.getState().statEntryOrder}
           showAddPlayer={!lineCallingEnabled || currentLine.length === 0}
         />
       </Pressable>

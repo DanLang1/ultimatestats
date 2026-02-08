@@ -36,7 +36,7 @@ description: Build and release a production native app to app stores
 // turbo 4. **Run EAS build:**
 
 ```bash
-eas build --platform android --profile production
+eas build --platform android --profile production --local
 ```
 
 5. Wait for build to complete (check https://expo.dev/accounts/langdk/projects/ultimatestats/builds)
@@ -46,7 +46,7 @@ eas build --platform android --profile production
 6. **Submit to Play Store:**
 
    ```bash
-   eas submit --platform android
+   eas submit --platform android --path <path>
    ```
 
    Or manually upload the APK/AAB from the EAS dashboard.

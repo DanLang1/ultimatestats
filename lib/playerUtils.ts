@@ -1,5 +1,8 @@
 import { MatchingType, Player, SavedTeam } from './storage/types';
 
+/** Special ID for recording plays when the player is unknown */
+export const UNKNOWN_PLAYER_ID = 'UNKNOWN_PLAYER';
+
 /**
  * Resolve the current team name using ID lookup with snapshot fallback.
  * - If team is found in savedTeams by ID, returns the live name
@@ -38,6 +41,7 @@ export function getPlayerById(roster: Player[], id: string): Player | undefined 
  * 2. Returns ID if no roster provided.
  * 3. Returns "Deleted Player (xxxx)" if not found in roster.
  * 4. Returns "Other Team" if ID is "OTHER_TEAM" (Callahan).
+ * 5. Returns "Unknown" if ID is "UNKNOWN_PLAYER".
  */
 export function getPlayerName(
   roster: Player[] | null | undefined,
@@ -45,6 +49,7 @@ export function getPlayerName(
 ): string | null {
   if (!id) return null;
   if (id === 'OTHER_TEAM') return 'Other Team';
+  if (id === UNKNOWN_PLAYER_ID) return 'Unknown';
   if (!roster) return id;
   return roster.find((p) => p.id === id)?.name ?? `Deleted Player (${id.slice(0, 4)})`;
 }

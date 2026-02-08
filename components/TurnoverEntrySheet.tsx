@@ -47,7 +47,7 @@ export default function TurnoverEntrySheet() {
   const displayTeamName = isOpponentTurnover ? team1Name : teamName;
   const displayRoster = isOpponentTurnover ? team1Roster : roster;
 
-  const handleSkip = () => {
+  const handleCancel = () => {
     clearPendingTurnoverEntry();
   };
 
@@ -84,15 +84,15 @@ export default function TurnoverEntrySheet() {
   if (!visible || !pendingTurnoverEntry) return null;
 
   return (
-    <Modal transparent visible={visible} animationType="none" onRequestClose={handleSkip}>
+    <Modal transparent visible={visible} animationType="none" onRequestClose={handleCancel}>
       <Pressable
         style={[styles.overlay, { backgroundColor: palette.overlayModal }]}
-        onPress={handleSkip}>
+        onPress={handleCancel}>
         <TurnoverEntryInner
           key={`turnover-${possession}`}
           teamName={displayTeamName}
           roster={displayRoster}
-          onSkip={handleSkip}
+          onCancel={handleCancel}
           onComplete={handleComplete}
           onAddPlayer={handleAddPlayer}
           isMyTeamTurnover={isMyTeamTurnover}

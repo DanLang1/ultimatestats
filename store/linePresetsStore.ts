@@ -14,6 +14,7 @@ interface LinePresetsState {
   removePlayerFromPresets: (playerId: string) => void;
   reorderPresets: (teamId: string, fromIndex: number, toIndex: number) => void;
   clearPresetsForTeam: (teamId: string) => void;
+  importPresetsForTeam: (teamId: string, presets: LinePreset[]) => void;
   setLineConfirmedForNextPoint: (confirmed: boolean) => void;
 }
 
@@ -66,11 +67,14 @@ export const useLinePresetsStore = create<LinePresetsState>()(
 
         clearPresetsForTeam: (teamId: string) => {
           set((state) => {
-            state.presets.forEach((preset) => {
-              if (preset.teamId === teamId) {
-                preset.playerIds = [];
-              }
-            });
+            state.presets = state.presets.filter((preset) => preset.teamId !== teamId);
+          });
+        },
+
+        importPresetsForTeam: (teamId: string, presets: LinePreset[]) => {
+          set((state) => {
+            state.presets = state.presets.filter((p) => p.teamId !== teamId);
+            state.presets.push(...presets);
           });
         },
 

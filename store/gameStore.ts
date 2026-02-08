@@ -155,7 +155,11 @@ export const useGameStore = create<GameState>()(
               state.isSoftCap = true;
               state.softCapPending = false;
               const highestScore = Math.max(state.team1Score, state.team2Score);
-              state.gameTo = highestScore + 1;
+
+              // Only adjust gameTo if the game total hasn't been reached yet
+              if (highestScore < state.gameTo) {
+                state.gameTo = highestScore + 1;
+              }
             }
 
             // Halftime: reset timeouts and set halftime break
@@ -199,29 +203,31 @@ export const useGameStore = create<GameState>()(
               state.possession = isTeam1 ? 'team2' : 'team1';
             }
 
-            // Team1 goal: open stat entry sheet to record goal/assist
+            // Save point start timestamp to the record (currentPoint was already incremented)
+            if (state.currentPointStartTime !== null) {
+              state.pointStartTimestamps[state.currentPoint - 1] = state.currentPointStartTime;
+            }
+            // Calculate elapsed game time (ms since point start)
+            const elapsedMs =
+              state.currentPointStartTime !== null
+                ? (state.pointTimerPausedElapsed ?? Date.now() - state.currentPointStartTime)
+                : undefined;
+
+            // Push goal event immediately (with null players for now)
+            // This ensures score and events stay in sync even if stat entry is dismissed
+            state.events.push({
+              type: 'goal',
+              team: isTeam1 ? 'team1' : 'team2',
+              goalPlayerId: null,
+              assistPlayerId: null,
+              elapsedMs,
+            });
+            state.currentPointStartTime = null;
+            state.pointTimerPausedElapsed = null;
+
+            // Team1 goal: open stat entry sheet to update goal/assist players
             if (isTeam1) {
               state.pendingStatEntry = { team: 'team1', pointNumber: newScore };
-            } else {
-              // Team2 goal: record immediately (no player details needed)
-              // Save point start timestamp to the record (currentPoint was already incremented)
-              if (state.currentPointStartTime !== null) {
-                state.pointStartTimestamps[state.currentPoint - 1] = state.currentPointStartTime;
-              }
-              // Calculate elapsed game time (ms since point start)
-              const elapsedMs =
-                state.currentPointStartTime !== null
-                  ? (state.pointTimerPausedElapsed ?? Date.now() - state.currentPointStartTime)
-                  : undefined;
-              state.events.push({
-                type: 'goal',
-                team: 'team2',
-                goalPlayerId: null,
-                assistPlayerId: null,
-                elapsedMs,
-              });
-              state.currentPointStartTime = null;
-              state.pointTimerPausedElapsed = null;
             }
           });
           return { didIncrement, isHalftime };
@@ -510,37 +516,60 @@ export const useGameStore = create<GameState>()(
           return newId;
         },
 
-        addGoalEvent: (event: {
-          team: 'team1' | 'team2';
-          goalPlayerId: string | null;
-          assistPlayerId: string | null;
-        }) =>
+        addGoalEvent: (event: { goalPlayerId: string | null; assistPlayerId: string | null }) =>
           set((state: GameState) => {
-            // Save point start timestamp to the record
-            // Note: currentPoint has already been incremented in incrementScore,
-            // so we use currentPoint - 1 for the point that just ended
-            if (state.currentPointStartTime !== null) {
-              state.pointStartTimestamps[state.currentPoint - 1] = state.currentPointStartTime;
+            // Update the last goal event (already pushed in incrementScore)
+            const lastEvent = state.events[state.events.length - 1];
+            if (lastEvent?.type === 'goal') {
+              lastEvent.goalPlayerId = event.goalPlayerId;
+              lastEvent.assistPlayerId = event.assistPlayerId;
             }
-            // Calculate elapsed game time (ms since point start)
-            const elapsedMs =
-              state.currentPointStartTime !== null
-                ? (state.pointTimerPausedElapsed ?? Date.now() - state.currentPointStartTime)
-                : undefined;
-            state.events.push({
-              type: 'goal',
-              team: event.team,
-              goalPlayerId: event.goalPlayerId,
-              assistPlayerId: event.assistPlayerId,
-              elapsedMs,
-            });
             state.pendingStatEntry = null;
-            state.currentPointStartTime = null;
-            state.pointTimerPausedElapsed = null;
           }),
 
         clearPendingStatEntry: () =>
           set((state: GameState) => {
+            state.pendingStatEntry = null;
+          }),
+
+        // Cancel a pending goal entry - reverts the score and removes the goal event
+        cancelPendingGoal: () =>
+          set((state: GameState) => {
+            if (!state.pendingStatEntry) return;
+
+            const lastEvent = state.events[state.events.length - 1];
+            if (lastEvent?.type !== 'goal') return;
+
+            // Revert the score (stat entry only shows for team1 goals)
+            state.team1Score--;
+
+            // Restore point timer state from the goal event
+            if (lastEvent.elapsedMs !== undefined) {
+              state.currentPointStartTime = Date.now() - lastEvent.elapsedMs;
+              state.pointTimerPausedElapsed = null;
+            }
+
+            // Reset halftime if needed (same logic as undoLastAction)
+            const halftimeScore = Math.ceil(state.baseGameTo / 2);
+            if (state.team1Score < halftimeScore && state.team2Score < halftimeScore) {
+              state.gameHalf = 1;
+              // Cancel halftime break if it was triggered by this goal
+              state.isHalftimeBreak = false;
+            }
+
+            // Remove the goal event
+            state.events.pop();
+
+            // Reset possession to team1 (they were attacking)
+            state.possession = 'team1';
+
+            // Decrement current point
+            state.currentPoint = Math.max(1, state.currentPoint - 1);
+
+            // Remove entry from pointStartTimestamps
+            delete state.pointStartTimestamps[state.currentPoint];
+
+            // Clear pending entry
             state.pendingStatEntry = null;
           }),
 
@@ -620,10 +649,11 @@ export const useGameStore = create<GameState>()(
             state.pendingTurnoverEntry = null;
           }),
 
+        // Cancel pending turnover entry - just clears without flipping possession
+        // The turnover event was never recorded, so no state change needed
         clearPendingTurnoverEntry: () =>
           set((state: GameState) => {
             state.pendingTurnoverEntry = null;
-            state.possession = state.possession === 'team1' ? 'team2' : 'team1';
           }),
 
         // Line Calling Actions
@@ -864,6 +894,30 @@ export const useGameStore = create<GameState>()(
           const teams = await storage.loadTeams();
           set((state: GameState) => {
             state.savedTeams = teams;
+          });
+        },
+
+        importGame: async (game: SavedGame) => {
+          await storage.saveGame(game);
+          const games = await storage.loadGames();
+          set((state: GameState) => {
+            state.savedGames = games;
+          });
+        },
+
+        importTeam: async (team: SavedTeam) => {
+          await storage.saveTeam(team);
+          const teams = await storage.loadTeams();
+          set((state: GameState) => {
+            state.savedTeams = teams;
+            // Also update currentTeam if it's the same team (deep copy like loadTeam)
+            if (state.currentTeam.id === team.id) {
+              state.currentTeam = {
+                id: team.id,
+                name: team.name,
+                roster: team.roster.map((p) => ({ ...p })),
+              };
+            }
           });
         },
 

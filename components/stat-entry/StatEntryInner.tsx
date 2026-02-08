@@ -1,6 +1,6 @@
 import { AnimatedThemedView } from '@/components/ThemedView';
 import { useTheme } from '@/context/ThemeContext';
-import { getActiveRoster, getPlayerName } from '@/lib/playerUtils';
+import { getActiveRoster, getPlayerName, UNKNOWN_PLAYER_ID } from '@/lib/playerUtils';
 import { Player } from '@/lib/storage/types';
 import { useGameStore } from '@/store/gameStore';
 import React, { useState } from 'react';
@@ -14,22 +14,28 @@ type EntryStep = 'goal' | 'assist';
 export interface StatEntryInnerProps {
   teamName: string;
   roster: Player[];
-  onSkip: () => void;
+  onCancel: () => void;
   onComplete: (goalPlayerId: string | null, assistPlayerId: string | null) => void;
   onAddPlayer: (name: string) => string | null;
+  entryOrder: 'goal_first' | 'assist_first';
   showAddPlayer?: boolean;
 }
 
 export function StatEntryInner({
   teamName,
   roster,
-  onSkip,
+  onCancel,
   onComplete,
   onAddPlayer,
+  entryOrder,
   showAddPlayer = true,
 }: StatEntryInnerProps) {
-  const [step, setStep] = useState<EntryStep>('goal');
-  const [selectedGoalId, setSelectedGoalId] = useState<string | null>(null);
+  // Determine initial step based on order
+  const [step, setStep] = useState<EntryStep>(entryOrder === 'goal_first' ? 'goal' : 'assist');
+
+  const [goalPlayerId, setGoalPlayerId] = useState<string | null>(null);
+  const [assistPlayerId, setAssistPlayerId] = useState<string | null>(null);
+
   const [newPlayerName, setNewPlayerName] = useState('');
   const { palette, themeMode } = useTheme();
   const { events } = useGameStore();
@@ -38,26 +44,82 @@ export function StatEntryInner({
   const activeRoster = getActiveRoster(roster);
 
   // Get player name for display
-  const selectedGoalName = getPlayerName(roster, selectedGoalId);
+  // If we are in step 2, we show the previous selection
+  // If goal_first: Step 1 (Goal) -> Step 2 (Assist, show Goal)
+  // If assist_first: Step 1 (Assist) -> Step 2 (Goal, show Assist)
 
-  // Check if Callahan is possible: last event was a block by this player
+  let badgeValue: string | null = null;
+  let badgeLabel: string | null = null;
+  let selectedPlayerId: string | null = null;
+
+  if (entryOrder === 'goal_first') {
+    if (step === 'assist') {
+      badgeValue = getPlayerName(roster, goalPlayerId);
+      badgeLabel = 'GOAL';
+      selectedPlayerId = goalPlayerId;
+    }
+  } else {
+    // assist_first
+    if (step === 'goal') {
+      badgeValue = getPlayerName(roster, assistPlayerId);
+      badgeLabel = 'ASSIST';
+      selectedPlayerId = assistPlayerId;
+    }
+  }
+
+  // Check if Callahan is possible
+  // Show on first step if event before the current goal was a block by our team
+  // Note: goal event is now pushed immediately in incrementScore, so we check the second-to-last event
   const lastEvent = events[events.length - 1];
-  const canShowCallahan =
-    lastEvent?.type === 'turnover' &&
-    lastEvent?.subtype === 'block' &&
-    lastEvent?.playerId === selectedGoalId;
+  const prevEvent = events[events.length - 2];
 
-  // Skip button colors - darker in light mode for visibility
+  // If last event is a goal with null players (pending stat entry), check the event before it
+  const eventToCheck =
+    lastEvent?.type === 'goal' &&
+    lastEvent?.goalPlayerId === null &&
+    lastEvent?.assistPlayerId === null
+      ? prevEvent
+      : lastEvent;
+
+  const eventWasOurBlock =
+    eventToCheck?.type === 'turnover' &&
+    eventToCheck?.subtype === 'block' &&
+    eventToCheck?.team === 'team1';
+
+  // Get the blocker's player ID if the relevant event was a block
+  const blockerId = eventToCheck?.type === 'turnover' ? eventToCheck.playerId : null;
+
+  // Show Callahan on first step (goal for goal_first, assist for assist_first)
+  const isFirstStep =
+    (entryOrder === 'goal_first' && step === 'goal') ||
+    (entryOrder === 'assist_first' && step === 'assist');
+  const showCallahan = isFirstStep && eventWasOurBlock;
+
   const skipButtonBorder = themeMode === 'light' ? palette.textMuted : palette.overlay20;
   const skipButtonText = themeMode === 'light' ? palette.modalText : palette.textSecondary;
 
   const handlePlayerSelect = (playerId: string) => {
-    if (step === 'goal') {
-      setSelectedGoalId(playerId);
-      setStep('assist');
-      setNewPlayerName(''); // Clear filter after selection
+    if (entryOrder === 'goal_first') {
+      if (step === 'goal') {
+        setGoalPlayerId(playerId);
+        setStep('assist');
+        setNewPlayerName('');
+      } else {
+        // Step is assist
+        setAssistPlayerId(playerId);
+        onComplete(goalPlayerId, playerId);
+      }
     } else {
-      onComplete(selectedGoalId, playerId);
+      // assist_first
+      if (step === 'assist') {
+        setAssistPlayerId(playerId);
+        setStep('goal');
+        setNewPlayerName('');
+      } else {
+        // Step is goal
+        setGoalPlayerId(playerId);
+        onComplete(playerId, assistPlayerId);
+      }
     }
   };
 
@@ -81,13 +143,17 @@ export function StatEntryInner({
 
     // Auto-select the player (new or existing)
     if (playerIdToSelect) {
-      if (step === 'goal') {
-        setSelectedGoalId(playerIdToSelect);
-        setStep('assist');
-      } else {
-        // On assist step, complete with current goal and this player as assist
-        onComplete(selectedGoalId, playerIdToSelect);
-      }
+      handlePlayerSelect(playerIdToSelect);
+    }
+  };
+
+  const handleBack = () => {
+    if (entryOrder === 'goal_first') {
+      setStep('goal');
+      setGoalPlayerId(null);
+    } else {
+      setStep('assist');
+      setAssistPlayerId(null);
     }
   };
 
@@ -103,46 +169,65 @@ export function StatEntryInner({
             borderColor: skipButtonBorder,
           },
         ]}
-        onPress={onSkip}>
-        <Text style={[styles.skipText, { color: skipButtonText }]}>Skip</Text>
+        onPress={onCancel}>
+        <Text style={[styles.skipText, { color: skipButtonText }]}>Cancel</Text>
       </Pressable>
-      {step === 'goal' ? null : (
-        <>
-          <Animated.View entering={FadeIn}>
-            <Pressable
-              style={[
-                styles.skipButton,
-                {
-                  backgroundColor: palette.cardBgAlt,
-                  borderWidth: 1,
-                  borderColor: skipButtonBorder,
-                },
-              ]}
-              onPress={() => {
-                setStep('goal');
-                setSelectedGoalId(null);
-              }}>
-              <Text style={[styles.skipText, { color: skipButtonText }]}>Back</Text>
-            </Pressable>
-          </Animated.View>
-          {canShowCallahan && (
-            <Animated.View entering={FadeIn}>
-              <Pressable
-                style={[
-                  styles.skipButton,
-                  {
-                    backgroundColor: palette.success,
-                    borderWidth: 1,
-                    borderColor: palette.success,
-                  },
-                ]}
-                onPress={() => onComplete(selectedGoalId, 'OTHER_TEAM')}>
-                <Text style={[styles.skipText, { color: palette.textOnAccent }]}>Callahan</Text>
-              </Pressable>
-            </Animated.View>
-          )}
-        </>
+
+      {/* Show Back button if we are on the second step */}
+      {((entryOrder === 'goal_first' && step === 'assist') ||
+        (entryOrder === 'assist_first' && step === 'goal')) && (
+        <Animated.View entering={FadeIn}>
+          <Pressable
+            style={[
+              styles.skipButton,
+              {
+                backgroundColor: palette.cardBgAlt,
+                borderWidth: 1,
+                borderColor: skipButtonBorder,
+              },
+            ]}
+            onPress={handleBack}>
+            <Text style={[styles.skipText, { color: skipButtonText }]}>Back</Text>
+          </Pressable>
+        </Animated.View>
       )}
+
+      {/* Callahan button - shows when conditions are met */}
+      {showCallahan && (
+        <Animated.View entering={FadeIn}>
+          <Pressable
+            style={[
+              styles.skipButton,
+              {
+                backgroundColor: palette.success,
+                borderWidth: 1,
+                borderColor: palette.success,
+              },
+            ]}
+            onPress={() => {
+              // For Callahan, the goal scorer is always the blocker
+              onComplete(blockerId, 'OTHER_TEAM');
+            }}>
+            <Text style={[styles.skipText, { color: palette.textOnAccent }]}>Callahan</Text>
+          </Pressable>
+        </Animated.View>
+      )}
+
+      {/* Unknown button - allows recording a play without knowing the player */}
+      <Animated.View entering={FadeIn}>
+        <Pressable
+          style={[
+            styles.skipButton,
+            {
+              backgroundColor: palette.cardBgAlt,
+              borderWidth: 1,
+              borderColor: palette.overlay20,
+            },
+          ]}
+          onPress={() => handlePlayerSelect(UNKNOWN_PLAYER_ID)}>
+          <Text style={[styles.skipText, { color: palette.textMuted }]}>Unknown</Text>
+        </Pressable>
+      </Animated.View>
     </Animated.View>
   );
 
@@ -155,11 +240,15 @@ export function StatEntryInner({
         onStartShouldSetResponder={() => true}>
         <Pressable onPress={() => {}} style={styles.sheetContent}>
           <View style={styles.compactContainer}>
-            <StatEntryHeader teamName={teamName} step={step} selectedGoal={selectedGoalName} />
+            <StatEntryHeader
+              teamName={teamName}
+              step={step}
+              badgeValue={badgeValue}
+              badgeLabel={badgeLabel}
+            />
             <StatEntryRoster
               roster={activeRoster}
-              step={step}
-              selectedGoalId={selectedGoalId}
+              selectedPlayerId={selectedPlayerId}
               onSelect={handlePlayerSelect}
               maxHeight={220}
             />
@@ -180,7 +269,12 @@ export function StatEntryInner({
         <View style={styles.sideBySideContainer}>
           {/* Left Column: Info, Add Player, Actions */}
           <View style={styles.leftColumn}>
-            <StatEntryHeader teamName={teamName} step={step} selectedGoal={selectedGoalName} />
+            <StatEntryHeader
+              teamName={teamName}
+              step={step}
+              badgeValue={badgeValue}
+              badgeLabel={badgeLabel}
+            />
 
             <View style={styles.addPlayerRow}>
               <TextInput
@@ -219,8 +313,7 @@ export function StatEntryInner({
           <View style={styles.rightColumn}>
             <StatEntryRoster
               roster={activeRoster}
-              step={step}
-              selectedGoalId={selectedGoalId}
+              selectedPlayerId={selectedPlayerId}
               onSelect={handlePlayerSelect}
               maxHeight={280}
             />

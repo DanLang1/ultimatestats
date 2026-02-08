@@ -1,71 +1,62 @@
-# Cloud Sync & Team Sharing
+# Cloud Sync (Cross-Device)
 
 > **Status**: Brainstorm / Future Feature
 
 ## Overview
 
-Enable multiple users to share stats for the same team with an offline-first approach.
+Allow a user to sign in and sync their data across multiple devices. This is a **personal sync** feature — syncing _my_ data between _my_ devices. Sharing data with other people is a separate feature (see [sharing.md](./sharing.md)).
 
 ---
 
-## Core Architecture: Offline-First with Sync
+## Auth
 
-### Team as Source of Truth
-
-```
-Team (cloud)
-├── id: string (UUID)
-├── name: string
-├── roster: string[] (canonical player names)
-├── createdBy: userId
-├── members: userId[] (people who can upload games)
-└── games: SavedGame[] (uploaded by any member)
-```
-
-The **Team** becomes the shared entity. Users "join" a team, and any member can upload games.
+- **Sign in with Apple / Google** (one-tap, minimal friction)
+- Apple requires this if you offer any sign-in option on iOS
+- Provides identity + account recovery for free
+- Foundation for future team member management if needed
+- Backend options: Supabase Auth or Firebase Auth
 
 ---
 
-## Sync Strategy: Last-Write-Wins with Conflict Avoidance
+## Sync Strategy
 
-### Upload Flow
+### Games (Immutable — Union Merge)
 
-1. User finishes a game → saves locally
-2. When internet available, user taps "Upload to Team"
-3. Game gets `uploadedAt` server timestamp + `uploadedBy` userId
-4. Server stores game under the team
+Games are immutable once saved and have stable UUIDs. Sync is a simple union:
 
-### Roster Sync
+- Device A has games `{1, 2, 3}`, device B has `{2, 3, 4}`
+- After sync, both have `{1, 2, 3, 4}`
+- No conflicts possible — games are never edited after creation
+- Deduplication by `game.id`
 
-- **Problem**: Two users might add different players offline
-- **Solution**: **Additive merge** - rosters are unioned, not replaced
+### Teams (Editable — Last-Write-Wins)
 
-### Game Deduplication
+Teams can be edited, but in cross-device sync you're the only editor:
 
-- Use composite key: `team1Name + team2Name + createdAt (within 10 min) + finalScore`
-- Or use local `gameUUID` generated at game start, checked server-side
+- Single-user editing means you won't be editing the same team on two devices simultaneously
+- Last-write-wins by timestamp is sufficient
+- On conflict (same team edited on both devices offline), use the most recent `updatedAt`
+
+### Settings & Presets
+
+- Last-write-wins by timestamp
+- Low-stakes data, conflicts are rare and easy to re-set
 
 ---
 
-## User Flows
+## Sync Flow
 
-### Joining a Team
+1. User signs in on device → initial sync pulls all cloud data
+2. Local changes are queued for upload
+3. When online, push local changes to cloud
+4. Periodically pull remote changes (or on app foreground)
+5. Show last sync timestamp in UI
 
-1. Team owner shares invite code/link
-2. New user enters code → becomes member
-3. User gets synced roster + game history
+### Offline Behavior
 
-### Recording Offline
-
-1. Select team (loads cached roster)
-2. Record game as normal
-3. App queues for upload when online
-4. Background sync uploads when connection detected
-
-### Viewing Team Stats
-
-- Aggregate from cloud (online) or cached games (offline)
-- Show last sync timestamp
+- App works fully offline as it does today
+- Changes queue locally until connection is available
+- Background sync uploads when connection detected
 
 ---
 
@@ -74,18 +65,14 @@ The **Team** becomes the shared entity. Users "join" a team, and any member can 
 ```typescript
 interface SavedGame {
   // ... existing fields
-  schemaVersion: number; // ✅ Added in MVP
-  uploadedAt?: number; // Server timestamp
-  uploadedBy?: string; // User ID
-  teamId?: string; // Links to cloud team
+  schemaVersion: number; // ✅ Already added
+  cloudSyncedAt?: number; // Last time this game was synced
 }
 
-interface CloudTeam {
-  id: string;
-  name: string;
-  roster: string[];
-  memberIds: string[];
-  inviteCode: string;
+interface SavedTeam {
+  // ... existing fields
+  updatedAt?: number; // For last-write-wins conflict resolution
+  cloudSyncedAt?: number;
 }
 ```
 
@@ -93,19 +80,21 @@ interface CloudTeam {
 
 ## Implementation Phases
 
-| Phase | Description                               | Status  |
-| ----- | ----------------------------------------- | ------- |
-| 1     | Add `schemaVersion` to SavedGame          | ✅ Done |
-| 2     | Add Firebase/Supabase with anonymous auth | Future  |
-| 3     | "Upload to Cloud" button                  | Future  |
-| 4     | Roster sync + member management           | Future  |
+| Phase | Description                                | Status  |
+| ----- | ------------------------------------------ | ------- |
+| 1     | Add `schemaVersion` to SavedGame           | ✅ Done |
+| 2     | Add `updatedAt` to SavedTeam               | Future  |
+| 3     | Integrate auth (Apple/Google sign-in)      | Future  |
+| 4     | Cloud storage for games (union merge)      | Future  |
+| 5     | Cloud storage for teams (last-write-wins)  | Future  |
+| 6     | Background sync + offline queue            | Future  |
 
 ---
 
 ## Tech Stack Options
 
-| Need             | Option                                     |
-| ---------------- | ------------------------------------------ |
-| Offline-first DB | WatermelonDB or PowerSync                  |
-| Backend          | Supabase (Postgres + Auth) or Firebase     |
-| Sync             | Built-in sync or custom AsyncStorage queue |
+| Need    | Option                                 |
+| ------- | -------------------------------------- |
+| Auth    | Supabase Auth or Firebase Auth         |
+| Backend | Supabase (Postgres) or Firebase        |
+| Sync    | Custom queue with AsyncStorage markers |

@@ -4,6 +4,7 @@ import PlayerStatsSummary from '@/components/view-stats/PlayerStatsSummary';
 import PlayingTimeSection from '@/components/view-stats/PlayingTimeSection';
 import RoleDiamond from '@/components/view-stats/RoleDiamond';
 import { useTheme } from '@/context/ThemeContext';
+import { getPlayerName } from '@/lib/playerUtils';
 import {
   computePlayerStats,
   getChemistryStats,
@@ -19,7 +20,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 export default function PlayerStats() {
   const {
-    player,
+    playerId,
     events,
     team,
     games,
@@ -31,16 +32,20 @@ export default function PlayerStats() {
   } = usePlayerStatsStore();
   const { palette } = useTheme();
 
+  // Derive player name for display
+  const playerName = getPlayerName(roster, playerId) ?? playerId ?? '';
+
   const handleDismiss = () => {
     router.back();
   };
 
   // Compute stats directly (React Compiler handles memoization)
   const allPlayerStats =
-    player && events.length ? computePlayerStats(events, team, roster || undefined) : [];
+    playerId && events.length ? computePlayerStats(events, team, roster || undefined) : [];
   const roleStats =
-    player && events.length ? getRoleStats(player, events, team, roster || undefined) : null;
-  const summary = allPlayerStats.find((p) => p.name === player);
+    playerId && events.length ? getRoleStats(playerId, events, team, roster || undefined) : null;
+  // Find by player ID instead of name
+  const summary = allPlayerStats.find((p) => p.id === playerId);
   const highestPlusMinus = allPlayerStats.length
     ? Math.max(...allPlayerStats.map((p) => p.plusMinus))
     : 0;
@@ -59,7 +64,9 @@ export default function PlayerStats() {
   }
 
   // Calculate impact for the specific game selected (React Compiler handles memoization)
-  const impactData = player ? getImpactStats(player, impactEvents, team, roster || undefined) : [];
+  const impactData = playerId
+    ? getImpactStats(playerId, impactEvents, team, roster || undefined)
+    : [];
 
   const selectedGame = games?.find((g) => g.id === effectiveGameId);
   const gameDate = selectedGame
@@ -72,18 +79,18 @@ export default function PlayerStats() {
 
   // Calculate aggregate impact across all games (for multi-game view)
   const aggregateImpact =
-    games && games.length > 1 && player
+    games && games.length > 1 && playerId
       ? games.reduce((total, g) => {
-          const gameImpact = getImpactStats(player, g.events, team, roster || undefined);
+          const gameImpact = getImpactStats(playerId, g.events, team, roster || undefined);
           const finalValue = gameImpact[gameImpact.length - 1]?.cumulativePlusMinus ?? 0;
           return total + finalValue;
         }, 0)
       : null;
 
   const stats =
-    player && events.length && roleStats
+    playerId && events.length && roleStats
       ? {
-          chemistry: getChemistryStats(player, events, team, roster || undefined),
+          chemistry: getChemistryStats(playerId, events, team, roster || undefined),
           impact: impactData,
           summary,
           role: roleStats,
@@ -91,7 +98,7 @@ export default function PlayerStats() {
         }
       : null;
 
-  if (!player || !stats) {
+  if (!playerId || !stats) {
     return (
       <View
         style={[
@@ -144,7 +151,7 @@ export default function PlayerStats() {
                 gap: 8,
                 justifyContent: 'center',
               }}>
-              <Text style={[styles.playerName, { color: palette.textInverse }]}>{player}</Text>
+              <Text style={[styles.playerName, { color: palette.textInverse }]}>{playerName}</Text>
               <View
                 style={{
                   flexDirection: 'row',
@@ -286,18 +293,17 @@ export default function PlayerStats() {
                 styles.card,
                 { backgroundColor: palette.overlay02, borderColor: palette.overlay05 },
               ]}>
-              <ChemistryMap playerName={player} connections={stats.chemistry} />
+              <ChemistryMap playerName={playerName} connections={stats.chemistry} />
             </View>
           )}
 
           {/* Playing Time Section */}
           <PlayingTimeSection
-            playerName={player}
+            playerId={playerId}
             events={events}
             pointLines={pointLines}
             startingPossession={startingPossession}
             gameTo={gameTo}
-            roster={roster}
             goals={stats.summary?.goals}
             assists={stats.summary?.assists}
             blocks={stats.summary?.blocks}

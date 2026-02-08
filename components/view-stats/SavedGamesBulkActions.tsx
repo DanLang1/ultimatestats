@@ -6,19 +6,25 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 interface SavedGamesBulkActionsProps {
   selectedCount: number;
   onDelete: () => void;
+  onShare: () => void;
   onCancel: () => void;
   isVisible: boolean;
 }
 
+const MAX_BULK_SHARE = 10;
+
 export default function SavedGamesBulkActions({
   selectedCount,
   onDelete,
+  onShare,
   onCancel,
   isVisible,
 }: SavedGamesBulkActionsProps) {
   const { palette } = useTheme();
 
   if (!isVisible || selectedCount === 0) return null;
+
+  const shareDisabled = selectedCount > MAX_BULK_SHARE;
 
   return (
     <View style={styles.bottomBar}>
@@ -36,15 +42,30 @@ export default function SavedGamesBulkActions({
           <MaterialCommunityIcons name="close" size={20} color={palette.textOnAccent} />
         </Pressable>
 
+        {/* Share Button (Pill) */}
+        <Pressable
+          style={[
+            styles.actionButton,
+            { backgroundColor: palette.accent, shadowColor: palette.shadow },
+            shareDisabled && { opacity: 0.5 },
+          ]}
+          onPress={onShare}
+          disabled={shareDisabled}>
+          <MaterialCommunityIcons name="share-variant" size={20} color={palette.textOnAccent} />
+          <Text style={[styles.actionText, { color: palette.textOnAccent }]}>
+            Share ({selectedCount})
+          </Text>
+        </Pressable>
+
         {/* Delete Button (Pill) */}
         <Pressable
           style={[
-            styles.deleteButton,
+            styles.actionButton,
             { backgroundColor: palette.danger, shadowColor: palette.shadow },
           ]}
           onPress={onDelete}>
           <MaterialCommunityIcons name="delete" size={20} color={palette.textOnAccent} />
-          <Text style={[styles.deleteText, { color: palette.textOnAccent }]}>
+          <Text style={[styles.actionText, { color: palette.textOnAccent }]}>
             Delete ({selectedCount})
           </Text>
         </Pressable>
@@ -78,7 +99,7 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 8,
   },
-  deleteButton: {
+  actionButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -92,7 +113,7 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 8,
   },
-  deleteText: {
+  actionText: {
     fontSize: 15,
     fontWeight: '700',
     letterSpacing: 0.3,

@@ -89,7 +89,7 @@ export default function StatsContent({
               </Text>
               <View style={styles.topPerformersList}>
                 {topPerformers.map((player, index) => (
-                  <View key={player.name} style={styles.topPerformerRow}>
+                  <View key={player.id} style={styles.topPerformerRow}>
                     <Text style={[styles.topPerformerRank, { color: palette.textMuted }]}>
                       {index + 1}.
                     </Text>

@@ -81,9 +81,8 @@ export default function PointTransition() {
 
   // Presets display config
   const MAX_VISIBLE_PRESETS = 5;
-  const validPresets = presets.filter((p) => p.playerIds.length >= numPlayers);
-  const visiblePresets = validPresets.slice(0, MAX_VISIBLE_PRESETS);
-  const overflowCount = validPresets.length - MAX_VISIBLE_PRESETS;
+  const visiblePresets = presets.slice(0, MAX_VISIBLE_PRESETS);
+  const overflowCount = presets.length - MAX_VISIBLE_PRESETS;
 
   const toggleSort = () => {
     setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
@@ -359,7 +358,7 @@ export default function PointTransition() {
                 </Text>
               </Pressable>
             )}
-            {validPresets.length === 0 && (
+            {presets.length === 0 && (
               <Pressable
                 onPress={() => router.push('/LinePresetEditor')}
                 style={({ pressed }) => [
@@ -451,7 +450,7 @@ export default function PointTransition() {
       <PresetPickerModal
         visible={showPresetPicker}
         onClose={() => setShowPresetPicker(false)}
-        presets={validPresets}
+        presets={presets}
         selectedPresetId={selectedPresetId}
         onSelectPreset={(preset) => {
           handleSelectPreset(preset);

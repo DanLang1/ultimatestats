@@ -55,22 +55,22 @@ export default function StatsTable({
 
   // Compute playing time stats if pointLines are available
   const playingTimeStats = pointLines?.length
-    ? computePlayingTimeStats(pointLines, events, startingPossession ?? null, gameTo, roster)
+    ? computePlayingTimeStats(pointLines, events, startingPossession ?? null, gameTo)
     : null;
 
   // Only show playing time columns if we have data
   const hasPlayingTimeData = playingTimeStats !== null && playingTimeStats.size > 0;
 
-  // Helper to get playing time stats for a player
-  const getPlayingTimeStats = (playerName: string): PlayingTimeStats | null => {
-    return playingTimeStats?.get(playerName) ?? null;
+  // Helper to get playing time stats for a player by ID
+  const getPlayingTimeStats = (playerId: string): PlayingTimeStats | null => {
+    return playingTimeStats?.get(playerId) ?? null;
   };
 
   const { openPlayerStats } = usePlayerStatsStore();
 
-  const handlePlayerPress = (playerName: string) => {
+  const handlePlayerPress = (playerId: string) => {
     openPlayerStats(
-      playerName,
+      playerId,
       events,
       team,
       roster || undefined,
@@ -89,8 +89,8 @@ export default function StatsTable({
       sortConfig.key === 'oEfficiency' ||
       sortConfig.key === 'dEfficiency'
     ) {
-      const aStats = getPlayingTimeStats(a.name);
-      const bStats = getPlayingTimeStats(b.name);
+      const aStats = getPlayingTimeStats(a.id);
+      const bStats = getPlayingTimeStats(b.id);
       const aValue = aStats?.[sortConfig.key] ?? 0;
       const bValue = bStats?.[sortConfig.key] ?? 0;
 
@@ -334,14 +334,14 @@ export default function StatsTable({
         {/* Table Rows */}
         {sortedStats.map((player, index) => (
           <TouchableOpacity
-            key={player.name}
+            key={player.id}
             style={[
               styles.tableRow,
               { borderBottomColor: palette.overlay10 },
               index === sortedStats.length - 1 && { borderBottomWidth: 0 },
               index % 2 === 1 && { backgroundColor: palette.overlay02 },
             ]}
-            onPress={() => handlePlayerPress(player.name)}>
+            onPress={() => handlePlayerPress(player.id)}>
             <Text style={[styles.cell, styles.nameCell, { color: palette.textInverse }]}>
               {player.name}
             </Text>
@@ -349,38 +349,38 @@ export default function StatsTable({
             {hasPlayingTimeData && (
               <>
                 <Text style={[styles.cell, { color: palette.textInverse }]}>
-                  {getPlayingTimeStats(player.name)?.pointsPlayed ?? '-'}
+                  {getPlayingTimeStats(player.id)?.pointsPlayed ?? '-'}
                 </Text>
                 <Text
                   style={[
                     styles.cell,
                     { color: palette.textInverse },
-                    (getPlayingTimeStats(player.name)?.oEfficiency ?? 0) >= 0.6 && {
+                    (getPlayingTimeStats(player.id)?.oEfficiency ?? 0) >= 0.6 && {
                       color: palette.success,
                     },
-                    (getPlayingTimeStats(player.name)?.oEfficiency ?? 0) <= 0.4 &&
-                      (getPlayingTimeStats(player.name)?.oPoints ?? 0) > 0 && {
+                    (getPlayingTimeStats(player.id)?.oEfficiency ?? 0) <= 0.4 &&
+                      (getPlayingTimeStats(player.id)?.oPoints ?? 0) > 0 && {
                         color: palette.danger,
                       },
                   ]}>
-                  {getPlayingTimeStats(player.name)
-                    ? formatEfficiency(getPlayingTimeStats(player.name)!.oEfficiency)
+                  {getPlayingTimeStats(player.id)
+                    ? formatEfficiency(getPlayingTimeStats(player.id)!.oEfficiency)
                     : '-'}
                 </Text>
                 <Text
                   style={[
                     styles.cell,
                     { color: palette.textInverse },
-                    (getPlayingTimeStats(player.name)?.dEfficiency ?? 0) >= 0.6 && {
+                    (getPlayingTimeStats(player.id)?.dEfficiency ?? 0) >= 0.6 && {
                       color: palette.success,
                     },
-                    (getPlayingTimeStats(player.name)?.dEfficiency ?? 0) <= 0.4 &&
-                      (getPlayingTimeStats(player.name)?.dPoints ?? 0) > 0 && {
+                    (getPlayingTimeStats(player.id)?.dEfficiency ?? 0) <= 0.4 &&
+                      (getPlayingTimeStats(player.id)?.dPoints ?? 0) > 0 && {
                         color: palette.danger,
                       },
                   ]}>
-                  {getPlayingTimeStats(player.name)
-                    ? formatEfficiency(getPlayingTimeStats(player.name)!.dEfficiency)
+                  {getPlayingTimeStats(player.id)
+                    ? formatEfficiency(getPlayingTimeStats(player.id)!.dEfficiency)
                     : '-'}
                 </Text>
               </>

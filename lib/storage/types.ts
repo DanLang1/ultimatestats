@@ -19,6 +19,7 @@ export interface SavedGame {
   startingPossession: 'team1' | 'team2';
   pointStartTimestamps?: Record<number, number>; // { [pointNumber]: timestamp when point started }
   pointLines?: PointLineRecord[]; // Line records per point - added in schema v2
+  importedAt?: number; // timestamp when this game was imported via sharing
 }
 
 export type MatchingType = 'fmp' | 'mmp';
@@ -36,6 +37,7 @@ export interface SavedTeam {
   id: string;
   name: string;
   roster: Player[];
+  // Future: add updatedAt/importedAt for cloud sync and import tracking
 }
 
 // Storage interface - implement this for different storage backends

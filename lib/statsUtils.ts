@@ -1,5 +1,5 @@
 import { GameEvent, Player, SavedGame } from '@/lib/storage';
-import { getPlayerName } from './playerUtils';
+import { getPlayerName, UNKNOWN_PLAYER_ID } from './playerUtils';
 import {
   aggregateTeamStats,
   aggregateTimingStats,
@@ -11,7 +11,8 @@ import {
 import { computePointByPointEvents } from './timelineUtils';
 
 export interface PlayerStats {
-  name: string;
+  id: string; // Player ID (for lookups) - may be UNKNOWN_PLAYER_ID or OTHER_TEAM
+  name: string; // Display name
   goals: number;
   assists: number;
   blocks: number;
@@ -23,6 +24,7 @@ export interface PlayerStats {
 
 /**
  * Compute player stats from events.
+ * Stats are keyed by player ID to prevent collisions for players with the same name.
  * @param events - Game events
  * @param team - Which team's stats to compute
  * @param roster - Optional roster to resolve player IDs to names. If not provided, IDs are used as names.
@@ -32,14 +34,19 @@ export function computePlayerStats(
   team: 'team1' | 'team2',
   roster?: Player[],
 ): PlayerStats[] {
+  // Key by player ID instead of name to prevent collisions
   const statsMap = new Map<string, PlayerStats>();
 
   // Helper to resolve playerId to name (falls back to ID if no roster or not found)
   const resolveName = (playerId: string | null) => getPlayerName(roster, playerId);
 
-  const getOrCreate = (name: string): PlayerStats =>
-    statsMap.get(name) || {
-      name,
+  const getOrCreate = (playerId: string): PlayerStats => {
+    if (statsMap.has(playerId)) {
+      return statsMap.get(playerId)!;
+    }
+    const stats: PlayerStats = {
+      id: playerId,
+      name: resolveName(playerId) ?? playerId,
       goals: 0,
       assists: 0,
       blocks: 0,
@@ -48,55 +55,50 @@ export function computePlayerStats(
       plusMinus: 0,
       callahans: 0,
     };
+    statsMap.set(playerId, stats);
+    return stats;
+  };
 
   for (const event of events) {
     if (event.type === 'goal') {
       if (event.team !== team) continue;
 
-      const goalName = resolveName(event.goalPlayerId);
-      if (goalName) {
-        const stats = getOrCreate(goalName);
-        stats.goals++;
-        // Check for Callahan: assistPlayerId is 'OTHER_TEAM'
-        if (event.assistPlayerId === 'OTHER_TEAM') {
-          stats.callahans++;
-        }
-        statsMap.set(goalName, stats);
+      // Treat null player IDs as UNKNOWN_PLAYER_ID (handles edge case where
+      // user dismisses stat entry without selecting a player)
+      const goalPlayerId = event.goalPlayerId ?? UNKNOWN_PLAYER_ID;
+      const assistPlayerId = event.assistPlayerId;
+
+      const stats = getOrCreate(goalPlayerId);
+      stats.goals++;
+      // Check for Callahan: assistPlayerId is 'OTHER_TEAM'
+      if (assistPlayerId === 'OTHER_TEAM') {
+        stats.callahans++;
       }
 
-      // Don't count 'OTHER_TEAM' as an assist to any player
-      if (event.assistPlayerId && event.assistPlayerId !== 'OTHER_TEAM') {
-        const assistName = resolveName(event.assistPlayerId);
-        if (assistName) {
-          const stats = getOrCreate(assistName);
-          stats.assists++;
-          statsMap.set(assistName, stats);
-        }
+      // Don't count 'OTHER_TEAM' or null as an assist to any player
+      if (assistPlayerId && assistPlayerId !== 'OTHER_TEAM') {
+        const assistStats = getOrCreate(assistPlayerId);
+        assistStats.assists++;
       }
     } else if (event.type === 'turnover') {
       if (event.team !== team) continue;
 
       // Handle fiftyfifty - player1 gets 0.5 throwaway, player2 gets 0.5 drop
       if (event.subtype === 'fiftyfifty') {
-        const player1Name = resolveName(event.playerId);
-        if (player1Name) {
-          const stats = getOrCreate(player1Name);
+        if (event.playerId) {
+          const stats = getOrCreate(event.playerId);
           stats.throwaways += 0.5; // Thrower gets half a throwaway
-          statsMap.set(player1Name, stats);
         }
-        const player2Name = resolveName(event.player2Id ?? null);
-        if (player2Name) {
-          const stats = getOrCreate(player2Name);
+        if (event.player2Id) {
+          const stats = getOrCreate(event.player2Id);
           stats.drops += 0.5; // Receiver gets half a drop
-          statsMap.set(player2Name, stats);
         }
         continue;
       }
 
-      const playerName = resolveName(event.playerId);
-      if (!playerName) continue;
+      if (!event.playerId) continue;
 
-      const stats = getOrCreate(playerName);
+      const stats = getOrCreate(event.playerId);
       switch (event.subtype) {
         case 'block':
           stats.blocks++;
@@ -108,7 +110,6 @@ export function computePlayerStats(
           stats.drops++;
           break;
       }
-      statsMap.set(playerName, stats);
     }
   }
 
@@ -126,53 +127,62 @@ export function computePlayerStats(
 // --- Visualization Helpers ---
 
 export interface ChemistryConnection {
-  playerName: string;
+  playerId: string; // Player ID for lookups
+  playerName: string; // Display name
   goalsFrom: number; // How many goals did I catch from this person?
   assistsTo: number; // How many assists did I throw to this person?
   totalConnections: number;
 }
 
+/**
+ * Get chemistry stats showing connections between players.
+ * @param playerId - The player ID to analyze
+ */
 export function getChemistryStats(
-  player: string,
+  playerId: string,
   events: GameEvent[],
   team: 'team1' | 'team2',
   roster?: Player[],
 ): ChemistryConnection[] {
+  // Key by player ID to prevent collisions
   const connections = new Map<
     string,
     { goalsFrom: number; assistsTo: number; totalConnections: number }
   >();
 
-  const resolveName = (playerId: string | null) => getPlayerName(roster, playerId);
+  const resolveName = (id: string | null) => getPlayerName(roster, id);
 
-  const getOrCreate = (name: string) =>
-    connections.get(name) || { goalsFrom: 0, assistsTo: 0, totalConnections: 0 };
+  const getOrCreate = (connPlayerId: string) => {
+    if (!connections.has(connPlayerId)) {
+      connections.set(connPlayerId, { goalsFrom: 0, assistsTo: 0, totalConnections: 0 });
+    }
+    return connections.get(connPlayerId)!;
+  };
 
   for (const event of events) {
     if (event.type === 'goal' && event.team === team) {
-      const goalName = resolveName(event.goalPlayerId);
-      const assistName = resolveName(event.assistPlayerId);
+      const goalPlayerId = event.goalPlayerId;
+      const assistPlayerId = event.assistPlayerId;
 
       // Did I catch a goal? (player is the goal scorer, check if assist exists)
-      if (goalName === player && assistName) {
-        const stats = getOrCreate(assistName);
+      if (goalPlayerId === playerId && assistPlayerId && assistPlayerId !== 'OTHER_TEAM') {
+        const stats = getOrCreate(assistPlayerId);
         stats.goalsFrom++;
         stats.totalConnections++;
-        connections.set(assistName, stats);
       }
       // Did I throw an assist? (player is the assister, check if goal scorer exists)
-      if (assistName === player && goalName) {
-        const stats = getOrCreate(goalName);
+      if (assistPlayerId === playerId && goalPlayerId) {
+        const stats = getOrCreate(goalPlayerId);
         stats.assistsTo++;
         stats.totalConnections++;
-        connections.set(goalName, stats);
       }
     }
   }
 
   return Array.from(connections.entries())
-    .map(([name, stats]) => ({
-      playerName: name,
+    .map(([connId, stats]) => ({
+      playerId: connId,
+      playerName: resolveName(connId) ?? connId,
       ...stats,
     }))
     .sort((a, b) => b.totalConnections - a.totalConnections);
@@ -185,8 +195,12 @@ export interface ImpactPoint {
   score: string; // e.g. "0-0", "1-0", "3-2"
 }
 
+/**
+ * Get impact timeline for a player showing cumulative +/- over the game.
+ * @param playerId - The player ID to analyze
+ */
 export function getImpactStats(
-  player: string,
+  playerId: string,
   events: GameEvent[],
   team: 'team1' | 'team2',
   roster?: Player[],
@@ -217,15 +231,11 @@ export function getImpactStats(
 
     let change = 0;
     let desc = '';
-    const resolveName = (playerId: string | null) => getPlayerName(roster, playerId);
 
     if (event.type === 'goal') {
-      const goalName = resolveName(event.goalPlayerId);
-      const assistName = resolveName(event.assistPlayerId);
-
       // Check for Callahan: goal with 'OTHER_TEAM' assist AND same player got the block
       const isCallahan =
-        goalName === player &&
+        event.goalPlayerId === playerId &&
         event.assistPlayerId === 'OTHER_TEAM' &&
         points.length > 1 &&
         points[points.length - 1].description?.includes('Block');
@@ -236,18 +246,15 @@ export function getImpactStats(
         currentPlusMinus -= 1; // Undo the block +1
         change = 2; // Callahan is worth +2 (block + goal)
         desc = 'Callahan (+2)';
-      } else if (goalName === player) {
+      } else if (event.goalPlayerId === playerId) {
         change = 1;
         desc = 'Goal (+1)';
-      } else if (assistName === player) {
+      } else if (event.assistPlayerId === playerId) {
         change = 1;
         desc = 'Assist (+1)';
       }
     } else if (event.type === 'turnover') {
-      const p1Name = resolveName(event.playerId);
-      const p2Name = resolveName(event.player2Id || null);
-
-      if (p1Name === player) {
+      if (event.playerId === playerId) {
         if (event.subtype === 'block') {
           change = 1;
           desc = 'Block (+1)';
@@ -258,7 +265,7 @@ export function getImpactStats(
           change = -1;
           desc = `${event.subtype.charAt(0).toUpperCase() + event.subtype.slice(1)} (-1)`;
         }
-      } else if (p2Name === player && event.subtype === 'fiftyfifty') {
+      } else if (event.player2Id === playerId && event.subtype === 'fiftyfifty') {
         change = -0.5;
         desc = '50/50 Drop (-0.5)';
       }
@@ -324,8 +331,12 @@ export type PlayerRoleLabel =
   | 'Green Light'
   | null;
 
+/**
+ * Get role stats for radar chart visualization.
+ * @param playerId - The player ID to analyze
+ */
 export function getRoleStats(
-  player: string,
+  playerId: string,
   events: GameEvent[],
   team: 'team1' | 'team2',
   roster?: Player[],
@@ -344,7 +355,8 @@ export function getRoleStats(
   const maxPlusMinus = Math.max(...plusMinusValues, 0);
   const plusMinusRange = Math.max(maxPlusMinus - minPlusMinus, 1);
 
-  const myStats = allPlayerStats.find((p) => p.name === player);
+  // Find by player ID instead of name
+  const myStats = allPlayerStats.find((p) => p.id === playerId);
 
   if (!myStats) {
     return {

@@ -5,17 +5,16 @@ import {
   computeRates,
   formatMinutesPlayed,
 } from '@/lib/playingTimeStatsUtils';
-import { GameEvent, Player, PointLineRecord } from '@/lib/storage';
+import { GameEvent, PointLineRecord } from '@/lib/storage';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 interface PlayingTimeSectionProps {
-  playerName: string;
+  playerId: string; // Player ID for stats lookup
   events: GameEvent[];
   pointLines?: PointLineRecord[] | null;
   startingPossession?: 'team1' | 'team2' | null;
   gameTo?: number;
-  roster?: Player[] | null;
   // Basic stats for per-point calculations
   goals?: number;
   assists?: number;
@@ -26,12 +25,11 @@ interface PlayingTimeSectionProps {
 }
 
 export default function PlayingTimeSection({
-  playerName,
+  playerId,
   events,
   pointLines,
   startingPossession,
   gameTo = 15,
-  roster,
   goals = 0,
   assists = 0,
   blocks = 0,
@@ -45,6 +43,8 @@ export default function PlayingTimeSection({
   if (!pointLines?.length) {
     return null;
   }
+  console.log(events);
+  console.log(pointLines);
 
   // Compute stats
   const playingTimeStats = computePlayingTimeStats(
@@ -52,10 +52,10 @@ export default function PlayingTimeSection({
     events,
     startingPossession ?? null,
     gameTo,
-    roster ?? undefined,
   );
 
-  const stats = playingTimeStats.get(playerName);
+  // Lookup by player ID since computePlayingTimeStats now keys by ID
+  const stats = playingTimeStats.get(playerId);
   if (!stats) {
     return null;
   }
@@ -130,16 +130,18 @@ export default function PlayingTimeSection({
           <Text style={[styles.sectionLabel, { color: palette.textMuted }]}>EFFICIENCY</Text>
           <View style={styles.pillRow}>
             {renderRatePill('Win', rates.pointWinRate)}
-            {renderStatPill(
-              'Offense',
-              formatEfficiencyLocal(stats.oEfficiency),
-              getEfficiencyColor(stats.oEfficiency),
-            )}
-            {renderStatPill(
-              'Defense',
-              formatEfficiencyLocal(stats.dEfficiency),
-              getEfficiencyColor(stats.dEfficiency),
-            )}
+            {stats.oPoints > 0 &&
+              renderStatPill(
+                'Offense',
+                formatEfficiencyLocal(stats.oEfficiency),
+                getEfficiencyColor(stats.oEfficiency),
+              )}
+            {stats.dPoints > 0 &&
+              renderStatPill(
+                'Defense',
+                formatEfficiencyLocal(stats.dEfficiency),
+                getEfficiencyColor(stats.dEfficiency),
+              )}
           </View>
         </View>
 

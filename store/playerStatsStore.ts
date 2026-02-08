@@ -2,7 +2,7 @@ import { GameEvent, Player, PointLineRecord, SavedGame } from '@/lib/storage';
 import { create } from 'zustand';
 
 interface PlayerStatsStore {
-  player: string | null;
+  playerId: string | null; // Changed from player name to player ID
   events: GameEvent[];
   team: 'team1' | 'team2';
   roster?: Player[] | null;
@@ -13,7 +13,7 @@ interface PlayerStatsStore {
   startingPossession?: 'team1' | 'team2' | null;
   gameTo?: number;
   openPlayerStats: (
-    player: string,
+    playerId: string, // Changed from player name to player ID
     events: GameEvent[],
     team: 'team1' | 'team2',
     roster?: Player[],
@@ -26,7 +26,7 @@ interface PlayerStatsStore {
 }
 
 export const usePlayerStatsStore = create<PlayerStatsStore>((set) => ({
-  player: null,
+  playerId: null,
   events: [],
   team: 'team1',
   roster: null,
@@ -35,9 +35,18 @@ export const usePlayerStatsStore = create<PlayerStatsStore>((set) => ({
   pointLines: null,
   startingPossession: null,
   gameTo: 15,
-  openPlayerStats: (player, events, team, roster, games, pointLines, startingPossession, gameTo) =>
+  openPlayerStats: (
+    playerId,
+    events,
+    team,
+    roster,
+    games,
+    pointLines,
+    startingPossession,
+    gameTo,
+  ) =>
     set({
-      player,
+      playerId,
       events,
       team,
       roster,

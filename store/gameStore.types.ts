@@ -133,11 +133,8 @@ export interface GameState {
   // Stat Tracking Actions
   setStatTrackingEnabled: (enabled: boolean) => void;
   addPlayer: (name: string) => string | null;
-  addGoalEvent: (event: {
-    team: 'team1' | 'team2';
-    goalPlayerId: string | null;
-    assistPlayerId: string | null;
-  }) => void;
+  addGoalEvent: (event: { goalPlayerId: string | null; assistPlayerId: string | null }) => void;
+  cancelPendingGoal: () => void;
   clearRoster: () => void;
   setPointTimerEnabled: (enabled: boolean) => void;
   startPoint: () => void;
@@ -196,4 +193,6 @@ export interface GameState {
   saveCurrentTeam: () => Promise<void>;
   deleteTeam: (id: string) => Promise<void>;
   loadTeam: (teamId: string) => void;
+  importGame: (game: SavedGame) => Promise<void>;
+  importTeam: (team: SavedTeam) => Promise<void>;
 }
