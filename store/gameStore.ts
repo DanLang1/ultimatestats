@@ -190,6 +190,7 @@ export const useGameStore = create<GameState>()(
                 team: isTeam1 ? 'team1' : 'team2',
                 goalPlayerId: null,
                 assistPlayerId: null,
+                pointNumber: state.currentPoint - 1, // currentPoint already incremented
               });
               return;
             }
@@ -221,6 +222,7 @@ export const useGameStore = create<GameState>()(
               goalPlayerId: null,
               assistPlayerId: null,
               elapsedMs,
+              pointNumber: state.currentPoint - 1, // currentPoint already incremented
             });
             state.currentPointStartTime = null;
             state.pointTimerPausedElapsed = null;
@@ -283,10 +285,11 @@ export const useGameStore = create<GameState>()(
               }
               // Remove entry from pointStartTimestamps since point is in-progress again
               delete state.pointStartTimestamps[state.currentPoint];
-              // Remove any line records for the undone point and any future points
+              // Remove any line records for future points
               // (user may have set a line for the next point before undoing)
+              // Use <= because currentPoint now represents the in-progress point we're reverting to
               state.pointLines = state.pointLines.filter(
-                (record) => record.pointNumber < state.currentPoint,
+                (record) => record.pointNumber <= state.currentPoint,
               );
               state.events.pop();
             } else {
@@ -355,6 +358,7 @@ export const useGameStore = create<GameState>()(
               isFloater,
               elapsedMs,
               pointTimerWasPaused: !pointTimerWasRunning,
+              pointNumber: state.currentPoint,
             });
 
             // Update cached state for immediate UI feedback
@@ -644,6 +648,7 @@ export const useGameStore = create<GameState>()(
               playerId: event.playerId,
               player2Id: event.player2Id,
               elapsedMs,
+              pointNumber: state.currentPoint,
             });
             state.possession = state.possession === 'team1' ? 'team2' : 'team1';
             state.pendingTurnoverEntry = null;
@@ -664,6 +669,30 @@ export const useGameStore = create<GameState>()(
 
         recordLineForPoint: (pointNumber: number, isSubstitution?: boolean) =>
           set((state: GameState) => {
+            // When editing a line mid-game, determine if this is a correction or a real substitution
+            // by comparing how many players changed from the existing record.
+            // 1-2 players changed = substitution (append), 3+ changed = line correction (replace).
+            if (isSubstitution) {
+              const existingIdx = state.pointLines.findLastIndex(
+                (r) => r.pointNumber === pointNumber,
+              );
+              if (existingIdx !== -1) {
+                const oldPlayerIds = new Set(state.pointLines[existingIdx].playerIds);
+                const newPlayerIds = state.currentLine;
+                const changedCount = newPlayerIds.filter((id) => !oldPlayerIds.has(id)).length;
+
+                if (changedCount > 2) {
+                  // 3+ players changed — treat as a line correction (replace)
+                  state.pointLines[existingIdx] = {
+                    pointNumber,
+                    playerIds: [...newPlayerIds],
+                    timestamp: Date.now(),
+                    isSubstitution: false,
+                  };
+                  return;
+                }
+              }
+            }
             state.pointLines.push({
               pointNumber,
               playerIds: [...state.currentLine],

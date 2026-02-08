@@ -6,6 +6,21 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.5.0',
+    date: 'February 8, 2026',
+    changes: [
+      'Added game and team sharing via links',
+      'Added playing time stats when line calling is enabled',
+      'Added handling to keep screen on while on scoreboard',
+      'Added setting to allow recording assists first',
+      'Added an "Unknown" option for stat entry in case you didnt see who scored',
+      'Added a "Cancel" option during stat entry in case score/turn was unintended',
+      'Fixed a soft cap bug allowing game to score to reach over the original value',
+      'Fixed a bug where canceling out of stat entry was not appending to game events',
+      'Misc bug fixes with line presets',
+    ],
+  },
+  {
     version: '1.4.0',
     date: 'February 5, 2026',
     changes: [

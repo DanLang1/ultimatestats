@@ -1,4 +1,5 @@
 import { GameEvent, PointLineRecord } from '@/lib/storage';
+import { getAllPlayersByPoint } from './lineUtils';
 import { computePointByPointEvents } from './timelineUtils';
 
 /**
@@ -23,26 +24,6 @@ export interface PlayingTimeStats {
 }
 
 /**
- * Get the final line for each point (accounts for substitutions)
- * Returns a map from point number to the set of player IDs on field when point ended
- */
-function getFinalLinesByPoint(pointLines: PointLineRecord[]): Map<number, Set<string>> {
-  const finalLines = new Map<number, Set<string>>();
-
-  // Group by point number and take the last record for each point
-  const byPoint = new Map<number, PointLineRecord>();
-  for (const record of pointLines) {
-    byPoint.set(record.pointNumber, record);
-  }
-
-  for (const [pointNumber, record] of byPoint) {
-    finalLines.set(pointNumber, new Set(record.playerIds));
-  }
-
-  return finalLines;
-}
-
-/**
  * Compute playing time-based stats for all players
  * Returns a map from player ID to their PlayingTimeStats
  */
@@ -61,8 +42,8 @@ export function computePlayingTimeStats(
     return statsMap;
   }
 
-  // Get final line for each point
-  const finalLines = getFinalLinesByPoint(pointLines);
+  // Get all players who appeared in each point (including mid-point subs)
+  const finalLines = getAllPlayersByPoint(pointLines);
 
   // Compute point-by-point events to determine O-line/D-line and outcomes
   const pointEvents = computePointByPointEvents(

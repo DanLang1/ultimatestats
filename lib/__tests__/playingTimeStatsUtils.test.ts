@@ -105,8 +105,8 @@ describe('playingTimeStatsUtils', () => {
       expect(result.get('p1')?.pointLosses).toBe(1);
     });
 
-    it('uses final line for substitutions', () => {
-      // p1 subs out, p2 subs in mid-point
+    it('includes all players who appeared during a point with substitutions', () => {
+      // p1 subs out, p2 subs in mid-point — both get credit
       const pointLines: PointLineRecord[] = [
         { pointNumber: 1, playerIds: ['p1'], timestamp: 1000 },
         { pointNumber: 1, playerIds: ['p2'], timestamp: 2000, isSubstitution: true },
@@ -118,8 +118,9 @@ describe('playingTimeStatsUtils', () => {
 
       const result = computePlayingTimeStats(pointLines, events, 'team1', 15);
 
-      // Only p2 should get credit for this point (final line)
-      expect(result.has('p1')).toBe(false);
+      // Both p1 and p2 get credit for this point
+      expect(result.get('p1')?.pointsPlayed).toBe(1);
+      expect(result.get('p1')?.oEfficiency).toBe(1);
       expect(result.get('p2')?.pointsPlayed).toBe(1);
       expect(result.get('p2')?.oEfficiency).toBe(1);
     });

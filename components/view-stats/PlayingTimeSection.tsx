@@ -43,8 +43,6 @@ export default function PlayingTimeSection({
   if (!pointLines?.length) {
     return null;
   }
-  console.log(events);
-  console.log(pointLines);
 
   // Compute stats
   const playingTimeStats = computePlayingTimeStats(
@@ -120,8 +118,8 @@ export default function PlayingTimeSection({
             {renderStatPill('Played', stats.pointsPlayed)}
             {renderStatPill('O-Line', stats.oPoints)}
             {renderStatPill('D-Line', stats.dPoints)}
-            {renderStatPill('O-Holds', stats.oLineHolds)}
-            {renderStatPill('D-Breaks', stats.dLineBreaks)}
+            {renderStatPill(stats.oLineHolds === 1 ? 'Hold' : 'Holds', stats.oLineHolds)}
+            {renderStatPill(stats.dLineBreaks === 1 ? 'Break' : 'Breaks', stats.dLineBreaks)}
           </View>
         </View>
 
@@ -163,11 +161,11 @@ export default function PlayingTimeSection({
           <View style={styles.section}>
             <Text style={[styles.sectionLabel, { color: palette.textMuted }]}>TIMING</Text>
             <View style={styles.pillRow}>
-              {renderStatPill('Mins', formatMinutesPlayed(stats.minutesPlayed!))}
+              {renderStatPill('Total PT', formatMinutesPlayed(stats.minutesPlayed!))}
               {stats.avgPointDurationMs !== undefined &&
-                renderStatPill('Avg Pt', `${(stats.avgPointDurationMs / 1000).toFixed(0)}s`)}
+                renderStatPill('Avg Per Point', `${(stats.avgPointDurationMs / 1000).toFixed(0)}s`)}
               {stats.playingTimePercent !== undefined &&
-                renderStatPill('Time', `${stats.playingTimePercent.toFixed(0)}%`)}
+                renderStatPill('Total PP', `${stats.playingTimePercent.toFixed(0)}%`)}
             </View>
           </View>
         )}

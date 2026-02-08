@@ -202,89 +202,95 @@ export default function PlayerStats() {
         </View>
 
         <View style={styles.grid}>
-          {/* Full-width Impact Timeline */}
-          <View
-            style={[
-              styles.card,
-              { backgroundColor: palette.overlay02, borderColor: palette.overlay05 },
-            ]}>
-            {/* Game Selector (only if aggregate) */}
-            {games && games.length > 1 && (
-              <View style={{ marginBottom: 12, paddingHorizontal: 16 }}>
-                {/* Aggregate Summary */}
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    marginBottom: 12,
-                    gap: 8,
-                  }}>
+          {/* Full-width Impact Timeline - only show if player has recorded stats */}
+          {(stats.impact.some((d) => d.cumulativePlusMinus !== 0) || stats.impact.length > 2) && (
+            <View
+              style={[
+                styles.card,
+                { backgroundColor: palette.overlay02, borderColor: palette.overlay05 },
+              ]}>
+              {/* Game Selector (only if aggregate) */}
+              {games && games.length > 1 && (
+                <View style={{ marginBottom: 12, paddingHorizontal: 16 }}>
+                  {/* Aggregate Summary */}
                   <View
                     style={{
-                      backgroundColor:
-                        aggregateImpact && aggregateImpact > 0
-                          ? palette.successOverlay15
-                          : aggregateImpact && aggregateImpact < 0
-                            ? palette.dangerOverlay15
-                            : palette.overlay05,
-                      paddingHorizontal: 12,
-                      paddingVertical: 6,
-                      borderRadius: 8,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      marginBottom: 12,
+                      gap: 8,
                     }}>
-                    <Text
+                    <View
                       style={{
-                        color:
+                        backgroundColor:
                           aggregateImpact && aggregateImpact > 0
-                            ? palette.success
+                            ? palette.successOverlay15
                             : aggregateImpact && aggregateImpact < 0
-                              ? palette.danger
-                              : palette.textMuted,
-                        fontSize: 16,
-                        fontWeight: '800',
+                              ? palette.dangerOverlay15
+                              : palette.overlay05,
+                        paddingHorizontal: 12,
+                        paddingVertical: 6,
+                        borderRadius: 8,
                       }}>
-                      {aggregateImpact && aggregateImpact > 0 ? '+' : ''}
-                      {aggregateImpact ?? 0}
+                      <Text
+                        style={{
+                          color:
+                            aggregateImpact && aggregateImpact > 0
+                              ? palette.success
+                              : aggregateImpact && aggregateImpact < 0
+                                ? palette.danger
+                                : palette.textMuted,
+                          fontSize: 16,
+                          fontWeight: '800',
+                        }}>
+                        {aggregateImpact && aggregateImpact > 0 ? '+' : ''}
+                        {aggregateImpact ?? 0}
+                      </Text>
+                    </View>
+                    <Text style={{ color: palette.textMuted, fontSize: 12, fontWeight: '600' }}>
+                      TOTAL ACROSS {games.length} GAMES
                     </Text>
                   </View>
-                  <Text style={{ color: palette.textMuted, fontSize: 12, fontWeight: '600' }}>
-                    TOTAL ACROSS {games.length} GAMES
+
+                  {/* Per-game selector */}
+                  <Text
+                    style={{
+                      color: palette.textMuted,
+                      fontSize: 10,
+                      fontWeight: '600',
+                      marginBottom: 6,
+                      letterSpacing: 0.5,
+                    }}>
+                    VIEW GAME DETAILS
                   </Text>
+                  <Pressable
+                    onPress={() => router.push('/GameSelectorModal')}
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      backgroundColor: palette.overlay05,
+                      paddingHorizontal: 12,
+                      paddingVertical: 10,
+                      borderRadius: 8,
+                      alignSelf: 'flex-start',
+                      gap: 6,
+                    }}>
+                    <MaterialCommunityIcons name="calendar" size={16} color={palette.textMuted} />
+                    <Text style={{ color: palette.textInverse, fontWeight: '600', fontSize: 14 }}>
+                      {gameLabel}
+                    </Text>
+                    <MaterialCommunityIcons
+                      name="chevron-down"
+                      size={18}
+                      color={palette.textMuted}
+                    />
+                  </Pressable>
                 </View>
+              )}
 
-                {/* Per-game selector */}
-                <Text
-                  style={{
-                    color: palette.textMuted,
-                    fontSize: 10,
-                    fontWeight: '600',
-                    marginBottom: 6,
-                    letterSpacing: 0.5,
-                  }}>
-                  VIEW GAME DETAILS
-                </Text>
-                <Pressable
-                  onPress={() => router.push('/GameSelectorModal')}
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    backgroundColor: palette.overlay05,
-                    paddingHorizontal: 12,
-                    paddingVertical: 10,
-                    borderRadius: 8,
-                    alignSelf: 'flex-start',
-                    gap: 6,
-                  }}>
-                  <MaterialCommunityIcons name="calendar" size={16} color={palette.textMuted} />
-                  <Text style={{ color: palette.textInverse, fontWeight: '600', fontSize: 14 }}>
-                    {gameLabel}
-                  </Text>
-                  <MaterialCommunityIcons name="chevron-down" size={18} color={palette.textMuted} />
-                </Pressable>
-              </View>
-            )}
-
-            <ImpactTimeline data={stats.impact} />
-          </View>
+              <ImpactTimeline data={stats.impact} />
+            </View>
+          )}
 
           {/* Full-width Chemistry Map - only show if connections exist */}
           {stats.chemistry.some((c) => c.goalsFrom > 0 || c.assistsTo > 0) && (

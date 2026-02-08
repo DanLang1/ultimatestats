@@ -244,6 +244,59 @@ interface PointLineRecord {
 
 ---
 
+## Line Recording Logic
+
+### How Lines Are Recorded (`recordLineForPoint`)
+
+**File**: `store/gameStore.ts`
+
+Lines are recorded at two points:
+1. **PointTransition** (`isSubstitution: false`): When the user sets the line for the next point after a score
+2. **LinePromptModal** (`isSubstitution: true`): When the user edits the line mid-game via GameInfo → Edit Line
+
+### Replace vs Append (Correction vs Substitution)
+
+When a user edits a line during a point, the system determines whether it's a **correction** (wrong line picked) or a **real substitution** (e.g., injury) by comparing how many players changed:
+
+| Players Changed | Behavior | Rationale |
+|----------------|----------|-----------|
+| 1-2 players | **Append** as substitution | Small swap — likely a real sub (injury, fatigue) |
+| 3+ players | **Replace** existing record | Most of the line changed — likely picked the wrong preset |
+
+When replacing, `isSubstitution` is set to `false` on the updated record since it's treated as the corrected original line. The comparison uses the most recent record for the point (`findLastIndex`) to handle cases where multiple substitutions have already occurred.
+
+### Playing Time Attribution
+
+Two functions compute playing time, with consistent behavior:
+
+| Function | File | Behavior |
+|----------|------|----------|
+| `computePlayingTime()` | `lib/lineUtils.ts` | Merges all player IDs across all records for a point |
+| `computePlayingTimeStats()` | `lib/playingTimeStatsUtils.ts` | Merges all player IDs across all records for a point |
+
+Both use a `Set` to collect all players who appeared in any `PointLineRecord` for a given point number. This means:
+- A player subbed out mid-point still gets credit for playing that point
+- A player subbed in mid-point also gets credit
+- If a line is **replaced** (correction), only the corrected players get credit (the original wrong record is overwritten)
+
+### Undo and Point Lines
+
+When a goal is undone (`undoLastAction`):
+
+1. `currentPoint` is decremented back to the in-progress point
+2. Point lines are filtered with `record.pointNumber <= currentPoint`
+   - Lines for the current (reverted) point are **kept** (the line on field is still valid)
+   - Lines for future points (set after the undone score) are **removed**
+
+### Game Events and Point Numbers
+
+All game events (`GoalEvent`, `TurnoverEvent`, `TimeoutEvent`) include an optional `pointNumber` field:
+- Goal events use `currentPoint - 1` (since `currentPoint` is incremented before the event is pushed)
+- Turnover and timeout events use `currentPoint` (they occur during the current point)
+- Old saved games may not have this field — stats utilities derive point numbers independently by counting goals in `computePointByPointEvents()`
+
+---
+
 ## State Management
 
 ### linePresetsStore

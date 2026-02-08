@@ -48,6 +48,8 @@ export interface ModalPlayerGridProps {
   sortSelectedFirst?: boolean;
   /** Change this value to trigger a re-sort (e.g., increment on preset selection) */
   sortKey?: number;
+  /** Current point number — excludes in-progress point from playing time count */
+  currentPoint?: number;
 }
 
 type ColumnKey =
@@ -103,6 +105,7 @@ export function ModalPlayerGrid({
   gameActive = false,
   sortSelectedFirst = false,
   sortKey = 0,
+  currentPoint,
 }: ModalPlayerGridProps) {
   const { palette } = useTheme();
 
@@ -110,7 +113,7 @@ export function ModalPlayerGrid({
   const labelColor = useModalColorsProp ? palette.modalTextMuted : palette.textMuted;
   const emptyTextColor = useModalColorsProp ? palette.modalTextMuted : palette.textMuted;
 
-  const playingTime = computePlayingTime(pointLines);
+  const playingTime = computePlayingTime(pointLines, currentPoint);
   const selectedSet = new Set(selectedIds);
 
   // Use ref to store sorted roster - only re-sort when sortKey changes

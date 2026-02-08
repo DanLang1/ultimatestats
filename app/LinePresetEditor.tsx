@@ -14,7 +14,7 @@ export default function LinePresetEditor() {
   const { presetId } = useLocalSearchParams<{ presetId?: string }>();
   const { showAlert } = useAlert();
 
-  const { currentTeam, pointLines } = useGameStore();
+  const { currentTeam, pointLines, currentPoint } = useGameStore();
   const { numPlayers } = useSettingsStore();
   const gameActive = useIsGameActive();
   const { presets, addPreset, updatePreset, deletePreset, reorderPresets } = useLinePresetsStore();
@@ -160,6 +160,7 @@ export default function LinePresetEditor() {
       presetName={presetName}
       selectedIds={selectedIds}
       gameActive={gameActive}
+      currentPoint={currentPoint}
       numPlayers={numPlayers}
       onPresetNameChange={setPresetName}
       onTogglePlayer={handleTogglePlayer}

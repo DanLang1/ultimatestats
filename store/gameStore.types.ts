@@ -15,6 +15,7 @@ export type GoalEvent = {
   assistPlayerId: string | null; // Player ID who assisted
   gameId?: string; // Populated on save - links to SavedGame.id
   elapsedMs?: number; // Elapsed game time in ms when goal was scored
+  pointNumber?: number; // Point this event belongs to (absent in games saved before this field existed)
 };
 
 export type TurnoverEvent = {
@@ -25,6 +26,7 @@ export type TurnoverEvent = {
   player2Id?: string | null; // Second player ID for 50/50 turnovers
   gameId?: string; // Populated on save - links to SavedGame.id
   elapsedMs?: number; // Elapsed game time in ms when event was recorded
+  pointNumber?: number; // Point this event belongs to (absent in games saved before this field existed)
 };
 
 export type TimeoutEvent = {
@@ -35,6 +37,7 @@ export type TimeoutEvent = {
   gameId?: string; // Populated on save - links to SavedGame.id
   elapsedMs?: number; // Elapsed game time in ms when timeout was called
   pointTimerWasPaused?: boolean; // Timer state BEFORE timeout (for undo restoration)
+  pointNumber?: number; // Point this event belongs to (absent in games saved before this field existed)
 };
 
 export type GameEvent = GoalEvent | TurnoverEvent | TimeoutEvent;

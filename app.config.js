@@ -3,7 +3,7 @@ const IS_DEV = process.env.APP_VARIANT === 'development';
 export default {
   name: IS_DEV ? 'U-Stat (Dev)' : 'U-Stat',
   slug: 'ultimatestats',
-  version: '1.4.0',
+  version: '1.5.0',
   orientation: 'landscape',
   icon: './assets/images/icon.png',
   scheme: IS_DEV ? 'ultimatestats-dev' : 'ultimatestats',

@@ -30,7 +30,11 @@ export function ShareConfirmModal({ visible, onConfirm, onCancel }: ShareConfirm
   return (
     <AlertModal visible={visible} title="Share Data?" onClose={handleCancel}>
       <Text style={[styles.body, { color: palette.textMuted }]}>
-        This will upload player names to a shared link. The link expires after 30 days.
+        By proceeding, anyone with the generated link can view your game/team data including names,
+        lines, and stats.
+      </Text>
+      <Text style={[styles.body, { color: palette.textMuted }]}>
+        The link expires after 30 days.
       </Text>
 
       <View style={styles.buttonContainer}>
@@ -44,7 +48,7 @@ export function ShareConfirmModal({ visible, onConfirm, onCancel }: ShareConfirm
           ]}
           onPress={handleCancel}
           disabled={isLoading}>
-          <Text style={[styles.buttonText, { color: palette.textInverse }]}>Cancel</Text>
+          <Text style={[styles.buttonText, { color: palette.modalText }]}>Cancel</Text>
         </Pressable>
         <Pressable
           style={({ pressed }) => [

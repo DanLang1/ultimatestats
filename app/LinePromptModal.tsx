@@ -252,6 +252,7 @@ export default function LinePromptModal() {
               sortSelectedFirst
               sortKey={sortKey}
               gameActive={gameActive}
+              currentPoint={currentPoint}
             />
           </View>
         </View>

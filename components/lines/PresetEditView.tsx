@@ -14,6 +14,7 @@ export interface PresetEditViewProps {
   selectedIds: string[];
   gameActive: boolean;
   numPlayers: number;
+  currentPoint?: number;
   onPresetNameChange: (name: string) => void;
   onTogglePlayer: (playerId: string) => void;
   onSave: () => void;
@@ -26,6 +27,7 @@ export function PresetEditView({
   presetName,
   selectedIds,
   gameActive,
+  currentPoint,
   onPresetNameChange,
   onTogglePlayer,
   onSave,
@@ -132,6 +134,7 @@ export function PresetEditView({
           sortSelectedFirst={selectedIds.length > 0}
           useModalColors={false}
           gameActive={gameActive}
+          currentPoint={currentPoint}
         />
       </View>
     </View>

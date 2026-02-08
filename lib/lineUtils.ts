@@ -83,18 +83,20 @@ export function groupPlayersByGenderRole(roster: Player[]): PlayerGroup[] {
 }
 
 /**
- * Computes playing time (points played) from point line records.
- * Returns a Map from playerId to number of points played.
- * Counts ALL players who appeared in any line record for a point,
- * including substitutions - so both the subbed-in and subbed-out players get credit.
+ * Get all players who appeared in each point (includes substituted-out players).
+ * This is the single source of truth for "which players were on field during a point".
+ * Returns a map from point number to the set of all player IDs who were on field at any time.
+ * @param excludeFromPoint - If provided, excludes points >= this number
+ *   (used to exclude the current in-progress point during live gameplay)
  */
-export function computePlayingTime(pointLines: PointLineRecord[]): Map<string, number> {
-  const playingTime = new Map<string, number>();
-
-  // Group all player IDs by point number (including substitutions)
+export function getAllPlayersByPoint(
+  pointLines: PointLineRecord[],
+  excludeFromPoint?: number,
+): Map<number, Set<string>> {
   const playersByPoint = new Map<number, Set<string>>();
 
   for (const record of pointLines) {
+    if (excludeFromPoint !== undefined && record.pointNumber >= excludeFromPoint) continue;
     if (!playersByPoint.has(record.pointNumber)) {
       playersByPoint.set(record.pointNumber, new Set());
     }
@@ -104,7 +106,22 @@ export function computePlayingTime(pointLines: PointLineRecord[]): Map<string, n
     }
   }
 
-  // Count each player's points (each point they appear in counts as 1)
+  return playersByPoint;
+}
+
+/**
+ * Computes playing time (points played) from point line records.
+ * Returns a Map from playerId to number of points played.
+ * @param excludeFromPoint - If provided, excludes points >= this number
+ *   (used to exclude the current in-progress point during live gameplay)
+ */
+export function computePlayingTime(
+  pointLines: PointLineRecord[],
+  excludeFromPoint?: number,
+): Map<string, number> {
+  const playingTime = new Map<string, number>();
+  const playersByPoint = getAllPlayersByPoint(pointLines, excludeFromPoint);
+
   for (const playerIds of playersByPoint.values()) {
     for (const playerId of playerIds) {
       playingTime.set(playerId, (playingTime.get(playerId) ?? 0) + 1);

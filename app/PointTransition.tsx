@@ -442,6 +442,7 @@ export default function PointTransition() {
             sortSelectedFirst={selectedPresetId !== null || selectedIds.length > 0}
             sortKey={sortKey}
             gameActive={gameActive}
+            currentPoint={currentPoint}
           />
         )}
       </View>

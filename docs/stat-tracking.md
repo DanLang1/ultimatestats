@@ -113,6 +113,7 @@ When an action is undone (via `undoLastAction`):
    - Possession is returned to the scoring team.
    - `pendingStatEntry` is cleared.
    - `currentPoint` is decremented.
+   - Point lines for future points are removed (`pointNumber > currentPoint`), but the current point's line is kept. See [Line Recording Logic](line-selection.md#undo-and-point-lines) for details.
 3. If it was a `turnover`:
    - Possession is flipped back to the previous team.
    - `pendingTurnoverEntry` is cleared.
