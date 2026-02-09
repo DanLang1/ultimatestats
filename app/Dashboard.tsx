@@ -255,6 +255,24 @@ export default function DashboardScreen() {
                 </Text>
               </View>
             </Pressable>
+
+            <Pressable
+              onPress={() => {
+                router.push('/this-route-does-not-exist' as never);
+              }}
+              style={({ pressed }) => [
+                styles.discordBanner,
+                { backgroundColor: palette.warning, marginTop: 12 },
+                pressed && styles.menuItemPressed,
+              ]}>
+              <MaterialCommunityIcons name="link-off" size={24} color="white" />
+              <View style={styles.discordText}>
+                <Text style={[styles.discordTitle, { color: 'white' }]}>Test 404 Page</Text>
+                <Text style={[styles.discordSubtitle, { color: 'rgba(255,255,255,0.7)' }]}>
+                  DEV ONLY - Navigate to non-existent route
+                </Text>
+              </View>
+            </Pressable>
           </>
         )}
       </ScrollView>

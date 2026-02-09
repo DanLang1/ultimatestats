@@ -667,32 +667,28 @@ export const useGameStore = create<GameState>()(
             state.currentLine = playerIds;
           }),
 
-        recordLineForPoint: (pointNumber: number, isSubstitution?: boolean) =>
+        recordLineForPoint: (
+          pointNumber: number,
+          isSubstitution?: boolean,
+          subType?: 'injury' | 'replacement',
+        ) =>
           set((state: GameState) => {
-            // When editing a line mid-game, determine if this is a correction or a real substitution
-            // by comparing how many players changed from the existing record.
-            // 1-2 players changed = substitution (append), 3+ changed = line correction (replace).
-            if (isSubstitution) {
+            if (isSubstitution && subType === 'replacement') {
+              // Replace: overwrite the most recent record for this point
               const existingIdx = state.pointLines.findLastIndex(
                 (r) => r.pointNumber === pointNumber,
               );
               if (existingIdx !== -1) {
-                const oldPlayerIds = new Set(state.pointLines[existingIdx].playerIds);
-                const newPlayerIds = state.currentLine;
-                const changedCount = newPlayerIds.filter((id) => !oldPlayerIds.has(id)).length;
-
-                if (changedCount > 2) {
-                  // 3+ players changed — treat as a line correction (replace)
-                  state.pointLines[existingIdx] = {
-                    pointNumber,
-                    playerIds: [...newPlayerIds],
-                    timestamp: Date.now(),
-                    isSubstitution: false,
-                  };
-                  return;
-                }
+                state.pointLines[existingIdx] = {
+                  pointNumber,
+                  playerIds: [...state.currentLine],
+                  timestamp: Date.now(),
+                  isSubstitution: false,
+                };
+                return;
               }
             }
+            // Injury sub or initial line: append a new record
             state.pointLines.push({
               pointNumber,
               playerIds: [...state.currentLine],

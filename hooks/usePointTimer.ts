@@ -11,6 +11,7 @@ export function usePointTimer() {
     pointTimerPausedElapsed,
     pointTimerEnabled,
     togglePointTimerPause,
+    startPoint,
   } = useGameStore();
 
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
@@ -50,5 +51,6 @@ export function usePointTimer() {
     isPaused,
     isEnabled: pointTimerEnabled,
     togglePause: togglePointTimerPause,
+    restart: startPoint,
   };
 }

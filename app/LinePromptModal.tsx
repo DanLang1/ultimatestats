@@ -36,6 +36,11 @@ export default function LinePromptModal() {
   // Increment sortKey to trigger a re-sort (initial load, preset selection, sort toggle)
   const [sortKey, setSortKey] = useState(0);
 
+  // Sub type toggle for mid-point substitutions
+  const [subType, setSubType] = useState<'injury' | 'replacement'>('injury');
+  const [showSubTypeHint, setShowSubTypeHint] = useState(false);
+  const hasExistingLine = pointLines.some((r) => r.pointNumber === currentPoint);
+
   const toggleSort = () => {
     setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
     setSortKey((k) => k + 1);
@@ -74,7 +79,7 @@ export default function LinePromptModal() {
   const handleConfirm = () => {
     requestIdleCallback(() => {
       setCurrentLine(selectedIds);
-      recordLineForPoint(currentPoint, true);
+      recordLineForPoint(currentPoint, true, hasExistingLine ? subType : undefined);
     });
 
     // Dismiss back to GameInfo
@@ -241,6 +246,79 @@ export default function LinePromptModal() {
             </View>
           </View>
 
+          {/* Sub Type Toggle - only shown when editing an existing line */}
+          {hasExistingLine && (
+            <View style={styles.subTypeSection}>
+              <View style={styles.subTypeRow}>
+                <Pressable
+                  onPress={() => setSubType('injury')}
+                  style={({ pressed }) => [
+                    styles.subTypeChip,
+                    {
+                      backgroundColor: subType === 'injury' ? palette.accent : palette.overlay08,
+                      borderColor: subType === 'injury' ? palette.accent : palette.overlay15,
+                    },
+                    pressed && { opacity: 0.8 },
+                  ]}>
+                  <Text
+                    style={[
+                      styles.subTypeChipText,
+                      { color: subType === 'injury' ? palette.textOnAccent : palette.modalText },
+                    ]}>
+                    Injury Sub
+                  </Text>
+                </Pressable>
+                <Pressable
+                  onPress={() => setSubType('replacement')}
+                  style={({ pressed }) => [
+                    styles.subTypeChip,
+                    {
+                      backgroundColor:
+                        subType === 'replacement' ? palette.accent : palette.overlay08,
+                      borderColor: subType === 'replacement' ? palette.accent : palette.overlay15,
+                    },
+                    pressed && { opacity: 0.8 },
+                  ]}>
+                  <Text
+                    style={[
+                      styles.subTypeChipText,
+                      {
+                        color: subType === 'replacement' ? palette.textOnAccent : palette.modalText,
+                      },
+                    ]}>
+                    Replace Line
+                  </Text>
+                </Pressable>
+                <Pressable
+                  onPress={() => setShowSubTypeHint((v) => !v)}
+                  hitSlop={8}
+                  style={({ pressed }) => [
+                    styles.subTypeInfoBtn,
+                    {
+                      borderColor: showSubTypeHint ? palette.accent : palette.overlay15,
+                      backgroundColor: showSubTypeHint ? palette.accent : 'transparent',
+                    },
+                    pressed && { opacity: 0.7 },
+                  ]}>
+                  <Text
+                    style={[
+                      styles.subTypeInfoText,
+                      { color: showSubTypeHint ? palette.textOnAccent : palette.modalTextMuted },
+                    ]}>
+                    ?
+                  </Text>
+                </Pressable>
+              </View>
+              {showSubTypeHint && (
+                <Text style={[styles.subTypeHint, { color: palette.modalTextMuted }]}>
+                  {subType === 'injury'
+                    ? 'Both old and new players get point credit'
+                    : 'Only the new lineup gets point credit'}
+                </Text>
+              )}
+            </View>
+          )}
+
           {/* Player Selection - 4 Column Layout */}
           <View style={styles.playerSection}>
             <ModalPlayerGrid
@@ -358,5 +436,40 @@ const styles = StyleSheet.create({
   ratioWarningText: {
     fontSize: 9,
     fontWeight: '700',
+  },
+  subTypeSection: {
+    marginBottom: 8,
+    gap: 4,
+  },
+  subTypeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  subTypeChip: {
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+    borderRadius: 10,
+    borderWidth: 1,
+  },
+  subTypeChipText: {
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  subTypeInfoBtn: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  subTypeInfoText: {
+    fontSize: 10,
+    fontWeight: '700',
+  },
+  subTypeHint: {
+    fontSize: 10,
+    fontStyle: 'italic',
   },
 });

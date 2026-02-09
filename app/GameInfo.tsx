@@ -1,6 +1,7 @@
 import HelpContent from '@/components/HelpContent';
 import { ThemedView } from '@/components/ThemedView';
 import { AlertModal } from '@/components/ui/AlertModal';
+import { useAlert } from '@/components/ui/AlertProvider';
 import FlashingIcon from '@/components/ui/FlashingIcon';
 import { useTheme } from '@/context/ThemeContext';
 import { useEndGame } from '@/hooks/useEndGame';
@@ -43,6 +44,7 @@ export default function GameInfoScreen() {
   const isHardcap = timeLeft === 0;
 
   const { palette } = useTheme();
+  const { showAlert } = useAlert();
   const { confirmEndGame } = useEndGame();
   const {
     elapsedSeconds,
@@ -50,6 +52,7 @@ export default function GameInfoScreen() {
     isPaused,
     togglePause,
     isEnabled: pointTimerEnabled,
+    restart: restartPointTimer,
   } = usePointTimer();
 
   const countTimeoutsRemaining = (timeouts: boolean[]) => timeouts.filter((t) => t).length;
@@ -67,6 +70,17 @@ export default function GameInfoScreen() {
     const toText = `${toCount} TO`;
     if (!floaterEnabled) return toText;
     return hasFloater ? `${toText} • 1 Floater` : `${toText} • 0 Floater`;
+  };
+
+  const confirmRestartPointTimer = () => {
+    showAlert({
+      title: 'Restart Point Timer?',
+      message: 'This will reset the timer for the current point back to 0:00.',
+      buttons: [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Restart', style: 'destructive', onPress: restartPointTimer },
+      ],
+    });
   };
 
   const showPointTimer = pointTimerEnabled && pointIsActive;
@@ -186,28 +200,28 @@ export default function GameInfoScreen() {
             {showPointTimer && (
               <View style={styles.pointTimerContainer}>
                 <View style={[styles.pointTimerDivider, { backgroundColor: palette.overlay10 }]} />
-                <Pressable
-                  onPress={togglePause}
-                  style={({ pressed }) => [
-                    styles.pointTimerPod,
-                    pressed && { backgroundColor: palette.overlay10 },
-                  ]}>
-                  <Text style={[styles.centerLabel, { color: palette.accent }]}>POINT LENGTH</Text>
-                  <View style={styles.pointTimerRow}>
+                <Text style={[styles.centerLabel, { color: palette.accent }]}>POINT LENGTH</Text>
+                <View style={styles.pointTimerRow}>
+                  <Pressable onPress={togglePause} hitSlop={8}>
                     <MaterialCommunityIcons
                       name={isPaused ? 'play' : 'pause'}
                       size={24}
                       color={isPaused ? palette.warning : palette.textMuted}
                     />
-                    <Text
-                      style={[
-                        styles.pointTimerValue,
-                        { color: isPaused ? palette.warning : palette.textInverse },
-                      ]}>
-                      {formatElapsed(elapsedSeconds)}
-                    </Text>
-                  </View>
-                </Pressable>
+                  </Pressable>
+                  <Text
+                    style={[
+                      styles.pointTimerValue,
+                      { color: isPaused ? palette.warning : palette.textInverse },
+                    ]}>
+                    {formatElapsed(elapsedSeconds)}
+                  </Text>
+                  {isPaused && (
+                    <Pressable onPress={confirmRestartPointTimer} hitSlop={8}>
+                      <MaterialCommunityIcons name="restart" size={22} color={palette.textMuted} />
+                    </Pressable>
+                  )}
+                </View>
               </View>
             )}
           </View>
@@ -428,12 +442,6 @@ const styles = StyleSheet.create({
     width: 24,
     height: 1,
     marginBottom: 16,
-  },
-  pointTimerPod: {
-    alignItems: 'center',
-    paddingVertical: 4,
-    paddingHorizontal: 24,
-    borderRadius: 12,
   },
   pointTimerRow: {
     flexDirection: 'row',

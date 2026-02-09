@@ -183,7 +183,11 @@ export interface GameState {
 
   // Line Calling Actions
   setCurrentLine: (playerIds: string[]) => void;
-  recordLineForPoint: (pointNumber: number, isSubstitution?: boolean) => void;
+  recordLineForPoint: (
+    pointNumber: number,
+    isSubstitution?: boolean,
+    subType?: 'injury' | 'replacement',
+  ) => void;
 
   // Saved Games & Teams
   savedGames: SavedGame[];
