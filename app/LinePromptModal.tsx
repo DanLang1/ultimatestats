@@ -82,13 +82,13 @@ export default function LinePromptModal() {
       recordLineForPoint(currentPoint, true, hasExistingLine ? subType : undefined);
     });
 
-    // Dismiss back to GameInfo
-    router.back();
+    // Dismiss modal back to GameInfo
+    router.dismiss();
   };
 
   const handleSkip = () => {
-    // Dismiss back to GameInfo
-    router.back();
+    // Dismiss modal back to GameInfo
+    router.dismiss();
   };
 
   const canConfirm = selectedIds.length === numPlayers;

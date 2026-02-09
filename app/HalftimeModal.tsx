@@ -188,7 +188,7 @@ export default function HalftimeModal() {
                     pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
                   ]}>
                   <Text style={[styles.continueBtnTextCompact, { color: palette.textOnAccent }]}>
-                    START 2ND HALF
+                    CONTINUE
                   </Text>
                   <MaterialCommunityIcons
                     name="arrow-right"
@@ -266,7 +266,7 @@ export default function HalftimeModal() {
                     pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
                   ]}>
                   <Text style={[styles.continueBtnTextCompact, { color: palette.textOnAccent }]}>
-                    START 2ND HALF
+                    CONTINUE
                   </Text>
                   <MaterialCommunityIcons
                     name="arrow-right"
