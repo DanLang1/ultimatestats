@@ -60,7 +60,7 @@ Supabase `shared_payloads` table (direct, no custom backend):
 - Accepts JSON payload uploads (anonymous, no auth required)
 - Returns a unique 6-char alphanumeric ID
 - Serves payloads by ID
-- 30-day TTL via `expires_at` column (cleanup not yet automated)
+- 30-day TTL via `expires_at` column (daily `pg_cron` cleanup at 3am UTC)
 - 256KB payload size constraint
 - RLS policies for anonymous insert/select
 
@@ -242,7 +242,7 @@ Dedicated import page (`app/Import.tsx`):
 | 11    | Fallback landing page on u-stat.app                  | **Done**  |
 | 12    | Payload validation + size constraints                | **Done**  |
 | 13    | iOS universal links (AASA file)                      | Future (needs Mac/iOS build) |
-| 14    | TTL cleanup for expired payloads                     | Future    |
+| 14    | TTL cleanup for expired payloads                     | **Done**  |
 
 ---
 
@@ -267,6 +267,6 @@ Dedicated import page (`app/Import.tsx`):
 - **Sharing**: Postgres table with auto-generated REST API (PostgREST), anonymous access via RLS
 - **Future Google Auth**: Built-in OAuth provider for cloud sync
 - **Future Cloud Sync**: RLS scopes data by `auth.uid()`, real-time subscriptions available
-- **TTL cleanup**: `pg_cron` or scheduled Edge Function to delete expired payloads (not yet set up)
+- **TTL cleanup**: `pg_cron` job (`cleanup-expired-payloads`) runs daily at 3am UTC, hard-deletes rows where `expires_at < now()`. Links with `expires_at = NULL` are permanent.
 
 **Supabase project**: `qsfsticmgthpfwalfceq` (MCP configured in `.mcp.json`)

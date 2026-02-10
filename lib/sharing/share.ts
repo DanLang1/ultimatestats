@@ -37,5 +37,8 @@ export async function fetchPayload(id: string): Promise<SharedPayload> {
     throw new Error(`Failed to fetch shared payload: ${error.message}`);
   }
 
+  // Fire-and-forget — don't block import on analytics
+  supabase.rpc('increment_view_count', { share_id: id });
+
   return validatePayload(data.payload);
 }
