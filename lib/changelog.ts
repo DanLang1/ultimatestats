@@ -6,6 +6,18 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.5.1',
+    date: 'February 9, 2026',
+    changes: [
+      'Fixing line preset bugs',
+      'Editing a line now has option for injury sub (appends player to line), or replace (line was set incorrectly, replace all players)',
+      'Halftime continue button no longer starts point timer automatically, making point timer more consistent',
+      'Adjusted thresholds for defensive efficiency to show success color',
+      'Added a reset point timer in Game Info',
+      'Portrait mode available in Dashboard (easiest screen to support). Will look into migrating other screens, especially Scoreboard in the future',
+    ],
+  },
+  {
     version: '1.5.0',
     date: 'February 8, 2026',
     changes: [

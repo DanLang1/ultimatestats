@@ -688,6 +688,16 @@ export const useGameStore = create<GameState>()(
                 return;
               }
             }
+            // Injury sub: skip if lineup is identical to the last record for this point
+            if (isSubstitution && subType === 'injury') {
+              const lastRecord = state.pointLines.findLast((r) => r.pointNumber === pointNumber);
+              if (lastRecord) {
+                const isSame =
+                  lastRecord.playerIds.length === state.currentLine.length &&
+                  lastRecord.playerIds.every((id) => state.currentLine.includes(id));
+                if (isSame) return;
+              }
+            }
             // Injury sub or initial line: append a new record
             state.pointLines.push({
               pointNumber,

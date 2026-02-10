@@ -464,11 +464,11 @@ export default function StatsTable({
                       styles.cell,
                       { color: palette.textInverse },
                       (pStats?.dPoints ?? 0) > 0 &&
-                        (pStats?.dEfficiency ?? 0) >= 0.6 && {
+                        (pStats?.dEfficiency ?? 0) >= 0.25 && {
                           color: palette.success,
                         },
                       (pStats?.dPoints ?? 0) > 0 &&
-                        (pStats?.dEfficiency ?? 0) <= 0.4 && {
+                        (pStats?.dEfficiency ?? 0) < 0.25 && {
                           color: palette.danger,
                         },
                     ]}>

@@ -91,9 +91,12 @@ export default function PlayingTimeSection({
     return renderStatPill(label, `${value.toFixed(0)}%`, color);
   };
 
-  // Color based on rate: >= 0.6 green, <= 0.4 red
-  const getEfficiencyColor = (value: number) =>
+  // O-Eff color: >= 0.6 green, <= 0.4 red
+  const getOEfficiencyColor = (value: number) =>
     value >= 0.6 ? palette.success : value <= 0.4 ? palette.danger : undefined;
+
+  // D-Eff color: >= 0.25 green, < 0.25 red (breaks are rare)
+  const getDEfficiencyColor = (value: number) => (value >= 0.25 ? palette.success : palette.danger);
 
   // Format rate as percentage
   const formatEfficiencyLocal = (value: number) => `${Math.round(value * 100)}%`;
@@ -132,13 +135,13 @@ export default function PlayingTimeSection({
               renderStatPill(
                 'Offense',
                 formatEfficiencyLocal(stats.oEfficiency),
-                getEfficiencyColor(stats.oEfficiency),
+                getOEfficiencyColor(stats.oEfficiency),
               )}
             {stats.dPoints > 0 &&
               renderStatPill(
                 'Defense',
                 formatEfficiencyLocal(stats.dEfficiency),
-                getEfficiencyColor(stats.dEfficiency),
+                getDEfficiencyColor(stats.dEfficiency),
               )}
           </View>
         </View>

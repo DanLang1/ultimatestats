@@ -1,6 +1,7 @@
 import { ThemedView } from '@/components/ThemedView';
 import { useTheme } from '@/context/ThemeContext';
 import { useNewGame } from '@/hooks/useNewGame';
+import { useOrientationLock } from '@/hooks/useOrientationLock';
 import { useVersionCheck } from '@/hooks/useVersionCheck';
 import { useGameStore } from '@/store/gameStore';
 import { useTutorialStore } from '@/store/tutorialStore';
@@ -26,6 +27,7 @@ interface MenuSection {
 }
 
 export default function DashboardScreen() {
+  useOrientationLock();
   const { palette } = useTheme();
   const { statTrackingEnabled, currentTeam, savedGames } = useGameStore();
   const { resetStatsTutorial } = useTutorialStore();
