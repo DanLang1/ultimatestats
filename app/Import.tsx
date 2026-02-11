@@ -1,87 +1,24 @@
 import { ThemedView } from '@/components/ThemedView';
 import { ScoreBadge } from '@/components/ui/ScoreBadge';
 import { useTheme } from '@/context/ThemeContext';
+import { useShareImport } from '@/hooks/useShareImport';
 import { resolveTeamName } from '@/lib/playerUtils';
-import { fetchPayload, SharedPayload } from '@/lib/sharing';
+import { SharedPayload } from '@/lib/sharing';
 import { formatDate } from '@/lib/statsUtils';
 import { SavedGame, SavedTeam } from '@/lib/storage';
 import { useGameStore } from '@/store/gameStore';
 import { useLinePresetsStore } from '@/store/linePresetsStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
-import React, { useState } from 'react';
+import React from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
-
-type ImportState =
-  | { status: 'loading' }
-  | { status: 'preview'; payload: SharedPayload }
-  | {
-      status: 'preview-games';
-      payload: SharedPayload;
-      newGames: SavedGame[];
-      duplicateCount: number;
-    }
-  | { status: 'duplicate'; isMultiple?: boolean }
-  | { status: 'team-exists'; payload: SharedPayload; existingTeam: SavedTeam }
-  | { status: 'error'; message: string }
-  | { status: 'done'; type: 'game'; gameId: string }
-  | { status: 'done'; type: 'team' }
-  | { status: 'done'; type: 'games'; count: number };
 
 export default function ImportScreen() {
   const { shareId } = useLocalSearchParams<{ shareId: string }>();
   const { palette } = useTheme();
-  const { savedGames, savedTeams, importGame, importTeam, loadTeam } = useGameStore();
-
-  const [importState, setImportState] = useState<ImportState>({ status: 'loading' });
-  const [hasStartedFetch, setHasStartedFetch] = useState(false);
-
-  if (!hasStartedFetch && shareId) {
-    setHasStartedFetch(true);
-    fetchPayload(shareId)
-      .then((payload) => {
-        if (payload.type === 'game') {
-          const game = payload.data as SavedGame;
-          if (savedGames.some((g) => g.id === game.id)) {
-            setImportState({ status: 'duplicate' });
-            return;
-          }
-        }
-
-        if (payload.type === 'team') {
-          const team = payload.data as SavedTeam;
-          const existing = savedTeams.find((t) => t.id === team.id);
-          if (existing) {
-            setImportState({ status: 'team-exists', payload, existingTeam: existing });
-            return;
-          }
-        }
-
-        if (payload.type === 'games') {
-          const allGames = payload.data as SavedGame[];
-          const existingIds = new Set(savedGames.map((g) => g.id));
-          const newGames = allGames.filter((g) => !existingIds.has(g.id));
-          const duplicateCount = allGames.length - newGames.length;
-
-          if (newGames.length === 0) {
-            setImportState({ status: 'duplicate', isMultiple: true });
-            return;
-          }
-
-          setImportState({ status: 'preview-games', payload, newGames, duplicateCount });
-          return;
-        }
-
-        setImportState({ status: 'preview', payload });
-      })
-      .catch(() => {
-        setImportState({
-          status: 'error',
-          message: 'Could not load shared data. The link may have expired.',
-        });
-      });
-  }
+  const { savedTeams, importGame, importTeam, loadTeam } = useGameStore();
+  const { importState, setImportState } = useShareImport(shareId);
 
   if (!shareId) {
     return null;
