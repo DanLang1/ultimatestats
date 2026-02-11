@@ -33,7 +33,8 @@ export function useShareImport(shareId: string | undefined) {
       try {
         const payload = await fetchPayload(shareId);
 
-        supabase.rpc('increment_view_count', { share_id: shareId });
+        // .then() required — Supabase builder is lazy; request only fires when consumed
+        supabase.rpc('increment_view_count', { share_id: shareId }).then(() => {});
 
         if (payload.type === 'game') {
           const game = payload.data as SavedGame;
