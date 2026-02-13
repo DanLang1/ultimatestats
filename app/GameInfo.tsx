@@ -14,6 +14,7 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router, Stack } from 'expo-router';
 import React, { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function GameInfoScreen() {
   const {
@@ -44,6 +45,7 @@ export default function GameInfoScreen() {
   const isHardcap = timeLeft === 0;
 
   const { palette } = useTheme();
+  const insets = useSafeAreaInsets();
   const { showAlert } = useAlert();
   const { confirmEndGame } = useEndGame();
   const {
@@ -90,7 +92,7 @@ export default function GameInfoScreen() {
       <Stack.Screen options={{ headerShown: false }} />
 
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: Math.max(insets.top, 16) }]}>
         <Pressable
           onPress={() => router.back()}
           style={[styles.backButton, { backgroundColor: palette.overlay10 }]}
@@ -101,7 +103,11 @@ export default function GameInfoScreen() {
         <View style={styles.headerRightSpacer} />
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView
+        contentContainerStyle={[
+          styles.scrollContent,
+          { paddingBottom: Math.max(24, insets.bottom) },
+        ]}>
         {/* Three-Column Hero Section */}
         <View style={styles.heroSection}>
           {/* Left Column - Team 1 */}

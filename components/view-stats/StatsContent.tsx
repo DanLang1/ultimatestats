@@ -4,7 +4,7 @@ import { computePlayerStats } from '@/lib/statsUtils';
 import { GameEvent, Player, PointLineRecord, SavedGame } from '@/lib/storage';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import StatsTable from './StatsTable';
 import TeamStatsSection from './TeamStatsSection';
 
@@ -37,6 +37,8 @@ export default function StatsContent({
   pointLines,
 }: StatsContentProps) {
   const { palette } = useTheme();
+  const { width: dimWidth, height: dimHeight } = useWindowDimensions();
+  const isLandscape = dimWidth > dimHeight;
   const playerStats = computePlayerStats(events, 'team1', roster);
   const goalCount = events.filter((e) => e.type === 'goal' && e.team === 'team1').length;
   const topPerformers = playerStats.filter((p) => p.plusMinus > 0).slice(0, 3);
@@ -49,7 +51,7 @@ export default function StatsContent({
           styles.summaryCard,
           { backgroundColor: palette.overlay05, borderColor: palette.overlay10 },
         ]}>
-        <View style={styles.summaryColumns}>
+        <View style={[styles.summaryColumns, !isLandscape && styles.summaryColumnsPortrait]}>
           {/* Left Column: Team Info */}
           <View style={styles.summaryLeft}>
             <Text style={[styles.summaryLabel, { color: palette.textMuted }]}>MY TEAM</Text>
@@ -83,7 +85,15 @@ export default function StatsContent({
 
           {/* Right Column: Top Performers */}
           {topPerformers.length > 0 && (
-            <View style={[styles.summaryRight, { borderLeftColor: palette.overlay10 }]}>
+            <View
+              style={[
+                styles.summaryRight,
+                { borderLeftColor: palette.overlay10 },
+                !isLandscape && [
+                  styles.summaryRightPortrait,
+                  { borderTopColor: palette.overlay10 },
+                ],
+              ]}>
               <Text style={[styles.topPerformersTitle, { color: palette.textMuted }]}>
                 TOP PERFORMERS
               </Text>
@@ -149,6 +159,9 @@ const styles = StyleSheet.create({
     width: '100%',
     gap: 16,
   },
+  summaryColumnsPortrait: {
+    flexDirection: 'column',
+  },
   summaryLeft: {
     flex: 1,
     alignItems: 'flex-start',
@@ -157,6 +170,12 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingLeft: 16,
     borderLeftWidth: 1,
+  },
+  summaryRightPortrait: {
+    borderLeftWidth: 0,
+    paddingLeft: 0,
+    borderTopWidth: 1,
+    paddingTop: 16,
   },
   summaryLabel: {
     fontSize: 10,

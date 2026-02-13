@@ -1,4 +1,5 @@
 import { useFocusEffect } from 'expo-router';
+import { useCallback } from 'react';
 import * as ScreenOrientation from 'expo-screen-orientation';
 
 /**
@@ -9,11 +10,13 @@ import * as ScreenOrientation from 'expo-screen-orientation';
  * that should support portrait mode.
  */
 export function useOrientationLock() {
-  useFocusEffect(() => {
-    ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.DEFAULT);
+  useFocusEffect(
+    useCallback(() => {
+      ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.DEFAULT);
 
-    return () => {
-      ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE);
-    };
-  });
+      return () => {
+        ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE);
+      };
+    }, []),
+  );
 }

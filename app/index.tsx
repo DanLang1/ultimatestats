@@ -6,6 +6,7 @@ import { ThemedView } from '@/components/ThemedView';
 import StatsTrackingTutorial from '@/components/tutorial/StatsTrackingTutorial';
 import TutorialOverlay from '@/components/tutorial/TutorialOverlay';
 import { useHalftimeNavigation } from '@/hooks/useHalftimeNavigation';
+import * as ScreenOrientation from 'expo-screen-orientation';
 import { usePullPromptNavigation } from '@/hooks/usePullPromptNavigation';
 import { useTimeoutTimer } from '@/hooks/useTimeoutTimer';
 import { getContrastingTextColor } from '@/lib/colorUtils';
@@ -16,11 +17,18 @@ import { TurnoverType } from '@/store/gameStore.types';
 import { useLinePresetsStore } from '@/store/linePresetsStore';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useKeepAwake } from 'expo-keep-awake';
-import { router } from 'expo-router';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { router, useFocusEffect } from 'expo-router';
+import { Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 
 export default function BasicScoreboard() {
   useKeepAwake();
+  // Unlock orientation on focus without re-locking on blur,
+  // so transparent modals pushed on top don't cause an orientation snap.
+  useFocusEffect(() => {
+    ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.DEFAULT);
+  });
+  const { width, height } = useWindowDimensions();
+  const isLandscape = width > height;
 
   const {
     currentTeam,
@@ -180,7 +188,7 @@ export default function BasicScoreboard() {
     !gameLocked;
 
   return (
-    <ThemedView style={styles.container}>
+    <ThemedView style={[styles.container, { flexDirection: isLandscape ? 'row' : 'column' }]}>
       {/* Top half */}
       <TeamScoreSection
         teamName={team1Name}
@@ -197,7 +205,11 @@ export default function BasicScoreboard() {
       />
 
       {/* Timer Bar Overlay */}
-      <View style={styles.timerBarContainer}>
+      <View
+        style={[
+          styles.timerBarContainer,
+          !isLandscape && { top: '50%', transform: [{ translateY: -25 }] },
+        ]}>
         <SettingsBar onUndo={undo} />
       </View>
 
@@ -248,7 +260,6 @@ export default function BasicScoreboard() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    flexDirection: 'row',
   },
   timerBarContainer: {
     position: 'absolute',

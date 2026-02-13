@@ -4,8 +4,17 @@ import { getActiveRoster, getPlayerName, UNKNOWN_PLAYER_ID } from '@/lib/playerU
 import { Player } from '@/lib/storage/types';
 import { useGameStore } from '@/store/gameStore';
 import React, { useState } from 'react';
-import { Keyboard, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import {
+  Keyboard,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  useWindowDimensions,
+  View,
+} from 'react-native';
 import Animated, { FadeIn, LinearTransition, SlideInDown } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatEntryHeader } from './StatEntryHeader';
 import { StatEntryRoster } from './StatEntryRoster';
 
@@ -39,6 +48,9 @@ export function StatEntryInner({
   const [newPlayerName, setNewPlayerName] = useState('');
   const { palette, themeMode } = useTheme();
   const { events } = useGameStore();
+  const { width: dimWidth, height: dimHeight } = useWindowDimensions();
+  const isLandscape = dimWidth > dimHeight;
+  const insets = useSafeAreaInsets();
 
   // Only show active players
   const activeRoster = getActiveRoster(roster);
@@ -236,7 +248,10 @@ export function StatEntryInner({
     return (
       <AnimatedThemedView
         entering={SlideInDown.duration(400)}
-        style={[styles.sheet, { shadowColor: palette.shadow }]}
+        style={[
+          styles.sheet,
+          { shadowColor: palette.shadow, paddingBottom: Math.max(10, insets.bottom) },
+        ]}
         onStartShouldSetResponder={() => true}>
         <Pressable onPress={() => {}} style={styles.sheetContent}>
           <View style={styles.compactContainer}>
@@ -250,7 +265,7 @@ export function StatEntryInner({
               roster={activeRoster}
               selectedPlayerId={selectedPlayerId}
               onSelect={handlePlayerSelect}
-              maxHeight={220}
+              maxHeight={isLandscape ? 220 : 400}
             />
             {renderFooter()}
           </View>
@@ -259,11 +274,76 @@ export function StatEntryInner({
     );
   }
 
-  // Side-by-side layout with add player input
+  // Portrait: vertical stack layout
+  if (!isLandscape) {
+    return (
+      <AnimatedThemedView
+        entering={SlideInDown.duration(400)}
+        style={[
+          styles.sheet,
+          { shadowColor: palette.shadow, paddingBottom: Math.max(10, insets.bottom) },
+        ]}
+        onStartShouldSetResponder={() => true}>
+        <Pressable onPress={() => {}} style={styles.sheetContent}>
+          <View style={styles.compactContainer}>
+            <StatEntryHeader
+              teamName={teamName}
+              step={step}
+              badgeValue={badgeValue}
+              badgeLabel={badgeLabel}
+            />
+
+            <View style={styles.addPlayerRow}>
+              <TextInput
+                style={[
+                  styles.input,
+                  {
+                    borderColor: palette.border,
+                    color: palette.inputText,
+                    backgroundColor: palette.inputBg,
+                  },
+                ]}
+                value={newPlayerName}
+                onChangeText={setNewPlayerName}
+                placeholder="Add player..."
+                placeholderTextColor={palette.textMuted}
+                onSubmitEditing={handleAddPlayer}
+                returnKeyType="done"
+                maxLength={20}
+              />
+              <Pressable
+                style={[
+                  styles.addButton,
+                  { backgroundColor: palette.accent },
+                  !newPlayerName.trim() && styles.addButtonDisabled,
+                ]}
+                onPress={handleAddPlayer}
+                disabled={!newPlayerName.trim()}>
+                <Text style={[styles.addButtonText, { color: palette.textOnAccent }]}>Add</Text>
+              </Pressable>
+            </View>
+
+            <StatEntryRoster
+              roster={activeRoster}
+              selectedPlayerId={selectedPlayerId}
+              onSelect={handlePlayerSelect}
+              maxHeight={400}
+            />
+            {renderFooter()}
+          </View>
+        </Pressable>
+      </AnimatedThemedView>
+    );
+  }
+
+  // Landscape: side-by-side layout with add player input
   return (
     <AnimatedThemedView
       entering={SlideInDown.duration(400)}
-      style={[styles.sheet, { shadowColor: palette.shadow }]}
+      style={[
+        styles.sheet,
+        { shadowColor: palette.shadow, paddingBottom: Math.max(10, insets.bottom) },
+      ]}
       onStartShouldSetResponder={() => true}>
       <Pressable onPress={() => {}} style={styles.sheetContent}>
         <View style={styles.sideBySideContainer}>

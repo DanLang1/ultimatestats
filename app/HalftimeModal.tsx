@@ -8,7 +8,7 @@ import { useSettingsStore } from '@/store/settingsStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router } from 'expo-router';
 import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 
 export default function HalftimeModal() {
@@ -34,6 +34,9 @@ export default function HalftimeModal() {
     canDecrement,
     canIncrement,
   } = useHalftimeTimer();
+
+  const { width: dimWidth, height: dimHeight } = useWindowDimensions();
+  const isLandscape = dimWidth > dimHeight;
 
   const team1Name = currentTeam?.name ?? 'Team 1';
   const receivingTeam = startingPossession === 'team1' ? team2Name : team1Name;
@@ -115,9 +118,24 @@ export default function HalftimeModal() {
             </View>
           </View>
 
-          <View style={[styles.contentRow, !hasStats && styles.contentRowCompact]}>
+          <View
+            style={[
+              styles.contentRow,
+              !hasStats && styles.contentRowCompact,
+              !isLandscape && {
+                flexDirection: 'column',
+                height: 'auto',
+                alignItems: 'stretch',
+                gap: 8,
+              },
+            ]}>
             {/* LEFT SIDE: Game State (Score + Timer) */}
-            <View style={[styles.leftColumn, !hasStats && styles.leftColumnCompact]}>
+            <View
+              style={[
+                styles.leftColumn,
+                !hasStats && styles.leftColumnCompact,
+                !isLandscape && { flex: 0, justifyContent: 'center', gap: 16 },
+              ]}>
               <View style={styles.scoreCompact}>
                 <View style={styles.scoreGroup}>
                   <Text
@@ -199,12 +217,24 @@ export default function HalftimeModal() {
               )}
             </View>
 
-            {/* Vertical Divider */}
-            {hasStats && <View style={[styles.divider, { backgroundColor: palette.overlay10 }]} />}
+            {/* Divider */}
+            {hasStats && (
+              <View
+                style={[
+                  styles.divider,
+                  { backgroundColor: palette.overlay10 },
+                  !isLandscape && { width: '80%', height: 1, alignSelf: 'center' },
+                ]}
+              />
+            )}
 
             {/* RIGHT SIDE: Stats & Action */}
             {hasStats && (
-              <View style={styles.rightColumn}>
+              <View
+                style={[
+                  styles.rightColumn,
+                  !isLandscape && { flex: 0, justifyContent: 'center', gap: 12 },
+                ]}>
                 {/* 2 Stats Cards */}
                 <View style={styles.statsRowCompact}>
                   <View style={[styles.statCardCompact, { backgroundColor: palette.overlay05 }]}>
@@ -226,7 +256,7 @@ export default function HalftimeModal() {
                 </View>
 
                 {/* Top Performers List (Compact) */}
-                <View style={styles.performersListCompact}>
+                <View style={[styles.performersListCompact, !isLandscape && { flex: 0 }]}>
                   {topPerformers.map((p, i) => (
                     <View key={p.name} style={styles.performerRowCompact}>
                       <Text style={[styles.performerRankCompact, { color: palette.accent }]}>

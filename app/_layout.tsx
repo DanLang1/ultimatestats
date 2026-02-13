@@ -69,6 +69,7 @@ function RootLayoutInner() {
           <Stack.Screen name="ViewStats" />
           <Stack.Screen name="Settings" />
           <Stack.Screen name="EditRoster" />
+          <Stack.Screen name="ImportTeam" />
           <Stack.Screen name="GameInfo" />
           <Stack.Screen name="About" />
           <Stack.Screen name="LinePresetEditor" />

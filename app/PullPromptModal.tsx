@@ -7,7 +7,7 @@ import { useSettingsStore } from '@/store/settingsStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import Animated, { FadeIn, SlideInDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -30,6 +30,8 @@ export default function PullPromptScreen() {
   const { genderRatioEnabled, setFirstPointRatio, firstPointRatio } = useSettingsStore();
   const { palette } = useTheme();
   const insets = useSafeAreaInsets();
+  const { width: dimWidth, height: dimHeight } = useWindowDimensions();
+  const isLandscape = dimWidth > dimHeight;
   const team1Name = currentTeam?.name ?? 'Team 1';
 
   // Determine what's needed
@@ -173,7 +175,8 @@ export default function PullPromptScreen() {
           {step === 'possession' ? (
             <>
               {/* Main Matchup Stage */}
-              <View style={styles.matchupContainer}>
+              <View
+                style={[styles.matchupContainer, !isLandscape && styles.matchupContainerPortrait]}>
                 {/* My Team Card */}
                 <Pressable
                   style={({ pressed }) => [
@@ -182,6 +185,7 @@ export default function PullPromptScreen() {
                       backgroundColor: team1BgColor || palette.primary,
                       borderColor: palette.overlay10,
                     },
+                    !isLandscape && styles.teamCardPortrait,
                     pressed && styles.cardPressed,
                   ]}
                   onPress={() => handleSelect('team1')}>
@@ -189,7 +193,7 @@ export default function PullPromptScreen() {
                 </Pressable>
 
                 {/* VS Badge */}
-                <View style={styles.vsBadge}>
+                <View style={[styles.vsBadge, !isLandscape && styles.vsBadgePortrait]}>
                   <Text style={[styles.vsText, { color: palette.textMuted }]}>VS</Text>
                 </View>
 
@@ -201,6 +205,7 @@ export default function PullPromptScreen() {
                       backgroundColor: team2BgColor || palette.accent,
                       borderColor: palette.overlay10,
                     },
+                    !isLandscape && styles.teamCardPortrait,
                     pressed && styles.cardPressed,
                   ]}
                   onPress={() => handleSelect('team2')}>
@@ -218,7 +223,8 @@ export default function PullPromptScreen() {
           ) : (
             <>
               {/* Ratio Selection Stage */}
-              <View style={styles.ratioContainer}>
+              <View
+                style={[styles.ratioContainer, !isLandscape && styles.matchupContainerPortrait]}>
                 <Pressable
                   style={({ pressed }) => [
                     styles.ratioCard,
@@ -312,9 +318,14 @@ const styles = StyleSheet.create({
     gap: 12,
     marginBottom: 20,
   },
+  matchupContainerPortrait: {
+    flexDirection: 'column',
+    alignItems: 'stretch',
+    alignSelf: 'stretch',
+  },
   teamCard: {
     flex: 1,
-    height: 140, // Taller, more prominent cards
+    height: 140,
     borderRadius: 20,
     padding: 16,
     alignItems: 'center',
@@ -328,6 +339,12 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 6,
     zIndex: 1,
+  },
+  teamCardPortrait: {
+    flex: 0,
+    height: 80,
+    maxWidth: undefined,
+    minWidth: undefined,
   },
   cardPressed: {
     transform: [{ scale: 0.96 }],
@@ -344,6 +361,10 @@ const styles = StyleSheet.create({
     height: 48,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  vsBadgePortrait: {
+    height: 32,
+    alignSelf: 'center',
   },
   vsText: {
     fontSize: 18,

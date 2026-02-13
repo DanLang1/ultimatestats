@@ -12,7 +12,14 @@ import { usePlayerStatsStore } from '@/store/playerStatsStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import {
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  useWindowDimensions,
+  View,
+} from 'react-native';
 
 type SortKey =
   | 'name'
@@ -49,6 +56,8 @@ export default function StatsTable({
   gameTo = 15,
 }: StatsTableProps) {
   const { palette } = useTheme();
+  const { width: dimWidth, height: dimHeight } = useWindowDimensions();
+  const isLandscape = dimWidth > dimHeight;
   const [sortConfig, setSortConfig] = useState<{
     key: SortKey;
     direction: 'asc' | 'desc';
@@ -216,275 +225,285 @@ export default function StatsTable({
           </View>
         </View>
       )}
-      <View style={[styles.tableContainer, { borderColor: palette.overlay10 }]}>
-        {/* Table Header */}
+      <ScrollView horizontal={!isLandscape} showsHorizontalScrollIndicator={!isLandscape}>
         <View
           style={[
-            styles.tableHeader,
-            { backgroundColor: palette.overlay08, borderBottomColor: palette.overlay10 },
+            styles.tableContainer,
+            { borderColor: palette.overlay10 },
+            !isLandscape && { minWidth: hasPlayingTimeData ? 680 : 480 },
           ]}>
-          <TouchableOpacity
+          {/* Table Header */}
+          <View
             style={[
-              styles.headerCell,
-              styles.headerNameCell,
-              styles.sortableHeader,
-              sortConfig.key === 'name' && { backgroundColor: palette.overlay05 },
-            ]}
-            onPress={() => handleSort('name')}>
-            <Text
-              style={[
-                styles.headerText,
-                { color: sortConfig.key === 'name' ? palette.accent : palette.textMuted },
-              ]}>
-              PLAYER
-            </Text>
-            {renderSortIcon('name')}
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[
-              styles.headerCell,
-              styles.sortableHeader,
-              sortConfig.key === 'plusMinus' && { backgroundColor: palette.overlay05 },
-            ]}
-            onPress={() => handleSort('plusMinus')}>
-            <Text
-              style={[
-                styles.headerText,
-                { color: sortConfig.key === 'plusMinus' ? palette.accent : palette.textMuted },
-              ]}>
-              +/-
-            </Text>
-            {renderSortIcon('plusMinus')}
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[
-              styles.headerCell,
-              styles.sortableHeader,
-              sortConfig.key === 'goals' && { backgroundColor: palette.overlay05 },
-            ]}
-            onPress={() => handleSort('goals')}>
-            <Text
-              style={[
-                styles.headerText,
-                { color: sortConfig.key === 'goals' ? palette.accent : palette.textMuted },
-              ]}>
-              Goals
-            </Text>
-            {renderSortIcon('goals')}
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[
-              styles.headerCell,
-              styles.sortableHeader,
-              sortConfig.key === 'assists' && { backgroundColor: palette.overlay05 },
-            ]}
-            onPress={() => handleSort('assists')}>
-            <Text
-              style={[
-                styles.headerText,
-                { color: sortConfig.key === 'assists' ? palette.accent : palette.textMuted },
-              ]}>
-              Assists
-            </Text>
-            {renderSortIcon('assists')}
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[
-              styles.headerCell,
-              styles.sortableHeader,
-              sortConfig.key === 'blocks' && { backgroundColor: palette.overlay05 },
-            ]}
-            onPress={() => handleSort('blocks')}>
-            <Text
-              style={[
-                styles.headerText,
-                { color: sortConfig.key === 'blocks' ? palette.accent : palette.textMuted },
-              ]}>
-              Blocks
-            </Text>
-            {renderSortIcon('blocks')}
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[
-              styles.headerCell,
-              styles.sortableHeader,
-              sortConfig.key === 'throwaways' && { backgroundColor: palette.overlay05 },
-            ]}
-            onPress={() => handleSort('throwaways')}>
-            <Text
-              style={[
-                styles.headerText,
-                { color: sortConfig.key === 'throwaways' ? palette.accent : palette.textMuted },
-              ]}>
-              T/A
-            </Text>
-            {renderSortIcon('throwaways')}
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[
-              styles.headerCell,
-              styles.sortableHeader,
-              sortConfig.key === 'drops' && { backgroundColor: palette.overlay05 },
-            ]}
-            onPress={() => handleSort('drops')}>
-            <Text
-              style={[
-                styles.headerText,
-                { color: sortConfig.key === 'drops' ? palette.accent : palette.textMuted },
-              ]}>
-              Drops
-            </Text>
-            {renderSortIcon('drops')}
-          </TouchableOpacity>
-          {/* Playing Time Columns - only show if data exists */}
-          {hasPlayingTimeData && (
-            <>
-              <TouchableOpacity
-                style={[
-                  styles.headerCell,
-                  styles.sortableHeader,
-                  sortConfig.key === 'oEfficiency' && { backgroundColor: palette.overlay05 },
-                ]}
-                onPress={() => handleSort('oEfficiency')}>
-                <Text
-                  style={[
-                    styles.headerText,
-                    {
-                      color: sortConfig.key === 'oEfficiency' ? palette.accent : palette.textMuted,
-                    },
-                  ]}>
-                  O-Eff
-                </Text>
-                {renderSortIcon('oEfficiency')}
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[
-                  styles.headerCell,
-                  styles.sortableHeader,
-                  sortConfig.key === 'dEfficiency' && { backgroundColor: palette.overlay05 },
-                ]}
-                onPress={() => handleSort('dEfficiency')}>
-                <Text
-                  style={[
-                    styles.headerText,
-                    {
-                      color: sortConfig.key === 'dEfficiency' ? palette.accent : palette.textMuted,
-                    },
-                  ]}>
-                  D-Eff
-                </Text>
-                {renderSortIcon('dEfficiency')}
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[
-                  styles.headerCell,
-                  styles.sortableHeader,
-                  sortConfig.key === 'pointsPlayed' && { backgroundColor: palette.overlay05 },
-                ]}
-                onPress={() => handleSort('pointsPlayed')}>
-                <Text
-                  style={[
-                    styles.headerText,
-                    {
-                      color: sortConfig.key === 'pointsPlayed' ? palette.accent : palette.textMuted,
-                    },
-                  ]}>
-                  PP
-                </Text>
-                {renderSortIcon('pointsPlayed')}
-              </TouchableOpacity>
-            </>
-          )}
-        </View>
-
-        {/* Table Rows */}
-        {sortedStats.map((player, index) => {
-          const pStats = getPlayingTimeStats(player.id);
-          return (
+              styles.tableHeader,
+              { backgroundColor: palette.overlay08, borderBottomColor: palette.overlay10 },
+            ]}>
             <TouchableOpacity
-              key={player.id}
               style={[
-                styles.tableRow,
-                { borderBottomColor: palette.overlay10 },
-                index === sortedStats.length - 1 && { borderBottomWidth: 0 },
-                index % 2 === 1 && { backgroundColor: palette.overlay02 },
+                styles.headerCell,
+                styles.headerNameCell,
+                styles.sortableHeader,
+                sortConfig.key === 'name' && { backgroundColor: palette.overlay05 },
               ]}
-              onPress={() => handlePlayerPress(player.id)}>
-              <Text style={[styles.cell, styles.nameCell, { color: palette.textInverse }]}>
-                {player.name}
-              </Text>
+              onPress={() => handleSort('name')}>
               <Text
                 style={[
-                  styles.cell,
-                  styles.plusMinusCell,
-                  { color: palette.textInverse },
-                  player.plusMinus > 0 && { color: palette.success },
-                  player.plusMinus < 0 && { color: palette.danger },
+                  styles.headerText,
+                  { color: sortConfig.key === 'name' ? palette.accent : palette.textMuted },
                 ]}>
-                {player.plusMinus > 0 ? '+' : ''}
-                {player.plusMinus}
+                PLAYER
               </Text>
-              <Text style={[styles.cell, { color: palette.textInverse }]}>
-                {player.goals || '-'}
-              </Text>
-              <Text style={[styles.cell, { color: palette.textInverse }]}>
-                {player.assists || '-'}
-              </Text>
-              <Text style={[styles.cell, { color: palette.textInverse }]}>
-                {player.blocks || '-'}
-              </Text>
-              <Text style={[styles.cell, { color: palette.textInverse }]}>
-                {player.throwaways || '-'}
-              </Text>
-              <Text style={[styles.cell, { color: palette.textInverse }]}>
-                {player.drops || '-'}
-              </Text>
-              {/* Playing Time Cells - only show if data exists */}
-              {hasPlayingTimeData && (
-                <>
-                  <Text
-                    style={[
-                      styles.cell,
-                      { color: palette.textInverse },
-                      (pStats?.oPoints ?? 0) > 0 &&
-                        (pStats?.oEfficiency ?? 0) >= 0.6 && {
-                          color: palette.success,
-                        },
-                      (pStats?.oPoints ?? 0) > 0 &&
-                        (pStats?.oEfficiency ?? 0) <= 0.4 && {
-                          color: palette.danger,
-                        },
-                    ]}>
-                    {pStats && (pStats.oPoints ?? 0) > 0
-                      ? formatEfficiency(pStats.oEfficiency)
-                      : '-'}
-                  </Text>
-                  <Text
-                    style={[
-                      styles.cell,
-                      { color: palette.textInverse },
-                      (pStats?.dPoints ?? 0) > 0 &&
-                        (pStats?.dEfficiency ?? 0) >= 0.25 && {
-                          color: palette.success,
-                        },
-                      (pStats?.dPoints ?? 0) > 0 &&
-                        (pStats?.dEfficiency ?? 0) < 0.25 && {
-                          color: palette.danger,
-                        },
-                    ]}>
-                    {pStats && (pStats.dPoints ?? 0) > 0
-                      ? formatEfficiency(pStats.dEfficiency)
-                      : '-'}
-                  </Text>
-                  <Text style={[styles.cell, { color: palette.textInverse }]}>
-                    {pStats?.pointsPlayed ?? '-'}
-                  </Text>
-                </>
-              )}
+              {renderSortIcon('name')}
             </TouchableOpacity>
-          );
-        })}
-      </View>
+            <TouchableOpacity
+              style={[
+                styles.headerCell,
+                styles.sortableHeader,
+                sortConfig.key === 'plusMinus' && { backgroundColor: palette.overlay05 },
+              ]}
+              onPress={() => handleSort('plusMinus')}>
+              <Text
+                style={[
+                  styles.headerText,
+                  { color: sortConfig.key === 'plusMinus' ? palette.accent : palette.textMuted },
+                ]}>
+                +/-
+              </Text>
+              {renderSortIcon('plusMinus')}
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.headerCell,
+                styles.sortableHeader,
+                sortConfig.key === 'goals' && { backgroundColor: palette.overlay05 },
+              ]}
+              onPress={() => handleSort('goals')}>
+              <Text
+                style={[
+                  styles.headerText,
+                  { color: sortConfig.key === 'goals' ? palette.accent : palette.textMuted },
+                ]}>
+                Goals
+              </Text>
+              {renderSortIcon('goals')}
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.headerCell,
+                styles.sortableHeader,
+                sortConfig.key === 'assists' && { backgroundColor: palette.overlay05 },
+              ]}
+              onPress={() => handleSort('assists')}>
+              <Text
+                style={[
+                  styles.headerText,
+                  { color: sortConfig.key === 'assists' ? palette.accent : palette.textMuted },
+                ]}>
+                Assists
+              </Text>
+              {renderSortIcon('assists')}
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.headerCell,
+                styles.sortableHeader,
+                sortConfig.key === 'blocks' && { backgroundColor: palette.overlay05 },
+              ]}
+              onPress={() => handleSort('blocks')}>
+              <Text
+                style={[
+                  styles.headerText,
+                  { color: sortConfig.key === 'blocks' ? palette.accent : palette.textMuted },
+                ]}>
+                Blocks
+              </Text>
+              {renderSortIcon('blocks')}
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.headerCell,
+                styles.sortableHeader,
+                sortConfig.key === 'throwaways' && { backgroundColor: palette.overlay05 },
+              ]}
+              onPress={() => handleSort('throwaways')}>
+              <Text
+                style={[
+                  styles.headerText,
+                  { color: sortConfig.key === 'throwaways' ? palette.accent : palette.textMuted },
+                ]}>
+                T/A
+              </Text>
+              {renderSortIcon('throwaways')}
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.headerCell,
+                styles.sortableHeader,
+                sortConfig.key === 'drops' && { backgroundColor: palette.overlay05 },
+              ]}
+              onPress={() => handleSort('drops')}>
+              <Text
+                style={[
+                  styles.headerText,
+                  { color: sortConfig.key === 'drops' ? palette.accent : palette.textMuted },
+                ]}>
+                Drops
+              </Text>
+              {renderSortIcon('drops')}
+            </TouchableOpacity>
+            {/* Playing Time Columns - only show if data exists */}
+            {hasPlayingTimeData && (
+              <>
+                <TouchableOpacity
+                  style={[
+                    styles.headerCell,
+                    styles.sortableHeader,
+                    sortConfig.key === 'oEfficiency' && { backgroundColor: palette.overlay05 },
+                  ]}
+                  onPress={() => handleSort('oEfficiency')}>
+                  <Text
+                    style={[
+                      styles.headerText,
+                      {
+                        color:
+                          sortConfig.key === 'oEfficiency' ? palette.accent : palette.textMuted,
+                      },
+                    ]}>
+                    O-Eff
+                  </Text>
+                  {renderSortIcon('oEfficiency')}
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.headerCell,
+                    styles.sortableHeader,
+                    sortConfig.key === 'dEfficiency' && { backgroundColor: palette.overlay05 },
+                  ]}
+                  onPress={() => handleSort('dEfficiency')}>
+                  <Text
+                    style={[
+                      styles.headerText,
+                      {
+                        color:
+                          sortConfig.key === 'dEfficiency' ? palette.accent : palette.textMuted,
+                      },
+                    ]}>
+                    D-Eff
+                  </Text>
+                  {renderSortIcon('dEfficiency')}
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.headerCell,
+                    styles.sortableHeader,
+                    sortConfig.key === 'pointsPlayed' && { backgroundColor: palette.overlay05 },
+                  ]}
+                  onPress={() => handleSort('pointsPlayed')}>
+                  <Text
+                    style={[
+                      styles.headerText,
+                      {
+                        color:
+                          sortConfig.key === 'pointsPlayed' ? palette.accent : palette.textMuted,
+                      },
+                    ]}>
+                    PP
+                  </Text>
+                  {renderSortIcon('pointsPlayed')}
+                </TouchableOpacity>
+              </>
+            )}
+          </View>
+
+          {/* Table Rows */}
+          {sortedStats.map((player, index) => {
+            const pStats = getPlayingTimeStats(player.id);
+            return (
+              <TouchableOpacity
+                key={player.id}
+                style={[
+                  styles.tableRow,
+                  { borderBottomColor: palette.overlay10 },
+                  index === sortedStats.length - 1 && { borderBottomWidth: 0 },
+                  index % 2 === 1 && { backgroundColor: palette.overlay02 },
+                ]}
+                onPress={() => handlePlayerPress(player.id)}>
+                <Text style={[styles.cell, styles.nameCell, { color: palette.textInverse }]}>
+                  {player.name}
+                </Text>
+                <Text
+                  style={[
+                    styles.cell,
+                    styles.plusMinusCell,
+                    { color: palette.textInverse },
+                    player.plusMinus > 0 && { color: palette.success },
+                    player.plusMinus < 0 && { color: palette.danger },
+                  ]}>
+                  {player.plusMinus > 0 ? '+' : ''}
+                  {player.plusMinus}
+                </Text>
+                <Text style={[styles.cell, { color: palette.textInverse }]}>
+                  {player.goals || '-'}
+                </Text>
+                <Text style={[styles.cell, { color: palette.textInverse }]}>
+                  {player.assists || '-'}
+                </Text>
+                <Text style={[styles.cell, { color: palette.textInverse }]}>
+                  {player.blocks || '-'}
+                </Text>
+                <Text style={[styles.cell, { color: palette.textInverse }]}>
+                  {player.throwaways || '-'}
+                </Text>
+                <Text style={[styles.cell, { color: palette.textInverse }]}>
+                  {player.drops || '-'}
+                </Text>
+                {/* Playing Time Cells - only show if data exists */}
+                {hasPlayingTimeData && (
+                  <>
+                    <Text
+                      style={[
+                        styles.cell,
+                        { color: palette.textInverse },
+                        (pStats?.oPoints ?? 0) > 0 &&
+                          (pStats?.oEfficiency ?? 0) >= 0.6 && {
+                            color: palette.success,
+                          },
+                        (pStats?.oPoints ?? 0) > 0 &&
+                          (pStats?.oEfficiency ?? 0) <= 0.4 && {
+                            color: palette.danger,
+                          },
+                      ]}>
+                      {pStats && (pStats.oPoints ?? 0) > 0
+                        ? formatEfficiency(pStats.oEfficiency)
+                        : '-'}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.cell,
+                        { color: palette.textInverse },
+                        (pStats?.dPoints ?? 0) > 0 &&
+                          (pStats?.dEfficiency ?? 0) >= 0.25 && {
+                            color: palette.success,
+                          },
+                        (pStats?.dPoints ?? 0) > 0 &&
+                          (pStats?.dEfficiency ?? 0) < 0.25 && {
+                            color: palette.danger,
+                          },
+                      ]}>
+                      {pStats && (pStats.dPoints ?? 0) > 0
+                        ? formatEfficiency(pStats.dEfficiency)
+                        : '-'}
+                    </Text>
+                    <Text style={[styles.cell, { color: palette.textInverse }]}>
+                      {pStats?.pointsPlayed ?? '-'}
+                    </Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      </ScrollView>
     </View>
   );
 }

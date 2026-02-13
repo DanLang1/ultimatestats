@@ -7,7 +7,7 @@ import { useGameStore } from '@/store/gameStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
-import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Linking, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { AlertModal } from './ui/AlertModal';
 import FlashingIcon from './ui/FlashingIcon';
 
@@ -21,6 +21,8 @@ export default function SettingsBar({ onUndo }: SettingsBarProps) {
 
   const { genderRatioEnabled, firstPointRatio } = useSettingsStore();
   const { palette } = useTheme();
+  const { width, height } = useWindowDimensions();
+  const isLandscape = width > height;
 
   const [showAbbaModal, setShowAbbaModal] = useState(false);
 
@@ -37,7 +39,8 @@ export default function SettingsBar({ onUndo }: SettingsBarProps) {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: barBg }]}>
+    <View
+      style={[styles.container, { backgroundColor: barBg }, !isLandscape && { borderRadius: 20 }]}>
       {/* Play/Pause */}
       <Pressable onPress={toggleTimer} style={styles.iconButton}>
         <MaterialCommunityIcons

@@ -6,7 +6,7 @@ import { SavedGame } from '@/lib/storage';
 import { useGameStore } from '@/store/gameStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React, { useState } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, StyleSheet, Text, TextInput, useWindowDimensions, View } from 'react-native';
 import Animated, { FadeOut, LinearTransition } from 'react-native-reanimated';
 
 interface SavedGamesListProps {
@@ -29,6 +29,8 @@ export default function SavedGamesList({
 }: SavedGamesListProps) {
   const { palette } = useTheme();
   const { savedTeams } = useGameStore();
+  const { width: dimWidth, height: dimHeight } = useWindowDimensions();
+  const isLandscape = dimWidth > dimHeight;
 
   const [searchQuery, setSearchQuery] = useState('');
   const [sortField, setSortField] = useState<SortField>('date');
@@ -119,7 +121,7 @@ export default function SavedGamesList({
   return (
     <View style={styles.container}>
       {/* Controls Header */}
-      <View style={styles.controlsHeader}>
+      <View style={[styles.controlsHeader, !isLandscape && styles.controlsHeaderPortrait]}>
         <View
           style={[
             styles.searchWrapper,
@@ -222,23 +224,70 @@ export default function SavedGamesList({
                       />
                     )}
                   </View>
-                  <View style={styles.savedGameTeams}>
-                    <Text
-                      style={[styles.savedGameTeamName, { color: palette.textInverse }]}
-                      numberOfLines={1}>
-                      {getTeamName(game)}
-                    </Text>
-                    <ScoreBadge score1={game.team1Score} score2={game.team2Score} />
-                    <Text
-                      style={[
-                        styles.savedGameTeamName,
-                        styles.savedGameTeamRight,
-                        { color: palette.textInverse },
-                      ]}
-                      numberOfLines={1}>
-                      {game.team2Name}
-                    </Text>
-                  </View>
+                  {isLandscape ? (
+                    <View style={styles.savedGameTeams}>
+                      <Text
+                        style={[styles.savedGameTeamName, { color: palette.textInverse }]}
+                        numberOfLines={1}>
+                        {getTeamName(game)}
+                      </Text>
+                      <ScoreBadge score1={game.team1Score} score2={game.team2Score} />
+                      <Text
+                        style={[
+                          styles.savedGameTeamName,
+                          styles.savedGameTeamRight,
+                          { color: palette.textInverse },
+                        ]}
+                        numberOfLines={1}>
+                        {game.team2Name}
+                      </Text>
+                    </View>
+                  ) : (
+                    <View style={styles.savedGameTeamsPortrait}>
+                      <View style={styles.teamScoreRow}>
+                        <Text
+                          style={[styles.savedGameTeamName, { color: palette.textInverse }]}
+                          numberOfLines={1}>
+                          {getTeamName(game)}
+                        </Text>
+                        <Text
+                          style={[
+                            styles.teamScoreValue,
+                            {
+                              color:
+                                game.team1Score > game.team2Score
+                                  ? palette.success
+                                  : game.team1Score < game.team2Score
+                                    ? palette.danger
+                                    : palette.warning,
+                            },
+                          ]}>
+                          {game.team1Score}
+                        </Text>
+                      </View>
+                      <View style={styles.teamScoreRow}>
+                        <Text
+                          style={[styles.savedGameTeamName, { color: palette.textInverse }]}
+                          numberOfLines={1}>
+                          {game.team2Name}
+                        </Text>
+                        <Text
+                          style={[
+                            styles.teamScoreValue,
+                            {
+                              color:
+                                game.team2Score > game.team1Score
+                                  ? palette.success
+                                  : game.team2Score < game.team1Score
+                                    ? palette.danger
+                                    : palette.warning,
+                            },
+                          ]}>
+                          {game.team2Score}
+                        </Text>
+                      </View>
+                    </View>
+                  )}
                   <View style={[styles.savedGameMeta, { borderTopColor: palette.overlay08 }]}>
                     <MaterialCommunityIcons
                       name="account-multiple"
@@ -273,6 +322,10 @@ const styles = StyleSheet.create({
   controlsHeader: {
     flexDirection: 'row',
     gap: 12,
+  },
+  controlsHeaderPortrait: {
+    flexDirection: 'column',
+    gap: 8,
   },
   searchWrapper: {
     flex: 1,
@@ -370,6 +423,21 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
+  },
+  savedGameTeamsPortrait: {
+    gap: 4,
+  },
+  teamScoreRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  teamScoreValue: {
+    fontSize: 18,
+    fontWeight: '700',
+    fontVariant: ['tabular-nums'],
+    minWidth: 28,
+    textAlign: 'right',
   },
   savedGameTeamName: {
     flex: 1,

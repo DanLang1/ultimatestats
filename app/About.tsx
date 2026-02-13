@@ -1,5 +1,6 @@
 import { ThemedView } from '@/components/ThemedView';
 import { useTheme } from '@/context/ThemeContext';
+import { useOrientationLock } from '@/hooks/useOrientationLock';
 import { useVersionCheck } from '@/hooks/useVersionCheck';
 import { CHANGELOG } from '@/lib/changelog';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -7,9 +8,12 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router, Stack, useFocusEffect } from 'expo-router';
 import React, { useCallback } from 'react';
 import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function AboutScreen() {
+  useOrientationLock();
   const { palette } = useTheme();
+  const insets = useSafeAreaInsets();
   const { currentVersion, acknowledge } = useVersionCheck();
 
   // Acknowledge version when user views this page
@@ -24,7 +28,7 @@ export default function AboutScreen() {
       <Stack.Screen options={{ headerShown: false }} />
 
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: Math.max(insets.top, 16) }]}>
         <Pressable
           onPress={() => router.back()}
           style={[styles.backButton, { backgroundColor: palette.overlay10 }]}
@@ -35,7 +39,11 @@ export default function AboutScreen() {
         <View style={styles.headerSpacer} />
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView
+        contentContainerStyle={[
+          styles.scrollContent,
+          { paddingBottom: Math.max(24, insets.bottom) },
+        ]}>
         {/* App Info Card */}
         <View style={[styles.card, { backgroundColor: palette.overlay08 }]}>
           <View style={styles.appInfo}>

@@ -1,10 +1,12 @@
 import { EditRosterSidebar } from '@/components/EditRosterSidebar';
+import { EditRosterToolbar } from '@/components/EditRosterToolbar';
 import { AlertModal } from '@/components/ui/AlertModal';
 import { useAlert } from '@/components/ui/AlertProvider';
 import { ShareConfirmModal } from '@/components/ui/ShareConfirmModal';
 import { PlayerChip } from '@/components/ui/PlayerChip';
 import { useTheme } from '@/context/ThemeContext';
 import { useIsGameActive } from '@/hooks/useIsGameActive';
+import { useOrientationLock } from '@/hooks/useOrientationLock';
 import { hasPlayerWithName } from '@/lib/playerUtils';
 import { serializeTeam, uploadPayload } from '@/lib/sharing';
 import { SavedTeam } from '@/lib/storage';
@@ -16,9 +18,24 @@ import { useSettingsStore } from '@/store/settingsStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { Pressable, ScrollView, Share, StyleSheet, Text, TextInput, View } from 'react-native';
+import {
+  Pressable,
+  ScrollView,
+  Share,
+  StyleSheet,
+  Text,
+  TextInput,
+  useWindowDimensions,
+  View,
+} from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function EditRosterScreen() {
+  useOrientationLock();
+  const insets = useSafeAreaInsets();
+  const { width: dimWidth, height: dimHeight } = useWindowDimensions();
+  const isLandscape = dimWidth > dimHeight;
+
   const { teamName } = useLocalSearchParams<{ teamName: string }>();
 
   const {
@@ -164,31 +181,33 @@ export default function EditRosterScreen() {
     <View style={[styles.container, { backgroundColor: palette.primary }]}>
       <Stack.Screen options={{ headerShown: false }} />
 
-      <View style={styles.mainLayout}>
-        {/* Sidebar */}
-        <EditRosterSidebar
-          collapsed={sidebarCollapsed}
-          onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
-          onRenameTeam={() => {
-            setEditTeamName(currentTeam?.name ?? '');
-            setRenameModalVisible(true);
-          }}
-          onNewTeam={handleNewTeam}
-          onSwitchTeam={() => router.push('/TeamManagementModal')}
-          onEditPresets={() => router.push('/LinePresetEditor')}
-          onShareTeam={handleShareTeam}
-          onClearRoster={handleClearAll}
-          showNewTeam={!gameActive}
-          showSwitchTeam={!gameActive && hasOtherTeams}
-          showEditPresets={roster.length > 0}
-          showShareTeam={roster.length > 0}
-          showClearRoster={roster.length > 0}
-        />
+      <View style={[styles.mainLayout, !isLandscape && styles.mainLayoutPortrait]}>
+        {/* Sidebar - landscape only */}
+        {isLandscape && (
+          <EditRosterSidebar
+            collapsed={sidebarCollapsed}
+            onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
+            onRenameTeam={() => {
+              setEditTeamName(currentTeam?.name ?? '');
+              setRenameModalVisible(true);
+            }}
+            onNewTeam={handleNewTeam}
+            onSwitchTeam={() => router.push('/TeamManagementModal')}
+            onEditPresets={() => router.push('/LinePresetEditor')}
+            onShareTeam={handleShareTeam}
+            onClearRoster={handleClearAll}
+            showNewTeam={!gameActive}
+            showSwitchTeam={!gameActive && hasOtherTeams}
+            showEditPresets={roster.length > 0}
+            showShareTeam={roster.length > 0}
+            showClearRoster={roster.length > 0}
+          />
+        )}
 
         {/* Main Content */}
         <View style={styles.mainContent}>
           {/* Header */}
-          <View style={styles.header}>
+          <View style={[styles.header, { paddingTop: Math.max(insets.top, 16) }]}>
             <Pressable
               onPress={handleBack}
               style={[styles.backButton, { backgroundColor: palette.overlay10 }]}
@@ -205,6 +224,26 @@ export default function EditRosterScreen() {
 
             <View style={styles.headerSpacer} />
           </View>
+
+          {/* Toolbar - portrait only */}
+          {!isLandscape && (
+            <EditRosterToolbar
+              onRenameTeam={() => {
+                setEditTeamName(currentTeam?.name ?? '');
+                setRenameModalVisible(true);
+              }}
+              onNewTeam={handleNewTeam}
+              onSwitchTeam={() => router.push('/TeamManagementModal')}
+              onEditPresets={() => router.push('/LinePresetEditor')}
+              onShareTeam={handleShareTeam}
+              onClearRoster={handleClearAll}
+              showNewTeam={!gameActive}
+              showSwitchTeam={!gameActive && hasOtherTeams}
+              showEditPresets={roster.length > 0}
+              showShareTeam={roster.length > 0}
+              showClearRoster={roster.length > 0}
+            />
+          )}
 
           {/* Add Player Input */}
           <View style={[styles.addPlayerSection, { borderBottomColor: palette.overlay10 }]}>
@@ -248,7 +287,12 @@ export default function EditRosterScreen() {
           </View>
 
           {/* Player List - 2 Column Grid */}
-          <ScrollView style={styles.playerList} contentContainerStyle={styles.playerListContent}>
+          <ScrollView
+            style={styles.playerList}
+            contentContainerStyle={[
+              styles.playerListContent,
+              { paddingBottom: Math.max(20, insets.bottom) },
+            ]}>
             {roster.length === 0 ? (
               <View style={styles.emptyState}>
                 <MaterialCommunityIcons
@@ -435,6 +479,9 @@ const styles = StyleSheet.create({
   mainLayout: {
     flex: 1,
     flexDirection: 'row',
+  },
+  mainLayoutPortrait: {
+    flexDirection: 'column',
   },
   mainContent: {
     flex: 1,

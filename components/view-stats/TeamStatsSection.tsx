@@ -2,7 +2,7 @@ import { useTheme } from '@/context/ThemeContext';
 import { GameEvent } from '@/lib/storage';
 import { computeTeamStats, computeTimingStats } from '@/lib/teamStatsUtils';
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import StatRing from './StatRing';
 import StatsGrid from './StatsGrid';
 
@@ -34,6 +34,8 @@ export default function TeamStatsSection({
   gameTo,
 }: TeamStatsSectionProps) {
   const { palette } = useTheme();
+  const { width: dimWidth, height: dimHeight } = useWindowDimensions();
+  const isLandscape = dimWidth > dimHeight;
 
   const stats = computeTeamStats(events, startingPossession, gameTo);
   const timingStats = computeTimingStats(events, startingPossession, gameTo);
@@ -114,21 +116,22 @@ export default function TeamStatsSection({
       <Text style={[styles.sectionTitle, { color: palette.textMuted }]}>TEAM PERFORMANCE</Text>
 
       {/* Ring Gauges */}
-      <View style={styles.ringRow}>
+      <View style={[styles.ringRow, !isLandscape && styles.ringRowPortrait]}>
         {primaryStats.map((stat, index) => (
-          <StatRing
-            key={index}
-            percentage={stat.percentage}
-            label={stat.label}
-            sublabel={stat.sublabel}
-            info={stat.info}
-            infoLabel={stat.infoLabel}
-          />
+          <View key={index} style={!isLandscape && styles.ringWrapper}>
+            <StatRing
+              percentage={stat.percentage}
+              label={stat.label}
+              sublabel={stat.sublabel}
+              info={stat.info}
+              infoLabel={stat.infoLabel}
+            />
+          </View>
         ))}
       </View>
 
       {/* Primary Stats Grid */}
-      <StatsGrid stats={secondaryStats} columns={4} />
+      <StatsGrid stats={secondaryStats} columns={isLandscape ? 4 : 2} />
 
       {/* Game Flow Section */}
       <View style={styles.subsectionContainer}>
@@ -139,7 +142,7 @@ export default function TeamStatsSection({
       {/* Efficiency Section */}
       <View style={styles.subsectionContainer}>
         <Text style={[styles.subsectionTitle, { color: palette.textMuted }]}>EFFICIENCY</Text>
-        <StatsGrid stats={efficiencyStats} columns={4} />
+        <StatsGrid stats={efficiencyStats} columns={isLandscape ? 4 : 2} />
       </View>
 
       {/* Timing Section - only show if timing data exists */}
@@ -154,7 +157,7 @@ export default function TeamStatsSection({
               { label: 'Longest', value: formatDuration(timingStats.longestPointDurationMs) },
               { label: 'Shortest', value: formatDuration(timingStats.shortestPointDurationMs) },
             ]}
-            columns={5}
+            columns={isLandscape ? 5 : 3}
           />
         </View>
       )}
@@ -180,6 +183,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     marginBottom: 20,
+  },
+  ringRowPortrait: {
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    rowGap: 16,
+  },
+  ringWrapper: {
+    width: '50%',
+    alignItems: 'center',
   },
   subsectionContainer: {
     marginTop: 8,

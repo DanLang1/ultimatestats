@@ -74,7 +74,7 @@ sequenceDiagram
 
 ### `StatEntrySheet.tsx`
 
-- Bottom sheet modal optimized for permanent landscape orientation
+- Bottom sheet modal with side-by-side layout
 - Orchestrates the entry flow with side-by-side layout (info + roster)
 - Uses sub-components from `components/stat-entry/`
 
@@ -86,7 +86,7 @@ sequenceDiagram
 ### `components/stat-entry/StatEntryRoster.tsx`
 
 - Displays roster as a scrollable grid of `PlayerChip`s
-- Compact sizing for landscape (maxHeight: 280px)
+- Compact sizing (maxHeight: 280px)
 
 ### `components/ui/PlayerChip.tsx`
 

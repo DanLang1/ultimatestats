@@ -13,9 +13,10 @@ import { useGameStore } from '@/store/gameStore';
 import { useLinePresetsStore } from '@/store/linePresetsStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
+import * as ScreenOrientation from 'expo-screen-orientation';
 import React, { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type PointOutcome = {
@@ -48,6 +49,13 @@ function getPointOutcome(
 export default function PointTransition() {
   const { palette } = useTheme();
   const insets = useSafeAreaInsets();
+  const { width: dimWidth, height: dimHeight } = useWindowDimensions();
+  const isLandscape = dimWidth > dimHeight;
+
+  // Keep orientation unlocked (same pattern as scoreboard)
+  useFocusEffect(() => {
+    ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.DEFAULT);
+  });
 
   const {
     events,
@@ -196,8 +204,8 @@ export default function PointTransition() {
       ]}>
       {/* Header - Point Summary + Confirm */}
       <View style={[styles.header, { borderBottomColor: palette.border }]}>
-        <View style={styles.headerTop}>
-          <View style={styles.headerTitleRow}>
+        <View style={[styles.headerTop, !isLandscape && styles.headerTopPortrait]}>
+          <View style={[styles.headerTitleRow, !isLandscape && { flex: 0 }]}>
             <Pressable
               onPress={handleSkip}
               style={({ pressed }) => [
@@ -275,7 +283,7 @@ export default function PointTransition() {
         </View>
 
         {/* Stats + Presets Row */}
-        <View style={styles.statsRow}>
+        <View style={[styles.statsRow, !isLandscape && styles.statsRowPortrait]}>
           {/* Stats (left) */}
           <View style={styles.statsLeft}>
             {lastPoint?.pointDurationMs && (
@@ -480,6 +488,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
+  headerTopPortrait: {
+    flexWrap: 'wrap',
+    gap: 8,
+  },
   headerTitleRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -532,6 +544,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginTop: 10,
     gap: 8,
+  },
+  statsRowPortrait: {
+    flexWrap: 'wrap',
   },
   statsLeft: {
     flexDirection: 'row',

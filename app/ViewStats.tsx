@@ -22,8 +22,10 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { File, Paths } from 'expo-file-system';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import * as Sharing from 'expo-sharing';
+import { useOrientationLock } from '@/hooks/useOrientationLock';
 import React, { useEffect, useState } from 'react';
 import { Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type ViewMode = 'current' | 'saved' | 'aggregate';
 
@@ -43,8 +45,10 @@ export default function ViewStatsScreen() {
     gameTo,
     pointLines,
   } = useGameStore();
+  useOrientationLock();
   const { showAlert } = useAlert();
   const { palette } = useTheme();
+  const insets = useSafeAreaInsets();
 
   const team1Name = currentTeam?.name ?? 'Team 1';
 
@@ -342,7 +346,7 @@ export default function ViewStatsScreen() {
       <Stack.Screen options={{ headerShown: false }} />
 
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: Math.max(insets.top, 16) }]}>
         <Pressable
           onPress={() => router.back()}
           style={[styles.backButton, { backgroundColor: palette.overlay10 }]}
@@ -474,7 +478,12 @@ export default function ViewStatsScreen() {
         </View>
       )}
 
-      <ScrollView key={scrollKey} contentContainerStyle={styles.scrollContent}>
+      <ScrollView
+        key={scrollKey}
+        contentContainerStyle={[
+          styles.scrollContent,
+          { paddingBottom: Math.max(100, insets.bottom + 76) },
+        ]}>
         {viewMode === 'current' || selectedGame ? (
           <StatsContent
             team1Name={displayData.team1Name}

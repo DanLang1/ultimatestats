@@ -1,14 +1,12 @@
 # Per-Screen Orientation Support
 
-> Allow specific screens to support portrait mode while the app defaults to landscape.
+> The app supports both portrait and landscape orientations. Screens opt in to portrait via `useOrientationLock()`.
 
-## Current State
+## How It Works
 
-- App is locked to landscape via `app.config.js` (`orientation: 'landscape'`)
-- `expo-screen-orientation` (v9.0.8) is installed
-- Android-only — `lockAsync()` overrides the manifest at runtime, so no native rebuild needed
-
-## Implementation
+- `expo-screen-orientation` overrides the manifest at runtime — no native rebuild needed
+- Screens without `useOrientationLock()` remain landscape-only
+- OTA deployable via EAS Update
 
 ### Hook: `hooks/useOrientationLock.ts`
 
@@ -21,39 +19,36 @@ Usage: call `useOrientationLock()` at the top of any screen component.
 
 ### Screens Enabled
 
-| Screen                   | Status         | Notes                                                       |
-| ------------------------ | -------------- | ----------------------------------------------------------- |
-| Dashboard                | ✅ Done        | Layout already uses `flexWrap`/`minWidth`, adapts naturally |
-| Scoreboard (`index.tsx`) | ❌ Not started | Needs `flexDirection` switch from `row` → `column`          |
-| Settings                 | ❌ Not started | Needs layout assessment                                     |
-| ViewStats                | ❌ Not started | Needs layout assessment                                     |
-| Modals                   | ❌ Not started | May need width/height adjustments                           |
+| Screen                   | Status  | Notes                                                      |
+| ------------------------ | ------- | ---------------------------------------------------------- |
+| Dashboard                | Done    | Layout uses `flexWrap`/`minWidth`, adapts naturally        |
+| GameTimeline             | Done    | Full-screen scroll view, works in both orientations        |
+| EditEventModal           | Done    | Bottom sheet with safe area insets                         |
+| Scoreboard (`index.tsx`) | Pending | Needs `flexDirection` switch from `row` → `column`         |
+| Settings                 | Done    | Two-column ↔ single-column layout, uses key-based remount |
+| ViewStats                | Pending | Needs layout assessment                                    |
 
-## Screen-Specific Notes
+## Gotcha: Flex Layout Caching on Rotation
 
-### Dashboard
+React Native does not always re-layout flex containers correctly when toggling `flexDirection` between `row` and `column` via conditional styles. Symptoms include columns retaining portrait-mode widths after rotating to landscape.
 
-Already responsive — `flexWrap: 'wrap'` with `minWidth: 280` on sections means cards reflow naturally in portrait.
+**Fix:** Add a `key` that changes with orientation to force a full remount of the container:
 
-### Scoreboard
+```tsx
+<View
+  key={isLandscape ? 'landscape' : 'portrait'}
+  style={[
+    styles.columnsContainer,
+    !isLandscape && { flexDirection: 'column', alignItems: 'stretch' },
+  ]}>
+```
 
-Uses `flexDirection: 'row'` for the two `TeamScoreSection` components side-by-side. Portrait would need:
+Apply this pattern to any container that switches `flexDirection` based on orientation. See `Settings.tsx` for a working example.
 
-- Switch to `flexDirection: 'column'` (stack teams vertically)
-- `ScoreboardActionBar` clamp logic needs to account for different screen dimensions
-- `SettingsBar` uses absolute positioning, should adapt without changes
+## Portrait Considerations for Modals
 
-### Modals
+When a modal supports portrait, ensure:
 
-Transparent modals may need width constraints adjusted. Currently many use percentage-based or `maxWidth` sizing which should work, but each needs testing.
-
-## Key Decisions
-
-- **No `app.config.js` change needed** — Android's `lockAsync` overrides manifest at runtime
-- **OTA deployable** — can ship via EAS Update, no new native build required
-- **Per-screen opt-in** — screens stay landscape by default; only screens with `useOrientationLock()` get portrait support
-
-## Status
-
-**Status:** Dashboard implemented, other screens pending  
-**Priority:** Low — expand as screens are adapted for portrait
+1. Add `useOrientationLock()` at the top of the component
+2. Use `useSafeAreaInsets()` and apply `insets.bottom` as padding on the sheet container
+3. Test that content is scrollable and doesn't overflow in portrait

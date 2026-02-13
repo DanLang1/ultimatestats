@@ -4,6 +4,7 @@ import PlayerStatsSummary from '@/components/view-stats/PlayerStatsSummary';
 import PlayingTimeSection from '@/components/view-stats/PlayingTimeSection';
 import RoleDiamond from '@/components/view-stats/RoleDiamond';
 import { useTheme } from '@/context/ThemeContext';
+import { useOrientationLock } from '@/hooks/useOrientationLock';
 import { getPlayerName } from '@/lib/playerUtils';
 import {
   computePlayerStats,
@@ -16,7 +17,8 @@ import { usePlayerStatsStore } from '@/store/playerStatsStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router } from 'expo-router';
 import React from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function PlayerStats() {
   const {
@@ -30,7 +32,11 @@ export default function PlayerStats() {
     startingPossession,
     gameTo,
   } = usePlayerStatsStore();
+  useOrientationLock();
   const { palette } = useTheme();
+  const insets = useSafeAreaInsets();
+  const { width: dimWidth, height: dimHeight } = useWindowDimensions();
+  const isLandscape = dimWidth > dimHeight;
 
   // Derive player name for display
   const playerName = getPlayerName(roster, playerId) ?? playerId ?? '';
@@ -116,7 +122,11 @@ export default function PlayerStats() {
   return (
     <View style={[styles.container, { backgroundColor: palette.primary }]}>
       {/* Header - just back button */}
-      <View style={[styles.header, { borderBottomColor: palette.overlay10 }]}>
+      <View
+        style={[
+          styles.header,
+          { borderBottomColor: palette.overlay10, paddingTop: Math.max(insets.top, 12) },
+        ]}>
         <Pressable
           onPress={handleDismiss}
           style={[styles.backButton, { backgroundColor: palette.overlay05 }]}>
@@ -125,9 +135,14 @@ export default function PlayerStats() {
         <Text style={[styles.headerTitle, { color: palette.textMuted }]}>PLAYER STATS</Text>
       </View>
 
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={[
+          styles.scrollContent,
+          { paddingBottom: Math.max(40, insets.bottom) },
+        ]}>
         {/* Top Row: Profile Diamond + Player Summary Cards */}
-        <View style={styles.topCardsRow}>
+        <View style={[styles.topCardsRow, !isLandscape && styles.topCardsRowPortrait]}>
           {/* Profile Diamond Card */}
           <View
             style={[
@@ -374,6 +389,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 12,
     marginBottom: 16,
+  },
+  topCardsRowPortrait: {
+    flexDirection: 'column-reverse',
+    alignItems: 'stretch',
   },
   profileCard: {
     borderRadius: 16,

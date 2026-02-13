@@ -184,6 +184,54 @@ export default function EditPlayerModal() {
 
 **Why this matters:** Calling `router.navigate()` or `router.dismissTo()` during render is a side effect that triggers React's warning. The `<Redirect>` component is the React-way to handle this declaratively.
 
+## Portrait Mode Support
+
+Modals that can appear on portrait-enabled screens need extra handling for safe areas and orientation.
+
+### Required Steps
+
+1. **Add `useOrientationLock()`** at the top of the modal component so orientation stays unlocked while the modal is focused:
+
+```tsx
+import { useOrientationLock } from '@/hooks/useOrientationLock';
+
+export default function MyModal() {
+  useOrientationLock();
+  // ...
+}
+```
+
+2. **Add safe area insets** to prevent content from being clipped by the status bar or home indicator:
+
+```tsx
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+export default function MyModal() {
+  useOrientationLock();
+  const insets = useSafeAreaInsets();
+
+  return (
+    <View style={StyleSheet.absoluteFill}>
+      <Pressable style={[styles.overlay, { backgroundColor: palette.overlayDark40 }]}>
+        <View
+          style={[
+            styles.sheet,
+            { backgroundColor: palette.modalBg, paddingBottom: insets.bottom },
+          ]}>
+          {/* content */}
+        </View>
+      </Pressable>
+    </View>
+  );
+}
+```
+
+3. **Ensure content is scrollable** — portrait has less horizontal space, so wrap content in `ScrollView` if it may overflow.
+
+### Modals with Portrait Support
+
+- `app/EditEventModal.tsx` - Edit action modal (opened from GameTimeline)
+
 ## Existing Modal Routes
 
 - `app/StatEntryModal.tsx` - Goal/assist entry after scoring
