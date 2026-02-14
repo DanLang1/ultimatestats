@@ -6,7 +6,7 @@ import { ShareConfirmModal } from '@/components/ui/ShareConfirmModal';
 import { PlayerChip } from '@/components/ui/PlayerChip';
 import { useTheme } from '@/context/ThemeContext';
 import { useIsGameActive } from '@/hooks/useIsGameActive';
-import { useOrientationLock } from '@/hooks/useOrientationLock';
+import { useLayout } from '@/hooks/useLayout';
 import { hasPlayerWithName } from '@/lib/playerUtils';
 import { serializeTeam, uploadPayload } from '@/lib/sharing';
 import { SavedTeam } from '@/lib/storage';
@@ -18,23 +18,11 @@ import { useSettingsStore } from '@/store/settingsStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import {
-  Pressable,
-  ScrollView,
-  Share,
-  StyleSheet,
-  Text,
-  TextInput,
-  useWindowDimensions,
-  View,
-} from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Pressable, ScrollView, Share, StyleSheet, Text, TextInput, View } from 'react-native';
 
 export default function EditRosterScreen() {
-  useOrientationLock();
-  const insets = useSafeAreaInsets();
-  const { width: dimWidth, height: dimHeight } = useWindowDimensions();
-  const isLandscape = dimWidth > dimHeight;
+  const { isLandscape } = useLayout();
+  const styles = createStyles(isLandscape);
 
   const { teamName } = useLocalSearchParams<{ teamName: string }>();
 
@@ -181,7 +169,7 @@ export default function EditRosterScreen() {
     <View style={[styles.container, { backgroundColor: palette.primary }]}>
       <Stack.Screen options={{ headerShown: false }} />
 
-      <View style={[styles.mainLayout, !isLandscape && styles.mainLayoutPortrait]}>
+      <View style={styles.mainLayout}>
         {/* Sidebar - landscape only */}
         {isLandscape && (
           <EditRosterSidebar
@@ -207,7 +195,7 @@ export default function EditRosterScreen() {
         {/* Main Content */}
         <View style={styles.mainContent}>
           {/* Header */}
-          <View style={[styles.header, { paddingTop: Math.max(insets.top, 16) }]}>
+          <View style={styles.header}>
             <Pressable
               onPress={handleBack}
               style={[styles.backButton, { backgroundColor: palette.overlay10 }]}
@@ -287,12 +275,7 @@ export default function EditRosterScreen() {
           </View>
 
           {/* Player List - 2 Column Grid */}
-          <ScrollView
-            style={styles.playerList}
-            contentContainerStyle={[
-              styles.playerListContent,
-              { paddingBottom: Math.max(20, insets.bottom) },
-            ]}>
+          <ScrollView style={styles.playerList} contentContainerStyle={[styles.playerListContent]}>
             {roster.length === 0 ? (
               <View style={styles.emptyState}>
                 <MaterialCommunityIcons
@@ -472,175 +455,174 @@ export default function EditRosterScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  mainLayout: {
-    flex: 1,
-    flexDirection: 'row',
-  },
-  mainLayoutPortrait: {
-    flexDirection: 'column',
-  },
-  mainContent: {
-    flex: 1,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 12,
-  },
-  backButton: {
-    padding: 8,
-    borderRadius: 20,
-  },
-  headerTitle: {
-    fontSize: 14,
-    fontWeight: '700',
-    letterSpacing: 2,
-  },
-  headerSpacer: {
-    width: 40,
-  },
-  teamHeaderCenterWrapper: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  clearButton: {
-    padding: 8,
-    borderRadius: 20,
-  },
-  addPlayerSection: {
-    flexDirection: 'row',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    gap: 12,
-    borderBottomWidth: 1,
-  },
-  inputWrapper: {
-    flex: 1,
-  },
-  addPlayerInput: {
-    height: 48,
-    borderWidth: 1,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    fontSize: 16,
-  },
-  errorText: {
-    fontSize: 12,
-    marginLeft: 4,
-    marginTop: 4,
-  },
-  addButton: {
-    width: 48,
-    height: 48,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  buttonPressed: {
-    opacity: 0.8,
-    transform: [{ scale: 0.98 }],
-  },
-  playerList: {
-    flex: 1,
-  },
-  playerListContent: {
-    paddingHorizontal: 20,
-    paddingBottom: 20,
-    paddingTop: 8,
-  },
+function createStyles(isLandscape: boolean) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+    },
+    mainLayout: {
+      flex: 1,
+      flexDirection: isLandscape ? 'row' : 'column',
+    },
+    mainContent: {
+      flex: 1,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 20,
+      paddingTop: 8,
+      paddingBottom: 12,
+    },
+    backButton: {
+      padding: 8,
+      borderRadius: 20,
+    },
+    headerTitle: {
+      fontSize: 14,
+      fontWeight: '700',
+      letterSpacing: 2,
+    },
+    headerSpacer: {
+      width: 40,
+    },
+    teamHeaderCenterWrapper: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    clearButton: {
+      padding: 8,
+      borderRadius: 20,
+    },
+    addPlayerSection: {
+      flexDirection: 'row',
+      paddingHorizontal: 20,
+      paddingVertical: 16,
+      gap: 12,
+      borderBottomWidth: 1,
+    },
+    inputWrapper: {
+      flex: 1,
+    },
+    addPlayerInput: {
+      height: 48,
+      borderWidth: 1,
+      borderRadius: 12,
+      paddingHorizontal: 16,
+      fontSize: 16,
+    },
+    errorText: {
+      fontSize: 12,
+      marginLeft: 4,
+      marginTop: 4,
+    },
+    addButton: {
+      width: 48,
+      height: 48,
+      borderRadius: 12,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    buttonPressed: {
+      opacity: 0.8,
+      transform: [{ scale: 0.98 }],
+    },
+    playerList: {
+      flex: 1,
+    },
+    playerListContent: {
+      paddingHorizontal: 20,
+      paddingBottom: 20,
+      paddingTop: 8,
+    },
 
-  listHeader: {
-    marginBottom: 4,
-    alignItems: 'flex-end',
-  },
-  listHint: {
-    fontSize: 11,
-    fontStyle: 'italic',
-  },
-  emptyState: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingTop: 30,
-  },
-  emptyStateText: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginTop: 16,
-  },
-  emptyStateHint: {
-    fontSize: 14,
-    marginTop: 4,
-  },
-  playerGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-  },
-  // Alert modal content styles
-  alertInput: {
-    borderWidth: 1,
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    fontSize: 16,
-    marginBottom: 8,
-  },
-  alertButtonContainer: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  alertButton: {
-    flex: 1,
-    paddingVertical: 12,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  alertCancelButton: {
-    borderWidth: 1,
-  },
-  alertButtonText: {
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  // Line Presets Section
-  presetsSection: {
-    marginTop: 24,
-    gap: 16,
-  },
-  sectionDivider: {
-    height: 1,
-  },
-  presetsButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-  },
-  presetsButtonContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    flex: 1,
-  },
-  presetsButtonText: {
-    gap: 2,
-  },
-  presetsButtonTitle: {
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  presetsButtonSubtitle: {
-    fontSize: 12,
-  },
-});
+    listHeader: {
+      marginBottom: 4,
+      alignItems: 'flex-end',
+    },
+    listHint: {
+      fontSize: 11,
+      fontStyle: 'italic',
+    },
+    emptyState: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingTop: 30,
+    },
+    emptyStateText: {
+      fontSize: 18,
+      fontWeight: '600',
+      marginTop: 16,
+    },
+    emptyStateHint: {
+      fontSize: 14,
+      marginTop: 4,
+    },
+    playerGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 10,
+    },
+    // Alert modal content styles
+    alertInput: {
+      borderWidth: 1,
+      borderRadius: 10,
+      paddingHorizontal: 14,
+      paddingVertical: 12,
+      fontSize: 16,
+      marginBottom: 8,
+    },
+    alertButtonContainer: {
+      flexDirection: 'row',
+      gap: 12,
+    },
+    alertButton: {
+      flex: 1,
+      paddingVertical: 12,
+      borderRadius: 10,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    alertCancelButton: {
+      borderWidth: 1,
+    },
+    alertButtonText: {
+      fontSize: 15,
+      fontWeight: '600',
+    },
+    // Line Presets Section
+    presetsSection: {
+      marginTop: 24,
+      gap: 16,
+    },
+    sectionDivider: {
+      height: 1,
+    },
+    presetsButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      padding: 16,
+      borderRadius: 12,
+      borderWidth: 1,
+    },
+    presetsButtonContent: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+      flex: 1,
+    },
+    presetsButtonText: {
+      gap: 2,
+    },
+    presetsButtonTitle: {
+      fontSize: 15,
+      fontWeight: '600',
+    },
+    presetsButtonSubtitle: {
+      fontSize: 12,
+    },
+  });
+}

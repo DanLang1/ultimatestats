@@ -1,5 +1,6 @@
 import { useTheme } from '@/context/ThemeContext';
 import { useHalftimeTimer } from '@/hooks/useHalftimeTimer';
+import { useLayout } from '@/hooks/useLayout';
 import { computePlayerStats } from '@/lib/statsUtils';
 import { computeTeamStats } from '@/lib/teamStatsUtils';
 import { useGameStore } from '@/store/gameStore';
@@ -8,11 +9,12 @@ import { useSettingsStore } from '@/store/settingsStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router } from 'expo-router';
 import React from 'react';
-import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 
 export default function HalftimeModal() {
   const { palette } = useTheme();
+  const { isLandscape } = useLayout();
   const {
     team1Score,
     team2Score,
@@ -35,8 +37,7 @@ export default function HalftimeModal() {
     canIncrement,
   } = useHalftimeTimer();
 
-  const { width: dimWidth, height: dimHeight } = useWindowDimensions();
-  const isLandscape = dimWidth > dimHeight;
+  const styles = createStyles(isLandscape);
 
   const team1Name = currentTeam?.name ?? 'Team 1';
   const receivingTeam = startingPossession === 'team1' ? team2Name : team1Name;
@@ -71,7 +72,7 @@ export default function HalftimeModal() {
           styles.overlay,
           {
             backgroundColor: 'rgba(0,0,0,0.88)',
-            padding: 16, // Reduced padding
+            padding: 16,
           },
         ]}>
         <Animated.View
@@ -85,7 +86,7 @@ export default function HalftimeModal() {
             <MaterialCommunityIcons name="close" size={20} color={palette.textMuted} />
           </Pressable>
 
-          <View style={styles.headerCenteredRow}>
+          <View style={styles.headerRow}>
             <View style={styles.headerSection}>
               <MaterialCommunityIcons name="timer-sand" size={16} color={palette.accent} />
               <Text style={[styles.headerText, { color: palette.textMuted }]}>HALFTIME</Text>
@@ -93,49 +94,34 @@ export default function HalftimeModal() {
 
             <MaterialCommunityIcons name="disc" size={12} color={palette.accent} />
 
-            <View style={styles.headerSection}>
-              <Text style={[styles.receivingText, { color: palette.textMuted }]}>
-                {receivingTeam} receives
-              </Text>
+            <Text style={[styles.receivingText, { color: palette.textMuted }]}>
+              {receivingTeam} receives
+            </Text>
 
-              {lineCallingEnabled && (
-                <>
-                  <MaterialCommunityIcons name="disc" size={12} color={palette.accent} />
-                  <Pressable
-                    onPress={() => router.push('/PointTransition')}
-                    style={({ pressed }) => [styles.setLineBtn, pressed && { opacity: 0.5 }]}>
-                    <MaterialCommunityIcons
-                      name="account-switch"
-                      size={12}
-                      color={palette.accent}
-                    />
-                    <Text style={[styles.setLineBtnText, { color: palette.textMuted }]}>
-                      Set Line
-                    </Text>
-                  </Pressable>
-                </>
-              )}
-            </View>
+            {lineCallingEnabled && (
+              <>
+                <MaterialCommunityIcons name="disc" size={12} color={palette.accent} />
+                <Pressable
+                  onPress={() => router.push('/PointTransition')}
+                  style={({ pressed }) => [
+                    styles.setLineBtn,
+                    { backgroundColor: palette.overlay08 },
+                    pressed && { opacity: 0.5 },
+                  ]}>
+                  <MaterialCommunityIcons name="account-switch" size={12} color={palette.accent} />
+                  <Text style={[styles.setLineBtnText, { color: palette.textMuted }]}>
+                    Set Line
+                  </Text>
+                </Pressable>
+              </>
+            )}
           </View>
 
-          <View
-            style={[
-              styles.contentRow,
-              !hasStats && styles.contentRowCompact,
-              !isLandscape && {
-                flexDirection: 'column',
-                height: 'auto',
-                alignItems: 'stretch',
-                gap: 8,
-              },
-            ]}>
-            {/* LEFT SIDE: Game State (Score + Timer) */}
-            <View
-              style={[
-                styles.leftColumn,
-                !hasStats && styles.leftColumnCompact,
-                !isLandscape && { flex: 0, justifyContent: 'center', gap: 16 },
-              ]}>
+          <ScrollView
+            contentContainerStyle={[styles.contentRow, !hasStats && styles.contentRowCompact]}
+            showsVerticalScrollIndicator={false}>
+            {/* Score + Timer */}
+            <View style={[styles.leftColumn, !hasStats && styles.leftColumnCompact]}>
               <View style={styles.scoreCompact}>
                 <View style={styles.scoreGroup}>
                   <Text
@@ -164,7 +150,7 @@ export default function HalftimeModal() {
                 <Pressable
                   onPress={() => adjustTimer(-1)}
                   disabled={!canDecrement}
-                  style={[styles.timerBtnCompact]}>
+                  style={styles.timerBtnCompact}>
                   <MaterialCommunityIcons
                     name="minus"
                     size={16}
@@ -188,7 +174,7 @@ export default function HalftimeModal() {
                 <Pressable
                   onPress={() => adjustTimer(1)}
                   disabled={!canIncrement}
-                  style={[styles.timerBtnCompact]}>
+                  style={styles.timerBtnCompact}>
                   <MaterialCommunityIcons
                     name="plus"
                     size={16}
@@ -218,23 +204,11 @@ export default function HalftimeModal() {
             </View>
 
             {/* Divider */}
-            {hasStats && (
-              <View
-                style={[
-                  styles.divider,
-                  { backgroundColor: palette.overlay10 },
-                  !isLandscape && { width: '80%', height: 1, alignSelf: 'center' },
-                ]}
-              />
-            )}
+            {hasStats && <View style={[styles.divider, { backgroundColor: palette.overlay10 }]} />}
 
-            {/* RIGHT SIDE: Stats & Action */}
+            {/* Stats & Action */}
             {hasStats && (
-              <View
-                style={[
-                  styles.rightColumn,
-                  !isLandscape && { flex: 0, justifyContent: 'center', gap: 12 },
-                ]}>
+              <View style={styles.rightColumn}>
                 {/* 2 Stats Cards */}
                 <View style={styles.statsRowCompact}>
                   <View style={[styles.statCardCompact, { backgroundColor: palette.overlay05 }]}>
@@ -255,8 +229,8 @@ export default function HalftimeModal() {
                   </View>
                 </View>
 
-                {/* Top Performers List (Compact) */}
-                <View style={[styles.performersListCompact, !isLandscape && { flex: 0 }]}>
+                {/* Top Performers List */}
+                <View style={styles.performersListCompact}>
                   {topPerformers.map((p, i) => (
                     <View key={p.name} style={styles.performerRowCompact}>
                       <Text style={[styles.performerRankCompact, { color: palette.accent }]}>
@@ -306,229 +280,238 @@ export default function HalftimeModal() {
                 </Pressable>
               </View>
             )}
-          </View>
+          </ScrollView>
         </Animated.View>
       </View>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  container: {
-    width: '100%',
-    maxWidth: 680,
-    maxHeight: '90%', // Ensure it doesn't overflow screen
-    borderRadius: 16,
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.4,
-    shadowRadius: 12,
-    elevation: 8,
-  },
-  contentRow: {
-    flexDirection: 'row',
-    height: 240, // Fixed modest height for content
-  },
-  contentRowCompact: {
-    height: 'auto', // Let content determine height when no stats
-  },
-  leftColumn: {
-    flex: 1,
-    padding: 24,
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  leftColumnCompact: {
-    justifyContent: 'center', // Center content vertically when no stats
-    gap: 16, // Add consistent spacing between elements
-  },
-  rightColumn: {
-    flex: 1.1, // Give stats slightly more width
-    padding: 16,
-    paddingTop: 24,
-    justifyContent: 'space-between',
-  },
-  divider: {
-    width: 1,
-    height: '80%',
-    alignSelf: 'center',
-  },
-  headerCenteredRow: {
-    paddingTop: 16,
-    paddingBottom: 4,
-    flexDirection: 'row',
-    alignItems: 'center',
-    alignSelf: 'center',
-    gap: 16,
-    zIndex: 10,
-  },
-  headerSection: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  receivingText: {
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  headerText: {
-    fontSize: 12,
-    fontWeight: '800',
-    letterSpacing: 2,
-  },
-  scoreCompact: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  scoreNumber: {
-    fontSize: 64,
-    fontWeight: '900',
-    fontVariant: ['tabular-nums'],
-    lineHeight: 70, // Tight line height
-  },
-  scoreDivider: {
-    fontSize: 32,
-    fontWeight: '200',
-    marginBottom: 8,
-    marginHorizontal: 8,
-  },
-  scoreGroup: {
-    alignItems: 'center',
-  },
-  teamNameLabel: {
-    fontSize: 11,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: -4,
-    maxWidth: 100,
-  },
-
-  timerCompact: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    padding: 6,
-    paddingHorizontal: 12,
-    borderRadius: 24,
-    marginTop: 8,
-  },
-  timerBtnCompact: {
-    padding: 8,
-  },
-  timerDisplayCompact: {
-    alignItems: 'center',
-    minWidth: 90,
-  },
-  timerValueCompact: {
-    fontSize: 36,
-    fontWeight: '800',
-    fontVariant: ['tabular-nums'],
-  },
-  timerStateCompact: {
-    fontSize: 9,
-    fontWeight: '700',
-    letterSpacing: 0.5,
-  },
-  setLineBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingVertical: 4,
-  },
-  setLineBtnText: {
-    fontSize: 12,
-    fontWeight: '600',
-  },
-
-  // Right Side Styles
-  statsRowCompact: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  statCardCompact: {
-    flex: 1,
-    padding: 8,
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-  statValueCompact: {
-    fontSize: 20,
-    fontWeight: '800',
-  },
-  statLabelCompact: {
-    fontSize: 10,
-    fontWeight: '700',
-    marginTop: 2,
-    letterSpacing: 0.5,
-  },
-  performersListCompact: {
-    gap: 4,
-    marginTop: 12,
-    flex: 1,
-    justifyContent: 'center',
-    width: '100%',
-    maxWidth: 220, // Constrain width to keep badge closer
-    alignSelf: 'center',
-  },
-  performerRowCompact: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between', // Align ends
-    gap: 8,
-    paddingVertical: 2,
-  },
-  performerRankCompact: {
-    fontSize: 12,
-    fontWeight: '800',
-    width: 16,
-    color: '#888', // Muted rank color
-  },
-  performerNameCompact: {
-    flex: 1,
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  performerBadge: {
-    paddingHorizontal: 6,
-    paddingVertical: 1,
-    borderRadius: 4,
-    minWidth: 28,
-    alignItems: 'center',
-  },
-  performerStatCompact: {
-    fontSize: 11,
-    fontWeight: '800',
-    fontVariant: ['tabular-nums'],
-  },
-
-  continueBtnCompact: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 12,
-    paddingHorizontal: 32,
-    borderRadius: 8,
-    width: '100%',
-  },
-  continueBtnTextCompact: {
-    fontSize: 14,
-    fontWeight: '800',
-    letterSpacing: 1,
-  },
-  closeBtn: {
-    position: 'absolute',
-    top: 12,
-    right: 12,
-    padding: 4,
-    zIndex: 20,
-  },
-});
+function createStyles(isLandscape: boolean) {
+  return StyleSheet.create({
+    overlay: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    container: {
+      width: '100%',
+      maxWidth: 680,
+      maxHeight: '90%',
+      borderRadius: 16,
+      overflow: 'hidden',
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 8 },
+      shadowOpacity: 0.4,
+      shadowRadius: 12,
+      elevation: 8,
+    },
+    contentRow: {
+      flexDirection: isLandscape ? 'row' : 'column',
+      minHeight: isLandscape ? 240 : 0,
+      ...(!isLandscape && { alignItems: 'stretch', gap: 8 }),
+    },
+    contentRowCompact: {
+      minHeight: 0,
+    },
+    leftColumn: {
+      flex: isLandscape ? 1 : 0,
+      padding: 24,
+      justifyContent: isLandscape ? 'space-between' : 'center',
+      alignItems: 'center',
+      ...(!isLandscape && { gap: 16 }),
+    },
+    leftColumnCompact: {
+      justifyContent: 'center',
+      gap: 16,
+    },
+    rightColumn: {
+      flex: isLandscape ? 1.1 : 0,
+      padding: 16,
+      paddingTop: 24,
+      justifyContent: isLandscape ? 'space-between' : 'center',
+      ...(!isLandscape && { gap: 12 }),
+    },
+    divider: isLandscape
+      ? {
+          width: 1,
+          height: '80%',
+          alignSelf: 'center',
+        }
+      : {
+          width: '80%',
+          height: 1,
+          alignSelf: 'center',
+        },
+    headerRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      alignSelf: 'center',
+      paddingTop: 16,
+      paddingBottom: 4,
+      gap: 10,
+      zIndex: 10,
+      ...(!isLandscape && { flexWrap: 'wrap', justifyContent: 'center' }),
+    },
+    headerSection: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    receivingText: {
+      fontSize: 13,
+      fontWeight: '600',
+    },
+    headerText: {
+      fontSize: 12,
+      fontWeight: '800',
+      letterSpacing: 2,
+    },
+    scoreCompact: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+    },
+    scoreNumber: {
+      fontSize: 64,
+      fontWeight: '900',
+      fontVariant: ['tabular-nums'],
+      lineHeight: 70,
+    },
+    scoreDivider: {
+      fontSize: 32,
+      fontWeight: '200',
+      marginBottom: 8,
+      marginHorizontal: 8,
+    },
+    scoreGroup: {
+      alignItems: 'center',
+    },
+    teamNameLabel: {
+      fontSize: 11,
+      fontWeight: '700',
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+      marginBottom: -4,
+      maxWidth: 100,
+    },
+    timerCompact: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      padding: 6,
+      paddingHorizontal: 12,
+      borderRadius: 24,
+      marginTop: 8,
+    },
+    timerBtnCompact: {
+      padding: 8,
+    },
+    timerDisplayCompact: {
+      alignItems: 'center',
+      minWidth: 90,
+    },
+    timerValueCompact: {
+      fontSize: 36,
+      fontWeight: '800',
+      fontVariant: ['tabular-nums'],
+    },
+    timerStateCompact: {
+      fontSize: 9,
+      fontWeight: '700',
+      letterSpacing: 0.5,
+    },
+    setLineBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      paddingVertical: 4,
+      paddingHorizontal: 8,
+      borderRadius: 8,
+    },
+    setLineBtnText: {
+      fontSize: 12,
+      fontWeight: '600',
+    },
+    statsRowCompact: {
+      flexDirection: 'row',
+      gap: 12,
+    },
+    statCardCompact: {
+      flex: 1,
+      padding: 8,
+      borderRadius: 12,
+      alignItems: 'center',
+    },
+    statValueCompact: {
+      fontSize: 20,
+      fontWeight: '800',
+    },
+    statLabelCompact: {
+      fontSize: 10,
+      fontWeight: '700',
+      marginTop: 2,
+      letterSpacing: 0.5,
+    },
+    performersListCompact: {
+      gap: 4,
+      marginTop: 12,
+      flex: isLandscape ? 1 : 0,
+      justifyContent: 'center',
+      width: '100%',
+      maxWidth: 220,
+      alignSelf: 'center',
+    },
+    performerRowCompact: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: 8,
+      paddingVertical: 2,
+    },
+    performerRankCompact: {
+      fontSize: 12,
+      fontWeight: '800',
+      width: 16,
+    },
+    performerNameCompact: {
+      flex: 1,
+      fontSize: 13,
+      fontWeight: '600',
+    },
+    performerBadge: {
+      paddingHorizontal: 6,
+      paddingVertical: 1,
+      borderRadius: 4,
+      minWidth: 28,
+      alignItems: 'center',
+    },
+    performerStatCompact: {
+      fontSize: 11,
+      fontWeight: '800',
+      fontVariant: ['tabular-nums'],
+    },
+    continueBtnCompact: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+      paddingVertical: 12,
+      paddingHorizontal: 32,
+      borderRadius: 8,
+      width: '100%',
+    },
+    continueBtnTextCompact: {
+      fontSize: 14,
+      fontWeight: '800',
+      letterSpacing: 1,
+    },
+    closeBtn: {
+      position: 'absolute',
+      top: 12,
+      right: 12,
+      padding: 4,
+      zIndex: 20,
+    },
+  });
+}

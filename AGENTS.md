@@ -11,11 +11,12 @@ Primary reference sources:
 - `.agent/workflows/*.md`
 - `docs/README.md`
 - `docs/architecture-rules.md`
+- `docs/responsive-layout.md`
 
 ## Fast Start (First 2 Minutes)
 
 1. Read `docs/README.md` for feature map and terminology.
-2. Read `docs/architecture-rules.md` for non-negotiable patterns.
+2. Read `docs/architecture-rules.md` and `docs/responsive-layout.md` for non-negotiable patterns.
 3. Identify owning store before changing state (`store/gameStore.ts` plus related stores).
 4. If touching stat entry or view stats, plan matching doc updates in `docs/`.
 
@@ -93,7 +94,9 @@ Primary reference sources:
 - Use early returns where practical.
 - Use `AlertProvider`; do not use native `Alert.alert`.
 - Do not use `runOnJs`; use `scheduleOnRn`.
-- App is landscape-locked; evaluate layouts in landscape assumptions - OUTDATED, migrating screens now.
+- App supports both portrait and landscape via `useLayout()` + `createStyles()` (see `docs/responsive-layout.md`).
+- Do not use `useWindowDimensions` directly in screens/components; use `useLayout()` instead.
+- Do not use orientation-based conditional style arrays (`!isLandscape && ...`); encode orientation in `createStyles()`.
 - For modal UX/patterns, follow `docs/modals.md`.
 
 ## Navigation/Modal Rules
@@ -117,14 +120,21 @@ Primary reference sources:
 
 - Project overview: `docs/README.md`
 - Architecture rules: `docs/architecture-rules.md`
+- Responsive layout pattern: `docs/responsive-layout.md`
+- State ownership map: `docs/state-ownership.md`
+- Navigation map: `docs/navigation-map.md`
+- Event model: `docs/event-model.md`
+- UI patterns: `docs/ui-patterns.md`
 - Game logic/scoring/caps: `docs/game-logic.md`
 - Stat entry: `docs/stat-tracking.md`
 - Turnovers: `docs/turnover-tracking.md`
 - View stats: `docs/view-stats.md`
 - Modals: `docs/modals.md`
 - Testing: `docs/testing.md`
+- Testing map: `docs/testing-map.md`
 - Point timer: `docs/point-timer.md`
 - Line recording/selection: `docs/line-selection.md`
+- Tech debt backlog: `docs/tech-debt.md`
 
 When changing behavior in these areas, update the corresponding docs in the same change.
 
@@ -138,6 +148,7 @@ When changing behavior in these areas, update the corresponding docs in the same
 
 ## Release/Deployment Runbooks
 
+- Development build workflow: `.agent/workflows/dev-build.md`
 - OTA update workflow: `.agent/workflows/eas-update.md`
 - Production build checklist: `.agent/workflows/prod-build.md`
 - Feature branch workflow: `.agent/workflows/feature-branch.md`

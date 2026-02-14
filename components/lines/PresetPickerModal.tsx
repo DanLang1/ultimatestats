@@ -3,7 +3,7 @@ import { LinePreset } from '@/lib/storage/types';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 interface PresetPickerModalProps {
   visible: boolean;
@@ -23,7 +23,6 @@ export function PresetPickerModal({
   onEditPresets,
 }: PresetPickerModalProps) {
   const { palette } = useTheme();
-  const insets = useSafeAreaInsets();
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
@@ -36,7 +35,7 @@ export function PresetPickerModal({
               styles.bottomSheet,
               {
                 backgroundColor: palette.modalBg,
-                paddingBottom: insets.bottom + 16,
+                paddingBottom: 16,
               },
             ]}
             onPress={(e) => e.stopPropagation()}>

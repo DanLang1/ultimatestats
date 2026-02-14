@@ -1,24 +1,20 @@
 import HelpContent from '@/components/HelpContent';
 import { ThemedView } from '@/components/ThemedView';
 import { useTheme } from '@/context/ThemeContext';
-import { useOrientationLock } from '@/hooks/useOrientationLock';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router, Stack } from 'expo-router';
 import React from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function HelpScreen() {
-  useOrientationLock();
   const { palette } = useTheme();
-  const insets = useSafeAreaInsets();
 
   return (
     <ThemedView style={[styles.container, { backgroundColor: palette.primary }]}>
       <Stack.Screen options={{ headerShown: false }} />
 
       {/* Header */}
-      <View style={[styles.header, { paddingTop: Math.max(insets.top, 16) }]}>
+      <View style={styles.header}>
         <Pressable
           onPress={() => router.back()}
           style={[styles.backButton, { backgroundColor: palette.overlay10 }]}
@@ -30,10 +26,7 @@ export default function HelpScreen() {
       </View>
 
       <ScrollView
-        contentContainerStyle={[
-          styles.scrollContent,
-          { paddingBottom: Math.max(24, insets.bottom) },
-        ]}>
+        contentContainerStyle={[styles.scrollContent]}>
         <HelpContent showActionBarLegend={true} />
       </ScrollView>
     </ThemedView>
@@ -49,7 +42,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingTop: 16,
+    paddingTop: 8,
     paddingBottom: 12,
   },
   backButton: {

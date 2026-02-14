@@ -2,7 +2,6 @@ import { ThemedView } from '@/components/ThemedView';
 import { useAlert } from '@/components/ui/AlertProvider';
 import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import { useTheme } from '@/context/ThemeContext';
-import { useOrientationLock } from '@/hooks/useOrientationLock';
 import {
   extractApiErrorMessage,
   fetchImportTeamPayload,
@@ -13,6 +12,7 @@ import { NAME_FORMAT_OPTIONS, NameFormatOption } from '@/lib/import-team/types';
 import { useGameStore } from '@/store/gameStore';
 import { MaterialIcons } from '@expo/vector-icons';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import * as Clipboard from 'expo-clipboard';
 import { router, Stack } from 'expo-router';
 import React, { useState } from 'react';
 import {
@@ -26,13 +26,10 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const DISCORD_URL = 'https://discord.gg/AjsmqhZ2GH';
 
 export default function ImportTeamScreen() {
-  useOrientationLock();
-  const insets = useSafeAreaInsets();
   const { palette } = useTheme();
   const { showAlert } = useAlert();
   const { savedTeams, importTeam, loadTeam } = useGameStore();
@@ -43,6 +40,33 @@ export default function ImportTeamScreen() {
   const [isFetching, setIsFetching] = useState(false);
 
   const isUsauDomainLink = (value: string) => value.toLowerCase().includes('play.usaultimate.org');
+
+  const handlePasteTeamLink = async () => {
+    try {
+      const clipboardValue = (await Clipboard.getStringAsync()).trim();
+
+      if (!clipboardValue) {
+        showAlert({
+          title: 'Clipboard Empty',
+          message: 'Copy a USA Ultimate team link first, then tap Paste.',
+          buttons: [{ text: 'OK', style: 'default' }],
+        });
+        return;
+      }
+
+      setTeamLink(clipboardValue);
+      if (linkError && isUsauDomainLink(clipboardValue)) {
+        setLinkError(null);
+      }
+    } catch (error) {
+      console.error('[ImportTeam] clipboard read error', error);
+      showAlert({
+        title: 'Paste Failed',
+        message: 'Could not read clipboard text. Try again.',
+        buttons: [{ text: 'OK', style: 'default' }],
+      });
+    }
+  };
 
   const handleFetchRoster = async () => {
     const trimmedLink = teamLink.trim();
@@ -121,8 +145,7 @@ export default function ImportTeamScreen() {
   };
 
   return (
-    <ThemedView
-      style={[styles.container, { backgroundColor: palette.primary, paddingTop: insets.top }]}>
+    <ThemedView style={[styles.container, { backgroundColor: palette.primary }]}>
       <Stack.Screen options={{ headerShown: false }} />
 
       <View style={styles.header}>
@@ -136,35 +159,43 @@ export default function ImportTeamScreen() {
         <View style={styles.headerSpacer} />
       </View>
 
-      <ScrollView
-        contentContainerStyle={[
-          styles.scrollContent,
-          { paddingBottom: Math.max(24, insets.bottom) },
-        ]}>
+      <ScrollView contentContainerStyle={[styles.scrollContent]}>
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: palette.textInverse }]}>TEAM LINK</Text>
-          <TextInput
-            style={[
-              styles.linkInput,
-              {
-                borderColor: linkError ? palette.danger : palette.overlay20,
-                color: palette.textInverse,
-                backgroundColor: palette.overlay08,
-              },
-            ]}
-            value={teamLink}
-            onChangeText={(nextValue) => {
-              setTeamLink(nextValue);
-              if (linkError && isUsauDomainLink(nextValue.trim())) {
-                setLinkError(null);
-              }
-            }}
-            autoCapitalize="none"
-            autoCorrect={false}
-            keyboardType="url"
-            placeholder="Paste USA Ultimate team URL"
-            placeholderTextColor={palette.textMuted}
-          />
+          <View style={styles.linkRow}>
+            <TextInput
+              style={[
+                styles.linkInput,
+                {
+                  borderColor: linkError ? palette.danger : palette.overlay20,
+                  color: palette.textInverse,
+                  backgroundColor: palette.overlay08,
+                },
+              ]}
+              value={teamLink}
+              onChangeText={(nextValue) => {
+                setTeamLink(nextValue);
+                if (linkError && isUsauDomainLink(nextValue.trim())) {
+                  setLinkError(null);
+                }
+              }}
+              autoCapitalize="none"
+              autoCorrect={false}
+              keyboardType="url"
+              placeholder="Click button to paste ->"
+              placeholderTextColor={palette.textMuted}
+            />
+            <Pressable
+              onPress={handlePasteTeamLink}
+              style={({ pressed }) => [
+                styles.pasteButton,
+                { borderColor: palette.overlay20, backgroundColor: palette.overlay08 },
+                pressed && styles.buttonPressed,
+              ]}>
+              <MaterialCommunityIcons name="content-paste" size={20} color={palette.textInverse} />
+              <Text style={[styles.pasteButtonText, { color: palette.textInverse }]}>Paste</Text>
+            </Pressable>
+          </View>
           {linkError && (
             <Text style={[styles.errorText, { color: palette.danger }]}>{linkError}</Text>
           )}
@@ -260,7 +291,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingTop: 16,
+    paddingTop: 8,
     paddingBottom: 12,
   },
   backButton: {
@@ -289,12 +320,33 @@ const styles = StyleSheet.create({
   section: {
     gap: 8,
   },
+  linkRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
   linkInput: {
+    flex: 1,
     height: 48,
     borderWidth: 1,
     borderRadius: 10,
     paddingHorizontal: 14,
     fontSize: 16,
+  },
+  pasteButton: {
+    height: 48,
+    borderRadius: 10,
+    borderWidth: 1,
+    paddingHorizontal: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  pasteButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
+    letterSpacing: 0.2,
   },
   sectionTitle: {
     fontSize: 12,

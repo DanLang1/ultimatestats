@@ -24,7 +24,7 @@ function RootLayoutInner() {
         flex: 1,
         backgroundColor: safeAreaBg,
       }}
-      edges={['left', 'right']}>
+      edges={['top', 'bottom', 'left', 'right']}>
       <GestureHandlerRootView style={{ flex: 1 }}>
         <Stack
           screenOptions={{

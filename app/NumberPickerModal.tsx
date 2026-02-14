@@ -1,4 +1,5 @@
 import { useTheme } from '@/context/ThemeContext';
+import { useLayout } from '@/hooks/useLayout';
 import { useNumberPickerStore } from '@/store/numberPickerStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router } from 'expo-router';
@@ -7,6 +8,8 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 export default function NumberPickerModal() {
   const { palette } = useTheme();
+  const { isLandscape } = useLayout();
+  const styles = createStyles(isLandscape);
   const { isActive, value, min, max, label, suffix, quickOptions, save, close } =
     useNumberPickerStore();
 
@@ -49,6 +52,12 @@ export default function NumberPickerModal() {
     router.back();
   };
 
+  const keypadRows = [
+    [1, 2, 3],
+    [4, 5, 6],
+    [7, 8, 9],
+  ] as const;
+
   return (
     <View style={StyleSheet.absoluteFill}>
       <Pressable
@@ -68,10 +77,10 @@ export default function NumberPickerModal() {
             </Text>
           </View>
 
-          {/* Main Content - Horizontal Layout */}
+          {/* Main Content */}
           <View style={styles.content}>
-            {/* Left - Value Display */}
-            <View style={styles.valueDisplayContainer}>
+            {/* Value Display */}
+            <View style={[styles.valueDisplayContainer, { borderBottomColor: palette.overlay15 }]}>
               <Text
                 style={[
                   styles.largeValue,
@@ -86,67 +95,128 @@ export default function NumberPickerModal() {
               )}
             </View>
 
-            {/* Right - Numpad */}
-            <View style={styles.numpadContainer}>
-              <View style={styles.numpadRow}>
-                {[1, 2, 3, 4, 5].map((digit) => (
+            {/* Numpad */}
+            {isLandscape ? (
+              <View style={styles.numpadContainer}>
+                <View style={styles.numpadRow}>
+                  {[1, 2, 3, 4, 5].map((digit) => (
+                    <Pressable
+                      key={digit}
+                      onPress={() => handleDigitPress(digit)}
+                      style={({ pressed }) => [
+                        styles.numpadButton,
+                        { backgroundColor: palette.overlay15 },
+                        pressed && { opacity: 0.6 },
+                      ]}>
+                      <Text style={[styles.numpadText, { color: palette.modalText }]}>{digit}</Text>
+                    </Pressable>
+                  ))}
                   <Pressable
-                    key={digit}
-                    onPress={() => handleDigitPress(digit)}
+                    onPress={handleBackspace}
                     style={({ pressed }) => [
                       styles.numpadButton,
-                      { backgroundColor: palette.overlay15 },
+                      { backgroundColor: palette.overlay20 },
                       pressed && { opacity: 0.6 },
                     ]}>
-                    <Text style={[styles.numpadText, { color: palette.modalText }]}>{digit}</Text>
+                    <MaterialCommunityIcons
+                      name="backspace-outline"
+                      size={24}
+                      color={palette.modalText}
+                    />
                   </Pressable>
-                ))}
-                <Pressable
-                  onPress={handleBackspace}
-                  style={({ pressed }) => [
-                    styles.numpadButton,
-                    { backgroundColor: palette.overlay20 },
-                    pressed && { opacity: 0.6 },
-                  ]}>
-                  <MaterialCommunityIcons
-                    name="backspace-outline"
-                    size={24}
-                    color={palette.modalText}
-                  />
-                </Pressable>
-              </View>
+                </View>
 
-              <View style={styles.numpadRow}>
-                {[6, 7, 8, 9, 0].map((digit) => (
+                <View style={styles.numpadRow}>
+                  {[6, 7, 8, 9, 0].map((digit) => (
+                    <Pressable
+                      key={digit}
+                      onPress={() => handleDigitPress(digit)}
+                      style={({ pressed }) => [
+                        styles.numpadButton,
+                        { backgroundColor: palette.overlay15 },
+                        pressed && { opacity: 0.6 },
+                      ]}>
+                      <Text style={[styles.numpadText, { color: palette.modalText }]}>{digit}</Text>
+                    </Pressable>
+                  ))}
                   <Pressable
-                    key={digit}
-                    onPress={() => handleDigitPress(digit)}
+                    onPress={handleClear}
                     style={({ pressed }) => [
                       styles.numpadButton,
+                      { backgroundColor: palette.overlay20 },
+                      pressed && { opacity: 0.6 },
+                    ]}>
+                    <Text style={[styles.numpadText, { color: palette.modalText, opacity: 0.6 }]}>
+                      C
+                    </Text>
+                  </Pressable>
+                </View>
+              </View>
+            ) : (
+              <View style={styles.numpadContainerPortrait}>
+                {keypadRows.map((row) => (
+                  <View key={row.join('-')} style={styles.numpadRow}>
+                    {row.map((digit) => (
+                      <Pressable
+                        key={digit}
+                        onPress={() => handleDigitPress(digit)}
+                        style={({ pressed }) => [
+                          styles.numpadButtonPortrait,
+                          { backgroundColor: palette.overlay15 },
+                          pressed && { opacity: 0.6 },
+                        ]}>
+                        <Text style={[styles.numpadText, { color: palette.modalText }]}>
+                          {digit}
+                        </Text>
+                      </Pressable>
+                    ))}
+                  </View>
+                ))}
+
+                <View style={styles.numpadRow}>
+                  <Pressable
+                    onPress={handleClear}
+                    style={({ pressed }) => [
+                      styles.numpadButtonPortrait,
+                      { backgroundColor: palette.overlay20 },
+                      pressed && { opacity: 0.6 },
+                    ]}>
+                    <Text style={[styles.numpadText, { color: palette.modalText, opacity: 0.6 }]}>
+                      C
+                    </Text>
+                  </Pressable>
+
+                  <Pressable
+                    onPress={() => handleDigitPress(0)}
+                    style={({ pressed }) => [
+                      styles.numpadButtonPortrait,
                       { backgroundColor: palette.overlay15 },
                       pressed && { opacity: 0.6 },
                     ]}>
-                    <Text style={[styles.numpadText, { color: palette.modalText }]}>{digit}</Text>
+                    <Text style={[styles.numpadText, { color: palette.modalText }]}>0</Text>
                   </Pressable>
-                ))}
-                <Pressable
-                  onPress={handleClear}
-                  style={({ pressed }) => [
-                    styles.numpadButton,
-                    { backgroundColor: palette.overlay20 },
-                    pressed && { opacity: 0.6 },
-                  ]}>
-                  <Text style={[styles.numpadText, { color: palette.modalText, opacity: 0.6 }]}>
-                    C
-                  </Text>
-                </Pressable>
+
+                  <Pressable
+                    onPress={handleBackspace}
+                    style={({ pressed }) => [
+                      styles.numpadButtonPortrait,
+                      { backgroundColor: palette.overlay20 },
+                      pressed && { opacity: 0.6 },
+                    ]}>
+                    <MaterialCommunityIcons
+                      name="backspace-outline"
+                      size={24}
+                      color={palette.modalText}
+                    />
+                  </Pressable>
+                </View>
               </View>
-            </View>
+            )}
           </View>
 
           {/* Quick Options - Below main content */}
           {quickOptions && quickOptions.length > 0 && (
-            <View style={styles.quickOptionsContainer}>
+            <View style={[styles.quickOptionsContainer]}>
               {Array.from(new Set(quickOptions)).map((opt) => (
                 <Pressable
                   key={opt}
@@ -201,104 +271,121 @@ export default function NumberPickerModal() {
   );
 }
 
-const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  container: {
-    borderRadius: 16,
-    borderWidth: 1,
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    gap: 12,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  title: {
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  rangeText: {
-    fontSize: 12,
-  },
-  content: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 24,
-  },
-  valueDisplayContainer: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    justifyContent: 'center',
-    minWidth: 120,
-    gap: 6,
-  },
-  largeValue: {
-    fontSize: 44,
-    fontWeight: '700',
-    fontVariant: ['tabular-nums'],
-  },
-  largeSuffix: {
-    fontSize: 18,
-    fontWeight: '500',
-  },
-  numpadContainer: {
-    gap: 6,
-  },
-  numpadRow: {
-    flexDirection: 'row',
-    gap: 6,
-  },
-  numpadButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  numpadText: {
-    fontSize: 20,
-    fontWeight: '600',
-  },
-  quickOptionsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    gap: 8,
-  },
-  quickOptionChip: {
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 16,
-    minWidth: 44,
-    alignItems: 'center',
-  },
-  quickOptionText: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  actionRow: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  actionButton: {
-    flex: 1,
-    height: 40,
-    borderRadius: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  cancelButton: {
-    borderWidth: 1,
-    backgroundColor: 'transparent',
-  },
-  saveButton: {},
-  actionButtonText: {
-    fontSize: 15,
-    fontWeight: '600',
-  },
-});
+function createStyles(isLandscape: boolean) {
+  return StyleSheet.create({
+    overlay: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    container: {
+      borderRadius: 16,
+      borderWidth: 1,
+      width: isLandscape ? undefined : '92%',
+      maxWidth: isLandscape ? undefined : 420,
+      paddingHorizontal: isLandscape ? 20 : 14,
+      paddingVertical: 16,
+      gap: 12,
+    },
+    header: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    title: {
+      fontSize: 16,
+      fontWeight: '700',
+    },
+    rangeText: {
+      fontSize: 12,
+    },
+    content: {
+      flexDirection: isLandscape ? 'row' : 'column',
+      alignItems: isLandscape ? 'center' : 'stretch',
+      gap: isLandscape ? 24 : 14,
+    },
+    valueDisplayContainer: {
+      flexDirection: 'row',
+      alignItems: 'baseline',
+      justifyContent: 'center',
+      minWidth: isLandscape ? 120 : 0,
+      paddingVertical: isLandscape ? 0 : 8,
+      borderBottomWidth: isLandscape ? 0 : 1,
+      gap: 6,
+    },
+    largeValue: {
+      fontSize: isLandscape ? 44 : 38,
+      fontWeight: '700',
+      fontVariant: ['tabular-nums'],
+    },
+    largeSuffix: {
+      fontSize: 18,
+      fontWeight: '500',
+    },
+    numpadContainer: {
+      gap: 6,
+    },
+    numpadContainerPortrait: {
+      gap: 6,
+    },
+    numpadRow: {
+      flexDirection: 'row',
+      gap: 6,
+    },
+    numpadButton: {
+      width: 44,
+      height: 44,
+      borderRadius: 8,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    numpadButtonPortrait: {
+      flex: 1,
+      height: 48,
+      borderRadius: 8,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    numpadText: {
+      fontSize: 20,
+      fontWeight: '600',
+    },
+    quickOptionsContainer: {
+      flexDirection: 'row',
+      justifyContent: isLandscape ? 'flex-end' : 'flex-start',
+      flexWrap: isLandscape ? 'nowrap' : 'wrap',
+      gap: 8,
+    },
+    quickOptionChip: {
+      paddingHorizontal: 14,
+      paddingVertical: 6,
+      borderRadius: 16,
+      minWidth: 44,
+      alignItems: 'center',
+    },
+    quickOptionText: {
+      fontSize: 14,
+      fontWeight: '600',
+    },
+    actionRow: {
+      flexDirection: 'row',
+      gap: 12,
+    },
+    actionButton: {
+      flex: 1,
+      height: 40,
+      borderRadius: 10,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    cancelButton: {
+      borderWidth: 1,
+      backgroundColor: 'transparent',
+    },
+    saveButton: {},
+    actionButtonText: {
+      fontSize: 15,
+      fontWeight: '600',
+    },
+  });
+}

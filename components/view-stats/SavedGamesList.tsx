@@ -1,12 +1,13 @@
 import { ScoreBadge } from '@/components/ui/ScoreBadge';
 import { useTheme } from '@/context/ThemeContext';
+import { useLayout } from '@/hooks/useLayout';
 import { resolveTeamName } from '@/lib/playerUtils';
 import { formatDate } from '@/lib/statsUtils';
 import { SavedGame } from '@/lib/storage';
 import { useGameStore } from '@/store/gameStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React, { useState } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, useWindowDimensions, View } from 'react-native';
+import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import Animated, { FadeOut, LinearTransition } from 'react-native-reanimated';
 
 interface SavedGamesListProps {
@@ -29,8 +30,8 @@ export default function SavedGamesList({
 }: SavedGamesListProps) {
   const { palette } = useTheme();
   const { savedTeams } = useGameStore();
-  const { width: dimWidth, height: dimHeight } = useWindowDimensions();
-  const isLandscape = dimWidth > dimHeight;
+  const { isLandscape } = useLayout();
+  const styles = createStyles(isLandscape);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [sortField, setSortField] = useState<SortField>('date');
@@ -121,7 +122,7 @@ export default function SavedGamesList({
   return (
     <View style={styles.container}>
       {/* Controls Header */}
-      <View style={[styles.controlsHeader, !isLandscape && styles.controlsHeaderPortrait]}>
+      <View style={styles.controlsHeader}>
         <View
           style={[
             styles.searchWrapper,
@@ -315,147 +316,145 @@ export default function SavedGamesList({
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    gap: 16,
-  },
-  controlsHeader: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  controlsHeaderPortrait: {
-    flexDirection: 'column',
-    gap: 8,
-  },
-  searchWrapper: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    height: 48,
-    borderRadius: 12,
-    borderWidth: 1,
-    gap: 10,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 16,
-    paddingVertical: 8,
-  },
-  sortPills: {
-    flexDirection: 'row',
-    gap: 6,
-  },
-  sortPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 10,
-    height: 48,
-    borderRadius: 12,
-    borderWidth: 1,
-    gap: 4,
-  },
-  sortPillText: {
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  emptyState: {
-    padding: 40,
-    alignItems: 'center',
-    gap: 16,
-    marginTop: 40,
-  },
-  emptyText: {
-    fontSize: 16,
-    textAlign: 'center',
-  },
-  emptySubtext: {
-    fontSize: 14,
-    textAlign: 'center',
-    opacity: 0.7,
-  },
-  noResults: {
-    padding: 20,
-    alignItems: 'center',
-  },
-  savedGamesList: {
-    gap: 12,
-  },
-  savedGameCard: {
-    borderRadius: 12,
-    borderWidth: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    overflow: 'hidden',
-  },
-  checkboxWrapper: {
-    paddingLeft: 16,
-    paddingRight: 8,
-    alignSelf: 'stretch',
-    justifyContent: 'center',
-  },
-  cardContent: {
-    flex: 1,
-    padding: 16,
-    paddingLeft: 8,
-  },
-  savedGameHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  checkbox: {
-    width: 22,
-    height: 22,
-    borderRadius: 6,
-    borderWidth: 2,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  savedGameDate: {
-    fontSize: 12,
-    fontWeight: '600',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  savedGameTeams: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  savedGameTeamsPortrait: {
-    gap: 4,
-  },
-  teamScoreRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  teamScoreValue: {
-    fontSize: 18,
-    fontWeight: '700',
-    fontVariant: ['tabular-nums'],
-    minWidth: 28,
-    textAlign: 'right',
-  },
-  savedGameTeamName: {
-    flex: 1,
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  savedGameTeamRight: {
-    textAlign: 'right',
-  },
-  savedGameMeta: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginTop: 12,
-    paddingTop: 12,
-    borderTopWidth: 1,
-  },
-  savedGameMetaText: {
-    fontSize: 12,
-  },
-});
+function createStyles(isLandscape: boolean) {
+  return StyleSheet.create({
+    container: {
+      gap: 16,
+    },
+    controlsHeader: {
+      flexDirection: isLandscape ? 'row' : 'column',
+      gap: isLandscape ? 12 : 8,
+    },
+    searchWrapper: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 16,
+      height: 48,
+      borderRadius: 12,
+      borderWidth: 1,
+      gap: 10,
+    },
+    searchInput: {
+      flex: 1,
+      fontSize: 16,
+      paddingVertical: 8,
+    },
+    sortPills: {
+      flexDirection: 'row',
+      gap: 6,
+    },
+    sortPill: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 10,
+      height: 48,
+      borderRadius: 12,
+      borderWidth: 1,
+      gap: 4,
+    },
+    sortPillText: {
+      fontSize: 12,
+      fontWeight: '600',
+    },
+    emptyState: {
+      padding: 40,
+      alignItems: 'center',
+      gap: 16,
+      marginTop: 40,
+    },
+    emptyText: {
+      fontSize: 16,
+      textAlign: 'center',
+    },
+    emptySubtext: {
+      fontSize: 14,
+      textAlign: 'center',
+      opacity: 0.7,
+    },
+    noResults: {
+      padding: 20,
+      alignItems: 'center',
+    },
+    savedGamesList: {
+      gap: 12,
+    },
+    savedGameCard: {
+      borderRadius: 12,
+      borderWidth: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      overflow: 'hidden',
+    },
+    checkboxWrapper: {
+      paddingLeft: 16,
+      paddingRight: 8,
+      alignSelf: 'stretch',
+      justifyContent: 'center',
+    },
+    cardContent: {
+      flex: 1,
+      padding: 16,
+      paddingLeft: 8,
+    },
+    savedGameHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 12,
+    },
+    checkbox: {
+      width: 22,
+      height: 22,
+      borderRadius: 6,
+      borderWidth: 2,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    savedGameDate: {
+      fontSize: 12,
+      fontWeight: '600',
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+    },
+    savedGameTeams: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+    },
+    savedGameTeamsPortrait: {
+      gap: 4,
+    },
+    teamScoreRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    teamScoreValue: {
+      fontSize: 18,
+      fontWeight: '700',
+      fontVariant: ['tabular-nums'],
+      minWidth: 28,
+      textAlign: 'right',
+    },
+    savedGameTeamName: {
+      flex: 1,
+      fontSize: 16,
+      fontWeight: '600',
+    },
+    savedGameTeamRight: {
+      textAlign: 'right',
+    },
+    savedGameMeta: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      marginTop: 12,
+      paddingTop: 12,
+      borderTopWidth: 1,
+    },
+    savedGameMetaText: {
+      fontSize: 12,
+    },
+  });
+}

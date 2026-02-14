@@ -17,10 +17,11 @@
 
 ## Navigation & Layout Rules
 
-- **App supports both portrait and landscape** - use `useOrientationLock()` hook on screens that should allow portrait
+- **App supports both portrait and landscape** — use `useLayout()` hook and `createStyles()` pattern (see `docs/responsive-layout.md`). Never use `useWindowDimensions` directly in components.
 - Use `router.dismissTo('/')` not `router.back()` in modals (avoids "action not handled" errors)
 - **Use `<Redirect href="..." />` for conditional navigation** - never call `router.navigate()` or `router.dismissTo()` during render (causes "cannot update a component while rendering" error). The `<Redirect>` component is declarative and React-safe.
 - Single `SafeAreaProvider` at root only - don't add `SafeAreaView` in individual screens
+- Screen headers should keep a small explicit top gutter (`paddingTop: 8`) so controls do not sit flush to the top edge in landscape
 - Apply consistent `contentStyle` background in `_layout.tsx` to prevent screen flickering
 - For modals, set `gestureEnabled: false` and handle dismissal explicitly
 

@@ -1,4 +1,5 @@
 import { useTheme } from '@/context/ThemeContext';
+import { useLayout } from '@/hooks/useLayout';
 import { getPlayerName } from '@/lib/playerUtils';
 import {
   computePlayingTimeStats,
@@ -12,14 +13,7 @@ import { usePlayerStatsStore } from '@/store/playerStatsStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
-import {
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  useWindowDimensions,
-  View,
-} from 'react-native';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 type SortKey =
   | 'name'
@@ -56,8 +50,7 @@ export default function StatsTable({
   gameTo = 15,
 }: StatsTableProps) {
   const { palette } = useTheme();
-  const { width: dimWidth, height: dimHeight } = useWindowDimensions();
-  const isLandscape = dimWidth > dimHeight;
+  const { isLandscape } = useLayout();
   const [sortConfig, setSortConfig] = useState<{
     key: SortKey;
     direction: 'asc' | 'desc';
@@ -71,6 +64,7 @@ export default function StatsTable({
 
   // Only show playing time columns if we have data
   const hasPlayingTimeData = playingTimeStats !== null && playingTimeStats.size > 0;
+  const styles = createStyles(isLandscape, hasPlayingTimeData);
 
   // Helper to get playing time stats for a player by ID
   const getPlayingTimeStats = (playerId: string): PlayingTimeStats | null => {
@@ -226,12 +220,7 @@ export default function StatsTable({
         </View>
       )}
       <ScrollView horizontal={!isLandscape} showsHorizontalScrollIndicator={!isLandscape}>
-        <View
-          style={[
-            styles.tableContainer,
-            { borderColor: palette.overlay10 },
-            !isLandscape && { minWidth: hasPlayingTimeData ? 680 : 480 },
-          ]}>
+        <View style={[styles.tableContainer, { borderColor: palette.overlay10 }]}>
           {/* Table Header */}
           <View
             style={[
@@ -508,114 +497,117 @@ export default function StatsTable({
   );
 }
 
-const styles = StyleSheet.create({
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  sectionTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  legendContainer: {
-    borderRadius: 8,
-    borderWidth: 1,
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    marginBottom: 10,
-  },
-  legendGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    columnGap: 20,
-    rowGap: 6,
-  },
-  legendItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    width: '45%',
-    gap: 6,
-  },
-  legendAbbr: {
-    fontSize: 11,
-    fontWeight: '700',
-    minWidth: 32,
-  },
-  legendLabel: {
-    fontSize: 11,
-  },
-  sectionTitle: {
-    fontSize: 12,
-    fontWeight: '700',
-    letterSpacing: 1,
-  },
-  tableContainer: {
-    borderRadius: 12,
-    overflow: 'hidden',
-    borderWidth: 1,
-  },
-  tableHeader: {
-    flexDirection: 'row',
-    borderBottomWidth: 1,
-  },
-  headerCell: {
-    flex: 1,
-    paddingVertical: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  headerNameCell: {
-    flex: 1.8,
-    alignItems: 'flex-start',
-    justifyContent: 'flex-start',
-    paddingLeft: 12,
-    paddingRight: 8,
-  },
-  headerText: {
-    fontSize: 10,
-    fontWeight: '800',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  sortableHeader: {
-    flexDirection: 'row',
-  },
-  tableRow: {
-    flexDirection: 'row',
-    paddingVertical: 14,
-    paddingHorizontal: 12,
-    backgroundColor: 'transparent',
-    alignItems: 'center',
-    borderBottomWidth: 1,
-  },
-  cell: {
-    flex: 1,
-    fontSize: 13,
-    textAlign: 'center',
-    fontWeight: '500',
-  },
-  nameCell: {
-    flex: 1.8,
-    textAlign: 'left',
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  headerHint: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    opacity: 0.6,
-  },
-  headerHintText: {
-    fontSize: 10,
-    fontWeight: '600',
-    letterSpacing: 0.5,
-    textTransform: 'uppercase',
-  },
-  plusMinusCell: {
-    fontWeight: '800',
-  },
-});
+function createStyles(isLandscape: boolean, hasPlayingTimeData: boolean) {
+  return StyleSheet.create({
+    sectionHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 12,
+    },
+    sectionTitleRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+    },
+    legendContainer: {
+      borderRadius: 8,
+      borderWidth: 1,
+      paddingVertical: 10,
+      paddingHorizontal: 14,
+      marginBottom: 10,
+    },
+    legendGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      columnGap: 20,
+      rowGap: 6,
+    },
+    legendItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      width: '45%',
+      gap: 6,
+    },
+    legendAbbr: {
+      fontSize: 11,
+      fontWeight: '700',
+      minWidth: 32,
+    },
+    legendLabel: {
+      fontSize: 11,
+    },
+    sectionTitle: {
+      fontSize: 12,
+      fontWeight: '700',
+      letterSpacing: 1,
+    },
+    tableContainer: {
+      borderRadius: 12,
+      overflow: 'hidden',
+      borderWidth: 1,
+      minWidth: isLandscape ? undefined : hasPlayingTimeData ? 680 : 480,
+    },
+    tableHeader: {
+      flexDirection: 'row',
+      borderBottomWidth: 1,
+    },
+    headerCell: {
+      flex: 1,
+      paddingVertical: 12,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    headerNameCell: {
+      flex: 1.8,
+      alignItems: 'flex-start',
+      justifyContent: 'flex-start',
+      paddingLeft: 12,
+      paddingRight: 8,
+    },
+    headerText: {
+      fontSize: 10,
+      fontWeight: '800',
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+    },
+    sortableHeader: {
+      flexDirection: 'row',
+    },
+    tableRow: {
+      flexDirection: 'row',
+      paddingVertical: 14,
+      paddingHorizontal: 12,
+      backgroundColor: 'transparent',
+      alignItems: 'center',
+      borderBottomWidth: 1,
+    },
+    cell: {
+      flex: 1,
+      fontSize: 13,
+      textAlign: 'center',
+      fontWeight: '500',
+    },
+    nameCell: {
+      flex: 1.8,
+      textAlign: 'left',
+      fontSize: 13,
+      fontWeight: '600',
+    },
+    headerHint: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      opacity: 0.6,
+    },
+    headerHintText: {
+      fontSize: 10,
+      fontWeight: '600',
+      letterSpacing: 0.5,
+      textTransform: 'uppercase',
+    },
+    plusMinusCell: {
+      fontWeight: '800',
+    },
+  });
+}

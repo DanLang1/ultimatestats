@@ -1,10 +1,11 @@
 import { PlayerChip } from '@/components/ui/PlayerChip';
 import { useTheme } from '@/context/ThemeContext';
+import { useLayout } from '@/hooks/useLayout';
 import { computePlayingTime, formatPlayingTime } from '@/lib/lineUtils';
 import { Player, PointLineRecord } from '@/lib/storage/types';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React, { useRef } from 'react';
-import { ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 function sortPlayers(
   players: Player[],
@@ -108,8 +109,8 @@ export function ModalPlayerGrid({
   currentPoint,
 }: ModalPlayerGridProps) {
   const { palette } = useTheme();
-  const { width: dimWidth, height: dimHeight } = useWindowDimensions();
-  const isLandscape = dimWidth > dimHeight;
+  const { isLandscape } = useLayout();
+  const styles = createStyles(isLandscape);
 
   // Determine colors based on context
   const labelColor = useModalColorsProp ? palette.modalTextMuted : palette.textMuted;
@@ -175,12 +176,10 @@ export function ModalPlayerGrid({
     }
   }
 
-  const columnStyle = [styles.column, !isLandscape && styles.columnPortrait];
-
   const renderMixedColumn = (key: ColumnKey) => {
     const players = columns.get(key) ?? [];
     return (
-      <View key={key} style={columnStyle}>
+      <View key={key} style={styles.column}>
         <Text style={[styles.columnLabel, { color: labelColor }]}>{MIXED_COLUMN_LABELS[key]}</Text>
         <View style={styles.columnChips}>{players.map(renderPlayerChip)}</View>
       </View>
@@ -190,7 +189,7 @@ export function ModalPlayerGrid({
   const renderGenericColumn = (key: GenericColumnKey) => {
     const players = genericColumns.get(key) ?? [];
     return (
-      <View key={key} style={columnStyle}>
+      <View key={key} style={styles.column}>
         <Text style={[styles.columnLabel, { color: labelColor }]}>
           {GENERIC_COLUMN_LABELS[key]}
         </Text>
@@ -255,7 +254,7 @@ export function ModalPlayerGrid({
         showsVerticalScrollIndicator
         contentContainerStyle={styles.scrollContent}
         nestedScrollEnabled>
-        <View style={[styles.fourColumnContainer, !isLandscape && styles.wrappedContainer]}>
+        <View style={styles.fourColumnContainer}>
           {activeGenericColumns.map(renderGenericColumn)}
         </View>
       </ScrollView>
@@ -285,7 +284,7 @@ export function ModalPlayerGrid({
             MIXED_COLUMN_LABELS[activePrimaryColumns[0]],
           )
         ) : (
-          <View style={[styles.fourColumnContainer, !isLandscape && styles.wrappedContainer]}>
+          <View style={styles.fourColumnContainer}>
             {activePrimaryColumns.map(renderMixedColumn)}
           </View>
         ))}
@@ -300,7 +299,7 @@ export function ModalPlayerGrid({
             )}
           </View>
         ) : (
-          <View style={[styles.threeColumnContainer, !isLandscape && styles.wrappedContainer]}>
+          <View style={styles.threeColumnContainer}>
             {activeSecondaryColumns.map(renderMixedColumn)}
           </View>
         ))}
@@ -308,73 +307,72 @@ export function ModalPlayerGrid({
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    overflow: 'hidden',
-  },
-  scrollContent: {
-    paddingVertical: 4,
-    paddingBottom: 12,
-  },
-  fourColumnContainer: {
-    flexDirection: 'row',
-    gap: 6,
-  },
-  threeColumnContainer: {
-    flexDirection: 'row',
-    gap: 6,
-    marginTop: 14,
-  },
-  wrappedContainer: {
-    flexWrap: 'wrap',
-    rowGap: 12,
-  },
-  splitColumnWrapper: {
-    gap: 5,
-  },
-  splitColumnsRow: {
-    flexDirection: 'row',
-    gap: 6,
-  },
-  splitColumn: {
-    flex: 1,
-    gap: 6,
-    alignItems: 'stretch',
-  },
-  secondarySplitWrapper: {
-    marginTop: 14,
-  },
-  column: {
-    flex: 1,
-    gap: 5,
-  },
-  columnPortrait: {
-    flex: 0,
-    flexBasis: '47%',
-  },
-  columnLabel: {
-    fontSize: 9,
-    fontWeight: '700',
-    letterSpacing: 0.5,
-    textTransform: 'uppercase',
-    textAlign: 'center',
-  },
-  columnChips: {
-    gap: 6,
-    alignItems: 'stretch',
-  },
-  emptyState: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 40,
-    gap: 8,
-  },
-  emptyText: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  emptyHint: {
-    fontSize: 13,
-  },
-});
+function createStyles(isLandscape: boolean) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      overflow: 'hidden',
+    },
+    scrollContent: {
+      paddingVertical: 4,
+      paddingBottom: 12,
+    },
+    fourColumnContainer: {
+      flexDirection: 'row',
+      gap: 6,
+      flexWrap: isLandscape ? 'nowrap' : 'wrap',
+      rowGap: isLandscape ? 0 : 12,
+    },
+    threeColumnContainer: {
+      flexDirection: 'row',
+      gap: 6,
+      marginTop: 14,
+      flexWrap: isLandscape ? 'nowrap' : 'wrap',
+      rowGap: isLandscape ? 0 : 12,
+    },
+    splitColumnWrapper: {
+      gap: 5,
+    },
+    splitColumnsRow: {
+      flexDirection: 'row',
+      gap: 6,
+    },
+    splitColumn: {
+      flex: 1,
+      gap: 6,
+      alignItems: 'stretch',
+    },
+    secondarySplitWrapper: {
+      marginTop: 14,
+    },
+    column: {
+      flex: isLandscape ? 1 : 0,
+      flexBasis: isLandscape ? undefined : '47%',
+      gap: 5,
+    },
+    columnLabel: {
+      fontSize: 9,
+      fontWeight: '700',
+      letterSpacing: 0.5,
+      textTransform: 'uppercase',
+      textAlign: 'center',
+    },
+    columnChips: {
+      gap: 6,
+      alignItems: 'stretch',
+    },
+    emptyState: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: 40,
+      gap: 8,
+    },
+    emptyText: {
+      fontSize: 16,
+      fontWeight: '600',
+    },
+    emptyHint: {
+      fontSize: 13,
+    },
+  });
+}

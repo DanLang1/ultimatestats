@@ -2,14 +2,12 @@ import { useAlert } from '@/components/ui/AlertProvider';
 import { PlayerChip } from '@/components/ui/PlayerChip';
 import { useTheme } from '@/context/ThemeContext';
 import { getPlayerName } from '@/lib/playerUtils';
-import { useOrientationLock } from '@/hooks/useOrientationLock';
 import { useGameStore } from '@/store/gameStore';
 import { TurnoverType } from '@/store/gameStore.types';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import React, { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // Extended type to include opponent turnover and opponent block for editing
 type EditableTurnoverType = TurnoverType | 'opponentTurn' | 'opponentBlock';
@@ -28,10 +26,8 @@ const ALL_TURNOVER_TYPES: {
 ];
 
 export default function EditEventModal() {
-  useOrientationLock();
   const { palette } = useTheme();
   const { showAlert } = useAlert();
-  const insets = useSafeAreaInsets();
   const params = useLocalSearchParams<{
     eventIndex: string;
     eventType: string;
@@ -232,7 +228,7 @@ export default function EditEventModal() {
         style={[styles.overlay, { backgroundColor: palette.overlayDark60 }]}
         onPress={handleDismiss}>
         <Pressable
-          style={[styles.sheet, { backgroundColor: palette.modalBg, paddingBottom: insets.bottom }]}
+          style={[styles.sheet, { backgroundColor: palette.modalBg }]}
           onPress={(e) => e.stopPropagation()}>
           {/* Header */}
           <View style={[styles.header, { borderBottomColor: palette.overlay15 }]}>

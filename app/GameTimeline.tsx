@@ -3,18 +3,14 @@ import EventTimeline from '@/components/timeline/EventTimeline';
 import { useTheme } from '@/context/ThemeContext';
 import { resolveTeamName } from '@/lib/playerUtils';
 import { computePointByPointEvents } from '@/lib/timelineUtils';
-import { useOrientationLock } from '@/hooks/useOrientationLock';
 import { useGameStore } from '@/store/gameStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import * as Haptics from 'expo-haptics';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import React from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function GameTimelineScreen() {
-  useOrientationLock();
-  const insets = useSafeAreaInsets();
   const { palette } = useTheme();
   const params = useLocalSearchParams<{ gameId?: string }>();
   // If gameId is present, it's a saved game
@@ -85,7 +81,7 @@ export default function GameTimelineScreen() {
       <Stack.Screen options={{ headerShown: false }} />
 
       {/* Header */}
-      <View style={[styles.header, { paddingTop: Math.max(insets.top, 16) }]}>
+      <View style={styles.header}>
         <Pressable
           onPress={() => router.back()}
           style={[styles.backButton, { backgroundColor: palette.overlay10 }]}
@@ -103,11 +99,7 @@ export default function GameTimelineScreen() {
         </Text>
       </View>
 
-      <ScrollView
-        contentContainerStyle={[
-          styles.scrollContent,
-          { paddingBottom: Math.max(40, insets.bottom) },
-        ]}>
+      <ScrollView contentContainerStyle={[styles.scrollContent]}>
         {hasData ? (
           <EventTimeline
             points={pointEvents}
@@ -166,7 +158,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingTop: 16,
+    paddingTop: 8,
     paddingBottom: 12,
   },
   backButton: {
@@ -197,7 +189,6 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingVertical: 8,
-    paddingBottom: 40,
   },
   emptyState: {
     alignItems: 'center',

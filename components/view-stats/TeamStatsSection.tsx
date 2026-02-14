@@ -1,8 +1,9 @@
 import { useTheme } from '@/context/ThemeContext';
+import { useLayout } from '@/hooks/useLayout';
 import { GameEvent } from '@/lib/storage';
 import { computeTeamStats, computeTimingStats } from '@/lib/teamStatsUtils';
 import React from 'react';
-import { StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import StatRing from './StatRing';
 import StatsGrid from './StatsGrid';
 
@@ -34,8 +35,8 @@ export default function TeamStatsSection({
   gameTo,
 }: TeamStatsSectionProps) {
   const { palette } = useTheme();
-  const { width: dimWidth, height: dimHeight } = useWindowDimensions();
-  const isLandscape = dimWidth > dimHeight;
+  const { isLandscape } = useLayout();
+  const styles = createStyles(isLandscape);
 
   const stats = computeTeamStats(events, startingPossession, gameTo);
   const timingStats = computeTimingStats(events, startingPossession, gameTo);
@@ -116,9 +117,9 @@ export default function TeamStatsSection({
       <Text style={[styles.sectionTitle, { color: palette.textMuted }]}>TEAM PERFORMANCE</Text>
 
       {/* Ring Gauges */}
-      <View style={[styles.ringRow, !isLandscape && styles.ringRowPortrait]}>
+      <View style={styles.ringRow}>
         {primaryStats.map((stat, index) => (
-          <View key={index} style={!isLandscape && styles.ringWrapper}>
+          <View key={index} style={styles.ringWrapper}>
             <StatRing
               percentage={stat.percentage}
               label={stat.label}
@@ -165,41 +166,40 @@ export default function TeamStatsSection({
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 24,
-    borderWidth: 1,
-  },
-  sectionTitle: {
-    fontSize: 10,
-    fontWeight: '700',
-    letterSpacing: 1,
-    marginBottom: 16,
-    textTransform: 'uppercase',
-  },
-  ringRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginBottom: 20,
-  },
-  ringRowPortrait: {
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-    rowGap: 16,
-  },
-  ringWrapper: {
-    width: '50%',
-    alignItems: 'center',
-  },
-  subsectionContainer: {
-    marginTop: 8,
-  },
-  subsectionTitle: {
-    fontSize: 9,
-    fontWeight: '700',
-    letterSpacing: 0.5,
-    marginBottom: 8,
-  },
-});
+function createStyles(isLandscape: boolean) {
+  return StyleSheet.create({
+    container: {
+      borderRadius: 16,
+      padding: 16,
+      marginBottom: 24,
+      borderWidth: 1,
+    },
+    sectionTitle: {
+      fontSize: 10,
+      fontWeight: '700',
+      letterSpacing: 1,
+      marginBottom: 16,
+      textTransform: 'uppercase',
+    },
+    ringRow: {
+      flexDirection: 'row',
+      justifyContent: isLandscape ? 'space-around' : 'center',
+      marginBottom: 20,
+      flexWrap: isLandscape ? 'nowrap' : 'wrap',
+      rowGap: 16,
+    },
+    ringWrapper: {
+      width: isLandscape ? undefined : '50%',
+      alignItems: 'center',
+    },
+    subsectionContainer: {
+      marginTop: 8,
+    },
+    subsectionTitle: {
+      fontSize: 9,
+      fontWeight: '700',
+      letterSpacing: 0.5,
+      marginBottom: 8,
+    },
+  });
+}

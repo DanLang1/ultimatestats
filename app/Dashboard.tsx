@@ -1,7 +1,6 @@
 import { ThemedView } from '@/components/ThemedView';
 import { useTheme } from '@/context/ThemeContext';
 import { useNewGame } from '@/hooks/useNewGame';
-import { useOrientationLock } from '@/hooks/useOrientationLock';
 import { useVersionCheck } from '@/hooks/useVersionCheck';
 import { useGameStore } from '@/store/gameStore';
 import { useTutorialStore } from '@/store/tutorialStore';
@@ -11,7 +10,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router, Stack } from 'expo-router';
 import React from 'react';
 import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface MenuItem {
   icon: keyof typeof MaterialCommunityIcons.glyphMap;
@@ -28,8 +26,6 @@ interface MenuSection {
 }
 
 export default function DashboardScreen() {
-  useOrientationLock();
-  const insets = useSafeAreaInsets();
   const { palette } = useTheme();
   const { statTrackingEnabled, currentTeam, savedGames } = useGameStore();
   const { resetStatsTutorial } = useTutorialStore();
@@ -132,7 +128,7 @@ export default function DashboardScreen() {
       <Stack.Screen options={{ headerShown: false }} />
 
       {/* Header */}
-      <View style={[styles.header, { paddingTop: Math.max(insets.top, 16) }]}>
+      <View style={styles.header}>
         <Pressable
           onPress={() => router.back()}
           style={[styles.backButton, { backgroundColor: palette.overlay10 }]}
@@ -143,11 +139,7 @@ export default function DashboardScreen() {
         <View style={styles.headerSpacer} />
       </View>
 
-      <ScrollView
-        contentContainerStyle={[
-          styles.scrollContent,
-          { paddingBottom: Math.max(24, insets.bottom) },
-        ]}>
+      <ScrollView contentContainerStyle={[styles.scrollContent]}>
         {sections.map((section, sectionIndex) => (
           <View key={sectionIndex} style={styles.section}>
             <Text style={[styles.sectionTitle, { color: palette.textMuted }]}>{section.title}</Text>
@@ -297,7 +289,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingTop: 16,
+    paddingTop: 8,
     paddingBottom: 12,
   },
   backButton: {

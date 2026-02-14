@@ -190,24 +190,13 @@ Modals that can appear on portrait-enabled screens need extra handling for safe 
 
 ### Required Steps
 
-1. **Add `useOrientationLock()`** at the top of the modal component so orientation stays unlocked while the modal is focused:
-
-```tsx
-import { useOrientationLock } from '@/hooks/useOrientationLock';
-
-export default function MyModal() {
-  useOrientationLock();
-  // ...
-}
-```
-
-2. **Add safe area insets** to prevent content from being clipped by the status bar or home indicator:
+1. **Rely on root safe area edges** (`app/_layout.tsx`) for top/bottom safe area.
+2. **Use safe area insets only when needed** (typically for horizontal inset handling):
 
 ```tsx
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function MyModal() {
-  useOrientationLock();
   const insets = useSafeAreaInsets();
 
   return (
@@ -216,7 +205,7 @@ export default function MyModal() {
         <View
           style={[
             styles.sheet,
-            { backgroundColor: palette.modalBg, paddingBottom: insets.bottom },
+            { backgroundColor: palette.modalBg, paddingHorizontal: Math.max(insets.left, 16) },
           ]}>
           {/* content */}
         </View>

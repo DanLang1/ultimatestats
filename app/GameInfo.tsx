@@ -6,6 +6,7 @@ import FlashingIcon from '@/components/ui/FlashingIcon';
 import { useTheme } from '@/context/ThemeContext';
 import { useEndGame } from '@/hooks/useEndGame';
 import { useGameTimer } from '@/hooks/useGameTimer';
+import { useLayout } from '@/hooks/useLayout';
 import { usePointTimer } from '@/hooks/usePointTimer';
 import { formatRatioFull, getExpectedRatio, getSequenceNumber } from '@/lib/genderRatioUtils';
 import { useGameStore } from '@/store/gameStore';
@@ -14,9 +15,10 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router, Stack } from 'expo-router';
 import React, { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function GameInfoScreen() {
+  const { isLandscape } = useLayout();
+  const styles = createStyles(isLandscape);
   const {
     gameTo,
     currentTeam,
@@ -45,7 +47,6 @@ export default function GameInfoScreen() {
   const isHardcap = timeLeft === 0;
 
   const { palette } = useTheme();
-  const insets = useSafeAreaInsets();
   const { showAlert } = useAlert();
   const { confirmEndGame } = useEndGame();
   const {
@@ -92,7 +93,7 @@ export default function GameInfoScreen() {
       <Stack.Screen options={{ headerShown: false }} />
 
       {/* Header */}
-      <View style={[styles.header, { paddingTop: Math.max(insets.top, 16) }]}>
+      <View style={styles.header}>
         <Pressable
           onPress={() => router.back()}
           style={[styles.backButton, { backgroundColor: palette.overlay10 }]}
@@ -103,13 +104,9 @@ export default function GameInfoScreen() {
         <View style={styles.headerRightSpacer} />
       </View>
 
-      <ScrollView
-        contentContainerStyle={[
-          styles.scrollContent,
-          { paddingBottom: Math.max(24, insets.bottom) },
-        ]}>
+      <ScrollView contentContainerStyle={[styles.scrollContent]}>
         {/* Three-Column Hero Section */}
-        <View style={styles.heroSection}>
+        <View key={isLandscape ? 'hero-landscape' : 'hero-portrait'} style={styles.heroSection}>
           {/* Left Column - Team 1 */}
           <View style={styles.teamColumn}>
             <Text
@@ -277,7 +274,9 @@ export default function GameInfoScreen() {
         )}
 
         {/* Action Section */}
-        <View style={styles.actionSection}>
+        <View
+          key={isLandscape ? 'actions-landscape' : 'actions-portrait'}
+          style={styles.actionSection}>
           {lineCallingEnabled && !gameLocked && (
             <Pressable
               onPress={() => router.push('/LinePromptModal')}
@@ -342,203 +341,211 @@ export default function GameInfoScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 12,
-  },
-  backButton: {
-    padding: 8,
-    borderRadius: 20,
-  },
-  headerTitle: {
-    fontSize: 14,
-    fontWeight: '700',
-    letterSpacing: 2,
-    textTransform: 'uppercase',
-  },
-  headerRightSpacer: {
-    width: 40,
-  },
-  scrollContent: {
-    padding: 24,
-    paddingTop: 8,
-  },
+function createStyles(isLandscape: boolean) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 20,
+      paddingTop: 8,
+      paddingBottom: 12,
+    },
+    backButton: {
+      padding: 8,
+      borderRadius: 20,
+    },
+    headerTitle: {
+      fontSize: 14,
+      fontWeight: '700',
+      letterSpacing: 2,
+      textTransform: 'uppercase',
+    },
+    headerRightSpacer: {
+      width: 40,
+    },
+    scrollContent: {
+      padding: 24,
+      paddingTop: 8,
+    },
 
-  // Three-Column Hero Section
-  heroSection: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-  },
-  teamColumn: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  teamColumnName: {
-    fontSize: 14,
-    fontWeight: '600',
-    marginBottom: 4,
-  },
-  teamColumnScore: {
-    fontSize: 56,
-    fontWeight: '800',
-    includeFontPadding: false,
-    lineHeight: 64,
-  },
-  teamColumnStats: {
-    fontSize: 13,
-    fontWeight: '500',
-    marginTop: 4,
-  },
-  centerColumn: {
-    flex: 1.2,
-    alignItems: 'center',
-    justifyContent: 'flex-start',
-    paddingHorizontal: 16,
-  },
-  centerLabel: {
-    fontSize: 12,
-    fontWeight: '700',
-    letterSpacing: 1,
-  },
-  centerNumber: {
-    fontSize: 48,
-    fontWeight: '800',
-    includeFontPadding: false,
-    lineHeight: 56,
-  },
-  hardcapLabelRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  hardcapWinnerText: {
-    fontSize: 24,
-    fontWeight: '800',
-    textAlign: 'center',
-  },
-  capStatusBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginTop: 4,
-  },
-  capStatusText: {
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  universePointText: {
-    fontSize: 16,
-    fontWeight: '700',
-  },
+    // Three-Column Hero Section
+    heroSection: {
+      flexDirection: isLandscape ? 'row' : 'column',
+      alignItems: 'flex-start',
+      gap: isLandscape ? 0 : 16,
+    },
+    teamColumn: {
+      flex: 1,
+      width: isLandscape ? undefined : '100%',
+      alignItems: 'center',
+    },
+    teamColumnName: {
+      fontSize: isLandscape ? 14 : 13,
+      fontWeight: '600',
+      marginBottom: 4,
+    },
+    teamColumnScore: {
+      fontSize: isLandscape ? 56 : 48,
+      fontWeight: '800',
+      includeFontPadding: false,
+      lineHeight: isLandscape ? 64 : 54,
+    },
+    teamColumnStats: {
+      fontSize: 13,
+      fontWeight: '500',
+      marginTop: 4,
+    },
+    centerColumn: {
+      flex: 1.2,
+      width: isLandscape ? undefined : '100%',
+      alignItems: 'center',
+      justifyContent: 'flex-start',
+      paddingHorizontal: isLandscape ? 16 : 0,
+    },
+    centerLabel: {
+      fontSize: 12,
+      fontWeight: '700',
+      letterSpacing: 1,
+    },
+    centerNumber: {
+      fontSize: isLandscape ? 48 : 42,
+      fontWeight: '800',
+      includeFontPadding: false,
+      lineHeight: isLandscape ? 56 : 48,
+    },
+    hardcapLabelRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+    },
+    hardcapWinnerText: {
+      fontSize: 24,
+      fontWeight: '800',
+      textAlign: 'center',
+    },
+    capStatusBadge: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      marginTop: 4,
+    },
+    capStatusText: {
+      fontSize: 13,
+      fontWeight: '600',
+    },
+    universePointText: {
+      fontSize: 16,
+      fontWeight: '700',
+    },
 
-  // Point Timer (integrated in center column)
-  pointTimerContainer: {
-    alignItems: 'center',
-    marginTop: 12,
-  },
-  pointTimerDivider: {
-    width: 24,
-    height: 1,
-    marginBottom: 16,
-  },
-  pointTimerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginTop: 2,
-  },
-  pointTimerValue: {
-    fontSize: 32,
-    fontWeight: '800',
-    fontVariant: ['tabular-nums'],
-    includeFontPadding: false,
-    lineHeight: 38,
-  },
+    // Point Timer (integrated in center column)
+    pointTimerContainer: {
+      alignItems: 'center',
+      marginTop: 12,
+    },
+    pointTimerDivider: {
+      width: 24,
+      height: 1,
+      marginBottom: 16,
+    },
+    pointTimerRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      marginTop: 2,
+    },
+    pointTimerValue: {
+      fontSize: 32,
+      fontWeight: '800',
+      fontVariant: ['tabular-nums'],
+      includeFontPadding: false,
+      lineHeight: 38,
+    },
 
-  divider: {
-    height: 1,
-    marginVertical: 20,
-  },
+    divider: {
+      height: 1,
+      marginVertical: 20,
+    },
 
-  sectionTitle: {
-    fontSize: 12,
-    fontWeight: '700',
-    letterSpacing: 1.5,
-    marginBottom: 16,
-  },
-  actionSection: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 12,
-    paddingTop: 24,
-    paddingVertical: 8,
-  },
-  actionButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 12,
-    borderWidth: 1,
-  },
-  actionButtonText: {
-    fontSize: 14,
-    fontWeight: '700',
-    letterSpacing: 1,
-  },
+    sectionTitle: {
+      fontSize: 12,
+      fontWeight: '700',
+      letterSpacing: 1.5,
+      marginBottom: 16,
+    },
+    actionSection: {
+      flexDirection: isLandscape ? 'row' : 'column',
+      justifyContent: 'center',
+      alignItems: isLandscape ? undefined : 'stretch',
+      gap: 12,
+      paddingTop: isLandscape ? 24 : 16,
+      paddingVertical: 8,
+    },
+    actionButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      width: isLandscape ? undefined : '100%',
+      gap: 10,
+      paddingVertical: 12,
+      paddingHorizontal: 20,
+      borderRadius: 12,
+      borderWidth: 1,
+    },
+    actionButtonText: {
+      fontSize: 14,
+      fontWeight: '700',
+      letterSpacing: 1,
+    },
 
-  // Gender Ratio Section
-  ratioSection: {
-    alignItems: 'center',
-    marginTop: 16,
-  },
-  ratioDivider: {
-    width: 40,
-    height: 1,
-    marginBottom: 16,
-  },
-  ratioRow: {
-    alignItems: 'center',
-    gap: 4,
-  },
-  ratioLabel: {
-    fontSize: 12,
-    fontWeight: '700',
-    letterSpacing: 1,
-  },
-  ratioValueRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  ratioValue: {
-    fontSize: 28,
-    fontWeight: '800',
-  },
+    // Gender Ratio Section
+    ratioSection: {
+      alignItems: 'center',
+      marginTop: 16,
+    },
+    ratioDivider: {
+      width: 40,
+      height: 1,
+      marginBottom: 16,
+    },
+    ratioRow: {
+      alignItems: 'center',
+      gap: 4,
+    },
+    ratioLabel: {
+      fontSize: 12,
+      fontWeight: '700',
+      letterSpacing: 1,
+    },
+    ratioValueRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    ratioValue: {
+      fontSize: 28,
+      fontWeight: '800',
+    },
 
-  // Gender Ratio Info Modal
-  ratioInfoRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 12,
-  },
-  ratioInfoLabel: {
-    fontSize: 12,
-    fontWeight: '600',
-    letterSpacing: 1,
-  },
-  ratioInfoValue: {
-    fontSize: 16,
-    fontWeight: '700',
-  },
-});
+    // Gender Ratio Info Modal
+    ratioInfoRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingVertical: 12,
+    },
+    ratioInfoLabel: {
+      fontSize: 12,
+      fontWeight: '600',
+      letterSpacing: 1,
+    },
+    ratioInfoValue: {
+      fontSize: 16,
+      fontWeight: '700',
+    },
+  });
+}

@@ -145,7 +145,6 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   headerCenteredRow: {
-    paddingTop: 16,
     paddingBottom: 4,
     flexDirection: 'row',
     alignItems: 'center',

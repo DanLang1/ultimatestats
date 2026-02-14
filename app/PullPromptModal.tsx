@@ -1,4 +1,5 @@
 import { useTheme } from '@/context/ThemeContext';
+import { useLayout } from '@/hooks/useLayout';
 import { getContrastingTextColor } from '@/lib/colorUtils';
 import { formatRatioFull, GenderRatio } from '@/lib/genderRatioUtils';
 import { shouldShowLinePrompt } from '@/lib/linePromptUtils';
@@ -7,7 +8,7 @@ import { useSettingsStore } from '@/store/settingsStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
-import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeIn, SlideInDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -30,8 +31,8 @@ export default function PullPromptScreen() {
   const { genderRatioEnabled, setFirstPointRatio, firstPointRatio } = useSettingsStore();
   const { palette } = useTheme();
   const insets = useSafeAreaInsets();
-  const { width: dimWidth, height: dimHeight } = useWindowDimensions();
-  const isLandscape = dimWidth > dimHeight;
+  const { isLandscape } = useLayout();
+  const styles = createStyles(isLandscape);
   const team1Name = currentTeam?.name ?? 'Team 1';
 
   // Determine what's needed
@@ -129,8 +130,6 @@ export default function PullPromptScreen() {
           styles.overlay,
           {
             backgroundColor: palette.overlayDark60,
-            paddingTop: Math.max(insets.top, 16),
-            paddingBottom: Math.max(insets.bottom, 16),
             paddingLeft: Math.max(insets.left, 16),
             paddingRight: Math.max(insets.right, 16),
           },
@@ -175,8 +174,7 @@ export default function PullPromptScreen() {
           {step === 'possession' ? (
             <>
               {/* Main Matchup Stage */}
-              <View
-                style={[styles.matchupContainer, !isLandscape && styles.matchupContainerPortrait]}>
+              <View style={styles.matchupContainer}>
                 {/* My Team Card */}
                 <Pressable
                   style={({ pressed }) => [
@@ -185,7 +183,6 @@ export default function PullPromptScreen() {
                       backgroundColor: team1BgColor || palette.primary,
                       borderColor: palette.overlay10,
                     },
-                    !isLandscape && styles.teamCardPortrait,
                     pressed && styles.cardPressed,
                   ]}
                   onPress={() => handleSelect('team1')}>
@@ -193,7 +190,7 @@ export default function PullPromptScreen() {
                 </Pressable>
 
                 {/* VS Badge */}
-                <View style={[styles.vsBadge, !isLandscape && styles.vsBadgePortrait]}>
+                <View style={styles.vsBadge}>
                   <Text style={[styles.vsText, { color: palette.textMuted }]}>VS</Text>
                 </View>
 
@@ -205,7 +202,6 @@ export default function PullPromptScreen() {
                       backgroundColor: team2BgColor || palette.accent,
                       borderColor: palette.overlay10,
                     },
-                    !isLandscape && styles.teamCardPortrait,
                     pressed && styles.cardPressed,
                   ]}
                   onPress={() => handleSelect('team2')}>
@@ -223,8 +219,7 @@ export default function PullPromptScreen() {
           ) : (
             <>
               {/* Ratio Selection Stage */}
-              <View
-                style={[styles.ratioContainer, !isLandscape && styles.matchupContainerPortrait]}>
+              <View style={styles.ratioContainer}>
                 <Pressable
                   style={({ pressed }) => [
                     styles.ratioCard,
@@ -266,163 +261,153 @@ export default function PullPromptScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  sheet: {
-    borderRadius: 24,
-    padding: 24,
-    width: '100%',
-    maxWidth: 700,
-    alignItems: 'center',
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.35,
-    shadowRadius: 30,
-    elevation: 20,
-  },
-  headerContainer: {
-    alignItems: 'center',
-    marginBottom: 24,
-    gap: 6,
-  },
-  settingsBar: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-    gap: 8,
-    alignItems: 'center',
-  },
-  settingBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingVertical: 4,
-    paddingHorizontal: 10,
-    borderRadius: 12,
-  },
-  settingBadgeText: {
-    fontSize: 11,
-    fontWeight: '600',
-  },
-  editIconBtn: {
-    padding: 3,
-  },
-  matchupContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: '100%',
-    gap: 12,
-    marginBottom: 20,
-  },
-  matchupContainerPortrait: {
-    flexDirection: 'column',
-    alignItems: 'stretch',
-    alignSelf: 'stretch',
-  },
-  teamCard: {
-    flex: 1,
-    height: 140,
-    borderRadius: 20,
-    padding: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    maxWidth: 280,
-    minWidth: 200,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 6,
-    zIndex: 1,
-  },
-  teamCardPortrait: {
-    flex: 0,
-    height: 80,
-    maxWidth: undefined,
-    minWidth: undefined,
-  },
-  cardPressed: {
-    transform: [{ scale: 0.96 }],
-    opacity: 0.9,
-  },
-  teamNameLarge: {
-    fontSize: 24,
-    fontWeight: '800',
-    textAlign: 'center',
-    letterSpacing: 0.5,
-  },
-  vsBadge: {
-    width: 48,
-    height: 48,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  vsBadgePortrait: {
-    height: 32,
-    alignSelf: 'center',
-  },
-  vsText: {
-    fontSize: 18,
-    fontWeight: '900',
-    fontStyle: 'italic',
-  },
-  footer: {
-    alignItems: 'center',
-    gap: 4,
-  },
-  mainQuestion: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  lockInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  lockText: {
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  closeBtn: {
-    position: 'absolute',
-    top: 12,
-    right: 12,
-    padding: 4,
-    zIndex: 20,
-  },
-  ratioContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: '100%',
-    gap: 16,
-    marginBottom: 20,
-  },
-  ratioCard: {
-    flex: 1,
-    height: 100,
-    borderRadius: 20,
-    padding: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    maxWidth: 200,
-    minWidth: 120,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 6,
-  },
-  ratioText: {
-    fontSize: 24,
-    fontWeight: '800',
-    textAlign: 'center',
-    letterSpacing: 1,
-  },
-});
+function createStyles(isLandscape: boolean) {
+  return StyleSheet.create({
+    overlay: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    sheet: {
+      borderRadius: 24,
+      padding: 24,
+      width: '100%',
+      maxWidth: 700,
+      alignItems: 'center',
+      shadowOffset: { width: 0, height: 12 },
+      shadowOpacity: 0.35,
+      shadowRadius: 30,
+      elevation: 20,
+    },
+    headerContainer: {
+      alignItems: 'center',
+      marginBottom: 24,
+      gap: 6,
+    },
+    settingsBar: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      justifyContent: 'center',
+      gap: 8,
+      alignItems: 'center',
+    },
+    settingBadge: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      paddingVertical: 4,
+      paddingHorizontal: 10,
+      borderRadius: 12,
+    },
+    settingBadgeText: {
+      fontSize: 11,
+      fontWeight: '600',
+    },
+    editIconBtn: {
+      padding: 3,
+    },
+    matchupContainer: {
+      flexDirection: isLandscape ? 'row' : 'column',
+      alignItems: isLandscape ? 'center' : 'stretch',
+      alignSelf: isLandscape ? undefined : 'stretch',
+      justifyContent: 'center',
+      width: '100%',
+      gap: 12,
+      marginBottom: 20,
+    },
+    teamCard: {
+      flex: isLandscape ? 1 : 0,
+      height: isLandscape ? 140 : 80,
+      borderRadius: 20,
+      padding: 16,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: 1,
+      maxWidth: isLandscape ? 280 : undefined,
+      minWidth: isLandscape ? 200 : undefined,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.2,
+      shadowRadius: 8,
+      elevation: 6,
+      zIndex: 1,
+    },
+    cardPressed: {
+      transform: [{ scale: 0.96 }],
+      opacity: 0.9,
+    },
+    teamNameLarge: {
+      fontSize: 24,
+      fontWeight: '800',
+      textAlign: 'center',
+      letterSpacing: 0.5,
+    },
+    vsBadge: {
+      width: 48,
+      height: isLandscape ? 48 : 32,
+      alignSelf: isLandscape ? undefined : 'center',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    vsText: {
+      fontSize: 18,
+      fontWeight: '900',
+      fontStyle: 'italic',
+    },
+    footer: {
+      alignItems: 'center',
+      gap: 4,
+    },
+    mainQuestion: {
+      fontSize: 16,
+      fontWeight: '600',
+    },
+    lockInfo: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+    },
+    lockText: {
+      fontSize: 12,
+      fontWeight: '700',
+    },
+    closeBtn: {
+      position: 'absolute',
+      top: 12,
+      right: 12,
+      padding: 4,
+      zIndex: 20,
+    },
+    ratioContainer: {
+      flexDirection: isLandscape ? 'row' : 'column',
+      alignItems: isLandscape ? 'center' : 'stretch',
+      ...(!isLandscape && { alignSelf: 'stretch' }),
+      justifyContent: 'center',
+      width: '100%',
+      gap: 16,
+      marginBottom: 20,
+    },
+    ratioCard: {
+      flex: isLandscape ? 1 : 0,
+      height: isLandscape ? 140 : 80,
+      borderRadius: 20,
+      padding: 16,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: 1,
+      maxWidth: isLandscape ? 280 : undefined,
+      minWidth: isLandscape ? 200 : undefined,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.2,
+      shadowRadius: 8,
+      elevation: 6,
+    },
+    ratioText: {
+      fontSize: 24,
+      fontWeight: '800',
+      textAlign: 'center',
+      letterSpacing: 1,
+    },
+  });
+}

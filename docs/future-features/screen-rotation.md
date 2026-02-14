@@ -1,21 +1,15 @@
 # Per-Screen Orientation Support
 
-> The app supports both portrait and landscape orientations. Screens opt in to portrait via `useOrientationLock()`.
+> The app supports both portrait and landscape orientations.
 
 ## How It Works
 
 - `expo-screen-orientation` overrides the manifest at runtime — no native rebuild needed
-- Screens without `useOrientationLock()` remain landscape-only
 - OTA deployable via EAS Update
 
-### Hook: `hooks/useOrientationLock.ts`
+### Orientation Lock Status
 
-Reusable hook using `useFocusEffect`:
-
-- **On focus:** `lockAsync(OrientationLock.DEFAULT)` — allows all orientations
-- **On blur:** `lockAsync(OrientationLock.LANDSCAPE)` — re-locks to landscape
-
-Usage: call `useOrientationLock()` at the top of any screen component.
+Orientation behavior is controlled centrally rather than per-screen lock/unlock calls.
 
 ### Screens Enabled
 
@@ -49,6 +43,7 @@ Apply this pattern to any container that switches `flexDirection` based on orien
 
 When a modal supports portrait, ensure:
 
-1. Add `useOrientationLock()` at the top of the component
-2. Use `useSafeAreaInsets()` and apply `insets.bottom` as padding on the sheet container
-3. Test that content is scrollable and doesn't overflow in portrait
+1. Rely on root safe area (`app/_layout.tsx` edges include `top`/`bottom`) for vertical inset handling
+2. Avoid per-screen/per-modal orientation lock calls unless explicitly needed
+3. Use `useSafeAreaInsets()` only when you specifically need horizontal safe-area handling (`left`/`right`)
+4. Test that content is scrollable and doesn't overflow in portrait

@@ -1,4 +1,5 @@
 import { useTheme } from '@/context/ThemeContext';
+import { useLayout } from '@/hooks/useLayout';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
 import { useGameTimer } from '@/hooks/useGameTimer';
@@ -7,7 +8,7 @@ import { useGameStore } from '@/store/gameStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
-import { Linking, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 import { AlertModal } from './ui/AlertModal';
 import FlashingIcon from './ui/FlashingIcon';
 
@@ -21,8 +22,8 @@ export default function SettingsBar({ onUndo }: SettingsBarProps) {
 
   const { genderRatioEnabled, firstPointRatio } = useSettingsStore();
   const { palette } = useTheme();
-  const { width, height } = useWindowDimensions();
-  const isLandscape = width > height;
+  const { isLandscape } = useLayout();
+  const styles = createStyles(isLandscape);
 
   const [showAbbaModal, setShowAbbaModal] = useState(false);
 
@@ -39,8 +40,7 @@ export default function SettingsBar({ onUndo }: SettingsBarProps) {
   };
 
   return (
-    <View
-      style={[styles.container, { backgroundColor: barBg }, !isLandscape && { borderRadius: 20 }]}>
+    <View style={[styles.container, { backgroundColor: barBg }]}>
       {/* Play/Pause */}
       <Pressable onPress={toggleTimer} style={styles.iconButton}>
         <MaterialCommunityIcons
@@ -126,57 +126,60 @@ export default function SettingsBar({ onUndo }: SettingsBarProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
+function createStyles(isLandscape: boolean) {
+  return StyleSheet.create({
+    container: {
+      borderBottomLeftRadius: 20,
+      borderBottomRightRadius: 20,
+      borderRadius: isLandscape ? 0 : 20,
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      shadowColor: '#000',
+      shadowOffset: {
+        width: 0,
+        height: 2,
+      },
+      shadowOpacity: 0.25,
+      shadowRadius: 3.84,
+      elevation: 5,
+      flexDirection: 'row',
+      paddingHorizontal: 20,
+      paddingVertical: 10,
+      minHeight: 50,
+      minWidth: 220,
+      gap: 15,
     },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-    flexDirection: 'row',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    minHeight: 50,
-    minWidth: 220,
-    gap: 15,
-  },
-  timerContainer: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    gap: 5,
-  },
-  timerText: {
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-  iconButton: {
-    padding: 5,
-  },
-  iconButtonDisabled: {
-    opacity: 0.3,
-  },
-  ratioContainer: {
-    alignSelf: 'center',
-  },
-  ratioText: {
-    fontSize: 18,
-    fontWeight: '700',
-  },
-  abbaText: {
-    fontSize: 14,
-    lineHeight: 20,
-    marginBottom: 12,
-  },
-  abbaSource: {
-    fontSize: 12,
-    fontStyle: 'italic',
-    marginTop: 4,
-  },
-});
+    timerContainer: {
+      flexDirection: 'row',
+      alignItems: 'flex-end',
+      gap: 5,
+    },
+    timerText: {
+      fontSize: 20,
+      fontWeight: 'bold',
+    },
+    iconButton: {
+      padding: 5,
+    },
+    iconButtonDisabled: {
+      opacity: 0.3,
+    },
+    ratioContainer: {
+      alignSelf: 'center',
+    },
+    ratioText: {
+      fontSize: 18,
+      fontWeight: '700',
+    },
+    abbaText: {
+      fontSize: 14,
+      lineHeight: 20,
+      marginBottom: 12,
+    },
+    abbaSource: {
+      fontSize: 12,
+      fontStyle: 'italic',
+      marginTop: 4,
+    },
+  });
+}

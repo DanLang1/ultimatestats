@@ -6,6 +6,7 @@ import { ThemedView } from '@/components/ThemedView';
 import StatsTrackingTutorial from '@/components/tutorial/StatsTrackingTutorial';
 import TutorialOverlay from '@/components/tutorial/TutorialOverlay';
 import { useHalftimeNavigation } from '@/hooks/useHalftimeNavigation';
+import { useLayout } from '@/hooks/useLayout';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import { usePullPromptNavigation } from '@/hooks/usePullPromptNavigation';
 import { useTimeoutTimer } from '@/hooks/useTimeoutTimer';
@@ -18,7 +19,7 @@ import { useLinePresetsStore } from '@/store/linePresetsStore';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useKeepAwake } from 'expo-keep-awake';
 import { router, useFocusEffect } from 'expo-router';
-import { Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 export default function BasicScoreboard() {
   useKeepAwake();
@@ -27,8 +28,8 @@ export default function BasicScoreboard() {
   useFocusEffect(() => {
     ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.DEFAULT);
   });
-  const { width, height } = useWindowDimensions();
-  const isLandscape = width > height;
+  const { isLandscape } = useLayout();
+  const styles = createStyles(isLandscape);
 
   const {
     currentTeam,
@@ -188,7 +189,7 @@ export default function BasicScoreboard() {
     !gameLocked;
 
   return (
-    <ThemedView style={[styles.container, { flexDirection: isLandscape ? 'row' : 'column' }]}>
+    <ThemedView style={styles.container}>
       {/* Top half */}
       <TeamScoreSection
         teamName={team1Name}
@@ -205,11 +206,7 @@ export default function BasicScoreboard() {
       />
 
       {/* Timer Bar Overlay */}
-      <View
-        style={[
-          styles.timerBarContainer,
-          !isLandscape && { top: '50%', transform: [{ translateY: -25 }] },
-        ]}>
+      <View style={styles.timerBarContainer}>
         <SettingsBar onUndo={undo} />
       </View>
 
@@ -257,23 +254,27 @@ export default function BasicScoreboard() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  timerBarContainer: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    alignItems: 'center',
-    zIndex: 100,
-  },
-  floatingHomeButton: {
-    position: 'absolute',
-    top: 12,
-    left: 12,
-    padding: 10,
-    zIndex: 200,
-  },
-});
+function createStyles(isLandscape: boolean) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      flexDirection: isLandscape ? 'row' : 'column',
+    },
+    timerBarContainer: {
+      position: 'absolute',
+      top: isLandscape ? 0 : '50%',
+      left: 0,
+      right: 0,
+      ...(isLandscape ? {} : { transform: [{ translateY: -25 }] }),
+      alignItems: 'center',
+      zIndex: 100,
+    },
+    floatingHomeButton: {
+      position: 'absolute',
+      top: 12,
+      left: 12,
+      padding: 10,
+      zIndex: 200,
+    },
+  });
+}

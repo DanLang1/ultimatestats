@@ -1,6 +1,7 @@
 import { ModalPlayerGrid, SortDirection } from '@/components/lines/ModalPlayerGrid';
 import { useTheme } from '@/context/ThemeContext';
 import { useIsGameActive } from '@/hooks/useIsGameActive';
+import { useLayout } from '@/hooks/useLayout';
 import {
   checkLineRatio,
   formatRatio,
@@ -13,14 +14,13 @@ import { useSettingsStore } from '@/store/settingsStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function LinePromptModal() {
   const { palette } = useTheme();
   const insets = useSafeAreaInsets();
-  const { width: dimWidth, height: dimHeight } = useWindowDimensions();
-  const isLandscape = dimWidth > dimHeight;
+  const { isLandscape } = useLayout();
   const { genderRatioEnabled, firstPointRatio, numPlayers } = useSettingsStore();
   const { currentTeam, currentPoint, currentLine, pointLines, setCurrentLine, recordLineForPoint } =
     useGameStore();
@@ -118,8 +118,8 @@ export default function LinePromptModal() {
           styles.overlay,
           {
             backgroundColor: palette.overlayDark60,
-            paddingTop: Math.max(insets.top, isLandscape ? 12 : 16),
-            paddingBottom: Math.max(insets.bottom, isLandscape ? 12 : 16),
+            paddingTop: isLandscape ? 12 : 16,
+            paddingBottom: isLandscape ? 12 : 16,
             paddingHorizontal: isLandscape ? 12 : Math.max(insets.left, insets.right, 12),
           },
         ]}>

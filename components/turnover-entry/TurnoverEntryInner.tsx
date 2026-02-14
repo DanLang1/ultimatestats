@@ -1,20 +1,12 @@
 import { AnimatedThemedView } from '@/components/ThemedView';
 import { useTheme } from '@/context/ThemeContext';
+import { useLayout } from '@/hooks/useLayout';
 import { getActiveRoster, getPlayerName, UNKNOWN_PLAYER_ID } from '@/lib/playerUtils';
 import { Player } from '@/lib/storage/types';
 import { TurnoverType } from '@/store/gameStore.types';
 import React, { useState } from 'react';
-import {
-  Keyboard,
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  useWindowDimensions,
-  View,
-} from 'react-native';
+import { Keyboard, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import Animated, { FadeIn, LinearTransition, SlideInDown } from 'react-native-reanimated';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatEntryRoster } from '../stat-entry/StatEntryRoster';
 
 type EntryStep = 'type' | 'player';
@@ -52,9 +44,7 @@ export function TurnoverEntryInner({
   // For 50/50: track first selected player ID (thrower)
   const [fiftyFiftyFirstPlayerId, setFiftyFiftyFirstPlayerId] = useState<string | null>(null);
   const { palette, themeMode } = useTheme();
-  const { width: dimWidth, height: dimHeight } = useWindowDimensions();
-  const isLandscape = dimWidth > dimHeight;
-  const insets = useSafeAreaInsets();
+  const { isLandscape } = useLayout();
 
   // Only show active players
   const activeRoster = getActiveRoster(roster);
@@ -298,10 +288,7 @@ export function TurnoverEntryInner({
     return (
       <AnimatedThemedView
         entering={SlideInDown.duration(400)}
-        style={[
-          styles.sheet,
-          { shadowColor: palette.shadow, paddingBottom: Math.max(10, insets.bottom) },
-        ]}
+        style={[styles.sheet, { shadowColor: palette.shadow, paddingBottom: 10 }]}
         onStartShouldSetResponder={() => true}>
         <Pressable onPress={() => {}} style={styles.sheetContent}>
           <View style={styles.compactContainer}>
@@ -323,10 +310,7 @@ export function TurnoverEntryInner({
     return (
       <AnimatedThemedView
         entering={SlideInDown.duration(400)}
-        style={[
-          styles.sheet,
-          { shadowColor: palette.shadow, paddingBottom: Math.max(10, insets.bottom) },
-        ]}
+        style={[styles.sheet, { shadowColor: palette.shadow, paddingBottom: 10 }]}
         onStartShouldSetResponder={() => true}>
         <Pressable onPress={() => {}} style={styles.sheetContent}>
           <View style={styles.compactContainer}>
@@ -385,10 +369,7 @@ export function TurnoverEntryInner({
   return (
     <AnimatedThemedView
       entering={SlideInDown.duration(400)}
-      style={[
-        styles.sheet,
-        { shadowColor: palette.shadow, paddingBottom: Math.max(10, insets.bottom) },
-      ]}
+      style={[styles.sheet, { shadowColor: palette.shadow, paddingBottom: 10 }]}
       onStartShouldSetResponder={() => true}>
       <Pressable onPress={() => {}} style={styles.sheetContent}>
         <View style={styles.sideBySideContainer}>
