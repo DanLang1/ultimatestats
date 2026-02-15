@@ -730,11 +730,21 @@ export const useGameStore = create<GameState>()(
             team?: 'team1' | 'team2';
             goalPlayerId?: string | null;
             assistPlayerId?: string | null;
+            elapsedMs?: number | null;
           },
         ) =>
           set((state: GameState) => {
             const event = state.events[eventIndex];
             if (!event) return;
+
+            // Handle elapsedMs for any event type
+            if (updates.elapsedMs !== undefined) {
+              if (updates.elapsedMs === null) {
+                delete event.elapsedMs;
+              } else {
+                event.elapsedMs = updates.elapsedMs;
+              }
+            }
 
             if (event.type === 'turnover') {
               if (updates.playerId !== undefined) event.playerId = updates.playerId;
@@ -792,6 +802,7 @@ export const useGameStore = create<GameState>()(
             team?: 'team1' | 'team2';
             goalPlayerId?: string | null;
             assistPlayerId?: string | null;
+            elapsedMs?: number | null;
           },
         ) => {
           const game = get().savedGames.find((g) => g.id === gameId);
@@ -829,6 +840,15 @@ export const useGameStore = create<GameState>()(
             }
           } else {
             return;
+          }
+
+          // Handle elapsedMs for any event type
+          if (updates.elapsedMs !== undefined) {
+            if (updates.elapsedMs === null) {
+              delete updatedEvent.elapsedMs;
+            } else {
+              updatedEvent.elapsedMs = updates.elapsedMs;
+            }
           }
 
           // Update the main event

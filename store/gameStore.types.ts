@@ -171,6 +171,7 @@ export interface GameState {
       subtype?: TurnoverType;
       goalPlayerId?: string | null;
       assistPlayerId?: string | null;
+      elapsedMs?: number | null;
     },
   ) => void;
   deleteEvent: (eventIndex: number) => boolean; // Returns false if deletion blocked (goal/assist)
@@ -185,6 +186,7 @@ export interface GameState {
       subtype?: TurnoverType;
       goalPlayerId?: string | null;
       assistPlayerId?: string | null;
+      elapsedMs?: number | null;
     },
   ) => Promise<void>;
   deleteSavedGameEvent: (gameId: string, eventIndex: number) => Promise<boolean>;

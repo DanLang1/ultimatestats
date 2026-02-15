@@ -26,6 +26,7 @@ export default function GameTimelineScreen() {
     gameTo,
     pointStartTimestamps,
     currentPointStartTime,
+    currentPoint,
   } = useGameStore();
   const team1Name = currentTeam?.name ?? 'Team 1';
 
@@ -135,6 +136,18 @@ export default function GameTimelineScreen() {
                 },
               });
             }}
+            onEditDuration={(goalEventIndex, currentDurationMs) => {
+              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+              router.push({
+                pathname: '/EditDurationModal',
+                params: {
+                  eventIndex: String(goalEventIndex),
+                  gameId: params.gameId ?? 'current',
+                  currentDurationMs: String(currentDurationMs ?? '0'),
+                },
+              });
+            }}
+            currentPoint={isSavedGame ? undefined : currentPoint}
           />
         ) : (
           <View style={styles.emptyState}>

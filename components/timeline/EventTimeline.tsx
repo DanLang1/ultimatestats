@@ -34,11 +34,15 @@ function mergeTimelineEvents(
   return events;
 }
 
-// Format milliseconds to "Xm Ys" or just "Xs" for short durations
+// Format milliseconds to "Xh Ym", "Xm Ys", or just "Xs" for short durations
 const formatDuration = (ms: number): string => {
   const totalSeconds = Math.round(ms / 1000);
-  const minutes = Math.floor(totalSeconds / 60);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
   const seconds = totalSeconds % 60;
+  if (hours > 0) {
+    return `${hours}h ${minutes}m`;
+  }
   if (minutes === 0) {
     return `${seconds}s`;
   }
@@ -58,6 +62,7 @@ interface EventTimelineProps {
     playerId: string | null,
     editField: 'scorer' | 'assist',
   ) => void;
+  onEditDuration?: (goalEventIndex: number, currentDurationMs: number | undefined) => void;
 }
 
 export default function EventTimeline({
@@ -69,6 +74,7 @@ export default function EventTimeline({
   currentPoint,
   onEditEvent,
   onEditGoal,
+  onEditDuration,
 }: EventTimelineProps) {
   const { palette } = useTheme();
   const { mmpColor, fmpColor } = useSettingsStore();
@@ -153,8 +159,21 @@ export default function EventTimeline({
                 ) : (
                   <View style={styles.headerRight}>
                     {/* Point Duration */}
-                    {point.pointDurationMs !== undefined && point.pointDurationMs > 0 && (
-                      <View style={[styles.durationChip, { backgroundColor: palette.overlay10 }]}>
+                    {point.pointDurationMs !== undefined && point.pointDurationMs > 0 ? (
+                      <Pressable
+                        onPress={
+                          onEditDuration
+                            ? () => {
+                                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                                onEditDuration(point.goalEventIndex, point.pointDurationMs);
+                              }
+                            : undefined
+                        }
+                        style={[
+                          styles.durationChip,
+                          { backgroundColor: palette.overlay10 },
+                          onEditDuration && { borderColor: palette.textMuted, borderWidth: 1 },
+                        ]}>
                         <MaterialCommunityIcons
                           name="timer-outline"
                           size={12}
@@ -163,7 +182,25 @@ export default function EventTimeline({
                         <Text style={[styles.durationText, { color: palette.textMuted }]}>
                           {formatDuration(point.pointDurationMs)}
                         </Text>
-                      </View>
+                      </Pressable>
+                    ) : (
+                      onEditDuration && (
+                        <Pressable
+                          onPress={() => {
+                            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                            onEditDuration(point.goalEventIndex, undefined);
+                          }}
+                          style={[
+                            styles.durationChip,
+                            { borderColor: palette.textMuted, borderWidth: 1 },
+                          ]}>
+                          <MaterialCommunityIcons
+                            name="timer-plus-outline"
+                            size={12}
+                            color={palette.textMuted}
+                          />
+                        </Pressable>
+                      )
                     )}
                     {/* Hold/Break Chip */}
                     {point.possessionType && (
