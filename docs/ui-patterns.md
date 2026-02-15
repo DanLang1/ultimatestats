@@ -16,8 +16,23 @@ Reusable UI conventions for screens and modals.
   `paddingTop: 8`
   `paddingHorizontal: 16-20`
   `paddingBottom: 10-12`
+- Prefer the shared header component for main screens: `components/ui/ScreenHeader.tsx`.
+- In portrait, keep the title visually centered using an absolute, non-interactive title layer:
+  `...StyleSheet.absoluteFillObject`, `justifyContent: 'center'`, `alignItems: 'center'`, `pointerEvents="none"`.
+- Keep interactive controls in left/right slots and cap right-side actions in portrait (use overflow when needed) to avoid title drift.
 - Use explicit back/dismiss action and avoid render-time imperative navigation.
 - Reference: `docs/architecture-rules.md`.
+
+Example:
+```tsx
+<ScreenHeader
+  title="SETTINGS"
+  onBack={() => router.back()}
+  titleColor={palette.textMuted}
+  backButtonBackgroundColor={palette.overlay10}
+  rightSlot={<MyRightActions />}
+/>
+```
 
 ## Modal Shell Pattern
 

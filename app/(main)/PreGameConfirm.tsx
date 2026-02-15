@@ -1,5 +1,6 @@
 import { ThemedView } from '@/components/ThemedView';
 import { SegmentedControl } from '@/components/ui/SegmentedControl';
+import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { useTheme } from '@/context/ThemeContext';
 import { useLayout } from '@/hooks/useLayout';
 import { getContrastingTextColor } from '@/lib/colorUtils';
@@ -141,29 +142,35 @@ export default function PreGameConfirm() {
     <ThemedView style={[styles.container, { backgroundColor: palette.primary }]}>
       <Stack.Screen options={{ headerShown: false }} />
 
-      {/* Header */}
-      <View style={styles.header}>
-        <Pressable
-          onPress={handleBack}
-          style={[styles.backButton, { backgroundColor: palette.overlay10 }]}
-          hitSlop={24}>
-          <MaterialCommunityIcons name="arrow-left" size={24} color={palette.textInverse} />
-        </Pressable>
-        <Text style={[styles.headerTitle, { color: palette.textMuted }]}>PRE-GAME</Text>
-        <Pressable
-          onPress={handleEditSettings}
-          style={({ pressed }) => [
-            styles.editButton,
-            {
-              backgroundColor: palette.accentOverlay10,
-              borderColor: palette.accentOverlay30,
-            },
-            pressed && { opacity: 0.8 },
-          ]}>
-          <MaterialCommunityIcons name="pencil" size={14} color={palette.accent} />
-          <Text style={[styles.editButtonText, { color: palette.accent }]}>Edit Settings</Text>
-        </Pressable>
-      </View>
+      <ScreenHeader
+        title="PRE-GAME"
+        onBack={handleBack}
+        backHitSlop={24}
+        titleColor={palette.textMuted}
+        backButtonBackgroundColor={palette.overlay10}
+        titleOverlayPaddingPortrait={88}
+        rightSlot={
+          <Pressable
+            onPress={handleEditSettings}
+            style={({ pressed }) => [
+              styles.editButton,
+              {
+                backgroundColor: palette.accentOverlay10,
+                borderColor: palette.accentOverlay30,
+              },
+              pressed && { opacity: 0.8 },
+            ]}>
+            <MaterialCommunityIcons
+              name="pencil"
+              size={isLandscape ? 14 : 18}
+              color={palette.accent}
+            />
+            {isLandscape && (
+              <Text style={[styles.editButtonText, { color: palette.accent }]}>Edit Settings</Text>
+            )}
+          </Pressable>
+        }
+      />
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Lock Warning */}
@@ -278,31 +285,6 @@ function createStyles(isLandscape: boolean) {
     container: {
       flex: 1,
     },
-    header: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingHorizontal: 20,
-      paddingTop: 8,
-      paddingBottom: 12,
-    },
-    backButton: {
-      padding: 8,
-      borderRadius: 20,
-      zIndex: 10,
-    },
-    headerTitle: {
-      position: isLandscape ? 'absolute' : 'relative',
-      left: isLandscape ? 0 : undefined,
-      right: isLandscape ? 0 : undefined,
-      textAlign: isLandscape ? 'center' : 'left',
-      flex: isLandscape ? undefined : 1,
-      marginLeft: isLandscape ? undefined : 8,
-      fontSize: 14,
-      fontWeight: '700',
-      letterSpacing: 2,
-      textTransform: 'uppercase',
-    },
     scrollContent: {
       padding: 24,
       paddingTop: 8,
@@ -362,9 +344,11 @@ function createStyles(isLandscape: boolean) {
     editButton: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 8,
+      justifyContent: 'center',
+      gap: isLandscape ? 8 : 0,
       height: 40,
-      paddingHorizontal: 16,
+      width: isLandscape ? undefined : 40,
+      paddingHorizontal: isLandscape ? 16 : 0,
       borderRadius: 10,
       borderWidth: 1,
     },

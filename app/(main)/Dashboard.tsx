@@ -1,4 +1,5 @@
 import { ThemedView } from '@/components/ThemedView';
+import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { useTheme } from '@/context/ThemeContext';
 import { useNewGame } from '@/hooks/useNewGame';
 import { useVersionCheck } from '@/hooks/useVersionCheck';
@@ -101,6 +102,16 @@ export default function DashboardScreen() {
               params: { teamName: team1Name },
             }),
         },
+        ...(currentTeam && rosterCount > 0
+          ? [
+              {
+                icon: 'account-group-outline' as const,
+                label: 'Team Line Presets',
+                description: 'Create and manage preset lines',
+                onPress: () => router.push('/LinePresetEditor'),
+              },
+            ]
+          : []),
       ],
     },
     {
@@ -127,17 +138,12 @@ export default function DashboardScreen() {
     <ThemedView style={[styles.container, { backgroundColor: palette.primary }]}>
       <Stack.Screen options={{ headerShown: false }} />
 
-      {/* Header */}
-      <View style={styles.header}>
-        <Pressable
-          onPress={() => router.back()}
-          style={[styles.backButton, { backgroundColor: palette.overlay10 }]}
-          hitSlop={12}>
-          <MaterialCommunityIcons name="arrow-left" size={24} color={palette.textInverse} />
-        </Pressable>
-        <Text style={[styles.headerTitle, { color: palette.textMuted }]}>DASHBOARD</Text>
-        <View style={styles.headerSpacer} />
-      </View>
+      <ScreenHeader
+        title="DASHBOARD"
+        onBack={() => router.back()}
+        titleColor={palette.textMuted}
+        backButtonBackgroundColor={palette.overlay10}
+      />
 
       <ScrollView contentContainerStyle={[styles.scrollContent]}>
         {sections.map((section, sectionIndex) => (
@@ -283,27 +289,6 @@ export default function DashboardScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingTop: 8,
-    paddingBottom: 12,
-  },
-  backButton: {
-    padding: 8,
-    borderRadius: 20,
-  },
-  headerTitle: {
-    fontSize: 14,
-    fontWeight: '700',
-    letterSpacing: 2,
-    textTransform: 'uppercase',
-  },
-  headerSpacer: {
-    width: 40,
   },
   scrollContent: {
     padding: 24,

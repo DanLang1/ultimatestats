@@ -1,5 +1,6 @@
 import { ThemedView } from '@/components/ThemedView';
 import { useAlert } from '@/components/ui/AlertProvider';
+import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { ShareConfirmModal } from '@/components/ui/ShareConfirmModal';
 import AggregateBottomBar from '@/components/view-stats/AggregateBottomBar';
 import AggregateGamesList from '@/components/view-stats/AggregateGamesList';
@@ -9,22 +10,18 @@ import StatsContent from '@/components/view-stats/StatsContent';
 import { useTheme } from '@/context/ThemeContext';
 import { useLayout } from '@/hooks/useLayout';
 import { resolveTeamName } from '@/lib/playerUtils';
-import { serializeGame, serializeGames, uploadPayload } from '@/lib/sharing';
-import {
-  formatDate,
-  generateAggregateCSV,
-  generateCurrentGameCSV,
-  generateSavedGameCSV,
-} from '@/lib/statsUtils';
+import { serializeGames, uploadPayload } from '@/lib/sharing';
+import { formatDate, generateAggregateCSV, generateCurrentGameCSV } from '@/lib/statsUtils';
 import { GameEvent, Player, SavedGame } from '@/lib/storage';
 import { useGameStore } from '@/store/gameStore';
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { File, Paths } from 'expo-file-system';
-import { router, Stack, useLocalSearchParams } from 'expo-router';
+import { Redirect, router, Stack, useLocalSearchParams } from 'expo-router';
 import * as Sharing from 'expo-sharing';
 import React, { useEffect, useState } from 'react';
-import { Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
+import { Modal, Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type ViewMode = 'current' | 'saved' | 'aggregate';
 
@@ -47,17 +44,12 @@ export default function ViewStatsScreen() {
   const { showAlert } = useAlert();
   const { palette } = useTheme();
   const { isLandscape } = useLayout();
+  const insets = useSafeAreaInsets();
   const styles = createStyles(isLandscape);
 
   const team1Name = currentTeam?.name ?? 'Team 1';
 
-  const [viewMode, setViewMode] = useState<ViewMode>(gameId ? 'saved' : (tab ?? 'current'));
-  const [selectedGameId, setSelectedGameId] = useState<string | null>(gameId ?? null);
-
-  // Derive selectedGame from store to ensure fresh data after edits
-  const selectedGame = selectedGameId
-    ? (savedGames.find((g) => g.id === selectedGameId) ?? null)
-    : null;
+  const [viewMode, setViewMode] = useState<ViewMode>(tab ?? 'current');
 
   // Aggregate mode state
   const [selectedTeam, setSelectedTeam] = useState<string | null>(null);
@@ -66,6 +58,7 @@ export default function ViewStatsScreen() {
 
   // Saved Games Selection
   const [selectedSavedGameIds, setSelectedSavedGameIds] = useState<Set<string>>(new Set());
+  const [isHeaderMenuVisible, setIsHeaderMenuVisible] = useState(false);
 
   // Load saved games on mount
   useEffect(() => {
@@ -73,32 +66,7 @@ export default function ViewStatsScreen() {
   }, [loadSavedGames]);
 
   // Derive unique key for scroll view to force reset
-  const scrollKey = `stats-${viewMode}-${selectedGame?.id ?? 'current'}-${showingAggregatedStats ? 'agg' : 'list'}-${selectedTeam ?? ''}`;
-
-  // Derive which data to display
-  const displayData = selectedGame
-    ? {
-        team1Name: resolveTeamName(selectedGame.team1.id, selectedGame.team1.name, savedTeams),
-        team2Name: selectedGame.team2Name,
-        team1Score: selectedGame.team1Score,
-        team2Score: selectedGame.team2Score,
-        events: selectedGame.events,
-        startingPossession: selectedGame.startingPossession,
-        gameTo: selectedGame.gameTo,
-        roster: selectedGame.team1.roster,
-        pointLines: selectedGame.pointLines,
-      }
-    : {
-        team1Name,
-        team2Name,
-        team1Score,
-        team2Score,
-        events,
-        startingPossession,
-        gameTo,
-        roster: currentTeam?.roster,
-        pointLines,
-      };
+  const scrollKey = `stats-${viewMode}-${showingAggregatedStats ? 'agg' : 'list'}-${selectedTeam ?? ''}`;
   // Helper to generate filename for single game exports
   const generateGameFilename = (t1Name: string, t2Name: string, date?: number) => {
     const sanitize = (s: string) => s.replace(/[^a-zA-Z0-9]/g, '_');
@@ -118,18 +86,6 @@ export default function ViewStatsScreen() {
           aggregatedData.roster,
         );
         filename = `${aggregatedData.teamName.replace(/[^a-zA-Z0-9]/g, '_')}_${aggregatedData.gameCount}_games`;
-      } else if (selectedGame) {
-        const gameTeamName = resolveTeamName(
-          selectedGame.team1.id,
-          selectedGame.team1.name,
-          savedTeams,
-        );
-        csv = generateSavedGameCSV(selectedGame);
-        filename = generateGameFilename(
-          gameTeamName,
-          selectedGame.team2Name,
-          selectedGame.createdAt,
-        );
       } else {
         csv = generateCurrentGameCSV(
           events,
@@ -165,22 +121,8 @@ export default function ViewStatsScreen() {
     null,
   );
 
-  const handleShareGame = () => {
-    if (!selectedGame) return;
-    const game = selectedGame;
-    setPendingShareAction(() => async () => {
-      const payload = serializeGame(game);
-      const { url } = await uploadPayload(payload);
-      return url;
-    });
-  };
-
   const handleSelectGame = (game: SavedGame) => {
-    setSelectedGameId(game.id);
-  };
-
-  const handleBackToList = () => {
-    setSelectedGameId(null);
+    router.push({ pathname: '/saved-games/[gameId]', params: { gameId: game.id } });
   };
 
   const handleBulkDeleteGames = async () => {
@@ -236,7 +178,6 @@ export default function ViewStatsScreen() {
 
   const handleTabPress = (mode: ViewMode) => {
     setViewMode(mode);
-    setSelectedGameId(null);
     // Reset aggregate state when switching tabs
     setSelectedTeam(null);
     setSelectedGameIds(new Set());
@@ -321,7 +262,6 @@ export default function ViewStatsScreen() {
   };
 
   const getHeaderTitle = () => {
-    if (selectedGame) return 'SAVED GAME';
     if (showingAggregatedStats) return 'COMBINED STATS';
     if (viewMode === 'current') return 'CURRENT GAME';
     if (viewMode === 'aggregate') {
@@ -340,159 +280,234 @@ export default function ViewStatsScreen() {
     return 'SAVED GAMES';
   };
 
+  const showTimelineAction = viewMode === 'current';
+  const showExportAction = viewMode === 'current' || showingAggregatedStats;
+
+  const handleOpenTimeline = () => {
+    router.push('/GameTimeline');
+  };
+
+  const headerCloseAction = showingAggregatedStats
+    ? handleBackFromAggregated
+    : viewMode === 'aggregate' && selectedTeam
+      ? handleBackToTeams
+      : null;
+
+  const handleScreenBack = () => {
+    if (headerCloseAction) {
+      headerCloseAction();
+      return;
+    }
+    router.back();
+  };
+
+  const overflowActions: {
+    key: string;
+    label: string;
+    onPress: () => void;
+    icon: 'timeline' | 'csv';
+  }[] = [];
+
+  if (showTimelineAction) {
+    overflowActions.push({
+      key: 'timeline',
+      label: 'Timeline',
+      onPress: handleOpenTimeline,
+      icon: 'timeline',
+    });
+  }
+  if (showExportAction) {
+    overflowActions.push({
+      key: 'csv',
+      label: 'Export CSV',
+      onPress: handleExportCSV,
+      icon: 'csv',
+    });
+  }
+
+  if (gameId) {
+    return <Redirect href={{ pathname: '/saved-games/[gameId]', params: { gameId } }} />;
+  }
+
   return (
     <ThemedView style={[styles.container, { backgroundColor: palette.primary }]}>
       <Stack.Screen options={{ headerShown: false }} />
 
-      {/* Header */}
-      <View style={styles.header}>
-        <Pressable
-          onPress={() => router.back()}
-          style={[styles.backButton, { backgroundColor: palette.overlay10 }]}
-          hitSlop={12}>
-          <MaterialCommunityIcons name="arrow-left" size={24} color={palette.textInverse} />
-        </Pressable>
-        <Text style={[styles.headerTitle, { color: palette.textMuted }]}>{getHeaderTitle()}</Text>
-        <View style={styles.headerRight}>
-          {/* Timeline button - show for current game or saved game */}
-          {(viewMode === 'current' || selectedGame) && (
-            <Pressable
-              onPress={() =>
-                router.push({
-                  pathname: '/GameTimeline',
-                  params: selectedGame ? { gameId: selectedGame.id } : {},
-                })
-              }
-              style={[styles.backButton, { backgroundColor: palette.overlay10 }]}
-              hitSlop={12}>
-              <MaterialCommunityIcons
-                name="chart-timeline-variant"
-                size={24}
-                color={palette.accent}
-              />
-            </Pressable>
-          )}
-          {/* Share button - only for saved games */}
-          {selectedGame && (
-            <Pressable
-              onPress={handleShareGame}
-              style={[styles.backButton, { backgroundColor: palette.overlay10 }]}
-              hitSlop={12}>
-              <MaterialCommunityIcons name="share-variant" size={20} color={palette.accent} />
-            </Pressable>
-          )}
-          {/* Export buttons - show when stats are visible */}
-          {(viewMode === 'current' || selectedGame || showingAggregatedStats) && (
-            <>
-              <Pressable
-                onPress={handleExportCSV}
-                style={[styles.backButton, { backgroundColor: palette.overlay10 }]}
-                hitSlop={12}>
-                <FontAwesome6 name="file-csv" size={20} color={palette.accent} />
-              </Pressable>
-            </>
-          )}
-          {/* Close buttons for various states */}
-          {selectedGame ? (
-            <Pressable
-              onPress={handleBackToList}
-              style={[styles.backButton, { backgroundColor: palette.overlay10 }]}
-              hitSlop={12}>
-              <MaterialCommunityIcons name="close" size={24} color={palette.textInverse} />
-            </Pressable>
-          ) : showingAggregatedStats ? (
-            <Pressable
-              onPress={handleBackFromAggregated}
-              style={[styles.backButton, { backgroundColor: palette.overlay10 }]}
-              hitSlop={12}>
-              <MaterialCommunityIcons name="close" size={24} color={palette.textInverse} />
-            </Pressable>
-          ) : viewMode === 'aggregate' && selectedTeam ? (
-            <Pressable
-              onPress={handleBackToTeams}
-              style={[styles.backButton, { backgroundColor: palette.overlay10 }]}
-              hitSlop={12}>
-              <MaterialCommunityIcons name="close" size={24} color={palette.textInverse} />
-            </Pressable>
+      <ScreenHeader
+        title={getHeaderTitle()}
+        onBack={handleScreenBack}
+        titleColor={palette.textMuted}
+        backButtonBackgroundColor={palette.overlay10}
+        centerTitleInLandscape={false}
+        titleOverlayPaddingPortrait={88}
+        rightSlot={
+          isLandscape ? (
+            <View style={styles.headerRight}>
+              {showTimelineAction && (
+                <Pressable
+                  onPress={handleOpenTimeline}
+                  style={[styles.backButton, { backgroundColor: palette.overlay10 }]}
+                  hitSlop={12}>
+                  <MaterialCommunityIcons
+                    name="chart-timeline-variant"
+                    size={24}
+                    color={palette.accent}
+                  />
+                </Pressable>
+              )}
+              {showExportAction && (
+                <Pressable
+                  onPress={handleExportCSV}
+                  style={[styles.backButton, { backgroundColor: palette.overlay10 }]}
+                  hitSlop={12}>
+                  <FontAwesome6 name="file-csv" size={20} color={palette.accent} />
+                </Pressable>
+              )}
+              {!showTimelineAction && !showExportAction ? (
+                <View style={styles.headerSpacer} />
+              ) : null}
+            </View>
           ) : (
-            <View style={styles.headerSpacer} />
-          )}
+            <View style={styles.headerRightPortrait}>
+              {overflowActions.length > 0 ? (
+                <Pressable
+                  onPress={() => setIsHeaderMenuVisible(true)}
+                  style={[styles.backButton, { backgroundColor: palette.overlay10 }]}
+                  hitSlop={12}>
+                  <MaterialCommunityIcons name="dots-horizontal" size={22} color={palette.accent} />
+                </Pressable>
+              ) : (
+                <View style={styles.headerSpacer} />
+              )}
+            </View>
+          )
+        }
+      />
+
+      <Modal
+        visible={isHeaderMenuVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setIsHeaderMenuVisible(false)}>
+        <View style={StyleSheet.absoluteFill}>
+          <Pressable
+            style={[styles.menuOverlay, { backgroundColor: palette.overlayDark40 }]}
+            onPress={() => setIsHeaderMenuVisible(false)}
+          />
+          <View
+            style={[
+              styles.menuSheet,
+              {
+                backgroundColor: palette.modalBg,
+                borderColor: palette.overlay15,
+                bottom: Math.max(insets.bottom, 12),
+              },
+            ]}>
+            {overflowActions.map((action) => (
+              <Pressable
+                key={action.key}
+                style={({ pressed }) => [styles.menuActionRow, pressed && styles.buttonPressed]}
+                onPress={() => {
+                  setIsHeaderMenuVisible(false);
+                  action.onPress();
+                }}>
+                {action.icon === 'csv' ? (
+                  <FontAwesome6 name="file-csv" size={18} color={palette.accent} />
+                ) : (
+                  <MaterialCommunityIcons
+                    name="chart-timeline-variant"
+                    size={20}
+                    color={palette.accent}
+                  />
+                )}
+                <Text style={[styles.menuActionText, { color: palette.modalText }]}>
+                  {action.label}
+                </Text>
+              </Pressable>
+            ))}
+            <Pressable
+              style={({ pressed }) => [
+                styles.menuCancelButton,
+                { backgroundColor: palette.overlay10 },
+                pressed && styles.buttonPressed,
+              ]}
+              onPress={() => setIsHeaderMenuVisible(false)}>
+              <Text style={[styles.menuCancelText, { color: palette.modalText }]}>Cancel</Text>
+            </Pressable>
+          </View>
         </View>
-      </View>
+      </Modal>
 
       {/* Tab Switcher */}
-      {!selectedGame && (
-        <View style={[styles.tabContainer, { backgroundColor: palette.overlay05 }]}>
-          <Pressable
-            style={[styles.tab, viewMode === 'current' && { backgroundColor: palette.overlay10 }]}
-            onPress={() => handleTabPress('current')}>
-            <MaterialCommunityIcons
-              name="play-circle"
-              size={18}
-              color={viewMode === 'current' ? palette.accent : palette.textMuted}
-            />
-            <Text
-              style={[
-                styles.tabText,
-                { color: palette.textMuted },
-                viewMode === 'current' && { color: palette.accent },
-              ]}>
-              Current
-            </Text>
-          </Pressable>
-          <Pressable
-            style={[styles.tab, viewMode === 'saved' && { backgroundColor: palette.overlay10 }]}
-            onPress={() => handleTabPress('saved')}>
-            <MaterialCommunityIcons
-              name="history"
-              size={18}
-              color={viewMode === 'saved' ? palette.accent : palette.textMuted}
-            />
-            <Text
-              style={[
-                styles.tabText,
-                { color: palette.textMuted },
-                viewMode === 'saved' && { color: palette.accent },
-              ]}>
-              Saved ({savedGames.length})
-            </Text>
-          </Pressable>
-          <Pressable
-            style={[styles.tab, viewMode === 'aggregate' && { backgroundColor: palette.overlay10 }]}
-            onPress={() => handleTabPress('aggregate')}>
-            <MaterialCommunityIcons
-              name="chart-box-outline"
-              size={18}
-              color={viewMode === 'aggregate' ? palette.accent : palette.textMuted}
-            />
-            <Text
-              style={[
-                styles.tabText,
-                { color: palette.textMuted },
-                viewMode === 'aggregate' && { color: palette.accent },
-              ]}>
-              Aggregate
-            </Text>
-          </Pressable>
-        </View>
-      )}
+      <View style={[styles.tabContainer, { backgroundColor: palette.overlay05 }]}>
+        <Pressable
+          style={[styles.tab, viewMode === 'current' && { backgroundColor: palette.overlay10 }]}
+          onPress={() => handleTabPress('current')}>
+          <MaterialCommunityIcons
+            name="play-circle"
+            size={18}
+            color={viewMode === 'current' ? palette.accent : palette.textMuted}
+          />
+          <Text
+            style={[
+              styles.tabText,
+              { color: palette.textMuted },
+              viewMode === 'current' && { color: palette.accent },
+            ]}>
+            Current
+          </Text>
+        </Pressable>
+        <Pressable
+          style={[styles.tab, viewMode === 'saved' && { backgroundColor: palette.overlay10 }]}
+          onPress={() => handleTabPress('saved')}>
+          <MaterialCommunityIcons
+            name="history"
+            size={18}
+            color={viewMode === 'saved' ? palette.accent : palette.textMuted}
+          />
+          <Text
+            style={[
+              styles.tabText,
+              { color: palette.textMuted },
+              viewMode === 'saved' && { color: palette.accent },
+            ]}>
+            Saved ({savedGames.length})
+          </Text>
+        </Pressable>
+        <Pressable
+          style={[styles.tab, viewMode === 'aggregate' && { backgroundColor: palette.overlay10 }]}
+          onPress={() => handleTabPress('aggregate')}>
+          <MaterialCommunityIcons
+            name="chart-box-outline"
+            size={18}
+            color={viewMode === 'aggregate' ? palette.accent : palette.textMuted}
+          />
+          <Text
+            style={[
+              styles.tabText,
+              { color: palette.textMuted },
+              viewMode === 'aggregate' && { color: palette.accent },
+            ]}>
+            Aggregate
+          </Text>
+        </Pressable>
+      </View>
 
       <ScrollView
         key={scrollKey}
         contentContainerStyle={[styles.scrollContent, { paddingBottom: 100 }]}>
-        {viewMode === 'current' || selectedGame ? (
+        {viewMode === 'current' ? (
           <StatsContent
-            team1Name={displayData.team1Name}
-            team2Name={displayData.team2Name}
-            team1Score={'team1Score' in displayData ? displayData.team1Score : undefined}
-            team2Score={'team2Score' in displayData ? displayData.team2Score : undefined}
-            events={displayData.events}
-            roster={displayData.roster}
-            isSavedGame={!!selectedGame}
-            startingPossession={displayData.startingPossession}
-            gameTo={displayData.gameTo}
-            games={selectedGame ? [selectedGame] : undefined}
-            pointLines={displayData.pointLines}
+            team1Name={team1Name}
+            team2Name={team2Name}
+            team1Score={team1Score}
+            team2Score={team2Score}
+            events={events}
+            roster={currentTeam?.roster}
+            isSavedGame={false}
+            startingPossession={startingPossession}
+            gameTo={gameTo}
+            pointLines={pointLines}
           />
         ) : viewMode === 'aggregate' ? (
           showingAggregatedStats && aggregatedData ? (
@@ -573,23 +588,9 @@ function createStyles(isLandscape: boolean) {
     container: {
       flex: 1,
     },
-    header: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingHorizontal: 20,
-      paddingTop: 8,
-      paddingBottom: 12,
-    },
     backButton: {
       padding: 8,
       borderRadius: 20,
-    },
-    headerTitle: {
-      fontSize: 14,
-      fontWeight: '700',
-      letterSpacing: 2,
-      textTransform: 'uppercase',
     },
     headerSpacer: {
       width: 40,
@@ -598,6 +599,52 @@ function createStyles(isLandscape: boolean) {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 8,
+    },
+    headerRightPortrait: {
+      minWidth: 40,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'flex-end',
+      gap: 8,
+    },
+    menuOverlay: {
+      ...StyleSheet.absoluteFillObject,
+    },
+    menuSheet: {
+      position: 'absolute',
+      left: 16,
+      right: 16,
+      bottom: 24,
+      borderRadius: 14,
+      borderWidth: 1,
+      padding: 12,
+      gap: 6,
+    },
+    menuActionRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+      borderRadius: 10,
+      paddingHorizontal: 12,
+      paddingVertical: 12,
+    },
+    menuActionText: {
+      fontSize: 15,
+      fontWeight: '600',
+    },
+    menuCancelButton: {
+      marginTop: 6,
+      borderRadius: 10,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: 12,
+    },
+    menuCancelText: {
+      fontSize: 14,
+      fontWeight: '600',
+    },
+    buttonPressed: {
+      opacity: 0.8,
     },
     tabContainer: {
       flexDirection: 'row',

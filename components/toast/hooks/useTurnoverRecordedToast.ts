@@ -1,12 +1,18 @@
 import { EVENT_RECORDED_TOAST_DURATION_MS } from '@/lib/constants';
 import { Player } from '@/lib/storage';
-import { GameEvent, TurnoverEvent, TurnoverToastSignal } from '@/store/gameStore.types';
+import { TurnoverEvent, TurnoverToastSignal } from '@/store/gameStore.types';
 import { useEffect, useState } from 'react';
+
+export type TurnoverIconInfo = {
+  library: 'material' | 'fontawesome5';
+  name: string;
+};
 
 type TurnoverToastState = {
   visible: boolean;
   message: string;
   tone: 'success' | 'danger';
+  icon: TurnoverIconInfo;
 };
 
 function getPlayerName(playerId: string | null | undefined, roster: Player[]): string | null {
@@ -56,29 +62,37 @@ function getTurnoverMessage(event: TurnoverEvent, roster: Player[], team2Name: s
   }
 }
 
-function getTurnoverSignature(event: GameEvent, eventIndex: number) {
-  if (event.type !== 'turnover') return null;
-  return [
-    eventIndex,
-    event.type,
-    event.team,
-    event.subtype,
-    event.playerId ?? 'null',
-    event.player2Id ?? 'null',
-    event.pointNumber ?? 'null',
-    event.elapsedMs ?? 'null',
-  ].join('|');
-}
-
 function getTurnoverTone(event: TurnoverEvent): 'success' | 'danger' {
   const isOurTeamBlock = event.subtype === 'block' && event.team === 'team1';
   const isOpponentThrowaway = event.subtype === 'throwaway' && event.team === 'team2';
   return isOurTeamBlock || isOpponentThrowaway ? 'success' : 'danger';
 }
 
+const DEFAULT_ICON: TurnoverIconInfo = { library: 'material', name: 'swap-horizontal' };
+
+function getTurnoverIcon(event: TurnoverEvent): TurnoverIconInfo {
+  if (event.team === 'team2') {
+    // Opponent actions
+    if (event.subtype === 'block') return { library: 'material', name: 'hand-front-left-outline' };
+    return { library: 'material', name: 'gift-outline' };
+  }
+
+  // Our team actions
+  switch (event.subtype) {
+    case 'block':
+      return { library: 'material', name: 'hand-back-left-outline' };
+    case 'drop':
+      return { library: 'fontawesome5', name: 'hands-wash' };
+    case 'throwaway':
+      return { library: 'material', name: 'trash-can-outline' };
+    case 'fiftyfifty':
+      return { library: 'material', name: 'scale-balance' };
+    default:
+      return DEFAULT_ICON;
+  }
+}
+
 type ToastOptions = {
-  events: GameEvent[];
-  undoLastAction: () => boolean;
   roster: Player[];
   team2Name: string;
   turnoverToastSignal: TurnoverToastSignal | null;
@@ -86,8 +100,6 @@ type ToastOptions = {
 };
 
 export function useTurnoverRecordedToast({
-  events,
-  undoLastAction,
   roster,
   team2Name,
   turnoverToastSignal,
@@ -97,30 +109,12 @@ export function useTurnoverRecordedToast({
     visible: false,
     message: '',
     tone: 'danger',
+    icon: DEFAULT_ICON,
   });
-  const [turnoverSignature, setTurnoverSignature] = useState<string | null>(null);
   const [toastInstanceId, setToastInstanceId] = useState(0);
 
   const dismissToast = () => {
     setToast((current) => (current.visible ? { ...current, visible: false } : current));
-    setTurnoverSignature(null);
-  };
-
-  const handleUndoTurnover = () => {
-    if (!toast.visible || !turnoverSignature) return;
-    const lastEventIndex = events.length - 1;
-    const lastEvent = events[lastEventIndex];
-    const latestSignature = lastEvent ? getTurnoverSignature(lastEvent, lastEventIndex) : null;
-
-    if (latestSignature !== turnoverSignature) {
-      dismissToast();
-      return;
-    }
-
-    const didUndo = undoLastAction();
-    if (didUndo) {
-      dismissToast();
-    }
   };
 
   useEffect(() => {
@@ -128,17 +122,9 @@ export function useTurnoverRecordedToast({
 
     const message = getTurnoverMessage(turnoverToastSignal.event, roster, team2Name);
     const tone = getTurnoverTone(turnoverToastSignal.event);
-    const signature = getTurnoverSignature(
-      turnoverToastSignal.event,
-      turnoverToastSignal.eventIndex,
-    );
-    if (!signature) {
-      clearTurnoverToastSignal();
-      return;
-    }
+    const icon = getTurnoverIcon(turnoverToastSignal.event);
 
-    setTurnoverSignature(signature);
-    setToast({ visible: true, message, tone });
+    setToast({ visible: true, message, tone, icon });
     setToastInstanceId((current) => current + 1);
     clearTurnoverToastSignal();
   }, [turnoverToastSignal, roster, team2Name, clearTurnoverToastSignal]);
@@ -147,15 +133,10 @@ export function useTurnoverRecordedToast({
     if (!toast.visible) return;
     const timeoutId = setTimeout(() => {
       setToast((current) => ({ ...current, visible: false }));
-      setTurnoverSignature(null);
     }, EVENT_RECORDED_TOAST_DURATION_MS);
 
     return () => clearTimeout(timeoutId);
   }, [toast.visible, toastInstanceId]);
 
-  return {
-    toast,
-    dismissToast,
-    handleUndoTurnover,
-  };
+  return { toast, toastInstanceId, dismissToast };
 }

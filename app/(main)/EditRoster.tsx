@@ -3,6 +3,7 @@ import { EditRosterToolbar } from '@/components/EditRosterToolbar';
 import { AlertModal } from '@/components/ui/AlertModal';
 import { useAlert } from '@/components/ui/AlertProvider';
 import { PlayerChip } from '@/components/ui/PlayerChip';
+import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { ShareConfirmModal } from '@/components/ui/ShareConfirmModal';
 import { useTheme } from '@/context/ThemeContext';
 import { useIsGameActive } from '@/hooks/useIsGameActive';
@@ -195,24 +196,12 @@ export default function EditRosterScreen() {
 
         {/* Main Content */}
         <View style={styles.mainContent}>
-          {/* Header */}
-          <View style={styles.header}>
-            <Pressable
-              onPress={handleBack}
-              style={[styles.backButton, { backgroundColor: palette.overlay10 }]}
-              hitSlop={12}>
-              <MaterialCommunityIcons name="arrow-left" size={24} color={palette.textInverse} />
-            </Pressable>
-
-            {/* Team name (display only) */}
-            <View style={styles.teamHeaderCenterWrapper} pointerEvents="none">
-              <Text style={[styles.headerTitle, { color: palette.textMuted }]}>
-                {(currentTeam?.name ?? teamName ?? 'TEAM').toUpperCase()}
-              </Text>
-            </View>
-
-            <View style={styles.headerSpacer} />
-          </View>
+          <ScreenHeader
+            title={(currentTeam?.name ?? teamName ?? 'TEAM').toUpperCase()}
+            onBack={handleBack}
+            titleColor={palette.textMuted}
+            backButtonBackgroundColor={palette.overlay10}
+          />
 
           {/* Toolbar - portrait only */}
           {!isLandscape && (
@@ -467,30 +456,6 @@ function createStyles(isLandscape: boolean) {
     },
     mainContent: {
       flex: 1,
-    },
-    header: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      paddingHorizontal: 20,
-      paddingTop: 8,
-      paddingBottom: 12,
-    },
-    backButton: {
-      padding: 8,
-      borderRadius: 20,
-    },
-    headerTitle: {
-      fontSize: 14,
-      fontWeight: '700',
-      letterSpacing: 2,
-    },
-    headerSpacer: {
-      width: 40,
-    },
-    teamHeaderCenterWrapper: {
-      flex: 1,
-      alignItems: 'center',
-      justifyContent: 'center',
     },
     clearButton: {
       padding: 8,

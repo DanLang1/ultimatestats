@@ -3,6 +3,7 @@ import ImpactTimeline from '@/components/view-stats/ImpactTimeline';
 import PlayerStatsSummary from '@/components/view-stats/PlayerStatsSummary';
 import PlayingTimeSection from '@/components/view-stats/PlayingTimeSection';
 import RoleDiamond from '@/components/view-stats/RoleDiamond';
+import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { useTheme } from '@/context/ThemeContext';
 import { useLayout } from '@/hooks/useLayout';
 import { getPlayerName } from '@/lib/playerUtils';
@@ -118,15 +119,14 @@ export default function PlayerStats() {
 
   return (
     <View style={[styles.container, { backgroundColor: palette.primary }]}>
-      {/* Header - just back button */}
-      <View style={[styles.header, { borderBottomColor: palette.overlay10 }]}>
-        <Pressable
-          onPress={handleDismiss}
-          style={[styles.backButton, { backgroundColor: palette.overlay05 }]}>
-          <MaterialCommunityIcons name="arrow-left" size={24} color={palette.textInverse} />
-        </Pressable>
-        <Text style={[styles.headerTitle, { color: palette.textMuted }]}>PLAYER STATS</Text>
-      </View>
+      <ScreenHeader
+        title="PLAYER STATS"
+        onBack={handleDismiss}
+        titleColor={palette.textMuted}
+        backButtonBackgroundColor={palette.overlay05}
+        containerStyle={[styles.header, { borderBottomColor: palette.overlay10 }]}
+        titleOverlayPaddingPortrait={76}
+      />
 
       <ScrollView style={styles.scrollView} contentContainerStyle={[styles.scrollContent]}>
         {/* Top Row: Profile Diamond + Player Summary Cards */}
@@ -332,16 +332,7 @@ function createStyles(isLandscape: boolean) {
       flex: 1,
     },
     header: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      paddingHorizontal: 16,
-      paddingVertical: 12,
       borderBottomWidth: 1,
-    },
-    backButton: {
-      padding: 8,
-      borderRadius: 20,
-      marginRight: 4,
     },
     avatar: {
       width: 40,
@@ -391,12 +382,6 @@ function createStyles(isLandscape: boolean) {
       padding: 16,
       alignItems: 'center',
       justifyContent: 'center',
-    },
-    headerTitle: {
-      fontSize: 12,
-      fontWeight: '700',
-      letterSpacing: 1,
-      marginLeft: 12,
     },
     card: {
       borderRadius: 16,

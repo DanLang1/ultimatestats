@@ -30,7 +30,7 @@ export default function ImportScreen() {
 
   const handleGoToGame = (gameId: string) => {
     router.dismissTo('/');
-    router.push({ pathname: '/ViewStats', params: { gameId } });
+    router.push({ pathname: '/saved-games/[gameId]', params: { gameId } });
   };
 
   const handleGoToTeam = () => {

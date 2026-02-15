@@ -3,14 +3,14 @@ import { ActionBarAction, ScoreboardActionBar } from '@/components/ScoreboardAct
 import SettingsBar from '@/components/SettingsBar';
 import TeamScoreSection from '@/components/TeamScoreSection';
 import { ThemedView } from '@/components/ThemedView';
+import TurnoverToast from '@/components/toast/TurnoverToast';
 import StatsTrackingTutorial from '@/components/tutorial/StatsTrackingTutorial';
 import TutorialOverlay from '@/components/tutorial/TutorialOverlay';
-import { useTheme } from '@/context/ThemeContext';
 import { useHalftimeNavigation } from '@/hooks/useHalftimeNavigation';
 import { useLayout } from '@/hooks/useLayout';
 import { usePullPromptNavigation } from '@/hooks/usePullPromptNavigation';
 import { useTimeoutTimer } from '@/hooks/useTimeoutTimer';
-import { useTurnoverRecordedToast } from '@/hooks/useTurnoverRecordedToast';
+import { useTurnoverRecordedToast } from '@/components/toast/hooks/useTurnoverRecordedToast';
 import { getContrastingTextColor } from '@/lib/colorUtils';
 import { checkGameOver } from '@/lib/gameUtils';
 import { shouldShowLinePrompt } from '@/lib/linePromptUtils';
@@ -20,15 +20,12 @@ import { useLinePresetsStore } from '@/store/linePresetsStore';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useKeepAwake } from 'expo-keep-awake';
 import { router } from 'expo-router';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 export default function BasicScoreboard() {
   useKeepAwake();
   const { isLandscape } = useLayout();
-  const { palette } = useTheme();
-  const insets = useSafeAreaInsets();
-  const styles = createStyles(isLandscape, insets.top);
+  const styles = createStyles(isLandscape);
 
   const {
     currentTeam,
@@ -59,16 +56,13 @@ export default function BasicScoreboard() {
     startPoint,
     // Timeout
     pendingTimeoutModal,
-    events,
     turnoverToastSignal,
     clearTurnoverToastSignal,
   } = useGameStore();
 
   const { handleContinue: endTimeout } = useTimeoutTimer();
   const roster = currentTeam?.roster ?? [];
-  const { toast, handleUndoTurnover } = useTurnoverRecordedToast({
-    events,
-    undoLastAction,
+  const { toast, toastInstanceId } = useTurnoverRecordedToast({
     roster,
     team2Name,
     turnoverToastSignal,
@@ -196,9 +190,6 @@ export default function BasicScoreboard() {
     currentPointStartTime === null &&
     pointStartTimestamps[currentPoint] === undefined &&
     !gameLocked;
-  const turnoverToneColor = toast.tone === 'success' ? palette.success : palette.danger;
-  const turnoverToneOverlay =
-    toast.tone === 'success' ? palette.successOverlay15 : palette.dangerOverlay15;
 
   return (
     <ThemedView style={styles.container}>
@@ -256,48 +247,7 @@ export default function BasicScoreboard() {
         />
       )}
 
-      {toast.visible && (
-        <View style={styles.turnoverToastContainer} pointerEvents="box-none">
-          <View
-            style={[
-              styles.turnoverToast,
-              { backgroundColor: palette.glassBg, borderColor: palette.overlay15 },
-            ]}>
-            <View style={[styles.turnoverToastAccent, { backgroundColor: turnoverToneColor }]} />
-            <View style={styles.turnoverToastContent}>
-              <View style={styles.turnoverToastLeft}>
-                <View
-                  style={[styles.turnoverToastIconWrap, { backgroundColor: turnoverToneOverlay }]}>
-                  <MaterialCommunityIcons
-                    name="swap-horizontal"
-                    size={16}
-                    color={turnoverToneColor}
-                  />
-                </View>
-                <Text
-                  style={[styles.turnoverToastText, { color: palette.textInverse }]}
-                  numberOfLines={1}>
-                  {toast.message}
-                </Text>
-              </View>
-              <Pressable
-                onPress={handleUndoTurnover}
-                style={({ pressed }) => [
-                  styles.turnoverUndoButton,
-                  {
-                    backgroundColor: palette.overlay08,
-                    borderColor: palette.overlay15,
-                  },
-                  pressed && styles.turnoverUndoButtonPressed,
-                ]}>
-                <Text style={[styles.turnoverUndoButtonText, { color: palette.textInverse }]}>
-                  Undo
-                </Text>
-              </Pressable>
-            </View>
-          </View>
-        </View>
-      )}
+      <TurnoverToast toast={toast} toastInstanceId={toastInstanceId} />
 
       {/* Game Locked Overlay - shows when WinModal has appeared (sets gameLocked=true) */}
       <GameLockedOverlay />
@@ -309,7 +259,7 @@ export default function BasicScoreboard() {
   );
 }
 
-function createStyles(isLandscape: boolean, topInset: number) {
+function createStyles(isLandscape: boolean) {
   return StyleSheet.create({
     container: {
       flex: 1,
@@ -330,71 +280,6 @@ function createStyles(isLandscape: boolean, topInset: number) {
       left: 12,
       padding: 10,
       zIndex: 200,
-    },
-    turnoverToastContainer: {
-      position: 'absolute',
-      // In landscape, SettingsBar is pinned to top-center, so toast needs extra clearance.
-      top: topInset + (isLandscape ? 68 : 14),
-      left: 0,
-      right: 0,
-      alignItems: 'center',
-      zIndex: 350,
-    },
-    turnoverToast: {
-      width: isLandscape ? '50%' : '88%',
-      maxWidth: 400,
-      borderRadius: 14,
-      borderWidth: 1,
-      overflow: 'hidden',
-      flexDirection: 'row',
-      alignItems: 'stretch',
-    },
-    turnoverToastAccent: {
-      width: 4,
-    },
-    turnoverToastContent: {
-      flex: 1,
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingLeft: 12,
-      paddingRight: 10,
-      paddingVertical: 12,
-      gap: 10,
-    },
-    turnoverToastLeft: {
-      flex: 1,
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 10,
-    },
-    turnoverToastIconWrap: {
-      width: 30,
-      height: 30,
-      borderRadius: 8,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    turnoverToastText: {
-      flex: 1,
-      fontSize: 14,
-      fontWeight: '600',
-      letterSpacing: 0.1,
-    },
-    turnoverUndoButton: {
-      borderRadius: 8,
-      borderWidth: 1,
-      paddingHorizontal: 14,
-      paddingVertical: 7,
-    },
-    turnoverUndoButtonPressed: {
-      opacity: 0.7,
-      transform: [{ scale: 0.96 }],
-    },
-    turnoverUndoButtonText: {
-      fontSize: 13,
-      fontWeight: '700',
-      letterSpacing: 0.2,
     },
   });
 }

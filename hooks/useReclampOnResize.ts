@@ -1,7 +1,8 @@
-import { useEffect } from 'react';
-import { useWindowDimensions } from 'react-native';
+import { useEffect, useRef } from 'react';
 import { SharedValue, withSpring } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import { useLayout } from './useLayout';
 
 interface ReclampOptions {
   translateX: SharedValue<number>;
@@ -13,6 +14,8 @@ interface ReclampOptions {
 /**
  * Re-clamps a draggable element's position within screen bounds
  * whenever the screen dimensions change (e.g. rotation).
+ * On landscape → portrait transitions, snaps Y to bottom to avoid
+ * overlapping the settings bar.
  */
 export function useReclampOnResize({
   translateX,
@@ -20,19 +23,35 @@ export function useReclampOnResize({
   effectiveWidth,
   effectiveHeight,
 }: ReclampOptions) {
-  const { width: screenWidth, height: screenHeight } = useWindowDimensions();
+  const { width: screenWidth, height: screenHeight, isLandscape } = useLayout();
   const insets = useSafeAreaInsets();
+  const wasLandscape = useRef(isLandscape);
 
   useEffect(() => {
     const leftBound = insets.left + 8;
     const rightBound = screenWidth - insets.right - effectiveWidth - 24;
     const topBound = insets.top + 40;
-    const bottomBound = screenHeight - insets.bottom - effectiveHeight - 8;
+    const bottomBound = screenHeight - insets.bottom - effectiveHeight - 48;
 
     const clampedX = Math.max(leftBound, Math.min(translateX.value, rightBound));
-    const clampedY = Math.max(topBound, Math.min(translateY.value, bottomBound));
+
+    const didFlipToPortrait = wasLandscape.current && !isLandscape;
+    wasLandscape.current = isLandscape;
+
+    const clampedY = didFlipToPortrait
+      ? bottomBound
+      : Math.max(topBound, Math.min(translateY.value, bottomBound));
 
     translateX.value = withSpring(clampedX);
     translateY.value = withSpring(clampedY);
-  }, [screenWidth, screenHeight, effectiveWidth, effectiveHeight, insets, translateX, translateY]);
+  }, [
+    screenWidth,
+    screenHeight,
+    effectiveWidth,
+    effectiveHeight,
+    insets,
+    translateX,
+    translateY,
+    isLandscape,
+  ]);
 }

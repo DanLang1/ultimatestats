@@ -102,7 +102,7 @@ export function ScoreboardActionBar({
     const leftBound = insets.left + 8;
     const rightBound = screenWidth - insets.right - effectiveWidth - 24;
     const topBound = insets.top + 40;
-    const bottomBound = screenHeight - insets.bottom - effectiveHeight - 8;
+    const bottomBound = screenHeight - insets.bottom - effectiveHeight - 10;
 
     const clampedX = Math.max(leftBound, Math.min(x, rightBound));
     const clampedY = Math.max(topBound, Math.min(y, bottomBound));

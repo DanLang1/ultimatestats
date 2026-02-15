@@ -1,4 +1,5 @@
 import { ThemedView } from '@/components/ThemedView';
+import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { useTheme } from '@/context/ThemeContext';
 import { useVersionCheck } from '@/hooks/useVersionCheck';
 import { CHANGELOG } from '@/lib/changelog';
@@ -23,17 +24,12 @@ export default function AboutScreen() {
     <ThemedView style={[styles.container, { backgroundColor: palette.primary }]}>
       <Stack.Screen options={{ headerShown: false }} />
 
-      {/* Header */}
-      <View style={styles.header}>
-        <Pressable
-          onPress={() => router.back()}
-          style={[styles.backButton, { backgroundColor: palette.overlay10 }]}
-          hitSlop={12}>
-          <MaterialCommunityIcons name="arrow-left" size={24} color={palette.textInverse} />
-        </Pressable>
-        <Text style={[styles.headerTitle, { color: palette.textMuted }]}>ABOUT</Text>
-        <View style={styles.headerSpacer} />
-      </View>
+      <ScreenHeader
+        title="ABOUT"
+        onBack={() => router.back()}
+        titleColor={palette.textMuted}
+        backButtonBackgroundColor={palette.overlay10}
+      />
 
       <ScrollView contentContainerStyle={[styles.scrollContent]}>
         {/* App Info Card */}
@@ -117,27 +113,6 @@ export default function AboutScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingTop: 8,
-    paddingBottom: 12,
-  },
-  backButton: {
-    padding: 8,
-    borderRadius: 20,
-  },
-  headerTitle: {
-    fontSize: 14,
-    fontWeight: '700',
-    letterSpacing: 2,
-    textTransform: 'uppercase',
-  },
-  headerSpacer: {
-    width: 40,
   },
   scrollContent: {
     padding: 24,

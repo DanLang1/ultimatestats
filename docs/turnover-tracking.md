@@ -94,7 +94,7 @@ sequenceDiagram
     Sheet->>Store: addTurnoverEvent()
     Store->>Store: Flip possession to Team 2
     Store->>Store: Clear pendingTurnoverEntry
-    Store-->>User: Show "Event recorded" toast with Undo
+    Store-->>User: Show "Event recorded" toast
 ```
 
 ### Post-Record Confirmation (Toast)
@@ -109,7 +109,7 @@ After a turnover is recorded, the scoreboard shows a short confirmation toast ne
   - `Casey threw it away`
   - `Turnover by Alex and Casey`
 
-The toast includes an **Undo** action. Undo only applies while the same turnover is still the latest event in the log (to prevent undoing a different action if gameplay has progressed).
+The toast is informational only (no inline **Undo** action).
 
 Color coding:
 

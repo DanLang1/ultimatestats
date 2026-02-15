@@ -44,7 +44,6 @@ export type GameEvent = GoalEvent | TurnoverEvent | TimeoutEvent;
 
 export type TurnoverToastSignal = {
   id: number;
-  eventIndex: number;
   event: TurnoverEvent;
 };
 

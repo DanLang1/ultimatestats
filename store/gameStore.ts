@@ -655,7 +655,6 @@ export const useGameStore = create<GameState>()(
             state.events.push(turnoverEvent);
             state.turnoverToastSignal = {
               id: Date.now(),
-              eventIndex: state.events.length - 1,
               event: turnoverEvent,
             };
             state.possession = state.possession === 'team1' ? 'team2' : 'team1';

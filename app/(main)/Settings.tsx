@@ -2,6 +2,7 @@ import { ThemedView } from '@/components/ThemedView';
 import { useAlert } from '@/components/ui/AlertProvider';
 import { TeamColorPicker } from '@/components/ui/ColorPicker';
 import { NumberPicker } from '@/components/ui/NumberPicker';
+import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import { Switch } from '@/components/ui/Switch';
 import { useTheme } from '@/context/ThemeContext';
@@ -15,7 +16,6 @@ import { useGameStore } from '@/store/gameStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useTutorialStore } from '@/store/tutorialStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { router, Stack } from 'expo-router';
 import React, { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
@@ -158,22 +158,43 @@ function SettingsContent() {
   const inputBgStyle = { backgroundColor: palette.overlay08 };
   const dividerStyle = { backgroundColor: palette.overlay10 };
 
-  const renderColorSettings = () => (
+  const renderColorSettings = (compact: boolean) => (
     <>
       <View style={[styles.divider, dividerStyle]} />
 
       <Text style={[styles.sectionTitle, textInverseStyle]}>TEAM COLORS</Text>
-      <TeamColorPicker
-        label="MY TEAM COLOR"
-        value={team1BgColor}
-        onChange={(color) => setTeamBgColor('team1', color)}
-      />
-      <View style={{ height: 12 }} />
-      <TeamColorPicker
-        label="OPPOSING TEAM COLOR"
-        value={team2BgColor}
-        onChange={(color) => setTeamBgColor('team2', color)}
-      />
+      {compact ? (
+        <View style={styles.compactColorGrid}>
+          <View style={styles.compactColorItem}>
+            <TeamColorPicker
+              label="MY TEAM COLOR"
+              value={team1BgColor}
+              onChange={(color) => setTeamBgColor('team1', color)}
+            />
+          </View>
+          <View style={styles.compactColorItem}>
+            <TeamColorPicker
+              label="OPPOSING TEAM COLOR"
+              value={team2BgColor}
+              onChange={(color) => setTeamBgColor('team2', color)}
+            />
+          </View>
+        </View>
+      ) : (
+        <>
+          <TeamColorPicker
+            label="MY TEAM COLOR"
+            value={team1BgColor}
+            onChange={(color) => setTeamBgColor('team1', color)}
+          />
+          <View style={{ height: 12 }} />
+          <TeamColorPicker
+            label="OPPOSING TEAM COLOR"
+            value={team2BgColor}
+            onChange={(color) => setTeamBgColor('team2', color)}
+          />
+        </>
+      )}
       <Pressable
         style={({ pressed }) => [styles.resetColorsButton, pressed && { opacity: 0.7 }]}
         onPress={() => {
@@ -186,9 +207,26 @@ function SettingsContent() {
       <View style={[styles.divider, dividerStyle]} />
 
       <Text style={[styles.sectionTitle, textInverseStyle]}>PLAYER NAME COLORS</Text>
-      <TeamColorPicker label="MMP (MALE MATCHING)" value={mmpColor} onChange={setMmpColor} />
-      <View style={{ height: 12 }} />
-      <TeamColorPicker label="FMP (FEMALE MATCHING)" value={fmpColor} onChange={setFmpColor} />
+      {compact ? (
+        <View style={styles.compactColorGrid}>
+          <View style={styles.compactColorItem}>
+            <TeamColorPicker label="MMP (MALE MATCHING)" value={mmpColor} onChange={setMmpColor} />
+          </View>
+          <View style={styles.compactColorItem}>
+            <TeamColorPicker
+              label="FMP (FEMALE MATCHING)"
+              value={fmpColor}
+              onChange={setFmpColor}
+            />
+          </View>
+        </View>
+      ) : (
+        <>
+          <TeamColorPicker label="MMP (MALE MATCHING)" value={mmpColor} onChange={setMmpColor} />
+          <View style={{ height: 12 }} />
+          <TeamColorPicker label="FMP (FEMALE MATCHING)" value={fmpColor} onChange={setFmpColor} />
+        </>
+      )}
       <Pressable
         style={({ pressed }) => [styles.resetColorsButton, pressed && { opacity: 0.7 }]}
         onPress={resetMatchingTypeColors}>
@@ -197,38 +235,43 @@ function SettingsContent() {
     </>
   );
 
+  const renderAppearanceSettings = () => (
+    <View style={styles.appearanceSection}>
+      <Text style={[styles.sectionTitle, textInverseStyle]}>APP</Text>
+      <SegmentedControl
+        label="THEME"
+        options={[
+          { value: 'light', label: 'Light' },
+          { value: 'dark', label: 'Dark' },
+        ]}
+        value={themeMode}
+        onChange={(next) => setThemeMode(next as 'light' | 'dark')}
+      />
+    </View>
+  );
+
   return (
     <ThemedView style={[styles.container, containerStyle]}>
       <Stack.Screen options={{ headerShown: false }} />
 
-      {/* Header */}
-      <View style={styles.header}>
-        <Pressable
-          onPress={() => router.back()}
-          style={[styles.backButton, { backgroundColor: palette.overlay10 }]}
-          hitSlop={24}>
-          <MaterialCommunityIcons name="arrow-left" size={24} color={palette.textInverse} />
-        </Pressable>
-        <Text style={[styles.headerTitle, { color: palette.textMuted }]}>SETTINGS</Text>
-        <View style={styles.headerRight}>
-          <Pressable
-            onPress={() => setThemeMode(themeMode === 'light' ? 'dark' : 'light')}
-            style={({ pressed }) => [styles.themeButton, pressed && styles.buttonPressed]}
-            hitSlop={12}>
-            <MaterialIcons
-              name={themeMode === 'light' ? 'dark-mode' : 'light-mode'}
-              size={20}
-              color={palette.textInverse}
-            />
-          </Pressable>
-          <Pressable
-            onPress={confirmNewGame}
-            style={({ pressed }) => [styles.newGameButton, pressed && styles.buttonPressed]}
-            hitSlop={12}>
-            <Text style={[styles.newGameButtonText, { color: palette.success }]}>New Game</Text>
-          </Pressable>
-        </View>
-      </View>
+      <ScreenHeader
+        title="SETTINGS"
+        onBack={() => router.back()}
+        backHitSlop={24}
+        titleColor={palette.textMuted}
+        backButtonBackgroundColor={palette.overlay10}
+        titleOverlayPaddingPortrait={96}
+        rightSlot={
+          <View style={styles.headerRight}>
+            <Pressable
+              onPress={confirmNewGame}
+              style={({ pressed }) => [styles.newGameButton, pressed && styles.buttonPressed]}
+              hitSlop={12}>
+              <Text style={[styles.newGameButtonText, { color: palette.success }]}>New Game</Text>
+            </Pressable>
+          </View>
+        }
+      />
 
       <ScrollView contentContainerStyle={[styles.scrollContent]}>
         {gameActive && (
@@ -243,6 +286,7 @@ function SettingsContent() {
             </Text>
           </View>
         )}
+
         <View key={isLandscape ? 'landscape' : 'portrait'} style={styles.columnsContainer}>
           {/* Left Column: Teams */}
           <View style={styles.column}>
@@ -319,8 +363,8 @@ function SettingsContent() {
                 maxLength={MAX_TEAM_NAME_LENGTH}
               />
             </View>
-
-            {isLandscape && renderColorSettings()}
+            {isLandscape && renderAppearanceSettings()}
+            {isLandscape && renderColorSettings(true)}
           </View>
 
           {/* Right Column: Game Settings */}
@@ -499,7 +543,10 @@ function SettingsContent() {
             </View>
           </View>
         </View>
-        {!isLandscape && renderColorSettings()}
+
+        {!isLandscape && renderAppearanceSettings()}
+
+        {!isLandscape && renderColorSettings(false)}
       </ScrollView>
     </ThemedView>
   );
@@ -510,41 +557,10 @@ function createStyles(isLandscape: boolean) {
     container: {
       flex: 1,
     },
-    header: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingHorizontal: 20,
-      paddingTop: 8,
-      paddingBottom: 12,
-    },
-    backButton: {
-      padding: 8,
-      borderRadius: 20,
-      zIndex: 10,
-    },
-    headerTitle: {
-      position: isLandscape ? 'absolute' : 'relative',
-      left: isLandscape ? 0 : undefined,
-      right: isLandscape ? 0 : undefined,
-      textAlign: isLandscape ? 'center' : 'left',
-      flex: isLandscape ? undefined : 1,
-      marginLeft: isLandscape ? undefined : 8,
-      fontSize: 14,
-      fontWeight: '700',
-      letterSpacing: 2,
-      textTransform: 'uppercase',
-    },
-    headerSpacer: {
-      width: 40,
-    },
     headerRight: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 16,
-    },
-    themeButton: {
-      padding: 8,
+      gap: 8,
     },
     scrollContent: {
       padding: 24,
@@ -724,6 +740,19 @@ function createStyles(isLandscape: boolean) {
       fontSize: 13,
       fontWeight: '600',
       flex: 1,
+    },
+    appearanceSection: {
+      marginTop: isLandscape ? 8 : 4,
+      marginBottom: isLandscape ? 0 : 8,
+      gap: 8,
+    },
+    compactColorGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 12,
+    },
+    compactColorItem: {
+      width: isLandscape ? '48%' : '100%',
     },
   });
 }

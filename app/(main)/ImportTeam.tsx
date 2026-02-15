@@ -1,5 +1,6 @@
 import { ThemedView } from '@/components/ThemedView';
 import { useAlert } from '@/components/ui/AlertProvider';
+import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import { useTheme } from '@/context/ThemeContext';
 import { useIsGameActive } from '@/hooks/useIsGameActive';
@@ -169,16 +170,13 @@ export default function ImportTeamScreen() {
     <ThemedView style={[styles.container, { backgroundColor: palette.primary }]}>
       <Stack.Screen options={{ headerShown: false }} />
 
-      <View style={styles.header}>
-        <Pressable
-          onPress={() => router.back()}
-          style={[styles.backButton, { backgroundColor: palette.overlay10 }]}
-          hitSlop={24}>
-          <MaterialCommunityIcons name="arrow-left" size={24} color={palette.textInverse} />
-        </Pressable>
-        <Text style={[styles.headerTitle, { color: palette.textMuted }]}>IMPORT TEAM</Text>
-        <View style={styles.headerSpacer} />
-      </View>
+      <ScreenHeader
+        title="IMPORT TEAM"
+        onBack={() => router.back()}
+        backHitSlop={24}
+        titleColor={palette.textMuted}
+        backButtonBackgroundColor={palette.overlay10}
+      />
 
       <ScrollView contentContainerStyle={[styles.scrollContent]}>
         <View style={styles.section}>
@@ -306,32 +304,6 @@ export default function ImportTeamScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingTop: 8,
-    paddingBottom: 12,
-  },
-  backButton: {
-    padding: 8,
-    borderRadius: 20,
-    zIndex: 10,
-  },
-  headerTitle: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    textAlign: 'center',
-    fontSize: 14,
-    fontWeight: '700',
-    letterSpacing: 2,
-    textTransform: 'uppercase',
-  },
-  headerSpacer: {
-    width: 40,
   },
   scrollContent: {
     paddingHorizontal: 24,

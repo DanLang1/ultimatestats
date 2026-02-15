@@ -71,7 +71,7 @@ The **Saved** tab displays a history of games recorded on this device.
 - **Bulk Actions Bar**: Once a game is selected, a floating bar will appear at the bottom with:
   - **Cancel (X)**: Clear all selections and hide the bar.
   - **Delete (N)**: Delete all selected games after confirmation.
-- **Individual vs. Bulk**: Tapping the main area of a game card opens its full stats, while tapping the checkbox toggles its selection state. Individual deletion via the trash icon is hidden once multiple games are selected to focus on bulk operations.
+- **Individual vs. Bulk**: Tapping the main area of a game card opens a dedicated Saved Game detail screen, while tapping the checkbox toggles its selection state. Individual deletion via the trash icon is hidden once multiple games are selected to focus on bulk operations.
 
 ## Aggregate Mode
 
@@ -83,10 +83,16 @@ The **Aggregate** tab allows you to combine stats from multiple games for a sing
 
 ## Actions
 
-- **Back**: returns to Settings.
+- **Back**: From the View Stats tabs, returns to the previous screen. Saved Game detail uses its own route, so back returns to the previous page in the stack.
 - **Export CSV**: Generates a CSV file and opens the system share sheet.
 - **Export PDF**: Generates a professional PDF report.
 - **Timeline**: Opens the Game Timeline view for the selected game.
+
+### Portrait Header Actions
+
+- In portrait, the header title stays centered while secondary actions are moved into a **More** menu (`...`) in the top-right.
+- The overflow menu includes the available actions for the current state: Timeline and Export CSV.
+- On the dedicated Saved Game detail route, portrait mode also uses the **More** menu for Timeline, Share, and Export CSV.
 
 ## CSV Export
 
