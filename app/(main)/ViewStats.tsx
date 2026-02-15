@@ -7,6 +7,7 @@ import SavedGamesBulkActions from '@/components/view-stats/SavedGamesBulkActions
 import SavedGamesList from '@/components/view-stats/SavedGamesList';
 import StatsContent from '@/components/view-stats/StatsContent';
 import { useTheme } from '@/context/ThemeContext';
+import { useLayout } from '@/hooks/useLayout';
 import { resolveTeamName } from '@/lib/playerUtils';
 import { serializeGame, serializeGames, uploadPayload } from '@/lib/sharing';
 import {
@@ -45,6 +46,8 @@ export default function ViewStatsScreen() {
   } = useGameStore();
   const { showAlert } = useAlert();
   const { palette } = useTheme();
+  const { isLandscape } = useLayout();
+  const styles = createStyles(isLandscape);
 
   const team1Name = currentTeam?.name ?? 'Team 1';
 
@@ -474,7 +477,9 @@ export default function ViewStatsScreen() {
         </View>
       )}
 
-      <ScrollView key={scrollKey} contentContainerStyle={styles.scrollContent}>
+      <ScrollView
+        key={scrollKey}
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: 100 }]}>
         {viewMode === 'current' || selectedGame ? (
           <StatsContent
             team1Name={displayData.team1Name}
@@ -563,69 +568,71 @@ export default function ViewStatsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 12,
-  },
-  backButton: {
-    padding: 8,
-    borderRadius: 20,
-  },
-  headerTitle: {
-    fontSize: 14,
-    fontWeight: '700',
-    letterSpacing: 2,
-    textTransform: 'uppercase',
-  },
-  headerSpacer: {
-    width: 40,
-  },
-  headerRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  tabContainer: {
-    flexDirection: 'row',
-    marginHorizontal: 24,
-    marginBottom: 8,
-    borderRadius: 12,
-    padding: 4,
-  },
-  tab: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    paddingVertical: 10,
-    borderRadius: 10,
-  },
-  tabText: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
+function createStyles(isLandscape: boolean) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 20,
+      paddingTop: 8,
+      paddingBottom: 12,
+    },
+    backButton: {
+      padding: 8,
+      borderRadius: 20,
+    },
+    headerTitle: {
+      fontSize: 14,
+      fontWeight: '700',
+      letterSpacing: 2,
+      textTransform: 'uppercase',
+    },
+    headerSpacer: {
+      width: 40,
+    },
+    headerRight: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    tabContainer: {
+      flexDirection: 'row',
+      marginHorizontal: 24,
+      marginBottom: 8,
+      borderRadius: 12,
+      padding: 4,
+    },
+    tab: {
+      flex: 1,
+      flexDirection: isLandscape ? 'row' : 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: isLandscape ? 6 : 2,
+      paddingVertical: isLandscape ? 10 : 8,
+      borderRadius: 10,
+    },
+    tabText: {
+      fontSize: 14,
+      fontWeight: '600',
+    },
 
-  scrollContent: {
-    padding: 24,
-    paddingTop: 8,
-    paddingBottom: 100, // Extra padding for bottom bar
-  },
-  selectButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 6,
-    borderRadius: 16,
-  },
-  selectButtonText: {
-    fontSize: 14,
-    fontWeight: '700',
-  },
-});
+    scrollContent: {
+      padding: 24,
+      paddingTop: 8,
+      paddingBottom: 100, // Extra padding for bottom bar
+    },
+    selectButton: {
+      paddingHorizontal: 16,
+      paddingVertical: 6,
+      borderRadius: 16,
+    },
+    selectButtonText: {
+      fontSize: 14,
+      fontWeight: '700',
+    },
+  });
+}

@@ -1,7 +1,8 @@
 import { useTheme } from '@/context/ThemeContext';
+import { useLayout } from '@/hooks/useLayout';
 import { useTutorialStore } from '@/store/tutorialStore';
 import React, { useState } from 'react';
-import { Dimensions, Linking, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Linking, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import Animated, {
   FadeIn,
@@ -12,8 +13,6 @@ import Animated, {
 } from 'react-native-reanimated';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import TutorialStep from './TutorialStep';
-
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 const PRIVACY_URL = 'https://u-stat.app/privacy/';
 
@@ -43,6 +42,7 @@ const TUTORIAL_STEPS = [
 ];
 
 export default function TutorialOverlay() {
+  const { width } = useLayout();
   const { hasSeenOnboarding, showOnboarding, closeOnboarding } = useTutorialStore();
   const [currentStep, setCurrentStep] = useState(0);
   const [slideDirection, setSlideDirection] = useState<'left' | 'right'>('right');
@@ -111,6 +111,7 @@ export default function TutorialOverlay() {
                 entering={FadeIn.duration(300)}
                 style={[
                   styles.container,
+                  { maxWidth: Math.min(width - 48, 600) },
                   { backgroundColor: palette.modalBg, borderColor: palette.overlay20 },
                 ]}>
                 {/* Skip button */}
@@ -161,11 +162,7 @@ export default function TutorialOverlay() {
                   )}
                   <Pressable
                     onPress={handleNext}
-                    style={[
-                      styles.nextButton,
-                      { backgroundColor: palette.accent },
-                      isFirstStep && styles.nextButtonFull,
-                    ]}>
+                    style={[styles.nextButton, { backgroundColor: palette.accent }]}>
                     <Text style={[styles.nextButtonText, { color: palette.textOnAccent }]}>
                       {isLastStep ? 'Get Started' : 'Next'}
                     </Text>
@@ -198,11 +195,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   container: {
+    width: '92%',
     borderRadius: 24,
     paddingTop: 16,
     paddingBottom: 16,
     paddingHorizontal: 16,
-    maxWidth: Math.min(SCREEN_WIDTH - 48, 600),
     borderWidth: 1,
   },
   skipButton: {
@@ -240,13 +237,12 @@ const styles = StyleSheet.create({
   buttonRow: {
     flexDirection: 'row',
     gap: 12,
-    marginHorizontal: 16,
   },
   backButton: {
     flex: 1,
     backgroundColor: 'transparent',
     paddingVertical: 14,
-    paddingHorizontal: 24,
+    paddingHorizontal: 16,
     borderRadius: 12,
     borderWidth: 2,
     alignItems: 'center',
@@ -258,12 +254,9 @@ const styles = StyleSheet.create({
   nextButton: {
     flex: 1,
     paddingVertical: 14,
-    paddingHorizontal: 24,
+    paddingHorizontal: 16,
     borderRadius: 12,
     alignItems: 'center',
-  },
-  nextButtonFull: {
-    flex: 1,
   },
   nextButtonText: {
     fontSize: 16,

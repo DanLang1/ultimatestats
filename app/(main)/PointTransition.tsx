@@ -1,22 +1,21 @@
 import { ModalPlayerGrid, SortDirection } from '@/components/lines/ModalPlayerGrid';
-import { PresetPickerModal } from '@/components/lines/PresetPickerModal';
 import { useTheme } from '@/context/ThemeContext';
 import { useIsGameActive } from '@/hooks/useIsGameActive';
+import { useLayout } from '@/hooks/useLayout';
 import {
   checkLineRatio,
   formatRatio,
   getExpectedRatio,
   getSequenceNumber,
 } from '@/lib/genderRatioUtils';
-import { computePointByPointEvents, getTurnoverSummary } from '@/lib/timelineUtils';
+import { computePointByPointEvents } from '@/lib/timelineUtils';
 import { useGameStore } from '@/store/gameStore';
 import { useLinePresetsStore } from '@/store/linePresetsStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 type PointOutcome = {
   label: string;
@@ -47,7 +46,7 @@ function getPointOutcome(
 
 export default function PointTransition() {
   const { palette } = useTheme();
-  const insets = useSafeAreaInsets();
+  const { isLandscape } = useLayout();
 
   const {
     events,
@@ -75,14 +74,8 @@ export default function PointTransition() {
   const [selectedIds, setSelectedIds] = useState<string[]>(currentLine);
   const [selectedPresetId, setSelectedPresetId] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
-  const [showPresetPicker, setShowPresetPicker] = useState(false);
   // Increment sortKey to trigger a re-sort (initial load, preset selection, sort toggle)
   const [sortKey, setSortKey] = useState(0);
-
-  // Presets display config
-  const MAX_VISIBLE_PRESETS = 5;
-  const visiblePresets = presets.slice(0, MAX_VISIBLE_PRESETS);
-  const overflowCount = presets.length - MAX_VISIBLE_PRESETS;
 
   const toggleSort = () => {
     setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
@@ -104,7 +97,6 @@ export default function PointTransition() {
   const lastPoint = completedPoints[completedPoints.length - 1];
 
   // Get summary data if we have a completed point
-  const turnoverSummary = lastPoint ? getTurnoverSummary(lastPoint.turnovers, 'team1') : null;
   const totalTurnovers = lastPoint
     ? lastPoint.turnovers.filter((t) => t.team === 'team1').length
     : 0;
@@ -185,136 +177,105 @@ export default function PointTransition() {
   };
 
   return (
-    <View
-      style={[
-        styles.container,
-        {
-          backgroundColor: palette.primary,
-          paddingTop: insets.top,
-          paddingBottom: insets.bottom,
-        },
-      ]}>
+    <View style={[styles.container, { backgroundColor: palette.primary }]}>
       {/* Header - Point Summary + Confirm */}
       <View style={[styles.header, { borderBottomColor: palette.border }]}>
+        {/* Top row: always skip | title | confirm */}
         <View style={styles.headerTop}>
+          <Pressable
+            onPress={handleSkip}
+            style={({ pressed }) => [
+              styles.skipBtn,
+              { borderColor: palette.overlay15 },
+              pressed && { opacity: 0.7 },
+            ]}
+            hitSlop={8}>
+            <MaterialCommunityIcons name="close" size={18} color={palette.textMuted} />
+          </Pressable>
           <View style={styles.headerTitleRow}>
-            <Pressable
-              onPress={handleSkip}
-              style={({ pressed }) => [
-                styles.skipBtn,
-                { borderColor: palette.overlay15, marginRight: 4 },
-                pressed && { opacity: 0.7 },
-              ]}
-              hitSlop={8}>
-              <MaterialCommunityIcons name="close" size={18} color={palette.textMuted} />
-            </Pressable>
-            {lastPoint ? (
-              <>
-                <Text style={[styles.headerTitle, { color: palette.textInverse }]}>
-                  Point {lastPoint.pointNumber} Complete
-                </Text>
-                {pointOutcome && (
-                  <View
-                    style={[
-                      styles.outcomeChip,
-                      {
-                        backgroundColor: pointOutcome.isPositive
-                          ? palette.success + '20'
-                          : palette.danger + '20',
-                      },
-                    ]}>
-                    <Text
-                      style={[
-                        styles.outcomeText,
-                        { color: pointOutcome.isPositive ? palette.success : palette.danger },
-                      ]}>
-                      {pointOutcome.label}
-                    </Text>
-                  </View>
-                )}
-              </>
-            ) : (
-              <Text style={[styles.headerTitle, { color: palette.textInverse }]}>Set Line</Text>
+            <Text style={[styles.headerTitle, { color: palette.textInverse }]}>
+              {lastPoint ? `Point ${lastPoint.pointNumber}` : 'Set Line'}
+            </Text>
+            {pointOutcome && (
+              <Text
+                style={[
+                  styles.headerOutcome,
+                  { color: pointOutcome.isPositive ? palette.success : palette.danger },
+                ]}>
+                {' · '}
+                {pointOutcome.label}
+              </Text>
+            )}
+            {lastPoint?.pointDurationMs != null && (
+              <Text style={[styles.headerDuration, { color: palette.textMuted }]}>
+                {' · '}
+                {formatDuration(lastPoint.pointDurationMs)}
+              </Text>
             )}
           </View>
+          {/* Ratio inline in landscape */}
+          {isLandscape && (genderRatioEnabled || showRatioWarning) && (
+            <View style={styles.ratioInline}>
+              {genderRatioEnabled && (
+                <Text style={[styles.nextPointLabel, { color: palette.textMuted }]}>
+                  Ratio{expectedRatioLabel ? ` · ${expectedRatioLabel}` : ''}
+                </Text>
+              )}
+              {showRatioWarning && (
+                <View style={[styles.infoChip, { backgroundColor: palette.warning + '20' }]}>
+                  <MaterialCommunityIcons name="alert" size={14} color={palette.warning} />
+                  <Text style={[styles.infoChipText, { color: palette.warning }]}>
+                    Expecting {expectedRatio === 'more-women' ? 'F' : 'M'} majority
+                  </Text>
+                </View>
+              )}
+            </View>
+          )}
+          <Pressable
+            onPress={handleDone}
+            disabled={!canConfirm}
+            style={({ pressed }) => [
+              styles.confirmBtn,
+              { backgroundColor: canConfirm ? palette.success : palette.overlay10 },
+              pressed && canConfirm && { opacity: 0.8 },
+            ]}
+            hitSlop={8}>
+            {canConfirm ? (
+              <MaterialCommunityIcons name="check" size={18} color={palette.textOnAccent} />
+            ) : (
+              <Text style={[styles.countText, { color: palette.textMuted }]}>
+                {selectedIds.length}/{numPlayers}
+              </Text>
+            )}
+          </Pressable>
+        </View>
 
-          {/* Next Point Info + Confirm Button */}
-          <View style={styles.headerRight}>
+        {/* Ratio info row - portrait only */}
+        {!isLandscape && (genderRatioEnabled || showRatioWarning) && (
+          <View style={styles.infoRow}>
             {genderRatioEnabled && (
               <Text style={[styles.nextPointLabel, { color: palette.textMuted }]}>
                 Ratio{expectedRatioLabel ? ` · ${expectedRatioLabel}` : ''}
               </Text>
             )}
             {showRatioWarning && (
-              <View style={[styles.ratioWarningChip, { backgroundColor: palette.warning + '20' }]}>
+              <View style={[styles.infoChip, { backgroundColor: palette.warning + '20' }]}>
                 <MaterialCommunityIcons name="alert" size={14} color={palette.warning} />
-                <Text style={[styles.ratioWarningText, { color: palette.warning }]}>
+                <Text style={[styles.infoChipText, { color: palette.warning }]}>
                   Expecting {expectedRatio === 'more-women' ? 'F' : 'M'} majority
                 </Text>
               </View>
             )}
-
-            <Pressable
-              onPress={handleDone}
-              disabled={!canConfirm}
-              style={({ pressed }) => [
-                styles.confirmBtn,
-                { backgroundColor: canConfirm ? palette.success : palette.overlay10 },
-                pressed && canConfirm && { opacity: 0.8 },
-              ]}
-              hitSlop={8}>
-              {canConfirm ? (
-                <MaterialCommunityIcons name="check" size={18} color={palette.textOnAccent} />
-              ) : (
-                <Text style={[styles.countText, { color: palette.textMuted }]}>
-                  {selectedIds.length}/{numPlayers}
-                </Text>
-              )}
-            </Pressable>
           </View>
-        </View>
+        )}
 
-        {/* Stats + Presets Row */}
-        <View style={styles.statsRow}>
-          {/* Stats (left) */}
-          <View style={styles.statsLeft}>
-            {lastPoint?.pointDurationMs && (
-              <View style={[styles.statChip, { backgroundColor: palette.overlay05 }]}>
-                <MaterialCommunityIcons name="timer-outline" size={14} color={palette.textMuted} />
-                <Text style={[styles.statText, { color: palette.textInverse }]}>
-                  {formatDuration(lastPoint.pointDurationMs)}
-                </Text>
-              </View>
-            )}
-            {totalTurnovers > 0 && (
-              <View style={[styles.statChip, { backgroundColor: palette.overlay05 }]}>
-                <MaterialCommunityIcons
-                  name="swap-horizontal"
-                  size={14}
-                  color={palette.textMuted}
-                />
-                <Text style={[styles.statText, { color: palette.textInverse }]}>
-                  {totalTurnovers} turn{totalTurnovers !== 1 ? 's' : ''}
-                </Text>
-              </View>
-            )}
-            {turnoverSummary && turnoverSummary.blocks > 0 && (
-              <View style={[styles.statChip, { backgroundColor: palette.overlay05 }]}>
-                <MaterialCommunityIcons
-                  name="hand-back-left-outline"
-                  size={14}
-                  color={palette.textMuted}
-                />
-                <Text style={[styles.statText, { color: palette.textInverse }]}>
-                  {turnoverSummary.blocks} block{turnoverSummary.blocks !== 1 ? 's' : ''}
-                </Text>
-              </View>
-            )}
-          </View>
-
-          {/* Presets + Sort (right) */}
-          <View style={styles.statsRight}>
-            {visiblePresets.map((preset) => (
+        {/* Presets + Sort Row */}
+        <View style={styles.presetsRow}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.presetsScrollContent}>
+            {presets.map((preset) => (
               <Pressable
                 key={preset.id}
                 onPress={() => handleSelectPreset(preset)}
@@ -344,20 +305,6 @@ export default function PointTransition() {
                 </Text>
               </Pressable>
             ))}
-            {overflowCount > 0 && (
-              <Pressable
-                onPress={() => setShowPresetPicker(true)}
-                style={({ pressed }) => [
-                  styles.presetChip,
-                  styles.overflowChip,
-                  { backgroundColor: palette.overlay08, borderColor: palette.overlay15 },
-                  pressed && { opacity: 0.8 },
-                ]}>
-                <Text style={[styles.presetChipText, { color: palette.textMuted }]}>
-                  +{overflowCount}
-                </Text>
-              </Pressable>
-            )}
             {presets.length === 0 && (
               <Pressable
                 onPress={() => router.push('/LinePresetEditor')}
@@ -370,20 +317,20 @@ export default function PointTransition() {
                 <Text style={[styles.presetChipText, { color: palette.textMuted }]}>Preset</Text>
               </Pressable>
             )}
-            <Pressable
-              onPress={toggleSort}
-              style={({ pressed }) => [
-                styles.sortBtn,
-                { borderColor: palette.overlay15 },
-                pressed && { opacity: 0.7 },
-              ]}>
-              <MaterialCommunityIcons
-                name={sortDirection === 'asc' ? 'sort-ascending' : 'sort-descending'}
-                size={14}
-                color={palette.textMuted}
-              />
-            </Pressable>
-          </View>
+          </ScrollView>
+          <Pressable
+            onPress={toggleSort}
+            style={({ pressed }) => [
+              styles.sortBtn,
+              { borderColor: palette.overlay15 },
+              pressed && { opacity: 0.7 },
+            ]}>
+            <MaterialCommunityIcons
+              name={sortDirection === 'asc' ? 'sort-ascending' : 'sort-descending'}
+              size={14}
+              color={palette.textMuted}
+            />
+          </Pressable>
         </View>
       </View>
 
@@ -446,22 +393,6 @@ export default function PointTransition() {
           />
         )}
       </View>
-
-      {/* Preset Picker Bottom Sheet */}
-      <PresetPickerModal
-        visible={showPresetPicker}
-        onClose={() => setShowPresetPicker(false)}
-        presets={presets}
-        selectedPresetId={selectedPresetId}
-        onSelectPreset={(preset) => {
-          handleSelectPreset(preset);
-          setShowPresetPicker(false);
-        }}
-        onEditPresets={() => {
-          setShowPresetPicker(false);
-          router.push('/LinePresetEditor');
-        }}
-      />
     </View>
   );
 }
@@ -479,32 +410,44 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    gap: 12,
   },
   headerTitleRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
+    alignItems: 'baseline',
     flex: 1,
-  },
-  headerRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
   },
   headerTitle: {
     fontSize: 20,
     fontWeight: '800',
   },
-  outcomeChip: {
+  headerOutcome: {
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  headerDuration: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginTop: 8,
+  },
+  infoChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
-    marginTop: 4,
   },
-  outcomeText: {
+  infoChipText: {
     fontSize: 11,
-    fontWeight: '800',
-    letterSpacing: 0.5,
+    fontWeight: '700',
+    letterSpacing: 0.3,
   },
   skipBtn: {
     paddingVertical: 8,
@@ -513,6 +456,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  ratioInline: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   confirmBtn: {
     height: 36,
@@ -526,36 +474,14 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '700',
   },
-  statsRow: {
+  presetsRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
     marginTop: 10,
-    gap: 8,
-  },
-  statsLeft: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
     gap: 6,
-    flex: 1,
   },
-  statsRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  presetsScrollContent: {
     gap: 6,
-    flexShrink: 0,
-  },
-  statChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-    borderRadius: 8,
-  },
-  statText: {
-    fontSize: 12,
-    fontWeight: '600',
   },
   presetChip: {
     flexDirection: 'row',
@@ -565,32 +491,16 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: 1,
     gap: 3,
-    maxWidth: 80,
   },
   presetChipText: {
     fontSize: 11,
     fontWeight: '600',
-  },
-  overflowChip: {
-    paddingHorizontal: 6,
   },
   sortBtn: {
     paddingVertical: 4,
     paddingHorizontal: 6,
     borderRadius: 6,
     borderWidth: 1,
-  },
-  ratioWarningChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    height: 36,
-    paddingHorizontal: 12,
-    borderRadius: 12,
-  },
-  ratioWarningText: {
-    fontSize: 11,
-    fontWeight: '700',
   },
   nextPointLabel: {
     fontSize: 12,

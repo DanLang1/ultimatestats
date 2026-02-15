@@ -4,6 +4,7 @@ import PlayerStatsSummary from '@/components/view-stats/PlayerStatsSummary';
 import PlayingTimeSection from '@/components/view-stats/PlayingTimeSection';
 import RoleDiamond from '@/components/view-stats/RoleDiamond';
 import { useTheme } from '@/context/ThemeContext';
+import { useLayout } from '@/hooks/useLayout';
 import { getPlayerName } from '@/lib/playerUtils';
 import {
   computePlayerStats,
@@ -31,6 +32,8 @@ export default function PlayerStats() {
     gameTo,
   } = usePlayerStatsStore();
   const { palette } = useTheme();
+  const { isLandscape } = useLayout();
+  const styles = createStyles(isLandscape);
 
   // Derive player name for display
   const playerName = getPlayerName(roster, playerId) ?? playerId ?? '';
@@ -125,7 +128,7 @@ export default function PlayerStats() {
         <Text style={[styles.headerTitle, { color: palette.textMuted }]}>PLAYER STATS</Text>
       </View>
 
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
+      <ScrollView style={styles.scrollView} contentContainerStyle={[styles.scrollContent]}>
         {/* Top Row: Profile Diamond + Player Summary Cards */}
         <View style={styles.topCardsRow}>
           {/* Profile Diamond Card */}
@@ -323,94 +326,96 @@ export default function PlayerStats() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-  },
-  backButton: {
-    padding: 8,
-    borderRadius: 20,
-    marginRight: 4,
-  },
-  avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  avatarText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  playerName: {
-    fontSize: 20,
-    fontWeight: '800',
-    letterSpacing: 0.5,
-  },
-  playerDetail: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginTop: 4,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    padding: 16,
-    paddingBottom: 40,
-  },
-  grid: {
-    gap: 16,
-  },
-  topCardsRow: {
-    flexDirection: 'row',
-    gap: 12,
-    marginBottom: 16,
-  },
-  profileCard: {
-    borderRadius: 16,
-    borderWidth: 1,
-    overflow: 'hidden',
-  },
-  summaryCard: {
-    flex: 1,
-    borderRadius: 16,
-    borderWidth: 1,
-    padding: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerTitle: {
-    fontSize: 12,
-    fontWeight: '700',
-    letterSpacing: 1,
-    marginLeft: 12,
-  },
-  card: {
-    borderRadius: 16,
-    borderWidth: 1,
-    overflow: 'hidden',
-    paddingVertical: 12,
-    // Ensure sufficient height for charts (prevent cut-off)
-    minHeight: 250,
-  },
-  labelBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 8,
-  },
-  labelText: {
-    fontSize: 10,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-});
+function createStyles(isLandscape: boolean) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      borderBottomWidth: 1,
+    },
+    backButton: {
+      padding: 8,
+      borderRadius: 20,
+      marginRight: 4,
+    },
+    avatar: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    avatarText: {
+      fontSize: 16,
+      fontWeight: 'bold',
+    },
+    playerName: {
+      fontSize: 20,
+      fontWeight: '800',
+      letterSpacing: 0.5,
+    },
+    playerDetail: {
+      fontSize: 16,
+      fontWeight: '600',
+      marginTop: 4,
+    },
+    scrollView: {
+      flex: 1,
+    },
+    scrollContent: {
+      padding: 16,
+    },
+    grid: {
+      gap: 16,
+    },
+    topCardsRow: {
+      flexDirection: isLandscape ? 'row' : 'column-reverse',
+      alignItems: isLandscape ? undefined : 'stretch',
+      gap: 12,
+      marginBottom: 16,
+    },
+    profileCard: {
+      borderRadius: 16,
+      borderWidth: 1,
+      overflow: 'hidden',
+    },
+    summaryCard: {
+      flex: 1,
+      borderRadius: 16,
+      borderWidth: 1,
+      padding: 16,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    headerTitle: {
+      fontSize: 12,
+      fontWeight: '700',
+      letterSpacing: 1,
+      marginLeft: 12,
+    },
+    card: {
+      borderRadius: 16,
+      borderWidth: 1,
+      overflow: 'hidden',
+      paddingVertical: 12,
+      // Ensure sufficient height for charts (prevent cut-off)
+      minHeight: 250,
+    },
+    labelBadge: {
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+      borderRadius: 8,
+    },
+    labelText: {
+      fontSize: 10,
+      fontWeight: '700',
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+    },
+  });
+}

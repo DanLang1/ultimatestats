@@ -35,7 +35,7 @@ export default function AboutScreen() {
         <View style={styles.headerSpacer} />
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView contentContainerStyle={[styles.scrollContent]}>
         {/* App Info Card */}
         <View style={[styles.card, { backgroundColor: palette.overlay08 }]}>
           <View style={styles.appInfo}>
@@ -123,7 +123,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingTop: 16,
+    paddingTop: 8,
     paddingBottom: 12,
   },
   backButton: {

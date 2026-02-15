@@ -1,12 +1,14 @@
 import { useTheme } from '@/context/ThemeContext';
+import { useLayout } from '@/hooks/useLayout';
+import { useReclampOnResize } from '@/hooks/useReclampOnResize';
 import { useTimeoutTimer } from '@/hooks/useTimeoutTimer';
 import { useGameStore } from '@/store/gameStore';
 import { useUIStore } from '@/store/uiStore';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router } from 'expo-router';
-import React from 'react';
-import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import React, { useState } from 'react';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -29,10 +31,6 @@ interface ScoreboardActionBarProps {
 
 const BAR_WIDTH_INITIAL = 280;
 const BAR_HEIGHT_INITIAL = 56;
-const BAR_HEIGHT_HORIZONTAL = 56;
-const BAR_WIDTH_HORIZONTAL = 420;
-const BAR_HEIGHT_VERTICAL = 230;
-const BAR_WIDTH_VERTICAL = 60;
 
 export function ScoreboardActionBar({
   possession,
@@ -41,7 +39,7 @@ export function ScoreboardActionBar({
   onStartPoint,
 }: ScoreboardActionBarProps) {
   const { palette } = useTheme();
-  const { width: screenWidth, height: screenHeight } = useWindowDimensions();
+  const { width: screenWidth, height: screenHeight } = useLayout();
   const insets = useSafeAreaInsets();
   const {
     actionBarPosition,
@@ -90,17 +88,15 @@ export function ScoreboardActionBar({
   const isDragging = useSharedValue(false);
   const boxWidth = useSharedValue(BAR_WIDTH_INITIAL);
   const boxHeight = useSharedValue(BAR_HEIGHT_INITIAL);
+  const [measuredSize, setMeasuredSize] = useState({
+    width: BAR_WIDTH_INITIAL,
+    height: BAR_HEIGHT_INITIAL,
+  });
   // Clamp position within screen bounds
   const clampPosition = (x: number, y: number) => {
     'worklet';
-    const effectiveWidth = Math.max(
-      boxWidth.value,
-      isVertical ? BAR_WIDTH_VERTICAL : BAR_WIDTH_HORIZONTAL,
-    );
-    const effectiveHeight = Math.max(
-      boxHeight.value,
-      isVertical ? BAR_HEIGHT_VERTICAL : BAR_HEIGHT_HORIZONTAL,
-    );
+    const effectiveWidth = boxWidth.value;
+    const effectiveHeight = boxHeight.value;
 
     // Account for safe areas and margin for shadows
     const leftBound = insets.left + 8;
@@ -112,6 +108,14 @@ export function ScoreboardActionBar({
     const clampedY = Math.max(topBound, Math.min(y, bottomBound));
     return { x: clampedX, y: clampedY };
   };
+
+  // Re-clamp position when screen dimensions change (e.g. rotation)
+  useReclampOnResize({
+    translateX,
+    translateY,
+    effectiveWidth: measuredSize.width,
+    effectiveHeight: measuredSize.height,
+  });
 
   const panGesture = Gesture.Pan()
     .minDistance(5)
@@ -220,6 +224,7 @@ export function ScoreboardActionBar({
           const { width, height } = e.nativeEvent.layout;
           boxWidth.value = width;
           boxHeight.value = height;
+          setMeasuredSize({ width, height });
         }}
         style={[
           styles.container,

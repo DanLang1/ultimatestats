@@ -3,7 +3,6 @@ import { LinePreset, Player, PointLineRecord } from '@/lib/storage/types';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React, { useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ModalPlayerGrid, SortDirection } from './ModalPlayerGrid';
 
 export interface PresetEditViewProps {
@@ -34,7 +33,6 @@ export function PresetEditView({
   onBack,
 }: PresetEditViewProps) {
   const { palette } = useTheme();
-  const insets = useSafeAreaInsets();
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [sortKey, setSortKey] = useState(0);
   const nameInputRef = useRef<TextInput>(null);
@@ -47,8 +45,7 @@ export function PresetEditView({
   const canSave = presetName.trim().length > 0 && selectedIds.length > 0;
 
   return (
-    <View
-      style={[styles.container, { backgroundColor: palette.primary, paddingTop: insets.top + 12 }]}>
+    <View style={[styles.container, { backgroundColor: palette.primary, paddingTop: 12 }]}>
       {/* Header Row */}
       <View style={styles.headerRow}>
         {/* Back button */}

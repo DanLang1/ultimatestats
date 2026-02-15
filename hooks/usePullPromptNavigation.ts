@@ -35,7 +35,7 @@ export function usePullPromptNavigation() {
       if (hasNavigatedRef.current) return;
       hasNavigatedRef.current = true;
 
-      router.push('/PullPromptModal');
+      router.push('/PreGameConfirm');
     }, [shouldShowPullPrompt]),
   );
 }

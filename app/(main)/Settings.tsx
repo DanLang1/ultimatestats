@@ -7,7 +7,9 @@ import { Switch } from '@/components/ui/Switch';
 import { useTheme } from '@/context/ThemeContext';
 import { useIsGameActive } from '@/hooks/useIsGameActive';
 import { useKeyboardDidHide } from '@/hooks/useKeyboardDidHide';
+import { useLayout } from '@/hooks/useLayout';
 import { useNewGame } from '@/hooks/useNewGame';
+import { MAX_TEAM_NAME_LENGTH } from '@/lib/constants';
 import { SavedTeam } from '@/lib/storage';
 import { useGameStore } from '@/store/gameStore';
 import { useSettingsStore } from '@/store/settingsStore';
@@ -24,6 +26,8 @@ export default function SettingsScreen() {
 }
 
 function SettingsContent() {
+  const { isLandscape } = useLayout();
+  const styles = createStyles(isLandscape);
   const { palette, themeMode, setThemeMode } = useTheme();
   const { showAlert } = useAlert();
   const { hasSeenStatsTutorial, triggerStatsTutorial } = useTutorialStore();
@@ -109,6 +113,10 @@ function SettingsContent() {
     router.push({ pathname: '/EditRoster', params: { teamName: team1Name } });
   };
 
+  const handleImportTeamFromApi = () => {
+    router.push('/ImportTeam');
+  };
+
   // Save team when name editing finishes (on blur)
   const handleTeam1NameBlur = () => {
     const newName = team1NameDraft.trim();
@@ -150,6 +158,45 @@ function SettingsContent() {
   const inputBgStyle = { backgroundColor: palette.overlay08 };
   const dividerStyle = { backgroundColor: palette.overlay10 };
 
+  const renderColorSettings = () => (
+    <>
+      <View style={[styles.divider, dividerStyle]} />
+
+      <Text style={[styles.sectionTitle, textInverseStyle]}>TEAM COLORS</Text>
+      <TeamColorPicker
+        label="MY TEAM COLOR"
+        value={team1BgColor}
+        onChange={(color) => setTeamBgColor('team1', color)}
+      />
+      <View style={{ height: 12 }} />
+      <TeamColorPicker
+        label="OPPOSING TEAM COLOR"
+        value={team2BgColor}
+        onChange={(color) => setTeamBgColor('team2', color)}
+      />
+      <Pressable
+        style={({ pressed }) => [styles.resetColorsButton, pressed && { opacity: 0.7 }]}
+        onPress={() => {
+          setTeamBgColor('team1', palette.surface);
+          setTeamBgColor('team2', palette.primary);
+        }}>
+        <Text style={[styles.resetColorsButtonText, textMutedStyle]}>Reset to Default</Text>
+      </Pressable>
+
+      <View style={[styles.divider, dividerStyle]} />
+
+      <Text style={[styles.sectionTitle, textInverseStyle]}>PLAYER NAME COLORS</Text>
+      <TeamColorPicker label="MMP (MALE MATCHING)" value={mmpColor} onChange={setMmpColor} />
+      <View style={{ height: 12 }} />
+      <TeamColorPicker label="FMP (FEMALE MATCHING)" value={fmpColor} onChange={setFmpColor} />
+      <Pressable
+        style={({ pressed }) => [styles.resetColorsButton, pressed && { opacity: 0.7 }]}
+        onPress={resetMatchingTypeColors}>
+        <Text style={[styles.resetColorsButtonText, textMutedStyle]}>Reset to Default</Text>
+      </Pressable>
+    </>
+  );
+
   return (
     <ThemedView style={[styles.container, containerStyle]}>
       <Stack.Screen options={{ headerShown: false }} />
@@ -183,7 +230,7 @@ function SettingsContent() {
         </View>
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView contentContainerStyle={[styles.scrollContent]}>
         {gameActive && (
           <View
             style={[
@@ -196,10 +243,26 @@ function SettingsContent() {
             </Text>
           </View>
         )}
-        <View style={styles.columnsContainer}>
+        <View key={isLandscape ? 'landscape' : 'portrait'} style={styles.columnsContainer}>
           {/* Left Column: Teams */}
           <View style={styles.column}>
             <Text style={[styles.sectionTitle, textInverseStyle]}>TEAMS</Text>
+            <Pressable
+              style={({ pressed }) => [
+                styles.importTeamButton,
+                { backgroundColor: palette.accentOverlay10, borderColor: palette.accentOverlay30 },
+                pressed && styles.buttonPressed,
+              ]}
+              onPress={handleImportTeamFromApi}>
+              <MaterialCommunityIcons
+                name="cloud-download-outline"
+                size={20}
+                color={palette.accent}
+              />
+              <Text style={[styles.importTeamButtonText, { color: palette.accent }]}>
+                Import from USA Ultimate
+              </Text>
+            </Pressable>
             <View style={styles.inputGroupFullWidth}>
               <Text style={[styles.inputLabel, textMutedStyle]}>My Team</Text>
               <View style={styles.teamInputRow}>
@@ -218,7 +281,7 @@ function SettingsContent() {
                     onBlur={handleTeam1NameBlur}
                     placeholder="Team 1 Name"
                     placeholderTextColor={palette.textMuted}
-                    maxLength={20}
+                    maxLength={MAX_TEAM_NAME_LENGTH}
                   />
                 </View>
 
@@ -253,50 +316,11 @@ function SettingsContent() {
                 onChangeText={setTeam2Name}
                 placeholder="Team 2 Name"
                 placeholderTextColor={palette.textMuted}
-                maxLength={20}
+                maxLength={MAX_TEAM_NAME_LENGTH}
               />
             </View>
 
-            <View style={[styles.divider, dividerStyle]} />
-
-            {/* Team Colors */}
-            <Text style={[styles.sectionTitle, textInverseStyle]}>TEAM COLORS</Text>
-            <TeamColorPicker
-              label="MY TEAM COLOR"
-              value={team1BgColor}
-              onChange={(color) => setTeamBgColor('team1', color)}
-            />
-            <View style={{ height: 12 }} />
-            <TeamColorPicker
-              label="OPPOSING TEAM COLOR"
-              value={team2BgColor}
-              onChange={(color) => setTeamBgColor('team2', color)}
-            />
-            <Pressable
-              style={({ pressed }) => [styles.resetColorsButton, pressed && { opacity: 0.7 }]}
-              onPress={() => {
-                setTeamBgColor('team1', palette.surface);
-                setTeamBgColor('team2', palette.primary);
-              }}>
-              <Text style={[styles.resetColorsButtonText, textMutedStyle]}>Reset to Default</Text>
-            </Pressable>
-
-            <View style={[styles.divider, dividerStyle]} />
-
-            {/* Matching Type Colors */}
-            <Text style={[styles.sectionTitle, textInverseStyle]}>PLAYER NAME COLORS</Text>
-            <TeamColorPicker label="MMP (MALE MATCHING)" value={mmpColor} onChange={setMmpColor} />
-            <View style={{ height: 12 }} />
-            <TeamColorPicker
-              label="FMP (FEMALE MATCHING)"
-              value={fmpColor}
-              onChange={setFmpColor}
-            />
-            <Pressable
-              style={({ pressed }) => [styles.resetColorsButton, pressed && { opacity: 0.7 }]}
-              onPress={resetMatchingTypeColors}>
-              <Text style={[styles.resetColorsButtonText, textMutedStyle]}>Reset to Default</Text>
-            </Pressable>
+            {isLandscape && renderColorSettings()}
           </View>
 
           {/* Right Column: Game Settings */}
@@ -475,212 +499,231 @@ function SettingsContent() {
             </View>
           </View>
         </View>
+        {!isLandscape && renderColorSettings()}
       </ScrollView>
     </ThemedView>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 12,
-  },
-  backButton: {
-    padding: 8,
-    borderRadius: 20,
-    zIndex: 10,
-  },
-  headerTitle: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    textAlign: 'center',
-    fontSize: 14,
-    fontWeight: '700',
-    letterSpacing: 2,
-    textTransform: 'uppercase',
-  },
-  headerSpacer: {
-    width: 40,
-  },
-  headerRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 16,
-  },
-  themeButton: {
-    padding: 8,
-  },
-  scrollContent: {
-    padding: 24,
-    paddingTop: 8,
-  },
-  columnsContainer: {
-    flexDirection: 'row',
-    gap: 24,
-    alignItems: 'flex-start',
-  },
-  column: {
-    flex: 1,
-    gap: 12,
-  },
-  sectionTitle: {
-    fontSize: 12,
-    fontWeight: '700',
-    letterSpacing: 1.5,
-    marginBottom: 4,
-  },
-  sectionHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    gap: 8,
-  },
-  divider: {
-    height: 1,
-    marginVertical: 12,
-  },
-  inputsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
-  },
-  inputGroup: {
-    width: '48%',
-  },
-  inputGroupFullWidth: {
-    width: '100%',
-    marginBottom: 0,
-  },
-  teamInputRow: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  teamNameInputWrapper: {
-    flex: 1,
-  },
-  teamNameInput: {
-    flex: 1,
-  },
-  buttonDisabled: {
-    opacity: 0.5,
-  },
-  newTeamButton: {
-    height: 48,
-    paddingHorizontal: 12,
-    borderRadius: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  newTeamButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  editRosterButton: {
-    height: 48,
-    paddingHorizontal: 12,
-    borderRadius: 10,
-    borderWidth: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  editRosterButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  inputLabel: {
-    fontSize: 10,
-    fontWeight: '700',
-    letterSpacing: 1,
-    marginBottom: 6,
-  },
-  inputStacked: {
-    height: 48,
-    borderWidth: 1,
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    fontSize: 18,
-    fontWeight: '600',
-    textAlign: 'center',
-  },
-  inputWithSuffix: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  inputWithSuffixInput: {
-    flex: 1,
-    borderTopRightRadius: 0,
-    borderBottomRightRadius: 0,
-    borderRightWidth: 0,
-  },
-  inputSuffix: {
-    fontSize: 14,
-    fontWeight: '600',
-    paddingHorizontal: 12,
-    height: 48,
-    lineHeight: 48,
-    borderWidth: 1,
-    borderLeftWidth: 0,
-    borderTopRightRadius: 10,
-    borderBottomRightRadius: 10,
-  },
-  inputDisabled: {
-    opacity: 0.5,
-  },
-  helperText: {
-    fontSize: 11,
-  },
-  buttonPressed: {
-    opacity: 0.8,
-    transform: [{ scale: 0.98 }],
-  },
-  newGameButton: {
-    paddingHorizontal: 8,
-    paddingVertical: 8,
-  },
-  newGameButtonText: {
-    fontSize: 12,
-    fontWeight: '700',
-    letterSpacing: 0.5,
-  },
-  resetColorsButton: {
-    marginTop: 12,
-    paddingVertical: 8,
-    alignItems: 'center',
-  },
-  resetColorsButtonText: {
-    fontSize: 12,
-    fontWeight: '500',
-  },
-  switchWithHelp: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  helpButton: {
-    padding: 4,
-    borderRadius: 12,
-  },
-  activeGameBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-    marginBottom: 20,
-  },
-  activeGameBannerText: {
-    fontSize: 13,
-    fontWeight: '600',
-    flex: 1,
-  },
-});
+function createStyles(isLandscape: boolean) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 20,
+      paddingTop: 8,
+      paddingBottom: 12,
+    },
+    backButton: {
+      padding: 8,
+      borderRadius: 20,
+      zIndex: 10,
+    },
+    headerTitle: {
+      position: isLandscape ? 'absolute' : 'relative',
+      left: isLandscape ? 0 : undefined,
+      right: isLandscape ? 0 : undefined,
+      textAlign: isLandscape ? 'center' : 'left',
+      flex: isLandscape ? undefined : 1,
+      marginLeft: isLandscape ? undefined : 8,
+      fontSize: 14,
+      fontWeight: '700',
+      letterSpacing: 2,
+      textTransform: 'uppercase',
+    },
+    headerSpacer: {
+      width: 40,
+    },
+    headerRight: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 16,
+    },
+    themeButton: {
+      padding: 8,
+    },
+    scrollContent: {
+      padding: 24,
+      paddingTop: 8,
+    },
+    columnsContainer: {
+      flexDirection: isLandscape ? 'row' : 'column',
+      gap: 24,
+      alignItems: isLandscape ? 'flex-start' : 'stretch',
+    },
+    column: {
+      flex: isLandscape ? 1 : 0,
+      width: isLandscape ? undefined : '100%',
+      gap: 12,
+    },
+    sectionTitle: {
+      fontSize: 12,
+      fontWeight: '700',
+      letterSpacing: 1.5,
+      marginBottom: 4,
+    },
+    sectionHeaderRow: {
+      flexDirection: 'row',
+      alignItems: 'baseline',
+      gap: 8,
+    },
+    divider: {
+      height: 1,
+      marginVertical: 12,
+    },
+    inputsGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 12,
+    },
+    inputGroup: {
+      width: '48%',
+    },
+    inputGroupFullWidth: {
+      width: '100%',
+      marginBottom: 0,
+    },
+    teamInputRow: {
+      flexDirection: 'row',
+      gap: 8,
+    },
+    teamNameInputWrapper: {
+      flex: 1,
+    },
+    teamNameInput: {
+      flex: 1,
+    },
+    buttonDisabled: {
+      opacity: 0.5,
+    },
+    newTeamButton: {
+      height: 48,
+      paddingHorizontal: 12,
+      borderRadius: 10,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+    },
+    newTeamButtonText: {
+      fontSize: 14,
+      fontWeight: '600',
+    },
+    editRosterButton: {
+      height: 48,
+      paddingHorizontal: 12,
+      borderRadius: 10,
+      borderWidth: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+    },
+    editRosterButtonText: {
+      fontSize: 14,
+      fontWeight: '600',
+    },
+    importTeamButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+      height: 44,
+      paddingHorizontal: 14,
+      borderRadius: 10,
+      borderWidth: 1,
+    },
+    importTeamButtonText: {
+      fontSize: 14,
+      fontWeight: '600',
+    },
+    inputLabel: {
+      fontSize: 10,
+      fontWeight: '700',
+      letterSpacing: 1,
+      marginBottom: 6,
+    },
+    inputStacked: {
+      height: 48,
+      borderWidth: 1,
+      borderRadius: 10,
+      paddingHorizontal: 14,
+      fontSize: 18,
+      fontWeight: '600',
+      textAlign: 'center',
+    },
+    inputWithSuffix: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    inputWithSuffixInput: {
+      flex: 1,
+      borderTopRightRadius: 0,
+      borderBottomRightRadius: 0,
+      borderRightWidth: 0,
+    },
+    inputSuffix: {
+      fontSize: 14,
+      fontWeight: '600',
+      paddingHorizontal: 12,
+      height: 48,
+      lineHeight: 48,
+      borderWidth: 1,
+      borderLeftWidth: 0,
+      borderTopRightRadius: 10,
+      borderBottomRightRadius: 10,
+    },
+    inputDisabled: {
+      opacity: 0.5,
+    },
+    helperText: {
+      fontSize: 11,
+    },
+    buttonPressed: {
+      opacity: 0.8,
+      transform: [{ scale: 0.98 }],
+    },
+    newGameButton: {
+      paddingHorizontal: 8,
+      paddingVertical: 8,
+    },
+    newGameButtonText: {
+      fontSize: 12,
+      fontWeight: '700',
+      letterSpacing: 0.5,
+    },
+    resetColorsButton: {
+      marginTop: 12,
+      paddingVertical: 8,
+      alignItems: 'center',
+    },
+    resetColorsButtonText: {
+      fontSize: 12,
+      fontWeight: '500',
+    },
+    switchWithHelp: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    helpButton: {
+      padding: 4,
+      borderRadius: 12,
+    },
+    activeGameBanner: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+      paddingVertical: 10,
+      paddingHorizontal: 16,
+      borderRadius: 12,
+      borderWidth: 1,
+      marginBottom: 20,
+    },
+    activeGameBannerText: {
+      fontSize: 13,
+      fontWeight: '600',
+      flex: 1,
+    },
+  });
+}

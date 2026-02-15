@@ -1,5 +1,6 @@
 import { ScoreBadge } from '@/components/ui/ScoreBadge';
 import { useTheme } from '@/context/ThemeContext';
+import { useLayout } from '@/hooks/useLayout';
 import { computePlayerStats } from '@/lib/statsUtils';
 import { GameEvent, Player, PointLineRecord, SavedGame } from '@/lib/storage';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
@@ -37,6 +38,8 @@ export default function StatsContent({
   pointLines,
 }: StatsContentProps) {
   const { palette } = useTheme();
+  const { isLandscape } = useLayout();
+  const styles = createStyles(isLandscape);
   const playerStats = computePlayerStats(events, 'team1', roster);
   const goalCount = events.filter((e) => e.type === 'goal' && e.team === 'team1').length;
   const topPerformers = playerStats.filter((p) => p.plusMinus > 0).slice(0, 3);
@@ -83,7 +86,12 @@ export default function StatsContent({
 
           {/* Right Column: Top Performers */}
           {topPerformers.length > 0 && (
-            <View style={[styles.summaryRight, { borderLeftColor: palette.overlay10 }]}>
+            <View
+              style={[
+                styles.summaryRight,
+                { borderLeftColor: palette.overlay10 },
+                { borderTopColor: palette.overlay10 },
+              ]}>
               <Text style={[styles.topPerformersTitle, { color: palette.textMuted }]}>
                 TOP PERFORMERS
               </Text>
@@ -136,114 +144,118 @@ export default function StatsContent({
   );
 }
 
-const styles = StyleSheet.create({
-  summaryCard: {
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 24,
-    borderWidth: 1,
-    position: 'relative',
-  },
-  summaryColumns: {
-    flexDirection: 'row',
-    width: '100%',
-    gap: 16,
-  },
-  summaryLeft: {
-    flex: 1,
-    alignItems: 'flex-start',
-  },
-  summaryRight: {
-    flex: 1,
-    paddingLeft: 16,
-    borderLeftWidth: 1,
-  },
-  summaryLabel: {
-    fontSize: 10,
-    fontWeight: '700',
-    letterSpacing: 1,
-    marginBottom: 4,
-    textTransform: 'uppercase',
-  },
-  summaryTeamName: {
-    fontSize: 24,
-    fontWeight: '700',
-    marginBottom: 12,
-  },
-  summaryBadge: {
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 12,
-    borderWidth: 1,
-  },
-  summaryBadgeText: {
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  topPerformersTitle: {
-    fontSize: 10,
-    fontWeight: '700',
-    letterSpacing: 1,
-    marginBottom: 10,
-    textAlign: 'left',
-  },
-  topPerformersList: {
-    gap: 6,
-  },
-  topPerformerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 4,
-  },
-  topPerformerRank: {
-    fontSize: 12,
-    fontWeight: '700',
-    width: 20,
-  },
-  topPerformerName: {
-    flex: 1,
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  topPerformerPlusMinus: {
-    fontSize: 14,
-    fontWeight: '800',
-    minWidth: 44,
-    textAlign: 'right',
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  sectionTitle: {
-    fontSize: 12,
-    fontWeight: '700',
-    letterSpacing: 1,
-  },
-  headerExportButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-    borderRadius: 8,
-    borderWidth: 1,
-  },
-  headerExportText: {
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  emptyState: {
-    padding: 40,
-    alignItems: 'center',
-    gap: 16,
-    marginTop: 40,
-  },
-  emptyText: {
-    fontSize: 16,
-    textAlign: 'center',
-  },
-});
+function createStyles(isLandscape: boolean) {
+  return StyleSheet.create({
+    summaryCard: {
+      borderRadius: 16,
+      padding: 20,
+      marginBottom: 24,
+      borderWidth: 1,
+      position: 'relative',
+    },
+    summaryColumns: {
+      flexDirection: isLandscape ? 'row' : 'column',
+      width: '100%',
+      gap: 16,
+    },
+    summaryLeft: {
+      flex: 1,
+      alignItems: 'flex-start',
+    },
+    summaryRight: {
+      flex: 1,
+      paddingLeft: isLandscape ? 16 : 0,
+      borderLeftWidth: isLandscape ? 1 : 0,
+      borderTopWidth: isLandscape ? 0 : 1,
+      paddingTop: isLandscape ? 0 : 16,
+    },
+    summaryLabel: {
+      fontSize: 10,
+      fontWeight: '700',
+      letterSpacing: 1,
+      marginBottom: 4,
+      textTransform: 'uppercase',
+    },
+    summaryTeamName: {
+      fontSize: 24,
+      fontWeight: '700',
+      marginBottom: 12,
+    },
+    summaryBadge: {
+      paddingHorizontal: 12,
+      paddingVertical: 4,
+      borderRadius: 12,
+      borderWidth: 1,
+    },
+    summaryBadgeText: {
+      fontSize: 12,
+      fontWeight: '600',
+    },
+    topPerformersTitle: {
+      fontSize: 10,
+      fontWeight: '700',
+      letterSpacing: 1,
+      marginBottom: 10,
+      textAlign: 'left',
+    },
+    topPerformersList: {
+      gap: 6,
+    },
+    topPerformerRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      paddingHorizontal: 4,
+    },
+    topPerformerRank: {
+      fontSize: 12,
+      fontWeight: '700',
+      width: 20,
+    },
+    topPerformerName: {
+      flex: 1,
+      fontSize: 14,
+      fontWeight: '600',
+    },
+    topPerformerPlusMinus: {
+      fontSize: 14,
+      fontWeight: '800',
+      minWidth: 44,
+      textAlign: 'right',
+    },
+    sectionHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 12,
+    },
+    sectionTitle: {
+      fontSize: 12,
+      fontWeight: '700',
+      letterSpacing: 1,
+    },
+    headerExportButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      paddingVertical: 4,
+      paddingHorizontal: 8,
+      borderRadius: 8,
+      borderWidth: 1,
+    },
+    headerExportText: {
+      fontSize: 12,
+      fontWeight: '600',
+    },
+    emptyState: {
+      padding: 40,
+      alignItems: 'center',
+      gap: 16,
+      marginTop: 40,
+    },
+    emptyText: {
+      fontSize: 16,
+      textAlign: 'center',
+    },
+  });
+}

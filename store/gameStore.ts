@@ -7,7 +7,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
-import { GameState, TurnoverType } from './gameStore.types';
+import { GameState, TurnoverEvent, TurnoverType } from './gameStore.types';
 import { useLinePresetsStore } from './linePresetsStore';
 import { useSettingsStore } from './settingsStore';
 
@@ -66,6 +66,7 @@ export const useGameStore = create<GameState>()(
         possession: null,
         startingPossession: null,
         pendingTurnoverEntry: null,
+        turnoverToastSignal: null,
 
         // Point tracking for timeline
         currentPoint: 1,
@@ -396,6 +397,7 @@ export const useGameStore = create<GameState>()(
             state.possession = null;
             state.startingPossession = null;
             state.pendingTurnoverEntry = null;
+            state.turnoverToastSignal = null;
             state.currentPoint = 1;
             state.timerIsActive = false;
             state.timerEndTime = null;
@@ -641,7 +643,7 @@ export const useGameStore = create<GameState>()(
               state.currentPointStartTime !== null
                 ? Date.now() - state.currentPointStartTime
                 : undefined;
-            state.events.push({
+            const turnoverEvent: TurnoverEvent = {
               type: 'turnover',
               team: event.team,
               subtype: event.subtype,
@@ -649,9 +651,20 @@ export const useGameStore = create<GameState>()(
               player2Id: event.player2Id,
               elapsedMs,
               pointNumber: state.currentPoint,
-            });
+            };
+            state.events.push(turnoverEvent);
+            state.turnoverToastSignal = {
+              id: Date.now(),
+              eventIndex: state.events.length - 1,
+              event: turnoverEvent,
+            };
             state.possession = state.possession === 'team1' ? 'team2' : 'team1';
             state.pendingTurnoverEntry = null;
+          }),
+
+        clearTurnoverToastSignal: () =>
+          set((state: GameState) => {
+            state.turnoverToastSignal = null;
           }),
 
         // Cancel pending turnover entry - just clears without flipping possession
@@ -717,11 +730,21 @@ export const useGameStore = create<GameState>()(
             team?: 'team1' | 'team2';
             goalPlayerId?: string | null;
             assistPlayerId?: string | null;
+            elapsedMs?: number | null;
           },
         ) =>
           set((state: GameState) => {
             const event = state.events[eventIndex];
             if (!event) return;
+
+            // Handle elapsedMs for any event type
+            if (updates.elapsedMs !== undefined) {
+              if (updates.elapsedMs === null) {
+                delete event.elapsedMs;
+              } else {
+                event.elapsedMs = updates.elapsedMs;
+              }
+            }
 
             if (event.type === 'turnover') {
               if (updates.playerId !== undefined) event.playerId = updates.playerId;
@@ -779,6 +802,7 @@ export const useGameStore = create<GameState>()(
             team?: 'team1' | 'team2';
             goalPlayerId?: string | null;
             assistPlayerId?: string | null;
+            elapsedMs?: number | null;
           },
         ) => {
           const game = get().savedGames.find((g) => g.id === gameId);
@@ -816,6 +840,15 @@ export const useGameStore = create<GameState>()(
             }
           } else {
             return;
+          }
+
+          // Handle elapsedMs for any event type
+          if (updates.elapsedMs !== undefined) {
+            if (updates.elapsedMs === null) {
+              delete updatedEvent.elapsedMs;
+            } else {
+              updatedEvent.elapsedMs = updates.elapsedMs;
+            }
           }
 
           // Update the main event

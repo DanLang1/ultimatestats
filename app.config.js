@@ -4,7 +4,7 @@ export default {
   name: IS_DEV ? 'U-Stat (Dev)' : 'U-Stat',
   slug: 'ultimatestats',
   version: '1.5.1',
-  orientation: 'landscape',
+  orientation: 'default',
   icon: './assets/images/icon.png',
   scheme: IS_DEV ? 'ultimatestats-dev' : 'ultimatestats',
   userInterfaceStyle: 'automatic',

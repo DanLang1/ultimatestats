@@ -128,7 +128,6 @@ export function EditRosterSidebar({
             collapsed={collapsed}
           />
         )}
-
         {showClearRoster && (
           <>
             <SidebarButton

@@ -1,5 +1,6 @@
 import { PlayerChip } from '@/components/ui/PlayerChip';
 import { useTheme } from '@/context/ThemeContext';
+import { useLayout } from '@/hooks/useLayout';
 import { computePlayingTime, formatPlayingTime } from '@/lib/lineUtils';
 import { Player, PointLineRecord } from '@/lib/storage/types';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
@@ -108,6 +109,8 @@ export function ModalPlayerGrid({
   currentPoint,
 }: ModalPlayerGridProps) {
   const { palette } = useTheme();
+  const { isLandscape } = useLayout();
+  const styles = baseStyles;
 
   // Determine colors based on context
   const labelColor = useModalColorsProp ? palette.modalTextMuted : palette.textMuted;
@@ -173,10 +176,12 @@ export function ModalPlayerGrid({
     }
   }
 
+  const columnStyle = isLandscape ? styles.columnLandscape : styles.columnPortrait;
+
   const renderMixedColumn = (key: ColumnKey) => {
     const players = columns.get(key) ?? [];
     return (
-      <View key={key} style={styles.column}>
+      <View key={key} style={columnStyle}>
         <Text style={[styles.columnLabel, { color: labelColor }]}>{MIXED_COLUMN_LABELS[key]}</Text>
         <View style={styles.columnChips}>{players.map(renderPlayerChip)}</View>
       </View>
@@ -186,7 +191,7 @@ export function ModalPlayerGrid({
   const renderGenericColumn = (key: GenericColumnKey) => {
     const players = genericColumns.get(key) ?? [];
     return (
-      <View key={key} style={styles.column}>
+      <View key={key} style={columnStyle}>
         <Text style={[styles.columnLabel, { color: labelColor }]}>
           {GENERIC_COLUMN_LABELS[key]}
         </Text>
@@ -247,13 +252,12 @@ export function ModalPlayerGrid({
 
     return (
       <ScrollView
+        key={isLandscape ? 'landscape' : 'portrait'}
         style={styles.container}
         showsVerticalScrollIndicator
         contentContainerStyle={styles.scrollContent}
         nestedScrollEnabled>
-        <View style={styles.fourColumnContainer}>
-          {activeGenericColumns.map(renderGenericColumn)}
-        </View>
+        <View style={styles.multiColumn}>{activeGenericColumns.map(renderGenericColumn)}</View>
       </ScrollView>
     );
   }
@@ -281,9 +285,7 @@ export function ModalPlayerGrid({
             MIXED_COLUMN_LABELS[activePrimaryColumns[0]],
           )
         ) : (
-          <View style={styles.fourColumnContainer}>
-            {activePrimaryColumns.map(renderMixedColumn)}
-          </View>
+          <View style={styles.multiColumn}>{activePrimaryColumns.map(renderMixedColumn)}</View>
         ))}
 
       {/* Secondary columns */}
@@ -296,7 +298,7 @@ export function ModalPlayerGrid({
             )}
           </View>
         ) : (
-          <View style={styles.threeColumnContainer}>
+          <View style={[styles.multiColumn, styles.secondaryMargin]}>
             {activeSecondaryColumns.map(renderMixedColumn)}
           </View>
         ))}
@@ -304,7 +306,7 @@ export function ModalPlayerGrid({
   );
 }
 
-const styles = StyleSheet.create({
+const baseStyles = StyleSheet.create({
   container: {
     flex: 1,
     overflow: 'hidden',
@@ -313,13 +315,13 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     paddingBottom: 12,
   },
-  fourColumnContainer: {
+  multiColumn: {
     flexDirection: 'row',
     gap: 6,
+    flexWrap: 'wrap',
+    rowGap: 12,
   },
-  threeColumnContainer: {
-    flexDirection: 'row',
-    gap: 6,
+  secondaryMargin: {
     marginTop: 14,
   },
   splitColumnWrapper: {
@@ -337,8 +339,13 @@ const styles = StyleSheet.create({
   secondarySplitWrapper: {
     marginTop: 14,
   },
-  column: {
+  columnLandscape: {
     flex: 1,
+    gap: 5,
+  },
+  columnPortrait: {
+    flex: 1,
+    minWidth: '45%',
     gap: 5,
   },
   columnLabel: {

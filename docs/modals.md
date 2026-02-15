@@ -184,11 +184,48 @@ export default function EditPlayerModal() {
 
 **Why this matters:** Calling `router.navigate()` or `router.dismissTo()` during render is a side effect that triggers React's warning. The `<Redirect>` component is the React-way to handle this declaratively.
 
+## Portrait Mode Support
+
+Modals that can appear on portrait-enabled screens need extra handling for safe areas and orientation.
+Use [responsive-layout.md](responsive-layout.md) as the source of truth for orientation behavior and `useLayout()` / `createStyles()` patterns.
+
+### Required Steps
+
+1. **Rely on root safe area edges** (`app/_layout.tsx`) for top/bottom safe area.
+2. **Use safe area insets only when needed** (typically for horizontal inset handling):
+
+```tsx
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+export default function MyModal() {
+  const insets = useSafeAreaInsets();
+
+  return (
+    <View style={StyleSheet.absoluteFill}>
+      <Pressable style={[styles.overlay, { backgroundColor: palette.overlayDark40 }]}>
+        <View
+          style={[
+            styles.sheet,
+            { backgroundColor: palette.modalBg, paddingHorizontal: Math.max(insets.left, 16) },
+          ]}>
+          {/* content */}
+        </View>
+      </Pressable>
+    </View>
+  );
+}
+```
+
+3. **Ensure content is scrollable** — portrait has less horizontal space, so wrap content in `ScrollView` if it may overflow.
+
+### Modals with Portrait Support
+
+- `app/EditEventModal.tsx` - Edit action modal (opened from GameTimeline)
+
 ## Existing Modal Routes
 
 - `app/StatEntryModal.tsx` - Goal/assist entry after scoring
 - `app/TurnoverEntryModal.tsx` - Turnover type selection
-- `app/PullPromptModal.tsx` - Initial possession selection
 - `app/EditPlayerModal.tsx` - Edit player details
 
 ---

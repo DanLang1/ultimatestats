@@ -6,6 +6,8 @@
 
 A mobile app for tracking Ultimate Frisbee game scores and player statistics, built with React Native + Expo.
 
+Platform support details are documented in [platform-support.md](platform-support.md).
+
 ## Directory Structure
 
 ```
@@ -27,6 +29,7 @@ A mobile app for tracking Ultimate Frisbee game scores and player statistics, bu
 │   ├── gameStore.ts   # Main game state
 │   └── *.types.ts     # TypeScript interfaces
 ├── lib/               # Utilities and helpers
+│   ├── constants.ts   # App-wide constants (name limits, etc.)
 │   ├── gameUtils.ts   # Game logic (checkGameOver)
 │   ├── statsUtils.ts  # Stats calculations, CSV export
 │   ├── storage/       # AsyncStorage helpers
@@ -66,13 +69,30 @@ Tracks which team has the disc, enabling turnover detection when user taps the n
 
 ## Quick Links
 
-| Topic      | Documentation                                  |
-| ---------- | ---------------------------------------------- |
-| Modals     | [modals.md](modals.md)                         |
-| Themes     | [theming.md](theming.md)                       |
-| Stats      | [stat-tracking.md](stat-tracking.md)           |
-| Turnovers  | [turnover-tracking.md](turnover-tracking.md)   |
-| View Stats | [view-stats.md](view-stats.md)                 |
-| Game Logic | [game-logic.md](game-logic.md)                 |
-| Testing    | [testing.md](testing.md)                       |
-| Rules      | [architecture-rules.md](architecture-rules.md) |
+| Topic       | Documentation                                         |
+| ----------- | ----------------------------------------------------- |
+| Agent Guide | [GEMINI.md](../GEMINI.md) / [AGENTS.md](../AGENTS.md) |
+| Responsive  | [responsive-layout.md](responsive-layout.md)          |
+| Modals      | [modals.md](modals.md)                                |
+| Platforms   | [platform-support.md](platform-support.md)            |
+| Themes      | [theming.md](theming.md)                              |
+| UI Patterns | [ui-patterns.md](ui-patterns.md)                      |
+| Stats       | [stat-tracking.md](stat-tracking.md)                  |
+| Turnovers   | [turnover-tracking.md](turnover-tracking.md)          |
+| View Stats  | [view-stats.md](view-stats.md)                        |
+| Game Logic  | [game-logic.md](game-logic.md)                        |
+| Testing     | [testing.md](testing.md)                              |
+| Testing Map | [testing-map.md](testing-map.md)                      |
+| Rules       | [architecture-rules.md](architecture-rules.md)        |
+| State       | [state-ownership.md](state-ownership.md)              |
+| Navigation  | [navigation-map.md](navigation-map.md)                |
+| Events      | [event-model.md](event-model.md)                      |
+| Tech Debt   | [tech-debt.md](tech-debt.md)                          |
+
+## New Screen Checklist
+
+When adding a new screen or modal route:
+
+1. Start with [responsive-layout.md](responsive-layout.md) and choose the correct orientation support tier.
+2. Follow [ui-patterns.md](ui-patterns.md) for header, safe area, and component structure conventions.
+3. If the route is a modal, follow [modals.md](modals.md) and ensure dismissal/navigation contracts match [navigation-map.md](navigation-map.md).

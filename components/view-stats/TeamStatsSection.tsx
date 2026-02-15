@@ -1,4 +1,5 @@
 import { useTheme } from '@/context/ThemeContext';
+import { useLayout } from '@/hooks/useLayout';
 import { GameEvent } from '@/lib/storage';
 import { computeTeamStats, computeTimingStats } from '@/lib/teamStatsUtils';
 import React from 'react';
@@ -34,6 +35,8 @@ export default function TeamStatsSection({
   gameTo,
 }: TeamStatsSectionProps) {
   const { palette } = useTheme();
+  const { isLandscape } = useLayout();
+  const styles = createStyles(isLandscape);
 
   const stats = computeTeamStats(events, startingPossession, gameTo);
   const timingStats = computeTimingStats(events, startingPossession, gameTo);
@@ -116,19 +119,20 @@ export default function TeamStatsSection({
       {/* Ring Gauges */}
       <View style={styles.ringRow}>
         {primaryStats.map((stat, index) => (
-          <StatRing
-            key={index}
-            percentage={stat.percentage}
-            label={stat.label}
-            sublabel={stat.sublabel}
-            info={stat.info}
-            infoLabel={stat.infoLabel}
-          />
+          <View key={index} style={styles.ringWrapper}>
+            <StatRing
+              percentage={stat.percentage}
+              label={stat.label}
+              sublabel={stat.sublabel}
+              info={stat.info}
+              infoLabel={stat.infoLabel}
+            />
+          </View>
         ))}
       </View>
 
       {/* Primary Stats Grid */}
-      <StatsGrid stats={secondaryStats} columns={4} />
+      <StatsGrid stats={secondaryStats} columns={isLandscape ? 4 : 2} />
 
       {/* Game Flow Section */}
       <View style={styles.subsectionContainer}>
@@ -139,7 +143,7 @@ export default function TeamStatsSection({
       {/* Efficiency Section */}
       <View style={styles.subsectionContainer}>
         <Text style={[styles.subsectionTitle, { color: palette.textMuted }]}>EFFICIENCY</Text>
-        <StatsGrid stats={efficiencyStats} columns={4} />
+        <StatsGrid stats={efficiencyStats} columns={isLandscape ? 4 : 2} />
       </View>
 
       {/* Timing Section - only show if timing data exists */}
@@ -154,7 +158,7 @@ export default function TeamStatsSection({
               { label: 'Longest', value: formatDuration(timingStats.longestPointDurationMs) },
               { label: 'Shortest', value: formatDuration(timingStats.shortestPointDurationMs) },
             ]}
-            columns={5}
+            columns={isLandscape ? 5 : 3}
           />
         </View>
       )}
@@ -162,32 +166,40 @@ export default function TeamStatsSection({
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 24,
-    borderWidth: 1,
-  },
-  sectionTitle: {
-    fontSize: 10,
-    fontWeight: '700',
-    letterSpacing: 1,
-    marginBottom: 16,
-    textTransform: 'uppercase',
-  },
-  ringRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginBottom: 20,
-  },
-  subsectionContainer: {
-    marginTop: 8,
-  },
-  subsectionTitle: {
-    fontSize: 9,
-    fontWeight: '700',
-    letterSpacing: 0.5,
-    marginBottom: 8,
-  },
-});
+function createStyles(isLandscape: boolean) {
+  return StyleSheet.create({
+    container: {
+      borderRadius: 16,
+      padding: 16,
+      marginBottom: 24,
+      borderWidth: 1,
+    },
+    sectionTitle: {
+      fontSize: 10,
+      fontWeight: '700',
+      letterSpacing: 1,
+      marginBottom: 16,
+      textTransform: 'uppercase',
+    },
+    ringRow: {
+      flexDirection: 'row',
+      justifyContent: isLandscape ? 'space-around' : 'center',
+      marginBottom: 20,
+      flexWrap: isLandscape ? 'nowrap' : 'wrap',
+      rowGap: 16,
+    },
+    ringWrapper: {
+      width: isLandscape ? undefined : '50%',
+      alignItems: 'center',
+    },
+    subsectionContainer: {
+      marginTop: 8,
+    },
+    subsectionTitle: {
+      fontSize: 9,
+      fontWeight: '700',
+      letterSpacing: 0.5,
+      marginBottom: 8,
+    },
+  });
+}

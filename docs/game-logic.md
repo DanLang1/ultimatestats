@@ -45,8 +45,9 @@ if (result.isGameOver) {
 ### Initial Possession
 
 1. Game starts with `possession: null`
-2. `PullPromptModal` appears asking "Who is receiving?"
-3. User taps team → `setPossession(team)` + `startingPossession = team`
+2. `/PreGameConfirm` is required before the scoreboard can be used
+3. User selects receiving team -> `setPossession(team)` + `startingPossession = team`
+4. If gender ratio tracking is enabled, user must also select the starting ratio
 
 ### After a Goal
 

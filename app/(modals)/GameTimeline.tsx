@@ -26,6 +26,7 @@ export default function GameTimelineScreen() {
     gameTo,
     pointStartTimestamps,
     currentPointStartTime,
+    currentPoint,
   } = useGameStore();
   const team1Name = currentTeam?.name ?? 'Team 1';
 
@@ -99,7 +100,7 @@ export default function GameTimelineScreen() {
         </Text>
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView contentContainerStyle={[styles.scrollContent]}>
         {hasData ? (
           <EventTimeline
             points={pointEvents}
@@ -135,6 +136,18 @@ export default function GameTimelineScreen() {
                 },
               });
             }}
+            onEditDuration={(goalEventIndex, currentDurationMs) => {
+              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+              router.push({
+                pathname: '/EditDurationModal',
+                params: {
+                  eventIndex: String(goalEventIndex),
+                  gameId: params.gameId ?? 'current',
+                  currentDurationMs: String(currentDurationMs ?? '0'),
+                },
+              });
+            }}
+            currentPoint={isSavedGame ? undefined : currentPoint}
           />
         ) : (
           <View style={styles.emptyState}>
@@ -158,7 +171,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingTop: 16,
+    paddingTop: 8,
     paddingBottom: 12,
   },
   backButton: {
@@ -189,7 +202,6 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingVertical: 8,
-    paddingBottom: 40,
   },
   emptyState: {
     alignItems: 'center',

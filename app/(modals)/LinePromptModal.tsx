@@ -1,6 +1,7 @@
 import { ModalPlayerGrid, SortDirection } from '@/components/lines/ModalPlayerGrid';
 import { useTheme } from '@/context/ThemeContext';
 import { useIsGameActive } from '@/hooks/useIsGameActive';
+import { useLayout } from '@/hooks/useLayout';
 import {
   checkLineRatio,
   formatRatio,
@@ -19,6 +20,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 export default function LinePromptModal() {
   const { palette } = useTheme();
   const insets = useSafeAreaInsets();
+  const { isLandscape } = useLayout();
   const { genderRatioEnabled, firstPointRatio, numPlayers } = useSettingsStore();
   const { currentTeam, currentPoint, currentLine, pointLines, setCurrentLine, recordLineForPoint } =
     useGameStore();
@@ -116,9 +118,9 @@ export default function LinePromptModal() {
           styles.overlay,
           {
             backgroundColor: palette.overlayDark60,
-            paddingTop: Math.max(insets.top, 12),
-            paddingBottom: Math.max(insets.bottom, 12),
-            paddingHorizontal: 12,
+            paddingTop: isLandscape ? 12 : 16,
+            paddingBottom: isLandscape ? 12 : 16,
+            paddingHorizontal: isLandscape ? 12 : Math.max(insets.left, insets.right, 12),
           },
         ]}>
         <View style={[styles.sheet, { backgroundColor: palette.modalBg }]}>

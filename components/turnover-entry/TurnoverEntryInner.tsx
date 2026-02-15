@@ -1,5 +1,6 @@
 import { AnimatedThemedView } from '@/components/ThemedView';
 import { useTheme } from '@/context/ThemeContext';
+import { useLayout } from '@/hooks/useLayout';
 import { getActiveRoster, getPlayerName, UNKNOWN_PLAYER_ID } from '@/lib/playerUtils';
 import { Player } from '@/lib/storage/types';
 import { TurnoverType } from '@/store/gameStore.types';
@@ -43,6 +44,7 @@ export function TurnoverEntryInner({
   // For 50/50: track first selected player ID (thrower)
   const [fiftyFiftyFirstPlayerId, setFiftyFiftyFirstPlayerId] = useState<string | null>(null);
   const { palette, themeMode } = useTheme();
+  const { isLandscape } = useLayout();
 
   // Only show active players
   const activeRoster = getActiveRoster(roster);
@@ -286,12 +288,16 @@ export function TurnoverEntryInner({
     return (
       <AnimatedThemedView
         entering={SlideInDown.duration(400)}
-        style={[styles.sheet, { shadowColor: palette.shadow }]}
+        style={[styles.sheet, { shadowColor: palette.shadow, paddingBottom: 10 }]}
         onStartShouldSetResponder={() => true}>
         <Pressable onPress={() => {}} style={styles.sheetContent}>
           <View style={styles.compactContainer}>
             {renderHeader()}
-            <StatEntryRoster roster={displayRoster} onSelect={handlePlayerSelect} maxHeight={220} />
+            <StatEntryRoster
+              roster={displayRoster}
+              onSelect={handlePlayerSelect}
+              maxHeight={isLandscape ? 220 : 400}
+            />
             {renderCancelButton()}
           </View>
         </Pressable>
@@ -299,11 +305,71 @@ export function TurnoverEntryInner({
     );
   }
 
-  // Standard side-by-side layout
+  // Portrait: vertical stack layout
+  if (!isLandscape) {
+    return (
+      <AnimatedThemedView
+        entering={SlideInDown.duration(400)}
+        style={[styles.sheet, { shadowColor: palette.shadow, paddingBottom: 10 }]}
+        onStartShouldSetResponder={() => true}>
+        <Pressable onPress={() => {}} style={styles.sheetContent}>
+          <View style={styles.compactContainer}>
+            {renderHeader()}
+
+            {step === 'type' ? (
+              renderTypeButtons()
+            ) : (
+              <>
+                <View style={styles.addPlayerRow}>
+                  <TextInput
+                    style={[
+                      styles.input,
+                      {
+                        borderColor: palette.border,
+                        color: palette.inputText,
+                        backgroundColor: palette.inputBg,
+                      },
+                    ]}
+                    value={newPlayerName}
+                    onChangeText={setNewPlayerName}
+                    placeholder="Add player..."
+                    placeholderTextColor={palette.textMuted}
+                    onSubmitEditing={handleAddPlayer}
+                    returnKeyType="done"
+                    maxLength={20}
+                  />
+                  <Pressable
+                    style={[
+                      styles.addButton,
+                      { backgroundColor: palette.accent },
+                      !newPlayerName.trim() && styles.addButtonDisabled,
+                    ]}
+                    onPress={handleAddPlayer}
+                    disabled={!newPlayerName.trim()}>
+                    <Text style={[styles.addButtonText, { color: palette.textOnAccent }]}>Add</Text>
+                  </Pressable>
+                </View>
+
+                <StatEntryRoster
+                  roster={displayRoster}
+                  onSelect={handlePlayerSelect}
+                  maxHeight={400}
+                />
+              </>
+            )}
+
+            {renderCancelButton()}
+          </View>
+        </Pressable>
+      </AnimatedThemedView>
+    );
+  }
+
+  // Landscape: standard side-by-side layout
   return (
     <AnimatedThemedView
       entering={SlideInDown.duration(400)}
-      style={[styles.sheet, { shadowColor: palette.shadow }]}
+      style={[styles.sheet, { shadowColor: palette.shadow, paddingBottom: 10 }]}
       onStartShouldSetResponder={() => true}>
       <Pressable onPress={() => {}} style={styles.sheetContent}>
         <View style={styles.sideBySideContainer}>
