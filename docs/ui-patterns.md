@@ -4,17 +4,18 @@ Reusable UI conventions for screens and modals.
 
 ## Responsive Layout
 
+- For any new screen, start with [responsive-layout.md](responsive-layout.md) first.
 - Use `useLayout()` for layout info.
 - Prefer `createStyles(...)` style factories for orientation-aware styles.
 - Keep orientation logic in style definitions, not ad-hoc inline conditionals.
-- Reference: `docs/responsive-layout.md`.
+- Reference: [responsive-layout.md](responsive-layout.md).
 
 ## Screen Header Pattern
 
 - Keep headers consistent:
-`paddingTop: 8`
-`paddingHorizontal: 16-20`
-`paddingBottom: 10-12`
+  `paddingTop: 8`
+  `paddingHorizontal: 16-20`
+  `paddingBottom: 10-12`
 - Use explicit back/dismiss action and avoid render-time imperative navigation.
 - Reference: `docs/architecture-rules.md`.
 
@@ -25,9 +26,9 @@ For transparent modal routes:
 1. Wrap with `StyleSheet.absoluteFill`.
 2. Use overlay backdrop + centered/bottom sheet content.
 3. Set modal route options in `_layout.tsx`:
-`presentation: 'transparentModal'`
-`gestureEnabled: false`
-`contentStyle: { backgroundColor: 'transparent' }`
+   `presentation: 'transparentModal'`
+   `gestureEnabled: false`
+   `contentStyle: { backgroundColor: 'transparent' }`
 4. Use `router.dismissTo(...)` for deterministic exits.
 
 Reference: `docs/modals.md`.
@@ -49,4 +50,3 @@ Reference: `docs/modals.md`.
 - One component per file.
 - Avoid creating local subcomponents in the same file unless there is a strong reason.
 - Prefer early returns for empty/error branches.
-

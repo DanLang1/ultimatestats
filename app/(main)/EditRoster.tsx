@@ -2,11 +2,12 @@ import { EditRosterSidebar } from '@/components/EditRosterSidebar';
 import { EditRosterToolbar } from '@/components/EditRosterToolbar';
 import { AlertModal } from '@/components/ui/AlertModal';
 import { useAlert } from '@/components/ui/AlertProvider';
-import { ShareConfirmModal } from '@/components/ui/ShareConfirmModal';
 import { PlayerChip } from '@/components/ui/PlayerChip';
+import { ShareConfirmModal } from '@/components/ui/ShareConfirmModal';
 import { useTheme } from '@/context/ThemeContext';
 import { useIsGameActive } from '@/hooks/useIsGameActive';
 import { useLayout } from '@/hooks/useLayout';
+import { MAX_TEAM_NAME_LENGTH } from '@/lib/constants';
 import { hasPlayerWithName } from '@/lib/playerUtils';
 import { serializeTeam, uploadPayload } from '@/lib/sharing';
 import { SavedTeam } from '@/lib/storage';
@@ -332,7 +333,7 @@ export default function EditRosterScreen() {
           placeholder="Team name"
           placeholderTextColor={palette.textMuted}
           autoFocus
-          maxLength={20}
+          maxLength={MAX_TEAM_NAME_LENGTH}
         />
         {teamNameExists && (
           <Text style={[styles.errorText, { color: palette.danger }]}>
@@ -388,7 +389,7 @@ export default function EditRosterScreen() {
           placeholder="Team name"
           placeholderTextColor={palette.textMuted}
           autoFocus
-          maxLength={20}
+          maxLength={MAX_TEAM_NAME_LENGTH}
         />
         {newTeamNameExists && (
           <Text style={[styles.errorText, { color: palette.danger }]}>

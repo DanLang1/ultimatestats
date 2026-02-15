@@ -187,6 +187,7 @@ export default function EditPlayerModal() {
 ## Portrait Mode Support
 
 Modals that can appear on portrait-enabled screens need extra handling for safe areas and orientation.
+Use [responsive-layout.md](responsive-layout.md) as the source of truth for orientation behavior and `useLayout()` / `createStyles()` patterns.
 
 ### Required Steps
 
@@ -225,7 +226,6 @@ export default function MyModal() {
 
 - `app/StatEntryModal.tsx` - Goal/assist entry after scoring
 - `app/TurnoverEntryModal.tsx` - Turnover type selection
-- `app/PullPromptModal.tsx` - Initial possession selection
 - `app/EditPlayerModal.tsx` - Edit player details
 
 ---

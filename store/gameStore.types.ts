@@ -42,6 +42,12 @@ export type TimeoutEvent = {
 
 export type GameEvent = GoalEvent | TurnoverEvent | TimeoutEvent;
 
+export type TurnoverToastSignal = {
+  id: number;
+  eventIndex: number;
+  event: TurnoverEvent;
+};
+
 export interface GameState {
   // Teams
   currentTeam: SavedTeam; // My team (id, name, roster) - defaults to Team 1
@@ -95,6 +101,7 @@ export interface GameState {
   possession: 'team1' | 'team2' | null;
   startingPossession: 'team1' | 'team2' | null;
   pendingTurnoverEntry: { receivingTeam: 'team1' | 'team2' } | null;
+  turnoverToastSignal: TurnoverToastSignal | null;
 
   // Point tracking for timeline
   currentPoint: number;
@@ -152,6 +159,7 @@ export interface GameState {
     playerId: string | null;
     player2Id?: string | null;
   }) => void;
+  clearTurnoverToastSignal: () => void;
   clearPendingTurnoverEntry: () => void;
 
   // Event Editing Actions

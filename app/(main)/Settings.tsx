@@ -9,6 +9,7 @@ import { useIsGameActive } from '@/hooks/useIsGameActive';
 import { useKeyboardDidHide } from '@/hooks/useKeyboardDidHide';
 import { useLayout } from '@/hooks/useLayout';
 import { useNewGame } from '@/hooks/useNewGame';
+import { MAX_TEAM_NAME_LENGTH } from '@/lib/constants';
 import { SavedTeam } from '@/lib/storage';
 import { useGameStore } from '@/store/gameStore';
 import { useSettingsStore } from '@/store/settingsStore';
@@ -280,7 +281,7 @@ function SettingsContent() {
                     onBlur={handleTeam1NameBlur}
                     placeholder="Team 1 Name"
                     placeholderTextColor={palette.textMuted}
-                    maxLength={20}
+                    maxLength={MAX_TEAM_NAME_LENGTH}
                   />
                 </View>
 
@@ -315,7 +316,7 @@ function SettingsContent() {
                 onChangeText={setTeam2Name}
                 placeholder="Team 2 Name"
                 placeholderTextColor={palette.textMuted}
-                maxLength={20}
+                maxLength={MAX_TEAM_NAME_LENGTH}
               />
             </View>
 

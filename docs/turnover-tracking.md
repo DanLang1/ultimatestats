@@ -54,19 +54,22 @@ export type GameEvent =
 
 ## Flow
 
-### Initial Possession (Pull Prompt)
+### Initial Possession (Pre-Game Confirm)
 
 ```mermaid
 sequenceDiagram
     participant User
-    participant PullPrompt
+    participant PreGameConfirm
+    participant Scoreboard
     participant Store
 
     Note over User,Store: Game starts / New Game
     Store->>Store: possession = null
-    PullPrompt-->>User: "Who is receiving the pull?"
-    User->>PullPrompt: Taps Team 1
-    PullPrompt->>Store: setPossession('team1')
+    Scoreboard->>Scoreboard: Redirect to /PreGameConfirm
+    PreGameConfirm-->>User: "Who is receiving?"
+    User->>PreGameConfirm: Selects Team 1
+    PreGameConfirm->>Store: setPossession('team1')
+    Note over PreGameConfirm,Store: Selection persists immediately
     Store->>Store: possession = 'team1'
 ```
 
@@ -91,7 +94,27 @@ sequenceDiagram
     Sheet->>Store: addTurnoverEvent()
     Store->>Store: Flip possession to Team 2
     Store->>Store: Clear pendingTurnoverEntry
+    Store-->>User: Show "Event recorded" toast with Undo
 ```
+
+### Post-Record Confirmation (Toast)
+
+After a turnover is recorded, the scoreboard shows a short confirmation toast near the top:
+
+- Team-based examples:
+  - `Rivals blocked us`
+  - `Rivals turnover`
+- Player-based examples:
+  - `Alex got a block`
+  - `Casey threw it away`
+  - `Turnover by Alex and Casey`
+
+The toast includes an **Undo** action. Undo only applies while the same turnover is still the latest event in the log (to prevent undoing a different action if gameplay has progressed).
+
+Color coding:
+
+- **Green** for positive outcomes: block by team1, or throwaway by team2.
+- **Red** for all other turnover outcomes.
 
 ### Score After Goal
 
@@ -138,14 +161,14 @@ The tap behavior depends on the stat tracking mode setting:
 
 ## Components
 
-### `PullPrompt.tsx`
+### `PreGameConfirm.tsx`
 
-Modal that appears when:
+Full-screen setup that appears when required start-of-game values are missing:
 
-- Stat tracking is enabled (`statTrackingEnabled`)
-- Possession is `null` (start of game or after "New Game")
+- Receiving team is required when stat tracking is enabled and `possession === null`
+- Starting ratio is required when gender ratio tracking is enabled and `firstPointRatio === null`
 
-Shows two team buttons. Tapping a team calls `setPossession(team)` and sets that team as having the disc (they're receiving the pull).
+Selections are written directly to store when tapped, so they are preserved if the user navigates away and returns.
 
 ### `TurnoverEntrySheet.tsx`
 

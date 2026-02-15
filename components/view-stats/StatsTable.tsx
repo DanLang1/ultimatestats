@@ -166,6 +166,33 @@ export default function StatsTable({
     );
   };
 
+  const baseColumns: { key: SortKey; label: string }[] = [
+    { key: 'name', label: 'PLAYER' },
+    { key: 'plusMinus', label: '+/-' },
+    { key: 'goals', label: 'Goals' },
+    { key: 'assists', label: 'Assists' },
+    { key: 'blocks', label: 'Blocks' },
+    { key: 'throwaways', label: 'T/A' },
+    { key: 'drops', label: 'Drops' },
+  ];
+  const playingTimeColumns: { key: SortKey; label: string }[] = [
+    { key: 'oEfficiency', label: 'O-Eff' },
+    { key: 'dEfficiency', label: 'D-Eff' },
+    { key: 'pointsPlayed', label: 'PP' },
+  ];
+  const visibleColumns = hasPlayingTimeData ? [...baseColumns, ...playingTimeColumns] : baseColumns;
+
+  const getPortraitColumnWidth = (key: SortKey) => {
+    if (key === 'name') return 140;
+    if (key === 'oEfficiency' || key === 'dEfficiency' || key === 'pointsPlayed') return 88;
+    return 78;
+  };
+
+  const portraitTableMinWidth = visibleColumns.reduce(
+    (totalWidth, column) => totalWidth + getPortraitColumnWidth(column.key),
+    0,
+  );
+
   return (
     <View>
       <View style={styles.sectionHeader}>
@@ -219,192 +246,35 @@ export default function StatsTable({
           </View>
         </View>
       )}
-      <ScrollView horizontal={!isLandscape} showsHorizontalScrollIndicator={!isLandscape}>
+      {isLandscape ? (
         <View style={[styles.tableContainer, { borderColor: palette.overlay10 }]}>
-          {/* Table Header */}
           <View
             style={[
               styles.tableHeader,
               { backgroundColor: palette.overlay08, borderBottomColor: palette.overlay10 },
             ]}>
-            <TouchableOpacity
-              style={[
-                styles.headerCell,
-                styles.headerNameCell,
-                styles.sortableHeader,
-                sortConfig.key === 'name' && { backgroundColor: palette.overlay05 },
-              ]}
-              onPress={() => handleSort('name')}>
-              <Text
+            {visibleColumns.map((column) => (
+              <TouchableOpacity
+                key={column.key}
                 style={[
-                  styles.headerText,
-                  { color: sortConfig.key === 'name' ? palette.accent : palette.textMuted },
-                ]}>
-                PLAYER
-              </Text>
-              {renderSortIcon('name')}
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[
-                styles.headerCell,
-                styles.sortableHeader,
-                sortConfig.key === 'plusMinus' && { backgroundColor: palette.overlay05 },
-              ]}
-              onPress={() => handleSort('plusMinus')}>
-              <Text
-                style={[
-                  styles.headerText,
-                  { color: sortConfig.key === 'plusMinus' ? palette.accent : palette.textMuted },
-                ]}>
-                +/-
-              </Text>
-              {renderSortIcon('plusMinus')}
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[
-                styles.headerCell,
-                styles.sortableHeader,
-                sortConfig.key === 'goals' && { backgroundColor: palette.overlay05 },
-              ]}
-              onPress={() => handleSort('goals')}>
-              <Text
-                style={[
-                  styles.headerText,
-                  { color: sortConfig.key === 'goals' ? palette.accent : palette.textMuted },
-                ]}>
-                Goals
-              </Text>
-              {renderSortIcon('goals')}
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[
-                styles.headerCell,
-                styles.sortableHeader,
-                sortConfig.key === 'assists' && { backgroundColor: palette.overlay05 },
-              ]}
-              onPress={() => handleSort('assists')}>
-              <Text
-                style={[
-                  styles.headerText,
-                  { color: sortConfig.key === 'assists' ? palette.accent : palette.textMuted },
-                ]}>
-                Assists
-              </Text>
-              {renderSortIcon('assists')}
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[
-                styles.headerCell,
-                styles.sortableHeader,
-                sortConfig.key === 'blocks' && { backgroundColor: palette.overlay05 },
-              ]}
-              onPress={() => handleSort('blocks')}>
-              <Text
-                style={[
-                  styles.headerText,
-                  { color: sortConfig.key === 'blocks' ? palette.accent : palette.textMuted },
-                ]}>
-                Blocks
-              </Text>
-              {renderSortIcon('blocks')}
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[
-                styles.headerCell,
-                styles.sortableHeader,
-                sortConfig.key === 'throwaways' && { backgroundColor: palette.overlay05 },
-              ]}
-              onPress={() => handleSort('throwaways')}>
-              <Text
-                style={[
-                  styles.headerText,
-                  { color: sortConfig.key === 'throwaways' ? palette.accent : palette.textMuted },
-                ]}>
-                T/A
-              </Text>
-              {renderSortIcon('throwaways')}
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[
-                styles.headerCell,
-                styles.sortableHeader,
-                sortConfig.key === 'drops' && { backgroundColor: palette.overlay05 },
-              ]}
-              onPress={() => handleSort('drops')}>
-              <Text
-                style={[
-                  styles.headerText,
-                  { color: sortConfig.key === 'drops' ? palette.accent : palette.textMuted },
-                ]}>
-                Drops
-              </Text>
-              {renderSortIcon('drops')}
-            </TouchableOpacity>
-            {/* Playing Time Columns - only show if data exists */}
-            {hasPlayingTimeData && (
-              <>
-                <TouchableOpacity
+                  styles.headerCell,
+                  column.key === 'name' && styles.headerNameCell,
+                  styles.sortableHeader,
+                  sortConfig.key === column.key && { backgroundColor: palette.overlay05 },
+                ]}
+                onPress={() => handleSort(column.key)}>
+                <Text
                   style={[
-                    styles.headerCell,
-                    styles.sortableHeader,
-                    sortConfig.key === 'oEfficiency' && { backgroundColor: palette.overlay05 },
-                  ]}
-                  onPress={() => handleSort('oEfficiency')}>
-                  <Text
-                    style={[
-                      styles.headerText,
-                      {
-                        color:
-                          sortConfig.key === 'oEfficiency' ? palette.accent : palette.textMuted,
-                      },
-                    ]}>
-                    O-Eff
-                  </Text>
-                  {renderSortIcon('oEfficiency')}
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[
-                    styles.headerCell,
-                    styles.sortableHeader,
-                    sortConfig.key === 'dEfficiency' && { backgroundColor: palette.overlay05 },
-                  ]}
-                  onPress={() => handleSort('dEfficiency')}>
-                  <Text
-                    style={[
-                      styles.headerText,
-                      {
-                        color:
-                          sortConfig.key === 'dEfficiency' ? palette.accent : palette.textMuted,
-                      },
-                    ]}>
-                    D-Eff
-                  </Text>
-                  {renderSortIcon('dEfficiency')}
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[
-                    styles.headerCell,
-                    styles.sortableHeader,
-                    sortConfig.key === 'pointsPlayed' && { backgroundColor: palette.overlay05 },
-                  ]}
-                  onPress={() => handleSort('pointsPlayed')}>
-                  <Text
-                    style={[
-                      styles.headerText,
-                      {
-                        color:
-                          sortConfig.key === 'pointsPlayed' ? palette.accent : palette.textMuted,
-                      },
-                    ]}>
-                    PP
-                  </Text>
-                  {renderSortIcon('pointsPlayed')}
-                </TouchableOpacity>
-              </>
-            )}
+                    styles.headerText,
+                    { color: sortConfig.key === column.key ? palette.accent : palette.textMuted },
+                  ]}>
+                  {column.label}
+                </Text>
+                {renderSortIcon(column.key)}
+              </TouchableOpacity>
+            ))}
           </View>
 
-          {/* Table Rows */}
           {sortedStats.map((player, index) => {
             const pStats = getPlayingTimeStats(player.id);
             return (
@@ -446,7 +316,6 @@ export default function StatsTable({
                 <Text style={[styles.cell, { color: palette.textInverse }]}>
                   {player.drops || '-'}
                 </Text>
-                {/* Playing Time Cells - only show if data exists */}
                 {hasPlayingTimeData && (
                   <>
                     <Text
@@ -492,7 +361,235 @@ export default function StatsTable({
             );
           })}
         </View>
-      </ScrollView>
+      ) : (
+        <ScrollView horizontal showsHorizontalScrollIndicator>
+          <View
+            style={[
+              styles.portraitTableContainer,
+              { borderColor: palette.overlay10, minWidth: portraitTableMinWidth },
+            ]}>
+            <View
+              style={[
+                styles.portraitTableHeader,
+                { backgroundColor: palette.overlay08, borderBottomColor: palette.overlay10 },
+              ]}>
+              {visibleColumns.map((column) => (
+                <TouchableOpacity
+                  key={column.key}
+                  style={[
+                    styles.portraitHeaderCell,
+                    { width: getPortraitColumnWidth(column.key) },
+                    column.key === 'name' && styles.portraitNameHeaderCell,
+                    sortConfig.key === column.key && { backgroundColor: palette.overlay05 },
+                  ]}
+                  onPress={() => handleSort(column.key)}>
+                  <View style={styles.sortableHeader}>
+                    <Text
+                      style={[
+                        styles.headerText,
+                        {
+                          color: sortConfig.key === column.key ? palette.accent : palette.textMuted,
+                        },
+                        column.key === 'name' && styles.portraitNameHeaderText,
+                      ]}>
+                      {column.label}
+                    </Text>
+                    {renderSortIcon(column.key)}
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            {sortedStats.map((player, index) => {
+              const pStats = getPlayingTimeStats(player.id);
+              return (
+                <TouchableOpacity
+                  key={player.id}
+                  style={[
+                    styles.portraitTableRow,
+                    { borderBottomColor: palette.overlay10 },
+                    index === sortedStats.length - 1 && { borderBottomWidth: 0 },
+                    index % 2 === 1 && { backgroundColor: palette.overlay02 },
+                  ]}
+                  onPress={() => handlePlayerPress(player.id)}>
+                  {visibleColumns.map((column) => {
+                    if (column.key === 'name') {
+                      return (
+                        <Text
+                          key={`${player.id}-${column.key}`}
+                          style={[
+                            styles.portraitCell,
+                            styles.portraitNameCell,
+                            {
+                              width: getPortraitColumnWidth(column.key),
+                              color: palette.textInverse,
+                            },
+                          ]}>
+                          {player.name}
+                        </Text>
+                      );
+                    }
+                    if (column.key === 'plusMinus') {
+                      return (
+                        <Text
+                          key={`${player.id}-${column.key}`}
+                          style={[
+                            styles.portraitCell,
+                            styles.plusMinusCell,
+                            {
+                              width: getPortraitColumnWidth(column.key),
+                              color: palette.textInverse,
+                            },
+                            player.plusMinus > 0 && { color: palette.success },
+                            player.plusMinus < 0 && { color: palette.danger },
+                          ]}>
+                          {player.plusMinus > 0 ? '+' : ''}
+                          {player.plusMinus}
+                        </Text>
+                      );
+                    }
+                    if (column.key === 'goals') {
+                      return (
+                        <Text
+                          key={`${player.id}-${column.key}`}
+                          style={[
+                            styles.portraitCell,
+                            {
+                              width: getPortraitColumnWidth(column.key),
+                              color: palette.textInverse,
+                            },
+                          ]}>
+                          {player.goals || '-'}
+                        </Text>
+                      );
+                    }
+                    if (column.key === 'assists') {
+                      return (
+                        <Text
+                          key={`${player.id}-${column.key}`}
+                          style={[
+                            styles.portraitCell,
+                            {
+                              width: getPortraitColumnWidth(column.key),
+                              color: palette.textInverse,
+                            },
+                          ]}>
+                          {player.assists || '-'}
+                        </Text>
+                      );
+                    }
+                    if (column.key === 'blocks') {
+                      return (
+                        <Text
+                          key={`${player.id}-${column.key}`}
+                          style={[
+                            styles.portraitCell,
+                            {
+                              width: getPortraitColumnWidth(column.key),
+                              color: palette.textInverse,
+                            },
+                          ]}>
+                          {player.blocks || '-'}
+                        </Text>
+                      );
+                    }
+                    if (column.key === 'throwaways') {
+                      return (
+                        <Text
+                          key={`${player.id}-${column.key}`}
+                          style={[
+                            styles.portraitCell,
+                            {
+                              width: getPortraitColumnWidth(column.key),
+                              color: palette.textInverse,
+                            },
+                          ]}>
+                          {player.throwaways || '-'}
+                        </Text>
+                      );
+                    }
+                    if (column.key === 'drops') {
+                      return (
+                        <Text
+                          key={`${player.id}-${column.key}`}
+                          style={[
+                            styles.portraitCell,
+                            {
+                              width: getPortraitColumnWidth(column.key),
+                              color: palette.textInverse,
+                            },
+                          ]}>
+                          {player.drops || '-'}
+                        </Text>
+                      );
+                    }
+                    if (column.key === 'oEfficiency') {
+                      return (
+                        <Text
+                          key={`${player.id}-${column.key}`}
+                          style={[
+                            styles.portraitCell,
+                            {
+                              width: getPortraitColumnWidth(column.key),
+                              color: palette.textInverse,
+                            },
+                            (pStats?.oPoints ?? 0) > 0 &&
+                              (pStats?.oEfficiency ?? 0) >= 0.6 && {
+                                color: palette.success,
+                              },
+                            (pStats?.oPoints ?? 0) > 0 &&
+                              (pStats?.oEfficiency ?? 0) <= 0.4 && {
+                                color: palette.danger,
+                              },
+                          ]}>
+                          {pStats && (pStats.oPoints ?? 0) > 0
+                            ? formatEfficiency(pStats.oEfficiency)
+                            : '-'}
+                        </Text>
+                      );
+                    }
+                    if (column.key === 'dEfficiency') {
+                      return (
+                        <Text
+                          key={`${player.id}-${column.key}`}
+                          style={[
+                            styles.portraitCell,
+                            {
+                              width: getPortraitColumnWidth(column.key),
+                              color: palette.textInverse,
+                            },
+                            (pStats?.dPoints ?? 0) > 0 &&
+                              (pStats?.dEfficiency ?? 0) >= 0.25 && {
+                                color: palette.success,
+                              },
+                            (pStats?.dPoints ?? 0) > 0 &&
+                              (pStats?.dEfficiency ?? 0) < 0.25 && {
+                                color: palette.danger,
+                              },
+                          ]}>
+                          {pStats && (pStats.dPoints ?? 0) > 0
+                            ? formatEfficiency(pStats.dEfficiency)
+                            : '-'}
+                        </Text>
+                      );
+                    }
+                    return (
+                      <Text
+                        key={`${player.id}-${column.key}`}
+                        style={[
+                          styles.portraitCell,
+                          { width: getPortraitColumnWidth(column.key), color: palette.textInverse },
+                        ]}>
+                        {pStats?.pointsPlayed ?? '-'}
+                      </Text>
+                    );
+                  })}
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </ScrollView>
+      )}
     </View>
   );
 }
@@ -593,6 +690,46 @@ function createStyles(isLandscape: boolean, hasPlayingTimeData: boolean) {
       textAlign: 'left',
       fontSize: 13,
       fontWeight: '600',
+    },
+    portraitTableContainer: {
+      borderRadius: 12,
+      overflow: 'hidden',
+      borderWidth: 1,
+    },
+    portraitTableHeader: {
+      flexDirection: 'row',
+      borderBottomWidth: 1,
+    },
+    portraitHeaderCell: {
+      paddingVertical: 12,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    portraitNameHeaderCell: {
+      alignItems: 'flex-start',
+      paddingLeft: 12,
+      paddingRight: 8,
+    },
+    portraitNameHeaderText: {
+      textAlign: 'left',
+    },
+    portraitTableRow: {
+      flexDirection: 'row',
+      paddingVertical: 14,
+      alignItems: 'center',
+      borderBottomWidth: 1,
+    },
+    portraitCell: {
+      fontSize: 13,
+      textAlign: 'center',
+      fontWeight: '500',
+    },
+    portraitNameCell: {
+      textAlign: 'left',
+      fontSize: 13,
+      fontWeight: '600',
+      paddingLeft: 12,
+      paddingRight: 8,
     },
     headerHint: {
       flexDirection: 'row',

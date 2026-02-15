@@ -1,10 +1,9 @@
-import { ImportedPlayerDraft, ImportApiSuccessPayload } from '@/lib/import-team/types';
+import { MAX_PLAYER_NAME_LENGTH, MAX_TEAM_NAME_LENGTH } from '@/lib/constants';
+import { ImportApiSuccessPayload, ImportedPlayerDraft } from '@/lib/import-team/types';
 import { SavedTeam } from '@/lib/storage';
 import { MatchingType, PlayerRole } from '@/lib/storage/types';
 import { generateId } from '@/lib/utils';
 
-const MAX_TEAM_NAME_LENGTH = 20;
-const MAX_PLAYER_NAME_LENGTH = 20;
 const DEFAULT_IMPORTED_TEAM_NAME = 'Imported Team';
 
 function getRoleFromPosition(position?: string): PlayerRole | null {
@@ -95,8 +94,8 @@ function getPronounMatchingType(pronouns: string | null): MatchingType | null {
 function getDivisionDefaultMatchingType(division: string | null): MatchingType | null {
   if (!division) return null;
   const normalized = division.trim().toLowerCase();
-  if (normalized === 'men') return 'mmp';
-  if (normalized === 'women') return 'fmp';
+  if (normalized === 'men' || normalized === 'boys') return 'mmp';
+  if (normalized === 'women' || normalized === 'girls') return 'fmp';
   return null;
 }
 

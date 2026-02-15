@@ -25,8 +25,7 @@ export default function HelpScreen() {
         <View style={styles.headerSpacer} />
       </View>
 
-      <ScrollView
-        contentContainerStyle={[styles.scrollContent]}>
+      <ScrollView contentContainerStyle={[styles.scrollContent]}>
         <HelpContent showActionBarLegend={true} />
       </ScrollView>
     </ThemedView>

@@ -2,6 +2,7 @@ import { ThemedView } from '@/components/ThemedView';
 import { useAlert } from '@/components/ui/AlertProvider';
 import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import { useTheme } from '@/context/ThemeContext';
+import { useIsGameActive } from '@/hooks/useIsGameActive';
 import {
   extractApiErrorMessage,
   fetchImportTeamPayload,
@@ -33,6 +34,7 @@ export default function ImportTeamScreen() {
   const { palette } = useTheme();
   const { showAlert } = useAlert();
   const { savedTeams, importTeam, loadTeam } = useGameStore();
+  const gameActive = useIsGameActive();
 
   const [nameFormat, setNameFormat] = useState<NameFormatOption>('first');
   const [teamLink, setTeamLink] = useState('');
@@ -117,21 +119,40 @@ export default function ImportTeamScreen() {
       }
 
       await importTeam(importedTeam);
-      loadTeam(importedTeam.id);
 
-      showAlert({
-        title: 'Team Imported',
-        message: `Imported ${importedTeam.roster.length} players to "${importedTeam.name}".`,
-        buttons: [
-          {
-            text: 'OK',
-            style: 'default',
-            onPress: () => {
-              router.replace({ pathname: '/EditRoster', params: { teamName: importedTeam.name } });
+      if (gameActive) {
+        showAlert({
+          title: 'Team Imported',
+          message: `Imported ${importedTeam.roster.length} players to "${importedTeam.name}". You can switch to it from Edit Roster after the game.`,
+          buttons: [
+            {
+              text: 'OK',
+              style: 'default',
+              onPress: () => {
+                router.back();
+              },
             },
-          },
-        ],
-      });
+          ],
+        });
+      } else {
+        loadTeam(importedTeam.id);
+        showAlert({
+          title: 'Team Imported',
+          message: `Imported ${importedTeam.roster.length} players to "${importedTeam.name}".`,
+          buttons: [
+            {
+              text: 'OK',
+              style: 'default',
+              onPress: () => {
+                router.replace({
+                  pathname: '/EditRoster',
+                  params: { teamName: importedTeam.name },
+                });
+              },
+            },
+          ],
+        });
+      }
     } catch (error) {
       console.error('[ImportTeam] API request error', error);
       showAlert({

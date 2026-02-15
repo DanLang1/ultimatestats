@@ -8,7 +8,7 @@ import {
   getExpectedRatio,
   getSequenceNumber,
 } from '@/lib/genderRatioUtils';
-import { computePointByPointEvents, getTurnoverSummary } from '@/lib/timelineUtils';
+import { computePointByPointEvents } from '@/lib/timelineUtils';
 import { useGameStore } from '@/store/gameStore';
 import { useLinePresetsStore } from '@/store/linePresetsStore';
 import { useSettingsStore } from '@/store/settingsStore';
@@ -46,8 +46,7 @@ function getPointOutcome(
 
 export default function PointTransition() {
   const { palette } = useTheme();
-  // Force re-render on rotation so flexWrap recalculates
-  useLayout();
+  const { isLandscape } = useLayout();
 
   const {
     events,
@@ -98,7 +97,6 @@ export default function PointTransition() {
   const lastPoint = completedPoints[completedPoints.length - 1];
 
   // Get summary data if we have a completed point
-  const turnoverSummary = lastPoint ? getTurnoverSummary(lastPoint.turnovers, 'team1') : null;
   const totalTurnovers = lastPoint
     ? lastPoint.turnovers.filter((t) => t.team === 'team1').length
     : 0;
@@ -194,9 +192,45 @@ export default function PointTransition() {
             hitSlop={8}>
             <MaterialCommunityIcons name="close" size={18} color={palette.textMuted} />
           </Pressable>
-          <Text style={[styles.headerTitle, { color: palette.textInverse }]}>
-            {lastPoint ? `Point ${lastPoint.pointNumber} Complete` : 'Set Line'}
-          </Text>
+          <View style={styles.headerTitleRow}>
+            <Text style={[styles.headerTitle, { color: palette.textInverse }]}>
+              {lastPoint ? `Point ${lastPoint.pointNumber}` : 'Set Line'}
+            </Text>
+            {pointOutcome && (
+              <Text
+                style={[
+                  styles.headerOutcome,
+                  { color: pointOutcome.isPositive ? palette.success : palette.danger },
+                ]}>
+                {' · '}
+                {pointOutcome.label}
+              </Text>
+            )}
+            {lastPoint?.pointDurationMs != null && (
+              <Text style={[styles.headerDuration, { color: palette.textMuted }]}>
+                {' · '}
+                {formatDuration(lastPoint.pointDurationMs)}
+              </Text>
+            )}
+          </View>
+          {/* Ratio inline in landscape */}
+          {isLandscape && (genderRatioEnabled || showRatioWarning) && (
+            <View style={styles.ratioInline}>
+              {genderRatioEnabled && (
+                <Text style={[styles.nextPointLabel, { color: palette.textMuted }]}>
+                  Ratio{expectedRatioLabel ? ` · ${expectedRatioLabel}` : ''}
+                </Text>
+              )}
+              {showRatioWarning && (
+                <View style={[styles.infoChip, { backgroundColor: palette.warning + '20' }]}>
+                  <MaterialCommunityIcons name="alert" size={14} color={palette.warning} />
+                  <Text style={[styles.infoChipText, { color: palette.warning }]}>
+                    Expecting {expectedRatio === 'more-women' ? 'F' : 'M'} majority
+                  </Text>
+                </View>
+              )}
+            </View>
+          )}
           <Pressable
             onPress={handleDone}
             disabled={!canConfirm}
@@ -216,49 +250,9 @@ export default function PointTransition() {
           </Pressable>
         </View>
 
-        {/* Info row: outcome chip + stat chips + ratio */}
-        {(pointOutcome || lastPoint || genderRatioEnabled || showRatioWarning) && (
+        {/* Ratio info row - portrait only */}
+        {!isLandscape && (genderRatioEnabled || showRatioWarning) && (
           <View style={styles.infoRow}>
-            {pointOutcome && (
-              <View
-                style={[
-                  styles.infoChip,
-                  {
-                    backgroundColor: pointOutcome.isPositive
-                      ? palette.success + '20'
-                      : palette.danger + '20',
-                  },
-                ]}>
-                <Text
-                  style={[
-                    styles.infoChipText,
-                    { color: pointOutcome.isPositive ? palette.success : palette.danger },
-                  ]}>
-                  {pointOutcome.label}
-                </Text>
-              </View>
-            )}
-            {lastPoint?.pointDurationMs != null && (
-              <View style={[styles.infoChip, { backgroundColor: palette.overlay08 }]}>
-                <Text style={[styles.infoChipText, { color: palette.textMuted }]}>
-                  {formatDuration(lastPoint.pointDurationMs)}
-                </Text>
-              </View>
-            )}
-            {totalTurnovers > 0 && (
-              <View style={[styles.infoChip, { backgroundColor: palette.overlay08 }]}>
-                <Text style={[styles.infoChipText, { color: palette.textMuted }]}>
-                  {totalTurnovers} turn{totalTurnovers !== 1 ? 's' : ''}
-                </Text>
-              </View>
-            )}
-            {turnoverSummary && turnoverSummary.blocks > 0 && (
-              <View style={[styles.infoChip, { backgroundColor: palette.overlay08 }]}>
-                <Text style={[styles.infoChipText, { color: palette.textMuted }]}>
-                  {turnoverSummary.blocks} block{turnoverSummary.blocks !== 1 ? 's' : ''}
-                </Text>
-              </View>
-            )}
             {genderRatioEnabled && (
               <Text style={[styles.nextPointLabel, { color: palette.textMuted }]}>
                 Ratio{expectedRatioLabel ? ` · ${expectedRatioLabel}` : ''}
@@ -418,10 +412,22 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     gap: 12,
   },
+  headerTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    flex: 1,
+  },
   headerTitle: {
     fontSize: 20,
     fontWeight: '800',
-    flex: 1,
+  },
+  headerOutcome: {
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  headerDuration: {
+    fontSize: 14,
+    fontWeight: '600',
   },
   infoRow: {
     flexDirection: 'row',
@@ -450,6 +456,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  ratioInline: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   confirmBtn: {
     height: 36,

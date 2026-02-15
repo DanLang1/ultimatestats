@@ -98,23 +98,6 @@ export default function HalftimeModal() {
               {receivingTeam} receives
             </Text>
 
-            {lineCallingEnabled && (
-              <>
-                <MaterialCommunityIcons name="disc" size={12} color={palette.accent} />
-                <Pressable
-                  onPress={() => router.push('/PointTransition')}
-                  style={({ pressed }) => [
-                    styles.setLineBtn,
-                    { backgroundColor: palette.overlay08 },
-                    pressed && { opacity: 0.5 },
-                  ]}>
-                  <MaterialCommunityIcons name="account-switch" size={12} color={palette.accent} />
-                  <Text style={[styles.setLineBtnText, { color: palette.textMuted }]}>
-                    Set Line
-                  </Text>
-                </Pressable>
-              </>
-            )}
           </View>
 
           <ScrollView
@@ -184,22 +167,42 @@ export default function HalftimeModal() {
               </View>
 
               {!hasStats && (
-                <Pressable
-                  onPress={onContinue}
-                  style={({ pressed }) => [
-                    styles.continueBtnCompact,
-                    { backgroundColor: palette.accent },
-                    pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
-                  ]}>
-                  <Text style={[styles.continueBtnTextCompact, { color: palette.textOnAccent }]}>
-                    CONTINUE
-                  </Text>
-                  <MaterialCommunityIcons
-                    name="arrow-right"
-                    size={16}
-                    color={palette.textOnAccent}
-                  />
-                </Pressable>
+                <View style={styles.buttonRow}>
+                  {lineCallingEnabled && (
+                    <Pressable
+                      onPress={() => router.push('/PointTransition')}
+                      style={({ pressed }) => [
+                        styles.setLineBtn,
+                        { borderColor: palette.overlay10 },
+                        pressed && { opacity: 0.7 },
+                      ]}>
+                      <MaterialCommunityIcons
+                        name="account-switch"
+                        size={14}
+                        color={palette.accent}
+                      />
+                      <Text style={[styles.setLineBtnText, { color: palette.textInverse }]}>
+                        SET LINE
+                      </Text>
+                    </Pressable>
+                  )}
+                  <Pressable
+                    onPress={onContinue}
+                    style={({ pressed }) => [
+                      styles.continueBtnCompact,
+                      { backgroundColor: palette.accent },
+                      pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
+                    ]}>
+                    <Text style={[styles.continueBtnTextCompact, { color: palette.textOnAccent }]}>
+                      CONTINUE
+                    </Text>
+                    <MaterialCommunityIcons
+                      name="arrow-right"
+                      size={16}
+                      color={palette.textOnAccent}
+                    />
+                  </Pressable>
+                </View>
               )}
             </View>
 
@@ -262,22 +265,42 @@ export default function HalftimeModal() {
                   ))}
                 </View>
 
-                <Pressable
-                  onPress={onContinue}
-                  style={({ pressed }) => [
-                    styles.continueBtnCompact,
-                    { backgroundColor: palette.accent, marginTop: 16 },
-                    pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
-                  ]}>
-                  <Text style={[styles.continueBtnTextCompact, { color: palette.textOnAccent }]}>
-                    CONTINUE
-                  </Text>
-                  <MaterialCommunityIcons
-                    name="arrow-right"
-                    size={16}
-                    color={palette.textOnAccent}
-                  />
-                </Pressable>
+                <View style={[styles.buttonRow, { marginTop: 16 }]}>
+                  {lineCallingEnabled && (
+                    <Pressable
+                      onPress={() => router.push('/PointTransition')}
+                      style={({ pressed }) => [
+                        styles.setLineBtn,
+                        { borderColor: palette.overlay10 },
+                        pressed && { opacity: 0.7 },
+                      ]}>
+                      <MaterialCommunityIcons
+                        name="account-switch"
+                        size={14}
+                        color={palette.accent}
+                      />
+                      <Text style={[styles.setLineBtnText, { color: palette.textInverse }]}>
+                        SET LINE
+                      </Text>
+                    </Pressable>
+                  )}
+                  <Pressable
+                    onPress={onContinue}
+                    style={({ pressed }) => [
+                      styles.continueBtnCompact,
+                      { backgroundColor: palette.accent },
+                      pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
+                    ]}>
+                    <Text style={[styles.continueBtnTextCompact, { color: palette.textOnAccent }]}>
+                      CONTINUE
+                    </Text>
+                    <MaterialCommunityIcons
+                      name="arrow-right"
+                      size={16}
+                      color={palette.textOnAccent}
+                    />
+                  </Pressable>
+                </View>
               </View>
             )}
           </ScrollView>
@@ -349,9 +372,9 @@ function createStyles(isLandscape: boolean) {
       alignSelf: 'center',
       paddingTop: 16,
       paddingBottom: 4,
+      paddingHorizontal: 40,
       gap: 10,
       zIndex: 10,
-      ...(!isLandscape && { flexWrap: 'wrap', justifyContent: 'center' }),
     },
     headerSection: {
       flexDirection: 'row',
@@ -421,17 +444,26 @@ function createStyles(isLandscape: boolean) {
       fontWeight: '700',
       letterSpacing: 0.5,
     },
+    buttonRow: {
+      flexDirection: 'row',
+      gap: 8,
+      width: '100%',
+    },
     setLineBtn: {
+      flex: 1,
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 4,
-      paddingVertical: 4,
-      paddingHorizontal: 8,
+      justifyContent: 'center',
+      gap: 6,
+      paddingVertical: 12,
+      paddingHorizontal: 12,
       borderRadius: 8,
+      borderWidth: 1,
     },
     setLineBtnText: {
-      fontSize: 12,
-      fontWeight: '600',
+      fontSize: 13,
+      fontWeight: '800',
+      letterSpacing: 0.5,
     },
     statsRowCompact: {
       flexDirection: 'row',
@@ -492,14 +524,14 @@ function createStyles(isLandscape: boolean) {
       fontVariant: ['tabular-nums'],
     },
     continueBtnCompact: {
+      flex: 1,
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
       gap: 8,
       paddingVertical: 12,
-      paddingHorizontal: 32,
+      paddingHorizontal: 16,
       borderRadius: 8,
-      width: '100%',
     },
     continueBtnTextCompact: {
       fontSize: 14,

@@ -7,7 +7,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
-import { GameState, TurnoverType } from './gameStore.types';
+import { GameState, TurnoverEvent, TurnoverType } from './gameStore.types';
 import { useLinePresetsStore } from './linePresetsStore';
 import { useSettingsStore } from './settingsStore';
 
@@ -66,6 +66,7 @@ export const useGameStore = create<GameState>()(
         possession: null,
         startingPossession: null,
         pendingTurnoverEntry: null,
+        turnoverToastSignal: null,
 
         // Point tracking for timeline
         currentPoint: 1,
@@ -396,6 +397,7 @@ export const useGameStore = create<GameState>()(
             state.possession = null;
             state.startingPossession = null;
             state.pendingTurnoverEntry = null;
+            state.turnoverToastSignal = null;
             state.currentPoint = 1;
             state.timerIsActive = false;
             state.timerEndTime = null;
@@ -641,7 +643,7 @@ export const useGameStore = create<GameState>()(
               state.currentPointStartTime !== null
                 ? Date.now() - state.currentPointStartTime
                 : undefined;
-            state.events.push({
+            const turnoverEvent: TurnoverEvent = {
               type: 'turnover',
               team: event.team,
               subtype: event.subtype,
@@ -649,9 +651,20 @@ export const useGameStore = create<GameState>()(
               player2Id: event.player2Id,
               elapsedMs,
               pointNumber: state.currentPoint,
-            });
+            };
+            state.events.push(turnoverEvent);
+            state.turnoverToastSignal = {
+              id: Date.now(),
+              eventIndex: state.events.length - 1,
+              event: turnoverEvent,
+            };
             state.possession = state.possession === 'team1' ? 'team2' : 'team1';
             state.pendingTurnoverEntry = null;
+          }),
+
+        clearTurnoverToastSignal: () =>
+          set((state: GameState) => {
+            state.turnoverToastSignal = null;
           }),
 
         // Cancel pending turnover entry - just clears without flipping possession

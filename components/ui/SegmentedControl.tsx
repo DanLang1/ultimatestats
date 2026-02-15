@@ -6,6 +6,8 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 interface SegmentOption {
   value: string;
   label: string;
+  activeColor?: string;
+  activeTextColor?: string;
 }
 
 interface SegmentedControlProps {
@@ -50,7 +52,7 @@ export function SegmentedControl({
               <Pressable
                 style={[
                   styles.button,
-                  isActive && { backgroundColor: palette.accent },
+                  isActive && { backgroundColor: option.activeColor ?? palette.accent },
                   disabled && styles.buttonDisabled,
                 ]}
                 onPress={() => onChange(option.value)}
@@ -59,8 +61,9 @@ export function SegmentedControl({
                   style={[
                     styles.buttonText,
                     { color: palette.textMuted },
-                    isActive && { color: palette.textOnAccent },
-                  ]}>
+                    isActive && { color: option.activeTextColor ?? palette.textOnAccent },
+                  ]}
+                  numberOfLines={1}>
                   {option.label}
                 </Text>
               </Pressable>

@@ -38,29 +38,35 @@ describe('importTeam transform', () => {
     expect(importedTeam.roster[1].name).toBe('casey (2)');
   });
 
-  it('truncates long imported team names to 20 chars', () => {
+  it('truncates long imported team names to 30 chars', () => {
     const payload: ImportApiSuccessPayload = {
-      team: { teamname: 'Very Long Team Name That Exceeds Limit', division: 'Men' },
+      team: {
+        teamname: 'Very Long Team Name That Exceeds The Thirty Character Limit',
+        division: 'Men',
+      },
       players: [{ name: 'Alex' }],
     };
 
     const importedTeam = buildImportedTeam(payload, [], 'Fallback Team');
 
-    expect(importedTeam.name).toBe('Very Long Team Name');
-    expect(importedTeam.name.length).toBeLessThanOrEqual(20);
+    expect(importedTeam.name).toBe('Very Long Team Name That Excee');
+    expect(importedTeam.name.length).toBeLessThanOrEqual(30);
   });
 
   it('keeps team name suffix within length limit for collisions', () => {
     const payload: ImportApiSuccessPayload = {
-      team: { teamname: 'Very Long Team Name That Exceeds Limit', division: 'Men' },
+      team: {
+        teamname: 'Very Long Team Name That Exceeds The Thirty Character Limit',
+        division: 'Men',
+      },
       players: [{ name: 'Alex' }],
     };
 
-    const savedTeams = [{ id: '1', name: 'Very Long Team Name', roster: [] }];
+    const savedTeams = [{ id: '1', name: 'Very Long Team Name That Excee', roster: [] }];
     const importedTeam = buildImportedTeam(payload, savedTeams, 'Fallback Team');
 
-    expect(importedTeam.name).toBe('Very Long Team N (2)');
-    expect(importedTeam.name.length).toBe(20);
+    expect(importedTeam.name).toBe('Very Long Team Name That E (2)');
+    expect(importedTeam.name.length).toBe(30);
   });
 
   it('truncates long duplicate player names and preserves unique suffixes', () => {

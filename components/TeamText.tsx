@@ -26,7 +26,7 @@ export default function TeamText({ teamName, color, hasPossession }: TeamTextPro
 
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-      <ThemedText style={{ color: color, fontSize, lineHeight }} type="title">
+      <ThemedText style={{ color: color, fontSize, lineHeight }} type="title" numberOfLines={1}>
         {teamName}
       </ThemedText>
       {hasPossession && (

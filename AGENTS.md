@@ -6,12 +6,15 @@ This file is the Codex operating guide for this repository. Use it to quickly fi
 
 Primary reference sources:
 
-- `CLAUDE.md`
-- `.agent/rules/general-rules.md`
 - `.agent/workflows/*.md`
 - `docs/README.md`
 - `docs/architecture-rules.md`
 - `docs/responsive-layout.md`
+
+Agent entrypoints:
+
+- `CLAUDE.md` points here.
+- `.agent/rules/general-rules.md` points here.
 
 ## Fast Start (First 2 Minutes)
 
@@ -26,6 +29,7 @@ Primary reference sources:
 - `components/`: UI and feature components.
 - `store/`: Zustand state containers and types.
 - `lib/`: Pure logic/utilities, sharing, and tests.
+- `lib/constants.ts`: App-wide constants (name length limits, etc.).
 - `context/`: Providers (`AlertProvider`, theme context).
 - `theme/theme.ts`: All theme tokens and colors.
 - `docs/`: Project behavior and architecture docs.
@@ -90,6 +94,7 @@ Primary reference sources:
 - If `useEffect` is necessary, prefer extracting behavior into a custom hook.
 - Do not use `useCallback` or `useMemo` (React Compiler workflow).
 - No raw color values; use `theme/theme.ts`.
+- No magic numbers for app-wide limits; define constants in `lib/constants.ts`.
 - No sub-components in the same file; one component per file.
 - Use early returns where practical.
 - Use `AlertProvider`; do not use native `Alert.alert`.

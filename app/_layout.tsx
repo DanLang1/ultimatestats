@@ -30,122 +30,12 @@ function RootLayoutInner() {
           screenOptions={{
             headerShown: false,
             animation: 'none',
-            contentStyle: { backgroundColor: palette.primary },
           }}>
-          <Stack.Screen name="index" />
+          <Stack.Screen name="(main)" />
           <Stack.Screen
-            name="StatEntryModal"
+            name="(modals)"
             options={{
               presentation: 'transparentModal',
-              gestureEnabled: false,
-              contentStyle: { backgroundColor: 'transparent' },
-            }}
-          />
-          <Stack.Screen
-            name="TurnoverEntryModal"
-            options={{
-              presentation: 'transparentModal',
-              gestureEnabled: false,
-              contentStyle: { backgroundColor: 'transparent' },
-            }}
-          />
-          <Stack.Screen
-            name="PullPromptModal"
-            options={{
-              presentation: 'transparentModal',
-              gestureEnabled: false,
-              contentStyle: { backgroundColor: 'transparent' },
-            }}
-          />
-          <Stack.Screen
-            name="GameSelectorModal"
-            options={{
-              presentation: 'transparentModal',
-              gestureEnabled: false,
-              contentStyle: { backgroundColor: 'transparent' },
-            }}
-          />
-          <Stack.Screen name="PlayerStats" />
-          <Stack.Screen name="ViewStats" />
-          <Stack.Screen name="Settings" />
-          <Stack.Screen name="EditRoster" />
-          <Stack.Screen name="ImportTeam" />
-          <Stack.Screen name="GameInfo" />
-          <Stack.Screen name="About" />
-          <Stack.Screen name="LinePresetEditor" />
-          <Stack.Screen name="PointTransition" />
-          <Stack.Screen
-            name="WinModal"
-            options={{
-              presentation: 'transparentModal',
-              gestureEnabled: false,
-              contentStyle: { backgroundColor: 'transparent' },
-            }}
-          />
-          <Stack.Screen
-            name="GameTimeline"
-            options={{
-              presentation: 'transparentModal',
-              gestureEnabled: false,
-              contentStyle: { backgroundColor: 'transparent' },
-            }}
-          />
-          <Stack.Screen
-            name="TeamManagementModal"
-            options={{
-              presentation: 'transparentModal',
-              gestureEnabled: false,
-              contentStyle: { backgroundColor: 'transparent' },
-            }}
-          />
-          <Stack.Screen
-            name="HalftimeModal"
-            options={{
-              presentation: 'transparentModal',
-              gestureEnabled: false,
-              contentStyle: { backgroundColor: 'transparent' },
-            }}
-          />
-          <Stack.Screen
-            name="EditEventModal"
-            options={{
-              presentation: 'transparentModal',
-              gestureEnabled: false,
-              contentStyle: { backgroundColor: 'transparent' },
-            }}
-          />
-          <Stack.Screen
-            name="PointSummaryModal"
-            options={{
-              presentation: 'transparentModal',
-              gestureEnabled: false,
-              contentStyle: { backgroundColor: 'transparent' },
-            }}
-          />
-          <Stack.Screen
-            name="NumberPickerModal"
-            options={{
-              presentation: 'transparentModal',
-              animation: 'fade',
-              gestureEnabled: false,
-              contentStyle: { backgroundColor: 'transparent' },
-            }}
-          />
-          <Stack.Screen name="Import" />
-          <Stack.Screen
-            name="EditPlayerModal"
-            options={{
-              presentation: 'transparentModal',
-              animation: 'fade',
-              gestureEnabled: false,
-              contentStyle: { backgroundColor: 'transparent' },
-            }}
-          />
-          <Stack.Screen
-            name="LinePromptModal"
-            options={{
-              presentation: 'transparentModal',
-              animation: 'fade',
               gestureEnabled: false,
               contentStyle: { backgroundColor: 'transparent' },
             }}
