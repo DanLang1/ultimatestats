@@ -44,7 +44,7 @@ export function SegmentedControl({
   highlightRightColor,
   attentionRunKey,
 }: SegmentedControlProps) {
-  const { palette } = useTheme();
+  const { palette, themeMode } = useTheme();
   const [isAttentionActive, setIsAttentionActive] = useState(false);
   const { onLayout, runnerStyle, runnerOffsetStyle, enabled } = useAttentionBorderRunner(
     isAttentionActive && !disabled,
@@ -70,6 +70,7 @@ export function SegmentedControl({
       ? (highlightColor ?? palette.warning)
       : palette.overlay20;
   const borderWidth = highlightBorder ? 2 : 1;
+  const sideHighlightEdgeWidth = themeMode === 'light' ? 4 : 3;
 
   return (
     <View>
@@ -97,10 +98,20 @@ export function SegmentedControl({
         {highlightBorder && (highlightLeftColor || highlightRightColor) && (
           <View pointerEvents="none" style={styles.sideHighlightLayer}>
             {highlightLeftColor && (
-              <View style={[styles.leftHighlightEdge, { backgroundColor: highlightLeftColor }]} />
+              <View
+                style={[
+                  styles.leftHighlightEdge,
+                  { backgroundColor: highlightLeftColor, width: sideHighlightEdgeWidth },
+                ]}
+              />
             )}
             {highlightRightColor && (
-              <View style={[styles.rightHighlightEdge, { backgroundColor: highlightRightColor }]} />
+              <View
+                style={[
+                  styles.rightHighlightEdge,
+                  { backgroundColor: highlightRightColor, width: sideHighlightEdgeWidth },
+                ]}
+              />
             )}
           </View>
         )}
@@ -217,14 +228,12 @@ const styles = StyleSheet.create({
     left: 0,
     top: 0,
     bottom: 0,
-    width: 3,
   },
   rightHighlightEdge: {
     position: 'absolute',
     right: 0,
     top: 0,
     bottom: 0,
-    width: 3,
   },
   attentionLayer: {
     ...StyleSheet.absoluteFillObject,

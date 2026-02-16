@@ -137,21 +137,9 @@ export default function ImportTeamScreen() {
         });
       } else {
         loadTeam(importedTeam.id);
-        showAlert({
-          title: 'Team Imported',
-          message: `Imported ${importedTeam.roster.length} players to "${importedTeam.name}".`,
-          buttons: [
-            {
-              text: 'OK',
-              style: 'default',
-              onPress: () => {
-                router.replace({
-                  pathname: '/EditRoster',
-                  params: { teamName: importedTeam.name },
-                });
-              },
-            },
-          ],
+        router.replace({
+          pathname: '/EditRoster',
+          params: { teamName: importedTeam.name },
         });
       }
     } catch (error) {

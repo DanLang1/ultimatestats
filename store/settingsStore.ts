@@ -23,6 +23,9 @@ interface SettingsState {
   // Sidebar Settings
   sidebarCollapsed: boolean;
 
+  // Roster View
+  rosterViewMode: 'chips' | 'cards';
+
   // Actions
   setMmpColor: (color: string) => void;
   setFmpColor: (color: string) => void;
@@ -32,6 +35,7 @@ interface SettingsState {
   setLineCallingEnabled: (enabled: boolean) => void;
   setNumPlayers: (num: number) => void;
   setSidebarCollapsed: (collapsed: boolean) => void;
+  setRosterViewMode: (mode: 'chips' | 'cards') => void;
   statEntryOrder: 'goal_first' | 'assist_first';
   setStatEntryOrder: (order: 'goal_first' | 'assist_first') => void;
 }
@@ -46,6 +50,7 @@ export const useSettingsStore = create<SettingsState>()(
       lineCallingEnabled: false,
       numPlayers: 7,
       sidebarCollapsed: false,
+      rosterViewMode: 'chips',
 
       setMmpColor: (color) => set({ mmpColor: color }),
       setFmpColor: (color) => set({ fmpColor: color }),
@@ -59,6 +64,7 @@ export const useSettingsStore = create<SettingsState>()(
       setLineCallingEnabled: (enabled) => set({ lineCallingEnabled: enabled }),
       setNumPlayers: (num) => set({ numPlayers: num }),
       setSidebarCollapsed: (collapsed) => set({ sidebarCollapsed: collapsed }),
+      setRosterViewMode: (mode) => set({ rosterViewMode: mode }),
       statEntryOrder: 'goal_first',
       setStatEntryOrder: (order) => set({ statEntryOrder: order }),
     }),

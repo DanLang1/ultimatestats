@@ -14,7 +14,6 @@ interface PlayerChipProps {
   matchingType?: MatchingType | null;
   role?: PlayerRole | null;
   subtitle?: string;
-  showCheckIcon?: boolean;
   compact?: boolean;
   /** Use modal-appropriate colors (modalText, modalTextMuted) */
   useModalColors?: boolean;
@@ -38,7 +37,6 @@ export function PlayerChip({
   matchingType,
   role,
   subtitle,
-  showCheckIcon = false,
   compact = false,
   useModalColors = false,
   onPress,
@@ -95,14 +93,6 @@ export function PlayerChip({
       ]}
       onPress={disabled ? undefined : onPress}
       disabled={disabled}>
-      {showCheckIcon && selected && (
-        <MaterialCommunityIcons
-          name="check"
-          size={compact ? 12 : 14}
-          color={selectedTextColor}
-          style={styles.checkIcon}
-        />
-      )}
       <Text
         style={[compact ? styles.chipTextCompact : styles.chipText, { color: textColor }]}
         numberOfLines={1}>
@@ -117,11 +107,11 @@ export function PlayerChip({
           {subtitle}
         </Text>
       )}
-      {role && !selected && (
+      {role && (
         <MaterialCommunityIcons
           name={ROLE_ICONS[role]}
           size={compact ? 10 : 12}
-          color={roleColor}
+          color={selected ? selectedTextColor : roleColor}
           style={styles.roleIcon}
         />
       )}
@@ -173,9 +163,6 @@ const styles = StyleSheet.create({
   chipSubtitleCompact: {
     fontSize: 10,
     fontWeight: '600',
-  },
-  checkIcon: {
-    marginRight: 2,
   },
   roleIcon: {
     marginTop: 2,

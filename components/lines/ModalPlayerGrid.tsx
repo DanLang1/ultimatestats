@@ -152,7 +152,6 @@ export function ModalPlayerGrid({
       selected={selectedSet.has(player.id)}
       matchingType={player.matchingType}
       subtitle={gameActive ? formatPlayingTime(player.id, playingTime) : undefined}
-      showCheckIcon
       compact
       useModalColors={useModalColorsProp}
       onPress={() => onTogglePlayer(player.id)}

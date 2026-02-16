@@ -522,6 +522,37 @@ export const useGameStore = create<GameState>()(
           return newId;
         },
 
+        updateRosterPlayer: (playerId, updates) => {
+          let playerExists = false;
+          let becameInactive = false;
+
+          set((state: GameState) => {
+            const player = state.currentTeam.roster.find((p) => p.id === playerId);
+            if (!player) return;
+
+            playerExists = true;
+            const wasActive = player.isActive;
+
+            if (updates.isActive !== undefined) {
+              player.isActive = updates.isActive;
+            }
+            if (updates.matchingType !== undefined) {
+              player.matchingType = updates.matchingType;
+            }
+            if (updates.role !== undefined) {
+              player.role = updates.role;
+            }
+
+            becameInactive = wasActive && player.isActive === false;
+          });
+
+          if (becameInactive) {
+            useLinePresetsStore.getState().removePlayerFromPresets(playerId);
+          }
+
+          return playerExists;
+        },
+
         addGoalEvent: (event: { goalPlayerId: string | null; assistPlayerId: string | null }) =>
           set((state: GameState) => {
             // Update the last goal event (already pushed in incrementScore)

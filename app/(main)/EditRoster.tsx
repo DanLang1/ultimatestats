@@ -1,5 +1,8 @@
 import { EditRosterSidebar } from '@/components/EditRosterSidebar';
 import { EditRosterToolbar } from '@/components/EditRosterToolbar';
+import { QuickEditPlayerList } from '@/components/roster/QuickEditPlayerList';
+import RosterBulkActions from '@/components/roster/RosterBulkActions';
+import { RosterControlsHeader } from '@/components/roster/RosterControlsHeader';
 import { AlertModal } from '@/components/ui/AlertModal';
 import { useAlert } from '@/components/ui/AlertProvider';
 import { PlayerChip } from '@/components/ui/PlayerChip';
@@ -12,7 +15,7 @@ import { MAX_TEAM_NAME_LENGTH } from '@/lib/constants';
 import { hasPlayerWithName } from '@/lib/playerUtils';
 import { serializeTeam, uploadPayload } from '@/lib/sharing';
 import { SavedTeam } from '@/lib/storage';
-import { Player } from '@/lib/storage/types';
+import { MatchingType, Player, PlayerRole } from '@/lib/storage/types';
 import { generateId } from '@/lib/utils';
 import { useGameStore } from '@/store/gameStore';
 import { useLinePresetsStore } from '@/store/linePresetsStore';
@@ -21,6 +24,9 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { Pressable, ScrollView, Share, StyleSheet, Text, TextInput, View } from 'react-native';
+
+const EMPTY_ROSTER: Player[] = [];
+type RoleFilter = PlayerRole | 'unset' | null;
 
 export default function EditRosterScreen() {
   const { isLandscape } = useLayout();
@@ -32,6 +38,7 @@ export default function EditRosterScreen() {
     currentTeam,
     setCurrentTeam,
     addPlayer,
+    updateRosterPlayer,
     saveCurrentTeam,
     clearRoster,
     savedTeams,
@@ -39,10 +46,11 @@ export default function EditRosterScreen() {
   } = useGameStore();
   const { showAlert } = useAlert();
   const { palette } = useTheme();
-  const { sidebarCollapsed, setSidebarCollapsed } = useSettingsStore();
+  const { sidebarCollapsed, setSidebarCollapsed, rosterViewMode, setRosterViewMode } =
+    useSettingsStore();
 
   // Derived values
-  const roster = currentTeam?.roster ?? [];
+  const roster = currentTeam?.roster ?? EMPTY_ROSTER;
   const gameActive = useIsGameActive();
 
   // Load saved teams on mount
@@ -56,12 +64,42 @@ export default function EditRosterScreen() {
   const [editTeamName, setEditTeamName] = useState('');
   const [newTeamModalVisible, setNewTeamModalVisible] = useState(false);
   const [newTeamName, setNewTeamName] = useState('');
+  const [roleFilter, setRoleFilter] = useState<RoleFilter>(null);
+  const [bulkVisiblePlayerIds, setBulkVisiblePlayerIds] = useState<Set<string> | null>(null);
+
+  // Selection mode state
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedPlayerIds, setSelectedPlayerIds] = useState<Set<string>>(new Set());
+
+  const resetSelectionState = () => {
+    setSelectionMode(false);
+    setSelectedPlayerIds(new Set());
+    setBulkVisiblePlayerIds(null);
+  };
 
   const isDuplicateName =
     newPlayerName.trim() !== '' && hasPlayerWithName(roster, newPlayerName.trim());
 
   const hasOtherTeams = savedTeams.filter((t) => t.id !== currentTeam?.id).length > 0;
   const hasRoster = roster.length > 0;
+
+  // Sorted roster: active first
+  const displayRoster = [...roster].sort((a, b) => {
+    if (a.isActive !== b.isActive) {
+      return a.isActive ? -1 : 1;
+    }
+    return a.name.localeCompare(b.name);
+  });
+  const filteredRoster =
+    roleFilter === null
+      ? displayRoster
+      : roleFilter === 'unset'
+        ? displayRoster.filter((player) => player.role === null)
+        : displayRoster.filter((player) => player.role === roleFilter);
+  const visibleRoster =
+    selectionMode && bulkVisiblePlayerIds
+      ? displayRoster.filter((player) => bulkVisiblePlayerIds.has(player.id))
+      : filteredRoster;
 
   // Derived: check if edited team name already exists
   const teamNameExists =
@@ -75,6 +113,53 @@ export default function EditRosterScreen() {
   const newTeamNameExists =
     newTeamName.trim() !== '' &&
     savedTeams.some((t: SavedTeam) => t.name.toLowerCase() === newTeamName.trim().toLowerCase());
+
+  // Selection mode handlers
+  const toggleSelectionMode = () => {
+    setSelectionMode((prev) => {
+      if (prev) {
+        setSelectedPlayerIds(new Set());
+        setBulkVisiblePlayerIds(null);
+      } else {
+        setBulkVisiblePlayerIds(new Set(filteredRoster.map((player) => player.id)));
+      }
+      return !prev;
+    });
+  };
+
+  const togglePlayerSelection = (playerId: string) => {
+    setSelectedPlayerIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(playerId)) {
+        next.delete(playerId);
+      } else {
+        next.add(playerId);
+      }
+      return next;
+    });
+  };
+
+  const selectAll = () => {
+    setSelectedPlayerIds(new Set(visibleRoster.filter((p) => p.isActive).map((p) => p.id)));
+  };
+
+  const deselectAll = () => {
+    setSelectedPlayerIds(new Set());
+  };
+
+  const handleBulkSetMatching = async (type: MatchingType) => {
+    for (const playerId of selectedPlayerIds) {
+      updateRosterPlayer(playerId, { matchingType: type });
+    }
+    await saveCurrentTeam();
+  };
+
+  const handleBulkSetRole = async (role: PlayerRole) => {
+    for (const playerId of selectedPlayerIds) {
+      updateRosterPlayer(playerId, { role });
+    }
+    await saveCurrentTeam();
+  };
 
   const handleRenameTeam = async () => {
     const newName = editTeamName.trim();
@@ -90,6 +175,7 @@ export default function EditRosterScreen() {
   };
 
   const handleNewTeam = () => {
+    resetSelectionState();
     setNewTeamName('');
     setNewTeamModalVisible(true);
   };
@@ -97,6 +183,7 @@ export default function EditRosterScreen() {
   const handleConfirmNewTeam = async () => {
     const trimmedName = newTeamName.trim();
     if (!trimmedName || newTeamNameExists) return;
+    resetSelectionState();
 
     // Save current team first if it has a roster
     if (hasRoster && currentTeam) {
@@ -115,6 +202,7 @@ export default function EditRosterScreen() {
 
   const handleShareTeam = () => {
     if (!currentTeam) return;
+    if (selectionMode) return;
     setShowShareConfirm(true);
   };
 
@@ -123,13 +211,30 @@ export default function EditRosterScreen() {
     if (trimmed && !hasPlayerWithName(roster, trimmed)) {
       addPlayer(trimmed);
       setNewPlayerName('');
-      // Auto-save team
       await saveCurrentTeam();
     }
   };
 
   const handleEditPlayer = (player: Player) => {
     router.push({ pathname: '/EditPlayerModal', params: { playerId: player.id } });
+  };
+
+  const handleSetPlayerActive = async (playerId: string, isActive: boolean) => {
+    const didUpdate = updateRosterPlayer(playerId, { isActive });
+    if (!didUpdate) return;
+    await saveCurrentTeam();
+  };
+
+  const handleSetPlayerMatching = async (playerId: string, matchingType: MatchingType | null) => {
+    const didUpdate = updateRosterPlayer(playerId, { matchingType });
+    if (!didUpdate) return;
+    await saveCurrentTeam();
+  };
+
+  const handleSetPlayerRole = async (playerId: string, role: Player['role']) => {
+    const didUpdate = updateRosterPlayer(playerId, { role });
+    if (!didUpdate) return;
+    await saveCurrentTeam();
   };
 
   const handleBack = () => {
@@ -148,8 +253,8 @@ export default function EditRosterScreen() {
           text: 'Clear All',
           style: 'destructive',
           onPress: () => {
+            resetSelectionState();
             clearRoster();
-            // Clear the saved version too
             if (currentTeam) {
               setCurrentTeam({ ...currentTeam, roster: [] });
             }
@@ -159,31 +264,64 @@ export default function EditRosterScreen() {
     });
   };
 
-  // Sort roster: active players first, then inactive, alphabetically within each group
-  const sortedRoster = [...roster].sort((a, b) => {
-    if (a.isActive !== b.isActive) {
-      return a.isActive ? -1 : 1;
-    }
-    return a.name.localeCompare(b.name);
-  });
+  const toggleViewMode = () => {
+    setRosterViewMode(rosterViewMode === 'chips' ? 'cards' : 'chips');
+  };
+
+  const toggleRoleFilter = (role: Exclude<RoleFilter, null>) => {
+    setRoleFilter((prev) => (prev === role ? null : role));
+    setSelectedPlayerIds(new Set());
+  };
+
+  const useChipView = selectionMode || rosterViewMode === 'chips';
+
+  // Group players by matching type for chip grid
+  const groupedPlayers = useChipView
+    ? (() => {
+        const groups: { label: string; players: Player[] }[] = [];
+        const fmp = visibleRoster.filter((p) => p.isActive && p.matchingType === 'fmp');
+        const mmp = visibleRoster.filter((p) => p.isActive && p.matchingType === 'mmp');
+        const unset = visibleRoster.filter((p) => p.isActive && p.matchingType === null);
+        const inactive = visibleRoster.filter((p) => !p.isActive);
+        if (fmp.length > 0) groups.push({ label: 'FMP', players: fmp });
+        if (mmp.length > 0) groups.push({ label: 'MMP', players: mmp });
+        if (unset.length > 0) groups.push({ label: 'Unset', players: unset });
+        if (inactive.length > 0) groups.push({ label: 'Inactive', players: inactive });
+        return groups;
+      })()
+    : [];
+
+  const allActiveSelected =
+    visibleRoster.filter((p) => p.isActive).length > 0 &&
+    visibleRoster.filter((p) => p.isActive).every((p) => selectedPlayerIds.has(p.id));
+  const hasActivePlayers = visibleRoster.some((player) => player.isActive);
 
   return (
     <View style={[styles.container, { backgroundColor: palette.primary }]}>
       <Stack.Screen options={{ headerShown: false }} />
 
       <View style={styles.mainLayout}>
-        {/* Sidebar - landscape only */}
-        {isLandscape && (
+        {/* Sidebar - landscape only, hidden during selection */}
+        {isLandscape && !selectionMode && (
           <EditRosterSidebar
             collapsed={sidebarCollapsed}
             onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
             onRenameTeam={() => {
+              if (selectionMode) return;
               setEditTeamName(currentTeam?.name ?? '');
               setRenameModalVisible(true);
             }}
             onNewTeam={handleNewTeam}
-            onSwitchTeam={() => router.push('/TeamManagementModal')}
-            onEditPresets={() => router.push('/LinePresetEditor')}
+            onSwitchTeam={() => {
+              if (selectionMode) return;
+              resetSelectionState();
+              router.push('/TeamManagementModal');
+            }}
+            onEditPresets={() => {
+              if (selectionMode) return;
+              resetSelectionState();
+              router.push('/LinePresetEditor');
+            }}
             onShareTeam={handleShareTeam}
             onClearRoster={handleClearAll}
             showNewTeam={!gameActive}
@@ -203,16 +341,25 @@ export default function EditRosterScreen() {
             backButtonBackgroundColor={palette.overlay10}
           />
 
-          {/* Toolbar - portrait only */}
-          {!isLandscape && (
+          {/* Toolbar - portrait only, hidden during selection */}
+          {!isLandscape && !selectionMode && (
             <EditRosterToolbar
               onRenameTeam={() => {
+                if (selectionMode) return;
                 setEditTeamName(currentTeam?.name ?? '');
                 setRenameModalVisible(true);
               }}
               onNewTeam={handleNewTeam}
-              onSwitchTeam={() => router.push('/TeamManagementModal')}
-              onEditPresets={() => router.push('/LinePresetEditor')}
+              onSwitchTeam={() => {
+                if (selectionMode) return;
+                resetSelectionState();
+                router.push('/TeamManagementModal');
+              }}
+              onEditPresets={() => {
+                if (selectionMode) return;
+                resetSelectionState();
+                router.push('/LinePresetEditor');
+              }}
               onShareTeam={handleShareTeam}
               onClearRoster={handleClearAll}
               showNewTeam={!gameActive}
@@ -224,48 +371,70 @@ export default function EditRosterScreen() {
           )}
 
           {/* Add Player Input */}
-          <View style={[styles.addPlayerSection, { borderBottomColor: palette.overlay10 }]}>
-            <View style={styles.inputWrapper}>
-              <TextInput
-                style={[
-                  styles.addPlayerInput,
-                  {
-                    borderColor: palette.overlay20,
-                    color: palette.textInverse,
-                    backgroundColor: palette.overlay08,
-                  },
-                  isDuplicateName && { borderColor: palette.danger },
-                ]}
-                placeholder="Add player..."
-                placeholderTextColor={palette.textMuted}
-                value={newPlayerName}
-                onChangeText={setNewPlayerName}
-                onSubmitEditing={handleAddPlayer}
-                returnKeyType="done"
-                autoCapitalize="words"
-                maxLength={20}
-              />
-              {isDuplicateName && (
-                <Text
+          {!selectionMode && (
+            <View style={[styles.addPlayerSection, { borderBottomColor: palette.overlay10 }]}>
+              <View style={styles.inputWrapper}>
+                <TextInput
                   style={[
-                    styles.errorText,
-                    { color: palette.danger },
-                  ]}>{`${newPlayerName} is already on your team`}</Text>
-              )}
+                    styles.addPlayerInput,
+                    {
+                      borderColor: palette.overlay20,
+                      color: palette.textInverse,
+                      backgroundColor: palette.overlay08,
+                    },
+                    isDuplicateName && { borderColor: palette.danger },
+                  ]}
+                  placeholder="Add player..."
+                  placeholderTextColor={palette.textMuted}
+                  value={newPlayerName}
+                  onChangeText={setNewPlayerName}
+                  onSubmitEditing={handleAddPlayer}
+                  returnKeyType="done"
+                  autoCapitalize="words"
+                  maxLength={20}
+                />
+                {isDuplicateName && (
+                  <Text
+                    style={[
+                      styles.errorText,
+                      { color: palette.danger },
+                    ]}>{`${newPlayerName} is already on your team`}</Text>
+                )}
+              </View>
+              <Pressable
+                style={({ pressed }) => [
+                  styles.addButton,
+                  { backgroundColor: palette.accent },
+                  pressed && styles.buttonPressed,
+                ]}
+                onPress={handleAddPlayer}>
+                <MaterialCommunityIcons name="plus" size={24} color={palette.textOnAccent} />
+              </Pressable>
             </View>
-            <Pressable
-              style={({ pressed }) => [
-                styles.addButton,
-                { backgroundColor: palette.accent },
-                pressed && styles.buttonPressed,
-              ]}
-              onPress={handleAddPlayer}>
-              <MaterialCommunityIcons name="plus" size={24} color={palette.textOnAccent} />
-            </Pressable>
-          </View>
+          )}
 
-          {/* Player List - 2 Column Grid */}
-          <ScrollView style={styles.playerList} contentContainerStyle={[styles.playerListContent]}>
+          {roster.length > 0 && (
+            <RosterControlsHeader
+              isSelecting={selectionMode}
+              viewMode={rosterViewMode}
+              activeRoleFilter={roleFilter}
+              selectedCount={selectedPlayerIds.size}
+              allActiveSelected={allActiveSelected}
+              hasActivePlayers={hasActivePlayers}
+              onToggleViewMode={toggleViewMode}
+              onToggleSelectMode={toggleSelectionMode}
+              onToggleSelectAll={allActiveSelected ? deselectAll : selectAll}
+              onToggleRoleFilter={toggleRoleFilter}
+            />
+          )}
+
+          {/* Player List */}
+          <ScrollView
+            style={styles.playerList}
+            contentContainerStyle={[
+              styles.playerListContent,
+              selectionMode && styles.playerListContentSelection,
+            ]}>
             {roster.length === 0 ? (
               <View style={styles.emptyState}>
                 <MaterialCommunityIcons
@@ -280,26 +449,67 @@ export default function EditRosterScreen() {
                   Add players using the input above
                 </Text>
               </View>
-            ) : (
+            ) : visibleRoster.length === 0 ? (
+              <View style={styles.emptyState}>
+                <MaterialCommunityIcons name="filter-outline" size={42} color={palette.textMuted} />
+                <Text style={[styles.emptyStateText, { color: palette.textMuted }]}>
+                  No players match this filter
+                </Text>
+                <Text style={[styles.emptyStateHint, { color: palette.textMuted }]}>
+                  Tap the active position filter to show all players
+                </Text>
+              </View>
+            ) : useChipView ? (
               <>
-                <View style={styles.listHeader}>
-                  <Text style={[styles.listHint, { color: palette.textMuted }]}>Tap to edit</Text>
-                </View>
-                <View style={styles.playerGrid}>
-                  {sortedRoster.map((player) => (
-                    <PlayerChip
-                      key={player.id}
-                      name={player.name}
-                      isActive={player.isActive}
-                      matchingType={player.matchingType}
-                      role={player.role}
-                      onPress={() => handleEditPlayer(player)}
-                    />
-                  ))}
-                </View>
+                {/* Grouped chip grid */}
+                {groupedPlayers.map((group) => (
+                  <View key={group.label} style={styles.chipGroup}>
+                    <View style={styles.chipGroupHeader}>
+                      <Text style={[styles.chipGroupLabel, { color: palette.textMuted }]}>
+                        {group.label}
+                      </Text>
+                      <Text style={[styles.chipGroupCount, { color: palette.textMuted }]}>
+                        {group.players.length}
+                      </Text>
+                    </View>
+                    <View style={styles.chipGrid}>
+                      {group.players.map((player) => (
+                        <PlayerChip
+                          key={player.id}
+                          name={player.name}
+                          selected={selectionMode && selectedPlayerIds.has(player.id)}
+                          isActive={player.isActive}
+                          matchingType={player.matchingType}
+                          role={player.role}
+                          onPress={
+                            selectionMode
+                              ? () => togglePlayerSelection(player.id)
+                              : () => handleEditPlayer(player)
+                          }
+                        />
+                      ))}
+                    </View>
+                  </View>
+                ))}
               </>
+            ) : (
+              <QuickEditPlayerList
+                roster={visibleRoster}
+                onEditPlayer={handleEditPlayer}
+                onSetPlayerActive={handleSetPlayerActive}
+                onSetPlayerMatching={handleSetPlayerMatching}
+                onSetPlayerRole={handleSetPlayerRole}
+              />
             )}
           </ScrollView>
+
+          {/* Bulk Actions Bar */}
+          <RosterBulkActions
+            selectedCount={selectedPlayerIds.size}
+            onSetMatching={handleBulkSetMatching}
+            onSetRole={handleBulkSetRole}
+            isVisible={selectionMode}
+          />
         </View>
       </View>
 
@@ -457,10 +667,6 @@ function createStyles(isLandscape: boolean) {
     mainContent: {
       flex: 1,
     },
-    clearButton: {
-      padding: 8,
-      borderRadius: 20,
-    },
     addPlayerSection: {
       flexDirection: 'row',
       paddingHorizontal: 20,
@@ -502,14 +708,8 @@ function createStyles(isLandscape: boolean) {
       paddingBottom: 20,
       paddingTop: 8,
     },
-
-    listHeader: {
-      marginBottom: 4,
-      alignItems: 'flex-end',
-    },
-    listHint: {
-      fontSize: 11,
-      fontStyle: 'italic',
+    playerListContentSelection: {
+      paddingBottom: 100,
     },
     emptyState: {
       flex: 1,
@@ -526,10 +726,30 @@ function createStyles(isLandscape: boolean) {
       fontSize: 14,
       marginTop: 4,
     },
-    playerGrid: {
+    chipGroup: {
+      marginBottom: 16,
+    },
+    chipGroupHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 2,
+      marginBottom: 8,
+    },
+    chipGroupLabel: {
+      fontSize: 12,
+      fontWeight: '600',
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+    },
+    chipGroupCount: {
+      fontSize: 11,
+      fontWeight: '600',
+    },
+    chipGrid: {
       flexDirection: 'row',
       flexWrap: 'wrap',
-      gap: 10,
+      gap: 8,
     },
     // Alert modal content styles
     alertInput: {
@@ -557,38 +777,6 @@ function createStyles(isLandscape: boolean) {
     alertButtonText: {
       fontSize: 15,
       fontWeight: '600',
-    },
-    // Line Presets Section
-    presetsSection: {
-      marginTop: 24,
-      gap: 16,
-    },
-    sectionDivider: {
-      height: 1,
-    },
-    presetsButton: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      padding: 16,
-      borderRadius: 12,
-      borderWidth: 1,
-    },
-    presetsButtonContent: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 12,
-      flex: 1,
-    },
-    presetsButtonText: {
-      gap: 2,
-    },
-    presetsButtonTitle: {
-      fontSize: 15,
-      fontWeight: '600',
-    },
-    presetsButtonSubtitle: {
-      fontSize: 12,
     },
   });
 }

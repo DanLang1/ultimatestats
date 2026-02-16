@@ -1,4 +1,5 @@
 import { PointLineRecord, SavedGame, SavedTeam } from '@/lib/storage';
+import { MatchingType, PlayerRole } from '@/lib/storage/types';
 
 export type TurnoverType = 'block' | 'throwaway' | 'drop' | 'fiftyfifty';
 
@@ -142,6 +143,14 @@ export interface GameState {
   // Stat Tracking Actions
   setStatTrackingEnabled: (enabled: boolean) => void;
   addPlayer: (name: string) => string | null;
+  updateRosterPlayer: (
+    playerId: string,
+    updates: {
+      isActive?: boolean;
+      matchingType?: MatchingType | null;
+      role?: PlayerRole | null;
+    },
+  ) => boolean;
   addGoalEvent: (event: { goalPlayerId: string | null; assistPlayerId: string | null }) => void;
   cancelPendingGoal: () => void;
   clearRoster: () => void;
