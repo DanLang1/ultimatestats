@@ -1,9 +1,10 @@
+import { useToastPulse } from '@/components/toast/hooks/useToastPulse';
+import { TurnoverIconInfo } from '@/components/toast/hooks/useTurnoverRecordedToast';
 import TurnoverToastIcon from '@/components/toast/TurnoverToastIcon';
 import { useTheme } from '@/context/ThemeContext';
 import { useLayout } from '@/hooks/useLayout';
-import { useToastPulse } from '@/components/toast/hooks/useToastPulse';
-import { TurnoverIconInfo } from '@/components/toast/hooks/useTurnoverRecordedToast';
 import { Palette } from '@/theme/theme';
+import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Animated, { SlideInUp, SlideOutUp } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -28,22 +29,42 @@ export default function TurnoverToast({ toast, toastInstanceId }: TurnoverToastP
   const { isLandscape } = useLayout();
   const { palette } = useTheme();
   const insets = useSafeAreaInsets();
-  const animatedStyle = useToastPulse(toast.visible, toastInstanceId);
+  const [toastWidth, setToastWidth] = useState(0);
+  const toastHeight = 44;
+  const { toastAnimatedStyle, borderRunnerAnimatedStyle, borderRunnerOffsetAnimatedStyle } =
+    useToastPulse(toast.visible, toastInstanceId, toastWidth, toastHeight);
 
   if (!toast.visible) return null;
 
   const topOffset = insets.top + (isLandscape ? 68 : 14);
+  const toneColor = getToneBg(toast.tone, palette);
 
   return (
     <View style={[styles.container, { top: topOffset }]} pointerEvents="box-none">
       <Animated.View
+        onLayout={(event) => {
+          setToastWidth(event.nativeEvent.layout.width);
+        }}
         entering={SlideInUp.duration(200)}
         exiting={SlideOutUp.duration(150)}
         style={[
           styles.banner,
-          animatedStyle,
-          { backgroundColor: getToneBg(toast.tone, palette), shadowColor: palette.shadow },
+          toastAnimatedStyle,
+          { backgroundColor: toneColor, shadowColor: palette.shadow },
         ]}>
+        <View pointerEvents="none" style={styles.borderLayer}>
+          <View style={[styles.borderBase, { borderColor: palette.textOnAccent }]} />
+          <Animated.View style={[styles.borderRunner, borderRunnerAnimatedStyle]}>
+            <View style={[styles.borderRunnerOuter, { backgroundColor: palette.textOnAccent }]}>
+              <View style={[styles.borderRunnerInner, { backgroundColor: toneColor }]} />
+            </View>
+          </Animated.View>
+          <Animated.View style={[styles.borderRunner, borderRunnerOffsetAnimatedStyle]}>
+            <View style={[styles.borderRunnerOuter, { backgroundColor: palette.textOnAccent }]}>
+              <View style={[styles.borderRunnerInner, { backgroundColor: toneColor }]} />
+            </View>
+          </Animated.View>
+        </View>
         <TurnoverToastIcon icon={toast.icon} color={palette.textOnAccent} />
         <Text style={[styles.bannerText, { color: palette.textOnAccent }]} numberOfLines={1}>
           {toast.message}
@@ -75,6 +96,34 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 6,
     elevation: 6,
+  },
+  borderLayer: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: 10,
+  },
+  borderBase: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: 10,
+    borderWidth: 3,
+  },
+  borderRunner: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    width: 44,
+    height: 5,
+  },
+  borderRunnerOuter: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 999,
+    paddingHorizontal: 1,
+    paddingVertical: 1,
+  },
+  borderRunnerInner: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 999,
   },
   bannerText: {
     fontSize: 15,

@@ -57,6 +57,8 @@ export default function PreGameConfirm() {
 
   const [selectedTeam, setSelectedTeam] = useState<'team1' | 'team2' | ''>(possession ?? '');
   const [selectedRatio, setSelectedRatio] = useState<GenderRatio | ''>(firstPointRatio ?? '');
+  const [teamOrbitRunKey, setTeamOrbitRunKey] = useState(0);
+  const [ratioOrbitRunKey, setRatioOrbitRunKey] = useState(0);
 
   // If nothing is needed, don't show the page
   if (!needPossession && !needRatio) {
@@ -108,6 +110,11 @@ export default function PreGameConfirm() {
   const t2Color = team2BgColor || palette.accent;
   const t1TextColor = getContrastingTextColor(t1Color);
   const t2TextColor = getContrastingTextColor(t2Color);
+  const fmpTextColor = getContrastingTextColor(palette.fmpColor);
+  const mmpTextColor = getContrastingTextColor(palette.mmpColor);
+  const selectedTeamOrbitColor = selectedTeam === 'team2' ? t2Color : t1Color;
+  const selectedRatioOrbitColor =
+    selectedRatio === 'more-men' ? palette.mmpColor : palette.fmpColor;
 
   // Button text depends on whether line calling chains next
   const showSetLine = statTrackingEnabled && lineCallingEnabled;
@@ -231,7 +238,17 @@ export default function PreGameConfirm() {
                     },
                   ]}
                   value={selectedTeam}
-                  onChange={(val) => setSelectedTeam(val as 'team1' | 'team2')}
+                  onChange={(val) => {
+                    setSelectedTeam(val as 'team1' | 'team2');
+                    setTeamOrbitRunKey((prev) => prev + 1);
+                  }}
+                  showRequired={needPossession && selectedTeam === ''}
+                  highlightBorder={needPossession && selectedTeam === ''}
+                  highlightColor={palette.warning}
+                  highlightLeftColor={needPossession && selectedTeam === '' ? t1Color : undefined}
+                  highlightRightColor={needPossession && selectedTeam === '' ? t2Color : undefined}
+                  attentionColor={selectedTeamOrbitColor}
+                  attentionRunKey={teamOrbitRunKey}
                 />
               </View>
             )}
@@ -242,11 +259,35 @@ export default function PreGameConfirm() {
                 <SegmentedControl
                   label="STARTING GENDER RATIO"
                   options={[
-                    { value: 'more-women', label: formatRatioFull('more-women') },
-                    { value: 'more-men', label: formatRatioFull('more-men') },
+                    {
+                      value: 'more-women',
+                      label: formatRatioFull('more-women'),
+                      activeColor: palette.fmpColor,
+                      activeTextColor: fmpTextColor,
+                    },
+                    {
+                      value: 'more-men',
+                      label: formatRatioFull('more-men'),
+                      activeColor: palette.mmpColor,
+                      activeTextColor: mmpTextColor,
+                    },
                   ]}
                   value={selectedRatio}
-                  onChange={(val) => setSelectedRatio(val as GenderRatio)}
+                  onChange={(val) => {
+                    setSelectedRatio(val as GenderRatio);
+                    setRatioOrbitRunKey((prev) => prev + 1);
+                  }}
+                  showRequired={needRatio && selectedRatio === ''}
+                  highlightBorder={needRatio && selectedRatio === ''}
+                  highlightColor={palette.warning}
+                  highlightLeftColor={
+                    needRatio && selectedRatio === '' ? palette.fmpColor : undefined
+                  }
+                  highlightRightColor={
+                    needRatio && selectedRatio === '' ? palette.mmpColor : undefined
+                  }
+                  attentionColor={selectedRatioOrbitColor}
+                  attentionRunKey={ratioOrbitRunKey}
                 />
               </View>
             )}

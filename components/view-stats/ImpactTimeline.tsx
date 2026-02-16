@@ -1,4 +1,5 @@
 import { useTheme } from '@/context/ThemeContext';
+import { useLayout } from '@/hooks/useLayout';
 import { ImpactPoint } from '@/lib/statsUtils';
 import { Circle } from '@shopify/react-native-skia';
 import React from 'react';
@@ -11,6 +12,7 @@ interface ImpactTimelineProps {
 
 export default function ImpactTimeline({ data }: ImpactTimelineProps) {
   const { palette } = useTheme();
+  const { isLandscape } = useLayout();
   const hasImpact = data.some((d) => d.cumulativePlusMinus !== 0);
 
   if (!hasImpact && data.length <= 2) {
@@ -145,7 +147,7 @@ export default function ImpactTimeline({ data }: ImpactTimelineProps) {
 
           // Filter to avoid overlapping labels (minimum 10% gap)
           // Always keep first and last labels
-          const MIN_GAP = 5;
+          const MIN_GAP = isLandscape ? 5 : 8;
           const filteredScores: typeof scoresWithPct = [];
 
           scoresWithPct.forEach((item, i) => {

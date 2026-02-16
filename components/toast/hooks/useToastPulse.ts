@@ -1,32 +1,132 @@
 import { useEffect } from 'react';
 import {
+  cancelAnimation,
   useAnimatedStyle,
   useSharedValue,
+  withRepeat,
   withSequence,
   withTiming,
 } from 'react-native-reanimated';
 
-export function useToastPulse(visible: boolean, instanceId: number) {
+const BORDER_RUNNER_LENGTH = 44;
+const BORDER_RUNNER_THICKNESS = 5;
+
+export function useToastPulse(
+  visible: boolean,
+  instanceId: number,
+  toastWidth: number,
+  toastHeight: number,
+) {
   const scale = useSharedValue(1);
-  const borderGlow = useSharedValue(0);
+  const borderRunnerProgress = useSharedValue(0);
+  const borderRunnerOpacity = useSharedValue(0);
 
   useEffect(() => {
-    if (!visible || instanceId === 0) return;
+    if (!visible || instanceId === 0 || toastWidth <= 0 || toastHeight <= 0) {
+      cancelAnimation(borderRunnerProgress);
+      cancelAnimation(borderRunnerOpacity);
+      borderRunnerOpacity.value = 0;
+      return;
+    }
+
     scale.value = withSequence(
       withTiming(1.04, { duration: 120 }),
       withTiming(1, { duration: 200 }),
     );
-    borderGlow.value = withSequence(
-      withTiming(1, { duration: 100 }),
-      withTiming(0, { duration: 500 }),
-    );
-  }, [visible, instanceId, scale, borderGlow]);
+    borderRunnerProgress.value = 0;
+    borderRunnerOpacity.value = withTiming(1, { duration: 120 });
+    borderRunnerProgress.value = withRepeat(withTiming(1, { duration: 1700 }), -1, false);
+  }, [
+    visible,
+    instanceId,
+    toastWidth,
+    toastHeight,
+    scale,
+    borderRunnerProgress,
+    borderRunnerOpacity,
+  ]);
 
-  const animatedStyle = useAnimatedStyle(() => ({
+  const toastAnimatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
-    borderWidth: 2,
-    borderColor: `rgba(255,255,255,${0.25 + borderGlow.value * 0.75})`,
   }));
 
-  return animatedStyle;
+  const borderRunnerAnimatedStyle = useAnimatedStyle(() => {
+    if (toastWidth <= 0 || toastHeight <= 0) {
+      return { opacity: 0 };
+    }
+
+    const perimeter = 2 * (toastWidth + toastHeight);
+    const distance = borderRunnerProgress.value * perimeter;
+    let x = 0;
+    let y = 0;
+    let rotation = 0;
+
+    if (distance <= toastWidth) {
+      x = distance;
+      y = 0;
+      rotation = 0;
+    } else if (distance <= toastWidth + toastHeight) {
+      x = toastWidth;
+      y = distance - toastWidth;
+      rotation = 90;
+    } else if (distance <= 2 * toastWidth + toastHeight) {
+      x = toastWidth - (distance - (toastWidth + toastHeight));
+      y = toastHeight;
+      rotation = 180;
+    } else {
+      x = 0;
+      y = toastHeight - (distance - (2 * toastWidth + toastHeight));
+      rotation = 270;
+    }
+
+    return {
+      opacity: borderRunnerOpacity.value,
+      transform: [
+        { translateX: x - BORDER_RUNNER_LENGTH / 2 },
+        { translateY: y - BORDER_RUNNER_THICKNESS / 2 },
+        { rotate: `${rotation}deg` },
+      ],
+    };
+  });
+
+  const borderRunnerOffsetAnimatedStyle = useAnimatedStyle(() => {
+    if (toastWidth <= 0 || toastHeight <= 0) {
+      return { opacity: 0 };
+    }
+
+    const perimeter = 2 * (toastWidth + toastHeight);
+    const distance = (borderRunnerProgress.value * perimeter + perimeter / 2) % perimeter;
+    let x = 0;
+    let y = 0;
+    let rotation = 0;
+
+    if (distance <= toastWidth) {
+      x = distance;
+      y = 0;
+      rotation = 0;
+    } else if (distance <= toastWidth + toastHeight) {
+      x = toastWidth;
+      y = distance - toastWidth;
+      rotation = 90;
+    } else if (distance <= 2 * toastWidth + toastHeight) {
+      x = toastWidth - (distance - (toastWidth + toastHeight));
+      y = toastHeight;
+      rotation = 180;
+    } else {
+      x = 0;
+      y = toastHeight - (distance - (2 * toastWidth + toastHeight));
+      rotation = 270;
+    }
+
+    return {
+      opacity: borderRunnerOpacity.value,
+      transform: [
+        { translateX: x - BORDER_RUNNER_LENGTH / 2 },
+        { translateY: y - BORDER_RUNNER_THICKNESS / 2 },
+        { rotate: `${rotation}deg` },
+      ],
+    };
+  });
+
+  return { toastAnimatedStyle, borderRunnerAnimatedStyle, borderRunnerOffsetAnimatedStyle };
 }

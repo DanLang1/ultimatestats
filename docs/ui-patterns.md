@@ -60,6 +60,29 @@ Reference: `docs/modals.md`.
 - Use tokens from `theme/theme.ts` and theme palette via `useTheme()`.
 - For modals, follow modal token guidance in `docs/modals.md`.
 
+## Required Field Attention Pattern
+
+- Default pattern for required segmented inputs:
+  - Add a `Required` chip next to the label.
+  - Use a highlighted border until the user selects a value.
+  - Trigger a one-shot confirmation pulse after first selection.
+- For side-specific choices (team/player split), use side highlight colors:
+  - `highlightLeftColor` for left option cue.
+  - `highlightRightColor` for right option cue.
+- Current implementation:
+  - `components/ui/SegmentedControl.tsx`
+  - `app/(main)/PreGameConfirm.tsx`
+
+## Orbit Attention Pattern (Optional)
+
+- Orbit runners are preserved as an optional, higher-attention variant for segmented controls.
+- Use when a temporary motion cue is preferred over static required affordances.
+- Primary implementation:
+  - Hook: `components/ui/hooks/useAttentionBorderRunner.ts`
+  - Rendering integration: `components/ui/SegmentedControl.tsx` via
+    `attentionEnabled`, `attentionColor`, and `attentionSecondaryColor`.
+- Recommendation: use sparingly and only for short onboarding moments to avoid persistent visual noise.
+
 ## Component Placement
 
 - One component per file.
