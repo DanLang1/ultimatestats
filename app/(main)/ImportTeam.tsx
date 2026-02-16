@@ -201,7 +201,7 @@ export default function ImportTeamScreen() {
               autoCapitalize="none"
               autoCorrect={false}
               keyboardType="url"
-              placeholder="Click button to paste ->"
+              placeholder="USAU Team URL"
               placeholderTextColor={palette.textMuted}
             />
             <Pressable

@@ -44,6 +44,7 @@
 - If you must use `useEffect`, abstract it into a custom hook
 - Never use `useCallback` or `useMemo` - using React Compiler
 - Use **Immer** when updating object state for simplicity (already configured in store)
+- **Await async persistence actions** (e.g. `saveCurrentTeam()`, `saveCurrentGame()`) in UI handlers before dismissing modals, navigating, or resetting state to avoid stale-write races
 
 ## Reanimated
 

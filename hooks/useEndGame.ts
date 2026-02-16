@@ -36,13 +36,13 @@ export function useEndGame() {
         {
           text: 'End Game',
           style: 'destructive',
-          onPress: () => {
+          onPress: async () => {
             // Stop timer
             setTimerActive(false);
 
             // Save game if stat tracking enabled
             if (statTrackingEnabled) {
-              saveCurrentGame();
+              await saveCurrentGame();
             }
 
             // Lock the game (shows lock screen)

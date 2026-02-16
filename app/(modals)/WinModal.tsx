@@ -46,19 +46,19 @@ export default function WinModal() {
   const winnerScore = team1Won ? team1Score : team2Score;
   const loserScore = team1Won ? team2Score : team1Score;
 
-  const handleViewStats = () => {
+  const handleViewStats = async () => {
     setTimerActive(false);
     setGameLocked(true);
     if (statTrackingEnabled) {
-      saveCurrentGame();
+      await saveCurrentGame();
     }
     router.dismissTo('/');
     router.push('/ViewStats');
   };
 
-  const handleNewGame = () => {
+  const handleNewGame = async () => {
     if (statTrackingEnabled) {
-      saveCurrentGame();
+      await saveCurrentGame();
     }
     resetGame();
     router.dismissTo('/');

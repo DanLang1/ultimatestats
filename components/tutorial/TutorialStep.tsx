@@ -18,7 +18,7 @@ export default function TutorialStep({ icon, title, description }: TutorialStepP
         <MaterialCommunityIcons name={icon} size={40} color={palette.accent} />
       </View>
       <Text style={[styles.title, { color: palette.modalText }]}>{title}</Text>
-      <Text style={[styles.description, { color: palette.textMuted }]}>{description}</Text>
+      <Text style={[styles.description, { color: palette.modalTextMuted }]}>{description}</Text>
     </View>
   );
 }

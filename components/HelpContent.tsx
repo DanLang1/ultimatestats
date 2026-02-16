@@ -206,7 +206,7 @@ export default function HelpContent({ showActionBarLegend = true }: HelpContentP
             Privacy Policy
           </Text>
           <Text style={[styles.tutorialButtonSubtitle, { color: palette.textMuted }]}>
-            TLDR: Everything is stored locally on your device
+            TLDR: Local first with options for sharing
           </Text>
         </View>
         <MaterialCommunityIcons name="open-in-new" size={24} color={palette.textMuted} />

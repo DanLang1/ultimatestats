@@ -92,6 +92,10 @@ function SettingsContent() {
 
   // Save all draft inputs - called on keyboard hide (for Android back button)
   const saveAllDrafts = () => {
+    void persistTeamNameDraft();
+  };
+
+  const persistTeamNameDraft = async () => {
     // Team 1 name
     const newTeam1Name = team1NameDraft.trim();
     if (newTeam1Name && currentTeam) {
@@ -101,7 +105,7 @@ function SettingsContent() {
       if (!existingTeam && newTeam1Name !== team1Name) {
         const updatedTeam: SavedTeam = { ...currentTeam, name: newTeam1Name };
         setCurrentTeam(updatedTeam);
-        saveCurrentTeam();
+        await saveCurrentTeam();
       }
     }
   };
@@ -118,7 +122,7 @@ function SettingsContent() {
   };
 
   // Save team when name editing finishes (on blur)
-  const handleTeam1NameBlur = () => {
+  const handleTeam1NameBlur = async () => {
     const newName = team1NameDraft.trim();
 
     // Prevent empty name - revert to current
@@ -147,7 +151,7 @@ function SettingsContent() {
 
     const updatedTeam: SavedTeam = { ...currentTeam, name: newName };
     setCurrentTeam(updatedTeam);
-    saveCurrentTeam();
+    await saveCurrentTeam();
   };
 
   // Dynamic Styles

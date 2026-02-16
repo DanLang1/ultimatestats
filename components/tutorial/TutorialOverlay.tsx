@@ -2,16 +2,9 @@ import { useTheme } from '@/context/ThemeContext';
 import { useLayout } from '@/hooks/useLayout';
 import { useTutorialStore } from '@/store/tutorialStore';
 import React, { useState } from 'react';
-import { Linking, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Linking, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
-import Animated, {
-  FadeIn,
-  SlideInLeft,
-  SlideInRight,
-  SlideOutLeft,
-  SlideOutRight,
-} from 'react-native-reanimated';
-import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import Animated, { FadeIn, SlideInLeft, SlideInRight } from 'react-native-reanimated';
 import TutorialStep from './TutorialStep';
 
 const PRIVACY_URL = 'https://u-stat.app/privacy/';
@@ -42,7 +35,8 @@ const TUTORIAL_STEPS = [
 ];
 
 export default function TutorialOverlay() {
-  const { width } = useLayout();
+  const { width, height, isLandscape, isNarrow } = useLayout();
+  const styles = createStyles({ height, isLandscape, isNarrow });
   const { hasSeenOnboarding, showOnboarding, closeOnboarding } = useTutorialStore();
   const [currentStep, setCurrentStep] = useState(0);
   const [slideDirection, setSlideDirection] = useState<'left' | 'right'>('right');
@@ -95,36 +89,33 @@ export default function TutorialOverlay() {
 
   const step = TUTORIAL_STEPS[currentStep];
 
-  // Choose animations based on slide direction
   const enteringAnimation = slideDirection === 'right' ? SlideInRight : SlideInLeft;
-  const exitingAnimation = slideDirection === 'right' ? SlideOutLeft : SlideOutRight;
 
   return (
-    <Modal transparent visible={visible} animationType="fade">
-      <GestureHandlerRootView style={{ flex: 1 }}>
-        <SafeAreaProvider>
-          <SafeAreaView
-            style={[styles.overlay, { backgroundColor: palette.overlayDark60 }]}
-            edges={['top', 'bottom', 'left', 'right']}>
-            <GestureDetector gesture={panGesture}>
-              <Animated.View
-                entering={FadeIn.duration(300)}
-                style={[
-                  styles.container,
-                  { maxWidth: Math.min(width - 48, 600) },
-                  { backgroundColor: palette.modalBg, borderColor: palette.overlay20 },
-                ]}>
-                {/* Skip button */}
-                <Pressable onPress={handleClose} style={styles.skipButton}>
-                  <Text style={[styles.skipText, { color: palette.textMuted }]}>Skip</Text>
-                </Pressable>
+    <Modal transparent visible={visible} animationType="fade" statusBarTranslucent>
+      <GestureHandlerRootView style={styles.root}>
+        <View style={[styles.overlay, { backgroundColor: palette.overlayDark60 }]}>
+          <GestureDetector gesture={panGesture}>
+            <Animated.View
+              entering={FadeIn.duration(220)}
+              style={[
+                styles.container,
+                { maxWidth: Math.min(width - 32, 640) },
+                { backgroundColor: palette.modalBg, borderColor: palette.overlay20 },
+              ]}>
+              <Pressable onPress={handleClose} style={styles.skipButton}>
+                <Text style={[styles.skipText, { color: palette.modalTextMuted }]}>Skip</Text>
+              </Pressable>
 
-                {/* Step content with animation */}
+              <ScrollView
+                style={styles.scrollContainer}
+                contentContainerStyle={styles.scrollContent}
+                bounces={false}
+                showsVerticalScrollIndicator={false}>
                 <View style={styles.contentContainer}>
                   <Animated.View
-                    key={currentStep}
-                    entering={enteringAnimation.duration(300)}
-                    exiting={exitingAnimation.duration(200)}
+                    key={`${slideDirection}-${currentStep}`}
+                    entering={enteringAnimation.duration(260)}
                     style={styles.stepWrapper}>
                     <TutorialStep
                       icon={step.icon}
@@ -134,7 +125,6 @@ export default function TutorialOverlay() {
                   </Animated.View>
                 </View>
 
-                {/* Progress dots */}
                 <View style={styles.dotsContainer}>
                   {TUTORIAL_STEPS.map((_, index) => (
                     <View
@@ -150,124 +140,137 @@ export default function TutorialOverlay() {
                     />
                   ))}
                 </View>
+              </ScrollView>
 
-                {/* Navigation buttons */}
-                <View style={styles.buttonRow}>
-                  {!isFirstStep && (
-                    <Pressable
-                      onPress={handleBack}
-                      style={[styles.backButton, { borderColor: palette.accent }]}>
-                      <Text style={[styles.backButtonText, { color: palette.accent }]}>Back</Text>
-                    </Pressable>
-                  )}
+              <View style={styles.buttonRow}>
+                {!isFirstStep && (
                   <Pressable
-                    onPress={handleNext}
-                    style={[styles.nextButton, { backgroundColor: palette.accent }]}>
-                    <Text style={[styles.nextButtonText, { color: palette.textOnAccent }]}>
-                      {isLastStep ? 'Get Started' : 'Next'}
-                    </Text>
-                  </Pressable>
-                </View>
-
-                {/* Privacy link footer - only on first step */}
-                {isFirstStep && (
-                  <Pressable
-                    onPress={() => Linking.openURL(PRIVACY_URL)}
-                    style={styles.privacyFooter}>
-                    <Text style={[styles.privacyFooterText, { color: palette.accent }]}>
-                      Privacy
-                    </Text>
+                    onPress={handleBack}
+                    style={[styles.backButton, { borderColor: palette.accent }]}>
+                    <Text style={[styles.backButtonText, { color: palette.accent }]}>Back</Text>
                   </Pressable>
                 )}
-              </Animated.View>
-            </GestureDetector>
-          </SafeAreaView>
-        </SafeAreaProvider>
+                <Pressable
+                  onPress={handleNext}
+                  style={[styles.nextButton, { backgroundColor: palette.accent }]}>
+                  <Text style={[styles.nextButtonText, { color: palette.textOnAccent }]}>
+                    {isLastStep ? 'Get Started' : 'Next'}
+                  </Text>
+                </Pressable>
+              </View>
+
+              {isFirstStep && (
+                <Pressable
+                  onPress={() => Linking.openURL(PRIVACY_URL)}
+                  style={styles.privacyFooter}>
+                  <Text style={[styles.privacyFooterText, { color: palette.accent }]}>Privacy</Text>
+                </Pressable>
+              )}
+            </Animated.View>
+          </GestureDetector>
+        </View>
       </GestureHandlerRootView>
     </Modal>
   );
 }
 
-const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  container: {
-    width: '92%',
-    borderRadius: 24,
-    paddingTop: 16,
-    paddingBottom: 16,
-    paddingHorizontal: 16,
-    borderWidth: 1,
-  },
-  skipButton: {
-    position: 'absolute',
-    top: 12,
-    right: 12,
-    padding: 8,
-    zIndex: 10,
-  },
-  skipText: {
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  contentContainer: {
-    minHeight: 150,
-    justifyContent: 'center',
-  },
-  stepWrapper: {
-    width: '100%',
-  },
-  dotsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 8,
-    marginBottom: 24,
-  },
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  dotActive: {
-    width: 24,
-  },
-  buttonRow: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  backButton: {
-    flex: 1,
-    backgroundColor: 'transparent',
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    borderRadius: 12,
-    borderWidth: 2,
-    alignItems: 'center',
-  },
-  backButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  nextButton: {
-    flex: 1,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-  nextButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  privacyFooter: {
-    alignItems: 'center',
-    paddingTop: 12,
-  },
-  privacyFooterText: {
-    fontSize: 12,
-    textDecorationLine: 'underline',
-  },
-});
+function createStyles(layout: { height: number; isLandscape: boolean; isNarrow: boolean }) {
+  return StyleSheet.create({
+    root: {
+      flex: 1,
+    },
+    overlay: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingHorizontal: layout.isNarrow ? 12 : 16,
+      paddingVertical: layout.isLandscape ? 12 : 20,
+    },
+    container: {
+      width: '100%',
+      borderRadius: 24,
+      paddingTop: 16,
+      paddingBottom: 16,
+      paddingHorizontal: layout.isNarrow ? 12 : 16,
+      maxHeight: layout.isLandscape ? layout.height * 0.9 : layout.height * 0.84,
+      borderWidth: 1,
+    },
+    skipButton: {
+      position: 'absolute',
+      top: 12,
+      right: 12,
+      padding: 8,
+      zIndex: 10,
+    },
+    skipText: {
+      fontSize: 14,
+      fontWeight: '500',
+    },
+    scrollContainer: {
+      maxHeight: layout.isLandscape ? layout.height * 0.55 : layout.height * 0.56,
+    },
+    scrollContent: {
+      flexGrow: 1,
+      justifyContent: 'center',
+    },
+    contentContainer: {
+      minHeight: layout.isLandscape ? 130 : 160,
+      justifyContent: 'center',
+      paddingTop: 24,
+      overflow: 'hidden',
+    },
+    stepWrapper: {
+      width: '100%',
+    },
+    dotsContainer: {
+      flexDirection: 'row',
+      justifyContent: 'center',
+      gap: 8,
+      marginBottom: layout.isLandscape ? 16 : 24,
+    },
+    dot: {
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+    },
+    dotActive: {
+      width: 24,
+    },
+    buttonRow: {
+      flexDirection: 'row',
+      gap: 12,
+    },
+    backButton: {
+      flex: 1,
+      backgroundColor: 'transparent',
+      paddingVertical: 14,
+      paddingHorizontal: 16,
+      borderRadius: 12,
+      borderWidth: 2,
+      alignItems: 'center',
+    },
+    backButtonText: {
+      fontSize: 16,
+      fontWeight: '600',
+    },
+    nextButton: {
+      flex: 1,
+      paddingVertical: 14,
+      paddingHorizontal: 16,
+      borderRadius: 12,
+      alignItems: 'center',
+    },
+    nextButtonText: {
+      fontSize: 16,
+      fontWeight: '600',
+    },
+    privacyFooter: {
+      alignItems: 'center',
+      paddingTop: 12,
+    },
+    privacyFooterText: {
+      fontSize: 12,
+      textDecorationLine: 'underline',
+    },
+  });
+}

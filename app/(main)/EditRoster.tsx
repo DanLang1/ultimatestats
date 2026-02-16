@@ -76,7 +76,7 @@ export default function EditRosterScreen() {
     newTeamName.trim() !== '' &&
     savedTeams.some((t: SavedTeam) => t.name.toLowerCase() === newTeamName.trim().toLowerCase());
 
-  const handleRenameTeam = () => {
+  const handleRenameTeam = async () => {
     const newName = editTeamName.trim();
     if (!newName || !currentTeam || teamNameExists) {
       if (!newName) setRenameModalVisible(false);
@@ -85,7 +85,7 @@ export default function EditRosterScreen() {
 
     const updatedTeam: SavedTeam = { ...currentTeam, name: newName };
     setCurrentTeam(updatedTeam);
-    saveCurrentTeam();
+    await saveCurrentTeam();
     setRenameModalVisible(false);
   };
 
@@ -118,13 +118,13 @@ export default function EditRosterScreen() {
     setShowShareConfirm(true);
   };
 
-  const handleAddPlayer = () => {
+  const handleAddPlayer = async () => {
     const trimmed = newPlayerName.trim();
     if (trimmed && !hasPlayerWithName(roster, trimmed)) {
       addPlayer(trimmed);
       setNewPlayerName('');
       // Auto-save team
-      saveCurrentTeam();
+      await saveCurrentTeam();
     }
   };
 

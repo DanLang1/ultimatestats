@@ -40,7 +40,7 @@ export default function EditPlayerModal() {
     router.dismissTo('/EditRoster');
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const trimmedName = name.trim();
     if (!trimmedName || nameExists) return;
 
@@ -61,11 +61,11 @@ export default function EditPlayerModal() {
         : p,
     );
     setCurrentTeam({ ...currentTeam, roster: updatedRoster });
-    saveCurrentTeam();
+    await saveCurrentTeam();
     router.dismissTo('/EditRoster');
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     // Can't delete if player has stats (check is at component level for UI)
     if (hasCurrentGameStats) {
       return;
@@ -75,7 +75,7 @@ export default function EditPlayerModal() {
     const newRoster = roster.filter((p) => p.id !== playerId);
     setCurrentTeam({ ...currentTeam, roster: newRoster });
     removePlayerFromPresets(playerId);
-    saveCurrentTeam();
+    await saveCurrentTeam();
     router.dismissTo('/EditRoster');
   };
 
