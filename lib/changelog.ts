@@ -12,6 +12,7 @@ export const CHANGELOG: ChangelogEntry[] = [
       'Portrait Mode Support for entire app',
       'Can now import a team directly from a USAU link',
       'Revamped game start modals into a single page',
+      'Updated team page to allow bulk editing',
       'Added toasts after recording turnover events',
       'Added point length editing via Game Timeline',
     ],
