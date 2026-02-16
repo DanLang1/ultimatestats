@@ -202,6 +202,15 @@ export interface ImpactPoint {
 }
 
 /**
+ * Impact timelines always include a Start marker.
+ * A game has player impact data if there is at least one stat event (length > 2)
+ * or any non-zero cumulative impact value.
+ */
+export function hasImpactTimelineData(points: ImpactPoint[]): boolean {
+  return points.some((point) => point.cumulativePlusMinus !== 0) || points.length > 2;
+}
+
+/**
  * Get impact timeline for a player showing cumulative +/- over the game.
  * @param playerId - The player ID to analyze
  */

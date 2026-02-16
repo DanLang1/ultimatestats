@@ -42,6 +42,7 @@ Scrollable table with the following columns:
 - Non-integer values (from 50/50 turnovers) are displayed with single decimal (e.g. 0.5).
 - Pts, O-Eff, D-Eff columns are hidden for games without line tracking data.
 - **Interactive Rows**: Tap any player row to view a detailed breakdown of their individual stats.
+- In aggregate player view, the **Game Impact** selector only includes games where that player has at least one recorded impact event (goal, assist, block, throwaway, drop, or 50/50 involvement).
 
 ### 3. Game Timeline
 

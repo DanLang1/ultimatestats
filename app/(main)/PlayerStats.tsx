@@ -12,6 +12,7 @@ import {
   getChemistryStats,
   getImpactStats,
   getPlayerRoleLabel,
+  hasImpactTimelineData,
   getRoleStats,
 } from '@/lib/statsUtils';
 import { usePlayerStatsStore } from '@/store/playerStatsStore';
@@ -55,15 +56,24 @@ export default function PlayerStats() {
     : 0;
   const isMVP = summary?.plusMinus === highestPlusMinus && highestPlusMinus > 0;
 
-  // Derive the effective selected game ID (default to latest if none selected)
-  const defaultGameId =
-    games && games.length > 1 ? [...games].sort((a, b) => b.createdAt - a.createdAt)[0].id : null;
+  const impactGames =
+    playerId && games
+      ? games.filter((game) =>
+          hasImpactTimelineData(getImpactStats(playerId, game.events, team, roster || undefined)),
+        )
+      : [];
+  const hasMultipleImpactGames = impactGames.length > 1;
+
+  // Derive the effective selected game ID from games with actual impact data
+  const defaultGameId = impactGames.length
+    ? [...impactGames].sort((a, b) => b.createdAt - a.createdAt)[0].id
+    : null;
   const effectiveGameId = selectedGameId ?? defaultGameId;
 
   // Determine which events to use for Impact Chart
   let impactEvents = events;
-  if (effectiveGameId && games) {
-    const game = games.find((g) => g.id === effectiveGameId);
+  if (effectiveGameId) {
+    const game = impactGames.find((g) => g.id === effectiveGameId);
     if (game) impactEvents = game.events;
   }
 
@@ -72,7 +82,7 @@ export default function PlayerStats() {
     ? getImpactStats(playerId, impactEvents, team, roster || undefined)
     : [];
 
-  const selectedGame = games?.find((g) => g.id === effectiveGameId);
+  const selectedGame = impactGames.find((g) => g.id === effectiveGameId);
   const gameDate = selectedGame
     ? new Date(selectedGame.createdAt).toLocaleDateString(undefined, {
         month: 'short',
@@ -83,8 +93,8 @@ export default function PlayerStats() {
 
   // Calculate aggregate impact across all games (for multi-game view)
   const aggregateImpact =
-    games && games.length > 1 && playerId
-      ? games.reduce((total, g) => {
+    impactGames.length > 1 && playerId
+      ? impactGames.reduce((total, g) => {
           const gameImpact = getImpactStats(playerId, g.events, team, roster || undefined);
           const finalValue = gameImpact[gameImpact.length - 1]?.cumulativePlusMinus ?? 0;
           return total + finalValue;
@@ -206,14 +216,14 @@ export default function PlayerStats() {
 
         <View style={styles.grid}>
           {/* Full-width Impact Timeline - only show if player has recorded stats */}
-          {(stats.impact.some((d) => d.cumulativePlusMinus !== 0) || stats.impact.length > 2) && (
+          {hasImpactTimelineData(stats.impact) && (
             <View
               style={[
                 styles.card,
                 { backgroundColor: palette.overlay02, borderColor: palette.overlay05 },
               ]}>
               {/* Game Selector (only if aggregate) */}
-              {games && games.length > 1 && (
+              {hasMultipleImpactGames && (
                 <View style={{ marginBottom: 12, paddingHorizontal: 16 }}>
                   {/* Aggregate Summary */}
                   <View
@@ -251,7 +261,7 @@ export default function PlayerStats() {
                       </Text>
                     </View>
                     <Text style={{ color: palette.textMuted, fontSize: 12, fontWeight: '600' }}>
-                      TOTAL ACROSS {games.length} GAMES
+                      TOTAL ACROSS {impactGames.length} GAMES
                     </Text>
                   </View>
 
