@@ -7,7 +7,8 @@ import React from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 export default function GameSelectorModal() {
-  const { games, selectedGameId, setSelectedGameId, playerId, team, roster } = usePlayerStatsStore();
+  const { games, selectedGameId, setSelectedGameId, playerId, team, roster } =
+    usePlayerStatsStore();
   const { palette } = useTheme();
 
   // If no games, just return null
