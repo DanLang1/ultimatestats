@@ -27,8 +27,7 @@ export function PresetListView({
   const [isDragging, setIsDragging] = useState(false);
 
   return (
-    <View
-      style={[styles.container, { backgroundColor: palette.primary, paddingTop: 16 }]}>
+    <View style={[styles.container, { backgroundColor: palette.primary, paddingTop: 16 }]}>
       {/* Header */}
       <View style={styles.header}>
         <Pressable onPress={onClose} style={styles.backButton} hitSlop={12}>
