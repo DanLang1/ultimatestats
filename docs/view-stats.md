@@ -119,10 +119,14 @@ Aggregated statistics for your team:
 
 ```csv
 # Player Summary
-Player,Goals,Assists,Blocks,Throwaways,Drops,Callahans,Plus/Minus
-Alice,3,2,1,0,0,6,1
-Bob,2,1,0,1,0,2,0
+Player,Goals,Assists,Blocks,Throwaways,Drops,Callahans,Plus/Minus,Points Played,O-Points,D-Points,O-Line Holds,D-Line Breaks,Minutes Played,O-Eff,D-Eff
+Alice,3,2,1,0,0,1,6,10,6,4,4,1,15:42,70%,33%
+Bob,2,1,0,1,0,0,2,8,5,3,3,1,12:18,63%,25%
 ```
+
+- If line tracking data exists, CSV adds `Points Played`, `O-Points`, `D-Points`, `O-Line Holds`, `D-Line Breaks`, `Minutes Played`, `O-Eff`, and `D-Eff` columns.
+- Players who appeared in lines but recorded no event stats are still included in Player Summary.
+- If line tracking data is not available, those columns are omitted.
 
 ### Section 4: Team Stats
 

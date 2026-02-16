@@ -1,5 +1,11 @@
-import { GameEvent, Player, SavedGame } from '@/lib/storage';
+import { GameEvent, Player, PointLineRecord, SavedGame } from '@/lib/storage';
 import { getPlayerName, UNKNOWN_PLAYER_ID } from './playerUtils';
+import {
+  computePlayingTimeStats,
+  formatEfficiency,
+  formatMinutesPlayed,
+  PlayingTimeStats,
+} from './playingTimeStatsUtils';
 import {
   aggregateTeamStats,
   aggregateTimingStats,
@@ -463,8 +469,13 @@ export function generateCurrentGameCSV(
   startingPossession: 'team1' | 'team2' | null,
   gameTo: number,
   roster?: Player[],
+  pointLines?: PointLineRecord[],
 ): string {
   const playerStats = computePlayerStats(events, 'team1', roster);
+  const playingTimeStats = pointLines?.length
+    ? computePlayingTimeStats(pointLines, events, startingPossession, gameTo)
+    : null;
+  const playerRows = mergePlayerRows(playerStats, playingTimeStats, roster);
 
   let csv = '# Play-by-Play\n';
   csv += playByPlayCSV(events, team1Name, team2Name, startingPossession, gameTo, roster);
@@ -473,7 +484,7 @@ export function generateCurrentGameCSV(
   csv += turnoversCSV(events, team1Name, team2Name, roster);
 
   csv += '\n\n# Player Summary\n';
-  csv += playerSummaryCSV(playerStats);
+  csv += playerSummaryCSV(playerRows, playingTimeStats !== null && playingTimeStats.size > 0);
 
   csv += '\n\n# Team Stats\n';
   csv += teamStatsCSV(computeTeamStats(events, startingPossession, gameTo));
@@ -487,6 +498,10 @@ export function generateCurrentGameCSV(
  */
 export function generateSavedGameCSV(game: SavedGame): string {
   const playerStats = computePlayerStats(game.events, 'team1', game.team1.roster);
+  const playingTimeStats = game.pointLines?.length
+    ? computePlayingTimeStats(game.pointLines, game.events, game.startingPossession, game.gameTo)
+    : null;
+  const playerRows = mergePlayerRows(playerStats, playingTimeStats, game.team1.roster);
 
   let csv = `# Game: ${game.team1.name} vs ${game.team2Name} - ${formatDateForCSV(game.createdAt)}\n`;
 
@@ -504,7 +519,7 @@ export function generateSavedGameCSV(game: SavedGame): string {
   csv += turnoversCSV(game.events, game.team1.name, game.team2Name, game.team1.roster);
 
   csv += '\n\n# Player Summary\n';
-  csv += playerSummaryCSV(playerStats);
+  csv += playerSummaryCSV(playerRows, playingTimeStats !== null && playingTimeStats.size > 0);
 
   csv += '\n\n# Team Stats\n';
   csv += teamStatsCSV(computeTeamStats(game.events, game.startingPossession, game.gameTo));
@@ -523,6 +538,8 @@ export function generateAggregateCSV(
 ): string {
   const mergedEvents = games.flatMap((g) => g.events);
   const playerStats = computePlayerStats(mergedEvents, 'team1', roster);
+  const playingTimeStats = aggregatePlayingTimeStatsByPlayer(games);
+  const playerRows = mergePlayerRows(playerStats, playingTimeStats, roster);
 
   let csv = `# Aggregated Stats: ${teamName} (${games.length} games)\n`;
 
@@ -541,7 +558,7 @@ export function generateAggregateCSV(
 
   // Section 2: Combined Player Summary
   csv += '\n\n# Combined Player Summary\n';
-  csv += playerSummaryCSV(playerStats);
+  csv += playerSummaryCSV(playerRows, playingTimeStats.size > 0);
 
   // Section 3: Game Log
   csv += '\n\n# Game Log\n';
@@ -566,7 +583,19 @@ export function generateAggregateCSV(
     csv += timingStatsCSV(computeTimingStats(game.events, game.startingPossession, game.gameTo));
 
     csv += '\n\n# Player Summary\n';
-    csv += playerSummaryCSV(computePlayerStats(game.events, 'team1', game.team1.roster));
+    const perGamePlayerStats = computePlayerStats(game.events, 'team1', game.team1.roster);
+    const perGamePlayingTimeStats = game.pointLines?.length
+      ? computePlayingTimeStats(game.pointLines, game.events, game.startingPossession, game.gameTo)
+      : null;
+    const perGameRows = mergePlayerRows(
+      perGamePlayerStats,
+      perGamePlayingTimeStats,
+      game.team1.roster,
+    );
+    csv += playerSummaryCSV(
+      perGameRows,
+      perGamePlayingTimeStats !== null && perGamePlayingTimeStats.size > 0,
+    );
 
     csv += '\n\n# Play-by-Play\n';
     csv += playByPlayCSV(
@@ -587,17 +616,155 @@ export function generateAggregateCSV(
 
 // --- CSV Helper Functions ---
 
-function playerSummaryCSV(stats: PlayerStats[]): string {
+interface PlayerSummaryCSVRow extends PlayerStats {
+  pointsPlayed?: number;
+  oPoints?: number;
+  dPoints?: number;
+  oLineHolds?: number;
+  dLineBreaks?: number;
+  minutesPlayed?: number;
+  oEfficiency?: number;
+  dEfficiency?: number;
+}
+
+interface AggregatedPlayingTimeCSVRow {
+  pointsPlayed: number;
+  oPoints: number;
+  dPoints: number;
+  oLineHolds: number;
+  dLineBreaks: number;
+  minutesPlayed?: number;
+}
+
+type PlayingTimeStatsForCSV = Pick<
+  PlayingTimeStats,
+  'pointsPlayed' | 'oPoints' | 'dPoints' | 'oLineHolds' | 'dLineBreaks' | 'minutesPlayed'
+>;
+
+function mergePlayerRows(
+  playerStats: PlayerStats[],
+  playingTimeStats: Map<string, PlayingTimeStatsForCSV> | null,
+  roster?: Player[],
+): PlayerSummaryCSVRow[] {
+  const rowsById = new Map<string, PlayerSummaryCSVRow>();
+
+  for (const stats of playerStats) {
+    rowsById.set(stats.id, { ...stats });
+  }
+
+  if (playingTimeStats) {
+    for (const [playerId, pt] of playingTimeStats.entries()) {
+      const existing = rowsById.get(playerId);
+      const oEfficiency = pt.oPoints > 0 ? pt.oLineHolds / pt.oPoints : undefined;
+      const dEfficiency = pt.dPoints > 0 ? pt.dLineBreaks / pt.dPoints : undefined;
+      if (existing) {
+        existing.pointsPlayed = pt.pointsPlayed;
+        existing.oPoints = pt.oPoints;
+        existing.dPoints = pt.dPoints;
+        existing.oLineHolds = pt.oLineHolds;
+        existing.dLineBreaks = pt.dLineBreaks;
+        existing.minutesPlayed = pt.minutesPlayed;
+        existing.oEfficiency = oEfficiency;
+        existing.dEfficiency = dEfficiency;
+        continue;
+      }
+
+      rowsById.set(playerId, {
+        id: playerId,
+        name: getPlayerName(roster, playerId) ?? playerId,
+        goals: 0,
+        assists: 0,
+        blocks: 0,
+        throwaways: 0,
+        drops: 0,
+        plusMinus: 0,
+        callahans: 0,
+        pointsPlayed: pt.pointsPlayed,
+        oPoints: pt.oPoints,
+        dPoints: pt.dPoints,
+        oLineHolds: pt.oLineHolds,
+        dLineBreaks: pt.dLineBreaks,
+        minutesPlayed: pt.minutesPlayed,
+        oEfficiency,
+        dEfficiency,
+      });
+    }
+  }
+
+  return Array.from(rowsById.values()).sort(
+    (a, b) => b.plusMinus - a.plusMinus || a.name.localeCompare(b.name),
+  );
+}
+
+function aggregatePlayingTimeStatsByPlayer(
+  games: SavedGame[],
+): Map<string, AggregatedPlayingTimeCSVRow> {
+  const totals = new Map<string, AggregatedPlayingTimeCSVRow>();
+
+  for (const game of games) {
+    if (!game.pointLines?.length) continue;
+    const perGame = computePlayingTimeStats(
+      game.pointLines,
+      game.events,
+      game.startingPossession,
+      game.gameTo,
+      game.pointStartTimestamps,
+    );
+
+    for (const [playerId, stats] of perGame.entries()) {
+      const existing = totals.get(playerId);
+      if (existing) {
+        existing.pointsPlayed += stats.pointsPlayed;
+        existing.oPoints += stats.oPoints;
+        existing.dPoints += stats.dPoints;
+        existing.oLineHolds += stats.oLineHolds;
+        existing.dLineBreaks += stats.dLineBreaks;
+        if (stats.minutesPlayed !== undefined) {
+          existing.minutesPlayed = (existing.minutesPlayed ?? 0) + stats.minutesPlayed;
+        }
+      } else {
+        totals.set(playerId, {
+          pointsPlayed: stats.pointsPlayed,
+          oPoints: stats.oPoints,
+          dPoints: stats.dPoints,
+          oLineHolds: stats.oLineHolds,
+          dLineBreaks: stats.dLineBreaks,
+          minutesPlayed: stats.minutesPlayed,
+        });
+      }
+    }
+  }
+
+  return totals;
+}
+
+function playerSummaryCSV(stats: PlayerSummaryCSVRow[], includePlayingTimeStats = false): string {
   const hasCallahans = stats.some((p) => p.callahans > 0);
-  const header = hasCallahans
+  const headerBase = hasCallahans
     ? 'Player,Goals,Assists,Blocks,Throwaways,Drops,Callahans,Plus/Minus'
     : 'Player,Goals,Assists,Blocks,Throwaways,Drops,Plus/Minus';
+  const header = includePlayingTimeStats
+    ? `${headerBase},Points Played,O-Points,D-Points,O-Line Holds,D-Line Breaks,Minutes Played,O-Eff,D-Eff`
+    : headerBase;
 
-  const rows = stats.map((p) =>
-    hasCallahans
+  const rows = stats.map((p) => {
+    const rowBase = hasCallahans
       ? `${p.name},${p.goals},${p.assists},${p.blocks},${p.throwaways},${p.drops},${p.callahans},${p.plusMinus}`
-      : `${p.name},${p.goals},${p.assists},${p.blocks},${p.throwaways},${p.drops},${p.plusMinus}`,
-  );
+      : `${p.name},${p.goals},${p.assists},${p.blocks},${p.throwaways},${p.drops},${p.plusMinus}`;
+    if (!includePlayingTimeStats) {
+      return rowBase;
+    }
+
+    const pointsPlayed = p.pointsPlayed ?? 0;
+    const oPoints = p.oPoints ?? 0;
+    const dPoints = p.dPoints ?? 0;
+    const oLineHolds = p.oLineHolds ?? 0;
+    const dLineBreaks = p.dLineBreaks ?? 0;
+    const minutesPlayed = formatMinutesPlayed(p.minutesPlayed);
+    const oEff = p.oEfficiency !== undefined ? formatEfficiency(p.oEfficiency) : '-';
+    const dEff = p.dEfficiency !== undefined ? formatEfficiency(p.dEfficiency) : '-';
+    return `${rowBase},${pointsPlayed},${oPoints},${dPoints},${oLineHolds},${dLineBreaks},${minutesPlayed},${oEff},${dEff}`;
+  });
 
   return header + '\n' + rows.join('\n');
 }

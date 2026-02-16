@@ -94,6 +94,7 @@ export default function ViewStatsScreen() {
           startingPossession,
           gameTo,
           currentTeam?.roster,
+          pointLines,
         );
         filename = generateGameFilename(team1Name, team2Name);
       }

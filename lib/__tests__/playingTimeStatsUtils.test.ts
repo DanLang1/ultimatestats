@@ -231,5 +231,9 @@ describe('playingTimeStatsUtils', () => {
       expect(formatMinutesPlayed(undefined)).toBe('-');
       expect(formatMinutesPlayed(0)).toBe('-');
     });
+
+    it('normalizes rounding so seconds never render as 60', () => {
+      expect(formatMinutesPlayed(1.999)).toBe('2:00');
+    });
   });
 });
