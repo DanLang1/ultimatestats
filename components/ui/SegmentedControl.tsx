@@ -262,6 +262,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    paddingHorizontal: 8,
   },
   buttonDisabled: {
     opacity: 0.5,

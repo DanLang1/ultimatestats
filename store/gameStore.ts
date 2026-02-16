@@ -953,9 +953,9 @@ export const useGameStore = create<GameState>()(
           });
         },
 
-        saveCurrentTeam: async () => {
+        saveCurrentTeam: async (teamOverride?: SavedTeam) => {
           const state = get();
-          const team = state.currentTeam;
+          const team = teamOverride ?? state.currentTeam;
 
           await storage.saveTeam(team);
           const teams = await storage.loadTeams();

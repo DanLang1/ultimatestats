@@ -40,7 +40,8 @@ export default function HalftimeModal() {
   const styles = createStyles(isLandscape);
 
   const team1Name = currentTeam?.name ?? 'Team 1';
-  const receivingTeam = startingPossession === 'team1' ? team2Name : team1Name;
+  const receivingTeamKey = startingPossession === 'team1' ? 'team2' : 'team1';
+  const receivingLabel = receivingTeamKey === 'team1' ? 'YOU RECEIVE' : 'THEY RECEIVE';
 
   // Compute halftime stats
   const teamStats = computeTeamStats(events, startingPossession, gameTo);
@@ -92,11 +93,17 @@ export default function HalftimeModal() {
               <Text style={[styles.headerText, { color: palette.textMuted }]}>HALFTIME</Text>
             </View>
 
-            <MaterialCommunityIcons name="disc" size={12} color={palette.accent} />
-
-            <Text style={[styles.receivingText, { color: palette.textMuted }]}>
-              {receivingTeam} receives
-            </Text>
+            {statTrackingEnabled && (
+              <>
+                <MaterialCommunityIcons name="disc" size={12} color={palette.accent} />
+                <Text
+                  style={[styles.receivingText, { color: palette.textMuted }]}
+                  numberOfLines={1}
+                  ellipsizeMode="tail">
+                  {receivingLabel}
+                </Text>
+              </>
+            )}
 
           </View>
 
@@ -373,6 +380,7 @@ function createStyles(isLandscape: boolean) {
       paddingTop: 16,
       paddingBottom: 4,
       paddingHorizontal: 40,
+      paddingRight: 56,
       gap: 10,
       zIndex: 10,
     },
@@ -384,6 +392,8 @@ function createStyles(isLandscape: boolean) {
     receivingText: {
       fontSize: 13,
       fontWeight: '600',
+      flexShrink: 1,
+      maxWidth: isLandscape ? 260 : 180,
     },
     headerText: {
       fontSize: 12,

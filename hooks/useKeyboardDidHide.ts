@@ -6,9 +6,10 @@ import { Keyboard } from 'react-native';
  * This is needed because on Android, pressing the back button to dismiss
  * the keyboard doesn't trigger onBlur on TextInputs.
  */
-export function useKeyboardDidHide(callback: () => void) {
+export function useKeyboardDidHide(callback: () => void, enabled = true) {
   useEffect(() => {
+    if (!enabled) return;
     const subscription = Keyboard.addListener('keyboardDidHide', callback);
     return () => subscription.remove();
-  }, [callback]);
+  }, [callback, enabled]);
 }

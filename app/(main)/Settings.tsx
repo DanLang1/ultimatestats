@@ -18,14 +18,17 @@ import { useTutorialStore } from '@/store/tutorialStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router, Stack } from 'expo-router';
 import React, { useState } from 'react';
+import { useIsFocused } from '@react-navigation/native';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 export default function SettingsScreen() {
   const { currentTeam } = useGameStore();
-  return <SettingsContent key={currentTeam?.id} />;
+  const settingsKey = `${currentTeam?.id ?? 'no-team'}:${currentTeam?.name ?? 'Team 1'}`;
+  return <SettingsContent key={settingsKey} />;
 }
 
 function SettingsContent() {
+  const isFocused = useIsFocused();
   const { isLandscape } = useLayout();
   const styles = createStyles(isLandscape);
   const { palette, themeMode, setThemeMode } = useTheme();
@@ -105,13 +108,13 @@ function SettingsContent() {
       if (!existingTeam && newTeam1Name !== team1Name) {
         const updatedTeam: SavedTeam = { ...currentTeam, name: newTeam1Name };
         setCurrentTeam(updatedTeam);
-        await saveCurrentTeam();
+        await saveCurrentTeam(updatedTeam);
       }
     }
   };
 
   // Handle Android back button dismissing keyboard (doesn't trigger onBlur)
-  useKeyboardDidHide(saveAllDrafts);
+  useKeyboardDidHide(saveAllDrafts, isFocused);
 
   const handleEditRoster = () => {
     router.push({ pathname: '/EditRoster', params: { teamName: team1Name } });
@@ -151,7 +154,7 @@ function SettingsContent() {
 
     const updatedTeam: SavedTeam = { ...currentTeam, name: newName };
     setCurrentTeam(updatedTeam);
-    await saveCurrentTeam();
+    await saveCurrentTeam(updatedTeam);
   };
 
   // Dynamic Styles

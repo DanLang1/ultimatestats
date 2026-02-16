@@ -85,7 +85,7 @@ export default function EditRosterScreen() {
 
     const updatedTeam: SavedTeam = { ...currentTeam, name: newName };
     setCurrentTeam(updatedTeam);
-    await saveCurrentTeam();
+    await saveCurrentTeam(updatedTeam);
     setRenameModalVisible(false);
   };
 
@@ -110,7 +110,7 @@ export default function EditRosterScreen() {
     };
     setCurrentTeam(newTeam);
     setNewTeamModalVisible(false);
-    await saveCurrentTeam();
+    await saveCurrentTeam(newTeam);
   };
 
   const handleShareTeam = () => {

@@ -6,6 +6,17 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.6.0',
+    date: 'February 16, 2026',
+    changes: [
+      'Portrait Mode Support for entire app',
+      'Can now import a team directly from a USAU link',
+      'Revamped game start modals into a single page',
+      'Added toasts after recording turnover events',
+      'Added point length editing via Game Timeline',
+    ],
+  },
+  {
     version: '1.5.1',
     date: 'February 9, 2026',
     changes: [
