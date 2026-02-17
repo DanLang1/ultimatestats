@@ -30,6 +30,7 @@ function RootLayoutInner() {
           screenOptions={{
             headerShown: false,
             animation: 'none',
+            contentStyle: { backgroundColor: safeAreaBg },
           }}>
           <Stack.Screen name="(main)" />
           <Stack.Screen
