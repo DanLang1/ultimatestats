@@ -1,6 +1,8 @@
 import { AlertProvider } from '@/components/ui/AlertProvider';
 import { loadPersistedTheme, ThemeProvider, useTheme } from '@/context/ThemeContext';
+import { useOrientationLock } from '@/hooks/useOrientationLock';
 import { useShareLink } from '@/hooks/useShareLink';
+import { useSettingsStore } from '@/store/settingsStore';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useState } from 'react';
@@ -11,7 +13,9 @@ import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
 function RootLayoutInner() {
   const { palette, themeMode } = useTheme();
+  const orientationMode = useSettingsStore((state) => state.orientationMode);
   useShareLink();
+  useOrientationLock(orientationMode);
 
   // Safe area background should always be dark for contrast
   // In dark mode: use primary (Navy)

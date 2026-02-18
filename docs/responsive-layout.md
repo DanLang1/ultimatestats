@@ -4,7 +4,12 @@
 
 ## Orientation Config
 
-Orientation behavior is controlled centrally via `app.config.js` (set to `default`). No per-screen lock/unlock calls.
+Orientation behavior is controlled centrally:
+
+- `app.config.js` is set to `orientation: 'default'`.
+- App-level locking (Settings -> App -> Orientation) is applied from `app/_layout.tsx` via `useOrientationLock()`.
+- No per-screen lock/unlock calls.
+- In settings may not apply to large screens because of Android 16 update
 
 ## Required Hook
 
@@ -13,10 +18,11 @@ Use `useLayout()` from `@/hooks/useLayout` to get layout info. Never call `useWi
 ```tsx
 import { useLayout } from '@/hooks/useLayout';
 
-const { isLandscape, isNarrow, width, height } = useLayout();
+const { isLandscape, isNarrow, isAndroidLargeScreen, width, height } = useLayout();
 ```
 
 Add new breakpoint flags to this hook as needed (e.g. `isTablet`). This keeps layout logic centralized.
+`isAndroidLargeScreen` is available for Android-specific large-display behavior (`smallestDimension >= 600dp`).
 
 ## Style Factory Pattern
 

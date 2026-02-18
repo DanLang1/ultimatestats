@@ -7,6 +7,8 @@ import { createJSONStorage, persist } from 'zustand/middleware';
 const DEFAULT_MMP_COLOR = '#60A5FA'; // Blue 400
 const DEFAULT_FMP_COLOR = '#F472B6'; // Pink 400
 
+export type OrientationMode = 'system' | 'portrait' | 'landscape';
+
 interface SettingsState {
   // Matching type player name colors
   mmpColor: string;
@@ -26,6 +28,9 @@ interface SettingsState {
   // Roster View
   rosterViewMode: 'chips' | 'cards';
 
+  // App Orientation
+  orientationMode: OrientationMode;
+
   // Actions
   setMmpColor: (color: string) => void;
   setFmpColor: (color: string) => void;
@@ -36,6 +41,7 @@ interface SettingsState {
   setNumPlayers: (num: number) => void;
   setSidebarCollapsed: (collapsed: boolean) => void;
   setRosterViewMode: (mode: 'chips' | 'cards') => void;
+  setOrientationMode: (mode: OrientationMode) => void;
   statEntryOrder: 'goal_first' | 'assist_first';
   setStatEntryOrder: (order: 'goal_first' | 'assist_first') => void;
 }
@@ -51,6 +57,7 @@ export const useSettingsStore = create<SettingsState>()(
       numPlayers: 7,
       sidebarCollapsed: false,
       rosterViewMode: 'chips',
+      orientationMode: 'system',
 
       setMmpColor: (color) => set({ mmpColor: color }),
       setFmpColor: (color) => set({ fmpColor: color }),
@@ -65,6 +72,7 @@ export const useSettingsStore = create<SettingsState>()(
       setNumPlayers: (num) => set({ numPlayers: num }),
       setSidebarCollapsed: (collapsed) => set({ sidebarCollapsed: collapsed }),
       setRosterViewMode: (mode) => set({ rosterViewMode: mode }),
+      setOrientationMode: (mode) => set({ orientationMode: mode }),
       statEntryOrder: 'goal_first',
       setStatEntryOrder: (order) => set({ statEntryOrder: order }),
     }),

@@ -13,12 +13,12 @@ import { useNewGame } from '@/hooks/useNewGame';
 import { MAX_TEAM_NAME_LENGTH } from '@/lib/constants';
 import { SavedTeam } from '@/lib/storage';
 import { useGameStore } from '@/store/gameStore';
-import { useSettingsStore } from '@/store/settingsStore';
+import { OrientationMode, useSettingsStore } from '@/store/settingsStore';
 import { useTutorialStore } from '@/store/tutorialStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { useIsFocused } from '@react-navigation/native';
 import { router, Stack } from 'expo-router';
 import React, { useState } from 'react';
-import { useIsFocused } from '@react-navigation/native';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 export default function SettingsScreen() {
@@ -29,7 +29,7 @@ export default function SettingsScreen() {
 
 function SettingsContent() {
   const isFocused = useIsFocused();
-  const { isLandscape } = useLayout();
+  const { isLandscape, isAndroidLargeScreen } = useLayout();
   const styles = createStyles(isLandscape);
   const { palette, themeMode, setThemeMode } = useTheme();
   const { showAlert } = useAlert();
@@ -46,6 +46,8 @@ function SettingsContent() {
     setLineCallingEnabled,
     numPlayers,
     setNumPlayers,
+    orientationMode,
+    setOrientationMode,
     statEntryOrder,
     setStatEntryOrder,
   } = useSettingsStore();
@@ -254,6 +256,21 @@ function SettingsContent() {
         value={themeMode}
         onChange={(next) => setThemeMode(next as 'light' | 'dark')}
       />
+      <SegmentedControl
+        label="ORIENTATION"
+        options={[
+          { value: 'system', label: 'System' },
+          { value: 'portrait', label: 'Portrait' },
+          { value: 'landscape', label: 'Landscape' },
+        ]}
+        value={orientationMode}
+        onChange={(next) => setOrientationMode(next as OrientationMode)}
+      />
+      {isAndroidLargeScreen && (
+        <Text style={[styles.helperText, textMutedStyle]}>
+          On some Android large-screen devices, orientation lock may be ignored by the OS.
+        </Text>
+      )}
     </View>
   );
 
