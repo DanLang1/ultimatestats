@@ -2,7 +2,7 @@ import { useTheme } from '@/context/ThemeContext';
 import { RoleStats } from '@/lib/statsUtils';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import Svg, { Circle, Polygon, Line as SvgLine, Text as SvgText } from 'react-native-svg';
+import Svg, { Circle, Polygon, Line as SvgLine } from 'react-native-svg';
 
 interface RoleDiamondProps {
   roleStats: RoleStats;
@@ -10,13 +10,19 @@ interface RoleDiamondProps {
 
 export default function RoleDiamond({ roleStats }: RoleDiamondProps) {
   const { palette } = useTheme();
-  const { goals, assists, blocks, turnovers } = roleStats;
+  const { rawGoals, rawAssists, rawBlocks, rawTurnovers } = roleStats;
 
   const size = 140;
   const center = size / 2;
   const maxRadius = center - 20;
 
-  // Values are already normalized 0-1 from getRoleStats
+  // Use a shared raw-count scale so equal counts render equally on every axis.
+  const scaleMax = Math.max(rawGoals, rawAssists, rawBlocks, rawTurnovers, 1);
+  const goals = rawGoals / scaleMax;
+  const assists = rawAssists / scaleMax;
+  const blocks = rawBlocks / scaleMax;
+  const turnovers = rawTurnovers / scaleMax;
+
   // Diamond layout:
   // Top: Goals
   // Right: Assists
@@ -49,7 +55,7 @@ export default function RoleDiamond({ roleStats }: RoleDiamondProps) {
         </Text>
 
         {/* SVG Diamond */}
-        <View style={{ width: size, height: size }}>
+        <View style={styles.diamondArea}>
           <Svg width={size} height={size}>
             {/* Axis lines */}
             <SvgLine
@@ -89,27 +95,10 @@ export default function RoleDiamond({ roleStats }: RoleDiamondProps) {
 
             {/* Center dot */}
             <Circle cx={center} cy={center} r="3" fill={palette.textMuted} />
-
-            {/* Top/Bottom labels stay in SVG since they don't overlap */}
-            <SvgText
-              x={center}
-              y={12}
-              fill={palette.textMuted}
-              fontSize="9"
-              fontWeight="600"
-              textAnchor="middle">
-              GOALS
-            </SvgText>
-            <SvgText
-              x={center}
-              y={size - 4}
-              fill={palette.danger}
-              fontSize="9"
-              fontWeight="600"
-              textAnchor="middle">
-              TURNS
-            </SvgText>
           </Svg>
+
+          <Text style={[styles.topLabel, { color: palette.textMuted }]}>GOALS</Text>
+          <Text style={[styles.bottomLabel, { color: palette.danger }]}>TURNS</Text>
         </View>
 
         {/* Right label: ASSISTS */}
@@ -137,6 +126,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
+  diamondArea: {
+    width: 140,
+    height: 140,
+    position: 'relative',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   sideLabel: {
     fontSize: 9,
     fontWeight: '600',
@@ -147,5 +143,25 @@ const styles = StyleSheet.create({
   },
   rightLabel: {
     marginLeft: 4,
+  },
+  topLabel: {
+    position: 'absolute',
+    top: 2,
+    left: 0,
+    right: 0,
+    textAlign: 'center',
+    fontSize: 9,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+  },
+  bottomLabel: {
+    position: 'absolute',
+    bottom: 2,
+    left: 0,
+    right: 0,
+    textAlign: 'center',
+    fontSize: 9,
+    fontWeight: '600',
+    textTransform: 'uppercase',
   },
 });

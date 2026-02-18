@@ -329,6 +329,10 @@ export interface RoleStats {
   turnovers: number; // Normalized Total Turnovers (0-1)
   throwaways: number; // Normalized Throwaways (0-1)
   drops: number; // Normalized Drops (0-1)
+  rawGoals: number; // Raw goal count
+  rawAssists: number; // Raw assist count
+  rawBlocks: number; // Raw block count
+  rawTurnovers: number; // Raw total turnovers (throwaways + drops)
   rawDrops: number; // Raw drop count
   rawThrowaways: number; // Raw throwaway count
   totalEvents: number; // Raw count of total events
@@ -382,6 +386,10 @@ export function getRoleStats(
       turnovers: 0,
       throwaways: 0,
       drops: 0,
+      rawGoals: 0,
+      rawAssists: 0,
+      rawBlocks: 0,
+      rawTurnovers: 0,
       rawDrops: 0,
       rawThrowaways: 0,
       totalEvents: 0,
@@ -399,6 +407,10 @@ export function getRoleStats(
     turnovers: maxTurns === 0 ? 0 : myTurns / maxTurns,
     throwaways: myStats.throwaways / maxThrowaways,
     drops: myStats.drops / maxDrops,
+    rawGoals: myStats.goals,
+    rawAssists: myStats.assists,
+    rawBlocks: myStats.blocks,
+    rawTurnovers: myTurns,
     rawDrops: myStats.drops,
     rawThrowaways: myStats.throwaways,
     totalEvents,

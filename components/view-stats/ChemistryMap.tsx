@@ -11,6 +11,12 @@ interface ChemistryMapProps {
 
 export default function ChemistryMap({ playerName, connections }: ChemistryMapProps) {
   const { palette } = useTheme();
+  const normalizedPlayerName = playerName.trim().replace(/\s+/g, ' ');
+  const centerLabel =
+    normalizedPlayerName.length > 8
+      ? `${normalizedPlayerName.substring(0, 7).toUpperCase()}…`
+      : normalizedPlayerName.toUpperCase();
+
   // Filter top connections to avoid clutter
   const feeders = connections
     .filter((c) => c.goalsFrom > 0)
@@ -57,7 +63,9 @@ export default function ChemistryMap({ playerName, connections }: ChemistryMapPr
           {topConnection ? `${topConnection.count}` : '0'}
         </Text>
         <Text style={[styles.summaryLabel, { color: palette.textMuted }]}>
-          {topConnection ? `Top Link: ${topConnection.name.split(' ')[0]}` : 'Top Connection'}
+          {topConnection
+            ? `Top Link: ${topConnection.name.length > 12 ? `${topConnection.name.substring(0, 12)}…` : topConnection.name}`
+            : 'Top Connection'}
         </Text>
       </View>
 
@@ -130,10 +138,7 @@ export default function ChemistryMap({ playerName, connections }: ChemistryMapPr
           fontSize="10"
           fontWeight="bold"
           textAnchor="middle">
-          {(() => {
-            const firstName = playerName.split(' ')[0].toUpperCase();
-            return firstName.length > 8 ? firstName.substring(0, 7) + '…' : firstName;
-          })()}
+          {centerLabel}
         </SvgText>
 
         {/* Feeder Nodes (Left Side) */}

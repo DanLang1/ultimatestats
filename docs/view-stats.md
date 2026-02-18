@@ -43,6 +43,7 @@ Scrollable table with the following columns:
 - Pts, O-Eff, D-Eff columns are hidden for games without line tracking data.
 - **Interactive Rows**: Tap any player row to view a detailed breakdown of their individual stats.
 - In aggregate player view, the **Game Impact** selector only includes games where that player has at least one recorded impact event (goal, assist, block, throwaway, drop, or 50/50 involvement).
+- In player detail, the **Profile** diamond uses raw counts (Goals, Assists, Blocks, Total Turns) on a shared per-player scale so equal counts render equal axis lengths.
 
 ### 3. Game Timeline
 
