@@ -12,7 +12,7 @@ Allow users to share games and teams with other people via universal links. This
 
 Shared data is a **point-in-time copy**. The sender shares their current version, the recipient gets an independent copy. No ongoing sync between sender and recipient.
 
-**Delivery mechanism**: Universal links (`https://u-stat.app/s/game/<id>` or `https://u-stat.app/s/team/<id>`)
+**Delivery mechanism**: Universal links (`https://u-stat.app/s/game/<id>`, `https://u-stat.app/s/team/<id>`, or `https://u-stat.app/s/games/<id>`)
 
 - Looks like a normal URL in messages, email, etc.
 - If app is installed: opens directly in U-Stat → import screen
@@ -29,7 +29,7 @@ Shared data is a **point-in-time copy**. The sender shares their current version
 - **Snapshot model** — shared data is a copy, no ongoing sync between sender and recipient
 - **Team re-share prompts user** — if recipient already has the team, ask: Update Roster / Keep Mine
 - **6-character alphanumeric share IDs** — short and clean in URLs (like BTD6 share codes)
-- **Separate routes for game/team** — `/s/game/<id>` and `/s/team/<id>` so the Astro fallback site can differentiate without querying Supabase
+- **Separate routes for game/team/games** — `/s/game/<id>`, `/s/team/<id>`, and `/s/games/<id>` so the Astro fallback site can differentiate without querying Supabase
 - **Manual payload validation** — no Zod, manual validation in `lib/sharing/validate.ts` with caps on events (500), roster (50), and string lengths (200 chars)
 - **Full page import screen** — `app/Import.tsx` is a dedicated page (not a modal) to avoid conflicts with other modals on the root route
 
@@ -42,7 +42,7 @@ Shared data is a **point-in-time copy**. The sender shares their current version
 1. User taps "Share" on a game or team
 2. App serializes data into a `SharedPayload` JSON object (`lib/sharing/serialize.ts`)
 3. App uploads payload to Supabase → receives a 6-char ID (`lib/sharing/share.ts`)
-4. App builds link: `https://u-stat.app/s/game/<id>` or `https://u-stat.app/s/team/<id>`
+4. App builds link: `https://u-stat.app/s/game/<id>`, `https://u-stat.app/s/team/<id>`, or `https://u-stat.app/s/games/<id>`
 5. Native share sheet opens → user sends via Messages, AirDrop, email, Slack, etc.
 
 ### Import Flow (Recipient)
@@ -143,6 +143,7 @@ interface SharedPayload {
 ```
 https://u-stat.app/s/game/<id>
 https://u-stat.app/s/team/<id>
+https://u-stat.app/s/games/<id>
 ```
 
 - `<id>` is a 6-character alphanumeric identifier
@@ -151,15 +152,15 @@ https://u-stat.app/s/team/<id>
 
 ### Deep Link Handling
 
-`hooks/useShareLink.ts` handles both cold start (app opened via link) and warm start (link tapped while app is open). Parses both universal links (`u-stat.app/s/...`) and custom scheme (`ultimatestats://s/...`). Navigates to `app/Import.tsx` with the share ID.
+Expo Router handles deep links directly via `app/s/[kind]/[shareId].tsx`. This route validates the share type (`game`, `team`, `games`) and redirects to `app/Import.tsx` with the `shareId` param.
 
 ### Android App Links Setup
 
-**App side** (`app.config.js`): `intentFilters` configured with `autoVerify: true` for `u-stat.app/s/game/*` and `u-stat.app/s/team/*`.
+**App side** (`app.config.js`): `intentFilters` configured with `autoVerify: true` for `u-stat.app/s/game/*`, `u-stat.app/s/team/*`, and `u-stat.app/s/games/*`.
 
 **Website side**: Host `assetlinks.json` at `https://u-stat.app/.well-known/assetlinks.json` with the app's signing certificate SHA-256 fingerprint. Get fingerprint via `eas credentials -p android`.
 
-> **Status**: `intentFilters` added to app config. Fingerprint setup pending — will be done when deploying to production. Currently uses custom scheme fallback via Astro landing page button.
+> **Status**: `intentFilters` added to app config. Fingerprint setup pending — will be done when deploying to production.
 
 ### iOS Universal Links (Future)
 
@@ -235,7 +236,7 @@ Dedicated import page (`app/Import.tsx`):
 | 4     | Create `SharedPayload` type + serialize/deserialize  | **Done**  |
 | 5     | Wire up Supabase JS SDK in app (upload/fetch)        | **Done**  |
 | 6     | Android App Links (assetlinks.json + intentFilters)  | Pending fingerprint |
-| 7     | Deep link handling in app (useShareLink hook)         | **Done**  |
+| 7     | Deep link handling in app (Expo Router route redirect) | **Done**  |
 | 8     | Build import page (app/Import.tsx)                   | **Done**  |
 | 9     | Share button for teams (EditRoster sidebar)           | **Done**  |
 | 10    | Share button for games (ViewStats header)             | **Done**  |
@@ -255,7 +256,7 @@ Dedicated import page (`app/Import.tsx`):
 - `lib/sharing/shareId.ts` — 6-char alphanumeric ID generator
 - `lib/sharing/validate.ts` — payload validation
 - `app/Import.tsx` — import confirmation page
-- `hooks/useShareLink.ts` — deep link handler
+- `app/s/[kind]/[shareId].tsx` — deep link redirect route
 - `app.config.js` — intentFilters for Android App Links
 
 ---

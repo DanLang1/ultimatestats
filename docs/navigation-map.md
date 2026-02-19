@@ -26,6 +26,7 @@ Defined across:
 - `/PointTransition` (`app/(main)/PointTransition.tsx`)
 - `/PreGameConfirm` (`app/(main)/PreGameConfirm.tsx`)
 - `/Import` (`app/(main)/Import.tsx`)
+- `/s/[kind]/[shareId]` (`app/s/[kind]/[shareId].tsx`) - deep-link redirect route for shared game/team/games links
 - `/Help` (`app/(main)/Help.tsx`)
 - `/About` (`app/(main)/About.tsx`)
 
