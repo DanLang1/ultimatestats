@@ -92,9 +92,11 @@ The **Aggregate** tab allows you to combine stats from multiple games for a sing
 
 ### Portrait Header Actions
 
-- In portrait, the header title stays centered while secondary actions are moved into a **More** menu (`...`) in the top-right.
-- The overflow menu includes the available actions for the current state: Timeline and Export CSV.
-- On the dedicated Saved Game detail route, portrait mode also uses the **More** menu for Timeline, Share, and Export CSV.
+- In portrait on **phones** (`sizeClass === 'small'`), secondary actions collapse into a **More** menu (`...`) in the top-right to avoid crowding the title.
+- In portrait on **tablets** (`sizeClass === 'medium'` or `'large'`), inline icon buttons are shown directly in the header right slot — same as landscape — because there is enough horizontal space.
+- The decision is made via `showInlineHeaderActions = isLandscape || sizeClass !== 'small'` near the top of the component.
+- The overflow menu (phone portrait only) includes the available actions for the current state: Timeline and Export CSV.
+- On the dedicated Saved Game detail route, the same pattern should be applied (pending codebase sweep).
 
 ## CSV Export
 

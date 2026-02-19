@@ -19,7 +19,7 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useIsFocused } from '@react-navigation/native';
 import { router, Stack } from 'expo-router';
 import React, { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 export default function SettingsScreen() {
   const { currentTeam } = useGameStore();
@@ -29,7 +29,7 @@ export default function SettingsScreen() {
 
 function SettingsContent() {
   const isFocused = useIsFocused();
-  const { isLandscape, isAndroidLargeScreen } = useLayout();
+  const { isLandscape, sizeClass } = useLayout();
   const styles = createStyles(isLandscape);
   const { palette, themeMode, setThemeMode } = useTheme();
   const { showAlert } = useAlert();
@@ -266,9 +266,10 @@ function SettingsContent() {
         value={orientationMode}
         onChange={(next) => setOrientationMode(next as OrientationMode)}
       />
-      {isAndroidLargeScreen && (
+      {Platform.OS === 'android' && sizeClass !== 'small' && (
         <Text style={[styles.helperText, textMutedStyle]}>
-          On some Android large-screen devices, orientation lock may be ignored by the OS.
+          Orientation lock may be ignored by the OS if you are on Android 16 or later (blame Android
+          not me please).
         </Text>
       )}
     </View>

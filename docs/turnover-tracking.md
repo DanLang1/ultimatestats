@@ -4,7 +4,8 @@
 
 ## Overview
 
-The turnover tracking system records turnovers (blocks, throwaways, drops) during gameplay using a possession-aware approach. When a user taps the team that doesn't have the disc, a turnover is recorded and possession flips.
+The turnover tracking system records turnovers (blocks, throwaways, drops, 50/50) during gameplay using a possession-aware approach.
+Turnovers are recorded from the floating `ScoreboardActionBar` action buttons
 
 This feature integrates with the existing stat tracking setting—turnover tracking is enabled when stat tracking is on.
 
@@ -78,22 +79,14 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant User
-    participant TeamSection
+    participant ActionBar
     participant Store
-    participant Sheet
 
-    Note over User: Team 1 has possession
-    User->>TeamSection: Taps Team 2 (no disc)
-    TeamSection->>Store: triggerTurnover()
-    Store->>Store: Set pendingTurnoverEntry
-    Store-->>Sheet: Sheet becomes visible
-    Sheet->>User: "What happened?"
-    User->>Sheet: Selects "Throwaway"
-    Sheet->>User: "Who threw it away?"
-    User->>Sheet: Selects player
-    Sheet->>Store: addTurnoverEvent()
+    Note over User: Team 1 has possession (my team)
+    User->>ActionBar: Taps "DROP"
+    ActionBar->>Store: triggerTurnover()
+    ActionBar->>Store: addTurnoverEvent(...)
     Store->>Store: Flip possession to Team 2
-    Store->>Store: Clear pendingTurnoverEntry
     Store-->>User: Show "Event recorded" toast
 ```
 
@@ -152,12 +145,12 @@ sequenceDiagram
 
 ## Tap Behavior
 
-The tap behavior depends on the stat tracking mode setting:
+Team-section taps and turnover controls depend on possession + stat tracking mode:
 
-| Stat Tracking Mode | Tap Team WITH Disc | Tap Team WITHOUT Disc |
-| ------------------ | ------------------ | --------------------- |
-| **Off**            | Increment score    | Increment score       |
-| **My Team / Both** | Increment score    | Trigger turnover flow |
+| Stat Tracking Mode | Tap Team WITH Disc | Tap Team WITHOUT Disc | Turnover Recording            |
+| ------------------ | ------------------ | --------------------- | ----------------------------- |
+| **Off**            | Increment score    | Increment score       | Disabled                      |
+| **My Team / Both** | Increment score    | No score action       | `ScoreboardActionBar` buttons |
 
 ## Components
 
@@ -170,26 +163,22 @@ Full-screen setup that appears when required start-of-game values are missing:
 
 Selections are written directly to store when tapped, so they are preserved if the user navigates away and returns.
 
-### `TurnoverEntrySheet.tsx`
+### `ScoreboardActionBar.tsx`
 
-Bottom sheet modal that appears when `pendingTurnoverEntry` is set.
+Floating action bar shown while stat tracking is enabled (or during active timeout).
 
-**Two-step flow:**
+Turnover actions:
 
-1. **Select event type**: Block, Throwaway, or Drop
-2. **Select player** (optional): Choose from roster who caused the event
+- When `possession === 'team1'` (my team has disc): record opponent-pressure outcomes (`oppBlock`) and my-team turnovers (`drop`, `throwaway`, `fiftyfifty`).
+- When `possession === 'team2'` (opponent has disc): record `block` and `turn`.
 
-**Attribution logic:**
-
-- **Block**: Attributed to the _receiving_ team (+1 for blocker)
-- **Throwaway/Drop**: Attributed to the team that _had possession_ (-1 for player)
+In `app/(main)/index.tsx`, `onAction` first calls `triggerTurnover()`, then records the selected event via `addTurnoverEvent(...)` (or opens `TurnoverEntryModal` for player-attributed types).
 
 ### `TeamScoreSection.tsx` (Modified)
 
-**New Props:**
+**Relevant Props:**
 
 - `hasPossession?: boolean` — Whether this team has the disc
-- `onTurnover?: () => void` — Called when user taps to trigger turnover
 
 **Visual:**
 
@@ -200,7 +189,6 @@ Bottom sheet modal that appears when `pendingTurnoverEntry` is set.
 
 - If `hasPossession === undefined`: Original behavior (increment score)
 - If `hasPossession === true`: Increment score (goal)
-- If `hasPossession === false`: Call `onTurnover()` (turnover)
 
 ## Settings Integration
 

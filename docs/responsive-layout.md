@@ -16,13 +16,31 @@ Orientation behavior is controlled centrally:
 Use `useLayout()` from `@/hooks/useLayout` to get layout info. Never call `useWindowDimensions` directly in components.
 
 ```tsx
-import { useLayout } from '@/hooks/useLayout';
+import { useLayout, SizeClass, LayoutInfo } from '@/hooks/useLayout';
 
-const { isLandscape, isNarrow, isAndroidLargeScreen, width, height } = useLayout();
+const layout = useLayout();
+// layout.isLandscape, layout.sizeClass, layout.width, layout.height
 ```
 
-Add new breakpoint flags to this hook as needed (e.g. `isTablet`). This keeps layout logic centralized.
-`isAndroidLargeScreen` is available for Android-specific large-display behavior (`smallestDimension >= 600dp`).
+### `sizeClass` (rotation-stable size classes)
+
+Based on `smallestDimension` (the shorter screen edge), so the class stays constant across rotation. This differs from Material Design window size classes, which use current width and can change on rotation. We intentionally use `smallestDimension` so that text/spacing scaling doesn't jump when the device rotates.
+
+Breakpoint constants are defined in `lib/constants.ts` (`SIZE_CLASS_MEDIUM_THRESHOLD`, `SIZE_CLASS_LARGE_THRESHOLD`).
+
+| Value | Threshold | Devices |
+|---|---|---|
+| `small` | < 600dp | Phones |
+| `medium` | >= 600dp | Foldables (inner screen), small tablets |
+| `large` | >= 790dp | Tablets, desktop |
+
+**Note:** Because this uses `smallestDimension`, a 1280x800 tablet becomes `large` (smallest=800 >= 790). This is intentional for this project's current breakpoint tuning.
+
+Use `sizeClass` to scale text, spacing, and component sizing for larger screens. Import the `SizeClass` type when accepting it as a prop, and `LayoutInfo` when passing the full layout object to `createStyles`.
+
+Components that accept `sizeClass` should make it optional with a `'small'` default. This keeps them usable outside size-class-aware screens without forcing every caller to thread layout through, but be mindful that a missing prop silently degrades to phone sizing.
+
+For Android-specific large-screen behavior, use `Platform.OS === 'android' && sizeClass !== 'small'` inline at the call site — `isAndroidLargeScreen` has been removed from the hook.
 
 ## Style Factory Pattern
 
@@ -170,28 +188,49 @@ When a modal supports portrait, ensure:
 3. Use `useSafeAreaInsets()` only when you specifically need horizontal safe-area handling (`left`/`right`)
 4. Test that content is scrollable and doesn't overflow in portrait
 
-## Extending for Tablet / New Breakpoints
+## Tablet / Size Class Support
 
-When tablet support is needed, extend `useLayout` and `createStyles`:
+`useLayout()` returns a `sizeClass` field that components can use to scale sizing for larger screens. The scoreboard (`index.tsx`, `TeamScoreSection`, `ScoreDisplay`, `TeamText`) is the first set of components adapted for tablet sizing.
+
+### Pattern: passing `sizeClass` to child components
 
 ```tsx
-// hooks/useLayout.ts
-export function useLayout() {
-  const { width, height } = useWindowDimensions();
-  return {
-    width,
-    height,
-    isLandscape: width > height,
-    isNarrow: width < 380,
-    isTablet: Math.min(width, height) >= 600,
-  };
+import { SizeClass } from '@/hooks/useLayout';
+
+interface MyComponentProps {
+  sizeClass?: SizeClass;
 }
 
-// In a component
-function createStyles(layout: { isLandscape: boolean; isTablet: boolean }) {
+export default function MyComponent({ sizeClass = 'small' }: MyComponentProps) {
+  const styles = createStyles(sizeClass);
+  // ...
+}
+
+function createStyles(sizeClass: SizeClass) {
+  const fontSize = sizeClass === 'large' ? 24 : sizeClass === 'medium' ? 20 : 16;
+  return StyleSheet.create({
+    text: { fontSize },
+  });
+}
+```
+
+### Pattern: passing full layout to `createStyles`
+
+When a component needs both orientation and size class info:
+
+```tsx
+import { LayoutInfo, useLayout } from '@/hooks/useLayout';
+
+export default function MyScreen() {
+  const layout = useLayout();
+  const styles = createStyles(layout);
+  // ...
+}
+
+function createStyles(layout: LayoutInfo) {
   return StyleSheet.create({
     content: {
-      padding: layout.isTablet ? 32 : 16,
+      padding: layout.sizeClass === 'small' ? 16 : 32,
       flexDirection: layout.isLandscape ? 'row' : 'column',
     },
   });

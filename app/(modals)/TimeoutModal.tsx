@@ -3,7 +3,7 @@ import { useLayout } from '@/hooks/useLayout';
 import { useTimeoutTimer } from '@/hooks/useTimeoutTimer';
 import { useGameStore } from '@/store/gameStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { router } from 'expo-router';
+import { Redirect, router } from 'expo-router';
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
@@ -29,9 +29,8 @@ export default function TimeoutModal() {
     lastEvent?.type === 'timeout' ? (lastEvent.team === 'team1' ? 'Team 1' : 'Team 2') : 'Team';
 
   const styles = createStyles(isLandscape);
-
   if (!pendingTimeoutModal) {
-    return null;
+    return <Redirect href="/" />;
   }
 
   const onClose = () => {

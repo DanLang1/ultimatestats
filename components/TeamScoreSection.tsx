@@ -2,6 +2,7 @@ import ScoreDisplay from '@/components/ScoreDisplay';
 import TeamText from '@/components/TeamText';
 import { ThemedView } from '@/components/ThemedView';
 import { useHaptics } from '@/hooks/useHaptics';
+import { SizeClass, useLayout } from '@/hooks/useLayout';
 import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
@@ -17,8 +18,14 @@ interface TeamScoreSectionProps {
 
   // Possession tracking (optional - only when stat tracking is enabled)
   hasPossession?: boolean;
-  onTurnover?: () => void;
 }
+
+const TIMEOUT_HIT_SLOP = {
+  top: 16,
+  bottom: 16,
+  left: 12,
+  right: 12,
+} as const;
 
 export default function TeamScoreSection({
   teamName,
@@ -29,9 +36,10 @@ export default function TeamScoreSection({
   timeouts = [],
   onTimeoutUse,
   hasPossession,
-  onTurnover,
 }: TeamScoreSectionProps) {
-  const { triggerScoreHaptic, triggerTurnoverHaptic } = useHaptics();
+  const { triggerScoreHaptic } = useHaptics();
+  const { sizeClass } = useLayout();
+  const styles = createStyles(sizeClass);
 
   // Determine what happens on tap
   // If possession tracking is enabled (hasPossession is defined):
@@ -47,21 +55,19 @@ export default function TeamScoreSection({
       // This team has the disc - they scored
       triggerScoreHaptic();
       onIncrement();
-    } else if (onTurnover) {
-      // This team doesn't have the disc - turnover
-      triggerTurnoverHaptic();
-      onTurnover();
     }
   };
 
   return (
     <ThemedView style={[styles.container, { backgroundColor }]}>
-      {/* Top 1/3: Timeouts */}
-      <View style={styles.timeoutArea}>
+      <Pressable onPress={handleTap} style={styles.scoreTapArea} />
+
+      <View pointerEvents="box-none" style={styles.overlayContent}>
         <View style={styles.timeoutContainer}>
           {timeouts.map((timeout, index) => (
             <Pressable
               key={index}
+              hitSlop={TIMEOUT_HIT_SLOP}
               onPress={() => onTimeoutUse?.(index)}
               style={[
                 styles.timeoutIndicator,
@@ -80,44 +86,51 @@ export default function TeamScoreSection({
             />
           ))}
         </View>
-      </View>
 
-      {/* Bottom 2/3: Score Area */}
-      <Pressable onPress={handleTap} style={styles.scoreArea}>
-        <TeamText color={textColor} teamName={teamName} hasPossession={hasPossession} />
-        <ScoreDisplay bgColor={backgroundColor} textColor={textColor} score={score} />
-      </Pressable>
+        <TeamText
+          color={textColor}
+          teamName={teamName}
+          hasPossession={hasPossession}
+          sizeClass={sizeClass}
+        />
+        <ScoreDisplay
+          bgColor={backgroundColor}
+          textColor={textColor}
+          score={score}
+          sizeClass={sizeClass}
+        />
+      </View>
     </ThemedView>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingTop: 30,
-    position: 'relative',
-  },
-  timeoutArea: {
-    flex: 1,
-    justifyContent: 'flex-end',
-    alignItems: 'center',
-    paddingBottom: 10,
-  },
-  timeoutContainer: {
-    flexDirection: 'row',
-    gap: 15,
-    alignItems: 'center',
-  },
-  timeoutIndicator: {
-    width: 20,
-    height: 20,
-    borderRadius: 12,
-    borderWidth: 2,
-  },
-  scoreArea: {
-    flex: 4,
-    alignItems: 'center',
-    justifyContent: 'flex-start',
-    paddingTop: 10,
-  },
-});
+function createStyles(sizeClass: SizeClass) {
+  const gap = sizeClass === 'large' ? 12 : sizeClass === 'medium' ? 10 : 6;
+
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      position: 'relative',
+    },
+    scoreTapArea: {
+      ...StyleSheet.absoluteFillObject,
+    },
+    overlayContent: {
+      ...StyleSheet.absoluteFillObject,
+      justifyContent: 'center',
+      alignItems: 'center',
+      gap,
+    },
+    timeoutContainer: {
+      flexDirection: 'row',
+      gap: 15,
+      alignItems: 'center',
+    },
+    timeoutIndicator: {
+      width: 20,
+      height: 20,
+      borderRadius: 12,
+      borderWidth: 2,
+    },
+  });
+}

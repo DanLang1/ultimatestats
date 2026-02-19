@@ -1,14 +1,22 @@
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import { SizeClass } from '@/hooks/useLayout';
 import { StyleSheet } from 'react-native';
 
 export interface ScoreDisplayProps {
   bgColor: string;
   textColor: string;
   score: number;
+  sizeClass?: SizeClass;
 }
 
-export default function ScoreDisplay({ bgColor, textColor, score }: ScoreDisplayProps) {
+export default function ScoreDisplay({
+  bgColor,
+  textColor,
+  score,
+  sizeClass = 'small',
+}: ScoreDisplayProps) {
+  const styles = createStyles(sizeClass);
   return (
     <ThemedView style={[styles.scoreContainer, { backgroundColor: bgColor }]}>
       <ThemedText style={[styles.scoreText, { color: textColor }]} type="title">
@@ -18,15 +26,19 @@ export default function ScoreDisplay({ bgColor, textColor, score }: ScoreDisplay
   );
 }
 
-const styles = StyleSheet.create({
-  scoreText: {
-    fontSize: 150,
-    lineHeight: 150,
-    marginBottom: 50,
-  },
-  scoreContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 20,
-  },
-});
+function createStyles(sizeClass: SizeClass) {
+  const fontSize = sizeClass === 'large' ? 200 : sizeClass === 'medium' ? 180 : 150;
+  const lineHeight = sizeClass === 'large' ? 200 : sizeClass === 'medium' ? 180 : 150;
+
+  return StyleSheet.create({
+    scoreText: {
+      fontSize,
+      lineHeight,
+    },
+    scoreContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 20,
+    },
+  });
+}

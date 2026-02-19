@@ -20,6 +20,11 @@ Reusable UI conventions for screens and modals.
 - In portrait, keep the title visually centered using an absolute, non-interactive title layer:
   `...StyleSheet.absoluteFillObject`, `justifyContent: 'center'`, `alignItems: 'center'`, `pointerEvents="none"`.
 - Keep interactive controls in left/right slots and cap right-side actions in portrait (use overflow when needed) to avoid title drift.
+- **Tablet portrait rule**: use `showInlineHeaderActions = isLandscape || sizeClass !== 'small'` to decide between inline icons vs. overflow `...` menu. Tablets (`medium`/`large`) always get inline icons; phones (`small`) get the overflow menu in portrait.
+  ```tsx
+  const { isLandscape, sizeClass } = useLayout();
+  const showInlineHeaderActions = isLandscape || sizeClass !== 'small';
+  ```
 - Use explicit back/dismiss action and avoid render-time imperative navigation.
 - Reference: `docs/architecture-rules.md`.
 

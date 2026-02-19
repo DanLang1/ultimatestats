@@ -35,8 +35,8 @@ const TUTORIAL_STEPS = [
 ];
 
 export default function StatsTrackingTutorial() {
-  const { width, height, isLandscape, isNarrow } = useLayout();
-  const styles = createStyles({ height, isLandscape, isNarrow });
+  const { width, height, isLandscape } = useLayout();
+  const styles = createStyles({ width, height, isLandscape });
   const { showStatsTutorial, closeStatsTutorial } = useTutorialStore();
   const [currentStep, setCurrentStep] = useState(0);
   const [slideDirection, setSlideDirection] = useState<'left' | 'right'>('right');
@@ -163,7 +163,7 @@ export default function StatsTrackingTutorial() {
   );
 }
 
-function createStyles(layout: { height: number; isLandscape: boolean; isNarrow: boolean }) {
+function createStyles(layout: { width: number; height: number; isLandscape: boolean }) {
   return StyleSheet.create({
     root: {
       flex: 1,
@@ -172,14 +172,14 @@ function createStyles(layout: { height: number; isLandscape: boolean; isNarrow: 
       flex: 1,
       justifyContent: 'center',
       alignItems: 'center',
-      paddingHorizontal: layout.isNarrow ? 12 : 16,
+      paddingHorizontal: layout.width < 400 ? 12 : 16,
       paddingVertical: layout.isLandscape ? 12 : 20,
     },
     container: {
       width: '100%',
       borderRadius: 24,
       paddingVertical: 16,
-      paddingHorizontal: layout.isNarrow ? 12 : 16,
+      paddingHorizontal: layout.width < 400 ? 12 : 16,
       maxHeight: layout.isLandscape ? layout.height * 0.9 : layout.height * 0.84,
       borderWidth: 1,
     },

@@ -3,6 +3,7 @@ import { ActionBarAction, ScoreboardActionBar } from '@/components/ScoreboardAct
 import SettingsBar from '@/components/SettingsBar';
 import TeamScoreSection from '@/components/TeamScoreSection';
 import { ThemedView } from '@/components/ThemedView';
+import { useTurnoverRecordedToast } from '@/components/toast/hooks/useTurnoverRecordedToast';
 import TurnoverToast from '@/components/toast/TurnoverToast';
 import StatsTrackingTutorial from '@/components/tutorial/StatsTrackingTutorial';
 import TutorialOverlay from '@/components/tutorial/TutorialOverlay';
@@ -10,7 +11,6 @@ import { useHalftimeNavigation } from '@/hooks/useHalftimeNavigation';
 import { useLayout } from '@/hooks/useLayout';
 import { usePullPromptNavigation } from '@/hooks/usePullPromptNavigation';
 import { useTimeoutTimer } from '@/hooks/useTimeoutTimer';
-import { useTurnoverRecordedToast } from '@/components/toast/hooks/useTurnoverRecordedToast';
 import { getContrastingTextColor } from '@/lib/colorUtils';
 import { checkGameOver } from '@/lib/gameUtils';
 import { shouldShowLinePrompt } from '@/lib/linePromptUtils';
@@ -24,8 +24,8 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 export default function BasicScoreboard() {
   useKeepAwake();
-  const { isLandscape } = useLayout();
-  const styles = createStyles(isLandscape);
+  const layout = useLayout();
+  const styles = createStyles(layout.isLandscape);
 
   const {
     currentTeam,
@@ -202,6 +202,7 @@ export default function BasicScoreboard() {
         backgroundColor={team1BgColor}
         timeouts={team1Combined}
         onTimeoutUse={(index) => {
+          if (!team1Combined[index]?.active) return;
           toggleTimeout(true, index);
           router.push('/TimeoutModal');
         }}
@@ -214,7 +215,10 @@ export default function BasicScoreboard() {
       </View>
 
       {/* Floating Home Button - Top Left */}
-      <Pressable onPress={() => router.push('/Dashboard')} style={styles.floatingHomeButton}>
+      <Pressable
+        onPress={() => router.push('/Dashboard')}
+        hitSlop={16}
+        style={styles.floatingHomeButton}>
         <MaterialCommunityIcons
           name="home"
           size={30}
@@ -231,6 +235,7 @@ export default function BasicScoreboard() {
         backgroundColor={team2BgColor}
         timeouts={team2Combined}
         onTimeoutUse={(index) => {
+          if (!team2Combined[index]?.active) return;
           toggleTimeout(false, index);
           router.push('/TimeoutModal');
         }}

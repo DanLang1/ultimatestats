@@ -43,9 +43,10 @@ export default function ViewStatsScreen() {
   } = useGameStore();
   const { showAlert } = useAlert();
   const { palette } = useTheme();
-  const { isLandscape } = useLayout();
+  const { isLandscape, sizeClass } = useLayout();
   const insets = useSafeAreaInsets();
   const styles = createStyles(isLandscape);
+  const showInlineHeaderActions = isLandscape || sizeClass !== 'small';
 
   const team1Name = currentTeam?.name ?? 'Team 1';
 
@@ -342,7 +343,7 @@ export default function ViewStatsScreen() {
         centerTitleInLandscape={false}
         titleOverlayPaddingPortrait={88}
         rightSlot={
-          isLandscape ? (
+          showInlineHeaderActions ? (
             <View style={styles.headerRight}>
               {showTimelineAction && (
                 <Pressable
