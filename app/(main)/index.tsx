@@ -26,6 +26,8 @@ export default function BasicScoreboard() {
   useKeepAwake();
   const layout = useLayout();
   const styles = createStyles(layout.isLandscape);
+  const homeIconSize = layout.sizeClass === 'large' ? 38 : layout.sizeClass === 'medium' ? 34 : 30;
+  const homeHitSlop = layout.sizeClass === 'small' ? 16 : 20;
 
   const {
     currentTeam,
@@ -217,11 +219,11 @@ export default function BasicScoreboard() {
       {/* Floating Home Button - Top Left */}
       <Pressable
         onPress={() => router.push('/Dashboard')}
-        hitSlop={16}
+        hitSlop={homeHitSlop}
         style={styles.floatingHomeButton}>
         <MaterialCommunityIcons
           name="home"
-          size={30}
+          size={homeIconSize}
           color={getContrastingTextColor(team1BgColor)}
         />
       </Pressable>
@@ -283,7 +285,7 @@ function createStyles(isLandscape: boolean) {
       position: 'absolute',
       top: 12,
       left: 12,
-      padding: 10,
+      padding: 12,
       zIndex: 200,
     },
   });

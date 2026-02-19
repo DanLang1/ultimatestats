@@ -1,5 +1,5 @@
 import { useTheme } from '@/context/ThemeContext';
-import { useLayout } from '@/hooks/useLayout';
+import { SizeClass, useLayout } from '@/hooks/useLayout';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
 import { useGameTimer } from '@/hooks/useGameTimer';
@@ -22,8 +22,9 @@ export default function SettingsBar({ onUndo }: SettingsBarProps) {
 
   const { genderRatioEnabled, firstPointRatio } = useSettingsStore();
   const { palette } = useTheme();
-  const { isLandscape } = useLayout();
-  const styles = createStyles(isLandscape);
+  const { isLandscape, sizeClass } = useLayout();
+  const styles = createStyles(isLandscape, sizeClass);
+  const iconSize = sizeClass === 'large' ? 28 : sizeClass === 'medium' ? 26 : 24;
 
   const [showAbbaModal, setShowAbbaModal] = useState(false);
 
@@ -45,7 +46,7 @@ export default function SettingsBar({ onUndo }: SettingsBarProps) {
       <Pressable onPress={toggleTimer} style={styles.iconButton}>
         <MaterialCommunityIcons
           name={isActive ? 'pause' : 'play'}
-          size={24}
+          size={iconSize}
           color={barContentColor}
         />
       </Pressable>
@@ -54,11 +55,11 @@ export default function SettingsBar({ onUndo }: SettingsBarProps) {
       <View style={styles.timerContainer}>
         <Text style={[styles.timerText, { color: barContentColor }]}>{formatTime(timeLeft)}</Text>
         {timeLeft === 0 ? (
-          <MaterialCommunityIcons name="hard-hat" size={24} color={barContentColor} />
+          <MaterialCommunityIcons name="hard-hat" size={iconSize} color={barContentColor} />
         ) : isSoftCap || softCapPending ? (
           <FlashingIcon
             name="hat-fedora"
-            size={24}
+            size={iconSize}
             color={barContentColor}
             isFlashing={softCapPending && !isSoftCap}
           />
@@ -80,18 +81,18 @@ export default function SettingsBar({ onUndo }: SettingsBarProps) {
       {/* Stats - only show when stat tracking enabled */}
       {statTrackingEnabled && (
         <Pressable onPress={() => router.push('/ViewStats')} style={styles.iconButton}>
-          <MaterialCommunityIcons name="chart-bar" size={24} color={barContentColor} />
+          <MaterialCommunityIcons name="chart-bar" size={iconSize} color={barContentColor} />
         </Pressable>
       )}
 
       {/* Info */}
       <Pressable onPress={() => router.push('/GameInfo')} style={styles.iconButton}>
-        <MaterialCommunityIcons name="information" size={24} color={barContentColor} />
+        <MaterialCommunityIcons name="information" size={iconSize} color={barContentColor} />
       </Pressable>
 
       {/* Settings */}
       <Pressable onPress={() => router.push('/Settings')} style={styles.iconButton}>
-        <MaterialCommunityIcons name="cog" size={24} color={barContentColor} />
+        <MaterialCommunityIcons name="cog" size={iconSize} color={barContentColor} />
       </Pressable>
 
       {/* Undo */}
@@ -99,7 +100,7 @@ export default function SettingsBar({ onUndo }: SettingsBarProps) {
         onPress={onUndo}
         style={[styles.iconButton, !canUndo && styles.iconButtonDisabled]}
         disabled={!canUndo}>
-        <MaterialCommunityIcons name="undo" size={24} color={barContentColor} />
+        <MaterialCommunityIcons name="undo" size={iconSize} color={barContentColor} />
       </Pressable>
 
       {/* ABBA Rule Explanation Modal */}
@@ -126,7 +127,16 @@ export default function SettingsBar({ onUndo }: SettingsBarProps) {
   );
 }
 
-function createStyles(isLandscape: boolean) {
+function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
+  const isSmall = sizeClass === 'small';
+  const horizontalPadding = isSmall ? 20 : sizeClass === 'medium' ? 24 : 28;
+  const verticalPadding = isSmall ? 10 : sizeClass === 'medium' ? 12 : 14;
+  const minHeight = isSmall ? 50 : sizeClass === 'medium' ? 58 : 64;
+  const gap = isSmall ? 15 : sizeClass === 'medium' ? 18 : 22;
+  const timerTextSize = isSmall ? 20 : sizeClass === 'medium' ? 22 : 24;
+  const ratioTextSize = isSmall ? 18 : sizeClass === 'medium' ? 20 : 22;
+  const iconButtonPadding = isSmall ? 5 : sizeClass === 'medium' ? 7 : 8;
+
   return StyleSheet.create({
     container: {
       borderBottomLeftRadius: 20,
@@ -143,11 +153,11 @@ function createStyles(isLandscape: boolean) {
       shadowRadius: 3.84,
       elevation: 5,
       flexDirection: 'row',
-      paddingHorizontal: 20,
-      paddingVertical: 10,
-      minHeight: 50,
+      paddingHorizontal: horizontalPadding,
+      paddingVertical: verticalPadding,
+      minHeight,
       minWidth: 220,
-      gap: 15,
+      gap,
     },
     timerContainer: {
       flexDirection: 'row',
@@ -155,11 +165,11 @@ function createStyles(isLandscape: boolean) {
       gap: 5,
     },
     timerText: {
-      fontSize: 20,
+      fontSize: timerTextSize,
       fontWeight: 'bold',
     },
     iconButton: {
-      padding: 5,
+      padding: iconButtonPadding,
     },
     iconButtonDisabled: {
       opacity: 0.3,
@@ -168,7 +178,7 @@ function createStyles(isLandscape: boolean) {
       alignSelf: 'center',
     },
     ratioText: {
-      fontSize: 18,
+      fontSize: ratioTextSize,
       fontWeight: '700',
     },
     abbaText: {

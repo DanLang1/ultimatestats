@@ -1,5 +1,5 @@
 import { useTheme } from '@/context/ThemeContext';
-import { useLayout } from '@/hooks/useLayout';
+import { SizeClass, useLayout } from '@/hooks/useLayout';
 import { useReclampOnResize } from '@/hooks/useReclampOnResize';
 import { useTimeoutTimer } from '@/hooks/useTimeoutTimer';
 import { useGameStore } from '@/store/gameStore';
@@ -39,7 +39,14 @@ export function ScoreboardActionBar({
   onStartPoint,
 }: ScoreboardActionBarProps) {
   const { palette } = useTheme();
-  const { width: screenWidth, height: screenHeight } = useLayout();
+  const { width: screenWidth, height: screenHeight, sizeClass } = useLayout();
+  const metrics = getActionBarMetrics(sizeClass);
+  const styles = createStyles(metrics);
+  // Icon sizes derived from metrics.iconSize — used inline in JSX
+  const { iconSize } = metrics;
+  const dragIconSize = iconSize - 6;
+  const startIconSize = iconSize + 2;
+  const timeoutControlIconSize = iconSize + 4;
   const insets = useSafeAreaInsets();
   const {
     actionBarPosition,
@@ -68,14 +75,14 @@ export function ScoreboardActionBar({
   // Derive initial position: use stored position or calculate default center-bottom
   const getInitialX = () => {
     if (actionBarPosition.x === 0 && actionBarPosition.y === 0) {
-      return (screenWidth - BAR_WIDTH_INITIAL) / 2;
+      return (screenWidth - metrics.estimatedWidth) / 2;
     }
     return actionBarPosition.x;
   };
 
   const getInitialY = () => {
     if (actionBarPosition.x === 0 && actionBarPosition.y === 0) {
-      return screenHeight - BAR_HEIGHT_INITIAL - 100;
+      return screenHeight - metrics.estimatedHeight - 100;
     }
     return actionBarPosition.y;
   };
@@ -86,12 +93,13 @@ export function ScoreboardActionBar({
   const startX = useSharedValue(0);
   const startY = useSharedValue(0);
   const isDragging = useSharedValue(false);
-  const boxWidth = useSharedValue(BAR_WIDTH_INITIAL);
-  const boxHeight = useSharedValue(BAR_HEIGHT_INITIAL);
+  const boxWidth = useSharedValue(metrics.estimatedWidth);
+  const boxHeight = useSharedValue(metrics.estimatedHeight);
   const [measuredSize, setMeasuredSize] = useState({
-    width: BAR_WIDTH_INITIAL,
-    height: BAR_HEIGHT_INITIAL,
+    width: metrics.estimatedWidth,
+    height: metrics.estimatedHeight,
   });
+
   // Clamp position within screen bounds
   const clampPosition = (x: number, y: number) => {
     'worklet';
@@ -171,7 +179,7 @@ export function ScoreboardActionBar({
           renderIcon: () => (
             <MaterialCommunityIcons
               name="hand-front-left-outline"
-              size={20}
+              size={iconSize}
               color={palette.danger}
             />
           ),
@@ -179,20 +187,26 @@ export function ScoreboardActionBar({
         {
           label: 'DROP',
           action: { type: 'drop' as const },
-          renderIcon: () => <FontAwesome5 name="hands-wash" size={20} color={palette.danger} />,
+          renderIcon: () => (
+            <FontAwesome5 name="hands-wash" size={iconSize} color={palette.danger} />
+          ),
         },
         {
           label: 'T/A',
           action: { type: 'throwaway' as const },
           renderIcon: () => (
-            <MaterialCommunityIcons name="trash-can-outline" size={20} color={palette.danger} />
+            <MaterialCommunityIcons
+              name="trash-can-outline"
+              size={iconSize}
+              color={palette.danger}
+            />
           ),
         },
         {
           label: '50/50',
           action: { type: 'fiftyfifty' as const },
           renderIcon: () => (
-            <MaterialCommunityIcons name="scale-balance" size={20} color={palette.danger} />
+            <MaterialCommunityIcons name="scale-balance" size={iconSize} color={palette.danger} />
           ),
         },
       ]
@@ -203,7 +217,7 @@ export function ScoreboardActionBar({
           renderIcon: () => (
             <MaterialCommunityIcons
               name="hand-back-left-outline"
-              size={20}
+              size={iconSize}
               color={palette.success}
             />
           ),
@@ -212,7 +226,7 @@ export function ScoreboardActionBar({
           label: 'OPP TURN',
           action: { type: 'turn' as const },
           renderIcon: () => (
-            <MaterialCommunityIcons name="gift-outline" size={20} color={palette.accent} />
+            <MaterialCommunityIcons name="gift-outline" size={iconSize} color={palette.accent} />
           ),
         },
       ];
@@ -249,7 +263,7 @@ export function ScoreboardActionBar({
                   ? 'arrow-expand-horizontal'
                   : 'arrow-expand-vertical'
             }
-            size={pendingTimeoutModal ? 20 : 14}
+            size={pendingTimeoutModal ? iconSize : dragIconSize}
             color={palette.textMuted}
           />
         </Pressable>
@@ -262,7 +276,7 @@ export function ScoreboardActionBar({
               onPress={toggleTimer}>
               <MaterialCommunityIcons
                 name={isRunning ? 'pause' : 'play'}
-                size={24}
+                size={timeoutControlIconSize}
                 color={palette.accent}
               />
             </Pressable>
@@ -275,7 +289,11 @@ export function ScoreboardActionBar({
           <Pressable
             style={({ pressed }) => [styles.startPointButton, pressed && styles.buttonPressed]}
             onPress={onStartPoint}>
-            <MaterialCommunityIcons name="timer-outline" size={22} color={palette.accent} />
+            <MaterialCommunityIcons
+              name="timer-outline"
+              size={startIconSize}
+              color={palette.accent}
+            />
             {!isVertical && (
               <Text style={[styles.startPointText, { color: palette.accent }]}>START POINT</Text>
             )}
@@ -285,7 +303,7 @@ export function ScoreboardActionBar({
           <Pressable
             style={({ pressed }) => [styles.startPointButton, pressed && styles.buttonPressed]}
             onPress={pendingTimeoutModal ? handleContinue : togglePointTimerPause}>
-            <MaterialCommunityIcons name="play" size={22} color={palette.success} />
+            <MaterialCommunityIcons name="play" size={startIconSize} color={palette.success} />
             {!isVertical && (
               <Text style={[styles.startPointText, { color: palette.success }]}>RESUME POINT</Text>
             )}
@@ -309,74 +327,118 @@ export function ScoreboardActionBar({
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    alignItems: 'center',
-    paddingHorizontal: 6,
-    paddingVertical: 8,
-    borderRadius: 28,
-    borderWidth: 1,
-    gap: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-    elevation: 8,
-    zIndex: 1000,
-  },
-  dragHandle: {
-    padding: 6,
-    borderRadius: 12,
-    opacity: 0.6,
-  },
-  button: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 10,
-    gap: 6,
-    borderRadius: 12,
-  },
-  buttonText: {
-    fontSize: 11,
-    fontWeight: '700',
-    letterSpacing: 0.3,
-  },
-  buttonPressed: {
-    opacity: 0.7,
-    transform: [{ scale: 0.95 }],
-  },
-  startPointButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    gap: 8,
-    borderRadius: 12,
-  },
-  startPointText: {
-    fontSize: 13,
-    fontWeight: '800',
-    letterSpacing: 0.5,
-  },
-  timeoutContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 2,
-    paddingRight: 6,
-  },
-  timeoutPlayPause: {
-    padding: 8,
-    borderRadius: 20,
-  },
-  timeoutTime: {
-    fontSize: 22,
-    fontWeight: '800',
-    fontVariant: ['tabular-nums'],
-    minWidth: 50,
-    textAlign: 'center',
-  },
-});
+// ── Metrics ───────────────────────────────────────────────────────────
+// Only the fields that don't scale linearly from iconSize are kept
+// explicit. Everything else is derived in createStyles via:
+//   d = (iconSize - 20) / 2   →   0 (small) | 1 (medium) | 2 (large)
+
+type ActionBarMetrics = {
+  estimatedWidth: number; // needed for initial position / clamping math
+  estimatedHeight: number; // needed for initial position / clamping math
+  iconSize: number; // base action icon size; drives all icon + spacing derivations
+  containerRadius: number; // non-linear (28 → 30 → 34), keep explicit
+  textSize: number; // button label text size
+};
+
+function getActionBarMetrics(sizeClass: SizeClass): ActionBarMetrics {
+  if (sizeClass === 'large')
+    return {
+      estimatedWidth: 360,
+      estimatedHeight: 74,
+      iconSize: 24,
+      containerRadius: 34,
+      textSize: 13,
+    };
+  if (sizeClass === 'medium')
+    return {
+      estimatedWidth: 320,
+      estimatedHeight: 66,
+      iconSize: 22,
+      containerRadius: 30,
+      textSize: 12,
+    };
+  return {
+    estimatedWidth: BAR_WIDTH_INITIAL,
+    estimatedHeight: BAR_HEIGHT_INITIAL,
+    iconSize: 20,
+    containerRadius: 28,
+    textSize: 11,
+  };
+}
+
+function createStyles(metrics: ActionBarMetrics) {
+  const { iconSize, containerRadius, textSize } = metrics;
+  const d = (iconSize - 20) / 2; // 0 | 1 | 2
+
+  return StyleSheet.create({
+    container: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      alignItems: 'center',
+      paddingHorizontal: 6 + d * 2,
+      paddingVertical: 8 + d,
+      borderRadius: containerRadius,
+      borderWidth: 1,
+      gap: 2 + d,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.25,
+      shadowRadius: 8,
+      elevation: 8,
+      zIndex: 1000,
+    },
+    dragHandle: {
+      padding: 6 + d,
+      borderRadius: 12 + d,
+      opacity: 0.6,
+    },
+    button: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: 8 + d,
+      paddingHorizontal: 10 + d * 2,
+      gap: 6 + d,
+      borderRadius: 12 + d,
+    },
+    buttonText: {
+      fontSize: textSize,
+      fontWeight: '700',
+      letterSpacing: 0.3,
+    },
+    buttonPressed: {
+      opacity: 0.7,
+      transform: [{ scale: 0.95 }],
+    },
+    startPointButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: 10 + d,
+      paddingHorizontal: 16 + d * 2,
+      gap: 8 + d,
+      borderRadius: 12 + d,
+    },
+    startPointText: {
+      fontSize: textSize + 2,
+      fontWeight: '800',
+      letterSpacing: 0.5,
+    },
+    timeoutContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 2 + d * 2,
+      paddingRight: 6 + d,
+    },
+    timeoutPlayPause: {
+      padding: 8 + d,
+      borderRadius: 20 + d,
+    },
+    timeoutTime: {
+      fontSize: iconSize + 2,
+      fontWeight: '800',
+      fontVariant: ['tabular-nums'],
+      minWidth: 50 + d * 7,
+      textAlign: 'center',
+    },
+  });
+}
