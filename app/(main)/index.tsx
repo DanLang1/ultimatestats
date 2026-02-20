@@ -8,7 +8,7 @@ import TurnoverToast from '@/components/toast/TurnoverToast';
 import StatsTrackingTutorial from '@/components/tutorial/StatsTrackingTutorial';
 import TutorialOverlay from '@/components/tutorial/TutorialOverlay';
 import { useHalftimeNavigation } from '@/hooks/useHalftimeNavigation';
-import { useLayout } from '@/hooks/useLayout';
+import { getSizeClassValue, scaleBySizeClass, useLayout } from '@/hooks/useLayout';
 import { usePullPromptNavigation } from '@/hooks/usePullPromptNavigation';
 import { useTimeoutTimer } from '@/hooks/useTimeoutTimer';
 import { getContrastingTextColor } from '@/lib/colorUtils';
@@ -26,8 +26,8 @@ export default function BasicScoreboard() {
   useKeepAwake();
   const layout = useLayout();
   const styles = createStyles(layout.isLandscape);
-  const homeIconSize = layout.sizeClass === 'large' ? 38 : layout.sizeClass === 'medium' ? 34 : 30;
-  const homeHitSlop = layout.sizeClass === 'small' ? 16 : 20;
+  const homeIconSize = scaleBySizeClass(30, layout.sizeClass);
+  const homeHitSlop = getSizeClassValue({ small: 16, medium: 18, large: 20 }, layout.sizeClass);
 
   const {
     currentTeam,

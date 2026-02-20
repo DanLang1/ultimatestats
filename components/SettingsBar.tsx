@@ -1,5 +1,5 @@
 import { useTheme } from '@/context/ThemeContext';
-import { SizeClass, useLayout } from '@/hooks/useLayout';
+import { getSizeClassValue, SizeClass, useLayout } from '@/hooks/useLayout';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
 import { useGameTimer } from '@/hooks/useGameTimer';
@@ -24,7 +24,7 @@ export default function SettingsBar({ onUndo }: SettingsBarProps) {
   const { palette } = useTheme();
   const { isLandscape, sizeClass } = useLayout();
   const styles = createStyles(isLandscape, sizeClass);
-  const iconSize = sizeClass === 'large' ? 28 : sizeClass === 'medium' ? 26 : 24;
+  const iconSize = getSizeClassValue({ small: 24, medium: 26, large: 28 }, sizeClass);
 
   const [showAbbaModal, setShowAbbaModal] = useState(false);
 
@@ -128,14 +128,13 @@ export default function SettingsBar({ onUndo }: SettingsBarProps) {
 }
 
 function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
-  const isSmall = sizeClass === 'small';
-  const horizontalPadding = isSmall ? 20 : sizeClass === 'medium' ? 24 : 28;
-  const verticalPadding = isSmall ? 10 : sizeClass === 'medium' ? 12 : 14;
-  const minHeight = isSmall ? 50 : sizeClass === 'medium' ? 58 : 64;
-  const gap = isSmall ? 15 : sizeClass === 'medium' ? 18 : 22;
-  const timerTextSize = isSmall ? 20 : sizeClass === 'medium' ? 22 : 24;
-  const ratioTextSize = isSmall ? 18 : sizeClass === 'medium' ? 20 : 22;
-  const iconButtonPadding = isSmall ? 5 : sizeClass === 'medium' ? 7 : 8;
+  const horizontalPadding = getSizeClassValue({ small: 20, medium: 24, large: 28 }, sizeClass);
+  const verticalPadding = getSizeClassValue({ small: 10, medium: 12, large: 14 }, sizeClass);
+  const minHeight = getSizeClassValue({ small: 50, medium: 58, large: 64 }, sizeClass);
+  const gap = getSizeClassValue({ small: 15, medium: 18, large: 22 }, sizeClass);
+  const timerTextSize = getSizeClassValue({ small: 20, medium: 22, large: 24 }, sizeClass);
+  const ratioTextSize = getSizeClassValue({ small: 18, medium: 20, large: 22 }, sizeClass);
+  const iconButtonPadding = getSizeClassValue({ small: 5, medium: 7, large: 8 }, sizeClass);
 
   return StyleSheet.create({
     container: {

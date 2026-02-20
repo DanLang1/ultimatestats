@@ -1,5 +1,5 @@
 import { useTheme } from '@/context/ThemeContext';
-import { SizeClass, useLayout } from '@/hooks/useLayout';
+import { getSizeClassValue, SizeClass, useLayout } from '@/hooks/useLayout';
 import { useReclampOnResize } from '@/hooks/useReclampOnResize';
 import { useTimeoutTimer } from '@/hooks/useTimeoutTimer';
 import { useGameStore } from '@/store/gameStore';
@@ -341,29 +341,32 @@ type ActionBarMetrics = {
 };
 
 function getActionBarMetrics(sizeClass: SizeClass): ActionBarMetrics {
-  if (sizeClass === 'large')
-    return {
-      estimatedWidth: 360,
-      estimatedHeight: 74,
-      iconSize: 24,
-      containerRadius: 34,
-      textSize: 13,
-    };
-  if (sizeClass === 'medium')
-    return {
-      estimatedWidth: 320,
-      estimatedHeight: 66,
-      iconSize: 22,
-      containerRadius: 30,
-      textSize: 12,
-    };
-  return {
-    estimatedWidth: BAR_WIDTH_INITIAL,
-    estimatedHeight: BAR_HEIGHT_INITIAL,
-    iconSize: 20,
-    containerRadius: 28,
-    textSize: 11,
-  };
+  return getSizeClassValue(
+    {
+      small: {
+        estimatedWidth: BAR_WIDTH_INITIAL,
+        estimatedHeight: BAR_HEIGHT_INITIAL,
+        iconSize: 20,
+        containerRadius: 28,
+        textSize: 11,
+      },
+      medium: {
+        estimatedWidth: 320,
+        estimatedHeight: 66,
+        iconSize: 22,
+        containerRadius: 30,
+        textSize: 12,
+      },
+      large: {
+        estimatedWidth: 360,
+        estimatedHeight: 74,
+        iconSize: 24,
+        containerRadius: 34,
+        textSize: 13,
+      },
+    },
+    sizeClass,
+  );
 }
 
 function createStyles(metrics: ActionBarMetrics) {

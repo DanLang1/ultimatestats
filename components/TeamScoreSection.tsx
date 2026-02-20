@@ -2,7 +2,7 @@ import ScoreDisplay from '@/components/ScoreDisplay';
 import TeamText from '@/components/TeamText';
 import { ThemedView } from '@/components/ThemedView';
 import { useHaptics } from '@/hooks/useHaptics';
-import { SizeClass, useLayout } from '@/hooks/useLayout';
+import { getSizeClassValue, SizeClass, useLayout } from '@/hooks/useLayout';
 import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
@@ -105,7 +105,7 @@ export default function TeamScoreSection({
 }
 
 function createStyles(sizeClass: SizeClass) {
-  const gap = sizeClass === 'large' ? 12 : sizeClass === 'medium' ? 10 : 6;
+  const gap = getSizeClassValue({ small: 6, medium: 10, large: 12 }, sizeClass);
 
   return StyleSheet.create({
     container: {

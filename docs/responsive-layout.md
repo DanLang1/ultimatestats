@@ -192,10 +192,38 @@ When a modal supports portrait, ensure:
 
 `useLayout()` returns a `sizeClass` field that components can use to scale sizing for larger screens. The scoreboard (`index.tsx`, `TeamScoreSection`, `ScoreDisplay`, `TeamText`) is the first set of components adapted for tablet sizing.
 
+### Pattern: shared size-class helpers (preferred)
+
+Avoid repeated inline ternaries for size class values. Prefer helpers from `hooks/useLayout.ts`:
+
+- `scaleBySizeClass(base, sizeClass, options?)` for values that scale linearly.
+- `getSizeClassValue({ small, medium, large }, sizeClass)` for explicit, non-linear mappings (especially touch target sizing).
+
+`SIZE_CLASS_SCALE` is centralized as:
+
+- `small: 1`
+- `medium: 1.1`
+- `large: 1.2`
+
+Example:
+
+```tsx
+import { getSizeClassValue, scaleBySizeClass, SizeClass } from '@/hooks/useLayout';
+
+function createMetrics(sizeClass: SizeClass) {
+  return {
+    iconSize: scaleBySizeClass(30, sizeClass),
+    hitSlop: getSizeClassValue({ small: 16, medium: 18, large: 20 }, sizeClass),
+  };
+}
+```
+
+Use explicit mappings when precision matters (for example: hit slop, minimum touch targets, and hard size caps). Use scaling when a value should follow the global size-class ratio.
+
 ### Pattern: passing `sizeClass` to child components
 
 ```tsx
-import { SizeClass } from '@/hooks/useLayout';
+import { scaleBySizeClass, SizeClass } from '@/hooks/useLayout';
 
 interface MyComponentProps {
   sizeClass?: SizeClass;
@@ -207,7 +235,7 @@ export default function MyComponent({ sizeClass = 'small' }: MyComponentProps) {
 }
 
 function createStyles(sizeClass: SizeClass) {
-  const fontSize = sizeClass === 'large' ? 24 : sizeClass === 'medium' ? 20 : 16;
+  const fontSize = scaleBySizeClass(16, sizeClass);
   return StyleSheet.create({
     text: { fontSize },
   });
@@ -219,7 +247,7 @@ function createStyles(sizeClass: SizeClass) {
 When a component needs both orientation and size class info:
 
 ```tsx
-import { LayoutInfo, useLayout } from '@/hooks/useLayout';
+import { LayoutInfo, getSizeClassValue, useLayout } from '@/hooks/useLayout';
 
 export default function MyScreen() {
   const layout = useLayout();
@@ -230,7 +258,7 @@ export default function MyScreen() {
 function createStyles(layout: LayoutInfo) {
   return StyleSheet.create({
     content: {
-      padding: layout.sizeClass === 'small' ? 16 : 32,
+      padding: getSizeClassValue({ small: 16, medium: 24, large: 32 }, layout.sizeClass),
       flexDirection: layout.isLandscape ? 'row' : 'column',
     },
   });

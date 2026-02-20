@@ -1,4 +1,4 @@
-import { SizeClass } from '@/hooks/useLayout';
+import { getSizeClassValue, SizeClass } from '@/hooks/useLayout';
 import { View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 
@@ -18,8 +18,8 @@ export default function TeamText({
   sizeClass = 'small',
 }: TeamTextProps) {
   // Dynamic font size: starts at baseFontSize, shrinks for longer names
-  const baseFontSize = sizeClass === 'large' ? 60 : sizeClass === 'medium' ? 52 : 40;
-  const minFontSize = sizeClass === 'large' ? 36 : sizeClass === 'medium' ? 30 : 24;
+  const baseFontSize = getSizeClassValue({ small: 40, medium: 52, large: 60 }, sizeClass);
+  const minFontSize = getSizeClassValue({ small: 24, medium: 30, large: 36 }, sizeClass);
   const shrinkThreshold = 8; // Start shrinking after 8 characters
   const shrinkFactor = 2; // Reduce by 2px per character over threshold
 
@@ -29,7 +29,7 @@ export default function TeamText({
       : baseFontSize;
 
   // Fixed line height to prevent layout shift when emoji switches teams
-  const lineHeight = sizeClass === 'large' ? 68 : sizeClass === 'medium' ? 60 : 48;
+  const lineHeight = getSizeClassValue({ small: 48, medium: 60, large: 68 }, sizeClass);
 
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>

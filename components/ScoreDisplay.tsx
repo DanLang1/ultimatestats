@@ -1,6 +1,6 @@
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import { SizeClass } from '@/hooks/useLayout';
+import { getSizeClassValue, SizeClass } from '@/hooks/useLayout';
 import { StyleSheet } from 'react-native';
 
 export interface ScoreDisplayProps {
@@ -27,8 +27,8 @@ export default function ScoreDisplay({
 }
 
 function createStyles(sizeClass: SizeClass) {
-  const fontSize = sizeClass === 'large' ? 200 : sizeClass === 'medium' ? 180 : 150;
-  const lineHeight = sizeClass === 'large' ? 200 : sizeClass === 'medium' ? 180 : 150;
+  const fontSize = getSizeClassValue({ small: 150, medium: 180, large: 200 }, sizeClass);
+  const lineHeight = getSizeClassValue({ small: 150, medium: 180, large: 200 }, sizeClass);
 
   return StyleSheet.create({
     scoreText: {
