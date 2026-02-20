@@ -1,5 +1,9 @@
 import { ThemedView } from '@/components/ThemedView';
 import { useAlert } from '@/components/ui/AlertProvider';
+import {
+  ResponsiveHeaderAction,
+  ResponsiveHeaderActions,
+} from '@/components/ui/ResponsiveHeaderActions';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { ShareConfirmModal } from '@/components/ui/ShareConfirmModal';
 import AggregateBottomBar from '@/components/view-stats/AggregateBottomBar';
@@ -20,8 +24,7 @@ import { File, Paths } from 'expo-file-system';
 import { Redirect, router, Stack, useLocalSearchParams } from 'expo-router';
 import * as Sharing from 'expo-sharing';
 import React, { useEffect, useState } from 'react';
-import { Modal, Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
 
 type ViewMode = 'current' | 'saved' | 'aggregate';
 
@@ -43,10 +46,8 @@ export default function ViewStatsScreen() {
   } = useGameStore();
   const { showAlert } = useAlert();
   const { palette } = useTheme();
-  const { isLandscape, sizeClass } = useLayout();
-  const insets = useSafeAreaInsets();
+  const { isLandscape } = useLayout();
   const styles = createStyles(isLandscape);
-  const showInlineHeaderActions = isLandscape || sizeClass !== 'small';
 
   const team1Name = currentTeam?.name ?? 'Team 1';
 
@@ -59,7 +60,6 @@ export default function ViewStatsScreen() {
 
   // Saved Games Selection
   const [selectedSavedGameIds, setSelectedSavedGameIds] = useState<Set<string>>(new Set());
-  const [isHeaderMenuVisible, setIsHeaderMenuVisible] = useState(false);
 
   // Load saved games on mount
   useEffect(() => {
@@ -303,29 +303,28 @@ export default function ViewStatsScreen() {
     router.back();
   };
 
-  const overflowActions: {
-    key: string;
-    label: string;
-    onPress: () => void;
-    icon: 'timeline' | 'csv';
-  }[] = [];
-
-  if (showTimelineAction) {
-    overflowActions.push({
+  const headerActions: ResponsiveHeaderAction[] = [
+    {
       key: 'timeline',
       label: 'Timeline',
       onPress: handleOpenTimeline,
-      icon: 'timeline',
-    });
-  }
-  if (showExportAction) {
-    overflowActions.push({
+      visible: showTimelineAction,
+      inlineIcon: (
+        <MaterialCommunityIcons name="chart-timeline-variant" size={24} color={palette.accent} />
+      ),
+      menuIcon: (
+        <MaterialCommunityIcons name="chart-timeline-variant" size={20} color={palette.accent} />
+      ),
+    },
+    {
       key: 'csv',
       label: 'Export CSV',
       onPress: handleExportCSV,
-      icon: 'csv',
-    });
-  }
+      visible: showExportAction,
+      inlineIcon: <FontAwesome6 name="file-csv" size={20} color={palette.accent} />,
+      menuIcon: <FontAwesome6 name="file-csv" size={18} color={palette.accent} />,
+    },
+  ];
 
   if (gameId) {
     return <Redirect href={{ pathname: '/saved-games/[gameId]', params: { gameId } }} />;
@@ -342,103 +341,8 @@ export default function ViewStatsScreen() {
         backButtonBackgroundColor={palette.overlay10}
         centerTitleInLandscape={false}
         titleOverlayPaddingPortrait={88}
-        rightSlot={
-          showInlineHeaderActions ? (
-            <View style={styles.headerRight}>
-              {showTimelineAction && (
-                <Pressable
-                  onPress={handleOpenTimeline}
-                  style={[styles.backButton, { backgroundColor: palette.overlay10 }]}
-                  hitSlop={12}>
-                  <MaterialCommunityIcons
-                    name="chart-timeline-variant"
-                    size={24}
-                    color={palette.accent}
-                  />
-                </Pressable>
-              )}
-              {showExportAction && (
-                <Pressable
-                  onPress={handleExportCSV}
-                  style={[styles.backButton, { backgroundColor: palette.overlay10 }]}
-                  hitSlop={12}>
-                  <FontAwesome6 name="file-csv" size={20} color={palette.accent} />
-                </Pressable>
-              )}
-              {!showTimelineAction && !showExportAction ? (
-                <View style={styles.headerSpacer} />
-              ) : null}
-            </View>
-          ) : (
-            <View style={styles.headerRightPortrait}>
-              {overflowActions.length > 0 ? (
-                <Pressable
-                  onPress={() => setIsHeaderMenuVisible(true)}
-                  style={[styles.backButton, { backgroundColor: palette.overlay10 }]}
-                  hitSlop={12}>
-                  <MaterialCommunityIcons name="dots-horizontal" size={22} color={palette.accent} />
-                </Pressable>
-              ) : (
-                <View style={styles.headerSpacer} />
-              )}
-            </View>
-          )
-        }
+        rightSlot={<ResponsiveHeaderActions actions={headerActions} />}
       />
-
-      <Modal
-        visible={isHeaderMenuVisible}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setIsHeaderMenuVisible(false)}>
-        <View style={StyleSheet.absoluteFill}>
-          <Pressable
-            style={[styles.menuOverlay, { backgroundColor: palette.overlayDark40 }]}
-            onPress={() => setIsHeaderMenuVisible(false)}
-          />
-          <View
-            style={[
-              styles.menuSheet,
-              {
-                backgroundColor: palette.modalBg,
-                borderColor: palette.overlay15,
-                bottom: Math.max(insets.bottom, 12),
-              },
-            ]}>
-            {overflowActions.map((action) => (
-              <Pressable
-                key={action.key}
-                style={({ pressed }) => [styles.menuActionRow, pressed && styles.buttonPressed]}
-                onPress={() => {
-                  setIsHeaderMenuVisible(false);
-                  action.onPress();
-                }}>
-                {action.icon === 'csv' ? (
-                  <FontAwesome6 name="file-csv" size={18} color={palette.accent} />
-                ) : (
-                  <MaterialCommunityIcons
-                    name="chart-timeline-variant"
-                    size={20}
-                    color={palette.accent}
-                  />
-                )}
-                <Text style={[styles.menuActionText, { color: palette.modalText }]}>
-                  {action.label}
-                </Text>
-              </Pressable>
-            ))}
-            <Pressable
-              style={({ pressed }) => [
-                styles.menuCancelButton,
-                { backgroundColor: palette.overlay10 },
-                pressed && styles.buttonPressed,
-              ]}
-              onPress={() => setIsHeaderMenuVisible(false)}>
-              <Text style={[styles.menuCancelText, { color: palette.modalText }]}>Cancel</Text>
-            </Pressable>
-          </View>
-        </View>
-      </Modal>
 
       {/* Tab Switcher */}
       <View style={[styles.tabContainer, { backgroundColor: palette.overlay05 }]}>
@@ -589,64 +493,6 @@ function createStyles(isLandscape: boolean) {
   return StyleSheet.create({
     container: {
       flex: 1,
-    },
-    backButton: {
-      padding: 8,
-      borderRadius: 20,
-    },
-    headerSpacer: {
-      width: 40,
-    },
-    headerRight: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 8,
-    },
-    headerRightPortrait: {
-      minWidth: 40,
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'flex-end',
-      gap: 8,
-    },
-    menuOverlay: {
-      ...StyleSheet.absoluteFillObject,
-    },
-    menuSheet: {
-      position: 'absolute',
-      left: 16,
-      right: 16,
-      bottom: 24,
-      borderRadius: 14,
-      borderWidth: 1,
-      padding: 12,
-      gap: 6,
-    },
-    menuActionRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 10,
-      borderRadius: 10,
-      paddingHorizontal: 12,
-      paddingVertical: 12,
-    },
-    menuActionText: {
-      fontSize: 15,
-      fontWeight: '600',
-    },
-    menuCancelButton: {
-      marginTop: 6,
-      borderRadius: 10,
-      alignItems: 'center',
-      justifyContent: 'center',
-      paddingVertical: 12,
-    },
-    menuCancelText: {
-      fontSize: 14,
-      fontWeight: '600',
-    },
-    buttonPressed: {
-      opacity: 0.8,
     },
     tabContainer: {
       flexDirection: 'row',

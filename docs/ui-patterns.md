@@ -25,6 +25,7 @@ Reusable UI conventions for screens and modals.
   const { isLandscape, sizeClass } = useLayout();
   const showInlineHeaderActions = isLandscape || sizeClass !== 'small';
   ```
+- Prefer `components/ui/ResponsiveHeaderActions.tsx` for composed right-slot actions so screens reuse one inline-vs-overflow implementation.
 - Use explicit back/dismiss action and avoid render-time imperative navigation.
 - Reference: `docs/architecture-rules.md`.
 
@@ -35,7 +36,7 @@ Example:
   onBack={() => router.back()}
   titleColor={palette.textMuted}
   backButtonBackgroundColor={palette.overlay10}
-  rightSlot={<MyRightActions />}
+  rightSlot={<ResponsiveHeaderActions actions={headerActions} />}
 />
 ```
 

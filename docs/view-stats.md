@@ -95,8 +95,8 @@ The **Aggregate** tab allows you to combine stats from multiple games for a sing
 - In portrait on **phones** (`sizeClass === 'small'`), secondary actions collapse into a **More** menu (`...`) in the top-right to avoid crowding the title.
 - In portrait on **tablets** (`sizeClass === 'medium'` or `'large'`), inline icon buttons are shown directly in the header right slot — same as landscape — because there is enough horizontal space.
 - The decision is made via `showInlineHeaderActions = isLandscape || sizeClass !== 'small'` near the top of the component.
+- This behavior is implemented through `components/ui/ResponsiveHeaderActions.tsx` and is used by both `app/(main)/ViewStats.tsx` and `app/(main)/saved-games/[gameId].tsx`.
 - The overflow menu (phone portrait only) includes the available actions for the current state: Timeline and Export CSV.
-- On the dedicated Saved Game detail route, the same pattern should be applied (pending codebase sweep).
 
 ## CSV Export
 

@@ -1,5 +1,9 @@
 import { ThemedView } from '@/components/ThemedView';
 import { useAlert } from '@/components/ui/AlertProvider';
+import {
+  ResponsiveHeaderAction,
+  ResponsiveHeaderActions,
+} from '@/components/ui/ResponsiveHeaderActions';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { ShareConfirmModal } from '@/components/ui/ShareConfirmModal';
 import StatsContent from '@/components/view-stats/StatsContent';
@@ -15,18 +19,15 @@ import { File, Paths } from 'expo-file-system';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import * as Sharing from 'expo-sharing';
 import React, { useEffect, useState } from 'react';
-import { Modal, Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
 
 export default function SavedGameStatsScreen() {
   const { gameId } = useLocalSearchParams<{ gameId?: string }>();
   const { showAlert } = useAlert();
   const { palette } = useTheme();
   const { isLandscape } = useLayout();
-  const insets = useSafeAreaInsets();
   const styles = createStyles(isLandscape);
   const { savedGames, savedTeams, loadSavedGames } = useGameStore();
-  const [isHeaderMenuVisible, setIsHeaderMenuVisible] = useState(false);
   const [pendingShareAction, setPendingShareAction] = useState<(() => Promise<string>) | null>(
     null,
   );
@@ -40,6 +41,7 @@ export default function SavedGameStatsScreen() {
   const gameTeamName = selectedGame
     ? resolveTeamName(selectedGame.team1.id, selectedGame.team1.name, savedTeams)
     : null;
+  const actionIconColor = selectedGame ? palette.accent : palette.textMuted;
 
   const handleExportCSV = async () => {
     if (!selectedGame || !gameTeamName) return;
@@ -92,14 +94,35 @@ export default function SavedGameStatsScreen() {
     });
   };
 
-  const headerActions: {
-    key: 'timeline' | 'share' | 'csv';
-    label: string;
-    onPress: () => void;
-  }[] = [
-    { key: 'timeline', label: 'Timeline', onPress: handleOpenTimeline },
-    { key: 'share', label: 'Share', onPress: handleShareGame },
-    { key: 'csv', label: 'Export CSV', onPress: handleExportCSV },
+  const headerActions: ResponsiveHeaderAction[] = [
+    {
+      key: 'timeline',
+      label: 'Timeline',
+      onPress: handleOpenTimeline,
+      disabled: !selectedGame,
+      inlineIcon: (
+        <MaterialCommunityIcons name="chart-timeline-variant" size={24} color={actionIconColor} />
+      ),
+      menuIcon: (
+        <MaterialCommunityIcons name="chart-timeline-variant" size={20} color={actionIconColor} />
+      ),
+    },
+    {
+      key: 'share',
+      label: 'Share',
+      onPress: handleShareGame,
+      disabled: !selectedGame,
+      inlineIcon: <MaterialCommunityIcons name="share-variant" size={20} color={actionIconColor} />,
+      menuIcon: <MaterialCommunityIcons name="share-variant" size={20} color={actionIconColor} />,
+    },
+    {
+      key: 'csv',
+      label: 'Export CSV',
+      onPress: handleExportCSV,
+      disabled: !selectedGame,
+      inlineIcon: <FontAwesome6 name="file-csv" size={20} color={actionIconColor} />,
+      menuIcon: <FontAwesome6 name="file-csv" size={18} color={actionIconColor} />,
+    },
   ];
 
   return (
@@ -111,114 +134,8 @@ export default function SavedGameStatsScreen() {
         titleColor={palette.textMuted}
         backButtonBackgroundColor={palette.overlay10}
         centerTitleInLandscape={false}
-        rightSlot={
-          isLandscape ? (
-            <View style={styles.headerRight}>
-              <Pressable
-                onPress={handleOpenTimeline}
-                style={[styles.backButton, { backgroundColor: palette.overlay10 }]}
-                hitSlop={12}
-                disabled={!selectedGame}>
-                <MaterialCommunityIcons
-                  name="chart-timeline-variant"
-                  size={24}
-                  color={selectedGame ? palette.accent : palette.textMuted}
-                />
-              </Pressable>
-              <Pressable
-                onPress={handleShareGame}
-                style={[styles.backButton, { backgroundColor: palette.overlay10 }]}
-                hitSlop={12}
-                disabled={!selectedGame}>
-                <MaterialCommunityIcons
-                  name="share-variant"
-                  size={20}
-                  color={selectedGame ? palette.accent : palette.textMuted}
-                />
-              </Pressable>
-              <Pressable
-                onPress={handleExportCSV}
-                style={[styles.backButton, { backgroundColor: palette.overlay10 }]}
-                hitSlop={12}
-                disabled={!selectedGame}>
-                <FontAwesome6
-                  name="file-csv"
-                  size={20}
-                  color={selectedGame ? palette.accent : palette.textMuted}
-                />
-              </Pressable>
-            </View>
-          ) : (
-            <View style={styles.headerRightPortrait}>
-              <Pressable
-                onPress={() => setIsHeaderMenuVisible(true)}
-                style={[styles.backButton, { backgroundColor: palette.overlay10 }]}
-                hitSlop={12}
-                disabled={!selectedGame}>
-                <MaterialCommunityIcons
-                  name="dots-horizontal"
-                  size={22}
-                  color={selectedGame ? palette.accent : palette.textMuted}
-                />
-              </Pressable>
-            </View>
-          )
-        }
+        rightSlot={<ResponsiveHeaderActions actions={headerActions} />}
       />
-
-      <Modal
-        visible={isHeaderMenuVisible}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setIsHeaderMenuVisible(false)}>
-        <View style={StyleSheet.absoluteFill}>
-          <Pressable
-            style={[styles.menuOverlay, { backgroundColor: palette.overlayDark40 }]}
-            onPress={() => setIsHeaderMenuVisible(false)}
-          />
-          <View
-            style={[
-              styles.menuSheet,
-              {
-                backgroundColor: palette.modalBg,
-                borderColor: palette.overlay15,
-                bottom: Math.max(insets.bottom, 12),
-              },
-            ]}>
-            {headerActions.map((action) => (
-              <Pressable
-                key={action.key}
-                style={({ pressed }) => [styles.menuActionRow, pressed && styles.buttonPressed]}
-                onPress={() => {
-                  setIsHeaderMenuVisible(false);
-                  action.onPress();
-                }}>
-                {action.key === 'csv' ? (
-                  <FontAwesome6 name="file-csv" size={18} color={palette.accent} />
-                ) : (
-                  <MaterialCommunityIcons
-                    name={action.key === 'timeline' ? 'chart-timeline-variant' : 'share-variant'}
-                    size={20}
-                    color={palette.accent}
-                  />
-                )}
-                <Text style={[styles.menuActionText, { color: palette.modalText }]}>
-                  {action.label}
-                </Text>
-              </Pressable>
-            ))}
-            <Pressable
-              style={({ pressed }) => [
-                styles.menuCancelButton,
-                { backgroundColor: palette.overlay10 },
-                pressed && styles.buttonPressed,
-              ]}
-              onPress={() => setIsHeaderMenuVisible(false)}>
-              <Text style={[styles.menuCancelText, { color: palette.modalText }]}>Cancel</Text>
-            </Pressable>
-          </View>
-        </View>
-      </Modal>
 
       {hasMissingParam || !selectedGame ? (
         <View style={styles.centeredState}>
@@ -278,61 +195,6 @@ function createStyles(isLandscape: boolean) {
   return StyleSheet.create({
     container: {
       flex: 1,
-    },
-    backButton: {
-      padding: 8,
-      borderRadius: 20,
-    },
-    headerRight: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 8,
-    },
-    headerRightPortrait: {
-      minWidth: 40,
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'flex-end',
-      gap: 8,
-    },
-    menuOverlay: {
-      ...StyleSheet.absoluteFillObject,
-    },
-    menuSheet: {
-      position: 'absolute',
-      left: 16,
-      right: 16,
-      bottom: 24,
-      borderRadius: 14,
-      borderWidth: 1,
-      padding: 12,
-      gap: 6,
-    },
-    menuActionRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 10,
-      borderRadius: 10,
-      paddingHorizontal: 12,
-      paddingVertical: 12,
-    },
-    menuActionText: {
-      fontSize: 15,
-      fontWeight: '600',
-    },
-    menuCancelButton: {
-      marginTop: 6,
-      borderRadius: 10,
-      alignItems: 'center',
-      justifyContent: 'center',
-      paddingVertical: 12,
-    },
-    menuCancelText: {
-      fontSize: 14,
-      fontWeight: '600',
-    },
-    buttonPressed: {
-      opacity: 0.8,
     },
     scrollContent: {
       padding: isLandscape ? 14 : 24,
