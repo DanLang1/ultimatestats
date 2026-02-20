@@ -1,5 +1,6 @@
 // Fallback for using MaterialIcons on Android and web.
 
+import { scaleBySizeClass, SizeClass } from '@/hooks/useLayout';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { SymbolWeight, SymbolViewProps } from 'expo-symbols';
 import { ComponentProps } from 'react';
@@ -28,14 +29,23 @@ const MAPPING = {
 export function IconSymbol({
   name,
   size = 24,
+  sizeClass = 'small',
   color,
   style,
 }: {
   name: IconSymbolName;
   size?: number;
+  sizeClass?: SizeClass;
   color: string | OpaqueColorValue;
   style?: StyleProp<TextStyle>;
   weight?: SymbolWeight;
 }) {
-  return <MaterialIcons color={color} size={size} name={MAPPING[name]} style={style} />;
+  return (
+    <MaterialIcons
+      color={color}
+      size={scaleBySizeClass(size, sizeClass)}
+      name={MAPPING[name]}
+      style={style}
+    />
+  );
 }

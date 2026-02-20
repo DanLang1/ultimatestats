@@ -1,4 +1,5 @@
 import { useTheme } from '@/context/ThemeContext';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { formatRatio, getExpectedRatio, getSequenceNumber } from '@/lib/genderRatioUtils';
 import { computePointByPointEvents, getTurnoverSummary } from '@/lib/timelineUtils';
 import { useGameStore } from '@/store/gameStore';
@@ -51,6 +52,8 @@ function getPointOutcome(
 
 export default function PointSummaryModal() {
   const { palette } = useTheme();
+  const { sizeClass } = useLayout();
+  const styles = createStyles(sizeClass);
   const {
     events,
     startingPossession,
@@ -154,7 +157,11 @@ export default function PointSummaryModal() {
               onPress={handleDismiss}
               style={({ pressed }) => [styles.closeBtn, pressed && { opacity: 0.7 }]}
               hitSlop={12}>
-              <MaterialCommunityIcons name="close" size={20} color={palette.textMuted} />
+              <MaterialCommunityIcons
+                name="close"
+                size={scaleBySizeClass(20, sizeClass)}
+                color={palette.textMuted}
+              />
             </Pressable>
           </View>
 
@@ -163,7 +170,11 @@ export default function PointSummaryModal() {
             {/* Duration */}
             {lastPoint.pointDurationMs && (
               <View style={[styles.statCard, { backgroundColor: palette.overlay05 }]}>
-                <MaterialCommunityIcons name="timer-outline" size={16} color={palette.textMuted} />
+                <MaterialCommunityIcons
+                  name="timer-outline"
+                  size={scaleBySizeClass(16, sizeClass)}
+                  color={palette.textMuted}
+                />
                 <Text style={[styles.statValue, { color: palette.modalText }]}>
                   {formatDuration(lastPoint.pointDurationMs)}
                 </Text>
@@ -175,7 +186,7 @@ export default function PointSummaryModal() {
               <View style={[styles.statCard, { backgroundColor: palette.overlay05 }]}>
                 <MaterialCommunityIcons
                   name="swap-horizontal"
-                  size={16}
+                  size={scaleBySizeClass(16, sizeClass)}
                   color={palette.textMuted}
                 />
                 <Text style={[styles.statValue, { color: palette.modalText }]}>
@@ -189,7 +200,7 @@ export default function PointSummaryModal() {
               <View style={[styles.statCard, { backgroundColor: palette.overlay05 }]}>
                 <MaterialCommunityIcons
                   name="hand-back-left-outline"
-                  size={16}
+                  size={scaleBySizeClass(16, sizeClass)}
                   color={palette.textMuted}
                 />
                 <Text style={[styles.statValue, { color: palette.modalText }]}>
@@ -217,7 +228,11 @@ export default function PointSummaryModal() {
                 { backgroundColor: palette.success },
                 pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
               ]}>
-              <MaterialCommunityIcons name="timer-outline" size={16} color={palette.textOnAccent} />
+              <MaterialCommunityIcons
+                name="timer-outline"
+                size={scaleBySizeClass(16, sizeClass)}
+                color={palette.textOnAccent}
+              />
               <Text style={[styles.ctaText, { color: palette.textOnAccent }]} numberOfLines={1}>
                 START TIMER
               </Text>
@@ -243,96 +258,98 @@ export default function PointSummaryModal() {
   );
 }
 
-const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  sheet: {
-    borderRadius: 20,
-    padding: 24,
-    width: '90%',
-    maxWidth: 400,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3,
-    shadowRadius: 16,
-    elevation: 12,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
-    marginBottom: 20,
-  },
-  headerContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: '800',
-  },
-  possessionChip: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  possessionText: {
-    fontSize: 11,
-    fontWeight: '800',
-    letterSpacing: 0.5,
-  },
-  closeBtn: {
-    padding: 4,
-  },
-  summaryRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-    marginBottom: 24,
-  },
-  statCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 12,
-  },
-  statValue: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  ctaContainer: {
-    gap: 10,
-  },
-  ctaButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 14,
-    borderRadius: 12,
-  },
-  ctaText: {
-    fontSize: 14,
-    fontWeight: '800',
-    letterSpacing: 0.3,
-    flexShrink: 1,
-  },
-  secondaryButton: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 12,
-    borderRadius: 12,
-    borderWidth: 1,
-  },
-  secondaryButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    flexShrink: 1,
-  },
-});
+function createStyles(sizeClass: SizeClass) {
+  return StyleSheet.create({
+    overlay: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    sheet: {
+      borderRadius: 20,
+      padding: 24,
+      width: '90%',
+      maxWidth: 400,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 8 },
+      shadowOpacity: 0.3,
+      shadowRadius: 16,
+      elevation: 12,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      justifyContent: 'space-between',
+      marginBottom: 20,
+    },
+    headerContent: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+    },
+    title: {
+      fontSize: scaleBySizeClass(20, sizeClass),
+      fontWeight: '800',
+    },
+    possessionChip: {
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      borderRadius: 12,
+    },
+    possessionText: {
+      fontSize: scaleBySizeClass(11, sizeClass),
+      fontWeight: '800',
+      letterSpacing: 0.5,
+    },
+    closeBtn: {
+      padding: 4,
+    },
+    summaryRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 10,
+      marginBottom: 24,
+    },
+    statCard: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      paddingVertical: 8,
+      paddingHorizontal: 12,
+      borderRadius: 12,
+    },
+    statValue: {
+      fontSize: scaleBySizeClass(14, sizeClass),
+      fontWeight: '600',
+    },
+    ctaContainer: {
+      gap: 10,
+    },
+    ctaButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+      paddingVertical: 14,
+      borderRadius: 12,
+    },
+    ctaText: {
+      fontSize: scaleBySizeClass(14, sizeClass),
+      fontWeight: '800',
+      letterSpacing: 0.3,
+      flexShrink: 1,
+    },
+    secondaryButton: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: 12,
+      borderRadius: 12,
+      borderWidth: 1,
+    },
+    secondaryButtonText: {
+      fontSize: scaleBySizeClass(14, sizeClass),
+      fontWeight: '600',
+      flexShrink: 1,
+    },
+  });
+}

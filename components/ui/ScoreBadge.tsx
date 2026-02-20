@@ -1,4 +1,5 @@
 import { useTheme } from '@/context/ThemeContext';
+import { scaleBySizeClass, SizeClass } from '@/hooks/useLayout';
 import React from 'react';
 import { StyleSheet, Text, View, ViewStyle } from 'react-native';
 
@@ -6,10 +7,17 @@ interface ScoreBadgeProps {
   score1: number;
   score2: number;
   size?: 'small' | 'medium' | 'large';
+  sizeClass?: SizeClass;
   style?: ViewStyle;
 }
 
-export function ScoreBadge({ score1, score2, size = 'medium', style }: ScoreBadgeProps) {
+export function ScoreBadge({
+  score1,
+  score2,
+  size = 'medium',
+  sizeClass = 'small',
+  style,
+}: ScoreBadgeProps) {
   const { palette } = useTheme();
 
   const isWin = score1 > score2;
@@ -53,7 +61,14 @@ export function ScoreBadge({ score1, score2, size = 'medium', style }: ScoreBadg
         },
         style,
       ]}>
-      <Text style={[styles.text, textStyles, { color: colors.text }]}>
+      <Text
+        style={[
+          styles.text,
+          {
+            fontSize: scaleBySizeClass(textStyles.fontSize, sizeClass),
+            color: colors.text,
+          },
+        ]}>
         {score1} - {score2}
       </Text>
     </View>
@@ -86,14 +101,8 @@ const styles = StyleSheet.create({
   },
 });
 
-const textSizeStyles = StyleSheet.create({
-  small: {
-    fontSize: 13,
-  },
-  medium: {
-    fontSize: 16,
-  },
-  large: {
-    fontSize: 19,
-  },
-});
+const textSizeStyles = {
+  small: { fontSize: 13 },
+  medium: { fontSize: 16 },
+  large: { fontSize: 19 },
+} as const;

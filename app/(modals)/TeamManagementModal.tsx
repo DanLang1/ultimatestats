@@ -1,5 +1,6 @@
 import { useAlert } from '@/components/ui/AlertProvider';
 import { useTheme } from '@/context/ThemeContext';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { useGameStore } from '@/store/gameStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router } from 'expo-router';
@@ -8,6 +9,8 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 export default function TeamManagementModal() {
   const { palette } = useTheme();
+  const { sizeClass } = useLayout();
+  const styles = createStyles(sizeClass);
   const { showAlert } = useAlert();
   const { currentTeam, savedTeams, loadTeam, deleteTeam, saveCurrentTeam } = useGameStore();
 
@@ -52,7 +55,11 @@ export default function TeamManagementModal() {
             <View style={styles.headerSpacer} />
             <Text style={[styles.title, { color: palette.modalText }]}>Switch Team</Text>
             <Pressable onPress={handleDismiss} hitSlop={12} style={styles.closeButton}>
-              <MaterialCommunityIcons name="close" size={24} color={palette.textMuted} />
+              <MaterialCommunityIcons
+                name="close"
+                size={scaleBySizeClass(24, sizeClass)}
+                color={palette.textMuted}
+              />
             </Pressable>
           </View>
 
@@ -69,7 +76,7 @@ export default function TeamManagementModal() {
                   onPress={() => handleLoadTeam(team.id)}>
                   <MaterialCommunityIcons
                     name="account-group-outline"
-                    size={22}
+                    size={scaleBySizeClass(22, sizeClass)}
                     color={palette.textMuted}
                   />
                   <Text style={[styles.optionText, { color: palette.modalText }]}>{team.name}</Text>
@@ -79,7 +86,7 @@ export default function TeamManagementModal() {
                     hitSlop={8}>
                     <MaterialCommunityIcons
                       name="trash-can-outline"
-                      size={18}
+                      size={scaleBySizeClass(18, sizeClass)}
                       color={palette.danger}
                     />
                   </Pressable>
@@ -99,69 +106,71 @@ export default function TeamManagementModal() {
   );
 }
 
-const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
-  },
-  sheet: {
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    padding: 20,
-    maxHeight: '70%',
-  },
-  handle: {
-    width: 40,
-    height: 4,
-    borderRadius: 2,
-    alignSelf: 'center',
-    marginBottom: 16,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: '700',
-    textAlign: 'center',
-    flex: 1,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  headerSpacer: {
-    width: 24,
-  },
-  closeButton: {
-    padding: 4,
-  },
-  scrollView: {
-    flexGrow: 0,
-  },
-  options: {
-    gap: 8,
-  },
-  option: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
-    padding: 16,
-    borderRadius: 12,
-  },
-  optionPressed: {
-    opacity: 0.7,
-  },
-  optionText: {
-    fontSize: 16,
-    fontWeight: '500',
-    flex: 1,
-  },
-  deleteButton: {
-    padding: 4,
-  },
-  emptyText: {
-    textAlign: 'center',
-    fontSize: 14,
-    paddingVertical: 20,
-  },
-});
+function createStyles(sizeClass: SizeClass) {
+  return StyleSheet.create({
+    overlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      justifyContent: 'flex-end',
+    },
+    sheet: {
+      borderTopLeftRadius: 20,
+      borderTopRightRadius: 20,
+      padding: 20,
+      maxHeight: '70%',
+    },
+    handle: {
+      width: 40,
+      height: 4,
+      borderRadius: 2,
+      alignSelf: 'center',
+      marginBottom: 16,
+    },
+    title: {
+      fontSize: scaleBySizeClass(18, sizeClass),
+      fontWeight: '700',
+      textAlign: 'center',
+      flex: 1,
+    },
+    headerRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: 20,
+    },
+    headerSpacer: {
+      width: 24,
+    },
+    closeButton: {
+      padding: 4,
+    },
+    scrollView: {
+      flexGrow: 0,
+    },
+    options: {
+      gap: 8,
+    },
+    option: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 14,
+      padding: 16,
+      borderRadius: 12,
+    },
+    optionPressed: {
+      opacity: 0.7,
+    },
+    optionText: {
+      fontSize: scaleBySizeClass(16, sizeClass),
+      fontWeight: '500',
+      flex: 1,
+    },
+    deleteButton: {
+      padding: 4,
+    },
+    emptyText: {
+      textAlign: 'center',
+      fontSize: scaleBySizeClass(14, sizeClass),
+      paddingVertical: 20,
+    },
+  });
+}

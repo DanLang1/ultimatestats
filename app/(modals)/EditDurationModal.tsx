@@ -1,5 +1,5 @@
 import { useTheme } from '@/context/ThemeContext';
-import { useLayout } from '@/hooks/useLayout';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { MAX_POINT_DURATION_MINUTES } from '@/lib/constants';
 import { useGameStore } from '@/store/gameStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
@@ -11,8 +11,8 @@ type ActiveField = 'minutes' | 'seconds';
 
 export default function EditDurationModal() {
   const { palette } = useTheme();
-  const { isLandscape } = useLayout();
-  const styles = createStyles(isLandscape);
+  const { isLandscape, sizeClass } = useLayout();
+  const styles = createStyles(isLandscape, sizeClass);
   const params = useLocalSearchParams<{
     eventIndex: string;
     gameId: string;
@@ -192,7 +192,7 @@ export default function EditDurationModal() {
                     ]}>
                     <MaterialCommunityIcons
                       name="backspace-outline"
-                      size={24}
+                      size={scaleBySizeClass(24, sizeClass)}
                       color={palette.modalText}
                     />
                   </Pressable>
@@ -273,7 +273,7 @@ export default function EditDurationModal() {
                     ]}>
                     <MaterialCommunityIcons
                       name="backspace-outline"
-                      size={24}
+                      size={scaleBySizeClass(24, sizeClass)}
                       color={palette.modalText}
                     />
                   </Pressable>
@@ -321,7 +321,7 @@ export default function EditDurationModal() {
   );
 }
 
-function createStyles(isLandscape: boolean) {
+function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
   return StyleSheet.create({
     overlay: {
       flex: 1,
@@ -343,7 +343,7 @@ function createStyles(isLandscape: boolean) {
       alignItems: 'center',
     },
     title: {
-      fontSize: 16,
+      fontSize: scaleBySizeClass(16, sizeClass),
       fontWeight: '700',
     },
     content: {
@@ -368,16 +368,16 @@ function createStyles(isLandscape: boolean) {
       gap: 4,
     },
     fieldValue: {
-      fontSize: isLandscape ? 40 : 34,
+      fontSize: scaleBySizeClass(isLandscape ? 40 : 34, sizeClass),
       fontWeight: '700',
       fontVariant: ['tabular-nums'],
     },
     fieldSuffix: {
-      fontSize: 14,
+      fontSize: scaleBySizeClass(14, sizeClass),
       fontWeight: '500',
     },
     fieldSeparator: {
-      fontSize: 28,
+      fontSize: scaleBySizeClass(28, sizeClass),
       fontWeight: '700',
     },
     numpadContainer: {
@@ -405,7 +405,7 @@ function createStyles(isLandscape: boolean) {
       alignItems: 'center',
     },
     numpadText: {
-      fontSize: 20,
+      fontSize: scaleBySizeClass(20, sizeClass),
       fontWeight: '600',
     },
     actionRow: {
@@ -429,7 +429,7 @@ function createStyles(isLandscape: boolean) {
     },
     saveButton: {},
     actionButtonText: {
-      fontSize: 15,
+      fontSize: scaleBySizeClass(15, sizeClass),
       fontWeight: '600',
     },
   });

@@ -1,5 +1,5 @@
 import { useTheme } from '@/context/ThemeContext';
-import { useLayout } from '@/hooks/useLayout';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { useNumberPickerStore } from '@/store/numberPickerStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router } from 'expo-router';
@@ -8,8 +8,8 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 export default function NumberPickerModal() {
   const { palette } = useTheme();
-  const { isLandscape } = useLayout();
-  const styles = createStyles(isLandscape);
+  const { isLandscape, sizeClass } = useLayout();
+  const styles = createStyles(isLandscape, sizeClass);
   const { isActive, value, min, max, label, suffix, quickOptions, save, close } =
     useNumberPickerStore();
 
@@ -120,7 +120,7 @@ export default function NumberPickerModal() {
                     ]}>
                     <MaterialCommunityIcons
                       name="backspace-outline"
-                      size={24}
+                      size={scaleBySizeClass(24, sizeClass)}
                       color={palette.modalText}
                     />
                   </Pressable>
@@ -205,7 +205,7 @@ export default function NumberPickerModal() {
                     ]}>
                     <MaterialCommunityIcons
                       name="backspace-outline"
-                      size={24}
+                      size={scaleBySizeClass(24, sizeClass)}
                       color={palette.modalText}
                     />
                   </Pressable>
@@ -271,7 +271,7 @@ export default function NumberPickerModal() {
   );
 }
 
-function createStyles(isLandscape: boolean) {
+function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
   return StyleSheet.create({
     overlay: {
       flex: 1,
@@ -293,11 +293,11 @@ function createStyles(isLandscape: boolean) {
       alignItems: 'center',
     },
     title: {
-      fontSize: 16,
+      fontSize: scaleBySizeClass(16, sizeClass),
       fontWeight: '700',
     },
     rangeText: {
-      fontSize: 12,
+      fontSize: scaleBySizeClass(12, sizeClass),
     },
     content: {
       flexDirection: isLandscape ? 'row' : 'column',
@@ -314,12 +314,12 @@ function createStyles(isLandscape: boolean) {
       gap: 6,
     },
     largeValue: {
-      fontSize: isLandscape ? 44 : 38,
+      fontSize: scaleBySizeClass(isLandscape ? 44 : 38, sizeClass),
       fontWeight: '700',
       fontVariant: ['tabular-nums'],
     },
     largeSuffix: {
-      fontSize: 18,
+      fontSize: scaleBySizeClass(18, sizeClass),
       fontWeight: '500',
     },
     numpadContainer: {
@@ -347,7 +347,7 @@ function createStyles(isLandscape: boolean) {
       alignItems: 'center',
     },
     numpadText: {
-      fontSize: 20,
+      fontSize: scaleBySizeClass(20, sizeClass),
       fontWeight: '600',
     },
     quickOptionsContainer: {
@@ -364,7 +364,7 @@ function createStyles(isLandscape: boolean) {
       alignItems: 'center',
     },
     quickOptionText: {
-      fontSize: 14,
+      fontSize: scaleBySizeClass(14, sizeClass),
       fontWeight: '600',
     },
     actionRow: {
@@ -384,7 +384,7 @@ function createStyles(isLandscape: boolean) {
     },
     saveButton: {},
     actionButtonText: {
-      fontSize: 15,
+      fontSize: scaleBySizeClass(15, sizeClass),
       fontWeight: '600',
     },
   });

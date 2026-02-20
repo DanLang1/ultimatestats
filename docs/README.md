@@ -73,7 +73,7 @@ Tracks which team has the disc, enabling turnover detection when user taps the n
 | --------------- | -------------------------------------------------------------- |
 | Agent Guide     | [GEMINI.md](../GEMINI.md) / [AGENTS.md](../AGENTS.md)          |
 | Responsive      | [responsive-layout.md](responsive-layout.md)                   |
-| Scaling Tracker | [responsive-scaling-tracker.md](responsive-scaling-tracker.md) |
+| Completed Docs  | [completed/responsive-scaling-tracker.md](completed/responsive-scaling-tracker.md) |
 | Modals          | [modals.md](modals.md)                                         |
 | Platforms       | [platform-support.md](platform-support.md)                     |
 | Themes          | [theming.md](theming.md)                                       |

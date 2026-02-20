@@ -1,6 +1,7 @@
 import { ThemedView } from '@/components/ThemedView';
 import EventTimeline from '@/components/timeline/EventTimeline';
 import { useTheme } from '@/context/ThemeContext';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { resolveTeamName } from '@/lib/playerUtils';
 import { computePointByPointEvents } from '@/lib/timelineUtils';
 import { useGameStore } from '@/store/gameStore';
@@ -12,6 +13,8 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 export default function GameTimelineScreen() {
   const { palette } = useTheme();
+  const { sizeClass } = useLayout();
+  const styles = createStyles(sizeClass);
   const params = useLocalSearchParams<{ gameId?: string }>();
   // If gameId is present, it's a saved game
   const isSavedGame = !!params.gameId;
@@ -87,7 +90,11 @@ export default function GameTimelineScreen() {
           onPress={() => router.back()}
           style={[styles.backButton, { backgroundColor: palette.overlay10 }]}
           hitSlop={12}>
-          <MaterialCommunityIcons name="arrow-left" size={24} color={palette.textInverse} />
+          <MaterialCommunityIcons
+            name="arrow-left"
+            size={scaleBySizeClass(24, sizeClass)}
+            color={palette.textInverse}
+          />
         </Pressable>
         <Text style={[styles.headerTitle, { color: palette.textMuted }]}>GAME TIMELINE</Text>
         <View style={styles.headerSpacer} />
@@ -151,7 +158,11 @@ export default function GameTimelineScreen() {
           />
         ) : (
           <View style={styles.emptyState}>
-            <MaterialCommunityIcons name="timeline-outline" size={48} color={palette.textMuted} />
+            <MaterialCommunityIcons
+              name="timeline-outline"
+              size={scaleBySizeClass(48, sizeClass)}
+              color={palette.textMuted}
+            />
             <Text style={[styles.emptyText, { color: palette.textMuted }]}>
               No events to display
             </Text>
@@ -162,63 +173,65 @@ export default function GameTimelineScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingTop: 8,
-    paddingBottom: 12,
-  },
-  backButton: {
-    padding: 8,
-    borderRadius: 20,
-  },
-  headerTitle: {
-    fontSize: 14,
-    fontWeight: '700',
-    letterSpacing: 2,
-    textTransform: 'uppercase',
-  },
-  headerSpacer: {
-    width: 40,
-  },
-  gameInfo: {
-    alignItems: 'center',
-    paddingBottom: 16,
-    gap: 4,
-  },
-  teamNames: {
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  finalScore: {
-    fontSize: 24,
-    fontWeight: '700',
-  },
-  scrollContent: {
-    paddingVertical: 8,
-  },
-  emptyState: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 60,
-    gap: 12,
-  },
-  emptyText: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  emptySubtext: {
-    fontSize: 14,
-  },
-  errorText: {
-    fontSize: 16,
-    textAlign: 'center',
-    marginTop: 100,
-  },
-});
+function createStyles(sizeClass: SizeClass) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 20,
+      paddingTop: 8,
+      paddingBottom: 12,
+    },
+    backButton: {
+      padding: 8,
+      borderRadius: 20,
+    },
+    headerTitle: {
+      fontSize: scaleBySizeClass(14, sizeClass),
+      fontWeight: '700',
+      letterSpacing: 2,
+      textTransform: 'uppercase',
+    },
+    headerSpacer: {
+      width: 40,
+    },
+    gameInfo: {
+      alignItems: 'center',
+      paddingBottom: 16,
+      gap: 4,
+    },
+    teamNames: {
+      fontSize: scaleBySizeClass(18, sizeClass),
+      fontWeight: '600',
+    },
+    finalScore: {
+      fontSize: scaleBySizeClass(24, sizeClass),
+      fontWeight: '700',
+    },
+    scrollContent: {
+      paddingVertical: 8,
+    },
+    emptyState: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: 60,
+      gap: 12,
+    },
+    emptyText: {
+      fontSize: scaleBySizeClass(16, sizeClass),
+      fontWeight: '600',
+    },
+    emptySubtext: {
+      fontSize: scaleBySizeClass(14, sizeClass),
+    },
+    errorText: {
+      fontSize: scaleBySizeClass(16, sizeClass),
+      textAlign: 'center',
+      marginTop: 100,
+    },
+  });
+}

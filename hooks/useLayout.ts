@@ -42,16 +42,17 @@ export function scaleBySizeClass(
   return Math.round(clamped);
 }
 
+function determineSizeClass(dimension: number): SizeClass {
+  if (dimension >= SIZE_CLASS_LARGE_THRESHOLD) return 'large';
+  if (dimension >= SIZE_CLASS_MEDIUM_THRESHOLD) return 'medium';
+  return 'small';
+}
+
 export function useLayout(): LayoutInfo {
   const { width, height } = useWindowDimensions();
   const smallestDimension = Math.min(width, height);
 
-  const sizeClass: SizeClass =
-    smallestDimension >= SIZE_CLASS_LARGE_THRESHOLD
-      ? 'large'
-      : smallestDimension >= SIZE_CLASS_MEDIUM_THRESHOLD
-        ? 'medium'
-        : 'small';
+  const sizeClass = determineSizeClass(smallestDimension);
 
   return {
     width,

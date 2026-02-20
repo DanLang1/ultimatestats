@@ -1,7 +1,7 @@
 import { ModalPlayerGrid, SortDirection } from '@/components/lines/ModalPlayerGrid';
 import { useTheme } from '@/context/ThemeContext';
 import { useIsGameActive } from '@/hooks/useIsGameActive';
-import { useLayout } from '@/hooks/useLayout';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import {
   checkLineRatio,
   formatRatio,
@@ -46,7 +46,8 @@ function getPointOutcome(
 
 export default function PointTransition() {
   const { palette } = useTheme();
-  const { isLandscape } = useLayout();
+  const { isLandscape, sizeClass } = useLayout();
+  const styles = createStyles(sizeClass);
 
   const {
     events,
@@ -190,7 +191,11 @@ export default function PointTransition() {
               pressed && { opacity: 0.7 },
             ]}
             hitSlop={8}>
-            <MaterialCommunityIcons name="close" size={18} color={palette.textMuted} />
+            <MaterialCommunityIcons
+              name="close"
+              size={scaleBySizeClass(18, sizeClass)}
+              color={palette.textMuted}
+            />
           </Pressable>
           <View style={styles.headerTitleRow}>
             <Text style={[styles.headerTitle, { color: palette.textInverse }]}>
@@ -223,7 +228,11 @@ export default function PointTransition() {
               )}
               {showRatioWarning && (
                 <View style={[styles.infoChip, { backgroundColor: palette.warning + '20' }]}>
-                  <MaterialCommunityIcons name="alert" size={14} color={palette.warning} />
+                  <MaterialCommunityIcons
+                    name="alert"
+                    size={scaleBySizeClass(14, sizeClass)}
+                    color={palette.warning}
+                  />
                   <Text style={[styles.infoChipText, { color: palette.warning }]}>
                     Expecting {expectedRatio === 'more-women' ? 'F' : 'M'} majority
                   </Text>
@@ -290,7 +299,11 @@ export default function PointTransition() {
                   pressed && { opacity: 0.8 },
                 ]}>
                 {selectedPresetId === preset.id && (
-                  <MaterialCommunityIcons name="check" size={10} color={palette.textOnAccent} />
+                  <MaterialCommunityIcons
+                    name="check"
+                    size={scaleBySizeClass(10, sizeClass)}
+                    color={palette.textOnAccent}
+                  />
                 )}
                 <Text
                   style={[
@@ -313,7 +326,11 @@ export default function PointTransition() {
                   { borderColor: palette.overlay15, backgroundColor: palette.overlay08 },
                   pressed && { opacity: 0.8 },
                 ]}>
-                <MaterialCommunityIcons name="plus" size={10} color={palette.textMuted} />
+                <MaterialCommunityIcons
+                  name="plus"
+                  size={scaleBySizeClass(10, sizeClass)}
+                  color={palette.textMuted}
+                />
                 <Text style={[styles.presetChipText, { color: palette.textMuted }]}>Preset</Text>
               </Pressable>
             )}
@@ -327,7 +344,7 @@ export default function PointTransition() {
             ]}>
             <MaterialCommunityIcons
               name={sortDirection === 'asc' ? 'sort-ascending' : 'sort-descending'}
-              size={14}
+              size={scaleBySizeClass(14, sizeClass)}
               color={palette.textMuted}
             />
           </Pressable>
@@ -340,7 +357,7 @@ export default function PointTransition() {
           <View style={styles.emptyState}>
             <MaterialCommunityIcons
               name="account-group-outline"
-              size={48}
+              size={scaleBySizeClass(48, sizeClass)}
               color={palette.textMuted}
             />
             <Text style={[styles.emptyStateTitle, { color: palette.textInverse }]}>
@@ -359,7 +376,7 @@ export default function PointTransition() {
                 ]}>
                 <MaterialCommunityIcons
                   name="account-plus"
-                  size={18}
+                  size={scaleBySizeClass(18, sizeClass)}
                   color={palette.textOnAccent}
                 />
                 <Text style={[styles.emptyStateBtnText, { color: palette.textOnAccent }]}>
@@ -397,152 +414,154 @@ export default function PointTransition() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  header: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-  },
-  headerTop: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 12,
-  },
-  headerTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    flex: 1,
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: '800',
-  },
-  headerOutcome: {
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  headerDuration: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  infoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flexWrap: 'wrap',
-    gap: 8,
-    marginTop: 8,
-  },
-  infoChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  infoChipText: {
-    fontSize: 11,
-    fontWeight: '700',
-    letterSpacing: 0.3,
-  },
-  skipBtn: {
-    paddingVertical: 8,
-    paddingHorizontal: 8,
-    borderRadius: 12,
-    borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  ratioInline: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  confirmBtn: {
-    height: 36,
-    paddingHorizontal: 12,
-    borderRadius: 12,
-    minWidth: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  countText: {
-    fontSize: 11,
-    fontWeight: '700',
-  },
-  presetsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 10,
-    gap: 6,
-  },
-  presetsScrollContent: {
-    gap: 6,
-  },
-  presetChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-    borderRadius: 8,
-    borderWidth: 1,
-    gap: 3,
-  },
-  presetChipText: {
-    fontSize: 11,
-    fontWeight: '600',
-  },
-  sortBtn: {
-    paddingVertical: 4,
-    paddingHorizontal: 6,
-    borderRadius: 6,
-    borderWidth: 1,
-  },
-  nextPointLabel: {
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  gridContainer: {
-    flex: 1,
-    paddingHorizontal: 12,
-    paddingTop: 8,
-  },
-  emptyState: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 32,
-    gap: 12,
-  },
-  emptyStateTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    marginTop: 8,
-  },
-  emptyStateText: {
-    fontSize: 14,
-    textAlign: 'center',
-    lineHeight: 20,
-  },
-  emptyStateButtons: {
-    flexDirection: 'row',
-    gap: 12,
-    marginTop: 16,
-  },
-  emptyStateBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 12,
-  },
-  emptyStateBtnText: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-});
+function createStyles(sizeClass: SizeClass) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+    },
+    header: {
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      borderBottomWidth: 1,
+    },
+    headerTop: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: 12,
+    },
+    headerTitleRow: {
+      flexDirection: 'row',
+      alignItems: 'baseline',
+      flex: 1,
+    },
+    headerTitle: {
+      fontSize: scaleBySizeClass(20, sizeClass),
+      fontWeight: '800',
+    },
+    headerOutcome: {
+      fontSize: scaleBySizeClass(14, sizeClass),
+      fontWeight: '700',
+    },
+    headerDuration: {
+      fontSize: scaleBySizeClass(14, sizeClass),
+      fontWeight: '600',
+    },
+    infoRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      flexWrap: 'wrap',
+      gap: 8,
+      marginTop: 8,
+    },
+    infoChip: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      borderRadius: 12,
+    },
+    infoChipText: {
+      fontSize: scaleBySizeClass(11, sizeClass),
+      fontWeight: '700',
+      letterSpacing: 0.3,
+    },
+    skipBtn: {
+      paddingVertical: 8,
+      paddingHorizontal: 8,
+      borderRadius: 12,
+      borderWidth: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    ratioInline: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    confirmBtn: {
+      height: 36,
+      paddingHorizontal: 12,
+      borderRadius: 12,
+      minWidth: 44,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    countText: {
+      fontSize: scaleBySizeClass(11, sizeClass),
+      fontWeight: '700',
+    },
+    presetsRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginTop: 10,
+      gap: 6,
+    },
+    presetsScrollContent: {
+      gap: 6,
+    },
+    presetChip: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: 4,
+      paddingHorizontal: 8,
+      borderRadius: 8,
+      borderWidth: 1,
+      gap: 3,
+    },
+    presetChipText: {
+      fontSize: scaleBySizeClass(11, sizeClass),
+      fontWeight: '600',
+    },
+    sortBtn: {
+      paddingVertical: 4,
+      paddingHorizontal: 6,
+      borderRadius: 6,
+      borderWidth: 1,
+    },
+    nextPointLabel: {
+      fontSize: scaleBySizeClass(12, sizeClass),
+      fontWeight: '600',
+    },
+    gridContainer: {
+      flex: 1,
+      paddingHorizontal: 12,
+      paddingTop: 8,
+    },
+    emptyState: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingHorizontal: 32,
+      gap: 12,
+    },
+    emptyStateTitle: {
+      fontSize: scaleBySizeClass(18, sizeClass),
+      fontWeight: '700',
+      marginTop: 8,
+    },
+    emptyStateText: {
+      fontSize: scaleBySizeClass(14, sizeClass),
+      textAlign: 'center',
+      lineHeight: 20,
+    },
+    emptyStateButtons: {
+      flexDirection: 'row',
+      gap: 12,
+      marginTop: 16,
+    },
+    emptyStateBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      paddingVertical: 12,
+      paddingHorizontal: 20,
+      borderRadius: 12,
+    },
+    emptyStateBtnText: {
+      fontSize: scaleBySizeClass(14, sizeClass),
+      fontWeight: '600',
+    },
+  });
+}

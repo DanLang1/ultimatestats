@@ -1,4 +1,5 @@
 import { useTheme } from '@/context/ThemeContext';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { MatchingType, PlayerRole } from '@/lib/storage/types';
 import { useGameStore } from '@/store/gameStore';
 import { useLinePresetsStore } from '@/store/linePresetsStore';
@@ -10,6 +11,8 @@ import { Pressable, StyleSheet, Switch, Text, TextInput, View } from 'react-nati
 export default function EditPlayerModal() {
   const { playerId } = useLocalSearchParams<{ playerId: string }>();
   const { palette } = useTheme();
+  const { sizeClass } = useLayout();
+  const styles = createStyles(sizeClass);
   const { currentTeam, setCurrentTeam, saveCurrentTeam, events, savedGames } = useGameStore();
 
   const { removePlayerFromPresets } = useLinePresetsStore();
@@ -118,7 +121,7 @@ export default function EditPlayerModal() {
             <View style={styles.confirmContainer}>
               <MaterialCommunityIcons
                 name="alert-circle-outline"
-                size={48}
+                size={scaleBySizeClass(48, sizeClass)}
                 color={palette.danger}
               />
               <Text style={[styles.confirmTitle, { color: palette.modalText }]}>
@@ -255,7 +258,7 @@ export default function EditPlayerModal() {
                     onPress={() => setRole(role === 'handler' ? null : 'handler')}>
                     <MaterialCommunityIcons
                       name="bullseye-arrow"
-                      size={14}
+                      size={scaleBySizeClass(14, sizeClass)}
                       color={role === 'handler' ? palette.textOnAccent : palette.modalTextMuted}
                     />
                     <Text
@@ -281,7 +284,7 @@ export default function EditPlayerModal() {
                     onPress={() => setRole(role === 'hybrid' ? null : 'hybrid')}>
                     <MaterialCommunityIcons
                       name="star-three-points"
-                      size={14}
+                      size={scaleBySizeClass(14, sizeClass)}
                       color={role === 'hybrid' ? palette.textOnAccent : palette.modalTextMuted}
                     />
                     <Text
@@ -307,7 +310,7 @@ export default function EditPlayerModal() {
                     onPress={() => setRole(role === 'cutter' ? null : 'cutter')}>
                     <MaterialCommunityIcons
                       name="shoe-print"
-                      size={14}
+                      size={scaleBySizeClass(14, sizeClass)}
                       color={role === 'cutter' ? palette.textOnAccent : palette.modalTextMuted}
                     />
                     <Text
@@ -331,7 +334,7 @@ export default function EditPlayerModal() {
                     onPress={() => setConfirmingDelete(true)}>
                     <MaterialCommunityIcons
                       name="delete-outline"
-                      size={20}
+                      size={scaleBySizeClass(20, sizeClass)}
                       color={palette.danger}
                     />
                   </Pressable>
@@ -371,132 +374,134 @@ export default function EditPlayerModal() {
   );
 }
 
-const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 24,
-  },
-  sheet: {
-    width: '100%',
-    maxWidth: 340,
-    borderRadius: 16,
-    padding: 20,
-    borderWidth: 1,
-  },
-  title: {
-    fontSize: 12,
-    fontWeight: '700',
-    letterSpacing: 1,
-    marginBottom: 16,
-    textAlign: 'center',
-  },
-  input: {
-    borderWidth: 1,
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    fontSize: 16,
-    marginBottom: 8,
-  },
-  errorText: {
-    fontSize: 12,
-    marginLeft: 4,
-    marginBottom: 8,
-  },
-  toggleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: 12,
-  },
-  toggleLabel: {
-    fontSize: 15,
-    fontWeight: '500',
-  },
-  pillRow: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  pill: {
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 16,
-    borderWidth: 1,
-    minWidth: 50,
-    alignItems: 'center',
-  },
-  pillWithIcon: {
-    flexDirection: 'row',
-    gap: 4,
-  },
-  pillText: {
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  buttonRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 24,
-    gap: 12,
-  },
-  deleteButton: {
-    padding: 12,
-    borderRadius: 10,
-  },
-  actionButtons: {
-    flex: 1,
-    flexDirection: 'row',
-    gap: 12,
-  },
-  button: {
-    flex: 1,
-    paddingVertical: 12,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  cancelButton: {
-    borderWidth: 1,
-  },
-  buttonText: {
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  // Confirmation styles
-  confirmContainer: {
-    alignItems: 'center',
-    paddingVertical: 8,
-  },
-  confirmTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginTop: 12,
-    marginBottom: 8,
-  },
-  confirmMessage: {
-    fontSize: 14,
-    textAlign: 'center',
-    marginBottom: 20,
-    lineHeight: 20,
-  },
-  confirmButtons: {
-    flexDirection: 'row',
-    gap: 12,
-    width: '100%',
-  },
-  confirmButton: {
-    flex: 1,
-    paddingVertical: 12,
-    borderRadius: 10,
-    alignItems: 'center',
-  },
-  confirmCancelButton: {
-    borderWidth: 1,
-  },
-  confirmButtonText: {
-    fontSize: 15,
-    fontWeight: '600',
-  },
-});
+function createStyles(sizeClass: SizeClass) {
+  return StyleSheet.create({
+    overlay: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: 24,
+    },
+    sheet: {
+      width: '100%',
+      maxWidth: 340,
+      borderRadius: 16,
+      padding: 20,
+      borderWidth: 1,
+    },
+    title: {
+      fontSize: scaleBySizeClass(12, sizeClass),
+      fontWeight: '700',
+      letterSpacing: 1,
+      marginBottom: 16,
+      textAlign: 'center',
+    },
+    input: {
+      borderWidth: 1,
+      borderRadius: 10,
+      paddingHorizontal: 14,
+      paddingVertical: 12,
+      fontSize: scaleBySizeClass(16, sizeClass),
+      marginBottom: 8,
+    },
+    errorText: {
+      fontSize: scaleBySizeClass(12, sizeClass),
+      marginLeft: 4,
+      marginBottom: 8,
+    },
+    toggleRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginTop: 12,
+    },
+    toggleLabel: {
+      fontSize: scaleBySizeClass(15, sizeClass),
+      fontWeight: '500',
+    },
+    pillRow: {
+      flexDirection: 'row',
+      gap: 8,
+    },
+    pill: {
+      paddingVertical: 6,
+      paddingHorizontal: 12,
+      borderRadius: 16,
+      borderWidth: 1,
+      minWidth: 50,
+      alignItems: 'center',
+    },
+    pillWithIcon: {
+      flexDirection: 'row',
+      gap: 4,
+    },
+    pillText: {
+      fontSize: scaleBySizeClass(12, sizeClass),
+      fontWeight: '600',
+    },
+    buttonRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginTop: 24,
+      gap: 12,
+    },
+    deleteButton: {
+      padding: 12,
+      borderRadius: 10,
+    },
+    actionButtons: {
+      flex: 1,
+      flexDirection: 'row',
+      gap: 12,
+    },
+    button: {
+      flex: 1,
+      paddingVertical: 12,
+      borderRadius: 10,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    cancelButton: {
+      borderWidth: 1,
+    },
+    buttonText: {
+      fontSize: scaleBySizeClass(15, sizeClass),
+      fontWeight: '600',
+    },
+    // Confirmation styles
+    confirmContainer: {
+      alignItems: 'center',
+      paddingVertical: 8,
+    },
+    confirmTitle: {
+      fontSize: scaleBySizeClass(18, sizeClass),
+      fontWeight: '600',
+      marginTop: 12,
+      marginBottom: 8,
+    },
+    confirmMessage: {
+      fontSize: scaleBySizeClass(14, sizeClass),
+      textAlign: 'center',
+      marginBottom: 20,
+      lineHeight: 20,
+    },
+    confirmButtons: {
+      flexDirection: 'row',
+      gap: 12,
+      width: '100%',
+    },
+    confirmButton: {
+      flex: 1,
+      paddingVertical: 12,
+      borderRadius: 10,
+      alignItems: 'center',
+    },
+    confirmCancelButton: {
+      borderWidth: 1,
+    },
+    confirmButtonText: {
+      fontSize: scaleBySizeClass(15, sizeClass),
+      fontWeight: '600',
+    },
+  });
+}

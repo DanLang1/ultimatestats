@@ -1,5 +1,5 @@
 import { useTheme } from '@/context/ThemeContext';
-import { useLayout } from '@/hooks/useLayout';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { useTimeoutTimer } from '@/hooks/useTimeoutTimer';
 import { useGameStore } from '@/store/gameStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
@@ -10,7 +10,7 @@ import Animated, { FadeIn } from 'react-native-reanimated';
 
 export default function TimeoutModal() {
   const { palette } = useTheme();
-  const { isLandscape } = useLayout();
+  const { sizeClass } = useLayout();
   const { pendingTimeoutModal, events } = useGameStore();
   const {
     formattedTime,
@@ -28,7 +28,7 @@ export default function TimeoutModal() {
   const timeoutTeam =
     lastEvent?.type === 'timeout' ? (lastEvent.team === 'team1' ? 'Team 1' : 'Team 2') : 'Team';
 
-  const styles = createStyles(isLandscape);
+  const styles = createStyles(sizeClass);
   if (!pendingTimeoutModal) {
     return <Redirect href="/" />;
   }
@@ -62,11 +62,19 @@ export default function TimeoutModal() {
             onPress={onClose}
             style={({ pressed }) => [styles.closeBtn, pressed && { opacity: 0.7 }]}
             hitSlop={12}>
-            <MaterialCommunityIcons name="close" size={20} color={palette.textMuted} />
+            <MaterialCommunityIcons
+              name="close"
+              size={scaleBySizeClass(20, sizeClass)}
+              color={palette.textMuted}
+            />
           </Pressable>
 
           <View style={styles.headerCenteredRow}>
-            <MaterialCommunityIcons name="timer-sand" size={16} color={palette.accent} />
+            <MaterialCommunityIcons
+              name="timer-sand"
+              size={scaleBySizeClass(16, sizeClass)}
+              color={palette.accent}
+            />
             <Text style={[styles.headerText, { color: palette.textMuted }]}>TIMEOUT</Text>
             <Text style={[styles.teamText, { color: palette.textMuted }]}>{timeoutTeam}</Text>
           </View>
@@ -80,7 +88,7 @@ export default function TimeoutModal() {
                 style={[styles.timerBtnCompact]}>
                 <MaterialCommunityIcons
                   name="minus"
-                  size={20}
+                  size={scaleBySizeClass(20, sizeClass)}
                   color={!canDecrement ? palette.textMuted : palette.textInverse}
                 />
               </Pressable>
@@ -104,7 +112,7 @@ export default function TimeoutModal() {
                 style={[styles.timerBtnCompact]}>
                 <MaterialCommunityIcons
                   name="plus"
-                  size={20}
+                  size={scaleBySizeClass(20, sizeClass)}
                   color={!canIncrement ? palette.textMuted : palette.textInverse}
                 />
               </Pressable>
@@ -121,7 +129,11 @@ export default function TimeoutModal() {
               <Text style={[styles.continueBtnTextCompact, { color: palette.textOnAccent }]}>
                 END TIMEOUT
               </Text>
-              <MaterialCommunityIcons name="arrow-right" size={16} color={palette.textOnAccent} />
+              <MaterialCommunityIcons
+                name="arrow-right"
+                size={scaleBySizeClass(16, sizeClass)}
+                color={palette.textOnAccent}
+              />
             </Pressable>
           </View>
         </Animated.View>
@@ -130,7 +142,7 @@ export default function TimeoutModal() {
   );
 }
 
-function createStyles(isLandscape: boolean) {
+function createStyles(sizeClass: SizeClass) {
   return StyleSheet.create({
     overlay: {
       flex: 1,
@@ -158,12 +170,12 @@ function createStyles(isLandscape: boolean) {
       zIndex: 10,
     },
     headerText: {
-      fontSize: 12,
+      fontSize: scaleBySizeClass(12, sizeClass),
       fontWeight: '800',
       letterSpacing: 2,
     },
     teamText: {
-      fontSize: 13,
+      fontSize: scaleBySizeClass(13, sizeClass),
       fontWeight: '600',
     },
     content: {
@@ -187,12 +199,12 @@ function createStyles(isLandscape: boolean) {
       minWidth: 100,
     },
     timerValueCompact: {
-      fontSize: 48,
+      fontSize: scaleBySizeClass(48, sizeClass),
       fontWeight: '800',
       fontVariant: ['tabular-nums'],
     },
     timerStateCompact: {
-      fontSize: 10,
+      fontSize: scaleBySizeClass(10, sizeClass),
       fontWeight: '700',
       letterSpacing: 0.5,
     },
@@ -207,7 +219,7 @@ function createStyles(isLandscape: boolean) {
       width: '100%',
     },
     continueBtnTextCompact: {
-      fontSize: 14,
+      fontSize: scaleBySizeClass(14, sizeClass),
       fontWeight: '800',
       letterSpacing: 1,
     },

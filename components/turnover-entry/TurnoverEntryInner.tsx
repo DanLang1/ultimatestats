@@ -1,6 +1,6 @@
 import { AnimatedThemedView } from '@/components/ThemedView';
 import { useTheme } from '@/context/ThemeContext';
-import { useLayout } from '@/hooks/useLayout';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { getActiveRoster, getPlayerName, UNKNOWN_PLAYER_ID } from '@/lib/playerUtils';
 import { Player } from '@/lib/storage/types';
 import { TurnoverType } from '@/store/gameStore.types';
@@ -44,7 +44,8 @@ export function TurnoverEntryInner({
   // For 50/50: track first selected player ID (thrower)
   const [fiftyFiftyFirstPlayerId, setFiftyFiftyFirstPlayerId] = useState<string | null>(null);
   const { palette, themeMode } = useTheme();
-  const { isLandscape } = useLayout();
+  const { isLandscape, sizeClass } = useLayout();
+  const styles = createStyles(sizeClass);
 
   // Only show active players
   const activeRoster = getActiveRoster(roster);
@@ -430,125 +431,127 @@ export function TurnoverEntryInner({
   );
 }
 
-const styles = StyleSheet.create({
-  sheet: {
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    paddingBottom: 10,
-    shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 10,
-  },
-  sheetContent: {
-    padding: 16,
-  },
-  // Compact vertical layout (no add player)
-  compactContainer: {
-    gap: 12,
-  },
-  // Side-by-side layout (with add player)
-  sideBySideContainer: {
-    flexDirection: 'row',
-    gap: 24,
-    alignItems: 'flex-start',
-  },
-  leftColumn: {
-    flex: 1,
-    gap: 12,
-  },
-  rightColumn: {
-    flex: 1,
-  },
-  header: {
-    width: '100%',
-    marginBottom: 8,
-    gap: 8,
-  },
-  teamName: {
-    fontSize: 12,
-    fontWeight: '600',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: 2,
-  },
-  stepLabel: {
-    fontSize: 22,
-    fontWeight: 'bold',
-  },
-  badge: {
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    borderWidth: 1,
-    alignSelf: 'flex-start',
-  },
-  badgeLabel: {
-    fontSize: 10,
-    fontWeight: 'bold',
-    letterSpacing: 1,
-    marginTop: 2,
-  },
-  badgeValue: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  typeButtons: {
-    flexDirection: 'row',
-    gap: 10,
-    flexWrap: 'wrap',
-  },
-  typeButton: {
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 10,
-    borderWidth: 2,
-  },
-  typeButtonText: {
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  addPlayerRow: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  input: {
-    flex: 1,
-    height: 44,
-    borderWidth: 1,
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    fontSize: 15,
-  },
-  addButton: {
-    paddingHorizontal: 16,
-    borderRadius: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  addButtonDisabled: {
-    opacity: 0.5,
-  },
-  addButtonText: {
-    fontWeight: '600',
-    fontSize: 15,
-  },
-  footer: {
-    flexDirection: 'row',
-    justifyContent: 'flex-start',
-    gap: 12,
-    marginTop: 8,
-  },
-  skipButton: {
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 8,
-  },
-  skipText: {
-    fontWeight: '600',
-    fontSize: 15,
-  },
-});
+function createStyles(sizeClass: SizeClass) {
+  return StyleSheet.create({
+    sheet: {
+      borderTopLeftRadius: 24,
+      borderTopRightRadius: 24,
+      paddingBottom: 10,
+      shadowOffset: { width: 0, height: -4 },
+      shadowOpacity: 0.15,
+      shadowRadius: 12,
+      elevation: 10,
+    },
+    sheetContent: {
+      padding: 16,
+    },
+    // Compact vertical layout (no add player)
+    compactContainer: {
+      gap: 12,
+    },
+    // Side-by-side layout (with add player)
+    sideBySideContainer: {
+      flexDirection: 'row',
+      gap: 24,
+      alignItems: 'flex-start',
+    },
+    leftColumn: {
+      flex: 1,
+      gap: 12,
+    },
+    rightColumn: {
+      flex: 1,
+    },
+    header: {
+      width: '100%',
+      marginBottom: 8,
+      gap: 8,
+    },
+    teamName: {
+      fontSize: scaleBySizeClass(12, sizeClass),
+      fontWeight: '600',
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+      marginBottom: 2,
+    },
+    stepLabel: {
+      fontSize: scaleBySizeClass(22, sizeClass),
+      fontWeight: 'bold',
+    },
+    badge: {
+      borderRadius: 8,
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      borderWidth: 1,
+      alignSelf: 'flex-start',
+    },
+    badgeLabel: {
+      fontSize: scaleBySizeClass(10, sizeClass),
+      fontWeight: 'bold',
+      letterSpacing: 1,
+      marginTop: 2,
+    },
+    badgeValue: {
+      fontSize: scaleBySizeClass(14, sizeClass),
+      fontWeight: '600',
+    },
+    typeButtons: {
+      flexDirection: 'row',
+      gap: 10,
+      flexWrap: 'wrap',
+    },
+    typeButton: {
+      paddingVertical: 12,
+      paddingHorizontal: 16,
+      borderRadius: 10,
+      borderWidth: 2,
+    },
+    typeButtonText: {
+      fontSize: scaleBySizeClass(15, sizeClass),
+      fontWeight: '600',
+    },
+    addPlayerRow: {
+      flexDirection: 'row',
+      gap: 8,
+    },
+    input: {
+      flex: 1,
+      height: 44,
+      borderWidth: 1,
+      borderRadius: 10,
+      paddingHorizontal: 12,
+      fontSize: scaleBySizeClass(15, sizeClass),
+    },
+    addButton: {
+      paddingHorizontal: 16,
+      borderRadius: 10,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    addButtonDisabled: {
+      opacity: 0.5,
+    },
+    addButtonText: {
+      fontWeight: '600',
+      fontSize: scaleBySizeClass(15, sizeClass),
+    },
+    footer: {
+      flexDirection: 'row',
+      justifyContent: 'flex-start',
+      gap: 12,
+      marginTop: 8,
+    },
+    skipButton: {
+      paddingVertical: 10,
+      paddingHorizontal: 20,
+      borderRadius: 8,
+    },
+    skipText: {
+      fontWeight: '600',
+      fontSize: scaleBySizeClass(15, sizeClass),
+    },
+  });
+}

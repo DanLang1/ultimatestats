@@ -5,7 +5,7 @@ import PlayingTimeSection from '@/components/view-stats/PlayingTimeSection';
 import RoleDiamond from '@/components/view-stats/RoleDiamond';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { useTheme } from '@/context/ThemeContext';
-import { useLayout } from '@/hooks/useLayout';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { getPlayerName } from '@/lib/playerUtils';
 import {
   computePlayerStats,
@@ -34,8 +34,8 @@ export default function PlayerStats() {
     gameTo,
   } = usePlayerStatsStore();
   const { palette } = useTheme();
-  const { isLandscape } = useLayout();
-  const styles = createStyles(isLandscape);
+  const { isLandscape, sizeClass } = useLayout();
+  const styles = createStyles(isLandscape, sizeClass);
 
   // Derive player name for display
   const playerName = getPlayerName(roster, playerId) ?? playerId ?? '';
@@ -253,14 +253,19 @@ export default function PlayerStats() {
                               : aggregateImpact && aggregateImpact < 0
                                 ? palette.danger
                                 : palette.textMuted,
-                          fontSize: 16,
+                          fontSize: scaleBySizeClass(16, sizeClass),
                           fontWeight: '800',
                         }}>
                         {aggregateImpact && aggregateImpact > 0 ? '+' : ''}
                         {aggregateImpact ?? 0}
                       </Text>
                     </View>
-                    <Text style={{ color: palette.textMuted, fontSize: 12, fontWeight: '600' }}>
+                    <Text
+                      style={{
+                        color: palette.textMuted,
+                        fontSize: scaleBySizeClass(12, sizeClass),
+                        fontWeight: '600',
+                      }}>
                       TOTAL ACROSS {impactGames.length} GAMES
                     </Text>
                   </View>
@@ -269,7 +274,7 @@ export default function PlayerStats() {
                   <Text
                     style={{
                       color: palette.textMuted,
-                      fontSize: 10,
+                      fontSize: scaleBySizeClass(10, sizeClass),
                       fontWeight: '600',
                       marginBottom: 6,
                       letterSpacing: 0.5,
@@ -288,13 +293,22 @@ export default function PlayerStats() {
                       alignSelf: 'flex-start',
                       gap: 6,
                     }}>
-                    <MaterialCommunityIcons name="calendar" size={16} color={palette.textMuted} />
-                    <Text style={{ color: palette.textInverse, fontWeight: '600', fontSize: 14 }}>
+                    <MaterialCommunityIcons
+                      name="calendar"
+                      size={scaleBySizeClass(16, sizeClass)}
+                      color={palette.textMuted}
+                    />
+                    <Text
+                      style={{
+                        color: palette.textInverse,
+                        fontWeight: '600',
+                        fontSize: scaleBySizeClass(14, sizeClass),
+                      }}>
                       {gameLabel}
                     </Text>
                     <MaterialCommunityIcons
                       name="chevron-down"
-                      size={18}
+                      size={scaleBySizeClass(18, sizeClass)}
                       color={palette.textMuted}
                     />
                   </Pressable>
@@ -336,7 +350,7 @@ export default function PlayerStats() {
   );
 }
 
-function createStyles(isLandscape: boolean) {
+function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
   return StyleSheet.create({
     container: {
       flex: 1,
@@ -352,16 +366,16 @@ function createStyles(isLandscape: boolean) {
       alignItems: 'center',
     },
     avatarText: {
-      fontSize: 16,
+      fontSize: scaleBySizeClass(16, sizeClass),
       fontWeight: 'bold',
     },
     playerName: {
-      fontSize: 20,
+      fontSize: scaleBySizeClass(20, sizeClass),
       fontWeight: '800',
       letterSpacing: 0.5,
     },
     playerDetail: {
-      fontSize: 16,
+      fontSize: scaleBySizeClass(16, sizeClass),
       fontWeight: '600',
       marginTop: 4,
     },
@@ -407,7 +421,7 @@ function createStyles(isLandscape: boolean) {
       borderRadius: 8,
     },
     labelText: {
-      fontSize: 10,
+      fontSize: scaleBySizeClass(10, sizeClass),
       fontWeight: '700',
       textTransform: 'uppercase',
       letterSpacing: 0.5,

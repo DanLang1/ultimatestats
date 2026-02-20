@@ -2,7 +2,7 @@ import { ThemedView } from '@/components/ThemedView';
 import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { useTheme } from '@/context/ThemeContext';
-import { useLayout } from '@/hooks/useLayout';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { getContrastingTextColor } from '@/lib/colorUtils';
 import { formatRatioFull, GenderRatio } from '@/lib/genderRatioUtils';
 import { shouldShowLinePrompt } from '@/lib/linePromptUtils';
@@ -21,8 +21,8 @@ type SettingItem = {
 
 export default function PreGameConfirm() {
   const { palette } = useTheme();
-  const { isLandscape } = useLayout();
-  const styles = createStyles(isLandscape);
+  const { isLandscape, sizeClass } = useLayout();
+  const styles = createStyles(isLandscape, sizeClass);
 
   const {
     possession,
@@ -169,7 +169,7 @@ export default function PreGameConfirm() {
             ]}>
             <MaterialCommunityIcons
               name="pencil"
-              size={isLandscape ? 14 : 18}
+              size={scaleBySizeClass(isLandscape ? 14 : 18, sizeClass)}
               color={palette.accent}
             />
             {isLandscape && (
@@ -198,7 +198,11 @@ export default function PreGameConfirm() {
                 <View
                   key={index}
                   style={[styles.settingCard, { backgroundColor: palette.overlay05 }]}>
-                  <MaterialCommunityIcons name={setting.icon} size={16} color={palette.textMuted} />
+                  <MaterialCommunityIcons
+                    name={setting.icon}
+                    size={scaleBySizeClass(16, sizeClass)}
+                    color={palette.textMuted}
+                  />
                   <View style={styles.settingTextContainer}>
                     <Text style={[styles.settingLabel, { color: palette.textMuted }]}>
                       {setting.label}
@@ -303,7 +307,7 @@ export default function PreGameConfirm() {
               ]}>
               <MaterialCommunityIcons
                 name={buttonIcon}
-                size={22}
+                size={scaleBySizeClass(22, sizeClass)}
                 color={canStart ? palette.textOnAccent : palette.textMuted}
               />
               <Text
@@ -321,7 +325,7 @@ export default function PreGameConfirm() {
   );
 }
 
-function createStyles(isLandscape: boolean) {
+function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
   return StyleSheet.create({
     container: {
       flex: 1,
@@ -341,7 +345,7 @@ function createStyles(isLandscape: boolean) {
       gap: 16,
     },
     sectionTitle: {
-      fontSize: 11,
+      fontSize: scaleBySizeClass(11, sizeClass),
       fontWeight: '700',
       letterSpacing: 1.5,
       marginBottom: -4,
@@ -364,12 +368,12 @@ function createStyles(isLandscape: boolean) {
       flex: 1,
     },
     settingLabel: {
-      fontSize: 10,
+      fontSize: scaleBySizeClass(10, sizeClass),
       fontWeight: '600',
       letterSpacing: 0.5,
     },
     settingValue: {
-      fontSize: 16,
+      fontSize: scaleBySizeClass(16, sizeClass),
       fontWeight: '700',
       marginTop: 1,
     },
@@ -394,11 +398,11 @@ function createStyles(isLandscape: boolean) {
       borderWidth: 1,
     },
     editButtonText: {
-      fontSize: 14,
+      fontSize: scaleBySizeClass(14, sizeClass),
       fontWeight: '600',
     },
     lockText: {
-      fontSize: 13,
+      fontSize: scaleBySizeClass(13, sizeClass),
       fontWeight: '600',
     },
     choiceGroup: {
@@ -414,7 +418,7 @@ function createStyles(isLandscape: boolean) {
       marginTop: 8,
     },
     startButtonText: {
-      fontSize: 18,
+      fontSize: scaleBySizeClass(18, sizeClass),
       fontWeight: '700',
       letterSpacing: 0.5,
     },

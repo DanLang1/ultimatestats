@@ -1,5 +1,9 @@
 # Responsive Scaling Tracker
 
+## Status
+
+This rollout is complete and this document is now archived for historical reference in `docs/completed/`.
+
 Track progress for size-class scaling (`small` / `medium` / `large`) across screens and shared components.
 
 ## Status Legend
@@ -26,36 +30,36 @@ Track progress for size-class scaling (`small` / `medium` / `large`) across scre
 - `[x]` `app/(main)/Import.tsx`
 - `[x]` `app/(main)/ImportTeam.tsx`
 - `[x]` `app/(main)/EditRoster.tsx`
-- `[ ]` `app/(main)/GameInfo.tsx`
-- `[ ]` `app/(main)/PreGameConfirm.tsx`
-- `[ ]` `app/(main)/PointTransition.tsx`
-- `[ ]` `app/(main)/ViewStats.tsx`
-- `[ ]` `app/(main)/PlayerStats.tsx`
-- `[ ]` `app/(main)/SavedGameStats.tsx`
-- `[ ]` `app/(main)/LinePresetEditor.tsx`
-- `[ ]` `app/(main)/saved-games/[gameId].tsx`
+- `[x]` `app/(main)/GameInfo.tsx`
+- `[x]` `app/(main)/PreGameConfirm.tsx`
+- `[x]` `app/(main)/PointTransition.tsx`
+- `[x]` `app/(main)/ViewStats.tsx`
+- `[x]` `app/(main)/PlayerStats.tsx`
+- `[x]` `app/(main)/SavedGameStats.tsx`
+- `[x]` `app/(main)/LinePresetEditor.tsx`
+- `[x]` `app/(main)/saved-games/[gameId].tsx`
 
 ### Modal Routes (`app/(modals)`)
 
-- `[ ]` `app/(modals)/StatEntryModal.tsx`
-- `[ ]` `app/(modals)/TurnoverEntryModal.tsx`
-- `[ ]` `app/(modals)/LinePromptModal.tsx`
-- `[ ]` `app/(modals)/NumberPickerModal.tsx`
-- `[ ]` `app/(modals)/TimeoutModal.tsx`
-- `[ ]` `app/(modals)/HalftimeModal.tsx`
-- `[ ]` `app/(modals)/WinModal.tsx`
-- `[ ]` `app/(modals)/PointSummaryModal.tsx`
-- `[ ]` `app/(modals)/EditDurationModal.tsx`
-- `[ ]` `app/(modals)/EditPlayerModal.tsx`
-- `[ ]` `app/(modals)/EditEventModal.tsx`
-- `[ ]` `app/(modals)/GameTimeline.tsx`
-- `[ ]` `app/(modals)/GameSelectorModal.tsx`
-- `[ ]` `app/(modals)/TeamManagementModal.tsx`
+- `[x]` `app/(modals)/StatEntryModal.tsx`
+- `[x]` `app/(modals)/TurnoverEntryModal.tsx`
+- `[x]` `app/(modals)/LinePromptModal.tsx`
+- `[x]` `app/(modals)/NumberPickerModal.tsx`
+- `[x]` `app/(modals)/TimeoutModal.tsx`
+- `[x]` `app/(modals)/HalftimeModal.tsx`
+- `[x]` `app/(modals)/WinModal.tsx`
+- `[x]` `app/(modals)/PointSummaryModal.tsx`
+- `[x]` `app/(modals)/EditDurationModal.tsx`
+- `[x]` `app/(modals)/EditPlayerModal.tsx`
+- `[x]` `app/(modals)/EditEventModal.tsx`
+- `[x]` `app/(modals)/GameTimeline.tsx`
+- `[x]` `app/(modals)/GameSelectorModal.tsx`
+- `[x]` `app/(modals)/TeamManagementModal.tsx`
 
 ### Other Routes
 
-- `[ ]` `app/s/[kind]/[shareId].tsx`
-- `[ ]` `app/+not-found.tsx`
+- `[x]` `app/s/[kind]/[shareId].tsx`
+- `[x]` `app/+not-found.tsx`
 
 ## Shared Components
 
@@ -71,22 +75,22 @@ Track progress for size-class scaling (`small` / `medium` / `large`) across scre
 ### Global UI Primitives
 
 - `[x]` `components/ui/ScreenHeader.tsx`
-- `[ ]` `components/ui/ResponsiveHeaderActions.tsx`
-- `[ ]` `components/ThemedText.tsx`
-- `[ ]` `components/ui/icon-symbol.tsx` / `components/ui/icon-symbol.ios.tsx`
-- `[ ]` `components/ui/AlertModal.tsx`
+- `[x]` `components/ui/ResponsiveHeaderActions.tsx`
+- `[x]` `components/ThemedText.tsx`
+- `[x]` `components/ui/icon-symbol.tsx` / `components/ui/icon-symbol.ios.tsx`
+- `[x]` `components/ui/AlertModal.tsx`
 - `[x]` `components/ui/PlayerChip.tsx`
-- `[ ]` `components/ui/ScoreBadge.tsx`
+- `[x]` `components/ui/ScoreBadge.tsx`
 - `[x]` `components/ui/SegmentedControl.tsx`
 - `[x]` `components/ui/Switch.tsx`
 - `[x]` `components/ui/NumberPicker.tsx`
-- `[ ]` `components/ui/TeamDropdown.tsx`
+- `[x]` `components/ui/TeamDropdown.tsx`
 - `[x]` `components/ui/ColorPicker.tsx`
 
 ## Verification Checklist (Per Item)
 
-- `[ ]` Fonts scale correctly for `medium` and `large`
-- `[ ]` Icons scale correctly for `medium` and `large`
-- `[ ]` No clipping/truncation regressions
-- `[ ]` Tap targets remain usable
-- `[ ]` Portrait + landscape sanity check completed
+- `[x]` Fonts scale correctly for `medium` and `large`
+- `[x]` Icons scale correctly for `medium` and `large`
+- `[x]` No clipping/truncation regressions
+- `[x]` Tap targets remain usable
+- `[x]` Portrait + landscape sanity check completed

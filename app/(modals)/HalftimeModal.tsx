@@ -1,6 +1,6 @@
 import { useTheme } from '@/context/ThemeContext';
 import { useHalftimeTimer } from '@/hooks/useHalftimeTimer';
-import { useLayout } from '@/hooks/useLayout';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { computePlayerStats } from '@/lib/statsUtils';
 import { computeTeamStats } from '@/lib/teamStatsUtils';
 import { useGameStore } from '@/store/gameStore';
@@ -14,7 +14,7 @@ import Animated, { FadeIn } from 'react-native-reanimated';
 
 export default function HalftimeModal() {
   const { palette } = useTheme();
-  const { isLandscape } = useLayout();
+  const { isLandscape, sizeClass } = useLayout();
   const {
     team1Score,
     team2Score,
@@ -37,7 +37,7 @@ export default function HalftimeModal() {
     canIncrement,
   } = useHalftimeTimer();
 
-  const styles = createStyles(isLandscape);
+  const styles = createStyles(isLandscape, sizeClass);
 
   const team1Name = currentTeam?.name ?? 'Team 1';
   const receivingTeamKey = startingPossession === 'team1' ? 'team2' : 'team1';
@@ -84,18 +84,30 @@ export default function HalftimeModal() {
             onPress={() => router.replace('/Dashboard')}
             style={({ pressed }) => [styles.closeBtn, pressed && { opacity: 0.7 }]}
             hitSlop={12}>
-            <MaterialCommunityIcons name="close" size={20} color={palette.textMuted} />
+            <MaterialCommunityIcons
+              name="close"
+              size={scaleBySizeClass(20, sizeClass)}
+              color={palette.textMuted}
+            />
           </Pressable>
 
           <View style={styles.headerRow}>
             <View style={styles.headerSection}>
-              <MaterialCommunityIcons name="timer-sand" size={16} color={palette.accent} />
+              <MaterialCommunityIcons
+                name="timer-sand"
+                size={scaleBySizeClass(16, sizeClass)}
+                color={palette.accent}
+              />
               <Text style={[styles.headerText, { color: palette.textMuted }]}>HALFTIME</Text>
             </View>
 
             {statTrackingEnabled && (
               <>
-                <MaterialCommunityIcons name="disc" size={12} color={palette.accent} />
+                <MaterialCommunityIcons
+                  name="disc"
+                  size={scaleBySizeClass(12, sizeClass)}
+                  color={palette.accent}
+                />
                 <Text
                   style={[styles.receivingText, { color: palette.textMuted }]}
                   numberOfLines={1}
@@ -142,7 +154,7 @@ export default function HalftimeModal() {
                   style={styles.timerBtnCompact}>
                   <MaterialCommunityIcons
                     name="minus"
-                    size={16}
+                    size={scaleBySizeClass(16, sizeClass)}
                     color={!canDecrement ? palette.textMuted : palette.textInverse}
                   />
                 </Pressable>
@@ -166,7 +178,7 @@ export default function HalftimeModal() {
                   style={styles.timerBtnCompact}>
                   <MaterialCommunityIcons
                     name="plus"
-                    size={16}
+                    size={scaleBySizeClass(16, sizeClass)}
                     color={!canIncrement ? palette.textMuted : palette.textInverse}
                   />
                 </Pressable>
@@ -184,7 +196,7 @@ export default function HalftimeModal() {
                       ]}>
                       <MaterialCommunityIcons
                         name="account-switch"
-                        size={14}
+                        size={scaleBySizeClass(14, sizeClass)}
                         color={palette.accent}
                       />
                       <Text style={[styles.setLineBtnText, { color: palette.textInverse }]}>
@@ -204,7 +216,7 @@ export default function HalftimeModal() {
                     </Text>
                     <MaterialCommunityIcons
                       name="arrow-right"
-                      size={16}
+                      size={scaleBySizeClass(16, sizeClass)}
                       color={palette.textOnAccent}
                     />
                   </Pressable>
@@ -282,7 +294,7 @@ export default function HalftimeModal() {
                       ]}>
                       <MaterialCommunityIcons
                         name="account-switch"
-                        size={14}
+                        size={scaleBySizeClass(14, sizeClass)}
                         color={palette.accent}
                       />
                       <Text style={[styles.setLineBtnText, { color: palette.textInverse }]}>
@@ -302,7 +314,7 @@ export default function HalftimeModal() {
                     </Text>
                     <MaterialCommunityIcons
                       name="arrow-right"
-                      size={16}
+                      size={scaleBySizeClass(16, sizeClass)}
                       color={palette.textOnAccent}
                     />
                   </Pressable>
@@ -316,7 +328,7 @@ export default function HalftimeModal() {
   );
 }
 
-function createStyles(isLandscape: boolean) {
+function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
   return StyleSheet.create({
     overlay: {
       flex: 1,
@@ -389,13 +401,13 @@ function createStyles(isLandscape: boolean) {
       gap: 8,
     },
     receivingText: {
-      fontSize: 13,
+      fontSize: scaleBySizeClass(13, sizeClass),
       fontWeight: '600',
       flexShrink: 1,
       maxWidth: isLandscape ? 260 : 180,
     },
     headerText: {
-      fontSize: 12,
+      fontSize: scaleBySizeClass(12, sizeClass),
       fontWeight: '800',
       letterSpacing: 2,
     },
@@ -405,13 +417,13 @@ function createStyles(isLandscape: boolean) {
       gap: 12,
     },
     scoreNumber: {
-      fontSize: 64,
+      fontSize: scaleBySizeClass(64, sizeClass),
       fontWeight: '900',
       fontVariant: ['tabular-nums'],
       lineHeight: 70,
     },
     scoreDivider: {
-      fontSize: 32,
+      fontSize: scaleBySizeClass(32, sizeClass),
       fontWeight: '200',
       marginBottom: 8,
       marginHorizontal: 8,
@@ -420,7 +432,7 @@ function createStyles(isLandscape: boolean) {
       alignItems: 'center',
     },
     teamNameLabel: {
-      fontSize: 11,
+      fontSize: scaleBySizeClass(11, sizeClass),
       fontWeight: '700',
       textTransform: 'uppercase',
       letterSpacing: 0.5,
@@ -444,12 +456,12 @@ function createStyles(isLandscape: boolean) {
       minWidth: 90,
     },
     timerValueCompact: {
-      fontSize: 36,
+      fontSize: scaleBySizeClass(36, sizeClass),
       fontWeight: '800',
       fontVariant: ['tabular-nums'],
     },
     timerStateCompact: {
-      fontSize: 9,
+      fontSize: scaleBySizeClass(9, sizeClass),
       fontWeight: '700',
       letterSpacing: 0.5,
     },
@@ -470,7 +482,7 @@ function createStyles(isLandscape: boolean) {
       borderWidth: 1,
     },
     setLineBtnText: {
-      fontSize: 13,
+      fontSize: scaleBySizeClass(13, sizeClass),
       fontWeight: '800',
       letterSpacing: 0.5,
     },
@@ -485,11 +497,11 @@ function createStyles(isLandscape: boolean) {
       alignItems: 'center',
     },
     statValueCompact: {
-      fontSize: 20,
+      fontSize: scaleBySizeClass(20, sizeClass),
       fontWeight: '800',
     },
     statLabelCompact: {
-      fontSize: 10,
+      fontSize: scaleBySizeClass(10, sizeClass),
       fontWeight: '700',
       marginTop: 2,
       letterSpacing: 0.5,
@@ -511,13 +523,13 @@ function createStyles(isLandscape: boolean) {
       paddingVertical: 2,
     },
     performerRankCompact: {
-      fontSize: 12,
+      fontSize: scaleBySizeClass(12, sizeClass),
       fontWeight: '800',
       width: 16,
     },
     performerNameCompact: {
       flex: 1,
-      fontSize: 13,
+      fontSize: scaleBySizeClass(13, sizeClass),
       fontWeight: '600',
     },
     performerBadge: {
@@ -528,7 +540,7 @@ function createStyles(isLandscape: boolean) {
       alignItems: 'center',
     },
     performerStatCompact: {
-      fontSize: 11,
+      fontSize: scaleBySizeClass(11, sizeClass),
       fontWeight: '800',
       fontVariant: ['tabular-nums'],
     },
@@ -543,7 +555,7 @@ function createStyles(isLandscape: boolean) {
       borderRadius: 8,
     },
     continueBtnTextCompact: {
-      fontSize: 14,
+      fontSize: scaleBySizeClass(14, sizeClass),
       fontWeight: '800',
       letterSpacing: 1,
     },

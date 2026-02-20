@@ -15,7 +15,6 @@ interface AggregateGamesListProps {
   onSelectTeam: (teamId: string) => void; // Pass team ID
   onBackToTeams: () => void;
   onToggleGameSelection: (gameId: string) => void;
-  onViewAggregated: () => void;
   onToggleAllGames: (select: boolean) => void;
 }
 
@@ -32,7 +31,6 @@ export default function AggregateGamesList({
   selectedGameIds,
   onSelectTeam,
   onToggleGameSelection,
-  onViewAggregated,
   onToggleAllGames,
 }: AggregateGamesListProps) {
   const { palette } = useTheme();

@@ -1,5 +1,6 @@
 import { useAlert } from '@/components/ui/AlertProvider';
 import { useTheme } from '@/context/ThemeContext';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React, { useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -16,6 +17,7 @@ interface TeamDropdownProps {
   onDelete?: (option: TeamDropdownOption) => void;
   buttonStyle?: object;
   disabled?: boolean;
+  sizeClass?: SizeClass;
 }
 
 export function TeamDropdown({
@@ -25,10 +27,14 @@ export function TeamDropdown({
   onDelete,
   buttonStyle,
   disabled = false,
+  sizeClass,
 }: TeamDropdownProps) {
   const [visible, setVisible] = useState(false);
   const { showAlert } = useAlert();
   const { palette } = useTheme();
+  const layout = useLayout();
+  const resolvedSizeClass = sizeClass ?? layout.sizeClass;
+  const styles = createStyles(resolvedSizeClass);
 
   const handleSelect = (option: TeamDropdownOption) => {
     onSelect(option);
@@ -63,9 +69,17 @@ export function TeamDropdown({
           disabled && styles.buttonDisabled,
         ]}
         onPress={() => !disabled && setVisible(true)}>
-        <MaterialCommunityIcons name="folder-account-outline" size={18} color={palette.accent} />
+        <MaterialCommunityIcons
+          name="folder-account-outline"
+          size={scaleBySizeClass(18, resolvedSizeClass)}
+          color={palette.accent}
+        />
         <Text style={[styles.buttonText, { color: palette.accent }]}>{placeholder}</Text>
-        <MaterialCommunityIcons name="chevron-down" size={16} color={palette.textMuted} />
+        <MaterialCommunityIcons
+          name="chevron-down"
+          size={scaleBySizeClass(16, resolvedSizeClass)}
+          color={palette.textMuted}
+        />
       </Pressable>
 
       <Modal
@@ -84,7 +98,11 @@ export function TeamDropdown({
             <View style={[styles.dropdownHeader, { borderBottomColor: palette.overlay10 }]}>
               <Text style={[styles.dropdownTitle, { color: palette.textMuted }]}>SAVED TEAMS</Text>
               <Pressable onPress={() => setVisible(false)} hitSlop={12}>
-                <MaterialCommunityIcons name="close" size={20} color={palette.textMuted} />
+                <MaterialCommunityIcons
+                  name="close"
+                  size={scaleBySizeClass(20, resolvedSizeClass)}
+                  color={palette.textMuted}
+                />
               </Pressable>
             </View>
 
@@ -113,7 +131,7 @@ export function TeamDropdown({
                         onPress={() => handleSelect(option)}>
                         <MaterialCommunityIcons
                           name={isNewTeam ? 'plus-circle-outline' : 'account-group'}
-                          size={20}
+                          size={scaleBySizeClass(20, resolvedSizeClass)}
                           color={isNewTeam ? palette.success : palette.textMuted}
                         />
                         <Text
@@ -135,7 +153,7 @@ export function TeamDropdown({
                           hitSlop={8}>
                           <MaterialCommunityIcons
                             name="trash-can-outline"
-                            size={18}
+                            size={scaleBySizeClass(18, resolvedSizeClass)}
                             color={palette.danger}
                           />
                         </Pressable>
@@ -152,91 +170,93 @@ export function TeamDropdown({
   );
 }
 
-const styles = StyleSheet.create({
-  button: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    height: 48,
-    paddingHorizontal: 12,
-    borderRadius: 10,
-    borderWidth: 1,
-  },
-  buttonPressed: {
-    opacity: 0.8,
-  },
-  buttonDisabled: {
-    opacity: 0.5,
-  },
-  buttonText: {
-    flex: 1,
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  overlay: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 40,
-  },
-  dropdown: {
-    width: '100%',
-    maxWidth: 320,
-    maxHeight: 400,
-    borderRadius: 16,
-    borderWidth: 1,
-    overflow: 'hidden',
-  },
-  dropdownHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    borderBottomWidth: 1,
-  },
-  dropdownTitle: {
-    fontSize: 12,
-    fontWeight: '700',
-    letterSpacing: 1,
-  },
-  emptyState: {
-    padding: 32,
-    alignItems: 'center',
-    gap: 8,
-  },
-  emptyText: {
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  emptyHint: {
-    fontSize: 13,
-  },
-  optionsList: {
-    maxHeight: 300,
-  },
-  option: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-  },
-  optionText: {
-    flex: 1,
-    fontSize: 16,
-    fontWeight: '500',
-  },
-  newTeamText: {
-    fontWeight: '600',
-  },
-  optionRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderBottomWidth: 1,
-  },
-  deleteButton: {
-    padding: 14,
-  },
-});
+function createStyles(sizeClass: SizeClass) {
+  return StyleSheet.create({
+    button: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      height: 48,
+      paddingHorizontal: 12,
+      borderRadius: 10,
+      borderWidth: 1,
+    },
+    buttonPressed: {
+      opacity: 0.8,
+    },
+    buttonDisabled: {
+      opacity: 0.5,
+    },
+    buttonText: {
+      flex: 1,
+      fontSize: scaleBySizeClass(13, sizeClass),
+      fontWeight: '600',
+    },
+    overlay: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: 40,
+    },
+    dropdown: {
+      width: '100%',
+      maxWidth: 320,
+      maxHeight: 400,
+      borderRadius: 16,
+      borderWidth: 1,
+      overflow: 'hidden',
+    },
+    dropdownHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: 16,
+      paddingVertical: 14,
+      borderBottomWidth: 1,
+    },
+    dropdownTitle: {
+      fontSize: scaleBySizeClass(12, sizeClass),
+      fontWeight: '700',
+      letterSpacing: 1,
+    },
+    emptyState: {
+      padding: 32,
+      alignItems: 'center',
+      gap: 8,
+    },
+    emptyText: {
+      fontSize: scaleBySizeClass(15, sizeClass),
+      fontWeight: '600',
+    },
+    emptyHint: {
+      fontSize: scaleBySizeClass(13, sizeClass),
+    },
+    optionsList: {
+      maxHeight: 300,
+    },
+    option: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+      paddingVertical: 14,
+      paddingHorizontal: 16,
+    },
+    optionText: {
+      flex: 1,
+      fontSize: scaleBySizeClass(16, sizeClass),
+      fontWeight: '500',
+    },
+    newTeamText: {
+      fontWeight: '600',
+    },
+    optionRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      borderBottomWidth: 1,
+    },
+    deleteButton: {
+      padding: 14,
+    },
+  });
+}

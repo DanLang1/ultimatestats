@@ -1,7 +1,7 @@
 import { ModalPlayerGrid, SortDirection } from '@/components/lines/ModalPlayerGrid';
 import { useTheme } from '@/context/ThemeContext';
 import { useIsGameActive } from '@/hooks/useIsGameActive';
-import { useLayout } from '@/hooks/useLayout';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import {
   checkLineRatio,
   formatRatio,
@@ -20,7 +20,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 export default function LinePromptModal() {
   const { palette } = useTheme();
   const insets = useSafeAreaInsets();
-  const { isLandscape } = useLayout();
+  const { isLandscape, sizeClass } = useLayout();
+  const styles = createStyles(sizeClass);
   const { genderRatioEnabled, firstPointRatio, numPlayers } = useSettingsStore();
   const { currentTeam, currentPoint, currentLine, pointLines, setCurrentLine, recordLineForPoint } =
     useGameStore();
@@ -131,7 +132,11 @@ export default function LinePromptModal() {
               onPress={handleSkip}
               style={({ pressed }) => [styles.closeBtn, pressed && { opacity: 0.7 }]}
               hitSlop={12}>
-              <MaterialCommunityIcons name="close" size={20} color={palette.modalTextMuted} />
+              <MaterialCommunityIcons
+                name="close"
+                size={scaleBySizeClass(20, sizeClass)}
+                color={palette.modalTextMuted}
+              />
             </Pressable>
 
             {/* Presets (scrollable) */}
@@ -180,7 +185,7 @@ export default function LinePromptModal() {
                     ]}>
                     <MaterialCommunityIcons
                       name="pencil"
-                      size={11}
+                      size={scaleBySizeClass(11, sizeClass)}
                       color={palette.modalTextMuted}
                     />
                   </Pressable>
@@ -193,7 +198,11 @@ export default function LinePromptModal() {
                     { borderColor: palette.overlay15, backgroundColor: palette.overlay08 },
                     pressed && { opacity: 0.8 },
                   ]}>
-                  <MaterialCommunityIcons name="plus" size={11} color={palette.modalTextMuted} />
+                  <MaterialCommunityIcons
+                    name="plus"
+                    size={scaleBySizeClass(11, sizeClass)}
+                    color={palette.modalTextMuted}
+                  />
                   <Text style={[styles.presetChipText, { color: palette.modalTextMuted }]}>
                     Preset
                   </Text>
@@ -212,14 +221,18 @@ export default function LinePromptModal() {
                 ]}>
                 <MaterialCommunityIcons
                   name={sortDirection === 'asc' ? 'sort-ascending' : 'sort-descending'}
-                  size={16}
+                  size={scaleBySizeClass(16, sizeClass)}
                   color={palette.modalTextMuted}
                 />
               </Pressable>
               {showRatioWarning && (
                 <View
                   style={[styles.ratioWarningChip, { backgroundColor: palette.warning + '20' }]}>
-                  <MaterialCommunityIcons name="alert" size={16} color={palette.warning} />
+                  <MaterialCommunityIcons
+                    name="alert"
+                    size={scaleBySizeClass(16, sizeClass)}
+                    color={palette.warning}
+                  />
                   <Text style={[styles.ratioWarningText, { color: palette.warning }]}>
                     {actualMajorityLabel}
                   </Text>
@@ -238,7 +251,11 @@ export default function LinePromptModal() {
                 ]}
                 hitSlop={8}>
                 {canConfirm ? (
-                  <MaterialCommunityIcons name="check" size={16} color={palette.textOnAccent} />
+                  <MaterialCommunityIcons
+                    name="check"
+                    size={scaleBySizeClass(16, sizeClass)}
+                    color={palette.textOnAccent}
+                  />
                 ) : (
                   <Text style={[styles.countText, { color: palette.modalTextMuted }]}>
                     {selectedIds.length}/{numPlayers}
@@ -341,137 +358,139 @@ export default function LinePromptModal() {
   );
 }
 
-const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  sheet: {
-    borderRadius: 16,
-    padding: 12,
-    width: '100%',
-    maxWidth: 600,
-    maxHeight: '90%',
-    minHeight: 300,
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 12,
-    elevation: 8,
-  },
-  playerSection: {
-    flex: 1,
-    minHeight: 150,
-    overflow: 'hidden',
-  },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 10,
-    gap: 8,
-  },
-  closeBtn: {
-    padding: 4,
-  },
-  presetsSection: {
-    flex: 1,
-  },
-  presetsScrollContent: {
-    gap: 5,
-  },
-  presetChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-    borderRadius: 10,
-    borderWidth: 1,
-    gap: 3,
-  },
-  presetChipText: {
-    fontSize: 10,
-    fontWeight: '600',
-  },
-  editPresetsChip: {
-    paddingHorizontal: 6,
-    backgroundColor: 'transparent',
-  },
-  rightSection: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  sortBtn: {
-    paddingVertical: 3,
-    paddingHorizontal: 6,
-    borderRadius: 8,
-    borderWidth: 1,
-  },
-  pointLabel: {
-    fontSize: 11,
-    fontWeight: '600',
-  },
-  confirmBtn: {
-    paddingVertical: 5,
-    paddingHorizontal: 8,
-    borderRadius: 10,
-    minWidth: 36,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  countText: {
-    fontSize: 10,
-    fontWeight: '700',
-  },
-  ratioWarningChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 3,
-    paddingVertical: 3,
-    paddingHorizontal: 6,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: 'transparent',
-  },
-  ratioWarningText: {
-    fontSize: 9,
-    fontWeight: '700',
-  },
-  subTypeSection: {
-    marginBottom: 8,
-    gap: 4,
-  },
-  subTypeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  subTypeChip: {
-    paddingVertical: 4,
-    paddingHorizontal: 10,
-    borderRadius: 10,
-    borderWidth: 1,
-  },
-  subTypeChipText: {
-    fontSize: 11,
-    fontWeight: '600',
-  },
-  subTypeInfoBtn: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  subTypeInfoText: {
-    fontSize: 10,
-    fontWeight: '700',
-  },
-  subTypeHint: {
-    fontSize: 10,
-    fontStyle: 'italic',
-  },
-});
+function createStyles(sizeClass: SizeClass) {
+  return StyleSheet.create({
+    overlay: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    sheet: {
+      borderRadius: 16,
+      padding: 12,
+      width: '100%',
+      maxWidth: 600,
+      maxHeight: '90%',
+      minHeight: 300,
+      overflow: 'hidden',
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.25,
+      shadowRadius: 12,
+      elevation: 8,
+    },
+    playerSection: {
+      flex: 1,
+      minHeight: 150,
+      overflow: 'hidden',
+    },
+    headerRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: 10,
+      gap: 8,
+    },
+    closeBtn: {
+      padding: 4,
+    },
+    presetsSection: {
+      flex: 1,
+    },
+    presetsScrollContent: {
+      gap: 5,
+    },
+    presetChip: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: 4,
+      paddingHorizontal: 8,
+      borderRadius: 10,
+      borderWidth: 1,
+      gap: 3,
+    },
+    presetChipText: {
+      fontSize: scaleBySizeClass(10, sizeClass),
+      fontWeight: '600',
+    },
+    editPresetsChip: {
+      paddingHorizontal: 6,
+      backgroundColor: 'transparent',
+    },
+    rightSection: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+    },
+    sortBtn: {
+      paddingVertical: 3,
+      paddingHorizontal: 6,
+      borderRadius: 8,
+      borderWidth: 1,
+    },
+    pointLabel: {
+      fontSize: scaleBySizeClass(11, sizeClass),
+      fontWeight: '600',
+    },
+    confirmBtn: {
+      paddingVertical: 5,
+      paddingHorizontal: 8,
+      borderRadius: 10,
+      minWidth: 36,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    countText: {
+      fontSize: scaleBySizeClass(10, sizeClass),
+      fontWeight: '700',
+    },
+    ratioWarningChip: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 3,
+      paddingVertical: 3,
+      paddingHorizontal: 6,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: 'transparent',
+    },
+    ratioWarningText: {
+      fontSize: scaleBySizeClass(9, sizeClass),
+      fontWeight: '700',
+    },
+    subTypeSection: {
+      marginBottom: 8,
+      gap: 4,
+    },
+    subTypeRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+    },
+    subTypeChip: {
+      paddingVertical: 4,
+      paddingHorizontal: 10,
+      borderRadius: 10,
+      borderWidth: 1,
+    },
+    subTypeChipText: {
+      fontSize: scaleBySizeClass(11, sizeClass),
+      fontWeight: '600',
+    },
+    subTypeInfoBtn: {
+      width: 18,
+      height: 18,
+      borderRadius: 9,
+      borderWidth: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    subTypeInfoText: {
+      fontSize: scaleBySizeClass(10, sizeClass),
+      fontWeight: '700',
+    },
+    subTypeHint: {
+      fontSize: scaleBySizeClass(10, sizeClass),
+      fontStyle: 'italic',
+    },
+  });
+}

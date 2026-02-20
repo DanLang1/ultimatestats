@@ -1,4 +1,5 @@
 import { useTheme } from '@/context/ThemeContext';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { getImpactStats, hasImpactTimelineData } from '@/lib/statsUtils';
 import { usePlayerStatsStore } from '@/store/playerStatsStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
@@ -10,6 +11,8 @@ export default function GameSelectorModal() {
   const { games, selectedGameId, setSelectedGameId, playerId, team, roster } =
     usePlayerStatsStore();
   const { palette } = useTheme();
+  const { sizeClass } = useLayout();
+  const styles = createStyles(sizeClass);
 
   // If no games, just return null
   if (!games || games.length === 0) {
@@ -52,7 +55,11 @@ export default function GameSelectorModal() {
           <View style={[styles.header, { borderBottomColor: palette.overlay10 }]}>
             <Text style={[styles.headerTitle, { color: palette.textMuted }]}>SELECT GAME</Text>
             <Pressable onPress={handleDismiss} hitSlop={12}>
-              <MaterialCommunityIcons name="close" size={24} color={palette.textMuted} />
+              <MaterialCommunityIcons
+                name="close"
+                size={scaleBySizeClass(24, sizeClass)}
+                color={palette.textMuted}
+              />
             </Pressable>
           </View>
 
@@ -95,7 +102,7 @@ export default function GameSelectorModal() {
                         {isSelected && (
                           <MaterialCommunityIcons
                             name="check"
-                            size={14}
+                            size={scaleBySizeClass(14, sizeClass)}
                             color={palette.textOnAccent}
                           />
                         )}
@@ -134,81 +141,83 @@ export default function GameSelectorModal() {
   );
 }
 
-const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    justifyContent: 'flex-end',
-  },
-  sheet: {
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    maxHeight: '80%',
-  },
-  handleContainer: {
-    alignItems: 'center',
-    paddingVertical: 12,
-  },
-  handle: {
-    width: 40,
-    height: 4,
-    borderRadius: 2,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingBottom: 12,
-    borderBottomWidth: 1,
-  },
-  headerTitle: {
-    fontSize: 12,
-    fontWeight: '700',
-    letterSpacing: 1,
-  },
-  scrollView: {
-    paddingHorizontal: 12,
-    paddingTop: 8,
-  },
-  emptyState: {
-    paddingHorizontal: 16,
-    paddingVertical: 20,
-  },
-  emptyText: {
-    textAlign: 'center',
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  gameRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 16,
-    paddingHorizontal: 16,
-    borderRadius: 12,
-    marginBottom: 4,
-    gap: 12,
-  },
-  radio: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    borderWidth: 2,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  gameInfo: {
-    flex: 1,
-  },
-  opponentText: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  dateText: {
-    fontSize: 13,
-    marginTop: 2,
-  },
-  scoreText: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-});
+function createStyles(sizeClass: SizeClass) {
+  return StyleSheet.create({
+    overlay: {
+      flex: 1,
+      justifyContent: 'flex-end',
+    },
+    sheet: {
+      borderTopLeftRadius: 20,
+      borderTopRightRadius: 20,
+      maxHeight: '80%',
+    },
+    handleContainer: {
+      alignItems: 'center',
+      paddingVertical: 12,
+    },
+    handle: {
+      width: 40,
+      height: 4,
+      borderRadius: 2,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 20,
+      paddingBottom: 12,
+      borderBottomWidth: 1,
+    },
+    headerTitle: {
+      fontSize: scaleBySizeClass(12, sizeClass),
+      fontWeight: '700',
+      letterSpacing: 1,
+    },
+    scrollView: {
+      paddingHorizontal: 12,
+      paddingTop: 8,
+    },
+    emptyState: {
+      paddingHorizontal: 16,
+      paddingVertical: 20,
+    },
+    emptyText: {
+      textAlign: 'center',
+      fontSize: scaleBySizeClass(14, sizeClass),
+      fontWeight: '500',
+    },
+    gameRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: 16,
+      paddingHorizontal: 16,
+      borderRadius: 12,
+      marginBottom: 4,
+      gap: 12,
+    },
+    radio: {
+      width: 22,
+      height: 22,
+      borderRadius: 11,
+      borderWidth: 2,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    gameInfo: {
+      flex: 1,
+    },
+    opponentText: {
+      fontSize: scaleBySizeClass(16, sizeClass),
+      fontWeight: '600',
+    },
+    dateText: {
+      fontSize: scaleBySizeClass(13, sizeClass),
+      marginTop: 2,
+    },
+    scoreText: {
+      fontSize: scaleBySizeClass(14, sizeClass),
+      fontWeight: '600',
+    },
+  });
+}

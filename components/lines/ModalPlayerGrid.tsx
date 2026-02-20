@@ -1,6 +1,6 @@
 import { PlayerChip } from '@/components/ui/PlayerChip';
 import { useTheme } from '@/context/ThemeContext';
-import { useLayout } from '@/hooks/useLayout';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { computePlayingTime, formatPlayingTime } from '@/lib/lineUtils';
 import { Player, PointLineRecord } from '@/lib/storage/types';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
@@ -109,8 +109,8 @@ export function ModalPlayerGrid({
   currentPoint,
 }: ModalPlayerGridProps) {
   const { palette } = useTheme();
-  const { isLandscape } = useLayout();
-  const styles = baseStyles;
+  const { isLandscape, sizeClass } = useLayout();
+  const styles = createStyles(sizeClass);
 
   // Determine colors based on context
   const labelColor = useModalColorsProp ? palette.modalTextMuted : palette.textMuted;
@@ -219,7 +219,11 @@ export function ModalPlayerGrid({
   if (roster.length === 0) {
     return (
       <View style={styles.emptyState}>
-        <MaterialCommunityIcons name="account-group-outline" size={40} color={emptyTextColor} />
+        <MaterialCommunityIcons
+          name="account-group-outline"
+          size={scaleBySizeClass(40, sizeClass)}
+          color={emptyTextColor}
+        />
         <Text style={[styles.emptyText, { color: emptyTextColor }]}>No active players</Text>
         <Text style={[styles.emptyHint, { color: emptyTextColor }]}>
           Add players in Edit Roster
@@ -305,70 +309,72 @@ export function ModalPlayerGrid({
   );
 }
 
-const baseStyles = StyleSheet.create({
-  container: {
-    flex: 1,
-    overflow: 'hidden',
-  },
-  scrollContent: {
-    paddingVertical: 4,
-    paddingBottom: 12,
-  },
-  multiColumn: {
-    flexDirection: 'row',
-    gap: 6,
-    flexWrap: 'wrap',
-    rowGap: 12,
-  },
-  secondaryMargin: {
-    marginTop: 14,
-  },
-  splitColumnWrapper: {
-    gap: 5,
-  },
-  splitColumnsRow: {
-    flexDirection: 'row',
-    gap: 6,
-  },
-  splitColumn: {
-    flex: 1,
-    gap: 6,
-    alignItems: 'stretch',
-  },
-  secondarySplitWrapper: {
-    marginTop: 14,
-  },
-  columnLandscape: {
-    flex: 1,
-    gap: 5,
-  },
-  columnPortrait: {
-    flex: 1,
-    minWidth: '45%',
-    gap: 5,
-  },
-  columnLabel: {
-    fontSize: 9,
-    fontWeight: '700',
-    letterSpacing: 0.5,
-    textTransform: 'uppercase',
-    textAlign: 'center',
-  },
-  columnChips: {
-    gap: 6,
-    alignItems: 'stretch',
-  },
-  emptyState: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 40,
-    gap: 8,
-  },
-  emptyText: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  emptyHint: {
-    fontSize: 13,
-  },
-});
+function createStyles(sizeClass: SizeClass) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      overflow: 'hidden',
+    },
+    scrollContent: {
+      paddingVertical: 4,
+      paddingBottom: 12,
+    },
+    multiColumn: {
+      flexDirection: 'row',
+      gap: 6,
+      flexWrap: 'wrap',
+      rowGap: 12,
+    },
+    secondaryMargin: {
+      marginTop: 14,
+    },
+    splitColumnWrapper: {
+      gap: 5,
+    },
+    splitColumnsRow: {
+      flexDirection: 'row',
+      gap: 6,
+    },
+    splitColumn: {
+      flex: 1,
+      gap: 6,
+      alignItems: 'stretch',
+    },
+    secondarySplitWrapper: {
+      marginTop: 14,
+    },
+    columnLandscape: {
+      flex: 1,
+      gap: 5,
+    },
+    columnPortrait: {
+      flex: 1,
+      minWidth: '45%',
+      gap: 5,
+    },
+    columnLabel: {
+      fontSize: scaleBySizeClass(9, sizeClass),
+      fontWeight: '700',
+      letterSpacing: 0.5,
+      textTransform: 'uppercase',
+      textAlign: 'center',
+    },
+    columnChips: {
+      gap: 6,
+      alignItems: 'stretch',
+    },
+    emptyState: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: 40,
+      gap: 8,
+    },
+    emptyText: {
+      fontSize: scaleBySizeClass(16, sizeClass),
+      fontWeight: '600',
+    },
+    emptyHint: {
+      fontSize: scaleBySizeClass(13, sizeClass),
+    },
+  });
+}

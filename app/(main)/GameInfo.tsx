@@ -7,7 +7,7 @@ import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { useTheme } from '@/context/ThemeContext';
 import { useEndGame } from '@/hooks/useEndGame';
 import { useGameTimer } from '@/hooks/useGameTimer';
-import { useLayout } from '@/hooks/useLayout';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { usePointTimer } from '@/hooks/usePointTimer';
 import { formatRatioFull, getExpectedRatio, getSequenceNumber } from '@/lib/genderRatioUtils';
 import { useGameStore } from '@/store/gameStore';
@@ -18,8 +18,8 @@ import React, { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 export default function GameInfoScreen() {
-  const { isLandscape } = useLayout();
-  const styles = createStyles(isLandscape);
+  const { isLandscape, sizeClass } = useLayout();
+  const styles = createStyles(isLandscape, sizeClass);
   const {
     gameTo,
     currentTeam,
@@ -88,6 +88,13 @@ export default function GameInfoScreen() {
   };
 
   const showPointTimer = pointTimerEnabled && pointIsActive;
+  const hardcapIconSize = scaleBySizeClass(18, sizeClass);
+  const universeIconSize = scaleBySizeClass(20, sizeClass);
+  const softcapIconSize = scaleBySizeClass(16, sizeClass);
+  const pointTimerControlIconSize = scaleBySizeClass(24, sizeClass);
+  const pointTimerRestartIconSize = scaleBySizeClass(22, sizeClass);
+  const ratioInfoIconSize = scaleBySizeClass(18, sizeClass);
+  const actionIconSize = scaleBySizeClass(20, sizeClass);
 
   return (
     <ThemedView style={[styles.container, { backgroundColor: palette.primary }]}>
@@ -123,14 +130,18 @@ export default function GameInfoScreen() {
               {isHardcap ? (
                 <>
                   <View style={styles.hardcapLabelRow}>
-                    <MaterialCommunityIcons name="hard-hat" size={18} color={palette.accent} />
+                    <MaterialCommunityIcons
+                      name="hard-hat"
+                      size={hardcapIconSize}
+                      color={palette.accent}
+                    />
                     <Text style={[styles.centerLabel, { color: palette.accent }]}>HARDCAP</Text>
                   </View>
                   {team1Score === team2Score ? (
                     <View style={styles.capStatusBadge}>
                       <MaterialCommunityIcons
                         name="sword-cross"
-                        size={20}
+                        size={universeIconSize}
                         color={palette.textInverse}
                       />
                       <Text style={[styles.universePointText, { color: palette.textInverse }]}>
@@ -171,7 +182,7 @@ export default function GameInfoScreen() {
                     <View style={styles.capStatusBadge}>
                       <MaterialCommunityIcons
                         name="hat-fedora"
-                        size={16}
+                        size={softcapIconSize}
                         color={palette.textInverse}
                       />
                       <Text style={[styles.capStatusText, { color: palette.textInverse }]}>
@@ -183,7 +194,7 @@ export default function GameInfoScreen() {
                     <View style={styles.capStatusBadge}>
                       <FlashingIcon
                         name="hat-fedora"
-                        size={16}
+                        size={softcapIconSize}
                         color={palette.textInverse}
                         isFlashing
                       />
@@ -205,7 +216,7 @@ export default function GameInfoScreen() {
                     <Pressable onPress={togglePause} hitSlop={8}>
                       <MaterialCommunityIcons
                         name={isPaused ? 'play' : 'pause'}
-                        size={24}
+                        size={pointTimerControlIconSize}
                         color={isPaused ? palette.warning : palette.textMuted}
                       />
                     </Pressable>
@@ -220,7 +231,7 @@ export default function GameInfoScreen() {
                       <Pressable onPress={confirmRestartPointTimer} hitSlop={8}>
                         <MaterialCommunityIcons
                           name="restart"
-                          size={22}
+                          size={pointTimerRestartIconSize}
                           color={palette.textMuted}
                         />
                       </Pressable>
@@ -288,14 +299,18 @@ export default function GameInfoScreen() {
               {isHardcap ? (
                 <>
                   <View style={styles.hardcapLabelRow}>
-                    <MaterialCommunityIcons name="hard-hat" size={18} color={palette.accent} />
+                    <MaterialCommunityIcons
+                      name="hard-hat"
+                      size={hardcapIconSize}
+                      color={palette.accent}
+                    />
                     <Text style={[styles.centerLabel, { color: palette.accent }]}>HARDCAP</Text>
                   </View>
                   {team1Score === team2Score ? (
                     <View style={styles.capStatusBadge}>
                       <MaterialCommunityIcons
                         name="sword-cross"
-                        size={20}
+                        size={universeIconSize}
                         color={palette.textInverse}
                       />
                       <Text style={[styles.universePointText, { color: palette.textInverse }]}>
@@ -336,7 +351,7 @@ export default function GameInfoScreen() {
                     <View style={styles.capStatusBadge}>
                       <MaterialCommunityIcons
                         name="hat-fedora"
-                        size={16}
+                        size={softcapIconSize}
                         color={palette.textInverse}
                       />
                       <Text style={[styles.capStatusText, { color: palette.textInverse }]}>
@@ -348,7 +363,7 @@ export default function GameInfoScreen() {
                     <View style={styles.capStatusBadge}>
                       <FlashingIcon
                         name="hat-fedora"
-                        size={16}
+                        size={softcapIconSize}
                         color={palette.textInverse}
                         isFlashing
                       />
@@ -370,7 +385,7 @@ export default function GameInfoScreen() {
                     <Pressable onPress={togglePause} hitSlop={8}>
                       <MaterialCommunityIcons
                         name={isPaused ? 'play' : 'pause'}
-                        size={24}
+                        size={pointTimerControlIconSize}
                         color={isPaused ? palette.warning : palette.textMuted}
                       />
                     </Pressable>
@@ -385,7 +400,7 @@ export default function GameInfoScreen() {
                       <Pressable onPress={confirmRestartPointTimer} hitSlop={8}>
                         <MaterialCommunityIcons
                           name="restart"
-                          size={22}
+                          size={pointTimerRestartIconSize}
                           color={palette.textMuted}
                         />
                       </Pressable>
@@ -416,7 +431,7 @@ export default function GameInfoScreen() {
                 </Text>
                 <MaterialCommunityIcons
                   name="information-outline"
-                  size={18}
+                  size={ratioInfoIconSize}
                   color={palette.textMuted}
                 />
               </Pressable>
@@ -436,7 +451,11 @@ export default function GameInfoScreen() {
                 { backgroundColor: palette.overlay05, borderColor: palette.overlay20 },
                 pressed && { backgroundColor: palette.overlay10 },
               ]}>
-              <MaterialCommunityIcons name="account-switch" size={20} color={palette.textInverse} />
+              <MaterialCommunityIcons
+                name="account-switch"
+                size={actionIconSize}
+                color={palette.textInverse}
+              />
               <Text style={[styles.actionButtonText, { color: palette.textInverse }]}>
                 EDIT LINE
               </Text>
@@ -450,7 +469,11 @@ export default function GameInfoScreen() {
               { backgroundColor: palette.danger + '10', borderColor: palette.danger + '20' },
               pressed && { backgroundColor: palette.danger + '20' },
             ]}>
-            <MaterialCommunityIcons name="flag-checkered" size={20} color={palette.danger} />
+            <MaterialCommunityIcons
+              name="flag-checkered"
+              size={actionIconSize}
+              color={palette.danger}
+            />
             <Text style={[styles.actionButtonText, { color: palette.danger }]}>END GAME EARLY</Text>
           </Pressable>
         </View>
@@ -492,7 +515,7 @@ export default function GameInfoScreen() {
   );
 }
 
-function createStyles(isLandscape: boolean) {
+function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
   return StyleSheet.create({
     container: {
       flex: 1,
@@ -523,7 +546,7 @@ function createStyles(isLandscape: boolean) {
       alignItems: 'center',
     },
     scoreDivider: {
-      fontSize: 48,
+      fontSize: scaleBySizeClass(48, sizeClass),
       fontWeight: '300',
       lineHeight: 54,
       paddingTop: 18,
@@ -534,18 +557,18 @@ function createStyles(isLandscape: boolean) {
       marginTop: 20,
     },
     teamColumnName: {
-      fontSize: isLandscape ? 14 : 13,
+      fontSize: scaleBySizeClass(isLandscape ? 14 : 13, sizeClass),
       fontWeight: '600',
       marginBottom: 4,
     },
     teamColumnScore: {
-      fontSize: isLandscape ? 56 : 48,
+      fontSize: scaleBySizeClass(isLandscape ? 56 : 48, sizeClass),
       fontWeight: '800',
       includeFontPadding: false,
       lineHeight: isLandscape ? 64 : 54,
     },
     teamColumnStats: {
-      fontSize: 13,
+      fontSize: scaleBySizeClass(13, sizeClass),
       fontWeight: '500',
       marginTop: 4,
     },
@@ -557,12 +580,12 @@ function createStyles(isLandscape: boolean) {
       paddingHorizontal: isLandscape ? 16 : 0,
     },
     centerLabel: {
-      fontSize: 12,
+      fontSize: scaleBySizeClass(12, sizeClass),
       fontWeight: '700',
       letterSpacing: 1,
     },
     centerNumber: {
-      fontSize: isLandscape ? 48 : 42,
+      fontSize: scaleBySizeClass(isLandscape ? 48 : 42, sizeClass),
       fontWeight: '800',
       includeFontPadding: false,
       lineHeight: isLandscape ? 56 : 48,
@@ -573,7 +596,7 @@ function createStyles(isLandscape: boolean) {
       gap: 6,
     },
     hardcapWinnerText: {
-      fontSize: 24,
+      fontSize: scaleBySizeClass(24, sizeClass),
       fontWeight: '800',
       textAlign: 'center',
     },
@@ -584,11 +607,11 @@ function createStyles(isLandscape: boolean) {
       marginTop: 4,
     },
     capStatusText: {
-      fontSize: 13,
+      fontSize: scaleBySizeClass(13, sizeClass),
       fontWeight: '600',
     },
     universePointText: {
-      fontSize: 16,
+      fontSize: scaleBySizeClass(16, sizeClass),
       fontWeight: '700',
     },
 
@@ -609,7 +632,7 @@ function createStyles(isLandscape: boolean) {
       marginTop: 2,
     },
     pointTimerValue: {
-      fontSize: 32,
+      fontSize: scaleBySizeClass(32, sizeClass),
       fontWeight: '800',
       fontVariant: ['tabular-nums'],
       includeFontPadding: false,
@@ -647,7 +670,7 @@ function createStyles(isLandscape: boolean) {
       borderWidth: 1,
     },
     actionButtonText: {
-      fontSize: 14,
+      fontSize: scaleBySizeClass(14, sizeClass),
       fontWeight: '700',
       letterSpacing: 1,
     },
@@ -667,7 +690,7 @@ function createStyles(isLandscape: boolean) {
       gap: 4,
     },
     ratioLabel: {
-      fontSize: 12,
+      fontSize: scaleBySizeClass(12, sizeClass),
       fontWeight: '700',
       letterSpacing: 1,
     },
@@ -677,7 +700,7 @@ function createStyles(isLandscape: boolean) {
       gap: 8,
     },
     ratioValue: {
-      fontSize: 28,
+      fontSize: scaleBySizeClass(28, sizeClass),
       fontWeight: '800',
     },
 
@@ -689,12 +712,12 @@ function createStyles(isLandscape: boolean) {
       paddingVertical: 12,
     },
     ratioInfoLabel: {
-      fontSize: 12,
+      fontSize: scaleBySizeClass(12, sizeClass),
       fontWeight: '600',
       letterSpacing: 1,
     },
     ratioInfoValue: {
-      fontSize: 16,
+      fontSize: scaleBySizeClass(16, sizeClass),
       fontWeight: '700',
     },
   });

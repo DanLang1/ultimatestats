@@ -1,4 +1,5 @@
 import { useTheme } from '@/context/ThemeContext';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { checkGameOver, getWinner } from '@/lib/gameUtils';
 import { useGameStore } from '@/store/gameStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
@@ -23,6 +24,8 @@ export default function WinModal() {
     setGameLocked,
   } = useGameStore();
   const { palette } = useTheme();
+  const { sizeClass } = useLayout();
+  const styles = createStyles(sizeClass);
 
   const team1Name = currentTeam?.name ?? 'Team 1';
 
@@ -79,7 +82,11 @@ export default function WinModal() {
           ]}>
           {/* Trophy Icon - Centered */}
           <Animated.View entering={FadeIn.delay(200)} style={styles.iconContainer}>
-            <MaterialCommunityIcons name="trophy" size={48} color={palette.warning} />
+            <MaterialCommunityIcons
+              name="trophy"
+              size={scaleBySizeClass(48, sizeClass)}
+              color={palette.warning}
+            />
           </Animated.View>
 
           {/* Winner Text */}
@@ -118,7 +125,11 @@ export default function WinModal() {
                     },
                   ]}
                   onPress={handleViewStats}>
-                  <MaterialCommunityIcons name="chart-bar" size={18} color={palette.accent} />
+                  <MaterialCommunityIcons
+                    name="chart-bar"
+                    size={scaleBySizeClass(18, sizeClass)}
+                    color={palette.accent}
+                  />
                   <Text style={[styles.buttonText, { color: palette.accent }]}>View Stats</Text>
                 </Pressable>
               )}
@@ -127,7 +138,11 @@ export default function WinModal() {
               <Pressable
                 style={[styles.button, styles.rowButton, { backgroundColor: palette.success }]}
                 onPress={handleNewGame}>
-                <MaterialCommunityIcons name="restart" size={18} color={palette.textOnAccent} />
+                <MaterialCommunityIcons
+                  name="restart"
+                  size={scaleBySizeClass(18, sizeClass)}
+                  color={palette.textOnAccent}
+                />
                 <Text style={[styles.buttonText, { color: palette.textOnAccent }]}>New Game</Text>
               </Pressable>
             </View>
@@ -142,7 +157,11 @@ export default function WinModal() {
                 undoLastAction();
                 router.back();
               }}>
-              <MaterialCommunityIcons name="undo" size={18} color={palette.textMuted} />
+              <MaterialCommunityIcons
+                name="undo"
+                size={scaleBySizeClass(18, sizeClass)}
+                color={palette.textMuted}
+              />
               <Text style={[styles.buttonText, { color: palette.textMuted }]}>
                 Undo Winning Point
               </Text>
@@ -154,79 +173,81 @@ export default function WinModal() {
   );
 }
 
-const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 24,
-  },
-  card: {
-    borderRadius: 20,
-    padding: 24,
-    width: '100%',
-    maxWidth: 320,
-    alignItems: 'center',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3,
-    shadowRadius: 16,
-    elevation: 12,
-    borderWidth: 1,
-  },
-  iconContainer: {
-    marginBottom: 12,
-  },
-  winnerText: {
-    fontSize: 24,
-    fontWeight: '800',
-    textAlign: 'center',
-  },
-  winsText: {
-    fontSize: 12,
-    fontWeight: '700',
-    letterSpacing: 3,
-    marginTop: 2,
-    marginBottom: 16,
-  },
-  scoreContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    marginBottom: 20,
-  },
-  score: {
-    fontSize: 40,
-    fontWeight: '800',
-  },
-  scoreDivider: {
-    fontSize: 28,
-    fontWeight: '300',
-  },
-  buttonContainer: {
-    width: '100%',
-    gap: 10,
-  },
-  buttonRow: {
-    flexDirection: 'row',
-    gap: 10,
-  },
-  button: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 10,
-  },
-  rowButton: {
-    flex: 1,
-  },
-  buttonText: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  statsButton: {
-    borderWidth: 1,
-  },
-});
+function createStyles(sizeClass: SizeClass) {
+  return StyleSheet.create({
+    overlay: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: 24,
+    },
+    card: {
+      borderRadius: 20,
+      padding: 24,
+      width: '100%',
+      maxWidth: 320,
+      alignItems: 'center',
+      shadowOffset: { width: 0, height: 8 },
+      shadowOpacity: 0.3,
+      shadowRadius: 16,
+      elevation: 12,
+      borderWidth: 1,
+    },
+    iconContainer: {
+      marginBottom: 12,
+    },
+    winnerText: {
+      fontSize: scaleBySizeClass(24, sizeClass),
+      fontWeight: '800',
+      textAlign: 'center',
+    },
+    winsText: {
+      fontSize: scaleBySizeClass(12, sizeClass),
+      fontWeight: '700',
+      letterSpacing: 3,
+      marginTop: 2,
+      marginBottom: 16,
+    },
+    scoreContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+      marginBottom: 20,
+    },
+    score: {
+      fontSize: scaleBySizeClass(40, sizeClass),
+      fontWeight: '800',
+    },
+    scoreDivider: {
+      fontSize: scaleBySizeClass(28, sizeClass),
+      fontWeight: '300',
+    },
+    buttonContainer: {
+      width: '100%',
+      gap: 10,
+    },
+    buttonRow: {
+      flexDirection: 'row',
+      gap: 10,
+    },
+    button: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 6,
+      paddingVertical: 12,
+      paddingHorizontal: 16,
+      borderRadius: 10,
+    },
+    rowButton: {
+      flex: 1,
+    },
+    buttonText: {
+      fontSize: scaleBySizeClass(14, sizeClass),
+      fontWeight: '600',
+    },
+    statsButton: {
+      borderWidth: 1,
+    },
+  });
+}

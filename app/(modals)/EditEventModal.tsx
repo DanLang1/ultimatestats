@@ -1,6 +1,7 @@
 import { useAlert } from '@/components/ui/AlertProvider';
 import { PlayerChip } from '@/components/ui/PlayerChip';
 import { useTheme } from '@/context/ThemeContext';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { getPlayerName } from '@/lib/playerUtils';
 import { useGameStore } from '@/store/gameStore';
 import { TurnoverType } from '@/store/gameStore.types';
@@ -27,6 +28,8 @@ const ALL_TURNOVER_TYPES: {
 
 export default function EditEventModal() {
   const { palette } = useTheme();
+  const { sizeClass } = useLayout();
+  const styles = createStyles(sizeClass);
   const { showAlert } = useAlert();
   const params = useLocalSearchParams<{
     eventIndex: string;
@@ -248,7 +251,7 @@ export default function EditEventModal() {
                     style={[styles.headerButton, { backgroundColor: palette.dangerOverlay15 }]}>
                     <MaterialCommunityIcons
                       name="trash-can-outline"
-                      size={20}
+                      size={scaleBySizeClass(20, sizeClass)}
                       color={palette.danger}
                     />
                   </Pressable>
@@ -256,7 +259,11 @@ export default function EditEventModal() {
                     onPress={handleSave}
                     hitSlop={12}
                     style={[styles.headerButton, { backgroundColor: palette.accentOverlay30 }]}>
-                    <MaterialCommunityIcons name="check" size={20} color={palette.accent} />
+                    <MaterialCommunityIcons
+                      name="check"
+                      size={scaleBySizeClass(20, sizeClass)}
+                      color={palette.accent}
+                    />
                   </Pressable>
                 </>
               )}
@@ -265,11 +272,19 @@ export default function EditEventModal() {
                   onPress={handleSave}
                   hitSlop={12}
                   style={[styles.headerButton, { backgroundColor: palette.accentOverlay30 }]}>
-                  <MaterialCommunityIcons name="check" size={20} color={palette.accent} />
+                  <MaterialCommunityIcons
+                    name="check"
+                    size={scaleBySizeClass(20, sizeClass)}
+                    color={palette.accent}
+                  />
                 </Pressable>
               )}
               <Pressable onPress={handleDismiss} hitSlop={12}>
-                <MaterialCommunityIcons name="close" size={24} color={palette.textMuted} />
+                <MaterialCommunityIcons
+                  name="close"
+                  size={scaleBySizeClass(24, sizeClass)}
+                  color={palette.textMuted}
+                />
               </Pressable>
             </View>
           </View>
@@ -382,7 +397,11 @@ export default function EditEventModal() {
                     hitSlop={12}
                     onPress={() => setFiftyFiftyStep(1)}
                     style={styles.throwerBadgeEdit}>
-                    <MaterialCommunityIcons name="pencil" size={14} color={palette.accent} />
+                    <MaterialCommunityIcons
+                      name="pencil"
+                      size={scaleBySizeClass(14, sizeClass)}
+                      color={palette.accent}
+                    />
                   </Pressable>
                 </View>
 
@@ -440,90 +459,92 @@ export default function EditEventModal() {
   );
 }
 
-const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    justifyContent: 'flex-end',
-  },
-  sheet: {
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    maxHeight: '90%',
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-  },
-  headerActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  headerButton: {
-    padding: 8,
-    borderRadius: 8,
-  },
-  content: {
-    padding: 20,
-  },
-  section: {
-    marginBottom: 24,
-  },
-  sectionLabel: {
-    fontSize: 11,
-    fontWeight: '600',
-    letterSpacing: 0.5,
-    marginBottom: 10,
-  },
-  chipsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  typeGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-  },
-  typeChip: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 10,
-    borderWidth: 1,
-  },
-  typeChipText: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  // 50/50 Thrower Badge
-  throwerBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 10,
-    borderWidth: 1,
-    alignSelf: 'flex-start',
-  },
-  throwerBadgeLabel: {
-    fontSize: 10,
-    fontWeight: 'bold',
-    letterSpacing: 1,
-  },
-  throwerBadgeValue: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  throwerBadgeEdit: {
-    marginLeft: 4,
-  },
-});
+function createStyles(sizeClass: SizeClass) {
+  return StyleSheet.create({
+    overlay: {
+      flex: 1,
+      justifyContent: 'flex-end',
+    },
+    sheet: {
+      borderTopLeftRadius: 20,
+      borderTopRightRadius: 20,
+      maxHeight: '90%',
+    },
+    header: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: 20,
+      paddingVertical: 16,
+      borderBottomWidth: 1,
+    },
+    headerTitle: {
+      fontSize: scaleBySizeClass(18, sizeClass),
+      fontWeight: '700',
+    },
+    headerActions: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+    },
+    headerButton: {
+      padding: 8,
+      borderRadius: 8,
+    },
+    content: {
+      padding: 20,
+    },
+    section: {
+      marginBottom: 24,
+    },
+    sectionLabel: {
+      fontSize: scaleBySizeClass(11, sizeClass),
+      fontWeight: '600',
+      letterSpacing: 0.5,
+      marginBottom: 10,
+    },
+    chipsContainer: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 8,
+    },
+    typeGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 10,
+    },
+    typeChip: {
+      paddingHorizontal: 16,
+      paddingVertical: 10,
+      borderRadius: 10,
+      borderWidth: 1,
+    },
+    typeChipText: {
+      fontSize: scaleBySizeClass(14, sizeClass),
+      fontWeight: '600',
+    },
+    // 50/50 Thrower Badge
+    throwerBadge: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      borderRadius: 10,
+      borderWidth: 1,
+      alignSelf: 'flex-start',
+    },
+    throwerBadgeLabel: {
+      fontSize: scaleBySizeClass(10, sizeClass),
+      fontWeight: 'bold',
+      letterSpacing: 1,
+    },
+    throwerBadgeValue: {
+      fontSize: scaleBySizeClass(14, sizeClass),
+      fontWeight: '600',
+    },
+    throwerBadgeEdit: {
+      marginLeft: 4,
+    },
+  });
+}

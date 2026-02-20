@@ -1,4 +1,5 @@
 import { useTheme } from '@/context/ThemeContext';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { LinePreset, Player, PointLineRecord } from '@/lib/storage/types';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React, { useRef, useState } from 'react';
@@ -33,6 +34,8 @@ export function PresetEditView({
   onBack,
 }: PresetEditViewProps) {
   const { palette } = useTheme();
+  const { sizeClass } = useLayout();
+  const styles = createStyles(sizeClass);
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [sortKey, setSortKey] = useState(0);
   const nameInputRef = useRef<TextInput>(null);
@@ -53,7 +56,11 @@ export function PresetEditView({
           onPress={onBack}
           style={({ pressed }) => [styles.iconBtn, pressed && { opacity: 0.7 }]}
           hitSlop={12}>
-          <MaterialCommunityIcons name="arrow-left" size={22} color={palette.textInverse} />
+          <MaterialCommunityIcons
+            name="arrow-left"
+            size={scaleBySizeClass(22, sizeClass)}
+            color={palette.textInverse}
+          />
         </Pressable>
 
         {/* Preset Name Input */}
@@ -71,7 +78,7 @@ export function PresetEditView({
             />
             <MaterialCommunityIcons
               name="pencil"
-              size={12}
+              size={scaleBySizeClass(12, sizeClass)}
               color={palette.textMuted}
               style={styles.pencilIcon}
             />
@@ -90,7 +97,7 @@ export function PresetEditView({
               ]}>
               <MaterialCommunityIcons
                 name={sortDirection === 'asc' ? 'sort-ascending' : 'sort-descending'}
-                size={16}
+                size={scaleBySizeClass(16, sizeClass)}
                 color={palette.textMuted}
               />
             </Pressable>
@@ -113,7 +120,11 @@ export function PresetEditView({
               {selectedIds.length}
             </Text>
             {canSave && (
-              <MaterialCommunityIcons name="check" size={16} color={palette.textOnAccent} />
+              <MaterialCommunityIcons
+                name="check"
+                size={scaleBySizeClass(16, sizeClass)}
+                color={palette.textOnAccent}
+              />
             )}
           </Pressable>
         </View>
@@ -138,76 +149,78 @@ export function PresetEditView({
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingBottom: 12,
-    gap: 8,
-  },
-  iconBtn: {
-    padding: 4,
-  },
-  nameSection: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  nameInputRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  pencilIcon: {
-    marginLeft: 4,
-  },
-  presetNameInput: {
-    fontSize: 14,
-    fontWeight: '700',
-    letterSpacing: 1,
-  },
-  rightSection: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  actionBtn: {
-    height: 36,
-    width: 36,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  saveBtn: {
-    flexDirection: 'row',
-    height: 36,
-    paddingHorizontal: 12,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 4,
-  },
-  saveBtnText: {
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  sizeWarningChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 3,
-    paddingVertical: 3,
-    paddingHorizontal: 6,
-    borderRadius: 8,
-  },
-  sizeWarningText: {
-    fontSize: 9,
-    fontWeight: '700',
-  },
-  playersSection: {
-    flex: 1,
-    paddingHorizontal: 12,
-  },
-});
+function createStyles(sizeClass: SizeClass) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+    },
+    headerRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 12,
+      paddingBottom: 12,
+      gap: 8,
+    },
+    iconBtn: {
+      padding: 4,
+    },
+    nameSection: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    nameInputRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    pencilIcon: {
+      marginLeft: 4,
+    },
+    presetNameInput: {
+      fontSize: scaleBySizeClass(14, sizeClass),
+      fontWeight: '700',
+      letterSpacing: 1,
+    },
+    rightSection: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+    },
+    actionBtn: {
+      height: 36,
+      width: 36,
+      borderRadius: 10,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    saveBtn: {
+      flexDirection: 'row',
+      height: 36,
+      paddingHorizontal: 12,
+      borderRadius: 10,
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 4,
+    },
+    saveBtnText: {
+      fontSize: scaleBySizeClass(14, sizeClass),
+      fontWeight: '700',
+    },
+    sizeWarningChip: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 3,
+      paddingVertical: 3,
+      paddingHorizontal: 6,
+      borderRadius: 8,
+    },
+    sizeWarningText: {
+      fontSize: scaleBySizeClass(9, sizeClass),
+      fontWeight: '700',
+    },
+    playersSection: {
+      flex: 1,
+      paddingHorizontal: 12,
+    },
+  });
+}

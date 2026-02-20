@@ -12,7 +12,7 @@ import SavedGamesBulkActions from '@/components/view-stats/SavedGamesBulkActions
 import SavedGamesList from '@/components/view-stats/SavedGamesList';
 import StatsContent from '@/components/view-stats/StatsContent';
 import { useTheme } from '@/context/ThemeContext';
-import { useLayout } from '@/hooks/useLayout';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { resolveTeamName } from '@/lib/playerUtils';
 import { serializeGames, uploadPayload } from '@/lib/sharing';
 import { formatDate, generateAggregateCSV, generateCurrentGameCSV } from '@/lib/statsUtils';
@@ -46,8 +46,8 @@ export default function ViewStatsScreen() {
   } = useGameStore();
   const { showAlert } = useAlert();
   const { palette } = useTheme();
-  const { isLandscape } = useLayout();
-  const styles = createStyles(isLandscape);
+  const { isLandscape, sizeClass } = useLayout();
+  const styles = createStyles(isLandscape, sizeClass);
 
   const team1Name = currentTeam?.name ?? 'Team 1';
 
@@ -310,10 +310,18 @@ export default function ViewStatsScreen() {
       onPress: handleOpenTimeline,
       visible: showTimelineAction,
       inlineIcon: (
-        <MaterialCommunityIcons name="chart-timeline-variant" size={24} color={palette.accent} />
+        <MaterialCommunityIcons
+          name="chart-timeline-variant"
+          size={scaleBySizeClass(24, sizeClass)}
+          color={palette.accent}
+        />
       ),
       menuIcon: (
-        <MaterialCommunityIcons name="chart-timeline-variant" size={20} color={palette.accent} />
+        <MaterialCommunityIcons
+          name="chart-timeline-variant"
+          size={scaleBySizeClass(20, sizeClass)}
+          color={palette.accent}
+        />
       ),
     },
     {
@@ -321,8 +329,20 @@ export default function ViewStatsScreen() {
       label: 'Export CSV',
       onPress: handleExportCSV,
       visible: showExportAction,
-      inlineIcon: <FontAwesome6 name="file-csv" size={20} color={palette.accent} />,
-      menuIcon: <FontAwesome6 name="file-csv" size={18} color={palette.accent} />,
+      inlineIcon: (
+        <FontAwesome6
+          name="file-csv"
+          size={scaleBySizeClass(20, sizeClass)}
+          color={palette.accent}
+        />
+      ),
+      menuIcon: (
+        <FontAwesome6
+          name="file-csv"
+          size={scaleBySizeClass(18, sizeClass)}
+          color={palette.accent}
+        />
+      ),
     },
   ];
 
@@ -351,7 +371,7 @@ export default function ViewStatsScreen() {
           onPress={() => handleTabPress('current')}>
           <MaterialCommunityIcons
             name="play-circle"
-            size={18}
+            size={scaleBySizeClass(18, sizeClass)}
             color={viewMode === 'current' ? palette.accent : palette.textMuted}
           />
           <Text
@@ -368,7 +388,7 @@ export default function ViewStatsScreen() {
           onPress={() => handleTabPress('saved')}>
           <MaterialCommunityIcons
             name="history"
-            size={18}
+            size={scaleBySizeClass(18, sizeClass)}
             color={viewMode === 'saved' ? palette.accent : palette.textMuted}
           />
           <Text
@@ -385,7 +405,7 @@ export default function ViewStatsScreen() {
           onPress={() => handleTabPress('aggregate')}>
           <MaterialCommunityIcons
             name="chart-box-outline"
-            size={18}
+            size={scaleBySizeClass(18, sizeClass)}
             color={viewMode === 'aggregate' ? palette.accent : palette.textMuted}
           />
           <Text
@@ -439,7 +459,6 @@ export default function ViewStatsScreen() {
               onSelectTeam={handleSelectTeam}
               onBackToTeams={handleBackToTeams}
               onToggleGameSelection={handleToggleGameSelection}
-              onViewAggregated={handleViewAggregated}
               onToggleAllGames={handleToggleAllGames}
             />
           )
@@ -489,7 +508,7 @@ export default function ViewStatsScreen() {
   );
 }
 
-function createStyles(isLandscape: boolean) {
+function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
   return StyleSheet.create({
     container: {
       flex: 1,
@@ -511,7 +530,7 @@ function createStyles(isLandscape: boolean) {
       borderRadius: 10,
     },
     tabText: {
-      fontSize: 14,
+      fontSize: scaleBySizeClass(14, sizeClass),
       fontWeight: '600',
     },
 
@@ -526,7 +545,7 @@ function createStyles(isLandscape: boolean) {
       borderRadius: 16,
     },
     selectButtonText: {
-      fontSize: 14,
+      fontSize: scaleBySizeClass(14, sizeClass),
       fontWeight: '700',
     },
   });

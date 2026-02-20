@@ -26,7 +26,7 @@ export default function ImpactTimeline({ data }: ImpactTimelineProps) {
   }
 
   // Format data for chart - include description and score for tooltips
-  const chartData = data.map((d, i) => ({
+  const chartData = data.map((d) => ({
     x: d.eventIndex,
     y: d.cumulativePlusMinus,
     description: d.description ?? '',

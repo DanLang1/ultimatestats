@@ -1,5 +1,5 @@
 import { useTheme } from '@/context/ThemeContext';
-import { useLayout } from '@/hooks/useLayout';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React, { useState } from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
@@ -21,6 +21,7 @@ type ResponsiveHeaderActionsProps = {
 
 export function ResponsiveHeaderActions({ actions }: ResponsiveHeaderActionsProps) {
   const { isLandscape, sizeClass } = useLayout();
+  const styles = createStyles(sizeClass);
   const { palette } = useTheme();
   const insets = useSafeAreaInsets();
   const [isMenuVisible, setIsMenuVisible] = useState(false);
@@ -66,7 +67,7 @@ export function ResponsiveHeaderActions({ actions }: ResponsiveHeaderActionsProp
             disabled={!hasEnabledActions}>
             <MaterialCommunityIcons
               name="dots-horizontal"
-              size={22}
+              size={scaleBySizeClass(22, sizeClass)}
               color={hasEnabledActions ? palette.accent : palette.textMuted}
             />
           </Pressable>
@@ -126,63 +127,65 @@ export function ResponsiveHeaderActions({ actions }: ResponsiveHeaderActionsProp
   );
 }
 
-const styles = StyleSheet.create({
-  iconButton: {
-    padding: 8,
-    borderRadius: 20,
-  },
-  headerSpacer: {
-    width: 40,
-  },
-  headerRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  headerRightPortrait: {
-    minWidth: 40,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-    gap: 8,
-  },
-  menuOverlay: {
-    ...StyleSheet.absoluteFillObject,
-  },
-  menuSheet: {
-    position: 'absolute',
-    left: 16,
-    right: 16,
-    bottom: 24,
-    borderRadius: 14,
-    borderWidth: 1,
-    padding: 12,
-    gap: 6,
-  },
-  menuActionRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-  },
-  menuActionText: {
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  menuCancelButton: {
-    marginTop: 6,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 12,
-  },
-  menuCancelText: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  buttonPressed: {
-    opacity: 0.8,
-  },
-});
+function createStyles(sizeClass: SizeClass) {
+  return StyleSheet.create({
+    iconButton: {
+      padding: 8,
+      borderRadius: 20,
+    },
+    headerSpacer: {
+      width: 40,
+    },
+    headerRight: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    headerRightPortrait: {
+      minWidth: 40,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'flex-end',
+      gap: 8,
+    },
+    menuOverlay: {
+      ...StyleSheet.absoluteFillObject,
+    },
+    menuSheet: {
+      position: 'absolute',
+      left: 16,
+      right: 16,
+      bottom: 24,
+      borderRadius: 14,
+      borderWidth: 1,
+      padding: 12,
+      gap: 6,
+    },
+    menuActionRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+      borderRadius: 10,
+      paddingHorizontal: 12,
+      paddingVertical: 12,
+    },
+    menuActionText: {
+      fontSize: scaleBySizeClass(15, sizeClass),
+      fontWeight: '600',
+    },
+    menuCancelButton: {
+      marginTop: 6,
+      borderRadius: 10,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: 12,
+    },
+    menuCancelText: {
+      fontSize: scaleBySizeClass(14, sizeClass),
+      fontWeight: '600',
+    },
+    buttonPressed: {
+      opacity: 0.8,
+    },
+  });
+}

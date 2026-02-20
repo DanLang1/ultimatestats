@@ -1,4 +1,5 @@
 import { useTheme } from '@/context/ThemeContext';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { StyleSheet, Text, type TextProps } from 'react-native';
 
 export type ThemedTextProps = TextProps & {
@@ -7,6 +8,8 @@ export type ThemedTextProps = TextProps & {
 
 export function ThemedText({ style, type = 'default', ...rest }: ThemedTextProps) {
   const { palette } = useTheme();
+  const { sizeClass } = useLayout();
+  const styles = createStyles(sizeClass);
 
   return (
     <Text
@@ -24,27 +27,29 @@ export function ThemedText({ style, type = 'default', ...rest }: ThemedTextProps
   );
 }
 
-const styles = StyleSheet.create({
-  default: {
-    fontSize: 16,
-    lineHeight: 24,
-  },
-  defaultSemiBold: {
-    fontSize: 16,
-    lineHeight: 24,
-    fontWeight: '600',
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    lineHeight: 32,
-  },
-  subtitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-  link: {
-    lineHeight: 30,
-    fontSize: 16,
-  },
-});
+function createStyles(sizeClass: SizeClass) {
+  return StyleSheet.create({
+    default: {
+      fontSize: scaleBySizeClass(16, sizeClass),
+      lineHeight: scaleBySizeClass(24, sizeClass),
+    },
+    defaultSemiBold: {
+      fontSize: scaleBySizeClass(16, sizeClass),
+      lineHeight: scaleBySizeClass(24, sizeClass),
+      fontWeight: '600',
+    },
+    title: {
+      fontSize: scaleBySizeClass(32, sizeClass),
+      fontWeight: 'bold',
+      lineHeight: scaleBySizeClass(32, sizeClass),
+    },
+    subtitle: {
+      fontSize: scaleBySizeClass(20, sizeClass),
+      fontWeight: 'bold',
+    },
+    link: {
+      lineHeight: scaleBySizeClass(30, sizeClass),
+      fontSize: scaleBySizeClass(16, sizeClass),
+    },
+  });
+}

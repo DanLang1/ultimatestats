@@ -8,7 +8,7 @@ import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { ShareConfirmModal } from '@/components/ui/ShareConfirmModal';
 import StatsContent from '@/components/view-stats/StatsContent';
 import { useTheme } from '@/context/ThemeContext';
-import { useLayout } from '@/hooks/useLayout';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { resolveTeamName } from '@/lib/playerUtils';
 import { serializeGame, uploadPayload } from '@/lib/sharing';
 import { formatDate, generateSavedGameCSV } from '@/lib/statsUtils';
@@ -25,8 +25,8 @@ export default function SavedGameStatsScreen() {
   const { gameId } = useLocalSearchParams<{ gameId?: string }>();
   const { showAlert } = useAlert();
   const { palette } = useTheme();
-  const { isLandscape } = useLayout();
-  const styles = createStyles(isLandscape);
+  const { isLandscape, sizeClass } = useLayout();
+  const styles = createStyles(isLandscape, sizeClass);
   const { savedGames, savedTeams, loadSavedGames } = useGameStore();
   const [pendingShareAction, setPendingShareAction] = useState<(() => Promise<string>) | null>(
     null,
@@ -101,10 +101,18 @@ export default function SavedGameStatsScreen() {
       onPress: handleOpenTimeline,
       disabled: !selectedGame,
       inlineIcon: (
-        <MaterialCommunityIcons name="chart-timeline-variant" size={24} color={actionIconColor} />
+        <MaterialCommunityIcons
+          name="chart-timeline-variant"
+          size={scaleBySizeClass(24, sizeClass)}
+          color={actionIconColor}
+        />
       ),
       menuIcon: (
-        <MaterialCommunityIcons name="chart-timeline-variant" size={20} color={actionIconColor} />
+        <MaterialCommunityIcons
+          name="chart-timeline-variant"
+          size={scaleBySizeClass(20, sizeClass)}
+          color={actionIconColor}
+        />
       ),
     },
     {
@@ -112,16 +120,40 @@ export default function SavedGameStatsScreen() {
       label: 'Share',
       onPress: handleShareGame,
       disabled: !selectedGame,
-      inlineIcon: <MaterialCommunityIcons name="share-variant" size={20} color={actionIconColor} />,
-      menuIcon: <MaterialCommunityIcons name="share-variant" size={20} color={actionIconColor} />,
+      inlineIcon: (
+        <MaterialCommunityIcons
+          name="share-variant"
+          size={scaleBySizeClass(20, sizeClass)}
+          color={actionIconColor}
+        />
+      ),
+      menuIcon: (
+        <MaterialCommunityIcons
+          name="share-variant"
+          size={scaleBySizeClass(20, sizeClass)}
+          color={actionIconColor}
+        />
+      ),
     },
     {
       key: 'csv',
       label: 'Export CSV',
       onPress: handleExportCSV,
       disabled: !selectedGame,
-      inlineIcon: <FontAwesome6 name="file-csv" size={20} color={actionIconColor} />,
-      menuIcon: <FontAwesome6 name="file-csv" size={18} color={actionIconColor} />,
+      inlineIcon: (
+        <FontAwesome6
+          name="file-csv"
+          size={scaleBySizeClass(20, sizeClass)}
+          color={actionIconColor}
+        />
+      ),
+      menuIcon: (
+        <FontAwesome6
+          name="file-csv"
+          size={scaleBySizeClass(18, sizeClass)}
+          color={actionIconColor}
+        />
+      ),
     },
   ];
 
@@ -139,7 +171,11 @@ export default function SavedGameStatsScreen() {
 
       {hasMissingParam || !selectedGame ? (
         <View style={styles.centeredState}>
-          <MaterialCommunityIcons name="alert-circle-outline" size={42} color={palette.textMuted} />
+          <MaterialCommunityIcons
+            name="alert-circle-outline"
+            size={scaleBySizeClass(42, sizeClass)}
+            color={palette.textMuted}
+          />
           <Text style={[styles.stateText, { color: palette.textMuted }]}>
             {hasMissingParam ? 'Missing game link.' : 'Saved game not found.'}
           </Text>
@@ -191,7 +227,7 @@ export default function SavedGameStatsScreen() {
   );
 }
 
-function createStyles(isLandscape: boolean) {
+function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
   return StyleSheet.create({
     container: {
       flex: 1,
@@ -209,7 +245,7 @@ function createStyles(isLandscape: boolean) {
       paddingHorizontal: 24,
     },
     stateText: {
-      fontSize: 15,
+      fontSize: scaleBySizeClass(15, sizeClass),
       textAlign: 'center',
       fontWeight: '600',
     },
@@ -220,7 +256,7 @@ function createStyles(isLandscape: boolean) {
       borderRadius: 10,
     },
     recoverButtonText: {
-      fontSize: 14,
+      fontSize: scaleBySizeClass(14, sizeClass),
       fontWeight: '700',
     },
   });

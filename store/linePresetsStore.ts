@@ -21,7 +21,7 @@ interface LinePresetsState {
 export const useLinePresetsStore = create<LinePresetsState>()(
   immer(
     persist(
-      (set, get) => ({
+      (set) => ({
         presets: [],
         lineConfirmedForNextPoint: false,
 

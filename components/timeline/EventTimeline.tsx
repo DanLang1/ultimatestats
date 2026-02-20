@@ -255,7 +255,7 @@ export default function EventTimeline({
 
                   let visibleEventCount = 0;
 
-                  return mergedEvents.map((event, mergedIndex) => {
+                  return mergedEvents.map((event) => {
                     // Skip the callahan block turnover
                     if (
                       event.kind === 'turnover' &&

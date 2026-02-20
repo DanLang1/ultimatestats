@@ -1,4 +1,5 @@
 import { useTheme } from '@/context/ThemeContext';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
@@ -17,6 +18,8 @@ interface AlertModalProps {
  */
 export function AlertModal({ visible, title, onClose, children }: AlertModalProps) {
   const { palette } = useTheme();
+  const { sizeClass } = useLayout();
+  const styles = createStyles(sizeClass);
 
   return (
     <Modal visible={visible} transparent animationType="fade">
@@ -31,7 +34,11 @@ export function AlertModal({ visible, title, onClose, children }: AlertModalProp
             style={[styles.closeButton, { backgroundColor: palette.overlay10 }]}
             onPress={onClose}
             hitSlop={8}>
-            <MaterialCommunityIcons name="close" size={18} color={palette.textMuted} />
+            <MaterialCommunityIcons
+              name="close"
+              size={scaleBySizeClass(18, sizeClass)}
+              color={palette.textMuted}
+            />
           </Pressable>
 
           <Text style={[styles.title, { color: palette.textInverse }]}>{title}</Text>
@@ -43,34 +50,36 @@ export function AlertModal({ visible, title, onClose, children }: AlertModalProp
   );
 }
 
-const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 32,
-  },
-  container: {
-    borderRadius: 16,
-    padding: 24,
-    width: '100%',
-    maxWidth: 320,
-    borderWidth: 1,
-    position: 'relative',
-  },
-  closeButton: {
-    position: 'absolute',
-    top: 12,
-    right: 12,
-    padding: 4,
-    borderRadius: 12,
-    zIndex: 1,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: '700',
-    textAlign: 'center',
-    marginBottom: 16,
-  },
-});
+function createStyles(sizeClass: SizeClass) {
+  return StyleSheet.create({
+    overlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0, 0, 0, 0.7)',
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: 32,
+    },
+    container: {
+      borderRadius: 16,
+      padding: 24,
+      width: '100%',
+      maxWidth: 320,
+      borderWidth: 1,
+      position: 'relative',
+    },
+    closeButton: {
+      position: 'absolute',
+      top: 12,
+      right: 12,
+      padding: 4,
+      borderRadius: 12,
+      zIndex: 1,
+    },
+    title: {
+      fontSize: scaleBySizeClass(18, sizeClass),
+      fontWeight: '700',
+      textAlign: 'center',
+      marginBottom: 16,
+    },
+  });
+}
