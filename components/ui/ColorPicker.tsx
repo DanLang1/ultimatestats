@@ -1,4 +1,5 @@
 import { useTheme } from '@/context/ThemeContext';
+import { scaleBySizeClass, SizeClass } from '@/hooks/useLayout';
 import { getContrastingTextColor, normalizeHexColor, TEAM_COLOR_PRESETS } from '@/lib/colorUtils';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React, { useState } from 'react';
@@ -10,12 +11,15 @@ interface ColorPickerProps {
   label: string;
   value: string;
   onChange: (color: string) => void;
+  sizeClass?: SizeClass;
 }
 
-export function TeamColorPicker({ label, value, onChange }: ColorPickerProps) {
+export function TeamColorPicker({ label, value, onChange, sizeClass = 'small' }: ColorPickerProps) {
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [tempColor, setTempColor] = useState(value);
   const { palette } = useTheme();
+  const styles = createStyles(sizeClass);
+  const metrics = createMetrics(sizeClass);
 
   const handlePresetSelect = (hex: string) => {
     onChange(hex);
@@ -60,7 +64,7 @@ export function TeamColorPicker({ label, value, onChange }: ColorPickerProps) {
             {value === preset.hex && (
               <MaterialCommunityIcons
                 name="check"
-                size={16}
+                size={metrics.presetCheckIconSize}
                 color={getContrastingTextColor(preset.hex)}
               />
             )}
@@ -83,7 +87,11 @@ export function TeamColorPicker({ label, value, onChange }: ColorPickerProps) {
           ]}
         />
         <Text style={[styles.customButtonText, { color: palette.textInverse }]}>Custom Color</Text>
-        <MaterialCommunityIcons name="chevron-right" size={18} color={palette.textMuted} />
+        <MaterialCommunityIcons
+          name="chevron-right"
+          size={metrics.customButtonChevronSize}
+          color={palette.textMuted}
+        />
       </Pressable>
 
       {/* Advanced Picker Modal */}
@@ -137,110 +145,119 @@ export function TeamColorPicker({ label, value, onChange }: ColorPickerProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    gap: 8,
-  },
-  label: {
-    fontSize: 10,
-    fontWeight: '700',
-    letterSpacing: 1,
-  },
-  presetGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  presetSwatch: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
-    borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  presetSwatchSelected: {
-    borderWidth: 2,
-  },
-  customButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    borderRadius: 10,
-    borderWidth: 1,
-  },
-  buttonPressed: {
-    opacity: 0.8,
-  },
-  currentColorPreview: {
-    width: 24,
-    height: 24,
-    borderRadius: 6,
-    borderWidth: 1,
-  },
-  customButtonText: {
-    flex: 1,
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  modalBackdrop: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 24,
-  },
-  modalContent: {
-    borderRadius: 20,
-    width: '90%',
-    maxWidth: 360,
-    maxHeight: '100%',
-    borderWidth: 1,
-    overflow: 'hidden',
-  },
-  modalScroll: {
-    flexGrow: 0,
-  },
-  modalScrollContent: {
-    padding: 16,
-  },
-  picker: {
-    gap: 12,
-  },
-  preview: {
-    height: 35,
-    borderRadius: 8,
-  },
-  panel: {
-    height: 150,
-    borderRadius: 8,
-  },
-  hueSlider: {
-    height: 30,
-    borderRadius: 8,
-  },
-  modalActions: {
-    flexDirection: 'row',
-    gap: 12,
-    padding: 16,
-    paddingTop: 8,
-  },
-  modalButton: {
-    flex: 1,
-    paddingVertical: 12,
-    borderRadius: 10,
-    alignItems: 'center',
-  },
-  cancelButton: {
-    borderWidth: 1,
-  },
-  cancelButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  confirmButtonText: {
-    fontSize: 14,
-    fontWeight: '700',
-  },
-});
+function createStyles(sizeClass: SizeClass) {
+  return StyleSheet.create({
+    container: {
+      gap: scaleBySizeClass(8, sizeClass),
+    },
+    label: {
+      fontSize: scaleBySizeClass(10, sizeClass),
+      fontWeight: '700',
+      letterSpacing: scaleBySizeClass(1, sizeClass, { rounding: 'none' }),
+    },
+    presetGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: scaleBySizeClass(8, sizeClass),
+    },
+    presetSwatch: {
+      width: scaleBySizeClass(32, sizeClass),
+      height: scaleBySizeClass(32, sizeClass),
+      borderRadius: scaleBySizeClass(8, sizeClass),
+      borderWidth: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    presetSwatchSelected: {
+      borderWidth: 2,
+    },
+    customButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: scaleBySizeClass(10, sizeClass),
+      paddingVertical: scaleBySizeClass(10, sizeClass),
+      paddingHorizontal: scaleBySizeClass(12, sizeClass),
+      borderRadius: scaleBySizeClass(10, sizeClass),
+      borderWidth: 1,
+    },
+    buttonPressed: {
+      opacity: 0.8,
+    },
+    currentColorPreview: {
+      width: scaleBySizeClass(24, sizeClass),
+      height: scaleBySizeClass(24, sizeClass),
+      borderRadius: scaleBySizeClass(6, sizeClass),
+      borderWidth: 1,
+    },
+    customButtonText: {
+      flex: 1,
+      fontSize: scaleBySizeClass(14, sizeClass),
+      fontWeight: '500',
+    },
+    modalBackdrop: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: scaleBySizeClass(24, sizeClass),
+    },
+    modalContent: {
+      borderRadius: scaleBySizeClass(20, sizeClass),
+      width: '90%',
+      maxWidth: scaleBySizeClass(360, sizeClass),
+      maxHeight: '100%',
+      borderWidth: 1,
+      overflow: 'hidden',
+    },
+    modalScroll: {
+      flexGrow: 0,
+    },
+    modalScrollContent: {
+      padding: scaleBySizeClass(16, sizeClass),
+    },
+    picker: {
+      gap: scaleBySizeClass(12, sizeClass),
+    },
+    preview: {
+      height: scaleBySizeClass(35, sizeClass),
+      borderRadius: scaleBySizeClass(8, sizeClass),
+    },
+    panel: {
+      height: scaleBySizeClass(150, sizeClass),
+      borderRadius: scaleBySizeClass(8, sizeClass),
+    },
+    hueSlider: {
+      height: scaleBySizeClass(30, sizeClass),
+      borderRadius: scaleBySizeClass(8, sizeClass),
+    },
+    modalActions: {
+      flexDirection: 'row',
+      gap: scaleBySizeClass(12, sizeClass),
+      padding: scaleBySizeClass(16, sizeClass),
+      paddingTop: scaleBySizeClass(8, sizeClass),
+    },
+    modalButton: {
+      flex: 1,
+      paddingVertical: scaleBySizeClass(12, sizeClass),
+      borderRadius: scaleBySizeClass(10, sizeClass),
+      alignItems: 'center',
+    },
+    cancelButton: {
+      borderWidth: 1,
+    },
+    cancelButtonText: {
+      fontSize: scaleBySizeClass(14, sizeClass),
+      fontWeight: '600',
+    },
+    confirmButtonText: {
+      fontSize: scaleBySizeClass(14, sizeClass),
+      fontWeight: '700',
+    },
+  });
+}
+
+function createMetrics(sizeClass: SizeClass) {
+  return {
+    presetCheckIconSize: scaleBySizeClass(16, sizeClass),
+    customButtonChevronSize: scaleBySizeClass(18, sizeClass),
+  };
+}

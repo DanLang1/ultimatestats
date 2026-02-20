@@ -1,4 +1,5 @@
 import { useTheme } from '@/context/ThemeContext';
+import { getSizeClassValue, SizeClass } from '@/hooks/useLayout';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
 import { Switch as RNSwitch, StyleSheet, Text, View } from 'react-native';
@@ -9,10 +10,21 @@ interface SwitchProps {
   onValueChange: (value: boolean) => void;
   disabled?: boolean;
   locked?: boolean;
+  sizeClass?: SizeClass;
 }
 
-export function Switch({ label, value, onValueChange, disabled, locked }: SwitchProps) {
+export function Switch({
+  label,
+  value,
+  onValueChange,
+  disabled,
+  locked,
+  sizeClass = 'small',
+}: SwitchProps) {
   const { palette } = useTheme();
+  const styles = createStyles(sizeClass);
+  const lockIconSize = getSizeClassValue({ small: 10, medium: 11, large: 12 }, sizeClass);
+  const switchScale = getSizeClassValue({ small: 1, medium: 1.12, large: 1.2 }, sizeClass);
 
   return (
     <View style={[styles.container, disabled && styles.disabled]}>
@@ -20,7 +32,7 @@ export function Switch({ label, value, onValueChange, disabled, locked }: Switch
         {locked && (
           <MaterialCommunityIcons
             name="lock"
-            size={10}
+            size={lockIconSize}
             color={palette.textMuted}
             style={styles.lockIcon}
           />
@@ -30,6 +42,7 @@ export function Switch({ label, value, onValueChange, disabled, locked }: Switch
       </Text>
       <View style={styles.switchWrapper}>
         <RNSwitch
+          style={{ transform: [{ scale: switchScale }] }}
           trackColor={{
             false: palette.overlay20,
             true: disabled ? palette.textMuted : palette.accent,
@@ -46,28 +59,30 @@ export function Switch({ label, value, onValueChange, disabled, locked }: Switch
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-start',
-    gap: 12,
-    height: 48,
-    paddingHorizontal: 4, // Align with input text visually
-  },
-  label: {
-    fontSize: 10,
-    fontWeight: '700',
-    letterSpacing: 1,
-    textTransform: 'uppercase',
-  },
-  lockIcon: {
-    marginRight: 4,
-  },
-  switchWrapper: {
-    // No extra wrapper styling needed for horizontal layout
-  },
-  disabled: {
-    opacity: 0.5,
-  },
-});
+function createStyles(sizeClass: SizeClass) {
+  return StyleSheet.create({
+    container: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'flex-start',
+      gap: getSizeClassValue({ small: 12, medium: 14, large: 16 }, sizeClass),
+      height: getSizeClassValue({ small: 48, medium: 54, large: 58 }, sizeClass),
+      paddingHorizontal: getSizeClassValue({ small: 4, medium: 6, large: 8 }, sizeClass), // Align with input text visually
+    },
+    label: {
+      fontSize: getSizeClassValue({ small: 10, medium: 11, large: 12 }, sizeClass),
+      fontWeight: '700',
+      letterSpacing: getSizeClassValue({ small: 1, medium: 1.05, large: 1.1 }, sizeClass),
+      textTransform: 'uppercase',
+    },
+    lockIcon: {
+      marginRight: getSizeClassValue({ small: 4, medium: 5, large: 6 }, sizeClass),
+    },
+    switchWrapper: {
+      // No extra wrapper styling needed for horizontal layout
+    },
+    disabled: {
+      opacity: 0.5,
+    },
+  });
+}

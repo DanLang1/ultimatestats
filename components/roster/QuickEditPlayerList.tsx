@@ -1,7 +1,7 @@
 import { QuickEditPlayerRow } from '@/components/roster/QuickEditPlayerRow';
 import { useTheme } from '@/context/ThemeContext';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { MatchingType, Player, PlayerRole } from '@/lib/storage/types';
-import { useLayout } from '@/hooks/useLayout';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
@@ -11,6 +11,7 @@ interface QuickEditPlayerListProps {
   onSetPlayerActive: (playerId: string, isActive: boolean) => void;
   onSetPlayerMatching: (playerId: string, matchingType: MatchingType | null) => void;
   onSetPlayerRole: (playerId: string, role: PlayerRole | null) => void;
+  sizeClass?: SizeClass;
 }
 
 export function QuickEditPlayerList({
@@ -19,8 +20,12 @@ export function QuickEditPlayerList({
   onSetPlayerActive,
   onSetPlayerMatching,
   onSetPlayerRole,
+  sizeClass,
 }: QuickEditPlayerListProps) {
-  const { isLandscape } = useLayout();
+  const layout = useLayout();
+  const isLandscape = layout.isLandscape;
+  const resolvedSizeClass = sizeClass ?? layout.sizeClass;
+  const styles = createStyles(resolvedSizeClass);
   const { palette } = useTheme();
 
   const activePlayers = roster.filter((player) => player.isActive);
@@ -49,6 +54,7 @@ export function QuickEditPlayerList({
       key={player.id}
       player={player}
       isLandscape={isLandscape}
+      sizeClass={resolvedSizeClass}
       onEditPlayer={() => onEditPlayer(player)}
       onSetActive={(isActive) => onSetPlayerActive(player.id, isActive)}
       onSetMatching={(matchingType) => onSetPlayerMatching(player.id, matchingType)}
@@ -87,30 +93,32 @@ export function QuickEditPlayerList({
   );
 }
 
-const styles = StyleSheet.create({
-  list: {
-    gap: 10,
-  },
-  groupSection: {
-    gap: 8,
-  },
-  groupHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 2,
-  },
-  groupLabel: {
-    fontSize: 11,
-    fontWeight: '700',
-    letterSpacing: 0.6,
-    textTransform: 'uppercase',
-  },
-  groupCount: {
-    fontSize: 11,
-    fontWeight: '600',
-  },
-  groupRows: {
-    gap: 10,
-  },
-});
+function createStyles(sizeClass: SizeClass) {
+  return StyleSheet.create({
+    list: {
+      gap: scaleBySizeClass(10, sizeClass),
+    },
+    groupSection: {
+      gap: scaleBySizeClass(8, sizeClass),
+    },
+    groupHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: scaleBySizeClass(2, sizeClass),
+    },
+    groupLabel: {
+      fontSize: scaleBySizeClass(11, sizeClass),
+      fontWeight: '700',
+      letterSpacing: scaleBySizeClass(0.6, sizeClass, { rounding: 'none' }),
+      textTransform: 'uppercase',
+    },
+    groupCount: {
+      fontSize: scaleBySizeClass(11, sizeClass),
+      fontWeight: '600',
+    },
+    groupRows: {
+      gap: scaleBySizeClass(10, sizeClass),
+    },
+  });
+}

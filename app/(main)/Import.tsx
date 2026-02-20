@@ -1,6 +1,7 @@
 import { ThemedView } from '@/components/ThemedView';
 import { ScoreBadge } from '@/components/ui/ScoreBadge';
 import { useTheme } from '@/context/ThemeContext';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { useShareImport } from '@/hooks/useShareImport';
 import { resolveTeamName } from '@/lib/playerUtils';
 import { SharedPayload } from '@/lib/sharing';
@@ -17,6 +18,8 @@ import Animated, { FadeIn } from 'react-native-reanimated';
 export default function ImportScreen() {
   const { shareId } = useLocalSearchParams<{ shareId: string }>();
   const { palette } = useTheme();
+  const { sizeClass } = useLayout();
+  const styles = createStyles(sizeClass);
   const { savedTeams, importGame, importTeam, loadTeam } = useGameStore();
   const { importState, setImportState } = useShareImport(shareId);
 
@@ -161,6 +164,7 @@ export default function ImportScreen() {
 }
 
 function LoadingContent({ palette }: { palette: ReturnType<typeof useTheme>['palette'] }) {
+  const { styles } = useImportUi();
   return (
     <View style={styles.content}>
       <ActivityIndicator size="large" color={palette.accent} />
@@ -178,9 +182,14 @@ function ErrorContent({
   message: string;
   onDismiss: () => void;
 }) {
+  const { styles, metrics } = useImportUi();
   return (
     <View style={styles.content}>
-      <MaterialCommunityIcons name="alert-circle-outline" size={48} color={palette.danger} />
+      <MaterialCommunityIcons
+        name="alert-circle-outline"
+        size={metrics.statusIconLarge}
+        color={palette.danger}
+      />
       <Text style={[styles.title, { color: palette.modalText }]}>Import Failed</Text>
       <Text style={[styles.subtitle, { color: palette.modalTextMuted }]}>{message}</Text>
       <Pressable
@@ -201,9 +210,14 @@ function DuplicateContent({
   onDismiss: () => void;
   isMultiple?: boolean;
 }) {
+  const { styles, metrics } = useImportUi();
   return (
     <View style={styles.content}>
-      <MaterialCommunityIcons name="check-circle-outline" size={48} color={palette.accent} />
+      <MaterialCommunityIcons
+        name="check-circle-outline"
+        size={metrics.statusIconLarge}
+        color={palette.accent}
+      />
       <Text style={[styles.title, { color: palette.modalText }]}>
         {isMultiple ? 'You already have all these games' : 'You already have this game'}
       </Text>
@@ -234,13 +248,18 @@ function GamePreviewContent({
   onImport: () => void;
   onCancel: () => void;
 }) {
+  const { styles, metrics } = useImportUi();
   const game = payload.data as SavedGame;
   const teamName = resolveTeamName(game.team1.id, game.team1.name, savedTeams);
   const goalCount = game.events.filter((e) => e.type === 'goal').length;
 
   return (
     <Animated.View entering={FadeIn.duration(200)} style={styles.content}>
-      <MaterialCommunityIcons name="cloud-download-outline" size={40} color={palette.accent} />
+      <MaterialCommunityIcons
+        name="cloud-download-outline"
+        size={metrics.statusIconMedium}
+        color={palette.accent}
+      />
       <Text style={[styles.title, { color: palette.modalText }]}>Import game?</Text>
 
       <View style={styles.previewCard}>
@@ -283,9 +302,14 @@ function GamesPreviewContent({
   onImport: () => void;
   onCancel: () => void;
 }) {
+  const { styles, metrics } = useImportUi();
   return (
     <Animated.View entering={FadeIn.duration(200)} style={styles.content}>
-      <MaterialCommunityIcons name="cloud-download-outline" size={40} color={palette.accent} />
+      <MaterialCommunityIcons
+        name="cloud-download-outline"
+        size={metrics.statusIconMedium}
+        color={palette.accent}
+      />
       <Text style={[styles.title, { color: palette.modalText }]}>
         Import {newGames.length} game{newGames.length !== 1 ? 's' : ''}?
       </Text>
@@ -340,13 +364,18 @@ function TeamPreviewContent({
   onImport: () => void;
   onCancel: () => void;
 }) {
+  const { styles, metrics } = useImportUi();
   const team = payload.data as SavedTeam;
   const playerCount = team.roster.length;
   const presetCount = payload.presets?.length ?? 0;
 
   return (
     <Animated.View entering={FadeIn.duration(200)} style={styles.content}>
-      <MaterialCommunityIcons name="cloud-download-outline" size={40} color={palette.accent} />
+      <MaterialCommunityIcons
+        name="cloud-download-outline"
+        size={metrics.statusIconMedium}
+        color={palette.accent}
+      />
       <Text style={[styles.title, { color: palette.modalText }]}>Import team?</Text>
 
       <View style={styles.previewCard}>
@@ -384,11 +413,16 @@ function TeamExistsContent({
   onUpdate: () => void;
   onKeep: () => void;
 }) {
+  const { styles, metrics } = useImportUi();
   const incomingTeam = payload.data as SavedTeam;
 
   return (
     <Animated.View entering={FadeIn.duration(200)} style={styles.content}>
-      <MaterialCommunityIcons name="account-group-outline" size={40} color={palette.accent} />
+      <MaterialCommunityIcons
+        name="account-group-outline"
+        size={metrics.statusIconMedium}
+        color={palette.accent}
+      />
       <Text style={[styles.title, { color: palette.modalText }]}>
         You already have {existingTeam.name}
       </Text>
@@ -432,6 +466,7 @@ function DoneContent({
   onAction: () => void;
   actionLabel: string;
 }) {
+  const { styles, metrics } = useImportUi();
   const message =
     type === 'games'
       ? `${count} game${count !== 1 ? 's' : ''} imported!`
@@ -441,7 +476,11 @@ function DoneContent({
 
   return (
     <Animated.View entering={FadeIn.duration(200)} style={styles.content}>
-      <MaterialCommunityIcons name="check-circle-outline" size={48} color={palette.success} />
+      <MaterialCommunityIcons
+        name="check-circle-outline"
+        size={metrics.statusIconLarge}
+        color={palette.success}
+      />
       <Text style={[styles.title, { color: palette.modalText }]}>{message}</Text>
       <Pressable style={[styles.button, { backgroundColor: palette.accent }]} onPress={onAction}>
         <Text style={[styles.buttonText, { color: palette.textOnAccent }]}>{actionLabel}</Text>
@@ -450,90 +489,107 @@ function DoneContent({
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  centered: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 24,
-  },
-  card: {
-    borderRadius: 24,
-    padding: 32,
-    width: '100%',
-    maxWidth: 420,
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.35,
-    shadowRadius: 30,
-    elevation: 20,
-  },
-  content: {
-    alignItems: 'center',
-    gap: 16,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: '700',
-    textAlign: 'center',
-  },
-  subtitle: {
-    fontSize: 14,
-    textAlign: 'center',
-  },
-  previewCard: {
-    alignItems: 'center',
-    gap: 12,
-    paddingVertical: 8,
-  },
-  previewTeams: {
-    fontSize: 18,
-    fontWeight: '600',
-    textAlign: 'center',
-  },
-  previewMeta: {
-    fontSize: 13,
-  },
-  buttonRow: {
-    flexDirection: 'row',
-    gap: 12,
-    marginTop: 8,
-  },
-  button: {
-    paddingHorizontal: 28,
-    paddingVertical: 12,
-    borderRadius: 12,
-    minWidth: 100,
-    alignItems: 'center',
-  },
-  buttonText: {
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  gamesList: {
-    maxHeight: 200,
-    width: '100%',
-  },
-  gamesListContent: {
-    gap: 8,
-  },
-  gameRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderRadius: 10,
-  },
-  gameRowInfo: {
-    flex: 1,
-    marginRight: 12,
-    gap: 2,
-  },
-  gameRowTeams: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-});
+function createStyles(sizeClass: SizeClass) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+    },
+    centered: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: scaleBySizeClass(24, sizeClass),
+    },
+    card: {
+      borderRadius: scaleBySizeClass(24, sizeClass),
+      padding: scaleBySizeClass(32, sizeClass),
+      width: '100%',
+      maxWidth: scaleBySizeClass(420, sizeClass),
+      shadowOffset: { width: 0, height: scaleBySizeClass(12, sizeClass) },
+      shadowOpacity: 0.35,
+      shadowRadius: scaleBySizeClass(30, sizeClass),
+      elevation: scaleBySizeClass(20, sizeClass),
+    },
+    content: {
+      alignItems: 'center',
+      gap: scaleBySizeClass(16, sizeClass),
+    },
+    title: {
+      fontSize: scaleBySizeClass(20, sizeClass),
+      fontWeight: '700',
+      textAlign: 'center',
+    },
+    subtitle: {
+      fontSize: scaleBySizeClass(14, sizeClass),
+      textAlign: 'center',
+    },
+    previewCard: {
+      alignItems: 'center',
+      gap: scaleBySizeClass(12, sizeClass),
+      paddingVertical: scaleBySizeClass(8, sizeClass),
+    },
+    previewTeams: {
+      fontSize: scaleBySizeClass(18, sizeClass),
+      fontWeight: '600',
+      textAlign: 'center',
+    },
+    previewMeta: {
+      fontSize: scaleBySizeClass(13, sizeClass),
+    },
+    buttonRow: {
+      flexDirection: 'row',
+      gap: scaleBySizeClass(12, sizeClass),
+      marginTop: scaleBySizeClass(8, sizeClass),
+    },
+    button: {
+      paddingHorizontal: scaleBySizeClass(28, sizeClass),
+      paddingVertical: scaleBySizeClass(12, sizeClass),
+      borderRadius: scaleBySizeClass(12, sizeClass),
+      minWidth: scaleBySizeClass(100, sizeClass),
+      alignItems: 'center',
+    },
+    buttonText: {
+      fontSize: scaleBySizeClass(16, sizeClass),
+      fontWeight: '700',
+    },
+    gamesList: {
+      maxHeight: scaleBySizeClass(200, sizeClass),
+      width: '100%',
+    },
+    gamesListContent: {
+      gap: scaleBySizeClass(8, sizeClass),
+    },
+    gameRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: scaleBySizeClass(12, sizeClass),
+      paddingVertical: scaleBySizeClass(10, sizeClass),
+      borderRadius: scaleBySizeClass(10, sizeClass),
+    },
+    gameRowInfo: {
+      flex: 1,
+      marginRight: scaleBySizeClass(12, sizeClass),
+      gap: scaleBySizeClass(2, sizeClass),
+    },
+    gameRowTeams: {
+      fontSize: scaleBySizeClass(14, sizeClass),
+      fontWeight: '600',
+    },
+  });
+}
+
+function createMetrics(sizeClass: SizeClass) {
+  return {
+    statusIconMedium: scaleBySizeClass(40, sizeClass),
+    statusIconLarge: scaleBySizeClass(48, sizeClass),
+  };
+}
+
+function useImportUi() {
+  const { sizeClass } = useLayout();
+  return {
+    styles: createStyles(sizeClass),
+    metrics: createMetrics(sizeClass),
+  };
+}

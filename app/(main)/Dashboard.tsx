@@ -1,6 +1,7 @@
 import { ThemedView } from '@/components/ThemedView';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { useTheme } from '@/context/ThemeContext';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { useNewGame } from '@/hooks/useNewGame';
 import { useVersionCheck } from '@/hooks/useVersionCheck';
 import { useGameStore } from '@/store/gameStore';
@@ -28,6 +29,9 @@ interface MenuSection {
 
 export default function DashboardScreen() {
   const { palette } = useTheme();
+  const { sizeClass } = useLayout();
+  const styles = createStyles(sizeClass);
+  const metrics = createMetrics(sizeClass);
   const { statTrackingEnabled, currentTeam, savedGames } = useGameStore();
   const { resetStatsTutorial } = useTutorialStore();
   const { confirmNewGame } = useNewGame({ onSuccess: () => router.push('/') });
@@ -165,7 +169,7 @@ export default function DashboardScreen() {
                     style={[styles.iconContainer, { backgroundColor: palette.accentOverlay10 }]}>
                     <MaterialCommunityIcons
                       name={item.icon}
-                      size={22}
+                      size={metrics.menuItemIconSize}
                       color={item.disabled ? palette.textMuted : palette.accent}
                     />
                   </View>
@@ -192,7 +196,7 @@ export default function DashboardScreen() {
                   </View>
                   <MaterialCommunityIcons
                     name="chevron-right"
-                    size={22}
+                    size={metrics.chevronIconSize}
                     color={item.disabled ? palette.overlay20 : palette.textMuted}
                   />
                 </Pressable>
@@ -209,7 +213,7 @@ export default function DashboardScreen() {
             { backgroundColor: palette.discordBg },
             pressed && styles.menuItemPressed,
           ]}>
-          <MaterialIcons name="discord" size={24} color={palette.discordText} />
+          <MaterialIcons name="discord" size={metrics.bannerIconSize} color={palette.discordText} />
           <View style={styles.discordText}>
             <Text style={[styles.discordTitle, { color: palette.discordText }]}>
               Join the Discord
@@ -218,7 +222,11 @@ export default function DashboardScreen() {
               Share feedback and give me ideas for new features
             </Text>
           </View>
-          <MaterialCommunityIcons name="chevron-right" size={22} color={palette.discordTextMuted} />
+          <MaterialCommunityIcons
+            name="chevron-right"
+            size={metrics.chevronIconSize}
+            color={palette.discordTextMuted}
+          />
         </Pressable>
 
         {/* Dev tools - only visible in development */}
@@ -235,7 +243,7 @@ export default function DashboardScreen() {
                 { backgroundColor: palette.danger },
                 pressed && styles.menuItemPressed,
               ]}>
-              <MaterialCommunityIcons name="bug" size={24} color="white" />
+              <MaterialCommunityIcons name="bug" size={metrics.bannerIconSize} color="white" />
               <View style={styles.discordText}>
                 <Text style={[styles.discordTitle, { color: 'white' }]}>Reset Version Check</Text>
                 <Text style={[styles.discordSubtitle, { color: 'rgba(255,255,255,0.7)' }]}>
@@ -253,7 +261,11 @@ export default function DashboardScreen() {
                 { backgroundColor: palette.danger, marginTop: 12 },
                 pressed && styles.menuItemPressed,
               ]}>
-              <MaterialCommunityIcons name="gesture-tap-button" size={24} color="white" />
+              <MaterialCommunityIcons
+                name="gesture-tap-button"
+                size={metrics.bannerIconSize}
+                color="white"
+              />
               <View style={styles.discordText}>
                 <Text style={[styles.discordTitle, { color: 'white' }]}>Reset Stats Tutorial</Text>
                 <Text style={[styles.discordSubtitle, { color: 'rgba(255,255,255,0.7)' }]}>
@@ -271,7 +283,7 @@ export default function DashboardScreen() {
                 { backgroundColor: palette.warning, marginTop: 12 },
                 pressed && styles.menuItemPressed,
               ]}>
-              <MaterialCommunityIcons name="link-off" size={24} color="white" />
+              <MaterialCommunityIcons name="link-off" size={metrics.bannerIconSize} color="white" />
               <View style={styles.discordText}>
                 <Text style={[styles.discordTitle, { color: 'white' }]}>Test 404 Page</Text>
                 <Text style={[styles.discordSubtitle, { color: 'rgba(255,255,255,0.7)' }]}>
@@ -286,95 +298,105 @@ export default function DashboardScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  scrollContent: {
-    padding: 24,
-    paddingTop: 8,
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 24,
-  },
-  section: {
-    flex: 1,
-    minWidth: 280,
-    gap: 12,
-  },
-  sectionTitle: {
-    fontSize: 11,
-    fontWeight: '700',
-    letterSpacing: 1.5,
-    marginLeft: 4,
-  },
-  menuList: {
-    gap: 8,
-  },
-  menuItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 14,
-    borderRadius: 14,
-    gap: 14,
-  },
-  menuItemPressed: {
-    opacity: 0.8,
-    transform: [{ scale: 0.98 }],
-  },
-  menuItemDisabled: {
-    opacity: 0.5,
-  },
-  iconContainer: {
-    width: 42,
-    height: 42,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  menuItemText: {
-    flex: 1,
-    gap: 2,
-  },
-  menuItemLabel: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  menuItemLabelRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  newBadge: {
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
-  newBadgeText: {
-    fontSize: 10,
-    fontWeight: '700',
-  },
-  menuItemDescription: {
-    fontSize: 12,
-  },
-  discordBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    borderRadius: 14,
-    gap: 14,
-    width: '100%',
-    marginTop: 8,
-  },
-  discordText: {
-    flex: 1,
-    gap: 2,
-  },
-  discordTitle: {
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  discordSubtitle: {
-    fontSize: 12,
-  },
-});
+function createStyles(sizeClass: SizeClass) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+    },
+    scrollContent: {
+      padding: scaleBySizeClass(24, sizeClass),
+      paddingTop: scaleBySizeClass(8, sizeClass),
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: scaleBySizeClass(24, sizeClass),
+    },
+    section: {
+      flex: 1,
+      minWidth: scaleBySizeClass(280, sizeClass),
+      gap: scaleBySizeClass(12, sizeClass),
+    },
+    sectionTitle: {
+      fontSize: scaleBySizeClass(11, sizeClass),
+      fontWeight: '700',
+      letterSpacing: scaleBySizeClass(1.5, sizeClass, { rounding: 'none' }),
+      marginLeft: scaleBySizeClass(4, sizeClass),
+    },
+    menuList: {
+      gap: scaleBySizeClass(8, sizeClass),
+    },
+    menuItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: scaleBySizeClass(14, sizeClass),
+      borderRadius: scaleBySizeClass(14, sizeClass),
+      gap: scaleBySizeClass(14, sizeClass),
+    },
+    menuItemPressed: {
+      opacity: 0.8,
+      transform: [{ scale: 0.98 }],
+    },
+    menuItemDisabled: {
+      opacity: 0.5,
+    },
+    iconContainer: {
+      width: scaleBySizeClass(42, sizeClass),
+      height: scaleBySizeClass(42, sizeClass),
+      borderRadius: scaleBySizeClass(10, sizeClass),
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    menuItemText: {
+      flex: 1,
+      gap: scaleBySizeClass(2, sizeClass),
+    },
+    menuItemLabel: {
+      fontSize: scaleBySizeClass(16, sizeClass),
+      fontWeight: '600',
+    },
+    menuItemLabelRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: scaleBySizeClass(8, sizeClass),
+    },
+    newBadge: {
+      paddingHorizontal: scaleBySizeClass(6, sizeClass),
+      paddingVertical: scaleBySizeClass(2, sizeClass),
+      borderRadius: scaleBySizeClass(4, sizeClass),
+    },
+    newBadgeText: {
+      fontSize: scaleBySizeClass(10, sizeClass),
+      fontWeight: '700',
+    },
+    menuItemDescription: {
+      fontSize: scaleBySizeClass(12, sizeClass),
+    },
+    discordBanner: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: scaleBySizeClass(16, sizeClass),
+      borderRadius: scaleBySizeClass(14, sizeClass),
+      gap: scaleBySizeClass(14, sizeClass),
+      width: '100%',
+      marginTop: scaleBySizeClass(8, sizeClass),
+    },
+    discordText: {
+      flex: 1,
+      gap: scaleBySizeClass(2, sizeClass),
+    },
+    discordTitle: {
+      fontSize: scaleBySizeClass(15, sizeClass),
+      fontWeight: '600',
+    },
+    discordSubtitle: {
+      fontSize: scaleBySizeClass(12, sizeClass),
+    },
+  });
+}
+
+function createMetrics(sizeClass: SizeClass) {
+  return {
+    menuItemIconSize: scaleBySizeClass(22, sizeClass),
+    chevronIconSize: scaleBySizeClass(22, sizeClass),
+    bannerIconSize: scaleBySizeClass(24, sizeClass),
+  };
+}

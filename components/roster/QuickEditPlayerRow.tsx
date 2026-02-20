@@ -1,4 +1,5 @@
 import { useTheme } from '@/context/ThemeContext';
+import { getSizeClassValue, scaleBySizeClass, SizeClass } from '@/hooks/useLayout';
 import { MatchingType, Player, PlayerRole } from '@/lib/storage/types';
 import { useSettingsStore } from '@/store/settingsStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
@@ -8,6 +9,7 @@ import { Pressable, StyleSheet, Switch, Text, View } from 'react-native';
 interface QuickEditPlayerRowProps {
   player: Player;
   isLandscape: boolean;
+  sizeClass?: SizeClass;
   onEditPlayer: () => void;
   onSetActive: (isActive: boolean) => void;
   onSetMatching: (matchingType: MatchingType | null) => void;
@@ -25,6 +27,7 @@ const ROLE_ICONS: Record<PlayerRole, IconName> = {
 export function QuickEditPlayerRow({
   player,
   isLandscape,
+  sizeClass = 'small',
   onEditPlayer,
   onSetActive,
   onSetMatching,
@@ -32,7 +35,8 @@ export function QuickEditPlayerRow({
 }: QuickEditPlayerRowProps) {
   const { palette } = useTheme();
   const { mmpColor, fmpColor } = useSettingsStore();
-  const styles = createStyles(isLandscape);
+  const styles = createStyles(isLandscape, sizeClass);
+  const metrics = createMetrics(sizeClass);
 
   return (
     <View
@@ -44,7 +48,7 @@ export function QuickEditPlayerRow({
           {player.role && (
             <MaterialCommunityIcons
               name={ROLE_ICONS[player.role]}
-              size={15}
+              size={metrics.roleBadgeIconSize}
               color={palette.textMuted}
             />
           )}
@@ -56,12 +60,17 @@ export function QuickEditPlayerRow({
             numberOfLines={1}>
             {player.name}
           </Text>
-          <MaterialCommunityIcons name="pencil-outline" size={14} color={palette.textMuted} />
+          <MaterialCommunityIcons
+            name="pencil-outline"
+            size={metrics.pencilIconSize}
+            color={palette.textMuted}
+          />
         </Pressable>
 
         <View style={styles.topActions}>
           <Text style={[styles.activeLabel, { color: palette.textMuted }]}>Active</Text>
           <Switch
+            style={{ transform: [{ scale: metrics.nativeSwitchScale }] }}
             value={player.isActive}
             onValueChange={onSetActive}
             trackColor={{ false: palette.overlay20, true: palette.accent }}
@@ -74,7 +83,11 @@ export function QuickEditPlayerRow({
               pressed && styles.buttonPressed,
             ]}
             onPress={onEditPlayer}>
-            <MaterialCommunityIcons name="dots-horizontal" size={16} color={palette.textMuted} />
+            <MaterialCommunityIcons
+              name="dots-horizontal"
+              size={metrics.moreIconSize}
+              color={palette.textMuted}
+            />
           </Pressable>
         </View>
       </View>
@@ -145,7 +158,7 @@ export function QuickEditPlayerRow({
               onPress={() => onSetRole(player.role === 'handler' ? null : 'handler')}>
               <MaterialCommunityIcons
                 name={ROLE_ICONS.handler}
-                size={13}
+                size={metrics.rolePillIconSize}
                 color={player.role === 'handler' ? palette.textOnAccent : palette.textMuted}
               />
               <Text
@@ -170,7 +183,7 @@ export function QuickEditPlayerRow({
               onPress={() => onSetRole(player.role === 'hybrid' ? null : 'hybrid')}>
               <MaterialCommunityIcons
                 name={ROLE_ICONS.hybrid}
-                size={13}
+                size={metrics.rolePillIconSize}
                 color={player.role === 'hybrid' ? palette.textOnAccent : palette.textMuted}
               />
               <Text
@@ -195,7 +208,7 @@ export function QuickEditPlayerRow({
               onPress={() => onSetRole(player.role === 'cutter' ? null : 'cutter')}>
               <MaterialCommunityIcons
                 name={ROLE_ICONS.cutter}
-                size={13}
+                size={metrics.rolePillIconSize}
                 color={player.role === 'cutter' ? palette.textOnAccent : palette.textMuted}
               />
               <Text
@@ -213,87 +226,97 @@ export function QuickEditPlayerRow({
   );
 }
 
-function createStyles(isLandscape: boolean) {
+function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
   return StyleSheet.create({
     row: {
       borderWidth: 1,
-      borderRadius: 12,
-      paddingHorizontal: 12,
-      paddingVertical: 10,
-      gap: 10,
+      borderRadius: scaleBySizeClass(12, sizeClass),
+      paddingHorizontal: scaleBySizeClass(12, sizeClass),
+      paddingVertical: scaleBySizeClass(10, sizeClass),
+      gap: scaleBySizeClass(10, sizeClass),
     },
     topRow: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
-      gap: 12,
+      gap: scaleBySizeClass(12, sizeClass),
     },
     nameButton: {
       flex: 1,
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 8,
-      minHeight: 28,
+      gap: scaleBySizeClass(8, sizeClass),
+      minHeight: scaleBySizeClass(28, sizeClass),
     },
     playerName: {
-      fontSize: 16,
+      fontSize: scaleBySizeClass(16, sizeClass),
       fontWeight: '600',
       flexShrink: 1,
     },
     topActions: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 8,
+      gap: scaleBySizeClass(8, sizeClass),
     },
     activeLabel: {
-      fontSize: 12,
+      fontSize: scaleBySizeClass(12, sizeClass),
       fontWeight: '600',
     },
     moreButton: {
-      width: 30,
-      height: 30,
-      borderRadius: 8,
+      width: scaleBySizeClass(30, sizeClass),
+      height: scaleBySizeClass(30, sizeClass),
+      borderRadius: scaleBySizeClass(8, sizeClass),
       borderWidth: 1,
       alignItems: 'center',
       justifyContent: 'center',
     },
     controlsRow: {
       flexDirection: isLandscape ? 'row' : 'column',
-      gap: 12,
+      gap: scaleBySizeClass(12, sizeClass),
     },
     controlGroup: {
       flex: 1,
-      gap: 6,
+      gap: scaleBySizeClass(6, sizeClass),
     },
     groupLabel: {
-      fontSize: 11,
+      fontSize: scaleBySizeClass(11, sizeClass),
       fontWeight: '700',
-      letterSpacing: 0.6,
+      letterSpacing: scaleBySizeClass(0.6, sizeClass, { rounding: 'none' }),
       textTransform: 'uppercase',
     },
     pillRow: {
       flexDirection: 'row',
-      gap: 6,
+      gap: scaleBySizeClass(6, sizeClass),
     },
     pill: {
-      minHeight: 30,
-      minWidth: 34,
-      paddingHorizontal: 8,
-      borderRadius: 8,
+      minHeight: scaleBySizeClass(30, sizeClass),
+      minWidth: scaleBySizeClass(34, sizeClass),
+      paddingHorizontal: scaleBySizeClass(8, sizeClass),
+      borderRadius: scaleBySizeClass(8, sizeClass),
       borderWidth: 1,
       alignItems: 'center',
       justifyContent: 'center',
     },
     rolePill: {
       flexDirection: 'row',
-      gap: 4,
+      gap: scaleBySizeClass(4, sizeClass),
     },
     pillText: {
-      fontSize: 12,
+      fontSize: scaleBySizeClass(12, sizeClass),
       fontWeight: '700',
     },
     buttonPressed: {
       opacity: 0.8,
     },
   });
+}
+
+function createMetrics(sizeClass: SizeClass) {
+  return {
+    roleBadgeIconSize: scaleBySizeClass(15, sizeClass),
+    pencilIconSize: scaleBySizeClass(14, sizeClass),
+    moreIconSize: scaleBySizeClass(16, sizeClass),
+    rolePillIconSize: scaleBySizeClass(13, sizeClass),
+    nativeSwitchScale: getSizeClassValue({ small: 1, medium: 1.08, large: 1.15 }, sizeClass),
+  };
 }

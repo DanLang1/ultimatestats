@@ -1,5 +1,5 @@
-import { useLayout } from '@/hooks/useLayout';
 import { useTheme } from '@/context/ThemeContext';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React, { ReactNode } from 'react';
 import { Pressable, StyleProp, StyleSheet, Text, TextStyle, View, ViewStyle } from 'react-native';
@@ -35,9 +35,14 @@ export function ScreenHeader({
   titleOverlayPaddingLandscape = 88,
   titleNumberOfLines = 1,
 }: ScreenHeaderProps) {
-  const { isLandscape } = useLayout();
+  const { isLandscape, sizeClass } = useLayout();
   const { palette } = useTheme();
+  const styles = createStyles(sizeClass);
+  const metrics = createMetrics(sizeClass);
   const useTitleOverlay = !isLandscape || centerTitleInLandscape;
+  const effectiveBackHitSlop = scaleBySizeClass(backHitSlop, sizeClass);
+  const titlePaddingPortrait = scaleBySizeClass(titleOverlayPaddingPortrait, sizeClass);
+  const titlePaddingLandscape = scaleBySizeClass(titleOverlayPaddingLandscape, sizeClass);
 
   return (
     <View style={[styles.header, containerStyle]}>
@@ -47,10 +52,10 @@ export function ScreenHeader({
           styles.backButton,
           { backgroundColor: backButtonBackgroundColor ?? palette.overlay10 },
         ]}
-        hitSlop={backHitSlop}>
+        hitSlop={effectiveBackHitSlop}>
         <MaterialCommunityIcons
           name="arrow-left"
-          size={24}
+          size={metrics.backIconSize}
           color={backIconColor ?? palette.textInverse}
         />
       </Pressable>
@@ -61,9 +66,7 @@ export function ScreenHeader({
           style={[
             styles.titleOverlay,
             {
-              paddingHorizontal: isLandscape
-                ? titleOverlayPaddingLandscape
-                : titleOverlayPaddingPortrait,
+              paddingHorizontal: isLandscape ? titlePaddingLandscape : titlePaddingPortrait,
             },
           ]}>
           <Text
@@ -89,42 +92,50 @@ export function ScreenHeader({
   );
 }
 
-const styles = StyleSheet.create({
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingTop: 8,
-    paddingBottom: 12,
-  },
-  backButton: {
-    padding: 8,
-    borderRadius: 20,
-    zIndex: 10,
-  },
-  titleOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  title: {
-    fontSize: 14,
-    fontWeight: '700',
-    letterSpacing: 2,
-    textTransform: 'uppercase',
-  },
-  titleCentered: {
-    textAlign: 'center',
-    width: '100%',
-  },
-  rightSlot: {
-    minWidth: 40,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-  },
-  headerSpacer: {
-    width: 40,
-  },
-});
+function createStyles(sizeClass: SizeClass) {
+  return StyleSheet.create({
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: scaleBySizeClass(20, sizeClass),
+      paddingTop: scaleBySizeClass(8, sizeClass),
+      paddingBottom: scaleBySizeClass(12, sizeClass),
+    },
+    backButton: {
+      padding: scaleBySizeClass(8, sizeClass),
+      borderRadius: scaleBySizeClass(20, sizeClass),
+      zIndex: 10,
+    },
+    titleOverlay: {
+      ...StyleSheet.absoluteFillObject,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    title: {
+      fontSize: scaleBySizeClass(14, sizeClass),
+      fontWeight: '700',
+      letterSpacing: scaleBySizeClass(2, sizeClass, { rounding: 'none' }),
+      textTransform: 'uppercase',
+    },
+    titleCentered: {
+      textAlign: 'center',
+      width: '100%',
+    },
+    rightSlot: {
+      minWidth: scaleBySizeClass(40, sizeClass),
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'flex-end',
+    },
+    headerSpacer: {
+      width: scaleBySizeClass(40, sizeClass),
+    },
+  });
+}
+
+function createMetrics(sizeClass: SizeClass) {
+  return {
+    backIconSize: scaleBySizeClass(24, sizeClass),
+  };
+}

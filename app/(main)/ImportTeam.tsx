@@ -4,6 +4,7 @@ import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import { useTheme } from '@/context/ThemeContext';
 import { useIsGameActive } from '@/hooks/useIsGameActive';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import {
   extractApiErrorMessage,
   fetchImportTeamPayload,
@@ -33,6 +34,9 @@ const DISCORD_URL = 'https://discord.gg/AjsmqhZ2GH';
 
 export default function ImportTeamScreen() {
   const { palette } = useTheme();
+  const { sizeClass } = useLayout();
+  const styles = createStyles(sizeClass);
+  const metrics = createMetrics(sizeClass);
   const { showAlert } = useAlert();
   const { savedTeams, importTeam, loadTeam } = useGameStore();
   const gameActive = useIsGameActive();
@@ -199,7 +203,11 @@ export default function ImportTeamScreen() {
                 { borderColor: palette.overlay20, backgroundColor: palette.overlay08 },
                 pressed && styles.buttonPressed,
               ]}>
-              <MaterialCommunityIcons name="content-paste" size={20} color={palette.textInverse} />
+              <MaterialCommunityIcons
+                name="content-paste"
+                size={metrics.actionIconSize}
+                color={palette.textInverse}
+              />
               <Text style={[styles.pasteButtonText, { color: palette.textInverse }]}>Paste</Text>
             </Pressable>
           </View>
@@ -215,6 +223,7 @@ export default function ImportTeamScreen() {
               options={NAME_FORMAT_OPTIONS}
               value={nameFormat}
               onChange={(next) => setNameFormat(next as NameFormatOption)}
+              sizeClass={sizeClass}
             />
           </View>
         </View>
@@ -229,7 +238,7 @@ export default function ImportTeamScreen() {
           disabled={isFetching}>
           <MaterialCommunityIcons
             name="cloud-download-outline"
-            size={20}
+            size={metrics.actionIconSize}
             color={isFetching ? palette.textMuted : palette.textOnAccent}
           />
           <Text
@@ -253,7 +262,11 @@ export default function ImportTeamScreen() {
               { backgroundColor: palette.discordBg },
               pressed && styles.buttonPressed,
             ]}>
-            <MaterialIcons name="discord" size={24} color={palette.discordText} />
+            <MaterialIcons
+              name="discord"
+              size={metrics.discordIconSize}
+              color={palette.discordText}
+            />
             <View style={styles.discordText}>
               <Text style={[styles.discordTitle, { color: palette.discordText }]}>
                 Join U-Stat Discord
@@ -261,7 +274,7 @@ export default function ImportTeamScreen() {
             </View>
             <MaterialCommunityIcons
               name="chevron-right"
-              size={22}
+              size={metrics.discordChevronSize}
               color={palette.discordTextMuted}
             />
           </Pressable>
@@ -289,128 +302,138 @@ export default function ImportTeamScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingHorizontal: 24,
-    paddingTop: 8,
-    gap: 16,
-  },
-  section: {
-    gap: 8,
-  },
-  linkRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  linkInput: {
-    flex: 1,
-    height: 48,
-    borderWidth: 1,
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    fontSize: 16,
-  },
-  pasteButton: {
-    height: 48,
-    borderRadius: 10,
-    borderWidth: 1,
-    paddingHorizontal: 14,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-  },
-  pasteButtonText: {
-    fontSize: 15,
-    fontWeight: '600',
-    letterSpacing: 0.2,
-  },
-  sectionTitle: {
-    fontSize: 12,
-    fontWeight: '700',
-    letterSpacing: 1.5,
-  },
-  controls: {
-    gap: 12,
-  },
-  errorText: {
-    fontSize: 12,
-    marginTop: 4,
-    marginLeft: 2,
-  },
-  fetchButton: {
-    height: 48,
-    borderRadius: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-  },
-  fetchButtonText: {
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  footerNote: {
-    marginTop: 8,
-    paddingTop: 12,
-    gap: 8,
-    borderTopWidth: 1,
-  },
-  footerNoteText: {
-    fontSize: 12,
-    lineHeight: 17,
-  },
-  discordBanner: {
-    width: '100%',
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    borderRadius: 14,
-    gap: 14,
-    marginTop: 2,
-  },
-  discordText: {
-    flex: 1,
-    gap: 2,
-  },
-  discordTitle: {
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  discordSubtitle: {
-    fontSize: 12,
-  },
-  buttonPressed: {
-    opacity: 0.8,
-    transform: [{ scale: 0.98 }],
-  },
-  loadingOverlay: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 24,
-  },
-  loadingCard: {
-    width: '100%',
-    maxWidth: 360,
-    borderRadius: 14,
-    borderWidth: 1,
-    paddingHorizontal: 20,
-    paddingVertical: 18,
-    alignItems: 'center',
-    gap: 10,
-  },
-  loadingTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-  },
-  loadingText: {
-    fontSize: 13,
-    textAlign: 'center',
-    lineHeight: 18,
-  },
-});
+function createStyles(sizeClass: SizeClass) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+    },
+    scrollContent: {
+      paddingHorizontal: scaleBySizeClass(24, sizeClass),
+      paddingTop: scaleBySizeClass(8, sizeClass),
+      gap: scaleBySizeClass(16, sizeClass),
+    },
+    section: {
+      gap: scaleBySizeClass(8, sizeClass),
+    },
+    linkRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: scaleBySizeClass(8, sizeClass),
+    },
+    linkInput: {
+      flex: 1,
+      height: scaleBySizeClass(48, sizeClass),
+      borderWidth: 1,
+      borderRadius: scaleBySizeClass(10, sizeClass),
+      paddingHorizontal: scaleBySizeClass(14, sizeClass),
+      fontSize: scaleBySizeClass(16, sizeClass),
+    },
+    pasteButton: {
+      height: scaleBySizeClass(48, sizeClass),
+      borderRadius: scaleBySizeClass(10, sizeClass),
+      borderWidth: 1,
+      paddingHorizontal: scaleBySizeClass(14, sizeClass),
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: scaleBySizeClass(8, sizeClass),
+    },
+    pasteButtonText: {
+      fontSize: scaleBySizeClass(15, sizeClass),
+      fontWeight: '600',
+      letterSpacing: scaleBySizeClass(0.2, sizeClass, { rounding: 'none' }),
+    },
+    sectionTitle: {
+      fontSize: scaleBySizeClass(12, sizeClass),
+      fontWeight: '700',
+      letterSpacing: scaleBySizeClass(1.5, sizeClass, { rounding: 'none' }),
+    },
+    controls: {
+      gap: scaleBySizeClass(12, sizeClass),
+    },
+    errorText: {
+      fontSize: scaleBySizeClass(12, sizeClass),
+      marginTop: scaleBySizeClass(4, sizeClass),
+      marginLeft: scaleBySizeClass(2, sizeClass),
+    },
+    fetchButton: {
+      height: scaleBySizeClass(48, sizeClass),
+      borderRadius: scaleBySizeClass(12, sizeClass),
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: scaleBySizeClass(8, sizeClass),
+    },
+    fetchButtonText: {
+      fontSize: scaleBySizeClass(16, sizeClass),
+      fontWeight: '700',
+    },
+    footerNote: {
+      marginTop: scaleBySizeClass(8, sizeClass),
+      paddingTop: scaleBySizeClass(12, sizeClass),
+      gap: scaleBySizeClass(8, sizeClass),
+      borderTopWidth: 1,
+    },
+    footerNoteText: {
+      fontSize: scaleBySizeClass(12, sizeClass),
+      lineHeight: scaleBySizeClass(17, sizeClass),
+    },
+    discordBanner: {
+      width: '100%',
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: scaleBySizeClass(16, sizeClass),
+      borderRadius: scaleBySizeClass(14, sizeClass),
+      gap: scaleBySizeClass(14, sizeClass),
+      marginTop: scaleBySizeClass(2, sizeClass),
+    },
+    discordText: {
+      flex: 1,
+      gap: scaleBySizeClass(2, sizeClass),
+    },
+    discordTitle: {
+      fontSize: scaleBySizeClass(15, sizeClass),
+      fontWeight: '600',
+    },
+    discordSubtitle: {
+      fontSize: scaleBySizeClass(12, sizeClass),
+    },
+    buttonPressed: {
+      opacity: 0.8,
+      transform: [{ scale: 0.98 }],
+    },
+    loadingOverlay: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: scaleBySizeClass(24, sizeClass),
+    },
+    loadingCard: {
+      width: '100%',
+      maxWidth: scaleBySizeClass(360, sizeClass),
+      borderRadius: scaleBySizeClass(14, sizeClass),
+      borderWidth: 1,
+      paddingHorizontal: scaleBySizeClass(20, sizeClass),
+      paddingVertical: scaleBySizeClass(18, sizeClass),
+      alignItems: 'center',
+      gap: scaleBySizeClass(10, sizeClass),
+    },
+    loadingTitle: {
+      fontSize: scaleBySizeClass(18, sizeClass),
+      fontWeight: '700',
+    },
+    loadingText: {
+      fontSize: scaleBySizeClass(13, sizeClass),
+      textAlign: 'center',
+      lineHeight: scaleBySizeClass(18, sizeClass),
+    },
+  });
+}
+
+function createMetrics(sizeClass: SizeClass) {
+  return {
+    actionIconSize: scaleBySizeClass(20, sizeClass),
+    discordIconSize: scaleBySizeClass(24, sizeClass),
+    discordChevronSize: scaleBySizeClass(22, sizeClass),
+  };
+}

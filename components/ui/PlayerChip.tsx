@@ -1,4 +1,5 @@
 import { useTheme } from '@/context/ThemeContext';
+import { scaleBySizeClass, SizeClass } from '@/hooks/useLayout';
 import { getContrastingTextColor } from '@/lib/colorUtils';
 import { MatchingType, PlayerRole } from '@/lib/storage/types';
 import { useSettingsStore } from '@/store/settingsStore';
@@ -17,6 +18,7 @@ interface PlayerChipProps {
   compact?: boolean;
   /** Use modal-appropriate colors (modalText, modalTextMuted) */
   useModalColors?: boolean;
+  sizeClass?: SizeClass;
   onPress: () => void;
 }
 
@@ -39,10 +41,12 @@ export function PlayerChip({
   subtitle,
   compact = false,
   useModalColors = false,
+  sizeClass = 'small',
   onPress,
 }: PlayerChipProps) {
   const { palette } = useTheme();
   const { mmpColor, fmpColor } = useSettingsStore();
+  const styles = createStyles(sizeClass);
 
   const activeColor =
     matchingType === 'fmp' ? fmpColor : matchingType === 'mmp' ? mmpColor : palette.accent;
@@ -110,7 +114,7 @@ export function PlayerChip({
       {role && (
         <MaterialCommunityIcons
           name={ROLE_ICONS[role]}
-          size={compact ? 10 : 12}
+          size={compact ? scaleBySizeClass(10, sizeClass) : scaleBySizeClass(12, sizeClass)}
           color={selected ? selectedTextColor : roleColor}
           style={styles.roleIcon}
         />
@@ -119,52 +123,54 @@ export function PlayerChip({
   );
 }
 
-const styles = StyleSheet.create({
-  chip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-    borderRadius: 20,
-    borderWidth: 2,
-    gap: 4,
-  },
-  chipCompact: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    borderRadius: 16,
-    borderWidth: 1.5,
-    gap: 3,
-  },
-  chipInactive: {
-    opacity: 0.5,
-  },
-  chipDisabled: {
-    opacity: 0.4,
-  },
-  chipPressed: {
-    opacity: 0.8,
-  },
-  chipText: {
-    fontSize: 15,
-    fontWeight: '500',
-  },
-  chipTextCompact: {
-    fontSize: 13,
-    fontWeight: '500',
-  },
-  chipSubtitle: {
-    fontSize: 11,
-    fontWeight: '600',
-  },
-  chipSubtitleCompact: {
-    fontSize: 10,
-    fontWeight: '600',
-  },
-  roleIcon: {
-    marginTop: 2,
-  },
-});
+function createStyles(sizeClass: SizeClass) {
+  return StyleSheet.create({
+    chip: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: scaleBySizeClass(8, sizeClass),
+      paddingHorizontal: scaleBySizeClass(14, sizeClass),
+      borderRadius: scaleBySizeClass(20, sizeClass),
+      borderWidth: 2,
+      gap: scaleBySizeClass(4, sizeClass),
+    },
+    chipCompact: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: scaleBySizeClass(6, sizeClass),
+      paddingHorizontal: scaleBySizeClass(10, sizeClass),
+      borderRadius: scaleBySizeClass(16, sizeClass),
+      borderWidth: 1.5,
+      gap: scaleBySizeClass(3, sizeClass),
+    },
+    chipInactive: {
+      opacity: 0.5,
+    },
+    chipDisabled: {
+      opacity: 0.4,
+    },
+    chipPressed: {
+      opacity: 0.8,
+    },
+    chipText: {
+      fontSize: scaleBySizeClass(15, sizeClass),
+      fontWeight: '500',
+    },
+    chipTextCompact: {
+      fontSize: scaleBySizeClass(13, sizeClass),
+      fontWeight: '500',
+    },
+    chipSubtitle: {
+      fontSize: scaleBySizeClass(11, sizeClass),
+      fontWeight: '600',
+    },
+    chipSubtitleCompact: {
+      fontSize: scaleBySizeClass(10, sizeClass),
+      fontWeight: '600',
+    },
+    roleIcon: {
+      marginTop: scaleBySizeClass(2, sizeClass),
+    },
+  });
+}

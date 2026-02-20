@@ -3,6 +3,7 @@ import {
   useAttentionBorderRunner,
 } from '@/components/ui/hooks/useAttentionBorderRunner';
 import { useTheme } from '@/context/ThemeContext';
+import { scaleBySizeClass, SizeClass } from '@/hooks/useLayout';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React, { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
@@ -28,6 +29,7 @@ interface SegmentedControlProps {
   highlightLeftColor?: string;
   highlightRightColor?: string;
   attentionRunKey?: number;
+  sizeClass?: SizeClass;
 }
 
 export function SegmentedControl({
@@ -43,8 +45,11 @@ export function SegmentedControl({
   highlightLeftColor,
   highlightRightColor,
   attentionRunKey,
+  sizeClass = 'small',
 }: SegmentedControlProps) {
   const { palette, themeMode } = useTheme();
+  const styles = createStyles(sizeClass);
+  const metrics = createMetrics(sizeClass);
   const [isAttentionActive, setIsAttentionActive] = useState(false);
   const { onLayout, runnerStyle, runnerOffsetStyle, enabled } = useAttentionBorderRunner(
     isAttentionActive && !disabled,
@@ -77,7 +82,13 @@ export function SegmentedControl({
       {label && (
         <View style={styles.labelRow}>
           <Text style={[styles.label, { color: palette.textMuted }]}>
-            {disabled && <MaterialCommunityIcons name="lock" size={10} color={palette.textMuted} />}{' '}
+            {disabled && (
+              <MaterialCommunityIcons
+                name="lock"
+                size={metrics.labelLockSize}
+                color={palette.textMuted}
+              />
+            )}{' '}
             {label}
           </Text>
           {showRequired && (
@@ -185,99 +196,107 @@ export function SegmentedControl({
   );
 }
 
-const styles = StyleSheet.create({
-  label: {
-    fontSize: 10,
-    fontWeight: '700',
-    letterSpacing: 1,
-  },
-  labelRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 6,
-  },
-  requiredChip: {
-    borderWidth: 1,
-    borderRadius: 999,
-    paddingHorizontal: 7,
-    paddingVertical: 2,
-  },
-  requiredChipText: {
-    fontSize: 10,
-    fontWeight: '700',
-    letterSpacing: 0.3,
-  },
-  container: {
-    flexDirection: 'row',
-    height: 48,
-    borderRadius: 10,
-    borderWidth: 1,
-    overflow: 'hidden',
-  },
-  controlWrapper: {
-    position: 'relative',
-  },
-  sideHighlightLayer: {
-    ...StyleSheet.absoluteFillObject,
-    borderRadius: 10,
-    overflow: 'hidden',
-  },
-  leftHighlightEdge: {
-    position: 'absolute',
-    left: 0,
-    top: 0,
-    bottom: 0,
-  },
-  rightHighlightEdge: {
-    position: 'absolute',
-    right: 0,
-    top: 0,
-    bottom: 0,
-  },
-  attentionLayer: {
-    ...StyleSheet.absoluteFillObject,
-    borderRadius: 10,
-    overflow: 'hidden',
-  },
-  attentionBase: {
-    ...StyleSheet.absoluteFillObject,
-    borderRadius: 10,
-    borderWidth: 1,
-  },
-  attentionRunner: {
-    position: 'absolute',
-    left: 0,
-    top: 0,
-    width: 22,
-    height: 5,
-  },
-  attentionRunnerOuter: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 999,
-    paddingHorizontal: 1,
-    paddingVertical: 1,
-  },
-  attentionRunnerInner: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 999,
-  },
-  separator: {
-    width: 1,
-  },
-  button: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 8,
-  },
-  buttonDisabled: {
-    opacity: 0.5,
-  },
-  buttonText: {
-    fontSize: 18,
-    fontWeight: '600',
-  },
-});
+function createStyles(sizeClass: SizeClass) {
+  return StyleSheet.create({
+    label: {
+      fontSize: scaleBySizeClass(10, sizeClass),
+      fontWeight: '700',
+      letterSpacing: scaleBySizeClass(1, sizeClass, { rounding: 'none' }),
+    },
+    labelRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: scaleBySizeClass(8, sizeClass),
+      marginBottom: scaleBySizeClass(6, sizeClass),
+    },
+    requiredChip: {
+      borderWidth: 1,
+      borderRadius: 999,
+      paddingHorizontal: scaleBySizeClass(7, sizeClass),
+      paddingVertical: scaleBySizeClass(2, sizeClass),
+    },
+    requiredChipText: {
+      fontSize: scaleBySizeClass(10, sizeClass),
+      fontWeight: '700',
+      letterSpacing: scaleBySizeClass(0.3, sizeClass, { rounding: 'none' }),
+    },
+    container: {
+      flexDirection: 'row',
+      height: scaleBySizeClass(48, sizeClass),
+      borderRadius: scaleBySizeClass(10, sizeClass),
+      borderWidth: 1,
+      overflow: 'hidden',
+    },
+    controlWrapper: {
+      position: 'relative',
+    },
+    sideHighlightLayer: {
+      ...StyleSheet.absoluteFillObject,
+      borderRadius: scaleBySizeClass(10, sizeClass),
+      overflow: 'hidden',
+    },
+    leftHighlightEdge: {
+      position: 'absolute',
+      left: 0,
+      top: 0,
+      bottom: 0,
+    },
+    rightHighlightEdge: {
+      position: 'absolute',
+      right: 0,
+      top: 0,
+      bottom: 0,
+    },
+    attentionLayer: {
+      ...StyleSheet.absoluteFillObject,
+      borderRadius: scaleBySizeClass(10, sizeClass),
+      overflow: 'hidden',
+    },
+    attentionBase: {
+      ...StyleSheet.absoluteFillObject,
+      borderRadius: scaleBySizeClass(10, sizeClass),
+      borderWidth: 1,
+    },
+    attentionRunner: {
+      position: 'absolute',
+      left: 0,
+      top: 0,
+      width: scaleBySizeClass(22, sizeClass),
+      height: scaleBySizeClass(5, sizeClass),
+    },
+    attentionRunnerOuter: {
+      width: '100%',
+      height: '100%',
+      borderRadius: 999,
+      paddingHorizontal: scaleBySizeClass(1, sizeClass),
+      paddingVertical: scaleBySizeClass(1, sizeClass),
+    },
+    attentionRunnerInner: {
+      width: '100%',
+      height: '100%',
+      borderRadius: 999,
+    },
+    separator: {
+      width: 1,
+    },
+    button: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingHorizontal: scaleBySizeClass(8, sizeClass),
+    },
+    buttonDisabled: {
+      opacity: 0.5,
+    },
+    buttonText: {
+      fontSize: scaleBySizeClass(18, sizeClass),
+      fontWeight: '600',
+    },
+  });
+}
+
+function createMetrics(sizeClass: SizeClass) {
+  return {
+    labelLockSize: scaleBySizeClass(10, sizeClass),
+  };
+}

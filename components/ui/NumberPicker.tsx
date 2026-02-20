@@ -1,4 +1,5 @@
 import { useTheme } from '@/context/ThemeContext';
+import { scaleBySizeClass, SizeClass } from '@/hooks/useLayout';
 import { useNumberPickerStore } from '@/store/numberPickerStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router } from 'expo-router';
@@ -15,6 +16,7 @@ interface NumberPickerProps {
   suffix?: string;
   quickOptions?: number[];
   placeholder?: string;
+  sizeClass?: SizeClass;
 }
 
 export function NumberPicker({
@@ -27,8 +29,11 @@ export function NumberPicker({
   suffix,
   quickOptions,
   placeholder = '0',
+  sizeClass = 'small',
 }: NumberPickerProps) {
   const { palette } = useTheme();
+  const styles = createStyles(sizeClass);
+  const metrics = createMetrics(sizeClass);
   const openPicker = useNumberPickerStore((s) => s.open);
 
   const handleOpen = () => {
@@ -52,7 +57,13 @@ export function NumberPicker({
     <View>
       {label && (
         <Text style={[styles.label, { color: palette.textMuted }]}>
-          {disabled && <MaterialCommunityIcons name="lock" size={10} color={palette.textMuted} />}{' '}
+          {disabled && (
+            <MaterialCommunityIcons
+              name="lock"
+              size={metrics.labelLockSize}
+              color={palette.textMuted}
+            />
+          )}{' '}
           {label}
         </Text>
       )}
@@ -84,39 +95,47 @@ export function NumberPicker({
   );
 }
 
-const styles = StyleSheet.create({
-  label: {
-    fontSize: 10,
-    fontWeight: '700',
-    letterSpacing: 1,
-    marginBottom: 6,
-  },
-  trigger: {
-    height: 48,
-    borderWidth: 1,
-    borderRadius: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
-    overflow: 'hidden',
-  },
-  disabled: {
-    opacity: 0.5,
-  },
-  triggerText: {
-    flex: 1,
-    fontSize: 18,
-    fontWeight: '600',
-    textAlign: 'center',
-  },
-  suffixContainer: {
-    height: '100%',
-    paddingHorizontal: 12,
-    justifyContent: 'center',
-    borderLeftWidth: 1,
-    backgroundColor: 'rgba(0,0,0,0.05)',
-  },
-  suffixText: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-});
+function createStyles(sizeClass: SizeClass) {
+  return StyleSheet.create({
+    label: {
+      fontSize: scaleBySizeClass(10, sizeClass),
+      fontWeight: '700',
+      letterSpacing: scaleBySizeClass(1, sizeClass, { rounding: 'none' }),
+      marginBottom: scaleBySizeClass(6, sizeClass),
+    },
+    trigger: {
+      height: scaleBySizeClass(48, sizeClass),
+      borderWidth: 1,
+      borderRadius: scaleBySizeClass(10, sizeClass),
+      flexDirection: 'row',
+      alignItems: 'center',
+      overflow: 'hidden',
+    },
+    disabled: {
+      opacity: 0.5,
+    },
+    triggerText: {
+      flex: 1,
+      fontSize: scaleBySizeClass(18, sizeClass),
+      fontWeight: '600',
+      textAlign: 'center',
+    },
+    suffixContainer: {
+      height: '100%',
+      paddingHorizontal: scaleBySizeClass(12, sizeClass),
+      justifyContent: 'center',
+      borderLeftWidth: 1,
+      backgroundColor: 'rgba(0,0,0,0.05)',
+    },
+    suffixText: {
+      fontSize: scaleBySizeClass(14, sizeClass),
+      fontWeight: '600',
+    },
+  });
+}
+
+function createMetrics(sizeClass: SizeClass) {
+  return {
+    labelLockSize: scaleBySizeClass(10, sizeClass),
+  };
+}

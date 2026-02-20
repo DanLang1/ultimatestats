@@ -1,11 +1,10 @@
 import { useTheme } from '@/context/ThemeContext';
+import { getSizeClassValue, scaleBySizeClass, SizeClass } from '@/hooks/useLayout';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, { useAnimatedStyle, withTiming } from 'react-native-reanimated';
 
-const EXPANDED_WIDTH = 180;
-const COLLAPSED_WIDTH = 48;
 const ANIMATION_DURATION = 200;
 
 export interface EditRosterSidebarProps {
@@ -23,6 +22,7 @@ export interface EditRosterSidebarProps {
   showShareTeam: boolean;
   showClearRoster: boolean;
   showNewTeam: boolean;
+  sizeClass?: SizeClass;
 }
 
 interface SidebarButtonProps {
@@ -31,6 +31,7 @@ interface SidebarButtonProps {
   onPress: () => void;
   collapsed: boolean;
   variant?: 'default' | 'danger';
+  sizeClass?: SizeClass;
 }
 
 function SidebarButton({
@@ -39,8 +40,11 @@ function SidebarButton({
   onPress,
   collapsed,
   variant = 'default',
+  sizeClass = 'small',
 }: SidebarButtonProps) {
   const { palette } = useTheme();
+  const styles = createStyles(sizeClass);
+  const iconSize = scaleBySizeClass(20, sizeClass);
 
   const iconColor = variant === 'danger' ? palette.danger : palette.textInverse;
   const textColor = variant === 'danger' ? palette.danger : palette.textInverse;
@@ -53,7 +57,7 @@ function SidebarButton({
         collapsed && styles.sidebarButtonCollapsed,
         pressed && styles.buttonPressed,
       ]}>
-      <MaterialCommunityIcons name={icon} size={20} color={iconColor} />
+      <MaterialCommunityIcons name={icon} size={iconSize} color={iconColor} />
       {!collapsed && (
         <Text style={[styles.sidebarButtonText, { color: textColor }]} numberOfLines={1}>
           {label}
@@ -77,11 +81,14 @@ export function EditRosterSidebar({
   showShareTeam,
   showClearRoster,
   showNewTeam,
+  sizeClass = 'small',
 }: EditRosterSidebarProps) {
   const { palette } = useTheme();
+  const styles = createStyles(sizeClass);
+  const metrics = createMetrics(sizeClass);
 
   const animatedStyle = useAnimatedStyle(() => ({
-    width: withTiming(collapsed ? COLLAPSED_WIDTH : EXPANDED_WIDTH, {
+    width: withTiming(collapsed ? metrics.collapsedWidth : metrics.expandedWidth, {
       duration: ANIMATION_DURATION,
     }),
   }));
@@ -100,9 +107,16 @@ export function EditRosterSidebar({
           label="Rename Team"
           onPress={onRenameTeam}
           collapsed={collapsed}
+          sizeClass={sizeClass}
         />
         {showNewTeam && (
-          <SidebarButton icon="plus" label="New Team" onPress={onNewTeam} collapsed={collapsed} />
+          <SidebarButton
+            icon="plus"
+            label="New Team"
+            onPress={onNewTeam}
+            collapsed={collapsed}
+            sizeClass={sizeClass}
+          />
         )}
         {showSwitchTeam && (
           <SidebarButton
@@ -110,6 +124,7 @@ export function EditRosterSidebar({
             label="Switch Team"
             onPress={onSwitchTeam}
             collapsed={collapsed}
+            sizeClass={sizeClass}
           />
         )}
         {showEditPresets && (
@@ -118,6 +133,7 @@ export function EditRosterSidebar({
             label="Edit Lines"
             onPress={onEditPresets}
             collapsed={collapsed}
+            sizeClass={sizeClass}
           />
         )}
         {showShareTeam && (
@@ -126,6 +142,7 @@ export function EditRosterSidebar({
             label="Share Team"
             onPress={onShareTeam}
             collapsed={collapsed}
+            sizeClass={sizeClass}
           />
         )}
         {showClearRoster && (
@@ -136,6 +153,7 @@ export function EditRosterSidebar({
               onPress={onClearRoster}
               collapsed={collapsed}
               variant="danger"
+              sizeClass={sizeClass}
             />
           </>
         )}
@@ -152,7 +170,7 @@ export function EditRosterSidebar({
           ]}>
           <MaterialCommunityIcons
             name={collapsed ? 'chevron-right' : 'chevron-left'}
-            size={20}
+            size={metrics.toggleIconSize}
             color={palette.textMuted}
           />
           {!collapsed && (
@@ -164,59 +182,69 @@ export function EditRosterSidebar({
   );
 }
 
-const styles = StyleSheet.create({
-  sidebar: {
-    borderRightWidth: 1,
-    paddingVertical: 16,
-    paddingHorizontal: 8,
-    justifyContent: 'space-between',
-  },
-  actionsSection: {
-    flex: 1,
-    gap: 2,
-  },
-  bottomSection: {
-    marginTop: 16,
-  },
-  sidebarButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    paddingVertical: 12,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-  },
-  sidebarButtonCollapsed: {
-    justifyContent: 'center',
-    paddingHorizontal: 0,
-  },
-  sidebarButtonText: {
-    fontSize: 14,
-    fontWeight: '500',
-    flex: 1,
-  },
-  buttonPressed: {
-    opacity: 0.7,
-  },
-  divider: {
-    height: 1,
-    marginVertical: 8,
-    marginHorizontal: 4,
-  },
-  collapseButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-  },
-  collapseButtonCollapsed: {
-    justifyContent: 'center',
-    paddingHorizontal: 0,
-  },
-  collapseButtonText: {
-    fontSize: 12,
-    flex: 1,
-  },
-});
+function createStyles(sizeClass: SizeClass) {
+  return StyleSheet.create({
+    sidebar: {
+      borderRightWidth: 1,
+      paddingVertical: scaleBySizeClass(16, sizeClass),
+      paddingHorizontal: scaleBySizeClass(8, sizeClass),
+      justifyContent: 'space-between',
+    },
+    actionsSection: {
+      flex: 1,
+      gap: scaleBySizeClass(2, sizeClass),
+    },
+    bottomSection: {
+      marginTop: scaleBySizeClass(16, sizeClass),
+    },
+    sidebarButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: scaleBySizeClass(12, sizeClass),
+      paddingVertical: scaleBySizeClass(12, sizeClass),
+      paddingHorizontal: scaleBySizeClass(12, sizeClass),
+      borderRadius: scaleBySizeClass(8, sizeClass),
+    },
+    sidebarButtonCollapsed: {
+      justifyContent: 'center',
+      paddingHorizontal: 0,
+    },
+    sidebarButtonText: {
+      fontSize: scaleBySizeClass(14, sizeClass),
+      fontWeight: '500',
+      flex: 1,
+    },
+    buttonPressed: {
+      opacity: 0.7,
+    },
+    divider: {
+      height: 1,
+      marginVertical: scaleBySizeClass(8, sizeClass),
+      marginHorizontal: scaleBySizeClass(4, sizeClass),
+    },
+    collapseButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: scaleBySizeClass(8, sizeClass),
+      paddingVertical: scaleBySizeClass(8, sizeClass),
+      paddingHorizontal: scaleBySizeClass(12, sizeClass),
+      borderRadius: scaleBySizeClass(8, sizeClass),
+    },
+    collapseButtonCollapsed: {
+      justifyContent: 'center',
+      paddingHorizontal: 0,
+    },
+    collapseButtonText: {
+      fontSize: scaleBySizeClass(12, sizeClass),
+      flex: 1,
+    },
+  });
+}
+
+function createMetrics(sizeClass: SizeClass) {
+  return {
+    expandedWidth: getSizeClassValue({ small: 180, medium: 196, large: 212 }, sizeClass),
+    collapsedWidth: getSizeClassValue({ small: 48, medium: 52, large: 56 }, sizeClass),
+    toggleIconSize: scaleBySizeClass(20, sizeClass),
+  };
+}

@@ -1,4 +1,5 @@
 import { useTheme } from '@/context/ThemeContext';
+import { scaleBySizeClass, SizeClass } from '@/hooks/useLayout';
 import { PlayerRole } from '@/lib/storage/types';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React, { useState } from 'react';
@@ -17,6 +18,7 @@ interface RosterControlsHeaderProps {
   onToggleSelectMode: () => void;
   onToggleSelectAll: () => void;
   onToggleRoleFilter: (role: Exclude<RoleFilter, null>) => void;
+  sizeClass?: SizeClass;
 }
 
 export function RosterControlsHeader({
@@ -30,8 +32,11 @@ export function RosterControlsHeader({
   onToggleSelectMode,
   onToggleSelectAll,
   onToggleRoleFilter,
+  sizeClass = 'small',
 }: RosterControlsHeaderProps) {
-  const TRACK_WIDTH = 118;
+  const TRACK_WIDTH = scaleBySizeClass(118, sizeClass);
+  const styles = createStyles(sizeClass);
+  const metrics = createMetrics(sizeClass);
   const { palette } = useTheme();
   const [viewportWidth, setViewportWidth] = useState(0);
   const [contentWidth, setContentWidth] = useState(0);
@@ -70,7 +75,7 @@ export function RosterControlsHeader({
                 ]}>
                 <MaterialCommunityIcons
                   name={viewMode === 'chips' ? 'view-list' : 'view-module'}
-                  size={15}
+                  size={metrics.primaryIconSize}
                   color={viewMode === 'chips' ? palette.textOnAccent : palette.textMuted}
                 />
                 <Text
@@ -91,7 +96,7 @@ export function RosterControlsHeader({
                 ]}>
                 <MaterialCommunityIcons
                   name="checkbox-multiple-blank-outline"
-                  size={16}
+                  size={metrics.primaryCheckIconSize}
                   color={palette.textMuted}
                 />
                 <Text style={[styles.primaryChipText, { color: palette.textMuted }]}>Bulk</Text>
@@ -124,7 +129,7 @@ export function RosterControlsHeader({
                       ]}>
                       <MaterialCommunityIcons
                         name={icon}
-                        size={14}
+                        size={metrics.segmentIconSize}
                         color={isActive ? palette.textOnAccent : palette.textMuted}
                       />
                       <Text
@@ -161,7 +166,7 @@ export function RosterControlsHeader({
                         ? 'checkbox-multiple-marked'
                         : 'checkbox-multiple-blank-outline'
                     }
-                    size={14}
+                    size={metrics.segmentIconSize}
                     color={palette.textMuted}
                   />
                   <Text style={[styles.smallActionText, { color: palette.textMuted }]}>
@@ -179,7 +184,7 @@ export function RosterControlsHeader({
                 ]}>
                 <MaterialCommunityIcons
                   name="checkbox-multiple-marked-outline"
-                  size={16}
+                  size={metrics.primaryCheckIconSize}
                   color={palette.textOnAccent}
                 />
                 <Text style={[styles.primaryChipText, { color: palette.textOnAccent }]}>Done</Text>
@@ -205,113 +210,123 @@ export function RosterControlsHeader({
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    borderBottomWidth: 1,
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-  },
-  scrollViewport: {
-    position: 'relative',
-  },
-  controlsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    paddingRight: 28,
-  },
-  primaryChip: {
-    borderWidth: 1,
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  primaryChipText: {
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  selectionChip: {
-    borderWidth: 1,
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-  },
-  smallAction: {
-    borderWidth: 1,
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  selectionLabel: {
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  smallActionText: {
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  segmentedControl: {
-    borderWidth: 1,
-    borderRadius: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    overflow: 'hidden',
-  },
-  segment: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-  },
-  segmentFirst: {
-    borderTopLeftRadius: 11,
-    borderBottomLeftRadius: 11,
-  },
-  segmentLast: {
-    borderTopRightRadius: 11,
-    borderBottomRightRadius: 11,
-  },
-  filterText: {
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  indicatorWrap: {
-    marginTop: 10,
-    alignItems: 'center',
-  },
-  indicatorTrack: {
-    width: 118,
-    height: 2,
-    borderRadius: 999,
-    overflow: 'hidden',
-  },
-  indicatorThumb: {
-    position: 'absolute',
-    top: -2,
-    height: 6,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  thumbCore: {
-    flex: 1,
-    height: 2,
-    borderRadius: 999,
-    marginHorizontal: -1,
-  },
-  thumbPoint: {
-    width: 6,
-    height: 6,
-    transform: [{ rotate: '45deg' }],
-    borderRadius: 1,
-  },
-  pressed: {
-    opacity: 0.75,
-  },
-});
+function createStyles(sizeClass: SizeClass) {
+  return StyleSheet.create({
+    container: {
+      borderBottomWidth: 1,
+      paddingHorizontal: scaleBySizeClass(20, sizeClass),
+      paddingVertical: scaleBySizeClass(10, sizeClass),
+    },
+    scrollViewport: {
+      position: 'relative',
+    },
+    controlsRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: scaleBySizeClass(8, sizeClass),
+      paddingRight: scaleBySizeClass(28, sizeClass),
+    },
+    primaryChip: {
+      borderWidth: 1,
+      borderRadius: scaleBySizeClass(12, sizeClass),
+      paddingHorizontal: scaleBySizeClass(12, sizeClass),
+      paddingVertical: scaleBySizeClass(8, sizeClass),
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: scaleBySizeClass(6, sizeClass),
+    },
+    primaryChipText: {
+      fontSize: scaleBySizeClass(12, sizeClass),
+      fontWeight: '700',
+    },
+    selectionChip: {
+      borderWidth: 1,
+      borderRadius: scaleBySizeClass(12, sizeClass),
+      paddingHorizontal: scaleBySizeClass(12, sizeClass),
+      paddingVertical: scaleBySizeClass(8, sizeClass),
+    },
+    smallAction: {
+      borderWidth: 1,
+      borderRadius: scaleBySizeClass(12, sizeClass),
+      paddingHorizontal: scaleBySizeClass(12, sizeClass),
+      paddingVertical: scaleBySizeClass(8, sizeClass),
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: scaleBySizeClass(6, sizeClass),
+    },
+    selectionLabel: {
+      fontSize: scaleBySizeClass(12, sizeClass),
+      fontWeight: '600',
+    },
+    smallActionText: {
+      fontSize: scaleBySizeClass(12, sizeClass),
+      fontWeight: '600',
+    },
+    segmentedControl: {
+      borderWidth: 1,
+      borderRadius: scaleBySizeClass(12, sizeClass),
+      flexDirection: 'row',
+      alignItems: 'center',
+      overflow: 'hidden',
+    },
+    segment: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: scaleBySizeClass(5, sizeClass),
+      paddingHorizontal: scaleBySizeClass(10, sizeClass),
+      paddingVertical: scaleBySizeClass(8, sizeClass),
+    },
+    segmentFirst: {
+      borderTopLeftRadius: scaleBySizeClass(11, sizeClass),
+      borderBottomLeftRadius: scaleBySizeClass(11, sizeClass),
+    },
+    segmentLast: {
+      borderTopRightRadius: scaleBySizeClass(11, sizeClass),
+      borderBottomRightRadius: scaleBySizeClass(11, sizeClass),
+    },
+    filterText: {
+      fontSize: scaleBySizeClass(12, sizeClass),
+      fontWeight: '600',
+    },
+    indicatorWrap: {
+      marginTop: scaleBySizeClass(10, sizeClass),
+      alignItems: 'center',
+    },
+    indicatorTrack: {
+      width: scaleBySizeClass(118, sizeClass),
+      height: scaleBySizeClass(2, sizeClass),
+      borderRadius: 999,
+      overflow: 'hidden',
+    },
+    indicatorThumb: {
+      position: 'absolute',
+      top: scaleBySizeClass(-2, sizeClass),
+      height: scaleBySizeClass(6, sizeClass),
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    thumbCore: {
+      flex: 1,
+      height: scaleBySizeClass(2, sizeClass),
+      borderRadius: 999,
+      marginHorizontal: scaleBySizeClass(-1, sizeClass),
+    },
+    thumbPoint: {
+      width: scaleBySizeClass(6, sizeClass),
+      height: scaleBySizeClass(6, sizeClass),
+      transform: [{ rotate: '45deg' }],
+      borderRadius: scaleBySizeClass(1, sizeClass),
+    },
+    pressed: {
+      opacity: 0.75,
+    },
+  });
+}
+
+function createMetrics(sizeClass: SizeClass) {
+  return {
+    primaryIconSize: scaleBySizeClass(15, sizeClass),
+    primaryCheckIconSize: scaleBySizeClass(16, sizeClass),
+    segmentIconSize: scaleBySizeClass(14, sizeClass),
+  };
+}

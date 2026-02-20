@@ -1,5 +1,6 @@
 import FlashingIcon from '@/components/ui/FlashingIcon';
 import { useTheme } from '@/context/ThemeContext';
+import { scaleBySizeClass, SizeClass } from '@/hooks/useLayout';
 import { useTutorialStore } from '@/store/tutorialStore';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
@@ -9,10 +10,16 @@ import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 
 interface HelpContentProps {
   showActionBarLegend?: boolean;
+  sizeClass?: SizeClass;
 }
 
-export default function HelpContent({ showActionBarLegend = true }: HelpContentProps) {
+export default function HelpContent({
+  showActionBarLegend = true,
+  sizeClass = 'small',
+}: HelpContentProps) {
   const { palette } = useTheme();
+  const styles = createStyles(sizeClass);
+  const metrics = createMetrics(sizeClass);
 
   return (
     <>
@@ -28,7 +35,7 @@ export default function HelpContent({ showActionBarLegend = true }: HelpContentP
               <View style={styles.legendIconContainer}>
                 <MaterialCommunityIcons
                   name="hand-front-left-outline"
-                  size={20}
+                  size={metrics.legendIconSize}
                   color={palette.danger}
                 />
               </View>
@@ -41,7 +48,11 @@ export default function HelpContent({ showActionBarLegend = true }: HelpContentP
             </View>
             <View style={styles.legendItem}>
               <View style={styles.legendIconContainer}>
-                <FontAwesome5 name="hands-wash" size={16} color={palette.danger} />
+                <FontAwesome5
+                  name="hands-wash"
+                  size={metrics.legendDropIconSize}
+                  color={palette.danger}
+                />
               </View>
               <View style={styles.legendTextContainer}>
                 <Text style={[styles.legendLabel, { color: palette.textInverse }]}>DROP</Text>
@@ -52,7 +63,11 @@ export default function HelpContent({ showActionBarLegend = true }: HelpContentP
             </View>
             <View style={styles.legendItem}>
               <View style={styles.legendIconContainer}>
-                <MaterialCommunityIcons name="trash-can-outline" size={20} color={palette.danger} />
+                <MaterialCommunityIcons
+                  name="trash-can-outline"
+                  size={metrics.legendIconSize}
+                  color={palette.danger}
+                />
               </View>
               <View style={styles.legendTextContainer}>
                 <Text style={[styles.legendLabel, { color: palette.textInverse }]}>T/A</Text>
@@ -64,7 +79,11 @@ export default function HelpContent({ showActionBarLegend = true }: HelpContentP
 
             <View style={styles.legendItem}>
               <View style={styles.legendIconContainer}>
-                <MaterialCommunityIcons name="scale-balance" size={20} color={palette.danger} />
+                <MaterialCommunityIcons
+                  name="scale-balance"
+                  size={metrics.legendIconSize}
+                  color={palette.danger}
+                />
               </View>
               <View style={styles.legendTextContainer}>
                 <Text style={[styles.legendLabel, { color: palette.textInverse }]}>50/50</Text>
@@ -83,7 +102,7 @@ export default function HelpContent({ showActionBarLegend = true }: HelpContentP
               <View style={styles.legendIconContainer}>
                 <MaterialCommunityIcons
                   name="hand-back-left-outline"
-                  size={20}
+                  size={metrics.legendIconSize}
                   color={palette.success}
                 />
               </View>
@@ -96,7 +115,11 @@ export default function HelpContent({ showActionBarLegend = true }: HelpContentP
             </View>
             <View style={styles.legendItem}>
               <View style={styles.legendIconContainer}>
-                <MaterialCommunityIcons name="gift-outline" size={20} color={palette.accent} />
+                <MaterialCommunityIcons
+                  name="gift-outline"
+                  size={metrics.legendIconSize}
+                  color={palette.accent}
+                />
               </View>
               <View style={styles.legendTextContainer}>
                 <Text style={[styles.legendLabel, { color: palette.textInverse }]}>OPP TURN</Text>
@@ -116,7 +139,12 @@ export default function HelpContent({ showActionBarLegend = true }: HelpContentP
       <View style={[styles.legendContainer, { backgroundColor: palette.overlay08 }]}>
         <View style={styles.legendItem}>
           <View style={styles.legendIconContainer}>
-            <FlashingIcon name="hat-fedora" size={20} color={palette.textMuted} isFlashing />
+            <FlashingIcon
+              name="hat-fedora"
+              size={metrics.legendIconSize}
+              color={palette.textMuted}
+              isFlashing
+            />
           </View>
           <View style={styles.legendTextContainer}>
             <Text style={[styles.legendLabel, { color: palette.textInverse }]}>
@@ -129,7 +157,11 @@ export default function HelpContent({ showActionBarLegend = true }: HelpContentP
         </View>
         <View style={styles.legendItem}>
           <View style={styles.legendIconContainer}>
-            <MaterialCommunityIcons name="hat-fedora" size={20} color={palette.textInverse} />
+            <MaterialCommunityIcons
+              name="hat-fedora"
+              size={metrics.legendIconSize}
+              color={palette.textInverse}
+            />
           </View>
           <View style={styles.legendTextContainer}>
             <Text style={[styles.legendLabel, { color: palette.textInverse }]}>Softcap Active</Text>
@@ -140,7 +172,11 @@ export default function HelpContent({ showActionBarLegend = true }: HelpContentP
         </View>
         <View style={styles.legendItem}>
           <View style={styles.legendIconContainer}>
-            <MaterialCommunityIcons name="hard-hat" size={20} color={palette.textInverse} />
+            <MaterialCommunityIcons
+              name="hard-hat"
+              size={metrics.legendIconSize}
+              color={palette.textInverse}
+            />
           </View>
           <View style={styles.legendTextContainer}>
             <Text style={[styles.legendLabel, { color: palette.textInverse }]}>Hardcap</Text>
@@ -161,7 +197,11 @@ export default function HelpContent({ showActionBarLegend = true }: HelpContentP
           useTutorialStore.getState().triggerOnboarding();
           router.replace('/');
         }}>
-        <MaterialCommunityIcons name="school-outline" size={24} color={palette.accent} />
+        <MaterialCommunityIcons
+          name="school-outline"
+          size={metrics.buttonIconSize}
+          color={palette.accent}
+        />
         <View style={styles.tutorialButtonContent}>
           <Text style={[styles.tutorialButtonTitle, { color: palette.textInverse }]}>
             View Tutorial
@@ -170,10 +210,14 @@ export default function HelpContent({ showActionBarLegend = true }: HelpContentP
             Learn how to use U-Stat
           </Text>
         </View>
-        <MaterialCommunityIcons name="chevron-right" size={24} color={palette.textMuted} />
+        <MaterialCommunityIcons
+          name="chevron-right"
+          size={metrics.buttonIconSize}
+          color={palette.textMuted}
+        />
       </Pressable>
 
-      <View style={{ height: 12 }} />
+      <View style={styles.buttonSpacer} />
 
       <Pressable
         style={[styles.tutorialButton, { backgroundColor: palette.overlay08 }]}
@@ -181,7 +225,11 @@ export default function HelpContent({ showActionBarLegend = true }: HelpContentP
           useTutorialStore.getState().triggerStatsTutorial();
           router.replace('/');
         }}>
-        <MaterialCommunityIcons name="chart-line" size={24} color={palette.accent} />
+        <MaterialCommunityIcons
+          name="chart-line"
+          size={metrics.buttonIconSize}
+          color={palette.accent}
+        />
         <View style={styles.tutorialButtonContent}>
           <Text style={[styles.tutorialButtonTitle, { color: palette.textInverse }]}>
             Stats Guide
@@ -190,17 +238,25 @@ export default function HelpContent({ showActionBarLegend = true }: HelpContentP
             How to track player statistics
           </Text>
         </View>
-        <MaterialCommunityIcons name="chevron-right" size={24} color={palette.textMuted} />
+        <MaterialCommunityIcons
+          name="chevron-right"
+          size={metrics.buttonIconSize}
+          color={palette.textMuted}
+        />
       </Pressable>
 
-      <View style={{ height: 12 }} />
+      <View style={styles.buttonSpacer} />
 
       <Pressable
         style={[styles.tutorialButton, { backgroundColor: palette.overlay08 }]}
         onPress={() => {
           Linking.openURL('https://u-stat.app/privacy/');
         }}>
-        <MaterialCommunityIcons name="shield-lock-outline" size={24} color={palette.accent} />
+        <MaterialCommunityIcons
+          name="shield-lock-outline"
+          size={metrics.buttonIconSize}
+          color={palette.accent}
+        />
         <View style={styles.tutorialButtonContent}>
           <Text style={[styles.tutorialButtonTitle, { color: palette.textInverse }]}>
             Privacy Policy
@@ -209,73 +265,90 @@ export default function HelpContent({ showActionBarLegend = true }: HelpContentP
             TLDR: Local first with options for sharing
           </Text>
         </View>
-        <MaterialCommunityIcons name="open-in-new" size={24} color={palette.textMuted} />
+        <MaterialCommunityIcons
+          name="open-in-new"
+          size={metrics.buttonIconSize}
+          color={palette.textMuted}
+        />
       </Pressable>
     </>
   );
 }
 
-const styles = StyleSheet.create({
-  sectionTitle: {
-    fontSize: 12,
-    fontWeight: '700',
-    letterSpacing: 1.5,
-    marginBottom: 16,
-  },
-  divider: {
-    height: 1,
-    marginVertical: 20,
-  },
-  tutorialButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderRadius: 12,
-    padding: 16,
-    gap: 12,
-  },
-  tutorialButtonContent: {
-    flex: 1,
-  },
-  tutorialButtonTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  tutorialButtonSubtitle: {
-    fontSize: 13,
-    marginTop: 2,
-  },
-  legendContainer: {
-    borderRadius: 12,
-    padding: 16,
-    gap: 12,
-  },
-  legendCategoryTitle: {
-    fontSize: 13,
-    fontWeight: '700',
-    marginBottom: 4,
-  },
-  legendItem: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 12,
-  },
-  legendTextContainer: {
-    flex: 1,
-  },
-  legendLabel: {
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  legendDescription: {
-    fontSize: 13,
-    marginTop: 2,
-  },
-  legendDivider: {
-    height: 1,
-    marginVertical: 8,
-  },
-  legendIconContainer: {
-    width: 28,
-    alignItems: 'center',
-  },
-});
+function createStyles(sizeClass: SizeClass) {
+  return StyleSheet.create({
+    sectionTitle: {
+      fontSize: scaleBySizeClass(12, sizeClass),
+      fontWeight: '700',
+      letterSpacing: scaleBySizeClass(1.5, sizeClass, { rounding: 'none' }),
+      marginBottom: scaleBySizeClass(16, sizeClass),
+    },
+    divider: {
+      height: 1,
+      marginVertical: scaleBySizeClass(20, sizeClass),
+    },
+    tutorialButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      borderRadius: scaleBySizeClass(12, sizeClass),
+      padding: scaleBySizeClass(16, sizeClass),
+      gap: scaleBySizeClass(12, sizeClass),
+    },
+    tutorialButtonContent: {
+      flex: 1,
+    },
+    tutorialButtonTitle: {
+      fontSize: scaleBySizeClass(16, sizeClass),
+      fontWeight: '600',
+    },
+    tutorialButtonSubtitle: {
+      fontSize: scaleBySizeClass(13, sizeClass),
+      marginTop: scaleBySizeClass(2, sizeClass),
+    },
+    legendContainer: {
+      borderRadius: scaleBySizeClass(12, sizeClass),
+      padding: scaleBySizeClass(16, sizeClass),
+      gap: scaleBySizeClass(12, sizeClass),
+    },
+    legendCategoryTitle: {
+      fontSize: scaleBySizeClass(13, sizeClass),
+      fontWeight: '700',
+      marginBottom: scaleBySizeClass(4, sizeClass),
+    },
+    legendItem: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      gap: scaleBySizeClass(12, sizeClass),
+    },
+    legendTextContainer: {
+      flex: 1,
+    },
+    legendLabel: {
+      fontSize: scaleBySizeClass(14, sizeClass),
+      fontWeight: '700',
+    },
+    legendDescription: {
+      fontSize: scaleBySizeClass(13, sizeClass),
+      marginTop: scaleBySizeClass(2, sizeClass),
+    },
+    legendDivider: {
+      height: 1,
+      marginVertical: scaleBySizeClass(8, sizeClass),
+    },
+    legendIconContainer: {
+      width: scaleBySizeClass(28, sizeClass),
+      alignItems: 'center',
+    },
+    buttonSpacer: {
+      height: scaleBySizeClass(12, sizeClass),
+    },
+  });
+}
+
+function createMetrics(sizeClass: SizeClass) {
+  return {
+    legendIconSize: scaleBySizeClass(20, sizeClass),
+    legendDropIconSize: scaleBySizeClass(16, sizeClass),
+    buttonIconSize: scaleBySizeClass(24, sizeClass),
+  };
+}

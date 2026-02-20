@@ -10,7 +10,7 @@ import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { ShareConfirmModal } from '@/components/ui/ShareConfirmModal';
 import { useTheme } from '@/context/ThemeContext';
 import { useIsGameActive } from '@/hooks/useIsGameActive';
-import { useLayout } from '@/hooks/useLayout';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { MAX_TEAM_NAME_LENGTH } from '@/lib/constants';
 import { hasPlayerWithName } from '@/lib/playerUtils';
 import { serializeTeam, uploadPayload } from '@/lib/sharing';
@@ -29,8 +29,9 @@ const EMPTY_ROSTER: Player[] = [];
 type RoleFilter = PlayerRole | 'unset' | null;
 
 export default function EditRosterScreen() {
-  const { isLandscape } = useLayout();
-  const styles = createStyles(isLandscape);
+  const { isLandscape, sizeClass } = useLayout();
+  const styles = createStyles(isLandscape, sizeClass);
+  const metrics = createMetrics(sizeClass);
 
   const { teamName } = useLocalSearchParams<{ teamName: string }>();
 
@@ -304,6 +305,7 @@ export default function EditRosterScreen() {
         {/* Sidebar - landscape only, hidden during selection */}
         {isLandscape && !selectionMode && (
           <EditRosterSidebar
+            sizeClass={sizeClass}
             collapsed={sidebarCollapsed}
             onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
             onRenameTeam={() => {
@@ -344,6 +346,7 @@ export default function EditRosterScreen() {
           {/* Toolbar - portrait only, hidden during selection */}
           {!isLandscape && !selectionMode && (
             <EditRosterToolbar
+              sizeClass={sizeClass}
               onRenameTeam={() => {
                 if (selectionMode) return;
                 setEditTeamName(currentTeam?.name ?? '');
@@ -408,13 +411,18 @@ export default function EditRosterScreen() {
                   pressed && styles.buttonPressed,
                 ]}
                 onPress={handleAddPlayer}>
-                <MaterialCommunityIcons name="plus" size={24} color={palette.textOnAccent} />
+                <MaterialCommunityIcons
+                  name="plus"
+                  size={metrics.addIconSize}
+                  color={palette.textOnAccent}
+                />
               </Pressable>
             </View>
           )}
 
           {roster.length > 0 && (
             <RosterControlsHeader
+              sizeClass={sizeClass}
               isSelecting={selectionMode}
               viewMode={rosterViewMode}
               activeRoleFilter={roleFilter}
@@ -439,7 +447,7 @@ export default function EditRosterScreen() {
               <View style={styles.emptyState}>
                 <MaterialCommunityIcons
                   name="account-group-outline"
-                  size={48}
+                  size={metrics.emptyStateIconLarge}
                   color={palette.textMuted}
                 />
                 <Text style={[styles.emptyStateText, { color: palette.textMuted }]}>
@@ -451,7 +459,11 @@ export default function EditRosterScreen() {
               </View>
             ) : visibleRoster.length === 0 ? (
               <View style={styles.emptyState}>
-                <MaterialCommunityIcons name="filter-outline" size={42} color={palette.textMuted} />
+                <MaterialCommunityIcons
+                  name="filter-outline"
+                  size={metrics.emptyStateIconMedium}
+                  color={palette.textMuted}
+                />
                 <Text style={[styles.emptyStateText, { color: palette.textMuted }]}>
                   No players match this filter
                 </Text>
@@ -476,6 +488,7 @@ export default function EditRosterScreen() {
                       {group.players.map((player) => (
                         <PlayerChip
                           key={player.id}
+                          sizeClass={sizeClass}
                           name={player.name}
                           selected={selectionMode && selectedPlayerIds.has(player.id)}
                           isActive={player.isActive}
@@ -494,6 +507,7 @@ export default function EditRosterScreen() {
               </>
             ) : (
               <QuickEditPlayerList
+                sizeClass={sizeClass}
                 roster={visibleRoster}
                 onEditPlayer={handleEditPlayer}
                 onSetPlayerActive={handleSetPlayerActive}
@@ -505,6 +519,7 @@ export default function EditRosterScreen() {
 
           {/* Bulk Actions Bar */}
           <RosterBulkActions
+            sizeClass={sizeClass}
             selectedCount={selectedPlayerIds.size}
             onSetMatching={handleBulkSetMatching}
             onSetRole={handleBulkSetRole}
@@ -655,7 +670,7 @@ export default function EditRosterScreen() {
   );
 }
 
-function createStyles(isLandscape: boolean) {
+function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
   return StyleSheet.create({
     container: {
       flex: 1,
@@ -669,30 +684,30 @@ function createStyles(isLandscape: boolean) {
     },
     addPlayerSection: {
       flexDirection: 'row',
-      paddingHorizontal: 20,
-      paddingVertical: 16,
-      gap: 12,
+      paddingHorizontal: scaleBySizeClass(20, sizeClass),
+      paddingVertical: scaleBySizeClass(16, sizeClass),
+      gap: scaleBySizeClass(12, sizeClass),
       borderBottomWidth: 1,
     },
     inputWrapper: {
       flex: 1,
     },
     addPlayerInput: {
-      height: 48,
+      height: scaleBySizeClass(48, sizeClass),
       borderWidth: 1,
-      borderRadius: 12,
-      paddingHorizontal: 16,
-      fontSize: 16,
+      borderRadius: scaleBySizeClass(12, sizeClass),
+      paddingHorizontal: scaleBySizeClass(16, sizeClass),
+      fontSize: scaleBySizeClass(16, sizeClass),
     },
     errorText: {
-      fontSize: 12,
-      marginLeft: 4,
-      marginTop: 4,
+      fontSize: scaleBySizeClass(12, sizeClass),
+      marginLeft: scaleBySizeClass(4, sizeClass),
+      marginTop: scaleBySizeClass(4, sizeClass),
     },
     addButton: {
-      width: 48,
-      height: 48,
-      borderRadius: 12,
+      width: scaleBySizeClass(48, sizeClass),
+      height: scaleBySizeClass(48, sizeClass),
+      borderRadius: scaleBySizeClass(12, sizeClass),
       alignItems: 'center',
       justifyContent: 'center',
     },
@@ -704,70 +719,70 @@ function createStyles(isLandscape: boolean) {
       flex: 1,
     },
     playerListContent: {
-      paddingHorizontal: 20,
-      paddingBottom: 20,
-      paddingTop: 8,
+      paddingHorizontal: scaleBySizeClass(20, sizeClass),
+      paddingBottom: scaleBySizeClass(20, sizeClass),
+      paddingTop: scaleBySizeClass(8, sizeClass),
     },
     playerListContentSelection: {
-      paddingBottom: 100,
+      paddingBottom: scaleBySizeClass(100, sizeClass),
     },
     emptyState: {
       flex: 1,
       alignItems: 'center',
       justifyContent: 'center',
-      paddingTop: 30,
+      paddingTop: scaleBySizeClass(30, sizeClass),
     },
     emptyStateText: {
-      fontSize: 18,
+      fontSize: scaleBySizeClass(18, sizeClass),
       fontWeight: '600',
-      marginTop: 16,
+      marginTop: scaleBySizeClass(16, sizeClass),
     },
     emptyStateHint: {
-      fontSize: 14,
-      marginTop: 4,
+      fontSize: scaleBySizeClass(14, sizeClass),
+      marginTop: scaleBySizeClass(4, sizeClass),
     },
     chipGroup: {
-      marginBottom: 16,
+      marginBottom: scaleBySizeClass(16, sizeClass),
     },
     chipGroupHeader: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
-      paddingHorizontal: 2,
-      marginBottom: 8,
+      paddingHorizontal: scaleBySizeClass(2, sizeClass),
+      marginBottom: scaleBySizeClass(8, sizeClass),
     },
     chipGroupLabel: {
-      fontSize: 12,
+      fontSize: scaleBySizeClass(12, sizeClass),
       fontWeight: '600',
       textTransform: 'uppercase',
-      letterSpacing: 0.5,
+      letterSpacing: scaleBySizeClass(0.5, sizeClass, { rounding: 'none' }),
     },
     chipGroupCount: {
-      fontSize: 11,
+      fontSize: scaleBySizeClass(11, sizeClass),
       fontWeight: '600',
     },
     chipGrid: {
       flexDirection: 'row',
       flexWrap: 'wrap',
-      gap: 8,
+      gap: scaleBySizeClass(8, sizeClass),
     },
     // Alert modal content styles
     alertInput: {
       borderWidth: 1,
-      borderRadius: 10,
-      paddingHorizontal: 14,
-      paddingVertical: 12,
-      fontSize: 16,
-      marginBottom: 8,
+      borderRadius: scaleBySizeClass(10, sizeClass),
+      paddingHorizontal: scaleBySizeClass(14, sizeClass),
+      paddingVertical: scaleBySizeClass(12, sizeClass),
+      fontSize: scaleBySizeClass(16, sizeClass),
+      marginBottom: scaleBySizeClass(8, sizeClass),
     },
     alertButtonContainer: {
       flexDirection: 'row',
-      gap: 12,
+      gap: scaleBySizeClass(12, sizeClass),
     },
     alertButton: {
       flex: 1,
-      paddingVertical: 12,
-      borderRadius: 10,
+      paddingVertical: scaleBySizeClass(12, sizeClass),
+      borderRadius: scaleBySizeClass(10, sizeClass),
       alignItems: 'center',
       justifyContent: 'center',
     },
@@ -775,8 +790,16 @@ function createStyles(isLandscape: boolean) {
       borderWidth: 1,
     },
     alertButtonText: {
-      fontSize: 15,
+      fontSize: scaleBySizeClass(15, sizeClass),
       fontWeight: '600',
     },
   });
+}
+
+function createMetrics(sizeClass: SizeClass) {
+  return {
+    addIconSize: scaleBySizeClass(24, sizeClass),
+    emptyStateIconLarge: scaleBySizeClass(48, sizeClass),
+    emptyStateIconMedium: scaleBySizeClass(42, sizeClass),
+  };
 }

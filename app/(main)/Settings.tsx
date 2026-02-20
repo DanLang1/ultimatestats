@@ -8,7 +8,7 @@ import { Switch } from '@/components/ui/Switch';
 import { useTheme } from '@/context/ThemeContext';
 import { useIsGameActive } from '@/hooks/useIsGameActive';
 import { useKeyboardDidHide } from '@/hooks/useKeyboardDidHide';
-import { useLayout } from '@/hooks/useLayout';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { useNewGame } from '@/hooks/useNewGame';
 import { MAX_TEAM_NAME_LENGTH } from '@/lib/constants';
 import { SavedTeam } from '@/lib/storage';
@@ -30,7 +30,9 @@ export default function SettingsScreen() {
 function SettingsContent() {
   const isFocused = useIsFocused();
   const { isLandscape, sizeClass } = useLayout();
-  const styles = createStyles(isLandscape);
+  const styles = createStyles(isLandscape, sizeClass);
+  const metrics = createMetrics(sizeClass);
+  const useCompactColorLayout = isLandscape || sizeClass !== 'small';
   const { palette, themeMode, setThemeMode } = useTheme();
   const { showAlert } = useAlert();
   const { hasSeenStatsTutorial, triggerStatsTutorial } = useTutorialStore();
@@ -179,6 +181,7 @@ function SettingsContent() {
               label="MY TEAM COLOR"
               value={team1BgColor}
               onChange={(color) => setTeamBgColor('team1', color)}
+              sizeClass={sizeClass}
             />
           </View>
           <View style={styles.compactColorItem}>
@@ -186,6 +189,7 @@ function SettingsContent() {
               label="OPPOSING TEAM COLOR"
               value={team2BgColor}
               onChange={(color) => setTeamBgColor('team2', color)}
+              sizeClass={sizeClass}
             />
           </View>
         </View>
@@ -195,12 +199,14 @@ function SettingsContent() {
             label="MY TEAM COLOR"
             value={team1BgColor}
             onChange={(color) => setTeamBgColor('team1', color)}
+            sizeClass={sizeClass}
           />
-          <View style={{ height: 12 }} />
+          <View style={styles.colorPickerSpacer} />
           <TeamColorPicker
             label="OPPOSING TEAM COLOR"
             value={team2BgColor}
             onChange={(color) => setTeamBgColor('team2', color)}
+            sizeClass={sizeClass}
           />
         </>
       )}
@@ -219,21 +225,37 @@ function SettingsContent() {
       {compact ? (
         <View style={styles.compactColorGrid}>
           <View style={styles.compactColorItem}>
-            <TeamColorPicker label="MMP (MALE MATCHING)" value={mmpColor} onChange={setMmpColor} />
+            <TeamColorPicker
+              label="MMP (MALE MATCHING)"
+              value={mmpColor}
+              onChange={setMmpColor}
+              sizeClass={sizeClass}
+            />
           </View>
           <View style={styles.compactColorItem}>
             <TeamColorPicker
               label="FMP (FEMALE MATCHING)"
               value={fmpColor}
               onChange={setFmpColor}
+              sizeClass={sizeClass}
             />
           </View>
         </View>
       ) : (
         <>
-          <TeamColorPicker label="MMP (MALE MATCHING)" value={mmpColor} onChange={setMmpColor} />
-          <View style={{ height: 12 }} />
-          <TeamColorPicker label="FMP (FEMALE MATCHING)" value={fmpColor} onChange={setFmpColor} />
+          <TeamColorPicker
+            label="MMP (MALE MATCHING)"
+            value={mmpColor}
+            onChange={setMmpColor}
+            sizeClass={sizeClass}
+          />
+          <View style={styles.colorPickerSpacer} />
+          <TeamColorPicker
+            label="FMP (FEMALE MATCHING)"
+            value={fmpColor}
+            onChange={setFmpColor}
+            sizeClass={sizeClass}
+          />
         </>
       )}
       <Pressable
@@ -255,6 +277,7 @@ function SettingsContent() {
         ]}
         value={themeMode}
         onChange={(next) => setThemeMode(next as 'light' | 'dark')}
+        sizeClass={sizeClass}
       />
       <SegmentedControl
         label="ORIENTATION"
@@ -265,6 +288,7 @@ function SettingsContent() {
         ]}
         value={orientationMode}
         onChange={(next) => setOrientationMode(next as OrientationMode)}
+        sizeClass={sizeClass}
       />
       {Platform.OS === 'android' && sizeClass !== 'small' && (
         <Text style={[styles.helperText, textMutedStyle]}>
@@ -305,7 +329,11 @@ function SettingsContent() {
               styles.activeGameBanner,
               { backgroundColor: palette.warning + '15', borderColor: palette.warning + '30' },
             ]}>
-            <MaterialCommunityIcons name="lock-outline" size={16} color={palette.warning} />
+            <MaterialCommunityIcons
+              name="lock-outline"
+              size={metrics.bannerIconSize}
+              color={palette.warning}
+            />
             <Text style={[styles.activeGameBannerText, { color: palette.warning }]}>
               Game in progress: some settings are locked
             </Text>
@@ -325,7 +353,7 @@ function SettingsContent() {
               onPress={handleImportTeamFromApi}>
               <MaterialCommunityIcons
                 name="cloud-download-outline"
-                size={20}
+                size={metrics.actionIconSize}
                 color={palette.accent}
               />
               <Text style={[styles.importTeamButtonText, { color: palette.accent }]}>
@@ -364,7 +392,11 @@ function SettingsContent() {
                     pressed && styles.buttonPressed,
                   ]}
                   onPress={handleEditRoster}>
-                  <MaterialCommunityIcons name="account-group" size={20} color={palette.accent} />
+                  <MaterialCommunityIcons
+                    name="account-group"
+                    size={metrics.actionIconSize}
+                    color={palette.accent}
+                  />
                   <Text style={[styles.editRosterButtonText, { color: palette.accent }]}>
                     {team1Roster.length > 0 ? team1Roster.length : 'Roster'}
                   </Text>
@@ -389,7 +421,7 @@ function SettingsContent() {
               />
             </View>
             {isLandscape && renderAppearanceSettings()}
-            {isLandscape && renderColorSettings(true)}
+            {isLandscape && renderColorSettings(useCompactColorLayout)}
           </View>
 
           {/* Right Column: Game Settings */}
@@ -406,6 +438,7 @@ function SettingsContent() {
                   max={99}
                   quickOptions={[13, 15]}
                   disabled={gameActive}
+                  sizeClass={sizeClass}
                 />
               </View>
 
@@ -425,6 +458,7 @@ function SettingsContent() {
                   suffix="min"
                   quickOptions={[90, 105, 110, 120]}
                   disabled={gameActive}
+                  sizeClass={sizeClass}
                 />
               </View>
 
@@ -443,6 +477,7 @@ function SettingsContent() {
                     Math.max(0, gameLength - 10),
                   ]}
                   disabled={gameActive}
+                  sizeClass={sizeClass}
                 />
               </View>
 
@@ -455,6 +490,7 @@ function SettingsContent() {
                   max={7}
                   quickOptions={[3, 5, 7]}
                   disabled={gameActive}
+                  sizeClass={sizeClass}
                 />
               </View>
 
@@ -471,6 +507,7 @@ function SettingsContent() {
                     if (!isNaN(num)) resetTimeouts(num);
                   }}
                   disabled={gameActive}
+                  sizeClass={sizeClass}
                 />
               </View>
 
@@ -488,6 +525,7 @@ function SettingsContent() {
                   }}
                   disabled={gameActive}
                   locked={gameActive}
+                  sizeClass={sizeClass}
                 />
               </View>
               {autoHalftimeEnabled && (
@@ -498,6 +536,7 @@ function SettingsContent() {
                     onValueChange={setFloaterEnabled}
                     disabled={gameActive}
                     locked={gameActive}
+                    sizeClass={sizeClass}
                   />
                 </View>
               )}
@@ -520,6 +559,7 @@ function SettingsContent() {
                     }}
                     disabled={gameActive}
                     locked={gameActive}
+                    sizeClass={sizeClass}
                   />
                 </View>
               </View>
@@ -532,6 +572,7 @@ function SettingsContent() {
                       onValueChange={(enabled) =>
                         setStatEntryOrder(enabled ? 'goal_first' : 'assist_first')
                       }
+                      sizeClass={sizeClass}
                     />
                   </View>
                   <View style={styles.inputGroup}>
@@ -541,6 +582,7 @@ function SettingsContent() {
                       onValueChange={setPointTimerEnabled}
                       disabled={gameActive}
                       locked={gameActive}
+                      sizeClass={sizeClass}
                     />
                   </View>
                 </>
@@ -552,6 +594,7 @@ function SettingsContent() {
                   onValueChange={setGenderRatioEnabled}
                   disabled={gameActive}
                   locked={gameActive}
+                  sizeClass={sizeClass}
                 />
               </View>
               {statTrackingEnabled && (
@@ -562,6 +605,7 @@ function SettingsContent() {
                     onValueChange={setLineCallingEnabled}
                     disabled={gameActive}
                     locked={gameActive}
+                    sizeClass={sizeClass}
                   />
                 </View>
               )}
@@ -571,13 +615,13 @@ function SettingsContent() {
 
         {!isLandscape && renderAppearanceSettings()}
 
-        {!isLandscape && renderColorSettings(false)}
+        {!isLandscape && renderColorSettings(useCompactColorLayout)}
       </ScrollView>
     </ThemedView>
   );
 }
 
-function createStyles(isLandscape: boolean) {
+function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
   return StyleSheet.create({
     container: {
       flex: 1,
@@ -585,41 +629,41 @@ function createStyles(isLandscape: boolean) {
     headerRight: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 8,
+      gap: scaleBySizeClass(8, sizeClass),
     },
     scrollContent: {
-      padding: 24,
-      paddingTop: 8,
+      padding: scaleBySizeClass(24, sizeClass),
+      paddingTop: scaleBySizeClass(8, sizeClass),
     },
     columnsContainer: {
       flexDirection: isLandscape ? 'row' : 'column',
-      gap: 24,
+      gap: scaleBySizeClass(24, sizeClass),
       alignItems: isLandscape ? 'flex-start' : 'stretch',
     },
     column: {
       flex: isLandscape ? 1 : 0,
       width: isLandscape ? undefined : '100%',
-      gap: 12,
+      gap: scaleBySizeClass(12, sizeClass),
     },
     sectionTitle: {
-      fontSize: 12,
+      fontSize: scaleBySizeClass(12, sizeClass),
       fontWeight: '700',
-      letterSpacing: 1.5,
-      marginBottom: 4,
+      letterSpacing: scaleBySizeClass(1.5, sizeClass, { rounding: 'none' }),
+      marginBottom: scaleBySizeClass(4, sizeClass),
     },
     sectionHeaderRow: {
       flexDirection: 'row',
       alignItems: 'baseline',
-      gap: 8,
+      gap: scaleBySizeClass(8, sizeClass),
     },
     divider: {
       height: 1,
-      marginVertical: 12,
+      marginVertical: scaleBySizeClass(12, sizeClass),
     },
     inputsGrid: {
       flexDirection: 'row',
       flexWrap: 'wrap',
-      gap: 12,
+      gap: scaleBySizeClass(12, sizeClass),
     },
     inputGroup: {
       width: '48%',
@@ -630,7 +674,7 @@ function createStyles(isLandscape: boolean) {
     },
     teamInputRow: {
       flexDirection: 'row',
-      gap: 8,
+      gap: scaleBySizeClass(8, sizeClass),
     },
     teamNameInputWrapper: {
       flex: 1,
@@ -642,55 +686,55 @@ function createStyles(isLandscape: boolean) {
       opacity: 0.5,
     },
     newTeamButton: {
-      height: 48,
-      paddingHorizontal: 12,
-      borderRadius: 10,
+      height: scaleBySizeClass(48, sizeClass),
+      paddingHorizontal: scaleBySizeClass(12, sizeClass),
+      borderRadius: scaleBySizeClass(10, sizeClass),
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 4,
+      gap: scaleBySizeClass(4, sizeClass),
     },
     newTeamButtonText: {
-      fontSize: 14,
+      fontSize: scaleBySizeClass(14, sizeClass),
       fontWeight: '600',
     },
     editRosterButton: {
-      height: 48,
-      paddingHorizontal: 12,
-      borderRadius: 10,
+      height: scaleBySizeClass(48, sizeClass),
+      paddingHorizontal: scaleBySizeClass(12, sizeClass),
+      borderRadius: scaleBySizeClass(10, sizeClass),
       borderWidth: 1,
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 6,
+      gap: scaleBySizeClass(6, sizeClass),
     },
     editRosterButtonText: {
-      fontSize: 14,
+      fontSize: scaleBySizeClass(14, sizeClass),
       fontWeight: '600',
     },
     importTeamButton: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 10,
-      height: 44,
-      paddingHorizontal: 14,
-      borderRadius: 10,
+      gap: scaleBySizeClass(10, sizeClass),
+      height: scaleBySizeClass(44, sizeClass),
+      paddingHorizontal: scaleBySizeClass(14, sizeClass),
+      borderRadius: scaleBySizeClass(10, sizeClass),
       borderWidth: 1,
     },
     importTeamButtonText: {
-      fontSize: 14,
+      fontSize: scaleBySizeClass(14, sizeClass),
       fontWeight: '600',
     },
     inputLabel: {
-      fontSize: 10,
+      fontSize: scaleBySizeClass(10, sizeClass),
       fontWeight: '700',
-      letterSpacing: 1,
-      marginBottom: 6,
+      letterSpacing: scaleBySizeClass(1, sizeClass, { rounding: 'none' }),
+      marginBottom: scaleBySizeClass(6, sizeClass),
     },
     inputStacked: {
-      height: 48,
+      height: scaleBySizeClass(48, sizeClass),
       borderWidth: 1,
-      borderRadius: 10,
-      paddingHorizontal: 14,
-      fontSize: 18,
+      borderRadius: scaleBySizeClass(10, sizeClass),
+      paddingHorizontal: scaleBySizeClass(14, sizeClass),
+      fontSize: scaleBySizeClass(18, sizeClass),
       fontWeight: '600',
       textAlign: 'center',
     },
@@ -705,42 +749,42 @@ function createStyles(isLandscape: boolean) {
       borderRightWidth: 0,
     },
     inputSuffix: {
-      fontSize: 14,
+      fontSize: scaleBySizeClass(14, sizeClass),
       fontWeight: '600',
-      paddingHorizontal: 12,
-      height: 48,
-      lineHeight: 48,
+      paddingHorizontal: scaleBySizeClass(12, sizeClass),
+      height: scaleBySizeClass(48, sizeClass),
+      lineHeight: scaleBySizeClass(48, sizeClass),
       borderWidth: 1,
       borderLeftWidth: 0,
-      borderTopRightRadius: 10,
-      borderBottomRightRadius: 10,
+      borderTopRightRadius: scaleBySizeClass(10, sizeClass),
+      borderBottomRightRadius: scaleBySizeClass(10, sizeClass),
     },
     inputDisabled: {
       opacity: 0.5,
     },
     helperText: {
-      fontSize: 11,
+      fontSize: scaleBySizeClass(11, sizeClass),
     },
     buttonPressed: {
       opacity: 0.8,
       transform: [{ scale: 0.98 }],
     },
     newGameButton: {
-      paddingHorizontal: 8,
-      paddingVertical: 8,
+      paddingHorizontal: scaleBySizeClass(8, sizeClass),
+      paddingVertical: scaleBySizeClass(8, sizeClass),
     },
     newGameButtonText: {
-      fontSize: 12,
+      fontSize: scaleBySizeClass(12, sizeClass),
       fontWeight: '700',
-      letterSpacing: 0.5,
+      letterSpacing: scaleBySizeClass(0.5, sizeClass, { rounding: 'none' }),
     },
     resetColorsButton: {
-      marginTop: 12,
-      paddingVertical: 8,
+      marginTop: scaleBySizeClass(12, sizeClass),
+      paddingVertical: scaleBySizeClass(8, sizeClass),
       alignItems: 'center',
     },
     resetColorsButtonText: {
-      fontSize: 12,
+      fontSize: scaleBySizeClass(12, sizeClass),
       fontWeight: '500',
     },
     switchWithHelp: {
@@ -748,36 +792,46 @@ function createStyles(isLandscape: boolean) {
       alignItems: 'center',
     },
     helpButton: {
-      padding: 4,
-      borderRadius: 12,
+      padding: scaleBySizeClass(4, sizeClass),
+      borderRadius: scaleBySizeClass(12, sizeClass),
     },
     activeGameBanner: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 10,
-      paddingVertical: 10,
-      paddingHorizontal: 16,
-      borderRadius: 12,
+      gap: scaleBySizeClass(10, sizeClass),
+      paddingVertical: scaleBySizeClass(10, sizeClass),
+      paddingHorizontal: scaleBySizeClass(16, sizeClass),
+      borderRadius: scaleBySizeClass(12, sizeClass),
       borderWidth: 1,
-      marginBottom: 20,
+      marginBottom: scaleBySizeClass(20, sizeClass),
     },
     activeGameBannerText: {
-      fontSize: 13,
+      fontSize: scaleBySizeClass(13, sizeClass),
       fontWeight: '600',
       flex: 1,
     },
     appearanceSection: {
-      marginTop: isLandscape ? 8 : 4,
-      marginBottom: isLandscape ? 0 : 8,
-      gap: 8,
+      marginTop: isLandscape ? scaleBySizeClass(8, sizeClass) : scaleBySizeClass(4, sizeClass),
+      marginBottom: isLandscape ? 0 : scaleBySizeClass(8, sizeClass),
+      gap: scaleBySizeClass(8, sizeClass),
     },
     compactColorGrid: {
       flexDirection: 'row',
       flexWrap: 'wrap',
-      gap: 12,
+      gap: scaleBySizeClass(12, sizeClass),
     },
     compactColorItem: {
-      width: isLandscape ? '48%' : '100%',
+      width: isLandscape || sizeClass !== 'small' ? '48%' : '100%',
+    },
+    colorPickerSpacer: {
+      height: scaleBySizeClass(12, sizeClass),
     },
   });
+}
+
+function createMetrics(sizeClass: SizeClass) {
+  return {
+    actionIconSize: scaleBySizeClass(20, sizeClass),
+    bannerIconSize: scaleBySizeClass(16, sizeClass),
+  };
 }

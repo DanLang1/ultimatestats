@@ -1,4 +1,5 @@
 import { useTheme } from '@/context/ThemeContext';
+import { scaleBySizeClass, SizeClass } from '@/hooks/useLayout';
 import { MatchingType, PlayerRole } from '@/lib/storage/types';
 import { useSettingsStore } from '@/store/settingsStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
@@ -10,6 +11,7 @@ interface RosterBulkActionsProps {
   onSetMatching: (type: MatchingType) => void;
   onSetRole: (role: PlayerRole) => void;
   isVisible: boolean;
+  sizeClass?: SizeClass;
 }
 
 export default function RosterBulkActions({
@@ -17,8 +19,11 @@ export default function RosterBulkActions({
   onSetMatching,
   onSetRole,
   isVisible,
+  sizeClass = 'small',
 }: RosterBulkActionsProps) {
   const { palette } = useTheme();
+  const styles = createStyles(sizeClass);
+  const iconSize = scaleBySizeClass(14, sizeClass);
   const { fmpColor, mmpColor } = useSettingsStore();
 
   if (!isVisible || selectedCount === 0) return null;
@@ -65,7 +70,11 @@ export default function RosterBulkActions({
             },
           ]}
           onPress={() => onSetRole('handler')}>
-          <MaterialCommunityIcons name="bullseye-arrow" size={14} color={palette.textInverse} />
+          <MaterialCommunityIcons
+            name="bullseye-arrow"
+            size={iconSize}
+            color={palette.textInverse}
+          />
           <Text style={[styles.actionPillText, { color: palette.textInverse }]}>Handler</Text>
         </Pressable>
         <Pressable
@@ -80,7 +89,11 @@ export default function RosterBulkActions({
             },
           ]}
           onPress={() => onSetRole('hybrid')}>
-          <MaterialCommunityIcons name="star-three-points" size={14} color={palette.textInverse} />
+          <MaterialCommunityIcons
+            name="star-three-points"
+            size={iconSize}
+            color={palette.textInverse}
+          />
           <Text style={[styles.actionPillText, { color: palette.textInverse }]}>Hybrid</Text>
         </Pressable>
         <Pressable
@@ -95,7 +108,7 @@ export default function RosterBulkActions({
             },
           ]}
           onPress={() => onSetRole('cutter')}>
-          <MaterialCommunityIcons name="shoe-print" size={14} color={palette.textInverse} />
+          <MaterialCommunityIcons name="shoe-print" size={iconSize} color={palette.textInverse} />
           <Text style={[styles.actionPillText, { color: palette.textInverse }]}>Cutter</Text>
         </Pressable>
       </View>
@@ -103,42 +116,44 @@ export default function RosterBulkActions({
   );
 }
 
-const styles = StyleSheet.create({
-  bottomBar: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    gap: 8,
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 24,
-    borderTopWidth: 1,
-  },
-  pillGroup: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  pillShadow: {
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.25,
-    shadowRadius: 6,
-    elevation: 8,
-  },
-  actionPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 20,
-  },
-  actionPillText: {
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  rolePill: {
-    borderWidth: 1.5,
-  },
-});
+function createStyles(sizeClass: SizeClass) {
+  return StyleSheet.create({
+    bottomBar: {
+      position: 'absolute',
+      bottom: 0,
+      left: 0,
+      right: 0,
+      gap: scaleBySizeClass(8, sizeClass),
+      paddingHorizontal: scaleBySizeClass(16, sizeClass),
+      paddingTop: scaleBySizeClass(12, sizeClass),
+      paddingBottom: scaleBySizeClass(24, sizeClass),
+      borderTopWidth: 1,
+    },
+    pillGroup: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: scaleBySizeClass(8, sizeClass),
+    },
+    pillShadow: {
+      shadowOffset: { width: 0, height: scaleBySizeClass(3, sizeClass) },
+      shadowOpacity: 0.25,
+      shadowRadius: scaleBySizeClass(6, sizeClass),
+      elevation: scaleBySizeClass(8, sizeClass),
+    },
+    actionPill: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: scaleBySizeClass(4, sizeClass),
+      paddingHorizontal: scaleBySizeClass(14, sizeClass),
+      paddingVertical: scaleBySizeClass(10, sizeClass),
+      borderRadius: scaleBySizeClass(20, sizeClass),
+    },
+    actionPillText: {
+      fontSize: scaleBySizeClass(13, sizeClass),
+      fontWeight: '600',
+    },
+    rolePill: {
+      borderWidth: 1.5,
+    },
+  });
+}
