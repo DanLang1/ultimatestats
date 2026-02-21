@@ -17,6 +17,7 @@ export type GoalEvent = {
   gameId?: string; // Populated on save - links to SavedGame.id
   elapsedMs?: number; // Elapsed game time in ms when goal was scored
   pointNumber?: number; // Point this event belongs to (absent in games saved before this field existed)
+  triggeredSoftcap?: boolean; // True if this goal was the one that activated the soft cap
 };
 
 export type TurnoverEvent = {

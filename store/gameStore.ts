@@ -120,6 +120,7 @@ export const useGameStore = create<GameState>()(
         incrementScore: (isTeam1: boolean) => {
           let didIncrement = false;
           let isHalftime = false;
+          let triggeredSoftcap = false;
           set((state: GameState) => {
             // Guard: Prevent scoring past gameTo (race condition prevention)
             // This is a simpler check than checkGameOver to allow mid-point scoring at hardcap.
@@ -155,6 +156,7 @@ export const useGameStore = create<GameState>()(
             if (state.softCapPending && !state.isSoftCap && !isHardcap) {
               state.isSoftCap = true;
               state.softCapPending = false;
+              triggeredSoftcap = true;
               const highestScore = Math.max(state.team1Score, state.team2Score);
 
               // Only adjust gameTo if the game total hasn't been reached yet
@@ -192,6 +194,7 @@ export const useGameStore = create<GameState>()(
                 goalPlayerId: null,
                 assistPlayerId: null,
                 pointNumber: state.currentPoint - 1, // currentPoint already incremented
+                ...(triggeredSoftcap && { triggeredSoftcap: true }),
               });
               return;
             }
@@ -224,6 +227,7 @@ export const useGameStore = create<GameState>()(
               assistPlayerId: null,
               elapsedMs,
               pointNumber: state.currentPoint - 1, // currentPoint already incremented
+              ...(triggeredSoftcap && { triggeredSoftcap: true }),
             });
             state.currentPointStartTime = null;
             state.pointTimerPausedElapsed = null;
@@ -264,6 +268,13 @@ export const useGameStore = create<GameState>()(
 
               if (isTeam1) state.team1Score--;
               else state.team2Score--;
+
+              // If this goal triggered the soft cap, restore pre-softcap state
+              if (lastEvent.triggeredSoftcap) {
+                state.isSoftCap = false;
+                state.softCapPending = true;
+                state.gameTo = state.baseGameTo;
+              }
 
               // Reset gameHalf to 1 if undo brings both scores below halftime threshold
               const halftimeScore = Math.ceil(state.baseGameTo / 2);
@@ -579,6 +590,13 @@ export const useGameStore = create<GameState>()(
 
             // Revert the score (stat entry only shows for team1 goals)
             state.team1Score--;
+
+            // If this goal triggered the soft cap, restore pre-softcap state
+            if (lastEvent.triggeredSoftcap) {
+              state.isSoftCap = false;
+              state.softCapPending = true;
+              state.gameTo = state.baseGameTo;
+            }
 
             // Restore point timer state from the goal event
             if (lastEvent.elapsedMs !== undefined) {
