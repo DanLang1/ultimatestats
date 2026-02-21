@@ -167,9 +167,6 @@ export default function TeamStatsSection({
 }
 
 function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
-  const sectionTitleFontSize = scaleBySizeClass(10, sizeClass);
-  const subsectionTitleFontSize = scaleBySizeClass(9, sizeClass);
-
   return StyleSheet.create({
     container: {
       borderRadius: 16,
@@ -178,7 +175,7 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
       borderWidth: 1,
     },
     sectionTitle: {
-      fontSize: sectionTitleFontSize,
+      fontSize: scaleBySizeClass(10, sizeClass),
       fontWeight: '700',
       letterSpacing: 1,
       marginBottom: 16,
@@ -199,7 +196,7 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
       marginTop: 8,
     },
     subsectionTitle: {
-      fontSize: subsectionTitleFontSize,
+      fontSize: scaleBySizeClass(9, sizeClass),
       fontWeight: '700',
       letterSpacing: 0.5,
       marginBottom: 8,

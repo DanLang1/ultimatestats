@@ -248,12 +248,14 @@ export function StatEntryInner({
               step={step}
               badgeValue={badgeValue}
               badgeLabel={badgeLabel}
+              sizeClass={sizeClass}
             />
             <StatEntryRoster
               roster={activeRoster}
               selectedPlayerId={selectedPlayerId}
               onSelect={handlePlayerSelect}
               maxHeight={isLandscape ? 220 : 400}
+              sizeClass={sizeClass}
             />
             {renderFooter()}
           </View>
@@ -276,6 +278,7 @@ export function StatEntryInner({
               step={step}
               badgeValue={badgeValue}
               badgeLabel={badgeLabel}
+              sizeClass={sizeClass}
             />
 
             <View style={styles.addPlayerRow}>
@@ -313,6 +316,7 @@ export function StatEntryInner({
               selectedPlayerId={selectedPlayerId}
               onSelect={handlePlayerSelect}
               maxHeight={400}
+              sizeClass={sizeClass}
             />
             {renderFooter()}
           </View>
@@ -336,6 +340,7 @@ export function StatEntryInner({
               step={step}
               badgeValue={badgeValue}
               badgeLabel={badgeLabel}
+              sizeClass={sizeClass}
             />
 
             <View style={styles.addPlayerRow}>
@@ -378,6 +383,7 @@ export function StatEntryInner({
               selectedPlayerId={selectedPlayerId}
               onSelect={handlePlayerSelect}
               maxHeight={280}
+              sizeClass={sizeClass}
             />
           </View>
         </View>

@@ -1,5 +1,5 @@
 import { useTheme } from '@/context/ThemeContext';
-import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { ChemistryConnection } from '@/lib/statsUtils';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
@@ -31,14 +31,15 @@ export default function ChemistryMap({ playerName, connections }: ChemistryMapPr
     .sort((a, b) => b.assistsTo - a.assistsTo)
     .slice(0, 4);
 
-  const svgWidth = 320;
-  const minNodeRadius = 16;
-  const maxNodeRadius = 24;
-  const centerNodeRadius = 22;
-  const svgHeight = Math.max(feeders.length, targets.length, 1) * 60 + 50;
+  const svgWidth = getSizeClassValue({ small: 320, medium: 352, large: 384 }, sizeClass);
+  const minNodeRadius = scaleBySizeClass(16, sizeClass);
+  const maxNodeRadius = scaleBySizeClass(24, sizeClass);
+  const centerNodeRadius = scaleBySizeClass(22, sizeClass);
+  const rowSpacing = scaleBySizeClass(60, sizeClass);
+  const svgHeight = Math.max(feeders.length, targets.length, 1) * rowSpacing + 50;
   const centerX = svgWidth / 2;
   const centerY = svgHeight / 2;
-  const columnOffset = 75;
+  const columnOffset = scaleBySizeClass(75, sizeClass);
 
   // Calculate max count for scaling
   const maxFeederCount = Math.max(...feeders.map((f) => f.goalsFrom), 1);
@@ -89,7 +90,7 @@ export default function ChemistryMap({ playerName, connections }: ChemistryMapPr
       <Svg width={svgWidth} height={svgHeight}>
         {/* Connection Lines (draw first so they're behind nodes) */}
         {feeders.map((feeder, i) => {
-          const y = centerY - ((feeders.length - 1) * 60) / 2 + i * 60;
+          const y = centerY - ((feeders.length - 1) * rowSpacing) / 2 + i * rowSpacing;
           const x = centerX - columnOffset;
           const strokeWidth = Math.min(2 + feeder.goalsFrom, 6);
           // Calculate the actual node radius for this feeder (same formula as node drawing)
@@ -111,7 +112,7 @@ export default function ChemistryMap({ playerName, connections }: ChemistryMapPr
         })}
 
         {targets.map((target, i) => {
-          const y = centerY - ((targets.length - 1) * 60) / 2 + i * 60;
+          const y = centerY - ((targets.length - 1) * rowSpacing) / 2 + i * rowSpacing;
           const x = centerX + columnOffset;
           const strokeWidth = Math.min(2 + target.assistsTo, 6);
           // Calculate the actual node radius for this target (same formula as node drawing)
@@ -137,8 +138,8 @@ export default function ChemistryMap({ playerName, connections }: ChemistryMapPr
         <SvgText
           x={centerX}
           y={centerY + 4}
-          fill="#FFF"
-          fontSize="10"
+          fill={palette.textInverse}
+          fontSize={scaleBySizeClass(10, sizeClass)}
           fontWeight="bold"
           textAnchor="middle">
           {centerLabel}
@@ -146,7 +147,7 @@ export default function ChemistryMap({ playerName, connections }: ChemistryMapPr
 
         {/* Feeder Nodes (Left Side) */}
         {feeders.map((feeder, i) => {
-          const y = centerY - ((feeders.length - 1) * 60) / 2 + i * 60;
+          const y = centerY - ((feeders.length - 1) * rowSpacing) / 2 + i * rowSpacing;
           const x = centerX - columnOffset;
           // Scale node radius based on count
           const nodeRadius =
@@ -168,7 +169,7 @@ export default function ChemistryMap({ playerName, connections }: ChemistryMapPr
                 x={x}
                 y={y + 5}
                 fill={palette.accent}
-                fontSize="14"
+                fontSize={scaleBySizeClass(14, sizeClass)}
                 fontWeight="bold"
                 textAnchor="middle">
                 {feeder.goalsFrom}
@@ -179,7 +180,7 @@ export default function ChemistryMap({ playerName, connections }: ChemistryMapPr
                 x={x - nodeRadius - 6}
                 y={y + 4}
                 fill={palette.textMuted}
-                fontSize="9"
+                fontSize={scaleBySizeClass(9, sizeClass)}
                 fontWeight="600"
                 textAnchor="end">
                 {feeder.playerName.length > 10
@@ -192,7 +193,7 @@ export default function ChemistryMap({ playerName, connections }: ChemistryMapPr
 
         {/* Target Nodes (Right Side) */}
         {targets.map((target, i) => {
-          const y = centerY - ((targets.length - 1) * 60) / 2 + i * 60;
+          const y = centerY - ((targets.length - 1) * rowSpacing) / 2 + i * rowSpacing;
           const x = centerX + columnOffset;
           // Scale node radius based on count
           const nodeRadius =
@@ -214,7 +215,7 @@ export default function ChemistryMap({ playerName, connections }: ChemistryMapPr
                 x={x}
                 y={y + 5}
                 fill={palette.success}
-                fontSize="14"
+                fontSize={scaleBySizeClass(14, sizeClass)}
                 fontWeight="bold"
                 textAnchor="middle">
                 {target.assistsTo}
@@ -225,7 +226,7 @@ export default function ChemistryMap({ playerName, connections }: ChemistryMapPr
                 x={x + nodeRadius + 6}
                 y={y + 4}
                 fill={palette.textMuted}
-                fontSize="9"
+                fontSize={scaleBySizeClass(9, sizeClass)}
                 fontWeight="600"
                 textAnchor="start">
                 {target.playerName.length > 10

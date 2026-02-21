@@ -1,8 +1,9 @@
 import { useTheme } from '@/context/ThemeContext';
-import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { useLayout } from '@/hooks/useLayout';
 import { PlayerStats as PlayerStatsType } from '@/lib/statsUtils';
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import StatPill from './StatPill';
 
 interface PlayerStatsSummaryProps {
   stats: PlayerStatsType;
@@ -13,31 +14,13 @@ interface PlayerStatsSummaryProps {
 const pluralize = (count: number, singular: string, plural: string) =>
   count === 1 ? singular : plural;
 
-interface StatPillProps {
-  value: number;
-  label: string;
-  type: 'positive' | 'negative';
-  bgColor: string;
-  textColor: string;
-  styles: ReturnType<typeof createStyles>;
-}
-
-function StatPill({ value, label, bgColor, textColor, styles }: StatPillProps) {
-  return (
-    <View style={[styles.pill, { backgroundColor: bgColor }]}>
-      <Text style={[styles.pillValue, { color: textColor }]}>{value}</Text>
-      <Text style={[styles.pillLabel, { color: textColor }]}>{label}</Text>
-    </View>
-  );
-}
-
 export default function PlayerStatsSummary({
   stats,
   variant = 'horizontal',
 }: PlayerStatsSummaryProps) {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
-  const styles = createStyles(sizeClass);
+  const styles = createStyles();
   const isVertical = variant === 'vertical';
 
   const positiveBg = palette.successOverlay15;
@@ -57,7 +40,7 @@ export default function PlayerStatsSummary({
         type="positive"
         bgColor={positiveBg}
         textColor={positiveText}
-        styles={styles}
+        sizeClass={sizeClass}
       />
       <StatPill
         value={stats.assists}
@@ -65,7 +48,7 @@ export default function PlayerStatsSummary({
         type="positive"
         bgColor={positiveBg}
         textColor={positiveText}
-        styles={styles}
+        sizeClass={sizeClass}
       />
       <StatPill
         value={stats.blocks}
@@ -73,7 +56,7 @@ export default function PlayerStatsSummary({
         type="positive"
         bgColor={positiveBg}
         textColor={positiveText}
-        styles={styles}
+        sizeClass={sizeClass}
       />
 
       <StatPill
@@ -82,7 +65,7 @@ export default function PlayerStatsSummary({
         type="negative"
         bgColor={negativeBg}
         textColor={negativeText}
-        styles={styles}
+        sizeClass={sizeClass}
       />
       <StatPill
         value={stats.drops}
@@ -90,7 +73,7 @@ export default function PlayerStatsSummary({
         type="negative"
         bgColor={negativeBg}
         textColor={negativeText}
-        styles={styles}
+        sizeClass={sizeClass}
       />
       <StatPill
         value={stats.throwaways + stats.drops}
@@ -98,13 +81,13 @@ export default function PlayerStatsSummary({
         type="negative"
         bgColor={negativeBg}
         textColor={negativeText}
-        styles={styles}
+        sizeClass={sizeClass}
       />
     </View>
   );
 }
 
-function createStyles(sizeClass: SizeClass) {
+function createStyles() {
   return StyleSheet.create({
     container: {
       flexDirection: 'row',
@@ -121,22 +104,6 @@ function createStyles(sizeClass: SizeClass) {
       flexWrap: 'wrap',
       justifyContent: 'center',
       gap: 8,
-    },
-    pill: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      paddingHorizontal: 10,
-      paddingVertical: 6,
-      borderRadius: 16,
-      gap: 4,
-    },
-    pillValue: {
-      fontSize: scaleBySizeClass(14, sizeClass),
-      fontWeight: '800',
-    },
-    pillLabel: {
-      fontSize: scaleBySizeClass(11, sizeClass),
-      fontWeight: '600',
     },
   });
 }

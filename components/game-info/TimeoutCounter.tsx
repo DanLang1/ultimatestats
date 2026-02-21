@@ -1,5 +1,5 @@
 import { useTheme } from '@/context/ThemeContext';
-import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { scaleBySizeClass, SizeClass } from '@/hooks/useLayout';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
@@ -8,11 +8,16 @@ interface TimeoutCounterProps {
   count: number;
   hasFloater: boolean;
   floaterEnabled: boolean;
+  sizeClass?: SizeClass;
 }
 
-export function TimeoutCounter({ count, hasFloater, floaterEnabled }: TimeoutCounterProps) {
+export function TimeoutCounter({
+  count,
+  hasFloater,
+  floaterEnabled,
+  sizeClass = 'small',
+}: TimeoutCounterProps) {
   const { palette } = useTheme();
-  const { sizeClass } = useLayout();
   const styles = createStyles(sizeClass);
   const floaterIconSize = scaleBySizeClass(14, sizeClass);
 

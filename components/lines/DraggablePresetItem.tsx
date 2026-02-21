@@ -1,5 +1,5 @@
 import { useTheme } from '@/context/ThemeContext';
-import { scaleBySizeClass, useLayout } from '@/hooks/useLayout';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { LinePreset } from '@/lib/storage/types';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
@@ -161,7 +161,7 @@ export function DraggablePresetItem({
   );
 }
 
-function createStyles(sizeClass: 'small' | 'medium' | 'large') {
+function createStyles(sizeClass: SizeClass) {
   return StyleSheet.create({
     item: {
       height: ITEM_HEIGHT,

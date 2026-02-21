@@ -1,6 +1,6 @@
 import { PlayerChip } from '@/components/ui/PlayerChip';
 import { useTheme } from '@/context/ThemeContext';
-import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { scaleBySizeClass, SizeClass } from '@/hooks/useLayout';
 import { Player } from '@/lib/storage/types';
 import React from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -10,6 +10,7 @@ interface StatEntryRosterProps {
   selectedPlayerId?: string | null;
   onSelect: (playerId: string) => void;
   maxHeight?: number;
+  sizeClass?: SizeClass;
 }
 
 export function StatEntryRoster({
@@ -17,9 +18,9 @@ export function StatEntryRoster({
   selectedPlayerId,
   onSelect,
   maxHeight = 120,
+  sizeClass = 'small',
 }: StatEntryRosterProps) {
   const { palette } = useTheme();
-  const { sizeClass } = useLayout();
   const styles = createStyles(sizeClass);
 
   // Sort roster alphabetically by name

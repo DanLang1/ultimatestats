@@ -27,11 +27,11 @@ function getToneBg(tone: 'success' | 'danger', palette: Palette) {
 
 export default function TurnoverToast({ toast, toastInstanceId }: TurnoverToastProps) {
   const { isLandscape, sizeClass } = useLayout();
-  const styles = createStyles(sizeClass);
   const { palette } = useTheme();
   const insets = useSafeAreaInsets();
   const [toastWidth, setToastWidth] = useState(0);
-  const toastHeight = 44;
+  const toastHeight = scaleBySizeClass(44, sizeClass);
+  const styles = createStyles(sizeClass, toastHeight);
   const { toastAnimatedStyle, borderRunnerAnimatedStyle, borderRunnerOffsetAnimatedStyle } =
     useToastPulse(toast.visible, toastInstanceId, toastWidth, toastHeight);
 
@@ -75,7 +75,7 @@ export default function TurnoverToast({ toast, toastInstanceId }: TurnoverToastP
   );
 }
 
-function createStyles(sizeClass: SizeClass) {
+function createStyles(sizeClass: SizeClass, toastHeight: number) {
   return StyleSheet.create({
     container: {
       position: 'absolute',
@@ -87,7 +87,7 @@ function createStyles(sizeClass: SizeClass) {
     banner: {
       width: '88%',
       maxWidth: 400,
-      height: 44,
+      height: toastHeight,
       borderRadius: 10,
       overflow: 'hidden',
       flexDirection: 'row',

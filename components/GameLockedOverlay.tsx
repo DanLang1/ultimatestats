@@ -144,9 +144,9 @@ function createStyles(sizeClass: SizeClass) {
       alignItems: 'center',
       justifyContent: 'center',
       gap: 8,
-      paddingVertical: 14,
-      paddingHorizontal: 20,
-      borderRadius: 12,
+      paddingVertical: scaleBySizeClass(14, sizeClass),
+      paddingHorizontal: scaleBySizeClass(20, sizeClass),
+      borderRadius: scaleBySizeClass(12, sizeClass),
     },
     buttonText: {
       fontSize: scaleBySizeClass(16, sizeClass),

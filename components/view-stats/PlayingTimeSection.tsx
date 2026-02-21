@@ -1,5 +1,6 @@
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import PlayingTimePill from './PlayingTimePill';
 import {
   computePerPointStats,
   computePlayingTimeStats,
@@ -81,17 +82,17 @@ export default function PlayingTimeSection({
     drops,
   );
 
-  const renderStatPill = (label: string, value: string | number, color?: string) => (
-    <View style={[styles.statPill, { backgroundColor: palette.overlay05 }]}>
-      <Text style={[styles.statValue, { color: color ?? palette.textInverse }]}>{value}</Text>
-      <Text style={[styles.statLabel, { color: palette.textMuted }]}>{label}</Text>
-    </View>
-  );
-
   const renderRatePill = (label: string, value: number) => {
     const color =
       value >= 60 ? palette.success : value <= 40 ? palette.danger : palette.textInverse;
-    return renderStatPill(label, `${value.toFixed(0)}%`, color);
+    return (
+      <PlayingTimePill
+        label={label}
+        value={`${value.toFixed(0)}%`}
+        color={color}
+        sizeClass={sizeClass}
+      />
+    );
   };
 
   // O-Eff color: >= 0.6 green, <= 0.4 red
@@ -121,11 +122,19 @@ export default function PlayingTimeSection({
         <View style={styles.section}>
           <Text style={[styles.sectionLabel, { color: palette.textMuted }]}>POINTS</Text>
           <View style={styles.pillRow}>
-            {renderStatPill('Played', stats.pointsPlayed)}
-            {renderStatPill('O-Line', stats.oPoints)}
-            {renderStatPill('D-Line', stats.dPoints)}
-            {renderStatPill(stats.oLineHolds === 1 ? 'Hold' : 'Holds', stats.oLineHolds)}
-            {renderStatPill(stats.dLineBreaks === 1 ? 'Break' : 'Breaks', stats.dLineBreaks)}
+            <PlayingTimePill label="Played" value={stats.pointsPlayed} sizeClass={sizeClass} />
+            <PlayingTimePill label="O-Line" value={stats.oPoints} sizeClass={sizeClass} />
+            <PlayingTimePill label="D-Line" value={stats.dPoints} sizeClass={sizeClass} />
+            <PlayingTimePill
+              label={stats.oLineHolds === 1 ? 'Hold' : 'Holds'}
+              value={stats.oLineHolds}
+              sizeClass={sizeClass}
+            />
+            <PlayingTimePill
+              label={stats.dLineBreaks === 1 ? 'Break' : 'Breaks'}
+              value={stats.dLineBreaks}
+              sizeClass={sizeClass}
+            />
           </View>
         </View>
 
@@ -134,18 +143,22 @@ export default function PlayingTimeSection({
           <Text style={[styles.sectionLabel, { color: palette.textMuted }]}>EFFICIENCY</Text>
           <View style={styles.pillRow}>
             {renderRatePill('Win', rates.pointWinRate)}
-            {stats.oPoints > 0 &&
-              renderStatPill(
-                'Offense',
-                formatEfficiencyLocal(stats.oEfficiency),
-                getOEfficiencyColor(stats.oEfficiency),
-              )}
-            {stats.dPoints > 0 &&
-              renderStatPill(
-                'Defense',
-                formatEfficiencyLocal(stats.dEfficiency),
-                getDEfficiencyColor(stats.dEfficiency),
-              )}
+            {stats.oPoints > 0 && (
+              <PlayingTimePill
+                label="Offense"
+                value={formatEfficiencyLocal(stats.oEfficiency)}
+                color={getOEfficiencyColor(stats.oEfficiency)}
+                sizeClass={sizeClass}
+              />
+            )}
+            {stats.dPoints > 0 && (
+              <PlayingTimePill
+                label="Defense"
+                value={formatEfficiencyLocal(stats.dEfficiency)}
+                color={getDEfficiencyColor(stats.dEfficiency)}
+                sizeClass={sizeClass}
+              />
+            )}
           </View>
         </View>
 
@@ -153,12 +166,28 @@ export default function PlayingTimeSection({
         <View style={styles.section}>
           <Text style={[styles.sectionLabel, { color: palette.textMuted }]}>PER POINT</Text>
           <View style={styles.pillRow}>
-            {renderStatPill('Goals', goalsPerPoint.toFixed(2))}
-            {renderStatPill('Assists', assistsPerPoint.toFixed(2))}
-            {renderStatPill('Blocks', blocksPerPoint.toFixed(2))}
-            {renderStatPill('TO', turnoversPerPoint.toFixed(2))}
-            {renderStatPill('TA', throwawaysPerPoint.toFixed(2))}
-            {renderStatPill('Drops', dropsPerPoint.toFixed(2))}
+            <PlayingTimePill label="Goals" value={goalsPerPoint.toFixed(2)} sizeClass={sizeClass} />
+            <PlayingTimePill
+              label="Assists"
+              value={assistsPerPoint.toFixed(2)}
+              sizeClass={sizeClass}
+            />
+            <PlayingTimePill
+              label="Blocks"
+              value={blocksPerPoint.toFixed(2)}
+              sizeClass={sizeClass}
+            />
+            <PlayingTimePill
+              label="TO"
+              value={turnoversPerPoint.toFixed(2)}
+              sizeClass={sizeClass}
+            />
+            <PlayingTimePill
+              label="TA"
+              value={throwawaysPerPoint.toFixed(2)}
+              sizeClass={sizeClass}
+            />
+            <PlayingTimePill label="Drops" value={dropsPerPoint.toFixed(2)} sizeClass={sizeClass} />
           </View>
         </View>
 
@@ -167,11 +196,25 @@ export default function PlayingTimeSection({
           <View style={styles.section}>
             <Text style={[styles.sectionLabel, { color: palette.textMuted }]}>TIMING</Text>
             <View style={styles.pillRow}>
-              {renderStatPill('Total PT', formatMinutesPlayed(stats.minutesPlayed!))}
-              {stats.avgPointDurationMs !== undefined &&
-                renderStatPill('Avg Per Point', `${(stats.avgPointDurationMs / 1000).toFixed(0)}s`)}
-              {stats.playingTimePercent !== undefined &&
-                renderStatPill('Total PP', `${stats.playingTimePercent.toFixed(0)}%`)}
+              <PlayingTimePill
+                label="Total PT"
+                value={formatMinutesPlayed(stats.minutesPlayed!)}
+                sizeClass={sizeClass}
+              />
+              {stats.avgPointDurationMs !== undefined && (
+                <PlayingTimePill
+                  label="Avg Per Point"
+                  value={`${(stats.avgPointDurationMs / 1000).toFixed(0)}s`}
+                  sizeClass={sizeClass}
+                />
+              )}
+              {stats.playingTimePercent !== undefined && (
+                <PlayingTimePill
+                  label="Total PP"
+                  value={`${stats.playingTimePercent.toFixed(0)}%`}
+                  sizeClass={sizeClass}
+                />
+              )}
             </View>
           </View>
         )}
@@ -213,24 +256,6 @@ function createStyles(sizeClass: SizeClass) {
       flexDirection: 'row',
       gap: 6,
       flexWrap: 'wrap',
-    },
-    statPill: {
-      paddingHorizontal: 10,
-      paddingVertical: 6,
-      borderRadius: 8,
-      alignItems: 'center',
-      minWidth: 55,
-    },
-    statValue: {
-      fontSize: scaleBySizeClass(14, sizeClass),
-      fontWeight: '700',
-    },
-    statLabel: {
-      fontSize: scaleBySizeClass(8, sizeClass),
-      fontWeight: '600',
-      marginTop: 2,
-      textTransform: 'uppercase',
-      letterSpacing: 0.3,
     },
   });
 }

@@ -190,7 +190,7 @@ export default function PointTransition() {
               { borderColor: palette.overlay15 },
               pressed && { opacity: 0.7 },
             ]}
-            hitSlop={8}>
+            hitSlop={scaleBySizeClass(8, sizeClass)}>
             <MaterialCommunityIcons
               name="close"
               size={scaleBySizeClass(18, sizeClass)}
@@ -248,7 +248,7 @@ export default function PointTransition() {
               { backgroundColor: canConfirm ? palette.success : palette.overlay10 },
               pressed && canConfirm && { opacity: 0.8 },
             ]}
-            hitSlop={8}>
+            hitSlop={scaleBySizeClass(8, sizeClass)}>
             {canConfirm ? (
               <MaterialCommunityIcons
                 name="check"

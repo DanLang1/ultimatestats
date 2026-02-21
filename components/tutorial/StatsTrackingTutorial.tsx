@@ -1,5 +1,5 @@
 import { useTheme } from '@/context/ThemeContext';
-import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { LayoutInfo, scaleBySizeClass, useLayout } from '@/hooks/useLayout';
 import { useTutorialStore } from '@/store/tutorialStore';
 import React, { useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -118,6 +118,7 @@ export default function StatsTrackingTutorial() {
                       icon={step.icon}
                       title={step.title}
                       description={step.description}
+                      sizeClass={sizeClass}
                     />
                   </Animated.View>
                 </View>
@@ -163,12 +164,7 @@ export default function StatsTrackingTutorial() {
   );
 }
 
-function createStyles(layout: {
-  width: number;
-  height: number;
-  isLandscape: boolean;
-  sizeClass: SizeClass;
-}) {
+function createStyles(layout: LayoutInfo) {
   return StyleSheet.create({
     root: {
       flex: 1,

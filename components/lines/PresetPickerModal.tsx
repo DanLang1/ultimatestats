@@ -1,5 +1,5 @@
 import { useTheme } from '@/context/ThemeContext';
-import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { LinePreset } from '@/lib/storage/types';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
@@ -120,7 +120,7 @@ function createStyles(sizeClass: SizeClass) {
       borderTopRightRadius: 16,
       paddingHorizontal: 16,
       maxHeight: '75%',
-      width: '75%',
+      width: getSizeClassValue({ small: '100%', medium: '75%', large: '60%' }, sizeClass),
       alignSelf: 'center',
     },
     sheetHandle: {

@@ -12,10 +12,10 @@ interface RoleDiamondProps {
 export default function RoleDiamond({ roleStats }: RoleDiamondProps) {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
-  const styles = createStyles(sizeClass);
   const { rawGoals, rawAssists, rawBlocks, rawTurnovers } = roleStats;
 
-  const size = 140;
+  const size = scaleBySizeClass(140, sizeClass);
+  const styles = createStyles(sizeClass, size);
   const center = size / 2;
   const maxRadius = center - 20;
 
@@ -113,7 +113,7 @@ export default function RoleDiamond({ roleStats }: RoleDiamondProps) {
   );
 }
 
-function createStyles(sizeClass: SizeClass) {
+function createStyles(sizeClass: SizeClass, size: number) {
   return StyleSheet.create({
     container: {
       padding: 16,
@@ -131,8 +131,8 @@ function createStyles(sizeClass: SizeClass) {
       alignItems: 'center',
     },
     diamondArea: {
-      width: 140,
-      height: 140,
+      width: size,
+      height: size,
       position: 'relative',
       justifyContent: 'center',
       alignItems: 'center',

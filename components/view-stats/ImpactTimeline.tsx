@@ -13,7 +13,8 @@ interface ImpactTimelineProps {
 export default function ImpactTimeline({ data }: ImpactTimelineProps) {
   const { palette } = useTheme();
   const { isLandscape, sizeClass } = useLayout();
-  const styles = createStyles(sizeClass);
+  const chartHeight = scaleBySizeClass(150, sizeClass);
+  const styles = createStyles(sizeClass, chartHeight);
   const hasImpact = data.some((d) => d.cumulativePlusMinus !== 0);
 
   if (!hasImpact && data.length <= 2) {
@@ -84,7 +85,7 @@ export default function ImpactTimeline({ data }: ImpactTimelineProps) {
         </View>
 
         {/* Chart */}
-        <View style={{ flex: 1, height: 150 }}>
+        <View style={{ flex: 1, height: chartHeight }}>
           <CartesianChart
             data={chartData}
             xKey="x"
@@ -220,7 +221,7 @@ export default function ImpactTimeline({ data }: ImpactTimelineProps) {
   );
 }
 
-function createStyles(sizeClass: SizeClass) {
+function createStyles(sizeClass: SizeClass, chartHeight: number) {
   return StyleSheet.create({
     container: {
       padding: 16,
@@ -253,7 +254,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     yAxis: {
       width: 30,
-      height: 150,
+      height: chartHeight,
       justifyContent: 'space-between',
       alignItems: 'flex-end',
       paddingRight: 4,

@@ -1,5 +1,5 @@
 import { useTheme } from '@/context/ThemeContext';
-import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { scaleBySizeClass, SizeClass } from '@/hooks/useLayout';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
@@ -11,11 +11,17 @@ interface StatEntryHeaderProps {
   step: EntryStep;
   badgeValue: string | null;
   badgeLabel: string | null;
+  sizeClass?: SizeClass;
 }
 
-export function StatEntryHeader({ teamName, step, badgeValue, badgeLabel }: StatEntryHeaderProps) {
+export function StatEntryHeader({
+  teamName,
+  step,
+  badgeValue,
+  badgeLabel,
+  sizeClass = 'small',
+}: StatEntryHeaderProps) {
   const { palette } = useTheme();
-  const { sizeClass } = useLayout();
   const styles = createStyles(sizeClass);
 
   return (

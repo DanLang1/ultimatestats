@@ -1,5 +1,5 @@
 import { useTheme } from '@/context/ThemeContext';
-import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { scaleBySizeClass, SizeClass } from '@/hooks/useLayout';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
@@ -8,11 +8,16 @@ interface TutorialStepProps {
   icon: keyof typeof MaterialCommunityIcons.glyphMap;
   title: string;
   description: React.ReactNode;
+  sizeClass?: SizeClass;
 }
 
-export default function TutorialStep({ icon, title, description }: TutorialStepProps) {
+export default function TutorialStep({
+  icon,
+  title,
+  description,
+  sizeClass = 'small',
+}: TutorialStepProps) {
   const { palette } = useTheme();
-  const { sizeClass } = useLayout();
   const styles = createStyles(sizeClass);
   const iconSize = scaleBySizeClass(40, sizeClass);
 
