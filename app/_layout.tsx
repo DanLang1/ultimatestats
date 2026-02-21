@@ -10,6 +10,13 @@ import 'react-native-reanimated';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
+// KEEP THIS: If we need to suppress the deep link logs, this is how
+// Think it's just a dev issue, won't happen in prod
+// if (__DEV__) {
+//   // Temporary suppression while tracking an upstream duplicate-linking warning.
+//   LogBox.ignoreLogs(['Looks like you have configured linking in multiple places']);
+// }
+
 function RootLayoutInner() {
   const { palette, themeMode } = useTheme();
   const orientationMode = useSettingsStore((state) => state.orientationMode);

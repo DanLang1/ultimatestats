@@ -94,8 +94,32 @@ function SettingsContent() {
 
   // Soft Cap displays as time (when soft cap triggers), converts to softCapMins for storage
   const softCapTime = gameLength - softCapMins;
+  const isAndroidLargeScreen = Platform.OS === 'android' && sizeClass !== 'small';
 
   const gameActive = useIsGameActive();
+
+  const handleOrientationModeChange = (nextMode: OrientationMode) => {
+    if (nextMode === orientationMode) return;
+
+    if (isAndroidLargeScreen && nextMode !== 'system') {
+      showAlert({
+        title: 'Orientation Lock Warning',
+        message:
+          '1. Landscape / Portrait mode may not apply on this large device.\n2. Setting these modes may cause letterboxing.',
+        buttons: [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Set Anyway',
+            style: 'default',
+            onPress: () => setOrientationMode(nextMode),
+          },
+        ],
+      });
+      return;
+    }
+
+    setOrientationMode(nextMode);
+  };
 
   // Save all draft inputs - called on keyboard hide (for Android back button)
   const saveAllDrafts = () => {
@@ -287,13 +311,12 @@ function SettingsContent() {
           { value: 'landscape', label: 'Landscape' },
         ]}
         value={orientationMode}
-        onChange={(next) => setOrientationMode(next as OrientationMode)}
+        onChange={(next) => handleOrientationModeChange(next as OrientationMode)}
         sizeClass={sizeClass}
       />
-      {Platform.OS === 'android' && sizeClass !== 'small' && (
+      {isAndroidLargeScreen && (
         <Text style={[styles.helperText, textMutedStyle]}>
-          Orientation lock may be ignored by the OS if you are on Android 16 or later (blame Android
-          not me please).
+          On large Android devices, orientation locks may be ignored (blame Android not me please).
         </Text>
       )}
     </View>

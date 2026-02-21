@@ -8,7 +8,7 @@ import TurnoverToast from '@/components/toast/TurnoverToast';
 import StatsTrackingTutorial from '@/components/tutorial/StatsTrackingTutorial';
 import TutorialOverlay from '@/components/tutorial/TutorialOverlay';
 import { useHalftimeNavigation } from '@/hooks/useHalftimeNavigation';
-import { getSizeClassValue, scaleBySizeClass, useLayout } from '@/hooks/useLayout';
+import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { usePullPromptNavigation } from '@/hooks/usePullPromptNavigation';
 import { useTimeoutTimer } from '@/hooks/useTimeoutTimer';
 import { getContrastingTextColor } from '@/lib/colorUtils';
@@ -21,13 +21,24 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useKeepAwake } from 'expo-keep-awake';
 import { router } from 'expo-router';
 import { Pressable, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function BasicScoreboard() {
   useKeepAwake();
   const layout = useLayout();
-  const styles = createStyles(layout.isLandscape);
+  const styles = createStyles(layout.isLandscape, layout.sizeClass);
+  const insets = useSafeAreaInsets();
   const homeIconSize = scaleBySizeClass(30, layout.sizeClass);
   const homeHitSlop = getSizeClassValue({ small: 16, medium: 18, large: 20 }, layout.sizeClass);
+  const portraitAspectRatio = layout.width > 0 ? layout.height / layout.width : 0;
+  const isCompactVertical = !layout.isLandscape && portraitAspectRatio < 1.75;
+  const topSafeInset = layout.isLandscape ? 0 : Math.max(12, Math.round(insets.top * 0.35));
+  const bottomSafeInset = layout.isLandscape ? 0 : Math.max(12, Math.round(insets.bottom * 0.35));
+  const centerBarClearance = layout.isLandscape
+    ? 0
+    : isCompactVertical
+      ? scaleBySizeClass(14, layout.sizeClass)
+      : scaleBySizeClass(20, layout.sizeClass);
 
   const {
     currentTeam,
@@ -202,6 +213,9 @@ export default function BasicScoreboard() {
         onIncrement={() => handleIncrement(true)}
         textColor={getContrastingTextColor(team1BgColor)}
         backgroundColor={team1BgColor}
+        isCompactVertical={isCompactVertical}
+        contentInsetTop={topSafeInset}
+        contentInsetBottom={centerBarClearance}
         timeouts={team1Combined}
         onTimeoutUse={(index) => {
           if (!team1Combined[index]?.active) return;
@@ -235,6 +249,9 @@ export default function BasicScoreboard() {
         onIncrement={() => handleIncrement(false)}
         textColor={getContrastingTextColor(team2BgColor)}
         backgroundColor={team2BgColor}
+        isCompactVertical={isCompactVertical}
+        contentInsetTop={centerBarClearance}
+        contentInsetBottom={bottomSafeInset}
         timeouts={team2Combined}
         onTimeoutUse={(index) => {
           if (!team2Combined[index]?.active) return;
@@ -266,7 +283,9 @@ export default function BasicScoreboard() {
   );
 }
 
-function createStyles(isLandscape: boolean) {
+function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
+  const timerBarTranslateY = getSizeClassValue({ small: -28, medium: -32, large: -36 }, sizeClass);
+
   return StyleSheet.create({
     container: {
       flex: 1,
@@ -277,7 +296,7 @@ function createStyles(isLandscape: boolean) {
       top: isLandscape ? 0 : '50%',
       left: 0,
       right: 0,
-      ...(isLandscape ? {} : { transform: [{ translateY: -25 }] }),
+      ...(isLandscape ? {} : { transform: [{ translateY: timerBarTranslateY }] }),
       alignItems: 'center',
       zIndex: 100,
     },

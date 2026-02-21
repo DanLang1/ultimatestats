@@ -1,5 +1,5 @@
 import { useTheme } from '@/context/ThemeContext';
-import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React, { createContext, useContext, useState } from 'react';
 import { Modal, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
@@ -177,6 +177,8 @@ export function AlertProvider({ children }: { children: React.ReactNode }) {
 }
 
 function createStyles(sizeClass: SizeClass) {
+  const modalMaxWidth = getSizeClassValue({ small: 340, medium: 420, large: 520 }, sizeClass);
+
   return StyleSheet.create({
     overlay: {
       flex: 1,
@@ -189,7 +191,7 @@ function createStyles(sizeClass: SizeClass) {
       borderRadius: 16,
       padding: 24,
       width: '100%',
-      maxWidth: 320,
+      maxWidth: modalMaxWidth,
       borderWidth: 1,
       position: 'relative',
     },
@@ -204,12 +206,12 @@ function createStyles(sizeClass: SizeClass) {
       fontSize: scaleBySizeClass(18, sizeClass),
       fontWeight: '700',
       textAlign: 'center',
-      marginBottom: 8,
+      marginBottom: 12,
     },
     message: {
       fontSize: scaleBySizeClass(14, sizeClass),
       textAlign: 'center',
-      marginBottom: 20,
+      marginBottom: 22,
       lineHeight: scaleBySizeClass(20, sizeClass),
     },
     input: {
@@ -223,6 +225,7 @@ function createStyles(sizeClass: SizeClass) {
     buttonContainer: {
       flexDirection: 'row',
       gap: 12,
+      marginTop: 2,
     },
     button: {
       flex: 1,

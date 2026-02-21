@@ -9,6 +9,7 @@ interface TeamTextProps {
   color: string;
   hasPossession?: boolean;
   sizeClass?: SizeClass;
+  isCompactVertical?: boolean;
 }
 
 export default function TeamText({
@@ -16,6 +17,7 @@ export default function TeamText({
   color,
   hasPossession,
   sizeClass = 'small',
+  isCompactVertical = false,
 }: TeamTextProps) {
   // Dynamic font size: starts at baseFontSize, shrinks for longer names
   const baseFontSize = getSizeClassValue({ small: 40, medium: 52, large: 60 }, sizeClass);
@@ -27,21 +29,30 @@ export default function TeamText({
     teamName.length > shrinkThreshold
       ? Math.max(minFontSize, baseFontSize - (teamName.length - shrinkThreshold) * shrinkFactor)
       : baseFontSize;
+  const effectiveFontSize = isCompactVertical ? Math.max(minFontSize, Math.round(fontSize * 0.86)) : fontSize;
 
   // Fixed line height to prevent layout shift when emoji switches teams
   const lineHeight = getSizeClassValue({ small: 48, medium: 60, large: 68 }, sizeClass);
+  const effectiveLineHeight = isCompactVertical
+    ? Math.max(40, Math.round(lineHeight * 0.86))
+    : lineHeight;
+  const emojiSize = getSizeClassValue({ small: 24, medium: 28, large: 32 }, sizeClass);
+  const effectiveEmojiSize = isCompactVertical ? Math.max(20, Math.round(emojiSize * 0.9)) : emojiSize;
 
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-      <ThemedText style={{ color: color, fontSize, lineHeight }} type="title" numberOfLines={1}>
+      <ThemedText
+        style={{ color: color, fontSize: effectiveFontSize, lineHeight: effectiveLineHeight }}
+        type="title"
+        numberOfLines={1}>
         {teamName}
       </ThemedText>
       {hasPossession && (
         <Animated.View entering={FadeIn.duration(300)} exiting={FadeOut.duration(300)}>
           <ThemedText
             style={{
-              fontSize: getSizeClassValue({ small: 24, medium: 28, large: 32 }, sizeClass),
-              lineHeight,
+              fontSize: effectiveEmojiSize,
+              lineHeight: effectiveLineHeight,
             }}>
             🥏
           </ThemedText>

@@ -1,5 +1,5 @@
 import { useTheme } from '@/context/ThemeContext';
-import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
@@ -51,6 +51,8 @@ export function AlertModal({ visible, title, onClose, children }: AlertModalProp
 }
 
 function createStyles(sizeClass: SizeClass) {
+  const modalMaxWidth = getSizeClassValue({ small: 340, medium: 420, large: 520 }, sizeClass);
+
   return StyleSheet.create({
     overlay: {
       flex: 1,
@@ -63,7 +65,7 @@ function createStyles(sizeClass: SizeClass) {
       borderRadius: 16,
       padding: 24,
       width: '100%',
-      maxWidth: 320,
+      maxWidth: modalMaxWidth,
       borderWidth: 1,
       position: 'relative',
     },

@@ -12,6 +12,9 @@ interface TeamScoreSectionProps {
   onIncrement: () => void;
   textColor: string;
   backgroundColor: string;
+  isCompactVertical?: boolean;
+  contentInsetTop?: number;
+  contentInsetBottom?: number;
 
   timeouts?: { active: boolean; isFloater: boolean }[];
   onTimeoutUse?: (index: number) => void;
@@ -33,13 +36,16 @@ export default function TeamScoreSection({
   onIncrement,
   textColor,
   backgroundColor,
+  isCompactVertical = false,
+  contentInsetTop = 0,
+  contentInsetBottom = 0,
   timeouts = [],
   onTimeoutUse,
   hasPossession,
 }: TeamScoreSectionProps) {
   const { triggerScoreHaptic } = useHaptics();
   const { sizeClass } = useLayout();
-  const styles = createStyles(sizeClass);
+  const styles = createStyles(sizeClass, isCompactVertical);
 
   // Determine what happens on tap
   // If possession tracking is enabled (hasPossession is defined):
@@ -62,7 +68,15 @@ export default function TeamScoreSection({
     <ThemedView style={[styles.container, { backgroundColor }]}>
       <Pressable onPress={handleTap} style={styles.scoreTapArea} />
 
-      <View pointerEvents="box-none" style={styles.overlayContent}>
+      <View
+        pointerEvents="box-none"
+        style={[
+          styles.overlayContent,
+          {
+            paddingTop: contentInsetTop,
+            paddingBottom: contentInsetBottom,
+          },
+        ]}>
         <View style={styles.timeoutContainer}>
           {timeouts.map((timeout, index) => (
             <Pressable
@@ -92,20 +106,31 @@ export default function TeamScoreSection({
           teamName={teamName}
           hasPossession={hasPossession}
           sizeClass={sizeClass}
+          isCompactVertical={isCompactVertical}
         />
         <ScoreDisplay
           bgColor={backgroundColor}
           textColor={textColor}
           score={score}
           sizeClass={sizeClass}
+          isCompactVertical={isCompactVertical}
         />
       </View>
     </ThemedView>
   );
 }
 
-function createStyles(sizeClass: SizeClass) {
+function createStyles(sizeClass: SizeClass, isCompactVertical: boolean) {
   const gap = getSizeClassValue({ small: 6, medium: 10, large: 12 }, sizeClass);
+  const effectiveGap = isCompactVertical ? Math.max(4, Math.round(gap * 0.75)) : gap;
+  const timeoutGap = isCompactVertical ? 12 : 15;
+  const timeoutSize = getSizeClassValue(
+    { small: 20, medium: 22, large: 24 },
+    sizeClass,
+  );
+  const effectiveTimeoutSize = isCompactVertical
+    ? Math.max(16, Math.round(timeoutSize * 0.8))
+    : timeoutSize;
 
   return StyleSheet.create({
     container: {
@@ -119,16 +144,16 @@ function createStyles(sizeClass: SizeClass) {
       ...StyleSheet.absoluteFillObject,
       justifyContent: 'center',
       alignItems: 'center',
-      gap,
+      gap: effectiveGap,
     },
     timeoutContainer: {
       flexDirection: 'row',
-      gap: 15,
+      gap: timeoutGap,
       alignItems: 'center',
     },
     timeoutIndicator: {
-      width: 20,
-      height: 20,
+      width: effectiveTimeoutSize,
+      height: effectiveTimeoutSize,
       borderRadius: 12,
       borderWidth: 2,
     },
