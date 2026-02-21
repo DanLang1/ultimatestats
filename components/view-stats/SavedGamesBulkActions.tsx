@@ -1,4 +1,5 @@
 import { useTheme } from '@/context/ThemeContext';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
@@ -21,6 +22,9 @@ export default function SavedGamesBulkActions({
   isVisible,
 }: SavedGamesBulkActionsProps) {
   const { palette } = useTheme();
+  const { sizeClass } = useLayout();
+  const styles = createStyles(sizeClass);
+  const actionIconSize = scaleBySizeClass(20, sizeClass);
 
   if (!isVisible || selectedCount === 0) return null;
 
@@ -39,7 +43,7 @@ export default function SavedGamesBulkActions({
             },
           ]}
           onPress={onCancel}>
-          <MaterialCommunityIcons name="close" size={20} color={palette.textOnAccent} />
+          <MaterialCommunityIcons name="close" size={actionIconSize} color={palette.textOnAccent} />
         </Pressable>
 
         {/* Share Button (Pill) */}
@@ -51,7 +55,11 @@ export default function SavedGamesBulkActions({
           ]}
           onPress={onShare}
           disabled={shareDisabled}>
-          <MaterialCommunityIcons name="share-variant" size={20} color={palette.textOnAccent} />
+          <MaterialCommunityIcons
+            name="share-variant"
+            size={actionIconSize}
+            color={palette.textOnAccent}
+          />
           <Text style={[styles.actionText, { color: palette.textOnAccent }]}>
             Share ({selectedCount})
           </Text>
@@ -64,7 +72,11 @@ export default function SavedGamesBulkActions({
             { backgroundColor: palette.danger, shadowColor: palette.shadow },
           ]}
           onPress={onDelete}>
-          <MaterialCommunityIcons name="delete" size={20} color={palette.textOnAccent} />
+          <MaterialCommunityIcons
+            name="delete"
+            size={actionIconSize}
+            color={palette.textOnAccent}
+          />
           <Text style={[styles.actionText, { color: palette.textOnAccent }]}>
             Delete ({selectedCount})
           </Text>
@@ -74,48 +86,50 @@ export default function SavedGamesBulkActions({
   );
 }
 
-const styles = StyleSheet.create({
-  bottomBar: {
-    position: 'absolute',
-    bottom: 32,
-    right: 24,
-    alignItems: 'flex-end',
-    pointerEvents: 'box-none',
-  },
-  actionsContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  cancelButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    alignItems: 'center',
-    justifyContent: 'center',
-    // Shadow
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 6,
-    elevation: 8,
-  },
-  actionButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 25,
-    // Shadow
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 6,
-    elevation: 8,
-  },
-  actionText: {
-    fontSize: 15,
-    fontWeight: '700',
-    letterSpacing: 0.3,
-  },
-});
+function createStyles(sizeClass: SizeClass) {
+  return StyleSheet.create({
+    bottomBar: {
+      position: 'absolute',
+      bottom: 32,
+      right: 24,
+      alignItems: 'flex-end',
+      pointerEvents: 'box-none',
+    },
+    actionsContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+    },
+    cancelButton: {
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      alignItems: 'center',
+      justifyContent: 'center',
+      // Shadow
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.2,
+      shadowRadius: 6,
+      elevation: 8,
+    },
+    actionButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+      paddingHorizontal: 20,
+      paddingVertical: 12,
+      borderRadius: 25,
+      // Shadow
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.2,
+      shadowRadius: 6,
+      elevation: 8,
+    },
+    actionText: {
+      fontSize: scaleBySizeClass(15, sizeClass),
+      fontWeight: '700',
+      letterSpacing: 0.3,
+    },
+  });
+}

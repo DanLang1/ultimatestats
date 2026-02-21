@@ -182,7 +182,11 @@ export default function PreGameConfirm() {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Lock Warning */}
         <View style={[styles.lockInfo, { backgroundColor: palette.dangerOverlay15 }]}>
-          <MaterialCommunityIcons name="lock-outline" size={16} color={palette.danger} />
+          <MaterialCommunityIcons
+            name="lock-outline"
+            size={scaleBySizeClass(16, sizeClass)}
+            color={palette.danger}
+          />
           <Text style={[styles.lockText, { color: palette.danger }]}>
             Settings lock once the game starts
           </Text>

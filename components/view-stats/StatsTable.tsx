@@ -1,5 +1,5 @@
 import { useTheme } from '@/context/ThemeContext';
-import { useLayout } from '@/hooks/useLayout';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { getPlayerName } from '@/lib/playerUtils';
 import {
   computePlayingTimeStats,
@@ -50,7 +50,7 @@ export default function StatsTable({
   gameTo = 15,
 }: StatsTableProps) {
   const { palette } = useTheme();
-  const { isLandscape } = useLayout();
+  const { isLandscape, sizeClass } = useLayout();
   const [sortConfig, setSortConfig] = useState<{
     key: SortKey;
     direction: 'asc' | 'desc';
@@ -64,7 +64,7 @@ export default function StatsTable({
 
   // Only show playing time columns if we have data
   const hasPlayingTimeData = playingTimeStats !== null && playingTimeStats.size > 0;
-  const styles = createStyles(isLandscape, hasPlayingTimeData);
+  const styles = createStyles(isLandscape, hasPlayingTimeData, sizeClass);
 
   // Helper to get playing time stats for a player by ID
   const getPlayingTimeStats = (playerId: string): PlayingTimeStats | null => {
@@ -150,7 +150,7 @@ export default function StatsTable({
       return (
         <MaterialCommunityIcons
           name={sortConfig.direction === 'asc' ? 'arrow-up' : 'arrow-down'}
-          size={12}
+          size={scaleBySizeClass(12, sizeClass)}
           color={palette.accent}
           style={{ marginLeft: 2 }}
         />
@@ -159,7 +159,7 @@ export default function StatsTable({
     return (
       <MaterialCommunityIcons
         name="unfold-more-horizontal"
-        size={12}
+        size={scaleBySizeClass(12, sizeClass)}
         color={palette.textMuted}
         style={{ marginLeft: 2, opacity: 0.5 }}
       />
@@ -201,7 +201,7 @@ export default function StatsTable({
           <TouchableOpacity onPress={() => setShowLegend((v) => !v)} hitSlop={8}>
             <MaterialCommunityIcons
               name={showLegend ? 'information' : 'information-outline'}
-              size={16}
+              size={scaleBySizeClass(16, sizeClass)}
               color={showLegend ? palette.accent : palette.textMuted}
             />
           </TouchableOpacity>
@@ -594,7 +594,7 @@ export default function StatsTable({
   );
 }
 
-function createStyles(isLandscape: boolean, hasPlayingTimeData: boolean) {
+function createStyles(isLandscape: boolean, hasPlayingTimeData: boolean, sizeClass: SizeClass) {
   return StyleSheet.create({
     sectionHeader: {
       flexDirection: 'row',
@@ -627,15 +627,15 @@ function createStyles(isLandscape: boolean, hasPlayingTimeData: boolean) {
       gap: 6,
     },
     legendAbbr: {
-      fontSize: 11,
+      fontSize: scaleBySizeClass(11, sizeClass),
       fontWeight: '700',
       minWidth: 32,
     },
     legendLabel: {
-      fontSize: 11,
+      fontSize: scaleBySizeClass(11, sizeClass),
     },
     sectionTitle: {
-      fontSize: 12,
+      fontSize: scaleBySizeClass(12, sizeClass),
       fontWeight: '700',
       letterSpacing: 1,
     },
@@ -663,7 +663,7 @@ function createStyles(isLandscape: boolean, hasPlayingTimeData: boolean) {
       paddingRight: 8,
     },
     headerText: {
-      fontSize: 10,
+      fontSize: scaleBySizeClass(10, sizeClass),
       fontWeight: '800',
       textTransform: 'uppercase',
       letterSpacing: 0.5,
@@ -681,14 +681,14 @@ function createStyles(isLandscape: boolean, hasPlayingTimeData: boolean) {
     },
     cell: {
       flex: 1,
-      fontSize: 13,
+      fontSize: scaleBySizeClass(13, sizeClass),
       textAlign: 'center',
       fontWeight: '500',
     },
     nameCell: {
       flex: 1.8,
       textAlign: 'left',
-      fontSize: 13,
+      fontSize: scaleBySizeClass(13, sizeClass),
       fontWeight: '600',
     },
     portraitTableContainer: {
@@ -720,13 +720,13 @@ function createStyles(isLandscape: boolean, hasPlayingTimeData: boolean) {
       borderBottomWidth: 1,
     },
     portraitCell: {
-      fontSize: 13,
+      fontSize: scaleBySizeClass(13, sizeClass),
       textAlign: 'center',
       fontWeight: '500',
     },
     portraitNameCell: {
       textAlign: 'left',
-      fontSize: 13,
+      fontSize: scaleBySizeClass(13, sizeClass),
       fontWeight: '600',
       paddingLeft: 12,
       paddingRight: 8,
@@ -738,7 +738,7 @@ function createStyles(isLandscape: boolean, hasPlayingTimeData: boolean) {
       opacity: 0.6,
     },
     headerHintText: {
-      fontSize: 10,
+      fontSize: scaleBySizeClass(10, sizeClass),
       fontWeight: '600',
       letterSpacing: 0.5,
       textTransform: 'uppercase',

@@ -38,7 +38,13 @@ export default function TeamText({
       </ThemedText>
       {hasPossession && (
         <Animated.View entering={FadeIn.duration(300)} exiting={FadeOut.duration(300)}>
-          <ThemedText style={{ fontSize: 24, lineHeight }}>🥏</ThemedText>
+          <ThemedText
+            style={{
+              fontSize: getSizeClassValue({ small: 24, medium: 28, large: 32 }, sizeClass),
+              lineHeight,
+            }}>
+            🥏
+          </ThemedText>
         </Animated.View>
       )}
     </View>

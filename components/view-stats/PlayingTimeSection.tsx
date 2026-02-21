@@ -1,4 +1,5 @@
 import { useTheme } from '@/context/ThemeContext';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import {
   computePerPointStats,
   computePlayingTimeStats,
@@ -38,6 +39,8 @@ export default function PlayingTimeSection({
   drops = 0,
 }: PlayingTimeSectionProps) {
   const { palette } = useTheme();
+  const { sizeClass } = useLayout();
+  const styles = createStyles(sizeClass);
 
   // Don't render if no pointLines data
   if (!pointLines?.length) {
@@ -177,55 +180,57 @@ export default function PlayingTimeSection({
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    borderRadius: 16,
-    borderWidth: 1,
-    padding: 16,
-    marginTop: 16,
-  },
-  sectionTitle: {
-    fontSize: 10,
-    fontWeight: '700',
-    letterSpacing: 1,
-    marginBottom: 12,
-  },
-  mainRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 16,
-  },
-  section: {
-    flex: 1,
-    minWidth: 140,
-  },
-  sectionLabel: {
-    fontSize: 9,
-    fontWeight: '600',
-    letterSpacing: 0.5,
-    marginBottom: 8,
-  },
-  pillRow: {
-    flexDirection: 'row',
-    gap: 6,
-    flexWrap: 'wrap',
-  },
-  statPill: {
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 8,
-    alignItems: 'center',
-    minWidth: 55,
-  },
-  statValue: {
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  statLabel: {
-    fontSize: 8,
-    fontWeight: '600',
-    marginTop: 2,
-    textTransform: 'uppercase',
-    letterSpacing: 0.3,
-  },
-});
+function createStyles(sizeClass: SizeClass) {
+  return StyleSheet.create({
+    container: {
+      borderRadius: 16,
+      borderWidth: 1,
+      padding: 16,
+      marginTop: 16,
+    },
+    sectionTitle: {
+      fontSize: scaleBySizeClass(10, sizeClass),
+      fontWeight: '700',
+      letterSpacing: 1,
+      marginBottom: 12,
+    },
+    mainRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 16,
+    },
+    section: {
+      flex: 1,
+      minWidth: 140,
+    },
+    sectionLabel: {
+      fontSize: scaleBySizeClass(9, sizeClass),
+      fontWeight: '600',
+      letterSpacing: 0.5,
+      marginBottom: 8,
+    },
+    pillRow: {
+      flexDirection: 'row',
+      gap: 6,
+      flexWrap: 'wrap',
+    },
+    statPill: {
+      paddingHorizontal: 10,
+      paddingVertical: 6,
+      borderRadius: 8,
+      alignItems: 'center',
+      minWidth: 55,
+    },
+    statValue: {
+      fontSize: scaleBySizeClass(14, sizeClass),
+      fontWeight: '700',
+    },
+    statLabel: {
+      fontSize: scaleBySizeClass(8, sizeClass),
+      fontWeight: '600',
+      marginTop: 2,
+      textTransform: 'uppercase',
+      letterSpacing: 0.3,
+    },
+  });
+}

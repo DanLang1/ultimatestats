@@ -3,6 +3,8 @@ const expoConfig = require('eslint-config-expo/flat');
 const eslintPluginPrettierRecommended = require('eslint-plugin-prettier/recommended');
 const tseslint = require('@typescript-eslint/eslint-plugin');
 
+const localPlugin = require('./scripts/eslint-rules/index.js');
+
 module.exports = defineConfig([
   expoConfig,
   eslintPluginPrettierRecommended,
@@ -10,9 +12,13 @@ module.exports = defineConfig([
     ignores: ['dist/*', 'expo-env.d.ts'],
   },
   {
+    plugins: {
+      local: localPlugin,
+    },
     files: ['**/*.ts', '**/*.tsx'],
     rules: {
       ...tseslint.configs.recommended.rules,
+      'local/no-unscaled-sizes': 'error',
     },
   },
 ]);

@@ -548,7 +548,7 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     scoreDivider: {
       fontSize: scaleBySizeClass(48, sizeClass),
       fontWeight: '300',
-      lineHeight: 54,
+      lineHeight: scaleBySizeClass(54, sizeClass),
       paddingTop: 18,
       paddingHorizontal: 8,
     },
@@ -565,7 +565,7 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
       fontSize: scaleBySizeClass(isLandscape ? 56 : 48, sizeClass),
       fontWeight: '800',
       includeFontPadding: false,
-      lineHeight: isLandscape ? 64 : 54,
+      lineHeight: scaleBySizeClass(isLandscape ? 64 : 54, sizeClass),
     },
     teamColumnStats: {
       fontSize: scaleBySizeClass(13, sizeClass),
@@ -588,7 +588,7 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
       fontSize: scaleBySizeClass(isLandscape ? 48 : 42, sizeClass),
       fontWeight: '800',
       includeFontPadding: false,
-      lineHeight: isLandscape ? 56 : 48,
+      lineHeight: scaleBySizeClass(isLandscape ? 56 : 48, sizeClass),
     },
     hardcapLabelRow: {
       flexDirection: 'row',
@@ -636,7 +636,7 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
       fontWeight: '800',
       fontVariant: ['tabular-nums'],
       includeFontPadding: false,
-      lineHeight: 38,
+      lineHeight: scaleBySizeClass(38, sizeClass),
     },
 
     divider: {
@@ -645,7 +645,7 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     },
 
     sectionTitle: {
-      fontSize: 12,
+      fontSize: scaleBySizeClass(12, sizeClass),
       fontWeight: '700',
       letterSpacing: 1.5,
       marginBottom: 16,

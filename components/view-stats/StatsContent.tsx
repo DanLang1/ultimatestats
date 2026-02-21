@@ -1,6 +1,6 @@
 import { ScoreBadge } from '@/components/ui/ScoreBadge';
 import { useTheme } from '@/context/ThemeContext';
-import { useLayout } from '@/hooks/useLayout';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { computePlayerStats } from '@/lib/statsUtils';
 import { GameEvent, Player, PointLineRecord, SavedGame } from '@/lib/storage';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
@@ -38,8 +38,8 @@ export default function StatsContent({
   pointLines,
 }: StatsContentProps) {
   const { palette } = useTheme();
-  const { isLandscape } = useLayout();
-  const styles = createStyles(isLandscape);
+  const { isLandscape, sizeClass } = useLayout();
+  const styles = createStyles(isLandscape, sizeClass);
   const playerStats = computePlayerStats(events, 'team1', roster);
   const goalCount = events.filter((e) => e.type === 'goal' && e.team === 'team1').length;
   const topPerformers = playerStats.filter((p) => p.plusMinus > 0).slice(0, 3);
@@ -123,7 +123,11 @@ export default function StatsContent({
       {/* Player Stats Table */}
       {playerStats.length === 0 ? (
         <View style={styles.emptyState}>
-          <MaterialCommunityIcons name="chart-bar-stacked" size={48} color={palette.textMuted} />
+          <MaterialCommunityIcons
+            name="chart-bar-stacked"
+            size={scaleBySizeClass(48, sizeClass)}
+            color={palette.textMuted}
+          />
           <Text style={[styles.emptyText, { color: palette.textMuted }]}>
             {isSavedGame ? 'No player stats recorded for this game' : 'No stats recorded yet'}
           </Text>
@@ -144,7 +148,7 @@ export default function StatsContent({
   );
 }
 
-function createStyles(isLandscape: boolean) {
+function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
   return StyleSheet.create({
     summaryCard: {
       borderRadius: 16,
@@ -170,14 +174,14 @@ function createStyles(isLandscape: boolean) {
       paddingTop: isLandscape ? 0 : 16,
     },
     summaryLabel: {
-      fontSize: 10,
+      fontSize: scaleBySizeClass(10, sizeClass),
       fontWeight: '700',
       letterSpacing: 1,
       marginBottom: 4,
       textTransform: 'uppercase',
     },
     summaryTeamName: {
-      fontSize: 24,
+      fontSize: scaleBySizeClass(24, sizeClass),
       fontWeight: '700',
       marginBottom: 12,
     },
@@ -188,11 +192,11 @@ function createStyles(isLandscape: boolean) {
       borderWidth: 1,
     },
     summaryBadgeText: {
-      fontSize: 12,
+      fontSize: scaleBySizeClass(12, sizeClass),
       fontWeight: '600',
     },
     topPerformersTitle: {
-      fontSize: 10,
+      fontSize: scaleBySizeClass(10, sizeClass),
       fontWeight: '700',
       letterSpacing: 1,
       marginBottom: 10,
@@ -208,17 +212,17 @@ function createStyles(isLandscape: boolean) {
       paddingHorizontal: 4,
     },
     topPerformerRank: {
-      fontSize: 12,
+      fontSize: scaleBySizeClass(12, sizeClass),
       fontWeight: '700',
       width: 20,
     },
     topPerformerName: {
       flex: 1,
-      fontSize: 14,
+      fontSize: scaleBySizeClass(14, sizeClass),
       fontWeight: '600',
     },
     topPerformerPlusMinus: {
-      fontSize: 14,
+      fontSize: scaleBySizeClass(14, sizeClass),
       fontWeight: '800',
       minWidth: 44,
       textAlign: 'right',
@@ -230,7 +234,7 @@ function createStyles(isLandscape: boolean) {
       marginBottom: 12,
     },
     sectionTitle: {
-      fontSize: 12,
+      fontSize: scaleBySizeClass(12, sizeClass),
       fontWeight: '700',
       letterSpacing: 1,
     },
@@ -244,7 +248,7 @@ function createStyles(isLandscape: boolean) {
       borderWidth: 1,
     },
     headerExportText: {
-      fontSize: 12,
+      fontSize: scaleBySizeClass(12, sizeClass),
       fontWeight: '600',
     },
     emptyState: {
@@ -254,7 +258,7 @@ function createStyles(isLandscape: boolean) {
       marginTop: 40,
     },
     emptyText: {
-      fontSize: 16,
+      fontSize: scaleBySizeClass(16, sizeClass),
       textAlign: 'center',
     },
   });

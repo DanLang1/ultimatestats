@@ -34,6 +34,35 @@ This document tracks intentionally deferred cleanup work discovered during the d
   `components/tutorial/StatsTrackingTutorial.tsx:183`
   `components/tutorial/TutorialOverlay.tsx:191`
 
+## P1 - Soft Cap Undo Does Not Re-derive `gameTo`
+
+- Undoing (or canceling via `cancelPendingGoal`) a goal that triggered soft cap does not restore `gameTo` or `isSoftCap`. After the undo, `softCapPending = false` and `isSoftCap = true`, so the next goal does not re-trigger the +1 recalculation.
+- Impact: only manifests when the trailing team scores the very next goal after the undo (different highest score → different correct `gameTo`), resulting in at most 1 extra point played. If the same team scores again the stale `gameTo` coincidentally matches the correct value.
+- Fix: stamp a `triggeredSoftCap?: boolean` flag on the `GoalEvent`. Both undo paths check the flag and restore `gameTo = baseGameTo`, `isSoftCap = false`, `softCapPending = true` so the next goal re-applies the rule against the actual post-undo scores.
+- References:
+  `store/gameStore.ts:155` (soft cap logic in `incrementScore`)
+  `store/gameStore.ts:256` (`undoLastAction` goal branch — missing restoration)
+  `store/gameStore.ts:573` (`cancelPendingGoal` — missing restoration)
+  `store/gameStore.types.ts:12` (`GoalEvent` — needs `triggeredSoftCap?` field)
+
+## P2 - `cancelPendingGoal` Does Not Re-derive Timeout State
+
+- `undoLastAction` calls `deriveTimeoutState()` after every undo, correctly replaying events to reconstruct timeout availability. `cancelPendingGoal` does not.
+- Impact: if team1 used a timeout in the first half, then scored the halftime goal (which resets timeouts via `fill(true)`), then canceled the stat entry — the used timeout is silently restored and available again.
+- Fix: call `deriveTimeoutState` at the end of `cancelPendingGoal`, same as `undoLastAction`.
+- References:
+  `store/gameStore.ts:573` (`cancelPendingGoal` — missing `deriveTimeoutState` call)
+  `store/gameStore.ts:305` (`undoLastAction` — correct pattern to follow)
+  `lib/timeoutUtils.ts:19` (`deriveTimeoutState`)
+
+## P3 - Stale Break Timer State on App Crash/Kill
+
+- `isHalftimeBreak`, `halftimeEndTime`, `halftimeTimeLeft`, `pendingTimeoutModal`, `timeoutEndTime`, and `timeoutTimeLeft` are all persisted via Zustand. If the app is killed during a halftime or timeout break, on restart the break modal reappears with stale timer values (`endTime` is in the past, `timeLeft` is whatever was last written).
+- Impact: UX annoyance — broken timer display. User can dismiss the modal. No data corruption.
+- Fix: on hydration, if `halftimeEndTime`/`timeoutEndTime` is in the past, clear the break state.
+- References:
+  `store/gameStore.ts:1069` (partialize — persisted break fields)
+
 ## P2 - Modal Theming Token Alignment
 
 - Align modal text/background token usage with modal theming guidance (`modalText`, `modalTextMuted`, etc.) where currently using banned tokens.
@@ -68,6 +97,16 @@ This document tracks intentionally deferred cleanup work discovered during the d
   `docs/responsive-layout.md:99`
   `AGENTS.md:143`
   `docs/README.md:69`
+
+## P3 - Store Architecture Refactor
+
+- `gameStore` is a god store spanning six concerns: live game state, timers, roster, game catalog, UI signals, and game config.
+- Proposed split: `gameLibraryStore` (saved games/teams catalog), `gameConfigStore` (pre-game settings that survive reset), `timerStore` (all timer state), slimmed-down `liveGameStore`.
+- No backwards-compat risk for saved game data — the storage adapter keys are independent of store boundaries.
+- References:
+  `docs/future-features/store-refactor.md`
+  `store/gameStore.ts`
+  `store/gameStore.types.ts`
 
 ## P3 - Expo Router Naming and Feature Grouping
 

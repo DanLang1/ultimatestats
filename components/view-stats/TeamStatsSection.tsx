@@ -1,5 +1,5 @@
 import { useTheme } from '@/context/ThemeContext';
-import { useLayout } from '@/hooks/useLayout';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { GameEvent } from '@/lib/storage';
 import { computeTeamStats, computeTimingStats } from '@/lib/teamStatsUtils';
 import React from 'react';
@@ -35,8 +35,8 @@ export default function TeamStatsSection({
   gameTo,
 }: TeamStatsSectionProps) {
   const { palette } = useTheme();
-  const { isLandscape } = useLayout();
-  const styles = createStyles(isLandscape);
+  const { isLandscape, sizeClass } = useLayout();
+  const styles = createStyles(isLandscape, sizeClass);
 
   const stats = computeTeamStats(events, startingPossession, gameTo);
   const timingStats = computeTimingStats(events, startingPossession, gameTo);
@@ -166,7 +166,10 @@ export default function TeamStatsSection({
   );
 }
 
-function createStyles(isLandscape: boolean) {
+function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
+  const sectionTitleFontSize = scaleBySizeClass(10, sizeClass);
+  const subsectionTitleFontSize = scaleBySizeClass(9, sizeClass);
+
   return StyleSheet.create({
     container: {
       borderRadius: 16,
@@ -175,7 +178,7 @@ function createStyles(isLandscape: boolean) {
       borderWidth: 1,
     },
     sectionTitle: {
-      fontSize: 10,
+      fontSize: sectionTitleFontSize,
       fontWeight: '700',
       letterSpacing: 1,
       marginBottom: 16,
@@ -196,7 +199,7 @@ function createStyles(isLandscape: boolean) {
       marginTop: 8,
     },
     subsectionTitle: {
-      fontSize: 9,
+      fontSize: subsectionTitleFontSize,
       fontWeight: '700',
       letterSpacing: 0.5,
       marginBottom: 8,

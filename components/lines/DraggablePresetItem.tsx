@@ -1,4 +1,5 @@
 import { useTheme } from '@/context/ThemeContext';
+import { scaleBySizeClass, useLayout } from '@/hooks/useLayout';
 import { LinePreset } from '@/lib/storage/types';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
@@ -49,6 +50,10 @@ export function DraggablePresetItem({
   onDeletePreset,
 }: DraggablePresetItemProps) {
   const { palette } = useTheme();
+  const { sizeClass } = useLayout();
+  const styles = createStyles(sizeClass);
+  const dragIconSize = scaleBySizeClass(22, sizeClass);
+  const actionIconSize = scaleBySizeClass(16, sizeClass);
 
   // Smoothed layout compensation — animated with withTiming so the dragged item
   // transitions in sync with LinearTransition on non-dragged items, avoiding a
@@ -110,7 +115,7 @@ export function DraggablePresetItem({
       style={[styles.item, { backgroundColor: palette.overlay08 }, animatedStyle]}>
       <GestureDetector gesture={panGesture}>
         <View style={styles.dragHandle}>
-          <MaterialCommunityIcons name="drag" size={22} color={palette.textMuted} />
+          <MaterialCommunityIcons name="drag" size={dragIconSize} color={palette.textMuted} />
         </View>
       </GestureDetector>
       <View style={[styles.orderBadge, { backgroundColor: palette.overlay12 }]}>
@@ -131,7 +136,11 @@ export function DraggablePresetItem({
             pressed && { opacity: 0.7 },
           ]}
           hitSlop={4}>
-          <MaterialCommunityIcons name="pencil-outline" size={16} color={palette.textMuted} />
+          <MaterialCommunityIcons
+            name="pencil-outline"
+            size={actionIconSize}
+            color={palette.textMuted}
+          />
         </Pressable>
         <Pressable
           onPress={() => onDeletePreset(preset)}
@@ -141,59 +150,65 @@ export function DraggablePresetItem({
             pressed && { opacity: 0.7 },
           ]}
           hitSlop={4}>
-          <MaterialCommunityIcons name="delete-outline" size={16} color={palette.danger} />
+          <MaterialCommunityIcons
+            name="delete-outline"
+            size={actionIconSize}
+            color={palette.danger}
+          />
         </Pressable>
       </View>
     </Animated.View>
   );
 }
 
-const styles = StyleSheet.create({
-  item: {
-    height: ITEM_HEIGHT,
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderRadius: 10,
-    paddingRight: 16,
-  },
-  dragHandle: {
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  orderBadge: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 10,
-  },
-  orderText: {
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  infoSection: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  presetName: {
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  presetCount: {
-    fontSize: 12,
-  },
-  actions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  actionBtn: {
-    padding: 6,
-    borderRadius: 8,
-  },
-});
+function createStyles(sizeClass: 'small' | 'medium' | 'large') {
+  return StyleSheet.create({
+    item: {
+      height: ITEM_HEIGHT,
+      flexDirection: 'row',
+      alignItems: 'center',
+      borderRadius: 10,
+      paddingRight: 16,
+    },
+    dragHandle: {
+      paddingHorizontal: 12,
+      paddingVertical: 12,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    orderBadge: {
+      width: 24,
+      height: 24,
+      borderRadius: 12,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginRight: 10,
+    },
+    orderText: {
+      fontSize: scaleBySizeClass(12, sizeClass),
+      fontWeight: '700',
+    },
+    infoSection: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    presetName: {
+      fontSize: scaleBySizeClass(15, sizeClass),
+      fontWeight: '600',
+    },
+    presetCount: {
+      fontSize: scaleBySizeClass(12, sizeClass),
+    },
+    actions: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+    },
+    actionBtn: {
+      padding: 6,
+      borderRadius: 8,
+    },
+  });
+}

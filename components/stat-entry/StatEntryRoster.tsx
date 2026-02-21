@@ -1,5 +1,6 @@
 import { PlayerChip } from '@/components/ui/PlayerChip';
 import { useTheme } from '@/context/ThemeContext';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { Player } from '@/lib/storage/types';
 import React from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -18,6 +19,8 @@ export function StatEntryRoster({
   maxHeight = 120,
 }: StatEntryRosterProps) {
   const { palette } = useTheme();
+  const { sizeClass } = useLayout();
+  const styles = createStyles(sizeClass);
 
   // Sort roster alphabetically by name
   const sortedRoster = [...roster].sort((a, b) => a.name.localeCompare(b.name));
@@ -48,21 +51,23 @@ export function StatEntryRoster({
   );
 }
 
-const styles = StyleSheet.create({
-  scrollWrapper: {
-    width: '100%',
-  },
-  chipsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    paddingVertical: 10,
-  },
-  emptyText: {
-    fontSize: 14,
-    fontStyle: 'italic',
-    width: '100%',
-    textAlign: 'center',
-    marginTop: 10,
-  },
-});
+function createStyles(sizeClass: SizeClass) {
+  return StyleSheet.create({
+    scrollWrapper: {
+      width: '100%',
+    },
+    chipsContainer: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 8,
+      paddingVertical: 10,
+    },
+    emptyText: {
+      fontSize: scaleBySizeClass(14, sizeClass),
+      fontStyle: 'italic',
+      width: '100%',
+      textAlign: 'center',
+      marginTop: 10,
+    },
+  });
+}

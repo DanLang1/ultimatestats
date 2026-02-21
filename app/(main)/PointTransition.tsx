@@ -250,7 +250,11 @@ export default function PointTransition() {
             ]}
             hitSlop={8}>
             {canConfirm ? (
-              <MaterialCommunityIcons name="check" size={18} color={palette.textOnAccent} />
+              <MaterialCommunityIcons
+                name="check"
+                size={scaleBySizeClass(18, sizeClass)}
+                color={palette.textOnAccent}
+              />
             ) : (
               <Text style={[styles.countText, { color: palette.textMuted }]}>
                 {selectedIds.length}/{numPlayers}
@@ -269,7 +273,11 @@ export default function PointTransition() {
             )}
             {showRatioWarning && (
               <View style={[styles.infoChip, { backgroundColor: palette.warning + '20' }]}>
-                <MaterialCommunityIcons name="alert" size={14} color={palette.warning} />
+                <MaterialCommunityIcons
+                  name="alert"
+                  size={scaleBySizeClass(14, sizeClass)}
+                  color={palette.warning}
+                />
                 <Text style={[styles.infoChipText, { color: palette.warning }]}>
                   Expecting {expectedRatio === 'more-women' ? 'F' : 'M'} majority
                 </Text>
@@ -544,7 +552,7 @@ function createStyles(sizeClass: SizeClass) {
     emptyStateText: {
       fontSize: scaleBySizeClass(14, sizeClass),
       textAlign: 'center',
-      lineHeight: 20,
+      lineHeight: scaleBySizeClass(20, sizeClass),
     },
     emptyStateButtons: {
       flexDirection: 'row',

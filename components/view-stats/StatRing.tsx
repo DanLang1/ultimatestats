@@ -1,5 +1,6 @@
 import { useAlert } from '@/components/ui/AlertProvider';
 import { useTheme } from '@/context/ThemeContext';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
@@ -19,6 +20,8 @@ interface StatRingProps {
  */
 export default function StatRing({ percentage, label, sublabel, info, infoLabel }: StatRingProps) {
   const { palette } = useTheme();
+  const { sizeClass } = useLayout();
+  const styles = createStyles(sizeClass);
   const { showAlert } = useAlert();
 
   // Clamp percentage between 0-100
@@ -36,7 +39,7 @@ export default function StatRing({ percentage, label, sublabel, info, infoLabel 
     ? `${Math.round(percentage)}%`
     : `${percentage.toFixed(1)}%`;
 
-  const size = 90;
+  const size = scaleBySizeClass(90, sizeClass);
 
   const handleInfoPress = () => {
     if (info) {
@@ -65,7 +68,7 @@ export default function StatRing({ percentage, label, sublabel, info, infoLabel 
           <Pressable onPress={handleInfoPress} hitSlop={8}>
             <MaterialCommunityIcons
               name="help-circle-outline"
-              size={14}
+              size={scaleBySizeClass(14, sizeClass)}
               color={palette.textMuted}
             />
           </Pressable>
@@ -76,33 +79,35 @@ export default function StatRing({ percentage, label, sublabel, info, infoLabel 
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    alignItems: 'center',
-    gap: 4,
-  },
-  valueContainer: {
-    ...StyleSheet.absoluteFillObject,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  percentage: {
-    fontSize: 18,
-    fontWeight: '700',
-  },
-  labelRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  label: {
-    fontSize: 11,
-    fontWeight: '600',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  sublabel: {
-    fontSize: 10,
-    fontWeight: '500',
-  },
-});
+function createStyles(sizeClass: SizeClass) {
+  return StyleSheet.create({
+    container: {
+      alignItems: 'center',
+      gap: 4,
+    },
+    valueContainer: {
+      ...StyleSheet.absoluteFillObject,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    percentage: {
+      fontSize: scaleBySizeClass(18, sizeClass),
+      fontWeight: '700',
+    },
+    labelRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+    },
+    label: {
+      fontSize: scaleBySizeClass(11, sizeClass),
+      fontWeight: '600',
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+    },
+    sublabel: {
+      fontSize: scaleBySizeClass(10, sizeClass),
+      fontWeight: '500',
+    },
+  });
+}

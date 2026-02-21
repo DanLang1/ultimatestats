@@ -181,12 +181,12 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
       fontWeight: '700',
     },
     abbaText: {
-      fontSize: 14,
-      lineHeight: 20,
+      fontSize: getSizeClassValue({ small: 14, medium: 15, large: 16 }, sizeClass),
+      lineHeight: getSizeClassValue({ small: 20, medium: 22, large: 24 }, sizeClass),
       marginBottom: 12,
     },
     abbaSource: {
-      fontSize: 12,
+      fontSize: getSizeClassValue({ small: 12, medium: 13, large: 14 }, sizeClass),
       fontStyle: 'italic',
       marginTop: 4,
     },

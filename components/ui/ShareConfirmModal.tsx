@@ -1,4 +1,5 @@
 import { useTheme } from '@/context/ThemeContext';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import React, { useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { AlertModal } from './AlertModal';
@@ -11,6 +12,8 @@ interface ShareConfirmModalProps {
 
 export function ShareConfirmModal({ visible, onConfirm, onCancel }: ShareConfirmModalProps) {
   const { palette } = useTheme();
+  const { sizeClass } = useLayout();
+  const styles = createStyles(sizeClass);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleProceed = async () => {
@@ -70,34 +73,36 @@ export function ShareConfirmModal({ visible, onConfirm, onCancel }: ShareConfirm
   );
 }
 
-const styles = StyleSheet.create({
-  body: {
-    fontSize: 14,
-    lineHeight: 20,
-    textAlign: 'center',
-    marginBottom: 20,
-  },
-  buttonContainer: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  button: {
-    flex: 1,
-    paddingVertical: 12,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: 44,
-  },
-  cancelButton: {
-    borderWidth: 1,
-  },
-  buttonText: {
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  buttonPressed: {
-    opacity: 0.8,
-    transform: [{ scale: 0.98 }],
-  },
-});
+function createStyles(sizeClass: SizeClass) {
+  return StyleSheet.create({
+    body: {
+      fontSize: scaleBySizeClass(14, sizeClass),
+      lineHeight: scaleBySizeClass(20, sizeClass),
+      textAlign: 'center',
+      marginBottom: 20,
+    },
+    buttonContainer: {
+      flexDirection: 'row',
+      gap: 12,
+    },
+    button: {
+      flex: 1,
+      paddingVertical: 12,
+      borderRadius: 10,
+      alignItems: 'center',
+      justifyContent: 'center',
+      minHeight: 44,
+    },
+    cancelButton: {
+      borderWidth: 1,
+    },
+    buttonText: {
+      fontSize: scaleBySizeClass(15, sizeClass),
+      fontWeight: '600',
+    },
+    buttonPressed: {
+      opacity: 0.8,
+      transform: [{ scale: 0.98 }],
+    },
+  });
+}

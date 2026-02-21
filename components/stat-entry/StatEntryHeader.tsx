@@ -1,4 +1,5 @@
 import { useTheme } from '@/context/ThemeContext';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
@@ -14,6 +15,8 @@ interface StatEntryHeaderProps {
 
 export function StatEntryHeader({ teamName, step, badgeValue, badgeLabel }: StatEntryHeaderProps) {
   const { palette } = useTheme();
+  const { sizeClass } = useLayout();
+  const styles = createStyles(sizeClass);
 
   return (
     <View style={styles.container}>
@@ -42,44 +45,46 @@ export function StatEntryHeader({ teamName, step, badgeValue, badgeLabel }: Stat
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    width: '100%',
-    marginBottom: 8,
-    gap: 8,
-  },
-  leftGroup: {
-    flex: 1,
-  },
-  teamName: {
-    fontSize: 12,
-    fontWeight: '600',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: 2,
-  },
-  stepLabel: {
-    fontSize: 22,
-    fontWeight: 'bold',
-  },
-  badge: {
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    borderWidth: 1,
-    alignSelf: 'flex-start',
-  },
-  badgeLabel: {
-    fontSize: 10,
-    fontWeight: 'bold',
-    letterSpacing: 1,
-    marginTop: 2,
-  },
-  badgeValue: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-});
+function createStyles(sizeClass: SizeClass) {
+  return StyleSheet.create({
+    container: {
+      width: '100%',
+      marginBottom: 8,
+      gap: 8,
+    },
+    leftGroup: {
+      flex: 1,
+    },
+    teamName: {
+      fontSize: scaleBySizeClass(12, sizeClass),
+      fontWeight: '600',
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+      marginBottom: 2,
+    },
+    stepLabel: {
+      fontSize: scaleBySizeClass(22, sizeClass),
+      fontWeight: 'bold',
+    },
+    badge: {
+      borderRadius: 8,
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      borderWidth: 1,
+      alignSelf: 'flex-start',
+    },
+    badgeLabel: {
+      fontSize: scaleBySizeClass(10, sizeClass),
+      fontWeight: 'bold',
+      letterSpacing: 1,
+      marginTop: 2,
+    },
+    badgeValue: {
+      fontSize: scaleBySizeClass(14, sizeClass),
+      fontWeight: '600',
+    },
+  });
+}

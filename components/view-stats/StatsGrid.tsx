@@ -1,4 +1,5 @@
 import { useTheme } from '@/context/ThemeContext';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
@@ -18,6 +19,8 @@ interface StatsGridProps {
  */
 export default function StatsGrid({ stats, columns = 4 }: StatsGridProps) {
   const { palette } = useTheme();
+  const { sizeClass } = useLayout();
+  const styles = createStyles(sizeClass);
 
   return (
     <View style={[styles.container, { gap: 8 }]}>
@@ -47,36 +50,38 @@ export default function StatsGrid({ stats, columns = 4 }: StatsGridProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    width: '100%',
-  },
-  grid: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  statCard: {
-    paddingVertical: 12,
-    paddingHorizontal: 8,
-    borderRadius: 10,
-    borderWidth: 1,
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  value: {
-    fontSize: 18,
-    fontWeight: '700',
-  },
-  label: {
-    fontSize: 9,
-    fontWeight: '600',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    textAlign: 'center',
-    marginTop: 2,
-  },
-  sublabel: {
-    fontSize: 9,
-    marginTop: 2,
-  },
-});
+function createStyles(sizeClass: SizeClass) {
+  return StyleSheet.create({
+    container: {
+      width: '100%',
+    },
+    grid: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+    },
+    statCard: {
+      paddingVertical: 12,
+      paddingHorizontal: 8,
+      borderRadius: 10,
+      borderWidth: 1,
+      alignItems: 'center',
+      marginBottom: 8,
+    },
+    value: {
+      fontSize: scaleBySizeClass(18, sizeClass),
+      fontWeight: '700',
+    },
+    label: {
+      fontSize: scaleBySizeClass(9, sizeClass),
+      fontWeight: '600',
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+      textAlign: 'center',
+      marginTop: 2,
+    },
+    sublabel: {
+      fontSize: scaleBySizeClass(9, sizeClass),
+      marginTop: 2,
+    },
+  });
+}

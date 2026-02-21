@@ -1,4 +1,5 @@
 import { useTheme } from '@/context/ThemeContext';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { LinePreset } from '@/lib/storage/types';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
@@ -23,6 +24,10 @@ export function PresetPickerModal({
   onEditPresets,
 }: PresetPickerModalProps) {
   const { palette } = useTheme();
+  const { sizeClass } = useLayout();
+  const styles = createStyles(sizeClass);
+  const editIconSize = scaleBySizeClass(14, sizeClass);
+  const checkIconSize = scaleBySizeClass(16, sizeClass);
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
@@ -47,7 +52,11 @@ export function PresetPickerModal({
               <Pressable
                 onPress={onEditPresets}
                 style={({ pressed }) => [styles.editPresetsHeaderBtn, pressed && { opacity: 0.7 }]}>
-                <MaterialCommunityIcons name="pencil" size={14} color={palette.modalTextMuted} />
+                <MaterialCommunityIcons
+                  name="pencil"
+                  size={editIconSize}
+                  color={palette.modalTextMuted}
+                />
                 <Text style={[styles.editPresetsHeaderText, { color: palette.modalTextMuted }]}>
                   Edit
                 </Text>
@@ -81,7 +90,11 @@ export function PresetPickerModal({
                     {preset.name}
                   </Text>
                   {selectedPresetId === preset.id && (
-                    <MaterialCommunityIcons name="check" size={16} color={palette.accent} />
+                    <MaterialCommunityIcons
+                      name="check"
+                      size={checkIconSize}
+                      color={palette.accent}
+                    />
                   )}
                 </Pressable>
               ))}
@@ -93,73 +106,75 @@ export function PresetPickerModal({
   );
 }
 
-const styles = StyleSheet.create({
-  modalSafeArea: {
-    flex: 1,
-  },
-  modalOverlay: {
-    flex: 1,
-    justifyContent: 'flex-end',
-  },
-  bottomSheet: {
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-    paddingHorizontal: 16,
-    maxHeight: '75%',
-    width: '75%',
-    alignSelf: 'center',
-  },
-  sheetHandle: {
-    alignItems: 'center',
-    paddingVertical: 12,
-  },
-  handleBar: {
-    width: 36,
-    height: 4,
-    borderRadius: 2,
-  },
-  sheetHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 12,
-  },
-  sheetTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  editPresetsHeaderBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-  },
-  editPresetsHeaderText: {
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  presetList: {
-    flexGrow: 0,
-  },
-  presetListContent: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    paddingBottom: 8,
-  },
-  presetListItem: {
-    width: '48.5%',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 12,
-    paddingHorizontal: 12,
-    borderRadius: 10,
-    borderWidth: 1,
-  },
-  presetListItemText: {
-    fontSize: 15,
-    fontWeight: '600',
-  },
-});
+function createStyles(sizeClass: SizeClass) {
+  return StyleSheet.create({
+    modalSafeArea: {
+      flex: 1,
+    },
+    modalOverlay: {
+      flex: 1,
+      justifyContent: 'flex-end',
+    },
+    bottomSheet: {
+      borderTopLeftRadius: 16,
+      borderTopRightRadius: 16,
+      paddingHorizontal: 16,
+      maxHeight: '75%',
+      width: '75%',
+      alignSelf: 'center',
+    },
+    sheetHandle: {
+      alignItems: 'center',
+      paddingVertical: 12,
+    },
+    handleBar: {
+      width: 36,
+      height: 4,
+      borderRadius: 2,
+    },
+    sheetHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: 12,
+    },
+    sheetTitle: {
+      fontSize: scaleBySizeClass(16, sizeClass),
+      fontWeight: '700',
+    },
+    editPresetsHeaderBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      paddingVertical: 6,
+      paddingHorizontal: 10,
+    },
+    editPresetsHeaderText: {
+      fontSize: scaleBySizeClass(13, sizeClass),
+      fontWeight: '600',
+    },
+    presetList: {
+      flexGrow: 0,
+    },
+    presetListContent: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 8,
+      paddingBottom: 8,
+    },
+    presetListItem: {
+      width: '48.5%',
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingVertical: 12,
+      paddingHorizontal: 12,
+      borderRadius: 10,
+      borderWidth: 1,
+    },
+    presetListItemText: {
+      fontSize: scaleBySizeClass(15, sizeClass),
+      fontWeight: '600',
+    },
+  });
+}

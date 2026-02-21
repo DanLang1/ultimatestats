@@ -1,4 +1,5 @@
 import { useTheme } from '@/context/ThemeContext';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
@@ -11,6 +12,9 @@ interface TimeoutCounterProps {
 
 export function TimeoutCounter({ count, hasFloater, floaterEnabled }: TimeoutCounterProps) {
   const { palette } = useTheme();
+  const { sizeClass } = useLayout();
+  const styles = createStyles(sizeClass);
+  const floaterIconSize = scaleBySizeClass(14, sizeClass);
 
   return (
     <View style={styles.timeoutContainer}>
@@ -27,7 +31,7 @@ export function TimeoutCounter({ count, hasFloater, floaterEnabled }: TimeoutCou
             </Text>
             <MaterialCommunityIcons
               name={hasFloater ? 'rhombus' : 'rhombus-outline'}
-              size={14}
+              size={floaterIconSize}
               color={hasFloater ? palette.success : palette.textMuted}
             />
             <Text
@@ -49,30 +53,32 @@ export function TimeoutCounter({ count, hasFloater, floaterEnabled }: TimeoutCou
   );
 }
 
-const styles = StyleSheet.create({
-  timeoutContainer: {
-    alignItems: 'center',
-    gap: 4,
-  },
-  countRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  timeoutNumber: {
-    fontSize: 28,
-    fontWeight: '700',
-  },
-  floaterBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  floaterText: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  floaterLabel: {
-    fontSize: 11,
-    fontWeight: '500',
-  },
-});
+function createStyles(sizeClass: SizeClass) {
+  return StyleSheet.create({
+    timeoutContainer: {
+      alignItems: 'center',
+      gap: 4,
+    },
+    countRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+    },
+    timeoutNumber: {
+      fontSize: scaleBySizeClass(28, sizeClass),
+      fontWeight: '700',
+    },
+    floaterBadge: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    floaterText: {
+      fontSize: scaleBySizeClass(16, sizeClass),
+      fontWeight: '600',
+    },
+    floaterLabel: {
+      fontSize: scaleBySizeClass(11, sizeClass),
+      fontWeight: '500',
+    },
+  });
+}

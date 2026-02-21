@@ -1,4 +1,5 @@
 import { useTheme } from '@/context/ThemeContext';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { RoleStats } from '@/lib/statsUtils';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
@@ -10,6 +11,8 @@ interface RoleDiamondProps {
 
 export default function RoleDiamond({ roleStats }: RoleDiamondProps) {
   const { palette } = useTheme();
+  const { sizeClass } = useLayout();
+  const styles = createStyles(sizeClass);
   const { rawGoals, rawAssists, rawBlocks, rawTurnovers } = roleStats;
 
   const size = 140;
@@ -110,58 +113,60 @@ export default function RoleDiamond({ roleStats }: RoleDiamondProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    padding: 16,
-    alignItems: 'center',
-  },
-  title: {
-    fontSize: 12,
-    fontWeight: '700',
-    letterSpacing: 1,
-    marginBottom: 8,
-    textTransform: 'uppercase',
-  },
-  diamondWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  diamondArea: {
-    width: 140,
-    height: 140,
-    position: 'relative',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  sideLabel: {
-    fontSize: 9,
-    fontWeight: '600',
-    textTransform: 'uppercase',
-  },
-  leftLabel: {
-    marginRight: 4,
-  },
-  rightLabel: {
-    marginLeft: 4,
-  },
-  topLabel: {
-    position: 'absolute',
-    top: 2,
-    left: 0,
-    right: 0,
-    textAlign: 'center',
-    fontSize: 9,
-    fontWeight: '600',
-    textTransform: 'uppercase',
-  },
-  bottomLabel: {
-    position: 'absolute',
-    bottom: 2,
-    left: 0,
-    right: 0,
-    textAlign: 'center',
-    fontSize: 9,
-    fontWeight: '600',
-    textTransform: 'uppercase',
-  },
-});
+function createStyles(sizeClass: SizeClass) {
+  return StyleSheet.create({
+    container: {
+      padding: 16,
+      alignItems: 'center',
+    },
+    title: {
+      fontSize: scaleBySizeClass(12, sizeClass),
+      fontWeight: '700',
+      letterSpacing: 1,
+      marginBottom: 8,
+      textTransform: 'uppercase',
+    },
+    diamondWrapper: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    diamondArea: {
+      width: 140,
+      height: 140,
+      position: 'relative',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    sideLabel: {
+      fontSize: scaleBySizeClass(9, sizeClass),
+      fontWeight: '600',
+      textTransform: 'uppercase',
+    },
+    leftLabel: {
+      marginRight: 4,
+    },
+    rightLabel: {
+      marginLeft: 4,
+    },
+    topLabel: {
+      position: 'absolute',
+      top: 2,
+      left: 0,
+      right: 0,
+      textAlign: 'center',
+      fontSize: scaleBySizeClass(9, sizeClass),
+      fontWeight: '600',
+      textTransform: 'uppercase',
+    },
+    bottomLabel: {
+      position: 'absolute',
+      bottom: 2,
+      left: 0,
+      right: 0,
+      textAlign: 'center',
+      fontSize: scaleBySizeClass(9, sizeClass),
+      fontWeight: '600',
+      textTransform: 'uppercase',
+    },
+  });
+}

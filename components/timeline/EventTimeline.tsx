@@ -1,4 +1,5 @@
 import { useTheme } from '@/context/ThemeContext';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { getPlayerMatchingType, getPlayerName } from '@/lib/playerUtils';
 import { Player } from '@/lib/storage/types';
 import { DisplayTimeout, DisplayTurnover, PointEvents } from '@/lib/timelineUtils';
@@ -77,6 +78,8 @@ export default function EventTimeline({
   onEditDuration,
 }: EventTimelineProps) {
   const { palette } = useTheme();
+  const { sizeClass } = useLayout();
+  const styles = createStyles(sizeClass);
   const { mmpColor, fmpColor } = useSettingsStore();
 
   const handleLongPressTurnover = (turnover: DisplayTurnover) => {
@@ -176,7 +179,7 @@ export default function EventTimeline({
                         ]}>
                         <MaterialCommunityIcons
                           name="timer-outline"
-                          size={12}
+                          size={scaleBySizeClass(12, sizeClass)}
                           color={palette.textMuted}
                         />
                         <Text style={[styles.durationText, { color: palette.textMuted }]}>
@@ -196,7 +199,7 @@ export default function EventTimeline({
                           ]}>
                           <MaterialCommunityIcons
                             name="timer-plus-outline"
-                            size={12}
+                            size={scaleBySizeClass(12, sizeClass)}
                             color={palette.textMuted}
                           />
                         </Pressable>
@@ -619,149 +622,151 @@ export default function EventTimeline({
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    gap: 12,
-  },
-  // Header
-  scoreHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    marginHorizontal: 16,
-    borderRadius: 12,
-    gap: 10,
-  },
-  headerScore: {
-    fontSize: 28,
-    fontWeight: '700',
-  },
-  headerDivider: {
-    fontSize: 20,
-    fontWeight: '300',
-  },
-  headerLabel: {
-    fontSize: 11,
-    fontWeight: '600',
-    marginLeft: 12,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-  },
-  // List
-  listContent: {
-    paddingHorizontal: 16,
-    paddingBottom: 24,
-    gap: 12,
-  },
-  // Card
-  pointCard: {
-    borderRadius: 14,
-    overflow: 'hidden',
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-  },
-  headerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  pointBadge: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  pointBadgeText: {
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  scoreText: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  statusChip: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 6,
-  },
-  statusChipText: {
-    fontSize: 10,
-    fontWeight: '700',
-    letterSpacing: 0.5,
-  },
-  headerRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  durationChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-  },
-  durationText: {
-    fontSize: 11,
-    fontWeight: '600',
-  },
-  // Body
-  cardBody: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    padding: 12,
-    gap: 8,
-  },
-  eventRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 8,
-  },
-  eventEmoji: {
-    fontSize: 14,
-  },
-  eventLabel: {
-    fontSize: 11,
-    fontWeight: '700',
-    letterSpacing: 0.3,
-  },
-  eventPlayer: {
-    fontSize: 12,
-    fontWeight: '500',
-    maxWidth: 100,
-    flexShrink: 1,
-  },
-  eventTimestamp: {
-    fontSize: 10,
-    fontWeight: '500',
-    marginLeft: 4,
-    opacity: 0.7,
-  },
-  arrow: {
-    fontSize: 14,
-    fontWeight: '600',
-    lineHeight: 30,
-  },
-  editHint: {
-    alignItems: 'flex-start',
-    marginBottom: -4,
-  },
-  editHintText: {
-    fontSize: 11,
-    fontStyle: 'italic',
-  },
-});
+function createStyles(sizeClass: SizeClass) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      gap: 12,
+    },
+    // Header
+    scoreHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: 12,
+      paddingHorizontal: 20,
+      marginHorizontal: 16,
+      borderRadius: 12,
+      gap: 10,
+    },
+    headerScore: {
+      fontSize: scaleBySizeClass(28, sizeClass),
+      fontWeight: '700',
+    },
+    headerDivider: {
+      fontSize: scaleBySizeClass(20, sizeClass),
+      fontWeight: '300',
+    },
+    headerLabel: {
+      fontSize: scaleBySizeClass(11, sizeClass),
+      fontWeight: '600',
+      marginLeft: 12,
+      textTransform: 'uppercase',
+      letterSpacing: 1,
+    },
+    // List
+    listContent: {
+      paddingHorizontal: 16,
+      paddingBottom: 24,
+      gap: 12,
+    },
+    // Card
+    pointCard: {
+      borderRadius: 14,
+      overflow: 'hidden',
+    },
+    cardHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 14,
+      paddingVertical: 10,
+      borderBottomWidth: 1,
+    },
+    headerLeft: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+    },
+    pointBadge: {
+      width: 26,
+      height: 26,
+      borderRadius: 13,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    pointBadgeText: {
+      fontSize: scaleBySizeClass(12, sizeClass),
+      fontWeight: '700',
+    },
+    scoreText: {
+      fontSize: scaleBySizeClass(16, sizeClass),
+      fontWeight: '600',
+    },
+    statusChip: {
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      borderRadius: 6,
+    },
+    statusChipText: {
+      fontSize: scaleBySizeClass(10, sizeClass),
+      fontWeight: '700',
+      letterSpacing: 0.5,
+    },
+    headerRight: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    durationChip: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: 6,
+    },
+    durationText: {
+      fontSize: scaleBySizeClass(11, sizeClass),
+      fontWeight: '600',
+    },
+    // Body
+    cardBody: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      padding: 12,
+      gap: 8,
+    },
+    eventRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      paddingHorizontal: 10,
+      paddingVertical: 6,
+      borderRadius: 8,
+    },
+    eventEmoji: {
+      fontSize: scaleBySizeClass(14, sizeClass),
+    },
+    eventLabel: {
+      fontSize: scaleBySizeClass(11, sizeClass),
+      fontWeight: '700',
+      letterSpacing: 0.3,
+    },
+    eventPlayer: {
+      fontSize: scaleBySizeClass(12, sizeClass),
+      fontWeight: '500',
+      maxWidth: 100,
+      flexShrink: 1,
+    },
+    eventTimestamp: {
+      fontSize: scaleBySizeClass(10, sizeClass),
+      fontWeight: '500',
+      marginLeft: 4,
+      opacity: 0.7,
+    },
+    arrow: {
+      fontSize: scaleBySizeClass(14, sizeClass),
+      fontWeight: '600',
+      lineHeight: scaleBySizeClass(30, sizeClass),
+    },
+    editHint: {
+      alignItems: 'flex-start',
+      marginBottom: -4,
+    },
+    editHintText: {
+      fontSize: scaleBySizeClass(11, sizeClass),
+      fontStyle: 'italic',
+    },
+  });
+}

@@ -1,4 +1,5 @@
 import { useTheme } from '@/context/ThemeContext';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React, { createContext, useContext, useState } from 'react';
 import { Modal, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
@@ -37,6 +38,8 @@ export function useAlert() {
 }
 
 export function AlertProvider({ children }: { children: React.ReactNode }) {
+  const { sizeClass } = useLayout();
+  const styles = createStyles(sizeClass);
   const [visible, setVisible] = useState(false);
   const [options, setOptions] = useState<AlertOptions | null>(null);
   const [inputValue, setInputValue] = useState('');
@@ -80,7 +83,11 @@ export function AlertProvider({ children }: { children: React.ReactNode }) {
               style={[styles.closeButton, { backgroundColor: palette.overlay10 }]}
               onPress={handleDismiss}
               hitSlop={8}>
-              <MaterialCommunityIcons name="close" size={18} color={palette.textMuted} />
+              <MaterialCommunityIcons
+                name="close"
+                size={scaleBySizeClass(18, sizeClass)}
+                color={palette.textMuted}
+              />
             </Pressable>
 
             <Text style={[styles.title, { color: palette.textInverse }]}>{options?.title}</Text>
@@ -169,74 +176,76 @@ export function AlertProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 32,
-  },
-  container: {
-    borderRadius: 16,
-    padding: 24,
-    width: '100%',
-    maxWidth: 320,
-    borderWidth: 1,
-    position: 'relative',
-  },
-  closeButton: {
-    position: 'absolute',
-    top: 12,
-    right: 12,
-    padding: 4,
-    borderRadius: 12,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: '700',
-    textAlign: 'center',
-    marginBottom: 8,
-  },
-  message: {
-    fontSize: 14,
-    textAlign: 'center',
-    marginBottom: 20,
-    lineHeight: 20,
-  },
-  input: {
-    borderWidth: 1,
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    fontSize: 16,
-    marginBottom: 20,
-  },
-  buttonContainer: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  button: {
-    flex: 1,
-    paddingVertical: 12,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  buttonContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  cancelButton: {
-    borderWidth: 1,
-  },
-  buttonPressed: {
-    opacity: 0.8,
-    transform: [{ scale: 0.98 }],
-  },
-  buttonText: {
-    fontSize: 15,
-    fontWeight: '600',
-  },
-});
+function createStyles(sizeClass: SizeClass) {
+  return StyleSheet.create({
+    overlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0, 0, 0, 0.7)',
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: 32,
+    },
+    container: {
+      borderRadius: 16,
+      padding: 24,
+      width: '100%',
+      maxWidth: 320,
+      borderWidth: 1,
+      position: 'relative',
+    },
+    closeButton: {
+      position: 'absolute',
+      top: 12,
+      right: 12,
+      padding: 4,
+      borderRadius: 12,
+    },
+    title: {
+      fontSize: scaleBySizeClass(18, sizeClass),
+      fontWeight: '700',
+      textAlign: 'center',
+      marginBottom: 8,
+    },
+    message: {
+      fontSize: scaleBySizeClass(14, sizeClass),
+      textAlign: 'center',
+      marginBottom: 20,
+      lineHeight: scaleBySizeClass(20, sizeClass),
+    },
+    input: {
+      borderWidth: 1,
+      borderRadius: 10,
+      paddingHorizontal: 14,
+      paddingVertical: 12,
+      fontSize: scaleBySizeClass(16, sizeClass),
+      marginBottom: 20,
+    },
+    buttonContainer: {
+      flexDirection: 'row',
+      gap: 12,
+    },
+    button: {
+      flex: 1,
+      paddingVertical: 12,
+      borderRadius: 10,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    buttonContent: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+    },
+    cancelButton: {
+      borderWidth: 1,
+    },
+    buttonPressed: {
+      opacity: 0.8,
+      transform: [{ scale: 0.98 }],
+    },
+    buttonText: {
+      fontSize: scaleBySizeClass(15, sizeClass),
+      fontWeight: '600',
+    },
+  });
+}

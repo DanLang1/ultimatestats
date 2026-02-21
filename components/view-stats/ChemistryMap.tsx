@@ -1,4 +1,5 @@
 import { useTheme } from '@/context/ThemeContext';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { ChemistryConnection } from '@/lib/statsUtils';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
@@ -11,6 +12,8 @@ interface ChemistryMapProps {
 
 export default function ChemistryMap({ playerName, connections }: ChemistryMapProps) {
   const { palette } = useTheme();
+  const { sizeClass } = useLayout();
+  const styles = createStyles(sizeClass);
   const normalizedPlayerName = playerName.trim().replace(/\s+/g, ' ');
   const centerLabel =
     normalizedPlayerName.length > 8
@@ -249,64 +252,66 @@ export default function ChemistryMap({ playerName, connections }: ChemistryMapPr
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    padding: 16,
-    alignItems: 'center',
-  },
-  title: {
-    fontSize: 13,
-    fontWeight: '800',
-    letterSpacing: 1.5,
-    marginBottom: 8,
-    textTransform: 'uppercase',
-  },
-  summaryDisplay: {
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  summaryValue: {
-    fontSize: 32,
-    fontWeight: '800',
-  },
-  summaryLabel: {
-    fontSize: 11,
-    fontWeight: '600',
-    marginTop: 2,
-  },
-  columnHeaders: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingHorizontal: 0,
-    marginBottom: 8,
-  },
-  columnHeader: {
-    width: 100,
-    alignItems: 'center',
-  },
-  headerText: {
-    fontSize: 10,
-    fontWeight: 'bold',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  legend: {
-    flexDirection: 'row',
-    gap: 16,
-    marginTop: 12,
-  },
-  legendItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  legendDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  legendText: {
-    fontSize: 10,
-    fontWeight: '500',
-  },
-});
+function createStyles(sizeClass: SizeClass) {
+  return StyleSheet.create({
+    container: {
+      padding: 16,
+      alignItems: 'center',
+    },
+    title: {
+      fontSize: scaleBySizeClass(13, sizeClass),
+      fontWeight: '800',
+      letterSpacing: 1.5,
+      marginBottom: 8,
+      textTransform: 'uppercase',
+    },
+    summaryDisplay: {
+      alignItems: 'center',
+      marginBottom: 12,
+    },
+    summaryValue: {
+      fontSize: scaleBySizeClass(32, sizeClass),
+      fontWeight: '800',
+    },
+    summaryLabel: {
+      fontSize: scaleBySizeClass(11, sizeClass),
+      fontWeight: '600',
+      marginTop: 2,
+    },
+    columnHeaders: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      paddingHorizontal: 0,
+      marginBottom: 8,
+    },
+    columnHeader: {
+      width: 100,
+      alignItems: 'center',
+    },
+    headerText: {
+      fontSize: scaleBySizeClass(10, sizeClass),
+      fontWeight: 'bold',
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+    },
+    legend: {
+      flexDirection: 'row',
+      gap: 16,
+      marginTop: 12,
+    },
+    legendItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+    },
+    legendDot: {
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+    },
+    legendText: {
+      fontSize: scaleBySizeClass(10, sizeClass),
+      fontWeight: '500',
+    },
+  });
+}

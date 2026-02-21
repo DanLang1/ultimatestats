@@ -1,6 +1,6 @@
 import { ScoreBadge } from '@/components/ui/ScoreBadge';
 import { useTheme } from '@/context/ThemeContext';
-import { useLayout } from '@/hooks/useLayout';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { resolveTeamName } from '@/lib/playerUtils';
 import { formatDate } from '@/lib/statsUtils';
 import { SavedGame } from '@/lib/storage';
@@ -30,8 +30,8 @@ export default function SavedGamesList({
 }: SavedGamesListProps) {
   const { palette } = useTheme();
   const { savedTeams } = useGameStore();
-  const { isLandscape } = useLayout();
-  const styles = createStyles(isLandscape);
+  const { isLandscape, sizeClass } = useLayout();
+  const styles = createStyles(isLandscape, sizeClass);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [sortField, setSortField] = useState<SortField>('date');
@@ -74,7 +74,11 @@ export default function SavedGamesList({
   if (games.length === 0) {
     return (
       <View style={styles.emptyState}>
-        <MaterialCommunityIcons name="history" size={48} color={palette.textMuted} />
+        <MaterialCommunityIcons
+          name="history"
+          size={scaleBySizeClass(48, sizeClass)}
+          color={palette.textMuted}
+        />
         <Text style={[styles.emptyText, { color: palette.textMuted }]}>No saved games yet</Text>
         <Text style={[styles.emptySubtext, { color: palette.textMuted }]}>
           Save games from the win screen to see them here
@@ -128,7 +132,11 @@ export default function SavedGamesList({
             styles.searchWrapper,
             { backgroundColor: palette.overlay05, borderColor: palette.overlay10 },
           ]}>
-          <MaterialCommunityIcons name="magnify" size={20} color={palette.textMuted} />
+          <MaterialCommunityIcons
+            name="magnify"
+            size={scaleBySizeClass(20, sizeClass)}
+            color={palette.textMuted}
+          />
           <TextInput
             style={[styles.searchInput, { color: palette.textInverse }]}
             placeholder="Search teams or dates..."
@@ -160,7 +168,7 @@ export default function SavedGamesList({
                 onPress={() => handleSortPress(opt.field)}>
                 <MaterialCommunityIcons
                   name={icon}
-                  size={16}
+                  size={scaleBySizeClass(16, sizeClass)}
                   color={isActive ? palette.accent : palette.textMuted}
                 />
                 <Text
@@ -206,7 +214,11 @@ export default function SavedGamesList({
                       },
                     ]}>
                     {isSelected && (
-                      <MaterialCommunityIcons name="check" size={14} color={palette.textOnAccent} />
+                      <MaterialCommunityIcons
+                        name="check"
+                        size={scaleBySizeClass(14, sizeClass)}
+                        color={palette.textOnAccent}
+                      />
                     )}
                   </View>
                 </Pressable>
@@ -220,7 +232,7 @@ export default function SavedGamesList({
                     {game.importedAt && (
                       <MaterialCommunityIcons
                         name="cloud-download-outline"
-                        size={14}
+                        size={scaleBySizeClass(14, sizeClass)}
                         color={palette.textMuted}
                       />
                     )}
@@ -292,7 +304,7 @@ export default function SavedGamesList({
                   <View style={[styles.savedGameMeta, { borderTopColor: palette.overlay08 }]}>
                     <MaterialCommunityIcons
                       name="account-multiple"
-                      size={14}
+                      size={scaleBySizeClass(14, sizeClass)}
                       color={palette.textMuted}
                     />
                     <Text style={[styles.savedGameMetaText, { color: palette.textMuted }]}>
@@ -316,7 +328,7 @@ export default function SavedGamesList({
   );
 }
 
-function createStyles(isLandscape: boolean) {
+function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
   return StyleSheet.create({
     container: {
       gap: 16,
@@ -337,7 +349,7 @@ function createStyles(isLandscape: boolean) {
     },
     searchInput: {
       flex: 1,
-      fontSize: 16,
+      fontSize: scaleBySizeClass(16, sizeClass),
       paddingVertical: 8,
     },
     sortPills: {
@@ -354,7 +366,7 @@ function createStyles(isLandscape: boolean) {
       gap: 4,
     },
     sortPillText: {
-      fontSize: 12,
+      fontSize: scaleBySizeClass(12, sizeClass),
       fontWeight: '600',
     },
     emptyState: {
@@ -364,11 +376,11 @@ function createStyles(isLandscape: boolean) {
       marginTop: 40,
     },
     emptyText: {
-      fontSize: 16,
+      fontSize: scaleBySizeClass(16, sizeClass),
       textAlign: 'center',
     },
     emptySubtext: {
-      fontSize: 14,
+      fontSize: scaleBySizeClass(14, sizeClass),
       textAlign: 'center',
       opacity: 0.7,
     },
@@ -412,7 +424,7 @@ function createStyles(isLandscape: boolean) {
       justifyContent: 'center',
     },
     savedGameDate: {
-      fontSize: 12,
+      fontSize: scaleBySizeClass(12, sizeClass),
       fontWeight: '600',
       textTransform: 'uppercase',
       letterSpacing: 0.5,
@@ -431,7 +443,7 @@ function createStyles(isLandscape: boolean) {
       justifyContent: 'space-between',
     },
     teamScoreValue: {
-      fontSize: 18,
+      fontSize: scaleBySizeClass(18, sizeClass),
       fontWeight: '700',
       fontVariant: ['tabular-nums'],
       minWidth: 28,
@@ -439,7 +451,7 @@ function createStyles(isLandscape: boolean) {
     },
     savedGameTeamName: {
       flex: 1,
-      fontSize: 16,
+      fontSize: scaleBySizeClass(16, sizeClass),
       fontWeight: '600',
     },
     savedGameTeamRight: {
@@ -454,7 +466,7 @@ function createStyles(isLandscape: boolean) {
       borderTopWidth: 1,
     },
     savedGameMetaText: {
-      fontSize: 12,
+      fontSize: scaleBySizeClass(12, sizeClass),
     },
   });
 }

@@ -1,5 +1,5 @@
 import { useTheme } from '@/context/ThemeContext';
-import { useLayout } from '@/hooks/useLayout';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { ImpactPoint } from '@/lib/statsUtils';
 import { Circle } from '@shopify/react-native-skia';
 import React from 'react';
@@ -12,7 +12,8 @@ interface ImpactTimelineProps {
 
 export default function ImpactTimeline({ data }: ImpactTimelineProps) {
   const { palette } = useTheme();
-  const { isLandscape } = useLayout();
+  const { isLandscape, sizeClass } = useLayout();
+  const styles = createStyles(sizeClass);
   const hasImpact = data.some((d) => d.cumulativePlusMinus !== 0);
 
   if (!hasImpact && data.length <= 2) {
@@ -219,114 +220,116 @@ export default function ImpactTimeline({ data }: ImpactTimelineProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    padding: 16,
-    alignItems: 'center',
-  },
-  title: {
-    fontSize: 12,
-    fontWeight: '700',
-    letterSpacing: 1,
-    marginBottom: 8,
-    textTransform: 'uppercase',
-  },
-  valueDisplay: {
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  currentValue: {
-    fontSize: 32,
-    fontWeight: '800',
-  },
-  valueLabel: {
-    fontSize: 11,
-    fontWeight: '600',
-    marginTop: 2,
-  },
-  chartContainer: {
-    flexDirection: 'row',
-    width: '100%',
-    alignItems: 'center',
-  },
-  yAxis: {
-    width: 30,
-    height: 150,
-    justifyContent: 'space-between',
-    alignItems: 'flex-end',
-    paddingRight: 4,
-  },
-  axisLabel: {
-    fontSize: 10,
-    fontWeight: '600',
-  },
-  legend: {
-    flexDirection: 'row',
-    gap: 16,
-    marginTop: 12,
-  },
-  legendItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  legendDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  legendText: {
-    fontSize: 10,
-    fontWeight: '500',
-  },
-  xAxisLabel: {
-    width: '100%',
-    marginTop: 4,
-    paddingLeft: 30, // Match y-axis width
-  },
-  scoreLabelsPositioned: {
-    position: 'relative',
-    height: 16,
-    marginHorizontal: 10, // Match chart's domainPadding left/right
-  },
-  scoreText: {
-    fontSize: 11,
-    fontWeight: '700',
-  },
-  scoreLabelWrapper: {
-    position: 'absolute',
-    alignItems: 'center',
-    width: 40,
-    marginLeft: -20, // Half of width to center
-  },
-  eventLog: {
-    width: '100%',
-    marginTop: 12,
-  },
-  eventLogTitle: {
-    fontSize: 9,
-    fontWeight: '700',
-    letterSpacing: 0.5,
-    textTransform: 'uppercase',
-    marginBottom: 6,
-  },
-  eventScroll: {
-    flexGrow: 0,
-  },
-  eventItem: {
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 8,
-    marginRight: 8,
-    alignItems: 'center',
-    minWidth: 60,
-  },
-  eventScore: {
-    fontSize: 10,
-    fontWeight: '600',
-  },
-  eventDesc: {
-    fontSize: 12,
-    fontWeight: '700',
-  },
-});
+function createStyles(sizeClass: SizeClass) {
+  return StyleSheet.create({
+    container: {
+      padding: 16,
+      alignItems: 'center',
+    },
+    title: {
+      fontSize: scaleBySizeClass(12, sizeClass),
+      fontWeight: '700',
+      letterSpacing: 1,
+      marginBottom: 8,
+      textTransform: 'uppercase',
+    },
+    valueDisplay: {
+      alignItems: 'center',
+      marginBottom: 12,
+    },
+    currentValue: {
+      fontSize: scaleBySizeClass(32, sizeClass),
+      fontWeight: '800',
+    },
+    valueLabel: {
+      fontSize: scaleBySizeClass(11, sizeClass),
+      fontWeight: '600',
+      marginTop: 2,
+    },
+    chartContainer: {
+      flexDirection: 'row',
+      width: '100%',
+      alignItems: 'center',
+    },
+    yAxis: {
+      width: 30,
+      height: 150,
+      justifyContent: 'space-between',
+      alignItems: 'flex-end',
+      paddingRight: 4,
+    },
+    axisLabel: {
+      fontSize: scaleBySizeClass(10, sizeClass),
+      fontWeight: '600',
+    },
+    legend: {
+      flexDirection: 'row',
+      gap: 16,
+      marginTop: 12,
+    },
+    legendItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+    },
+    legendDot: {
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+    },
+    legendText: {
+      fontSize: scaleBySizeClass(10, sizeClass),
+      fontWeight: '500',
+    },
+    xAxisLabel: {
+      width: '100%',
+      marginTop: 4,
+      paddingLeft: 30, // Match y-axis width
+    },
+    scoreLabelsPositioned: {
+      position: 'relative',
+      height: 16,
+      marginHorizontal: 10, // Match chart's domainPadding left/right
+    },
+    scoreText: {
+      fontSize: scaleBySizeClass(11, sizeClass),
+      fontWeight: '700',
+    },
+    scoreLabelWrapper: {
+      position: 'absolute',
+      alignItems: 'center',
+      width: 40,
+      marginLeft: -20, // Half of width to center
+    },
+    eventLog: {
+      width: '100%',
+      marginTop: 12,
+    },
+    eventLogTitle: {
+      fontSize: scaleBySizeClass(9, sizeClass),
+      fontWeight: '700',
+      letterSpacing: 0.5,
+      textTransform: 'uppercase',
+      marginBottom: 6,
+    },
+    eventScroll: {
+      flexGrow: 0,
+    },
+    eventItem: {
+      paddingHorizontal: 10,
+      paddingVertical: 6,
+      borderRadius: 8,
+      marginRight: 8,
+      alignItems: 'center',
+      minWidth: 60,
+    },
+    eventScore: {
+      fontSize: scaleBySizeClass(10, sizeClass),
+      fontWeight: '600',
+    },
+    eventDesc: {
+      fontSize: scaleBySizeClass(12, sizeClass),
+      fontWeight: '700',
+    },
+  });
+}

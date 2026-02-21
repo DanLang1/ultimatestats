@@ -1,5 +1,6 @@
 import { ScoreBadge } from '@/components/ui/ScoreBadge';
 import { useTheme } from '@/context/ThemeContext';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { resolveTeamName } from '@/lib/playerUtils';
 import { formatDate } from '@/lib/statsUtils';
 import { SavedGame } from '@/lib/storage';
@@ -34,6 +35,8 @@ export default function AggregateGamesList({
   onToggleAllGames,
 }: AggregateGamesListProps) {
   const { palette } = useTheme();
+  const { sizeClass } = useLayout();
+  const styles = createStyles(sizeClass);
   const { savedTeams } = useGameStore();
 
   // Helper to get live team name with snapshot fallback
@@ -71,7 +74,11 @@ export default function AggregateGamesList({
   if (games.length === 0) {
     return (
       <View style={styles.emptyState}>
-        <MaterialCommunityIcons name="chart-box-outline" size={48} color={palette.textMuted} />
+        <MaterialCommunityIcons
+          name="chart-box-outline"
+          size={scaleBySizeClass(48, sizeClass)}
+          color={palette.textMuted}
+        />
         <Text style={[styles.emptyText, { color: palette.textMuted }]}>No saved games yet</Text>
         <Text style={[styles.emptySubtext, { color: palette.textMuted }]}>
           Save games to aggregate stats across multiple games
@@ -119,7 +126,11 @@ export default function AggregateGamesList({
                     isSelected && { backgroundColor: palette.accent, borderColor: palette.accent },
                   ]}>
                   {isSelected && (
-                    <MaterialCommunityIcons name="check" size={14} color={palette.textOnAccent} />
+                    <MaterialCommunityIcons
+                      name="check"
+                      size={scaleBySizeClass(14, sizeClass)}
+                      color={palette.textOnAccent}
+                    />
                   )}
                 </View>
 
@@ -166,7 +177,11 @@ export default function AggregateGamesList({
                 tracked
               </Text>
             </View>
-            <MaterialCommunityIcons name="chevron-right" size={24} color={palette.textMuted} />
+            <MaterialCommunityIcons
+              name="chevron-right"
+              size={scaleBySizeClass(24, sizeClass)}
+              color={palette.textMuted}
+            />
           </Pressable>
         ))}
       </View>
@@ -174,95 +189,97 @@ export default function AggregateGamesList({
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    gap: 16,
-  },
-  emptyState: {
-    padding: 40,
-    alignItems: 'center',
-    gap: 16,
-    marginTop: 40,
-  },
-  emptyText: {
-    fontSize: 16,
-    textAlign: 'center',
-  },
-  emptySubtext: {
-    fontSize: 14,
-    textAlign: 'center',
-    opacity: 0.7,
-  },
-  instructions: {
-    fontSize: 12,
-    fontWeight: '600',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 4,
-  },
-  selectAllText: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  teamsList: {
-    gap: 12,
-  },
-  teamCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-  },
-  teamInfo: {
-    flex: 1,
-    gap: 4,
-  },
-  teamName: {
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  teamMeta: {
-    fontSize: 13,
-  },
-  gamesList: {
-    gap: 10,
-  },
-  gameCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 14,
-    borderRadius: 12,
-    borderWidth: 1,
-    gap: 14,
-  },
-  checkbox: {
-    width: 22,
-    height: 22,
-    borderRadius: 6,
-    borderWidth: 2,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  gameInfo: {
-    flex: 1,
-    gap: 6,
-  },
-  opponentText: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  gameDetails: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  dateText: {
-    fontSize: 12,
-  },
-});
+function createStyles(sizeClass: SizeClass) {
+  return StyleSheet.create({
+    container: {
+      gap: 16,
+    },
+    emptyState: {
+      padding: 40,
+      alignItems: 'center',
+      gap: 16,
+      marginTop: 40,
+    },
+    emptyText: {
+      fontSize: scaleBySizeClass(16, sizeClass),
+      textAlign: 'center',
+    },
+    emptySubtext: {
+      fontSize: scaleBySizeClass(14, sizeClass),
+      textAlign: 'center',
+      opacity: 0.7,
+    },
+    instructions: {
+      fontSize: scaleBySizeClass(12, sizeClass),
+      fontWeight: '600',
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+    },
+    headerRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 4,
+    },
+    selectAllText: {
+      fontSize: scaleBySizeClass(14, sizeClass),
+      fontWeight: '600',
+    },
+    teamsList: {
+      gap: 12,
+    },
+    teamCard: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: 16,
+      borderRadius: 12,
+      borderWidth: 1,
+    },
+    teamInfo: {
+      flex: 1,
+      gap: 4,
+    },
+    teamName: {
+      fontSize: scaleBySizeClass(18, sizeClass),
+      fontWeight: '600',
+    },
+    teamMeta: {
+      fontSize: scaleBySizeClass(13, sizeClass),
+    },
+    gamesList: {
+      gap: 10,
+    },
+    gameCard: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: 14,
+      borderRadius: 12,
+      borderWidth: 1,
+      gap: 14,
+    },
+    checkbox: {
+      width: 22,
+      height: 22,
+      borderRadius: 6,
+      borderWidth: 2,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    gameInfo: {
+      flex: 1,
+      gap: 6,
+    },
+    opponentText: {
+      fontSize: scaleBySizeClass(16, sizeClass),
+      fontWeight: '600',
+    },
+    gameDetails: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+    },
+    dateText: {
+      fontSize: scaleBySizeClass(12, sizeClass),
+    },
+  });
+}

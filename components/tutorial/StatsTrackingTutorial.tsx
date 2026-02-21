@@ -1,5 +1,5 @@
 import { useTheme } from '@/context/ThemeContext';
-import { useLayout } from '@/hooks/useLayout';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { useTutorialStore } from '@/store/tutorialStore';
 import React, { useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -35,8 +35,8 @@ const TUTORIAL_STEPS = [
 ];
 
 export default function StatsTrackingTutorial() {
-  const { width, height, isLandscape } = useLayout();
-  const styles = createStyles({ width, height, isLandscape });
+  const { width, height, isLandscape, sizeClass } = useLayout();
+  const styles = createStyles({ width, height, isLandscape, sizeClass });
   const { showStatsTutorial, closeStatsTutorial } = useTutorialStore();
   const [currentStep, setCurrentStep] = useState(0);
   const [slideDirection, setSlideDirection] = useState<'left' | 'right'>('right');
@@ -163,7 +163,12 @@ export default function StatsTrackingTutorial() {
   );
 }
 
-function createStyles(layout: { width: number; height: number; isLandscape: boolean }) {
+function createStyles(layout: {
+  width: number;
+  height: number;
+  isLandscape: boolean;
+  sizeClass: SizeClass;
+}) {
   return StyleSheet.create({
     root: {
       flex: 1,
@@ -191,7 +196,7 @@ function createStyles(layout: { width: number; height: number; isLandscape: bool
       zIndex: 10,
     },
     skipText: {
-      fontSize: 14,
+      fontSize: scaleBySizeClass(14, layout.sizeClass),
       fontWeight: '500',
     },
     contentContainer: {
@@ -240,7 +245,7 @@ function createStyles(layout: { width: number; height: number; isLandscape: bool
       alignItems: 'center',
     },
     backButtonText: {
-      fontSize: 16,
+      fontSize: scaleBySizeClass(16, layout.sizeClass),
       fontWeight: '600',
     },
     nextButton: {
@@ -251,7 +256,7 @@ function createStyles(layout: { width: number; height: number; isLandscape: bool
       alignItems: 'center',
     },
     nextButtonText: {
-      fontSize: 16,
+      fontSize: scaleBySizeClass(16, layout.sizeClass),
       fontWeight: '600',
     },
   });
