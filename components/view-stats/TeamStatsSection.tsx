@@ -1,11 +1,16 @@
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { GameEvent } from '@/lib/storage';
-import { computeTeamStats, computeTimingStats } from '@/lib/teamStatsUtils';
+import {
+  computeTeamStats,
+  computeTimingStats,
+  computeTimeOfPossessionStats,
+} from '@/lib/teamStatsUtils';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import StatRing from './StatRing';
 import StatsGrid from './StatsGrid';
+import TimeOfPossessionSection from './TimeOfPossessionSection';
 
 // Format milliseconds to "Xm Ys" or just "Xs" for short durations
 const formatDuration = (ms: number): string => {
@@ -22,6 +27,8 @@ interface TeamStatsSectionProps {
   events: GameEvent[];
   startingPossession: 'team1' | 'team2' | null;
   gameTo: number;
+  team1Name: string;
+  team2Name: string;
 }
 
 /**
@@ -33,6 +40,8 @@ export default function TeamStatsSection({
   events,
   startingPossession,
   gameTo,
+  team1Name,
+  team2Name,
 }: TeamStatsSectionProps) {
   const { palette } = useTheme();
   const { isLandscape, sizeClass } = useLayout();
@@ -40,6 +49,7 @@ export default function TeamStatsSection({
 
   const stats = computeTeamStats(events, startingPossession, gameTo);
   const timingStats = computeTimingStats(events, startingPossession, gameTo);
+  const topStats = computeTimeOfPossessionStats(events, startingPossession, gameTo);
 
   // Don't render if no events
   if (events.length === 0) {
@@ -162,6 +172,8 @@ export default function TeamStatsSection({
           />
         </View>
       )}
+
+      <TimeOfPossessionSection topStats={topStats} team1Name={team1Name} team2Name={team2Name} />
     </View>
   );
 }

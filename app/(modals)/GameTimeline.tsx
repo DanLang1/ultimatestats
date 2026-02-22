@@ -8,7 +8,7 @@ import { useGameStore } from '@/store/gameStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import * as Haptics from 'expo-haptics';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
-import React from 'react';
+import React, { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 export default function GameTimelineScreen() {
@@ -18,6 +18,7 @@ export default function GameTimelineScreen() {
   const params = useLocalSearchParams<{ gameId?: string }>();
   // If gameId is present, it's a saved game
   const isSavedGame = !!params.gameId;
+  const [showSplitSeparators, setShowSplitSeparators] = useState(true);
 
   const {
     currentTeam,
@@ -30,6 +31,7 @@ export default function GameTimelineScreen() {
     pointStartTimestamps,
     currentPointStartTime,
     currentPoint,
+    pointTimerEnabled,
   } = useGameStore();
   const team1Name = currentTeam?.name ?? 'Team 1';
 
@@ -48,6 +50,7 @@ export default function GameTimelineScreen() {
           gameTo: game.gameTo,
           roster: game.team1.roster,
           pointStartTimestamps: game.pointStartTimestamps,
+          timingEnabled: game.events.some((event) => event.elapsedMs !== undefined),
         };
       })()
     : {
@@ -60,6 +63,7 @@ export default function GameTimelineScreen() {
         gameTo,
         roster: currentTeam?.roster ?? [],
         pointStartTimestamps,
+        timingEnabled: pointTimerEnabled,
       };
 
   if (!gameData) {
@@ -79,6 +83,7 @@ export default function GameTimelineScreen() {
     isSavedGame ? undefined : currentPointStartTime,
   );
   const hasData = pointEvents.length > 0;
+  const canToggleSplits = gameData.timingEnabled;
 
   return (
     <ThemedView style={[styles.container, { backgroundColor: palette.primary }]}>
@@ -105,6 +110,32 @@ export default function GameTimelineScreen() {
         <Text style={[styles.teamNames, { color: palette.textInverse }]}>
           {gameData.team1Name} vs {gameData.team2Name}
         </Text>
+        {canToggleSplits && (
+          <View style={styles.timelineControlsRow}>
+            <Pressable
+              onPress={() => setShowSplitSeparators((prev) => !prev)}
+              style={[
+                styles.timelineToggleChip,
+                {
+                  backgroundColor: showSplitSeparators ? palette.overlay08 : palette.overlay15,
+                  borderColor: showSplitSeparators ? palette.accent : palette.overlay15,
+                },
+              ]}>
+              <MaterialCommunityIcons
+                name="arrow-split-horizontal"
+                size={scaleBySizeClass(12, sizeClass)}
+                color={showSplitSeparators ? palette.accent : palette.textMuted}
+              />
+              <Text
+                style={[
+                  styles.timelineToggleText,
+                  { color: showSplitSeparators ? palette.accent : palette.textMuted },
+                ]}>
+                Show Splits: {showSplitSeparators ? 'On' : 'Off'}
+              </Text>
+            </Pressable>
+          </View>
+        )}
       </View>
 
       <ScrollView contentContainerStyle={[styles.scrollContent]}>
@@ -115,6 +146,8 @@ export default function GameTimelineScreen() {
             team2Name={gameData.team2Name}
             gameTo={gameData.gameTo}
             roster={gameData.roster}
+            timingEnabled={gameData.timingEnabled}
+            showSplitSeparators={showSplitSeparators}
             onEditEvent={(eventIndex, turnover) => {
               Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
               router.push({
@@ -203,6 +236,25 @@ function createStyles(sizeClass: SizeClass) {
       alignItems: 'center',
       paddingBottom: 16,
       gap: 4,
+    },
+    timelineControlsRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginTop: scaleBySizeClass(6, sizeClass),
+    },
+    timelineToggleChip: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: scaleBySizeClass(6, sizeClass),
+      borderWidth: 1,
+      borderRadius: scaleBySizeClass(16, sizeClass),
+      paddingHorizontal: scaleBySizeClass(10, sizeClass),
+      paddingVertical: scaleBySizeClass(6, sizeClass),
+    },
+    timelineToggleText: {
+      fontSize: scaleBySizeClass(11, sizeClass),
+      fontWeight: '600',
     },
     teamNames: {
       fontSize: scaleBySizeClass(18, sizeClass),

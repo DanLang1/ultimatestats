@@ -19,6 +19,13 @@ module.exports = defineConfig([
     rules: {
       ...tseslint.configs.recommended.rules,
       'local/no-unscaled-sizes': 'error',
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: "MemberExpression[object.name='React'][property.name=/^use[A-Z]/]",
+          message: 'Use named React hook imports (e.g. useState()) instead of React.useState().',
+        },
+      ],
     },
   },
 ]);

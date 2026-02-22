@@ -1,6 +1,6 @@
 # Tech Debt Backlog
 
-Last updated: February 15, 2026
+Last updated: February 22, 2026
 
 This document tracks intentionally deferred cleanup work discovered during the docs/rules/workflow audit.
 
@@ -22,28 +22,16 @@ This document tracks intentionally deferred cleanup work discovered during the d
 
 ## P1 - Responsive Pattern Completion
 
-- Finish migration to `useLayout()` + `createStyles(...)` in touched files still using static `StyleSheet.create` and inline orientation branches.
-- Keep orientation logic centralized in style factories where practical.
+- Continue migration to `useLayout()` + `createStyles(...)` in remaining files that still use inline orientation branches for style values.
+- Keep orientation logic centralized in style factories where practical. (Render-time branching for different UI sections is still fine when behavior differs by orientation.)
 - References:
   `docs/responsive-layout.md:19`
   `docs/responsive-layout.md:99`
-  `app/LinePromptModal.tsx:344`
-  `app/PointTransition.tsx:406`
-  `components/stat-entry/StatEntryInner.tsx:388`
-  `components/turnover-entry/TurnoverEntryInner.tsx:433`
-  `components/tutorial/StatsTrackingTutorial.tsx:183`
-  `components/tutorial/TutorialOverlay.tsx:191`
-
-## P1 - Soft Cap Undo Does Not Re-derive `gameTo`
-
-- Undoing (or canceling via `cancelPendingGoal`) a goal that triggered soft cap does not restore `gameTo` or `isSoftCap`. After the undo, `softCapPending = false` and `isSoftCap = true`, so the next goal does not re-trigger the +1 recalculation.
-- Impact: only manifests when the trailing team scores the very next goal after the undo (different highest score → different correct `gameTo`), resulting in at most 1 extra point played. If the same team scores again the stale `gameTo` coincidentally matches the correct value.
-- Fix: stamp a `triggeredSoftCap?: boolean` flag on the `GoalEvent`. Both undo paths check the flag and restore `gameTo = baseGameTo`, `isSoftCap = false`, `softCapPending = true` so the next goal re-applies the rule against the actual post-undo scores.
-- References:
-  `store/gameStore.ts:155` (soft cap logic in `incrementScore`)
-  `store/gameStore.ts:256` (`undoLastAction` goal branch — missing restoration)
-  `store/gameStore.ts:573` (`cancelPendingGoal` — missing restoration)
-  `store/gameStore.types.ts:12` (`GoalEvent` — needs `triggeredSoftCap?` field)
+  `app/(modals)/LinePromptModal.tsx:122`
+  `components/stat-entry/StatEntryInner.tsx:257`
+  `components/turnover-entry/TurnoverEntryInner.tsx:300`
+  `components/tutorial/StatsTrackingTutorial.tsx:177`
+  `components/tutorial/TutorialOverlay.tsx:188`
 
 ## P2 - `cancelPendingGoal` Does Not Re-derive Timeout State
 
@@ -87,6 +75,22 @@ This document tracks intentionally deferred cleanup work discovered during the d
   `app/PullPromptModal.tsx:400`
   `app/LinePromptModal.tsx:358`
   `app/PlayerStats.tsx:167`
+
+## P2 - Timeline Tie Ordering for Equal `elapsedMs`
+
+- `mergeTimelineEvents()` merges `turnovers` before `timeouts` and sorts only by `elapsedMs`. When timestamps tie, the comparator returns `0`, so display order falls back to merge order instead of raw event order.
+- Impact: timeout/turnover rows can render out of chronological sequence for equal timestamps, and split separators in `EventTimeline` may attach to the wrong transition.
+- Why ties happen: timeouts pause the point timer and record an `elapsedMs` snapshot; resume/undo reconstructs `currentPointStartTime` from that stored elapsed, making equal timestamps plausible for the next event.
+- Fix: add a tie-break on raw `eventIndex` (available on both `DisplayTurnover` and `DisplayTimeout`) in `mergeTimelineEvents()`, plus a regression test for equal-`elapsedMs` timeout/turnover ordering.
+- References:
+  `lib/timelineUtils.ts:173`
+  `lib/timelineUtils.ts:181`
+  `components/timeline/EventTimeline.tsx:145`
+  `components/timeline/EventTimeline.tsx:150`
+  `store/gameStore.ts:252` (`undoLastAction` timeout resume)
+  `store/gameStore.ts:653` (`togglePointTimerPause` resume path)
+  `store/gameStore.ts:683` (`addTurnoverEvent` elapsed capture)
+  `store/gameStore.ts:216` (`incrementScore` goal elapsed capture)
 
 ## P3 - Documentation Hygiene
 

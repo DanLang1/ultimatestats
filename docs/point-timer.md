@@ -4,13 +4,13 @@
 
 ## Overview
 
-The Point Timer feature allows users to record precise start times for each point. This enables the calculation of accurate point durations and displays relative timestamps (e.g., "+15s") for events within the game timeline.
+The Point Timer feature allows users to record precise start times for each point. This enables the calculation of accurate point durations and displays relative timestamps (e.g., `0:15`) for events within the game timeline.
 
 ## Usage
 
 1.  **Enable**: Go to **Settings** and toggle **Point Timer** (requires "Track My Team Stats" to be enabled).
 2.  **Start Point**: A "START" button appears in the center of the game screen when a new point begins. Tap it when the pull is released or the point starts.
-3.  **View Timeline**: Turnovers and goals in the Game Timeline will automatically show accurate timing information.
+3.  **View Timeline**: Turnovers and goals in the Game Timeline will automatically show accurate timing information. Use the local **Splits** toggle on the timeline screen to show/hide split times (for example `+32s`) above arrow separators.
 4.  **Match Status**: View and toggle the timer on the **Match Status** (Game Info) screen, which features a vertical display with a large timer and pause/play control.
 
 ## Data Model

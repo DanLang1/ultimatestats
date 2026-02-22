@@ -31,7 +31,9 @@ export default function ScoreDisplay({
 function createStyles(sizeClass: SizeClass, isCompactVertical: boolean) {
   const fontSize = getSizeClassValue({ small: 150, medium: 180, large: 200 }, sizeClass);
   const lineHeight = getSizeClassValue({ small: 150, medium: 180, large: 200 }, sizeClass);
-  const effectiveFontSize = isCompactVertical ? Math.max(110, Math.round(fontSize * 0.8)) : fontSize;
+  const effectiveFontSize = isCompactVertical
+    ? Math.max(110, Math.round(fontSize * 0.8))
+    : fontSize;
   const effectiveLineHeight = isCompactVertical
     ? Math.max(110, Math.round(lineHeight * 0.8))
     : lineHeight;

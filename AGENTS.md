@@ -146,8 +146,10 @@ When changing behavior in these areas, update the corresponding docs in the same
 ## Useful Commands
 
 - Dev server: `npm run dev`
-- Type check: `npx tsc --noEmit`
-- Lint: `npx eslint . --ext .ts,.tsx`
+- Type check: `npm run typecheck`
+- Lint: `npm run lint`
+- Quick verify (lint + typecheck): `npm run check`
+- Full verify (lint + typecheck + tests): `npm run check:all`
 - Tests: `npm test`
 - Single test target: `npm test -- gameUtils`
 

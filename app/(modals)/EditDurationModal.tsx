@@ -1,6 +1,7 @@
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { MAX_POINT_DURATION_MINUTES } from '@/lib/constants';
+import { computePointByPointEvents, formatClockDuration } from '@/lib/timelineUtils';
 import { useGameStore } from '@/store/gameStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -19,22 +20,65 @@ export default function EditDurationModal() {
     currentDurationMs?: string;
   }>();
 
-  const { updateEvent, updateSavedGameEvent } = useGameStore();
+  const {
+    events,
+    startingPossession,
+    gameTo: currentGameTo,
+    savedGames,
+    updateEvent,
+    updateSavedGameEvent,
+  } = useGameStore();
 
   const eventIndex = parseInt(params.eventIndex, 10);
   const gameId = params.gameId;
   const currentMs = params.currentDurationMs ? parseInt(params.currentDurationMs, 10) : 0;
+  const isSavedGame = gameId !== 'current';
+  const savedGame = isSavedGame ? savedGames.find((g) => g.id === gameId) : null;
+
+  const activeEvents = savedGame?.events ?? events;
+  const activeStartingPossession = savedGame?.startingPossession ?? startingPossession;
+  const activeGameTo = savedGame?.gameTo ?? currentGameTo;
+
+  const pointEvents = computePointByPointEvents(
+    activeEvents,
+    activeStartingPossession,
+    activeGameTo,
+  );
+  const editedPoint = pointEvents.find((point) => point.goalEventIndex === eventIndex);
+  // Compare the edited goal timestamp against earlier events in the point
+  // (turnovers/timeouts). The goal event itself is the value being edited.
+  const lastNonGoalTimedEventMs = editedPoint
+    ? [...editedPoint.turnovers, ...editedPoint.timeouts]
+        .map((event) => event.elapsedMs)
+        .filter((ms): ms is number => ms !== undefined)
+        .reduce<number | undefined>(
+          (max, ms) => (max === undefined ? ms : Math.max(max, ms)),
+          undefined,
+        )
+    : undefined;
 
   const initialTotalSeconds = Math.round(currentMs / 1000);
   const initialMinutes = Math.floor(initialTotalSeconds / 60);
   const initialSeconds = initialTotalSeconds % 60;
 
-  const [activeField, setActiveField] = useState<ActiveField>('minutes');
+  const [activeField, setActiveField] = useState<ActiveField>(
+    initialMinutes === 0 ? 'seconds' : 'minutes',
+  );
   const [minutesStr, setMinutesStr] = useState(initialMinutes > 0 ? initialMinutes.toString() : '');
   const [secondsStr, setSecondsStr] = useState(initialSeconds > 0 ? initialSeconds.toString() : '');
 
   const currentMinutes = minutesStr === '' ? 0 : parseInt(minutesStr, 10);
   const currentSeconds = secondsStr === '' ? 0 : parseInt(secondsStr, 10);
+  const totalMs = (currentMinutes * 60 + currentSeconds) * 1000;
+  const minAllowedGoalMs =
+    lastNonGoalTimedEventMs !== undefined
+      ? Math.round(lastNonGoalTimedEventMs / 1000) * 1000
+      : undefined;
+  const validationError =
+    minAllowedGoalMs !== undefined && totalMs > 0 && totalMs < minAllowedGoalMs
+      ? `Duration can't be earlier than the last event (${formatClockDuration(minAllowedGoalMs)}).`
+      : null;
+  const isSaveDisabled = validationError !== null;
 
   const handleDigitPress = (digit: number) => {
     if (activeField === 'minutes') {
@@ -73,7 +117,7 @@ export default function EditDurationModal() {
   };
 
   const handleSave = () => {
-    const totalMs = (currentMinutes * 60 + currentSeconds) * 1000;
+    if (validationError) return;
     const elapsedMs = totalMs > 0 ? totalMs : null;
     if (gameId === 'current') {
       updateEvent(eventIndex, { elapsedMs });
@@ -282,6 +326,12 @@ export default function EditDurationModal() {
             )}
           </View>
 
+          {validationError && (
+            <Text style={[styles.validationError, { color: palette.danger }]}>
+              {validationError}
+            </Text>
+          )}
+
           {/* Action Buttons */}
           <View style={styles.actionRow}>
             <Pressable
@@ -305,14 +355,23 @@ export default function EditDurationModal() {
               <Text style={[styles.actionButtonText, { color: palette.accent }]}>Cancel</Text>
             </Pressable>
             <Pressable
+              disabled={isSaveDisabled}
               onPress={handleSave}
               style={({ pressed }) => [
                 styles.actionButton,
                 styles.saveButton,
-                { backgroundColor: palette.accent },
-                pressed && { opacity: 0.8 },
+                {
+                  backgroundColor: isSaveDisabled ? palette.overlay15 : palette.accent,
+                },
+                pressed && !isSaveDisabled && { opacity: 0.8 },
               ]}>
-              <Text style={[styles.actionButtonText, { color: palette.textOnAccent }]}>Save</Text>
+              <Text
+                style={[
+                  styles.actionButtonText,
+                  { color: isSaveDisabled ? palette.textMuted : palette.textOnAccent },
+                ]}>
+                Save
+              </Text>
             </Pressable>
           </View>
         </Pressable>
@@ -411,6 +470,14 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     actionRow: {
       flexDirection: 'row',
       gap: 12,
+    },
+    validationError: {
+      fontSize: scaleBySizeClass(11, sizeClass),
+      fontWeight: '600',
+      textAlign: 'center',
+      marginTop: scaleBySizeClass(6, sizeClass),
+      marginBottom: scaleBySizeClass(2, sizeClass),
+      paddingHorizontal: scaleBySizeClass(6, sizeClass),
     },
     actionButton: {
       flex: 1,

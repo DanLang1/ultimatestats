@@ -26,6 +26,7 @@ interface StatsContentProps {
 
 export default function StatsContent({
   team1Name,
+  team2Name,
   team1Score,
   team2Score,
   events,
@@ -118,7 +119,13 @@ export default function StatsContent({
       </View>
 
       {/* Team Stats Section */}
-      <TeamStatsSection events={events} startingPossession={startingPossession} gameTo={gameTo} />
+      <TeamStatsSection
+        events={events}
+        startingPossession={startingPossession}
+        gameTo={gameTo}
+        team1Name={team1Name}
+        team2Name={team2Name}
+      />
 
       {/* Player Stats Table */}
       {playerStats.length === 0 ? (

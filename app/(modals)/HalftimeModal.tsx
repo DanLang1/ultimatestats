@@ -420,7 +420,7 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
       fontSize: scaleBySizeClass(64, sizeClass),
       fontWeight: '900',
       fontVariant: ['tabular-nums'],
-      lineHeight: 70,
+      lineHeight: scaleBySizeClass(70, sizeClass),
     },
     scoreDivider: {
       fontSize: scaleBySizeClass(32, sizeClass),

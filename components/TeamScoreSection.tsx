@@ -124,10 +124,7 @@ function createStyles(sizeClass: SizeClass, isCompactVertical: boolean) {
   const gap = getSizeClassValue({ small: 6, medium: 10, large: 12 }, sizeClass);
   const effectiveGap = isCompactVertical ? Math.max(4, Math.round(gap * 0.75)) : gap;
   const timeoutGap = isCompactVertical ? 12 : 15;
-  const timeoutSize = getSizeClassValue(
-    { small: 20, medium: 22, large: 24 },
-    sizeClass,
-  );
+  const timeoutSize = getSizeClassValue({ small: 20, medium: 22, large: 24 }, sizeClass);
   const effectiveTimeoutSize = isCompactVertical
     ? Math.max(16, Math.round(timeoutSize * 0.8))
     : timeoutSize;

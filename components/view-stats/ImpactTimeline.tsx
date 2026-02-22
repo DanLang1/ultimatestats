@@ -1,10 +1,29 @@
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { ImpactPoint } from '@/lib/statsUtils';
-import { Circle } from '@shopify/react-native-skia';
-import React from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Circle, matchFont, Text as SkiaText } from '@shopify/react-native-skia';
+import React, { useState } from 'react';
+import { Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { CartesianChart, Line } from 'victory-native';
+
+const FONT_FAMILY = Platform.select({
+  ios: 'Helvetica',
+  android: 'sans-serif',
+  default: 'sans-serif',
+});
+
+/** Maps an event description to a single letter abbreviation. */
+function eventAbbrev(description: string | undefined): string | null {
+  if (!description) return null;
+  const d = description.toLowerCase();
+  if (d.startsWith('callahan')) return 'C';
+  if (d.startsWith('goal')) return 'G';
+  if (d.startsWith('assist')) return 'A';
+  if (d.startsWith('block')) return 'B';
+  if (d.startsWith('drop') || d.startsWith('50/50 drop')) return 'D';
+  if (d.startsWith('throwaway') || d.startsWith('50/50 throw')) return 'T';
+  return null;
+}
 
 interface ImpactTimelineProps {
   data: ImpactPoint[];
@@ -12,28 +31,38 @@ interface ImpactTimelineProps {
 
 export default function ImpactTimeline({ data }: ImpactTimelineProps) {
   const { palette } = useTheme();
-  const { isLandscape, sizeClass } = useLayout();
+  const { sizeClass } = useLayout();
   const chartHeight = scaleBySizeClass(150, sizeClass);
-  const styles = createStyles(sizeClass, chartHeight);
+  const pxPerEvent = scaleBySizeClass(55, sizeClass);
+  const yAxisWidth = scaleBySizeClass(30, sizeClass);
+  const labelWidth = scaleBySizeClass(52, sizeClass);
+  const dotRadius = scaleBySizeClass(5, sizeClass);
+  const strokeWidth = scaleBySizeClass(3, sizeClass);
+  const labelFontSize = scaleBySizeClass(11, sizeClass);
+  const labelAboveOffset = scaleBySizeClass(14, sizeClass);
+  const labelBelowOffset = scaleBySizeClass(16, sizeClass);
+  const labelFont = matchFont({
+    fontFamily: FONT_FAMILY,
+    fontSize: labelFontSize,
+    fontWeight: '700',
+  });
+  const domainPadLeft = scaleBySizeClass(10, sizeClass);
+  const domainPadRight = scaleBySizeClass(36, sizeClass);
+  const domainPadTop = scaleBySizeClass(32, sizeClass);
+  const domainPadBottom = scaleBySizeClass(20, sizeClass);
+  const styles = createStyles(sizeClass, chartHeight, yAxisWidth, labelWidth);
   const hasImpact = data.some((d) => d.cumulativePlusMinus !== 0);
 
-  if (!hasImpact && data.length <= 2) {
-    return (
-      <View style={[styles.container, { height: 200, justifyContent: 'center' }]}>
-        <Text style={{ color: palette.textMuted, textAlign: 'center' }}>
-          No impact recorded yet.
-        </Text>
-      </View>
-    );
-  }
-
-  // Format data for chart - include description and score for tooltips
-  const chartData = data.map((d) => ({
-    x: d.eventIndex,
-    y: d.cumulativePlusMinus,
-    description: d.description ?? '',
-    score: d.score,
-  }));
+  // Format data for chart — exclude the trailing End marker so the chart
+  // stops at the last real event rather than showing a flat tail.
+  const chartData = data
+    .filter((d) => d.description !== 'End')
+    .map((d) => ({
+      x: d.eventIndex,
+      y: d.cumulativePlusMinus,
+      description: d.description ?? '',
+      score: d.score,
+    }));
 
   // Filter out Start/End events for the event log
   const eventLog = data.filter(
@@ -51,6 +80,34 @@ export default function ImpactTimeline({ data }: ImpactTimelineProps) {
   // Ensure some padding
   const yPadding = Math.max(Math.abs(yMin), Math.abs(yMax), 1);
 
+  // Scrollbar tracking state (must be declared before chartScrollWidth uses viewportWidth)
+  const [viewportWidth, setViewportWidth] = useState(0);
+  const [contentWidth, setContentWidth] = useState(0);
+  const [scrollX, setScrollX] = useState(0);
+
+  // Width of the scrollable chart area: at least PX_PER_EVENT per event so
+  // all points have breathing room on large games.  Fills the viewport
+  // when content is short (e.g. few events on a tablet).
+  const eventCount = chartData.length - 1; // exclude Start
+  const minChartWidth = eventCount * pxPerEvent;
+  const chartScrollWidth = Math.max(viewportWidth || 300, minChartWidth);
+  const needsScroll = viewportWidth > 0 && minChartWidth > viewportWidth;
+
+  // Custom scrollbar derived values
+  const maxScroll = Math.max(0, contentWidth - viewportWidth);
+  const visibleRatio = contentWidth > 0 ? Math.min(1, viewportWidth / contentWidth) : 1;
+  const indicatorThumbWidth = Math.max(26, Math.round(viewportWidth * visibleRatio));
+  const indicatorTravel = viewportWidth - indicatorThumbWidth;
+  const indicatorLeft = maxScroll > 0 ? (scrollX / maxScroll) * indicatorTravel : 0;
+  if (!hasImpact && data.length <= 2) {
+    return (
+      <View style={[styles.container, { height: 200, justifyContent: 'center' }]}>
+        <Text style={{ color: palette.textMuted, textAlign: 'center' }}>
+          No impact recorded yet.
+        </Text>
+      </View>
+    );
+  }
   return (
     <View style={styles.container}>
       <Text style={[styles.title, { color: palette.textMuted }]}>GAME IMPACT</Text>
@@ -77,110 +134,186 @@ export default function ImpactTimeline({ data }: ImpactTimelineProps) {
 
       {/* Chart with Y-axis labels */}
       <View style={styles.chartContainer}>
-        {/* Y-Axis Labels */}
+        {/* Y-Axis Labels — fixed, does not scroll */}
         <View style={styles.yAxis}>
           <Text style={[styles.axisLabel, { color: palette.success }]}>+{yPadding}</Text>
           <Text style={[styles.axisLabel, { color: palette.textMuted }]}>0</Text>
           <Text style={[styles.axisLabel, { color: palette.danger }]}>-{yPadding}</Text>
         </View>
 
-        {/* Chart */}
-        <View style={{ flex: 1, height: chartHeight }}>
-          <CartesianChart
-            data={chartData}
-            xKey="x"
-            yKeys={['y']}
-            domain={{ y: [-yPadding, yPadding] }}
-            axisOptions={{
-              font: null,
-              lineColor: palette.overlay10,
-              labelColor: 'transparent',
-            }}
-            domainPadding={{ top: 20, bottom: 20, left: 10, right: 10 }}>
-            {({ points }) => {
-              // Color line based on final value: green (+), red (-), blue (0)
-              const lineColor =
-                finalValue > 0 ? palette.success : finalValue < 0 ? palette.danger : palette.accent;
-              return (
-                <>
-                  <Line points={points.y} color={lineColor} strokeWidth={3} curveType="linear" />
-                  {/* Dots at each data point */}
-                  {points.y.map((point, i) => {
-                    // Skip Start and End points for cleaner look
-                    if (i === 0 || i === points.y.length - 1) return null;
-                    if (point.x == null || point.y == null) return null;
-                    const dotColor = chartData[i]?.description?.includes('+')
-                      ? palette.success
-                      : palette.danger;
-                    return <Circle key={i} cx={point.x} cy={point.y} r={5} color={dotColor} />;
-                  })}
-                </>
-              );
-            }}
-          </CartesianChart>
-        </View>
-      </View>
+        {/* Scrollable chart + x-axis labels */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          scrollEventThrottle={16}
+          onLayout={(e) => setViewportWidth(e.nativeEvent.layout.width)}
+          onContentSizeChange={(w) => setContentWidth(w)}
+          onScroll={(e) => setScrollX(e.nativeEvent.contentOffset.x)}
+          style={styles.chartScroll}>
+          <View style={{ width: chartScrollWidth }}>
+            {/* Chart */}
+            <View style={{ height: chartHeight }}>
+              <CartesianChart
+                data={chartData}
+                xKey="x"
+                yKeys={['y']}
+                domain={{ y: [-yPadding, yPadding] }}
+                axisOptions={{
+                  font: null,
+                  lineColor: palette.overlay10,
+                  labelColor: 'transparent',
+                }}
+                domainPadding={{
+                  top: domainPadTop,
+                  bottom: domainPadBottom,
+                  left: domainPadLeft,
+                  right: domainPadRight,
+                }}>
+                {({ points }) => {
+                  type Pt = (typeof points.y)[number];
 
-      {/* X-Axis Score Labels */}
-      <View style={styles.xAxisLabel}>
-        {(() => {
-          // Get unique scores with their eventIndex positions (skip Start/End markers)
-          const scorePositions: { score: string; eventIndex: number }[] = [];
-          data.forEach((d) => {
-            if (
-              d.score &&
-              d.description !== 'Start' &&
-              d.description !== 'End' &&
-              !scorePositions.some((s) => s.score === d.score)
-            ) {
-              scorePositions.push({ score: d.score, eventIndex: d.eventIndex });
-            }
-          });
+                  // Split into color segments based on sign of cumulative +/-,
+                  // sharing the boundary point between adjacent segments so the
+                  // line stays connected through zero crossings.
+                  const segments: { pts: Pt[]; color: string }[] = [];
 
-          const minIdx = data[0]?.eventIndex ?? 0;
-          const maxIdx = data[data.length - 1]?.eventIndex ?? 1;
-          const range = maxIdx - minIdx || 1;
+                  for (let i = 0; i < points.y.length; i++) {
+                    const dataY = chartData[i]?.y ?? 0;
+                    let color: string;
+                    if (dataY > 0) {
+                      color = palette.success;
+                    } else if (dataY < 0) {
+                      color = palette.danger;
+                    } else {
+                      // y === 0: inherit the previous segment's color so crossings
+                      // read as continuations of the prior trend, not a third state.
+                      // Falls back to accent only for the opening Start point.
+                      color = segments[segments.length - 1]?.color ?? palette.accent;
+                    }
 
-          // Calculate percentage positions for all scores
-          const scoresWithPct = scorePositions.map((item) => ({
-            ...item,
-            pct: ((item.eventIndex - minIdx) / range) * 100,
-          }));
+                    const last = segments[segments.length - 1];
+                    if (!last || last.color !== color) {
+                      // New segment — share the previous point so segments connect
+                      const newPts: Pt[] = last ? [points.y[i - 1], points.y[i]] : [points.y[i]];
+                      segments.push({ pts: newPts, color });
+                    } else {
+                      last.pts.push(points.y[i]);
+                    }
+                  }
 
-          // Filter to avoid overlapping labels (minimum 10% gap)
-          // Always keep first and last labels
-          const MIN_GAP = isLandscape ? 5 : 8;
-          const filteredScores: typeof scoresWithPct = [];
-
-          scoresWithPct.forEach((item, i) => {
-            const isFirst = i === 0;
-            const isLast = i === scoresWithPct.length - 1;
-            const lastShown = filteredScores[filteredScores.length - 1];
-
-            if (isFirst) {
-              filteredScores.push(item);
-            } else if (isLast) {
-              // Always show last, but remove previous if too close
-              if (lastShown && item.pct - lastShown.pct < MIN_GAP && filteredScores.length > 1) {
-                filteredScores.pop();
-              }
-              filteredScores.push(item);
-            } else if (!lastShown || item.pct - lastShown.pct >= MIN_GAP) {
-              filteredScores.push(item);
-            }
-          });
-
-          return (
-            <View style={styles.scoreLabelsPositioned}>
-              {filteredScores.map((item, i) => (
-                <View key={i} style={[styles.scoreLabelWrapper, { left: `${item.pct}%` }]}>
-                  <Text style={[styles.scoreText, { color: palette.textMuted }]}>{item.score}</Text>
-                </View>
-              ))}
+                  return (
+                    <>
+                      {segments.map((seg, i) => (
+                        <Line
+                          key={i}
+                          points={seg.pts}
+                          color={seg.color}
+                          strokeWidth={strokeWidth}
+                          curveType="linear"
+                        />
+                      ))}
+                      {/* Dots + letter labels at each data point */}
+                      {points.y.map((point, i) => {
+                        // Skip the Start marker (index 0) — End is no longer in chartData
+                        if (i === 0) return null;
+                        if (point.x == null || point.y == null) return null;
+                        const isPositive = chartData[i]?.description?.includes('+') ?? false;
+                        const dotColor = isPositive ? palette.success : palette.danger;
+                        const abbrev = eventAbbrev(chartData[i]?.description);
+                        // Place label above dot for positive events, below for negative
+                        const labelY = isPositive
+                          ? point.y - labelAboveOffset
+                          : point.y + labelBelowOffset;
+                        const labelX = point.x - labelFontSize * 0.35;
+                        return (
+                          <React.Fragment key={i}>
+                            <Circle cx={point.x} cy={point.y} r={dotRadius} color={dotColor} />
+                            {abbrev && labelFont && (
+                              <SkiaText
+                                x={labelX}
+                                y={labelY}
+                                text={abbrev}
+                                font={labelFont}
+                                color={dotColor}
+                              />
+                            )}
+                          </React.Fragment>
+                        );
+                      })}
+                    </>
+                  );
+                }}
+              </CartesianChart>
             </View>
-          );
-        })()}
+
+            {/* X-Axis Score Labels — scrolls with the chart */}
+            {(() => {
+              // Unique scores keyed by score string (skip Start/End)
+              const scorePositions: { score: string; eventIndex: number }[] = [];
+              data.forEach((d) => {
+                if (
+                  d.score &&
+                  d.description !== 'Start' &&
+                  d.description !== 'End' &&
+                  !scorePositions.some((s) => s.score === d.score)
+                ) {
+                  scorePositions.push({ score: d.score, eventIndex: d.eventIndex });
+                }
+              });
+
+              const minIdx = chartData[0]?.x ?? 0;
+              const maxIdx = chartData[chartData.length - 1]?.x ?? 1;
+              const range = maxIdx - minIdx || 1;
+              const drawableWidth = chartScrollWidth - domainPadLeft - domainPadRight;
+
+              const LABEL_GAP = 4; // minimum gap between adjacent labels
+              let lastLabelRight = -Infinity;
+
+              return (
+                <View style={styles.scoreLabelsPositioned}>
+                  {scorePositions.map((item, i) => {
+                    // Pixel position matching the chart's x-axis layout
+                    const px =
+                      domainPadLeft +
+                      ((item.eventIndex - minIdx) / range) * drawableWidth -
+                      labelWidth / 2; // center label on event
+                    // Skip if this label overlaps the previous rendered one
+                    if (px < lastLabelRight + LABEL_GAP) return null;
+                    lastLabelRight = px + labelWidth;
+                    return (
+                      <View key={i} style={[styles.scoreLabelWrapper, { left: px }]}>
+                        <Text
+                          numberOfLines={1}
+                          style={[styles.scoreText, { color: palette.textMuted }]}>
+                          {item.score}
+                        </Text>
+                      </View>
+                    );
+                  })}
+                </View>
+              );
+            })()}
+          </View>
+        </ScrollView>
       </View>
+
+      {/* Custom scrollbar indicator */}
+      {needsScroll && (
+        <View style={[styles.indicatorWrap, { paddingLeft: yAxisWidth }]}>
+          <View
+            style={[
+              styles.indicatorTrack,
+              { backgroundColor: palette.overlay20, width: viewportWidth },
+            ]}>
+            <View
+              style={[styles.indicatorThumb, { left: indicatorLeft, width: indicatorThumbWidth }]}>
+              <View style={[styles.thumbPoint, { backgroundColor: palette.accent }]} />
+              <View style={[styles.thumbCore, { backgroundColor: palette.accent }]} />
+              <View style={[styles.thumbPoint, { backgroundColor: palette.accent }]} />
+            </View>
+          </View>
+        </View>
+      )}
 
       {/* Legend */}
       <View style={styles.legend}>
@@ -192,7 +325,7 @@ export default function ImpactTimeline({ data }: ImpactTimelineProps) {
         </View>
         <View style={styles.legendItem}>
           <View style={[styles.legendDot, { backgroundColor: palette.danger }]} />
-          <Text style={[styles.legendText, { color: palette.textMuted }]}>Turnovers</Text>
+          <Text style={[styles.legendText, { color: palette.textMuted }]}>Drops/Throwaways</Text>
         </View>
       </View>
 
@@ -221,10 +354,15 @@ export default function ImpactTimeline({ data }: ImpactTimelineProps) {
   );
 }
 
-function createStyles(sizeClass: SizeClass, chartHeight: number) {
+function createStyles(
+  sizeClass: SizeClass,
+  chartHeight: number,
+  yAxisWidth: number,
+  labelWidth: number,
+) {
   return StyleSheet.create({
     container: {
-      padding: 16,
+      padding: scaleBySizeClass(16, sizeClass),
       alignItems: 'center',
     },
     title: {
@@ -250,14 +388,17 @@ function createStyles(sizeClass: SizeClass, chartHeight: number) {
     chartContainer: {
       flexDirection: 'row',
       width: '100%',
-      alignItems: 'center',
+      alignItems: 'flex-start',
     },
     yAxis: {
-      width: 30,
+      width: yAxisWidth,
       height: chartHeight,
       justifyContent: 'space-between',
       alignItems: 'flex-end',
-      paddingRight: 4,
+      paddingRight: scaleBySizeClass(4, sizeClass),
+    },
+    chartScroll: {
+      flex: 1,
     },
     axisLabel: {
       fontSize: scaleBySizeClass(10, sizeClass),
@@ -274,23 +415,17 @@ function createStyles(sizeClass: SizeClass, chartHeight: number) {
       gap: 4,
     },
     legendDot: {
-      width: 8,
-      height: 8,
-      borderRadius: 4,
+      width: scaleBySizeClass(8, sizeClass),
+      height: scaleBySizeClass(8, sizeClass),
+      borderRadius: scaleBySizeClass(4, sizeClass),
     },
     legendText: {
       fontSize: scaleBySizeClass(10, sizeClass),
       fontWeight: '500',
     },
-    xAxisLabel: {
-      width: '100%',
-      marginTop: 4,
-      paddingLeft: 30, // Match y-axis width
-    },
     scoreLabelsPositioned: {
-      position: 'relative',
-      height: 16,
-      marginHorizontal: 10, // Match chart's domainPadding left/right
+      height: scaleBySizeClass(20, sizeClass),
+      marginTop: scaleBySizeClass(4, sizeClass),
     },
     scoreText: {
       fontSize: scaleBySizeClass(11, sizeClass),
@@ -299,8 +434,7 @@ function createStyles(sizeClass: SizeClass, chartHeight: number) {
     scoreLabelWrapper: {
       position: 'absolute',
       alignItems: 'center',
-      width: 40,
-      marginLeft: -20, // Half of width to center
+      width: labelWidth,
     },
     eventLog: {
       width: '100%',
@@ -317,12 +451,12 @@ function createStyles(sizeClass: SizeClass, chartHeight: number) {
       flexGrow: 0,
     },
     eventItem: {
-      paddingHorizontal: 10,
-      paddingVertical: 6,
-      borderRadius: 8,
-      marginRight: 8,
+      paddingHorizontal: scaleBySizeClass(10, sizeClass),
+      paddingVertical: scaleBySizeClass(6, sizeClass),
+      borderRadius: scaleBySizeClass(8, sizeClass),
+      marginRight: scaleBySizeClass(8, sizeClass),
       alignItems: 'center',
-      minWidth: 60,
+      minWidth: scaleBySizeClass(60, sizeClass),
     },
     eventScore: {
       fontSize: scaleBySizeClass(10, sizeClass),
@@ -331,6 +465,35 @@ function createStyles(sizeClass: SizeClass, chartHeight: number) {
     eventDesc: {
       fontSize: scaleBySizeClass(12, sizeClass),
       fontWeight: '700',
+    },
+    indicatorWrap: {
+      alignItems: 'flex-start',
+      width: '100%',
+      marginTop: scaleBySizeClass(6, sizeClass),
+    },
+    indicatorTrack: {
+      height: scaleBySizeClass(2, sizeClass),
+      borderRadius: 999,
+      overflow: 'hidden',
+    },
+    indicatorThumb: {
+      position: 'absolute',
+      top: scaleBySizeClass(-2, sizeClass),
+      height: scaleBySizeClass(6, sizeClass),
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    thumbCore: {
+      flex: 1,
+      height: scaleBySizeClass(2, sizeClass),
+      borderRadius: 999,
+      marginHorizontal: scaleBySizeClass(-1, sizeClass),
+    },
+    thumbPoint: {
+      width: scaleBySizeClass(6, sizeClass),
+      height: scaleBySizeClass(6, sizeClass),
+      transform: [{ rotate: '45deg' }],
+      borderRadius: scaleBySizeClass(1, sizeClass),
     },
   });
 }

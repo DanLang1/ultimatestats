@@ -129,7 +129,7 @@ function createStyles(sizeClass: SizeClass) {
     message: {
       fontSize: scaleBySizeClass(15, sizeClass),
       textAlign: 'center',
-      lineHeight: 22,
+      lineHeight: scaleBySizeClass(22, sizeClass),
       maxWidth: 300,
     },
     actions: {

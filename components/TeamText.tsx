@@ -29,7 +29,9 @@ export default function TeamText({
     teamName.length > shrinkThreshold
       ? Math.max(minFontSize, baseFontSize - (teamName.length - shrinkThreshold) * shrinkFactor)
       : baseFontSize;
-  const effectiveFontSize = isCompactVertical ? Math.max(minFontSize, Math.round(fontSize * 0.86)) : fontSize;
+  const effectiveFontSize = isCompactVertical
+    ? Math.max(minFontSize, Math.round(fontSize * 0.86))
+    : fontSize;
 
   // Fixed line height to prevent layout shift when emoji switches teams
   const lineHeight = getSizeClassValue({ small: 48, medium: 60, large: 68 }, sizeClass);
@@ -37,7 +39,9 @@ export default function TeamText({
     ? Math.max(40, Math.round(lineHeight * 0.86))
     : lineHeight;
   const emojiSize = getSizeClassValue({ small: 24, medium: 28, large: 32 }, sizeClass);
-  const effectiveEmojiSize = isCompactVertical ? Math.max(20, Math.round(emojiSize * 0.9)) : emojiSize;
+  const effectiveEmojiSize = isCompactVertical
+    ? Math.max(20, Math.round(emojiSize * 0.9))
+    : emojiSize;
 
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>

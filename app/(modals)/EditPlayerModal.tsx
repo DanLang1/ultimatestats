@@ -483,7 +483,7 @@ function createStyles(sizeClass: SizeClass) {
       fontSize: scaleBySizeClass(14, sizeClass),
       textAlign: 'center',
       marginBottom: 20,
-      lineHeight: 20,
+      lineHeight: scaleBySizeClass(20, sizeClass),
     },
     confirmButtons: {
       flexDirection: 'row',

@@ -2,53 +2,20 @@ import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { getPlayerMatchingType, getPlayerName } from '@/lib/playerUtils';
 import { Player } from '@/lib/storage/types';
-import { DisplayTimeout, DisplayTurnover, PointEvents } from '@/lib/timelineUtils';
+import {
+  computeRoundedSplitMs,
+  DisplayTurnover,
+  filterCallahanBlock,
+  formatClockDuration,
+  formatSplitDuration,
+  mergeTimelineEvents,
+  PointEvents,
+} from '@/lib/timelineUtils';
 import { useSettingsStore } from '@/store/settingsStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import * as Haptics from 'expo-haptics';
 import React from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-
-// Union type for timeline events (turnovers and timeouts)
-type TimelineEvent =
-  | { kind: 'turnover'; data: DisplayTurnover; originalIndex: number }
-  | { kind: 'timeout'; data: DisplayTimeout; originalIndex: number };
-
-// Merge turnovers and timeouts into a single sorted list by elapsedMs
-function mergeTimelineEvents(
-  turnovers: DisplayTurnover[],
-  timeouts: DisplayTimeout[],
-): TimelineEvent[] {
-  const events: TimelineEvent[] = [
-    ...turnovers.map((t, i) => ({ kind: 'turnover' as const, data: t, originalIndex: i })),
-    ...timeouts.map((t, i) => ({ kind: 'timeout' as const, data: t, originalIndex: i })),
-  ];
-
-  // Sort by elapsedMs if available, otherwise maintain relative order
-  events.sort((a, b) => {
-    const aMs = a.data.elapsedMs ?? Infinity;
-    const bMs = b.data.elapsedMs ?? Infinity;
-    if (aMs === bMs) return 0;
-    return aMs - bMs;
-  });
-
-  return events;
-}
-
-// Format milliseconds to "Xh Ym", "Xm Ys", or just "Xs" for short durations
-const formatDuration = (ms: number): string => {
-  const totalSeconds = Math.round(ms / 1000);
-  const hours = Math.floor(totalSeconds / 3600);
-  const minutes = Math.floor((totalSeconds % 3600) / 60);
-  const seconds = totalSeconds % 60;
-  if (hours > 0) {
-    return `${hours}h ${minutes}m`;
-  }
-  if (minutes === 0) {
-    return `${seconds}s`;
-  }
-  return `${minutes}m ${seconds}s`;
-};
 
 interface EventTimelineProps {
   points: PointEvents[];
@@ -56,6 +23,8 @@ interface EventTimelineProps {
   team2Name: string;
   gameTo: number;
   roster: Player[];
+  timingEnabled?: boolean;
+  showSplitSeparators?: boolean;
   currentPoint?: number; // For live games: disable editing of current point
   onEditEvent?: (eventIndex: number, turnover: DisplayTurnover) => void;
   onEditGoal?: (
@@ -72,6 +41,8 @@ export default function EventTimeline({
   team2Name,
   gameTo,
   roster,
+  timingEnabled = false,
+  showSplitSeparators = false,
   currentPoint,
   onEditEvent,
   onEditGoal,
@@ -91,6 +62,33 @@ export default function EventTimeline({
     points.length > 0 ? points[points.length - 1].scoreAfter : { team1: 0, team2: 0 };
 
   const isGameComplete = finalScore.team1 >= gameTo || finalScore.team2 >= gameTo || isSavedGame;
+  const renderSeparator = (splitMs?: number) => {
+    if (timingEnabled && showSplitSeparators && splitMs !== undefined && splitMs >= 0) {
+      return (
+        <View style={styles.separatorWithSplit}>
+          <Text style={[styles.split, { color: palette.textMuted }]}>
+            {formatSplitDuration(splitMs)}
+          </Text>
+          <MaterialCommunityIcons
+            name="arrow-right"
+            size={scaleBySizeClass(14, sizeClass)}
+            color={palette.textMuted}
+            style={styles.separatorIcon}
+          />
+        </View>
+      );
+    }
+    return (
+      <View style={styles.separatorArrowOnly}>
+        <MaterialCommunityIcons
+          name="arrow-right"
+          size={scaleBySizeClass(14, sizeClass)}
+          color={palette.textMuted}
+          style={styles.separatorIcon}
+        />
+      </View>
+    );
+  };
 
   return (
     <View style={styles.container}>
@@ -133,9 +131,30 @@ export default function EventTimeline({
           const isCallahan = isTeam1 && point.assistPlayerId === 'OTHER_TEAM';
           const callahanBlockIndex = isCallahan
             ? point.turnovers.findLastIndex(
-                (t) => t.type === 'block' && t.playerId === point.goalPlayerId,
+                (t) =>
+                  t.type === 'block' &&
+                  point.goalPlayerId !== null &&
+                  t.playerId === point.goalPlayerId,
               )
             : -1;
+          const callahanBlockEventIndex =
+            callahanBlockIndex >= 0 ? point.turnovers[callahanBlockIndex]?.eventIndex : undefined;
+          const mergedEvents = filterCallahanBlock(
+            mergeTimelineEvents(point.turnovers, point.timeouts),
+            callahanBlockEventIndex,
+          );
+          const hasVisibleEvents = mergedEvents.length > 0;
+          const lastVisibleElapsedMs = [...mergedEvents]
+            .reverse()
+            .find((event) => event.data.elapsedMs !== undefined)?.data.elapsedMs;
+          const splitToGoalMs =
+            timingEnabled &&
+            showSplitSeparators &&
+            point.goalElapsedMs !== undefined &&
+            lastVisibleElapsedMs !== undefined &&
+            point.goalElapsedMs >= lastVisibleElapsedMs
+              ? computeRoundedSplitMs(lastVisibleElapsedMs, point.goalElapsedMs)
+              : undefined;
 
           return (
             <View
@@ -183,7 +202,7 @@ export default function EventTimeline({
                           color={palette.textMuted}
                         />
                         <Text style={[styles.durationText, { color: palette.textMuted }]}>
-                          {formatDuration(point.pointDurationMs)}
+                          {formatClockDuration(point.pointDurationMs)}
                         </Text>
                       </Pressable>
                     ) : (
@@ -249,31 +268,29 @@ export default function EventTimeline({
               <View style={styles.cardBody}>
                 {/* Merged turnovers and timeouts (in chronological order) */}
                 {(() => {
-                  const mergedEvents = mergeTimelineEvents(point.turnovers, point.timeouts);
-                  // Filter out the callahan block from merged events
-                  const callahanBlockEventIndex =
-                    callahanBlockIndex >= 0
-                      ? point.turnovers[callahanBlockIndex]?.eventIndex
-                      : undefined;
+                  let previousElapsedMs: number | undefined;
 
-                  let visibleEventCount = 0;
-
-                  return mergedEvents.map((event) => {
-                    // Skip the callahan block turnover
-                    if (
-                      event.kind === 'turnover' &&
-                      event.data.eventIndex === callahanBlockEventIndex
-                    ) {
-                      return null;
-                    }
-
-                    const isFirst = visibleEventCount === 0;
-                    visibleEventCount++;
+                  return mergedEvents.map((event, index) => {
+                    const isFirst = index === 0;
+                    const currentElapsedMs = event.data.elapsedMs;
+                    const splitMs =
+                      !isFirst &&
+                      timingEnabled &&
+                      showSplitSeparators &&
+                      currentElapsedMs !== undefined &&
+                      previousElapsedMs !== undefined &&
+                      currentElapsedMs >= previousElapsedMs
+                        ? computeRoundedSplitMs(previousElapsedMs, currentElapsedMs)
+                        : undefined;
 
                     const relativeTime =
-                      event.data.elapsedMs !== undefined
-                        ? formatDuration(event.data.elapsedMs)
+                      currentElapsedMs !== undefined
+                        ? formatClockDuration(currentElapsedMs)
                         : undefined;
+
+                    if (currentElapsedMs !== undefined) {
+                      previousElapsedMs = currentElapsedMs;
+                    }
 
                     // Render timeout
                     if (event.kind === 'timeout') {
@@ -282,9 +299,7 @@ export default function EventTimeline({
 
                       return (
                         <React.Fragment key={`timeout-${event.originalIndex}`}>
-                          {!isFirst && (
-                            <Text style={[styles.arrow, { color: palette.textMuted }]}>→</Text>
-                          )}
+                          {!isFirst && renderSeparator(splitMs)}
                           <View
                             style={[styles.eventRow, { backgroundColor: palette.warning + '20' }]}>
                             <Text style={[styles.eventLabel, { color: palette.warning }]}>
@@ -295,7 +310,7 @@ export default function EventTimeline({
                             </Text>
                             {relativeTime && (
                               <Text style={[styles.eventTimestamp, { color: palette.textMuted }]}>
-                                +{relativeTime}
+                                {relativeTime}
                               </Text>
                             )}
                           </View>
@@ -333,9 +348,7 @@ export default function EventTimeline({
 
                     return (
                       <React.Fragment key={`turnover-${event.originalIndex}`}>
-                        {!isFirst && (
-                          <Text style={[styles.arrow, { color: palette.textMuted }]}>→</Text>
-                        )}
+                        {!isFirst && renderSeparator(splitMs)}
                         <Pressable
                           onLongPress={
                             canEdit ? () => handleLongPressTurnover(turnover) : undefined
@@ -440,7 +453,7 @@ export default function EventTimeline({
                             )}
                             {relativeTime && (
                               <Text style={[styles.eventTimestamp, { color: palette.textMuted }]}>
-                                +{relativeTime}
+                                {relativeTime}
                               </Text>
                             )}
                           </View>
@@ -451,11 +464,7 @@ export default function EventTimeline({
                 })()}
 
                 {/* Arrow before Goal/Callahan - only show if there are visible events and point is complete */}
-                {!isInProgress &&
-                  (point.turnovers.length > 0 || point.timeouts.length > 0) &&
-                  !(isCallahan && point.turnovers.length === 1 && point.timeouts.length === 0) && (
-                    <Text style={[styles.arrow, { color: palette.textMuted }]}>→</Text>
-                  )}
+                {!isInProgress && hasVisibleEvents && renderSeparator(splitToGoalMs)}
 
                 {/* Goal/Assist section - only for completed points */}
                 {!isInProgress &&
@@ -500,7 +509,7 @@ export default function EventTimeline({
                         {/* Point duration timestamp */}
                         {point.pointDurationMs !== undefined && point.pointDurationMs > 0 && (
                           <Text style={[styles.eventTimestamp, { color: palette.textMuted }]}>
-                            +{formatDuration(point.pointDurationMs)}
+                            {formatClockDuration(point.pointDurationMs)}
                           </Text>
                         )}
                       </View>
@@ -549,16 +558,16 @@ export default function EventTimeline({
                           {/* Point duration timestamp */}
                           {point.pointDurationMs !== undefined && point.pointDurationMs > 0 && (
                             <Text style={[styles.eventTimestamp, { color: palette.textMuted }]}>
-                              +{formatDuration(point.pointDurationMs)}
+                              {formatClockDuration(point.pointDurationMs)}
                             </Text>
                           )}
                         </View>
                       </Pressable>
 
-                      {/* Arrow before Assist */}
+                      {/* Plus between Goal and Assist */}
                       {isTeam1 && assistName && (
                         <>
-                          <Text style={[styles.arrow, { color: palette.textMuted }]}>→</Text>
+                          <Text style={[styles.plus, { color: palette.textMuted }]}>+</Text>
                           <Pressable
                             onLongPress={
                               onEditGoal && currentPoint !== point.pointNumber
@@ -604,7 +613,7 @@ export default function EventTimeline({
                               {/* Point duration timestamp */}
                               {point.pointDurationMs !== undefined && point.pointDurationMs > 0 && (
                                 <Text style={[styles.eventTimestamp, { color: palette.textMuted }]}>
-                                  +{formatDuration(point.pointDurationMs)}
+                                  {formatClockDuration(point.pointDurationMs)}
                                 </Text>
                               )}
                             </View>
@@ -755,9 +764,31 @@ function createStyles(sizeClass: SizeClass) {
       marginLeft: 4,
       opacity: 0.7,
     },
-    arrow: {
-      fontSize: scaleBySizeClass(14, sizeClass),
-      fontWeight: '600',
+    split: {
+      fontSize: scaleBySizeClass(10, sizeClass),
+      fontWeight: '500',
+      opacity: 0.78,
+    },
+    separatorWithSplit: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 3,
+      minHeight: scaleBySizeClass(24, sizeClass),
+      alignSelf: 'center',
+    },
+    separatorArrowOnly: {
+      minHeight: scaleBySizeClass(24, sizeClass),
+      justifyContent: 'center',
+      alignItems: 'center',
+      alignSelf: 'center',
+    },
+    separatorIcon: {
+      opacity: 0.75,
+    },
+    plus: {
+      fontSize: scaleBySizeClass(16, sizeClass),
+      fontWeight: '700',
       lineHeight: scaleBySizeClass(30, sizeClass),
     },
     editHint: {

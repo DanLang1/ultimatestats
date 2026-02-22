@@ -321,6 +321,129 @@ export function computeTimingStats(
   };
 }
 
+// --- Time of Possession Stats ---
+
+export interface TimeOfPossessionStats {
+  hasTopData: boolean;
+  team1TotalPossessionMs: number;
+  team2TotalPossessionMs: number;
+  /** 0–100 */
+  team1PossessionPct: number;
+  /** 0–100 */
+  team2PossessionPct: number;
+  /** Points included in the calculation */
+  timedPointCount: number;
+}
+
+/**
+ * Computes time-of-possession stats from game events.
+ * Only counts points where every event has a valid elapsedMs.
+ * Returns hasTopData=false if no qualifying points exist.
+ */
+export function computeTimeOfPossessionStats(
+  events: GameEvent[],
+  startingPossession: 'team1' | 'team2' | null,
+  gameTo: number,
+): TimeOfPossessionStats {
+  const pointEvents = computePointByPointEvents(events, startingPossession, gameTo);
+
+  let team1TotalMs = 0;
+  let team2TotalMs = 0;
+  let timedPointCount = 0;
+
+  for (const point of pointEvents) {
+    if (point.isInProgress) continue;
+
+    // Need a valid goal elapsed time
+    if (!point.goalElapsedMs) continue;
+
+    // Every turnover must also have elapsedMs
+    if (!point.turnovers.every((t) => t.elapsedMs !== undefined)) continue;
+
+    let currentPossessor: 'team1' | 'team2' = point.offensiveTeam;
+    let prevElapsedMs = 0;
+    let team1PointMs = 0;
+    let team2PointMs = 0;
+    let validPoint = true;
+
+    for (const turnover of point.turnovers) {
+      const segment = turnover.elapsedMs! - prevElapsedMs;
+      if (segment < 0) {
+        validPoint = false;
+        break;
+      }
+      if (currentPossessor === 'team1') {
+        team1PointMs += segment;
+      } else {
+        team2PointMs += segment;
+      }
+      currentPossessor = currentPossessor === 'team1' ? 'team2' : 'team1';
+      prevElapsedMs = turnover.elapsedMs!;
+    }
+
+    if (!validPoint) continue;
+
+    // Final possession up to the goal
+    const finalSegment = point.goalElapsedMs - prevElapsedMs;
+    if (finalSegment < 0) continue; // goal timestamp before last turnover — skip
+
+    if (currentPossessor === 'team1') {
+      team1PointMs += finalSegment;
+    } else {
+      team2PointMs += finalSegment;
+    }
+
+    team1TotalMs += team1PointMs;
+    team2TotalMs += team2PointMs;
+    timedPointCount++;
+  }
+
+  const totalMs = team1TotalMs + team2TotalMs;
+  const hasTopData = timedPointCount > 0;
+
+  return {
+    hasTopData,
+    team1TotalPossessionMs: team1TotalMs,
+    team2TotalPossessionMs: team2TotalMs,
+    team1PossessionPct: totalMs > 0 ? (team1TotalMs / totalMs) * 100 : 50,
+    team2PossessionPct: totalMs > 0 ? (team2TotalMs / totalMs) * 100 : 50,
+    timedPointCount,
+  };
+}
+
+/**
+ * Aggregates multiple TimeOfPossessionStats by summing raw ms totals,
+ * then recomputing percentages.
+ */
+export function aggregateTopStats(allStats: TimeOfPossessionStats[]): TimeOfPossessionStats {
+  const statsWithData = allStats.filter((s) => s.hasTopData);
+
+  if (statsWithData.length === 0) {
+    return {
+      hasTopData: false,
+      team1TotalPossessionMs: 0,
+      team2TotalPossessionMs: 0,
+      team1PossessionPct: 50,
+      team2PossessionPct: 50,
+      timedPointCount: 0,
+    };
+  }
+
+  const team1TotalMs = statsWithData.reduce((acc, s) => acc + s.team1TotalPossessionMs, 0);
+  const team2TotalMs = statsWithData.reduce((acc, s) => acc + s.team2TotalPossessionMs, 0);
+  const totalMs = team1TotalMs + team2TotalMs;
+  const timedPointCount = statsWithData.reduce((acc, s) => acc + s.timedPointCount, 0);
+
+  return {
+    hasTopData: true,
+    team1TotalPossessionMs: team1TotalMs,
+    team2TotalPossessionMs: team2TotalMs,
+    team1PossessionPct: totalMs > 0 ? (team1TotalMs / totalMs) * 100 : 50,
+    team2PossessionPct: totalMs > 0 ? (team2TotalMs / totalMs) * 100 : 50,
+    timedPointCount,
+  };
+}
+
 /**
  * Aggregates multiple TimingStats into a combined TimingStats.
  * Durations are weighted by point count to get accurate averages.

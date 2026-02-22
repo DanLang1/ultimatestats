@@ -54,7 +54,7 @@ export default function RoleDiamond({ roleStats }: RoleDiamondProps) {
       <View style={styles.diamondWrapper}>
         {/* Left label: BLOCKS */}
         <Text style={[styles.sideLabel, styles.leftLabel, { color: palette.textMuted }]}>
-          BLOCKS
+          BLOCKS{'\n'}({rawBlocks})
         </Text>
 
         {/* SVG Diamond */}
@@ -100,13 +100,15 @@ export default function RoleDiamond({ roleStats }: RoleDiamondProps) {
             <Circle cx={center} cy={center} r="3" fill={palette.textMuted} />
           </Svg>
 
-          <Text style={[styles.topLabel, { color: palette.textMuted }]}>GOALS</Text>
-          <Text style={[styles.bottomLabel, { color: palette.danger }]}>TURNS</Text>
+          <Text style={[styles.topLabel, { color: palette.textMuted }]}>GOALS ({rawGoals})</Text>
+          <Text style={[styles.bottomLabel, { color: palette.danger }]}>
+            TURNS ({rawTurnovers})
+          </Text>
         </View>
 
         {/* Right label: ASSISTS */}
         <Text style={[styles.sideLabel, styles.rightLabel, { color: palette.textMuted }]}>
-          ASSISTS
+          ASSISTS{'\n'}({rawAssists})
         </Text>
       </View>
     </View>
@@ -141,6 +143,7 @@ function createStyles(sizeClass: SizeClass, size: number) {
       fontSize: scaleBySizeClass(9, sizeClass),
       fontWeight: '600',
       textTransform: 'uppercase',
+      textAlign: 'center',
     },
     leftLabel: {
       marginRight: 4,

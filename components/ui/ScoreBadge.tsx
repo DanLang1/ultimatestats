@@ -48,7 +48,7 @@ export function ScoreBadge({
   const colors = getColors();
 
   const sizeStyles = styles[size];
-  const textStyles = textSizeStyles[size];
+  const textSize = textSizes[size];
 
   return (
     <View
@@ -65,7 +65,7 @@ export function ScoreBadge({
         style={[
           styles.text,
           {
-            fontSize: scaleBySizeClass(textStyles.fontSize, sizeClass),
+            fontSize: scaleBySizeClass(textSize, sizeClass),
             color: colors.text,
           },
         ]}>
@@ -101,8 +101,8 @@ const styles = StyleSheet.create({
   },
 });
 
-const textSizeStyles = {
-  small: { fontSize: 13 },
-  medium: { fontSize: 16 },
-  large: { fontSize: 19 },
+const textSizes = {
+  small: 13,
+  medium: 16,
+  large: 19,
 } as const;

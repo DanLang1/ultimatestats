@@ -52,6 +52,8 @@ Scrollable table with the following columns:
 - **50/50 Turnovers**: Labeled specifically and display both players involved (Thrower & Receiver).
 - **Callahans**: Detected automatically (Block + Goal by same player) and displayed as a single high-contrast badge.
 - Possession flips (Holds/Breaks) are clearly marked.
+- With point timing enabled, event chips show `m:ss` timestamps.
+- The timeline header includes a local Splits toggle to show/hide inter-event split times (e.g., `+32s`) above arrow separators.
 
 ## Saved Games List
 
@@ -152,9 +154,23 @@ Shortest Point,0:32,
 
 > **Note**: This section only appears if timing data was recorded during the game.
 
+### Section 6: Time of Possession (Conditional)
+
+If every event in at least one point has a recorded timestamp, a time-of-possession summary is included:
+
+```csv
+# Time of Possession
+Stat,Value,Detail
+Team 1,1:05,55.2%
+Team 2,0:53,44.8%
+Points (timed),12,
+```
+
+> **Note**: Points missing any `elapsedMs` value are excluded. If no points qualify, this section is omitted.
+
 ## Team Performance Section
 
-The Team Performance section displays key efficiency metrics. If timing data is available, a **TIMING** subsection appears with:
+The Team Performance section displays key efficiency metrics. If timing data is available, a **POINT LENGTH** subsection appears with:
 
 | Stat     | Description                              |
 | -------- | ---------------------------------------- |
@@ -163,3 +179,15 @@ The Team Performance section displays key efficiency metrics. If timing data is 
 | Avg D-Pt | Average duration of defensive points     |
 | Longest  | Duration of the longest point            |
 | Shortest | Duration of the shortest point           |
+
+If point-timer data is available with complete per-event timestamps, a **TIME OF POSSESSION** subsection also appears:
+
+- The subsection header shows the title on the left and the number of timed points (`N pts timed`) on the right.
+- A horizontal bar fills the full width, split proportionally between team 1 (accent blue, left) and team 2 (muted gray, right).
+- Below the bar, each team's name, total possession time (`Xm Ys`), and percentage share are shown — team 1 left-aligned, team 2 right-aligned.
+
+**Data requirements**: Every event in a point (all turnovers and the goal) must have a recorded `elapsedMs` timestamp. Points missing any timestamp are excluded. If no points qualify, the section is hidden entirely.
+
+**Aggregate mode**: Raw millisecond totals are summed across all included games, then percentages are recomputed from the combined totals.
+
+**Future — team colors**: The bar and team name labels currently use fixed palette colors (accent blue for team 1, muted gray for team 2). Ideally these would use each team's chosen color, but `SavedGame` does not currently store `team1BgColor`/`team2BgColor` — those fields only exist in live game store state. If team colors are ever added to the `SavedGame` schema, the possession bar and labels could be updated to use them, with a luminance-based fallback to palette colors for dark or low-contrast picks.

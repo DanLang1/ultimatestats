@@ -161,6 +161,87 @@ export function computePointByPointEvents(
   return result;
 }
 
+// Union type for timeline events (turnovers and timeouts)
+export type TimelineEvent =
+  | { kind: 'turnover'; data: DisplayTurnover; originalIndex: number }
+  | { kind: 'timeout'; data: DisplayTimeout; originalIndex: number };
+
+/**
+ * Merge turnovers and timeouts into a single list sorted by elapsedMs.
+ * Events without elapsedMs are placed after timed events.
+ */
+export function mergeTimelineEvents(
+  turnovers: DisplayTurnover[],
+  timeouts: DisplayTimeout[],
+): TimelineEvent[] {
+  const events: TimelineEvent[] = [
+    ...turnovers.map((t, i) => ({ kind: 'turnover' as const, data: t, originalIndex: i })),
+    ...timeouts.map((t, i) => ({ kind: 'timeout' as const, data: t, originalIndex: i })),
+  ];
+  events.sort((a, b) => {
+    const aMs = a.data.elapsedMs ?? Infinity;
+    const bMs = b.data.elapsedMs ?? Infinity;
+    if (aMs === bMs) return 0;
+    return aMs - bMs;
+  });
+  return events;
+}
+
+/**
+ * Format milliseconds as "m:ss" (or "h:mm:ss" for long durations).
+ */
+export function formatClockDuration(ms: number): string {
+  const totalSeconds = Math.round(ms / 1000);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  if (hours > 0) {
+    return `${hours}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+  }
+  return `${minutes}:${String(seconds).padStart(2, '0')}`;
+}
+
+/**
+ * Format a split duration as "+Xs", "+m:ss", or "+h:mm:ss".
+ */
+export function formatSplitDuration(ms: number): string {
+  const totalSeconds = Math.round(ms / 1000);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  if (hours > 0) {
+    return `+${hours}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+  }
+  if (minutes > 0) {
+    return `+${minutes}:${String(seconds).padStart(2, '0')}`;
+  }
+  return `+${seconds}s`;
+}
+
+/**
+ * Compute the split between two timestamps rounded to the nearest second.
+ * Rounding both operands first ensures the result matches the displayed timestamps
+ * and avoids off-by-one display issues (e.g. 3:32 → 3:44 should show +12s, not +11s).
+ */
+export function computeRoundedSplitMs(fromMs: number, toMs: number): number {
+  return (Math.round(toMs / 1000) - Math.round(fromMs / 1000)) * 1000;
+}
+
+/**
+ * Remove the callahan block event from a merged event list.
+ * The block is hidden because it's implicit in the CALLAHAN goal chip.
+ * If callahanBlockEventIndex is undefined (block not found), returns events unchanged.
+ */
+export function filterCallahanBlock(
+  events: TimelineEvent[],
+  callahanBlockEventIndex: number | undefined,
+): TimelineEvent[] {
+  if (callahanBlockEventIndex === undefined) return events;
+  return events.filter(
+    (event) => !(event.kind === 'turnover' && event.data.eventIndex === callahanBlockEventIndex),
+  );
+}
+
 /**
  * Get total turnovers by type
  */

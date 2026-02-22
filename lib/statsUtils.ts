@@ -9,10 +9,13 @@ import {
 import {
   aggregateTeamStats,
   aggregateTimingStats,
+  aggregateTopStats,
   computeTeamStats,
   computeTimingStats,
+  computeTimeOfPossessionStats,
   TeamStats,
   TimingStats,
+  TimeOfPossessionStats,
 } from './teamStatsUtils';
 import { computePointByPointEvents } from './timelineUtils';
 
@@ -510,6 +513,11 @@ export function generateCurrentGameCSV(
   csv += '\n\n# Team Stats\n';
   csv += teamStatsCSV(computeTeamStats(events, startingPossession, gameTo));
   csv += timingStatsCSV(computeTimingStats(events, startingPossession, gameTo));
+  csv += topStatsCSV(
+    computeTimeOfPossessionStats(events, startingPossession, gameTo),
+    team1Name,
+    team2Name,
+  );
 
   return csv;
 }
@@ -545,6 +553,11 @@ export function generateSavedGameCSV(game: SavedGame): string {
   csv += '\n\n# Team Stats\n';
   csv += teamStatsCSV(computeTeamStats(game.events, game.startingPossession, game.gameTo));
   csv += timingStatsCSV(computeTimingStats(game.events, game.startingPossession, game.gameTo));
+  csv += topStatsCSV(
+    computeTimeOfPossessionStats(game.events, game.startingPossession, game.gameTo),
+    game.team1.name,
+    game.team2Name,
+  );
 
   return csv;
 }
@@ -576,6 +589,13 @@ export function generateAggregateCSV(
       games.map((g) => computeTimingStats(g.events, g.startingPossession, g.gameTo)),
     ),
   );
+  csv += topStatsCSV(
+    aggregateTopStats(
+      games.map((g) => computeTimeOfPossessionStats(g.events, g.startingPossession, g.gameTo)),
+    ),
+    teamName,
+    'Opponents',
+  );
 
   // Section 2: Combined Player Summary
   csv += '\n\n# Combined Player Summary\n';
@@ -602,6 +622,11 @@ export function generateAggregateCSV(
     csv += '\n\n# Team Stats\n';
     csv += teamStatsCSV(computeTeamStats(game.events, game.startingPossession, game.gameTo));
     csv += timingStatsCSV(computeTimingStats(game.events, game.startingPossession, game.gameTo));
+    csv += topStatsCSV(
+      computeTimeOfPossessionStats(game.events, game.startingPossession, game.gameTo),
+      game.team1.name,
+      game.team2Name,
+    );
 
     csv += '\n\n# Player Summary\n';
     const perGamePlayerStats = computePlayerStats(game.events, 'team1', game.team1.roster);
@@ -838,6 +863,27 @@ function timingStatsCSV(stats: TimingStats): string {
     `Avg D-Point Duration,${formatDuration(stats.avgDPointDurationMs)},${stats.timedDPointCount} D-points\n` +
     `Longest Point,${formatDuration(stats.longestPointDurationMs)},\n` +
     `Shortest Point,${formatDuration(stats.shortestPointDurationMs)},`
+  );
+}
+
+function topStatsCSV(stats: TimeOfPossessionStats, team1Name: string, team2Name: string): string {
+  if (!stats.hasTopData) {
+    return '';
+  }
+
+  const formatMs = (ms: number): string => {
+    const totalSeconds = Math.round(ms / 1000);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  };
+
+  return (
+    '\n# Time of Possession\n' +
+    'Stat,Value,Detail\n' +
+    `${team1Name} Possession,${formatMs(stats.team1TotalPossessionMs)},${stats.team1PossessionPct.toFixed(1)}%\n` +
+    `${team2Name} Possession,${formatMs(stats.team2TotalPossessionMs)},${stats.team2PossessionPct.toFixed(1)}%\n` +
+    `Points (timed),${stats.timedPointCount},`
   );
 }
 
