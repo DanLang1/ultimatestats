@@ -10,7 +10,7 @@
 2. Timer state (game clock, halftime break, timeout, point timer — four state variables each)
 3. Roster and team management (`currentTeam`, `addPlayer`, `updateRosterPlayer`)
 4. Game catalog (`savedGames`, `savedTeams` and all CRUD)
-5. Transient UI signals (`pendingStatEntry`, `pendingTurnoverEntry`, `pendingTimeoutModal`, `turnoverToastSignal`)
+5. Transient UI signals (`pendingStatEntry`, `pendingTurnoverEntry`, `pendingTimeoutModal`, `eventToastSignal`)
 6. Game config that survives `resetGame` (`gameTo`, `gameLength`, `floaterEnabled`, etc.)
 
 The `partialize` function is correspondingly massive and hard to reason about. Adding state means deciding whether it belongs in the snapshot, which requires understanding the full shape.
@@ -80,7 +80,7 @@ currentLine, pointLines
 currentGameId, gameLocked
 
 // Transient UI signals (or move to entryStore if preferred)
-pendingStatEntry, pendingTurnoverEntry, pendingTimeoutModal, turnoverToastSignal
+pendingStatEntry, pendingTurnoverEntry, pendingTimeoutModal, eventToastSignal
 ```
 
 Core compound actions (`incrementScore`, `undoLastAction`, `toggleTimeout`, `resetGame`) stay here. They call out to `timerStore.getState()` and `gameConfigStore.getState()` as needed — the same cross-store pattern already used for `useSettingsStore.getState()` in `resetGame`.

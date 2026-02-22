@@ -46,6 +46,7 @@ export function TurnoverEntryInner({
   const { palette, themeMode } = useTheme();
   const { isLandscape, sizeClass } = useLayout();
   const styles = createStyles(sizeClass);
+  const compactRosterMaxHeight = isLandscape ? 220 : 400;
 
   // Only show active players
   const activeRoster = getActiveRoster(roster);
@@ -297,7 +298,7 @@ export function TurnoverEntryInner({
             <StatEntryRoster
               roster={displayRoster}
               onSelect={handlePlayerSelect}
-              maxHeight={isLandscape ? 220 : 400}
+              maxHeight={compactRosterMaxHeight}
             />
             {renderCancelButton()}
           </View>

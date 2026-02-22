@@ -169,6 +169,7 @@ export type TimelineEvent =
 /**
  * Merge turnovers and timeouts into a single list sorted by elapsedMs.
  * Events without elapsedMs are placed after timed events.
+ * Ties fall back to raw event order so untimed events still render chronologically.
  */
 export function mergeTimelineEvents(
   turnovers: DisplayTurnover[],
@@ -181,7 +182,9 @@ export function mergeTimelineEvents(
   events.sort((a, b) => {
     const aMs = a.data.elapsedMs ?? Infinity;
     const bMs = b.data.elapsedMs ?? Infinity;
-    if (aMs === bMs) return 0;
+    if (aMs === bMs) {
+      return a.data.eventIndex - b.data.eventIndex;
+    }
     return aMs - bMs;
   });
   return events;

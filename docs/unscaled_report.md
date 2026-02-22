@@ -152,5 +152,5 @@ Status (updated): all listed items have been converted to size-class-aware scali
 - Line 41 (fontSize): `fontSize: 20,`
 - Line 47 (fontSize): `fontSize: 15,`
 
-## `components/toast/TurnoverToast.tsx`
+## `components/toast/EventToast.tsx`
 - Line 129 (fontSize): `fontSize: 15,`

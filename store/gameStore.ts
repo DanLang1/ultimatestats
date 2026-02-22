@@ -4,10 +4,11 @@ import { deriveTimeoutState } from '@/lib/timeoutUtils';
 import { generateId } from '@/lib/utils';
 import { palette } from '@/theme/theme';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { current } from 'immer';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
-import { GameState, TurnoverEvent, TurnoverType } from './gameStore.types';
+import { EventToastSignal, GameState, TurnoverEvent, TurnoverType } from './gameStore.types';
 import { useLinePresetsStore } from './linePresetsStore';
 import { useSettingsStore } from './settingsStore';
 
@@ -66,7 +67,7 @@ export const useGameStore = create<GameState>()(
         possession: null,
         startingPossession: null,
         pendingTurnoverEntry: null,
-        turnoverToastSignal: null,
+        eventToastSignal: null,
 
         // Point tracking for timeline
         currentPoint: 1,
@@ -137,8 +138,15 @@ export const useGameStore = create<GameState>()(
               state.autoHalftimeEnabled && state.gameHalf === 1 && newScore === halftimeScore;
 
             // Update score FIRST
-            if (isTeam1) state.team1Score = newScore;
-            else state.team2Score = newScore;
+            if (isTeam1) {
+              state.team1Score = newScore;
+            } else {
+              state.team2Score = newScore;
+              state.eventToastSignal = {
+                id: Date.now(),
+                kind: 'opponentGoal',
+              } satisfies EventToastSignal;
+            }
 
             didIncrement = true;
             isHalftime = isHalftimeGoal;
@@ -248,6 +256,8 @@ export const useGameStore = create<GameState>()(
               result = false;
               return;
             }
+            // Snapshot before any mutation so we can reference it in the signal
+            const undoneEventSnapshot = current(lastEvent);
 
             if (lastEvent.type === 'timeout') {
               // Resume point timer if it was running before the timeout
@@ -256,6 +266,10 @@ export const useGameStore = create<GameState>()(
                 state.currentPointStartTime = Date.now() - pausedElapsed;
                 state.pointTimerPausedElapsed = null;
               }
+              // Undoing the timeout should also clear timeout UI/timer state
+              state.pendingTimeoutModal = false;
+              state.timeoutEndTime = null;
+              state.timeoutTimeLeft = 70;
               state.events.pop();
             } else if (lastEvent.type === 'goal') {
               const isTeam1 = lastEvent.team === 'team1';
@@ -324,6 +338,7 @@ export const useGameStore = create<GameState>()(
             state.team2Floater = derived.team2Floater;
 
             state.gameLocked = false;
+            state.eventToastSignal = { id: Date.now(), kind: 'undo', event: undoneEventSnapshot };
             result = true;
           });
           return result;
@@ -408,7 +423,7 @@ export const useGameStore = create<GameState>()(
             state.possession = null;
             state.startingPossession = null;
             state.pendingTurnoverEntry = null;
-            state.turnoverToastSignal = null;
+            state.eventToastSignal = null;
             state.currentPoint = 1;
             state.timerIsActive = false;
             state.timerEndTime = null;
@@ -702,17 +717,14 @@ export const useGameStore = create<GameState>()(
               pointNumber: state.currentPoint,
             };
             state.events.push(turnoverEvent);
-            state.turnoverToastSignal = {
-              id: Date.now(),
-              event: turnoverEvent,
-            };
+            state.eventToastSignal = { id: Date.now(), kind: 'turnover', event: turnoverEvent };
             state.possession = state.possession === 'team1' ? 'team2' : 'team1';
             state.pendingTurnoverEntry = null;
           }),
 
-        clearTurnoverToastSignal: () =>
+        clearEventToastSignal: () =>
           set((state: GameState) => {
-            state.turnoverToastSignal = null;
+            state.eventToastSignal = null;
           }),
 
         // Cancel pending turnover entry - just clears without flipping possession

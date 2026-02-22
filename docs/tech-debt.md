@@ -17,21 +17,6 @@ This document tracks intentionally deferred cleanup work discovered during the d
   `app/NumberPickerModal.tsx:46`
   `app/NumberPickerModal.tsx:52`
   `app/GameTimeline.tsx:86`
-  `app/LinePromptModal.tsx:88`
-  `app/LinePromptModal.tsx:93`
-
-## P1 - Responsive Pattern Completion
-
-- Continue migration to `useLayout()` + `createStyles(...)` in remaining files that still use inline orientation branches for style values.
-- Keep orientation logic centralized in style factories where practical. (Render-time branching for different UI sections is still fine when behavior differs by orientation.)
-- References:
-  `docs/responsive-layout.md:19`
-  `docs/responsive-layout.md:99`
-  `app/(modals)/LinePromptModal.tsx:122`
-  `components/stat-entry/StatEntryInner.tsx:257`
-  `components/turnover-entry/TurnoverEntryInner.tsx:300`
-  `components/tutorial/StatsTrackingTutorial.tsx:177`
-  `components/tutorial/TutorialOverlay.tsx:188`
 
 ## P2 - `cancelPendingGoal` Does Not Re-derive Timeout State
 
@@ -75,22 +60,6 @@ This document tracks intentionally deferred cleanup work discovered during the d
   `app/PullPromptModal.tsx:400`
   `app/LinePromptModal.tsx:358`
   `app/PlayerStats.tsx:167`
-
-## P2 - Timeline Tie Ordering for Equal `elapsedMs`
-
-- `mergeTimelineEvents()` merges `turnovers` before `timeouts` and sorts only by `elapsedMs`. When timestamps tie, the comparator returns `0`, so display order falls back to merge order instead of raw event order.
-- Impact: timeout/turnover rows can render out of chronological sequence for equal timestamps, and split separators in `EventTimeline` may attach to the wrong transition.
-- Why ties happen: timeouts pause the point timer and record an `elapsedMs` snapshot; resume/undo reconstructs `currentPointStartTime` from that stored elapsed, making equal timestamps plausible for the next event.
-- Fix: add a tie-break on raw `eventIndex` (available on both `DisplayTurnover` and `DisplayTimeout`) in `mergeTimelineEvents()`, plus a regression test for equal-`elapsedMs` timeout/turnover ordering.
-- References:
-  `lib/timelineUtils.ts:173`
-  `lib/timelineUtils.ts:181`
-  `components/timeline/EventTimeline.tsx:145`
-  `components/timeline/EventTimeline.tsx:150`
-  `store/gameStore.ts:252` (`undoLastAction` timeout resume)
-  `store/gameStore.ts:653` (`togglePointTimerPause` resume path)
-  `store/gameStore.ts:683` (`addTurnoverEvent` elapsed capture)
-  `store/gameStore.ts:216` (`incrementScore` goal elapsed capture)
 
 ## P3 - Documentation Hygiene
 

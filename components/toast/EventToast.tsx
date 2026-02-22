@@ -1,6 +1,6 @@
 import { useToastPulse } from '@/components/toast/hooks/useToastPulse';
-import { TurnoverIconInfo } from '@/components/toast/hooks/useTurnoverRecordedToast';
-import TurnoverToastIcon from '@/components/toast/TurnoverToastIcon';
+import { EventIconInfo } from '@/components/toast/hooks/useEventToast';
+import EventToastIcon from '@/components/toast/EventToastIcon';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { Palette } from '@/theme/theme';
@@ -9,23 +9,25 @@ import { StyleSheet, Text, View } from 'react-native';
 import Animated, { SlideInUp, SlideOutUp } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-type TurnoverToastData = {
+type EventToastData = {
   visible: boolean;
   message: string;
-  tone: 'success' | 'danger';
-  icon: TurnoverIconInfo;
+  tone: 'success' | 'danger' | 'neutral';
+  icon: EventIconInfo;
 };
 
-interface TurnoverToastProps {
-  toast: TurnoverToastData;
+interface EventToastProps {
+  toast: EventToastData;
   toastInstanceId: number;
 }
 
-function getToneBg(tone: 'success' | 'danger', palette: Palette) {
-  return tone === 'success' ? palette.success : palette.danger;
+function getToneBg(tone: 'success' | 'danger' | 'neutral', palette: Palette) {
+  if (tone === 'success') return palette.success;
+  if (tone === 'neutral') return palette.neutral;
+  return palette.danger;
 }
 
-export default function TurnoverToast({ toast, toastInstanceId }: TurnoverToastProps) {
+export default function EventToast({ toast, toastInstanceId }: EventToastProps) {
   const { isLandscape, sizeClass } = useLayout();
   const { palette } = useTheme();
   const insets = useSafeAreaInsets();
@@ -66,7 +68,7 @@ export default function TurnoverToast({ toast, toastInstanceId }: TurnoverToastP
             </View>
           </Animated.View>
         </View>
-        <TurnoverToastIcon icon={toast.icon} color={palette.textOnAccent} />
+        <EventToastIcon icon={toast.icon} color={palette.textOnAccent} />
         <Text style={[styles.bannerText, { color: palette.textOnAccent }]} numberOfLines={1}>
           {toast.message}
         </Text>

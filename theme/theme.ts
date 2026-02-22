@@ -28,6 +28,7 @@ const midnightElectric = {
   success: '#10B981', // Emerald - positive stats, goals
   danger: '#F43F5E', // Rose - negative stats, errors
   warning: '#F59E0B', // Amber - turnovers, caution
+  neutral: '#64748B', // Slate 500 - informational/undo toasts
 
   // Text
   textPrimary: '#0F172A', // Slate 900 - main text on light bg
@@ -217,6 +218,7 @@ export const lightPalette = {
   success: '#059669', // Emerald 600 - positive stats, goals
   danger: '#DC2626', // Red 600 - negative stats, errors
   warning: '#D97706', // Amber 600 - turnovers, caution
+  neutral: '#475569', // Slate 600 - informational/undo toasts
 
   // Text
   textPrimary: '#F8FAFC', // Slate 50 - main text on dark bg

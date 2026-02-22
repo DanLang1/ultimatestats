@@ -248,6 +248,12 @@ describe('timelineUtils', () => {
       expect(result[1].data.eventIndex).toBe(0); // untimed last
     });
 
+    it('uses raw eventIndex to order untimed turnovers and timeouts', () => {
+      const result = mergeTimelineEvents([makeTurnover(1, undefined)], [makeTimeout(0, undefined)]);
+      expect(result.map((e) => e.data.eventIndex)).toEqual([0, 1]);
+      expect(result.map((e) => e.kind)).toEqual(['timeout', 'turnover']);
+    });
+
     it('preserves originalIndex for each kind independently', () => {
       const result = mergeTimelineEvents(
         [makeTurnover(10, 1000), makeTurnover(20, 3000)],

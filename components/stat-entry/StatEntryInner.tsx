@@ -42,6 +42,7 @@ export function StatEntryInner({
   const { events } = useGameStore();
   const { isLandscape, sizeClass } = useLayout();
   const styles = createStyles(sizeClass);
+  const compactRosterMaxHeight = isLandscape ? 220 : 400;
 
   // Only show active players
   const activeRoster = getActiveRoster(roster);
@@ -254,7 +255,7 @@ export function StatEntryInner({
               roster={activeRoster}
               selectedPlayerId={selectedPlayerId}
               onSelect={handlePlayerSelect}
-              maxHeight={isLandscape ? 220 : 400}
+              maxHeight={compactRosterMaxHeight}
               sizeClass={sizeClass}
             />
             {renderFooter()}

@@ -1,7 +1,7 @@
 import { ModalPlayerGrid, SortDirection } from '@/components/lines/ModalPlayerGrid';
 import { useTheme } from '@/context/ThemeContext';
 import { useIsGameActive } from '@/hooks/useIsGameActive';
-import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import {
   checkLineRatio,
   formatRatio,
@@ -21,7 +21,8 @@ export default function LinePromptModal() {
   const { palette } = useTheme();
   const insets = useSafeAreaInsets();
   const { isLandscape, sizeClass } = useLayout();
-  const styles = createStyles(sizeClass);
+  const overlayHorizontalPadding = isLandscape ? 12 : Math.max(insets.left, insets.right, 12);
+  const styles = createStyles(isLandscape, sizeClass, overlayHorizontalPadding);
   const { genderRatioEnabled, firstPointRatio, numPlayers } = useSettingsStore();
   const { currentTeam, currentPoint, currentLine, pointLines, setCurrentLine, recordLineForPoint } =
     useGameStore();
@@ -86,12 +87,12 @@ export default function LinePromptModal() {
     });
 
     // Dismiss modal back to GameInfo
-    router.dismiss();
+    router.dismissTo('/GameInfo');
   };
 
   const handleSkip = () => {
     // Dismiss modal back to GameInfo
-    router.dismiss();
+    router.dismissTo('/GameInfo');
   };
 
   const canConfirm = selectedIds.length === numPlayers;
@@ -119,9 +120,6 @@ export default function LinePromptModal() {
           styles.overlay,
           {
             backgroundColor: palette.overlayDark60,
-            paddingTop: isLandscape ? 12 : 16,
-            paddingBottom: isLandscape ? 12 : 16,
-            paddingHorizontal: isLandscape ? 12 : Math.max(insets.left, insets.right, 12),
           },
         ]}>
         <View style={[styles.sheet, { backgroundColor: palette.modalBg }]}>
@@ -358,20 +356,41 @@ export default function LinePromptModal() {
   );
 }
 
-function createStyles(sizeClass: SizeClass) {
+function createStyles(
+  isLandscape: boolean,
+  sizeClass: SizeClass,
+  overlayHorizontalPadding: number,
+) {
   return StyleSheet.create({
     overlay: {
       flex: 1,
       justifyContent: 'center',
       alignItems: 'center',
+      paddingTop: isLandscape ? 12 : 16,
+      paddingBottom: isLandscape ? 12 : 16,
+      paddingHorizontal: overlayHorizontalPadding,
     },
     sheet: {
       borderRadius: 16,
       padding: 12,
       width: '100%',
-      maxWidth: 600,
-      maxHeight: '90%',
-      minHeight: 300,
+      maxWidth: getSizeClassValue(
+        {
+          small: 600,
+          medium: isLandscape ? 920 : 760,
+          large: isLandscape ? 1100 : 860,
+        },
+        sizeClass,
+      ),
+      maxHeight: isLandscape ? '94%' : '90%',
+      minHeight: getSizeClassValue(
+        {
+          small: 300,
+          medium: isLandscape ? 460 : 360,
+          large: isLandscape ? 560 : 420,
+        },
+        sizeClass,
+      ),
       overflow: 'hidden',
       shadowColor: '#000',
       shadowOffset: { width: 0, height: 4 },
@@ -381,7 +400,14 @@ function createStyles(sizeClass: SizeClass) {
     },
     playerSection: {
       flex: 1,
-      minHeight: 150,
+      minHeight: getSizeClassValue(
+        {
+          small: 150,
+          medium: isLandscape ? 280 : 200,
+          large: isLandscape ? 360 : 240,
+        },
+        sizeClass,
+      ),
       overflow: 'hidden',
     },
     headerRow: {

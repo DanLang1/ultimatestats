@@ -44,10 +44,10 @@ export type TimeoutEvent = {
 
 export type GameEvent = GoalEvent | TurnoverEvent | TimeoutEvent;
 
-export type TurnoverToastSignal = {
-  id: number;
-  event: TurnoverEvent;
-};
+export type EventToastSignal =
+  | { id: number; kind: 'turnover'; event: TurnoverEvent }
+  | { id: number; kind: 'undo'; event: GameEvent }
+  | { id: number; kind: 'opponentGoal' };
 
 export interface GameState {
   // Teams
@@ -102,7 +102,7 @@ export interface GameState {
   possession: 'team1' | 'team2' | null;
   startingPossession: 'team1' | 'team2' | null;
   pendingTurnoverEntry: { receivingTeam: 'team1' | 'team2' } | null;
-  turnoverToastSignal: TurnoverToastSignal | null;
+  eventToastSignal: EventToastSignal | null;
 
   // Point tracking for timeline
   currentPoint: number;
@@ -168,7 +168,7 @@ export interface GameState {
     playerId: string | null;
     player2Id?: string | null;
   }) => void;
-  clearTurnoverToastSignal: () => void;
+  clearEventToastSignal: () => void;
   clearPendingTurnoverEntry: () => void;
 
   // Event Editing Actions

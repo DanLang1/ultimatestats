@@ -3,8 +3,8 @@ import { ActionBarAction, ScoreboardActionBar } from '@/components/ScoreboardAct
 import SettingsBar from '@/components/SettingsBar';
 import TeamScoreSection from '@/components/TeamScoreSection';
 import { ThemedView } from '@/components/ThemedView';
-import { useTurnoverRecordedToast } from '@/components/toast/hooks/useTurnoverRecordedToast';
-import TurnoverToast from '@/components/toast/TurnoverToast';
+import { useEventToast } from '@/components/toast/hooks/useEventToast';
+import EventToast from '@/components/toast/EventToast';
 import StatsTrackingTutorial from '@/components/tutorial/StatsTrackingTutorial';
 import TutorialOverlay from '@/components/tutorial/TutorialOverlay';
 import { useHalftimeNavigation } from '@/hooks/useHalftimeNavigation';
@@ -69,17 +69,17 @@ export default function BasicScoreboard() {
     startPoint,
     // Timeout
     pendingTimeoutModal,
-    turnoverToastSignal,
-    clearTurnoverToastSignal,
+    eventToastSignal,
+    clearEventToastSignal,
   } = useGameStore();
 
   const { handleContinue: endTimeout } = useTimeoutTimer();
   const roster = currentTeam?.roster ?? [];
-  const { toast, toastInstanceId } = useTurnoverRecordedToast({
+  const { toast, toastInstanceId } = useEventToast({
     roster,
     team2Name,
-    turnoverToastSignal,
-    clearTurnoverToastSignal,
+    eventToastSignal,
+    clearEventToastSignal,
   });
 
   const team1Name = currentTeam?.name ?? 'Team 1';
@@ -271,7 +271,7 @@ export default function BasicScoreboard() {
         />
       )}
 
-      <TurnoverToast toast={toast} toastInstanceId={toastInstanceId} />
+      <EventToast toast={toast} toastInstanceId={toastInstanceId} />
 
       {/* Game Locked Overlay - shows when WinModal has appeared (sets gameLocked=true) */}
       <GameLockedOverlay />
