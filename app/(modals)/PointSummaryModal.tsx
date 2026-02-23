@@ -1,5 +1,6 @@
 import { useTheme } from '@/context/ThemeContext';
-import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { MODAL_MAX_WIDTH_INFO } from '@/lib/constants';
+import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { formatRatio, getExpectedRatio, getSequenceNumber } from '@/lib/genderRatioUtils';
 import { computePointByPointEvents, getTurnoverSummary } from '@/lib/timelineUtils';
 import { useGameStore } from '@/store/gameStore';
@@ -269,7 +270,7 @@ function createStyles(sizeClass: SizeClass) {
       borderRadius: 20,
       padding: 24,
       width: '90%',
-      maxWidth: 400,
+      maxWidth: getSizeClassValue(MODAL_MAX_WIDTH_INFO, sizeClass),
       shadowColor: '#000',
       shadowOffset: { width: 0, height: 8 },
       shadowOpacity: 0.3,

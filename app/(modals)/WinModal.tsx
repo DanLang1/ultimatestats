@@ -1,5 +1,6 @@
 import { useTheme } from '@/context/ThemeContext';
-import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { MODAL_MAX_WIDTH_COMPACT } from '@/lib/constants';
+import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { checkGameOver, getWinner } from '@/lib/gameUtils';
 import { useGameStore } from '@/store/gameStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
@@ -185,7 +186,7 @@ function createStyles(sizeClass: SizeClass) {
       borderRadius: 20,
       padding: 24,
       width: '100%',
-      maxWidth: 320,
+      maxWidth: getSizeClassValue(MODAL_MAX_WIDTH_COMPACT, sizeClass),
       alignItems: 'center',
       shadowOffset: { width: 0, height: 8 },
       shadowOpacity: 0.3,

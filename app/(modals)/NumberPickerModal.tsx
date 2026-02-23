@@ -1,5 +1,6 @@
 import { useTheme } from '@/context/ThemeContext';
-import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { MODAL_MAX_WIDTH_PICKER } from '@/lib/constants';
+import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { useNumberPickerStore } from '@/store/numberPickerStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router } from 'expo-router';
@@ -282,7 +283,7 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
       borderRadius: 16,
       borderWidth: 1,
       width: isLandscape ? undefined : '92%',
-      maxWidth: isLandscape ? undefined : 420,
+      maxWidth: isLandscape ? undefined : getSizeClassValue(MODAL_MAX_WIDTH_PICKER, sizeClass),
       paddingHorizontal: isLandscape ? 20 : 14,
       paddingVertical: 16,
       gap: 12,

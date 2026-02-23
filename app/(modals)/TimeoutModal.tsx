@@ -1,5 +1,6 @@
 import { useTheme } from '@/context/ThemeContext';
-import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { MODAL_MAX_WIDTH_INFO } from '@/lib/constants';
+import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { useTimeoutTimer } from '@/hooks/useTimeoutTimer';
 import { useGameStore } from '@/store/gameStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
@@ -151,7 +152,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     container: {
       width: '100%',
-      maxWidth: 400,
+      maxWidth: getSizeClassValue(MODAL_MAX_WIDTH_INFO, sizeClass),
       borderRadius: 16,
       overflow: 'hidden',
       shadowColor: '#000',

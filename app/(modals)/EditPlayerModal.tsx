@@ -1,5 +1,6 @@
 import { useTheme } from '@/context/ThemeContext';
-import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { MODAL_MAX_WIDTH_FORM } from '@/lib/constants';
+import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { MatchingType, PlayerRole } from '@/lib/storage/types';
 import { useGameStore } from '@/store/gameStore';
 import { useLinePresetsStore } from '@/store/linePresetsStore';
@@ -384,7 +385,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     sheet: {
       width: '100%',
-      maxWidth: 340,
+      maxWidth: getSizeClassValue(MODAL_MAX_WIDTH_FORM, sizeClass),
       borderRadius: 16,
       padding: 20,
       borderWidth: 1,

@@ -1,6 +1,7 @@
 import { useTheme } from '@/context/ThemeContext';
 import { useHalftimeTimer } from '@/hooks/useHalftimeTimer';
-import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { MODAL_MAX_WIDTH_LARGE } from '@/lib/constants';
+import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { computePlayerStats } from '@/lib/statsUtils';
 import { computeTeamStats } from '@/lib/teamStatsUtils';
 import { useGameStore } from '@/store/gameStore';
@@ -337,7 +338,7 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     },
     container: {
       width: '100%',
-      maxWidth: 680,
+      maxWidth: getSizeClassValue(MODAL_MAX_WIDTH_LARGE, sizeClass),
       maxHeight: '90%',
       borderRadius: 16,
       overflow: 'hidden',
