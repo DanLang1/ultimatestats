@@ -19,6 +19,8 @@ export interface SavedGame {
   startingPossession: 'team1' | 'team2';
   pointStartTimestamps?: Record<number, number>; // { [pointNumber]: timestamp when point started }
   pointLines?: PointLineRecord[]; // Line records per point - added in schema v2
+  team1Color?: string; // hex color snapshot at save time - optional, falls back to theme default
+  team2Color?: string; // hex color snapshot at save time - optional, falls back to theme default
   importedAt?: number; // timestamp when this game was imported via sharing
 }
 

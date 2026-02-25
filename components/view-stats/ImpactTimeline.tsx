@@ -25,6 +25,17 @@ function eventAbbrev(description: string | undefined): string | null {
   return null;
 }
 
+function isPositiveImpactEvent(description: string | undefined): boolean {
+  if (!description) return false;
+  const d = description.toLowerCase();
+  return (
+    d.startsWith('callahan') ||
+    d.startsWith('goal') ||
+    d.startsWith('assist') ||
+    d.startsWith('block')
+  );
+}
+
 interface ImpactTimelineProps {
   data: ImpactPoint[];
 }
@@ -217,7 +228,7 @@ export default function ImpactTimeline({ data }: ImpactTimelineProps) {
                         // Skip the Start marker (index 0) — End is no longer in chartData
                         if (i === 0) return null;
                         if (point.x == null || point.y == null) return null;
-                        const isPositive = chartData[i]?.description?.includes('+') ?? false;
+                        const isPositive = isPositiveImpactEvent(chartData[i]?.description);
                         const dotColor = isPositive ? palette.success : palette.danger;
                         const abbrev = eventAbbrev(chartData[i]?.description);
                         // Place label above dot for positive events, below for negative
@@ -340,10 +351,13 @@ export default function ImpactTimeline({ data }: ImpactTimelineProps) {
                 <Text
                   style={[
                     styles.eventDesc,
-                    { color: event.description?.includes('+') ? palette.success : palette.danger },
+                    {
+                      color: isPositiveImpactEvent(event.description)
+                        ? palette.success
+                        : palette.danger,
+                    },
                   ]}>
-                  {/* Extract just the event name before the parentheses */}
-                  {event.description?.split(' (')[0] ?? ''}
+                  {event.description ?? ''}
                 </Text>
               </View>
             ))}

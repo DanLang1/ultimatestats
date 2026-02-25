@@ -22,6 +22,8 @@ interface StatsContentProps {
   gameTo?: number;
   games?: SavedGame[];
   pointLines?: PointLineRecord[];
+  team1Color?: string;
+  team2Color?: string;
 }
 
 export default function StatsContent({
@@ -37,6 +39,8 @@ export default function StatsContent({
   gameTo = 15,
   games,
   pointLines,
+  team1Color,
+  team2Color,
 }: StatsContentProps) {
   const { palette } = useTheme();
   const { isLandscape, sizeClass } = useLayout();
@@ -125,6 +129,8 @@ export default function StatsContent({
         gameTo={gameTo}
         team1Name={team1Name}
         team2Name={team2Name}
+        team1Color={team1Color}
+        team2Color={team2Color}
       />
 
       {/* Player Stats Table */}

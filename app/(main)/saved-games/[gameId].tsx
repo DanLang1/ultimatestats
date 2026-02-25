@@ -203,6 +203,8 @@ export default function SavedGameStatsScreen() {
             gameTo={selectedGame.gameTo}
             games={[selectedGame]}
             pointLines={selectedGame.pointLines}
+            team1Color={selectedGame.team1Color}
+            team2Color={selectedGame.team2Color}
           />
         </ScrollView>
       ) : null}

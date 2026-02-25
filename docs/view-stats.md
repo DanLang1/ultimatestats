@@ -21,14 +21,16 @@ The View Stats page displays a table of player statistics (goals, assists, block
 
 ### 2. Player Stats Table
 
-Scrollable table with the following columns:
+Scrollable table of player stats. Exact columns vary depending on whether line-tracking data is available.
+
+Common columns include:
 
 | Column | Description                                              |
 | ------ | -------------------------------------------------------- |
 | Player | Player name                                              |
-| Pts    | Points played (requires line tracking data)              |
-| O-Eff  | O-line Efficiency: +1 hold, -1 broken (green/red)        |
-| D-Eff  | D-line Efficiency: +1 break, -1 held against (green/red) |
+| Pts    | Points played (when line tracking data exists)           |
+| O-Eff  | O-line efficiency (when line tracking data exists)       |
+| D-Eff  | D-line efficiency (when line tracking data exists)       |
 | G      | Goals scored (+1)                                        |
 | A      | Assists thrown (+1)                                      |
 | Blk    | Blocks made (+1)                                         |
@@ -38,12 +40,19 @@ Scrollable table with the following columns:
 | +/-    | Plus/Minus (G + A + Blk - TO - D), color-coded           |
 
 - sorted by Plus/Minus descending, then by name.
-- Plus/Minus, O-Eff, D-Eff are **green** for positive, **red** for negative.
 - Non-integer values (from 50/50 turnovers) are displayed with single decimal (e.g. 0.5).
 - Pts, O-Eff, D-Eff columns are hidden for games without line tracking data.
 - **Interactive Rows**: Tap any player row to view a detailed breakdown of their individual stats.
 - In aggregate player view, the **Game Impact** selector only includes games where that player has at least one recorded impact event (goal, assist, block, throwaway, drop, or 50/50 involvement).
 - In player detail, the **Profile** diamond uses raw counts (Goals, Assists, Blocks, Total Turns) on a shared per-player scale so equal counts render equal axis lengths.
+- In player detail, a **Relative to Team** card shows team-context comparisons for core event stats (Goals, Assists, Blocks, turnovers, and Plus/Minus).
+- The Relative card has a local **Vs Avg / Vs Max** toggle:
+  - **Vs Avg** compares each stat to the visible team average (single game or aggregate selection).
+  - **Vs Max** displays **Team Best** context: higher-is-better metrics compare to the visible team max, lower-is-better metrics (turnovers/drops) compare to the visible team min, and signed metrics like Plus/Minus keep a range-based bar (raw value remains visible).
+- Relative player comparisons exclude synthetic/unattributed entries (for example `Unknown`) and, when a roster is available, compare only against known roster players. Raw/team totals still retain those events.
+- Relative rows may suppress low-value comparisons (for example, stats with no recorded events for the selected player) and may show low-sample messaging when comparisons are noisy.
+- When line tracking data exists, the Relative card adds a **Playing Time (Relative)** subsection (usage, efficiency, and playing-time metrics).
+- In aggregate mode with mixed line-tracking availability, the playing-time relative subsection notes how many selected games had line data (e.g. `3/5 games`) and computes comparisons from the line-tracked subset.
 
 ### 3. Game Timeline
 
@@ -92,13 +101,10 @@ The **Aggregate** tab allows you to combine stats from multiple games for a sing
 - **Export PDF**: Generates a professional PDF report.
 - **Timeline**: Opens the Game Timeline view for the selected game.
 
-### Portrait Header Actions
+### Header Actions
 
-- In portrait on **phones** (`sizeClass === 'small'`), secondary actions collapse into a **More** menu (`...`) in the top-right to avoid crowding the title.
-- In portrait on **tablets** (`sizeClass === 'medium'` or `'large'`), inline icon buttons are shown directly in the header right slot — same as landscape — because there is enough horizontal space.
-- The decision is made via `showInlineHeaderActions = isLandscape || sizeClass !== 'small'` near the top of the component.
-- This behavior is implemented through `components/ui/ResponsiveHeaderActions.tsx` and is used by both `app/(main)/ViewStats.tsx` and `app/(main)/saved-games/[gameId].tsx`.
-- The overflow menu (phone portrait only) includes the available actions for the current state: Timeline and Export CSV.
+- Available actions vary by context (current game, saved game, aggregate view) and screen size.
+- On smaller portrait layouts, secondary actions may collapse into an overflow menu to preserve space.
 
 ## CSV Export
 
@@ -182,12 +188,10 @@ The Team Performance section displays key efficiency metrics. If timing data is 
 
 If point-timer data is available with complete per-event timestamps, a **TIME OF POSSESSION** subsection also appears:
 
-- The subsection header shows the title on the left and the number of timed points (`N pts timed`) on the right.
-- A horizontal bar fills the full width, split proportionally between team 1 (accent blue, left) and team 2 (muted gray, right).
-- Below the bar, each team's name, total possession time (`Xm Ys`), and percentage share are shown — team 1 left-aligned, team 2 right-aligned.
+- The subsection header shows the title and the number of timed points (`N pts timed`).
+- A horizontal bar visualizes each team's share of possession time.
+- Team labels below the bar show total possession time (`Xm Ys`) and percentage share.
 
 **Data requirements**: Every event in a point (all turnovers and the goal) must have a recorded `elapsedMs` timestamp. Points missing any timestamp are excluded. If no points qualify, the section is hidden entirely.
 
 **Aggregate mode**: Raw millisecond totals are summed across all included games, then percentages are recomputed from the combined totals.
-
-**Future — team colors**: The bar and team name labels currently use fixed palette colors (accent blue for team 1, muted gray for team 2). Ideally these would use each team's chosen color, but `SavedGame` does not currently store `team1BgColor`/`team2BgColor` — those fields only exist in live game store state. If team colors are ever added to the `SavedGame` schema, the possession bar and labels could be updated to use them, with a luminance-based fallback to palette colors for dark or low-contrast picks.

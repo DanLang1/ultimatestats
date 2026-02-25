@@ -1,4 +1,5 @@
 import { checkGameOver } from '@/lib/gameUtils';
+import { UNKNOWN_PLAYER_ID } from '@/lib/playerUtils';
 import { CURRENT_SCHEMA_VERSION, SavedGame, SavedTeam, storage } from '@/lib/storage';
 import { deriveTimeoutState } from '@/lib/timeoutUtils';
 import { generateId } from '@/lib/utils';
@@ -707,12 +708,20 @@ export const useGameStore = create<GameState>()(
               state.currentPointStartTime !== null
                 ? Date.now() - state.currentPointStartTime
                 : undefined;
+            const playerId =
+              event.team === 'team1' && event.playerId === null
+                ? UNKNOWN_PLAYER_ID
+                : event.playerId;
+            const player2Id =
+              event.team === 'team1' && event.player2Id === null
+                ? UNKNOWN_PLAYER_ID
+                : event.player2Id;
             const turnoverEvent: TurnoverEvent = {
               type: 'turnover',
               team: event.team,
               subtype: event.subtype,
-              playerId: event.playerId,
-              player2Id: event.player2Id,
+              playerId,
+              player2Id,
               elapsedMs,
               pointNumber: state.currentPoint,
             };
@@ -989,6 +998,8 @@ export const useGameStore = create<GameState>()(
             startingPossession: state.startingPossession ?? 'team1',
             pointStartTimestamps: state.pointStartTimestamps,
             pointLines: state.pointLines,
+            team1Color: state.team1BgColor,
+            team2Color: state.team2BgColor,
           };
           await storage.saveGame(game);
           const games = await storage.loadGames();

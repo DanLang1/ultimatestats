@@ -90,6 +90,100 @@ export function getContrastingTextColor(backgroundColor: string): '#000000' | '#
 }
 
 /**
+ * Convert a hex color to HSL components.
+ * Returns null if the input is not a parseable hex color.
+ */
+function hexToHsl(hex: string): [number, number, number] | null {
+  if (!hex || typeof hex !== 'string') return null;
+  let clean = hex.replace('#', '');
+  if (clean.length === 8) clean = clean.substring(0, 6);
+  if (clean.length === 3) {
+    clean = clean[0] + clean[0] + clean[1] + clean[1] + clean[2] + clean[2];
+  }
+  if (clean.length !== 6) return null;
+
+  const r = parseInt(clean.substring(0, 2), 16) / 255;
+  const g = parseInt(clean.substring(2, 4), 16) / 255;
+  const b = parseInt(clean.substring(4, 6), 16) / 255;
+  if (isNaN(r) || isNaN(g) || isNaN(b)) return null;
+
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const delta = max - min;
+  let h = 0;
+  let s = 0;
+  const l = (max + min) / 2;
+
+  if (delta !== 0) {
+    s = delta / (1 - Math.abs(2 * l - 1));
+    if (max === r) h = ((g - b) / delta) % 6;
+    else if (max === g) h = (b - r) / delta + 2;
+    else h = (r - g) / delta + 4;
+    h = Math.round(h * 60);
+    if (h < 0) h += 360;
+  }
+
+  return [h, s * 100, l * 100];
+}
+
+/**
+ * Convert HSL components back to a hex color string.
+ * h: 0–360, s: 0–100, l: 0–100
+ */
+function hslToHex(h: number, s: number, l: number): string {
+  const sn = s / 100;
+  const ln = l / 100;
+  const a = sn * Math.min(ln, 1 - ln);
+  const f = (n: number) => {
+    const k = (n + h / 30) % 12;
+    const color = ln - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
+    return Math.round(255 * color)
+      .toString(16)
+      .padStart(2, '0');
+  };
+  return `#${f(0)}${f(8)}${f(4)}`;
+}
+
+function contrastRatio(l1: number, l2: number): number {
+  const lighter = Math.max(l1, l2);
+  const darker = Math.min(l1, l2);
+  return (lighter + 0.05) / (darker + 0.05);
+}
+
+/**
+ * Adjusts a hex color until it meets a minimum WCAG contrast ratio against
+ * a given background color. Pushes toward light on dark backgrounds and
+ * toward dark on light backgrounds, so it works correctly in both themes.
+ *
+ * Returns the original value unchanged if it is not a parseable hex color
+ * (e.g. rgba strings from the palette are passed through as-is).
+ *
+ * Suggested ratios: 3.0 for UI elements (bars), 4.5 for body text (WCAG AA).
+ */
+export function ensureContrast(color: string, bgColor: string, minRatio: number): string {
+  const hsl = hexToHsl(color);
+  if (!hsl) return color;
+
+  const bgLum = getLuminance(bgColor);
+  const colorLum = getLuminance(color);
+  if (contrastRatio(colorLum, bgLum) >= minRatio) return color;
+
+  // On dark backgrounds push lighter; on light backgrounds push darker
+  const [h, s, l] = hsl;
+  const step = bgLum < 0.5 ? 1 : -1;
+  let adjustedL = l;
+
+  for (let i = 0; i < 100; i++) {
+    adjustedL = Math.min(100, Math.max(0, adjustedL + step));
+    const candidate = hslToHex(h, s, adjustedL);
+    if (contrastRatio(getLuminance(candidate), bgLum) >= minRatio) return candidate;
+    if (adjustedL === 0 || adjustedL === 100) break;
+  }
+
+  return hslToHex(h, s, adjustedL);
+}
+
+/**
  * Validate if a string is a valid hex color
  */
 export function isValidHexColor(color: string): boolean {

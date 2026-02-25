@@ -43,6 +43,8 @@ export default function ViewStatsScreen() {
     startingPossession,
     gameTo,
     pointLines,
+    team1BgColor,
+    team2BgColor,
   } = useGameStore();
   const { showAlert } = useAlert();
   const { palette } = useTheme();
@@ -434,6 +436,8 @@ export default function ViewStatsScreen() {
             startingPossession={startingPossession}
             gameTo={gameTo}
             pointLines={pointLines}
+            team1Color={team1BgColor}
+            team2Color={team2BgColor}
           />
         ) : viewMode === 'aggregate' ? (
           showingAggregatedStats && aggregatedData ? (

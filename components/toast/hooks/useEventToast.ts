@@ -1,4 +1,5 @@
 import { EVENT_RECORDED_TOAST_DURATION_MS } from '@/lib/constants';
+import { getPlayerName as getPlayerNameFromRoster, UNKNOWN_PLAYER_ID } from '@/lib/playerUtils';
 import { Player } from '@/lib/storage';
 import { EventToastSignal, GameEvent, TurnoverEvent } from '@/store/gameStore.types';
 import { useEffect, useState } from 'react';
@@ -15,9 +16,14 @@ type EventToastState = {
   icon: EventIconInfo;
 };
 
+const UNKNOWN_PLAYER_LABEL = 'Unknown player';
+
 function getPlayerName(playerId: string | null | undefined, roster: Player[]): string | null {
-  if (!playerId) return null;
-  return roster.find((p) => p.id === playerId)?.name ?? null;
+  const resolved = getPlayerNameFromRoster(roster, playerId ?? null);
+  if (resolved === 'Unknown') return UNKNOWN_PLAYER_LABEL;
+  if (resolved?.startsWith('Deleted Player')) return null;
+  if (playerId === UNKNOWN_PLAYER_ID) return UNKNOWN_PLAYER_LABEL;
+  return resolved;
 }
 
 // ---------------------------------------------------------------------------
@@ -43,19 +49,22 @@ function getTurnoverMessage(event: TurnoverEvent, roster: Player[], team2Name: s
   }
 
   // Our team actions
+  const playerLabel = playerName ?? UNKNOWN_PLAYER_LABEL;
   const nameLabel = playerName ? ` by ${playerName}` : '';
   switch (event.subtype) {
     case 'block':
-      return `${playerName} got a block`;
+      return `${playerLabel} got a block`;
     case 'throwaway':
-      return `${playerName} threw it away`;
+      return `${playerLabel} threw it away`;
     case 'drop':
-      return `${playerName} dropped it`;
+      return `${playerLabel} dropped it`;
     case 'fiftyfifty': {
-      const names = [playerName, player2Name].filter(Boolean);
-      if (names.length === 2) return `Turnover by ${names[0]} and ${names[1]}`;
-      if (names.length === 1) return `Turnover by ${names[0]}`;
-      return 'Turnover recorded';
+      const player1Label = playerName ?? UNKNOWN_PLAYER_LABEL;
+      const player2Label = player2Name ?? UNKNOWN_PLAYER_LABEL;
+      if (player1Label === UNKNOWN_PLAYER_LABEL && player2Label === UNKNOWN_PLAYER_LABEL) {
+        return 'Turnover by Unknown Players';
+      }
+      return `Turnover by ${player1Label} and ${player2Label}`;
     }
     default:
       return `Turnover${nameLabel}`;

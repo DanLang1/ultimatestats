@@ -29,6 +29,8 @@ interface TeamStatsSectionProps {
   gameTo: number;
   team1Name: string;
   team2Name: string;
+  team1Color?: string;
+  team2Color?: string;
 }
 
 /**
@@ -42,6 +44,8 @@ export default function TeamStatsSection({
   gameTo,
   team1Name,
   team2Name,
+  team1Color,
+  team2Color,
 }: TeamStatsSectionProps) {
   const { palette } = useTheme();
   const { isLandscape, sizeClass } = useLayout();
@@ -173,7 +177,13 @@ export default function TeamStatsSection({
         </View>
       )}
 
-      <TimeOfPossessionSection topStats={topStats} team1Name={team1Name} team2Name={team2Name} />
+      <TimeOfPossessionSection
+        topStats={topStats}
+        team1Name={team1Name}
+        team2Name={team2Name}
+        team1Color={team1Color}
+        team2Color={team2Color}
+      />
     </View>
   );
 }

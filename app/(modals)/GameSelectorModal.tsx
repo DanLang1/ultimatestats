@@ -8,8 +8,7 @@ import React from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 export default function GameSelectorModal() {
-  const { games, selectedGameId, setSelectedGameId, playerId, team, roster } =
-    usePlayerStatsStore();
+  const { games, selectedGameId, setSelectedGameId, playerId, team } = usePlayerStatsStore();
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
   const styles = createStyles(sizeClass);
@@ -20,9 +19,7 @@ export default function GameSelectorModal() {
   }
 
   const impactGames = playerId
-    ? games.filter((game) =>
-        hasImpactTimelineData(getImpactStats(playerId, game.events, team, roster || undefined)),
-      )
+    ? games.filter((game) => hasImpactTimelineData(getImpactStats(playerId, game.events, team)))
     : [];
 
   // Default to latest game if none selected

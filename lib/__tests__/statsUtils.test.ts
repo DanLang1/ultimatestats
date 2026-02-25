@@ -1,10 +1,14 @@
 import { GameEvent, TurnoverType } from '@/store/gameStore.types';
 import { Player, PointLineRecord, SavedGame } from '../storage/types';
+import { UNKNOWN_PLAYER_ID } from '../playerUtils';
 import {
+  computeRelativePlayerStats,
+  computeRelativePlayingTimeStats,
   computePlayerStats,
   formatDateForCSV,
   generateAggregateCSV,
   generateCurrentGameCSV,
+  PlayerStats as ComputedPlayerStats,
 } from '../statsUtils';
 
 describe('statsUtils', () => {
@@ -138,6 +142,255 @@ describe('statsUtils', () => {
       expect(thrower?.plusMinus).toBe(-0.5);
       expect(receiver?.drops).toBe(0.5);
       expect(receiver?.plusMinus).toBe(-0.5);
+    });
+
+    it('normalizes missing turnover player IDs to unknown', () => {
+      const events: GameEvent[] = [
+        {
+          type: 'turnover',
+          team: 'team1',
+          subtype: 'block',
+          playerId: null,
+          player2Id: null,
+        },
+        {
+          type: 'turnover',
+          team: 'team1',
+          subtype: 'throwaway',
+          playerId: null,
+          player2Id: null,
+        },
+      ];
+
+      const stats = computePlayerStats(events, 'team1');
+      const unknown = stats.find((p) => p.id === UNKNOWN_PLAYER_ID);
+
+      expect(unknown).toBeDefined();
+      expect(unknown?.name).toBe('Unknown');
+      expect(unknown?.blocks).toBe(1);
+      expect(unknown?.throwaways).toBe(1);
+      expect(unknown?.plusMinus).toBe(0);
+    });
+  });
+
+  describe('computeRelativePlayerStats', () => {
+    const playerStatsFixture = (): ComputedPlayerStats[] => [
+      {
+        id: 'alice',
+        name: 'Alice',
+        goals: 3,
+        assists: 4,
+        blocks: 1,
+        throwaways: 1,
+        drops: 0,
+        plusMinus: 7,
+        callahans: 0,
+      },
+      {
+        id: 'bob',
+        name: 'Bob',
+        goals: 1,
+        assists: 2,
+        blocks: 0,
+        throwaways: 3,
+        drops: 1,
+        plusMinus: -1,
+        callahans: 0,
+      },
+      {
+        id: 'cara',
+        name: 'Cara',
+        goals: 2,
+        assists: 0,
+        blocks: 2,
+        throwaways: 0,
+        drops: 1,
+        plusMinus: 3,
+        callahans: 0,
+      },
+    ];
+
+    it('computes team-average and team-max context for a player', () => {
+      const metrics = computeRelativePlayerStats('alice', playerStatsFixture());
+
+      const assists = metrics.find((m) => m.key === 'assists');
+      const goals = metrics.find((m) => m.key === 'goals');
+      const plusMinus = metrics.find((m) => m.key === 'plusMinus');
+
+      expect(assists).toBeDefined();
+      expect(assists?.raw).toBe(4);
+      expect(assists?.teamAvg).toBeCloseTo(2); // (4 + 2 + 0) / 3
+      expect(assists?.teamMax).toBe(4);
+      expect(assists?.deltaFromAvg).toBeCloseTo(2);
+      expect(assists?.ratioToAvg).toBeCloseTo(2);
+      expect(assists?.pctOfMax).toBe(1);
+      expect(assists?.rank).toBe(1);
+      expect(assists?.higherIsBetter).toBe(true);
+
+      expect(goals?.teamAvg).toBeCloseTo(2); // (3 + 1 + 2) / 3
+      expect(goals?.pctOfMax).toBe(1);
+      expect(plusMinus?.teamAvg).toBeCloseTo(3); // (7 - 1 + 3) / 3
+      expect(plusMinus?.deltaFromAvg).toBeCloseTo(4);
+      expect(plusMinus?.teamMin).toBe(-1);
+      expect(plusMinus?.teamMax).toBe(7);
+      // Signed pool includes negatives, so helper disables pct-of-max
+      expect(plusMinus?.pctOfMax).toBeNull();
+    });
+
+    it('ranks lower-is-better metrics correctly and preserves raw arithmetic', () => {
+      const metrics = computeRelativePlayerStats('cara', playerStatsFixture());
+
+      const throwaways = metrics.find((m) => m.key === 'throwaways');
+      const totalTurnovers = metrics.find((m) => m.key === 'totalTurnovers');
+
+      expect(throwaways).toBeDefined();
+      expect(throwaways?.raw).toBe(0);
+      expect(throwaways?.higherIsBetter).toBe(false);
+      expect(throwaways?.rank).toBe(1); // Lowest throwaways on team
+      expect(throwaways?.teamAvg).toBeCloseTo(4 / 3); // 1 + 3 + 0
+      expect(throwaways?.deltaFromAvg).toBeCloseTo(-(4 / 3));
+      expect(throwaways?.ratioToAvg).toBe(0);
+      expect(throwaways?.pctOfMax).toBe(0); // 0 / 3; UI can invert visuals later
+
+      expect(totalTurnovers?.raw).toBe(1); // 0 TA + 1 drop
+      expect(totalTurnovers?.rank).toBe(1); // values: 1,4,1 => shared first
+      expect(totalTurnovers?.teamAvg).toBeCloseTo(2);
+      expect(totalTurnovers?.pctOfMax).toBeCloseTo(0.25);
+    });
+
+    it('returns no event-relative metrics when the player has no tracked events', () => {
+      const zeroStats: ComputedPlayerStats[] = [
+        {
+          id: 'alice',
+          name: 'Alice',
+          goals: 0,
+          assists: 0,
+          blocks: 0,
+          throwaways: 0,
+          drops: 0,
+          plusMinus: 0,
+          callahans: 0,
+        },
+        {
+          id: 'bob',
+          name: 'Bob',
+          goals: 0,
+          assists: 0,
+          blocks: 0,
+          throwaways: 0,
+          drops: 0,
+          plusMinus: 0,
+          callahans: 0,
+        },
+      ];
+
+      expect(computeRelativePlayerStats('alice', zeroStats)).toEqual([]);
+    });
+
+    it('returns an empty array when the player is not in the comparison pool', () => {
+      expect(computeRelativePlayerStats('missing', playerStatsFixture())).toEqual([]);
+      expect(computeRelativePlayerStats('missing', [])).toEqual([]);
+    });
+
+    it('excludes unknown and non-roster players from comparison metrics', () => {
+      const statsWithUnknown: ComputedPlayerStats[] = [
+        ...playerStatsFixture(),
+        {
+          id: UNKNOWN_PLAYER_ID,
+          name: 'Unknown',
+          goals: 20,
+          assists: 20,
+          blocks: 20,
+          throwaways: 0,
+          drops: 0,
+          plusMinus: 60,
+          callahans: 0,
+        },
+        {
+          id: 'guest',
+          name: 'Guest',
+          goals: 10,
+          assists: 10,
+          blocks: 10,
+          throwaways: 0,
+          drops: 0,
+          plusMinus: 30,
+          callahans: 0,
+        },
+      ];
+      const roster: Player[] = [
+        { id: 'alice', name: 'Alice', isActive: true, matchingType: null, role: null },
+        { id: 'bob', name: 'Bob', isActive: true, matchingType: null, role: null },
+        { id: 'cara', name: 'Cara', isActive: true, matchingType: null, role: null },
+      ];
+
+      const metrics = computeRelativePlayerStats('alice', statsWithUnknown, roster);
+      const goals = metrics.find((m) => m.key === 'goals');
+
+      expect(goals).toBeDefined();
+      expect(goals?.teamPoolSize).toBe(3);
+      expect(goals?.teamMax).toBe(3);
+      expect(goals?.teamAvg).toBeCloseTo(2); // alice, bob, cara only
+      expect(goals?.rank).toBe(1);
+    });
+  });
+
+  describe('computeRelativePlayingTimeStats', () => {
+    it('returns empty when point line data is missing or player is absent', () => {
+      expect(computeRelativePlayingTimeStats('alice', null, [], 'team1', 15)).toEqual([]);
+      expect(computeRelativePlayingTimeStats('alice', [], [], 'team1', 15)).toEqual([]);
+
+      const events: GameEvent[] = [goal('team1', 'Alice', 'Bob')];
+      const pointLines: PointLineRecord[] = [{ pointNumber: 1, playerIds: ['Bob'], timestamp: 1 }];
+      expect(computeRelativePlayingTimeStats('Alice', pointLines, events, 'team1', 15)).toEqual([]);
+    });
+
+    it('computes playing-time relative metrics with metric-specific comparison pools', () => {
+      const events: GameEvent[] = [
+        goal('team1', 'Alice', 'Bob'), // Point 1: team1 O hold
+        goal('team2', 'Opp', 'Opp'), // Point 2: team1 D hold against
+        goal('team1', 'Alice', 'Bob'), // Point 3: team1 O hold
+      ];
+      const pointLines: PointLineRecord[] = [
+        { pointNumber: 1, playerIds: ['alice', 'bob'], timestamp: 1 },
+        { pointNumber: 2, playerIds: ['alice', 'cara'], timestamp: 2 },
+        { pointNumber: 3, playerIds: ['alice'], timestamp: 3 },
+      ];
+
+      const aliceMetrics = computeRelativePlayingTimeStats('alice', pointLines, events, 'team1', 15);
+      const bobMetrics = computeRelativePlayingTimeStats('bob', pointLines, events, 'team1', 15);
+      const caraMetrics = computeRelativePlayingTimeStats('cara', pointLines, events, 'team1', 15);
+
+      const aliceWinRate = aliceMetrics.find((m) => m.key === 'pointWinRate');
+      const aliceOEff = aliceMetrics.find((m) => m.key === 'oEfficiency');
+      const aliceDEff = aliceMetrics.find((m) => m.key === 'dEfficiency');
+
+      expect(aliceWinRate?.raw).toBeCloseTo((2 / 3) * 100);
+      expect(aliceWinRate?.detail).toBe('2/3');
+      expect(aliceWinRate?.teamPoolSize).toBe(3); // alice, bob, cara all played points
+      expect(aliceOEff?.raw).toBe(100);
+      expect(aliceOEff?.detail).toBe('2/2');
+      expect(aliceOEff?.teamPoolSize).toBe(2); // alice + bob have O points
+
+      expect(aliceDEff?.raw).toBe(0);
+      expect(aliceDEff?.detail).toBe('0/1');
+      expect(aliceDEff?.teamPoolSize).toBe(2); // alice + cara have D points
+
+      const bobWinRate = bobMetrics.find((m) => m.key === 'pointWinRate');
+      const bobOEff = bobMetrics.find((m) => m.key === 'oEfficiency');
+      const bobDEff = bobMetrics.find((m) => m.key === 'dEfficiency');
+      expect(bobWinRate?.raw).toBe(100);
+      expect(bobWinRate?.detail).toBe('1/1');
+      expect(bobOEff?.raw).toBe(100);
+      expect(bobOEff?.detail).toBe('1/1');
+      expect(bobDEff).toBeUndefined(); // no D points, metric omitted
+
+      const caraWinRate = caraMetrics.find((m) => m.key === 'pointWinRate');
+      const caraDEff = caraMetrics.find((m) => m.key === 'dEfficiency');
+      expect(caraWinRate?.raw).toBe(0);
+      expect(caraWinRate?.detail).toBe('0/1');
+      expect(caraDEff?.raw).toBe(0);
+      expect(caraDEff?.detail).toBe('0/1');
     });
   });
 

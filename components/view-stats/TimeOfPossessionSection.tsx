@@ -1,5 +1,6 @@
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { ensureContrast } from '@/lib/colorUtils';
 import { TimeOfPossessionStats } from '@/lib/teamStatsUtils';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
@@ -18,6 +19,8 @@ interface TimeOfPossessionSectionProps {
   topStats: TimeOfPossessionStats;
   team1Name: string;
   team2Name: string;
+  team1Color?: string;
+  team2Color?: string;
 }
 
 /**
@@ -28,10 +31,20 @@ export default function TimeOfPossessionSection({
   topStats,
   team1Name,
   team2Name,
+  team1Color,
+  team2Color,
 }: TimeOfPossessionSectionProps) {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
   const styles = createStyles(sizeClass);
+  // palette.primary approximates the card background well enough for contrast checks
+  const cardBg = palette.primary;
+  // Bar: 3:1 contrast (WCAG minimum for UI elements)
+  const t1BarColor = team1Color ? ensureContrast(team1Color, cardBg, 3) : palette.accent;
+  const t2BarColor = team2Color ? ensureContrast(team2Color, cardBg, 3) : palette.overlay20;
+  // Text: 4.5:1 contrast (WCAG AA for normal text)
+  const t1TextColor = team1Color ? ensureContrast(team1Color, cardBg, 4.5) : palette.accent;
+  const t2TextColor = team2Color ? ensureContrast(team2Color, cardBg, 4.5) : palette.textMuted;
 
   if (!topStats.hasTopData) {
     return null;
@@ -39,11 +52,14 @@ export default function TimeOfPossessionSection({
 
   return (
     <View style={styles.container}>
-      {/* Header row: title + points count */}
+      {/* Header row: title · points count */}
       <View style={styles.header}>
-        <Text style={[styles.title, { color: palette.textMuted }]}>TIME OF POSSESSION</Text>
-        <Text style={[styles.pointsNote, { color: palette.textMuted }]}>
-          {topStats.timedPointCount} pt{topStats.timedPointCount !== 1 ? 's' : ''} timed
+        <Text style={[styles.title, { color: palette.textMuted }]}>
+          TIME OF POSSESSION
+          <Text style={styles.pointsNote}>
+            {' · '}
+            {topStats.timedPointCount} pt{topStats.timedPointCount !== 1 ? 's' : ''} timed
+          </Text>
         </Text>
       </View>
 
@@ -52,13 +68,13 @@ export default function TimeOfPossessionSection({
         <View
           style={[
             styles.barTeam1,
-            { flex: topStats.team1PossessionPct, backgroundColor: palette.accent },
+            { flex: topStats.team1PossessionPct, backgroundColor: t1BarColor },
           ]}
         />
         <View
           style={[
             styles.barTeam2,
-            { flex: topStats.team2PossessionPct, backgroundColor: palette.overlay20 },
+            { flex: topStats.team2PossessionPct, backgroundColor: t2BarColor },
           ]}
         />
       </View>
@@ -66,10 +82,10 @@ export default function TimeOfPossessionSection({
       {/* Team labels with time and percentage */}
       <View style={styles.teamRow}>
         <View style={styles.teamLeft}>
-          <Text style={[styles.teamName, { color: palette.accent }]} numberOfLines={1}>
+          <Text style={[styles.teamName, { color: t1TextColor }]} numberOfLines={1}>
             {team1Name}
           </Text>
-          <Text style={[styles.teamDetail, { color: palette.accent }]}>
+          <Text style={[styles.teamDetail, { color: t1TextColor }]}>
             {formatDuration(topStats.team1TotalPossessionMs)}
             {'  ·  '}
             {topStats.team1PossessionPct.toFixed(0)}%
@@ -78,12 +94,12 @@ export default function TimeOfPossessionSection({
 
         <View style={styles.teamRight}>
           <Text
-            style={[styles.teamName, { color: palette.textMuted }]}
+            style={[styles.teamName, { color: t2TextColor }]}
             numberOfLines={1}
             textBreakStrategy="simple">
             {team2Name}
           </Text>
-          <Text style={[styles.teamDetail, { color: palette.textMuted }]}>
+          <Text style={[styles.teamDetail, { color: t2TextColor }]}>
             {topStats.team2PossessionPct.toFixed(0)}% ·{' '}
             {formatDuration(topStats.team2TotalPossessionMs)}
           </Text>
@@ -105,9 +121,6 @@ function createStyles(sizeClass: SizeClass) {
       marginTop: sectionGap,
     },
     header: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
       marginBottom: sectionGap,
     },
     title: {
@@ -117,7 +130,8 @@ function createStyles(sizeClass: SizeClass) {
     },
     pointsNote: {
       fontSize: scaleBySizeClass(9, sizeClass),
-      fontWeight: '500',
+      fontWeight: '400',
+      letterSpacing: 0,
     },
     bar: {
       flexDirection: 'row',

@@ -11,11 +11,11 @@ import {
   aggregateTimingStats,
   aggregateTopStats,
   computeTeamStats,
-  computeTimingStats,
   computeTimeOfPossessionStats,
+  computeTimingStats,
   TeamStats,
-  TimingStats,
   TimeOfPossessionStats,
+  TimingStats,
 } from './teamStatsUtils';
 import { computePointByPointEvents } from './timelineUtils';
 
@@ -29,6 +29,55 @@ export interface PlayerStats {
   drops: number;
   plusMinus: number;
   callahans: number;
+}
+
+export type RelativePlayerMetricKey =
+  | 'goals'
+  | 'assists'
+  | 'blocks'
+  | 'throwaways'
+  | 'drops'
+  | 'totalTurnovers'
+  | 'plusMinus';
+
+export interface RelativePlayerMetric {
+  key: RelativePlayerMetricKey;
+  label: string;
+  raw: number;
+  teamAvg: number;
+  teamMax: number;
+  teamMin: number;
+  deltaFromAvg: number;
+  ratioToAvg: number | null;
+  pctOfMax: number | null; // Only for non-negative metrics
+  higherIsBetter: boolean;
+  rank: number; // 1 = best by metric direction
+  teamPoolSize: number;
+}
+
+export type RelativePlayingTimeMetricKey =
+  | 'pointsPlayed'
+  | 'pointWinRate'
+  | 'oEfficiency'
+  | 'dEfficiency'
+  | 'minutesPlayed'
+  | 'playingTimePercent';
+
+export interface RelativePlayingTimeMetric {
+  key: RelativePlayingTimeMetricKey;
+  label: string;
+  raw: number;
+  teamAvg: number;
+  teamMax: number;
+  teamMin: number;
+  deltaFromAvg: number;
+  ratioToAvg: number | null;
+  pctOfMax: number | null;
+  higherIsBetter: boolean;
+  rank: number;
+  format: 'count' | 'percent' | 'duration';
+  detail?: string; // e.g. "5/7" for efficiency rates
+  teamPoolSize: number;
 }
 
 /**
@@ -94,20 +143,17 @@ export function computePlayerStats(
 
       // Handle fiftyfifty - player1 gets 0.5 throwaway, player2 gets 0.5 drop
       if (event.subtype === 'fiftyfifty') {
-        if (event.playerId) {
-          const stats = getOrCreate(event.playerId);
-          stats.throwaways += 0.5; // Thrower gets half a throwaway
-        }
-        if (event.player2Id) {
-          const stats = getOrCreate(event.player2Id);
-          stats.drops += 0.5; // Receiver gets half a drop
-        }
+        const throwerId = event.playerId ?? UNKNOWN_PLAYER_ID;
+        const receiverId = event.player2Id ?? UNKNOWN_PLAYER_ID;
+        const throwerStats = getOrCreate(throwerId);
+        throwerStats.throwaways += 0.5; // Thrower gets half a throwaway
+        const receiverStats = getOrCreate(receiverId);
+        receiverStats.drops += 0.5; // Receiver gets half a drop
         continue;
       }
 
-      if (!event.playerId) continue;
-
-      const stats = getOrCreate(event.playerId);
+      const turnoverPlayerId = event.playerId ?? UNKNOWN_PLAYER_ID;
+      const stats = getOrCreate(turnoverPlayerId);
       switch (event.subtype) {
         case 'block':
           stats.blocks++;
@@ -131,6 +177,225 @@ export function computePlayerStats(
   return Array.from(statsMap.values()).sort(
     (a, b) => b.plusMinus - a.plusMinus || a.name.localeCompare(b.name),
   );
+}
+
+/**
+ * Compute player-relative metrics against the current comparison pool.
+ * Expects a single visible dataset (current game or pre-aggregated totals).
+ */
+export function computeRelativePlayerStats(
+  playerId: string,
+  allPlayerStats: PlayerStats[],
+  roster?: Player[],
+): RelativePlayerMetric[] {
+  const rosterIds = roster?.length ? new Set(roster.map((player) => player.id)) : null;
+  const comparisonPool = allPlayerStats.filter((stats) => {
+    if (stats.id === UNKNOWN_PLAYER_ID || stats.id === 'OTHER_TEAM') {
+      return false;
+    }
+
+    if (rosterIds) {
+      return rosterIds.has(stats.id);
+    }
+
+    return true;
+  });
+
+  const player = comparisonPool.find((stats) => stats.id === playerId);
+
+  if (!player || comparisonPool.length === 0) {
+    return [];
+  }
+
+  const playerEventCount =
+    player.goals + player.assists + player.blocks + player.throwaways + player.drops;
+  if (playerEventCount === 0) {
+    return [];
+  }
+
+  const metricDefs: {
+    key: RelativePlayerMetricKey;
+    label: string;
+    higherIsBetter: boolean;
+    getValue: (stats: PlayerStats) => number;
+  }[] = [
+    { key: 'goals', label: 'Goals', higherIsBetter: true, getValue: (stats) => stats.goals },
+    { key: 'assists', label: 'Assists', higherIsBetter: true, getValue: (stats) => stats.assists },
+    { key: 'blocks', label: 'Blocks', higherIsBetter: true, getValue: (stats) => stats.blocks },
+    {
+      key: 'throwaways',
+      label: 'Throwaways',
+      higherIsBetter: false,
+      getValue: (stats) => stats.throwaways,
+    },
+    { key: 'drops', label: 'Drops', higherIsBetter: false, getValue: (stats) => stats.drops },
+    {
+      key: 'totalTurnovers',
+      label: 'Total Turnovers',
+      higherIsBetter: false,
+      getValue: (stats) => stats.throwaways + stats.drops,
+    },
+    {
+      key: 'plusMinus',
+      label: 'Plus/Minus',
+      higherIsBetter: true,
+      getValue: (stats) => stats.plusMinus,
+    },
+  ];
+
+  return metricDefs.map((metricDef) => {
+    const values = comparisonPool.map(metricDef.getValue);
+    const raw = metricDef.getValue(player);
+    const teamMax = Math.max(...values);
+    const teamMin = Math.min(...values);
+    const teamAvg = values.reduce((sum, value) => sum + value, 0) / values.length;
+    const deltaFromAvg = raw - teamAvg;
+    const ratioToAvg = teamAvg !== 0 ? raw / teamAvg : null;
+    const pctOfMax = teamMin >= 0 && teamMax > 0 ? raw / teamMax : null;
+
+    const rank =
+      1 + values.filter((value) => (metricDef.higherIsBetter ? value > raw : value < raw)).length;
+
+    return {
+      key: metricDef.key,
+      label: metricDef.label,
+      raw,
+      teamAvg,
+      teamMax,
+      teamMin,
+      deltaFromAvg,
+      ratioToAvg,
+      pctOfMax,
+      higherIsBetter: metricDef.higherIsBetter,
+      rank,
+      teamPoolSize: comparisonPool.length,
+    };
+  });
+}
+
+/**
+ * Compute relative playing-time metrics for a player when point line data exists.
+ * Uses metric-specific comparison pools (e.g., only players with O points for O-Eff).
+ */
+export function computeRelativePlayingTimeStats(
+  playerId: string,
+  pointLines: PointLineRecord[] | null | undefined,
+  events: GameEvent[],
+  startingPossession: 'team1' | 'team2' | null,
+  gameTo: number,
+): RelativePlayingTimeMetric[] {
+  if (!pointLines?.length) {
+    return [];
+  }
+
+  const playingTimeMap = computePlayingTimeStats(pointLines, events, startingPossession, gameTo);
+  const myStats = playingTimeMap.get(playerId);
+
+  if (!myStats) {
+    return [];
+  }
+
+  const allEntries = Array.from(playingTimeMap.entries());
+
+  const buildMetric = (params: {
+    key: RelativePlayingTimeMetricKey;
+    label: string;
+    format: RelativePlayingTimeMetric['format'];
+    getValue: (stats: PlayingTimeStats) => number | undefined;
+    inPool: (stats: PlayingTimeStats) => boolean;
+    detail?: (stats: PlayingTimeStats) => string | undefined;
+  }): RelativePlayingTimeMetric | null => {
+    const rawMaybe = params.getValue(myStats);
+    if (rawMaybe === undefined) {
+      return null;
+    }
+
+    const poolValues = allEntries
+      .map(([, stats]) => stats)
+      .filter(params.inPool)
+      .map(params.getValue)
+      .filter((value): value is number => value !== undefined);
+
+    const raw = rawMaybe;
+    const values = poolValues.length > 0 ? poolValues : [raw];
+    const teamMax = Math.max(...values);
+    const teamMin = Math.min(...values);
+    const teamAvg = values.reduce((sum, value) => sum + value, 0) / values.length;
+    const deltaFromAvg = raw - teamAvg;
+    const ratioToAvg = teamAvg !== 0 ? raw / teamAvg : null;
+    const pctOfMax = teamMin >= 0 && teamMax > 0 ? raw / teamMax : null;
+    const rank = 1 + values.filter((value) => value > raw).length;
+
+    return {
+      key: params.key,
+      label: params.label,
+      raw,
+      teamAvg,
+      teamMax,
+      teamMin,
+      deltaFromAvg,
+      ratioToAvg,
+      pctOfMax,
+      higherIsBetter: true,
+      rank,
+      format: params.format,
+      detail: params.detail?.(myStats),
+      teamPoolSize: values.length,
+    };
+  };
+
+  return [
+    buildMetric({
+      key: 'pointsPlayed',
+      label: 'Points Played',
+      format: 'count',
+      getValue: (stats) => stats.pointsPlayed,
+      inPool: () => true,
+    }),
+    buildMetric({
+      key: 'pointWinRate',
+      label: 'Point Win Rate',
+      format: 'percent',
+      getValue: (stats) =>
+        stats.pointsPlayed > 0 ? (stats.pointWins / stats.pointsPlayed) * 100 : undefined,
+      inPool: (stats) => stats.pointsPlayed > 0,
+      detail: (stats) =>
+        stats.pointsPlayed > 0 ? `${stats.pointWins}/${stats.pointsPlayed}` : undefined,
+    }),
+    buildMetric({
+      key: 'oEfficiency',
+      label: 'O-Eff',
+      format: 'percent',
+      getValue: (stats) => (stats.oPoints > 0 ? stats.oEfficiency * 100 : undefined),
+      inPool: (stats) => stats.oPoints > 0,
+      detail: (stats) => (stats.oPoints > 0 ? `${stats.oLineHolds}/${stats.oPoints}` : undefined),
+    }),
+    buildMetric({
+      key: 'dEfficiency',
+      label: 'D-Eff',
+      format: 'percent',
+      getValue: (stats) => (stats.dPoints > 0 ? stats.dEfficiency * 100 : undefined),
+      inPool: (stats) => stats.dPoints > 0,
+      detail: (stats) => (stats.dPoints > 0 ? `${stats.dLineBreaks}/${stats.dPoints}` : undefined),
+    }),
+    buildMetric({
+      key: 'minutesPlayed',
+      label: 'Minutes Played',
+      format: 'duration',
+      getValue: (stats) =>
+        stats.minutesPlayed !== undefined && stats.minutesPlayed > 0
+          ? stats.minutesPlayed
+          : undefined,
+      inPool: (stats) => stats.minutesPlayed !== undefined && stats.minutesPlayed > 0,
+    }),
+    buildMetric({
+      key: 'playingTimePercent',
+      label: 'Playing Time %',
+      format: 'percent',
+      getValue: (stats) => stats.playingTimePercent,
+      inPool: (stats) => stats.playingTimePercent !== undefined,
+    }),
+  ].filter((metric): metric is RelativePlayingTimeMetric => !!metric);
 }
 
 // --- Visualization Helpers ---
@@ -221,7 +486,6 @@ export function getImpactStats(
   playerId: string,
   events: GameEvent[],
   team: 'team1' | 'team2',
-  roster?: Player[],
 ): ImpactPoint[] {
   // Track score throughout the game
   let team1Score = 0;
@@ -263,29 +527,29 @@ export function getImpactStats(
         points.pop();
         currentPlusMinus -= 1; // Undo the block +1
         change = 2; // Callahan is worth +2 (block + goal)
-        desc = 'Callahan (+2)';
+        desc = 'Callahan';
       } else if (event.goalPlayerId === playerId) {
         change = 1;
-        desc = 'Goal (+1)';
+        desc = 'Goal';
       } else if (event.assistPlayerId === playerId) {
         change = 1;
-        desc = 'Assist (+1)';
+        desc = 'Assist';
       }
     } else if (event.type === 'turnover') {
       if (event.playerId === playerId) {
         if (event.subtype === 'block') {
           change = 1;
-          desc = 'Block (+1)';
+          desc = 'Block';
         } else if (event.subtype === 'fiftyfifty') {
           change = -0.5;
-          desc = '50/50 Throw (-0.5)';
+          desc = '50/50 Throw';
         } else {
           change = -1;
-          desc = `${event.subtype.charAt(0).toUpperCase() + event.subtype.slice(1)} (-1)`;
+          desc = event.subtype.charAt(0).toUpperCase() + event.subtype.slice(1);
         }
       } else if (event.player2Id === playerId && event.subtype === 'fiftyfifty') {
         change = -0.5;
-        desc = '50/50 Drop (-0.5)';
+        desc = '50/50 Drop';
       }
     }
 
@@ -294,7 +558,7 @@ export function getImpactStats(
       points.push({
         eventIndex,
         cumulativePlusMinus: currentPlusMinus,
-        description: `${desc} (${change > 0 ? '+' : ''}${change})`,
+        description: desc,
         score: getScore(),
       });
     }
