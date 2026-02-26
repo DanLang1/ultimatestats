@@ -21,7 +21,11 @@ export function isPlayingTimeMetric(metric: RelativeRowMetric): metric is Relati
 }
 
 export function getMetricTone(metric: RelativeRowMetric): 'good' | 'bad' | 'neutral' {
-  const advantage = metric.higherIsBetter ? metric.deltaFromAvg : -metric.deltaFromAvg;
+  const percentDelta =
+    isPlayingTimeMetric(metric) && metric.format === 'percent'
+      ? getRoundedPercentDelta(metric)
+      : metric.deltaFromAvg;
+  const advantage = metric.higherIsBetter ? percentDelta : -percentDelta;
   const neutralThreshold = isPlayingTimeMetric(metric) && metric.format === 'percent' ? 0.5 : 0.05;
 
   if (Math.abs(advantage) < neutralThreshold) {
@@ -142,12 +146,16 @@ function getSingleSampleWarning(detail: string | undefined, unitLabel: string): 
 
 function getPlayingTimeRelativeLabel(metric: RelativePlayingTimeRow, mode: RelativeMode): string {
   if (mode === 'avg') {
-    if (isEffectivelyEqual(metric.deltaFromAvg, metric.format)) {
-      return 'even with avg';
+    if (metric.format === 'percent') {
+      const roundedPercentDelta = getRoundedPercentDelta(metric);
+      if (roundedPercentDelta === 0) {
+        return 'even with avg';
+      }
+      return `${formatSignedWhole(roundedPercentDelta)} vs avg`;
     }
 
-    if (metric.format === 'percent') {
-      return `${formatSignedWhole(metric.deltaFromAvg)} vs avg`;
+    if (isEffectivelyEqual(metric.deltaFromAvg, metric.format)) {
+      return 'even with avg';
     }
 
     if (metric.format === 'duration') {
@@ -228,4 +236,8 @@ function isEffectivelyEqual(value: number, format?: RelativePlayingTimeMetric['f
     return Math.abs(value) < 1 / 60;
   }
   return Math.abs(value) < 0.05;
+}
+
+function getRoundedPercentDelta(metric: Pick<RelativePlayingTimeMetric, 'raw' | 'teamAvg'>): number {
+  return Math.round(metric.raw) - Math.round(metric.teamAvg);
 }

@@ -17,7 +17,7 @@ The line selection system allows users to:
 
 ```
 app/
-├── LinePromptModal.tsx      # In-game line selection modal
+├── LineEditor.tsx           # Between-points line selection + scoreboard edit-line flow
 ├── LinePresetEditor.tsx     # Full-page preset management (list + edit)
 
 components/lines/
@@ -43,7 +43,7 @@ lib/
 
 **File**: [ModalPlayerGrid.tsx](file:///home/langd/coding/ultimatestats/components/lines/ModalPlayerGrid.tsx)
 
-The core player selection grid used by both `LinePromptModal` and `PresetEditView`.
+The core player selection grid used by both `LineEditor` and `PresetEditView`.
 
 #### Features
 
@@ -193,11 +193,11 @@ Full-page route for managing presets. Handles navigation and state between list/
 
 ---
 
-### LinePromptModal
+### LineEditor (Line Selection UI)
 
-**File**: [LinePromptModal.tsx](file:///home/langd/coding/ultimatestats/app/LinePromptModal.tsx)
+**File**: [LineEditor.tsx](file:///home/langd/coding/ultimatestats/app/(main)/LineEditor.tsx)
 
-Modal shown during gameplay for selecting the line.
+Full-page route shown after points and for manual line edits.
 
 #### Features
 
@@ -205,13 +205,13 @@ Modal shown during gameplay for selecting the line.
 - **Edit presets button**: Opens `LinePresetEditor`
 - **Point indicator**: Shows current point number
 - **Gender ratio warning**: Shows warning when line doesn't match expected ratio
-- **Substitution mode**: When `mode=substitution`, pre-fills with current line
+- **Edit-line mode**: When `mode=edit-line`, opens from the scoreboard and supports injury/replacement handling
 - **7-player requirement**: Confirm button only enabled at exactly 7 players
 
 #### URL Params
 
 ```typescript
-{ mode?: 'substitution' }  // Pre-fills current line, records as substitution
+{ mode?: 'edit-line' }  // Opens manual edit flow from the scoreboard
 ```
 
 ---
@@ -251,8 +251,8 @@ interface PointLineRecord {
 **File**: `store/gameStore.ts`
 
 Lines are recorded at two points:
-1. **PointTransition** (`isSubstitution: false`): When the user sets the line for the next point after a score
-2. **LinePromptModal** (`isSubstitution: true`): When the user edits the line mid-game via GameInfo → Edit Line
+1. **LineEditor** (`isSubstitution: false`): When the user sets the line for the next point after a score
+2. **LineEditor** (`isSubstitution: true`, `mode=edit-line`): When the user edits the line mid-game from the scoreboard edit-line button
 
 ### Replace vs Append (Correction vs Substitution)
 
@@ -367,7 +367,7 @@ Groups active players by gender + role. Returns only non-empty groups in consist
 2. **Then by playing time**: Helps balance player usage
 3. **Then alphabetically**: Stable sort for players with equal time
 
-### Preset Selection Toggle (LinePromptModal)
+### Preset Selection Toggle (LineEditor)
 
 - Clicking an already-selected preset **deselects** it (clears selection)
 - This allows users to quickly reset and manually pick players
@@ -376,20 +376,20 @@ Groups active players by gender + role. Returns only non-empty groups in consist
 
 ## Usage Patterns
 
-### Opening Line Selection Modal
+### Opening Line Selection UI
 
 ```typescript
 // After a point ends (automatic)
-router.push('/LinePromptModal');
+router.push('/LineEditor');
 
-// For substitution (manual button in GameInfo)
-router.push('/LinePromptModal?mode=substitution');
+// Manual line edit from scoreboard
+router.push({ pathname: '/LineEditor', params: { mode: 'edit-line' } });
 ```
 
 ### Opening Preset Editor
 
 ```typescript
-// From LinePromptModal (edit button in presets area)
+// From LineEditor (edit button in presets area)
 router.push('/LinePresetEditor');
 
 // To edit a specific preset directly
@@ -408,7 +408,7 @@ const teamPresets = presets.filter((p) => p.teamId === currentTeam?.id);
 
 ### Overview
 
-Presets can be reordered via drag-and-drop in the PresetListView reorder mode. The order determines how presets appear in `PointTransition.tsx` and `LinePromptModal.tsx` during games.
+Presets can be reordered via drag-and-drop in the PresetListView reorder mode. The order determines how presets appear in `LineEditor.tsx` during games (including edit-line mode).
 
 ### Architecture: Real-Time Swap with LinearTransition
 

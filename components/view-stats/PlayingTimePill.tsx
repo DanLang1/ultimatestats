@@ -7,6 +7,10 @@ interface PlayingTimePillProps {
   label: string;
   value: string | number;
   color?: string;
+  backgroundColor?: string;
+  borderColor?: string;
+  align?: 'center' | 'left';
+  compact?: boolean;
   sizeClass?: SizeClass;
 }
 
@@ -14,12 +18,25 @@ export default function PlayingTimePill({
   label,
   value,
   color,
+  backgroundColor,
+  borderColor,
+  align = 'center',
+  compact = false,
   sizeClass = 'small',
 }: PlayingTimePillProps) {
   const { palette } = useTheme();
   const styles = createStyles(sizeClass);
   return (
-    <View style={[styles.statPill, { backgroundColor: palette.overlay05 }]}>
+    <View
+      style={[
+        styles.statPill,
+        compact && styles.statPillCompact,
+        align === 'left' && styles.statPillLeft,
+        {
+          backgroundColor: backgroundColor ?? palette.overlay05,
+          borderColor: borderColor ?? palette.overlay10,
+        },
+      ]}>
       <Text style={[styles.statValue, { color: color ?? palette.textInverse }]}>{value}</Text>
       <Text style={[styles.statLabel, { color: palette.textMuted }]}>{label}</Text>
     </View>
@@ -30,10 +47,20 @@ function createStyles(sizeClass: SizeClass) {
   return StyleSheet.create({
     statPill: {
       paddingHorizontal: 10,
-      paddingVertical: 6,
-      borderRadius: 8,
+      paddingVertical: 8,
+      borderRadius: 10,
+      borderWidth: 1,
       alignItems: 'center',
+      justifyContent: 'center',
       minWidth: 55,
+    },
+    statPillCompact: {
+      minWidth: scaleBySizeClass(78, sizeClass),
+      paddingHorizontal: 10,
+      paddingVertical: 7,
+    },
+    statPillLeft: {
+      alignItems: 'flex-start',
     },
     statValue: {
       fontSize: scaleBySizeClass(14, sizeClass),

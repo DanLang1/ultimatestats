@@ -17,6 +17,7 @@ import { shouldShowLinePrompt } from '@/lib/linePromptUtils';
 import { useGameStore } from '@/store/gameStore';
 import { TurnoverType } from '@/store/gameStore.types';
 import { useLinePresetsStore } from '@/store/linePresetsStore';
+import { useSettingsStore } from '@/store/settingsStore';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useKeepAwake } from 'expo-keep-awake';
 import { router } from 'expo-router';
@@ -72,8 +73,12 @@ export default function BasicScoreboard() {
     eventToastSignal,
     clearEventToastSignal,
   } = useGameStore();
+  const { lineCallingEnabled } = useSettingsStore();
 
   const { handleContinue: endTimeout } = useTimeoutTimer();
+  const floatingEditIconColor = getContrastingTextColor(
+    layout.isLandscape ? team2BgColor : team1BgColor,
+  );
   const roster = currentTeam?.roster ?? [];
   const { toast, toastInstanceId } = useEventToast({
     roster,
@@ -164,9 +169,9 @@ export default function BasicScoreboard() {
       return;
     }
 
-    // Team2 goal (not halftime, not game over): show PointTransition for summary + line selection
+    // Team2 goal (not halftime, not game over): show LineEditor for summary + line selection
     if (shouldShowLinePrompt()) {
-      router.push('/PointTransition');
+      router.push('/LineEditor');
     } else if (pointTimerEnabled && statTrackingEnabled) {
       router.push('/PointSummaryModal');
     }
@@ -242,6 +247,19 @@ export default function BasicScoreboard() {
         />
       </Pressable>
 
+      {lineCallingEnabled && !gameLocked && (
+        <Pressable
+          onPress={() => router.push({ pathname: '/LineEditor', params: { mode: 'edit-line' } })}
+          hitSlop={homeHitSlop}
+          style={styles.floatingEditLineButton}>
+          <MaterialCommunityIcons
+            name="account-switch"
+            size={homeIconSize}
+            color={floatingEditIconColor}
+          />
+        </Pressable>
+      )}
+
       {/* Bottom half */}
       <TeamScoreSection
         teamName={team2Name}
@@ -304,6 +322,13 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
       position: 'absolute',
       top: 12,
       left: 12,
+      padding: 12,
+      zIndex: 200,
+    },
+    floatingEditLineButton: {
+      position: 'absolute',
+      top: 12,
+      right: 12,
       padding: 12,
       zIndex: 200,
     },

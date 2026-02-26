@@ -70,9 +70,9 @@ export default function StatEntryScreen() {
       return;
     }
 
-    // Show PointTransition page for summary + line selection
+    // Show LineEditor page for summary + line selection
     if (shouldShowLinePrompt()) {
-      router.replace('/PointTransition');
+      router.replace('/LineEditor');
     } else if (pointTimerEnabled) {
       router.replace('/PointSummaryModal');
     } else {

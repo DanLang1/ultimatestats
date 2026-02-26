@@ -129,9 +129,9 @@ export default function PreGameConfirm() {
       setFirstPointRatio(selectedRatio as GenderRatio);
     }
 
-    // Chain to PointTransition for first point line selection
+    // Chain to LineEditor for first point line selection
     if (shouldShowLinePrompt()) {
-      router.replace('/PointTransition');
+      router.replace('/LineEditor');
     } else {
       router.dismissTo('/');
     }

@@ -154,7 +154,7 @@ router.dismissTo('/'); // Dismisses multiple screens at once
 router.dismissTo('/GameInfo'); // Return to the screen that opened this modal
 ```
 
-**Why:** Using `router.back()` or dismissing to root when the modal was opened from an intermediate screen (e.g., `/` → `/GameInfo` → `/LinePromptModal`) can cause React Native view hierarchy errors during simultaneous screen transitions.
+**Why:** Using `router.back()` or dismissing to root when the modal was opened from an intermediate screen (e.g., `/` → `/GameInfo` → `/EditPlayerModal`) can cause React Native view hierarchy errors during simultaneous screen transitions.
 
 ## Conditional Redirects (When Data Becomes Unavailable)
 

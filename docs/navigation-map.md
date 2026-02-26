@@ -23,7 +23,7 @@ Defined across:
 - `/ViewStats` (`app/(main)/ViewStats.tsx`)
 - `/PlayerStats` (`app/(main)/PlayerStats.tsx`)
 - `/LinePresetEditor` (`app/(main)/LinePresetEditor.tsx`)
-- `/PointTransition` (`app/(main)/PointTransition.tsx`)
+- `/LineEditor` (`app/(main)/LineEditor.tsx`)
 - `/PreGameConfirm` (`app/(main)/PreGameConfirm.tsx`)
 - `/Import` (`app/(main)/Import.tsx`)
 - `/s/[kind]/[shareId]` (`app/s/[kind]/[shareId].tsx`) - deep-link redirect route for shared game/team/games links
@@ -43,7 +43,6 @@ Defined across:
 - `/PointSummaryModal` (`app/(modals)/PointSummaryModal.tsx`)
 - `/NumberPickerModal` (`app/(modals)/NumberPickerModal.tsx`)
 - `/EditPlayerModal` (`app/(modals)/EditPlayerModal.tsx`)
-- `/LinePromptModal` (`app/(modals)/LinePromptModal.tsx`)
 - `/TimeoutModal` (`app/(modals)/TimeoutModal.tsx`)
 
 ## Core Flows
@@ -55,8 +54,8 @@ Defined across:
    `/PreGameConfirm` (full-screen) when start-of-game inputs are required
 3. Optional modal step:
    `/StatEntryModal` or `/TurnoverEntryModal` or `/TimeoutModal`
-4. Point transition step:
-   `/PointTransition` or `/PointSummaryModal`
+4. Line editor / summary step:
+   `/LineEditor` or `/PointSummaryModal`
 5. End game:
    `/WinModal` then `/ViewStats`
 

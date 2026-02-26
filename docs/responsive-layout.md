@@ -102,8 +102,7 @@ Some screens need `isLandscape` beyond styling — to conditionally render diffe
 
 **Examples:**
 
-- `PointTransition.tsx` — renders gender ratio info inline in the header row (landscape) vs a separate row below the header (portrait)
-- `LinePromptModal.tsx` — adjusts overlay padding based on orientation and safe area insets
+- `LineEditor.tsx` — renders gender ratio info inline in the header row (landscape) vs a separate row below the header (portrait)
 
 ## Gotchas
 

@@ -13,7 +13,7 @@ import { useGameStore } from '@/store/gameStore';
 import { useLinePresetsStore } from '@/store/linePresetsStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import React, { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
@@ -44,10 +44,12 @@ function getPointOutcome(
   return { label: 'OPP HOLD', isPositive: false };
 }
 
-export default function PointTransition() {
+export default function LineEditor() {
   const { palette } = useTheme();
   const { isLandscape, sizeClass } = useLayout();
   const styles = createStyles(sizeClass);
+  const { mode } = useLocalSearchParams<{ mode?: string }>();
+  const isEditLineMode = mode === 'edit-line';
 
   const {
     events,
@@ -77,6 +79,8 @@ export default function PointTransition() {
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   // Increment sortKey to trigger a re-sort (initial load, preset selection, sort toggle)
   const [sortKey, setSortKey] = useState(0);
+  const [subType, setSubType] = useState<'injury' | 'replacement'>('injury');
+  const [showSubTypeHint, setShowSubTypeHint] = useState(false);
 
   const toggleSort = () => {
     setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
@@ -107,6 +111,7 @@ export default function PointTransition() {
 
   const roster = currentTeam?.roster ?? [];
   const activePlayers = roster.filter((p) => p.isActive !== false);
+  const hasExistingLine = pointLines.some((record) => record.pointNumber === currentPoint);
 
   const handleTogglePlayer = (playerId: string) => {
     setSelectedPresetId(null);
@@ -140,6 +145,11 @@ export default function PointTransition() {
     requestIdleCallback(() => {
       if (selectedIds.length === numPlayers) {
         setCurrentLine(selectedIds);
+        if (isEditLineMode) {
+          recordLineForPoint(currentPoint, true, hasExistingLine ? subType : undefined);
+          return;
+        }
+
         recordLineForPoint(currentPoint, false);
         setLineConfirmedForNextPoint(true);
       }
@@ -199,9 +209,13 @@ export default function PointTransition() {
           </Pressable>
           <View style={styles.headerTitleRow}>
             <Text style={[styles.headerTitle, { color: palette.textInverse }]}>
-              {lastPoint ? `Point ${lastPoint.pointNumber}` : 'Set Line'}
+              {isEditLineMode
+                ? `Edit Line · Point ${currentPoint}`
+                : lastPoint
+                  ? `Point ${lastPoint.pointNumber}`
+                  : 'Set Line'}
             </Text>
-            {pointOutcome && (
+            {!isEditLineMode && pointOutcome && (
               <Text
                 style={[
                   styles.headerOutcome,
@@ -211,7 +225,7 @@ export default function PointTransition() {
                 {pointOutcome.label}
               </Text>
             )}
-            {lastPoint?.pointDurationMs != null && (
+            {!isEditLineMode && lastPoint?.pointDurationMs != null && (
               <Text style={[styles.headerDuration, { color: palette.textMuted }]}>
                 {' · '}
                 {formatDuration(lastPoint.pointDurationMs)}
@@ -342,6 +356,22 @@ export default function PointTransition() {
                 <Text style={[styles.presetChipText, { color: palette.textMuted }]}>Preset</Text>
               </Pressable>
             )}
+            {presets.length > 0 && (
+              <Pressable
+                onPress={() => router.push('/LinePresetEditor')}
+                style={({ pressed }) => [
+                  styles.presetChip,
+                  styles.editPresetsChip,
+                  { borderColor: palette.overlay15, backgroundColor: palette.overlay08 },
+                  pressed && { opacity: 0.8 },
+                ]}>
+                <MaterialCommunityIcons
+                  name="pencil"
+                  size={scaleBySizeClass(10, sizeClass)}
+                  color={palette.textMuted}
+                />
+              </Pressable>
+            )}
           </ScrollView>
           <Pressable
             onPress={toggleSort}
@@ -357,6 +387,77 @@ export default function PointTransition() {
             />
           </Pressable>
         </View>
+
+        {isEditLineMode && hasExistingLine && (
+          <View style={styles.subTypeSection}>
+            <View style={styles.subTypeRow}>
+              <Pressable
+                onPress={() => setSubType('injury')}
+                style={({ pressed }) => [
+                  styles.subTypeChip,
+                  {
+                    backgroundColor: subType === 'injury' ? palette.accent : palette.overlay08,
+                    borderColor: subType === 'injury' ? palette.accent : palette.overlay15,
+                  },
+                  pressed && { opacity: 0.8 },
+                ]}>
+                <Text
+                  style={[
+                    styles.subTypeChipText,
+                    { color: subType === 'injury' ? palette.textOnAccent : palette.textInverse },
+                  ]}>
+                  Injury Sub
+                </Text>
+              </Pressable>
+              <Pressable
+                onPress={() => setSubType('replacement')}
+                style={({ pressed }) => [
+                  styles.subTypeChip,
+                  {
+                    backgroundColor: subType === 'replacement' ? palette.accent : palette.overlay08,
+                    borderColor: subType === 'replacement' ? palette.accent : palette.overlay15,
+                  },
+                  pressed && { opacity: 0.8 },
+                ]}>
+                <Text
+                  style={[
+                    styles.subTypeChipText,
+                    {
+                      color: subType === 'replacement' ? palette.textOnAccent : palette.textInverse,
+                    },
+                  ]}>
+                  Replace Line
+                </Text>
+              </Pressable>
+              <Pressable
+                onPress={() => setShowSubTypeHint((value) => !value)}
+                hitSlop={8}
+                style={({ pressed }) => [
+                  styles.subTypeInfoBtn,
+                  {
+                    borderColor: showSubTypeHint ? palette.accent : palette.overlay15,
+                    backgroundColor: showSubTypeHint ? palette.accent : 'transparent',
+                  },
+                  pressed && { opacity: 0.7 },
+                ]}>
+                <Text
+                  style={[
+                    styles.subTypeInfoText,
+                    { color: showSubTypeHint ? palette.textOnAccent : palette.textMuted },
+                  ]}>
+                  ?
+                </Text>
+              </Pressable>
+            </View>
+            {showSubTypeHint && (
+              <Text style={[styles.subTypeHint, { color: palette.textMuted }]}>
+                {subType === 'injury'
+                  ? 'Both old and new players get point credit'
+                  : 'Only the new lineup gets point credit'}
+              </Text>
+            )}
+          </View>
+        )}
       </View>
 
       {/* Player Grid or Empty State */}
@@ -506,6 +607,42 @@ function createStyles(sizeClass: SizeClass) {
       marginTop: 10,
       gap: 6,
     },
+    subTypeSection: {
+      marginTop: 10,
+      gap: 6,
+    },
+    subTypeRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      flexWrap: 'wrap',
+    },
+    subTypeChip: {
+      paddingVertical: 5,
+      paddingHorizontal: 10,
+      borderRadius: 10,
+      borderWidth: 1,
+    },
+    subTypeChipText: {
+      fontSize: scaleBySizeClass(11, sizeClass),
+      fontWeight: '600',
+    },
+    subTypeInfoBtn: {
+      width: 18,
+      height: 18,
+      borderRadius: 9,
+      borderWidth: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    subTypeInfoText: {
+      fontSize: scaleBySizeClass(10, sizeClass),
+      fontWeight: '700',
+    },
+    subTypeHint: {
+      fontSize: scaleBySizeClass(11, sizeClass),
+      fontStyle: 'italic',
+    },
     presetsScrollContent: {
       gap: 6,
     },
@@ -517,6 +654,9 @@ function createStyles(sizeClass: SizeClass) {
       borderRadius: 8,
       borderWidth: 1,
       gap: 3,
+    },
+    editPresetsChip: {
+      paddingHorizontal: 7,
     },
     presetChipText: {
       fontSize: scaleBySizeClass(11, sizeClass),

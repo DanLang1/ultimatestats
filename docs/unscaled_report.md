@@ -5,7 +5,7 @@ Status (updated): all listed items have been converted to size-class-aware scali
 ## `app/(main)/GameInfo.tsx`
 - Line 648 (fontSize): `fontSize: 12,`
 
-## `app/(main)/PointTransition.tsx`
+## `app/(main)/LineEditor.tsx`
 - Line 253 (iconSize): `<MaterialCommunityIcons name="check" size={18} color={palette.textOnAccent} />`
 - Line 272 (iconSize): `<MaterialCommunityIcons name="alert" size={14} color={palette.warning} />`
 

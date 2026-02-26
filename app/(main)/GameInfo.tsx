@@ -35,10 +35,9 @@ export default function GameInfoScreen() {
     softCapPending,
     statTrackingEnabled,
     currentPoint,
-    gameLocked,
   } = useGameStore();
 
-  const { genderRatioEnabled, firstPointRatio, lineCallingEnabled } = useSettingsStore();
+  const { genderRatioEnabled, firstPointRatio } = useSettingsStore();
 
   const [showAbbaModal, setShowAbbaModal] = useState(false);
 
@@ -443,25 +442,6 @@ export default function GameInfoScreen() {
         <View
           key={isLandscape ? 'actions-landscape' : 'actions-portrait'}
           style={styles.actionSection}>
-          {lineCallingEnabled && !gameLocked && (
-            <Pressable
-              onPress={() => router.push('/LinePromptModal')}
-              style={({ pressed }) => [
-                styles.actionButton,
-                { backgroundColor: palette.overlay05, borderColor: palette.overlay20 },
-                pressed && { backgroundColor: palette.overlay10 },
-              ]}>
-              <MaterialCommunityIcons
-                name="account-switch"
-                size={actionIconSize}
-                color={palette.textInverse}
-              />
-              <Text style={[styles.actionButtonText, { color: palette.textInverse }]}>
-                EDIT LINE
-              </Text>
-            </Pressable>
-          )}
-
           <Pressable
             onPress={confirmEndGame}
             style={({ pressed }) => [

@@ -32,7 +32,7 @@ Track progress for size-class scaling (`small` / `medium` / `large`) across scre
 - `[x]` `app/(main)/EditRoster.tsx`
 - `[x]` `app/(main)/GameInfo.tsx`
 - `[x]` `app/(main)/PreGameConfirm.tsx`
-- `[x]` `app/(main)/PointTransition.tsx`
+- `[x]` `app/(main)/LineEditor.tsx`
 - `[x]` `app/(main)/ViewStats.tsx`
 - `[x]` `app/(main)/PlayerStats.tsx`
 - `[x]` `app/(main)/SavedGameStats.tsx`
@@ -43,7 +43,6 @@ Track progress for size-class scaling (`small` / `medium` / `large`) across scre
 
 - `[x]` `app/(modals)/StatEntryModal.tsx`
 - `[x]` `app/(modals)/TurnoverEntryModal.tsx`
-- `[x]` `app/(modals)/LinePromptModal.tsx`
 - `[x]` `app/(modals)/NumberPickerModal.tsx`
 - `[x]` `app/(modals)/TimeoutModal.tsx`
 - `[x]` `app/(modals)/HalftimeModal.tsx`

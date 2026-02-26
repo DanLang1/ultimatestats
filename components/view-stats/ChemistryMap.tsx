@@ -19,6 +19,12 @@ export default function ChemistryMap({ playerName, connections }: ChemistryMapPr
     normalizedPlayerName.length > 8
       ? `${normalizedPlayerName.substring(0, 7).toUpperCase()}…`
       : normalizedPlayerName.toUpperCase();
+  const centerLabelFontSize =
+    normalizedPlayerName.length > 8
+      ? scaleBySizeClass(8.5, sizeClass)
+      : normalizedPlayerName.length > 6
+        ? scaleBySizeClass(9, sizeClass)
+        : scaleBySizeClass(10, sizeClass);
 
   // Filter top connections to avoid clutter
   const feeders = connections
@@ -138,8 +144,8 @@ export default function ChemistryMap({ playerName, connections }: ChemistryMapPr
         <SvgText
           x={centerX}
           y={centerY + 4}
-          fill={palette.textInverse}
-          fontSize={scaleBySizeClass(10, sizeClass)}
+          fill={palette.textOnAccent}
+          fontSize={centerLabelFontSize}
           fontWeight="bold"
           textAnchor="middle">
           {centerLabel}

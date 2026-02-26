@@ -112,60 +112,60 @@ export default function RelativePlayerStatsSection({
         styles.container,
         { backgroundColor: palette.overlay02, borderColor: palette.overlay05 },
       ]}>
-      <View style={styles.headerRow}>
-        <View style={{ flex: 1 }}>
-          <Text style={[styles.title, { color: palette.textInverse }]}>RELATIVE TO TEAM</Text>
-        </View>
+      <View style={styles.headerStack}>
+        <Text style={[styles.title, { color: palette.textMuted }]}>RELATIVE TO TEAM</Text>
 
-        <View
-          style={[
-            styles.toggle,
-            { backgroundColor: palette.overlay05, borderColor: palette.overlay10 },
-          ]}>
-          <Pressable
-            onPress={() => setMode('avg')}
+        <View style={styles.headerControlsRow}>
+          <View
             style={[
-              styles.toggleButton,
-              mode === 'avg' && {
-                backgroundColor: palette.accentOverlay15,
-                borderColor: palette.accentOverlay30,
-              },
+              styles.toggle,
+              { backgroundColor: palette.overlay05, borderColor: palette.overlay10 },
             ]}>
-            <Text
+            <Pressable
+              onPress={() => setMode('avg')}
               style={[
-                styles.toggleText,
-                { color: mode === 'avg' ? palette.accent : palette.textMuted },
+                styles.toggleButton,
+                mode === 'avg' && {
+                  backgroundColor: palette.accentOverlay15,
+                  borderColor: palette.accentOverlay30,
+                },
               ]}>
-              Team Avg
-            </Text>
-          </Pressable>
-          <Pressable
-            onPress={() => setMode('max')}
-            style={[
-              styles.toggleButton,
-              mode === 'max' && {
-                backgroundColor: palette.accentOverlay15,
-                borderColor: palette.accentOverlay30,
-              },
-            ]}>
-            <Text
+              <Text
+                style={[
+                  styles.toggleText,
+                  { color: mode === 'avg' ? palette.accent : palette.textMuted },
+                ]}>
+                Team Avg
+              </Text>
+            </Pressable>
+            <Pressable
+              onPress={() => setMode('max')}
               style={[
-                styles.toggleText,
-                { color: mode === 'max' ? palette.accent : palette.textMuted },
+                styles.toggleButton,
+                mode === 'max' && {
+                  backgroundColor: palette.accentOverlay15,
+                  borderColor: palette.accentOverlay30,
+                },
               ]}>
-              Team Best
-            </Text>
-          </Pressable>
-        </View>
-      </View>
-
-      <View style={styles.legendRow}>
-        {mode === 'avg' && (
-          <View style={styles.legendItem}>
-            <View style={[styles.legendMarker, { backgroundColor: palette.textInverse }]} />
-            <Text style={[styles.legendText, { color: palette.textMuted }]}>= Team Avg</Text>
+              <Text
+                style={[
+                  styles.toggleText,
+                  { color: mode === 'max' ? palette.accent : palette.textMuted },
+                ]}>
+                Team Best
+              </Text>
+            </Pressable>
           </View>
-        )}
+
+          <View style={styles.legendSlot}>
+            {mode === 'avg' && (
+              <View style={styles.legendItem}>
+                <View style={[styles.legendMarker, { backgroundColor: palette.textInverse }]} />
+                <Text style={[styles.legendText, { color: palette.textMuted }]}>= Team Avg</Text>
+              </View>
+            )}
+          </View>
+        </View>
       </View>
 
       {renderGroup('PRODUCTION', productionMetrics, mode, styles, palette, sizeClass, subjectLabel)}
@@ -318,16 +318,26 @@ function createStyles(sizeClass: SizeClass) {
       padding: 16,
       gap: 14,
     },
-    headerRow: {
-      flexDirection: 'row',
-      gap: 12,
-      alignItems: 'flex-start',
-      flexWrap: 'wrap',
+    headerStack: {
+      gap: scaleBySizeClass(8, sizeClass),
     },
     title: {
-      fontSize: scaleBySizeClass(14, sizeClass),
-      fontWeight: '800',
-      letterSpacing: 0.7,
+      fontSize: scaleBySizeClass(12, sizeClass),
+      fontWeight: '700',
+      letterSpacing: 1,
+      textTransform: 'uppercase',
+      textAlign: 'center',
+    },
+    headerControlsRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      width: '100%',
+      gap: scaleBySizeClass(12, sizeClass),
+    },
+    legendSlot: {
+      minHeight: scaleBySizeClass(24, sizeClass),
+      justifyContent: 'center',
     },
     subtitle: {
       fontSize: scaleBySizeClass(11, sizeClass),
@@ -430,12 +440,6 @@ function createStyles(sizeClass: SizeClass) {
       width: scaleBySizeClass(3, sizeClass),
       height: '100%',
       borderRadius: scaleBySizeClass(2, sizeClass),
-    },
-    legendRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'flex-end',
-      marginTop: scaleBySizeClass(-6, sizeClass),
     },
     legendItem: {
       flexDirection: 'row',

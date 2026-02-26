@@ -58,7 +58,7 @@ This document tracks intentionally deferred cleanup work discovered during the d
   `app/HalftimeModal.tsx:303`
   `app/PullPromptModal.tsx:328`
   `app/PullPromptModal.tsx:400`
-  `app/LinePromptModal.tsx:358`
+  `app/(main)/LineEditor.tsx`
   `app/PlayerStats.tsx:167`
 
 ## P3 - Documentation Hygiene

@@ -53,9 +53,25 @@ function makePlayingTimeMetric(
 
 describe('relativeStatsViewUtils', () => {
   describe('getMetricTone', () => {
-    it('uses a larger neutral threshold for percentage playing-time metrics', () => {
-      expect(getMetricTone(makePlayingTimeMetric({ deltaFromAvg: 0.4 }))).toBe('neutral');
-      expect(getMetricTone(makePlayingTimeMetric({ deltaFromAvg: 0.6 }))).toBe('good');
+    it('uses rounded displayed percentages for percentage playing-time tone', () => {
+      expect(
+        getMetricTone(makePlayingTimeMetric({ raw: 50.4, teamAvg: 50, deltaFromAvg: 0.4 })),
+      ).toBe('neutral');
+      expect(
+        getMetricTone(makePlayingTimeMetric({ raw: 50.6, teamAvg: 50, deltaFromAvg: 0.6 })),
+      ).toBe('good');
+    });
+
+    it('treats rounded-equal percentage metrics as neutral', () => {
+      expect(
+        getMetricTone(
+          makePlayingTimeMetric({
+            raw: 42.6,
+            teamAvg: 43.4,
+            deltaFromAvg: -0.8,
+          }),
+        ),
+      ).toBe('neutral');
     });
 
     it('respects lower-is-better event metrics', () => {
@@ -95,12 +111,31 @@ describe('relativeStatsViewUtils', () => {
     });
 
     it('formats playing-time percent deltas as whole numbers without % suffix', () => {
-      expect(getRelativeLabel(makePlayingTimeMetric({ deltaFromAvg: 12.6 }), 'avg')).toBe(
-        '+13 vs avg',
-      );
-      expect(getRelativeLabel(makePlayingTimeMetric({ deltaFromAvg: -8.2 }), 'avg')).toBe(
-        '-8 vs avg',
-      );
+      expect(
+        getRelativeLabel(
+          makePlayingTimeMetric({ raw: 62.6, teamAvg: 50, deltaFromAvg: 12.6 }),
+          'avg',
+        ),
+      ).toBe('+13 vs avg');
+      expect(
+        getRelativeLabel(
+          makePlayingTimeMetric({ raw: 41.8, teamAvg: 50, deltaFromAvg: -8.2 }),
+          'avg',
+        ),
+      ).toBe('-8 vs avg');
+    });
+
+    it('uses displayed rounded percentages for avg diff labels', () => {
+      expect(
+        getRelativeLabel(
+          makePlayingTimeMetric({
+            raw: 42.6,
+            teamAvg: 43.4,
+            deltaFromAvg: -0.8,
+          }),
+          'avg',
+        ),
+      ).toBe('even with avg');
     });
 
     it('formats playing-time duration and max-mode usage labels', () => {

@@ -63,7 +63,7 @@ export default function HalftimeModal() {
     if (lineConfirmedForNextPoint || !lineCallingEnabled) {
       router.dismissTo('/');
     } else {
-      router.replace('/PointTransition');
+      router.replace('/LineEditor');
     }
   };
 
@@ -189,7 +189,7 @@ export default function HalftimeModal() {
                 <View style={styles.buttonRow}>
                   {lineCallingEnabled && (
                     <Pressable
-                      onPress={() => router.push('/PointTransition')}
+                      onPress={() => router.push('/LineEditor')}
                       style={({ pressed }) => [
                         styles.setLineBtn,
                         { borderColor: palette.overlay10 },
@@ -287,7 +287,7 @@ export default function HalftimeModal() {
                 <View style={[styles.buttonRow, { marginTop: 16 }]}>
                   {lineCallingEnabled && (
                     <Pressable
-                      onPress={() => router.push('/PointTransition')}
+                      onPress={() => router.push('/LineEditor')}
                       style={({ pressed }) => [
                         styles.setLineBtn,
                         { borderColor: palette.overlay10 },

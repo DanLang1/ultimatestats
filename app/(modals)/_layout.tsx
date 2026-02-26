@@ -12,7 +12,6 @@ export default function ModalsLayout() {
       }}>
       <Stack.Screen name="NumberPickerModal" options={{ animation: 'fade' }} />
       <Stack.Screen name="EditPlayerModal" options={{ animation: 'fade' }} />
-      <Stack.Screen name="LinePromptModal" options={{ animation: 'fade' }} />
       <Stack.Screen name="EditDurationModal" options={{ animation: 'fade' }} />
     </Stack>
   );
