@@ -8,7 +8,6 @@ export default {
   icon: './assets/images/icon.png',
   scheme: IS_DEV ? 'ultimatestats-dev' : 'ultimatestats',
   userInterfaceStyle: 'automatic',
-  newArchEnabled: true,
   ios: {
     supportsTablet: true,
     bundleIdentifier: IS_DEV ? 'com.langdk.ultimatestats.dev' : 'com.langdk.ultimatestats',
@@ -70,6 +69,17 @@ export default {
       'expo-dev-client',
       {
         addGeneratedScheme: IS_DEV,
+      },
+    ],
+    'expo-font',
+    'expo-image',
+    'expo-sharing',
+    'expo-web-browser',
+    [
+      'expo-build-properties',
+      {
+        buildReactNativeFromSource: true,
+        useHermesV1: true,
       },
     ],
   ],

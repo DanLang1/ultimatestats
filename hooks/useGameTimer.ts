@@ -28,7 +28,7 @@ export function useGameTimer() {
    * Instead of tracking time since last 'tick' with setInterval (which can be inconsistent), we check when the timer should end (endTime) and calculate remaining time (endTime - now)
    */
   useEffect(() => {
-    let interval: number;
+    let interval: ReturnType<typeof setInterval>;
     if (isActive && endTime) {
       interval = setInterval(() => {
         const now = Date.now();
