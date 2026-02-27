@@ -83,6 +83,7 @@ const midnightElectric = {
   // Player matching type colors
   mmpColor: '#60A5FA', // Blue 400 - male matching player names
   fmpColor: '#F472B6', // Pink 400 - female matching player names
+  dLineAccent: '#C026D3', // Fuchsia 600 - D-line accent in playing time
 
   // Contrast labels
   // Contrast labels
@@ -274,6 +275,7 @@ export const lightPalette = {
   // Player matching type colors
   mmpColor: '#2563EB', // Blue 600 - male matching player names (darker for light bg)
   fmpColor: '#DB2777', // Pink 600 - female matching player names (darker for light bg)
+  dLineAccent: '#A21CAF', // Fuchsia 700 - D-line accent in playing time
 
   // Contrast labels
   textOnAccent: '#FFFFFF',

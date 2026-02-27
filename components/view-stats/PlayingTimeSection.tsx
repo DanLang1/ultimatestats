@@ -109,9 +109,8 @@ export default function PlayingTimeSection({
         />
 
         <View style={styles.heroDetails}>
-          <Text style={[styles.sectionLabel, { color: palette.textMuted }]}>OVERVIEW</Text>
           <Text style={[styles.heroSubtext, { color: palette.textMuted }]}>
-            {stats.playingTimePercent?.toFixed(0) ?? '0'}% of team points
+            Played {stats.playingTimePercent?.toFixed(0) ?? '0'}% of team points
           </Text>
 
           <View style={styles.heroMetricsRow}>
@@ -191,9 +190,10 @@ function createStyles(sizeClass: SizeClass) {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 16,
+      ...(sizeClass !== 'small' && { alignSelf: 'center' as const }),
     },
     heroDetails: {
-      flex: 1,
+      ...(sizeClass === 'small' && { flex: 1 }),
       gap: 6,
     },
     heroSubtext: {
@@ -216,11 +216,13 @@ function createStyles(sizeClass: SizeClass) {
       fontSize: scaleBySizeClass(9, sizeClass),
       fontWeight: '600',
       letterSpacing: 0.5,
+      ...(sizeClass !== 'small' && { alignSelf: 'center' as const }),
     },
     pillGrid: {
       flexDirection: 'row',
       flexWrap: 'wrap',
       gap: 8,
+      ...(sizeClass !== 'small' && { justifyContent: 'center' as const }),
     },
   });
 }

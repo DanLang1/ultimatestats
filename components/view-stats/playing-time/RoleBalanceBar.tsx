@@ -20,7 +20,7 @@ export default function RoleBalanceBar({
 }: RoleBalanceBarProps) {
   const { palette } = useTheme();
   const styles = createStyles(sizeClass);
-  const dLineColor = palette.fmpColor;
+  const dLineColor = palette.dLineAccent;
 
   const totalPoints = oPoints + dPoints;
   if (totalPoints === 0) {
@@ -115,10 +115,12 @@ function createStyles(sizeClass: SizeClass) {
       flexDirection: 'row',
       flexWrap: 'wrap',
       gap: 10,
+      ...(sizeClass !== 'small' && { justifyContent: 'center' as const }),
     },
     roleCard: {
       flex: 1,
       minWidth: scaleBySizeClass(130, sizeClass),
+      maxWidth: 320,
       borderRadius: 14,
       borderWidth: 1,
       padding: scaleBySizeClass(12, sizeClass),
