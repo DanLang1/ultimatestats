@@ -105,6 +105,16 @@ This document tracks intentionally deferred cleanup work discovered during the d
   `store/gameStore.ts:1146`
   `app/(main)/ViewStats.tsx:67`
 
+## P3 - Manual Halftime Correction For Legacy Saved Games
+
+- Legacy saved games are now normalized to a single persisted `triggeredHalftime` goal marker so timeline/stats replay can stay simple, but old soft-cap-adjusted games can still end up with an inferred halftime goal that is unknowable from the stored data alone.
+- Future UX: show halftime in the saved-game timeline and allow the user to move the halftime marker to a different goal event. That would correct downstream possession-flip and timeout-reset replay without reintroducing special-case legacy halftime math throughout stats utilities.
+- References:
+  `lib/storage/migrations/v3_stamp_halftime.ts`
+  `lib/timelineUtils.ts`
+  `lib/timeoutUtils.ts`
+  `store/gameStore.types.ts`
+
 ## P3 - Expo Router Naming and Feature Grouping
 
 - Standardize route filenames to lowercase kebab-case for long-term consistency (for example `GameInfo.tsx` -> `game-info.tsx`) with a planned migration that preserves existing links during rollout.

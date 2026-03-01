@@ -1,5 +1,6 @@
 import { DEFAULT_HALFTIME_BREAK_SECONDS, DEFAULT_TIMEOUT_SECONDS } from '@/lib/constants';
 import { checkGameOver } from '@/lib/gameUtils';
+import { hasReachedHalftime } from '@/lib/halftimeUtils';
 import { UNKNOWN_PLAYER_ID } from '@/lib/playerUtils';
 import { CURRENT_SCHEMA_VERSION, SavedGame, SavedTeam, storage } from '@/lib/storage';
 import { deriveTimeoutState } from '@/lib/timeoutUtils';
@@ -296,12 +297,6 @@ export const useGameStore = create<GameState>()(
                 state.gameTo = state.baseGameTo;
               }
 
-              // Reset gameHalf to 1 if undo brings both scores below halftime threshold
-              const halftimeScore = Math.ceil(state.baseGameTo / 2);
-              if (state.team1Score < halftimeScore && state.team2Score < halftimeScore) {
-                state.gameHalf = 1;
-              }
-
               state.possession = lastEvent.team;
               state.pendingStatEntry = null;
               state.currentPoint = Math.max(1, state.currentPoint - 1);
@@ -329,6 +324,12 @@ export const useGameStore = create<GameState>()(
               state.possession = state.possession === 'team1' ? 'team2' : 'team1';
               state.pendingTurnoverEntry = null;
               state.events.pop();
+            }
+
+            const halftimeReached = hasReachedHalftime(state.events, state.autoHalftimeEnabled);
+            state.gameHalf = halftimeReached ? 2 : 1;
+            if (!halftimeReached) {
+              state.isHalftimeBreak = false;
             }
 
             // Re-derive timeout state from remaining events
@@ -625,16 +626,14 @@ export const useGameStore = create<GameState>()(
               state.pointTimerPausedElapsed = null;
             }
 
-            // Reset halftime if needed (same logic as undoLastAction)
-            const halftimeScore = Math.ceil(state.baseGameTo / 2);
-            if (state.team1Score < halftimeScore && state.team2Score < halftimeScore) {
-              state.gameHalf = 1;
-              // Cancel halftime break if it was triggered by this goal
-              state.isHalftimeBreak = false;
-            }
-
             // Remove the goal event
             state.events.pop();
+
+            const halftimeReached = hasReachedHalftime(state.events, state.autoHalftimeEnabled);
+            state.gameHalf = halftimeReached ? 2 : 1;
+            if (!halftimeReached) {
+              state.isHalftimeBreak = false;
+            }
 
             // Reset possession to team1 (they were attacking)
             state.possession = 'team1';

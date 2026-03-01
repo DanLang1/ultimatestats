@@ -1,4 +1,4 @@
-import { GameEvent, GoalEvent } from '@/store/gameStore.types';
+import type { GameEvent, GoalEvent } from '@/store/gameStore.types';
 
 export function inferHalftimeGoalEventIndex(
   events: GameEvent[],
@@ -85,4 +85,11 @@ export function didGoalTriggerHalftime(event: GoalEvent, halftimeAlreadyReached:
   }
 
   return event.triggeredHalftime === true;
+}
+
+export function hasReachedHalftime(events: GameEvent[], autoHalftimeEnabled = true): boolean {
+  return (
+    autoHalftimeEnabled &&
+    events.some((event) => event.type === 'goal' && event.triggeredHalftime === true)
+  );
 }

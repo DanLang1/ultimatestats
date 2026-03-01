@@ -9,6 +9,7 @@ Tests live in `lib/__tests__/`.
 | Change Area | Primary Tests |
 | --- | --- |
 | Game end rules / scoring caps | `lib/__tests__/gameUtils.test.ts`, `lib/__tests__/timeoutUtils.test.ts` |
+| Halftime marker utilities | `lib/__tests__/halftimeUtils.test.ts` |
 | Gender ratio / line expectations | `lib/__tests__/genderRatioUtils.test.ts`, `lib/__tests__/lineUtils.test.ts` |
 | Event timeline / point reconstruction | `lib/__tests__/timelineUtils.test.ts` |
 | Player/team stats calculations | `lib/__tests__/statsUtils.test.ts`, `lib/__tests__/teamStatsUtils.test.ts`, `lib/__tests__/playerStatsUtils.test.ts`, `lib/__tests__/playingTimeStatsUtils.test.ts`, `lib/__tests__/timingStatsUtils.test.ts` |

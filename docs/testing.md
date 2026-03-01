@@ -21,6 +21,7 @@ Tests live in `lib/__tests__/` directory:
 
 - `gameUtils.test.ts` - Game end logic
 - `playerUtils.test.ts` - Player utilities
+- `halftimeUtils.test.ts` - Halftime marker utilities
 - `statsUtils.test.ts` - Stats calculations
 - `timelineUtils.test.ts` - Timeline formatting
 - `lib/storage/__tests__/migrations*.test.ts` - Saved-game schema migrations
