@@ -1,0 +1,251 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`storage migration snapshots migrates v2/halftime-by-math.json: v2/halftime-by-math.json 1`] = `
+{
+  "autoHalftimeEnabled": true,
+  "createdAt": 1700000000000,
+  "events": [
+    {
+      "assistPlayerId": "p2",
+      "goalPlayerId": "p1",
+      "team": "team1",
+      "type": "goal",
+    },
+    {
+      "assistPlayerId": null,
+      "goalPlayerId": null,
+      "team": "team2",
+      "type": "goal",
+    },
+    {
+      "assistPlayerId": null,
+      "goalPlayerId": "p1",
+      "team": "team1",
+      "type": "goal",
+    },
+    {
+      "assistPlayerId": null,
+      "goalPlayerId": null,
+      "team": "team2",
+      "type": "goal",
+    },
+    {
+      "assistPlayerId": "p1",
+      "goalPlayerId": "p2",
+      "team": "team1",
+      "type": "goal",
+    },
+    {
+      "assistPlayerId": "p2",
+      "goalPlayerId": "p1",
+      "team": "team1",
+      "type": "goal",
+    },
+    {
+      "assistPlayerId": null,
+      "goalPlayerId": null,
+      "team": "team2",
+      "type": "goal",
+    },
+    {
+      "assistPlayerId": null,
+      "goalPlayerId": "p1",
+      "team": "team1",
+      "type": "goal",
+    },
+    {
+      "assistPlayerId": "p1",
+      "goalPlayerId": "p2",
+      "team": "team1",
+      "type": "goal",
+    },
+    {
+      "assistPlayerId": "p2",
+      "goalPlayerId": "p1",
+      "team": "team1",
+      "triggeredHalftime": true,
+      "type": "goal",
+    },
+    {
+      "assistPlayerId": null,
+      "goalPlayerId": "p2",
+      "team": "team1",
+      "type": "goal",
+    },
+  ],
+  "gameLength": 90,
+  "gameTo": 13,
+  "id": "fixture-v2-halftime-by-math",
+  "schemaVersion": 3,
+  "startingPossession": "team1",
+  "team1": {
+    "id": "team-1",
+    "name": "Mixed Team",
+    "roster": [
+      {
+        "id": "p1",
+        "isActive": true,
+        "matchingType": null,
+        "name": "Alex",
+        "role": null,
+      },
+      {
+        "id": "p2",
+        "isActive": true,
+        "matchingType": null,
+        "name": "Blair",
+        "role": null,
+      },
+    ],
+  },
+  "team1Score": 8,
+  "team2Name": "Womp",
+  "team2Score": 3,
+}
+`;
+
+exports[`storage migration snapshots migrates v2/softcap-final-target.json: v2/softcap-final-target.json 1`] = `
+{
+  "autoHalftimeEnabled": true,
+  "createdAt": 1700003600000,
+  "events": [
+    {
+      "assistPlayerId": "lily",
+      "goalPlayerId": "joel",
+      "team": "team1",
+      "type": "goal",
+    },
+    {
+      "assistPlayerId": null,
+      "goalPlayerId": null,
+      "team": "team2",
+      "type": "goal",
+    },
+    {
+      "player2Id": null,
+      "playerId": "lily",
+      "subtype": "drop",
+      "team": "team1",
+      "type": "turnover",
+    },
+    {
+      "assistPlayerId": null,
+      "goalPlayerId": null,
+      "team": "team2",
+      "triggeredHalftime": true,
+      "triggeredSoftcap": true,
+      "type": "goal",
+    },
+    {
+      "player2Id": null,
+      "playerId": null,
+      "subtype": "block",
+      "team": "team2",
+      "type": "turnover",
+    },
+    {
+      "assistPlayerId": null,
+      "goalPlayerId": null,
+      "team": "team2",
+      "type": "goal",
+    },
+    {
+      "player2Id": null,
+      "playerId": null,
+      "subtype": "block",
+      "team": "team2",
+      "type": "turnover",
+    },
+    {
+      "assistPlayerId": null,
+      "goalPlayerId": null,
+      "team": "team2",
+      "type": "goal",
+    },
+  ],
+  "gameLength": 90,
+  "gameTo": 4,
+  "id": "fixture-v2-softcap-final-target",
+  "schemaVersion": 3,
+  "startingPossession": "team1",
+  "team1": {
+    "id": "team-1",
+    "name": "Mixed Team",
+    "roster": [
+      {
+        "id": "joel",
+        "isActive": true,
+        "matchingType": null,
+        "name": "Joel",
+        "role": null,
+      },
+      {
+        "id": "lily",
+        "isActive": true,
+        "matchingType": null,
+        "name": "Lily",
+        "role": null,
+      },
+    ],
+  },
+  "team1Score": 1,
+  "team2Name": "Womp",
+  "team2Score": 4,
+}
+`;
+
+exports[`storage migration snapshots migrates v3/already-stamped-halftime.json: v3/already-stamped-halftime.json 1`] = `
+{
+  "autoHalftimeEnabled": true,
+  "createdAt": 1700007200000,
+  "events": [
+    {
+      "assistPlayerId": "p2",
+      "goalPlayerId": "p1",
+      "team": "team1",
+      "type": "goal",
+    },
+    {
+      "assistPlayerId": "p1",
+      "goalPlayerId": "p2",
+      "team": "team1",
+      "triggeredHalftime": true,
+      "type": "goal",
+    },
+    {
+      "assistPlayerId": null,
+      "goalPlayerId": null,
+      "team": "team2",
+      "type": "goal",
+    },
+  ],
+  "gameLength": 90,
+  "gameTo": 3,
+  "id": "fixture-v3-already-stamped-halftime",
+  "schemaVersion": 3,
+  "startingPossession": "team1",
+  "team1": {
+    "id": "team-1",
+    "name": "Mixed Team",
+    "roster": [
+      {
+        "id": "p1",
+        "isActive": true,
+        "matchingType": null,
+        "name": "Alex",
+        "role": null,
+      },
+      {
+        "id": "p2",
+        "isActive": true,
+        "matchingType": null,
+        "name": "Blair",
+        "role": null,
+      },
+    ],
+  },
+  "team1Score": 2,
+  "team2Name": "Womp",
+  "team2Score": 1,
+}
+`;

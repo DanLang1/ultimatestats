@@ -9,6 +9,7 @@ import { ShareConfirmModal } from '@/components/ui/ShareConfirmModal';
 import StatsContent from '@/components/view-stats/StatsContent';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { useLoadSavedGamesWithAlert } from '@/hooks/useLoadSavedGamesWithAlert';
 import { resolveTeamName } from '@/lib/playerUtils';
 import { serializeGame, uploadPayload } from '@/lib/sharing';
 import { formatDate, generateSavedGameCSV } from '@/lib/statsUtils';
@@ -18,7 +19,7 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { File, Paths } from 'expo-file-system';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import * as Sharing from 'expo-sharing';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
 
 export default function SavedGameStatsScreen() {
@@ -27,16 +28,14 @@ export default function SavedGameStatsScreen() {
   const { palette } = useTheme();
   const { isLandscape, sizeClass } = useLayout();
   const styles = createStyles(isLandscape, sizeClass);
-  const { savedGames, savedTeams, loadSavedGames } = useGameStore();
+  const { savedGames, savedTeams } = useGameStore();
+  useLoadSavedGamesWithAlert();
   const [pendingShareAction, setPendingShareAction] = useState<(() => Promise<string>) | null>(
     null,
   );
 
-  useEffect(() => {
-    loadSavedGames();
-  }, [loadSavedGames]);
-
   const selectedGame = gameId ? (savedGames.find((game) => game.id === gameId) ?? null) : null;
+
   const hasMissingParam = !gameId;
   const gameTeamName = selectedGame
     ? resolveTeamName(selectedGame.team1.id, selectedGame.team1.name, savedTeams)
@@ -201,6 +200,7 @@ export default function SavedGameStatsScreen() {
             isSavedGame
             startingPossession={selectedGame.startingPossession}
             gameTo={selectedGame.gameTo}
+            autoHalftimeEnabled={selectedGame.autoHalftimeEnabled ?? true}
             games={[selectedGame]}
             pointLines={selectedGame.pointLines}
             team1Color={selectedGame.team1Color}

@@ -33,6 +33,7 @@ export default function PlayerStats() {
     pointLines,
     startingPossession,
     gameTo,
+    autoHalftimeEnabled,
   } = usePlayerStatsStore();
   const { palette } = useTheme();
   const { isLandscape, sizeClass } = useLayout();
@@ -219,6 +220,7 @@ export default function PlayerStats() {
             pointLines={pointLines}
             startingPossession={startingPossession}
             gameTo={gameTo}
+            autoHalftimeEnabled={autoHalftimeEnabled}
             games={games}
             roster={roster}
           />
@@ -345,6 +347,7 @@ export default function PlayerStats() {
             pointLines={pointLines}
             startingPossession={startingPossession}
             gameTo={gameTo}
+            autoHalftimeEnabled={autoHalftimeEnabled}
             goals={stats.summary?.goals}
             assists={stats.summary?.assists}
             blocks={stats.summary?.blocks}

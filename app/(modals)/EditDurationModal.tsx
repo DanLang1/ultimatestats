@@ -24,6 +24,7 @@ export default function EditDurationModal() {
     events,
     startingPossession,
     gameTo: currentGameTo,
+    autoHalftimeEnabled: currentAutoHalftimeEnabled,
     savedGames,
     updateEvent,
     updateSavedGameEvent,
@@ -38,11 +39,15 @@ export default function EditDurationModal() {
   const activeEvents = savedGame?.events ?? events;
   const activeStartingPossession = savedGame?.startingPossession ?? startingPossession;
   const activeGameTo = savedGame?.gameTo ?? currentGameTo;
+  const activeAutoHalftimeEnabled = savedGame?.autoHalftimeEnabled ?? currentAutoHalftimeEnabled;
 
   const pointEvents = computePointByPointEvents(
     activeEvents,
     activeStartingPossession,
     activeGameTo,
+    undefined,
+    undefined,
+    activeAutoHalftimeEnabled,
   );
   const editedPoint = pointEvents.find((point) => point.goalEventIndex === eventIndex);
   // Compare the edited goal timestamp against earlier events in the point

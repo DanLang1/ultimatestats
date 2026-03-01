@@ -283,12 +283,15 @@ export function computeRelativePlayingTimeStats(
   events: GameEvent[],
   startingPossession: 'team1' | 'team2' | null,
   gameTo: number,
+  autoHalftimeEnabled = true,
 ): RelativePlayingTimeMetric[] {
   if (!pointLines?.length) {
     return [];
   }
 
-  const playingTimeMap = computePlayingTimeStats(pointLines, events, startingPossession, gameTo);
+  const playingTimeMap = computePlayingTimeStats(pointLines, events, startingPossession, gameTo, {
+    autoHalftimeEnabled,
+  });
   const myStats = playingTimeMap.get(playerId);
 
   if (!myStats) {
@@ -756,17 +759,28 @@ export function generateCurrentGameCSV(
   team2Name: string,
   startingPossession: 'team1' | 'team2' | null,
   gameTo: number,
+  autoHalftimeEnabled = true,
   roster?: Player[],
   pointLines?: PointLineRecord[],
 ): string {
   const playerStats = computePlayerStats(events, 'team1', roster);
   const playingTimeStats = pointLines?.length
-    ? computePlayingTimeStats(pointLines, events, startingPossession, gameTo)
+    ? computePlayingTimeStats(pointLines, events, startingPossession, gameTo, {
+        autoHalftimeEnabled,
+      })
     : null;
   const playerRows = mergePlayerRows(playerStats, playingTimeStats, roster);
 
   let csv = '# Play-by-Play\n';
-  csv += playByPlayCSV(events, team1Name, team2Name, startingPossession, gameTo, roster);
+  csv += playByPlayCSV(
+    events,
+    team1Name,
+    team2Name,
+    startingPossession,
+    gameTo,
+    autoHalftimeEnabled,
+    roster,
+  );
 
   csv += '\n\n# Turnovers\n';
   csv += turnoversCSV(events, team1Name, team2Name, roster);
@@ -775,10 +789,12 @@ export function generateCurrentGameCSV(
   csv += playerSummaryCSV(playerRows, playingTimeStats !== null && playingTimeStats.size > 0);
 
   csv += '\n\n# Team Stats\n';
-  csv += teamStatsCSV(computeTeamStats(events, startingPossession, gameTo));
-  csv += timingStatsCSV(computeTimingStats(events, startingPossession, gameTo));
+  csv += teamStatsCSV(computeTeamStats(events, startingPossession, gameTo, autoHalftimeEnabled));
+  csv += timingStatsCSV(
+    computeTimingStats(events, startingPossession, gameTo, autoHalftimeEnabled),
+  );
   csv += topStatsCSV(
-    computeTimeOfPossessionStats(events, startingPossession, gameTo),
+    computeTimeOfPossessionStats(events, startingPossession, gameTo, autoHalftimeEnabled),
     team1Name,
     team2Name,
   );
@@ -790,9 +806,12 @@ export function generateCurrentGameCSV(
  * Generate CSV for a single saved game.
  */
 export function generateSavedGameCSV(game: SavedGame): string {
+  const autoHalftimeEnabled = game.autoHalftimeEnabled ?? true;
   const playerStats = computePlayerStats(game.events, 'team1', game.team1.roster);
   const playingTimeStats = game.pointLines?.length
-    ? computePlayingTimeStats(game.pointLines, game.events, game.startingPossession, game.gameTo)
+    ? computePlayingTimeStats(game.pointLines, game.events, game.startingPossession, game.gameTo, {
+        autoHalftimeEnabled,
+      })
     : null;
   const playerRows = mergePlayerRows(playerStats, playingTimeStats, game.team1.roster);
 
@@ -805,6 +824,7 @@ export function generateSavedGameCSV(game: SavedGame): string {
     game.team2Name,
     game.startingPossession,
     game.gameTo,
+    autoHalftimeEnabled,
     game.team1.roster,
   );
 
@@ -815,10 +835,19 @@ export function generateSavedGameCSV(game: SavedGame): string {
   csv += playerSummaryCSV(playerRows, playingTimeStats !== null && playingTimeStats.size > 0);
 
   csv += '\n\n# Team Stats\n';
-  csv += teamStatsCSV(computeTeamStats(game.events, game.startingPossession, game.gameTo));
-  csv += timingStatsCSV(computeTimingStats(game.events, game.startingPossession, game.gameTo));
+  csv += teamStatsCSV(
+    computeTeamStats(game.events, game.startingPossession, game.gameTo, autoHalftimeEnabled),
+  );
+  csv += timingStatsCSV(
+    computeTimingStats(game.events, game.startingPossession, game.gameTo, autoHalftimeEnabled),
+  );
   csv += topStatsCSV(
-    computeTimeOfPossessionStats(game.events, game.startingPossession, game.gameTo),
+    computeTimeOfPossessionStats(
+      game.events,
+      game.startingPossession,
+      game.gameTo,
+      autoHalftimeEnabled,
+    ),
     game.team1.name,
     game.team2Name,
   );
@@ -845,17 +874,28 @@ export function generateAggregateCSV(
   csv += '\n# Combined Team Stats\n';
   csv += teamStatsCSV(
     aggregateTeamStats(
-      games.map((g) => computeTeamStats(g.events, g.startingPossession, g.gameTo)),
+      games.map((g) =>
+        computeTeamStats(g.events, g.startingPossession, g.gameTo, g.autoHalftimeEnabled ?? true),
+      ),
     ),
   );
   csv += timingStatsCSV(
     aggregateTimingStats(
-      games.map((g) => computeTimingStats(g.events, g.startingPossession, g.gameTo)),
+      games.map((g) =>
+        computeTimingStats(g.events, g.startingPossession, g.gameTo, g.autoHalftimeEnabled ?? true),
+      ),
     ),
   );
   csv += topStatsCSV(
     aggregateTopStats(
-      games.map((g) => computeTimeOfPossessionStats(g.events, g.startingPossession, g.gameTo)),
+      games.map((g) =>
+        computeTimeOfPossessionStats(
+          g.events,
+          g.startingPossession,
+          g.gameTo,
+          g.autoHalftimeEnabled ?? true,
+        ),
+      ),
     ),
     teamName,
     'Opponents',
@@ -881,13 +921,23 @@ export function generateAggregateCSV(
   // Section 4: Individual Games
   csv += '\n\n# Individual Game Details';
   for (const game of games) {
+    const autoHalftimeEnabled = game.autoHalftimeEnabled ?? true;
     csv += `\n\nGame: vs ${game.team2Name} - ${formatDateForCSV(game.createdAt)}`;
 
     csv += '\n\n# Team Stats\n';
-    csv += teamStatsCSV(computeTeamStats(game.events, game.startingPossession, game.gameTo));
-    csv += timingStatsCSV(computeTimingStats(game.events, game.startingPossession, game.gameTo));
+    csv += teamStatsCSV(
+      computeTeamStats(game.events, game.startingPossession, game.gameTo, autoHalftimeEnabled),
+    );
+    csv += timingStatsCSV(
+      computeTimingStats(game.events, game.startingPossession, game.gameTo, autoHalftimeEnabled),
+    );
     csv += topStatsCSV(
-      computeTimeOfPossessionStats(game.events, game.startingPossession, game.gameTo),
+      computeTimeOfPossessionStats(
+        game.events,
+        game.startingPossession,
+        game.gameTo,
+        autoHalftimeEnabled,
+      ),
       game.team1.name,
       game.team2Name,
     );
@@ -895,7 +945,13 @@ export function generateAggregateCSV(
     csv += '\n\n# Player Summary\n';
     const perGamePlayerStats = computePlayerStats(game.events, 'team1', game.team1.roster);
     const perGamePlayingTimeStats = game.pointLines?.length
-      ? computePlayingTimeStats(game.pointLines, game.events, game.startingPossession, game.gameTo)
+      ? computePlayingTimeStats(
+          game.pointLines,
+          game.events,
+          game.startingPossession,
+          game.gameTo,
+          { autoHalftimeEnabled },
+        )
       : null;
     const perGameRows = mergePlayerRows(
       perGamePlayerStats,
@@ -914,6 +970,7 @@ export function generateAggregateCSV(
       game.team2Name,
       game.startingPossession,
       game.gameTo,
+      autoHalftimeEnabled,
       game.team1.roster,
     );
 
@@ -1018,7 +1075,10 @@ function aggregatePlayingTimeStatsByPlayer(
       game.events,
       game.startingPossession,
       game.gameTo,
-      game.pointStartTimestamps,
+      {
+        pointStartTimestamps: game.pointStartTimestamps,
+        autoHalftimeEnabled: game.autoHalftimeEnabled ?? true,
+      },
     );
 
     for (const [playerId, stats] of perGame.entries()) {
@@ -1165,9 +1225,17 @@ function playByPlayCSV(
   team2Name: string,
   startingPossession: 'team1' | 'team2' | null,
   gameTo: number,
+  autoHalftimeEnabled = true,
   roster?: Player[],
 ): string {
-  const points = computePointByPointEvents(events, startingPossession, gameTo);
+  const points = computePointByPointEvents(
+    events,
+    startingPossession,
+    gameTo,
+    undefined,
+    undefined,
+    autoHalftimeEnabled,
+  );
   let csv = 'Point Number,Curr Score,Pulling Team,Goal Team,Goal,Assist,Duration\n';
 
   const resolveName = (playerId: string | null) => getPlayerName(roster, playerId);

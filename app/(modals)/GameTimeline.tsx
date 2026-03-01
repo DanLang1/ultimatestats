@@ -28,6 +28,7 @@ export default function GameTimelineScreen() {
     savedTeams,
     startingPossession,
     gameTo,
+    autoHalftimeEnabled,
     pointStartTimestamps,
     currentPointStartTime,
     currentPoint,
@@ -48,6 +49,7 @@ export default function GameTimelineScreen() {
           team2Score: game.team2Score,
           startingPossession: game.startingPossession,
           gameTo: game.gameTo,
+          autoHalftimeEnabled: game.autoHalftimeEnabled ?? true,
           roster: game.team1.roster,
           pointStartTimestamps: game.pointStartTimestamps,
           timingEnabled: game.events.some((event) => event.elapsedMs !== undefined),
@@ -61,6 +63,7 @@ export default function GameTimelineScreen() {
         team2Score: events.filter((e) => e.type === 'goal' && e.team === 'team2').length,
         startingPossession,
         gameTo,
+        autoHalftimeEnabled,
         roster: currentTeam?.roster ?? [],
         pointStartTimestamps,
         timingEnabled: pointTimerEnabled,
@@ -81,6 +84,7 @@ export default function GameTimelineScreen() {
     gameData.gameTo,
     gameData.pointStartTimestamps,
     isSavedGame ? undefined : currentPointStartTime,
+    gameData.autoHalftimeEnabled,
   );
   const hasData = pointEvents.length > 0;
   const canToggleSplits = gameData.timingEnabled;

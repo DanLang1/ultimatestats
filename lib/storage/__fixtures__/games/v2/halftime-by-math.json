@@ -1,0 +1,44 @@
+{
+  "id": "fixture-v2-halftime-by-math",
+  "schemaVersion": 2,
+  "createdAt": 1700000000000,
+  "team1": {
+    "id": "team-1",
+    "name": "Mixed Team",
+    "roster": [
+      {
+        "id": "p1",
+        "name": "Alex",
+        "isActive": true,
+        "matchingType": null,
+        "role": null
+      },
+      {
+        "id": "p2",
+        "name": "Blair",
+        "isActive": true,
+        "matchingType": null,
+        "role": null
+      }
+    ]
+  },
+  "team2Name": "Womp",
+  "team1Score": 8,
+  "team2Score": 3,
+  "events": [
+    { "type": "goal", "team": "team1", "goalPlayerId": "p1", "assistPlayerId": "p2" },
+    { "type": "goal", "team": "team2", "goalPlayerId": null, "assistPlayerId": null },
+    { "type": "goal", "team": "team1", "goalPlayerId": "p1", "assistPlayerId": null },
+    { "type": "goal", "team": "team2", "goalPlayerId": null, "assistPlayerId": null },
+    { "type": "goal", "team": "team1", "goalPlayerId": "p2", "assistPlayerId": "p1" },
+    { "type": "goal", "team": "team1", "goalPlayerId": "p1", "assistPlayerId": "p2" },
+    { "type": "goal", "team": "team2", "goalPlayerId": null, "assistPlayerId": null },
+    { "type": "goal", "team": "team1", "goalPlayerId": "p1", "assistPlayerId": null },
+    { "type": "goal", "team": "team1", "goalPlayerId": "p2", "assistPlayerId": "p1" },
+    { "type": "goal", "team": "team1", "goalPlayerId": "p1", "assistPlayerId": "p2" },
+    { "type": "goal", "team": "team1", "goalPlayerId": "p2", "assistPlayerId": null }
+  ],
+  "gameTo": 13,
+  "gameLength": 90,
+  "startingPossession": "team1"
+}

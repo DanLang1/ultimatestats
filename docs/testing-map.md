@@ -13,6 +13,7 @@ Tests live in `lib/__tests__/`.
 | Event timeline / point reconstruction | `lib/__tests__/timelineUtils.test.ts` |
 | Player/team stats calculations | `lib/__tests__/statsUtils.test.ts`, `lib/__tests__/teamStatsUtils.test.ts`, `lib/__tests__/playerStatsUtils.test.ts`, `lib/__tests__/playingTimeStatsUtils.test.ts`, `lib/__tests__/timingStatsUtils.test.ts` |
 | Import/share payload behavior | `lib/__tests__/importTeamTransform.test.ts`, `lib/__tests__/sharingPayloadSize.test.ts` |
+| Saved-game schema migrations | `lib/storage/__tests__/migrations.test.ts`, `lib/storage/__tests__/migrations.snapshot.test.ts`, `lib/storage/__tests__/asyncStorageAdapter.test.ts`, `lib/storage/__tests__/devImport.test.ts` |
 
 ## Manual Smoke Checklist
 
@@ -58,4 +59,3 @@ npm test -- statsUtils
 - Any change to event semantics or score progression.
 - Any change to game-over, soft-cap, halftime, or timeout logic.
 - Any bug fix where behavior previously regressed.
-

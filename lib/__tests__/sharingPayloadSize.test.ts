@@ -1,4 +1,11 @@
-import { GameEvent, Player, PointLineRecord, SavedGame, SavedTeam } from '@/lib/storage';
+import {
+  CURRENT_SCHEMA_VERSION,
+  GameEvent,
+  Player,
+  PointLineRecord,
+  SavedGame,
+  SavedTeam,
+} from '@/lib/storage';
 import { generateId } from '@/lib/utils';
 
 /**
@@ -98,7 +105,7 @@ function makeSavedGame(opts: { rosterSize: number; pointCount: number }): SavedG
 
   return {
     id: generateId(),
-    schemaVersion: 2,
+    schemaVersion: CURRENT_SCHEMA_VERSION,
     createdAt: Date.now(),
     team1,
     team2Name: 'Rival Squad',
@@ -134,7 +141,7 @@ describe('Sharing Payload Size Measurement', () => {
     const payload = {
       type: 'game' as const,
       appVersion: '1.0.0',
-      schemaVersion: 2,
+      schemaVersion: CURRENT_SCHEMA_VERSION,
       sharedAt: Date.now(),
       data: game,
     };
@@ -159,7 +166,7 @@ describe('Sharing Payload Size Measurement', () => {
     const payload = {
       type: 'team' as const,
       appVersion: '1.0.0',
-      schemaVersion: 2,
+      schemaVersion: CURRENT_SCHEMA_VERSION,
       sharedAt: Date.now(),
       data: team,
     };

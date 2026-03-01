@@ -12,6 +12,7 @@ interface PlayerStatsStore {
   pointLines?: PointLineRecord[] | null;
   startingPossession?: 'team1' | 'team2' | null;
   gameTo?: number;
+  autoHalftimeEnabled?: boolean;
   openPlayerStats: (
     playerId: string, // Changed from player name to player ID
     events: GameEvent[],
@@ -21,6 +22,7 @@ interface PlayerStatsStore {
     pointLines?: PointLineRecord[],
     startingPossession?: 'team1' | 'team2' | null,
     gameTo?: number,
+    autoHalftimeEnabled?: boolean,
   ) => void;
   setSelectedGameId: (id: string | null) => void;
 }
@@ -35,6 +37,7 @@ export const usePlayerStatsStore = create<PlayerStatsStore>((set) => ({
   pointLines: null,
   startingPossession: null,
   gameTo: 15,
+  autoHalftimeEnabled: true,
   openPlayerStats: (
     playerId,
     events,
@@ -44,6 +47,7 @@ export const usePlayerStatsStore = create<PlayerStatsStore>((set) => ({
     pointLines,
     startingPossession,
     gameTo,
+    autoHalftimeEnabled,
   ) =>
     set({
       playerId,
@@ -55,6 +59,7 @@ export const usePlayerStatsStore = create<PlayerStatsStore>((set) => ({
       pointLines,
       startingPossession,
       gameTo: gameTo ?? 15,
+      autoHalftimeEnabled: autoHalftimeEnabled ?? true,
     }),
   setSelectedGameId: (id) => set({ selectedGameId: id }),
 }));

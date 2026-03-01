@@ -1,3 +1,4 @@
+import { didGoalTriggerHalftime } from '@/lib/halftimeUtils';
 import { GameEvent } from '@/store/gameStore.types';
 
 export interface TimeoutState {
@@ -12,40 +13,31 @@ export interface TimeoutState {
  * This ensures correct timeout state after undo operations, especially across halftime.
  *
  * @param events - Array of game events to replay
- * @param baseGameTo - The base game-to score (before soft cap adjustments)
+ * @param _baseGameTo - Legacy argument retained for call-site compatibility
  * @param autoHalftimeEnabled - Whether automatic halftime is enabled
  * @returns The derived timeout state for both teams
  */
 export function deriveTimeoutState(
   events: GameEvent[],
-  baseGameTo: number,
+  _baseGameTo: number,
   autoHalftimeEnabled: boolean,
 ): TimeoutState {
   const team1Timeouts = [true, true];
   const team2Timeouts = [true, true];
   let team1Floater = true;
   let team2Floater = true;
-
-  let team1Score = 0;
-  let team2Score = 0;
   let halfReached = false;
-  const halftimeScore = Math.ceil(baseGameTo / 2);
 
   for (const event of events) {
     if (event.type === 'goal') {
-      if (event.team === 'team1') team1Score++;
-      else team2Score++;
-
-      // Halftime reset - when either team reaches halftime score
+      // Halftime reset uses the persisted halftime marker.
       // Note: Only regular timeouts reset at halftime, NOT floaters (floaters are once per game)
-      if (autoHalftimeEnabled && !halfReached) {
-        if (team1Score === halftimeScore || team2Score === halftimeScore) {
-          halfReached = true;
-          team1Timeouts[0] = true;
-          team1Timeouts[1] = true;
-          team2Timeouts[0] = true;
-          team2Timeouts[1] = true;
-        }
+      if (autoHalftimeEnabled && didGoalTriggerHalftime(event, halfReached)) {
+        halfReached = true;
+        team1Timeouts[0] = true;
+        team1Timeouts[1] = true;
+        team2Timeouts[0] = true;
+        team2Timeouts[1] = true;
       }
     } else if (event.type === 'timeout') {
       if (event.isFloater) {

@@ -3,7 +3,7 @@
 import { GameEvent, TurnoverType } from '@/store/gameStore.types';
 export type { GameEvent, TurnoverType };
 
-export const CURRENT_SCHEMA_VERSION = 2;
+export const CURRENT_SCHEMA_VERSION = 3;
 
 export interface SavedGame {
   id: string;
@@ -14,6 +14,7 @@ export interface SavedGame {
   team1Score: number;
   team2Score: number;
   events: GameEvent[];
+  autoHalftimeEnabled?: boolean; // Defaults to true for legacy saved games
   gameTo: number;
   gameLength: number;
   startingPossession: 'team1' | 'team2';
@@ -48,7 +49,6 @@ export interface GameStorage {
   loadGames(): Promise<SavedGame[]>;
   deleteGame(id: string): Promise<void>;
   deleteGames(ids: string[]): Promise<void>;
-  getGame(id: string): Promise<SavedGame | null>;
 }
 
 export interface TeamStorage {

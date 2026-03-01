@@ -55,6 +55,7 @@ export default function LineEditor() {
     events,
     startingPossession,
     gameTo,
+    autoHalftimeEnabled,
     pointStartTimestamps,
     currentTeam,
     currentPoint,
@@ -96,6 +97,7 @@ export default function LineEditor() {
     gameTo,
     pointStartTimestamps,
     null,
+    autoHalftimeEnabled,
   );
 
   const completedPoints = pointEvents.filter((p) => !p.isInProgress);

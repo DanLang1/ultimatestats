@@ -1,6 +1,6 @@
 # Tech Debt Backlog
 
-Last updated: February 22, 2026
+Last updated: February 28, 2026
 
 This document tracks intentionally deferred cleanup work discovered during the docs/rules/workflow audit.
 
@@ -27,14 +27,6 @@ This document tracks intentionally deferred cleanup work discovered during the d
   `store/gameStore.ts:573` (`cancelPendingGoal` — missing `deriveTimeoutState` call)
   `store/gameStore.ts:305` (`undoLastAction` — correct pattern to follow)
   `lib/timeoutUtils.ts:19` (`deriveTimeoutState`)
-
-## P3 - Stale Break Timer State on App Crash/Kill
-
-- `isHalftimeBreak`, `halftimeEndTime`, `halftimeTimeLeft`, `pendingTimeoutModal`, `timeoutEndTime`, and `timeoutTimeLeft` are all persisted via Zustand. If the app is killed during a halftime or timeout break, on restart the break modal reappears with stale timer values (`endTime` is in the past, `timeLeft` is whatever was last written).
-- Impact: UX annoyance — broken timer display. User can dismiss the modal. No data corruption.
-- Fix: on hydration, if `halftimeEndTime`/`timeoutEndTime` is in the past, clear the break state.
-- References:
-  `store/gameStore.ts:1069` (partialize — persisted break fields)
 
 ## P2 - Modal Theming Token Alignment
 
@@ -75,11 +67,43 @@ This document tracks intentionally deferred cleanup work discovered during the d
 
 - `gameStore` is a god store spanning six concerns: live game state, timers, roster, game catalog, UI signals, and game config.
 - Proposed split: `gameLibraryStore` (saved games/teams catalog), `gameConfigStore` (pre-game settings that survive reset), `timerStore` (all timer state), slimmed-down `liveGameStore`.
+- Persistence responsibilities are also blurred today: Zustand persist is used for the live session, while the storage adapter separately owns the saved-games/saved-teams library, but `savedGames` and `savedTeams` are still persisted inside the Zustand snapshot as cached copies.
+- Cleanup direction: keep Zustand persist focused on in-progress game/session state and let the storage adapter remain the only source of truth for saved-game and team catalogs.
 - No backwards-compat risk for saved game data — the storage adapter keys are independent of store boundaries.
 - References:
   `docs/future-features/store-refactor.md`
   `store/gameStore.ts`
   `store/gameStore.types.ts`
+  `lib/storage/asyncStorageAdapter.ts`
+
+## P3 - Quarantined Saved-Game Recovery UX
+
+- Saved-game migration now quarantines malformed individual entries instead of failing the whole list load, but there is no user-facing recovery flow yet.
+- Current behavior is effectively silent in production: bad entries disappear from the visible saved-games list while raw payloads are preserved under the quarantine storage key for debugging.
+- Future handling should likely include a visible warning count plus basic actions such as retry after an app update, export raw payload, or delete the quarantined entry.
+- References:
+  `lib/storage/asyncStorageAdapter.ts`
+  `components/dashboard/LegacyGamesDevModal.tsx`
+
+## P3 - Stats Tutorial Trigger Consistency
+
+- First-time stats onboarding currently only triggers from Settings. Enabling stat tracking from the pre-game screen bypasses that tutorial path.
+- If multiple entry points for stat tracking remain, the first-enable tutorial check should be centralized so onboarding behavior stays consistent.
+- References:
+  `app/(main)/PreGameConfirm.tsx:283`
+  `app/(main)/Settings.tsx:567`
+  `store/tutorialStore.ts`
+
+## P3 - Saved-Games Recovery Edge Cases
+
+- Healthy saved-games loads do not clear the quarantine storage key, so dev tooling can report stale quarantine counts after the underlying data is fixed.
+- `savedGames` is still persisted in the Zustand store, so corrupt storage can briefly show the last cached saved-games list until the real load fails and clears it.
+- Both issues are low severity and mostly affect rare corruption scenarios or developer testing, so they can stay deferred unless they become noisy in practice.
+- References:
+  `lib/storage/asyncStorageAdapter.ts:103`
+  `components/dashboard/LegacyGamesDevModal.tsx:153`
+  `store/gameStore.ts:1146`
+  `app/(main)/ViewStats.tsx:67`
 
 ## P3 - Expo Router Naming and Feature Grouping
 

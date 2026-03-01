@@ -33,6 +33,7 @@ interface RelativePlayerStatsSectionProps {
   pointLines?: PointLineRecord[] | null;
   startingPossession?: 'team1' | 'team2' | null;
   gameTo?: number;
+  autoHalftimeEnabled?: boolean;
   games?: SavedGame[] | null;
   roster?: Player[] | null;
 }
@@ -56,6 +57,7 @@ export default function RelativePlayerStatsSection({
   pointLines,
   startingPossession,
   gameTo = 15,
+  autoHalftimeEnabled = true,
   games,
   roster,
 }: RelativePlayerStatsSectionProps) {
@@ -78,6 +80,7 @@ export default function RelativePlayerStatsSection({
     events,
     startingPossession ?? null,
     gameTo,
+    autoHalftimeEnabled,
   ).map((metric) => ({ ...metric, category: 'playingTime' as const }));
 
   if (!eventMetrics.length && !playingTimeMetrics.length) {

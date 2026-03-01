@@ -1,0 +1,41 @@
+{
+  "id": "fixture-v2-softcap-final-target",
+  "schemaVersion": 2,
+  "createdAt": 1700003600000,
+  "team1": {
+    "id": "team-1",
+    "name": "Mixed Team",
+    "roster": [
+      {
+        "id": "joel",
+        "name": "Joel",
+        "isActive": true,
+        "matchingType": null,
+        "role": null
+      },
+      {
+        "id": "lily",
+        "name": "Lily",
+        "isActive": true,
+        "matchingType": null,
+        "role": null
+      }
+    ]
+  },
+  "team2Name": "Womp",
+  "team1Score": 1,
+  "team2Score": 4,
+  "events": [
+    { "type": "goal", "team": "team1", "goalPlayerId": "joel", "assistPlayerId": "lily" },
+    { "type": "goal", "team": "team2", "goalPlayerId": null, "assistPlayerId": null },
+    { "type": "turnover", "team": "team1", "subtype": "drop", "playerId": "lily", "player2Id": null },
+    { "type": "goal", "team": "team2", "goalPlayerId": null, "assistPlayerId": null, "triggeredSoftcap": true },
+    { "type": "turnover", "team": "team2", "subtype": "block", "playerId": null, "player2Id": null },
+    { "type": "goal", "team": "team2", "goalPlayerId": null, "assistPlayerId": null },
+    { "type": "turnover", "team": "team2", "subtype": "block", "playerId": null, "player2Id": null },
+    { "type": "goal", "team": "team2", "goalPlayerId": null, "assistPlayerId": null }
+  ],
+  "gameTo": 4,
+  "gameLength": 90,
+  "startingPossession": "team1"
+}

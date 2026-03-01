@@ -61,12 +61,17 @@ Common columns include:
 - **50/50 Turnovers**: Labeled specifically and display both players involved (Thrower & Receiver).
 - **Callahans**: Detected automatically (Block + Goal by same player) and displayed as a single high-contrast badge.
 - Possession flips (Holds/Breaks) are clearly marked.
+- Replay uses the recorded halftime goal event rather than recalculating halftime on the fly.
+- Legacy saved games are migrated by inferring that halftime event from `gameTo` once on load/import, so replayed timelines and stats use a single persisted source of truth afterward.
+- Replay also honors whether auto halftime was enabled when the game was played. Legacy saves default that flag to auto halftime enabled.
 - With point timing enabled, event chips show `m:ss` timestamps.
 - The timeline header includes a local Splits toggle to show/hide inter-event split times (e.g., `+32s`) above arrow separators.
 
 ## Saved Games List
 
 The **Saved** tab displays a history of games recorded on this device.
+
+- If the entire saved-games storage blob becomes unreadable, the screen shows a simple corruption warning instead of silently treating the library as empty.
 
 ### 1. Searching & Filtering
 

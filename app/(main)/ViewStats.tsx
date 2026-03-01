@@ -13,6 +13,7 @@ import SavedGamesList from '@/components/view-stats/SavedGamesList';
 import StatsContent from '@/components/view-stats/StatsContent';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { useLoadSavedGamesWithAlert } from '@/hooks/useLoadSavedGamesWithAlert';
 import { resolveTeamName } from '@/lib/playerUtils';
 import { serializeGames, uploadPayload } from '@/lib/sharing';
 import { formatDate, generateAggregateCSV, generateCurrentGameCSV } from '@/lib/statsUtils';
@@ -23,7 +24,7 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { File, Paths } from 'expo-file-system';
 import { Redirect, router, Stack, useLocalSearchParams } from 'expo-router';
 import * as Sharing from 'expo-sharing';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
 
 type ViewMode = 'current' | 'saved' | 'aggregate';
@@ -38,10 +39,10 @@ export default function ViewStatsScreen() {
     events,
     savedGames,
     savedTeams,
-    loadSavedGames,
     deleteSavedGames,
     startingPossession,
     gameTo,
+    autoHalftimeEnabled,
     pointLines,
     team1BgColor,
     team2BgColor,
@@ -64,9 +65,7 @@ export default function ViewStatsScreen() {
   const [selectedSavedGameIds, setSelectedSavedGameIds] = useState<Set<string>>(new Set());
 
   // Load saved games on mount
-  useEffect(() => {
-    loadSavedGames();
-  }, [loadSavedGames]);
+  useLoadSavedGamesWithAlert();
 
   // Derive unique key for scroll view to force reset
   const scrollKey = `stats-${viewMode}-${showingAggregatedStats ? 'agg' : 'list'}-${selectedTeam ?? ''}`;
@@ -96,6 +95,7 @@ export default function ViewStatsScreen() {
           team2Name,
           startingPossession,
           gameTo,
+          autoHalftimeEnabled,
           currentTeam?.roster,
           pointLines,
         );
@@ -435,6 +435,7 @@ export default function ViewStatsScreen() {
             isSavedGame={false}
             startingPossession={startingPossession}
             gameTo={gameTo}
+            autoHalftimeEnabled={autoHalftimeEnabled}
             pointLines={pointLines}
             team1Color={team1BgColor}
             team2Color={team2BgColor}

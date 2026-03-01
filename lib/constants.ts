@@ -10,6 +10,12 @@ export const EVENT_RECORDED_TOAST_DURATION_MS = 2000;
 /** Maximum minutes allowed when editing a point duration. */
 export const MAX_POINT_DURATION_MINUTES = 50;
 
+/** Default halftime break length in seconds. */
+export const DEFAULT_HALFTIME_BREAK_SECONDS = 7 * 60;
+
+/** Default timeout length in seconds. */
+export const DEFAULT_TIMEOUT_SECONDS = 70;
+
 // ── Layout breakpoints (dp) ───────────────────────────────────────────
 // Used by useLayout() for size class and narrow/large-screen detection.
 

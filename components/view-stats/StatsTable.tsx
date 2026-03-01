@@ -37,6 +37,7 @@ interface StatsTableProps {
   pointLines?: PointLineRecord[];
   startingPossession?: 'team1' | 'team2' | null;
   gameTo?: number;
+  autoHalftimeEnabled?: boolean;
 }
 
 export default function StatsTable({
@@ -48,6 +49,7 @@ export default function StatsTable({
   pointLines,
   startingPossession,
   gameTo = 15,
+  autoHalftimeEnabled = true,
 }: StatsTableProps) {
   const { palette } = useTheme();
   const { isLandscape, sizeClass } = useLayout();
@@ -59,7 +61,9 @@ export default function StatsTable({
 
   // Compute playing time stats if pointLines are available
   const playingTimeStats = pointLines?.length
-    ? computePlayingTimeStats(pointLines, events, startingPossession ?? null, gameTo)
+    ? computePlayingTimeStats(pointLines, events, startingPossession ?? null, gameTo, {
+        autoHalftimeEnabled,
+      })
     : null;
 
   // Only show playing time columns if we have data
@@ -83,6 +87,7 @@ export default function StatsTable({
       pointLines,
       startingPossession,
       gameTo,
+      autoHalftimeEnabled,
     );
     router.push('/PlayerStats');
   };

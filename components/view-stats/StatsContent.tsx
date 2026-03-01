@@ -20,6 +20,7 @@ interface StatsContentProps {
   aggregateInfo?: { teamName: string; gameCount: number };
   startingPossession?: 'team1' | 'team2' | null;
   gameTo?: number;
+  autoHalftimeEnabled?: boolean;
   games?: SavedGame[];
   pointLines?: PointLineRecord[];
   team1Color?: string;
@@ -37,6 +38,7 @@ export default function StatsContent({
   aggregateInfo,
   startingPossession = null,
   gameTo = 15,
+  autoHalftimeEnabled = true,
   games,
   pointLines,
   team1Color,
@@ -127,6 +129,7 @@ export default function StatsContent({
         events={events}
         startingPossession={startingPossession}
         gameTo={gameTo}
+        autoHalftimeEnabled={autoHalftimeEnabled}
         team1Name={team1Name}
         team2Name={team2Name}
         team1Color={team1Color}
@@ -155,6 +158,7 @@ export default function StatsContent({
           pointLines={pointLines}
           startingPossession={startingPossession}
           gameTo={gameTo}
+          autoHalftimeEnabled={autoHalftimeEnabled}
         />
       )}
     </>

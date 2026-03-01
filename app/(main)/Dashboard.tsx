@@ -1,3 +1,4 @@
+import LegacyGamesDevModal from '@/components/dashboard/LegacyGamesDevModal';
 import { ThemedView } from '@/components/ThemedView';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { useTheme } from '@/context/ThemeContext';
@@ -10,7 +11,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router, Stack } from 'expo-router';
-import React from 'react';
+import React, { useState } from 'react';
 import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 interface MenuItem {
@@ -32,6 +33,7 @@ export default function DashboardScreen() {
   const { sizeClass } = useLayout();
   const styles = createStyles(sizeClass);
   const metrics = createMetrics(sizeClass);
+  const [legacyGamesModalVisible, setLegacyGamesModalVisible] = useState(false);
   const { statTrackingEnabled, currentTeam, savedGames } = useGameStore();
   const { resetStatsTutorial } = useTutorialStore();
   const { confirmNewGame } = useNewGame({ onSuccess: () => router.push('/') });
@@ -141,6 +143,10 @@ export default function DashboardScreen() {
   return (
     <ThemedView style={[styles.container, { backgroundColor: palette.primary }]}>
       <Stack.Screen options={{ headerShown: false }} />
+      <LegacyGamesDevModal
+        visible={legacyGamesModalVisible}
+        onClose={() => setLegacyGamesModalVisible(false)}
+      />
 
       <ScreenHeader
         title="DASHBOARD"
@@ -270,6 +276,30 @@ export default function DashboardScreen() {
                 <Text style={[styles.discordTitle, { color: 'white' }]}>Reset Stats Tutorial</Text>
                 <Text style={[styles.discordSubtitle, { color: 'rgba(255,255,255,0.7)' }]}>
                   DEV ONLY - Reset the has seen flag
+                </Text>
+              </View>
+            </Pressable>
+
+            <Pressable
+              onPress={() => {
+                setLegacyGamesModalVisible(true);
+              }}
+              style={({ pressed }) => [
+                styles.discordBanner,
+                { backgroundColor: palette.warning, marginTop: 12 },
+                pressed && styles.menuItemPressed,
+              ]}>
+              <MaterialCommunityIcons
+                name="database-import-outline"
+                size={metrics.bannerIconSize}
+                color={palette.textOnAccent}
+              />
+              <View style={styles.discordText}>
+                <Text style={[styles.discordTitle, { color: palette.textOnAccent }]}>
+                  Import Legacy Game JSON
+                </Text>
+                <Text style={[styles.discordSubtitle, { color: palette.textOnAccent }]}>
+                  DEV ONLY - Paste pre-migration saved-game data
                 </Text>
               </View>
             </Pressable>

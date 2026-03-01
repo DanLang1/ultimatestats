@@ -1,0 +1,27 @@
+[
+  {
+    "id": "good-1",
+    "schemaVersion": 2,
+    "createdAt": 1,
+    "team1": { "id": "t1", "name": "Team A", "roster": [] },
+    "team2Name": "Opp 1",
+    "team1Score": 8,
+    "team2Score": 3,
+    "events": [],
+    "gameTo": 15,
+    "gameLength": 90,
+    "startingPossession": "team1"
+  },
+  {
+    "id": "bad-1",
+    "createdAt": 2,
+    "team1": { "id": "t2", "name": "Team B", "roster": [] },
+    "team2Name": "Opp 2",
+    "team1Score": 5,
+    "team2Score": 1,
+    "events": [],
+    "gameTo": 15,
+    "gameLength": 90,
+    "startingPossession": "team1"
+  }
+]

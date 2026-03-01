@@ -23,6 +23,11 @@ export interface PlayingTimeStats {
   playingTimePercent?: number;
 }
 
+export interface ComputePlayingTimeStatsOptions {
+  pointStartTimestamps?: Record<number, number>;
+  autoHalftimeEnabled?: boolean;
+}
+
 /**
  * Compute playing time-based stats for all players
  * Returns a map from player ID to their PlayingTimeStats
@@ -32,8 +37,10 @@ export function computePlayingTimeStats(
   events: GameEvent[],
   startingPossession: 'team1' | 'team2' | null,
   gameTo: number,
-  pointStartTimestamps?: Record<number, number>,
+  options: ComputePlayingTimeStatsOptions = {},
 ): Map<string, PlayingTimeStats> {
+  const { pointStartTimestamps, autoHalftimeEnabled = true } = options;
+
   // Key by player ID instead of name
   const statsMap = new Map<string, PlayingTimeStats>();
 
@@ -51,6 +58,8 @@ export function computePlayingTimeStats(
     startingPossession,
     gameTo,
     pointStartTimestamps,
+    undefined,
+    autoHalftimeEnabled,
   );
 
   // Helper to get or create stats for a player by ID

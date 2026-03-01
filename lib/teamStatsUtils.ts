@@ -41,8 +41,16 @@ export function computeTeamStats(
   events: GameEvent[],
   startingPossession: 'team1' | 'team2' | null,
   gameTo: number,
+  autoHalftimeEnabled = true,
 ): TeamStats {
-  const pointEvents = computePointByPointEvents(events, startingPossession, gameTo);
+  const pointEvents = computePointByPointEvents(
+    events,
+    startingPossession,
+    gameTo,
+    undefined,
+    undefined,
+    autoHalftimeEnabled,
+  );
 
   // Count totals
   let offensivePoints = 0;
@@ -278,8 +286,16 @@ export function computeTimingStats(
   events: GameEvent[],
   startingPossession: 'team1' | 'team2' | null,
   gameTo: number,
+  autoHalftimeEnabled = true,
 ): TimingStats {
-  const pointEvents = computePointByPointEvents(events, startingPossession, gameTo);
+  const pointEvents = computePointByPointEvents(
+    events,
+    startingPossession,
+    gameTo,
+    undefined,
+    undefined,
+    autoHalftimeEnabled,
+  );
 
   const allDurations: number[] = [];
   const oDurations: number[] = [];
@@ -344,8 +360,16 @@ export function computeTimeOfPossessionStats(
   events: GameEvent[],
   startingPossession: 'team1' | 'team2' | null,
   gameTo: number,
+  autoHalftimeEnabled = true,
 ): TimeOfPossessionStats {
-  const pointEvents = computePointByPointEvents(events, startingPossession, gameTo);
+  const pointEvents = computePointByPointEvents(
+    events,
+    startingPossession,
+    gameTo,
+    undefined,
+    undefined,
+    autoHalftimeEnabled,
+  );
 
   let team1TotalMs = 0;
   let team2TotalMs = 0;

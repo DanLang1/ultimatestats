@@ -23,6 +23,13 @@ Tests live in `lib/__tests__/` directory:
 - `playerUtils.test.ts` - Player utilities
 - `statsUtils.test.ts` - Stats calculations
 - `timelineUtils.test.ts` - Timeline formatting
+- `lib/storage/__tests__/migrations*.test.ts` - Saved-game schema migrations
+- `lib/storage/__tests__/asyncStorageAdapter.test.ts` - Saved-game load/write recovery behavior
+- `lib/storage/__tests__/devImport.test.ts` - Dev legacy JSON import parsing
+
+Legacy saved-game fixtures live in `lib/storage/__fixtures__/games/`, grouped by schema version
+(`v2/`, `v3/`, etc.). When adding a new migration, keep older fixtures unchanged and add new
+versioned fixtures/snapshots rather than rewriting the old data.
 
 ## Writing Tests
 
@@ -86,6 +93,14 @@ When testing stat tracking:
 2. Record turnovers of each type
 3. Verify timeline shows correct events
 4. Export CSV and verify data matches UI
+
+When testing saved-game migrations:
+
+1. In a dev build, open Dashboard and use `Import Legacy Game JSON`.
+2. Paste a raw saved-game object/array or a persisted `state.savedGames` blob.
+3. Confirm the games appear in Saved Games and that halftime/timeline behavior matches the migrated schema.
+4. To test malformed legacy data, use `Append Raw Entries`, then `Run loadGames() Now` (or open Saved Games) and confirm only the bad entries are quarantined.
+5. To test whole-blob corruption from the Dashboard, tap `Test Corrupt Blob Alert`. It writes invalid JSON to `ultimatestats_games` and opens Saved Games, which should show the corruption warning instead of silently pretending the library is empty.
 
 When testing game end:
 

@@ -19,6 +19,7 @@ interface PlayingTimeSectionProps {
   pointLines?: PointLineRecord[] | null;
   startingPossession?: 'team1' | 'team2' | null;
   gameTo?: number;
+  autoHalftimeEnabled?: boolean;
   goals?: number;
   assists?: number;
   blocks?: number;
@@ -33,6 +34,7 @@ export default function PlayingTimeSection({
   pointLines,
   startingPossession,
   gameTo = 15,
+  autoHalftimeEnabled = true,
   goals = 0,
   assists = 0,
   blocks = 0,
@@ -53,6 +55,7 @@ export default function PlayingTimeSection({
     events,
     startingPossession ?? null,
     gameTo,
+    { autoHalftimeEnabled },
   );
 
   const stats = playingTimeStats.get(playerId);

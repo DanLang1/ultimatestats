@@ -1,0 +1,37 @@
+{
+  "id": "fixture-v3-already-stamped-halftime",
+  "schemaVersion": 3,
+  "createdAt": 1700007200000,
+  "team1": {
+    "id": "team-1",
+    "name": "Mixed Team",
+    "roster": [
+      {
+        "id": "p1",
+        "name": "Alex",
+        "isActive": true,
+        "matchingType": null,
+        "role": null
+      },
+      {
+        "id": "p2",
+        "name": "Blair",
+        "isActive": true,
+        "matchingType": null,
+        "role": null
+      }
+    ]
+  },
+  "team2Name": "Womp",
+  "team1Score": 2,
+  "team2Score": 1,
+  "events": [
+    { "type": "goal", "team": "team1", "goalPlayerId": "p1", "assistPlayerId": "p2" },
+    { "type": "goal", "team": "team1", "goalPlayerId": "p2", "assistPlayerId": "p1", "triggeredHalftime": true },
+    { "type": "goal", "team": "team2", "goalPlayerId": null, "assistPlayerId": null }
+  ],
+  "autoHalftimeEnabled": true,
+  "gameTo": 3,
+  "gameLength": 90,
+  "startingPossession": "team1"
+}

@@ -57,6 +57,9 @@ if (result.isGameOver) {
 
 - Possession returns to `startingPossession` (they receive)
 - The team that pulled first now receives at half
+- The actual halftime goal is persisted on the goal event (`triggeredHalftime`)
+- Legacy saved games are migrated by inferring that goal from `gameTo` once, then replay uses the stamped event rather than recalculating halftime every time
+- Replayed timelines/stats also respect whether auto halftime was enabled for that game; legacy saves default that flag to `true`
 
 ### After a Turnover
 

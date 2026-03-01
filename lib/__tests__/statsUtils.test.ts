@@ -1,5 +1,5 @@
 import { GameEvent, TurnoverType } from '@/store/gameStore.types';
-import { Player, PointLineRecord, SavedGame } from '../storage/types';
+import { CURRENT_SCHEMA_VERSION, Player, PointLineRecord, SavedGame } from '../storage/types';
 import { UNKNOWN_PLAYER_ID } from '../playerUtils';
 import {
   computeRelativePlayerStats,
@@ -56,7 +56,7 @@ describe('statsUtils', () => {
     team2Score: number;
   }): SavedGame => ({
     id: params.id,
-    schemaVersion: 2,
+    schemaVersion: CURRENT_SCHEMA_VERSION,
     createdAt: params.createdAt,
     team1: {
       id: 'team1-id',
@@ -430,6 +430,7 @@ describe('statsUtils', () => {
         'team1',
         15,
         undefined,
+        undefined,
         pointLines,
       );
 
@@ -462,6 +463,7 @@ describe('statsUtils', () => {
         'team1',
         15,
         undefined,
+        undefined,
         pointLines,
       );
 
@@ -486,6 +488,7 @@ describe('statsUtils', () => {
         'Opponent',
         'team1',
         15,
+        undefined,
         undefined,
         pointLines,
       );

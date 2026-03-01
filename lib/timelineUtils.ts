@@ -1,3 +1,4 @@
+import { didGoalTriggerHalftime } from '@/lib/halftimeUtils';
 import { GameEvent, TurnoverType } from '@/store/gameStore.types';
 
 // Represents a turnover for display purposes
@@ -49,9 +50,10 @@ export interface PointEvents {
 export function computePointByPointEvents(
   events: GameEvent[],
   startingPossession: 'team1' | 'team2' | null,
-  gameTo: number,
+  _gameTo: number,
   pointStartTimestamps?: Record<number, number>,
   currentPointStartTime?: number | null, // For in-progress points
+  autoHalftimeEnabled = true,
 ): PointEvents[] {
   const result: PointEvents[] = [];
   let currentTurnovers: DisplayTurnover[] = [];
@@ -60,8 +62,6 @@ export function computePointByPointEvents(
   let team1Score = 0;
   let team2Score = 0;
 
-  // Calculate halftime score
-  const halftimeScore = Math.ceil(gameTo / 2);
   let hasReachedHalftime = false;
 
   // Track who is ON OFFENSE (receiving the pull) for the current point
@@ -125,7 +125,7 @@ export function computePointByPointEvents(
       currentTimeouts = [];
 
       // Update offensive team for NEXT point
-      if (!hasReachedHalftime && (team1Score === halftimeScore || team2Score === halftimeScore)) {
+      if (autoHalftimeEnabled && didGoalTriggerHalftime(event, hasReachedHalftime)) {
         // Halftime reached! The team that started on defense receives to start 2nd half.
         currentOffensiveTeam = startingPossession === 'team1' ? 'team2' : 'team1';
         hasReachedHalftime = true;

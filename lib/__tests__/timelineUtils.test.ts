@@ -1,4 +1,4 @@
-import { GameEvent, TurnoverType } from '@/store/gameStore.types';
+import { GameEvent, GoalEvent, TurnoverType } from '@/store/gameStore.types';
 import {
   computePointByPointEvents,
   computeRoundedSplitMs,
@@ -18,7 +18,7 @@ describe('timelineUtils', () => {
       team: 'team1' | 'team2',
       goalPlayerId?: string,
       assistPlayerId?: string,
-    ): GameEvent => ({
+    ): GoalEvent => ({
       type: 'goal',
       team,
       goalPlayerId: goalPlayerId ?? null,
@@ -92,7 +92,7 @@ describe('timelineUtils', () => {
       // gameTo = 3, halftime = 2
       const events: GameEvent[] = [
         goal('team2'), // P1: T1 O, T2 scores. Score: 0-1.
-        goal('team2'), // P2: T2 O, T2 scores. Score: 0-2 (Halftime!)
+        { ...goal('team2'), triggeredHalftime: true }, // P2: actual halftime goal
         goal('team1'), // P3: T2 starts O (because T1 started game on O).
       ];
 
@@ -102,6 +102,37 @@ describe('timelineUtils', () => {
 
       // Point 3: Team that started on defense (team2) receives 2nd half
       expect(points[2].offensiveTeam).toBe('team2');
+    });
+
+    it('should not apply a halftime flip when auto halftime is disabled', () => {
+      const events: GameEvent[] = [
+        goal('team2'), // P1: team1 starts on offense, team2 scores
+        goal('team2'), // P2: team2 starts on offense, team2 scores
+        goal('team1'), // P3 should start with team1 when halftime is disabled
+      ];
+
+      const points = computePointByPointEvents(events, 'team1', 3, undefined, undefined, false);
+
+      expect(points[2].offensiveTeam).toBe('team1');
+    });
+
+    it('should prefer the explicit halftime marker over final gameTo reconstruction', () => {
+      const events: GameEvent[] = [
+        goal('team2'), // P1: team1 starts on offense
+        goal('team2'), // P2: team1 still receives after a break
+        goal('team2'), // P3: soft-cap-reduced gameTo would incorrectly infer halftime here
+        goal('team2'), // P4: should still be team1 offense until the marked halftime goal
+        goal('team2'),
+        goal('team2'),
+        goal('team2'),
+        { ...goal('team2'), triggeredHalftime: true }, // Actual halftime goal from original baseGameTo
+        goal('team1'),
+      ];
+
+      const points = computePointByPointEvents(events, 'team1', 6);
+
+      expect(points[3].offensiveTeam).toBe('team1');
+      expect(points[8].offensiveTeam).toBe('team2');
     });
 
     it('should correctly group timeouts into points', () => {

@@ -27,6 +27,7 @@ interface TeamStatsSectionProps {
   events: GameEvent[];
   startingPossession: 'team1' | 'team2' | null;
   gameTo: number;
+  autoHalftimeEnabled?: boolean;
   team1Name: string;
   team2Name: string;
   team1Color?: string;
@@ -42,6 +43,7 @@ export default function TeamStatsSection({
   events,
   startingPossession,
   gameTo,
+  autoHalftimeEnabled = true,
   team1Name,
   team2Name,
   team1Color,
@@ -51,9 +53,14 @@ export default function TeamStatsSection({
   const { isLandscape, sizeClass } = useLayout();
   const styles = createStyles(isLandscape, sizeClass);
 
-  const stats = computeTeamStats(events, startingPossession, gameTo);
-  const timingStats = computeTimingStats(events, startingPossession, gameTo);
-  const topStats = computeTimeOfPossessionStats(events, startingPossession, gameTo);
+  const stats = computeTeamStats(events, startingPossession, gameTo, autoHalftimeEnabled);
+  const timingStats = computeTimingStats(events, startingPossession, gameTo, autoHalftimeEnabled);
+  const topStats = computeTimeOfPossessionStats(
+    events,
+    startingPossession,
+    gameTo,
+    autoHalftimeEnabled,
+  );
 
   // Don't render if no events
   if (events.length === 0) {

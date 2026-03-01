@@ -25,6 +25,7 @@ export default function HalftimeModal() {
     isHalftimeBreak,
     events,
     gameTo,
+    autoHalftimeEnabled,
     statTrackingEnabled,
   } = useGameStore();
   const {
@@ -45,7 +46,7 @@ export default function HalftimeModal() {
   const receivingLabel = receivingTeamKey === 'team1' ? 'YOU RECEIVE' : 'THEY RECEIVE';
 
   // Compute halftime stats
-  const teamStats = computeTeamStats(events, startingPossession, gameTo);
+  const teamStats = computeTeamStats(events, startingPossession, gameTo, autoHalftimeEnabled);
   const playerStats = computePlayerStats(events, 'team1', currentTeam?.roster);
   const topPerformers = playerStats.slice(0, 3);
 

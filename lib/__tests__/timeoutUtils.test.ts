@@ -1,13 +1,25 @@
-import { GameEvent } from '@/store/gameStore.types';
+import { GameEvent, GoalEvent } from '@/store/gameStore.types';
 import { deriveTimeoutState } from '../timeoutUtils';
 
 // Helper to create goal events
-const goal = (team: 'team1' | 'team2'): GameEvent => ({
+const goal = (team: 'team1' | 'team2'): GoalEvent => ({
   type: 'goal',
   team,
   goalPlayerId: null,
   assistPlayerId: null,
 });
+
+const goalRun = (
+  team: 'team1' | 'team2',
+  count: number,
+  halftimeGoalNumber?: number,
+): GoalEvent[] =>
+  Array.from({ length: count }, (_, index) => ({
+    ...goal(team),
+    ...(halftimeGoalNumber !== undefined && index === halftimeGoalNumber - 1
+      ? { triggeredHalftime: true }
+      : {}),
+  }));
 
 // Helper to create timeout events
 const timeout = (team: 'team1' | 'team2', index: number, isFloater = false): GameEvent => ({
@@ -96,6 +108,26 @@ describe('deriveTimeoutState', () => {
   });
 
   describe('halftime reset with autoHalftimeEnabled', () => {
+    it('prefers the explicit halftime marker over the final gameTo when replaying timeouts', () => {
+      const events: GameEvent[] = [
+        timeout('team1', 0),
+        goal('team2'),
+        goal('team2'),
+        goal('team2'),
+        goal('team2'),
+        timeout('team1', 1),
+        goal('team2'),
+        goal('team2'),
+        goal('team2'),
+        { ...goal('team2'), triggeredHalftime: true },
+      ];
+
+      const result = deriveTimeoutState(events, 6, true);
+
+      // Both timeouts happened before the actual halftime goal, so both reset.
+      expect(result.team1Timeouts).toEqual([true, true]);
+    });
+
     it('resets regular timeouts at halftime but NOT floaters (game to 15, halftime at 8)', () => {
       const events: GameEvent[] = [
         timeout('team1', 0),
@@ -103,7 +135,7 @@ describe('deriveTimeoutState', () => {
         timeout('team1', 0, true), // Floater
         timeout('team2', 0),
         // Score reaches 8-0 (halftime)
-        ...Array(8).fill(goal('team1')),
+        ...goalRun('team1', 8, 8),
       ];
       const result = deriveTimeoutState(events, 15, true);
 
@@ -121,7 +153,7 @@ describe('deriveTimeoutState', () => {
         timeout('team2', 0),
         timeout('team2', 1),
         // Score reaches 0-8 (halftime)
-        ...Array(8).fill(goal('team2')),
+        ...goalRun('team2', 8, 8),
       ];
       const result = deriveTimeoutState(events, 15, true);
 
@@ -132,7 +164,7 @@ describe('deriveTimeoutState', () => {
     it('tracks timeouts used after halftime', () => {
       const events: GameEvent[] = [
         timeout('team1', 0), // Used before halftime
-        ...Array(8).fill(goal('team1')), // Halftime reached
+        ...goalRun('team1', 8, 8), // Halftime reached
         timeout('team1', 1), // Used after halftime
         timeout('team2', 0, true), // Floater used after halftime
       ];
@@ -147,9 +179,9 @@ describe('deriveTimeoutState', () => {
     it('only resets once at first halftime', () => {
       const events: GameEvent[] = [
         timeout('team1', 0),
-        ...Array(8).fill(goal('team1')), // First halftime at 8-0
+        ...goalRun('team1', 8, 8), // First halftime at 8-0
         timeout('team1', 1),
-        ...Array(7).fill(goal('team2')), // Would be 8-7, but halftime already passed
+        ...goalRun('team2', 7), // Would be 8-7, but halftime already passed
       ];
       const result = deriveTimeoutState(events, 15, true);
 
@@ -161,7 +193,7 @@ describe('deriveTimeoutState', () => {
       const events: GameEvent[] = [
         timeout('team1', 0),
         timeout('team1', 1),
-        ...Array(7).fill(goal('team1')), // Halftime at 7
+        ...goalRun('team1', 7, 7), // Halftime at 7
       ];
       const result = deriveTimeoutState(events, 13, true);
 
@@ -171,7 +203,7 @@ describe('deriveTimeoutState', () => {
     it('handles game to 11 (halftime at 6)', () => {
       const events: GameEvent[] = [
         timeout('team2', 0),
-        ...Array(6).fill(goal('team2')), // Halftime at 6
+        ...goalRun('team2', 6, 6), // Halftime at 6
         timeout('team2', 1), // After halftime
       ];
       const result = deriveTimeoutState(events, 11, true);
@@ -185,12 +217,22 @@ describe('deriveTimeoutState', () => {
       const events: GameEvent[] = [
         timeout('team1', 0),
         timeout('team1', 1),
-        ...Array(8).fill(goal('team1')), // Would be halftime at 8
+        ...goalRun('team1', 8, 8), // Would be halftime at 8
       ];
       const result = deriveTimeoutState(events, 15, false);
 
       // Timeouts should NOT be reset
       expect(result.team1Timeouts).toEqual([false, false]);
+    });
+
+    it('ignores explicit halftime markers when halftime is disabled', () => {
+      const events: GameEvent[] = [
+        timeout('team1', 0),
+        { ...goal('team1'), triggeredHalftime: true },
+      ];
+      const result = deriveTimeoutState(events, 15, false);
+
+      expect(result.team1Timeouts).toEqual([false, true]);
     });
   });
 
@@ -226,7 +268,7 @@ describe('deriveTimeoutState', () => {
         goal('team1'), // 5-2
         goal('team1'), // 6-2
         goal('team1'), // 7-2
-        goal('team1'), // 8-2 - HALFTIME
+        { ...goal('team1'), triggeredHalftime: true }, // 8-2 - HALFTIME
       ];
       const result = deriveTimeoutState(events, 15, true);
 
@@ -244,7 +286,7 @@ describe('deriveTimeoutState', () => {
         timeout('team1', 0),
         timeout('team1', 1),
         timeout('team1', 0, true), // Floater
-        ...Array(8).fill(goal('team1')), // Halftime
+        ...goalRun('team1', 8, 8), // Halftime
       ];
 
       // After halftime: regular timeouts reset, floater stays used
@@ -272,7 +314,7 @@ describe('deriveTimeoutState', () => {
         timeout('team1', 1),
         timeout('team1', 0, true), // Floater - once per game!
         // Goals to reach halftime (8 for game to 15)
-        ...Array(8).fill(goal('team1')),
+        ...goalRun('team1', 8, 8),
         // Second half: use both timeouts (floater can't be used again)
         timeout('team1', 0),
         timeout('team1', 1),

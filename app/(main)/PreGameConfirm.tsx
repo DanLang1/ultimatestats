@@ -1,23 +1,21 @@
+import { EditableSettingCard } from '@/components/pre-game-confirm/EditableSettingCard';
+import { TimeoutSettingCard } from '@/components/pre-game-confirm/TimeoutSettingCard';
 import { ThemedView } from '@/components/ThemedView';
 import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
+
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { getContrastingTextColor } from '@/lib/colorUtils';
 import { formatRatioFull, GenderRatio } from '@/lib/genderRatioUtils';
 import { shouldShowLinePrompt } from '@/lib/linePromptUtils';
 import { useGameStore } from '@/store/gameStore';
+import { useNumberPickerStore } from '@/store/numberPickerStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { Redirect, router, Stack } from 'expo-router';
 import React, { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-
-type SettingItem = {
-  icon: keyof typeof MaterialCommunityIcons.glyphMap;
-  label: string;
-  value: string;
-};
 
 export default function PreGameConfirm() {
   const { palette } = useTheme();
@@ -31,23 +29,36 @@ export default function PreGameConfirm() {
     team2Name,
     setPossession,
     gameTo,
+    setGameTo,
     gameLength,
+    setGameLength,
     softCapMins,
+    setSoftCapMins,
     team1Timeouts,
     autoHalftimeEnabled,
+    setAutoHalftimeEnabled,
     floaterEnabled,
+    setFloaterEnabled,
     pointTimerEnabled,
+    setPointTimerEnabled,
+    setStatTrackingEnabled,
+    resetTimeouts,
     team1BgColor,
     team2BgColor,
   } = useGameStore();
 
   const {
     genderRatioEnabled,
+    setGenderRatioEnabled,
     setFirstPointRatio,
     firstPointRatio,
     lineCallingEnabled,
+    setLineCallingEnabled,
     numPlayers,
+    setNumPlayers,
   } = useSettingsStore();
+
+  const openPicker = useNumberPickerStore((s) => s.open);
 
   const team1Name = currentTeam?.name ?? 'Team 1';
 
@@ -67,38 +78,7 @@ export default function PreGameConfirm() {
 
   // Derived values
   const softCapTime = gameLength - softCapMins;
-  const timeoutsLabel = `${team1Timeouts.length}${autoHalftimeEnabled ? ' / half' : ''}${floaterEnabled ? ' + Floater' : ''}`;
-
-  // Build settings list — only show enabled/relevant settings
-  const settings: SettingItem[] = [
-    { icon: 'trophy-outline', label: 'Game To', value: `${gameTo}` },
-    { icon: 'clock-outline', label: 'Hard Cap', value: `${gameLength} min` },
-    { icon: 'clock-alert-outline', label: 'Soft Cap', value: `${softCapTime} min` },
-    { icon: 'timer-sand', label: 'Timeouts', value: timeoutsLabel },
-    { icon: 'account-multiple-outline', label: 'Players', value: `${numPlayers}v${numPlayers}` },
-  ];
-
-  settings.push({
-    icon: 'swap-vertical',
-    label: 'Halftime',
-    value: autoHalftimeEnabled ? 'On' : 'Off',
-  });
-
-  if (statTrackingEnabled) {
-    settings.push({ icon: 'chart-bar', label: 'Stat Tracking', value: 'On' });
-  }
-
-  if (statTrackingEnabled && lineCallingEnabled) {
-    settings.push({ icon: 'clipboard-list-outline', label: 'Line Calling', value: 'On' });
-  }
-
-  if (genderRatioEnabled) {
-    settings.push({ icon: 'account-group', label: 'Gender Ratio', value: 'On' });
-  }
-
-  if (statTrackingEnabled && pointTimerEnabled) {
-    settings.push({ icon: 'timer-outline', label: 'Point Timer', value: 'On' });
-  }
+  const timeoutCount = team1Timeouts.length;
 
   // Determine if the start button should be enabled
   const possessionReady = !needPossession || selectedTeam !== '';
@@ -137,12 +117,22 @@ export default function PreGameConfirm() {
     }
   };
 
-  const handleEditSettings = () => {
-    router.replace('/Settings');
-  };
-
   const handleBack = () => {
     router.replace('/Dashboard');
+  };
+
+  // Number picker helpers
+  const openNumberPicker = (config: {
+    value: number;
+    min: number;
+    max: number;
+    label: string;
+    suffix?: string;
+    quickOptions?: number[];
+    onChange: (value: number) => void;
+  }) => {
+    openPicker(config);
+    router.push('/NumberPickerModal');
   };
 
   return (
@@ -156,27 +146,6 @@ export default function PreGameConfirm() {
         titleColor={palette.textMuted}
         backButtonBackgroundColor={palette.overlay10}
         titleOverlayPaddingPortrait={88}
-        rightSlot={
-          <Pressable
-            onPress={handleEditSettings}
-            style={({ pressed }) => [
-              styles.editButton,
-              {
-                backgroundColor: palette.accentOverlay10,
-                borderColor: palette.accentOverlay30,
-              },
-              pressed && { opacity: 0.8 },
-            ]}>
-            <MaterialCommunityIcons
-              name="pencil"
-              size={scaleBySizeClass(isLandscape ? 14 : 18, sizeClass)}
-              color={palette.accent}
-            />
-            {isLandscape && (
-              <Text style={[styles.editButtonText, { color: palette.accent }]}>Edit Settings</Text>
-            )}
-          </Pressable>
-        }
       />
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
@@ -193,30 +162,197 @@ export default function PreGameConfirm() {
         </View>
 
         <View key={isLandscape ? 'landscape' : 'portrait'} style={styles.columnsContainer}>
-          {/* Left Column: Settings Summary */}
+          {/* Left Column: Settings */}
           <View style={styles.column}>
-            {/* Settings Grid */}
             <Text style={[styles.sectionTitle, { color: palette.textMuted }]}>GAME SETTINGS</Text>
             <View style={styles.settingsGrid}>
-              {settings.map((setting, index) => (
-                <View
-                  key={index}
-                  style={[styles.settingCard, { backgroundColor: palette.overlay05 }]}>
-                  <MaterialCommunityIcons
-                    name={setting.icon}
-                    size={scaleBySizeClass(16, sizeClass)}
-                    color={palette.textMuted}
-                  />
-                  <View style={styles.settingTextContainer}>
-                    <Text style={[styles.settingLabel, { color: palette.textMuted }]}>
-                      {setting.label}
-                    </Text>
-                    <Text style={[styles.settingValue, { color: palette.textInverse }]}>
-                      {setting.value}
-                    </Text>
-                  </View>
-                </View>
-              ))}
+              {/* Game To */}
+              <EditableSettingCard
+                icon="trophy-outline"
+                label="Game To"
+                onPress={() =>
+                  openNumberPicker({
+                    value: gameTo,
+                    min: 1,
+                    max: 99,
+                    label: 'Game To',
+                    quickOptions: [13, 15],
+                    onChange: setGameTo,
+                  })
+                }
+                sizeClass={sizeClass}>
+                <Text style={[styles.settingValue, { color: palette.textInverse }]}>{gameTo}</Text>
+              </EditableSettingCard>
+
+              {/* Hard Cap */}
+              <EditableSettingCard
+                icon="clock-outline"
+                label="Hard Cap"
+                onPress={() =>
+                  openNumberPicker({
+                    value: gameLength,
+                    min: 1,
+                    max: 180,
+                    label: 'Hard Cap',
+                    suffix: 'min',
+                    quickOptions: [90, 105, 110, 120],
+                    onChange: (val) => {
+                      setGameLength(val);
+                      // Clamp soft cap if needed
+                      if (softCapMins > val) {
+                        setSoftCapMins(val);
+                      }
+                    },
+                  })
+                }
+                sizeClass={sizeClass}>
+                <Text style={[styles.settingValue, { color: palette.textInverse }]}>
+                  {gameLength} min
+                </Text>
+              </EditableSettingCard>
+
+              {/* Soft Cap */}
+              <EditableSettingCard
+                icon="clock-alert-outline"
+                label="Soft Cap"
+                onPress={() =>
+                  openNumberPicker({
+                    value: softCapTime,
+                    min: 0,
+                    max: gameLength,
+                    label: 'Soft Cap',
+                    suffix: 'min',
+                    onChange: (val) => setSoftCapMins(gameLength - val),
+                  })
+                }
+                sizeClass={sizeClass}>
+                <Text style={[styles.settingValue, { color: palette.textInverse }]}>
+                  {softCapTime} min
+                </Text>
+              </EditableSettingCard>
+
+              {/* Players */}
+              <EditableSettingCard
+                icon="account-multiple-outline"
+                label="Players"
+                onPress={() =>
+                  openNumberPicker({
+                    value: numPlayers,
+                    min: 1,
+                    max: 7,
+                    label: 'Players',
+                    quickOptions: [3, 5, 7],
+                    onChange: setNumPlayers,
+                  })
+                }
+                sizeClass={sizeClass}>
+                <Text style={[styles.settingValue, { color: palette.textInverse }]}>
+                  {numPlayers}v{numPlayers}
+                </Text>
+              </EditableSettingCard>
+
+              {/* Halftime */}
+              <EditableSettingCard
+                icon="swap-vertical"
+                label="Halftime"
+                isActive={autoHalftimeEnabled}
+                onPress={() => {
+                  setAutoHalftimeEnabled(!autoHalftimeEnabled);
+                  if (autoHalftimeEnabled) setFloaterEnabled(false);
+                }}
+                sizeClass={sizeClass}>
+                <Text
+                  style={[
+                    styles.settingValue,
+                    { color: autoHalftimeEnabled ? palette.accent : palette.textMuted },
+                  ]}>
+                  {autoHalftimeEnabled ? 'ON' : 'OFF'}
+                </Text>
+              </EditableSettingCard>
+
+              {/* Timeouts */}
+              <TimeoutSettingCard
+                timeoutCount={timeoutCount}
+                autoHalftimeEnabled={autoHalftimeEnabled}
+                floaterEnabled={floaterEnabled}
+                onResetTimeouts={resetTimeouts}
+                onSetFloaterEnabled={setFloaterEnabled}
+                sizeClass={sizeClass}
+              />
+
+              {/* Stat Tracking */}
+              <EditableSettingCard
+                icon="chart-bar"
+                label="Stat Tracking"
+                isActive={statTrackingEnabled}
+                onPress={() => {
+                  setStatTrackingEnabled(!statTrackingEnabled);
+                  if (statTrackingEnabled) {
+                    setPointTimerEnabled(false);
+                    setLineCallingEnabled(false);
+                  }
+                }}
+                sizeClass={sizeClass}>
+                <Text
+                  style={[
+                    styles.settingValue,
+                    { color: statTrackingEnabled ? palette.accent : palette.textMuted },
+                  ]}>
+                  {statTrackingEnabled ? 'ON' : 'OFF'}
+                </Text>
+              </EditableSettingCard>
+
+              {/* Line Calling - only when stat tracking enabled */}
+              {statTrackingEnabled && (
+                <EditableSettingCard
+                  icon="clipboard-list-outline"
+                  label="Line Calling"
+                  isActive={lineCallingEnabled}
+                  onPress={() => setLineCallingEnabled(!lineCallingEnabled)}
+                  sizeClass={sizeClass}>
+                  <Text
+                    style={[
+                      styles.settingValue,
+                      { color: lineCallingEnabled ? palette.accent : palette.textMuted },
+                    ]}>
+                    {lineCallingEnabled ? 'ON' : 'OFF'}
+                  </Text>
+                </EditableSettingCard>
+              )}
+
+              {/* Gender Ratio */}
+              <EditableSettingCard
+                icon="account-group"
+                label="Gender Ratio"
+                isActive={genderRatioEnabled}
+                onPress={() => setGenderRatioEnabled(!genderRatioEnabled)}
+                sizeClass={sizeClass}>
+                <Text
+                  style={[
+                    styles.settingValue,
+                    { color: genderRatioEnabled ? palette.accent : palette.textMuted },
+                  ]}>
+                  {genderRatioEnabled ? 'ON' : 'OFF'}
+                </Text>
+              </EditableSettingCard>
+
+              {/* Point Timer - only when stat tracking enabled */}
+              {statTrackingEnabled && (
+                <EditableSettingCard
+                  icon="timer-outline"
+                  label="Point Timer"
+                  isActive={pointTimerEnabled}
+                  onPress={() => setPointTimerEnabled(!pointTimerEnabled)}
+                  sizeClass={sizeClass}>
+                  <Text
+                    style={[
+                      styles.settingValue,
+                      { color: pointTimerEnabled ? palette.accent : palette.textMuted },
+                    ]}>
+                    {pointTimerEnabled ? 'ON' : 'OFF'}
+                  </Text>
+                </EditableSettingCard>
+              )}
             </View>
           </View>
 
@@ -359,23 +495,6 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
       flexWrap: 'wrap',
       gap: 8,
     },
-    settingCard: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 8,
-      paddingVertical: 10,
-      paddingHorizontal: 12,
-      borderRadius: 10,
-      width: '48%',
-    },
-    settingTextContainer: {
-      flex: 1,
-    },
-    settingLabel: {
-      fontSize: scaleBySizeClass(10, sizeClass),
-      fontWeight: '600',
-      letterSpacing: 0.5,
-    },
     settingValue: {
       fontSize: scaleBySizeClass(16, sizeClass),
       fontWeight: '700',
@@ -389,21 +508,6 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
       paddingVertical: 10,
       paddingHorizontal: 14,
       borderRadius: 10,
-    },
-    editButton: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: isLandscape ? 8 : 0,
-      height: 40,
-      width: isLandscape ? undefined : 40,
-      paddingHorizontal: isLandscape ? 16 : 0,
-      borderRadius: 10,
-      borderWidth: 1,
-    },
-    editButtonText: {
-      fontSize: scaleBySizeClass(14, sizeClass),
-      fontWeight: '600',
     },
     lockText: {
       fontSize: scaleBySizeClass(13, sizeClass),

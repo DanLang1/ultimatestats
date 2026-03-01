@@ -18,10 +18,13 @@ Source of truth: `store/gameStore.types.ts`.
 `elapsedMs?`
 `pointNumber?`
 `gameId?`
+`triggeredHalftime?`
 - Meaning:
 A point was scored by `team`.
 - Notes:
 `goalPlayerId` / `assistPlayerId` can be `null` initially, then filled by stat entry/edit flows.
+`triggeredHalftime` is the canonical halftime marker used by replayed timelines and stats.
+Legacy saved games are migrated by inferring the halftime goal from `gameTo` once on load/import, then persisting that marker.
 
 ## TurnoverEvent
 
@@ -79,4 +82,3 @@ If you change event fields or semantics:
 `docs/turnover-tracking.md`
 `docs/view-stats.md`
 5. Add/update tests in `lib/__tests__/`.
-

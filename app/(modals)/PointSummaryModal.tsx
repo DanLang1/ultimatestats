@@ -59,6 +59,7 @@ export default function PointSummaryModal() {
     events,
     startingPossession,
     gameTo,
+    autoHalftimeEnabled,
     pointStartTimestamps,
     pointTimerEnabled,
     statTrackingEnabled,
@@ -81,6 +82,7 @@ export default function PointSummaryModal() {
     gameTo,
     pointStartTimestamps,
     null,
+    autoHalftimeEnabled,
   );
 
   const completedPoints = pointEvents.filter((p) => !p.isInProgress);

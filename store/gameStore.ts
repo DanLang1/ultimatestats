@@ -1,3 +1,4 @@
+import { DEFAULT_HALFTIME_BREAK_SECONDS, DEFAULT_TIMEOUT_SECONDS } from '@/lib/constants';
 import { checkGameOver } from '@/lib/gameUtils';
 import { UNKNOWN_PLAYER_ID } from '@/lib/playerUtils';
 import { CURRENT_SCHEMA_VERSION, SavedGame, SavedTeam, storage } from '@/lib/storage';
@@ -48,12 +49,12 @@ export const useGameStore = create<GameState>()(
         // Halftime Break Initial State
         isHalftimeBreak: false,
         halftimeEndTime: null,
-        halftimeTimeLeft: 7 * 60, // 7 minutes default
+        halftimeTimeLeft: DEFAULT_HALFTIME_BREAK_SECONDS,
 
         // Timeout Modal Initial State
         pendingTimeoutModal: false,
         timeoutEndTime: null,
-        timeoutTimeLeft: 70, // 70 seconds default
+        timeoutTimeLeft: DEFAULT_TIMEOUT_SECONDS,
 
         // Stat Tracking Initial State
         statTrackingEnabled: false,
@@ -193,6 +194,8 @@ export const useGameStore = create<GameState>()(
               isHalftime = false;
             }
 
+            const triggeredHalftime = isHalftime;
+
             state.currentPoint++;
 
             // Early return if stat tracking is disabled
@@ -203,6 +206,7 @@ export const useGameStore = create<GameState>()(
                 goalPlayerId: null,
                 assistPlayerId: null,
                 pointNumber: state.currentPoint - 1, // currentPoint already incremented
+                ...(triggeredHalftime && { triggeredHalftime: true }),
                 ...(triggeredSoftcap && { triggeredSoftcap: true }),
               });
               return;
@@ -211,7 +215,7 @@ export const useGameStore = create<GameState>()(
             // --- Stat tracking enabled below ---
 
             // Set possession: halftime flips to non-starting team, otherwise to non-scoring team
-            if (isHalftimeGoal) {
+            if (triggeredHalftime) {
               state.possession = state.startingPossession === 'team1' ? 'team2' : 'team1';
             } else {
               state.possession = isTeam1 ? 'team2' : 'team1';
@@ -236,6 +240,7 @@ export const useGameStore = create<GameState>()(
               assistPlayerId: null,
               elapsedMs,
               pointNumber: state.currentPoint - 1, // currentPoint already incremented
+              ...(triggeredHalftime && { triggeredHalftime: true }),
               ...(triggeredSoftcap && { triggeredSoftcap: true }),
             });
             state.currentPointStartTime = null;
@@ -270,7 +275,7 @@ export const useGameStore = create<GameState>()(
               // Undoing the timeout should also clear timeout UI/timer state
               state.pendingTimeoutModal = false;
               state.timeoutEndTime = null;
-              state.timeoutTimeLeft = 70;
+              state.timeoutTimeLeft = DEFAULT_TIMEOUT_SECONDS;
               state.events.pop();
             } else if (lastEvent.type === 'goal') {
               const isTeam1 = lastEvent.team === 'team1';
@@ -433,10 +438,10 @@ export const useGameStore = create<GameState>()(
             state.currentGameId = null;
             state.isHalftimeBreak = false;
             state.halftimeEndTime = null;
-            state.halftimeTimeLeft = 7 * 60;
+            state.halftimeTimeLeft = DEFAULT_HALFTIME_BREAK_SECONDS;
             state.pendingTimeoutModal = false;
             state.timeoutEndTime = null;
-            state.timeoutTimeLeft = 70;
+            state.timeoutTimeLeft = DEFAULT_TIMEOUT_SECONDS;
             state.currentPointStartTime = null;
             state.pointStartTimestamps = {};
             state.pointTimerPausedElapsed = null;
@@ -497,7 +502,7 @@ export const useGameStore = create<GameState>()(
           set((state: GameState) => {
             state.isHalftimeBreak = false;
             state.halftimeEndTime = null;
-            state.halftimeTimeLeft = 7 * 60;
+            state.halftimeTimeLeft = DEFAULT_HALFTIME_BREAK_SECONDS;
           }),
 
         // Timeout Modal Actions
@@ -520,7 +525,7 @@ export const useGameStore = create<GameState>()(
           set((state: GameState) => {
             state.pendingTimeoutModal = false;
             state.timeoutEndTime = null;
-            state.timeoutTimeLeft = 70;
+            state.timeoutTimeLeft = DEFAULT_TIMEOUT_SECONDS;
           }),
 
         // Stat Tracking Actions
@@ -962,10 +967,17 @@ export const useGameStore = create<GameState>()(
 
         // Saved Games & Teams Actions
         loadSavedGames: async () => {
-          const games = await storage.loadGames();
-          set((state: GameState) => {
-            state.savedGames = games;
-          });
+          try {
+            const games = await storage.loadGames();
+            set((state: GameState) => {
+              state.savedGames = games;
+            });
+          } catch (error) {
+            set((state: GameState) => {
+              state.savedGames = [];
+            });
+            throw error;
+          }
         },
 
         loadSavedTeams: async () => {
@@ -993,6 +1005,7 @@ export const useGameStore = create<GameState>()(
             team1Score: state.team1Score,
             team2Score: state.team2Score,
             events: eventsWithGameId,
+            autoHalftimeEnabled: state.autoHalftimeEnabled,
             gameTo: state.gameTo,
             gameLength: state.gameLength,
             startingPossession: state.startingPossession ?? 'team1',
