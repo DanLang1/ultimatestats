@@ -118,7 +118,7 @@ export default function PlayingTimeSection({
 
           <View style={styles.heroMetricsRow}>
             <PlayingTimePill
-              label="Total PT"
+              label="Total PT (min)"
               value={totalPlayingTimeLabel}
               align="left"
               compact

@@ -119,6 +119,7 @@ export interface GameState {
   setFloaterEnabled: (enabled: boolean) => void;
   setAutoHalftimeEnabled: (enabled: boolean) => void;
   setGameTo: (score: number) => void;
+  setGameToInGame: (score: number) => void;
   setGameLength: (minutes: number) => void;
   incrementScore: (isTeam1: boolean) => { didIncrement: boolean; isHalftime: boolean };
   undoLastAction: () => boolean; // Returns true if something was undone

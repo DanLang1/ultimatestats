@@ -61,6 +61,13 @@ if (result.isGameOver) {
 - Legacy saved games are migrated by inferring that goal from `gameTo` once, then replay uses the stamped event rather than recalculating halftime every time
 - Replayed timelines/stats also respect whether auto halftime was enabled for that game; legacy saves default that flag to `true`
 
+## In-Game `gameTo` Edits
+
+- `gameTo` and `baseGameTo` can be adjusted from Settings during a live game while the game is still in the first half
+- In-game edits are blocked once soft cap is pending or active
+- The minimum allowed value is constrained so the game cannot end immediately, and with auto halftime enabled the halftime threshold remains reachable
+- Halftime detection and soft-cap undo behavior remain event-driven; changing `gameTo` in Settings does not rewrite existing events
+
 ### After a Turnover
 
 - Possession flips to the other team

@@ -6,6 +6,7 @@ interface NumberPickerState {
   min: number;
   max: number;
   label: string;
+  helperText?: string;
   suffix?: string;
   quickOptions?: number[];
   onChange: ((value: number) => void) | null;
@@ -15,6 +16,7 @@ interface NumberPickerState {
     min: number;
     max: number;
     label: string;
+    helperText?: string;
     suffix?: string;
     quickOptions?: number[];
     onChange: (value: number) => void;
@@ -30,6 +32,7 @@ export const useNumberPickerStore = create<NumberPickerState>((set, get) => ({
   min: 0,
   max: 999,
   label: '',
+  helperText: undefined,
   suffix: undefined,
   quickOptions: undefined,
   onChange: null,
@@ -41,6 +44,7 @@ export const useNumberPickerStore = create<NumberPickerState>((set, get) => ({
       min: config.min,
       max: config.max,
       label: config.label,
+      helperText: config.helperText,
       suffix: config.suffix,
       quickOptions: config.quickOptions,
       onChange: config.onChange,
@@ -48,7 +52,7 @@ export const useNumberPickerStore = create<NumberPickerState>((set, get) => ({
   },
 
   close: () => {
-    set({ isActive: false, onChange: null });
+    set({ isActive: false, helperText: undefined, onChange: null });
   },
 
   save: (value: number) => {
@@ -56,6 +60,6 @@ export const useNumberPickerStore = create<NumberPickerState>((set, get) => ({
     if (onChange) {
       onChange(value);
     }
-    set({ isActive: false, onChange: null });
+    set({ isActive: false, helperText: undefined, onChange: null });
   },
 }));

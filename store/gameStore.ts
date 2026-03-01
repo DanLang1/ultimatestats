@@ -115,6 +115,27 @@ export const useGameStore = create<GameState>()(
             state.baseGameTo = gameTo;
           }),
 
+        setGameToInGame: (newGameTo: number) =>
+          set((state: GameState) => {
+            if (state.gameHalf !== 1) {
+              return;
+            }
+
+            if (state.isSoftCap || state.softCapPending) {
+              return;
+            }
+
+            const maxScore = Math.max(state.team1Score, state.team2Score);
+            const minimumGameTo = state.autoHalftimeEnabled ? 2 * maxScore + 1 : maxScore + 1;
+
+            if (newGameTo < minimumGameTo) {
+              return;
+            }
+
+            state.gameTo = newGameTo;
+            state.baseGameTo = newGameTo;
+          }),
+
         setGameLength: (minutes: number) =>
           set((state: GameState) => {
             state.gameLength = minutes;

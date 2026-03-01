@@ -12,6 +12,7 @@ interface NumberPickerProps {
   min?: number;
   max?: number;
   label?: string;
+  helperText?: string;
   disabled?: boolean;
   suffix?: string;
   quickOptions?: number[];
@@ -25,6 +26,7 @@ export function NumberPicker({
   min = 0,
   max = 999,
   label,
+  helperText,
   disabled = false,
   suffix,
   quickOptions,
@@ -44,6 +46,7 @@ export function NumberPicker({
       min,
       max,
       label: label || 'Select Value',
+      helperText,
       suffix,
       quickOptions,
       onChange,

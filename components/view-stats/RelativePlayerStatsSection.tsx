@@ -1,3 +1,4 @@
+import { useAlert } from '@/components/ui/AlertProvider';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import {
@@ -20,6 +21,7 @@ import {
   RelativePlayingTimeMetricKey,
 } from '@/lib/statsUtils';
 import { GameEvent, Player, PointLineRecord, SavedGame } from '@/lib/storage';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React, { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
@@ -64,12 +66,22 @@ export default function RelativePlayerStatsSection({
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
   const styles = createStyles(sizeClass);
+  const { showAlert } = useAlert();
   const [mode, setMode] = useState<RelativeMode>('avg');
+  const hasLineTracking = (pointLines?.length ?? 0) > 0;
+
+  const handleInfoPress = () => {
+    const lineNote = hasLineTracking
+      ? 'Players who played at least one point are included in averages.'
+      : 'Line tracking not enabled, so entire team included in averages. Enable line tracking to get more accurate averages.';
+    showAlert({ title: 'Relative to Team', message: lineNote });
+  };
 
   const eventMetrics = computeRelativePlayerStats(
     playerId,
     allPlayerStats,
     roster ?? undefined,
+    pointLines,
   ).map((metric) => ({
     ...metric,
     category: 'event' as const,
@@ -116,7 +128,16 @@ export default function RelativePlayerStatsSection({
         { backgroundColor: palette.overlay02, borderColor: palette.overlay05 },
       ]}>
       <View style={styles.headerStack}>
-        <Text style={[styles.title, { color: palette.textMuted }]}>RELATIVE TO TEAM</Text>
+        <View style={styles.titleRow}>
+          <Text style={[styles.title, { color: palette.textMuted }]}>RELATIVE TO TEAM</Text>
+          <Pressable onPress={handleInfoPress} hitSlop={8}>
+            <MaterialCommunityIcons
+              name="help-circle-outline"
+              size={scaleBySizeClass(14, sizeClass)}
+              color={palette.textMuted}
+            />
+          </Pressable>
+        </View>
 
         <View style={styles.headerControlsRow}>
           <View
@@ -323,6 +344,12 @@ function createStyles(sizeClass: SizeClass) {
     },
     headerStack: {
       gap: scaleBySizeClass(8, sizeClass),
+    },
+    titleRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 6,
     },
     title: {
       fontSize: scaleBySizeClass(12, sizeClass),

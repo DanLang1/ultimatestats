@@ -187,15 +187,25 @@ export function computeRelativePlayerStats(
   playerId: string,
   allPlayerStats: PlayerStats[],
   roster?: Player[],
+  pointLines?: PointLineRecord[] | null,
 ): RelativePlayerMetric[] {
   const rosterIds = roster?.length ? new Set(roster.map((player) => player.id)) : null;
+  const activePlayerIds = pointLines?.length
+    ? new Set(pointLines.flatMap((pl) => pl.playerIds))
+    : null;
   const comparisonPool = allPlayerStats.filter((stats) => {
     if (stats.id === UNKNOWN_PLAYER_ID || stats.id === 'OTHER_TEAM') {
       return false;
     }
 
     if (rosterIds) {
-      return rosterIds.has(stats.id);
+      if (!rosterIds.has(stats.id)) {
+        return false;
+      }
+    }
+
+    if (activePlayerIds) {
+      return activePlayerIds.has(stats.id);
     }
 
     return true;

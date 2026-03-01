@@ -1,6 +1,6 @@
 import { useTheme } from '@/context/ThemeContext';
-import { MODAL_MAX_WIDTH_PICKER } from '@/lib/constants';
 import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { MODAL_MAX_WIDTH_PICKER } from '@/lib/constants';
 import { useNumberPickerStore } from '@/store/numberPickerStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router } from 'expo-router';
@@ -11,7 +11,7 @@ export default function NumberPickerModal() {
   const { palette } = useTheme();
   const { isLandscape, sizeClass } = useLayout();
   const styles = createStyles(isLandscape, sizeClass);
-  const { isActive, value, min, max, label, suffix, quickOptions, save, close } =
+  const { isActive, value, min, max, label, helperText, suffix, quickOptions, save, close } =
     useNumberPickerStore();
 
   const [inputString, setInputString] = useState(value > 0 ? value.toString() : '');
@@ -21,6 +21,10 @@ export default function NumberPickerModal() {
   }
 
   const currentValue = inputString === '' ? 0 : parseInt(inputString, 10);
+  const hasInvalidValue = Number.isNaN(currentValue) || currentValue < min || currentValue > max;
+  const validationText = hasInvalidValue
+    ? (helperText ?? `Enter a value from ${min} to ${max}.`)
+    : null;
 
   const handleDigitPress = (digit: number) => {
     const newString = inputString + digit.toString();
@@ -48,8 +52,11 @@ export default function NumberPickerModal() {
   };
 
   const handleSave = () => {
-    const finalValue = Math.max(min, Math.min(max, currentValue));
-    save(finalValue);
+    if (hasInvalidValue) {
+      return;
+    }
+
+    save(currentValue);
     router.back();
   };
 
@@ -72,10 +79,15 @@ export default function NumberPickerModal() {
           onPress={(e) => e.stopPropagation()}>
           {/* Header */}
           <View style={styles.header}>
-            <Text style={[styles.title, { color: palette.modalText }]}>{label}</Text>
-            <Text style={[styles.rangeText, { color: palette.modalText, opacity: 0.6 }]}>
-              {min} - {max}
-            </Text>
+            <View style={styles.headerTopRow}>
+              <Text style={[styles.title, { color: palette.modalText }]}>{label}</Text>
+              <Text style={[styles.rangeText, { color: palette.modalTextMuted }]}>
+                {min} - {max}
+              </Text>
+            </View>
+            {validationText && (
+              <Text style={[styles.helperText, { color: palette.danger }]}>{validationText}</Text>
+            )}
           </View>
 
           {/* Main Content */}
@@ -256,14 +268,21 @@ export default function NumberPickerModal() {
               <Text style={[styles.actionButtonText, { color: palette.accent }]}>Cancel</Text>
             </Pressable>
             <Pressable
+              disabled={hasInvalidValue}
               onPress={handleSave}
               style={({ pressed }) => [
                 styles.actionButton,
                 styles.saveButton,
-                { backgroundColor: palette.accent },
-                pressed && { opacity: 0.8 },
+                { backgroundColor: hasInvalidValue ? palette.overlay15 : palette.accent },
+                pressed && !hasInvalidValue && { opacity: 0.8 },
               ]}>
-              <Text style={[styles.actionButtonText, { color: palette.textOnAccent }]}>Save</Text>
+              <Text
+                style={[
+                  styles.actionButtonText,
+                  { color: hasInvalidValue ? palette.modalTextMuted : palette.textOnAccent },
+                ]}>
+                Save
+              </Text>
             </Pressable>
           </View>
         </Pressable>
@@ -289,6 +308,9 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
       gap: 12,
     },
     header: {
+      gap: 6,
+    },
+    headerTopRow: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
@@ -299,6 +321,10 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     },
     rangeText: {
       fontSize: scaleBySizeClass(12, sizeClass),
+    },
+    helperText: {
+      fontSize: scaleBySizeClass(12, sizeClass),
+      lineHeight: scaleBySizeClass(16, sizeClass),
     },
     content: {
       flexDirection: isLandscape ? 'row' : 'column',

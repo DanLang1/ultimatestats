@@ -333,6 +333,56 @@ describe('statsUtils', () => {
       expect(goals?.teamAvg).toBeCloseTo(2); // alice, bob, cara only
       expect(goals?.rank).toBe(1);
     });
+
+    it('excludes inactive players from comparison pool when pointLines provided', () => {
+      const stats: ComputedPlayerStats[] = [
+        ...playerStatsFixture(),
+        {
+          id: 'dana',
+          name: 'Dana',
+          goals: 0,
+          assists: 0,
+          blocks: 0,
+          throwaways: 0,
+          drops: 0,
+          plusMinus: 0,
+          callahans: 0,
+        },
+      ];
+      // dana never appeared in any point line
+      const pointLines: PointLineRecord[] = [
+        { pointNumber: 1, playerIds: ['alice', 'bob', 'cara'], timestamp: 1 },
+      ];
+
+      const metrics = computeRelativePlayerStats('alice', stats, undefined, pointLines);
+      const goals = metrics.find((m) => m.key === 'goals');
+
+      expect(goals?.teamPoolSize).toBe(3); // dana excluded
+      expect(goals?.teamAvg).toBeCloseTo(2); // (3 + 1 + 2) / 3, not / 4
+    });
+
+    it('includes all players when pointLines is not provided', () => {
+      const stats: ComputedPlayerStats[] = [
+        ...playerStatsFixture(),
+        {
+          id: 'dana',
+          name: 'Dana',
+          goals: 0,
+          assists: 0,
+          blocks: 0,
+          throwaways: 0,
+          drops: 0,
+          plusMinus: 0,
+          callahans: 0,
+        },
+      ];
+
+      const metrics = computeRelativePlayerStats('alice', stats);
+      const goals = metrics.find((m) => m.key === 'goals');
+
+      expect(goals?.teamPoolSize).toBe(4); // dana included (no pointLines filter)
+      expect(goals?.teamAvg).toBeCloseTo(1.5); // (3 + 1 + 2 + 0) / 4
+    });
   });
 
   describe('computeRelativePlayingTimeStats', () => {

@@ -62,13 +62,19 @@ function SettingsContent() {
     team1BgColor,
     team2BgColor,
     gameTo,
+    team1Score,
+    team2Score,
     team1Timeouts,
     setTeamBgColor,
+    isSoftCap,
+    softCapPending,
     setGameTo,
+    setGameToInGame,
     resetTimeouts,
     floaterEnabled,
     setFloaterEnabled,
     autoHalftimeEnabled,
+    gameHalf,
     setAutoHalftimeEnabled,
     setGameLength,
     gameLength,
@@ -97,6 +103,22 @@ function SettingsContent() {
   const isAndroidLargeScreen = Platform.OS === 'android' && sizeClass !== 'small';
 
   const gameActive = useIsGameActive();
+  const maxScore = Math.max(team1Score, team2Score);
+  const canEditGameToInGame = gameHalf === 1 && !isSoftCap && !softCapPending;
+  const gameToMin =
+    gameActive && canEditGameToInGame ? (autoHalftimeEnabled ? 2 * maxScore + 1 : maxScore + 1) : 1;
+  const gameToSettingsHelperText = gameActive
+    ? autoHalftimeEnabled
+      ? 'Adjustable during first half'
+      : 'Adjustable until soft cap'
+    : null;
+  const gameToValidationText =
+    gameActive && canEditGameToInGame
+      ? autoHalftimeEnabled
+        ? `Must be at least ${gameToMin} to keep halftime reachable`
+        : `Must be at least ${gameToMin}`
+      : undefined;
+  const gameToQuickOptions = gameActive ? undefined : [13, 15];
 
   const handleOrientationModeChange = (nextMode: OrientationMode) => {
     if (nextMode === orientationMode) return;
@@ -456,13 +478,19 @@ function SettingsContent() {
                 <NumberPicker
                   label="GAME TO"
                   value={gameTo}
-                  onChange={setGameTo}
-                  min={1}
+                  onChange={gameActive ? setGameToInGame : setGameTo}
+                  min={gameToMin}
                   max={99}
-                  quickOptions={[13, 15]}
-                  disabled={gameActive}
+                  quickOptions={gameToQuickOptions}
+                  helperText={gameToValidationText}
+                  disabled={gameActive && !canEditGameToInGame}
                   sizeClass={sizeClass}
                 />
+                {gameToSettingsHelperText && (
+                  <Text style={[styles.helperText, textMutedStyle]}>
+                    {gameToSettingsHelperText}
+                  </Text>
+                )}
               </View>
 
               <View style={styles.inputGroup}>
