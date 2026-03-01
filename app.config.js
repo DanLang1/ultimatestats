@@ -82,6 +82,7 @@ export default {
         useHermesV1: true,
       },
     ],
+    './plugins/withAndroidGradleMemory',
   ],
   experiments: {
     typedRoutes: true,

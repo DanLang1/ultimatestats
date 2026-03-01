@@ -39,6 +39,10 @@ description: Build and release a production native app to app stores
 eas build --platform android --profile production --local
 ```
 
+If a local Android production build fails during `lintVitalAnalyzeRelease`, check for Gradle JVM
+metaspace errors first. This repo builds React Native from source for production/Hermes V1, so
+release builds are materially heavier than dev builds.
+
 5. Wait for build to complete (check https://expo.dev/accounts/langdk/projects/ultimatestats/builds)
 
 ## Post-Build

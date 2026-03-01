@@ -146,6 +146,22 @@ export default function PreGameConfirm() {
         titleColor={palette.textMuted}
         backButtonBackgroundColor={palette.overlay10}
         titleOverlayPaddingPortrait={88}
+        rightSlot={
+          <Pressable
+            onPress={() => router.push('/Settings')}
+            style={({ pressed }) => [
+              styles.headerIconButton,
+              { backgroundColor: palette.overlay10 },
+              pressed && styles.headerIconButtonPressed,
+            ]}
+            hitSlop={12}>
+            <MaterialCommunityIcons
+              name="cog-outline"
+              size={scaleBySizeClass(22, sizeClass)}
+              color={palette.textInverse}
+            />
+          </Pressable>
+        }
       />
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
@@ -515,6 +531,13 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     },
     choiceGroup: {
       gap: 6,
+    },
+    headerIconButton: {
+      padding: 8,
+      borderRadius: 20,
+    },
+    headerIconButtonPressed: {
+      opacity: 0.8,
     },
     startButton: {
       flexDirection: 'row',
