@@ -93,6 +93,7 @@ export default function RelativePlayerStatsSection({
     startingPossession ?? null,
     gameTo,
     autoHalftimeEnabled,
+    games,
   ).map((metric) => ({ ...metric, category: 'playingTime' as const }));
 
   if (!eventMetrics.length && !playingTimeMetrics.length) {

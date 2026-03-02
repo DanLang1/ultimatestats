@@ -345,6 +345,7 @@ export default function PlayerStats() {
             playerId={playerId}
             events={events}
             pointLines={pointLines}
+            games={games}
             startingPossession={startingPossession}
             gameTo={gameTo}
             autoHalftimeEnabled={autoHalftimeEnabled}

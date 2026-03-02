@@ -99,6 +99,8 @@ The **Aggregate** tab allows you to combine stats from multiple games for a sing
 2. Select one or more games to combine.
 3. Tap **View Combined** to see aggregated player and team statistics.
 
+- Aggregate playing-time stats are computed per selected game and then summed, so repeated point numbers across games do not affect combined O-line/D-line splits or total points played.
+
 ## Actions
 
 - **Back**: From the View Stats tabs, returns to the previous screen. Saved Game detail uses its own route, so back returns to the previous page in the stack.

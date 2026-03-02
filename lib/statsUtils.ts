@@ -1,6 +1,7 @@
 import { GameEvent, Player, PointLineRecord, SavedGame } from '@/lib/storage';
 import { getPlayerName, UNKNOWN_PLAYER_ID } from './playerUtils';
 import {
+  aggregatePlayingTimeStats,
   computePlayingTimeStats,
   formatEfficiency,
   formatMinutesPlayed,
@@ -294,14 +295,20 @@ export function computeRelativePlayingTimeStats(
   startingPossession: 'team1' | 'team2' | null,
   gameTo: number,
   autoHalftimeEnabled = true,
+  games?: SavedGame[] | null,
 ): RelativePlayingTimeMetric[] {
-  if (!pointLines?.length) {
+  const playingTimeMap =
+    games && games.length > 0
+      ? aggregatePlayingTimeStats(games)
+      : pointLines?.length
+        ? computePlayingTimeStats(pointLines, events, startingPossession, gameTo, {
+            autoHalftimeEnabled,
+          })
+        : null;
+
+  if (!playingTimeMap || playingTimeMap.size === 0) {
     return [];
   }
-
-  const playingTimeMap = computePlayingTimeStats(pointLines, events, startingPossession, gameTo, {
-    autoHalftimeEnabled,
-  });
   const myStats = playingTimeMap.get(playerId);
 
   if (!myStats) {
@@ -875,7 +882,7 @@ export function generateAggregateCSV(
 ): string {
   const mergedEvents = games.flatMap((g) => g.events);
   const playerStats = computePlayerStats(mergedEvents, 'team1', roster);
-  const playingTimeStats = aggregatePlayingTimeStatsByPlayer(games);
+  const playingTimeStats = aggregatePlayingTimeStats(games);
   const playerRows = mergePlayerRows(playerStats, playingTimeStats, roster);
 
   let csv = `# Aggregated Stats: ${teamName} (${games.length} games)\n`;
@@ -1004,15 +1011,6 @@ interface PlayerSummaryCSVRow extends PlayerStats {
   dEfficiency?: number;
 }
 
-interface AggregatedPlayingTimeCSVRow {
-  pointsPlayed: number;
-  oPoints: number;
-  dPoints: number;
-  oLineHolds: number;
-  dLineBreaks: number;
-  minutesPlayed?: number;
-}
-
 type PlayingTimeStatsForCSV = Pick<
   PlayingTimeStats,
   'pointsPlayed' | 'oPoints' | 'dPoints' | 'oLineHolds' | 'dLineBreaks' | 'minutesPlayed'
@@ -1071,51 +1069,6 @@ function mergePlayerRows(
   return Array.from(rowsById.values()).sort(
     (a, b) => b.plusMinus - a.plusMinus || a.name.localeCompare(b.name),
   );
-}
-
-function aggregatePlayingTimeStatsByPlayer(
-  games: SavedGame[],
-): Map<string, AggregatedPlayingTimeCSVRow> {
-  const totals = new Map<string, AggregatedPlayingTimeCSVRow>();
-
-  for (const game of games) {
-    if (!game.pointLines?.length) continue;
-    const perGame = computePlayingTimeStats(
-      game.pointLines,
-      game.events,
-      game.startingPossession,
-      game.gameTo,
-      {
-        pointStartTimestamps: game.pointStartTimestamps,
-        autoHalftimeEnabled: game.autoHalftimeEnabled ?? true,
-      },
-    );
-
-    for (const [playerId, stats] of perGame.entries()) {
-      const existing = totals.get(playerId);
-      if (existing) {
-        existing.pointsPlayed += stats.pointsPlayed;
-        existing.oPoints += stats.oPoints;
-        existing.dPoints += stats.dPoints;
-        existing.oLineHolds += stats.oLineHolds;
-        existing.dLineBreaks += stats.dLineBreaks;
-        if (stats.minutesPlayed !== undefined) {
-          existing.minutesPlayed = (existing.minutesPlayed ?? 0) + stats.minutesPlayed;
-        }
-      } else {
-        totals.set(playerId, {
-          pointsPlayed: stats.pointsPlayed,
-          oPoints: stats.oPoints,
-          dPoints: stats.dPoints,
-          oLineHolds: stats.oLineHolds,
-          dLineBreaks: stats.dLineBreaks,
-          minutesPlayed: stats.minutesPlayed,
-        });
-      }
-    }
-  }
-
-  return totals;
 }
 
 function playerSummaryCSV(stats: PlayerSummaryCSVRow[], includePlayingTimeStats = false): string {

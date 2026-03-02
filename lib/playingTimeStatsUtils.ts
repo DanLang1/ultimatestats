@@ -1,4 +1,4 @@
-import { GameEvent, PointLineRecord } from '@/lib/storage';
+import { GameEvent, PointLineRecord, SavedGame } from '@/lib/storage';
 import { getAllPlayersByPoint } from './lineUtils';
 import { computePointByPointEvents } from './timelineUtils';
 
@@ -137,6 +137,88 @@ export function computePlayingTimeStats(
   }
 
   return statsMap;
+}
+
+/**
+ * Aggregate playing-time statistics across multiple saved games.
+ * Each game is computed independently first so point numbers restarting at 1
+ * do not collide when combining line data.
+ */
+export function aggregatePlayingTimeStats(games: SavedGame[]): Map<string, PlayingTimeStats> {
+  const totals = new Map<string, PlayingTimeStats>();
+  const timedDurationsByPlayer = new Map<
+    string,
+    { totalDurationMs: number; timedPoints: number }
+  >();
+  let completedTrackedPoints = 0;
+
+  const getOrCreate = (playerId: string): PlayingTimeStats => {
+    if (!totals.has(playerId)) {
+      totals.set(playerId, createEmptyStats());
+    }
+    return totals.get(playerId)!;
+  };
+
+  for (const game of games) {
+    if (!game.pointLines?.length) {
+      continue;
+    }
+
+    completedTrackedPoints += game.events.filter((event) => event.type === 'goal').length;
+
+    const perGame = computePlayingTimeStats(
+      game.pointLines,
+      game.events,
+      game.startingPossession,
+      game.gameTo,
+      {
+        pointStartTimestamps: game.pointStartTimestamps,
+        autoHalftimeEnabled: game.autoHalftimeEnabled ?? true,
+      },
+    );
+
+    for (const [playerId, stats] of perGame.entries()) {
+      const existing = getOrCreate(playerId);
+
+      existing.pointsPlayed += stats.pointsPlayed;
+      existing.oPoints += stats.oPoints;
+      existing.dPoints += stats.dPoints;
+      existing.pointWins += stats.pointWins;
+      existing.pointLosses += stats.pointLosses;
+      existing.oLineHolds += stats.oLineHolds;
+      existing.oLineBreaksAgainst += stats.oLineBreaksAgainst;
+      existing.dLineBreaks += stats.dLineBreaks;
+      existing.dLineHoldsAgainst += stats.dLineHoldsAgainst;
+
+      if (stats.minutesPlayed !== undefined) {
+        existing.minutesPlayed = (existing.minutesPlayed ?? 0) + stats.minutesPlayed;
+      }
+
+      if (stats.avgPointDurationMs !== undefined && stats.avgPointDurationMs > 0) {
+        const durationTotals = timedDurationsByPlayer.get(playerId) ?? {
+          totalDurationMs: 0,
+          timedPoints: 0,
+        };
+        durationTotals.totalDurationMs += stats.avgPointDurationMs * stats.pointsPlayed;
+        durationTotals.timedPoints += stats.pointsPlayed;
+        timedDurationsByPlayer.set(playerId, durationTotals);
+      }
+    }
+  }
+
+  for (const [playerId, stats] of totals.entries()) {
+    stats.playingTimePercent =
+      completedTrackedPoints > 0 ? (stats.pointsPlayed / completedTrackedPoints) * 100 : 0;
+    stats.oEfficiency = stats.oPoints > 0 ? stats.oLineHolds / stats.oPoints : 0;
+    stats.dEfficiency = stats.dPoints > 0 ? stats.dLineBreaks / stats.dPoints : 0;
+
+    const durationTotals = timedDurationsByPlayer.get(playerId);
+    if (durationTotals && durationTotals.timedPoints > 0) {
+      stats.avgPointDurationMs = durationTotals.totalDurationMs / durationTotals.timedPoints;
+    }
+  }
+
+  return totals;
 }
 
 /**

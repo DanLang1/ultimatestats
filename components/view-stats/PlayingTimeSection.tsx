@@ -1,12 +1,13 @@
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import {
+  aggregatePlayingTimeStats,
   computePerPointStats,
   computePlayingTimeStats,
   computeRates,
   formatMinutesPlayed,
 } from '@/lib/playingTimeStatsUtils';
-import { GameEvent, PointLineRecord } from '@/lib/storage';
+import { GameEvent, PointLineRecord, SavedGame } from '@/lib/storage';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import PlayingTimePill from './PlayingTimePill';
@@ -17,6 +18,7 @@ interface PlayingTimeSectionProps {
   playerId: string;
   events: GameEvent[];
   pointLines?: PointLineRecord[] | null;
+  games?: SavedGame[] | null;
   startingPossession?: 'team1' | 'team2' | null;
   gameTo?: number;
   autoHalftimeEnabled?: boolean;
@@ -32,6 +34,7 @@ export default function PlayingTimeSection({
   playerId,
   events,
   pointLines,
+  games,
   startingPossession,
   gameTo = 15,
   autoHalftimeEnabled = true,
@@ -46,17 +49,18 @@ export default function PlayingTimeSection({
   const { sizeClass } = useLayout();
   const styles = createStyles(sizeClass);
 
-  if (!pointLines?.length) {
+  const playingTimeStats =
+    games && games.length > 0
+      ? aggregatePlayingTimeStats(games)
+      : pointLines?.length
+        ? computePlayingTimeStats(pointLines, events, startingPossession ?? null, gameTo, {
+            autoHalftimeEnabled,
+          })
+        : null;
+
+  if (!playingTimeStats || playingTimeStats.size === 0) {
     return null;
   }
-
-  const playingTimeStats = computePlayingTimeStats(
-    pointLines,
-    events,
-    startingPossession ?? null,
-    gameTo,
-    { autoHalftimeEnabled },
-  );
 
   const stats = playingTimeStats.get(playerId);
   if (!stats) {

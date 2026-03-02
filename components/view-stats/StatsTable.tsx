@@ -2,6 +2,7 @@ import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { getPlayerName } from '@/lib/playerUtils';
 import {
+  aggregatePlayingTimeStats,
   computePlayingTimeStats,
   formatEfficiency,
   PlayingTimeStats,
@@ -60,11 +61,14 @@ export default function StatsTable({
   const [showLegend, setShowLegend] = useState(false);
 
   // Compute playing time stats if pointLines are available
-  const playingTimeStats = pointLines?.length
-    ? computePlayingTimeStats(pointLines, events, startingPossession ?? null, gameTo, {
-        autoHalftimeEnabled,
-      })
-    : null;
+  const playingTimeStats =
+    games && games.length > 0
+      ? aggregatePlayingTimeStats(games)
+      : pointLines?.length
+        ? computePlayingTimeStats(pointLines, events, startingPossession ?? null, gameTo, {
+            autoHalftimeEnabled,
+          })
+        : null;
 
   // Only show playing time columns if we have data
   const hasPlayingTimeData = playingTimeStats !== null && playingTimeStats.size > 0;

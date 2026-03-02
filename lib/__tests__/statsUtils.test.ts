@@ -1,15 +1,16 @@
 import { GameEvent, TurnoverType } from '@/store/gameStore.types';
-import { CURRENT_SCHEMA_VERSION, Player, PointLineRecord, SavedGame } from '../storage/types';
 import { UNKNOWN_PLAYER_ID } from '../playerUtils';
+import { aggregatePlayingTimeStats } from '../playingTimeStatsUtils';
 import {
+  PlayerStats as ComputedPlayerStats,
+  computePlayerStats,
   computeRelativePlayerStats,
   computeRelativePlayingTimeStats,
-  computePlayerStats,
   formatDateForCSV,
   generateAggregateCSV,
   generateCurrentGameCSV,
-  PlayerStats as ComputedPlayerStats,
 } from '../statsUtils';
+import { CURRENT_SCHEMA_VERSION, Player, PointLineRecord, SavedGame } from '../storage/types';
 
 describe('statsUtils', () => {
   const goal = (
@@ -407,7 +408,13 @@ describe('statsUtils', () => {
         { pointNumber: 3, playerIds: ['alice'], timestamp: 3 },
       ];
 
-      const aliceMetrics = computeRelativePlayingTimeStats('alice', pointLines, events, 'team1', 15);
+      const aliceMetrics = computeRelativePlayingTimeStats(
+        'alice',
+        pointLines,
+        events,
+        'team1',
+        15,
+      );
       const bobMetrics = computeRelativePlayingTimeStats('bob', pointLines, events, 'team1', 15);
       const caraMetrics = computeRelativePlayingTimeStats('cara', pointLines, events, 'team1', 15);
 
@@ -441,6 +448,99 @@ describe('statsUtils', () => {
       expect(caraWinRate?.detail).toBe('0/1');
       expect(caraDEff?.raw).toBe(0);
       expect(caraDEff?.detail).toBe('0/1');
+    });
+
+    it('aggregates multi-game playing time without colliding repeated point numbers', () => {
+      const roster = [makePlayer('Dan'), makePlayer('Casey')];
+      const games: SavedGame[] = [
+        makeSavedGame({
+          id: 'g1',
+          createdAt: 1,
+          startingPossession: 'team1',
+          events: [goal('team1', 'Dan', 'Casey'), goal('team2', 'Opponent', 'Opponent')],
+          pointLines: [
+            { pointNumber: 1, playerIds: ['Dan'], timestamp: 1 },
+            { pointNumber: 2, playerIds: ['Casey'], timestamp: 2 },
+          ],
+          roster,
+          team1Score: 1,
+          team2Score: 1,
+        }),
+        makeSavedGame({
+          id: 'g2',
+          createdAt: 2,
+          startingPossession: 'team2',
+          events: [goal('team1', 'Dan', 'Casey'), goal('team2', 'Opponent', 'Opponent')],
+          pointLines: [
+            { pointNumber: 1, playerIds: ['Dan'], timestamp: 3 },
+            { pointNumber: 2, playerIds: ['Casey'], timestamp: 4 },
+          ],
+          roster,
+          team1Score: 1,
+          team2Score: 1,
+        }),
+      ];
+
+      const playingTime = aggregatePlayingTimeStats(games);
+      const dan = playingTime.get('Dan');
+
+      expect(dan?.pointsPlayed).toBe(2);
+      expect(dan?.oPoints).toBe(1);
+      expect(dan?.dPoints).toBe(1);
+      expect(dan?.oLineHolds).toBe(1);
+      expect(dan?.dLineBreaks).toBe(1);
+      expect(dan?.playingTimePercent).toBe(50);
+    });
+
+    it('uses aggregate game data for relative playing-time metrics', () => {
+      const games: SavedGame[] = [
+        makeSavedGame({
+          id: 'g1',
+          createdAt: 1,
+          startingPossession: 'team1',
+          events: [goal('team1', 'Dan', 'Casey'), goal('team2', 'Opponent', 'Opponent')],
+          pointLines: [
+            { pointNumber: 1, playerIds: ['Dan'], timestamp: 1 },
+            { pointNumber: 2, playerIds: ['Casey'], timestamp: 2 },
+          ],
+          roster: [makePlayer('Dan'), makePlayer('Casey')],
+          team1Score: 1,
+          team2Score: 1,
+        }),
+        makeSavedGame({
+          id: 'g2',
+          createdAt: 2,
+          startingPossession: 'team2',
+          events: [goal('team1', 'Dan', 'Casey'), goal('team2', 'Opponent', 'Opponent')],
+          pointLines: [
+            { pointNumber: 1, playerIds: ['Dan'], timestamp: 3 },
+            { pointNumber: 2, playerIds: ['Casey'], timestamp: 4 },
+          ],
+          roster: [makePlayer('Dan'), makePlayer('Casey')],
+          team1Score: 1,
+          team2Score: 1,
+        }),
+      ];
+
+      const flattenedPointLines = games.flatMap((game) => game.pointLines ?? []);
+      const flattenedEvents = games.flatMap((game) => game.events);
+      const metrics = computeRelativePlayingTimeStats(
+        'Dan',
+        flattenedPointLines,
+        flattenedEvents,
+        null,
+        15,
+        true,
+        games,
+      );
+
+      const pointsPlayed = metrics.find((metric) => metric.key === 'pointsPlayed');
+      const oEfficiency = metrics.find((metric) => metric.key === 'oEfficiency');
+      const dEfficiency = metrics.find((metric) => metric.key === 'dEfficiency');
+
+      expect(pointsPlayed?.raw).toBe(2);
+      expect(oEfficiency?.detail).toBe('1/1');
+      expect(dEfficiency?.detail).toBe('1/1');
     });
   });
 
