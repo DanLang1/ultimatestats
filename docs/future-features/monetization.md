@@ -23,7 +23,7 @@ No subscriptions. Users pay once and own the feature forever.
 
 ### 1. Advanced Stat Tracking
 
-> See: [field-stat-tracking.md](./field-stat-tracking.md)
+> See: [advanced-stat-tracking/README.md](./advanced-stat-tracking/README.md)
 
 - Full pass-by-pass tracking
 - Active 7 player selection per point

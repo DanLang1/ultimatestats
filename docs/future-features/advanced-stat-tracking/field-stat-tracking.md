@@ -1,7 +1,9 @@
-# Advanced Stat Tracking
+# Advanced Stat Tracking UI Concept
 
-> **Status**: Brainstorm / Future Feature  
-> **Monetization**: Paid feature (one-time purchase)  
+> **Status**: Older brainstorm / Future Feature
+> **Use this for**: Interaction and flow ideas
+> **Start here for current schema direction**: [data-model.md](./data-model.md)
+> **Monetization**: Paid feature (one-time purchase)
 > **Access**: Settings → "Advanced Stat Tracking" → Opens dedicated screen
 
 ## Overview
@@ -152,7 +154,7 @@ Always visible, shows current point's pass chain:
 
 ---
 
-## Data Model
+## Older Data Model Sketch
 
 ```typescript
 interface PassEvent {
