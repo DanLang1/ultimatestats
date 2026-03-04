@@ -13,11 +13,15 @@ function getSavedGameSchemaVersion(game: SavedGame): number {
 }
 
 function assertMigrationCoverage() {
+  if (SAVED_GAME_MIGRATIONS.length === 0) {
+    return;
+  }
+
   const latestMigrationVersion = SAVED_GAME_MIGRATIONS[SAVED_GAME_MIGRATIONS.length - 1].toVersion;
 
-  if (latestMigrationVersion !== CURRENT_SCHEMA_VERSION) {
+  if (latestMigrationVersion > CURRENT_SCHEMA_VERSION) {
     throw new Error(
-      `Saved game migrations are out of sync: latest migration is v${latestMigrationVersion}, current schema is v${CURRENT_SCHEMA_VERSION}`,
+      `Saved game migrations are ahead of the current schema: latest migration is v${latestMigrationVersion}, current schema is v${CURRENT_SCHEMA_VERSION}`,
     );
   }
 }
@@ -35,7 +39,7 @@ export function migrateSavedGame(game: SavedGame): SavedGame {
     }
   }
 
-  if (schemaVersion === 3) {
+  if (schemaVersion >= 3) {
     return sanitizeSavedGameV3(migratedGame);
   }
 

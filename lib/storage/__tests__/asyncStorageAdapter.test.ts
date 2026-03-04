@@ -21,7 +21,7 @@ const goal = (team: 'team1' | 'team2'): GoalEvent => ({
 function makeSavedGame(overrides: Partial<SavedGame> = {}): SavedGame {
   return {
     id: 'game-1',
-    schemaVersion: CURRENT_SCHEMA_VERSION - 1,
+    schemaVersion: 2,
     createdAt: 1,
     team1: {
       id: 'team-1',

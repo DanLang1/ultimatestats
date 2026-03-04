@@ -19,7 +19,7 @@ export default function GameTimelineScreen() {
   // If gameId is present, it's a saved game
   const isSavedGame = !!params.gameId;
   const [showSplitSeparators, setShowSplitSeparators] = useState(true);
-
+  const [showLineups, setShowLineups] = useState(true);
   const {
     currentTeam,
     team2Name,
@@ -33,6 +33,7 @@ export default function GameTimelineScreen() {
     currentPointStartTime,
     currentPoint,
     pointTimerEnabled,
+    pointLines: currentPointLines,
   } = useGameStore();
   const team1Name = currentTeam?.name ?? 'Team 1';
 
@@ -53,6 +54,7 @@ export default function GameTimelineScreen() {
           roster: game.team1.roster,
           pointStartTimestamps: game.pointStartTimestamps,
           timingEnabled: game.events.some((event) => event.elapsedMs !== undefined),
+          pointLines: game.pointLines ?? [],
         };
       })()
     : {
@@ -67,6 +69,7 @@ export default function GameTimelineScreen() {
         roster: currentTeam?.roster ?? [],
         pointStartTimestamps,
         timingEnabled: pointTimerEnabled,
+        pointLines: currentPointLines,
       };
 
   if (!gameData) {
@@ -88,6 +91,7 @@ export default function GameTimelineScreen() {
   );
   const hasData = pointEvents.length > 0;
   const canToggleSplits = gameData.timingEnabled;
+  const hasLineupData = (gameData.pointLines?.length ?? 0) > 0;
 
   return (
     <ThemedView style={[styles.container, { backgroundColor: palette.primary }]}>
@@ -114,30 +118,56 @@ export default function GameTimelineScreen() {
         <Text style={[styles.teamNames, { color: palette.textInverse }]}>
           {gameData.team1Name} vs {gameData.team2Name}
         </Text>
-        {canToggleSplits && (
+        {(canToggleSplits || hasLineupData) && (
           <View style={styles.timelineControlsRow}>
-            <Pressable
-              onPress={() => setShowSplitSeparators((prev) => !prev)}
-              style={[
-                styles.timelineToggleChip,
-                {
-                  backgroundColor: showSplitSeparators ? palette.overlay08 : palette.overlay15,
-                  borderColor: showSplitSeparators ? palette.accent : palette.overlay15,
-                },
-              ]}>
-              <MaterialCommunityIcons
-                name="arrow-split-horizontal"
-                size={scaleBySizeClass(12, sizeClass)}
-                color={showSplitSeparators ? palette.accent : palette.textMuted}
-              />
-              <Text
+            {canToggleSplits && (
+              <Pressable
+                onPress={() => setShowSplitSeparators((prev) => !prev)}
                 style={[
-                  styles.timelineToggleText,
-                  { color: showSplitSeparators ? palette.accent : palette.textMuted },
+                  styles.timelineToggleChip,
+                  {
+                    backgroundColor: showSplitSeparators ? palette.overlay08 : palette.overlay15,
+                    borderColor: showSplitSeparators ? palette.accent : palette.overlay15,
+                  },
                 ]}>
-                Show Splits: {showSplitSeparators ? 'On' : 'Off'}
-              </Text>
-            </Pressable>
+                <MaterialCommunityIcons
+                  name="arrow-split-horizontal"
+                  size={scaleBySizeClass(12, sizeClass)}
+                  color={showSplitSeparators ? palette.accent : palette.textMuted}
+                />
+                <Text
+                  style={[
+                    styles.timelineToggleText,
+                    { color: showSplitSeparators ? palette.accent : palette.textMuted },
+                  ]}>
+                  Show Splits: {showSplitSeparators ? 'On' : 'Off'}
+                </Text>
+              </Pressable>
+            )}
+            {hasLineupData && (
+              <Pressable
+                onPress={() => setShowLineups((prev) => !prev)}
+                style={[
+                  styles.timelineToggleChip,
+                  {
+                    backgroundColor: showLineups ? palette.overlay08 : palette.overlay15,
+                    borderColor: showLineups ? palette.accent : palette.overlay15,
+                  },
+                ]}>
+                <MaterialCommunityIcons
+                  name="account-group-outline"
+                  size={scaleBySizeClass(12, sizeClass)}
+                  color={showLineups ? palette.accent : palette.textMuted}
+                />
+                <Text
+                  style={[
+                    styles.timelineToggleText,
+                    { color: showLineups ? palette.accent : palette.textMuted },
+                  ]}>
+                  Show Lines: {showLineups ? 'On' : 'Off'}
+                </Text>
+              </Pressable>
+            )}
           </View>
         )}
       </View>
@@ -152,6 +182,8 @@ export default function GameTimelineScreen() {
             roster={gameData.roster}
             timingEnabled={gameData.timingEnabled}
             showSplitSeparators={showSplitSeparators}
+            pointLines={gameData.pointLines}
+            showLineups={showLineups}
             onEditEvent={(eventIndex, turnover) => {
               Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
               router.push({
@@ -246,6 +278,7 @@ function createStyles(sizeClass: SizeClass) {
       alignItems: 'center',
       justifyContent: 'center',
       marginTop: scaleBySizeClass(6, sizeClass),
+      gap: scaleBySizeClass(8, sizeClass),
     },
     timelineToggleChip: {
       flexDirection: 'row',

@@ -1,8 +1,10 @@
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { getAllPlayersByPoint } from '@/lib/lineUtils';
 import { getPlayerMatchingType, getPlayerName } from '@/lib/playerUtils';
-import { Player } from '@/lib/storage/types';
+import { Player, PointLineRecord } from '@/lib/storage/types';
 import {
+  buildTimelineLineupEntries,
   computeRoundedSplitMs,
   DisplayTurnover,
   filterCallahanBlock,
@@ -25,6 +27,8 @@ interface EventTimelineProps {
   roster: Player[];
   timingEnabled?: boolean;
   showSplitSeparators?: boolean;
+  pointLines?: PointLineRecord[];
+  showLineups?: boolean;
   currentPoint?: number; // For live games: disable editing of current point
   onEditEvent?: (eventIndex: number, turnover: DisplayTurnover) => void;
   onEditGoal?: (
@@ -43,6 +47,8 @@ export default function EventTimeline({
   roster,
   timingEnabled = false,
   showSplitSeparators = false,
+  pointLines,
+  showLineups = false,
   currentPoint,
   onEditEvent,
   onEditGoal,
@@ -60,6 +66,8 @@ export default function EventTimeline({
 
   const finalScore =
     points.length > 0 ? points[points.length - 1].scoreAfter : { team1: 0, team2: 0 };
+
+  const playersByPoint = getAllPlayersByPoint(pointLines ?? []);
 
   const isGameComplete = finalScore.team1 >= gameTo || finalScore.team2 >= gameTo || isSavedGame;
   const renderSeparator = (splitMs?: number) => {
@@ -623,6 +631,87 @@ export default function EventTimeline({
                     </>
                   ))}
               </View>
+
+              {/* Lineup Footer */}
+              {showLineups && playersByPoint.has(point.pointNumber) && (
+                <View style={[styles.lineupFooter, { backgroundColor: palette.overlay05 }]}>
+                  <View style={styles.lineupHeader}>
+                    <MaterialCommunityIcons
+                      name="account-group-outline"
+                      size={scaleBySizeClass(16, sizeClass)}
+                      color={palette.textMuted}
+                    />
+                  </View>
+                  <View style={styles.lineupChipsWrapper}>
+                    {(() => {
+                      const pointRecords =
+                        pointLines?.filter((record) => record.pointNumber === point.pointNumber) ??
+                        [];
+                      const lineupEntries = buildTimelineLineupEntries(
+                        playersByPoint.get(point.pointNumber) ?? [],
+                        pointRecords,
+                      );
+                      return lineupEntries.map(({ playerId, isSubIn, isInjuredOut }) => {
+                        const matchType = getPlayerMatchingType(roster, playerId);
+
+                        return (
+                          <View
+                            key={playerId}
+                            style={[
+                              styles.lineupChip,
+                              { backgroundColor: palette.overlay08 },
+                              isSubIn && {
+                                borderColor: palette.warning + '50',
+                                borderWidth: 1,
+                                backgroundColor: palette.warning + '10',
+                              },
+                              isInjuredOut && {
+                                borderColor: palette.danger + '35',
+                                borderWidth: 1,
+                                backgroundColor: palette.danger + '10',
+                              },
+                            ]}>
+                            <Text
+                              style={[
+                                styles.lineupChipText,
+                                {
+                                  color:
+                                    matchType === 'mmp'
+                                      ? mmpColor
+                                      : matchType === 'fmp'
+                                        ? fmpColor
+                                        : palette.textInverse,
+                                },
+                              ]}>
+                              {getPlayerName(roster, playerId) ?? playerId}
+                              {isSubIn && (
+                                <Text
+                                  style={{
+                                    color: palette.warning,
+                                    fontSize: scaleBySizeClass(10, sizeClass),
+                                  }}>
+                                  {' '}
+                                  (sub)
+                                </Text>
+                              )}
+                              {isInjuredOut && (
+                                <Text
+                                  style={{
+                                    color: palette.danger,
+                                    fontSize: scaleBySizeClass(10, sizeClass),
+                                  }}>
+                                  {' '}
+                                  (inj)
+                                </Text>
+                              )}
+                            </Text>
+                          </View>
+                        );
+                      });
+                    })()}
+                  </View>
+                </View>
+              )}
             </View>
           );
         })}
@@ -798,6 +887,35 @@ function createStyles(sizeClass: SizeClass) {
     editHintText: {
       fontSize: scaleBySizeClass(11, sizeClass),
       fontStyle: 'italic',
+    },
+    lineupFooter: {
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+      borderBottomLeftRadius: 14,
+      borderBottomRightRadius: 14,
+    },
+    lineupHeader: {
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingLeft: 4,
+    },
+    lineupChipsWrapper: {
+      flex: 1,
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 6,
+    },
+    lineupChip: {
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: 12,
+    },
+    lineupChipText: {
+      fontSize: scaleBySizeClass(11, sizeClass),
+      fontWeight: '600',
     },
   });
 }

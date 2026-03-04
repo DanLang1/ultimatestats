@@ -1,5 +1,7 @@
+import { PointLineRecord } from '@/lib/storage/types';
 import { GameEvent, GoalEvent, TurnoverType } from '@/store/gameStore.types';
 import {
+  buildTimelineLineupEntries,
   computePointByPointEvents,
   computeRoundedSplitMs,
   DisplayTimeout,
@@ -183,6 +185,76 @@ describe('timelineUtils', () => {
       expect(points[1].isInProgress).toBe(true);
       expect(points[1].timeouts).toHaveLength(1);
       expect(points[1].turnovers).toHaveLength(0);
+    });
+  });
+
+  describe('buildTimelineLineupEntries', () => {
+    it('falls back to showing all players when injury metadata is absent', () => {
+      const pointRecords: PointLineRecord[] = [
+        { pointNumber: 1, playerIds: ['a', 'b', 'c'], timestamp: 1 },
+        { pointNumber: 1, playerIds: ['a', 'b', 'd'], timestamp: 2, isSubstitution: true },
+      ];
+
+      expect(buildTimelineLineupEntries(['a', 'b', 'c', 'd'], pointRecords)).toEqual([
+        { playerId: 'a', isSubIn: false, isInjuredOut: false },
+        { playerId: 'b', isSubIn: false, isInjuredOut: false },
+        { playerId: 'c', isSubIn: false, isInjuredOut: false },
+        { playerId: 'd', isSubIn: false, isInjuredOut: false },
+      ]);
+    });
+
+    it('shows final line plus injured-out players when injury metadata exists', () => {
+      const pointRecords: PointLineRecord[] = [
+        { pointNumber: 1, playerIds: ['a', 'b', 'c'], timestamp: 1 },
+        {
+          pointNumber: 1,
+          playerIds: ['a', 'b', 'd'],
+          timestamp: 2,
+          isSubstitution: true,
+          substitutionType: 'injury',
+          subbedInPlayerIds: ['d'],
+          subbedOutPlayerIds: ['c'],
+        },
+      ];
+
+      expect(buildTimelineLineupEntries(['a', 'b', 'c', 'd'], pointRecords)).toEqual([
+        { playerId: 'a', isSubIn: false, isInjuredOut: false },
+        { playerId: 'b', isSubIn: false, isInjuredOut: false },
+        { playerId: 'd', isSubIn: true, isInjuredOut: false },
+        { playerId: 'c', isSubIn: false, isInjuredOut: true },
+      ]);
+    });
+
+    it('accumulates labels across multiple injury substitutions while preserving display order', () => {
+      const pointRecords: PointLineRecord[] = [
+        { pointNumber: 1, playerIds: ['a', 'b', 'c'], timestamp: 1 },
+        {
+          pointNumber: 1,
+          playerIds: ['a', 'b', 'd'],
+          timestamp: 2,
+          isSubstitution: true,
+          substitutionType: 'injury',
+          subbedInPlayerIds: ['d'],
+          subbedOutPlayerIds: ['c'],
+        },
+        {
+          pointNumber: 1,
+          playerIds: ['a', 'e', 'd'],
+          timestamp: 3,
+          isSubstitution: true,
+          substitutionType: 'injury',
+          subbedInPlayerIds: ['e'],
+          subbedOutPlayerIds: ['b'],
+        },
+      ];
+
+      expect(buildTimelineLineupEntries(['a', 'b', 'c', 'd', 'e'], pointRecords)).toEqual([
+        { playerId: 'a', isSubIn: false, isInjuredOut: false },
+        { playerId: 'e', isSubIn: true, isInjuredOut: false },
+        { playerId: 'd', isSubIn: true, isInjuredOut: false },
+        { playerId: 'b', isSubIn: false, isInjuredOut: true },
+        { playerId: 'c', isSubIn: false, isInjuredOut: true },
+      ]);
     });
   });
 

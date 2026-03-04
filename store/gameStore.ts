@@ -780,24 +780,24 @@ export const useGameStore = create<GameState>()(
           subType?: 'injury' | 'replacement',
         ) =>
           set((state: GameState) => {
+            const timestamp = Date.now();
+            const lastRecord = state.pointLines.findLast((r) => r.pointNumber === pointNumber);
+
             if (isSubstitution && subType === 'replacement') {
-              // Replace: overwrite the most recent record for this point
-              const existingIdx = state.pointLines.findLastIndex(
-                (r) => r.pointNumber === pointNumber,
-              );
-              if (existingIdx !== -1) {
-                state.pointLines[existingIdx] = {
-                  pointNumber,
-                  playerIds: [...state.currentLine],
-                  timestamp: Date.now(),
-                  isSubstitution: false,
-                };
-                return;
-              }
+              // Replace: clear the point's lineup history and write the corrected line only.
+              state.pointLines = state.pointLines.filter((r) => r.pointNumber !== pointNumber);
+              state.pointLines.push({
+                pointNumber,
+                playerIds: [...state.currentLine],
+                timestamp,
+                isSubstitution: false,
+                subbedInPlayerIds: undefined,
+                subbedOutPlayerIds: undefined,
+              });
+              return;
             }
             // Injury sub: skip if lineup is identical to the last record for this point
             if (isSubstitution && subType === 'injury') {
-              const lastRecord = state.pointLines.findLast((r) => r.pointNumber === pointNumber);
               if (lastRecord) {
                 const isSame =
                   lastRecord.playerIds.length === state.currentLine.length &&
@@ -805,12 +805,25 @@ export const useGameStore = create<GameState>()(
                 if (isSame) return;
               }
             }
+
+            const subbedInPlayerIds =
+              isSubstitution && subType === 'injury' && lastRecord
+                ? state.currentLine.filter((id) => !lastRecord.playerIds.includes(id))
+                : undefined;
+            const subbedOutPlayerIds =
+              isSubstitution && subType === 'injury' && lastRecord
+                ? lastRecord.playerIds.filter((id) => !state.currentLine.includes(id))
+                : undefined;
+
             // Injury sub or initial line: append a new record
             state.pointLines.push({
               pointNumber,
               playerIds: [...state.currentLine],
-              timestamp: Date.now(),
+              timestamp,
               isSubstitution,
+              substitutionType: isSubstitution && subType === 'injury' ? 'injury' : undefined,
+              subbedInPlayerIds,
+              subbedOutPlayerIds,
             });
           }),
 

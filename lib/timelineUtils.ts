@@ -1,4 +1,5 @@
 import { didGoalTriggerHalftime } from '@/lib/halftimeUtils';
+import { PointLineRecord } from '@/lib/storage/types';
 import { GameEvent, TurnoverType } from '@/store/gameStore.types';
 
 // Represents a turnover for display purposes
@@ -41,6 +42,12 @@ export interface PointEvents {
   // Timing info
   pointStartTimestamp?: number; // When point started (from Start Point button)
   pointDurationMs?: number; // Time from point start (or first event) to goal
+}
+
+export interface TimelineLineupEntry {
+  playerId: string;
+  isSubIn: boolean;
+  isInjuredOut: boolean;
 }
 
 /**
@@ -243,6 +250,56 @@ export function filterCallahanBlock(
   return events.filter(
     (event) => !(event.kind === 'turnover' && event.data.eventIndex === callahanBlockEventIndex),
   );
+}
+
+/**
+ * Build lineup footer entries for a point timeline card.
+ * When explicit injury-sub metadata exists, prefer the final line and append injured-out players
+ * so both credited groups remain visible. Legacy records fall back to all players who appeared.
+ */
+export function buildTimelineLineupEntries(
+  allPlayersForPoint: Iterable<string>,
+  pointRecords: PointLineRecord[],
+): TimelineLineupEntry[] {
+  const allPlayers = [...allPlayersForPoint];
+  const injuryRecords = pointRecords.filter((record) => record.substitutionType === 'injury');
+  const hasExplicitInjuryMetadata = injuryRecords.some(
+    (record) =>
+      (record.subbedInPlayerIds?.length ?? 0) > 0 || (record.subbedOutPlayerIds?.length ?? 0) > 0,
+  );
+
+  if (!hasExplicitInjuryMetadata) {
+    return allPlayers.map((playerId) => ({
+      playerId,
+      isSubIn: false,
+      isInjuredOut: false,
+    }));
+  }
+
+  const finalLine = pointRecords[pointRecords.length - 1]?.playerIds ?? [];
+  const finalLineSet = new Set(finalLine);
+  const subbedInPlayers = new Set(
+    injuryRecords.flatMap((record) => record.subbedInPlayerIds ?? []),
+  );
+  const injuredOutPlayers = new Set(
+    injuryRecords.flatMap((record) => record.subbedOutPlayerIds ?? []),
+  );
+  const displayedPlayers =
+    finalLine.length > 0
+      ? [
+          ...finalLine,
+          ...allPlayers.filter(
+            (playerId) => !finalLineSet.has(playerId) && injuredOutPlayers.has(playerId),
+          ),
+        ]
+      : allPlayers;
+  const uniqueDisplayedPlayers = [...new Set(displayedPlayers)];
+
+  return uniqueDisplayedPlayers.map((playerId) => ({
+    playerId,
+    isSubIn: subbedInPlayers.has(playerId),
+    isInjuredOut: injuredOutPlayers.has(playerId),
+  }));
 }
 
 /**

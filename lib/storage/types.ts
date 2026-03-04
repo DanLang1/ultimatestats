@@ -3,7 +3,7 @@
 import { GameEvent, TurnoverType } from '@/store/gameStore.types';
 export type { GameEvent, TurnoverType };
 
-export const CURRENT_SCHEMA_VERSION = 3;
+export const CURRENT_SCHEMA_VERSION = 4;
 
 export interface SavedGame {
   id: string;
@@ -74,4 +74,7 @@ export interface PointLineRecord {
   playerIds: string[];
   timestamp: number;
   isSubstitution?: boolean; // true if mid-point sub
+  substitutionType?: 'injury';
+  subbedInPlayerIds?: string[];
+  subbedOutPlayerIds?: string[];
 }

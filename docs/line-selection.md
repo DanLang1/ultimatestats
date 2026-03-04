@@ -263,7 +263,16 @@ When a user edits a line during a point, the system determines whether it's a **
 | 1-2 players | **Append** as substitution | Small swap — likely a real sub (injury, fatigue) |
 | 3+ players | **Replace** existing record | Most of the line changed — likely picked the wrong preset |
 
-When replacing, `isSubstitution` is set to `false` on the updated record since it's treated as the corrected original line. The comparison uses the most recent record for the point (`findLastIndex`) to handle cases where multiple substitutions have already occurred.
+When replacing, all existing `pointLines` records for that point are removed and a single corrected snapshot is written with `isSubstitution: false`. This ensures earlier mistaken lines or injury-sub history for that point do not continue to count toward playing time.
+
+For newly recorded games, injury substitutions also store explicit substitution deltas on the appended `PointLineRecord`:
+- `substitutionType: 'injury'`
+- `subbedInPlayerIds`
+- `subbedOutPlayerIds`
+
+Replacement/correction edits do not store substitution metadata. They only update the effective line snapshot for the point.
+
+These fields are optional and are only written for newer injury-sub records. When the metadata is present, timeline UI shows the final line for the point, labels replacement players as `(sub)`, and also keeps explicitly injured-out players visible with `(inj)` since they still receive point credit. Legacy saved games continue to work without migration, but the timeline may fall back to showing the union of players who appeared during the point because explicit injury-sub metadata is not available.
 
 ### Playing Time Attribution
 
@@ -277,7 +286,7 @@ Two functions compute playing time, with consistent behavior:
 Both use a `Set` to collect all players who appeared in any `PointLineRecord` for a given point number. This means:
 - A player subbed out mid-point still gets credit for playing that point
 - A player subbed in mid-point also gets credit
-- If a line is **replaced** (correction), only the corrected players get credit (the original wrong record is overwritten)
+- If a line is **replaced** (correction), only the corrected players get credit because earlier records for that point are removed
 
 ### Undo and Point Lines
 

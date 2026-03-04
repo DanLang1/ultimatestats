@@ -12,7 +12,7 @@ const goal = (team: 'team1' | 'team2'): GoalEvent => ({
 function makeSavedGame(overrides: Partial<SavedGame> = {}): SavedGame {
   return {
     id: 'game-1',
-    schemaVersion: CURRENT_SCHEMA_VERSION - 1,
+    schemaVersion: 2,
     createdAt: 1,
     team1: {
       id: 'team-1',
@@ -91,5 +91,19 @@ describe('storage migrations', () => {
 
     expect(didChange).toBe(true);
     expect(games[0].schemaVersion).toBe(CURRENT_SCHEMA_VERSION);
+  });
+
+  it('allows additive schema bumps without a dedicated migration step', () => {
+    const v3Game = makeSavedGame({
+      schemaVersion: 3,
+      autoHalftimeEnabled: true,
+      events: [goal('team1')],
+    });
+
+    const migrated = migrateSavedGame(v3Game);
+
+    expect(migrated.schemaVersion).toBe(CURRENT_SCHEMA_VERSION);
+    expect(migrated.events).toEqual(v3Game.events);
+    expect(migrated.autoHalftimeEnabled).toBe(true);
   });
 });
