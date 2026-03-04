@@ -32,7 +32,7 @@ function SettingsContent() {
   const { isLandscape, sizeClass } = useLayout();
   const styles = createStyles(isLandscape, sizeClass);
   const metrics = createMetrics(sizeClass);
-  const useCompactColorLayout = isLandscape || sizeClass !== 'small';
+  const useCompactColorLayout = sizeClass !== 'small';
   const { palette, themeMode, setThemeMode } = useTheme();
   const { showAlert } = useAlert();
   const { hasSeenStatsTutorial, triggerStatsTutorial } = useTutorialStore();
@@ -872,7 +872,7 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
       gap: scaleBySizeClass(12, sizeClass),
     },
     compactColorItem: {
-      width: isLandscape || sizeClass !== 'small' ? '48%' : '100%',
+      width: sizeClass !== 'small' ? '48%' : '100%',
     },
     colorPickerSpacer: {
       height: scaleBySizeClass(12, sizeClass),

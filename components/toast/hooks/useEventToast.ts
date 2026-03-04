@@ -61,6 +61,9 @@ function getTurnoverMessage(event: TurnoverEvent, roster: Player[], team2Name: s
     case 'fiftyfifty': {
       const player1Label = playerName ?? UNKNOWN_PLAYER_LABEL;
       const player2Label = player2Name ?? UNKNOWN_PLAYER_LABEL;
+      if (event.playerId === event.player2Id) {
+        return `Turnover by ${player1Label}`;
+      }
       if (player1Label === UNKNOWN_PLAYER_LABEL && player2Label === UNKNOWN_PLAYER_LABEL) {
         return 'Turnover by Unknown Players';
       }
@@ -133,7 +136,10 @@ function getUndoMessage(event: GameEvent, roster: Player[], team2Name: string): 
       case 'drop':
         return player ? `${player}'s drop undone` : 'Drop undone';
       case 'fiftyfifty': {
-        const names = [player, player2].filter(Boolean);
+        const names =
+          event.playerId === event.player2Id
+            ? [player].filter(Boolean)
+            : [player, player2].filter(Boolean);
         return names.length > 0 ? `Turnover by ${names.join(' & ')} undone` : 'Turnover undone';
       }
       default:

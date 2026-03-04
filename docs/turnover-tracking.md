@@ -7,6 +7,8 @@
 The turnover tracking system records turnovers (blocks, throwaways, drops, 50/50) during gameplay using a possession-aware approach.
 Turnovers are recorded from the floating `ScoreboardActionBar` action buttons
 
+For `50/50` turnovers, the event stores both thrower and receiver attribution. If one player causes both halves of the mistake, the same player can be recorded in both roles.
+
 This feature integrates with the existing stat tracking setting—turnover tracking is enabled when stat tracking is on.
 
 ## Plus/Minus System

@@ -420,7 +420,6 @@ export default function EditEventModal() {
                       key={player.id}
                       name={player.name}
                       selected={selectedPlayer2Id === player.id}
-                      disabled={player.id === selectedPlayerId}
                       onPress={() => setSelectedPlayer2Id(player.id)}
                     />
                   ))}

@@ -7,6 +7,7 @@ import {
   computeRelativePlayerStats,
   computeRelativePlayingTimeStats,
   formatDateForCSV,
+  getImpactStats,
   generateAggregateCSV,
   generateCurrentGameCSV,
 } from '../statsUtils';
@@ -362,7 +363,7 @@ describe('statsUtils', () => {
       expect(goals?.teamAvg).toBeCloseTo(2); // (3 + 1 + 2) / 3, not / 4
     });
 
-    it('includes all players when pointLines is not provided', () => {
+    it('includes all provided player stats when pointLines is not provided', () => {
       const stats: ComputedPlayerStats[] = [
         ...playerStatsFixture(),
         {
@@ -383,6 +384,28 @@ describe('statsUtils', () => {
 
       expect(goals?.teamPoolSize).toBe(4); // dana included (no pointLines filter)
       expect(goals?.teamAvg).toBeCloseTo(1.5); // (3 + 1 + 2 + 0) / 4
+    });
+  });
+
+  describe('getImpactStats', () => {
+    it('records a self fifty-fifty turnover as a single -1 impact event', () => {
+      const events: GameEvent[] = [
+        {
+          type: 'turnover',
+          team: 'team1',
+          subtype: 'fiftyfifty',
+          playerId: 'Alice',
+          player2Id: 'Alice',
+        },
+      ];
+
+      const impact = getImpactStats('Alice', events, 'team1');
+
+      expect(impact).toEqual([
+        { eventIndex: 0, cumulativePlusMinus: 0, description: 'Start', score: '0-0' },
+        { eventIndex: 1, cumulativePlusMinus: -1, description: '50/50 Self', score: '0-0' },
+        { eventIndex: 2, cumulativePlusMinus: -1, description: 'End', score: '0-0' },
+      ]);
     });
   });
 

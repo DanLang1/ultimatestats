@@ -73,7 +73,7 @@ export default function RelativePlayerStatsSection({
   const handleInfoPress = () => {
     const lineNote = hasLineTracking
       ? 'Players who played at least one point are included in averages.'
-      : 'Line tracking not enabled, so entire team included in averages. Enable line tracking to get more accurate averages.';
+      : 'Average across players with at least one +- event.';
     showAlert({ title: 'Relative to Team', message: lineNote });
   };
 

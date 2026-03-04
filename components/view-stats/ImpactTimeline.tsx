@@ -21,6 +21,7 @@ function eventAbbrev(description: string | undefined): string | null {
   if (d.startsWith('goal')) return 'G';
   if (d.startsWith('assist')) return 'A';
   if (d.startsWith('block')) return 'B';
+  if (d.startsWith('50/50 self')) return 'FF';
   if (d.startsWith('drop') || d.startsWith('50/50 drop')) return 'D';
   if (d.startsWith('throwaway') || d.startsWith('50/50 throw')) return 'T';
   return null;

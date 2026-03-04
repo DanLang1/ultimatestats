@@ -558,7 +558,14 @@ export function getImpactStats(
           desc = 'Assist';
         }
       } else if (event.type === 'turnover') {
-        if (event.playerId === playerId) {
+        if (
+          event.subtype === 'fiftyfifty' &&
+          event.playerId === playerId &&
+          event.player2Id === playerId
+        ) {
+          change = -1;
+          desc = '50/50 Self';
+        } else if (event.playerId === playerId) {
           if (event.subtype === 'block') {
             change = 1;
             desc = 'Block';

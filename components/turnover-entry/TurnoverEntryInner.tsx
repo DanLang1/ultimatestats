@@ -153,10 +153,7 @@ export function TurnoverEntryInner({
     }
   };
 
-  // Filter out first player for 50/50 mode
-  const displayRoster = isFiftyFiftyMode
-    ? activeRoster.filter((p) => p.id !== fiftyFiftyFirstPlayerId)
-    : activeRoster;
+  const displayRoster = activeRoster;
 
   // Render header content (team name, question, badges)
   const renderHeader = () => (
@@ -297,6 +294,7 @@ export function TurnoverEntryInner({
             {renderHeader()}
             <StatEntryRoster
               roster={displayRoster}
+              selectedPlayerId={fiftyFiftyFirstPlayerId}
               onSelect={handlePlayerSelect}
               maxHeight={compactRosterMaxHeight}
             />
@@ -354,6 +352,7 @@ export function TurnoverEntryInner({
 
                 <StatEntryRoster
                   roster={displayRoster}
+                  selectedPlayerId={fiftyFiftyFirstPlayerId}
                   onSelect={handlePlayerSelect}
                   maxHeight={400}
                 />
@@ -421,6 +420,7 @@ export function TurnoverEntryInner({
             <Animated.View entering={FadeIn} style={styles.rightColumn}>
               <StatEntryRoster
                 roster={displayRoster}
+                selectedPlayerId={fiftyFiftyFirstPlayerId}
                 onSelect={handlePlayerSelect}
                 maxHeight={280}
               />

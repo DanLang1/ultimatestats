@@ -141,6 +141,12 @@ export default function LineEditor() {
     setSortKey((k) => k + 1);
   };
 
+  const handleClearSelection = () => {
+    setSelectedIds([]);
+    setSelectedPresetId(null);
+    setSortKey((k) => k + 1);
+  };
+
   const handleDone = () => {
     router.dismissTo('/');
 
@@ -375,6 +381,21 @@ export default function LineEditor() {
               </Pressable>
             )}
           </ScrollView>
+          {selectedIds.length > 0 && (
+            <Pressable
+              onPress={handleClearSelection}
+              style={({ pressed }) => [
+                styles.sortBtn,
+                { borderColor: palette.overlay15 },
+                pressed && { opacity: 0.7 },
+              ]}>
+              <MaterialCommunityIcons
+                name="eraser"
+                size={scaleBySizeClass(14, sizeClass)}
+                color={palette.textMuted}
+              />
+            </Pressable>
+          )}
           <Pressable
             onPress={toggleSort}
             style={({ pressed }) => [
