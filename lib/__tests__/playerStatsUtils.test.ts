@@ -114,5 +114,22 @@ describe('Player Stats Visualization Logic', () => {
       expect(impactEvents[0]?.score).toBe('0-0');
       expect(impactEvents[1]?.score).toBe('1-0');
     });
+
+    it('counts a self-assisted goal as both a goal and assist in impact', () => {
+      const selfAssistEvents: GameEvent[] = [
+        { type: 'goal', team: 'team2', goalPlayerId: 'Opponent', assistPlayerId: 'Opponent' }, // 0-1
+        { type: 'goal', team: 'team1', goalPlayerId: 'Player A', assistPlayerId: 'Player A' }, // 1-1
+      ];
+
+      const stats = getImpactStats('Player A', selfAssistEvents, 'team1');
+      const impactEvents = stats.filter(
+        (s) => s.description && s.description !== 'Start' && s.description !== 'End',
+      );
+
+      expect(impactEvents).toHaveLength(1);
+      expect(impactEvents[0]?.description).toBe('Goal + Assist');
+      expect(impactEvents[0]?.cumulativePlusMinus).toBe(2);
+      expect(impactEvents[0]?.score).toBe('0-1');
+    });
   });
 });

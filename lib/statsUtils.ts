@@ -539,12 +539,17 @@ export function getImpactStats(
           event.goalPlayerId === playerId &&
           event.assistPlayerId === 'OTHER_TEAM' &&
           lastPendingEvent?.description === 'Block';
+        const isSelfAssistGoal =
+          event.goalPlayerId === playerId && event.assistPlayerId === playerId;
 
         if (isCallahan) {
           pendingPointEvents.pop();
           currentPlusMinus -= 1; // Undo the block +1
           change = 2; // Callahan is worth +2 (block + goal)
           desc = 'Callahan';
+        } else if (isSelfAssistGoal) {
+          change = 2;
+          desc = 'Goal + Assist';
         } else if (event.goalPlayerId === playerId) {
           change = 1;
           desc = 'Goal';

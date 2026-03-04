@@ -16,6 +16,7 @@ const FONT_FAMILY = Platform.select({
 function eventAbbrev(description: string | undefined): string | null {
   if (!description) return null;
   const d = description.toLowerCase();
+  if (d.startsWith('goal + assist')) return 'GA';
   if (d.startsWith('callahan')) return 'C';
   if (d.startsWith('goal')) return 'G';
   if (d.startsWith('assist')) return 'A';
@@ -235,7 +236,8 @@ export default function ImpactTimeline({ data }: ImpactTimelineProps) {
                         const labelY = isPositive
                           ? point.y - labelAboveOffset
                           : point.y + labelBelowOffset;
-                        const labelX = point.x - labelFontSize * 0.35;
+                        const labelX =
+                          point.x - labelFontSize * 0.35 * Math.max(abbrev?.length ?? 1, 1);
                         return (
                           <React.Fragment key={i}>
                             <Circle cx={point.x} cy={point.y} r={dotRadius} color={dotColor} />

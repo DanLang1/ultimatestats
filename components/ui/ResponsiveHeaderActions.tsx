@@ -26,8 +26,9 @@ export function ResponsiveHeaderActions({ actions }: ResponsiveHeaderActionsProp
   const insets = useSafeAreaInsets();
   const [isMenuVisible, setIsMenuVisible] = useState(false);
 
-  const showInlineHeaderActions = isLandscape || sizeClass !== 'small';
   const visibleActions = actions.filter((action) => action.visible !== false);
+  const showInlineHeaderActions =
+    isLandscape || sizeClass !== 'small' || visibleActions.length <= 2;
   const hasActions = visibleActions.length > 0;
   const hasEnabledActions = visibleActions.some((action) => !action.disabled);
 

@@ -45,6 +45,7 @@ Common columns include:
 - **Interactive Rows**: Tap any player row to view a detailed breakdown of their individual stats.
 - In aggregate player view, the **Game Impact** selector only includes games where that player has at least one recorded impact event (goal, assist, block, throwaway, drop, or 50/50 involvement).
 - In player detail, **Game Impact** event chips and score markers use the point-start score so all impact events from the same point share one label; if the point is still in progress, they show the current live score.
+- In player detail, a self-assisted goal is shown in **Game Impact** as a single `Goal + Assist` impact event worth `+2`, matching the raw stat totals.
 - In player detail, the **Profile** diamond uses raw counts (Goals, Assists, Blocks, Total Turns) on a shared per-player scale so equal counts render equal axis lengths.
 - In player detail, a **Relative to Team** card shows team-context comparisons for core event stats (Goals, Assists, Blocks, turnovers, and Plus/Minus).
 - The Relative card has a local **Vs Avg / Vs Max** toggle:
