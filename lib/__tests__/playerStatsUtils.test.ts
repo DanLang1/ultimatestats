@@ -61,5 +61,58 @@ describe('Player Stats Visualization Logic', () => {
       // 5th event involving A is the throwaway.
       expect(eventLast.cumulativePlusMinus).toBe(3);
     });
+
+    it('uses the point-start score for all impact events in that point', () => {
+      const pointAlignedEvents: GameEvent[] = [
+        { type: 'goal', team: 'team1', goalPlayerId: 'Teammate', assistPlayerId: 'Other' }, // 1-0
+        { type: 'turnover', team: 'team1', subtype: 'block', playerId: 'Player A' },
+        { type: 'goal', team: 'team1', goalPlayerId: 'Teammate', assistPlayerId: 'Player A' }, // 2-0
+      ];
+
+      const stats = getImpactStats('Player A', pointAlignedEvents, 'team1');
+      const block = stats.find((s) => s.description === 'Block');
+      const assist = stats.find((s) => s.description === 'Assist');
+
+      expect(block?.score).toBe('1-0');
+      expect(assist?.score).toBe('1-0');
+    });
+
+    it('merges a same-point block and goal into a single callahan event', () => {
+      const callahanEvents: GameEvent[] = [
+        { type: 'goal', team: 'team2', goalPlayerId: 'Opponent', assistPlayerId: 'Opponent' }, // 0-1
+        { type: 'turnover', team: 'team1', subtype: 'block', playerId: 'Player A' },
+        { type: 'goal', team: 'team1', goalPlayerId: 'Player A', assistPlayerId: 'OTHER_TEAM' }, // 1-1
+      ];
+
+      const stats = getImpactStats('Player A', callahanEvents, 'team1');
+      const impactEvents = stats.filter(
+        (s) => s.description && s.description !== 'Start' && s.description !== 'End',
+      );
+      const callahan = impactEvents.find((s) => s.description === 'Callahan');
+      const block = impactEvents.find((s) => s.description === 'Block');
+
+      expect(impactEvents).toHaveLength(1);
+      expect(callahan?.cumulativePlusMinus).toBe(2);
+      expect(callahan?.score).toBe('0-1');
+      expect(block).toBeUndefined();
+    });
+
+    it('does not carry a block across points when detecting callahans', () => {
+      const splitPointEvents: GameEvent[] = [
+        { type: 'turnover', team: 'team1', subtype: 'block', playerId: 'Player A' },
+        { type: 'goal', team: 'team1', goalPlayerId: 'Teammate', assistPlayerId: 'Teammate' }, // 1-0
+        { type: 'goal', team: 'team1', goalPlayerId: 'Player A', assistPlayerId: 'OTHER_TEAM' }, // 2-0
+      ];
+
+      const stats = getImpactStats('Player A', splitPointEvents, 'team1');
+      const impactEvents = stats.filter(
+        (s) => s.description && s.description !== 'Start' && s.description !== 'End',
+      );
+      const descriptions = impactEvents.map((s) => s.description);
+
+      expect(descriptions).toEqual(['Block', 'Goal']);
+      expect(impactEvents[0]?.score).toBe('0-0');
+      expect(impactEvents[1]?.score).toBe('1-0');
+    });
   });
 });

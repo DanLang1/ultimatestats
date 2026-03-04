@@ -517,73 +517,83 @@ export function getImpactStats(
   ];
   let currentPlusMinus = 0;
   let eventIndex = 1; // Start at 1 so first event doesn't overlap with Start point
+  let pendingPointEvents: Omit<ImpactPoint, 'score'>[] = [];
+  let currentPointScore = '0-0';
+
+  // Use the score at the start of the point for every impact event in that point
+  // so the chips read as "this happened while the score was X-Y".
+  const flushPendingPointEvents = (score: string) => {
+    if (pendingPointEvents.length === 0) return;
+    points.push(...pendingPointEvents.map((point) => ({ ...point, score })));
+    pendingPointEvents = [];
+  };
 
   for (const event of events) {
-    // Track ALL goals for score (including opponent)
-    if (event.type === 'goal') {
-      if (event.team === 'team1') team1Score++;
-      else team2Score++;
-    }
-
-    // Skip opponent events for impact calculation
-    if (event.team !== team) {
-      eventIndex++;
-      continue;
-    }
-
     let change = 0;
     let desc = '';
 
-    if (event.type === 'goal') {
-      // Check for Callahan: goal with 'OTHER_TEAM' assist AND same player got the block
-      const isCallahan =
-        event.goalPlayerId === playerId &&
-        event.assistPlayerId === 'OTHER_TEAM' &&
-        points.length > 1 &&
-        points[points.length - 1].description?.includes('Block');
+    if (event.team === team) {
+      if (event.type === 'goal') {
+        const lastPendingEvent = pendingPointEvents[pendingPointEvents.length - 1];
+        const isCallahan =
+          event.goalPlayerId === playerId &&
+          event.assistPlayerId === 'OTHER_TEAM' &&
+          lastPendingEvent?.description === 'Block';
 
-      if (isCallahan) {
-        // Merge with the block - remove the block point and add a Callahan
-        points.pop();
-        currentPlusMinus -= 1; // Undo the block +1
-        change = 2; // Callahan is worth +2 (block + goal)
-        desc = 'Callahan';
-      } else if (event.goalPlayerId === playerId) {
-        change = 1;
-        desc = 'Goal';
-      } else if (event.assistPlayerId === playerId) {
-        change = 1;
-        desc = 'Assist';
-      }
-    } else if (event.type === 'turnover') {
-      if (event.playerId === playerId) {
-        if (event.subtype === 'block') {
+        if (isCallahan) {
+          pendingPointEvents.pop();
+          currentPlusMinus -= 1; // Undo the block +1
+          change = 2; // Callahan is worth +2 (block + goal)
+          desc = 'Callahan';
+        } else if (event.goalPlayerId === playerId) {
           change = 1;
-          desc = 'Block';
-        } else if (event.subtype === 'fiftyfifty') {
-          change = -0.5;
-          desc = '50/50 Throw';
-        } else {
-          change = -1;
-          desc = event.subtype.charAt(0).toUpperCase() + event.subtype.slice(1);
+          desc = 'Goal';
+        } else if (event.assistPlayerId === playerId) {
+          change = 1;
+          desc = 'Assist';
         }
-      } else if (event.player2Id === playerId && event.subtype === 'fiftyfifty') {
-        change = -0.5;
-        desc = '50/50 Drop';
+      } else if (event.type === 'turnover') {
+        if (event.playerId === playerId) {
+          if (event.subtype === 'block') {
+            change = 1;
+            desc = 'Block';
+          } else if (event.subtype === 'fiftyfifty') {
+            change = -0.5;
+            desc = '50/50 Throw';
+          } else {
+            change = -1;
+            desc = event.subtype.charAt(0).toUpperCase() + event.subtype.slice(1);
+          }
+        } else if (event.player2Id === playerId && event.subtype === 'fiftyfifty') {
+          change = -0.5;
+          desc = '50/50 Drop';
+        }
+      }
+
+      if (change !== 0) {
+        currentPlusMinus += change;
+        pendingPointEvents.push({
+          eventIndex,
+          cumulativePlusMinus: currentPlusMinus,
+          description: desc,
+        });
       }
     }
 
-    if (change !== 0) {
-      currentPlusMinus += change;
-      points.push({
-        eventIndex,
-        cumulativePlusMinus: currentPlusMinus,
-        description: desc,
-        score: getScore(),
-      });
+    // Flush buffered point events before advancing the game score so completed
+    // points keep their start-of-point label. Then advance to the next point.
+    if (event.type === 'goal') {
+      flushPendingPointEvents(currentPointScore);
+      if (event.team === 'team1') team1Score++;
+      else team2Score++;
+      currentPointScore = getScore();
     }
+
     eventIndex++;
   }
+
+  // In-progress point events use the score at the start of the current point.
+  flushPendingPointEvents(currentPointScore);
 
   // If no events, just return the start
   if (points.length === 1 && events.length > 0) {
