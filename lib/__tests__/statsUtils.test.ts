@@ -8,6 +8,7 @@ import {
   computeRelativePlayingTimeStats,
   formatDateForCSV,
   getImpactStats,
+  getSelectablePlayerStatGames,
   generateAggregateCSV,
   generateCurrentGameCSV,
 } from '../statsUtils';
@@ -406,6 +407,56 @@ describe('statsUtils', () => {
         { eventIndex: 1, cumulativePlusMinus: -1, description: '50/50 Self', score: '0-0' },
         { eventIndex: 2, cumulativePlusMinus: -1, description: 'End', score: '0-0' },
       ]);
+    });
+  });
+
+  describe('getSelectablePlayerStatGames', () => {
+    it('returns empty for missing player or games', () => {
+      expect(getSelectablePlayerStatGames(null, [], 'team1')).toEqual([]);
+      expect(getSelectablePlayerStatGames('Alice', null, 'team1')).toEqual([]);
+      expect(getSelectablePlayerStatGames('Alice', undefined, 'team1')).toEqual([]);
+    });
+
+    it('includes games where player has impact or point-line presence', () => {
+      const playerId = 'Alice';
+      const games: SavedGame[] = [
+        // Impact game: assist by Alice
+        makeSavedGame({
+          id: 'impact',
+          createdAt: 3,
+          startingPossession: 'team1',
+          events: [goal('team1', 'Bob', playerId)],
+          pointLines: [{ pointNumber: 1, playerIds: ['Bob'], timestamp: 1 }],
+          roster: [makePlayer(playerId), makePlayer('Bob')],
+          team1Score: 1,
+          team2Score: 0,
+        }),
+        // Point-line-only game: Alice played but had no impact events
+        makeSavedGame({
+          id: 'line-only',
+          createdAt: 2,
+          startingPossession: 'team1',
+          events: [goal('team1', 'Bob', 'Cara')],
+          pointLines: [{ pointNumber: 1, playerIds: [playerId, 'Bob'], timestamp: 2 }],
+          roster: [makePlayer(playerId), makePlayer('Bob'), makePlayer('Cara')],
+          team1Score: 1,
+          team2Score: 0,
+        }),
+        // Neither impact nor line presence: should be excluded
+        makeSavedGame({
+          id: 'excluded',
+          createdAt: 1,
+          startingPossession: 'team1',
+          events: [goal('team1', 'Bob', 'Cara')],
+          pointLines: [{ pointNumber: 1, playerIds: ['Bob', 'Cara'], timestamp: 3 }],
+          roster: [makePlayer(playerId), makePlayer('Bob'), makePlayer('Cara')],
+          team1Score: 1,
+          team2Score: 0,
+        }),
+      ];
+
+      const selectable = getSelectablePlayerStatGames(playerId, games, 'team1');
+      expect(selectable.map((g) => g.id)).toEqual(['impact', 'line-only']);
     });
   });
 

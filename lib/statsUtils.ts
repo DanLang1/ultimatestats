@@ -19,6 +19,7 @@ import {
   TimingStats,
 } from './teamStatsUtils';
 import { computePointByPointEvents } from './timelineUtils';
+import { hasItems } from './utils';
 
 export interface PlayerStats {
   id: string; // Player ID (for lookups) - may be UNKNOWN_PLAYER_ID or OTHER_TEAM
@@ -410,7 +411,7 @@ export function computeRelativePlayingTimeStats(
     }),
     buildMetric({
       key: 'playingTimePercent',
-      label: 'Playing Time %',
+      label: '(%) Points Played',
       format: 'percent',
       getValue: (stats) => stats.playingTimePercent,
       inPool: (stats) => stats.playingTimePercent !== undefined,
@@ -496,6 +497,28 @@ export interface ImpactPoint {
  */
 export function hasImpactTimelineData(points: ImpactPoint[]): boolean {
   return points.some((point) => point.cumulativePlusMinus !== 0) || points.length > 2;
+}
+
+/**
+ * Returns saved games that should be selectable in Player Stats game context controls.
+ * A game is selectable when the player has either:
+ * 1) impact events (goal/assist/block/turnover involvement), or
+ * 2) recorded playing-time presence in point lines.
+ */
+export function getSelectablePlayerStatGames(
+  playerId: string | null,
+  games: SavedGame[] | null | undefined,
+  team: 'team1' | 'team2',
+): SavedGame[] {
+  if (!playerId || !games?.length) return [];
+
+  return games.filter((game) => {
+    const hasImpact = hasImpactTimelineData(getImpactStats(playerId, game.events, team));
+    const hasPointPresence =
+      hasItems(game.pointLines) &&
+      game.pointLines.some((line) => line.playerIds.includes(playerId));
+    return hasImpact || hasPointPresence;
+  });
 }
 
 /**
@@ -628,6 +651,28 @@ export function getImpactStats(
   }
 
   return points;
+}
+
+export interface ImpactGameMeta {
+  totalPoints: number;
+  halftimePointNumber?: number; // point number after which halftime occurred
+}
+
+/**
+ * Derive game-level metadata (total points, halftime boundary) from events.
+ */
+export function getImpactGameMeta(events: GameEvent[]): ImpactGameMeta {
+  let totalPoints = 0;
+  let halftimePointNumber: number | undefined;
+  for (const event of events) {
+    if (event.type === 'goal') {
+      totalPoints++;
+      if (event.triggeredHalftime) {
+        halftimePointNumber = totalPoints;
+      }
+    }
+  }
+  return { totalPoints, halftimePointNumber };
 }
 
 export interface RoleStats {

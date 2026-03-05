@@ -97,6 +97,7 @@ Agent entrypoints:
 - No magic numbers for app-wide limits; define constants in `lib/constants.ts`.
 - No sub-components in the same file; one component per file.
 - Use early returns where practical.
+- Prefer `hasItems(...)` from `lib/utils.ts` for array presence checks instead of `!!arr?.length`.
 - Use `AlertProvider`; do not use native `Alert.alert`.
 - Do not use `runOnJs`; use `scheduleOnRn`.
 - App supports both portrait and landscape via `useLayout()` + `createStyles()` (see `docs/responsive-layout.md`).

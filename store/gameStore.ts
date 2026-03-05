@@ -359,6 +359,7 @@ export const useGameStore = create<GameState>()(
               state.events,
               state.baseGameTo,
               state.autoHalftimeEnabled,
+              state.team1Timeouts.length,
             );
             state.team1Timeouts = derived.team1Timeouts;
             state.team2Timeouts = derived.team2Timeouts;

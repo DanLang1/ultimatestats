@@ -49,6 +49,17 @@ describe('deriveTimeoutState', () => {
         team2Floater: true,
       });
     });
+
+    it('respects configured timeout count', () => {
+      const result = deriveTimeoutState([], 15, true, 1);
+
+      expect(result).toEqual({
+        team1Timeouts: [true],
+        team2Timeouts: [true],
+        team1Floater: true,
+        team2Floater: true,
+      });
+    });
   });
 
   describe('timeout usage', () => {
@@ -329,6 +340,24 @@ describe('deriveTimeoutState', () => {
       const afterUndo = deriveTimeoutState(events.slice(0, -1), 15, true);
       expect(afterUndo.team1Timeouts).toEqual([false, true]); // One restored
       expect(afterUndo.team1Floater).toBe(false); // Still used (once per game)
+    });
+  });
+
+  describe('single-timeout configuration', () => {
+    it('restores one-timeout shape after undo replay', () => {
+      const events: GameEvent[] = [timeout('team1', 0)];
+      const afterUndo = deriveTimeoutState(events.slice(0, -1), 15, true, 1);
+
+      expect(afterUndo.team1Timeouts).toEqual([true]);
+      expect(afterUndo.team2Timeouts).toEqual([true]);
+    });
+
+    it('ignores out-of-range timeout indices for configured count', () => {
+      const events: GameEvent[] = [timeout('team1', 1)];
+      const result = deriveTimeoutState(events, 15, true, 1);
+
+      expect(result.team1Timeouts).toEqual([true]);
+      expect(result.team2Timeouts).toEqual([true]);
     });
   });
 });

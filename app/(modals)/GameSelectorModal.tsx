@@ -1,6 +1,6 @@
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import { getImpactStats, hasImpactTimelineData } from '@/lib/statsUtils';
+import { getSelectablePlayerStatGames } from '@/lib/statsUtils';
 import { usePlayerStatsStore } from '@/store/playerStatsStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router } from 'expo-router';
@@ -13,18 +13,11 @@ export default function GameSelectorModal() {
   const { sizeClass } = useLayout();
   const styles = createStyles(sizeClass);
 
-  // If no games, just return null
   if (!games || games.length === 0) {
     return null;
   }
 
-  const impactGames = playerId
-    ? games.filter((game) => hasImpactTimelineData(getImpactStats(playerId, game.events, team)))
-    : [];
-
-  // Default to latest game if none selected
-  const defaultGameId = [...impactGames].sort((a, b) => b.createdAt - a.createdAt)[0]?.id ?? null;
-  const effectiveGameId = selectedGameId ?? defaultGameId;
+  const selectableGames = getSelectablePlayerStatGames(playerId, games, team);
 
   const handleDismiss = () => {
     router.dismissTo('/PlayerStats');
@@ -34,6 +27,47 @@ export default function GameSelectorModal() {
     setSelectedGameId(gameId);
     router.dismissTo('/PlayerStats');
   };
+
+  if (selectableGames.length === 0) {
+    return (
+      <View style={StyleSheet.absoluteFill}>
+        <Pressable
+          style={[styles.overlay, { backgroundColor: palette.overlayDark60 }]}
+          onPress={handleDismiss}>
+          <View
+            style={[styles.sheet, { backgroundColor: palette.primary }]}
+            onStartShouldSetResponder={() => true}>
+            <View style={styles.handleContainer}>
+              <View style={[styles.handle, { backgroundColor: palette.overlay20 }]} />
+            </View>
+            <View style={[styles.header, { borderBottomColor: palette.overlay10 }]}>
+              <Text style={[styles.headerTitle, { color: palette.textMuted }]}>SELECT GAME</Text>
+              <Pressable onPress={handleDismiss} hitSlop={12}>
+                <MaterialCommunityIcons
+                  name="close"
+                  size={scaleBySizeClass(24, sizeClass)}
+                  color={palette.textMuted}
+                />
+              </Pressable>
+            </View>
+            <View style={styles.emptyWrap}>
+              <Text style={[styles.emptyText, { color: palette.textMuted }]}>
+                No games where this player had impact events or recorded playing time.
+              </Text>
+            </View>
+          </View>
+        </Pressable>
+      </View>
+    );
+  }
+
+  const sortedGames = [...selectableGames].sort((a, b) => b.createdAt - a.createdAt);
+
+  // Default to latest game if none selected
+  const defaultGameId = sortedGames[0]?.id ?? null;
+  const selectedGameIsEligible =
+    !!selectedGameId && sortedGames.some((g) => g.id === selectedGameId);
+  const effectiveGameId = selectedGameIsEligible ? selectedGameId : defaultGameId;
 
   return (
     <View style={StyleSheet.absoluteFill}>
@@ -62,75 +96,65 @@ export default function GameSelectorModal() {
 
           {/* Game list */}
           <ScrollView bounces={false} style={styles.scrollView}>
-            {impactGames.length === 0 ? (
-              <View style={styles.emptyState}>
-                <Text style={[styles.emptyText, { color: palette.textMuted }]}>
-                  No game impact data recorded for this player yet.
-                </Text>
-              </View>
-            ) : (
-              [...impactGames]
-                .sort((a, b) => b.createdAt - a.createdAt)
-                .map((g) => {
-                  const isSelected = effectiveGameId === g.id;
-                  return (
-                    <Pressable
-                      key={g.id}
-                      onPress={() => handleSelectGame(g.id)}
-                      style={({ pressed }) => [
-                        styles.gameRow,
-                        {
-                          backgroundColor: isSelected
-                            ? palette.accentOverlay10
-                            : pressed
-                              ? palette.overlay05
-                              : 'transparent',
-                        },
+            {sortedGames.map((g) => {
+              const isSelected = effectiveGameId === g.id;
+              return (
+                <Pressable
+                  key={g.id}
+                  onPress={() => handleSelectGame(g.id)}
+                  style={({ pressed }) => [
+                    styles.gameRow,
+                    {
+                      backgroundColor: isSelected
+                        ? palette.accentOverlay10
+                        : pressed
+                          ? palette.overlay05
+                          : 'transparent',
+                    },
+                  ]}>
+                  {/* Selected indicator */}
+                  <View
+                    style={[
+                      styles.radio,
+                      {
+                        borderColor: isSelected ? palette.accent : palette.overlay20,
+                        backgroundColor: isSelected ? palette.accent : 'transparent',
+                      },
+                    ]}>
+                    {isSelected && (
+                      <MaterialCommunityIcons
+                        name="check"
+                        size={scaleBySizeClass(14, sizeClass)}
+                        color={palette.textOnAccent}
+                      />
+                    )}
+                  </View>
+
+                  {/* Game info */}
+                  <View style={styles.gameInfo}>
+                    <Text
+                      style={[
+                        styles.opponentText,
+                        { color: isSelected ? palette.accent : palette.textInverse },
                       ]}>
-                      {/* Selected indicator */}
-                      <View
-                        style={[
-                          styles.radio,
-                          {
-                            borderColor: isSelected ? palette.accent : palette.overlay20,
-                            backgroundColor: isSelected ? palette.accent : 'transparent',
-                          },
-                        ]}>
-                        {isSelected && (
-                          <MaterialCommunityIcons
-                            name="check"
-                            size={scaleBySizeClass(14, sizeClass)}
-                            color={palette.textOnAccent}
-                          />
-                        )}
-                      </View>
+                      vs {g.team2Name}
+                    </Text>
+                    <Text style={[styles.dateText, { color: palette.textMuted }]}>
+                      {new Date(g.createdAt).toLocaleDateString(undefined, {
+                        weekday: 'short',
+                        month: 'short',
+                        day: 'numeric',
+                      })}
+                    </Text>
+                  </View>
 
-                      {/* Game info */}
-                      <View style={styles.gameInfo}>
-                        <Text
-                          style={[
-                            styles.opponentText,
-                            { color: isSelected ? palette.accent : palette.textInverse },
-                          ]}>
-                          vs {g.team2Name}
-                        </Text>
-                        <Text style={[styles.dateText, { color: palette.textMuted }]}>
-                          {new Date(g.createdAt).toLocaleDateString(undefined, {
-                            weekday: 'short',
-                            month: 'short',
-                            day: 'numeric',
-                          })}
-                        </Text>
-                      </View>
-
-                      {/* Score */}
-                      <Text style={[styles.scoreText, { color: palette.textMuted }]}>
-                        {g.team1Score}-{g.team2Score}
-                      </Text>
-                    </Pressable>
-                  );
-                })
-            )}
+                  {/* Score */}
+                  <Text style={[styles.scoreText, { color: palette.textMuted }]}>
+                    {g.team1Score}-{g.team2Score}
+                  </Text>
+                </Pressable>
+              );
+            })}
           </ScrollView>
         </View>
       </Pressable>
@@ -175,15 +199,6 @@ function createStyles(sizeClass: SizeClass) {
       paddingHorizontal: 12,
       paddingTop: 8,
     },
-    emptyState: {
-      paddingHorizontal: 16,
-      paddingVertical: 20,
-    },
-    emptyText: {
-      textAlign: 'center',
-      fontSize: scaleBySizeClass(14, sizeClass),
-      fontWeight: '500',
-    },
     gameRow: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -215,6 +230,14 @@ function createStyles(sizeClass: SizeClass) {
     scoreText: {
       fontSize: scaleBySizeClass(14, sizeClass),
       fontWeight: '600',
+    },
+    emptyWrap: {
+      paddingHorizontal: 20,
+      paddingVertical: 24,
+    },
+    emptyText: {
+      fontSize: scaleBySizeClass(14, sizeClass),
+      textAlign: 'center',
     },
   });
 }

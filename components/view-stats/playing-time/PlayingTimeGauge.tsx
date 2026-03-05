@@ -33,6 +33,13 @@ export default function PlayingTimeGauge({
   // Ensure percentage is between 0 and 100
   const clampedPercent = Math.min(Math.max(percentage, 0), 100);
   const strokeDashoffset = circumference - (clampedPercent / 100) * circumference;
+  const centerLabelLength = centerLabel.length;
+  const centerLabelStyle =
+    centerLabelLength >= 4
+      ? styles.centerLabelLong
+      : centerLabelLength === 3
+        ? styles.centerLabelMedium
+        : styles.centerLabel;
 
   return (
     <View style={styles.container}>
@@ -61,10 +68,7 @@ export default function PlayingTimeGauge({
           />
         </Svg>
         <View style={[styles.centerContent, { paddingHorizontal: strokeWidth * 1.5 }]}>
-          <Text
-            style={[styles.centerLabel, { color: palette.textInverse }]}
-            numberOfLines={1}
-            adjustsFontSizeToFit>
+          <Text style={[centerLabelStyle, { color: palette.textInverse }]} numberOfLines={1}>
             {centerLabel}
           </Text>
           <Text
@@ -99,6 +103,16 @@ function createStyles(sizeClass: SizeClass) {
       fontSize: scaleBySizeClass(22, sizeClass),
       fontWeight: '800',
       lineHeight: scaleBySizeClass(26, sizeClass),
+    },
+    centerLabelMedium: {
+      fontSize: scaleBySizeClass(18, sizeClass),
+      fontWeight: '800',
+      lineHeight: scaleBySizeClass(22, sizeClass),
+    },
+    centerLabelLong: {
+      fontSize: scaleBySizeClass(14, sizeClass),
+      fontWeight: '800',
+      lineHeight: scaleBySizeClass(18, sizeClass),
     },
     centerSubLabel: {
       fontSize: scaleBySizeClass(10, sizeClass),

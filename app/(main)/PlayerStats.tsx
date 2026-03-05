@@ -2,6 +2,7 @@ import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import ChemistryMap from '@/components/view-stats/ChemistryMap';
 import ImpactTimeline from '@/components/view-stats/ImpactTimeline';
 import PlayerStatsSummary from '@/components/view-stats/PlayerStatsSummary';
+import PointPresenceStrip from '@/components/view-stats/playing-time/PointPresenceStrip';
 import PlayingTimeSection from '@/components/view-stats/PlayingTimeSection';
 import RelativePlayerStatsSection from '@/components/view-stats/RelativePlayerStatsSection';
 import RoleDiamond from '@/components/view-stats/RoleDiamond';
@@ -14,8 +15,10 @@ import {
   getImpactStats,
   getPlayerRoleLabel,
   getRoleStats,
+  getSelectablePlayerStatGames,
   hasImpactTimelineData,
 } from '@/lib/statsUtils';
+import { hasItems } from '@/lib/utils';
 import { usePlayerStatsStore } from '@/store/playerStatsStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router } from 'expo-router';
@@ -58,46 +61,24 @@ export default function PlayerStats() {
     : 0;
   const isMVP = summary?.plusMinus === highestPlusMinus && highestPlusMinus > 0;
 
-  const impactGames =
-    playerId && games
-      ? games.filter((game) => hasImpactTimelineData(getImpactStats(playerId, game.events, team)))
-      : [];
-  const hasMultipleImpactGames = impactGames.length > 1;
+  const selectableGames = getSelectablePlayerStatGames(playerId, games, team);
+  const hasMultipleSelectableGames = selectableGames.length > 1;
 
-  // Derive the effective selected game ID from games with actual impact data
-  const defaultGameId = impactGames.length
-    ? [...impactGames].sort((a, b) => b.createdAt - a.createdAt)[0].id
+  // Default to the most recent selectable saved game (impact or playing-time presence).
+  const defaultGameId = selectableGames.length
+    ? [...selectableGames].sort((a, b) => b.createdAt - a.createdAt)[0].id
     : null;
-  const effectiveGameId = selectedGameId ?? defaultGameId;
+  const selectedGameIsSelectable =
+    !!selectedGameId && selectableGames.some((g) => g.id === selectedGameId);
+  const effectiveGameId = selectedGameIsSelectable ? selectedGameId : defaultGameId;
 
-  // Determine which events to use for Impact Chart
-  let impactEvents = events;
-  if (effectiveGameId) {
-    const game = impactGames.find((g) => g.id === effectiveGameId);
-    if (game) impactEvents = game.events;
-  }
-
-  // Calculate impact for the specific game selected (React Compiler handles memoization)
+  // Selected game stays within selectable games so timeline/strip stay visible.
+  const displayGame = effectiveGameId ? games?.find((g) => g.id === effectiveGameId) : null;
+  const impactEvents = displayGame?.events ?? events;
   const impactData = playerId ? getImpactStats(playerId, impactEvents, team) : [];
-
-  const selectedGame = impactGames.find((g) => g.id === effectiveGameId);
-  const gameDate = selectedGame
-    ? new Date(selectedGame.createdAt).toLocaleDateString(undefined, {
-        month: 'short',
-        day: 'numeric',
-      })
+  const gameLabel = displayGame
+    ? `${new Date(displayGame.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} vs ${displayGame.team2Name}`
     : '';
-  const gameLabel = selectedGame ? `${gameDate} vs ${selectedGame.team2Name}` : 'All Games';
-
-  // Calculate aggregate impact across all games (for multi-game view)
-  const aggregateImpact =
-    impactGames.length > 1 && playerId
-      ? impactGames.reduce((total, g) => {
-          const gameImpact = getImpactStats(playerId, g.events, team);
-          const finalValue = gameImpact[gameImpact.length - 1]?.cumulativePlusMinus ?? 0;
-          return total + finalValue;
-        }, 0)
-      : null;
 
   const stats =
     playerId && events.length && roleStats
@@ -109,6 +90,15 @@ export default function PlayerStats() {
           roleLabel: getPlayerRoleLabel(roleStats, isMVP),
         }
       : null;
+
+  const resolveStripPointLines = () => {
+    if (hasItems(displayGame?.pointLines)) return displayGame.pointLines;
+    if (!hasItems(games)) return pointLines ?? null;
+    return null;
+  };
+
+  const stripPointLines = resolveStripPointLines();
+  const stripEvents = displayGame?.events ?? events;
 
   if (!playerId || !stats) {
     return (
@@ -225,62 +215,17 @@ export default function PlayerStats() {
             roster={roster}
           />
 
-          {/* Full-width Impact Timeline - only show if player has recorded stats */}
-          {hasImpactTimelineData(stats.impact) && (
+          {/* Full-width Impact Timeline - show if impact data or playing time data exists */}
+          {(hasImpactTimelineData(stats.impact) || hasItems(stripPointLines)) && (
             <View
               style={[
                 styles.card,
                 { backgroundColor: palette.overlay02, borderColor: palette.overlay05 },
+                !hasImpactTimelineData(stats.impact) && { minHeight: 0 },
               ]}>
-              {/* Game Selector (only if aggregate) */}
-              {hasMultipleImpactGames && (
+              {/* Game context / selector */}
+              {(displayGame || hasMultipleSelectableGames) && (
                 <View style={{ marginBottom: 12, paddingHorizontal: 16 }}>
-                  {/* Aggregate Summary */}
-                  <View
-                    style={{
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      marginBottom: 12,
-                      gap: 8,
-                    }}>
-                    <View
-                      style={{
-                        backgroundColor:
-                          aggregateImpact && aggregateImpact > 0
-                            ? palette.successOverlay15
-                            : aggregateImpact && aggregateImpact < 0
-                              ? palette.dangerOverlay15
-                              : palette.overlay05,
-                        paddingHorizontal: 12,
-                        paddingVertical: 6,
-                        borderRadius: 8,
-                      }}>
-                      <Text
-                        style={{
-                          color:
-                            aggregateImpact && aggregateImpact > 0
-                              ? palette.success
-                              : aggregateImpact && aggregateImpact < 0
-                                ? palette.danger
-                                : palette.textMuted,
-                          fontSize: scaleBySizeClass(16, sizeClass),
-                          fontWeight: '800',
-                        }}>
-                        {aggregateImpact && aggregateImpact > 0 ? '+' : ''}
-                        {aggregateImpact ?? 0}
-                      </Text>
-                    </View>
-                    <Text
-                      style={{
-                        color: palette.textMuted,
-                        fontSize: scaleBySizeClass(12, sizeClass),
-                        fontWeight: '600',
-                      }}>
-                      TOTAL ACROSS {impactGames.length} GAMES
-                    </Text>
-                  </View>
-
-                  {/* Per-game selector */}
                   <Text
                     style={{
                       color: palette.textMuted,
@@ -289,43 +234,90 @@ export default function PlayerStats() {
                       marginBottom: 6,
                       letterSpacing: 0.5,
                     }}>
-                    VIEW GAME DETAILS
+                    CURRENT GAME
                   </Text>
-                  <Pressable
-                    onPress={() => router.push('/GameSelectorModal')}
-                    style={{
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      backgroundColor: palette.overlay05,
-                      paddingHorizontal: 12,
-                      paddingVertical: 10,
-                      borderRadius: 8,
-                      alignSelf: 'flex-start',
-                      gap: 6,
-                    }}>
-                    <MaterialCommunityIcons
-                      name="calendar"
-                      size={scaleBySizeClass(16, sizeClass)}
-                      color={palette.textMuted}
-                    />
-                    <Text
+
+                  {hasMultipleSelectableGames ? (
+                    <Pressable
+                      onPress={() => router.push('/GameSelectorModal')}
                       style={{
-                        color: palette.textInverse,
-                        fontWeight: '600',
-                        fontSize: scaleBySizeClass(14, sizeClass),
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        backgroundColor: palette.overlay05,
+                        paddingHorizontal: 12,
+                        paddingVertical: 10,
+                        borderRadius: 8,
+                        alignSelf: 'flex-start',
+                        gap: 6,
                       }}>
-                      {gameLabel}
-                    </Text>
-                    <MaterialCommunityIcons
-                      name="chevron-down"
-                      size={scaleBySizeClass(18, sizeClass)}
-                      color={palette.textMuted}
-                    />
-                  </Pressable>
+                      <MaterialCommunityIcons
+                        name="calendar"
+                        size={scaleBySizeClass(16, sizeClass)}
+                        color={palette.textMuted}
+                      />
+                      <Text
+                        style={{
+                          color: palette.textInverse,
+                          fontWeight: '600',
+                          fontSize: scaleBySizeClass(14, sizeClass),
+                        }}>
+                        {gameLabel}
+                      </Text>
+                      <MaterialCommunityIcons
+                        name="chevron-down"
+                        size={scaleBySizeClass(18, sizeClass)}
+                        color={palette.textMuted}
+                      />
+                    </Pressable>
+                  ) : (
+                    <View
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        backgroundColor: palette.overlay05,
+                        paddingHorizontal: 12,
+                        paddingVertical: 10,
+                        borderRadius: 8,
+                        alignSelf: 'flex-start',
+                        gap: 6,
+                      }}>
+                      <MaterialCommunityIcons
+                        name="calendar"
+                        size={scaleBySizeClass(16, sizeClass)}
+                        color={palette.textMuted}
+                      />
+                      <Text
+                        style={{
+                          color: palette.textInverse,
+                          fontWeight: '600',
+                          fontSize: scaleBySizeClass(14, sizeClass),
+                        }}>
+                        {gameLabel}
+                      </Text>
+                    </View>
+                  )}
                 </View>
               )}
 
-              <ImpactTimeline data={stats.impact} />
+              {/* Impact timeline — only when selected game has recorded events */}
+              {hasImpactTimelineData(stats.impact) && <ImpactTimeline data={stats.impact} />}
+
+              {/* Point presence strip */}
+              {hasItems(stripPointLines) && (
+                <View style={{ paddingHorizontal: 16, paddingBottom: 4 }}>
+                  <PointPresenceStrip
+                    playerId={playerId}
+                    events={stripEvents}
+                    pointLines={stripPointLines}
+                    sizeClass={sizeClass}
+                    startingPossession={
+                      displayGame?.startingPossession ?? startingPossession ?? null
+                    }
+                    gameTo={displayGame?.gameTo ?? gameTo ?? 15}
+                    autoHalftimeEnabled={displayGame?.autoHalftimeEnabled ?? autoHalftimeEnabled}
+                  />
+                </View>
+              )}
             </View>
           )}
 

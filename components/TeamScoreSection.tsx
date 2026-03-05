@@ -101,20 +101,24 @@ export default function TeamScoreSection({
           ))}
         </View>
 
-        <TeamText
-          color={textColor}
-          teamName={teamName}
-          hasPossession={hasPossession}
-          sizeClass={sizeClass}
-          isCompactVertical={isCompactVertical}
-        />
-        <ScoreDisplay
-          bgColor={backgroundColor}
-          textColor={textColor}
-          score={score}
-          sizeClass={sizeClass}
-          isCompactVertical={isCompactVertical}
-        />
+        <View pointerEvents="none">
+          <TeamText
+            color={textColor}
+            teamName={teamName}
+            hasPossession={hasPossession}
+            sizeClass={sizeClass}
+            isCompactVertical={isCompactVertical}
+          />
+        </View>
+        <View pointerEvents="none">
+          <ScoreDisplay
+            bgColor={backgroundColor}
+            textColor={textColor}
+            score={score}
+            sizeClass={sizeClass}
+            isCompactVertical={isCompactVertical}
+          />
+        </View>
       </View>
     </ThemedView>
   );
