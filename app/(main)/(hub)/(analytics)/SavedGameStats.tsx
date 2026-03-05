@@ -1,0 +1,175 @@
+import { ThemedView } from '@/components/ThemedView';
+import { useAlert } from '@/components/ui/AlertProvider';
+import {
+  ResponsiveHeaderAction,
+  ResponsiveHeaderActions,
+} from '@/components/ui/ResponsiveHeaderActions';
+import { ScreenHeader } from '@/components/ui/ScreenHeader';
+import { ShareConfirmModal } from '@/components/ui/ShareConfirmModal';
+import SavedGamesBulkActions from '@/components/view-stats/SavedGamesBulkActions';
+import SavedGamesList from '@/components/view-stats/SavedGamesList';
+import { useTheme } from '@/context/ThemeContext';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { useLoadSavedGamesWithAlert } from '@/hooks/useLoadSavedGamesWithAlert';
+import { serializeGames, uploadPayload } from '@/lib/sharing';
+import { SavedGame } from '@/lib/storage';
+import { useGameStore } from '@/store/gameStore';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { router, Stack } from 'expo-router';
+import React, { useState } from 'react';
+import { ScrollView, Share, StyleSheet } from 'react-native';
+
+export default function SavedGameStatsScreen() {
+  const { palette } = useTheme();
+  const { sizeClass } = useLayout();
+  const styles = createStyles(sizeClass);
+  const { savedGames, deleteSavedGames } = useGameStore();
+  const { showAlert } = useAlert();
+  const [selectedSavedGameIds, setSelectedSavedGameIds] = useState<Set<string>>(new Set());
+  const [pendingShareAction, setPendingShareAction] = useState<(() => Promise<string>) | null>(
+    null,
+  );
+
+  useLoadSavedGamesWithAlert();
+
+  const handleSelectGame = (game: SavedGame) => {
+    router.push({ pathname: '/saved-games/[gameId]', params: { gameId: game.id } });
+  };
+
+  const handleToggleSavedGameSelection = (gameId: string) => {
+    setSelectedSavedGameIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(gameId)) next.delete(gameId);
+      else next.add(gameId);
+      return next;
+    });
+  };
+
+  const handleBulkDeleteGames = async () => {
+    const count = selectedSavedGameIds.size;
+    if (count === 0) return;
+
+    showAlert({
+      title: 'Delete Games?',
+      message: `Are you sure you want to delete ${count} selected game${count !== 1 ? 's' : ''}?`,
+      buttons: [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            await deleteSavedGames(Array.from(selectedSavedGameIds));
+            setSelectedSavedGameIds(new Set());
+          },
+        },
+      ],
+    });
+  };
+
+  const handleBulkShareGames = () => {
+    const count = selectedSavedGameIds.size;
+    if (count === 0) return;
+
+    if (count > 10) {
+      showAlert({
+        title: 'Too many games',
+        message: 'You can share up to 10 games at a time.',
+      });
+      return;
+    }
+
+    const gameIds = new Set(selectedSavedGameIds);
+    setPendingShareAction(() => async () => {
+      const games = savedGames.filter((game) => gameIds.has(game.id));
+      const payload = serializeGames(games);
+      const { url } = await uploadPayload(payload);
+      return url;
+    });
+  };
+
+  const headerActions: ResponsiveHeaderAction[] = [
+    {
+      key: 'aggregate',
+      label: 'Combine Games',
+      onPress: () => router.push('/AggregateStats'),
+      inlineIcon: (
+        <MaterialCommunityIcons
+          name="chart-box-outline"
+          size={scaleBySizeClass(22, sizeClass)}
+          color={palette.accent}
+        />
+      ),
+      menuIcon: (
+        <MaterialCommunityIcons
+          name="chart-box-outline"
+          size={scaleBySizeClass(20, sizeClass)}
+          color={palette.accent}
+        />
+      ),
+    },
+  ];
+
+  return (
+    <ThemedView style={[styles.container, { backgroundColor: palette.primary }]}>
+      <Stack.Screen options={{ headerShown: false }} />
+
+      <ScreenHeader
+        title="SAVED GAMES"
+        onBack={() => router.back()}
+        titleColor={palette.textMuted}
+        backButtonBackgroundColor={palette.overlay10}
+        centerTitleInLandscape={false}
+        rightSlot={<ResponsiveHeaderActions actions={headerActions} />}
+      />
+
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <SavedGamesList
+          games={savedGames}
+          onSelectGame={handleSelectGame}
+          selectedGameIds={selectedSavedGameIds}
+          onToggleGameSelection={handleToggleSavedGameSelection}
+          onClearSelection={() => setSelectedSavedGameIds(new Set())}
+        />
+      </ScrollView>
+
+      <SavedGamesBulkActions
+        isVisible={selectedSavedGameIds.size > 0}
+        selectedCount={selectedSavedGameIds.size}
+        onDelete={handleBulkDeleteGames}
+        onShare={handleBulkShareGames}
+        onCancel={() => setSelectedSavedGameIds(new Set())}
+      />
+
+      <ShareConfirmModal
+        visible={pendingShareAction !== null}
+        onConfirm={async () => {
+          try {
+            const url = await pendingShareAction!();
+            setPendingShareAction(null);
+            await Share.share({ message: url });
+          } catch {
+            showAlert({
+              title: 'Share failed',
+              message: 'Could not upload data for sharing. Please try again.',
+            });
+            throw new Error('share failed');
+          }
+        }}
+        onCancel={() => setPendingShareAction(null)}
+      />
+    </ThemedView>
+  );
+}
+
+function createStyles(sizeClass: SizeClass) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+    },
+    scrollContent: {
+      padding: 24,
+      paddingTop: 8,
+      paddingBottom: 100,
+    },
+  });
+}

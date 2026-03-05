@@ -34,7 +34,7 @@ There are two types of updates:
 **Process:**
 
 1. Increment `version` in `app.config.js` (e.g., `1.0.1` → `1.0.2`)
-2. Update the `CHANGELOG` array in `app/About.tsx` with the new version's changes
+2. Update the `CHANGELOG` array in `app/(main)/About.tsx` with the new version's changes
 3. Build: `eas build --platform android --profile production`
 4. Submit to App Store / Play Store
 5. Users must manually update from the store
@@ -51,8 +51,8 @@ The app tracks whether users have seen the current version:
 
 - `lib/versionUtils.ts` - Version checking utilities
 - `hooks/useVersionCheck.ts` - React hook for version state
-- `app/About.tsx` - About page with changelog (update `CHANGELOG` array for new versions)
-- `app/Dashboard.tsx` - Shows "New!" badge when update is available
+- `app/(main)/About.tsx` - About page with changelog (update `CHANGELOG` array for new versions)
+- `app/(main)/(hub)/(home)/Dashboard.tsx` - Shows "New!" badge when update is available
 
 ## Adding a New Version
 

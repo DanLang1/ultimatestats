@@ -31,11 +31,16 @@ export function usePullPromptNavigation() {
         return;
       }
 
-      // Prevent double navigation
-      if (hasNavigatedRef.current) return;
-      hasNavigatedRef.current = true;
+      // Prevent double navigation while the scoreboard remains focused,
+      // but allow the prompt to show again when returning to the screen.
+      if (!hasNavigatedRef.current) {
+        hasNavigatedRef.current = true;
+        router.push('/PreGameConfirm');
+      }
 
-      router.push('/PreGameConfirm');
+      return () => {
+        hasNavigatedRef.current = false;
+      };
     }, [shouldShowPullPrompt]),
   );
 }

@@ -80,7 +80,9 @@ export default function SettingsBar({ onUndo }: SettingsBarProps) {
 
       {/* Stats - only show when stat tracking enabled */}
       {statTrackingEnabled && (
-        <Pressable onPress={() => router.push('/ViewStats')} style={styles.iconButton}>
+        <Pressable
+          onPress={() => router.push({ pathname: '/ViewStats', params: { from: 'scoreboard' } })}
+          style={styles.iconButton}>
           <MaterialCommunityIcons name="chart-bar" size={iconSize} color={barContentColor} />
         </Pressable>
       )}

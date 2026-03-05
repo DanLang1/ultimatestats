@@ -5,7 +5,11 @@ import { TimeOfPossessionStats } from '@/lib/teamStatsUtils';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
-const formatDuration = (ms: number): string => {
+const formatPossessionDuration = (ms: number): string => {
+  if (ms < 10_000 && ms % 1000 !== 0) {
+    return `${(ms / 1000).toFixed(1)}s`;
+  }
+
   const totalSeconds = Math.round(ms / 1000);
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
@@ -86,7 +90,7 @@ export default function TimeOfPossessionSection({
             {team1Name}
           </Text>
           <Text style={[styles.teamDetail, { color: t1TextColor }]}>
-            {formatDuration(topStats.team1TotalPossessionMs)}
+            {formatPossessionDuration(topStats.team1TotalPossessionMs)}
             {'  ·  '}
             {topStats.team1PossessionPct.toFixed(0)}%
           </Text>
@@ -101,7 +105,7 @@ export default function TimeOfPossessionSection({
           </Text>
           <Text style={[styles.teamDetail, { color: t2TextColor }]}>
             {topStats.team2PossessionPct.toFixed(0)}% ·{' '}
-            {formatDuration(topStats.team2TotalPossessionMs)}
+            {formatPossessionDuration(topStats.team2TotalPossessionMs)}
           </Text>
         </View>
       </View>

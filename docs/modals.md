@@ -220,7 +220,7 @@ export default function MyModal() {
 
 ### Modals with Portrait Support
 
-- `app/EditEventModal.tsx` - Edit action modal (opened from GameTimeline)
+- `app/EditEventModal.tsx` - Edit action modal (opened from the GameTimeline screen)
 
 ## Existing Modal Routes
 

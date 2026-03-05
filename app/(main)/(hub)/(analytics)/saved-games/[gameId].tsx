@@ -82,7 +82,7 @@ export default function SavedGameStatsScreen() {
   };
 
   const handleGoToSavedGames = () => {
-    router.replace({ pathname: '/ViewStats', params: { tab: 'saved' } });
+    router.replace('/SavedGameStats');
   };
 
   const handleOpenTimeline = () => {

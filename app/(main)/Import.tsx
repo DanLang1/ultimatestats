@@ -56,7 +56,7 @@ export default function ImportScreen() {
 
   const handleGoToGames = () => {
     router.dismissTo('/');
-    router.push({ pathname: '/ViewStats', params: { tab: 'saved' } });
+    router.push('/SavedGameStats');
   };
 
   const handleImportTeam = async (payload: SharedPayload) => {

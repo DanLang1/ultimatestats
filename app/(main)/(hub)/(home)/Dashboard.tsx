@@ -88,14 +88,14 @@ export default function DashboardScreen() {
           icon: 'history',
           label: 'Saved Games',
           description: gamesCount > 0 ? `${gamesCount} games saved` : 'No games yet',
-          onPress: () => router.push({ pathname: '/ViewStats', params: { tab: 'saved' } }),
+          onPress: () => router.push('/SavedGameStats'),
           disabled: gamesCount === 0,
         },
         {
           icon: 'chart-box-outline',
           label: 'Aggregate Stats',
           description: gamesCount > 0 ? 'Combine stats across games' : 'No games yet',
-          onPress: () => router.push({ pathname: '/ViewStats', params: { tab: 'aggregate' } }),
+          onPress: () => router.push('/AggregateStats'),
           disabled: gamesCount === 0,
         },
         {

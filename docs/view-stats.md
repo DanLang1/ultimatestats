@@ -4,15 +4,22 @@
 
 ## Overview
 
-The View Stats page displays a table of player statistics (goals, assists, blocks, throwaways, drops, and plus/minus) for the current game, with the ability to export raw data.
+The analytics area is split into three screens:
+
+- **View Stats** for the current game
+- **Saved Games** for the local game library
+- **Aggregate Stats** for combining multiple saved games from one team
+
+All three surfaces share the same underlying stats components, so player tables, player-detail drill-ins, and team analytics stay consistent across current, saved, and aggregate contexts.
 
 ## Access
 
 1. Tap the **Information (i)** icon in the timer bar on the main screen.
 2. Tap **View Stats**.
    - Note: This button is only visible if Stat Tracking is enabled.
+3. From **View Stats**, use the shortcut cards below the header to open **Saved Games** or **Aggregate Stats**.
 
-## Screen Layout
+## View Stats Screen Layout
 
 ### 1. Summary
 
@@ -70,9 +77,14 @@ Common columns include:
 - With point timing enabled, event chips show `m:ss` timestamps.
 - The timeline header includes a local Splits toggle to show/hide inter-event split times (e.g., `+32s`) above arrow separators.
 
-## Saved Games List
+### 4. Analytics Shortcuts
 
-The **Saved** tab displays a history of games recorded on this device.
+- The current-game screen includes shortcut cards for **Saved Games** and **Combine Games**.
+- These shortcuts push to separate analytics routes instead of switching local in-screen tabs.
+
+## Saved Games Screen
+
+The **Saved Games** screen displays a history of games recorded on this device.
 
 - If the entire saved-games storage blob becomes unreadable, the screen shows a simple corruption warning instead of silently treating the library as empty.
 
@@ -92,11 +104,12 @@ The **Saved** tab displays a history of games recorded on this device.
 - **Bulk Actions Bar**: Once a game is selected, a floating bar will appear at the bottom with:
   - **Cancel (X)**: Clear all selections and hide the bar.
   - **Delete (N)**: Delete all selected games after confirmation.
+- **Combine Games Action**: The header includes a quick action to jump into the aggregate workflow.
 - **Individual vs. Bulk**: Tapping the main area of a game card opens a dedicated Saved Game detail screen, while tapping the checkbox toggles its selection state. Individual deletion via the trash icon is hidden once multiple games are selected to focus on bulk operations.
 
-## Aggregate Mode
+## Aggregate Stats Screen
 
-The **Aggregate** tab allows you to combine stats from multiple games for a single team.
+The **Aggregate Stats** screen allows you to combine stats from multiple games for a single team.
 
 1. Select your team from the list.
 2. Select one or more games to combine.
@@ -106,7 +119,7 @@ The **Aggregate** tab allows you to combine stats from multiple games for a sing
 
 ## Actions
 
-- **Back**: From the View Stats tabs, returns to the previous screen. Saved Game detail uses its own route, so back returns to the previous page in the stack.
+- **Back**: Each analytics screen uses normal stack navigation. Saved Game detail uses its own route, so back returns to the previous page in the stack.
 - **Export CSV**: Generates a CSV file and opens the system share sheet.
 - **Export PDF**: Generates a professional PDF report.
 - **Timeline**: Opens the Game Timeline view for the selected game.
@@ -200,7 +213,8 @@ If point-timer data is available with complete per-event timestamps, a **TIME OF
 
 - The subsection header shows the title and the number of timed points (`N pts timed`).
 - A horizontal bar visualizes each team's share of possession time.
-- Team labels below the bar show total possession time (`Xm Ys`) and percentage share.
+- Team labels below the bar show total possession time and percentage share.
+- Short possession totals under 10 seconds show tenths (`1.4s`) so the displayed time better matches the percentage split.
 
 **Data requirements**: Every event in a point (all turnovers and the goal) must have a recorded `elapsedMs` timestamp. Points missing any timestamp are excluded. If no points qualify, the section is hidden entirely.
 

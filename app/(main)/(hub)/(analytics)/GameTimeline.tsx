@@ -16,7 +16,6 @@ export default function GameTimelineScreen() {
   const { sizeClass } = useLayout();
   const styles = createStyles(sizeClass);
   const params = useLocalSearchParams<{ gameId?: string }>();
-  // If gameId is present, it's a saved game
   const isSavedGame = !!params.gameId;
   const [showSplitSeparators, setShowSplitSeparators] = useState(true);
   const [showLineups, setShowLineups] = useState(true);
@@ -37,11 +36,11 @@ export default function GameTimelineScreen() {
   } = useGameStore();
   const team1Name = currentTeam?.name ?? 'Team 1';
 
-  // If a gameId is passed, load that saved game; otherwise use current game
   const gameData = params.gameId
     ? (() => {
-        const game = savedGames.find((g) => g.id === params.gameId);
+        const game = savedGames.find((savedGame) => savedGame.id === params.gameId);
         if (!game) return null;
+
         return {
           team1Name: resolveTeamName(game.team1.id, game.team1.name, savedTeams),
           team2Name: game.team2Name,
@@ -61,8 +60,10 @@ export default function GameTimelineScreen() {
         team1Name,
         team2Name,
         events,
-        team1Score: events.filter((e) => e.type === 'goal' && e.team === 'team1').length,
-        team2Score: events.filter((e) => e.type === 'goal' && e.team === 'team2').length,
+        team1Score: events.filter((event) => event.type === 'goal' && event.team === 'team1')
+          .length,
+        team2Score: events.filter((event) => event.type === 'goal' && event.team === 'team2')
+          .length,
         startingPossession,
         gameTo,
         autoHalftimeEnabled,
@@ -97,7 +98,6 @@ export default function GameTimelineScreen() {
     <ThemedView style={[styles.container, { backgroundColor: palette.primary }]}>
       <Stack.Screen options={{ headerShown: false }} />
 
-      {/* Header */}
       <View style={styles.header}>
         <Pressable
           onPress={() => router.back()}
@@ -113,7 +113,6 @@ export default function GameTimelineScreen() {
         <View style={styles.headerSpacer} />
       </View>
 
-      {/* Game Info - team names only, scores shown in EventTimeline */}
       <View style={styles.gameInfo}>
         <Text style={[styles.teamNames, { color: palette.textInverse }]}>
           {gameData.team1Name} vs {gameData.team2Name}
@@ -172,7 +171,7 @@ export default function GameTimelineScreen() {
         )}
       </View>
 
-      <ScrollView contentContainerStyle={[styles.scrollContent]}>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
         {hasData ? (
           <EventTimeline
             points={pointEvents}
@@ -262,16 +261,21 @@ function createStyles(sizeClass: SizeClass) {
     headerTitle: {
       fontSize: scaleBySizeClass(14, sizeClass),
       fontWeight: '700',
-      letterSpacing: 2,
+      letterSpacing: scaleBySizeClass(2, sizeClass, { rounding: 'none' }),
       textTransform: 'uppercase',
     },
     headerSpacer: {
-      width: 40,
+      width: scaleBySizeClass(40, sizeClass),
     },
     gameInfo: {
       alignItems: 'center',
       paddingBottom: 16,
       gap: 4,
+    },
+    teamNames: {
+      fontSize: scaleBySizeClass(18, sizeClass),
+      fontWeight: '600',
+      textAlign: 'center',
     },
     timelineControlsRow: {
       flexDirection: 'row',
@@ -293,29 +297,18 @@ function createStyles(sizeClass: SizeClass) {
       fontSize: scaleBySizeClass(11, sizeClass),
       fontWeight: '600',
     },
-    teamNames: {
-      fontSize: scaleBySizeClass(18, sizeClass),
-      fontWeight: '600',
-    },
-    finalScore: {
-      fontSize: scaleBySizeClass(24, sizeClass),
-      fontWeight: '700',
-    },
     scrollContent: {
       paddingVertical: 8,
     },
     emptyState: {
       alignItems: 'center',
       justifyContent: 'center',
-      paddingVertical: 60,
       gap: 12,
+      paddingVertical: 60,
     },
     emptyText: {
       fontSize: scaleBySizeClass(16, sizeClass),
       fontWeight: '600',
-    },
-    emptySubtext: {
-      fontSize: scaleBySizeClass(14, sizeClass),
     },
     errorText: {
       fontSize: scaleBySizeClass(16, sizeClass),

@@ -69,7 +69,9 @@ export default function GameLockedOverlay() {
                   borderColor: palette.lockScreenBtnSecondaryBorder,
                 },
               ]}
-              onPress={() => router.push('/ViewStats')}>
+              onPress={() =>
+                router.push({ pathname: '/ViewStats', params: { from: 'scoreboard' } })
+              }>
               <MaterialCommunityIcons
                 name="chart-bar"
                 size={actionIconSize}

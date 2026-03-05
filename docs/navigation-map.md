@@ -9,20 +9,26 @@ Before adding or restructuring a route, confirm layout behavior with [responsive
 Defined across:
 
 - `app/_layout.tsx` (providers + group stack)
-- `app/(main)/_layout.tsx` (primary screens)
+- `app/(main)/_layout.tsx` (main stack)
+- `app/(main)/(hub)/_layout.tsx` (hub tabs shell)
+- `app/(main)/(hub)/(home|analytics|team)/_layout.tsx` (per-tab nested stacks)
 - `app/(modals)/_layout.tsx` (transparent modal defaults)
 
 ### Primary Screens
 
 - `/` (`app/(main)/index.tsx`)
-- `/Dashboard` (`app/(main)/Dashboard.tsx`)
+- `/Dashboard` (`app/(main)/(hub)/(home)/Dashboard.tsx`)
 - `/GameInfo` (`app/(main)/GameInfo.tsx`)
-- `/Settings` (`app/(main)/Settings.tsx`)
-- `/EditRoster` (`app/(main)/EditRoster.tsx`)
+- `/Settings` (`app/(main)/(hub)/(home)/Settings.tsx`)
+- `/EditRoster` (`app/(main)/(hub)/(team)/EditRoster.tsx`)
 - `/ImportTeam` (`app/(main)/ImportTeam.tsx`)
-- `/ViewStats` (`app/(main)/ViewStats.tsx`)
-- `/PlayerStats` (`app/(main)/PlayerStats.tsx`)
+- `/ViewStats` (`app/(main)/(hub)/(analytics)/ViewStats.tsx`)
+- `/PlayerStats` (`app/(main)/(hub)/(analytics)/PlayerStats.tsx`)
+- `/AggregateStats` (`app/(main)/(hub)/(analytics)/AggregateStats.tsx`)
+- `/GameTimeline` (`app/(main)/(hub)/(analytics)/GameTimeline.tsx`)
 - `/LinePresetEditor` (`app/(main)/LinePresetEditor.tsx`)
+- `/SavedGameStats` (`app/(main)/(hub)/(analytics)/SavedGameStats.tsx`)
+- `/saved-games/[gameId]` (`app/(main)/(hub)/(analytics)/saved-games/[gameId].tsx`)
 - `/LineEditor` (`app/(main)/LineEditor.tsx`)
 - `/PreGameConfirm` (`app/(main)/PreGameConfirm.tsx`)
 - `/Import` (`app/(main)/Import.tsx`)
@@ -30,13 +36,21 @@ Defined across:
 - `/Help` (`app/(main)/Help.tsx`)
 - `/About` (`app/(main)/About.tsx`)
 
+### Hub Tab Navigation
+
+- Hub tabs are defined in `app/(main)/(hub)/_layout.tsx` and stay visible for all screens in hub tab stacks.
+- Tab sections:
+  - Home: `/Dashboard`, `/Settings`
+  - Stats: `/ViewStats`, `/PlayerStats`, `/SavedGameStats`, `/AggregateStats`, `/GameTimeline`, `/saved-games/[gameId]`
+  - Team: `/EditRoster`
+- Scoreboard quick action: custom tab-bar action that calls `router.dismissTo('/')`.
+
 ### Transparent Modals
 
 - `/StatEntryModal` (`app/(modals)/StatEntryModal.tsx`)
 - `/TurnoverEntryModal` (`app/(modals)/TurnoverEntryModal.tsx`)
 - `/GameSelectorModal` (`app/(modals)/GameSelectorModal.tsx`)
 - `/WinModal` (`app/(modals)/WinModal.tsx`)
-- `/GameTimeline` (`app/(modals)/GameTimeline.tsx`)
 - `/TeamManagementModal` (`app/(modals)/TeamManagementModal.tsx`)
 - `/HalftimeModal` (`app/(modals)/HalftimeModal.tsx`)
 - `/EditEventModal` (`app/(modals)/EditEventModal.tsx`)
@@ -72,10 +86,12 @@ Defined across:
 ### Stats Review Flow
 
 1. `/ViewStats`
-2. `/PlayerStats`
-3. Optional game selection:
+2. Optional secondary analytics routes:
+   `/SavedGameStats` or `/AggregateStats` or `/GameTimeline`
+3. `/PlayerStats`
+4. Optional game selection:
    `/GameSelectorModal`
-4. Timeline edit path:
+5. Timeline edit path:
    `/GameTimeline` -> `/EditEventModal`
 
 ## Modal Exit Contract

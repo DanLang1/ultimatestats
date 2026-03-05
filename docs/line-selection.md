@@ -174,7 +174,7 @@ Individual draggable row in the reorder view. See [Drag-to-Reorder](#drag-to-reo
 
 ### LinePresetEditor
 
-**File**: [LinePresetEditor.tsx](file:///home/langd/coding/ultimatestats/app/LinePresetEditor.tsx)
+**File**: [LinePresetEditor.tsx](/home/langd/coding/ultimatestats/app/(main)/LinePresetEditor.tsx)
 
 Full-page route for managing presets. Handles navigation and state between list/edit views.
 

@@ -57,7 +57,7 @@ export default function WinModal() {
       await saveCurrentGame();
     }
     router.dismissTo('/');
-    router.push('/ViewStats');
+    router.push({ pathname: '/ViewStats', params: { from: 'scoreboard' } });
   };
 
   const handleNewGame = async () => {

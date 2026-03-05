@@ -194,7 +194,7 @@ export default function LegacyGamesDevModal({ visible, onClose }: LegacyGamesDev
       await AsyncStorage.setItem(SAVED_GAMES_STORAGE_KEY, '{not-json');
       setRawJson('');
       onClose();
-      router.push({ pathname: '/ViewStats', params: { tab: 'saved' } });
+      router.push('/SavedGameStats');
     } catch (error) {
       showAlert({
         title: 'Corrupt Blob Test Failed',
