@@ -47,6 +47,7 @@ export default function ViewStatsScreen() {
   const { palette } = useTheme();
   const { isLandscape, sizeClass } = useLayout();
   const styles = createStyles(isLandscape, sizeClass);
+  const isCompletedGame = useGameStore((state) => state.currentGameStatus === 'finished');
 
   const team1Name = currentTeam?.name ?? 'Team 1';
 
@@ -101,7 +102,7 @@ export default function ViewStatsScreen() {
 
   const handleBack = () => {
     if (from === 'scoreboard') {
-      router.replace('/');
+      router.replace('/Dashboard');
       return;
     }
 
@@ -168,7 +169,7 @@ export default function ViewStatsScreen() {
       <Stack.Screen options={{ headerShown: false }} />
 
       <ScreenHeader
-        title="CURRENT GAME"
+        title={isCompletedGame ? 'RECENT GAME' : 'CURRENT GAME'}
         onBack={handleBack}
         titleColor={palette.textMuted}
         backButtonBackgroundColor={palette.overlay10}

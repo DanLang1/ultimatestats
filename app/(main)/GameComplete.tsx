@@ -1,0 +1,341 @@
+import { ThemedView } from '@/components/ThemedView';
+import { ScreenHeader } from '@/components/ui/ScreenHeader';
+import { useTheme } from '@/context/ThemeContext';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { checkGameOver, getWinner } from '@/lib/gameUtils';
+import { useGameStore } from '@/store/gameStore';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { Redirect, router, Stack } from 'expo-router';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+
+export default function GameCompleteScreen() {
+  const {
+    team1Score,
+    team2Score,
+    gameTo,
+    currentTeam,
+    team2Name,
+    resetGame,
+    statTrackingEnabled,
+    undoLastAction,
+    timerTimeLeft,
+    currentGameStatus,
+    setTimerActive,
+    setPostGameFlowPending,
+  } = useGameStore();
+  const { palette } = useTheme();
+  const { isLandscape, sizeClass } = useLayout();
+  const styles = createStyles(isLandscape, sizeClass);
+
+  const team1Name = currentTeam?.name ?? 'Team 1';
+  const isGameOver = checkGameOver({
+    team1Score,
+    team2Score,
+    gameTo,
+    timerTimeLeft,
+  });
+
+  if (!isGameOver) {
+    return <Redirect href={currentGameStatus === 'finished' ? '/Dashboard' : '/Scoreboard'} />;
+  }
+
+  const winnerTeam = getWinner(team1Score, team2Score);
+  const team1Won = winnerTeam === 'team1';
+  const winnerName = team1Won ? team1Name : team2Name;
+  const loserName = team1Won ? team2Name : team1Name;
+  const winnerScore = team1Won ? team1Score : team2Score;
+  const loserScore = team1Won ? team2Score : team1Score;
+
+  const handleViewStats = () => {
+    setTimerActive(false);
+    setPostGameFlowPending(false);
+    router.replace({ pathname: '/ViewStats', params: { from: 'scoreboard' } });
+  };
+
+  const handleNewGame = () => {
+    resetGame();
+    router.replace('/Scoreboard');
+  };
+
+  const handleGoHome = () => {
+    setTimerActive(false);
+    setPostGameFlowPending(false);
+    router.replace('/Dashboard');
+  };
+
+  const handleUndo = () => {
+    setPostGameFlowPending(false);
+    undoLastAction();
+    router.replace('/Scoreboard');
+  };
+
+  return (
+    <ThemedView style={[styles.screen, { backgroundColor: palette.primary }]}>
+      <Stack.Screen options={{ headerShown: false }} />
+
+      <ScreenHeader title="GAME COMPLETE" titleColor={palette.textMuted} />
+
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        bounces={false}>
+        <View
+          style={[
+            styles.hero,
+            { backgroundColor: palette.overlay05, borderColor: palette.overlay10 },
+          ]}>
+          <View
+            style={[
+              styles.trophyBadge,
+              { backgroundColor: palette.overlay08, borderColor: palette.overlay15 },
+            ]}>
+            <MaterialCommunityIcons
+              name="trophy"
+              size={scaleBySizeClass(34, sizeClass)}
+              color={palette.warning}
+            />
+          </View>
+
+          <Text style={[styles.eyebrow, { color: palette.textMuted }]}>FINAL RESULT</Text>
+          <Text style={[styles.winnerName, { color: palette.textInverse }]} numberOfLines={2}>
+            {winnerName}
+          </Text>
+          <Text style={[styles.subhead, { color: palette.textMuted }]}>wins the game</Text>
+
+          <View style={styles.scoreRow}>
+            <View style={styles.scoreBlock}>
+              <Text style={[styles.teamLabel, { color: palette.textMuted }]} numberOfLines={1}>
+                {winnerName}
+              </Text>
+              <Text style={[styles.scoreValue, { color: palette.textInverse }]}>{winnerScore}</Text>
+            </View>
+
+            <Text style={[styles.scoreDivider, { color: palette.textMuted }]}>-</Text>
+
+            <View style={styles.scoreBlock}>
+              <Text style={[styles.teamLabel, { color: palette.textMuted }]} numberOfLines={1}>
+                {loserName}
+              </Text>
+              <Text style={[styles.scoreValue, { color: palette.textInverse }]}>{loserScore}</Text>
+            </View>
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, { color: palette.textMuted }]}>WHAT NEXT</Text>
+
+          <Pressable
+            style={[
+              styles.secondaryAction,
+              { backgroundColor: 'transparent', borderColor: palette.overlay15 },
+            ]}
+            onPress={handleUndo}>
+            <View style={styles.actionCopy}>
+              <Text style={[styles.secondaryActionTitle, { color: palette.textInverse }]}>
+                Undo Winning Point
+              </Text>
+              <Text style={[styles.secondaryActionText, { color: palette.textMuted }]}>
+                Return to the scoreboard and continue the game
+              </Text>
+            </View>
+            <MaterialCommunityIcons
+              name="undo"
+              size={scaleBySizeClass(22, sizeClass)}
+              color={palette.textMuted}
+            />
+          </Pressable>
+
+          <Pressable
+            style={[styles.primaryAction, { backgroundColor: palette.success }]}
+            onPress={handleNewGame}>
+            <View>
+              <Text style={[styles.primaryActionTitle, { color: palette.textOnAccent }]}>
+                Start New Game
+              </Text>
+              <Text style={[styles.primaryActionText, { color: palette.textOnAccent }]}>
+                Clear the scoreboard and begin a fresh game
+              </Text>
+            </View>
+            <MaterialCommunityIcons
+              name="restart"
+              size={scaleBySizeClass(22, sizeClass)}
+              color={palette.textOnAccent}
+            />
+          </Pressable>
+
+          <Pressable
+            style={[
+              styles.secondaryAction,
+              { backgroundColor: palette.overlay05, borderColor: palette.overlay10 },
+            ]}
+            onPress={handleGoHome}>
+            <View style={styles.actionCopy}>
+              <Text style={[styles.secondaryActionTitle, { color: palette.textInverse }]}>
+                Home
+              </Text>
+              <Text style={[styles.secondaryActionText, { color: palette.textMuted }]}>
+                Leave the finished game and return to the dashboard
+              </Text>
+            </View>
+            <MaterialCommunityIcons
+              name="home-outline"
+              size={scaleBySizeClass(22, sizeClass)}
+              color={palette.textMuted}
+            />
+          </Pressable>
+
+          {statTrackingEnabled && (
+            <Pressable
+              style={[
+                styles.secondaryAction,
+                {
+                  backgroundColor: palette.accentOverlay10,
+                  borderColor: palette.accentOverlay30,
+                },
+              ]}
+              onPress={handleViewStats}>
+              <View style={styles.actionCopy}>
+                <Text style={[styles.secondaryActionTitle, { color: palette.accent }]}>
+                  View Stats
+                </Text>
+                <Text style={[styles.secondaryActionText, { color: palette.textMuted }]}>
+                  Review the finished game stats and timeline
+                </Text>
+              </View>
+              <MaterialCommunityIcons
+                name="chart-bar"
+                size={scaleBySizeClass(22, sizeClass)}
+                color={palette.accent}
+              />
+            </Pressable>
+          )}
+        </View>
+      </ScrollView>
+    </ThemedView>
+  );
+}
+
+function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
+  return StyleSheet.create({
+    screen: {
+      flex: 1,
+    },
+    scrollContent: {
+      paddingHorizontal: scaleBySizeClass(20, sizeClass),
+      paddingTop: scaleBySizeClass(20, sizeClass),
+      paddingBottom: scaleBySizeClass(28, sizeClass),
+      gap: scaleBySizeClass(22, sizeClass),
+    },
+    hero: {
+      borderRadius: 24,
+      borderWidth: 1,
+      paddingHorizontal: scaleBySizeClass(22, sizeClass),
+      paddingVertical: scaleBySizeClass(26, sizeClass),
+      alignItems: 'center',
+    },
+    trophyBadge: {
+      width: scaleBySizeClass(78, sizeClass),
+      height: scaleBySizeClass(78, sizeClass),
+      borderRadius: 999,
+      borderWidth: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: scaleBySizeClass(18, sizeClass),
+    },
+    eyebrow: {
+      fontSize: scaleBySizeClass(12, sizeClass),
+      fontWeight: '700',
+      letterSpacing: 2.5,
+      marginBottom: 8,
+      textAlign: 'center',
+    },
+    winnerName: {
+      fontSize: scaleBySizeClass(isLandscape ? 34 : 30, sizeClass),
+      fontWeight: '800',
+      textAlign: 'center',
+    },
+    subhead: {
+      fontSize: scaleBySizeClass(16, sizeClass),
+      marginTop: 6,
+      textAlign: 'center',
+    },
+    scoreRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: scaleBySizeClass(18, sizeClass),
+      marginTop: scaleBySizeClass(24, sizeClass),
+      width: '100%',
+    },
+    scoreBlock: {
+      flex: 1,
+      alignItems: 'center',
+      maxWidth: isLandscape ? 260 : undefined,
+    },
+    teamLabel: {
+      fontSize: scaleBySizeClass(14, sizeClass),
+      fontWeight: '600',
+      textAlign: 'center',
+      marginBottom: 4,
+    },
+    scoreValue: {
+      fontSize: scaleBySizeClass(isLandscape ? 58 : 52, sizeClass),
+      fontWeight: '800',
+      lineHeight: scaleBySizeClass(isLandscape ? 62 : 56, sizeClass),
+    },
+    scoreDivider: {
+      fontSize: scaleBySizeClass(30, sizeClass),
+      fontWeight: '300',
+      paddingBottom: 6,
+    },
+    section: {
+      gap: scaleBySizeClass(12, sizeClass),
+    },
+    sectionTitle: {
+      fontSize: scaleBySizeClass(12, sizeClass),
+      fontWeight: '700',
+      letterSpacing: 2.5,
+    },
+    primaryAction: {
+      borderRadius: 20,
+      minHeight: scaleBySizeClass(86, sizeClass),
+      paddingHorizontal: scaleBySizeClass(18, sizeClass),
+      paddingVertical: scaleBySizeClass(18, sizeClass),
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: 16,
+    },
+    primaryActionTitle: {
+      fontSize: scaleBySizeClass(22, sizeClass),
+      fontWeight: '800',
+    },
+    primaryActionText: {
+      fontSize: scaleBySizeClass(14, sizeClass),
+      marginTop: 2,
+      maxWidth: '92%',
+    },
+    secondaryAction: {
+      borderRadius: 18,
+      borderWidth: 1,
+      minHeight: scaleBySizeClass(84, sizeClass),
+      paddingHorizontal: scaleBySizeClass(18, sizeClass),
+      paddingVertical: scaleBySizeClass(16, sizeClass),
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: 16,
+    },
+    actionCopy: {
+      flex: 1,
+    },
+    secondaryActionTitle: {
+      fontSize: scaleBySizeClass(19, sizeClass),
+      fontWeight: '700',
+    },
+    secondaryActionText: {
+      fontSize: scaleBySizeClass(14, sizeClass),
+      marginTop: 3,
+    },
+  });
+}

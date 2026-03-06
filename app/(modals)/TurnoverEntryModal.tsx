@@ -50,7 +50,7 @@ export default function TurnoverEntryScreen() {
 
   const handleCancel = () => {
     clearPendingTurnoverEntry();
-    router.dismissTo('/');
+    router.dismissTo('/Scoreboard');
   };
 
   const handleComplete = (
@@ -67,7 +67,7 @@ export default function TurnoverEntryScreen() {
       playerId,
       player2Id,
     });
-    router.dismissTo('/');
+    router.dismissTo('/Scoreboard');
   };
 
   const handleAddPlayer = (name: string) => {

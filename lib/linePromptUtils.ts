@@ -15,11 +15,11 @@ import { useSettingsStore } from '@/store/settingsStore';
  */
 export function shouldShowLinePrompt(): boolean {
   const { lineCallingEnabled } = useSettingsStore.getState();
-  const { currentPoint, pointLines, gameLocked, isHalftimeBreak, statTrackingEnabled } =
+  const { currentPoint, pointLines, currentGameStatus, isHalftimeBreak, statTrackingEnabled } =
     useGameStore.getState();
 
   if (!lineCallingEnabled || !statTrackingEnabled) return false;
-  if (gameLocked || isHalftimeBreak) return false;
+  if (currentGameStatus === 'finished' || isHalftimeBreak) return false;
 
   // Check if line already set for current point
   const hasLineForPoint = pointLines.some(

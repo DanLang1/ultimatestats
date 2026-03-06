@@ -10,7 +10,8 @@ export function useEndGame() {
     currentTeam,
     team2Name,
     setTimerActive,
-    setGameLocked,
+    setCurrentGameStatus,
+    setPostGameFlowPending,
     saveCurrentGame,
     statTrackingEnabled,
   } = useGameStore();
@@ -45,11 +46,9 @@ export function useEndGame() {
               await saveCurrentGame();
             }
 
-            // Lock the game (shows lock screen)
-            setGameLocked(true);
-
-            // Navigate back to scoreboard
-            router.dismissTo('/');
+            setCurrentGameStatus('finished');
+            setPostGameFlowPending(true);
+            router.push('/GameComplete');
           },
         },
       ],

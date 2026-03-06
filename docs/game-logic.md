@@ -79,7 +79,7 @@ if (result.isGameOver) {
 | `lib/gameUtils.ts`                | `checkGameOver()` utility              |
 | `lib/__tests__/gameUtils.test.ts` | Unit tests for game logic              |
 | `store/gameStore.ts`              | `incrementScore()`, `possession` state |
-| `app/WinModal.tsx`                | Game end UI                            |
+| `app/(main)/GameComplete.tsx`     | Game end UI                            |
 | `app/StatEntryModal.tsx`          | Stat entry + game end check            |
 
 ## Testing Game Logic

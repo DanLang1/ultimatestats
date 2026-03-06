@@ -62,7 +62,7 @@ export default function HalftimeModal() {
   const onContinue = () => {
     handleContinue();
     if (lineConfirmedForNextPoint || !lineCallingEnabled) {
-      router.dismissTo('/');
+      router.dismissTo('/Scoreboard');
     } else {
       router.replace('/LineEditor');
     }

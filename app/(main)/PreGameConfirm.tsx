@@ -73,7 +73,7 @@ export default function PreGameConfirm() {
 
   // If nothing is needed, don't show the page
   if (!needPossession && !needRatio) {
-    return <Redirect href="/" />;
+    return <Redirect href="/Scoreboard" />;
   }
 
   // Derived values
@@ -113,7 +113,7 @@ export default function PreGameConfirm() {
     if (shouldShowLinePrompt()) {
       router.replace('/LineEditor');
     } else {
-      router.dismissTo('/');
+      router.dismissTo('/Scoreboard');
     }
   };
 

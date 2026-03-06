@@ -6,7 +6,7 @@ import { Pressable, StyleProp, StyleSheet, Text, TextStyle, View, ViewStyle } fr
 
 type ScreenHeaderProps = {
   title: string;
-  onBack: () => void;
+  onBack?: () => void;
   rightSlot?: ReactNode;
   containerStyle?: StyleProp<ViewStyle>;
   titleStyle?: StyleProp<TextStyle>;
@@ -48,16 +48,22 @@ export function ScreenHeader({
     <View style={[styles.header, containerStyle]}>
       <Pressable
         onPress={onBack}
+        disabled={!onBack}
         style={[
           styles.backButton,
           { backgroundColor: backButtonBackgroundColor ?? palette.overlay10 },
+          !onBack && styles.backButtonHidden,
         ]}
         hitSlop={effectiveBackHitSlop}>
-        <MaterialCommunityIcons
-          name="arrow-left"
-          size={metrics.backIconSize}
-          color={backIconColor ?? palette.textInverse}
-        />
+        {onBack ? (
+          <MaterialCommunityIcons
+            name="arrow-left"
+            size={metrics.backIconSize}
+            color={backIconColor ?? palette.textInverse}
+          />
+        ) : (
+          <View style={styles.headerSpacer} />
+        )}
       </Pressable>
 
       {useTitleOverlay ? (
@@ -106,6 +112,9 @@ function createStyles(sizeClass: SizeClass) {
       padding: scaleBySizeClass(8, sizeClass),
       borderRadius: scaleBySizeClass(20, sizeClass),
       zIndex: 10,
+    },
+    backButtonHidden: {
+      backgroundColor: 'transparent',
     },
     titleOverlay: {
       ...StyleSheet.absoluteFillObject,

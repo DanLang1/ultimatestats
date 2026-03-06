@@ -148,7 +148,7 @@ export default function LineEditor() {
   };
 
   const handleDone = () => {
-    router.dismissTo('/');
+    router.dismissTo('/Scoreboard');
 
     requestIdleCallback(() => {
       if (selectedIds.length === numPlayers) {
@@ -165,11 +165,11 @@ export default function LineEditor() {
   };
 
   const handleSkip = () => {
-    router.dismissTo('/');
+    router.dismissTo('/Scoreboard');
   };
 
   const handleGoToEditRoster = () => {
-    router.dismissTo('/');
+    router.dismissTo('/Scoreboard');
     router.push('/EditRoster');
   };
 

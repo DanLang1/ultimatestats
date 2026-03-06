@@ -44,7 +44,8 @@ export const useGameStore = create<GameState>()(
         timerIsActive: false,
         timerEndTime: null,
         timerTimeLeft: 90 * 60,
-        gameLocked: false,
+        currentGameStatus: 'fresh',
+        isPostGameFlowPending: false,
         currentGameId: null,
 
         // Halftime Break Initial State
@@ -366,7 +367,8 @@ export const useGameStore = create<GameState>()(
             state.team1Floater = derived.team1Floater;
             state.team2Floater = derived.team2Floater;
 
-            state.gameLocked = false;
+            state.currentGameStatus = 'inProgress';
+            state.isPostGameFlowPending = false;
             state.eventToastSignal = { id: Date.now(), kind: 'undo', event: undoneEventSnapshot };
             result = true;
           });
@@ -457,7 +459,8 @@ export const useGameStore = create<GameState>()(
             state.timerIsActive = false;
             state.timerEndTime = null;
             state.timerTimeLeft = state.gameLength * 60;
-            state.gameLocked = false;
+            state.currentGameStatus = 'fresh';
+            state.isPostGameFlowPending = false;
             state.currentGameId = null;
             state.isHalftimeBreak = false;
             state.halftimeEndTime = null;
@@ -501,9 +504,14 @@ export const useGameStore = create<GameState>()(
             state.timerTimeLeft = seconds;
           }),
 
-        setGameLocked: (locked: boolean) =>
+        setCurrentGameStatus: (status) =>
           set((state: GameState) => {
-            state.gameLocked = locked;
+            state.currentGameStatus = status;
+          }),
+
+        setPostGameFlowPending: (pending) =>
+          set((state: GameState) => {
+            state.isPostGameFlowPending = pending;
           }),
 
         setHalftimeBreak: (active: boolean) =>
@@ -712,6 +720,9 @@ export const useGameStore = create<GameState>()(
             state.possession = team;
             if (state.startingPossession === null) {
               state.startingPossession = team;
+            }
+            if (state.currentGameStatus === 'fresh') {
+              state.currentGameStatus = 'inProgress';
             }
           }),
 
@@ -1059,6 +1070,13 @@ export const useGameStore = create<GameState>()(
         deleteSavedGame: async (id: string) => {
           await storage.deleteGame(id);
           const games = await storage.loadGames();
+          const shouldClearCurrentFinishedGame =
+            get().currentGameStatus === 'finished' && get().currentGameId === id;
+
+          if (shouldClearCurrentFinishedGame) {
+            get().resetGame();
+          }
+
           set((state: GameState) => {
             state.savedGames = games;
           });
@@ -1067,6 +1085,16 @@ export const useGameStore = create<GameState>()(
         deleteSavedGames: async (ids: string[]) => {
           await storage.deleteGames(ids);
           const games = await storage.loadGames();
+          const currentGameId = get().currentGameId;
+          const shouldClearCurrentFinishedGame =
+            get().currentGameStatus === 'finished' &&
+            currentGameId !== null &&
+            ids.includes(currentGameId);
+
+          if (shouldClearCurrentFinishedGame) {
+            get().resetGame();
+          }
+
           set((state: GameState) => {
             state.savedGames = games;
           });
@@ -1153,7 +1181,8 @@ export const useGameStore = create<GameState>()(
           softCapPending: state.softCapPending,
           softCapMins: state.softCapMins,
           timerTimeLeft: state.timerTimeLeft,
-          gameLocked: state.gameLocked,
+          currentGameStatus: state.currentGameStatus,
+          isPostGameFlowPending: state.isPostGameFlowPending,
           currentGameId: state.currentGameId,
           isHalftimeBreak: state.isHalftimeBreak,
           halftimeEndTime: state.halftimeEndTime,

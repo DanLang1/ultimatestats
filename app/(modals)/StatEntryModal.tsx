@@ -39,7 +39,7 @@ export default function StatEntryScreen() {
   const teamName = pendingStatEntry.team === 'team1' ? team1Name : team2Name;
   const roster = lineFilteredRoster; // Filter by current line if set
 
-  const handleComplete = (goalPlayerId: string | null, assistPlayerId: string | null) => {
+  const handleComplete = async (goalPlayerId: string | null, assistPlayerId: string | null) => {
     addGoalEvent({
       goalPlayerId,
       assistPlayerId,
@@ -55,16 +55,16 @@ export default function StatEntryScreen() {
     });
 
     if (isGameOver) {
-      router.dismiss();
-      setTimeout(() => {
-        router.push('/WinModal');
-        useGameStore.getState().setGameLocked(true);
-      }, 100);
+      if (state.statTrackingEnabled) {
+        await state.saveCurrentGame();
+      }
+      state.setCurrentGameStatus('finished');
+      state.setPostGameFlowPending(true);
+      router.dismissTo('/Scoreboard');
       return;
     }
 
-    // Skip point summary for halftime goals - let useHalftimeNavigation handle it
-    // (PointSummaryModal returns null when isHalftimeBreak is true anyway)
+    // Skip point summary for halftime goals - Scoreboard route gating will surface halftime next.
     if (isHalftimeBreak) {
       router.dismiss();
       return;

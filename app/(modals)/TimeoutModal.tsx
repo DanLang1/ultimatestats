@@ -31,18 +31,18 @@ export default function TimeoutModal() {
 
   const styles = createStyles(sizeClass);
   if (!pendingTimeoutModal) {
-    return <Redirect href="/" />;
+    return <Redirect href="/Scoreboard" />;
   }
 
   const onClose = () => {
     // User closed modal - keep timeout state so banner shows on main screen
     // They can reopen the modal or let the timer continue in the background
-    router.dismissTo('/');
+    router.dismissTo('/Scoreboard');
   };
 
   const onContinue = () => {
     handleContinue();
-    router.dismissTo('/');
+    router.dismissTo('/Scoreboard');
   };
 
   return (

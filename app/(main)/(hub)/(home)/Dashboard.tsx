@@ -2,10 +2,10 @@ import LegacyGamesDevModal from '@/components/dashboard/LegacyGamesDevModal';
 import { ThemedView } from '@/components/ThemedView';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { useTheme } from '@/context/ThemeContext';
+import { useDashboardSession } from '@/hooks/useDashboardSession';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { useNewGame } from '@/hooks/useNewGame';
 import { useVersionCheck } from '@/hooks/useVersionCheck';
-import { useGameStore } from '@/store/gameStore';
 import { useTutorialStore } from '@/store/tutorialStore';
 import { MaterialIcons } from '@expo/vector-icons';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
@@ -34,72 +34,115 @@ export default function DashboardScreen() {
   const styles = createStyles(sizeClass);
   const metrics = createMetrics(sizeClass);
   const [legacyGamesModalVisible, setLegacyGamesModalVisible] = useState(false);
-  const { statTrackingEnabled, currentTeam, savedGames } = useGameStore();
   const { resetStatsTutorial } = useTutorialStore();
-  const { confirmNewGame } = useNewGame({ onSuccess: () => router.push('/') });
+  const { confirmNewGame } = useNewGame({ onSuccess: () => router.push('/Scoreboard') });
   const { hasNewVersion } = useVersionCheck();
-
-  const team1Name = currentTeam?.name ?? 'Team 1';
-  const rosterCount = currentTeam?.roster?.length ?? 0;
-  const gamesCount = savedGames?.length ?? 0;
+  const {
+    currentTeam,
+    statTrackingEnabled,
+    team1Name,
+    rosterCount,
+    gamesCount,
+    sessionStatus,
+    hasInProgressGame,
+    hasCompletedGame,
+    completedGameSummary,
+  } = useDashboardSession();
 
   const sections: MenuSection[] = [
     {
-      title: 'CURRENT GAME',
+      title: 'GAME SETUP',
       items: [
         {
-          icon: 'plus-circle-outline',
+          icon: 'plus-circle-outline' as const,
           label: 'New Game',
-          description: 'Reset score and start fresh',
+          description:
+            sessionStatus === 'finished'
+              ? statTrackingEnabled
+                ? 'Completed game is saved. Clear the scoreboard and start fresh'
+                : 'Clear the completed scoreboard and start fresh'
+              : hasInProgressGame
+                ? 'Leave the current game and start a fresh one'
+                : 'Open a fresh scoreboard and start tracking',
           onPress: confirmNewGame,
         },
         {
-          icon: 'scoreboard-outline',
-          label: 'Back to Scoreboard',
-          description: 'Return to live game',
-          onPress: () => router.back(),
-        },
-        {
-          icon: 'cog-outline',
+          icon: 'cog-outline' as const,
           label: 'Game Settings',
           description: 'Score limit, timer, timeouts',
           onPress: () => router.push('/Settings'),
         },
-        {
-          icon: 'timeline-clock-outline',
-          label: 'Game Timeline',
-          description: 'View play-by-play events',
-          onPress: () => router.push('/GameTimeline'),
-          disabled: !statTrackingEnabled,
-        },
-        {
-          icon: 'chart-bar',
-          label: 'View Stats',
-          description: 'Player stats & game history',
-          onPress: () => router.push('/ViewStats'),
-          disabled: !statTrackingEnabled,
-        },
       ],
     },
+    ...(hasInProgressGame
+      ? [
+          {
+            title: 'IN PROGRESS',
+            items: [
+              {
+                icon: 'scoreboard-outline' as const,
+                label: 'Resume Game',
+                description: 'Return to the live scoreboard',
+                onPress: () => router.dismissTo('/Scoreboard'),
+              },
+              {
+                icon: 'timeline-clock-outline' as const,
+                label: 'Game Timeline',
+                description: 'View play-by-play events',
+                onPress: () => router.push('/GameTimeline'),
+                disabled: !statTrackingEnabled,
+              },
+              {
+                icon: 'chart-bar' as const,
+                label: 'View Stats',
+                description: 'Live player and team stats',
+                onPress: () => router.push('/ViewStats'),
+                disabled: !statTrackingEnabled,
+              },
+            ],
+          },
+        ]
+      : []),
+    ...(hasCompletedGame && statTrackingEnabled
+      ? [
+          {
+            title: 'LAST COMPLETED GAME',
+            items: [
+              {
+                icon: 'chart-bar' as const,
+                label: 'View Stats',
+                description: completedGameSummary,
+                onPress: () => router.push('/ViewStats'),
+              },
+              {
+                icon: 'timeline-clock-outline' as const,
+                label: 'Game Timeline',
+                description: 'Review the play-by-play from the finished game',
+                onPress: () => router.push('/GameTimeline'),
+              },
+            ],
+          },
+        ]
+      : []),
     {
       title: 'DATA',
       items: [
         {
-          icon: 'history',
+          icon: 'history' as const,
           label: 'Saved Games',
           description: gamesCount > 0 ? `${gamesCount} games saved` : 'No games yet',
           onPress: () => router.push('/SavedGameStats'),
           disabled: gamesCount === 0,
         },
         {
-          icon: 'chart-box-outline',
+          icon: 'chart-box-outline' as const,
           label: 'Aggregate Stats',
           description: gamesCount > 0 ? 'Combine stats across games' : 'No games yet',
           onPress: () => router.push('/AggregateStats'),
           disabled: gamesCount === 0,
         },
         {
-          icon: 'account-group-outline',
+          icon: 'account-group-outline' as const,
           label: 'Manage Team',
           description: `${team1Name}${rosterCount > 0 ? ` • ${rosterCount} players` : ''}`,
           onPress: () =>
@@ -124,13 +167,13 @@ export default function DashboardScreen() {
       title: 'HELP',
       items: [
         {
-          icon: 'help-circle-outline',
+          icon: 'help-circle-outline' as const,
           label: 'Help',
           description: 'Tutorials, legends, privacy',
           onPress: () => router.push('/Help'),
         },
         {
-          icon: 'information-outline',
+          icon: 'information-outline' as const,
           label: 'About',
           description: 'Version info & changelog',
           onPress: () => router.push('/About'),
@@ -150,7 +193,6 @@ export default function DashboardScreen() {
 
       <ScreenHeader
         title="DASHBOARD"
-        onBack={() => router.back()}
         titleColor={palette.textMuted}
         backButtonBackgroundColor={palette.overlay10}
       />

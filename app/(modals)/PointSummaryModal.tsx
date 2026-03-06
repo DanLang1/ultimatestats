@@ -65,13 +65,18 @@ export default function PointSummaryModal() {
     statTrackingEnabled,
     startPoint,
     isHalftimeBreak,
-    gameLocked,
+    currentGameStatus,
   } = useGameStore();
 
   const { genderRatioEnabled, firstPointRatio } = useSettingsStore();
 
   // Don't show if point timer is off, no stat tracking, halftime is active, or game ended
-  if (!pointTimerEnabled || !statTrackingEnabled || isHalftimeBreak || gameLocked) {
+  if (
+    !pointTimerEnabled ||
+    !statTrackingEnabled ||
+    isHalftimeBreak ||
+    currentGameStatus === 'finished'
+  ) {
     return null;
   }
 
@@ -105,11 +110,11 @@ export default function PointSummaryModal() {
 
   const handleStartNextPoint = () => {
     startPoint();
-    router.dismissTo('/');
+    router.dismissTo('/Scoreboard');
   };
 
   const handleDismiss = () => {
-    router.dismissTo('/');
+    router.dismissTo('/Scoreboard');
   };
 
   // Format duration if available

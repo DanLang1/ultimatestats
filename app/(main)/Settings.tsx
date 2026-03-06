@@ -19,7 +19,17 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useIsFocused } from '@react-navigation/native';
 import { router, Stack } from 'expo-router';
 import React, { useState } from 'react';
-import { Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import {
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TextStyle,
+  View,
+  ViewStyle,
+} from 'react-native';
 
 export default function SettingsScreen() {
   const { currentTeam } = useGameStore();
@@ -88,17 +98,14 @@ function SettingsContent() {
     saveCurrentTeam,
   } = useGameStore();
 
-  const { confirmNewGame } = useNewGame({ onSuccess: () => router.push('/') });
+  const { confirmNewGame } = useNewGame({ onSuccess: () => router.push('/Scoreboard') });
 
-  // Derived values from currentTeam
   const team1Name = currentTeam?.name ?? 'Team 1';
   const team1Roster = currentTeam?.roster ?? [];
 
   const timeoutsCount = team1Timeouts.length;
-  // Local draft state for controlled inputs (needed for validation or string->number conversion)
   const [team1NameDraft, setTeam1NameDraft] = useState(team1Name);
 
-  // Soft Cap displays as time (when soft cap triggers), converts to softCapMins for storage
   const softCapTime = gameLength - softCapMins;
   const isAndroidLargeScreen = Platform.OS === 'android' && sizeClass !== 'small';
 
@@ -143,13 +150,11 @@ function SettingsContent() {
     setOrientationMode(nextMode);
   };
 
-  // Save all draft inputs - called on keyboard hide (for Android back button)
   const saveAllDrafts = () => {
     void persistTeamNameDraft();
   };
 
   const persistTeamNameDraft = async () => {
-    // Team 1 name
     const newTeam1Name = team1NameDraft.trim();
     if (newTeam1Name && currentTeam) {
       const existingTeam = savedTeams.find(
@@ -163,7 +168,6 @@ function SettingsContent() {
     }
   };
 
-  // Handle Android back button dismissing keyboard (doesn't trigger onBlur)
   useKeyboardDidHide(saveAllDrafts, isFocused);
 
   const handleEditRoster = () => {
@@ -174,17 +178,14 @@ function SettingsContent() {
     router.push('/ImportTeam');
   };
 
-  // Save team when name editing finishes (on blur)
   const handleTeam1NameBlur = async () => {
     const newName = team1NameDraft.trim();
 
-    // Prevent empty name - revert to current
     if (!newName) {
       setTeam1NameDraft(team1Name);
       return;
     }
 
-    // Check if name already exists (case-insensitive, excluding current team)
     const existingTeam = savedTeams.find(
       (t) => t.name.toLowerCase() === newName.toLowerCase() && t.id !== currentTeam?.id,
     );
@@ -195,11 +196,10 @@ function SettingsContent() {
         message: `A team named "${existingTeam.name}" already exists. Please choose a different name.`,
         buttons: [{ text: 'I will not try to break the app again', style: 'default' }],
       });
-      setTeam1NameDraft(team1Name); // Revert to current name
+      setTeam1NameDraft(team1Name);
       return;
     }
 
-    // currentTeam should always exist by this point (set on load or when creating new team)
     if (!currentTeam) return;
 
     const updatedTeam: SavedTeam = { ...currentTeam, name: newName };
@@ -207,13 +207,12 @@ function SettingsContent() {
     await saveCurrentTeam(updatedTeam);
   };
 
-  // Dynamic Styles
-  const containerStyle = { backgroundColor: palette.primary };
-  const textInverseStyle = { color: palette.textInverse };
-  const textMutedStyle = { color: palette.textMuted };
-  const borderStyle = { borderColor: palette.overlay20 };
-  const inputBgStyle = { backgroundColor: palette.overlay08 };
-  const dividerStyle = { backgroundColor: palette.overlay10 };
+  const containerStyle: ViewStyle = { backgroundColor: palette.primary };
+  const textInverseStyle: TextStyle = { color: palette.textInverse };
+  const textMutedStyle: TextStyle = { color: palette.textMuted };
+  const borderStyle: TextStyle = { borderColor: palette.overlay20 };
+  const inputBgStyle: TextStyle = { backgroundColor: palette.overlay08 };
+  const dividerStyle: ViewStyle = { backgroundColor: palette.overlay10 };
 
   const renderColorSettings = (compact: boolean) => (
     <>
@@ -386,7 +385,6 @@ function SettingsContent() {
         )}
 
         <View key={isLandscape ? 'landscape' : 'portrait'} style={styles.columnsContainer}>
-          {/* Left Column: Teams */}
           <View style={styles.column}>
             <Text style={[styles.sectionTitle, textInverseStyle]}>TEAMS</Text>
             <Pressable
@@ -469,7 +467,6 @@ function SettingsContent() {
             {isLandscape && renderColorSettings(useCompactColorLayout)}
           </View>
 
-          {/* Right Column: Game Settings */}
           <View style={styles.column}>
             <Text style={[styles.sectionTitle, textInverseStyle]}>GAME SETTINGS</Text>
 
@@ -499,7 +496,6 @@ function SettingsContent() {
                   value={gameLength}
                   onChange={(val) => {
                     setGameLength(val);
-                    // Clamp soft cap if needed
                     if (softCapTime > val) {
                       setSoftCapMins(Math.max(0, val - softCapTime));
                     }
@@ -602,7 +598,6 @@ function SettingsContent() {
                       if (enabled && !hasSeenStatsTutorial) {
                         triggerStatsTutorial();
                       }
-                      // Disable point timer and line calling if stat tracking is disabled
                       if (!enabled) {
                         setPointTimerEnabled(false);
                         setLineCallingEnabled(false);
@@ -702,11 +697,6 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
       letterSpacing: scaleBySizeClass(1.5, sizeClass, { rounding: 'none' }),
       marginBottom: scaleBySizeClass(4, sizeClass),
     },
-    sectionHeaderRow: {
-      flexDirection: 'row',
-      alignItems: 'baseline',
-      gap: scaleBySizeClass(8, sizeClass),
-    },
     divider: {
       height: 1,
       marginVertical: scaleBySizeClass(12, sizeClass),
@@ -732,21 +722,6 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     },
     teamNameInput: {
       flex: 1,
-    },
-    buttonDisabled: {
-      opacity: 0.5,
-    },
-    newTeamButton: {
-      height: scaleBySizeClass(48, sizeClass),
-      paddingHorizontal: scaleBySizeClass(12, sizeClass),
-      borderRadius: scaleBySizeClass(10, sizeClass),
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: scaleBySizeClass(4, sizeClass),
-    },
-    newTeamButtonText: {
-      fontSize: scaleBySizeClass(14, sizeClass),
-      fontWeight: '600',
     },
     editRosterButton: {
       height: scaleBySizeClass(48, sizeClass),
@@ -789,100 +764,71 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
       fontWeight: '600',
       textAlign: 'center',
     },
-    inputWithSuffix: {
-      flexDirection: 'row',
-      alignItems: 'center',
-    },
-    inputWithSuffixInput: {
-      flex: 1,
-      borderTopRightRadius: 0,
-      borderBottomRightRadius: 0,
-      borderRightWidth: 0,
-    },
-    inputSuffix: {
-      fontSize: scaleBySizeClass(14, sizeClass),
-      fontWeight: '600',
-      paddingHorizontal: scaleBySizeClass(12, sizeClass),
-      height: scaleBySizeClass(48, sizeClass),
-      lineHeight: scaleBySizeClass(48, sizeClass),
-      borderWidth: 1,
-      borderLeftWidth: 0,
-      borderTopRightRadius: scaleBySizeClass(10, sizeClass),
-      borderBottomRightRadius: scaleBySizeClass(10, sizeClass),
-    },
-    inputDisabled: {
-      opacity: 0.5,
-    },
     helperText: {
       fontSize: scaleBySizeClass(11, sizeClass),
     },
     buttonPressed: {
       opacity: 0.8,
-      transform: [{ scale: 0.98 }],
     },
     newGameButton: {
-      paddingHorizontal: scaleBySizeClass(8, sizeClass),
-      paddingVertical: scaleBySizeClass(8, sizeClass),
+      paddingVertical: scaleBySizeClass(6, sizeClass),
+      paddingHorizontal: scaleBySizeClass(10, sizeClass),
+      borderRadius: scaleBySizeClass(8, sizeClass),
+      backgroundColor: 'transparent',
+      justifyContent: 'center',
+      alignItems: 'center',
     },
     newGameButtonText: {
-      fontSize: scaleBySizeClass(12, sizeClass),
+      fontSize: scaleBySizeClass(13, sizeClass),
       fontWeight: '700',
-      letterSpacing: scaleBySizeClass(0.5, sizeClass, { rounding: 'none' }),
-    },
-    resetColorsButton: {
-      marginTop: scaleBySizeClass(12, sizeClass),
-      paddingVertical: scaleBySizeClass(8, sizeClass),
-      alignItems: 'center',
-    },
-    resetColorsButtonText: {
-      fontSize: scaleBySizeClass(12, sizeClass),
-      fontWeight: '500',
-    },
-    switchWithHelp: {
-      flexDirection: 'row',
-      alignItems: 'center',
-    },
-    helpButton: {
-      padding: scaleBySizeClass(4, sizeClass),
-      borderRadius: scaleBySizeClass(12, sizeClass),
+      letterSpacing: scaleBySizeClass(0.4, sizeClass, { rounding: 'none' }),
     },
     activeGameBanner: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: scaleBySizeClass(10, sizeClass),
+      gap: scaleBySizeClass(8, sizeClass),
+      paddingHorizontal: scaleBySizeClass(12, sizeClass),
       paddingVertical: scaleBySizeClass(10, sizeClass),
-      paddingHorizontal: scaleBySizeClass(16, sizeClass),
-      borderRadius: scaleBySizeClass(12, sizeClass),
+      borderRadius: scaleBySizeClass(10, sizeClass),
       borderWidth: 1,
-      marginBottom: scaleBySizeClass(20, sizeClass),
+      marginBottom: scaleBySizeClass(16, sizeClass),
     },
     activeGameBannerText: {
-      fontSize: scaleBySizeClass(13, sizeClass),
+      fontSize: scaleBySizeClass(12, sizeClass),
       fontWeight: '600',
       flex: 1,
     },
-    appearanceSection: {
-      marginTop: isLandscape ? scaleBySizeClass(8, sizeClass) : scaleBySizeClass(4, sizeClass),
-      marginBottom: isLandscape ? 0 : scaleBySizeClass(8, sizeClass),
-      gap: scaleBySizeClass(8, sizeClass),
-    },
     compactColorGrid: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
+      flexDirection: isLandscape ? 'row' : 'column',
       gap: scaleBySizeClass(12, sizeClass),
     },
     compactColorItem: {
-      width: sizeClass !== 'small' ? '48%' : '100%',
+      flex: isLandscape ? 1 : undefined,
     },
     colorPickerSpacer: {
       height: scaleBySizeClass(12, sizeClass),
+    },
+    resetColorsButton: {
+      alignSelf: 'flex-start',
+      paddingVertical: scaleBySizeClass(4, sizeClass),
+    },
+    resetColorsButtonText: {
+      fontSize: scaleBySizeClass(12, sizeClass),
+      fontWeight: '600',
+    },
+    appearanceSection: {
+      marginTop: scaleBySizeClass(20, sizeClass),
+      gap: scaleBySizeClass(12, sizeClass),
+    },
+    switchWithHelp: {
+      gap: scaleBySizeClass(8, sizeClass),
     },
   });
 }
 
 function createMetrics(sizeClass: SizeClass) {
   return {
-    actionIconSize: scaleBySizeClass(20, sizeClass),
-    bannerIconSize: scaleBySizeClass(16, sizeClass),
+    actionIconSize: scaleBySizeClass(18, sizeClass),
+    bannerIconSize: scaleBySizeClass(18, sizeClass),
   };
 }

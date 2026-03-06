@@ -1,3 +1,4 @@
+import { GameSessionStatus } from '@/lib/gameSessionUtils';
 import { PointLineRecord, SavedGame, SavedTeam } from '@/lib/storage';
 import { MatchingType, PlayerRole } from '@/lib/storage/types';
 
@@ -77,7 +78,8 @@ export interface GameState {
   timerIsActive: boolean;
   timerEndTime: number | null;
   timerTimeLeft: number;
-  gameLocked: boolean;
+  currentGameStatus: GameSessionStatus;
+  isPostGameFlowPending: boolean;
   currentGameId: string | null; // ID of saved game for current session (prevents duplicates on undo+re-win)
 
   // Halftime Break
@@ -131,7 +133,8 @@ export interface GameState {
   setTimerActive: (active: boolean) => void;
   setTimerEndTime: (time: number | null) => void;
   setTimerTimeLeft: (seconds: number) => void;
-  setGameLocked: (locked: boolean) => void;
+  setCurrentGameStatus: (status: GameSessionStatus) => void;
+  setPostGameFlowPending: (pending: boolean) => void;
   setHalftimeBreak: (active: boolean) => void;
   setHalftimeEndTime: (time: number | null) => void;
   setHalftimeTimeLeft: (seconds: number) => void;

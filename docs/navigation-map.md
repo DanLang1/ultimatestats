@@ -17,9 +17,10 @@ Defined across:
 ### Primary Screens
 
 - `/` (`app/(main)/index.tsx`)
+- `/Scoreboard` (`app/(main)/Scoreboard.tsx`)
 - `/Dashboard` (`app/(main)/(hub)/(home)/Dashboard.tsx`)
 - `/GameInfo` (`app/(main)/GameInfo.tsx`)
-- `/Settings` (`app/(main)/(hub)/(home)/Settings.tsx`)
+- `/Settings` (`app/(main)/Settings.tsx`)
 - `/EditRoster` (`app/(main)/(hub)/(team)/EditRoster.tsx`)
 - `/ImportTeam` (`app/(main)/ImportTeam.tsx`)
 - `/ViewStats` (`app/(main)/(hub)/(analytics)/ViewStats.tsx`)
@@ -31,6 +32,7 @@ Defined across:
 - `/saved-games/[gameId]` (`app/(main)/(hub)/(analytics)/saved-games/[gameId].tsx`)
 - `/LineEditor` (`app/(main)/LineEditor.tsx`)
 - `/PreGameConfirm` (`app/(main)/PreGameConfirm.tsx`)
+- `/GameComplete` (`app/(main)/GameComplete.tsx`)
 - `/Import` (`app/(main)/Import.tsx`)
 - `/s/[kind]/[shareId]` (`app/s/[kind]/[shareId].tsx`) - deep-link redirect route for shared game/team/games links
 - `/Help` (`app/(main)/Help.tsx`)
@@ -40,17 +42,17 @@ Defined across:
 
 - Hub tabs are defined in `app/(main)/(hub)/_layout.tsx` and stay visible for all screens in hub tab stacks.
 - Tab sections:
-  - Home: `/Dashboard`, `/Settings`
+  - Home: `/Dashboard`
   - Stats: `/ViewStats`, `/PlayerStats`, `/SavedGameStats`, `/AggregateStats`, `/GameTimeline`, `/saved-games/[gameId]`
   - Team: `/EditRoster`
-- Scoreboard quick action: custom tab-bar action that calls `router.dismissTo('/')`.
+- Scoreboard quick action: custom tab-bar action that routes to `/Scoreboard` for fresh/in-progress sessions and starts a fresh game flow for completed sessions.
+- Entry-route behavior: `/` is a declarative entry route. It redirects to `/Scoreboard` for active/fresh sessions and also for finished sessions with a pending post-game decision. It only redirects to `/Dashboard` after the finished game has been acknowledged from the win flow.
 
 ### Transparent Modals
 
 - `/StatEntryModal` (`app/(modals)/StatEntryModal.tsx`)
 - `/TurnoverEntryModal` (`app/(modals)/TurnoverEntryModal.tsx`)
 - `/GameSelectorModal` (`app/(modals)/GameSelectorModal.tsx`)
-- `/WinModal` (`app/(modals)/WinModal.tsx`)
 - `/TeamManagementModal` (`app/(modals)/TeamManagementModal.tsx`)
 - `/HalftimeModal` (`app/(modals)/HalftimeModal.tsx`)
 - `/EditEventModal` (`app/(modals)/EditEventModal.tsx`)
@@ -63,15 +65,25 @@ Defined across:
 
 ### Live Scoring Flow
 
-1. `/` (scoreboard)
+1. `/` (entry route) -> `/Scoreboard`
 2. Optional pre-point setup:
    `/PreGameConfirm` (full-screen) when start-of-game inputs are required
+   Triggered declaratively from `/Scoreboard` when starting possession or first-point ratio is missing
 3. Optional modal step:
    `/StatEntryModal` or `/TurnoverEntryModal` or `/TimeoutModal`
 4. Line editor / summary step:
    `/LineEditor` or `/PointSummaryModal`
 5. End game:
-   `/WinModal` then `/ViewStats`
+   save immediately, mark session finished, and present `/GameComplete`
+   `/GameComplete` then `/Dashboard` or `/ViewStats` or `/Scoreboard` on undo/new game
+
+### Route Gating Priorities
+
+- `/Scoreboard` redirects to `/GameComplete` when the game is finished and the post-game decision is still pending.
+- `/Scoreboard` redirects to `/Dashboard` when the game is finished and the post-game decision has already been acknowledged.
+- `/Scoreboard` redirects to `/HalftimeModal` when halftime is active, stat entry is clear, and the game is not over.
+- `/Scoreboard` redirects to `/PreGameConfirm` when pre-game inputs are still required.
+- Otherwise `/Scoreboard` renders the live scoreboard UI.
 
 ### Team/Roster Management Flow
 

@@ -4,6 +4,6 @@ export function generateId(): string {
 }
 
 /** True when an array exists and has at least one item. */
-export function hasItems<T>(arr: T[] | null | undefined): arr is T[] {
+export function hasItems<T>(arr: readonly T[] | null | undefined): arr is readonly T[] {
   return Array.isArray(arr) && arr.length > 0;
 }

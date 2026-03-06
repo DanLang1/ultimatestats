@@ -46,7 +46,7 @@ Track progress for size-class scaling (`small` / `medium` / `large`) across scre
 - `[x]` `app/(modals)/NumberPickerModal.tsx`
 - `[x]` `app/(modals)/TimeoutModal.tsx`
 - `[x]` `app/(modals)/HalftimeModal.tsx`
-- `[x]` `app/(modals)/WinModal.tsx`
+- `[x]` `app/(main)/GameComplete.tsx`
 - `[x]` `app/(modals)/PointSummaryModal.tsx`
 - `[x]` `app/(modals)/EditDurationModal.tsx`
 - `[x]` `app/(modals)/EditPlayerModal.tsx`

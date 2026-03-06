@@ -1,5 +1,7 @@
 import { useTheme } from '@/context/ThemeContext';
+import { useGameSessionStatus } from '@/hooks/useGameSessionStatus';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { useNewGame } from '@/hooks/useNewGame';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { router, usePathname, type Href } from 'expo-router';
@@ -64,15 +66,23 @@ type HubRouteEntry = {
 };
 
 export default function HubTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
-  const { palette } = useTheme();
+  const { palette, themeMode } = useTheme();
   const { sizeClass } = useLayout();
   const pathname = usePathname();
+  const { confirmNewGame } = useNewGame({ onSuccess: () => router.navigate('/Scoreboard') });
   const styles = createStyles(sizeClass);
   const iconSize = scaleBySizeClass(20, sizeClass);
   const bottomPadding = scaleBySizeClass(6, sizeClass);
+  const isLightTheme = themeMode === 'light';
+  const sessionStatus = useGameSessionStatus();
 
   const handleGamePress = () => {
-    router.dismissTo('/');
+    if (sessionStatus === 'finished') {
+      confirmNewGame();
+      return;
+    }
+
+    router.navigate('/Scoreboard');
   };
 
   const hubRoutes = HUB_TAB_DISPLAY_ORDER.map((routeName) => {
@@ -85,7 +95,17 @@ export default function HubTabBar({ state, descriptors, navigation }: BottomTabB
     const tabConfig = TAB_CONFIG[route.name];
     const isFocused = state.index === index;
     const isActive = isFocused && isTabPathActive(pathname, tabConfig);
-    const color = isActive ? palette.accent : palette.textMuted;
+    const color = isActive
+      ? isLightTheme
+        ? palette.accent
+        : palette.textInverse
+      : palette.textMuted;
+    const buttonBackgroundColor = isActive
+      ? isLightTheme
+        ? palette.accentOverlay10
+        : palette.accentOverlay15
+      : 'transparent';
+    const buttonBorderColor = isActive ? palette.accentOverlay30 : 'transparent';
 
     const onPress = () => {
       const event = navigation.emit({
@@ -122,7 +142,11 @@ export default function HubTabBar({ state, descriptors, navigation }: BottomTabB
         onLongPress={onLongPress}
         style={({ pressed }) => [
           styles.tabButton,
-          { backgroundColor: isActive ? palette.overlay05 : palette.overlay02 },
+          {
+            backgroundColor: buttonBackgroundColor,
+            borderColor: buttonBorderColor,
+          },
+          isActive && styles.activeTabButton,
           pressed && styles.pressed,
         ]}>
         <MaterialCommunityIcons
@@ -144,8 +168,10 @@ export default function HubTabBar({ state, descriptors, navigation }: BottomTabB
       style={[
         styles.container,
         {
-          backgroundColor: palette.primary,
+          backgroundColor: isLightTheme ? palette.cardBg : palette.primary,
+          borderTopColor: isLightTheme ? palette.borderLight : palette.overlay10,
           paddingBottom: bottomPadding,
+          shadowColor: palette.shadow,
         },
       ]}>
       <View style={styles.row}>
@@ -156,7 +182,10 @@ export default function HubTabBar({ state, descriptors, navigation }: BottomTabB
           onPress={handleGamePress}
           style={({ pressed }) => [
             styles.tabButton,
-            { backgroundColor: palette.overlay02 },
+            {
+              backgroundColor: 'transparent',
+              borderColor: 'transparent',
+            },
             pressed && styles.pressed,
           ]}>
           <MaterialCommunityIcons
@@ -177,23 +206,32 @@ function createStyles(sizeClass: SizeClass) {
   return StyleSheet.create({
     container: {
       paddingTop: scaleBySizeClass(6, sizeClass),
-      paddingHorizontal: scaleBySizeClass(8, sizeClass),
+      paddingHorizontal: scaleBySizeClass(12, sizeClass),
+      borderTopWidth: 1,
+      shadowOffset: { width: 0, height: -4 },
+      shadowOpacity: 0.04,
+      shadowRadius: 10,
+      elevation: 5,
     },
     row: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
-      gap: scaleBySizeClass(6, sizeClass),
+      gap: scaleBySizeClass(2, sizeClass),
     },
     tabButton: {
       flex: 1,
-      minHeight: scaleBySizeClass(44, sizeClass),
-      borderRadius: scaleBySizeClass(10, sizeClass),
+      minHeight: scaleBySizeClass(50, sizeClass),
+      borderRadius: scaleBySizeClass(12, sizeClass),
       alignItems: 'center',
       justifyContent: 'center',
-      gap: scaleBySizeClass(1, sizeClass),
+      gap: scaleBySizeClass(2, sizeClass),
       paddingHorizontal: scaleBySizeClass(6, sizeClass),
-      paddingVertical: scaleBySizeClass(4, sizeClass),
+      paddingVertical: scaleBySizeClass(6, sizeClass),
+      borderWidth: 1,
+    },
+    activeTabButton: {
+      transform: [{ translateY: -1 }],
     },
     tabLabel: {
       fontSize: scaleBySizeClass(10, sizeClass),

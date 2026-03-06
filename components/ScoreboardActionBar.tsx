@@ -59,7 +59,7 @@ export function ScoreboardActionBar({
     pointTimerEnabled,
     statTrackingEnabled,
     pointTimerPausedElapsed,
-    gameLocked,
+    currentGameStatus,
     togglePointTimerPause,
     pendingTimeoutModal,
   } = useGameStore();
@@ -67,7 +67,10 @@ export function ScoreboardActionBar({
   const { formattedTime, isRunning, isComplete, toggleTimer, handleContinue } = useTimeoutTimer();
 
   const showResumePoint =
-    pointTimerEnabled && statTrackingEnabled && pointTimerPausedElapsed !== null && !gameLocked;
+    pointTimerEnabled &&
+    statTrackingEnabled &&
+    pointTimerPausedElapsed !== null &&
+    currentGameStatus !== 'finished';
 
   const isVertical = actionBarOrientation === 'vertical';
   const isMyTeam = possession === 'team1';
