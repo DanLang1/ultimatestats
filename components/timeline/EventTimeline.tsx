@@ -634,12 +634,19 @@ export default function EventTimeline({
 
               {/* Lineup Footer */}
               {showLineups && playersByPoint.has(point.pointNumber) && (
-                <View style={[styles.lineupFooter, { backgroundColor: palette.overlay05 }]}>
+                <View
+                  style={[
+                    styles.lineupFooter,
+                    {
+                      backgroundColor: 'transparent',
+                      borderTopColor: palette.border,
+                    },
+                  ]}>
                   <View style={styles.lineupHeader}>
                     <MaterialCommunityIcons
                       name="account-group-outline"
                       size={scaleBySizeClass(16, sizeClass)}
-                      color={palette.textMuted}
+                      color={palette.accent}
                     />
                   </View>
                   <View style={styles.lineupChipsWrapper}>
@@ -653,58 +660,60 @@ export default function EventTimeline({
                       );
                       return lineupEntries.map(({ playerId, isSubIn, isInjuredOut }) => {
                         const matchType = getPlayerMatchingType(roster, playerId);
+                        const chipLabelColor =
+                          matchType === 'mmp'
+                            ? mmpColor
+                            : matchType === 'fmp'
+                              ? fmpColor
+                              : palette.textInverse;
 
                         return (
                           <View
                             key={playerId}
                             style={[
                               styles.lineupChip,
-                              { backgroundColor: palette.overlay08 },
-                              isSubIn && {
-                                borderColor: palette.warning + '50',
-                                borderWidth: 1,
-                                backgroundColor: palette.warning + '10',
-                              },
-                              isInjuredOut && {
-                                borderColor: palette.danger + '35',
-                                borderWidth: 1,
-                                backgroundColor: palette.danger + '10',
+                              {
+                                backgroundColor: palette.timelineLineupChipBg,
+                                borderColor: palette.timelineLineupChipBorder,
                               },
                             ]}>
-                            <Text
-                              style={[
-                                styles.lineupChipText,
-                                {
-                                  color:
-                                    matchType === 'mmp'
-                                      ? mmpColor
-                                      : matchType === 'fmp'
-                                        ? fmpColor
-                                        : palette.textInverse,
-                                },
-                              ]}>
+                            <Text style={[styles.lineupChipText, { color: chipLabelColor }]}>
                               {getPlayerName(roster, playerId) ?? playerId}
-                              {isSubIn && (
-                                <Text
-                                  style={{
-                                    color: palette.warning,
-                                    fontSize: scaleBySizeClass(10, sizeClass),
-                                  }}>
-                                  {' '}
-                                  (sub)
-                                </Text>
-                              )}
-                              {isInjuredOut && (
-                                <Text
-                                  style={{
-                                    color: palette.danger,
-                                    fontSize: scaleBySizeClass(10, sizeClass),
-                                  }}>
-                                  {' '}
-                                  (inj)
-                                </Text>
-                              )}
                             </Text>
+                            {isSubIn && (
+                              <View
+                                style={[
+                                  styles.lineupStateBadge,
+                                  {
+                                    backgroundColor: palette.warning,
+                                  },
+                                ]}>
+                                <Text
+                                  style={[
+                                    styles.lineupStateBadgeText,
+                                    { color: palette.textOnAccent },
+                                  ]}>
+                                  SUB
+                                </Text>
+                              </View>
+                            )}
+                            {isInjuredOut && (
+                              <View
+                                style={[
+                                  styles.lineupStateBadge,
+                                  {
+                                    backgroundColor: palette.danger,
+                                  },
+                                ]}>
+                                <Text
+                                  style={[
+                                    styles.lineupStateBadgeText,
+                                    { color: palette.textOnAccent },
+                                  ]}>
+                                  INJ
+                                </Text>
+                              </View>
+                            )}
                           </View>
                         );
                       });
@@ -894,6 +903,7 @@ function createStyles(sizeClass: SizeClass) {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 10,
+      borderTopWidth: 1,
       borderBottomLeftRadius: 14,
       borderBottomRightRadius: 14,
     },
@@ -909,13 +919,29 @@ function createStyles(sizeClass: SizeClass) {
       gap: 6,
     },
     lineupChip: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
       paddingHorizontal: 8,
       paddingVertical: 4,
       borderRadius: 12,
+      borderWidth: 1,
     },
     lineupChipText: {
       fontSize: scaleBySizeClass(11, sizeClass),
       fontWeight: '600',
+    },
+    lineupStateBadge: {
+      paddingHorizontal: 6,
+      paddingVertical: 2,
+      borderRadius: 999,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    lineupStateBadgeText: {
+      fontSize: scaleBySizeClass(9, sizeClass),
+      fontWeight: '800',
+      letterSpacing: 0.4,
     },
   });
 }

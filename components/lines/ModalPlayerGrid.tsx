@@ -4,36 +4,25 @@ import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { computePlayingTime, formatPlayingTime } from '@/lib/lineUtils';
 import { Player, PointLineRecord } from '@/lib/storage/types';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import React, { useRef } from 'react';
+import React from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 function sortPlayers(
   players: Player[],
   playingTime: Map<string, number>,
   direction: SortDirection,
-  selectedIds?: Set<string>,
 ): Player[] {
   return [...players].sort((a, b) => {
-    // If selectedIds provided, sort selected players first
-    if (selectedIds) {
-      const aSelected = selectedIds.has(a.id);
-      const bSelected = selectedIds.has(b.id);
-      if (aSelected !== bSelected) {
-        return aSelected ? -1 : 1;
-      }
-    }
-
-    // Sort by playing time
-    const aPoints = playingTime.get(a.id) ?? 0;
-    const bPoints = playingTime.get(b.id) ?? 0;
-    if (aPoints !== bPoints) {
-      return direction === 'asc' ? aPoints - bPoints : bPoints - aPoints;
+    if (direction === 'points') {
+      const aPoints = playingTime.get(a.id) ?? 0;
+      const bPoints = playingTime.get(b.id) ?? 0;
+      if (aPoints !== bPoints) return bPoints - aPoints;
     }
     return a.name.localeCompare(b.name);
   });
 }
 
-export type SortDirection = 'asc' | 'desc';
+export type SortDirection = 'alpha' | 'points';
 
 export interface ModalPlayerGridProps {
   roster: Player[];
@@ -45,10 +34,6 @@ export interface ModalPlayerGridProps {
   useModalColors?: boolean;
   /** Whether a game is currently active (shows pts played) */
   gameActive?: boolean;
-  /** Sort selected players to top (use for preset selection, not manual selection) */
-  sortSelectedFirst?: boolean;
-  /** Change this value to trigger a re-sort (e.g., increment on preset selection) */
-  sortKey?: number;
   /** Current point number — excludes in-progress point from playing time count */
   currentPoint?: number;
 }
@@ -101,11 +86,9 @@ export function ModalPlayerGrid({
   pointLines,
   selectedIds,
   onTogglePlayer,
-  sortDirection = 'asc',
+  sortDirection = 'alpha',
   useModalColors: useModalColorsProp = true,
   gameActive = false,
-  sortSelectedFirst = false,
-  sortKey = 0,
   currentPoint,
 }: ModalPlayerGridProps) {
   const { palette } = useTheme();
@@ -119,21 +102,7 @@ export function ModalPlayerGrid({
   const playingTime = computePlayingTime(pointLines, currentPoint);
   const selectedSet = new Set(selectedIds);
 
-  // Use ref to store sorted roster - only re-sort when sortKey changes
-  const sortedRosterRef = useRef<Player[]>([]);
-  const lastSortKeyRef = useRef<number>(-1);
-
-  if (sortKey !== lastSortKeyRef.current || sortedRosterRef.current.length === 0) {
-    sortedRosterRef.current = sortPlayers(
-      roster,
-      playingTime,
-      sortDirection,
-      sortSelectedFirst ? selectedSet : undefined,
-    );
-    lastSortKeyRef.current = sortKey;
-  }
-
-  const sortedRoster = sortedRosterRef.current;
+  const sortedRoster = sortPlayers(roster, playingTime, sortDirection);
 
   // Group players by column
   const columns = new Map<ColumnKey, Player[]>();

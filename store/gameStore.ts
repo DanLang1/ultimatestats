@@ -3,6 +3,7 @@ import { checkGameOver } from '@/lib/gameUtils';
 import { hasReachedHalftime } from '@/lib/halftimeUtils';
 import { UNKNOWN_PLAYER_ID } from '@/lib/playerUtils';
 import { CURRENT_SCHEMA_VERSION, SavedGame, SavedTeam, storage } from '@/lib/storage';
+import { getLatestLineForPoint } from '@/lib/lineUtils';
 import { deriveTimeoutState } from '@/lib/timeoutUtils';
 import { generateId } from '@/lib/utils';
 import { palette } from '@/theme/theme';
@@ -340,6 +341,8 @@ export const useGameStore = create<GameState>()(
               state.pointLines = state.pointLines.filter(
                 (record) => record.pointNumber <= state.currentPoint,
               );
+              state.currentLine = getLatestLineForPoint(state.pointLines, state.currentPoint);
+              useLinePresetsStore.getState().setLineConfirmedForNextPoint(false);
               state.events.pop();
             } else {
               // Turnover: flip possession back
@@ -673,6 +676,13 @@ export const useGameStore = create<GameState>()(
 
             // Remove entry from pointStartTimestamps
             delete state.pointStartTimestamps[state.currentPoint];
+
+            // Remove any future line records and restore the active line for the reverted point
+            state.pointLines = state.pointLines.filter(
+              (record) => record.pointNumber <= state.currentPoint,
+            );
+            state.currentLine = getLatestLineForPoint(state.pointLines, state.currentPoint);
+            useLinePresetsStore.getState().setLineConfirmedForNextPoint(false);
 
             // Clear pending entry
             state.pendingStatEntry = null;

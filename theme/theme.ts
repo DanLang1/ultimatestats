@@ -44,6 +44,8 @@ const midnightElectric = {
   inputText: '#0F172A', // Slate 900 - text in inputs (always dark)
   cardBg: '#F8FAFC', // Slate 50 - card backgrounds
   cardBgAlt: '#F1F5F9', // Slate 100 - alternating rows
+  timelineLineupChipBg: 'rgba(255,255,255,0.1)', // subdued lineup chip surface on dark cards
+  timelineLineupChipBorder: 'rgba(255,255,255,0.2)', // lineup chip border on dark cards
   shadow: '#000000', // Shadow color (use with opacity)
 
   // Overlay/Glass effects - white (for dark backgrounds)
@@ -236,6 +238,8 @@ export const lightPalette = {
   inputText: '#0F172A', // Slate 900 - text in inputs (always dark)
   cardBg: '#FFFFFF', // White - card backgrounds
   cardBgAlt: '#F8FAFC', // Slate 50 - alternating rows
+  timelineLineupChipBg: '#FFFFFF', // lineup chip surface on light cards
+  timelineLineupChipBorder: '#CBD5E1', // lineup chip border on light cards
   shadow: '#000000', // Shadow color (use with opacity)
 
   // Overlay/Glass effects - black (for light backgrounds)

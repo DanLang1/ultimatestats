@@ -125,19 +125,21 @@ export default function GameTimelineScreen() {
                 style={[
                   styles.timelineToggleChip,
                   {
-                    backgroundColor: showSplitSeparators ? palette.overlay08 : palette.overlay15,
-                    borderColor: showSplitSeparators ? palette.accent : palette.overlay15,
+                    backgroundColor: showSplitSeparators
+                      ? palette.accentOverlay10
+                      : palette.overlay08,
+                    borderColor: showSplitSeparators ? palette.accent : palette.border,
                   },
                 ]}>
                 <MaterialCommunityIcons
                   name="arrow-split-horizontal"
                   size={scaleBySizeClass(12, sizeClass)}
-                  color={showSplitSeparators ? palette.accent : palette.textMuted}
+                  color={showSplitSeparators ? palette.accent : palette.textSecondary}
                 />
                 <Text
                   style={[
                     styles.timelineToggleText,
-                    { color: showSplitSeparators ? palette.accent : palette.textMuted },
+                    { color: showSplitSeparators ? palette.accent : palette.textSecondary },
                   ]}>
                   Show Splits: {showSplitSeparators ? 'On' : 'Off'}
                 </Text>
@@ -149,19 +151,19 @@ export default function GameTimelineScreen() {
                 style={[
                   styles.timelineToggleChip,
                   {
-                    backgroundColor: showLineups ? palette.overlay08 : palette.overlay15,
-                    borderColor: showLineups ? palette.accent : palette.overlay15,
+                    backgroundColor: showLineups ? palette.accentOverlay10 : palette.overlay08,
+                    borderColor: showLineups ? palette.accent : palette.border,
                   },
                 ]}>
                 <MaterialCommunityIcons
                   name="account-group-outline"
                   size={scaleBySizeClass(12, sizeClass)}
-                  color={showLineups ? palette.accent : palette.textMuted}
+                  color={showLineups ? palette.accent : palette.textSecondary}
                 />
                 <Text
                   style={[
                     styles.timelineToggleText,
-                    { color: showLineups ? palette.accent : palette.textMuted },
+                    { color: showLineups ? palette.accent : palette.textSecondary },
                   ]}>
                   Show Lines: {showLineups ? 'On' : 'Off'}
                 </Text>

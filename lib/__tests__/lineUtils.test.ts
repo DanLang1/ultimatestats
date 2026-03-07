@@ -2,6 +2,7 @@ import { Player, PointLineRecord } from '@/lib/storage/types';
 import {
   computePlayingTime,
   formatPlayingTime,
+  getLatestLineForPoint,
   groupPlayersByGenderRole,
   sortByPointsPlayed,
 } from '../lineUtils';
@@ -148,6 +149,33 @@ describe('computePlayingTime', () => {
   it('returns empty map when no records', () => {
     const playingTime = computePlayingTime([]);
     expect(playingTime.size).toBe(0);
+  });
+});
+
+describe('getLatestLineForPoint', () => {
+  it('returns an empty array when the point has no records', () => {
+    const pointLines: PointLineRecord[] = [{ pointNumber: 2, playerIds: ['a', 'b'], timestamp: 1000 }];
+
+    expect(getLatestLineForPoint(pointLines, 1)).toEqual([]);
+  });
+
+  it('returns the player ids from the latest record for the requested point', () => {
+    const pointLines: PointLineRecord[] = [
+      { pointNumber: 1, playerIds: ['a', 'b', 'c'], timestamp: 1000 },
+      { pointNumber: 1, playerIds: ['a', 'b', 'd'], timestamp: 1500, isSubstitution: true },
+      { pointNumber: 2, playerIds: ['e', 'f', 'g'], timestamp: 2000 },
+    ];
+
+    expect(getLatestLineForPoint(pointLines, 1)).toEqual(['a', 'b', 'd']);
+  });
+
+  it('returns a copy instead of the original playerIds array', () => {
+    const pointLines: PointLineRecord[] = [{ pointNumber: 1, playerIds: ['a', 'b'], timestamp: 1000 }];
+
+    const latestLine = getLatestLineForPoint(pointLines, 1);
+    latestLine.push('c');
+
+    expect(pointLines[0]?.playerIds).toEqual(['a', 'b']);
   });
 });
 

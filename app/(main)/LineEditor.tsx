@@ -1,4 +1,4 @@
-import { ModalPlayerGrid, SortDirection } from '@/components/lines/ModalPlayerGrid';
+import { ModalPlayerGrid } from '@/components/lines/ModalPlayerGrid';
 import { useTheme } from '@/context/ThemeContext';
 import { useIsGameActive } from '@/hooks/useIsGameActive';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
@@ -65,7 +65,8 @@ export default function LineEditor() {
     recordLineForPoint,
   } = useGameStore();
 
-  const { genderRatioEnabled, firstPointRatio, numPlayers } = useSettingsStore();
+  const { genderRatioEnabled, firstPointRatio, numPlayers, linePlayerSortOrder } =
+    useSettingsStore();
 
   // Get presets for the team
   const allPresets = useLinePresetsStore((state) => state.presets);
@@ -77,16 +78,8 @@ export default function LineEditor() {
   // Local selection state
   const [selectedIds, setSelectedIds] = useState<string[]>(currentLine);
   const [selectedPresetId, setSelectedPresetId] = useState<string | null>(null);
-  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
-  // Increment sortKey to trigger a re-sort (initial load, preset selection, sort toggle)
-  const [sortKey, setSortKey] = useState(0);
   const [subType, setSubType] = useState<'injury' | 'replacement'>('injury');
   const [showSubTypeHint, setShowSubTypeHint] = useState(false);
-
-  const toggleSort = () => {
-    setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
-    setSortKey((k) => k + 1);
-  };
 
   const gameActive = useIsGameActive();
 
@@ -133,18 +126,15 @@ export default function LineEditor() {
     if (selectedPresetId === preset.id) {
       setSelectedPresetId(null);
       setSelectedIds([]);
-      setSortKey((k) => k + 1);
       return;
     }
     setSelectedPresetId(preset.id);
     setSelectedIds(preset.playerIds);
-    setSortKey((k) => k + 1);
   };
 
   const handleClearSelection = () => {
     setSelectedIds([]);
     setSelectedPresetId(null);
-    setSortKey((k) => k + 1);
   };
 
   const handleDone = () => {
@@ -396,19 +386,6 @@ export default function LineEditor() {
               />
             </Pressable>
           )}
-          <Pressable
-            onPress={toggleSort}
-            style={({ pressed }) => [
-              styles.sortBtn,
-              { borderColor: palette.overlay15 },
-              pressed && { opacity: 0.7 },
-            ]}>
-            <MaterialCommunityIcons
-              name={sortDirection === 'asc' ? 'sort-ascending' : 'sort-descending'}
-              size={scaleBySizeClass(14, sizeClass)}
-              color={palette.textMuted}
-            />
-          </Pressable>
         </View>
 
         {isEditLineMode && hasExistingLine && (
@@ -534,9 +511,7 @@ export default function LineEditor() {
             pointLines={pointLines}
             selectedIds={selectedIds}
             onTogglePlayer={handleTogglePlayer}
-            sortDirection={sortDirection}
-            sortSelectedFirst={selectedPresetId !== null || selectedIds.length > 0}
-            sortKey={sortKey}
+            sortDirection={linePlayerSortOrder}
             gameActive={gameActive}
             currentPoint={currentPoint}
           />

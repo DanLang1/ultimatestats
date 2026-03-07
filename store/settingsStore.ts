@@ -44,6 +44,8 @@ interface SettingsState {
   setOrientationMode: (mode: OrientationMode) => void;
   statEntryOrder: 'goal_first' | 'assist_first';
   setStatEntryOrder: (order: 'goal_first' | 'assist_first') => void;
+  linePlayerSortOrder: 'alpha' | 'points';
+  setLinePlayerSortOrder: (order: 'alpha' | 'points') => void;
 }
 
 export const useSettingsStore = create<SettingsState>()(
@@ -75,6 +77,8 @@ export const useSettingsStore = create<SettingsState>()(
       setOrientationMode: (mode) => set({ orientationMode: mode }),
       statEntryOrder: 'goal_first',
       setStatEntryOrder: (order) => set({ statEntryOrder: order }),
+      linePlayerSortOrder: 'alpha',
+      setLinePlayerSortOrder: (order) => set({ linePlayerSortOrder: order }),
     }),
     {
       name: 'ultimatestats-settings',

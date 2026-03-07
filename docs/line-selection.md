@@ -290,12 +290,15 @@ Both use a `Set` to collect all players who appeared in any `PointLineRecord` fo
 
 ### Undo and Point Lines
 
-When a goal is undone (`undoLastAction`):
+When a goal is undone (`undoLastAction`) or a pending goal is canceled from stat entry:
 
 1. `currentPoint` is decremented back to the in-progress point
 2. Point lines are filtered with `record.pointNumber <= currentPoint`
    - Lines for the current (reverted) point are **kept** (the line on field is still valid)
    - Lines for future points (set after the undone score) are **removed**
+3. `currentLine` is restored from the latest remaining line record for the reverted point
+   - If the reverted point has no recorded line yet, `currentLine` is cleared
+4. `lineConfirmedForNextPoint` is cleared so the next point must be confirmed again after the score is re-entered
 
 ### Game Events and Point Numbers
 

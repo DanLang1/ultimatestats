@@ -131,6 +131,14 @@ export function computePlayingTime(
   return playingTime;
 }
 
+export function getLatestLineForPoint(
+  pointLines: PointLineRecord[],
+  pointNumber: number,
+): string[] {
+  const latestLineRecord = pointLines.findLast((record) => record.pointNumber === pointNumber);
+  return latestLineRecord ? [...latestLineRecord.playerIds] : [];
+}
+
 /**
  * Sorts players by points played in ascending order (least played first).
  * Players with equal playing time are sorted alphabetically by name.

@@ -2,8 +2,8 @@ import { ActionBarAction, ScoreboardActionBar } from '@/components/ScoreboardAct
 import SettingsBar from '@/components/SettingsBar';
 import TeamScoreSection from '@/components/TeamScoreSection';
 import { ThemedView } from '@/components/ThemedView';
-import { useEventToast } from '@/components/toast/hooks/useEventToast';
 import EventToast from '@/components/toast/EventToast';
+import { useEventToast } from '@/components/toast/hooks/useEventToast';
 import StatsTrackingTutorial from '@/components/tutorial/StatsTrackingTutorial';
 import TutorialOverlay from '@/components/tutorial/TutorialOverlay';
 import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
@@ -22,7 +22,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function LiveScoreboard() {
-  useKeepAwake();
+  useKeepAwake('LiveScoreboard', { suppressDeactivateWarnings: true });
   const layout = useLayout();
   const styles = createStyles(layout.isLandscape, layout.sizeClass);
   const insets = useSafeAreaInsets();

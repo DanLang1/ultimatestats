@@ -62,6 +62,8 @@ function SettingsContent() {
     setOrientationMode,
     statEntryOrder,
     setStatEntryOrder,
+    linePlayerSortOrder,
+    setLinePlayerSortOrder,
   } = useSettingsStore();
 
   const {
@@ -651,6 +653,20 @@ function SettingsContent() {
                     onValueChange={setLineCallingEnabled}
                     disabled={gameActive}
                     locked={gameActive}
+                    sizeClass={sizeClass}
+                  />
+                </View>
+              )}
+              {statTrackingEnabled && lineCallingEnabled && (
+                <View style={styles.inputGroupFullWidth}>
+                  <SegmentedControl
+                    label="SORT PLAYERS"
+                    options={[
+                      { value: 'alpha', label: 'Alphabetically' },
+                      { value: 'points', label: 'Points Played' },
+                    ]}
+                    value={linePlayerSortOrder}
+                    onChange={(val) => setLinePlayerSortOrder(val as 'alpha' | 'points')}
                     sizeClass={sizeClass}
                   />
                 </View>

@@ -94,9 +94,11 @@ Agent entrypoints:
 - If `useEffect` is necessary, prefer extracting behavior into a custom hook.
 - Do not use `useCallback` or `useMemo` (React Compiler workflow).
 - No raw color values; use `theme/theme.ts`.
+- Prefer semantic palette tokens over `themeMode` branching for styling. If light/dark values differ, add or reuse a palette token instead of checking `themeMode` in components.
 - No magic numbers for app-wide limits; define constants in `lib/constants.ts`.
 - No sub-components in the same file; one component per file.
 - Use early returns where practical.
+- Prefer direct, explicit types over indexed-access types (for example, use `PointLineRecord[]` instead of `GameState['pointLines']`) unless the coupling is intentionally required.
 - Prefer `hasItems(...)` from `lib/utils.ts` for array presence checks instead of `!!arr?.length`.
 - Use `AlertProvider`; do not use native `Alert.alert`.
 - Do not use `runOnJs`; use `scheduleOnRn`.

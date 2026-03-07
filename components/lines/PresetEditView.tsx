@@ -2,9 +2,10 @@ import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { LinePreset, Player, PointLineRecord } from '@/lib/storage/types';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import React, { useRef, useState } from 'react';
+import React, { useRef } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
-import { ModalPlayerGrid, SortDirection } from './ModalPlayerGrid';
+import { useSettingsStore } from '@/store/settingsStore';
+import { ModalPlayerGrid } from './ModalPlayerGrid';
 
 export interface PresetEditViewProps {
   roster: Player[];
@@ -36,14 +37,8 @@ export function PresetEditView({
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
   const styles = createStyles(sizeClass);
-  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
-  const [sortKey, setSortKey] = useState(0);
+  const { linePlayerSortOrder } = useSettingsStore();
   const nameInputRef = useRef<TextInput>(null);
-
-  const toggleSort = () => {
-    setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
-    setSortKey((k) => k + 1);
-  };
 
   const canSave = presetName.trim().length > 0 && selectedIds.length > 0;
 
@@ -87,22 +82,6 @@ export function PresetEditView({
 
         {/* Sort + Delete + Count + Save */}
         <View style={styles.rightSection}>
-          {gameActive && (
-            <Pressable
-              onPress={toggleSort}
-              style={({ pressed }) => [
-                styles.actionBtn,
-                { backgroundColor: palette.overlay20 },
-                pressed && { opacity: 0.7 },
-              ]}>
-              <MaterialCommunityIcons
-                name={sortDirection === 'asc' ? 'sort-ascending' : 'sort-descending'}
-                size={scaleBySizeClass(16, sizeClass)}
-                color={palette.textMuted}
-              />
-            </Pressable>
-          )}
-
           <Pressable
             onPress={onSave}
             disabled={!canSave}
@@ -137,9 +116,7 @@ export function PresetEditView({
           pointLines={pointLines}
           selectedIds={selectedIds}
           onTogglePlayer={onTogglePlayer}
-          sortDirection={sortDirection}
-          sortKey={sortKey}
-          sortSelectedFirst={selectedIds.length > 0}
+          sortDirection={linePlayerSortOrder}
           useModalColors={false}
           gameActive={gameActive}
           currentPoint={currentPoint}
