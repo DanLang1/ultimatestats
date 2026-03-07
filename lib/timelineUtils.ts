@@ -1,5 +1,5 @@
 import { didGoalTriggerHalftime } from '@/lib/halftimeUtils';
-import { PointLineRecord } from '@/lib/storage/types';
+import { MatchingType, PointLineRecord } from '@/lib/storage/types';
 import { GameEvent, TurnoverType } from '@/store/gameStore.types';
 
 // Represents a turnover for display purposes
@@ -48,6 +48,115 @@ export interface TimelineLineupEntry {
   playerId: string;
   isSubIn: boolean;
   isInjuredOut: boolean;
+}
+
+export interface PointCardTimelineData {
+  isCallahan: boolean;
+  callahanBlockEventIndex?: number;
+  mergedEvents: TimelineEvent[];
+  hasVisibleEvents: boolean;
+  splitToGoalMs?: number;
+}
+
+interface PointTimingEntry {
+  eventIndex: number;
+  elapsedMs?: number;
+}
+
+export interface PointTimingBounds {
+  minAllowedMs?: number;
+  maxAllowedMs?: number;
+}
+
+function getPointTimingEntries(point: PointEvents): PointTimingEntry[] {
+  const entries: PointTimingEntry[] = [
+    ...point.turnovers.map((turnover) => ({
+      eventIndex: turnover.eventIndex,
+      elapsedMs: turnover.elapsedMs,
+    })),
+    ...point.timeouts.map((timeout) => ({
+      eventIndex: timeout.eventIndex,
+      elapsedMs: timeout.elapsedMs,
+    })),
+  ];
+
+  if (point.goalEventIndex >= 0) {
+    entries.push({ eventIndex: point.goalEventIndex, elapsedMs: point.goalElapsedMs });
+  }
+
+  entries.sort((a, b) => a.eventIndex - b.eventIndex);
+  return entries;
+}
+
+export function getPointTimingBounds(
+  point: PointEvents | undefined,
+  eventIndex: number,
+): PointTimingBounds {
+  if (!point) return {};
+
+  const entries = getPointTimingEntries(point);
+  const targetIndex = entries.findIndex((entry) => entry.eventIndex === eventIndex);
+  if (targetIndex === -1) return {};
+
+  const previousTimed = [...entries.slice(0, targetIndex)]
+    .reverse()
+    .find((entry) => entry.elapsedMs !== undefined)?.elapsedMs;
+  const nextTimed = entries
+    .slice(targetIndex + 1)
+    .find((entry) => entry.elapsedMs !== undefined)?.elapsedMs;
+
+  return {
+    minAllowedMs: previousTimed,
+    maxAllowedMs: nextTimed,
+  };
+}
+
+/**
+ * Returns the latest timed non-goal event in a point.
+ * Goal duration edits must stay at or after this value so the timeline remains chronological.
+ */
+export function getMinAllowedPointDurationMs(
+  point: Pick<PointEvents, 'turnovers' | 'timeouts'>,
+): number | undefined {
+  return [...point.turnovers, ...point.timeouts]
+    .map((event) => event.elapsedMs)
+    .filter((ms): ms is number => ms !== undefined)
+    .reduce<number | undefined>(
+      (max, ms) => (max === undefined ? ms : Math.max(max, ms)),
+      undefined,
+    );
+}
+
+export function getPointDurationValidationError(
+  point: Pick<PointEvents, 'turnovers' | 'timeouts'> | undefined,
+  pointDurationMs: number,
+): string | null {
+  if (!point || pointDurationMs <= 0) return null;
+
+  const minAllowedGoalMs = getMinAllowedPointDurationMs(point);
+  if (minAllowedGoalMs === undefined || pointDurationMs >= minAllowedGoalMs) {
+    return null;
+  }
+
+  return `Duration can't be earlier than the last event (${formatClockDuration(minAllowedGoalMs)}).`;
+}
+
+export function getEventTimeValidationError(
+  point: PointEvents | undefined,
+  eventIndex: number,
+  elapsedMs: number,
+): string | null {
+  if (!point || elapsedMs <= 0) return null;
+
+  const { minAllowedMs, maxAllowedMs } = getPointTimingBounds(point, eventIndex);
+  if (minAllowedMs !== undefined && elapsedMs < minAllowedMs) {
+    return `Time can't be earlier than the previous timed event (${formatClockDuration(minAllowedMs)}).`;
+  }
+  if (maxAllowedMs !== undefined && elapsedMs > maxAllowedMs) {
+    return `Time can't be later than the next timed event (${formatClockDuration(maxAllowedMs)}).`;
+  }
+
+  return null;
 }
 
 /**
@@ -237,6 +346,25 @@ export function computeRoundedSplitMs(fromMs: number, toMs: number): number {
   return (Math.round(toMs / 1000) - Math.round(fromMs / 1000)) * 1000;
 }
 
+export function getMatchingTypeColor(
+  matchingType: MatchingType | null | undefined,
+  colors: {
+    mmpColor: string;
+    fmpColor: string;
+    fallbackColor: string;
+  },
+): string {
+  if (matchingType === 'mmp') {
+    return colors.mmpColor;
+  }
+
+  if (matchingType === 'fmp') {
+    return colors.fmpColor;
+  }
+
+  return colors.fallbackColor;
+}
+
 /**
  * Remove the callahan block event from a merged event list.
  * The block is hidden because it's implicit in the CALLAHAN goal chip.
@@ -250,6 +378,59 @@ export function filterCallahanBlock(
   return events.filter(
     (event) => !(event.kind === 'turnover' && event.data.eventIndex === callahanBlockEventIndex),
   );
+}
+
+export function buildPointCardTimelineData(
+  point: Pick<
+    PointEvents,
+    'assistPlayerId' | 'goalElapsedMs' | 'goalPlayerId' | 'timeouts' | 'turnovers'
+  >,
+  options: {
+    isTeam1: boolean;
+    timingEnabled: boolean;
+    showSplitSeparators: boolean;
+  },
+): PointCardTimelineData {
+  const isCallahan = options.isTeam1 && point.assistPlayerId === 'OTHER_TEAM';
+
+  let callahanBlockEventIndex: number | undefined;
+  if (isCallahan && point.goalPlayerId !== null) {
+    const callahanBlock = [...point.turnovers]
+      .reverse()
+      .find((turnover) => turnover.type === 'block' && turnover.playerId === point.goalPlayerId);
+    callahanBlockEventIndex = callahanBlock?.eventIndex;
+  }
+
+  const mergedEvents = filterCallahanBlock(
+    mergeTimelineEvents(point.turnovers, point.timeouts),
+    callahanBlockEventIndex,
+  );
+  const hasVisibleEvents = mergedEvents.length > 0;
+
+  let splitToGoalMs: number | undefined;
+  if (options.timingEnabled && options.showSplitSeparators && point.goalElapsedMs !== undefined) {
+    const lastVisibleTimedEvent = [...mergedEvents]
+      .reverse()
+      .find((event) => event.data.elapsedMs !== undefined);
+
+    if (
+      lastVisibleTimedEvent?.data.elapsedMs !== undefined &&
+      point.goalElapsedMs >= lastVisibleTimedEvent.data.elapsedMs
+    ) {
+      splitToGoalMs = computeRoundedSplitMs(
+        lastVisibleTimedEvent.data.elapsedMs,
+        point.goalElapsedMs,
+      );
+    }
+  }
+
+  return {
+    isCallahan,
+    callahanBlockEventIndex,
+    mergedEvents,
+    hasVisibleEvents,
+    splitToGoalMs,
+  };
 }
 
 /**

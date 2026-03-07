@@ -9,7 +9,7 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import * as Haptics from 'expo-haptics';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import React, { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 export default function GameTimelineScreen() {
   const { palette } = useTheme();
@@ -173,72 +173,83 @@ export default function GameTimelineScreen() {
         )}
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        {hasData ? (
-          <EventTimeline
-            points={pointEvents}
-            isSavedGame={isSavedGame}
-            team2Name={gameData.team2Name}
-            gameTo={gameData.gameTo}
-            roster={gameData.roster}
-            timingEnabled={gameData.timingEnabled}
-            showSplitSeparators={showSplitSeparators}
-            pointLines={gameData.pointLines}
-            showLineups={showLineups}
-            onEditEvent={(eventIndex, turnover) => {
-              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-              router.push({
-                pathname: '/EditEventModal',
-                params: {
-                  eventIndex: String(eventIndex),
-                  eventType: 'turnover',
-                  playerId: String(turnover.playerId ?? 'null'),
-                  player2Id: String(turnover.player2Id ?? 'null'),
-                  subtype: turnover.type,
-                  originalTeam: turnover.team,
-                  gameId: params.gameId ?? 'current',
-                },
-              });
-            }}
-            onEditGoal={(eventIndex, playerId, editField) => {
-              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-              router.push({
-                pathname: '/EditEventModal',
-                params: {
-                  eventIndex: String(eventIndex),
-                  eventType: 'goal',
-                  playerId: String(playerId ?? 'null'),
-                  editField,
-                  gameId: params.gameId ?? 'current',
-                },
-              });
-            }}
-            onEditDuration={(goalEventIndex, currentDurationMs) => {
-              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-              router.push({
-                pathname: '/EditDurationModal',
-                params: {
-                  eventIndex: String(goalEventIndex),
-                  gameId: params.gameId ?? 'current',
-                  currentDurationMs: String(currentDurationMs ?? '0'),
-                },
-              });
-            }}
-            currentPoint={isSavedGame ? undefined : currentPoint}
+      {hasData ? (
+        <EventTimeline
+          points={pointEvents}
+          isSavedGame={isSavedGame}
+          team2Name={gameData.team2Name}
+          gameTo={gameData.gameTo}
+          roster={gameData.roster}
+          timingEnabled={gameData.timingEnabled}
+          showSplitSeparators={showSplitSeparators}
+          pointLines={gameData.pointLines}
+          showLineups={showLineups}
+          onEditEvent={(eventIndex, turnover) => {
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+            router.push({
+              pathname: '/EditEventModal',
+              params: {
+                eventIndex: String(eventIndex),
+                eventType: 'turnover',
+                playerId: String(turnover.playerId ?? 'null'),
+                player2Id: String(turnover.player2Id ?? 'null'),
+                subtype: turnover.type,
+                originalTeam: turnover.team,
+                gameId: params.gameId ?? 'current',
+              },
+            });
+          }}
+          onEditGoal={(eventIndex, playerId, editField) => {
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+            router.push({
+              pathname: '/EditEventModal',
+              params: {
+                eventIndex: String(eventIndex),
+                eventType: 'goal',
+                playerId: String(playerId ?? 'null'),
+                editField,
+                gameId: params.gameId ?? 'current',
+              },
+            });
+          }}
+          onEditPointDuration={(goalEventIndex, currentDurationMs) => {
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+            router.push({
+              pathname: '/EditDurationModal',
+              params: {
+                eventIndex: String(goalEventIndex),
+                gameId: params.gameId ?? 'current',
+                currentDurationMs: String(currentDurationMs ?? '0'),
+                editorType: 'point',
+                title: 'Edit Point Duration',
+              },
+            });
+          }}
+          onEditEventTime={(eventIndex, currentElapsedMs, eventType) => {
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+            router.push({
+              pathname: '/EditDurationModal',
+              params: {
+                eventIndex: String(eventIndex),
+                gameId: params.gameId ?? 'current',
+                currentDurationMs: String(currentElapsedMs ?? '0'),
+                editorType: 'event',
+                title: eventType === 'timeout' ? 'Edit Timeout Time' : 'Edit Event Time',
+              },
+            });
+          }}
+          currentPoint={isSavedGame ? undefined : currentPoint}
+        />
+      ) : (
+        <View style={styles.emptyState}>
+          <MaterialCommunityIcons
+            name="timeline-outline"
+            size={scaleBySizeClass(48, sizeClass)}
+            color={palette.textMuted}
           />
-        ) : (
-          <View style={styles.emptyState}>
-            <MaterialCommunityIcons
-              name="timeline-outline"
-              size={scaleBySizeClass(48, sizeClass)}
-              color={palette.textMuted}
-            />
-            <Text style={[styles.emptyText, { color: palette.textMuted }]}>
-              No events to display
-            </Text>
-          </View>
-        )}
-      </ScrollView>
+          <Text style={[styles.emptyText, { color: palette.textMuted }]}>No events to display</Text>
+        </View>
+      )}
     </ThemedView>
   );
 }
@@ -299,10 +310,8 @@ function createStyles(sizeClass: SizeClass) {
       fontSize: scaleBySizeClass(11, sizeClass),
       fontWeight: '600',
     },
-    scrollContent: {
-      paddingVertical: 8,
-    },
     emptyState: {
+      flex: 1,
       alignItems: 'center',
       justifyContent: 'center',
       gap: 12,

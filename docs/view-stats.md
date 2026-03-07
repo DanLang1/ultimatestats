@@ -32,19 +32,19 @@ Scrollable table of player stats. Exact columns vary depending on whether line-t
 
 Common columns include:
 
-| Column | Description                                              |
-| ------ | -------------------------------------------------------- |
-| Player | Player name                                              |
-| Pts    | Points played (when line tracking data exists)           |
-| O-Eff  | O-line efficiency (when line tracking data exists)       |
-| D-Eff  | D-line efficiency (when line tracking data exists)       |
-| G      | Goals scored (+1)                                        |
-| A      | Assists thrown (+1)                                      |
-| Blk    | Blocks made (+1)                                         |
-| Calh   | Callahans made (+1, only appears if > 0)                 |
-| TO     | Throwaways committed (-1)                                |
-| D      | Drops committed (-1)                                     |
-| +/-    | Plus/Minus (G + A + Blk - TO - D), color-coded           |
+| Column | Description                                        |
+| ------ | -------------------------------------------------- |
+| Player | Player name                                        |
+| Pts    | Points played (when line tracking data exists)     |
+| O-Eff  | O-line efficiency (when line tracking data exists) |
+| D-Eff  | D-line efficiency (when line tracking data exists) |
+| G      | Goals scored (+1)                                  |
+| A      | Assists thrown (+1)                                |
+| Blk    | Blocks made (+1)                                   |
+| Calh   | Callahans made (+1, only appears if > 0)           |
+| TO     | Throwaways committed (-1)                          |
+| D      | Drops committed (-1)                               |
+| +/-    | Plus/Minus (G + A + Blk - TO - D), color-coded     |
 
 - sorted by Plus/Minus descending, then by name.
 - Non-integer values (from 50/50 turnovers) are displayed with single decimal (e.g. 0.5).
@@ -76,6 +76,9 @@ Common columns include:
 - Replay also honors whether auto halftime was enabled when the game was played. Legacy saves default that flag to auto halftime enabled.
 - With point timing enabled, event chips show `m:ss` timestamps.
 - The timeline header includes a local Splits toggle to show/hide inter-event split times (e.g., `+32s`) above arrow separators.
+- When timing is enabled, tap a timeline event row to edit its recorded time.
+- Long press still edits event details. Goal, assist, and Callahan rows tap into point-duration editing, while turnover and timeout rows tap into event-time editing.
+- Event timing edits must stay between the previous and next timed events in that point so chronology remains valid.
 
 ### 4. Analytics Shortcuts
 

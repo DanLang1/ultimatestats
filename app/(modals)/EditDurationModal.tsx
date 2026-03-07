@@ -1,7 +1,11 @@
 import { useTheme } from '@/context/ThemeContext';
 import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { MAX_POINT_DURATION_MINUTES, MODAL_MAX_WIDTH_PICKER } from '@/lib/constants';
-import { computePointByPointEvents, formatClockDuration } from '@/lib/timelineUtils';
+import {
+  computePointByPointEvents,
+  getEventTimeValidationError,
+  getPointDurationValidationError,
+} from '@/lib/timelineUtils';
 import { useGameStore } from '@/store/gameStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -18,6 +22,8 @@ export default function EditDurationModal() {
     eventIndex: string;
     gameId: string;
     currentDurationMs?: string;
+    editorType?: 'point' | 'event';
+    title?: string;
   }>();
 
   const {
@@ -33,6 +39,7 @@ export default function EditDurationModal() {
   const eventIndex = parseInt(params.eventIndex, 10);
   const gameId = params.gameId;
   const currentMs = params.currentDurationMs ? parseInt(params.currentDurationMs, 10) : 0;
+  const editorType = params.editorType === 'event' ? 'event' : 'point';
   const isSavedGame = gameId !== 'current';
   const savedGame = isSavedGame ? savedGames.find((g) => g.id === gameId) : null;
 
@@ -49,18 +56,12 @@ export default function EditDurationModal() {
     undefined,
     activeAutoHalftimeEnabled,
   );
-  const editedPoint = pointEvents.find((point) => point.goalEventIndex === eventIndex);
-  // Compare the edited goal timestamp against earlier events in the point
-  // (turnovers/timeouts). The goal event itself is the value being edited.
-  const lastNonGoalTimedEventMs = editedPoint
-    ? [...editedPoint.turnovers, ...editedPoint.timeouts]
-        .map((event) => event.elapsedMs)
-        .filter((ms): ms is number => ms !== undefined)
-        .reduce<number | undefined>(
-          (max, ms) => (max === undefined ? ms : Math.max(max, ms)),
-          undefined,
-        )
-    : undefined;
+  const editedPoint = pointEvents.find(
+    (point) =>
+      point.goalEventIndex === eventIndex ||
+      point.turnovers.some((turnover) => turnover.eventIndex === eventIndex) ||
+      point.timeouts.some((timeout) => timeout.eventIndex === eventIndex),
+  );
 
   const initialTotalSeconds = Math.round(currentMs / 1000);
   const initialMinutes = Math.floor(initialTotalSeconds / 60);
@@ -75,15 +76,13 @@ export default function EditDurationModal() {
   const currentMinutes = minutesStr === '' ? 0 : parseInt(minutesStr, 10);
   const currentSeconds = secondsStr === '' ? 0 : parseInt(secondsStr, 10);
   const totalMs = (currentMinutes * 60 + currentSeconds) * 1000;
-  const minAllowedGoalMs =
-    lastNonGoalTimedEventMs !== undefined
-      ? Math.round(lastNonGoalTimedEventMs / 1000) * 1000
-      : undefined;
   const validationError =
-    minAllowedGoalMs !== undefined && totalMs > 0 && totalMs < minAllowedGoalMs
-      ? `Duration can't be earlier than the last event (${formatClockDuration(minAllowedGoalMs)}).`
-      : null;
+    editorType === 'point'
+      ? getPointDurationValidationError(editedPoint, totalMs)
+      : getEventTimeValidationError(editedPoint, eventIndex, totalMs);
   const isSaveDisabled = validationError !== null;
+  const title =
+    params.title ?? (editorType === 'point' ? 'Edit Point Duration' : 'Edit Event Time');
 
   const handleDigitPress = (digit: number) => {
     if (activeField === 'minutes') {
@@ -156,7 +155,7 @@ export default function EditDurationModal() {
           onPress={(e) => e.stopPropagation()}>
           {/* Header */}
           <View style={styles.header}>
-            <Text style={[styles.title, { color: palette.modalText }]}>Edit Point Duration</Text>
+            <Text style={[styles.title, { color: palette.modalText }]}>{title}</Text>
           </View>
 
           {/* Main Content */}

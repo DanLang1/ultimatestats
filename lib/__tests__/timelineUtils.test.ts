@@ -1,6 +1,7 @@
 import { PointLineRecord } from '@/lib/storage/types';
 import { GameEvent, GoalEvent, TurnoverType } from '@/store/gameStore.types';
 import {
+  buildPointCardTimelineData,
   buildTimelineLineupEntries,
   computePointByPointEvents,
   computeRoundedSplitMs,
@@ -9,6 +10,11 @@ import {
   filterCallahanBlock,
   formatClockDuration,
   formatSplitDuration,
+  getEventTimeValidationError,
+  getMatchingTypeColor,
+  getMinAllowedPointDurationMs,
+  getPointDurationValidationError,
+  getPointTimingBounds,
   getTurnoverSummary,
   mergeTimelineEvents,
   TimelineEvent,
@@ -320,6 +326,27 @@ describe('timelineUtils', () => {
     });
   });
 
+  describe('getMatchingTypeColor', () => {
+    const colors = {
+      mmpColor: '#111111',
+      fmpColor: '#222222',
+      fallbackColor: '#333333',
+    };
+
+    it('returns the MMP color for mmp players', () => {
+      expect(getMatchingTypeColor('mmp', colors)).toBe('#111111');
+    });
+
+    it('returns the FMP color for fmp players', () => {
+      expect(getMatchingTypeColor('fmp', colors)).toBe('#222222');
+    });
+
+    it('returns the fallback color when matching is missing', () => {
+      expect(getMatchingTypeColor(null, colors)).toBe('#333333');
+      expect(getMatchingTypeColor(undefined, colors)).toBe('#333333');
+    });
+  });
+
   describe('mergeTimelineEvents', () => {
     const makeTurnover = (eventIndex: number, elapsedMs?: number): DisplayTurnover => ({
       team: 'team1',
@@ -372,6 +399,114 @@ describe('timelineUtils', () => {
     });
   });
 
+  describe('point duration editing validation', () => {
+    const timedPoint = {
+      turnovers: [
+        {
+          team: 'team1' as const,
+          type: 'throwaway' as const,
+          playerId: null,
+          eventIndex: 0,
+          elapsedMs: 12000,
+        },
+      ],
+      timeouts: [{ team: 'team1' as const, isFloater: false, eventIndex: 1, elapsedMs: 33000 }],
+    };
+
+    it('returns the latest timed non-goal event in the point', () => {
+      expect(getMinAllowedPointDurationMs(timedPoint)).toBe(33000);
+    });
+
+    it('allows a goal duration at or after the latest event', () => {
+      expect(getPointDurationValidationError(timedPoint, 33000)).toBeNull();
+      expect(getPointDurationValidationError(timedPoint, 45000)).toBeNull();
+    });
+
+    it('blocks a goal duration earlier than the latest event', () => {
+      expect(getPointDurationValidationError(timedPoint, 32000)).toBe(
+        "Duration can't be earlier than the last event (0:33).",
+      );
+    });
+
+    it('allows clearing or untimed points', () => {
+      expect(getPointDurationValidationError(timedPoint, 0)).toBeNull();
+      expect(getPointDurationValidationError({ turnovers: [], timeouts: [] }, 15000)).toBeNull();
+      expect(getPointDurationValidationError(undefined, 15000)).toBeNull();
+    });
+  });
+
+  describe('event time editing validation', () => {
+    const point = {
+      pointNumber: 1,
+      scoringTeam: 'team1' as const,
+      scoreAfter: { team1: 1, team2: 0 },
+      goalPlayerId: null,
+      assistPlayerId: null,
+      goalEventIndex: 3,
+      goalElapsedMs: 45000,
+      turnovers: [
+        {
+          team: 'team1' as const,
+          type: 'throwaway' as const,
+          playerId: null,
+          eventIndex: 0,
+          elapsedMs: 12000,
+        },
+      ],
+      timeouts: [
+        {
+          team: 'team1' as const,
+          isFloater: false,
+          eventIndex: 1,
+        },
+        {
+          team: 'team2' as const,
+          isFloater: false,
+          eventIndex: 2,
+          elapsedMs: 33000,
+        },
+      ],
+      offensiveTeam: 'team1' as const,
+      possessionType: 'hold' as const,
+      pointDurationMs: 45000,
+    };
+
+    it('returns previous and next timed bounds for an event by raw event order', () => {
+      expect(getPointTimingBounds(point, 1)).toEqual({
+        minAllowedMs: 12000,
+        maxAllowedMs: 33000,
+      });
+      expect(getPointTimingBounds(point, 2)).toEqual({
+        minAllowedMs: 12000,
+        maxAllowedMs: 45000,
+      });
+      expect(getPointTimingBounds(point, 3)).toEqual({
+        minAllowedMs: 33000,
+        maxAllowedMs: undefined,
+      });
+    });
+
+    it('allows event times within neighboring timed bounds', () => {
+      expect(getEventTimeValidationError(point, 1, 20000)).toBeNull();
+      expect(getEventTimeValidationError(point, 2, 45000)).toBeNull();
+    });
+
+    it('blocks event times that would break chronological order', () => {
+      expect(getEventTimeValidationError(point, 1, 11000)).toBe(
+        "Time can't be earlier than the previous timed event (0:12).",
+      );
+      expect(getEventTimeValidationError(point, 1, 34000)).toBe(
+        "Time can't be later than the next timed event (0:33).",
+      );
+    });
+
+    it('allows clearing or editing when no point context is found', () => {
+      expect(getEventTimeValidationError(point, 1, 0)).toBeNull();
+      expect(getEventTimeValidationError(undefined, 1, 15000)).toBeNull();
+      expect(getPointTimingBounds(undefined, 1)).toEqual({});
+    });
+  });
+
   describe('filterCallahanBlock', () => {
     const makeTurnoverEvent = (eventIndex: number): TimelineEvent => ({
       kind: 'turnover',
@@ -409,6 +544,113 @@ describe('timelineUtils', () => {
       const events = [makeTurnoverEvent(3), makeTurnoverEvent(7)];
       const result = filterCallahanBlock(events, 99);
       expect(result).toHaveLength(2);
+    });
+  });
+
+  describe('buildPointCardTimelineData', () => {
+    const basePoint = {
+      pointNumber: 1,
+      scoringTeam: 'team1' as const,
+      scoreAfter: { team1: 1, team2: 0 },
+      goalPlayerId: 'goal-player',
+      assistPlayerId: 'assist-player',
+      goalEventIndex: 4,
+      goalElapsedMs: 45000,
+      turnovers: [
+        {
+          team: 'team1' as const,
+          type: 'throwaway' as const,
+          playerId: 'thrower',
+          eventIndex: 1,
+          elapsedMs: 12000,
+        },
+      ],
+      timeouts: [
+        {
+          team: 'team1' as const,
+          isFloater: false,
+          eventIndex: 2,
+          elapsedMs: 30000,
+        },
+      ],
+      offensiveTeam: 'team1' as const,
+      possessionType: 'hold' as const,
+      pointDurationMs: 45000,
+    };
+
+    it('builds visible merged events and a split-to-goal value when timing is shown', () => {
+      const result = buildPointCardTimelineData(basePoint, {
+        isTeam1: true,
+        timingEnabled: true,
+        showSplitSeparators: true,
+      });
+
+      expect(result.isCallahan).toBe(false);
+      expect(result.callahanBlockEventIndex).toBeUndefined();
+      expect(result.hasVisibleEvents).toBe(true);
+      expect(result.mergedEvents.map((event) => event.data.eventIndex)).toEqual([1, 2]);
+      expect(result.splitToGoalMs).toBe(15000);
+    });
+
+    it('filters the implicit Callahan block from the merged event list', () => {
+      const callahanPoint = {
+        ...basePoint,
+        assistPlayerId: 'OTHER_TEAM',
+        turnovers: [
+          {
+            team: 'team1' as const,
+            type: 'block' as const,
+            playerId: 'goal-player',
+            eventIndex: 0,
+            elapsedMs: 8000,
+          },
+          ...basePoint.turnovers,
+        ],
+      };
+
+      const result = buildPointCardTimelineData(callahanPoint, {
+        isTeam1: true,
+        timingEnabled: true,
+        showSplitSeparators: true,
+      });
+
+      expect(result.isCallahan).toBe(true);
+      expect(result.callahanBlockEventIndex).toBe(0);
+      expect(result.mergedEvents.map((event) => event.data.eventIndex)).toEqual([1, 2]);
+      expect(result.splitToGoalMs).toBe(15000);
+    });
+
+    it('omits split-to-goal when timing or split separators are disabled', () => {
+      expect(
+        buildPointCardTimelineData(basePoint, {
+          isTeam1: true,
+          timingEnabled: false,
+          showSplitSeparators: true,
+        }).splitToGoalMs,
+      ).toBeUndefined();
+
+      expect(
+        buildPointCardTimelineData(basePoint, {
+          isTeam1: true,
+          timingEnabled: true,
+          showSplitSeparators: false,
+        }).splitToGoalMs,
+      ).toBeUndefined();
+    });
+
+    it('omits split-to-goal when the goal is earlier than the last visible timed event', () => {
+      const invalidPoint = {
+        ...basePoint,
+        goalElapsedMs: 25000,
+      };
+
+      const result = buildPointCardTimelineData(invalidPoint, {
+        isTeam1: true,
+        timingEnabled: true,
+        showSplitSeparators: true,
+      });
+
+      expect(result.splitToGoalMs).toBeUndefined();
     });
   });
 
