@@ -35,7 +35,7 @@ export default function DashboardScreen() {
   const metrics = createMetrics(sizeClass);
   const [legacyGamesModalVisible, setLegacyGamesModalVisible] = useState(false);
   const { resetStatsTutorial } = useTutorialStore();
-  const { confirmNewGame } = useNewGame({ onSuccess: () => router.push('/Scoreboard') });
+  const { confirmNewGame } = useNewGame({ onSuccess: () => router.navigate('/Scoreboard') });
   const { hasNewVersion } = useVersionCheck();
   const {
     currentTeam,
@@ -83,7 +83,7 @@ export default function DashboardScreen() {
                 icon: 'scoreboard-outline' as const,
                 label: 'Resume Game',
                 description: 'Return to the live scoreboard',
-                onPress: () => router.dismissTo('/Scoreboard'),
+                onPress: () => router.navigate('/Scoreboard'),
               },
               {
                 icon: 'timeline-clock-outline' as const,

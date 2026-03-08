@@ -100,7 +100,7 @@ function SettingsContent() {
     saveCurrentTeam,
   } = useGameStore();
 
-  const { confirmNewGame } = useNewGame({ onSuccess: () => router.push('/Scoreboard') });
+  const { confirmNewGame } = useNewGame({ onSuccess: () => router.navigate('/Scoreboard') });
 
   const team1Name = currentTeam?.name ?? 'Team 1';
   const team1Roster = currentTeam?.roster ?? [];

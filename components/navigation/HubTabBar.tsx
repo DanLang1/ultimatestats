@@ -8,8 +8,13 @@ import { router, usePathname, type Href } from 'expo-router';
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-type HubTabRouteName = '(home)' | '(analytics)' | '(team)';
-const HUB_TAB_DISPLAY_ORDER: readonly HubTabRouteName[] = ['(home)', '(analytics)', '(team)'];
+type HubTabRouteName = '(home)' | '(game)' | '(analytics)' | '(team)';
+const HUB_TAB_DISPLAY_ORDER: readonly HubTabRouteName[] = [
+  '(home)',
+  '(game)',
+  '(analytics)',
+  '(team)',
+];
 
 type TabConfig = {
   activeIcon: keyof typeof MaterialCommunityIcons.glyphMap;
@@ -24,7 +29,7 @@ type TabConfig = {
 const TAB_CONFIG: Record<HubTabRouteName, TabConfig> = {
   '(home)': {
     activeIcon: 'view-dashboard',
-    activePathnames: ['/Dashboard'],
+    activePathnames: ['/Dashboard', '/Help', '/About'],
     href: '/Dashboard',
     inactiveIcon: 'view-dashboard-outline',
     label: 'Home',
@@ -44,6 +49,14 @@ const TAB_CONFIG: Record<HubTabRouteName, TabConfig> = {
     inactiveIcon: 'chart-bar',
     label: 'Stats',
     rootRoute: 'ViewStats',
+  },
+  '(game)': {
+    activeIcon: 'scoreboard',
+    activePathnames: ['/Scoreboard', '/GameInfo'],
+    href: '/Scoreboard',
+    inactiveIcon: 'scoreboard-outline',
+    label: 'Game',
+    rootRoute: 'Scoreboard',
   },
   '(team)': {
     activeIcon: 'account-group',
@@ -76,14 +89,9 @@ export default function HubTabBar({ state, descriptors, navigation }: BottomTabB
   const isLightTheme = themeMode === 'light';
   const sessionStatus = useGameSessionStatus();
 
-  const handleGamePress = () => {
-    if (sessionStatus === 'finished') {
-      confirmNewGame();
-      return;
-    }
-
-    router.navigate('/Scoreboard');
-  };
+  if (pathname === '/Scoreboard') {
+    return null;
+  }
 
   const hubRoutes = HUB_TAB_DISPLAY_ORDER.map((routeName) => {
     const routeIndex = state.routes.findIndex((route) => route.name === routeName);
@@ -108,6 +116,16 @@ export default function HubTabBar({ state, descriptors, navigation }: BottomTabB
     const buttonBorderColor = isActive ? palette.accentOverlay30 : 'transparent';
 
     const onPress = () => {
+      if (route.name === '(game)' && sessionStatus === 'finished') {
+        confirmNewGame();
+        return;
+      }
+
+      if (route.name === '(game)') {
+        router.navigate('/Scoreboard');
+        return;
+      }
+
       const event = navigation.emit({
         type: 'tabPress',
         target: route.key,
@@ -160,6 +178,7 @@ export default function HubTabBar({ state, descriptors, navigation }: BottomTabB
   };
 
   const homeRoute = hubRoutes.find(({ route }) => route.name === '(home)');
+  const gameRoute = hubRoutes.find(({ route }) => route.name === '(game)');
   const analyticsRoute = hubRoutes.find(({ route }) => route.name === '(analytics)');
   const teamRoute = hubRoutes.find(({ route }) => route.name === '(team)');
 
@@ -176,25 +195,7 @@ export default function HubTabBar({ state, descriptors, navigation }: BottomTabB
       ]}>
       <View style={styles.row}>
         {homeRoute ? renderHubTabButton(homeRoute) : null}
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Go to scoreboard"
-          onPress={handleGamePress}
-          style={({ pressed }) => [
-            styles.tabButton,
-            {
-              backgroundColor: 'transparent',
-              borderColor: 'transparent',
-            },
-            pressed && styles.pressed,
-          ]}>
-          <MaterialCommunityIcons
-            name="scoreboard-outline"
-            size={iconSize}
-            color={palette.textMuted}
-          />
-          <Text style={[styles.tabLabel, { color: palette.textMuted }]}>Game</Text>
-        </Pressable>
+        {gameRoute ? renderHubTabButton(gameRoute) : null}
         {analyticsRoute ? renderHubTabButton(analyticsRoute) : null}
         {teamRoute ? renderHubTabButton(teamRoute) : null}
       </View>

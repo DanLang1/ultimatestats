@@ -23,6 +23,7 @@
 - Single `SafeAreaProvider` at root only - don't add `SafeAreaView` in individual screens
 - Screen headers should keep a small explicit top gutter (`paddingTop: 8`) so controls do not sit flush to the top edge in landscape
 - Apply consistent `contentStyle` background in `_layout.tsx` to prevent screen flickering
+- Every navigator shell must set an explicit themed background on its scene container (`contentStyle` for stacks, `sceneStyle` for tabs/drawers) to avoid white flashes during transitions, especially in dark mode
 - For modals, set `gestureEnabled: false` and handle dismissal explicitly
 
 ## Dev/Build Rules

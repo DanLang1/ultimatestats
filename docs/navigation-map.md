@@ -11,15 +11,15 @@ Defined across:
 - `app/_layout.tsx` (providers + group stack)
 - `app/(main)/_layout.tsx` (main stack)
 - `app/(main)/(hub)/_layout.tsx` (hub tabs shell)
-- `app/(main)/(hub)/(home|analytics|team)/_layout.tsx` (per-tab nested stacks)
+- `app/(main)/(hub)/(home|game|analytics|team)/_layout.tsx` (per-tab nested stacks)
 - `app/(modals)/_layout.tsx` (transparent modal defaults)
 
 ### Primary Screens
 
 - `/` (`app/(main)/index.tsx`)
-- `/Scoreboard` (`app/(main)/Scoreboard.tsx`)
+- `/Scoreboard` (`app/(main)/(hub)/(game)/Scoreboard.tsx`)
 - `/Dashboard` (`app/(main)/(hub)/(home)/Dashboard.tsx`)
-- `/GameInfo` (`app/(main)/GameInfo.tsx`)
+- `/GameInfo` (`app/(main)/(hub)/(game)/GameInfo.tsx`)
 - `/Settings` (`app/(main)/Settings.tsx`)
 - `/EditRoster` (`app/(main)/(hub)/(team)/EditRoster.tsx`)
 - `/ImportTeam` (`app/(main)/ImportTeam.tsx`)
@@ -35,17 +35,19 @@ Defined across:
 - `/GameComplete` (`app/(main)/GameComplete.tsx`)
 - `/Import` (`app/(main)/Import.tsx`)
 - `/s/[kind]/[shareId]` (`app/s/[kind]/[shareId].tsx`) - deep-link redirect route for shared game/team/games links
-- `/Help` (`app/(main)/Help.tsx`)
-- `/About` (`app/(main)/About.tsx`)
+- `/Help` (`app/(main)/(hub)/(home)/Help.tsx`)
+- `/About` (`app/(main)/(hub)/(home)/About.tsx`)
 
 ### Hub Tab Navigation
 
 - Hub tabs are defined in `app/(main)/(hub)/_layout.tsx` and stay visible for all screens in hub tab stacks.
+- Navigator background rule: every route shell in this tree must set an explicit themed scene background (`contentStyle` for stacks, `sceneStyle` for tabs). Missing navigator-level backgrounds can surface as white flashes during back/tab transitions even when each screen component has its own background color.
 - Tab sections:
-  - Home: `/Dashboard`
+  - Home: `/Dashboard`, `/Help`, `/About`
+  - Game: `/Scoreboard`, `/GameInfo`
   - Stats: `/ViewStats`, `/PlayerStats`, `/SavedGameStats`, `/AggregateStats`, `/GameTimeline`, `/saved-games/[gameId]`
   - Team: `/EditRoster`
-- Scoreboard quick action: custom tab-bar action that routes to `/Scoreboard` for fresh/in-progress sessions and starts a fresh game flow for completed sessions.
+- Scoreboard is a real hub tab, but the tab bar is hidden while `/Scoreboard` is visible. Pressing the Game tab routes to `/Scoreboard` for fresh/in-progress sessions or starts a fresh game flow for completed sessions when the current session is finished.
 - Entry-route behavior: `/` is a declarative entry route. It redirects to `/Scoreboard` for active/fresh sessions and also for finished sessions with a pending post-game decision. It only redirects to `/Dashboard` after the finished game has been acknowledged from the win flow.
 
 ### Transparent Modals
