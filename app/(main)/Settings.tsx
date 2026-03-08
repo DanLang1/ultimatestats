@@ -16,7 +16,6 @@ import { useGameStore } from '@/store/gameStore';
 import { OrientationMode, useSettingsStore } from '@/store/settingsStore';
 import { useTutorialStore } from '@/store/tutorialStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { useIsFocused } from '@react-navigation/native';
 import { router, Stack } from 'expo-router';
 import React, { useState } from 'react';
 import {
@@ -38,7 +37,6 @@ export default function SettingsScreen() {
 }
 
 function SettingsContent() {
-  const isFocused = useIsFocused();
   const { isLandscape, sizeClass } = useLayout();
   const styles = createStyles(isLandscape, sizeClass);
   const metrics = createMetrics(sizeClass);
@@ -170,7 +168,7 @@ function SettingsContent() {
     }
   };
 
-  useKeyboardDidHide(saveAllDrafts, isFocused);
+  useKeyboardDidHide(saveAllDrafts);
 
   const handleEditRoster = () => {
     router.push({ pathname: '/EditRoster', params: { teamName: team1Name } });

@@ -4,7 +4,7 @@ import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { Pie, PolarChart } from 'victory-native';
+import Svg, { Circle } from 'react-native-svg';
 
 interface StatRingProps {
   percentage: number;
@@ -14,10 +14,7 @@ interface StatRingProps {
   infoLabel: string;
 }
 
-/**
- * Full circle donut gauge component using Victory Native.
- * Displays a complete ring filled proportionally to the percentage.
- */
+/** Full circle donut gauge component using react-native-svg. */
 export default function StatRing({ percentage, label, sublabel, info, infoLabel }: StatRingProps) {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
@@ -26,13 +23,6 @@ export default function StatRing({ percentage, label, sublabel, info, infoLabel 
 
   // Clamp percentage between 0-100
   const clampedPercent = Math.max(0, Math.min(100, percentage));
-  const remaining = 100 - clampedPercent;
-
-  // Data for the donut chart - filled portion first so it starts from top
-  const data = [
-    { value: clampedPercent, color: palette.accent, label: 'filled' },
-    { value: remaining, color: palette.overlay15, label: 'empty' },
-  ];
 
   // Format percentage display
   const displayValue = Number.isInteger(percentage)
@@ -40,6 +30,11 @@ export default function StatRing({ percentage, label, sublabel, info, infoLabel 
     : `${percentage.toFixed(1)}%`;
 
   const size = scaleBySizeClass(90, sizeClass);
+  const strokeWidth = scaleBySizeClass(14, sizeClass);
+  const radius = (size - strokeWidth) / 2;
+  const center = size / 2;
+  const circumference = 2 * Math.PI * radius;
+  const strokeDashoffset = circumference - (clampedPercent / 100) * circumference;
 
   const handleInfoPress = () => {
     if (info) {
@@ -49,13 +44,31 @@ export default function StatRing({ percentage, label, sublabel, info, infoLabel 
 
   return (
     <View style={styles.container}>
-      {/* Container must have explicit height for PolarChart to render */}
       <View style={{ height: size, width: size }}>
-        <PolarChart data={data} labelKey="label" valueKey="value" colorKey="color">
-          <Pie.Chart innerRadius="70%" startAngle={-90}>
-            {() => <Pie.Slice />}
-          </Pie.Chart>
-        </PolarChart>
+        <Svg width={size} height={size}>
+          <Circle
+            stroke={palette.overlay15}
+            fill="none"
+            cx={center}
+            cy={center}
+            r={radius}
+            strokeWidth={strokeWidth}
+          />
+          {clampedPercent > 0 && (
+            <Circle
+              stroke={palette.accent}
+              fill="none"
+              cx={center}
+              cy={center}
+              r={radius}
+              strokeWidth={strokeWidth}
+              strokeDasharray={circumference}
+              strokeDashoffset={strokeDashoffset}
+              strokeLinecap="round"
+              transform={`rotate(-90 ${center} ${center})`}
+            />
+          )}
+        </Svg>
         {/* Centered percentage overlay */}
         <View style={styles.valueContainer}>
           <Text style={[styles.percentage, { color: palette.textInverse }]}>{displayValue}</Text>

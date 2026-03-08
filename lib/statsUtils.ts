@@ -641,7 +641,6 @@ export function getImpactStats(
     });
   } else if (points.length > 1) {
     // Add an endpoint to show the final state sustained purely for visual length?
-    // Actually, VictoryLine handles this fine.
     points.push({
       eventIndex,
       cumulativePlusMinus: currentPlusMinus,

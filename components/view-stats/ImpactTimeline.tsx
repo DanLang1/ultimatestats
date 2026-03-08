@@ -1,10 +1,14 @@
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { ImpactPoint } from '@/lib/statsUtils';
-import { Circle, matchFont, Text as SkiaText } from '@shopify/react-native-skia';
 import React, { useState } from 'react';
 import { Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { CartesianChart, Line } from 'victory-native';
+import Svg, {
+  Circle as SvgCircle,
+  Line as SvgLine,
+  Polyline,
+  Text as SvgText,
+} from 'react-native-svg';
 
 const FONT_FAMILY = Platform.select({
   ios: 'Helvetica',
@@ -42,28 +46,102 @@ interface ImpactTimelineProps {
   data: ImpactPoint[];
 }
 
+function normalizeImpactValue(value: number): number {
+  return Number(value.toFixed(2));
+}
+
+function buildImpactTickValues(axisMin: number, axisMax: number): number[] {
+  const tickValues: number[] = [];
+
+  for (let value = axisMin; value <= axisMax; value += 1) {
+    tickValues.push(value);
+  }
+
+  return tickValues;
+}
+
+function formatImpactValue(value: number): string {
+  const normalized = normalizeImpactValue(Math.abs(value));
+  return Number.isInteger(normalized) ? String(normalized) : normalized.toFixed(1);
+}
+
+function formatImpactAxisLabel(value: number): string {
+  if (value === 0) return '0';
+  const prefix = value > 0 ? '+' : '-';
+  return `${prefix}${formatImpactValue(value)}`;
+}
+
+interface RenderedImpactPoint {
+  description: string;
+  score?: string;
+  x: number;
+  y: number;
+  yValue: number;
+}
+
+interface ImpactLineSegment {
+  color: string;
+  points: RenderedImpactPoint[];
+}
+
+function getAxisLabelTop(centerY: number, chartHeight: number, labelHeight: number): number {
+  const desiredTop = centerY - labelHeight / 2;
+  return Math.max(0, Math.min(chartHeight - labelHeight, desiredTop));
+}
+
+function buildPolylinePoints(points: RenderedImpactPoint[]): string {
+  return points.map((point) => `${point.x},${point.y}`).join(' ');
+}
+
+function buildImpactLineSegments(
+  points: RenderedImpactPoint[],
+  palette: ReturnType<typeof useTheme>['palette'],
+): ImpactLineSegment[] {
+  const segments: ImpactLineSegment[] = [];
+
+  for (let i = 0; i < points.length; i++) {
+    const point = points[i];
+    let color: string;
+
+    if (point.yValue > 0) {
+      color = palette.success;
+    } else if (point.yValue < 0) {
+      color = palette.danger;
+    } else {
+      color = segments[segments.length - 1]?.color ?? palette.accent;
+    }
+
+    const lastSegment = segments[segments.length - 1];
+
+    if (!lastSegment || lastSegment.color !== color) {
+      const nextPoints = lastSegment ? [points[i - 1], point] : [point];
+      segments.push({ color, points: nextPoints });
+    } else {
+      lastSegment.points.push(point);
+    }
+  }
+
+  return segments.filter((segment) => segment.points.length > 1);
+}
+
 export default function ImpactTimeline({ data }: ImpactTimelineProps) {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
   const chartHeight = scaleBySizeClass(150, sizeClass);
   const pxPerEvent = scaleBySizeClass(55, sizeClass);
-  const yAxisWidth = scaleBySizeClass(30, sizeClass);
+  const yAxisWidth = scaleBySizeClass(34, sizeClass);
   const labelWidth = scaleBySizeClass(52, sizeClass);
   const dotRadius = scaleBySizeClass(5, sizeClass);
   const strokeWidth = scaleBySizeClass(3, sizeClass);
+  const axisLabelHeight = scaleBySizeClass(16, sizeClass);
   const labelFontSize = scaleBySizeClass(11, sizeClass);
   const labelAboveOffset = scaleBySizeClass(14, sizeClass);
   const labelBelowOffset = scaleBySizeClass(16, sizeClass);
-  const labelFont = matchFont({
-    fontFamily: FONT_FAMILY,
-    fontSize: labelFontSize,
-    fontWeight: '700',
-  });
   const domainPadLeft = scaleBySizeClass(10, sizeClass);
   const domainPadRight = scaleBySizeClass(36, sizeClass);
   const domainPadTop = scaleBySizeClass(32, sizeClass);
   const domainPadBottom = scaleBySizeClass(20, sizeClass);
-  const styles = createStyles(sizeClass, chartHeight, yAxisWidth, labelWidth);
+  const styles = createStyles(sizeClass, chartHeight, yAxisWidth, labelWidth, axisLabelHeight);
   const hasImpact = data.some((d) => d.cumulativePlusMinus !== 0);
 
   // Format data for chart — exclude the trailing End marker so the chart
@@ -88,10 +166,9 @@ export default function ImpactTimeline({ data }: ImpactTimelineProps) {
   const finalValue = chartData[chartData.length - 1]?.y ?? 0;
 
   // Calculate Y-axis domain (symmetric around 0, or at least include 0)
-  const yMin = Math.min(minY, 0);
-  const yMax = Math.max(maxY, 0);
-  // Ensure some padding
-  const yPadding = Math.max(Math.abs(yMin), Math.abs(yMax), 1);
+  const axisMin = Math.floor(Math.min(minY, 0));
+  const axisMax = Math.ceil(Math.max(maxY, 0));
+  const yTickValues = buildImpactTickValues(axisMin, axisMax);
 
   // Scrollbar tracking state (must be declared before chartScrollWidth uses viewportWidth)
   const [viewportWidth, setViewportWidth] = useState(0);
@@ -112,6 +189,87 @@ export default function ImpactTimeline({ data }: ImpactTimelineProps) {
   const indicatorThumbWidth = Math.max(26, Math.round(viewportWidth * visibleRatio));
   const indicatorTravel = viewportWidth - indicatorThumbWidth;
   const indicatorLeft = maxScroll > 0 ? (scrollX / maxScroll) * indicatorTravel : 0;
+  const plotTop = domainPadTop;
+  const plotBottom = chartHeight - domainPadBottom;
+  const plotLeft = domainPadLeft;
+  const plotRight = chartScrollWidth - domainPadRight;
+  const plotHeight = plotBottom - plotTop;
+  const plotWidth = plotRight - plotLeft;
+  const yRange = Math.max(axisMax - axisMin, 1);
+  const minIdx = chartData[0]?.x ?? 0;
+  const maxIdx = chartData[chartData.length - 1]?.x ?? 1;
+  const xRange = maxIdx - minIdx || 1;
+
+  const getX = (value: number) => plotLeft + ((value - minIdx) / xRange) * plotWidth;
+  const getY = (value: number) => plotBottom - ((value - axisMin) / yRange) * plotHeight;
+
+  const renderedChartPoints: RenderedImpactPoint[] = chartData.map((point) => ({
+    x: getX(point.x),
+    y: getY(point.y),
+    yValue: point.y,
+    description: point.description,
+    score: point.score,
+  }));
+
+  const lineSegments = buildImpactLineSegments(renderedChartPoints, palette);
+  const visibleEventPoints = renderedChartPoints.filter((_, index) => index !== 0);
+  const horizontalGridValues = yTickValues;
+
+  const scorePositions: { score: string; eventIndex: number; x: number }[] = [];
+  data.forEach((point) => {
+    if (
+      point.score &&
+      point.description !== 'Start' &&
+      point.description !== 'End' &&
+      !scorePositions.some((scorePoint) => scorePoint.score === point.score)
+    ) {
+      scorePositions.push({
+        score: point.score,
+        eventIndex: point.eventIndex,
+        x: getX(point.eventIndex),
+      });
+    }
+  });
+
+  const visibleScorePositions: { score: string; eventIndex: number; x: number }[] = [];
+  const LABEL_GAP = 4;
+  let lastLabelRight = -Infinity;
+
+  scorePositions.forEach((item) => {
+    const left = item.x - labelWidth / 2;
+    if (left < lastLabelRight + LABEL_GAP) return;
+    lastLabelRight = left + labelWidth;
+    visibleScorePositions.push(item);
+  });
+
+  const axisLabelCandidates = [
+    {
+      key: 'max',
+      value: axisMax,
+      color: axisMax > 0 ? palette.success : palette.textMuted,
+      label: formatImpactAxisLabel(axisMax),
+      top: getAxisLabelTop(getY(axisMax), chartHeight, axisLabelHeight),
+    },
+    {
+      key: 'neutral',
+      value: 0,
+      color: palette.textMuted,
+      label: '0',
+      top: getAxisLabelTop(getY(0), chartHeight, axisLabelHeight),
+    },
+    {
+      key: 'min',
+      value: axisMin,
+      color: axisMin < 0 ? palette.danger : palette.textMuted,
+      label: formatImpactAxisLabel(axisMin),
+      top: getAxisLabelTop(getY(axisMin), chartHeight, axisLabelHeight),
+    },
+  ];
+  const axisLabels = axisLabelCandidates.filter(
+    (label, index, labels) =>
+      labels.findIndex((candidate) => candidate.value === label.value) === index,
+  );
+
   if (!hasImpact && data.length <= 2) {
     return (
       <View style={[styles.container, { height: 200, justifyContent: 'center' }]}>
@@ -149,9 +307,11 @@ export default function ImpactTimeline({ data }: ImpactTimelineProps) {
       <View style={styles.chartContainer}>
         {/* Y-Axis Labels — fixed, does not scroll */}
         <View style={styles.yAxis}>
-          <Text style={[styles.axisLabel, { color: palette.success }]}>+{yPadding}</Text>
-          <Text style={[styles.axisLabel, { color: palette.textMuted }]}>0</Text>
-          <Text style={[styles.axisLabel, { color: palette.danger }]}>-{yPadding}</Text>
+          {axisLabels.map((axisLabel) => (
+            <View key={axisLabel.key} style={[styles.axisLabelSlot, { top: axisLabel.top }]}>
+              <Text style={[styles.axisLabel, { color: axisLabel.color }]}>{axisLabel.label}</Text>
+            </View>
+          ))}
         </View>
 
         {/* Scrollable chart + x-axis labels */}
@@ -166,147 +326,84 @@ export default function ImpactTimeline({ data }: ImpactTimelineProps) {
           <View style={{ width: chartScrollWidth }}>
             {/* Chart */}
             <View style={{ height: chartHeight }}>
-              <CartesianChart
-                data={chartData}
-                xKey="x"
-                yKeys={['y']}
-                domain={{ y: [-yPadding, yPadding] }}
-                axisOptions={{
-                  font: null,
-                  lineColor: palette.overlay10,
-                  labelColor: 'transparent',
-                }}
-                domainPadding={{
-                  top: domainPadTop,
-                  bottom: domainPadBottom,
-                  left: domainPadLeft,
-                  right: domainPadRight,
-                }}>
-                {({ points }) => {
-                  type Pt = (typeof points.y)[number];
+              <Svg width={chartScrollWidth} height={chartHeight}>
+                {horizontalGridValues.map((value) => (
+                  <SvgLine
+                    key={`h-${value}`}
+                    x1={plotLeft}
+                    y1={getY(value)}
+                    x2={plotRight}
+                    y2={getY(value)}
+                    stroke={value === 0 ? palette.overlay20 : palette.overlay10}
+                    strokeWidth={1}
+                  />
+                ))}
 
-                  // Split into color segments based on sign of cumulative +/-,
-                  // sharing the boundary point between adjacent segments so the
-                  // line stays connected through zero crossings.
-                  const segments: { pts: Pt[]; color: string }[] = [];
+                {visibleScorePositions.map((item) => (
+                  <SvgLine
+                    key={`v-${item.score}-${item.eventIndex}`}
+                    x1={item.x}
+                    y1={plotTop}
+                    x2={item.x}
+                    y2={plotBottom}
+                    stroke={palette.overlay10}
+                    strokeWidth={1}
+                  />
+                ))}
 
-                  for (let i = 0; i < points.y.length; i++) {
-                    const dataY = chartData[i]?.y ?? 0;
-                    let color: string;
-                    if (dataY > 0) {
-                      color = palette.success;
-                    } else if (dataY < 0) {
-                      color = palette.danger;
-                    } else {
-                      // y === 0: inherit the previous segment's color so crossings
-                      // read as continuations of the prior trend, not a third state.
-                      // Falls back to accent only for the opening Start point.
-                      color = segments[segments.length - 1]?.color ?? palette.accent;
-                    }
+                {lineSegments.map((segment, index) => (
+                  <Polyline
+                    key={`segment-${index}`}
+                    points={buildPolylinePoints(segment.points)}
+                    fill="none"
+                    stroke={segment.color}
+                    strokeWidth={strokeWidth}
+                    strokeLinejoin="round"
+                    strokeLinecap="round"
+                  />
+                ))}
 
-                    const last = segments[segments.length - 1];
-                    if (!last || last.color !== color) {
-                      // New segment — share the previous point so segments connect
-                      const newPts: Pt[] = last ? [points.y[i - 1], points.y[i]] : [points.y[i]];
-                      segments.push({ pts: newPts, color });
-                    } else {
-                      last.pts.push(points.y[i]);
-                    }
-                  }
+                {visibleEventPoints.map((point, index) => {
+                  const isPositive = isPositiveImpactEvent(point.description);
+                  const dotColor = isPositive ? palette.success : palette.danger;
+                  const abbrev = eventAbbrev(point.description);
+                  const labelY = isPositive
+                    ? point.y - labelAboveOffset
+                    : point.y + labelBelowOffset;
 
                   return (
-                    <>
-                      {segments.map((seg, i) => (
-                        <Line
-                          key={i}
-                          points={seg.pts}
-                          color={seg.color}
-                          strokeWidth={strokeWidth}
-                          curveType="linear"
-                        />
-                      ))}
-                      {/* Dots + letter labels at each data point */}
-                      {points.y.map((point, i) => {
-                        // Skip the Start marker (index 0) — End is no longer in chartData
-                        if (i === 0) return null;
-                        if (point.x == null || point.y == null) return null;
-                        const isPositive = isPositiveImpactEvent(chartData[i]?.description);
-                        const dotColor = isPositive ? palette.success : palette.danger;
-                        const abbrev = eventAbbrev(chartData[i]?.description);
-                        // Place label above dot for positive events, below for negative
-                        const labelY = isPositive
-                          ? point.y - labelAboveOffset
-                          : point.y + labelBelowOffset;
-                        const labelX =
-                          point.x - labelFontSize * 0.35 * Math.max(abbrev?.length ?? 1, 1);
-                        return (
-                          <React.Fragment key={i}>
-                            <Circle cx={point.x} cy={point.y} r={dotRadius} color={dotColor} />
-                            {abbrev && labelFont && (
-                              <SkiaText
-                                x={labelX}
-                                y={labelY}
-                                text={abbrev}
-                                font={labelFont}
-                                color={dotColor}
-                              />
-                            )}
-                          </React.Fragment>
-                        );
-                      })}
-                    </>
+                    <React.Fragment key={`point-${index}-${point.x}`}>
+                      <SvgCircle cx={point.x} cy={point.y} r={dotRadius} fill={dotColor} />
+                      {abbrev ? (
+                        <SvgText
+                          x={point.x}
+                          y={labelY}
+                          fill={dotColor}
+                          fontSize={labelFontSize}
+                          fontWeight="700"
+                          fontFamily={FONT_FAMILY}
+                          textAnchor="middle">
+                          {abbrev}
+                        </SvgText>
+                      ) : null}
+                    </React.Fragment>
                   );
-                }}
-              </CartesianChart>
+                })}
+              </Svg>
             </View>
 
             {/* X-Axis Score Labels — scrolls with the chart */}
-            {(() => {
-              // Unique scores keyed by score string (skip Start/End)
-              const scorePositions: { score: string; eventIndex: number }[] = [];
-              data.forEach((d) => {
-                if (
-                  d.score &&
-                  d.description !== 'Start' &&
-                  d.description !== 'End' &&
-                  !scorePositions.some((s) => s.score === d.score)
-                ) {
-                  scorePositions.push({ score: d.score, eventIndex: d.eventIndex });
-                }
-              });
-
-              const minIdx = chartData[0]?.x ?? 0;
-              const maxIdx = chartData[chartData.length - 1]?.x ?? 1;
-              const range = maxIdx - minIdx || 1;
-              const drawableWidth = chartScrollWidth - domainPadLeft - domainPadRight;
-
-              const LABEL_GAP = 4; // minimum gap between adjacent labels
-              let lastLabelRight = -Infinity;
-
-              return (
-                <View style={styles.scoreLabelsPositioned}>
-                  {scorePositions.map((item, i) => {
-                    // Pixel position matching the chart's x-axis layout
-                    const px =
-                      domainPadLeft +
-                      ((item.eventIndex - minIdx) / range) * drawableWidth -
-                      labelWidth / 2; // center label on event
-                    // Skip if this label overlaps the previous rendered one
-                    if (px < lastLabelRight + LABEL_GAP) return null;
-                    lastLabelRight = px + labelWidth;
-                    return (
-                      <View key={i} style={[styles.scoreLabelWrapper, { left: px }]}>
-                        <Text
-                          numberOfLines={1}
-                          style={[styles.scoreText, { color: palette.textMuted }]}>
-                          {item.score}
-                        </Text>
-                      </View>
-                    );
-                  })}
+            <View style={styles.scoreLabelsPositioned}>
+              {visibleScorePositions.map((item) => (
+                <View
+                  key={`${item.score}-${item.eventIndex}`}
+                  style={[styles.scoreLabelWrapper, { left: item.x - labelWidth / 2 }]}>
+                  <Text numberOfLines={1} style={[styles.scoreText, { color: palette.textMuted }]}>
+                    {item.score}
+                  </Text>
                 </View>
-              );
-            })()}
+              ))}
+            </View>
           </View>
         </ScrollView>
       </View>
@@ -376,6 +473,7 @@ function createStyles(
   chartHeight: number,
   yAxisWidth: number,
   labelWidth: number,
+  axisLabelHeight: number,
 ) {
   return StyleSheet.create({
     container: {
@@ -410,9 +508,13 @@ function createStyles(
     yAxis: {
       width: yAxisWidth,
       height: chartHeight,
-      justifyContent: 'space-between',
-      alignItems: 'flex-end',
-      paddingRight: scaleBySizeClass(4, sizeClass),
+      position: 'relative',
+    },
+    axisLabelSlot: {
+      position: 'absolute',
+      right: scaleBySizeClass(4, sizeClass),
+      height: axisLabelHeight,
+      justifyContent: 'center',
     },
     chartScroll: {
       flex: 1,
@@ -420,6 +522,9 @@ function createStyles(
     axisLabel: {
       fontSize: scaleBySizeClass(10, sizeClass),
       fontWeight: '600',
+      lineHeight: axisLabelHeight,
+      textAlign: 'right',
+      includeFontPadding: false,
     },
     legend: {
       flexDirection: 'row',
