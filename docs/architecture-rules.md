@@ -12,6 +12,7 @@
 ## Data Integrity Rules
 
 - Player names must be unique **case-insensitively** across the roster
+- Do not allow a player who already appeared in the current game's `pointLines` or attributed stat events to be marked inactive
 - Before deleting a player, check for stats in BOTH current game `events` AND all `savedGames`
 - When adding new persisted data, consider adding `schemaVersion` for future migrations
 

@@ -3,6 +3,7 @@ import {
   computePlayingTime,
   formatPlayingTime,
   getLatestLineForPoint,
+  getRecentLines,
   groupPlayersByGenderRole,
   sortByPointsPlayed,
 } from '../lineUtils';
@@ -154,7 +155,9 @@ describe('computePlayingTime', () => {
 
 describe('getLatestLineForPoint', () => {
   it('returns an empty array when the point has no records', () => {
-    const pointLines: PointLineRecord[] = [{ pointNumber: 2, playerIds: ['a', 'b'], timestamp: 1000 }];
+    const pointLines: PointLineRecord[] = [
+      { pointNumber: 2, playerIds: ['a', 'b'], timestamp: 1000 },
+    ];
 
     expect(getLatestLineForPoint(pointLines, 1)).toEqual([]);
   });
@@ -170,12 +173,72 @@ describe('getLatestLineForPoint', () => {
   });
 
   it('returns a copy instead of the original playerIds array', () => {
-    const pointLines: PointLineRecord[] = [{ pointNumber: 1, playerIds: ['a', 'b'], timestamp: 1000 }];
+    const pointLines: PointLineRecord[] = [
+      { pointNumber: 1, playerIds: ['a', 'b'], timestamp: 1000 },
+    ];
 
     const latestLine = getLatestLineForPoint(pointLines, 1);
     latestLine.push('c');
 
     expect(pointLines[0]?.playerIds).toEqual(['a', 'b']);
+  });
+});
+
+describe('getRecentLines', () => {
+  it('returns the most recent distinct completed lines, excluding presets', () => {
+    const pointLines: PointLineRecord[] = [
+      { pointNumber: 1, playerIds: ['a', 'b', 'c'], timestamp: 1000 },
+      { pointNumber: 2, playerIds: ['d', 'e', 'f'], timestamp: 2000 },
+      { pointNumber: 3, playerIds: ['f', 'e', 'd'], timestamp: 3000 },
+      { pointNumber: 4, playerIds: ['g', 'h', 'i'], timestamp: 4000 },
+      { pointNumber: 5, playerIds: ['j', 'k', 'l'], timestamp: 5000 },
+      { pointNumber: 6, playerIds: ['m', 'n', 'o'], timestamp: 6000 },
+      { pointNumber: 7, playerIds: ['p', 'q', 'r'], timestamp: 7000 },
+    ];
+
+    const recentLines = getRecentLines(pointLines, 7, [
+      ['a', 'b', 'c'],
+      ['g', 'h', 'i'],
+    ]);
+
+    expect(recentLines).toEqual([
+      { pointNumber: 6, playerIds: ['m', 'n', 'o'] },
+      { pointNumber: 5, playerIds: ['j', 'k', 'l'] },
+      { pointNumber: 3, playerIds: ['f', 'e', 'd'] },
+    ]);
+  });
+
+  it('uses the latest record for a point when there were substitutions', () => {
+    const pointLines: PointLineRecord[] = [
+      { pointNumber: 1, playerIds: ['a', 'b', 'c'], timestamp: 1000 },
+      { pointNumber: 2, playerIds: ['d', 'e', 'f'], timestamp: 2000 },
+      { pointNumber: 2, playerIds: ['d', 'e', 'g'], timestamp: 2500, isSubstitution: true },
+      { pointNumber: 3, playerIds: ['h', 'i', 'j'], timestamp: 3000 },
+    ];
+
+    const recentLines = getRecentLines(pointLines, 4, []);
+
+    expect(recentLines).toEqual([
+      { pointNumber: 3, playerIds: ['h', 'i', 'j'] },
+      { pointNumber: 2, playerIds: ['d', 'e', 'g'] },
+      { pointNumber: 1, playerIds: ['a', 'b', 'c'] },
+    ]);
+  });
+
+  it('ignores the current point and limits results to maxCount', () => {
+    const pointLines: PointLineRecord[] = [
+      { pointNumber: 1, playerIds: ['a', 'b', 'c'], timestamp: 1000 },
+      { pointNumber: 2, playerIds: ['d', 'e', 'f'], timestamp: 2000 },
+      { pointNumber: 3, playerIds: ['g', 'h', 'i'], timestamp: 3000 },
+      { pointNumber: 4, playerIds: ['j', 'k', 'l'], timestamp: 4000 },
+    ];
+
+    const recentLines = getRecentLines(pointLines, 4, [], 2);
+
+    expect(recentLines).toEqual([
+      { pointNumber: 3, playerIds: ['g', 'h', 'i'] },
+      { pointNumber: 2, playerIds: ['d', 'e', 'f'] },
+    ]);
   });
 });
 

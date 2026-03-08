@@ -1,4 +1,5 @@
 import { ModalPlayerGrid } from '@/components/lines/ModalPlayerGrid';
+import { PresetPickerModal } from '@/components/lines/PresetPickerModal';
 import { useTheme } from '@/context/ThemeContext';
 import { useIsGameActive } from '@/hooks/useIsGameActive';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
@@ -9,13 +10,14 @@ import {
   getSequenceNumber,
 } from '@/lib/genderRatioUtils';
 import { computePointByPointEvents } from '@/lib/timelineUtils';
+import { getRecentLines, RecentLine } from '@/lib/lineUtils';
 import { useGameStore } from '@/store/gameStore';
 import { useLinePresetsStore } from '@/store/linePresetsStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router, useLocalSearchParams } from 'expo-router';
 import React, { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 type PointOutcome = {
   label: string;
@@ -74,10 +76,17 @@ export default function LineEditor() {
     (state) => state.setLineConfirmedForNextPoint,
   );
   const presets = allPresets.filter((p) => p.teamId === (currentTeam?.id ?? ''));
+  const recentLines: RecentLine[] = getRecentLines(
+    pointLines,
+    currentPoint,
+    presets.map((p) => p.playerIds),
+  );
 
   // Local selection state
   const [selectedIds, setSelectedIds] = useState<string[]>(currentLine);
   const [selectedPresetId, setSelectedPresetId] = useState<string | null>(null);
+  const [selectedRecentPointNumber, setSelectedRecentPointNumber] = useState<number | null>(null);
+  const [showLinePicker, setShowLinePicker] = useState(false);
   const [subType, setSubType] = useState<'injury' | 'replacement'>('injury');
   const [showSubTypeHint, setShowSubTypeHint] = useState(false);
 
@@ -110,6 +119,7 @@ export default function LineEditor() {
 
   const handleTogglePlayer = (playerId: string) => {
     setSelectedPresetId(null);
+    setSelectedRecentPointNumber(null);
     // No sortKey change - manual selection doesn't trigger re-sort
     setSelectedIds((prev) => {
       if (prev.includes(playerId)) {
@@ -129,12 +139,25 @@ export default function LineEditor() {
       return;
     }
     setSelectedPresetId(preset.id);
+    setSelectedRecentPointNumber(null);
     setSelectedIds(preset.playerIds);
+  };
+
+  const handleSelectRecentLine = (recent: RecentLine) => {
+    if (selectedRecentPointNumber === recent.pointNumber) {
+      setSelectedRecentPointNumber(null);
+      setSelectedIds([]);
+      return;
+    }
+    setSelectedRecentPointNumber(recent.pointNumber);
+    setSelectedPresetId(null);
+    setSelectedIds(recent.playerIds);
   };
 
   const handleClearSelection = () => {
     setSelectedIds([]);
     setSelectedPresetId(null);
+    setSelectedRecentPointNumber(null);
   };
 
   const handleDone = () => {
@@ -298,79 +321,51 @@ export default function LineEditor() {
           </View>
         )}
 
-        {/* Presets + Sort Row */}
+        {/* Load Line + Clear Row */}
         <View style={styles.presetsRow}>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.presetsScrollContent}>
-            {presets.map((preset) => (
-              <Pressable
-                key={preset.id}
-                onPress={() => handleSelectPreset(preset)}
-                style={({ pressed }) => [
-                  styles.presetChip,
-                  {
-                    backgroundColor:
-                      selectedPresetId === preset.id ? palette.accent : palette.overlay08,
-                    borderColor:
-                      selectedPresetId === preset.id ? palette.accent : palette.overlay15,
-                  },
-                  pressed && { opacity: 0.8 },
-                ]}>
-                {selectedPresetId === preset.id && (
-                  <MaterialCommunityIcons
-                    name="check"
-                    size={scaleBySizeClass(10, sizeClass)}
-                    color={palette.textOnAccent}
-                  />
-                )}
-                <Text
-                  style={[
-                    styles.presetChipText,
-                    {
-                      color:
-                        selectedPresetId === preset.id ? palette.textOnAccent : palette.textInverse,
-                    },
-                  ]}
-                  numberOfLines={1}>
-                  {preset.name}
-                </Text>
-              </Pressable>
-            ))}
-            {presets.length === 0 && (
-              <Pressable
-                onPress={() => router.push('/LinePresetEditor')}
-                style={({ pressed }) => [
-                  styles.presetChip,
-                  { borderColor: palette.overlay15, backgroundColor: palette.overlay08 },
-                  pressed && { opacity: 0.8 },
-                ]}>
-                <MaterialCommunityIcons
-                  name="plus"
-                  size={scaleBySizeClass(10, sizeClass)}
-                  color={palette.textMuted}
-                />
-                <Text style={[styles.presetChipText, { color: palette.textMuted }]}>Preset</Text>
-              </Pressable>
-            )}
-            {presets.length > 0 && (
-              <Pressable
-                onPress={() => router.push('/LinePresetEditor')}
-                style={({ pressed }) => [
-                  styles.presetChip,
-                  styles.editPresetsChip,
-                  { borderColor: palette.overlay15, backgroundColor: palette.overlay08 },
-                  pressed && { opacity: 0.8 },
-                ]}>
-                <MaterialCommunityIcons
-                  name="pencil"
-                  size={scaleBySizeClass(10, sizeClass)}
-                  color={palette.textMuted}
-                />
-              </Pressable>
-            )}
-          </ScrollView>
+          <Pressable
+            onPress={() => setShowLinePicker(true)}
+            style={({ pressed }) => [
+              styles.loadLineBtn,
+              {
+                backgroundColor:
+                  selectedPresetId !== null || selectedRecentPointNumber !== null
+                    ? palette.accent
+                    : palette.overlay08,
+                borderColor:
+                  selectedPresetId !== null || selectedRecentPointNumber !== null
+                    ? palette.accent
+                    : palette.overlay15,
+              },
+              pressed && { opacity: 0.8 },
+            ]}>
+            <MaterialCommunityIcons
+              name="layers-outline"
+              size={scaleBySizeClass(13, sizeClass)}
+              color={
+                selectedPresetId !== null || selectedRecentPointNumber !== null
+                  ? palette.textOnAccent
+                  : palette.textMuted
+              }
+            />
+            <Text
+              style={[
+                styles.loadLineBtnText,
+                {
+                  color:
+                    selectedPresetId !== null || selectedRecentPointNumber !== null
+                      ? palette.textOnAccent
+                      : palette.textMuted,
+                },
+              ]}
+              numberOfLines={1}>
+              {selectedPresetId !== null
+                ? (presets.find((p) => p.id === selectedPresetId)?.name ?? 'Preset')
+                : selectedRecentPointNumber !== null
+                  ? `Pt ${selectedRecentPointNumber}`
+                  : 'Load Line'}
+            </Text>
+          </Pressable>
           {selectedIds.length > 0 && (
             <Pressable
               onPress={handleClearSelection}
@@ -387,6 +382,28 @@ export default function LineEditor() {
             </Pressable>
           )}
         </View>
+
+        <PresetPickerModal
+          visible={showLinePicker}
+          onClose={() => setShowLinePicker(false)}
+          presets={presets}
+          selectedPresetId={selectedPresetId}
+          onSelectPreset={(preset) => {
+            handleSelectPreset(preset);
+            setShowLinePicker(false);
+          }}
+          onEditPresets={() => {
+            setShowLinePicker(false);
+            router.push('/LinePresetEditor');
+          }}
+          recentLines={recentLines}
+          selectedRecentPointNumber={selectedRecentPointNumber}
+          onSelectRecentLine={(recent) => {
+            handleSelectRecentLine(recent);
+            setShowLinePicker(false);
+          }}
+          roster={activePlayers}
+        />
 
         {isEditLineMode && hasExistingLine && (
           <View style={styles.subTypeSection}>
@@ -641,29 +658,25 @@ function createStyles(sizeClass: SizeClass) {
       fontSize: scaleBySizeClass(11, sizeClass),
       fontStyle: 'italic',
     },
-    presetsScrollContent: {
-      gap: 6,
-    },
-    presetChip: {
+    loadLineBtn: {
       flexDirection: 'row',
       alignItems: 'center',
-      paddingVertical: 4,
-      paddingHorizontal: 8,
+      gap: 5,
+      paddingVertical: 5,
+      paddingHorizontal: 10,
       borderRadius: 8,
       borderWidth: 1,
-      gap: 3,
+      maxWidth: 160,
     },
-    editPresetsChip: {
-      paddingHorizontal: 7,
-    },
-    presetChipText: {
-      fontSize: scaleBySizeClass(11, sizeClass),
+    loadLineBtnText: {
+      fontSize: scaleBySizeClass(12, sizeClass),
       fontWeight: '600',
+      flexShrink: 1,
     },
     sortBtn: {
-      paddingVertical: 4,
-      paddingHorizontal: 6,
-      borderRadius: 6,
+      paddingVertical: 5,
+      paddingHorizontal: 10,
+      borderRadius: 8,
       borderWidth: 1,
     },
     nextPointLabel: {

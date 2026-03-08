@@ -1,3 +1,4 @@
+import { useAlert } from '@/components/ui/AlertProvider';
 import { useTheme } from '@/context/ThemeContext';
 import { MODAL_MAX_WIDTH_FORM } from '@/lib/constants';
 import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
@@ -12,9 +13,11 @@ import { Pressable, StyleSheet, Switch, Text, TextInput, View } from 'react-nati
 export default function EditPlayerModal() {
   const { playerId } = useLocalSearchParams<{ playerId: string }>();
   const { palette } = useTheme();
+  const { showAlert } = useAlert();
   const { sizeClass } = useLayout();
   const styles = createStyles(sizeClass);
-  const { currentTeam, setCurrentTeam, saveCurrentTeam, events, savedGames } = useGameStore();
+  const { currentTeam, setCurrentTeam, saveCurrentTeam, events, savedGames, updateRosterPlayer } =
+    useGameStore();
 
   const { removePlayerFromPresets } = useLinePresetsStore();
 
@@ -48,24 +51,31 @@ export default function EditPlayerModal() {
     const trimmedName = name.trim();
     if (!trimmedName || nameExists) return;
 
-    // If player is becoming inactive, remove from presets
-    if (player.isActive && !isActive) {
-      removePlayerFromPresets(player.id);
+    const updateResult = updateRosterPlayer(player.id, { isActive, matchingType, role });
+    if (updateResult === 'blocked-current-game-participation') {
+      showAlert({
+        title: 'Player Already Participated',
+        message:
+          'Players who already appeared in the current game cannot be set inactive until the game is over.',
+      });
+      return;
     }
+    if (updateResult !== 'updated') return;
 
-    const updatedRoster = roster.map((p) =>
+    const latestTeam = useGameStore.getState().currentTeam;
+    if (!latestTeam) return;
+
+    const updatedRoster = latestTeam.roster.map((p) =>
       p.id === player.id
         ? {
             ...p,
             name: trimmedName,
-            isActive,
-            matchingType,
-            role,
           }
         : p,
     );
-    setCurrentTeam({ ...currentTeam, roster: updatedRoster });
-    await saveCurrentTeam();
+    const updatedTeam = { ...latestTeam, roster: updatedRoster };
+    setCurrentTeam(updatedTeam);
+    await saveCurrentTeam(updatedTeam);
     router.dismissTo('/EditRoster');
   };
 

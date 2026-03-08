@@ -17,6 +17,7 @@ export default function TimeoutModal() {
     formattedTime,
     isRunning,
     isComplete,
+    isOvertime,
     toggleTimer,
     adjustTimer,
     handleContinue,
@@ -98,7 +99,13 @@ export default function TimeoutModal() {
                 <Text
                   style={[
                     styles.timerValueCompact,
-                    { color: isComplete ? palette.success : palette.textInverse },
+                    {
+                      color: isOvertime
+                        ? palette.danger
+                        : isComplete
+                          ? palette.success
+                          : palette.textInverse,
+                    },
                   ]}>
                   {formattedTime}
                 </Text>

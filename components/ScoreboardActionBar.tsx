@@ -64,7 +64,7 @@ export function ScoreboardActionBar({
     pendingTimeoutModal,
   } = useGameStore();
 
-  const { formattedTime, isRunning, isComplete, toggleTimer, handleContinue } = useTimeoutTimer();
+  const { formattedTime, isRunning, isOvertime, toggleTimer, handleContinue } = useTimeoutTimer();
 
   const showResumePoint =
     pointTimerEnabled &&
@@ -271,19 +271,23 @@ export function ScoreboardActionBar({
           />
         </Pressable>
 
-        {/* Timeout UI - shows when timeout is active and timer still running */}
-        {pendingTimeoutModal && !isComplete ? (
+        {/* Timeout UI - shows when timeout is active and timer is running (including overtime) */}
+        {pendingTimeoutModal && isRunning ? (
           <View style={styles.timeoutContainer}>
             <Pressable
               style={({ pressed }) => [styles.timeoutPlayPause, pressed && styles.buttonPressed]}
               onPress={toggleTimer}>
               <MaterialCommunityIcons
-                name={isRunning ? 'pause' : 'play'}
+                name="pause"
                 size={timeoutControlIconSize}
                 color={palette.accent}
               />
             </Pressable>
-            <Text style={[styles.timeoutTime, { color: palette.textInverse }]}>
+            <Text
+              style={[
+                styles.timeoutTime,
+                { color: isOvertime ? palette.danger : palette.textInverse },
+              ]}>
               {formattedTime}
             </Text>
           </View>
@@ -301,14 +305,16 @@ export function ScoreboardActionBar({
               <Text style={[styles.startPointText, { color: palette.accent }]}>START POINT</Text>
             )}
           </Pressable>
-        ) : showResumePoint || (pendingTimeoutModal && isComplete) ? (
-          /* Resume Point Button - shows when timer is paused or timeout complete */
+        ) : showResumePoint || (pendingTimeoutModal && !isRunning) ? (
+          /* Resume Point Button - shows when point timer is paused or timeout timer is paused */
           <Pressable
             style={({ pressed }) => [styles.startPointButton, pressed && styles.buttonPressed]}
             onPress={pendingTimeoutModal ? handleContinue : togglePointTimerPause}>
             <MaterialCommunityIcons name="play" size={startIconSize} color={palette.success} />
             {!isVertical && (
-              <Text style={[styles.startPointText, { color: palette.success }]}>RESUME POINT</Text>
+              <Text style={[styles.startPointText, { color: palette.success }]}>
+                {pendingTimeoutModal ? 'END TIMEOUT' : 'RESUME POINT'}
+              </Text>
             )}
           </Pressable>
         ) : (

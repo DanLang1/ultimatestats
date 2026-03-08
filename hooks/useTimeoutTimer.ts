@@ -1,4 +1,5 @@
 import { useGameStore } from '@/store/gameStore';
+import { formatTimerSeconds } from '@/lib/utils';
 import { useEffect } from 'react';
 
 const MIN_SECONDS = 0;
@@ -29,17 +30,12 @@ export function useTimeoutTimer() {
 
     const interval = setInterval(() => {
       const now = Date.now();
-      const remaining = Math.max(0, Math.ceil((endTime - now) / 1000));
+      const remaining = Math.ceil((endTime - now) / 1000);
       setTimeLeft(remaining);
-
-      // Stop when timer reaches 0
-      if (remaining === 0) {
-        setEndTime(null);
-      }
     }, 500);
 
     return () => clearInterval(interval);
-  }, [isRunning, endTime, setTimeLeft, setEndTime]);
+  }, [isRunning, endTime, setTimeLeft]);
 
   const toggleTimer = () => {
     if (!isRunning) {
@@ -50,7 +46,7 @@ export function useTimeoutTimer() {
       // Pause: capture remaining time and clear end time
       if (endTime) {
         const now = Date.now();
-        const remaining = Math.max(0, Math.ceil((endTime - now) / 1000));
+        const remaining = Math.ceil((endTime - now) / 1000);
         setTimeLeft(remaining);
       }
       setEndTime(null);
@@ -64,7 +60,7 @@ export function useTimeoutTimer() {
     // If timer is running, update end time to reflect new duration
     if (endTime) {
       const now = Date.now();
-      const currentRemaining = Math.max(0, Math.ceil((endTime - now) / 1000));
+      const currentRemaining = Math.ceil((endTime - now) / 1000);
       const diff = newTime - currentRemaining;
       setEndTime(endTime + diff * 1000);
     }
@@ -78,18 +74,12 @@ export function useTimeoutTimer() {
     clearTimeoutModal();
   };
 
-  // Format time as M:SS
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
-
   return {
     timeLeft,
     isRunning,
-    isComplete: timeLeft === 0,
-    formattedTime: formatTime(timeLeft),
+    isComplete: timeLeft <= 0,
+    isOvertime: timeLeft < 0,
+    formattedTime: formatTimerSeconds(timeLeft),
     toggleTimer,
     adjustTimer,
     handleContinue,

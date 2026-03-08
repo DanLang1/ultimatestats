@@ -32,6 +32,7 @@ export default function HalftimeModal() {
     formattedTime,
     isRunning,
     isComplete,
+    isOvertime,
     toggleTimer,
     adjustTimer,
     handleContinue,
@@ -165,7 +166,13 @@ export default function HalftimeModal() {
                   <Text
                     style={[
                       styles.timerValueCompact,
-                      { color: isComplete ? palette.success : palette.textInverse },
+                      {
+                        color: isOvertime
+                          ? palette.danger
+                          : isComplete
+                            ? palette.success
+                            : palette.textInverse,
+                      },
                     ]}>
                     {formattedTime}
                   </Text>

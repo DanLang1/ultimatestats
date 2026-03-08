@@ -1,4 +1,5 @@
-import { MatchingType, Player, SavedTeam } from './storage/types';
+import { GameEvent } from '@/store/gameStore.types';
+import { MatchingType, Player, PointLineRecord, SavedTeam } from './storage/types';
 
 /** Special ID for recording plays when the player is unknown */
 export const UNKNOWN_PLAYER_ID = 'UNKNOWN_PLAYER';
@@ -67,6 +68,32 @@ export function getPlayerByName(roster: Player[], name: string): Player | undefi
 export function hasPlayerWithName(roster: Player[], name: string): boolean {
   const searchName = name.trim().toLowerCase();
   return roster.some((p) => p.name.toLowerCase() === searchName);
+}
+
+/**
+ * Returns true if the player has already participated in the current game.
+ * Participation is inferred from recorded point lines and directly attributed stat events.
+ */
+export function hasPlayerParticipatedInCurrentGame(
+  playerId: string,
+  events: GameEvent[],
+  pointLines: PointLineRecord[],
+): boolean {
+  if (pointLines.some((record) => record.playerIds.includes(playerId))) {
+    return true;
+  }
+
+  return events.some((event) => {
+    if (event.type === 'goal') {
+      return event.goalPlayerId === playerId || event.assistPlayerId === playerId;
+    }
+
+    if (event.type === 'turnover') {
+      return event.playerId === playerId || event.player2Id === playerId;
+    }
+
+    return false;
+  });
 }
 
 /**

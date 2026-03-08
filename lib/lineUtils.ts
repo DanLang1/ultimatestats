@@ -139,6 +139,44 @@ export function getLatestLineForPoint(
   return latestLineRecord ? [...latestLineRecord.playerIds] : [];
 }
 
+export interface RecentLine {
+  pointNumber: number;
+  playerIds: string[];
+}
+
+/**
+ * Returns the last N distinct lines played in the game, for quick re-selection.
+ * - Only considers completed points (pointNumber < currentPoint)
+ * - Deduplicates by player set (same players = same line, regardless of order)
+ * - Skips lines that exactly match an existing preset (to avoid redundancy)
+ */
+export function getRecentLines(
+  pointLines: PointLineRecord[],
+  currentPoint: number,
+  presetPlayerIdSets: string[][],
+  maxCount = 3,
+): RecentLine[] {
+  const completedPointNumbers = [
+    ...new Set(pointLines.filter((r) => r.pointNumber < currentPoint).map((r) => r.pointNumber)),
+  ].sort((a, b) => b - a); // most recent first
+
+  const presetKeys = new Set(presetPlayerIdSets.map((ids) => [...ids].sort().join(',')));
+  const seen = new Set<string>();
+  const result: RecentLine[] = [];
+
+  for (const pointNumber of completedPointNumbers) {
+    if (result.length >= maxCount) break;
+    const playerIds = getLatestLineForPoint(pointLines, pointNumber);
+    if (playerIds.length === 0) continue;
+    const key = [...playerIds].sort().join(',');
+    if (seen.has(key) || presetKeys.has(key)) continue;
+    seen.add(key);
+    result.push({ pointNumber, playerIds });
+  }
+
+  return result;
+}
+
 /**
  * Sorts players by points played in ascending order (least played first).
  * Players with equal playing time are sorted alphabetically by name.

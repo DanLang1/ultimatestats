@@ -221,20 +221,28 @@ export default function EditRosterScreen() {
   };
 
   const handleSetPlayerActive = async (playerId: string, isActive: boolean) => {
-    const didUpdate = updateRosterPlayer(playerId, { isActive });
-    if (!didUpdate) return;
+    const updateResult = updateRosterPlayer(playerId, { isActive });
+    if (updateResult === 'blocked-current-game-participation') {
+      showAlert({
+        title: 'Player Already Participated',
+        message:
+          'Players who already appeared in the current game cannot be set inactive until the game is over.',
+      });
+      return;
+    }
+    if (updateResult !== 'updated') return;
     await saveCurrentTeam();
   };
 
   const handleSetPlayerMatching = async (playerId: string, matchingType: MatchingType | null) => {
-    const didUpdate = updateRosterPlayer(playerId, { matchingType });
-    if (!didUpdate) return;
+    const updateResult = updateRosterPlayer(playerId, { matchingType });
+    if (updateResult !== 'updated') return;
     await saveCurrentTeam();
   };
 
   const handleSetPlayerRole = async (playerId: string, role: Player['role']) => {
-    const didUpdate = updateRosterPlayer(playerId, { role });
-    if (!didUpdate) return;
+    const updateResult = updateRosterPlayer(playerId, { role });
+    if (updateResult !== 'updated') return;
     await saveCurrentTeam();
   };
 

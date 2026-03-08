@@ -3,6 +3,10 @@ import { PointLineRecord, SavedGame, SavedTeam } from '@/lib/storage';
 import { MatchingType, PlayerRole } from '@/lib/storage/types';
 
 export type TurnoverType = 'block' | 'throwaway' | 'drop' | 'fiftyfifty';
+export type UpdateRosterPlayerResult =
+  | 'updated'
+  | 'blocked-current-game-participation'
+  | 'not-found';
 
 // Unified event model - all game events in chronological order
 // NOTE: gameId is optional because events are created during live gameplay before the game is saved.
@@ -156,7 +160,7 @@ export interface GameState {
       matchingType?: MatchingType | null;
       role?: PlayerRole | null;
     },
-  ) => boolean;
+  ) => UpdateRosterPlayerResult;
   addGoalEvent: (event: { goalPlayerId: string | null; assistPlayerId: string | null }) => void;
   cancelPendingGoal: () => void;
   clearRoster: () => void;

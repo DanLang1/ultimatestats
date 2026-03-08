@@ -1,7 +1,7 @@
 import { DEFAULT_HALFTIME_BREAK_SECONDS, DEFAULT_TIMEOUT_SECONDS } from '@/lib/constants';
 import { checkGameOver } from '@/lib/gameUtils';
 import { hasReachedHalftime } from '@/lib/halftimeUtils';
-import { UNKNOWN_PLAYER_ID } from '@/lib/playerUtils';
+import { hasPlayerParticipatedInCurrentGame, UNKNOWN_PLAYER_ID } from '@/lib/playerUtils';
 import { CURRENT_SCHEMA_VERSION, SavedGame, SavedTeam, storage } from '@/lib/storage';
 import { getLatestLineForPoint } from '@/lib/lineUtils';
 import { deriveTimeoutState } from '@/lib/timeoutUtils';
@@ -12,7 +12,13 @@ import { current } from 'immer';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
-import { EventToastSignal, GameState, TurnoverEvent, TurnoverType } from './gameStore.types';
+import {
+  EventToastSignal,
+  GameState,
+  TurnoverEvent,
+  TurnoverType,
+  UpdateRosterPlayerResult,
+} from './gameStore.types';
 import { useLinePresetsStore } from './linePresetsStore';
 import { useSettingsStore } from './settingsStore';
 
@@ -589,14 +595,23 @@ export const useGameStore = create<GameState>()(
         },
 
         updateRosterPlayer: (playerId, updates) => {
-          let playerExists = false;
+          let updateResult: UpdateRosterPlayerResult = 'not-found';
           let becameInactive = false;
 
           set((state: GameState) => {
             const player = state.currentTeam.roster.find((p) => p.id === playerId);
             if (!player) return;
 
-            playerExists = true;
+            if (
+              updates.isActive === false &&
+              player.isActive !== false &&
+              hasPlayerParticipatedInCurrentGame(playerId, state.events, state.pointLines)
+            ) {
+              updateResult = 'blocked-current-game-participation';
+              return;
+            }
+
+            updateResult = 'updated';
             const wasActive = player.isActive;
 
             if (updates.isActive !== undefined) {
@@ -616,7 +631,7 @@ export const useGameStore = create<GameState>()(
             useLinePresetsStore.getState().removePlayerFromPresets(playerId);
           }
 
-          return playerExists;
+          return updateResult;
         },
 
         addGoalEvent: (event: { goalPlayerId: string | null; assistPlayerId: string | null }) =>
