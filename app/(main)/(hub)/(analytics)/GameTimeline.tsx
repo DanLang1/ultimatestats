@@ -92,6 +92,7 @@ export default function GameTimelineScreen() {
   );
   const hasData = pointEvents.length > 0;
   const canToggleSplits = gameData.timingEnabled;
+  const canEditTiming = gameData.timingEnabled;
   const hasLineupData = (gameData.pointLines?.length ?? 0) > 0;
 
   return (
@@ -212,32 +213,40 @@ export default function GameTimelineScreen() {
               },
             });
           }}
-          onEditPointDuration={(goalEventIndex, currentDurationMs) => {
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-            router.push({
-              pathname: '/EditDurationModal',
-              params: {
-                eventIndex: String(goalEventIndex),
-                gameId: params.gameId ?? 'current',
-                currentDurationMs: String(currentDurationMs ?? '0'),
-                editorType: 'point',
-                title: 'Edit Point Duration',
-              },
-            });
-          }}
-          onEditEventTime={(eventIndex, currentElapsedMs, eventType) => {
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-            router.push({
-              pathname: '/EditDurationModal',
-              params: {
-                eventIndex: String(eventIndex),
-                gameId: params.gameId ?? 'current',
-                currentDurationMs: String(currentElapsedMs ?? '0'),
-                editorType: 'event',
-                title: eventType === 'timeout' ? 'Edit Timeout Time' : 'Edit Event Time',
-              },
-            });
-          }}
+          onEditPointDuration={
+            canEditTiming
+              ? (goalEventIndex, currentDurationMs) => {
+                  Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                  router.push({
+                    pathname: '/EditDurationModal',
+                    params: {
+                      eventIndex: String(goalEventIndex),
+                      gameId: params.gameId ?? 'current',
+                      currentDurationMs: String(currentDurationMs ?? '0'),
+                      editorType: 'point',
+                      title: 'Edit Point Duration',
+                    },
+                  });
+                }
+              : undefined
+          }
+          onEditEventTime={
+            canEditTiming
+              ? (eventIndex, currentElapsedMs, eventType) => {
+                  Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                  router.push({
+                    pathname: '/EditDurationModal',
+                    params: {
+                      eventIndex: String(eventIndex),
+                      gameId: params.gameId ?? 'current',
+                      currentDurationMs: String(currentElapsedMs ?? '0'),
+                      editorType: 'event',
+                      title: eventType === 'timeout' ? 'Edit Timeout Time' : 'Edit Event Time',
+                    },
+                  });
+                }
+              : undefined
+          }
           currentPoint={isSavedGame ? undefined : currentPoint}
         />
       ) : (

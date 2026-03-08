@@ -10,7 +10,7 @@ The Point Timer feature allows users to record precise start times for each poin
 
 1.  **Enable**: Go to **Settings** and toggle **Point Timer** (requires "Track My Team Stats" to be enabled).
 2.  **Start Point**: A "START" button appears in the center of the game screen when a new point begins. Tap it when the pull is released or the point starts.
-3.  **View Timeline**: Turnovers and goals in the Game Timeline will automatically show accurate timing information. Use the local **Splits** toggle on the timeline screen to show/hide split times (for example `+32s`) above arrow separators. When timing is enabled, tap a timeline event row to edit its recorded time. Long press still opens event detail editing.
+3.  **View Timeline**: Turnovers and goals in the Game Timeline will automatically show accurate timing information. Use the local **Splits** toggle on the timeline screen to show/hide split times (for example `+32s`) above arrow separators. When timing data exists, tap a timeline event row to edit its recorded time. Long press still opens event detail editing.
 4.  **Match Status**: View and toggle the timer on the **Match Status** (Game Info) screen, which features a vertical display with a large timer and pause/play control.
 
 ## Data Model
@@ -80,3 +80,4 @@ This prioritization ensures that even if events are edited or re-ordered, the po
 - Validation prevents setting the point duration earlier than the latest timed turnover or timeout already recorded in that point, so event order remains chronological.
 - Individual turnover and timeout rows can also be retimed from the timeline. Those edits are constrained to stay between the previous and next timed events in the same point.
 - Clearing the duration is still allowed when you want the point treated as untimed.
+- Untimed games do not expose these timeline time editors. This prevents manual edits from accidentally creating timing-derived stats for games that were played without the point timer.

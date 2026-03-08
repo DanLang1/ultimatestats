@@ -83,7 +83,7 @@ export default function EventTimeline({
                 Long press event to edit type or player
               </Text>
             )}
-            {(onEditPointDuration || onEditEventTime) && (
+            {timingEnabled && (onEditPointDuration || onEditEventTime) && (
               <Text style={[styles.editHintText, { color: palette.textMuted }]}>
                 Tap event to edit time
               </Text>

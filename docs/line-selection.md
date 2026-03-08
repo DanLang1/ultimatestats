@@ -288,6 +288,8 @@ Both use a `Set` to collect all players who appeared in any `PointLineRecord` fo
 - A player subbed in mid-point also gets credit
 - If a line is **replaced** (correction), only the corrected players get credit because earlier records for that point are removed
 
+That same point-participant set is also used by timeline event editing. When a point has recorded line data, goal/assist/turnover player pickers are limited to players who appeared in that point. If line data is missing for the point, the editor falls back to the full roster.
+
 ### Undo and Point Lines
 
 When a goal is undone (`undoLastAction`) or a pending goal is canceled from stat entry:

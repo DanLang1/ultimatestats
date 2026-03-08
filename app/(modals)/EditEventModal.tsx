@@ -2,6 +2,7 @@ import { useAlert } from '@/components/ui/AlertProvider';
 import { PlayerChip } from '@/components/ui/PlayerChip';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { getAllPlayersByPoint } from '@/lib/lineUtils';
 import { getPlayerName } from '@/lib/playerUtils';
 import { useGameStore } from '@/store/gameStore';
 import { TurnoverType } from '@/store/gameStore.types';
@@ -44,6 +45,8 @@ export default function EditEventModal() {
 
   const {
     currentTeam,
+    events,
+    pointLines,
     savedGames,
     updateEvent,
     deleteEvent,
@@ -55,6 +58,8 @@ export default function EditEventModal() {
   const isSavedGame = params.gameId && params.gameId !== 'current';
   const savedGame = isSavedGame ? savedGames.find((g) => g.id === params.gameId) : null;
   const roster = savedGame?.team1.roster ?? currentTeam?.roster ?? [];
+  const activeEvents = savedGame?.events ?? events;
+  const activePointLines = savedGame?.pointLines ?? pointLines;
 
   // Sort roster alphabetically by name (matches StatEntrySheet pattern)
   const sortedRoster = [...roster].sort((a, b) => a.name.localeCompare(b.name));
@@ -86,6 +91,23 @@ export default function EditEventModal() {
     params.player2Id === 'null' ? null : (params.player2Id ?? null),
   );
   const [selectedSubtype, setSelectedSubtype] = useState<EditableTurnoverType>(getInitialSubtype);
+
+  const activeEvent = activeEvents[eventIndex];
+  const pointPlayersByPoint = getAllPlayersByPoint(activePointLines ?? []);
+  const selectedPlayerIds = new Set(
+    [selectedPlayerId, selectedPlayer2Id].filter((playerId): playerId is string => playerId !== null),
+  );
+  const pointPlayerIds = activeEvent?.pointNumber
+    ? pointPlayersByPoint.get(activeEvent.pointNumber)
+    : undefined;
+  const eligiblePlayerIds =
+    pointPlayerIds && pointPlayerIds.size > 0
+      ? new Set([...pointPlayerIds, ...selectedPlayerIds])
+      : null;
+  const selectableRoster =
+    eligiblePlayerIds === null
+      ? sortedRoster
+      : sortedRoster.filter((player) => eligiblePlayerIds.has(player.id));
 
   const originalSubtype = params.subtype as EditableTurnoverType;
   const originalTeam = params.originalTeam as 'team1' | 'team2';
@@ -363,7 +385,7 @@ export default function EditEventModal() {
                         }
                       }}
                     />
-                    {sortedRoster.map((player) => (
+                    {selectableRoster.map((player) => (
                       <PlayerChip
                         key={player.id}
                         name={player.name}
@@ -405,6 +427,25 @@ export default function EditEventModal() {
                   </Pressable>
                 </View>
 
+                {selectedPlayer2Id !== null && (
+                  <View
+                    style={[
+                      styles.throwerBadge,
+                      {
+                        backgroundColor: palette.successOverlay15,
+                        borderColor: palette.success,
+                        marginTop: 10,
+                      },
+                    ]}>
+                    <Text style={[styles.throwerBadgeLabel, { color: palette.success }]}>
+                      RECEIVER
+                    </Text>
+                    <Text style={[styles.throwerBadgeValue, { color: palette.success }]}>
+                      {getPlayerName(roster, selectedPlayer2Id) ?? 'Unknown'}
+                    </Text>
+                  </View>
+                )}
+
                 <Text
                   style={[styles.sectionLabel, { color: palette.textSecondary, marginTop: 16 }]}>
                   STEP 2: RECEIVER (Who dropped it?)
@@ -415,7 +456,7 @@ export default function EditEventModal() {
                     selected={selectedPlayer2Id === null}
                     onPress={() => setSelectedPlayer2Id(null)}
                   />
-                  {sortedRoster.map((player) => (
+                  {selectableRoster.map((player) => (
                     <PlayerChip
                       key={player.id}
                       name={player.name}
@@ -440,7 +481,7 @@ export default function EditEventModal() {
                     selected={selectedPlayerId === null}
                     onPress={() => setSelectedPlayerId(null)}
                   />
-                  {sortedRoster.map((player) => (
+                  {selectableRoster.map((player) => (
                     <PlayerChip
                       key={player.id}
                       name={player.name}
