@@ -85,6 +85,7 @@ Common columns include:
 
 - The current-game screen includes shortcut cards for **Saved Games** and **Combine Games**.
 - These shortcuts push to separate analytics routes instead of switching local in-screen tabs.
+- On medium and large screens, the shortcut cards expand to fill the available row so the top of the analytics screen does not leave unused horizontal space on tablets.
 
 ## Saved Games Screen
 

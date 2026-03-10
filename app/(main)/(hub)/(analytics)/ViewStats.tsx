@@ -192,6 +192,7 @@ export default function ViewStatsScreen() {
               }
               icon="history"
               onPress={() => router.push('/SavedGameStats')}
+              fullWidth={sizeClass !== 'small'}
             />
             <AnalyticsShortcutCard
               title="Combine Games"
@@ -199,6 +200,7 @@ export default function ViewStatsScreen() {
               detail={savedGames.length === 0 ? 'Start by saving a game' : 'Build combined stats'}
               icon="chart-box-outline"
               onPress={() => router.push('/AggregateStats')}
+              fullWidth={sizeClass !== 'small'}
             />
           </View>
         </View>
@@ -236,10 +238,12 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     },
     shortcutsSection: {
       gap: 10,
+      width: '100%',
     },
     shortcutsGrid: {
       flexDirection: isLandscape ? 'row' : 'column',
       gap: 12,
+      width: '100%',
     },
     sectionLabel: {
       fontSize: scaleBySizeClass(12, sizeClass),

@@ -10,6 +10,7 @@ interface AnalyticsShortcutCardProps {
   detail: string;
   icon: keyof typeof MaterialCommunityIcons.glyphMap;
   onPress: () => void;
+  fullWidth?: boolean;
 }
 
 export default function AnalyticsShortcutCard({
@@ -18,10 +19,11 @@ export default function AnalyticsShortcutCard({
   detail,
   icon,
   onPress,
+  fullWidth = false,
 }: AnalyticsShortcutCardProps) {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
-  const styles = createStyles(sizeClass);
+  const styles = createStyles(sizeClass, fullWidth);
 
   return (
     <Pressable
@@ -57,9 +59,10 @@ export default function AnalyticsShortcutCard({
   );
 }
 
-function createStyles(sizeClass: SizeClass) {
+function createStyles(sizeClass: SizeClass, fullWidth: boolean) {
   return StyleSheet.create({
     card: {
+      flex: fullWidth ? 1 : undefined,
       flexDirection: 'row',
       alignItems: 'center',
       gap: scaleBySizeClass(12, sizeClass),
@@ -67,6 +70,7 @@ function createStyles(sizeClass: SizeClass) {
       borderWidth: 1,
       paddingHorizontal: scaleBySizeClass(14, sizeClass),
       paddingVertical: scaleBySizeClass(14, sizeClass),
+      minWidth: fullWidth ? 0 : undefined,
     },
     iconWrap: {
       width: scaleBySizeClass(42, sizeClass),

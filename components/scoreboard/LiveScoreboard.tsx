@@ -16,13 +16,11 @@ import { TurnoverType } from '@/store/gameStore.types';
 import { useLinePresetsStore } from '@/store/linePresetsStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useKeepAwake } from 'expo-keep-awake';
 import { router } from 'expo-router';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function LiveScoreboard() {
-  useKeepAwake('LiveScoreboard', { suppressDeactivateWarnings: true });
   const layout = useLayout();
   const styles = createStyles(layout.isLandscape, layout.sizeClass);
   const insets = useSafeAreaInsets();
