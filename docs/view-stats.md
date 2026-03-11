@@ -23,8 +23,10 @@ All three surfaces share the same underlying stats components, so player tables,
 
 ### 1. Summary
 
-- Displays the team name and total number of points recorded.
+- Current-game and saved-game summaries use a `Us vs Them` matchup header with the score centered between team names.
+- Current-game and saved-game summaries also show the opponent name.
 - Shows stats for your team (Team 1).
+- Aggregate summaries omit the opponent label because the selection can span multiple opponents.
 
 ### 2. Player Stats Table
 
@@ -85,7 +87,7 @@ Common columns include:
 
 - The current-game screen includes shortcut cards for **Saved Games** and **Combine Games**.
 - These shortcuts push to separate analytics routes instead of switching local in-screen tabs.
-- On medium and large screens, the shortcut cards expand to fill the available row so the top of the analytics screen does not leave unused horizontal space on tablets.
+- The shortcut cards use a simple responsive grid: they stack full-width on narrow portrait layouts and switch to a two-up row when there is enough room, avoiding compressed icon-only tiles.
 
 ## Saved Games Screen
 

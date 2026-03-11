@@ -182,26 +182,28 @@ export default function ViewStatsScreen() {
         <View style={styles.shortcutsSection}>
           <Text style={[styles.sectionLabel, { color: palette.textMuted }]}>More Analytics</Text>
           <View style={styles.shortcutsGrid}>
-            <AnalyticsShortcutCard
-              title="Saved Games"
-              description="Browse, share, manage past games."
-              detail={
-                savedGames.length === 0
-                  ? 'No saved games yet'
-                  : `${savedGames.length} saved game${savedGames.length === 1 ? '' : 's'}`
-              }
-              icon="history"
-              onPress={() => router.push('/SavedGameStats')}
-              fullWidth={sizeClass !== 'small'}
-            />
-            <AnalyticsShortcutCard
-              title="Combine Games"
-              description="Aggregate games into a combined stat view."
-              detail={savedGames.length === 0 ? 'Start by saving a game' : 'Build combined stats'}
-              icon="chart-box-outline"
-              onPress={() => router.push('/AggregateStats')}
-              fullWidth={sizeClass !== 'small'}
-            />
+            <View style={styles.shortcutItem}>
+              <AnalyticsShortcutCard
+                title="Saved Games"
+                description="Browse, share, manage past games."
+                detail={
+                  savedGames.length === 0
+                    ? 'No saved games yet'
+                    : `${savedGames.length} saved game${savedGames.length === 1 ? '' : 's'}`
+                }
+                icon="history"
+                onPress={() => router.push('/SavedGameStats')}
+              />
+            </View>
+            <View style={styles.shortcutItem}>
+              <AnalyticsShortcutCard
+                title="Combine Games"
+                description="Aggregate games into a combined stat view."
+                detail={savedGames.length === 0 ? 'Start by saving a game' : 'Build combined stats'}
+                icon="chart-box-outline"
+                onPress={() => router.push('/AggregateStats')}
+              />
+            </View>
           </View>
         </View>
 
@@ -227,6 +229,8 @@ export default function ViewStatsScreen() {
 }
 
 function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
+  const showShortcutGrid = isLandscape || sizeClass !== 'small';
+
   return StyleSheet.create({
     container: {
       flex: 1,
@@ -241,9 +245,14 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
       width: '100%',
     },
     shortcutsGrid: {
-      flexDirection: isLandscape ? 'row' : 'column',
+      flexDirection: 'row',
+      flexWrap: 'wrap',
       gap: 12,
       width: '100%',
+    },
+    shortcutItem: {
+      flex: 1,
+      minWidth: showShortcutGrid ? 0 : '100%',
     },
     sectionLabel: {
       fontSize: scaleBySizeClass(12, sizeClass),
