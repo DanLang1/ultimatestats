@@ -201,8 +201,8 @@ Full-page route shown after points and for manual line edits.
 
 #### Features
 
-- **Preset chips**: Quick-select from saved presets (horizontal scroll)
-- **Edit presets button**: Opens `LinePresetEditor`
+- **Quick preset shortcuts**: Shows the first 3 saved presets inline for one-tap selection
+- **Load Line button**: Opens the full preset/recent-line picker for additional presets and recent lines
 - **Point indicator**: Shows current point number
 - **Gender ratio warning**: Shows warning when line doesn't match expected ratio
 - **Edit-line mode**: When `mode=edit-line`, opens from the scoreboard and supports injury/replacement handling

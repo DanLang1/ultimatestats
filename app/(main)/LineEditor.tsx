@@ -9,6 +9,7 @@ import {
   getExpectedRatio,
   getSequenceNumber,
 } from '@/lib/genderRatioUtils';
+import { getLoadLineButtonState } from '@/lib/lineEditorUtils';
 import { computePointByPointEvents } from '@/lib/timelineUtils';
 import { getRecentLines, RecentLine } from '@/lib/lineUtils';
 import { useGameStore } from '@/store/gameStore';
@@ -76,6 +77,7 @@ export default function LineEditor() {
     (state) => state.setLineConfirmedForNextPoint,
   );
   const presets = allPresets.filter((p) => p.teamId === (currentTeam?.id ?? ''));
+  const quickPresets = presets.slice(0, 3);
   const recentLines: RecentLine[] = getRecentLines(
     pointLines,
     currentPoint,
@@ -187,6 +189,12 @@ export default function LineEditor() {
   };
 
   const canConfirm = selectedIds.length === numPlayers;
+  const { active: loadLineButtonActive, label: loadLineButtonLabel } = getLoadLineButtonState({
+    presets,
+    quickPresetIds: quickPresets.map((preset) => preset.id),
+    selectedPresetId,
+    selectedRecentPointNumber,
+  });
 
   // Check gender ratio if enabled
   const expectedRatio =
@@ -323,47 +331,56 @@ export default function LineEditor() {
 
         {/* Load Line + Clear Row */}
         <View style={styles.presetsRow}>
+          {quickPresets.map((preset) => {
+            const isSelected = selectedPresetId === preset.id;
+
+            return (
+              <Pressable
+                key={preset.id}
+                onPress={() => handleSelectPreset(preset)}
+                style={({ pressed }) => [
+                  styles.quickPresetBtn,
+                  {
+                    backgroundColor: isSelected ? palette.accent : palette.overlay08,
+                    borderColor: isSelected ? palette.accent : palette.overlay15,
+                  },
+                  pressed && { opacity: 0.8 },
+                ]}>
+                <Text
+                  style={[
+                    styles.quickPresetBtnText,
+                    { color: isSelected ? palette.textOnAccent : palette.textInverse },
+                  ]}
+                  numberOfLines={1}>
+                  {preset.name}
+                </Text>
+              </Pressable>
+            );
+          })}
           <Pressable
             onPress={() => setShowLinePicker(true)}
             style={({ pressed }) => [
               styles.loadLineBtn,
               {
-                backgroundColor:
-                  selectedPresetId !== null || selectedRecentPointNumber !== null
-                    ? palette.accent
-                    : palette.overlay08,
-                borderColor:
-                  selectedPresetId !== null || selectedRecentPointNumber !== null
-                    ? palette.accent
-                    : palette.overlay15,
+                backgroundColor: loadLineButtonActive ? palette.accent : palette.overlay08,
+                borderColor: loadLineButtonActive ? palette.accent : palette.overlay15,
               },
               pressed && { opacity: 0.8 },
             ]}>
             <MaterialCommunityIcons
               name="layers-outline"
               size={scaleBySizeClass(13, sizeClass)}
-              color={
-                selectedPresetId !== null || selectedRecentPointNumber !== null
-                  ? palette.textOnAccent
-                  : palette.textMuted
-              }
+              color={loadLineButtonActive ? palette.textOnAccent : palette.textMuted}
             />
             <Text
               style={[
                 styles.loadLineBtnText,
                 {
-                  color:
-                    selectedPresetId !== null || selectedRecentPointNumber !== null
-                      ? palette.textOnAccent
-                      : palette.textMuted,
+                  color: loadLineButtonActive ? palette.textOnAccent : palette.textMuted,
                 },
               ]}
               numberOfLines={1}>
-              {selectedPresetId !== null
-                ? (presets.find((p) => p.id === selectedPresetId)?.name ?? 'Preset')
-                : selectedRecentPointNumber !== null
-                  ? `Pt ${selectedRecentPointNumber}`
-                  : 'Load Line'}
+              {loadLineButtonLabel}
             </Text>
           </Pressable>
           {selectedIds.length > 0 && (
@@ -619,8 +636,20 @@ function createStyles(sizeClass: SizeClass) {
     presetsRow: {
       flexDirection: 'row',
       alignItems: 'center',
+      flexWrap: 'wrap',
       marginTop: 10,
       gap: 6,
+    },
+    quickPresetBtn: {
+      paddingVertical: 5,
+      paddingHorizontal: 10,
+      borderRadius: 8,
+      borderWidth: 1,
+      maxWidth: 120,
+    },
+    quickPresetBtnText: {
+      fontSize: scaleBySizeClass(12, sizeClass),
+      fontWeight: '600',
     },
     subTypeSection: {
       marginTop: 10,
