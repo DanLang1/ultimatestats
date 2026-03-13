@@ -4,6 +4,7 @@ import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { useShareImport } from '@/hooks/useShareImport';
 import { resolveTeamName } from '@/lib/playerUtils';
+import { getGameDisplayTimestamp } from '@/lib/savedGameUtils';
 import { SharedPayload } from '@/lib/sharing';
 import { formatDate } from '@/lib/statsUtils';
 import { SavedGame, SavedTeam } from '@/lib/storage';
@@ -268,7 +269,7 @@ function GamePreviewContent({
         </Text>
         <ScoreBadge score1={game.team1Score} score2={game.team2Score} size="large" />
         <Text style={[styles.previewMeta, { color: palette.modalTextMuted }]}>
-          {formatDate(game.createdAt)} &middot; {goalCount} point
+          {formatDate(getGameDisplayTimestamp(game))} &middot; {goalCount} point
           {goalCount !== 1 ? 's' : ''} tracked
         </Text>
       </View>
@@ -330,7 +331,7 @@ function GamesPreviewContent({
                   {teamName} vs {game.team2Name}
                 </Text>
                 <Text style={[styles.previewMeta, { color: palette.modalTextMuted }]}>
-                  {formatDate(game.createdAt)}
+                  {formatDate(getGameDisplayTimestamp(game))}
                 </Text>
               </View>
               <ScoreBadge score1={game.team1Score} score2={game.team2Score} size="small" />

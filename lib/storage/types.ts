@@ -3,12 +3,13 @@
 import { GameEvent, TurnoverType } from '@/store/gameStore.types';
 export type { GameEvent, TurnoverType };
 
-export const CURRENT_SCHEMA_VERSION = 4;
+export const CURRENT_SCHEMA_VERSION = 5;
 
 export interface SavedGame {
   id: string;
   schemaVersion: number; // For future migrations - always set to CURRENT_SCHEMA_VERSION on save
   createdAt: number; // timestamp
+  playedAt?: number; // timestamp when the game was actually played; UI falls back to createdAt
   team1: SavedTeam; // My team (id, name, roster)
   team2Name: string;
   team1Score: number;

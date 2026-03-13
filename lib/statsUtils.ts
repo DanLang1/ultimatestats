@@ -1,5 +1,6 @@
 import { GameEvent, Player, PointLineRecord, SavedGame } from '@/lib/storage';
 import { getPlayerName, UNKNOWN_PLAYER_ID } from './playerUtils';
+import { getGameDisplayTimestamp } from './savedGameUtils';
 import {
   aggregatePlayingTimeStats,
   computePlayingTimeStats,
@@ -898,7 +899,7 @@ export function generateSavedGameCSV(game: SavedGame): string {
     : null;
   const playerRows = mergePlayerRows(playerStats, playingTimeStats, game.team1.roster);
 
-  let csv = `# Game: ${game.team1.name} vs ${game.team2Name} - ${formatDateForCSV(game.createdAt)}\n`;
+  let csv = `# Game: ${game.team1.name} vs ${game.team2Name} - ${formatDateForCSV(getGameDisplayTimestamp(game))}\n`;
 
   csv += '\n# Play-by-Play\n';
   csv += playByPlayCSV(
@@ -992,9 +993,9 @@ export function generateAggregateCSV(
   csv += '\n\n# Game Log\n';
   csv += 'Date,Opponent,Result,Score,Our Score,Their Score\n';
   csv += games
-    .sort((a, b) => b.createdAt - a.createdAt)
+    .sort((a, b) => getGameDisplayTimestamp(b) - getGameDisplayTimestamp(a))
     .map((g) => {
-      const date = formatDateForCSV(g.createdAt);
+      const date = formatDateForCSV(getGameDisplayTimestamp(g));
       const win = g.team1Score > g.team2Score;
       const result = win ? 'Win' : 'Loss';
       return `${date},${g.team2Name},${result},${g.team1Score}-${g.team2Score},${g.team1Score},${g.team2Score}`;
@@ -1005,7 +1006,7 @@ export function generateAggregateCSV(
   csv += '\n\n# Individual Game Details';
   for (const game of games) {
     const autoHalftimeEnabled = game.autoHalftimeEnabled ?? true;
-    csv += `\n\nGame: vs ${game.team2Name} - ${formatDateForCSV(game.createdAt)}`;
+    csv += `\n\nGame: vs ${game.team2Name} - ${formatDateForCSV(getGameDisplayTimestamp(game))}`;
 
     csv += '\n\n# Team Stats\n';
     csv += teamStatsCSV(

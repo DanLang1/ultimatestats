@@ -1,5 +1,6 @@
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { getGameDisplayTimestamp } from '@/lib/savedGameUtils';
 import { getSelectablePlayerStatGames } from '@/lib/statsUtils';
 import { usePlayerStatsStore } from '@/store/playerStatsStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
@@ -61,7 +62,9 @@ export default function GameSelectorModal() {
     );
   }
 
-  const sortedGames = [...selectableGames].sort((a, b) => b.createdAt - a.createdAt);
+  const sortedGames = [...selectableGames].sort(
+    (a, b) => getGameDisplayTimestamp(b) - getGameDisplayTimestamp(a),
+  );
 
   // Default to latest game if none selected
   const defaultGameId = sortedGames[0]?.id ?? null;
@@ -140,7 +143,7 @@ export default function GameSelectorModal() {
                       vs {g.team2Name}
                     </Text>
                     <Text style={[styles.dateText, { color: palette.textMuted }]}>
-                      {new Date(g.createdAt).toLocaleDateString(undefined, {
+                      {new Date(getGameDisplayTimestamp(g)).toLocaleDateString(undefined, {
                         weekday: 'short',
                         month: 'short',
                         day: 'numeric',

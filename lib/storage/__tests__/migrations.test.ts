@@ -106,4 +106,18 @@ describe('storage migrations', () => {
     expect(migrated.events).toEqual(v3Game.events);
     expect(migrated.autoHalftimeEnabled).toBe(true);
   });
+
+  it('preserves playedAt through additive schema stamping', () => {
+    const v4Game = makeSavedGame({
+      schemaVersion: 4,
+      autoHalftimeEnabled: true,
+      events: [goal('team1')],
+      playedAt: 12345,
+    });
+
+    const migrated = migrateSavedGame(v4Game);
+
+    expect(migrated.schemaVersion).toBe(CURRENT_SCHEMA_VERSION);
+    expect(migrated.playedAt).toBe(12345);
+  });
 });

@@ -16,6 +16,9 @@ export const DEFAULT_HALFTIME_BREAK_SECONDS = 7 * 60;
 /** Default timeout length in seconds. */
 export const DEFAULT_TIMEOUT_SECONDS = 70;
 
+/** Earliest valid year for recorded Ultimate games in the played-at editor. */
+export const MIN_PLAYED_AT_YEAR = 1968;
+
 // ── Layout breakpoints (dp) ───────────────────────────────────────────
 // Used by useLayout() for size class and narrow/large-screen detection.
 

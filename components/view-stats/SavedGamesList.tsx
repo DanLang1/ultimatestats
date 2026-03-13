@@ -2,6 +2,7 @@ import { ScoreBadge } from '@/components/ui/ScoreBadge';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { resolveTeamName } from '@/lib/playerUtils';
+import { getGameDisplayTimestamp } from '@/lib/savedGameUtils';
 import { formatDate } from '@/lib/statsUtils';
 import { SavedGame } from '@/lib/storage';
 import { useGameStore } from '@/store/gameStore';
@@ -49,7 +50,7 @@ export default function SavedGamesList({
     filteredAndSortedGames = filteredAndSortedGames.filter((game) => {
       const t1 = getTeamName(game).toLowerCase();
       const t2 = game.team2Name.toLowerCase();
-      const date = formatDate(game.createdAt).toLowerCase();
+      const date = formatDate(getGameDisplayTimestamp(game)).toLowerCase();
       return t1.includes(query) || t2.includes(query) || date.includes(query);
     });
   }
@@ -67,7 +68,7 @@ export default function SavedGamesList({
       }
       case 'date':
       default:
-        return dir * (a.createdAt - b.createdAt);
+        return dir * (getGameDisplayTimestamp(a) - getGameDisplayTimestamp(b));
     }
   });
 
@@ -227,7 +228,7 @@ export default function SavedGamesList({
                 <Pressable style={styles.cardContent} onPress={() => onSelectGame(game)}>
                   <View style={styles.savedGameHeader}>
                     <Text style={[styles.savedGameDate, { color: palette.textMuted }]}>
-                      {formatDate(game.createdAt)}
+                      {formatDate(getGameDisplayTimestamp(game))}
                     </Text>
                     {game.importedAt && (
                       <MaterialCommunityIcons

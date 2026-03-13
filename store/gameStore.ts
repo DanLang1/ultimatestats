@@ -1035,6 +1035,21 @@ export const useGameStore = create<GameState>()(
           return true;
         },
 
+        updateSavedGamePlayedAt: async (gameId: string, playedAt: number) => {
+          const game = get().savedGames.find((g) => g.id === gameId);
+          if (!game) return;
+
+          const updatedGame: SavedGame = { ...game, playedAt };
+
+          await storage.saveGame(updatedGame);
+          set((state: GameState) => {
+            const idx = state.savedGames.findIndex((g) => g.id === gameId);
+            if (idx !== -1) {
+              state.savedGames[idx] = updatedGame;
+            }
+          });
+        },
+
         // Saved Games & Teams Actions
         loadSavedGames: async () => {
           try {

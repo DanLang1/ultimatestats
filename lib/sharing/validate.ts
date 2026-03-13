@@ -78,6 +78,10 @@ function validateGame(data: Record<string, unknown>) {
     throw new Error('Invalid game: missing scores');
   }
 
+  if (data.playedAt !== undefined && !isNumber(data.playedAt)) {
+    throw new Error('Invalid game: invalid playedAt');
+  }
+
   if (!Array.isArray(data.events)) {
     throw new Error('Invalid game: missing events');
   }

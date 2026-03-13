@@ -2,6 +2,7 @@ import { ScoreBadge } from '@/components/ui/ScoreBadge';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { resolveTeamName } from '@/lib/playerUtils';
+import { getGameDisplayTimestamp } from '@/lib/savedGameUtils';
 import { formatDate } from '@/lib/statsUtils';
 import { SavedGame } from '@/lib/storage';
 import { useGameStore } from '@/store/gameStore';
@@ -67,7 +68,9 @@ export default function AggregateGamesList({
 
   // Games for the selected team (by ID)
   const gamesForTeam = selectedTeam
-    ? games.filter((g) => g.team1.id === selectedTeam).sort((a, b) => b.createdAt - a.createdAt)
+    ? games
+        .filter((g) => g.team1.id === selectedTeam)
+        .sort((a, b) => getGameDisplayTimestamp(b) - getGameDisplayTimestamp(a))
     : [];
 
   // Empty state
@@ -142,7 +145,7 @@ export default function AggregateGamesList({
                   <View style={styles.gameDetails}>
                     <ScoreBadge score1={game.team1Score} score2={game.team2Score} size="small" />
                     <Text style={[styles.dateText, { color: palette.textMuted }]}>
-                      {formatDate(game.createdAt)}
+                      {formatDate(getGameDisplayTimestamp(game))}
                     </Text>
                   </View>
                 </View>

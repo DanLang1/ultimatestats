@@ -10,17 +10,25 @@ import StatsContent from '@/components/view-stats/StatsContent';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { useLoadSavedGamesWithAlert } from '@/hooks/useLoadSavedGamesWithAlert';
+import { MIN_PLAYED_AT_YEAR } from '@/lib/constants';
 import { resolveTeamName } from '@/lib/playerUtils';
+import { getGameDisplayTimestamp } from '@/lib/savedGameUtils';
 import { serializeGame, uploadPayload } from '@/lib/sharing';
 import { formatDate, generateSavedGameCSV } from '@/lib/statsUtils';
 import { useGameStore } from '@/store/gameStore';
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import DateTimePicker, {
+  DateTimePickerAndroid,
+  DateTimePickerEvent,
+} from '@react-native-community/datetimepicker';
 import { File, Paths } from 'expo-file-system';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import * as Sharing from 'expo-sharing';
 import React, { useState } from 'react';
-import { Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
+import { Platform, Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
+
+const MIN_PLAYED_AT_DATE = new Date(MIN_PLAYED_AT_YEAR, 0, 1);
 
 export default function SavedGameStatsScreen() {
   const { gameId } = useLocalSearchParams<{ gameId?: string }>();
@@ -28,7 +36,7 @@ export default function SavedGameStatsScreen() {
   const { palette } = useTheme();
   const { isLandscape, sizeClass } = useLayout();
   const styles = createStyles(isLandscape, sizeClass);
-  const { savedGames, savedTeams } = useGameStore();
+  const { savedGames, savedTeams, updateSavedGamePlayedAt } = useGameStore();
   useLoadSavedGamesWithAlert();
   const [pendingShareAction, setPendingShareAction] = useState<(() => Promise<string>) | null>(
     null,
@@ -46,7 +54,10 @@ export default function SavedGameStatsScreen() {
     if (!selectedGame || !gameTeamName) return;
 
     const sanitize = (value: string) => value.replace(/[^a-zA-Z0-9]/g, '_');
-    const dateText = formatDate(selectedGame.createdAt).replace(/[^a-zA-Z0-9]/g, '_');
+    const dateText = formatDate(getGameDisplayTimestamp(selectedGame)).replace(
+      /[^a-zA-Z0-9]/g,
+      '_',
+    );
     const filename = `${sanitize(gameTeamName)}_vs_${sanitize(selectedGame.team2Name)}_${dateText}`;
 
     try {
@@ -90,6 +101,37 @@ export default function SavedGameStatsScreen() {
     router.push({
       pathname: '/GameTimeline',
       params: { gameId: selectedGame.id },
+    });
+  };
+
+  const handleDateChange = (_event: DateTimePickerEvent, selectedValue?: Date) => {
+    if (!selectedGame || !selectedValue) return;
+    const now = new Date();
+    if (selectedValue.getTime() > now.getTime()) return;
+    updateSavedGamePlayedAt(selectedGame.id, selectedValue.getTime());
+  };
+
+  const handleOpenAndroidDatePicker = () => {
+    if (!selectedGame) return;
+    const now = new Date();
+    DateTimePickerAndroid.open({
+      value: new Date(getGameDisplayTimestamp(selectedGame)),
+      mode: 'date',
+      maximumDate: now,
+      minimumDate: MIN_PLAYED_AT_DATE,
+      onChange: (e, date) => {
+        if (e.type !== 'set' || !date) return;
+        DateTimePickerAndroid.open({
+          value: date,
+          mode: 'time',
+          is24Hour: false,
+          onChange: (e2, finalDate) => {
+            if (e2.type === 'set' && finalDate && finalDate.getTime() <= now.getTime()) {
+              updateSavedGamePlayedAt(selectedGame.id, finalDate.getTime());
+            }
+          },
+        });
+      },
     });
   };
 
@@ -190,6 +232,57 @@ export default function SavedGameStatsScreen() {
 
       {selectedGame ? (
         <ScrollView contentContainerStyle={[styles.scrollContent, { paddingBottom: 100 }]}>
+          {Platform.OS === 'ios' ? (
+            <View
+              style={[
+                styles.dateCard,
+                { backgroundColor: palette.overlay05, borderColor: palette.overlay10 },
+              ]}>
+              <View style={styles.dateCardContent}>
+                <Text style={[styles.dateLabel, { color: palette.textMuted }]}>PLAYED AT</Text>
+                <DateTimePicker
+                  value={new Date(getGameDisplayTimestamp(selectedGame))}
+                  mode="datetime"
+                  display="compact"
+                  maximumDate={new Date()}
+                  minimumDate={MIN_PLAYED_AT_DATE}
+                  onChange={handleDateChange}
+                  themeVariant="dark"
+                  accentColor={palette.accent}
+                />
+                {selectedGame.playedAt ? (
+                  <Text style={[styles.dateSecondary, { color: palette.textMuted }]}>
+                    Recorded {formatDate(selectedGame.createdAt)}
+                  </Text>
+                ) : null}
+              </View>
+            </View>
+          ) : (
+            <Pressable
+              style={({ pressed }) => [
+                styles.dateCard,
+                { backgroundColor: palette.overlay05, borderColor: palette.overlay10 },
+                pressed && styles.dateCardPressed,
+              ]}
+              onPress={handleOpenAndroidDatePicker}>
+              <View style={styles.dateCardContent}>
+                <Text style={[styles.dateLabel, { color: palette.textMuted }]}>PLAYED AT</Text>
+                <Text style={[styles.dateValue, { color: palette.textInverse }]}>
+                  {formatDate(getGameDisplayTimestamp(selectedGame))}
+                </Text>
+                {selectedGame.playedAt ? (
+                  <Text style={[styles.dateSecondary, { color: palette.textMuted }]}>
+                    Recorded {formatDate(selectedGame.createdAt)}
+                  </Text>
+                ) : null}
+              </View>
+              <MaterialCommunityIcons
+                name="calendar-edit"
+                size={scaleBySizeClass(20, sizeClass)}
+                color={palette.textMuted}
+              />
+            </Pressable>
+          )}
           <StatsContent
             team1Name={gameTeamName ?? selectedGame.team1.name}
             team2Name={selectedGame.team2Name}
@@ -260,6 +353,35 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     recoverButtonText: {
       fontSize: scaleBySizeClass(14, sizeClass),
       fontWeight: '700',
+    },
+    dateCard: {
+      borderRadius: 14,
+      borderWidth: 1,
+      paddingHorizontal: 16,
+      paddingVertical: 14,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+    },
+    dateCardPressed: {
+      opacity: 0.8,
+    },
+    dateCardContent: {
+      flex: 1,
+      gap: 4,
+    },
+    dateLabel: {
+      fontSize: scaleBySizeClass(10, sizeClass),
+      fontWeight: '700',
+      letterSpacing: 1,
+    },
+    dateValue: {
+      fontSize: scaleBySizeClass(16, sizeClass),
+      fontWeight: '700',
+    },
+    dateSecondary: {
+      fontSize: scaleBySizeClass(12, sizeClass),
+      lineHeight: scaleBySizeClass(16, sizeClass),
     },
   });
 }

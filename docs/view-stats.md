@@ -94,6 +94,7 @@ Common columns include:
 The **Saved Games** screen displays a history of games recorded on this device.
 
 - If the entire saved-games storage blob becomes unreadable, the screen shows a simple corruption warning instead of silently treating the library as empty.
+- Saved-game date labels use the custom played time when one has been set; otherwise they fall back to the original recorded timestamp.
 
 ### 1. Searching & Filtering
 
@@ -113,6 +114,7 @@ The **Saved Games** screen displays a history of games recorded on this device.
   - **Delete (N)**: Delete all selected games after confirmation.
 - **Combine Games Action**: The header includes a quick action to jump into the aggregate workflow.
 - **Individual vs. Bulk**: Tapping the main area of a game card opens a dedicated Saved Game detail screen, while tapping the checkbox toggles its selection state. Individual deletion via the trash icon is hidden once multiple games are selected to focus on bulk operations.
+- **Edit Game Date**: The date card on the Saved Game detail screen allows inline editing of the played time. On iOS it uses a compact native picker; on Android it opens chained date then time pickers. Changes auto-save immediately. When a custom played time is set, the original recorded timestamp is shown as secondary text on the card.
 
 ## Aggregate Stats Screen
 

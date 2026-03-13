@@ -9,6 +9,7 @@ import RoleDiamond from '@/components/view-stats/RoleDiamond';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { getPlayerName } from '@/lib/playerUtils';
+import { getGameDisplayTimestamp } from '@/lib/savedGameUtils';
 import {
   computePlayerStats,
   getChemistryStats,
@@ -66,7 +67,9 @@ export default function PlayerStats() {
 
   // Default to the most recent selectable saved game (impact or playing-time presence).
   const defaultGameId = selectableGames.length
-    ? [...selectableGames].sort((a, b) => b.createdAt - a.createdAt)[0].id
+    ? [...selectableGames].sort(
+        (a, b) => getGameDisplayTimestamp(b) - getGameDisplayTimestamp(a),
+      )[0].id
     : null;
   const selectedGameIsSelectable =
     !!selectedGameId && selectableGames.some((g) => g.id === selectedGameId);
@@ -77,7 +80,10 @@ export default function PlayerStats() {
   const impactEvents = displayGame?.events ?? events;
   const impactData = playerId ? getImpactStats(playerId, impactEvents, team) : [];
   const gameLabel = displayGame
-    ? `${new Date(displayGame.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} vs ${displayGame.team2Name}`
+    ? `${new Date(getGameDisplayTimestamp(displayGame)).toLocaleDateString(undefined, {
+        month: 'short',
+        day: 'numeric',
+      })} vs ${displayGame.team2Name}`
     : '';
 
   const stats =
