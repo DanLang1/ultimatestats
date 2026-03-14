@@ -87,7 +87,7 @@ export default function LiveScoreboard() {
 
   const possessionTrackingEnabled = statTrackingEnabled;
 
-  const team1Combined = [
+  const team1Combined: { active: boolean; isFloater: boolean; disabled?: boolean }[] = [
     ...team1Timeouts.map((active) => ({ active, isFloater: false })),
     ...(floaterEnabled
       ? [
@@ -100,7 +100,7 @@ export default function LiveScoreboard() {
       : []),
   ];
 
-  const team2Combined = [
+  const team2Combined: { active: boolean; isFloater: boolean; disabled?: boolean }[] = [
     ...team2Timeouts.map((active) => ({ active, isFloater: false })),
     ...(floaterEnabled
       ? [
@@ -204,6 +204,7 @@ export default function LiveScoreboard() {
         timeouts={team1Combined}
         onTimeoutUse={(index) => {
           if (!team1Combined[index]?.active) return;
+          if (team1Combined[index]?.disabled) return;
           toggleTimeout(true, index);
           router.push('/TimeoutModal');
         }}
@@ -250,6 +251,7 @@ export default function LiveScoreboard() {
         timeouts={team2Combined}
         onTimeoutUse={(index) => {
           if (!team2Combined[index]?.active) return;
+          if (team2Combined[index]?.disabled) return;
           toggleTimeout(false, index);
           router.push('/TimeoutModal');
         }}

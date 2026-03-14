@@ -78,11 +78,7 @@ export default function LineEditor() {
   );
   const presets = allPresets.filter((p) => p.teamId === (currentTeam?.id ?? ''));
   const quickPresets = presets.slice(0, 3);
-  const recentLines: RecentLine[] = getRecentLines(
-    pointLines,
-    currentPoint,
-    presets.map((p) => p.playerIds),
-  );
+  const recentLines: RecentLine[] = getRecentLines(pointLines, currentPoint);
 
   // Local selection state
   const [selectedIds, setSelectedIds] = useState<string[]>(currentLine);

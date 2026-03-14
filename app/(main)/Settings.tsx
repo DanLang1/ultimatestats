@@ -14,7 +14,6 @@ import { MAX_TEAM_NAME_LENGTH } from '@/lib/constants';
 import { SavedTeam } from '@/lib/storage';
 import { useGameStore } from '@/store/gameStore';
 import { OrientationMode, useSettingsStore } from '@/store/settingsStore';
-import { useTutorialStore } from '@/store/tutorialStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router, Stack } from 'expo-router';
 import React, { useState } from 'react';
@@ -43,7 +42,6 @@ function SettingsContent() {
   const useCompactColorLayout = sizeClass !== 'small';
   const { palette, themeMode, setThemeMode } = useTheme();
   const { showAlert } = useAlert();
-  const { hasSeenStatsTutorial, triggerStatsTutorial } = useTutorialStore();
   const {
     mmpColor,
     fmpColor,
@@ -595,9 +593,6 @@ function SettingsContent() {
                     value={statTrackingEnabled}
                     onValueChange={(enabled) => {
                       setStatTrackingEnabled(enabled);
-                      if (enabled && !hasSeenStatsTutorial) {
-                        triggerStatsTutorial();
-                      }
                       if (!enabled) {
                         setPointTimerEnabled(false);
                         setLineCallingEnabled(false);

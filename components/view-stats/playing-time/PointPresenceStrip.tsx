@@ -55,53 +55,65 @@ export default function PointPresenceStrip({
     offensiveByPoint.set(p.pointNumber, p.offensiveTeam);
   }
 
+  type SegmentType = 'Hold' | 'Break' | 'Opp Hold' | 'Broken' | 'Off';
+  const usedTypes = new Set<SegmentType>();
+
+  const segments = Array.from({ length: totalPoints }, (_, i) => {
+    const p = i + 1;
+    const onField = playersByPoint.get(p)?.has(playerId) ?? false;
+    const won = outcomes.get(p) ?? false;
+    const onOffense = offensiveByPoint.get(p) === 'team1';
+
+    let segType: SegmentType;
+    if (!onField) {
+      segType = 'Off';
+    } else if (onOffense && won) {
+      segType = 'Hold';
+    } else if (!onOffense && won) {
+      segType = 'Break';
+    } else if (!onOffense && !won) {
+      segType = 'Opp Hold';
+    } else {
+      segType = 'Broken';
+    }
+    usedTypes.add(segType);
+    return { p, segType };
+  });
+
+  const segColorMap: Record<SegmentType, string> = {
+    Hold: palette.success,
+    Break: palette.gold,
+    'Opp Hold': palette.dLineAccent,
+    Broken: palette.danger,
+    Off: palette.overlay15,
+  };
+  const legendOrder: SegmentType[] = ['Hold', 'Break', 'Opp Hold', 'Broken', 'Off'];
+
   return (
     <View style={styles.container}>
       <Text style={[styles.label, { color: palette.textMuted }]}>GAME BREAKDOWN</Text>
 
       <View style={styles.bar}>
-        {Array.from({ length: totalPoints }, (_, i) => {
-          const p = i + 1;
-          const onField = playersByPoint.get(p)?.has(playerId) ?? false;
-          const won = outcomes.get(p) ?? false;
-          const onOffense = offensiveByPoint.get(p) === 'team1';
-
-          let segColor: string;
-          if (!onField) {
-            segColor = palette.overlay15; // Did not play
-          } else if (onOffense && won) {
-            segColor = palette.success; // Hold
-          } else if (!onOffense && won) {
-            segColor = palette.gold; // Break — exceptional
-          } else if (!onOffense && !won) {
-            segColor = palette.dLineAccent; // Opp Hold — D-line color
-          } else {
-            segColor = palette.danger; // Broken — bad
-          }
-
-          return (
-            <React.Fragment key={p}>
-              <View style={[styles.segment, { backgroundColor: segColor }]} />
-              {p < totalPoints && (
-                <View style={[styles.divider, { backgroundColor: palette.overlay08 }]} />
-              )}
-            </React.Fragment>
-          );
-        })}
+        {segments.map(({ p, segType }) => (
+          <React.Fragment key={p}>
+            <View style={[styles.segment, { backgroundColor: segColorMap[segType] }]} />
+            {p < totalPoints && (
+              <View style={[styles.divider, { backgroundColor: palette.overlay08 }]} />
+            )}
+          </React.Fragment>
+        ))}
       </View>
 
-      {/* Legend */}
+      {/* Legend — only show types that appear in this game */}
       <View style={styles.legend}>
-        <View style={[styles.legendSwatch, { backgroundColor: palette.success }]} />
-        <Text style={[styles.legendText, { color: palette.textMuted }]}>Hold</Text>
-        <View style={[styles.legendSwatch, { backgroundColor: palette.gold }]} />
-        <Text style={[styles.legendText, { color: palette.textMuted }]}>Break</Text>
-        <View style={[styles.legendSwatch, { backgroundColor: palette.dLineAccent }]} />
-        <Text style={[styles.legendText, { color: palette.textMuted }]}>Opp Hold</Text>
-        <View style={[styles.legendSwatch, { backgroundColor: palette.danger }]} />
-        <Text style={[styles.legendText, { color: palette.textMuted }]}>Broken</Text>
-        <View style={[styles.legendSwatch, { backgroundColor: palette.overlay15 }]} />
-        <Text style={[styles.legendText, { color: palette.textMuted }]}>Off</Text>
+        {legendOrder
+          .filter((type) => usedTypes.has(type))
+          .map((type) => (
+            <React.Fragment key={type}>
+              <View style={[styles.legendSwatch, { backgroundColor: segColorMap[type] }]} />
+              <Text style={[styles.legendText, { color: palette.textMuted }]}>{type}</Text>
+            </React.Fragment>
+          ))}
       </View>
     </View>
   );

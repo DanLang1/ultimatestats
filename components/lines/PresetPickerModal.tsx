@@ -42,8 +42,8 @@ export function PresetPickerModal({
   roster,
 }: PresetPickerModalProps) {
   const { palette } = useTheme();
-  const { sizeClass } = useLayout();
-  const styles = createStyles(sizeClass);
+  const { sizeClass, isLandscape } = useLayout();
+  const styles = createStyles(sizeClass, isLandscape);
   const insets = useSafeAreaInsets();
   const editIconSize = scaleBySizeClass(14, sizeClass);
   const checkIconSize = scaleBySizeClass(16, sizeClass);
@@ -200,7 +200,7 @@ export function PresetPickerModal({
   );
 }
 
-function createStyles(sizeClass: SizeClass) {
+function createStyles(sizeClass: SizeClass, isLandscape: boolean) {
   return StyleSheet.create({
     modalSafeArea: {
       flex: 1,
@@ -213,7 +213,7 @@ function createStyles(sizeClass: SizeClass) {
       borderTopLeftRadius: 16,
       borderTopRightRadius: 16,
       paddingHorizontal: 16,
-      maxHeight: '75%',
+      maxHeight: isLandscape ? '90%' : '75%',
       width: getSizeClassValue({ small: '100%', medium: '75%', large: '60%' }, sizeClass),
       alignSelf: 'center',
     },
@@ -248,7 +248,7 @@ function createStyles(sizeClass: SizeClass) {
       fontWeight: '600',
     },
     presetList: {
-      flexGrow: 0,
+      flexShrink: 1,
     },
     presetListContent: {
       gap: 6,

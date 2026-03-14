@@ -153,14 +153,12 @@ export interface RecentLine {
 export function getRecentLines(
   pointLines: PointLineRecord[],
   currentPoint: number,
-  presetPlayerIdSets: string[][],
   maxCount = 3,
 ): RecentLine[] {
   const completedPointNumbers = [
     ...new Set(pointLines.filter((r) => r.pointNumber < currentPoint).map((r) => r.pointNumber)),
   ].sort((a, b) => b - a); // most recent first
 
-  const presetKeys = new Set(presetPlayerIdSets.map((ids) => [...ids].sort().join(',')));
   const seen = new Set<string>();
   const result: RecentLine[] = [];
 
@@ -169,7 +167,7 @@ export function getRecentLines(
     const playerIds = getLatestLineForPoint(pointLines, pointNumber);
     if (playerIds.length === 0) continue;
     const key = [...playerIds].sort().join(',');
-    if (seen.has(key) || presetKeys.has(key)) continue;
+    if (seen.has(key)) continue;
     seen.add(key);
     result.push({ pointNumber, playerIds });
   }

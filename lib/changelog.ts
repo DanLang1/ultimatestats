@@ -6,6 +6,23 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.8.0',
+    date: 'March 14, 2026',
+    changes: [
+      'Added Tabs to help with navigation',
+      'Reworked end game screen, app opens on dashboard if game is over now',
+      'Added way for games to be added to tourneys, accessible from combined games screen',
+      'Added a played at field for saved games',
+      'Added lines to Game Timeline screen',
+      'Game event time timestamp editable from Game Timeline screen',
+      'Added points played strip to player stats',
+      'Added recently played lines to line editor modal',
+      'Added deselect all option for line editor',
+      'Added setting to sort players by points played or alphabetically',
+      'Many bug fixes',
+    ],
+  },
+  {
     version: '1.7.0',
     date: 'March 1, 2026',
     changes: [

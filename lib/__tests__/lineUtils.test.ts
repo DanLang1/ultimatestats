@@ -185,7 +185,7 @@ describe('getLatestLineForPoint', () => {
 });
 
 describe('getRecentLines', () => {
-  it('returns the most recent distinct completed lines, excluding presets', () => {
+  it('returns the most recent distinct completed lines', () => {
     const pointLines: PointLineRecord[] = [
       { pointNumber: 1, playerIds: ['a', 'b', 'c'], timestamp: 1000 },
       { pointNumber: 2, playerIds: ['d', 'e', 'f'], timestamp: 2000 },
@@ -196,15 +196,12 @@ describe('getRecentLines', () => {
       { pointNumber: 7, playerIds: ['p', 'q', 'r'], timestamp: 7000 },
     ];
 
-    const recentLines = getRecentLines(pointLines, 7, [
-      ['a', 'b', 'c'],
-      ['g', 'h', 'i'],
-    ]);
+    const recentLines = getRecentLines(pointLines, 7);
 
     expect(recentLines).toEqual([
       { pointNumber: 6, playerIds: ['m', 'n', 'o'] },
       { pointNumber: 5, playerIds: ['j', 'k', 'l'] },
-      { pointNumber: 3, playerIds: ['f', 'e', 'd'] },
+      { pointNumber: 4, playerIds: ['g', 'h', 'i'] },
     ]);
   });
 
@@ -216,7 +213,7 @@ describe('getRecentLines', () => {
       { pointNumber: 3, playerIds: ['h', 'i', 'j'], timestamp: 3000 },
     ];
 
-    const recentLines = getRecentLines(pointLines, 4, []);
+    const recentLines = getRecentLines(pointLines, 4);
 
     expect(recentLines).toEqual([
       { pointNumber: 3, playerIds: ['h', 'i', 'j'] },
@@ -233,7 +230,7 @@ describe('getRecentLines', () => {
       { pointNumber: 4, playerIds: ['j', 'k', 'l'], timestamp: 4000 },
     ];
 
-    const recentLines = getRecentLines(pointLines, 4, [], 2);
+    const recentLines = getRecentLines(pointLines, 4, 2);
 
     expect(recentLines).toEqual([
       { pointNumber: 3, playerIds: ['g', 'h', 'i'] },

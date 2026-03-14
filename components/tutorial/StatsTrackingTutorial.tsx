@@ -1,6 +1,8 @@
 import { useTheme } from '@/context/ThemeContext';
 import { LayoutInfo, scaleBySizeClass, useLayout } from '@/hooks/useLayout';
+import { useGameStore } from '@/store/gameStore';
 import { useTutorialStore } from '@/store/tutorialStore';
+import { usePathname } from 'expo-router';
 import React, { useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -37,7 +39,12 @@ const TUTORIAL_STEPS = [
 export default function StatsTrackingTutorial() {
   const { width, height, isLandscape, sizeClass } = useLayout();
   const styles = createStyles({ width, height, isLandscape, sizeClass });
-  const { showStatsTutorial, closeStatsTutorial } = useTutorialStore();
+  const { showStatsTutorial, hasSeenStatsTutorial, closeStatsTutorial } = useTutorialStore();
+  const statTrackingEnabled = useGameStore((s) => s.statTrackingEnabled);
+  const pathname = usePathname();
+  const visible =
+    pathname === '/Scoreboard' &&
+    (showStatsTutorial || (statTrackingEnabled && !hasSeenStatsTutorial));
   const [currentStep, setCurrentStep] = useState(0);
   const [slideDirection, setSlideDirection] = useState<'left' | 'right'>('right');
   const { palette } = useTheme();
@@ -80,7 +87,7 @@ export default function StatsTrackingTutorial() {
       }
     });
 
-  if (!showStatsTutorial) {
+  if (!visible) {
     return null;
   }
 
@@ -89,7 +96,7 @@ export default function StatsTrackingTutorial() {
   const enteringAnimation = slideDirection === 'right' ? SlideInRight : SlideInLeft;
 
   return (
-    <Modal transparent visible={showStatsTutorial} animationType="fade" statusBarTranslucent>
+    <Modal transparent visible={visible} animationType="fade" statusBarTranslucent>
       <GestureHandlerRootView style={styles.root}>
         <View style={[styles.overlay, { backgroundColor: palette.overlayDark60 }]}>
           <GestureDetector gesture={panGesture}>
