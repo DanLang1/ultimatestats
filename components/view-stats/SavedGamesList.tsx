@@ -5,6 +5,8 @@ import { resolveTeamName } from '@/lib/playerUtils';
 import { getGameDisplayTimestamp } from '@/lib/savedGameUtils';
 import { formatDate } from '@/lib/statsUtils';
 import { SavedGame } from '@/lib/storage';
+import { Tournament } from '@/lib/storage/types';
+import { TournamentFilterModal } from '@/components/ui/TournamentFilterModal';
 import { useGameStore } from '@/store/gameStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React, { useState } from 'react';
@@ -17,6 +19,7 @@ interface SavedGamesListProps {
   selectedGameIds?: Set<string>;
   onToggleGameSelection?: (gameId: string) => void;
   onClearSelection?: () => void;
+  tournaments?: Tournament[];
 }
 
 type SortField = 'date' | 'team' | 'score';
@@ -28,6 +31,7 @@ export default function SavedGamesList({
   selectedGameIds = new Set(),
   onToggleGameSelection,
   onClearSelection,
+  tournaments = [],
 }: SavedGamesListProps) {
   const { palette } = useTheme();
   const { savedTeams } = useGameStore();
@@ -37,14 +41,38 @@ export default function SavedGamesList({
   const [searchQuery, setSearchQuery] = useState('');
   const [sortField, setSortField] = useState<SortField>('date');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+  const [tournamentFilter, setTournamentFilter] = useState<string | null>(null);
+  const [showTournamentFilter, setShowTournamentFilter] = useState(false);
 
   // Helper to get live team name with snapshot fallback
   const getTeamName = (game: SavedGame) =>
     resolveTeamName(game.team1.id, game.team1.name, savedTeams);
 
+  // Tournaments that have at least one saved game, with counts
+  const tournamentGameCounts = new Map<string, number>();
+  for (const game of games) {
+    if (game.tournamentId) {
+      tournamentGameCounts.set(
+        game.tournamentId,
+        (tournamentGameCounts.get(game.tournamentId) ?? 0) + 1,
+      );
+    }
+  }
+  const visibleTournaments = tournaments.filter((t) => tournamentGameCounts.has(t.id));
+  // If the active filter no longer exists (e.g. tournament was deleted), treat as no filter
+  const activeTournament = visibleTournaments.find((t) => t.id === tournamentFilter) ?? null;
+  const effectiveTournamentFilter = activeTournament ? tournamentFilter : null;
+
   let filteredAndSortedGames = [...games];
 
-  // Filter
+  // Tournament filter
+  if (effectiveTournamentFilter) {
+    filteredAndSortedGames = filteredAndSortedGames.filter(
+      (game) => game.tournamentId === effectiveTournamentFilter,
+    );
+  }
+
+  // Search filter
   if (searchQuery.trim()) {
     const query = searchQuery.toLowerCase().trim();
     filteredAndSortedGames = filteredAndSortedGames.filter((game) => {
@@ -183,6 +211,31 @@ export default function SavedGamesList({
               </Pressable>
             );
           })}
+          {visibleTournaments.length > 0 && (
+            <Pressable
+              style={[
+                styles.sortPill,
+                { borderColor: activeTournament ? palette.accent : palette.overlay10 },
+                activeTournament && {
+                  backgroundColor: palette.overlay10,
+                  borderColor: palette.accent,
+                },
+              ]}
+              onPress={() => setShowTournamentFilter(true)}>
+              <MaterialCommunityIcons
+                name="trophy"
+                size={scaleBySizeClass(14, sizeClass)}
+                color={activeTournament ? palette.accent : palette.textMuted}
+              />
+              {activeTournament && (
+                <Text
+                  style={[styles.sortPillText, { color: palette.accent, fontWeight: '700' }]}
+                  numberOfLines={1}>
+                  {activeTournament.name}
+                </Text>
+              )}
+            </Pressable>
+          )}
         </View>
       </View>
 
@@ -320,11 +373,31 @@ export default function SavedGamesList({
         })}
       </View>
 
+      {filteredAndSortedGames.length === 0 &&
+        effectiveTournamentFilter &&
+        searchQuery.trim() === '' && (
+          <View style={styles.noResults}>
+            <Text style={{ color: palette.textMuted }}>No games in this tournament</Text>
+          </View>
+        )}
+
       {filteredAndSortedGames.length === 0 && searchQuery.trim() !== '' && (
         <View style={styles.noResults}>
           <Text style={{ color: palette.textMuted }}>No games match &quot;{searchQuery}&quot;</Text>
         </View>
       )}
+
+      <TournamentFilterModal
+        visible={showTournamentFilter}
+        tournaments={visibleTournaments}
+        gameCounts={tournamentGameCounts}
+        selectedTournamentId={effectiveTournamentFilter}
+        onSelect={(id) => {
+          setTournamentFilter(id);
+          onClearSelection?.();
+        }}
+        onClose={() => setShowTournamentFilter(false)}
+      />
     </View>
   );
 }
@@ -355,6 +428,7 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     },
     sortPills: {
       flexDirection: 'row',
+      flexWrap: 'wrap',
       gap: 6,
     },
     sortPill: {

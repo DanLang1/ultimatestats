@@ -198,7 +198,7 @@ export default function ViewStatsScreen() {
             <View style={styles.shortcutItem}>
               <AnalyticsShortcutCard
                 title="Combine Games"
-                description="Aggregate games into a combined stat view."
+                description="Aggregate games into a combined stat view / add to tourneys."
                 detail={savedGames.length === 0 ? 'Start by saving a game' : 'Build combined stats'}
                 icon="chart-box-outline"
                 onPress={() => router.push('/AggregateStats')}

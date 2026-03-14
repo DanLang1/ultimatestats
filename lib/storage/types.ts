@@ -24,6 +24,7 @@ export interface SavedGame {
   team1Color?: string; // hex color snapshot at save time - optional, falls back to theme default
   team2Color?: string; // hex color snapshot at save time - optional, falls back to theme default
   importedAt?: number; // timestamp when this game was imported via sharing
+  tournamentId?: string; // optional link to a Tournament
 }
 
 export type MatchingType = 'fmp' | 'mmp';
@@ -44,6 +45,13 @@ export interface SavedTeam {
   // Future: add updatedAt/importedAt for cloud sync and import tracking
 }
 
+export interface Tournament {
+  id: string;
+  name: string;
+  startDate: string; // ISO date string, e.g. "2026-03-12"
+  endDate: string; // ISO date string, e.g. "2026-03-14"
+}
+
 // Storage interface - implement this for different storage backends
 export interface GameStorage {
   saveGame(game: SavedGame): Promise<void>;
@@ -59,8 +67,14 @@ export interface TeamStorage {
   getTeam(id: string): Promise<SavedTeam | null>;
 }
 
+export interface TournamentStorage {
+  saveTournament(tournament: Tournament): Promise<void>;
+  loadTournaments(): Promise<Tournament[]>;
+  deleteTournament(id: string): Promise<void>;
+}
+
 // Combined storage interface
-export interface Storage extends GameStorage, TeamStorage {}
+export interface Storage extends GameStorage, TeamStorage, TournamentStorage {}
 
 // Line Calling Types
 export interface LinePreset {

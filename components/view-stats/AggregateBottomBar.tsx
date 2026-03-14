@@ -7,38 +7,80 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 interface AggregateBottomBarProps {
   selectedCount: number;
   onViewAggregated: () => void;
+  onAddToTournament?: () => void;
+  showAddToTournament?: boolean;
+  onShare?: () => void;
+  showShare?: boolean;
   isVisible: boolean;
 }
 
 export default function AggregateBottomBar({
   selectedCount,
   onViewAggregated,
+  onAddToTournament,
+  showAddToTournament = false,
+  onShare,
+  showShare = false,
   isVisible,
 }: AggregateBottomBarProps) {
   const { palette } = useTheme();
-  const { sizeClass } = useLayout();
+  const { isLandscape, sizeClass } = useLayout();
   const styles = createStyles(sizeClass);
   const actionIconSize = scaleBySizeClass(20, sizeClass);
 
   if (!isVisible || selectedCount === 0) return null;
 
+  const tournamentButton = showAddToTournament && onAddToTournament && (
+    <Pressable
+      style={[
+        styles.actionButton,
+        { backgroundColor: palette.accent, shadowColor: palette.shadow },
+      ]}
+      onPress={onAddToTournament}>
+      <MaterialCommunityIcons
+        name="trophy-outline"
+        size={actionIconSize}
+        color={palette.textOnAccent}
+      />
+      <Text style={[styles.actionText, { color: palette.textOnAccent }]}>Add to Tournament</Text>
+    </Pressable>
+  );
+
   return (
     <View style={styles.bottomBar}>
-      <Pressable
-        style={[
-          styles.viewCombinedButton,
-          { backgroundColor: palette.accent, shadowColor: palette.shadow },
-        ]}
-        onPress={onViewAggregated}>
-        <MaterialCommunityIcons
-          name="chart-box"
-          size={actionIconSize}
-          color={palette.textOnAccent}
-        />
-        <Text style={[styles.viewCombinedText, { color: palette.textOnAccent }]}>
-          View Combined ({selectedCount} game{selectedCount !== 1 ? 's' : ''})
-        </Text>
-      </Pressable>
+      {!isLandscape && tournamentButton}
+      <View style={styles.bottomRow}>
+        {showShare && onShare && (
+          <Pressable
+            style={[
+              styles.iconButton,
+              { backgroundColor: palette.accent, shadowColor: palette.shadow },
+            ]}
+            onPress={onShare}>
+            <MaterialCommunityIcons
+              name="share-variant"
+              size={actionIconSize}
+              color={palette.textOnAccent}
+            />
+          </Pressable>
+        )}
+        {isLandscape && tournamentButton}
+        <Pressable
+          style={[
+            styles.actionButton,
+            { backgroundColor: palette.accent, shadowColor: palette.shadow },
+          ]}
+          onPress={onViewAggregated}>
+          <MaterialCommunityIcons
+            name="chart-box"
+            size={actionIconSize}
+            color={palette.textOnAccent}
+          />
+          <Text style={[styles.actionText, { color: palette.textOnAccent }]}>
+            View Combined ({selectedCount} game{selectedCount !== 1 ? 's' : ''})
+          </Text>
+        </Pressable>
+      </View>
     </View>
   );
 }
@@ -48,26 +90,44 @@ function createStyles(sizeClass: SizeClass) {
     bottomBar: {
       position: 'absolute',
       bottom: 32,
-      right: 24, // Anchored to the right
+      right: 24,
       alignItems: 'flex-end',
+      gap: 10,
       pointerEvents: 'box-none',
     },
-    viewCombinedButton: {
+    bottomRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+    },
+    iconButton: {
+      width: scaleBySizeClass(44, sizeClass),
+      height: scaleBySizeClass(44, sizeClass),
+      borderRadius: 22,
+      alignItems: 'center',
+      justifyContent: 'center',
+      opacity: 0.95,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.2,
+      shadowRadius: 6,
+      elevation: 8,
+    },
+    actionButton: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
       gap: 8,
-      paddingHorizontal: 20, // Slightly more compact
+      paddingHorizontal: 20,
       paddingVertical: 12,
       borderRadius: 25,
-      opacity: 0.95, // Subtle transparency to see content behind
+      opacity: 0.95,
       // Shadow
       shadowOffset: { width: 0, height: 4 },
       shadowOpacity: 0.2,
       shadowRadius: 6,
       elevation: 8,
     },
-    viewCombinedText: {
+    actionText: {
       fontSize: scaleBySizeClass(15, sizeClass),
       fontWeight: '700',
       letterSpacing: 0.3,

@@ -5,19 +5,24 @@ import { resolveTeamName } from '@/lib/playerUtils';
 import { getGameDisplayTimestamp } from '@/lib/savedGameUtils';
 import { formatDate } from '@/lib/statsUtils';
 import { SavedGame } from '@/lib/storage';
+import { Tournament } from '@/lib/storage/types';
 import { useGameStore } from '@/store/gameStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 interface AggregateGamesListProps {
   games: SavedGame[];
   selectedTeam: string | null; // Team ID (not name)
   selectedGameIds: Set<string>;
   onSelectTeam: (teamId: string) => void; // Pass team ID
-  onBackToTeams: () => void;
   onToggleGameSelection: (gameId: string) => void;
-  onToggleAllGames: (select: boolean) => void;
+  onSelectAllGames: (gameIds: string[]) => void;
+  onDeselectAllGames: () => void;
+  tournaments: Tournament[];
+  tournamentFilter: string | null; // null = all games
+  onSetTournamentFilter: (tournamentId: string | null) => void;
+  onCreateTournament: () => void;
 }
 
 interface TeamGroup {
@@ -29,11 +34,16 @@ interface TeamGroup {
 
 export default function AggregateGamesList({
   games,
-  selectedTeam, // This is now team ID
+  selectedTeam,
   selectedGameIds,
   onSelectTeam,
   onToggleGameSelection,
-  onToggleAllGames,
+  onSelectAllGames,
+  onDeselectAllGames,
+  tournaments,
+  tournamentFilter,
+  onSetTournamentFilter,
+  onCreateTournament,
 }: AggregateGamesListProps) {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
@@ -66,12 +76,27 @@ export default function AggregateGamesList({
     .map(([id, data]) => ({ id, ...data }))
     .sort((a, b) => b.gameCount - a.gameCount);
 
-  // Games for the selected team (by ID)
-  const gamesForTeam = selectedTeam
+  // Games for the selected team (by ID), optionally filtered by tournament
+  const allGamesForTeam = selectedTeam
     ? games
         .filter((g) => g.team1.id === selectedTeam)
         .sort((a, b) => getGameDisplayTimestamp(b) - getGameDisplayTimestamp(a))
     : [];
+
+  const gamesForTeam = tournamentFilter
+    ? allGamesForTeam.filter((g) => g.tournamentId === tournamentFilter)
+    : allGamesForTeam;
+
+  // Game counts per tournament for this team
+  const tournamentGameCounts = new Map<string, number>();
+  for (const game of allGamesForTeam) {
+    if (game.tournamentId) {
+      tournamentGameCounts.set(
+        game.tournamentId,
+        (tournamentGameCounts.get(game.tournamentId) ?? 0) + 1,
+      );
+    }
+  }
 
   // Empty state
   if (games.length === 0) {
@@ -94,19 +119,102 @@ export default function AggregateGamesList({
   if (selectedTeam) {
     return (
       <View style={styles.container}>
-        {/* Instructions */}
-        <View style={styles.headerRow}>
-          <Text style={[styles.instructions, { color: palette.textMuted }]}>
-            Select games to combine stats
-          </Text>
-          <Pressable
-            hitSlop={8}
-            onPress={() => onToggleAllGames(selectedGameIds.size < gamesForTeam.length)}>
-            <Text style={[styles.selectAllText, { color: palette.accent }]}>
-              {selectedGameIds.size < gamesForTeam.length ? 'Select All' : 'Deselect All'}
-            </Text>
-          </Pressable>
+        {/* Tournament cards section */}
+        <View style={styles.tournamentSection}>
+          <Text style={[styles.instructions, { color: palette.textMuted }]}>Tournaments</Text>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.tournamentCards}>
+            {tournaments.map((t) => {
+              const gameCount = tournamentGameCounts.get(t.id) ?? 0;
+              const isActive = tournamentFilter === t.id;
+
+              return (
+                <Pressable
+                  key={t.id}
+                  style={[
+                    styles.tournamentCard,
+                    { backgroundColor: palette.overlay05, borderColor: palette.overlay10 },
+                    isActive && { borderColor: palette.accent },
+                  ]}
+                  onPress={() => onSetTournamentFilter(isActive ? null : t.id)}>
+                  <MaterialCommunityIcons
+                    name="trophy"
+                    size={scaleBySizeClass(16, sizeClass)}
+                    color={isActive ? palette.accent : palette.textMuted}
+                  />
+                  <Text
+                    style={[
+                      styles.tournamentCardName,
+                      { color: isActive ? palette.accent : palette.textInverse },
+                    ]}
+                    numberOfLines={1}>
+                    {t.name}
+                  </Text>
+                  <Text style={[styles.tournamentCardMeta, { color: palette.textMuted }]}>
+                    {gameCount} game{gameCount !== 1 ? 's' : ''}
+                  </Text>
+                </Pressable>
+              );
+            })}
+            <Pressable
+              style={[
+                styles.tournamentCard,
+                styles.createTournamentCard,
+                { borderColor: palette.overlay10 },
+              ]}
+              onPress={onCreateTournament}>
+              <MaterialCommunityIcons
+                name="plus"
+                size={scaleBySizeClass(20, sizeClass)}
+                color={palette.accent}
+              />
+              <Text style={[styles.tournamentCardName, { color: palette.accent }]}>Create</Text>
+            </Pressable>
+          </ScrollView>
         </View>
+
+        {/* Games header */}
+        <View style={styles.headerRow}>
+          <View style={styles.gamesHeaderLeft}>
+            <Text style={[styles.instructions, { color: palette.textMuted }]}>
+              {tournamentFilter ? 'Tournament Games' : 'All Games'}
+            </Text>
+            {tournamentFilter && (
+              <Pressable hitSlop={8} onPress={() => onSetTournamentFilter(null)}>
+                <Text style={[styles.clearFilterText, { color: palette.accent }]}>Show All</Text>
+              </Pressable>
+            )}
+          </View>
+          <View style={styles.headerActions}>
+            <Pressable
+              hitSlop={8}
+              onPress={() => {
+                const visibleIds = gamesForTeam.map((g) => g.id);
+                const allVisibleSelected =
+                  gamesForTeam.length > 0 && visibleIds.every((id) => selectedGameIds.has(id));
+                if (allVisibleSelected) {
+                  onDeselectAllGames();
+                } else {
+                  onSelectAllGames(visibleIds);
+                }
+              }}>
+              <Text style={[styles.selectAllText, { color: palette.accent }]}>
+                {gamesForTeam.length > 0 && gamesForTeam.every((g) => selectedGameIds.has(g.id))
+                  ? 'Deselect All'
+                  : 'Select All'}
+              </Text>
+            </Pressable>
+          </View>
+        </View>
+
+        {/* Empty state for filtered results */}
+        {gamesForTeam.length === 0 && tournamentFilter && (
+          <Text style={[styles.emptyFilterText, { color: palette.textMuted }]}>
+            No games in this tournament
+          </Text>
+        )}
 
         {/* Game list with checkboxes */}
         <View style={styles.gamesList}>
@@ -207,6 +315,11 @@ function createStyles(sizeClass: SizeClass) {
       fontSize: scaleBySizeClass(16, sizeClass),
       textAlign: 'center',
     },
+    emptyFilterText: {
+      fontSize: scaleBySizeClass(14, sizeClass),
+      textAlign: 'center',
+      paddingVertical: 24,
+    },
     emptySubtext: {
       fontSize: scaleBySizeClass(14, sizeClass),
       textAlign: 'center',
@@ -224,9 +337,49 @@ function createStyles(sizeClass: SizeClass) {
       alignItems: 'center',
       marginBottom: 4,
     },
+    headerActions: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 16,
+    },
     selectAllText: {
       fontSize: scaleBySizeClass(14, sizeClass),
       fontWeight: '600',
+    },
+    gamesHeaderLeft: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+    },
+    clearFilterText: {
+      fontSize: scaleBySizeClass(13, sizeClass),
+      fontWeight: '600',
+    },
+    tournamentSection: {
+      gap: 10,
+    },
+    tournamentCards: {
+      flexDirection: 'row',
+      gap: 10,
+    },
+    tournamentCard: {
+      borderRadius: 12,
+      borderWidth: 1,
+      padding: 12,
+      width: scaleBySizeClass(130, sizeClass),
+      gap: 4,
+    },
+    createTournamentCard: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderStyle: 'dashed',
+    },
+    tournamentCardName: {
+      fontSize: scaleBySizeClass(14, sizeClass),
+      fontWeight: '600',
+    },
+    tournamentCardMeta: {
+      fontSize: scaleBySizeClass(12, sizeClass),
     },
     teamsList: {
       gap: 12,

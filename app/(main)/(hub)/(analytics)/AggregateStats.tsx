@@ -5,34 +5,51 @@ import {
   ResponsiveHeaderActions,
 } from '@/components/ui/ResponsiveHeaderActions';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
+import { ShareConfirmModal } from '@/components/ui/ShareConfirmModal';
+import { TournamentPickerModal } from '@/components/ui/TournamentPickerModal';
 import AggregateBottomBar from '@/components/view-stats/AggregateBottomBar';
 import AggregateGamesList from '@/components/view-stats/AggregateGamesList';
 import StatsContent from '@/components/view-stats/StatsContent';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { useLoadSavedGamesWithAlert } from '@/hooks/useLoadSavedGamesWithAlert';
+import { MAX_SHARE_GAMES } from '@/lib/constants';
 import { resolveTeamName } from '@/lib/playerUtils';
+import { serializeGames, uploadPayload } from '@/lib/sharing';
 import { generateAggregateCSV } from '@/lib/statsUtils';
 import { GameEvent, Player, SavedGame } from '@/lib/storage';
 import { useGameStore } from '@/store/gameStore';
+import { useTournamentStore } from '@/store/tournamentStore';
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 import { File, Paths } from 'expo-file-system';
-import { router, Stack } from 'expo-router';
+import { router, Stack, useFocusEffect } from 'expo-router';
 import * as Sharing from 'expo-sharing';
-import React, { useState } from 'react';
-import { ScrollView, StyleSheet } from 'react-native';
+import React, { useCallback, useState } from 'react';
+import { ScrollView, Share, StyleSheet } from 'react-native';
 
 export default function AggregateStatsScreen() {
   const { palette } = useTheme();
   const { isLandscape, sizeClass } = useLayout();
   const styles = createStyles(isLandscape, sizeClass);
   const { showAlert } = useAlert();
-  const { savedGames, savedTeams } = useGameStore();
+  const { savedGames, savedTeams, updateSavedGameTournament } = useGameStore();
+  const { tournaments, loadTournaments } = useTournamentStore();
   const [selectedTeam, setSelectedTeam] = useState<string | null>(null);
   const [selectedGameIds, setSelectedGameIds] = useState<Set<string>>(new Set());
   const [showingAggregatedStats, setShowingAggregatedStats] = useState(false);
+  const [tournamentFilter, setTournamentFilter] = useState<string | null>(null);
+  const [showTournamentPicker, setShowTournamentPicker] = useState(false);
+  const [pendingShareAction, setPendingShareAction] = useState<(() => Promise<string>) | null>(
+    null,
+  );
 
   useLoadSavedGamesWithAlert();
+
+  useFocusEffect(
+    useCallback(() => {
+      void loadTournaments();
+    }, [loadTournaments]),
+  );
 
   let aggregatedData: {
     teamName: string;
@@ -44,36 +61,55 @@ export default function AggregateStatsScreen() {
 
   if (selectedGameIds.size > 0) {
     const games = savedGames.filter((game) => selectedGameIds.has(game.id));
-    const mergedEvents = games.flatMap((game) => game.events);
-    const rosterMap = new Map<string, Player>();
-    games.forEach((game) =>
-      game.team1.roster.forEach((player) => rosterMap.set(player.id, player)),
-    );
-    const mergedRoster = Array.from(rosterMap.values());
-    const firstGame = games[0];
-    const resolvedName = selectedTeam
-      ? resolveTeamName(selectedTeam, firstGame.team1.name, savedTeams)
-      : 'Combined';
+    if (games.length > 0) {
+      const mergedEvents = games.flatMap((game) => game.events);
+      const rosterMap = new Map<string, Player>();
+      games.forEach((game) =>
+        game.team1.roster.forEach((player) => rosterMap.set(player.id, player)),
+      );
+      const mergedRoster = Array.from(rosterMap.values());
+      const firstGame = games[0];
+      const resolvedName = selectedTeam
+        ? resolveTeamName(selectedTeam, firstGame.team1.name, savedTeams)
+        : 'Combined';
 
-    aggregatedData = {
-      teamName: resolvedName,
-      gameCount: games.length,
-      events: mergedEvents,
-      games,
-      roster: mergedRoster,
-    };
+      aggregatedData = {
+        teamName: resolvedName,
+        gameCount: games.length,
+        events: mergedEvents,
+        games,
+        roster: mergedRoster,
+      };
+    }
   }
 
   const handleSelectTeam = (teamId: string) => {
     setSelectedTeam(teamId);
     setSelectedGameIds(new Set());
     setShowingAggregatedStats(false);
+    setTournamentFilter(null);
   };
 
   const handleBackToTeams = () => {
     setSelectedTeam(null);
     setSelectedGameIds(new Set());
     setShowingAggregatedStats(false);
+    setTournamentFilter(null);
+  };
+
+  const handleTournamentSelected = async (tournamentId: string) => {
+    try {
+      const ids = Array.from(selectedGameIds);
+      for (const gameId of ids) {
+        await updateSavedGameTournament(gameId, tournamentId);
+      }
+      setSelectedGameIds(new Set());
+    } catch {
+      showAlert({
+        title: 'Save failed',
+        message: 'Could not assign all games to the tournament. Please try again.',
+      });
+    }
   };
 
   const handleToggleGameSelection = (gameId: string) => {
@@ -85,16 +121,33 @@ export default function AggregateStatsScreen() {
     });
   };
 
-  const handleToggleAllGames = (select: boolean) => {
-    if (!selectedTeam) return;
+  const handleSelectAllGames = (gameIds: string[]) => {
+    setSelectedGameIds((prev) => new Set([...prev, ...gameIds]));
+  };
 
-    if (select) {
-      const games = savedGames.filter((game) => game.team1.id === selectedTeam);
-      setSelectedGameIds(new Set(games.map((game) => game.id)));
+  const handleDeselectAllGames = () => {
+    setSelectedGameIds(new Set());
+  };
+
+  const handleShareGames = () => {
+    const count = selectedGameIds.size;
+    if (count === 0) return;
+
+    if (count > MAX_SHARE_GAMES) {
+      showAlert({
+        title: 'Too many games',
+        message: `You can share up to ${MAX_SHARE_GAMES} games at a time.`,
+      });
       return;
     }
 
-    setSelectedGameIds(new Set());
+    const gameIds = new Set(selectedGameIds);
+    setPendingShareAction(() => async () => {
+      const games = savedGames.filter((game) => gameIds.has(game.id));
+      const payload = serializeGames(games);
+      const { url } = await uploadPayload(payload);
+      return url;
+    });
   };
 
   const handleExportCSV = async () => {
@@ -214,9 +267,16 @@ export default function AggregateStatsScreen() {
             selectedTeam={selectedTeam}
             selectedGameIds={selectedGameIds}
             onSelectTeam={handleSelectTeam}
-            onBackToTeams={handleBackToTeams}
             onToggleGameSelection={handleToggleGameSelection}
-            onToggleAllGames={handleToggleAllGames}
+            onSelectAllGames={handleSelectAllGames}
+            onDeselectAllGames={handleDeselectAllGames}
+            tournaments={tournaments}
+            tournamentFilter={tournamentFilter}
+            onSetTournamentFilter={(id) => {
+              setTournamentFilter(id);
+              setSelectedGameIds(new Set());
+            }}
+            onCreateTournament={() => router.push('/CreateTournament')}
           />
         )}
       </ScrollView>
@@ -225,6 +285,34 @@ export default function AggregateStatsScreen() {
         isVisible={!!selectedTeam && !showingAggregatedStats}
         selectedCount={selectedGameIds.size}
         onViewAggregated={() => setShowingAggregatedStats(true)}
+        showAddToTournament={!tournamentFilter && selectedGameIds.size > 0}
+        onAddToTournament={() => setShowTournamentPicker(true)}
+        showShare={selectedGameIds.size > 0}
+        onShare={handleShareGames}
+      />
+
+      <TournamentPickerModal
+        visible={showTournamentPicker}
+        onSelect={handleTournamentSelected}
+        onClose={() => setShowTournamentPicker(false)}
+      />
+
+      <ShareConfirmModal
+        visible={pendingShareAction !== null}
+        onConfirm={async () => {
+          try {
+            const url = await pendingShareAction!();
+            setPendingShareAction(null);
+            await Share.share({ message: url });
+          } catch {
+            showAlert({
+              title: 'Share failed',
+              message: 'Could not upload data for sharing. Please try again.',
+            });
+            throw new Error('share failed');
+          }
+        }}
+        onCancel={() => setPendingShareAction(null)}
       />
     </ThemedView>
   );

@@ -1050,6 +1050,39 @@ export const useGameStore = create<GameState>()(
           });
         },
 
+        updateSavedGameTournament: async (gameId: string, tournamentId: string | undefined) => {
+          const game = get().savedGames.find((g) => g.id === gameId);
+          if (!game) return;
+
+          const updatedGame: SavedGame = { ...game, tournamentId };
+
+          await storage.saveGame(updatedGame);
+          set((state: GameState) => {
+            const idx = state.savedGames.findIndex((g) => g.id === gameId);
+            if (idx !== -1) {
+              state.savedGames[idx] = updatedGame;
+            }
+          });
+        },
+
+        clearTournamentFromGames: async (tournamentId: string) => {
+          const gamesToUpdate = get().savedGames.filter((g) => g.tournamentId === tournamentId);
+
+          for (const game of gamesToUpdate) {
+            await storage.saveGame({ ...game, tournamentId: undefined });
+          }
+
+          if (gamesToUpdate.length > 0) {
+            set((state: GameState) => {
+              state.savedGames.forEach((g) => {
+                if (g.tournamentId === tournamentId) {
+                  g.tournamentId = undefined;
+                }
+              });
+            });
+          }
+        },
+
         // Saved Games & Teams Actions
         loadSavedGames: async () => {
           try {

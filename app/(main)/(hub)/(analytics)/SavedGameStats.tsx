@@ -11,12 +11,14 @@ import SavedGamesList from '@/components/view-stats/SavedGamesList';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { useLoadSavedGamesWithAlert } from '@/hooks/useLoadSavedGamesWithAlert';
+import { MAX_SHARE_GAMES } from '@/lib/constants';
 import { serializeGames, uploadPayload } from '@/lib/sharing';
 import { SavedGame } from '@/lib/storage';
 import { useGameStore } from '@/store/gameStore';
+import { useTournamentStore } from '@/store/tournamentStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { router, Stack } from 'expo-router';
-import React, { useState } from 'react';
+import { router, Stack, useFocusEffect } from 'expo-router';
+import React, { useCallback, useState } from 'react';
 import { ScrollView, Share, StyleSheet } from 'react-native';
 
 export default function SavedGameStatsScreen() {
@@ -25,12 +27,19 @@ export default function SavedGameStatsScreen() {
   const styles = createStyles(sizeClass);
   const { savedGames, deleteSavedGames } = useGameStore();
   const { showAlert } = useAlert();
+  const { tournaments, loadTournaments } = useTournamentStore();
   const [selectedSavedGameIds, setSelectedSavedGameIds] = useState<Set<string>>(new Set());
   const [pendingShareAction, setPendingShareAction] = useState<(() => Promise<string>) | null>(
     null,
   );
 
   useLoadSavedGamesWithAlert();
+
+  useFocusEffect(
+    useCallback(() => {
+      void loadTournaments();
+    }, [loadTournaments]),
+  );
 
   const handleSelectGame = (game: SavedGame) => {
     router.push({ pathname: '/saved-games/[gameId]', params: { gameId: game.id } });
@@ -70,10 +79,10 @@ export default function SavedGameStatsScreen() {
     const count = selectedSavedGameIds.size;
     if (count === 0) return;
 
-    if (count > 10) {
+    if (count > MAX_SHARE_GAMES) {
       showAlert({
         title: 'Too many games',
-        message: 'You can share up to 10 games at a time.',
+        message: `You can share up to ${MAX_SHARE_GAMES} games at a time.`,
       });
       return;
     }
@@ -129,6 +138,7 @@ export default function SavedGameStatsScreen() {
           selectedGameIds={selectedSavedGameIds}
           onToggleGameSelection={handleToggleSavedGameSelection}
           onClearSelection={() => setSelectedSavedGameIds(new Set())}
+          tournaments={tournaments}
         />
       </ScrollView>
 

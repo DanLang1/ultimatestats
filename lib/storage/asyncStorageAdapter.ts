@@ -2,10 +2,11 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { generateId } from '../utils';
 import { SavedGamesStorageCorruptionError } from './errors';
 import { migrateSavedGame } from './migrations';
-import type { SavedGame, SavedTeam, Storage } from './types';
+import type { SavedGame, SavedTeam, Storage, Tournament } from './types';
 
 const GAMES_KEY = 'ultimatestats_games';
 const TEAMS_KEY = 'ultimatestats_teams';
+const TOURNAMENTS_KEY = 'ultimatestats_tournaments';
 const GAMES_QUARANTINE_KEY = 'ultimatestats_games_quarantine';
 
 export const SAVED_GAMES_STORAGE_KEY = GAMES_KEY;
@@ -189,5 +190,29 @@ export const asyncStorageAdapter: Storage = {
   async getTeam(id: string): Promise<SavedTeam | null> {
     const teams = await this.loadTeams();
     return teams.find((t) => t.id === id) || null;
+  },
+
+  // Tournament Storage
+  async saveTournament(tournament: Tournament): Promise<void> {
+    const tournaments = await this.loadTournaments();
+    const tournamentToSave = tournament.id ? tournament : { ...tournament, id: generateId() };
+    const existingIndex = tournaments.findIndex((t) => t.id === tournamentToSave.id);
+    if (existingIndex >= 0) {
+      tournaments[existingIndex] = tournamentToSave;
+    } else {
+      tournaments.push(tournamentToSave);
+    }
+    await AsyncStorage.setItem(TOURNAMENTS_KEY, JSON.stringify(tournaments));
+  },
+
+  async loadTournaments(): Promise<Tournament[]> {
+    const data = await AsyncStorage.getItem(TOURNAMENTS_KEY);
+    return data ? JSON.parse(data) : [];
+  },
+
+  async deleteTournament(id: string): Promise<void> {
+    const tournaments = await this.loadTournaments();
+    const filtered = tournaments.filter((t) => t.id !== id);
+    await AsyncStorage.setItem(TOURNAMENTS_KEY, JSON.stringify(filtered));
   },
 };

@@ -19,6 +19,12 @@ export const DEFAULT_TIMEOUT_SECONDS = 70;
 /** Earliest valid year for recorded Ultimate games in the played-at editor. */
 export const MIN_PLAYED_AT_YEAR = 1968;
 
+/** Maximum number of games that can be shared at once. */
+export const MAX_SHARE_GAMES = 10;
+
+/** Maximum character length for tournament names. */
+export const MAX_TOURNAMENT_NAME_LENGTH = 30;
+
 // ── Layout breakpoints (dp) ───────────────────────────────────────────
 // Used by useLayout() for size class and narrow/large-screen detection.
 
