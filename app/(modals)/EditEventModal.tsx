@@ -95,7 +95,9 @@ export default function EditEventModal() {
   const activeEvent = activeEvents[eventIndex];
   const pointPlayersByPoint = getAllPlayersByPoint(activePointLines ?? []);
   const selectedPlayerIds = new Set(
-    [selectedPlayerId, selectedPlayer2Id].filter((playerId): playerId is string => playerId !== null),
+    [selectedPlayerId, selectedPlayer2Id].filter(
+      (playerId): playerId is string => playerId !== null,
+    ),
   );
   const pointPlayerIds = activeEvent?.pointNumber
     ? pointPlayersByPoint.get(activeEvent.pointNumber)

@@ -29,6 +29,7 @@ export default function SavedGameStatsScreen() {
   const { showAlert } = useAlert();
   const { tournaments, loadTournaments } = useTournamentStore();
   const [selectedSavedGameIds, setSelectedSavedGameIds] = useState<Set<string>>(new Set());
+  const [selectionMode, setSelectionMode] = useState(false);
   const [pendingShareAction, setPendingShareAction] = useState<(() => Promise<string>) | null>(
     null,
   );
@@ -52,6 +53,16 @@ export default function SavedGameStatsScreen() {
       else next.add(gameId);
       return next;
     });
+  };
+
+  const handleToggleSelectionMode = () => {
+    setSelectionMode((prev) => !prev);
+    setSelectedSavedGameIds(new Set());
+  };
+
+  const handleExitSelectionMode = () => {
+    setSelectionMode(false);
+    setSelectedSavedGameIds(new Set());
   };
 
   const handleBulkDeleteGames = async () => {
@@ -139,6 +150,8 @@ export default function SavedGameStatsScreen() {
           onToggleGameSelection={handleToggleSavedGameSelection}
           onClearSelection={() => setSelectedSavedGameIds(new Set())}
           tournaments={tournaments}
+          selectionMode={selectionMode}
+          onToggleSelectionMode={handleToggleSelectionMode}
         />
       </ScrollView>
 
@@ -147,7 +160,7 @@ export default function SavedGameStatsScreen() {
         selectedCount={selectedSavedGameIds.size}
         onDelete={handleBulkDeleteGames}
         onShare={handleBulkShareGames}
-        onCancel={() => setSelectedSavedGameIds(new Set())}
+        onCancel={handleExitSelectionMode}
       />
 
       <ShareConfirmModal

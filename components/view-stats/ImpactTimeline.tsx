@@ -1,14 +1,17 @@
+import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { ImpactPoint } from '@/lib/statsUtils';
 import React, { useState } from 'react';
-import { Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Platform, ScrollView, StyleSheet, View } from 'react-native';
 import Svg, {
   Circle as SvgCircle,
   Line as SvgLine,
-  Polyline,
+  Path as SvgPath,
   Text as SvgText,
 } from 'react-native-svg';
+
+const LABEL_GAP = 4;
 
 const FONT_FAMILY = Platform.select({
   ios: 'Helvetica',
@@ -34,6 +37,9 @@ function eventAbbrev(description: string | undefined): string | null {
 function isPositiveImpactEvent(description: string | undefined): boolean {
   if (!description) return false;
   const d = description.toLowerCase();
+  if (d.startsWith('drop') || d.startsWith('throwaway') || d.startsWith('50/50')) {
+    return false;
+  }
   return (
     d.startsWith('callahan') ||
     d.startsWith('goal') ||
@@ -89,8 +95,15 @@ function getAxisLabelTop(centerY: number, chartHeight: number, labelHeight: numb
   return Math.max(0, Math.min(chartHeight - labelHeight, desiredTop));
 }
 
-function buildPolylinePoints(points: RenderedImpactPoint[]): string {
-  return points.map((point) => `${point.x},${point.y}`).join(' ');
+function buildStepPath(points: RenderedImpactPoint[]): string {
+  if (points.length === 0) return '';
+  const [first, ...rest] = points;
+  const commands = [`M ${first.x},${first.y}`];
+  for (const point of rest) {
+    commands.push(`H ${point.x}`);
+    commands.push(`V ${point.y}`);
+  }
+  return commands.join(' ');
 }
 
 function buildImpactLineSegments(
@@ -197,7 +210,8 @@ export default function ImpactTimeline({ data }: ImpactTimelineProps) {
   const plotWidth = plotRight - plotLeft;
   const yRange = Math.max(axisMax - axisMin, 1);
   const minIdx = chartData[0]?.x ?? 0;
-  const maxIdx = chartData[chartData.length - 1]?.x ?? 1;
+  // Use the End marker's eventIndex so every player's chart spans the full game width
+  const maxIdx = data[data.length - 1]?.eventIndex ?? chartData[chartData.length - 1]?.x ?? 1;
   const xRange = maxIdx - minIdx || 1;
 
   const getX = (value: number) => plotLeft + ((value - minIdx) / xRange) * plotWidth;
@@ -213,7 +227,6 @@ export default function ImpactTimeline({ data }: ImpactTimelineProps) {
 
   const lineSegments = buildImpactLineSegments(renderedChartPoints, palette);
   const visibleEventPoints = renderedChartPoints.filter((_, index) => index !== 0);
-  const horizontalGridValues = yTickValues;
 
   const scorePositions: { score: string; eventIndex: number; x: number }[] = [];
   data.forEach((point) => {
@@ -232,7 +245,6 @@ export default function ImpactTimeline({ data }: ImpactTimelineProps) {
   });
 
   const visibleScorePositions: { score: string; eventIndex: number; x: number }[] = [];
-  const LABEL_GAP = 4;
   let lastLabelRight = -Infinity;
 
   scorePositions.forEach((item) => {
@@ -273,19 +285,19 @@ export default function ImpactTimeline({ data }: ImpactTimelineProps) {
   if (!hasImpact && data.length <= 2) {
     return (
       <View style={[styles.container, { height: 200, justifyContent: 'center' }]}>
-        <Text style={{ color: palette.textMuted, textAlign: 'center' }}>
+        <ThemedText style={{ color: palette.textMuted, textAlign: 'center' }}>
           No impact recorded yet.
-        </Text>
+        </ThemedText>
       </View>
     );
   }
   return (
     <View style={styles.container}>
-      <Text style={[styles.title, { color: palette.textMuted }]}>GAME IMPACT</Text>
+      <ThemedText style={[styles.title, { color: palette.textMuted }]}>GAME IMPACT</ThemedText>
 
       {/* Current Value Display */}
       <View style={styles.valueDisplay}>
-        <Text
+        <ThemedText
           style={[
             styles.currentValue,
             {
@@ -299,8 +311,10 @@ export default function ImpactTimeline({ data }: ImpactTimelineProps) {
           ]}>
           {finalValue > 0 ? '+' : ''}
           {finalValue}
-        </Text>
-        <Text style={[styles.valueLabel, { color: palette.textMuted }]}>Current +/-</Text>
+        </ThemedText>
+        <ThemedText style={[styles.valueLabel, { color: palette.textMuted }]}>
+          Current +/-
+        </ThemedText>
       </View>
 
       {/* Chart with Y-axis labels */}
@@ -309,7 +323,9 @@ export default function ImpactTimeline({ data }: ImpactTimelineProps) {
         <View style={styles.yAxis}>
           {axisLabels.map((axisLabel) => (
             <View key={axisLabel.key} style={[styles.axisLabelSlot, { top: axisLabel.top }]}>
-              <Text style={[styles.axisLabel, { color: axisLabel.color }]}>{axisLabel.label}</Text>
+              <ThemedText style={[styles.axisLabel, { color: axisLabel.color }]}>
+                {axisLabel.label}
+              </ThemedText>
             </View>
           ))}
         </View>
@@ -327,7 +343,7 @@ export default function ImpactTimeline({ data }: ImpactTimelineProps) {
             {/* Chart */}
             <View style={{ height: chartHeight }}>
               <Svg width={chartScrollWidth} height={chartHeight}>
-                {horizontalGridValues.map((value) => (
+                {yTickValues.map((value) => (
                   <SvgLine
                     key={`h-${value}`}
                     x1={plotLeft}
@@ -352,9 +368,9 @@ export default function ImpactTimeline({ data }: ImpactTimelineProps) {
                 ))}
 
                 {lineSegments.map((segment, index) => (
-                  <Polyline
+                  <SvgPath
                     key={`segment-${index}`}
-                    points={buildPolylinePoints(segment.points)}
+                    d={buildStepPath(segment.points)}
                     fill="none"
                     stroke={segment.color}
                     strokeWidth={strokeWidth}
@@ -398,9 +414,11 @@ export default function ImpactTimeline({ data }: ImpactTimelineProps) {
                 <View
                   key={`${item.score}-${item.eventIndex}`}
                   style={[styles.scoreLabelWrapper, { left: item.x - labelWidth / 2 }]}>
-                  <Text numberOfLines={1} style={[styles.scoreText, { color: palette.textMuted }]}>
+                  <ThemedText
+                    numberOfLines={1}
+                    style={[styles.scoreText, { color: palette.textMuted }]}>
                     {item.score}
-                  </Text>
+                  </ThemedText>
                 </View>
               ))}
             </View>
@@ -430,25 +448,31 @@ export default function ImpactTimeline({ data }: ImpactTimelineProps) {
       <View style={styles.legend}>
         <View style={styles.legendItem}>
           <View style={[styles.legendDot, { backgroundColor: palette.success }]} />
-          <Text style={[styles.legendText, { color: palette.textMuted }]}>
+          <ThemedText style={[styles.legendText, { color: palette.textMuted }]}>
             Goals/Assists/Blocks
-          </Text>
+          </ThemedText>
         </View>
         <View style={styles.legendItem}>
           <View style={[styles.legendDot, { backgroundColor: palette.danger }]} />
-          <Text style={[styles.legendText, { color: palette.textMuted }]}>Drops/Throwaways</Text>
+          <ThemedText style={[styles.legendText, { color: palette.textMuted }]}>
+            Drops/Throwaways
+          </ThemedText>
         </View>
       </View>
 
       {/* Event Log */}
       {eventLog.length > 0 && (
         <View style={styles.eventLog}>
-          <Text style={[styles.eventLogTitle, { color: palette.textMuted }]}>EVENTS</Text>
+          <ThemedText style={[styles.eventLogTitle, { color: palette.textMuted }]}>
+            EVENTS
+          </ThemedText>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.eventScroll}>
             {eventLog.map((event, i) => (
               <View key={i} style={[styles.eventItem, { backgroundColor: palette.overlay05 }]}>
-                <Text style={[styles.eventScore, { color: palette.textMuted }]}>{event.score}</Text>
-                <Text
+                <ThemedText style={[styles.eventScore, { color: palette.textMuted }]}>
+                  {event.score}
+                </ThemedText>
+                <ThemedText
                   style={[
                     styles.eventDesc,
                     {
@@ -458,7 +482,7 @@ export default function ImpactTimeline({ data }: ImpactTimelineProps) {
                     },
                   ]}>
                   {event.description ?? ''}
-                </Text>
+                </ThemedText>
               </View>
             ))}
           </ScrollView>

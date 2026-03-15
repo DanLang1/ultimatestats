@@ -9,5 +9,9 @@ export default function IndexRoute() {
     return <Redirect href={isPostGameFlowPending ? '/GameComplete' : '/Dashboard'} />;
   }
 
+  if (currentGameStatus !== 'inProgress') {
+    return <Redirect href="/Dashboard" />;
+  }
+
   return <Redirect href="/Scoreboard" />;
 }

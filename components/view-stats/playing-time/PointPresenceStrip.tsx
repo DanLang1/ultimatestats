@@ -82,8 +82,8 @@ export default function PointPresenceStrip({
 
   const segColorMap: Record<SegmentType, string> = {
     Hold: palette.success,
-    Break: palette.gold,
-    'Opp Hold': palette.dLineAccent,
+    Break: palette.dLineAccent,
+    'Opp Hold': palette.warning,
     Broken: palette.danger,
     Off: palette.overlay15,
   };

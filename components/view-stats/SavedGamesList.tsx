@@ -20,6 +20,8 @@ interface SavedGamesListProps {
   onToggleGameSelection?: (gameId: string) => void;
   onClearSelection?: () => void;
   tournaments?: Tournament[];
+  selectionMode?: boolean;
+  onToggleSelectionMode?: () => void;
 }
 
 type SortField = 'date' | 'team' | 'score';
@@ -32,6 +34,8 @@ export default function SavedGamesList({
   onToggleGameSelection,
   onClearSelection,
   tournaments = [],
+  selectionMode = false,
+  onToggleSelectionMode,
 }: SavedGamesListProps) {
   const { palette } = useTheme();
   const { savedTeams } = useGameStore();
@@ -179,6 +183,28 @@ export default function SavedGamesList({
           />
         </View>
         <View style={styles.sortPills}>
+          <Pressable
+            style={[
+              styles.sortPill,
+              selectionMode
+                ? { backgroundColor: palette.accent, borderColor: palette.accent }
+                : { borderColor: palette.overlay10 },
+            ]}
+            onPress={onToggleSelectionMode}>
+            <MaterialCommunityIcons
+              name={selectionMode ? 'check-circle' : 'checkbox-multiple-outline'}
+              size={scaleBySizeClass(16, sizeClass)}
+              color={selectionMode ? palette.textOnAccent : palette.textMuted}
+            />
+            <Text
+              style={[
+                styles.sortPillText,
+                { color: selectionMode ? palette.textOnAccent : palette.textMuted },
+                selectionMode && { fontWeight: '700' },
+              ]}>
+              {selectionMode ? 'Done' : 'Select'}
+            </Text>
+          </Pressable>
           {sortFields.map((opt) => {
             const isActive = sortField === opt.field;
             const icon = isActive
@@ -254,31 +280,37 @@ export default function SavedGamesList({
                   isSelected && { borderColor: palette.accent },
                 ]}>
                 {/* Checkbox Section */}
-                <Pressable
-                  style={styles.checkboxWrapper}
-                  onPress={() => onToggleGameSelection?.(game.id)}
-                  hitSlop={8}>
-                  <View
-                    style={[
-                      styles.checkbox,
-                      { borderColor: palette.overlay20 },
-                      isSelected && {
-                        backgroundColor: palette.accent,
-                        borderColor: palette.accent,
-                      },
-                    ]}>
-                    {isSelected && (
-                      <MaterialCommunityIcons
-                        name="check"
-                        size={scaleBySizeClass(14, sizeClass)}
-                        color={palette.textOnAccent}
-                      />
-                    )}
-                  </View>
-                </Pressable>
+                {selectionMode && (
+                  <Pressable
+                    style={styles.checkboxWrapper}
+                    onPress={() => onToggleGameSelection?.(game.id)}
+                    hitSlop={8}>
+                    <View
+                      style={[
+                        styles.checkbox,
+                        { borderColor: palette.overlay20 },
+                        isSelected && {
+                          backgroundColor: palette.accent,
+                          borderColor: palette.accent,
+                        },
+                      ]}>
+                      {isSelected && (
+                        <MaterialCommunityIcons
+                          name="check"
+                          size={scaleBySizeClass(14, sizeClass)}
+                          color={palette.textOnAccent}
+                        />
+                      )}
+                    </View>
+                  </Pressable>
+                )}
 
                 {/* Content Section */}
-                <Pressable style={styles.cardContent} onPress={() => onSelectGame(game)}>
+                <Pressable
+                  style={[styles.cardContent, selectionMode && { paddingLeft: 8 }]}
+                  onPress={() =>
+                    selectionMode ? onToggleGameSelection?.(game.id) : onSelectGame(game)
+                  }>
                   <View style={styles.savedGameHeader}>
                     <Text style={[styles.savedGameDate, { color: palette.textMuted }]}>
                       {formatDate(getGameDisplayTimestamp(game))}
@@ -482,7 +514,6 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     cardContent: {
       flex: 1,
       padding: 16,
-      paddingLeft: 8,
     },
     savedGameHeader: {
       flexDirection: 'row',
