@@ -121,20 +121,6 @@ This document tracks intentionally deferred cleanup work discovered during the d
   `lib/timeoutUtils.ts`
   `store/gameStore.types.ts`
 
-## P3 - Cross-Platform Font Consistency
-
-- The app uses the system font on all platforms (SF Pro on iOS, Roboto on Android). This causes two iOS-specific rendering issues:
-  1. **SF Pro optical size switching**: iOS automatically uses SF Pro Text below ~20pt and SF Pro Display above ~20pt. These are distinct optical variants with different letterform weights and spacing, so a small label (e.g., 11pt team name) and a large number (e.g., 64pt score) are rendered by effectively different typefaces, making the size contrast look more extreme on iOS than Android.
-  2. **Dynamic Type scaling**: `Text` components default to `allowFontScaling={true}`, meaning iOS system font size settings (Settings → Accessibility → Larger Text) scale all text. With no `maxFontSizeMultiplier` set anywhere, sizes can diverge in ways that break layout proportions.
-- Fix:
-  1. Bundle a cross-platform font (Inter is the recommended choice — neutral, consistent, strong bold/heavy weights for scores). Use `@expo-google-fonts/inter` or bundle TTF files in `assets/fonts/`. Load via `useFonts` in the root layout.
-  2. Apply globally via `Text.defaultProps` (set `fontFamily` + `maxFontSizeMultiplier={1}`) so no per-component changes are needed.
-  3. Explicitly map the needed weights: 400 (Regular), 600 (SemiBold), 700 (Bold), 800 (ExtraBold), 900 (Black). In React Native, `fontWeight` does not auto-map to bundled variants — each weight needs its own `fontFamily` name or the theme needs explicit per-weight font family constants.
-- `expo-font` is already installed.
-- References:
-  `app/_layout.tsx` (root layout — load fonts here)
-  `theme/theme.ts` (add font family constants here)
-  `components/ThemedText.tsx` (can set defaults here as an alternative to `Text.defaultProps`)
 
 ## P3 - Expo Router Naming and Feature Grouping
 

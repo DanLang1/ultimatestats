@@ -49,7 +49,6 @@ function RootLayoutInner() {
 export default function RootLayout() {
   const [initialTheme, setInitialTheme] = useState<'light' | 'dark'>('dark');
   const [isLoaded, setIsLoaded] = useState(false);
-
   // Load persisted theme on mount
   if (!isLoaded) {
     loadPersistedTheme().then((theme) => {

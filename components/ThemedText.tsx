@@ -1,5 +1,6 @@
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { Fonts } from '@/theme/theme';
 import { StyleSheet, Text, type TextProps } from 'react-native';
 
 export type ThemedTextProps = TextProps & {
@@ -30,24 +31,26 @@ export function ThemedText({ style, type = 'default', ...rest }: ThemedTextProps
 function createStyles(sizeClass: SizeClass) {
   return StyleSheet.create({
     default: {
+      fontFamily: Fonts.regular,
       fontSize: scaleBySizeClass(16, sizeClass),
       lineHeight: scaleBySizeClass(24, sizeClass),
     },
     defaultSemiBold: {
+      fontFamily: Fonts.semiBold,
       fontSize: scaleBySizeClass(16, sizeClass),
       lineHeight: scaleBySizeClass(24, sizeClass),
-      fontWeight: '600',
     },
     title: {
+      fontFamily: Fonts.bold,
       fontSize: scaleBySizeClass(32, sizeClass),
-      fontWeight: 'bold',
       lineHeight: scaleBySizeClass(32, sizeClass),
     },
     subtitle: {
+      fontFamily: Fonts.bold,
       fontSize: scaleBySizeClass(20, sizeClass),
-      fontWeight: 'bold',
     },
     link: {
+      fontFamily: Fonts.regular,
       lineHeight: scaleBySizeClass(30, sizeClass),
       fontSize: scaleBySizeClass(16, sizeClass),
     },

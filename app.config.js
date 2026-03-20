@@ -74,7 +74,18 @@ export default {
         addGeneratedScheme: IS_DEV,
       },
     ],
-    'expo-font',
+    [
+      'expo-font',
+      {
+        fonts: [
+          './assets/fonts/Inter-Regular.ttf',
+          './assets/fonts/Inter-SemiBold.ttf',
+          './assets/fonts/Inter-Bold.ttf',
+          './assets/fonts/Inter-ExtraBold.ttf',
+          './assets/fonts/Inter-Black.ttf',
+        ],
+      },
+    ],
     'expo-image',
     'expo-sharing',
     'expo-web-browser',
