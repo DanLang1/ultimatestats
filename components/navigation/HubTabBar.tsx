@@ -4,11 +4,13 @@ import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { useNewGame } from '@/hooks/useNewGame';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
-import { router, usePathname, type Href } from 'expo-router';
+import { router, usePathname, useSegments, type Href } from 'expo-router';
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 type HubTabRouteName = '(home)' | '(game)' | '(analytics)' | '(team)';
+const MODAL_SEGMENTS = new Set<string>(['(modals)']);
+
 const HUB_TAB_DISPLAY_ORDER: readonly HubTabRouteName[] = [
   '(home)',
   '(game)',
@@ -82,6 +84,7 @@ export default function HubTabBar({ state, descriptors, navigation }: BottomTabB
   const { palette, themeMode } = useTheme();
   const { sizeClass } = useLayout();
   const pathname = usePathname();
+  const segments = useSegments();
   const { confirmNewGame } = useNewGame({ onSuccess: () => router.navigate('/Scoreboard') });
   const styles = createStyles(sizeClass);
   const iconSize = scaleBySizeClass(20, sizeClass);
@@ -89,7 +92,7 @@ export default function HubTabBar({ state, descriptors, navigation }: BottomTabB
   const isLightTheme = themeMode === 'light';
   const sessionStatus = useGameSessionStatus();
 
-  if (pathname === '/Scoreboard') {
+  if (pathname === '/Scoreboard' || segments.some((s) => MODAL_SEGMENTS.has(s))) {
     return null;
   }
 

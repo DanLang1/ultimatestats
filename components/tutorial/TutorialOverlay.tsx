@@ -249,10 +249,13 @@ function createStyles(layout: LayoutInfo) {
       borderRadius: 12,
       borderWidth: 2,
       alignItems: 'center',
+      justifyContent: 'center',
     },
     backButtonText: {
       fontSize: scaleBySizeClass(16, layout.sizeClass),
       fontWeight: '600',
+      textAlign: 'center',
+      width: '100%',
     },
     nextButton: {
       flex: 1,
@@ -260,10 +263,13 @@ function createStyles(layout: LayoutInfo) {
       paddingHorizontal: 16,
       borderRadius: 12,
       alignItems: 'center',
+      justifyContent: 'center',
     },
     nextButtonText: {
       fontSize: scaleBySizeClass(16, layout.sizeClass),
       fontWeight: '600',
+      textAlign: 'center',
+      width: '100%',
     },
     privacyFooter: {
       alignItems: 'center',

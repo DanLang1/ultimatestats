@@ -6,6 +6,10 @@
 - Web support is currently deferred and not maintained.
 - Running Expo web (`w`) may surface unresolved runtime/bundling issues.
 
+## iOS Follow-ups
+
+See [ios-followups.md](ios-followups.md) for the current iOS-specific findings and next steps.
+
 ## Web Support Attempt Log
 
 ### Context
@@ -18,13 +22,16 @@ During a local web run, the app hit:
 ### Changes Attempted
 
 1. `context/ThemeContext.tsx`
+
 - Added an SSR guard to `loadPersistedTheme()` (`typeof window === 'undefined'` fallback).
 - Added a `useInitialTheme()` hook that loads persisted theme in `useEffect`.
 
 2. `app/_layout.tsx`
+
 - Switched from render-time async call (`loadPersistedTheme().then(...)`) to `useInitialTheme()`.
 
 3. `metro.config.js` (new file)
+
 - Added Metro resolver overrides:
   - `unstable_enablePackageExports = true`
   - `unstable_conditionNames = ['browser', 'require', 'react-native', 'default']`

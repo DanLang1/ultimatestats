@@ -2,7 +2,7 @@ import { useTheme } from '@/context/ThemeContext';
 import { getSizeClassValue, SizeClass } from '@/hooks/useLayout';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
-import { Switch as RNSwitch, StyleSheet, Text, View } from 'react-native';
+import { Platform, Switch as RNSwitch, StyleSheet, Text, View } from 'react-native';
 
 interface SwitchProps {
   label: string;
@@ -24,7 +24,10 @@ export function Switch({
   const { palette } = useTheme();
   const styles = createStyles(sizeClass);
   const lockIconSize = getSizeClassValue({ small: 10, medium: 11, large: 12 }, sizeClass);
-  const switchScale = getSizeClassValue({ small: 1, medium: 1.12, large: 1.2 }, sizeClass);
+  const switchScale =
+    Platform.OS === 'ios'
+      ? getSizeClassValue({ small: 0.8, medium: 0.9, large: 1.0 }, sizeClass)
+      : getSizeClassValue({ small: 1, medium: 1.12, large: 1.2 }, sizeClass);
 
   return (
     <View style={[styles.container, disabled && styles.disabled]}>

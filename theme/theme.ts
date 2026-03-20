@@ -200,6 +200,8 @@ export const darkPalette = {
   overlayModal: 'rgba(0,0,0,0.6)', // Darker backdrop for dark theme
   // Glass/floating bar backgrounds
   glassBg: 'rgba(15, 23, 42, 0.92)', // Dark slate with transparency
+  // App chrome (status bar area, safe area insets) — always Navy regardless of theme
+  chrome: '#0F172A',
 };
 
 /**
@@ -287,8 +289,9 @@ export const lightPalette = {
   textOnAccent: '#FFFFFF',
 
   // Glass/floating bar backgrounds
-  // Glass/floating bar backgrounds
   glassBg: 'rgba(255, 255, 255, 0.95)', // White with transparency
+  // App chrome (status bar area, safe area insets) — always Navy regardless of theme
+  chrome: '#0F172A',
 
   // Lock Screen (Fixed Contrast)
   lockScreenText: '#FFFFFF',
@@ -316,6 +319,7 @@ export type Palette = {
   overlayModal: string;
   textOnAccent: string;
   glassBg: string;
+  chrome: string;
   lockScreenText: string;
   lockScreenBtnPrimaryBg: string;
   lockScreenBtnPrimaryText: string;

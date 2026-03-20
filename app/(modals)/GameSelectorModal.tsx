@@ -7,11 +7,13 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router } from 'expo-router';
 import React from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function GameSelectorModal() {
   const { games, selectedGameId, setSelectedGameId, playerId, team } = usePlayerStatsStore();
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
+  const { bottom: bottomInset } = useSafeAreaInsets();
   const styles = createStyles(sizeClass);
 
   if (!games || games.length === 0) {
@@ -98,7 +100,10 @@ export default function GameSelectorModal() {
           </View>
 
           {/* Game list */}
-          <ScrollView bounces={false} style={styles.scrollView}>
+          <ScrollView
+            bounces={false}
+            style={styles.scrollView}
+            contentContainerStyle={{ paddingBottom: Math.max(12, bottomInset) }}>
             {sortedGames.map((g) => {
               const isSelected = effectiveGameId === g.id;
               return (

@@ -28,7 +28,7 @@ This project uses **Expo Router transparent modals** for overlay-style UI elemen
 
 ### 1. Create the Route File
 
-Create a new file in `app/` with `Modal` suffix (e.g., `app/MyFeatureModal.tsx`):
+Create a new file in `app/(modals)/` with `Modal` suffix (e.g., `app/(modals)/MyFeatureModal.tsx`):
 
 ```tsx
 import { useTheme } from '@/context/ThemeContext';
@@ -89,18 +89,12 @@ const styles = StyleSheet.create({
 
 ### 2. Register in Layout
 
-Add to `app/_layout.tsx`:
+All modals live under `app/(modals)/`. The `(modals)` group is registered in the root `app/_layout.tsx` with `presentation: 'transparentModal'` applied globally, so most modals require no additional registration.
+
+If your modal needs a non-default animation (e.g., `'fade'` instead of `'none'`), add a `Stack.Screen` entry to `app/(modals)/_layout.tsx`:
 
 ```tsx
-<Stack.Screen
-  name="MyFeatureModal"
-  options={{
-    presentation: 'transparentModal',
-    animation: 'fade',
-    gestureEnabled: false,
-    contentStyle: { backgroundColor: 'transparent' },
-  }}
-/>
+<Stack.Screen name="MyFeatureModal" options={{ animation: 'fade' }} />
 ```
 
 ### 3. Navigate to Modal
@@ -184,49 +178,73 @@ export default function EditPlayerModal() {
 
 **Why this matters:** Calling `router.navigate()` or `router.dismissTo()` during render is a side effect that triggers React's warning. The `<Redirect>` component is the React-way to handle this declaratively.
 
-## Portrait Mode Support
+## Safe Area Handling in Modals
 
-Modals that can appear on portrait-enabled screens need extra handling for safe areas and orientation.
-Use [responsive-layout.md](responsive-layout.md) as the source of truth for orientation behavior and `useLayout()` / `createStyles()` patterns.
+Modals under `app/(modals)/` are rendered **outside** the `SafeAreaView` in `app/(main)/_layout.tsx`. They cover the full screen including safe area zones. Each modal is responsible for its own inset handling via `useSafeAreaInsets()`.
 
-### Required Steps
+### Bottom sheets (`justifyContent: 'flex-end'`)
 
-1. **Rely on root safe area edges** (`app/_layout.tsx`) for top/bottom safe area.
-2. **Use safe area insets only when needed** (typically for horizontal inset handling):
+Apply the bottom inset to the scroll view's `contentContainerStyle` (or the sheet's bottom padding if there's no scroll view):
 
 ```tsx
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function MyModal() {
-  const insets = useSafeAreaInsets();
+  const { bottom: bottomInset } = useSafeAreaInsets();
 
   return (
     <View style={StyleSheet.absoluteFill}>
-      <Pressable style={[styles.overlay, { backgroundColor: palette.overlayDark40 }]}>
+      <Pressable
+        style={[styles.overlay, { backgroundColor: palette.overlayDark40 }]}
+        onPress={handleDismiss}>
         <View
-          style={[
-            styles.sheet,
-            { backgroundColor: palette.modalBg, paddingHorizontal: Math.max(insets.left, 16) },
-          ]}>
-          {/* content */}
+          style={[styles.sheet, { backgroundColor: palette.modalBg }]}
+          onStartShouldSetResponder={() => true}>
+          <ScrollView contentContainerStyle={{ paddingBottom: Math.max(12, bottomInset) }}>
+            {/* content */}
+          </ScrollView>
         </View>
       </Pressable>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  overlay: { flex: 1, justifyContent: 'flex-end' },
+  sheet: { borderTopLeftRadius: 20, borderTopRightRadius: 20 },
+});
 ```
 
-3. **Ensure content is scrollable** — portrait has less horizontal space, so wrap content in `ScrollView` if it may overflow.
+### Centered modals (`justifyContent: 'center'`)
 
-### Modals with Portrait Support
+Centered modals don't sit at the screen edge, so bottom/top insets are generally not needed. Horizontal insets may matter in landscape on notched devices:
 
-- `app/EditEventModal.tsx` - Edit action modal (opened from the GameTimeline screen)
+```tsx
+const { left: leftInset } = useSafeAreaInsets();
+// paddingHorizontal: Math.max(leftInset, 24)
+```
+
+### Orientation
+
+Use [responsive-layout.md](responsive-layout.md) as the source of truth for `useLayout()` / `createStyles()` patterns. Ensure content is scrollable when portrait reduces horizontal space.
 
 ## Existing Modal Routes
 
-- `app/StatEntryModal.tsx` - Goal/assist entry after scoring
-- `app/TurnoverEntryModal.tsx` - Turnover type selection
-- `app/EditPlayerModal.tsx` - Edit player details
+All modals live under `app/(modals)/`:
+
+| File                      | Description                          |
+| ------------------------- | ------------------------------------ |
+| `StatEntryModal.tsx`      | Goal/assist entry after scoring      |
+| `TurnoverEntryModal.tsx`  | Turnover type selection              |
+| `HalftimeModal.tsx`       | Halftime break screen                |
+| `TimeoutModal.tsx`        | Timeout timer UI                     |
+| `PointSummaryModal.tsx`   | Point outcome summary                |
+| `GameSelectorModal.tsx`   | Game picker sheet (from PlayerStats) |
+| `EditEventModal.tsx`      | Edit a timeline event                |
+| `EditPlayerModal.tsx`     | Edit player details                  |
+| `EditDurationModal.tsx`   | Edit game/period duration            |
+| `NumberPickerModal.tsx`   | Generic number picker                |
+| `TeamManagementModal.tsx` | Team management sheet                |
 
 ---
 

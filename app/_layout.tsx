@@ -8,7 +8,7 @@ import { useState } from 'react';
 import 'react-native-reanimated';
 
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 // KEEP THIS: If we need to suppress the deep link logs, this is how
 // Think it's just a dev issue, won't happen in prod
@@ -18,43 +18,31 @@ import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 // }
 
 function RootLayoutInner() {
-  const { palette, themeMode } = useTheme();
+  const { palette } = useTheme();
   const orientationMode = useSettingsStore((state) => state.orientationMode);
   useOrientationLock(orientationMode);
 
-  // Safe area background should always be dark for contrast
-  // In dark mode: use primary (Navy)
-  // In light mode: use surface (Navy) since primary is white
-  const safeAreaBg = themeMode === 'light' ? palette.surface : palette.primary;
-
   return (
-    <SafeAreaView
-      style={{
-        flex: 1,
-        backgroundColor: safeAreaBg,
-      }}
-      edges={['top', 'bottom', 'left', 'right']}>
-      <GestureHandlerRootView style={{ flex: 1 }}>
-        <Stack
-          screenOptions={{
-            headerShown: false,
-            animation: 'none',
-            contentStyle: { backgroundColor: safeAreaBg },
-          }}>
-          <Stack.Screen name="(main)" />
-          <Stack.Screen
-            name="(modals)"
-            options={{
-              presentation: 'transparentModal',
-              gestureEnabled: false,
-              contentStyle: { backgroundColor: 'transparent' },
-            }}
-          />
-        </Stack>
+    <GestureHandlerRootView style={{ flex: 1, backgroundColor: palette.chrome }}>
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          animation: 'none',
+          contentStyle: { backgroundColor: palette.chrome },
+        }}>
+        <Stack.Screen name="(main)" />
+        <Stack.Screen
+          name="(modals)"
+          options={{
+            presentation: 'transparentModal',
+            gestureEnabled: false,
+            contentStyle: { backgroundColor: 'transparent' },
+          }}
+        />
+      </Stack>
 
-        <StatusBar style={themeMode === 'dark' ? 'light' : 'dark'} hidden />
-      </GestureHandlerRootView>
-    </SafeAreaView>
+      <StatusBar style="light" />
+    </GestureHandlerRootView>
   );
 }
 

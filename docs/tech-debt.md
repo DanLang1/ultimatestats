@@ -1,6 +1,6 @@
 # Tech Debt Backlog
 
-Last updated: February 28, 2026
+Last updated: March 17, 2026
 
 This document tracks intentionally deferred cleanup work discovered during the docs/rules/workflow audit.
 
@@ -11,12 +11,16 @@ This document tracks intentionally deferred cleanup work discovered during the d
 - References:
   `docs/modals.md:136`
   `docs/modals.md:146`
-  `app/EditEventModal.tsx:183`
-  `app/EditEventModal.tsx:211`
-  `app/EditEventModal.tsx:220`
-  `app/NumberPickerModal.tsx:46`
-  `app/NumberPickerModal.tsx:52`
-  `app/GameTimeline.tsx:86`
+  `app/(modals)/EditDurationModal.tsx:120`
+  `app/(modals)/EditDurationModal.tsx:131`
+  `app/(modals)/NumberPickerModal.tsx:51`
+  `app/(modals)/NumberPickerModal.tsx:60`
+  `app/(modals)/EditEventModal.tsx:208`
+  `app/(modals)/EditEventModal.tsx:236`
+  `app/(modals)/EditEventModal.tsx:245`
+  `app/(modals)/StatEntryModal.tsx:69`
+  `app/(modals)/StatEntryModal.tsx:79`
+  `app/(modals)/StatEntryModal.tsx:86`
 
 ## P2 - `cancelPendingGoal` Does Not Re-derive Timeout State
 
@@ -24,8 +28,9 @@ This document tracks intentionally deferred cleanup work discovered during the d
 - Impact: if team1 used a timeout in the first half, then scored the halftime goal (which resets timeouts via `fill(true)`), then canceled the stat entry — the used timeout is silently restored and available again.
 - Fix: call `deriveTimeoutState` at the end of `cancelPendingGoal`, same as `undoLastAction`.
 - References:
-  `store/gameStore.ts:573` (`cancelPendingGoal` — missing `deriveTimeoutState` call)
-  `store/gameStore.ts:305` (`undoLastAction` — correct pattern to follow)
+  `store/gameStore.ts:654` (`cancelPendingGoal` — missing `deriveTimeoutState` call)
+  `store/gameStore.ts:287` (`undoLastAction` — correct pattern to follow)
+  `store/gameStore.ts:368` (`undoLastAction` — derives timeout state)
   `lib/timeoutUtils.ts:19` (`deriveTimeoutState`)
 
 ## P2 - Modal Theming Token Alignment
@@ -34,34 +39,35 @@ This document tracks intentionally deferred cleanup work discovered during the d
 - References:
   `docs/modals.md:7`
   `docs/modals.md:20`
-  `app/HalftimeModal.tsx:128`
-  `app/HalftimeModal.tsx:136`
-  `app/HalftimeModal.tsx:165`
-  `app/PullPromptModal.tsx:95`
-  `app/PullPromptModal.tsx:145`
-  `app/GameTimeline.tsx:89`
-  `app/GameTimeline.tsx:91`
+  `app/(modals)/HalftimeModal.tsx:93`
+  `app/(modals)/HalftimeModal.tsx:132`
+  `app/(modals)/HalftimeModal.tsx:179`
+  `app/(modals)/TimeoutModal.tsx:80`
+  `app/(modals)/TimeoutModal.tsx:112`
+  `app/(modals)/PointSummaryModal.tsx:171`
+  `app/(modals)/PointSummaryModal.tsx:257`
+  `app/(modals)/TeamManagementModal.tsx:61`
+  `app/(modals)/GameSelectorModal.tsx:44`
+  `app/(modals)/GameSelectorModal.tsx:138`
+  `app/(modals)/EditDurationModal.tsx:375`
+  `app/(modals)/EditEventModal.tsx:308`
 
 ## P2 - Remove Raw Color Literals
 
 - Replace hardcoded color values with theme tokens.
 - References:
   `AGENTS.md:92`
-  `app/HalftimeModal.tsx:303`
-  `app/PullPromptModal.tsx:328`
-  `app/PullPromptModal.tsx:400`
-  `app/(main)/LineEditor.tsx`
-  `app/PlayerStats.tsx:167`
-
-## P3 - Documentation Hygiene
-
-- Refresh `docs/responsive-layout.md` migration list to remove files already migrated.
-- Add `.agent/workflows/dev-build.md` to runbook index in `AGENTS.md`.
-- Consider adding `docs/responsive-layout.md` to quick links in `docs/README.md`.
-- References:
-  `docs/responsive-layout.md:99`
-  `AGENTS.md:143`
-  `docs/README.md:69`
+  `app/(modals)/EditPlayerModal.tsx:161`
+  `app/(modals)/HalftimeModal.tsx:78`
+  `app/(modals)/HalftimeModal.tsx:353`
+  `app/(modals)/TeamManagementModal.tsx:113`
+  `app/(modals)/TimeoutModal.tsx:55`
+  `app/(modals)/TimeoutModal.tsx:165`
+  `app/(modals)/PointSummaryModal.tsx:281`
+  `app/(main)/(hub)/(home)/Dashboard.tsx:297`
+  `app/(main)/(hub)/(home)/Dashboard.tsx:319`
+  `app/(main)/(hub)/(home)/Dashboard.tsx:361`
+  `app/(main)/(hub)/(analytics)/PlayerStats.tsx:165`
 
 ## P3 - Store Architecture Refactor
 
@@ -90,8 +96,9 @@ This document tracks intentionally deferred cleanup work discovered during the d
 - First-time stats onboarding currently only triggers from Settings. Enabling stat tracking from the pre-game screen bypasses that tutorial path.
 - If multiple entry points for stat tracking remain, the first-enable tutorial check should be centralized so onboarding behavior stays consistent.
 - References:
-  `app/(main)/PreGameConfirm.tsx:283`
-  `app/(main)/Settings.tsx:567`
+  `app/(main)/PreGameConfirm.tsx:305`
+  `app/(main)/Settings.tsx:597`
+  `app/(main)/Settings.tsx:598`
   `store/tutorialStore.ts`
 
 ## P3 - Saved-Games Recovery Edge Cases
@@ -102,8 +109,7 @@ This document tracks intentionally deferred cleanup work discovered during the d
 - References:
   `lib/storage/asyncStorageAdapter.ts:103`
   `components/dashboard/LegacyGamesDevModal.tsx:153`
-  `store/gameStore.ts:1146`
-  `app/(main)/ViewStats.tsx:67`
+  `store/gameStore.ts:1220`
 
 ## P3 - Manual Halftime Correction For Legacy Saved Games
 
@@ -115,6 +121,21 @@ This document tracks intentionally deferred cleanup work discovered during the d
   `lib/timeoutUtils.ts`
   `store/gameStore.types.ts`
 
+## P3 - Cross-Platform Font Consistency
+
+- The app uses the system font on all platforms (SF Pro on iOS, Roboto on Android). This causes two iOS-specific rendering issues:
+  1. **SF Pro optical size switching**: iOS automatically uses SF Pro Text below ~20pt and SF Pro Display above ~20pt. These are distinct optical variants with different letterform weights and spacing, so a small label (e.g., 11pt team name) and a large number (e.g., 64pt score) are rendered by effectively different typefaces, making the size contrast look more extreme on iOS than Android.
+  2. **Dynamic Type scaling**: `Text` components default to `allowFontScaling={true}`, meaning iOS system font size settings (Settings → Accessibility → Larger Text) scale all text. With no `maxFontSizeMultiplier` set anywhere, sizes can diverge in ways that break layout proportions.
+- Fix:
+  1. Bundle a cross-platform font (Inter is the recommended choice — neutral, consistent, strong bold/heavy weights for scores). Use `@expo-google-fonts/inter` or bundle TTF files in `assets/fonts/`. Load via `useFonts` in the root layout.
+  2. Apply globally via `Text.defaultProps` (set `fontFamily` + `maxFontSizeMultiplier={1}`) so no per-component changes are needed.
+  3. Explicitly map the needed weights: 400 (Regular), 600 (SemiBold), 700 (Bold), 800 (ExtraBold), 900 (Black). In React Native, `fontWeight` does not auto-map to bundled variants — each weight needs its own `fontFamily` name or the theme needs explicit per-weight font family constants.
+- `expo-font` is already installed.
+- References:
+  `app/_layout.tsx` (root layout — load fonts here)
+  `theme/theme.ts` (add font family constants here)
+  `components/ThemedText.tsx` (can set defaults here as an alternative to `Text.defaultProps`)
+
 ## P3 - Expo Router Naming and Feature Grouping
 
 - Standardize route filenames to lowercase kebab-case for long-term consistency (for example `GameInfo.tsx` -> `game-info.tsx`) with a planned migration that preserves existing links during rollout.
@@ -122,3 +143,11 @@ This document tracks intentionally deferred cleanup work discovered during the d
 - References:
   `docs/navigation-map.md`
   `app/(main)/_layout.tsx`
+
+## Resolved (2026-03-14)
+
+### Documentation Hygiene
+
+- Refresh `docs/responsive-layout.md` migration list to remove files already migrated.
+- Add `.agent/workflows/dev-build.md` to runbook index in `AGENTS.md`.
+- Consider adding `docs/responsive-layout.md` to quick links in `docs/README.md`.

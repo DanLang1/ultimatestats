@@ -28,10 +28,10 @@ export function useReclampOnResize({
   const wasLandscape = useRef(isLandscape);
 
   useEffect(() => {
-    const leftBound = insets.left + 8;
-    const rightBound = screenWidth - insets.right - effectiveWidth - 24;
+    const leftBound = 8;
+    const rightBound = screenWidth - insets.left - insets.right - effectiveWidth - 24;
     const topBound = insets.top + 40;
-    const bottomBound = screenHeight - insets.bottom - effectiveHeight - 48;
+    const bottomBound = screenHeight - insets.top - insets.bottom - effectiveHeight - 48;
 
     const clampedX = Math.max(leftBound, Math.min(translateX.value, rightBound));
 

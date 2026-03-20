@@ -6,6 +6,7 @@ import { Player } from '@/lib/storage/types';
 import { useGameStore } from '@/store/gameStore';
 import React, { useState } from 'react';
 import { Keyboard, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeIn, LinearTransition, SlideInDown } from 'react-native-reanimated';
 import { StatEntryHeader } from './StatEntryHeader';
 import { StatEntryRoster } from './StatEntryRoster';
@@ -41,8 +42,18 @@ export function StatEntryInner({
   const { palette, themeMode } = useTheme();
   const { events } = useGameStore();
   const { isLandscape, sizeClass } = useLayout();
+  const { bottom: bottomInset, left: leftInset, right: rightInset } = useSafeAreaInsets();
   const styles = createStyles(sizeClass);
   const compactRosterMaxHeight = isLandscape ? 220 : 400;
+  const sheetInsetStyle = {
+    paddingBottom: Math.max(10, bottomInset),
+    ...(isLandscape
+      ? {
+          marginLeft: Math.max(12, leftInset),
+          marginRight: Math.max(12, rightInset),
+        }
+      : {}),
+  };
 
   // Only show active players
   const activeRoster = getActiveRoster(roster);
@@ -240,7 +251,7 @@ export function StatEntryInner({
     return (
       <AnimatedThemedView
         entering={SlideInDown.duration(400)}
-        style={[styles.sheet, { shadowColor: palette.shadow, paddingBottom: 10 }]}
+        style={[styles.sheet, { shadowColor: palette.shadow }, sheetInsetStyle]}
         onStartShouldSetResponder={() => true}>
         <Pressable onPress={() => {}} style={styles.sheetContent}>
           <View style={styles.compactContainer}>
@@ -270,7 +281,7 @@ export function StatEntryInner({
     return (
       <AnimatedThemedView
         entering={SlideInDown.duration(400)}
-        style={[styles.sheet, { shadowColor: palette.shadow, paddingBottom: 10 }]}
+        style={[styles.sheet, { shadowColor: palette.shadow }, sheetInsetStyle]}
         onStartShouldSetResponder={() => true}>
         <Pressable onPress={() => {}} style={styles.sheetContent}>
           <View style={styles.compactContainer}>
@@ -330,7 +341,7 @@ export function StatEntryInner({
   return (
     <AnimatedThemedView
       entering={SlideInDown.duration(400)}
-      style={[styles.sheet, { shadowColor: palette.shadow, paddingBottom: 10 }]}
+      style={[styles.sheet, { shadowColor: palette.shadow }, sheetInsetStyle]}
       onStartShouldSetResponder={() => true}>
       <Pressable onPress={() => {}} style={styles.sheetContent}>
         <View style={styles.sideBySideContainer}>
@@ -398,7 +409,6 @@ function createStyles(sizeClass: SizeClass) {
     sheet: {
       borderTopLeftRadius: 24,
       borderTopRightRadius: 24,
-      paddingBottom: 10,
       shadowOffset: { width: 0, height: -4 },
       shadowOpacity: 0.15,
       shadowRadius: 12,

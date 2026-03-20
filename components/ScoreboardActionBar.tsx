@@ -85,7 +85,7 @@ export function ScoreboardActionBar({
 
   const getInitialY = () => {
     if (actionBarPosition.x === 0 && actionBarPosition.y === 0) {
-      return screenHeight - metrics.estimatedHeight - 100;
+      return screenHeight - insets.top - insets.bottom - metrics.estimatedHeight - 100;
     }
     return actionBarPosition.y;
   };
@@ -110,10 +110,10 @@ export function ScoreboardActionBar({
     const effectiveHeight = boxHeight.value;
 
     // Account for safe areas and margin for shadows
-    const leftBound = insets.left + 8;
-    const rightBound = screenWidth - insets.right - effectiveWidth - 24;
+    const leftBound = 8;
+    const rightBound = screenWidth - insets.left - insets.right - effectiveWidth - 24;
     const topBound = insets.top + 40;
-    const bottomBound = screenHeight - insets.bottom - effectiveHeight - 10;
+    const bottomBound = screenHeight - insets.top - insets.bottom - effectiveHeight - 10;
 
     const clampedX = Math.max(leftBound, Math.min(x, rightBound));
     const clampedY = Math.max(topBound, Math.min(y, bottomBound));
