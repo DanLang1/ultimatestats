@@ -26,10 +26,8 @@ export default function StatRing({ percentage, label, sublabel, info, infoLabel 
   // Clamp percentage between 0-100
   const clampedPercent = Math.max(0, Math.min(100, percentage));
 
-  // Format percentage display
-  const displayValue = Number.isInteger(percentage)
-    ? `${Math.round(percentage)}%`
-    : `${percentage.toFixed(1)}%`;
+  // Format percentage display — rounded to avoid cramped decimals in rings
+  const displayValue = `${Math.round(percentage)}%`;
 
   const size = scaleBySizeClass(90, sizeClass);
   const strokeWidth = scaleBySizeClass(14, sizeClass);

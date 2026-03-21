@@ -33,17 +33,14 @@ function createStyles(sizeClass: SizeClass) {
     default: {
       fontFamily: Fonts.regular,
       fontSize: scaleBySizeClass(16, sizeClass),
-      lineHeight: scaleBySizeClass(24, sizeClass),
     },
     defaultSemiBold: {
       fontFamily: Fonts.semiBold,
       fontSize: scaleBySizeClass(16, sizeClass),
-      lineHeight: scaleBySizeClass(24, sizeClass),
     },
     title: {
       fontFamily: Fonts.bold,
       fontSize: scaleBySizeClass(32, sizeClass),
-      lineHeight: scaleBySizeClass(32, sizeClass),
     },
     subtitle: {
       fontFamily: Fonts.bold,
@@ -51,7 +48,6 @@ function createStyles(sizeClass: SizeClass) {
     },
     link: {
       fontFamily: Fonts.regular,
-      lineHeight: scaleBySizeClass(30, sizeClass),
       fontSize: scaleBySizeClass(16, sizeClass),
     },
   });

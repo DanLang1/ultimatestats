@@ -277,7 +277,7 @@ export default function EditPlayerModal() {
                     onPress={() => setRole(role === 'handler' ? null : 'handler')}>
                     <MaterialCommunityIcons
                       name="bullseye-arrow"
-                      size={scaleBySizeClass(14, sizeClass)}
+                      size={scaleBySizeClass(12, sizeClass)}
                       color={role === 'handler' ? palette.textOnAccent : palette.modalTextMuted}
                     />
                     <ThemedText
@@ -303,7 +303,7 @@ export default function EditPlayerModal() {
                     onPress={() => setRole(role === 'hybrid' ? null : 'hybrid')}>
                     <MaterialCommunityIcons
                       name="star-three-points"
-                      size={scaleBySizeClass(14, sizeClass)}
+                      size={scaleBySizeClass(12, sizeClass)}
                       color={role === 'hybrid' ? palette.textOnAccent : palette.modalTextMuted}
                     />
                     <ThemedText
@@ -329,7 +329,7 @@ export default function EditPlayerModal() {
                     onPress={() => setRole(role === 'cutter' ? null : 'cutter')}>
                     <MaterialCommunityIcons
                       name="shoe-print"
-                      size={scaleBySizeClass(14, sizeClass)}
+                      size={scaleBySizeClass(12, sizeClass)}
                       color={role === 'cutter' ? palette.textOnAccent : palette.modalTextMuted}
                     />
                     <ThemedText
@@ -454,7 +454,9 @@ function createStyles(sizeClass: SizeClass) {
     },
     pillWithIcon: {
       flexDirection: 'row',
-      gap: 4,
+      gap: 3,
+      paddingHorizontal: 8,
+      minWidth: 0,
     },
     pillText: {
       fontSize: scaleBySizeClass(12, sizeClass),
