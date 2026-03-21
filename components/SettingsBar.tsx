@@ -2,15 +2,15 @@ import { useTheme } from '@/context/ThemeContext';
 import { getSizeClassValue, SizeClass, useLayout } from '@/hooks/useLayout';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
+import { ThemedText } from '@/components/ThemedText';
 import { useGameTimer } from '@/hooks/useGameTimer';
 import { formatRatio, getExpectedRatio, getSequenceNumber } from '@/lib/genderRatioUtils';
 import { useGameStore } from '@/store/gameStore';
 import { useSettingsStore } from '@/store/settingsStore';
+import { Fonts } from '@/theme/theme';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
 import { Linking, Pressable, StyleSheet, View } from 'react-native';
-import { ThemedText } from '@/components/ThemedText';
-import { Fonts } from '@/theme/theme';
 import { AlertModal } from './ui/AlertModal';
 import FlashingIcon from './ui/FlashingIcon';
 
@@ -170,6 +170,7 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     timerText: {
       fontSize: timerTextSize,
       fontFamily: Fonts.bold,
+      fontVariant: ['tabular-nums'],
     },
     iconButton: {
       padding: iconButtonPadding,

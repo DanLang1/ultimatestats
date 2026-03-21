@@ -19,6 +19,8 @@ module.exports = defineConfig([
     rules: {
       ...tseslint.configs.recommended.rules,
       'local/no-unscaled-sizes': 'error',
+      'local/no-raw-text': 'error',
+      'local/no-font-weight': 'error',
       'no-restricted-syntax': [
         'error',
         {
