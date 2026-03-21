@@ -1,4 +1,5 @@
 import { useAlert } from '@/components/ui/AlertProvider';
+import { BottomSheet } from '@/components/ui/BottomSheet';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { useGameStore } from '@/store/gameStore';
@@ -45,77 +46,67 @@ export default function TeamManagementModal() {
   };
 
   return (
-    <View style={StyleSheet.absoluteFill}>
-      <Pressable style={styles.overlay} onPress={handleDismiss}>
-        <View
-          style={[styles.sheet, { backgroundColor: palette.modalBg }]}
-          onStartShouldSetResponder={() => true}>
-          <View style={[styles.handle, { backgroundColor: palette.overlay20 }]} />
-          <View style={styles.headerRow}>
-            <View style={styles.headerSpacer} />
-            <Text style={[styles.title, { color: palette.modalText }]}>Switch Team</Text>
-            <Pressable onPress={handleDismiss} hitSlop={12} style={styles.closeButton}>
+    <BottomSheet
+      onDismiss={handleDismiss}
+      sheetStyle={[styles.sheet, { backgroundColor: palette.modalBg }]}
+      minBottomPadding={20}>
+      <View style={[styles.handle, { backgroundColor: palette.overlay20 }]} />
+      <View style={styles.headerRow}>
+        <View style={styles.headerSpacer} />
+        <Text style={[styles.title, { color: palette.modalText }]}>Switch Team</Text>
+        <Pressable onPress={handleDismiss} hitSlop={12} style={styles.closeButton}>
+          <MaterialCommunityIcons
+            name="close"
+            size={scaleBySizeClass(24, sizeClass)}
+            color={palette.textMuted}
+          />
+        </Pressable>
+      </View>
+
+      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+        <View style={styles.options}>
+          {otherTeams.map((team) => (
+            <Pressable
+              key={team.id}
+              style={({ pressed }) => [
+                styles.option,
+                { backgroundColor: palette.overlay05 },
+                pressed && styles.optionPressed,
+              ]}
+              onPress={() => handleLoadTeam(team.id)}>
               <MaterialCommunityIcons
-                name="close"
-                size={scaleBySizeClass(24, sizeClass)}
+                name="account-group-outline"
+                size={scaleBySizeClass(22, sizeClass)}
                 color={palette.textMuted}
               />
+              <Text style={[styles.optionText, { color: palette.modalText }]}>{team.name}</Text>
+              <Pressable
+                style={styles.deleteButton}
+                onPress={() => handleDeleteTeam(team.id, team.name)}
+                hitSlop={8}>
+                <MaterialCommunityIcons
+                  name="trash-can-outline"
+                  size={scaleBySizeClass(18, sizeClass)}
+                  color={palette.danger}
+                />
+              </Pressable>
             </Pressable>
-          </View>
+          ))}
 
-          <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-            <View style={styles.options}>
-              {otherTeams.map((team) => (
-                <Pressable
-                  key={team.id}
-                  style={({ pressed }) => [
-                    styles.option,
-                    { backgroundColor: palette.overlay05 },
-                    pressed && styles.optionPressed,
-                  ]}
-                  onPress={() => handleLoadTeam(team.id)}>
-                  <MaterialCommunityIcons
-                    name="account-group-outline"
-                    size={scaleBySizeClass(22, sizeClass)}
-                    color={palette.textMuted}
-                  />
-                  <Text style={[styles.optionText, { color: palette.modalText }]}>{team.name}</Text>
-                  <Pressable
-                    style={styles.deleteButton}
-                    onPress={() => handleDeleteTeam(team.id, team.name)}
-                    hitSlop={8}>
-                    <MaterialCommunityIcons
-                      name="trash-can-outline"
-                      size={scaleBySizeClass(18, sizeClass)}
-                      color={palette.danger}
-                    />
-                  </Pressable>
-                </Pressable>
-              ))}
-
-              {otherTeams.length === 0 && (
-                <Text style={[styles.emptyText, { color: palette.textMuted }]}>
-                  No other teams saved yet
-                </Text>
-              )}
-            </View>
-          </ScrollView>
+          {otherTeams.length === 0 && (
+            <Text style={[styles.emptyText, { color: palette.textMuted }]}>
+              No other teams saved yet
+            </Text>
+          )}
         </View>
-      </Pressable>
-    </View>
+      </ScrollView>
+    </BottomSheet>
   );
 }
 
 function createStyles(sizeClass: SizeClass) {
   return StyleSheet.create({
-    overlay: {
-      flex: 1,
-      backgroundColor: 'rgba(0, 0, 0, 0.5)',
-      justifyContent: 'flex-end',
-    },
     sheet: {
-      borderTopLeftRadius: 20,
-      borderTopRightRadius: 20,
       padding: 20,
       maxHeight: '70%',
     },

@@ -134,6 +134,7 @@ export function useMyFeatureNavigation() {
 | Set `contentStyle: { backgroundColor: 'transparent' }` | Shows your overlay background correctly                 |
 | Prefer declarative navigation                          | Avoids useEffect complexity and timing issues           |
 | Use `palette.modalBg` and `palette.modalText`          | Correct colors in both dark and light mode              |
+| Bottom sheets must use `useSafeAreaInsets()`           | Modals render outside `SafeAreaView`; bottom inset must be applied manually or content clips under the Android nav bar |
 
 ### Modal Navigation from Non-Root Screens
 
@@ -184,36 +185,31 @@ Modals under `app/(modals)/` are rendered **outside** the `SafeAreaView` in `app
 
 ### Bottom sheets (`justifyContent: 'flex-end'`)
 
-Apply the bottom inset to the scroll view's `contentContainerStyle` (or the sheet's bottom padding if there's no scroll view):
+Use the `BottomSheet` component from `@/components/ui/BottomSheet`. It handles the full-screen overlay, backdrop dismiss, sheet border radius, and bottom safe-area inset automatically — do **not** call `useSafeAreaInsets()` manually in bottom sheet modals.
+
+Pass `minBottomPadding` to match the sheet's internal padding so the bottom padding never shrinks below that value on devices with no system inset.
 
 ```tsx
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { BottomSheet } from '@/components/ui/BottomSheet';
 
 export default function MyModal() {
-  const { bottom: bottomInset } = useSafeAreaInsets();
-
   return (
-    <View style={StyleSheet.absoluteFill}>
-      <Pressable
-        style={[styles.overlay, { backgroundColor: palette.overlayDark40 }]}
-        onPress={handleDismiss}>
-        <View
-          style={[styles.sheet, { backgroundColor: palette.modalBg }]}
-          onStartShouldSetResponder={() => true}>
-          <ScrollView contentContainerStyle={{ paddingBottom: Math.max(12, bottomInset) }}>
-            {/* content */}
-          </ScrollView>
-        </View>
-      </Pressable>
-    </View>
+    <BottomSheet
+      onDismiss={handleDismiss}
+      overlayColor={palette.overlayDark40}
+      sheetStyle={[styles.sheet, { backgroundColor: palette.modalBg }]}
+      minBottomPadding={20}>
+      {/* content */}
+    </BottomSheet>
   );
 }
 
 const styles = StyleSheet.create({
-  overlay: { flex: 1, justifyContent: 'flex-end' },
-  sheet: { borderTopLeftRadius: 20, borderTopRightRadius: 20 },
+  sheet: { padding: 20, maxHeight: '70%' },
 });
 ```
+
+> **Note:** `StatEntryInner` and `TurnoverEntryInner` manage their own sheet rendering and insets (including left/right for landscape). Do not use `BottomSheet` as a wrapper for those modals.
 
 ### Centered modals (`justifyContent: 'center'`)
 

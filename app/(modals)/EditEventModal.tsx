@@ -1,4 +1,5 @@
 import { useAlert } from '@/components/ui/AlertProvider';
+import { BottomSheet } from '@/components/ui/BottomSheet';
 import { PlayerChip } from '@/components/ui/PlayerChip';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
@@ -250,266 +251,240 @@ export default function EditEventModal() {
   const playerName = getPlayerName(roster, selectedPlayerId);
 
   return (
-    <View style={StyleSheet.absoluteFill}>
-      <Pressable
-        style={[styles.overlay, { backgroundColor: palette.overlayDark60 }]}
-        onPress={handleDismiss}>
-        <Pressable
-          style={[styles.sheet, { backgroundColor: palette.modalBg }]}
-          onPress={(e) => e.stopPropagation()}>
-          {/* Header */}
-          <View style={[styles.header, { borderBottomColor: palette.overlay15 }]}>
-            <Text style={[styles.headerTitle, { color: palette.modalText }]}>
-              {isGoal
-                ? params.editField === 'scorer'
-                  ? 'Edit Goal'
-                  : 'Edit Assist'
-                : 'Edit Event'}
-            </Text>
-            <View style={styles.headerActions}>
-              {isTurnover && (
-                <>
-                  <Pressable
-                    onPress={handleDelete}
-                    hitSlop={12}
-                    style={[styles.headerButton, { backgroundColor: palette.dangerOverlay15 }]}>
-                    <MaterialCommunityIcons
-                      name="trash-can-outline"
-                      size={scaleBySizeClass(20, sizeClass)}
-                      color={palette.danger}
-                    />
-                  </Pressable>
-                  <Pressable
-                    onPress={handleSave}
-                    hitSlop={12}
-                    style={[styles.headerButton, { backgroundColor: palette.accentOverlay30 }]}>
-                    <MaterialCommunityIcons
-                      name="check"
-                      size={scaleBySizeClass(20, sizeClass)}
-                      color={palette.accent}
-                    />
-                  </Pressable>
-                </>
-              )}
-              {isGoal && (
-                <Pressable
-                  onPress={handleSave}
-                  hitSlop={12}
-                  style={[styles.headerButton, { backgroundColor: palette.accentOverlay30 }]}>
-                  <MaterialCommunityIcons
-                    name="check"
-                    size={scaleBySizeClass(20, sizeClass)}
-                    color={palette.accent}
-                  />
-                </Pressable>
-              )}
-              <Pressable onPress={handleDismiss} hitSlop={12}>
+    <BottomSheet
+      onDismiss={handleDismiss}
+      sheetStyle={[styles.sheet, { backgroundColor: palette.modalBg }]}>
+      {/* Header */}
+      <View style={[styles.header, { borderBottomColor: palette.overlay15 }]}>
+        <Text style={[styles.headerTitle, { color: palette.modalText }]}>
+          {isGoal ? (params.editField === 'scorer' ? 'Edit Goal' : 'Edit Assist') : 'Edit Event'}
+        </Text>
+        <View style={styles.headerActions}>
+          {isTurnover && (
+            <>
+              <Pressable
+                onPress={handleDelete}
+                hitSlop={12}
+                style={[styles.headerButton, { backgroundColor: palette.dangerOverlay15 }]}>
                 <MaterialCommunityIcons
-                  name="close"
-                  size={scaleBySizeClass(24, sizeClass)}
-                  color={palette.textMuted}
+                  name="trash-can-outline"
+                  size={scaleBySizeClass(20, sizeClass)}
+                  color={palette.danger}
+                />
+              </Pressable>
+              <Pressable
+                onPress={handleSave}
+                hitSlop={12}
+                style={[styles.headerButton, { backgroundColor: palette.accentOverlay30 }]}>
+                <MaterialCommunityIcons
+                  name="check"
+                  size={scaleBySizeClass(20, sizeClass)}
+                  color={palette.accent}
+                />
+              </Pressable>
+            </>
+          )}
+          {isGoal && (
+            <Pressable
+              onPress={handleSave}
+              hitSlop={12}
+              style={[styles.headerButton, { backgroundColor: palette.accentOverlay30 }]}>
+              <MaterialCommunityIcons
+                name="check"
+                size={scaleBySizeClass(20, sizeClass)}
+                color={palette.accent}
+              />
+            </Pressable>
+          )}
+          <Pressable onPress={handleDismiss} hitSlop={12}>
+            <MaterialCommunityIcons
+              name="close"
+              size={scaleBySizeClass(24, sizeClass)}
+              color={palette.textMuted}
+            />
+          </Pressable>
+        </View>
+      </View>
+
+      <ScrollView style={styles.content} showsVerticalScrollIndicator={false} nestedScrollEnabled>
+        {/* Event Type Section */}
+        {isTurnover && (
+          <View style={styles.section}>
+            <Text style={[styles.sectionLabel, { color: palette.textSecondary }]}>EVENT TYPE</Text>
+            <View style={styles.typeGrid}>
+              {availableTypes.map((type) => (
+                <Pressable
+                  key={type.value}
+                  style={[
+                    styles.typeChip,
+                    {
+                      backgroundColor:
+                        selectedSubtype === type.value
+                          ? palette.accentOverlay30
+                          : palette.overlay10,
+                      borderColor: selectedSubtype === type.value ? palette.accent : 'transparent',
+                    },
+                  ]}
+                  onPress={() => {
+                    setSelectedSubtype(type.value);
+                    // When switching to 50/50, reset to step 1
+                    if (type.value === 'fiftyfifty') {
+                      setFiftyFiftyStep(1);
+                      setSelectedPlayer2Id(null);
+                    }
+                  }}>
+                  <Text
+                    style={[
+                      styles.typeChipText,
+                      {
+                        color: selectedSubtype === type.value ? palette.accent : palette.modalText,
+                      },
+                    ]}>
+                    {type.label}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+          </View>
+        )}
+
+        {/* Player Selection - For 50/50, this becomes Step 1 (Thrower) or Step 2 (Receiver) */}
+        {/* Hide for OPP TURN and OPP BLOCK since those don't have player attribution */}
+        {isTurnover &&
+          selectedSubtype !== 'opponentTurn' &&
+          selectedSubtype !== 'opponentBlock' &&
+          (!isFiftyFifty || fiftyFiftyStep === 1) && (
+            <View style={styles.section}>
+              <Text style={[styles.sectionLabel, { color: palette.textSecondary }]}>
+                {selectedSubtype === 'block'
+                  ? 'BLOCKED BY'
+                  : isFiftyFifty
+                    ? 'STEP 1: THROWER (Who threw it?)'
+                    : 'PLAYER'}
+              </Text>
+              <View style={styles.chipsContainer}>
+                <PlayerChip
+                  name="Unknown"
+                  selected={selectedPlayerId === null}
+                  onPress={() => {
+                    setSelectedPlayerId(null);
+                    if (isFiftyFifty) {
+                      setFiftyFiftyStep(2);
+                    }
+                  }}
+                />
+                {selectableRoster.map((player) => (
+                  <PlayerChip
+                    key={player.id}
+                    name={player.name}
+                    selected={selectedPlayerId === player.id}
+                    onPress={() => {
+                      setSelectedPlayerId(player.id);
+                      if (isFiftyFifty) {
+                        setFiftyFiftyStep(2);
+                      }
+                    }}
+                  />
+                ))}
+              </View>
+            </View>
+          )}
+
+        {/* Step 2 for 50/50: Receiver selection */}
+        {isTurnover && isFiftyFifty && fiftyFiftyStep === 2 && (
+          <View style={styles.section}>
+            {/* Show thrower badge */}
+            <View
+              style={[
+                styles.throwerBadge,
+                { backgroundColor: palette.accentOverlay30, borderColor: palette.accent },
+              ]}>
+              <Text style={[styles.throwerBadgeLabel, { color: palette.accent }]}>THROWER</Text>
+              <Text style={[styles.throwerBadgeValue, { color: palette.accent }]}>
+                {getPlayerName(roster, selectedPlayerId) ?? 'Unknown'}
+              </Text>
+              <Pressable
+                hitSlop={12}
+                onPress={() => setFiftyFiftyStep(1)}
+                style={styles.throwerBadgeEdit}>
+                <MaterialCommunityIcons
+                  name="pencil"
+                  size={scaleBySizeClass(14, sizeClass)}
+                  color={palette.accent}
                 />
               </Pressable>
             </View>
+
+            {selectedPlayer2Id !== null && (
+              <View
+                style={[
+                  styles.throwerBadge,
+                  {
+                    backgroundColor: palette.successOverlay15,
+                    borderColor: palette.success,
+                    marginTop: 10,
+                  },
+                ]}>
+                <Text style={[styles.throwerBadgeLabel, { color: palette.success }]}>RECEIVER</Text>
+                <Text style={[styles.throwerBadgeValue, { color: palette.success }]}>
+                  {getPlayerName(roster, selectedPlayer2Id) ?? 'Unknown'}
+                </Text>
+              </View>
+            )}
+
+            <Text style={[styles.sectionLabel, { color: palette.textSecondary, marginTop: 16 }]}>
+              STEP 2: RECEIVER (Who dropped it?)
+            </Text>
+            <View style={styles.chipsContainer}>
+              <PlayerChip
+                name="Unknown"
+                selected={selectedPlayer2Id === null}
+                onPress={() => setSelectedPlayer2Id(null)}
+              />
+              {selectableRoster.map((player) => (
+                <PlayerChip
+                  key={player.id}
+                  name={player.name}
+                  selected={selectedPlayer2Id === player.id}
+                  onPress={() => setSelectedPlayer2Id(player.id)}
+                />
+              ))}
+            </View>
           </View>
+        )}
 
-          <ScrollView
-            style={styles.content}
-            showsVerticalScrollIndicator={false}
-            nestedScrollEnabled>
-            {/* Event Type Section */}
-            {isTurnover && (
-              <View style={styles.section}>
-                <Text style={[styles.sectionLabel, { color: palette.textSecondary }]}>
-                  EVENT TYPE
-                </Text>
-                <View style={styles.typeGrid}>
-                  {availableTypes.map((type) => (
-                    <Pressable
-                      key={type.value}
-                      style={[
-                        styles.typeChip,
-                        {
-                          backgroundColor:
-                            selectedSubtype === type.value
-                              ? palette.accentOverlay30
-                              : palette.overlay10,
-                          borderColor:
-                            selectedSubtype === type.value ? palette.accent : 'transparent',
-                        },
-                      ]}
-                      onPress={() => {
-                        setSelectedSubtype(type.value);
-                        // When switching to 50/50, reset to step 1
-                        if (type.value === 'fiftyfifty') {
-                          setFiftyFiftyStep(1);
-                          setSelectedPlayer2Id(null);
-                        }
-                      }}>
-                      <Text
-                        style={[
-                          styles.typeChipText,
-                          {
-                            color:
-                              selectedSubtype === type.value ? palette.accent : palette.modalText,
-                          },
-                        ]}>
-                        {type.label}
-                      </Text>
-                    </Pressable>
-                  ))}
-                </View>
-              </View>
-            )}
-
-            {/* Player Selection - For 50/50, this becomes Step 1 (Thrower) or Step 2 (Receiver) */}
-            {/* Hide for OPP TURN and OPP BLOCK since those don't have player attribution */}
-            {isTurnover &&
-              selectedSubtype !== 'opponentTurn' &&
-              selectedSubtype !== 'opponentBlock' &&
-              (!isFiftyFifty || fiftyFiftyStep === 1) && (
-                <View style={styles.section}>
-                  <Text style={[styles.sectionLabel, { color: palette.textSecondary }]}>
-                    {selectedSubtype === 'block'
-                      ? 'BLOCKED BY'
-                      : isFiftyFifty
-                        ? 'STEP 1: THROWER (Who threw it?)'
-                        : 'PLAYER'}
-                  </Text>
-                  <View style={styles.chipsContainer}>
-                    <PlayerChip
-                      name="Unknown"
-                      selected={selectedPlayerId === null}
-                      onPress={() => {
-                        setSelectedPlayerId(null);
-                        if (isFiftyFifty) {
-                          setFiftyFiftyStep(2);
-                        }
-                      }}
-                    />
-                    {selectableRoster.map((player) => (
-                      <PlayerChip
-                        key={player.id}
-                        name={player.name}
-                        selected={selectedPlayerId === player.id}
-                        onPress={() => {
-                          setSelectedPlayerId(player.id);
-                          if (isFiftyFifty) {
-                            setFiftyFiftyStep(2);
-                          }
-                        }}
-                      />
-                    ))}
-                  </View>
-                </View>
-              )}
-
-            {/* Step 2 for 50/50: Receiver selection */}
-            {isTurnover && isFiftyFifty && fiftyFiftyStep === 2 && (
-              <View style={styles.section}>
-                {/* Show thrower badge */}
-                <View
-                  style={[
-                    styles.throwerBadge,
-                    { backgroundColor: palette.accentOverlay30, borderColor: palette.accent },
-                  ]}>
-                  <Text style={[styles.throwerBadgeLabel, { color: palette.accent }]}>THROWER</Text>
-                  <Text style={[styles.throwerBadgeValue, { color: palette.accent }]}>
-                    {getPlayerName(roster, selectedPlayerId) ?? 'Unknown'}
-                  </Text>
-                  <Pressable
-                    hitSlop={12}
-                    onPress={() => setFiftyFiftyStep(1)}
-                    style={styles.throwerBadgeEdit}>
-                    <MaterialCommunityIcons
-                      name="pencil"
-                      size={scaleBySizeClass(14, sizeClass)}
-                      color={palette.accent}
-                    />
-                  </Pressable>
-                </View>
-
-                {selectedPlayer2Id !== null && (
-                  <View
-                    style={[
-                      styles.throwerBadge,
-                      {
-                        backgroundColor: palette.successOverlay15,
-                        borderColor: palette.success,
-                        marginTop: 10,
-                      },
-                    ]}>
-                    <Text style={[styles.throwerBadgeLabel, { color: palette.success }]}>
-                      RECEIVER
-                    </Text>
-                    <Text style={[styles.throwerBadgeValue, { color: palette.success }]}>
-                      {getPlayerName(roster, selectedPlayer2Id) ?? 'Unknown'}
-                    </Text>
-                  </View>
-                )}
-
-                <Text
-                  style={[styles.sectionLabel, { color: palette.textSecondary, marginTop: 16 }]}>
-                  STEP 2: RECEIVER (Who dropped it?)
-                </Text>
-                <View style={styles.chipsContainer}>
-                  <PlayerChip
-                    name="Unknown"
-                    selected={selectedPlayer2Id === null}
-                    onPress={() => setSelectedPlayer2Id(null)}
-                  />
-                  {selectableRoster.map((player) => (
-                    <PlayerChip
-                      key={player.id}
-                      name={player.name}
-                      selected={selectedPlayer2Id === player.id}
-                      onPress={() => setSelectedPlayer2Id(player.id)}
-                    />
-                  ))}
-                </View>
-              </View>
-            )}
-
-            {/* Goal editing - scorer and assist selection */}
-            {/* Goal editing - single field based on editField */}
-            {isGoal && (
-              <View style={styles.section}>
-                <Text style={[styles.sectionLabel, { color: palette.textSecondary }]}>
-                  {params.editField === 'scorer' ? 'GOAL SCORED BY' : 'ASSISTED BY'}
-                </Text>
-                <View style={styles.chipsContainer}>
-                  <PlayerChip
-                    name="Unknown"
-                    selected={selectedPlayerId === null}
-                    onPress={() => setSelectedPlayerId(null)}
-                  />
-                  {selectableRoster.map((player) => (
-                    <PlayerChip
-                      key={player.id}
-                      name={player.name}
-                      selected={selectedPlayerId === player.id}
-                      onPress={() => setSelectedPlayerId(player.id)}
-                    />
-                  ))}
-                </View>
-              </View>
-            )}
-          </ScrollView>
-        </Pressable>
-      </Pressable>
-    </View>
+        {/* Goal editing - scorer and assist selection */}
+        {/* Goal editing - single field based on editField */}
+        {isGoal && (
+          <View style={styles.section}>
+            <Text style={[styles.sectionLabel, { color: palette.textSecondary }]}>
+              {params.editField === 'scorer' ? 'GOAL SCORED BY' : 'ASSISTED BY'}
+            </Text>
+            <View style={styles.chipsContainer}>
+              <PlayerChip
+                name="Unknown"
+                selected={selectedPlayerId === null}
+                onPress={() => setSelectedPlayerId(null)}
+              />
+              {selectableRoster.map((player) => (
+                <PlayerChip
+                  key={player.id}
+                  name={player.name}
+                  selected={selectedPlayerId === player.id}
+                  onPress={() => setSelectedPlayerId(player.id)}
+                />
+              ))}
+            </View>
+          </View>
+        )}
+      </ScrollView>
+    </BottomSheet>
   );
 }
 
 function createStyles(sizeClass: SizeClass) {
   return StyleSheet.create({
-    overlay: {
-      flex: 1,
-      justifyContent: 'flex-end',
-    },
     sheet: {
-      borderTopLeftRadius: 20,
-      borderTopRightRadius: 20,
       maxHeight: '90%',
     },
     header: {
