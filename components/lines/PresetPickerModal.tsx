@@ -4,7 +4,9 @@ import { RecentLine } from '@/lib/lineUtils';
 import { LinePreset, Player } from '@/lib/storage/types';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import { Fonts } from '@/theme/theme';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface PresetPickerModalProps {
@@ -65,7 +67,9 @@ export function PresetPickerModal({
               <View style={[styles.handleBar, { backgroundColor: palette.overlay15 }]} />
             </View>
             <View style={styles.sheetHeader}>
-              <Text style={[styles.sheetTitle, { color: palette.modalText }]}>Load Line</Text>
+              <ThemedText style={[styles.sheetTitle, { color: palette.modalText }]}>
+                Load Line
+              </ThemedText>
               <Pressable
                 onPress={onEditPresets}
                 style={({ pressed }) => [styles.editPresetsHeaderBtn, pressed && { opacity: 0.7 }]}>
@@ -74,9 +78,10 @@ export function PresetPickerModal({
                   size={editIconSize}
                   color={palette.modalTextMuted}
                 />
-                <Text style={[styles.editPresetsHeaderText, { color: palette.modalTextMuted }]}>
+                <ThemedText
+                  style={[styles.editPresetsHeaderText, { color: palette.modalTextMuted }]}>
                   Edit Presets
-                </Text>
+                </ThemedText>
               </Pressable>
             </View>
 
@@ -86,9 +91,9 @@ export function PresetPickerModal({
               showsVerticalScrollIndicator={false}>
               {/* Presets Section */}
               {hasBothSections && (
-                <Text style={[styles.sectionHeader, { color: palette.modalTextMuted }]}>
+                <ThemedText style={[styles.sectionHeader, { color: palette.modalTextMuted }]}>
                   Presets
-                </Text>
+                </ThemedText>
               )}
               {presets.length > 0 ? (
                 <View style={styles.presetGrid}>
@@ -105,7 +110,7 @@ export function PresetPickerModal({
                         },
                         pressed && { opacity: 0.8 },
                       ]}>
-                      <Text
+                      <ThemedText
                         style={[
                           styles.presetListItemText,
                           {
@@ -115,7 +120,7 @@ export function PresetPickerModal({
                         ]}
                         numberOfLines={1}>
                         {preset.name}
-                      </Text>
+                      </ThemedText>
                       {selectedPresetId === preset.id && (
                         <MaterialCommunityIcons
                           name="check"
@@ -128,9 +133,9 @@ export function PresetPickerModal({
                 </View>
               ) : (
                 recentLines.length === 0 && (
-                  <Text style={[styles.emptyText, { color: palette.modalTextMuted }]}>
+                  <ThemedText style={[styles.emptyText, { color: palette.modalTextMuted }]}>
                     No presets yet. Tap Edit Presets to add some.
-                  </Text>
+                  </ThemedText>
                 )
               )}
 
@@ -143,9 +148,9 @@ export function PresetPickerModal({
               {recentLines.length > 0 && (
                 <>
                   {hasBothSections && (
-                    <Text style={[styles.sectionHeader, { color: palette.modalTextMuted }]}>
+                    <ThemedText style={[styles.sectionHeader, { color: palette.modalTextMuted }]}>
                       Recent
-                    </Text>
+                    </ThemedText>
                   )}
                   {recentLines.map((recent) => {
                     const isSelected = selectedRecentPointNumber === recent.pointNumber;
@@ -167,18 +172,18 @@ export function PresetPickerModal({
                             size={scaleBySizeClass(14, sizeClass)}
                             color={isSelected ? palette.accent : palette.modalTextMuted}
                           />
-                          <Text
+                          <ThemedText
                             style={[
                               styles.recentPointLabel,
                               { color: isSelected ? palette.accent : palette.modalText },
                             ]}>
                             Pt {recent.pointNumber}
-                          </Text>
-                          <Text
+                          </ThemedText>
+                          <ThemedText
                             style={[styles.recentPlayerNames, { color: palette.modalTextMuted }]}
                             numberOfLines={1}>
                             {getFirstNames(recent.playerIds, roster)}
-                          </Text>
+                          </ThemedText>
                         </View>
                         {isSelected && (
                           <MaterialCommunityIcons
@@ -234,7 +239,7 @@ function createStyles(sizeClass: SizeClass, isLandscape: boolean) {
     },
     sheetTitle: {
       fontSize: scaleBySizeClass(16, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
     },
     editPresetsHeaderBtn: {
       flexDirection: 'row',
@@ -245,7 +250,7 @@ function createStyles(sizeClass: SizeClass, isLandscape: boolean) {
     },
     editPresetsHeaderText: {
       fontSize: scaleBySizeClass(13, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
     },
     presetList: {
       flexShrink: 1,
@@ -256,7 +261,7 @@ function createStyles(sizeClass: SizeClass, isLandscape: boolean) {
     },
     sectionHeader: {
       fontSize: scaleBySizeClass(11, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
       letterSpacing: 0.5,
       textTransform: 'uppercase',
       marginBottom: 4,
@@ -284,12 +289,11 @@ function createStyles(sizeClass: SizeClass, isLandscape: boolean) {
     },
     recentPointLabel: {
       fontSize: scaleBySizeClass(14, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
       flexShrink: 0,
     },
     recentPlayerNames: {
       fontSize: scaleBySizeClass(13, sizeClass),
-      fontWeight: '400',
       flex: 1,
     },
     presetGrid: {
@@ -309,7 +313,7 @@ function createStyles(sizeClass: SizeClass, isLandscape: boolean) {
     },
     presetListItemText: {
       fontSize: scaleBySizeClass(15, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
       flex: 1,
     },
     emptyText: {

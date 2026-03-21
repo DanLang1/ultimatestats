@@ -6,7 +6,9 @@ import { useGameStore } from '@/store/gameStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router } from 'expo-router';
 import React from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import { Fonts } from '@/theme/theme';
 
 export default function TeamManagementModal() {
   const { palette } = useTheme();
@@ -53,7 +55,7 @@ export default function TeamManagementModal() {
       <View style={[styles.handle, { backgroundColor: palette.overlay20 }]} />
       <View style={styles.headerRow}>
         <View style={styles.headerSpacer} />
-        <Text style={[styles.title, { color: palette.modalText }]}>Switch Team</Text>
+        <ThemedText style={[styles.title, { color: palette.modalText }]}>Switch Team</ThemedText>
         <Pressable onPress={handleDismiss} hitSlop={12} style={styles.closeButton}>
           <MaterialCommunityIcons
             name="close"
@@ -79,7 +81,9 @@ export default function TeamManagementModal() {
                 size={scaleBySizeClass(22, sizeClass)}
                 color={palette.textMuted}
               />
-              <Text style={[styles.optionText, { color: palette.modalText }]}>{team.name}</Text>
+              <ThemedText style={[styles.optionText, { color: palette.modalText }]}>
+                {team.name}
+              </ThemedText>
               <Pressable
                 style={styles.deleteButton}
                 onPress={() => handleDeleteTeam(team.id, team.name)}
@@ -94,9 +98,9 @@ export default function TeamManagementModal() {
           ))}
 
           {otherTeams.length === 0 && (
-            <Text style={[styles.emptyText, { color: palette.textMuted }]}>
+            <ThemedText style={[styles.emptyText, { color: palette.textMuted }]}>
               No other teams saved yet
-            </Text>
+            </ThemedText>
           )}
         </View>
       </ScrollView>
@@ -119,7 +123,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     title: {
       fontSize: scaleBySizeClass(18, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
       textAlign: 'center',
       flex: 1,
     },
@@ -152,7 +156,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     optionText: {
       fontSize: scaleBySizeClass(16, sizeClass),
-      fontWeight: '500',
+      fontFamily: Fonts.semiBold,
       flex: 1,
     },
     deleteButton: {

@@ -3,9 +3,10 @@ import { EventIconInfo } from '@/components/toast/hooks/useEventToast';
 import EventToastIcon from '@/components/toast/EventToastIcon';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import { Palette } from '@/theme/theme';
+import { Fonts, Palette } from '@/theme/theme';
 import { useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
 import Animated, { SlideInUp, SlideOutUp } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -69,9 +70,9 @@ export default function EventToast({ toast, toastInstanceId }: EventToastProps) 
           </Animated.View>
         </View>
         <EventToastIcon icon={toast.icon} color={palette.textOnAccent} />
-        <Text style={[styles.bannerText, { color: palette.textOnAccent }]} numberOfLines={1}>
+        <ThemedText style={[styles.bannerText, { color: palette.textOnAccent }]} numberOfLines={1}>
           {toast.message}
-        </Text>
+        </ThemedText>
       </Animated.View>
     </View>
   );
@@ -131,7 +132,7 @@ function createStyles(sizeClass: SizeClass, toastHeight: number) {
     },
     bannerText: {
       fontSize: scaleBySizeClass(15, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
       letterSpacing: 0.2,
       flex: 1,
     },

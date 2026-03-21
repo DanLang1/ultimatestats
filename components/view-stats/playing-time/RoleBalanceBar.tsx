@@ -1,7 +1,9 @@
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass } from '@/hooks/useLayout';
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import { Fonts } from '@/theme/theme';
 
 interface RoleBalanceBarProps {
   oPoints: number;
@@ -26,7 +28,9 @@ export default function RoleBalanceBar({
   if (totalPoints === 0) {
     return (
       <View style={[styles.emptyContainer, { backgroundColor: palette.overlay05 }]}>
-        <Text style={[styles.emptyText, { color: palette.textMuted }]}>No points played</Text>
+        <ThemedText style={[styles.emptyText, { color: palette.textMuted }]}>
+          No points played
+        </ThemedText>
       </View>
     );
   }
@@ -42,12 +46,14 @@ export default function RoleBalanceBar({
           styles.roleCard,
           { backgroundColor: palette.overlay05, borderColor: palette.accent },
         ]}>
-        <Text style={[styles.roleLabel, { color: palette.accent }]}>O-Line</Text>
+        <ThemedText style={[styles.roleLabel, { color: palette.accent }]}>O-Line</ThemedText>
         <View style={styles.countRow}>
-          <Text style={[styles.pointCount, { color: palette.textInverse }]}>{oPoints}</Text>
-          <Text style={[styles.ptsLabel, { color: palette.textMuted }]}>
+          <ThemedText style={[styles.pointCount, { color: palette.textInverse }]}>
+            {oPoints}
+          </ThemedText>
+          <ThemedText style={[styles.ptsLabel, { color: palette.textMuted }]}>
             {oPoints === 1 ? 'pt' : 'pts'}
-          </Text>
+          </ThemedText>
         </View>
         <View style={[styles.barTrack, { backgroundColor: palette.overlay10 }]}>
           {oPoints > 0 && (
@@ -60,24 +66,26 @@ export default function RoleBalanceBar({
           )}
         </View>
         <View style={styles.effRow}>
-          <Text style={[styles.effPercent, { color: palette.textInverse }]}>
+          <ThemedText style={[styles.effPercent, { color: palette.textInverse }]}>
             {oPoints > 0 ? `${oHoldPercent.toFixed(0)}%` : '—'}
-          </Text>
-          <Text style={[styles.effSub, { color: palette.textMuted }]}>
+          </ThemedText>
+          <ThemedText style={[styles.effSub, { color: palette.textMuted }]}>
             {oLineHolds} {oLineHolds === 1 ? 'hold' : 'holds'}
-          </Text>
+          </ThemedText>
         </View>
       </View>
 
       {/* D-LINE card */}
       <View
         style={[styles.roleCard, { backgroundColor: palette.overlay05, borderColor: dLineColor }]}>
-        <Text style={[styles.roleLabel, { color: dLineColor }]}>D-Line</Text>
+        <ThemedText style={[styles.roleLabel, { color: dLineColor }]}>D-Line</ThemedText>
         <View style={styles.countRow}>
-          <Text style={[styles.pointCount, { color: palette.textInverse }]}>{dPoints}</Text>
-          <Text style={[styles.ptsLabel, { color: palette.textMuted }]}>
+          <ThemedText style={[styles.pointCount, { color: palette.textInverse }]}>
+            {dPoints}
+          </ThemedText>
+          <ThemedText style={[styles.ptsLabel, { color: palette.textMuted }]}>
             {dPoints === 1 ? 'pt' : 'pts'}
-          </Text>
+          </ThemedText>
         </View>
         <View style={[styles.barTrack, { backgroundColor: palette.overlay10 }]}>
           {dPoints > 0 && (
@@ -87,12 +95,12 @@ export default function RoleBalanceBar({
           )}
         </View>
         <View style={styles.effRow}>
-          <Text style={[styles.effPercent, { color: palette.textInverse }]}>
+          <ThemedText style={[styles.effPercent, { color: palette.textInverse }]}>
             {dPoints > 0 ? `${dBreakPercent.toFixed(0)}%` : '—'}
-          </Text>
-          <Text style={[styles.effSub, { color: palette.textMuted }]}>
+          </ThemedText>
+          <ThemedText style={[styles.effSub, { color: palette.textMuted }]}>
             {dLineBreaks} {dLineBreaks === 1 ? 'break' : 'breaks'}
-          </Text>
+          </ThemedText>
         </View>
       </View>
     </View>
@@ -109,7 +117,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     emptyText: {
       fontSize: scaleBySizeClass(12, sizeClass),
-      fontWeight: '500',
+      fontFamily: Fonts.semiBold,
     },
     container: {
       flexDirection: 'row',
@@ -128,7 +136,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     roleLabel: {
       fontSize: scaleBySizeClass(9, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
       letterSpacing: 0.8,
       textTransform: 'uppercase',
     },
@@ -139,12 +147,12 @@ function createStyles(sizeClass: SizeClass) {
     },
     pointCount: {
       fontSize: scaleBySizeClass(28, sizeClass),
-      fontWeight: '800',
+      fontFamily: Fonts.extraBold,
       lineHeight: scaleBySizeClass(32, sizeClass),
     },
     ptsLabel: {
       fontSize: scaleBySizeClass(11, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
     },
     barTrack: {
       height: scaleBySizeClass(5, sizeClass),
@@ -162,7 +170,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     effPercent: {
       fontSize: scaleBySizeClass(14, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
     },
     effSub: {
       fontSize: scaleBySizeClass(10, sizeClass),

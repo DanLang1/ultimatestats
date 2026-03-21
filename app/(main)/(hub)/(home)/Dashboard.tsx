@@ -12,7 +12,9 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router, Stack } from 'expo-router';
 import React, { useState } from 'react';
-import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Linking, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import { Fonts } from '@/theme/theme';
 
 interface MenuItem {
   icon: keyof typeof MaterialCommunityIcons.glyphMap;
@@ -200,7 +202,9 @@ export default function DashboardScreen() {
       <ScrollView contentContainerStyle={[styles.scrollContent]}>
         {sections.map((section, sectionIndex) => (
           <View key={sectionIndex} style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: palette.textMuted }]}>{section.title}</Text>
+            <ThemedText style={[styles.sectionTitle, { color: palette.textMuted }]}>
+              {section.title}
+            </ThemedText>
             <View style={styles.menuList}>
               {section.items.map((item, index) => (
                 <Pressable
@@ -223,24 +227,24 @@ export default function DashboardScreen() {
                   </View>
                   <View style={styles.menuItemText}>
                     <View style={styles.menuItemLabelRow}>
-                      <Text
+                      <ThemedText
                         style={[
                           styles.menuItemLabel,
                           { color: item.disabled ? palette.textMuted : palette.textInverse },
                         ]}>
                         {item.label}
-                      </Text>
+                      </ThemedText>
                       {item.showBadge && (
                         <View style={[styles.newBadge, { backgroundColor: palette.accent }]}>
-                          <Text style={[styles.newBadgeText, { color: palette.primary }]}>
+                          <ThemedText style={[styles.newBadgeText, { color: palette.primary }]}>
                             New!
-                          </Text>
+                          </ThemedText>
                         </View>
                       )}
                     </View>
-                    <Text style={[styles.menuItemDescription, { color: palette.textMuted }]}>
+                    <ThemedText style={[styles.menuItemDescription, { color: palette.textMuted }]}>
                       {item.disabled ? 'Enable stat tracking first' : item.description}
-                    </Text>
+                    </ThemedText>
                   </View>
                   <MaterialCommunityIcons
                     name="chevron-right"
@@ -263,12 +267,12 @@ export default function DashboardScreen() {
           ]}>
           <MaterialIcons name="discord" size={metrics.bannerIconSize} color={palette.discordText} />
           <View style={styles.discordText}>
-            <Text style={[styles.discordTitle, { color: palette.discordText }]}>
+            <ThemedText style={[styles.discordTitle, { color: palette.discordText }]}>
               Join the Discord
-            </Text>
-            <Text style={[styles.discordSubtitle, { color: palette.discordTextMuted }]}>
+            </ThemedText>
+            <ThemedText style={[styles.discordSubtitle, { color: palette.discordTextMuted }]}>
               Share feedback and give me ideas for new features
-            </Text>
+            </ThemedText>
           </View>
           <MaterialCommunityIcons
             name="chevron-right"
@@ -293,10 +297,12 @@ export default function DashboardScreen() {
               ]}>
               <MaterialCommunityIcons name="bug" size={metrics.bannerIconSize} color="white" />
               <View style={styles.discordText}>
-                <Text style={[styles.discordTitle, { color: 'white' }]}>Reset Version Check</Text>
-                <Text style={[styles.discordSubtitle, { color: 'rgba(255,255,255,0.7)' }]}>
+                <ThemedText style={[styles.discordTitle, { color: 'white' }]}>
+                  Reset Version Check
+                </ThemedText>
+                <ThemedText style={[styles.discordSubtitle, { color: 'rgba(255,255,255,0.7)' }]}>
                   DEV ONLY - Reload app after tapping
-                </Text>
+                </ThemedText>
               </View>
             </Pressable>
 
@@ -315,10 +321,12 @@ export default function DashboardScreen() {
                 color="white"
               />
               <View style={styles.discordText}>
-                <Text style={[styles.discordTitle, { color: 'white' }]}>Reset Stats Tutorial</Text>
-                <Text style={[styles.discordSubtitle, { color: 'rgba(255,255,255,0.7)' }]}>
+                <ThemedText style={[styles.discordTitle, { color: 'white' }]}>
+                  Reset Stats Tutorial
+                </ThemedText>
+                <ThemedText style={[styles.discordSubtitle, { color: 'rgba(255,255,255,0.7)' }]}>
                   DEV ONLY - Reset the has seen flag
-                </Text>
+                </ThemedText>
               </View>
             </Pressable>
 
@@ -337,12 +345,12 @@ export default function DashboardScreen() {
                 color={palette.textOnAccent}
               />
               <View style={styles.discordText}>
-                <Text style={[styles.discordTitle, { color: palette.textOnAccent }]}>
+                <ThemedText style={[styles.discordTitle, { color: palette.textOnAccent }]}>
                   Import Legacy Game JSON
-                </Text>
-                <Text style={[styles.discordSubtitle, { color: palette.textOnAccent }]}>
+                </ThemedText>
+                <ThemedText style={[styles.discordSubtitle, { color: palette.textOnAccent }]}>
                   DEV ONLY - Paste pre-migration saved-game data
-                </Text>
+                </ThemedText>
               </View>
             </Pressable>
 
@@ -357,10 +365,12 @@ export default function DashboardScreen() {
               ]}>
               <MaterialCommunityIcons name="link-off" size={metrics.bannerIconSize} color="white" />
               <View style={styles.discordText}>
-                <Text style={[styles.discordTitle, { color: 'white' }]}>Test 404 Page</Text>
-                <Text style={[styles.discordSubtitle, { color: 'rgba(255,255,255,0.7)' }]}>
+                <ThemedText style={[styles.discordTitle, { color: 'white' }]}>
+                  Test 404 Page
+                </ThemedText>
+                <ThemedText style={[styles.discordSubtitle, { color: 'rgba(255,255,255,0.7)' }]}>
                   DEV ONLY - Navigate to non-existent route
-                </Text>
+                </ThemedText>
               </View>
             </Pressable>
           </>
@@ -389,7 +399,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     sectionTitle: {
       fontSize: scaleBySizeClass(11, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
       letterSpacing: scaleBySizeClass(1.5, sizeClass, { rounding: 'none' }),
       marginLeft: scaleBySizeClass(4, sizeClass),
     },
@@ -423,7 +433,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     menuItemLabel: {
       fontSize: scaleBySizeClass(16, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
     },
     menuItemLabelRow: {
       flexDirection: 'row',
@@ -437,7 +447,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     newBadgeText: {
       fontSize: scaleBySizeClass(10, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
     },
     menuItemDescription: {
       fontSize: scaleBySizeClass(12, sizeClass),
@@ -457,7 +467,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     discordTitle: {
       fontSize: scaleBySizeClass(15, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
     },
     discordSubtitle: {
       fontSize: scaleBySizeClass(12, sizeClass),

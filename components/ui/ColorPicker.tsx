@@ -3,7 +3,9 @@ import { scaleBySizeClass, SizeClass } from '@/hooks/useLayout';
 import { getContrastingTextColor, normalizeHexColor, TEAM_COLOR_PRESETS } from '@/lib/colorUtils';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React, { useState } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import { Fonts } from '@/theme/theme';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import ColorPicker, { HueSlider, Panel1, Preview } from 'reanimated-color-picker';
 
@@ -45,7 +47,7 @@ export function TeamColorPicker({ label, value, onChange, sizeClass = 'small' }:
 
   return (
     <View style={styles.container}>
-      <Text style={[styles.label, { color: palette.textMuted }]}>{label}</Text>
+      <ThemedText style={[styles.label, { color: palette.textMuted }]}>{label}</ThemedText>
 
       {/* Preset Grid */}
       <View style={styles.presetGrid}>
@@ -86,7 +88,9 @@ export function TeamColorPicker({ label, value, onChange, sizeClass = 'small' }:
             { backgroundColor: value, borderColor: palette.overlay20 },
           ]}
         />
-        <Text style={[styles.customButtonText, { color: palette.textInverse }]}>Custom Color</Text>
+        <ThemedText style={[styles.customButtonText, { color: palette.textInverse }]}>
+          Custom Color
+        </ThemedText>
         <MaterialCommunityIcons
           name="chevron-right"
           size={metrics.customButtonChevronSize}
@@ -125,16 +129,16 @@ export function TeamColorPicker({ label, value, onChange, sizeClass = 'small' }:
                     { backgroundColor: palette.overlay10, borderColor: palette.overlay20 },
                   ]}
                   onPress={handleAdvancedCancel}>
-                  <Text style={[styles.cancelButtonText, { color: palette.textInverse }]}>
+                  <ThemedText style={[styles.cancelButtonText, { color: palette.textInverse }]}>
                     Cancel
-                  </Text>
+                  </ThemedText>
                 </Pressable>
                 <Pressable
                   style={[styles.modalButton, { backgroundColor: palette.accent }]}
                   onPress={handleAdvancedConfirm}>
-                  <Text style={[styles.confirmButtonText, { color: palette.textOnAccent }]}>
+                  <ThemedText style={[styles.confirmButtonText, { color: palette.textOnAccent }]}>
                     Apply
-                  </Text>
+                  </ThemedText>
                 </Pressable>
               </View>
             </View>
@@ -152,7 +156,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     label: {
       fontSize: scaleBySizeClass(10, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
       letterSpacing: scaleBySizeClass(1, sizeClass, { rounding: 'none' }),
     },
     presetGrid: {
@@ -192,7 +196,7 @@ function createStyles(sizeClass: SizeClass) {
     customButtonText: {
       flex: 1,
       fontSize: scaleBySizeClass(14, sizeClass),
-      fontWeight: '500',
+      fontFamily: Fonts.semiBold,
     },
     modalBackdrop: {
       flex: 1,
@@ -246,11 +250,11 @@ function createStyles(sizeClass: SizeClass) {
     },
     cancelButtonText: {
       fontSize: scaleBySizeClass(14, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
     },
     confirmButtonText: {
       fontSize: scaleBySizeClass(14, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
     },
   });
 }

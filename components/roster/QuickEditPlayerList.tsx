@@ -3,7 +3,9 @@ import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { MatchingType, Player, PlayerRole } from '@/lib/storage/types';
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import { Fonts } from '@/theme/theme';
 
 interface QuickEditPlayerListProps {
   roster: Player[];
@@ -68,10 +70,12 @@ export function QuickEditPlayerList({
         group.players.length > 0 ? (
           <View key={group.key} style={styles.groupSection}>
             <View style={styles.groupHeader}>
-              <Text style={[styles.groupLabel, { color: palette.textMuted }]}>{group.label}</Text>
-              <Text style={[styles.groupCount, { color: palette.textMuted }]}>
+              <ThemedText style={[styles.groupLabel, { color: palette.textMuted }]}>
+                {group.label}
+              </ThemedText>
+              <ThemedText style={[styles.groupCount, { color: palette.textMuted }]}>
                 {group.players.length}
-              </Text>
+              </ThemedText>
             </View>
             <View style={styles.groupRows}>{group.players.map(renderPlayerRow)}</View>
           </View>
@@ -81,10 +85,12 @@ export function QuickEditPlayerList({
       {inactivePlayers.length > 0 && (
         <View style={styles.groupSection}>
           <View style={styles.groupHeader}>
-            <Text style={[styles.groupLabel, { color: palette.textMuted }]}>Inactive</Text>
-            <Text style={[styles.groupCount, { color: palette.textMuted }]}>
+            <ThemedText style={[styles.groupLabel, { color: palette.textMuted }]}>
+              Inactive
+            </ThemedText>
+            <ThemedText style={[styles.groupCount, { color: palette.textMuted }]}>
               {inactivePlayers.length}
-            </Text>
+            </ThemedText>
           </View>
           <View style={styles.groupRows}>{inactivePlayers.map(renderPlayerRow)}</View>
         </View>
@@ -109,13 +115,13 @@ function createStyles(sizeClass: SizeClass) {
     },
     groupLabel: {
       fontSize: scaleBySizeClass(11, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
       letterSpacing: scaleBySizeClass(0.6, sizeClass, { rounding: 'none' }),
       textTransform: 'uppercase',
     },
     groupCount: {
       fontSize: scaleBySizeClass(11, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
     },
     groupRows: {
       gap: scaleBySizeClass(10, sizeClass),

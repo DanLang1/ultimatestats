@@ -4,7 +4,9 @@ import { MatchingType, PlayerRole } from '@/lib/storage/types';
 import { useSettingsStore } from '@/store/settingsStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import { Fonts } from '@/theme/theme';
 
 interface RosterBulkActionsProps {
   selectedCount: number;
@@ -43,7 +45,9 @@ export default function RosterBulkActions({
             { backgroundColor: fmpColor, shadowColor: palette.shadow },
           ]}
           onPress={() => onSetMatching('fmp')}>
-          <Text style={[styles.actionPillText, { color: palette.textOnAccent }]}>FMP</Text>
+          <ThemedText style={[styles.actionPillText, { color: palette.textOnAccent }]}>
+            FMP
+          </ThemedText>
         </Pressable>
         <Pressable
           style={[
@@ -52,7 +56,9 @@ export default function RosterBulkActions({
             { backgroundColor: mmpColor, shadowColor: palette.shadow },
           ]}
           onPress={() => onSetMatching('mmp')}>
-          <Text style={[styles.actionPillText, { color: palette.textOnAccent }]}>MMP</Text>
+          <ThemedText style={[styles.actionPillText, { color: palette.textOnAccent }]}>
+            MMP
+          </ThemedText>
         </Pressable>
       </View>
 
@@ -75,7 +81,9 @@ export default function RosterBulkActions({
             size={iconSize}
             color={palette.textInverse}
           />
-          <Text style={[styles.actionPillText, { color: palette.textInverse }]}>Handler</Text>
+          <ThemedText style={[styles.actionPillText, { color: palette.textInverse }]}>
+            Handler
+          </ThemedText>
         </Pressable>
         <Pressable
           style={[
@@ -94,7 +102,9 @@ export default function RosterBulkActions({
             size={iconSize}
             color={palette.textInverse}
           />
-          <Text style={[styles.actionPillText, { color: palette.textInverse }]}>Hybrid</Text>
+          <ThemedText style={[styles.actionPillText, { color: palette.textInverse }]}>
+            Hybrid
+          </ThemedText>
         </Pressable>
         <Pressable
           style={[
@@ -109,7 +119,9 @@ export default function RosterBulkActions({
           ]}
           onPress={() => onSetRole('cutter')}>
           <MaterialCommunityIcons name="shoe-print" size={iconSize} color={palette.textInverse} />
-          <Text style={[styles.actionPillText, { color: palette.textInverse }]}>Cutter</Text>
+          <ThemedText style={[styles.actionPillText, { color: palette.textInverse }]}>
+            Cutter
+          </ThemedText>
         </Pressable>
       </View>
     </View>
@@ -150,7 +162,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     actionPillText: {
       fontSize: scaleBySizeClass(13, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
     },
     rolePill: {
       borderWidth: 1.5,

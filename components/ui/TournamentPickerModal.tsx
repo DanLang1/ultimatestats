@@ -8,7 +8,9 @@ import { useTournamentStore } from '@/store/tournamentStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router } from 'expo-router';
 import React from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import { Fonts } from '@/theme/theme';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface TournamentPickerModalProps {
@@ -93,7 +95,9 @@ export function TournamentPickerModal({ visible, onSelect, onClose }: Tournament
             </View>
 
             {/* Title */}
-            <Text style={[styles.title, { color: palette.modalText }]}>Select Tournament</Text>
+            <ThemedText style={[styles.title, { color: palette.modalText }]}>
+              Select Tournament
+            </ThemedText>
 
             <ScrollView bounces={false}>
               {/* Create new option */}
@@ -101,9 +105,9 @@ export function TournamentPickerModal({ visible, onSelect, onClose }: Tournament
                 style={[styles.row, { borderBottomColor: palette.overlay10 }]}
                 onPress={handleCreateNew}>
                 <MaterialCommunityIcons name="plus" size={iconSize} color={palette.accent} />
-                <Text style={[styles.rowText, { color: palette.accent }]}>
+                <ThemedText style={[styles.rowText, { color: palette.accent }]}>
                   Create New Tournament
-                </Text>
+                </ThemedText>
               </Pressable>
 
               {/* Existing tournaments */}
@@ -118,12 +122,12 @@ export function TournamentPickerModal({ visible, onSelect, onClose }: Tournament
                     color={palette.modalTextMuted}
                   />
                   <View style={styles.tournamentInfo}>
-                    <Text style={[styles.rowText, { color: palette.modalText }]}>
+                    <ThemedText style={[styles.rowText, { color: palette.modalText }]}>
                       {tournament.name}
-                    </Text>
-                    <Text style={[styles.dateText, { color: palette.modalTextMuted }]}>
+                    </ThemedText>
+                    <ThemedText style={[styles.dateText, { color: palette.modalTextMuted }]}>
                       {formatDateRange(tournament.startDate, tournament.endDate)}
-                    </Text>
+                    </ThemedText>
                   </View>
                   <Pressable hitSlop={8} onPress={() => handleDeleteTournament(tournament)}>
                     <MaterialCommunityIcons
@@ -136,9 +140,9 @@ export function TournamentPickerModal({ visible, onSelect, onClose }: Tournament
               ))}
 
               {tournaments.length === 0 && (
-                <Text style={[styles.emptyText, { color: palette.modalTextMuted }]}>
+                <ThemedText style={[styles.emptyText, { color: palette.modalTextMuted }]}>
                   No tournaments yet
-                </Text>
+                </ThemedText>
               )}
             </ScrollView>
           </Pressable>
@@ -181,7 +185,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     title: {
       fontSize: scaleBySizeClass(18, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
       marginBottom: 12,
       paddingHorizontal: 4,
     },
@@ -198,7 +202,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     rowText: {
       fontSize: scaleBySizeClass(15, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
     },
     dateText: {
       fontSize: scaleBySizeClass(13, sizeClass),

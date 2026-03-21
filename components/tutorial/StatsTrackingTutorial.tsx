@@ -4,7 +4,9 @@ import { useGameStore } from '@/store/gameStore';
 import { useTutorialStore } from '@/store/tutorialStore';
 import { usePathname } from 'expo-router';
 import React, { useState } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import { Fonts } from '@/theme/theme';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import Animated, { FadeIn, SlideInLeft, SlideInRight } from 'react-native-reanimated';
 import TutorialStep from './TutorialStep';
@@ -108,7 +110,9 @@ export default function StatsTrackingTutorial() {
                 { backgroundColor: palette.modalBg, borderColor: palette.overlay20 },
               ]}>
               <Pressable onPress={handleClose} style={styles.skipButton}>
-                <Text style={[styles.skipText, { color: palette.modalTextMuted }]}>Skip</Text>
+                <ThemedText style={[styles.skipText, { color: palette.modalTextMuted }]}>
+                  Skip
+                </ThemedText>
               </Pressable>
 
               <ScrollView
@@ -152,15 +156,17 @@ export default function StatsTrackingTutorial() {
                   <Pressable
                     onPress={handleBack}
                     style={[styles.backButton, { borderColor: palette.accent }]}>
-                    <Text style={[styles.backButtonText, { color: palette.accent }]}>Back</Text>
+                    <ThemedText style={[styles.backButtonText, { color: palette.accent }]}>
+                      Back
+                    </ThemedText>
                   </Pressable>
                 )}
                 <Pressable
                   onPress={handleNext}
                   style={[styles.nextButton, { backgroundColor: palette.accent }]}>
-                  <Text style={[styles.nextButtonText, { color: palette.textOnAccent }]}>
+                  <ThemedText style={[styles.nextButtonText, { color: palette.textOnAccent }]}>
                     {isLastStep ? 'Got It' : 'Next'}
-                  </Text>
+                  </ThemedText>
                 </Pressable>
               </View>
             </Animated.View>
@@ -200,7 +206,7 @@ function createStyles(layout: LayoutInfo) {
     },
     skipText: {
       fontSize: scaleBySizeClass(14, layout.sizeClass),
-      fontWeight: '500',
+      fontFamily: Fonts.semiBold,
     },
     contentContainer: {
       minHeight: layout.isLandscape ? 140 : 180,
@@ -250,7 +256,7 @@ function createStyles(layout: LayoutInfo) {
     },
     backButtonText: {
       fontSize: scaleBySizeClass(16, layout.sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
       textAlign: 'center',
       width: '100%',
     },
@@ -264,7 +270,7 @@ function createStyles(layout: LayoutInfo) {
     },
     nextButtonText: {
       fontSize: scaleBySizeClass(16, layout.sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
       textAlign: 'center',
       width: '100%',
     },

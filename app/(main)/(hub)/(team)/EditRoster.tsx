@@ -23,7 +23,9 @@ import { useSettingsStore } from '@/store/settingsStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { Pressable, ScrollView, Share, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, Share, StyleSheet, TextInput, View } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import { Fonts } from '@/theme/theme';
 
 const EMPTY_ROSTER: Player[] = [];
 type RoleFilter = PlayerRole | 'unset' | null;
@@ -405,11 +407,11 @@ export default function EditRosterScreen() {
                   maxLength={20}
                 />
                 {isDuplicateName && (
-                  <Text
+                  <ThemedText
                     style={[
                       styles.errorText,
                       { color: palette.danger },
-                    ]}>{`${newPlayerName} is already on your team`}</Text>
+                    ]}>{`${newPlayerName} is already on your team`}</ThemedText>
                 )}
               </View>
               <Pressable
@@ -458,12 +460,12 @@ export default function EditRosterScreen() {
                   size={metrics.emptyStateIconLarge}
                   color={palette.textMuted}
                 />
-                <Text style={[styles.emptyStateText, { color: palette.textMuted }]}>
+                <ThemedText style={[styles.emptyStateText, { color: palette.textMuted }]}>
                   No players yet
-                </Text>
-                <Text style={[styles.emptyStateHint, { color: palette.textMuted }]}>
+                </ThemedText>
+                <ThemedText style={[styles.emptyStateHint, { color: palette.textMuted }]}>
                   Add players using the input above
-                </Text>
+                </ThemedText>
               </View>
             ) : visibleRoster.length === 0 ? (
               <View style={styles.emptyState}>
@@ -472,12 +474,12 @@ export default function EditRosterScreen() {
                   size={metrics.emptyStateIconMedium}
                   color={palette.textMuted}
                 />
-                <Text style={[styles.emptyStateText, { color: palette.textMuted }]}>
+                <ThemedText style={[styles.emptyStateText, { color: palette.textMuted }]}>
                   No players match this filter
-                </Text>
-                <Text style={[styles.emptyStateHint, { color: palette.textMuted }]}>
+                </ThemedText>
+                <ThemedText style={[styles.emptyStateHint, { color: palette.textMuted }]}>
                   Tap the active position filter to show all players
-                </Text>
+                </ThemedText>
               </View>
             ) : useChipView ? (
               <>
@@ -485,12 +487,12 @@ export default function EditRosterScreen() {
                 {groupedPlayers.map((group) => (
                   <View key={group.label} style={styles.chipGroup}>
                     <View style={styles.chipGroupHeader}>
-                      <Text style={[styles.chipGroupLabel, { color: palette.textMuted }]}>
+                      <ThemedText style={[styles.chipGroupLabel, { color: palette.textMuted }]}>
                         {group.label}
-                      </Text>
-                      <Text style={[styles.chipGroupCount, { color: palette.textMuted }]}>
+                      </ThemedText>
+                      <ThemedText style={[styles.chipGroupCount, { color: palette.textMuted }]}>
                         {group.players.length}
-                      </Text>
+                      </ThemedText>
                     </View>
                     <View style={styles.chipGrid}>
                       {group.players.map((player) => (
@@ -558,9 +560,9 @@ export default function EditRosterScreen() {
           maxLength={MAX_TEAM_NAME_LENGTH}
         />
         {teamNameExists && (
-          <Text style={[styles.errorText, { color: palette.danger }]}>
+          <ThemedText style={[styles.errorText, { color: palette.danger }]}>
             A team with this name already exists
-          </Text>
+          </ThemedText>
         )}
         <View style={styles.alertButtonContainer}>
           <Pressable
@@ -571,7 +573,9 @@ export default function EditRosterScreen() {
               pressed && styles.buttonPressed,
             ]}
             onPress={() => setRenameModalVisible(false)}>
-            <Text style={[styles.alertButtonText, { color: palette.textInverse }]}>Cancel</Text>
+            <ThemedText style={[styles.alertButtonText, { color: palette.textInverse }]}>
+              Cancel
+            </ThemedText>
           </Pressable>
           <Pressable
             style={({ pressed }) => [
@@ -581,13 +585,13 @@ export default function EditRosterScreen() {
             ]}
             onPress={handleRenameTeam}
             disabled={teamNameExists}>
-            <Text
+            <ThemedText
               style={[
                 styles.alertButtonText,
                 { color: teamNameExists ? palette.textMuted : palette.textOnAccent },
               ]}>
               Save
-            </Text>
+            </ThemedText>
           </Pressable>
         </View>
       </AlertModal>
@@ -614,9 +618,9 @@ export default function EditRosterScreen() {
           maxLength={MAX_TEAM_NAME_LENGTH}
         />
         {newTeamNameExists && (
-          <Text style={[styles.errorText, { color: palette.danger }]}>
+          <ThemedText style={[styles.errorText, { color: palette.danger }]}>
             A team with this name already exists
-          </Text>
+          </ThemedText>
         )}
         <View style={styles.alertButtonContainer}>
           <Pressable
@@ -627,7 +631,9 @@ export default function EditRosterScreen() {
               pressed && styles.buttonPressed,
             ]}
             onPress={() => setNewTeamModalVisible(false)}>
-            <Text style={[styles.alertButtonText, { color: palette.textInverse }]}>Cancel</Text>
+            <ThemedText style={[styles.alertButtonText, { color: palette.textInverse }]}>
+              Cancel
+            </ThemedText>
           </Pressable>
           <Pressable
             style={({ pressed }) => [
@@ -640,7 +646,7 @@ export default function EditRosterScreen() {
             ]}
             onPress={handleConfirmNewTeam}
             disabled={newTeamNameExists || !newTeamName.trim()}>
-            <Text
+            <ThemedText
               style={[
                 styles.alertButtonText,
                 {
@@ -651,7 +657,7 @@ export default function EditRosterScreen() {
                 },
               ]}>
               Create
-            </Text>
+            </ThemedText>
           </Pressable>
         </View>
       </AlertModal>
@@ -742,7 +748,7 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     },
     emptyStateText: {
       fontSize: scaleBySizeClass(18, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
       marginTop: scaleBySizeClass(16, sizeClass),
     },
     emptyStateHint: {
@@ -761,13 +767,13 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     },
     chipGroupLabel: {
       fontSize: scaleBySizeClass(12, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
       textTransform: 'uppercase',
       letterSpacing: scaleBySizeClass(0.5, sizeClass, { rounding: 'none' }),
     },
     chipGroupCount: {
       fontSize: scaleBySizeClass(11, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
     },
     chipGrid: {
       flexDirection: 'row',
@@ -799,7 +805,7 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     },
     alertButtonText: {
       fontSize: scaleBySizeClass(15, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
     },
   });
 }

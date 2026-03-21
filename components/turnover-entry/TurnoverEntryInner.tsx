@@ -5,7 +5,9 @@ import { getActiveRoster, getPlayerName, UNKNOWN_PLAYER_ID } from '@/lib/playerU
 import { Player } from '@/lib/storage/types';
 import { TurnoverType } from '@/store/gameStore.types';
 import React, { useState } from 'react';
-import { Keyboard, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Keyboard, Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import { Fonts } from '@/theme/theme';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeIn, LinearTransition, SlideInDown } from 'react-native-reanimated';
 import { StatEntryRoster } from '../stat-entry/StatEntryRoster';
@@ -169,7 +171,7 @@ export function TurnoverEntryInner({
   // Render header content (team name, question, badges)
   const renderHeader = () => (
     <View style={styles.header}>
-      <Text style={[styles.teamName, { color: palette.modalText }]}>{teamName}</Text>
+      <ThemedText style={[styles.teamName, { color: palette.modalText }]}>{teamName}</ThemedText>
       <Animated.Text
         key={step}
         entering={FadeIn.duration(300)}
@@ -184,10 +186,10 @@ export function TurnoverEntryInner({
             styles.badge,
             { backgroundColor: palette.dangerOverlay15, borderColor: palette.danger },
           ]}>
-          <Text style={[styles.badgeLabel, { color: palette.danger }]}>EVENT</Text>
-          <Text style={[styles.badgeValue, { color: palette.danger }]}>
+          <ThemedText style={[styles.badgeLabel, { color: palette.danger }]}>EVENT</ThemedText>
+          <ThemedText style={[styles.badgeValue, { color: palette.danger }]}>
             {getTypeLabel(selectedType)}
-          </Text>
+          </ThemedText>
         </Animated.View>
       )}
 
@@ -199,10 +201,10 @@ export function TurnoverEntryInner({
             styles.badge,
             { backgroundColor: palette.indigoOverlay20, borderColor: palette.accent },
           ]}>
-          <Text style={[styles.badgeLabel, { color: palette.accent }]}>THROWER</Text>
-          <Text style={[styles.badgeValue, { color: palette.accent }]}>
+          <ThemedText style={[styles.badgeLabel, { color: palette.accent }]}>THROWER</ThemedText>
+          <ThemedText style={[styles.badgeValue, { color: palette.accent }]}>
             {fiftyFiftyFirstPlayerName}
-          </Text>
+          </ThemedText>
         </Animated.View>
       )}
     </View>
@@ -217,9 +219,9 @@ export function TurnoverEntryInner({
           { borderColor: palette.danger, backgroundColor: palette.dangerOverlay15 },
         ]}
         onPress={() => handleTypeSelect('block')}>
-        <Text style={[styles.typeButtonText, { color: palette.modalText }]}>
+        <ThemedText style={[styles.typeButtonText, { color: palette.modalText }]}>
           {getTypeLabel('block')}
-        </Text>
+        </ThemedText>
       </Pressable>
       {!isOpponentTurnover && (
         <>
@@ -229,9 +231,9 @@ export function TurnoverEntryInner({
               { borderColor: palette.danger, backgroundColor: palette.dangerOverlay15 },
             ]}
             onPress={() => handleTypeSelect('throwaway')}>
-            <Text style={[styles.typeButtonText, { color: palette.modalText }]}>
+            <ThemedText style={[styles.typeButtonText, { color: palette.modalText }]}>
               {getTypeLabel('throwaway')}
-            </Text>
+            </ThemedText>
           </Pressable>
           <Pressable
             style={[
@@ -239,9 +241,9 @@ export function TurnoverEntryInner({
               { borderColor: palette.danger, backgroundColor: palette.dangerOverlay15 },
             ]}
             onPress={() => handleTypeSelect('drop')}>
-            <Text style={[styles.typeButtonText, { color: palette.modalText }]}>
+            <ThemedText style={[styles.typeButtonText, { color: palette.modalText }]}>
               {getTypeLabel('drop')}
-            </Text>
+            </ThemedText>
           </Pressable>
           <Pressable
             style={[
@@ -249,9 +251,9 @@ export function TurnoverEntryInner({
               { borderColor: palette.danger, backgroundColor: palette.dangerOverlay15 },
             ]}
             onPress={() => handleTypeSelect('fiftyfifty')}>
-            <Text style={[styles.typeButtonText, { color: palette.modalText }]}>
+            <ThemedText style={[styles.typeButtonText, { color: palette.modalText }]}>
               {getTypeLabel('fiftyfifty')}
-            </Text>
+            </ThemedText>
           </Pressable>
         </>
       )}
@@ -272,7 +274,7 @@ export function TurnoverEntryInner({
           },
         ]}
         onPress={onCancel}>
-        <Text style={[styles.skipText, { color: skipButtonText }]}>Cancel</Text>
+        <ThemedText style={[styles.skipText, { color: skipButtonText }]}>Cancel</ThemedText>
       </Pressable>
 
       {/* Unknown button - shows only on player step */}
@@ -287,7 +289,7 @@ export function TurnoverEntryInner({
             },
           ]}
           onPress={() => handlePlayerSelect(UNKNOWN_PLAYER_ID)}>
-          <Text style={[styles.skipText, { color: palette.textMuted }]}>Unknown</Text>
+          <ThemedText style={[styles.skipText, { color: palette.textMuted }]}>Unknown</ThemedText>
         </Pressable>
       )}
     </Animated.View>
@@ -357,7 +359,9 @@ export function TurnoverEntryInner({
                     ]}
                     onPress={handleAddPlayer}
                     disabled={!newPlayerName.trim()}>
-                    <Text style={[styles.addButtonText, { color: palette.textOnAccent }]}>Add</Text>
+                    <ThemedText style={[styles.addButtonText, { color: palette.textOnAccent }]}>
+                      Add
+                    </ThemedText>
                   </Pressable>
                 </View>
 
@@ -418,7 +422,9 @@ export function TurnoverEntryInner({
                   ]}
                   onPress={handleAddPlayer}
                   disabled={!newPlayerName.trim()}>
-                  <Text style={[styles.addButtonText, { color: palette.textOnAccent }]}>Add</Text>
+                  <ThemedText style={[styles.addButtonText, { color: palette.textOnAccent }]}>
+                    Add
+                  </ThemedText>
                 </Pressable>
               </View>
             )}
@@ -481,14 +487,14 @@ function createStyles(sizeClass: SizeClass) {
     },
     teamName: {
       fontSize: scaleBySizeClass(12, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
       textTransform: 'uppercase',
       letterSpacing: 0.5,
       marginBottom: 2,
     },
     stepLabel: {
       fontSize: scaleBySizeClass(22, sizeClass),
-      fontWeight: 'bold',
+      fontFamily: Fonts.bold,
     },
     badge: {
       borderRadius: 8,
@@ -502,13 +508,13 @@ function createStyles(sizeClass: SizeClass) {
     },
     badgeLabel: {
       fontSize: scaleBySizeClass(10, sizeClass),
-      fontWeight: 'bold',
+      fontFamily: Fonts.bold,
       letterSpacing: 1,
       marginTop: 2,
     },
     badgeValue: {
       fontSize: scaleBySizeClass(14, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
     },
     typeButtons: {
       flexDirection: 'row',
@@ -523,7 +529,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     typeButtonText: {
       fontSize: scaleBySizeClass(15, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
     },
     addPlayerRow: {
       flexDirection: 'row',
@@ -547,7 +553,7 @@ function createStyles(sizeClass: SizeClass) {
       opacity: 0.5,
     },
     addButtonText: {
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
       fontSize: scaleBySizeClass(15, sizeClass),
     },
     footer: {
@@ -562,7 +568,7 @@ function createStyles(sizeClass: SizeClass) {
       borderRadius: 8,
     },
     skipText: {
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
       fontSize: scaleBySizeClass(15, sizeClass),
     },
   });

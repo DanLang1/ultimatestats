@@ -10,7 +10,9 @@ import { TurnoverType } from '@/store/gameStore.types';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import React, { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import { Fonts } from '@/theme/theme';
 
 // Extended type to include opponent turnover and opponent block for editing
 type EditableTurnoverType = TurnoverType | 'opponentTurn' | 'opponentBlock';
@@ -256,9 +258,9 @@ export default function EditEventModal() {
       sheetStyle={[styles.sheet, { backgroundColor: palette.modalBg }]}>
       {/* Header */}
       <View style={[styles.header, { borderBottomColor: palette.overlay15 }]}>
-        <Text style={[styles.headerTitle, { color: palette.modalText }]}>
+        <ThemedText style={[styles.headerTitle, { color: palette.modalText }]}>
           {isGoal ? (params.editField === 'scorer' ? 'Edit Goal' : 'Edit Assist') : 'Edit Event'}
-        </Text>
+        </ThemedText>
         <View style={styles.headerActions}>
           {isTurnover && (
             <>
@@ -310,7 +312,9 @@ export default function EditEventModal() {
         {/* Event Type Section */}
         {isTurnover && (
           <View style={styles.section}>
-            <Text style={[styles.sectionLabel, { color: palette.textSecondary }]}>EVENT TYPE</Text>
+            <ThemedText style={[styles.sectionLabel, { color: palette.textSecondary }]}>
+              EVENT TYPE
+            </ThemedText>
             <View style={styles.typeGrid}>
               {availableTypes.map((type) => (
                 <Pressable
@@ -333,7 +337,7 @@ export default function EditEventModal() {
                       setSelectedPlayer2Id(null);
                     }
                   }}>
-                  <Text
+                  <ThemedText
                     style={[
                       styles.typeChipText,
                       {
@@ -341,7 +345,7 @@ export default function EditEventModal() {
                       },
                     ]}>
                     {type.label}
-                  </Text>
+                  </ThemedText>
                 </Pressable>
               ))}
             </View>
@@ -355,13 +359,13 @@ export default function EditEventModal() {
           selectedSubtype !== 'opponentBlock' &&
           (!isFiftyFifty || fiftyFiftyStep === 1) && (
             <View style={styles.section}>
-              <Text style={[styles.sectionLabel, { color: palette.textSecondary }]}>
+              <ThemedText style={[styles.sectionLabel, { color: palette.textSecondary }]}>
                 {selectedSubtype === 'block'
                   ? 'BLOCKED BY'
                   : isFiftyFifty
                     ? 'STEP 1: THROWER (Who threw it?)'
                     : 'PLAYER'}
-              </Text>
+              </ThemedText>
               <View style={styles.chipsContainer}>
                 <PlayerChip
                   name="Unknown"
@@ -399,10 +403,12 @@ export default function EditEventModal() {
                 styles.throwerBadge,
                 { backgroundColor: palette.accentOverlay30, borderColor: palette.accent },
               ]}>
-              <Text style={[styles.throwerBadgeLabel, { color: palette.accent }]}>THROWER</Text>
-              <Text style={[styles.throwerBadgeValue, { color: palette.accent }]}>
+              <ThemedText style={[styles.throwerBadgeLabel, { color: palette.accent }]}>
+                THROWER
+              </ThemedText>
+              <ThemedText style={[styles.throwerBadgeValue, { color: palette.accent }]}>
                 {getPlayerName(roster, selectedPlayerId) ?? 'Unknown'}
-              </Text>
+              </ThemedText>
               <Pressable
                 hitSlop={12}
                 onPress={() => setFiftyFiftyStep(1)}
@@ -425,16 +431,19 @@ export default function EditEventModal() {
                     marginTop: 10,
                   },
                 ]}>
-                <Text style={[styles.throwerBadgeLabel, { color: palette.success }]}>RECEIVER</Text>
-                <Text style={[styles.throwerBadgeValue, { color: palette.success }]}>
+                <ThemedText style={[styles.throwerBadgeLabel, { color: palette.success }]}>
+                  RECEIVER
+                </ThemedText>
+                <ThemedText style={[styles.throwerBadgeValue, { color: palette.success }]}>
                   {getPlayerName(roster, selectedPlayer2Id) ?? 'Unknown'}
-                </Text>
+                </ThemedText>
               </View>
             )}
 
-            <Text style={[styles.sectionLabel, { color: palette.textSecondary, marginTop: 16 }]}>
+            <ThemedText
+              style={[styles.sectionLabel, { color: palette.textSecondary, marginTop: 16 }]}>
               STEP 2: RECEIVER (Who dropped it?)
-            </Text>
+            </ThemedText>
             <View style={styles.chipsContainer}>
               <PlayerChip
                 name="Unknown"
@@ -457,9 +466,9 @@ export default function EditEventModal() {
         {/* Goal editing - single field based on editField */}
         {isGoal && (
           <View style={styles.section}>
-            <Text style={[styles.sectionLabel, { color: palette.textSecondary }]}>
+            <ThemedText style={[styles.sectionLabel, { color: palette.textSecondary }]}>
               {params.editField === 'scorer' ? 'GOAL SCORED BY' : 'ASSISTED BY'}
-            </Text>
+            </ThemedText>
             <View style={styles.chipsContainer}>
               <PlayerChip
                 name="Unknown"
@@ -497,7 +506,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     headerTitle: {
       fontSize: scaleBySizeClass(18, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
     },
     headerActions: {
       flexDirection: 'row',
@@ -516,7 +525,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     sectionLabel: {
       fontSize: scaleBySizeClass(11, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
       letterSpacing: 0.5,
       marginBottom: 10,
     },
@@ -538,7 +547,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     typeChipText: {
       fontSize: scaleBySizeClass(14, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
     },
     // 50/50 Thrower Badge
     throwerBadge: {
@@ -553,12 +562,12 @@ function createStyles(sizeClass: SizeClass) {
     },
     throwerBadgeLabel: {
       fontSize: scaleBySizeClass(10, sizeClass),
-      fontWeight: 'bold',
+      fontFamily: Fonts.bold,
       letterSpacing: 1,
     },
     throwerBadgeValue: {
       fontSize: scaleBySizeClass(14, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
     },
     throwerBadgeEdit: {
       marginLeft: 4,

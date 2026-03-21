@@ -6,7 +6,9 @@ import { checkGameOver, getWinner } from '@/lib/gameUtils';
 import { useGameStore } from '@/store/gameStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { Redirect, router, Stack } from 'expo-router';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import { Fonts } from '@/theme/theme';
 
 export default function GameCompleteScreen() {
   const {
@@ -96,33 +98,47 @@ export default function GameCompleteScreen() {
             />
           </View>
 
-          <Text style={[styles.eyebrow, { color: palette.textMuted }]}>FINAL RESULT</Text>
-          <Text style={[styles.winnerName, { color: palette.textInverse }]} numberOfLines={2}>
+          <ThemedText style={[styles.eyebrow, { color: palette.textMuted }]}>
+            FINAL RESULT
+          </ThemedText>
+          <ThemedText style={[styles.winnerName, { color: palette.textInverse }]} numberOfLines={2}>
             {winnerName}
-          </Text>
-          <Text style={[styles.subhead, { color: palette.textMuted }]}>wins the game</Text>
+          </ThemedText>
+          <ThemedText style={[styles.subhead, { color: palette.textMuted }]}>
+            wins the game
+          </ThemedText>
 
           <View style={styles.scoreRow}>
             <View style={styles.scoreBlock}>
-              <Text style={[styles.teamLabel, { color: palette.textMuted }]} numberOfLines={1}>
+              <ThemedText
+                style={[styles.teamLabel, { color: palette.textMuted }]}
+                numberOfLines={1}>
                 {winnerName}
-              </Text>
-              <Text style={[styles.scoreValue, { color: palette.textInverse }]}>{winnerScore}</Text>
+              </ThemedText>
+              <ThemedText style={[styles.scoreValue, { color: palette.textInverse }]}>
+                {winnerScore}
+              </ThemedText>
             </View>
 
-            <Text style={[styles.scoreDivider, { color: palette.textMuted }]}>-</Text>
+            <ThemedText style={[styles.scoreDivider, { color: palette.textMuted }]}>-</ThemedText>
 
             <View style={styles.scoreBlock}>
-              <Text style={[styles.teamLabel, { color: palette.textMuted }]} numberOfLines={1}>
+              <ThemedText
+                style={[styles.teamLabel, { color: palette.textMuted }]}
+                numberOfLines={1}>
                 {loserName}
-              </Text>
-              <Text style={[styles.scoreValue, { color: palette.textInverse }]}>{loserScore}</Text>
+              </ThemedText>
+              <ThemedText style={[styles.scoreValue, { color: palette.textInverse }]}>
+                {loserScore}
+              </ThemedText>
             </View>
           </View>
         </View>
 
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: palette.textMuted }]}>WHAT NEXT</Text>
+          <ThemedText style={[styles.sectionTitle, { color: palette.textMuted }]}>
+            WHAT NEXT
+          </ThemedText>
 
           <Pressable
             style={[
@@ -131,12 +147,12 @@ export default function GameCompleteScreen() {
             ]}
             onPress={handleUndo}>
             <View style={styles.actionCopy}>
-              <Text style={[styles.secondaryActionTitle, { color: palette.textInverse }]}>
+              <ThemedText style={[styles.secondaryActionTitle, { color: palette.textInverse }]}>
                 Undo Winning Point
-              </Text>
-              <Text style={[styles.secondaryActionText, { color: palette.textMuted }]}>
+              </ThemedText>
+              <ThemedText style={[styles.secondaryActionText, { color: palette.textMuted }]}>
                 Return to the scoreboard and continue the game
-              </Text>
+              </ThemedText>
             </View>
             <MaterialCommunityIcons
               name="undo"
@@ -149,12 +165,12 @@ export default function GameCompleteScreen() {
             style={[styles.primaryAction, { backgroundColor: palette.success }]}
             onPress={handleNewGame}>
             <View>
-              <Text style={[styles.primaryActionTitle, { color: palette.textOnAccent }]}>
+              <ThemedText style={[styles.primaryActionTitle, { color: palette.textOnAccent }]}>
                 Start New Game
-              </Text>
-              <Text style={[styles.primaryActionText, { color: palette.textOnAccent }]}>
+              </ThemedText>
+              <ThemedText style={[styles.primaryActionText, { color: palette.textOnAccent }]}>
                 Clear the scoreboard and begin a fresh game
-              </Text>
+              </ThemedText>
             </View>
             <MaterialCommunityIcons
               name="restart"
@@ -170,12 +186,12 @@ export default function GameCompleteScreen() {
             ]}
             onPress={handleGoHome}>
             <View style={styles.actionCopy}>
-              <Text style={[styles.secondaryActionTitle, { color: palette.textInverse }]}>
+              <ThemedText style={[styles.secondaryActionTitle, { color: palette.textInverse }]}>
                 Home
-              </Text>
-              <Text style={[styles.secondaryActionText, { color: palette.textMuted }]}>
+              </ThemedText>
+              <ThemedText style={[styles.secondaryActionText, { color: palette.textMuted }]}>
                 Leave the finished game and return to the dashboard
-              </Text>
+              </ThemedText>
             </View>
             <MaterialCommunityIcons
               name="home-outline"
@@ -195,12 +211,12 @@ export default function GameCompleteScreen() {
               ]}
               onPress={handleViewStats}>
               <View style={styles.actionCopy}>
-                <Text style={[styles.secondaryActionTitle, { color: palette.accent }]}>
+                <ThemedText style={[styles.secondaryActionTitle, { color: palette.accent }]}>
                   View Stats
-                </Text>
-                <Text style={[styles.secondaryActionText, { color: palette.textMuted }]}>
+                </ThemedText>
+                <ThemedText style={[styles.secondaryActionText, { color: palette.textMuted }]}>
                   Review the finished game stats and timeline
-                </Text>
+                </ThemedText>
               </View>
               <MaterialCommunityIcons
                 name="chart-bar"
@@ -244,14 +260,14 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     },
     eyebrow: {
       fontSize: scaleBySizeClass(12, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
       letterSpacing: 2.5,
       marginBottom: 8,
       textAlign: 'center',
     },
     winnerName: {
       fontSize: scaleBySizeClass(isLandscape ? 34 : 30, sizeClass),
-      fontWeight: '800',
+      fontFamily: Fonts.extraBold,
       textAlign: 'center',
     },
     subhead: {
@@ -274,18 +290,17 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     },
     teamLabel: {
       fontSize: scaleBySizeClass(14, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
       textAlign: 'center',
       marginBottom: 4,
     },
     scoreValue: {
       fontSize: scaleBySizeClass(isLandscape ? 58 : 52, sizeClass),
-      fontWeight: '800',
+      fontFamily: Fonts.extraBold,
       lineHeight: scaleBySizeClass(isLandscape ? 62 : 56, sizeClass),
     },
     scoreDivider: {
       fontSize: scaleBySizeClass(30, sizeClass),
-      fontWeight: '300',
       paddingBottom: 6,
     },
     section: {
@@ -293,7 +308,7 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     },
     sectionTitle: {
       fontSize: scaleBySizeClass(12, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
       letterSpacing: 2.5,
     },
     primaryAction: {
@@ -308,7 +323,7 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     },
     primaryActionTitle: {
       fontSize: scaleBySizeClass(22, sizeClass),
-      fontWeight: '800',
+      fontFamily: Fonts.extraBold,
     },
     primaryActionText: {
       fontSize: scaleBySizeClass(14, sizeClass),
@@ -331,7 +346,7 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     },
     secondaryActionTitle: {
       fontSize: scaleBySizeClass(19, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
     },
     secondaryActionText: {
       fontSize: scaleBySizeClass(14, sizeClass),

@@ -7,7 +7,9 @@ import {
   computeTimeOfPossessionStats,
 } from '@/lib/teamStatsUtils';
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import { Fonts } from '@/theme/theme';
 import StatRing from './StatRing';
 import StatsGrid from './StatsGrid';
 import TimeOfPossessionSection from './TimeOfPossessionSection';
@@ -135,7 +137,9 @@ export default function TeamStatsSection({
         { backgroundColor: palette.overlay05, borderColor: palette.overlay10 },
       ]}>
       {/* Section Header */}
-      <Text style={[styles.sectionTitle, { color: palette.textMuted }]}>TEAM PERFORMANCE</Text>
+      <ThemedText style={[styles.sectionTitle, { color: palette.textMuted }]}>
+        TEAM PERFORMANCE
+      </ThemedText>
 
       {/* Ring Gauges */}
       <View style={styles.ringRow}>
@@ -157,20 +161,26 @@ export default function TeamStatsSection({
 
       {/* Game Flow Section */}
       <View style={styles.subsectionContainer}>
-        <Text style={[styles.subsectionTitle, { color: palette.textMuted }]}>GAME FLOW</Text>
+        <ThemedText style={[styles.subsectionTitle, { color: palette.textMuted }]}>
+          GAME FLOW
+        </ThemedText>
         <StatsGrid stats={gameFlowStats} columns={3} />
       </View>
 
       {/* Efficiency Section */}
       <View style={styles.subsectionContainer}>
-        <Text style={[styles.subsectionTitle, { color: palette.textMuted }]}>EFFICIENCY</Text>
+        <ThemedText style={[styles.subsectionTitle, { color: palette.textMuted }]}>
+          EFFICIENCY
+        </ThemedText>
         <StatsGrid stats={efficiencyStats} columns={isLandscape ? 4 : 2} />
       </View>
 
       {/* Timing Section - only show if timing data exists */}
       {timingStats.hasTimingData && (
         <View style={styles.subsectionContainer}>
-          <Text style={[styles.subsectionTitle, { color: palette.textMuted }]}>POINT LENGTH</Text>
+          <ThemedText style={[styles.subsectionTitle, { color: palette.textMuted }]}>
+            POINT LENGTH
+          </ThemedText>
           <StatsGrid
             stats={[
               { label: 'Avg Pt', value: formatDuration(timingStats.avgPointDurationMs) },
@@ -205,7 +215,7 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     },
     sectionTitle: {
       fontSize: scaleBySizeClass(10, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
       letterSpacing: 1,
       marginBottom: 16,
       textTransform: 'uppercase',
@@ -226,7 +236,7 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     },
     subsectionTitle: {
       fontSize: scaleBySizeClass(9, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
       letterSpacing: 0.5,
       marginBottom: 8,
     },

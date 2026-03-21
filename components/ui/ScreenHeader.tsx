@@ -2,7 +2,9 @@ import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React, { ReactNode } from 'react';
-import { Pressable, StyleProp, StyleSheet, Text, TextStyle, View, ViewStyle } from 'react-native';
+import { Pressable, StyleProp, StyleSheet, TextStyle, View, ViewStyle } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import { Fonts } from '@/theme/theme';
 
 type ScreenHeaderProps = {
   title: string;
@@ -75,7 +77,7 @@ export function ScreenHeader({
               paddingHorizontal: isLandscape ? titlePaddingLandscape : titlePaddingPortrait,
             },
           ]}>
-          <Text
+          <ThemedText
             style={[
               styles.title,
               styles.titleCentered,
@@ -85,12 +87,12 @@ export function ScreenHeader({
             numberOfLines={titleNumberOfLines}
             ellipsizeMode="tail">
             {title}
-          </Text>
+          </ThemedText>
         </View>
       ) : (
-        <Text style={[styles.title, { color: titleColor ?? palette.textMuted }, titleStyle]}>
+        <ThemedText style={[styles.title, { color: titleColor ?? palette.textMuted }, titleStyle]}>
           {title}
-        </Text>
+        </ThemedText>
       )}
 
       <View style={styles.rightSlot}>{rightSlot ?? <View style={styles.headerSpacer} />}</View>
@@ -123,7 +125,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     title: {
       fontSize: scaleBySizeClass(14, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
       letterSpacing: scaleBySizeClass(2, sizeClass, { rounding: 'none' }),
       textTransform: 'uppercase',
     },

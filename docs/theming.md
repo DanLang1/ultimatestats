@@ -54,11 +54,35 @@ import { ThemedView, AnimatedThemedView } from '@/components/ThemedView';
 ```tsx
 const { palette, themeMode, setThemeMode } = useTheme();
 
-// Dynamic styling
-<Text style={{ color: palette.modalText }}>Hello</Text>;
+// Dynamic styling - always use ThemedText, never raw Text
+<ThemedText style={{ color: palette.modalText }}>Hello</ThemedText>;
 
 // Toggle theme
 setThemeMode(themeMode === 'dark' ? 'light' : 'dark');
+```
+
+### Fonts
+
+The app uses the Inter font family, loaded via the `expo-font` config plugin. All text must use `<ThemedText>` (not `<Text>` from react-native) to ensure Inter is applied.
+
+For font weight variations, use `fontFamily` from `Fonts` in `theme/theme.ts` — never use `fontWeight` in styles:
+
+| Weight | Use |
+| --- | --- |
+| Regular (default) | No `fontFamily` needed — `ThemedText` default type applies `Fonts.regular` |
+| Semi-bold | `fontFamily: Fonts.semiBold` |
+| Bold | `fontFamily: Fonts.bold` |
+| Extra-bold | `fontFamily: Fonts.extraBold` |
+| Black | `fontFamily: Fonts.black` |
+
+```tsx
+import { Fonts } from '@/theme/theme';
+
+// Correct
+<ThemedText style={{ fontFamily: Fonts.bold, fontSize: 18 }}>Bold text</ThemedText>
+
+// Wrong — fontWeight causes synthetic bolding on top of Inter-Regular
+<ThemedText style={{ fontWeight: '700', fontSize: 18 }}>Bold text</ThemedText>
 ```
 
 ## Badge Styling

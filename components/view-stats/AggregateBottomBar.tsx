@@ -2,7 +2,9 @@ import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import { Fonts } from '@/theme/theme';
 
 interface AggregateBottomBarProps {
   selectedCount: number;
@@ -42,7 +44,9 @@ export default function AggregateBottomBar({
         size={actionIconSize}
         color={palette.textOnAccent}
       />
-      <Text style={[styles.actionText, { color: palette.textOnAccent }]}>Add to Tournament</Text>
+      <ThemedText style={[styles.actionText, { color: palette.textOnAccent }]}>
+        Add to Tournament
+      </ThemedText>
     </Pressable>
   );
 
@@ -76,9 +80,9 @@ export default function AggregateBottomBar({
             size={actionIconSize}
             color={palette.textOnAccent}
           />
-          <Text style={[styles.actionText, { color: palette.textOnAccent }]}>
+          <ThemedText style={[styles.actionText, { color: palette.textOnAccent }]}>
             View Combined ({selectedCount} game{selectedCount !== 1 ? 's' : ''})
-          </Text>
+          </ThemedText>
         </Pressable>
       </View>
     </View>
@@ -129,7 +133,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     actionText: {
       fontSize: scaleBySizeClass(15, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
       letterSpacing: 0.3,
     },
   });

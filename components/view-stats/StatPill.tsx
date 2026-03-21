@@ -1,6 +1,8 @@
 import { scaleBySizeClass, SizeClass } from '@/hooks/useLayout';
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import { Fonts } from '@/theme/theme';
 
 interface StatPillProps {
   value: number;
@@ -21,8 +23,8 @@ export default function StatPill({
   const styles = createStyles(sizeClass);
   return (
     <View style={[styles.pill, { backgroundColor: bgColor }]}>
-      <Text style={[styles.pillValue, { color: textColor }]}>{value}</Text>
-      <Text style={[styles.pillLabel, { color: textColor }]}>{label}</Text>
+      <ThemedText style={[styles.pillValue, { color: textColor }]}>{value}</ThemedText>
+      <ThemedText style={[styles.pillLabel, { color: textColor }]}>{label}</ThemedText>
     </View>
   );
 }
@@ -39,11 +41,11 @@ function createStyles(sizeClass: SizeClass) {
     },
     pillValue: {
       fontSize: scaleBySizeClass(14, sizeClass),
-      fontWeight: '800',
+      fontFamily: Fonts.extraBold,
     },
     pillLabel: {
       fontSize: scaleBySizeClass(11, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
     },
   });
 }

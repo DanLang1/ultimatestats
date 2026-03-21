@@ -9,7 +9,9 @@ import { Tournament } from '@/lib/storage/types';
 import { useGameStore } from '@/store/gameStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import { Fonts } from '@/theme/theme';
 
 interface AggregateGamesListProps {
   games: SavedGame[];
@@ -107,10 +109,12 @@ export default function AggregateGamesList({
           size={scaleBySizeClass(48, sizeClass)}
           color={palette.textMuted}
         />
-        <Text style={[styles.emptyText, { color: palette.textMuted }]}>No saved games yet</Text>
-        <Text style={[styles.emptySubtext, { color: palette.textMuted }]}>
+        <ThemedText style={[styles.emptyText, { color: palette.textMuted }]}>
+          No saved games yet
+        </ThemedText>
+        <ThemedText style={[styles.emptySubtext, { color: palette.textMuted }]}>
           Save games to aggregate stats across multiple games
-        </Text>
+        </ThemedText>
       </View>
     );
   }
@@ -121,7 +125,9 @@ export default function AggregateGamesList({
       <View style={styles.container}>
         {/* Tournament cards section */}
         <View style={styles.tournamentSection}>
-          <Text style={[styles.instructions, { color: palette.textMuted }]}>Tournaments</Text>
+          <ThemedText style={[styles.instructions, { color: palette.textMuted }]}>
+            Tournaments
+          </ThemedText>
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -144,17 +150,17 @@ export default function AggregateGamesList({
                     size={scaleBySizeClass(16, sizeClass)}
                     color={isActive ? palette.accent : palette.textMuted}
                   />
-                  <Text
+                  <ThemedText
                     style={[
                       styles.tournamentCardName,
                       { color: isActive ? palette.accent : palette.textInverse },
                     ]}
                     numberOfLines={1}>
                     {t.name}
-                  </Text>
-                  <Text style={[styles.tournamentCardMeta, { color: palette.textMuted }]}>
+                  </ThemedText>
+                  <ThemedText style={[styles.tournamentCardMeta, { color: palette.textMuted }]}>
                     {gameCount} game{gameCount !== 1 ? 's' : ''}
-                  </Text>
+                  </ThemedText>
                 </Pressable>
               );
             })}
@@ -170,7 +176,9 @@ export default function AggregateGamesList({
                 size={scaleBySizeClass(20, sizeClass)}
                 color={palette.accent}
               />
-              <Text style={[styles.tournamentCardName, { color: palette.accent }]}>Create</Text>
+              <ThemedText style={[styles.tournamentCardName, { color: palette.accent }]}>
+                Create
+              </ThemedText>
             </Pressable>
           </ScrollView>
         </View>
@@ -178,12 +186,14 @@ export default function AggregateGamesList({
         {/* Games header */}
         <View style={styles.headerRow}>
           <View style={styles.gamesHeaderLeft}>
-            <Text style={[styles.instructions, { color: palette.textMuted }]}>
+            <ThemedText style={[styles.instructions, { color: palette.textMuted }]}>
               {tournamentFilter ? 'Tournament Games' : 'All Games'}
-            </Text>
+            </ThemedText>
             {tournamentFilter && (
               <Pressable hitSlop={8} onPress={() => onSetTournamentFilter(null)}>
-                <Text style={[styles.clearFilterText, { color: palette.accent }]}>Show All</Text>
+                <ThemedText style={[styles.clearFilterText, { color: palette.accent }]}>
+                  Show All
+                </ThemedText>
               </Pressable>
             )}
           </View>
@@ -200,20 +210,20 @@ export default function AggregateGamesList({
                   onSelectAllGames(visibleIds);
                 }
               }}>
-              <Text style={[styles.selectAllText, { color: palette.accent }]}>
+              <ThemedText style={[styles.selectAllText, { color: palette.accent }]}>
                 {gamesForTeam.length > 0 && gamesForTeam.every((g) => selectedGameIds.has(g.id))
                   ? 'Deselect All'
                   : 'Select All'}
-              </Text>
+              </ThemedText>
             </Pressable>
           </View>
         </View>
 
         {/* Empty state for filtered results */}
         {gamesForTeam.length === 0 && tournamentFilter && (
-          <Text style={[styles.emptyFilterText, { color: palette.textMuted }]}>
+          <ThemedText style={[styles.emptyFilterText, { color: palette.textMuted }]}>
             No games in this tournament
-          </Text>
+          </ThemedText>
         )}
 
         {/* Game list with checkboxes */}
@@ -247,14 +257,14 @@ export default function AggregateGamesList({
 
                 {/* Game info */}
                 <View style={styles.gameInfo}>
-                  <Text style={[styles.opponentText, { color: palette.textInverse }]}>
+                  <ThemedText style={[styles.opponentText, { color: palette.textInverse }]}>
                     vs {game.team2Name}
-                  </Text>
+                  </ThemedText>
                   <View style={styles.gameDetails}>
                     <ScoreBadge score1={game.team1Score} score2={game.team2Score} size="small" />
-                    <Text style={[styles.dateText, { color: palette.textMuted }]}>
+                    <ThemedText style={[styles.dateText, { color: palette.textMuted }]}>
                       {formatDate(getGameDisplayTimestamp(game))}
-                    </Text>
+                    </ThemedText>
                   </View>
                 </View>
               </Pressable>
@@ -268,9 +278,9 @@ export default function AggregateGamesList({
   // Level 1: Team list
   return (
     <View style={styles.container}>
-      <Text style={[styles.instructions, { color: palette.textMuted }]}>
+      <ThemedText style={[styles.instructions, { color: palette.textMuted }]}>
         Select a team to aggregate stats
-      </Text>
+      </ThemedText>
 
       <View style={styles.teamsList}>
         {teamGroups.map((team) => (
@@ -282,11 +292,13 @@ export default function AggregateGamesList({
             ]}
             onPress={() => onSelectTeam(team.id)}>
             <View style={styles.teamInfo}>
-              <Text style={[styles.teamName, { color: palette.textInverse }]}>{team.name}</Text>
-              <Text style={[styles.teamMeta, { color: palette.textMuted }]}>
+              <ThemedText style={[styles.teamName, { color: palette.textInverse }]}>
+                {team.name}
+              </ThemedText>
+              <ThemedText style={[styles.teamMeta, { color: palette.textMuted }]}>
                 {team.gameCount} game{team.gameCount !== 1 ? 's' : ''} • {team.totalPoints} points
                 tracked
-              </Text>
+              </ThemedText>
             </View>
             <MaterialCommunityIcons
               name="chevron-right"
@@ -327,7 +339,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     instructions: {
       fontSize: scaleBySizeClass(12, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
       textTransform: 'uppercase',
       letterSpacing: 0.5,
     },
@@ -344,7 +356,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     selectAllText: {
       fontSize: scaleBySizeClass(14, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
     },
     gamesHeaderLeft: {
       flexDirection: 'row',
@@ -353,7 +365,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     clearFilterText: {
       fontSize: scaleBySizeClass(13, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
     },
     tournamentSection: {
       gap: 10,
@@ -376,7 +388,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     tournamentCardName: {
       fontSize: scaleBySizeClass(14, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
     },
     tournamentCardMeta: {
       fontSize: scaleBySizeClass(12, sizeClass),
@@ -397,7 +409,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     teamName: {
       fontSize: scaleBySizeClass(18, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
     },
     teamMeta: {
       fontSize: scaleBySizeClass(13, sizeClass),
@@ -427,7 +439,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     opponentText: {
       fontSize: scaleBySizeClass(16, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
     },
     gameDetails: {
       flexDirection: 'row',

@@ -17,10 +17,11 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
   TextInput,
   View,
 } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import { Fonts } from '@/theme/theme';
 
 export default function CreateTournamentScreen() {
   const { palette, themeMode } = useTheme();
@@ -106,7 +107,7 @@ export default function CreateTournamentScreen() {
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
           {/* Name */}
           <View style={styles.field}>
-            <Text style={[styles.label, { color: palette.textMuted }]}>NAME</Text>
+            <ThemedText style={[styles.label, { color: palette.textMuted }]}>NAME</ThemedText>
             <TextInput
               style={[
                 styles.input,
@@ -120,15 +121,15 @@ export default function CreateTournamentScreen() {
               autoFocus
             />
             {isDuplicate && trimmedName.length > 0 && (
-              <Text style={[styles.errorText, { color: palette.danger }]}>
+              <ThemedText style={[styles.errorText, { color: palette.danger }]}>
                 A tournament with this name already exists
-              </Text>
+              </ThemedText>
             )}
           </View>
 
           {/* Start Date */}
           <View style={styles.field}>
-            <Text style={[styles.label, { color: palette.textMuted }]}>START DATE</Text>
+            <ThemedText style={[styles.label, { color: palette.textMuted }]}>START DATE</ThemedText>
             {Platform.OS === 'ios' ? (
               <View
                 style={[
@@ -152,16 +153,16 @@ export default function CreateTournamentScreen() {
                   pressed && styles.dateCardPressed,
                 ]}
                 onPress={handleOpenAndroidStartPicker}>
-                <Text style={[styles.dateValue, { color: palette.textInverse }]}>
+                <ThemedText style={[styles.dateValue, { color: palette.textInverse }]}>
                   {formatDateForDisplay(startDate)}
-                </Text>
+                </ThemedText>
               </Pressable>
             )}
           </View>
 
           {/* End Date */}
           <View style={styles.field}>
-            <Text style={[styles.label, { color: palette.textMuted }]}>END DATE</Text>
+            <ThemedText style={[styles.label, { color: palette.textMuted }]}>END DATE</ThemedText>
             {Platform.OS === 'ios' ? (
               <View
                 style={[
@@ -186,9 +187,9 @@ export default function CreateTournamentScreen() {
                   pressed && styles.dateCardPressed,
                 ]}
                 onPress={handleOpenAndroidEndPicker}>
-                <Text style={[styles.dateValue, { color: palette.textInverse }]}>
+                <ThemedText style={[styles.dateValue, { color: palette.textInverse }]}>
                   {formatDateForDisplay(endDate)}
-                </Text>
+                </ThemedText>
               </Pressable>
             )}
           </View>
@@ -202,9 +203,9 @@ export default function CreateTournamentScreen() {
             ]}
             onPress={handleSave}
             disabled={isSaveDisabled}>
-            <Text style={[styles.saveButtonText, { color: palette.textOnAccent }]}>
+            <ThemedText style={[styles.saveButtonText, { color: palette.textOnAccent }]}>
               Create Tournament
-            </Text>
+            </ThemedText>
           </Pressable>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -229,7 +230,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     label: {
       fontSize: scaleBySizeClass(12, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
       textTransform: 'uppercase',
       letterSpacing: 0.5,
     },
@@ -254,7 +255,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     dateValue: {
       fontSize: scaleBySizeClass(16, sizeClass),
-      fontWeight: '500',
+      fontFamily: Fonts.semiBold,
     },
     saveButton: {
       borderRadius: 12,
@@ -264,7 +265,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     saveButtonText: {
       fontSize: scaleBySizeClass(16, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
     },
   });
 }

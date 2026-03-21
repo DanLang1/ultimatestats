@@ -23,7 +23,9 @@ import {
 import { GameEvent, Player, PointLineRecord, SavedGame } from '@/lib/storage';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React, { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import { Fonts } from '@/theme/theme';
 
 type RelativeEventRow = RelativePlayerMetric & { category: 'event' };
 type RelativePlayingTimeRow = RelativePlayingTimeMetric & { category: 'playingTime' };
@@ -130,7 +132,9 @@ export default function RelativePlayerStatsSection({
       ]}>
       <View style={styles.headerStack}>
         <View style={styles.titleRow}>
-          <Text style={[styles.title, { color: palette.textMuted }]}>RELATIVE TO TEAM</Text>
+          <ThemedText style={[styles.title, { color: palette.textMuted }]}>
+            RELATIVE TO TEAM
+          </ThemedText>
           <Pressable onPress={handleInfoPress} hitSlop={8}>
             <MaterialCommunityIcons
               name="help-circle-outline"
@@ -155,13 +159,13 @@ export default function RelativePlayerStatsSection({
                   borderColor: palette.accentOverlay30,
                 },
               ]}>
-              <Text
+              <ThemedText
                 style={[
                   styles.toggleText,
                   { color: mode === 'avg' ? palette.accent : palette.textMuted },
                 ]}>
                 Team Avg
-              </Text>
+              </ThemedText>
             </Pressable>
             <Pressable
               onPress={() => setMode('max')}
@@ -172,13 +176,13 @@ export default function RelativePlayerStatsSection({
                   borderColor: palette.accentOverlay30,
                 },
               ]}>
-              <Text
+              <ThemedText
                 style={[
                   styles.toggleText,
                   { color: mode === 'max' ? palette.accent : palette.textMuted },
                 ]}>
                 Team Best
-              </Text>
+              </ThemedText>
             </Pressable>
           </View>
 
@@ -186,7 +190,9 @@ export default function RelativePlayerStatsSection({
             {mode === 'avg' && (
               <View style={styles.legendItem}>
                 <View style={[styles.legendMarker, { backgroundColor: palette.textInverse }]} />
-                <Text style={[styles.legendText, { color: palette.textMuted }]}>= Team Avg</Text>
+                <ThemedText style={[styles.legendText, { color: palette.textMuted }]}>
+                  = Team Avg
+                </ThemedText>
               </View>
             )}
           </View>
@@ -201,10 +207,10 @@ export default function RelativePlayerStatsSection({
         <>
           <View style={[styles.sectionDivider, { backgroundColor: palette.overlay10 }]} />
           {showPartialCoverageNote && (
-            <Text style={[styles.sampleNote, { color: palette.textMuted }]}>
+            <ThemedText style={[styles.sampleNote, { color: palette.textMuted }]}>
               Playing-time comparisons are based on line data in {trackedGameCount}/{totalGameCount}{' '}
               selected games.
-            </Text>
+            </ThemedText>
           )}
           {renderGroup('PLAYING TIME', ptMetrics, mode, styles, palette, sizeClass, subjectLabel)}
         </>
@@ -229,7 +235,7 @@ function renderGroup(
   return (
     <View style={styles.group}>
       <View style={styles.groupHeaderRow}>
-        <Text style={[styles.groupTitle, { color: palette.textMuted }]}>{title}</Text>
+        <ThemedText style={[styles.groupTitle, { color: palette.textMuted }]}>{title}</ThemedText>
       </View>
 
       <View style={styles.groupRows}>
@@ -289,24 +295,24 @@ function renderGroup(
               key={`${metric.category}-${metric.key}`}
               style={[styles.row, { borderColor: palette.overlay05 }]}>
               <View style={styles.rowTop}>
-                <Text style={[styles.metricLabel, { color: palette.textInverse }]}>
+                <ThemedText style={[styles.metricLabel, { color: palette.textInverse }]}>
                   {metric.label}
-                </Text>
+                </ThemedText>
 
-                <Text style={[styles.relativeText, { color: relativeColor }]}>
+                <ThemedText style={[styles.relativeText, { color: relativeColor }]}>
                   {getRelativeLabel(metric, mode)}
-                </Text>
+                </ThemedText>
               </View>
 
               {'detail' in metric && metric.detail && !!metric.detail && (
-                <Text style={[styles.detailText, { color: palette.textMuted }]}>
+                <ThemedText style={[styles.detailText, { color: palette.textMuted }]}>
                   {metric.detail}
-                </Text>
+                </ThemedText>
               )}
               {sampleWarning && (
-                <Text style={[styles.detailText, { color: palette.textMuted }]}>
+                <ThemedText style={[styles.detailText, { color: palette.textMuted }]}>
                   {sampleWarning}
-                </Text>
+                </ThemedText>
               )}
 
               <View
@@ -320,12 +326,12 @@ function renderGroup(
               </View>
 
               <View style={styles.rowMeta}>
-                <Text style={[styles.contextText, { color: palette.textMuted }]}>
+                <ThemedText style={[styles.contextText, { color: palette.textMuted }]}>
                   {`${subjectLabel}: ${formatRawValue(metric)}`}
-                </Text>
-                <Text style={[styles.contextText, { color: palette.textMuted }]}>
+                </ThemedText>
+                <ThemedText style={[styles.contextText, { color: palette.textMuted }]}>
                   {getContextLabel(metric, mode)}
-                </Text>
+                </ThemedText>
               </View>
             </View>
           );
@@ -354,7 +360,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     title: {
       fontSize: scaleBySizeClass(12, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
       letterSpacing: 1,
       textTransform: 'uppercase',
       textAlign: 'center',
@@ -372,7 +378,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     subtitle: {
       fontSize: scaleBySizeClass(11, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
       marginTop: 2,
     },
     toggle: {
@@ -390,11 +396,11 @@ function createStyles(sizeClass: SizeClass) {
     },
     toggleText: {
       fontSize: scaleBySizeClass(11, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
     },
     sampleNote: {
       fontSize: scaleBySizeClass(10, sizeClass),
-      fontWeight: '500',
+      fontFamily: Fonts.semiBold,
       lineHeight: scaleBySizeClass(14, sizeClass),
     },
     sectionDivider: {
@@ -413,7 +419,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     groupTitle: {
       fontSize: scaleBySizeClass(10, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
       letterSpacing: 1,
     },
     groupRows: {
@@ -434,7 +440,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     metricLabel: {
       fontSize: scaleBySizeClass(13, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
     },
     rowMeta: {
       flexDirection: 'row',
@@ -445,15 +451,15 @@ function createStyles(sizeClass: SizeClass) {
     },
     relativeText: {
       fontSize: scaleBySizeClass(14, sizeClass),
-      fontWeight: '800',
+      fontFamily: Fonts.extraBold,
     },
     contextText: {
       fontSize: scaleBySizeClass(11, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
     },
     detailText: {
       fontSize: scaleBySizeClass(11, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
     },
     barTrack: {
       height: scaleBySizeClass(8, sizeClass),
@@ -484,7 +490,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     legendText: {
       fontSize: scaleBySizeClass(11, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
     },
   });
 }

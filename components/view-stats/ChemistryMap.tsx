@@ -2,7 +2,9 @@ import { useTheme } from '@/context/ThemeContext';
 import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { ChemistryConnection } from '@/lib/statsUtils';
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import { Fonts } from '@/theme/theme';
 import Svg, { Circle, G, Line, Text as SvgText } from 'react-native-svg';
 
 interface ChemistryMapProps {
@@ -65,31 +67,31 @@ export default function ChemistryMap({ playerName, connections }: ChemistryMapPr
 
   return (
     <View style={styles.container}>
-      <Text style={[styles.title, { color: palette.textMuted }]}>CHEMISTRY</Text>
+      <ThemedText style={[styles.title, { color: palette.textMuted }]}>CHEMISTRY</ThemedText>
 
       {/* Summary Stat (Matches ImpactTimeline style) */}
       <View style={styles.summaryDisplay}>
-        <Text style={[styles.summaryValue, { color: palette.accent }]}>
+        <ThemedText style={[styles.summaryValue, { color: palette.accent }]}>
           {topConnection ? `${topConnection.count}` : '0'}
-        </Text>
-        <Text style={[styles.summaryLabel, { color: palette.textMuted }]}>
+        </ThemedText>
+        <ThemedText style={[styles.summaryLabel, { color: palette.textMuted }]}>
           {topConnection
             ? `Top Link: ${topConnection.name.length > 12 ? `${topConnection.name.substring(0, 12)}…` : topConnection.name}`
             : 'Top Connection'}
-        </Text>
+        </ThemedText>
       </View>
 
       {/* Column Headers */}
       <View style={[styles.columnHeaders, { width: svgWidth }]}>
         <View style={styles.columnHeader}>
-          <Text style={[styles.headerText, { color: palette.textMuted }]}>
+          <ThemedText style={[styles.headerText, { color: palette.textMuted }]}>
             {feeders.length > 0 ? 'CAUGHT GOALS FROM' : ''}
-          </Text>
+          </ThemedText>
         </View>
         <View style={styles.columnHeader}>
-          <Text style={[styles.headerText, { color: palette.textMuted }]}>
+          <ThemedText style={[styles.headerText, { color: palette.textMuted }]}>
             {targets.length > 0 ? 'THREW ASSISTS TO' : ''}
-          </Text>
+          </ThemedText>
         </View>
       </View>
 
@@ -146,7 +148,7 @@ export default function ChemistryMap({ playerName, connections }: ChemistryMapPr
           y={centerY + 4}
           fill={palette.textOnAccent}
           fontSize={centerLabelFontSize}
-          fontWeight="bold"
+          fontFamily={Fonts.bold}
           textAnchor="middle">
           {centerLabel}
         </SvgText>
@@ -176,7 +178,7 @@ export default function ChemistryMap({ playerName, connections }: ChemistryMapPr
                 y={y + 5}
                 fill={palette.accent}
                 fontSize={scaleBySizeClass(14, sizeClass)}
-                fontWeight="bold"
+                fontFamily={Fonts.bold}
                 textAnchor="middle">
                 {feeder.goalsFrom}
               </SvgText>
@@ -187,7 +189,7 @@ export default function ChemistryMap({ playerName, connections }: ChemistryMapPr
                 y={y + 4}
                 fill={palette.textMuted}
                 fontSize={scaleBySizeClass(9, sizeClass)}
-                fontWeight="600"
+                fontFamily={Fonts.semiBold}
                 textAnchor="end">
                 {feeder.playerName.length > 10
                   ? feeder.playerName.substring(0, 10) + '…'
@@ -222,7 +224,7 @@ export default function ChemistryMap({ playerName, connections }: ChemistryMapPr
                 y={y + 5}
                 fill={palette.success}
                 fontSize={scaleBySizeClass(14, sizeClass)}
-                fontWeight="bold"
+                fontFamily={Fonts.bold}
                 textAnchor="middle">
                 {target.assistsTo}
               </SvgText>
@@ -233,7 +235,7 @@ export default function ChemistryMap({ playerName, connections }: ChemistryMapPr
                 y={y + 4}
                 fill={palette.textMuted}
                 fontSize={scaleBySizeClass(9, sizeClass)}
-                fontWeight="600"
+                fontFamily={Fonts.semiBold}
                 textAnchor="start">
                 {target.playerName.length > 10
                   ? target.playerName.substring(0, 10) + '…'
@@ -248,11 +250,15 @@ export default function ChemistryMap({ playerName, connections }: ChemistryMapPr
       <View style={styles.legend}>
         <View style={styles.legendItem}>
           <View style={[styles.legendDot, { backgroundColor: palette.accent }]} />
-          <Text style={[styles.legendText, { color: palette.textMuted }]}>Caught from them</Text>
+          <ThemedText style={[styles.legendText, { color: palette.textMuted }]}>
+            Caught from them
+          </ThemedText>
         </View>
         <View style={styles.legendItem}>
           <View style={[styles.legendDot, { backgroundColor: palette.success }]} />
-          <Text style={[styles.legendText, { color: palette.textMuted }]}>Threw to them</Text>
+          <ThemedText style={[styles.legendText, { color: palette.textMuted }]}>
+            Threw to them
+          </ThemedText>
         </View>
       </View>
     </View>
@@ -267,7 +273,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     title: {
       fontSize: scaleBySizeClass(13, sizeClass),
-      fontWeight: '800',
+      fontFamily: Fonts.extraBold,
       letterSpacing: 1.5,
       marginBottom: 8,
       textTransform: 'uppercase',
@@ -278,11 +284,11 @@ function createStyles(sizeClass: SizeClass) {
     },
     summaryValue: {
       fontSize: scaleBySizeClass(32, sizeClass),
-      fontWeight: '800',
+      fontFamily: Fonts.extraBold,
     },
     summaryLabel: {
       fontSize: scaleBySizeClass(11, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
       marginTop: 2,
     },
     columnHeaders: {
@@ -297,7 +303,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     headerText: {
       fontSize: scaleBySizeClass(10, sizeClass),
-      fontWeight: 'bold',
+      fontFamily: Fonts.bold,
       textTransform: 'uppercase',
       letterSpacing: 0.5,
     },
@@ -318,7 +324,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     legendText: {
       fontSize: scaleBySizeClass(10, sizeClass),
-      fontWeight: '500',
+      fontFamily: Fonts.semiBold,
     },
   });
 }

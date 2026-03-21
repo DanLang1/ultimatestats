@@ -2,7 +2,9 @@ import { useTheme } from '@/context/ThemeContext';
 import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React, { createContext, useContext, useState } from 'react';
-import { Modal, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Modal, Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import { Fonts } from '@/theme/theme';
 
 interface AlertButton {
   text: string;
@@ -90,9 +92,13 @@ export function AlertProvider({ children }: { children: React.ReactNode }) {
               />
             </Pressable>
 
-            <Text style={[styles.title, { color: palette.textInverse }]}>{options?.title}</Text>
+            <ThemedText style={[styles.title, { color: palette.textInverse }]}>
+              {options?.title}
+            </ThemedText>
             {options?.message && (
-              <Text style={[styles.message, { color: palette.textMuted }]}>{options.message}</Text>
+              <ThemedText style={[styles.message, { color: palette.textMuted }]}>
+                {options.message}
+              </ThemedText>
             )}
             {options?.prompt && (
               <TextInput
@@ -123,7 +129,9 @@ export function AlertProvider({ children }: { children: React.ReactNode }) {
                       pressed && styles.buttonPressed,
                     ]}
                     onPress={handleDismiss}>
-                    <Text style={[styles.buttonText, { color: palette.textInverse }]}>Cancel</Text>
+                    <ThemedText style={[styles.buttonText, { color: palette.textInverse }]}>
+                      Cancel
+                    </ThemedText>
                   </Pressable>
                   <Pressable
                     style={({ pressed }) => [
@@ -132,7 +140,9 @@ export function AlertProvider({ children }: { children: React.ReactNode }) {
                       pressed && styles.buttonPressed,
                     ]}
                     onPress={handlePromptSubmit}>
-                    <Text style={[styles.buttonText, { color: palette.textOnAccent }]}>Export</Text>
+                    <ThemedText style={[styles.buttonText, { color: palette.textOnAccent }]}>
+                      Export
+                    </ThemedText>
                   </Pressable>
                 </>
               ) : (
@@ -156,13 +166,13 @@ export function AlertProvider({ children }: { children: React.ReactNode }) {
                       onPress={() => handleButtonPress(button)}>
                       <View style={styles.buttonContent}>
                         {button.icon}
-                        <Text
+                        <ThemedText
                           style={[
                             styles.buttonText,
                             { color: isCancel ? palette.textInverse : palette.textOnAccent },
                           ]}>
                           {button.text}
-                        </Text>
+                        </ThemedText>
                       </View>
                     </Pressable>
                   );
@@ -204,7 +214,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     title: {
       fontSize: scaleBySizeClass(18, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
       textAlign: 'center',
       marginBottom: 12,
     },
@@ -248,7 +258,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     buttonText: {
       fontSize: scaleBySizeClass(15, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
     },
   });
 }

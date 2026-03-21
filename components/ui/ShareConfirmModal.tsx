@@ -1,7 +1,9 @@
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import React, { useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import { Fonts } from '@/theme/theme';
 import { AlertModal } from './AlertModal';
 
 interface ShareConfirmModalProps {
@@ -32,13 +34,13 @@ export function ShareConfirmModal({ visible, onConfirm, onCancel }: ShareConfirm
 
   return (
     <AlertModal visible={visible} title="Share Data?" onClose={handleCancel}>
-      <Text style={[styles.body, { color: palette.textMuted }]}>
+      <ThemedText style={[styles.body, { color: palette.textMuted }]}>
         By proceeding, anyone with the generated link can view your game/team data including names,
         lines, and stats.
-      </Text>
-      <Text style={[styles.body, { color: palette.textMuted }]}>
+      </ThemedText>
+      <ThemedText style={[styles.body, { color: palette.textMuted }]}>
         The link expires after 30 days.
-      </Text>
+      </ThemedText>
 
       <View style={styles.buttonContainer}>
         <Pressable
@@ -51,7 +53,7 @@ export function ShareConfirmModal({ visible, onConfirm, onCancel }: ShareConfirm
           ]}
           onPress={handleCancel}
           disabled={isLoading}>
-          <Text style={[styles.buttonText, { color: palette.modalText }]}>Cancel</Text>
+          <ThemedText style={[styles.buttonText, { color: palette.modalText }]}>Cancel</ThemedText>
         </Pressable>
         <Pressable
           style={({ pressed }) => [
@@ -65,7 +67,9 @@ export function ShareConfirmModal({ visible, onConfirm, onCancel }: ShareConfirm
           {isLoading ? (
             <ActivityIndicator size="small" color={palette.textOnAccent} />
           ) : (
-            <Text style={[styles.buttonText, { color: palette.textOnAccent }]}>Proceed</Text>
+            <ThemedText style={[styles.buttonText, { color: palette.textOnAccent }]}>
+              Proceed
+            </ThemedText>
           )}
         </Pressable>
       </View>
@@ -98,7 +102,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     buttonText: {
       fontSize: scaleBySizeClass(15, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
     },
     buttonPressed: {
       opacity: 0.8,

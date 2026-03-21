@@ -6,7 +6,9 @@ import { Player, PointLineRecord } from '@/lib/storage/types';
 import { DisplayTurnover, PointEvents } from '@/lib/timelineUtils';
 import { useSettingsStore } from '@/store/settingsStore';
 import React from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import { Fonts } from '@/theme/theme';
 
 interface EventTimelineProps {
   points: PointEvents[];
@@ -65,12 +67,16 @@ export default function EventTimeline({
     <View style={styles.container}>
       {/* Score Header */}
       <View style={[styles.scoreHeader, { backgroundColor: palette.overlay05 }]}>
-        <Text style={[styles.headerScore, { color: palette.success }]}>{finalScore.team1}</Text>
-        <Text style={[styles.headerDivider, { color: palette.textMuted }]}>–</Text>
-        <Text style={[styles.headerScore, { color: palette.danger }]}>{finalScore.team2}</Text>
-        <Text style={[styles.headerLabel, { color: palette.textSecondary }]}>
+        <ThemedText style={[styles.headerScore, { color: palette.success }]}>
+          {finalScore.team1}
+        </ThemedText>
+        <ThemedText style={[styles.headerDivider, { color: palette.textMuted }]}>–</ThemedText>
+        <ThemedText style={[styles.headerScore, { color: palette.danger }]}>
+          {finalScore.team2}
+        </ThemedText>
+        <ThemedText style={[styles.headerLabel, { color: palette.textSecondary }]}>
           {isGameComplete ? 'Final' : 'In Progress'}
-        </Text>
+        </ThemedText>
       </View>
 
       {/* Timeline */}
@@ -79,14 +85,14 @@ export default function EventTimeline({
         {(onEditEvent || onEditPointDuration || onEditEventTime) && (
           <View style={styles.editHint}>
             {onEditEvent && (
-              <Text style={[styles.editHintText, { color: palette.textMuted }]}>
+              <ThemedText style={[styles.editHintText, { color: palette.textMuted }]}>
                 Long press event to edit type or player
-              </Text>
+              </ThemedText>
             )}
             {timingEnabled && (onEditPointDuration || onEditEventTime) && (
-              <Text style={[styles.editHintText, { color: palette.textMuted }]}>
+              <ThemedText style={[styles.editHintText, { color: palette.textMuted }]}>
                 Tap event to edit time
-              </Text>
+              </ThemedText>
             )}
           </View>
         )}
@@ -139,15 +145,14 @@ function createStyles(sizeClass: SizeClass) {
     },
     headerScore: {
       fontSize: scaleBySizeClass(28, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
     },
     headerDivider: {
       fontSize: scaleBySizeClass(20, sizeClass),
-      fontWeight: '300',
     },
     headerLabel: {
       fontSize: scaleBySizeClass(11, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
       marginLeft: 12,
       textTransform: 'uppercase',
       letterSpacing: 1,

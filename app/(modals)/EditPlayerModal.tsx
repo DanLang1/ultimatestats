@@ -8,7 +8,9 @@ import { useLinePresetsStore } from '@/store/linePresetsStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { Redirect, router, useLocalSearchParams } from 'expo-router';
 import React, { useState } from 'react';
-import { Pressable, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
+import { Pressable, StyleSheet, Switch, TextInput, View } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import { Fonts } from '@/theme/theme';
 
 export default function EditPlayerModal() {
   const { playerId } = useLocalSearchParams<{ playerId: string }>();
@@ -135,14 +137,14 @@ export default function EditPlayerModal() {
                 size={scaleBySizeClass(48, sizeClass)}
                 color={palette.danger}
               />
-              <Text style={[styles.confirmTitle, { color: palette.modalText }]}>
+              <ThemedText style={[styles.confirmTitle, { color: palette.modalText }]}>
                 Delete {player.name}?
-              </Text>
-              <Text style={[styles.confirmMessage, { color: palette.modalTextMuted }]}>
+              </ThemedText>
+              <ThemedText style={[styles.confirmMessage, { color: palette.modalTextMuted }]}>
                 {hasStatsInSavedGames
                   ? 'This player has stats in saved games. This action cannot be undone.'
                   : 'This action cannot be undone.'}
-              </Text>
+              </ThemedText>
               <View style={styles.confirmButtons}>
                 <Pressable
                   style={[
@@ -151,21 +153,25 @@ export default function EditPlayerModal() {
                     styles.confirmCancelButton,
                   ]}
                   onPress={() => setConfirmingDelete(false)}>
-                  <Text style={[styles.confirmButtonText, { color: palette.modalText }]}>
+                  <ThemedText style={[styles.confirmButtonText, { color: palette.modalText }]}>
                     Cancel
-                  </Text>
+                  </ThemedText>
                 </Pressable>
                 <Pressable
                   style={[styles.confirmButton, { backgroundColor: palette.danger }]}
                   onPress={handleDelete}>
-                  <Text style={[styles.confirmButtonText, { color: '#fff' }]}>Delete</Text>
+                  <ThemedText style={[styles.confirmButtonText, { color: '#fff' }]}>
+                    Delete
+                  </ThemedText>
                 </Pressable>
               </View>
             </View>
           ) : (
             // Normal edit view
             <>
-              <Text style={[styles.title, { color: palette.modalTextMuted }]}>EDIT PLAYER</Text>
+              <ThemedText style={[styles.title, { color: palette.modalTextMuted }]}>
+                EDIT PLAYER
+              </ThemedText>
 
               <TextInput
                 style={[
@@ -183,16 +189,16 @@ export default function EditPlayerModal() {
                 maxLength={20}
               />
               {nameExists && (
-                <Text style={[styles.errorText, { color: palette.danger }]}>
+                <ThemedText style={[styles.errorText, { color: palette.danger }]}>
                   A player with this name already exists
-                </Text>
+                </ThemedText>
               )}
 
               {/* Active Toggle */}
               <View style={styles.toggleRow}>
-                <Text style={[styles.toggleLabel, { color: palette.modalText }]}>
+                <ThemedText style={[styles.toggleLabel, { color: palette.modalText }]}>
                   Active roster
-                </Text>
+                </ThemedText>
                 <Switch
                   value={isActive}
                   onValueChange={setIsActive}
@@ -203,9 +209,9 @@ export default function EditPlayerModal() {
 
               {/* Matching Type */}
               <View style={styles.toggleRow}>
-                <Text style={[styles.toggleLabel, { color: palette.modalText }]}>
+                <ThemedText style={[styles.toggleLabel, { color: palette.modalText }]}>
                   Matching preference
-                </Text>
+                </ThemedText>
                 <View style={styles.pillRow}>
                   <Pressable
                     style={[
@@ -217,7 +223,7 @@ export default function EditPlayerModal() {
                       },
                     ]}
                     onPress={() => setMatchingType(matchingType === 'fmp' ? null : 'fmp')}>
-                    <Text
+                    <ThemedText
                       style={[
                         styles.pillText,
                         {
@@ -226,7 +232,7 @@ export default function EditPlayerModal() {
                         },
                       ]}>
                       FMP
-                    </Text>
+                    </ThemedText>
                   </Pressable>
                   <Pressable
                     style={[
@@ -238,7 +244,7 @@ export default function EditPlayerModal() {
                       },
                     ]}
                     onPress={() => setMatchingType(matchingType === 'mmp' ? null : 'mmp')}>
-                    <Text
+                    <ThemedText
                       style={[
                         styles.pillText,
                         {
@@ -247,14 +253,16 @@ export default function EditPlayerModal() {
                         },
                       ]}>
                       MMP
-                    </Text>
+                    </ThemedText>
                   </Pressable>
                 </View>
               </View>
 
               {/* Role */}
               <View style={styles.toggleRow}>
-                <Text style={[styles.toggleLabel, { color: palette.modalText }]}>Role</Text>
+                <ThemedText style={[styles.toggleLabel, { color: palette.modalText }]}>
+                  Role
+                </ThemedText>
                 <View style={styles.pillRow}>
                   <Pressable
                     style={[
@@ -272,7 +280,7 @@ export default function EditPlayerModal() {
                       size={scaleBySizeClass(14, sizeClass)}
                       color={role === 'handler' ? palette.textOnAccent : palette.modalTextMuted}
                     />
-                    <Text
+                    <ThemedText
                       style={[
                         styles.pillText,
                         {
@@ -280,7 +288,7 @@ export default function EditPlayerModal() {
                         },
                       ]}>
                       Handler
-                    </Text>
+                    </ThemedText>
                   </Pressable>
                   <Pressable
                     style={[
@@ -298,7 +306,7 @@ export default function EditPlayerModal() {
                       size={scaleBySizeClass(14, sizeClass)}
                       color={role === 'hybrid' ? palette.textOnAccent : palette.modalTextMuted}
                     />
-                    <Text
+                    <ThemedText
                       style={[
                         styles.pillText,
                         {
@@ -306,7 +314,7 @@ export default function EditPlayerModal() {
                         },
                       ]}>
                       Hybrid
-                    </Text>
+                    </ThemedText>
                   </Pressable>
                   <Pressable
                     style={[
@@ -324,7 +332,7 @@ export default function EditPlayerModal() {
                       size={scaleBySizeClass(14, sizeClass)}
                       color={role === 'cutter' ? palette.textOnAccent : palette.modalTextMuted}
                     />
-                    <Text
+                    <ThemedText
                       style={[
                         styles.pillText,
                         {
@@ -332,7 +340,7 @@ export default function EditPlayerModal() {
                         },
                       ]}>
                       Cutter
-                    </Text>
+                    </ThemedText>
                   </Pressable>
                 </View>
               </View>
@@ -358,7 +366,9 @@ export default function EditPlayerModal() {
                       { backgroundColor: palette.overlay10, borderColor: palette.overlay20 },
                     ]}
                     onPress={handleDismiss}>
-                    <Text style={[styles.buttonText, { color: palette.modalText }]}>Cancel</Text>
+                    <ThemedText style={[styles.buttonText, { color: palette.modalText }]}>
+                      Cancel
+                    </ThemedText>
                   </Pressable>
                   <Pressable
                     style={[
@@ -367,13 +377,13 @@ export default function EditPlayerModal() {
                     ]}
                     onPress={handleSave}
                     disabled={nameExists}>
-                    <Text
+                    <ThemedText
                       style={[
                         styles.buttonText,
                         { color: nameExists ? palette.modalTextMuted : palette.textOnAccent },
                       ]}>
                       Save
-                    </Text>
+                    </ThemedText>
                   </Pressable>
                 </View>
               </View>
@@ -402,7 +412,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     title: {
       fontSize: scaleBySizeClass(12, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
       letterSpacing: 1,
       marginBottom: 16,
       textAlign: 'center',
@@ -428,7 +438,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     toggleLabel: {
       fontSize: scaleBySizeClass(15, sizeClass),
-      fontWeight: '500',
+      fontFamily: Fonts.semiBold,
     },
     pillRow: {
       flexDirection: 'row',
@@ -448,7 +458,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     pillText: {
       fontSize: scaleBySizeClass(12, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
     },
     buttonRow: {
       flexDirection: 'row',
@@ -477,7 +487,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     buttonText: {
       fontSize: scaleBySizeClass(15, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
     },
     // Confirmation styles
     confirmContainer: {
@@ -486,7 +496,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     confirmTitle: {
       fontSize: scaleBySizeClass(18, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
       marginTop: 12,
       marginBottom: 8,
     },
@@ -512,7 +522,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     confirmButtonText: {
       fontSize: scaleBySizeClass(15, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
     },
   });
 }

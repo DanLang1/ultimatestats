@@ -3,7 +3,9 @@ import { scaleBySizeClass, SizeClass } from '@/hooks/useLayout';
 import { PlayerRole } from '@/lib/storage/types';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React, { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import { Fonts } from '@/theme/theme';
 
 type RoleFilter = PlayerRole | 'unset' | null;
 
@@ -78,13 +80,13 @@ export function RosterControlsHeader({
                   size={metrics.primaryIconSize}
                   color={viewMode === 'chips' ? palette.textOnAccent : palette.textMuted}
                 />
-                <Text
+                <ThemedText
                   style={[
                     styles.primaryChipText,
                     { color: viewMode === 'chips' ? palette.textOnAccent : palette.textMuted },
                   ]}>
                   {viewMode === 'chips' ? 'Cards' : 'Chips'}
-                </Text>
+                </ThemedText>
               </Pressable>
 
               <Pressable
@@ -99,7 +101,9 @@ export function RosterControlsHeader({
                   size={metrics.primaryCheckIconSize}
                   color={palette.textMuted}
                 />
-                <Text style={[styles.primaryChipText, { color: palette.textMuted }]}>Bulk</Text>
+                <ThemedText style={[styles.primaryChipText, { color: palette.textMuted }]}>
+                  Bulk
+                </ThemedText>
               </Pressable>
 
               <View style={[styles.segmentedControl, { borderColor: palette.overlay20 }]}>
@@ -132,13 +136,13 @@ export function RosterControlsHeader({
                         size={metrics.segmentIconSize}
                         color={isActive ? palette.textOnAccent : palette.textMuted}
                       />
-                      <Text
+                      <ThemedText
                         style={[
                           styles.filterText,
                           { color: isActive ? palette.textOnAccent : palette.textMuted },
                         ]}>
                         {label}
-                      </Text>
+                      </ThemedText>
                     </Pressable>
                   );
                 })}
@@ -147,9 +151,9 @@ export function RosterControlsHeader({
           ) : (
             <>
               <View style={[styles.selectionChip, { borderColor: palette.overlay20 }]}>
-                <Text style={[styles.selectionLabel, { color: palette.textMuted }]}>
+                <ThemedText style={[styles.selectionLabel, { color: palette.textMuted }]}>
                   {selectedCount} selected
-                </Text>
+                </ThemedText>
               </View>
 
               {hasActivePlayers && (
@@ -169,9 +173,9 @@ export function RosterControlsHeader({
                     size={metrics.segmentIconSize}
                     color={palette.textMuted}
                   />
-                  <Text style={[styles.smallActionText, { color: palette.textMuted }]}>
+                  <ThemedText style={[styles.smallActionText, { color: palette.textMuted }]}>
                     {allActiveSelected ? 'Deselect All' : 'Select All'}
-                  </Text>
+                  </ThemedText>
                 </Pressable>
               )}
 
@@ -187,7 +191,9 @@ export function RosterControlsHeader({
                   size={metrics.primaryCheckIconSize}
                   color={palette.textOnAccent}
                 />
-                <Text style={[styles.primaryChipText, { color: palette.textOnAccent }]}>Done</Text>
+                <ThemedText style={[styles.primaryChipText, { color: palette.textOnAccent }]}>
+                  Done
+                </ThemedText>
               </Pressable>
             </>
           )}
@@ -237,7 +243,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     primaryChipText: {
       fontSize: scaleBySizeClass(12, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
     },
     selectionChip: {
       borderWidth: 1,
@@ -256,11 +262,11 @@ function createStyles(sizeClass: SizeClass) {
     },
     selectionLabel: {
       fontSize: scaleBySizeClass(12, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
     },
     smallActionText: {
       fontSize: scaleBySizeClass(12, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
     },
     segmentedControl: {
       borderWidth: 1,
@@ -286,7 +292,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     filterText: {
       fontSize: scaleBySizeClass(12, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
     },
     indicatorWrap: {
       marginTop: scaleBySizeClass(10, sizeClass),

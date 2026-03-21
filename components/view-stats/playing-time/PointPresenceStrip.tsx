@@ -4,7 +4,9 @@ import { getAllPlayersByPoint } from '@/lib/lineUtils';
 import { GameEvent, PointLineRecord } from '@/lib/storage';
 import { computePointByPointEvents } from '@/lib/timelineUtils';
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import { Fonts } from '@/theme/theme';
 
 interface PointPresenceStripProps {
   playerId: string;
@@ -91,7 +93,7 @@ export default function PointPresenceStrip({
 
   return (
     <View style={styles.container}>
-      <Text style={[styles.label, { color: palette.textMuted }]}>GAME BREAKDOWN</Text>
+      <ThemedText style={[styles.label, { color: palette.textMuted }]}>GAME BREAKDOWN</ThemedText>
 
       <View style={styles.bar}>
         {segments.map(({ p, segType }) => (
@@ -111,7 +113,9 @@ export default function PointPresenceStrip({
           .map((type) => (
             <React.Fragment key={type}>
               <View style={[styles.legendSwatch, { backgroundColor: segColorMap[type] }]} />
-              <Text style={[styles.legendText, { color: palette.textMuted }]}>{type}</Text>
+              <ThemedText style={[styles.legendText, { color: palette.textMuted }]}>
+                {type}
+              </ThemedText>
             </React.Fragment>
           ))}
       </View>
@@ -127,7 +131,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     label: {
       fontSize: scaleBySizeClass(9, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
       letterSpacing: 0.5,
       textTransform: 'uppercase',
     },
@@ -158,7 +162,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     legendText: {
       fontSize: scaleBySizeClass(10, sizeClass),
-      fontWeight: '500',
+      fontFamily: Fonts.semiBold,
       marginRight: 6,
     },
   });

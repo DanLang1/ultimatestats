@@ -5,7 +5,9 @@ import { computePlayingTime, formatPlayingTime } from '@/lib/lineUtils';
 import { Player, PointLineRecord } from '@/lib/storage/types';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import { Fonts } from '@/theme/theme';
 
 function sortPlayers(
   players: Player[],
@@ -150,7 +152,9 @@ export function ModalPlayerGrid({
     const players = columns.get(key) ?? [];
     return (
       <View key={key} style={columnStyle}>
-        <Text style={[styles.columnLabel, { color: labelColor }]}>{MIXED_COLUMN_LABELS[key]}</Text>
+        <ThemedText style={[styles.columnLabel, { color: labelColor }]}>
+          {MIXED_COLUMN_LABELS[key]}
+        </ThemedText>
         <View style={styles.columnChips}>{players.map(renderPlayerChip)}</View>
       </View>
     );
@@ -160,9 +164,9 @@ export function ModalPlayerGrid({
     const players = genericColumns.get(key) ?? [];
     return (
       <View key={key} style={columnStyle}>
-        <Text style={[styles.columnLabel, { color: labelColor }]}>
+        <ThemedText style={[styles.columnLabel, { color: labelColor }]}>
           {GENERIC_COLUMN_LABELS[key]}
-        </Text>
+        </ThemedText>
         <View style={styles.columnChips}>{players.map(renderPlayerChip)}</View>
       </View>
     );
@@ -176,7 +180,7 @@ export function ModalPlayerGrid({
 
     return (
       <View style={styles.splitColumnWrapper}>
-        <Text style={[styles.columnLabel, { color: labelColor }]}>{label}</Text>
+        <ThemedText style={[styles.columnLabel, { color: labelColor }]}>{label}</ThemedText>
         <View style={styles.splitColumnsRow}>
           <View style={styles.splitColumn}>{leftPlayers.map(renderPlayerChip)}</View>
           <View style={styles.splitColumn}>{rightPlayers.map(renderPlayerChip)}</View>
@@ -193,10 +197,12 @@ export function ModalPlayerGrid({
           size={scaleBySizeClass(40, sizeClass)}
           color={emptyTextColor}
         />
-        <Text style={[styles.emptyText, { color: emptyTextColor }]}>No active players</Text>
-        <Text style={[styles.emptyHint, { color: emptyTextColor }]}>
+        <ThemedText style={[styles.emptyText, { color: emptyTextColor }]}>
+          No active players
+        </ThemedText>
+        <ThemedText style={[styles.emptyHint, { color: emptyTextColor }]}>
           Add players in Edit Roster
-        </Text>
+        </ThemedText>
       </View>
     );
   }
@@ -323,7 +329,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     columnLabel: {
       fontSize: scaleBySizeClass(9, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
       letterSpacing: 0.5,
       textTransform: 'uppercase',
       textAlign: 'center',
@@ -340,7 +346,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     emptyText: {
       fontSize: scaleBySizeClass(16, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
     },
     emptyHint: {
       fontSize: scaleBySizeClass(13, sizeClass),

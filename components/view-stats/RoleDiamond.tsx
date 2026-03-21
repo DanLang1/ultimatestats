@@ -2,7 +2,9 @@ import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { RoleStats } from '@/lib/statsUtils';
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import { Fonts } from '@/theme/theme';
 import Svg, { Circle, Polygon, Line as SvgLine } from 'react-native-svg';
 
 interface RoleDiamondProps {
@@ -48,14 +50,14 @@ export default function RoleDiamond({ roleStats }: RoleDiamondProps) {
 
   return (
     <View style={styles.container}>
-      <Text style={[styles.title, { color: palette.textMuted }]}>PROFILE</Text>
+      <ThemedText style={[styles.title, { color: palette.textMuted }]}>PROFILE</ThemedText>
 
       {/* Diamond with external labels */}
       <View style={styles.diamondWrapper}>
         {/* Left label: BLOCKS */}
-        <Text style={[styles.sideLabel, styles.leftLabel, { color: palette.textMuted }]}>
+        <ThemedText style={[styles.sideLabel, styles.leftLabel, { color: palette.textMuted }]}>
           BLOCKS{'\n'}({rawBlocks})
-        </Text>
+        </ThemedText>
 
         {/* SVG Diamond */}
         <View style={styles.diamondArea}>
@@ -100,16 +102,18 @@ export default function RoleDiamond({ roleStats }: RoleDiamondProps) {
             <Circle cx={center} cy={center} r="3" fill={palette.textMuted} />
           </Svg>
 
-          <Text style={[styles.topLabel, { color: palette.textMuted }]}>GOALS ({rawGoals})</Text>
-          <Text style={[styles.bottomLabel, { color: palette.danger }]}>
+          <ThemedText style={[styles.topLabel, { color: palette.textMuted }]}>
+            GOALS ({rawGoals})
+          </ThemedText>
+          <ThemedText style={[styles.bottomLabel, { color: palette.danger }]}>
             TURNS ({rawTurnovers})
-          </Text>
+          </ThemedText>
         </View>
 
         {/* Right label: ASSISTS */}
-        <Text style={[styles.sideLabel, styles.rightLabel, { color: palette.textMuted }]}>
+        <ThemedText style={[styles.sideLabel, styles.rightLabel, { color: palette.textMuted }]}>
           ASSISTS{'\n'}({rawAssists})
-        </Text>
+        </ThemedText>
       </View>
     </View>
   );
@@ -123,7 +127,7 @@ function createStyles(sizeClass: SizeClass, size: number) {
     },
     title: {
       fontSize: scaleBySizeClass(12, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
       letterSpacing: 1,
       marginBottom: 8,
       textTransform: 'uppercase',
@@ -141,7 +145,7 @@ function createStyles(sizeClass: SizeClass, size: number) {
     },
     sideLabel: {
       fontSize: scaleBySizeClass(9, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
       textTransform: 'uppercase',
       textAlign: 'center',
     },
@@ -158,7 +162,7 @@ function createStyles(sizeClass: SizeClass, size: number) {
       right: 0,
       textAlign: 'center',
       fontSize: scaleBySizeClass(9, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
       textTransform: 'uppercase',
     },
     bottomLabel: {
@@ -168,7 +172,7 @@ function createStyles(sizeClass: SizeClass, size: number) {
       right: 0,
       textAlign: 'center',
       fontSize: scaleBySizeClass(9, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
       textTransform: 'uppercase',
     },
   });

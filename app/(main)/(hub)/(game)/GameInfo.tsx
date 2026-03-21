@@ -15,7 +15,9 @@ import { useSettingsStore } from '@/store/settingsStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router, Stack } from 'expo-router';
 import React, { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import { Fonts } from '@/theme/theme';
 
 export default function GameInfoScreen() {
   const { isLandscape, sizeClass } = useLayout();
@@ -111,18 +113,18 @@ export default function GameInfoScreen() {
           /* Landscape: Three-Column Hero Section */
           <View key="hero-landscape" style={styles.heroSection}>
             <View style={styles.teamColumn}>
-              <Text
+              <ThemedText
                 style={[styles.teamColumnName, { color: palette.textMuted }]}
                 numberOfLines={1}
                 ellipsizeMode="tail">
                 {team1Name}
-              </Text>
-              <Text style={[styles.teamColumnScore, { color: palette.textInverse }]}>
+              </ThemedText>
+              <ThemedText style={[styles.teamColumnScore, { color: palette.textInverse }]}>
                 {team1Score}
-              </Text>
-              <Text style={[styles.teamColumnStats, { color: palette.textMuted }]}>
+              </ThemedText>
+              <ThemedText style={[styles.teamColumnStats, { color: palette.textMuted }]}>
                 {formatTimeoutStats(team1Timeouts, team1Floater)}
-              </Text>
+              </ThemedText>
             </View>
 
             <View style={styles.centerColumn}>
@@ -134,7 +136,9 @@ export default function GameInfoScreen() {
                       size={hardcapIconSize}
                       color={palette.accent}
                     />
-                    <Text style={[styles.centerLabel, { color: palette.accent }]}>HARDCAP</Text>
+                    <ThemedText style={[styles.centerLabel, { color: palette.accent }]}>
+                      HARDCAP
+                    </ThemedText>
                   </View>
                   {team1Score === team2Score ? (
                     <View style={styles.capStatusBadge}>
@@ -143,9 +147,10 @@ export default function GameInfoScreen() {
                         size={universeIconSize}
                         color={palette.textInverse}
                       />
-                      <Text style={[styles.universePointText, { color: palette.textInverse }]}>
+                      <ThemedText
+                        style={[styles.universePointText, { color: palette.textInverse }]}>
                         Universe Point
-                      </Text>
+                      </ThemedText>
                     </View>
                   ) : (
                     <>
@@ -156,15 +161,16 @@ export default function GameInfoScreen() {
                         const canTie = scoreDiff === 1;
                         return (
                           <>
-                            <Text
+                            <ThemedText
                               style={[styles.hardcapWinnerText, { color: palette.textInverse }]}>
                               {leadingTeam}
-                            </Text>
-                            <Text style={[styles.capStatusText, { color: palette.textMuted }]}>
+                            </ThemedText>
+                            <ThemedText
+                              style={[styles.capStatusText, { color: palette.textMuted }]}>
                               {canTie
                                 ? `wins unless ${trailingTeam} scores`
                                 : 'wins after this point'}
-                            </Text>
+                            </ThemedText>
                           </>
                         );
                       })()}
@@ -173,10 +179,12 @@ export default function GameInfoScreen() {
                 </>
               ) : (
                 <>
-                  <Text style={[styles.centerLabel, { color: palette.accent }]}>GAME TO</Text>
-                  <Text style={[styles.centerNumber, { color: palette.textInverse }]}>
+                  <ThemedText style={[styles.centerLabel, { color: palette.accent }]}>
+                    GAME TO
+                  </ThemedText>
+                  <ThemedText style={[styles.centerNumber, { color: palette.textInverse }]}>
                     {gameTo}
-                  </Text>
+                  </ThemedText>
                   {isSoftCap && (
                     <View style={styles.capStatusBadge}>
                       <MaterialCommunityIcons
@@ -184,9 +192,9 @@ export default function GameInfoScreen() {
                         size={softcapIconSize}
                         color={palette.textInverse}
                       />
-                      <Text style={[styles.capStatusText, { color: palette.textInverse }]}>
+                      <ThemedText style={[styles.capStatusText, { color: palette.textInverse }]}>
                         Softcap Active
-                      </Text>
+                      </ThemedText>
                     </View>
                   )}
                   {softCapPending && !isSoftCap && (
@@ -197,9 +205,9 @@ export default function GameInfoScreen() {
                         color={palette.textInverse}
                         isFlashing
                       />
-                      <Text style={[styles.capStatusText, { color: palette.textInverse }]}>
+                      <ThemedText style={[styles.capStatusText, { color: palette.textInverse }]}>
                         Softcap Pending
-                      </Text>
+                      </ThemedText>
                     </View>
                   )}
                 </>
@@ -210,7 +218,9 @@ export default function GameInfoScreen() {
                   <View
                     style={[styles.pointTimerDivider, { backgroundColor: palette.overlay10 }]}
                   />
-                  <Text style={[styles.centerLabel, { color: palette.accent }]}>POINT LENGTH</Text>
+                  <ThemedText style={[styles.centerLabel, { color: palette.accent }]}>
+                    POINT LENGTH
+                  </ThemedText>
                   <View style={styles.pointTimerRow}>
                     <Pressable onPress={togglePause} hitSlop={8}>
                       <MaterialCommunityIcons
@@ -219,13 +229,13 @@ export default function GameInfoScreen() {
                         color={isPaused ? palette.warning : palette.textMuted}
                       />
                     </Pressable>
-                    <Text
+                    <ThemedText
                       style={[
                         styles.pointTimerValue,
                         { color: isPaused ? palette.warning : palette.textInverse },
                       ]}>
                       {formatElapsed(elapsedSeconds)}
-                    </Text>
+                    </ThemedText>
                     {isPaused && (
                       <Pressable onPress={confirmRestartPointTimer} hitSlop={8}>
                         <MaterialCommunityIcons
@@ -241,18 +251,18 @@ export default function GameInfoScreen() {
             </View>
 
             <View style={styles.teamColumn}>
-              <Text
+              <ThemedText
                 style={[styles.teamColumnName, { color: palette.textMuted }]}
                 numberOfLines={1}
                 ellipsizeMode="tail">
                 {team2Name}
-              </Text>
-              <Text style={[styles.teamColumnScore, { color: palette.textInverse }]}>
+              </ThemedText>
+              <ThemedText style={[styles.teamColumnScore, { color: palette.textInverse }]}>
                 {team2Score}
-              </Text>
-              <Text style={[styles.teamColumnStats, { color: palette.textMuted }]}>
+              </ThemedText>
+              <ThemedText style={[styles.teamColumnStats, { color: palette.textMuted }]}>
                 {formatTimeoutStats(team2Timeouts, team2Floater)}
-              </Text>
+              </ThemedText>
             </View>
           </View>
         ) : (
@@ -261,35 +271,35 @@ export default function GameInfoScreen() {
             {/* Score Row */}
             <View style={styles.scoreRow}>
               <View style={styles.scoreTeam}>
-                <Text
+                <ThemedText
                   style={[styles.teamColumnName, { color: palette.textMuted }]}
                   numberOfLines={1}
                   ellipsizeMode="tail">
                   {team1Name}
-                </Text>
-                <Text style={[styles.teamColumnScore, { color: palette.textInverse }]}>
+                </ThemedText>
+                <ThemedText style={[styles.teamColumnScore, { color: palette.textInverse }]}>
                   {team1Score}
-                </Text>
-                <Text style={[styles.teamColumnStats, { color: palette.textMuted }]}>
+                </ThemedText>
+                <ThemedText style={[styles.teamColumnStats, { color: palette.textMuted }]}>
                   {formatTimeoutStats(team1Timeouts, team1Floater)}
-                </Text>
+                </ThemedText>
               </View>
 
-              <Text style={[styles.scoreDivider, { color: palette.textMuted }]}>–</Text>
+              <ThemedText style={[styles.scoreDivider, { color: palette.textMuted }]}>–</ThemedText>
 
               <View style={styles.scoreTeam}>
-                <Text
+                <ThemedText
                   style={[styles.teamColumnName, { color: palette.textMuted }]}
                   numberOfLines={1}
                   ellipsizeMode="tail">
                   {team2Name}
-                </Text>
-                <Text style={[styles.teamColumnScore, { color: palette.textInverse }]}>
+                </ThemedText>
+                <ThemedText style={[styles.teamColumnScore, { color: palette.textInverse }]}>
                   {team2Score}
-                </Text>
-                <Text style={[styles.teamColumnStats, { color: palette.textMuted }]}>
+                </ThemedText>
+                <ThemedText style={[styles.teamColumnStats, { color: palette.textMuted }]}>
                   {formatTimeoutStats(team2Timeouts, team2Floater)}
-                </Text>
+                </ThemedText>
               </View>
             </View>
 
@@ -303,7 +313,9 @@ export default function GameInfoScreen() {
                       size={hardcapIconSize}
                       color={palette.accent}
                     />
-                    <Text style={[styles.centerLabel, { color: palette.accent }]}>HARDCAP</Text>
+                    <ThemedText style={[styles.centerLabel, { color: palette.accent }]}>
+                      HARDCAP
+                    </ThemedText>
                   </View>
                   {team1Score === team2Score ? (
                     <View style={styles.capStatusBadge}>
@@ -312,9 +324,10 @@ export default function GameInfoScreen() {
                         size={universeIconSize}
                         color={palette.textInverse}
                       />
-                      <Text style={[styles.universePointText, { color: palette.textInverse }]}>
+                      <ThemedText
+                        style={[styles.universePointText, { color: palette.textInverse }]}>
                         Universe Point
-                      </Text>
+                      </ThemedText>
                     </View>
                   ) : (
                     <>
@@ -325,15 +338,16 @@ export default function GameInfoScreen() {
                         const canTie = scoreDiff === 1;
                         return (
                           <>
-                            <Text
+                            <ThemedText
                               style={[styles.hardcapWinnerText, { color: palette.textInverse }]}>
                               {leadingTeam}
-                            </Text>
-                            <Text style={[styles.capStatusText, { color: palette.textMuted }]}>
+                            </ThemedText>
+                            <ThemedText
+                              style={[styles.capStatusText, { color: palette.textMuted }]}>
                               {canTie
                                 ? `wins unless ${trailingTeam} scores`
                                 : 'wins after this point'}
-                            </Text>
+                            </ThemedText>
                           </>
                         );
                       })()}
@@ -342,10 +356,12 @@ export default function GameInfoScreen() {
                 </>
               ) : (
                 <>
-                  <Text style={[styles.centerLabel, { color: palette.accent }]}>GAME TO</Text>
-                  <Text style={[styles.centerNumber, { color: palette.textInverse }]}>
+                  <ThemedText style={[styles.centerLabel, { color: palette.accent }]}>
+                    GAME TO
+                  </ThemedText>
+                  <ThemedText style={[styles.centerNumber, { color: palette.textInverse }]}>
                     {gameTo}
-                  </Text>
+                  </ThemedText>
                   {isSoftCap && (
                     <View style={styles.capStatusBadge}>
                       <MaterialCommunityIcons
@@ -353,9 +369,9 @@ export default function GameInfoScreen() {
                         size={softcapIconSize}
                         color={palette.textInverse}
                       />
-                      <Text style={[styles.capStatusText, { color: palette.textInverse }]}>
+                      <ThemedText style={[styles.capStatusText, { color: palette.textInverse }]}>
                         Softcap Active
-                      </Text>
+                      </ThemedText>
                     </View>
                   )}
                   {softCapPending && !isSoftCap && (
@@ -366,9 +382,9 @@ export default function GameInfoScreen() {
                         color={palette.textInverse}
                         isFlashing
                       />
-                      <Text style={[styles.capStatusText, { color: palette.textInverse }]}>
+                      <ThemedText style={[styles.capStatusText, { color: palette.textInverse }]}>
                         Softcap Pending
-                      </Text>
+                      </ThemedText>
                     </View>
                   )}
                 </>
@@ -379,7 +395,9 @@ export default function GameInfoScreen() {
                   <View
                     style={[styles.pointTimerDivider, { backgroundColor: palette.overlay10 }]}
                   />
-                  <Text style={[styles.centerLabel, { color: palette.accent }]}>POINT LENGTH</Text>
+                  <ThemedText style={[styles.centerLabel, { color: palette.accent }]}>
+                    POINT LENGTH
+                  </ThemedText>
                   <View style={styles.pointTimerRow}>
                     <Pressable onPress={togglePause} hitSlop={8}>
                       <MaterialCommunityIcons
@@ -388,13 +406,13 @@ export default function GameInfoScreen() {
                         color={isPaused ? palette.warning : palette.textMuted}
                       />
                     </Pressable>
-                    <Text
+                    <ThemedText
                       style={[
                         styles.pointTimerValue,
                         { color: isPaused ? palette.warning : palette.textInverse },
                       ]}>
                       {formatElapsed(elapsedSeconds)}
-                    </Text>
+                    </ThemedText>
                     {isPaused && (
                       <Pressable onPress={confirmRestartPointTimer} hitSlop={8}>
                         <MaterialCommunityIcons
@@ -416,18 +434,18 @@ export default function GameInfoScreen() {
           <View style={styles.ratioSection}>
             <View style={[styles.ratioDivider, { backgroundColor: palette.overlay10 }]} />
             <View style={styles.ratioRow}>
-              <Text style={[styles.ratioLabel, { color: palette.accent }]}>
+              <ThemedText style={[styles.ratioLabel, { color: palette.accent }]}>
                 CURRENT GENDER RATIO
-              </Text>
+              </ThemedText>
               <Pressable
                 onPress={() => setShowAbbaModal(true)}
                 style={({ pressed }) => [styles.ratioValueRow, pressed && { opacity: 0.7 }]}>
-                <Text style={[styles.ratioValue, { color: palette.textInverse }]}>
+                <ThemedText style={[styles.ratioValue, { color: palette.textInverse }]}>
                   {formatRatioFull(
                     getExpectedRatio(currentPoint, firstPointRatio),
                     getSequenceNumber(currentPoint),
                   )}
-                </Text>
+                </ThemedText>
                 <MaterialCommunityIcons
                   name="information-outline"
                   size={ratioInfoIconSize}
@@ -454,7 +472,9 @@ export default function GameInfoScreen() {
               size={actionIconSize}
               color={palette.danger}
             />
-            <Text style={[styles.actionButtonText, { color: palette.danger }]}>END GAME EARLY</Text>
+            <ThemedText style={[styles.actionButtonText, { color: palette.danger }]}>
+              END GAME EARLY
+            </ThemedText>
           </Pressable>
         </View>
 
@@ -472,21 +492,25 @@ export default function GameInfoScreen() {
         {firstPointRatio && (
           <>
             <View style={styles.ratioInfoRow}>
-              <Text style={[styles.ratioInfoLabel, { color: palette.textMuted }]} numberOfLines={1}>
+              <ThemedText
+                style={[styles.ratioInfoLabel, { color: palette.textMuted }]}
+                numberOfLines={1}>
                 1ST MAJORITY
-              </Text>
-              <Text style={[styles.ratioInfoValue, { color: palette.textInverse }]}>
+              </ThemedText>
+              <ThemedText style={[styles.ratioInfoValue, { color: palette.textInverse }]}>
                 {firstPointRatio === 'more-women' ? 'FMP' : 'MMP'}
-              </Text>
+              </ThemedText>
             </View>
             <View style={styles.ratioInfoRow}>
-              <Text style={[styles.ratioInfoLabel, { color: palette.textMuted }]}>NEXT POINT</Text>
-              <Text style={[styles.ratioInfoValue, { color: palette.textInverse }]}>
+              <ThemedText style={[styles.ratioInfoLabel, { color: palette.textMuted }]}>
+                NEXT POINT
+              </ThemedText>
+              <ThemedText style={[styles.ratioInfoValue, { color: palette.textInverse }]}>
                 {formatRatioFull(
                   getExpectedRatio(currentPoint + 1, firstPointRatio),
                   getSequenceNumber(currentPoint + 1),
                 )}
-              </Text>
+              </ThemedText>
             </View>
           </>
         )}
@@ -527,7 +551,6 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     },
     scoreDivider: {
       fontSize: scaleBySizeClass(48, sizeClass),
-      fontWeight: '300',
       lineHeight: scaleBySizeClass(54, sizeClass),
       paddingTop: 18,
       paddingHorizontal: 8,
@@ -538,18 +561,18 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     },
     teamColumnName: {
       fontSize: scaleBySizeClass(isLandscape ? 14 : 13, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
       marginBottom: 4,
     },
     teamColumnScore: {
       fontSize: scaleBySizeClass(isLandscape ? 56 : 48, sizeClass),
-      fontWeight: '800',
+      fontFamily: Fonts.extraBold,
       includeFontPadding: false,
       lineHeight: scaleBySizeClass(isLandscape ? 64 : 54, sizeClass),
     },
     teamColumnStats: {
       fontSize: scaleBySizeClass(13, sizeClass),
-      fontWeight: '500',
+      fontFamily: Fonts.semiBold,
       marginTop: 4,
     },
     centerColumn: {
@@ -561,12 +584,12 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     },
     centerLabel: {
       fontSize: scaleBySizeClass(12, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
       letterSpacing: 1,
     },
     centerNumber: {
       fontSize: scaleBySizeClass(isLandscape ? 48 : 42, sizeClass),
-      fontWeight: '800',
+      fontFamily: Fonts.extraBold,
       includeFontPadding: false,
       lineHeight: scaleBySizeClass(isLandscape ? 56 : 48, sizeClass),
     },
@@ -577,7 +600,7 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     },
     hardcapWinnerText: {
       fontSize: scaleBySizeClass(24, sizeClass),
-      fontWeight: '800',
+      fontFamily: Fonts.extraBold,
       textAlign: 'center',
     },
     capStatusBadge: {
@@ -588,11 +611,11 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     },
     capStatusText: {
       fontSize: scaleBySizeClass(13, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
     },
     universePointText: {
       fontSize: scaleBySizeClass(16, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
     },
 
     // Point Timer (integrated in center column)
@@ -613,7 +636,7 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     },
     pointTimerValue: {
       fontSize: scaleBySizeClass(32, sizeClass),
-      fontWeight: '800',
+      fontFamily: Fonts.extraBold,
       fontVariant: ['tabular-nums'],
       includeFontPadding: false,
       lineHeight: scaleBySizeClass(38, sizeClass),
@@ -626,7 +649,7 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
 
     sectionTitle: {
       fontSize: scaleBySizeClass(12, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
       letterSpacing: 1.5,
       marginBottom: 16,
     },
@@ -651,7 +674,7 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     },
     actionButtonText: {
       fontSize: scaleBySizeClass(14, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
       letterSpacing: 1,
     },
 
@@ -671,7 +694,7 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     },
     ratioLabel: {
       fontSize: scaleBySizeClass(12, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
       letterSpacing: 1,
     },
     ratioValueRow: {
@@ -681,7 +704,7 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     },
     ratioValue: {
       fontSize: scaleBySizeClass(28, sizeClass),
-      fontWeight: '800',
+      fontFamily: Fonts.extraBold,
     },
 
     // Gender Ratio Info Modal
@@ -693,12 +716,12 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     },
     ratioInfoLabel: {
       fontSize: scaleBySizeClass(12, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
       letterSpacing: 1,
     },
     ratioInfoValue: {
       fontSize: scaleBySizeClass(16, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
     },
   });
 }

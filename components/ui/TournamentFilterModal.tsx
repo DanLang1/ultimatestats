@@ -3,7 +3,9 @@ import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hoo
 import { Tournament } from '@/lib/storage/types';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import { Fonts } from '@/theme/theme';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface TournamentFilterModalProps {
@@ -54,7 +56,9 @@ export function TournamentFilterModal({
               <View style={[styles.handleBar, { backgroundColor: palette.overlay15 }]} />
             </View>
 
-            <Text style={[styles.title, { color: palette.modalText }]}>Filter by Tournament</Text>
+            <ThemedText style={[styles.title, { color: palette.modalText }]}>
+              Filter by Tournament
+            </ThemedText>
 
             <ScrollView bounces={false}>
               {/* Show All option */}
@@ -66,13 +70,13 @@ export function TournamentFilterModal({
                   size={iconSize}
                   color={selectedTournamentId === null ? palette.accent : palette.modalTextMuted}
                 />
-                <Text
+                <ThemedText
                   style={[
                     styles.rowText,
                     { color: selectedTournamentId === null ? palette.accent : palette.modalText },
                   ]}>
                   All Games
-                </Text>
+                </ThemedText>
                 {selectedTournamentId === null && (
                   <MaterialCommunityIcons name="check" size={iconSize} color={palette.accent} />
                 )}
@@ -94,16 +98,16 @@ export function TournamentFilterModal({
                       color={isActive ? palette.accent : palette.modalTextMuted}
                     />
                     <View style={styles.tournamentInfo}>
-                      <Text
+                      <ThemedText
                         style={[
                           styles.rowText,
                           { color: isActive ? palette.accent : palette.modalText },
                         ]}>
                         {tournament.name}
-                      </Text>
-                      <Text style={[styles.countText, { color: palette.modalTextMuted }]}>
+                      </ThemedText>
+                      <ThemedText style={[styles.countText, { color: palette.modalTextMuted }]}>
                         {count} game{count !== 1 ? 's' : ''}
-                      </Text>
+                      </ThemedText>
                     </View>
                     {isActive && (
                       <MaterialCommunityIcons name="check" size={iconSize} color={palette.accent} />
@@ -113,9 +117,9 @@ export function TournamentFilterModal({
               })}
 
               {tournaments.length === 0 && (
-                <Text style={[styles.emptyText, { color: palette.modalTextMuted }]}>
+                <ThemedText style={[styles.emptyText, { color: palette.modalTextMuted }]}>
                   No tournaments with saved games
-                </Text>
+                </ThemedText>
               )}
             </ScrollView>
           </Pressable>
@@ -153,7 +157,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     title: {
       fontSize: scaleBySizeClass(18, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
       marginBottom: 12,
       paddingHorizontal: 4,
     },
@@ -170,7 +174,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     rowText: {
       fontSize: scaleBySizeClass(15, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
     },
     countText: {
       fontSize: scaleBySizeClass(13, sizeClass),

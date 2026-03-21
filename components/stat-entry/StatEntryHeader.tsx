@@ -1,7 +1,9 @@
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass } from '@/hooks/useLayout';
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import { Fonts } from '@/theme/theme';
 import Animated, { FadeIn } from 'react-native-reanimated';
 
 type EntryStep = 'goal' | 'assist';
@@ -26,7 +28,7 @@ export function StatEntryHeader({
 
   return (
     <View style={styles.container}>
-      <Text style={[styles.teamName, { color: palette.modalText }]}>{teamName}</Text>
+      <ThemedText style={[styles.teamName, { color: palette.modalText }]}>{teamName}</ThemedText>
       <Animated.Text
         key={step}
         entering={FadeIn.duration(300)}
@@ -41,10 +43,12 @@ export function StatEntryHeader({
             styles.badge,
             { backgroundColor: palette.accentOverlay15, borderColor: palette.accent },
           ]}>
-          <Text style={[styles.badgeLabel, { color: palette.accent }]}>
+          <ThemedText style={[styles.badgeLabel, { color: palette.accent }]}>
             {badgeLabel || 'SELECTED'}
-          </Text>
-          <Text style={[styles.badgeValue, { color: palette.accent }]}>{badgeValue}</Text>
+          </ThemedText>
+          <ThemedText style={[styles.badgeValue, { color: palette.accent }]}>
+            {badgeValue}
+          </ThemedText>
         </Animated.View>
       )}
     </View>
@@ -63,14 +67,14 @@ function createStyles(sizeClass: SizeClass) {
     },
     teamName: {
       fontSize: scaleBySizeClass(12, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
       textTransform: 'uppercase',
       letterSpacing: 0.5,
       marginBottom: 2,
     },
     stepLabel: {
       fontSize: scaleBySizeClass(22, sizeClass),
-      fontWeight: 'bold',
+      fontFamily: Fonts.bold,
     },
     badge: {
       borderRadius: 8,
@@ -84,13 +88,13 @@ function createStyles(sizeClass: SizeClass) {
     },
     badgeLabel: {
       fontSize: scaleBySizeClass(10, sizeClass),
-      fontWeight: 'bold',
+      fontFamily: Fonts.bold,
       letterSpacing: 1,
       marginTop: 2,
     },
     badgeValue: {
       fontSize: scaleBySizeClass(14, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
     },
   });
 }

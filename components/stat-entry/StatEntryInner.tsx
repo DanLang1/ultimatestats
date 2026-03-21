@@ -5,7 +5,9 @@ import { getActiveRoster, getPlayerName, UNKNOWN_PLAYER_ID } from '@/lib/playerU
 import { Player } from '@/lib/storage/types';
 import { useGameStore } from '@/store/gameStore';
 import React, { useState } from 'react';
-import { Keyboard, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Keyboard, Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import { Fonts } from '@/theme/theme';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeIn, LinearTransition, SlideInDown } from 'react-native-reanimated';
 import { StatEntryHeader } from './StatEntryHeader';
@@ -185,7 +187,7 @@ export function StatEntryInner({
           },
         ]}
         onPress={onCancel}>
-        <Text style={[styles.skipText, { color: skipButtonText }]}>Cancel</Text>
+        <ThemedText style={[styles.skipText, { color: skipButtonText }]}>Cancel</ThemedText>
       </Pressable>
 
       {/* Show Back button if we are on the second step */}
@@ -202,7 +204,7 @@ export function StatEntryInner({
               },
             ]}
             onPress={handleBack}>
-            <Text style={[styles.skipText, { color: skipButtonText }]}>Back</Text>
+            <ThemedText style={[styles.skipText, { color: skipButtonText }]}>Back</ThemedText>
           </Pressable>
         </Animated.View>
       )}
@@ -223,7 +225,9 @@ export function StatEntryInner({
               // For Callahan, the goal scorer is always the blocker
               onComplete(blockerId, 'OTHER_TEAM');
             }}>
-            <Text style={[styles.skipText, { color: palette.textOnAccent }]}>Callahan</Text>
+            <ThemedText style={[styles.skipText, { color: palette.textOnAccent }]}>
+              Callahan
+            </ThemedText>
           </Pressable>
         </Animated.View>
       )}
@@ -240,7 +244,7 @@ export function StatEntryInner({
             },
           ]}
           onPress={() => handlePlayerSelect(UNKNOWN_PLAYER_ID)}>
-          <Text style={[styles.skipText, { color: palette.textMuted }]}>Unknown</Text>
+          <ThemedText style={[styles.skipText, { color: palette.textMuted }]}>Unknown</ThemedText>
         </Pressable>
       </Animated.View>
     </Animated.View>
@@ -319,7 +323,9 @@ export function StatEntryInner({
                 ]}
                 onPress={handleAddPlayer}
                 disabled={!newPlayerName.trim()}>
-                <Text style={[styles.addButtonText, { color: palette.textOnAccent }]}>Add</Text>
+                <ThemedText style={[styles.addButtonText, { color: palette.textOnAccent }]}>
+                  Add
+                </ThemedText>
               </Pressable>
             </View>
 
@@ -381,7 +387,9 @@ export function StatEntryInner({
                 ]}
                 onPress={handleAddPlayer}
                 disabled={!newPlayerName.trim()}>
-                <Text style={[styles.addButtonText, { color: palette.textOnAccent }]}>Add</Text>
+                <ThemedText style={[styles.addButtonText, { color: palette.textOnAccent }]}>
+                  Add
+                </ThemedText>
               </Pressable>
             </View>
 
@@ -456,7 +464,7 @@ function createStyles(sizeClass: SizeClass) {
       opacity: 0.5,
     },
     addButtonText: {
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
       fontSize: scaleBySizeClass(15, sizeClass),
     },
     footer: {
@@ -471,7 +479,7 @@ function createStyles(sizeClass: SizeClass) {
       borderRadius: 8,
     },
     skipText: {
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
       fontSize: scaleBySizeClass(15, sizeClass),
     },
   });

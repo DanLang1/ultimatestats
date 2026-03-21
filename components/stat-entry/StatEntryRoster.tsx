@@ -3,7 +3,8 @@ import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass } from '@/hooks/useLayout';
 import { Player } from '@/lib/storage/types';
 import React from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
 
 interface StatEntryRosterProps {
   roster: Player[];
@@ -33,9 +34,9 @@ export function StatEntryRoster({
         contentContainerStyle={styles.chipsContainer}
         keyboardShouldPersistTaps="handled">
         {sortedRoster.length === 0 ? (
-          <Text style={[styles.emptyText, { color: palette.textMuted }]}>
+          <ThemedText style={[styles.emptyText, { color: palette.textMuted }]}>
             No players yet. Add one!
-          </Text>
+          </ThemedText>
         ) : (
           sortedRoster.map((player) => (
             <PlayerChip

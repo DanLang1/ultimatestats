@@ -93,6 +93,8 @@ Agent entrypoints:
 - Prefer derived state over `useEffect`.
 - If `useEffect` is necessary, prefer extracting behavior into a custom hook.
 - Do not use `useCallback` or `useMemo` (React Compiler workflow).
+- No raw `<Text>` from react-native; use `<ThemedText>` from `@/components/ThemedText` for all text. This ensures the Inter font family is applied consistently.
+- Do not use `fontWeight` in styles; use `fontFamily: Fonts.semiBold`, `Fonts.bold`, `Fonts.extraBold`, or `Fonts.black` from `theme/theme.ts` instead. The app loads Inter font files directly, so weight must be set via the correct font file, not synthesized.
 - No raw color values; use `theme/theme.ts`.
 - Prefer semantic palette tokens over `themeMode` branching for styling. If light/dark values differ, add or reuse a palette token instead of checking `themeMode` in components.
 - Do not use nested ternaries; prefer explicit conditionals or helper functions when branching logic affects readability.

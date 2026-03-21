@@ -65,8 +65,8 @@ export default function MyFeatureModal() {
             styles.sheet,
             { backgroundColor: palette.modalBg, borderColor: palette.overlay15 },
           ]}>
-          <Text style={{ color: palette.modalText }}>Modal Content</Text>
-          <Text style={{ color: palette.modalTextMuted }}>Secondary text</Text>
+          <ThemedText style={{ color: palette.modalText }}>Modal Content</ThemedText>
+          <ThemedText style={{ color: palette.modalTextMuted }}>Secondary text</ThemedText>
         </View>
       </Pressable>
     </View>
@@ -265,10 +265,10 @@ import { AlertModal } from '@/components/ui/AlertModal';
   />
   <View style={styles.buttonRow}>
     <Pressable onPress={handleCancel}>
-      <Text style={{ color: palette.modalText }}>Cancel</Text>
+      <ThemedText style={{ color: palette.modalText }}>Cancel</ThemedText>
     </Pressable>
     <Pressable onPress={handleSave}>
-      <Text style={{ color: palette.textOnAccent }}>Save</Text>
+      <ThemedText style={{ color: palette.textOnAccent }}>Save</ThemedText>
     </Pressable>
   </View>
 </AlertModal>;

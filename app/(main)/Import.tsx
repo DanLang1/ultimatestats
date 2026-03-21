@@ -13,7 +13,9 @@ import { useLinePresetsStore } from '@/store/linePresetsStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import React from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import { Fonts } from '@/theme/theme';
 import Animated, { FadeIn } from 'react-native-reanimated';
 
 export default function ImportScreen() {
@@ -169,7 +171,9 @@ function LoadingContent({ palette }: { palette: ReturnType<typeof useTheme>['pal
   return (
     <View style={styles.content}>
       <ActivityIndicator size="large" color={palette.accent} />
-      <Text style={[styles.title, { color: palette.modalText }]}>Loading shared data...</Text>
+      <ThemedText style={[styles.title, { color: palette.modalText }]}>
+        Loading shared data...
+      </ThemedText>
     </View>
   );
 }
@@ -191,12 +195,14 @@ function ErrorContent({
         size={metrics.statusIconLarge}
         color={palette.danger}
       />
-      <Text style={[styles.title, { color: palette.modalText }]}>Import Failed</Text>
-      <Text style={[styles.subtitle, { color: palette.modalTextMuted }]}>{message}</Text>
+      <ThemedText style={[styles.title, { color: palette.modalText }]}>Import Failed</ThemedText>
+      <ThemedText style={[styles.subtitle, { color: palette.modalTextMuted }]}>
+        {message}
+      </ThemedText>
       <Pressable
         style={[styles.button, { backgroundColor: palette.overlay10 }]}
         onPress={onDismiss}>
-        <Text style={[styles.buttonText, { color: palette.modalText }]}>OK</Text>
+        <ThemedText style={[styles.buttonText, { color: palette.modalText }]}>OK</ThemedText>
       </Pressable>
     </View>
   );
@@ -219,18 +225,18 @@ function DuplicateContent({
         size={metrics.statusIconLarge}
         color={palette.accent}
       />
-      <Text style={[styles.title, { color: palette.modalText }]}>
+      <ThemedText style={[styles.title, { color: palette.modalText }]}>
         {isMultiple ? 'You already have all these games' : 'You already have this game'}
-      </Text>
-      <Text style={[styles.subtitle, { color: palette.modalTextMuted }]}>
+      </ThemedText>
+      <ThemedText style={[styles.subtitle, { color: palette.modalTextMuted }]}>
         {isMultiple
           ? 'All shared games are already in your saved games.'
           : 'This game is already in your saved games.'}
-      </Text>
+      </ThemedText>
       <Pressable
         style={[styles.button, { backgroundColor: palette.overlay10 }]}
         onPress={onDismiss}>
-        <Text style={[styles.buttonText, { color: palette.modalText }]}>OK</Text>
+        <ThemedText style={[styles.buttonText, { color: palette.modalText }]}>OK</ThemedText>
       </Pressable>
     </View>
   );
@@ -261,27 +267,29 @@ function GamePreviewContent({
         size={metrics.statusIconMedium}
         color={palette.accent}
       />
-      <Text style={[styles.title, { color: palette.modalText }]}>Import game?</Text>
+      <ThemedText style={[styles.title, { color: palette.modalText }]}>Import game?</ThemedText>
 
       <View style={styles.previewCard}>
-        <Text style={[styles.previewTeams, { color: palette.modalText }]}>
+        <ThemedText style={[styles.previewTeams, { color: palette.modalText }]}>
           {teamName} vs {game.team2Name}
-        </Text>
+        </ThemedText>
         <ScoreBadge score1={game.team1Score} score2={game.team2Score} size="large" />
-        <Text style={[styles.previewMeta, { color: palette.modalTextMuted }]}>
+        <ThemedText style={[styles.previewMeta, { color: palette.modalTextMuted }]}>
           {formatDate(getGameDisplayTimestamp(game))} &middot; {goalCount} point
           {goalCount !== 1 ? 's' : ''} tracked
-        </Text>
+        </ThemedText>
       </View>
 
       <View style={styles.buttonRow}>
         <Pressable
           style={[styles.button, { backgroundColor: palette.overlay10 }]}
           onPress={onCancel}>
-          <Text style={[styles.buttonText, { color: palette.modalText }]}>Cancel</Text>
+          <ThemedText style={[styles.buttonText, { color: palette.modalText }]}>Cancel</ThemedText>
         </Pressable>
         <Pressable style={[styles.button, { backgroundColor: palette.accent }]} onPress={onImport}>
-          <Text style={[styles.buttonText, { color: palette.textOnAccent }]}>Import</Text>
+          <ThemedText style={[styles.buttonText, { color: palette.textOnAccent }]}>
+            Import
+          </ThemedText>
         </Pressable>
       </View>
     </Animated.View>
@@ -311,14 +319,14 @@ function GamesPreviewContent({
         size={metrics.statusIconMedium}
         color={palette.accent}
       />
-      <Text style={[styles.title, { color: palette.modalText }]}>
+      <ThemedText style={[styles.title, { color: palette.modalText }]}>
         Import {newGames.length} game{newGames.length !== 1 ? 's' : ''}?
-      </Text>
+      </ThemedText>
 
       {duplicateCount > 0 && (
-        <Text style={[styles.subtitle, { color: palette.modalTextMuted }]}>
+        <ThemedText style={[styles.subtitle, { color: palette.modalTextMuted }]}>
           Skipping {duplicateCount} duplicate{duplicateCount !== 1 ? 's' : ''}
-        </Text>
+        </ThemedText>
       )}
 
       <ScrollView style={styles.gamesList} contentContainerStyle={styles.gamesListContent}>
@@ -327,12 +335,14 @@ function GamesPreviewContent({
           return (
             <View key={game.id} style={[styles.gameRow, { backgroundColor: palette.overlay05 }]}>
               <View style={styles.gameRowInfo}>
-                <Text style={[styles.gameRowTeams, { color: palette.modalText }]} numberOfLines={1}>
+                <ThemedText
+                  style={[styles.gameRowTeams, { color: palette.modalText }]}
+                  numberOfLines={1}>
                   {teamName} vs {game.team2Name}
-                </Text>
-                <Text style={[styles.previewMeta, { color: palette.modalTextMuted }]}>
+                </ThemedText>
+                <ThemedText style={[styles.previewMeta, { color: palette.modalTextMuted }]}>
                   {formatDate(getGameDisplayTimestamp(game))}
-                </Text>
+                </ThemedText>
               </View>
               <ScoreBadge score1={game.team1Score} score2={game.team2Score} size="small" />
             </View>
@@ -344,10 +354,12 @@ function GamesPreviewContent({
         <Pressable
           style={[styles.button, { backgroundColor: palette.overlay10 }]}
           onPress={onCancel}>
-          <Text style={[styles.buttonText, { color: palette.modalText }]}>Cancel</Text>
+          <ThemedText style={[styles.buttonText, { color: palette.modalText }]}>Cancel</ThemedText>
         </Pressable>
         <Pressable style={[styles.button, { backgroundColor: palette.accent }]} onPress={onImport}>
-          <Text style={[styles.buttonText, { color: palette.textOnAccent }]}>Import</Text>
+          <ThemedText style={[styles.buttonText, { color: palette.textOnAccent }]}>
+            Import
+          </ThemedText>
         </Pressable>
       </View>
     </Animated.View>
@@ -377,24 +389,28 @@ function TeamPreviewContent({
         size={metrics.statusIconMedium}
         color={palette.accent}
       />
-      <Text style={[styles.title, { color: palette.modalText }]}>Import team?</Text>
+      <ThemedText style={[styles.title, { color: palette.modalText }]}>Import team?</ThemedText>
 
       <View style={styles.previewCard}>
-        <Text style={[styles.previewTeams, { color: palette.modalText }]}>{team.name}</Text>
-        <Text style={[styles.previewMeta, { color: palette.modalTextMuted }]}>
+        <ThemedText style={[styles.previewTeams, { color: palette.modalText }]}>
+          {team.name}
+        </ThemedText>
+        <ThemedText style={[styles.previewMeta, { color: palette.modalTextMuted }]}>
           {playerCount} player{playerCount !== 1 ? 's' : ''}
           {presetCount > 0 ? ` · ${presetCount} line preset${presetCount !== 1 ? 's' : ''}` : ''}
-        </Text>
+        </ThemedText>
       </View>
 
       <View style={styles.buttonRow}>
         <Pressable
           style={[styles.button, { backgroundColor: palette.overlay10 }]}
           onPress={onCancel}>
-          <Text style={[styles.buttonText, { color: palette.modalText }]}>Cancel</Text>
+          <ThemedText style={[styles.buttonText, { color: palette.modalText }]}>Cancel</ThemedText>
         </Pressable>
         <Pressable style={[styles.button, { backgroundColor: palette.accent }]} onPress={onImport}>
-          <Text style={[styles.buttonText, { color: palette.textOnAccent }]}>Import</Text>
+          <ThemedText style={[styles.buttonText, { color: palette.textOnAccent }]}>
+            Import
+          </ThemedText>
         </Pressable>
       </View>
     </Animated.View>
@@ -424,30 +440,34 @@ function TeamExistsContent({
         size={metrics.statusIconMedium}
         color={palette.accent}
       />
-      <Text style={[styles.title, { color: palette.modalText }]}>
+      <ThemedText style={[styles.title, { color: palette.modalText }]}>
         You already have {existingTeam.name}
-      </Text>
-      <Text style={[styles.subtitle, { color: palette.modalTextMuted }]}>
+      </ThemedText>
+      <ThemedText style={[styles.subtitle, { color: palette.modalTextMuted }]}>
         Do you want to update your roster to match?
-      </Text>
+      </ThemedText>
 
       <View style={styles.previewCard}>
-        <Text style={[styles.previewMeta, { color: palette.modalTextMuted }]}>
+        <ThemedText style={[styles.previewMeta, { color: palette.modalTextMuted }]}>
           Incoming: {incomingTeam.roster.length} player
           {incomingTeam.roster.length !== 1 ? 's' : ''}
-        </Text>
-        <Text style={[styles.previewMeta, { color: palette.modalTextMuted }]}>
+        </ThemedText>
+        <ThemedText style={[styles.previewMeta, { color: palette.modalTextMuted }]}>
           Your version: {existingTeam.roster.length} player
           {existingTeam.roster.length !== 1 ? 's' : ''}
-        </Text>
+        </ThemedText>
       </View>
 
       <View style={styles.buttonRow}>
         <Pressable style={[styles.button, { backgroundColor: palette.overlay10 }]} onPress={onKeep}>
-          <Text style={[styles.buttonText, { color: palette.modalText }]}>Keep Mine</Text>
+          <ThemedText style={[styles.buttonText, { color: palette.modalText }]}>
+            Keep Mine
+          </ThemedText>
         </Pressable>
         <Pressable style={[styles.button, { backgroundColor: palette.accent }]} onPress={onUpdate}>
-          <Text style={[styles.buttonText, { color: palette.textOnAccent }]}>Update Roster</Text>
+          <ThemedText style={[styles.buttonText, { color: palette.textOnAccent }]}>
+            Update Roster
+          </ThemedText>
         </Pressable>
       </View>
     </Animated.View>
@@ -482,9 +502,11 @@ function DoneContent({
         size={metrics.statusIconLarge}
         color={palette.success}
       />
-      <Text style={[styles.title, { color: palette.modalText }]}>{message}</Text>
+      <ThemedText style={[styles.title, { color: palette.modalText }]}>{message}</ThemedText>
       <Pressable style={[styles.button, { backgroundColor: palette.accent }]} onPress={onAction}>
-        <Text style={[styles.buttonText, { color: palette.textOnAccent }]}>{actionLabel}</Text>
+        <ThemedText style={[styles.buttonText, { color: palette.textOnAccent }]}>
+          {actionLabel}
+        </ThemedText>
       </Pressable>
     </Animated.View>
   );
@@ -517,7 +539,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     title: {
       fontSize: scaleBySizeClass(20, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
       textAlign: 'center',
     },
     subtitle: {
@@ -531,7 +553,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     previewTeams: {
       fontSize: scaleBySizeClass(18, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
       textAlign: 'center',
     },
     previewMeta: {
@@ -551,7 +573,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     buttonText: {
       fontSize: scaleBySizeClass(16, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
     },
     gamesList: {
       maxHeight: scaleBySizeClass(200, sizeClass),
@@ -575,7 +597,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     gameRowTeams: {
       fontSize: scaleBySizeClass(14, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
     },
   });
 }

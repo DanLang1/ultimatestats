@@ -7,7 +7,9 @@ import { usePlayerStatsStore } from '@/store/playerStatsStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router } from 'expo-router';
 import React from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import { Fonts } from '@/theme/theme';
 
 export default function GameSelectorModal() {
   const { games, selectedGameId, setSelectedGameId, playerId, team } = usePlayerStatsStore();
@@ -39,7 +41,9 @@ export default function GameSelectorModal() {
           <View style={[styles.handle, { backgroundColor: palette.overlay20 }]} />
         </View>
         <View style={[styles.header, { borderBottomColor: palette.overlay10 }]}>
-          <Text style={[styles.headerTitle, { color: palette.textMuted }]}>SELECT GAME</Text>
+          <ThemedText style={[styles.headerTitle, { color: palette.textMuted }]}>
+            SELECT GAME
+          </ThemedText>
           <Pressable onPress={handleDismiss} hitSlop={12}>
             <MaterialCommunityIcons
               name="close"
@@ -49,9 +53,9 @@ export default function GameSelectorModal() {
           </Pressable>
         </View>
         <View style={styles.emptyWrap}>
-          <Text style={[styles.emptyText, { color: palette.textMuted }]}>
+          <ThemedText style={[styles.emptyText, { color: palette.textMuted }]}>
             No games where this player had impact events or recorded playing time.
-          </Text>
+          </ThemedText>
         </View>
       </BottomSheet>
     );
@@ -78,7 +82,9 @@ export default function GameSelectorModal() {
 
       {/* Header */}
       <View style={[styles.header, { borderBottomColor: palette.overlay10 }]}>
-        <Text style={[styles.headerTitle, { color: palette.textMuted }]}>SELECT GAME</Text>
+        <ThemedText style={[styles.headerTitle, { color: palette.textMuted }]}>
+          SELECT GAME
+        </ThemedText>
         <Pressable onPress={handleDismiss} hitSlop={12}>
           <MaterialCommunityIcons
             name="close"
@@ -126,26 +132,26 @@ export default function GameSelectorModal() {
 
               {/* Game info */}
               <View style={styles.gameInfo}>
-                <Text
+                <ThemedText
                   style={[
                     styles.opponentText,
                     { color: isSelected ? palette.accent : palette.textInverse },
                   ]}>
                   vs {g.team2Name}
-                </Text>
-                <Text style={[styles.dateText, { color: palette.textMuted }]}>
+                </ThemedText>
+                <ThemedText style={[styles.dateText, { color: palette.textMuted }]}>
                   {new Date(getGameDisplayTimestamp(g)).toLocaleDateString(undefined, {
                     weekday: 'short',
                     month: 'short',
                     day: 'numeric',
                   })}
-                </Text>
+                </ThemedText>
               </View>
 
               {/* Score */}
-              <Text style={[styles.scoreText, { color: palette.textMuted }]}>
+              <ThemedText style={[styles.scoreText, { color: palette.textMuted }]}>
                 {g.team1Score}-{g.team2Score}
-              </Text>
+              </ThemedText>
             </Pressable>
           );
         })}
@@ -178,7 +184,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     headerTitle: {
       fontSize: scaleBySizeClass(12, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
       letterSpacing: 1,
     },
     scrollView: {
@@ -207,7 +213,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     opponentText: {
       fontSize: scaleBySizeClass(16, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
     },
     dateText: {
       fontSize: scaleBySizeClass(13, sizeClass),
@@ -215,7 +221,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     scoreText: {
       fontSize: scaleBySizeClass(14, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
     },
     emptyWrap: {
       paddingHorizontal: 20,

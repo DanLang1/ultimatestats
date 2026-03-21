@@ -1,7 +1,9 @@
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass } from '@/hooks/useLayout';
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import { Fonts } from '@/theme/theme';
 import Svg, { Circle } from 'react-native-svg';
 
 interface PlayingTimeGaugeProps {
@@ -68,20 +70,22 @@ export default function PlayingTimeGauge({
           />
         </Svg>
         <View style={[styles.centerContent, { paddingHorizontal: strokeWidth * 1.5 }]}>
-          <Text style={[centerLabelStyle, { color: palette.textInverse }]} numberOfLines={1}>
+          <ThemedText style={[centerLabelStyle, { color: palette.textInverse }]} numberOfLines={1}>
             {centerLabel}
-          </Text>
-          <Text
+          </ThemedText>
+          <ThemedText
             style={[styles.centerSubLabel, { color: palette.textMuted }]}
             numberOfLines={1}
             adjustsFontSizeToFit
             minimumFontScale={0.6}>
             {centerSubLabel}
-          </Text>
+          </ThemedText>
         </View>
       </View>
       {bottomLabel && (
-        <Text style={[styles.bottomLabel, { color: palette.textMuted }]}>{bottomLabel}</Text>
+        <ThemedText style={[styles.bottomLabel, { color: palette.textMuted }]}>
+          {bottomLabel}
+        </ThemedText>
       )}
     </View>
   );
@@ -101,28 +105,28 @@ function createStyles(sizeClass: SizeClass) {
     },
     centerLabel: {
       fontSize: scaleBySizeClass(22, sizeClass),
-      fontWeight: '800',
+      fontFamily: Fonts.extraBold,
       lineHeight: scaleBySizeClass(26, sizeClass),
     },
     centerLabelMedium: {
       fontSize: scaleBySizeClass(18, sizeClass),
-      fontWeight: '800',
+      fontFamily: Fonts.extraBold,
       lineHeight: scaleBySizeClass(22, sizeClass),
     },
     centerLabelLong: {
       fontSize: scaleBySizeClass(14, sizeClass),
-      fontWeight: '800',
+      fontFamily: Fonts.extraBold,
       lineHeight: scaleBySizeClass(18, sizeClass),
     },
     centerSubLabel: {
       fontSize: scaleBySizeClass(10, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
       textTransform: 'uppercase',
       letterSpacing: 0.5,
     },
     bottomLabel: {
       fontSize: scaleBySizeClass(11, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
     },
   });
 }

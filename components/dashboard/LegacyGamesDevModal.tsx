@@ -12,7 +12,9 @@ import { useGameStore } from '@/store/gameStore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import { Fonts } from '@/theme/theme';
 
 interface LegacyGamesDevModalProps {
   visible: boolean;
@@ -222,9 +224,11 @@ export default function LegacyGamesDevModal({ visible, onClose }: LegacyGamesDev
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled">
-        <Text style={[styles.message, { color: palette.textMuted }]}>{description}</Text>
+        <ThemedText style={[styles.message, { color: palette.textMuted }]}>
+          {description}
+        </ThemedText>
 
-        <Text style={[styles.note, { color: palette.textMuted }]}>{note}</Text>
+        <ThemedText style={[styles.note, { color: palette.textMuted }]}>{note}</ThemedText>
 
         <TextInput
           value={rawJson}
@@ -259,7 +263,9 @@ export default function LegacyGamesDevModal({ visible, onClose }: LegacyGamesDev
               pressed && styles.buttonPressed,
               (isImporting || rawJson.length === 0) && styles.buttonDisabled,
             ]}>
-            <Text style={[styles.secondaryButtonText, { color: palette.textInverse }]}>Clear</Text>
+            <ThemedText style={[styles.secondaryButtonText, { color: palette.textInverse }]}>
+              Clear
+            </ThemedText>
           </Pressable>
 
           <Pressable
@@ -271,9 +277,9 @@ export default function LegacyGamesDevModal({ visible, onClose }: LegacyGamesDev
               pressed && styles.buttonPressed,
               (isImporting || rawJson.trim().length === 0) && styles.buttonDisabled,
             ]}>
-            <Text style={[styles.primaryButtonText, { color: palette.textOnAccent }]}>
+            <ThemedText style={[styles.primaryButtonText, { color: palette.textOnAccent }]}>
               {isImporting ? 'Working...' : 'Import Safely'}
-            </Text>
+            </ThemedText>
           </Pressable>
 
           <Pressable
@@ -285,9 +291,9 @@ export default function LegacyGamesDevModal({ visible, onClose }: LegacyGamesDev
               pressed && styles.buttonPressed,
               (isImporting || rawJson.trim().length === 0) && styles.buttonDisabled,
             ]}>
-            <Text style={[styles.primaryButtonText, { color: palette.textOnAccent }]}>
+            <ThemedText style={[styles.primaryButtonText, { color: palette.textOnAccent }]}>
               {isImporting ? 'Working...' : 'Append Raw Entries'}
-            </Text>
+            </ThemedText>
           </Pressable>
 
           <Pressable
@@ -299,9 +305,9 @@ export default function LegacyGamesDevModal({ visible, onClose }: LegacyGamesDev
               pressed && styles.buttonPressed,
               (isImporting || rawJson.trim().length === 0) && styles.buttonDisabled,
             ]}>
-            <Text style={[styles.primaryButtonText, { color: palette.textOnAccent }]}>
+            <ThemedText style={[styles.primaryButtonText, { color: palette.textOnAccent }]}>
               {isImporting ? 'Working...' : 'Replace Raw Storage'}
-            </Text>
+            </ThemedText>
           </Pressable>
 
           <Pressable
@@ -316,9 +322,9 @@ export default function LegacyGamesDevModal({ visible, onClose }: LegacyGamesDev
               pressed && styles.buttonPressed,
               isImporting && styles.buttonDisabled,
             ]}>
-            <Text style={[styles.secondaryButtonText, { color: palette.textInverse }]}>
+            <ThemedText style={[styles.secondaryButtonText, { color: palette.textInverse }]}>
               {isImporting ? 'Working...' : 'Run loadGames() Now'}
-            </Text>
+            </ThemedText>
           </Pressable>
 
           <Pressable
@@ -330,9 +336,9 @@ export default function LegacyGamesDevModal({ visible, onClose }: LegacyGamesDev
               pressed && styles.buttonPressed,
               isImporting && styles.buttonDisabled,
             ]}>
-            <Text style={[styles.primaryButtonText, { color: palette.textOnAccent }]}>
+            <ThemedText style={[styles.primaryButtonText, { color: palette.textOnAccent }]}>
               {isImporting ? 'Working...' : 'Test Corrupt Blob Alert'}
-            </Text>
+            </ThemedText>
           </Pressable>
         </View>
       </ScrollView>
@@ -380,11 +386,11 @@ function createStyles(sizeClass: SizeClass) {
     },
     secondaryButtonText: {
       fontSize: scaleBySizeClass(15, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
     },
     primaryButtonText: {
       fontSize: scaleBySizeClass(15, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
     },
     buttonPressed: {
       opacity: 0.8,

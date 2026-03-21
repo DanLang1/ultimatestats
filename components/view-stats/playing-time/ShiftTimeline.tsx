@@ -2,7 +2,9 @@ import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass } from '@/hooks/useLayout';
 import { PointEvents } from '@/lib/timelineUtils';
 import React from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import { Fonts } from '@/theme/theme';
 
 interface ShiftTimelineProps {
   pointEvents: PointEvents[];
@@ -34,7 +36,7 @@ export default function ShiftTimeline({
 
   return (
     <View style={styles.container}>
-      <Text style={[styles.title, { color: palette.textMuted }]}>SHIFT TIMELINE</Text>
+      <ThemedText style={[styles.title, { color: palette.textMuted }]}>SHIFT TIMELINE</ThemedText>
 
       <ScrollView
         horizontal
@@ -96,9 +98,9 @@ export default function ShiftTimeline({
               />
               {/* Point number indicator for reference if it's the first or last or every 5th */}
               {(index === 0 || index === pointEvents.length - 1 || point.pointNumber % 5 === 0) && (
-                <Text style={[styles.pointLabel, { color: palette.textMuted }]}>
+                <ThemedText style={[styles.pointLabel, { color: palette.textMuted }]}>
                   {point.pointNumber}
-                </Text>
+                </ThemedText>
               )}
             </View>
           );
@@ -109,19 +111,27 @@ export default function ShiftTimeline({
       <View style={styles.legendRow}>
         <View style={styles.legendItem}>
           <View style={[styles.legendDot, { backgroundColor: palette.accent }]} />
-          <Text style={[styles.legendText, { color: palette.textMuted }]}>O-Line Hold</Text>
+          <ThemedText style={[styles.legendText, { color: palette.textMuted }]}>
+            O-Line Hold
+          </ThemedText>
         </View>
         <View style={styles.legendItem}>
           <View style={[styles.legendDot, { backgroundColor: palette.accent, opacity: 0.5 }]} />
-          <Text style={[styles.legendText, { color: palette.textMuted }]}>O-Line Broken</Text>
+          <ThemedText style={[styles.legendText, { color: palette.textMuted }]}>
+            O-Line Broken
+          </ThemedText>
         </View>
         <View style={styles.legendItem}>
           <View style={[styles.legendDot, { backgroundColor: palette.warning }]} />
-          <Text style={[styles.legendText, { color: palette.textMuted }]}>D-Line Break</Text>
+          <ThemedText style={[styles.legendText, { color: palette.textMuted }]}>
+            D-Line Break
+          </ThemedText>
         </View>
         <View style={styles.legendItem}>
           <View style={[styles.legendDot, { backgroundColor: palette.warning, opacity: 0.5 }]} />
-          <Text style={[styles.legendText, { color: palette.textMuted }]}>D-Line Held</Text>
+          <ThemedText style={[styles.legendText, { color: palette.textMuted }]}>
+            D-Line Held
+          </ThemedText>
         </View>
       </View>
     </View>
@@ -136,7 +146,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     title: {
       fontSize: scaleBySizeClass(10, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
       letterSpacing: 1,
     },
     scrollContent: {
@@ -169,7 +179,7 @@ function createStyles(sizeClass: SizeClass) {
       position: 'absolute',
       bottom: scaleBySizeClass(-20, sizeClass),
       fontSize: scaleBySizeClass(9, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
     },
     legendRow: {
       flexDirection: 'row',

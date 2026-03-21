@@ -3,7 +3,9 @@ import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import { Fonts } from '@/theme/theme';
 import Svg, { Circle } from 'react-native-svg';
 
 interface StatRingProps {
@@ -71,12 +73,14 @@ export default function StatRing({ percentage, label, sublabel, info, infoLabel 
         </Svg>
         {/* Centered percentage overlay */}
         <View style={styles.valueContainer}>
-          <Text style={[styles.percentage, { color: palette.textInverse }]}>{displayValue}</Text>
+          <ThemedText style={[styles.percentage, { color: palette.textInverse }]}>
+            {displayValue}
+          </ThemedText>
         </View>
       </View>
       {/* Label row with info button */}
       <View style={styles.labelRow}>
-        <Text style={[styles.label, { color: palette.textInverse }]}>{label}</Text>
+        <ThemedText style={[styles.label, { color: palette.textInverse }]}>{label}</ThemedText>
         {info && (
           <Pressable onPress={handleInfoPress} hitSlop={8}>
             <MaterialCommunityIcons
@@ -87,7 +91,9 @@ export default function StatRing({ percentage, label, sublabel, info, infoLabel 
           </Pressable>
         )}
       </View>
-      {sublabel && <Text style={[styles.sublabel, { color: palette.textMuted }]}>{sublabel}</Text>}
+      {sublabel && (
+        <ThemedText style={[styles.sublabel, { color: palette.textMuted }]}>{sublabel}</ThemedText>
+      )}
     </View>
   );
 }
@@ -105,7 +111,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     percentage: {
       fontSize: scaleBySizeClass(18, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
     },
     labelRow: {
       flexDirection: 'row',
@@ -114,13 +120,13 @@ function createStyles(sizeClass: SizeClass) {
     },
     label: {
       fontSize: scaleBySizeClass(11, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
       textTransform: 'uppercase',
       letterSpacing: 0.5,
     },
     sublabel: {
       fontSize: scaleBySizeClass(10, sizeClass),
-      fontWeight: '500',
+      fontFamily: Fonts.semiBold,
     },
   });
 }

@@ -6,7 +6,9 @@ import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router } from 'expo-router';
 import React from 'react';
-import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Linking, Pressable, StyleSheet, View } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import { Fonts } from '@/theme/theme';
 
 interface HelpContentProps {
   showActionBarLegend?: boolean;
@@ -26,11 +28,13 @@ export default function HelpContent({
       {/* Action Bar Legend */}
       {showActionBarLegend && (
         <>
-          <Text style={[styles.sectionTitle, { color: palette.textMuted }]}>ACTION BAR LEGEND</Text>
+          <ThemedText style={[styles.sectionTitle, { color: palette.textMuted }]}>
+            ACTION BAR LEGEND
+          </ThemedText>
           <View style={[styles.legendContainer, { backgroundColor: palette.overlay08 }]}>
-            <Text style={[styles.legendCategoryTitle, { color: palette.danger }]}>
+            <ThemedText style={[styles.legendCategoryTitle, { color: palette.danger }]}>
               When Your Team Has Possession
-            </Text>
+            </ThemedText>
             <View style={styles.legendItem}>
               <View style={styles.legendIconContainer}>
                 <MaterialCommunityIcons
@@ -40,10 +44,12 @@ export default function HelpContent({
                 />
               </View>
               <View style={styles.legendTextContainer}>
-                <Text style={[styles.legendLabel, { color: palette.textInverse }]}>OPP D</Text>
-                <Text style={[styles.legendDescription, { color: palette.textMuted }]}>
+                <ThemedText style={[styles.legendLabel, { color: palette.textInverse }]}>
+                  OPP D
+                </ThemedText>
+                <ThemedText style={[styles.legendDescription, { color: palette.textMuted }]}>
                   Opponent made a defensive play
-                </Text>
+                </ThemedText>
               </View>
             </View>
             <View style={styles.legendItem}>
@@ -55,10 +61,12 @@ export default function HelpContent({
                 />
               </View>
               <View style={styles.legendTextContainer}>
-                <Text style={[styles.legendLabel, { color: palette.textInverse }]}>DROP</Text>
-                <Text style={[styles.legendDescription, { color: palette.textMuted }]}>
+                <ThemedText style={[styles.legendLabel, { color: palette.textInverse }]}>
+                  DROP
+                </ThemedText>
+                <ThemedText style={[styles.legendDescription, { color: palette.textMuted }]}>
                   Your team dropped the disc
-                </Text>
+                </ThemedText>
               </View>
             </View>
             <View style={styles.legendItem}>
@@ -70,10 +78,12 @@ export default function HelpContent({
                 />
               </View>
               <View style={styles.legendTextContainer}>
-                <Text style={[styles.legendLabel, { color: palette.textInverse }]}>T/A</Text>
-                <Text style={[styles.legendDescription, { color: palette.textMuted }]}>
+                <ThemedText style={[styles.legendLabel, { color: palette.textInverse }]}>
+                  T/A
+                </ThemedText>
+                <ThemedText style={[styles.legendDescription, { color: palette.textMuted }]}>
                   Your team threw it away (incomplete pass)
-                </Text>
+                </ThemedText>
               </View>
             </View>
 
@@ -86,18 +96,20 @@ export default function HelpContent({
                 />
               </View>
               <View style={styles.legendTextContainer}>
-                <Text style={[styles.legendLabel, { color: palette.textInverse }]}>50/50</Text>
-                <Text style={[styles.legendDescription, { color: palette.textMuted }]}>
+                <ThemedText style={[styles.legendLabel, { color: palette.textInverse }]}>
+                  50/50
+                </ThemedText>
+                <ThemedText style={[styles.legendDescription, { color: palette.textMuted }]}>
                   Partial blame on thrower and receiver
-                </Text>
+                </ThemedText>
               </View>
             </View>
 
             <View style={[styles.legendDivider, { backgroundColor: palette.overlay10 }]} />
 
-            <Text style={[styles.legendCategoryTitle, { color: palette.success }]}>
+            <ThemedText style={[styles.legendCategoryTitle, { color: palette.success }]}>
               When Opponent Has Possession
-            </Text>
+            </ThemedText>
             <View style={styles.legendItem}>
               <View style={styles.legendIconContainer}>
                 <MaterialCommunityIcons
@@ -107,10 +119,12 @@ export default function HelpContent({
                 />
               </View>
               <View style={styles.legendTextContainer}>
-                <Text style={[styles.legendLabel, { color: palette.textInverse }]}>BLOCK</Text>
-                <Text style={[styles.legendDescription, { color: palette.textMuted }]}>
+                <ThemedText style={[styles.legendLabel, { color: palette.textInverse }]}>
+                  BLOCK
+                </ThemedText>
+                <ThemedText style={[styles.legendDescription, { color: palette.textMuted }]}>
                   Your team got a block
-                </Text>
+                </ThemedText>
               </View>
             </View>
             <View style={styles.legendItem}>
@@ -122,10 +136,12 @@ export default function HelpContent({
                 />
               </View>
               <View style={styles.legendTextContainer}>
-                <Text style={[styles.legendLabel, { color: palette.textInverse }]}>OPP TURN</Text>
-                <Text style={[styles.legendDescription, { color: palette.textMuted }]}>
+                <ThemedText style={[styles.legendLabel, { color: palette.textInverse }]}>
+                  OPP TURN
+                </ThemedText>
+                <ThemedText style={[styles.legendDescription, { color: palette.textMuted }]}>
                   Opponent made an unforced error
-                </Text>
+                </ThemedText>
               </View>
             </View>
           </View>
@@ -135,7 +151,9 @@ export default function HelpContent({
       )}
 
       {/* Cap Status Legend */}
-      <Text style={[styles.sectionTitle, { color: palette.textMuted }]}>CAP STATUS LEGEND</Text>
+      <ThemedText style={[styles.sectionTitle, { color: palette.textMuted }]}>
+        CAP STATUS LEGEND
+      </ThemedText>
       <View style={[styles.legendContainer, { backgroundColor: palette.overlay08 }]}>
         <View style={styles.legendItem}>
           <View style={styles.legendIconContainer}>
@@ -147,12 +165,12 @@ export default function HelpContent({
             />
           </View>
           <View style={styles.legendTextContainer}>
-            <Text style={[styles.legendLabel, { color: palette.textInverse }]}>
+            <ThemedText style={[styles.legendLabel, { color: palette.textInverse }]}>
               Softcap Pending
-            </Text>
-            <Text style={[styles.legendDescription, { color: palette.textMuted }]}>
+            </ThemedText>
+            <ThemedText style={[styles.legendDescription, { color: palette.textMuted }]}>
               Softcap has not activated yet but will after the next score
-            </Text>
+            </ThemedText>
           </View>
         </View>
         <View style={styles.legendItem}>
@@ -164,10 +182,12 @@ export default function HelpContent({
             />
           </View>
           <View style={styles.legendTextContainer}>
-            <Text style={[styles.legendLabel, { color: palette.textInverse }]}>Softcap Active</Text>
-            <Text style={[styles.legendDescription, { color: palette.textMuted }]}>
+            <ThemedText style={[styles.legendLabel, { color: palette.textInverse }]}>
+              Softcap Active
+            </ThemedText>
+            <ThemedText style={[styles.legendDescription, { color: palette.textMuted }]}>
               Softcap is in effect - game is to current score + 1
-            </Text>
+            </ThemedText>
           </View>
         </View>
         <View style={styles.legendItem}>
@@ -179,10 +199,12 @@ export default function HelpContent({
             />
           </View>
           <View style={styles.legendTextContainer}>
-            <Text style={[styles.legendLabel, { color: palette.textInverse }]}>Hardcap</Text>
-            <Text style={[styles.legendDescription, { color: palette.textMuted }]}>
+            <ThemedText style={[styles.legendLabel, { color: palette.textInverse }]}>
+              Hardcap
+            </ThemedText>
+            <ThemedText style={[styles.legendDescription, { color: palette.textMuted }]}>
               Timer reached zero - game ends after next score unless tied
-            </Text>
+            </ThemedText>
           </View>
         </View>
       </View>
@@ -190,7 +212,7 @@ export default function HelpContent({
       <View style={[styles.divider, { backgroundColor: palette.overlay10 }]} />
 
       {/* Help Section */}
-      <Text style={[styles.sectionTitle, { color: palette.textMuted }]}>HELP</Text>
+      <ThemedText style={[styles.sectionTitle, { color: palette.textMuted }]}>HELP</ThemedText>
       <Pressable
         style={[styles.tutorialButton, { backgroundColor: palette.overlay08 }]}
         onPress={() => {
@@ -203,12 +225,12 @@ export default function HelpContent({
           color={palette.accent}
         />
         <View style={styles.tutorialButtonContent}>
-          <Text style={[styles.tutorialButtonTitle, { color: palette.textInverse }]}>
+          <ThemedText style={[styles.tutorialButtonTitle, { color: palette.textInverse }]}>
             View Tutorial
-          </Text>
-          <Text style={[styles.tutorialButtonSubtitle, { color: palette.textMuted }]}>
+          </ThemedText>
+          <ThemedText style={[styles.tutorialButtonSubtitle, { color: palette.textMuted }]}>
             Learn how to use U-Stat
-          </Text>
+          </ThemedText>
         </View>
         <MaterialCommunityIcons
           name="chevron-right"
@@ -231,12 +253,12 @@ export default function HelpContent({
           color={palette.accent}
         />
         <View style={styles.tutorialButtonContent}>
-          <Text style={[styles.tutorialButtonTitle, { color: palette.textInverse }]}>
+          <ThemedText style={[styles.tutorialButtonTitle, { color: palette.textInverse }]}>
             Stats Guide
-          </Text>
-          <Text style={[styles.tutorialButtonSubtitle, { color: palette.textMuted }]}>
+          </ThemedText>
+          <ThemedText style={[styles.tutorialButtonSubtitle, { color: palette.textMuted }]}>
             How to track player statistics
-          </Text>
+          </ThemedText>
         </View>
         <MaterialCommunityIcons
           name="chevron-right"
@@ -258,12 +280,12 @@ export default function HelpContent({
           color={palette.accent}
         />
         <View style={styles.tutorialButtonContent}>
-          <Text style={[styles.tutorialButtonTitle, { color: palette.textInverse }]}>
+          <ThemedText style={[styles.tutorialButtonTitle, { color: palette.textInverse }]}>
             Privacy Policy
-          </Text>
-          <Text style={[styles.tutorialButtonSubtitle, { color: palette.textMuted }]}>
+          </ThemedText>
+          <ThemedText style={[styles.tutorialButtonSubtitle, { color: palette.textMuted }]}>
             TLDR: Local first with options for sharing
-          </Text>
+          </ThemedText>
         </View>
         <MaterialCommunityIcons
           name="open-in-new"
@@ -279,7 +301,7 @@ function createStyles(sizeClass: SizeClass) {
   return StyleSheet.create({
     sectionTitle: {
       fontSize: scaleBySizeClass(12, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
       letterSpacing: scaleBySizeClass(1.5, sizeClass, { rounding: 'none' }),
       marginBottom: scaleBySizeClass(16, sizeClass),
     },
@@ -299,7 +321,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     tutorialButtonTitle: {
       fontSize: scaleBySizeClass(16, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
     },
     tutorialButtonSubtitle: {
       fontSize: scaleBySizeClass(13, sizeClass),
@@ -312,7 +334,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     legendCategoryTitle: {
       fontSize: scaleBySizeClass(13, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
       marginBottom: scaleBySizeClass(4, sizeClass),
     },
     legendItem: {
@@ -325,7 +347,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     legendLabel: {
       fontSize: scaleBySizeClass(14, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
     },
     legendDescription: {
       fontSize: scaleBySizeClass(13, sizeClass),

@@ -6,7 +6,9 @@ import { computePlayerStats } from '@/lib/statsUtils';
 import { GameEvent, Player, PointLineRecord, SavedGame } from '@/lib/storage';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import { Fonts } from '@/theme/theme';
 import StatsTable from './StatsTable';
 import TeamStatsSection from './TeamStatsSection';
 
@@ -61,9 +63,9 @@ export default function StatsContent({
         styles.summaryBadge,
         { backgroundColor: palette.indigoOverlay20, borderColor: palette.accent },
       ]}>
-      <Text style={[styles.summaryBadgeText, { color: palette.accent }]}>
+      <ThemedText style={[styles.summaryBadgeText, { color: palette.accent }]}>
         {aggregateInfo.gameCount} Game{aggregateInfo.gameCount !== 1 ? 's' : ''} Combined
-      </Text>
+      </ThemedText>
     </View>
   ) : team1Score !== undefined && team2Score !== undefined ? (
     <ScoreBadge score1={team1Score} score2={team2Score} size="large" style={styles.scoreBadge} />
@@ -73,9 +75,9 @@ export default function StatsContent({
         styles.summaryBadge,
         { backgroundColor: palette.indigoOverlay20, borderColor: palette.accent },
       ]}>
-      <Text style={[styles.summaryBadgeText, { color: palette.accent }]}>
+      <ThemedText style={[styles.summaryBadgeText, { color: palette.accent }]}>
         {goalCount} Point{goalCount !== 1 ? 's' : ''}
-      </Text>
+      </ThemedText>
     </View>
   );
 
@@ -90,54 +92,56 @@ export default function StatsContent({
         {showOpponentName ? (
           <View style={styles.matchupRow}>
             <View style={styles.teamBlock}>
-              <Text
+              <ThemedText
                 style={[styles.teamName, styles.teamNameLeft, { color: t1TextColor }]}
                 numberOfLines={2}>
                 {team1Name}
-              </Text>
+              </ThemedText>
             </View>
 
             <View style={styles.summaryCenter}>{summaryBadge}</View>
 
             <View style={[styles.teamBlock, styles.teamBlockRight]}>
-              <Text
+              <ThemedText
                 style={[styles.teamName, styles.teamNameRight, { color: t2TextColor }]}
                 numberOfLines={2}>
                 {team2Name}
-              </Text>
+              </ThemedText>
             </View>
           </View>
         ) : (
           <View style={styles.aggregateHero}>
-            <Text style={[styles.aggregateLabel, { color: palette.textMuted }]}>TEAM</Text>
-            <Text
+            <ThemedText style={[styles.aggregateLabel, { color: palette.textMuted }]}>
+              TEAM
+            </ThemedText>
+            <ThemedText
               style={[styles.aggregateTeamName, { color: palette.textInverse }]}
               numberOfLines={2}>
               {team1Name}
-            </Text>
+            </ThemedText>
             {summaryBadge}
           </View>
         )}
 
         {topPerformers.length > 0 ? (
           <View style={[styles.topPerformersSection, { borderTopColor: palette.overlay10 }]}>
-            <Text style={[styles.topPerformersTitle, { color: palette.textMuted }]}>
+            <ThemedText style={[styles.topPerformersTitle, { color: palette.textMuted }]}>
               TOP PERFORMERS
-            </Text>
+            </ThemedText>
             <View style={styles.topPerformersList}>
               {topPerformers.map((player, index) => (
                 <View key={player.id} style={styles.topPerformerRow}>
-                  <Text style={[styles.topPerformerRank, { color: palette.textMuted }]}>
+                  <ThemedText style={[styles.topPerformerRank, { color: palette.textMuted }]}>
                     {index + 1}.
-                  </Text>
-                  <Text
+                  </ThemedText>
+                  <ThemedText
                     style={[styles.topPerformerName, { color: palette.textInverse }]}
                     numberOfLines={1}>
                     {player.name}
-                  </Text>
-                  <Text style={[styles.topPerformerPlusMinus, { color: palette.success }]}>
+                  </ThemedText>
+                  <ThemedText style={[styles.topPerformerPlusMinus, { color: palette.success }]}>
                     +{player.plusMinus}
-                  </Text>
+                  </ThemedText>
                 </View>
               ))}
             </View>
@@ -165,9 +169,9 @@ export default function StatsContent({
             size={scaleBySizeClass(48, sizeClass)}
             color={palette.textMuted}
           />
-          <Text style={[styles.emptyText, { color: palette.textMuted }]}>
+          <ThemedText style={[styles.emptyText, { color: palette.textMuted }]}>
             {isSavedGame ? 'No player stats recorded for this game' : 'No stats recorded yet'}
-          </Text>
+          </ThemedText>
         </View>
       ) : (
         <StatsTable
@@ -210,7 +214,7 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     },
     teamName: {
       fontSize: scaleBySizeClass(isLandscape ? 24 : 18, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
       lineHeight: scaleBySizeClass(isLandscape ? 28 : 22, sizeClass),
     },
     teamNameLeft: {
@@ -232,13 +236,13 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     },
     aggregateLabel: {
       fontSize: scaleBySizeClass(10, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
       letterSpacing: 1,
       textTransform: 'uppercase',
     },
     aggregateTeamName: {
       fontSize: scaleBySizeClass(24, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
       textAlign: isLandscape ? 'left' : 'center',
     },
     summaryBadge: {
@@ -249,7 +253,7 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     },
     summaryBadgeText: {
       fontSize: scaleBySizeClass(12, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
     },
     topPerformersSection: {
       marginTop: 16,
@@ -258,7 +262,7 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     },
     topPerformersTitle: {
       fontSize: scaleBySizeClass(10, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
       letterSpacing: 1,
       marginBottom: 10,
       textAlign: 'left',
@@ -274,17 +278,17 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     },
     topPerformerRank: {
       fontSize: scaleBySizeClass(12, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
       width: 20,
     },
     topPerformerName: {
       flex: 1,
       fontSize: scaleBySizeClass(14, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
     },
     topPerformerPlusMinus: {
       fontSize: scaleBySizeClass(14, sizeClass),
-      fontWeight: '800',
+      fontFamily: Fonts.extraBold,
       minWidth: 44,
       textAlign: 'right',
     },
@@ -299,7 +303,7 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     },
     headerExportText: {
       fontSize: scaleBySizeClass(12, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
     },
     emptyState: {
       padding: 40,

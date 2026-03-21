@@ -2,7 +2,9 @@ import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass } from '@/hooks/useLayout';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import { Fonts } from '@/theme/theme';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -59,7 +61,7 @@ export function EditableSettingCard({
         color={iconColor}
       />
       <View style={styles.textContainer}>
-        <Text style={[styles.label, { color: palette.textMuted }]}>{label}</Text>
+        <ThemedText style={[styles.label, { color: palette.textMuted }]}>{label}</ThemedText>
         {children}
       </View>
       {!isToggle && onPress && (
@@ -102,7 +104,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     label: {
       fontSize: scaleBySizeClass(10, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
       letterSpacing: 0.5,
     },
     chevron: {

@@ -2,7 +2,9 @@ import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React, { useState } from 'react';
-import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Modal, Pressable, StyleSheet, View } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import { Fonts } from '@/theme/theme';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export type ResponsiveHeaderAction = {
@@ -107,9 +109,9 @@ export function ResponsiveHeaderActions({ actions }: ResponsiveHeaderActionsProp
                   action.onPress();
                 }}>
                 {action.menuIcon ?? action.inlineIcon}
-                <Text style={[styles.menuActionText, { color: palette.modalText }]}>
+                <ThemedText style={[styles.menuActionText, { color: palette.modalText }]}>
                   {action.label}
-                </Text>
+                </ThemedText>
               </Pressable>
             ))}
             <Pressable
@@ -119,7 +121,9 @@ export function ResponsiveHeaderActions({ actions }: ResponsiveHeaderActionsProp
                 pressed && styles.buttonPressed,
               ]}
               onPress={() => setIsMenuVisible(false)}>
-              <Text style={[styles.menuCancelText, { color: palette.modalText }]}>Cancel</Text>
+              <ThemedText style={[styles.menuCancelText, { color: palette.modalText }]}>
+                Cancel
+              </ThemedText>
             </Pressable>
           </View>
         </View>
@@ -172,7 +176,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     menuActionText: {
       fontSize: scaleBySizeClass(15, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
     },
     menuCancelButton: {
       marginTop: 6,
@@ -183,7 +187,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     menuCancelText: {
       fontSize: scaleBySizeClass(14, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
     },
     buttonPressed: {
       opacity: 0.8,

@@ -18,7 +18,9 @@ import { useSettingsStore } from '@/store/settingsStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router, useLocalSearchParams } from 'expo-router';
 import React, { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import { Fonts } from '@/theme/theme';
 
 type PointOutcome = {
   label: string;
@@ -233,37 +235,37 @@ export default function LineEditor() {
             />
           </Pressable>
           <View style={styles.headerTitleRow}>
-            <Text style={[styles.headerTitle, { color: palette.textInverse }]}>
+            <ThemedText style={[styles.headerTitle, { color: palette.textInverse }]}>
               {isEditLineMode
                 ? `Edit Line · Point ${currentPoint}`
                 : lastPoint
                   ? `Point ${lastPoint.pointNumber}`
                   : 'Set Line'}
-            </Text>
+            </ThemedText>
             {!isEditLineMode && pointOutcome && (
-              <Text
+              <ThemedText
                 style={[
                   styles.headerOutcome,
                   { color: pointOutcome.isPositive ? palette.success : palette.danger },
                 ]}>
                 {' · '}
                 {pointOutcome.label}
-              </Text>
+              </ThemedText>
             )}
             {!isEditLineMode && lastPoint?.pointDurationMs != null && (
-              <Text style={[styles.headerDuration, { color: palette.textMuted }]}>
+              <ThemedText style={[styles.headerDuration, { color: palette.textMuted }]}>
                 {' · '}
                 {formatDuration(lastPoint.pointDurationMs)}
-              </Text>
+              </ThemedText>
             )}
           </View>
           {/* Ratio inline in landscape */}
           {isLandscape && (genderRatioEnabled || showRatioWarning) && (
             <View style={styles.ratioInline}>
               {genderRatioEnabled && (
-                <Text style={[styles.nextPointLabel, { color: palette.textMuted }]}>
+                <ThemedText style={[styles.nextPointLabel, { color: palette.textMuted }]}>
                   Ratio{expectedRatioLabel ? ` · ${expectedRatioLabel}` : ''}
-                </Text>
+                </ThemedText>
               )}
               {showRatioWarning && (
                 <View style={[styles.infoChip, { backgroundColor: palette.warning + '20' }]}>
@@ -272,9 +274,9 @@ export default function LineEditor() {
                     size={scaleBySizeClass(14, sizeClass)}
                     color={palette.warning}
                   />
-                  <Text style={[styles.infoChipText, { color: palette.warning }]}>
+                  <ThemedText style={[styles.infoChipText, { color: palette.warning }]}>
                     Expecting {expectedRatio === 'more-women' ? 'F' : 'M'} majority
-                  </Text>
+                  </ThemedText>
                 </View>
               )}
             </View>
@@ -295,9 +297,9 @@ export default function LineEditor() {
                 color={palette.textOnAccent}
               />
             ) : (
-              <Text style={[styles.countText, { color: palette.textMuted }]}>
+              <ThemedText style={[styles.countText, { color: palette.textMuted }]}>
                 {selectedIds.length}/{numPlayers}
-              </Text>
+              </ThemedText>
             )}
           </Pressable>
         </View>
@@ -306,9 +308,9 @@ export default function LineEditor() {
         {!isLandscape && (genderRatioEnabled || showRatioWarning) && (
           <View style={styles.infoRow}>
             {genderRatioEnabled && (
-              <Text style={[styles.nextPointLabel, { color: palette.textMuted }]}>
+              <ThemedText style={[styles.nextPointLabel, { color: palette.textMuted }]}>
                 Ratio{expectedRatioLabel ? ` · ${expectedRatioLabel}` : ''}
-              </Text>
+              </ThemedText>
             )}
             {showRatioWarning && (
               <View style={[styles.infoChip, { backgroundColor: palette.warning + '20' }]}>
@@ -317,9 +319,9 @@ export default function LineEditor() {
                   size={scaleBySizeClass(14, sizeClass)}
                   color={palette.warning}
                 />
-                <Text style={[styles.infoChipText, { color: palette.warning }]}>
+                <ThemedText style={[styles.infoChipText, { color: palette.warning }]}>
                   Expecting {expectedRatio === 'more-women' ? 'F' : 'M'} majority
-                </Text>
+                </ThemedText>
               </View>
             )}
           </View>
@@ -342,14 +344,14 @@ export default function LineEditor() {
                   },
                   pressed && { opacity: 0.8 },
                 ]}>
-                <Text
+                <ThemedText
                   style={[
                     styles.quickPresetBtnText,
                     { color: isSelected ? palette.textOnAccent : palette.textInverse },
                   ]}
                   numberOfLines={1}>
                   {preset.name}
-                </Text>
+                </ThemedText>
               </Pressable>
             );
           })}
@@ -368,7 +370,7 @@ export default function LineEditor() {
               size={scaleBySizeClass(13, sizeClass)}
               color={loadLineButtonActive ? palette.textOnAccent : palette.textMuted}
             />
-            <Text
+            <ThemedText
               style={[
                 styles.loadLineBtnText,
                 {
@@ -377,7 +379,7 @@ export default function LineEditor() {
               ]}
               numberOfLines={1}>
               {loadLineButtonLabel}
-            </Text>
+            </ThemedText>
           </Pressable>
           {selectedIds.length > 0 && (
             <Pressable
@@ -431,13 +433,13 @@ export default function LineEditor() {
                   },
                   pressed && { opacity: 0.8 },
                 ]}>
-                <Text
+                <ThemedText
                   style={[
                     styles.subTypeChipText,
                     { color: subType === 'injury' ? palette.textOnAccent : palette.textInverse },
                   ]}>
                   Injury Sub
-                </Text>
+                </ThemedText>
               </Pressable>
               <Pressable
                 onPress={() => setSubType('replacement')}
@@ -449,7 +451,7 @@ export default function LineEditor() {
                   },
                   pressed && { opacity: 0.8 },
                 ]}>
-                <Text
+                <ThemedText
                   style={[
                     styles.subTypeChipText,
                     {
@@ -457,7 +459,7 @@ export default function LineEditor() {
                     },
                   ]}>
                   Replace Line
-                </Text>
+                </ThemedText>
               </Pressable>
               <Pressable
                 onPress={() => setShowSubTypeHint((value) => !value)}
@@ -470,21 +472,21 @@ export default function LineEditor() {
                   },
                   pressed && { opacity: 0.7 },
                 ]}>
-                <Text
+                <ThemedText
                   style={[
                     styles.subTypeInfoText,
                     { color: showSubTypeHint ? palette.textOnAccent : palette.textMuted },
                   ]}>
                   ?
-                </Text>
+                </ThemedText>
               </Pressable>
             </View>
             {showSubTypeHint && (
-              <Text style={[styles.subTypeHint, { color: palette.textMuted }]}>
+              <ThemedText style={[styles.subTypeHint, { color: palette.textMuted }]}>
                 {subType === 'injury'
                   ? 'Both old and new players get point credit'
                   : 'Only the new lineup gets point credit'}
-              </Text>
+              </ThemedText>
             )}
           </View>
         )}
@@ -499,12 +501,12 @@ export default function LineEditor() {
               size={scaleBySizeClass(48, sizeClass)}
               color={palette.textMuted}
             />
-            <Text style={[styles.emptyStateTitle, { color: palette.textInverse }]}>
+            <ThemedText style={[styles.emptyStateTitle, { color: palette.textInverse }]}>
               No Active Players
-            </Text>
-            <Text style={[styles.emptyStateText, { color: palette.textMuted }]}>
+            </ThemedText>
+            <ThemedText style={[styles.emptyStateText, { color: palette.textMuted }]}>
               Add players to your roster to set a line for the next point
-            </Text>
+            </ThemedText>
             <View style={styles.emptyStateButtons}>
               <Pressable
                 onPress={handleGoToEditRoster}
@@ -518,9 +520,9 @@ export default function LineEditor() {
                   size={scaleBySizeClass(18, sizeClass)}
                   color={palette.textOnAccent}
                 />
-                <Text style={[styles.emptyStateBtnText, { color: palette.textOnAccent }]}>
+                <ThemedText style={[styles.emptyStateBtnText, { color: palette.textOnAccent }]}>
                   Edit Roster
-                </Text>
+                </ThemedText>
               </Pressable>
               <Pressable
                 onPress={handleSkip}
@@ -529,9 +531,9 @@ export default function LineEditor() {
                   { backgroundColor: palette.overlay10 },
                   pressed && { opacity: 0.8 },
                 ]}>
-                <Text style={[styles.emptyStateBtnText, { color: palette.textMuted }]}>
+                <ThemedText style={[styles.emptyStateBtnText, { color: palette.textMuted }]}>
                   Skip for Now
-                </Text>
+                </ThemedText>
               </Pressable>
             </View>
           </View>
@@ -574,15 +576,15 @@ function createStyles(sizeClass: SizeClass) {
     },
     headerTitle: {
       fontSize: scaleBySizeClass(20, sizeClass),
-      fontWeight: '800',
+      fontFamily: Fonts.extraBold,
     },
     headerOutcome: {
       fontSize: scaleBySizeClass(14, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
     },
     headerDuration: {
       fontSize: scaleBySizeClass(14, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
     },
     infoRow: {
       flexDirection: 'row',
@@ -601,7 +603,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     infoChipText: {
       fontSize: scaleBySizeClass(11, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
       letterSpacing: 0.3,
     },
     skipBtn: {
@@ -627,7 +629,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     countText: {
       fontSize: scaleBySizeClass(11, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
     },
     presetsRow: {
       flexDirection: 'row',
@@ -645,7 +647,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     quickPresetBtnText: {
       fontSize: scaleBySizeClass(12, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
     },
     subTypeSection: {
       marginTop: 10,
@@ -665,7 +667,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     subTypeChipText: {
       fontSize: scaleBySizeClass(11, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
     },
     subTypeInfoBtn: {
       width: 18,
@@ -677,7 +679,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     subTypeInfoText: {
       fontSize: scaleBySizeClass(10, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
     },
     subTypeHint: {
       fontSize: scaleBySizeClass(11, sizeClass),
@@ -695,7 +697,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     loadLineBtnText: {
       fontSize: scaleBySizeClass(12, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
       flexShrink: 1,
     },
     sortBtn: {
@@ -706,7 +708,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     nextPointLabel: {
       fontSize: scaleBySizeClass(12, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
     },
     gridContainer: {
       flex: 1,
@@ -722,7 +724,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     emptyStateTitle: {
       fontSize: scaleBySizeClass(18, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
       marginTop: 8,
     },
     emptyStateText: {
@@ -745,7 +747,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     emptyStateBtnText: {
       fontSize: scaleBySizeClass(14, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
     },
   });
 }

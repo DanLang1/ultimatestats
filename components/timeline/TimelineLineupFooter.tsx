@@ -5,7 +5,9 @@ import { Player, PointLineRecord } from '@/lib/storage/types';
 import { buildTimelineLineupEntries } from '@/lib/timelineUtils';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import { Fonts } from '@/theme/theme';
 
 interface TimelineLineupFooterProps {
   playerIds: string[];
@@ -60,9 +62,9 @@ export default function TimelineLineupFooter({
                   borderColor: palette.timelineLineupChipBorder,
                 },
               ]}>
-              <Text style={[styles.lineupChipText, { color: chipLabelColor }]}>
+              <ThemedText style={[styles.lineupChipText, { color: chipLabelColor }]}>
                 {getPlayerName(roster, playerId) ?? playerId}
-              </Text>
+              </ThemedText>
               {isSubIn && (
                 <View
                   style={[
@@ -71,9 +73,10 @@ export default function TimelineLineupFooter({
                       backgroundColor: palette.warning,
                     },
                   ]}>
-                  <Text style={[styles.lineupStateBadgeText, { color: palette.textOnAccent }]}>
+                  <ThemedText
+                    style={[styles.lineupStateBadgeText, { color: palette.textOnAccent }]}>
                     SUB
-                  </Text>
+                  </ThemedText>
                 </View>
               )}
               {isInjuredOut && (
@@ -84,9 +87,10 @@ export default function TimelineLineupFooter({
                       backgroundColor: palette.danger,
                     },
                   ]}>
-                  <Text style={[styles.lineupStateBadgeText, { color: palette.textOnAccent }]}>
+                  <ThemedText
+                    style={[styles.lineupStateBadgeText, { color: palette.textOnAccent }]}>
                     INJ
-                  </Text>
+                  </ThemedText>
                 </View>
               )}
             </View>
@@ -131,7 +135,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     lineupChipText: {
       fontSize: scaleBySizeClass(11, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
     },
     lineupStateBadge: {
       borderRadius: 999,
@@ -140,7 +144,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     lineupStateBadgeText: {
       fontSize: scaleBySizeClass(9, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
       letterSpacing: 0.4,
     },
   });

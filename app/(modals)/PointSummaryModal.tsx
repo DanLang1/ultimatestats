@@ -8,7 +8,9 @@ import { useSettingsStore } from '@/store/settingsStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router } from 'expo-router';
 import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import { Fonts } from '@/theme/theme';
 import Animated, { FadeIn, SlideInUp } from 'react-native-reanimated';
 
 type PointOutcome = {
@@ -136,9 +138,9 @@ export default function PointSummaryModal() {
           {/* Header */}
           <View style={styles.header}>
             <Animated.View entering={FadeIn.delay(100)} style={styles.headerContent}>
-              <Text style={[styles.title, { color: palette.modalText }]}>
+              <ThemedText style={[styles.title, { color: palette.modalText }]}>
                 Point {lastPoint.pointNumber} Complete
-              </Text>
+              </ThemedText>
               <View
                 style={[
                   styles.possessionChip,
@@ -148,7 +150,7 @@ export default function PointSummaryModal() {
                       : palette.danger + '20',
                   },
                 ]}>
-                <Text
+                <ThemedText
                   style={[
                     styles.possessionText,
                     {
@@ -156,7 +158,7 @@ export default function PointSummaryModal() {
                     },
                   ]}>
                   {pointOutcome.label}
-                </Text>
+                </ThemedText>
               </View>
             </Animated.View>
 
@@ -183,9 +185,9 @@ export default function PointSummaryModal() {
                   size={scaleBySizeClass(16, sizeClass)}
                   color={palette.textMuted}
                 />
-                <Text style={[styles.statValue, { color: palette.modalText }]}>
+                <ThemedText style={[styles.statValue, { color: palette.modalText }]}>
                   {formatDuration(lastPoint.pointDurationMs)}
-                </Text>
+                </ThemedText>
               </View>
             )}
 
@@ -197,9 +199,9 @@ export default function PointSummaryModal() {
                   size={scaleBySizeClass(16, sizeClass)}
                   color={palette.textMuted}
                 />
-                <Text style={[styles.statValue, { color: palette.modalText }]}>
+                <ThemedText style={[styles.statValue, { color: palette.modalText }]}>
                   {totalTurnovers} turn{totalTurnovers !== 1 ? 's' : ''}
-                </Text>
+                </ThemedText>
               </View>
             )}
 
@@ -211,18 +213,18 @@ export default function PointSummaryModal() {
                   size={scaleBySizeClass(16, sizeClass)}
                   color={palette.textMuted}
                 />
-                <Text style={[styles.statValue, { color: palette.modalText }]}>
+                <ThemedText style={[styles.statValue, { color: palette.modalText }]}>
                   {turnoverSummary.blocks} block{turnoverSummary.blocks !== 1 ? 's' : ''}
-                </Text>
+                </ThemedText>
               </View>
             )}
 
             {/* Next Point Ratio */}
             {genderRatioEnabled && firstPointRatio && (
               <View style={[styles.statCard, { backgroundColor: palette.overlay05 }]}>
-                <Text style={[styles.statValue, { color: palette.modalText }]}>
+                <ThemedText style={[styles.statValue, { color: palette.modalText }]}>
                   {`Next Point: ${formatRatio(getExpectedRatio(lastPoint.pointNumber + 1, firstPointRatio), getSequenceNumber(lastPoint.pointNumber + 1))}`}
-                </Text>
+                </ThemedText>
               </View>
             )}
           </Animated.View>
@@ -241,9 +243,11 @@ export default function PointSummaryModal() {
                 size={scaleBySizeClass(16, sizeClass)}
                 color={palette.textOnAccent}
               />
-              <Text style={[styles.ctaText, { color: palette.textOnAccent }]} numberOfLines={1}>
+              <ThemedText
+                style={[styles.ctaText, { color: palette.textOnAccent }]}
+                numberOfLines={1}>
                 START TIMER
-              </Text>
+              </ThemedText>
             </Pressable>
 
             <Pressable
@@ -253,11 +257,11 @@ export default function PointSummaryModal() {
                 { borderColor: palette.border },
                 pressed && { opacity: 0.7 },
               ]}>
-              <Text
+              <ThemedText
                 style={[styles.secondaryButtonText, { color: palette.textMuted }]}
                 numberOfLines={1}>
                 SKIP TIMER
-              </Text>
+              </ThemedText>
             </Pressable>
           </Animated.View>
         </Animated.View>
@@ -297,7 +301,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     title: {
       fontSize: scaleBySizeClass(20, sizeClass),
-      fontWeight: '800',
+      fontFamily: Fonts.extraBold,
     },
     possessionChip: {
       paddingHorizontal: 10,
@@ -306,7 +310,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     possessionText: {
       fontSize: scaleBySizeClass(11, sizeClass),
-      fontWeight: '800',
+      fontFamily: Fonts.extraBold,
       letterSpacing: 0.5,
     },
     closeBtn: {
@@ -328,7 +332,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     statValue: {
       fontSize: scaleBySizeClass(14, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
     },
     ctaContainer: {
       gap: 10,
@@ -343,7 +347,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     ctaText: {
       fontSize: scaleBySizeClass(14, sizeClass),
-      fontWeight: '800',
+      fontFamily: Fonts.extraBold,
       letterSpacing: 0.3,
       flexShrink: 1,
     },
@@ -356,7 +360,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     secondaryButtonText: {
       fontSize: scaleBySizeClass(14, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
       flexShrink: 1,
     },
   });

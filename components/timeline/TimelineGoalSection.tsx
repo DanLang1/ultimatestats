@@ -4,7 +4,9 @@ import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { formatClockDuration } from '@/lib/timelineUtils';
 import * as Haptics from 'expo-haptics';
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import { Fonts } from '@/theme/theme';
 
 interface TimelineGoalSectionProps {
   isCallahan: boolean;
@@ -69,9 +71,9 @@ export default function TimelineGoalSection({
 
   const renderDuration = () =>
     pointDurationMs !== undefined && pointDurationMs > 0 ? (
-      <Text style={[styles.eventTimestamp, { color: palette.textMuted }]}>
+      <ThemedText style={[styles.eventTimestamp, { color: palette.textMuted }]}>
         {formatClockDuration(pointDurationMs)}
-      </Text>
+      </ThemedText>
     ) : null;
 
   if (isCallahan) {
@@ -93,10 +95,10 @@ export default function TimelineGoalSection({
               borderWidth: 1,
             },
           ]}>
-          <Text style={[styles.eventLabel, { color: palette.success }]}>CALLAHAN</Text>
-          <Text style={[styles.eventPlayer, { color: goalMatchingColor }]} numberOfLines={1}>
+          <ThemedText style={[styles.eventLabel, { color: palette.success }]}>CALLAHAN</ThemedText>
+          <ThemedText style={[styles.eventPlayer, { color: goalMatchingColor }]} numberOfLines={1}>
             {goalName}
-          </Text>
+          </ThemedText>
           {renderDuration()}
         </View>
       </TimelineInteractiveRow>
@@ -123,22 +125,22 @@ export default function TimelineGoalSection({
               borderWidth: 1,
             },
           ]}>
-          <Text style={[styles.eventLabel, { color: teamColor }]}>GOAL</Text>
-          <Text
+          <ThemedText style={[styles.eventLabel, { color: teamColor }]}>GOAL</ThemedText>
+          <ThemedText
             style={[
               styles.eventPlayer,
               { color: isTeam1 ? goalMatchingColor : palette.textInverse },
             ]}
             numberOfLines={1}>
             {isTeam1 ? goalName || 'Unknown' : team2Name}
-          </Text>
+          </ThemedText>
           {renderDuration()}
         </View>
       </TimelineInteractiveRow>
 
       {isTeam1 && assistName && (
         <>
-          <Text style={[styles.plus, { color: palette.textMuted }]}>+</Text>
+          <ThemedText style={[styles.plus, { color: palette.textMuted }]}>+</ThemedText>
           <TimelineInteractiveRow
             canTap={canEditTime}
             onTap={handleEditTime}
@@ -153,10 +155,12 @@ export default function TimelineGoalSection({
                   borderWidth: 1,
                 },
               ]}>
-              <Text style={[styles.eventLabel, { color: palette.accent }]}>ASSIST</Text>
-              <Text style={[styles.eventPlayer, { color: assistMatchingColor }]} numberOfLines={1}>
+              <ThemedText style={[styles.eventLabel, { color: palette.accent }]}>ASSIST</ThemedText>
+              <ThemedText
+                style={[styles.eventPlayer, { color: assistMatchingColor }]}
+                numberOfLines={1}>
                 {assistName}
-              </Text>
+              </ThemedText>
               {renderDuration()}
             </View>
           </TimelineInteractiveRow>
@@ -178,24 +182,24 @@ function createStyles(sizeClass: SizeClass) {
     },
     eventLabel: {
       fontSize: scaleBySizeClass(11, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
       letterSpacing: 0.3,
     },
     eventPlayer: {
       fontSize: scaleBySizeClass(12, sizeClass),
-      fontWeight: '500',
+      fontFamily: Fonts.semiBold,
       maxWidth: 100,
       flexShrink: 1,
     },
     eventTimestamp: {
       fontSize: scaleBySizeClass(10, sizeClass),
-      fontWeight: '500',
+      fontFamily: Fonts.semiBold,
       marginLeft: 4,
       opacity: 0.7,
     },
     plus: {
       fontSize: scaleBySizeClass(16, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
       lineHeight: scaleBySizeClass(30, sizeClass),
     },
   });

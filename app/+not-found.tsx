@@ -5,7 +5,9 @@ import { MaterialIcons } from '@expo/vector-icons';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router, Stack } from 'expo-router';
 import React from 'react';
-import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Linking, Pressable, StyleSheet, View } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import { Fonts } from '@/theme/theme';
 
 const DISCORD_URL = 'https://discord.gg/AjsmqhZ2GH';
 
@@ -30,7 +32,9 @@ export default function NotFoundScreen() {
             color={palette.textInverse}
           />
         </Pressable>
-        <Text style={[styles.headerTitle, { color: palette.textMuted }]}>NOT FOUND</Text>
+        <ThemedText style={[styles.headerTitle, { color: palette.textMuted }]}>
+          NOT FOUND
+        </ThemedText>
         <View style={styles.headerSpacer} />
       </View>
 
@@ -42,11 +46,13 @@ export default function NotFoundScreen() {
           color={palette.textMuted}
         />
 
-        <Text style={[styles.title, { color: palette.textInverse }]}>Page Not Found</Text>
+        <ThemedText style={[styles.title, { color: palette.textInverse }]}>
+          Page Not Found
+        </ThemedText>
 
-        <Text style={[styles.message, { color: palette.textMuted }]}>
+        <ThemedText style={[styles.message, { color: palette.textMuted }]}>
           If you came from a share link, it may have expired.
-        </Text>
+        </ThemedText>
 
         {/* Actions */}
         <View style={styles.actions}>
@@ -62,7 +68,9 @@ export default function NotFoundScreen() {
               size={scaleBySizeClass(20, sizeClass)}
               color={palette.textOnAccent}
             />
-            <Text style={[styles.primaryButtonText, { color: palette.textOnAccent }]}>Go Home</Text>
+            <ThemedText style={[styles.primaryButtonText, { color: palette.textOnAccent }]}>
+              Go Home
+            </ThemedText>
           </Pressable>
 
           <Pressable
@@ -77,9 +85,9 @@ export default function NotFoundScreen() {
               size={scaleBySizeClass(20, sizeClass)}
               color={palette.accent}
             />
-            <Text style={[styles.secondaryButtonText, { color: palette.accent }]}>
+            <ThemedText style={[styles.secondaryButtonText, { color: palette.accent }]}>
               Report Issue
-            </Text>
+            </ThemedText>
           </Pressable>
         </View>
       </View>
@@ -106,7 +114,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     headerTitle: {
       fontSize: scaleBySizeClass(14, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
       letterSpacing: 2,
       textTransform: 'uppercase',
     },
@@ -123,7 +131,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     title: {
       fontSize: scaleBySizeClass(24, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
       marginTop: 8,
     },
     message: {
@@ -147,7 +155,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     primaryButtonText: {
       fontSize: scaleBySizeClass(15, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
     },
     secondaryButton: {
       flexDirection: 'row',
@@ -159,7 +167,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     secondaryButtonText: {
       fontSize: scaleBySizeClass(15, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
     },
     buttonPressed: {
       opacity: 0.8,

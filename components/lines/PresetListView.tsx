@@ -3,7 +3,9 @@ import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { LinePreset } from '@/lib/storage/types';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React, { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import { Fonts } from '@/theme/theme';
 
 import { DraggablePresetList } from './DraggablePresetList';
 
@@ -40,7 +42,9 @@ export function PresetListView({
             color={palette.textInverse}
           />
         </Pressable>
-        <Text style={[styles.headerTitle, { color: palette.textInverse }]}>Line Presets</Text>
+        <ThemedText style={[styles.headerTitle, { color: palette.textInverse }]}>
+          Line Presets
+        </ThemedText>
         <View style={styles.headerActions}>
           <Pressable
             onPress={onCreateNew}
@@ -66,10 +70,12 @@ export function PresetListView({
               size={scaleBySizeClass(48, sizeClass)}
               color={palette.textMuted}
             />
-            <Text style={[styles.emptyTextList, { color: palette.textMuted }]}>No presets yet</Text>
-            <Text style={[styles.emptyHintList, { color: palette.textMuted }]}>
+            <ThemedText style={[styles.emptyTextList, { color: palette.textMuted }]}>
+              No presets yet
+            </ThemedText>
+            <ThemedText style={[styles.emptyHintList, { color: palette.textMuted }]}>
               Create presets for quick line selection
-            </Text>
+            </ThemedText>
           </View>
         ) : (
           <DraggablePresetList
@@ -111,7 +117,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     headerTitle: {
       fontSize: scaleBySizeClass(18, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
       flex: 1,
       textAlign: 'center',
     },
@@ -131,7 +137,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     emptyTextList: {
       fontSize: scaleBySizeClass(18, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
       marginTop: 8,
     },
     emptyHintList: {

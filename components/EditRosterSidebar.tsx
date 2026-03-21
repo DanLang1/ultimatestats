@@ -2,7 +2,9 @@ import { useTheme } from '@/context/ThemeContext';
 import { getSizeClassValue, scaleBySizeClass, SizeClass } from '@/hooks/useLayout';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import { Fonts } from '@/theme/theme';
 import Animated, { useAnimatedStyle, withTiming } from 'react-native-reanimated';
 
 const ANIMATION_DURATION = 200;
@@ -59,9 +61,9 @@ function SidebarButton({
       ]}>
       <MaterialCommunityIcons name={icon} size={iconSize} color={iconColor} />
       {!collapsed && (
-        <Text style={[styles.sidebarButtonText, { color: textColor }]} numberOfLines={1}>
+        <ThemedText style={[styles.sidebarButtonText, { color: textColor }]} numberOfLines={1}>
           {label}
-        </Text>
+        </ThemedText>
       )}
     </Pressable>
   );
@@ -174,7 +176,9 @@ export function EditRosterSidebar({
             color={palette.textMuted}
           />
           {!collapsed && (
-            <Text style={[styles.collapseButtonText, { color: palette.textMuted }]}>Collapse</Text>
+            <ThemedText style={[styles.collapseButtonText, { color: palette.textMuted }]}>
+              Collapse
+            </ThemedText>
           )}
         </Pressable>
       </View>
@@ -211,7 +215,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     sidebarButtonText: {
       fontSize: scaleBySizeClass(14, sizeClass),
-      fontWeight: '500',
+      fontFamily: Fonts.semiBold,
       flex: 1,
     },
     buttonPressed: {

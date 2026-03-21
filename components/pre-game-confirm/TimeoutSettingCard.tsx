@@ -5,7 +5,9 @@ import { AlertModal } from '@/components/ui/AlertModal';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass } from '@/hooks/useLayout';
 import React, { useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import { Fonts } from '@/theme/theme';
 
 interface TimeoutSettingCardProps {
   timeoutCount: number;
@@ -40,7 +42,7 @@ export function TimeoutSettingCard({
         label="Timeouts"
         onPress={() => setModalVisible(true)}
         sizeClass={sizeClass}>
-        <Text style={[styles.value, { color: palette.textInverse }]}>{summary}</Text>
+        <ThemedText style={[styles.value, { color: palette.textInverse }]}>{summary}</ThemedText>
       </EditableSettingCard>
 
       <AlertModal visible={modalVisible} title="Timeouts" onClose={() => setModalVisible(false)}>
@@ -74,7 +76,7 @@ function createStyles(sizeClass: SizeClass) {
   return StyleSheet.create({
     value: {
       fontSize: scaleBySizeClass(16, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
       marginTop: 1,
     },
     modalContent: {

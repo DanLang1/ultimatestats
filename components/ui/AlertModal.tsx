@@ -2,7 +2,9 @@ import { useTheme } from '@/context/ThemeContext';
 import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
-import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Modal, Pressable, StyleSheet, View } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import { Fonts } from '@/theme/theme';
 
 interface AlertModalProps {
   visible: boolean;
@@ -41,7 +43,7 @@ export function AlertModal({ visible, title, onClose, children }: AlertModalProp
             />
           </Pressable>
 
-          <Text style={[styles.title, { color: palette.textInverse }]}>{title}</Text>
+          <ThemedText style={[styles.title, { color: palette.textInverse }]}>{title}</ThemedText>
 
           {children}
         </View>
@@ -79,7 +81,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     title: {
       fontSize: scaleBySizeClass(18, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
       textAlign: 'center',
       marginBottom: 16,
     },

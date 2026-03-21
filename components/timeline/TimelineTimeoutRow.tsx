@@ -3,7 +3,9 @@ import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { DisplayTimeout } from '@/lib/timelineUtils';
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import { Fonts } from '@/theme/theme';
 
 interface TimelineTimeoutRowProps {
   timeout: DisplayTimeout;
@@ -26,14 +28,16 @@ export default function TimelineTimeoutRow({
   return (
     <TimelineInteractiveRow canTap={canEditTime} onTap={onEditTime}>
       <View style={[styles.eventRow, { backgroundColor: palette.warning + '20' }]}>
-        <Text style={[styles.eventLabel, { color: palette.warning }]}>
+        <ThemedText style={[styles.eventLabel, { color: palette.warning }]}>
           {timeout.isFloater ? 'FLOATER' : 'TIMEOUT'}
-        </Text>
-        <Text style={[styles.eventPlayer, { color: palette.textMuted }]}>
+        </ThemedText>
+        <ThemedText style={[styles.eventPlayer, { color: palette.textMuted }]}>
           {isOurTimeout ? 'Us' : 'Opp'}
-        </Text>
+        </ThemedText>
         {relativeTime && (
-          <Text style={[styles.eventTimestamp, { color: palette.textMuted }]}>{relativeTime}</Text>
+          <ThemedText style={[styles.eventTimestamp, { color: palette.textMuted }]}>
+            {relativeTime}
+          </ThemedText>
         )}
       </View>
     </TimelineInteractiveRow>
@@ -52,18 +56,18 @@ function createStyles(sizeClass: SizeClass) {
     },
     eventLabel: {
       fontSize: scaleBySizeClass(11, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
       letterSpacing: 0.3,
     },
     eventPlayer: {
       fontSize: scaleBySizeClass(12, sizeClass),
-      fontWeight: '500',
+      fontFamily: Fonts.semiBold,
       maxWidth: 100,
       flexShrink: 1,
     },
     eventTimestamp: {
       fontSize: scaleBySizeClass(10, sizeClass),
-      fontWeight: '500',
+      fontFamily: Fonts.semiBold,
       marginLeft: 4,
       opacity: 0.7,
     },

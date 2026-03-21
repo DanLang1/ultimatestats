@@ -2,7 +2,9 @@ import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import { Fonts } from '@/theme/theme';
 
 interface AnalyticsShortcutCardProps {
   title: string;
@@ -43,9 +45,11 @@ export default function AnalyticsShortcutCard({
       </View>
 
       <View style={styles.textWrap}>
-        <Text style={[styles.title, { color: palette.textInverse }]}>{title}</Text>
-        <Text style={[styles.description, { color: palette.textMuted }]}>{description}</Text>
-        <Text style={[styles.detail, { color: palette.accent }]}>{detail}</Text>
+        <ThemedText style={[styles.title, { color: palette.textInverse }]}>{title}</ThemedText>
+        <ThemedText style={[styles.description, { color: palette.textMuted }]}>
+          {description}
+        </ThemedText>
+        <ThemedText style={[styles.detail, { color: palette.accent }]}>{detail}</ThemedText>
       </View>
 
       <MaterialCommunityIcons
@@ -83,7 +87,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     title: {
       fontSize: scaleBySizeClass(16, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
     },
     description: {
       fontSize: scaleBySizeClass(13, sizeClass),
@@ -91,7 +95,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     detail: {
       fontSize: scaleBySizeClass(12, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
       textTransform: 'uppercase',
       letterSpacing: scaleBySizeClass(0.5, sizeClass, { rounding: 'none' }),
     },

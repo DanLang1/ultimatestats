@@ -8,7 +8,9 @@ import { useGameStore } from '@/store/gameStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
-import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Linking, Pressable, StyleSheet, View } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import { Fonts } from '@/theme/theme';
 import { AlertModal } from './ui/AlertModal';
 import FlashingIcon from './ui/FlashingIcon';
 
@@ -53,7 +55,9 @@ export default function SettingsBar({ onUndo }: SettingsBarProps) {
 
       {/* Timer Text */}
       <View style={styles.timerContainer}>
-        <Text style={[styles.timerText, { color: barContentColor }]}>{formatTime(timeLeft)}</Text>
+        <ThemedText style={[styles.timerText, { color: barContentColor }]}>
+          {formatTime(timeLeft)}
+        </ThemedText>
         {timeLeft === 0 ? (
           <MaterialCommunityIcons name="hard-hat" size={iconSize} color={barContentColor} />
         ) : isSoftCap || softCapPending ? (
@@ -69,12 +73,12 @@ export default function SettingsBar({ onUndo }: SettingsBarProps) {
       {/* Gender Ratio Indicator */}
       {genderRatioEnabled && firstPointRatio && (
         <Pressable onPress={() => setShowAbbaModal(true)} style={styles.ratioContainer}>
-          <Text style={[styles.ratioText, { color: barContentColor }]}>
+          <ThemedText style={[styles.ratioText, { color: barContentColor }]}>
             {formatRatio(
               getExpectedRatio(currentPoint, firstPointRatio),
               getSequenceNumber(currentPoint),
             )}
-          </Text>
+          </ThemedText>
         </Pressable>
       )}
 
@@ -108,19 +112,19 @@ export default function SettingsBar({ onUndo }: SettingsBarProps) {
         visible={showAbbaModal}
         title="Ratio Rule A (ABBA)"
         onClose={() => setShowAbbaModal(false)}>
-        <Text style={[styles.abbaText, { color: palette.textInverse }]}>
+        <ThemedText style={[styles.abbaText, { color: palette.textInverse }]}>
           Gender ratio is tracked by the Ratio Rule A or ABBA method.
-        </Text>
-        <Text style={[styles.abbaText, { color: palette.textInverse }]}>
+        </ThemedText>
+        <ThemedText style={[styles.abbaText, { color: palette.textInverse }]}>
           Prefix F or M indicate gender majority, the number indicates if it is the first or second
           point with this gender majority.
-        </Text>
+        </ThemedText>
         <Pressable
           onPress={() => Linking.openURL('https://usaultimate.org/rules/')}
           style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}>
-          <Text style={[styles.abbaSource, { color: palette.accent }]}>
+          <ThemedText style={[styles.abbaSource, { color: palette.accent }]}>
             USAU Rules of Ultimate, Appendix B1.B
-          </Text>
+          </ThemedText>
         </Pressable>
       </AlertModal>
     </View>
@@ -165,7 +169,7 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     },
     timerText: {
       fontSize: timerTextSize,
-      fontWeight: 'bold',
+      fontFamily: Fonts.bold,
     },
     iconButton: {
       padding: iconButtonPadding,
@@ -178,7 +182,7 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     },
     ratioText: {
       fontSize: ratioTextSize,
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
     },
     abbaText: {
       fontSize: getSizeClassValue({ small: 14, medium: 15, large: 16 }, sizeClass),

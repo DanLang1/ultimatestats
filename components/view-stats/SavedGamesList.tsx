@@ -10,7 +10,9 @@ import { TournamentFilterModal } from '@/components/ui/TournamentFilterModal';
 import { useGameStore } from '@/store/gameStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React, { useState } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import { Fonts } from '@/theme/theme';
 import Animated, { FadeOut, LinearTransition } from 'react-native-reanimated';
 
 interface SavedGamesListProps {
@@ -112,10 +114,12 @@ export default function SavedGamesList({
           size={scaleBySizeClass(48, sizeClass)}
           color={palette.textMuted}
         />
-        <Text style={[styles.emptyText, { color: palette.textMuted }]}>No saved games yet</Text>
-        <Text style={[styles.emptySubtext, { color: palette.textMuted }]}>
+        <ThemedText style={[styles.emptyText, { color: palette.textMuted }]}>
+          No saved games yet
+        </ThemedText>
+        <ThemedText style={[styles.emptySubtext, { color: palette.textMuted }]}>
           Save games from the win screen to see them here
-        </Text>
+        </ThemedText>
       </View>
     );
   }
@@ -196,14 +200,14 @@ export default function SavedGamesList({
               size={scaleBySizeClass(16, sizeClass)}
               color={selectionMode ? palette.textOnAccent : palette.textMuted}
             />
-            <Text
+            <ThemedText
               style={[
                 styles.sortPillText,
                 { color: selectionMode ? palette.textOnAccent : palette.textMuted },
-                selectionMode && { fontWeight: '700' },
+                selectionMode && { fontFamily: Fonts.bold },
               ]}>
               {selectionMode ? 'Done' : 'Select'}
-            </Text>
+            </ThemedText>
           </Pressable>
           {sortFields.map((opt) => {
             const isActive = sortField === opt.field;
@@ -226,14 +230,14 @@ export default function SavedGamesList({
                   size={scaleBySizeClass(16, sizeClass)}
                   color={isActive ? palette.accent : palette.textMuted}
                 />
-                <Text
+                <ThemedText
                   style={[
                     styles.sortPillText,
                     { color: isActive ? palette.accent : palette.textMuted },
-                    isActive && { fontWeight: '700' },
+                    isActive && { fontFamily: Fonts.bold },
                   ]}>
                   {opt.label}
-                </Text>
+                </ThemedText>
               </Pressable>
             );
           })}
@@ -254,11 +258,11 @@ export default function SavedGamesList({
                 color={activeTournament ? palette.accent : palette.textMuted}
               />
               {activeTournament && (
-                <Text
-                  style={[styles.sortPillText, { color: palette.accent, fontWeight: '700' }]}
+                <ThemedText
+                  style={[styles.sortPillText, { color: palette.accent, fontFamily: Fonts.bold }]}
                   numberOfLines={1}>
                   {activeTournament.name}
-                </Text>
+                </ThemedText>
               )}
             </Pressable>
           )}
@@ -312,9 +316,9 @@ export default function SavedGamesList({
                     selectionMode ? onToggleGameSelection?.(game.id) : onSelectGame(game)
                   }>
                   <View style={styles.savedGameHeader}>
-                    <Text style={[styles.savedGameDate, { color: palette.textMuted }]}>
+                    <ThemedText style={[styles.savedGameDate, { color: palette.textMuted }]}>
                       {formatDate(getGameDisplayTimestamp(game))}
-                    </Text>
+                    </ThemedText>
                     {game.importedAt && (
                       <MaterialCommunityIcons
                         name="cloud-download-outline"
@@ -325,13 +329,13 @@ export default function SavedGamesList({
                   </View>
                   {isLandscape ? (
                     <View style={styles.savedGameTeams}>
-                      <Text
+                      <ThemedText
                         style={[styles.savedGameTeamName, { color: palette.textInverse }]}
                         numberOfLines={1}>
                         {getTeamName(game)}
-                      </Text>
+                      </ThemedText>
                       <ScoreBadge score1={game.team1Score} score2={game.team2Score} />
-                      <Text
+                      <ThemedText
                         style={[
                           styles.savedGameTeamName,
                           styles.savedGameTeamRight,
@@ -339,17 +343,17 @@ export default function SavedGamesList({
                         ]}
                         numberOfLines={1}>
                         {game.team2Name}
-                      </Text>
+                      </ThemedText>
                     </View>
                   ) : (
                     <View style={styles.savedGameTeamsPortrait}>
                       <View style={styles.teamScoreRow}>
-                        <Text
+                        <ThemedText
                           style={[styles.savedGameTeamName, { color: palette.textInverse }]}
                           numberOfLines={1}>
                           {getTeamName(game)}
-                        </Text>
-                        <Text
+                        </ThemedText>
+                        <ThemedText
                           style={[
                             styles.teamScoreValue,
                             {
@@ -362,15 +366,15 @@ export default function SavedGamesList({
                             },
                           ]}>
                           {game.team1Score}
-                        </Text>
+                        </ThemedText>
                       </View>
                       <View style={styles.teamScoreRow}>
-                        <Text
+                        <ThemedText
                           style={[styles.savedGameTeamName, { color: palette.textInverse }]}
                           numberOfLines={1}>
                           {game.team2Name}
-                        </Text>
-                        <Text
+                        </ThemedText>
+                        <ThemedText
                           style={[
                             styles.teamScoreValue,
                             {
@@ -383,7 +387,7 @@ export default function SavedGamesList({
                             },
                           ]}>
                           {game.team2Score}
-                        </Text>
+                        </ThemedText>
                       </View>
                     </View>
                   )}
@@ -393,10 +397,10 @@ export default function SavedGamesList({
                       size={scaleBySizeClass(14, sizeClass)}
                       color={palette.textMuted}
                     />
-                    <Text style={[styles.savedGameMetaText, { color: palette.textMuted }]}>
+                    <ThemedText style={[styles.savedGameMetaText, { color: palette.textMuted }]}>
                       {game.events.filter((e) => e.type === 'goal').length} point
                       {game.events.filter((e) => e.type === 'goal').length !== 1 ? 's' : ''} tracked
-                    </Text>
+                    </ThemedText>
                   </View>
                 </Pressable>
               </View>
@@ -409,13 +413,17 @@ export default function SavedGamesList({
         effectiveTournamentFilter &&
         searchQuery.trim() === '' && (
           <View style={styles.noResults}>
-            <Text style={{ color: palette.textMuted }}>No games in this tournament</Text>
+            <ThemedText style={{ color: palette.textMuted }}>
+              No games in this tournament
+            </ThemedText>
           </View>
         )}
 
       {filteredAndSortedGames.length === 0 && searchQuery.trim() !== '' && (
         <View style={styles.noResults}>
-          <Text style={{ color: palette.textMuted }}>No games match &quot;{searchQuery}&quot;</Text>
+          <ThemedText style={{ color: palette.textMuted }}>
+            No games match &quot;{searchQuery}&quot;
+          </ThemedText>
         </View>
       )}
 
@@ -474,7 +482,7 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     },
     sortPillText: {
       fontSize: scaleBySizeClass(12, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
     },
     emptyState: {
       padding: 40,
@@ -531,7 +539,7 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     },
     savedGameDate: {
       fontSize: scaleBySizeClass(12, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
       textTransform: 'uppercase',
       letterSpacing: 0.5,
     },
@@ -550,7 +558,7 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     },
     teamScoreValue: {
       fontSize: scaleBySizeClass(18, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
       fontVariant: ['tabular-nums'],
       minWidth: 28,
       textAlign: 'right',
@@ -558,7 +566,7 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     savedGameTeamName: {
       flex: 1,
       fontSize: scaleBySizeClass(16, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
     },
     savedGameTeamRight: {
       textAlign: 'right',

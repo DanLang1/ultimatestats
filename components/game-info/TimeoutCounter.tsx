@@ -2,7 +2,9 @@ import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass } from '@/hooks/useLayout';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import { Fonts } from '@/theme/theme';
 
 interface TimeoutCounterProps {
   count: number;
@@ -24,35 +26,35 @@ export function TimeoutCounter({
   return (
     <View style={styles.timeoutContainer}>
       <View style={styles.countRow}>
-        <Text style={[styles.timeoutNumber, { color: palette.success }]}>{count}</Text>
+        <ThemedText style={[styles.timeoutNumber, { color: palette.success }]}>{count}</ThemedText>
         {floaterEnabled && (
           <View style={styles.floaterBadge}>
-            <Text
+            <ThemedText
               style={[
                 styles.floaterText,
                 { color: hasFloater ? palette.success : palette.textMuted },
               ]}>
               (
-            </Text>
+            </ThemedText>
             <MaterialCommunityIcons
               name={hasFloater ? 'rhombus' : 'rhombus-outline'}
               size={floaterIconSize}
               color={hasFloater ? palette.success : palette.textMuted}
             />
-            <Text
+            <ThemedText
               style={[
                 styles.floaterText,
                 { color: hasFloater ? palette.success : palette.textMuted },
               ]}>
               {hasFloater ? '+1' : '0'})
-            </Text>
+            </ThemedText>
           </View>
         )}
       </View>
       {floaterEnabled && (
-        <Text style={[styles.floaterLabel, { color: palette.textMuted }]}>
+        <ThemedText style={[styles.floaterLabel, { color: palette.textMuted }]}>
           {hasFloater ? 'floater available' : 'floater used'}
-        </Text>
+        </ThemedText>
       )}
     </View>
   );
@@ -71,7 +73,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     timeoutNumber: {
       fontSize: scaleBySizeClass(28, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
     },
     floaterBadge: {
       flexDirection: 'row',
@@ -79,11 +81,11 @@ function createStyles(sizeClass: SizeClass) {
     },
     floaterText: {
       fontSize: scaleBySizeClass(16, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
     },
     floaterLabel: {
       fontSize: scaleBySizeClass(11, sizeClass),
-      fontWeight: '500',
+      fontFamily: Fonts.semiBold,
     },
   });
 }

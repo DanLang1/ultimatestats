@@ -5,7 +5,9 @@ import { MatchingType, PlayerRole } from '@/lib/storage/types';
 import { useSettingsStore } from '@/store/settingsStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
-import { Pressable, StyleSheet, Text } from 'react-native';
+import { Pressable, StyleSheet } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import { Fonts } from '@/theme/theme';
 
 interface PlayerChipProps {
   name: string;
@@ -97,19 +99,19 @@ export function PlayerChip({
       ]}
       onPress={disabled ? undefined : onPress}
       disabled={disabled}>
-      <Text
+      <ThemedText
         style={[compact ? styles.chipTextCompact : styles.chipText, { color: textColor }]}
         numberOfLines={1}>
         {name}
-      </Text>
+      </ThemedText>
       {subtitle && (
-        <Text
+        <ThemedText
           style={[
             compact ? styles.chipSubtitleCompact : styles.chipSubtitle,
             { color: subtitleColor },
           ]}>
           {subtitle}
-        </Text>
+        </ThemedText>
       )}
       {role && (
         <MaterialCommunityIcons
@@ -155,19 +157,19 @@ function createStyles(sizeClass: SizeClass) {
     },
     chipText: {
       fontSize: scaleBySizeClass(15, sizeClass),
-      fontWeight: '500',
+      fontFamily: Fonts.semiBold,
     },
     chipTextCompact: {
       fontSize: scaleBySizeClass(13, sizeClass),
-      fontWeight: '500',
+      fontFamily: Fonts.semiBold,
     },
     chipSubtitle: {
       fontSize: scaleBySizeClass(11, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
     },
     chipSubtitleCompact: {
       fontSize: scaleBySizeClass(10, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
     },
     roleIcon: {
       marginTop: scaleBySizeClass(2, sizeClass),

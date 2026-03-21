@@ -2,7 +2,9 @@ import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass } from '@/hooks/useLayout';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import { Fonts } from '@/theme/theme';
 
 export interface EditRosterToolbarProps {
   onRenameTeam: () => void;
@@ -45,9 +47,9 @@ function ToolbarButton({
       onPress={onPress}
       style={({ pressed }) => [styles.toolbarButton, pressed && styles.buttonPressed]}>
       <MaterialCommunityIcons name={icon} size={iconSize} color={color} />
-      <Text style={[styles.toolbarButtonText, { color }]} numberOfLines={1}>
+      <ThemedText style={[styles.toolbarButtonText, { color }]} numberOfLines={1}>
         {label}
-      </Text>
+      </ThemedText>
     </Pressable>
   );
 }
@@ -143,7 +145,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     toolbarButtonText: {
       fontSize: scaleBySizeClass(10, sizeClass),
-      fontWeight: '500',
+      fontFamily: Fonts.semiBold,
       marginTop: scaleBySizeClass(2, sizeClass),
     },
     buttonPressed: {

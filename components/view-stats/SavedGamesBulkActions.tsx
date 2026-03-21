@@ -2,7 +2,9 @@ import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import { Fonts } from '@/theme/theme';
 
 interface SavedGamesBulkActionsProps {
   selectedCount: number;
@@ -60,9 +62,9 @@ export default function SavedGamesBulkActions({
             size={actionIconSize}
             color={palette.textOnAccent}
           />
-          <Text style={[styles.actionText, { color: palette.textOnAccent }]}>
+          <ThemedText style={[styles.actionText, { color: palette.textOnAccent }]}>
             Share ({selectedCount})
-          </Text>
+          </ThemedText>
         </Pressable>
 
         {/* Delete Button (Pill) */}
@@ -77,9 +79,9 @@ export default function SavedGamesBulkActions({
             size={actionIconSize}
             color={palette.textOnAccent}
           />
-          <Text style={[styles.actionText, { color: palette.textOnAccent }]}>
+          <ThemedText style={[styles.actionText, { color: palette.textOnAccent }]}>
             Delete ({selectedCount})
-          </Text>
+          </ThemedText>
         </Pressable>
       </View>
     </View>
@@ -128,7 +130,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     actionText: {
       fontSize: scaleBySizeClass(15, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
       letterSpacing: 0.3,
     },
   });

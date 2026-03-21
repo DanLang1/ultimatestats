@@ -3,7 +3,9 @@ import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { LinePreset } from '@/lib/storage/types';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import { Fonts } from '@/theme/theme';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   LinearTransition,
@@ -119,13 +121,17 @@ export function DraggablePresetItem({
         </View>
       </GestureDetector>
       <View style={[styles.orderBadge, { backgroundColor: palette.overlay12 }]}>
-        <Text style={[styles.orderText, { color: palette.textInverse }]}>{index + 1}</Text>
+        <ThemedText style={[styles.orderText, { color: palette.textInverse }]}>
+          {index + 1}
+        </ThemedText>
       </View>
       <View style={styles.infoSection}>
-        <Text style={[styles.presetName, { color: palette.textInverse }]}>{preset.name}</Text>
-        <Text style={[styles.presetCount, { color: palette.textMuted }]}>
+        <ThemedText style={[styles.presetName, { color: palette.textInverse }]}>
+          {preset.name}
+        </ThemedText>
+        <ThemedText style={[styles.presetCount, { color: palette.textMuted }]}>
           {preset.playerIds.length} players
-        </Text>
+        </ThemedText>
       </View>
       <View style={styles.actions}>
         <Pressable
@@ -186,7 +192,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     orderText: {
       fontSize: scaleBySizeClass(12, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
     },
     infoSection: {
       flex: 1,
@@ -196,7 +202,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     presetName: {
       fontSize: scaleBySizeClass(15, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
     },
     presetCount: {
       fontSize: scaleBySizeClass(12, sizeClass),

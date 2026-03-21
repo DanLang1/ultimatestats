@@ -4,7 +4,9 @@ import { MatchingType, Player, PlayerRole } from '@/lib/storage/types';
 import { useSettingsStore } from '@/store/settingsStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
-import { Pressable, StyleSheet, Switch, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Switch, View } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import { Fonts } from '@/theme/theme';
 
 interface QuickEditPlayerRowProps {
   player: Player;
@@ -52,14 +54,14 @@ export function QuickEditPlayerRow({
               color={palette.textMuted}
             />
           )}
-          <Text
+          <ThemedText
             style={[
               styles.playerName,
               { color: player.isActive ? palette.textInverse : palette.textMuted },
             ]}
             numberOfLines={1}>
             {player.name}
-          </Text>
+          </ThemedText>
           <MaterialCommunityIcons
             name="pencil-outline"
             size={metrics.pencilIconSize}
@@ -68,7 +70,7 @@ export function QuickEditPlayerRow({
         </Pressable>
 
         <View style={styles.topActions}>
-          <Text style={[styles.activeLabel, { color: palette.textMuted }]}>Active</Text>
+          <ThemedText style={[styles.activeLabel, { color: palette.textMuted }]}>Active</ThemedText>
           <Switch
             style={{ transform: [{ scale: metrics.nativeSwitchScale }] }}
             value={player.isActive}
@@ -94,7 +96,9 @@ export function QuickEditPlayerRow({
 
       <View style={styles.controlsRow}>
         <View style={styles.controlGroup}>
-          <Text style={[styles.groupLabel, { color: palette.textMuted }]}>Matching</Text>
+          <ThemedText style={[styles.groupLabel, { color: palette.textMuted }]}>
+            Matching
+          </ThemedText>
           <View style={styles.pillRow}>
             <Pressable
               style={({ pressed }) => [
@@ -107,7 +111,7 @@ export function QuickEditPlayerRow({
                 pressed && styles.buttonPressed,
               ]}
               onPress={() => onSetMatching(player.matchingType === 'fmp' ? null : 'fmp')}>
-              <Text
+              <ThemedText
                 style={[
                   styles.pillText,
                   {
@@ -115,7 +119,7 @@ export function QuickEditPlayerRow({
                   },
                 ]}>
                 FMP
-              </Text>
+              </ThemedText>
             </Pressable>
             <Pressable
               style={({ pressed }) => [
@@ -128,7 +132,7 @@ export function QuickEditPlayerRow({
                 pressed && styles.buttonPressed,
               ]}
               onPress={() => onSetMatching(player.matchingType === 'mmp' ? null : 'mmp')}>
-              <Text
+              <ThemedText
                 style={[
                   styles.pillText,
                   {
@@ -136,13 +140,13 @@ export function QuickEditPlayerRow({
                   },
                 ]}>
                 MMP
-              </Text>
+              </ThemedText>
             </Pressable>
           </View>
         </View>
 
         <View style={styles.controlGroup}>
-          <Text style={[styles.groupLabel, { color: palette.textMuted }]}>Role</Text>
+          <ThemedText style={[styles.groupLabel, { color: palette.textMuted }]}>Role</ThemedText>
           <View style={styles.pillRow}>
             <Pressable
               style={({ pressed }) => [
@@ -161,13 +165,13 @@ export function QuickEditPlayerRow({
                 size={metrics.rolePillIconSize}
                 color={player.role === 'handler' ? palette.textOnAccent : palette.textMuted}
               />
-              <Text
+              <ThemedText
                 style={[
                   styles.pillText,
                   { color: player.role === 'handler' ? palette.textOnAccent : palette.textMuted },
                 ]}>
                 Handler
-              </Text>
+              </ThemedText>
             </Pressable>
             <Pressable
               style={({ pressed }) => [
@@ -186,13 +190,13 @@ export function QuickEditPlayerRow({
                 size={metrics.rolePillIconSize}
                 color={player.role === 'hybrid' ? palette.textOnAccent : palette.textMuted}
               />
-              <Text
+              <ThemedText
                 style={[
                   styles.pillText,
                   { color: player.role === 'hybrid' ? palette.textOnAccent : palette.textMuted },
                 ]}>
                 Hybrid
-              </Text>
+              </ThemedText>
             </Pressable>
             <Pressable
               style={({ pressed }) => [
@@ -211,13 +215,13 @@ export function QuickEditPlayerRow({
                 size={metrics.rolePillIconSize}
                 color={player.role === 'cutter' ? palette.textOnAccent : palette.textMuted}
               />
-              <Text
+              <ThemedText
                 style={[
                   styles.pillText,
                   { color: player.role === 'cutter' ? palette.textOnAccent : palette.textMuted },
                 ]}>
                 Cutter
-              </Text>
+              </ThemedText>
             </Pressable>
           </View>
         </View>
@@ -250,7 +254,7 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     },
     playerName: {
       fontSize: scaleBySizeClass(16, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
       flexShrink: 1,
     },
     topActions: {
@@ -260,7 +264,7 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     },
     activeLabel: {
       fontSize: scaleBySizeClass(12, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
     },
     moreButton: {
       width: scaleBySizeClass(30, sizeClass),
@@ -280,7 +284,7 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     },
     groupLabel: {
       fontSize: scaleBySizeClass(11, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
       letterSpacing: scaleBySizeClass(0.6, sizeClass, { rounding: 'none' }),
       textTransform: 'uppercase',
     },
@@ -303,7 +307,7 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     },
     pillText: {
       fontSize: scaleBySizeClass(12, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
     },
     buttonPressed: {
       opacity: 0.8,

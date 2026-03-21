@@ -3,7 +3,9 @@ import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { formatClockDuration } from '@/lib/timelineUtils';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import { Fonts } from '@/theme/theme';
 
 interface TimelinePointHeaderProps {
   pointNumber: number;
@@ -32,17 +34,19 @@ export default function TimelinePointHeader({
     <View style={[styles.cardHeader, { borderBottomColor: palette.overlay10 }]}>
       <View style={styles.headerLeft}>
         <View style={[styles.pointBadge, { backgroundColor: teamColor }]}>
-          <Text style={[styles.pointBadgeText, { color: palette.textOnAccent }]}>
+          <ThemedText style={[styles.pointBadgeText, { color: palette.textOnAccent }]}>
             {pointNumber}
-          </Text>
+          </ThemedText>
         </View>
-        <Text style={[styles.scoreText, { color: palette.textInverse }]}>
+        <ThemedText style={[styles.scoreText, { color: palette.textInverse }]}>
           {scoreAfter.team1} – {scoreAfter.team2}
-        </Text>
+        </ThemedText>
       </View>
       {isInProgress ? (
         <View style={[styles.statusChip, { backgroundColor: palette.accent }]}>
-          <Text style={[styles.statusChipText, { color: palette.textOnAccent }]}>IN PROGRESS</Text>
+          <ThemedText style={[styles.statusChipText, { color: palette.textOnAccent }]}>
+            IN PROGRESS
+          </ThemedText>
         </View>
       ) : (
         <View style={styles.headerRight}>
@@ -53,9 +57,9 @@ export default function TimelinePointHeader({
                 size={scaleBySizeClass(12, sizeClass)}
                 color={palette.textMuted}
               />
-              <Text style={[styles.durationText, { color: palette.textMuted }]}>
+              <ThemedText style={[styles.durationText, { color: palette.textMuted }]}>
                 {formatClockDuration(pointDurationMs)}
-              </Text>
+              </ThemedText>
             </View>
           )}
           {possessionType && (
@@ -71,7 +75,7 @@ export default function TimelinePointHeader({
                       : palette.overlay15,
                 },
               ]}>
-              <Text
+              <ThemedText
                 style={[
                   styles.statusChipText,
                   {
@@ -90,7 +94,7 @@ export default function TimelinePointHeader({
                   : isTeam1
                     ? 'HOLD'
                     : 'OPP HOLD'}
-              </Text>
+              </ThemedText>
             </View>
           )}
         </View>
@@ -123,11 +127,11 @@ function createStyles(sizeClass: SizeClass) {
     },
     pointBadgeText: {
       fontSize: scaleBySizeClass(12, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
     },
     scoreText: {
       fontSize: scaleBySizeClass(16, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
     },
     headerRight: {
       flexDirection: 'row',
@@ -143,7 +147,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     durationText: {
       fontSize: scaleBySizeClass(11, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
     },
     statusChip: {
       paddingHorizontal: 10,
@@ -152,7 +156,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     statusChipText: {
       fontSize: scaleBySizeClass(10, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
       letterSpacing: 0.5,
     },
   });

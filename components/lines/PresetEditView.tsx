@@ -3,7 +3,9 @@ import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { LinePreset, Player, PointLineRecord } from '@/lib/storage/types';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React, { useRef } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import { Fonts } from '@/theme/theme';
 import { useSettingsStore } from '@/store/settingsStore';
 import { ModalPlayerGrid } from './ModalPlayerGrid';
 
@@ -91,13 +93,13 @@ export function PresetEditView({
               pressed && canSave && { opacity: 0.8 },
             ]}
             hitSlop={8}>
-            <Text
+            <ThemedText
               style={[
                 styles.saveBtnText,
                 { color: canSave ? palette.textOnAccent : palette.textMuted },
               ]}>
               {selectedIds.length}
-            </Text>
+            </ThemedText>
             {canSave && (
               <MaterialCommunityIcons
                 name="check"
@@ -155,7 +157,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     presetNameInput: {
       fontSize: scaleBySizeClass(14, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
       letterSpacing: 1,
     },
     rightSection: {
@@ -181,7 +183,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     saveBtnText: {
       fontSize: scaleBySizeClass(14, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
     },
     sizeWarningChip: {
       flexDirection: 'row',
@@ -193,7 +195,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     sizeWarningText: {
       fontSize: scaleBySizeClass(9, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
     },
     playersSection: {
       flex: 1,

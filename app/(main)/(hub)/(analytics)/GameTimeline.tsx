@@ -9,7 +9,9 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import * as Haptics from 'expo-haptics';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import React, { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import { Fonts } from '@/theme/theme';
 
 export default function GameTimelineScreen() {
   const { palette } = useTheme();
@@ -77,7 +79,9 @@ export default function GameTimelineScreen() {
     return (
       <ThemedView style={[styles.container, { backgroundColor: palette.primary }]}>
         <Stack.Screen options={{ headerShown: false }} />
-        <Text style={[styles.errorText, { color: palette.textMuted }]}>Game not found</Text>
+        <ThemedText style={[styles.errorText, { color: palette.textMuted }]}>
+          Game not found
+        </ThemedText>
       </ThemedView>
     );
   }
@@ -110,14 +114,16 @@ export default function GameTimelineScreen() {
             color={palette.textInverse}
           />
         </Pressable>
-        <Text style={[styles.headerTitle, { color: palette.textMuted }]}>GAME TIMELINE</Text>
+        <ThemedText style={[styles.headerTitle, { color: palette.textMuted }]}>
+          GAME TIMELINE
+        </ThemedText>
         <View style={styles.headerSpacer} />
       </View>
 
       <View style={styles.gameInfo}>
-        <Text style={[styles.teamNames, { color: palette.textInverse }]}>
+        <ThemedText style={[styles.teamNames, { color: palette.textInverse }]}>
           {gameData.team1Name} vs {gameData.team2Name}
-        </Text>
+        </ThemedText>
         {(canToggleSplits || hasLineupData) && (
           <View style={styles.timelineControlsRow}>
             {canToggleSplits && (
@@ -137,13 +143,13 @@ export default function GameTimelineScreen() {
                   size={scaleBySizeClass(12, sizeClass)}
                   color={showSplitSeparators ? palette.accent : palette.textSecondary}
                 />
-                <Text
+                <ThemedText
                   style={[
                     styles.timelineToggleText,
                     { color: showSplitSeparators ? palette.accent : palette.textSecondary },
                   ]}>
                   Show Splits: {showSplitSeparators ? 'On' : 'Off'}
-                </Text>
+                </ThemedText>
               </Pressable>
             )}
             {hasLineupData && (
@@ -161,13 +167,13 @@ export default function GameTimelineScreen() {
                   size={scaleBySizeClass(12, sizeClass)}
                   color={showLineups ? palette.accent : palette.textSecondary}
                 />
-                <Text
+                <ThemedText
                   style={[
                     styles.timelineToggleText,
                     { color: showLineups ? palette.accent : palette.textSecondary },
                   ]}>
                   Show Lines: {showLineups ? 'On' : 'Off'}
-                </Text>
+                </ThemedText>
               </Pressable>
             )}
           </View>
@@ -256,7 +262,9 @@ export default function GameTimelineScreen() {
             size={scaleBySizeClass(48, sizeClass)}
             color={palette.textMuted}
           />
-          <Text style={[styles.emptyText, { color: palette.textMuted }]}>No events to display</Text>
+          <ThemedText style={[styles.emptyText, { color: palette.textMuted }]}>
+            No events to display
+          </ThemedText>
         </View>
       )}
     </ThemedView>
@@ -282,7 +290,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     headerTitle: {
       fontSize: scaleBySizeClass(14, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
       letterSpacing: scaleBySizeClass(2, sizeClass, { rounding: 'none' }),
       textTransform: 'uppercase',
     },
@@ -296,7 +304,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     teamNames: {
       fontSize: scaleBySizeClass(18, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
       textAlign: 'center',
     },
     timelineControlsRow: {
@@ -317,7 +325,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     timelineToggleText: {
       fontSize: scaleBySizeClass(11, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
     },
     emptyState: {
       flex: 1,
@@ -328,7 +336,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     emptyText: {
       fontSize: scaleBySizeClass(16, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
     },
     errorText: {
       fontSize: scaleBySizeClass(16, sizeClass),

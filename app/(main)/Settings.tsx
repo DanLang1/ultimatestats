@@ -22,12 +22,13 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
   TextInput,
   TextStyle,
   View,
   ViewStyle,
 } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import { Fonts } from '@/theme/theme';
 
 export default function SettingsScreen() {
   const { currentTeam } = useGameStore();
@@ -216,7 +217,7 @@ function SettingsContent() {
     <>
       <View style={[styles.divider, dividerStyle]} />
 
-      <Text style={[styles.sectionTitle, textInverseStyle]}>TEAM COLORS</Text>
+      <ThemedText style={[styles.sectionTitle, textInverseStyle]}>TEAM COLORS</ThemedText>
       {compact ? (
         <View style={styles.compactColorGrid}>
           <View style={styles.compactColorItem}>
@@ -259,12 +260,14 @@ function SettingsContent() {
           setTeamBgColor('team1', palette.surface);
           setTeamBgColor('team2', palette.primary);
         }}>
-        <Text style={[styles.resetColorsButtonText, textMutedStyle]}>Reset to Default</Text>
+        <ThemedText style={[styles.resetColorsButtonText, textMutedStyle]}>
+          Reset to Default
+        </ThemedText>
       </Pressable>
 
       <View style={[styles.divider, dividerStyle]} />
 
-      <Text style={[styles.sectionTitle, textInverseStyle]}>PLAYER NAME COLORS</Text>
+      <ThemedText style={[styles.sectionTitle, textInverseStyle]}>PLAYER NAME COLORS</ThemedText>
       {compact ? (
         <View style={styles.compactColorGrid}>
           <View style={styles.compactColorItem}>
@@ -304,14 +307,16 @@ function SettingsContent() {
       <Pressable
         style={({ pressed }) => [styles.resetColorsButton, pressed && { opacity: 0.7 }]}
         onPress={resetMatchingTypeColors}>
-        <Text style={[styles.resetColorsButtonText, textMutedStyle]}>Reset to Default</Text>
+        <ThemedText style={[styles.resetColorsButtonText, textMutedStyle]}>
+          Reset to Default
+        </ThemedText>
       </Pressable>
     </>
   );
 
   const renderAppearanceSettings = () => (
     <View style={styles.appearanceSection}>
-      <Text style={[styles.sectionTitle, textInverseStyle]}>APP</Text>
+      <ThemedText style={[styles.sectionTitle, textInverseStyle]}>APP</ThemedText>
       <SegmentedControl
         label="THEME"
         options={[
@@ -334,9 +339,9 @@ function SettingsContent() {
         sizeClass={sizeClass}
       />
       {isAndroidLargeScreen && (
-        <Text style={[styles.helperText, textMutedStyle]}>
+        <ThemedText style={[styles.helperText, textMutedStyle]}>
           On large Android devices, orientation locks may be ignored (blame Android not me please).
-        </Text>
+        </ThemedText>
       )}
     </View>
   );
@@ -358,7 +363,9 @@ function SettingsContent() {
               onPress={confirmNewGame}
               style={({ pressed }) => [styles.newGameButton, pressed && styles.buttonPressed]}
               hitSlop={12}>
-              <Text style={[styles.newGameButtonText, { color: palette.success }]}>New Game</Text>
+              <ThemedText style={[styles.newGameButtonText, { color: palette.success }]}>
+                New Game
+              </ThemedText>
             </Pressable>
           </View>
         }
@@ -376,15 +383,15 @@ function SettingsContent() {
               size={metrics.bannerIconSize}
               color={palette.warning}
             />
-            <Text style={[styles.activeGameBannerText, { color: palette.warning }]}>
+            <ThemedText style={[styles.activeGameBannerText, { color: palette.warning }]}>
               Game in progress: some settings are locked
-            </Text>
+            </ThemedText>
           </View>
         )}
 
         <View key={isLandscape ? 'landscape' : 'portrait'} style={styles.columnsContainer}>
           <View style={styles.column}>
-            <Text style={[styles.sectionTitle, textInverseStyle]}>TEAMS</Text>
+            <ThemedText style={[styles.sectionTitle, textInverseStyle]}>TEAMS</ThemedText>
             <Pressable
               style={({ pressed }) => [
                 styles.importTeamButton,
@@ -397,12 +404,12 @@ function SettingsContent() {
                 size={metrics.actionIconSize}
                 color={palette.accent}
               />
-              <Text style={[styles.importTeamButtonText, { color: palette.accent }]}>
+              <ThemedText style={[styles.importTeamButtonText, { color: palette.accent }]}>
                 Import from USA Ultimate
-              </Text>
+              </ThemedText>
             </Pressable>
             <View style={styles.inputGroupFullWidth}>
-              <Text style={[styles.inputLabel, textMutedStyle]}>My Team</Text>
+              <ThemedText style={[styles.inputLabel, textMutedStyle]}>My Team</ThemedText>
               <View style={styles.teamInputRow}>
                 <View style={styles.teamNameInputWrapper}>
                   <TextInput
@@ -438,14 +445,14 @@ function SettingsContent() {
                     size={metrics.actionIconSize}
                     color={palette.accent}
                   />
-                  <Text style={[styles.editRosterButtonText, { color: palette.accent }]}>
+                  <ThemedText style={[styles.editRosterButtonText, { color: palette.accent }]}>
                     {team1Roster.length > 0 ? team1Roster.length : 'Roster'}
-                  </Text>
+                  </ThemedText>
                 </Pressable>
               </View>
             </View>
             <View style={styles.inputGroupFullWidth}>
-              <Text style={[styles.inputLabel, textMutedStyle]}>Opposing Team</Text>
+              <ThemedText style={[styles.inputLabel, textMutedStyle]}>Opposing Team</ThemedText>
               <TextInput
                 style={[
                   styles.inputStacked,
@@ -466,7 +473,7 @@ function SettingsContent() {
           </View>
 
           <View style={styles.column}>
-            <Text style={[styles.sectionTitle, textInverseStyle]}>GAME SETTINGS</Text>
+            <ThemedText style={[styles.sectionTitle, textInverseStyle]}>GAME SETTINGS</ThemedText>
 
             <View style={styles.inputsGrid}>
               <View style={styles.inputGroup}>
@@ -482,9 +489,9 @@ function SettingsContent() {
                   sizeClass={sizeClass}
                 />
                 {gameToSettingsHelperText && (
-                  <Text style={[styles.helperText, textMutedStyle]}>
+                  <ThemedText style={[styles.helperText, textMutedStyle]}>
                     {gameToSettingsHelperText}
-                  </Text>
+                  </ThemedText>
                 )}
               </View>
 
@@ -702,7 +709,7 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     },
     sectionTitle: {
       fontSize: scaleBySizeClass(12, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
       letterSpacing: scaleBySizeClass(1.5, sizeClass, { rounding: 'none' }),
       marginBottom: scaleBySizeClass(4, sizeClass),
     },
@@ -743,7 +750,7 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     },
     editRosterButtonText: {
       fontSize: scaleBySizeClass(14, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
     },
     importTeamButton: {
       flexDirection: 'row',
@@ -756,11 +763,11 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     },
     importTeamButtonText: {
       fontSize: scaleBySizeClass(14, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
     },
     inputLabel: {
       fontSize: scaleBySizeClass(10, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
       letterSpacing: scaleBySizeClass(1, sizeClass, { rounding: 'none' }),
       marginBottom: scaleBySizeClass(6, sizeClass),
     },
@@ -770,7 +777,7 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
       borderRadius: scaleBySizeClass(10, sizeClass),
       paddingHorizontal: scaleBySizeClass(14, sizeClass),
       fontSize: scaleBySizeClass(18, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
       textAlign: 'center',
     },
     helperText: {
@@ -789,7 +796,7 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     },
     newGameButtonText: {
       fontSize: scaleBySizeClass(13, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
       letterSpacing: scaleBySizeClass(0.4, sizeClass, { rounding: 'none' }),
     },
     activeGameBanner: {
@@ -804,7 +811,7 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     },
     activeGameBannerText: {
       fontSize: scaleBySizeClass(12, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
       flex: 1,
     },
     compactColorGrid: {
@@ -823,7 +830,7 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     },
     resetColorsButtonText: {
       fontSize: scaleBySizeClass(12, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
     },
     appearanceSection: {
       marginTop: scaleBySizeClass(20, sizeClass),

@@ -5,7 +5,9 @@ import { useNumberPickerStore } from '@/store/numberPickerStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import { Fonts } from '@/theme/theme';
 
 export default function NumberPickerModal() {
   const { palette } = useTheme();
@@ -80,13 +82,15 @@ export default function NumberPickerModal() {
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.headerTopRow}>
-              <Text style={[styles.title, { color: palette.modalText }]}>{label}</Text>
-              <Text style={[styles.rangeText, { color: palette.modalTextMuted }]}>
+              <ThemedText style={[styles.title, { color: palette.modalText }]}>{label}</ThemedText>
+              <ThemedText style={[styles.rangeText, { color: palette.modalTextMuted }]}>
                 {min} - {max}
-              </Text>
+              </ThemedText>
             </View>
             {validationText && (
-              <Text style={[styles.helperText, { color: palette.danger }]}>{validationText}</Text>
+              <ThemedText style={[styles.helperText, { color: palette.danger }]}>
+                {validationText}
+              </ThemedText>
             )}
           </View>
 
@@ -94,17 +98,18 @@ export default function NumberPickerModal() {
           <View style={styles.content}>
             {/* Value Display */}
             <View style={[styles.valueDisplayContainer, { borderBottomColor: palette.overlay15 }]}>
-              <Text
+              <ThemedText
                 style={[
                   styles.largeValue,
                   { color: palette.modalText, opacity: inputString ? 1 : 0.4 },
                 ]}>
                 {inputString || '0'}
-              </Text>
+              </ThemedText>
               {suffix && (
-                <Text style={[styles.largeSuffix, { color: palette.modalText, opacity: 0.6 }]}>
+                <ThemedText
+                  style={[styles.largeSuffix, { color: palette.modalText, opacity: 0.6 }]}>
                   {suffix}
-                </Text>
+                </ThemedText>
               )}
             </View>
 
@@ -121,7 +126,9 @@ export default function NumberPickerModal() {
                         { backgroundColor: palette.overlay15 },
                         pressed && { opacity: 0.6 },
                       ]}>
-                      <Text style={[styles.numpadText, { color: palette.modalText }]}>{digit}</Text>
+                      <ThemedText style={[styles.numpadText, { color: palette.modalText }]}>
+                        {digit}
+                      </ThemedText>
                     </Pressable>
                   ))}
                   <Pressable
@@ -149,7 +156,9 @@ export default function NumberPickerModal() {
                         { backgroundColor: palette.overlay15 },
                         pressed && { opacity: 0.6 },
                       ]}>
-                      <Text style={[styles.numpadText, { color: palette.modalText }]}>{digit}</Text>
+                      <ThemedText style={[styles.numpadText, { color: palette.modalText }]}>
+                        {digit}
+                      </ThemedText>
                     </Pressable>
                   ))}
                   <Pressable
@@ -159,9 +168,10 @@ export default function NumberPickerModal() {
                       { backgroundColor: palette.overlay20 },
                       pressed && { opacity: 0.6 },
                     ]}>
-                    <Text style={[styles.numpadText, { color: palette.modalText, opacity: 0.6 }]}>
+                    <ThemedText
+                      style={[styles.numpadText, { color: palette.modalText, opacity: 0.6 }]}>
                       C
-                    </Text>
+                    </ThemedText>
                   </Pressable>
                 </View>
               </View>
@@ -178,9 +188,9 @@ export default function NumberPickerModal() {
                           { backgroundColor: palette.overlay15 },
                           pressed && { opacity: 0.6 },
                         ]}>
-                        <Text style={[styles.numpadText, { color: palette.modalText }]}>
+                        <ThemedText style={[styles.numpadText, { color: palette.modalText }]}>
                           {digit}
-                        </Text>
+                        </ThemedText>
                       </Pressable>
                     ))}
                   </View>
@@ -194,9 +204,10 @@ export default function NumberPickerModal() {
                       { backgroundColor: palette.overlay20 },
                       pressed && { opacity: 0.6 },
                     ]}>
-                    <Text style={[styles.numpadText, { color: palette.modalText, opacity: 0.6 }]}>
+                    <ThemedText
+                      style={[styles.numpadText, { color: palette.modalText, opacity: 0.6 }]}>
                       C
-                    </Text>
+                    </ThemedText>
                   </Pressable>
 
                   <Pressable
@@ -206,7 +217,9 @@ export default function NumberPickerModal() {
                       { backgroundColor: palette.overlay15 },
                       pressed && { opacity: 0.6 },
                     ]}>
-                    <Text style={[styles.numpadText, { color: palette.modalText }]}>0</Text>
+                    <ThemedText style={[styles.numpadText, { color: palette.modalText }]}>
+                      0
+                    </ThemedText>
                   </Pressable>
 
                   <Pressable
@@ -241,7 +254,7 @@ export default function NumberPickerModal() {
                     },
                     pressed && { opacity: 0.8 },
                   ]}>
-                  <Text
+                  <ThemedText
                     style={[
                       styles.quickOptionText,
                       {
@@ -249,7 +262,7 @@ export default function NumberPickerModal() {
                       },
                     ]}>
                     {opt}
-                  </Text>
+                  </ThemedText>
                 </Pressable>
               ))}
             </View>
@@ -265,7 +278,9 @@ export default function NumberPickerModal() {
                 { borderColor: palette.overlay15 },
                 pressed && { opacity: 0.7 },
               ]}>
-              <Text style={[styles.actionButtonText, { color: palette.accent }]}>Cancel</Text>
+              <ThemedText style={[styles.actionButtonText, { color: palette.accent }]}>
+                Cancel
+              </ThemedText>
             </Pressable>
             <Pressable
               disabled={hasInvalidValue}
@@ -276,13 +291,13 @@ export default function NumberPickerModal() {
                 { backgroundColor: hasInvalidValue ? palette.overlay15 : palette.accent },
                 pressed && !hasInvalidValue && { opacity: 0.8 },
               ]}>
-              <Text
+              <ThemedText
                 style={[
                   styles.actionButtonText,
                   { color: hasInvalidValue ? palette.modalTextMuted : palette.textOnAccent },
                 ]}>
                 Save
-              </Text>
+              </ThemedText>
             </Pressable>
           </View>
         </Pressable>
@@ -317,7 +332,7 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     },
     title: {
       fontSize: scaleBySizeClass(16, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
     },
     rangeText: {
       fontSize: scaleBySizeClass(12, sizeClass),
@@ -342,12 +357,12 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     },
     largeValue: {
       fontSize: scaleBySizeClass(isLandscape ? 44 : 38, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
       fontVariant: ['tabular-nums'],
     },
     largeSuffix: {
       fontSize: scaleBySizeClass(18, sizeClass),
-      fontWeight: '500',
+      fontFamily: Fonts.semiBold,
     },
     numpadContainer: {
       gap: 6,
@@ -375,7 +390,7 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     },
     numpadText: {
       fontSize: scaleBySizeClass(20, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
     },
     quickOptionsContainer: {
       flexDirection: 'row',
@@ -392,7 +407,7 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     },
     quickOptionText: {
       fontSize: scaleBySizeClass(14, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
     },
     actionRow: {
       flexDirection: 'row',
@@ -412,7 +427,7 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     saveButton: {},
     actionButtonText: {
       fontSize: scaleBySizeClass(15, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
     },
   });
 }

@@ -2,7 +2,9 @@ import { useTheme } from '@/context/ThemeContext';
 import { getSizeClassValue, SizeClass } from '@/hooks/useLayout';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
-import { Platform, Switch as RNSwitch, StyleSheet, Text, View } from 'react-native';
+import { Platform, Switch as RNSwitch, StyleSheet, View } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import { Fonts } from '@/theme/theme';
 
 interface SwitchProps {
   label: string;
@@ -31,7 +33,7 @@ export function Switch({
 
   return (
     <View style={[styles.container, disabled && styles.disabled]}>
-      <Text style={[styles.label, { color: palette.textMuted }]}>
+      <ThemedText style={[styles.label, { color: palette.textMuted }]}>
         {locked && (
           <MaterialCommunityIcons
             name="lock"
@@ -42,7 +44,7 @@ export function Switch({
         )}
         {locked ? ' ' : ''}
         {label}
-      </Text>
+      </ThemedText>
       <View style={styles.switchWrapper}>
         <RNSwitch
           style={{ transform: [{ scale: switchScale }] }}
@@ -74,7 +76,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     label: {
       fontSize: getSizeClassValue({ small: 10, medium: 11, large: 12 }, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
       letterSpacing: getSizeClassValue({ small: 1, medium: 1.05, large: 1.1 }, sizeClass),
       textTransform: 'uppercase',
     },

@@ -24,7 +24,9 @@ import { usePlayerStatsStore } from '@/store/playerStatsStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router } from 'expo-router';
 import React from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import { Fonts } from '@/theme/theme';
 
 export default function PlayerStats() {
   const {
@@ -113,9 +115,9 @@ export default function PlayerStats() {
           styles.container,
           { backgroundColor: palette.primary, justifyContent: 'center', alignItems: 'center' },
         ]}>
-        <Text style={{ color: palette.textMuted }}>No player data found.</Text>
+        <ThemedText style={{ color: palette.textMuted }}>No player data found.</ThemedText>
         <Pressable onPress={() => router.back()} style={{ marginTop: 20, padding: 10 }}>
-          <Text style={{ color: palette.accent }}>Go Back</Text>
+          <ThemedText style={{ color: palette.accent }}>Go Back</ThemedText>
         </Pressable>
       </View>
     );
@@ -158,7 +160,9 @@ export default function PlayerStats() {
                 gap: 8,
                 justifyContent: 'center',
               }}>
-              <Text style={[styles.playerName, { color: palette.textInverse }]}>{playerName}</Text>
+              <ThemedText style={[styles.playerName, { color: palette.textInverse }]}>
+                {playerName}
+              </ThemedText>
               <View
                 style={{
                   flexDirection: 'row',
@@ -168,7 +172,9 @@ export default function PlayerStats() {
                 }}>
                 {stats.roleLabel && (
                   <View style={[styles.labelBadge, { backgroundColor: palette.accent }]}>
-                    <Text style={[styles.labelText, { color: '#FFF' }]}>{stats.roleLabel}</Text>
+                    <ThemedText style={[styles.labelText, { color: '#FFF' }]}>
+                      {stats.roleLabel}
+                    </ThemedText>
                   </View>
                 )}
                 {stats.summary && stats.summary.callahans > 0 && (
@@ -181,19 +187,20 @@ export default function PlayerStats() {
                         borderWidth: 1,
                       },
                     ]}>
-                    <Text style={[styles.labelText, { color: palette.success }]}>
+                    <ThemedText style={[styles.labelText, { color: palette.success }]}>
                       {stats.summary.callahans > 1 ? `${stats.summary.callahans} ` : ''}
                       CALLAHAN
-                    </Text>
+                    </ThemedText>
                   </View>
                 )}
               </View>
             </View>
             {/* Net Impact */}
-            <Text style={[styles.playerDetail, { color: palette.textMuted, textAlign: 'center' }]}>
+            <ThemedText
+              style={[styles.playerDetail, { color: palette.textMuted, textAlign: 'center' }]}>
               {stats.summary?.plusMinus !== undefined && stats.summary.plusMinus > 0 ? '+' : ''}
               {stats.summary?.plusMinus ?? 0} Net Impact
-            </Text>
+            </ThemedText>
             {/* Divider */}
             <View
               style={{
@@ -232,16 +239,16 @@ export default function PlayerStats() {
               {/* Game context / selector */}
               {(displayGame || hasMultipleSelectableGames) && (
                 <View style={{ marginBottom: 12, paddingHorizontal: 16 }}>
-                  <Text
+                  <ThemedText
                     style={{
                       color: palette.textMuted,
                       fontSize: scaleBySizeClass(10, sizeClass),
-                      fontWeight: '600',
+                      fontFamily: Fonts.semiBold,
                       marginBottom: 6,
                       letterSpacing: 0.5,
                     }}>
                     CURRENT GAME
-                  </Text>
+                  </ThemedText>
 
                   {hasMultipleSelectableGames ? (
                     <Pressable
@@ -261,14 +268,14 @@ export default function PlayerStats() {
                         size={scaleBySizeClass(16, sizeClass)}
                         color={palette.textMuted}
                       />
-                      <Text
+                      <ThemedText
                         style={{
                           color: palette.textInverse,
-                          fontWeight: '600',
+                          fontFamily: Fonts.semiBold,
                           fontSize: scaleBySizeClass(14, sizeClass),
                         }}>
                         {gameLabel}
-                      </Text>
+                      </ThemedText>
                       <MaterialCommunityIcons
                         name="chevron-down"
                         size={scaleBySizeClass(18, sizeClass)}
@@ -292,14 +299,14 @@ export default function PlayerStats() {
                         size={scaleBySizeClass(16, sizeClass)}
                         color={palette.textMuted}
                       />
-                      <Text
+                      <ThemedText
                         style={{
                           color: palette.textInverse,
-                          fontWeight: '600',
+                          fontFamily: Fonts.semiBold,
                           fontSize: scaleBySizeClass(14, sizeClass),
                         }}>
                         {gameLabel}
-                      </Text>
+                      </ThemedText>
                     </View>
                   )}
                 </View>
@@ -377,16 +384,16 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     },
     avatarText: {
       fontSize: scaleBySizeClass(16, sizeClass),
-      fontWeight: 'bold',
+      fontFamily: Fonts.bold,
     },
     playerName: {
       fontSize: scaleBySizeClass(20, sizeClass),
-      fontWeight: '800',
+      fontFamily: Fonts.extraBold,
       letterSpacing: 0.5,
     },
     playerDetail: {
       fontSize: scaleBySizeClass(16, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
       marginTop: 4,
     },
     scrollView: {
@@ -432,7 +439,7 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     },
     labelText: {
       fontSize: scaleBySizeClass(10, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
       textTransform: 'uppercase',
       letterSpacing: 0.5,
     },

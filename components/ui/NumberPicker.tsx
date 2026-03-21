@@ -4,7 +4,9 @@ import { useNumberPickerStore } from '@/store/numberPickerStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router } from 'expo-router';
 import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import { Fonts } from '@/theme/theme';
 
 interface NumberPickerProps {
   value: number;
@@ -59,7 +61,7 @@ export function NumberPicker({
   return (
     <View>
       {label && (
-        <Text style={[styles.label, { color: palette.textMuted }]}>
+        <ThemedText style={[styles.label, { color: palette.textMuted }]}>
           {disabled && (
             <MaterialCommunityIcons
               name="lock"
@@ -68,7 +70,7 @@ export function NumberPicker({
             />
           )}{' '}
           {label}
-        </Text>
+        </ThemedText>
       )}
 
       <Pressable
@@ -81,16 +83,18 @@ export function NumberPicker({
           },
           disabled && styles.disabled,
         ]}>
-        <Text
+        <ThemedText
           style={[
             styles.triggerText,
             { color: displayValue ? palette.textInverse : palette.textMuted },
           ]}>
           {displayValue || placeholder}
-        </Text>
+        </ThemedText>
         {suffix && (
           <View style={[styles.suffixContainer, { borderColor: palette.overlay20 }]}>
-            <Text style={[styles.suffixText, { color: palette.textMuted }]}>{suffix}</Text>
+            <ThemedText style={[styles.suffixText, { color: palette.textMuted }]}>
+              {suffix}
+            </ThemedText>
           </View>
         )}
       </Pressable>
@@ -102,7 +106,7 @@ function createStyles(sizeClass: SizeClass) {
   return StyleSheet.create({
     label: {
       fontSize: scaleBySizeClass(10, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
       letterSpacing: scaleBySizeClass(1, sizeClass, { rounding: 'none' }),
       marginBottom: scaleBySizeClass(6, sizeClass),
     },
@@ -120,7 +124,7 @@ function createStyles(sizeClass: SizeClass) {
     triggerText: {
       flex: 1,
       fontSize: scaleBySizeClass(18, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
       textAlign: 'center',
     },
     suffixContainer: {
@@ -132,7 +136,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     suffixText: {
       fontSize: scaleBySizeClass(14, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
     },
   });
 }

@@ -1,7 +1,9 @@
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass } from '@/hooks/useLayout';
 import React from 'react';
-import { StyleSheet, Text, View, ViewStyle } from 'react-native';
+import { StyleSheet, View, ViewStyle } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import { Fonts } from '@/theme/theme';
 
 interface ScoreBadgeProps {
   score1: number;
@@ -61,7 +63,7 @@ export function ScoreBadge({
         },
         style,
       ]}>
-      <Text
+      <ThemedText
         style={[
           styles.text,
           {
@@ -70,7 +72,7 @@ export function ScoreBadge({
           },
         ]}>
         {score1} - {score2}
-      </Text>
+      </ThemedText>
     </View>
   );
 }
@@ -97,7 +99,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   text: {
-    fontWeight: '700',
+    fontFamily: Fonts.bold,
   },
 });
 

@@ -2,7 +2,9 @@ import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass } from '@/hooks/useLayout';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import { Fonts } from '@/theme/theme';
 
 interface TutorialStepProps {
   icon: keyof typeof MaterialCommunityIcons.glyphMap;
@@ -26,8 +28,10 @@ export default function TutorialStep({
       <View style={[styles.iconContainer, { backgroundColor: palette.accentOverlay15 }]}>
         <MaterialCommunityIcons name={icon} size={iconSize} color={palette.accent} />
       </View>
-      <Text style={[styles.title, { color: palette.modalText }]}>{title}</Text>
-      <Text style={[styles.description, { color: palette.modalTextMuted }]}>{description}</Text>
+      <ThemedText style={[styles.title, { color: palette.modalText }]}>{title}</ThemedText>
+      <ThemedText style={[styles.description, { color: palette.modalTextMuted }]}>
+        {description}
+      </ThemedText>
     </View>
   );
 }
@@ -49,7 +53,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     title: {
       fontSize: scaleBySizeClass(20, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
       textAlign: 'center',
       marginBottom: 8,
     },

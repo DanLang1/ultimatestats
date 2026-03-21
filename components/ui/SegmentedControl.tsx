@@ -6,7 +6,9 @@ import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass } from '@/hooks/useLayout';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React, { useEffect, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import { Fonts } from '@/theme/theme';
 import Animated from 'react-native-reanimated';
 
 interface SegmentOption {
@@ -81,7 +83,7 @@ export function SegmentedControl({
     <View>
       {label && (
         <View style={styles.labelRow}>
-          <Text style={[styles.label, { color: palette.textMuted }]}>
+          <ThemedText style={[styles.label, { color: palette.textMuted }]}>
             {disabled && (
               <MaterialCommunityIcons
                 name="lock"
@@ -90,7 +92,7 @@ export function SegmentedControl({
               />
             )}{' '}
             {label}
-          </Text>
+          </ThemedText>
           {showRequired && (
             <View
               style={[
@@ -100,7 +102,9 @@ export function SegmentedControl({
                   borderColor: palette.warning,
                 },
               ]}>
-              <Text style={[styles.requiredChipText, { color: palette.warning }]}>Required</Text>
+              <ThemedText style={[styles.requiredChipText, { color: palette.warning }]}>
+                Required
+              </ThemedText>
             </View>
           )}
         </View>
@@ -149,7 +153,7 @@ export function SegmentedControl({
                   ]}
                   onPress={() => onChange(option.value)}
                   disabled={disabled}>
-                  <Text
+                  <ThemedText
                     style={[
                       styles.buttonText,
                       { color: palette.textMuted },
@@ -157,7 +161,7 @@ export function SegmentedControl({
                     ]}
                     numberOfLines={1}>
                     {option.label}
-                  </Text>
+                  </ThemedText>
                 </Pressable>
               </React.Fragment>
             );
@@ -200,7 +204,7 @@ function createStyles(sizeClass: SizeClass) {
   return StyleSheet.create({
     label: {
       fontSize: scaleBySizeClass(10, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
       letterSpacing: scaleBySizeClass(1, sizeClass, { rounding: 'none' }),
     },
     labelRow: {
@@ -217,7 +221,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     requiredChipText: {
       fontSize: scaleBySizeClass(10, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
       letterSpacing: scaleBySizeClass(0.3, sizeClass, { rounding: 'none' }),
     },
     container: {
@@ -290,7 +294,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     buttonText: {
       fontSize: scaleBySizeClass(18, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
     },
   });
 }

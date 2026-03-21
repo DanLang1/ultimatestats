@@ -6,7 +6,9 @@ import { useGameStore } from '@/store/gameStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { Redirect, router } from 'expo-router';
 import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import { Fonts } from '@/theme/theme';
 import Animated, { FadeIn } from 'react-native-reanimated';
 
 export default function TimeoutModal() {
@@ -77,8 +79,12 @@ export default function TimeoutModal() {
               size={scaleBySizeClass(16, sizeClass)}
               color={palette.accent}
             />
-            <Text style={[styles.headerText, { color: palette.textMuted }]}>TIMEOUT</Text>
-            <Text style={[styles.teamText, { color: palette.textMuted }]}>{timeoutTeam}</Text>
+            <ThemedText style={[styles.headerText, { color: palette.textMuted }]}>
+              TIMEOUT
+            </ThemedText>
+            <ThemedText style={[styles.teamText, { color: palette.textMuted }]}>
+              {timeoutTeam}
+            </ThemedText>
           </View>
 
           <View style={styles.content}>
@@ -96,7 +102,7 @@ export default function TimeoutModal() {
               </Pressable>
 
               <Pressable onPress={toggleTimer} style={styles.timerDisplayCompact}>
-                <Text
+                <ThemedText
                   style={[
                     styles.timerValueCompact,
                     {
@@ -108,10 +114,10 @@ export default function TimeoutModal() {
                     },
                   ]}>
                   {formattedTime}
-                </Text>
-                <Text style={[styles.timerStateCompact, { color: palette.textMuted }]}>
+                </ThemedText>
+                <ThemedText style={[styles.timerStateCompact, { color: palette.textMuted }]}>
                   {isRunning ? 'PAUSE' : 'START'}
-                </Text>
+                </ThemedText>
               </Pressable>
 
               <Pressable
@@ -134,9 +140,9 @@ export default function TimeoutModal() {
                 { backgroundColor: palette.accent },
                 pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
               ]}>
-              <Text style={[styles.continueBtnTextCompact, { color: palette.textOnAccent }]}>
+              <ThemedText style={[styles.continueBtnTextCompact, { color: palette.textOnAccent }]}>
                 END TIMEOUT
-              </Text>
+              </ThemedText>
               <MaterialCommunityIcons
                 name="arrow-right"
                 size={scaleBySizeClass(16, sizeClass)}
@@ -179,12 +185,12 @@ function createStyles(sizeClass: SizeClass) {
     },
     headerText: {
       fontSize: scaleBySizeClass(12, sizeClass),
-      fontWeight: '800',
+      fontFamily: Fonts.extraBold,
       letterSpacing: 2,
     },
     teamText: {
       fontSize: scaleBySizeClass(13, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
     },
     content: {
       padding: 24,
@@ -208,12 +214,12 @@ function createStyles(sizeClass: SizeClass) {
     },
     timerValueCompact: {
       fontSize: scaleBySizeClass(48, sizeClass),
-      fontWeight: '800',
+      fontFamily: Fonts.extraBold,
       fontVariant: ['tabular-nums'],
     },
     timerStateCompact: {
       fontSize: scaleBySizeClass(10, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
       letterSpacing: 0.5,
     },
     continueBtnCompact: {
@@ -228,7 +234,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     continueBtnTextCompact: {
       fontSize: scaleBySizeClass(14, sizeClass),
-      fontWeight: '800',
+      fontFamily: Fonts.extraBold,
       letterSpacing: 1,
     },
     closeBtn: {

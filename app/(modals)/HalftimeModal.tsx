@@ -10,7 +10,9 @@ import { useSettingsStore } from '@/store/settingsStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router } from 'expo-router';
 import React from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import { Fonts } from '@/theme/theme';
 import Animated, { FadeIn } from 'react-native-reanimated';
 
 export default function HalftimeModal() {
@@ -101,7 +103,9 @@ export default function HalftimeModal() {
                 size={scaleBySizeClass(16, sizeClass)}
                 color={palette.accent}
               />
-              <Text style={[styles.headerText, { color: palette.textMuted }]}>HALFTIME</Text>
+              <ThemedText style={[styles.headerText, { color: palette.textMuted }]}>
+                HALFTIME
+              </ThemedText>
             </View>
 
             {statTrackingEnabled && (
@@ -111,12 +115,12 @@ export default function HalftimeModal() {
                   size={scaleBySizeClass(12, sizeClass)}
                   color={palette.accent}
                 />
-                <Text
+                <ThemedText
                   style={[styles.receivingText, { color: palette.textMuted }]}
                   numberOfLines={1}
                   ellipsizeMode="tail">
                   {receivingLabel}
-                </Text>
+                </ThemedText>
               </>
             )}
           </View>
@@ -128,25 +132,27 @@ export default function HalftimeModal() {
             <View style={[styles.leftColumn, !hasStats && styles.leftColumnCompact]}>
               <View style={styles.scoreCompact}>
                 <View style={styles.scoreGroup}>
-                  <Text
+                  <ThemedText
                     style={[styles.teamNameLabel, { color: palette.textInverse }]}
                     numberOfLines={1}>
                     {team1Name}
-                  </Text>
-                  <Text style={[styles.scoreNumber, { color: palette.textInverse }]}>
+                  </ThemedText>
+                  <ThemedText style={[styles.scoreNumber, { color: palette.textInverse }]}>
                     {team1Score}
-                  </Text>
+                  </ThemedText>
                 </View>
-                <Text style={[styles.scoreDivider, { color: palette.textMuted }]}>-</Text>
+                <ThemedText style={[styles.scoreDivider, { color: palette.textMuted }]}>
+                  -
+                </ThemedText>
                 <View style={styles.scoreGroup}>
-                  <Text
+                  <ThemedText
                     style={[styles.teamNameLabel, { color: palette.textInverse }]}
                     numberOfLines={1}>
                     {team2Name}
-                  </Text>
-                  <Text style={[styles.scoreNumber, { color: palette.textInverse }]}>
+                  </ThemedText>
+                  <ThemedText style={[styles.scoreNumber, { color: palette.textInverse }]}>
                     {team2Score}
-                  </Text>
+                  </ThemedText>
                 </View>
               </View>
 
@@ -163,7 +169,7 @@ export default function HalftimeModal() {
                 </Pressable>
 
                 <Pressable onPress={toggleTimer} style={styles.timerDisplayCompact}>
-                  <Text
+                  <ThemedText
                     style={[
                       styles.timerValueCompact,
                       {
@@ -175,10 +181,10 @@ export default function HalftimeModal() {
                       },
                     ]}>
                     {formattedTime}
-                  </Text>
-                  <Text style={[styles.timerStateCompact, { color: palette.textMuted }]}>
+                  </ThemedText>
+                  <ThemedText style={[styles.timerStateCompact, { color: palette.textMuted }]}>
                     {isRunning ? 'PAUSE' : 'START'}
-                  </Text>
+                  </ThemedText>
                 </Pressable>
 
                 <Pressable
@@ -208,9 +214,9 @@ export default function HalftimeModal() {
                         size={scaleBySizeClass(14, sizeClass)}
                         color={palette.accent}
                       />
-                      <Text style={[styles.setLineBtnText, { color: palette.textInverse }]}>
+                      <ThemedText style={[styles.setLineBtnText, { color: palette.textInverse }]}>
                         SET LINE
-                      </Text>
+                      </ThemedText>
                     </Pressable>
                   )}
                   <Pressable
@@ -220,9 +226,10 @@ export default function HalftimeModal() {
                       { backgroundColor: palette.accent },
                       pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
                     ]}>
-                    <Text style={[styles.continueBtnTextCompact, { color: palette.textOnAccent }]}>
+                    <ThemedText
+                      style={[styles.continueBtnTextCompact, { color: palette.textOnAccent }]}>
                       CONTINUE
-                    </Text>
+                    </ThemedText>
                     <MaterialCommunityIcons
                       name="arrow-right"
                       size={scaleBySizeClass(16, sizeClass)}
@@ -242,20 +249,20 @@ export default function HalftimeModal() {
                 {/* 2 Stats Cards */}
                 <View style={styles.statsRowCompact}>
                   <View style={[styles.statCardCompact, { backgroundColor: palette.overlay05 }]}>
-                    <Text style={[styles.statValueCompact, { color: palette.textInverse }]}>
+                    <ThemedText style={[styles.statValueCompact, { color: palette.textInverse }]}>
                       {Math.round(teamStats.holds)}/{teamStats.offensivePoints}
-                    </Text>
-                    <Text style={[styles.statLabelCompact, { color: palette.textMuted }]}>
+                    </ThemedText>
+                    <ThemedText style={[styles.statLabelCompact, { color: palette.textMuted }]}>
                       HOLD
-                    </Text>
+                    </ThemedText>
                   </View>
                   <View style={[styles.statCardCompact, { backgroundColor: palette.overlay05 }]}>
-                    <Text style={[styles.statValueCompact, { color: palette.textInverse }]}>
+                    <ThemedText style={[styles.statValueCompact, { color: palette.textInverse }]}>
                       {Math.round(teamStats.breaks)}/{teamStats.defensivePoints}
-                    </Text>
-                    <Text style={[styles.statLabelCompact, { color: palette.textMuted }]}>
+                    </ThemedText>
+                    <ThemedText style={[styles.statLabelCompact, { color: palette.textMuted }]}>
                       BREAK
-                    </Text>
+                    </ThemedText>
                   </View>
                 </View>
 
@@ -263,14 +270,14 @@ export default function HalftimeModal() {
                 <View style={styles.performersListCompact}>
                   {topPerformers.map((p, i) => (
                     <View key={p.name} style={styles.performerRowCompact}>
-                      <Text style={[styles.performerRankCompact, { color: palette.accent }]}>
+                      <ThemedText style={[styles.performerRankCompact, { color: palette.accent }]}>
                         {i + 1}
-                      </Text>
-                      <Text
+                      </ThemedText>
+                      <ThemedText
                         style={[styles.performerNameCompact, { color: palette.textInverse }]}
                         numberOfLines={1}>
                         {p.name}
-                      </Text>
+                      </ThemedText>
                       <View
                         style={[
                           styles.performerBadge,
@@ -279,14 +286,14 @@ export default function HalftimeModal() {
                               p.plusMinus >= 0 ? palette.success + '20' : palette.danger + '20',
                           },
                         ]}>
-                        <Text
+                        <ThemedText
                           style={[
                             styles.performerStatCompact,
                             { color: p.plusMinus >= 0 ? palette.success : palette.danger },
                           ]}>
                           {p.plusMinus > 0 ? '+' : ''}
                           {p.plusMinus}
-                        </Text>
+                        </ThemedText>
                       </View>
                     </View>
                   ))}
@@ -306,9 +313,9 @@ export default function HalftimeModal() {
                         size={scaleBySizeClass(14, sizeClass)}
                         color={palette.accent}
                       />
-                      <Text style={[styles.setLineBtnText, { color: palette.textInverse }]}>
+                      <ThemedText style={[styles.setLineBtnText, { color: palette.textInverse }]}>
                         SET LINE
-                      </Text>
+                      </ThemedText>
                     </Pressable>
                   )}
                   <Pressable
@@ -318,9 +325,10 @@ export default function HalftimeModal() {
                       { backgroundColor: palette.accent },
                       pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
                     ]}>
-                    <Text style={[styles.continueBtnTextCompact, { color: palette.textOnAccent }]}>
+                    <ThemedText
+                      style={[styles.continueBtnTextCompact, { color: palette.textOnAccent }]}>
                       CONTINUE
-                    </Text>
+                    </ThemedText>
                     <MaterialCommunityIcons
                       name="arrow-right"
                       size={scaleBySizeClass(16, sizeClass)}
@@ -411,13 +419,13 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     },
     receivingText: {
       fontSize: scaleBySizeClass(13, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
       flexShrink: 1,
       maxWidth: isLandscape ? 260 : 180,
     },
     headerText: {
       fontSize: scaleBySizeClass(12, sizeClass),
-      fontWeight: '800',
+      fontFamily: Fonts.extraBold,
       letterSpacing: 2,
     },
     scoreCompact: {
@@ -427,13 +435,12 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     },
     scoreNumber: {
       fontSize: scaleBySizeClass(64, sizeClass),
-      fontWeight: '900',
+      fontFamily: Fonts.black,
       fontVariant: ['tabular-nums'],
       lineHeight: scaleBySizeClass(70, sizeClass),
     },
     scoreDivider: {
       fontSize: scaleBySizeClass(32, sizeClass),
-      fontWeight: '200',
       marginBottom: 8,
       marginHorizontal: 8,
     },
@@ -442,7 +449,7 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     },
     teamNameLabel: {
       fontSize: scaleBySizeClass(11, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
       textTransform: 'uppercase',
       letterSpacing: 0.5,
       marginBottom: -4,
@@ -466,12 +473,12 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     },
     timerValueCompact: {
       fontSize: scaleBySizeClass(36, sizeClass),
-      fontWeight: '800',
+      fontFamily: Fonts.extraBold,
       fontVariant: ['tabular-nums'],
     },
     timerStateCompact: {
       fontSize: scaleBySizeClass(9, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
       letterSpacing: 0.5,
     },
     buttonRow: {
@@ -492,7 +499,7 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     },
     setLineBtnText: {
       fontSize: scaleBySizeClass(13, sizeClass),
-      fontWeight: '800',
+      fontFamily: Fonts.extraBold,
       letterSpacing: 0.5,
     },
     statsRowCompact: {
@@ -507,11 +514,11 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     },
     statValueCompact: {
       fontSize: scaleBySizeClass(20, sizeClass),
-      fontWeight: '800',
+      fontFamily: Fonts.extraBold,
     },
     statLabelCompact: {
       fontSize: scaleBySizeClass(10, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
       marginTop: 2,
       letterSpacing: 0.5,
     },
@@ -533,13 +540,13 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     },
     performerRankCompact: {
       fontSize: scaleBySizeClass(12, sizeClass),
-      fontWeight: '800',
+      fontFamily: Fonts.extraBold,
       width: 16,
     },
     performerNameCompact: {
       flex: 1,
       fontSize: scaleBySizeClass(13, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
     },
     performerBadge: {
       paddingHorizontal: 6,
@@ -550,7 +557,7 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     },
     performerStatCompact: {
       fontSize: scaleBySizeClass(11, sizeClass),
-      fontWeight: '800',
+      fontFamily: Fonts.extraBold,
       fontVariant: ['tabular-nums'],
     },
     continueBtnCompact: {
@@ -565,7 +572,7 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     },
     continueBtnTextCompact: {
       fontSize: scaleBySizeClass(14, sizeClass),
-      fontWeight: '800',
+      fontFamily: Fonts.extraBold,
       letterSpacing: 1,
     },
     closeBtn: {

@@ -26,7 +26,9 @@ import { File, Paths } from 'expo-file-system';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import * as Sharing from 'expo-sharing';
 import React, { useState } from 'react';
-import { Platform, Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
+import { Platform, Pressable, ScrollView, Share, StyleSheet, View } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import { Fonts } from '@/theme/theme';
 
 const MIN_PLAYED_AT_DATE = new Date(MIN_PLAYED_AT_YEAR, 0, 1);
 
@@ -217,15 +219,15 @@ export default function SavedGameStatsScreen() {
             size={scaleBySizeClass(42, sizeClass)}
             color={palette.textMuted}
           />
-          <Text style={[styles.stateText, { color: palette.textMuted }]}>
+          <ThemedText style={[styles.stateText, { color: palette.textMuted }]}>
             {hasMissingParam ? 'Missing game link.' : 'Saved game not found.'}
-          </Text>
+          </ThemedText>
           <Pressable
             onPress={handleGoToSavedGames}
             style={[styles.recoverButton, { backgroundColor: palette.overlay10 }]}>
-            <Text style={[styles.recoverButtonText, { color: palette.accent }]}>
+            <ThemedText style={[styles.recoverButtonText, { color: palette.accent }]}>
               Go to Saved Games
-            </Text>
+            </ThemedText>
           </Pressable>
         </View>
       ) : null}
@@ -239,7 +241,9 @@ export default function SavedGameStatsScreen() {
                 { backgroundColor: palette.overlay05, borderColor: palette.overlay10 },
               ]}>
               <View style={styles.dateCardContent}>
-                <Text style={[styles.dateLabel, { color: palette.textMuted }]}>PLAYED AT</Text>
+                <ThemedText style={[styles.dateLabel, { color: palette.textMuted }]}>
+                  PLAYED AT
+                </ThemedText>
                 <DateTimePicker
                   value={new Date(getGameDisplayTimestamp(selectedGame))}
                   mode="datetime"
@@ -251,9 +255,9 @@ export default function SavedGameStatsScreen() {
                   accentColor={palette.accent}
                 />
                 {selectedGame.playedAt ? (
-                  <Text style={[styles.dateSecondary, { color: palette.textMuted }]}>
+                  <ThemedText style={[styles.dateSecondary, { color: palette.textMuted }]}>
                     Recorded {formatDate(selectedGame.createdAt)}
-                  </Text>
+                  </ThemedText>
                 ) : null}
               </View>
             </View>
@@ -266,14 +270,16 @@ export default function SavedGameStatsScreen() {
               ]}
               onPress={handleOpenAndroidDatePicker}>
               <View style={styles.dateCardContent}>
-                <Text style={[styles.dateLabel, { color: palette.textMuted }]}>PLAYED AT</Text>
-                <Text style={[styles.dateValue, { color: palette.textInverse }]}>
+                <ThemedText style={[styles.dateLabel, { color: palette.textMuted }]}>
+                  PLAYED AT
+                </ThemedText>
+                <ThemedText style={[styles.dateValue, { color: palette.textInverse }]}>
                   {formatDate(getGameDisplayTimestamp(selectedGame))}
-                </Text>
+                </ThemedText>
                 {selectedGame.playedAt ? (
-                  <Text style={[styles.dateSecondary, { color: palette.textMuted }]}>
+                  <ThemedText style={[styles.dateSecondary, { color: palette.textMuted }]}>
                     Recorded {formatDate(selectedGame.createdAt)}
-                  </Text>
+                  </ThemedText>
                 ) : null}
               </View>
               <MaterialCommunityIcons
@@ -342,7 +348,7 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     stateText: {
       fontSize: scaleBySizeClass(15, sizeClass),
       textAlign: 'center',
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
     },
     recoverButton: {
       marginTop: 8,
@@ -352,7 +358,7 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     },
     recoverButtonText: {
       fontSize: scaleBySizeClass(14, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
     },
     dateCard: {
       borderRadius: 14,
@@ -372,12 +378,12 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     },
     dateLabel: {
       fontSize: scaleBySizeClass(10, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
       letterSpacing: 1,
     },
     dateValue: {
       fontSize: scaleBySizeClass(16, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
     },
     dateSecondary: {
       fontSize: scaleBySizeClass(12, sizeClass),

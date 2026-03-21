@@ -15,7 +15,9 @@ import { useSettingsStore } from '@/store/settingsStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { Redirect, router, Stack } from 'expo-router';
 import React, { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import { Fonts } from '@/theme/theme';
 
 export default function PreGameConfirm() {
   const { palette } = useTheme();
@@ -172,15 +174,17 @@ export default function PreGameConfirm() {
             size={scaleBySizeClass(16, sizeClass)}
             color={palette.danger}
           />
-          <Text style={[styles.lockText, { color: palette.danger }]}>
+          <ThemedText style={[styles.lockText, { color: palette.danger }]}>
             Settings lock once the game starts
-          </Text>
+          </ThemedText>
         </View>
 
         <View key={isLandscape ? 'landscape' : 'portrait'} style={styles.columnsContainer}>
           {/* Left Column: Settings */}
           <View style={styles.column}>
-            <Text style={[styles.sectionTitle, { color: palette.textMuted }]}>GAME SETTINGS</Text>
+            <ThemedText style={[styles.sectionTitle, { color: palette.textMuted }]}>
+              GAME SETTINGS
+            </ThemedText>
             <View style={styles.settingsGrid}>
               {/* Game To */}
               <EditableSettingCard
@@ -197,7 +201,9 @@ export default function PreGameConfirm() {
                   })
                 }
                 sizeClass={sizeClass}>
-                <Text style={[styles.settingValue, { color: palette.textInverse }]}>{gameTo}</Text>
+                <ThemedText style={[styles.settingValue, { color: palette.textInverse }]}>
+                  {gameTo}
+                </ThemedText>
               </EditableSettingCard>
 
               {/* Hard Cap */}
@@ -222,9 +228,9 @@ export default function PreGameConfirm() {
                   })
                 }
                 sizeClass={sizeClass}>
-                <Text style={[styles.settingValue, { color: palette.textInverse }]}>
+                <ThemedText style={[styles.settingValue, { color: palette.textInverse }]}>
                   {gameLength} min
-                </Text>
+                </ThemedText>
               </EditableSettingCard>
 
               {/* Soft Cap */}
@@ -242,9 +248,9 @@ export default function PreGameConfirm() {
                   })
                 }
                 sizeClass={sizeClass}>
-                <Text style={[styles.settingValue, { color: palette.textInverse }]}>
+                <ThemedText style={[styles.settingValue, { color: palette.textInverse }]}>
                   {softCapTime} min
-                </Text>
+                </ThemedText>
               </EditableSettingCard>
 
               {/* Players */}
@@ -262,9 +268,9 @@ export default function PreGameConfirm() {
                   })
                 }
                 sizeClass={sizeClass}>
-                <Text style={[styles.settingValue, { color: palette.textInverse }]}>
+                <ThemedText style={[styles.settingValue, { color: palette.textInverse }]}>
                   {numPlayers}v{numPlayers}
-                </Text>
+                </ThemedText>
               </EditableSettingCard>
 
               {/* Halftime */}
@@ -277,13 +283,13 @@ export default function PreGameConfirm() {
                   if (autoHalftimeEnabled) setFloaterEnabled(false);
                 }}
                 sizeClass={sizeClass}>
-                <Text
+                <ThemedText
                   style={[
                     styles.settingValue,
                     { color: autoHalftimeEnabled ? palette.accent : palette.textMuted },
                   ]}>
                   {autoHalftimeEnabled ? 'ON' : 'OFF'}
-                </Text>
+                </ThemedText>
               </EditableSettingCard>
 
               {/* Timeouts */}
@@ -309,13 +315,13 @@ export default function PreGameConfirm() {
                   }
                 }}
                 sizeClass={sizeClass}>
-                <Text
+                <ThemedText
                   style={[
                     styles.settingValue,
                     { color: statTrackingEnabled ? palette.accent : palette.textMuted },
                   ]}>
                   {statTrackingEnabled ? 'ON' : 'OFF'}
-                </Text>
+                </ThemedText>
               </EditableSettingCard>
 
               {/* Line Calling - only when stat tracking enabled */}
@@ -326,13 +332,13 @@ export default function PreGameConfirm() {
                   isActive={lineCallingEnabled}
                   onPress={() => setLineCallingEnabled(!lineCallingEnabled)}
                   sizeClass={sizeClass}>
-                  <Text
+                  <ThemedText
                     style={[
                       styles.settingValue,
                       { color: lineCallingEnabled ? palette.accent : palette.textMuted },
                     ]}>
                     {lineCallingEnabled ? 'ON' : 'OFF'}
-                  </Text>
+                  </ThemedText>
                 </EditableSettingCard>
               )}
 
@@ -343,13 +349,13 @@ export default function PreGameConfirm() {
                 isActive={genderRatioEnabled}
                 onPress={() => setGenderRatioEnabled(!genderRatioEnabled)}
                 sizeClass={sizeClass}>
-                <Text
+                <ThemedText
                   style={[
                     styles.settingValue,
                     { color: genderRatioEnabled ? palette.accent : palette.textMuted },
                   ]}>
                   {genderRatioEnabled ? 'ON' : 'OFF'}
-                </Text>
+                </ThemedText>
               </EditableSettingCard>
 
               {/* Point Timer - only when stat tracking enabled */}
@@ -360,13 +366,13 @@ export default function PreGameConfirm() {
                   isActive={pointTimerEnabled}
                   onPress={() => setPointTimerEnabled(!pointTimerEnabled)}
                   sizeClass={sizeClass}>
-                  <Text
+                  <ThemedText
                     style={[
                       styles.settingValue,
                       { color: pointTimerEnabled ? palette.accent : palette.textMuted },
                     ]}>
                     {pointTimerEnabled ? 'ON' : 'OFF'}
-                  </Text>
+                  </ThemedText>
                 </EditableSettingCard>
               )}
             </View>
@@ -374,9 +380,9 @@ export default function PreGameConfirm() {
 
           {/* Right Column: Game Start Choices */}
           <View style={styles.column}>
-            <Text style={[styles.sectionTitle, { color: palette.textMuted }]}>
+            <ThemedText style={[styles.sectionTitle, { color: palette.textMuted }]}>
               STARTING OPTIONS
-            </Text>
+            </ThemedText>
 
             {/* Receiving Team Selection */}
             {statTrackingEnabled && (
@@ -466,13 +472,13 @@ export default function PreGameConfirm() {
                 size={scaleBySizeClass(22, sizeClass)}
                 color={canStart ? palette.textOnAccent : palette.textMuted}
               />
-              <Text
+              <ThemedText
                 style={[
                   styles.startButtonText,
                   { color: canStart ? palette.textOnAccent : palette.textMuted },
                 ]}>
                 {buttonLabel}
-              </Text>
+              </ThemedText>
             </Pressable>
           </View>
         </View>
@@ -502,7 +508,7 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     },
     sectionTitle: {
       fontSize: scaleBySizeClass(11, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
       letterSpacing: 1.5,
       marginBottom: -4,
     },
@@ -513,7 +519,7 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     },
     settingValue: {
       fontSize: scaleBySizeClass(16, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
       marginTop: 1,
     },
     lockInfo: {
@@ -527,7 +533,7 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     },
     lockText: {
       fontSize: scaleBySizeClass(13, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
     },
     choiceGroup: {
       gap: 6,
@@ -550,7 +556,7 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     },
     startButtonText: {
       fontSize: scaleBySizeClass(18, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
       letterSpacing: 0.5,
     },
   });

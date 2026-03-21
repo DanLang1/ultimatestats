@@ -5,7 +5,9 @@ import { getPlayerMatchingType, getPlayerName } from '@/lib/playerUtils';
 import { Player } from '@/lib/storage/types';
 import { DisplayTurnover } from '@/lib/timelineUtils';
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import { Fonts } from '@/theme/theme';
 
 interface TimelineTurnoverRowProps {
   turnover: DisplayTurnover;
@@ -78,21 +80,21 @@ export default function TimelineTurnoverRow({
             borderWidth: 1,
           },
         ]}>
-        <Text style={[styles.eventLabel, { color: palette.textInverse }]}>
+        <ThemedText style={[styles.eventLabel, { color: palette.textInverse }]}>
           {isOpponent
             ? turnover.type === 'block'
               ? 'OPP BLOCK'
               : 'OPP TURN'
             : label.toUpperCase()}
-        </Text>
+        </ThemedText>
         {!isOpponent && (
           <>
             {turnover.type === 'fiftyfifty' && turnoverPlayer2Name && (
-              <Text style={[styles.eventLabel, { color: palette.textInverse, opacity: 0.7 }]}>
+              <ThemedText style={[styles.eventLabel, { color: palette.textInverse, opacity: 0.7 }]}>
                 Thr:
-              </Text>
+              </ThemedText>
             )}
-            <Text
+            <ThemedText
               style={[
                 styles.eventPlayer,
                 {
@@ -109,12 +111,12 @@ export default function TimelineTurnoverRow({
               ]}
               numberOfLines={1}>
               {turnoverPlayerName || 'Unknown'}
-            </Text>
+            </ThemedText>
           </>
         )}
         {turnover.type === 'fiftyfifty' && turnoverPlayer2Name && (
           <>
-            <Text
+            <ThemedText
               style={[
                 styles.eventLabel,
                 {
@@ -123,8 +125,8 @@ export default function TimelineTurnoverRow({
                 },
               ]}>
               Drop:
-            </Text>
-            <Text
+            </ThemedText>
+            <ThemedText
               style={[
                 styles.eventPlayer,
                 {
@@ -142,11 +144,13 @@ export default function TimelineTurnoverRow({
               ]}
               numberOfLines={1}>
               {turnoverPlayer2Name}
-            </Text>
+            </ThemedText>
           </>
         )}
         {relativeTime && (
-          <Text style={[styles.eventTimestamp, { color: palette.textMuted }]}>{relativeTime}</Text>
+          <ThemedText style={[styles.eventTimestamp, { color: palette.textMuted }]}>
+            {relativeTime}
+          </ThemedText>
         )}
       </View>
     </TimelineInteractiveRow>
@@ -165,18 +169,18 @@ function createStyles(sizeClass: SizeClass) {
     },
     eventLabel: {
       fontSize: scaleBySizeClass(11, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
       letterSpacing: 0.3,
     },
     eventPlayer: {
       fontSize: scaleBySizeClass(12, sizeClass),
-      fontWeight: '500',
+      fontFamily: Fonts.semiBold,
       maxWidth: 100,
       flexShrink: 1,
     },
     eventTimestamp: {
       fontSize: scaleBySizeClass(10, sizeClass),
-      fontWeight: '500',
+      fontFamily: Fonts.semiBold,
       marginLeft: 4,
       opacity: 0.7,
     },

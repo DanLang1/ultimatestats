@@ -10,7 +10,9 @@ import { useGameStore } from '@/store/gameStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import { Fonts } from '@/theme/theme';
 
 type ActiveField = 'minutes' | 'seconds';
 
@@ -155,7 +157,7 @@ export default function EditDurationModal() {
           onPress={(e) => e.stopPropagation()}>
           {/* Header */}
           <View style={styles.header}>
-            <Text style={[styles.title, { color: palette.modalText }]}>{title}</Text>
+            <ThemedText style={[styles.title, { color: palette.modalText }]}>{title}</ThemedText>
           </View>
 
           {/* Main Content */}
@@ -171,7 +173,7 @@ export default function EditDurationModal() {
                       activeField === 'minutes' ? palette.accent : palette.overlay15,
                   },
                 ]}>
-                <Text
+                <ThemedText
                   style={[
                     styles.fieldValue,
                     {
@@ -180,15 +182,17 @@ export default function EditDurationModal() {
                     },
                   ]}>
                   {minutesStr || '0'}
-                </Text>
-                <Text style={[styles.fieldSuffix, { color: palette.modalText, opacity: 0.6 }]}>
+                </ThemedText>
+                <ThemedText
+                  style={[styles.fieldSuffix, { color: palette.modalText, opacity: 0.6 }]}>
                   min
-                </Text>
+                </ThemedText>
               </Pressable>
 
-              <Text style={[styles.fieldSeparator, { color: palette.modalText, opacity: 0.4 }]}>
+              <ThemedText
+                style={[styles.fieldSeparator, { color: palette.modalText, opacity: 0.4 }]}>
                 :
-              </Text>
+              </ThemedText>
 
               <Pressable
                 onPress={() => setActiveField('seconds')}
@@ -199,7 +203,7 @@ export default function EditDurationModal() {
                       activeField === 'seconds' ? palette.accent : palette.overlay15,
                   },
                 ]}>
-                <Text
+                <ThemedText
                   style={[
                     styles.fieldValue,
                     {
@@ -208,10 +212,11 @@ export default function EditDurationModal() {
                     },
                   ]}>
                   {secondsStr || '0'}
-                </Text>
-                <Text style={[styles.fieldSuffix, { color: palette.modalText, opacity: 0.6 }]}>
+                </ThemedText>
+                <ThemedText
+                  style={[styles.fieldSuffix, { color: palette.modalText, opacity: 0.6 }]}>
                   sec
-                </Text>
+                </ThemedText>
               </Pressable>
             </View>
 
@@ -228,7 +233,9 @@ export default function EditDurationModal() {
                         { backgroundColor: palette.overlay15 },
                         pressed && { opacity: 0.6 },
                       ]}>
-                      <Text style={[styles.numpadText, { color: palette.modalText }]}>{digit}</Text>
+                      <ThemedText style={[styles.numpadText, { color: palette.modalText }]}>
+                        {digit}
+                      </ThemedText>
                     </Pressable>
                   ))}
                   <Pressable
@@ -255,7 +262,9 @@ export default function EditDurationModal() {
                         { backgroundColor: palette.overlay15 },
                         pressed && { opacity: 0.6 },
                       ]}>
-                      <Text style={[styles.numpadText, { color: palette.modalText }]}>{digit}</Text>
+                      <ThemedText style={[styles.numpadText, { color: palette.modalText }]}>
+                        {digit}
+                      </ThemedText>
                     </Pressable>
                   ))}
                   <Pressable
@@ -265,9 +274,10 @@ export default function EditDurationModal() {
                       { backgroundColor: palette.overlay20 },
                       pressed && { opacity: 0.6 },
                     ]}>
-                    <Text style={[styles.numpadText, { color: palette.modalText, opacity: 0.6 }]}>
+                    <ThemedText
+                      style={[styles.numpadText, { color: palette.modalText, opacity: 0.6 }]}>
                       C
-                    </Text>
+                    </ThemedText>
                   </Pressable>
                 </View>
               </View>
@@ -284,9 +294,9 @@ export default function EditDurationModal() {
                           { backgroundColor: palette.overlay15 },
                           pressed && { opacity: 0.6 },
                         ]}>
-                        <Text style={[styles.numpadText, { color: palette.modalText }]}>
+                        <ThemedText style={[styles.numpadText, { color: palette.modalText }]}>
                           {digit}
-                        </Text>
+                        </ThemedText>
                       </Pressable>
                     ))}
                   </View>
@@ -299,9 +309,10 @@ export default function EditDurationModal() {
                       { backgroundColor: palette.overlay20 },
                       pressed && { opacity: 0.6 },
                     ]}>
-                    <Text style={[styles.numpadText, { color: palette.modalText, opacity: 0.6 }]}>
+                    <ThemedText
+                      style={[styles.numpadText, { color: palette.modalText, opacity: 0.6 }]}>
                       C
-                    </Text>
+                    </ThemedText>
                   </Pressable>
                   <Pressable
                     onPress={() => handleDigitPress(0)}
@@ -310,7 +321,9 @@ export default function EditDurationModal() {
                       { backgroundColor: palette.overlay15 },
                       pressed && { opacity: 0.6 },
                     ]}>
-                    <Text style={[styles.numpadText, { color: palette.modalText }]}>0</Text>
+                    <ThemedText style={[styles.numpadText, { color: palette.modalText }]}>
+                      0
+                    </ThemedText>
                   </Pressable>
                   <Pressable
                     onPress={handleBackspace}
@@ -331,9 +344,9 @@ export default function EditDurationModal() {
           </View>
 
           {validationError && (
-            <Text style={[styles.validationError, { color: palette.danger }]}>
+            <ThemedText style={[styles.validationError, { color: palette.danger }]}>
               {validationError}
-            </Text>
+            </ThemedText>
           )}
 
           {/* Action Buttons */}
@@ -346,7 +359,9 @@ export default function EditDurationModal() {
                 { borderColor: palette.danger },
                 pressed && { opacity: 0.7 },
               ]}>
-              <Text style={[styles.actionButtonText, { color: palette.danger }]}>Clear</Text>
+              <ThemedText style={[styles.actionButtonText, { color: palette.danger }]}>
+                Clear
+              </ThemedText>
             </Pressable>
             <Pressable
               onPress={handleDismiss}
@@ -356,7 +371,9 @@ export default function EditDurationModal() {
                 { borderColor: palette.overlay15 },
                 pressed && { opacity: 0.7 },
               ]}>
-              <Text style={[styles.actionButtonText, { color: palette.accent }]}>Cancel</Text>
+              <ThemedText style={[styles.actionButtonText, { color: palette.accent }]}>
+                Cancel
+              </ThemedText>
             </Pressable>
             <Pressable
               disabled={isSaveDisabled}
@@ -369,13 +386,13 @@ export default function EditDurationModal() {
                 },
                 pressed && !isSaveDisabled && { opacity: 0.8 },
               ]}>
-              <Text
+              <ThemedText
                 style={[
                   styles.actionButtonText,
                   { color: isSaveDisabled ? palette.textMuted : palette.textOnAccent },
                 ]}>
                 Save
-              </Text>
+              </ThemedText>
             </Pressable>
           </View>
         </Pressable>
@@ -407,7 +424,7 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     },
     title: {
       fontSize: scaleBySizeClass(16, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
     },
     content: {
       flexDirection: isLandscape ? 'row' : 'column',
@@ -432,16 +449,16 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     },
     fieldValue: {
       fontSize: scaleBySizeClass(isLandscape ? 40 : 34, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
       fontVariant: ['tabular-nums'],
     },
     fieldSuffix: {
       fontSize: scaleBySizeClass(14, sizeClass),
-      fontWeight: '500',
+      fontFamily: Fonts.semiBold,
     },
     fieldSeparator: {
       fontSize: scaleBySizeClass(28, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
     },
     numpadContainer: {
       gap: 6,
@@ -469,7 +486,7 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     },
     numpadText: {
       fontSize: scaleBySizeClass(20, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
     },
     actionRow: {
       flexDirection: 'row',
@@ -477,7 +494,7 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     },
     validationError: {
       fontSize: scaleBySizeClass(11, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
       textAlign: 'center',
       marginTop: scaleBySizeClass(6, sizeClass),
       marginBottom: scaleBySizeClass(2, sizeClass),
@@ -501,7 +518,7 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     saveButton: {},
     actionButtonText: {
       fontSize: scaleBySizeClass(15, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
     },
   });
 }

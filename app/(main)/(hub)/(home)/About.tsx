@@ -8,7 +8,9 @@ import { MaterialIcons } from '@expo/vector-icons';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router, Stack, useFocusEffect } from 'expo-router';
 import React, { useCallback } from 'react';
-import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Linking, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import { Fonts } from '@/theme/theme';
 
 export default function AboutScreen() {
   const { palette } = useTheme();
@@ -41,17 +43,21 @@ export default function AboutScreen() {
           <View style={styles.appInfo}>
             <MaterialCommunityIcons name="disc" size={metrics.appIconSize} color={palette.accent} />
             <View style={styles.appInfoText}>
-              <Text style={[styles.appName, { color: palette.textInverse }]}>U-Stat</Text>
-              <Text style={[styles.appVersion, { color: palette.textMuted }]}>
+              <ThemedText style={[styles.appName, { color: palette.textInverse }]}>
+                U-Stat
+              </ThemedText>
+              <ThemedText style={[styles.appVersion, { color: palette.textMuted }]}>
                 Version {currentVersion}
-              </Text>
+              </ThemedText>
             </View>
           </View>
         </View>
 
         {/* What's New Section */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: palette.textMuted }]}>WHAT&apos;S NEW</Text>
+          <ThemedText style={[styles.sectionTitle, { color: palette.textMuted }]}>
+            WHAT&apos;S NEW
+          </ThemedText>
 
           {CHANGELOG.map((entry, index) => (
             <View
@@ -62,23 +68,29 @@ export default function AboutScreen() {
                 index === 0 && { borderColor: palette.accent, borderWidth: 1 },
               ]}>
               <View style={styles.changelogHeader}>
-                <Text style={[styles.changelogVersion, { color: palette.textInverse }]}>
+                <ThemedText style={[styles.changelogVersion, { color: palette.textInverse }]}>
                   v{entry.version}
-                </Text>
+                </ThemedText>
                 {index === 0 && (
                   <View style={[styles.currentBadge, { backgroundColor: palette.accentOverlay10 }]}>
-                    <Text style={[styles.currentBadgeText, { color: palette.accent }]}>
+                    <ThemedText style={[styles.currentBadgeText, { color: palette.accent }]}>
                       Current
-                    </Text>
+                    </ThemedText>
                   </View>
                 )}
               </View>
-              <Text style={[styles.changelogDate, { color: palette.textMuted }]}>{entry.date}</Text>
+              <ThemedText style={[styles.changelogDate, { color: palette.textMuted }]}>
+                {entry.date}
+              </ThemedText>
               <View style={styles.changesList}>
                 {entry.changes.map((change, i) => (
                   <View key={i} style={styles.changeItem}>
-                    <Text style={[styles.changeBullet, { color: palette.accent }]}>•</Text>
-                    <Text style={[styles.changeText, { color: palette.textMuted }]}>{change}</Text>
+                    <ThemedText style={[styles.changeBullet, { color: palette.accent }]}>
+                      •
+                    </ThemedText>
+                    <ThemedText style={[styles.changeText, { color: palette.textMuted }]}>
+                      {change}
+                    </ThemedText>
                   </View>
                 ))}
               </View>
@@ -88,7 +100,9 @@ export default function AboutScreen() {
 
         {/* Links Section */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: palette.textMuted }]}>CONNECT</Text>
+          <ThemedText style={[styles.sectionTitle, { color: palette.textMuted }]}>
+            CONNECT
+          </ThemedText>
 
           <Pressable
             onPress={() => Linking.openURL('https://discord.gg/AjsmqhZ2GH')}
@@ -99,12 +113,12 @@ export default function AboutScreen() {
             ]}>
             <MaterialIcons name="discord" size={metrics.linkIconSize} color={palette.accent} />
             <View style={styles.linkText}>
-              <Text style={[styles.linkTitle, { color: palette.textInverse }]}>
+              <ThemedText style={[styles.linkTitle, { color: palette.textInverse }]}>
                 Join the Discord
-              </Text>
-              <Text style={[styles.linkSubtitle, { color: palette.textMuted }]}>
+              </ThemedText>
+              <ThemedText style={[styles.linkSubtitle, { color: palette.textMuted }]}>
                 Share feedback and suggest features
-              </Text>
+              </ThemedText>
             </View>
             <MaterialCommunityIcons
               name="chevron-right"
@@ -143,7 +157,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     appName: {
       fontSize: scaleBySizeClass(24, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
     },
     appVersion: {
       fontSize: scaleBySizeClass(14, sizeClass),
@@ -157,7 +171,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     sectionTitle: {
       fontSize: scaleBySizeClass(11, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
       letterSpacing: scaleBySizeClass(1.5, sizeClass, { rounding: 'none' }),
       marginLeft: scaleBySizeClass(4, sizeClass),
     },
@@ -173,7 +187,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     changelogVersion: {
       fontSize: scaleBySizeClass(16, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
     },
     currentBadge: {
       paddingHorizontal: scaleBySizeClass(8, sizeClass),
@@ -182,7 +196,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     currentBadgeText: {
       fontSize: scaleBySizeClass(11, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
     },
     changelogDate: {
       fontSize: scaleBySizeClass(12, sizeClass),
@@ -218,7 +232,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     linkTitle: {
       fontSize: scaleBySizeClass(15, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
     },
     linkSubtitle: {
       fontSize: scaleBySizeClass(12, sizeClass),

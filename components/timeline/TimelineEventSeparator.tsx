@@ -3,7 +3,9 @@ import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { formatSplitDuration } from '@/lib/timelineUtils';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import { Fonts } from '@/theme/theme';
 
 interface TimelineEventSeparatorProps {
   splitMs?: number;
@@ -23,9 +25,9 @@ export default function TimelineEventSeparator({
   if (timingEnabled && showSplitSeparators && splitMs !== undefined && splitMs >= 0) {
     return (
       <View style={styles.separatorWithSplit}>
-        <Text style={[styles.split, { color: palette.textMuted }]}>
+        <ThemedText style={[styles.split, { color: palette.textMuted }]}>
           {formatSplitDuration(splitMs)}
-        </Text>
+        </ThemedText>
         <MaterialCommunityIcons
           name="arrow-right"
           size={scaleBySizeClass(14, sizeClass)}
@@ -52,7 +54,7 @@ function createStyles(sizeClass: SizeClass) {
   return StyleSheet.create({
     split: {
       fontSize: scaleBySizeClass(10, sizeClass),
-      fontWeight: '500',
+      fontFamily: Fonts.semiBold,
       opacity: 0.78,
     },
     separatorWithSplit: {

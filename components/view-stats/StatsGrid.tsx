@@ -1,7 +1,9 @@
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import { Fonts } from '@/theme/theme';
 
 interface StatItem {
   label: string;
@@ -36,12 +38,16 @@ export default function StatsGrid({ stats, columns = 4 }: StatsGridProps) {
                 width: `${100 / columns - 2}%`,
               },
             ]}>
-            <Text style={[styles.value, { color: palette.textInverse }]}>{stat.value}</Text>
-            <Text style={[styles.label, { color: palette.textMuted }]}>{stat.label}</Text>
+            <ThemedText style={[styles.value, { color: palette.textInverse }]}>
+              {stat.value}
+            </ThemedText>
+            <ThemedText style={[styles.label, { color: palette.textMuted }]}>
+              {stat.label}
+            </ThemedText>
             {stat.sublabel && (
-              <Text style={[styles.sublabel, { color: palette.textSecondary }]}>
+              <ThemedText style={[styles.sublabel, { color: palette.textSecondary }]}>
                 {stat.sublabel}
-              </Text>
+              </ThemedText>
             )}
           </View>
         ))}
@@ -69,11 +75,11 @@ function createStyles(sizeClass: SizeClass) {
     },
     value: {
       fontSize: scaleBySizeClass(18, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
     },
     label: {
       fontSize: scaleBySizeClass(9, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
       textTransform: 'uppercase',
       letterSpacing: 0.5,
       textAlign: 'center',

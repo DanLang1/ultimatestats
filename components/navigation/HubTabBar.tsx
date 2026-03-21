@@ -6,7 +6,9 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { router, usePathname, useSegments, type Href } from 'expo-router';
 import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import { Fonts } from '@/theme/theme';
 
 type HubTabRouteName = '(home)' | '(game)' | '(analytics)' | '(team)';
 const MODAL_SEGMENTS = new Set<string>(['(modals)']);
@@ -175,7 +177,7 @@ export default function HubTabBar({ state, descriptors, navigation }: BottomTabB
           size={iconSize}
           color={color}
         />
-        <Text style={[styles.tabLabel, { color }]}>{tabConfig.label}</Text>
+        <ThemedText style={[styles.tabLabel, { color }]}>{tabConfig.label}</ThemedText>
       </Pressable>
     );
   };
@@ -239,7 +241,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     tabLabel: {
       fontSize: scaleBySizeClass(10, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
       letterSpacing: scaleBySizeClass(0.3, sizeClass, { rounding: 'none' }),
     },
     pressed: {

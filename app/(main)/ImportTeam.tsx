@@ -25,10 +25,11 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
   TextInput,
   View,
 } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import { Fonts } from '@/theme/theme';
 
 const DISCORD_URL = 'https://discord.gg/AjsmqhZ2GH';
 
@@ -172,7 +173,9 @@ export default function ImportTeamScreen() {
 
       <ScrollView contentContainerStyle={[styles.scrollContent]}>
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: palette.textInverse }]}>TEAM LINK</Text>
+          <ThemedText style={[styles.sectionTitle, { color: palette.textInverse }]}>
+            TEAM LINK
+          </ThemedText>
           <View style={styles.linkRow}>
             <TextInput
               style={[
@@ -208,11 +211,15 @@ export default function ImportTeamScreen() {
                 size={metrics.actionIconSize}
                 color={palette.textInverse}
               />
-              <Text style={[styles.pasteButtonText, { color: palette.textInverse }]}>Paste</Text>
+              <ThemedText style={[styles.pasteButtonText, { color: palette.textInverse }]}>
+                Paste
+              </ThemedText>
             </Pressable>
           </View>
           {linkError && (
-            <Text style={[styles.errorText, { color: palette.danger }]}>{linkError}</Text>
+            <ThemedText style={[styles.errorText, { color: palette.danger }]}>
+              {linkError}
+            </ThemedText>
           )}
         </View>
 
@@ -241,20 +248,20 @@ export default function ImportTeamScreen() {
             size={metrics.actionIconSize}
             color={isFetching ? palette.textMuted : palette.textOnAccent}
           />
-          <Text
+          <ThemedText
             style={[
               styles.fetchButtonText,
               { color: isFetching ? palette.textMuted : palette.textOnAccent },
             ]}>
             {isFetching ? 'Fetching...' : 'Fetch Roster'}
-          </Text>
+          </ThemedText>
         </Pressable>
 
         <View style={[styles.footerNote, { borderTopColor: palette.overlay10 }]}>
-          <Text style={[styles.footerNoteText, { color: palette.textMuted }]}>
+          <ThemedText style={[styles.footerNoteText, { color: palette.textMuted }]}>
             Got a different site you want to import from? Message me on Discord and I&apos;ll see
             what I can do
-          </Text>
+          </ThemedText>
           <Pressable
             onPress={() => Linking.openURL(DISCORD_URL)}
             style={({ pressed }) => [
@@ -268,9 +275,9 @@ export default function ImportTeamScreen() {
               color={palette.discordText}
             />
             <View style={styles.discordText}>
-              <Text style={[styles.discordTitle, { color: palette.discordText }]}>
+              <ThemedText style={[styles.discordTitle, { color: palette.discordText }]}>
                 Join U-Stat Discord
-              </Text>
+              </ThemedText>
             </View>
             <MaterialCommunityIcons
               name="chevron-right"
@@ -289,12 +296,12 @@ export default function ImportTeamScreen() {
               { backgroundColor: palette.secondary, borderColor: palette.overlay20 },
             ]}>
             <ActivityIndicator size="large" color={palette.accent} />
-            <Text style={[styles.loadingTitle, { color: palette.textInverse }]}>
+            <ThemedText style={[styles.loadingTitle, { color: palette.textInverse }]}>
               Importing Roster
-            </Text>
-            <Text style={[styles.loadingText, { color: palette.textMuted }]}>
+            </ThemedText>
+            <ThemedText style={[styles.loadingText, { color: palette.textMuted }]}>
               Importing players, please wait...
-            </Text>
+            </ThemedText>
           </View>
         </View>
       </Modal>
@@ -340,12 +347,12 @@ function createStyles(sizeClass: SizeClass) {
     },
     pasteButtonText: {
       fontSize: scaleBySizeClass(15, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
       letterSpacing: scaleBySizeClass(0.2, sizeClass, { rounding: 'none' }),
     },
     sectionTitle: {
       fontSize: scaleBySizeClass(12, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
       letterSpacing: scaleBySizeClass(1.5, sizeClass, { rounding: 'none' }),
     },
     controls: {
@@ -366,7 +373,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     fetchButtonText: {
       fontSize: scaleBySizeClass(16, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
     },
     footerNote: {
       marginTop: scaleBySizeClass(8, sizeClass),
@@ -393,7 +400,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     discordTitle: {
       fontSize: scaleBySizeClass(15, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
     },
     discordSubtitle: {
       fontSize: scaleBySizeClass(12, sizeClass),
@@ -420,7 +427,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     loadingTitle: {
       fontSize: scaleBySizeClass(18, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
     },
     loadingText: {
       fontSize: scaleBySizeClass(13, sizeClass),

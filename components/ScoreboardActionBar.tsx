@@ -8,7 +8,9 @@ import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import { Fonts } from '@/theme/theme';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -283,13 +285,13 @@ export function ScoreboardActionBar({
                 color={palette.accent}
               />
             </Pressable>
-            <Text
+            <ThemedText
               style={[
                 styles.timeoutTime,
                 { color: isOvertime ? palette.danger : palette.textInverse },
               ]}>
               {formattedTime}
-            </Text>
+            </ThemedText>
           </View>
         ) : showStartPoint && onStartPoint ? (
           /* Start Point Button - shows when point needs to be started */
@@ -302,7 +304,9 @@ export function ScoreboardActionBar({
               color={palette.accent}
             />
             {!isVertical && (
-              <Text style={[styles.startPointText, { color: palette.accent }]}>START POINT</Text>
+              <ThemedText style={[styles.startPointText, { color: palette.accent }]}>
+                START POINT
+              </ThemedText>
             )}
           </Pressable>
         ) : showResumePoint || (pendingTimeoutModal && !isRunning) ? (
@@ -312,9 +316,9 @@ export function ScoreboardActionBar({
             onPress={pendingTimeoutModal ? handleContinue : togglePointTimerPause}>
             <MaterialCommunityIcons name="play" size={startIconSize} color={palette.success} />
             {!isVertical && (
-              <Text style={[styles.startPointText, { color: palette.success }]}>
+              <ThemedText style={[styles.startPointText, { color: palette.success }]}>
                 {pendingTimeoutModal ? 'END TIMEOUT' : 'RESUME POINT'}
-              </Text>
+              </ThemedText>
             )}
           </Pressable>
         ) : (
@@ -326,7 +330,9 @@ export function ScoreboardActionBar({
               onPress={() => onAction(btn.action)}>
               {btn.renderIcon()}
               {!isVertical && (
-                <Text style={[styles.buttonText, { color: palette.textInverse }]}>{btn.label}</Text>
+                <ThemedText style={[styles.buttonText, { color: palette.textInverse }]}>
+                  {btn.label}
+                </ThemedText>
               )}
             </Pressable>
           ))
@@ -415,7 +421,7 @@ function createStyles(metrics: ActionBarMetrics) {
     },
     buttonText: {
       fontSize: textSize,
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
       letterSpacing: 0.3,
     },
     buttonPressed: {
@@ -432,7 +438,7 @@ function createStyles(metrics: ActionBarMetrics) {
     },
     startPointText: {
       fontSize: textSize + 2,
-      fontWeight: '800',
+      fontFamily: Fonts.extraBold,
       letterSpacing: 0.5,
     },
     timeoutContainer: {
@@ -447,7 +453,7 @@ function createStyles(metrics: ActionBarMetrics) {
     },
     timeoutTime: {
       fontSize: iconSize + 2,
-      fontWeight: '800',
+      fontFamily: Fonts.extraBold,
       fontVariant: ['tabular-nums'],
       minWidth: 50 + d * 7,
       textAlign: 'center',

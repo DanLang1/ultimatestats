@@ -3,7 +3,9 @@ import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { ensureContrast } from '@/lib/colorUtils';
 import { TimeOfPossessionStats } from '@/lib/teamStatsUtils';
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import { Fonts } from '@/theme/theme';
 
 const formatPossessionDuration = (ms: number): string => {
   if (ms < 10_000 && ms % 1000 !== 0) {
@@ -58,13 +60,13 @@ export default function TimeOfPossessionSection({
     <View style={styles.container}>
       {/* Header row: title · points count */}
       <View style={styles.header}>
-        <Text style={[styles.title, { color: palette.textMuted }]}>
+        <ThemedText style={[styles.title, { color: palette.textMuted }]}>
           TIME OF POSSESSION
-          <Text style={styles.pointsNote}>
+          <ThemedText style={styles.pointsNote}>
             {' · '}
             {topStats.timedPointCount} pt{topStats.timedPointCount !== 1 ? 's' : ''} timed
-          </Text>
-        </Text>
+          </ThemedText>
+        </ThemedText>
       </View>
 
       {/* Possession bar */}
@@ -86,27 +88,27 @@ export default function TimeOfPossessionSection({
       {/* Team labels with time and percentage */}
       <View style={styles.teamRow}>
         <View style={styles.teamLeft}>
-          <Text style={[styles.teamName, { color: t1TextColor }]} numberOfLines={1}>
+          <ThemedText style={[styles.teamName, { color: t1TextColor }]} numberOfLines={1}>
             {team1Name}
-          </Text>
-          <Text style={[styles.teamDetail, { color: t1TextColor }]}>
+          </ThemedText>
+          <ThemedText style={[styles.teamDetail, { color: t1TextColor }]}>
             {formatPossessionDuration(topStats.team1TotalPossessionMs)}
             {'  ·  '}
             {topStats.team1PossessionPct.toFixed(0)}%
-          </Text>
+          </ThemedText>
         </View>
 
         <View style={styles.teamRight}>
-          <Text
+          <ThemedText
             style={[styles.teamName, { color: t2TextColor }]}
             numberOfLines={1}
             textBreakStrategy="simple">
             {team2Name}
-          </Text>
-          <Text style={[styles.teamDetail, { color: t2TextColor }]}>
+          </ThemedText>
+          <ThemedText style={[styles.teamDetail, { color: t2TextColor }]}>
             {topStats.team2PossessionPct.toFixed(0)}% ·{' '}
             {formatPossessionDuration(topStats.team2TotalPossessionMs)}
-          </Text>
+          </ThemedText>
         </View>
       </View>
     </View>
@@ -129,12 +131,11 @@ function createStyles(sizeClass: SizeClass) {
     },
     title: {
       fontSize: scaleBySizeClass(9, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
       letterSpacing: 0.5,
     },
     pointsNote: {
       fontSize: scaleBySizeClass(9, sizeClass),
-      fontWeight: '400',
       letterSpacing: 0,
     },
     bar: {
@@ -168,11 +169,11 @@ function createStyles(sizeClass: SizeClass) {
     },
     teamName: {
       fontSize: scaleBySizeClass(11, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
     },
     teamDetail: {
       fontSize: scaleBySizeClass(10, sizeClass),
-      fontWeight: '500',
+      fontFamily: Fonts.semiBold,
       marginTop: detailTopMargin,
     },
   });

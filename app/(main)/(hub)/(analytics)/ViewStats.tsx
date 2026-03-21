@@ -18,7 +18,9 @@ import { File, Paths } from 'expo-file-system';
 import { Redirect, router, Stack, useLocalSearchParams } from 'expo-router';
 import * as Sharing from 'expo-sharing';
 import React from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import { Fonts } from '@/theme/theme';
 
 type ViewMode = 'current' | 'saved' | 'aggregate';
 type ViewStatsOrigin = 'scoreboard';
@@ -180,7 +182,9 @@ export default function ViewStatsScreen() {
 
       <ScrollView contentContainerStyle={[styles.scrollContent, { paddingBottom: 100 }]}>
         <View style={styles.shortcutsSection}>
-          <Text style={[styles.sectionLabel, { color: palette.textMuted }]}>More Analytics</Text>
+          <ThemedText style={[styles.sectionLabel, { color: palette.textMuted }]}>
+            More Analytics
+          </ThemedText>
           <View style={styles.shortcutsGrid}>
             <View style={styles.shortcutItem}>
               <AnalyticsShortcutCard
@@ -207,7 +211,9 @@ export default function ViewStatsScreen() {
           </View>
         </View>
 
-        <Text style={[styles.sectionLabel, { color: palette.textMuted }]}>Live Stats</Text>
+        <ThemedText style={[styles.sectionLabel, { color: palette.textMuted }]}>
+          Live Stats
+        </ThemedText>
         <StatsContent
           team1Name={team1Name}
           team2Name={team2Name}
@@ -256,7 +262,7 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     },
     sectionLabel: {
       fontSize: scaleBySizeClass(12, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
       textTransform: 'uppercase',
       letterSpacing: scaleBySizeClass(0.6, sizeClass, { rounding: 'none' }),
     },

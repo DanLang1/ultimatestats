@@ -3,7 +3,9 @@ import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React, { useState } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import { Fonts } from '@/theme/theme';
 
 export interface TeamDropdownOption {
   id: string;
@@ -74,7 +76,9 @@ export function TeamDropdown({
           size={scaleBySizeClass(18, resolvedSizeClass)}
           color={palette.accent}
         />
-        <Text style={[styles.buttonText, { color: palette.accent }]}>{placeholder}</Text>
+        <ThemedText style={[styles.buttonText, { color: palette.accent }]}>
+          {placeholder}
+        </ThemedText>
         <MaterialCommunityIcons
           name="chevron-down"
           size={scaleBySizeClass(16, resolvedSizeClass)}
@@ -96,7 +100,9 @@ export function TeamDropdown({
               { backgroundColor: palette.primary, borderColor: palette.overlay15 },
             ]}>
             <View style={[styles.dropdownHeader, { borderBottomColor: palette.overlay10 }]}>
-              <Text style={[styles.dropdownTitle, { color: palette.textMuted }]}>SAVED TEAMS</Text>
+              <ThemedText style={[styles.dropdownTitle, { color: palette.textMuted }]}>
+                SAVED TEAMS
+              </ThemedText>
               <Pressable onPress={() => setVisible(false)} hitSlop={12}>
                 <MaterialCommunityIcons
                   name="close"
@@ -108,12 +114,12 @@ export function TeamDropdown({
 
             {options.length === 0 ? (
               <View style={styles.emptyState}>
-                <Text style={[styles.emptyText, { color: palette.textMuted }]}>
+                <ThemedText style={[styles.emptyText, { color: palette.textMuted }]}>
                   No saved teams yet
-                </Text>
-                <Text style={[styles.emptyHint, { color: palette.textMuted }]}>
+                </ThemedText>
+                <ThemedText style={[styles.emptyHint, { color: palette.textMuted }]}>
                   Save a team from the roster editor
-                </Text>
+                </ThemedText>
               </View>
             ) : (
               <ScrollView style={styles.optionsList}>
@@ -134,14 +140,14 @@ export function TeamDropdown({
                           size={scaleBySizeClass(20, resolvedSizeClass)}
                           color={isNewTeam ? palette.success : palette.textMuted}
                         />
-                        <Text
+                        <ThemedText
                           style={[
                             styles.optionText,
                             { color: palette.textInverse },
                             isNewTeam && [styles.newTeamText, { color: palette.success }],
                           ]}>
                           {isNewTeam ? 'New Team' : option.label}
-                        </Text>
+                        </ThemedText>
                       </Pressable>
                       {onDelete && !isNewTeam && (
                         <Pressable
@@ -190,7 +196,7 @@ function createStyles(sizeClass: SizeClass) {
     buttonText: {
       flex: 1,
       fontSize: scaleBySizeClass(13, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
     },
     overlay: {
       flex: 1,
@@ -216,7 +222,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     dropdownTitle: {
       fontSize: scaleBySizeClass(12, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
       letterSpacing: 1,
     },
     emptyState: {
@@ -226,7 +232,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     emptyText: {
       fontSize: scaleBySizeClass(15, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
     },
     emptyHint: {
       fontSize: scaleBySizeClass(13, sizeClass),
@@ -245,10 +251,10 @@ function createStyles(sizeClass: SizeClass) {
     optionText: {
       flex: 1,
       fontSize: scaleBySizeClass(16, sizeClass),
-      fontWeight: '500',
+      fontFamily: Fonts.semiBold,
     },
     newTeamText: {
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
     },
     optionRow: {
       flexDirection: 'row',

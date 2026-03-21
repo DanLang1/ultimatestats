@@ -14,7 +14,9 @@ import { usePlayerStatsStore } from '@/store/playerStatsStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import { Fonts } from '@/theme/theme';
 
 type SortKey =
   | 'name'
@@ -206,7 +208,9 @@ export default function StatsTable({
     <View>
       <View style={styles.sectionHeader}>
         <View style={styles.sectionTitleRow}>
-          <Text style={[styles.sectionTitle, { color: palette.textMuted }]}>PLAYER STATS</Text>
+          <ThemedText style={[styles.sectionTitle, { color: palette.textMuted }]}>
+            PLAYER STATS
+          </ThemedText>
           <TouchableOpacity onPress={() => setShowLegend((v) => !v)} hitSlop={8}>
             <MaterialCommunityIcons
               name={showLegend ? 'information' : 'information-outline'}
@@ -216,9 +220,9 @@ export default function StatsTable({
           </TouchableOpacity>
         </View>
         <View style={styles.headerHint}>
-          <Text style={[styles.headerHintText, { color: palette.textMuted }]}>
+          <ThemedText style={[styles.headerHintText, { color: palette.textMuted }]}>
             Tap player for details
-          </Text>
+          </ThemedText>
         </View>
       </View>
       {showLegend && (
@@ -229,28 +233,44 @@ export default function StatsTable({
           ]}>
           <View style={styles.legendGrid}>
             <View style={styles.legendItem}>
-              <Text style={[styles.legendAbbr, { color: palette.textInverse }]}>+/-</Text>
-              <Text style={[styles.legendLabel, { color: palette.textMuted }]}>Plus/Minus</Text>
+              <ThemedText style={[styles.legendAbbr, { color: palette.textInverse }]}>
+                +/-
+              </ThemedText>
+              <ThemedText style={[styles.legendLabel, { color: palette.textMuted }]}>
+                Plus/Minus
+              </ThemedText>
             </View>
             <View style={styles.legendItem}>
-              <Text style={[styles.legendAbbr, { color: palette.textInverse }]}>T/A</Text>
-              <Text style={[styles.legendLabel, { color: palette.textMuted }]}>Throwaways</Text>
+              <ThemedText style={[styles.legendAbbr, { color: palette.textInverse }]}>
+                T/A
+              </ThemedText>
+              <ThemedText style={[styles.legendLabel, { color: palette.textMuted }]}>
+                Throwaways
+              </ThemedText>
             </View>
             <View style={styles.legendItem}>
-              <Text style={[styles.legendAbbr, { color: palette.textInverse }]}>O-Eff</Text>
-              <Text style={[styles.legendLabel, { color: palette.textMuted }]}>
+              <ThemedText style={[styles.legendAbbr, { color: palette.textInverse }]}>
+                O-Eff
+              </ThemedText>
+              <ThemedText style={[styles.legendLabel, { color: palette.textMuted }]}>
                 Off. Efficiency
-              </Text>
+              </ThemedText>
             </View>
             <View style={styles.legendItem}>
-              <Text style={[styles.legendAbbr, { color: palette.textInverse }]}>D-Eff</Text>
-              <Text style={[styles.legendLabel, { color: palette.textMuted }]}>
+              <ThemedText style={[styles.legendAbbr, { color: palette.textInverse }]}>
+                D-Eff
+              </ThemedText>
+              <ThemedText style={[styles.legendLabel, { color: palette.textMuted }]}>
                 Def. Efficiency
-              </Text>
+              </ThemedText>
             </View>
             <View style={styles.legendItem}>
-              <Text style={[styles.legendAbbr, { color: palette.textInverse }]}>PP</Text>
-              <Text style={[styles.legendLabel, { color: palette.textMuted }]}>Points Played</Text>
+              <ThemedText style={[styles.legendAbbr, { color: palette.textInverse }]}>
+                PP
+              </ThemedText>
+              <ThemedText style={[styles.legendLabel, { color: palette.textMuted }]}>
+                Points Played
+              </ThemedText>
             </View>
           </View>
         </View>
@@ -272,13 +292,13 @@ export default function StatsTable({
                   sortConfig.key === column.key && { backgroundColor: palette.overlay05 },
                 ]}
                 onPress={() => handleSort(column.key)}>
-                <Text
+                <ThemedText
                   style={[
                     styles.headerText,
                     { color: sortConfig.key === column.key ? palette.accent : palette.textMuted },
                   ]}>
                   {column.label}
-                </Text>
+                </ThemedText>
                 {renderSortIcon(column.key)}
               </TouchableOpacity>
             ))}
@@ -296,10 +316,10 @@ export default function StatsTable({
                   index % 2 === 1 && { backgroundColor: palette.overlay02 },
                 ]}
                 onPress={() => handlePlayerPress(player.id)}>
-                <Text style={[styles.cell, styles.nameCell, { color: palette.textInverse }]}>
+                <ThemedText style={[styles.cell, styles.nameCell, { color: palette.textInverse }]}>
                   {player.name}
-                </Text>
-                <Text
+                </ThemedText>
+                <ThemedText
                   style={[
                     styles.cell,
                     styles.plusMinusCell,
@@ -309,25 +329,25 @@ export default function StatsTable({
                   ]}>
                   {player.plusMinus > 0 ? '+' : ''}
                   {player.plusMinus}
-                </Text>
-                <Text style={[styles.cell, { color: palette.textInverse }]}>
+                </ThemedText>
+                <ThemedText style={[styles.cell, { color: palette.textInverse }]}>
                   {player.goals || '-'}
-                </Text>
-                <Text style={[styles.cell, { color: palette.textInverse }]}>
+                </ThemedText>
+                <ThemedText style={[styles.cell, { color: palette.textInverse }]}>
                   {player.assists || '-'}
-                </Text>
-                <Text style={[styles.cell, { color: palette.textInverse }]}>
+                </ThemedText>
+                <ThemedText style={[styles.cell, { color: palette.textInverse }]}>
                   {player.blocks || '-'}
-                </Text>
-                <Text style={[styles.cell, { color: palette.textInverse }]}>
+                </ThemedText>
+                <ThemedText style={[styles.cell, { color: palette.textInverse }]}>
                   {player.throwaways || '-'}
-                </Text>
-                <Text style={[styles.cell, { color: palette.textInverse }]}>
+                </ThemedText>
+                <ThemedText style={[styles.cell, { color: palette.textInverse }]}>
                   {player.drops || '-'}
-                </Text>
+                </ThemedText>
                 {hasPlayingTimeData && (
                   <>
-                    <Text
+                    <ThemedText
                       style={[
                         styles.cell,
                         { color: palette.textInverse },
@@ -343,8 +363,8 @@ export default function StatsTable({
                       {pStats && (pStats.oPoints ?? 0) > 0
                         ? formatEfficiency(pStats.oEfficiency)
                         : '-'}
-                    </Text>
-                    <Text
+                    </ThemedText>
+                    <ThemedText
                       style={[
                         styles.cell,
                         { color: palette.textInverse },
@@ -360,10 +380,10 @@ export default function StatsTable({
                       {pStats && (pStats.dPoints ?? 0) > 0
                         ? formatEfficiency(pStats.dEfficiency)
                         : '-'}
-                    </Text>
-                    <Text style={[styles.cell, { color: palette.textInverse }]}>
+                    </ThemedText>
+                    <ThemedText style={[styles.cell, { color: palette.textInverse }]}>
                       {pStats?.pointsPlayed ?? '-'}
-                    </Text>
+                    </ThemedText>
                   </>
                 )}
               </TouchableOpacity>
@@ -393,7 +413,7 @@ export default function StatsTable({
                   ]}
                   onPress={() => handleSort(column.key)}>
                   <View style={styles.sortableHeader}>
-                    <Text
+                    <ThemedText
                       style={[
                         styles.headerText,
                         {
@@ -402,7 +422,7 @@ export default function StatsTable({
                         column.key === 'name' && styles.portraitNameHeaderText,
                       ]}>
                       {column.label}
-                    </Text>
+                    </ThemedText>
                     {renderSortIcon(column.key)}
                   </View>
                 </TouchableOpacity>
@@ -424,7 +444,7 @@ export default function StatsTable({
                   {visibleColumns.map((column) => {
                     if (column.key === 'name') {
                       return (
-                        <Text
+                        <ThemedText
                           key={`${player.id}-${column.key}`}
                           style={[
                             styles.portraitCell,
@@ -435,12 +455,12 @@ export default function StatsTable({
                             },
                           ]}>
                           {player.name}
-                        </Text>
+                        </ThemedText>
                       );
                     }
                     if (column.key === 'plusMinus') {
                       return (
-                        <Text
+                        <ThemedText
                           key={`${player.id}-${column.key}`}
                           style={[
                             styles.portraitCell,
@@ -454,12 +474,12 @@ export default function StatsTable({
                           ]}>
                           {player.plusMinus > 0 ? '+' : ''}
                           {player.plusMinus}
-                        </Text>
+                        </ThemedText>
                       );
                     }
                     if (column.key === 'goals') {
                       return (
-                        <Text
+                        <ThemedText
                           key={`${player.id}-${column.key}`}
                           style={[
                             styles.portraitCell,
@@ -469,12 +489,12 @@ export default function StatsTable({
                             },
                           ]}>
                           {player.goals || '-'}
-                        </Text>
+                        </ThemedText>
                       );
                     }
                     if (column.key === 'assists') {
                       return (
-                        <Text
+                        <ThemedText
                           key={`${player.id}-${column.key}`}
                           style={[
                             styles.portraitCell,
@@ -484,12 +504,12 @@ export default function StatsTable({
                             },
                           ]}>
                           {player.assists || '-'}
-                        </Text>
+                        </ThemedText>
                       );
                     }
                     if (column.key === 'blocks') {
                       return (
-                        <Text
+                        <ThemedText
                           key={`${player.id}-${column.key}`}
                           style={[
                             styles.portraitCell,
@@ -499,12 +519,12 @@ export default function StatsTable({
                             },
                           ]}>
                           {player.blocks || '-'}
-                        </Text>
+                        </ThemedText>
                       );
                     }
                     if (column.key === 'throwaways') {
                       return (
-                        <Text
+                        <ThemedText
                           key={`${player.id}-${column.key}`}
                           style={[
                             styles.portraitCell,
@@ -514,12 +534,12 @@ export default function StatsTable({
                             },
                           ]}>
                           {player.throwaways || '-'}
-                        </Text>
+                        </ThemedText>
                       );
                     }
                     if (column.key === 'drops') {
                       return (
-                        <Text
+                        <ThemedText
                           key={`${player.id}-${column.key}`}
                           style={[
                             styles.portraitCell,
@@ -529,12 +549,12 @@ export default function StatsTable({
                             },
                           ]}>
                           {player.drops || '-'}
-                        </Text>
+                        </ThemedText>
                       );
                     }
                     if (column.key === 'oEfficiency') {
                       return (
-                        <Text
+                        <ThemedText
                           key={`${player.id}-${column.key}`}
                           style={[
                             styles.portraitCell,
@@ -554,12 +574,12 @@ export default function StatsTable({
                           {pStats && (pStats.oPoints ?? 0) > 0
                             ? formatEfficiency(pStats.oEfficiency)
                             : '-'}
-                        </Text>
+                        </ThemedText>
                       );
                     }
                     if (column.key === 'dEfficiency') {
                       return (
-                        <Text
+                        <ThemedText
                           key={`${player.id}-${column.key}`}
                           style={[
                             styles.portraitCell,
@@ -579,18 +599,18 @@ export default function StatsTable({
                           {pStats && (pStats.dPoints ?? 0) > 0
                             ? formatEfficiency(pStats.dEfficiency)
                             : '-'}
-                        </Text>
+                        </ThemedText>
                       );
                     }
                     return (
-                      <Text
+                      <ThemedText
                         key={`${player.id}-${column.key}`}
                         style={[
                           styles.portraitCell,
                           { width: getPortraitColumnWidth(column.key), color: palette.textInverse },
                         ]}>
                         {pStats?.pointsPlayed ?? '-'}
-                      </Text>
+                      </ThemedText>
                     );
                   })}
                 </TouchableOpacity>
@@ -637,7 +657,7 @@ function createStyles(isLandscape: boolean, hasPlayingTimeData: boolean, sizeCla
     },
     legendAbbr: {
       fontSize: scaleBySizeClass(11, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
       minWidth: 32,
     },
     legendLabel: {
@@ -645,7 +665,7 @@ function createStyles(isLandscape: boolean, hasPlayingTimeData: boolean, sizeCla
     },
     sectionTitle: {
       fontSize: scaleBySizeClass(12, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
       letterSpacing: 1,
     },
     tableContainer: {
@@ -673,7 +693,7 @@ function createStyles(isLandscape: boolean, hasPlayingTimeData: boolean, sizeCla
     },
     headerText: {
       fontSize: scaleBySizeClass(10, sizeClass),
-      fontWeight: '800',
+      fontFamily: Fonts.extraBold,
       textTransform: 'uppercase',
       letterSpacing: 0.5,
     },
@@ -692,13 +712,13 @@ function createStyles(isLandscape: boolean, hasPlayingTimeData: boolean, sizeCla
       flex: 1,
       fontSize: scaleBySizeClass(13, sizeClass),
       textAlign: 'center',
-      fontWeight: '500',
+      fontFamily: Fonts.semiBold,
     },
     nameCell: {
       flex: 1.8,
       textAlign: 'left',
       fontSize: scaleBySizeClass(13, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
     },
     portraitTableContainer: {
       borderRadius: 12,
@@ -731,12 +751,12 @@ function createStyles(isLandscape: boolean, hasPlayingTimeData: boolean, sizeCla
     portraitCell: {
       fontSize: scaleBySizeClass(13, sizeClass),
       textAlign: 'center',
-      fontWeight: '500',
+      fontFamily: Fonts.semiBold,
     },
     portraitNameCell: {
       textAlign: 'left',
       fontSize: scaleBySizeClass(13, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
       paddingLeft: 12,
       paddingRight: 8,
     },
@@ -748,12 +768,12 @@ function createStyles(isLandscape: boolean, hasPlayingTimeData: boolean, sizeCla
     },
     headerHintText: {
       fontSize: scaleBySizeClass(10, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
       letterSpacing: 0.5,
       textTransform: 'uppercase',
     },
     plusMinusCell: {
-      fontWeight: '800',
+      fontFamily: Fonts.extraBold,
     },
   });
 }

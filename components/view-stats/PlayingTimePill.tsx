@@ -1,7 +1,9 @@
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass } from '@/hooks/useLayout';
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import { Fonts } from '@/theme/theme';
 
 interface PlayingTimePillProps {
   label: string;
@@ -37,8 +39,10 @@ export default function PlayingTimePill({
           borderColor: borderColor ?? palette.overlay10,
         },
       ]}>
-      <Text style={[styles.statValue, { color: color ?? palette.textInverse }]}>{value}</Text>
-      <Text style={[styles.statLabel, { color: palette.textMuted }]}>{label}</Text>
+      <ThemedText style={[styles.statValue, { color: color ?? palette.textInverse }]}>
+        {value}
+      </ThemedText>
+      <ThemedText style={[styles.statLabel, { color: palette.textMuted }]}>{label}</ThemedText>
     </View>
   );
 }
@@ -64,11 +68,11 @@ function createStyles(sizeClass: SizeClass) {
     },
     statValue: {
       fontSize: scaleBySizeClass(14, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
     },
     statLabel: {
       fontSize: scaleBySizeClass(8, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
       marginTop: 2,
       textTransform: 'uppercase',
       letterSpacing: 0.3,

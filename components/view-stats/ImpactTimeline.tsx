@@ -1,9 +1,10 @@
 import { ThemedText } from '@/components/ThemedText';
+import { Fonts } from '@/theme/theme';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { ImpactPoint } from '@/lib/statsUtils';
 import React, { useState } from 'react';
-import { Platform, ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import Svg, {
   Circle as SvgCircle,
   Line as SvgLine,
@@ -12,12 +13,6 @@ import Svg, {
 } from 'react-native-svg';
 
 const LABEL_GAP = 4;
-
-const FONT_FAMILY = Platform.select({
-  ios: 'Helvetica',
-  android: 'sans-serif',
-  default: 'sans-serif',
-});
 
 /** Maps an event description to a single letter abbreviation. */
 function eventAbbrev(description: string | undefined): string | null {
@@ -396,8 +391,7 @@ export default function ImpactTimeline({ data }: ImpactTimelineProps) {
                           y={labelY}
                           fill={dotColor}
                           fontSize={labelFontSize}
-                          fontWeight="700"
-                          fontFamily={FONT_FAMILY}
+                          fontFamily={Fonts.bold}
                           textAnchor="middle">
                           {abbrev}
                         </SvgText>
@@ -506,7 +500,7 @@ function createStyles(
     },
     title: {
       fontSize: scaleBySizeClass(12, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
       letterSpacing: 1,
       marginBottom: 8,
       textTransform: 'uppercase',
@@ -517,11 +511,11 @@ function createStyles(
     },
     currentValue: {
       fontSize: scaleBySizeClass(32, sizeClass),
-      fontWeight: '800',
+      fontFamily: Fonts.extraBold,
     },
     valueLabel: {
       fontSize: scaleBySizeClass(11, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
       marginTop: 2,
     },
     chartContainer: {
@@ -545,7 +539,7 @@ function createStyles(
     },
     axisLabel: {
       fontSize: scaleBySizeClass(10, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
       lineHeight: axisLabelHeight,
       textAlign: 'right',
       includeFontPadding: false,
@@ -567,7 +561,7 @@ function createStyles(
     },
     legendText: {
       fontSize: scaleBySizeClass(10, sizeClass),
-      fontWeight: '500',
+      fontFamily: Fonts.semiBold,
     },
     scoreLabelsPositioned: {
       height: scaleBySizeClass(20, sizeClass),
@@ -575,7 +569,7 @@ function createStyles(
     },
     scoreText: {
       fontSize: scaleBySizeClass(11, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
     },
     scoreLabelWrapper: {
       position: 'absolute',
@@ -588,7 +582,7 @@ function createStyles(
     },
     eventLogTitle: {
       fontSize: scaleBySizeClass(9, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
       letterSpacing: 0.5,
       textTransform: 'uppercase',
       marginBottom: 6,
@@ -606,11 +600,11 @@ function createStyles(
     },
     eventScore: {
       fontSize: scaleBySizeClass(10, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
     },
     eventDesc: {
       fontSize: scaleBySizeClass(12, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
     },
     indicatorWrap: {
       alignItems: 'flex-start',

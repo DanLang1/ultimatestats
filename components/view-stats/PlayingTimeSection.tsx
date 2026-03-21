@@ -9,7 +9,9 @@ import {
 } from '@/lib/playingTimeStatsUtils';
 import { GameEvent, PointLineRecord, SavedGame } from '@/lib/storage';
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import { Fonts } from '@/theme/theme';
 import PlayingTimePill from './PlayingTimePill';
 import PlayingTimeGauge from './playing-time/PlayingTimeGauge';
 import RoleBalanceBar from './playing-time/RoleBalanceBar';
@@ -104,7 +106,9 @@ export default function PlayingTimeSection({
         styles.container,
         { backgroundColor: palette.overlay02, borderColor: palette.overlay05 },
       ]}>
-      <Text style={[styles.sectionTitle, { color: palette.textMuted }]}>PLAYING TIME</Text>
+      <ThemedText style={[styles.sectionTitle, { color: palette.textMuted }]}>
+        PLAYING TIME
+      </ThemedText>
 
       <View style={styles.overviewRow}>
         <PlayingTimeGauge
@@ -116,9 +120,9 @@ export default function PlayingTimeSection({
         />
 
         <View style={styles.heroDetails}>
-          <Text style={[styles.heroSubtext, { color: palette.textMuted }]}>
+          <ThemedText style={[styles.heroSubtext, { color: palette.textMuted }]}>
             Played {stats.playingTimePercent?.toFixed(0) ?? '0'}% of team points
-          </Text>
+          </ThemedText>
 
           <View style={styles.heroMetricsRow}>
             <PlayingTimePill
@@ -148,7 +152,9 @@ export default function PlayingTimeSection({
       </View>
 
       <View style={styles.roleSection}>
-        <Text style={[styles.sectionLabel, { color: palette.textMuted }]}>LINE BALANCE</Text>
+        <ThemedText style={[styles.sectionLabel, { color: palette.textMuted }]}>
+          LINE BALANCE
+        </ThemedText>
         <RoleBalanceBar
           oPoints={stats.oPoints}
           dPoints={stats.dPoints}
@@ -159,7 +165,9 @@ export default function PlayingTimeSection({
       </View>
 
       <View style={styles.perPointSection}>
-        <Text style={[styles.sectionLabel, { color: palette.textMuted }]}>PER POINT</Text>
+        <ThemedText style={[styles.sectionLabel, { color: palette.textMuted }]}>
+          PER POINT
+        </ThemedText>
         <View style={styles.pillGrid}>
           <PlayingTimePill label="Goals" value={goalsPerPoint.toFixed(2)} sizeClass={sizeClass} />
           <PlayingTimePill
@@ -188,7 +196,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     sectionTitle: {
       fontSize: scaleBySizeClass(12, sizeClass),
-      fontWeight: '700',
+      fontFamily: Fonts.bold,
       letterSpacing: 1,
       textTransform: 'uppercase',
       alignSelf: 'center',
@@ -205,7 +213,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     heroSubtext: {
       fontSize: scaleBySizeClass(11, sizeClass),
-      fontWeight: '500',
+      fontFamily: Fonts.semiBold,
     },
     heroMetricsRow: {
       flexDirection: 'row',
@@ -221,7 +229,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     sectionLabel: {
       fontSize: scaleBySizeClass(9, sizeClass),
-      fontWeight: '600',
+      fontFamily: Fonts.semiBold,
       letterSpacing: 0.5,
       ...(sizeClass !== 'small' && { alignSelf: 'center' as const }),
     },
