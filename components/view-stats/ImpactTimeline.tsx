@@ -156,8 +156,8 @@ export default function ImpactTimeline({ data }: ImpactTimelineProps) {
   // stops at the last real event rather than showing a flat tail.
   const chartData = data
     .filter((d) => d.description !== 'End')
-    .map((d) => ({
-      x: d.eventIndex,
+    .map((d, index) => ({
+      x: index,
       y: d.cumulativePlusMinus,
       description: d.description ?? '',
       score: d.score,
@@ -205,8 +205,7 @@ export default function ImpactTimeline({ data }: ImpactTimelineProps) {
   const plotWidth = plotRight - plotLeft;
   const yRange = Math.max(axisMax - axisMin, 1);
   const minIdx = chartData[0]?.x ?? 0;
-  // Use the End marker's eventIndex so every player's chart spans the full game width
-  const maxIdx = data[data.length - 1]?.eventIndex ?? chartData[chartData.length - 1]?.x ?? 1;
+  const maxIdx = chartData[chartData.length - 1]?.x ?? 1;
   const xRange = maxIdx - minIdx || 1;
 
   const getX = (value: number) => plotLeft + ((value - minIdx) / xRange) * plotWidth;
@@ -224,17 +223,16 @@ export default function ImpactTimeline({ data }: ImpactTimelineProps) {
   const visibleEventPoints = renderedChartPoints.filter((_, index) => index !== 0);
 
   const scorePositions: { score: string; eventIndex: number; x: number }[] = [];
-  data.forEach((point) => {
+  chartData.forEach((point, index) => {
     if (
       point.score &&
       point.description !== 'Start' &&
-      point.description !== 'End' &&
       !scorePositions.some((scorePoint) => scorePoint.score === point.score)
     ) {
       scorePositions.push({
         score: point.score,
-        eventIndex: point.eventIndex,
-        x: getX(point.eventIndex),
+        eventIndex: index,
+        x: getX(index),
       });
     }
   });

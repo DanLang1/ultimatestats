@@ -35,7 +35,7 @@ const MIN_PLAYED_AT_DATE = new Date(MIN_PLAYED_AT_YEAR, 0, 1);
 export default function SavedGameStatsScreen() {
   const { gameId } = useLocalSearchParams<{ gameId?: string }>();
   const { showAlert } = useAlert();
-  const { palette } = useTheme();
+  const { palette, themeMode } = useTheme();
   const { isLandscape, sizeClass } = useLayout();
   const styles = createStyles(isLandscape, sizeClass);
   const { savedGames, savedTeams, updateSavedGamePlayedAt } = useGameStore();
@@ -251,7 +251,7 @@ export default function SavedGameStatsScreen() {
                   maximumDate={new Date()}
                   minimumDate={MIN_PLAYED_AT_DATE}
                   onChange={handleDateChange}
-                  themeVariant="dark"
+                  themeVariant={themeMode}
                   accentColor={palette.accent}
                 />
                 {selectedGame.playedAt ? (

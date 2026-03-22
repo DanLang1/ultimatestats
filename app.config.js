@@ -11,6 +11,7 @@ export default {
   ios: {
     supportsTablet: true,
     bundleIdentifier: IS_DEV ? 'com.langdk.ultimatestats.dev' : 'com.langdk.ultimatestats',
+    associatedDomains: ['applinks:u-stat.app'],
     config: {
       usesNonExemptEncryption: false,
     },
