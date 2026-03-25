@@ -4,7 +4,7 @@ import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { ImpactPoint } from '@/lib/statsUtils';
 import React, { useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import Svg, {
   Circle as SvgCircle,
   Line as SvgLine,
@@ -13,6 +13,8 @@ import Svg, {
 } from 'react-native-svg';
 
 const LABEL_GAP = 4;
+
+type ScaleMode = 'event' | 'game';
 
 /** Maps an event description to a single letter abbreviation. */
 function eventAbbrev(description: string | undefined): string | null {
@@ -149,15 +151,22 @@ export default function ImpactTimeline({ data }: ImpactTimelineProps) {
   const domainPadRight = scaleBySizeClass(36, sizeClass);
   const domainPadTop = scaleBySizeClass(32, sizeClass);
   const domainPadBottom = scaleBySizeClass(20, sizeClass);
+  const toggleFontSize = scaleBySizeClass(10, sizeClass);
+  const togglePaddingH = scaleBySizeClass(8, sizeClass);
+  const togglePaddingV = scaleBySizeClass(3, sizeClass);
+  const toggleRadius = scaleBySizeClass(6, sizeClass);
   const styles = createStyles(sizeClass, chartHeight, yAxisWidth, labelWidth, axisLabelHeight);
   const hasImpact = data.some((d) => d.cumulativePlusMinus !== 0);
+  const [scaleMode, setScaleMode] = useState<ScaleMode>('event');
 
   // Format data for chart — exclude the trailing End marker so the chart
   // stops at the last real event rather than showing a flat tail.
   const chartData = data
     .filter((d) => d.description !== 'End')
     .map((d, index) => ({
-      x: index,
+      // Event mode: sequential index for even spacing.
+      // Game mode: eventIndex for proportional game-timeline positioning.
+      x: scaleMode === 'game' ? d.eventIndex : index,
       y: d.cumulativePlusMinus,
       description: d.description ?? '',
       score: d.score,
@@ -186,8 +195,17 @@ export default function ImpactTimeline({ data }: ImpactTimelineProps) {
   // Width of the scrollable chart area: at least PX_PER_EVENT per event so
   // all points have breathing room on large games.  Fills the viewport
   // when content is short (e.g. few events on a tablet).
-  const eventCount = chartData.length - 1; // exclude Start
-  const minChartWidth = eventCount * pxPerEvent;
+  const playerEventCount = chartData.length - 1; // exclude Start
+  const playerMinWidth = playerEventCount * pxPerEvent;
+
+  // In game mode, widen the chart so the player's event cluster still gets
+  // at least pxPerEvent spacing.  Without this, events clustered early in a
+  // long game get compressed into a tiny sliver.
+  const gameEndIdx = data[data.length - 1]?.eventIndex ?? 1;
+  const playerSpan = (chartData[chartData.length - 1]?.x ?? 1) - (chartData[0]?.x ?? 0);
+  const spanRatio = gameEndIdx > 0 ? Math.max(playerSpan / gameEndIdx, 0.15) : 1;
+  const minChartWidth =
+    scaleMode === 'game' ? Math.max(playerMinWidth, playerMinWidth / spanRatio) : playerMinWidth;
   const chartScrollWidth = Math.max(viewportWidth || 300, minChartWidth);
   const needsScroll = viewportWidth > 0 && minChartWidth > viewportWidth;
 
@@ -205,7 +223,11 @@ export default function ImpactTimeline({ data }: ImpactTimelineProps) {
   const plotWidth = plotRight - plotLeft;
   const yRange = Math.max(axisMax - axisMin, 1);
   const minIdx = chartData[0]?.x ?? 0;
-  const maxIdx = chartData[chartData.length - 1]?.x ?? 1;
+  // In game mode, use the End marker's eventIndex so the X-axis spans the full game.
+  const maxIdx =
+    scaleMode === 'game'
+      ? (data[data.length - 1]?.eventIndex ?? chartData[chartData.length - 1]?.x ?? 1)
+      : (chartData[chartData.length - 1]?.x ?? 1);
   const xRange = maxIdx - minIdx || 1;
 
   const getX = (value: number) => plotLeft + ((value - minIdx) / xRange) * plotWidth;
@@ -223,7 +245,7 @@ export default function ImpactTimeline({ data }: ImpactTimelineProps) {
   const visibleEventPoints = renderedChartPoints.filter((_, index) => index !== 0);
 
   const scorePositions: { score: string; eventIndex: number; x: number }[] = [];
-  chartData.forEach((point, index) => {
+  chartData.forEach((point) => {
     if (
       point.score &&
       point.description !== 'Start' &&
@@ -231,21 +253,46 @@ export default function ImpactTimeline({ data }: ImpactTimelineProps) {
     ) {
       scorePositions.push({
         score: point.score,
-        eventIndex: index,
-        x: getX(index),
+        eventIndex: point.x,
+        x: getX(point.x),
       });
     }
   });
 
+  // Add an ending tick: game mode shows the final game score, event mode
+  // shows the score at the player's last event.
+  const endScore =
+    scaleMode === 'game' ? data[data.length - 1]?.score : chartData[chartData.length - 1]?.score;
+  const endIdx =
+    scaleMode === 'game'
+      ? (data[data.length - 1]?.eventIndex ?? 0)
+      : (chartData[chartData.length - 1]?.x ?? 0);
+  if (endScore) {
+    // Remove any earlier entry with the same score so the end tick takes
+    // priority at the rightmost position.
+    const dupIdx = scorePositions.findIndex((sp) => sp.score === endScore);
+    if (dupIdx !== -1) scorePositions.splice(dupIdx, 1);
+    scorePositions.push({ score: endScore, eventIndex: endIdx, x: getX(endIdx) });
+  }
+
+  // Always reserve the last score label, then fill in earlier labels that fit.
+  const lastScorePos = scorePositions[scorePositions.length - 1];
   const visibleScorePositions: { score: string; eventIndex: number; x: number }[] = [];
+  const reservedLeft = lastScorePos ? lastScorePos.x - labelWidth / 2 : Infinity;
   let lastLabelRight = -Infinity;
 
-  scorePositions.forEach((item) => {
+  scorePositions.forEach((item, i) => {
+    if (i === scorePositions.length - 1) return; // handle last separately
     const left = item.x - labelWidth / 2;
     if (left < lastLabelRight + LABEL_GAP) return;
+    if (left + labelWidth + LABEL_GAP > reservedLeft) return;
     lastLabelRight = left + labelWidth;
     visibleScorePositions.push(item);
   });
+
+  if (lastScorePos) {
+    visibleScorePositions.push(lastScorePos);
+  }
 
   const axisLabelCandidates = [
     {
@@ -286,7 +333,36 @@ export default function ImpactTimeline({ data }: ImpactTimelineProps) {
   }
   return (
     <View style={styles.container}>
-      <ThemedText style={[styles.title, { color: palette.textMuted }]}>GAME IMPACT</ThemedText>
+      <View style={styles.titleRow}>
+        <ThemedText style={[styles.title, { color: palette.textMuted }]}>GAME IMPACT</ThemedText>
+        <View style={[styles.scaleToggle, { backgroundColor: palette.overlay08 }]}>
+          {(['event', 'game'] as const).map((mode) => {
+            const isActive = scaleMode === mode;
+            return (
+              <Pressable
+                key={mode}
+                onPress={() => setScaleMode(mode)}
+                style={[
+                  {
+                    paddingHorizontal: togglePaddingH,
+                    paddingVertical: togglePaddingV,
+                    borderRadius: toggleRadius,
+                  },
+                  isActive && { backgroundColor: palette.overlay20 },
+                ]}>
+                <ThemedText
+                  style={{
+                    fontSize: toggleFontSize,
+                    fontFamily: Fonts.semiBold,
+                    color: isActive ? palette.textPrimary : palette.textMuted,
+                  }}>
+                  {mode === 'event' ? 'Event' : 'Game'}
+                </ThemedText>
+              </Pressable>
+            );
+          })}
+        </View>
+      </View>
 
       {/* Current Value Display */}
       <View style={styles.valueDisplay}>
@@ -496,12 +572,23 @@ function createStyles(
       padding: scaleBySizeClass(16, sizeClass),
       alignItems: 'center',
     },
+    titleRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: scaleBySizeClass(10, sizeClass),
+      marginBottom: 8,
+    },
     title: {
       fontSize: scaleBySizeClass(12, sizeClass),
       fontFamily: Fonts.bold,
       letterSpacing: 1,
-      marginBottom: 8,
       textTransform: 'uppercase',
+    },
+    scaleToggle: {
+      flexDirection: 'row',
+      borderRadius: scaleBySizeClass(8, sizeClass),
+      padding: scaleBySizeClass(2, sizeClass),
     },
     valueDisplay: {
       alignItems: 'center',
