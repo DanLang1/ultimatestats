@@ -336,3 +336,14 @@ export const Fonts = {
   extraBold: 'Inter-ExtraBold',
   black: 'Inter-Black',
 } as const;
+
+// =============================================================================
+// TUTORIAL COLORS
+// Fixed demo team colors used in the interactive tutorial scoreboard.
+// Not palette tokens — these don't vary by theme.
+// =============================================================================
+
+export const TutorialColors = {
+  team1Bg: '#1A3A7A', // USA navy
+  team2Bg: '#C41E3A', // Canada red
+} as const;

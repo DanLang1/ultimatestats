@@ -10,7 +10,7 @@ import { ThemedText } from '@/components/ThemedText';
 import Animated, { SlideInUp, SlideOutUp } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-type EventToastData = {
+export type EventToastData = {
   visible: boolean;
   message: string;
   tone: 'success' | 'danger' | 'neutral';

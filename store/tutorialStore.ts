@@ -3,21 +3,20 @@ import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
 interface TutorialState {
-  // Persisted - tracks if user has completed onboarding
+  // Persisted
   hasSeenOnboarding: boolean;
   hasSeenStatsTutorial: boolean;
 
-  // Runtime - controls overlay visibility
-  showOnboarding: boolean;
+  // Runtime
   showStatsTutorial: boolean;
+  hasHydrated: boolean;
 
   // Actions
-  setHasSeenOnboarding: (seen: boolean) => void;
-  triggerOnboarding: () => void;
-  closeOnboarding: () => void;
+  completeTutorial: () => void;
   triggerStatsTutorial: () => void;
   closeStatsTutorial: () => void;
   resetStatsTutorial: () => void;
+  setHasHydrated: (hasHydrated: boolean) => void;
 }
 
 export const useTutorialStore = create<TutorialState>()(
@@ -25,18 +24,10 @@ export const useTutorialStore = create<TutorialState>()(
     (set) => ({
       hasSeenOnboarding: false,
       hasSeenStatsTutorial: false,
-      showOnboarding: false,
       showStatsTutorial: false,
+      hasHydrated: false,
 
-      setHasSeenOnboarding: (seen) => set({ hasSeenOnboarding: seen }),
-
-      triggerOnboarding: () => set({ showOnboarding: true }),
-
-      closeOnboarding: () =>
-        set({
-          showOnboarding: false,
-          hasSeenOnboarding: true,
-        }),
+      completeTutorial: () => set({ hasSeenOnboarding: true }),
 
       triggerStatsTutorial: () => set({ showStatsTutorial: true }),
 
@@ -51,15 +42,19 @@ export const useTutorialStore = create<TutorialState>()(
           hasSeenStatsTutorial: false,
           showStatsTutorial: false,
         }),
+
+      setHasHydrated: (hasHydrated) => set({ hasHydrated }),
     }),
     {
       name: 'ultimatestats-tutorial-storage',
       storage: createJSONStorage(() => AsyncStorage),
-      // Only persist hasSeenOnboarding, not showOnboarding (runtime state)
       partialize: (state) => ({
         hasSeenOnboarding: state.hasSeenOnboarding,
         hasSeenStatsTutorial: state.hasSeenStatsTutorial,
       }),
+      onRehydrateStorage: () => (state) => {
+        state?.setHasHydrated(true);
+      },
     },
   ),
 );

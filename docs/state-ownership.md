@@ -69,9 +69,11 @@ UI control state for `NumberPickerModal`.
 ### `useTutorialStore` (`store/tutorialStore.ts`)
 
 - Owns:
-Onboarding/tutorial completion flags and runtime visibility state.
+Persisted onboarding/stat-tutorial completion flags, scoreboard stats-tutorial visibility, and the
+hydration gate used by the `/` entry route.
 - Use for:
-Tutorial trigger/close/reset behavior.
+Onboarding completion, tutorial trigger/close/reset behavior, and gating entry navigation until
+tutorial storage has loaded.
 
 ### `useUIStore` (`store/uiStore.ts`)
 
@@ -88,4 +90,3 @@ If yes, it probably belongs in `useGameStore` or storage schema.
 Put it in `useSettingsStore`.
 - "Is this only needed while one modal/screen is open?"
 Use a UI-scoped store (`useNumberPickerStore`, `usePlayerStatsStore`) or local component state.
-

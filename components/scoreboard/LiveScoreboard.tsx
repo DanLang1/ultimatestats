@@ -5,7 +5,6 @@ import { ThemedView } from '@/components/ThemedView';
 import EventToast from '@/components/toast/EventToast';
 import { useEventToast } from '@/components/toast/hooks/useEventToast';
 import StatsTrackingTutorial from '@/components/tutorial/StatsTrackingTutorial';
-import TutorialOverlay from '@/components/tutorial/TutorialOverlay';
 import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { useTimeoutTimer } from '@/hooks/useTimeoutTimer';
 import { getContrastingTextColor } from '@/lib/colorUtils';
@@ -268,7 +267,6 @@ export default function LiveScoreboard() {
       )}
 
       <EventToast toast={toast} toastInstanceId={toastInstanceId} />
-      <TutorialOverlay />
       <StatsTrackingTutorial />
     </ThemedView>
   );

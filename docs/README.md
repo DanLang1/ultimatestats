@@ -23,7 +23,7 @@ Platform support details are documented in [platform-support.md](platform-suppor
 │   ├── ui/            # Generic UI (buttons, chips, etc.)
 │   ├── stat-entry/    # Stat entry flow components
 │   ├── view-stats/    # Stats display components
-│   ├── tutorial/      # Tutorial overlay components
+│   ├── tutorial/      # Routed onboarding and tutorial components
 │   └── *.tsx          # Feature components
 ├── store/             # Zustand stores with Immer
 │   ├── gameStore.ts   # Main game state
@@ -42,6 +42,12 @@ Platform support details are documented in [platform-support.md](platform-suppor
 ```
 
 ## Key Concepts
+
+### Onboarding
+
+First launch is gated by `useTutorialStore` hydration and routes through `/TutorialIntro`,
+`/TutorialScoreboard`, and `/TutorialComplete` before the normal `/` entry route starts sending the
+user to `/Dashboard` or `/Scoreboard`.
 
 ### Stat Tracking
 

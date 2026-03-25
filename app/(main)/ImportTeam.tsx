@@ -1,3 +1,4 @@
+import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { useAlert } from '@/components/ui/AlertProvider';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
@@ -13,14 +14,13 @@ import {
 import { buildImportedTeam } from '@/lib/import-team/transform';
 import { NAME_FORMAT_OPTIONS, NameFormatOption } from '@/lib/import-team/types';
 import { useGameStore } from '@/store/gameStore';
-import { MaterialIcons } from '@expo/vector-icons';
+import { Fonts } from '@/theme/theme';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import * as Clipboard from 'expo-clipboard';
 import { router, Stack } from 'expo-router';
 import React, { useState } from 'react';
 import {
   ActivityIndicator,
-  Linking,
   Modal,
   Pressable,
   ScrollView,
@@ -28,10 +28,6 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { ThemedText } from '@/components/ThemedText';
-import { Fonts } from '@/theme/theme';
-
-const DISCORD_URL = 'https://discord.gg/AjsmqhZ2GH';
 
 export default function ImportTeamScreen() {
   const { palette } = useTheme();
@@ -256,36 +252,6 @@ export default function ImportTeamScreen() {
             {isFetching ? 'Fetching...' : 'Fetch Roster'}
           </ThemedText>
         </Pressable>
-
-        <View style={[styles.footerNote, { borderTopColor: palette.overlay10 }]}>
-          <ThemedText style={[styles.footerNoteText, { color: palette.textMuted }]}>
-            Got a different site you want to import from? Message me on Discord and I&apos;ll see
-            what I can do
-          </ThemedText>
-          <Pressable
-            onPress={() => Linking.openURL(DISCORD_URL)}
-            style={({ pressed }) => [
-              styles.discordBanner,
-              { backgroundColor: palette.discordBg },
-              pressed && styles.buttonPressed,
-            ]}>
-            <MaterialIcons
-              name="discord"
-              size={metrics.discordIconSize}
-              color={palette.discordText}
-            />
-            <View style={styles.discordText}>
-              <ThemedText style={[styles.discordTitle, { color: palette.discordText }]}>
-                Join U-Stat Discord
-              </ThemedText>
-            </View>
-            <MaterialCommunityIcons
-              name="chevron-right"
-              size={metrics.discordChevronSize}
-              color={palette.discordTextMuted}
-            />
-          </Pressable>
-        </View>
       </ScrollView>
 
       <Modal visible={isFetching} transparent animationType="fade">
@@ -375,36 +341,6 @@ function createStyles(sizeClass: SizeClass) {
       fontSize: scaleBySizeClass(16, sizeClass),
       fontFamily: Fonts.bold,
     },
-    footerNote: {
-      marginTop: scaleBySizeClass(8, sizeClass),
-      paddingTop: scaleBySizeClass(12, sizeClass),
-      gap: scaleBySizeClass(8, sizeClass),
-      borderTopWidth: 1,
-    },
-    footerNoteText: {
-      fontSize: scaleBySizeClass(12, sizeClass),
-      lineHeight: scaleBySizeClass(17, sizeClass),
-    },
-    discordBanner: {
-      width: '100%',
-      flexDirection: 'row',
-      alignItems: 'center',
-      padding: scaleBySizeClass(16, sizeClass),
-      borderRadius: scaleBySizeClass(14, sizeClass),
-      gap: scaleBySizeClass(14, sizeClass),
-      marginTop: scaleBySizeClass(2, sizeClass),
-    },
-    discordText: {
-      flex: 1,
-      gap: scaleBySizeClass(2, sizeClass),
-    },
-    discordTitle: {
-      fontSize: scaleBySizeClass(15, sizeClass),
-      fontFamily: Fonts.semiBold,
-    },
-    discordSubtitle: {
-      fontSize: scaleBySizeClass(12, sizeClass),
-    },
     buttonPressed: {
       opacity: 0.8,
       transform: [{ scale: 0.98 }],
@@ -440,7 +376,5 @@ function createStyles(sizeClass: SizeClass) {
 function createMetrics(sizeClass: SizeClass) {
   return {
     actionIconSize: scaleBySizeClass(20, sizeClass),
-    discordIconSize: scaleBySizeClass(24, sizeClass),
-    discordChevronSize: scaleBySizeClass(22, sizeClass),
   };
 }

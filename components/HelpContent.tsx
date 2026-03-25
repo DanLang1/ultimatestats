@@ -216,8 +216,7 @@ export default function HelpContent({
       <Pressable
         style={[styles.tutorialButton, { backgroundColor: palette.overlay08 }]}
         onPress={() => {
-          useTutorialStore.getState().triggerOnboarding();
-          router.replace('/');
+          router.push('/TutorialIntro');
         }}>
         <MaterialCommunityIcons
           name="school-outline"
