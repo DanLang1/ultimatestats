@@ -9,8 +9,7 @@ This document tracks intentionally deferred cleanup work discovered during the d
 - Replace `router.back()` / `router.dismiss()` in modal exits with `router.dismissTo(...)` per modal navigation rules.
 - For modals launched from non-root screens, use explicit parent destinations (for example `router.dismissTo('/GameInfo')`).
 - References:
-  `docs/modals.md:136`
-  `docs/modals.md:146`
+  `/add-modal` skill — Modal Navigation from Non-Root Screens section
   `app/(modals)/EditDurationModal.tsx:120`
   `app/(modals)/EditDurationModal.tsx:131`
   `app/(modals)/NumberPickerModal.tsx:51`
@@ -37,8 +36,7 @@ This document tracks intentionally deferred cleanup work discovered during the d
 
 - Align modal text/background token usage with modal theming guidance (`modalText`, `modalTextMuted`, etc.) where currently using banned tokens.
 - References:
-  `docs/modals.md:7`
-  `docs/modals.md:20`
+  `/add-modal` skill — Modal Theming section
   `app/(modals)/HalftimeModal.tsx:93`
   `app/(modals)/HalftimeModal.tsx:132`
   `app/(modals)/HalftimeModal.tsx:179`

@@ -27,7 +27,7 @@ Reusable UI conventions for screens and modals.
   ```
 - Prefer `components/ui/ResponsiveHeaderActions.tsx` for composed right-slot actions so screens reuse one inline-vs-overflow implementation.
 - Use explicit back/dismiss action and avoid render-time imperative navigation.
-- Reference: `docs/architecture-rules.md`.
+- Reference: `AGENTS.md`.
 
 Example:
 
@@ -53,7 +53,7 @@ For transparent modal routes:
    `contentStyle: { backgroundColor: 'transparent' }`
 4. Use `router.dismissTo(...)` for deterministic exits.
 
-Reference: `docs/modals.md`.
+Reference: `/add-modal` skill.
 
 ## Safe Area Pattern
 
@@ -65,7 +65,7 @@ Reference: `docs/modals.md`.
 
 - Do not hardcode colors.
 - Use tokens from `theme/theme.ts` and theme palette via `useTheme()`.
-- For modals, follow modal token guidance in `docs/modals.md`.
+- For modals, follow modal token guidance in the `/add-modal` skill.
 
 ## Required Field Attention Pattern
 

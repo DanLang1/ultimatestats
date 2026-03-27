@@ -129,4 +129,4 @@ Examples:
 - `/GameSelectorModal` -> `router.dismissTo('/PlayerStats')`
 - `/TeamManagementModal` -> `router.dismissTo('/EditRoster')`
 
-Keep this map in sync with `docs/modals.md`.
+Keep this map in sync with the `/add-modal` skill.

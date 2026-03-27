@@ -80,7 +80,7 @@ Tracks which team has the disc, enabling turnover detection when user taps the n
 | Agent Guide    | [GEMINI.md](../GEMINI.md) / [AGENTS.md](../AGENTS.md)                              |
 | Responsive     | [responsive-layout.md](responsive-layout.md)                                       |
 | Completed Docs | [completed/responsive-scaling-tracker.md](completed/responsive-scaling-tracker.md) |
-| Modals         | [modals.md](modals.md)                                                             |
+| Modals         | `/add-modal` skill                                                                 |
 | Platforms      | [platform-support.md](platform-support.md)                                         |
 | iOS Follow-ups | [ios-followups.md](ios-followups.md)                                               |
 | Themes         | [theming.md](theming.md)                                                           |
@@ -91,7 +91,6 @@ Tracks which team has the disc, enabling turnover detection when user taps the n
 | Game Logic     | [game-logic.md](game-logic.md)                                                     |
 | Testing        | [testing.md](testing.md)                                                           |
 | Testing Map    | [testing-map.md](testing-map.md)                                                   |
-| Rules          | [architecture-rules.md](architecture-rules.md)                                     |
 | State          | [state-ownership.md](state-ownership.md)                                           |
 | Navigation     | [navigation-map.md](navigation-map.md)                                             |
 | Events         | [event-model.md](event-model.md)                                                   |
@@ -103,4 +102,4 @@ When adding a new screen or modal route:
 
 1. Start with [responsive-layout.md](responsive-layout.md) and choose the correct orientation support tier.
 2. Follow [ui-patterns.md](ui-patterns.md) for header, safe area, and component structure conventions.
-3. If the route is a modal, follow [modals.md](modals.md) and ensure dismissal/navigation contracts match [navigation-map.md](navigation-map.md).
+3. If the route is a modal, run `/add-modal` and ensure dismissal/navigation contracts match [navigation-map.md](navigation-map.md).

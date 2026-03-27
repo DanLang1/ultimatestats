@@ -33,16 +33,16 @@ export type GameEvent =
   | {
       type: 'goal';
       team: 'team1' | 'team2';
-      goal: string | null;
-      assist: string | null;
+      goalPlayerId: string | null;
+      assistPlayerId: string | null;
       gameId?: string; // Links to SavedGame.id
     }
   | {
       type: 'turnover';
       team: 'team1' | 'team2';
       subtype: TurnoverType;
-      player: string | null;
-      player2?: string | null;
+      playerId: string | null;
+      player2Id?: string | null;
       gameId?: string; // Links to SavedGame.id
     };
 ```
