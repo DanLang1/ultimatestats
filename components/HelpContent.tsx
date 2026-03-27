@@ -1,7 +1,6 @@
 import FlashingIcon from '@/components/ui/FlashingIcon';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass } from '@/hooks/useLayout';
-import { useTutorialStore } from '@/store/tutorialStore';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router } from 'expo-router';
@@ -243,8 +242,7 @@ export default function HelpContent({
       <Pressable
         style={[styles.tutorialButton, { backgroundColor: palette.overlay08 }]}
         onPress={() => {
-          useTutorialStore.getState().triggerStatsTutorial();
-          router.replace('/');
+          router.replace('/TutorialStatIntro');
         }}>
         <MaterialCommunityIcons
           name="chart-line"

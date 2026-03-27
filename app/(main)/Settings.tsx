@@ -14,6 +14,7 @@ import { MAX_TEAM_NAME_LENGTH } from '@/lib/constants';
 import { SavedTeam } from '@/lib/storage';
 import { useGameStore } from '@/store/gameStore';
 import { OrientationMode, useSettingsStore } from '@/store/settingsStore';
+import { useTutorialStore } from '@/store/tutorialStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router, Stack } from 'expo-router';
 import React, { useState } from 'react';
@@ -43,6 +44,7 @@ function SettingsContent() {
   const useCompactColorLayout = sizeClass !== 'small';
   const { palette, themeMode, setThemeMode } = useTheme();
   const { showAlert } = useAlert();
+  const { hasSeenStatsTutorial, queueStatsTutorialForNextGameStart } = useTutorialStore();
   const {
     mmpColor,
     fmpColor,
@@ -97,7 +99,7 @@ function SettingsContent() {
     saveCurrentTeam,
   } = useGameStore();
 
-  const { confirmNewGame } = useNewGame({ onSuccess: () => router.navigate('/Scoreboard') });
+  const { confirmNewGame } = useNewGame();
 
   const team1Name = currentTeam?.name ?? 'Team 1';
   const team1Roster = currentTeam?.roster ?? [];
@@ -599,6 +601,9 @@ function SettingsContent() {
                     label="Track Stats"
                     value={statTrackingEnabled}
                     onValueChange={(enabled) => {
+                      if (enabled && !statTrackingEnabled && !hasSeenStatsTutorial) {
+                        queueStatsTutorialForNextGameStart();
+                      }
                       setStatTrackingEnabled(enabled);
                       if (!enabled) {
                         setPointTimerEnabled(false);

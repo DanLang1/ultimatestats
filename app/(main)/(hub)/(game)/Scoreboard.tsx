@@ -1,4 +1,5 @@
 import LiveScoreboard from '@/components/scoreboard/LiveScoreboard';
+import { useStatsTutorialPending } from '@/hooks/useStatsTutorialPending';
 import { checkGameOver } from '@/lib/gameUtils';
 import { useGameStore } from '@/store/gameStore';
 import { useSettingsStore } from '@/store/settingsStore';
@@ -18,6 +19,7 @@ export default function BasicScoreboard() {
     statTrackingEnabled,
   } = useGameStore();
   const { genderRatioEnabled, firstPointRatio } = useSettingsStore();
+  const statsTutorialPending = useStatsTutorialPending();
   const pathname = usePathname();
 
   const needPossession = statTrackingEnabled && possession === null;
@@ -39,6 +41,10 @@ export default function BasicScoreboard() {
 
   if (isHalftimeBreak && !pendingStatEntry && !isGameOver) {
     return <Redirect href="/HalftimeModal" />;
+  }
+
+  if (statsTutorialPending) {
+    return <Redirect href="/TutorialStatIntro" />;
   }
 
   if (!isGameOver && (needPossession || needRatio)) {

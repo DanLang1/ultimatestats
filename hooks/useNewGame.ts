@@ -1,6 +1,8 @@
 import { useAlert } from '@/components/ui/AlertProvider';
 import { useGameSessionStatus } from '@/hooks/useGameSessionStatus';
+import { useStatsTutorialPending } from '@/hooks/useStatsTutorialPending';
 import { useGameStore } from '@/store/gameStore';
+import { router } from 'expo-router';
 
 interface UseNewGameOptions {
   onSuccess: () => void;
@@ -11,17 +13,32 @@ export function useNewGame(options?: UseNewGameOptions) {
   const sessionStatus = useGameSessionStatus();
   const resetGame = useGameStore((state) => state.resetGame);
   const statTrackingEnabled = useGameStore((state) => state.statTrackingEnabled);
+  const statsTutorialPending = useStatsTutorialPending();
+
+  const handleSuccess = () => {
+    if (options?.onSuccess) {
+      options.onSuccess();
+      return;
+    }
+
+    if (statsTutorialPending) {
+      router.navigate('/TutorialStatIntro');
+      return;
+    }
+
+    router.navigate('/Scoreboard');
+  };
 
   const confirmNewGame = () => {
     if (sessionStatus === 'fresh') {
       resetGame();
-      options?.onSuccess?.();
+      handleSuccess();
       return;
     }
 
     if (sessionStatus === 'finished') {
       resetGame();
-      options?.onSuccess?.();
+      handleSuccess();
       return;
     }
 
@@ -39,7 +56,7 @@ export function useNewGame(options?: UseNewGameOptions) {
           style: 'success',
           onPress: () => {
             resetGame();
-            options?.onSuccess?.();
+            handleSuccess();
           },
         },
       ],

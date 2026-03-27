@@ -38,12 +38,12 @@ Do NOT use in modals: `palette.surface`, `palette.textPrimary`, `palette.textInv
 
 Read these before writing — they are the pattern:
 
-| Pattern | File |
-| ------- | ---- |
-| Bottom sheet | `app/(modals)/TeamManagementModal.tsx` |
-| Bottom sheet (scrollable) | `app/(modals)/EditEventModal.tsx` |
-| Centered modal | `app/(modals)/HalftimeModal.tsx` |
-| Conditional redirect | `app/(modals)/EditPlayerModal.tsx` |
+| Pattern                    | File                                     |
+| -------------------------- | ---------------------------------------- |
+| Bottom sheet               | `app/(modals)/TeamManagementModal.tsx`   |
+| Bottom sheet (scrollable)  | `app/(modals)/EditEventModal.tsx`        |
+| Centered modal             | `app/(modals)/HalftimeModal.tsx`         |
+| Conditional redirect       | `app/(modals)/EditPlayerModal.tsx`       |
 | Inline dialog (AlertModal) | `app/(main)/(hub)/(team)/EditRoster.tsx` |
 
 ## Existing Modals

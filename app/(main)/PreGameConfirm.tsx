@@ -11,7 +11,9 @@ import { formatRatioFull, GenderRatio } from '@/lib/genderRatioUtils';
 import { shouldShowLinePrompt } from '@/lib/linePromptUtils';
 import { useGameStore } from '@/store/gameStore';
 import { useNumberPickerStore } from '@/store/numberPickerStore';
+import { useStatsTutorialPending } from '@/hooks/useStatsTutorialPending';
 import { useSettingsStore } from '@/store/settingsStore';
+import { useTutorialStore } from '@/store/tutorialStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { Redirect, router, Stack } from 'expo-router';
 import React, { useState } from 'react';
@@ -22,7 +24,7 @@ import { Fonts } from '@/theme/theme';
 export default function PreGameConfirm() {
   const { palette } = useTheme();
   const { isLandscape, sizeClass } = useLayout();
-  const styles = createStyles(isLandscape, sizeClass);
+  const styles = createStyles(sizeClass);
 
   const {
     possession,
@@ -59,6 +61,8 @@ export default function PreGameConfirm() {
     numPlayers,
     setNumPlayers,
   } = useSettingsStore();
+  const { hasSeenStatsTutorial, queueStatsTutorialForNextGameStart } = useTutorialStore();
+  const statsTutorialPending = useStatsTutorialPending();
 
   const openPicker = useNumberPickerStore((s) => s.open);
 
@@ -109,6 +113,11 @@ export default function PreGameConfirm() {
     }
     if (needRatio && selectedRatio) {
       setFirstPointRatio(selectedRatio as GenderRatio);
+    }
+
+    if (statsTutorialPending) {
+      router.replace('/TutorialStatIntro');
+      return;
     }
 
     // Chain to LineEditor for first point line selection
@@ -308,6 +317,9 @@ export default function PreGameConfirm() {
                 label="Stat Tracking"
                 isActive={statTrackingEnabled}
                 onPress={() => {
+                  if (!statTrackingEnabled && !hasSeenStatsTutorial) {
+                    queueStatsTutorialForNextGameStart();
+                  }
                   setStatTrackingEnabled(!statTrackingEnabled);
                   if (statTrackingEnabled) {
                     setPointTimerEnabled(false);
@@ -487,7 +499,7 @@ export default function PreGameConfirm() {
   );
 }
 
-function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
+function createStyles(sizeClass: SizeClass) {
   return StyleSheet.create({
     container: {
       flex: 1,
@@ -497,13 +509,11 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
       paddingTop: 8,
     },
     columnsContainer: {
-      flexDirection: isLandscape ? 'row' : 'column',
+      flexDirection: 'column',
       gap: 24,
-      alignItems: isLandscape ? 'flex-start' : 'stretch',
     },
     column: {
-      flex: isLandscape ? 1 : 0,
-      width: isLandscape ? undefined : '100%',
+      width: '100%',
       gap: 16,
     },
     sectionTitle: {

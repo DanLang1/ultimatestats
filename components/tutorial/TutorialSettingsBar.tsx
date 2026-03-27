@@ -2,9 +2,9 @@ import { ThemedText } from '@/components/ThemedText';
 import TutorialAnimatedArrow from '@/components/tutorial/TutorialAnimatedArrow';
 import { useTheme } from '@/context/ThemeContext';
 import { getSizeClassValue, useLayout } from '@/hooks/useLayout';
+import { usePulseAnimation } from '@/hooks/usePulseAnimation';
 import { Fonts } from '@/theme/theme';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { usePulseAnimation } from '@/hooks/usePulseAnimation';
 import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import Animated from 'react-native-reanimated';
@@ -12,6 +12,7 @@ import Animated from 'react-native-reanimated';
 interface TutorialSettingsBarProps {
   // Message-only mode (score step)
   message?: string;
+  onMessagePress?: () => void;
 
   // Play / timer
   showPlay?: boolean;
@@ -20,22 +21,31 @@ interface TutorialSettingsBarProps {
   highlightPlay?: boolean;
   timeLeft?: number;
 
+  // Ratio label (e.g., "M1")
+  ratioLabel?: string;
+
   // Undo
   onUndo?: () => void;
   canUndo?: boolean;
   highlightUndo?: boolean;
+
+  // Message tap hint
+  highlightMessage?: boolean;
 }
 
 export default function TutorialSettingsBar({
   message,
+  onMessagePress,
   showPlay = false,
   isPlaying = false,
   onPlay,
   highlightPlay = false,
   timeLeft,
+  ratioLabel,
   onUndo,
   canUndo = false,
   highlightUndo = false,
+  highlightMessage = false,
 }: TutorialSettingsBarProps) {
   const { palette } = useTheme();
   const { isLandscape, sizeClass } = useLayout();
@@ -44,6 +54,7 @@ export default function TutorialSettingsBar({
 
   const undoPulseStyle = usePulseAnimation(highlightUndo);
   const playPulseStyle = usePulseAnimation(highlightPlay);
+  const chevronPulseStyle = usePulseAnimation(highlightMessage);
 
   const barBg = palette.glassBg;
   const barContentColor = palette.textInverse;
@@ -55,15 +66,22 @@ export default function TutorialSettingsBar({
   };
 
   if (message) {
+    const MessageContainer = onMessagePress ? Pressable : View;
     return (
-      <View
+      <MessageContainer
+        onPress={onMessagePress}
         style={[
           styles.container,
           styles.containerMessage,
           { backgroundColor: barBg, shadowColor: palette.shadow },
         ]}>
         <ThemedText style={[styles.messageText, { color: barContentColor }]}>{message}</ThemedText>
-      </View>
+        {onMessagePress ? (
+          <Animated.View style={chevronPulseStyle}>
+            <MaterialCommunityIcons name="chevron-right" size={iconSize} color={barContentColor} />
+          </Animated.View>
+        ) : null}
+      </MessageContainer>
     );
   }
 
@@ -92,6 +110,7 @@ export default function TutorialSettingsBar({
         </Pressable>
       )}
 
+      {/* Timer */}
       {timeLeft !== undefined && (
         <View style={styles.timerContainer}>
           <ThemedText style={[styles.timerText, { color: barContentColor }]}>
@@ -100,6 +119,31 @@ export default function TutorialSettingsBar({
         </View>
       )}
 
+      {/* Ratio label */}
+      {ratioLabel && (
+        <View style={styles.ratioContainer}>
+          <ThemedText style={[styles.ratioText, { color: barContentColor }]}>
+            {ratioLabel}
+          </ThemedText>
+        </View>
+      )}
+
+      {/* Stats icon (decorative) */}
+      <Pressable style={styles.iconButton} disabled>
+        <MaterialCommunityIcons name="chart-bar" size={iconSize} color={barContentColor} />
+      </Pressable>
+
+      {/* Info icon (decorative) */}
+      <Pressable style={styles.iconButton} disabled>
+        <MaterialCommunityIcons name="information" size={iconSize} color={barContentColor} />
+      </Pressable>
+
+      {/* Settings icon (decorative) */}
+      <Pressable style={styles.iconButton} disabled>
+        <MaterialCommunityIcons name="cog" size={iconSize} color={barContentColor} />
+      </Pressable>
+
+      {/* Undo */}
       {onUndo && (
         <Pressable
           onPress={onUndo}
@@ -131,6 +175,7 @@ function createStyles(isLandscape: boolean, sizeClass: 'small' | 'medium' | 'lar
   const minHeight = getSizeClassValue({ small: 50, medium: 58, large: 64 }, sizeClass);
   const gap = getSizeClassValue({ small: 15, medium: 18, large: 22 }, sizeClass);
   const timerTextSize = getSizeClassValue({ small: 20, medium: 22, large: 24 }, sizeClass);
+  const ratioTextSize = getSizeClassValue({ small: 18, medium: 20, large: 22 }, sizeClass);
   const iconButtonPadding = getSizeClassValue({ small: 5, medium: 7, large: 8 }, sizeClass);
 
   return StyleSheet.create({
@@ -161,11 +206,19 @@ function createStyles(isLandscape: boolean, sizeClass: 'small' | 'medium' | 'lar
     timerContainer: {
       flexDirection: 'row',
       alignItems: 'flex-end',
+      gap: 5,
     },
     timerText: {
       fontSize: timerTextSize,
       fontFamily: Fonts.bold,
       fontVariant: ['tabular-nums'],
+    },
+    ratioContainer: {
+      alignSelf: 'center',
+    },
+    ratioText: {
+      fontSize: ratioTextSize,
+      fontFamily: Fonts.bold,
     },
     iconButton: {
       padding: iconButtonPadding,
@@ -174,7 +227,7 @@ function createStyles(isLandscape: boolean, sizeClass: 'small' | 'medium' | 'lar
       opacity: 0.3,
     },
     buttonHighlight: {
-      ...StyleSheet.absoluteFillObject,
+      ...StyleSheet.absoluteFill,
       borderWidth: 2,
       borderRadius: 20,
       margin: -4,

@@ -37,7 +37,7 @@ export default function DashboardScreen() {
   const metrics = createMetrics(sizeClass);
   const [legacyGamesModalVisible, setLegacyGamesModalVisible] = useState(false);
   const { resetStatsTutorial } = useTutorialStore();
-  const { confirmNewGame } = useNewGame({ onSuccess: () => router.navigate('/Scoreboard') });
+  const { confirmNewGame } = useNewGame();
   const { hasNewVersion } = useVersionCheck();
   const {
     currentTeam,

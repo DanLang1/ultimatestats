@@ -12,6 +12,7 @@ When a user edits a line mid-point, the system determines whether it's a **corre
 When replacing, all existing `pointLines` records for that point are removed and a single corrected snapshot is written with `isSubstitution: false`. This ensures earlier mistaken lines don't count toward playing time.
 
 Injury substitutions store explicit metadata on the appended `PointLineRecord`:
+
 - `substitutionType: 'injury'`
 - `subbedInPlayerIds` / `subbedOutPlayerIds`
 
@@ -73,7 +74,7 @@ const layoutOffset = (dragCurrentIndex.value - dragOriginIndex.value) * ROW_HEIG
 transform: [{ translateY: dragTranslateY.value - layoutOffset }];
 ```
 
-**Conditional LinearTransition** — `LinearTransition.duration(150)` is applied to all items *except* the one being dragged. Without this, `LinearTransition` fights the gesture-driven `translateY`:
+**Conditional LinearTransition** — `LinearTransition.duration(150)` is applied to all items _except_ the one being dragged. Without this, `LinearTransition` fights the gesture-driven `translateY`:
 
 ```typescript
 layout={isDraggingProp ? undefined : LinearTransition.duration(150)}

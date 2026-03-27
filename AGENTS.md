@@ -46,9 +46,6 @@ See `docs/README.md` for directory structure, key concepts, and the New Screen C
 
 ## Useful Commands
 
-- Dev server: `npm run dev`
-- Type check: `npm run typecheck`
-- Lint: `npm run lint`
 - Quick verify (lint + typecheck): `npm run check`
 - Full verify (lint + typecheck + tests): `npm run check:all`
 - Tests: `npm test`

@@ -2,8 +2,9 @@ import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, useLayout } from '@/hooks/useLayout';
 import { Fonts } from '@/theme/theme';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 
 interface TutorialTooltipProps {
@@ -11,6 +12,7 @@ interface TutorialTooltipProps {
   message?: string;
   stepIndex: number;
   position: 'top' | 'bottom' | 'center';
+  onPress?: () => void;
 }
 
 export default function TutorialTooltip({
@@ -18,6 +20,7 @@ export default function TutorialTooltip({
   message,
   stepIndex,
   position,
+  onPress,
 }: TutorialTooltipProps) {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
@@ -29,10 +32,16 @@ export default function TutorialTooltip({
       entering={FadeIn.duration(200)}
       style={styles.wrapper}
       pointerEvents="box-none">
-      <View
+      <Pressable
+        onPress={onPress}
         style={[
           styles.container,
-          { backgroundColor: palette.modalBg, shadowColor: palette.shadow },
+          {
+            backgroundColor: palette.modalBg,
+            shadowColor: palette.shadow,
+            borderWidth: 1,
+            borderColor: palette.overlay15,
+          },
         ]}>
         <ThemedText
           style={[styles.title, { color: palette.modalText }, !message && styles.titleCentered]}>
@@ -44,7 +53,18 @@ export default function TutorialTooltip({
             {message}
           </ThemedText>
         ) : null}
-      </View>
+
+        {onPress ? (
+          <View style={styles.gotItRow}>
+            <ThemedText style={[styles.gotItText, { color: palette.accent }]}>Got it</ThemedText>
+            <MaterialCommunityIcons
+              name="chevron-right"
+              size={scaleBySizeClass(16, sizeClass)}
+              color={palette.accent}
+            />
+          </View>
+        ) : null}
+      </Pressable>
     </Animated.View>
   );
 }
@@ -95,6 +115,15 @@ function createStyles(
     message: {
       fontSize: scaleBySizeClass(13, sizeClass),
       lineHeight: scaleBySizeClass(18, sizeClass),
+    },
+    gotItRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginTop: scaleBySizeClass(6, sizeClass),
+    },
+    gotItText: {
+      fontSize: scaleBySizeClass(13, sizeClass),
+      fontFamily: Fonts.semiBold,
     },
   });
 }

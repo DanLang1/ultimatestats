@@ -87,7 +87,7 @@ export default function HubTabBar({ state, descriptors, navigation }: BottomTabB
   const { sizeClass } = useLayout();
   const pathname = usePathname();
   const segments = useSegments();
-  const { confirmNewGame } = useNewGame({ onSuccess: () => router.navigate('/Scoreboard') });
+  const { confirmNewGame } = useNewGame();
   const styles = createStyles(sizeClass);
   const iconSize = scaleBySizeClass(20, sizeClass);
   const bottomPadding = scaleBySizeClass(6, sizeClass);
