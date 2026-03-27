@@ -28,11 +28,35 @@
   "events": [
     { "type": "goal", "team": "team1", "goalPlayerId": "joel", "assistPlayerId": "lily" },
     { "type": "goal", "team": "team2", "goalPlayerId": null, "assistPlayerId": null },
-    { "type": "turnover", "team": "team1", "subtype": "drop", "playerId": "lily", "player2Id": null },
-    { "type": "goal", "team": "team2", "goalPlayerId": null, "assistPlayerId": null, "triggeredSoftcap": true },
-    { "type": "turnover", "team": "team2", "subtype": "block", "playerId": null, "player2Id": null },
+    {
+      "type": "turnover",
+      "team": "team1",
+      "subtype": "drop",
+      "playerId": "lily",
+      "player2Id": null
+    },
+    {
+      "type": "goal",
+      "team": "team2",
+      "goalPlayerId": null,
+      "assistPlayerId": null,
+      "triggeredSoftcap": true
+    },
+    {
+      "type": "turnover",
+      "team": "team2",
+      "subtype": "block",
+      "playerId": null,
+      "player2Id": null
+    },
     { "type": "goal", "team": "team2", "goalPlayerId": null, "assistPlayerId": null },
-    { "type": "turnover", "team": "team2", "subtype": "block", "playerId": null, "player2Id": null },
+    {
+      "type": "turnover",
+      "team": "team2",
+      "subtype": "block",
+      "playerId": null,
+      "player2Id": null
+    },
     { "type": "goal", "team": "team2", "goalPlayerId": null, "assistPlayerId": null }
   ],
   "gameTo": 4,

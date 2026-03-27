@@ -252,6 +252,7 @@ export function ScoreboardActionBar({
             backgroundColor: barBackgroundColor,
             borderColor: palette.overlay10,
             flexDirection: isVertical ? 'column' : 'row',
+            shadowColor: palette.shadow,
           },
         ]}>
         {/* Drag handle - opens modal during timeout, toggles orientation otherwise */}
@@ -399,7 +400,6 @@ function createStyles(metrics: ActionBarMetrics) {
       borderRadius: containerRadius,
       borderWidth: 1,
       gap: 2 + d,
-      shadowColor: '#000',
       shadowOffset: { width: 0, height: 4 },
       shadowOpacity: 0.25,
       shadowRadius: 8,

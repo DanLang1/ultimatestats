@@ -134,7 +134,7 @@ export default function PointSummaryModal() {
         onPress={handleDismiss}>
         <Animated.View
           entering={SlideInUp.duration(300)}
-          style={[styles.sheet, { backgroundColor: palette.modalBg }]}>
+          style={[styles.sheet, { backgroundColor: palette.modalBg, shadowColor: palette.shadow }]}>
           {/* Header */}
           <View style={styles.header}>
             <Animated.View entering={FadeIn.delay(100)} style={styles.headerContent}>
@@ -282,7 +282,6 @@ function createStyles(sizeClass: SizeClass) {
       padding: 24,
       width: '90%',
       maxWidth: getSizeClassValue(MODAL_MAX_WIDTH_INFO, sizeClass),
-      shadowColor: '#000',
       shadowOffset: { width: 0, height: 8 },
       shadowOpacity: 0.3,
       shadowRadius: 16,

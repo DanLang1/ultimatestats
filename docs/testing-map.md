@@ -6,15 +6,15 @@ Use this to choose test coverage quickly based on the feature you changed.
 
 Tests live in `lib/__tests__/`.
 
-| Change Area | Primary Tests |
-| --- | --- |
-| Game end rules / scoring caps | `lib/__tests__/gameUtils.test.ts`, `lib/__tests__/timeoutUtils.test.ts` |
-| Halftime marker utilities | `lib/__tests__/halftimeUtils.test.ts` |
-| Gender ratio / line expectations | `lib/__tests__/genderRatioUtils.test.ts`, `lib/__tests__/lineUtils.test.ts` |
-| Event timeline / point reconstruction | `lib/__tests__/timelineUtils.test.ts` |
-| Player/team stats calculations | `lib/__tests__/statsUtils.test.ts`, `lib/__tests__/teamStatsUtils.test.ts`, `lib/__tests__/playerStatsUtils.test.ts`, `lib/__tests__/playingTimeStatsUtils.test.ts`, `lib/__tests__/timingStatsUtils.test.ts` |
-| Import/share payload behavior | `lib/__tests__/importTeamTransform.test.ts`, `lib/__tests__/sharingPayloadSize.test.ts` |
-| Saved-game schema migrations | `lib/storage/__tests__/migrations.test.ts`, `lib/storage/__tests__/migrations.snapshot.test.ts`, `lib/storage/__tests__/asyncStorageAdapter.test.ts`, `lib/storage/__tests__/devImport.test.ts` |
+| Change Area                           | Primary Tests                                                                                                                                                                                                 |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Game end rules / scoring caps         | `lib/__tests__/gameUtils.test.ts`, `lib/__tests__/timeoutUtils.test.ts`                                                                                                                                       |
+| Halftime marker utilities             | `lib/__tests__/halftimeUtils.test.ts`                                                                                                                                                                         |
+| Gender ratio / line expectations      | `lib/__tests__/genderRatioUtils.test.ts`, `lib/__tests__/lineUtils.test.ts`                                                                                                                                   |
+| Event timeline / point reconstruction | `lib/__tests__/timelineUtils.test.ts`                                                                                                                                                                         |
+| Player/team stats calculations        | `lib/__tests__/statsUtils.test.ts`, `lib/__tests__/teamStatsUtils.test.ts`, `lib/__tests__/playerStatsUtils.test.ts`, `lib/__tests__/playingTimeStatsUtils.test.ts`, `lib/__tests__/timingStatsUtils.test.ts` |
+| Import/share payload behavior         | `lib/__tests__/importTeamTransform.test.ts`, `lib/__tests__/sharingPayloadSize.test.ts`                                                                                                                       |
+| Saved-game schema migrations          | `lib/storage/__tests__/migrations.test.ts`, `lib/storage/__tests__/migrations.snapshot.test.ts`, `lib/storage/__tests__/asyncStorageAdapter.test.ts`, `lib/storage/__tests__/devImport.test.ts`               |
 
 ## Manual Smoke Checklist
 

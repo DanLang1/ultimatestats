@@ -56,8 +56,11 @@ const midnightElectric = {
   overlay20: 'rgba(255,255,255,0.2)', // input borders, button borders
 
   // Overlay/Glass effects - black (for modals, backdrops)
+  overlayDark05: 'rgba(0,0,0,0.05)', // very subtle dark tint (always dark, unlike overlay05)
   overlayDark40: 'rgba(0,0,0,0.4)', // light backdrop
   overlayDark60: 'rgba(0,0,0,0.6)', // modal backdrop
+  overlayDark70: 'rgba(0,0,0,0.7)', // alert backdrops
+  overlayDark88: 'rgba(0,0,0,0.88)', // game overlay screens (halftime, timeout)
 
   // Accent color overlays
   accentOverlay10: 'rgba(59,130,246,0.1)', // subtle accent bg
@@ -89,6 +92,7 @@ const midnightElectric = {
   // Contrast labels
   // Contrast labels
   textOnAccent: '#FFFFFF',
+  textOnAccentMuted: 'rgba(255,255,255,0.7)', // muted text on colored buttons/banners
 
   // Lock Screen (Fixed Contrast)
   lockScreenText: '#FFFFFF',
@@ -102,88 +106,6 @@ const midnightElectric = {
   discordText: '#FFFFFF',
   discordTextMuted: 'rgba(255, 255, 255, 0.7)',
 } as const;
-
-// =============================================================================
-// UNUSED THEMES (kept for future use)
-// =============================================================================
-
-// /**
-//  * Option 2: "Court Classic" — Clean & Professional
-//  * Crisp, professional look inspired by sports broadcasts.
-//  */
-// const courtClassic = {
-//   // Core
-//   primary: '#1E293B', // Graphite
-//   surface: '#FFFFFF', // Pure White
-//
-//   // UI Accents
-//   accent: '#0EA5E9', // Sky Blue
-//   success: '#14B8A6', // Teal
-//   danger: '#EF4444', // Red
-//   warning: '#F97316', // Orange
-//
-//   // Text
-//   textPrimary: '#111827', // Gray 900
-//   textSecondary: '#6B7280', // Gray 500
-//   textMuted: '#9CA3AF', // Gray 400
-//   textInverse: '#FFFFFF', // White
-//
-//   // Borders & Backgrounds
-//   border: '#E5E7EB', // Gray 200
-//   borderLight: '#F3F4F6', // Gray 100
-//   inputBg: '#F9FAFB', // Gray 50
-//   cardBg: '#FFFFFF', // White
-//   cardBgAlt: '#F9FAFB', // Gray 50
-//   shadow: '#000000',
-//
-//   // Overlay/Glass effects
-//   overlay10: 'rgba(255,255,255,0.1)',
-//   overlay20: 'rgba(255,255,255,0.2)',
-//
-//   // Semantic
-//   disabled: '#9CA3AF', // Gray 400
-// } as const;
-
-// /**
-//  * Option 3: "Sunset Energy" — Bold & Dynamic
-//  * Warmer palette with coral accents. Stands out and feels energetic.
-//  */
-// const sunsetEnergy = {
-//   // Core
-//   primary: '#18181B', // Rich Black
-//   surface: '#FAFAFA', // Warm White
-//
-//   // UI Accents
-//   accent: '#FF6B6B', // Coral
-//   success: '#22C55E', // Spring Green
-//   danger: '#DC2626', // Crimson
-//   warning: '#EAB308', // Gold
-//
-//   // Text
-//   textPrimary: '#18181B', // Zinc 900
-//   textSecondary: '#71717A', // Zinc 500
-//   textMuted: '#A1A1AA', // Zinc 400
-//   textInverse: '#FFFFFF', // White
-//
-//   // Borders & Backgrounds
-//   border: '#E4E4E7', // Zinc 200
-//   borderLight: '#F4F4F5', // Zinc 100
-//   inputBg: '#F4F4F5', // Zinc 100
-//   cardBg: '#FAFAFA', // Zinc 50
-//   cardBgAlt: '#F4F4F5', // Zinc 100
-//   shadow: '#000000',
-//
-//   // Overlay/Glass effects
-//   overlay10: 'rgba(255,255,255,0.1)',
-//   overlay20: 'rgba(255,255,255,0.2)',
-//
-//   // Semantic
-//   disabled: '#A1A1AA', // Zinc 400
-// } as const;
-
-// =============================================================================
-// ACTIVE PALETTE (default export for backwards compatibility during migration)
-// =============================================================================
 
 // =============================================================================
 // ACTIVE PALETTE (default export for backwards compatibility during migration)
@@ -253,8 +175,11 @@ export const lightPalette = {
   overlayModal: 'rgba(0,0,0,0.3)', // Lighter backdrop for light theme
 
   // Overlay/Glass effects - dark (for modals, backdrops)
+  overlayDark05: 'rgba(0,0,0,0.05)', // very subtle dark tint (always dark, unlike overlay05)
   overlayDark40: 'rgba(0,0,0,0.4)', // light backdrop
   overlayDark60: 'rgba(0,0,0,0.6)', // modal backdrop
+  overlayDark70: 'rgba(0,0,0,0.7)', // alert backdrops
+  overlayDark88: 'rgba(0,0,0,0.88)', // game overlay screens (halftime, timeout)
 
   // Accent color overlays
   accentOverlay10: 'rgba(37,99,235,0.1)', // subtle accent bg
@@ -285,6 +210,7 @@ export const lightPalette = {
 
   // Contrast labels
   textOnAccent: '#FFFFFF',
+  textOnAccentMuted: 'rgba(255,255,255,0.7)', // muted text on colored buttons/banners
 
   // Glass/floating bar backgrounds
   glassBg: 'rgba(255, 255, 255, 0.95)', // White with transparency

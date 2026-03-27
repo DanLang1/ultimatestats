@@ -46,15 +46,16 @@ export interface TimeOfPossessionStats {
   hasTopData: boolean;
   team1TotalPossessionMs: number;
   team2TotalPossessionMs: number;
-  team1PossessionPct: number;   // 0–100
+  team1PossessionPct: number; // 0–100
   team2PossessionPct: number;
-  timedPointCount: number;      // points included in calculation
+  timedPointCount: number; // points included in calculation
 }
 ```
 
 Add `computeTimeOfPossessionStats(pointEvents: PointEvents[], events: GameEvent[]): TimeOfPossessionStats`.
 
 **Algorithm per point:**
+
 1. Collect all events for this point (turnovers + goal) sorted by `elapsedMs`.
 2. If any event is missing `elapsedMs`, skip point.
 3. Walk events in order, tracking `currentPossessor` (starts as `point.offensiveTeam`) and `prevElapsedMs = 0`.
@@ -96,14 +97,14 @@ Document the new "Time of Possession" section: what it shows, what data is requi
 
 ## Edge Cases
 
-| Case | Handling |
-|------|----------|
-| Timer was never enabled | `hasTopData = false`, section hidden |
-| Point has turnovers but missing `elapsedMs` on any one | Skip entire point |
-| Callahan (goal scored by defense) | `offensiveTeam` flipped at goal time; treat as a normal `GoalEvent` for the defender |
-| Timeout events | Timeouts do not change possession — skip them in the walk, do not split possession on them |
-| In-progress point | Skip (no goal event yet, point incomplete) |
-| Aggregate mode (multiple saved games) | Sum raw ms across all included points from all games, then compute overall percentage |
+| Case                                                   | Handling                                                                                   |
+| ------------------------------------------------------ | ------------------------------------------------------------------------------------------ |
+| Timer was never enabled                                | `hasTopData = false`, section hidden                                                       |
+| Point has turnovers but missing `elapsedMs` on any one | Skip entire point                                                                          |
+| Callahan (goal scored by defense)                      | `offensiveTeam` flipped at goal time; treat as a normal `GoalEvent` for the defender       |
+| Timeout events                                         | Timeouts do not change possession — skip them in the walk, do not split possession on them |
+| In-progress point                                      | Skip (no goal event yet, point incomplete)                                                 |
+| Aggregate mode (multiple saved games)                  | Sum raw ms across all included points from all games, then compute overall percentage      |
 
 ---
 

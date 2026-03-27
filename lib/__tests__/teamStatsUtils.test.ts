@@ -107,7 +107,6 @@ describe('computeTeamStats', () => {
       expect(stats.timesBroken).toBe(1);
       expect(stats.holds).toBe(0);
     });
-
   });
 
   describe('game flow', () => {

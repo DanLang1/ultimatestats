@@ -160,7 +160,7 @@ export default function EditPlayerModal() {
                 <Pressable
                   style={[styles.confirmButton, { backgroundColor: palette.danger }]}
                   onPress={handleDelete}>
-                  <ThemedText style={[styles.confirmButtonText, { color: '#fff' }]}>
+                  <ThemedText style={[styles.confirmButtonText, { color: palette.textOnAccent }]}>
                     Delete
                   </ThemedText>
                 </Pressable>

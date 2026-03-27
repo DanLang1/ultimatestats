@@ -1,12 +1,12 @@
+import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass } from '@/hooks/useLayout';
 import { useNumberPickerStore } from '@/store/numberPickerStore';
+import { Fonts } from '@/theme/theme';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router } from 'expo-router';
 import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
-import { ThemedText } from '@/components/ThemedText';
-import { Fonts } from '@/theme/theme';
 
 interface NumberPickerProps {
   value: number;
@@ -91,7 +91,11 @@ export function NumberPicker({
           {displayValue || placeholder}
         </ThemedText>
         {suffix && (
-          <View style={[styles.suffixContainer, { borderColor: palette.overlay20 }]}>
+          <View
+            style={[
+              styles.suffixContainer,
+              { borderColor: palette.overlay20, backgroundColor: palette.overlayDark05 },
+            ]}>
             <ThemedText style={[styles.suffixText, { color: palette.textMuted }]}>
               {suffix}
             </ThemedText>
@@ -132,7 +136,6 @@ function createStyles(sizeClass: SizeClass) {
       paddingHorizontal: scaleBySizeClass(12, sizeClass),
       justifyContent: 'center',
       borderLeftWidth: 1,
-      backgroundColor: 'rgba(0,0,0,0.05)',
     },
     suffixText: {
       fontSize: scaleBySizeClass(14, sizeClass),

@@ -91,14 +91,15 @@ Core compound actions (`incrementScore`, `undoLastAction`, `toggleTimeout`, `res
 
 **No risk to saved game data.** There are two storage layers and only one of them is affected by store boundaries:
 
-| Layer | Keys | Affected by refactor? |
-|---|---|---|
-| Storage adapter (canonical) | `'ultimatestats_games'`, `'ultimatestats_teams'` | No |
-| Zustand persist snapshot | `'ultimatestats-game-storage'` | Yes — shape changes |
+| Layer                       | Keys                                             | Affected by refactor? |
+| --------------------------- | ------------------------------------------------ | --------------------- |
+| Storage adapter (canonical) | `'ultimatestats_games'`, `'ultimatestats_teams'` | No                    |
+| Zustand persist snapshot    | `'ultimatestats-game-storage'`                   | Yes — shape changes   |
 
 `SavedGame` and `SavedTeam` data models are unchanged. The adapter keys are managed independently of Zustand store names. `loadSavedGames()` always reads fresh from the adapter on startup, so users' saved games survive any store boundary change.
 
 **What will reset on first launch after update:**
+
 - In-progress game state (scores, live events mid-game) — already the reality when partialize shape changes
 - Game config defaults (`gameTo`, `gameLength`) — one-time reset to defaults
 

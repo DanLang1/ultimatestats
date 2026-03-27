@@ -139,9 +139,7 @@ type PlayerRef =
   | { kind: 'unknown' }
   | { kind: 'untracked' };
 
-type FieldLocation =
-  | { kind: 'zone'; zoneId: string }
-  | { kind: 'xy'; x: number; y: number };
+type FieldLocation = { kind: 'zone'; zoneId: string } | { kind: 'xy'; x: number; y: number };
 
 type PointAction =
   | {
@@ -151,12 +149,7 @@ type PointAction =
       receivingSideId: string;
       puller: PlayerRef;
       receiver?: PlayerRef;
-      result:
-        | 'caught'
-        | 'dropped'
-        | 'landed_in_bounds'
-        | 'landed_in_bounds_rolled_out'
-        | 'bricked';
+      result: 'caught' | 'dropped' | 'landed_in_bounds' | 'landed_in_bounds_rolled_out' | 'bricked';
       hangTimeMs?: number;
       origin?: FieldLocation;
       landing?: FieldLocation;
@@ -332,7 +325,7 @@ So yes: "tracking only my team" and "both teams" belong here as top-level gamepl
 `TrackedPoint` should explicitly store which side started on offense:
 
 ```ts
-offenseStartSideId: string
+offenseStartSideId: string;
 ```
 
 This is important for stats like:
@@ -361,7 +354,7 @@ If line-level labels like "O-line" or "D-line" are ever needed as user-facing ta
 `FieldLocation` coordinates only make sense if each point also records which endzone each side is attacking:
 
 ```ts
-attackingEndzoneBySide: Record<string, Endzone>
+attackingEndzoneBySide: Record<string, Endzone>;
 ```
 
 This is important for:
@@ -398,12 +391,11 @@ Stable IDs are necessary for safe editing, but they are not enough to express re
 For those cases, the possession-establishing `touch` should be able to point back to the action that caused it:
 
 ```ts
-type PointAction =
-  | {
-      kind: 'touch';
-      source: 'pull_pickup' | 'turnover_pickup' | 'dead_disc';
-      causedByActionId?: string;
-    }
+type PointAction = {
+  kind: 'touch';
+  source: 'pull_pickup' | 'turnover_pickup' | 'dead_disc';
+  causedByActionId?: string;
+};
 ```
 
 This is better than relying only on array order during edits.
@@ -470,7 +462,9 @@ That makes common queries simpler:
 For a normal completed point, the outcome should be:
 
 ```ts
-{ kind: 'goal', scoringSideId, actionId }
+{
+  kind: ('goal', scoringSideId, actionId);
+}
 ```
 
 The terminal throw action still carries the detailed action data, including whether there was an identifiable thrower for an assist. The point outcome just answers "how did this point end?"

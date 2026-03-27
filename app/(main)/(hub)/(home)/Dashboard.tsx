@@ -1,4 +1,5 @@
 import LegacyGamesDevModal from '@/components/dashboard/LegacyGamesDevModal';
+import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { useTheme } from '@/context/ThemeContext';
@@ -7,14 +8,13 @@ import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { useNewGame } from '@/hooks/useNewGame';
 import { useVersionCheck } from '@/hooks/useVersionCheck';
 import { useTutorialStore } from '@/store/tutorialStore';
+import { Fonts } from '@/theme/theme';
 import { MaterialIcons } from '@expo/vector-icons';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router, Stack } from 'expo-router';
 import React, { useState } from 'react';
 import { Linking, Pressable, ScrollView, StyleSheet, View } from 'react-native';
-import { ThemedText } from '@/components/ThemedText';
-import { Fonts } from '@/theme/theme';
 
 interface MenuItem {
   icon: keyof typeof MaterialCommunityIcons.glyphMap;
@@ -295,12 +295,16 @@ export default function DashboardScreen() {
                 { backgroundColor: palette.danger },
                 pressed && styles.menuItemPressed,
               ]}>
-              <MaterialCommunityIcons name="bug" size={metrics.bannerIconSize} color="white" />
+              <MaterialCommunityIcons
+                name="bug"
+                size={metrics.bannerIconSize}
+                color={palette.textOnAccent}
+              />
               <View style={styles.discordText}>
-                <ThemedText style={[styles.discordTitle, { color: 'white' }]}>
+                <ThemedText style={[styles.discordTitle, { color: palette.textOnAccent }]}>
                   Reset Version Check
                 </ThemedText>
-                <ThemedText style={[styles.discordSubtitle, { color: 'rgba(255,255,255,0.7)' }]}>
+                <ThemedText style={[styles.discordSubtitle, { color: palette.textOnAccentMuted }]}>
                   DEV ONLY - Reload app after tapping
                 </ThemedText>
               </View>
@@ -318,13 +322,13 @@ export default function DashboardScreen() {
               <MaterialCommunityIcons
                 name="gesture-tap-button"
                 size={metrics.bannerIconSize}
-                color="white"
+                color={palette.textOnAccent}
               />
               <View style={styles.discordText}>
-                <ThemedText style={[styles.discordTitle, { color: 'white' }]}>
+                <ThemedText style={[styles.discordTitle, { color: palette.textOnAccent }]}>
                   Reset Stats Tutorial
                 </ThemedText>
-                <ThemedText style={[styles.discordSubtitle, { color: 'rgba(255,255,255,0.7)' }]}>
+                <ThemedText style={[styles.discordSubtitle, { color: palette.textOnAccentMuted }]}>
                   DEV ONLY - Reset the has seen flag
                 </ThemedText>
               </View>
@@ -363,12 +367,16 @@ export default function DashboardScreen() {
                 { backgroundColor: palette.warning, marginTop: 12 },
                 pressed && styles.menuItemPressed,
               ]}>
-              <MaterialCommunityIcons name="link-off" size={metrics.bannerIconSize} color="white" />
+              <MaterialCommunityIcons
+                name="link-off"
+                size={metrics.bannerIconSize}
+                color={palette.textOnAccent}
+              />
               <View style={styles.discordText}>
-                <ThemedText style={[styles.discordTitle, { color: 'white' }]}>
+                <ThemedText style={[styles.discordTitle, { color: palette.textOnAccent }]}>
                   Test 404 Page
                 </ThemedText>
-                <ThemedText style={[styles.discordSubtitle, { color: 'rgba(255,255,255,0.7)' }]}>
+                <ThemedText style={[styles.discordSubtitle, { color: palette.textOnAccentMuted }]}>
                   DEV ONLY - Navigate to non-existent route
                 </ThemedText>
               </View>

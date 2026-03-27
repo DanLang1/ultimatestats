@@ -206,14 +206,14 @@ This keeps "Vs Avg" and "Vs Max" consistent with the numbers shown elsewhere in 
 
 ## Edge Cases
 
-| Case | Handling |
-|------|----------|
-| Only 1 player has recorded stats | `Vs Max` is 100%; `Vs Avg` is 1.0x for that player |
-| Team average is 0 (e.g. no blocks by anyone) | `ratioToAvg = null`; show raw and "team avg 0" |
-| Negative plus/minus values across team | Show delta vs avg; avoid `% of max` label text |
-| Player has no event stats but appears in line tracking | Show optional line-based relative metrics; event metrics remain raw 0 |
-| Aggregate mode with mixed line-tracking availability | Only show line-based relative metrics when underlying line data exists |
-| Ties for max / rank | Shared rank behavior is acceptable; define deterministic secondary sort in UI |
+| Case                                                   | Handling                                                                      |
+| ------------------------------------------------------ | ----------------------------------------------------------------------------- |
+| Only 1 player has recorded stats                       | `Vs Max` is 100%; `Vs Avg` is 1.0x for that player                            |
+| Team average is 0 (e.g. no blocks by anyone)           | `ratioToAvg = null`; show raw and "team avg 0"                                |
+| Negative plus/minus values across team                 | Show delta vs avg; avoid `% of max` label text                                |
+| Player has no event stats but appears in line tracking | Show optional line-based relative metrics; event metrics remain raw 0         |
+| Aggregate mode with mixed line-tracking availability   | Only show line-based relative metrics when underlying line data exists        |
+| Ties for max / rank                                    | Shared rank behavior is acceptable; define deterministic secondary sort in UI |
 
 ---
 

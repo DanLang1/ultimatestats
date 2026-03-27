@@ -29,7 +29,11 @@ export default function TutorialTooltip({
       entering={FadeIn.duration(200)}
       style={styles.wrapper}
       pointerEvents="box-none">
-      <View style={[styles.container, { backgroundColor: palette.modalBg }]}>
+      <View
+        style={[
+          styles.container,
+          { backgroundColor: palette.modalBg, shadowColor: palette.shadow },
+        ]}>
         <ThemedText
           style={[styles.title, { color: palette.modalText }, !message && styles.titleCentered]}>
           {title}
@@ -76,7 +80,6 @@ function createStyles(
       maxWidth: 400,
       width: '100%',
       gap: scaleBySizeClass(4, sizeClass),
-      shadowColor: '#000',
       shadowOffset: { width: 0, height: 4 },
       shadowOpacity: 0.3,
       shadowRadius: 8,

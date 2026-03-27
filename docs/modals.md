@@ -125,15 +125,15 @@ export function useMyFeatureNavigation() {
 
 ## Key Points
 
-| Rule                                                   | Reason                                                  |
-| ------------------------------------------------------ | ------------------------------------------------------- |
-| Use `router.dismissTo('/')` not `router.back()`        | Prevents "action not handled" errors when no history    |
-| Add `Modal` suffix to filename                         | Makes modal routes clearly identifiable                 |
-| Use `StyleSheet.absoluteFill`                          | Ensures full-screen overlay                             |
-| Set `gestureEnabled: false`                            | Prevents swipe-to-dismiss (handle dismissal explicitly) |
-| Set `contentStyle: { backgroundColor: 'transparent' }` | Shows your overlay background correctly                 |
-| Prefer declarative navigation                          | Avoids useEffect complexity and timing issues           |
-| Use `palette.modalBg` and `palette.modalText`          | Correct colors in both dark and light mode              |
+| Rule                                                   | Reason                                                                                                                 |
+| ------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------- |
+| Use `router.dismissTo('/')` not `router.back()`        | Prevents "action not handled" errors when no history                                                                   |
+| Add `Modal` suffix to filename                         | Makes modal routes clearly identifiable                                                                                |
+| Use `StyleSheet.absoluteFill`                          | Ensures full-screen overlay                                                                                            |
+| Set `gestureEnabled: false`                            | Prevents swipe-to-dismiss (handle dismissal explicitly)                                                                |
+| Set `contentStyle: { backgroundColor: 'transparent' }` | Shows your overlay background correctly                                                                                |
+| Prefer declarative navigation                          | Avoids useEffect complexity and timing issues                                                                          |
+| Use `palette.modalBg` and `palette.modalText`          | Correct colors in both dark and light mode                                                                             |
 | Bottom sheets must use `useSafeAreaInsets()`           | Modals render outside `SafeAreaView`; bottom inset must be applied manually or content clips under the Android nav bar |
 
 ### Modal Navigation from Non-Root Screens

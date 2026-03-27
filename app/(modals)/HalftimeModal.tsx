@@ -77,13 +77,16 @@ export default function HalftimeModal() {
         style={[
           styles.overlay,
           {
-            backgroundColor: 'rgba(0,0,0,0.88)',
+            backgroundColor: palette.overlayDark88,
             padding: 16,
           },
         ]}>
         <Animated.View
           entering={FadeIn.duration(300)}
-          style={[styles.container, { backgroundColor: palette.primary }]}>
+          style={[
+            styles.container,
+            { backgroundColor: palette.primary, shadowColor: palette.shadow },
+          ]}>
           {/* Close button - top right */}
           <Pressable
             onPress={() => router.replace('/Dashboard')}
@@ -358,7 +361,6 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
       maxHeight: '90%',
       borderRadius: 16,
       overflow: 'hidden',
-      shadowColor: '#000',
       shadowOffset: { width: 0, height: 8 },
       shadowOpacity: 0.4,
       shadowRadius: 12,

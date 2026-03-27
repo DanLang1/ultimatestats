@@ -108,7 +108,7 @@ export default function ShiftTimeline({
       </ScrollView>
 
       {/* Legend */}
-      <View style={styles.legendRow}>
+      <View style={[styles.legendRow, { borderColor: palette.overlay05 }]}>
         <View style={styles.legendItem}>
           <View style={[styles.legendDot, { backgroundColor: palette.accent }]} />
           <ThemedText style={[styles.legendText, { color: palette.textMuted }]}>
@@ -187,7 +187,6 @@ function createStyles(sizeClass: SizeClass) {
       gap: scaleBySizeClass(12, sizeClass),
       paddingTop: scaleBySizeClass(8, sizeClass),
       borderTopWidth: 1,
-      borderColor: 'rgba(255,255,255,0.05)',
       justifyContent: 'center',
     },
     legendItem: {

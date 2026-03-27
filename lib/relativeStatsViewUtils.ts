@@ -238,6 +238,8 @@ function isEffectivelyEqual(value: number, format?: RelativePlayingTimeMetric['f
   return Math.abs(value) < 0.05;
 }
 
-function getRoundedPercentDelta(metric: Pick<RelativePlayingTimeMetric, 'raw' | 'teamAvg'>): number {
+function getRoundedPercentDelta(
+  metric: Pick<RelativePlayingTimeMetric, 'raw' | 'teamAvg'>,
+): number {
   return Math.round(metric.raw) - Math.round(metric.teamAvg);
 }

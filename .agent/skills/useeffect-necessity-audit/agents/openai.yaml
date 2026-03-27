@@ -1,4 +1,4 @@
 interface:
-  display_name: "useEffect Audit"
-  short_description: "Audit useEffect usage against React guidance"
-  default_prompt: "Audit all useEffect usage and classify keep vs refactor"
+  display_name: 'useEffect Audit'
+  short_description: 'Audit useEffect usage against React guidance'
+  default_prompt: 'Audit all useEffect usage and classify keep vs refactor'

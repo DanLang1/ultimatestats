@@ -56,14 +56,19 @@ export default function TutorialSettingsBar({
 
   if (message) {
     return (
-      <View style={[styles.container, styles.containerMessage, { backgroundColor: barBg }]}>
+      <View
+        style={[
+          styles.container,
+          styles.containerMessage,
+          { backgroundColor: barBg, shadowColor: palette.shadow },
+        ]}>
         <ThemedText style={[styles.messageText, { color: barContentColor }]}>{message}</ThemedText>
       </View>
     );
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: barBg }]}>
+    <View style={[styles.container, { backgroundColor: barBg, shadowColor: palette.shadow }]}>
       {showPlay && (
         <Pressable onPress={onPlay} style={styles.iconButton}>
           {highlightPlay && (
@@ -135,7 +140,6 @@ function createStyles(isLandscape: boolean, sizeClass: 'small' | 'medium' | 'lar
       borderRadius: isLandscape ? 0 : 20,
       alignItems: 'center',
       justifyContent: 'center',
-      shadowColor: '#000',
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.25,
       shadowRadius: 3.84,

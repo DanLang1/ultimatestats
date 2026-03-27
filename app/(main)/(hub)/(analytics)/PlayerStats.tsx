@@ -172,7 +172,7 @@ export default function PlayerStats() {
                 }}>
                 {stats.roleLabel && (
                   <View style={[styles.labelBadge, { backgroundColor: palette.accent }]}>
-                    <ThemedText style={[styles.labelText, { color: '#FFF' }]}>
+                    <ThemedText style={[styles.labelText, { color: palette.textOnAccent }]}>
                       {stats.roleLabel}
                     </ThemedText>
                   </View>

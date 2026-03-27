@@ -1,3 +1,4 @@
+import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
 import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { MAX_POINT_DURATION_MINUTES, MODAL_MAX_WIDTH_PICKER } from '@/lib/constants';
@@ -7,12 +8,11 @@ import {
   getPointDurationValidationError,
 } from '@/lib/timelineUtils';
 import { useGameStore } from '@/store/gameStore';
+import { Fonts } from '@/theme/theme';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
-import { ThemedText } from '@/components/ThemedText';
-import { Fonts } from '@/theme/theme';
 
 type ActiveField = 'minutes' | 'seconds';
 

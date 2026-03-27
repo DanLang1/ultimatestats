@@ -21,6 +21,7 @@ module.exports = defineConfig([
       'local/no-unscaled-sizes': 'error',
       'local/no-raw-text': 'error',
       'local/no-font-weight': 'error',
+      'local/no-raw-colors': 'error',
       'no-restricted-syntax': [
         'error',
         {

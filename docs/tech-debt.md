@@ -121,7 +121,6 @@ This document tracks intentionally deferred cleanup work discovered during the d
   `lib/timeoutUtils.ts`
   `store/gameStore.types.ts`
 
-
 ## P3 - Expo Router Naming and Feature Grouping
 
 - Standardize route filenames to lowercase kebab-case for long-term consistency (for example `GameInfo.tsx` -> `game-info.tsx`) with a planned migration that preserves existing links during rollout.

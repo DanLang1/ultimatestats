@@ -83,13 +83,13 @@ Full `SavedGame` object (events, scores, teams, timestamps).
 
 Tested with realistic mock data (`lib/__tests__/sharingPayloadSize.test.ts`):
 
-| Scenario | Events | SharedPayload JSON |
-|---|---|---|
-| Short game (11 pts, 14 players) | 33 | **9.2 KB** |
-| Normal game (25 pts, 14 players) | 78 | **19.4 KB** |
-| Long game (35 pts, 20 players) | 102 | **26.2 KB** |
-| Marathon game (45 pts, 25 players) | 134 | **33.6 KB** |
-| Team only (20 players) | — | **2.1 KB** |
+| Scenario                           | Events | SharedPayload JSON |
+| ---------------------------------- | ------ | ------------------ |
+| Short game (11 pts, 14 players)    | 33     | **9.2 KB**         |
+| Normal game (25 pts, 14 players)   | 78     | **19.4 KB**        |
+| Long game (35 pts, 20 players)     | 102    | **26.2 KB**        |
+| Marathon game (45 pts, 25 players) | 134    | **33.6 KB**        |
+| Team only (20 players)             | —      | **2.1 KB**         |
 
 **Conclusion**: All payloads well under 100KB. No compression needed.
 
@@ -122,9 +122,9 @@ When recipient already has a team with the same `id` (captain re-shared after ro
 ```typescript
 interface SharedPayload {
   type: 'game' | 'team';
-  appVersion: string;        // sender's app version
-  schemaVersion: number;     // for forward/backward compat
-  sharedAt: number;          // timestamp
+  appVersion: string; // sender's app version
+  schemaVersion: number; // for forward/backward compat
+  sharedAt: number; // timestamp
   data: SavedGame | SavedTeam;
 }
 ```
@@ -194,23 +194,27 @@ Fields to add to `SavedTeam` when cloud sync is implemented:
 Dedicated import page (`app/Import.tsx`):
 
 **Game import:**
+
 > "Import game?"
 > **Thunderbirds vs Rivals** — 15-12
 > Recorded Jan 15, 2026 • 47 points tracked
 > [Import] [Cancel]
 
 **Team import (new):**
+
 > "Import team?"
 > **Thunderbirds** — 14 players
 > [Import] [Cancel]
 
 **Team import (existing):**
+
 > "You already have **Thunderbirds**"
 > "Do you want to update your roster to match?"
 > Incoming: 16 players • Your version: 14 players
 > [Update Roster] [Keep Mine]
 
 **After import:**
+
 - Game: "Game imported!" → Done button returns home
 - Team: "Team imported!" → View Team button navigates to EditRoster
 
@@ -219,31 +223,33 @@ Dedicated import page (`app/Import.tsx`):
 ## Share Button Placement
 
 **Games:**
+
 - ViewStats screen header — share icon alongside CSV export
 
 **Teams:**
+
 - EditRoster sidebar — Share Team button
 
 ---
 
 ## Implementation Phases
 
-| Phase | Description                                          | Status    |
-| ----- | ---------------------------------------------------- | --------- |
-| 1     | Test payload sizes with real game data               | **Done**  |
-| 2     | Set up Supabase project + `shared_payloads` table    | **Done**  |
-| 3     | Add `updatedAt` / `importedAt` fields to teams       | Future (when cloud sync is built) |
-| 4     | Create `SharedPayload` type + serialize/deserialize  | **Done**  |
-| 5     | Wire up Supabase JS SDK in app (upload/fetch)        | **Done**  |
-| 6     | Android App Links (assetlinks.json + intentFilters)  | Pending fingerprint |
-| 7     | Deep link handling in app (Expo Router route redirect) | **Done**  |
-| 8     | Build import page (app/Import.tsx)                   | **Done**  |
-| 9     | Share button for teams (EditRoster sidebar)           | **Done**  |
-| 10    | Share button for games (ViewStats header)             | **Done**  |
-| 11    | Fallback landing page on u-stat.app                  | **Done**  |
-| 12    | Payload validation + size constraints                | **Done**  |
-| 13    | iOS universal links (AASA file)                      | Future (needs Mac/iOS build) |
-| 14    | TTL cleanup for expired payloads                     | **Done**  |
+| Phase | Description                                            | Status                            |
+| ----- | ------------------------------------------------------ | --------------------------------- |
+| 1     | Test payload sizes with real game data                 | **Done**                          |
+| 2     | Set up Supabase project + `shared_payloads` table      | **Done**                          |
+| 3     | Add `updatedAt` / `importedAt` fields to teams         | Future (when cloud sync is built) |
+| 4     | Create `SharedPayload` type + serialize/deserialize    | **Done**                          |
+| 5     | Wire up Supabase JS SDK in app (upload/fetch)          | **Done**                          |
+| 6     | Android App Links (assetlinks.json + intentFilters)    | Pending fingerprint               |
+| 7     | Deep link handling in app (Expo Router route redirect) | **Done**                          |
+| 8     | Build import page (app/Import.tsx)                     | **Done**                          |
+| 9     | Share button for teams (EditRoster sidebar)            | **Done**                          |
+| 10    | Share button for games (ViewStats header)              | **Done**                          |
+| 11    | Fallback landing page on u-stat.app                    | **Done**                          |
+| 12    | Payload validation + size constraints                  | **Done**                          |
+| 13    | iOS universal links (AASA file)                        | Future (needs Mac/iOS build)      |
+| 14    | TTL cleanup for expired payloads                       | **Done**                          |
 
 ---
 

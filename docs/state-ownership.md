@@ -14,79 +14,79 @@ Use this file to decide where state should live before implementing a change.
 ### `useGameStore` (`store/gameStore.ts`)
 
 - Owns:
-`currentTeam`
-`team2Name`
-`team1Score`
-`team2Score`
-`timeouts/floater/game clock state`
-`events`
-`possession`
-`pendingStatEntry`
-`pendingTurnoverEntry`
-`point timing`
-`line state for current game`
-`savedGames`
-`savedTeams`
+  `currentTeam`
+  `team2Name`
+  `team1Score`
+  `team2Score`
+  `timeouts/floater/game clock state`
+  `events`
+  `possession`
+  `pendingStatEntry`
+  `pendingTurnoverEntry`
+  `point timing`
+  `line state for current game`
+  `savedGames`
+  `savedTeams`
 - Use for:
-Game flow, scoring, roster updates for active team, event creation/editing, save/import/delete game data.
+  Game flow, scoring, roster updates for active team, event creation/editing, save/import/delete game data.
 - Do not duplicate in other stores:
-Scores, possession, event log, saved game/team records.
+  Scores, possession, event log, saved game/team records.
 
 ### `useSettingsStore` (`store/settingsStore.ts`)
 
 - Owns:
-User/game configuration preferences (gender ratio settings, line calling settings, matching-type colors, stat entry order, sidebar collapsed).
+  User/game configuration preferences (gender ratio settings, line calling settings, matching-type colors, stat entry order, sidebar collapsed).
 - Use for:
-Persistent preferences and toggles that are not per-game history.
+  Persistent preferences and toggles that are not per-game history.
 - Do not duplicate in other stores:
-Config toggles or preference values.
+  Config toggles or preference values.
 
 ### `useLinePresetsStore` (`store/linePresetsStore.ts`)
 
 - Owns:
-Preset templates by team, plus `lineConfirmedForNextPoint`.
+  Preset templates by team, plus `lineConfirmedForNextPoint`.
 - Use for:
-Creating/editing/reordering reusable line presets.
+  Creating/editing/reordering reusable line presets.
 - Do not duplicate in other stores:
-Preset collections.
+  Preset collections.
 
 ### `usePlayerStatsStore` (`store/playerStatsStore.ts`)
 
 - Owns:
-Navigation/session context for Player Stats view (`playerId`, selected game, provided event/roster context).
+  Navigation/session context for Player Stats view (`playerId`, selected game, provided event/roster context).
 - Use for:
-Passing player-stats context across screens without persisting gameplay state.
+  Passing player-stats context across screens without persisting gameplay state.
 - Do not duplicate in other stores:
-Player-stats screen selection context.
+  Player-stats screen selection context.
 
 ### `useNumberPickerStore` (`store/numberPickerStore.ts`)
 
 - Owns:
-Transient number picker modal config (`isActive`, bounds, label, callback).
+  Transient number picker modal config (`isActive`, bounds, label, callback).
 - Use for:
-UI control state for `NumberPickerModal`.
+  UI control state for `NumberPickerModal`.
 
 ### `useTutorialStore` (`store/tutorialStore.ts`)
 
 - Owns:
-Persisted onboarding/stat-tutorial completion flags, scoreboard stats-tutorial visibility, and the
-hydration gate used by the `/` entry route.
+  Persisted onboarding/stat-tutorial completion flags, scoreboard stats-tutorial visibility, and the
+  hydration gate used by the `/` entry route.
 - Use for:
-Onboarding completion, tutorial trigger/close/reset behavior, and gating entry navigation until
-tutorial storage has loaded.
+  Onboarding completion, tutorial trigger/close/reset behavior, and gating entry navigation until
+  tutorial storage has loaded.
 
 ### `useUIStore` (`store/uiStore.ts`)
 
 - Owns:
-Scoreboard action bar position and orientation.
+  Scoreboard action bar position and orientation.
 - Use for:
-UI placement/orientation state that is not gameplay data.
+  UI placement/orientation state that is not gameplay data.
 
 ## Common Decisions
 
 - "Should this persist in saved games?"
-If yes, it probably belongs in `useGameStore` or storage schema.
+  If yes, it probably belongs in `useGameStore` or storage schema.
 - "Is this just a view preference?"
-Put it in `useSettingsStore`.
+  Put it in `useSettingsStore`.
 - "Is this only needed while one modal/screen is open?"
-Use a UI-scoped store (`useNumberPickerStore`, `usePlayerStatsStore`) or local component state.
+  Use a UI-scoped store (`useNumberPickerStore`, `usePlayerStatsStore`) or local component state.

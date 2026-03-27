@@ -27,7 +27,13 @@
   "team2Score": 1,
   "events": [
     { "type": "goal", "team": "team1", "goalPlayerId": "p1", "assistPlayerId": "p2" },
-    { "type": "goal", "team": "team1", "goalPlayerId": "p2", "assistPlayerId": "p1", "triggeredHalftime": true },
+    {
+      "type": "goal",
+      "team": "team1",
+      "goalPlayerId": "p2",
+      "assistPlayerId": "p1",
+      "triggeredHalftime": true
+    },
     { "type": "goal", "team": "team2", "goalPlayerId": null, "assistPlayerId": null }
   ],
   "autoHalftimeEnabled": true,

@@ -174,7 +174,7 @@ Individual draggable row in the reorder view. See [Drag-to-Reorder](#drag-to-reo
 
 ### LinePresetEditor
 
-**File**: [LinePresetEditor.tsx](/home/langd/coding/ultimatestats/app/(main)/LinePresetEditor.tsx)
+**File**: [LinePresetEditor.tsx](</home/langd/coding/ultimatestats/app/(main)/LinePresetEditor.tsx>)
 
 Full-page route for managing presets. Handles navigation and state between list/edit views.
 
@@ -195,7 +195,7 @@ Full-page route for managing presets. Handles navigation and state between list/
 
 ### LineEditor (Line Selection UI)
 
-**File**: [LineEditor.tsx](file:///home/langd/coding/ultimatestats/app/(main)/LineEditor.tsx)
+**File**: [LineEditor.tsx](<file:///home/langd/coding/ultimatestats/app/(main)/LineEditor.tsx>)
 
 Full-page route shown after points and for manual line edits.
 
@@ -251,6 +251,7 @@ interface PointLineRecord {
 **File**: `store/gameStore.ts`
 
 Lines are recorded at two points:
+
 1. **LineEditor** (`isSubstitution: false`): When the user sets the line for the next point after a score
 2. **LineEditor** (`isSubstitution: true`, `mode=edit-line`): When the user edits the line mid-game from the scoreboard edit-line button
 
@@ -258,14 +259,15 @@ Lines are recorded at two points:
 
 When a user edits a line during a point, the system determines whether it's a **correction** (wrong line picked) or a **real substitution** (e.g., injury) by comparing how many players changed:
 
-| Players Changed | Behavior | Rationale |
-|----------------|----------|-----------|
-| 1-2 players | **Append** as substitution | Small swap — likely a real sub (injury, fatigue) |
-| 3+ players | **Replace** existing record | Most of the line changed — likely picked the wrong preset |
+| Players Changed | Behavior                    | Rationale                                                 |
+| --------------- | --------------------------- | --------------------------------------------------------- |
+| 1-2 players     | **Append** as substitution  | Small swap — likely a real sub (injury, fatigue)          |
+| 3+ players      | **Replace** existing record | Most of the line changed — likely picked the wrong preset |
 
 When replacing, all existing `pointLines` records for that point are removed and a single corrected snapshot is written with `isSubstitution: false`. This ensures earlier mistaken lines or injury-sub history for that point do not continue to count toward playing time.
 
 For newly recorded games, injury substitutions also store explicit substitution deltas on the appended `PointLineRecord`:
+
 - `substitutionType: 'injury'`
 - `subbedInPlayerIds`
 - `subbedOutPlayerIds`
@@ -278,12 +280,13 @@ These fields are optional and are only written for newer injury-sub records. Whe
 
 Two functions compute playing time, with consistent behavior:
 
-| Function | File | Behavior |
-|----------|------|----------|
-| `computePlayingTime()` | `lib/lineUtils.ts` | Merges all player IDs across all records for a point |
+| Function                    | File                           | Behavior                                             |
+| --------------------------- | ------------------------------ | ---------------------------------------------------- |
+| `computePlayingTime()`      | `lib/lineUtils.ts`             | Merges all player IDs across all records for a point |
 | `computePlayingTimeStats()` | `lib/playingTimeStatsUtils.ts` | Merges all player IDs across all records for a point |
 
 Both use a `Set` to collect all players who appeared in any `PointLineRecord` for a given point number. This means:
+
 - A player subbed out mid-point still gets credit for playing that point
 - A player subbed in mid-point also gets credit
 - If a line is **replaced** (correction), only the corrected players get credit because earlier records for that point are removed
@@ -305,6 +308,7 @@ When a goal is undone (`undoLastAction`) or a pending goal is canceled from stat
 ### Game Events and Point Numbers
 
 All game events (`GoalEvent`, `TurnoverEvent`, `TimeoutEvent`) include an optional `pointNumber` field:
+
 - Goal events use `currentPoint - 1` (since `currentPoint` is incremented before the event is pushed)
 - Turnover and timeout events use `currentPoint` (they occur during the current point)
 - Old saved games may not have this field — stats utilities derive point numbers independently by counting goals in `computePointByPointEvents()`
@@ -444,7 +448,7 @@ When the dragged item swaps with neighbors, its flex layout position changes (be
 
 ```typescript
 const layoutOffset = (dragCurrentIndex.value - dragOriginIndex.value) * ROW_HEIGHT;
-transform: [{ translateY: dragTranslateY.value - layoutOffset }]
+transform: [{ translateY: dragTranslateY.value - layoutOffset }];
 ```
 
 `layoutOffset` accounts for how far the item's natural position has shifted from swaps.

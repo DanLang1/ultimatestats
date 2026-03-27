@@ -30,6 +30,7 @@ Reusable UI conventions for screens and modals.
 - Reference: `docs/architecture-rules.md`.
 
 Example:
+
 ```tsx
 <ScreenHeader
   title="SETTINGS"

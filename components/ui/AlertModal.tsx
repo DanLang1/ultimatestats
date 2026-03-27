@@ -25,7 +25,7 @@ export function AlertModal({ visible, title, onClose, children }: AlertModalProp
 
   return (
     <Modal visible={visible} transparent animationType="fade">
-      <View style={styles.overlay}>
+      <View style={[styles.overlay, { backgroundColor: palette.overlayDark70 }]}>
         <View
           style={[
             styles.container,
@@ -58,7 +58,6 @@ function createStyles(sizeClass: SizeClass) {
   return StyleSheet.create({
     overlay: {
       flex: 1,
-      backgroundColor: 'rgba(0, 0, 0, 0.7)',
       justifyContent: 'center',
       alignItems: 'center',
       padding: 32,

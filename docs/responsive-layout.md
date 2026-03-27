@@ -28,11 +28,11 @@ Based on `smallestDimension` (the shorter screen edge), so the class stays const
 
 Breakpoint constants are defined in `lib/constants.ts` (`SIZE_CLASS_MEDIUM_THRESHOLD`, `SIZE_CLASS_LARGE_THRESHOLD`).
 
-| Value | Threshold | Devices |
-|---|---|---|
-| `small` | < 600dp | Phones |
-| `medium` | >= 600dp | Foldables (inner screen), small tablets |
-| `large` | >= 790dp | Tablets, desktop |
+| Value    | Threshold | Devices                                 |
+| -------- | --------- | --------------------------------------- |
+| `small`  | < 600dp   | Phones                                  |
+| `medium` | >= 600dp  | Foldables (inner screen), small tablets |
+| `large`  | >= 790dp  | Tablets, desktop                        |
 
 **Note:** Because this uses `smallestDimension`, a 1280x800 tablet becomes `large` (smallest=800 >= 790). This is intentional for this project's current breakpoint tuning.
 

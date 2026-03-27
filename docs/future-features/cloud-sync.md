@@ -80,14 +80,14 @@ interface SavedTeam {
 
 ## Implementation Phases
 
-| Phase | Description                                | Status  |
-| ----- | ------------------------------------------ | ------- |
-| 1     | Add `schemaVersion` to SavedGame           | ✅ Done |
-| 2     | Add `updatedAt` to SavedTeam               | Future  |
-| 3     | Integrate auth (Apple/Google sign-in)      | Future  |
-| 4     | Cloud storage for games (union merge)      | Future  |
-| 5     | Cloud storage for teams (last-write-wins)  | Future  |
-| 6     | Background sync + offline queue            | Future  |
+| Phase | Description                               | Status  |
+| ----- | ----------------------------------------- | ------- |
+| 1     | Add `schemaVersion` to SavedGame          | ✅ Done |
+| 2     | Add `updatedAt` to SavedTeam              | Future  |
+| 3     | Integrate auth (Apple/Google sign-in)     | Future  |
+| 4     | Cloud storage for games (union merge)     | Future  |
+| 5     | Cloud storage for teams (last-write-wins) | Future  |
+| 6     | Background sync + offline queue           | Future  |
 
 ---
 

@@ -43,7 +43,7 @@ export default function SettingsBar({ onUndo }: SettingsBarProps) {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: barBg }]}>
+    <View style={[styles.container, { backgroundColor: barBg, shadowColor: palette.shadow }]}>
       {/* Play/Pause */}
       <Pressable onPress={toggleTimer} style={styles.iconButton}>
         <MaterialCommunityIcons
@@ -147,7 +147,6 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
       borderRadius: isLandscape ? 0 : 20,
       alignItems: 'center',
       justifyContent: 'space-between',
-      shadowColor: '#000',
       shadowOffset: {
         width: 0,
         height: 2,

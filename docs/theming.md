@@ -67,13 +67,13 @@ The app uses the Inter font family, loaded via the `expo-font` config plugin. Al
 
 For font weight variations, use `fontFamily` from `Fonts` in `theme/theme.ts` — never use `fontWeight` in styles:
 
-| Weight | Use |
-| --- | --- |
+| Weight            | Use                                                                        |
+| ----------------- | -------------------------------------------------------------------------- |
 | Regular (default) | No `fontFamily` needed — `ThemedText` default type applies `Fonts.regular` |
-| Semi-bold | `fontFamily: Fonts.semiBold` |
-| Bold | `fontFamily: Fonts.bold` |
-| Extra-bold | `fontFamily: Fonts.extraBold` |
-| Black | `fontFamily: Fonts.black` |
+| Semi-bold         | `fontFamily: Fonts.semiBold`                                               |
+| Bold              | `fontFamily: Fonts.bold`                                                   |
+| Extra-bold        | `fontFamily: Fonts.extraBold`                                              |
+| Black             | `fontFamily: Fonts.black`                                                  |
 
 ```tsx
 import { Fonts } from '@/theme/theme';
