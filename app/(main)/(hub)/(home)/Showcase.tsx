@@ -11,7 +11,7 @@ import { useQuery } from '@tanstack/react-query';
 import { router, Stack } from 'expo-router';
 import React from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native';
-import ShowcaseCard from './ShowcaseCard';
+import ShowcaseCard from '@/components/showcase/ShowcaseCard';
 
 export default function ShowcaseScreen() {
   const { palette } = useTheme();

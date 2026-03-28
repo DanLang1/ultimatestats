@@ -341,6 +341,30 @@ export default function DashboardScreen() {
 
             <Pressable
               onPress={() => {
+                useTutorialStore.setState({ hasSeenShowcaseHint: false });
+              }}
+              style={({ pressed }) => [
+                styles.discordBanner,
+                { backgroundColor: palette.danger, marginTop: 12 },
+                pressed && styles.menuItemPressed,
+              ]}>
+              <MaterialCommunityIcons
+                name="trophy-outline"
+                size={metrics.bannerIconSize}
+                color={palette.textOnAccent}
+              />
+              <View style={styles.discordText}>
+                <ThemedText style={[styles.discordTitle, { color: palette.textOnAccent }]}>
+                  Reset Showcase Hint
+                </ThemedText>
+                <ThemedText style={[styles.discordSubtitle, { color: palette.textOnAccentMuted }]}>
+                  DEV ONLY - Show hint banner on Stats page again
+                </ThemedText>
+              </View>
+            </Pressable>
+
+            <Pressable
+              onPress={() => {
                 router.push('/this-route-does-not-exist' as never);
               }}
               style={({ pressed }) => [

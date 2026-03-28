@@ -7,11 +7,13 @@ import {
 } from '@/components/ui/ResponsiveHeaderActions';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import AnalyticsShortcutCard from '@/components/view-stats/AnalyticsShortcutCard';
+import ShowcaseHintBanner from '@/components/view-stats/ShowcaseHintBanner';
 import StatsContent from '@/components/view-stats/StatsContent';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { formatDate, generateCurrentGameCSV } from '@/lib/statsUtils';
 import { useGameStore } from '@/store/gameStore';
+import { useTutorialStore } from '@/store/tutorialStore';
 import { Fonts } from '@/theme/theme';
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
@@ -49,6 +51,7 @@ export default function ViewStatsScreen() {
   const { isLandscape, sizeClass } = useLayout();
   const styles = createStyles(isLandscape, sizeClass);
   const isCompletedGame = useGameStore((state) => state.currentGameStatus === 'finished');
+  const showShowcaseHint = useTutorialStore((s) => !s.hasSeenShowcaseHint);
 
   const team1Name = currentTeam?.name ?? 'Team 1';
 
@@ -177,6 +180,7 @@ export default function ViewStatsScreen() {
       />
 
       <ScrollView contentContainerStyle={[styles.scrollContent, { paddingBottom: 100 }]}>
+        {showShowcaseHint && <ShowcaseHintBanner sizeClass={sizeClass} />}
         <View style={styles.shortcutsSection}>
           <ThemedText style={[styles.sectionLabel, { color: palette.textMuted }]}>
             More Analytics
