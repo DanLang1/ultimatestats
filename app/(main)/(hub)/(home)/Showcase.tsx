@@ -76,11 +76,18 @@ export default function ShowcaseScreen() {
       <ScreenHeader
         title="SHOWCASE"
         onBack={() => router.back()}
-        titleColor={palette.textMuted}
+        titleColor={palette.textInverse}
         backButtonBackgroundColor={palette.overlay10}
       />
 
-      <ScrollView contentContainerStyle={styles.scrollContent}>{renderBody()}</ScrollView>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        {hasItems(games) && (
+          <ThemedText style={[styles.metaLine, { color: palette.textMuted }]}>
+            {games!.length} {games!.length === 1 ? 'game' : 'games'} available
+          </ThemedText>
+        )}
+        {renderBody()}
+      </ScrollView>
     </ThemedView>
   );
 }
@@ -106,6 +113,12 @@ function createStyles(sizeClass: SizeClass) {
       fontSize: scaleBySizeClass(14, sizeClass),
       fontFamily: Fonts.regular,
       textAlign: 'center',
+    },
+    metaLine: {
+      fontSize: scaleBySizeClass(12, sizeClass),
+      fontFamily: Fonts.semiBold,
+      letterSpacing: 0.5,
+      textTransform: 'uppercase',
     },
   });
 }

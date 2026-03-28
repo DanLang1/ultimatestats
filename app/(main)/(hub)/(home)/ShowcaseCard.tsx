@@ -6,6 +6,7 @@ import {
   incrementShowcaseImportCount,
   ShowcaseGameMeta,
 } from '@/lib/sharing';
+import { hasItems } from '@/lib/utils';
 import { useGameStore } from '@/store/gameStore';
 import { Fonts } from '@/theme/theme';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
@@ -45,24 +46,92 @@ export default function ShowcaseCard({ game, sizeClass }: ShowcaseCardProps) {
 
   const viewGameId = importedGameId ?? (alreadyImported ? game.game_id : null);
   const showViewGame = isSuccess || alreadyImported;
+  const importCountLabel = `${game.import_count} ${game.import_count === 1 ? 'import' : 'imports'}`;
+
+  function renderButtonContent() {
+    if (isPending) {
+      return <ActivityIndicator size="small" color={palette.textOnAccent} />;
+    }
+    if (showViewGame) {
+      return (
+        <>
+          <MaterialCommunityIcons
+            name="open-in-new"
+            size={scaleBySizeClass(16, sizeClass)}
+            color={palette.textInverse}
+          />
+          <ThemedText style={[styles.buttonText, { color: palette.textInverse }]}>
+            View Game
+          </ThemedText>
+        </>
+      );
+    }
+    return (
+      <>
+        <MaterialCommunityIcons
+          name="download-outline"
+          size={scaleBySizeClass(16, sizeClass)}
+          color={palette.textOnAccent}
+        />
+        <ThemedText style={[styles.buttonText, { color: palette.textOnAccent }]}>Import</ThemedText>
+      </>
+    );
+  }
 
   return (
-    <View style={[styles.card, { backgroundColor: palette.overlay08 }]}>
-      <View style={styles.cardContent}>
-        <ThemedText style={[styles.cardTitle, { color: palette.textInverse }]}>
+    <View
+      style={[
+        styles.card,
+        {
+          backgroundColor: palette.overlay05,
+          borderColor: showViewGame ? palette.accentOverlay30 : palette.overlay15,
+        },
+      ]}>
+      <View style={styles.cardHeader}>
+        <ThemedText numberOfLines={2} style={[styles.title, { color: palette.textInverse }]}>
           {game.title}
         </ThemedText>
-        {game.description !== null && (
-          <ThemedText style={[styles.cardDescription, { color: palette.textMuted }]}>
-            {game.description}
-          </ThemedText>
-        )}
-        {isError && (
-          <ThemedText style={[styles.errorText, { color: palette.danger }]}>
-            Failed to import. Please try again.
-          </ThemedText>
+
+        {game.import_count > 0 && (
+          <View style={[styles.importBadge, { backgroundColor: palette.accentOverlay10 }]}>
+            <MaterialCommunityIcons
+              name="download-outline"
+              size={scaleBySizeClass(11, sizeClass)}
+              color={palette.accent}
+            />
+            <ThemedText style={[styles.importCount, { color: palette.accent }]}>
+              {importCountLabel}
+            </ThemedText>
+          </View>
         )}
       </View>
+
+      {game.description !== null && (
+        <ThemedText style={[styles.description, { color: palette.textMuted }]}>
+          {game.description}
+        </ThemedText>
+      )}
+
+      {hasItems(game.tags) && (
+        <View style={styles.tagsRow}>
+          {game.tags.map((tag) => (
+            <View
+              key={tag}
+              style={[
+                styles.tag,
+                { backgroundColor: palette.accentOverlay10, borderColor: palette.accentOverlay30 },
+              ]}>
+              <ThemedText style={[styles.tagText, { color: palette.accent }]}>{tag}</ThemedText>
+            </View>
+          ))}
+        </View>
+      )}
+
+      {isError && (
+        <ThemedText style={[styles.errorText, { color: palette.danger }]}>
+          Failed to import. Please try again.
+        </ThemedText>
+      )}
 
       <Pressable
         onPress={() => {
@@ -70,41 +139,23 @@ export default function ShowcaseCard({ game, sizeClass }: ShowcaseCardProps) {
             router.push({ pathname: '/saved-games/[gameId]', params: { gameId: viewGameId } });
             return;
           }
-
           mutate();
         }}
         disabled={isPending}
         style={({ pressed }) => [
-          styles.importButton,
-          {
-            backgroundColor: showViewGame ? palette.accentOverlay10 : palette.accent,
-            borderColor: palette.accentOverlay30,
-          },
-          (pressed || isPending) && styles.importButtonPressed,
-          showViewGame && styles.importButtonDone,
+          styles.button,
+          showViewGame
+            ? {
+                backgroundColor: palette.accentOverlay10,
+                borderColor: palette.accentOverlay30,
+              }
+            : {
+                backgroundColor: palette.accent,
+                borderColor: palette.accent,
+              },
+          (pressed || isPending) && styles.buttonPressed,
         ]}>
-        {isPending ? (
-          <ActivityIndicator size="small" color={palette.textOnAccent} />
-        ) : showViewGame ? (
-          <MaterialCommunityIcons
-            name="open-in-new"
-            size={scaleBySizeClass(18, sizeClass)}
-            color={palette.accent}
-          />
-        ) : (
-          <MaterialCommunityIcons
-            name="download-outline"
-            size={scaleBySizeClass(18, sizeClass)}
-            color={palette.textOnAccent}
-          />
-        )}
-        <ThemedText
-          style={[
-            styles.importButtonText,
-            { color: showViewGame ? palette.accent : palette.textOnAccent },
-          ]}>
-          {showViewGame ? 'View Game' : 'Import'}
-        </ThemedText>
+        {renderButtonContent()}
       </Pressable>
     </View>
   );
@@ -114,26 +165,60 @@ function createStyles(sizeClass: SizeClass) {
   return StyleSheet.create({
     card: {
       borderRadius: scaleBySizeClass(14, sizeClass),
+      borderWidth: 1,
       padding: scaleBySizeClass(16, sizeClass),
-      gap: scaleBySizeClass(12, sizeClass),
+      gap: scaleBySizeClass(10, sizeClass),
     },
-    cardContent: {
-      gap: scaleBySizeClass(4, sizeClass),
+    cardHeader: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      gap: scaleBySizeClass(10, sizeClass),
     },
-    cardTitle: {
-      fontSize: scaleBySizeClass(16, sizeClass),
+    title: {
+      flex: 1,
+      fontSize: scaleBySizeClass(17, sizeClass),
       fontFamily: Fonts.semiBold,
+      lineHeight: scaleBySizeClass(23, sizeClass),
     },
-    cardDescription: {
+    importBadge: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: scaleBySizeClass(4, sizeClass),
+      paddingHorizontal: scaleBySizeClass(8, sizeClass),
+      paddingVertical: scaleBySizeClass(4, sizeClass),
+      borderRadius: scaleBySizeClass(999, sizeClass),
+    },
+    importCount: {
+      fontSize: scaleBySizeClass(11, sizeClass),
+      fontFamily: Fonts.semiBold,
+      letterSpacing: 0.2,
+    },
+    description: {
       fontSize: scaleBySizeClass(13, sizeClass),
       fontFamily: Fonts.regular,
+      lineHeight: scaleBySizeClass(20, sizeClass),
+    },
+    tagsRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: scaleBySizeClass(6, sizeClass),
+    },
+    tag: {
+      paddingHorizontal: scaleBySizeClass(8, sizeClass),
+      paddingVertical: scaleBySizeClass(4, sizeClass),
+      borderRadius: scaleBySizeClass(999, sizeClass),
+      borderWidth: 1,
+    },
+    tagText: {
+      fontSize: scaleBySizeClass(11, sizeClass),
+      fontFamily: Fonts.semiBold,
+      letterSpacing: 0.3,
     },
     errorText: {
       fontSize: scaleBySizeClass(12, sizeClass),
       fontFamily: Fonts.regular,
-      marginTop: scaleBySizeClass(4, sizeClass),
     },
-    importButton: {
+    button: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
@@ -141,16 +226,13 @@ function createStyles(sizeClass: SizeClass) {
       paddingVertical: scaleBySizeClass(10, sizeClass),
       paddingHorizontal: scaleBySizeClass(16, sizeClass),
       borderRadius: scaleBySizeClass(10, sizeClass),
-      alignSelf: 'flex-start',
+      borderWidth: 1,
     },
-    importButtonPressed: {
+    buttonPressed: {
       opacity: 0.8,
       transform: [{ scale: 0.98 }],
     },
-    importButtonDone: {
-      borderWidth: 1,
-    },
-    importButtonText: {
+    buttonText: {
       fontSize: scaleBySizeClass(14, sizeClass),
       fontFamily: Fonts.semiBold,
     },

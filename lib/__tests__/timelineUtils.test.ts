@@ -192,6 +192,42 @@ describe('timelineUtils', () => {
       expect(points[1].timeouts).toHaveLength(1);
       expect(points[1].turnovers).toHaveLength(0);
     });
+
+    it('preserves a timeout taken before point start ahead of the first timed event', () => {
+      const events: GameEvent[] = [
+        timeout('team1'),
+        {
+          type: 'turnover',
+          team: 'team1',
+          subtype: 'throwaway',
+          playerId: null,
+          elapsedMs: 5000,
+        },
+        {
+          type: 'goal',
+          team: 'team2',
+          goalPlayerId: null,
+          assistPlayerId: null,
+          elapsedMs: 12000,
+        },
+      ];
+
+      const points = computePointByPointEvents(events, 'team1', 15);
+      const pointTimeline = buildPointCardTimelineData(points[0], {
+        isTeam1: false,
+        timingEnabled: true,
+        showSplitSeparators: true,
+      });
+
+      expect(points).toHaveLength(1);
+      expect(points[0].timeouts).toHaveLength(1);
+      expect(points[0].turnovers).toHaveLength(1);
+      expect(pointTimeline.mergedEvents.map((event) => event.kind)).toEqual([
+        'timeout',
+        'turnover',
+      ]);
+      expect(pointTimeline.mergedEvents.map((event) => event.data.eventIndex)).toEqual([0, 1]);
+    });
   });
 
   describe('buildTimelineLineupEntries', () => {
@@ -372,14 +408,20 @@ describe('timelineUtils', () => {
       expect(result.map((e) => e.kind)).toEqual(['turnover', 'timeout', 'turnover']);
     });
 
-    it('places events without elapsedMs after timed events', () => {
+    it('preserves raw event order for mixed timed and untimed events', () => {
       const result = mergeTimelineEvents([makeTurnover(0, undefined), makeTurnover(1, 5000)], []);
-      expect(result[0].data.eventIndex).toBe(1); // timed first
-      expect(result[1].data.eventIndex).toBe(0); // untimed last
+      expect(result[0].data.eventIndex).toBe(0);
+      expect(result[1].data.eventIndex).toBe(1);
     });
 
     it('uses raw eventIndex to order untimed turnovers and timeouts', () => {
       const result = mergeTimelineEvents([makeTurnover(1, undefined)], [makeTimeout(0, undefined)]);
+      expect(result.map((e) => e.data.eventIndex)).toEqual([0, 1]);
+      expect(result.map((e) => e.kind)).toEqual(['timeout', 'turnover']);
+    });
+
+    it('keeps a pre-point timeout ahead of the first timed event', () => {
+      const result = mergeTimelineEvents([makeTurnover(1, 5000)], [makeTimeout(0, undefined)]);
       expect(result.map((e) => e.data.eventIndex)).toEqual([0, 1]);
       expect(result.map((e) => e.kind)).toEqual(['timeout', 'turnover']);
     });

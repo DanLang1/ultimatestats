@@ -37,7 +37,7 @@ export default function SavedGameStatsScreen() {
   const { palette, themeMode } = useTheme();
   const { isLandscape, sizeClass } = useLayout();
   const styles = createStyles(isLandscape, sizeClass);
-  const { savedGames, savedTeams, updateSavedGamePlayedAt } = useGameStore();
+  const { savedGames, savedTeams, updateSavedGamePlayedAt, deleteSavedGame } = useGameStore();
   const [pendingShareAction, setPendingShareAction] = useState<(() => Promise<string>) | null>(
     null,
   );
@@ -109,6 +109,25 @@ export default function SavedGameStatsScreen() {
     const now = new Date();
     if (selectedValue.getTime() > now.getTime()) return;
     updateSavedGamePlayedAt(selectedGame.id, selectedValue.getTime());
+  };
+
+  const handleDeleteGame = () => {
+    if (!selectedGame) return;
+    showAlert({
+      title: 'Delete Game?',
+      message: 'Are you sure you want to delete this saved game?',
+      buttons: [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            await deleteSavedGame(selectedGame.id);
+            router.back();
+          },
+        },
+      ],
+    });
   };
 
   const handleOpenAndroidDatePicker = () => {
@@ -193,6 +212,26 @@ export default function SavedGameStatsScreen() {
           name="file-csv"
           size={scaleBySizeClass(18, sizeClass)}
           color={actionIconColor}
+        />
+      ),
+    },
+    {
+      key: 'delete',
+      label: 'Delete',
+      onPress: handleDeleteGame,
+      disabled: !selectedGame,
+      inlineIcon: (
+        <MaterialCommunityIcons
+          name="delete-outline"
+          size={scaleBySizeClass(20, sizeClass)}
+          color={palette.danger}
+        />
+      ),
+      menuIcon: (
+        <MaterialCommunityIcons
+          name="delete-outline"
+          size={scaleBySizeClass(20, sizeClass)}
+          color={palette.danger}
         />
       ),
     },
