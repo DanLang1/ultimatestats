@@ -32,7 +32,7 @@ export const TUTORIAL_STAT_ROSTER: Player[] = [
   { id: 'm1', name: 'M Ing', isActive: true, matchingType: 'mmp', role: 'cutter' },
   { id: 'm2', name: 'H Ing', isActive: true, matchingType: 'mmp', role: 'cutter' },
   { id: 'm3', name: 'Brownlee', isActive: true, matchingType: 'mmp', role: 'hybrid' },
-  { id: 'm4', name: 'Freechild', isActive: true, matchingType: 'mmp', role: 'hybrid' },
+  { id: 'm4', name: 'Freechild', isActive: true, matchingType: 'mmp', role: 'handler' },
   { id: 'm5', name: 'Kocher', isActive: true, matchingType: 'mmp', role: 'cutter' },
   { id: 'm6', name: 'Hayes', isActive: true, matchingType: 'mmp', role: 'cutter' },
   { id: 'm7', name: 'Lindsley', isActive: true, matchingType: 'mmp', role: 'hybrid' },

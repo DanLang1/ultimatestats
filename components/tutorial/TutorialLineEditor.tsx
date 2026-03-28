@@ -43,7 +43,7 @@ export default function TutorialLineEditor({
 }: TutorialLineEditorProps) {
   const { palette } = useTheme();
   const { isLandscape, sizeClass } = useLayout();
-  const styles = createStyles(sizeClass);
+  const styles = createStyles(sizeClass, isLandscape);
   const presetPulseStyle = usePulseAnimation(highlightPreset);
 
   const canConfirm = currentLine.length === numPlayers && (!ratioCheck || ratioCheck.isCorrect);
@@ -200,7 +200,7 @@ export default function TutorialLineEditor({
   );
 }
 
-function createStyles(sizeClass: SizeClass) {
+function createStyles(sizeClass: SizeClass, isLandscape: boolean) {
   return StyleSheet.create({
     container: {
       ...StyleSheet.absoluteFill,
@@ -289,6 +289,7 @@ function createStyles(sizeClass: SizeClass) {
       flex: 1,
       paddingHorizontal: 12,
       paddingTop: 8,
+      paddingBottom: isLandscape ? 88 : 0,
     },
     emptyState: {
       flex: 1,

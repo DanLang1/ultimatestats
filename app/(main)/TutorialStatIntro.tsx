@@ -172,7 +172,14 @@ function createStyles(sizeClass: 'small' | 'medium' | 'large', useRowLayout: boo
       marginBottom: useRowLayout ? 0 : 24,
     },
     title: {
-      fontSize: getSizeClassValue({ small: 44, medium: 52, large: 60 }, sizeClass),
+      fontSize: getSizeClassValue(
+        {
+          small: useRowLayout ? 32 : 44,
+          medium: useRowLayout ? 38 : 52,
+          large: 60,
+        },
+        sizeClass,
+      ),
       fontFamily: Fonts.black,
       letterSpacing: -1,
     },

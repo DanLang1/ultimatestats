@@ -98,6 +98,7 @@ export default {
       },
     ],
     './plugins/withAndroidGradleMemory',
+    './plugins/withFmtFix',
   ],
   experiments: {
     typedRoutes: true,

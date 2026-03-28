@@ -1,7 +1,5 @@
-import { EventToastData } from '@/components/toast/EventToast';
-import { EVENT_RECORDED_TOAST_DURATION_MS } from '@/lib/constants';
 import { checkLineRatio, RatioCheckResult } from '@/lib/genderRatioUtils';
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import {
   TUTORIAL_STAT_EXPECTED_RATIO,
   TUTORIAL_STAT_INITIAL_SCORE_TEAM1,
@@ -144,23 +142,6 @@ export default function useTutorialStatGameState(onComplete?: () => void) {
   // Stat entry
   const [goalScorerId, setGoalScorerId] = useState<string | null>(null);
 
-  // Toast
-  const [toast, setToast] = useState<EventToastData>({
-    visible: false,
-    message: '',
-    tone: 'success',
-    icon: { library: 'material', name: 'check-circle' },
-  });
-  const [toastInstanceId, setToastInstanceId] = useState(0);
-  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  // Cleanup
-  useEffect(() => {
-    return () => {
-      if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
-    };
-  }, []);
-
   // Derived
   const step = TUTORIAL_STAT_STEPS[currentStep];
   const phase = step?.phase ?? 'scoreboard';
@@ -172,15 +153,6 @@ export default function useTutorialStatGameState(onComplete?: () => void) {
     } else {
       onComplete?.();
     }
-  };
-
-  const showToast = (message: string, tone: EventToastData['tone'], iconName: string) => {
-    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
-    setToast({ visible: true, message, tone, icon: { library: 'material', name: iconName } });
-    setToastInstanceId((prev) => prev + 1);
-    toastTimerRef.current = setTimeout(() => {
-      setToast((prev) => ({ ...prev, visible: false }));
-    }, EVENT_RECORDED_TOAST_DURATION_MS);
   };
 
   // Recalc ratio for the NEXT point (point 7 after scoring, which uses the next expected ratio)
@@ -215,7 +187,6 @@ export default function useTutorialStatGameState(onComplete?: () => void) {
 
   const handleSelectBlocker = (playerId: string) => {
     setPossession('team1');
-    showToast(`🥏 flipped to ${TUTORIAL_STAT_TEAM1_NAME}!`, 'success', 'hand-back-left-outline');
 
     if (step?.expectedAction === 'select-blocker') {
       advanceStep();
@@ -313,8 +284,6 @@ export default function useTutorialStatGameState(onComplete?: () => void) {
     pointTimerRunning,
     hasPointStarted,
     goalScorerId,
-    toast,
-    toastInstanceId,
 
     // Handlers
     handleStartPoint,

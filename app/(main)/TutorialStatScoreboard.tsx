@@ -1,5 +1,4 @@
 import { ThemedView } from '@/components/ThemedView';
-import EventToast from '@/components/toast/EventToast';
 import TutorialActionBar from '@/components/tutorial/TutorialActionBar';
 import TutorialLineEditor from '@/components/tutorial/TutorialLineEditor';
 import TutorialSettingsBar from '@/components/tutorial/TutorialSettingsBar';
@@ -60,8 +59,6 @@ export default function TutorialStatScoreboardRoute() {
     pointTimerRunning,
     hasPointStarted,
     goalScorerId,
-    toast,
-    toastInstanceId,
     handleSelectPreset,
     handleTogglePlayer,
     handleConfirmLine,
@@ -222,7 +219,6 @@ export default function TutorialStatScoreboardRoute() {
         />
       )}
 
-      <EventToast toast={toast} toastInstanceId={toastInstanceId} />
     </ThemedView>
   );
 }
