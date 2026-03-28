@@ -6,14 +6,13 @@ import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 
 export type ShareImportState =
-  | { status: 'preview'; payload: SharedPayload }
+  | { status: 'preview'; payload: SharedPayload; isUpdate: boolean }
   | {
       status: 'preview-games';
       payload: SharedPayload;
-      newGames: SavedGame[];
-      duplicateCount: number;
+      games: SavedGame[];
+      updateCount: number;
     }
-  | { status: 'duplicate'; isMultiple?: boolean }
   | { status: 'team-exists'; payload: SharedPayload; existingTeam: SavedTeam }
   | { status: 'error'; message: string }
   | { status: 'done'; type: 'game'; gameId: string }
@@ -27,9 +26,8 @@ function deriveImportState(
 ): ShareImportState {
   if (payload.type === 'game') {
     const game = payload.data as SavedGame;
-    if (savedGames.some((g) => g.id === game.id)) {
-      return { status: 'duplicate' };
-    }
+    const isUpdate = savedGames.some((g) => g.id === game.id);
+    return { status: 'preview', payload, isUpdate };
   }
 
   if (payload.type === 'team') {
@@ -43,17 +41,11 @@ function deriveImportState(
   if (payload.type === 'games') {
     const allGames = payload.data as SavedGame[];
     const existingIds = new Set(savedGames.map((g) => g.id));
-    const newGames = allGames.filter((g) => !existingIds.has(g.id));
-    const duplicateCount = allGames.length - newGames.length;
-
-    if (newGames.length === 0) {
-      return { status: 'duplicate', isMultiple: true };
-    }
-
-    return { status: 'preview-games', payload, newGames, duplicateCount };
+    const updateCount = allGames.filter((g) => existingIds.has(g.id)).length;
+    return { status: 'preview-games', payload, games: allGames, updateCount };
   }
 
-  return { status: 'preview', payload };
+  return { status: 'preview', payload, isUpdate: false };
 }
 
 export function useShareImport(shareId: string | undefined) {

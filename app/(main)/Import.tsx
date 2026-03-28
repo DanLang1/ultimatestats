@@ -44,7 +44,7 @@ export default function ImportScreen() {
     router.push('/EditRoster');
   };
 
-  const handleImportGame = async (payload: SharedPayload) => {
+  const handleImportGame = async (payload: SharedPayload, isUpdate: boolean) => {
     const game = payload.data as SavedGame;
     setImportState({ status: 'done', type: 'game', gameId: game.id });
     await importGame({ ...game, importedAt: Date.now() });
@@ -85,20 +85,13 @@ export default function ImportScreen() {
             <ErrorContent palette={palette} message={importState.message} onDismiss={handleDone} />
           )}
 
-          {importState?.status === 'duplicate' && (
-            <DuplicateContent
-              palette={palette}
-              onDismiss={handleDone}
-              isMultiple={importState.isMultiple}
-            />
-          )}
-
           {importState?.status === 'preview' && importState.payload.type === 'game' && (
             <GamePreviewContent
               palette={palette}
               payload={importState.payload}
               savedTeams={savedTeams}
-              onImport={() => handleImportGame(importState.payload)}
+              isUpdate={importState.isUpdate}
+              onImport={() => handleImportGame(importState.payload, importState.isUpdate)}
               onCancel={handleDone}
             />
           )}
@@ -106,10 +99,10 @@ export default function ImportScreen() {
           {importState?.status === 'preview-games' && (
             <GamesPreviewContent
               palette={palette}
-              newGames={importState.newGames}
-              duplicateCount={importState.duplicateCount}
+              games={importState.games}
+              updateCount={importState.updateCount}
               savedTeams={savedTeams}
-              onImport={() => handleImportGames(importState.newGames)}
+              onImport={() => handleImportGames(importState.games)}
               onCancel={handleDone}
             />
           )}
@@ -208,50 +201,18 @@ function ErrorContent({
   );
 }
 
-function DuplicateContent({
-  palette,
-  onDismiss,
-  isMultiple,
-}: {
-  palette: ReturnType<typeof useTheme>['palette'];
-  onDismiss: () => void;
-  isMultiple?: boolean;
-}) {
-  const { styles, metrics } = useImportUi();
-  return (
-    <View style={styles.content}>
-      <MaterialCommunityIcons
-        name="check-circle-outline"
-        size={metrics.statusIconLarge}
-        color={palette.accent}
-      />
-      <ThemedText style={[styles.title, { color: palette.modalText }]}>
-        {isMultiple ? 'You already have all these games' : 'You already have this game'}
-      </ThemedText>
-      <ThemedText style={[styles.subtitle, { color: palette.modalTextMuted }]}>
-        {isMultiple
-          ? 'All shared games are already in your saved games.'
-          : 'This game is already in your saved games.'}
-      </ThemedText>
-      <Pressable
-        style={[styles.button, { backgroundColor: palette.overlay10 }]}
-        onPress={onDismiss}>
-        <ThemedText style={[styles.buttonText, { color: palette.modalText }]}>OK</ThemedText>
-      </Pressable>
-    </View>
-  );
-}
-
 function GamePreviewContent({
   palette,
   payload,
   savedTeams,
+  isUpdate,
   onImport,
   onCancel,
 }: {
   palette: ReturnType<typeof useTheme>['palette'];
   payload: SharedPayload;
   savedTeams: SavedTeam[];
+  isUpdate: boolean;
   onImport: () => void;
   onCancel: () => void;
 }) {
@@ -268,6 +229,11 @@ function GamePreviewContent({
         color={palette.accent}
       />
       <ThemedText style={[styles.title, { color: palette.modalText }]}>Import game?</ThemedText>
+      {isUpdate && (
+        <ThemedText style={[styles.subtitle, { color: palette.modalTextMuted }]}>
+          You already have this game. Importing will replace your saved copy.
+        </ThemedText>
+      )}
 
       <View style={styles.previewCard}>
         <ThemedText style={[styles.previewTeams, { color: palette.modalText }]}>
@@ -298,20 +264,22 @@ function GamePreviewContent({
 
 function GamesPreviewContent({
   palette,
-  newGames,
-  duplicateCount,
+  games,
+  updateCount,
   savedTeams,
   onImport,
   onCancel,
 }: {
   palette: ReturnType<typeof useTheme>['palette'];
-  newGames: SavedGame[];
-  duplicateCount: number;
+  games: SavedGame[];
+  updateCount: number;
   savedTeams: SavedTeam[];
   onImport: () => void;
   onCancel: () => void;
 }) {
   const { styles, metrics } = useImportUi();
+  const newCount = games.length - updateCount;
+
   return (
     <Animated.View entering={FadeIn.duration(200)} style={styles.content}>
       <MaterialCommunityIcons
@@ -320,17 +288,22 @@ function GamesPreviewContent({
         color={palette.accent}
       />
       <ThemedText style={[styles.title, { color: palette.modalText }]}>
-        Import {newGames.length} game{newGames.length !== 1 ? 's' : ''}?
+        Import {games.length} game{games.length !== 1 ? 's' : ''}?
       </ThemedText>
 
-      {duplicateCount > 0 && (
+      {updateCount > 0 && newCount > 0 && (
         <ThemedText style={[styles.subtitle, { color: palette.modalTextMuted }]}>
-          Skipping {duplicateCount} duplicate{duplicateCount !== 1 ? 's' : ''}
+          {newCount} new · {updateCount} re-imported
+        </ThemedText>
+      )}
+      {updateCount > 0 && newCount === 0 && (
+        <ThemedText style={[styles.subtitle, { color: palette.modalTextMuted }]}>
+          {updateCount === 1 ? 'This game' : 'All games'} will be re-imported
         </ThemedText>
       )}
 
       <ScrollView style={styles.gamesList} contentContainerStyle={styles.gamesListContent}>
-        {newGames.map((game) => {
+        {games.map((game) => {
           const teamName = resolveTeamName(game.team1.id, game.team1.name, savedTeams);
           return (
             <View key={game.id} style={[styles.gameRow, { backgroundColor: palette.overlay05 }]}>
