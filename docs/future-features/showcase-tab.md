@@ -16,11 +16,14 @@ create table showcase_games (
   id           uuid primary key default gen_random_uuid(),
   title        text not null,
   description  text,
-  tags         text[] default '{}',
-  payload      jsonb not null,   -- SharedPayload shape (type: 'game')
-  created_at   timestamptz default now(),
-  is_published boolean default false,
-  import_count integer default 0
+  tags         text[] not null default '{}',
+  game_id      text not null unique,
+  payload      jsonb not null check (payload->>'type' = 'game'),
+  created_at   timestamptz not null default now(),
+  is_published boolean not null default false,
+  import_count integer not null default 0,
+  constraint showcase_games_game_id_matches_payload
+    check (game_id = payload->'data'->>'id')
 );
 ```
 
@@ -63,9 +66,9 @@ The list and the payload are fetched separately to keep the browse experience li
 1. **`lib/sharing/showcaseTypes.ts`** — `ShowcaseGameMeta` type (metadata columns only, no payload)
 2. **`lib/sharing/showcase.ts`** — `fetchShowcaseList()`, `fetchShowcasePayload(id)`, `incrementShowcaseImportCount(id)`
 3. **`lib/sharing/index.ts`** — barrel exports for new types/functions
-4. **`lib/constants.ts`** — add `MAX_SHOWCASE_GAMES = 50`
-5. **`hooks/useShowcase.ts`** — `useShowcaseGames()` TanStack Query hook; `useShowcaseImport()` hook (fetch payload → validate → importGame → fire-and-forget RPC)
-6. **`app/(main)/(hub)/(home)/Showcase.tsx`** — list screen with loading/error/empty states; cards with title, description, tags, import button
+4. **`hooks/useShowcase.ts`** — ~~`useShowcaseGames()` TanStack Query hook; `useShowcaseImport()` hook~~ — inlined directly into `Showcase.tsx` (`useQuery`) and `ShowcaseCard.tsx` (`useMutation`)
+5. **`app/(main)/(hub)/(home)/Showcase.tsx`** — list screen with loading/error/empty states
+6. **`app/(main)/(hub)/(home)/ShowcaseCard.tsx`** — card with title, description, import button; owns `useMutation` for import
 7. **`app/(main)/(hub)/(home)/Dashboard.tsx`** — add entry point (button/card) navigating to `/Showcase`
 8. **`components/navigation/HubTabBar.tsx`** — add `/Showcase` to `(home)` tab's `activePathnames` so home tab stays highlighted
 

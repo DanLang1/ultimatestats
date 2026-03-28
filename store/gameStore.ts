@@ -984,7 +984,7 @@ export const useGameStore = create<GameState>()(
               }
             }
           } else {
-            return;
+            updatedEvent = { ...event };
           }
 
           // Handle elapsedMs for any event type

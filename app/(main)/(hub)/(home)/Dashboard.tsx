@@ -164,6 +164,17 @@ export default function DashboardScreen() {
       ],
     },
     {
+      title: 'EXPLORE',
+      items: [
+        {
+          icon: 'trophy-outline' as const,
+          label: 'Showcase (Beta)',
+          description: 'Browse and import popular games',
+          onPress: () => router.push('/Showcase'),
+        },
+      ],
+    },
+    {
       title: 'HELP',
       items: [
         {

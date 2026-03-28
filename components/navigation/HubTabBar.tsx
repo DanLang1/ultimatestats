@@ -33,7 +33,7 @@ type TabConfig = {
 const TAB_CONFIG: Record<HubTabRouteName, TabConfig> = {
   '(home)': {
     activeIcon: 'view-dashboard',
-    activePathnames: ['/Dashboard', '/Help', '/About'],
+    activePathnames: ['/Dashboard', '/Help', '/About', '/Showcase'],
     href: '/Dashboard',
     inactiveIcon: 'view-dashboard-outline',
     label: 'Home',
