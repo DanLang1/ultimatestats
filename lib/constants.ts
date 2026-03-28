@@ -22,6 +22,9 @@ export const MIN_PLAYED_AT_YEAR = 1968;
 /** Maximum number of games that can be shared at once. */
 export const MAX_SHARE_GAMES = 10;
 
+/** Default React Query stale time in milliseconds. */
+export const DEFAULT_QUERY_STALE_TIME_MS = 2 * 60 * 1000;
+
 /** Maximum character length for tournament names. */
 export const MAX_TOURNAMENT_NAME_LENGTH = 30;
 

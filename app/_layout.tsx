@@ -1,7 +1,9 @@
 import { AlertProvider } from '@/components/ui/AlertProvider';
+import { DEFAULT_QUERY_STALE_TIME_MS } from '@/lib/constants';
 import { loadPersistedTheme, ThemeProvider, useTheme } from '@/context/ThemeContext';
 import { useOrientationLock } from '@/hooks/useOrientationLock';
 import { useSettingsStore } from '@/store/settingsStore';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useState } from 'react';
@@ -9,6 +11,15 @@ import 'react-native-reanimated';
 
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: false,
+      staleTime: DEFAULT_QUERY_STALE_TIME_MS,
+    },
+  },
+});
 
 // KEEP THIS: If we need to suppress the deep link logs, this is how
 // Think it's just a dev issue, won't happen in prod
@@ -63,12 +74,14 @@ export default function RootLayout() {
   }
 
   return (
-    <SafeAreaProvider>
-      <ThemeProvider initialTheme={initialTheme}>
-        <AlertProvider>
-          <RootLayoutInner />
-        </AlertProvider>
-      </ThemeProvider>
-    </SafeAreaProvider>
+    <QueryClientProvider client={queryClient}>
+      <SafeAreaProvider>
+        <ThemeProvider initialTheme={initialTheme}>
+          <AlertProvider>
+            <RootLayoutInner />
+          </AlertProvider>
+        </ThemeProvider>
+      </SafeAreaProvider>
+    </QueryClientProvider>
   );
 }

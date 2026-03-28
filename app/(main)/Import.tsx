@@ -24,7 +24,7 @@ export default function ImportScreen() {
   const { sizeClass } = useLayout();
   const styles = createStyles(sizeClass);
   const { savedTeams, importGame, importTeam, loadTeam } = useGameStore();
-  const { importState, setImportState } = useShareImport(shareId);
+  const { isPending, importState, setImportState } = useShareImport(shareId);
 
   if (!shareId) {
     return null;
@@ -46,15 +46,15 @@ export default function ImportScreen() {
 
   const handleImportGame = async (payload: SharedPayload) => {
     const game = payload.data as SavedGame;
-    await importGame({ ...game, importedAt: Date.now() });
     setImportState({ status: 'done', type: 'game', gameId: game.id });
+    await importGame({ ...game, importedAt: Date.now() });
   };
 
   const handleImportGames = async (games: SavedGame[]) => {
+    setImportState({ status: 'done', type: 'games', count: games.length });
     for (const game of games) {
       await importGame({ ...game, importedAt: Date.now() });
     }
-    setImportState({ status: 'done', type: 'games', count: games.length });
   };
 
   const handleGoToGames = () => {
@@ -64,12 +64,12 @@ export default function ImportScreen() {
 
   const handleImportTeam = async (payload: SharedPayload) => {
     const team = payload.data as SavedTeam;
+    setImportState({ status: 'done', type: 'team' });
     await importTeam(team);
     if (payload.presets?.length) {
       useLinePresetsStore.getState().importPresetsForTeam(team.id, payload.presets);
     }
     loadTeam(team.id);
-    setImportState({ status: 'done', type: 'team' });
   };
 
   return (
@@ -79,13 +79,13 @@ export default function ImportScreen() {
       <View style={styles.centered}>
         <View
           style={[styles.card, { backgroundColor: palette.modalBg, shadowColor: palette.shadow }]}>
-          {importState.status === 'loading' && <LoadingContent palette={palette} />}
+          {isPending && <LoadingContent palette={palette} />}
 
-          {importState.status === 'error' && (
+          {importState?.status === 'error' && (
             <ErrorContent palette={palette} message={importState.message} onDismiss={handleDone} />
           )}
 
-          {importState.status === 'duplicate' && (
+          {importState?.status === 'duplicate' && (
             <DuplicateContent
               palette={palette}
               onDismiss={handleDone}
@@ -93,7 +93,7 @@ export default function ImportScreen() {
             />
           )}
 
-          {importState.status === 'preview' && importState.payload.type === 'game' && (
+          {importState?.status === 'preview' && importState.payload.type === 'game' && (
             <GamePreviewContent
               palette={palette}
               payload={importState.payload}
@@ -103,7 +103,7 @@ export default function ImportScreen() {
             />
           )}
 
-          {importState.status === 'preview-games' && (
+          {importState?.status === 'preview-games' && (
             <GamesPreviewContent
               palette={palette}
               newGames={importState.newGames}
@@ -114,7 +114,7 @@ export default function ImportScreen() {
             />
           )}
 
-          {importState.status === 'preview' && importState.payload.type === 'team' && (
+          {importState?.status === 'preview' && importState.payload.type === 'team' && (
             <TeamPreviewContent
               palette={palette}
               payload={importState.payload}
@@ -123,7 +123,7 @@ export default function ImportScreen() {
             />
           )}
 
-          {importState.status === 'team-exists' && (
+          {importState?.status === 'team-exists' && (
             <TeamExistsContent
               palette={palette}
               payload={importState.payload}
@@ -133,7 +133,7 @@ export default function ImportScreen() {
             />
           )}
 
-          {importState.status === 'done' && importState.type === 'game' && (
+          {importState?.status === 'done' && importState.type === 'game' && (
             <DoneContent
               palette={palette}
               type="game"
@@ -142,7 +142,7 @@ export default function ImportScreen() {
             />
           )}
 
-          {importState.status === 'done' && importState.type === 'team' && (
+          {importState?.status === 'done' && importState.type === 'team' && (
             <DoneContent
               palette={palette}
               type="team"
@@ -151,7 +151,7 @@ export default function ImportScreen() {
             />
           )}
 
-          {importState.status === 'done' && importState.type === 'games' && (
+          {importState?.status === 'done' && importState.type === 'games' && (
             <DoneContent
               palette={palette}
               type="games"

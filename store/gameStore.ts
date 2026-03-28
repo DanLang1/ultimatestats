@@ -2,7 +2,8 @@ import { DEFAULT_HALFTIME_BREAK_SECONDS, DEFAULT_TIMEOUT_SECONDS } from '@/lib/c
 import { checkGameOver } from '@/lib/gameUtils';
 import { hasReachedHalftime } from '@/lib/halftimeUtils';
 import { hasPlayerParticipatedInCurrentGame, UNKNOWN_PLAYER_ID } from '@/lib/playerUtils';
-import { CURRENT_SCHEMA_VERSION, SavedGame, SavedTeam, storage } from '@/lib/storage';
+import { CURRENT_SCHEMA_VERSION, SavedGame, SavedTeam } from '@/lib/storage';
+import { migrateSavedGame, migrateSavedGames } from '@/lib/storage/migrations';
 import { getLatestLineForPoint } from '@/lib/lineUtils';
 import { deriveTimeoutState } from '@/lib/timeoutUtils';
 import { generateId } from '@/lib/utils';
@@ -999,8 +1000,6 @@ export const useGameStore = create<GameState>()(
           updatedEvents[eventIndex] = updatedEvent;
           const updatedGame: SavedGame = { ...game, events: updatedEvents };
 
-          // Persist and update state
-          await storage.saveGame(updatedGame);
           set((state: GameState) => {
             const idx = state.savedGames.findIndex((g) => g.id === gameId);
             if (idx !== -1) {
@@ -1024,8 +1023,6 @@ export const useGameStore = create<GameState>()(
           updatedEvents.splice(eventIndex, 1);
           const updatedGame: SavedGame = { ...game, events: updatedEvents };
 
-          // Persist and update state
-          await storage.saveGame(updatedGame);
           set((state: GameState) => {
             const idx = state.savedGames.findIndex((g) => g.id === gameId);
             if (idx !== -1) {
@@ -1041,7 +1038,6 @@ export const useGameStore = create<GameState>()(
 
           const updatedGame: SavedGame = { ...game, playedAt };
 
-          await storage.saveGame(updatedGame);
           set((state: GameState) => {
             const idx = state.savedGames.findIndex((g) => g.id === gameId);
             if (idx !== -1) {
@@ -1056,7 +1052,6 @@ export const useGameStore = create<GameState>()(
 
           const updatedGame: SavedGame = { ...game, tournamentId };
 
-          await storage.saveGame(updatedGame);
           set((state: GameState) => {
             const idx = state.savedGames.findIndex((g) => g.id === gameId);
             if (idx !== -1) {
@@ -1066,42 +1061,12 @@ export const useGameStore = create<GameState>()(
         },
 
         clearTournamentFromGames: async (tournamentId: string) => {
-          const gamesToUpdate = get().savedGames.filter((g) => g.tournamentId === tournamentId);
-
-          for (const game of gamesToUpdate) {
-            await storage.saveGame({ ...game, tournamentId: undefined });
-          }
-
-          if (gamesToUpdate.length > 0) {
-            set((state: GameState) => {
-              state.savedGames.forEach((g) => {
-                if (g.tournamentId === tournamentId) {
-                  g.tournamentId = undefined;
-                }
-              });
-            });
-          }
-        },
-
-        // Saved Games & Teams Actions
-        loadSavedGames: async () => {
-          try {
-            const games = await storage.loadGames();
-            set((state: GameState) => {
-              state.savedGames = games;
-            });
-          } catch (error) {
-            set((state: GameState) => {
-              state.savedGames = [];
-            });
-            throw error;
-          }
-        },
-
-        loadSavedTeams: async () => {
-          const teams = await storage.loadTeams();
           set((state: GameState) => {
-            state.savedTeams = teams;
+            state.savedGames.forEach((g) => {
+              if (g.tournamentId === tournamentId) {
+                g.tournamentId = undefined;
+              }
+            });
           });
         },
 
@@ -1132,17 +1097,18 @@ export const useGameStore = create<GameState>()(
             team1Color: state.team1BgColor,
             team2Color: state.team2BgColor,
           };
-          await storage.saveGame(game);
-          const games = await storage.loadGames();
           set((state: GameState) => {
-            state.savedGames = games;
+            const idx = state.savedGames.findIndex((g) => g.id === gameId);
+            if (idx >= 0) {
+              state.savedGames[idx] = game;
+            } else {
+              state.savedGames.push(game);
+            }
             state.currentGameId = gameId; // Remember ID for subsequent saves
           });
         },
 
         deleteSavedGame: async (id: string) => {
-          await storage.deleteGame(id);
-          const games = await storage.loadGames();
           const shouldClearCurrentFinishedGame =
             get().currentGameStatus === 'finished' && get().currentGameId === id;
 
@@ -1151,25 +1117,24 @@ export const useGameStore = create<GameState>()(
           }
 
           set((state: GameState) => {
-            state.savedGames = games;
+            state.savedGames = state.savedGames.filter((g) => g.id !== id);
           });
         },
 
         deleteSavedGames: async (ids: string[]) => {
-          await storage.deleteGames(ids);
-          const games = await storage.loadGames();
+          const idSet = new Set(ids);
           const currentGameId = get().currentGameId;
           const shouldClearCurrentFinishedGame =
             get().currentGameStatus === 'finished' &&
             currentGameId !== null &&
-            ids.includes(currentGameId);
+            idSet.has(currentGameId);
 
           if (shouldClearCurrentFinishedGame) {
             get().resetGame();
           }
 
           set((state: GameState) => {
-            state.savedGames = games;
+            state.savedGames = state.savedGames.filter((g) => !idSet.has(g.id));
           });
         },
 
@@ -1177,26 +1142,36 @@ export const useGameStore = create<GameState>()(
           const state = get();
           const team = teamOverride ?? state.currentTeam;
 
-          await storage.saveTeam(team);
-          const teams = await storage.loadTeams();
           set((state: GameState) => {
-            state.savedTeams = teams;
+            const idx = state.savedTeams.findIndex((t) => t.id === team.id);
+            if (idx >= 0) {
+              state.savedTeams[idx] = team;
+            } else {
+              state.savedTeams.push(team);
+            }
           });
         },
 
         importGame: async (game: SavedGame) => {
-          await storage.saveGame(game);
-          const games = await storage.loadGames();
+          const migrated = migrateSavedGame(game);
           set((state: GameState) => {
-            state.savedGames = games;
+            const idx = state.savedGames.findIndex((g) => g.id === migrated.id);
+            if (idx >= 0) {
+              state.savedGames[idx] = migrated;
+            } else {
+              state.savedGames.push(migrated);
+            }
           });
         },
 
         importTeam: async (team: SavedTeam) => {
-          await storage.saveTeam(team);
-          const teams = await storage.loadTeams();
           set((state: GameState) => {
-            state.savedTeams = teams;
+            const idx = state.savedTeams.findIndex((t) => t.id === team.id);
+            if (idx >= 0) {
+              state.savedTeams[idx] = team;
+            } else {
+              state.savedTeams.push(team);
+            }
             // Also update currentTeam if it's the same team (deep copy like loadTeam)
             if (state.currentTeam.id === team.id) {
               state.currentTeam = {
@@ -1209,10 +1184,8 @@ export const useGameStore = create<GameState>()(
         },
 
         deleteTeam: async (id: string) => {
-          await storage.deleteTeam(id);
-          const teams = await storage.loadTeams();
           set((state: GameState) => {
-            state.savedTeams = teams;
+            state.savedTeams = state.savedTeams.filter((t) => t.id !== id);
           });
         },
 
@@ -1232,6 +1205,13 @@ export const useGameStore = create<GameState>()(
       {
         name: 'ultimatestats-game-storage',
         storage: createJSONStorage(() => AsyncStorage),
+        onRehydrateStorage: () => (state) => {
+          if (!state?.savedGames?.length) return;
+          const { games, didChange } = migrateSavedGames(state.savedGames);
+          if (didChange) {
+            useGameStore.setState({ savedGames: games });
+          }
+        },
         // Only persist game-related state, not UI state like pending entries
         partialize: (state: GameState) => ({
           currentTeam: state.currentTeam,

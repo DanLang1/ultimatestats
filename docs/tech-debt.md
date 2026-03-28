@@ -1,6 +1,6 @@
 # Tech Debt Backlog
 
-Last updated: March 17, 2026
+Last updated: March 28, 2026
 
 This document tracks intentionally deferred cleanup work discovered during the docs/rules/workflow audit.
 
@@ -71,23 +71,20 @@ This document tracks intentionally deferred cleanup work discovered during the d
 
 - `gameStore` is a god store spanning six concerns: live game state, timers, roster, game catalog, UI signals, and game config.
 - Proposed split: `gameLibraryStore` (saved games/teams catalog), `gameConfigStore` (pre-game settings that survive reset), `timerStore` (all timer state), slimmed-down `liveGameStore`.
-- Persistence responsibilities are also blurred today: Zustand persist is used for the live session, while the storage adapter separately owns the saved-games/saved-teams library, but `savedGames` and `savedTeams` are still persisted inside the Zustand snapshot as cached copies.
-- Cleanup direction: keep Zustand persist focused on in-progress game/session state and let the storage adapter remain the only source of truth for saved-game and team catalogs.
-- No backwards-compat risk for saved game data — the storage adapter keys are independent of store boundaries.
+- No backwards-compat risk for saved game data — all state lives in a single Zustand persist key today, so store boundaries can be redrawn without touching the schema.
 - References:
   `docs/future-features/store-refactor.md`
   `store/gameStore.ts`
   `store/gameStore.types.ts`
-  `lib/storage/asyncStorageAdapter.ts`
 
-## P3 - Quarantined Saved-Game Recovery UX
+## P3 - gameStore Async Action Signatures
 
-- Saved-game migration now quarantines malformed individual entries instead of failing the whole list load, but there is no user-facing recovery flow yet.
-- Current behavior is effectively silent in production: bad entries disappear from the visible saved-games list while raw payloads are preserved under the quarantine storage key for debugging.
-- Future handling should likely include a visible warning count plus basic actions such as retry after an app update, export raw payload, or delete the quarantined entry.
+- Several store actions (`saveCurrentGame`, `deleteSavedGame`, `deleteSavedGames`, `saveCurrentTeam`, `importGame`, `importTeam`, `deleteTeam`, `updateSavedGame*`, `clearTournamentFromGames`) are typed as `Promise<void>` in `gameStore.types.ts` but no longer contain any async work — they just call Zustand `set()`.
+- These were made async when they called `storage.*` methods. Now that Zustand persist owns all writes, the `async` keyword and `Promise` return types are misleading.
+- Fix: remove `async` and update the type signatures in `gameStore.types.ts`. Callers that `await` them will continue to work but will no longer need to.
 - References:
-  `lib/storage/asyncStorageAdapter.ts`
-  `components/dashboard/LegacyGamesDevModal.tsx`
+  `store/gameStore.ts`
+  `store/gameStore.types.ts`
 
 ## P3 - Stats Tutorial Trigger Consistency
 
@@ -98,16 +95,6 @@ This document tracks intentionally deferred cleanup work discovered during the d
   `app/(main)/Settings.tsx:597`
   `app/(main)/Settings.tsx:598`
   `store/tutorialStore.ts`
-
-## P3 - Saved-Games Recovery Edge Cases
-
-- Healthy saved-games loads do not clear the quarantine storage key, so dev tooling can report stale quarantine counts after the underlying data is fixed.
-- `savedGames` is still persisted in the Zustand store, so corrupt storage can briefly show the last cached saved-games list until the real load fails and clears it.
-- Both issues are low severity and mostly affect rare corruption scenarios or developer testing, so they can stay deferred unless they become noisy in practice.
-- References:
-  `lib/storage/asyncStorageAdapter.ts:103`
-  `components/dashboard/LegacyGamesDevModal.tsx:153`
-  `store/gameStore.ts:1220`
 
 ## P3 - Manual Halftime Correction For Legacy Saved Games
 
@@ -126,6 +113,14 @@ This document tracks intentionally deferred cleanup work discovered during the d
 - References:
   `docs/navigation-map.md`
   `app/(main)/_layout.tsx`
+
+## Resolved (2026-03-28)
+
+### Storage Adapter Removal
+
+- Deleted `asyncStorageAdapter.ts` and the manual read/write pattern it backed. All persistence now goes through Zustand `persist` middleware, which writes automatically on every `set()`. Saves, deletes, and imports are all optimistic state updates — no more `storage.saveGame()` + `storage.loadGames()` pairs.
+- Quarantine logic and `LegacyGamesDevModal` were removed as part of this cleanup. Malformed entries are now skipped with a `console.error` during rehydration; no recovery UX was ever shipped so nothing was lost.
+- The `GameStorage`, `TeamStorage`, `TournamentStorage`, and `Storage` interfaces in `lib/storage/types.ts` were dead after the adapter was removed and have been deleted.
 
 ## Resolved (2026-03-14)
 

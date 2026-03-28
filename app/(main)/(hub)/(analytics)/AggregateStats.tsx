@@ -12,7 +12,6 @@ import AggregateGamesList from '@/components/view-stats/AggregateGamesList';
 import StatsContent from '@/components/view-stats/StatsContent';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import { useLoadSavedGamesWithAlert } from '@/hooks/useLoadSavedGamesWithAlert';
 import { MAX_SHARE_GAMES } from '@/lib/constants';
 import { resolveTeamName } from '@/lib/playerUtils';
 import { serializeGames, uploadPayload } from '@/lib/sharing';
@@ -22,9 +21,9 @@ import { useGameStore } from '@/store/gameStore';
 import { useTournamentStore } from '@/store/tournamentStore';
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 import { File, Paths } from 'expo-file-system';
-import { router, Stack, useFocusEffect } from 'expo-router';
+import { router, Stack } from 'expo-router';
 import * as Sharing from 'expo-sharing';
-import React, { useCallback, useState } from 'react';
+import React, { useState } from 'react';
 import { ScrollView, Share, StyleSheet } from 'react-native';
 
 export default function AggregateStatsScreen() {
@@ -33,7 +32,7 @@ export default function AggregateStatsScreen() {
   const styles = createStyles(isLandscape, sizeClass);
   const { showAlert } = useAlert();
   const { savedGames, savedTeams, updateSavedGameTournament } = useGameStore();
-  const { tournaments, loadTournaments } = useTournamentStore();
+  const { tournaments } = useTournamentStore();
   const [selectedTeam, setSelectedTeam] = useState<string | null>(null);
   const [selectedGameIds, setSelectedGameIds] = useState<Set<string>>(new Set());
   const [showingAggregatedStats, setShowingAggregatedStats] = useState(false);
@@ -41,14 +40,6 @@ export default function AggregateStatsScreen() {
   const [showTournamentPicker, setShowTournamentPicker] = useState(false);
   const [pendingShareAction, setPendingShareAction] = useState<(() => Promise<string>) | null>(
     null,
-  );
-
-  useLoadSavedGamesWithAlert();
-
-  useFocusEffect(
-    useCallback(() => {
-      void loadTournaments();
-    }, [loadTournaments]),
   );
 
   let aggregatedData: {

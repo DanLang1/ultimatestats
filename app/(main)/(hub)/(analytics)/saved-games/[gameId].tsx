@@ -9,7 +9,6 @@ import { ShareConfirmModal } from '@/components/ui/ShareConfirmModal';
 import StatsContent from '@/components/view-stats/StatsContent';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import { useLoadSavedGamesWithAlert } from '@/hooks/useLoadSavedGamesWithAlert';
 import { MIN_PLAYED_AT_YEAR } from '@/lib/constants';
 import { resolveTeamName } from '@/lib/playerUtils';
 import { getGameDisplayTimestamp } from '@/lib/savedGameUtils';
@@ -39,7 +38,6 @@ export default function SavedGameStatsScreen() {
   const { isLandscape, sizeClass } = useLayout();
   const styles = createStyles(isLandscape, sizeClass);
   const { savedGames, savedTeams, updateSavedGamePlayedAt } = useGameStore();
-  useLoadSavedGamesWithAlert();
   const [pendingShareAction, setPendingShareAction] = useState<(() => Promise<string>) | null>(
     null,
   );

@@ -223,8 +223,6 @@ export interface GameState {
   // Saved Games & Teams
   savedGames: SavedGame[];
   savedTeams: SavedTeam[];
-  loadSavedGames: () => Promise<void>;
-  loadSavedTeams: () => Promise<void>;
   saveCurrentGame: () => Promise<void>;
   deleteSavedGame: (id: string) => Promise<void>;
   deleteSavedGames: (ids: string[]) => Promise<void>;

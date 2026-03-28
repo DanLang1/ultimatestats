@@ -52,30 +52,6 @@ export interface Tournament {
   endDate: string; // ISO date string, e.g. "2026-03-14"
 }
 
-// Storage interface - implement this for different storage backends
-export interface GameStorage {
-  saveGame(game: SavedGame): Promise<void>;
-  loadGames(): Promise<SavedGame[]>;
-  deleteGame(id: string): Promise<void>;
-  deleteGames(ids: string[]): Promise<void>;
-}
-
-export interface TeamStorage {
-  saveTeam(team: SavedTeam): Promise<void>;
-  loadTeams(): Promise<SavedTeam[]>;
-  deleteTeam(id: string): Promise<void>;
-  getTeam(id: string): Promise<SavedTeam | null>;
-}
-
-export interface TournamentStorage {
-  saveTournament(tournament: Tournament): Promise<void>;
-  loadTournaments(): Promise<Tournament[]>;
-  deleteTournament(id: string): Promise<void>;
-}
-
-// Combined storage interface
-export interface Storage extends GameStorage, TeamStorage, TournamentStorage {}
-
 // Line Calling Types
 export interface LinePreset {
   id: string;

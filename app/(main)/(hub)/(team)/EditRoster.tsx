@@ -22,7 +22,7 @@ import { useLinePresetsStore } from '@/store/linePresetsStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Pressable, ScrollView, Share, StyleSheet, TextInput, View } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 import { Fonts } from '@/theme/theme';
@@ -45,7 +45,6 @@ export default function EditRosterScreen() {
     saveCurrentTeam,
     clearRoster,
     savedTeams,
-    loadSavedTeams,
   } = useGameStore();
   const { showAlert } = useAlert();
   const { palette } = useTheme();
@@ -55,11 +54,6 @@ export default function EditRosterScreen() {
   // Derived values
   const roster = currentTeam?.roster ?? EMPTY_ROSTER;
   const gameActive = useIsGameActive();
-
-  // Load saved teams on mount
-  useEffect(() => {
-    loadSavedTeams();
-  }, [loadSavedTeams]);
 
   const [showShareConfirm, setShowShareConfirm] = useState(false);
   const [newPlayerName, setNewPlayerName] = useState('');

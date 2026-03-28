@@ -1,3 +1,4 @@
+import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { useAlert } from '@/components/ui/AlertProvider';
 import {
@@ -9,9 +10,9 @@ import AnalyticsShortcutCard from '@/components/view-stats/AnalyticsShortcutCard
 import StatsContent from '@/components/view-stats/StatsContent';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import { useLoadSavedGamesWithAlert } from '@/hooks/useLoadSavedGamesWithAlert';
 import { formatDate, generateCurrentGameCSV } from '@/lib/statsUtils';
 import { useGameStore } from '@/store/gameStore';
+import { Fonts } from '@/theme/theme';
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { File, Paths } from 'expo-file-system';
@@ -19,8 +20,6 @@ import { Redirect, router, Stack, useLocalSearchParams } from 'expo-router';
 import * as Sharing from 'expo-sharing';
 import React from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
-import { ThemedText } from '@/components/ThemedText';
-import { Fonts } from '@/theme/theme';
 
 type ViewMode = 'current' | 'saved' | 'aggregate';
 type ViewStatsOrigin = 'scoreboard';
@@ -52,9 +51,6 @@ export default function ViewStatsScreen() {
   const isCompletedGame = useGameStore((state) => state.currentGameStatus === 'finished');
 
   const team1Name = currentTeam?.name ?? 'Team 1';
-
-  // Load saved games on mount
-  useLoadSavedGamesWithAlert();
 
   // Helper to generate filename for single game exports
   const generateGameFilename = (t1Name: string, t2Name: string, date?: number) => {

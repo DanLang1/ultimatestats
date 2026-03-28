@@ -1,4 +1,3 @@
-import LegacyGamesDevModal from '@/components/dashboard/LegacyGamesDevModal';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
@@ -13,7 +12,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router, Stack } from 'expo-router';
-import React, { useState } from 'react';
+import React from 'react';
 import { Linking, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 interface MenuItem {
@@ -35,7 +34,6 @@ export default function DashboardScreen() {
   const { sizeClass } = useLayout();
   const styles = createStyles(sizeClass);
   const metrics = createMetrics(sizeClass);
-  const [legacyGamesModalVisible, setLegacyGamesModalVisible] = useState(false);
   const { resetStatsTutorial } = useTutorialStore();
   const { confirmNewGame } = useNewGame();
   const { hasNewVersion } = useVersionCheck();
@@ -188,10 +186,6 @@ export default function DashboardScreen() {
   return (
     <ThemedView style={[styles.container, { backgroundColor: palette.primary }]}>
       <Stack.Screen options={{ headerShown: false }} />
-      <LegacyGamesDevModal
-        visible={legacyGamesModalVisible}
-        onClose={() => setLegacyGamesModalVisible(false)}
-      />
 
       <ScreenHeader
         title="DASHBOARD"
@@ -330,30 +324,6 @@ export default function DashboardScreen() {
                 </ThemedText>
                 <ThemedText style={[styles.discordSubtitle, { color: palette.textOnAccentMuted }]}>
                   DEV ONLY - Reset the has seen flag
-                </ThemedText>
-              </View>
-            </Pressable>
-
-            <Pressable
-              onPress={() => {
-                setLegacyGamesModalVisible(true);
-              }}
-              style={({ pressed }) => [
-                styles.discordBanner,
-                { backgroundColor: palette.warning, marginTop: 12 },
-                pressed && styles.menuItemPressed,
-              ]}>
-              <MaterialCommunityIcons
-                name="database-import-outline"
-                size={metrics.bannerIconSize}
-                color={palette.textOnAccent}
-              />
-              <View style={styles.discordText}>
-                <ThemedText style={[styles.discordTitle, { color: palette.textOnAccent }]}>
-                  Import Legacy Game JSON
-                </ThemedText>
-                <ThemedText style={[styles.discordSubtitle, { color: palette.textOnAccent }]}>
-                  DEV ONLY - Paste pre-migration saved-game data
                 </ThemedText>
               </View>
             </Pressable>

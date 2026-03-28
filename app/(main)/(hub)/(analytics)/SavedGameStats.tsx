@@ -10,15 +10,14 @@ import SavedGamesBulkActions from '@/components/view-stats/SavedGamesBulkActions
 import SavedGamesList from '@/components/view-stats/SavedGamesList';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import { useLoadSavedGamesWithAlert } from '@/hooks/useLoadSavedGamesWithAlert';
 import { MAX_SHARE_GAMES } from '@/lib/constants';
 import { serializeGames, uploadPayload } from '@/lib/sharing';
 import { SavedGame } from '@/lib/storage';
 import { useGameStore } from '@/store/gameStore';
 import { useTournamentStore } from '@/store/tournamentStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { router, Stack, useFocusEffect } from 'expo-router';
-import React, { useCallback, useState } from 'react';
+import { router, Stack } from 'expo-router';
+import React, { useState } from 'react';
 import { ScrollView, Share, StyleSheet } from 'react-native';
 
 export default function SavedGameStatsScreen() {
@@ -27,19 +26,11 @@ export default function SavedGameStatsScreen() {
   const styles = createStyles(sizeClass);
   const { savedGames, deleteSavedGames } = useGameStore();
   const { showAlert } = useAlert();
-  const { tournaments, loadTournaments } = useTournamentStore();
+  const { tournaments } = useTournamentStore();
   const [selectedSavedGameIds, setSelectedSavedGameIds] = useState<Set<string>>(new Set());
   const [selectionMode, setSelectionMode] = useState(false);
   const [pendingShareAction, setPendingShareAction] = useState<(() => Promise<string>) | null>(
     null,
-  );
-
-  useLoadSavedGamesWithAlert();
-
-  useFocusEffect(
-    useCallback(() => {
-      void loadTournaments();
-    }, [loadTournaments]),
   );
 
   const handleSelectGame = (game: SavedGame) => {

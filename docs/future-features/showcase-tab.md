@@ -22,6 +22,7 @@ create table showcase_games (
 ```
 
 **Notes:**
+
 - `payload` reuses the existing `SharedPayload` type so `validatePayload()` and the import machinery work without changes
 - `is_published` lets you draft rows in the Supabase dashboard before making them visible in the app
 - Rows are inserted manually (dashboard or service-role key); no app-side upload yet
@@ -42,6 +43,7 @@ Dedup works via `SavedGame.id` (the ID embedded in the payload), not the showcas
 ## Future: User Uploads
 
 When user uploads land:
+
 - Add upload flow (auth will likely be required at that point)
 - Row PK is already UUID, so no schema migration needed
 - Will need moderation/approval layer (the `is_published` flag already supports this)

@@ -53,17 +53,6 @@ describe('tournamentStore', () => {
     useTournamentStore.setState({ tournaments: [] });
   });
 
-  describe('loadTournaments', () => {
-    it('loads tournaments from storage into state', async () => {
-      const stored = [makeTournament()];
-      mockedAsyncStorage.getItem.mockResolvedValue(JSON.stringify(stored));
-
-      await useTournamentStore.getState().loadTournaments();
-
-      expect(useTournamentStore.getState().tournaments).toEqual(stored);
-    });
-  });
-
   describe('addTournament', () => {
     it('creates a tournament and adds it to state', async () => {
       const id = await useTournamentStore
@@ -105,7 +94,7 @@ describe('tournamentStore', () => {
         name: 'Nope',
       });
 
-      expect(mockedAsyncStorage.setItem).not.toHaveBeenCalled();
+      expect(useTournamentStore.getState().tournaments).toHaveLength(0);
     });
   });
 
