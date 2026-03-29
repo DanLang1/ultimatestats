@@ -51,6 +51,11 @@ export default function SavedGameStatsScreen() {
     setSelectedSavedGameIds(new Set());
   };
 
+  const handleEnterSelectionWithGame = (gameId: string) => {
+    setSelectionMode(true);
+    setSelectedSavedGameIds(new Set([gameId]));
+  };
+
   const handleExitSelectionMode = () => {
     setSelectionMode(false);
     setSelectedSavedGameIds(new Set());
@@ -98,6 +103,7 @@ export default function SavedGameStatsScreen() {
     });
   };
 
+  const selectIconColor = selectionMode ? palette.accent : palette.textMuted;
   const headerActions: ResponsiveHeaderAction[] = [
     {
       key: 'aggregate',
@@ -115,6 +121,25 @@ export default function SavedGameStatsScreen() {
           name="chart-box-outline"
           size={scaleBySizeClass(20, sizeClass)}
           color={palette.accent}
+        />
+      ),
+    },
+    {
+      key: 'select',
+      label: selectionMode ? 'Cancel' : 'Select',
+      onPress: handleToggleSelectionMode,
+      inlineIcon: (
+        <MaterialCommunityIcons
+          name="checkbox-multiple-outline"
+          size={scaleBySizeClass(22, sizeClass)}
+          color={selectIconColor}
+        />
+      ),
+      menuIcon: (
+        <MaterialCommunityIcons
+          name="checkbox-multiple-outline"
+          size={scaleBySizeClass(20, sizeClass)}
+          color={selectIconColor}
         />
       ),
     },
@@ -139,10 +164,10 @@ export default function SavedGameStatsScreen() {
           onSelectGame={handleSelectGame}
           selectedGameIds={selectedSavedGameIds}
           onToggleGameSelection={handleToggleSavedGameSelection}
+          onEnterSelectionWithGame={handleEnterSelectionWithGame}
           onClearSelection={() => setSelectedSavedGameIds(new Set())}
           tournaments={tournaments}
           selectionMode={selectionMode}
-          onToggleSelectionMode={handleToggleSelectionMode}
         />
       </ScrollView>
 

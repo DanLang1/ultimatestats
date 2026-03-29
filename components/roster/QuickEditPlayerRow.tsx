@@ -4,7 +4,7 @@ import { MatchingType, Player, PlayerRole } from '@/lib/storage/types';
 import { useSettingsStore } from '@/store/settingsStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
-import { Pressable, StyleSheet, Switch, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, Switch, View } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 import { Fonts } from '@/theme/theme';
 
@@ -321,6 +321,9 @@ function createMetrics(sizeClass: SizeClass) {
     pencilIconSize: scaleBySizeClass(14, sizeClass),
     moreIconSize: scaleBySizeClass(16, sizeClass),
     rolePillIconSize: scaleBySizeClass(13, sizeClass),
-    nativeSwitchScale: getSizeClassValue({ small: 1, medium: 1.08, large: 1.15 }, sizeClass),
+    nativeSwitchScale:
+      Platform.OS === 'ios'
+        ? getSizeClassValue({ small: 0.8, medium: 0.9, large: 1.0 }, sizeClass)
+        : getSizeClassValue({ small: 1, medium: 1.08, large: 1.15 }, sizeClass),
   };
 }

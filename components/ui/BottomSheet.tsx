@@ -32,19 +32,27 @@ export function BottomSheet({
   children,
 }: BottomSheetProps) {
   const { palette } = useTheme();
-  const { bottom: bottomInset } = useSafeAreaInsets();
+  const {
+    bottom: bottomInset,
+    left: leftInset,
+    right: rightInset,
+    top: topInset,
+  } = useSafeAreaInsets();
   const resolvedOverlayColor = overlayColor ?? palette.overlayDark60;
 
   return (
     <View style={StyleSheet.absoluteFill}>
-      <Pressable
-        style={[styles.overlay, { backgroundColor: resolvedOverlayColor }]}
-        onPress={onDismiss}>
+      <View style={[StyleSheet.absoluteFill, { backgroundColor: resolvedOverlayColor }]} />
+      <Pressable style={[styles.overlay, { paddingTop: topInset }]} onPress={onDismiss}>
         <View
           style={[
             styles.sheet,
             sheetStyle,
-            { paddingBottom: Math.max(minBottomPadding, bottomInset) },
+            {
+              paddingBottom: Math.max(minBottomPadding, bottomInset),
+              paddingLeft: leftInset,
+              paddingRight: rightInset,
+            },
           ]}
           onStartShouldSetResponder={() => true}>
           {children}

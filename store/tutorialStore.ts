@@ -8,6 +8,7 @@ interface TutorialState {
   hasSeenStatsTutorial: boolean;
   shouldShowStatsTutorialOnNextGameStart: boolean;
   hasSeenShowcaseHint: boolean;
+  hasSeenLongPressSelectHint: boolean;
 
   // Runtime
   hasHydrated: boolean;
@@ -18,6 +19,7 @@ interface TutorialState {
   closeStatsTutorial: () => void;
   resetStatsTutorial: () => void;
   dismissShowcaseHint: () => void;
+  dismissLongPressSelectHint: () => void;
   setHasHydrated: (hasHydrated: boolean) => void;
 }
 
@@ -28,6 +30,7 @@ export const useTutorialStore = create<TutorialState>()(
       hasSeenStatsTutorial: false,
       shouldShowStatsTutorialOnNextGameStart: false,
       hasSeenShowcaseHint: false,
+      hasSeenLongPressSelectHint: false,
       hasHydrated: false,
 
       completeTutorial: () => set({ hasSeenOnboarding: true }),
@@ -51,6 +54,8 @@ export const useTutorialStore = create<TutorialState>()(
 
       dismissShowcaseHint: () => set({ hasSeenShowcaseHint: true }),
 
+      dismissLongPressSelectHint: () => set({ hasSeenLongPressSelectHint: true }),
+
       setHasHydrated: (hasHydrated) => set({ hasHydrated }),
     }),
     {
@@ -61,6 +66,7 @@ export const useTutorialStore = create<TutorialState>()(
         hasSeenStatsTutorial: state.hasSeenStatsTutorial,
         shouldShowStatsTutorialOnNextGameStart: state.shouldShowStatsTutorialOnNextGameStart,
         hasSeenShowcaseHint: state.hasSeenShowcaseHint,
+        hasSeenLongPressSelectHint: state.hasSeenLongPressSelectHint,
       }),
       onRehydrateStorage: () => (state) => {
         state?.setHasHydrated(true);

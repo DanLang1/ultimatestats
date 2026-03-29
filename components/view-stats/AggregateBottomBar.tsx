@@ -29,6 +29,7 @@ export default function AggregateBottomBar({
   const { isLandscape, sizeClass } = useLayout();
   const styles = createStyles(sizeClass);
   const actionIconSize = scaleBySizeClass(20, sizeClass);
+  const singleRow = isLandscape || sizeClass !== 'small';
 
   if (!isVisible || selectedCount === 0) return null;
 
@@ -52,7 +53,7 @@ export default function AggregateBottomBar({
 
   return (
     <View style={styles.bottomBar}>
-      {!isLandscape && tournamentButton}
+      {!singleRow && tournamentButton}
       <View style={styles.bottomRow}>
         {showShare && onShare && (
           <Pressable
@@ -68,7 +69,7 @@ export default function AggregateBottomBar({
             />
           </Pressable>
         )}
-        {isLandscape && tournamentButton}
+        {singleRow && tournamentButton}
         <Pressable
           style={[
             styles.actionButton,

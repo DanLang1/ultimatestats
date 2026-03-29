@@ -22,9 +22,6 @@ interface SettingsState {
   lineCallingEnabled: boolean;
   numPlayers: number;
 
-  // Sidebar Settings
-  sidebarCollapsed: boolean;
-
   // Roster View
   rosterViewMode: 'chips' | 'cards';
 
@@ -39,7 +36,6 @@ interface SettingsState {
   setFirstPointRatio: (ratio: GenderRatio | null) => void;
   setLineCallingEnabled: (enabled: boolean) => void;
   setNumPlayers: (num: number) => void;
-  setSidebarCollapsed: (collapsed: boolean) => void;
   setRosterViewMode: (mode: 'chips' | 'cards') => void;
   setOrientationMode: (mode: OrientationMode) => void;
   statEntryOrder: 'goal_first' | 'assist_first';
@@ -57,7 +53,6 @@ export const useSettingsStore = create<SettingsState>()(
       firstPointRatio: null,
       lineCallingEnabled: false,
       numPlayers: 7,
-      sidebarCollapsed: false,
       rosterViewMode: 'chips',
       orientationMode: 'system',
 
@@ -72,7 +67,6 @@ export const useSettingsStore = create<SettingsState>()(
       setFirstPointRatio: (ratio) => set({ firstPointRatio: ratio }),
       setLineCallingEnabled: (enabled) => set({ lineCallingEnabled: enabled }),
       setNumPlayers: (num) => set({ numPlayers: num }),
-      setSidebarCollapsed: (collapsed) => set({ sidebarCollapsed: collapsed }),
       setRosterViewMode: (mode) => set({ rosterViewMode: mode }),
       setOrientationMode: (mode) => set({ orientationMode: mode }),
       statEntryOrder: 'goal_first',

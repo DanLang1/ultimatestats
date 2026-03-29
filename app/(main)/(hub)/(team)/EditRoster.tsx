@@ -1,8 +1,8 @@
-import { EditRosterSidebar } from '@/components/EditRosterSidebar';
-import { EditRosterToolbar } from '@/components/EditRosterToolbar';
 import { QuickEditPlayerList } from '@/components/roster/QuickEditPlayerList';
 import RosterBulkActions from '@/components/roster/RosterBulkActions';
 import { RosterControlsHeader } from '@/components/roster/RosterControlsHeader';
+import { TeamActionsBar } from '@/components/roster/TeamActionsBar';
+import { TeamActionsSheet } from '@/components/roster/TeamActionsSheet';
 import { AlertModal } from '@/components/ui/AlertModal';
 import { useAlert } from '@/components/ui/AlertProvider';
 import { PlayerChip } from '@/components/ui/PlayerChip';
@@ -23,7 +23,7 @@ import { useSettingsStore } from '@/store/settingsStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import React, { useState } from 'react';
-import { Pressable, ScrollView, Share, StyleSheet, TextInput, View } from 'react-native';
+import { Modal, Pressable, ScrollView, Share, StyleSheet, TextInput, View } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 import { Fonts } from '@/theme/theme';
 
@@ -48,14 +48,14 @@ export default function EditRosterScreen() {
   } = useGameStore();
   const { showAlert } = useAlert();
   const { palette } = useTheme();
-  const { sidebarCollapsed, setSidebarCollapsed, rosterViewMode, setRosterViewMode } =
-    useSettingsStore();
+  const { rosterViewMode, setRosterViewMode } = useSettingsStore();
 
   // Derived values
   const roster = currentTeam?.roster ?? EMPTY_ROSTER;
   const gameActive = useIsGameActive();
 
   const [showShareConfirm, setShowShareConfirm] = useState(false);
+  const [showActionsSheet, setShowActionsSheet] = useState(false);
   const [newPlayerName, setNewPlayerName] = useState('');
   const [renameModalVisible, setRenameModalVisible] = useState(false);
   const [editTeamName, setEditTeamName] = useState('');
@@ -306,38 +306,6 @@ export default function EditRosterScreen() {
       <Stack.Screen options={{ headerShown: false }} />
 
       <View style={styles.mainLayout}>
-        {/* Sidebar - landscape only, hidden during selection */}
-        {isLandscape && !selectionMode && (
-          <EditRosterSidebar
-            sizeClass={sizeClass}
-            collapsed={sidebarCollapsed}
-            onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
-            onRenameTeam={() => {
-              if (selectionMode) return;
-              setEditTeamName(currentTeam?.name ?? '');
-              setRenameModalVisible(true);
-            }}
-            onNewTeam={handleNewTeam}
-            onSwitchTeam={() => {
-              if (selectionMode) return;
-              resetSelectionState();
-              router.push('/TeamManagementModal');
-            }}
-            onEditPresets={() => {
-              if (selectionMode) return;
-              resetSelectionState();
-              router.push('/LinePresetEditor');
-            }}
-            onShareTeam={handleShareTeam}
-            onClearRoster={handleClearAll}
-            showNewTeam={!gameActive}
-            showSwitchTeam={!gameActive && hasOtherTeams}
-            showEditPresets={roster.length > 0}
-            showShareTeam={roster.length > 0}
-            showClearRoster={roster.length > 0}
-          />
-        )}
-
         {/* Main Content */}
         <View style={styles.mainContent}>
           <ScreenHeader
@@ -345,25 +313,41 @@ export default function EditRosterScreen() {
             onBack={handleBack}
             titleColor={palette.textMuted}
             backButtonBackgroundColor={palette.overlay10}
+            rightSlot={
+              !selectionMode && sizeClass === 'small' ? (
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.moreButton,
+                    { backgroundColor: palette.overlay10 },
+                    pressed && styles.buttonPressed,
+                  ]}
+                  onPress={() => setShowActionsSheet(true)}>
+                  <MaterialCommunityIcons
+                    name="dots-horizontal"
+                    size={scaleBySizeClass(22, sizeClass)}
+                    color={palette.textInverse}
+                  />
+                </Pressable>
+              ) : undefined
+            }
           />
 
-          {/* Toolbar - portrait only, hidden during selection */}
-          {!isLandscape && !selectionMode && (
-            <EditRosterToolbar
+          {/* Actions bar - medium and large screens */}
+          {sizeClass !== 'small' && !selectionMode && (
+            <TeamActionsBar
               sizeClass={sizeClass}
+              viewMode={rosterViewMode}
+              onToggleViewMode={toggleViewMode}
               onRenameTeam={() => {
-                if (selectionMode) return;
                 setEditTeamName(currentTeam?.name ?? '');
                 setRenameModalVisible(true);
               }}
               onNewTeam={handleNewTeam}
               onSwitchTeam={() => {
-                if (selectionMode) return;
                 resetSelectionState();
                 router.push('/TeamManagementModal');
               }}
               onEditPresets={() => {
-                if (selectionMode) return;
                 resetSelectionState();
                 router.push('/LinePresetEditor');
               }}
@@ -428,12 +412,10 @@ export default function EditRosterScreen() {
             <RosterControlsHeader
               sizeClass={sizeClass}
               isSelecting={selectionMode}
-              viewMode={rosterViewMode}
               activeRoleFilter={roleFilter}
               selectedCount={selectedPlayerIds.size}
               allActiveSelected={allActiveSelected}
               hasActivePlayers={hasActivePlayers}
-              onToggleViewMode={toggleViewMode}
               onToggleSelectMode={toggleSelectionMode}
               onToggleSelectAll={allActiveSelected ? deselectAll : selectAll}
               onToggleRoleFilter={toggleRoleFilter}
@@ -674,6 +656,39 @@ export default function EditRosterScreen() {
         }}
         onCancel={() => setShowShareConfirm(false)}
       />
+
+      <Modal
+        visible={showActionsSheet}
+        transparent
+        animationType="fade"
+        supportedOrientations={['portrait', 'landscape']}>
+        <TeamActionsSheet
+          sizeClass={sizeClass}
+          onDismiss={() => setShowActionsSheet(false)}
+          onRenameTeam={() => {
+            setEditTeamName(currentTeam?.name ?? '');
+            setRenameModalVisible(true);
+          }}
+          onNewTeam={handleNewTeam}
+          onSwitchTeam={() => {
+            resetSelectionState();
+            router.push('/TeamManagementModal');
+          }}
+          onEditPresets={() => {
+            resetSelectionState();
+            router.push('/LinePresetEditor');
+          }}
+          onShareTeam={handleShareTeam}
+          onClearRoster={handleClearAll}
+          viewMode={rosterViewMode}
+          onToggleViewMode={toggleViewMode}
+          showNewTeam={!gameActive}
+          showSwitchTeam={!gameActive && hasOtherTeams}
+          showEditPresets={roster.length > 0}
+          showShareTeam={roster.length > 0}
+          showClearRoster={roster.length > 0}
+        />
+      </Modal>
     </View>
   );
 }
@@ -685,7 +700,6 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     },
     mainLayout: {
       flex: 1,
-      flexDirection: isLandscape ? 'row' : 'column',
     },
     mainContent: {
       flex: 1,
@@ -718,6 +732,10 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
       borderRadius: scaleBySizeClass(12, sizeClass),
       alignItems: 'center',
       justifyContent: 'center',
+    },
+    moreButton: {
+      padding: scaleBySizeClass(8, sizeClass),
+      borderRadius: scaleBySizeClass(20, sizeClass),
     },
     buttonPressed: {
       opacity: 0.8,

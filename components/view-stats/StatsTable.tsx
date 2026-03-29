@@ -275,7 +275,7 @@ export default function StatsTable({
           </View>
         </View>
       )}
-      {isLandscape ? (
+      {isLandscape || sizeClass !== 'small' ? (
         <View style={[styles.tableContainer, { borderColor: palette.overlay10 }]}>
           <View
             style={[

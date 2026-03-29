@@ -11,12 +11,10 @@ type RoleFilter = PlayerRole | 'unset' | null;
 
 interface RosterControlsHeaderProps {
   isSelecting: boolean;
-  viewMode: 'chips' | 'cards';
   activeRoleFilter: RoleFilter;
   selectedCount: number;
   allActiveSelected: boolean;
   hasActivePlayers: boolean;
-  onToggleViewMode: () => void;
   onToggleSelectMode: () => void;
   onToggleSelectAll: () => void;
   onToggleRoleFilter: (role: Exclude<RoleFilter, null>) => void;
@@ -25,12 +23,10 @@ interface RosterControlsHeaderProps {
 
 export function RosterControlsHeader({
   isSelecting,
-  viewMode,
   activeRoleFilter,
   selectedCount,
   allActiveSelected,
   hasActivePlayers,
-  onToggleViewMode,
   onToggleSelectMode,
   onToggleSelectAll,
   onToggleRoleFilter,
@@ -66,30 +62,6 @@ export function RosterControlsHeader({
           {!isSelecting ? (
             <>
               <Pressable
-                onPress={onToggleViewMode}
-                style={({ pressed }) => [
-                  styles.primaryChip,
-                  {
-                    borderColor: viewMode === 'chips' ? palette.accent : palette.overlay20,
-                    backgroundColor: viewMode === 'chips' ? palette.accent : palette.overlay08,
-                  },
-                  pressed && styles.pressed,
-                ]}>
-                <MaterialCommunityIcons
-                  name={viewMode === 'chips' ? 'view-list' : 'view-module'}
-                  size={metrics.primaryIconSize}
-                  color={viewMode === 'chips' ? palette.textOnAccent : palette.textMuted}
-                />
-                <ThemedText
-                  style={[
-                    styles.primaryChipText,
-                    { color: viewMode === 'chips' ? palette.textOnAccent : palette.textMuted },
-                  ]}>
-                  {viewMode === 'chips' ? 'Cards' : 'Chips'}
-                </ThemedText>
-              </Pressable>
-
-              <Pressable
                 onPress={onToggleSelectMode}
                 style={({ pressed }) => [
                   styles.primaryChip,
@@ -123,9 +95,7 @@ export function RosterControlsHeader({
                       onPress={() => onToggleRoleFilter(role)}
                       style={({ pressed }) => [
                         styles.segment,
-                        {
-                          backgroundColor: isActive ? palette.accent : 'transparent',
-                        },
+                        { backgroundColor: isActive ? palette.accent : 'transparent' },
                         index > 0 && { borderLeftWidth: 1, borderLeftColor: palette.overlay20 },
                         index === 0 && styles.segmentFirst,
                         index === items.length - 1 && styles.segmentLast,
@@ -136,13 +106,15 @@ export function RosterControlsHeader({
                         size={metrics.segmentIconSize}
                         color={isActive ? palette.textOnAccent : palette.textMuted}
                       />
-                      <ThemedText
-                        style={[
-                          styles.filterText,
-                          { color: isActive ? palette.textOnAccent : palette.textMuted },
-                        ]}>
-                        {label}
-                      </ThemedText>
+                      {(isActive || sizeClass !== 'small') && (
+                        <ThemedText
+                          style={[
+                            styles.filterText,
+                            { color: isActive ? palette.textOnAccent : palette.textMuted },
+                          ]}>
+                          {label}
+                        </ThemedText>
+                      )}
                     </Pressable>
                   );
                 })}
@@ -333,6 +305,6 @@ function createMetrics(sizeClass: SizeClass) {
   return {
     primaryIconSize: scaleBySizeClass(15, sizeClass),
     primaryCheckIconSize: scaleBySizeClass(16, sizeClass),
-    segmentIconSize: scaleBySizeClass(14, sizeClass),
+    segmentIconSize: scaleBySizeClass(17, sizeClass),
   };
 }

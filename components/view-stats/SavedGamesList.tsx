@@ -1,4 +1,6 @@
+import { ThemedText } from '@/components/ThemedText';
 import { ScoreBadge } from '@/components/ui/ScoreBadge';
+import { TournamentFilterModal } from '@/components/ui/TournamentFilterModal';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { resolveTeamName } from '@/lib/playerUtils';
@@ -6,13 +8,12 @@ import { getGameDisplayTimestamp } from '@/lib/savedGameUtils';
 import { formatDate } from '@/lib/statsUtils';
 import { SavedGame } from '@/lib/storage';
 import { Tournament } from '@/lib/storage/types';
-import { TournamentFilterModal } from '@/components/ui/TournamentFilterModal';
 import { useGameStore } from '@/store/gameStore';
+import { useTutorialStore } from '@/store/tutorialStore';
+import { Fonts } from '@/theme/theme';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React, { useState } from 'react';
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
-import { ThemedText } from '@/components/ThemedText';
-import { Fonts } from '@/theme/theme';
 import Animated, { FadeOut, LinearTransition } from 'react-native-reanimated';
 
 interface SavedGamesListProps {
@@ -20,10 +21,10 @@ interface SavedGamesListProps {
   onSelectGame: (game: SavedGame) => void;
   selectedGameIds?: Set<string>;
   onToggleGameSelection?: (gameId: string) => void;
+  onEnterSelectionWithGame?: (gameId: string) => void;
   onClearSelection?: () => void;
   tournaments?: Tournament[];
   selectionMode?: boolean;
-  onToggleSelectionMode?: () => void;
 }
 
 type SortField = 'date' | 'team' | 'score';
@@ -34,13 +35,14 @@ export default function SavedGamesList({
   onSelectGame,
   selectedGameIds = new Set(),
   onToggleGameSelection,
+  onEnterSelectionWithGame,
   onClearSelection,
   tournaments = [],
   selectionMode = false,
-  onToggleSelectionMode,
 }: SavedGamesListProps) {
   const { palette } = useTheme();
   const { savedTeams } = useGameStore();
+  const { hasSeenLongPressSelectHint, dismissLongPressSelectHint } = useTutorialStore();
   const { isLandscape, sizeClass } = useLayout();
   const styles = createStyles(isLandscape, sizeClass);
 
@@ -187,28 +189,6 @@ export default function SavedGamesList({
           />
         </View>
         <View style={styles.sortPills}>
-          <Pressable
-            style={[
-              styles.sortPill,
-              selectionMode
-                ? { backgroundColor: palette.accent, borderColor: palette.accent }
-                : { borderColor: palette.overlay10 },
-            ]}
-            onPress={onToggleSelectionMode}>
-            <MaterialCommunityIcons
-              name={selectionMode ? 'check-circle' : 'checkbox-multiple-outline'}
-              size={scaleBySizeClass(16, sizeClass)}
-              color={selectionMode ? palette.textOnAccent : palette.textMuted}
-            />
-            <ThemedText
-              style={[
-                styles.sortPillText,
-                { color: selectionMode ? palette.textOnAccent : palette.textMuted },
-                selectionMode && { fontFamily: Fonts.bold },
-              ]}>
-              {selectionMode ? 'Done' : 'Select'}
-            </ThemedText>
-          </Pressable>
           {sortFields.map((opt) => {
             const isActive = sortField === opt.field;
             const icon = isActive
@@ -314,7 +294,14 @@ export default function SavedGamesList({
                   style={[styles.cardContent, selectionMode && { paddingLeft: 8 }]}
                   onPress={() =>
                     selectionMode ? onToggleGameSelection?.(game.id) : onSelectGame(game)
-                  }>
+                  }
+                  onLongPress={() => {
+                    if (!selectionMode) {
+                      dismissLongPressSelectHint();
+                      onEnterSelectionWithGame?.(game.id);
+                    }
+                  }}
+                  delayLongPress={350}>
                   <View style={styles.savedGameHeader}>
                     <ThemedText style={[styles.savedGameDate, { color: palette.textMuted }]}>
                       {formatDate(getGameDisplayTimestamp(game))}
@@ -408,6 +395,19 @@ export default function SavedGamesList({
           );
         })}
       </View>
+
+      {!hasSeenLongPressSelectHint && filteredAndSortedGames.length > 0 && (
+        <View style={styles.longPressHint}>
+          <MaterialCommunityIcons
+            name="gesture-tap-hold"
+            size={scaleBySizeClass(14, sizeClass)}
+            color={palette.textMuted}
+          />
+          <ThemedText style={[styles.longPressHintText, { color: palette.textMuted }]}>
+            Long press a game to select. Also toggleable from top right.
+          </ThemedText>
+        </View>
+      )}
 
       {filteredAndSortedGames.length === 0 &&
         effectiveTournamentFilter &&
@@ -580,6 +580,16 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
       borderTopWidth: 1,
     },
     savedGameMetaText: {
+      fontSize: scaleBySizeClass(12, sizeClass),
+    },
+    longPressHint: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 6,
+      paddingVertical: 8,
+    },
+    longPressHintText: {
       fontSize: scaleBySizeClass(12, sizeClass),
     },
   });
