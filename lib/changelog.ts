@@ -6,6 +6,11 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.9.1',
+    date: 'March 31, 2026',
+    changes: ['Start 2nd half early button available from GameInfo page (in case of halftime cap)'],
+  },
+  {
     version: '1.9.0',
     date: 'March 29, 2026',
     changes: [
