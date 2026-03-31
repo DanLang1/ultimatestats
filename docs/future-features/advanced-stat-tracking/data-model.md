@@ -2,39 +2,63 @@
 
 > **Status**: Brainstorm / Future Feature
 
-This document proposes the data model for advanced stat tracking.
+This document proposes a cleaner v1 data model for advanced stat tracking.
 
-## Why This Should Be A New Model
+The main goal is to keep the raw stored model stable and simple enough that:
 
-The current stat model is intentionally narrow:
+- current stats are easy to derive
+- pass chains are first-class
+- game flow is preserved
+- tracking both sides fits naturally
+- same-team scrimmages fit naturally
+- future visualizations do not require a schema rewrite
 
-- `SavedGame` is built around one tracked roster plus a shallow opponent snapshot.
-- `GameEvent` only models `goal`, `turnover`, and `timeout`.
-- most detailed game state lives in one flat event stream with point metadata split across separate fields
+## Summary
 
-That works for basic stats, but advanced tracking needs more:
+The recommended v1 shape is:
 
-- pass-by-pass actions
-- optional location data
-- support for tracking both sides
-- support for scrimmages where both sides come from the same team
-- room for future action types without another large schema rewrite
+- one `AdvancedTrackedGame`
+- made of ordered `points`
+- each point contains ordered `possessions`
+- each possession contains ordered `actions`
 
-Because of that, advanced stat tracking should not be layered onto `SavedGame`.
+In short:
+
+```ts
+AdvancedTrackedGame -> points[] -> possessions[] -> actions[]
+```
+
+This is more structured than one flat game-wide event stream, but still simple enough to edit, persist, and derive stats from.
+
+## Why A New Model
+
+The current `SavedGame` model is good for lightweight stat entry, but it is not the right base for advanced tracking.
+
+Current limitations:
+
+- `SavedGame` is centered on one tracked roster plus a lightweight opponent
+- `GameEvent` only captures goals, turnovers, and timeouts
+- point context is split across separate structures like `events`, `pointLines`, and `pointStartTimestamps`
+- pass chains, pulls, and possession flow are not first-class
+- both-side tracking and scrimmages do not fit the model naturally
+
+Because of that, advanced stat tracking should be its own persisted model and store.
 
 ## Design Goals
 
-- Keep the persisted shape simple and explicit.
-- Make a single point self-contained.
-- Avoid `team1` / `team2` assumptions in the stored model.
-- Keep persistence and state ownership separate from `SavedGame` and the current game store.
-- Keep location optional on every action.
-- Make editing safe with stable IDs, not array position as identity.
-- Let new stats come from derived logic instead of more top-level stored counters.
+- Keep the persisted shape explicit and durable.
+- Make each point self-contained.
+- Make each possession self-contained.
+- Avoid `team1` / `team2` assumptions in raw storage.
+- Support both single-team and both-team tracking.
+- Support scrimmages without special-case schema branching.
+- Keep player stats derived, not stored as counters.
+- Support rough or precise field location without locking into one UI.
+- Make editing safe with stable IDs.
 
 ## Core Recommendation
 
-Use a dedicated top-level model for advanced tracking:
+Use this top-level model:
 
 ```ts
 interface AdvancedTrackedGame {
@@ -42,74 +66,78 @@ interface AdvancedTrackedGame {
   schemaVersion: number;
   createdAt: number;
   updatedAt: number;
-  metadata?: GameMetadata;
 
   trackingScope: 'single-team' | 'both-teams';
   gameType: 'game' | 'scrimmage' | 'practice' | 'other';
-  focusSideId: string;
   status: 'in_progress' | 'final' | 'terminated';
   endReason?: 'score_limit' | 'time_limit' | 'weather' | 'conceded' | 'manual';
+
+  focusSideId: string;
+  metadata?: GameMetadata;
+  settings: AdvancedTrackingSettings;
 
   sides: GameSide[];
   participants: Participant[];
   points: TrackedPoint[];
-
-  settings: {
-    locationMode: 'none' | 'zone' | 'xy';
-    scoring?: ScoringSettings;
-  };
 }
 ```
 
-This should be the source of truth for the advanced feature.
-
-It should be persisted independently from `SavedGame` and owned by a dedicated advanced-tracking store rather than the current game flow store.
+This model should be the source of truth for the advanced feature.
 
 ## Recommended Types
 
 ```ts
-interface GameSide {
-  id: string;
-  label: string; // "Home", "Away", "White", "Dark"
-  color?: string;
-  sourceTeamId?: string | null;
-  trackingMode: 'full-roster' | 'anonymous';
-}
-
-type GameMetadata = {
+interface GameMetadata {
   title?: string;
   opponentName?: string;
   location?: string;
   date?: string; // ISO date string: YYYY-MM-DD
   notes?: string;
-};
+}
 
-type ScoringSettings = {
+interface AdvancedTrackingSettings {
+  locationMode: 'none' | 'zone' | 'xy';
+  scoring?: ScoringSettings;
+}
+
+interface ScoringSettings {
   gameTo?: number;
   halftimeAt?: number;
   softCapAt?: number;
   hardCapAt?: number;
-};
+}
+
+interface GameSide {
+  id: string;
+  label: string; // "Home", "Away", "White", "Dark"
+  colorToken?: string;
+  sourceTeamId?: string | null;
+  trackingMode: 'full-roster' | 'anonymous';
+}
 
 interface Participant {
   id: string;
   name: string;
   sourcePlayerId?: string | null;
-  defaultSideId?: string | null;
 }
 
 interface TrackedPoint {
   id: string;
   number: number;
-  scoreStart: Record<string, number>; // key = sideId, value = score at start of this point
+  scoreStart: Record<string, number>;
   offenseStartSideId: string;
   attackingEndzoneBySide: Record<string, Endzone>;
   lineups: PointLineup[];
-  actions: PointAction[];
+  possessions: PointPossession[];
   outcome:
-    | { kind: 'goal'; scoringSideId: string; actionId: string }
-    | { kind: 'unfinished' }
-    | { kind: 'abandoned'; reason: 'weather' | 'injury' | 'manual' | 'other' };
+    | {
+        outcomeType: 'goal';
+        scoringSideId: string;
+        possessionId: string;
+        actionId: string;
+      }
+    | { outcomeType: 'unfinished' }
+    | { outcomeType: 'abandoned'; reason: 'weather' | 'injury' | 'manual' | 'other' };
   transitionsAfter?: BetweenPointTransition[];
 }
 
@@ -118,16 +146,33 @@ interface PointLineup {
   participantIds: string[];
 }
 
+interface PointPossession {
+  id: string;
+  number: number;
+  sideId: string;
+  startedBy:
+    | { startType: 'pull_received'; actionId: string }
+    | { startType: 'pull_pickup'; actionId: string }
+    | { startType: 'turnover'; causedByActionId: string }
+    | { startType: 'dead_disc_check'; actionId: string };
+  actions: PossessionAction[];
+  endedBy:
+    | { endType: 'goal'; actionId: string }
+    | { endType: 'turnover'; actionId: string }
+    | { endType: 'stoppage'; actionId: string }
+    | { endType: 'end_of_recording' };
+}
+
 type BetweenPointTransition =
   | {
       id: string;
-      kind: 'timeout';
+      transitionType: 'timeout';
       sideId: string;
       notes?: string;
     }
   | {
       id: string;
-      kind: 'halftime' | 'spirit_timeout' | 'injury' | 'administrative' | 'heat_timeout';
+      transitionType: 'halftime' | 'spirit_timeout' | 'injury' | 'administrative' | 'heat_timeout';
       sideId?: string;
       notes?: string;
     };
@@ -135,663 +180,807 @@ type BetweenPointTransition =
 type Endzone = 'near' | 'far';
 
 type PlayerRef =
-  | { kind: 'participant'; participantId: string }
-  | { kind: 'unknown' }
-  | { kind: 'untracked' };
+  | { refType: 'participant'; participantId: string }
+  | { refType: 'unknown' }
+  | { refType: 'untracked' };
 
-type FieldLocation = { kind: 'zone'; zoneId: string } | { kind: 'xy'; x: number; y: number };
+type FieldLocation =
+  | { locationType: 'zone'; zoneId: string }
+  | { locationType: 'xy'; x: number; y: number };
 
-type PointAction =
+type TurnoverAttribution =
+  | { mode: 'single'; player: PlayerRef }
   | {
-      id: string;
-      kind: 'pull';
-      sideId: string;
-      receivingSideId: string;
-      puller: PlayerRef;
-      receiver?: PlayerRef;
-      result: 'caught' | 'dropped' | 'landed_in_bounds' | 'landed_in_bounds_rolled_out' | 'bricked';
-      hangTimeMs?: number;
-      origin?: FieldLocation;
-      landing?: FieldLocation;
-    }
-  | {
-      id: string;
-      kind: 'touch';
-      sideId: string;
-      player: PlayerRef;
-      source: 'pull_pickup' | 'turnover_pickup' | 'dead_disc';
-      causedByActionId?: string;
-      location?: FieldLocation;
-    }
-  | {
-      id: string;
-      kind: 'throw';
-      sideId: string; // throwing side
+      mode: 'split';
       thrower: PlayerRef;
       receiver: PlayerRef;
-      receiverSideId: string;
-      result: 'complete' | 'goal' | 'drop' | 'throwaway' | 'block' | 'callahan';
-      defender?: PlayerRef;
-      origin?: FieldLocation;
-      target?: FieldLocation;
-    }
-  | {
-      id: string;
-      kind: 'stoppage';
-      reason: 'timeout';
-      sideId: string;
-    }
-  | {
-      id: string;
-      kind: 'stoppage';
-      reason: 'injury';
-      sideId?: string;
     };
+
+type PossessionAction =
+  | PullAction
+  | DiscGainAction
+  | ThrowAction
+  | StoppageAction;
+
+interface PullAction {
+  id: string;
+  kind: 'pull';
+  sideId: string;
+  receivingSideId: string;
+  puller: PlayerRef;
+  receiver?: PlayerRef;
+  result: 'caught' | 'dropped' | 'landed_in_bounds' | 'landed_in_bounds_rolled_out' | 'bricked';
+  hangTimeMs?: number;
+  origin?: FieldLocation;
+  landing?: FieldLocation;
+}
+
+interface DiscGainAction {
+  id: string;
+  kind: 'disc_gain';
+  sideId: string;
+  player: PlayerRef;
+  source: 'pull_pickup' | 'turnover_pickup' | 'dead_disc_check';
+  causedByActionId?: string;
+  location?: FieldLocation;
+}
+
+interface ThrowAction {
+  id: string;
+  kind: 'throw';
+  sideId: string;
+  thrower: PlayerRef;
+  targetSideId: string;
+  targetPlayer?: PlayerRef;
+  result: 'complete' | 'goal' | 'drop' | 'throwaway' | 'block' | 'callahan';
+  defender?: PlayerRef;
+  turnoverAttribution?: TurnoverAttribution;
+  origin?: FieldLocation;
+  target?: FieldLocation;
+}
+
+interface StoppageAction {
+  id: string;
+  kind: 'stoppage';
+  reason: 'timeout' | 'injury';
+  sideId?: string;
+}
 ```
 
 ## Why This Shape
 
-### Point-first storage
+### Point-first and possession-first
 
-Advanced tracking is naturally point-based. Keeping `points[]` as the main unit makes each point easier to view, edit, export, and validate.
+Ultimate is naturally point-based, but advanced stats are often possession-based.
 
-### `scoreStart` semantics
+That is why the recommended model is:
 
-`TrackedPoint.scoreStart` should be read as:
+- point-first at the game level
+- possession-first inside each point
 
-- key = `sideId`
-- value = that side's score at the start of this point
+This makes the raw model much easier to reason about than:
 
-So if a point starts at 8-7, `scoreStart` stores that pre-point score state.
+- one flat game-wide stream
+- or one point-level action list with possession changes only implied
 
-The post-point score should be derived from `scoreStart` plus `TrackedPoint.outcome`, rather than stored redundantly on the point.
-
-### Game-level metadata
-
-`AdvancedTrackedGame` should include lightweight game-level metadata for display, filtering, and list views:
-
-```ts
-metadata?: {
-  title?: string;
-  opponentName?: string;
-  location?: string;
-  date?: string;
-  notes?: string;
-}
-```
-
-This solves practical UI needs that are not encoded in point data:
-
-- showing a game list entry like "vs Bravo - March 1, 2026"
-- filtering by date
-- displaying opponent or venue
-- keeping simple notes about the tracked session
-
-`createdAt` is still useful as a storage timestamp, but it is not a good substitute for the human-facing date of the game.
-
-### Game-level scoring settings
-
-`AdvancedTrackedGame` should also store a lightweight scoring snapshot:
-
-```ts
-settings: {
-  locationMode: 'none' | 'zone' | 'xy';
-  scoring?: {
-    gameTo?: number;
-    halftimeAt?: number;
-    softCapAt?: number;
-    hardCapAt?: number;
-  };
-}
-```
-
-This makes the saved model self-contained for questions like:
-
-- was this a universe point?
-- what was the target score?
-- when did halftime happen relative to the score?
-- what cap score applied to this game?
-
-The current basic game flow mixes baseline settings and runtime state:
-
-- baseline config: `baseGameTo`, `autoHalftimeEnabled`, `softCapMins`, `gameLength`
-- runtime/derived state: `gameTo`, `isSoftCap`, `softCapPending`, `gameHalf`, timer state
-
-For a fresh advanced-tracking implementation, do not copy that shape directly.
-
-Instead:
-
-- store the scoring format snapshot needed for interpretation
-- keep runtime game-flow state in the advanced store only
-- avoid persisting mutable live fields like `isSoftCap` or `softCapPending` as part of the raw game record
-
-The cleanest first cut is to persist the effective score thresholds, not the full timer/cap state machine.
-
-That means advanced tracking can reuse current app defaults as inputs when creating a game, but it should not share live state ownership with the current `gameStore`.
-
-If advanced tracking later supports mid-game scoring edits, the safer direction is:
-
-- keep `settings.scoring` as the initial snapshot
-- add an explicit settings/rules change history
-
-That is better than mutating one stored `gameTo` field in place, because past points may have been played under different rules.
-
-### Separate persistence and state ownership
-
-Advanced stat tracking should be completely separate from the current `savedGames` system.
-
-That means:
-
-- no `SavedGame` embedding
-- no foreign key or back-reference to `SavedGame`
-- no use of the current `GameEvent[]` union as raw storage
-- no ownership by the current game store
-
-This feature should have its own persisted collection/schema and its own store lifecycle.
-
-If data ever needs to be exported or compared across systems later, that can be designed as a separate reporting concern. It should not shape the raw storage model now.
-
-### Tracking scope vs game type
-
-These should be two separate fields.
-
-`trackingScope` describes how much of the game is being tracked in detail:
-
-- `single-team`
-- `both-teams`
-
-`gameType` describes what kind of session the record represents:
-
-- `game`
-- `scrimmage`
-- `practice`
-- `other`
-
-This separation is important because `scrimmage` is not the same kind of concept as tracking scope.
-
-Examples:
-
-- normal game tracking only your team:
-  `trackingScope: 'single-team'`, `gameType: 'game'`
-- normal game tracking both rosters:
-  `trackingScope: 'both-teams'`, `gameType: 'game'`
-- white vs dark scrimmage:
-  `trackingScope: 'both-teams'`, `gameType: 'scrimmage'`
-
-So yes: "tracking only my team" and "both teams" belong here as top-level gameplay metadata, but not inside the `metadata` display object. "Scrimmage" is also important, but it belongs on a separate `gameType` axis rather than being merged into tracking scope.
-
-### Explicit starting offense
-
-`TrackedPoint` should explicitly store which side started on offense:
-
-```ts
-offenseStartSideId: string;
-```
-
-This is important for stats like:
+Making possessions explicit simplifies derived stats like:
 
 - O-line conversion rate
 - D-line break rate
-- D-line block efficiency
-- possessions started on offense vs defense
+- break efficiency
+- time of possession
+- possessions per point
+- scoring after a block or throwaway
+- team flow visualizations
 
-In theory this can sometimes be inferred from the first `pull` action, but that is too fragile:
+### Why not a single flat action stream
 
-- the pull may not be logged
-- the point may be entered after the pull
-- the first recorded action may be a pickup or throw
-- consumers should not have to replay early actions just to classify the point
+A flat stream is attractive during logging, but it pushes complexity into every downstream consumer.
 
-With `offenseStartSideId`, lineups stay simple:
+With a flat stream, visualizations and calculations usually have to reconstruct:
 
-- lineup where `sideId === offenseStartSideId` started on offense
-- lineup where `sideId !== offenseStartSideId` started on defense
+- which point an action belongs to
+- which possession an action belongs to
+- when possession changed
+- how the point ended
 
-If line-level labels like "O-line" or "D-line" are ever needed as user-facing tags, they can still be derived from this field or added separately later without changing point semantics.
+That is exactly the kind of hidden complexity we want to avoid this time.
 
-### Explicit attacking direction
+### Why not store derived counters
 
-`FieldLocation` coordinates only make sense if each point also records which endzone each side is attacking:
+The model should store the sequence of observed play, not precomputed totals.
 
-```ts
-attackingEndzoneBySide: Record<string, Endzone>;
-```
+Goals, assists, completions, plus/minus, throwaways, drops, blocks, points played, holds, and breaks should all be derived.
 
-This is important for:
+That keeps the raw model stable even as stats evolve.
+
+For readability, `kind` is reserved for the main action union (`pull`, `disc_gain`, `throw`, `stoppage`).
+Nested helper objects use more specific discriminator names like `refType`, `mode`, `startType`, `endType`, `transitionType`, and `outcomeType`.
+
+## Semantics
+
+### `scoreStart`
+
+`TrackedPoint.scoreStart` means:
+
+- key = `sideId`
+- value = that side's score at the start of the point
+
+Post-point score should be derived from `scoreStart` and `outcome`.
+
+### `offenseStartSideId`
+
+This should be stored explicitly.
+
+Do not require consumers to infer starting offense from the first logged action. That is fragile when:
+
+- the pull is not logged
+- logging starts late
+- the first action is a pickup instead of a catch
+
+### `attackingEndzoneBySide`
+
+Location data only makes sense if each point also records which endzone each side is attacking.
+
+This is required for:
 
 - heat maps
-- field progression
-- red zone entry and conversion
-- pull placement relative to the receiving endzone
+- progression
+- red zone stats
+- normalized field visuals
 
-Without it, the same `x` value could mean "near our endzone" in one point and "near their endzone" in the next.
+The invariant is simple: sides in the same point must attack opposite endzones.
 
-The intended interpretation is:
+### `lineups`
 
-- `FieldLocation` uses one fixed field reference frame for the saved point
-- `Endzone = 'near' | 'far'` describes which endzone a side is attacking within that frame
+Participants exist for the game. `lineups` assign participants to a side for a specific point.
 
-The key invariant is that the two sides must have opposite attacking endzones for a given point.
+This is important for scrimmages because the same participant may be on different sides in different points.
 
-For example:
+`defaultSideId` is intentionally not part of `Participant`. Side membership should come from point lineup context, not be baked into the participant record.
 
-- if one side attacks `near`, the other side must attack `far`
-- if direction flips at halftime, that should appear as new `attackingEndzoneBySide` values on later `TrackedPoint` records rather than mutating earlier points
+### `PlayerRef`
 
-That lets consumers normalize locations later for side-specific analytics without guessing from halftime state or point number.
+`PlayerRef` distinguishes three very different cases:
 
-### Explicit possession-chain links
+- `refType: 'participant'`: known tracked player
+- `refType: 'unknown'`: player identity matters for this side, but was not captured for this action
+- `refType: 'untracked'`: this side is intentionally anonymous
 
-Stable IDs are necessary for safe editing, but they are not enough to express relationships like:
+That distinction is especially important in single-team tracking where the opponent side is usually anonymous.
 
-- blocked throw -> defense picks up
-- throwaway -> other side establishes possession
-- grounded pull -> receiving side picks up
+### `disc_gain`
 
-For those cases, the possession-establishing `touch` should be able to point back to the action that caused it:
+`disc_gain` is the possession-establishing action for non-caught-pull starts.
 
-```ts
-type PointAction = {
-  kind: 'touch';
-  source: 'pull_pickup' | 'turnover_pickup' | 'dead_disc';
-  causedByActionId?: string;
-};
-```
+Use it when a side establishes possession by:
 
-This is better than relying only on array order during edits.
+- picking up a grounded pull
+- picking up after a turnover
+- re-establishing play after a dead-disc check
 
-Example:
+This is better than a generic `touch` action because it captures why the possession started.
 
-- throw by Side A has `result: 'block'`
-- later touch by Side B has `source: 'turnover_pickup'`
-- that touch sets `causedByActionId` to the blocked throw's `id`
+### `throw`
 
-This creates an explicit possession chain without requiring a special-case block-only field.
+`throw` is the main pass action.
 
-Using a backward link on the dependent action is also more general than storing `gainedPossessionActionId` only on `throw`, because it works for:
+It supports:
 
-- `throw.result = 'block'`
-- `throw.result = 'throwaway'`
-- `pull.result = 'landed_in_bounds'`
+- regular completions
+- regular goals
+- drops
+- throwaways
+- blocks
+- Callahans
 
-If the app later needs fast forward traversal for the editor, it can derive that with an index from `causedByActionId` rather than storing two pointers that must stay in sync.
+`targetSideId` is required because in rare cases the disc can end with the other side, such as a Callahan.
+`targetSideId` is required, but `targetPlayer` is optional.
 
-### `dead_disc` touch semantics
+That distinction matters a lot for UI and data quality:
 
-`touch.source = 'dead_disc'` should be defined explicitly.
+- for `complete`, `goal`, and most `drop` outcomes, `targetPlayer` will usually be present
+- for `throwaway`, the intended receiver may be unknown or not worth capturing in the moment
+- for fast logging, "Alex throwaway" should be valid without forcing a target player selection
 
-It means:
+So the model should answer two separate questions:
 
-- the point is still live overall
-- possession has not changed
-- the disc was not picked up immediately
-- play resumes when a player re-establishes possession with a new touch
+- which side was this throw intended for
+- do we know which player on that side was the intended target
 
-This is different from:
+That is cleaner than requiring every failed throw to name a concrete receiver.
 
-- `pull_pickup`: first possession after a pull that was not caught cleanly
-- `turnover_pickup`: first possession after the other side lost the disc
-- `stoppage`: an interruption event such as a timeout or injury
+### `turnoverAttribution`
 
-In other words, `dead_disc` is for a resumed pickup during the same possession, not for a possession change and not for a timeout-style pause.
+The current basic tracker supports `fiftyfifty`, which splits blame between thrower and receiver.
 
-Examples where `dead_disc` can make sense:
+The advanced model should support that directly instead of forcing it to be inferred later.
 
-- the disc is on the ground briefly and the same side picks it up to continue
-- a live point resumes from a check or reset spot and the same side establishes possession again
-- the disc rolls or sits before the offense picks it up, with no intervening turnover
-
-For v1, that behavioral definition is enough.
-
-If later analytics need more precision, this can evolve into a richer model such as:
-
-- `deadDiscReason?: 'check' | 'foul' | 'travel' | 'other'`
-
-But that detail does not need to be required in the first schema version.
-
-### Explicit point outcome
-
-`TrackedPoint` should carry its own outcome instead of forcing every consumer to scan the last action and infer how the point ended.
-
-That makes common queries simpler:
-
-- who scored this point
-- which points are still unfinished
-- whether a point was abandoned instead of completed
-
-For a normal completed point, the outcome should be:
-
-```ts
-{
-  kind: ('goal', scoringSideId, actionId);
-}
-```
-
-The terminal throw action still carries the detailed action data, including whether there was an identifiable thrower for an assist. The point outcome just answers "how did this point end?"
-
-So the point conclusion is usually a goal for one side, not "goal/assist" as one combined concept. The assist remains derived from the terminal throw action and may be absent in edge cases.
-
-This also cleanly handles a Callahan:
-
-- the terminal `throw` action belongs to the throwing side
-- `receiverSideId` is the defending side that made the interception
-- `result: 'callahan'`
-- `TrackedPoint.outcome` is `{ kind: 'goal', scoringSideId: receiverSideId, actionId }`
-
-That lets the model record all of these at once:
-
-- turnover charged to the thrower side
-- goal credited to the intercepting side
-- scorer credited to the intercepting player if known
-- no synthetic extra action required just to end the point
-
-Rare non-standard endings should also be representable:
-
-- `unfinished` for an in-progress point
-- `abandoned` for a point stopped and not completed
-
-If the entire game ends due to weather or concession, that should also be reflected at the game level via `status` and `endReason`, because that is not just a point-level concern.
-
-### Between-point transitions
-
-Some events happen after one point ends and before the next point starts.
-
-Those should not be modeled as point `stoppage` actions. Instead, they should live in a dedicated between-point collection on the completed point:
-
-```ts
-transitionsAfter?: BetweenPointTransition[]
-```
-
-That keeps the semantics cleaner:
-
-- `stoppage` is for in-point interruptions like timeouts or injuries during live play
-- `outcome` is how the point ended
-- `transitionsAfter` is for between-point events before the next point begins
-
-This handles:
-
-- halftime
-- timeouts taken between points
-- spirit timeouts
-- administrative pauses or other dead time between points
-
-It also keeps timeout semantics honest:
-
-- timeout during a point -> `PointAction { kind: 'stoppage', reason: 'timeout' }`
-- timeout between points -> `BetweenPointTransition { kind: 'timeout' }`
-
-Timeout ownership is important enough that `sideId` should be required for timeout variants in both places.
-
-That keeps timeout stats and editing straightforward:
-
-- which side called the timeout
-- how many timeouts each side used
-- whether a stoppage or transition should affect one side's remaining timeout state
-
-Consumers should treat `transitionsAfter: undefined` and `transitionsAfter: []` as equivalent: both mean there were no recorded between-point transitions.
-
-For persistence, it is better to choose one canonical write shape. The cleaner default is to omit the field when there are no transitions rather than storing empty arrays unnecessarily.
-
-If between-point handling grows more complex later, `transitionsAfter` can move into a dedicated top-level game timeline without changing the meaning of point actions.
-
-### Single-team tracking as the default
-
-Most real usage will be "track my team in a normal game."
-
-The model should treat that as the primary case:
-
-- `trackingScope: 'single-team'`
-- `gameType: 'game'`
-- `focusSideId` points at the user's team
-- that side uses `trackingMode: 'full-roster'`
-- the opponent side usually uses `trackingMode: 'anonymous'`
-
-That means the model stays symmetric, but the common workflow is still explicit and easy to reason about.
-
-### Anonymous tracking behavior
-
-`GameSide.trackingMode` needs explicit behavioral meaning:
-
-- `full-roster`: player identity is intended to be tracked for this side
-- `anonymous`: this side is tracked at the side/team level only, not the player level
-
-In anonymous mode, actions for that side should still be logged. The difference is that player references for that side are intentionally not resolved to named participants.
-
-That means:
-
-- opponent throws can still be logged
-- opponent catches can still be logged
-- possession changes can still be logged
-- pulls, blocks, throwaways, goals, and location data can still be logged
-
-The recommended `PlayerRef` semantics are:
-
-- `{ kind: 'participant' }`: player identity is known and intentionally tracked
-- `{ kind: 'unknown' }`: this side is in `full-roster` mode, but the specific player was not captured for this action
-- `{ kind: 'untracked' }`: this side is in `anonymous` mode, so player identity is intentionally not being recorded
+That is why `ThrowAction` includes optional `turnoverAttribution`.
 
 Examples:
 
-- anonymous opponent completion:
-  `thrower: { kind: 'untracked' }`, `receiver: { kind: 'untracked' }`
-- anonymous opponent throwaway:
-  `thrower: { kind: 'untracked' }`
-- our tracked player catches an opponent pull from an unknown opponent puller:
-  `puller: { kind: 'untracked' }`, `receiver: { kind: 'participant', participantId: ... }`
+- plain throwaway:
+  `turnoverAttribution = { mode: 'single', player: thrower }`
+- plain drop:
+  `turnoverAttribution = { mode: 'single', player: targetPlayer }`
+- fifty-fifty:
+  `turnoverAttribution = { mode: 'split', thrower, receiver }`
 
-Lineup behavior should also be explicit:
+This gives parity with existing stats while keeping the raw action simple.
+For v1, `mode: 'split'` should always mean an even 50/50 attribution.
 
-- `PointLineup` is expected for `full-roster` sides
-- for `anonymous` sides, lineup records can be omitted because player-level on-field identity is not part of the tracked data
+### `outcome`
 
-This gives two clearly different classes of derived stats.
+Each point should explicitly store its outcome instead of forcing consumers to infer it from the final action.
 
-Available with anonymous side tracking:
+That makes it much easier to answer:
 
-- team/side-level possessions
-- team/side-level completions and turnovers
-- pull stats
-- point outcomes
-- conversion and break rates
-- field progression and heat-map data
+- who scored this point
+- which possession scored
+- which points are unfinished
+- which points were abandoned
 
-Not available for anonymous sides:
+### `transitionsAfter`
 
-- player-level touches
-- player-level assists
-- player-level completions / receiving
-- individual blocks
-- player-level plus/minus
-- line-based player stats
+Use `transitionsAfter` for between-point events:
 
-This distinction is important in single-team tracking, where the most common setup is:
+- halftime
+- between-point timeout
+- administrative pauses
 
-- focus side: `trackingMode: 'full-roster'`
-- opponent side: `trackingMode: 'anonymous'`
+Do not model these as in-point possession actions.
 
-### `sides` instead of `team1` / `team2`
+## Supported Tracking Modes
 
-The current basic stats model hard-codes `team1` and `team2`. Advanced tracking should use neutral side IDs so normal games and scrimmages use the same structure.
+### Single-team tracking
 
-### `participants` separate from lineups
+This should be the default usage:
 
-Participants exist for the game as a whole. Lineups assign them to a side for a specific point. That avoids baking one permanent team ownership assumption into every player record.
+- `trackingScope: 'single-team'`
+- one side is `full-roster`
+- the opponent side is usually `anonymous`
 
-### `zone | xy` for location
+This still allows full team-flow tracking while limiting opponent player detail.
 
-The old doc assumed direct x/y coordinates. That is probably too opinionated this early. A union keeps rough location tracking possible now and full coordinates possible later.
+### Both-team tracking
 
-### Dedicated `pull` action
+Both sides use `trackingMode: 'full-roster'`.
 
-Pulls are meaningful enough that they should not be folded into generic `throw` or `touch` actions.
+This enables:
 
-An explicit `pull` action lets the model represent:
+- player-to-player pass maps on both sides
+- full blocks / drops / throwaways for both sides
+- both-side plus/minus
+- both-side lineup and point results
 
-- who pulled
-- who fielded the pull, if anyone
-- whether the pull was caught, dropped, landed in bounds, landed in bounds then rolled out, or bricked
-- hang time
-- optional landing location
+### Scrimmage
 
-A caught pull should be represented by the `pull` action itself, not by a second synthetic `touch`. That avoids double-counting touches.
+Scrimmage should not require a different schema.
 
-If the pull is not caught and the offense later picks up the disc, that can be recorded as a `touch` with `source: 'pull_pickup'`.
+Use:
 
-This has one important stat implication: player touches must count a caught pull separately from regular throw receptions.
+- `gameType: 'scrimmage'`
+- two sides like `White` and `Dark`
+- participants shared at the game level
+- point `lineups` to assign participants per side, per point
 
-In other words:
+That gives a clean model for inter-team scrimmages and same-roster split scrimmages.
 
-- a `pull.receiver` catch counts as a touch
-- it should not require a synthetic `touch` action just to make touch totals work
-- regular receiving touches still come from completed `throw` actions
+## Derived Stats This Model Should Support
 
-The intended pull result semantics are:
+### Current stats parity
 
-- `caught`: the receiving side caught the pull cleanly
-- `dropped`: the receiving side touched the pull but did not complete the catch, which results in a turnover
-- `landed_in_bounds`: the pull first hit the ground in bounds without being touched
-- `landed_in_bounds_rolled_out`: the pull first landed in bounds, then rolled out of bounds
-- `bricked`: the pull went out of bounds in the air without landing in bounds first
-
-This distinction matters because restart options and UI prompts are not always the same.
-
-One important possession consequence:
-
-- for `dropped`, the receiving side does not end up with possession
-- the next possession-establishing action should usually be a `touch` with `source: 'turnover_pickup'` for the pulling side
-- this should not be modeled as `dead_disc`, because `dead_disc` is reserved for resumed pickup during the same possession
-
-Even though players may describe a dropped pull as a "dead disc" situation conversationally, the model should treat it as a turnover chain because possession changed.
-
-This also handles partial observability in single-team mode:
-
-- if the opponent pulls to your team and you do not know the puller, use `puller: { kind: 'unknown' }`
-- if your team pulls and you do not know who received it for the opponent, use `receiver: { kind: 'unknown' }`
-- if your team catches the pull, that receiving player can still be identified normally
-
-When the side itself is anonymous, prefer `{ kind: 'untracked' }` instead of `{ kind: 'unknown' }`.
-
-Using `PlayerRef` is better than a raw nullable ID because it distinguishes:
-
-- known tracked player
-- temporarily unknown player
-- intentionally untracked player
-
-### Explicit receiving side on throws
-
-Most throws are received by the same side that threw them, but that is not always true.
-
-Adding `receiverSideId` makes edge cases explicit:
-
-- normal completion: `receiverSideId === sideId`
-- normal goal: `receiverSideId === sideId`
-- Callahan: `receiverSideId !== sideId`
-
-Without this field, a terminal interception-for-goal would be harder to model cleanly.
-
-### Stable action IDs
-
-If the advanced tracker supports timeline editing, action identity should not depend on array index. Stable IDs make inserts, deletes, and corrections safer.
-
-## Derived Stats
-
-These should be calculated from point actions, not stored as raw counters:
+This v1 model should cleanly support all current stat categories:
 
 - goals
-- completions
-- completion percentage
-- touches, including caught pulls via `pull.receiver`, not only `touch` and `throw` records
 - assists
-- hockey assists
 - blocks
 - throwaways
 - drops
-- total turnovers
-- plus/minus for players on tracked full-roster sides
+- fifty-fifty turnovers
 - callahans
+- plus/minus
 - points played
-- point win rate
-- O-points
-- D-points
-- O-line holds
-- D-line breaks
-- O-efficiency
-- D-efficiency
-- minutes played
-- playing time percentage
-- average point duration for players with timed points
+
+### Advanced player stats
+
+- completions
+- completion percentage
+- receiving touches
+- total touches
+- hockey assists
+- thrower-receiver connection stats
 - goals per point
 - assists per point
-- blocks per point
 - turnovers per point
-- throwaways per point
-- drops per point
-- O-line conversion rate
-- D-line break rate
-- D-line block efficiency
+
+### Team and possession stats
+
 - holds
-- clean holds
-- dirty holds
 - breaks
 - times broken
+- clean holds
+- dirty holds
+- O-points
+- D-points
+- O-efficiency
+- D-efficiency
 - break efficiency
-- defensive efficiency
-- opponent turnovers forced
-- team conversion rate
-- points per turnover
-- turnovers per point
-- longest scoring run
-- longest drought
-- pulls
-- average pull hang time
-- pull in-bounds vs out-of-bounds rate
-- direction-normalized field progression
-- point outcomes by side
-- abandoned points
-- field progression
-- time of possession when event timing is available
-- average point duration / longest point / shortest point when timing is available
+- possessions per point
+- scores after turnovers
+- pull outcomes
+- pull hang time
 
-Secondary derived views that also exist in the current stats experience or are natural extensions:
+### Visualization-friendly outputs
 
-- chemistry / connection stats between throwers and receivers
-- cumulative impact timeline
-- red zone efficiency
-- location heat maps
+- pass maps
+- touch maps
+- progression charts
+- heat maps
+- red zone stats
+- point flow timelines
+
+## Scenario Walkthroughs
+
+These scenarios are intentionally small and partial. The point is to make the shape easy to visualize, not to show every optional field.
+
+### Scenario 1: Single-team game, clean offensive hold
+
+Team setup:
+
+- `Sharks` is the focus side and uses `full-roster`
+- `Rivals` is anonymous
+- Sharks receive the pull
+
+```ts
+const game: AdvancedTrackedGame = {
+  id: 'g1',
+  schemaVersion: 1,
+  createdAt: 1760000000000,
+  updatedAt: 1760000000000,
+  trackingScope: 'single-team',
+  gameType: 'game',
+  status: 'in_progress',
+  focusSideId: 'sharks',
+  settings: { locationMode: 'none', scoring: { gameTo: 15, halftimeAt: 8 } },
+  sides: [
+    { id: 'sharks', label: 'Sharks', trackingMode: 'full-roster', sourceTeamId: 'team_sharks' },
+    { id: 'rivals', label: 'Rivals', trackingMode: 'anonymous' },
+  ],
+  participants: [
+    { id: 'p_alex', name: 'Alex' },
+    { id: 'p_blair', name: 'Blair' },
+    { id: 'p_casey', name: 'Casey' },
+  ],
+  points: [
+    {
+      id: 'pt1',
+      number: 1,
+      scoreStart: { sharks: 0, rivals: 0 },
+      offenseStartSideId: 'sharks',
+      attackingEndzoneBySide: { sharks: 'far', rivals: 'near' },
+      lineups: [{ sideId: 'sharks', participantIds: ['p_alex', 'p_blair', 'p_casey'] }],
+      possessions: [
+        {
+          id: 'pos1',
+          number: 1,
+          sideId: 'sharks',
+          startedBy: { startType: 'pull_received', actionId: 'a1' },
+          actions: [
+            {
+              id: 'a1',
+              kind: 'pull',
+              sideId: 'rivals',
+              receivingSideId: 'sharks',
+              puller: { refType: 'untracked' },
+              receiver: { refType: 'participant', participantId: 'p_alex' },
+              result: 'caught',
+            },
+            {
+              id: 'a2',
+              kind: 'throw',
+              sideId: 'sharks',
+              thrower: { refType: 'participant', participantId: 'p_alex' },
+              targetSideId: 'sharks',
+              targetPlayer: { refType: 'participant', participantId: 'p_blair' },
+              result: 'complete',
+            },
+            {
+              id: 'a3',
+              kind: 'throw',
+              sideId: 'sharks',
+              thrower: { refType: 'participant', participantId: 'p_blair' },
+              targetSideId: 'sharks',
+              targetPlayer: { refType: 'participant', participantId: 'p_casey' },
+              result: 'goal',
+            },
+          ],
+          endedBy: { endType: 'goal', actionId: 'a3' },
+        },
+      ],
+      outcome: { outcomeType: 'goal', scoringSideId: 'sharks', possessionId: 'pos1', actionId: 'a3' },
+    },
+  ],
+};
+```
+
+What this gives us immediately:
+
+- Alex: 1 pull reception touch, 1 completion
+- Blair: 1 completion, 1 assist
+- Casey: 1 goal
+- Sharks: 1 offensive point, 1 hold
+
+### Scenario 2: Single-team game, opponent pull lands, offense picks up, then throwaway and break
+
+This shows:
+
+- pull not caught
+- possession started by `disc_gain`
+- turnover chain
+- anonymous opponent scoring
+
+```ts
+const point2: TrackedPoint = {
+  id: 'pt2',
+  number: 2,
+  scoreStart: { sharks: 1, rivals: 0 },
+  offenseStartSideId: 'sharks',
+  attackingEndzoneBySide: { sharks: 'near', rivals: 'far' },
+  lineups: [{ sideId: 'sharks', participantIds: ['p_alex', 'p_blair', 'p_casey'] }],
+  possessions: [
+    {
+      id: 'pos2a',
+      number: 1,
+      sideId: 'sharks',
+      startedBy: { startType: 'pull_pickup', actionId: 'b2' },
+      actions: [
+        {
+          id: 'b1',
+          kind: 'pull',
+          sideId: 'rivals',
+          receivingSideId: 'sharks',
+          puller: { refType: 'untracked' },
+          result: 'landed_in_bounds',
+        },
+        {
+          id: 'b2',
+          kind: 'disc_gain',
+          sideId: 'sharks',
+          player: { refType: 'participant', participantId: 'p_alex' },
+          source: 'pull_pickup',
+        },
+        {
+          id: 'b3',
+          kind: 'throw',
+          sideId: 'sharks',
+          thrower: { refType: 'participant', participantId: 'p_alex' },
+          targetSideId: 'sharks',
+          result: 'throwaway',
+          turnoverAttribution: {
+            mode: 'single',
+            player: { refType: 'participant', participantId: 'p_alex' },
+          },
+        },
+      ],
+      endedBy: { endType: 'turnover', actionId: 'b3' },
+    },
+    {
+      id: 'pos2b',
+      number: 2,
+      sideId: 'rivals',
+      startedBy: { startType: 'turnover', causedByActionId: 'b3' },
+      actions: [
+        {
+          id: 'b4',
+          kind: 'disc_gain',
+          sideId: 'rivals',
+          player: { refType: 'untracked' },
+          source: 'turnover_pickup',
+          causedByActionId: 'b3',
+        },
+        {
+          id: 'b5',
+          kind: 'throw',
+          sideId: 'rivals',
+          thrower: { refType: 'untracked' },
+          targetSideId: 'rivals',
+          targetPlayer: { refType: 'untracked' },
+          result: 'goal',
+        },
+      ],
+      endedBy: { endType: 'goal', actionId: 'b5' },
+    },
+  ],
+  outcome: { outcomeType: 'goal', scoringSideId: 'rivals', possessionId: 'pos2b', actionId: 'b5' },
+};
+```
+
+What this gives us:
+
+- Sharks had an O-point and got broken
+- Alex gets a throwaway
+- Rivals get a break
+- no opponent player identity was required
+
+Possible richer version of the same throwaway, if the target is known:
+
+```ts
+{
+  id: 'b3',
+  kind: 'throw',
+  sideId: 'sharks',
+  thrower: { refType: 'participant', participantId: 'p_alex' },
+  targetSideId: 'sharks',
+  targetPlayer: { refType: 'participant', participantId: 'p_blair' },
+  result: 'throwaway',
+  turnoverAttribution: {
+    mode: 'single',
+    player: { refType: 'participant', participantId: 'p_alex' },
+  },
+}
+```
+
+That means "Alex threw it away while trying to hit Blair," not "Blair caught it."
+
+### Scenario 3: Both-team tracking, block and short-field conversion
+
+This shows:
+
+- both sides use real participants
+- a block is represented as a failed throw with defender info
+- next possession starts from that turnover
+
+```ts
+const point3: TrackedPoint = {
+  id: 'pt3',
+  number: 3,
+  scoreStart: { sharks: 1, rivals: 1 },
+  offenseStartSideId: 'rivals',
+  attackingEndzoneBySide: { sharks: 'far', rivals: 'near' },
+  lineups: [
+    { sideId: 'sharks', participantIds: ['p_alex', 'p_blair', 'p_casey'] },
+    { sideId: 'rivals', participantIds: ['p_ryan', 'p_sam', 'p_taylor'] },
+  ],
+  possessions: [
+    {
+      id: 'pos3a',
+      number: 1,
+      sideId: 'rivals',
+      startedBy: { startType: 'pull_received', actionId: 'c1' },
+      actions: [
+        {
+          id: 'c1',
+          kind: 'pull',
+          sideId: 'sharks',
+          receivingSideId: 'rivals',
+          puller: { refType: 'participant', participantId: 'p_alex' },
+          receiver: { refType: 'participant', participantId: 'p_ryan' },
+          result: 'caught',
+        },
+        {
+          id: 'c2',
+          kind: 'throw',
+          sideId: 'rivals',
+          thrower: { refType: 'participant', participantId: 'p_ryan' },
+          targetSideId: 'rivals',
+          targetPlayer: { refType: 'participant', participantId: 'p_sam' },
+          result: 'block',
+          defender: { refType: 'participant', participantId: 'p_blair' },
+          turnoverAttribution: {
+            mode: 'single',
+            player: { refType: 'participant', participantId: 'p_ryan' },
+          },
+        },
+      ],
+      endedBy: { endType: 'turnover', actionId: 'c2' },
+    },
+    {
+      id: 'pos3b',
+      number: 2,
+      sideId: 'sharks',
+      startedBy: { startType: 'turnover', causedByActionId: 'c2' },
+      actions: [
+        {
+          id: 'c3',
+          kind: 'disc_gain',
+          sideId: 'sharks',
+          player: { refType: 'participant', participantId: 'p_blair' },
+          source: 'turnover_pickup',
+          causedByActionId: 'c2',
+        },
+        {
+          id: 'c4',
+          kind: 'throw',
+          sideId: 'sharks',
+          thrower: { refType: 'participant', participantId: 'p_blair' },
+          targetSideId: 'sharks',
+          targetPlayer: { refType: 'participant', participantId: 'p_casey' },
+          result: 'goal',
+        },
+      ],
+      endedBy: { endType: 'goal', actionId: 'c4' },
+    },
+  ],
+  outcome: { outcomeType: 'goal', scoringSideId: 'sharks', possessionId: 'pos3b', actionId: 'c4' },
+};
+```
+
+What this gives us:
+
+- Blair gets a block and an assist
+- Casey gets a goal
+- Sharks get a D-point break
+- Rivals get a turnover charged to Ryan
+
+### Scenario 4: Fifty-fifty turnover
+
+This is the direct replacement for the current basic `fiftyfifty` stat.
+
+```ts
+const throwAction: ThrowAction = {
+  id: 'd1',
+  kind: 'throw',
+  sideId: 'sharks',
+  thrower: { refType: 'participant', participantId: 'p_alex' },
+  targetSideId: 'sharks',
+  targetPlayer: { refType: 'participant', participantId: 'p_blair' },
+  result: 'drop',
+  turnoverAttribution: {
+    mode: 'split',
+    thrower: { refType: 'participant', participantId: 'p_alex' },
+    receiver: { refType: 'participant', participantId: 'p_blair' },
+  },
+};
+```
+
+Derived result:
+
+- Alex gets 0.5 throwaway
+- Blair gets 0.5 drop
+
+If later we decide the UI should capture this as a dedicated outcome instead of a `drop` with split credit, the derivation layer can stay the same.
+
+### Scenario 5: Same-team scrimmage
+
+This shows why `participants` and `lineups` must stay separate.
+
+```ts
+const scrimmageGame: AdvancedTrackedGame = {
+  id: 'scrim1',
+  schemaVersion: 1,
+  createdAt: 1760000000000,
+  updatedAt: 1760000000000,
+  trackingScope: 'both-teams',
+  gameType: 'scrimmage',
+  status: 'in_progress',
+  focusSideId: 'white',
+  settings: { locationMode: 'zone' },
+  sides: [
+    { id: 'white', label: 'White', trackingMode: 'full-roster', sourceTeamId: 'team_sharks' },
+    { id: 'dark', label: 'Dark', trackingMode: 'full-roster', sourceTeamId: 'team_sharks' },
+  ],
+  participants: [
+    { id: 'p_alex', name: 'Alex', sourcePlayerId: 'alex' },
+    { id: 'p_blair', name: 'Blair', sourcePlayerId: 'blair' },
+    { id: 'p_casey', name: 'Casey', sourcePlayerId: 'casey' },
+    { id: 'p_drew', name: 'Drew', sourcePlayerId: 'drew' },
+  ],
+  points: [
+    {
+      id: 'sp1',
+      number: 1,
+      scoreStart: { white: 0, dark: 0 },
+      offenseStartSideId: 'white',
+      attackingEndzoneBySide: { white: 'far', dark: 'near' },
+      lineups: [
+        { sideId: 'white', participantIds: ['p_alex', 'p_blair'] },
+        { sideId: 'dark', participantIds: ['p_casey', 'p_drew'] },
+      ],
+      possessions: [],
+      outcome: { outcomeType: 'unfinished' },
+    },
+  ],
+};
+```
+
+On the next point, Alex could appear on `dark` instead of `white` without changing the participant record at all.
+
+That is exactly why side assignment belongs in point lineups, not in the player itself.
+
+## Comparison To Other Approaches
+
+### Versus extending current `SavedGame`
+
+Not recommended.
+
+Problems:
+
+- too tied to one tracked roster
+- too coarse for pass-by-pass flow
+- point context remains split across multiple structures
+- awkward fit for both-side stats and scrimmages
+
+### Versus a flat advanced action stream
+
+Better than current basic events, but still not ideal.
+
+Problems:
+
+- every consumer must rebuild points and possessions
+- editing is harder
+- visualization code becomes more fragile
+
+### Versus point-only `actions[]` with implicit possessions
+
+Viable, but weaker than explicit possessions.
+
+Problems:
+
+- possessions still have to be reconstructed
+- O/D and conversion stats become more error-prone
+- turnover chains are harder to inspect and edit
+
+### Recommended choice
+
+For v1, the cleanest balance is:
+
+- `points[]`
+- explicit `possessions[]`
+- action unions inside each possession
+
+That keeps the model structured enough for analytics and editing without becoming overengineered.
 
 ## Separation Guidance
 
 - Do not extend the current `GameEvent` union for advanced tracking.
 - Do not store advanced-tracking data inside `SavedGame` or `savedGames`.
-- Do not share raw event ownership with the current game store.
-- Do not dual-write the same gameplay entry into both systems.
+- Do not dual-write the same game into both raw models.
+- Do not let the current `gameStore` own advanced-tracking raw state.
 
-The advanced tracker should be its own source of truth with its own persistence and state boundary.
+Advanced tracking should have:
 
-## Open Questions To Leave Flexible
+- its own persisted collection
+- its own store
+- its own save/load lifecycle
 
-- Whether rough field tracking should start as named zones, x/y coordinates, or a UI that can emit either.
-- Whether anonymous opponent tracking needs placeholders like "Opponent 1" or side-level aggregates only.
-- Whether point lineups should support substitutions inside a point in v1 or stay start-of-point only.
-- Whether pulls, dead discs, and stoppages need richer detail in the first schema version.
-- Whether the advanced raw action model needs an explicit equivalent to the current basic `fiftyfifty` turnover type for parity with existing tracking.
-- Whether `block` and `callahan` should stay as explicit throw results or be modeled as a more general interception outcome family.
-- Whether `BetweenPointTransition` needs richer structure than `kind`, `sideId`, and `notes`.
-- Whether `causedByActionId` should stay optional-only on `touch` or become part of a broader action-linking model.
-- Whether `dead_disc` eventually needs a required subtype for rules-specific situations.
-- Whether mid-game scoring/rules edits need a first-class change history in v1 or can wait until later.
+## Open Questions
+
+These can stay flexible without blocking the schema direction:
+
+- whether v1 location should start as zones, x/y, or both
+- whether mid-point substitutions need first-class support in v1
+- whether `stoppage` needs richer rule-specific detail immediately
+- whether Callahan should remain a `throw.result` or become a broader interception outcome family
+- whether between-point transitions need more structure in v1
+- whether timing should live on every action or only at point / possession boundaries initially
 
 ## Recommended First Cut
 
-If this feature starts small, the simplest useful slice is:
+If we want the smallest useful implementation slice, start with:
 
 - `AdvancedTrackedGame`
-- `GameMetadata`
-- `ScoringSettings`
 - `GameSide`
 - `Participant`
 - `TrackedPoint`
-- `PointAction` with `pull`, `touch`, `throw`, and `stoppage`
-- `FieldLocation` as `zone | xy`
+- `PointPossession`
+- `PullAction`
+- `DiscGainAction`
+- `ThrowAction`
+- `TrackedPoint.outcome`
 
-That is enough to support pass chains, point lineups, both-side tracking, scrimmages, and future derived stats without overcommitting to the final UI.
+Then derive:
+
+- goals
+- assists
+- completions
+- touches
+- blocks
+- throwaways
+- drops
+- plus/minus
+- points played
+- holds / breaks
+
+That is enough to support current stats, pass chains, and future both-side or scrimmage expansion without boxing us into the wrong model.

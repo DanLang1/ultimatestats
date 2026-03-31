@@ -1,3 +1,4 @@
+import { checkGameOver } from '@/lib/gameUtils';
 import type { GameEvent, GoalEvent } from '@/store/gameStore.types';
 
 export function inferHalftimeGoalEventIndex(
@@ -92,4 +93,33 @@ export function hasReachedHalftime(events: GameEvent[], autoHalftimeEnabled = tr
     autoHalftimeEnabled &&
     events.some((event) => event.type === 'goal' && event.triggeredHalftime === true)
   );
+}
+
+export interface HalftimeEarlyGuardState {
+  autoHalftimeEnabled: boolean;
+  gameHalf: number;
+  team1Score: number;
+  team2Score: number;
+  gameTo: number;
+  timerTimeLeft: number;
+  events: GameEvent[];
+}
+
+function isHalftimeEarlyRelevant(state: HalftimeEarlyGuardState): boolean {
+  return (
+    state.autoHalftimeEnabled &&
+    state.gameHalf === 1 &&
+    !checkGameOver({
+      team1Score: state.team1Score,
+      team2Score: state.team2Score,
+      gameTo: state.gameTo,
+      timerTimeLeft: state.timerTimeLeft,
+    }) &&
+    !hasReachedHalftime(state.events, state.autoHalftimeEnabled)
+  );
+}
+
+export function canTriggerHalftimeEarly(state: HalftimeEarlyGuardState): boolean {
+  const lastEvent = state.events[state.events.length - 1];
+  return isHalftimeEarlyRelevant(state) && lastEvent?.type === 'goal';
 }

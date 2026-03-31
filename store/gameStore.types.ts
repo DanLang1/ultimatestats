@@ -128,6 +128,7 @@ export interface GameState {
   setGameToInGame: (score: number) => void;
   setGameLength: (minutes: number) => void;
   incrementScore: (isTeam1: boolean) => { didIncrement: boolean; isHalftime: boolean };
+  triggerHalftimeEarly: () => boolean;
   undoLastAction: () => boolean; // Returns true if something was undone
   toggleTimeout: (isTeam1: boolean, index: number) => void;
   resetTimeouts: (count: number) => void;

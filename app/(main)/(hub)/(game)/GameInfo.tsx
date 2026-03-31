@@ -1,4 +1,6 @@
 import HelpContent from '@/components/HelpContent';
+import { HalfIndicator } from '@/components/game-info/HalfIndicator';
+import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { AlertModal } from '@/components/ui/AlertModal';
 import { useAlert } from '@/components/ui/AlertProvider';
@@ -7,17 +9,17 @@ import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { useTheme } from '@/context/ThemeContext';
 import { useEndGame } from '@/hooks/useEndGame';
 import { useGameTimer } from '@/hooks/useGameTimer';
+import { useHalftimeEarly } from '@/hooks/useHalftimeEarly';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { usePointTimer } from '@/hooks/usePointTimer';
 import { formatRatioFull, getExpectedRatio, getSequenceNumber } from '@/lib/genderRatioUtils';
 import { useGameStore } from '@/store/gameStore';
 import { useSettingsStore } from '@/store/settingsStore';
+import { Fonts } from '@/theme/theme';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router, Stack } from 'expo-router';
 import React, { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
-import { ThemedText } from '@/components/ThemedText';
-import { Fonts } from '@/theme/theme';
 
 export default function GameInfoScreen() {
   const { isLandscape, sizeClass } = useLayout();
@@ -37,6 +39,7 @@ export default function GameInfoScreen() {
     softCapPending,
     statTrackingEnabled,
     currentPoint,
+    gameHalf,
   } = useGameStore();
 
   const { genderRatioEnabled, firstPointRatio } = useSettingsStore();
@@ -51,6 +54,7 @@ export default function GameInfoScreen() {
   const { palette } = useTheme();
   const { showAlert } = useAlert();
   const { confirmEndGame } = useEndGame();
+  const { canTriggerHalftimeEarly, confirmHalftimeEarly } = useHalftimeEarly();
   const {
     elapsedSeconds,
     isActive: pointIsActive,
@@ -185,6 +189,7 @@ export default function GameInfoScreen() {
                   <ThemedText style={[styles.centerNumber, { color: palette.textInverse }]}>
                     {gameTo}
                   </ThemedText>
+                  <HalfIndicator gameHalf={gameHalf} sizeClass={sizeClass} />
                   {isSoftCap && (
                     <View style={styles.capStatusBadge}>
                       <MaterialCommunityIcons
@@ -362,6 +367,7 @@ export default function GameInfoScreen() {
                   <ThemedText style={[styles.centerNumber, { color: palette.textInverse }]}>
                     {gameTo}
                   </ThemedText>
+                  <HalfIndicator gameHalf={gameHalf} sizeClass={sizeClass} />
                   {isSoftCap && (
                     <View style={styles.capStatusBadge}>
                       <MaterialCommunityIcons
@@ -460,6 +466,24 @@ export default function GameInfoScreen() {
         <View
           key={isLandscape ? 'actions-landscape' : 'actions-portrait'}
           style={styles.actionSection}>
+          {canTriggerHalftimeEarly && (
+            <Pressable
+              onPress={confirmHalftimeEarly}
+              style={({ pressed }) => [
+                styles.actionButton,
+                { backgroundColor: palette.warning + '10', borderColor: palette.warning + '20' },
+                pressed && { backgroundColor: palette.warning + '20' },
+              ]}>
+              <MaterialCommunityIcons
+                name="skip-next-circle"
+                size={actionIconSize}
+                color={palette.warning}
+              />
+              <ThemedText style={[styles.actionButtonText, { color: palette.warning }]}>
+                START 2ND HALF EARLY
+              </ThemedText>
+            </Pressable>
+          )}
           <Pressable
             onPress={confirmEndGame}
             style={({ pressed }) => [
@@ -677,7 +701,6 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
       fontFamily: Fonts.bold,
       letterSpacing: 1,
     },
-
     // Gender Ratio Section
     ratioSection: {
       alignItems: 'center',

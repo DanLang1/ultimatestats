@@ -42,3 +42,6 @@ app-example
 /ios
 /android
 .mcp.json
+
+# AI agent markers
+.codex

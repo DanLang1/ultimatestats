@@ -26,7 +26,8 @@ Each tracked game should:
 
 - model two generic `sides` instead of hard-coded `team1` / `team2`
 - separate `participants` from side assignment so scrimmages work cleanly
-- store ordered point `actions` with stable IDs
-- derive goals, assists, completions, touches, and heat maps from those point actions
+- store ordered `points`, each with ordered `possessions` and ordered `actions`
+- use stable IDs for points, possessions, and actions
+- derive goals, assists, completions, touches, and visualizations from those raw point/possession actions
 
 If this feature is built, it should own its own store, persistence model, and save/load lifecycle rather than sharing ownership with the existing `savedGames` system.

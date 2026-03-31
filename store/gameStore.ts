@@ -1,6 +1,6 @@
 import { DEFAULT_HALFTIME_BREAK_SECONDS, DEFAULT_TIMEOUT_SECONDS } from '@/lib/constants';
 import { checkGameOver } from '@/lib/gameUtils';
-import { hasReachedHalftime } from '@/lib/halftimeUtils';
+import { canTriggerHalftimeEarly, hasReachedHalftime } from '@/lib/halftimeUtils';
 import { hasPlayerParticipatedInCurrentGame, UNKNOWN_PLAYER_ID } from '@/lib/playerUtils';
 import { CURRENT_SCHEMA_VERSION, SavedGame, SavedTeam } from '@/lib/storage';
 import { migrateSavedGame, migrateSavedGames } from '@/lib/storage/migrations';
@@ -22,6 +22,20 @@ import {
 } from './gameStore.types';
 import { useLinePresetsStore } from './linePresetsStore';
 import { useSettingsStore } from './settingsStore';
+
+function applyHalftimeTransition(state: GameState) {
+  state.gameHalf = 2;
+  state.team1Timeouts.fill(true);
+  state.team2Timeouts.fill(true);
+  // Note: Floaters are NOT reset - they're once per game, not per half
+  state.isHalftimeBreak = true;
+  state.currentPointStartTime = null;
+  state.pointTimerPausedElapsed = null;
+
+  if (state.statTrackingEnabled) {
+    state.possession = state.startingPossession === 'team1' ? 'team2' : 'team1';
+  }
+}
 
 export const useGameStore = create<GameState>()(
   immer(
@@ -216,11 +230,7 @@ export const useGameStore = create<GameState>()(
               timerTimeLeft: state.timerTimeLeft,
             });
             if (isHalftimeGoal && !gameWon) {
-              state.gameHalf = 2;
-              state.team1Timeouts.fill(true);
-              state.team2Timeouts.fill(true);
-              // Note: Floaters are NOT reset - they're once per game, not per half
-              state.isHalftimeBreak = true;
+              applyHalftimeTransition(state);
             } else if (gameWon) {
               isHalftime = false;
             }
@@ -246,9 +256,7 @@ export const useGameStore = create<GameState>()(
             // --- Stat tracking enabled below ---
 
             // Set possession: halftime flips to non-starting team, otherwise to non-scoring team
-            if (triggeredHalftime) {
-              state.possession = state.startingPossession === 'team1' ? 'team2' : 'team1';
-            } else {
+            if (!triggeredHalftime) {
               state.possession = isTeam1 ? 'team2' : 'team1';
             }
 
@@ -283,6 +291,26 @@ export const useGameStore = create<GameState>()(
             }
           });
           return { didIncrement, isHalftime };
+        },
+
+        triggerHalftimeEarly: () => {
+          let didTrigger = false;
+
+          set((state: GameState) => {
+            if (!canTriggerHalftimeEarly(state)) {
+              return;
+            }
+
+            const lastEvent = state.events[state.events.length - 1] as Extract<
+              (typeof state.events)[number],
+              { type: 'goal' }
+            >;
+            lastEvent.triggeredHalftime = true;
+            applyHalftimeTransition(state);
+            didTrigger = true;
+          });
+
+          return didTrigger;
         },
 
         undoLastAction: () => {

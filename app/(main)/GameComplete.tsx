@@ -37,11 +37,12 @@ export default function GameCompleteScreen() {
     timerTimeLeft,
   });
 
-  if (!isGameOver) {
-    return <Redirect href={currentGameStatus === 'finished' ? '/Dashboard' : '/Scoreboard'} />;
+  if (!isGameOver && currentGameStatus !== 'finished') {
+    return <Redirect href="/Scoreboard" />;
   }
 
-  const winnerTeam = getWinner(team1Score, team2Score);
+  const isTie = team1Score === team2Score;
+  const winnerTeam = isTie ? null : getWinner(team1Score, team2Score);
   const team1Won = winnerTeam === 'team1';
   const winnerName = team1Won ? team1Name : team2Name;
   const loserName = team1Won ? team2Name : team1Name;
@@ -92,9 +93,9 @@ export default function GameCompleteScreen() {
               { backgroundColor: palette.overlay08, borderColor: palette.overlay15 },
             ]}>
             <MaterialCommunityIcons
-              name="trophy"
+              name={isTie ? 'handshake-outline' : 'trophy'}
               size={scaleBySizeClass(34, sizeClass)}
-              color={palette.warning}
+              color={isTie ? palette.textMuted : palette.warning}
             />
           </View>
 
@@ -102,21 +103,23 @@ export default function GameCompleteScreen() {
             FINAL RESULT
           </ThemedText>
           <ThemedText style={[styles.winnerName, { color: palette.textInverse }]} numberOfLines={2}>
-            {winnerName}
+            {isTie ? "It's a Tie" : winnerName}
           </ThemedText>
-          <ThemedText style={[styles.subhead, { color: palette.textMuted }]}>
-            wins the game
-          </ThemedText>
+          {!isTie && (
+            <ThemedText style={[styles.subhead, { color: palette.textMuted }]}>
+              wins the game
+            </ThemedText>
+          )}
 
           <View style={styles.scoreRow}>
             <View style={styles.scoreBlock}>
               <ThemedText
                 style={[styles.teamLabel, { color: palette.textMuted }]}
                 numberOfLines={1}>
-                {winnerName}
+                {isTie ? team1Name : winnerName}
               </ThemedText>
               <ThemedText style={[styles.scoreValue, { color: palette.textInverse }]}>
-                {winnerScore}
+                {isTie ? team1Score : winnerScore}
               </ThemedText>
             </View>
 
@@ -126,10 +129,10 @@ export default function GameCompleteScreen() {
               <ThemedText
                 style={[styles.teamLabel, { color: palette.textMuted }]}
                 numberOfLines={1}>
-                {loserName}
+                {isTie ? team2Name : loserName}
               </ThemedText>
               <ThemedText style={[styles.scoreValue, { color: palette.textInverse }]}>
-                {loserScore}
+                {isTie ? team2Score : loserScore}
               </ThemedText>
             </View>
           </View>
@@ -148,7 +151,7 @@ export default function GameCompleteScreen() {
             onPress={handleUndo}>
             <View style={styles.actionCopy}>
               <ThemedText style={[styles.secondaryActionTitle, { color: palette.textInverse }]}>
-                Undo Winning Point
+                {isTie ? 'Undo Last Point' : 'Undo Winning Point'}
               </ThemedText>
               <ThemedText style={[styles.secondaryActionText, { color: palette.textMuted }]}>
                 Return to the scoreboard and continue the game
