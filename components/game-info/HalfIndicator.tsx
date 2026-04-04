@@ -15,7 +15,11 @@ export function HalfIndicator({ gameHalf, sizeClass = 'small' }: HalfIndicatorPr
   const label = gameHalf === 1 ? '1ST HALF' : '2ND HALF';
 
   return (
-    <View style={[styles.badge, { backgroundColor: palette.overlay05, borderColor: palette.overlay10 }]}>
+    <View
+      style={[
+        styles.badge,
+        { backgroundColor: palette.overlay05, borderColor: palette.overlay10 },
+      ]}>
       <ThemedText style={[styles.text, { color: palette.textMuted }]}>{label}</ThemedText>
     </View>
   );

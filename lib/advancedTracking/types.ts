@@ -9,17 +9,44 @@ export interface AdvancedTrackedGame {
   createdAt: number;
   updatedAt: number;
 
-  trackingScope: 'single-team' | 'both-teams';
   gameType: 'game' | 'scrimmage' | 'practice' | 'other';
   status: 'in_progress' | 'final' | 'terminated';
-  endReason?: 'score_limit' | 'time_limit' | 'weather' | 'conceded' | 'manual';
+  /** Only set when `status` is `'terminated'`. */
+  endReason?: 'time_limit' | 'weather' | 'conceded' | 'manual';
 
+  /**
+   * The side the coach is tracking for. Used as the default perspective for stats and UI.
+   * In `'single-team'` mode this is always the `full-roster` side and could be derived,
+   * but in `'both-teams'` mode it cannot be derived so it is stored explicitly.
+   */
   focusSideId: string;
   metadata?: GameMetadata;
   settings: AdvancedTrackingSettings;
 
+  /**
+   * Only set when `locationMode` is `'zone'` or `'xy'`. Records which endzone each side
+   * attacks at the start of the game. Sides flip after the `halftime` `GameTransition`.
+   * Per-point endzone is derived from this — not stored on each point.
+   *
+   * Scrimmage side-switch support is not yet handled — revisit when needed.
+   */
+  initialAttackingEndzoneBySide?: Record<string, Endzone>;
+
+  /**
+   * Which side received the pull to start the game (coin flip result).
+   * Per-point offense is derived: the side that did not score receives next,
+   * with roles flipping after the `halftime` `GameTransition`.
+   */
+  initialReceivingSideId: string;
+
   sides: GameSide[];
   participants: Participant[];
+  /**
+   * Format-driven game-flow transitions: halftime, soft cap, hard cap.
+   * Team-controlled between-point events (timeouts, etc.) live on
+   * `TrackedPoint.transitionsAfter` instead.
+   */
+  gameTransitions?: GameTransition[];
   points: TrackedPoint[];
 }
 
@@ -27,19 +54,24 @@ export interface GameMetadata {
   title?: string;
   opponentName?: string;
   location?: string;
-  date?: string; // ISO date string: YYYY-MM-DD
+  date?: string;
   notes?: string;
 }
 
 export interface AdvancedTrackingSettings {
   locationMode: 'none' | 'zone' | 'xy';
-  scoring?: ScoringSettings;
+  format?: GameFormatSettings;
 }
 
-export interface ScoringSettings {
+export interface GameFormatSettings {
+  /** Extend this union as new formats are supported (e.g. `'ufa'`, `'goaltimate'`). */
+  formatType: 'standard';
   gameTo?: number;
+  /** Score at which halftime is called, e.g. `8` in a game to 15. */
   halftimeAt?: number;
+  /** Score at which soft cap activates. */
   softCapAt?: number;
+  /** Score at which hard cap activates. */
   hardCapAt?: number;
 }
 
@@ -47,70 +79,83 @@ export interface ScoringSettings {
 
 export interface GameSide {
   id: string;
+  /** Display name, e.g. `"Home"`, `"Away"`, `"White"`, `"Dark"`. */
   label: string;
   colorToken?: string;
+  /** Set when this side maps to a saved team in the app. */
   sourceTeamId?: string | null;
+  /**
+   * `'full-roster'`: participants are tracked individually.
+   * `'anonymous'`: opponent side where player identity is not captured.
+   */
   trackingMode: 'full-roster' | 'anonymous';
 }
 
 export interface Participant {
   id: string;
   name: string;
+  /** Set when this participant maps to a saved player in the app. */
   sourcePlayerId?: string | null;
+  /**
+   * Mirrors `matchingType` from the basic tracking `Player` type.
+   * `'fmp'` = female matching player, `'mmp'` = male matching player, `null` = not set.
+   * Required for gender ratio validation in mixed games.
+   */
+  matchingType?: 'fmp' | 'mmp' | null;
 }
 
 // --- Points ---
 
 export type Endzone = 'near' | 'far';
 
-export interface PointLineup {
+export interface PointLine {
   sideId: string;
+  /**
+   * Participants on this side for this point. The same participant can appear on
+   * different sides in different points — important for scrimmages.
+   * Between-point subs are implicit: the next point's lines simply reflect the new lineup.
+   */
   participantIds: string[];
 }
 
-export type PointOutcome =
-  | {
-      outcomeType: 'goal';
-      scoringSideId: string;
-      possessionId: string;
-      actionId: string;
-    }
-  | { outcomeType: 'unfinished' }
-  | { outcomeType: 'abandoned'; reason: 'weather' | 'injury' | 'manual' | 'other' };
+export interface PointSub {
+  id: string;
+  sideId: string;
+  type: 'injury';
+  inIds: string[];
+  outIds: string[];
+  /**
+   * Links to the `StoppageAction` that triggered this sub.
+   * Use this to locate the sub in the possession/action timeline — e.g. to determine
+   * whether the injured player had the disc, and whether play resumed in the same
+   * possession or restarted with a `dead_disc_check`.
+   */
+  stoppageActionId: string;
+}
 
 export interface TrackedPoint {
   id: string;
-  number: number;
-  scoreStart: Record<string, number>;
-  offenseStartSideId: string;
-  attackingEndzoneBySide: Record<string, Endzone>;
-  lineups: PointLineup[];
+  lines: PointLine[];
+  /** Mid-point substitutions. Between-point subs are implicit in the next point's lines. */
+  subs?: PointSub[];
   possessions: PointPossession[];
-  outcome: PointOutcome;
+  /** Team-controlled events after this point ended (timeouts). */
   transitionsAfter?: BetweenPointTransition[];
+  /**
+   * Gender ratio for this point in mixed games.
+   * `'more-women'` = FMP (female matching player majority), `'more-men'` = MMP.
+   * Mirrors `GenderRatio` from `genderRatioUtils`. Only set when relevant.
+   */
+  genderRatio?: 'more-women' | 'more-men';
 }
 
 // --- Possessions ---
 
-export type PossessionStartedBy =
-  | { startType: 'pull_received'; actionId: string }
-  | { startType: 'pull_pickup'; actionId: string }
-  | { startType: 'turnover'; causedByActionId: string }
-  | { startType: 'dead_disc_check'; actionId: string };
-
-export type PossessionEndedBy =
-  | { endType: 'goal'; actionId: string }
-  | { endType: 'turnover'; actionId: string }
-  | { endType: 'stoppage'; actionId: string }
-  | { endType: 'end_of_recording' };
-
 export interface PointPossession {
   id: string;
-  number: number;
+  /** Which side holds the disc during this possession. */
   sideId: string;
-  startedBy: PossessionStartedBy;
   actions: PossessionAction[];
-  endedBy: PossessionEndedBy;
 }
 
 // --- Transitions ---
@@ -119,18 +164,43 @@ export type BetweenPointTransition =
   | {
       id: string;
       transitionType: 'timeout';
+      /** Which side called the timeout. */
       sideId: string;
-      notes?: string;
     }
   | {
       id: string;
-      transitionType: 'halftime' | 'spirit_timeout' | 'injury' | 'administrative' | 'heat_timeout';
+      transitionType: 'spirit_timeout' | 'administrative' | 'heat_timeout';
+      /** Not all stoppages are called by a specific side. */
       sideId?: string;
-      notes?: string;
+    };
+
+export type GameTransition =
+  | {
+      id: string;
+      transitionType: 'halftime';
+      afterPointId: string;
+    }
+  | {
+      id: string;
+      transitionType: 'soft_cap';
+      /** Soft cap always activates between points. */
+      afterPointId: string;
+    }
+  | {
+      id: string;
+      transitionType: 'hard_cap';
+      /** May be absent if hard cap ends the game mid-point. */
+      afterPointId?: string;
     };
 
 // --- Player References ---
 
+/**
+ * Distinguishes three meaningfully different cases for who performed an action:
+ * - `'participant'`: a known tracked player
+ * - `'unknown'`: player identity matters for this side but was not captured
+ * - `'untracked'`: this side is intentionally anonymous (e.g. opponent in single-team mode)
+ */
 export type PlayerRef =
   | { refType: 'participant'; participantId: string }
   | { refType: 'unknown' }
@@ -142,36 +212,30 @@ export type FieldLocation =
   | { locationType: 'zone'; zoneId: string }
   | { locationType: 'xy'; x: number; y: number };
 
-// --- Turnover Attribution ---
-
-export type TurnoverAttribution =
-  | { mode: 'single'; player: PlayerRef }
-  | { mode: 'split'; thrower: PlayerRef; receiver: PlayerRef };
-
 // --- Actions ---
 
-export type PossessionAction = PullAction | DiscGainAction | ThrowAction | StoppageAction;
+export type PossessionAction = PullAction | DiscPickupAction | ThrowAction | StoppageAction;
 
 export interface PullAction {
   id: string;
   kind: 'pull';
+  /** Side that pulled. */
   sideId: string;
   receivingSideId: string;
   puller: PlayerRef;
+  /** Optional — pull may not be caught or receiver may be untracked. */
   receiver?: PlayerRef;
-  result: 'caught' | 'dropped' | 'landed_in_bounds' | 'landed_in_bounds_rolled_out' | 'bricked';
+  result: 'caught' | 'dropped' | 'landed_in_bounds' | 'landed_in_bounds_rolled_out' | 'ob_pull';
   hangTimeMs?: number;
   origin?: FieldLocation;
   landing?: FieldLocation;
 }
 
-export interface DiscGainAction {
+export interface DiscPickupAction {
   id: string;
-  kind: 'disc_gain';
+  kind: 'disc_pickup';
   sideId: string;
   player: PlayerRef;
-  source: 'pull_pickup' | 'turnover_pickup' | 'dead_disc_check';
-  causedByActionId?: string;
   location?: FieldLocation;
 }
 
@@ -180,11 +244,28 @@ export interface ThrowAction {
   kind: 'throw';
   sideId: string;
   thrower: PlayerRef;
-  targetSideId: string;
-  targetPlayer?: PlayerRef;
-  result: 'complete' | 'goal' | 'drop' | 'throwaway' | 'block' | 'callahan';
+  /**
+   * Who caught or was in position to catch the throw. Present on `complete` and `goal`
+   * (the receiver), and optionally on `drop`. Absent on `throwaway`, `block`,
+   * `interception`, and `callahan` — coaches record what happened, not intent.
+   */
+  toPlayer?: PlayerRef;
+  /**
+   * `'stall'` — count reached 10, disc turns over at the spot with no throw.
+   * Attributed to the thrower (player holding the disc). No `toPlayer`.
+   */
+  result:
+    | 'complete'
+    | 'goal'
+    | 'drop'
+    | 'throwaway'
+    | 'stall'
+    | 'block'
+    | 'interception'
+    | 'callahan';
   defender?: PlayerRef;
-  turnoverAttribution?: TurnoverAttribution;
+  /** True when blame is shared 50/50 between thrower and toPlayer (e.g. a floaty huck both could have done better on). Single attribution is derived from result + thrower/toPlayer. */
+  splitAttribution?: boolean;
   origin?: FieldLocation;
   target?: FieldLocation;
 }

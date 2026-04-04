@@ -12,6 +12,7 @@ Current direction:
 - Support both-team tracking and same-team scrimmages.
 - Keep field location optional and flexible so rough zones or x/y coordinates can both fit later.
 - Keep the stored model simple enough that new stat types can be added without reshaping the whole game format.
+- Keep the persisted model focused on capture/editing, then compile it into a stat-friendly layer before running derived stats.
 
 ## Docs In This Folder
 
@@ -28,6 +29,6 @@ Each tracked game should:
 - separate `participants` from side assignment so scrimmages work cleanly
 - store ordered `points`, each with ordered `possessions` and ordered `actions`
 - use stable IDs for points, possessions, and actions
-- derive goals, assists, completions, touches, and visualizations from those raw point/possession actions
+- derive goals, assists, completions, touches, and visualizations from a compiled view of those raw point/possession actions
 
 If this feature is built, it should own its own store, persistence model, and save/load lifecycle rather than sharing ownership with the existing `savedGames` system.
