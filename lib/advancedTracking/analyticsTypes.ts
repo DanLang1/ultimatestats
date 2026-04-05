@@ -1,0 +1,132 @@
+// Analytics Layer Types
+// See docs/future-features/advanced-stat-tracking/analytics-layer.md
+
+export type PointState =
+  | 'hold' // focus side received and scored
+  | 'break' // focus side pulled and scored
+  | 'broken' // focus side received, opponent scored
+  | 'opp_hold' // focus side pulled, opponent scored
+  | 'terminated'; // game ended mid-point before a score was recorded
+
+export type AttributionType =
+  | 'goal'
+  | 'assist'
+  | 'hockey_assist'
+  | 'completion'
+  | 'throw_attempt'
+  | 'receiving_touch'
+  | 'throwaway'
+  | 'drop'
+  | 'stall'
+  | 'block'
+  | 'callahan'
+  | 'pull'
+  | 'pull_reception'
+  | 'disc_pickup';
+
+export interface AnalyticsPoint {
+  id: string;
+  pointIndex: number;
+  half: 1 | 2;
+  /**
+   * Perspective-neutral fields — valid regardless of which side you consider the focus.
+   * Use these with getPointStateForSide() to derive hold/break/etc. for any side.
+   */
+  receivingSideId: string;
+  pullingSideId: string;
+  /** Which side scored this point. Null only when the game ended mid-point. */
+  scoringSideId: string | null;
+  /**
+   * Convenience view of point outcome from game.focusSideId's perspective.
+   * For dual-perspective queries (both-team tracking, scrimmages) use getPointStateForSide()
+   * instead, which derives state for any sideId without recompiling the game.
+   */
+  state: PointState;
+  /** Participants on the field for this point, by sideId. */
+  linesBySide: Record<string, string[]>;
+  /**
+   * Each side's cumulative score at the START of this point (before this point's outcome).
+   * Useful for contextual stats — e.g. "break rate when trailing".
+   * Perspective-neutral: keyed by sideId.
+   */
+  scoresBySide: Record<string, number>;
+  genderRatio?: 'more-women' | 'more-men';
+  /**
+   * Total point duration in ms, excluding paused time from stoppages.
+   * Derived from the last action's elapsedMs. Null if timestamps are absent.
+   */
+  durationMs: number | null;
+  /**
+   * True when only one side possessed the disc for the entire point (no turnovers).
+   * Only ever true for 'hold' or 'opp_hold' — breaks and broken points always involve
+   * two possessions by definition, so isCleanHold is always false for those states.
+   * Null when the point ended early due to game termination.
+   */
+  isCleanHold: boolean | null;
+}
+
+export type AnalyticsPossessionResult = 'scored' | 'turned_over' | 'terminated';
+
+export type AnalyticsTurnoverType =
+  | 'drop'
+  | 'throwaway'
+  | 'stall'
+  | 'block'
+  | 'interception'
+  | 'callahan';
+
+export interface AnalyticsPossession {
+  id: string;
+  pointId: string;
+  pointIndex: number;
+  possessionIndex: number;
+  sideId: string;
+  result: AnalyticsPossessionResult;
+  turnoverType?: AnalyticsTurnoverType;
+}
+
+export interface AnalyticsAction {
+  id: string;
+  kind: 'pull' | 'disc_pickup' | 'throw' | 'stoppage';
+  pointId: string;
+  pointIndex: number;
+  possessionId: string;
+  possessionIndex: number;
+  actionIndex: number;
+  sideId: string;
+  /** Resolved from PlayerRef — null if unknown or untracked. */
+  actorId: string | null;
+  /** toPlayer on throws, receiver on pull. Null if unknown or untracked. */
+  receiverId: string | null;
+  defenderId: string | null;
+  result?: string;
+  /** Pull hang time in ms when this is a pull action. */
+  hangTimeMs?: number;
+  /**
+   * Derived during buildAnalyticsGame by walking the possession's actions array.
+   * Not stored in the raw model. Used for hockey assist derivation.
+   */
+  previousActionId: string | null;
+  splitAttribution: boolean;
+  /**
+   * Ms elapsed since the point started. Derived from action.recordedAt - point.startedAt.
+   * Null if either timestamp is absent.
+   */
+  elapsedMs: number | null;
+}
+
+export interface AnalyticsAttribution {
+  type: AttributionType;
+  participantId: string;
+  /** 1.0 standard, 0.5 for split attribution. */
+  weight: number;
+  actionId: string;
+  pointId: string;
+}
+
+export interface AnalyticsGame {
+  points: AnalyticsPoint[];
+  possessions: AnalyticsPossession[];
+  actions: AnalyticsAction[];
+  attributions: AnalyticsAttribution[];
+}

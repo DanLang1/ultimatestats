@@ -3,6 +3,8 @@
 
 // --- Core Game ---
 
+export type GameStatus = 'in_progress' | 'final' | 'terminated';
+
 export interface AdvancedTrackedGame {
   id: string;
   schemaVersion: number;
@@ -10,7 +12,7 @@ export interface AdvancedTrackedGame {
   updatedAt: number;
 
   gameType: 'game' | 'scrimmage' | 'practice' | 'other';
-  status: 'in_progress' | 'final' | 'terminated';
+  status: GameStatus;
   /** Only set when `status` is `'terminated'`. */
   endReason?: 'time_limit' | 'weather' | 'conceded' | 'manual';
 
@@ -147,6 +149,12 @@ export interface TrackedPoint {
    * Mirrors `GenderRatio` from `genderRatioUtils`. Only set when relevant.
    */
   genderRatio?: 'more-women' | 'more-men';
+  /**
+   * Absolute timestamp (ms epoch) when this point started — set when the coach taps START.
+   * Point duration and per-action elapsed times are derived from this.
+   * Mirrors `pointStartTimestamps` from basic stat tracking.
+   */
+  startedAt?: number;
 }
 
 // --- Possessions ---
@@ -229,6 +237,8 @@ export interface PullAction {
   hangTimeMs?: number;
   origin?: FieldLocation;
   landing?: FieldLocation;
+  /** Absolute timestamp (ms epoch) when this action was logged. */
+  recordedAt?: number;
 }
 
 export interface DiscPickupAction {
@@ -237,6 +247,8 @@ export interface DiscPickupAction {
   sideId: string;
   player: PlayerRef;
   location?: FieldLocation;
+  /** Absolute timestamp (ms epoch) when this action was logged. */
+  recordedAt?: number;
 }
 
 export interface ThrowAction {
@@ -268,6 +280,8 @@ export interface ThrowAction {
   splitAttribution?: boolean;
   origin?: FieldLocation;
   target?: FieldLocation;
+  /** Absolute timestamp (ms epoch) when this action was logged. */
+  recordedAt?: number;
 }
 
 export interface StoppageAction {
@@ -275,4 +289,17 @@ export interface StoppageAction {
   kind: 'stoppage';
   reason: 'timeout' | 'injury';
   sideId?: string;
+  /** Absolute timestamp (ms epoch) when this action was logged. */
+  recordedAt?: number;
+  /**
+   * When the point timer was paused — set immediately when the stoppage is logged.
+   * Undefined if the point timer was not running.
+   */
+  pausedAt?: number;
+  /**
+   * When play resumed and the point timer restarted.
+   * Undefined until the coach taps resume. If the stoppage is undone before
+   * resuming, neither field affects elapsed time since the action is removed.
+   */
+  resumedAt?: number;
 }

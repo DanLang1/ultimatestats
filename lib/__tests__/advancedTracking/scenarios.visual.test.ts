@@ -10,17 +10,17 @@ const ZOO = 'Zoo';
 const RIVALS = 'rivals';
 
 const participants = [
-  { id: 'p_alex', name: 'August' },
-  { id: 'p_blair', name: 'Meves' },
-  { id: 'p_casey', name: 'Joah' },
-  { id: 'p_drew', name: 'Max' },
+  { id: 'p_august', name: 'August' },
+  { id: 'p_meves', name: 'Meves' },
+  { id: 'p_joah', name: 'Joah' },
+  { id: 'p_max', name: 'Max' },
   { id: 'p_sam', name: 'Sam' },
 ];
 
-const august = { refType: 'participant' as const, participantId: 'p_alex' };
-const meves = { refType: 'participant' as const, participantId: 'p_blair' };
-const joah = { refType: 'participant' as const, participantId: 'p_casey' };
-const max = { refType: 'participant' as const, participantId: 'p_drew' };
+const august = { refType: 'participant' as const, participantId: 'p_august' };
+const meves = { refType: 'participant' as const, participantId: 'p_meves' };
+const joah = { refType: 'participant' as const, participantId: 'p_joah' };
+const max = { refType: 'participant' as const, participantId: 'p_max' };
 const sam = { refType: 'participant' as const, participantId: 'p_sam' };
 const untracked = { refType: 'untracked' as const };
 
@@ -48,7 +48,7 @@ it('scenario: clean hold — Zoo receive, 3 passes, goal', () => {
     points: [
       {
         id: 'pt1',
-        lines: [{ sideId: ZOO, participantIds: ['p_alex', 'p_blair', 'p_casey', 'p_drew'] }],
+        lines: [{ sideId: ZOO, participantIds: ['p_august', 'p_meves', 'p_joah', 'p_max'] }],
         possessions: [
           {
             id: 'pos1',
@@ -97,7 +97,7 @@ it('scenario: clean hold — Zoo receive, 3 passes, goal', () => {
   console.log('\n\n=== FORMATTED ===\n');
   console.log(formatGame(game));
   console.log('\n=== RAW JSON: Scenario 1 — Clean hold ===\n');
-  console.log(JSON.stringify(game, null, 2));
+  console.log(JSON.stringify(game));
 });
 
 // ── Scenario 2: Dirty hold ───────────────────────────────────────────────────
@@ -127,7 +127,7 @@ it('scenario: dirty hold — Zoo receive, throwaway, block, Zoo scores', () => {
     points: [
       {
         id: 'pt2',
-        lines: [{ sideId: ZOO, participantIds: ['p_alex', 'p_blair', 'p_casey', 'p_drew'] }],
+        lines: [{ sideId: ZOO, participantIds: ['p_august', 'p_meves', 'p_joah', 'p_max'] }],
         possessions: [
           // Zoo first possession — ends with Meves throwaway
           {
@@ -218,7 +218,7 @@ it('scenario: dirty hold — Zoo receive, throwaway, block, Zoo scores', () => {
   console.log('\n\n=== FORMATTED ===\n');
   console.log(formatGame(game));
   console.log('\n=== RAW JSON: Scenario 2 — Dirty hold ===\n');
-  console.log(JSON.stringify(game, null, 2));
+  console.log(JSON.stringify(game));
 });
 
 // ── Scenario 3: Break ────────────────────────────────────────────────────────
@@ -248,7 +248,7 @@ it('scenario: break — Zoo pull, Rivals possess, Meves block, Zoo scores', () =
     points: [
       {
         id: 'pt3',
-        lines: [{ sideId: ZOO, participantIds: ['p_alex', 'p_blair', 'p_casey', 'p_drew'] }],
+        lines: [{ sideId: ZOO, participantIds: ['p_august', 'p_meves', 'p_joah', 'p_max'] }],
         possessions: [
           // Rivals first possession — ends with Meves block
           {
@@ -319,7 +319,7 @@ it('scenario: break — Zoo pull, Rivals possess, Meves block, Zoo scores', () =
   console.log('\n\n=== FORMATTED ===\n');
   console.log(formatGame(game));
   console.log('\n=== RAW JSON: Scenario 3 — Break ===\n');
-  console.log(JSON.stringify(game, null, 2));
+  console.log(JSON.stringify(game));
 });
 
 // ── Scenario 4: Callahan ─────────────────────────────────────────────────────
@@ -350,7 +350,7 @@ it('scenario: callahan — Zoo D, Rivals in endzone, Max catches Callahan', () =
     points: [
       {
         id: 'pt4',
-        lines: [{ sideId: ZOO, participantIds: ['p_alex', 'p_blair', 'p_casey', 'p_drew'] }],
+        lines: [{ sideId: ZOO, participantIds: ['p_august', 'p_meves', 'p_joah', 'p_max'] }],
         possessions: [
           // Rivals' entire possession — ends when Max catches the Callahan
           {
@@ -394,7 +394,7 @@ it('scenario: callahan — Zoo D, Rivals in endzone, Max catches Callahan', () =
   console.log('\n\n=== FORMATTED ===\n');
   console.log(formatGame(game));
   console.log('\n=== RAW JSON: Scenario 4 — Callahan ===\n');
-  console.log(JSON.stringify(game, null, 2));
+  console.log(JSON.stringify(game));
 });
 // ── Scenario 5: Full game — every field ─────────────────────────────────────
 //
@@ -463,7 +463,7 @@ it('scenario: full game — both teams tracked, every field', () => {
       {
         id: 'pt1',
         lines: [
-          { sideId: ZOO, participantIds: ['p_alex', 'p_blair', 'p_casey', 'p_drew'] },
+          { sideId: ZOO, participantIds: ['p_august', 'p_meves', 'p_joah', 'p_max'] },
           { sideId: RIVALS, participantIds: ['p_ryan', 'p_sam', 'p_taylor'] },
         ],
         possessions: [
@@ -516,7 +516,7 @@ it('scenario: full game — both teams tracked, every field', () => {
       {
         id: 'pt2',
         lines: [
-          { sideId: ZOO, participantIds: ['p_alex', 'p_blair', 'p_casey', 'p_drew'] },
+          { sideId: ZOO, participantIds: ['p_august', 'p_meves', 'p_joah', 'p_max'] },
           { sideId: RIVALS, participantIds: ['p_ryan', 'p_sam', 'p_taylor'] },
         ],
         possessions: [
@@ -629,7 +629,7 @@ it('scenario: full game — both teams tracked, every field', () => {
       {
         id: 'pt3',
         lines: [
-          { sideId: ZOO, participantIds: ['p_alex', 'p_blair', 'p_casey', 'p_drew'] },
+          { sideId: ZOO, participantIds: ['p_august', 'p_meves', 'p_joah', 'p_max'] },
           { sideId: RIVALS, participantIds: ['p_ryan', 'p_sam', 'p_taylor'] },
         ],
         possessions: [
@@ -705,7 +705,7 @@ it('scenario: full game — both teams tracked, every field', () => {
       {
         id: 'pt4',
         lines: [
-          { sideId: ZOO, participantIds: ['p_alex', 'p_blair', 'p_casey', 'p_drew'] },
+          { sideId: ZOO, participantIds: ['p_august', 'p_meves', 'p_joah', 'p_max'] },
           { sideId: RIVALS, participantIds: ['p_ryan', 'p_sam', 'p_taylor'] },
         ],
         possessions: [
@@ -749,7 +749,7 @@ it('scenario: full game — both teams tracked, every field', () => {
   console.log('\n\n=== FORMATTED ===\n');
   console.log(formatGame(game));
   console.log('\n=== RAW JSON: Scenario 5 — Full game, both teams tracked ===\n');
-  console.log(JSON.stringify(game, null, 2));
+  console.log(JSON.stringify(game));
 });
 
 // ── Scenario 6: Block — disc hits ground, different player picks up ───────────
@@ -775,7 +775,7 @@ test('scenario: block — disc hits ground, different player picks up', () => {
     points: [
       {
         id: 'pt1',
-        lines: [{ sideId: ZOO, participantIds: ['p_alex', 'p_blair', 'p_casey', 'p_drew'] }],
+        lines: [{ sideId: ZOO, participantIds: ['p_august', 'p_meves', 'p_joah', 'p_max'] }],
         possessions: [
           {
             id: 'pos1a',
@@ -837,7 +837,7 @@ test('scenario: block — disc hits ground, different player picks up', () => {
   console.log('\n\n=== FORMATTED ===\n');
   console.log(formatGame(game));
   console.log('\n=== RAW JSON: Scenario 6 — Block, different player picks up ===\n');
-  console.log(JSON.stringify(game, null, 2));
+  console.log(JSON.stringify(game));
 });
 
 // ── Scenario 7: Interception — defender catches in air, throws immediately ────
@@ -863,7 +863,7 @@ test('scenario: interception — defender catches in air, becomes thrower', () =
     points: [
       {
         id: 'pt1',
-        lines: [{ sideId: ZOO, participantIds: ['p_alex', 'p_blair', 'p_casey', 'p_drew'] }],
+        lines: [{ sideId: ZOO, participantIds: ['p_august', 'p_meves', 'p_joah', 'p_max'] }],
         possessions: [
           {
             id: 'pos1a',
@@ -919,7 +919,7 @@ test('scenario: interception — defender catches in air, becomes thrower', () =
   console.log('\n\n=== FORMATTED ===\n');
   console.log(formatGame(game));
   console.log('\n=== RAW JSON: Scenario 7 — Interception, defender becomes thrower ===\n');
-  console.log(JSON.stringify(game, null, 2));
+  console.log(JSON.stringify(game));
 });
 
 // ── Scenario 8: Injury sub — injured player OFF the disc, play resumes same possession ──
@@ -945,15 +945,15 @@ test('scenario: injury sub — player off disc, play resumes in same possession'
     points: [
       {
         id: 'pt1',
-        lines: [{ sideId: ZOO, participantIds: ['p_alex', 'p_blair', 'p_casey', 'p_drew'] }],
-        // August (p_alex) injured off the disc — Sam (p_sam) subs in from the bench
+        lines: [{ sideId: ZOO, participantIds: ['p_august', 'p_meves', 'p_joah', 'p_max'] }],
+        // August (p_august) injured off the disc — Sam (p_sam) subs in from the bench
         subs: [
           {
             id: 'sub1',
             sideId: ZOO,
             type: 'injury',
             inIds: ['p_sam'],
-            outIds: ['p_alex'],
+            outIds: ['p_august'],
             stoppageActionId: 'g3',
           },
         ],
@@ -1006,7 +1006,7 @@ test('scenario: injury sub — player off disc, play resumes in same possession'
   console.log('\n\n=== FORMATTED ===\n');
   console.log(formatGame(game));
   console.log('\n=== RAW JSON: Scenario 8 — Injury sub, player off disc ===\n');
-  console.log(JSON.stringify(game, null, 2));
+  console.log(JSON.stringify(game));
 });
 
 // ── Scenario 9: Injury sub — injured player HAS the disc, new player takes possession ──
@@ -1032,15 +1032,15 @@ test('scenario: injury sub — player with disc injured, new player takes posses
     points: [
       {
         id: 'pt1',
-        lines: [{ sideId: ZOO, participantIds: ['p_alex', 'p_blair', 'p_casey', 'p_drew'] }],
-        // Meves (p_blair) injured while holding the disc — Sam (p_sam) subs in from the bench
+        lines: [{ sideId: ZOO, participantIds: ['p_august', 'p_meves', 'p_joah', 'p_max'] }],
+        // Meves (p_meves) injured while holding the disc — Sam (p_sam) subs in from the bench
         subs: [
           {
             id: 'sub1',
             sideId: ZOO,
             type: 'injury',
             inIds: ['p_sam'],
-            outIds: ['p_blair'],
+            outIds: ['p_meves'],
             stoppageActionId: 'h3',
           },
         ],
@@ -1105,7 +1105,7 @@ test('scenario: injury sub — player with disc injured, new player takes posses
   console.log('\n\n=== FORMATTED ===\n');
   console.log(formatGame(game));
   console.log('\n=== RAW JSON: Scenario 9 — Injury sub, player with disc ===\n');
-  console.log(JSON.stringify(game, null, 2));
+  console.log(JSON.stringify(game));
 });
 
 // ── Scenario 10: Stall ───────────────────────────────────────────────────────
@@ -1131,7 +1131,7 @@ test('scenario: stall — count hits 10, disc turns over at the spot', () => {
     points: [
       {
         id: 'pt1',
-        lines: [{ sideId: ZOO, participantIds: ['p_alex', 'p_blair', 'p_casey', 'p_drew'] }],
+        lines: [{ sideId: ZOO, participantIds: ['p_august', 'p_meves', 'p_joah', 'p_max'] }],
         possessions: [
           {
             id: 'pos1a',
@@ -1192,7 +1192,7 @@ test('scenario: stall — count hits 10, disc turns over at the spot', () => {
   console.log('\n\n=== FORMATTED ===\n');
   console.log(formatGame(game));
   console.log('\n=== RAW JSON: Scenario 10 — Stall ===\n');
-  console.log(JSON.stringify(game, null, 2));
+  console.log(JSON.stringify(game));
 });
 
 // ── Scenario 11: OB pull ─────────────────────────────────────────────────────
@@ -1218,7 +1218,7 @@ test('scenario: ob_pull — pull flies OB, receiving team spots and picks up', (
     points: [
       {
         id: 'pt1',
-        lines: [{ sideId: ZOO, participantIds: ['p_alex', 'p_blair', 'p_casey', 'p_drew'] }],
+        lines: [{ sideId: ZOO, participantIds: ['p_august', 'p_meves', 'p_joah', 'p_max'] }],
         possessions: [
           {
             id: 'pos1',
@@ -1276,7 +1276,7 @@ test('scenario: ob_pull — pull flies OB, receiving team spots and picks up', (
   console.log('\n\n=== FORMATTED ===\n');
   console.log(formatGame(game));
   console.log('\n=== RAW JSON: Scenario 11 — OB pull ===\n');
-  console.log(JSON.stringify(game, null, 2));
+  console.log(JSON.stringify(game));
 });
 
 // ── Scenario 12: Gender ratio — mixed game ───────────────────────────────────
@@ -1300,10 +1300,10 @@ test('scenario: gender ratio — mixed game, fmp then mmp point', () => {
       { id: RIVALS, label: 'Rivals', trackingMode: 'anonymous' },
     ],
     participants: [
-      { id: 'p_alex', name: 'August', matchingType: 'fmp' },
-      { id: 'p_blair', name: 'Meves', matchingType: 'fmp' },
-      { id: 'p_casey', name: 'Joah', matchingType: 'mmp' },
-      { id: 'p_drew', name: 'Max', matchingType: 'mmp' },
+      { id: 'p_august', name: 'August', matchingType: 'fmp' },
+      { id: 'p_meves', name: 'Meves', matchingType: 'fmp' },
+      { id: 'p_joah', name: 'Joah', matchingType: 'mmp' },
+      { id: 'p_max', name: 'Max', matchingType: 'mmp' },
       { id: 'p_sam', name: 'Sam', matchingType: 'mmp' },
     ],
     points: [
@@ -1314,7 +1314,7 @@ test('scenario: gender ratio — mixed game, fmp then mmp point', () => {
         lines: [
           {
             sideId: ZOO,
-            participantIds: ['p_alex', 'p_blair', 'p_casey', 'p_drew', 'p_sam'],
+            participantIds: ['p_august', 'p_meves', 'p_joah', 'p_max', 'p_sam'],
           },
         ],
         possessions: [
@@ -1350,7 +1350,7 @@ test('scenario: gender ratio — mixed game, fmp then mmp point', () => {
         lines: [
           {
             sideId: ZOO,
-            participantIds: ['p_alex', 'p_blair', 'p_casey', 'p_drew', 'p_sam'],
+            participantIds: ['p_august', 'p_meves', 'p_joah', 'p_max', 'p_sam'],
           },
         ],
         possessions: [
@@ -1385,5 +1385,5 @@ test('scenario: gender ratio — mixed game, fmp then mmp point', () => {
   console.log('\n\n=== FORMATTED ===\n');
   console.log(formatGame(game));
   console.log('\n=== RAW JSON: Scenario 12 — Gender ratio, mixed game ===\n');
-  console.log(JSON.stringify(game, null, 2));
+  console.log(JSON.stringify(game));
 });
