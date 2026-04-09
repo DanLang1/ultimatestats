@@ -125,6 +125,7 @@ export interface AnalyticsAttribution {
 }
 
 export interface AnalyticsGame {
+  gameType: 'game' | 'scrimmage' | 'practice' | 'other';
   points: AnalyticsPoint[];
   possessions: AnalyticsPossession[];
   actions: AnalyticsAction[];

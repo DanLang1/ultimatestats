@@ -17,11 +17,14 @@ import type {
   PossessionAction,
   TrackedPoint,
 } from './types';
+export const UNKNOWN_PARTICIPANT_ID = 'UNKNOWN_PARTICIPANT';
 
 // ── Small utilities ───────────────────────────────────────────────────────────
 
 function resolveRef(ref: PlayerRef): string | null {
-  return ref.refType === 'participant' ? ref.participantId : null;
+  if (ref.refType === 'participant') return ref.participantId;
+  if (ref.refType === 'unknown') return UNKNOWN_PARTICIPANT_ID;
+  return null; // 'untracked' — intentionally anonymous, no attribution
 }
 
 function otherSide(sideId: string, sideIds: [string, string]): string {
@@ -149,7 +152,6 @@ function emitAttributions(
         break;
 
       case 'stall':
-        add('throw_attempt', actorId);
         add('stall', actorId);
         break;
 
@@ -603,7 +605,13 @@ export function buildAnalyticsGame(game: AdvancedTrackedGame): AnalyticsGame {
     }
   }
 
-  return { points, possessions, actions, attributions };
+  return {
+    gameType: game.gameType,
+    points,
+    possessions,
+    actions,
+    attributions,
+  };
 }
 
 /**

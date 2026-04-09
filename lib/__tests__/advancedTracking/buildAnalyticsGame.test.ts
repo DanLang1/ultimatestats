@@ -1,4 +1,5 @@
 import type { AnalyticsAttribution, AttributionType } from '../../advancedTracking/analyticsTypes';
+import { UNKNOWN_PARTICIPANT_ID } from '../../advancedTracking/buildAnalyticsGame';
 import {
   buildAnalyticsGame,
   getPointStateForSide,
@@ -1341,6 +1342,189 @@ describe('disc_pickup attribution', () => {
     expect(sumAttributions(attributions, 'p_meves', 'disc_pickup')).toBe(1);
     // august picked up the pull, not the ground disc
     expect(sumAttributions(attributions, 'p_august', 'disc_pickup')).toBe(0);
+  });
+});
+
+describe('unknown vs untracked PlayerRef attribution', () => {
+  // 'unknown' = identity matters but wasn't captured → attributions collect under UNKNOWN_PARTICIPANT_ID
+  // 'untracked' = intentionally anonymous (e.g. opponent in single-team mode) → no attribution
+
+  const unknown = { refType: 'unknown' as const };
+
+  it('goal to unknown receiver — goal goes to UNKNOWN_PARTICIPANT_ID, not lost', () => {
+    const game: AdvancedTrackedGame = {
+      ...baseGame,
+      points: [
+        {
+          id: 'pt1',
+          lines: [{ sideId: ZOO, participantIds: ['p_august', 'p_meves'] }],
+          possessions: [
+            {
+              id: 'pos1',
+              sideId: ZOO,
+              actions: [
+                {
+                  id: 'a1',
+                  kind: 'pull',
+                  sideId: RIVALS,
+                  receivingSideId: ZOO,
+                  puller: untracked,
+                  receiver: august,
+                  result: 'caught',
+                },
+                {
+                  id: 'a2',
+                  kind: 'throw',
+                  sideId: ZOO,
+                  thrower: august,
+                  toPlayer: unknown,
+                  result: 'goal',
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+    const { attributions } = buildAnalyticsGameWithLog(game);
+
+    expect(sumAttributions(attributions, UNKNOWN_PARTICIPANT_ID, 'goal')).toBe(1);
+    expect(sumAttributions(attributions, UNKNOWN_PARTICIPANT_ID, 'receiving_touch')).toBe(1);
+    expect(sumAttributions(attributions, 'p_august', 'assist')).toBe(1);
+  });
+
+  it('goal to untracked receiver — goal is not attributed to anyone', () => {
+    const game: AdvancedTrackedGame = {
+      ...baseGame,
+      points: [
+        {
+          id: 'pt1',
+          lines: [{ sideId: ZOO, participantIds: ['p_august', 'p_meves'] }],
+          possessions: [
+            {
+              id: 'pos1',
+              sideId: ZOO,
+              actions: [
+                {
+                  id: 'a1',
+                  kind: 'pull',
+                  sideId: RIVALS,
+                  receivingSideId: ZOO,
+                  puller: untracked,
+                  receiver: august,
+                  result: 'caught',
+                },
+                {
+                  id: 'a2',
+                  kind: 'throw',
+                  sideId: ZOO,
+                  thrower: august,
+                  toPlayer: untracked,
+                  result: 'goal',
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+    const { attributions } = buildAnalyticsGameWithLog(game);
+
+    expect(sumAttributions(attributions, UNKNOWN_PARTICIPANT_ID, 'goal')).toBe(0);
+    expect(sumAttributions(attributions, 'p_august', 'assist')).toBe(1);
+  });
+
+  it('drop to unknown receiver (no split) — drop goes to UNKNOWN_PARTICIPANT_ID', () => {
+    const game: AdvancedTrackedGame = {
+      ...baseGame,
+      status: 'terminated',
+      points: [
+        {
+          id: 'pt1',
+          lines: [{ sideId: ZOO, participantIds: ['p_august', 'p_meves'] }],
+          possessions: [
+            {
+              id: 'pos1',
+              sideId: ZOO,
+              actions: [
+                {
+                  id: 'a1',
+                  kind: 'pull',
+                  sideId: RIVALS,
+                  receivingSideId: ZOO,
+                  puller: untracked,
+                  receiver: august,
+                  result: 'caught',
+                },
+                {
+                  id: 'a2',
+                  kind: 'throw',
+                  sideId: ZOO,
+                  thrower: august,
+                  toPlayer: unknown,
+                  result: 'drop',
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+    const { attributions } = buildAnalyticsGameWithLog(game);
+
+    expect(sumAttributions(attributions, UNKNOWN_PARTICIPANT_ID, 'drop')).toBe(1);
+    expect(sumAttributions(attributions, 'p_august', 'throw_attempt')).toBe(1);
+  });
+
+  it('hockey assist to unknown previous thrower — credited to UNKNOWN_PARTICIPANT_ID', () => {
+    const game: AdvancedTrackedGame = {
+      ...baseGame,
+      points: [
+        {
+          id: 'pt1',
+          lines: [{ sideId: ZOO, participantIds: ['p_august', 'p_meves'] }],
+          possessions: [
+            {
+              id: 'pos1',
+              sideId: ZOO,
+              actions: [
+                {
+                  id: 'a1',
+                  kind: 'pull',
+                  sideId: RIVALS,
+                  receivingSideId: ZOO,
+                  puller: untracked,
+                  receiver: august,
+                  result: 'caught',
+                },
+                // unknown player completes to August — should be hockey assist source
+                {
+                  id: 'a2',
+                  kind: 'throw',
+                  sideId: ZOO,
+                  thrower: unknown,
+                  toPlayer: august,
+                  result: 'complete',
+                },
+                {
+                  id: 'a3',
+                  kind: 'throw',
+                  sideId: ZOO,
+                  thrower: august,
+                  toPlayer: meves,
+                  result: 'goal',
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+    const { attributions } = buildAnalyticsGameWithLog(game);
+
+    expect(sumAttributions(attributions, UNKNOWN_PARTICIPANT_ID, 'hockey_assist')).toBe(1);
+    expect(sumAttributions(attributions, 'p_august', 'assist')).toBe(1);
+    expect(sumAttributions(attributions, 'p_meves', 'goal')).toBe(1);
   });
 });
 

@@ -18,6 +18,7 @@ Current direction:
 
 - [data-model.md](./data-model.md): Recommended persistence and domain model for the new feature.
 - [analytics-layer.md](./analytics-layer.md): The compiled analytics layer — how the raw model is transformed into stat-friendly indexes for query and display.
+- [stat-utils.md](./stat-utils.md): The stat derivation utilities — pure functions that consume `AnalyticsGame` and return typed stats for the UI. Includes UFA stat alignment coverage.
 - [field-stat-tracking.md](./field-stat-tracking.md): Older interaction and UI brainstorm. Useful for flow ideas, but outdated as the primary source for the data model.
 
 ## Recommendation Summary

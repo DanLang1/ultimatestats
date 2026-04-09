@@ -1,0 +1,882 @@
+import {
+  computeAdvancedPlayerStats,
+  computeAdvancedPlayerStatsForParticipant,
+} from '../../advancedTracking/advancedPlayerStatsUtils';
+import { buildAnalyticsGame } from '../../advancedTracking/buildAnalyticsGame';
+import type { AdvancedTrackedGame, PlayerRef } from '../../advancedTracking/types';
+
+// ── Shared fixtures ──────────────────────────────────────────────────────────
+
+const ZOO = 'Zoo';
+const RIVALS = 'rivals';
+
+const participants = [
+  { id: 'p_august', name: 'August' },
+  { id: 'p_meves', name: 'Meves' },
+  { id: 'p_joah', name: 'Joah' },
+  { id: 'p_max', name: 'Max' },
+];
+
+const august: PlayerRef = { refType: 'participant', participantId: 'p_august' };
+const meves: PlayerRef = { refType: 'participant', participantId: 'p_meves' };
+const joah: PlayerRef = { refType: 'participant', participantId: 'p_joah' };
+const max: PlayerRef = { refType: 'participant', participantId: 'p_max' };
+const untracked: PlayerRef = { refType: 'untracked' };
+
+const baseGame: Omit<AdvancedTrackedGame, 'points'> = {
+  id: 'g1',
+  schemaVersion: 1,
+  createdAt: 0,
+  updatedAt: 0,
+  gameType: 'game',
+  status: 'in_progress',
+  focusSideId: ZOO,
+  initialReceivingSideId: ZOO,
+  settings: { locationMode: 'none' },
+  sides: [
+    { id: ZOO, label: 'Zoo', trackingMode: 'full-roster' },
+    { id: RIVALS, label: 'Rivals', trackingMode: 'anonymous' },
+  ],
+  participants,
+};
+
+function findStats(stats: ReturnType<typeof computeAdvancedPlayerStats>, participantId: string) {
+  const s = stats.find((s) => s.participantId === participantId);
+  if (!s) throw new Error(`No stats found for ${participantId}`);
+  return s;
+}
+
+// ── Tests ─────────────────────────────────────────────────────────────────────
+
+describe('advancedPlayerStatsUtils', () => {
+  describe('clean offensive hold', () => {
+    // August catches pull → August→Meves (complete) → Meves→Joah (complete) → Joah→Max (goal)
+    const game: AdvancedTrackedGame = {
+      ...baseGame,
+      points: [
+        {
+          id: 'pt1',
+          lines: [{ sideId: ZOO, participantIds: ['p_august', 'p_meves', 'p_max', 'p_joah'] }],
+          possessions: [
+            {
+              id: 'pos1',
+              sideId: ZOO,
+              actions: [
+                {
+                  id: 'a1',
+                  kind: 'pull',
+                  sideId: RIVALS,
+                  receivingSideId: ZOO,
+                  puller: untracked,
+                  receiver: august,
+                  result: 'caught',
+                },
+                {
+                  id: 'a2',
+                  kind: 'throw',
+                  sideId: ZOO,
+                  thrower: august,
+                  toPlayer: meves,
+                  result: 'complete',
+                },
+                {
+                  id: 'a3',
+                  kind: 'throw',
+                  sideId: ZOO,
+                  thrower: meves,
+                  toPlayer: joah,
+                  result: 'complete',
+                },
+                {
+                  id: 'a4',
+                  kind: 'throw',
+                  sideId: ZOO,
+                  thrower: joah,
+                  toPlayer: max,
+                  result: 'goal',
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+
+    const analytics = buildAnalyticsGame(game);
+    const stats = computeAdvancedPlayerStats(analytics);
+
+    it('Max gets 1 goal, 1 reception', () => {
+      const s = findStats(stats, 'p_max');
+      expect(s.goals).toBe(1);
+      expect(s.receptions).toBe(1);
+    });
+
+    it('Joah gets 1 assist, 1 completion, 1 reception', () => {
+      const s = findStats(stats, 'p_joah');
+      expect(s.assists).toBe(1);
+      expect(s.completions).toBe(1);
+      expect(s.receptions).toBe(1);
+    });
+
+    it('Meves gets hockey assist, 1 completion, 1 reception', () => {
+      const s = findStats(stats, 'p_meves');
+      expect(s.hockeyAssists).toBe(1);
+      expect(s.assists).toBe(0);
+      expect(s.completions).toBe(1);
+      expect(s.receptions).toBe(1);
+    });
+
+    it('August gets 1 completion, 1 pull reception, 0 receptions, 0 hockey assists', () => {
+      // August is 2 throws before the goal — too far back for a hockey assist
+      const s = findStats(stats, 'p_august');
+      expect(s.completions).toBe(1);
+      expect(s.pullReceptions).toBe(1);
+      expect(s.receptions).toBe(0);
+      expect(s.hockeyAssists).toBe(0);
+    });
+
+    it('completion pct', () => {
+      expect(findStats(stats, 'p_august').completionPct).toBeCloseTo(1.0); // 1/1
+      expect(findStats(stats, 'p_meves').completionPct).toBeCloseTo(1.0); // 1/1
+      expect(findStats(stats, 'p_joah').completionPct).toBeCloseTo(1.0); // 1/1
+      expect(findStats(stats, 'p_max').completionPct).toBeNull(); // 0 attempts
+    });
+
+    it('total touches', () => {
+      // August: 1 completion + 0 receptions + 0 disc_pickup + 1 pull_reception = 2
+      expect(findStats(stats, 'p_august').totalTouches).toBe(2);
+      // Meves: 1 completion + 1 reception = 2
+      expect(findStats(stats, 'p_meves').totalTouches).toBe(2);
+      // Joah: 1 completion + 1 reception = 2
+      expect(findStats(stats, 'p_joah').totalTouches).toBe(2);
+      // Max: 0 completions + 1 reception = 1
+      expect(findStats(stats, 'p_max').totalTouches).toBe(1);
+    });
+
+    it('points played = 1 for all players on the line', () => {
+      expect(findStats(stats, 'p_august').pointsPlayed).toBe(1);
+      expect(findStats(stats, 'p_meves').pointsPlayed).toBe(1);
+      expect(findStats(stats, 'p_max').pointsPlayed).toBe(1);
+    });
+
+    it('O-points = 1 (Zoo received)', () => {
+      expect(findStats(stats, 'p_august').oPoints).toBe(1);
+      expect(findStats(stats, 'p_august').dPoints).toBe(0);
+    });
+
+    it('plus/minus', () => {
+      expect(findStats(stats, 'p_august').plusMinus).toBe(0); // 0+0+0-0-0
+      expect(findStats(stats, 'p_meves').plusMinus).toBe(0); // hockey assist doesn't count
+      expect(findStats(stats, 'p_joah').plusMinus).toBe(1); // 0+1+0-0-0
+      expect(findStats(stats, 'p_max').plusMinus).toBe(1); // 1+0+0-0-0
+    });
+  });
+
+  describe('throwaway', () => {
+    const game: AdvancedTrackedGame = {
+      ...baseGame,
+      status: 'terminated',
+      points: [
+        {
+          id: 'pt1',
+          lines: [{ sideId: ZOO, participantIds: ['p_august', 'p_meves'] }],
+          possessions: [
+            {
+              id: 'pos1',
+              sideId: ZOO,
+              actions: [
+                {
+                  id: 'a1',
+                  kind: 'pull',
+                  sideId: RIVALS,
+                  receivingSideId: ZOO,
+                  puller: untracked,
+                  receiver: august,
+                  result: 'caught',
+                },
+                { id: 'a2', kind: 'throw', sideId: ZOO, thrower: august, result: 'throwaway' },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+
+    const analytics = buildAnalyticsGame(game);
+    const stats = computeAdvancedPlayerStats(analytics);
+
+    it('August gets 1 throwaway, 50% completion', () => {
+      const s = findStats(stats, 'p_august');
+      expect(s.throwaways).toBe(1);
+      expect(s.throwAttempts).toBe(1);
+      expect(s.completionPct).toBeCloseTo(0);
+    });
+
+    it('August plus/minus = -1', () => {
+      expect(findStats(stats, 'p_august').plusMinus).toBe(-1);
+    });
+  });
+
+  describe('split attribution (50/50 drop)', () => {
+    const game: AdvancedTrackedGame = {
+      ...baseGame,
+      status: 'terminated',
+      points: [
+        {
+          id: 'pt1',
+          lines: [{ sideId: ZOO, participantIds: ['p_august', 'p_meves'] }],
+          possessions: [
+            {
+              id: 'pos1',
+              sideId: ZOO,
+              actions: [
+                {
+                  id: 'a1',
+                  kind: 'pull',
+                  sideId: RIVALS,
+                  receivingSideId: ZOO,
+                  puller: untracked,
+                  receiver: august,
+                  result: 'caught',
+                },
+                {
+                  id: 'a2',
+                  kind: 'throw',
+                  sideId: ZOO,
+                  thrower: august,
+                  toPlayer: meves,
+                  result: 'drop',
+                  splitAttribution: true,
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+
+    const analytics = buildAnalyticsGame(game);
+    const stats = computeAdvancedPlayerStats(analytics);
+
+    it('August gets 0.5 throwaway, Meves gets 0.5 drop', () => {
+      expect(findStats(stats, 'p_august').throwaways).toBeCloseTo(0.5);
+      expect(findStats(stats, 'p_meves').drops).toBeCloseTo(0.5);
+    });
+
+    it('plus/minus reflects split weights', () => {
+      // August: 0+0+0 - 0.5 - 0 = -0.5
+      expect(findStats(stats, 'p_august').plusMinus).toBeCloseTo(-0.5);
+      // Meves: 0+0+0 - 0 - 0.5 = -0.5
+      expect(findStats(stats, 'p_meves').plusMinus).toBeCloseTo(-0.5);
+    });
+  });
+
+  describe('callahan', () => {
+    const game: AdvancedTrackedGame = {
+      ...baseGame,
+      initialReceivingSideId: RIVALS,
+      points: [
+        {
+          id: 'pt1',
+          lines: [{ sideId: ZOO, participantIds: ['p_august', 'p_max'] }],
+          possessions: [
+            {
+              id: 'pos1',
+              sideId: RIVALS,
+              actions: [
+                {
+                  id: 'a1',
+                  kind: 'pull',
+                  sideId: ZOO,
+                  receivingSideId: RIVALS,
+                  puller: august,
+                  receiver: untracked,
+                  result: 'caught',
+                },
+                {
+                  id: 'a2',
+                  kind: 'throw',
+                  sideId: RIVALS,
+                  thrower: untracked,
+                  result: 'callahan',
+                  defender: max,
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+
+    const analytics = buildAnalyticsGame(game);
+    const stats = computeAdvancedPlayerStats(analytics);
+
+    it('Max gets callahan, goal, and block', () => {
+      const s = findStats(stats, 'p_max');
+      expect(s.callahans).toBe(1);
+      expect(s.goals).toBe(1);
+      expect(s.blocks).toBe(1);
+    });
+
+    it('August gets 1 pull', () => {
+      expect(findStats(stats, 'p_august').pulls).toBe(1);
+    });
+
+    it('D-points = 1 for Zoo players (Zoo was pulling)', () => {
+      expect(findStats(stats, 'p_august').dPoints).toBe(1);
+      expect(findStats(stats, 'p_august').oPoints).toBe(0);
+    });
+  });
+
+  describe('multi-point game — O/D split', () => {
+    // Pt1: Zoo receives (O-point) and scores
+    // Pt2: Zoo pulls (D-point) and opponent scores
+    const game: AdvancedTrackedGame = {
+      ...baseGame,
+      initialReceivingSideId: ZOO,
+      points: [
+        {
+          id: 'pt1',
+          lines: [{ sideId: ZOO, participantIds: ['p_august'] }],
+          possessions: [
+            {
+              id: 'pos1',
+              sideId: ZOO,
+              actions: [
+                {
+                  id: 'a1',
+                  kind: 'pull',
+                  sideId: RIVALS,
+                  receivingSideId: ZOO,
+                  puller: untracked,
+                  receiver: august,
+                  result: 'caught',
+                },
+                {
+                  id: 'a2',
+                  kind: 'throw',
+                  sideId: ZOO,
+                  thrower: august,
+                  toPlayer: meves,
+                  result: 'goal',
+                },
+              ],
+            },
+          ],
+        },
+        {
+          id: 'pt2',
+          lines: [{ sideId: ZOO, participantIds: ['p_august'] }],
+          possessions: [
+            {
+              id: 'pos2',
+              sideId: RIVALS,
+              actions: [
+                {
+                  id: 'b1',
+                  kind: 'pull',
+                  sideId: ZOO,
+                  receivingSideId: RIVALS,
+                  puller: august,
+                  receiver: untracked,
+                  result: 'caught',
+                },
+                {
+                  id: 'b2',
+                  kind: 'throw',
+                  sideId: RIVALS,
+                  thrower: untracked,
+                  toPlayer: untracked,
+                  result: 'goal',
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+
+    const analytics = buildAnalyticsGame(game);
+    const stats = computeAdvancedPlayerStats(analytics);
+
+    it('August has 2 points played, 1 O and 1 D', () => {
+      const s = findStats(stats, 'p_august');
+      expect(s.pointsPlayed).toBe(2);
+      expect(s.oPoints).toBe(1);
+      expect(s.dPoints).toBe(1);
+    });
+
+    it('August has 2 pulls total (1 each point where he pulled)', () => {
+      // Pt1: untracked pulled. Pt2: August pulled.
+      expect(findStats(stats, 'p_august').pulls).toBe(1);
+    });
+  });
+
+  describe('sideId filter', () => {
+    const game: AdvancedTrackedGame = {
+      ...baseGame,
+      sides: [
+        { id: ZOO, label: 'Zoo', trackingMode: 'full-roster' },
+        { id: RIVALS, label: 'Rivals', trackingMode: 'full-roster' },
+      ],
+      participants: [...participants, { id: 'p_rival1', name: 'Rival1' }],
+      points: [
+        {
+          id: 'pt1',
+          lines: [
+            { sideId: ZOO, participantIds: ['p_august'] },
+            { sideId: RIVALS, participantIds: ['p_rival1'] },
+          ],
+          possessions: [
+            {
+              id: 'pos1',
+              sideId: ZOO,
+              actions: [
+                {
+                  id: 'a1',
+                  kind: 'pull',
+                  sideId: RIVALS,
+                  receivingSideId: ZOO,
+                  puller: { refType: 'participant', participantId: 'p_rival1' },
+                  receiver: august,
+                  result: 'caught',
+                },
+                {
+                  id: 'a2',
+                  kind: 'throw',
+                  sideId: ZOO,
+                  thrower: august,
+                  toPlayer: meves,
+                  result: 'goal',
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+
+    it('returns only Zoo players when sideId=Zoo', () => {
+      const analytics = buildAnalyticsGame(game);
+      const stats = computeAdvancedPlayerStats(analytics, ZOO);
+      const ids = stats.map((s) => s.participantId);
+      expect(ids).toContain('p_august');
+      expect(ids).not.toContain('p_rival1');
+    });
+
+    it('returns only Rivals players when sideId=Rivals', () => {
+      const analytics = buildAnalyticsGame(game);
+      const stats = computeAdvancedPlayerStats(analytics, RIVALS);
+      const ids = stats.map((s) => s.participantId);
+      expect(ids).toContain('p_rival1');
+      expect(ids).not.toContain('p_august');
+    });
+
+    it('filters attributions by point-side when the game is a scrimmage', () => {
+      const game: AdvancedTrackedGame = {
+        ...baseGame,
+        gameType: 'scrimmage',
+        sides: [
+          { id: ZOO, label: 'White', trackingMode: 'full-roster' },
+          { id: RIVALS, label: 'Dark', trackingMode: 'full-roster' },
+        ],
+        participants: [...participants, { id: 'p_rival1', name: 'Rival1' }],
+        initialReceivingSideId: ZOO,
+        points: [
+          {
+            id: 'pt1',
+            lines: [
+              { sideId: ZOO, participantIds: ['p_august', 'p_meves'] },
+              { sideId: RIVALS, participantIds: ['p_rival1'] },
+            ],
+            possessions: [
+              {
+                id: 'pos1',
+                sideId: ZOO,
+                actions: [
+                  {
+                    id: 'a1',
+                    kind: 'pull',
+                    sideId: RIVALS,
+                    receivingSideId: ZOO,
+                    puller: { refType: 'participant', participantId: 'p_rival1' },
+                    receiver: august,
+                    result: 'caught',
+                  },
+                  {
+                    id: 'a2',
+                    kind: 'throw',
+                    sideId: ZOO,
+                    thrower: august,
+                    toPlayer: meves,
+                    result: 'goal',
+                  },
+                ],
+              },
+            ],
+          },
+          {
+            id: 'pt2',
+            lines: [
+              { sideId: ZOO, participantIds: ['p_meves'] },
+              { sideId: RIVALS, participantIds: ['p_august', 'p_rival1'] },
+            ],
+            possessions: [
+              {
+                id: 'pos2',
+                sideId: RIVALS,
+                actions: [
+                  {
+                    id: 'b1',
+                    kind: 'pull',
+                    sideId: ZOO,
+                    receivingSideId: RIVALS,
+                    puller: meves,
+                    receiver: august,
+                    result: 'caught',
+                  },
+                  {
+                    id: 'b2',
+                    kind: 'throw',
+                    sideId: RIVALS,
+                    thrower: august,
+                    toPlayer: { refType: 'participant', participantId: 'p_rival1' },
+                    result: 'goal',
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      };
+
+      const analytics = buildAnalyticsGame(game);
+
+      const zooStats = findStats(computeAdvancedPlayerStats(analytics, ZOO), 'p_august');
+      expect(zooStats.assists).toBe(1);
+      expect(zooStats.goals).toBe(0);
+      expect(zooStats.oPoints).toBe(1);
+      expect(zooStats.dPoints).toBe(0);
+
+      const rivalsStats = findStats(computeAdvancedPlayerStats(analytics, RIVALS), 'p_august');
+      expect(rivalsStats.assists).toBe(1);
+      expect(rivalsStats.goals).toBe(0);
+      expect(rivalsStats.oPoints).toBe(1);
+      expect(rivalsStats.dPoints).toBe(0);
+
+      const overallStats = findStats(computeAdvancedPlayerStats(analytics), 'p_august');
+      expect(overallStats.assists).toBe(2);
+      expect(overallStats.pointsPlayed).toBe(2);
+    });
+  });
+
+  describe('stall — does not count as a throw attempt', () => {
+    // August: 2 completions, 2 throwaways, 1 stall = 5 disc actions, 4 throw attempts
+    // completionPct should be 50%, NOT 40% (stall must not inflate throwAttempts)
+    const game: AdvancedTrackedGame = {
+      ...baseGame,
+      status: 'terminated',
+      points: [
+        {
+          id: 'pt1',
+          lines: [{ sideId: ZOO, participantIds: ['p_august', 'p_meves', 'p_joah'] }],
+          possessions: [
+            {
+              // ZOO possession 1: August completes twice, then throwaway
+              id: 'pos1',
+              sideId: ZOO,
+              actions: [
+                {
+                  id: 'a1',
+                  kind: 'pull',
+                  sideId: RIVALS,
+                  receivingSideId: ZOO,
+                  puller: untracked,
+                  receiver: august,
+                  result: 'caught',
+                },
+                {
+                  id: 'a2',
+                  kind: 'throw',
+                  sideId: ZOO,
+                  thrower: august,
+                  toPlayer: meves,
+                  result: 'complete',
+                },
+                {
+                  id: 'a3',
+                  kind: 'throw',
+                  sideId: ZOO,
+                  thrower: meves,
+                  toPlayer: august,
+                  result: 'complete',
+                },
+                {
+                  id: 'a4',
+                  kind: 'throw',
+                  sideId: ZOO,
+                  thrower: august,
+                  toPlayer: meves,
+                  result: 'complete',
+                },
+                {
+                  id: 'a5',
+                  kind: 'throw',
+                  sideId: ZOO,
+                  thrower: meves,
+                  toPlayer: august,
+                  result: 'complete',
+                },
+                { id: 'a6', kind: 'throw', sideId: ZOO, thrower: august, result: 'throwaway' },
+              ],
+            },
+            {
+              // RIVALS possession: block gives disc back to ZOO
+              id: 'pos2',
+              sideId: RIVALS,
+              actions: [
+                {
+                  id: 'b1',
+                  kind: 'throw',
+                  sideId: RIVALS,
+                  thrower: untracked,
+                  result: 'block',
+                  defender: joah,
+                },
+              ],
+            },
+            {
+              // ZOO possession 2: August throwaway
+              id: 'pos3',
+              sideId: ZOO,
+              actions: [
+                { id: 'c1', kind: 'disc_pickup', sideId: ZOO, player: august },
+                { id: 'c2', kind: 'throw', sideId: ZOO, thrower: august, result: 'throwaway' },
+              ],
+            },
+            {
+              // RIVALS possession: block gives disc back to ZOO
+              id: 'pos4',
+              sideId: RIVALS,
+              actions: [
+                {
+                  id: 'd1',
+                  kind: 'throw',
+                  sideId: RIVALS,
+                  thrower: untracked,
+                  result: 'block',
+                  defender: joah,
+                },
+              ],
+            },
+            {
+              // ZOO possession 3: August gets stalled — game ends
+              id: 'pos5',
+              sideId: ZOO,
+              actions: [
+                { id: 'e1', kind: 'disc_pickup', sideId: ZOO, player: august },
+                { id: 'e2', kind: 'throw', sideId: ZOO, thrower: august, result: 'stall' },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+
+    const analytics = buildAnalyticsGame(game);
+    const stats = computeAdvancedPlayerStats(analytics);
+
+    it('August has 4 throw attempts (stall excluded), 2 completions, 50% completion pct', () => {
+      const s = findStats(stats, 'p_august');
+      expect(s.throwAttempts).toBe(4);
+      expect(s.completions).toBe(2);
+      expect(s.completionPct).toBeCloseTo(0.5);
+    });
+
+    it('August has 1 stall', () => {
+      expect(findStats(stats, 'p_august').stalls).toBe(1);
+    });
+
+    it('throw attempts + stalls = 5 total disc actions', () => {
+      const s = findStats(stats, 'p_august');
+      expect(s.throwAttempts + s.stalls).toBe(5);
+    });
+  });
+
+  describe('computeAdvancedPlayerStatsForParticipant', () => {
+    it('returns stats for a specific participant', () => {
+      const game: AdvancedTrackedGame = {
+        ...baseGame,
+        points: [
+          {
+            id: 'pt1',
+            lines: [{ sideId: ZOO, participantIds: ['p_august', 'p_meves'] }],
+            possessions: [
+              {
+                id: 'pos1',
+                sideId: ZOO,
+                actions: [
+                  {
+                    id: 'a1',
+                    kind: 'pull',
+                    sideId: RIVALS,
+                    receivingSideId: ZOO,
+                    puller: untracked,
+                    receiver: august,
+                    result: 'caught',
+                  },
+                  {
+                    id: 'a2',
+                    kind: 'throw',
+                    sideId: ZOO,
+                    thrower: august,
+                    toPlayer: meves,
+                    result: 'goal',
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      };
+
+      const analytics = buildAnalyticsGame(game);
+      const s = computeAdvancedPlayerStatsForParticipant(analytics, 'p_meves');
+      expect(s.goals).toBe(1);
+      expect(s.assists).toBe(0);
+    });
+
+    it('returns empty stats for unknown participant', () => {
+      const game: AdvancedTrackedGame = {
+        ...baseGame,
+        points: [
+          {
+            id: 'pt1',
+            lines: [{ sideId: ZOO, participantIds: ['p_august'] }],
+            possessions: [
+              {
+                id: 'pos1',
+                sideId: ZOO,
+                actions: [
+                  {
+                    id: 'a1',
+                    kind: 'pull',
+                    sideId: RIVALS,
+                    receivingSideId: ZOO,
+                    puller: untracked,
+                    receiver: august,
+                    result: 'caught',
+                  },
+                  {
+                    id: 'a2',
+                    kind: 'throw',
+                    sideId: ZOO,
+                    thrower: august,
+                    toPlayer: meves,
+                    result: 'goal',
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      };
+
+      const analytics = buildAnalyticsGame(game);
+      const s = computeAdvancedPlayerStatsForParticipant(analytics, 'p_unknown');
+      expect(s.goals).toBe(0);
+      expect(s.pointsPlayed).toBe(0);
+    });
+  });
+
+  describe('timing stats', () => {
+    it('computes playing time when timestamps present', () => {
+      const game: AdvancedTrackedGame = {
+        ...baseGame,
+        points: [
+          {
+            id: 'pt1',
+            startedAt: 1000,
+            lines: [{ sideId: ZOO, participantIds: ['p_august', 'p_meves'] }],
+            possessions: [
+              {
+                id: 'pos1',
+                sideId: ZOO,
+                actions: [
+                  {
+                    id: 'a1',
+                    kind: 'pull',
+                    sideId: RIVALS,
+                    receivingSideId: ZOO,
+                    puller: untracked,
+                    receiver: august,
+                    result: 'caught',
+                    recordedAt: 1000,
+                  },
+                  {
+                    id: 'a2',
+                    kind: 'throw',
+                    sideId: ZOO,
+                    thrower: august,
+                    toPlayer: meves,
+                    result: 'goal',
+                    recordedAt: 61000, // 60 seconds later
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      };
+
+      const analytics = buildAnalyticsGame(game);
+      const stats = computeAdvancedPlayerStats(analytics);
+      const s = findStats(stats, 'p_august');
+      expect(s.pointDurationMs).toBe(60000);
+      expect(s.playingTimePct).toBeCloseTo(1.0); // Only point in game
+    });
+
+    it('returns null when no timing data', () => {
+      const game: AdvancedTrackedGame = {
+        ...baseGame,
+        points: [
+          {
+            id: 'pt1',
+            lines: [{ sideId: ZOO, participantIds: ['p_august'] }],
+            possessions: [
+              {
+                id: 'pos1',
+                sideId: ZOO,
+                actions: [
+                  {
+                    id: 'a1',
+                    kind: 'pull',
+                    sideId: RIVALS,
+                    receivingSideId: ZOO,
+                    puller: untracked,
+                    receiver: august,
+                    result: 'caught',
+                  },
+                  {
+                    id: 'a2',
+                    kind: 'throw',
+                    sideId: ZOO,
+                    thrower: august,
+                    toPlayer: meves,
+                    result: 'goal',
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      };
+
+      const analytics = buildAnalyticsGame(game);
+      const stats = computeAdvancedPlayerStats(analytics);
+      const s = findStats(stats, 'p_august');
+      expect(s.pointDurationMs).toBeNull();
+      expect(s.playingTimePct).toBeNull();
+    });
+  });
+});
