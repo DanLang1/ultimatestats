@@ -1,3 +1,4 @@
+import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { useAlert } from '@/components/ui/AlertProvider';
 import { TeamColorPicker } from '@/components/ui/ColorPicker';
@@ -15,6 +16,7 @@ import { SavedTeam } from '@/lib/storage';
 import { useGameStore } from '@/store/gameStore';
 import { OrientationMode, useSettingsStore } from '@/store/settingsStore';
 import { useTutorialStore } from '@/store/tutorialStore';
+import { Fonts } from '@/theme/theme';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router, Stack } from 'expo-router';
 import React, { useState } from 'react';
@@ -28,8 +30,6 @@ import {
   View,
   ViewStyle,
 } from 'react-native';
-import { ThemedText } from '@/components/ThemedText';
-import { Fonts } from '@/theme/theme';
 
 export default function SettingsScreen() {
   const { currentTeam } = useGameStore();
@@ -672,6 +672,16 @@ function SettingsContent() {
                     ]}
                     value={linePlayerSortOrder}
                     onChange={(val) => setLinePlayerSortOrder(val as 'alpha' | 'points')}
+                    sizeClass={sizeClass}
+                  />
+                </View>
+              )}
+              {__DEV__ && (
+                <View style={styles.inputGroupFullWidth}>
+                  <Switch
+                    label="[DEV] Adv Tracker UI"
+                    value={false}
+                    onValueChange={() => router.push('/advanced/PreGameConfirm')}
                     sizeClass={sizeClass}
                   />
                 </View>

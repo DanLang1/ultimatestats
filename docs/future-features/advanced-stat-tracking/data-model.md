@@ -138,6 +138,8 @@ interface Participant {
   // Mirrors matchingType from basic tracking Player. 'fmp' = female matching, 'mmp' = male matching.
   // Required for gender ratio validation in mixed games.
   matchingType?: 'fmp' | 'mmp' | null;
+  // Mirrors role from basic tracking Player. Used for line selection UI and role-based stat breakdowns.
+  role?: 'handler' | 'cutter' | 'hybrid' | null;
 }
 
 interface PointSub {

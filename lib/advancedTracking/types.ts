@@ -106,6 +106,11 @@ export interface Participant {
    * Required for gender ratio validation in mixed games.
    */
   matchingType?: 'fmp' | 'mmp' | null;
+  /**
+   * Mirrors `role` from the basic tracking `Player` type.
+   * Used for display in line selection UI and role-based stat breakdowns.
+   */
+  role?: 'handler' | 'cutter' | 'hybrid' | null;
 }
 
 // --- Points ---

@@ -201,7 +201,7 @@ describe('didPullTurnOver', () => {
 
 // ── isPossessionClosed ────────────────────────────────────────────────────────
 
-describe('isPossessionClosed', () => {
+describe('isPossessionOver', () => {
   it('returns false for null possession', () => {
     expect(isPossessionOver(null)).toBe(false);
   });
