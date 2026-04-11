@@ -186,16 +186,20 @@ type GameTransition =
   | {
       id: string;
       transitionType: 'halftime';
+      // Derived from score progression: for a game to 15, halftime is after the first point
+      // where either side reaches 8. Undoing that scoring point removes or repositions halftime.
       afterPointId: string;
     }
   | {
       id: string;
       transitionType: 'soft_cap';
+      // Timer-driven event. Once recorded, it changes the effective gameTo target.
       afterPointId: string; // soft cap always activates between points
     }
   | {
       id: string;
       transitionType: 'hard_cap';
+      // Timer-driven event. Once recorded, it is append-only.
       afterPointId?: string; // may be absent if cap ends the game mid-point
     };
 
@@ -363,7 +367,7 @@ In practice, that means these edits should be supported:
 - change `PlayerRef` attribution on an existing action
 - change a `ThrowAction.result` or `splitAttribution`
 - change a `toPlayer`, `defender`, or field location on an existing action
-- change timeout or stoppage details on an existing `StoppageAction`, `BetweenPointTransition`, or `GameTransition`
+- change timeout or stoppage details on an existing `StoppageAction`, `BetweenPointTransition`, or a derived/manual `GameTransition` when that event is intended to be user-correctable
 - delete or undo the most recent logged item when the user immediately catches a mistake
 
 These edits should not be supported in v1:
@@ -399,11 +403,13 @@ Undo is still important, but it does not need to mean arbitrary historical rewri
 
 For v1, undo should be scoped to recent user operations:
 
-- undo the last logged action
-- undo the last logged transition
-- undo the last in-session edit to an action or transition
+- expose one store-level undo entry point
+- undo the most recent undoable user operation, regardless of whether it was an action, a between-point timeout, or an in-session edit like a stoppage resume or injury sub
+- allow the scoring action that caused a derived halftime transition to be undone normally, with halftime re-derived from the updated score progression
 
 That is much closer to the existing app behavior, where undo is mainly a quick recovery tool for recent mistakes rather than a full "edit old history and replay the game" system.
+
+Cap events are the exception: `soft_cap` and `hard_cap` are timer-driven rule changes, not coach-entered game edits, so they should be append-only rather than undoable.
 
 The recommended implementation approach is:
 
@@ -411,6 +417,7 @@ The recommended implementation approach is:
 - keep `transitionsAfter` as canonical between-point team-controlled data
 - keep `gameTransitions` as canonical format-driven game-flow data
 - implement undo/redo in the advanced tracking store as recent editor operations, not as part of the persisted schema
+- keep one operation stack rather than separate undo systems for actions vs transitions
 
 In other words:
 
@@ -527,13 +534,18 @@ Do not model these as in-point possession actions.
 
 ### `gameTransitions`
 
-Use `gameTransitions` for format-driven game-flow changes:
+Use `gameTransitions` for derived or timer-driven game-flow changes:
 
 - halftime
 - soft cap activation
 - hard cap reached
 
 These are not possession actions and are not team-called between-point events.
+
+For v1:
+
+- halftime is derived from score progression and stored so analytics and point-flow logic can reference a stable `afterPointId`
+- soft cap and hard cap are timer events that affect game-over logic and effective `gameTo`
 
 ## Supported Tracking Modes
 

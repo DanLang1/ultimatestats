@@ -3,6 +3,8 @@
 
 // --- Core Game ---
 
+export const ADVANCED_TRACKING_SCHEMA_VERSION = 1;
+
 export type GameStatus = 'in_progress' | 'final' | 'terminated';
 
 export interface AdvancedTrackedGame {
@@ -44,7 +46,7 @@ export interface AdvancedTrackedGame {
   sides: GameSide[];
   participants: Participant[];
   /**
-   * Format-driven game-flow transitions: halftime, soft cap, hard cap.
+   * Derived or timer-driven game-flow transitions: halftime, soft cap, hard cap.
    * Team-controlled between-point events (timeouts, etc.) live on
    * `TrackedPoint.transitionsAfter` instead.
    */
@@ -185,19 +187,20 @@ export type BetweenPointTransition =
 export type GameTransition =
   | {
       id: string;
+      /** Derived from score progression at halftimeAt. */
       transitionType: 'halftime';
       afterPointId: string;
     }
   | {
       id: string;
       transitionType: 'soft_cap';
-      /** Soft cap always activates between points. */
+      /** Timer-driven event. Soft cap always activates between points. */
       afterPointId: string;
     }
   | {
       id: string;
       transitionType: 'hard_cap';
-      /** May be absent if hard cap ends the game mid-point. */
+      /** Timer-driven event. May be absent if hard cap ends the game mid-point. */
       afterPointId?: string;
     };
 
@@ -224,6 +227,13 @@ export type FieldLocation =
 
 export type PossessionAction = PullAction | DiscPickupAction | ThrowAction | StoppageAction;
 
+export type PullResult =
+  | 'caught'
+  | 'dropped'
+  | 'landed_in_bounds'
+  | 'landed_in_bounds_rolled_out'
+  | 'ob_pull';
+
 export interface PullAction {
   id: string;
   kind: 'pull';
@@ -233,7 +243,7 @@ export interface PullAction {
   puller: PlayerRef;
   /** Optional — pull may not be caught or receiver may be untracked. */
   receiver?: PlayerRef;
-  result: 'caught' | 'dropped' | 'landed_in_bounds' | 'landed_in_bounds_rolled_out' | 'ob_pull';
+  result: PullResult;
   hangTimeMs?: number;
   origin?: FieldLocation;
   landing?: FieldLocation;
@@ -251,6 +261,16 @@ export interface DiscPickupAction {
   recordedAt?: number;
 }
 
+export type ThrowResult =
+  | 'complete'
+  | 'goal'
+  | 'drop'
+  | 'throwaway'
+  | 'stall'
+  | 'block'
+  | 'interception'
+  | 'callahan';
+
 export interface ThrowAction {
   id: string;
   kind: 'throw';
@@ -266,15 +286,7 @@ export interface ThrowAction {
    * `'stall'` — count reached 10, disc turns over at the spot with no throw.
    * Attributed to the thrower (player holding the disc). No `toPlayer`.
    */
-  result:
-    | 'complete'
-    | 'goal'
-    | 'drop'
-    | 'throwaway'
-    | 'stall'
-    | 'block'
-    | 'interception'
-    | 'callahan';
+  result: ThrowResult;
   defender?: PlayerRef;
   /** True when blame is shared 50/50 between thrower and toPlayer (e.g. a floaty huck both could have done better on). Single attribution is derived from result + thrower/toPlayer. */
   splitAttribution?: boolean;

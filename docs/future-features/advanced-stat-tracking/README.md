@@ -33,4 +33,14 @@ Each tracked game should:
 - use stable IDs for points, possessions, and actions
 - derive goals, assists, completions, touches, and visualizations from a compiled view of those raw point/possession actions
 
-If this feature is built, it should own its own store, persistence model, and save/load lifecycle rather than sharing ownership with the existing `savedGames` system.
+If this feature is built, it should own its own store and persistence model rather than sharing ownership with the existing `savedGames` system.
+
+## Store Pattern
+
+The advanced tracking store uses a single-collection pattern: all games (in-progress and completed) live in `savedGames`, persisted automatically by zustand's `persist` middleware. There is no separate `currentGame` object — instead `currentGameId` points to the active game within `savedGames`. This eliminates the need for explicit `saveCurrentGame()` / `loadGame()` actions, which would be redundant with automatic persistence. See `store/advancedTrackingStore.ts`.
+
+The store also distinguishes three kinds of flow data:
+
+- point/possession actions for in-point play
+- `transitionsAfter` for between-point team-called events like timeouts
+- `gameTransitions` for derived or timer-driven game flow such as halftime and cap events

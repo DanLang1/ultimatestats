@@ -38,6 +38,7 @@ See `docs/README.md` for directory structure, key concepts, and the New Screen C
 - Use Immer for object state updates (already configured in store).
 - Await async persistence actions (e.g. `saveCurrentTeam()`, `saveCurrentGame()`) in UI handlers before dismissing modals, navigating, or resetting state — skipping this causes stale-write races.
 - New Zustand stores that need persistence must use the `persist` middleware with `createJSONStorage(() => AsyncStorage)` — this rehydrates automatically on startup and eliminates manual `loadX()` actions and `useEffect`/`useFocusEffect` fetch calls in screens. See `tournamentStore.ts` for the pattern. If per-record migrations are needed on rehydration, use `onRehydrateStorage` (see `gameStore.ts`).
+- Do not create separate `currentX` + `savedXs` state where both would be persisted and kept in sync via explicit `saveCurrentX()` calls — this is redundant with automatic persistence and creates two sources of truth. Instead, store all records in one persisted collection and use a `currentXId` pointer to identify the active record (see `advancedTrackingStore.ts`).
 
 ## Game Logic Rules
 

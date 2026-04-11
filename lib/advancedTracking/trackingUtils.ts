@@ -1,0 +1,334 @@
+import { hasItems } from '@/lib/utils';
+import {
+  AdvancedTrackedGame,
+  GameSide,
+  GameTransition,
+  Participant,
+  PlayerRef,
+  PointLine,
+  PointPossession,
+  PullAction,
+  ThrowResult,
+  TrackedPoint,
+} from './types';
+
+// --- Traversal ---
+
+export function getCurrentPoint(game: AdvancedTrackedGame | null): TrackedPoint | null {
+  if (game == null || !hasItems(game.points)) {
+    return null;
+  }
+
+  return game.points[game.points.length - 1];
+}
+
+export function getCurrentPossession(game: AdvancedTrackedGame | null): PointPossession | null {
+  const point = getCurrentPoint(game);
+  if (point == null || !hasItems(point.possessions)) {
+    return null;
+  }
+
+  return point.possessions[point.possessions.length - 1];
+}
+
+export function getLastAction(possession: PointPossession | null) {
+  if (possession == null || !hasItems(possession.actions)) {
+    return null;
+  }
+
+  return possession.actions[possession.actions.length - 1];
+}
+
+export function getOtherSideId(game: AdvancedTrackedGame, sideId: string): string {
+  const otherSide = game.sides.find((side) => side.id !== sideId);
+  if (otherSide == null) {
+    throw new Error(`Could not find opposite side for sideId "${sideId}".`);
+  }
+
+  return otherSide.id;
+}
+
+export function getReceivingSideForNextPoint(game: AdvancedTrackedGame): string {
+  // called before next point is created, so 'last point' in array is completed one
+  const previousPoint = getCurrentPoint(game);
+  if (previousPoint == null) {
+    return game.initialReceivingSideId;
+  }
+
+  const scoringSideId = getPointScoringSideId(game, previousPoint);
+  if (scoringSideId == null) {
+    throw new Error('Cannot derive next point receiving side before the current point is scored.');
+  }
+
+  // Default: scoring team pulls next, so the other side receives.
+  let receivingSideId = getOtherSideId(game, scoringSideId);
+
+  // Halftime flips receiving: the team that initially received now pulls,
+  // and the team that initially pulled now receives — regardless of who scored.
+  const halftimeAfterPointId = game.gameTransitions?.find(
+    (t) => t.transitionType === 'halftime',
+  )?.afterPointId;
+
+  if (halftimeAfterPointId === previousPoint.id) {
+    receivingSideId = getOtherSideId(game, game.initialReceivingSideId);
+  }
+
+  return receivingSideId;
+}
+
+// --- Classification ---
+
+export function isPointEndingThrow(result: ThrowResult): boolean {
+  return result === 'goal' || result === 'callahan';
+}
+
+export function isTurnoverThrow(result: ThrowResult): boolean {
+  return (
+    result === 'drop' ||
+    result === 'throwaway' ||
+    result === 'stall' ||
+    result === 'block' ||
+    result === 'interception'
+  );
+}
+
+export function didPullTurnOver(result: PullAction['result']): boolean {
+  return result === 'dropped';
+}
+
+export function isPossessionOver(possession: PointPossession | null): boolean {
+  const lastAction = getLastAction(possession);
+  if (lastAction == null) {
+    return false;
+  }
+
+  if (lastAction.kind === 'throw') {
+    return isPointEndingThrow(lastAction.result) || isTurnoverThrow(lastAction.result);
+  }
+
+  if (lastAction.kind === 'pull') {
+    return didPullTurnOver(lastAction.result);
+  }
+
+  return false;
+}
+
+export function hasPointEnded(point: TrackedPoint | null): boolean {
+  if (point == null || !hasItems(point.possessions)) {
+    return false;
+  }
+
+  const possession = point.possessions[point.possessions.length - 1];
+  const lastAction = possession?.actions[possession.actions.length - 1];
+
+  return lastAction?.kind === 'throw' && isPointEndingThrow(lastAction.result);
+}
+
+export function getPointScoringSideId(
+  game: AdvancedTrackedGame,
+  point: TrackedPoint,
+): string | null {
+  const possession = point.possessions[point.possessions.length - 1];
+  const lastAction = possession?.actions[possession.actions.length - 1];
+
+  if (lastAction == null || lastAction.kind !== 'throw') {
+    return null;
+  }
+
+  if (lastAction.result === 'goal') {
+    return possession.sideId;
+  }
+
+  if (lastAction.result === 'callahan') {
+    return getOtherSideId(game, possession.sideId);
+  }
+
+  return null;
+}
+
+export function cloneGame(game: AdvancedTrackedGame): AdvancedTrackedGame {
+  return structuredClone(game);
+}
+
+export function getGameScore(game: AdvancedTrackedGame): Record<string, number> {
+  const score: Record<string, number> = {};
+  for (const side of game.sides) {
+    score[side.id] = 0;
+  }
+  for (const point of game.points) {
+    const scoringSideId = getPointScoringSideId(game, point);
+    if (scoringSideId != null) {
+      score[scoringSideId] = (score[scoringSideId] ?? 0) + 1;
+    }
+  }
+  return score;
+}
+
+export function getScoreThroughPoint(
+  game: AdvancedTrackedGame,
+  pointId: string,
+): Record<string, number> {
+  const score: Record<string, number> = {};
+  for (const side of game.sides) {
+    score[side.id] = 0;
+  }
+
+  for (const point of game.points) {
+    const scoringSideId = getPointScoringSideId(game, point);
+    if (scoringSideId != null) {
+      score[scoringSideId] = (score[scoringSideId] ?? 0) + 1;
+    }
+
+    if (point.id === pointId) {
+      return score;
+    }
+  }
+
+  throw new Error(`Point "${pointId}" not found in advanced tracking game "${game.id}".`);
+}
+
+export function getEffectiveGameTo(game: AdvancedTrackedGame): number {
+  const baseGameTo = game.settings.format?.gameTo;
+  if (baseGameTo == null) {
+    throw new Error(`Advanced tracking game "${game.id}" is missing settings.format.gameTo.`);
+  }
+
+  const softCapTransition = game.gameTransitions?.find(
+    (transition) => transition.transitionType === 'soft_cap',
+  );
+  if (softCapTransition?.afterPointId == null) {
+    return baseGameTo;
+  }
+
+  const scoreAtSoftCap = getScoreThroughPoint(game, softCapTransition.afterPointId);
+  const highestScore = Math.max(...Object.values(scoreAtSoftCap));
+
+  return highestScore < baseGameTo ? highestScore + 1 : baseGameTo;
+}
+
+export function isAdvancedGameOver(game: AdvancedTrackedGame): boolean {
+  const currentPoint = getCurrentPoint(game);
+  if (currentPoint == null || !hasPointEnded(currentPoint)) {
+    return false;
+  }
+
+  const score = getGameScore(game);
+  const [firstSide, secondSide] = game.sides;
+  const firstScore = score[firstSide.id] ?? 0;
+  const secondScore = score[secondSide.id] ?? 0;
+  const notTied = firstScore !== secondScore;
+
+  if (game.gameTransitions?.some((transition) => transition.transitionType === 'hard_cap')) {
+    return notTied;
+  }
+
+  const effectiveGameTo = getEffectiveGameTo(game);
+
+  return (firstScore >= effectiveGameTo || secondScore >= effectiveGameTo) && notTied;
+}
+
+export function syncDerivedHalftimeTransition(game: AdvancedTrackedGame) {
+  const halftimeAt = game.settings.format?.halftimeAt;
+  const existingTransitions = game.gameTransitions ?? [];
+  const existingHalftime = existingTransitions.find(
+    (transition) => transition.transitionType === 'halftime',
+  );
+
+  let halftimeAfterPointId: string | undefined;
+  if (halftimeAt != null) {
+    const runningScore: Record<string, number> = {};
+    for (const side of game.sides) {
+      runningScore[side.id] = 0;
+    }
+
+    for (const point of game.points) {
+      const scoringSideId = getPointScoringSideId(game, point);
+      if (scoringSideId == null) {
+        continue;
+      }
+
+      runningScore[scoringSideId] = (runningScore[scoringSideId] ?? 0) + 1;
+      if (runningScore[scoringSideId] === halftimeAt) {
+        halftimeAfterPointId = point.id;
+        break;
+      }
+    }
+  }
+
+  const nextTransitions: GameTransition[] = existingTransitions.filter(
+    (transition) => transition.transitionType !== 'halftime',
+  );
+  if (halftimeAfterPointId != null) {
+    nextTransitions.push({
+      id: existingHalftime?.id ?? `halftime_${game.id}`,
+      transitionType: 'halftime',
+      afterPointId: halftimeAfterPointId,
+    });
+  }
+
+  game.gameTransitions = hasItems(nextTransitions) ? nextTransitions : undefined;
+}
+
+// --- Assertions ---
+
+export function assertTwoSides(sides: GameSide[]) {
+  if (sides.length !== 2) {
+    throw new Error('Advanced tracking MVP currently requires exactly two sides.');
+  }
+}
+
+export function assertValidSideIds(game: AdvancedTrackedGame, sideIds: string[]) {
+  const validSideIds = new Set(game.sides.map((side) => side.id));
+
+  for (const sideId of sideIds) {
+    if (!validSideIds.has(sideId)) {
+      throw new Error(`Unknown sideId "${sideId}" for advanced tracking game "${game.id}".`);
+    }
+  }
+}
+
+export function assertValidParticipantRefs(
+  game: AdvancedTrackedGame,
+  refs: (PlayerRef | undefined)[],
+) {
+  const participantIds = new Set(
+    game.participants.map((participant: Participant) => participant.id),
+  );
+
+  for (const ref of refs) {
+    if (ref == null || ref.refType !== 'participant') {
+      continue;
+    }
+
+    if (!participantIds.has(ref.participantId)) {
+      throw new Error(
+        `Unknown participantId "${ref.participantId}" for advanced tracking game "${game.id}".`,
+      );
+    }
+  }
+}
+
+export function assertValidLines(game: AdvancedTrackedGame, lines: PointLine[]) {
+  if (!hasItems(lines)) {
+    throw new Error('Cannot start a point without at least one line.');
+  }
+
+  const validSideIds = new Set(game.sides.map((side) => side.id));
+  const participantIds = new Set(
+    game.participants.map((participant: Participant) => participant.id),
+  );
+
+  for (const line of lines) {
+    if (!validSideIds.has(line.sideId)) {
+      throw new Error(`Unknown sideId "${line.sideId}" while starting an advanced point.`);
+    }
+
+    for (const participantId of line.participantIds) {
+      if (!participantIds.has(participantId)) {
+        throw new Error(
+          `Unknown participantId "${participantId}" while starting an advanced point.`,
+        );
+      }
+    }
+  }
+}
