@@ -27,9 +27,7 @@ export default function TutorialScoreboardRoute() {
   const isCompactVertical = !layout.isLandscape && portraitAspectRatio < 1.75;
   const centerBarClearance = layout.isLandscape
     ? 0
-    : isCompactVertical
-      ? scaleBySizeClass(14, layout.sizeClass)
-      : scaleBySizeClass(20, layout.sizeClass);
+    : scaleBySizeClass(isCompactVertical ? 14 : 20, layout.sizeClass);
 
   const {
     team1Score,

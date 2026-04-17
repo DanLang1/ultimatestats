@@ -42,6 +42,22 @@ export default function SettingsBar({ onUndo }: SettingsBarProps) {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
+  let capIcon: React.ReactNode;
+  if (timeLeft === 0) {
+    capIcon = <MaterialCommunityIcons name="hard-hat" size={iconSize} color={barContentColor} />;
+  } else if (isSoftCap || softCapPending) {
+    capIcon = (
+      <FlashingIcon
+        name="hat-fedora"
+        size={iconSize}
+        color={barContentColor}
+        isFlashing={softCapPending && !isSoftCap}
+      />
+    );
+  } else {
+    capIcon = null;
+  }
+
   return (
     <View style={[styles.container, { backgroundColor: barBg, shadowColor: palette.shadow }]}>
       {/* Play/Pause */}
@@ -58,16 +74,7 @@ export default function SettingsBar({ onUndo }: SettingsBarProps) {
         <ThemedText style={[styles.timerText, { color: barContentColor }]}>
           {formatTime(timeLeft)}
         </ThemedText>
-        {timeLeft === 0 ? (
-          <MaterialCommunityIcons name="hard-hat" size={iconSize} color={barContentColor} />
-        ) : isSoftCap || softCapPending ? (
-          <FlashingIcon
-            name="hat-fedora"
-            size={iconSize}
-            color={barContentColor}
-            isFlashing={softCapPending && !isSoftCap}
-          />
-        ) : null}
+        {capIcon}
       </View>
 
       {/* Gender Ratio Indicator */}

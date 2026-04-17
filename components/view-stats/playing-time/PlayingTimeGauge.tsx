@@ -36,12 +36,14 @@ export default function PlayingTimeGauge({
   const clampedPercent = Math.min(Math.max(percentage, 0), 100);
   const strokeDashoffset = circumference - (clampedPercent / 100) * circumference;
   const centerLabelLength = centerLabel.length;
-  const centerLabelStyle =
-    centerLabelLength >= 4
-      ? styles.centerLabelLong
-      : centerLabelLength === 3
-        ? styles.centerLabelMedium
-        : styles.centerLabel;
+  let centerLabelStyle;
+  if (centerLabelLength >= 4) {
+    centerLabelStyle = styles.centerLabelLong;
+  } else if (centerLabelLength === 3) {
+    centerLabelStyle = styles.centerLabelMedium;
+  } else {
+    centerLabelStyle = styles.centerLabel;
+  }
 
   return (
     <View style={styles.container}>

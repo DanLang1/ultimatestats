@@ -56,14 +56,16 @@ export default function DashboardScreen() {
         {
           icon: 'plus-circle-outline' as const,
           label: 'New Game',
-          description:
-            sessionStatus === 'finished'
-              ? statTrackingEnabled
+          description: (() => {
+            if (sessionStatus === 'finished') {
+              return statTrackingEnabled
                 ? 'Completed game is saved. Clear the scoreboard and start fresh'
-                : 'Clear the completed scoreboard and start fresh'
-              : hasInProgressGame
-                ? 'Leave the current game and start a fresh one'
-                : 'Open a fresh scoreboard and start tracking',
+                : 'Clear the completed scoreboard and start fresh';
+            }
+            return hasInProgressGame
+              ? 'Leave the current game and start a fresh one'
+              : 'Open a fresh scoreboard and start tracking';
+          })(),
           onPress: confirmNewGame,
         },
         {

@@ -64,6 +64,106 @@ export const TrackerActionBar = ({
     </Pressable>
   );
 
+  let barContent: React.ReactNode;
+  if (activeStoppageId) {
+    barContent = (
+      <>
+        <Pressable
+          style={({ pressed }) => [
+            styles.actionBtn,
+            styles.actionBtnFlex,
+            {
+              borderColor: palette.warning,
+              backgroundColor: palette.warning + '15',
+              boxShadow: `0 0 16px ${palette.warning}30`,
+            },
+            pressed && { opacity: 0.7 },
+          ]}
+          onPress={onResumeStoppage}>
+          <ThemedText style={[styles.actionBtnText, { color: palette.warning }]}>RESUME</ThemedText>
+        </Pressable>
+        <UndoBtn />
+      </>
+    );
+  } else if (pointIsOver) {
+    barContent = (
+      <>
+        <Pressable
+          style={({ pressed }) => [
+            styles.actionBtn,
+            {
+              borderColor: palette.success,
+              backgroundColor: palette.success + '15',
+              boxShadow: `0 0 16px ${palette.success}30`,
+            },
+            pressed && { opacity: 0.7 },
+          ]}
+          onPress={onStartNextPoint}>
+          <ThemedText style={[styles.actionBtnText, { color: palette.success }]}>
+            NEXT POINT
+          </ThemedText>
+        </Pressable>
+        <UndoBtn />
+      </>
+    );
+  } else if (oppHasDisc) {
+    barContent = (
+      <>
+        <Pressable
+          style={({ pressed }) => [
+            styles.actionBtn,
+            { borderColor: palette.danger, backgroundColor: palette.danger + '10' },
+            pressed && { opacity: 0.7 },
+          ]}
+          onPress={onOppScored}>
+          <ThemedText style={[styles.actionBtnText, { color: palette.danger }]}>
+            OPP GOAL
+          </ThemedText>
+        </Pressable>
+        <Pressable
+          style={({ pressed }) => [
+            styles.actionBtn,
+            { borderColor: palette.success, backgroundColor: palette.success + '10' },
+            pressed && { opacity: 0.7 },
+          ]}
+          onPress={onOppTurnover}>
+          <ThemedText style={[styles.actionBtnText, { color: palette.success }]}>
+            OPP TURN
+          </ThemedText>
+        </Pressable>
+        <MoreBtn />
+        <UndoBtn />
+      </>
+    );
+  } else {
+    barContent = (
+      <>
+        <Pressable
+          disabled={!discHolderId}
+          style={({ pressed }) => [
+            styles.actionBtn,
+            {
+              borderColor: discHolderId ? palette.danger : palette.overlay20,
+              backgroundColor: discHolderId ? palette.danger + '10' : palette.overlay05,
+              opacity: discHolderId ? 1 : 0.35,
+            },
+            pressed && discHolderId && { opacity: 0.7 },
+          ]}
+          onPress={onThrowaway}>
+          <ThemedText
+            style={[
+              styles.actionBtnText,
+              { color: discHolderId ? palette.danger : palette.textMuted },
+            ]}>
+            T/A
+          </ThemedText>
+        </Pressable>
+        <UndoBtn />
+        <MoreBtn />
+      </>
+    );
+  }
+
   return (
     <View
       style={[
@@ -77,99 +177,7 @@ export const TrackerActionBar = ({
               boxShadow: `0 -8px 32px ${palette.overlay10}`,
             },
       ]}>
-      {activeStoppageId ? (
-        <>
-          <Pressable
-            style={({ pressed }) => [
-              styles.actionBtn,
-              styles.actionBtnFlex,
-              {
-                borderColor: palette.warning,
-                backgroundColor: palette.warning + '15',
-                boxShadow: `0 0 16px ${palette.warning}30`,
-              },
-              pressed && { opacity: 0.7 },
-            ]}
-            onPress={onResumeStoppage}>
-            <ThemedText style={[styles.actionBtnText, { color: palette.warning }]}>
-              RESUME
-            </ThemedText>
-          </Pressable>
-          <UndoBtn />
-        </>
-      ) : pointIsOver ? (
-        <>
-          <Pressable
-            style={({ pressed }) => [
-              styles.actionBtn,
-              {
-                borderColor: palette.success,
-                backgroundColor: palette.success + '15',
-                boxShadow: `0 0 16px ${palette.success}30`,
-              },
-              pressed && { opacity: 0.7 },
-            ]}
-            onPress={onStartNextPoint}>
-            <ThemedText style={[styles.actionBtnText, { color: palette.success }]}>
-              NEXT POINT
-            </ThemedText>
-          </Pressable>
-          <UndoBtn />
-        </>
-      ) : oppHasDisc ? (
-        <>
-          <Pressable
-            style={({ pressed }) => [
-              styles.actionBtn,
-              { borderColor: palette.danger, backgroundColor: palette.danger + '10' },
-              pressed && { opacity: 0.7 },
-            ]}
-            onPress={onOppScored}>
-            <ThemedText style={[styles.actionBtnText, { color: palette.danger }]}>
-              OPP GOAL
-            </ThemedText>
-          </Pressable>
-          <Pressable
-            style={({ pressed }) => [
-              styles.actionBtn,
-              { borderColor: palette.success, backgroundColor: palette.success + '10' },
-              pressed && { opacity: 0.7 },
-            ]}
-            onPress={onOppTurnover}>
-            <ThemedText style={[styles.actionBtnText, { color: palette.success }]}>
-              OPP TURN
-            </ThemedText>
-          </Pressable>
-          <MoreBtn />
-          <UndoBtn />
-        </>
-      ) : (
-        <>
-          <Pressable
-            disabled={!discHolderId}
-            style={({ pressed }) => [
-              styles.actionBtn,
-              {
-                borderColor: discHolderId ? palette.danger : palette.overlay20,
-                backgroundColor: discHolderId ? palette.danger + '10' : palette.overlay05,
-                opacity: discHolderId ? 1 : 0.35,
-              },
-              pressed && discHolderId && { opacity: 0.7 },
-            ]}
-            onPress={onThrowaway}>
-            <ThemedText
-              style={[
-                styles.actionBtnText,
-                { color: discHolderId ? palette.danger : palette.textMuted },
-              ]}>
-              T/A
-            </ThemedText>
-          </Pressable>
-
-          <UndoBtn />
-          <MoreBtn />
-        </>
-      )}
+      {barContent}
     </View>
   );
 };

@@ -30,6 +30,29 @@ export default function TimelinePointHeader({
   const { sizeClass } = useLayout();
   const styles = createStyles(sizeClass);
 
+  const isBreak = possessionType === 'break';
+
+  let chipBg: string;
+  if (isBreak) {
+    chipBg = isTeam1 ? palette.success : palette.danger;
+  } else {
+    chipBg = palette.overlay15;
+  }
+
+  let chipTextColor: string;
+  if (isBreak) {
+    chipTextColor = palette.textOnAccent;
+  } else {
+    chipTextColor = isTeam1 ? palette.success : palette.danger;
+  }
+
+  let chipLabel: string;
+  if (isBreak) {
+    chipLabel = isTeam1 ? 'BROKE' : 'BROKEN';
+  } else {
+    chipLabel = isTeam1 ? 'HOLD' : 'OPP HOLD';
+  }
+
   return (
     <View style={[styles.cardHeader, { borderBottomColor: palette.overlay10 }]}>
       <View style={styles.headerLeft}>
@@ -63,37 +86,9 @@ export default function TimelinePointHeader({
             </View>
           )}
           {possessionType && (
-            <View
-              style={[
-                styles.statusChip,
-                {
-                  backgroundColor:
-                    possessionType === 'break'
-                      ? isTeam1
-                        ? palette.success
-                        : palette.danger
-                      : palette.overlay15,
-                },
-              ]}>
-              <ThemedText
-                style={[
-                  styles.statusChipText,
-                  {
-                    color:
-                      possessionType === 'break'
-                        ? palette.textOnAccent
-                        : isTeam1
-                          ? palette.success
-                          : palette.danger,
-                  },
-                ]}>
-                {possessionType === 'break'
-                  ? isTeam1
-                    ? 'BROKE'
-                    : 'BROKEN'
-                  : isTeam1
-                    ? 'HOLD'
-                    : 'OPP HOLD'}
+            <View style={[styles.statusChip, { backgroundColor: chipBg }]}>
+              <ThemedText style={[styles.statusChipText, { color: chipTextColor }]}>
+                {chipLabel}
               </ThemedText>
             </View>
           )}

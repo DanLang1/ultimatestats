@@ -47,84 +47,97 @@ export const TrackerStatusBar = ({
 
   const formatTime = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 
-  const timerColor =
-    secondsLeft <= 10 ? palette.danger : secondsLeft <= 20 ? palette.warning : palette.success;
+  let timerColor: string;
+  if (secondsLeft <= 10) {
+    timerColor = palette.danger;
+  } else if (secondsLeft <= 20) {
+    timerColor = palette.warning;
+  } else {
+    timerColor = palette.success;
+  }
 
   const scorerLabel = goalInfo?.isCallahan ? 'CALLAHAN' : 'GOAL';
 
-  return (
-    <View style={styles.statusBar}>
-      {stoppageActive ? (
-        <View
-          style={[
-            styles.timeoutBanner,
-            { backgroundColor: palette.overlay05, borderColor: palette.overlay15 },
-          ]}>
-          <ThemedText style={[styles.timeoutLabel, { color: palette.textMuted }]}>
-            TIMEOUT
-          </ThemedText>
-          <ThemedText style={[styles.timeoutTimer, { color: timerColor }]}>
-            {formatTime(secondsLeft)}
-          </ThemedText>
-        </View>
-      ) : pointIsOver ? (
-        goalInfo?.isFocusGoal ? (
-          <View style={styles.goalChain}>
-            {goalInfo.assisterName && (
+  let statusContent: React.ReactNode;
+  if (stoppageActive) {
+    statusContent = (
+      <View
+        style={[
+          styles.timeoutBanner,
+          { backgroundColor: palette.overlay05, borderColor: palette.overlay15 },
+        ]}>
+        <ThemedText style={[styles.timeoutLabel, { color: palette.textMuted }]}>TIMEOUT</ThemedText>
+        <ThemedText style={[styles.timeoutTimer, { color: timerColor }]}>
+          {formatTime(secondsLeft)}
+        </ThemedText>
+      </View>
+    );
+  } else if (pointIsOver) {
+    if (goalInfo?.isFocusGoal) {
+      statusContent = (
+        <View style={styles.goalChain}>
+          {goalInfo.assisterName && (
+            <>
+              <View style={[styles.goalChip, { backgroundColor: palette.success }]}>
+                <ThemedText
+                  numberOfLines={1}
+                  style={[styles.goalChipName, { color: palette.textOnAccent }]}>
+                  {goalInfo.assisterName}
+                </ThemedText>
+                <ThemedText style={[styles.goalChipSep, { color: palette.textOnAccentMuted }]}>
+                  ·
+                </ThemedText>
+                <ThemedText style={[styles.goalChipLabel, { color: palette.textOnAccentMuted }]}>
+                  ASSIST
+                </ThemedText>
+              </View>
+              <ThemedText style={[styles.goalArrow, { color: palette.textMuted }]}>+</ThemedText>
+            </>
+          )}
+          <View style={[styles.goalChip, { backgroundColor: palette.success }]}>
+            {goalInfo.scorerName && (
               <>
-                <View style={[styles.goalChip, { backgroundColor: palette.success }]}>
-                  <ThemedText
-                    numberOfLines={1}
-                    style={[styles.goalChipName, { color: palette.textOnAccent }]}>
-                    {goalInfo.assisterName}
-                  </ThemedText>
-                  <ThemedText style={[styles.goalChipSep, { color: palette.textOnAccentMuted }]}>
-                    ·
-                  </ThemedText>
-                  <ThemedText style={[styles.goalChipLabel, { color: palette.textOnAccentMuted }]}>
-                    ASSIST
-                  </ThemedText>
-                </View>
-                <ThemedText style={[styles.goalArrow, { color: palette.textMuted }]}>+</ThemedText>
+                <ThemedText
+                  numberOfLines={1}
+                  style={[styles.goalChipName, { color: palette.textOnAccent }]}>
+                  {goalInfo.scorerName}
+                </ThemedText>
+                <ThemedText style={[styles.goalChipSep, { color: palette.textOnAccentMuted }]}>
+                  ·
+                </ThemedText>
               </>
             )}
-            <View style={[styles.goalChip, { backgroundColor: palette.success }]}>
-              {goalInfo.scorerName && (
-                <>
-                  <ThemedText
-                    numberOfLines={1}
-                    style={[styles.goalChipName, { color: palette.textOnAccent }]}>
-                    {goalInfo.scorerName}
-                  </ThemedText>
-                  <ThemedText style={[styles.goalChipSep, { color: palette.textOnAccentMuted }]}>
-                    ·
-                  </ThemedText>
-                </>
-              )}
-              <ThemedText
-                style={[
-                  styles.goalChipLabel,
-                  { color: goalInfo.scorerName ? palette.textOnAccentMuted : palette.textOnAccent },
-                ]}>
-                {scorerLabel}
-              </ThemedText>
-            </View>
+            <ThemedText
+              style={[
+                styles.goalChipLabel,
+                { color: goalInfo.scorerName ? palette.textOnAccentMuted : palette.textOnAccent },
+              ]}>
+              {scorerLabel}
+            </ThemedText>
           </View>
-        ) : (
-          <ThemedText style={[styles.passChainText, { color: palette.danger }]}>
-            {goalInfo ? 'OPP SCORED' : 'POINT OVER'}
-          </ThemedText>
-        )
-      ) : turnoverEvent || passChainEvents.events.length > 0 ? (
-        <TrackerPassChain
-          events={passChainEvents.events}
-          truncated={passChainEvents.truncated}
-          turnoverEvent={turnoverEvent}
-          isLandscape={isLandscape}
-        />
-      ) : null}
-    </View>
-  );
+        </View>
+      );
+    } else {
+      statusContent = (
+        <ThemedText style={[styles.passChainText, { color: palette.danger }]}>
+          {goalInfo ? 'OPP SCORED' : 'POINT OVER'}
+        </ThemedText>
+      );
+    }
+  } else if (turnoverEvent || passChainEvents.events.length > 0) {
+    statusContent = (
+      <TrackerPassChain
+        events={passChainEvents.events}
+        truncated={passChainEvents.truncated}
+        turnoverEvent={turnoverEvent}
+        isLandscape={isLandscape}
+      />
+    );
+  } else {
+    statusContent = null;
+  }
+
+  return <View style={styles.statusBar}>{statusContent}</View>;
 };
 
 function createStyles(sizeClass: SizeClass, isLandscape: boolean, palette: Palette) {

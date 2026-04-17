@@ -299,14 +299,16 @@ export function computeRelativePlayingTimeStats(
   autoHalftimeEnabled = true,
   games?: SavedGame[] | null,
 ): RelativePlayingTimeMetric[] {
-  const playingTimeMap =
-    games && games.length > 0
-      ? aggregatePlayingTimeStats(games)
-      : pointLines?.length
-        ? computePlayingTimeStats(pointLines, events, startingPossession, gameTo, {
-            autoHalftimeEnabled,
-          })
-        : null;
+  let playingTimeMap;
+  if (games && games.length > 0) {
+    playingTimeMap = aggregatePlayingTimeStats(games);
+  } else if (pointLines?.length) {
+    playingTimeMap = computePlayingTimeStats(pointLines, events, startingPossession, gameTo, {
+      autoHalftimeEnabled,
+    });
+  } else {
+    playingTimeMap = null;
+  }
 
   if (!playingTimeMap || playingTimeMap.size === 0) {
     return [];

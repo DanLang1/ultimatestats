@@ -3,6 +3,7 @@ import RosterBulkActions from '@/components/roster/RosterBulkActions';
 import { RosterControlsHeader } from '@/components/roster/RosterControlsHeader';
 import { TeamActionsBar } from '@/components/roster/TeamActionsBar';
 import { TeamActionsSheet } from '@/components/roster/TeamActionsSheet';
+import { ThemedText } from '@/components/ThemedText';
 import { AlertModal } from '@/components/ui/AlertModal';
 import { useAlert } from '@/components/ui/AlertProvider';
 import { PlayerChip } from '@/components/ui/PlayerChip';
@@ -20,12 +21,11 @@ import { generateId } from '@/lib/utils';
 import { useGameStore } from '@/store/gameStore';
 import { useLinePresetsStore } from '@/store/linePresetsStore';
 import { useSettingsStore } from '@/store/settingsStore';
+import { Fonts } from '@/theme/theme';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import React, { useState } from 'react';
 import { Modal, Pressable, ScrollView, Share, StyleSheet, TextInput, View } from 'react-native';
-import { ThemedText } from '@/components/ThemedText';
-import { Fonts } from '@/theme/theme';
 
 const EMPTY_ROSTER: Player[] = [];
 type RoleFilter = PlayerRole | 'unset' | null;
@@ -87,12 +87,14 @@ export default function EditRosterScreen() {
     }
     return a.name.localeCompare(b.name);
   });
-  const filteredRoster =
-    roleFilter === null
-      ? displayRoster
-      : roleFilter === 'unset'
-        ? displayRoster.filter((player) => player.role === null)
-        : displayRoster.filter((player) => player.role === roleFilter);
+  let filteredRoster: Player[];
+  if (roleFilter === null) {
+    filteredRoster = displayRoster;
+  } else if (roleFilter === 'unset') {
+    filteredRoster = displayRoster.filter((player) => player.role === null);
+  } else {
+    filteredRoster = displayRoster.filter((player) => player.role === roleFilter);
+  }
   const visibleRoster =
     selectionMode && bulkVisiblePlayerIds
       ? displayRoster.filter((player) => bulkVisiblePlayerIds.has(player.id))
@@ -301,6 +303,87 @@ export default function EditRosterScreen() {
     visibleRoster.filter((p) => p.isActive).every((p) => selectedPlayerIds.has(p.id));
   const hasActivePlayers = visibleRoster.some((player) => player.isActive);
 
+  let playerListContent: React.ReactNode;
+  if (roster.length === 0) {
+    playerListContent = (
+      <View style={styles.emptyState}>
+        <MaterialCommunityIcons
+          name="account-group-outline"
+          size={metrics.emptyStateIconLarge}
+          color={palette.textMuted}
+        />
+        <ThemedText style={[styles.emptyStateText, { color: palette.textMuted }]}>
+          No players yet
+        </ThemedText>
+        <ThemedText style={[styles.emptyStateHint, { color: palette.textMuted }]}>
+          Add players using the input above
+        </ThemedText>
+      </View>
+    );
+  } else if (visibleRoster.length === 0) {
+    playerListContent = (
+      <View style={styles.emptyState}>
+        <MaterialCommunityIcons
+          name="filter-outline"
+          size={metrics.emptyStateIconMedium}
+          color={palette.textMuted}
+        />
+        <ThemedText style={[styles.emptyStateText, { color: palette.textMuted }]}>
+          No players match this filter
+        </ThemedText>
+        <ThemedText style={[styles.emptyStateHint, { color: palette.textMuted }]}>
+          Tap the active position filter to show all players
+        </ThemedText>
+      </View>
+    );
+  } else if (useChipView) {
+    playerListContent = (
+      <>
+        {groupedPlayers.map((group) => (
+          <View key={group.label} style={styles.chipGroup}>
+            <View style={styles.chipGroupHeader}>
+              <ThemedText style={[styles.chipGroupLabel, { color: palette.textMuted }]}>
+                {group.label}
+              </ThemedText>
+              <ThemedText style={[styles.chipGroupCount, { color: palette.textMuted }]}>
+                {group.players.length}
+              </ThemedText>
+            </View>
+            <View style={styles.chipGrid}>
+              {group.players.map((player) => (
+                <PlayerChip
+                  key={player.id}
+                  sizeClass={sizeClass}
+                  name={player.name}
+                  selected={selectionMode && selectedPlayerIds.has(player.id)}
+                  isActive={player.isActive}
+                  matchingType={player.matchingType}
+                  role={player.role}
+                  onPress={
+                    selectionMode
+                      ? () => togglePlayerSelection(player.id)
+                      : () => handleEditPlayer(player)
+                  }
+                />
+              ))}
+            </View>
+          </View>
+        ))}
+      </>
+    );
+  } else {
+    playerListContent = (
+      <QuickEditPlayerList
+        sizeClass={sizeClass}
+        roster={visibleRoster}
+        onEditPlayer={handleEditPlayer}
+        onSetPlayerActive={handleSetPlayerActive}
+        onSetPlayerMatching={handleSetPlayerMatching}
+        onSetPlayerRole={handleSetPlayerRole}
+      />
+    );
+  }
+
   return (
     <View style={[styles.container, { backgroundColor: palette.primary }]}>
       <Stack.Screen options={{ headerShown: false }} />
@@ -429,78 +512,7 @@ export default function EditRosterScreen() {
               styles.playerListContent,
               selectionMode && styles.playerListContentSelection,
             ]}>
-            {roster.length === 0 ? (
-              <View style={styles.emptyState}>
-                <MaterialCommunityIcons
-                  name="account-group-outline"
-                  size={metrics.emptyStateIconLarge}
-                  color={palette.textMuted}
-                />
-                <ThemedText style={[styles.emptyStateText, { color: palette.textMuted }]}>
-                  No players yet
-                </ThemedText>
-                <ThemedText style={[styles.emptyStateHint, { color: palette.textMuted }]}>
-                  Add players using the input above
-                </ThemedText>
-              </View>
-            ) : visibleRoster.length === 0 ? (
-              <View style={styles.emptyState}>
-                <MaterialCommunityIcons
-                  name="filter-outline"
-                  size={metrics.emptyStateIconMedium}
-                  color={palette.textMuted}
-                />
-                <ThemedText style={[styles.emptyStateText, { color: palette.textMuted }]}>
-                  No players match this filter
-                </ThemedText>
-                <ThemedText style={[styles.emptyStateHint, { color: palette.textMuted }]}>
-                  Tap the active position filter to show all players
-                </ThemedText>
-              </View>
-            ) : useChipView ? (
-              <>
-                {/* Grouped chip grid */}
-                {groupedPlayers.map((group) => (
-                  <View key={group.label} style={styles.chipGroup}>
-                    <View style={styles.chipGroupHeader}>
-                      <ThemedText style={[styles.chipGroupLabel, { color: palette.textMuted }]}>
-                        {group.label}
-                      </ThemedText>
-                      <ThemedText style={[styles.chipGroupCount, { color: palette.textMuted }]}>
-                        {group.players.length}
-                      </ThemedText>
-                    </View>
-                    <View style={styles.chipGrid}>
-                      {group.players.map((player) => (
-                        <PlayerChip
-                          key={player.id}
-                          sizeClass={sizeClass}
-                          name={player.name}
-                          selected={selectionMode && selectedPlayerIds.has(player.id)}
-                          isActive={player.isActive}
-                          matchingType={player.matchingType}
-                          role={player.role}
-                          onPress={
-                            selectionMode
-                              ? () => togglePlayerSelection(player.id)
-                              : () => handleEditPlayer(player)
-                          }
-                        />
-                      ))}
-                    </View>
-                  </View>
-                ))}
-              </>
-            ) : (
-              <QuickEditPlayerList
-                sizeClass={sizeClass}
-                roster={visibleRoster}
-                onEditPlayer={handleEditPlayer}
-                onSetPlayerActive={handleSetPlayerActive}
-                onSetPlayerMatching={handleSetPlayerMatching}
-                onSetPlayerRole={handleSetPlayerRole}
-              />
-            )}
+            {playerListContent}
           </ScrollView>
 
           {/* Bulk Actions Bar */}

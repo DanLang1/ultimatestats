@@ -169,21 +169,26 @@ export default function EditEventModal() {
 
       const oppEvent = selectedSubtype === 'opponentTurn' || selectedSubtype === 'opponentBlock';
 
-      const newTeam = oppEvent
-        ? 'team2'
-        : (selectedSubtype === 'block' || isOurTurnover) && isOriginalOpponentEvent
-          ? 'team1'
-          : undefined; // Don't change team
+      let newTeam: 'team1' | 'team2' | undefined;
+      if (oppEvent) {
+        newTeam = 'team2';
+      } else if ((selectedSubtype === 'block' || isOurTurnover) && isOriginalOpponentEvent) {
+        newTeam = 'team1';
+      } else {
+        newTeam = undefined;
+      }
 
       // Map virtual types to storage types:
       // - opponentTurn -> throwaway (opponent's unforced error)
       // - opponentBlock -> block (opponent blocked us, stored as opponent's block)
-      const actualSubtype =
-        selectedSubtype === 'opponentTurn'
-          ? 'throwaway'
-          : selectedSubtype === 'opponentBlock'
-            ? 'block'
-            : (selectedSubtype as TurnoverType);
+      let actualSubtype: TurnoverType;
+      if (selectedSubtype === 'opponentTurn') {
+        actualSubtype = 'throwaway';
+      } else if (selectedSubtype === 'opponentBlock') {
+        actualSubtype = 'block';
+      } else {
+        actualSubtype = selectedSubtype as TurnoverType;
+      }
 
       const updates = {
         playerId: oppEvent ? null : selectedPlayerId,
@@ -214,12 +219,14 @@ export default function EditEventModal() {
   };
 
   const handleDelete = () => {
-    const subtypeLabel =
-      selectedSubtype === 'opponentTurn'
-        ? 'OPP TURN'
-        : selectedSubtype === 'opponentBlock'
-          ? 'OPP BLOCK'
-          : selectedSubtype;
+    let subtypeLabel: string;
+    if (selectedSubtype === 'opponentTurn') {
+      subtypeLabel = 'OPP TURN';
+    } else if (selectedSubtype === 'opponentBlock') {
+      subtypeLabel = 'OPP BLOCK';
+    } else {
+      subtypeLabel = selectedSubtype;
+    }
 
     showAlert({
       title: 'Delete Event?',
@@ -252,6 +259,22 @@ export default function EditEventModal() {
 
   const playerName = getPlayerName(roster, selectedPlayerId);
 
+  let headerTitle: string;
+  if (isGoal) {
+    headerTitle = params.editField === 'scorer' ? 'Edit Goal' : 'Edit Assist';
+  } else {
+    headerTitle = 'Edit Event';
+  }
+
+  let playerSectionLabel: string;
+  if (selectedSubtype === 'block') {
+    playerSectionLabel = 'BLOCKED BY';
+  } else if (isFiftyFifty) {
+    playerSectionLabel = 'STEP 1: THROWER (Who threw it?)';
+  } else {
+    playerSectionLabel = 'PLAYER';
+  }
+
   return (
     <BottomSheet
       onDismiss={handleDismiss}
@@ -259,7 +282,7 @@ export default function EditEventModal() {
       {/* Header */}
       <View style={[styles.header, { borderBottomColor: palette.overlay15 }]}>
         <ThemedText style={[styles.headerTitle, { color: palette.modalText }]}>
-          {isGoal ? (params.editField === 'scorer' ? 'Edit Goal' : 'Edit Assist') : 'Edit Event'}
+          {headerTitle}
         </ThemedText>
         <View style={styles.headerActions}>
           {isTurnover && (
@@ -360,11 +383,7 @@ export default function EditEventModal() {
           (!isFiftyFifty || fiftyFiftyStep === 1) && (
             <View style={styles.section}>
               <ThemedText style={[styles.sectionLabel, { color: palette.textSecondary }]}>
-                {selectedSubtype === 'block'
-                  ? 'BLOCKED BY'
-                  : isFiftyFifty
-                    ? 'STEP 1: THROWER (Who threw it?)'
-                    : 'PLAYER'}
+                {playerSectionLabel}
               </ThemedText>
               <View style={styles.chipsContainer}>
                 <PlayerChip

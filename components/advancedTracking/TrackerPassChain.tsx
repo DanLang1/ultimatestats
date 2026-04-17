@@ -36,52 +36,49 @@ export const TrackerPassChain = ({
   if (turnoverEvent) {
     const { label, responsibleName, throwerName, isDropWithSplitAttribution } = turnoverEvent;
 
+    let chipContent: React.ReactNode;
+    if (isDropWithSplitAttribution && throwerName && responsibleName) {
+      chipContent = (
+        <View style={[styles.chip, { backgroundColor: turnoverColor }]}>
+          <ThemedText numberOfLines={1} style={[styles.chipText, { color: palette.textOnAccent }]}>
+            {throwerName}
+          </ThemedText>
+          <ThemedText style={[styles.chipSep, { color: palette.textOnAccentMuted }]}>+</ThemedText>
+          <ThemedText numberOfLines={1} style={[styles.chipText, { color: palette.textOnAccent }]}>
+            {responsibleName}
+          </ThemedText>
+          <ThemedText style={[styles.chipSep, { color: palette.textOnAccentMuted }]}>·</ThemedText>
+          <ThemedText style={[styles.chipLabel, { color: palette.textOnAccentMuted }]}>
+            {label}
+          </ThemedText>
+        </View>
+      );
+    } else if (responsibleName) {
+      chipContent = (
+        <View style={[styles.chip, { backgroundColor: turnoverColor }]}>
+          <ThemedText numberOfLines={1} style={[styles.chipText, { color: palette.textOnAccent }]}>
+            {responsibleName}
+          </ThemedText>
+          <ThemedText style={[styles.chipSep, { color: palette.textOnAccentMuted }]}>·</ThemedText>
+          <ThemedText style={[styles.chipLabel, { color: palette.textOnAccentMuted }]}>
+            {label}
+          </ThemedText>
+        </View>
+      );
+    } else {
+      chipContent = (
+        <View style={[styles.chip, { backgroundColor: turnoverColor }]}>
+          <ThemedText style={[styles.chipText, { color: palette.textOnAccent }]}>
+            {label}
+          </ThemedText>
+        </View>
+      );
+    }
+
     return (
       <View style={styles.container}>
         <Animated.View entering={FadeInRight} style={styles.chipWrapper}>
-          {isDropWithSplitAttribution && throwerName && responsibleName ? (
-            <View style={[styles.chip, { backgroundColor: turnoverColor }]}>
-              <ThemedText
-                numberOfLines={1}
-                style={[styles.chipText, { color: palette.textOnAccent }]}>
-                {throwerName}
-              </ThemedText>
-              <ThemedText style={[styles.chipSep, { color: palette.textOnAccentMuted }]}>
-                +
-              </ThemedText>
-              <ThemedText
-                numberOfLines={1}
-                style={[styles.chipText, { color: palette.textOnAccent }]}>
-                {responsibleName}
-              </ThemedText>
-              <ThemedText style={[styles.chipSep, { color: palette.textOnAccentMuted }]}>
-                ·
-              </ThemedText>
-              <ThemedText style={[styles.chipLabel, { color: palette.textOnAccentMuted }]}>
-                {label}
-              </ThemedText>
-            </View>
-          ) : responsibleName ? (
-            <View style={[styles.chip, { backgroundColor: turnoverColor }]}>
-              <ThemedText
-                numberOfLines={1}
-                style={[styles.chipText, { color: palette.textOnAccent }]}>
-                {responsibleName}
-              </ThemedText>
-              <ThemedText style={[styles.chipSep, { color: palette.textOnAccentMuted }]}>
-                ·
-              </ThemedText>
-              <ThemedText style={[styles.chipLabel, { color: palette.textOnAccentMuted }]}>
-                {label}
-              </ThemedText>
-            </View>
-          ) : (
-            <View style={[styles.chip, { backgroundColor: turnoverColor }]}>
-              <ThemedText style={[styles.chipText, { color: palette.textOnAccent }]}>
-                {label}
-              </ThemedText>
-            </View>
-          )}
+          {chipContent}
         </Animated.View>
       </View>
     );

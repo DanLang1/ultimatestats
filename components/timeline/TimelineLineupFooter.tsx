@@ -49,8 +49,14 @@ export default function TimelineLineupFooter({
       <View style={styles.lineupChipsWrapper}>
         {lineupEntries.map(({ playerId, isSubIn, isInjuredOut }) => {
           const matchType = getPlayerMatchingType(roster, playerId);
-          const chipLabelColor =
-            matchType === 'mmp' ? mmpColor : matchType === 'fmp' ? fmpColor : palette.textInverse;
+          let chipLabelColor: string;
+          if (matchType === 'mmp') {
+            chipLabelColor = mmpColor;
+          } else if (matchType === 'fmp') {
+            chipLabelColor = fmpColor;
+          } else {
+            chipLabelColor = palette.textInverse;
+          }
 
           return (
             <View

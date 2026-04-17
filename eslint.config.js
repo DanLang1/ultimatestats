@@ -22,6 +22,8 @@ module.exports = defineConfig([
       'local/no-raw-text': 'error',
       'local/no-font-weight': 'error',
       'local/no-raw-colors': 'error',
+      'no-nested-ternary': 'error',
+      'no-unneeded-ternary': 'error',
       'no-restricted-syntax': [
         'error',
         {

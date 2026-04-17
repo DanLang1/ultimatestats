@@ -62,7 +62,14 @@ export default function TimelinePointCard({
 
   const isInProgress = point.isInProgress === true;
   const isTeam1 = point.scoringTeam === 'team1';
-  const teamColor = isInProgress ? palette.accent : isTeam1 ? palette.success : palette.danger;
+  let teamColor: string;
+  if (isInProgress) {
+    teamColor = palette.accent;
+  } else if (isTeam1) {
+    teamColor = palette.success;
+  } else {
+    teamColor = palette.danger;
+  }
 
   const goalName = getPlayerName(roster, point.goalPlayerId);
   const assistName = getPlayerName(roster, point.assistPlayerId);

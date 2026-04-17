@@ -71,11 +71,14 @@ export function SegmentedControl({
   }, [attentionRunKey, disabled]);
 
   const hasSideHighlights = highlightBorder && (!!highlightLeftColor || !!highlightRightColor);
-  const borderColor = hasSideHighlights
-    ? palette.overlay20
-    : highlightBorder
-      ? (highlightColor ?? palette.warning)
-      : palette.overlay20;
+  let borderColor: string;
+  if (hasSideHighlights) {
+    borderColor = palette.overlay20;
+  } else if (highlightBorder) {
+    borderColor = highlightColor ?? palette.warning;
+  } else {
+    borderColor = palette.overlay20;
+  }
   const borderWidth = highlightBorder ? 2 : 1;
   const sideHighlightEdgeWidth = themeMode === 'light' ? 4 : 3;
 

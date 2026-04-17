@@ -1,3 +1,4 @@
+import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { getPlayerName } from '@/lib/playerUtils';
@@ -11,12 +12,11 @@ import { computePlayerStats, PlayerStats } from '@/lib/statsUtils';
 import { Player, PointLineRecord, SavedGame } from '@/lib/storage';
 import { GameEvent } from '@/store/gameStore.types';
 import { usePlayerStatsStore } from '@/store/playerStatsStore';
+import { Fonts } from '@/theme/theme';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
 import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
-import { ThemedText } from '@/components/ThemedText';
-import { Fonts } from '@/theme/theme';
 
 type SortKey =
   | 'name'
@@ -63,14 +63,22 @@ export default function StatsTable({
   const [showLegend, setShowLegend] = useState(false);
 
   // Compute playing time stats if pointLines are available
-  const playingTimeStats =
-    games && games.length > 0
-      ? aggregatePlayingTimeStats(games)
-      : pointLines?.length
-        ? computePlayingTimeStats(pointLines, events, startingPossession ?? null, gameTo, {
-            autoHalftimeEnabled,
-          })
-        : null;
+  let playingTimeStats: Map<string, PlayingTimeStats> | null;
+  if (games && games.length > 0) {
+    playingTimeStats = aggregatePlayingTimeStats(games);
+  } else if (pointLines?.length) {
+    playingTimeStats = computePlayingTimeStats(
+      pointLines,
+      events,
+      startingPossession ?? null,
+      gameTo,
+      {
+        autoHalftimeEnabled,
+      },
+    );
+  } else {
+    playingTimeStats = null;
+  }
 
   // Only show playing time columns if we have data
   const hasPlayingTimeData = playingTimeStats !== null && playingTimeStats.size > 0;
@@ -624,6 +632,15 @@ export default function StatsTable({
 }
 
 function createStyles(isLandscape: boolean, hasPlayingTimeData: boolean, sizeClass: SizeClass) {
+  let tableMinWidth: number | undefined;
+  if (isLandscape) {
+    tableMinWidth = undefined;
+  } else if (hasPlayingTimeData) {
+    tableMinWidth = 680;
+  } else {
+    tableMinWidth = 480;
+  }
+
   return StyleSheet.create({
     sectionHeader: {
       flexDirection: 'row',
@@ -672,7 +689,7 @@ function createStyles(isLandscape: boolean, hasPlayingTimeData: boolean, sizeCla
       borderRadius: 12,
       overflow: 'hidden',
       borderWidth: 1,
-      minWidth: isLandscape ? undefined : hasPlayingTimeData ? 680 : 480,
+      minWidth: tableMinWidth,
     },
     tableHeader: {
       flexDirection: 'row',

@@ -58,8 +58,12 @@ export default function TurnoverEntryScreen() {
     playerId: string | null,
     player2Id?: string | null,
   ) => {
-    const team =
-      type === 'block' ? (possession === 'team1' ? 'team2' : 'team1') : (possession ?? 'team1');
+    let team: 'team1' | 'team2';
+    if (type === 'block') {
+      team = possession === 'team1' ? 'team2' : 'team1';
+    } else {
+      team = possession ?? 'team1';
+    }
 
     addTurnoverEvent({
       team,

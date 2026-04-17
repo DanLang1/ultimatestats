@@ -301,11 +301,14 @@ export default function AdvancedTrackerScreen() {
   const focusHasStarted =
     !!possession && possession.sideId === game.focusSideId && possession.actions.length > 0;
 
-  const turnoverEvent = oppHasDisc
-    ? getLastTurnoverEvent(lastFocusPossession, true, game.participants)
-    : !focusHasStarted
-      ? getLastTurnoverEvent(lastOppPossession, false, game.participants)
-      : null;
+  let turnoverEvent: ReturnType<typeof getLastTurnoverEvent>;
+  if (oppHasDisc) {
+    turnoverEvent = getLastTurnoverEvent(lastFocusPossession, true, game.participants);
+  } else if (!focusHasStarted) {
+    turnoverEvent = getLastTurnoverEvent(lastOppPossession, false, game.participants);
+  } else {
+    turnoverEvent = null;
+  }
 
   const passChainEvents = getPassChainEvents(
     oppHasDisc ? lastFocusPossession : possession,
@@ -324,12 +327,14 @@ export default function AdvancedTrackerScreen() {
     return null;
   })();
 
-  const instructionColor =
-    passModifier === 'callahan' || passModifier === 'stall'
-      ? palette.success
-      : passModifier === 'fifty-fifty'
-        ? palette.warning
-        : palette.textMuted;
+  let instructionColor: string;
+  if (passModifier === 'callahan' || passModifier === 'stall') {
+    instructionColor = palette.success;
+  } else if (passModifier === 'fifty-fifty') {
+    instructionColor = palette.warning;
+  } else {
+    instructionColor = palette.textMuted;
+  }
 
   const LEFT_PANEL_WIDTH = 160;
   const scoreBarProps = {

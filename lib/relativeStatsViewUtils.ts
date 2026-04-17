@@ -219,7 +219,12 @@ function formatSignedMinutes(value: number): string {
   const totalSeconds = Math.round(Math.abs(value) * 60);
   const mins = Math.floor(totalSeconds / 60);
   const secs = totalSeconds % 60;
-  const prefix = value > 0 ? '+' : value < 0 ? '-' : '';
+  let prefix = '';
+  if (value > 0) {
+    prefix = '+';
+  } else if (value < 0) {
+    prefix = '-';
+  }
   return `${prefix}${mins}:${secs.toString().padStart(2, '0')}`;
 }
 

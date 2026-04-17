@@ -170,6 +170,13 @@ export function ScoreboardActionBar({
 
   const barBackgroundColor = palette.glassBg;
 
+  let dragHandleIcon: keyof typeof MaterialCommunityIcons.glyphMap;
+  if (pendingTimeoutModal) {
+    dragHandleIcon = 'arrow-expand';
+  } else {
+    dragHandleIcon = isVertical ? 'arrow-expand-horizontal' : 'arrow-expand-vertical';
+  }
+
   type ButtonConfig = {
     label: string;
     action: ActionBarAction;
@@ -236,6 +243,70 @@ export function ScoreboardActionBar({
         },
       ];
 
+  let barContent: React.ReactNode;
+  if (pendingTimeoutModal && isRunning) {
+    barContent = (
+      <View style={styles.timeoutContainer}>
+        <Pressable
+          style={({ pressed }) => [styles.timeoutPlayPause, pressed && styles.buttonPressed]}
+          onPress={toggleTimer}>
+          <MaterialCommunityIcons
+            name="pause"
+            size={timeoutControlIconSize}
+            color={palette.accent}
+          />
+        </Pressable>
+        <ThemedText
+          style={[
+            styles.timeoutTime,
+            { color: isOvertime ? palette.danger : palette.textInverse },
+          ]}>
+          {formattedTime}
+        </ThemedText>
+      </View>
+    );
+  } else if (showStartPoint && onStartPoint) {
+    barContent = (
+      <Pressable
+        style={({ pressed }) => [styles.startPointButton, pressed && styles.buttonPressed]}
+        onPress={onStartPoint}>
+        <MaterialCommunityIcons name="timer-outline" size={startIconSize} color={palette.accent} />
+        {!isVertical && (
+          <ThemedText style={[styles.startPointText, { color: palette.accent }]}>
+            START POINT
+          </ThemedText>
+        )}
+      </Pressable>
+    );
+  } else if (showResumePoint || (pendingTimeoutModal && !isRunning)) {
+    barContent = (
+      <Pressable
+        style={({ pressed }) => [styles.startPointButton, pressed && styles.buttonPressed]}
+        onPress={pendingTimeoutModal ? handleContinue : togglePointTimerPause}>
+        <MaterialCommunityIcons name="play" size={startIconSize} color={palette.success} />
+        {!isVertical && (
+          <ThemedText style={[styles.startPointText, { color: palette.success }]}>
+            {pendingTimeoutModal ? 'END TIMEOUT' : 'RESUME POINT'}
+          </ThemedText>
+        )}
+      </Pressable>
+    );
+  } else {
+    barContent = buttons.map((btn) => (
+      <Pressable
+        key={btn.label}
+        style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
+        onPress={() => onAction(btn.action)}>
+        {btn.renderIcon()}
+        {!isVertical && (
+          <ThemedText style={[styles.buttonText, { color: palette.textInverse }]}>
+            {btn.label}
+          </ThemedText>
+        )}
+      </Pressable>
+    ));
+  }
+
   return (
     <GestureDetector gesture={panGesture}>
       <Animated.View
@@ -262,82 +333,13 @@ export function ScoreboardActionBar({
             pendingTimeoutModal ? () => router.push('/TimeoutModal') : toggleActionBarOrientation
           }>
           <MaterialCommunityIcons
-            name={
-              pendingTimeoutModal
-                ? 'arrow-expand'
-                : isVertical
-                  ? 'arrow-expand-horizontal'
-                  : 'arrow-expand-vertical'
-            }
+            name={dragHandleIcon}
             size={pendingTimeoutModal ? iconSize : dragIconSize}
             color={palette.textMuted}
           />
         </Pressable>
 
-        {/* Timeout UI - shows when timeout is active and timer is running (including overtime) */}
-        {pendingTimeoutModal && isRunning ? (
-          <View style={styles.timeoutContainer}>
-            <Pressable
-              style={({ pressed }) => [styles.timeoutPlayPause, pressed && styles.buttonPressed]}
-              onPress={toggleTimer}>
-              <MaterialCommunityIcons
-                name="pause"
-                size={timeoutControlIconSize}
-                color={palette.accent}
-              />
-            </Pressable>
-            <ThemedText
-              style={[
-                styles.timeoutTime,
-                { color: isOvertime ? palette.danger : palette.textInverse },
-              ]}>
-              {formattedTime}
-            </ThemedText>
-          </View>
-        ) : showStartPoint && onStartPoint ? (
-          /* Start Point Button - shows when point needs to be started */
-          <Pressable
-            style={({ pressed }) => [styles.startPointButton, pressed && styles.buttonPressed]}
-            onPress={onStartPoint}>
-            <MaterialCommunityIcons
-              name="timer-outline"
-              size={startIconSize}
-              color={palette.accent}
-            />
-            {!isVertical && (
-              <ThemedText style={[styles.startPointText, { color: palette.accent }]}>
-                START POINT
-              </ThemedText>
-            )}
-          </Pressable>
-        ) : showResumePoint || (pendingTimeoutModal && !isRunning) ? (
-          /* Resume Point Button - shows when point timer is paused or timeout timer is paused */
-          <Pressable
-            style={({ pressed }) => [styles.startPointButton, pressed && styles.buttonPressed]}
-            onPress={pendingTimeoutModal ? handleContinue : togglePointTimerPause}>
-            <MaterialCommunityIcons name="play" size={startIconSize} color={palette.success} />
-            {!isVertical && (
-              <ThemedText style={[styles.startPointText, { color: palette.success }]}>
-                {pendingTimeoutModal ? 'END TIMEOUT' : 'RESUME POINT'}
-              </ThemedText>
-            )}
-          </Pressable>
-        ) : (
-          /* Action buttons */
-          buttons.map((btn) => (
-            <Pressable
-              key={btn.label}
-              style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
-              onPress={() => onAction(btn.action)}>
-              {btn.renderIcon()}
-              {!isVertical && (
-                <ThemedText style={[styles.buttonText, { color: palette.textInverse }]}>
-                  {btn.label}
-                </ThemedText>
-              )}
-            </Pressable>
-          ))
-        )}
+        {barContent}
       </Animated.View>
     </GestureDetector>
   );

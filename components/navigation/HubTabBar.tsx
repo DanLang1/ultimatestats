@@ -108,16 +108,18 @@ export default function HubTabBar({ state, descriptors, navigation }: BottomTabB
     const tabConfig = TAB_CONFIG[route.name];
     const isFocused = state.index === index;
     const isActive = isFocused && isTabPathActive(pathname, tabConfig);
-    const color = isActive
-      ? isLightTheme
-        ? palette.accent
-        : palette.textInverse
-      : palette.textMuted;
-    const buttonBackgroundColor = isActive
-      ? isLightTheme
-        ? palette.accentOverlay10
-        : palette.accentOverlay15
-      : 'transparent';
+    let color: string;
+    if (isActive) {
+      color = isLightTheme ? palette.accent : palette.textInverse;
+    } else {
+      color = palette.textMuted;
+    }
+    let buttonBackgroundColor: string;
+    if (isActive) {
+      buttonBackgroundColor = isLightTheme ? palette.accentOverlay10 : palette.accentOverlay15;
+    } else {
+      buttonBackgroundColor = 'transparent';
+    }
     const buttonBorderColor = isActive ? palette.accentOverlay30 : 'transparent';
 
     const onPress = () => {

@@ -461,12 +461,14 @@ function DoneContent({
   actionLabel: string;
 }) {
   const { styles, metrics } = useImportUi();
-  const message =
-    type === 'games'
-      ? `${count} game${count !== 1 ? 's' : ''} imported!`
-      : type === 'game'
-        ? 'Game imported!'
-        : 'Team imported!';
+  let message: string;
+  if (type === 'games') {
+    message = `${count} game${count !== 1 ? 's' : ''} imported!`;
+  } else if (type === 'game') {
+    message = 'Game imported!';
+  } else {
+    message = 'Team imported!';
+  }
 
   return (
     <Animated.View entering={FadeIn.duration(200)} style={styles.content}>

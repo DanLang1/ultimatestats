@@ -191,11 +191,7 @@ export default function SavedGamesList({
         <View style={styles.sortPills}>
           {sortFields.map((opt) => {
             const isActive = sortField === opt.field;
-            const icon = isActive
-              ? sortDirection === 'asc'
-                ? opt.ascIcon
-                : opt.descIcon
-              : opt.descIcon;
+            const icon = isActive && sortDirection === 'asc' ? opt.ascIcon : opt.descIcon;
             return (
               <Pressable
                 key={opt.field}
@@ -252,6 +248,25 @@ export default function SavedGamesList({
       <View style={styles.savedGamesList}>
         {filteredAndSortedGames.map((game) => {
           const isSelected = selectedGameIds.has(game.id);
+
+          let team1ScoreColor: string;
+          if (game.team1Score > game.team2Score) {
+            team1ScoreColor = palette.success;
+          } else if (game.team1Score < game.team2Score) {
+            team1ScoreColor = palette.danger;
+          } else {
+            team1ScoreColor = palette.warning;
+          }
+
+          let team2ScoreColor: string;
+          if (game.team2Score > game.team1Score) {
+            team2ScoreColor = palette.success;
+          } else if (game.team2Score < game.team1Score) {
+            team2ScoreColor = palette.danger;
+          } else {
+            team2ScoreColor = palette.warning;
+          }
+
           return (
             <Animated.View
               key={game.id}
@@ -340,18 +355,7 @@ export default function SavedGamesList({
                           numberOfLines={1}>
                           {getTeamName(game)}
                         </ThemedText>
-                        <ThemedText
-                          style={[
-                            styles.teamScoreValue,
-                            {
-                              color:
-                                game.team1Score > game.team2Score
-                                  ? palette.success
-                                  : game.team1Score < game.team2Score
-                                    ? palette.danger
-                                    : palette.warning,
-                            },
-                          ]}>
+                        <ThemedText style={[styles.teamScoreValue, { color: team1ScoreColor }]}>
                           {game.team1Score}
                         </ThemedText>
                       </View>
@@ -361,18 +365,7 @@ export default function SavedGamesList({
                           numberOfLines={1}>
                           {game.team2Name}
                         </ThemedText>
-                        <ThemedText
-                          style={[
-                            styles.teamScoreValue,
-                            {
-                              color:
-                                game.team2Score > game.team1Score
-                                  ? palette.success
-                                  : game.team2Score < game.team1Score
-                                    ? palette.danger
-                                    : palette.warning,
-                            },
-                          ]}>
+                        <ThemedText style={[styles.teamScoreValue, { color: team2ScoreColor }]}>
                           {game.team2Score}
                         </ThemedText>
                       </View>

@@ -30,9 +30,7 @@ export default function LiveScoreboard() {
   const bottomSafeInset = layout.isLandscape ? 0 : Math.max(12, Math.round(insets.bottom * 0.35));
   const centerBarClearance = layout.isLandscape
     ? 0
-    : isCompactVertical
-      ? scaleBySizeClass(14, layout.sizeClass)
-      : scaleBySizeClass(20, layout.sizeClass);
+    : scaleBySizeClass(isCompactVertical ? 14 : 20, layout.sizeClass);
 
   const {
     currentTeam,

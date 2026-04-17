@@ -6,7 +6,7 @@ import { Fonts } from '@/theme/theme';
 import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import { useSharedValue } from 'react-native-reanimated';
+import { useDerivedValue } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 import { PassModifier } from './types';
 
@@ -36,8 +36,7 @@ export const TrackerPlayerChip = ({
   const isHolder = discHolderId === p.id;
   const isTargetable = !oppHasDisc && discHolderId !== null && !isHolder;
 
-  const isTargetableSV = useSharedValue(isTargetable);
-  isTargetableSV.value = isTargetable;
+  const isTargetableSV = useDerivedValue(() => isTargetable);
 
   // Directional swipes on receiver chips (our possession only):
   //   swipe down → drop   (translationY > 0)

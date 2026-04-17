@@ -1,3 +1,4 @@
+import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import {
@@ -8,10 +9,9 @@ import {
   formatMinutesPlayed,
 } from '@/lib/playingTimeStatsUtils';
 import { GameEvent, PointLineRecord, SavedGame } from '@/lib/storage';
+import { Fonts } from '@/theme/theme';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
-import { ThemedText } from '@/components/ThemedText';
-import { Fonts } from '@/theme/theme';
 import PlayingTimePill from './PlayingTimePill';
 import PlayingTimeGauge from './playing-time/PlayingTimeGauge';
 import RoleBalanceBar from './playing-time/RoleBalanceBar';
@@ -51,14 +51,22 @@ export default function PlayingTimeSection({
   const { sizeClass } = useLayout();
   const styles = createStyles(sizeClass);
 
-  const playingTimeStats =
-    games && games.length > 0
-      ? aggregatePlayingTimeStats(games)
-      : pointLines?.length
-        ? computePlayingTimeStats(pointLines, events, startingPossession ?? null, gameTo, {
-            autoHalftimeEnabled,
-          })
-        : null;
+  let playingTimeStats: ReturnType<typeof aggregatePlayingTimeStats> | null;
+  if (games && games.length > 0) {
+    playingTimeStats = aggregatePlayingTimeStats(games);
+  } else if (pointLines?.length) {
+    playingTimeStats = computePlayingTimeStats(
+      pointLines,
+      events,
+      startingPossession ?? null,
+      gameTo,
+      {
+        autoHalftimeEnabled,
+      },
+    );
+  } else {
+    playingTimeStats = null;
+  }
 
   if (!playingTimeStats || playingTimeStats.size === 0) {
     return null;
@@ -70,12 +78,14 @@ export default function PlayingTimeSection({
   }
 
   const rates = computeRates(stats);
-  const scoreRateColor =
-    rates.pointWinRate >= 60
-      ? palette.success
-      : rates.pointWinRate <= 40
-        ? palette.danger
-        : palette.textInverse;
+  let scoreRateColor: string;
+  if (rates.pointWinRate >= 60) {
+    scoreRateColor = palette.success;
+  } else if (rates.pointWinRate <= 40) {
+    scoreRateColor = palette.danger;
+  } else {
+    scoreRateColor = palette.textInverse;
+  }
 
   const {
     goalsPerPoint,

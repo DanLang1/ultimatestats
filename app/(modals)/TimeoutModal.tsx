@@ -29,8 +29,21 @@ export default function TimeoutModal() {
 
   // Get the last timeout event to know which team called it
   const lastEvent = events[events.length - 1];
-  const timeoutTeam =
-    lastEvent?.type === 'timeout' ? (lastEvent.team === 'team1' ? 'Team 1' : 'Team 2') : 'Team';
+  let timeoutTeam: string;
+  if (lastEvent?.type === 'timeout') {
+    timeoutTeam = lastEvent.team === 'team1' ? 'Team 1' : 'Team 2';
+  } else {
+    timeoutTeam = 'Team';
+  }
+
+  let timerValueColor: string;
+  if (isOvertime) {
+    timerValueColor = palette.danger;
+  } else if (isComplete) {
+    timerValueColor = palette.success;
+  } else {
+    timerValueColor = palette.textInverse;
+  }
 
   const styles = createStyles(sizeClass);
   if (!pendingTimeoutModal) {
@@ -109,11 +122,7 @@ export default function TimeoutModal() {
                   style={[
                     styles.timerValueCompact,
                     {
-                      color: isOvertime
-                        ? palette.danger
-                        : isComplete
-                          ? palette.success
-                          : palette.textInverse,
+                      color: timerValueColor,
                     },
                   ]}>
                   {formattedTime}

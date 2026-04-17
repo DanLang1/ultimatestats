@@ -62,6 +62,15 @@ export default function HalftimeModal() {
     return null;
   }
 
+  let timerValueColor: string;
+  if (isOvertime) {
+    timerValueColor = palette.danger;
+  } else if (isComplete) {
+    timerValueColor = palette.success;
+  } else {
+    timerValueColor = palette.textInverse;
+  }
+
   const onContinue = () => {
     handleContinue();
     if (lineConfirmedForNextPoint || !lineCallingEnabled) {
@@ -176,11 +185,7 @@ export default function HalftimeModal() {
                     style={[
                       styles.timerValueCompact,
                       {
-                        color: isOvertime
-                          ? palette.danger
-                          : isComplete
-                            ? palette.success
-                            : palette.textInverse,
+                        color: timerValueColor,
                       },
                     ]}>
                     {formattedTime}

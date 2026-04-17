@@ -76,12 +76,14 @@ export const TurnoverSheet = ({
                 </ThemedText>
                 <View style={styles.turnoverGrid}>
                   {TURNOVER_OPTIONS.map((opt) => {
-                    const color =
-                      opt.color === 'danger'
-                        ? palette.danger
-                        : opt.color === 'warning'
-                          ? palette.warning
-                          : palette.textMuted;
+                    let color: string;
+                    if (opt.color === 'danger') {
+                      color = palette.danger;
+                    } else if (opt.color === 'warning') {
+                      color = palette.warning;
+                    } else {
+                      color = palette.textMuted;
+                    }
                     return (
                       <Pressable
                         key={opt.type}

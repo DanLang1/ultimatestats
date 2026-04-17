@@ -3415,14 +3415,18 @@ describe('getPointStateForSide', () => {
       receivingSideId,
       pullingSideId: receivingSideId === ZOO ? RIVALS : ZOO,
       scoringSideId,
-      state:
-        receivingSideId === ZOO && scoringSideId === ZOO
-          ? 'hold'
-          : receivingSideId === RIVALS && scoringSideId === ZOO
-            ? 'break'
-            : receivingSideId === ZOO && scoringSideId === RIVALS
-              ? 'broken'
-              : 'opp_hold',
+      state: (() => {
+        if (receivingSideId === ZOO && scoringSideId === ZOO) {
+          return 'hold';
+        }
+        if (receivingSideId === RIVALS && scoringSideId === ZOO) {
+          return 'break';
+        }
+        if (receivingSideId === ZOO && scoringSideId === RIVALS) {
+          return 'broken';
+        }
+        return 'opp_hold';
+      })(),
       linesBySide: {},
       scoresBySide: { [ZOO]: 0, [RIVALS]: 0 },
       durationMs: null,

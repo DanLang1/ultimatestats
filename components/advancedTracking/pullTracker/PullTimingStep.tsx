@@ -35,7 +35,14 @@ export const PullTimingStep = ({
     stop: stopTimer,
   } = useStopwatch();
 
-  const timerState = timerIsRunning ? 'running' : elapsedMs > 0 ? 'stopped' : 'idle';
+  let timerState: 'running' | 'stopped' | 'idle';
+  if (timerIsRunning) {
+    timerState = 'running';
+  } else if (elapsedMs > 0) {
+    timerState = 'stopped';
+  } else {
+    timerState = 'idle';
+  }
   const timerSize = scaleBySizeClass(260, sizeClass);
   const timerFontSize = scaleBySizeClass(72, sizeClass);
 

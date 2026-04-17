@@ -241,15 +241,23 @@ function renderGroup(
       <View style={styles.groupRows}>
         {metrics.map((metric) => {
           const tone = getMetricTone(metric);
-          const barColor =
-            tone === 'good' ? palette.success : tone === 'bad' ? palette.danger : palette.accent;
+          let barColor: string;
+          if (tone === 'good') {
+            barColor = palette.success;
+          } else if (tone === 'bad') {
+            barColor = palette.danger;
+          } else {
+            barColor = palette.accent;
+          }
 
-          const relativeColor =
-            tone === 'good'
-              ? palette.success
-              : tone === 'bad'
-                ? palette.danger
-                : palette.textInverse;
+          let relativeColor: string;
+          if (tone === 'good') {
+            relativeColor = palette.success;
+          } else if (tone === 'bad') {
+            relativeColor = palette.danger;
+          } else {
+            relativeColor = palette.textInverse;
+          }
 
           const isDiverging = mode === 'avg';
           const range = metric.teamMax - metric.teamMin;

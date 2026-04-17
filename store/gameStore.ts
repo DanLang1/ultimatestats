@@ -419,11 +419,10 @@ export const useGameStore = create<GameState>()(
             const isFloater = index >= timeouts.length;
 
             // Check if timeout is available
-            const isAvailable = isFloater
-              ? isTeam1
-                ? state.team1Floater
-                : state.team2Floater
-              : timeouts[index];
+            let isAvailable = timeouts[index];
+            if (isFloater) {
+              isAvailable = isTeam1 ? state.team1Floater : state.team2Floater;
+            }
 
             if (!isAvailable) return; // Already used - must undo to restore
 

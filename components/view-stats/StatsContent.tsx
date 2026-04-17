@@ -57,29 +57,36 @@ export default function StatsContent({
   const goalCount = events.filter((e) => e.type === 'goal' && e.team === 'team1').length;
   const topPerformers = playerStats.filter((p) => p.plusMinus > 0).slice(0, 3);
   const showOpponentName = !aggregateInfo && team2Name.trim().length > 0;
-  const summaryBadge = aggregateInfo ? (
-    <View
-      style={[
-        styles.summaryBadge,
-        { backgroundColor: palette.indigoOverlay20, borderColor: palette.accent },
-      ]}>
-      <ThemedText style={[styles.summaryBadgeText, { color: palette.accent }]}>
-        {aggregateInfo.gameCount} Game{aggregateInfo.gameCount !== 1 ? 's' : ''} Combined
-      </ThemedText>
-    </View>
-  ) : team1Score !== undefined && team2Score !== undefined ? (
-    <ScoreBadge score1={team1Score} score2={team2Score} size="large" style={styles.scoreBadge} />
-  ) : (
-    <View
-      style={[
-        styles.summaryBadge,
-        { backgroundColor: palette.indigoOverlay20, borderColor: palette.accent },
-      ]}>
-      <ThemedText style={[styles.summaryBadgeText, { color: palette.accent }]}>
-        {goalCount} Point{goalCount !== 1 ? 's' : ''}
-      </ThemedText>
-    </View>
-  );
+  let summaryBadge: React.ReactNode;
+  if (aggregateInfo) {
+    summaryBadge = (
+      <View
+        style={[
+          styles.summaryBadge,
+          { backgroundColor: palette.indigoOverlay20, borderColor: palette.accent },
+        ]}>
+        <ThemedText style={[styles.summaryBadgeText, { color: palette.accent }]}>
+          {aggregateInfo.gameCount} Game{aggregateInfo.gameCount !== 1 ? 's' : ''} Combined
+        </ThemedText>
+      </View>
+    );
+  } else if (team1Score !== undefined && team2Score !== undefined) {
+    summaryBadge = (
+      <ScoreBadge score1={team1Score} score2={team2Score} size="large" style={styles.scoreBadge} />
+    );
+  } else {
+    summaryBadge = (
+      <View
+        style={[
+          styles.summaryBadge,
+          { backgroundColor: palette.indigoOverlay20, borderColor: palette.accent },
+        ]}>
+        <ThemedText style={[styles.summaryBadgeText, { color: palette.accent }]}>
+          {goalCount} Point{goalCount !== 1 ? 's' : ''}
+        </ThemedText>
+      </View>
+    );
+  }
 
   return (
     <>

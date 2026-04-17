@@ -50,40 +50,55 @@ export function PlayerChip({
   const { mmpColor, fmpColor } = useSettingsStore();
   const styles = createStyles(sizeClass);
 
-  const activeColor =
-    matchingType === 'fmp' ? fmpColor : matchingType === 'mmp' ? mmpColor : palette.accent;
+  let activeColor: string;
+  if (matchingType === 'fmp') {
+    activeColor = fmpColor;
+  } else if (matchingType === 'mmp') {
+    activeColor = mmpColor;
+  } else {
+    activeColor = palette.accent;
+  }
 
-  const roleColor =
-    matchingType === 'fmp' ? fmpColor : matchingType === 'mmp' ? mmpColor : palette.textMuted;
-
-  const borderColor = selected
-    ? activeColor
-    : matchingType === 'mmp'
-      ? mmpColor
-      : matchingType === 'fmp'
-        ? fmpColor
-        : useModalColors
-          ? palette.overlay15
-          : palette.border;
+  let roleColor: string;
+  if (matchingType === 'fmp') {
+    roleColor = fmpColor;
+  } else if (matchingType === 'mmp') {
+    roleColor = mmpColor;
+  } else {
+    roleColor = palette.textMuted;
+  }
 
   // Text colors - use luminance-based contrast when selected, modal variants when useModalColors is true
   const selectedTextColor = getContrastingTextColor(activeColor);
 
-  const textColor = selected
-    ? selectedTextColor
-    : isActive
-      ? useModalColors
-        ? palette.modalText
-        : palette.textInverse
-      : useModalColors
-        ? palette.modalTextMuted
-        : palette.textMuted;
+  let borderColor: string;
+  if (selected) {
+    borderColor = activeColor;
+  } else if (matchingType === 'mmp') {
+    borderColor = mmpColor;
+  } else if (matchingType === 'fmp') {
+    borderColor = fmpColor;
+  } else if (useModalColors) {
+    borderColor = palette.overlay15;
+  } else {
+    borderColor = palette.border;
+  }
 
-  const subtitleColor = selected
-    ? selectedTextColor
-    : useModalColors
-      ? palette.modalTextMuted
-      : palette.textMuted;
+  let textColor: string;
+  if (selected) {
+    textColor = selectedTextColor;
+  } else if (isActive) {
+    textColor = useModalColors ? palette.modalText : palette.textInverse;
+  } else {
+    textColor = useModalColors ? palette.modalTextMuted : palette.textMuted;
+  }
+
+  let subtitleColor: string;
+  if (selected) {
+    subtitleColor = selectedTextColor;
+  } else {
+    subtitleColor = useModalColors ? palette.modalTextMuted : palette.textMuted;
+  }
 
   return (
     <Pressable

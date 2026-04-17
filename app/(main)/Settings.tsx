@@ -113,19 +113,30 @@ function SettingsContent() {
   const gameActive = useIsGameActive();
   const maxScore = Math.max(team1Score, team2Score);
   const canEditGameToInGame = gameHalf === 1 && !isSoftCap && !softCapPending;
-  const gameToMin =
-    gameActive && canEditGameToInGame ? (autoHalftimeEnabled ? 2 * maxScore + 1 : maxScore + 1) : 1;
-  const gameToSettingsHelperText = gameActive
-    ? autoHalftimeEnabled
+  let gameToMin: number;
+  if (gameActive && canEditGameToInGame) {
+    gameToMin = autoHalftimeEnabled ? 2 * maxScore + 1 : maxScore + 1;
+  } else {
+    gameToMin = 1;
+  }
+
+  let gameToSettingsHelperText: string | null;
+  if (!gameActive) {
+    gameToSettingsHelperText = null;
+  } else {
+    gameToSettingsHelperText = autoHalftimeEnabled
       ? 'Adjustable during first half'
-      : 'Adjustable until soft cap'
-    : null;
-  const gameToValidationText =
-    gameActive && canEditGameToInGame
-      ? autoHalftimeEnabled
-        ? `Must be at least ${gameToMin} to keep halftime reachable`
-        : `Must be at least ${gameToMin}`
-      : undefined;
+      : 'Adjustable until soft cap';
+  }
+
+  let gameToValidationText: string | undefined;
+  if (gameActive && canEditGameToInGame) {
+    gameToValidationText = autoHalftimeEnabled
+      ? `Must be at least ${gameToMin} to keep halftime reachable`
+      : `Must be at least ${gameToMin}`;
+  } else {
+    gameToValidationText = undefined;
+  }
   const gameToQuickOptions = gameActive ? undefined : [13, 15];
 
   const handleOrientationModeChange = (nextMode: OrientationMode) => {

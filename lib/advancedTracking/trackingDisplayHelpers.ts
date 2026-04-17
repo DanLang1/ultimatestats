@@ -223,12 +223,14 @@ export function getLastTurnoverEvent(
         : null;
 
     // drop → toPlayer (the dropper); block/stall on opp → defender (our player); everything else → thrower
-    const responsibleName =
-      result === 'drop'
-        ? getName(toPlayer)
-        : (result === 'block' || result === 'stall') && !isFocusPossession
-          ? getName(defender)
-          : getName(thrower);
+    let responsibleName;
+    if (result === 'drop') {
+      responsibleName = getName(toPlayer);
+    } else if ((result === 'block' || result === 'stall') && !isFocusPossession) {
+      responsibleName = getName(defender);
+    } else {
+      responsibleName = getName(thrower);
+    }
 
     const isFiftyFifty = result === 'drop' && (splitAttribution ?? false);
 

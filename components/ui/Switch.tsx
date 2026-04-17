@@ -31,6 +31,13 @@ export function Switch({
       ? getSizeClassValue({ small: 0.8, medium: 0.9, large: 1.0 }, sizeClass)
       : getSizeClassValue({ small: 1, medium: 1.12, large: 1.2 }, sizeClass);
 
+  let thumbColor: string;
+  if (value && !disabled) {
+    thumbColor = palette.textOnAccent;
+  } else {
+    thumbColor = palette.textMuted;
+  }
+
   return (
     <View style={[styles.container, disabled && styles.disabled]}>
       <ThemedText style={[styles.label, { color: palette.textMuted }]}>
@@ -52,9 +59,7 @@ export function Switch({
             false: palette.overlay20,
             true: disabled ? palette.textMuted : palette.accent,
           }}
-          thumbColor={
-            value ? (disabled ? palette.textMuted : palette.textOnAccent) : palette.textMuted
-          }
+          thumbColor={thumbColor}
           onValueChange={onValueChange}
           value={value}
           disabled={disabled}

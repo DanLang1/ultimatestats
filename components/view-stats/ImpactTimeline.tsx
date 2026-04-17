@@ -181,6 +181,14 @@ export default function ImpactTimeline({ data }: ImpactTimelineProps) {
   const minY = Math.min(...chartData.map((d) => d.y));
   const maxY = Math.max(...chartData.map((d) => d.y));
   const finalValue = chartData[chartData.length - 1]?.y ?? 0;
+  let finalValueColor: string;
+  if (finalValue > 0) {
+    finalValueColor = palette.success;
+  } else if (finalValue < 0) {
+    finalValueColor = palette.danger;
+  } else {
+    finalValueColor = palette.textMuted;
+  }
 
   // Calculate Y-axis domain (symmetric around 0, or at least include 0)
   const axisMin = Math.floor(Math.min(minY, 0));
@@ -370,12 +378,7 @@ export default function ImpactTimeline({ data }: ImpactTimelineProps) {
           style={[
             styles.currentValue,
             {
-              color:
-                finalValue > 0
-                  ? palette.success
-                  : finalValue < 0
-                    ? palette.danger
-                    : palette.textMuted,
+              color: finalValueColor,
             },
           ]}>
           {finalValue > 0 ? '+' : ''}

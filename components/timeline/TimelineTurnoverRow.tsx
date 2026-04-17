@@ -42,16 +42,59 @@ export default function TimelineTurnoverRow({
   const turnoverMatchingType = getPlayerMatchingType(roster, turnover.playerId);
   const turnover2MatchingType = getPlayerMatchingType(roster, turnover.player2Id ?? null);
 
-  const label =
-    turnover.type === 'block'
-      ? 'Block'
-      : turnover.type === 'drop'
-        ? 'Drop'
-        : turnover.type === 'fiftyfifty'
-          ? '50/50'
-          : 'Throwaway';
+  let label: string;
+  if (turnover.type === 'block') {
+    label = 'Block';
+  } else if (turnover.type === 'drop') {
+    label = 'Drop';
+  } else if (turnover.type === 'fiftyfifty') {
+    label = '50/50';
+  } else {
+    label = 'Throwaway';
+  }
 
   const bgColor = turnover.type === 'block' ? palette.success + '20' : palette.danger + '20';
+
+  let eventBgColor: string;
+  if (isOpponent) {
+    eventBgColor = turnover.type === 'block' ? palette.danger + '20' : palette.success + '20';
+  } else {
+    eventBgColor = bgColor;
+  }
+
+  let longPressBorderColor: string;
+  if (isOpponent) {
+    longPressBorderColor = turnover.type === 'block' ? palette.danger : palette.success;
+  } else {
+    longPressBorderColor = turnover.type === 'block' ? palette.success : palette.danger;
+  }
+
+  let displayLabel: string;
+  if (isOpponent) {
+    displayLabel = turnover.type === 'block' ? 'OPP BLOCK' : 'OPP TURN';
+  } else {
+    displayLabel = label.toUpperCase();
+  }
+
+  let playerColor: string;
+  if (turnoverMatchingType === 'mmp') {
+    playerColor = mmpColor;
+  } else if (turnoverMatchingType === 'fmp') {
+    playerColor = fmpColor;
+  } else {
+    playerColor = palette.textInverse;
+  }
+
+  let player2Color: string;
+  if (isOpponent) {
+    player2Color = palette.textMuted;
+  } else if (turnover2MatchingType === 'mmp') {
+    player2Color = mmpColor;
+  } else if (turnover2MatchingType === 'fmp') {
+    player2Color = fmpColor;
+  } else {
+    player2Color = palette.textInverse;
+  }
 
   return (
     <TimelineInteractiveRow
@@ -63,29 +106,15 @@ export default function TimelineTurnoverRow({
         style={[
           styles.eventRow,
           {
-            backgroundColor: isOpponent
-              ? turnover.type === 'block'
-                ? palette.danger + '20'
-                : palette.success + '20'
-              : bgColor,
+            backgroundColor: eventBgColor,
           },
           canLongPress && {
-            borderColor: isOpponent
-              ? turnover.type === 'block'
-                ? palette.danger
-                : palette.success
-              : turnover.type === 'block'
-                ? palette.success
-                : palette.danger,
+            borderColor: longPressBorderColor,
             borderWidth: 1,
           },
         ]}>
         <ThemedText style={[styles.eventLabel, { color: palette.textInverse }]}>
-          {isOpponent
-            ? turnover.type === 'block'
-              ? 'OPP BLOCK'
-              : 'OPP TURN'
-            : label.toUpperCase()}
+          {displayLabel}
         </ThemedText>
         {!isOpponent && (
           <>
@@ -98,12 +127,7 @@ export default function TimelineTurnoverRow({
               style={[
                 styles.eventPlayer,
                 {
-                  color:
-                    turnoverMatchingType === 'mmp'
-                      ? mmpColor
-                      : turnoverMatchingType === 'fmp'
-                        ? fmpColor
-                        : palette.textInverse,
+                  color: playerColor,
                   flexShrink: turnover.type === 'fiftyfifty' && turnoverPlayer2Name ? 1 : 0,
                   maxWidth:
                     turnover.type === 'fiftyfifty' && turnoverPlayer2Name ? '40%' : undefined,
@@ -130,13 +154,7 @@ export default function TimelineTurnoverRow({
               style={[
                 styles.eventPlayer,
                 {
-                  color: isOpponent
-                    ? palette.textMuted
-                    : turnover2MatchingType === 'mmp'
-                      ? mmpColor
-                      : turnover2MatchingType === 'fmp'
-                        ? fmpColor
-                        : palette.textInverse,
+                  color: player2Color,
                   opacity: 0.9,
                   flexShrink: 1,
                   maxWidth: '40%',

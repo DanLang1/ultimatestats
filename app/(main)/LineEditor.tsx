@@ -214,6 +214,15 @@ export default function LineEditor() {
     return minutes > 0 ? `${minutes}m ${seconds}s` : `${seconds}s`;
   };
 
+  let headerTitle: string;
+  if (isEditLineMode) {
+    headerTitle = `Edit Line · Point ${currentPoint}`;
+  } else if (lastPoint) {
+    headerTitle = `Point ${lastPoint.pointNumber}`;
+  } else {
+    headerTitle = 'Set Line';
+  }
+
   return (
     <View style={[styles.container, { backgroundColor: palette.primary }]}>
       {/* Header - Point Summary + Confirm */}
@@ -236,11 +245,7 @@ export default function LineEditor() {
           </Pressable>
           <View style={styles.headerTitleRow}>
             <ThemedText style={[styles.headerTitle, { color: palette.textInverse }]}>
-              {isEditLineMode
-                ? `Edit Line · Point ${currentPoint}`
-                : lastPoint
-                  ? `Point ${lastPoint.pointNumber}`
-                  : 'Set Line'}
+              {headerTitle}
             </ThemedText>
             {!isEditLineMode && pointOutcome && (
               <ThemedText

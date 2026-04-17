@@ -102,16 +102,17 @@ export default function GameSelectorModal() {
             <Pressable
               key={g.id}
               onPress={() => handleSelectGame(g.id)}
-              style={({ pressed }) => [
-                styles.gameRow,
-                {
-                  backgroundColor: isSelected
-                    ? palette.accentOverlay10
-                    : pressed
-                      ? palette.overlay05
-                      : 'transparent',
-                },
-              ]}>
+              style={({ pressed }) => {
+                let backgroundColor: string;
+                if (isSelected) {
+                  backgroundColor = palette.accentOverlay10;
+                } else if (pressed) {
+                  backgroundColor = palette.overlay05;
+                } else {
+                  backgroundColor = 'transparent';
+                }
+                return [styles.gameRow, { backgroundColor }];
+              }}>
               {/* Selected indicator */}
               <View
                 style={[
