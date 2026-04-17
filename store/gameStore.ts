@@ -301,10 +301,8 @@ export const useGameStore = create<GameState>()(
               return;
             }
 
-            const lastEvent = state.events[state.events.length - 1] as Extract<
-              (typeof state.events)[number],
-              { type: 'goal' }
-            >;
+            const lastEvent = state.events[state.events.length - 1];
+            if (lastEvent?.type !== 'goal') return;
             lastEvent.triggeredHalftime = true;
             applyHalftimeTransition(state);
             didTrigger = true;

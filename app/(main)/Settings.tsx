@@ -337,7 +337,7 @@ function SettingsContent() {
           { value: 'dark', label: 'Dark' },
         ]}
         value={themeMode}
-        onChange={(next) => setThemeMode(next as 'light' | 'dark')}
+        onChange={setThemeMode}
         sizeClass={sizeClass}
       />
       <SegmentedControl
@@ -348,7 +348,7 @@ function SettingsContent() {
           { value: 'landscape', label: 'Landscape' },
         ]}
         value={orientationMode}
-        onChange={(next) => handleOrientationModeChange(next as OrientationMode)}
+        onChange={handleOrientationModeChange}
         sizeClass={sizeClass}
       />
       {isAndroidLargeScreen && (
@@ -682,7 +682,7 @@ function SettingsContent() {
                       { value: 'points', label: 'Points Played' },
                     ]}
                     value={linePlayerSortOrder}
-                    onChange={(val) => setLinePlayerSortOrder(val as 'alpha' | 'points')}
+                    onChange={setLinePlayerSortOrder}
                     sizeClass={sizeClass}
                   />
                 </View>

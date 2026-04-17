@@ -279,7 +279,7 @@ export default function AdvancedPreGameConfirm() {
             { value: 'them', label: team2Name || 'Them' },
           ]}
           value={receivingTeam}
-          onChange={(val) => setReceivingTeam(val as 'us' | 'them')}
+          onChange={setReceivingTeam}
           showRequired={receivingTeam === ''}
           highlightBorder={receivingTeam === ''}
           highlightColor={palette.warning}

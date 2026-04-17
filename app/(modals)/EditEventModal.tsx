@@ -1,3 +1,4 @@
+import { ThemedText } from '@/components/ThemedText';
 import { useAlert } from '@/components/ui/AlertProvider';
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { PlayerChip } from '@/components/ui/PlayerChip';
@@ -7,15 +8,37 @@ import { getAllPlayersByPoint } from '@/lib/lineUtils';
 import { getPlayerName } from '@/lib/playerUtils';
 import { useGameStore } from '@/store/gameStore';
 import { TurnoverType } from '@/store/gameStore.types';
+import { Fonts } from '@/theme/theme';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import React, { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
-import { ThemedText } from '@/components/ThemedText';
-import { Fonts } from '@/theme/theme';
 
 // Extended type to include opponent turnover and opponent block for editing
 type EditableTurnoverType = TurnoverType | 'opponentTurn' | 'opponentBlock';
+
+function parseEventType(param: string | undefined): 'turnover' | 'goal' | undefined {
+  if (param === 'turnover' || param === 'goal') return param;
+  return undefined;
+}
+
+function parseSubtype(param: string | undefined): EditableTurnoverType {
+  if (
+    param === 'throwaway' ||
+    param === 'drop' ||
+    param === 'fiftyfifty' ||
+    param === 'block' ||
+    param === 'opponentTurn' ||
+    param === 'opponentBlock'
+  ) {
+    return param;
+  }
+  return 'throwaway';
+}
+
+function parseTeam(param: string | undefined): 'team1' | 'team2' {
+  return param === 'team2' ? 'team2' : 'team1';
+}
 
 const ALL_TURNOVER_TYPES: {
   value: EditableTurnoverType;
@@ -70,13 +93,13 @@ export default function EditEventModal() {
   const eventIndex = parseInt(params.eventIndex ?? '-1', 10);
 
   // Use params for event type since saved games don't have events in store
-  const eventType = params.eventType as 'turnover' | 'goal' | undefined;
+  const eventType = parseEventType(params.eventType);
 
   // Map stored subtype to editable subtype based on team
   // Opponent events are stored with regular subtypes but displayed as opponentBlock/opponentTurn
   const getInitialSubtype = (): EditableTurnoverType => {
-    const storedSubtype = params.subtype as EditableTurnoverType;
-    const team = params.originalTeam as 'team1' | 'team2';
+    const storedSubtype = parseSubtype(params.subtype);
+    const team = parseTeam(params.originalTeam);
 
     if (team === 'team2') {
       // Opponent event - map to opponent-specific types
@@ -114,8 +137,8 @@ export default function EditEventModal() {
       ? sortedRoster
       : sortedRoster.filter((player) => eligiblePlayerIds.has(player.id));
 
-  const originalSubtype = params.subtype as EditableTurnoverType;
-  const originalTeam = params.originalTeam as 'team1' | 'team2';
+  const originalSubtype = parseSubtype(params.subtype);
+  const originalTeam = parseTeam(params.originalTeam);
   const isOriginalOpponentEvent = originalTeam === 'team2';
 
   // OPP BLOCK = opponent blocked us (team2, subtype block) - we lost the disc via their block
@@ -187,7 +210,7 @@ export default function EditEventModal() {
       } else if (selectedSubtype === 'opponentBlock') {
         actualSubtype = 'block';
       } else {
-        actualSubtype = selectedSubtype as TurnoverType;
+        actualSubtype = selectedSubtype;
       }
 
       const updates = {

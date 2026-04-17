@@ -17,6 +17,17 @@ import type {
   PossessionAction,
   TrackedPoint,
 } from './types';
+
+const TURNOVER_RESULTS: readonly AnalyticsTurnoverType[] = [
+  'drop',
+  'throwaway',
+  'stall',
+  'block',
+  'callahan',
+];
+function isTurnoverResult(r: string): r is AnalyticsTurnoverType {
+  return (TURNOVER_RESULTS as readonly string[]).includes(r);
+}
 export const UNKNOWN_PARTICIPANT_ID = 'UNKNOWN_PARTICIPANT';
 
 // ── Small utilities ───────────────────────────────────────────────────────────
@@ -355,11 +366,9 @@ function compilePossessionWithActions(
   if (possLastAction.kind === 'throw') {
     if (possLastAction.result === 'goal') {
       possResult = 'scored';
-    } else if (
-      ['drop', 'throwaway', 'stall', 'block', 'callahan'].includes(possLastAction.result)
-    ) {
+    } else if (isTurnoverResult(possLastAction.result)) {
       possResult = 'turned_over';
-      turnoverType = possLastAction.result as AnalyticsTurnoverType;
+      turnoverType = possLastAction.result;
     }
   }
   if (possResult === null) {

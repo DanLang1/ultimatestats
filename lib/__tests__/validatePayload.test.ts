@@ -194,7 +194,7 @@ describe('validatePayload', () => {
 
     it('throws for non-object entry in array', () => {
       expect(() => validatePayload(makeGamesPayload({ data: ['not-an-object'] }))).toThrow(
-        'not an object',
+        'missing data',
       );
     });
   });

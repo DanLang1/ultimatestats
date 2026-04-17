@@ -33,7 +33,11 @@ export async function fetchShowcasePayload(id: string): Promise<ShowcasePayload>
     throw new Error(`Failed to fetch showcase payload: ${error.message}`);
   }
 
-  return validatePayload(data.payload) as ShowcasePayload;
+  const result = validatePayload(data.payload);
+  if (result.type !== 'game') {
+    throw new Error('Expected game payload in showcase');
+  }
+  return result;
 }
 
 export function incrementShowcaseImportCount(id: string): void {

@@ -20,7 +20,7 @@ export function getExpectedRatio(pointNumber: number, firstPointRatio: GenderRat
  */
 export function getSequenceNumber(pointNumber: number): 1 | 2 {
   if (pointNumber === 1) return 2;
-  return ((pointNumber % 2) + 1) as 1 | 2;
+  return pointNumber % 2 === 0 ? 1 : 2;
 }
 
 export function formatRatio(ratio: GenderRatio, sequenceNumber: 1 | 2): string {

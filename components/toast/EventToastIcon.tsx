@@ -17,11 +17,5 @@ export default function EventToastIcon({ icon, color }: EventToastIconProps) {
     return <FontAwesome5 name={icon.name} size={fontAwesomeSize} color={color} />;
   }
 
-  return (
-    <MaterialCommunityIcons
-      name={icon.name as keyof typeof MaterialCommunityIcons.glyphMap}
-      size={materialSize}
-      color={color}
-    />
-  );
+  return <MaterialCommunityIcons name={icon.name} size={materialSize} color={color} />;
 }

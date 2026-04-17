@@ -225,7 +225,7 @@ export default function ImportTeamScreen() {
               label="NAME FORMAT"
               options={NAME_FORMAT_OPTIONS}
               value={nameFormat}
-              onChange={(next) => setNameFormat(next as NameFormatOption)}
+              onChange={setNameFormat}
               sizeClass={sizeClass}
             />
           </View>

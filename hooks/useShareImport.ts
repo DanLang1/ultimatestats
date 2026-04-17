@@ -5,15 +5,15 @@ import { useGameStore } from '@/store/gameStore';
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 
+type GamePayload = Extract<SharedPayload, { type: 'game' }>;
+type TeamPayload = Extract<SharedPayload, { type: 'team' }>;
+type GamesPayload = Extract<SharedPayload, { type: 'games' }>;
+
 export type ShareImportState =
-  | { status: 'preview'; payload: SharedPayload; isUpdate: boolean }
-  | {
-      status: 'preview-games';
-      payload: SharedPayload;
-      games: SavedGame[];
-      updateCount: number;
-    }
-  | { status: 'team-exists'; payload: SharedPayload; existingTeam: SavedTeam }
+  | { status: 'preview-game'; payload: GamePayload; isUpdate: boolean }
+  | { status: 'preview-team'; payload: TeamPayload }
+  | { status: 'preview-games'; payload: GamesPayload; games: SavedGame[]; updateCount: number }
+  | { status: 'team-exists'; payload: TeamPayload; existingTeam: SavedTeam }
   | { status: 'error'; message: string }
   | { status: 'done'; type: 'game'; gameId: string }
   | { status: 'done'; type: 'team' }
@@ -25,27 +25,21 @@ function deriveImportState(
   savedTeams: SavedTeam[],
 ): ShareImportState {
   if (payload.type === 'game') {
-    const game = payload.data as SavedGame;
-    const isUpdate = savedGames.some((g) => g.id === game.id);
-    return { status: 'preview', payload, isUpdate };
+    const isUpdate = savedGames.some((g) => g.id === payload.data.id);
+    return { status: 'preview-game', payload, isUpdate };
   }
 
   if (payload.type === 'team') {
-    const team = payload.data as SavedTeam;
-    const existing = savedTeams.find((t) => t.id === team.id);
+    const existing = savedTeams.find((t) => t.id === payload.data.id);
     if (existing) {
       return { status: 'team-exists', payload, existingTeam: existing };
     }
+    return { status: 'preview-team', payload };
   }
 
-  if (payload.type === 'games') {
-    const allGames = payload.data as SavedGame[];
-    const existingIds = new Set(savedGames.map((g) => g.id));
-    const updateCount = allGames.filter((g) => existingIds.has(g.id)).length;
-    return { status: 'preview-games', payload, games: allGames, updateCount };
-  }
-
-  return { status: 'preview', payload, isUpdate: false };
+  const existingIds = new Set(savedGames.map((g) => g.id));
+  const updateCount = payload.data.filter((g) => existingIds.has(g.id)).length;
+  return { status: 'preview-games', payload, games: payload.data, updateCount };
 }
 
 export function useShareImport(shareId: string | undefined) {

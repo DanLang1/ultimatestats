@@ -1,10 +1,13 @@
 import type { LinePreset, SavedGame, SavedTeam } from '@/lib/storage/types';
 
-export interface SharedPayload {
-  type: 'game' | 'team' | 'games';
+type SharedPayloadBase = {
   appVersion: string;
   schemaVersion: number;
   sharedAt: number;
-  data: SavedGame | SavedTeam | SavedGame[];
   presets?: LinePreset[];
-}
+};
+
+export type SharedPayload =
+  | (SharedPayloadBase & { type: 'game'; data: SavedGame })
+  | (SharedPayloadBase & { type: 'team'; data: SavedTeam })
+  | (SharedPayloadBase & { type: 'games'; data: SavedGame[] });

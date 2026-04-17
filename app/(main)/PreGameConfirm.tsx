@@ -417,7 +417,7 @@ export default function PreGameConfirm() {
                   ]}
                   value={selectedTeam}
                   onChange={(val) => {
-                    setSelectedTeam(val as 'team1' | 'team2');
+                    setSelectedTeam(val);
                     setTeamOrbitRunKey((prev) => prev + 1);
                   }}
                   showRequired={needPossession && selectedTeam === ''}
@@ -452,7 +452,7 @@ export default function PreGameConfirm() {
                   ]}
                   value={selectedRatio}
                   onChange={(val) => {
-                    setSelectedRatio(val as GenderRatio);
+                    setSelectedRatio(val);
                     setRatioOrbitRunKey((prev) => prev + 1);
                   }}
                   showRequired={needRatio && selectedRatio === ''}

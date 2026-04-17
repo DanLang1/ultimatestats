@@ -23,7 +23,7 @@ function isImportApiErrorPayload(payload: ImportApiPayload): payload is ImportAp
 
 function parseApiPayload(responseText: string): ImportApiPayload {
   try {
-    return JSON.parse(responseText) as ImportApiPayload;
+    return JSON.parse(responseText);
   } catch {
     return responseText;
   }

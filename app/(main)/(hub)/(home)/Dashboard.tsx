@@ -389,7 +389,8 @@ export default function DashboardScreen() {
 
             <Pressable
               onPress={() => {
-                router.push('/this-route-does-not-exist' as never);
+                // dev testing, typecast fine so we can throw 404 manually
+                router.push('/this-route-does-not-exist' as never); // eslint-disable-line
               }}
               style={({ pressed }) => [
                 styles.discordBanner,

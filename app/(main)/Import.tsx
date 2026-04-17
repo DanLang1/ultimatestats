@@ -1,7 +1,9 @@
+import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { ScoreBadge } from '@/components/ui/ScoreBadge';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { useIsGameActive } from '@/hooks/useIsGameActive';
 import { useShareImport } from '@/hooks/useShareImport';
 import { resolveTeamName } from '@/lib/playerUtils';
 import { getGameDisplayTimestamp } from '@/lib/savedGameUtils';
@@ -10,13 +12,15 @@ import { formatDate } from '@/lib/statsUtils';
 import { SavedGame, SavedTeam } from '@/lib/storage';
 import { useGameStore } from '@/store/gameStore';
 import { useLinePresetsStore } from '@/store/linePresetsStore';
+import { Fonts } from '@/theme/theme';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import React from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
-import { ThemedText } from '@/components/ThemedText';
-import { Fonts } from '@/theme/theme';
 import Animated, { FadeIn } from 'react-native-reanimated';
+
+type GamePayload = Extract<SharedPayload, { type: 'game' }>;
+type TeamPayload = Extract<SharedPayload, { type: 'team' }>;
 
 export default function ImportScreen() {
   const { shareId } = useLocalSearchParams<{ shareId: string }>();
@@ -25,6 +29,7 @@ export default function ImportScreen() {
   const styles = createStyles(sizeClass);
   const { savedTeams, importGame, importTeam, loadTeam } = useGameStore();
   const { isPending, importState, setImportState } = useShareImport(shareId);
+  const gameActive = useIsGameActive();
 
   if (!shareId) {
     return null;
@@ -44,10 +49,9 @@ export default function ImportScreen() {
     router.push('/EditRoster');
   };
 
-  const handleImportGame = async (payload: SharedPayload, isUpdate: boolean) => {
-    const game = payload.data as SavedGame;
-    setImportState({ status: 'done', type: 'game', gameId: game.id });
-    await importGame({ ...game, importedAt: Date.now() });
+  const handleImportGame = async (payload: GamePayload, isUpdate: boolean) => {
+    setImportState({ status: 'done', type: 'game', gameId: payload.data.id });
+    await importGame({ ...payload.data, importedAt: Date.now() });
   };
 
   const handleImportGames = async (games: SavedGame[]) => {
@@ -62,14 +66,15 @@ export default function ImportScreen() {
     router.push('/SavedGameStats');
   };
 
-  const handleImportTeam = async (payload: SharedPayload) => {
-    const team = payload.data as SavedTeam;
+  const handleImportTeam = async (payload: TeamPayload) => {
     setImportState({ status: 'done', type: 'team' });
-    await importTeam(team);
+    await importTeam(payload.data);
     if (payload.presets?.length) {
-      useLinePresetsStore.getState().importPresetsForTeam(team.id, payload.presets);
+      useLinePresetsStore.getState().importPresetsForTeam(payload.data.id, payload.presets);
     }
-    loadTeam(team.id);
+    if (!gameActive) {
+      loadTeam(payload.data.id);
+    }
   };
 
   return (
@@ -85,7 +90,7 @@ export default function ImportScreen() {
             <ErrorContent palette={palette} message={importState.message} onDismiss={handleDone} />
           )}
 
-          {importState?.status === 'preview' && importState.payload.type === 'game' && (
+          {importState?.status === 'preview-game' && (
             <GamePreviewContent
               palette={palette}
               payload={importState.payload}
@@ -107,7 +112,7 @@ export default function ImportScreen() {
             />
           )}
 
-          {importState?.status === 'preview' && importState.payload.type === 'team' && (
+          {importState?.status === 'preview-team' && (
             <TeamPreviewContent
               palette={palette}
               payload={importState.payload}
@@ -210,14 +215,14 @@ function GamePreviewContent({
   onCancel,
 }: {
   palette: ReturnType<typeof useTheme>['palette'];
-  payload: SharedPayload;
+  payload: GamePayload;
   savedTeams: SavedTeam[];
   isUpdate: boolean;
   onImport: () => void;
   onCancel: () => void;
 }) {
   const { styles, metrics } = useImportUi();
-  const game = payload.data as SavedGame;
+  const game = payload.data;
   const teamName = resolveTeamName(game.team1.id, game.team1.name, savedTeams);
   const goalCount = game.events.filter((e) => e.type === 'goal').length;
 
@@ -346,12 +351,12 @@ function TeamPreviewContent({
   onCancel,
 }: {
   palette: ReturnType<typeof useTheme>['palette'];
-  payload: SharedPayload;
+  payload: TeamPayload;
   onImport: () => void;
   onCancel: () => void;
 }) {
   const { styles, metrics } = useImportUi();
-  const team = payload.data as SavedTeam;
+  const team = payload.data;
   const playerCount = team.roster.length;
   const presetCount = payload.presets?.length ?? 0;
 
@@ -398,13 +403,13 @@ function TeamExistsContent({
   onKeep,
 }: {
   palette: ReturnType<typeof useTheme>['palette'];
-  payload: SharedPayload;
+  payload: TeamPayload;
   existingTeam: SavedTeam;
   onUpdate: () => void;
   onKeep: () => void;
 }) {
   const { styles, metrics } = useImportUi();
-  const incomingTeam = payload.data as SavedTeam;
+  const incomingTeam = payload.data;
 
   return (
     <Animated.View entering={FadeIn.duration(200)} style={styles.content}>

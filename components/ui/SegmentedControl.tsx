@@ -11,17 +11,17 @@ import { ThemedText } from '@/components/ThemedText';
 import { Fonts } from '@/theme/theme';
 import Animated from 'react-native-reanimated';
 
-interface SegmentOption {
-  value: string;
+interface SegmentOption<T extends string = string> {
+  value: T;
   label: string;
   activeColor?: string;
   activeTextColor?: string;
 }
 
-interface SegmentedControlProps {
-  options: SegmentOption[];
+interface SegmentedControlProps<T extends string = string> {
+  options: SegmentOption<T>[];
   value: string;
-  onChange: (value: string) => void;
+  onChange: (value: T) => void;
   label?: string;
   disabled?: boolean;
   attentionColor?: string;
@@ -34,7 +34,7 @@ interface SegmentedControlProps {
   sizeClass?: SizeClass;
 }
 
-export function SegmentedControl({
+export function SegmentedControl<T extends string = string>({
   options,
   value,
   onChange,
@@ -48,7 +48,7 @@ export function SegmentedControl({
   highlightRightColor,
   attentionRunKey,
   sizeClass = 'small',
-}: SegmentedControlProps) {
+}: SegmentedControlProps<T>) {
   const { palette, themeMode } = useTheme();
   const styles = createStyles(sizeClass);
   const metrics = createMetrics(sizeClass);

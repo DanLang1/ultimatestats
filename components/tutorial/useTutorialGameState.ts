@@ -1,6 +1,7 @@
 import { EventToastData } from '@/components/toast/EventToast';
 import { useCountdown } from '@/hooks/useCountdown';
 import { EVENT_RECORDED_TOAST_DURATION_MS } from '@/lib/constants';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useEffect, useRef, useState } from 'react';
 
 type TutorialAction =
@@ -125,7 +126,11 @@ export default function useTutorialGameState(onComplete?: () => void) {
     }
   };
 
-  const showToast = (message: string, tone: EventToastData['tone'], iconName: string) => {
+  const showToast = (
+    message: string,
+    tone: EventToastData['tone'],
+    iconName: keyof typeof MaterialCommunityIcons.glyphMap,
+  ) => {
     if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
     setToast({ visible: true, message, tone, icon: { library: 'material', name: iconName } });
     setToastInstanceId((prev) => prev + 1);
