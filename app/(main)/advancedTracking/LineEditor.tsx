@@ -6,7 +6,7 @@ import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { getOtherSideId } from '@/lib/advancedTracking/trackingUtils';
 import { getLoadLineButtonState } from '@/lib/lineEditorUtils';
 import { Player } from '@/lib/storage/types';
-import { useAdvancedTrackingStore } from '@/store/advancedTrackingStore';
+import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { useGameStore } from '@/store/gameStore';
 import { useLinePresetsStore } from '@/store/linePresetsStore';
 import { Fonts } from '@/theme/theme';
@@ -14,14 +14,14 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router, Stack } from 'expo-router';
 import React, { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
-import { FOCUS_SIDE_ID, OPP_SIDE_ID } from './PreGameConfirm';
+import { FOCUS_SIDE_ID } from './PreGameConfirm';
 
 export default function AdvancedLineEditor() {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
   const styles = createStyles(sizeClass);
 
-  const { currentGameId, savedGames, recordPull } = useAdvancedTrackingStore();
+  const { currentGameId, savedGames } = useAdvancedTrackingStore();
   const currentTeamId = useGameStore((s) => s.currentTeam?.id);
 
   const game = savedGames.find((g) => g.id === currentGameId) ?? null;
@@ -64,20 +64,17 @@ export default function AdvancedLineEditor() {
   };
 
   const handleConfirm = () => {
-    if (!game) return;
+    if (!game || !canConfirm) return;
 
     const pullerSideId = getOtherSideId(game, game.initialReceivingSideId);
-
-    recordPull({
-      lines: [
-        { sideId: FOCUS_SIDE_ID, participantIds: selectedIds },
-        { sideId: OPP_SIDE_ID, participantIds: [] },
-      ],
-      puller: pullerSideId === FOCUS_SIDE_ID ? { refType: 'unknown' } : { refType: 'untracked' },
-      result: 'caught',
+    const isOurPull = pullerSideId === FOCUS_SIDE_ID;
+    router.push({
+      pathname: '/advancedTracking/pulltracking',
+      params: {
+        isOurPull: String(isOurPull),
+        lineParticipantIds: JSON.stringify(selectedIds),
+      },
     });
-
-    router.replace('/advanced/Tracker');
   };
 
   const { active: loadLineButtonActive, label: loadLineButtonLabel } = getLoadLineButtonState({

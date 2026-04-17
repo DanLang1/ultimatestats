@@ -61,7 +61,7 @@ it('scenario: clean hold — Zoo receive, 3 passes, goal', () => {
                 receivingSideId: ZOO,
                 puller: untracked,
                 receiver: august,
-                result: 'caught',
+                result: 'inbound',
               },
               {
                 id: 'a2',
@@ -141,7 +141,7 @@ it('scenario: dirty hold — Zoo receive, throwaway, block, Zoo scores', () => {
                 receivingSideId: ZOO,
                 puller: untracked,
                 receiver: august,
-                result: 'caught',
+                result: 'inbound',
               },
               {
                 id: 'b2',
@@ -262,7 +262,7 @@ it('scenario: break — Zoo pull, Rivals possess, Meves block, Zoo scores', () =
                 receivingSideId: RIVALS,
                 puller: august,
                 receiver: untracked,
-                result: 'caught',
+                result: 'inbound',
               },
               {
                 id: 'c2',
@@ -364,7 +364,7 @@ it('scenario: callahan — Zoo D, Rivals in endzone, Max catches Callahan', () =
                 receivingSideId: RIVALS,
                 puller: joah,
                 receiver: untracked,
-                result: 'caught',
+                result: 'inbound',
               },
               {
                 id: 'd2',
@@ -478,7 +478,7 @@ it('scenario: full game — both teams tracked, every field', () => {
                 receivingSideId: ZOO,
                 puller: ryan,
                 receiver: meves,
-                result: 'caught',
+                result: 'inbound',
                 hangTimeMs: 2100,
               },
               {
@@ -532,7 +532,7 @@ it('scenario: full game — both teams tracked, every field', () => {
                 receivingSideId: RIVALS,
                 puller: august,
                 receiver: ryan,
-                result: 'caught',
+                result: 'inbound',
                 hangTimeMs: 1950,
               },
               {
@@ -644,7 +644,7 @@ it('scenario: full game — both teams tracked, every field', () => {
                 receivingSideId: RIVALS,
                 puller: joah,
                 receiver: sam,
-                result: 'caught',
+                result: 'inbound',
                 hangTimeMs: 2300,
               },
               {
@@ -720,7 +720,7 @@ it('scenario: full game — both teams tracked, every field', () => {
                 receivingSideId: RIVALS,
                 puller: august,
                 receiver: taylor,
-                result: 'caught',
+                result: 'inbound',
                 hangTimeMs: 2050,
               },
               {
@@ -788,7 +788,7 @@ test('scenario: block — disc hits ground, different player picks up', () => {
                 receivingSideId: RIVALS,
                 puller: august,
                 receiver: untracked,
-                result: 'caught',
+                result: 'inbound',
               },
               {
                 id: 'e2',
@@ -840,13 +840,13 @@ test('scenario: block — disc hits ground, different player picks up', () => {
   console.log(JSON.stringify(game));
 });
 
-// ── Scenario 7: Interception — defender catches in air, throws immediately ────
-// Zoo pulls. Rivals possess. Meves intercepts (catches in air).
+// ── Scenario 7: Clean-catch block — defender catches in air, throws immediately ────
+// Zoo pulls. Rivals possess. Meves blocks (catches in air — no separate "interception" result).
 // Meves immediately becomes the thrower — no disc_gain needed.
 
-test('scenario: interception — defender catches in air, becomes thrower', () => {
+test('scenario: block — defender gets block, picks up and becomes thrower', () => {
   const game: AdvancedTrackedGame = {
-    id: 'game-interception',
+    id: 'game-block',
     schemaVersion: 1,
     createdAt: 0,
     updatedAt: 0,
@@ -876,19 +876,19 @@ test('scenario: interception — defender catches in air, becomes thrower', () =
                 receivingSideId: RIVALS,
                 puller: august,
                 receiver: untracked,
-                result: 'caught',
+                result: 'inbound',
               },
               {
                 id: 'f2',
                 kind: 'throw',
                 sideId: RIVALS,
                 thrower: untracked,
-                result: 'interception',
+                result: 'block',
                 defender: meves,
               },
             ],
           },
-          // Meves caught it in the air — she IS the first thrower, no disc_gain needed
+          // Meves picks it up — she IS the first thrower
           {
             id: 'pos1b',
             sideId: ZOO,
@@ -918,7 +918,7 @@ test('scenario: interception — defender catches in air, becomes thrower', () =
 
   console.log('\n\n=== FORMATTED ===\n');
   console.log(formatGame(game));
-  console.log('\n=== RAW JSON: Scenario 7 — Interception, defender becomes thrower ===\n');
+  console.log('\n=== RAW JSON: Scenario 7 — Block, defender picks up and becomes thrower ===\n');
   console.log(JSON.stringify(game));
 });
 
@@ -969,7 +969,7 @@ test('scenario: injury sub — player off disc, play resumes in same possession'
                 receivingSideId: ZOO,
                 puller: untracked,
                 receiver: august,
-                result: 'caught',
+                result: 'inbound',
               },
               {
                 id: 'g2',
@@ -1057,7 +1057,7 @@ test('scenario: injury sub — player with disc injured, new player takes posses
                 receivingSideId: ZOO,
                 puller: untracked,
                 receiver: august,
-                result: 'caught',
+                result: 'inbound',
               },
               {
                 id: 'h2',
@@ -1144,7 +1144,7 @@ test('scenario: stall — count hits 10, disc turns over at the spot', () => {
                 receivingSideId: ZOO,
                 puller: untracked,
                 receiver: august,
-                result: 'caught',
+                result: 'inbound',
               },
               {
                 id: 's2',
@@ -1196,10 +1196,10 @@ test('scenario: stall — count hits 10, disc turns over at the spot', () => {
 });
 
 // ── Scenario 11: OB pull ─────────────────────────────────────────────────────
-// Zoo pulls. Pull flies directly OB (ob_pull). Rivals spot the disc and pick up.
+// Zoo pulls. Pull flies directly OB. Rivals spot the disc and pick up.
 // Also covers the bricked case — both result in pull_pickup.
 
-test('scenario: ob_pull — pull flies OB, receiving team spots and picks up', () => {
+test('scenario: ob pull — pull flies OB, receiving team spots and picks up', () => {
   const game: AdvancedTrackedGame = {
     id: 'game-ob-pull',
     schemaVersion: 1,
@@ -1231,7 +1231,7 @@ test('scenario: ob_pull — pull flies OB, receiving team spots and picks up', (
                 sideId: ZOO,
                 receivingSideId: RIVALS,
                 puller: august,
-                result: 'ob_pull',
+                result: 'ob',
               },
               {
                 id: 'o2',
@@ -1329,7 +1329,7 @@ test('scenario: gender ratio — mixed game, fmp then mmp point', () => {
                 receivingSideId: ZOO,
                 puller: untracked,
                 receiver: august,
-                result: 'caught',
+                result: 'inbound',
               },
               {
                 id: 'r2',
@@ -1365,7 +1365,7 @@ test('scenario: gender ratio — mixed game, fmp then mmp point', () => {
                 receivingSideId: ZOO,
                 puller: untracked,
                 receiver: joah,
-                result: 'caught',
+                result: 'inbound',
               },
               {
                 id: 'r4',

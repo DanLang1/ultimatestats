@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { buildAnalyticsGame } from '@/lib/advancedTracking/buildAnalyticsGame';
 import { getCurrentPoint } from '@/lib/advancedTracking/trackingUtils';
 import { AdvancedTrackedGame } from '@/lib/advancedTracking/types';
-import { useAdvancedTrackingStore } from '../advancedTrackingStore';
+import { useAdvancedTrackingStore } from '../advancedTracking/trackingStore';
 
 jest.mock('@react-native-async-storage/async-storage', () => ({
   getItem: jest.fn(),
@@ -111,7 +111,7 @@ describe('advancedTrackingStore', () => {
       lines: homeLines,
       puller: untracked,
       receiver: august,
-      result: 'caught',
+      result: 'inbound',
     });
 
     const game = getCurrentGame() as AdvancedTrackedGame;
@@ -129,7 +129,7 @@ describe('advancedTrackingStore', () => {
       lines: homeLines,
       puller: untracked,
       receiver: august,
-      result: 'caught',
+      result: 'inbound',
     });
     useAdvancedTrackingStore.getState().recordThrow({
       thrower: august,
@@ -156,7 +156,7 @@ describe('advancedTrackingStore', () => {
       lines: homeLinesAugust,
       puller: untracked,
       receiver: august,
-      result: 'caught',
+      result: 'inbound',
     });
     useAdvancedTrackingStore.getState().recordThrow({ thrower: august, result: 'throwaway' });
     useAdvancedTrackingStore.getState().recordPickup({ sideId: awaySideId, player: untracked });
@@ -176,7 +176,7 @@ describe('advancedTrackingStore', () => {
       lines: homeLinesAugust,
       puller: untracked,
       receiver: august,
-      result: 'caught',
+      result: 'inbound',
     });
     useAdvancedTrackingStore.getState().recordThrow({ thrower: august, result: 'throwaway' });
     useAdvancedTrackingStore.getState().recordPickup({ sideId: awaySideId, player: untracked });
@@ -196,7 +196,7 @@ describe('advancedTrackingStore', () => {
       lines: homeLinesAugust,
       puller: untracked,
       receiver: august,
-      result: 'caught',
+      result: 'inbound',
     });
 
     expect(getCurrentGame()?.points).toHaveLength(1);
@@ -218,7 +218,7 @@ describe('advancedTrackingStore', () => {
       lines: point1Lines,
       puller: untracked,
       receiver: august,
-      result: 'caught',
+      result: 'inbound',
     });
     useAdvancedTrackingStore
       .getState()
@@ -228,7 +228,7 @@ describe('advancedTrackingStore', () => {
     useAdvancedTrackingStore.getState().recordPull({
       lines: point2Lines,
       puller: untracked,
-      result: 'caught',
+      result: 'inbound',
     });
 
     expect(getCurrentGame()?.points).toHaveLength(2);
@@ -303,7 +303,7 @@ describe('advancedTrackingStore', () => {
       lines: homeLinesAugust,
       puller: untracked,
       receiver: august,
-      result: 'caught',
+      result: 'inbound',
     });
     useAdvancedTrackingStore
       .getState()
@@ -324,7 +324,7 @@ describe('advancedTrackingStore', () => {
       lines: homeLinesAugust,
       puller: untracked,
       receiver: august,
-      result: 'caught',
+      result: 'inbound',
     });
     useAdvancedTrackingStore
       .getState()
@@ -347,7 +347,7 @@ describe('advancedTrackingStore', () => {
         lines: homeLinesAugust,
         puller: untracked,
         receiver: august,
-        result: 'caught',
+        result: 'inbound',
       });
       useAdvancedTrackingStore
         .getState()
@@ -359,7 +359,7 @@ describe('advancedTrackingStore', () => {
         lines: homeLinesAugust,
         puller: august,
         receiver: untracked,
-        result: 'caught',
+        result: 'inbound',
       });
       useAdvancedTrackingStore
         .getState()
@@ -408,7 +408,7 @@ describe('advancedTrackingStore', () => {
       lines: homeLinesAugust,
       puller: august,
       receiver: untracked,
-      result: 'caught',
+      result: 'inbound',
     });
 
     game = getCurrentGame() as AdvancedTrackedGame;
@@ -421,6 +421,103 @@ describe('advancedTrackingStore', () => {
     });
   });
 
+  describe('halftime disabled (halftimeEnabled: false)', () => {
+    function createGameNoHalftime(gameTo = 15): string {
+      return useAdvancedTrackingStore.getState().createGame({
+        focusSideId: homeSideId,
+        initialReceivingSideId: homeSideId,
+        sides: [
+          { id: homeSideId, label: 'Home', trackingMode: 'full-roster' },
+          { id: awaySideId, label: 'Away', trackingMode: 'anonymous' },
+        ],
+        participants: [
+          { id: august.participantId, name: 'August' },
+          { id: meves.participantId, name: 'Meves' },
+        ],
+        format: { gameTo, halftimeEnabled: false },
+      });
+    }
+
+    it('does not set halftimeAt on the stored game format', () => {
+      createGameNoHalftime();
+      const { savedGames } = useAdvancedTrackingStore.getState();
+      expect(savedGames[0].settings.format?.halftimeAt).toBeUndefined();
+    });
+
+    it('does not derive a halftime transition when a side reaches the would-be halftime score', () => {
+      createGameNoHalftime(2); // gameTo 2 → would-be halftimeAt 1
+
+      useAdvancedTrackingStore.getState().recordPull({
+        lines: homeLinesAugust,
+        puller: untracked,
+        receiver: august,
+        result: 'inbound',
+      });
+      useAdvancedTrackingStore
+        .getState()
+        .recordThrow({ thrower: august, result: 'goal', toPlayer: meves });
+
+      const game = getCurrentGame() as AdvancedTrackedGame;
+      expect(game.gameTransitions).toBeUndefined();
+    });
+
+    it('keeps half: 1 for all points in analytics when halftime is disabled', () => {
+      createGameNoHalftime(2);
+
+      const scoreHomePoint = () => {
+        useAdvancedTrackingStore.getState().recordPull({
+          lines: homeLinesAugust,
+          puller: untracked,
+          receiver: august,
+          result: 'inbound',
+        });
+        useAdvancedTrackingStore
+          .getState()
+          .recordThrow({ thrower: august, result: 'goal', toPlayer: meves });
+      };
+
+      scoreHomePoint(); // 1-0
+      scoreHomePoint(); // 2-0
+
+      const game = getCurrentGame() as AdvancedTrackedGame;
+      const analytics = buildAnalyticsGame(game);
+      expect(analytics.points).toHaveLength(2);
+      expect(analytics.points.every((p) => p.half === 1)).toBe(true);
+    });
+
+    it('does not flip receiving side after the would-be halftime score', () => {
+      createGameNoHalftime(2);
+
+      // Home receives first, scores — without halftime, home should pull next (not receive)
+      useAdvancedTrackingStore.getState().recordPull({
+        lines: homeLinesAugust,
+        puller: untracked,
+        receiver: august,
+        result: 'inbound',
+      });
+      useAdvancedTrackingStore
+        .getState()
+        .recordThrow({ thrower: august, result: 'goal', toPlayer: meves });
+
+      // Start next point — home scored so away receives (normal rotation, no halftime flip)
+      useAdvancedTrackingStore.getState().recordPull({
+        lines: homeLinesAugust,
+        puller: august,
+        receiver: untracked,
+        result: 'inbound',
+      });
+
+      const game = getCurrentGame() as AdvancedTrackedGame;
+      const pt2 = game.points[1];
+      expect(pt2.possessions[0].sideId).toBe(awaySideId);
+      expect(pt2.possessions[0].actions[0]).toMatchObject({
+        kind: 'pull',
+        sideId: homeSideId,
+        receivingSideId: awaySideId,
+      });
+    });
+  });
+
   it('recordGameTransition adds a soft_cap transition after the last completed point', () => {
     createGame();
 
@@ -428,7 +525,7 @@ describe('advancedTrackingStore', () => {
       lines: homeLinesAugust,
       puller: untracked,
       receiver: august,
-      result: 'caught',
+      result: 'inbound',
     });
     useAdvancedTrackingStore
       .getState()
@@ -450,7 +547,7 @@ describe('advancedTrackingStore', () => {
       lines: homeLinesAugust,
       puller: untracked,
       receiver: august,
-      result: 'caught',
+      result: 'inbound',
     });
 
     expect(() => useAdvancedTrackingStore.getState().recordGameTransition('soft_cap')).toThrow(
@@ -473,7 +570,7 @@ describe('advancedTrackingStore', () => {
       lines: homeLinesAugust,
       puller: untracked,
       receiver: august,
-      result: 'caught',
+      result: 'inbound',
     });
     useAdvancedTrackingStore
       .getState()
@@ -495,7 +592,7 @@ describe('advancedTrackingStore', () => {
       lines: homeLinesAugust,
       puller: untracked,
       receiver: august,
-      result: 'caught',
+      result: 'inbound',
     });
     // Point is in progress — hard_cap is still allowed mid-point
     const inProgressPointId = getCurrentGame()!.points[0].id;
@@ -516,7 +613,7 @@ describe('advancedTrackingStore', () => {
       lines: homeLinesAugust,
       puller: untracked,
       receiver: august,
-      result: 'caught',
+      result: 'inbound',
     });
     useAdvancedTrackingStore
       .getState()
@@ -543,7 +640,7 @@ describe('advancedTrackingStore', () => {
       lines: homeLinesAugust,
       puller: untracked,
       receiver: august,
-      result: 'caught',
+      result: 'inbound',
     });
     useAdvancedTrackingStore
       .getState()
@@ -564,7 +661,7 @@ describe('advancedTrackingStore', () => {
       lines: homeLinesAugust,
       puller: untracked,
       receiver: august,
-      result: 'caught',
+      result: 'inbound',
     });
     useAdvancedTrackingStore
       .getState()
@@ -585,14 +682,14 @@ describe('advancedTrackingStore', () => {
       lines: homeLinesAugust,
       puller: untracked,
       receiver: august,
-      result: 'caught',
+      result: 'inbound',
     });
 
     expect(() =>
       useAdvancedTrackingStore.getState().recordPull({
         lines: homeLinesAugust,
         puller: untracked,
-        result: 'caught',
+        result: 'inbound',
       }),
     ).toThrow('Cannot record a pull while the current point is still in progress.');
   });
@@ -604,7 +701,7 @@ describe('advancedTrackingStore', () => {
       lines: homeLinesAugust,
       puller: untracked,
       receiver: august,
-      result: 'caught',
+      result: 'inbound',
     });
     useAdvancedTrackingStore.getState().recordThrow({ thrower: august, result: 'throwaway' });
 
@@ -621,7 +718,7 @@ describe('advancedTrackingStore', () => {
       lines: homeLinesAugust,
       puller: untracked,
       receiver: august,
-      result: 'caught',
+      result: 'inbound',
     });
     useAdvancedTrackingStore
       .getState()
@@ -639,7 +736,7 @@ describe('advancedTrackingStore', () => {
       lines: homeLinesAugust,
       puller: untracked,
       receiver: august,
-      result: 'caught',
+      result: 'inbound',
     });
     useAdvancedTrackingStore.getState().recordThrow({ thrower: august, result: 'throwaway' });
 
@@ -655,7 +752,7 @@ describe('advancedTrackingStore', () => {
       lines: homeLinesAugust,
       puller: untracked,
       receiver: august,
-      result: 'caught',
+      result: 'inbound',
     });
 
     const stoppageId = useAdvancedTrackingStore.getState().recordStoppage({
@@ -682,7 +779,7 @@ describe('advancedTrackingStore', () => {
       lines: homeLinesAugust,
       puller: untracked,
       receiver: august,
-      result: 'caught',
+      result: 'inbound',
     });
 
     const stoppageId = useAdvancedTrackingStore.getState().recordStoppage({ reason: 'injury' });
@@ -705,7 +802,7 @@ describe('advancedTrackingStore', () => {
       lines: homeLinesAugust,
       puller: untracked,
       receiver: august,
-      result: 'caught',
+      result: 'inbound',
     });
 
     const stoppageId = useAdvancedTrackingStore.getState().recordStoppage({ reason: 'injury' });
@@ -730,7 +827,7 @@ describe('advancedTrackingStore', () => {
       lines: homeLinesAugust,
       puller: untracked,
       receiver: august,
-      result: 'caught',
+      result: 'inbound',
     });
 
     const stoppageId = useAdvancedTrackingStore.getState().recordStoppage({ reason: 'injury' });
@@ -756,7 +853,7 @@ describe('advancedTrackingStore', () => {
       lines: homeLinesAugust,
       puller: untracked,
       receiver: august,
-      result: 'caught',
+      result: 'inbound',
     });
 
     const stoppageId = useAdvancedTrackingStore.getState().recordStoppage({ reason: 'injury' });
@@ -788,7 +885,7 @@ describe('advancedTrackingStore', () => {
       lines: homeLinesAugust,
       puller: untracked,
       receiver: august,
-      result: 'caught',
+      result: 'inbound',
     });
     useAdvancedTrackingStore
       .getState()

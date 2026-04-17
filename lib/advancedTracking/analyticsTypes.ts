@@ -67,13 +67,7 @@ export interface AnalyticsPoint {
 
 export type AnalyticsPossessionResult = 'scored' | 'turned_over' | 'terminated';
 
-export type AnalyticsTurnoverType =
-  | 'drop'
-  | 'throwaway'
-  | 'stall'
-  | 'block'
-  | 'interception'
-  | 'callahan';
+export type AnalyticsTurnoverType = 'drop' | 'throwaway' | 'stall' | 'block' | 'callahan';
 
 export interface AnalyticsPossession {
   id: string;

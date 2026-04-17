@@ -290,6 +290,28 @@ export default function DashboardScreen() {
         {__DEV__ && (
           <>
             <Pressable
+              onPress={() => router.push('/advancedTracking/PreGameConfirm')}
+              style={({ pressed }) => [
+                styles.discordBanner,
+                { backgroundColor: palette.accent },
+                pressed && styles.menuItemPressed,
+              ]}>
+              <MaterialCommunityIcons
+                name="disc"
+                size={metrics.bannerIconSize}
+                color={palette.textOnAccent}
+              />
+              <View style={styles.discordText}>
+                <ThemedText style={[styles.discordTitle, { color: palette.textOnAccent }]}>
+                  Advanced Tracker
+                </ThemedText>
+                <ThemedText style={[styles.discordSubtitle, { color: palette.textOnAccentMuted }]}>
+                  DEV ONLY - Open advanced tracking flow
+                </ThemedText>
+              </View>
+            </Pressable>
+
+            <Pressable
               onPress={() => {
                 AsyncStorage.removeItem('ultimatestats_last_seen_version').then(() => {
                   console.log('Version check reset - reload app to see badge');

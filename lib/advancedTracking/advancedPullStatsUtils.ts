@@ -7,7 +7,7 @@ type PullResult = PullAction['result'];
 
 export interface PullStats {
   totalPulls: number;
-  /** Pull result → count. E.g. { caught: 3, landed_in_bounds: 2, ob_pull: 1 } */
+  /** Pull result → count. E.g. { inbound: 3, ob: 2, dropped: 1 } */
   outcomes: Partial<Record<PullResult, number>>;
   /** Average hang time in ms across pulls that have hangTimeMs. Null if none have it. */
   avgHangTimeMs: number | null;

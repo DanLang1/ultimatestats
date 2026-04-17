@@ -103,7 +103,7 @@ function emitAttributions(
 
   if (action.kind === 'pull') {
     add('pull', actorId);
-    if (action.result === 'caught') add('pull_reception', receiverId);
+    if (action.result === 'inbound') add('pull_reception', receiverId);
     if (action.result === 'dropped') add('drop', receiverId); // puller is opposing team — no throwaway
     return;
   }
@@ -153,15 +153,10 @@ function emitAttributions(
 
       case 'stall':
         add('stall', actorId);
+        add('stall', defenderId);
         break;
 
       case 'block':
-        add('throw_attempt', actorId);
-        add('throwaway', actorId);
-        add('block', defenderId);
-        break;
-
-      case 'interception':
         add('throw_attempt', actorId);
         add('throwaway', actorId);
         add('block', defenderId);
@@ -361,9 +356,7 @@ function compilePossessionWithActions(
     if (possLastAction.result === 'goal') {
       possResult = 'scored';
     } else if (
-      ['drop', 'throwaway', 'stall', 'block', 'interception', 'callahan'].includes(
-        possLastAction.result,
-      )
+      ['drop', 'throwaway', 'stall', 'block', 'callahan'].includes(possLastAction.result)
     ) {
       possResult = 'turned_over';
       turnoverType = possLastAction.result as AnalyticsTurnoverType;

@@ -83,13 +83,7 @@ export function isPointEndingThrow(result: ThrowResult): boolean {
 }
 
 export function isTurnoverThrow(result: ThrowResult): boolean {
-  return (
-    result === 'drop' ||
-    result === 'throwaway' ||
-    result === 'stall' ||
-    result === 'block' ||
-    result === 'interception'
-  );
+  return result === 'drop' || result === 'throwaway' || result === 'stall' || result === 'block';
 }
 
 export function didPullTurnOver(result: PullAction['result']): boolean {
@@ -110,6 +104,24 @@ export function isPossessionOver(possession: PointPossession | null): boolean {
     return didPullTurnOver(lastAction.result);
   }
 
+  return false;
+}
+
+/**
+ * Returns true when the current disc holder received their disc via a completed throw,
+ * meaning pressing GOAL can retroactively mark that throw as a goal.
+ */
+export function canRecordGoal(possession: PointPossession | null): boolean {
+  if (!possession || isPossessionOver(possession)) return false;
+  for (let i = possession.actions.length - 1; i >= 0; i--) {
+    const action = possession.actions[i];
+    if (action.kind === 'throw') {
+      return action.result === 'complete' && action.toPlayer?.refType === 'participant';
+    }
+    if (action.kind === 'disc_pickup') {
+      return false;
+    }
+  }
   return false;
 }
 
@@ -161,6 +173,13 @@ export function getGameScore(game: AdvancedTrackedGame): Record<string, number> 
       score[scoringSideId] = (score[scoringSideId] ?? 0) + 1;
     }
   }
+  return score;
+}
+
+/** Returns the score for a specific side. Throws if the sideId is not present in the game. */
+export function getSideScore(game: AdvancedTrackedGame, sideId: string): number {
+  const score = getGameScore(game)[sideId];
+  if (score == null) throw new Error(`No score entry for side "${sideId}" in game ${game.id}.`);
   return score;
 }
 

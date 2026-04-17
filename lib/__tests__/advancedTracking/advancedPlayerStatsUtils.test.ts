@@ -69,7 +69,7 @@ describe('advancedPlayerStatsUtils', () => {
                   receivingSideId: ZOO,
                   puller: untracked,
                   receiver: august,
-                  result: 'caught',
+                  result: 'inbound',
                 },
                 {
                   id: 'a2',
@@ -192,7 +192,7 @@ describe('advancedPlayerStatsUtils', () => {
                   receivingSideId: ZOO,
                   puller: untracked,
                   receiver: august,
-                  result: 'caught',
+                  result: 'inbound',
                 },
                 { id: 'a2', kind: 'throw', sideId: ZOO, thrower: august, result: 'throwaway' },
               ],
@@ -237,7 +237,7 @@ describe('advancedPlayerStatsUtils', () => {
                   receivingSideId: ZOO,
                   puller: untracked,
                   receiver: august,
-                  result: 'caught',
+                  result: 'inbound',
                 },
                 {
                   id: 'a2',
@@ -291,7 +291,7 @@ describe('advancedPlayerStatsUtils', () => {
                   receivingSideId: RIVALS,
                   puller: august,
                   receiver: untracked,
-                  result: 'caught',
+                  result: 'inbound',
                 },
                 {
                   id: 'a2',
@@ -350,7 +350,7 @@ describe('advancedPlayerStatsUtils', () => {
                   receivingSideId: ZOO,
                   puller: untracked,
                   receiver: august,
-                  result: 'caught',
+                  result: 'inbound',
                 },
                 {
                   id: 'a2',
@@ -379,7 +379,7 @@ describe('advancedPlayerStatsUtils', () => {
                   receivingSideId: RIVALS,
                   puller: august,
                   receiver: untracked,
-                  result: 'caught',
+                  result: 'inbound',
                 },
                 {
                   id: 'b2',
@@ -439,7 +439,7 @@ describe('advancedPlayerStatsUtils', () => {
                   receivingSideId: ZOO,
                   puller: { refType: 'participant', participantId: 'p_rival1' },
                   receiver: august,
-                  result: 'caught',
+                  result: 'inbound',
                 },
                 {
                   id: 'a2',
@@ -501,7 +501,7 @@ describe('advancedPlayerStatsUtils', () => {
                     receivingSideId: ZOO,
                     puller: { refType: 'participant', participantId: 'p_rival1' },
                     receiver: august,
-                    result: 'caught',
+                    result: 'inbound',
                   },
                   {
                     id: 'a2',
@@ -533,7 +533,7 @@ describe('advancedPlayerStatsUtils', () => {
                     receivingSideId: RIVALS,
                     puller: meves,
                     receiver: august,
-                    result: 'caught',
+                    result: 'inbound',
                   },
                   {
                     id: 'b2',
@@ -593,7 +593,7 @@ describe('advancedPlayerStatsUtils', () => {
                   receivingSideId: ZOO,
                   puller: untracked,
                   receiver: august,
-                  result: 'caught',
+                  result: 'inbound',
                 },
                 {
                   id: 'a2',
@@ -723,7 +723,7 @@ describe('advancedPlayerStatsUtils', () => {
                     receivingSideId: ZOO,
                     puller: untracked,
                     receiver: august,
-                    result: 'caught',
+                    result: 'inbound',
                   },
                   {
                     id: 'a2',
@@ -765,7 +765,7 @@ describe('advancedPlayerStatsUtils', () => {
                     receivingSideId: ZOO,
                     puller: untracked,
                     receiver: august,
-                    result: 'caught',
+                    result: 'inbound',
                   },
                   {
                     id: 'a2',
@@ -810,7 +810,7 @@ describe('advancedPlayerStatsUtils', () => {
                     receivingSideId: ZOO,
                     puller: untracked,
                     receiver: august,
-                    result: 'caught',
+                    result: 'inbound',
                     recordedAt: 1000,
                   },
                   {
@@ -855,7 +855,7 @@ describe('advancedPlayerStatsUtils', () => {
                     receivingSideId: ZOO,
                     puller: untracked,
                     receiver: august,
-                    result: 'caught',
+                    result: 'inbound',
                   },
                   {
                     id: 'a2',

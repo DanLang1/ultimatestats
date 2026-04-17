@@ -54,7 +54,7 @@ describe('advancedTimingStatsUtils', () => {
                   receivingSideId: ZOO,
                   puller: untracked,
                   receiver: august,
-                  result: 'caught',
+                  result: 'inbound',
                   recordedAt: 1000,
                 },
                 {
@@ -86,7 +86,7 @@ describe('advancedTimingStatsUtils', () => {
                   receivingSideId: RIVALS,
                   puller: august,
                   receiver: untracked,
-                  result: 'caught',
+                  result: 'inbound',
                   recordedAt: 100000,
                 },
                 {
@@ -135,7 +135,7 @@ describe('advancedTimingStatsUtils', () => {
                   receivingSideId: ZOO,
                   puller: untracked,
                   receiver: august,
-                  result: 'caught',
+                  result: 'inbound',
                 },
                 {
                   id: 'a2',
@@ -182,7 +182,7 @@ describe('advancedTimingStatsUtils', () => {
                   receivingSideId: ZOO,
                   puller: untracked,
                   receiver: august,
-                  result: 'caught',
+                  result: 'inbound',
                   recordedAt: 1000,
                 },
                 {
@@ -214,7 +214,7 @@ describe('advancedTimingStatsUtils', () => {
                   receivingSideId: RIVALS,
                   puller: august,
                   receiver: untracked,
-                  result: 'caught',
+                  result: 'inbound',
                 },
                 {
                   id: 'b2',

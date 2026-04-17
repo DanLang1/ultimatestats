@@ -55,7 +55,7 @@ describe('advancedPullStatsUtils', () => {
                     receivingSideId: RIVALS,
                     puller: august,
                     receiver: untracked,
-                    result: 'caught',
+                    result: 'inbound',
                     hangTimeMs: 3000,
                   },
                   {
@@ -84,7 +84,7 @@ describe('advancedPullStatsUtils', () => {
                     sideId: RIVALS,
                     receivingSideId: ZOO,
                     puller: untracked,
-                    result: 'ob_pull',
+                    result: 'ob',
                   },
                   { id: 'b2', kind: 'disc_pickup', sideId: ZOO, player: august },
                   {
@@ -106,7 +106,7 @@ describe('advancedPullStatsUtils', () => {
       const stats = computePullStats(analytics);
 
       expect(stats.totalPulls).toBe(2);
-      expect(stats.outcomes).toEqual({ caught: 1, ob_pull: 1 });
+      expect(stats.outcomes).toEqual({ inbound: 1, ob: 1 });
     });
   });
 
@@ -131,7 +131,7 @@ describe('advancedPullStatsUtils', () => {
                     receivingSideId: RIVALS,
                     puller: august,
                     receiver: untracked,
-                    result: 'caught',
+                    result: 'inbound',
                     hangTimeMs: 3000,
                   },
                   {
@@ -161,7 +161,7 @@ describe('advancedPullStatsUtils', () => {
                     receivingSideId: RIVALS,
                     puller: august,
                     receiver: untracked,
-                    result: 'landed_in_bounds',
+                    result: 'inbound',
                     hangTimeMs: 5000,
                   },
                   { id: 'b2', kind: 'disc_pickup', sideId: RIVALS, player: untracked },
@@ -206,7 +206,7 @@ describe('advancedPullStatsUtils', () => {
                     receivingSideId: RIVALS,
                     puller: august,
                     receiver: untracked,
-                    result: 'caught',
+                    result: 'inbound',
                     // no hangTimeMs
                   },
                   {
@@ -252,7 +252,7 @@ describe('advancedPullStatsUtils', () => {
                     receivingSideId: RIVALS,
                     puller: august,
                     receiver: untracked,
-                    result: 'caught',
+                    result: 'inbound',
                     hangTimeMs: 3000,
                   },
                   {
@@ -282,7 +282,7 @@ describe('advancedPullStatsUtils', () => {
                     receivingSideId: ZOO,
                     puller: untracked,
                     receiver: august,
-                    result: 'caught',
+                    result: 'inbound',
                     hangTimeMs: 2000,
                   },
                   {

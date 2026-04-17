@@ -112,7 +112,7 @@ type AnalyticsPossession = {
 
   sideId: string;
   result: 'scored' | 'turned_over' | 'terminated';
-  turnoverType?: 'drop' | 'throwaway' | 'stall' | 'block' | 'interception' | 'callahan';
+  turnoverType?: 'drop' | 'throwaway' | 'stall' | 'block' | 'callahan';
 };
 ```
 
@@ -191,20 +191,19 @@ type AttributionType =
 
 These rules are applied once during `buildAnalyticsGame`. Stat utils never need to re-derive them.
 
-| Raw action                    | Attributions emitted                                                                                                                                                                           |
-| ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `throw` result `complete`     | `completion` + `throw_attempt` → actor; `receiving_touch` → receiver                                                                                                                           |
-| `throw` result `goal`         | `goal` → receiver; `assist` → actor; `completion` + `throw_attempt` → actor; `receiving_touch` → receiver; `hockey_assist` → actor of previous `complete` throw in same possession (if exists) |
-| `throw` result `drop`         | `throw_attempt` → actor; `drop` → receiver (weight 0.5 if `splitAttribution`); `throwaway` → actor (weight 0.5 if `splitAttribution`)                                                          |
-| `throw` result `throwaway`    | `throwaway` + `throw_attempt` → actor (always weight 1.0 — no receiver to share blame with, so `splitAttribution` is ignored)                                                                  |
-| `throw` result `stall`        | `stall` + `throw_attempt` → actor                                                                                                                                                              |
-| `throw` result `block`        | `throwaway` + `throw_attempt` → actor; `block` → defender                                                                                                                                      |
-| `throw` result `interception` | `throwaway` + `throw_attempt` → actor; `block` → defender                                                                                                                                      |
-| `throw` result `callahan`     | `throwaway` + `throw_attempt` → actor; `callahan` + `block` + `goal` → defender                                                                                                                |
-| `pull` result `caught`        | `pull` → actor; `pull_reception` → receiver                                                                                                                                                    |
-| `pull` result `dropped`       | `pull` → actor; `drop` → receiver (puller is opposing team — no throwaway credit)                                                                                                              |
-| `pull` any other result       | `pull` → actor                                                                                                                                                                                 |
-| `disc_pickup`                 | `disc_pickup` → actor                                                                                                                                                                          |
+| Raw action                 | Attributions emitted                                                                                                                                                                           |
+| -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `throw` result `complete`  | `completion` + `throw_attempt` → actor; `receiving_touch` → receiver                                                                                                                           |
+| `throw` result `goal`      | `goal` → receiver; `assist` → actor; `completion` + `throw_attempt` → actor; `receiving_touch` → receiver; `hockey_assist` → actor of previous `complete` throw in same possession (if exists) |
+| `throw` result `drop`      | `throw_attempt` → actor; `drop` → receiver (weight 0.5 if `splitAttribution`); `throwaway` → actor (weight 0.5 if `splitAttribution`)                                                          |
+| `throw` result `throwaway` | `throwaway` + `throw_attempt` → actor (always weight 1.0 — no receiver to share blame with, so `splitAttribution` is ignored)                                                                  |
+| `throw` result `stall`     | `stall` + `throw_attempt` → actor                                                                                                                                                              |
+| `throw` result `block`     | `throwaway` + `throw_attempt` → actor; `block` → defender                                                                                                                                      |
+| `throw` result `callahan`  | `throwaway` + `throw_attempt` → actor; `callahan` + `block` + `goal` → defender                                                                                                                |
+| `pull` result `inbound`    | `pull` → actor; `pull_reception` → receiver                                                                                                                                                    |
+| `pull` result `dropped`    | `pull` → actor; `drop` → receiver (puller is opposing team — no throwaway credit)                                                                                                              |
+| `pull` result `ob`         | `pull` → actor                                                                                                                                                                                 |
+| `disc_pickup`              | `disc_pickup` → actor                                                                                                                                                                          |
 
 `hockey_assist` is the only credit that requires looking at a previous action. `previousActionId` on
 `AnalyticsAction` makes this a simple lookup rather than a traversal.

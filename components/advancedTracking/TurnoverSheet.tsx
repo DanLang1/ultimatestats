@@ -26,7 +26,6 @@ const TURNOVER_OPTIONS: {
   { type: 'throwaway', label: 'THROWAWAY', color: 'danger' },
   { type: 'drop', label: 'DROP', color: 'warning' },
   { type: 'block', label: 'BLOCK', color: 'muted' },
-  { type: 'interception', label: 'INTERCEPTION', color: 'muted' },
   { type: 'fifty-fifty', label: '50 / 50', color: 'warning' },
 ];
 
@@ -119,7 +118,7 @@ export const TurnoverSheet = ({
                       fontSize: scaleBySizeClass(18, sizeClass),
                     },
                   ]}>
-                  {state.resultType === 'fifty-fifty' ? 'WHO WAS THE TARGET?' : 'WHO DROPPED IT?'}
+                  WHO WAS THE TARGET?
                 </ThemedText>
                 <ScrollView
                   style={styles.receiverList}

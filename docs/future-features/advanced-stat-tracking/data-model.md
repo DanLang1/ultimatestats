@@ -225,10 +225,9 @@ interface PullAction {
   receivingSideId: string;
   puller: PlayerRef;
   receiver?: PlayerRef;
-  // 'ob_pull': flew directly OB or brick invoked. 'landed_in_bounds_rolled_out': touched in bounds first then rolled out.
-  // Both result in receiving team spotting the disc and picking up with pull_pickup.
+  // 'ob': flew OB or brick invoked — receiving team spots the disc and picks up.
   // 'dropped': receiver touched it and dropped — possession flips to pulling team via turnover_pickup.
-  result: 'caught' | 'dropped' | 'landed_in_bounds' | 'landed_in_bounds_rolled_out' | 'ob_pull';
+  result: 'inbound' | 'ob' | 'dropped';
   hangTimeMs?: number;
   origin?: FieldLocation;
   landing?: FieldLocation;
@@ -249,15 +248,7 @@ interface ThrowAction {
   thrower: PlayerRef;
   toPlayer?: PlayerRef;
   // 'stall': count reached 10, no throw — disc turns over at the spot. Attributed to thrower, no toPlayer.
-  result:
-    | 'complete'
-    | 'goal'
-    | 'drop'
-    | 'throwaway'
-    | 'stall'
-    | 'block'
-    | 'interception'
-    | 'callahan';
+  result: 'complete' | 'goal' | 'drop' | 'throwaway' | 'stall' | 'block' | 'callahan';
   defender?: PlayerRef;
   /** True when blame is shared 50/50 between thrower and toPlayer. Single attribution is derived from result + thrower/toPlayer. */
   splitAttribution?: boolean;
@@ -491,12 +482,14 @@ It supports:
 - blocks
 - Callahans
 
-`toPlayer` is optional. Present on `complete` and `goal` (the receiver), and optionally on `drop`. Absent on `throwaway`, `stall`, `block`, `interception`, and `callahan` — coaches record what happened, not intent.
+`toPlayer` is optional. Present on `complete` and `goal` (the receiver), and optionally on `drop`. Absent on `throwaway`, `stall`, `block`, and `callahan` — coaches record what happened, not intent.
 
 - for `complete` and `goal`, `toPlayer` is the player who caught the disc
 - for `drop`, `toPlayer` is optionally the player who dropped it
 - for `stall`, the `thrower` is the player who was holding the disc when the count reached 10
-- for `throwaway`, `stall`, `block`, `interception`, and `callahan`, omit `toPlayer` — no receiver to record
+- for `throwaway`, `stall`, `block`, and `callahan`, omit `toPlayer` — no receiver to record
+
+A "block" covers both cases where the D knocks the disc to the ground and where the D catches it cleanly (what some folks call an interception). Both resolve to the same stat credits — the next possession's side and starter already tell you whether the D retained the disc.
 
 ### `splitAttribution`
 
@@ -687,7 +680,7 @@ const game: AdvancedTrackedGame = {
               receivingSideId: 'sharks',
               puller: { refType: 'untracked' },
               receiver: { refType: 'participant', participantId: 'p_alex' },
-              result: 'caught',
+              result: 'inbound',
             },
             {
               id: 'a2',
@@ -744,7 +737,7 @@ const point2: TrackedPoint = {
           sideId: 'rivals',
           receivingSideId: 'sharks',
           puller: { refType: 'untracked' },
-          result: 'landed_in_bounds',
+          result: 'inbound',
         },
         {
           id: 'b2',
@@ -834,7 +827,7 @@ const point3: TrackedPoint = {
           receivingSideId: 'rivals',
           puller: { refType: 'participant', participantId: 'p_alex' },
           receiver: { refType: 'participant', participantId: 'p_ryan' },
-          result: 'caught',
+          result: 'inbound',
         },
         {
           id: 'c2',

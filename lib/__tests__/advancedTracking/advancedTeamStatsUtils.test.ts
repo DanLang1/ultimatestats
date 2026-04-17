@@ -16,8 +16,6 @@ const participants = [
 
 const august = { refType: 'participant' as const, participantId: 'p_august' };
 const meves = { refType: 'participant' as const, participantId: 'p_meves' };
-const joah = { refType: 'participant' as const, participantId: 'p_joah' };
-const max = { refType: 'participant' as const, participantId: 'p_max' };
 const untracked = { refType: 'untracked' as const };
 
 const baseGame: Omit<AdvancedTrackedGame, 'points'> = {
@@ -61,7 +59,7 @@ function makeHoldPoint(
               receivingSideId: receivingSide,
               puller: receivingSide === ZOO ? untracked : august,
               receiver: receivingSide === ZOO ? august : untracked,
-              result: 'caught' as const,
+              result: 'inbound' as const,
             },
             {
               id: `${id}_a2`,
@@ -92,7 +90,7 @@ function makeHoldPoint(
               receivingSideId: receivingSide,
               puller: pullingSide === ZOO ? august : untracked,
               receiver: receivingSide === ZOO ? august : untracked,
-              result: 'caught' as const,
+              result: 'inbound' as const,
             },
             {
               id: `${id}_a2`,
@@ -281,7 +279,7 @@ describe('advancedTeamStatsUtils', () => {
                     receivingSideId: RIVALS,
                     puller: august,
                     receiver: untracked,
-                    result: 'caught',
+                    result: 'inbound',
                   },
                   {
                     id: 'pt2_a2',

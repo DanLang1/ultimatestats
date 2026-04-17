@@ -232,12 +232,7 @@ export type FieldLocation =
 
 export type PossessionAction = PullAction | DiscPickupAction | ThrowAction | StoppageAction;
 
-export type PullResult =
-  | 'caught'
-  | 'dropped'
-  | 'landed_in_bounds'
-  | 'landed_in_bounds_rolled_out'
-  | 'ob_pull';
+export type PullResult = 'inbound' | 'ob' | 'dropped';
 
 export interface PullAction {
   id: string;
@@ -246,7 +241,7 @@ export interface PullAction {
   sideId: string;
   receivingSideId: string;
   puller: PlayerRef;
-  /** Optional — pull may not be caught or receiver may be untracked. */
+  /** Optional — pull may be OB or receiver may be untracked. */
   receiver?: PlayerRef;
   result: PullResult;
   hangTimeMs?: number;
@@ -273,7 +268,6 @@ export type ThrowResult =
   | 'throwaway'
   | 'stall'
   | 'block'
-  | 'interception'
   | 'callahan';
 
 export interface ThrowAction {
@@ -284,7 +278,7 @@ export interface ThrowAction {
   /**
    * Who caught or was in position to catch the throw. Present on `complete` and `goal`
    * (the receiver), and optionally on `drop`. Absent on `throwaway`, `block`,
-   * `interception`, and `callahan` — coaches record what happened, not intent.
+   * and `callahan` — coaches record what happened, not intent.
    */
   toPlayer?: PlayerRef;
   /**

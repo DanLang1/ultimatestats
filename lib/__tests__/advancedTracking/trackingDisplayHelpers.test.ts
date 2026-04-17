@@ -1,7 +1,7 @@
 import {
   getActiveSideId,
   getDiscHolderId,
-  getPassChainText,
+  getPassChainEvents,
   getSideTimeoutsUsed,
 } from '../../advancedTracking/trackingDisplayHelpers';
 import type { AdvancedTrackedGame, PointPossession } from '../../advancedTracking/types';
@@ -98,12 +98,15 @@ describe('getDiscHolderId', () => {
   });
 });
 
-describe('getPassChainText', () => {
-  it('returns empty string for empty possession', () => {
-    expect(getPassChainText(null, baseGame.participants)).toBe('');
+describe('getPassChainEvents', () => {
+  it('returns empty events for null possession', () => {
+    expect(getPassChainEvents(null, baseGame.participants)).toEqual({
+      events: [],
+      truncated: false,
+    });
   });
 
-  it('builds a chain string', () => {
+  it('builds a chain from pickup + completion', () => {
     const pos = makePossession(HOME, [
       { id: 'a1', kind: 'disc_pickup', sideId: HOME, player: august },
       {
@@ -115,10 +118,14 @@ describe('getPassChainText', () => {
         result: 'complete',
       },
     ]);
-    expect(getPassChainText(pos, baseGame.participants)).toBe('... → Meves');
+    const { events, truncated } = getPassChainEvents(pos, baseGame.participants);
+    expect(truncated).toBe(false);
+    expect(events.map((e) => e.name)).toEqual(['August', 'Meves']);
+    expect(events[0].id).toBe('a1');
+    expect(events[1].id).toBe('a2');
   });
 
-  it('limits to last 3 passes', () => {
+  it('limits to last maxDisplay entries and sets truncated', () => {
     const p1 = { refType: 'participant' as const, participantId: 'p1' };
     const p2 = { refType: 'participant' as const, participantId: 'p2' };
     const p3 = { refType: 'participant' as const, participantId: 'p3' };
@@ -142,7 +149,9 @@ describe('getPassChainText', () => {
       { id: 'a3', kind: 'throw', sideId: HOME, thrower: p2, toPlayer: p3, result: 'complete' },
       { id: 'a4', kind: 'throw', sideId: HOME, thrower: p3, toPlayer: p4, result: 'complete' },
     ]);
-    expect(getPassChainText(pos, participants)).toBe('... → P2 → P3 → P4');
+    const { events, truncated } = getPassChainEvents(pos, participants);
+    expect(truncated).toBe(true);
+    expect(events.map((e) => e.name)).toEqual(['P2', 'P3', 'P4']);
   });
 });
 

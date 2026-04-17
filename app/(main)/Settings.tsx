@@ -676,16 +676,6 @@ function SettingsContent() {
                   />
                 </View>
               )}
-              {__DEV__ && (
-                <View style={styles.inputGroupFullWidth}>
-                  <Switch
-                    label="[DEV] Adv Tracker UI"
-                    value={false}
-                    onValueChange={() => router.push('/advanced/PreGameConfirm')}
-                    sizeClass={sizeClass}
-                  />
-                </View>
-              )}
             </View>
           </View>
         </View>

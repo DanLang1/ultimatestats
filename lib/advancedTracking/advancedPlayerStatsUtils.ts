@@ -11,7 +11,7 @@ export interface AdvancedPlayerStats {
   assists: number;
   hockeyAssists: number;
   callahans: number;
-  /** goals + assists + blocks - throwaways - drops */
+  /** goals + assists + blocks + stalls - throwaways - drops */
   plusMinus: number;
 
   // Throwing
@@ -189,7 +189,8 @@ export function computeAdvancedPlayerStats(
     stats.completionPct = stats.throwAttempts > 0 ? stats.completions / stats.throwAttempts : null;
     stats.totalTouches =
       stats.completions + stats.receptions + sum('disc_pickup') + stats.pullReceptions;
-    stats.plusMinus = stats.goals + stats.assists + stats.blocks - stats.throwaways - stats.drops;
+    stats.plusMinus =
+      stats.goals + stats.assists + stats.blocks + stats.stalls - stats.throwaways - stats.drops;
 
     // Points played, O/D split, and efficiency from linesBySide
     let playerDurationMs = 0;

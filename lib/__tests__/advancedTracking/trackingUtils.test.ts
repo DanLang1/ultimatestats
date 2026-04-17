@@ -153,14 +153,7 @@ describe('isPointEndingThrow', () => {
   });
 
   it('returns false for all other results', () => {
-    for (const result of [
-      'complete',
-      'drop',
-      'throwaway',
-      'stall',
-      'block',
-      'interception',
-    ] as const) {
+    for (const result of ['complete', 'drop', 'throwaway', 'stall', 'block'] as const) {
       expect(isPointEndingThrow(result)).toBe(false);
     }
   });
@@ -168,7 +161,7 @@ describe('isPointEndingThrow', () => {
 
 describe('isTurnoverThrow', () => {
   it('returns true for all turnover results', () => {
-    for (const result of ['drop', 'throwaway', 'stall', 'block', 'interception'] as const) {
+    for (const result of ['drop', 'throwaway', 'stall', 'block'] as const) {
       expect(isTurnoverThrow(result)).toBe(true);
     }
   });
@@ -188,12 +181,7 @@ describe('didPullTurnOver', () => {
   });
 
   it('returns false for all other pull results', () => {
-    for (const result of [
-      'caught',
-      'landed_in_bounds',
-      'landed_in_bounds_rolled_out',
-      'ob_pull',
-    ] as const) {
+    for (const result of ['inbound', 'ob'] as const) {
       expect(didPullTurnOver(result)).toBe(false);
     }
   });
@@ -252,7 +240,7 @@ describe('isPossessionOver', () => {
     expect(isPossessionOver(pos)).toBe(true);
   });
 
-  it('returns false after a caught pull', () => {
+  it('returns false after an inbound pull', () => {
     const pos = makePossession(HOME, [
       {
         id: 'a1',
@@ -260,7 +248,7 @@ describe('isPossessionOver', () => {
         sideId: AWAY,
         receivingSideId: HOME,
         puller: untracked,
-        result: 'caught',
+        result: 'inbound',
       },
     ]);
     expect(isPossessionOver(pos)).toBe(false);

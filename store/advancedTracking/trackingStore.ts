@@ -30,7 +30,7 @@ import {
   AdvancedTrackingUndoEntry,
   RecordStoppageInput,
   RecordSubInput,
-} from './advancedTrackingStore.types';
+} from './trackingStore.types';
 
 const ADVANCED_TRACKING_STORAGE_KEY = 'ultimatestats_advanced_tracking';
 
@@ -122,7 +122,10 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
                 format: {
                   formatType: 'standard',
                   gameTo: input.format.gameTo,
-                  halftimeAt: Math.ceil(input.format.gameTo / 2),
+                  halftimeAt:
+                    (input.format.halftimeEnabled ?? true)
+                      ? Math.ceil(input.format.gameTo / 2)
+                      : undefined,
                   softCapAt: input.format.softCapAt,
                   hardCapAt: input.format.hardCapAt,
                 },
@@ -421,6 +424,44 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
           return actionId;
         },
 
+        amendLastThrowAsGoal: () => {
+          const game = getCurrentGame(get());
+          const point = getCurrentPoint(game);
+          const possession = getCurrentPossession(game);
+          if (!point || !possession) return;
+
+          let lastThrow: { id: string; result: string } | null = null;
+          for (let i = possession.actions.length - 1; i >= 0; i--) {
+            const a = possession.actions[i];
+            if (a.kind === 'throw') {
+              lastThrow = a;
+              break;
+            }
+          }
+          if (!lastThrow || lastThrow.result !== 'complete') return;
+
+          const previousResult = lastThrow.result;
+
+          set((state) => {
+            const liveGame = getCurrentGame(state);
+            const livePoint = liveGame.points.find((p) => p.id === point.id);
+            const livePossession = livePoint?.possessions.find((p) => p.id === possession.id);
+            const action = livePossession?.actions.find((a) => a.id === lastThrow!.id);
+            if (action?.kind === 'throw') {
+              action.result = 'goal';
+            }
+            pushUndoEntry(state, {
+              kind: 'amend_throw_result',
+              pointId: point.id,
+              possessionId: possession.id,
+              actionId: lastThrow!.id,
+              previousResult,
+            });
+            syncDerivedHalftimeTransition(liveGame);
+            liveGame.updatedAt = Date.now();
+          });
+        },
+
         recordStoppage: (input: RecordStoppageInput) => {
           // TODO: Support floating timeouts recorded outside an active point.
           const game = getCurrentGame(get());
@@ -612,6 +653,20 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
                 if (action?.kind === 'stoppage') {
                   action.resumedAt = undefined;
                 }
+              }
+            } else if (lastUndoEntry.kind === 'amend_throw_result') {
+              const point = liveGame.points.find(
+                (candidate) => candidate.id === lastUndoEntry.pointId,
+              );
+              const possession = point?.possessions.find(
+                (candidate) => candidate.id === lastUndoEntry.possessionId,
+              );
+              const action = possession?.actions.find(
+                (candidate) => candidate.id === lastUndoEntry.actionId,
+              );
+              if (action?.kind === 'throw') {
+                action.result = lastUndoEntry.previousResult;
+                syncDerivedHalftimeTransition(liveGame);
               }
             }
 

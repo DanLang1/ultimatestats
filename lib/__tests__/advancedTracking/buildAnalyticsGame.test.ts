@@ -1,6 +1,6 @@
 import type { AnalyticsAttribution, AttributionType } from '../../advancedTracking/analyticsTypes';
-import { UNKNOWN_PARTICIPANT_ID } from '../../advancedTracking/buildAnalyticsGame';
 import {
+  UNKNOWN_PARTICIPANT_ID,
   buildAnalyticsGame,
   getPointStateForSide,
 } from '../../advancedTracking/buildAnalyticsGame';
@@ -84,7 +84,7 @@ describe('point states', () => {
                   receivingSideId: ZOO,
                   puller: untracked,
                   receiver: august,
-                  result: 'caught',
+                  result: 'inbound',
                 },
                 {
                   id: 'a2',
@@ -125,7 +125,7 @@ describe('point states', () => {
                   receivingSideId: RIVALS,
                   puller: august,
                   receiver: untracked,
-                  result: 'caught',
+                  result: 'inbound',
                 },
                 {
                   id: 'a2',
@@ -179,7 +179,7 @@ describe('point states', () => {
                   receivingSideId: ZOO,
                   puller: untracked,
                   receiver: august,
-                  result: 'caught',
+                  result: 'inbound',
                 },
                 { id: 'a2', kind: 'throw', sideId: ZOO, thrower: august, result: 'throwaway' },
               ],
@@ -228,7 +228,7 @@ describe('point states', () => {
                   receivingSideId: ZOO,
                   puller: untracked,
                   receiver: august,
-                  result: 'caught',
+                  result: 'inbound',
                 },
                 {
                   id: 'a2',
@@ -270,7 +270,7 @@ describe('point states', () => {
                   receivingSideId: ZOO,
                   puller: untracked,
                   receiver: august,
-                  result: 'caught',
+                  result: 'inbound',
                 },
                 {
                   id: 'a2',
@@ -300,7 +300,7 @@ describe('point states', () => {
                   receivingSideId: RIVALS,
                   puller: august,
                   receiver: untracked,
-                  result: 'caught',
+                  result: 'inbound',
                 },
                 {
                   id: 'b2',
@@ -357,7 +357,7 @@ describe('point states', () => {
                   receivingSideId: ZOO,
                   puller: untracked,
                   receiver: august,
-                  result: 'caught',
+                  result: 'inbound',
                 },
                 { id: 'a2', kind: 'throw', sideId: ZOO, thrower: august, result: 'throwaway' },
               ],
@@ -397,7 +397,7 @@ describe('point states', () => {
                   receivingSideId: RIVALS,
                   puller: august,
                   receiver: untracked,
-                  result: 'caught',
+                  result: 'inbound',
                 },
                 {
                   id: 'b2',
@@ -444,7 +444,7 @@ describe('point states', () => {
                   receivingSideId: ZOO,
                   puller: untracked,
                   receiver: august,
-                  result: 'caught',
+                  result: 'inbound',
                 },
                 {
                   id: 'a2',
@@ -487,7 +487,7 @@ describe('point states', () => {
                   receivingSideId: RIVALS,
                   puller: august,
                   receiver: untracked,
-                  result: 'caught',
+                  result: 'inbound',
                 },
                 {
                   id: 'a2',
@@ -516,7 +516,7 @@ describe('point states', () => {
                   receivingSideId: RIVALS,
                   puller: august,
                   receiver: untracked,
-                  result: 'caught',
+                  result: 'inbound',
                 },
                 {
                   id: 'b2',
@@ -561,7 +561,7 @@ describe('goal and assist attributions', () => {
                   receivingSideId: ZOO,
                   puller: untracked,
                   receiver: august,
-                  result: 'caught',
+                  result: 'inbound',
                 },
                 {
                   id: 'a2',
@@ -627,7 +627,7 @@ describe('goal and assist attributions', () => {
                   sideId: RIVALS,
                   receivingSideId: ZOO,
                   puller: untracked,
-                  result: 'landed_in_bounds',
+                  result: 'inbound',
                 },
                 { id: 'a2', kind: 'disc_pickup', sideId: ZOO, player: meves },
                 {
@@ -674,7 +674,7 @@ describe('goal and assist attributions', () => {
                   receivingSideId: ZOO,
                   puller: untracked,
                   receiver: august,
-                  result: 'caught',
+                  result: 'inbound',
                 },
                 {
                   id: 'a2',
@@ -731,7 +731,7 @@ describe('turnover attributions', () => {
                   receivingSideId: ZOO,
                   puller: untracked,
                   receiver: august,
-                  result: 'caught',
+                  result: 'inbound',
                 },
                 {
                   id: 'a2',
@@ -775,7 +775,7 @@ describe('turnover attributions', () => {
                   receivingSideId: RIVALS,
                   puller: august,
                   receiver: untracked,
-                  result: 'caught',
+                  result: 'inbound',
                 },
                 {
                   id: 'a2',
@@ -818,7 +818,7 @@ describe('turnover attributions', () => {
                   receivingSideId: ZOO,
                   puller: untracked,
                   receiver: august,
-                  result: 'caught',
+                  result: 'inbound',
                 },
                 {
                   id: 'a2',
@@ -860,7 +860,7 @@ describe('turnover attributions', () => {
                   receivingSideId: ZOO,
                   puller: untracked,
                   receiver: august,
-                  result: 'caught',
+                  result: 'inbound',
                 },
                 {
                   id: 'a2',
@@ -903,7 +903,7 @@ describe('turnover attributions', () => {
                   receivingSideId: ZOO,
                   puller: untracked,
                   receiver: august,
-                  result: 'caught',
+                  result: 'inbound',
                 },
                 {
                   id: 'a2',
@@ -956,7 +956,7 @@ describe('turnover attributions', () => {
                   receivingSideId: ZOO,
                   puller: untracked,
                   receiver: august,
-                  result: 'caught',
+                  result: 'inbound',
                 },
                 {
                   id: 'a2',
@@ -999,7 +999,7 @@ describe('turnover attributions', () => {
                   receivingSideId: ZOO,
                   puller: untracked,
                   receiver: august,
-                  result: 'caught',
+                  result: 'inbound',
                 },
                 {
                   id: 'a2',
@@ -1042,7 +1042,7 @@ describe('turnover attributions', () => {
                   receivingSideId: RIVALS,
                   puller: august,
                   receiver: untracked,
-                  result: 'caught',
+                  result: 'inbound',
                 },
                 {
                   id: 'a2',
@@ -1065,9 +1065,9 @@ describe('turnover attributions', () => {
     expect(sumAttributions(attributions, 'p_max', 'goal')).toBe(1);
   });
 
-  it('interception — block to defender, throwaway to tracked thrower, no receiving_touch to defender', () => {
-    // Joah intercepts a Rivals throw, then immediately throws to Max for the goal.
-    // Joah should get block credit but NOT receiving_touch — the interception catch
+  it('block — block to defender, throwaway to tracked thrower, no receiving_touch to defender', () => {
+    // Joah blocks a Rivals throw, then picks up and throws to Max for the goal.
+    // Joah should get block credit but NOT receiving_touch — the block
     // is a defensive play, not an offensive touch.
     const game: AdvancedTrackedGame = {
       ...baseGame,
@@ -1088,14 +1088,14 @@ describe('turnover attributions', () => {
                   receivingSideId: RIVALS,
                   puller: august,
                   receiver: untracked,
-                  result: 'caught',
+                  result: 'inbound',
                 },
                 {
                   id: 'a2',
                   kind: 'throw',
                   sideId: RIVALS,
                   thrower: untracked,
-                  result: 'interception',
+                  result: 'block',
                   defender: joah,
                 },
               ],
@@ -1167,7 +1167,7 @@ describe('turnover attributions', () => {
 // ── Credits: pull reception ──────────────────────────────────────────────────
 
 describe('pull attributions', () => {
-  it('pull caught — pull to puller, pull_reception to receiver', () => {
+  it('pull inbound — pull to puller, pull_reception to receiver', () => {
     const game: AdvancedTrackedGame = {
       ...baseGame,
       status: 'terminated',
@@ -1188,7 +1188,7 @@ describe('pull attributions', () => {
                   receivingSideId: RIVALS,
                   puller: august,
                   receiver: untracked,
-                  result: 'caught',
+                  result: 'inbound',
                 },
               ],
             },
@@ -1225,7 +1225,7 @@ describe('pull attributions', () => {
                   receivingSideId: RIVALS,
                   puller: august,
                   receiver: untracked,
-                  result: 'caught',
+                  result: 'inbound',
                 },
               ],
             },
@@ -1259,7 +1259,7 @@ describe('pull attributions', () => {
                   receivingSideId: RIVALS,
                   puller: august,
                   receiver: untracked,
-                  result: 'caught',
+                  result: 'inbound',
                   hangTimeMs: 2100,
                 },
                 {
@@ -1307,7 +1307,7 @@ describe('disc_pickup attribution', () => {
                   receivingSideId: RIVALS,
                   puller: august,
                   receiver: untracked,
-                  result: 'caught',
+                  result: 'inbound',
                 },
                 {
                   id: 'a2',
@@ -1370,7 +1370,7 @@ describe('unknown vs untracked PlayerRef attribution', () => {
                   receivingSideId: ZOO,
                   puller: untracked,
                   receiver: august,
-                  result: 'caught',
+                  result: 'inbound',
                 },
                 {
                   id: 'a2',
@@ -1412,7 +1412,7 @@ describe('unknown vs untracked PlayerRef attribution', () => {
                   receivingSideId: ZOO,
                   puller: untracked,
                   receiver: august,
-                  result: 'caught',
+                  result: 'inbound',
                 },
                 {
                   id: 'a2',
@@ -1454,7 +1454,7 @@ describe('unknown vs untracked PlayerRef attribution', () => {
                   receivingSideId: ZOO,
                   puller: untracked,
                   receiver: august,
-                  result: 'caught',
+                  result: 'inbound',
                 },
                 {
                   id: 'a2',
@@ -1495,7 +1495,7 @@ describe('unknown vs untracked PlayerRef attribution', () => {
                   receivingSideId: ZOO,
                   puller: untracked,
                   receiver: august,
-                  result: 'caught',
+                  result: 'inbound',
                 },
                 // unknown player completes to August — should be hockey assist source
                 {
@@ -1596,7 +1596,7 @@ describe('invalid structure', () => {
                   receivingSideId: ZOO,
                   puller: untracked,
                   receiver: august,
-                  result: 'caught',
+                  result: 'inbound',
                 },
                 { id: 'a2', kind: 'throw', sideId: ZOO, thrower: august, result: 'goal' },
               ],
@@ -1628,7 +1628,7 @@ describe('invalid structure', () => {
                   receivingSideId: ZOO,
                   puller: untracked,
                   receiver: august,
-                  result: 'caught',
+                  result: 'inbound',
                 },
                 { id: 'a2', kind: 'throw', sideId: ZOO, thrower: august, result: 'goal' },
               ],
@@ -1670,7 +1670,7 @@ describe('invalid structure', () => {
                   receivingSideId: ZOO,
                   puller: untracked,
                   receiver: august,
-                  result: 'caught',
+                  result: 'inbound',
                 },
                 { id: 'a2', kind: 'stoppage', reason: 'injury', sideId: ZOO },
                 { id: 'a3', kind: 'throw', sideId: ZOO, thrower: august, result: 'goal' },
@@ -1703,7 +1703,7 @@ describe('invalid structure', () => {
                   receivingSideId: ZOO,
                   puller: untracked,
                   receiver: august,
-                  result: 'caught',
+                  result: 'inbound',
                 },
                 { id: 'a2', kind: 'throw', sideId: RIVALS, thrower: august, result: 'goal' },
               ],
@@ -1735,7 +1735,7 @@ describe('invalid structure', () => {
                   receivingSideId: RIVALS,
                   puller: untracked,
                   receiver: august,
-                  result: 'caught',
+                  result: 'inbound',
                 },
                 { id: 'a2', kind: 'throw', sideId: ZOO, thrower: august, result: 'goal' },
               ],
@@ -1768,7 +1768,7 @@ describe('invalid structure', () => {
                   receivingSideId: ZOO,
                   puller: untracked,
                   receiver: august,
-                  result: 'caught',
+                  result: 'inbound',
                 },
                 { id: 'a2', kind: 'disc_pickup', sideId: ZOO, player: august },
               ],
@@ -1806,7 +1806,7 @@ describe('point timer', () => {
                   receivingSideId: ZOO,
                   puller: untracked,
                   receiver: august,
-                  result: 'caught',
+                  result: 'inbound',
                 },
                 {
                   id: 'a2',
@@ -1847,7 +1847,7 @@ describe('point timer', () => {
                   receivingSideId: ZOO,
                   puller: untracked,
                   receiver: august,
-                  result: 'caught',
+                  result: 'inbound',
                   recordedAt: start + 2000,
                 },
                 {
@@ -1903,7 +1903,7 @@ describe('point timer', () => {
                   receivingSideId: ZOO,
                   puller: untracked,
                   receiver: august,
-                  result: 'caught',
+                  result: 'inbound',
                   recordedAt: start + 2000,
                 },
                 {
@@ -1976,7 +1976,7 @@ describe('point timer', () => {
                   receivingSideId: ZOO,
                   puller: untracked,
                   receiver: august,
-                  result: 'caught',
+                  result: 'inbound',
                   recordedAt: start + 2000,
                 },
                 {
@@ -2073,7 +2073,7 @@ describe('stat derivation', () => {
                 receivingSideId: ZOO,
                 puller: untracked,
                 receiver: august,
-                result: 'caught',
+                result: 'inbound',
               },
               {
                 id: 'a2',
@@ -2112,7 +2112,7 @@ describe('stat derivation', () => {
                 receivingSideId: RIVALS,
                 puller: august,
                 receiver: untracked,
-                result: 'caught',
+                result: 'inbound',
               },
               {
                 id: 'b2',
@@ -2268,7 +2268,7 @@ describe('point durationMs', () => {
                   receivingSideId: ZOO,
                   puller: untracked,
                   receiver: august,
-                  result: 'caught',
+                  result: 'inbound',
                 },
                 {
                   id: 'a2',
@@ -2309,7 +2309,7 @@ describe('point durationMs', () => {
                   receivingSideId: ZOO,
                   puller: untracked,
                   receiver: august,
-                  result: 'caught',
+                  result: 'inbound',
                   recordedAt: start + 2000,
                 },
                 {
@@ -2352,7 +2352,7 @@ describe('point durationMs', () => {
                   receivingSideId: ZOO,
                   puller: untracked,
                   receiver: august,
-                  result: 'caught',
+                  result: 'inbound',
                   recordedAt: start + 2000,
                 },
                 {
@@ -2407,7 +2407,7 @@ describe('isCleanHold', () => {
                   receivingSideId: ZOO,
                   puller: untracked,
                   receiver: august,
-                  result: 'caught',
+                  result: 'inbound',
                 },
                 {
                   id: 'a2',
@@ -2448,7 +2448,7 @@ describe('isCleanHold', () => {
                   receivingSideId: ZOO,
                   puller: untracked,
                   receiver: august,
-                  result: 'caught',
+                  result: 'inbound',
                 },
                 { id: 'a2', kind: 'throw', sideId: ZOO, thrower: august, result: 'throwaway' },
               ],
@@ -2511,7 +2511,7 @@ describe('isCleanHold', () => {
                   receivingSideId: RIVALS,
                   puller: august,
                   receiver: untracked,
-                  result: 'caught',
+                  result: 'inbound',
                 },
                 {
                   id: 'a2',
@@ -2567,7 +2567,7 @@ describe('isCleanHold', () => {
                   receivingSideId: ZOO,
                   puller: untracked,
                   receiver: august,
-                  result: 'caught',
+                  result: 'inbound',
                 },
               ],
             },
@@ -2614,7 +2614,7 @@ describe('injury subs', () => {
                   receivingSideId: ZOO,
                   puller: untracked,
                   receiver: august,
-                  result: 'caught',
+                  result: 'inbound',
                 },
                 { id: 'a2', kind: 'stoppage', reason: 'injury', sideId: ZOO },
                 {
@@ -2666,7 +2666,7 @@ describe('injury subs', () => {
                   receivingSideId: ZOO,
                   puller: untracked,
                   receiver: august,
-                  result: 'caught',
+                  result: 'inbound',
                 },
                 { id: 'a2', kind: 'stoppage', reason: 'injury', sideId: ZOO },
                 {
@@ -2724,7 +2724,7 @@ describe('injury subs', () => {
                   receivingSideId: ZOO,
                   puller: untracked,
                   receiver: meves,
-                  result: 'caught',
+                  result: 'inbound',
                 },
                 { id: 'a2', kind: 'stoppage', reason: 'injury', sideId: ZOO },
                 {
@@ -2779,7 +2779,7 @@ describe('possession turnoverType', () => {
                   receivingSideId: ZOO,
                   puller: untracked,
                   receiver: august,
-                  result: 'caught',
+                  result: 'inbound',
                 },
                 {
                   id: 'a2',
@@ -2821,7 +2821,7 @@ describe('possession turnoverType', () => {
                   receivingSideId: ZOO,
                   puller: untracked,
                   receiver: august,
-                  result: 'caught',
+                  result: 'inbound',
                 },
                 { id: 'a2', kind: 'throw', sideId: ZOO, thrower: august, result: 'throwaway' },
               ],
@@ -2858,7 +2858,7 @@ describe('possession turnoverType', () => {
                   receivingSideId: ZOO,
                   puller: untracked,
                   receiver: august,
-                  result: 'caught',
+                  result: 'inbound',
                 },
                 {
                   id: 'b2',
@@ -2902,7 +2902,7 @@ describe('possession turnoverType', () => {
                   receivingSideId: ZOO,
                   puller: untracked,
                   receiver: august,
-                  result: 'caught',
+                  result: 'inbound',
                 },
                 { id: 'c2', kind: 'throw', sideId: ZOO, thrower: august, result: 'stall' },
               ],
@@ -2939,7 +2939,7 @@ describe('possession turnoverType', () => {
                   receivingSideId: ZOO,
                   puller: untracked,
                   receiver: august,
-                  result: 'caught',
+                  result: 'inbound',
                 },
                 {
                   id: 'd2',
@@ -2983,14 +2983,14 @@ describe('possession turnoverType', () => {
                   receivingSideId: ZOO,
                   puller: untracked,
                   receiver: august,
-                  result: 'caught',
+                  result: 'inbound',
                 },
                 {
                   id: 'e2',
                   kind: 'throw',
                   sideId: ZOO,
                   thrower: august,
-                  result: 'interception',
+                  result: 'block',
                   defender: joah,
                 },
               ],
@@ -3019,7 +3019,7 @@ describe('possession turnoverType', () => {
     expect(possessions[2]).toMatchObject({ result: 'turned_over', turnoverType: 'drop' });
     expect(possessions[4]).toMatchObject({ result: 'turned_over', turnoverType: 'stall' });
     expect(possessions[6]).toMatchObject({ result: 'turned_over', turnoverType: 'block' });
-    expect(possessions[8]).toMatchObject({ result: 'turned_over', turnoverType: 'interception' });
+    expect(possessions[8]).toMatchObject({ result: 'turned_over', turnoverType: 'block' });
   });
 
   it('callahan — possession result is turned_over with turnoverType callahan', () => {
@@ -3042,7 +3042,7 @@ describe('possession turnoverType', () => {
                   receivingSideId: RIVALS,
                   puller: august,
                   receiver: untracked,
-                  result: 'caught',
+                  result: 'inbound',
                 },
                 {
                   id: 'a2',
@@ -3088,7 +3088,7 @@ describe('genderRatio', () => {
                   receivingSideId: ZOO,
                   puller: untracked,
                   receiver: august,
-                  result: 'caught',
+                  result: 'inbound',
                 },
                 {
                   id: 'a2',
@@ -3118,7 +3118,7 @@ describe('genderRatio', () => {
                   receivingSideId: RIVALS,
                   puller: august,
                   receiver: untracked,
-                  result: 'caught',
+                  result: 'inbound',
                 },
                 {
                   id: 'b2',
@@ -3158,7 +3158,7 @@ describe('genderRatio', () => {
                   receivingSideId: ZOO,
                   puller: untracked,
                   receiver: august,
-                  result: 'caught',
+                  result: 'inbound',
                 },
                 {
                   id: 'a2',
@@ -3205,7 +3205,7 @@ describe('scoresBySide', () => {
                   receivingSideId: ZOO,
                   puller: untracked,
                   receiver: august,
-                  result: 'caught',
+                  result: 'inbound',
                 },
                 {
                   id: 'a2',
@@ -3234,7 +3234,7 @@ describe('scoresBySide', () => {
                   receivingSideId: RIVALS,
                   puller: august,
                   receiver: untracked,
-                  result: 'caught',
+                  result: 'inbound',
                 },
                 {
                   id: 'b2',
@@ -3277,7 +3277,7 @@ describe('scoresBySide', () => {
                   receivingSideId: RIVALS,
                   puller: august,
                   receiver: untracked,
-                  result: 'caught',
+                  result: 'inbound',
                 },
                 {
                   id: 'c2',
@@ -3321,7 +3321,7 @@ describe('scoresBySide', () => {
                   receivingSideId: RIVALS,
                   puller: august,
                   receiver: untracked,
-                  result: 'caught',
+                  result: 'inbound',
                 },
                 {
                   id: 'a2',
@@ -3370,7 +3370,7 @@ describe('possession result for finished games', () => {
                   receivingSideId: RIVALS,
                   puller: august,
                   receiver: untracked,
-                  result: 'caught',
+                  result: 'inbound',
                 },
                 {
                   id: 'a2',
@@ -3491,7 +3491,7 @@ describe('getPointStateForSide', () => {
                   receivingSideId: ZOO,
                   puller: untracked,
                   receiver: august,
-                  result: 'caught',
+                  result: 'inbound',
                 },
                 {
                   id: 'a2',
@@ -3521,7 +3521,7 @@ describe('getPointStateForSide', () => {
                   receivingSideId: RIVALS,
                   puller: august,
                   receiver: untracked,
-                  result: 'caught',
+                  result: 'inbound',
                 },
                 {
                   id: 'b2',
@@ -3603,7 +3603,7 @@ describe('both-team tracking', () => {
                   receivingSideId: ZOO,
                   puller: joah,
                   receiver: august,
-                  result: 'caught',
+                  result: 'inbound',
                 },
                 {
                   id: 'a2',
@@ -3636,7 +3636,7 @@ describe('both-team tracking', () => {
                   receivingSideId: RIVALS,
                   puller: august,
                   receiver: joah,
-                  result: 'caught',
+                  result: 'inbound',
                 },
                 { id: 'b2', kind: 'throw', sideId: RIVALS, thrower: joah, result: 'throwaway' },
               ],
@@ -3677,7 +3677,7 @@ describe('both-team tracking', () => {
                   receivingSideId: RIVALS,
                   puller: august,
                   receiver: joah,
-                  result: 'caught',
+                  result: 'inbound',
                 },
                 {
                   id: 'c2',
@@ -3745,7 +3745,7 @@ describe('both-team tracking', () => {
                   receivingSideId: ZOO,
                   puller: joah,
                   receiver: august,
-                  result: 'caught',
+                  result: 'inbound',
                 },
                 {
                   id: 'a2',
@@ -3815,7 +3815,7 @@ describe('scrimmage', () => {
                   receivingSideId: WHITE,
                   puller: joah,
                   receiver: august,
-                  result: 'caught',
+                  result: 'inbound',
                 },
                 {
                   id: 'a2',
@@ -3848,7 +3848,7 @@ describe('scrimmage', () => {
                   receivingSideId: DARK,
                   puller: meves,
                   receiver: august,
-                  result: 'caught',
+                  result: 'inbound',
                 },
                 {
                   id: 'b2',
@@ -3909,7 +3909,7 @@ describe('scrimmage', () => {
                   receivingSideId: WHITE,
                   puller: joah,
                   receiver: august,
-                  result: 'caught',
+                  result: 'inbound',
                 },
                 {
                   id: 'a2',
