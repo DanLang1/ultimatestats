@@ -95,7 +95,9 @@ export interface AdvancedTrackingState {
   currentGameId: string | null;
   savedGames: AdvancedTrackedGame[];
   undoStack: AdvancedTrackingUndoEntry[];
+  isHalftimeBreakActive: boolean;
   createGame: (input: CreateAdvancedGameInput) => string;
+  clearHalftimeBreak: () => void;
   resetCurrentGame: () => void;
   finalizeGame: () => void;
   terminateGame: (endReason: NonNullable<AdvancedTrackedGame['endReason']>) => void;

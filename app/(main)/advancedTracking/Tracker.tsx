@@ -23,12 +23,13 @@ import {
   getReceivingSideForNextPoint,
   getSideScore,
   hasPointEnded,
+  isAdvancedGameOver,
   isPossessionOver,
 } from '@/lib/advancedTracking/trackingUtils';
 import { hasItems } from '@/lib/utils';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { Fonts, Palette } from '@/theme/theme';
-import { router, Stack } from 'expo-router';
+import { Redirect, router, Stack } from 'expo-router';
 import React, { useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -44,6 +45,7 @@ export default function AdvancedTrackerScreen() {
   const {
     currentGameId,
     savedGames,
+    isHalftimeBreakActive,
     recordThrow,
     recordPickup,
     amendLastThrowAsGoal,
@@ -70,6 +72,14 @@ export default function AdvancedTrackerScreen() {
         </View>
       </ThemedView>
     );
+  }
+
+  if (isHalftimeBreakActive) {
+    return <Redirect href="/advancedTracking/TrackerHalftime" />;
+  }
+
+  if (isAdvancedGameOver(game)) {
+    return <Redirect href="/advancedTracking/TrackerGameComplete" />;
   }
 
   const oppSide = game.sides.find((s) => s.id !== game.focusSideId);

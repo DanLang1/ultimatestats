@@ -246,7 +246,7 @@ export function isAdvancedGameOver(game: AdvancedTrackedGame): boolean {
   return (firstScore >= effectiveGameTo || secondScore >= effectiveGameTo) && notTied;
 }
 
-export function syncDerivedHalftimeTransition(game: AdvancedTrackedGame) {
+export function syncDerivedHalftimeTransition(game: AdvancedTrackedGame): boolean {
   const halftimeAt = game.settings.format?.halftimeAt;
   const existingTransitions = game.gameTransitions ?? [];
   const existingHalftime = existingTransitions.find(
@@ -286,6 +286,14 @@ export function syncDerivedHalftimeTransition(game: AdvancedTrackedGame) {
   }
 
   game.gameTransitions = hasItems(nextTransitions) ? nextTransitions : undefined;
+
+  const currentPoint = getCurrentPoint(game);
+  return (
+    currentPoint != null &&
+    hasPointEnded(currentPoint) &&
+    halftimeAfterPointId != null &&
+    halftimeAfterPointId === currentPoint.id
+  );
 }
 
 // --- Assertions ---

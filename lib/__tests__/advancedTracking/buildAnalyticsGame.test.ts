@@ -3062,6 +3062,60 @@ describe('possession turnoverType', () => {
     expect(possessions[0].result).toBe('turned_over');
     expect(possessions[0].turnoverType).toBe('callahan');
   });
+
+  it('dropped pull — turned_over with turnoverType drop, not masked by terminated status', () => {
+    // The bug: the existing dropped-pull test used status:'terminated', which let
+    // compilePossessionWithActions fall through to possResult='terminated' instead of
+    // throwing. This test uses in_progress with the dropped pull followed by a scoring
+    // possession, which is the case that actually hit production.
+    const game: AdvancedTrackedGame = {
+      ...baseGame,
+      status: 'in_progress',
+      initialReceivingSideId: ZOO,
+      points: [
+        {
+          id: 'pt1',
+          lines: [{ sideId: ZOO, participantIds: ['p_august', 'p_meves'] }],
+          possessions: [
+            {
+              id: 'pos1',
+              sideId: ZOO,
+              actions: [
+                {
+                  id: 'a1',
+                  kind: 'pull',
+                  sideId: RIVALS,
+                  receivingSideId: ZOO,
+                  puller: untracked,
+                  receiver: august,
+                  result: 'dropped',
+                },
+              ],
+            },
+            {
+              id: 'pos2',
+              sideId: RIVALS,
+              actions: [
+                { id: 'a2', kind: 'disc_pickup', sideId: RIVALS, player: untracked },
+                {
+                  id: 'a3',
+                  kind: 'throw',
+                  sideId: RIVALS,
+                  thrower: untracked,
+                  toPlayer: untracked,
+                  result: 'goal',
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+    const { possessions } = buildAnalyticsGameWithLog(game);
+    expect(possessions[0].result).toBe('turned_over');
+    expect(possessions[0].turnoverType).toBe('drop');
+    expect(possessions[1].result).toBe('scored');
+  });
 });
 
 // ── genderRatio ───────────────────────────────────────────────────────────────

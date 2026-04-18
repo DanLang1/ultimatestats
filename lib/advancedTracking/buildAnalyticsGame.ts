@@ -370,6 +370,9 @@ function compilePossessionWithActions(
       possResult = 'turned_over';
       turnoverType = possLastAction.result;
     }
+  } else if (possLastAction.kind === 'pull' && possLastAction.result === 'dropped') {
+    possResult = 'turned_over';
+    turnoverType = 'drop';
   }
   if (possResult === null) {
     if (ctx.gameStatus === 'terminated' && isLastPoint && isLastPossession) {

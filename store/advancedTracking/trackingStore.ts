@@ -88,6 +88,13 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
         currentGameId: null,
         savedGames: [],
         undoStack: [],
+        isHalftimeBreakActive: false,
+
+        clearHalftimeBreak: () => {
+          set((state) => {
+            state.isHalftimeBreakActive = false;
+          });
+        },
 
         createGame: (input) => {
           const now = Date.now();
@@ -417,7 +424,9 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
               possessionId: possession.id,
               actionId,
             });
-            syncDerivedHalftimeTransition(liveGame);
+            if (syncDerivedHalftimeTransition(liveGame)) {
+              state.isHalftimeBreakActive = true;
+            }
             liveGame.updatedAt = Date.now();
           });
 
@@ -457,7 +466,9 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
               actionId: lastThrow!.id,
               previousResult,
             });
-            syncDerivedHalftimeTransition(liveGame);
+            if (syncDerivedHalftimeTransition(liveGame)) {
+              state.isHalftimeBreakActive = true;
+            }
             liveGame.updatedAt = Date.now();
           });
         },
@@ -619,7 +630,6 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
                 lastUndoEntry.possessionId,
                 lastUndoEntry.actionId,
               );
-              syncDerivedHalftimeTransition(liveGame);
             } else if (lastUndoEntry.kind === 'between_point_timeout') {
               const point = liveGame.points.find(
                 (candidate) => candidate.id === lastUndoEntry.pointId,
@@ -666,11 +676,11 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
               );
               if (action?.kind === 'throw') {
                 action.result = lastUndoEntry.previousResult;
-                syncDerivedHalftimeTransition(liveGame);
               }
             }
 
             state.undoStack.pop();
+            state.isHalftimeBreakActive = syncDerivedHalftimeTransition(liveGame);
             liveGame.updatedAt = Date.now();
           });
 
