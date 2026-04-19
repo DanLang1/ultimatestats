@@ -6,6 +6,7 @@ import { useDashboardSession } from '@/hooks/useDashboardSession';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { useNewGame } from '@/hooks/useNewGame';
 import { useVersionCheck } from '@/hooks/useVersionCheck';
+import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { useTutorialStore } from '@/store/tutorialStore';
 import { Fonts } from '@/theme/theme';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -35,6 +36,9 @@ export default function DashboardScreen() {
   const styles = createStyles(sizeClass);
   const metrics = createMetrics(sizeClass);
   const { resetStatsTutorial } = useTutorialStore();
+  const { currentGameId, savedGames: advancedSavedGames } = useAdvancedTrackingStore();
+  const activeAdvancedGame = advancedSavedGames.find((g) => g.id === currentGameId) ?? null;
+  const hasActiveAdvancedGame = activeAdvancedGame != null;
   const { confirmNewGame } = useNewGame();
   const { hasNewVersion } = useVersionCheck();
   const {
@@ -305,10 +309,54 @@ export default function DashboardScreen() {
               />
               <View style={styles.discordText}>
                 <ThemedText style={[styles.discordTitle, { color: palette.textOnAccent }]}>
-                  Advanced Tracker
+                  New Advanced Game
                 </ThemedText>
                 <ThemedText style={[styles.discordSubtitle, { color: palette.textOnAccentMuted }]}>
-                  DEV ONLY - Open advanced tracking flow
+                  DEV ONLY - Start a fresh advanced tracking game
+                </ThemedText>
+              </View>
+            </Pressable>
+
+            <Pressable
+              onPress={() => {
+                const resumeRoute =
+                  activeAdvancedGame != null && activeAdvancedGame.points.length > 0
+                    ? '/advancedTracking/Tracker'
+                    : '/advancedTracking/LineEditor';
+                router.push(resumeRoute);
+              }}
+              disabled={!hasActiveAdvancedGame}
+              style={({ pressed }) => [
+                styles.discordBanner,
+                {
+                  backgroundColor: hasActiveAdvancedGame ? palette.accent : palette.overlay10,
+                  opacity: hasActiveAdvancedGame ? 1 : 0.5,
+                },
+                pressed && hasActiveAdvancedGame && styles.menuItemPressed,
+              ]}>
+              <MaterialCommunityIcons
+                name="play-circle-outline"
+                size={metrics.bannerIconSize}
+                color={hasActiveAdvancedGame ? palette.textOnAccent : palette.textMuted}
+              />
+              <View style={styles.discordText}>
+                <ThemedText
+                  style={[
+                    styles.discordTitle,
+                    { color: hasActiveAdvancedGame ? palette.textOnAccent : palette.textMuted },
+                  ]}>
+                  Resume Advanced Game
+                </ThemedText>
+                <ThemedText
+                  style={[
+                    styles.discordSubtitle,
+                    {
+                      color: hasActiveAdvancedGame ? palette.textOnAccentMuted : palette.textMuted,
+                    },
+                  ]}>
+                  {hasActiveAdvancedGame
+                    ? `DEV ONLY - Resume in-progress game (${activeAdvancedGame?.points.length ?? 0} points)`
+                    : 'DEV ONLY - No active game to resume'}
                 </ThemedText>
               </View>
             </Pressable>

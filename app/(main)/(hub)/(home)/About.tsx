@@ -7,7 +7,7 @@ import { CHANGELOG } from '@/lib/changelog';
 import { MaterialIcons } from '@expo/vector-icons';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router, Stack, useFocusEffect } from 'expo-router';
-import React, { useCallback } from 'react';
+import React from 'react';
 import { Linking, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 import { Fonts } from '@/theme/theme';
@@ -19,12 +19,9 @@ export default function AboutScreen() {
   const metrics = createMetrics(sizeClass);
   const { currentVersion, acknowledge } = useVersionCheck();
 
-  // Acknowledge version when user views this page
-  useFocusEffect(
-    useCallback(() => {
-      acknowledge();
-    }, [acknowledge]),
-  );
+  useFocusEffect(() => {
+    acknowledge();
+  });
 
   return (
     <ThemedView style={[styles.container, { backgroundColor: palette.primary }]}>

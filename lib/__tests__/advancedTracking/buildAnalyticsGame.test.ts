@@ -1,7 +1,8 @@
-import type { AnalyticsAttribution, AttributionType } from '../../advancedTracking/analyticsTypes';
+import type { AnalyticsAttribution, AnalyticsGame, AttributionType } from '../../advancedTracking/analyticsTypes';
 import {
   UNKNOWN_PARTICIPANT_ID,
   buildAnalyticsGame,
+  getFinalScores,
   getPointStateForSide,
 } from '../../advancedTracking/buildAnalyticsGame';
 import type { AdvancedTrackedGame } from '../../advancedTracking/types';
@@ -979,7 +980,7 @@ describe('turnover attributions', () => {
     expect(sumAttributions(attributions, 'p_august', 'throwaway')).toBe(1);
   });
 
-  it('stall — charged to the player holding the disc', () => {
+  it('stall — stall_conceded to the thrower, stall to the defender', () => {
     const game: AdvancedTrackedGame = {
       ...baseGame,
       status: 'terminated',
@@ -1018,7 +1019,8 @@ describe('turnover attributions', () => {
     };
     const { attributions } = buildAnalyticsGameWithLog(game);
 
-    expect(sumAttributions(attributions, 'p_meves', 'stall')).toBe(1);
+    expect(sumAttributions(attributions, 'p_meves', 'stall_conceded')).toBe(1);
+    expect(sumAttributions(attributions, 'p_meves', 'stall')).toBe(0);
     expect(sumAttributions(attributions, 'p_august', 'stall')).toBe(0);
   });
 
@@ -3989,5 +3991,160 @@ describe('scrimmage', () => {
     // point.state is always from focusSideId (White) perspective
     expect(points[0].state).toBe('hold');
     expect(points[0].state).toBe(getPointStateForSide(points[0], WHITE));
+  });
+});
+
+// ── AnalyticsGame metadata fields ─────────────────────────────────────────────
+
+describe('AnalyticsGame metadata fields', () => {
+  const zooHoldPoint = {
+    id: 'pt1',
+    lines: [{ sideId: ZOO, participantIds: ['p_august', 'p_meves'] }],
+    possessions: [
+      {
+        id: 'pos1',
+        sideId: ZOO,
+        actions: [
+          { id: 'a1', kind: 'pull' as const, sideId: RIVALS, receivingSideId: ZOO, puller: untracked, result: 'inbound' as const },
+          { id: 'a2', kind: 'throw' as const, sideId: ZOO, thrower: august, toPlayer: meves, result: 'goal' as const },
+        ],
+      },
+    ],
+  };
+
+  const gameWithMeta: AdvancedTrackedGame = {
+    ...baseGame,
+    createdAt: 9001,
+    metadata: { opponentName: 'Rivals FC', location: 'Field A', date: '2024-07-04' },
+    points: [zooHoldPoint],
+  };
+
+  it('exposes focusSideId matching the raw game', () => {
+    expect(buildAnalyticsGame(gameWithMeta).focusSideId).toBe(ZOO);
+  });
+
+  it('exposes oppSideId as the non-focus side', () => {
+    expect(buildAnalyticsGame(gameWithMeta).oppSideId).toBe(RIVALS);
+  });
+
+  it('exposes sideLabels keyed by sideId', () => {
+    const { sideLabels } = buildAnalyticsGame(gameWithMeta);
+    expect(sideLabels[ZOO]).toBe('Zoo');
+    expect(sideLabels[RIVALS]).toBe('Rivals');
+  });
+
+  it('exposes participantNames as a Map with correct entries', () => {
+    const { participantNames } = buildAnalyticsGame(gameWithMeta);
+    expect(participantNames.get('p_august')).toBe('August');
+    expect(participantNames.get('p_meves')).toBe('Meves');
+    expect(participantNames.size).toBe(participants.length);
+  });
+
+  it('passes through metadata', () => {
+    const { metadata } = buildAnalyticsGame(gameWithMeta);
+    expect(metadata?.opponentName).toBe('Rivals FC');
+    expect(metadata?.location).toBe('Field A');
+    expect(metadata?.date).toBe('2024-07-04');
+  });
+
+  it('passes through createdAt', () => {
+    expect(buildAnalyticsGame(gameWithMeta).createdAt).toBe(9001);
+  });
+
+  it('metadata is undefined when not set on the raw game', () => {
+    const game: AdvancedTrackedGame = { ...baseGame, points: [zooHoldPoint] };
+    expect(buildAnalyticsGame(game).metadata).toBeUndefined();
+  });
+});
+
+// ── getFinalScores ─────────────────────────────────────────────────────────────
+
+describe('getFinalScores', () => {
+  const zooHoldPoint = {
+    id: 'pt1',
+    lines: [{ sideId: ZOO, participantIds: ['p_august'] }],
+    possessions: [
+      {
+        id: 'pos1',
+        sideId: ZOO,
+        actions: [
+          { id: 'a1', kind: 'pull' as const, sideId: RIVALS, receivingSideId: ZOO, puller: untracked, result: 'inbound' as const },
+          { id: 'a2', kind: 'throw' as const, sideId: ZOO, thrower: august, toPlayer: meves, result: 'goal' as const },
+        ],
+      },
+    ],
+  };
+
+  const rivalsHoldPoint = (id: string) => ({
+    id,
+    lines: [{ sideId: ZOO, participantIds: ['p_august'] }],
+    possessions: [
+      {
+        id: `pos_${id}`,
+        sideId: RIVALS,
+        actions: [
+          { id: `pull_${id}`, kind: 'pull' as const, sideId: ZOO, receivingSideId: RIVALS, puller: august, result: 'inbound' as const },
+          { id: `throw_${id}`, kind: 'throw' as const, sideId: RIVALS, thrower: untracked, toPlayer: untracked, result: 'goal' as const },
+        ],
+      },
+    ],
+  });
+
+  it('returns empty object when there are no points', () => {
+    const analytics = buildAnalyticsGame({ ...baseGame, points: [zooHoldPoint] });
+    const empty: AnalyticsGame = { ...analytics, points: [] };
+    expect(getFinalScores(empty)).toEqual({});
+  });
+
+  it('returns correct score after a single Zoo hold', () => {
+    const analytics = buildAnalyticsGame({ ...baseGame, points: [zooHoldPoint] });
+    expect(getFinalScores(analytics)).toEqual({ [ZOO]: 1, [RIVALS]: 0 });
+  });
+
+  it('accumulates scores across multiple points', () => {
+    // Zoo holds (1-0), Rivals holds (1-1), Zoo holds (2-1)
+    const game: AdvancedTrackedGame = {
+      ...baseGame,
+      points: [
+        { ...zooHoldPoint, id: 'pt1' },
+        rivalsHoldPoint('pt2'),
+        { ...zooHoldPoint, id: 'pt3',
+          lines: [{ sideId: ZOO, participantIds: ['p_august'] }],
+          possessions: [{ id: 'pos3', sideId: ZOO, actions: [
+            { id: 'pull3', kind: 'pull' as const, sideId: RIVALS, receivingSideId: ZOO, puller: untracked, result: 'inbound' as const },
+            { id: 'throw3', kind: 'throw' as const, sideId: ZOO, thrower: august, toPlayer: meves, result: 'goal' as const },
+          ]}],
+        },
+      ],
+    };
+    const analytics = buildAnalyticsGame(game);
+    expect(getFinalScores(analytics)).toEqual({ [ZOO]: 2, [RIVALS]: 1 });
+  });
+
+  it('does not add score when the last point has no scorer (terminated mid-point)', () => {
+    // pt1: Zoo holds 1-0. pt2: game terminated during Rivals possession — no score.
+    const terminatedGame: AdvancedTrackedGame = {
+      ...baseGame,
+      status: 'terminated',
+      points: [
+        { ...zooHoldPoint, id: 'pt1' },
+        {
+          id: 'pt2',
+          lines: [{ sideId: ZOO, participantIds: ['p_august'] }],
+          possessions: [
+            {
+              id: 'pos2',
+              sideId: RIVALS,
+              actions: [
+                { id: 'pull2', kind: 'pull' as const, sideId: ZOO, receivingSideId: RIVALS, puller: august, result: 'inbound' as const },
+                { id: 'throw2', kind: 'throw' as const, sideId: RIVALS, thrower: untracked, toPlayer: untracked, result: 'complete' as const },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+    const analytics = buildAnalyticsGame(terminatedGame);
+    expect(getFinalScores(analytics)).toEqual({ [ZOO]: 1, [RIVALS]: 0 });
   });
 });

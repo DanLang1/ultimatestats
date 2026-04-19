@@ -163,7 +163,7 @@ function emitAttributions(
         break;
 
       case 'stall':
-        add('stall', actorId);
+        add('stall_conceded', actorId);
         add('stall', defenderId);
         break;
 
@@ -610,13 +610,36 @@ export function buildAnalyticsGame(game: AdvancedTrackedGame): AnalyticsGame {
     }
   }
 
+  const [sideA, sideB] = game.sides;
+  const oppSideId = sideA.id === game.focusSideId ? sideB.id : sideA.id;
+
   return {
     gameType: game.gameType,
+    focusSideId: game.focusSideId,
+    oppSideId,
+    sideLabels: Object.fromEntries(game.sides.map((s) => [s.id, s.label])),
+    participantNames: new Map(game.participants.map((p) => [p.id, p.name])),
+    metadata: game.metadata,
+    createdAt: game.createdAt,
     points,
     possessions,
     actions,
     attributions,
   };
+}
+
+/**
+ * Returns the final score for each side. scoresBySide on each AnalyticsPoint
+ * captures the score at the START of that point, so we add the last point's score.
+ */
+export function getFinalScores(game: AnalyticsGame): Record<string, number> {
+  const lastPoint = game.points[game.points.length - 1];
+  if (!lastPoint) return {};
+  const scores = { ...lastPoint.scoresBySide };
+  if (lastPoint.scoringSideId != null) {
+    scores[lastPoint.scoringSideId] = (scores[lastPoint.scoringSideId] ?? 0) + 1;
+  }
+  return scores;
 }
 
 /**

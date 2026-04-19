@@ -11,8 +11,9 @@ import SavedGamesList from '@/components/view-stats/SavedGamesList';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { MAX_SHARE_GAMES } from '@/lib/constants';
+import { advancedGameToListItem, basicGameToListItem, GameListItem } from '@/lib/gameListUtils';
 import { serializeGames, uploadPayload } from '@/lib/sharing';
-import { SavedGame } from '@/lib/storage';
+import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { useGameStore } from '@/store/gameStore';
 import { useTournamentStore } from '@/store/tournamentStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
@@ -24,7 +25,8 @@ export default function SavedGameStatsScreen() {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
   const styles = createStyles(sizeClass);
-  const { savedGames, deleteSavedGames } = useGameStore();
+  const { savedGames, savedTeams, deleteSavedGames } = useGameStore();
+  const { savedGames: advancedSavedGames } = useAdvancedTrackingStore();
   const { showAlert } = useAlert();
   const { tournaments } = useTournamentStore();
   const [selectedSavedGameIds, setSelectedSavedGameIds] = useState<Set<string>>(new Set());
@@ -33,8 +35,19 @@ export default function SavedGameStatsScreen() {
     null,
   );
 
-  const handleSelectGame = (game: SavedGame) => {
-    router.push({ pathname: '/saved-games/[gameId]', params: { gameId: game.id } });
+  const basicItems = savedGames.map((g) => basicGameToListItem(g, savedTeams));
+  const advancedItems = advancedSavedGames.map(advancedGameToListItem);
+  const allGames = [...basicItems, ...advancedItems].sort((a, b) => b.timestamp - a.timestamp);
+
+  const handleSelectGame = (game: GameListItem) => {
+    if (game.kind === 'advanced') {
+      router.push({
+        pathname: '/advancedTracking/analytics/[gameId]',
+        params: { gameId: game.id },
+      });
+    } else {
+      router.push({ pathname: '/saved-games/[gameId]', params: { gameId: game.id } });
+    }
   };
 
   const handleToggleSavedGameSelection = (gameId: string) => {
@@ -160,7 +173,7 @@ export default function SavedGameStatsScreen() {
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <SavedGamesList
-          games={savedGames}
+          games={allGames}
           onSelectGame={handleSelectGame}
           selectedGameIds={selectedSavedGameIds}
           onToggleGameSelection={handleToggleSavedGameSelection}

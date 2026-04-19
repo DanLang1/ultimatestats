@@ -3,12 +3,9 @@ import { ScoreBadge } from '@/components/ui/ScoreBadge';
 import { TournamentFilterModal } from '@/components/ui/TournamentFilterModal';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import { resolveTeamName } from '@/lib/playerUtils';
-import { getGameDisplayTimestamp } from '@/lib/savedGameUtils';
+import { GameListItem } from '@/lib/gameListUtils';
 import { formatDate } from '@/lib/statsUtils';
-import { SavedGame } from '@/lib/storage';
 import { Tournament } from '@/lib/storage/types';
-import { useGameStore } from '@/store/gameStore';
 import { useTutorialStore } from '@/store/tutorialStore';
 import { Fonts } from '@/theme/theme';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
@@ -17,8 +14,8 @@ import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 import Animated, { FadeOut, LinearTransition } from 'react-native-reanimated';
 
 interface SavedGamesListProps {
-  games: SavedGame[];
-  onSelectGame: (game: SavedGame) => void;
+  games: GameListItem[];
+  onSelectGame: (game: GameListItem) => void;
   selectedGameIds?: Set<string>;
   onToggleGameSelection?: (gameId: string) => void;
   onEnterSelectionWithGame?: (gameId: string) => void;
@@ -41,7 +38,6 @@ export default function SavedGamesList({
   selectionMode = false,
 }: SavedGamesListProps) {
   const { palette } = useTheme();
-  const { savedTeams } = useGameStore();
   const { hasSeenLongPressSelectHint, dismissLongPressSelectHint } = useTutorialStore();
   const { isLandscape, sizeClass } = useLayout();
   const styles = createStyles(isLandscape, sizeClass);
@@ -52,14 +48,10 @@ export default function SavedGamesList({
   const [tournamentFilter, setTournamentFilter] = useState<string | null>(null);
   const [showTournamentFilter, setShowTournamentFilter] = useState(false);
 
-  // Helper to get live team name with snapshot fallback
-  const getTeamName = (game: SavedGame) =>
-    resolveTeamName(game.team1.id, game.team1.name, savedTeams);
-
-  // Tournaments that have at least one saved game, with counts
+  // Tournaments that have at least one basic saved game, with counts
   const tournamentGameCounts = new Map<string, number>();
   for (const game of games) {
-    if (game.tournamentId) {
+    if (game.kind === 'basic' && game.tournamentId) {
       tournamentGameCounts.set(
         game.tournamentId,
         (tournamentGameCounts.get(game.tournamentId) ?? 0) + 1,
@@ -67,16 +59,15 @@ export default function SavedGamesList({
     }
   }
   const visibleTournaments = tournaments.filter((t) => tournamentGameCounts.has(t.id));
-  // If the active filter no longer exists (e.g. tournament was deleted), treat as no filter
   const activeTournament = visibleTournaments.find((t) => t.id === tournamentFilter) ?? null;
   const effectiveTournamentFilter = activeTournament ? tournamentFilter : null;
 
   let filteredAndSortedGames = [...games];
 
-  // Tournament filter
+  // Tournament filter — only applies to basic games; advanced games are unaffected
   if (effectiveTournamentFilter) {
     filteredAndSortedGames = filteredAndSortedGames.filter(
-      (game) => game.tournamentId === effectiveTournamentFilter,
+      (game) => game.kind === 'advanced' || game.tournamentId === effectiveTournamentFilter,
     );
   }
 
@@ -84,9 +75,9 @@ export default function SavedGamesList({
   if (searchQuery.trim()) {
     const query = searchQuery.toLowerCase().trim();
     filteredAndSortedGames = filteredAndSortedGames.filter((game) => {
-      const t1 = getTeamName(game).toLowerCase();
-      const t2 = game.team2Name.toLowerCase();
-      const date = formatDate(getGameDisplayTimestamp(game)).toLowerCase();
+      const t1 = game.myTeamName.toLowerCase();
+      const t2 = game.opponentName.toLowerCase();
+      const date = formatDate(game.timestamp).toLowerCase();
       return t1.includes(query) || t2.includes(query) || date.includes(query);
     });
   }
@@ -96,15 +87,15 @@ export default function SavedGamesList({
   filteredAndSortedGames.sort((a, b) => {
     switch (sortField) {
       case 'team':
-        return dir * getTeamName(a).localeCompare(getTeamName(b));
+        return dir * a.myTeamName.localeCompare(b.myTeamName);
       case 'score': {
-        const totalA = a.team1Score + a.team2Score;
-        const totalB = b.team1Score + b.team2Score;
+        const totalA = a.myScore + a.opponentScore;
+        const totalB = b.myScore + b.opponentScore;
         return dir * (totalA - totalB);
       }
       case 'date':
       default:
-        return dir * (getGameDisplayTimestamp(a) - getGameDisplayTimestamp(b));
+        return dir * (a.timestamp - b.timestamp);
     }
   });
 
@@ -247,24 +238,26 @@ export default function SavedGamesList({
 
       <View style={styles.savedGamesList}>
         {filteredAndSortedGames.map((game) => {
-          const isSelected = selectedGameIds.has(game.id);
+          const isAdvanced = game.kind === 'advanced';
+          const isSelectable = !isAdvanced;
+          const isSelected = isSelectable && selectedGameIds.has(game.id);
 
-          let team1ScoreColor: string;
-          if (game.team1Score > game.team2Score) {
-            team1ScoreColor = palette.success;
-          } else if (game.team1Score < game.team2Score) {
-            team1ScoreColor = palette.danger;
+          let myScoreColor: string;
+          if (game.myScore > game.opponentScore) {
+            myScoreColor = palette.success;
+          } else if (game.myScore < game.opponentScore) {
+            myScoreColor = palette.danger;
           } else {
-            team1ScoreColor = palette.warning;
+            myScoreColor = palette.warning;
           }
 
-          let team2ScoreColor: string;
-          if (game.team2Score > game.team1Score) {
-            team2ScoreColor = palette.success;
-          } else if (game.team2Score < game.team1Score) {
-            team2ScoreColor = palette.danger;
+          let oppScoreColor: string;
+          if (game.opponentScore > game.myScore) {
+            oppScoreColor = palette.success;
+          } else if (game.opponentScore < game.myScore) {
+            oppScoreColor = palette.danger;
           } else {
-            team2ScoreColor = palette.warning;
+            oppScoreColor = palette.warning;
           }
 
           return (
@@ -278,8 +271,8 @@ export default function SavedGamesList({
                   { backgroundColor: palette.overlay05, borderColor: palette.overlay10 },
                   isSelected && { borderColor: palette.accent },
                 ]}>
-                {/* Checkbox Section */}
-                {selectionMode && (
+                {/* Checkbox Section — only for selectable (basic) games */}
+                {selectionMode && isSelectable && (
                   <Pressable
                     style={styles.checkboxWrapper}
                     onPress={() => onToggleGameSelection?.(game.id)}
@@ -306,12 +299,16 @@ export default function SavedGamesList({
 
                 {/* Content Section */}
                 <Pressable
-                  style={[styles.cardContent, selectionMode && { paddingLeft: 8 }]}
-                  onPress={() =>
-                    selectionMode ? onToggleGameSelection?.(game.id) : onSelectGame(game)
-                  }
+                  style={[styles.cardContent, selectionMode && isSelectable && { paddingLeft: 8 }]}
+                  onPress={() => {
+                    if (selectionMode && isSelectable) {
+                      onToggleGameSelection?.(game.id);
+                    } else if (!selectionMode) {
+                      onSelectGame(game);
+                    }
+                  }}
                   onLongPress={() => {
-                    if (!selectionMode) {
+                    if (!selectionMode && isSelectable) {
                       dismissLongPressSelectHint();
                       onEnterSelectionWithGame?.(game.id);
                     }
@@ -319,24 +316,40 @@ export default function SavedGamesList({
                   delayLongPress={350}>
                   <View style={styles.savedGameHeader}>
                     <ThemedText style={[styles.savedGameDate, { color: palette.textMuted }]}>
-                      {formatDate(getGameDisplayTimestamp(game))}
+                      {formatDate(game.timestamp)}
                     </ThemedText>
-                    {game.importedAt && (
-                      <MaterialCommunityIcons
-                        name="cloud-download-outline"
-                        size={scaleBySizeClass(14, sizeClass)}
-                        color={palette.textMuted}
-                      />
-                    )}
+                    <View style={styles.headerBadges}>
+                      {isAdvanced && (
+                        <View
+                          style={[
+                            styles.advancedBadge,
+                            {
+                              backgroundColor: palette.indigoOverlay20,
+                              borderColor: palette.accent,
+                            },
+                          ]}>
+                          <ThemedText style={[styles.advancedBadgeText, { color: palette.accent }]}>
+                            Advanced
+                          </ThemedText>
+                        </View>
+                      )}
+                      {game.kind === 'basic' && game.importedAt != null && (
+                        <MaterialCommunityIcons
+                          name="cloud-download-outline"
+                          size={scaleBySizeClass(14, sizeClass)}
+                          color={palette.textMuted}
+                        />
+                      )}
+                    </View>
                   </View>
                   {isLandscape ? (
                     <View style={styles.savedGameTeams}>
                       <ThemedText
                         style={[styles.savedGameTeamName, { color: palette.textInverse }]}
                         numberOfLines={1}>
-                        {getTeamName(game)}
+                        {game.myTeamName}
                       </ThemedText>
-                      <ScoreBadge score1={game.team1Score} score2={game.team2Score} />
+                      <ScoreBadge score1={game.myScore} score2={game.opponentScore} />
                       <ThemedText
                         style={[
                           styles.savedGameTeamName,
@@ -344,7 +357,7 @@ export default function SavedGamesList({
                           { color: palette.textInverse },
                         ]}
                         numberOfLines={1}>
-                        {game.team2Name}
+                        {game.opponentName}
                       </ThemedText>
                     </View>
                   ) : (
@@ -353,20 +366,20 @@ export default function SavedGamesList({
                         <ThemedText
                           style={[styles.savedGameTeamName, { color: palette.textInverse }]}
                           numberOfLines={1}>
-                          {getTeamName(game)}
+                          {game.myTeamName}
                         </ThemedText>
-                        <ThemedText style={[styles.teamScoreValue, { color: team1ScoreColor }]}>
-                          {game.team1Score}
+                        <ThemedText style={[styles.teamScoreValue, { color: myScoreColor }]}>
+                          {game.myScore}
                         </ThemedText>
                       </View>
                       <View style={styles.teamScoreRow}>
                         <ThemedText
                           style={[styles.savedGameTeamName, { color: palette.textInverse }]}
                           numberOfLines={1}>
-                          {game.team2Name}
+                          {game.opponentName}
                         </ThemedText>
-                        <ThemedText style={[styles.teamScoreValue, { color: team2ScoreColor }]}>
-                          {game.team2Score}
+                        <ThemedText style={[styles.teamScoreValue, { color: oppScoreColor }]}>
+                          {game.opponentScore}
                         </ThemedText>
                       </View>
                     </View>
@@ -378,8 +391,7 @@ export default function SavedGamesList({
                       color={palette.textMuted}
                     />
                     <ThemedText style={[styles.savedGameMetaText, { color: palette.textMuted }]}>
-                      {game.events.filter((e) => e.type === 'goal').length} point
-                      {game.events.filter((e) => e.type === 'goal').length !== 1 ? 's' : ''} tracked
+                      {game.pointsTracked} point{game.pointsTracked !== 1 ? 's' : ''} tracked
                     </ThemedText>
                   </View>
                 </Pressable>
@@ -521,6 +533,22 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
       justifyContent: 'space-between',
       alignItems: 'center',
       marginBottom: 12,
+    },
+    headerBadges: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+    },
+    advancedBadge: {
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+      borderRadius: 6,
+      borderWidth: 1,
+    },
+    advancedBadgeText: {
+      fontSize: scaleBySizeClass(10, sizeClass),
+      fontFamily: Fonts.bold,
+      letterSpacing: 0.3,
     },
     checkbox: {
       width: 22,

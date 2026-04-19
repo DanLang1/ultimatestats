@@ -11,7 +11,7 @@ export interface AdvancedPlayerStats {
   assists: number;
   hockeyAssists: number;
   callahans: number;
-  /** goals + assists + blocks + stalls - throwaways - drops */
+  /** goals + assists + blocks + stalls - throwaways - drops - stallsConceded */
   plusMinus: number;
 
   // Throwing
@@ -21,7 +21,10 @@ export interface AdvancedPlayerStats {
   /** Null if 0 throw attempts. */
   completionPct: number | null;
   throwaways: number;
+  /** Stalls forced as a defender. */
   stalls: number;
+  /** Times stalled out as the disc holder. */
+  stallsConceded: number;
 
   // Receiving
   /** Catches of thrown passes (receiving_touch attributions). */
@@ -70,6 +73,7 @@ function createEmptyStats(participantId: string): AdvancedPlayerStats {
     completionPct: null,
     throwaways: 0,
     stalls: 0,
+    stallsConceded: 0,
     receptions: 0,
     drops: 0,
     totalTouches: 0,
@@ -179,6 +183,7 @@ export function computeAdvancedPlayerStats(
     stats.throwAttempts = sum('throw_attempt');
     stats.throwaways = sum('throwaway');
     stats.stalls = sum('stall');
+    stats.stallsConceded = sum('stall_conceded');
     stats.receptions = sum('receiving_touch');
     stats.drops = sum('drop');
     stats.blocks = sum('block');
@@ -190,7 +195,8 @@ export function computeAdvancedPlayerStats(
     stats.totalTouches =
       stats.completions + stats.receptions + sum('disc_pickup') + stats.pullReceptions;
     stats.plusMinus =
-      stats.goals + stats.assists + stats.blocks + stats.stalls - stats.throwaways - stats.drops;
+      stats.goals + stats.assists + stats.blocks + stats.stalls -
+      stats.throwaways - stats.drops - stats.stallsConceded;
 
     // Points played, O/D split, and efficiency from linesBySide
     let playerDurationMs = 0;

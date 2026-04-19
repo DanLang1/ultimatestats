@@ -1,6 +1,8 @@
 // Analytics Layer Types
 // See docs/future-features/advanced-stat-tracking/analytics-layer.md
 
+import type { GameMetadata } from './types';
+
 export type PointState =
   | 'hold' // focus side received and scored
   | 'break' // focus side pulled and scored
@@ -18,6 +20,7 @@ export type AttributionType =
   | 'throwaway'
   | 'drop'
   | 'stall'
+  | 'stall_conceded'
   | 'block'
   | 'callahan'
   | 'pull'
@@ -120,6 +123,17 @@ export interface AnalyticsAttribution {
 
 export interface AnalyticsGame {
   gameType: 'game' | 'scrimmage' | 'practice' | 'other';
+  /** The side the coach is tracking for — defines the analytics perspective. */
+  focusSideId: string;
+  /** The opposing side (non-focus). */
+  oppSideId: string;
+  /** Display label for each side, keyed by sideId. */
+  sideLabels: Record<string, string>;
+  /** Display name for each participant, keyed by participantId. */
+  participantNames: Map<string, string>;
+  metadata?: GameMetadata;
+  /** Unix ms timestamp when the game was created — fallback when metadata.date is absent. */
+  createdAt: number;
   points: AnalyticsPoint[];
   possessions: AnalyticsPossession[];
   actions: AnalyticsAction[];

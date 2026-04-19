@@ -693,13 +693,14 @@ describe('advancedPlayerStatsUtils', () => {
       expect(s.completionPct).toBeCloseTo(0.5);
     });
 
-    it('August has 1 stall', () => {
-      expect(findStats(stats, 'p_august').stalls).toBe(1);
+    it('August has 1 stallsConceded (was stalled out)', () => {
+      expect(findStats(stats, 'p_august').stallsConceded).toBe(1);
+      expect(findStats(stats, 'p_august').stalls).toBe(0);
     });
 
-    it('throw attempts + stalls = 5 total disc actions', () => {
+    it('throw attempts + stallsConceded = 5 total disc actions', () => {
       const s = findStats(stats, 'p_august');
-      expect(s.throwAttempts + s.stalls).toBe(5);
+      expect(s.throwAttempts + s.stallsConceded).toBe(5);
     });
   });
 
