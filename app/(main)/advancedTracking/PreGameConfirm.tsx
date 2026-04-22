@@ -7,6 +7,8 @@ import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { GameSide, Participant } from '@/lib/advancedTracking/types';
+import { getContrastingTextColor } from '@/lib/colorUtils';
+import { formatRatioFull } from '@/lib/genderRatioUtils';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { useGameStore } from '@/store/gameStore';
 import { useNumberPickerStore } from '@/store/numberPickerStore';
@@ -42,8 +44,17 @@ export default function AdvancedPreGameConfirm() {
     resetTimeouts,
   } = useGameStore();
 
-  const { genderRatioEnabled, setGenderRatioEnabled, numPlayers, setNumPlayers } =
-    useSettingsStore();
+  const {
+    genderRatioEnabled,
+    setGenderRatioEnabled,
+    firstPointRatio,
+    setFirstPointRatio,
+    numPlayers,
+    setNumPlayers,
+  } = useSettingsStore();
+
+  const fmpTextColor = getContrastingTextColor(palette.fmpColor);
+  const mmpTextColor = getContrastingTextColor(palette.mmpColor);
 
   const { resetCurrentGame, createGame } = useAdvancedTrackingStore();
 
@@ -54,7 +65,7 @@ export default function AdvancedPreGameConfirm() {
 
   const [receivingTeam, setReceivingTeam] = useState<'us' | 'them' | ''>('');
 
-  const canContinue = receivingTeam !== '';
+  const canContinue = receivingTeam !== '' && (!genderRatioEnabled || firstPointRatio !== null);
 
   const handleSetLine = () => {
     const sides: GameSide[] = [
@@ -79,13 +90,20 @@ export default function AdvancedPreGameConfirm() {
 
     const initialReceivingSideId = receivingTeam === 'us' ? FOCUS_SIDE_ID : OPP_SIDE_ID;
 
+    const floaterEnabledForGame = floaterEnabled && autoHalftimeEnabled;
+
     resetCurrentGame();
     createGame({
       focusSideId: FOCUS_SIDE_ID,
       initialReceivingSideId,
       sides,
       participants,
-      format: { gameTo, halftimeEnabled: autoHalftimeEnabled },
+      format: {
+        gameTo,
+        halftimeEnabled: autoHalftimeEnabled,
+        timeoutsPerHalf: timeoutCount,
+        floaterEnabled: floaterEnabledForGame,
+      },
     });
 
     router.push('/advancedTracking/LineEditor');
@@ -268,6 +286,31 @@ export default function AdvancedPreGameConfirm() {
             </ThemedText>
           </EditableSettingCard>
         </View>
+
+        {genderRatioEnabled && (
+          <SegmentedControl
+            label="STARTING GENDER RATIO"
+            options={[
+              {
+                value: 'more-women',
+                label: formatRatioFull('more-women'),
+                activeColor: palette.fmpColor,
+                activeTextColor: fmpTextColor,
+              },
+              {
+                value: 'more-men',
+                label: formatRatioFull('more-men'),
+                activeColor: palette.mmpColor,
+                activeTextColor: mmpTextColor,
+              },
+            ]}
+            value={firstPointRatio ?? ''}
+            onChange={setFirstPointRatio}
+            showRequired={firstPointRatio === null}
+            highlightBorder={firstPointRatio === null}
+            highlightColor={palette.warning}
+          />
+        )}
 
         <ThemedText style={[styles.sectionTitle, { color: palette.textMuted }]}>
           STARTING OPTIONS

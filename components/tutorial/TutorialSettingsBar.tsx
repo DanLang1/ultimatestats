@@ -128,21 +128,6 @@ export default function TutorialSettingsBar({
         </View>
       )}
 
-      {/* Stats icon (decorative) */}
-      <Pressable style={styles.iconButton} disabled>
-        <MaterialCommunityIcons name="chart-bar" size={iconSize} color={barContentColor} />
-      </Pressable>
-
-      {/* Info icon (decorative) */}
-      <Pressable style={styles.iconButton} disabled>
-        <MaterialCommunityIcons name="information" size={iconSize} color={barContentColor} />
-      </Pressable>
-
-      {/* Settings icon (decorative) */}
-      <Pressable style={styles.iconButton} disabled>
-        <MaterialCommunityIcons name="cog" size={iconSize} color={barContentColor} />
-      </Pressable>
-
       {/* Undo */}
       {onUndo && (
         <Pressable

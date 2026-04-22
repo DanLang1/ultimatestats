@@ -1,67 +1,77 @@
 import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import {
+  getSideTimeoutState,
+  SideTimeoutState,
+} from '@/lib/advancedTracking/trackingDisplayHelpers';
+import { getSideScore } from '@/lib/advancedTracking/trackingUtils';
+import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { Fonts } from '@/theme/theme';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { router } from 'expo-router';
 import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-interface TrackerScoreBarProps {
-  focusSideName: string;
-  focusScore: number;
-  focusTimeoutsUsed: number;
-  oppTimeoutsUsed: number;
-  maxTimeouts: number;
-  oppSideName: string;
-  oppScore: number;
-  onHomePress: () => void;
-  onFocusTimeout: () => void;
-  onOppTimeout: () => void;
-  topInset: number;
-  isLandscape?: boolean;
-}
-
-export const TrackerScoreBar = ({
-  focusSideName,
-  focusScore,
-  focusTimeoutsUsed,
-  oppTimeoutsUsed,
-  maxTimeouts,
-  oppSideName,
-  oppScore,
-  onHomePress,
-  onFocusTimeout,
-  onOppTimeout,
-  topInset,
-  isLandscape = false,
-}: TrackerScoreBarProps) => {
+export const TrackerScoreBar = () => {
   const { palette } = useTheme();
-  const { sizeClass } = useLayout();
+  const { sizeClass, isLandscape } = useLayout();
   const styles = createStyles(sizeClass);
+  const insets = useSafeAreaInsets();
 
-  const renderPips = (timeoutsUsed: number, onPress: () => void) => (
-    <Pressable
-      onPress={onPress}
-      hitSlop={8}
-      style={({ pressed }) => [styles.timeoutPips, pressed && { opacity: 0.6 }]}>
-      {Array.from({ length: maxTimeouts }).map((_, i) => (
-        <View
-          key={i}
-          style={[
-            styles.pip,
-            {
-              backgroundColor: i < maxTimeouts - timeoutsUsed ? palette.accent : palette.overlay20,
-              boxShadow: i < maxTimeouts - timeoutsUsed ? `0 0 8px ${palette.accent}` : undefined,
-            },
-          ]}
-        />
-      ))}
-    </Pressable>
-  );
+  const { currentGameId, savedGames } = useAdvancedTrackingStore();
+  const game = savedGames.find((g) => g.id === currentGameId);
+  if (!game) return null;
+
+  const oppSide = game.sides.find((s) => s.id !== game.focusSideId);
+  if (!oppSide) return null;
+
+  const focusSideName = game.sides.find((s) => s.id === game.focusSideId)?.label ?? '';
+  const oppSideName = oppSide.label;
+  const focusScore = getSideScore(game, game.focusSideId);
+  const oppScore = getSideScore(game, oppSide.id);
+  const focusTimeouts = getSideTimeoutState(game, game.focusSideId);
+  const oppTimeouts = getSideTimeoutState(game, oppSide.id);
+
+  const renderPips = (state: SideTimeoutState) => {
+    const regularsRemaining = Math.max(state.regularPerHalf - state.regularUsedInHalf, 0);
+    return (
+      <View style={styles.timeoutPips}>
+        {Array.from({ length: state.regularPerHalf }).map((_, i) => {
+          const active = i < regularsRemaining;
+          return (
+            <View
+              key={`r${i}`}
+              style={[
+                styles.pip,
+                {
+                  backgroundColor: active ? palette.accent : palette.overlay20,
+                  boxShadow: active ? `0 0 8px ${palette.accent}` : undefined,
+                },
+              ]}
+            />
+          );
+        })}
+        {state.floaterEnabled && (
+          <View
+            style={[
+              styles.floaterPip,
+              {
+                borderColor: state.floaterUsed ? palette.overlay20 : palette.accent,
+                backgroundColor: state.floaterUsed ? 'transparent' : palette.accent,
+                boxShadow: state.floaterUsed ? undefined : `0 0 8px ${palette.accent}`,
+              },
+            ]}
+          />
+        )}
+      </View>
+    );
+  };
 
   if (isLandscape) {
     return (
-      <View style={[styles.landscapeContainer, { paddingTop: Math.max(topInset, 8) }]}>
+      <View style={[styles.landscapeContainer, { paddingTop: Math.max(insets.top, 8) }]}>
         <View style={styles.landscapeTeamRow}>
           <ThemedText
             style={[styles.landscapeTeamName, { color: palette.textMuted }]}
@@ -71,9 +81,9 @@ export const TrackerScoreBar = ({
           <ThemedText style={[styles.landscapeScore, { color: palette.textInverse }]}>
             {focusScore}
           </ThemedText>
-          {renderPips(focusTimeoutsUsed, onFocusTimeout)}
+          {renderPips(focusTimeouts)}
           <Pressable
-            onPress={onHomePress}
+            onPress={() => router.dismissTo('/Dashboard')}
             hitSlop={12}
             style={({ pressed }) => [
               styles.homeBtn,
@@ -99,14 +109,14 @@ export const TrackerScoreBar = ({
           <ThemedText style={[styles.landscapeScore, { color: palette.textInverse }]}>
             {oppScore}
           </ThemedText>
-          {renderPips(oppTimeoutsUsed, onOppTimeout)}
+          {renderPips(oppTimeouts)}
         </View>
       </View>
     );
   }
 
   return (
-    <View style={[styles.scoreBarContainer, { paddingTop: Math.max(topInset, 16) }]}>
+    <View style={[styles.scoreBarContainer, { paddingTop: Math.max(insets.top, 16) }]}>
       <View
         style={[
           styles.scoreBar,
@@ -123,7 +133,7 @@ export const TrackerScoreBar = ({
           <ThemedText style={[styles.scoreNum, { color: palette.textInverse }]}>
             {focusScore}
           </ThemedText>
-          {renderPips(focusTimeoutsUsed, onFocusTimeout)}
+          {renderPips(focusTimeouts)}
         </View>
 
         <View style={styles.clockBlock}>
@@ -135,7 +145,7 @@ export const TrackerScoreBar = ({
             <ThemedText style={[styles.clock, { color: palette.textInverse }]}>00:00</ThemedText>
           </View>
           <Pressable
-            onPress={onHomePress}
+            onPress={() => router.dismissTo('/Dashboard')}
             hitSlop={12}
             style={({ pressed }) => [
               styles.homeBtn,
@@ -157,7 +167,7 @@ export const TrackerScoreBar = ({
           <ThemedText style={[styles.scoreNum, { color: palette.textInverse }]}>
             {oppScore}
           </ThemedText>
-          {renderPips(oppTimeoutsUsed, onOppTimeout)}
+          {renderPips(oppTimeouts)}
         </View>
       </View>
     </View>
@@ -201,6 +211,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     timeoutPips: {
       flexDirection: 'row',
+      alignItems: 'center',
       gap: 6,
       marginTop: 2,
     },
@@ -208,6 +219,13 @@ function createStyles(sizeClass: SizeClass) {
       width: 12,
       height: 4,
       borderRadius: 2,
+    },
+    floaterPip: {
+      width: 6,
+      height: 6,
+      borderRadius: 1,
+      borderWidth: 1,
+      transform: [{ rotate: '45deg' }],
     },
     landscapeContainer: {
       paddingHorizontal: 12,

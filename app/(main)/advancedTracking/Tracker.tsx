@@ -1,32 +1,33 @@
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { TrackerActionBar } from '@/components/advancedTracking/TrackerActionBar';
-import { TrackerLineScreen } from '@/components/advancedTracking/TrackerLineScreen';
 import { TrackerPlayerGrid } from '@/components/advancedTracking/TrackerPlayerGrid';
+import { TrackerRareMenu } from '@/components/advancedTracking/TrackerRareMenu';
 import { TrackerScoreBar } from '@/components/advancedTracking/TrackerScoreBar';
 import { TrackerStatusBar } from '@/components/advancedTracking/TrackerStatusBar';
-import { PassModifier } from '@/components/advancedTracking/types';
 import { useTheme } from '@/context/ThemeContext';
+import { useTimestampTimer } from '@/hooks/advancedTracking/useTimer';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import {
   getActiveSideId,
   getActiveStoppage,
   getDiscHolderId,
-  getGoalInfo,
-  getLastTurnoverEvent,
-  getPassChainEvents,
-  getSideTimeoutsUsed,
+  getEffectiveLineParticipantIds,
+  getPointAdjustedTimestamp,
+  getTrackerInstructionColor,
+  getTrackerInstructionText,
+  isInjuryJustResumed,
+  isInjuryStoppageAwaitingSub,
+  isPullAwaitingPickup,
 } from '@/lib/advancedTracking/trackingDisplayHelpers';
 import {
   getCurrentPoint,
   getCurrentPossession,
-  getReceivingSideForNextPoint,
-  getSideScore,
   hasPointEnded,
   isAdvancedGameOver,
   isPossessionOver,
 } from '@/lib/advancedTracking/trackingUtils';
-import { hasItems } from '@/lib/utils';
+import { PassModifier } from '@/lib/advancedTracking/types';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { Fonts, Palette } from '@/theme/theme';
 import { Redirect, router, Stack } from 'expo-router';
@@ -35,7 +36,6 @@ import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FOCUS_SIDE_ID, OPP_SIDE_ID } from './PreGameConfirm';
 
-const MAX_TIMEOUTS = 2;
 export default function AdvancedTrackerScreen() {
   const { palette } = useTheme();
   const { isLandscape, width, sizeClass } = useLayout();
@@ -49,17 +49,25 @@ export default function AdvancedTrackerScreen() {
     recordThrow,
     recordPickup,
     amendLastThrowAsGoal,
-    recordBetweenPointTimeout,
-    recordStoppage,
-    resumeStoppage,
-    undoLastOperation,
   } = useAdvancedTrackingStore();
 
   const game = savedGames.find((g) => g.id === currentGameId);
   const [showDevModal, setShowDevModal] = useState(false);
   const [showRareMenu, setShowRareMenu] = useState(false);
-  const [isSelectingLine, setIsSelectingLine] = useState(false);
   const [passModifier, setPassModifier] = useState<PassModifier>(null);
+
+  const point = game ? getCurrentPoint(game) : null;
+  const possession = game ? getCurrentPossession(game) : null;
+  const activeStoppage = getActiveStoppage(possession);
+  const isPointTimerPaused = activeStoppage !== null;
+  const showPointTimer = point?.startedAt != null && !hasPointEnded(point);
+  const pointTimerAdjustedTimestamp = point ? getPointAdjustedTimestamp(point) : null;
+  const pointElapsedMs = useTimestampTimer({
+    timestamp: pointTimerAdjustedTimestamp,
+    mode: 'elapsed',
+    intervalMs: 250,
+    enabled: showPointTimer && !isPointTimerPaused,
+  });
 
   if (!game) {
     return (
@@ -82,69 +90,46 @@ export default function AdvancedTrackerScreen() {
     return <Redirect href="/advancedTracking/TrackerGameComplete" />;
   }
 
-  const oppSide = game.sides.find((s) => s.id !== game.focusSideId);
-  if (!oppSide) throw new Error(`Game ${game.id} is missing the opponent side.`);
-
-  const focusScore = getSideScore(game, game.focusSideId);
-  const oppScore = getSideScore(game, oppSide.id);
-
-  const focusSideName = game.sides.find((s) => s.id === game.focusSideId)?.label;
-  if (!focusSideName) throw new Error(`Game ${game.id} focus side is missing a label.`);
-  const oppSideName = oppSide.label;
-
-  const focusTimeoutsUsed = getSideTimeoutsUsed(game, game.focusSideId);
-
-  const point = getCurrentPoint(game);
-  const pointIsOver = hasPointEnded(point);
-  const possession = getCurrentPossession(game);
-  const activeSideId = getActiveSideId(possession, game);
-  const oppHasDisc = !pointIsOver && activeSideId !== game.focusSideId;
-
-  const myLine = point?.lines.find((l) => l.sideId === game.focusSideId);
-  const activeParticipants = game.participants.filter((p) => myLine?.participantIds.includes(p.id));
-
-  const discHolderId = getDiscHolderId(possession, game.focusSideId);
-
-  const lastPossessionAction = possession?.actions[possession.actions.length - 1] ?? null;
-  const awaitingPullPickup =
-    !pointIsOver && !oppHasDisc && discHolderId === null && lastPossessionAction?.kind === 'pull';
-  const oppTimeoutsUsed = oppSide ? getSideTimeoutsUsed(game, oppSide.id) : 0;
-  const activeStoppage = getActiveStoppage(possession);
-
-  const handleTimeout = (sideId: string) => {
-    if (pointIsOver) {
-      recordBetweenPointTimeout({ sideId });
-    } else {
-      recordStoppage({ reason: 'timeout', sideId });
-    }
-  };
-
-  const handleStartNextPoint = () => {
-    setPassModifier(null);
-    setIsSelectingLine(true);
-  };
-
-  if (isSelectingLine) {
+  if (activeStoppage) {
+    const injuryWithNoSub = isInjuryStoppageAwaitingSub(point, activeStoppage);
     return (
-      <TrackerLineScreen
-        participants={game.participants}
-        onConfirm={(ids) => {
-          setIsSelectingLine(false);
-          const receivingSideId = getReceivingSideForNextPoint(game);
-          const isOurPull = receivingSideId !== game.focusSideId;
-          const lineIds = hasItems(ids) ? [...ids] : [...(myLine?.participantIds ?? [])];
-
-          router.push({
-            pathname: '/advancedTracking/pulltracking',
-            params: {
-              isOurPull: String(isOurPull),
-              lineParticipantIds: JSON.stringify(lineIds),
-            },
-          });
-        }}
+      <Redirect
+        href={
+          injuryWithNoSub
+            ? '/advancedTracking/TrackerInjurySub'
+            : '/advancedTracking/TrackerStoppage'
+        }
       />
     );
   }
+
+  if (!game.sides.find((s) => s.id !== game.focusSideId)) {
+    throw new Error(`Game ${game.id} is missing the opponent side.`);
+  }
+
+  const pointIsOver = hasPointEnded(point);
+  const activeSideId = getActiveSideId(possession, game);
+  const oppHasDisc = !pointIsOver && activeSideId !== game.focusSideId;
+
+  const activeIds = point ? getEffectiveLineParticipantIds(point, game.focusSideId) : [];
+  const activeParticipants = game.participants.filter((p) => activeIds.includes(p.id));
+
+  // After an injury stoppage resumes, force disc-holder to null so the coach must re-tap who has
+  // the disc — handles the subbed-out disc holder case and the general check-in requirement.
+  const injuryJustResumed = isInjuryJustResumed(possession);
+  const discHolderId = injuryJustResumed ? null : getDiscHolderId(possession, game.focusSideId);
+
+  const awaitingPullPickup = isPullAwaitingPickup({
+    possession,
+    pointIsOver,
+    oppHasDisc,
+    discHolderId,
+  });
+
+  const handleStartNextPoint = () => {
+    setPassModifier(null);
+    router.push('/advancedTracking/TrackerLineSelect');
+  };
 
   const handlePlayerTap = (participantId: string) => {
     if (pointIsOver) return;
@@ -170,11 +155,7 @@ export default function AdvancedTrackerScreen() {
       return;
     }
 
-    if (!possession || isPossessionOver(possession)) {
-      recordPickup({ sideId: FOCUS_SIDE_ID, player: { refType: 'participant', participantId } });
-      return;
-    }
-    if (discHolderId === null) {
+    if (!possession || isPossessionOver(possession) || discHolderId === null) {
       recordPickup({ sideId: FOCUS_SIDE_ID, player: { refType: 'participant', participantId } });
       return;
     }
@@ -214,7 +195,7 @@ export default function AdvancedTrackerScreen() {
       toPlayer: { refType: 'participant', participantId },
       result: 'complete',
     });
-    amendLastThrowAsGoal();
+    amendLastThrowAsGoal(pointElapsedMs);
   };
 
   const handleDrop = (participantId: string) => {
@@ -225,54 +206,6 @@ export default function AdvancedTrackerScreen() {
       result: 'drop',
     });
     setPassModifier(null);
-  };
-
-  const handleOppBlock = () => {
-    if (!discHolderId || pointIsOver) return;
-    recordThrow({
-      thrower: { refType: 'participant', participantId: discHolderId },
-      result: 'block',
-    });
-    setShowRareMenu(false);
-  };
-
-  const handleStall = () => {
-    if (!discHolderId || pointIsOver) return;
-    recordThrow({
-      thrower: { refType: 'participant', participantId: discHolderId },
-      result: 'stall',
-    });
-    setPassModifier(null);
-    setShowRareMenu(false);
-  };
-
-  const handleFiftyFiftyArm = () => {
-    setPassModifier('fifty-fifty');
-    setShowRareMenu(false);
-  };
-
-  const handleOppTurnover = () => {
-    if (!possession || isPossessionOver(possession)) {
-      recordPickup({ sideId: OPP_SIDE_ID, player: { refType: 'untracked' } });
-    }
-    recordThrow({ thrower: { refType: 'untracked' }, result: 'throwaway' });
-  };
-
-  const handleOppScored = () => {
-    if (!possession || isPossessionOver(possession)) {
-      recordPickup({ sideId: OPP_SIDE_ID, player: { refType: 'untracked' } });
-    }
-    recordThrow({ thrower: { refType: 'untracked' }, result: 'goal' });
-  };
-
-  const handleCallahan = () => {
-    setPassModifier('callahan');
-    setShowRareMenu(false);
-  };
-
-  const handleDefensiveStallArm = () => {
-    setPassModifier('stall');
-    setShowRareMenu(false);
   };
 
   const handleDefensiveStall = (participantId: string) => {
@@ -295,91 +228,22 @@ export default function AdvancedTrackerScreen() {
       thrower: { refType: 'untracked' },
       result: 'callahan',
       toPlayer: { refType: 'participant', participantId },
+      timerElapsedMs: pointElapsedMs,
     });
     setPassModifier(null);
   };
 
-  const goalInfo = getGoalInfo(point, game.focusSideId, game.participants);
-
-  const lastFocusPossession =
-    point?.possessions.filter((p) => p.sideId === game.focusSideId).at(-1) ?? null;
-  const lastOppPossession =
-    point?.possessions.filter((p) => p.sideId !== game.focusSideId).at(-1) ?? null;
-
-  // True only once we have an active focus possession with at least one action (disc pickup).
-  // When opp just turned it over, `possession` is their (now-over) possession — not ours.
-  const focusHasStarted =
-    !!possession && possession.sideId === game.focusSideId && possession.actions.length > 0;
-
-  let turnoverEvent: ReturnType<typeof getLastTurnoverEvent>;
-  if (oppHasDisc) {
-    turnoverEvent = getLastTurnoverEvent(lastFocusPossession, true, game.participants);
-  } else if (!focusHasStarted) {
-    turnoverEvent = getLastTurnoverEvent(lastOppPossession, false, game.participants);
-  } else {
-    turnoverEvent = null;
-  }
-
-  const passChainEvents = getPassChainEvents(
-    oppHasDisc ? lastFocusPossession : possession,
-    game.participants,
-  );
-
-  const instructionText = (() => {
-    if (pointIsOver || activeStoppage !== null) return null;
-    if (passModifier === 'callahan') return 'TAP WHO CAUGHT THE CALLAHAN';
-    if (passModifier === 'stall') return 'TAP WHO EARNED THE STALL';
-    if (passModifier === 'fifty-fifty') return 'TAP THE OTHER PLAYER (SPLIT)';
-    if (oppHasDisc) return 'TAP A PLAYER TO RECORD A BLOCK';
-    if (discHolderId === null) {
-      return awaitingPullPickup ? 'TAP WHO STARTS WITH DISC' : 'TAP A PLAYER TO PICK UP DISC';
-    }
-    return null;
-  })();
-
-  let instructionColor: string;
-  if (passModifier === 'callahan' || passModifier === 'stall') {
-    instructionColor = palette.success;
-  } else if (passModifier === 'fifty-fifty') {
-    instructionColor = palette.warning;
-  } else {
-    instructionColor = palette.textMuted;
-  }
-
-  const LEFT_PANEL_WIDTH = 160;
-  const scoreBarProps = {
-    focusSideName,
-    focusScore,
-    focusTimeoutsUsed,
-    oppTimeoutsUsed,
-    maxTimeouts: MAX_TIMEOUTS,
-    oppSideName,
-    oppScore,
-    onHomePress: () => router.dismissTo('/Dashboard'),
-    onFocusTimeout: () => handleTimeout(game.focusSideId),
-    onOppTimeout: () => oppSide && handleTimeout(oppSide.id),
-  };
-  const statusBarProps = {
+  const instructionText = getTrackerInstructionText({
     pointIsOver,
-    goalInfo,
-    stoppageActive: activeStoppage !== null,
-    stoppageStartedAt: activeStoppage?.pausedAt ?? activeStoppage?.recordedAt ?? null,
-    passChainEvents,
-    turnoverEvent,
-  };
-  const actionBarProps = {
-    pointIsOver,
+    passModifier,
     oppHasDisc,
     discHolderId,
-    activeStoppageId: activeStoppage?.id ?? null,
-    onStartNextPoint: handleStartNextPoint,
-    onOppScored: handleOppScored,
-    onOppTurnover: handleOppTurnover,
-    onThrowaway: handleThrowaway,
-    onMorePress: () => setShowRareMenu(true),
-    onResumeStoppage: () => activeStoppage && resumeStoppage(activeStoppage.id),
-    onUndoLastOperation: undoLastOperation,
-  };
+    isAwaitingPullPickup: awaitingPullPickup,
+  });
+
+  const instructionColor = getTrackerInstructionColor(passModifier, palette);
+
+  const LEFT_PANEL_WIDTH = 160;
 
   return (
     <ThemedView style={styles.container}>
@@ -396,9 +260,14 @@ export default function AdvancedTrackerScreen() {
                 borderRightColor: palette.overlay15,
               },
             ]}>
-            <TrackerScoreBar {...scoreBarProps} topInset={insets.top} isLandscape />
-            <TrackerStatusBar {...statusBarProps} isLandscape />
-            <TrackerActionBar {...actionBarProps} bottomInset={insets.bottom} isLandscape />
+            <TrackerScoreBar />
+            <TrackerStatusBar pointElapsedMs={pointElapsedMs} />
+            <TrackerActionBar
+              pointElapsedMs={pointElapsedMs}
+              onStartNextPoint={handleStartNextPoint}
+              onThrowaway={handleThrowaway}
+              onMorePress={() => setShowRareMenu(true)}
+            />
           </View>
           <View style={[styles.rightPanel, { paddingRight: insets.right }]}>
             {instructionText && (
@@ -420,7 +289,7 @@ export default function AdvancedTrackerScreen() {
         </View>
       ) : (
         <>
-          <TrackerScoreBar {...scoreBarProps} topInset={insets.top} />
+          <TrackerScoreBar />
           {instructionText && (
             <ThemedText style={[styles.instructionText, { color: instructionColor }]}>
               {instructionText}
@@ -435,126 +304,21 @@ export default function AdvancedTrackerScreen() {
             onDrop={handleDrop}
             onGoal={handleGoal}
           />
-          <TrackerStatusBar {...statusBarProps} />
-          <TrackerActionBar {...actionBarProps} bottomInset={insets.bottom} />
+          <TrackerStatusBar pointElapsedMs={pointElapsedMs} />
+          <TrackerActionBar
+            pointElapsedMs={pointElapsedMs}
+            onStartNextPoint={handleStartNextPoint}
+            onThrowaway={handleThrowaway}
+            onMorePress={() => setShowRareMenu(true)}
+          />
         </>
       )}
 
-      <Modal
+      <TrackerRareMenu
         visible={showRareMenu}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowRareMenu(false)}>
-        <Pressable
-          style={[styles.rareMenuBackdrop, { backgroundColor: palette.overlayDark88 }]}
-          onPress={() => setShowRareMenu(false)}>
-          <Pressable
-            style={[
-              styles.rareMenuSheet,
-              { backgroundColor: palette.primary, borderColor: palette.overlay15 },
-            ]}
-            onPress={() => {}}>
-            {oppHasDisc ? (
-              <>
-                <Pressable
-                  style={({ pressed }) => [
-                    styles.rareMenuBtn,
-                    { borderColor: palette.success, backgroundColor: palette.success + '12' },
-                    pressed && { opacity: 0.7 },
-                  ]}
-                  onPress={handleCallahan}>
-                  <ThemedText style={[styles.rareMenuBtnText, { color: palette.success }]}>
-                    CALLAHAN
-                  </ThemedText>
-                </Pressable>
-                <Pressable
-                  style={({ pressed }) => [
-                    styles.rareMenuBtn,
-                    { borderColor: palette.success, backgroundColor: palette.success + '12' },
-                    pressed && { opacity: 0.7 },
-                  ]}
-                  onPress={handleDefensiveStallArm}>
-                  <ThemedText style={[styles.rareMenuBtnText, { color: palette.success }]}>
-                    STALL
-                  </ThemedText>
-                </Pressable>
-              </>
-            ) : (
-              <>
-                <Pressable
-                  disabled={!discHolderId}
-                  style={({ pressed }) => [
-                    styles.rareMenuBtn,
-                    {
-                      borderColor: discHolderId ? palette.textMuted : palette.overlay15,
-                      backgroundColor: discHolderId ? palette.textMuted + '12' : palette.overlay05,
-                      opacity: discHolderId ? 1 : 0.4,
-                    },
-                    pressed && discHolderId && { opacity: 0.7 },
-                  ]}
-                  onPress={handleOppBlock}>
-                  <ThemedText
-                    style={[
-                      styles.rareMenuBtnText,
-                      { color: discHolderId ? palette.textInverse : palette.textMuted },
-                    ]}>
-                    OPP D
-                  </ThemedText>
-                  <ThemedText style={[styles.rareMenuBtnDesc, { color: palette.textMuted }]}>
-                    Tap the intended receiver — opponent got a block
-                  </ThemedText>
-                </Pressable>
-                <Pressable
-                  disabled={!discHolderId}
-                  style={({ pressed }) => [
-                    styles.rareMenuBtn,
-                    {
-                      borderColor: discHolderId ? palette.warning : palette.overlay15,
-                      backgroundColor: discHolderId ? palette.warning + '12' : palette.overlay05,
-                      opacity: discHolderId ? 1 : 0.4,
-                    },
-                    pressed && discHolderId && { opacity: 0.7 },
-                  ]}
-                  onPress={handleFiftyFiftyArm}>
-                  <ThemedText
-                    style={[
-                      styles.rareMenuBtnText,
-                      { color: discHolderId ? palette.warning : palette.textMuted },
-                    ]}>
-                    50/50
-                  </ThemedText>
-                  <ThemedText style={[styles.rareMenuBtnDesc, { color: palette.textMuted }]}>
-                    Tap the other player — blame shared equally
-                  </ThemedText>
-                </Pressable>
-                <Pressable
-                  disabled={!discHolderId}
-                  style={({ pressed }) => [
-                    styles.rareMenuBtn,
-                    {
-                      borderColor: discHolderId ? palette.overlay20 : palette.overlay15,
-                      backgroundColor: palette.overlay05,
-                      opacity: discHolderId ? 1 : 0.4,
-                    },
-                    pressed && discHolderId && { opacity: 0.7 },
-                  ]}
-                  onPress={handleStall}>
-                  <ThemedText
-                    style={[
-                      styles.rareMenuBtnText,
-                      { color: discHolderId ? palette.textInverse : palette.textMuted },
-                    ]}>
-                    STALL
-                  </ThemedText>
-                  <ThemedText style={[styles.rareMenuBtnDesc, { color: palette.textMuted }]}>
-                    Stall count reached 10
-                  </ThemedText>
-                </Pressable>
-              </>
-            )}
-          </Pressable>
-        </Pressable>
-      </Modal>
+        onClose={() => setShowRareMenu(false)}
+        setPassModifier={setPassModifier}
+      />
 
       {__DEV__ && (
         <>
@@ -607,44 +371,6 @@ function createStyles(palette: Palette, sizeClass: SizeClass) {
       borderRightWidth: 1,
     },
     rightPanel: { flex: 1 },
-    rareMenuBackdrop: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-      padding: 32,
-    },
-    rareMenuSheet: {
-      width: '100%',
-      maxWidth: 360,
-      borderRadius: 24,
-      borderCurve: 'continuous',
-      borderWidth: 1,
-      padding: 20,
-      gap: 12,
-    },
-    rareMenuTitle: {
-      fontFamily: Fonts.bold,
-      fontSize: scaleBySizeClass(11, sizeClass),
-      letterSpacing: 1.5,
-      marginBottom: 4,
-    },
-    rareMenuBtn: {
-      borderWidth: 1,
-      borderRadius: 16,
-      borderCurve: 'continuous',
-      paddingVertical: 14,
-      paddingHorizontal: 16,
-      gap: 4,
-    },
-    rareMenuBtnText: {
-      fontFamily: Fonts.black,
-      fontSize: scaleBySizeClass(14, sizeClass),
-      letterSpacing: 1,
-    },
-    rareMenuBtnDesc: {
-      fontFamily: Fonts.regular,
-      fontSize: scaleBySizeClass(12, sizeClass),
-    },
     devButton: {
       position: 'absolute',
       right: 20,

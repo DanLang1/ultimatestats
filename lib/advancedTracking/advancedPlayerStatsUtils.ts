@@ -195,8 +195,13 @@ export function computeAdvancedPlayerStats(
     stats.totalTouches =
       stats.completions + stats.receptions + sum('disc_pickup') + stats.pullReceptions;
     stats.plusMinus =
-      stats.goals + stats.assists + stats.blocks + stats.stalls -
-      stats.throwaways - stats.drops - stats.stallsConceded;
+      stats.goals +
+      stats.assists +
+      stats.blocks +
+      stats.stalls -
+      stats.throwaways -
+      stats.drops -
+      stats.stallsConceded;
 
     // Points played, O/D split, and efficiency from linesBySide
     let playerDurationMs = 0;

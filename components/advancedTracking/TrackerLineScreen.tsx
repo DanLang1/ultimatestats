@@ -6,6 +6,7 @@ import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { getLoadLineButtonState } from '@/lib/lineEditorUtils';
 import { Participant } from '@/lib/advancedTracking/types';
+import { checkLineRatio, formatRatio, GenderRatio } from '@/lib/genderRatioUtils';
 import { Player } from '@/lib/storage/types';
 import { useGameStore } from '@/store/gameStore';
 import { useLinePresetsStore } from '@/store/linePresetsStore';
@@ -18,11 +19,26 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 interface TrackerLineScreenProps {
   participants: Participant[];
   onConfirm: (participantIds: string[]) => void;
+  initialSelectedIds?: string[];
+  title?: string;
+  onBack?: () => void;
+  confirmLabel?: string;
+  expectedRatio?: GenderRatio;
+  sequenceNumber?: 1 | 2;
 }
 
-export const TrackerLineScreen = ({ participants, onConfirm }: TrackerLineScreenProps) => {
+export const TrackerLineScreen = ({
+  participants,
+  onConfirm,
+  initialSelectedIds,
+  title,
+  onBack,
+  confirmLabel,
+  expectedRatio,
+  sequenceNumber,
+}: TrackerLineScreenProps) => {
   const { palette } = useTheme();
-  const { sizeClass } = useLayout();
+  const { sizeClass, isLandscape } = useLayout();
   const styles = createStyles(sizeClass);
 
   const currentTeamId = useGameStore((s) => s.currentTeam?.id);
@@ -30,11 +46,23 @@ export const TrackerLineScreen = ({ participants, onConfirm }: TrackerLineScreen
   const presets = allPresets.filter((p) => p.teamId === (currentTeamId ?? ''));
   const quickPresets = presets.slice(0, 3);
 
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [selectedIds, setSelectedIds] = useState<string[]>(initialSelectedIds ?? []);
   const [selectedPresetId, setSelectedPresetId] = useState<string | null>(null);
   const [showLinePicker, setShowLinePicker] = useState(false);
 
   const canConfirm = selectedIds.length === 7;
+
+  const ratioCheck =
+    expectedRatio != null && canConfirm
+      ? checkLineRatio(
+          selectedIds,
+          participants.map((p) => ({ id: p.id, matchingType: p.matchingType ?? null })),
+          expectedRatio,
+        )
+      : null;
+  const ratioMismatch = ratioCheck != null && !ratioCheck.isCorrect;
+  const expectedRatioLabel =
+    expectedRatio != null ? formatRatio(expectedRatio, sequenceNumber ?? 1) : null;
 
   const players: Player[] = participants.map((p) => ({
     id: p.id,
@@ -74,31 +102,90 @@ export const TrackerLineScreen = ({ participants, onConfirm }: TrackerLineScreen
       <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
         <View style={[styles.header, { borderBottomColor: palette.border }]}>
           <View style={styles.headerTop}>
+            {onBack && (
+              <Pressable onPress={onBack} style={styles.backBtn} hitSlop={8}>
+                <MaterialCommunityIcons
+                  name="arrow-left"
+                  size={scaleBySizeClass(22, sizeClass)}
+                  color={palette.textInverse}
+                />
+              </Pressable>
+            )}
             <ThemedText style={[styles.headerTitle, { color: palette.textInverse }]}>
-              Select Line
+              {title ?? 'Select Line'}
             </ThemedText>
 
+            {isLandscape && (expectedRatio != null || ratioMismatch) && (
+              <View style={styles.ratioInline}>
+                {expectedRatio != null && (
+                  <ThemedText style={[styles.nextPointLabel, { color: palette.textMuted }]}>
+                    Ratio{expectedRatioLabel ? ` · ${expectedRatioLabel}` : ''}
+                  </ThemedText>
+                )}
+                {ratioMismatch && (
+                  <View style={[styles.infoChip, { backgroundColor: palette.warning + '20' }]}>
+                    <MaterialCommunityIcons
+                      name="alert"
+                      size={scaleBySizeClass(14, sizeClass)}
+                      color={palette.warning}
+                    />
+                    <ThemedText style={[styles.infoChipText, { color: palette.warning }]}>
+                      Expecting {expectedRatio === 'more-women' ? 'F' : 'M'} majority
+                    </ThemedText>
+                  </View>
+                )}
+              </View>
+            )}
+
             <Pressable
-              onPress={() => canConfirm && onConfirm(selectedIds)}
+              onPress={() => onConfirm(selectedIds)}
               disabled={!canConfirm}
               style={({ pressed }) => [
                 styles.confirmBtn,
                 { backgroundColor: canConfirm ? palette.success : palette.overlay10 },
                 pressed && canConfirm && { opacity: 0.8 },
               ]}>
-              {canConfirm ? (
+              {!canConfirm && (
+                <ThemedText style={[styles.countText, { color: palette.textMuted }]}>
+                  {selectedIds.length}/7
+                </ThemedText>
+              )}
+              {canConfirm && confirmLabel && (
+                <ThemedText style={[styles.countText, { color: palette.textOnAccent }]}>
+                  {confirmLabel}
+                </ThemedText>
+              )}
+              {canConfirm && !confirmLabel && (
                 <MaterialCommunityIcons
                   name="check"
                   size={scaleBySizeClass(18, sizeClass)}
                   color={palette.textOnAccent}
                 />
-              ) : (
-                <ThemedText style={[styles.countText, { color: palette.textMuted }]}>
-                  {selectedIds.length}/7
-                </ThemedText>
               )}
             </Pressable>
           </View>
+
+          {!isLandscape && (expectedRatio != null || ratioMismatch) && (
+            <View style={styles.infoRow}>
+              {expectedRatio != null && (
+                <ThemedText style={[styles.nextPointLabel, { color: palette.textMuted }]}>
+                  Ratio{expectedRatioLabel ? ` · ${expectedRatioLabel}` : ''}
+                </ThemedText>
+              )}
+              {ratioMismatch && (
+                <View style={[styles.infoChip, { backgroundColor: palette.warning + '20' }]}>
+                  <MaterialCommunityIcons
+                    name="alert"
+                    size={scaleBySizeClass(14, sizeClass)}
+                    color={palette.warning}
+                  />
+                  <ThemedText style={[styles.infoChipText, { color: palette.warning }]}>
+                    Expecting {expectedRatio === 'more-women' ? 'F' : 'M'} majority
+                  </ThemedText>
+                </View>
+              )}
+            </View>
+          )}
 
           <View style={styles.presetsRow}>
             {quickPresets.map((preset) => (
@@ -216,6 +303,9 @@ function createStyles(sizeClass: SizeClass) {
       justifyContent: 'space-between',
       gap: 12,
     },
+    backBtn: {
+      marginRight: 4,
+    },
     headerTitle: {
       flex: 1,
       fontSize: scaleBySizeClass(20, sizeClass),
@@ -239,6 +329,35 @@ function createStyles(sizeClass: SizeClass) {
       flexWrap: 'wrap',
       marginTop: 10,
       gap: 6,
+    },
+    infoRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      flexWrap: 'wrap',
+      gap: 8,
+      marginTop: 8,
+    },
+    infoChip: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      borderRadius: 12,
+    },
+    infoChipText: {
+      fontSize: scaleBySizeClass(11, sizeClass),
+      fontFamily: Fonts.bold,
+      letterSpacing: 0.3,
+    },
+    ratioInline: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    nextPointLabel: {
+      fontSize: scaleBySizeClass(12, sizeClass),
+      fontFamily: Fonts.semiBold,
     },
     quickPresetBtn: {
       paddingVertical: 5,

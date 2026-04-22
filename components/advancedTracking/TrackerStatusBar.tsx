@@ -1,78 +1,86 @@
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import { useTimestampTimer } from '@/hooks/advancedTracking/useTimer';
 import {
-  GoalInfo,
-  PassChainEvent,
-  TurnoverEventInfo,
+  formatPointTime,
+  getActiveSideId,
+  getGoalInfo,
+  getLastTurnoverEvent,
+  getPassChainEvents,
 } from '@/lib/advancedTracking/trackingDisplayHelpers';
-import { Fonts, Palette } from '@/theme/theme';
+import {
+  getCurrentPoint,
+  getCurrentPossession,
+  hasPointEnded,
+} from '@/lib/advancedTracking/trackingUtils';
+import { formatRatio, getExpectedRatio, getSequenceNumber } from '@/lib/genderRatioUtils';
+import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
+import { useSettingsStore } from '@/store/settingsStore';
+import { Fonts } from '@/theme/theme';
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { TrackerPassChain } from './TrackerPassChain';
 
-const TIMEOUT_DURATION_S = 70;
-
 interface TrackerStatusBarProps {
-  pointIsOver: boolean;
-  goalInfo: GoalInfo | null;
-  stoppageActive: boolean;
-  stoppageStartedAt: number | null;
-  passChainEvents: { events: PassChainEvent[]; truncated: boolean };
-  turnoverEvent: TurnoverEventInfo | null;
-  isLandscape?: boolean;
+  pointElapsedMs: number;
 }
 
-export const TrackerStatusBar = ({
-  pointIsOver,
-  goalInfo,
-  stoppageActive,
-  stoppageStartedAt,
-  passChainEvents,
-  turnoverEvent,
-  isLandscape = false,
-}: TrackerStatusBarProps) => {
+export const TrackerStatusBar = ({ pointElapsedMs }: TrackerStatusBarProps) => {
   const { palette } = useTheme();
-  const { sizeClass } = useLayout();
-  const styles = createStyles(sizeClass, isLandscape, palette);
+  const { sizeClass, isLandscape } = useLayout();
+  const styles = createStyles(sizeClass, isLandscape);
 
-  const secondsLeft = useTimestampTimer({
-    timestamp: stoppageStartedAt,
-    mode: 'countdown',
-    durationSeconds: TIMEOUT_DURATION_S,
-    intervalMs: 250,
-    enabled: stoppageActive,
-  });
+  const { currentGameId, savedGames, recordStoppage } = useAdvancedTrackingStore();
+  const { genderRatioEnabled, firstPointRatio } = useSettingsStore();
+  const game = savedGames.find((g) => g.id === currentGameId);
+  if (!game) return null;
 
-  const formatTime = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+  const currentPointNumber = game.points.length;
+  const ratioLabel =
+    genderRatioEnabled && firstPointRatio && currentPointNumber > 0
+      ? formatRatio(
+          getExpectedRatio(currentPointNumber, firstPointRatio),
+          getSequenceNumber(currentPointNumber),
+        )
+      : null;
 
-  let timerColor: string;
-  if (secondsLeft <= 10) {
-    timerColor = palette.danger;
-  } else if (secondsLeft <= 20) {
-    timerColor = palette.warning;
+  const point = getCurrentPoint(game);
+  const possession = getCurrentPossession(game);
+  const pointIsOver = hasPointEnded(point);
+  const activeSideId = getActiveSideId(possession, game);
+  const oppHasDisc = !pointIsOver && activeSideId !== game.focusSideId;
+
+  const lastFocusPossession =
+    point?.possessions.filter((p) => p.sideId === game.focusSideId).at(-1) ?? null;
+  const lastOppPossession =
+    point?.possessions.filter((p) => p.sideId !== game.focusSideId).at(-1) ?? null;
+
+  // True only once we have an active focus possession with at least one action (disc pickup).
+  // When opp just turned it over, `possession` is their (now-over) possession — not ours.
+  const focusHasStarted =
+    !!possession && possession.sideId === game.focusSideId && possession.actions.length > 0;
+
+  let turnoverEvent: ReturnType<typeof getLastTurnoverEvent>;
+  if (oppHasDisc) {
+    turnoverEvent = getLastTurnoverEvent(lastFocusPossession, true, game.participants);
+  } else if (!focusHasStarted) {
+    turnoverEvent = getLastTurnoverEvent(lastOppPossession, false, game.participants);
   } else {
-    timerColor = palette.success;
+    turnoverEvent = null;
   }
 
+  const passChainEvents = getPassChainEvents(
+    oppHasDisc ? lastFocusPossession : possession,
+    game.participants,
+  );
+
+  const goalInfo = getGoalInfo(point, game.focusSideId, game.participants);
+  const showPointTimer = point?.startedAt != null && !hasPointEnded(point);
   const scorerLabel = goalInfo?.isCallahan ? 'CALLAHAN' : 'GOAL';
 
   let statusContent: React.ReactNode;
-  if (stoppageActive) {
-    statusContent = (
-      <View
-        style={[
-          styles.timeoutBanner,
-          { backgroundColor: palette.overlay05, borderColor: palette.overlay15 },
-        ]}>
-        <ThemedText style={[styles.timeoutLabel, { color: palette.textMuted }]}>TIMEOUT</ThemedText>
-        <ThemedText style={[styles.timeoutTimer, { color: timerColor }]}>
-          {formatTime(secondsLeft)}
-        </ThemedText>
-      </View>
-    );
-  } else if (pointIsOver) {
+  if (pointIsOver) {
     if (goalInfo?.isFocusGoal) {
       statusContent = (
         <View style={styles.goalChain}>
@@ -137,10 +145,36 @@ export const TrackerStatusBar = ({
     statusContent = null;
   }
 
-  return <View style={styles.statusBar}>{statusContent}</View>;
+  return (
+    <View style={styles.statusBar}>
+      {showPointTimer && (
+        <View style={styles.pointTimerRow}>
+          <ThemedText style={[styles.pointTimerText, { color: palette.textInverse }]}>
+            {formatPointTime(pointElapsedMs)}
+          </ThemedText>
+          {ratioLabel && (
+            <ThemedText style={[styles.ratioLabel, { color: palette.textMuted }]}>
+              {ratioLabel}
+            </ThemedText>
+          )}
+          <Pressable
+            onPress={() => recordStoppage({ reason: 'manual_pause' })}
+            hitSlop={8}
+            style={({ pressed }) => (pressed ? { opacity: 0.6 } : undefined)}>
+            <MaterialCommunityIcons
+              name="pause"
+              size={scaleBySizeClass(isLandscape ? 14 : 16, sizeClass)}
+              color={palette.textMuted}
+            />
+          </Pressable>
+        </View>
+      )}
+      {statusContent}
+    </View>
+  );
 };
 
-function createStyles(sizeClass: SizeClass, isLandscape: boolean, palette: Palette) {
+function createStyles(sizeClass: SizeClass, isLandscape: boolean) {
   const chipFontSize = scaleBySizeClass(isLandscape ? 11 : 12, sizeClass);
   const chipLineHeight = isLandscape ? 14 : 15;
 
@@ -149,8 +183,25 @@ function createStyles(sizeClass: SizeClass, isLandscape: boolean, palette: Palet
       minHeight: isLandscape ? 40 : 64,
       alignItems: 'center',
       justifyContent: 'center',
+      gap: isLandscape ? 4 : 6,
       paddingHorizontal: isLandscape ? 12 : 24,
       paddingVertical: isLandscape ? 4 : 8,
+    },
+    pointTimerRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+    },
+    pointTimerText: {
+      fontSize: scaleBySizeClass(isLandscape ? 14 : 18, sizeClass),
+      fontFamily: Fonts.black,
+      fontVariant: ['tabular-nums'],
+      letterSpacing: 1,
+    },
+    ratioLabel: {
+      fontSize: scaleBySizeClass(isLandscape ? 12 : 14, sizeClass),
+      fontFamily: Fonts.black,
+      letterSpacing: 1,
     },
     passChainText: {
       fontSize: scaleBySizeClass(isLandscape ? 11 : 14, sizeClass),
@@ -202,27 +253,6 @@ function createStyles(sizeClass: SizeClass, isLandscape: boolean, palette: Palet
       fontSize: chipFontSize,
       fontFamily: Fonts.black,
       marginHorizontal: 2,
-    },
-    timeoutBanner: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: isLandscape ? 8 : 16,
-      paddingHorizontal: isLandscape ? 12 : 24,
-      paddingVertical: isLandscape ? 6 : 10,
-      borderRadius: 20,
-      borderCurve: 'continuous',
-      borderWidth: 1,
-    },
-    timeoutLabel: {
-      fontSize: scaleBySizeClass(isLandscape ? 10 : 12, sizeClass),
-      fontFamily: Fonts.black,
-      letterSpacing: 2,
-    },
-    timeoutTimer: {
-      fontSize: scaleBySizeClass(isLandscape ? 18 : 28, sizeClass),
-      fontFamily: Fonts.black,
-      fontVariant: ['tabular-nums'],
-      letterSpacing: 1,
     },
   });
 }

@@ -48,7 +48,14 @@ function makeScoredPoint(
         id: `pos_${id}`,
         sideId: ZOO,
         actions: [
-          { id: `pull_${id}`, kind: 'pull' as const, sideId: RIVALS, receivingSideId: ZOO, puller: untracked, result: 'inbound' as const },
+          {
+            id: `pull_${id}`,
+            kind: 'pull' as const,
+            sideId: RIVALS,
+            receivingSideId: ZOO,
+            puller: untracked,
+            result: 'inbound' as const,
+          },
           ...actions,
         ],
       },
@@ -73,8 +80,22 @@ describe('computeAdvancedChemistry', () => {
               id: 'pos1',
               sideId: RIVALS,
               actions: [
-                { id: 'pull1', kind: 'pull' as const, sideId: ZOO, receivingSideId: RIVALS, puller: august, result: 'inbound' as const },
-                { id: 'throw1', kind: 'throw' as const, sideId: RIVALS, thrower: untracked, result: 'callahan' as const, defender: august },
+                {
+                  id: 'pull1',
+                  kind: 'pull' as const,
+                  sideId: ZOO,
+                  receivingSideId: RIVALS,
+                  puller: august,
+                  result: 'inbound' as const,
+                },
+                {
+                  id: 'throw1',
+                  kind: 'throw' as const,
+                  sideId: RIVALS,
+                  thrower: untracked,
+                  result: 'callahan' as const,
+                  defender: august,
+                },
               ],
             },
           ],
@@ -93,7 +114,14 @@ describe('computeAdvancedChemistry', () => {
       ...baseGame,
       points: [
         makeScoredPoint('pt1', [
-          { id: 'a1', kind: 'throw' as const, sideId: ZOO, thrower: meves, toPlayer: august, result: 'goal' as const },
+          {
+            id: 'a1',
+            kind: 'throw' as const,
+            sideId: ZOO,
+            thrower: meves,
+            toPlayer: august,
+            result: 'goal' as const,
+          },
         ]),
       ],
     };
@@ -114,7 +142,14 @@ describe('computeAdvancedChemistry', () => {
       ...baseGame,
       points: [
         makeScoredPoint('pt1', [
-          { id: 'a1', kind: 'throw' as const, sideId: ZOO, thrower: august, toPlayer: meves, result: 'goal' as const },
+          {
+            id: 'a1',
+            kind: 'throw' as const,
+            sideId: ZOO,
+            thrower: august,
+            toPlayer: meves,
+            result: 'goal' as const,
+          },
         ]),
       ],
     };
@@ -134,7 +169,14 @@ describe('computeAdvancedChemistry', () => {
       ...baseGame,
       points: [
         makeScoredPoint('pt1', [
-          { id: 'a1', kind: 'throw' as const, sideId: ZOO, thrower: meves, toPlayer: august, result: 'goal' as const },
+          {
+            id: 'a1',
+            kind: 'throw' as const,
+            sideId: ZOO,
+            thrower: meves,
+            toPlayer: august,
+            result: 'goal' as const,
+          },
         ]),
         {
           id: 'pt2',
@@ -144,8 +186,22 @@ describe('computeAdvancedChemistry', () => {
               id: 'pos2',
               sideId: ZOO,
               actions: [
-                { id: 'pull2', kind: 'pull' as const, sideId: RIVALS, receivingSideId: ZOO, puller: untracked, result: 'inbound' as const },
-                { id: 'a2', kind: 'throw' as const, sideId: ZOO, thrower: august, toPlayer: meves, result: 'goal' as const },
+                {
+                  id: 'pull2',
+                  kind: 'pull' as const,
+                  sideId: RIVALS,
+                  receivingSideId: ZOO,
+                  puller: untracked,
+                  result: 'inbound' as const,
+                },
+                {
+                  id: 'a2',
+                  kind: 'throw' as const,
+                  sideId: ZOO,
+                  thrower: august,
+                  toPlayer: meves,
+                  result: 'goal' as const,
+                },
               ],
             },
           ],
@@ -168,7 +224,14 @@ describe('computeAdvancedChemistry', () => {
       ...baseGame,
       points: [
         makeScoredPoint('pt1', [
-          { id: 'a1', kind: 'throw' as const, sideId: ZOO, thrower: august, toPlayer: meves, result: 'goal' as const },
+          {
+            id: 'a1',
+            kind: 'throw' as const,
+            sideId: ZOO,
+            thrower: august,
+            toPlayer: meves,
+            result: 'goal' as const,
+          },
         ]),
         {
           id: 'pt2',
@@ -178,8 +241,22 @@ describe('computeAdvancedChemistry', () => {
               id: 'pos2',
               sideId: ZOO,
               actions: [
-                { id: 'pull2', kind: 'pull' as const, sideId: RIVALS, receivingSideId: ZOO, puller: untracked, result: 'inbound' as const },
-                { id: 'a2', kind: 'throw' as const, sideId: ZOO, thrower: august, toPlayer: joah, result: 'goal' as const },
+                {
+                  id: 'pull2',
+                  kind: 'pull' as const,
+                  sideId: RIVALS,
+                  receivingSideId: ZOO,
+                  puller: untracked,
+                  result: 'inbound' as const,
+                },
+                {
+                  id: 'a2',
+                  kind: 'throw' as const,
+                  sideId: ZOO,
+                  thrower: august,
+                  toPlayer: joah,
+                  result: 'goal' as const,
+                },
               ],
             },
           ],
@@ -202,7 +279,14 @@ describe('computeAdvancedChemistry', () => {
       ...baseGame,
       points: [
         makeScoredPoint('pt1', [
-          { id: 'a1', kind: 'throw' as const, sideId: ZOO, thrower: august, toPlayer: meves, result: 'goal' as const },
+          {
+            id: 'a1',
+            kind: 'throw' as const,
+            sideId: ZOO,
+            thrower: august,
+            toPlayer: meves,
+            result: 'goal' as const,
+          },
         ]),
         {
           id: 'pt2',
@@ -212,8 +296,22 @@ describe('computeAdvancedChemistry', () => {
               id: 'pos2',
               sideId: ZOO,
               actions: [
-                { id: 'pull2', kind: 'pull' as const, sideId: RIVALS, receivingSideId: ZOO, puller: untracked, result: 'inbound' as const },
-                { id: 'a2', kind: 'throw' as const, sideId: ZOO, thrower: august, toPlayer: meves, result: 'goal' as const },
+                {
+                  id: 'pull2',
+                  kind: 'pull' as const,
+                  sideId: RIVALS,
+                  receivingSideId: ZOO,
+                  puller: untracked,
+                  result: 'inbound' as const,
+                },
+                {
+                  id: 'a2',
+                  kind: 'throw' as const,
+                  sideId: ZOO,
+                  thrower: august,
+                  toPlayer: meves,
+                  result: 'goal' as const,
+                },
               ],
             },
           ],
@@ -226,8 +324,22 @@ describe('computeAdvancedChemistry', () => {
               id: 'pos3',
               sideId: ZOO,
               actions: [
-                { id: 'pull3', kind: 'pull' as const, sideId: RIVALS, receivingSideId: ZOO, puller: untracked, result: 'inbound' as const },
-                { id: 'a3', kind: 'throw' as const, sideId: ZOO, thrower: august, toPlayer: joah, result: 'goal' as const },
+                {
+                  id: 'pull3',
+                  kind: 'pull' as const,
+                  sideId: RIVALS,
+                  receivingSideId: ZOO,
+                  puller: untracked,
+                  result: 'inbound' as const,
+                },
+                {
+                  id: 'a3',
+                  kind: 'throw' as const,
+                  sideId: ZOO,
+                  thrower: august,
+                  toPlayer: joah,
+                  result: 'goal' as const,
+                },
               ],
             },
           ],
@@ -251,7 +363,14 @@ describe('computeAdvancedChemistry', () => {
       points: [
         makeScoredPoint('pt1', [
           // Meves scores, August assists
-          { id: 'a1', kind: 'throw' as const, sideId: ZOO, thrower: august, toPlayer: meves, result: 'goal' as const },
+          {
+            id: 'a1',
+            kind: 'throw' as const,
+            sideId: ZOO,
+            thrower: august,
+            toPlayer: meves,
+            result: 'goal' as const,
+          },
         ]),
       ],
     };

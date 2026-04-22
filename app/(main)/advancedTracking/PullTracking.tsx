@@ -6,6 +6,7 @@ import {
   getFlowParticipants,
 } from '@/lib/advancedTracking/pullTrackingUtils';
 import { PullResult } from '@/lib/advancedTracking/types';
+import { GenderRatio } from '@/lib/genderRatioUtils';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { Redirect, router, useLocalSearchParams } from 'expo-router';
 import React, { useState } from 'react';
@@ -16,13 +17,19 @@ type Step =
   | { name: 'dropper'; pullerId: string | null | undefined; hangTimeMs: number };
 
 export default function PullTrackingScreen() {
-  const { isOurPull: isOurPullParam, lineParticipantIds: idsParam } = useLocalSearchParams<{
+  const {
+    isOurPull: isOurPullParam,
+    lineParticipantIds: idsParam,
+    genderRatio: genderRatioParam,
+  } = useLocalSearchParams<{
     isOurPull: string;
     lineParticipantIds: string;
+    genderRatio: GenderRatio;
   }>();
 
   const isOurPull = isOurPullParam === 'true';
   const lineParticipantIds: string[] = idsParam ? JSON.parse(idsParam) : [];
+  const genderRatio = genderRatioParam;
 
   const { currentGameId, savedGames, recordPull } = useAdvancedTrackingStore();
   const game = savedGames.find((g) => g.id === currentGameId);
@@ -50,6 +57,7 @@ export default function PullTrackingScreen() {
         hangTimeMs,
         result,
         receiverId,
+        genderRatio,
       }),
     );
     router.dismissTo('/advancedTracking/Tracker');

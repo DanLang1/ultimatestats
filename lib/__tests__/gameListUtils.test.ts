@@ -18,9 +18,7 @@ const baseBasicGame: SavedGame = {
   startingPossession: 'team1',
 };
 
-const savedTeams: SavedTeam[] = [
-  { id: 'team1', name: 'Saved Name', roster: [] },
-];
+const savedTeams: SavedTeam[] = [{ id: 'team1', name: 'Saved Name', roster: [] }];
 
 describe('basicGameToListItem', () => {
   it('maps core fields correctly', () => {
@@ -91,8 +89,22 @@ const scoredPoint = {
       id: 'pos1',
       sideId: ZOO,
       actions: [
-        { id: 'pull1', kind: 'pull' as const, sideId: RIVALS, receivingSideId: ZOO, puller: untracked, result: 'inbound' as const },
-        { id: 'a1', kind: 'throw' as const, sideId: ZOO, thrower: august, toPlayer: meves, result: 'goal' as const },
+        {
+          id: 'pull1',
+          kind: 'pull' as const,
+          sideId: RIVALS,
+          receivingSideId: ZOO,
+          puller: untracked,
+          result: 'inbound' as const,
+        },
+        {
+          id: 'a1',
+          kind: 'throw' as const,
+          sideId: ZOO,
+          thrower: august,
+          toPlayer: meves,
+          result: 'goal' as const,
+        },
       ],
     },
   ],

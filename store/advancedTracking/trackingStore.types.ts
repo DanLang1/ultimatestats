@@ -9,6 +9,7 @@ import type {
   PullResult,
   ThrowResult,
 } from '@/lib/advancedTracking/types';
+import type { GenderRatio } from '@/lib/genderRatioUtils';
 
 export type { PullResult, ThrowResult };
 
@@ -18,7 +19,14 @@ export interface CreateAdvancedGameInput {
   initialReceivingSideId: string;
   sides: GameSide[];
   participants: Participant[];
-  format: { gameTo: number; halftimeEnabled?: boolean; softCapAt?: number; hardCapAt?: number };
+  format: {
+    gameTo: number;
+    halftimeEnabled?: boolean;
+    softCapAt?: number;
+    hardCapAt?: number;
+    timeoutsPerHalf?: number;
+    floaterEnabled?: boolean;
+  };
   metadata?: GameMetadata;
 }
 
@@ -30,6 +38,7 @@ export interface RecordPullInput {
   hangTimeMs?: number;
   origin?: FieldLocation;
   landing?: FieldLocation;
+  genderRatio?: GenderRatio;
 }
 
 export interface RecordPickupInput {
@@ -43,11 +52,15 @@ export interface RecordThrowInput {
   toPlayer?: PlayerRef;
   defender?: PlayerRef;
   splitAttribution?: boolean;
+  /** Visual timer elapsed ms at throw time — used as elapsedMsAtEnd for goal/callahan. */
+  timerElapsedMs?: number;
 }
 
 export interface RecordStoppageInput {
-  reason: 'timeout' | 'injury';
+  reason: 'timeout' | 'injury' | 'manual_pause';
   sideId?: string;
+  /** For `reason: 'timeout'`, true when this consumes the one-per-game floater. */
+  isFloater?: boolean;
 }
 
 export interface RecordSubInput {
@@ -59,6 +72,8 @@ export interface RecordSubInput {
 
 export interface RecordBetweenPointTimeoutInput {
   sideId: string;
+  /** True when this consumes the one-per-game floater. */
+  isFloater?: boolean;
 }
 
 export type AdvancedTrackingUndoEntry =
@@ -107,7 +122,7 @@ export interface AdvancedTrackingState {
   recordPull: (input: RecordPullInput) => string;
   recordPickup: (input: RecordPickupInput) => string;
   recordThrow: (input: RecordThrowInput) => string;
-  amendLastThrowAsGoal: () => void;
+  amendLastThrowAsGoal: (timerElapsedMs?: number) => void;
   recordStoppage: (input: RecordStoppageInput) => string;
   resumeStoppage: (actionId: string) => void;
   recordSub: (input: RecordSubInput) => void;

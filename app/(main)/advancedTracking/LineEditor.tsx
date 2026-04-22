@@ -69,7 +69,7 @@ export default function AdvancedLineEditor() {
     const pullerSideId = getOtherSideId(game, game.initialReceivingSideId);
     const isOurPull = pullerSideId === FOCUS_SIDE_ID;
     router.push({
-      pathname: '/advancedTracking/pulltracking',
+      pathname: '/advancedTracking/PullTracking',
       params: {
         isOurPull: String(isOurPull),
         lineParticipantIds: JSON.stringify(selectedIds),

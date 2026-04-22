@@ -15,7 +15,6 @@ const participants = [
 
 const august = { refType: 'participant' as const, participantId: 'p_august' };
 const meves = { refType: 'participant' as const, participantId: 'p_meves' };
-const joah = { refType: 'participant' as const, participantId: 'p_joah' };
 const untracked = { refType: 'untracked' as const };
 
 const baseGame: Omit<AdvancedTrackedGame, 'points'> = {

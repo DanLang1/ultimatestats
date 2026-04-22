@@ -30,6 +30,7 @@ AdvancedTrackedGame
 ```
 
 Additional fields not present in basic games:
+
 - `sides[]` — both teams, each with a `trackingMode` (`full-roster` | `anonymous`)
 - `participants[]` — all players across both sides
 - `gameTransitions[]` — halftime, soft cap, hard cap
@@ -44,6 +45,7 @@ Additional fields not present in basic games:
 ## What Needs to Change
 
 ### 1. `lib/sharing/types.ts`
+
 Add a new arm to the `SharedPayload` discriminated union:
 
 ```typescript
@@ -51,7 +53,9 @@ Add a new arm to the `SharedPayload` discriminated union:
 ```
 
 ### 2. `lib/sharing/validate.ts`
+
 Add a new validation branch for `advanced-game`. Key considerations:
+
 - The existing `MAX_PAYLOAD_EVENTS = 500` doesn't map directly — advanced games use `actions` per possession, not a flat events list. Need a new limit (e.g. total actions across all possessions/points).
 - Validate nested structure: `sides`, `participants`, `points → possessions → actions`
 - Validate `PlayerRef` discriminated union (`participant`, `unknown`, `untracked`)
@@ -59,6 +63,7 @@ Add a new validation branch for `advanced-game`. Key considerations:
 - This is the most complex piece — the nesting depth is significant
 
 ### 3. `lib/sharing/serialize.ts`
+
 Add `serializeAdvancedGame()`:
 
 ```typescript
@@ -74,9 +79,11 @@ export function serializeAdvancedGame(game: AdvancedTrackedGame): SharedPayload 
 ```
 
 ### 4. `lib/sharing/share.ts`
+
 No changes needed — `uploadPayload` is already generic.
 
 ### 5. `hooks/useShareImport.ts`
+
 - Add `AdvancedGamePayload` extract type
 - Add new states to `ShareImportState`:
   - `{ status: 'preview-advanced-game'; payload: AdvancedGamePayload; isUpdate: boolean }`
@@ -84,20 +91,25 @@ No changes needed — `uploadPayload` is already generic.
 - Add branch in `deriveImportState` — check if `AdvancedTrackedGame` with same `id` already exists in the advanced tracking store
 
 ### 6. `app/(main)/Import.tsx`
+
 - Add `AdvancedGamePreviewContent` component — show opponent name, date, point count, score
 - Add done handling for `type: 'advanced-game'` — "View Game" navigates to the advanced game detail screen
 - Preview should surface: `metadata.opponentName` (or fallback), point count, score if available
 
 ### 7. `app/s/[kind]/[shareId].tsx`
+
 Add `'advanced-game'` as a valid `kind` in the route validation so deep links like `u-stat.app/s/advanced-game/<id>` route to the import screen.
 
 ### 8. Advanced tracking store (`store/advancedTracking/trackingStore.ts`)
+
 Add `importAdvancedGame(game: AdvancedTrackedGame)` action — analogous to `importGame()` in the basic `gameStore`. Should add `importedAt` timestamp and handle deduplication (replace existing if same `id`).
 
 ### 9. Advanced tracking UI
+
 Add a share button — currently no export entry point exists for advanced games. Likely location: the advanced game detail/stats screen header, mirroring the basic game ViewStats share button.
 
 ### 10. Supabase
+
 Check if the `type` column on `shared_payloads` has a check constraint. If so, add `'advanced-game'` as an allowed value in a migration.
 
 ---
@@ -120,14 +132,14 @@ Advanced games are denser than basic games due to field location data and per-ac
 
 ## Key Files to Change
 
-| File | Change |
-|------|--------|
-| `lib/sharing/types.ts` | Add `type: 'advanced-game'` arm |
-| `lib/sharing/validate.ts` | New validation branch + new size limits |
-| `lib/sharing/serialize.ts` | Add `serializeAdvancedGame()` |
-| `hooks/useShareImport.ts` | New payload type + new `ShareImportState` arms |
-| `app/(main)/Import.tsx` | New preview component + done handling |
-| `app/s/[kind]/[shareId].tsx` | Allow `advanced-game` kind |
-| `store/advancedTracking/trackingStore.ts` | Add `importAdvancedGame()` action |
-| Advanced game detail screen | Add share button (export entry point) |
-| Supabase migration | Allow `advanced-game` in `type` column if constrained |
+| File                                      | Change                                                |
+| ----------------------------------------- | ----------------------------------------------------- |
+| `lib/sharing/types.ts`                    | Add `type: 'advanced-game'` arm                       |
+| `lib/sharing/validate.ts`                 | New validation branch + new size limits               |
+| `lib/sharing/serialize.ts`                | Add `serializeAdvancedGame()`                         |
+| `hooks/useShareImport.ts`                 | New payload type + new `ShareImportState` arms        |
+| `app/(main)/Import.tsx`                   | New preview component + done handling                 |
+| `app/s/[kind]/[shareId].tsx`              | Allow `advanced-game` kind                            |
+| `store/advancedTracking/trackingStore.ts` | Add `importAdvancedGame()` action                     |
+| Advanced game detail screen               | Add share button (export entry point)                 |
+| Supabase migration                        | Allow `advanced-game` in `type` column if constrained |

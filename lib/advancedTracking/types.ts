@@ -1,6 +1,10 @@
 // Advanced Stat Tracking Types
 // See docs/future-features/advanced-stat-tracking/data-model.md
 
+import type { GenderRatio } from '@/lib/genderRatioUtils';
+
+export type PassModifier = 'fifty-fifty' | 'callahan' | 'stall' | null;
+
 // --- Core Game ---
 
 export const ADVANCED_TRACKING_SCHEMA_VERSION = 1;
@@ -77,6 +81,10 @@ export interface GameFormatSettings {
   softCapAt?: number;
   /** Score at which hard cap activates. */
   hardCapAt?: number;
+  /** Regular timeouts per team per half. */
+  timeoutsPerHalf?: number;
+  /** Whether a once-per-game floater timeout is available after regulars are used. */
+  floaterEnabled?: boolean;
 }
 
 // --- Sides & Participants ---
@@ -153,15 +161,26 @@ export interface TrackedPoint {
   /**
    * Gender ratio for this point in mixed games.
    * `'more-women'` = FMP (female matching player majority), `'more-men'` = MMP.
-   * Mirrors `GenderRatio` from `genderRatioUtils`. Only set when relevant.
+   * Only set when relevant.
    */
-  genderRatio?: 'more-women' | 'more-men';
+  genderRatio?: GenderRatio;
   /**
    * Absolute timestamp (ms epoch) when this point started — set when the coach taps START.
    * Point duration and per-action elapsed times are derived from this.
    * Mirrors `pointStartTimestamps` from basic stat tracking.
    */
   startedAt?: number;
+  /**
+   * Timer value (ms elapsed) at the moment the goal/callahan was recorded.
+   * Accounts for all previous revivals and pauses, so it chains correctly across
+   * multiple undo cycles. Used with revivedAt to resume the timer accurately.
+   */
+  elapsedMsAtEnd?: number;
+  /**
+   * Absolute timestamp (ms epoch) when this point was last revived by undoing its goal.
+   * Combined with elapsedMsAtEnd: adjustedTimestamp = revivedAt - elapsedMsAtEnd.
+   */
+  revivedAt?: number;
 }
 
 // --- Possessions ---
@@ -181,6 +200,8 @@ export type BetweenPointTransition =
       transitionType: 'timeout';
       /** Which side called the timeout. */
       sideId: string;
+      /** True when this was the one-per-game floater rather than a regular timeout. */
+      isFloater?: boolean;
     }
   | {
       id: string;
@@ -298,8 +319,10 @@ export interface ThrowAction {
 export interface StoppageAction {
   id: string;
   kind: 'stoppage';
-  reason: 'timeout' | 'injury';
+  reason: 'timeout' | 'injury' | 'manual_pause';
   sideId?: string;
+  /** For `reason: 'timeout'`, true when this was the one-per-game floater. */
+  isFloater?: boolean;
   /** Absolute timestamp (ms epoch) when this action was logged. */
   recordedAt?: number;
   /**

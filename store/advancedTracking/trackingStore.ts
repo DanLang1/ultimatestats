@@ -19,6 +19,7 @@ import {
   isPossessionOver,
   syncDerivedHalftimeTransition,
 } from '@/lib/advancedTracking/trackingUtils';
+import { getPointAdjustedTimestamp } from '@/lib/advancedTracking/trackingDisplayHelpers';
 import {
   ADVANCED_TRACKING_SCHEMA_VERSION,
   AdvancedTrackedGame,
@@ -135,6 +136,8 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
                       : undefined,
                   softCapAt: input.format.softCapAt,
                   hardCapAt: input.format.hardCapAt,
+                  timeoutsPerHalf: input.format.timeoutsPerHalf,
+                  floaterEnabled: input.format.floaterEnabled,
                 },
               },
               sides: input.sides,
@@ -265,6 +268,7 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
               id: transitionId,
               transitionType: 'timeout',
               sideId: input.sideId,
+              isFloater: input.isFloater,
             });
             liveGame.updatedAt = now;
             pushUndoEntry(state, {
@@ -299,6 +303,7 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
             liveGame.points.push({
               id: pointId,
               lines: input.lines,
+              genderRatio: input.genderRatio,
               startedAt: now,
               possessions: [
                 {
@@ -403,10 +408,12 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
           }
 
           const actionId = generateId();
+          const now = Date.now();
 
           set((state) => {
             const liveGame = getCurrentGame(state);
             const possession = getCurrentPossession(liveGame)!;
+            const livePoint = getCurrentPoint(liveGame)!;
             possession.actions.push({
               id: actionId,
               kind: 'throw',
@@ -416,24 +423,29 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
               toPlayer: input.toPlayer,
               defender: input.defender,
               splitAttribution: input.splitAttribution,
-              recordedAt: Date.now(),
+              recordedAt: now,
             });
+            if (input.result === 'goal' || input.result === 'callahan') {
+              livePoint.elapsedMsAtEnd =
+                input.timerElapsedMs ?? now - getPointAdjustedTimestamp(livePoint);
+              livePoint.revivedAt = undefined;
+            }
             pushUndoEntry(state, {
               kind: 'action',
-              pointId: getCurrentPoint(liveGame)!.id,
+              pointId: livePoint.id,
               possessionId: possession.id,
               actionId,
             });
             if (syncDerivedHalftimeTransition(liveGame)) {
               state.isHalftimeBreakActive = true;
             }
-            liveGame.updatedAt = Date.now();
+            liveGame.updatedAt = now;
           });
 
           return actionId;
         },
 
-        amendLastThrowAsGoal: () => {
+        amendLastThrowAsGoal: (timerElapsedMs?: number) => {
           const game = getCurrentGame(get());
           const point = getCurrentPoint(game);
           const possession = getCurrentPossession(game);
@@ -451,6 +463,8 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
 
           const previousResult = lastThrow.result;
 
+          const now = Date.now();
+
           set((state) => {
             const liveGame = getCurrentGame(state);
             const livePoint = liveGame.points.find((p) => p.id === point.id);
@@ -458,6 +472,12 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
             const action = livePossession?.actions.find((a) => a.id === lastThrow!.id);
             if (action?.kind === 'throw') {
               action.result = 'goal';
+            }
+            if (livePoint) {
+              const goalTime = action?.kind === 'throw' ? (action.recordedAt ?? now) : now;
+              livePoint.elapsedMsAtEnd =
+                timerElapsedMs ?? goalTime - getPointAdjustedTimestamp(livePoint);
+              livePoint.revivedAt = undefined;
             }
             pushUndoEntry(state, {
               kind: 'amend_throw_result',
@@ -469,12 +489,11 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
             if (syncDerivedHalftimeTransition(liveGame)) {
               state.isHalftimeBreakActive = true;
             }
-            liveGame.updatedAt = Date.now();
+            liveGame.updatedAt = now;
           });
         },
 
         recordStoppage: (input: RecordStoppageInput) => {
-          // TODO: Support floating timeouts recorded outside an active point.
           const game = getCurrentGame(get());
           const currentPoint = getCurrentPoint(game);
           if (currentPoint == null) {
@@ -498,6 +517,7 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
               kind: 'stoppage',
               reason: input.reason,
               sideId: input.sideId,
+              isFloater: input.reason === 'timeout' ? input.isFloater : undefined,
               recordedAt: now,
               pausedAt: now,
             });
@@ -518,30 +538,23 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
           const point = getCurrentPoint(game);
           if (point == null) throw new Error('No active point.');
 
-          let found = false;
-          for (const possession of point.possessions) {
-            for (const action of possession.actions) {
-              if (action.id === actionId && action.kind === 'stoppage') {
-                if (action.resumedAt != null) {
-                  throw new Error('Stoppage has already been resumed.');
-                }
-                found = true;
-              }
-            }
+          const possession = getCurrentPossession(game);
+          const last = possession?.actions[possession.actions.length - 1];
+          if (!last || last.kind !== 'stoppage' || last.id !== actionId) {
+            throw new Error(`Stoppage action "${actionId}" not found as last action.`);
           }
-          if (!found) {
-            throw new Error(`Stoppage action "${actionId}" not found in current point.`);
+          if (last.resumedAt != null) {
+            throw new Error('Stoppage has already been resumed.');
           }
 
           const now = Date.now();
           set((state) => {
             const liveGame = getCurrentGame(state);
             const livePoint = getCurrentPoint(liveGame)!;
-            for (const possession of livePoint.possessions) {
-              const action = possession.actions.find((a) => a.id === actionId);
-              if (action?.kind === 'stoppage') {
-                action.resumedAt = now;
-              }
+            const livePossession = getCurrentPossession(liveGame)!;
+            const action = livePossession.actions[livePossession.actions.length - 1];
+            if (action?.kind === 'stoppage') {
+              action.resumedAt = now;
             }
             pushUndoEntry(state, {
               kind: 'resume_stoppage',
@@ -624,6 +637,20 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
             const liveGame = getCurrentGame(state);
 
             if (lastUndoEntry.kind === 'action') {
+              const undoPoint = liveGame.points.find((p) => p.id === lastUndoEntry.pointId);
+              const undoPossession = undoPoint?.possessions.find(
+                (p) => p.id === lastUndoEntry.possessionId,
+              );
+              const undoAction = undoPossession?.actions.find(
+                (a) => a.id === lastUndoEntry.actionId,
+              );
+              if (
+                undoAction?.kind === 'throw' &&
+                (undoAction.result === 'goal' || undoAction.result === 'callahan') &&
+                undoPoint != null
+              ) {
+                undoPoint.revivedAt = Date.now();
+              }
               removeActionById(
                 liveGame,
                 lastUndoEntry.pointId,
@@ -675,7 +702,11 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
                 (candidate) => candidate.id === lastUndoEntry.actionId,
               );
               if (action?.kind === 'throw') {
+                const wasGoal = action.result === 'goal' || action.result === 'callahan';
                 action.result = lastUndoEntry.previousResult;
+                if (wasGoal && point != null) {
+                  point.revivedAt = Date.now();
+                }
               }
             }
 

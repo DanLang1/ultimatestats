@@ -1,91 +1,80 @@
 import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import {
+  getActiveSideId,
+  getDiscHolderId,
+  isInjuryJustResumed,
+} from '@/lib/advancedTracking/trackingDisplayHelpers';
+import {
+  getCurrentPoint,
+  getCurrentPossession,
+  hasPointEnded,
+  isPossessionOver,
+} from '@/lib/advancedTracking/trackingUtils';
+import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { Fonts } from '@/theme/theme';
 import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { TrackerMoreBtn, TrackerUndoBtn } from './TrackerActionBarBtns';
 
 interface TrackerActionBarProps {
-  pointIsOver: boolean;
-  oppHasDisc: boolean;
-  discHolderId: string | null;
-  activeStoppageId: string | null;
+  pointElapsedMs: number;
   onStartNextPoint: () => void;
-  onOppScored: () => void;
-  onOppTurnover: () => void;
   onThrowaway: () => void;
   onMorePress: () => void;
-  onResumeStoppage: () => void;
-  onUndoLastOperation: () => void;
-  bottomInset: number;
-  isLandscape?: boolean;
 }
 
 export const TrackerActionBar = ({
-  pointIsOver,
-  oppHasDisc,
-  discHolderId,
-  activeStoppageId,
+  pointElapsedMs,
   onStartNextPoint,
-  onOppScored,
-  onOppTurnover,
   onThrowaway,
   onMorePress,
-  onResumeStoppage,
-  onUndoLastOperation,
-  bottomInset,
-  isLandscape = false,
 }: TrackerActionBarProps) => {
   const { palette } = useTheme();
-  const { sizeClass } = useLayout();
+  const { sizeClass, isLandscape } = useLayout();
   const styles = createStyles(sizeClass, isLandscape);
+  const insets = useSafeAreaInsets();
 
-  const UndoBtn = () => (
-    <Pressable
-      style={({ pressed }) => [
-        styles.actionBtn,
-        { borderColor: palette.overlay20, backgroundColor: palette.overlay05 },
-        pressed && { opacity: 0.7 },
-      ]}
-      onPress={onUndoLastOperation}>
-      <ThemedText style={[styles.actionBtnText, { color: palette.textInverse }]}>UNDO</ThemedText>
-    </Pressable>
-  );
+  const { currentGameId, savedGames, recordPickup, recordThrow, undoLastOperation } =
+    useAdvancedTrackingStore();
+  const game = savedGames.find((g) => g.id === currentGameId);
+  if (!game) return null;
 
-  const MoreBtn = () => (
-    <Pressable
-      style={({ pressed }) => [
-        styles.moreBtn,
-        { borderColor: palette.overlay20, backgroundColor: palette.overlay05 },
-        pressed && { opacity: 0.7 },
-      ]}
-      onPress={onMorePress}>
-      <ThemedText style={[styles.actionBtnText, { color: palette.textMuted }]}>•••</ThemedText>
-    </Pressable>
-  );
+  const oppSide = game.sides.find((s) => s.id !== game.focusSideId);
+  if (!oppSide) return null;
+
+  const point = getCurrentPoint(game);
+  const possession = getCurrentPossession(game);
+  const pointIsOver = hasPointEnded(point);
+  const activeSideId = getActiveSideId(possession, game);
+  const oppHasDisc = !pointIsOver && activeSideId !== game.focusSideId;
+
+  const discHolderId = isInjuryJustResumed(possession)
+    ? null
+    : getDiscHolderId(possession, game.focusSideId);
+
+  const handleOppTurnover = () => {
+    if (!possession || isPossessionOver(possession)) {
+      recordPickup({ sideId: oppSide.id, player: { refType: 'untracked' } });
+    }
+    recordThrow({ thrower: { refType: 'untracked' }, result: 'throwaway' });
+  };
+
+  const handleOppScored = () => {
+    if (!possession || isPossessionOver(possession)) {
+      recordPickup({ sideId: oppSide.id, player: { refType: 'untracked' } });
+    }
+    recordThrow({
+      thrower: { refType: 'untracked' },
+      result: 'goal',
+      timerElapsedMs: pointElapsedMs,
+    });
+  };
 
   let barContent: React.ReactNode;
-  if (activeStoppageId) {
-    barContent = (
-      <>
-        <Pressable
-          style={({ pressed }) => [
-            styles.actionBtn,
-            styles.actionBtnFlex,
-            {
-              borderColor: palette.warning,
-              backgroundColor: palette.warning + '15',
-              boxShadow: `0 0 16px ${palette.warning}30`,
-            },
-            pressed && { opacity: 0.7 },
-          ]}
-          onPress={onResumeStoppage}>
-          <ThemedText style={[styles.actionBtnText, { color: palette.warning }]}>RESUME</ThemedText>
-        </Pressable>
-        <UndoBtn />
-      </>
-    );
-  } else if (pointIsOver) {
+  if (pointIsOver) {
     barContent = (
       <>
         <Pressable
@@ -103,7 +92,8 @@ export const TrackerActionBar = ({
             NEXT POINT
           </ThemedText>
         </Pressable>
-        <UndoBtn />
+        <TrackerUndoBtn onPress={undoLastOperation} isLandscape={isLandscape} />
+        <TrackerMoreBtn onPress={onMorePress} isLandscape={isLandscape} />
       </>
     );
   } else if (oppHasDisc) {
@@ -115,7 +105,7 @@ export const TrackerActionBar = ({
             { borderColor: palette.danger, backgroundColor: palette.danger + '10' },
             pressed && { opacity: 0.7 },
           ]}
-          onPress={onOppScored}>
+          onPress={handleOppScored}>
           <ThemedText style={[styles.actionBtnText, { color: palette.danger }]}>
             OPP GOAL
           </ThemedText>
@@ -126,13 +116,13 @@ export const TrackerActionBar = ({
             { borderColor: palette.success, backgroundColor: palette.success + '10' },
             pressed && { opacity: 0.7 },
           ]}
-          onPress={onOppTurnover}>
+          onPress={handleOppTurnover}>
           <ThemedText style={[styles.actionBtnText, { color: palette.success }]}>
             OPP TURN
           </ThemedText>
         </Pressable>
-        <MoreBtn />
-        <UndoBtn />
+        <TrackerMoreBtn onPress={onMorePress} isLandscape={isLandscape} />
+        <TrackerUndoBtn onPress={undoLastOperation} isLandscape={isLandscape} />
       </>
     );
   } else {
@@ -158,8 +148,8 @@ export const TrackerActionBar = ({
             T/A
           </ThemedText>
         </Pressable>
-        <UndoBtn />
-        <MoreBtn />
+        <TrackerUndoBtn onPress={undoLastOperation} isLandscape={isLandscape} />
+        <TrackerMoreBtn onPress={onMorePress} isLandscape={isLandscape} />
       </>
     );
   }
@@ -169,11 +159,11 @@ export const TrackerActionBar = ({
       style={[
         isLandscape ? styles.actionBarLandscape : styles.actionBar,
         isLandscape
-          ? { paddingBottom: Math.max(bottomInset, 12) }
+          ? { paddingBottom: Math.max(insets.bottom, 12) }
           : {
               backgroundColor: palette.glassBg,
               borderColor: palette.overlay15,
-              paddingBottom: Math.max(bottomInset, 20),
+              paddingBottom: Math.max(insets.bottom, 20),
               boxShadow: `0 -8px 32px ${palette.overlay10}`,
             },
       ]}>
@@ -201,22 +191,10 @@ function createStyles(sizeClass: SizeClass, isLandscape: boolean) {
       paddingTop: 4,
       gap: 6,
     },
-    actionBtnFlex: {
-      flexGrow: 1,
-    },
     actionBtn: {
       flex: 1,
       paddingVertical: isLandscape ? 6 : 18,
       paddingHorizontal: 8,
-      borderWidth: 1,
-      borderRadius: 20,
-      borderCurve: 'continuous',
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    moreBtn: {
-      paddingVertical: isLandscape ? 6 : 18,
-      paddingHorizontal: isLandscape ? 10 : 14,
       borderWidth: 1,
       borderRadius: 20,
       borderCurve: 'continuous',

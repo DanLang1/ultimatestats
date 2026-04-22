@@ -51,7 +51,8 @@ export function computeAdvancedImpact(
       const stalls = get('stall');
       const stallsConceded = get('stall_conceded');
 
-      plusMinusDelta = goals + assists + blocks + stalls + callahans - throwaways - drops - stallsConceded;
+      plusMinusDelta =
+        goals + assists + blocks + stalls + callahans - throwaways - drops - stallsConceded;
 
       if (goals > 0 && assists > 0) parts.push('GA');
       else {

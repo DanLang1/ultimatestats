@@ -1,3 +1,5 @@
+import { PassModifier } from '@/lib/advancedTracking/types';
+
 export type TurnoverSheetState =
   | null
   | { stage: 'type' }
@@ -5,4 +7,4 @@ export type TurnoverSheetState =
 
 export type TurnoverType = 'throwaway' | 'drop' | 'block' | 'fifty-fifty';
 
-export type PassModifier = 'fifty-fifty' | 'callahan' | 'stall' | null;
+export { PassModifier };

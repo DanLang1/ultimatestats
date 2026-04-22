@@ -5,6 +5,7 @@ import {
   PullResult,
 } from '@/lib/advancedTracking/types';
 import { getOtherSideId } from '@/lib/advancedTracking/trackingUtils';
+import { GenderRatio } from '@/lib/genderRatioUtils';
 import { RecordPullInput } from '@/store/advancedTracking/trackingStore.types';
 
 export const PULL_RESULTS: { value: PullResult; label: string }[] = [
@@ -52,9 +53,18 @@ export function buildRecordPullInput(params: {
   hangTimeMs: number;
   result: PullResult;
   receiverId?: string | null;
+  genderRatio?: GenderRatio;
 }): RecordPullInput {
-  const { game, isOurPull, lineParticipantIds, selectedPullerId, hangTimeMs, result, receiverId } =
-    params;
+  const {
+    game,
+    isOurPull,
+    lineParticipantIds,
+    selectedPullerId,
+    hangTimeMs,
+    result,
+    receiverId,
+    genderRatio,
+  } = params;
   const opponentSideId = getOtherSideId(game, game.focusSideId);
   const lines = [
     { sideId: game.focusSideId, participantIds: lineParticipantIds },
@@ -65,6 +75,7 @@ export function buildRecordPullInput(params: {
     lines,
     puller: getPullerRef(selectedPullerId, isOurPull),
     result,
+    genderRatio,
   };
 
   if (hangTimeMs > 0) {

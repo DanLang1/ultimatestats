@@ -1,4 +1,8 @@
-import type { AnalyticsAttribution, AnalyticsGame, AttributionType } from '../../advancedTracking/analyticsTypes';
+import type {
+  AnalyticsAttribution,
+  AnalyticsGame,
+  AttributionType,
+} from '../../advancedTracking/analyticsTypes';
 import {
   UNKNOWN_PARTICIPANT_ID,
   buildAnalyticsGame,
@@ -4005,8 +4009,22 @@ describe('AnalyticsGame metadata fields', () => {
         id: 'pos1',
         sideId: ZOO,
         actions: [
-          { id: 'a1', kind: 'pull' as const, sideId: RIVALS, receivingSideId: ZOO, puller: untracked, result: 'inbound' as const },
-          { id: 'a2', kind: 'throw' as const, sideId: ZOO, thrower: august, toPlayer: meves, result: 'goal' as const },
+          {
+            id: 'a1',
+            kind: 'pull' as const,
+            sideId: RIVALS,
+            receivingSideId: ZOO,
+            puller: untracked,
+            result: 'inbound' as const,
+          },
+          {
+            id: 'a2',
+            kind: 'throw' as const,
+            sideId: ZOO,
+            thrower: august,
+            toPlayer: meves,
+            result: 'goal' as const,
+          },
         ],
       },
     ],
@@ -4068,8 +4086,22 @@ describe('getFinalScores', () => {
         id: 'pos1',
         sideId: ZOO,
         actions: [
-          { id: 'a1', kind: 'pull' as const, sideId: RIVALS, receivingSideId: ZOO, puller: untracked, result: 'inbound' as const },
-          { id: 'a2', kind: 'throw' as const, sideId: ZOO, thrower: august, toPlayer: meves, result: 'goal' as const },
+          {
+            id: 'a1',
+            kind: 'pull' as const,
+            sideId: RIVALS,
+            receivingSideId: ZOO,
+            puller: untracked,
+            result: 'inbound' as const,
+          },
+          {
+            id: 'a2',
+            kind: 'throw' as const,
+            sideId: ZOO,
+            thrower: august,
+            toPlayer: meves,
+            result: 'goal' as const,
+          },
         ],
       },
     ],
@@ -4083,8 +4115,22 @@ describe('getFinalScores', () => {
         id: `pos_${id}`,
         sideId: RIVALS,
         actions: [
-          { id: `pull_${id}`, kind: 'pull' as const, sideId: ZOO, receivingSideId: RIVALS, puller: august, result: 'inbound' as const },
-          { id: `throw_${id}`, kind: 'throw' as const, sideId: RIVALS, thrower: untracked, toPlayer: untracked, result: 'goal' as const },
+          {
+            id: `pull_${id}`,
+            kind: 'pull' as const,
+            sideId: ZOO,
+            receivingSideId: RIVALS,
+            puller: august,
+            result: 'inbound' as const,
+          },
+          {
+            id: `throw_${id}`,
+            kind: 'throw' as const,
+            sideId: RIVALS,
+            thrower: untracked,
+            toPlayer: untracked,
+            result: 'goal' as const,
+          },
         ],
       },
     ],
@@ -4108,12 +4154,34 @@ describe('getFinalScores', () => {
       points: [
         { ...zooHoldPoint, id: 'pt1' },
         rivalsHoldPoint('pt2'),
-        { ...zooHoldPoint, id: 'pt3',
+        {
+          ...zooHoldPoint,
+          id: 'pt3',
           lines: [{ sideId: ZOO, participantIds: ['p_august'] }],
-          possessions: [{ id: 'pos3', sideId: ZOO, actions: [
-            { id: 'pull3', kind: 'pull' as const, sideId: RIVALS, receivingSideId: ZOO, puller: untracked, result: 'inbound' as const },
-            { id: 'throw3', kind: 'throw' as const, sideId: ZOO, thrower: august, toPlayer: meves, result: 'goal' as const },
-          ]}],
+          possessions: [
+            {
+              id: 'pos3',
+              sideId: ZOO,
+              actions: [
+                {
+                  id: 'pull3',
+                  kind: 'pull' as const,
+                  sideId: RIVALS,
+                  receivingSideId: ZOO,
+                  puller: untracked,
+                  result: 'inbound' as const,
+                },
+                {
+                  id: 'throw3',
+                  kind: 'throw' as const,
+                  sideId: ZOO,
+                  thrower: august,
+                  toPlayer: meves,
+                  result: 'goal' as const,
+                },
+              ],
+            },
+          ],
         },
       ],
     };
@@ -4136,8 +4204,22 @@ describe('getFinalScores', () => {
               id: 'pos2',
               sideId: RIVALS,
               actions: [
-                { id: 'pull2', kind: 'pull' as const, sideId: ZOO, receivingSideId: RIVALS, puller: august, result: 'inbound' as const },
-                { id: 'throw2', kind: 'throw' as const, sideId: RIVALS, thrower: untracked, toPlayer: untracked, result: 'complete' as const },
+                {
+                  id: 'pull2',
+                  kind: 'pull' as const,
+                  sideId: ZOO,
+                  receivingSideId: RIVALS,
+                  puller: august,
+                  result: 'inbound' as const,
+                },
+                {
+                  id: 'throw2',
+                  kind: 'throw' as const,
+                  sideId: RIVALS,
+                  thrower: untracked,
+                  toPlayer: untracked,
+                  result: 'complete' as const,
+                },
               ],
             },
           ],
