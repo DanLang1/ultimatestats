@@ -1,11 +1,7 @@
 import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import {
-  getActiveSideId,
-  getDiscHolderId,
-  isInjuryJustResumed,
-} from '@/lib/advancedTracking/trackingDisplayHelpers';
+import { getActiveSideId } from '@/lib/advancedTracking/trackingDisplayHelpers';
 import {
   getCurrentPoint,
   getCurrentPossession,
@@ -22,14 +18,12 @@ import { TrackerMoreBtn, TrackerUndoBtn } from './TrackerActionBarBtns';
 interface TrackerActionBarProps {
   pointElapsedMs: number;
   onStartNextPoint: () => void;
-  onThrowaway: () => void;
   onMorePress: () => void;
 }
 
 export const TrackerActionBar = ({
   pointElapsedMs,
   onStartNextPoint,
-  onThrowaway,
   onMorePress,
 }: TrackerActionBarProps) => {
   const { palette } = useTheme();
@@ -50,10 +44,6 @@ export const TrackerActionBar = ({
   const pointIsOver = hasPointEnded(point);
   const activeSideId = getActiveSideId(possession, game);
   const oppHasDisc = !pointIsOver && activeSideId !== game.focusSideId;
-
-  const discHolderId = isInjuryJustResumed(possession)
-    ? null
-    : getDiscHolderId(possession, game.focusSideId);
 
   const handleOppTurnover = () => {
     if (!possession || isPossessionOver(possession)) {
@@ -128,26 +118,6 @@ export const TrackerActionBar = ({
   } else {
     barContent = (
       <>
-        <Pressable
-          disabled={!discHolderId}
-          style={({ pressed }) => [
-            styles.actionBtn,
-            {
-              borderColor: discHolderId ? palette.danger : palette.overlay20,
-              backgroundColor: discHolderId ? palette.danger + '10' : palette.overlay05,
-              opacity: discHolderId ? 1 : 0.35,
-            },
-            pressed && discHolderId && { opacity: 0.7 },
-          ]}
-          onPress={onThrowaway}>
-          <ThemedText
-            style={[
-              styles.actionBtnText,
-              { color: discHolderId ? palette.danger : palette.textMuted },
-            ]}>
-            T/A
-          </ThemedText>
-        </Pressable>
         <TrackerUndoBtn onPress={undoLastOperation} isLandscape={isLandscape} />
         <TrackerMoreBtn onPress={onMorePress} isLandscape={isLandscape} />
       </>

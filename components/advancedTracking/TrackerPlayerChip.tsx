@@ -18,6 +18,7 @@ interface TrackerPlayerChipProps {
   onTap: (id: string) => void;
   onDrop: (id: string) => void;
   onGoal: (id: string) => void;
+  onThrowaway: () => void;
   chipWidth: number;
 }
 
@@ -29,6 +30,7 @@ export const TrackerPlayerChip = ({
   onTap,
   onDrop,
   onGoal,
+  onThrowaway,
   chipWidth,
 }: TrackerPlayerChipProps) => {
   const { palette } = useTheme();
@@ -37,15 +39,21 @@ export const TrackerPlayerChip = ({
   const isTargetable = !oppHasDisc && discHolderId !== null && !isHolder;
 
   const isTargetableSV = useDerivedValue(() => isTargetable);
+  const isHolderSV = useDerivedValue(() => isHolder);
 
-  // Directional swipes on receiver chips (our possession only):
-  //   swipe down → drop   (translationY > 0)
-  //   swipe up   → goal   (translationY < 0)
+  // Directional swipes on player chips (our possession only):
+  //   swipe down on holder → throwaway
+  //   swipe down on receiver → drop   (translationY > 0)
+  //   swipe up on receiver   → goal   (translationY < 0)
   const panGesture = Gesture.Pan()
     .activeOffsetY([-12, 12])
     .failOffsetX([-8, 8])
     .onEnd((e) => {
       'worklet';
+      if (isHolderSV.value) {
+        if (e.translationY > 0) scheduleOnRN(onThrowaway);
+        return;
+      }
       if (!isTargetableSV.value) return;
       if (e.translationY > 0) scheduleOnRN(onDrop, p.id);
       else scheduleOnRN(onGoal, p.id);

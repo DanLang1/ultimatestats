@@ -146,6 +146,7 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
             });
             state.currentGameId = gameId;
             state.undoStack = [];
+            state.isHalftimeBreakActive = false;
           });
 
           return gameId;

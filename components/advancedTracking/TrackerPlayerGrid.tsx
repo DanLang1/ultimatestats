@@ -13,6 +13,7 @@ interface TrackerPlayerGridProps {
   onPlayerTap: (participantId: string) => void;
   onDrop: (participantId: string) => void;
   onGoal: (participantId: string) => void;
+  onThrowaway: () => void;
   availableWidth?: number;
 }
 
@@ -24,6 +25,7 @@ export const TrackerPlayerGrid = ({
   onPlayerTap,
   onDrop,
   onGoal,
+  onThrowaway,
   availableWidth,
 }: TrackerPlayerGridProps) => {
   const { width, sizeClass, isLandscape } = useLayout();
@@ -57,6 +59,7 @@ export const TrackerPlayerGrid = ({
                 onTap={onPlayerTap}
                 onDrop={onDrop}
                 onGoal={onGoal}
+                onThrowaway={onThrowaway}
                 chipWidth={chipWidth}
               />
             ))}

@@ -100,7 +100,10 @@ export default function TrackerHalftimeScreen() {
       <ScreenHeader
         title="HALFTIME"
         titleColor={palette.textMuted}
-        onBack={() => router.replace('/Dashboard')}
+        onBack={() => {
+          clearHalftimeBreak();
+          router.replace('/Dashboard');
+        }}
         backIconColor={palette.textMuted}
         backButtonBackgroundColor="transparent"
       />

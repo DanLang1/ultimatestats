@@ -14,7 +14,6 @@ import { Fonts } from '@/theme/theme';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React, { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 interface TrackerLineScreenProps {
   participants: Participant[];
@@ -99,74 +98,23 @@ export const TrackerLineScreen = ({
 
   return (
     <ThemedView style={{ flex: 1 }}>
-      <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
-        <View style={[styles.header, { borderBottomColor: palette.border }]}>
-          <View style={styles.headerTop}>
-            {onBack && (
-              <Pressable onPress={onBack} style={styles.backBtn} hitSlop={8}>
-                <MaterialCommunityIcons
-                  name="arrow-left"
-                  size={scaleBySizeClass(22, sizeClass)}
-                  color={palette.textInverse}
-                />
-              </Pressable>
-            )}
-            <ThemedText style={[styles.headerTitle, { color: palette.textInverse }]}>
-              {title ?? 'Select Line'}
-            </ThemedText>
-
-            {isLandscape && (expectedRatio != null || ratioMismatch) && (
-              <View style={styles.ratioInline}>
-                {expectedRatio != null && (
-                  <ThemedText style={[styles.nextPointLabel, { color: palette.textMuted }]}>
-                    Ratio{expectedRatioLabel ? ` · ${expectedRatioLabel}` : ''}
-                  </ThemedText>
-                )}
-                {ratioMismatch && (
-                  <View style={[styles.infoChip, { backgroundColor: palette.warning + '20' }]}>
-                    <MaterialCommunityIcons
-                      name="alert"
-                      size={scaleBySizeClass(14, sizeClass)}
-                      color={palette.warning}
-                    />
-                    <ThemedText style={[styles.infoChipText, { color: palette.warning }]}>
-                      Expecting {expectedRatio === 'more-women' ? 'F' : 'M'} majority
-                    </ThemedText>
-                  </View>
-                )}
-              </View>
-            )}
-
-            <Pressable
-              onPress={() => onConfirm(selectedIds)}
-              disabled={!canConfirm}
-              style={({ pressed }) => [
-                styles.confirmBtn,
-                { backgroundColor: canConfirm ? palette.success : palette.overlay10 },
-                pressed && canConfirm && { opacity: 0.8 },
-              ]}>
-              {!canConfirm && (
-                <ThemedText style={[styles.countText, { color: palette.textMuted }]}>
-                  {selectedIds.length}/7
-                </ThemedText>
-              )}
-              {canConfirm && confirmLabel && (
-                <ThemedText style={[styles.countText, { color: palette.textOnAccent }]}>
-                  {confirmLabel}
-                </ThemedText>
-              )}
-              {canConfirm && !confirmLabel && (
-                <MaterialCommunityIcons
-                  name="check"
-                  size={scaleBySizeClass(18, sizeClass)}
-                  color={palette.textOnAccent}
-                />
-              )}
+      <View style={[styles.header, { borderBottomColor: palette.border }]}>
+        <View style={styles.headerTop}>
+          {onBack && (
+            <Pressable onPress={onBack} style={styles.backBtn} hitSlop={8}>
+              <MaterialCommunityIcons
+                name="arrow-left"
+                size={scaleBySizeClass(22, sizeClass)}
+                color={palette.textInverse}
+              />
             </Pressable>
-          </View>
+          )}
+          <ThemedText style={[styles.headerTitle, { color: palette.textInverse }]}>
+            {title ?? 'Select Line'}
+          </ThemedText>
 
-          {!isLandscape && (expectedRatio != null || ratioMismatch) && (
-            <View style={styles.infoRow}>
+          {isLandscape && (expectedRatio != null || ratioMismatch) && (
+            <View style={styles.ratioInline}>
               {expectedRatio != null && (
                 <ThemedText style={[styles.nextPointLabel, { color: palette.textMuted }]}>
                   Ratio{expectedRatioLabel ? ` · ${expectedRatioLabel}` : ''}
@@ -187,105 +135,153 @@ export const TrackerLineScreen = ({
             </View>
           )}
 
-          <View style={styles.presetsRow}>
-            {quickPresets.map((preset) => (
-              <Pressable
-                key={preset.id}
-                onPress={() => handleSelectPreset(preset)}
-                style={({ pressed }) => [
-                  styles.quickPresetBtn,
-                  {
-                    backgroundColor:
-                      selectedPresetId === preset.id ? palette.accent : palette.overlay08,
-                    borderColor:
-                      selectedPresetId === preset.id ? palette.accent : palette.overlay15,
-                  },
-                  pressed && { opacity: 0.8 },
-                ]}>
-                <ThemedText
-                  style={[
-                    styles.quickPresetBtnText,
-                    {
-                      color:
-                        selectedPresetId === preset.id ? palette.textOnAccent : palette.textInverse,
-                    },
-                  ]}
-                  numberOfLines={1}>
-                  {preset.name}
+          <Pressable
+            onPress={() => onConfirm(selectedIds)}
+            disabled={!canConfirm}
+            style={({ pressed }) => [
+              styles.confirmBtn,
+              { backgroundColor: canConfirm ? palette.success : palette.overlay10 },
+              pressed && canConfirm && { opacity: 0.8 },
+            ]}>
+            {!canConfirm && (
+              <ThemedText style={[styles.countText, { color: palette.textMuted }]}>
+                {selectedIds.length}/7
+              </ThemedText>
+            )}
+            {canConfirm && confirmLabel && (
+              <ThemedText style={[styles.countText, { color: palette.textOnAccent }]}>
+                {confirmLabel}
+              </ThemedText>
+            )}
+            {canConfirm && !confirmLabel && (
+              <MaterialCommunityIcons
+                name="check"
+                size={scaleBySizeClass(18, sizeClass)}
+                color={palette.textOnAccent}
+              />
+            )}
+          </Pressable>
+        </View>
+
+        {!isLandscape && (expectedRatio != null || ratioMismatch) && (
+          <View style={styles.infoRow}>
+            {expectedRatio != null && (
+              <ThemedText style={[styles.nextPointLabel, { color: palette.textMuted }]}>
+                Ratio{expectedRatioLabel ? ` · ${expectedRatioLabel}` : ''}
+              </ThemedText>
+            )}
+            {ratioMismatch && (
+              <View style={[styles.infoChip, { backgroundColor: palette.warning + '20' }]}>
+                <MaterialCommunityIcons
+                  name="alert"
+                  size={scaleBySizeClass(14, sizeClass)}
+                  color={palette.warning}
+                />
+                <ThemedText style={[styles.infoChipText, { color: palette.warning }]}>
+                  Expecting {expectedRatio === 'more-women' ? 'F' : 'M'} majority
                 </ThemedText>
-              </Pressable>
-            ))}
+              </View>
+            )}
+          </View>
+        )}
+
+        <View style={styles.presetsRow}>
+          {quickPresets.map((preset) => (
             <Pressable
-              onPress={() => setShowLinePicker(true)}
+              key={preset.id}
+              onPress={() => handleSelectPreset(preset)}
               style={({ pressed }) => [
-                styles.loadLineBtn,
+                styles.quickPresetBtn,
                 {
-                  backgroundColor: loadLineButtonActive ? palette.accent : palette.overlay08,
-                  borderColor: loadLineButtonActive ? palette.accent : palette.overlay15,
+                  backgroundColor:
+                    selectedPresetId === preset.id ? palette.accent : palette.overlay08,
+                  borderColor: selectedPresetId === preset.id ? palette.accent : palette.overlay15,
                 },
                 pressed && { opacity: 0.8 },
               ]}>
-              <MaterialCommunityIcons
-                name="layers-outline"
-                size={scaleBySizeClass(13, sizeClass)}
-                color={loadLineButtonActive ? palette.textOnAccent : palette.textMuted}
-              />
               <ThemedText
                 style={[
-                  styles.loadLineBtnText,
-                  { color: loadLineButtonActive ? palette.textOnAccent : palette.textMuted },
+                  styles.quickPresetBtnText,
+                  {
+                    color:
+                      selectedPresetId === preset.id ? palette.textOnAccent : palette.textInverse,
+                  },
                 ]}
                 numberOfLines={1}>
-                {loadLineButtonLabel}
+                {preset.name}
               </ThemedText>
             </Pressable>
-            {selectedIds.length > 0 && (
-              <Pressable
-                onPress={() => {
-                  setSelectedIds([]);
-                  setSelectedPresetId(null);
-                }}
-                style={({ pressed }) => [
-                  styles.clearBtn,
-                  { borderColor: palette.overlay15 },
-                  pressed && { opacity: 0.7 },
-                ]}>
-                <MaterialCommunityIcons
-                  name="eraser"
-                  size={scaleBySizeClass(14, sizeClass)}
-                  color={palette.textMuted}
-                />
-              </Pressable>
-            )}
-          </View>
-
-          <PresetPickerModal
-            visible={showLinePicker}
-            onClose={() => setShowLinePicker(false)}
-            presets={presets}
-            selectedPresetId={selectedPresetId}
-            onSelectPreset={(preset) => {
-              handleSelectPreset(preset);
-              setShowLinePicker(false);
-            }}
-            onEditPresets={() => setShowLinePicker(false)}
-            recentLines={[]}
-            selectedRecentPointNumber={null}
-            onSelectRecentLine={() => {}}
-            roster={players}
-          />
+          ))}
+          <Pressable
+            onPress={() => setShowLinePicker(true)}
+            style={({ pressed }) => [
+              styles.loadLineBtn,
+              {
+                backgroundColor: loadLineButtonActive ? palette.accent : palette.overlay08,
+                borderColor: loadLineButtonActive ? palette.accent : palette.overlay15,
+              },
+              pressed && { opacity: 0.8 },
+            ]}>
+            <MaterialCommunityIcons
+              name="layers-outline"
+              size={scaleBySizeClass(13, sizeClass)}
+              color={loadLineButtonActive ? palette.textOnAccent : palette.textMuted}
+            />
+            <ThemedText
+              style={[
+                styles.loadLineBtnText,
+                { color: loadLineButtonActive ? palette.textOnAccent : palette.textMuted },
+              ]}
+              numberOfLines={1}>
+              {loadLineButtonLabel}
+            </ThemedText>
+          </Pressable>
+          {selectedIds.length > 0 && (
+            <Pressable
+              onPress={() => {
+                setSelectedIds([]);
+                setSelectedPresetId(null);
+              }}
+              style={({ pressed }) => [
+                styles.clearBtn,
+                { borderColor: palette.overlay15 },
+                pressed && { opacity: 0.7 },
+              ]}>
+              <MaterialCommunityIcons
+                name="eraser"
+                size={scaleBySizeClass(14, sizeClass)}
+                color={palette.textMuted}
+              />
+            </Pressable>
+          )}
         </View>
 
-        <View style={styles.gridContainer}>
-          <ModalPlayerGrid
-            roster={players}
-            pointLines={[]}
-            selectedIds={selectedIds}
-            onTogglePlayer={togglePlayer}
-            useModalColors={false}
-          />
-        </View>
-      </SafeAreaView>
+        <PresetPickerModal
+          visible={showLinePicker}
+          onClose={() => setShowLinePicker(false)}
+          presets={presets}
+          selectedPresetId={selectedPresetId}
+          onSelectPreset={(preset) => {
+            handleSelectPreset(preset);
+            setShowLinePicker(false);
+          }}
+          onEditPresets={() => setShowLinePicker(false)}
+          recentLines={[]}
+          selectedRecentPointNumber={null}
+          onSelectRecentLine={() => {}}
+          roster={players}
+        />
+      </View>
+
+      <View style={styles.gridContainer}>
+        <ModalPlayerGrid
+          roster={players}
+          pointLines={[]}
+          selectedIds={selectedIds}
+          onTogglePlayer={togglePlayer}
+          useModalColors={false}
+        />
+      </View>
     </ThemedView>
   );
 };

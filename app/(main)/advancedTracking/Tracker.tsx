@@ -159,7 +159,6 @@ export default function AdvancedTrackerScreen() {
       recordPickup({ sideId: FOCUS_SIDE_ID, player: { refType: 'participant', participantId } });
       return;
     }
-    if (discHolderId === participantId) return;
 
     if (passModifier === 'fifty-fifty') {
       recordThrow({
@@ -265,7 +264,6 @@ export default function AdvancedTrackerScreen() {
             <TrackerActionBar
               pointElapsedMs={pointElapsedMs}
               onStartNextPoint={handleStartNextPoint}
-              onThrowaway={handleThrowaway}
               onMorePress={() => setShowRareMenu(true)}
             />
           </View>
@@ -283,6 +281,7 @@ export default function AdvancedTrackerScreen() {
               onPlayerTap={handlePlayerTap}
               onDrop={handleDrop}
               onGoal={handleGoal}
+              onThrowaway={handleThrowaway}
               availableWidth={width - LEFT_PANEL_WIDTH - insets.left - insets.right}
             />
           </View>
@@ -303,12 +302,12 @@ export default function AdvancedTrackerScreen() {
             onPlayerTap={handlePlayerTap}
             onDrop={handleDrop}
             onGoal={handleGoal}
+            onThrowaway={handleThrowaway}
           />
           <TrackerStatusBar pointElapsedMs={pointElapsedMs} />
           <TrackerActionBar
             pointElapsedMs={pointElapsedMs}
             onStartNextPoint={handleStartNextPoint}
-            onThrowaway={handleThrowaway}
             onMorePress={() => setShowRareMenu(true)}
           />
         </>
