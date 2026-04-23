@@ -28,6 +28,11 @@ export const DEFAULT_QUERY_STALE_TIME_MS = 2 * 60 * 1000;
 /** Maximum character length for tournament names. */
 export const MAX_TOURNAMENT_NAME_LENGTH = 30;
 
+export const LATEST_VERSION_JSON_URL = 'https://u-stat.app/latest-version.json';
+export const APP_STORE_URL = 'https://apps.apple.com/us/app/u-stat/id6760956387';
+export const PLAY_STORE_URL =
+  'https://play.google.com/store/apps/details?id=com.langdk.ultimatestats';
+
 // ── Layout breakpoints (dp) ───────────────────────────────────────────
 // Used by useLayout() for size class and narrow/large-screen detection.
 

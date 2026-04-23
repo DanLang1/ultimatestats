@@ -43,6 +43,7 @@ export const TrackerPlayerChip = ({
 
   // Directional swipes on player chips (our possession only):
   //   swipe down on holder → throwaway
+  //   swipe up on holder   → self-goal
   //   swipe down on receiver → drop   (translationY > 0)
   //   swipe up on receiver   → goal   (translationY < 0)
   const panGesture = Gesture.Pan()
@@ -52,6 +53,7 @@ export const TrackerPlayerChip = ({
       'worklet';
       if (isHolderSV.value) {
         if (e.translationY > 0) scheduleOnRN(onThrowaway);
+        else scheduleOnRN(onGoal, p.id);
         return;
       }
       if (!isTargetableSV.value) return;

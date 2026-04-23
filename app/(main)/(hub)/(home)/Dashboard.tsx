@@ -5,7 +5,11 @@ import { useTheme } from '@/context/ThemeContext';
 import { useDashboardSession } from '@/hooks/useDashboardSession';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { useNewGame } from '@/hooks/useNewGame';
+import { useRemoteVersionCheck } from '@/hooks/useRemoteVersionCheck';
 import { useVersionCheck } from '@/hooks/useVersionCheck';
+import { APP_STORE_URL, PLAY_STORE_URL } from '@/lib/constants';
+import { LAST_DISMISSED_REMOTE_VERSION_KEY } from '@/lib/remoteVersionUtils';
+import { LAST_SEEN_VERSION_KEY } from '@/lib/versionUtils';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { useTutorialStore } from '@/store/tutorialStore';
 import { Fonts } from '@/theme/theme';
@@ -14,7 +18,7 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router, Stack } from 'expo-router';
 import React from 'react';
-import { Linking, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Linking, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 interface MenuItem {
   icon: keyof typeof MaterialCommunityIcons.glyphMap;
@@ -41,6 +45,7 @@ export default function DashboardScreen() {
   const hasActiveAdvancedGame = activeAdvancedGame != null;
   const { confirmNewGame } = useNewGame();
   const { hasNewVersion } = useVersionCheck();
+  const { hasUpdate: hasRemoteUpdate, dismiss: dismissRemoteUpdate } = useRemoteVersionCheck();
   const {
     currentTeam,
     statTrackingEnabled,
@@ -211,6 +216,37 @@ export default function DashboardScreen() {
       />
 
       <ScrollView contentContainerStyle={[styles.scrollContent]}>
+        {hasRemoteUpdate && (
+          <Pressable
+            onPress={() => Linking.openURL(Platform.OS === 'ios' ? APP_STORE_URL : PLAY_STORE_URL)}
+            style={({ pressed }) => [
+              styles.updateBanner,
+              { backgroundColor: palette.accentOverlay10, borderColor: palette.accentOverlay30 },
+              pressed && styles.menuItemPressed,
+            ]}>
+            <MaterialCommunityIcons
+              name="download-circle-outline"
+              size={metrics.bannerIconSize}
+              color={palette.accent}
+            />
+            <View style={styles.updateBannerText}>
+              <ThemedText style={[styles.updateBannerTitle, { color: palette.accent }]}>
+                New Version Available
+              </ThemedText>
+              <ThemedText style={[styles.updateBannerSubtitle, { color: palette.textMuted }]}>
+                Tap to update
+              </ThemedText>
+            </View>
+            <Pressable onPress={dismissRemoteUpdate} hitSlop={8}>
+              <MaterialCommunityIcons
+                name="close"
+                size={metrics.bannerIconSize}
+                color={palette.textMuted}
+              />
+            </Pressable>
+          </Pressable>
+        )}
+
         {sections.map((section, sectionIndex) => (
           <View key={sectionIndex} style={styles.section}>
             <ThemedText style={[styles.sectionTitle, { color: palette.textMuted }]}>
@@ -363,7 +399,7 @@ export default function DashboardScreen() {
 
             <Pressable
               onPress={() => {
-                AsyncStorage.removeItem('ultimatestats_last_seen_version').then(() => {
+                AsyncStorage.removeItem(LAST_SEEN_VERSION_KEY).then(() => {
                   console.log('Version check reset - reload app to see badge');
                 });
               }}
@@ -380,6 +416,30 @@ export default function DashboardScreen() {
               <View style={styles.discordText}>
                 <ThemedText style={[styles.discordTitle, { color: palette.textOnAccent }]}>
                   Reset Version Check
+                </ThemedText>
+                <ThemedText style={[styles.discordSubtitle, { color: palette.textOnAccentMuted }]}>
+                  DEV ONLY - Reload app after tapping
+                </ThemedText>
+              </View>
+            </Pressable>
+
+            <Pressable
+              onPress={() => {
+                AsyncStorage.removeItem(LAST_DISMISSED_REMOTE_VERSION_KEY);
+              }}
+              style={({ pressed }) => [
+                styles.discordBanner,
+                { backgroundColor: palette.danger },
+                pressed && styles.menuItemPressed,
+              ]}>
+              <MaterialCommunityIcons
+                name="cloud-refresh"
+                size={metrics.bannerIconSize}
+                color={palette.textOnAccent}
+              />
+              <View style={styles.discordText}>
+                <ThemedText style={[styles.discordTitle, { color: palette.textOnAccent }]}>
+                  Reset Remote Version Check
                 </ThemedText>
                 <ThemedText style={[styles.discordSubtitle, { color: palette.textOnAccentMuted }]}>
                   DEV ONLY - Reload app after tapping
@@ -536,6 +596,26 @@ function createStyles(sizeClass: SizeClass) {
       fontFamily: Fonts.bold,
     },
     menuItemDescription: {
+      fontSize: scaleBySizeClass(12, sizeClass),
+    },
+    updateBanner: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: scaleBySizeClass(16, sizeClass),
+      borderRadius: scaleBySizeClass(14, sizeClass),
+      gap: scaleBySizeClass(14, sizeClass),
+      width: '100%',
+      borderWidth: 1,
+    },
+    updateBannerText: {
+      flex: 1,
+      gap: scaleBySizeClass(2, sizeClass),
+    },
+    updateBannerTitle: {
+      fontSize: scaleBySizeClass(15, sizeClass),
+      fontFamily: Fonts.semiBold,
+    },
+    updateBannerSubtitle: {
       fontSize: scaleBySizeClass(12, sizeClass),
     },
     discordBanner: {

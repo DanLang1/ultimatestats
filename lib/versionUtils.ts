@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 
-const VERSION_KEY = 'ultimatestats_last_seen_version';
+export const LAST_SEEN_VERSION_KEY = 'ultimatestats_last_seen_version';
 
 /**
  * Get the current app version from expo-constants
@@ -14,14 +14,14 @@ export function getCurrentVersion(): string {
  * Get the last version the user has seen/acknowledged
  */
 export async function getLastSeenVersion(): Promise<string | null> {
-  return AsyncStorage.getItem(VERSION_KEY);
+  return AsyncStorage.getItem(LAST_SEEN_VERSION_KEY);
 }
 
 /**
  * Save the current version as the last seen version
  */
 export async function setLastSeenVersion(version: string): Promise<void> {
-  await AsyncStorage.setItem(VERSION_KEY, version);
+  await AsyncStorage.setItem(LAST_SEEN_VERSION_KEY, version);
 }
 
 /**
