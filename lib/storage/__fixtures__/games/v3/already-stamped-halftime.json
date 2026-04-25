@@ -38,6 +38,6 @@
   ],
   "autoHalftimeEnabled": true,
   "gameTo": 3,
-  "gameLength": 90,
+  "hardCapMins": 90,
   "startingPossession": "team1"
 }

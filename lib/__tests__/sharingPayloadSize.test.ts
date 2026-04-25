@@ -113,7 +113,6 @@ function makeSavedGame(opts: { rosterSize: number; pointCount: number }): SavedG
     team2Score: opts.pointCount - halfScore - Math.floor(Math.random() * 3),
     events,
     gameTo: 15,
-    gameLength: 90,
     startingPossession: 'team1',
     pointStartTimestamps: makePointStartTimestamps(opts.pointCount),
     pointLines: makePointLines(team1, opts.pointCount),

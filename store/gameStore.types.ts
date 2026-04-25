@@ -74,11 +74,9 @@ export interface GameState {
   gameHalf: number;
   gameTo: number;
   baseGameTo: number;
-  gameLength: number;
 
   isSoftCap: boolean;
   softCapPending: boolean;
-  softCapMins: number;
   timerIsActive: boolean;
   timerEndTime: number | null;
   timerTimeLeft: number;
@@ -126,7 +124,6 @@ export interface GameState {
   setAutoHalftimeEnabled: (enabled: boolean) => void;
   setGameTo: (score: number) => void;
   setGameToInGame: (score: number) => void;
-  setGameLength: (minutes: number) => void;
   incrementScore: (isTeam1: boolean) => { didIncrement: boolean; isHalftime: boolean };
   triggerHalftimeEarly: () => boolean;
   undoLastAction: () => boolean; // Returns true if something was undone
@@ -134,7 +131,6 @@ export interface GameState {
   resetTimeouts: (count: number) => void;
   resetGame: () => void;
   setSoftCapPending: (pending: boolean) => void;
-  setSoftCapMins: (minutes: number) => void;
   setTimerActive: (active: boolean) => void;
   setTimerEndTime: (time: number | null) => void;
   setTimerTimeLeft: (seconds: number) => void;

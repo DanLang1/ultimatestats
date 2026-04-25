@@ -59,10 +59,8 @@ export const useGameStore = create<GameState>()(
         gameHalf: 1,
         gameTo: 15,
         baseGameTo: 15,
-        gameLength: 90,
         isSoftCap: false,
         softCapPending: false,
-        softCapMins: 20,
         timerIsActive: false,
         timerEndTime: null,
         timerTimeLeft: 90 * 60,
@@ -157,12 +155,6 @@ export const useGameStore = create<GameState>()(
 
             state.gameTo = newGameTo;
             state.baseGameTo = newGameTo;
-          }),
-
-        setGameLength: (minutes: number) =>
-          set((state: GameState) => {
-            state.gameLength = minutes;
-            state.timerTimeLeft = minutes * 60;
           }),
 
         incrementScore: (isTeam1: boolean) => {
@@ -472,7 +464,8 @@ export const useGameStore = create<GameState>()(
             state.team2Timeouts = new Array(count).fill(true);
           }),
 
-        resetGame: () =>
+        resetGame: () => {
+          const hardCapMinutes = useSettingsStore.getState().hardCapMins;
           set((state: GameState) => {
             state.team1Score = 0;
             state.team2Score = 0;
@@ -493,7 +486,7 @@ export const useGameStore = create<GameState>()(
             state.currentPoint = 1;
             state.timerIsActive = false;
             state.timerEndTime = null;
-            state.timerTimeLeft = state.gameLength * 60;
+            state.timerTimeLeft = hardCapMinutes * 60;
             state.currentGameStatus = 'fresh';
             state.isPostGameFlowPending = false;
             state.currentGameId = null;
@@ -513,15 +506,11 @@ export const useGameStore = create<GameState>()(
 
             // Reset game-specific settings in settingsStore
             useSettingsStore.getState().setFirstPointRatio(null);
-          }),
+          });
+        },
         setSoftCapPending: (pending: boolean) =>
           set((state: GameState) => {
             state.softCapPending = pending;
-          }),
-
-        setSoftCapMins: (minutes: number) =>
-          set((state: GameState) => {
-            state.softCapMins = minutes;
           }),
 
         setTimerActive: (active: boolean) =>
@@ -1115,7 +1104,6 @@ export const useGameStore = create<GameState>()(
             events: eventsWithGameId,
             autoHalftimeEnabled: state.autoHalftimeEnabled,
             gameTo: state.gameTo,
-            gameLength: state.gameLength,
             startingPossession: state.startingPossession ?? 'team1',
             pointStartTimestamps: state.pointStartTimestamps,
             pointLines: state.pointLines,
@@ -1254,10 +1242,8 @@ export const useGameStore = create<GameState>()(
           gameHalf: state.gameHalf,
           gameTo: state.gameTo,
           baseGameTo: state.baseGameTo,
-          gameLength: state.gameLength,
           isSoftCap: state.isSoftCap,
           softCapPending: state.softCapPending,
-          softCapMins: state.softCapMins,
           timerTimeLeft: state.timerTimeLeft,
           currentGameStatus: state.currentGameStatus,
           isPostGameFlowPending: state.isPostGameFlowPending,

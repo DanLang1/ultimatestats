@@ -147,7 +147,7 @@ export const TrackerStatusBar = ({ pointElapsedMs }: TrackerStatusBarProps) => {
 
   return (
     <View style={styles.statusBar}>
-      {showPointTimer && (
+      {showPointTimer && isLandscape && (
         <View style={styles.pointTimerRow}>
           <ThemedText style={[styles.pointTimerText, { color: palette.textInverse }]}>
             {formatPointTime(pointElapsedMs)}
@@ -163,7 +163,7 @@ export const TrackerStatusBar = ({ pointElapsedMs }: TrackerStatusBarProps) => {
             style={({ pressed }) => (pressed ? { opacity: 0.6 } : undefined)}>
             <MaterialCommunityIcons
               name="pause"
-              size={scaleBySizeClass(isLandscape ? 14 : 16, sizeClass)}
+              size={scaleBySizeClass(14, sizeClass)}
               color={palette.textMuted}
             />
           </Pressable>

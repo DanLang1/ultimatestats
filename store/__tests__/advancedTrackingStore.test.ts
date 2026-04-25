@@ -1,8 +1,13 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { buildAnalyticsGame } from '@/lib/advancedTracking/buildAnalyticsGame';
-import { getCurrentPoint } from '@/lib/advancedTracking/trackingUtils';
+import {
+  getCurrentPoint,
+  getEffectiveGameTo,
+  getGameScore,
+} from '@/lib/advancedTracking/trackingUtils';
 import { AdvancedTrackedGame } from '@/lib/advancedTracking/types';
+import { useSettingsStore } from '@/store/settingsStore';
 import { useAdvancedTrackingStore } from '../advancedTracking/trackingStore';
 
 jest.mock('@react-native-async-storage/async-storage', () => ({
@@ -895,5 +900,235 @@ describe('advancedTrackingStore', () => {
 
     expect(useAdvancedTrackingStore.getState().currentGameId).toBeNull();
     expect(useAdvancedTrackingStore.getState().savedGames[0].status).toBe('final');
+  });
+
+  describe('cap transition auto-recording', () => {
+    beforeAll(() => {
+      jest.useFakeTimers();
+    });
+
+    afterAll(() => {
+      jest.useRealTimers();
+    });
+
+    beforeEach(() => {
+      jest.setSystemTime(0);
+      useSettingsStore.setState({ hardCapMins: 90, softCapMins: 20 });
+    });
+
+    function setupGameAndPull() {
+      createGame();
+      useAdvancedTrackingStore.getState().recordPull({
+        lines: homeLinesAugust,
+        puller: untracked,
+        receiver: august,
+        result: 'inbound',
+      });
+    }
+
+    function recordGoalAtElapsedMinutes(minutes: number) {
+      jest.setSystemTime(minutes * 60_000);
+      useAdvancedTrackingStore
+        .getState()
+        .recordThrow({ thrower: august, result: 'goal', toPlayer: meves });
+    }
+
+    function getCurrentGameTransitions() {
+      return getCurrentGame()?.gameTransitions ?? [];
+    }
+
+    it('records soft_cap when a goal crosses the soft cap threshold', () => {
+      setupGameAndPull();
+      recordGoalAtElapsedMinutes(70);
+
+      const transitions = getCurrentGameTransitions();
+      expect(transitions).toHaveLength(1);
+      expect(transitions[0]).toMatchObject({
+        transitionType: 'soft_cap',
+        afterPointId: getCurrentGame()!.points[0].id,
+      });
+    });
+
+    it('records hard_cap when a goal crosses the hard cap threshold', () => {
+      setupGameAndPull();
+      recordGoalAtElapsedMinutes(90);
+
+      const transitions = getCurrentGameTransitions();
+      // Hard-cap threshold (90 min) also crosses the soft-cap threshold (70 min),
+      // so both transitions are recorded.
+      expect(transitions).toHaveLength(2);
+      expect(transitions).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            transitionType: 'soft_cap',
+            afterPointId: getCurrentGame()!.points[0].id,
+          }),
+          expect.objectContaining({
+            transitionType: 'hard_cap',
+            afterPointId: getCurrentGame()!.points[0].id,
+          }),
+        ]),
+      );
+    });
+
+    it('records both caps when a goal crosses both thresholds', () => {
+      setupGameAndPull();
+      recordGoalAtElapsedMinutes(95);
+
+      const types = getCurrentGameTransitions()
+        .map((t) => t.transitionType)
+        .sort();
+      expect(types).toEqual(['hard_cap', 'soft_cap']);
+    });
+
+    it('does not record a cap before the threshold', () => {
+      setupGameAndPull();
+      recordGoalAtElapsedMinutes(60);
+
+      expect(getCurrentGameTransitions()).toHaveLength(0);
+    });
+
+    it('is idempotent — a second goal does not re-add the same cap', () => {
+      setupGameAndPull();
+      recordGoalAtElapsedMinutes(70);
+
+      jest.setSystemTime(71 * 60_000);
+      useAdvancedTrackingStore.getState().recordPull({
+        lines: homeLinesAugust,
+        puller: untracked,
+        receiver: august,
+        result: 'inbound',
+      });
+      recordGoalAtElapsedMinutes(75);
+
+      const softCaps = getCurrentGameTransitions().filter((t) => t.transitionType === 'soft_cap');
+      expect(softCaps).toHaveLength(1);
+    });
+
+    it('keeps the cap transition when the triggering goal is undone', () => {
+      setupGameAndPull();
+      recordGoalAtElapsedMinutes(70);
+      expect(getCurrentGameTransitions()).toHaveLength(1);
+
+      // Undo removes the goal but does not re-evaluate cap transitions
+      // (syncCapTransitions is additive-only).
+      useAdvancedTrackingStore.getState().undoLastOperation();
+      expect(getCurrentGameTransitions()).toHaveLength(1);
+      expect(getCurrentGameTransitions()[0]).toMatchObject({
+        transitionType: 'soft_cap',
+      });
+    });
+
+    it('amendLastThrowAsGoal records cap when amendment time crosses threshold', () => {
+      setupGameAndPull();
+      jest.setSystemTime(60 * 60_000);
+      useAdvancedTrackingStore.getState().recordThrow({
+        thrower: august,
+        result: 'complete',
+        toPlayer: meves,
+      });
+      jest.setSystemTime(70 * 60_000);
+      useAdvancedTrackingStore.getState().amendLastThrowAsGoal();
+
+      const transitions = getCurrentGameTransitions();
+      expect(transitions).toHaveLength(1);
+      expect(transitions[0]).toMatchObject({
+        transitionType: 'soft_cap',
+        afterPointId: getCurrentGame()!.points[0].id,
+      });
+    });
+
+    it('recomputes effectiveGameTo dynamically when the scoring point after soft_cap is undone', () => {
+      // Scenario: score is 5-4, timer at 71 min (past soft cap).
+      // Home scores → 6-4. Undo goal. Away scores → 5-5.
+      // getEffectiveGameTo reads the score THROUGH the soft_cap afterPointId,
+      // so it recalculates based on the CURRENT state of that point.
+      useAdvancedTrackingStore.getState().createGame({
+        focusSideId: homeSideId,
+        initialReceivingSideId: homeSideId,
+        sides: [
+          { id: homeSideId, label: 'Home', trackingMode: 'full-roster' },
+          { id: awaySideId, label: 'Away', trackingMode: 'anonymous' },
+        ],
+        participants: [
+          { id: august.participantId, name: 'August' },
+          { id: meves.participantId, name: 'Meves' },
+        ],
+        format: { gameTo: 15, halftimeEnabled: false },
+      });
+
+      const scoreHomePoint = () => {
+        useAdvancedTrackingStore.getState().recordPull({
+          lines: homeLinesAugust,
+          puller: untracked,
+          receiver: august,
+          result: 'inbound',
+        });
+        useAdvancedTrackingStore
+          .getState()
+          .recordThrow({ thrower: august, result: 'goal', toPlayer: meves });
+      };
+
+      const scoreAwayPoint = () => {
+        useAdvancedTrackingStore.getState().recordPull({
+          lines: homeLinesAugust,
+          puller: untracked,
+          receiver: untracked,
+          result: 'inbound',
+        });
+        useAdvancedTrackingStore
+          .getState()
+          .recordThrow({ thrower: untracked, result: 'goal', toPlayer: untracked });
+      };
+
+      // Build to 5-4 (home leads)
+      for (let i = 0; i < 4; i++) {
+        scoreHomePoint();
+        scoreAwayPoint();
+      }
+      scoreHomePoint(); // 5-4
+
+      // Soft-cap time: 71 minutes
+      jest.setSystemTime(71 * 60_000);
+
+      // Next point: away receives. Home gets a turnover and scores → 6-4.
+      useAdvancedTrackingStore.getState().recordPull({
+        lines: homeLinesAugust,
+        puller: untracked,
+        receiver: untracked,
+        result: 'inbound',
+      });
+      useAdvancedTrackingStore.getState().recordThrow({
+        thrower: untracked,
+        result: 'throwaway',
+      });
+      useAdvancedTrackingStore.getState().recordPickup({ sideId: homeSideId, player: august });
+      useAdvancedTrackingStore
+        .getState()
+        .recordThrow({ thrower: august, result: 'goal', toPlayer: meves });
+
+      let game = getCurrentGame()!;
+      expect(getGameScore(game)).toEqual({ [homeSideId]: 6, [awaySideId]: 4 });
+      expect(getEffectiveGameTo(game)).toBe(7); // 6 + 1
+
+      // Undo the goal → back to 5-4, point is revived
+      useAdvancedTrackingStore.getState().undoLastOperation();
+      game = getCurrentGame()!;
+      expect(getGameScore(game)).toEqual({ [homeSideId]: 5, [awaySideId]: 4 });
+      expect(getEffectiveGameTo(game)).toBe(6); // 5 + 1
+
+      // Home turns it over, away picks up and scores → 5-5
+      useAdvancedTrackingStore.getState().recordThrow({ thrower: august, result: 'throwaway' });
+      useAdvancedTrackingStore.getState().recordPickup({ sideId: awaySideId, player: untracked });
+      useAdvancedTrackingStore
+        .getState()
+        .recordThrow({ thrower: untracked, result: 'goal', toPlayer: untracked });
+
+      game = getCurrentGame()!;
+      expect(getGameScore(game)).toEqual({ [homeSideId]: 5, [awaySideId]: 5 });
+      // The soft_cap transition still points to the original (now away-scored) point,
+      // so the effective target is based on the score THROUGH that point: 5-5.
+      expect(getEffectiveGameTo(game)).toBe(6);
+    });
   });
 });

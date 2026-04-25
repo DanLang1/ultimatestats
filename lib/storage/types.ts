@@ -3,7 +3,7 @@
 import { GameEvent, TurnoverType } from '@/store/gameStore.types';
 export type { GameEvent, TurnoverType };
 
-export const CURRENT_SCHEMA_VERSION = 5;
+export const CURRENT_SCHEMA_VERSION = 6;
 
 export interface SavedGame {
   id: string;
@@ -17,7 +17,6 @@ export interface SavedGame {
   events: GameEvent[];
   autoHalftimeEnabled?: boolean; // Defaults to true for legacy saved games
   gameTo: number;
-  gameLength: number;
   startingPossession: 'team1' | 'team2';
   pointStartTimestamps?: Record<number, number>; // { [pointNumber]: timestamp when point started }
   pointLines?: PointLineRecord[]; // Line records per point - added in schema v2

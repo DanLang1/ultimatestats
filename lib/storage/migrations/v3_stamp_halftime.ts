@@ -1,5 +1,5 @@
 import { normalizeHalftimeMarkers } from '@/lib/halftimeUtils';
-import { CURRENT_SCHEMA_VERSION, SavedGame } from '../types';
+import { SavedGame } from '../types';
 import type { SavedGameMigration } from './index';
 
 export const SAVED_GAME_MIGRATION_V3_STAMP_HALFTIME: SavedGameMigration = {
@@ -27,21 +27,16 @@ export function migrateSavedGameToV3StampHalftime(game: SavedGame): SavedGame {
   };
 }
 
-export function sanitizeSavedGameV3(game: SavedGame): SavedGame {
+export function normalizeSavedGameHalftimeFields(game: SavedGame): SavedGame {
   const autoHalftimeEnabled = game.autoHalftimeEnabled ?? true;
   const events = normalizeHalftimeMarkers(game.events, game.gameTo, autoHalftimeEnabled);
 
-  if (
-    game.schemaVersion === CURRENT_SCHEMA_VERSION &&
-    game.autoHalftimeEnabled === autoHalftimeEnabled &&
-    events === game.events
-  ) {
+  if (game.autoHalftimeEnabled === autoHalftimeEnabled && events === game.events) {
     return game;
   }
 
   return {
     ...game,
-    schemaVersion: CURRENT_SCHEMA_VERSION,
     autoHalftimeEnabled,
     events,
   };

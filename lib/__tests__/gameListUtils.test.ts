@@ -14,7 +14,6 @@ const baseBasicGame: SavedGame = {
   team2Score: 7,
   events: [],
   gameTo: 15,
-  gameLength: 100,
   startingPossession: 'team1',
 };
 

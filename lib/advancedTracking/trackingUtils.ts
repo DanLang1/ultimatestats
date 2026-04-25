@@ -296,6 +296,64 @@ export function syncDerivedHalftimeTransition(game: AdvancedTrackedGame): boolea
   );
 }
 
+/**
+ * Appends `soft_cap` / `hard_cap` transitions to the game when the elapsed game
+ * clock has crossed the configured thresholds. Idempotent — each transition is
+ * only recorded once. Meant to be called from within a mutative store setter
+ * (operates on the passed game reference).
+ *
+ * - `soft_cap` is only recorded when a point has just ended (between-points).
+ * - `hard_cap` may be recorded mid-point; `afterPointId` is set if the current
+ *   point has ended, otherwise left undefined.
+ *
+ * Returns true if any transition was added.
+ */
+export function syncCapTransitions(
+  game: AdvancedTrackedGame,
+  input: {
+    gameElapsedMs: number;
+    gameLengthMinutes: number;
+    softCapMins: number;
+  },
+): boolean {
+  const { gameElapsedMs, gameLengthMinutes, softCapMins } = input;
+  const softCapMs = Math.max(0, (gameLengthMinutes - softCapMins) * 60 * 1000);
+  const hardCapMs = Math.max(softCapMs, gameLengthMinutes * 60 * 1000);
+
+  const transitions = game.gameTransitions ?? [];
+  const hasSoftCap = transitions.some((t) => t.transitionType === 'soft_cap');
+  const hasHardCap = transitions.some((t) => t.transitionType === 'hard_cap');
+
+  const currentPoint = getCurrentPoint(game);
+  const pointEnded = currentPoint != null && hasPointEnded(currentPoint);
+
+  const next: GameTransition[] = [...transitions];
+  let didChange = false;
+
+  if (!hasSoftCap && pointEnded && gameElapsedMs >= softCapMs) {
+    next.push({
+      id: `soft_cap_${game.id}`,
+      transitionType: 'soft_cap',
+      afterPointId: currentPoint.id,
+    });
+    didChange = true;
+  }
+
+  if (!hasHardCap && gameElapsedMs >= hardCapMs) {
+    next.push({
+      id: `hard_cap_${game.id}`,
+      transitionType: 'hard_cap',
+      afterPointId: pointEnded ? currentPoint.id : undefined,
+    });
+    didChange = true;
+  }
+
+  if (didChange) {
+    game.gameTransitions = next;
+  }
+  return didChange;
+}
+
 // --- Assertions ---
 
 export function assertTwoSides(sides: GameSide[]) {

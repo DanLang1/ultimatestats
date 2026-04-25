@@ -32,10 +32,7 @@ export default function AdvancedPreGameConfirm() {
     team2Name,
     gameTo,
     setGameTo,
-    gameLength,
-    setGameLength,
-    softCapMins,
-    setSoftCapMins,
+    setTimerTimeLeft,
     team1Timeouts,
     autoHalftimeEnabled,
     setAutoHalftimeEnabled,
@@ -51,6 +48,10 @@ export default function AdvancedPreGameConfirm() {
     setFirstPointRatio,
     numPlayers,
     setNumPlayers,
+    hardCapMins,
+    setHardCapMins,
+    softCapMins,
+    setSoftCapMins,
   } = useSettingsStore();
 
   const fmpTextColor = getContrastingTextColor(palette.fmpColor);
@@ -60,7 +61,7 @@ export default function AdvancedPreGameConfirm() {
 
   const openPicker = useNumberPickerStore((s) => s.open);
 
-  const softCapTime = gameLength - softCapMins;
+  const softCapTime = hardCapMins - softCapMins;
   const timeoutCount = team1Timeouts.length;
 
   const [receivingTeam, setReceivingTeam] = useState<'us' | 'them' | ''>('');
@@ -188,21 +189,22 @@ export default function AdvancedPreGameConfirm() {
             label="Hard Cap"
             onPress={() =>
               openNumberPicker({
-                value: gameLength,
+                value: hardCapMins,
                 min: 1,
                 max: 180,
                 label: 'Hard Cap',
                 suffix: 'min',
                 quickOptions: [90, 105, 110, 120],
                 onChange: (val) => {
-                  setGameLength(val);
+                  setHardCapMins(val);
+                  setTimerTimeLeft(val * 60);
                   if (softCapMins > val) setSoftCapMins(val);
                 },
               })
             }
             sizeClass={sizeClass}>
             <ThemedText style={[styles.settingValue, { color: palette.textInverse }]}>
-              {gameLength} min
+              {hardCapMins} min
             </ThemedText>
           </EditableSettingCard>
 
@@ -213,10 +215,10 @@ export default function AdvancedPreGameConfirm() {
               openNumberPicker({
                 value: softCapTime,
                 min: 0,
-                max: gameLength,
+                max: hardCapMins,
                 label: 'Soft Cap',
                 suffix: 'min',
-                onChange: (val) => setSoftCapMins(gameLength - val),
+                onChange: (val) => setSoftCapMins(hardCapMins - val),
               })
             }
             sizeClass={sizeClass}>

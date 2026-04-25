@@ -32,9 +32,9 @@ Legacy saved-game fixtures live in `lib/storage/__fixtures__/games/`, grouped by
 (`v2/`, `v3/`, etc.). When adding a new migration, keep older fixtures unchanged and add new
 versioned fixtures/snapshots rather than rewriting the old data.
 
-Saved-game schema bumps do not always require a new migration file. Add a migration only when
-older saved data needs a real transform. Backward-compatible additive fields can rely on the
-current-schema sanitizer to stamp records forward without a dedicated migration step.
+Every saved-game schema bump requires a new migration file — even if the migration is a no-op
+(only stamps the new `schemaVersion`). The migration engine asserts that all versions from the
+first migration up to `CURRENT_SCHEMA_VERSION` are covered consecutively.
 
 ## Writing Tests
 

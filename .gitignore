@@ -45,3 +45,6 @@ app-example
 
 # AI agent markers
 .codex
+
+# jest
+/coverage

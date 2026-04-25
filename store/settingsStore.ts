@@ -28,6 +28,10 @@ interface SettingsState {
   // App Orientation
   orientationMode: OrientationMode;
 
+  // Hard Cap / Cap Timing (minutes)
+  hardCapMins: number;
+  softCapMins: number;
+
   // Actions
   setMmpColor: (color: string) => void;
   setFmpColor: (color: string) => void;
@@ -38,6 +42,8 @@ interface SettingsState {
   setNumPlayers: (num: number) => void;
   setRosterViewMode: (mode: 'chips' | 'cards') => void;
   setOrientationMode: (mode: OrientationMode) => void;
+  setHardCapMins: (minutes: number) => void;
+  setSoftCapMins: (minutes: number) => void;
   statEntryOrder: 'goal_first' | 'assist_first';
   setStatEntryOrder: (order: 'goal_first' | 'assist_first') => void;
   linePlayerSortOrder: 'alpha' | 'points';
@@ -55,6 +61,8 @@ export const useSettingsStore = create<SettingsState>()(
       numPlayers: 7,
       rosterViewMode: 'chips',
       orientationMode: 'system',
+      hardCapMins: 90,
+      softCapMins: 20,
 
       setMmpColor: (color) => set({ mmpColor: color }),
       setFmpColor: (color) => set({ fmpColor: color }),
@@ -69,6 +77,8 @@ export const useSettingsStore = create<SettingsState>()(
       setNumPlayers: (num) => set({ numPlayers: num }),
       setRosterViewMode: (mode) => set({ rosterViewMode: mode }),
       setOrientationMode: (mode) => set({ orientationMode: mode }),
+      setHardCapMins: (minutes) => set({ hardCapMins: minutes }),
+      setSoftCapMins: (minutes) => set({ softCapMins: minutes }),
       statEntryOrder: 'goal_first',
       setStatEntryOrder: (order) => set({ statEntryOrder: order }),
       linePlayerSortOrder: 'alpha',

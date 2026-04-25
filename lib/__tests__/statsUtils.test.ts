@@ -71,7 +71,6 @@ describe('statsUtils', () => {
     team2Score: params.team2Score,
     events: params.events,
     gameTo: 15,
-    gameLength: 0,
     startingPossession: params.startingPossession,
     pointLines: params.pointLines,
   });

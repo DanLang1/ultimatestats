@@ -16,6 +16,9 @@ export const DEFAULT_HALFTIME_BREAK_SECONDS = 7 * 60;
 /** Default timeout length in seconds. */
 export const DEFAULT_TIMEOUT_SECONDS = 70;
 
+/** Cap progress bar turns red when time remaining drops below this (ms). */
+export const CAP_WARNING_THRESHOLD_MS = 5 * 60 * 1000;
+
 /** Earliest valid year for recorded Ultimate games in the played-at editor. */
 export const MIN_PLAYED_AT_YEAR = 1968;
 

@@ -17,8 +17,10 @@ import {
   hasPointEnded,
   isAdvancedGameOver,
   isPossessionOver,
+  syncCapTransitions,
   syncDerivedHalftimeTransition,
 } from '@/lib/advancedTracking/trackingUtils';
+import { useSettingsStore } from '@/store/settingsStore';
 import { getPointAdjustedTimestamp } from '@/lib/advancedTracking/trackingDisplayHelpers';
 import {
   ADVANCED_TRACKING_SCHEMA_VERSION,
@@ -437,6 +439,17 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
               possessionId: possession.id,
               actionId,
             });
+            if (input.result === 'goal' || input.result === 'callahan') {
+              const gameStartedAt = liveGame.points[0]?.startedAt;
+              if (gameStartedAt != null) {
+                const { hardCapMins, softCapMins } = useSettingsStore.getState();
+                syncCapTransitions(liveGame, {
+                  gameElapsedMs: now - gameStartedAt,
+                  gameLengthMinutes: hardCapMins,
+                  softCapMins,
+                });
+              }
+            }
             if (syncDerivedHalftimeTransition(liveGame)) {
               state.isHalftimeBreakActive = true;
             }
@@ -487,6 +500,15 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
               actionId: lastThrow!.id,
               previousResult,
             });
+            const gameStartedAt = liveGame.points[0]?.startedAt;
+            if (gameStartedAt != null) {
+              const { hardCapMins, softCapMins } = useSettingsStore.getState();
+              syncCapTransitions(liveGame, {
+                gameElapsedMs: now - gameStartedAt,
+                gameLengthMinutes: hardCapMins,
+                softCapMins,
+              });
+            }
             if (syncDerivedHalftimeTransition(liveGame)) {
               state.isHalftimeBreakActive = true;
             }

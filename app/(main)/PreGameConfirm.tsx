@@ -34,10 +34,7 @@ export default function PreGameConfirm() {
     setPossession,
     gameTo,
     setGameTo,
-    gameLength,
-    setGameLength,
-    softCapMins,
-    setSoftCapMins,
+    setTimerTimeLeft,
     team1Timeouts,
     autoHalftimeEnabled,
     setAutoHalftimeEnabled,
@@ -60,6 +57,10 @@ export default function PreGameConfirm() {
     setLineCallingEnabled,
     numPlayers,
     setNumPlayers,
+    hardCapMins,
+    setHardCapMins,
+    softCapMins,
+    setSoftCapMins,
   } = useSettingsStore();
   const { hasSeenStatsTutorial, queueStatsTutorialForNextGameStart } = useTutorialStore();
   const statsTutorialPending = useStatsTutorialPending();
@@ -83,7 +84,7 @@ export default function PreGameConfirm() {
   }
 
   // Derived values
-  const softCapTime = gameLength - softCapMins;
+  const softCapTime = hardCapMins - softCapMins;
   const timeoutCount = team1Timeouts.length;
 
   // Determine if the start button should be enabled
@@ -221,14 +222,15 @@ export default function PreGameConfirm() {
                 label="Hard Cap"
                 onPress={() =>
                   openNumberPicker({
-                    value: gameLength,
+                    value: hardCapMins,
                     min: 1,
                     max: 180,
                     label: 'Hard Cap',
                     suffix: 'min',
                     quickOptions: [90, 105, 110, 120],
                     onChange: (val) => {
-                      setGameLength(val);
+                      setHardCapMins(val);
+                      setTimerTimeLeft(val * 60);
                       // Clamp soft cap if needed
                       if (softCapMins > val) {
                         setSoftCapMins(val);
@@ -238,7 +240,7 @@ export default function PreGameConfirm() {
                 }
                 sizeClass={sizeClass}>
                 <ThemedText style={[styles.settingValue, { color: palette.textInverse }]}>
-                  {gameLength} min
+                  {hardCapMins} min
                 </ThemedText>
               </EditableSettingCard>
 
@@ -250,10 +252,10 @@ export default function PreGameConfirm() {
                   openNumberPicker({
                     value: softCapTime,
                     min: 0,
-                    max: gameLength,
+                    max: hardCapMins,
                     label: 'Soft Cap',
                     suffix: 'min',
-                    onChange: (val) => setSoftCapMins(gameLength - val),
+                    onChange: (val) => setSoftCapMins(hardCapMins - val),
                   })
                 }
                 sizeClass={sizeClass}>

@@ -218,7 +218,10 @@ export default function DashboardScreen() {
       <ScrollView contentContainerStyle={[styles.scrollContent]}>
         {hasRemoteUpdate && (
           <Pressable
-            onPress={() => Linking.openURL(Platform.OS === 'ios' ? APP_STORE_URL : PLAY_STORE_URL)}
+            onPress={() => {
+              dismissRemoteUpdate();
+              Linking.openURL(Platform.OS === 'ios' ? APP_STORE_URL : PLAY_STORE_URL);
+            }}
             style={({ pressed }) => [
               styles.updateBanner,
               { backgroundColor: palette.accentOverlay10, borderColor: palette.accentOverlay30 },

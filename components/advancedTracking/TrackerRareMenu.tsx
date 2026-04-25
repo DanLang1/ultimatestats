@@ -2,22 +2,20 @@ import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import {
-  canCallTimeout,
   getActiveSideId,
   getDiscHolderId,
-  getSideTimeoutState,
   isInjuryJustResumed,
 } from '@/lib/advancedTracking/trackingDisplayHelpers';
-import { PassModifier } from '@/lib/advancedTracking/types';
 import {
   getCurrentPoint,
   getCurrentPossession,
   hasPointEnded,
 } from '@/lib/advancedTracking/trackingUtils';
+import { PassModifier } from '@/lib/advancedTracking/types';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { Fonts } from '@/theme/theme';
 import React from 'react';
-import { Modal, Pressable, StyleSheet, View } from 'react-native';
+import { Modal, Pressable, StyleSheet } from 'react-native';
 
 interface TrackerRareMenuProps {
   visible: boolean;
@@ -30,8 +28,7 @@ export const TrackerRareMenu = ({ visible, onClose, setPassModifier }: TrackerRa
   const { sizeClass } = useLayout();
   const styles = createStyles(sizeClass);
 
-  const { currentGameId, savedGames, recordThrow, recordBetweenPointTimeout, recordStoppage } =
-    useAdvancedTrackingStore();
+  const { currentGameId, savedGames, recordThrow, recordStoppage } = useAdvancedTrackingStore();
 
   const game = savedGames.find((g) => g.id === currentGameId);
   if (!game) return null;
@@ -46,25 +43,6 @@ export const TrackerRareMenu = ({ visible, onClose, setPassModifier }: TrackerRa
   const oppHasDisc = !pointIsOver && activeSideId !== game.focusSideId;
   const injuryJustResumed = isInjuryJustResumed(possession);
   const discHolderId = injuryJustResumed ? null : getDiscHolderId(possession, game.focusSideId);
-
-  const focusTimeouts = getSideTimeoutState(game, game.focusSideId);
-  const oppTimeouts = getSideTimeoutState(game, oppSide.id);
-  const focusCanTimeout = canCallTimeout(focusTimeouts);
-  const oppCanTimeout = canCallTimeout(oppTimeouts);
-
-  const focusSideName = game.sides.find((s) => s.id === game.focusSideId)?.label ?? '';
-  const oppSideName = oppSide.label;
-
-  const handleTimeout = (sideId: string) => {
-    const state = sideId === game.focusSideId ? focusTimeouts : oppTimeouts;
-    if (!canCallTimeout(state)) return;
-    const useFloater = state.regularUsedInHalf >= state.regularPerHalf;
-    if (pointIsOver) {
-      recordBetweenPointTimeout({ sideId, isFloater: useFloater });
-    } else {
-      recordStoppage({ reason: 'timeout', sideId, isFloater: useFloater });
-    }
-  };
 
   const handleOppBlock = () => {
     if (!discHolderId || pointIsOver) return;
@@ -104,51 +82,6 @@ export const TrackerRareMenu = ({ visible, onClose, setPassModifier }: TrackerRa
             { backgroundColor: palette.primary, borderColor: palette.overlay15 },
           ]}
           onPress={() => {}}>
-          <View style={styles.timeoutRow}>
-            <Pressable
-              disabled={!focusCanTimeout}
-              style={({ pressed }) => [
-                styles.timeoutBtn,
-                {
-                  borderColor: focusCanTimeout ? palette.accent : palette.overlay15,
-                  backgroundColor: focusCanTimeout ? palette.accent + '12' : palette.overlay05,
-                  opacity: focusCanTimeout ? 1 : 0.4,
-                },
-                pressed && focusCanTimeout && { opacity: 0.7 },
-              ]}
-              onPress={closeAnd(() => handleTimeout(game.focusSideId))}>
-              <ThemedText
-                style={[
-                  styles.btnText,
-                  { color: focusCanTimeout ? palette.accent : palette.textMuted },
-                ]}
-                numberOfLines={1}>
-                {focusSideName} T/O
-              </ThemedText>
-            </Pressable>
-            <Pressable
-              disabled={!oppCanTimeout}
-              style={({ pressed }) => [
-                styles.timeoutBtn,
-                {
-                  borderColor: oppCanTimeout ? palette.accent : palette.overlay15,
-                  backgroundColor: oppCanTimeout ? palette.accent + '12' : palette.overlay05,
-                  opacity: oppCanTimeout ? 1 : 0.4,
-                },
-                pressed && oppCanTimeout && { opacity: 0.7 },
-              ]}
-              onPress={closeAnd(() => handleTimeout(oppSide.id))}>
-              <ThemedText
-                style={[
-                  styles.btnText,
-                  { color: oppCanTimeout ? palette.accent : palette.textMuted },
-                ]}
-                numberOfLines={1}>
-                {oppSideName} T/O
-              </ThemedText>
-            </Pressable>
-          </View>
-
           {!pointIsOver && oppHasDisc && (
             <>
               <Pressable
@@ -293,20 +226,6 @@ function createStyles(sizeClass: SizeClass) {
       borderWidth: 1,
       padding: 20,
       gap: 12,
-    },
-    timeoutRow: {
-      flexDirection: 'row',
-      gap: 12,
-    },
-    timeoutBtn: {
-      flex: 1,
-      borderWidth: 1,
-      borderRadius: 16,
-      borderCurve: 'continuous',
-      paddingVertical: 14,
-      paddingHorizontal: 12,
-      alignItems: 'center',
-      justifyContent: 'center',
     },
     btn: {
       borderWidth: 1,

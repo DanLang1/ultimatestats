@@ -82,12 +82,12 @@ export default function AdvancedTrackerScreen() {
     );
   }
 
-  if (isHalftimeBreakActive) {
-    return <Redirect href="/advancedTracking/TrackerHalftime" />;
-  }
-
   if (isAdvancedGameOver(game)) {
     return <Redirect href="/advancedTracking/TrackerGameComplete" />;
+  }
+
+  if (isHalftimeBreakActive) {
+    return <Redirect href="/advancedTracking/TrackerHalftime" />;
   }
 
   if (activeStoppage) {
@@ -259,7 +259,10 @@ export default function AdvancedTrackerScreen() {
                 borderRightColor: palette.overlay15,
               },
             ]}>
-            <TrackerScoreBar />
+            <TrackerScoreBar
+              pointElapsedMs={pointElapsedMs}
+              onMorePress={() => setShowRareMenu(true)}
+            />
             <TrackerStatusBar pointElapsedMs={pointElapsedMs} />
             <TrackerActionBar
               pointElapsedMs={pointElapsedMs}
@@ -288,7 +291,10 @@ export default function AdvancedTrackerScreen() {
         </View>
       ) : (
         <>
-          <TrackerScoreBar />
+          <TrackerScoreBar
+            pointElapsedMs={pointElapsedMs}
+            onMorePress={() => setShowRareMenu(true)}
+          />
           {instructionText && (
             <ThemedText style={[styles.instructionText, { color: instructionColor }]}>
               {instructionText}

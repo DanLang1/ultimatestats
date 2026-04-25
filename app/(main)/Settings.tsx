@@ -63,6 +63,10 @@ function SettingsContent() {
     setStatEntryOrder,
     linePlayerSortOrder,
     setLinePlayerSortOrder,
+    hardCapMins,
+    setHardCapMins,
+    softCapMins,
+    setSoftCapMins,
   } = useSettingsStore();
 
   const {
@@ -87,10 +91,7 @@ function SettingsContent() {
     autoHalftimeEnabled,
     gameHalf,
     setAutoHalftimeEnabled,
-    setGameLength,
-    gameLength,
-    softCapMins,
-    setSoftCapMins,
+    setTimerTimeLeft,
     statTrackingEnabled,
     setStatTrackingEnabled,
     pointTimerEnabled,
@@ -107,7 +108,7 @@ function SettingsContent() {
   const timeoutsCount = team1Timeouts.length;
   const [team1NameDraft, setTeam1NameDraft] = useState(team1Name);
 
-  const softCapTime = gameLength - softCapMins;
+  const softCapTime = hardCapMins - softCapMins;
   const isAndroidLargeScreen = Platform.OS === 'android' && sizeClass !== 'small';
 
   const gameActive = useIsGameActive();
@@ -511,9 +512,10 @@ function SettingsContent() {
               <View style={styles.inputGroup}>
                 <NumberPicker
                   label="HARD CAP"
-                  value={gameLength}
+                  value={hardCapMins}
                   onChange={(val) => {
-                    setGameLength(val);
+                    setHardCapMins(val);
+                    setTimerTimeLeft(val * 60);
                     if (softCapTime > val) {
                       setSoftCapMins(Math.max(0, val - softCapTime));
                     }
@@ -531,15 +533,15 @@ function SettingsContent() {
                 <NumberPicker
                   label="SOFT CAP"
                   value={softCapTime}
-                  onChange={(val) => setSoftCapMins(gameLength - val)}
+                  onChange={(val) => setSoftCapMins(hardCapMins - val)}
                   min={0}
-                  max={gameLength}
+                  max={hardCapMins}
                   suffix="min"
                   quickOptions={[
-                    Math.max(0, gameLength - 30),
-                    Math.max(0, gameLength - 20),
-                    Math.max(0, gameLength - 15),
-                    Math.max(0, gameLength - 10),
+                    Math.max(0, hardCapMins - 30),
+                    Math.max(0, hardCapMins - 20),
+                    Math.max(0, hardCapMins - 15),
+                    Math.max(0, hardCapMins - 10),
                   ]}
                   disabled={gameActive}
                   sizeClass={sizeClass}

@@ -1,12 +1,24 @@
 import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
+import { useTimestampTimer } from '@/hooks/advancedTracking/useTimer';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { computeCapState } from '@/lib/advancedTracking/capUtils';
 import {
+  canCallTimeout,
+  formatPointTime,
+  getActiveStoppage,
   getSideTimeoutState,
   SideTimeoutState,
 } from '@/lib/advancedTracking/trackingDisplayHelpers';
-import { getSideScore } from '@/lib/advancedTracking/trackingUtils';
+import {
+  getCurrentPoint,
+  getCurrentPossession,
+  getSideScore,
+  hasPointEnded,
+} from '@/lib/advancedTracking/trackingUtils';
+import { formatRatio, getExpectedRatio, getSequenceNumber } from '@/lib/genderRatioUtils';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
+import { useSettingsStore } from '@/store/settingsStore';
 import { Fonts } from '@/theme/theme';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router } from 'expo-router';
@@ -14,14 +26,30 @@ import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-export const TrackerScoreBar = () => {
+interface TrackerScoreBarProps {
+  pointElapsedMs: number;
+  onMorePress?: () => void;
+}
+
+export const TrackerScoreBar = ({ pointElapsedMs, onMorePress }: TrackerScoreBarProps) => {
   const { palette } = useTheme();
   const { sizeClass, isLandscape } = useLayout();
   const styles = createStyles(sizeClass);
   const insets = useSafeAreaInsets();
 
-  const { currentGameId, savedGames } = useAdvancedTrackingStore();
+  const { currentGameId, savedGames, recordBetweenPointTimeout, recordStoppage } =
+    useAdvancedTrackingStore();
+  const { genderRatioEnabled, firstPointRatio, hardCapMins, softCapMins } = useSettingsStore();
+
   const game = savedGames.find((g) => g.id === currentGameId);
+  const gameStartedAt = game?.points[0]?.startedAt ?? null;
+  const gameElapsedMs = useTimestampTimer({
+    timestamp: gameStartedAt,
+    mode: 'elapsed',
+    intervalMs: 1000,
+    enabled: gameStartedAt !== null,
+  });
+
   if (!game) return null;
 
   const oppSide = game.sides.find((s) => s.id !== game.focusSideId);
@@ -34,38 +62,74 @@ export const TrackerScoreBar = () => {
   const focusTimeouts = getSideTimeoutState(game, game.focusSideId);
   const oppTimeouts = getSideTimeoutState(game, oppSide.id);
 
-  const renderPips = (state: SideTimeoutState) => {
-    const regularsRemaining = Math.max(state.regularPerHalf - state.regularUsedInHalf, 0);
+  const point = getCurrentPoint(game);
+  const possession = getCurrentPossession(game);
+  const pointIsOver = hasPointEnded(point);
+  const activeStoppage = getActiveStoppage(possession);
+  const isPointTimerPaused = activeStoppage !== null;
+  const showPointTimer = point?.startedAt != null && !hasPointEnded(point);
+
+  const currentPointNumber = game.points.length;
+  const ratioLabel =
+    genderRatioEnabled && firstPointRatio && currentPointNumber > 0
+      ? formatRatio(
+          getExpectedRatio(currentPointNumber, firstPointRatio),
+          getSequenceNumber(currentPointNumber),
+        )
+      : null;
+
+  const { capLabel, capProgress, capTimeLeftMs, capIsWarning } = computeCapState({
+    gameElapsedMs,
+    gameStarted: gameStartedAt !== null,
+    gameLengthMinutes: hardCapMins,
+    softCapMins,
+  });
+
+  const handleTimeout = (sideId: string) => {
+    const state = sideId === game.focusSideId ? focusTimeouts : oppTimeouts;
+    if (!canCallTimeout(state)) return;
+    const useFloater = state.regularUsedInHalf >= state.regularPerHalf;
+    if (pointIsOver) {
+      recordBetweenPointTimeout({ sideId, isFloater: useFloater });
+    } else {
+      recordStoppage({ reason: 'timeout', sideId, isFloater: useFloater });
+    }
+  };
+
+  const renderTimeoutButton = (state: SideTimeoutState, sideId: string) => {
+    const regularsLeft = Math.max(state.regularPerHalf - state.regularUsedInHalf, 0);
+    const floaterAvailable = state.floaterEnabled && !state.floaterUsed;
+    const totalLeft = regularsLeft + (floaterAvailable ? 1 : 0);
+    const canUse = canCallTimeout(state);
     return (
-      <View style={styles.timeoutPips}>
-        {Array.from({ length: state.regularPerHalf }).map((_, i) => {
-          const active = i < regularsRemaining;
-          return (
-            <View
-              key={`r${i}`}
-              style={[
-                styles.pip,
-                {
-                  backgroundColor: active ? palette.accent : palette.overlay20,
-                  boxShadow: active ? `0 0 8px ${palette.accent}` : undefined,
-                },
-              ]}
-            />
-          );
-        })}
-        {state.floaterEnabled && (
+      <Pressable
+        onPress={() => handleTimeout(sideId)}
+        disabled={!canUse}
+        hitSlop={6}
+        style={({ pressed }) => [
+          styles.timeoutBtn,
+          {
+            backgroundColor: canUse ? palette.accentOverlay15 : palette.overlay08,
+            borderColor: canUse ? palette.accentOverlay30 : palette.overlay15,
+          },
+          pressed && canUse && { opacity: 0.6 },
+        ]}>
+        <ThemedText
+          style={[
+            styles.timeoutBtnText,
+            { color: canUse ? palette.textInverse : palette.textMuted },
+          ]}>
+          TO {totalLeft}
+        </ThemedText>
+        {floaterAvailable && (
           <View
             style={[
-              styles.floaterPip,
-              {
-                borderColor: state.floaterUsed ? palette.overlay20 : palette.accent,
-                backgroundColor: state.floaterUsed ? 'transparent' : palette.accent,
-                boxShadow: state.floaterUsed ? undefined : `0 0 8px ${palette.accent}`,
-              },
+              styles.timeoutBtnDiamond,
+              { borderColor: palette.accent, backgroundColor: palette.accent },
             ]}
           />
         )}
-      </View>
+      </Pressable>
     );
   };
 
@@ -81,7 +145,7 @@ export const TrackerScoreBar = () => {
           <ThemedText style={[styles.landscapeScore, { color: palette.textInverse }]}>
             {focusScore}
           </ThemedText>
-          {renderPips(focusTimeouts)}
+          {renderTimeoutButton(focusTimeouts, game.focusSideId)}
           <Pressable
             onPress={() => router.dismissTo('/Dashboard')}
             hitSlop={12}
@@ -109,66 +173,120 @@ export const TrackerScoreBar = () => {
           <ThemedText style={[styles.landscapeScore, { color: palette.textInverse }]}>
             {oppScore}
           </ThemedText>
-          {renderPips(oppTimeouts)}
+          {renderTimeoutButton(oppTimeouts, oppSide.id)}
         </View>
       </View>
     );
   }
 
+  const capFillColor = capIsWarning ? palette.danger : palette.accent;
+
   return (
-    <View style={[styles.scoreBarContainer, { paddingTop: Math.max(insets.top, 16) }]}>
-      <View
-        style={[
-          styles.scoreBar,
-          {
-            backgroundColor: palette.glassBg,
-            borderColor: palette.overlay15,
-            boxShadow: `0 8px 32px ${palette.overlay10}`,
-          },
-        ]}>
-        <View style={styles.teamBlock}>
+    <View style={[styles.scoreBarContainer, { paddingTop: Math.max(insets.top, 12) }]}>
+      {/* Cap progress bar — counts down to soft cap, then hard cap */}
+      <View style={styles.capBarBlock}>
+        <View style={styles.capBarHeader}>
+          <ThemedText style={[styles.capBarLabel, { color: palette.textMuted }]}>
+            {capLabel}
+          </ThemedText>
+          <ThemedText
+            style={[
+              styles.capBarTime,
+              { color: capIsWarning ? palette.danger : palette.textMuted },
+            ]}>
+            {gameStartedAt !== null ? `${formatPointTime(capTimeLeftMs)} left` : '—'}
+          </ThemedText>
+        </View>
+        <View style={[styles.capBarTrack, { backgroundColor: palette.overlay10 }]}>
+          <View
+            style={[
+              styles.capBarFill,
+              { width: `${capProgress * 100}%`, backgroundColor: capFillColor },
+            ]}
+          />
+        </View>
+      </View>
+
+      {/* Main row: home | focus col | point/time/ratio | opp col | menu */}
+      <View style={styles.headerRow}>
+        <Pressable
+          onPress={() => router.dismissTo('/Dashboard')}
+          hitSlop={12}
+          style={({ pressed }) => [
+            styles.iconBtn,
+            { backgroundColor: palette.overlay08 },
+            pressed && { opacity: 0.7, backgroundColor: palette.overlay15 },
+          ]}>
+          <MaterialCommunityIcons
+            name="home-outline"
+            size={scaleBySizeClass(18, sizeClass)}
+            color={palette.textMuted}
+          />
+        </Pressable>
+
+        <View style={styles.sideCol}>
           <ThemedText style={[styles.teamName, { color: palette.textMuted }]} numberOfLines={1}>
             {focusSideName}
           </ThemedText>
           <ThemedText style={[styles.scoreNum, { color: palette.textInverse }]}>
             {focusScore}
           </ThemedText>
-          {renderPips(focusTimeouts)}
+          {renderTimeoutButton(focusTimeouts, game.focusSideId)}
         </View>
 
-        <View style={styles.clockBlock}>
-          <View
-            style={[
-              styles.clockWrap,
-              { backgroundColor: palette.overlay05, borderColor: palette.overlay10 },
-            ]}>
-            <ThemedText style={[styles.clock, { color: palette.textInverse }]}>00:00</ThemedText>
-          </View>
-          <Pressable
-            onPress={() => router.dismissTo('/Dashboard')}
-            hitSlop={12}
-            style={({ pressed }) => [
-              styles.homeBtn,
-              { backgroundColor: palette.overlay08 },
-              pressed && { opacity: 0.7, backgroundColor: palette.overlay15 },
-            ]}>
-            <MaterialCommunityIcons
-              name="home-outline"
-              size={scaleBySizeClass(18, sizeClass)}
-              color={palette.textMuted}
-            />
-          </Pressable>
+        <View style={styles.centerCol}>
+          <ThemedText style={[styles.pointLabel, { color: palette.textMuted }]}>
+            POINT {currentPointNumber}
+          </ThemedText>
+          <ThemedText style={[styles.pointTimer, { color: palette.textInverse }]}>
+            {showPointTimer ? formatPointTime(pointElapsedMs) : '–:––'}
+          </ThemedText>
+          {isPointTimerPaused && (
+            <ThemedText style={[styles.pausedText, { color: palette.warning }]}>
+              ‖ paused
+            </ThemedText>
+          )}
+          {ratioLabel && (
+            <View
+              style={[
+                styles.ratioPill,
+                {
+                  backgroundColor: palette.accentOverlay15,
+                  borderColor: palette.accentOverlay30,
+                },
+              ]}>
+              <ThemedText style={[styles.ratioText, { color: palette.textInverse }]}>
+                {ratioLabel}
+              </ThemedText>
+            </View>
+          )}
         </View>
 
-        <View style={[styles.teamBlock, styles.teamBlockRight]}>
+        <View style={styles.sideCol}>
           <ThemedText style={[styles.teamName, { color: palette.textMuted }]} numberOfLines={1}>
             {oppSideName}
           </ThemedText>
           <ThemedText style={[styles.scoreNum, { color: palette.textInverse }]}>
             {oppScore}
           </ThemedText>
-          {renderPips(oppTimeouts)}
+          {renderTimeoutButton(oppTimeouts, oppSide.id)}
         </View>
+
+        <Pressable
+          onPress={onMorePress}
+          disabled={onMorePress == null}
+          hitSlop={12}
+          style={({ pressed }) => [
+            styles.iconBtn,
+            { backgroundColor: palette.overlay08 },
+            pressed && onMorePress != null && { opacity: 0.7, backgroundColor: palette.overlay15 },
+          ]}>
+          <MaterialCommunityIcons
+            name="dots-vertical"
+            size={scaleBySizeClass(18, sizeClass)}
+            color={palette.textMuted}
+          />
+        </Pressable>
       </View>
     </View>
   );
@@ -177,55 +295,129 @@ export const TrackerScoreBar = () => {
 function createStyles(sizeClass: SizeClass) {
   return StyleSheet.create({
     scoreBarContainer: {
-      paddingHorizontal: 16,
+      paddingHorizontal: 12,
       paddingBottom: 8,
       zIndex: 10,
+      gap: 10,
     },
-    scoreBar: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      paddingHorizontal: 20,
-      paddingVertical: 14,
-      borderRadius: 24,
-      borderCurve: 'continuous',
-      borderWidth: 1,
-    },
-    teamBlock: {
-      flex: 1,
-      alignItems: 'flex-start',
+    capBarBlock: {
       gap: 4,
     },
-    teamBlockRight: {
-      alignItems: 'flex-end',
+    capBarHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      paddingHorizontal: 2,
+    },
+    capBarLabel: {
+      fontSize: scaleBySizeClass(10, sizeClass),
+      fontFamily: Fonts.black,
+      letterSpacing: 1.5,
+    },
+    capBarTime: {
+      fontSize: scaleBySizeClass(10, sizeClass),
+      fontFamily: Fonts.black,
+      letterSpacing: 0.5,
+      fontVariant: ['tabular-nums'],
+    },
+    capBarTrack: {
+      height: 4,
+      borderRadius: 2,
+      overflow: 'hidden',
+    },
+    capBarFill: {
+      height: '100%',
+      borderRadius: 2,
+    },
+    headerRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+    },
+    iconBtn: {
+      padding: 8,
+      borderRadius: 10,
+      borderCurve: 'continuous',
+    },
+    sideCol: {
+      flex: 1,
+      alignItems: 'center',
+      gap: 4,
+    },
+    centerCol: {
+      alignItems: 'center',
+      gap: 6,
     },
     teamName: {
       fontSize: scaleBySizeClass(12, sizeClass),
       fontFamily: Fonts.extraBold,
       letterSpacing: 1,
       textTransform: 'uppercase',
+      maxWidth: '100%',
     },
     scoreNum: {
-      fontSize: scaleBySizeClass(42, sizeClass),
+      fontSize: scaleBySizeClass(38, sizeClass),
       fontFamily: Fonts.black,
       fontVariant: ['tabular-nums'],
+      lineHeight: scaleBySizeClass(42, sizeClass),
+      textAlign: 'center',
     },
-    timeoutPips: {
+    pointLabel: {
+      fontSize: scaleBySizeClass(10, sizeClass),
+      fontFamily: Fonts.black,
+      letterSpacing: 1.5,
+      textTransform: 'uppercase',
+    },
+    pointTimer: {
+      fontSize: scaleBySizeClass(24, sizeClass),
+      fontFamily: Fonts.black,
+      letterSpacing: 0.5,
+      fontVariant: ['tabular-nums'],
+      lineHeight: scaleBySizeClass(28, sizeClass),
+    },
+    pausedText: {
+      fontSize: scaleBySizeClass(10, sizeClass),
+      fontFamily: Fonts.bold,
+      letterSpacing: 1,
+      textTransform: 'uppercase',
+    },
+    timeoutBtn: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 6,
-      marginTop: 2,
-    },
-    pip: {
-      width: 12,
-      height: 4,
-      borderRadius: 2,
-    },
-    floaterPip: {
-      width: 6,
-      height: 6,
-      borderRadius: 1,
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      borderRadius: 999,
+      borderCurve: 'continuous',
       borderWidth: 1,
+    },
+    timeoutBtnText: {
+      fontSize: scaleBySizeClass(11, sizeClass),
+      fontFamily: Fonts.black,
+      letterSpacing: 1,
+      fontVariant: ['tabular-nums'],
+    },
+    timeoutBtnDiamond: {
+      width: 8,
+      height: 8,
+      borderRadius: 1,
       transform: [{ rotate: '45deg' }],
+    },
+    ratioPill: {
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      borderRadius: 999,
+      borderCurve: 'continuous',
+      borderWidth: 1,
+    },
+    ratioText: {
+      fontSize: scaleBySizeClass(11, sizeClass),
+      fontFamily: Fonts.black,
+      letterSpacing: 1,
+    },
+    homeBtn: {
+      padding: 6,
+      borderRadius: 10,
+      borderCurve: 'continuous',
     },
     landscapeContainer: {
       paddingHorizontal: 12,
@@ -252,29 +444,6 @@ function createStyles(sizeClass: SizeClass) {
     landscapeDivider: {
       height: 1,
       marginVertical: 4,
-    },
-    clockBlock: {
-      alignItems: 'center',
-      paddingHorizontal: 10,
-      gap: 10,
-    },
-    clockWrap: {
-      paddingHorizontal: 14,
-      paddingVertical: 6,
-      borderRadius: 12,
-      borderCurve: 'continuous',
-      borderWidth: 1,
-    },
-    clock: {
-      fontSize: scaleBySizeClass(15, sizeClass),
-      fontFamily: Fonts.black,
-      letterSpacing: 1,
-      fontVariant: ['tabular-nums'],
-    },
-    homeBtn: {
-      padding: 8,
-      borderRadius: 12,
-      borderCurve: 'continuous',
     },
   });
 }

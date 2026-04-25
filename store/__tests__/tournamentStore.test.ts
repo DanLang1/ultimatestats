@@ -29,7 +29,6 @@ function makeSavedGame(overrides: Partial<SavedGame> = {}): SavedGame {
     team2Score: 10,
     events: [],
     gameTo: 15,
-    gameLength: 0,
     startingPossession: 'team1',
     ...overrides,
   };

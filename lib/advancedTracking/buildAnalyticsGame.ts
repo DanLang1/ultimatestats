@@ -417,7 +417,10 @@ function compilePossessionWithActions(
           `buildAnalyticsGame requires pull action "${action.id}" sideId "${action.sideId}" to be the opposite of receivingSideId "${action.receivingSideId}"`,
         );
       }
-    } else if (action.sideId !== poss.sideId) {
+    } else if (action.kind !== 'stoppage' && action.sideId !== poss.sideId) {
+      // Stoppages are mid-play pauses; their sideId is independent of the possession
+      // (a defending team may call a timeout during the opponent's possession, and
+      // `manual_pause` stoppages have no sideId at all).
       throw new Error(
         `buildAnalyticsGame requires ${action.kind} action "${action.id}" sideId "${action.sideId}" to match possession sideId "${poss.sideId}"`,
       );

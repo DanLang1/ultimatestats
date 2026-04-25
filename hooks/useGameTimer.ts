@@ -1,12 +1,12 @@
 import { useGameStore } from '@/store/gameStore';
+import { useSettingsStore } from '@/store/settingsStore';
 import { useEffect, useState } from 'react';
 
 export function useGameTimer() {
+  const { hardCapMins, softCapMins } = useSettingsStore();
   const {
-    gameLength,
     setSoftCapPending,
     softCapPending,
-    softCapMins,
     timerIsActive: isActive,
     setTimerActive: setIsActive,
     timerEndTime: endTime,
@@ -15,12 +15,12 @@ export function useGameTimer() {
     setTimerTimeLeft: setTimeLeft,
   } = useGameStore();
 
-  const [prevGameLength, setPrevGameLength] = useState(gameLength);
+  const [prevHardCapMins, setPrevHardCapMins] = useState(hardCapMins);
 
   // https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes
   // may seem weird to set state during render, but this is actually the correct way to do it - as long as you're adjusting state within the component
-  if (gameLength !== prevGameLength) {
-    setPrevGameLength(gameLength);
+  if (hardCapMins !== prevHardCapMins) {
+    setPrevHardCapMins(hardCapMins);
   }
 
   /**
@@ -79,7 +79,7 @@ export function useGameTimer() {
   const resetTimer = () => {
     setIsActive(false);
     setEndTime(null);
-    setTimeLeft(gameLength * 60);
+    setTimeLeft(hardCapMins * 60);
   };
 
   return {

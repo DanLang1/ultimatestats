@@ -39,6 +39,6 @@
     { "type": "goal", "team": "team1", "goalPlayerId": "p2", "assistPlayerId": null }
   ],
   "gameTo": 13,
-  "gameLength": 90,
+  "hardCapMins": 90,
   "startingPossession": "team1"
 }

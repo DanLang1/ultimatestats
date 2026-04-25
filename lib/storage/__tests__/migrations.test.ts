@@ -24,7 +24,6 @@ function makeSavedGame(overrides: Partial<SavedGame> = {}): SavedGame {
     team2Score: 0,
     events: [],
     gameTo: 15,
-    gameLength: 90,
     startingPossession: 'team1',
     ...overrides,
   };
@@ -93,7 +92,7 @@ describe('storage migrations', () => {
     expect(games[0].schemaVersion).toBe(CURRENT_SCHEMA_VERSION);
   });
 
-  it('allows additive schema bumps without a dedicated migration step', () => {
+  it('applies explicit v4 no-op migration and reaches current schema', () => {
     const v3Game = makeSavedGame({
       schemaVersion: 3,
       autoHalftimeEnabled: true,
@@ -119,5 +118,37 @@ describe('storage migrations', () => {
 
     expect(migrated.schemaVersion).toBe(CURRENT_SCHEMA_VERSION);
     expect(migrated.playedAt).toBe(12345);
+  });
+
+  it('drops legacy gameLength and hardCapMins fields', () => {
+    const legacyGame = {
+      ...makeSavedGame({
+        schemaVersion: 4,
+      }),
+      gameLength: 90,
+      hardCapMins: 90,
+    } as unknown as SavedGame;
+
+    const migrated = migrateSavedGame(legacyGame);
+
+    expect(migrated.schemaVersion).toBe(CURRENT_SCHEMA_VERSION);
+    expect(migrated).not.toHaveProperty('gameLength');
+    expect(migrated).not.toHaveProperty('hardCapMins');
+  });
+
+  it('drops legacy cap fields for already-v5 games via v6 migration', () => {
+    const legacyV5Game = {
+      ...makeSavedGame({
+        schemaVersion: 5,
+      }),
+      gameLength: 90,
+      hardCapMins: 90,
+    } as unknown as SavedGame;
+
+    const migrated = migrateSavedGame(legacyV5Game);
+
+    expect(migrated.schemaVersion).toBe(CURRENT_SCHEMA_VERSION);
+    expect(migrated).not.toHaveProperty('gameLength');
+    expect(migrated).not.toHaveProperty('hardCapMins');
   });
 });
