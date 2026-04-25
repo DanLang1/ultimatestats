@@ -1,3 +1,4 @@
+import { BottomSheet } from '@/components/ui/BottomSheet';
 import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
@@ -14,8 +15,9 @@ import {
 import { PassModifier } from '@/lib/advancedTracking/types';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { Fonts } from '@/theme/theme';
+import { router } from 'expo-router';
 import React from 'react';
-import { Modal, Pressable, StyleSheet } from 'react-native';
+import { Modal, Pressable, StyleSheet, View } from 'react-native';
 
 interface TrackerRareMenuProps {
   visible: boolean;
@@ -66,6 +68,11 @@ export const TrackerRareMenu = ({ visible, onClose, setPassModifier }: TrackerRa
     recordStoppage({ reason: 'injury', sideId: game.focusSideId });
   };
 
+  const handleGoHome = () => {
+    onClose();
+    router.dismissTo('/Dashboard');
+  };
+
   const closeAnd = (fn: () => void) => () => {
     onClose();
     fn();
@@ -73,15 +80,14 @@ export const TrackerRareMenu = ({ visible, onClose, setPassModifier }: TrackerRa
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-      <Pressable
-        style={[styles.backdrop, { backgroundColor: palette.overlayDark88 }]}
-        onPress={onClose}>
-        <Pressable
-          style={[
-            styles.sheet,
-            { backgroundColor: palette.primary, borderColor: palette.overlay15 },
-          ]}
-          onPress={() => {}}>
+      <BottomSheet
+        onDismiss={onClose}
+        overlayColor={palette.overlayDark88}
+        sheetStyle={{ backgroundColor: palette.primary }}
+        minBottomPadding={12}>
+        <View style={styles.content}>
+          <View style={[styles.handle, { backgroundColor: palette.overlay20 }]} />
+
           {!pointIsOver && oppHasDisc && (
             <>
               <Pressable
@@ -140,9 +146,6 @@ export const TrackerRareMenu = ({ visible, onClose, setPassModifier }: TrackerRa
                   ]}>
                   OPP D
                 </ThemedText>
-                <ThemedText style={[styles.btnDesc, { color: palette.textMuted }]}>
-                  Tap the intended receiver — opponent got a block
-                </ThemedText>
               </Pressable>
               <Pressable
                 disabled={!discHolderId}
@@ -186,9 +189,6 @@ export const TrackerRareMenu = ({ visible, onClose, setPassModifier }: TrackerRa
                   ]}>
                   STALL
                 </ThemedText>
-                <ThemedText style={[styles.btnDesc, { color: palette.textMuted }]}>
-                  Stall count reached 10
-                </ThemedText>
               </Pressable>
               <Pressable
                 style={({ pressed }) => [
@@ -204,28 +204,39 @@ export const TrackerRareMenu = ({ visible, onClose, setPassModifier }: TrackerRa
               </Pressable>
             </>
           )}
-        </Pressable>
-      </Pressable>
+
+          <View style={[styles.divider, { backgroundColor: palette.overlay15 }]} />
+
+          <Pressable
+            style={({ pressed }) => [
+              styles.btn,
+              { borderColor: palette.textMuted, backgroundColor: palette.textMuted + '12' },
+              pressed && { opacity: 0.7 },
+            ]}
+            onPress={handleGoHome}>
+            <ThemedText style={[styles.btnText, { color: palette.textInverse }]}>
+              GO HOME
+            </ThemedText>
+          </Pressable>
+        </View>
+      </BottomSheet>
     </Modal>
   );
 };
 
 function createStyles(sizeClass: SizeClass) {
   return StyleSheet.create({
-    backdrop: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-      padding: 32,
-    },
-    sheet: {
-      width: '100%',
-      maxWidth: 360,
-      borderRadius: 24,
-      borderCurve: 'continuous',
-      borderWidth: 1,
-      padding: 20,
+    content: {
+      paddingVertical: 20,
+      paddingHorizontal: 16,
       gap: 12,
+    },
+    handle: {
+      width: 36,
+      height: 5,
+      borderRadius: 3,
+      alignSelf: 'center',
+      marginBottom: 4,
     },
     btn: {
       borderWidth: 1,
@@ -243,6 +254,9 @@ function createStyles(sizeClass: SizeClass) {
     btnDesc: {
       fontFamily: Fonts.regular,
       fontSize: scaleBySizeClass(12, sizeClass),
+    },
+    divider: {
+      height: 1,
     },
   });
 }

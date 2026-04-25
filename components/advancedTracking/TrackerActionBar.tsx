@@ -12,7 +12,6 @@ import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore
 import { Fonts } from '@/theme/theme';
 import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { TrackerMoreBtn, TrackerUndoBtn } from './TrackerActionBarBtns';
 
 interface TrackerActionBarProps {
@@ -29,7 +28,7 @@ export const TrackerActionBar = ({
   const { palette } = useTheme();
   const { sizeClass, isLandscape } = useLayout();
   const styles = createStyles(sizeClass, isLandscape);
-  const insets = useSafeAreaInsets();
+  // const insets = useSafeAreaInsets();
 
   const { currentGameId, savedGames, recordPickup, recordThrow, undoLastOperation } =
     useAdvancedTrackingStore();
@@ -111,8 +110,8 @@ export const TrackerActionBar = ({
             OPP TURN
           </ThemedText>
         </Pressable>
-        <TrackerMoreBtn onPress={onMorePress} isLandscape={isLandscape} />
         <TrackerUndoBtn onPress={undoLastOperation} isLandscape={isLandscape} />
+        <TrackerMoreBtn onPress={onMorePress} isLandscape={isLandscape} />
       </>
     );
   } else {
@@ -128,14 +127,7 @@ export const TrackerActionBar = ({
     <View
       style={[
         isLandscape ? styles.actionBarLandscape : styles.actionBar,
-        isLandscape
-          ? { paddingBottom: Math.max(insets.bottom, 12) }
-          : {
-              backgroundColor: palette.glassBg,
-              borderColor: palette.overlay15,
-              paddingBottom: Math.max(insets.bottom, 20),
-              boxShadow: `0 -8px 32px ${palette.overlay10}`,
-            },
+        { paddingBottom: 12},
       ]}>
       {barContent}
     </View>
@@ -147,13 +139,8 @@ function createStyles(sizeClass: SizeClass, isLandscape: boolean) {
     actionBar: {
       flexDirection: 'row',
       paddingHorizontal: 16,
-      paddingTop: 20,
+      paddingTop: 12,
       gap: 12,
-      borderTopLeftRadius: 32,
-      borderTopRightRadius: 32,
-      borderCurve: 'continuous',
-      borderWidth: 1,
-      borderBottomWidth: 0,
     },
     actionBarLandscape: {
       flexDirection: 'column',

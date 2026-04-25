@@ -20,22 +20,16 @@ import { formatRatio, getExpectedRatio, getSequenceNumber } from '@/lib/genderRa
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { Fonts } from '@/theme/theme';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { router } from 'expo-router';
 import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-
 interface TrackerScoreBarProps {
   pointElapsedMs: number;
-  onMorePress?: () => void;
 }
 
-export const TrackerScoreBar = ({ pointElapsedMs, onMorePress }: TrackerScoreBarProps) => {
+export const TrackerScoreBar = ({ pointElapsedMs }: TrackerScoreBarProps) => {
   const { palette } = useTheme();
   const { sizeClass, isLandscape } = useLayout();
   const styles = createStyles(sizeClass);
-  const insets = useSafeAreaInsets();
 
   const { currentGameId, savedGames, recordBetweenPointTimeout, recordStoppage } =
     useAdvancedTrackingStore();
@@ -135,7 +129,7 @@ export const TrackerScoreBar = ({ pointElapsedMs, onMorePress }: TrackerScoreBar
 
   if (isLandscape) {
     return (
-      <View style={[styles.landscapeContainer, { paddingTop: Math.max(insets.top, 8) }]}>
+      <View style={[styles.landscapeContainer, { paddingTop: 8 }]}>
         <View style={styles.landscapeTeamRow}>
           <ThemedText
             style={[styles.landscapeTeamName, { color: palette.textMuted }]}
@@ -146,20 +140,6 @@ export const TrackerScoreBar = ({ pointElapsedMs, onMorePress }: TrackerScoreBar
             {focusScore}
           </ThemedText>
           {renderTimeoutButton(focusTimeouts, game.focusSideId)}
-          <Pressable
-            onPress={() => router.dismissTo('/Dashboard')}
-            hitSlop={12}
-            style={({ pressed }) => [
-              styles.homeBtn,
-              { backgroundColor: palette.overlay08 },
-              pressed && { opacity: 0.7, backgroundColor: palette.overlay15 },
-            ]}>
-            <MaterialCommunityIcons
-              name="home-outline"
-              size={scaleBySizeClass(16, sizeClass)}
-              color={palette.textMuted}
-            />
-          </Pressable>
         </View>
 
         <View style={[styles.landscapeDivider, { backgroundColor: palette.overlay15 }]} />
@@ -182,7 +162,7 @@ export const TrackerScoreBar = ({ pointElapsedMs, onMorePress }: TrackerScoreBar
   const capFillColor = capIsWarning ? palette.danger : palette.accent;
 
   return (
-    <View style={[styles.scoreBarContainer, { paddingTop: Math.max(insets.top, 12) }]}>
+    <View style={[styles.scoreBarContainer, { paddingTop: 12 }]}>
       {/* Cap progress bar — counts down to soft cap, then hard cap */}
       <View style={styles.capBarBlock}>
         <View style={styles.capBarHeader}>
@@ -207,23 +187,7 @@ export const TrackerScoreBar = ({ pointElapsedMs, onMorePress }: TrackerScoreBar
         </View>
       </View>
 
-      {/* Main row: home | focus col | point/time/ratio | opp col | menu */}
       <View style={styles.headerRow}>
-        <Pressable
-          onPress={() => router.dismissTo('/Dashboard')}
-          hitSlop={12}
-          style={({ pressed }) => [
-            styles.iconBtn,
-            { backgroundColor: palette.overlay08 },
-            pressed && { opacity: 0.7, backgroundColor: palette.overlay15 },
-          ]}>
-          <MaterialCommunityIcons
-            name="home-outline"
-            size={scaleBySizeClass(18, sizeClass)}
-            color={palette.textMuted}
-          />
-        </Pressable>
-
         <View style={styles.sideCol}>
           <ThemedText style={[styles.teamName, { color: palette.textMuted }]} numberOfLines={1}>
             {focusSideName}
@@ -271,22 +235,6 @@ export const TrackerScoreBar = ({ pointElapsedMs, onMorePress }: TrackerScoreBar
           </ThemedText>
           {renderTimeoutButton(oppTimeouts, oppSide.id)}
         </View>
-
-        <Pressable
-          onPress={onMorePress}
-          disabled={onMorePress == null}
-          hitSlop={12}
-          style={({ pressed }) => [
-            styles.iconBtn,
-            { backgroundColor: palette.overlay08 },
-            pressed && onMorePress != null && { opacity: 0.7, backgroundColor: palette.overlay15 },
-          ]}>
-          <MaterialCommunityIcons
-            name="dots-vertical"
-            size={scaleBySizeClass(18, sizeClass)}
-            color={palette.textMuted}
-          />
-        </Pressable>
       </View>
     </View>
   );
@@ -332,11 +280,6 @@ function createStyles(sizeClass: SizeClass) {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 6,
-    },
-    iconBtn: {
-      padding: 8,
-      borderRadius: 10,
-      borderCurve: 'continuous',
     },
     sideCol: {
       flex: 1,
@@ -413,11 +356,6 @@ function createStyles(sizeClass: SizeClass) {
       fontSize: scaleBySizeClass(11, sizeClass),
       fontFamily: Fonts.black,
       letterSpacing: 1,
-    },
-    homeBtn: {
-      padding: 6,
-      borderRadius: 10,
-      borderCurve: 'continuous',
     },
     landscapeContainer: {
       paddingHorizontal: 12,

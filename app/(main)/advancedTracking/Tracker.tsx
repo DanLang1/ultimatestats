@@ -259,10 +259,7 @@ export default function AdvancedTrackerScreen() {
                 borderRightColor: palette.overlay15,
               },
             ]}>
-            <TrackerScoreBar
-              pointElapsedMs={pointElapsedMs}
-              onMorePress={() => setShowRareMenu(true)}
-            />
+            <TrackerScoreBar pointElapsedMs={pointElapsedMs} />
             <TrackerStatusBar pointElapsedMs={pointElapsedMs} />
             <TrackerActionBar
               pointElapsedMs={pointElapsedMs}
@@ -291,10 +288,7 @@ export default function AdvancedTrackerScreen() {
         </View>
       ) : (
         <>
-          <TrackerScoreBar
-            pointElapsedMs={pointElapsedMs}
-            onMorePress={() => setShowRareMenu(true)}
-          />
+          <TrackerScoreBar pointElapsedMs={pointElapsedMs} />
           {instructionText && (
             <ThemedText style={[styles.instructionText, { color: instructionColor }]}>
               {instructionText}
