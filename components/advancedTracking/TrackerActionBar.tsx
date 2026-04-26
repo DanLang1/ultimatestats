@@ -125,10 +125,7 @@ export const TrackerActionBar = ({
 
   return (
     <View
-      style={[
-        isLandscape ? styles.actionBarLandscape : styles.actionBar,
-        { paddingBottom: 12},
-      ]}>
+      style={[isLandscape ? styles.actionBarLandscape : styles.actionBar, { paddingBottom: 12 }]}>
       {barContent}
     </View>
   );

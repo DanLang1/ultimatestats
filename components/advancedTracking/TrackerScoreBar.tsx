@@ -20,6 +20,7 @@ import { formatRatio, getExpectedRatio, getSequenceNumber } from '@/lib/genderRa
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { Fonts } from '@/theme/theme';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 interface TrackerScoreBarProps {
@@ -90,6 +91,10 @@ export const TrackerScoreBar = ({ pointElapsedMs }: TrackerScoreBarProps) => {
     }
   };
 
+  const handlePause = () => {
+    recordStoppage({ reason: 'manual_pause' });
+  };
+
   const renderTimeoutButton = (state: SideTimeoutState, sideId: string) => {
     const regularsLeft = Math.max(state.regularPerHalf - state.regularUsedInHalf, 0);
     const floaterAvailable = state.floaterEnabled && !state.floaterUsed;
@@ -155,6 +160,28 @@ export const TrackerScoreBar = ({ pointElapsedMs }: TrackerScoreBarProps) => {
           </ThemedText>
           {renderTimeoutButton(oppTimeouts, oppSide.id)}
         </View>
+
+        <View style={[styles.landscapeDivider, { backgroundColor: palette.overlay15 }]} />
+
+        {showPointTimer && (
+          <View style={styles.landscapeTimerRow}>
+            <ThemedText style={[styles.landscapePointLabel, { color: palette.textMuted }]}>
+              PT {currentPointNumber}
+            </ThemedText>
+            <View style={styles.landscapeTimerInner}>
+              <Pressable onPress={handlePause} hitSlop={8}>
+                <MaterialCommunityIcons
+                  name="pause"
+                  size={scaleBySizeClass(18, sizeClass)}
+                  color={palette.textMuted}
+                />
+              </Pressable>
+              <ThemedText style={[styles.landscapeTimer, { color: palette.textInverse }]}>
+                {formatPointTime(pointElapsedMs)}
+              </ThemedText>
+            </View>
+          </View>
+        )}
       </View>
     );
   }
@@ -202,9 +229,20 @@ export const TrackerScoreBar = ({ pointElapsedMs }: TrackerScoreBarProps) => {
           <ThemedText style={[styles.pointLabel, { color: palette.textMuted }]}>
             POINT {currentPointNumber}
           </ThemedText>
-          <ThemedText style={[styles.pointTimer, { color: palette.textInverse }]}>
-            {showPointTimer ? formatPointTime(pointElapsedMs) : '–:––'}
-          </ThemedText>
+          <View style={styles.pointTimerRow}>
+            {showPointTimer && !isPointTimerPaused && (
+              <Pressable onPress={handlePause} hitSlop={8}>
+                <MaterialCommunityIcons
+                  name="pause"
+                  size={scaleBySizeClass(20, sizeClass)}
+                  color={palette.textMuted}
+                />
+              </Pressable>
+            )}
+            <ThemedText style={[styles.pointTimer, { color: palette.textInverse }]}>
+              {showPointTimer ? formatPointTime(pointElapsedMs) : '–:––'}
+            </ThemedText>
+          </View>
           {isPointTimerPaused && (
             <ThemedText style={[styles.pausedText, { color: palette.warning }]}>
               ‖ paused
@@ -317,6 +355,11 @@ function createStyles(sizeClass: SizeClass) {
       fontVariant: ['tabular-nums'],
       lineHeight: scaleBySizeClass(28, sizeClass),
     },
+    pointTimerRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+    },
     pausedText: {
       fontSize: scaleBySizeClass(10, sizeClass),
       fontFamily: Fonts.bold,
@@ -382,6 +425,29 @@ function createStyles(sizeClass: SizeClass) {
     landscapeDivider: {
       height: 1,
       marginVertical: 4,
+    },
+    landscapeTimerRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: 5,
+      gap: 8,
+    },
+    landscapeTimerInner: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+    },
+    landscapePointLabel: {
+      fontSize: scaleBySizeClass(10, sizeClass),
+      fontFamily: Fonts.black,
+      letterSpacing: 1.5,
+      textTransform: 'uppercase',
+    },
+    landscapeTimer: {
+      fontSize: scaleBySizeClass(18, sizeClass),
+      fontFamily: Fonts.black,
+      fontVariant: ['tabular-nums'],
+      letterSpacing: 0.5,
     },
   });
 }
