@@ -287,7 +287,7 @@ export function getLastTurnoverEvent(
       ? {
           throwaway: 'THROWAWAY',
           drop: splitAttribution ? '50/50' : 'DROP',
-          stall: 'STALL',
+          stall: 'STALLED',
           block: 'OPP D',
           callahan: 'CALLAHAN',
         }
@@ -313,6 +313,9 @@ export function getLastTurnoverEvent(
       responsibleName = getName(toPlayer);
     } else if ((result === 'block' || result === 'stall') && !isFocusPossession) {
       responsibleName = getName(defender);
+    } else if (result === 'block') {
+      // OPP D — no name shown
+      responsibleName = null;
     } else {
       responsibleName = getName(thrower);
     }

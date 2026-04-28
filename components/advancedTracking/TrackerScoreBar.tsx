@@ -16,7 +16,7 @@ import {
   getSideScore,
   hasPointEnded,
 } from '@/lib/advancedTracking/trackingUtils';
-import { formatRatio, getExpectedRatio, getSequenceNumber } from '@/lib/genderRatioUtils';
+
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { Fonts } from '@/theme/theme';
@@ -34,7 +34,7 @@ export const TrackerScoreBar = ({ pointElapsedMs }: TrackerScoreBarProps) => {
 
   const { currentGameId, savedGames, recordBetweenPointTimeout, recordStoppage } =
     useAdvancedTrackingStore();
-  const { genderRatioEnabled, firstPointRatio, hardCapMins, softCapMins } = useSettingsStore();
+  const { hardCapMins, softCapMins } = useSettingsStore();
 
   const game = savedGames.find((g) => g.id === currentGameId);
   const gameStartedAt = game?.points[0]?.startedAt ?? null;
@@ -65,13 +65,6 @@ export const TrackerScoreBar = ({ pointElapsedMs }: TrackerScoreBarProps) => {
   const showPointTimer = point?.startedAt != null && !hasPointEnded(point);
 
   const currentPointNumber = game.points.length;
-  const ratioLabel =
-    genderRatioEnabled && firstPointRatio && currentPointNumber > 0
-      ? formatRatio(
-          getExpectedRatio(currentPointNumber, firstPointRatio),
-          getSequenceNumber(currentPointNumber),
-        )
-      : null;
 
   const { capLabel, capProgress, capTimeLeftMs, capIsWarning } = computeCapState({
     gameElapsedMs,
@@ -214,66 +207,49 @@ export const TrackerScoreBar = ({ pointElapsedMs }: TrackerScoreBarProps) => {
         </View>
       </View>
 
-      <View style={styles.headerRow}>
-        <View style={styles.sideCol}>
+      <View style={styles.scoreRow}>
+        <View style={[styles.teamBlock, { justifyContent: 'flex-end' }]}>
           <ThemedText style={[styles.teamName, { color: palette.textMuted }]} numberOfLines={1}>
             {focusSideName}
           </ThemedText>
           <ThemedText style={[styles.scoreNum, { color: palette.textInverse }]}>
             {focusScore}
           </ThemedText>
-          {renderTimeoutButton(focusTimeouts, game.focusSideId)}
         </View>
 
-        <View style={styles.centerCol}>
-          <ThemedText style={[styles.pointLabel, { color: palette.textMuted }]}>
-            POINT {currentPointNumber}
+        <ThemedText style={[styles.divider, { color: palette.textMuted }]}>—</ThemedText>
+
+        <View style={[styles.teamBlock, { justifyContent: 'flex-start' }]}>
+          <ThemedText style={[styles.scoreNum, { color: palette.textInverse }]}>
+            {oppScore}
           </ThemedText>
-          <View style={styles.pointTimerRow}>
-            {showPointTimer && !isPointTimerPaused && (
-              <Pressable onPress={handlePause} hitSlop={8}>
-                <MaterialCommunityIcons
-                  name="pause"
-                  size={scaleBySizeClass(20, sizeClass)}
-                  color={palette.textMuted}
-                />
-              </Pressable>
-            )}
-            <ThemedText style={[styles.pointTimer, { color: palette.textInverse }]}>
-              {showPointTimer ? formatPointTime(pointElapsedMs) : '–:––'}
-            </ThemedText>
-          </View>
+          <ThemedText style={[styles.teamName, { color: palette.textMuted }]} numberOfLines={1}>
+            {oppSideName}
+          </ThemedText>
+        </View>
+      </View>
+
+      <View style={styles.timeoutRow}>
+        <View style={{ flex: 1, alignItems: 'center' }}>
+          {renderTimeoutButton(focusTimeouts, game.focusSideId)}
+        </View>
+        <View style={{ flex: 1, alignItems: 'center' }}>
+          {renderTimeoutButton(oppTimeouts, oppSide.id)}
+        </View>
+      </View>
+
+      {showPointTimer && (
+        <View style={styles.timerRow}>
+          <ThemedText style={[styles.pointTimer, { color: palette.textInverse }]}>
+            {formatPointTime(pointElapsedMs)}
+          </ThemedText>
           {isPointTimerPaused && (
             <ThemedText style={[styles.pausedText, { color: palette.warning }]}>
               ‖ paused
             </ThemedText>
           )}
-          {ratioLabel && (
-            <View
-              style={[
-                styles.ratioPill,
-                {
-                  backgroundColor: palette.accentOverlay15,
-                  borderColor: palette.accentOverlay30,
-                },
-              ]}>
-              <ThemedText style={[styles.ratioText, { color: palette.textInverse }]}>
-                {ratioLabel}
-              </ThemedText>
-            </View>
-          )}
         </View>
-
-        <View style={styles.sideCol}>
-          <ThemedText style={[styles.teamName, { color: palette.textMuted }]} numberOfLines={1}>
-            {oppSideName}
-          </ThemedText>
-          <ThemedText style={[styles.scoreNum, { color: palette.textInverse }]}>
-            {oppScore}
-          </ThemedText>
-          {renderTimeoutButton(oppTimeouts, oppSide.id)}
-        </View>
-      </View>
+      )}
     </View>
   );
 };
@@ -314,50 +290,50 @@ function createStyles(sizeClass: SizeClass) {
       height: '100%',
       borderRadius: 2,
     },
-    headerRow: {
+    scoreRow: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 6,
+      gap: 10,
     },
-    sideCol: {
+    teamBlock: {
       flex: 1,
+      flexDirection: 'row',
       alignItems: 'center',
-      gap: 4,
-    },
-    centerCol: {
-      alignItems: 'center',
-      gap: 6,
+      gap: 8,
     },
     teamName: {
-      fontSize: scaleBySizeClass(12, sizeClass),
+      fontSize: scaleBySizeClass(14, sizeClass),
       fontFamily: Fonts.extraBold,
       letterSpacing: 1,
       textTransform: 'uppercase',
-      maxWidth: '100%',
     },
     scoreNum: {
-      fontSize: scaleBySizeClass(38, sizeClass),
+      fontSize: scaleBySizeClass(32, sizeClass),
       fontFamily: Fonts.black,
       fontVariant: ['tabular-nums'],
-      lineHeight: scaleBySizeClass(42, sizeClass),
-      textAlign: 'center',
+      lineHeight: scaleBySizeClass(36, sizeClass),
     },
-    pointLabel: {
-      fontSize: scaleBySizeClass(10, sizeClass),
+    divider: {
+      fontSize: scaleBySizeClass(24, sizeClass),
       fontFamily: Fonts.black,
-      letterSpacing: 1.5,
-      textTransform: 'uppercase',
+      lineHeight: scaleBySizeClass(28, sizeClass),
+      fontVariant: ['tabular-nums'],
+    },
+    timeoutRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
     },
     pointTimer: {
-      fontSize: scaleBySizeClass(24, sizeClass),
+      fontSize: scaleBySizeClass(18, sizeClass),
       fontFamily: Fonts.black,
       letterSpacing: 0.5,
       fontVariant: ['tabular-nums'],
-      lineHeight: scaleBySizeClass(28, sizeClass),
+      lineHeight: scaleBySizeClass(22, sizeClass),
     },
-    pointTimerRow: {
+    timerRow: {
       flexDirection: 'row',
       alignItems: 'center',
+      justifyContent: 'center',
       gap: 6,
     },
     pausedText: {
@@ -387,18 +363,6 @@ function createStyles(sizeClass: SizeClass) {
       height: 8,
       borderRadius: 1,
       transform: [{ rotate: '45deg' }],
-    },
-    ratioPill: {
-      paddingHorizontal: 10,
-      paddingVertical: 4,
-      borderRadius: 999,
-      borderCurve: 'continuous',
-      borderWidth: 1,
-    },
-    ratioText: {
-      fontSize: scaleBySizeClass(11, sizeClass),
-      fontFamily: Fonts.black,
-      letterSpacing: 1,
     },
     landscapeContainer: {
       paddingHorizontal: 12,

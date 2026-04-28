@@ -1,5 +1,5 @@
-import { BottomSheet } from '@/components/ui/BottomSheet';
 import { ThemedText } from '@/components/ThemedText';
+import { BottomSheet } from '@/components/ui/BottomSheet';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import {
@@ -93,33 +93,34 @@ export const TrackerRareMenu = ({ visible, onClose, setPassModifier }: TrackerRa
               <Pressable
                 style={({ pressed }) => [
                   styles.btn,
-                  { borderColor: palette.success, backgroundColor: palette.success + '12' },
+                  { borderColor: palette.overlay15, backgroundColor: palette.overlay05 },
                   pressed && { opacity: 0.7 },
                 ]}
                 onPress={closeAnd(() => setPassModifier('callahan'))}>
-                <ThemedText style={[styles.btnText, { color: palette.success }]}>
+                <ThemedText style={[styles.btnText, { color: palette.textInverse }]}>
                   CALLAHAN
                 </ThemedText>
               </Pressable>
               <Pressable
                 style={({ pressed }) => [
                   styles.btn,
-                  { borderColor: palette.success, backgroundColor: palette.success + '12' },
+                  { borderColor: palette.overlay15, backgroundColor: palette.overlay05 },
                   pressed && { opacity: 0.7 },
                 ]}
                 onPress={closeAnd(() => setPassModifier('stall'))}>
-                <ThemedText style={[styles.btnText, { color: palette.success }]}>STALL</ThemedText>
+                <ThemedText style={[styles.btnText, { color: palette.textInverse }]}>
+                  STALL
+                </ThemedText>
               </Pressable>
               <Pressable
                 style={({ pressed }) => [
                   styles.btn,
-                  { borderColor: palette.warning, backgroundColor: palette.warning + '12' },
+                  { borderColor: palette.overlay15, backgroundColor: palette.overlay05 },
                   pressed && { opacity: 0.7 },
                 ]}
                 onPress={closeAnd(handleInjury)}>
-                <ThemedText style={[styles.btnText, { color: palette.warning }]}>INJURY</ThemedText>
-                <ThemedText style={[styles.btnDesc, { color: palette.textMuted }]}>
-                  Pause the point to record a sub
+                <ThemedText style={[styles.btnText, { color: palette.textInverse }]}>
+                  INJURY
                 </ThemedText>
               </Pressable>
             </>
@@ -132,18 +133,14 @@ export const TrackerRareMenu = ({ visible, onClose, setPassModifier }: TrackerRa
                 style={({ pressed }) => [
                   styles.btn,
                   {
-                    borderColor: discHolderId ? palette.textMuted : palette.overlay15,
-                    backgroundColor: discHolderId ? palette.textMuted + '12' : palette.overlay05,
+                    borderColor: palette.overlay15,
+                    backgroundColor: palette.overlay05,
                     opacity: discHolderId ? 1 : 0.4,
                   },
                   pressed && discHolderId && { opacity: 0.7 },
                 ]}
                 onPress={closeAnd(handleOppBlock)}>
-                <ThemedText
-                  style={[
-                    styles.btnText,
-                    { color: discHolderId ? palette.textInverse : palette.textMuted },
-                  ]}>
+                <ThemedText style={[styles.btnText, { color: palette.textInverse }]}>
                   OPP D
                 </ThemedText>
               </Pressable>
@@ -152,22 +149,15 @@ export const TrackerRareMenu = ({ visible, onClose, setPassModifier }: TrackerRa
                 style={({ pressed }) => [
                   styles.btn,
                   {
-                    borderColor: discHolderId ? palette.warning : palette.overlay15,
-                    backgroundColor: discHolderId ? palette.warning + '12' : palette.overlay05,
+                    borderColor: palette.overlay15,
+                    backgroundColor: palette.overlay05,
                     opacity: discHolderId ? 1 : 0.4,
                   },
                   pressed && discHolderId && { opacity: 0.7 },
                 ]}
                 onPress={closeAnd(() => setPassModifier('fifty-fifty'))}>
-                <ThemedText
-                  style={[
-                    styles.btnText,
-                    { color: discHolderId ? palette.warning : palette.textMuted },
-                  ]}>
+                <ThemedText style={[styles.btnText, { color: palette.textInverse }]}>
                   50/50
-                </ThemedText>
-                <ThemedText style={[styles.btnDesc, { color: palette.textMuted }]}>
-                  Tap the other player — blame shared equally
                 </ThemedText>
               </Pressable>
               <Pressable
@@ -175,31 +165,26 @@ export const TrackerRareMenu = ({ visible, onClose, setPassModifier }: TrackerRa
                 style={({ pressed }) => [
                   styles.btn,
                   {
-                    borderColor: discHolderId ? palette.overlay20 : palette.overlay15,
+                    borderColor: palette.overlay15,
                     backgroundColor: palette.overlay05,
                     opacity: discHolderId ? 1 : 0.4,
                   },
                   pressed && discHolderId && { opacity: 0.7 },
                 ]}
                 onPress={closeAnd(handleStall)}>
-                <ThemedText
-                  style={[
-                    styles.btnText,
-                    { color: discHolderId ? palette.textInverse : palette.textMuted },
-                  ]}>
+                <ThemedText style={[styles.btnText, { color: palette.textInverse }]}>
                   STALL
                 </ThemedText>
               </Pressable>
               <Pressable
                 style={({ pressed }) => [
                   styles.btn,
-                  { borderColor: palette.warning, backgroundColor: palette.warning + '12' },
+                  { borderColor: palette.overlay15, backgroundColor: palette.overlay05 },
                   pressed && { opacity: 0.7 },
                 ]}
                 onPress={closeAnd(handleInjury)}>
-                <ThemedText style={[styles.btnText, { color: palette.warning }]}>INJURY</ThemedText>
-                <ThemedText style={[styles.btnDesc, { color: palette.textMuted }]}>
-                  Pause the point to record a sub
+                <ThemedText style={[styles.btnText, { color: palette.textInverse }]}>
+                  INJURY
                 </ThemedText>
               </Pressable>
             </>
@@ -210,7 +195,7 @@ export const TrackerRareMenu = ({ visible, onClose, setPassModifier }: TrackerRa
           <Pressable
             style={({ pressed }) => [
               styles.btn,
-              { borderColor: palette.textMuted, backgroundColor: palette.textMuted + '12' },
+              { borderColor: palette.overlay15, backgroundColor: palette.overlay05 },
               pressed && { opacity: 0.7 },
             ]}
             onPress={handleGoHome}>

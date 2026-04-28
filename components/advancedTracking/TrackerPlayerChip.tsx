@@ -65,7 +65,7 @@ export const TrackerPlayerChip = ({
 
   let modifierColor: string | null = null;
   if (passModifier === 'callahan' || passModifier === 'stall') modifierColor = palette.success;
-  else if (passModifier === 'fifty-fifty') modifierColor = palette.warning;
+  else if (passModifier === 'fifty-fifty') modifierColor = palette.danger;
 
   const { bg, border, textColor, borderWidth, opacity } = (() => {
     if (oppHasDisc) {
@@ -87,6 +87,15 @@ export const TrackerPlayerChip = ({
       };
     }
     if (isHolder) {
+      if (modifierColor) {
+        return {
+          bg: modifierColor,
+          border: modifierColor,
+          textColor: palette.textOnAccent,
+          borderWidth: 2,
+          opacity: 1,
+        };
+      }
       return {
         bg: palette.accent,
         border: palette.accent,

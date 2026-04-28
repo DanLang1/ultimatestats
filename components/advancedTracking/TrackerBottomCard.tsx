@@ -13,6 +13,7 @@ import {
   hasPointEnded,
   isPossessionOver,
 } from '@/lib/advancedTracking/trackingUtils';
+import { PassModifier } from '@/lib/advancedTracking/types';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { Fonts, Palette } from '@/theme/theme';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
@@ -22,12 +23,16 @@ import { EdgeInsets, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface TrackerBottomCardProps {
   pointElapsedMs: number;
+  passModifier: PassModifier;
+  onCancelModifier: () => void;
   onStartNextPoint: () => void;
   onMorePress: () => void;
 }
 
 export const TrackerBottomCard = ({
   pointElapsedMs,
+  passModifier,
+  onCancelModifier,
   onStartNextPoint,
   onMorePress,
 }: TrackerBottomCardProps) => {
@@ -149,9 +154,6 @@ export const TrackerBottomCard = ({
       if (!turnoverEvent.isFocusTurnover) {
         turnoverColor = palette.success;
         headerBgColor = palette.successOverlay10;
-      } else if (turnoverEvent.isDropWithSplitAttribution) {
-        turnoverColor = palette.warning;
-        headerBgColor = palette.warningOverlay10;
       } else {
         turnoverColor = palette.danger;
         headerBgColor = palette.dangerOverlay10;
@@ -285,10 +287,6 @@ export const TrackerBottomCard = ({
       } else {
         headerContent = (
           <View style={styles.headerRowGroup}>
-            <ThemedText style={[styles.headerLabel, { color: palette.textMuted }]}>
-              PICKUP
-            </ThemedText>
-            <ThemedText style={[styles.headerSep, { color: palette.textMuted }]}>·</ThemedText>
             <ThemedText
               numberOfLines={1}
               style={[styles.headerBold, { color: palette.textInverse }]}>
@@ -301,7 +299,7 @@ export const TrackerBottomCard = ({
       headerBgColor = palette.overlay08;
       headerContent = (
         <ThemedText style={[styles.headerLabel, { color: palette.textMuted }]}>
-          WAITING FOR DISC
+          TAP WHO STARTS WITH DISC
         </ThemedText>
       );
     }
@@ -309,20 +307,53 @@ export const TrackerBottomCard = ({
     // Bottom: empty on offense
   }
 
+  // Override header when waiting for rare-action player selection
+  const isFiftyFifty = passModifier === 'fifty-fifty';
+  if (passModifier) {
+    let selectionText: string;
+    if (passModifier === 'callahan') {
+      selectionText = 'Tap player who got the Callahan';
+    } else if (passModifier === 'stall') {
+      selectionText = 'Tap player who got the stall';
+    } else {
+      selectionText = 'Tap other player at fault';
+    }
+    headerBgColor = isFiftyFifty ? palette.dangerOverlay10 : palette.overlay08;
+    headerContent = (
+      <ThemedText
+        style={[styles.headerLabel, { color: isFiftyFifty ? palette.danger : palette.textMuted }]}>
+        {selectionText}
+      </ThemedText>
+    );
+  }
+
   return (
     <View style={styles.outerContainer}>
       <View style={styles.card}>
         <View style={[styles.topHeader, { backgroundColor: headerBgColor }]}>
-          <Pressable
-            onPress={async () => await undoLastOperation()}
-            hitSlop={8}
-            style={({ pressed }) => [styles.iconBtn, pressed && { opacity: 0.6 }]}>
-            <MaterialCommunityIcons
-              name="undo"
-              size={scaleBySizeClass(20, sizeClass)}
-              color={palette.textInverse}
-            />
-          </Pressable>
+          {passModifier ? (
+            <Pressable
+              onPress={onCancelModifier}
+              hitSlop={8}
+              style={({ pressed }) => [styles.iconBtn, pressed && { opacity: 0.6 }]}>
+              <MaterialCommunityIcons
+                name="close"
+                size={scaleBySizeClass(22, sizeClass)}
+                color={isFiftyFifty ? palette.danger : palette.textMuted}
+              />
+            </Pressable>
+          ) : (
+            <Pressable
+              onPress={async () => await undoLastOperation()}
+              hitSlop={8}
+              style={({ pressed }) => [styles.iconBtn, pressed && { opacity: 0.6 }]}>
+              <MaterialCommunityIcons
+                name="undo"
+                size={scaleBySizeClass(20, sizeClass)}
+                color={palette.textInverse}
+              />
+            </Pressable>
+          )}
 
           <View style={styles.headerCenterContent}>{headerContent}</View>
 

@@ -1,5 +1,6 @@
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import { DevDebugModal } from '@/components/advancedTracking/DevDebugModal';
 import { TrackerBottomCard } from '@/components/advancedTracking/TrackerBottomCard';
 import { TrackerPlayerGrid } from '@/components/advancedTracking/TrackerPlayerGrid';
 import { TrackerRareMenu } from '@/components/advancedTracking/TrackerRareMenu';
@@ -24,12 +25,13 @@ import {
   isPossessionOver,
 } from '@/lib/advancedTracking/trackingUtils';
 import { PassModifier } from '@/lib/advancedTracking/types';
+
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { Fonts, Palette } from '@/theme/theme';
 import { Redirect, router, Stack } from 'expo-router';
 import React, { useState } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Pressable, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FOCUS_SIDE_ID, OPP_SIDE_ID } from './PreGameConfirm';
 
 export default function AdvancedTrackerScreen() {
@@ -242,6 +244,8 @@ export default function AdvancedTrackerScreen() {
             <View style={{ flex: 1 }} />
             <TrackerBottomCard
               pointElapsedMs={pointElapsedMs}
+              passModifier={passModifier}
+              onCancelModifier={() => setPassModifier(null)}
               onStartNextPoint={handleStartNextPoint}
               onMorePress={() => setShowRareMenu(true)}
             />
@@ -278,6 +282,8 @@ export default function AdvancedTrackerScreen() {
           </View>
           <TrackerBottomCard
             pointElapsedMs={pointElapsedMs}
+            passModifier={passModifier}
+            onCancelModifier={() => setPassModifier(null)}
             onStartNextPoint={handleStartNextPoint}
             onMorePress={() => setShowRareMenu(true)}
           />
@@ -297,24 +303,11 @@ export default function AdvancedTrackerScreen() {
             style={[styles.devButton, { bottom: insets.bottom + 140 }]}>
             <ThemedText style={styles.devButtonText}>DEV</ThemedText>
           </Pressable>
-          <Modal
+          <DevDebugModal
             visible={showDevModal}
-            transparent
-            animationType="slide"
-            onRequestClose={() => setShowDevModal(false)}>
-            <SafeAreaView style={{ flex: 1, backgroundColor: palette.overlayDark88 }}>
-              <Pressable style={styles.devModalClose} onPress={() => setShowDevModal(false)}>
-                <ThemedText style={{ color: palette.textInverse, fontFamily: Fonts.bold }}>
-                  ✕ Close
-                </ThemedText>
-              </Pressable>
-              <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16 }}>
-                <ThemedText style={styles.devModalText} selectable>
-                  {JSON.stringify(game, null, 2)}
-                </ThemedText>
-              </ScrollView>
-            </SafeAreaView>
-          </Modal>
+            onClose={() => setShowDevModal(false)}
+            data={game}
+          />
         </>
       )}
     </ThemedView>
@@ -348,15 +341,6 @@ function createStyles(palette: Palette, sizeClass: SizeClass) {
       fontSize: scaleBySizeClass(11, sizeClass),
       fontFamily: Fonts.bold,
       letterSpacing: 1,
-    },
-    devModalClose: {
-      padding: 16,
-      alignItems: 'flex-end',
-    },
-    devModalText: {
-      color: palette.success,
-      fontSize: scaleBySizeClass(11, sizeClass),
-      fontFamily: 'monospace',
     },
   });
 }
