@@ -121,11 +121,11 @@ export function getPassChainEvents(
 
   const chainEvents: PassChainEvent[] = [];
 
-  // Capture the initial holder if the first action is a pickup
-  const firstAction = possession.actions[0];
-  if (firstAction?.kind === 'disc_pickup' && firstAction.player.refType === 'participant') {
-    const name = getParticipantName(firstAction.player.participantId);
-    if (name) chainEvents.push({ id: firstAction.id, name });
+  // Capture the initial holder from the first pickup action in the possession
+  const firstPickup = possession.actions.find((a) => a.kind === 'disc_pickup');
+  if (firstPickup?.player.refType === 'participant') {
+    const name = getParticipantName(firstPickup.player.participantId);
+    if (name) chainEvents.push({ id: firstPickup.id, name });
   }
 
   possession.actions.forEach((action) => {

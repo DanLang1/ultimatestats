@@ -361,7 +361,7 @@ export default function DashboardScreen() {
                 const resumeRoute =
                   activeAdvancedGame != null && activeAdvancedGame.points.length > 0
                     ? '/advancedTracking/Tracker'
-                    : '/advancedTracking/LineEditor';
+                    : '/advancedTracking/TrackerLineSelect';
                 router.push(resumeRoute);
               }}
               disabled={!hasActiveAdvancedGame}

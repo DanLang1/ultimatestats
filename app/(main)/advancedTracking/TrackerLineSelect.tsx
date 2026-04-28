@@ -27,9 +27,12 @@ export default function TrackerLineSelectScreen() {
       : undefined;
   const nextSequenceNumber = nextRatio != null ? getSequenceNumber(nextPointNumber) : undefined;
 
+  const isInitialLine = game.points.length === 0;
+
   return (
     <TrackerLineScreen
       participants={game.participants}
+      title={isInitialLine ? 'Starting Line' : undefined}
       expectedRatio={nextRatio}
       sequenceNumber={nextSequenceNumber}
       onBack={() => router.back()}

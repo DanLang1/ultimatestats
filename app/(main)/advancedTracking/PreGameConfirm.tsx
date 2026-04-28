@@ -107,7 +107,7 @@ export default function AdvancedPreGameConfirm() {
       },
     });
 
-    router.push('/advancedTracking/LineEditor');
+    router.push('/advancedTracking/TrackerLineSelect');
   };
 
   const openNumberPicker = (config: {
