@@ -10,6 +10,8 @@ import { useDerivedValue } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 import { PassModifier } from './types';
 
+const CHIP_BORDER_RADIUS = 16;
+
 interface TrackerPlayerChipProps {
   p: Participant;
   discHolderId: string | null;
@@ -86,9 +88,9 @@ export const TrackerPlayerChip = ({
     }
     if (isHolder) {
       return {
-        bg: palette.accent + '25',
+        bg: palette.accent,
         border: palette.accent,
-        textColor: palette.accent,
+        textColor: palette.textOnAccent,
         borderWidth: 2,
         opacity: 1,
       };
@@ -125,23 +127,35 @@ export const TrackerPlayerChip = ({
       <View
         style={[
           styles.chip,
-          { width: chipWidth, backgroundColor: bg, borderColor: border, borderWidth, opacity },
-          isHolder && { boxShadow: `0 0 20px ${palette.accent}50` },
+          { width: chipWidth, opacity },
+          isHolder && { boxShadow: `0 4px 12px ${palette.shadow}40` },
           isTargetable && modifierColor && { boxShadow: `0 0 12px ${modifierColor}30` },
           oppHasDisc && modifierColor && { boxShadow: `0 0 12px ${modifierColor}30` },
         ]}>
-        <Pressable
-          style={({ pressed }) => [styles.chipBody, pressed && !oppHasDisc && { opacity: 0.75 }]}
-          onPress={() => onTap(p.id)}>
-          <ThemedText
-            style={[
-              styles.chipText,
-              { fontSize: scaleBySizeClass(14, sizeClass), color: textColor },
-            ]}
-            numberOfLines={2}>
-            {p.name}
-          </ThemedText>
-        </Pressable>
+        <View
+          style={[
+            StyleSheet.absoluteFill,
+            {
+              backgroundColor: bg,
+              borderColor: border,
+              borderWidth,
+              borderRadius: CHIP_BORDER_RADIUS,
+              overflow: 'hidden',
+            },
+          ]}>
+          <Pressable
+            style={({ pressed }) => [styles.chipBody, pressed && !oppHasDisc && { opacity: 0.75 }]}
+            onPress={() => onTap(p.id)}>
+            <ThemedText
+              style={[
+                styles.chipText,
+                { fontSize: scaleBySizeClass(14, sizeClass), color: textColor },
+              ]}
+              numberOfLines={2}>
+              {p.name}
+            </ThemedText>
+          </Pressable>
+        </View>
       </View>
     </GestureDetector>
   );
@@ -150,14 +164,15 @@ export const TrackerPlayerChip = ({
 const styles = StyleSheet.create({
   chip: {
     alignSelf: 'stretch',
-    borderRadius: 24,
+    aspectRatio: 0.8,
+    borderRadius: CHIP_BORDER_RADIUS,
     borderCurve: 'continuous',
   },
   chipBody: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 8,
+    padding: 12,
   },
   chipText: {
     fontFamily: Fonts.extraBold,

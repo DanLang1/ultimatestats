@@ -404,12 +404,12 @@ export function getTrackerInstructionText(params: {
   const { pointIsOver, passModifier, oppHasDisc, discHolderId, isAwaitingPullPickup } = params;
 
   if (pointIsOver) return null;
-  if (passModifier === 'callahan') return 'TAP WHO CAUGHT THE CALLAHAN';
-  if (passModifier === 'stall') return 'TAP WHO EARNED THE STALL';
-  if (passModifier === 'fifty-fifty') return 'TAP THE OTHER PLAYER (SPLIT)';
-  if (oppHasDisc) return 'TAP A PLAYER TO RECORD A BLOCK';
+  if (passModifier === 'callahan') return 'TAP PLAYER FOR CALLAHAN';
+  if (passModifier === 'stall') return 'TAP PLAYER WHO STALLED';
+  if (passModifier === 'fifty-fifty') return 'TAP PLAYER FOR 50/50';
+  if (oppHasDisc) return 'TAP PLAYER FOR BLOCK';
   if (discHolderId === null) {
-    return isAwaitingPullPickup ? 'TAP WHO STARTS WITH DISC' : 'TAP A PLAYER TO PICK UP DISC';
+    return isAwaitingPullPickup ? 'TAP STARTING PLAYER' : 'TAP PLAYER TO PICK UP';
   }
   return null;
 }

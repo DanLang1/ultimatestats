@@ -68,12 +68,15 @@ const midnightElectric = {
   accentOverlay30: 'rgba(59,130,246,0.3)', // accent border
 
   // Danger color overlays
+  dangerOverlay10: 'rgba(244,63,94,0.1)', // subtle danger bg
   dangerOverlay15: 'rgba(244,63,94,0.25)', // danger button bg
 
   // Success color overlays
+  successOverlay10: 'rgba(16,185,129,0.1)', // subtle success bg
   successOverlay15: 'rgba(16,185,129,0.25)', // success button bg
 
   // Warning color overlays
+  warningOverlay10: 'rgba(245,158,11,0.1)', // subtle warning bg
   warningOverlay15: 'rgba(245,158,11,0.15)', // warning badge bg
 
   // Indigo overlays (stats)
@@ -187,12 +190,15 @@ export const lightPalette = {
   accentOverlay30: 'rgba(37,99,235,0.3)', // accent border
 
   // Danger color overlays
+  dangerOverlay10: 'rgba(220,38,38,0.1)', // subtle danger bg
   dangerOverlay15: 'rgba(220,38,38,0.15)', // danger button bg
 
   // Success color overlays
+  successOverlay10: 'rgba(5,150,105,0.1)', // subtle success bg
   successOverlay15: 'rgba(5,150,105,0.15)', // success button bg
 
   // Warning color overlays
+  warningOverlay10: 'rgba(217,119,6,0.1)', // subtle warning bg
   warningOverlay15: 'rgba(217,119,6,0.15)', // warning badge bg
 
   // Indigo overlays (stats)

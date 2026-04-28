@@ -1,10 +1,9 @@
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import { TrackerActionBar } from '@/components/advancedTracking/TrackerActionBar';
+import { TrackerBottomCard } from '@/components/advancedTracking/TrackerBottomCard';
 import { TrackerPlayerGrid } from '@/components/advancedTracking/TrackerPlayerGrid';
 import { TrackerRareMenu } from '@/components/advancedTracking/TrackerRareMenu';
 import { TrackerScoreBar } from '@/components/advancedTracking/TrackerScoreBar';
-import { TrackerStatusBar } from '@/components/advancedTracking/TrackerStatusBar';
 import { useTheme } from '@/context/ThemeContext';
 import { useTimestampTimer } from '@/hooks/advancedTracking/useTimer';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
@@ -14,11 +13,8 @@ import {
   getDiscHolderId,
   getEffectiveLineParticipantIds,
   getPointAdjustedTimestamp,
-  getTrackerInstructionColor,
-  getTrackerInstructionText,
   isInjuryJustResumed,
   isInjuryStoppageAwaitingSub,
-  isPullAwaitingPickup,
 } from '@/lib/advancedTracking/trackingDisplayHelpers';
 import {
   getCurrentPoint,
@@ -118,13 +114,6 @@ export default function AdvancedTrackerScreen() {
   // the disc — handles the subbed-out disc holder case and the general check-in requirement.
   const injuryJustResumed = isInjuryJustResumed(possession);
   const discHolderId = injuryJustResumed ? null : getDiscHolderId(possession, game.focusSideId);
-
-  const awaitingPullPickup = isPullAwaitingPickup({
-    possession,
-    pointIsOver,
-    oppHasDisc,
-    discHolderId,
-  });
 
   const handleStartNextPoint = () => {
     setPassModifier(null);
@@ -232,16 +221,6 @@ export default function AdvancedTrackerScreen() {
     setPassModifier(null);
   };
 
-  const instructionText = getTrackerInstructionText({
-    pointIsOver,
-    passModifier,
-    oppHasDisc,
-    discHolderId,
-    isAwaitingPullPickup: awaitingPullPickup,
-  });
-
-  const instructionColor = getTrackerInstructionColor(passModifier, palette);
-
   const LEFT_PANEL_WIDTH = 160;
 
   return (
@@ -260,19 +239,15 @@ export default function AdvancedTrackerScreen() {
               },
             ]}>
             <TrackerScoreBar pointElapsedMs={pointElapsedMs} />
-            <TrackerStatusBar pointElapsedMs={pointElapsedMs} />
-            <TrackerActionBar
+            <View style={{ flex: 1 }} />
+            <TrackerBottomCard
               pointElapsedMs={pointElapsedMs}
               onStartNextPoint={handleStartNextPoint}
               onMorePress={() => setShowRareMenu(true)}
             />
           </View>
-          <View style={[styles.rightPanel, { paddingRight: insets.right }]}>
-            {instructionText && (
-              <ThemedText style={[styles.instructionText, { color: instructionColor }]}>
-                {instructionText}
-              </ThemedText>
-            )}
+          <View
+            style={[styles.rightPanel, { paddingRight: insets.right, justifyContent: 'center' }]}>
             <TrackerPlayerGrid
               activeParticipants={activeParticipants}
               discHolderId={discHolderId}
@@ -289,23 +264,19 @@ export default function AdvancedTrackerScreen() {
       ) : (
         <>
           <TrackerScoreBar pointElapsedMs={pointElapsedMs} />
-          {instructionText && (
-            <ThemedText style={[styles.instructionText, { color: instructionColor }]}>
-              {instructionText}
-            </ThemedText>
-          )}
-          <TrackerPlayerGrid
-            activeParticipants={activeParticipants}
-            discHolderId={discHolderId}
-            oppHasDisc={oppHasDisc}
-            passModifier={passModifier}
-            onPlayerTap={handlePlayerTap}
-            onDrop={handleDrop}
-            onGoal={handleGoal}
-            onThrowaway={handleThrowaway}
-          />
-          <TrackerStatusBar pointElapsedMs={pointElapsedMs} />
-          <TrackerActionBar
+          <View style={{ flex: 1, justifyContent: 'center' }}>
+            <TrackerPlayerGrid
+              activeParticipants={activeParticipants}
+              discHolderId={discHolderId}
+              oppHasDisc={oppHasDisc}
+              passModifier={passModifier}
+              onPlayerTap={handlePlayerTap}
+              onDrop={handleDrop}
+              onGoal={handleGoal}
+              onThrowaway={handleThrowaway}
+            />
+          </View>
+          <TrackerBottomCard
             pointElapsedMs={pointElapsedMs}
             onStartNextPoint={handleStartNextPoint}
             onMorePress={() => setShowRareMenu(true)}
@@ -356,17 +327,9 @@ function createStyles(palette: Palette, sizeClass: SizeClass) {
   return StyleSheet.create({
     container: { flex: 1 },
     landscapeContainer: { flex: 1, flexDirection: 'row' },
-    instructionText: {
-      textAlign: 'center',
-      fontFamily: Fonts.bold,
-      fontSize: scaleBySizeClass(12, sizeClass),
-      letterSpacing: 1,
-      textTransform: 'uppercase',
-      paddingHorizontal: 24,
-      paddingVertical: 6,
-    },
     leftPanel: {
       flexDirection: 'column',
+      justifyContent: 'space-between',
       borderRightWidth: 1,
     },
     rightPanel: { flex: 1 },

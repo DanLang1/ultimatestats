@@ -73,14 +73,12 @@ export const TrackerPlayerGrid = ({
 function createStyles(sizeClass: SizeClass, isLandscape: boolean) {
   return StyleSheet.create({
     gridContainer: {
-      flex: 1,
       justifyContent: 'center',
       gap: isLandscape ? scaleBySizeClass(12, sizeClass) : scaleBySizeClass(16, sizeClass),
       padding: scaleBySizeClass(16, sizeClass),
       paddingHorizontal: scaleBySizeClass(24, sizeClass),
     },
     row: {
-      flex: 1,
       flexDirection: 'row',
       justifyContent: 'center',
       gap: scaleBySizeClass(12, sizeClass),
