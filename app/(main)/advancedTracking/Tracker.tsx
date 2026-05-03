@@ -2,6 +2,8 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { DevDebugModal } from '@/components/advancedTracking/DevDebugModal';
 import { TrackerBottomCard } from '@/components/advancedTracking/TrackerBottomCard';
+import { TrackerCapBar } from '@/components/advancedTracking/TrackerCapBar';
+import { TrackerHomeMenu } from '@/components/advancedTracking/TrackerHomeMenu';
 import { TrackerPlayerGrid } from '@/components/advancedTracking/TrackerPlayerGrid';
 import { TrackerRareMenu } from '@/components/advancedTracking/TrackerRareMenu';
 import { TrackerScoreBar } from '@/components/advancedTracking/TrackerScoreBar';
@@ -24,9 +26,11 @@ import {
   isAdvancedGameOver,
   isPossessionOver,
 } from '@/lib/advancedTracking/trackingUtils';
+import { computeCapState } from '@/lib/advancedTracking/capUtils';
 import { PassModifier } from '@/lib/advancedTracking/types';
 
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
+import { useSettingsStore } from '@/store/settingsStore';
 import { Fonts, Palette } from '@/theme/theme';
 import { Redirect, router, Stack } from 'expo-router';
 import React, { useState } from 'react';
@@ -51,6 +55,7 @@ export default function AdvancedTrackerScreen() {
 
   const game = savedGames.find((g) => g.id === currentGameId);
   const [showDevModal, setShowDevModal] = useState(false);
+  const [showHomeMenu, setShowHomeMenu] = useState(false);
   const [showRareMenu, setShowRareMenu] = useState(false);
   const [passModifier, setPassModifier] = useState<PassModifier>(null);
 
@@ -65,6 +70,21 @@ export default function AdvancedTrackerScreen() {
     mode: 'elapsed',
     intervalMs: 250,
     enabled: showPointTimer && !isPointTimerPaused,
+  });
+
+  const gameStartedAt = game?.points[0]?.startedAt ?? null;
+  const gameElapsedMs = useTimestampTimer({
+    timestamp: gameStartedAt,
+    mode: 'elapsed',
+    intervalMs: 1000,
+    enabled: gameStartedAt !== null,
+  });
+  const { hardCapMins, softCapMins } = useSettingsStore();
+  const { capLabel, capProgress, capTimeLeftMs, capIsWarning } = computeCapState({
+    gameElapsedMs,
+    gameStarted: gameStartedAt !== null,
+    gameLengthMinutes: hardCapMins,
+    softCapMins,
   });
 
   if (!game) {
@@ -237,9 +257,19 @@ export default function AdvancedTrackerScreen() {
               {
                 width: LEFT_PANEL_WIDTH + insets.left,
                 paddingLeft: insets.left,
+                paddingTop: 4,
                 borderRightColor: palette.overlay15,
               },
             ]}>
+            <TrackerCapBar
+              compact
+              onMenuPress={() => setShowHomeMenu(true)}
+              capLabel={capLabel}
+              capProgress={capProgress}
+              capIsWarning={capIsWarning}
+              capTimeLeftMs={capTimeLeftMs}
+              gameStarted={gameStartedAt !== null}
+            />
             <TrackerScoreBar pointElapsedMs={pointElapsedMs} />
             <View style={{ flex: 1 }} />
             <TrackerBottomCard
@@ -267,6 +297,15 @@ export default function AdvancedTrackerScreen() {
         </View>
       ) : (
         <>
+          <TrackerCapBar
+            compact={false}
+            onMenuPress={() => setShowHomeMenu(true)}
+            capLabel={capLabel}
+            capProgress={capProgress}
+            capIsWarning={capIsWarning}
+            capTimeLeftMs={capTimeLeftMs}
+            gameStarted={gameStartedAt !== null}
+          />
           <TrackerScoreBar pointElapsedMs={pointElapsedMs} />
           <View style={{ flex: 1, justifyContent: 'center' }}>
             <TrackerPlayerGrid
@@ -296,11 +335,13 @@ export default function AdvancedTrackerScreen() {
         setPassModifier={setPassModifier}
       />
 
+      <TrackerHomeMenu visible={showHomeMenu} onClose={() => setShowHomeMenu(false)} />
+
       {__DEV__ && (
         <>
           <Pressable
             onPress={() => setShowDevModal(true)}
-            style={[styles.devButton, { bottom: insets.bottom + 140 }]}>
+            style={[styles.devButton, { bottom: insets.bottom + 190 }]}>
             <ThemedText style={styles.devButtonText}>DEV</ThemedText>
           </Pressable>
           <DevDebugModal

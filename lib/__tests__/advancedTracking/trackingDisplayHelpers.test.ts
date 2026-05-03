@@ -841,7 +841,7 @@ describe('getTrackerInstructionText', () => {
         discHolderId: null,
         isAwaitingPullPickup: false,
       }),
-    ).toBe('TAP WHO CAUGHT THE CALLAHAN');
+    ).toBe('TAP PLAYER FOR CALLAHAN');
   });
 
   it('handles opponent having disc', () => {
@@ -853,7 +853,7 @@ describe('getTrackerInstructionText', () => {
         discHolderId: null,
         isAwaitingPullPickup: false,
       }),
-    ).toBe('TAP A PLAYER TO RECORD A BLOCK');
+    ).toBe('TAP PLAYER FOR BLOCK');
   });
 
   it('handles empty disc holder', () => {
@@ -865,7 +865,7 @@ describe('getTrackerInstructionText', () => {
         discHolderId: null,
         isAwaitingPullPickup: true,
       }),
-    ).toBe('TAP WHO STARTS WITH DISC');
+    ).toBe('TAP STARTING PLAYER');
 
     expect(
       getTrackerInstructionText({
@@ -875,7 +875,7 @@ describe('getTrackerInstructionText', () => {
         discHolderId: null,
         isAwaitingPullPickup: false,
       }),
-    ).toBe('TAP A PLAYER TO PICK UP DISC');
+    ).toBe('TAP PLAYER TO PICK UP');
   });
 
   it('returns null when everything is normal', () => {

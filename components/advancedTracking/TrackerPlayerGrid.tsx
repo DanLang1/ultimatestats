@@ -74,14 +74,14 @@ function createStyles(sizeClass: SizeClass, isLandscape: boolean) {
   return StyleSheet.create({
     gridContainer: {
       justifyContent: 'center',
-      gap: isLandscape ? scaleBySizeClass(12, sizeClass) : scaleBySizeClass(16, sizeClass),
-      padding: scaleBySizeClass(16, sizeClass),
-      paddingHorizontal: scaleBySizeClass(24, sizeClass),
+      gap: isLandscape ? scaleBySizeClass(10, sizeClass) : scaleBySizeClass(12, sizeClass),
+      padding: scaleBySizeClass(12, sizeClass),
+      paddingHorizontal: scaleBySizeClass(20, sizeClass),
     },
     row: {
       flexDirection: 'row',
       justifyContent: 'center',
-      gap: scaleBySizeClass(12, sizeClass),
+      gap: scaleBySizeClass(10, sizeClass),
     },
   });
 }

@@ -10,7 +10,7 @@ import { useDerivedValue } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 import { PassModifier } from './types';
 
-const CHIP_BORDER_RADIUS = 16;
+const CHIP_BORDER_RADIUS = 12;
 
 interface TrackerPlayerChipProps {
   p: Participant;
@@ -173,7 +173,7 @@ export const TrackerPlayerChip = ({
 const styles = StyleSheet.create({
   chip: {
     alignSelf: 'stretch',
-    aspectRatio: 0.8,
+    aspectRatio: 1,
     borderRadius: CHIP_BORDER_RADIUS,
     borderCurve: 'continuous',
   },

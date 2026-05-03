@@ -1,4 +1,10 @@
 import { ThemedText } from '@/components/ThemedText';
+import { BottomCardFrame } from '@/components/advancedTracking/bottomCard/BottomCardFrame';
+import { DefenseActions } from '@/components/advancedTracking/bottomCard/DefenseActions';
+import { GoalHeader } from '@/components/advancedTracking/bottomCard/GoalHeader';
+import { ModifierPrompt } from '@/components/advancedTracking/bottomCard/ModifierPrompt';
+import { PassChainHeader } from '@/components/advancedTracking/bottomCard/PassChainHeader';
+import { TurnoverHeader } from '@/components/advancedTracking/bottomCard/TurnoverHeader';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import {
@@ -13,13 +19,17 @@ import {
   hasPointEnded,
   isPossessionOver,
 } from '@/lib/advancedTracking/trackingUtils';
-import { PassModifier } from '@/lib/advancedTracking/types';
+import {
+  Participant,
+  PassModifier,
+  PointPossession,
+  TrackedPoint,
+} from '@/lib/advancedTracking/types';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { Fonts, Palette } from '@/theme/theme';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import React from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
-import { EdgeInsets, useSafeAreaInsets } from 'react-native-safe-area-context';
+import React, { ReactNode } from 'react';
+import { Pressable, StyleSheet } from 'react-native';
 
 interface TrackerBottomCardProps {
   pointElapsedMs: number;
@@ -29,6 +39,47 @@ interface TrackerBottomCardProps {
   onMorePress: () => void;
 }
 
+type BottomCardButtonMode = React.ComponentProps<typeof BottomCardFrame>['buttonMode'];
+
+interface TrackerBottomCardState {
+  passModifier: PassModifier;
+  pointIsOver: boolean;
+  point: TrackedPoint | null;
+  focusSideId: string;
+  participants: Participant[];
+  oppHasDisc: boolean;
+  lastFocusPossession: PointPossession | null;
+  lastOppPossession: PointPossession | null;
+  focusHasStarted: boolean;
+  possession: PointPossession | null;
+}
+
+type TrackerBottomCardModel =
+  | {
+      kind: 'modifier';
+      accentColor: string;
+      buttonMode: BottomCardButtonMode;
+      content: ReactNode;
+    }
+  | {
+      kind: 'goal';
+      accentColor: string;
+      buttonMode: BottomCardButtonMode;
+      content: ReactNode;
+    }
+  | {
+      kind: 'turnover';
+      accentColor: string;
+      buttonMode: BottomCardButtonMode;
+      content: ReactNode;
+    }
+  | {
+      kind: 'label';
+      accentColor: string;
+      buttonMode: BottomCardButtonMode;
+      content: ReactNode;
+    };
+
 export const TrackerBottomCard = ({
   pointElapsedMs,
   passModifier,
@@ -37,9 +88,7 @@ export const TrackerBottomCard = ({
   onMorePress,
 }: TrackerBottomCardProps) => {
   const { palette } = useTheme();
-  const { sizeClass, isLandscape } = useLayout();
-  const insets = useSafeAreaInsets();
-  const styles = cardStyles(sizeClass, isLandscape, palette, insets);
+  const { sizeClass } = useLayout();
 
   const { currentGameId, savedGames, recordPickup, recordThrow, undoLastOperation } =
     useAdvancedTrackingStore();
@@ -53,6 +102,7 @@ export const TrackerBottomCard = ({
   const point = getCurrentPoint(game);
   const possession = getCurrentPossession(game);
   const pointIsOver = hasPointEnded(point);
+
   const activeSideId = getActiveSideId(possession, game);
   const oppHasDisc = !pointIsOver && activeSideId !== game.focusSideId;
 
@@ -63,7 +113,6 @@ export const TrackerBottomCard = ({
   const focusHasStarted =
     !!possession && possession.sideId === game.focusSideId && possession.actions.length > 0;
 
-  // --- Opp action handlers ---
   const handleOppTurnover = async () => {
     if (!possession || isPossessionOver(possession)) {
       await recordPickup({ sideId: oppSide.id, player: { refType: 'untracked' } });
@@ -82,401 +131,232 @@ export const TrackerBottomCard = ({
     });
   };
 
-  // --- Build content ---
-  let headerBgColor = palette.overlay08;
-  let headerContent: React.ReactNode = null;
-  let bottomContent: React.ReactNode = null;
+  const eyebrow = (color: string) => (
+    <ThemedText
+      style={{
+        fontFamily: Fonts.black,
+        fontSize: scaleBySizeClass(10, sizeClass),
+        letterSpacing: 1.4,
+        textTransform: 'uppercase',
+        color,
+      }}>
+      LAST ACTION
+    </ThemedText>
+  );
 
+  const frameLabel = (text: string) => (
+    <ThemedText style={[s.label(sizeClass), { color: palette.textMuted }]}>{text}</ThemedText>
+  );
+
+  // --- Bottom content (same regardless of modifier) ---
+  let bottomContent: ReactNode = null;
   if (pointIsOver) {
-    const goalInfo = getGoalInfo(point, game.focusSideId, game.participants);
-
-    // Header
-    if (goalInfo?.isFocusGoal) {
-      headerBgColor = palette.accentOverlay15; // light blue tint
-      headerContent = (
-        <View style={styles.headerRowGroup}>
-          {goalInfo.assisterName && (
-            <>
-              <ThemedText
-                numberOfLines={1}
-                style={[styles.headerBold, { color: palette.textInverse }]}>
-                {goalInfo.assisterName}
-              </ThemedText>
-              <ThemedText style={[styles.headerSep, { color: palette.textMuted }]}>+</ThemedText>
-            </>
-          )}
-          {goalInfo.scorerName && (
-            <ThemedText
-              numberOfLines={1}
-              style={[styles.headerBold, { color: palette.textInverse }]}>
-              {goalInfo.scorerName}
-            </ThemedText>
-          )}
-          <ThemedText style={[styles.headerSep, { color: palette.textMuted }]}>·</ThemedText>
-          <ThemedText style={[styles.headerLabel, { color: palette.textInverse }]}>
-            {goalInfo.isCallahan ? 'CALLAHAN' : 'GOAL'}
-          </ThemedText>
-        </View>
-      );
-    } else {
-      headerBgColor = palette.dangerOverlay10;
-      headerContent = (
-        <ThemedText style={[styles.headerBold, { color: palette.danger }]}>
-          {goalInfo ? 'OPP GOAL / POINT OVER' : 'POINT OVER'}
-        </ThemedText>
-      );
-    }
-
-    // Bottom
     bottomContent = (
       <Pressable
+        onPress={onStartNextPoint}
         style={({ pressed }) => [
-          styles.fullWidthBtn,
+          s.fullWidthBtn(sizeClass),
           { backgroundColor: palette.successOverlay10 },
           pressed && { opacity: 0.7 },
-        ]}
-        onPress={onStartNextPoint}>
+        ]}>
         <MaterialCommunityIcons
           name="arrow-right-circle"
           size={scaleBySizeClass(20, sizeClass)}
           color={palette.success}
           style={{ marginRight: 8 }}
         />
-        <ThemedText style={[styles.btnText, { color: palette.success }]}>NEXT POINT</ThemedText>
+        <ThemedText style={[s.btnText(sizeClass), { color: palette.success }]}>
+          NEXT POINT
+        </ThemedText>
       </Pressable>
     );
   } else if (oppHasDisc) {
-    const turnoverEvent = getLastTurnoverEvent(lastFocusPossession, true, game.participants);
-
-    // Header
-    if (turnoverEvent) {
-      let turnoverColor = palette.textMuted;
-      if (!turnoverEvent.isFocusTurnover) {
-        turnoverColor = palette.success;
-        headerBgColor = palette.successOverlay10;
-      } else {
-        turnoverColor = palette.danger;
-        headerBgColor = palette.dangerOverlay10;
-      }
-
-      let responsibleContent = null;
-      if (
-        turnoverEvent.isDropWithSplitAttribution &&
-        turnoverEvent.throwerName &&
-        turnoverEvent.responsibleName
-      ) {
-        responsibleContent = (
-          <>
-            <ThemedText numberOfLines={1} style={[styles.headerLabel, { color: turnoverColor }]}>
-              {turnoverEvent.throwerName}
-            </ThemedText>
-            <ThemedText style={[styles.headerSep, { color: turnoverColor }]}>+</ThemedText>
-            <ThemedText numberOfLines={1} style={[styles.headerBold, { color: turnoverColor }]}>
-              {turnoverEvent.responsibleName}
-            </ThemedText>
-            <ThemedText style={[styles.headerSep, { color: turnoverColor }]}>·</ThemedText>
-          </>
-        );
-      } else if (turnoverEvent.responsibleName) {
-        responsibleContent = (
-          <>
-            <ThemedText numberOfLines={1} style={[styles.headerBold, { color: turnoverColor }]}>
-              {turnoverEvent.responsibleName}
-            </ThemedText>
-            <ThemedText style={[styles.headerSep, { color: turnoverColor }]}>·</ThemedText>
-          </>
-        );
-      }
-
-      headerContent = (
-        <View style={styles.headerRowGroup}>
-          {responsibleContent}
-          <ThemedText numberOfLines={1} style={[styles.headerLabel, { color: turnoverColor }]}>
-            {turnoverEvent.label}
-          </ThemedText>
-        </View>
-      );
-    } else {
-      headerBgColor = palette.overlay08;
-      headerContent = (
-        <ThemedText style={[styles.headerLabel, { color: palette.textMuted }]}>DEFENSE</ThemedText>
-      );
-    }
-
-    // Bottom
     bottomContent = (
-      <View style={styles.btnRow}>
-        <Pressable
-          style={({ pressed }) => [
-            styles.flexBtn,
-            { backgroundColor: palette.success },
-            pressed && { opacity: 0.7 },
-          ]}
-          onPress={handleOppTurnover}>
-          <ThemedText numberOfLines={1} style={[styles.btnText, { color: palette.textOnAccent }]}>
-            OPP TURN
-          </ThemedText>
-        </Pressable>
-        <Pressable
-          style={({ pressed }) => [
-            styles.flexBtn,
-            { backgroundColor: palette.danger },
-            pressed && { opacity: 0.7 },
-          ]}
-          onPress={handleOppScored}>
-          <ThemedText numberOfLines={1} style={[styles.btnText, { color: palette.textOnAccent }]}>
-            OPP GOAL
-          </ThemedText>
-        </Pressable>
-      </View>
-    );
-  } else {
-    // Offense
-    const passChainEvents = getPassChainEvents(possession, game.participants);
-    let turnoverEvent: ReturnType<typeof getLastTurnoverEvent> = null;
-    if (!focusHasStarted && !oppHasDisc && !pointIsOver) {
-      turnoverEvent = getLastTurnoverEvent(lastOppPossession, false, game.participants);
-    }
-
-    // Header
-    if (turnoverEvent) {
-      // Just after opponent turned it
-      let turnoverColor = palette.success;
-      if (turnoverEvent.isFocusTurnover) {
-        turnoverColor = palette.danger;
-        headerBgColor = palette.dangerOverlay10;
-      } else {
-        headerBgColor = palette.successOverlay10;
-      }
-
-      headerContent = (
-        <View style={styles.headerRowGroup}>
-          {turnoverEvent.responsibleName && (
-            <>
-              <ThemedText numberOfLines={1} style={[styles.headerBold, { color: turnoverColor }]}>
-                {turnoverEvent.responsibleName}
-              </ThemedText>
-              <ThemedText style={[styles.headerSep, { color: turnoverColor }]}>·</ThemedText>
-            </>
-          )}
-          <ThemedText style={[styles.headerLabel, { color: turnoverColor }]}>
-            {turnoverEvent.label}
-          </ThemedText>
-        </View>
-      );
-    } else if (passChainEvents.events.length > 0) {
-      const lastTwo = passChainEvents.events.slice(-2);
-      headerBgColor = palette.accentOverlay15; // Light blue like screenshot
-
-      if (lastTwo.length === 2) {
-        headerContent = (
-          <View style={styles.headerRowGroup}>
-            <ThemedText
-              numberOfLines={1}
-              style={[styles.headerLabel, { color: palette.textInverse }]}>
-              {lastTwo[0].name}
-            </ThemedText>
-            <ThemedText style={[styles.headerSep, { color: palette.textMuted }]}>→</ThemedText>
-            <ThemedText
-              numberOfLines={1}
-              style={[styles.headerBold, { color: palette.textInverse }]}>
-              {lastTwo[1].name}
-            </ThemedText>
-          </View>
-        );
-      } else {
-        headerContent = (
-          <View style={styles.headerRowGroup}>
-            <ThemedText
-              numberOfLines={1}
-              style={[styles.headerBold, { color: palette.textInverse }]}>
-              {lastTwo[0].name}
-            </ThemedText>
-          </View>
-        );
-      }
-    } else {
-      headerBgColor = palette.overlay08;
-      headerContent = (
-        <ThemedText style={[styles.headerLabel, { color: palette.textMuted }]}>
-          TAP WHO STARTS WITH DISC
-        </ThemedText>
-      );
-    }
-
-    // Bottom: empty on offense
-  }
-
-  // Override header when waiting for rare-action player selection
-  const isFiftyFifty = passModifier === 'fifty-fifty';
-  if (passModifier) {
-    let selectionText: string;
-    if (passModifier === 'callahan') {
-      selectionText = 'Tap player who got the Callahan';
-    } else if (passModifier === 'stall') {
-      selectionText = 'Tap player who got the stall';
-    } else {
-      selectionText = 'Tap other player at fault';
-    }
-    headerBgColor = isFiftyFifty ? palette.dangerOverlay10 : palette.overlay08;
-    headerContent = (
-      <ThemedText
-        style={[styles.headerLabel, { color: isFiftyFifty ? palette.danger : palette.textMuted }]}>
-        {selectionText}
-      </ThemedText>
+      <DefenseActions onOppScored={handleOppScored} onOppTurnover={handleOppTurnover} />
     );
   }
+  const bottomCardState: TrackerBottomCardState = {
+    passModifier,
+    pointIsOver,
+    point,
+    focusSideId: game.focusSideId,
+    participants: game.participants,
+    oppHasDisc,
+    lastFocusPossession,
+    lastOppPossession,
+    focusHasStarted,
+    possession,
+  };
+  const model = getTrackerBottomCardModel({
+    state: bottomCardState,
+    ui: {
+      palette,
+      onCancelModifier,
+      onMorePress,
+      onUndo: undoLastOperation,
+      frameLabel,
+      eyebrow,
+    },
+  });
 
   return (
-    <View style={styles.outerContainer}>
-      <View style={styles.card}>
-        <View style={[styles.topHeader, { backgroundColor: headerBgColor }]}>
-          {passModifier ? (
-            <Pressable
-              onPress={onCancelModifier}
-              hitSlop={8}
-              style={({ pressed }) => [styles.iconBtn, pressed && { opacity: 0.6 }]}>
-              <MaterialCommunityIcons
-                name="close"
-                size={scaleBySizeClass(22, sizeClass)}
-                color={isFiftyFifty ? palette.danger : palette.textMuted}
-              />
-            </Pressable>
-          ) : (
-            <Pressable
-              onPress={async () => await undoLastOperation()}
-              hitSlop={8}
-              style={({ pressed }) => [styles.iconBtn, pressed && { opacity: 0.6 }]}>
-              <MaterialCommunityIcons
-                name="undo"
-                size={scaleBySizeClass(20, sizeClass)}
-                color={palette.textInverse}
-              />
-            </Pressable>
-          )}
-
-          <View style={styles.headerCenterContent}>{headerContent}</View>
-
-          <Pressable
-            onPress={onMorePress}
-            hitSlop={8}
-            style={({ pressed }) => [styles.iconBtn, pressed && { opacity: 0.6 }]}>
-            <MaterialCommunityIcons
-              name="dots-vertical"
-              size={scaleBySizeClass(22, sizeClass)}
-              color={palette.textInverse}
-            />
-          </Pressable>
-        </View>
-
-        {bottomContent && <View style={styles.bottomRow}>{bottomContent}</View>}
-      </View>
-    </View>
+    <BottomCardFrame
+      accentColor={model.accentColor}
+      bottom={bottomContent}
+      buttonMode={model.buttonMode}>
+      {model.content}
+    </BottomCardFrame>
   );
 };
 
-function cardStyles(
-  sizeClass: SizeClass,
-  isLandscape: boolean,
-  palette: Palette,
-  insets: EdgeInsets,
-) {
-  return StyleSheet.create({
-    outerContainer: {
-      paddingHorizontal: 12,
-      paddingTop: 8,
-      paddingBottom: isLandscape ? 12 : Math.max(Math.floor(insets.bottom * 0.7), 12),
-      backgroundColor: 'transparent',
-    },
-    card: {
-      backgroundColor: palette.cardBg,
-      borderRadius: 12,
-      borderCurve: 'continuous',
-      overflow: 'hidden',
-      // Subtle shadow matching screenshot style
-      shadowColor: palette.shadow,
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.15,
-      shadowRadius: 12,
-      elevation: 5,
-      borderWidth: 1,
-      borderColor: palette.overlay08,
-    },
-    topHeader: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      minHeight: scaleBySizeClass(48, sizeClass),
-      paddingHorizontal: 8,
-    },
-    iconBtn: {
-      padding: 8,
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    headerCenterContent: {
-      flex: 1,
-      flexDirection: 'row',
-      justifyContent: 'center',
-      alignItems: 'center',
-      paddingHorizontal: 8,
-    },
-    headerRowGroup: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 4,
-      flexShrink: 1,
-    },
-    headerBold: {
-      fontFamily: Fonts.black,
-      fontSize: scaleBySizeClass(13, sizeClass),
-      letterSpacing: 0.5,
-      textTransform: 'uppercase',
-      flexShrink: 1,
-    },
-    headerLabel: {
-      fontFamily: Fonts.bold,
-      fontSize: scaleBySizeClass(12, sizeClass),
-      letterSpacing: 0.5,
-      textTransform: 'uppercase',
-      flexShrink: 1,
-    },
-    headerSep: {
-      fontFamily: Fonts.black,
-      fontSize: scaleBySizeClass(12, sizeClass),
-    },
-    bottomRow: {
-      flexDirection: 'row',
-      padding: 8,
-      backgroundColor: palette.cardBg,
-    },
-    btnRow: {
-      flex: 1,
-      flexDirection: 'row',
-      gap: 8,
-    },
-    flexBtn: {
-      flex: 1,
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      minHeight: scaleBySizeClass(56, sizeClass),
-      borderRadius: 8,
-      borderCurve: 'continuous',
-    },
-    fullWidthBtn: {
-      flex: 1,
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      minHeight: scaleBySizeClass(56, sizeClass),
-      borderRadius: 8,
-      borderCurve: 'continuous',
-    },
-    btnText: {
-      fontFamily: Fonts.black,
-      fontSize: scaleBySizeClass(14, sizeClass),
-      letterSpacing: 0.5,
-      textTransform: 'uppercase',
-    },
-  });
+interface TrackerBottomCardModelUi {
+  palette: Palette;
+  onCancelModifier: () => void;
+  onMorePress: () => void;
+  onUndo: () => void;
+  frameLabel: (text: string) => ReactNode;
+  eyebrow: (color: string) => ReactNode;
 }
+
+function getTrackerBottomCardModel({
+  state,
+  ui,
+}: {
+  state: TrackerBottomCardState;
+  ui: TrackerBottomCardModelUi;
+}): TrackerBottomCardModel {
+  const {
+    passModifier,
+    pointIsOver,
+    point,
+    focusSideId,
+    participants,
+    oppHasDisc,
+    lastFocusPossession,
+    lastOppPossession,
+    focusHasStarted,
+    possession,
+  } = state;
+  const { palette, onCancelModifier, onMorePress, onUndo, frameLabel, eyebrow } = ui;
+
+  if (passModifier) {
+    const isFiftyFifty = passModifier === 'fifty-fifty';
+    return {
+      kind: 'modifier',
+      accentColor: isFiftyFifty ? palette.danger : palette.neutral,
+      buttonMode: {
+        kind: 'cancel-more',
+        onCancel: onCancelModifier,
+        onMore: onMorePress,
+        isDanger: isFiftyFifty,
+      },
+      content: <ModifierPrompt modifier={passModifier} />,
+    };
+  }
+
+  if (pointIsOver) {
+    const goalInfo = getGoalInfo(point, focusSideId, participants);
+    return {
+      kind: 'goal',
+      accentColor: goalInfo?.isFocusGoal ? palette.accent : palette.danger,
+      buttonMode: { kind: 'undo-only', onUndo },
+      content: goalInfo ? <GoalHeader goalInfo={goalInfo} /> : null,
+    };
+  }
+
+  if (oppHasDisc) {
+    const turnoverEvent = getLastTurnoverEvent(lastFocusPossession, true, participants);
+
+    if (turnoverEvent) {
+      const accentColor = !turnoverEvent.isFocusTurnover ? palette.success : palette.danger;
+      return {
+        kind: 'turnover',
+        accentColor,
+        buttonMode: { kind: 'undo-more', onUndo, onMore: onMorePress },
+        content: (
+          <>
+            {eyebrow(accentColor)}
+            <TurnoverHeader event={turnoverEvent} />
+          </>
+        ),
+      };
+    }
+
+    return {
+      kind: 'label',
+      accentColor: palette.neutral,
+      buttonMode: { kind: 'undo-more', onUndo, onMore: onMorePress },
+      content: frameLabel('DEFENSE'),
+    };
+  }
+
+  const turnoverEvent = !focusHasStarted
+    ? getLastTurnoverEvent(lastOppPossession, false, participants)
+    : null;
+
+  if (turnoverEvent) {
+    const accentColor = turnoverEvent.isFocusTurnover ? palette.danger : palette.success;
+    return {
+      kind: 'turnover',
+      accentColor,
+      buttonMode: { kind: 'undo-more', onUndo, onMore: onMorePress },
+      content: (
+        <>
+          {eyebrow(accentColor)}
+          <TurnoverHeader event={turnoverEvent} />
+        </>
+      ),
+    };
+  }
+
+  const passChainEvents = getPassChainEvents(possession, participants);
+  if (passChainEvents.events.length > 0) {
+    return {
+      kind: 'turnover',
+      accentColor: palette.accent,
+      buttonMode: { kind: 'undo-more', onUndo, onMore: onMorePress },
+      content: <PassChainHeader events={passChainEvents.events} />,
+    };
+  }
+
+  return {
+    kind: 'label',
+    accentColor: palette.neutral,
+    buttonMode: { kind: 'undo-more', onUndo, onMore: onMorePress },
+    content: frameLabel('TAP WHO STARTS WITH DISC'),
+  };
+}
+
+const s = {
+  label: (sizeClass: SizeClass) =>
+    StyleSheet.create({
+      label: {
+        fontFamily: Fonts.bold,
+        fontSize: scaleBySizeClass(12, sizeClass),
+        letterSpacing: 0.5,
+        textTransform: 'uppercase',
+        flexShrink: 1,
+      },
+    }).label,
+  btnText: (sizeClass: SizeClass) =>
+    StyleSheet.create({
+      text: {
+        fontFamily: Fonts.black,
+        fontSize: scaleBySizeClass(14, sizeClass),
+        letterSpacing: 0.5,
+        textTransform: 'uppercase',
+      },
+    }).text,
+  fullWidthBtn: (sizeClass: SizeClass) =>
+    StyleSheet.create({
+      btn: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: scaleBySizeClass(56, sizeClass),
+        borderRadius: 16,
+        borderCurve: 'continuous',
+      },
+    }).btn,
+};

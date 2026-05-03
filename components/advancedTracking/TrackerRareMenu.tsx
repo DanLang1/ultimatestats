@@ -15,7 +15,6 @@ import {
 import { PassModifier } from '@/lib/advancedTracking/types';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { Fonts } from '@/theme/theme';
-import { router } from 'expo-router';
 import React from 'react';
 import { Modal, Pressable, StyleSheet, View } from 'react-native';
 
@@ -34,9 +33,6 @@ export const TrackerRareMenu = ({ visible, onClose, setPassModifier }: TrackerRa
 
   const game = savedGames.find((g) => g.id === currentGameId);
   if (!game) return null;
-
-  const oppSide = game.sides.find((s) => s.id !== game.focusSideId);
-  if (!oppSide) return null;
 
   const point = getCurrentPoint(game);
   const possession = getCurrentPossession(game);
@@ -66,11 +62,6 @@ export const TrackerRareMenu = ({ visible, onClose, setPassModifier }: TrackerRa
   const handleInjury = () => {
     if (pointIsOver) return;
     recordStoppage({ reason: 'injury', sideId: game.focusSideId });
-  };
-
-  const handleGoHome = () => {
-    onClose();
-    router.dismissTo('/Dashboard');
   };
 
   const closeAnd = (fn: () => void) => () => {
@@ -189,20 +180,6 @@ export const TrackerRareMenu = ({ visible, onClose, setPassModifier }: TrackerRa
               </Pressable>
             </>
           )}
-
-          <View style={[styles.divider, { backgroundColor: palette.overlay15 }]} />
-
-          <Pressable
-            style={({ pressed }) => [
-              styles.btn,
-              { borderColor: palette.overlay15, backgroundColor: palette.overlay05 },
-              pressed && { opacity: 0.7 },
-            ]}
-            onPress={handleGoHome}>
-            <ThemedText style={[styles.btnText, { color: palette.textInverse }]}>
-              GO HOME
-            </ThemedText>
-          </Pressable>
         </View>
       </BottomSheet>
     </Modal>
@@ -235,13 +212,6 @@ function createStyles(sizeClass: SizeClass) {
       fontFamily: Fonts.black,
       fontSize: scaleBySizeClass(14, sizeClass),
       letterSpacing: 1,
-    },
-    btnDesc: {
-      fontFamily: Fonts.regular,
-      fontSize: scaleBySizeClass(12, sizeClass),
-    },
-    divider: {
-      height: 1,
     },
   });
 }
