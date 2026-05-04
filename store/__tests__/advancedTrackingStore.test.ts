@@ -1038,6 +1038,48 @@ describe('advancedTrackingStore', () => {
       });
     });
 
+    it('undoing an amendLastThrowAsGoal removes the throw action entirely', () => {
+      // Simulates the full tracker flow: coach taps Joe (pickup), taps
+      // Mike (throw), then swipes-up Mike for goal.  Undo should remove
+      // the throw action so possession reverts to Joe, not Mike.
+      createGame();
+      useAdvancedTrackingStore.getState().recordPull({
+        lines: homeLinesAugust,
+        puller: untracked,
+        receiver: august,
+        result: 'inbound',
+      });
+      // Joe picks up
+      useAdvancedTrackingStore.getState().recordPickup({
+        sideId: homeSideId,
+        player: august,
+      });
+      // Joe throws to Mike (complete)
+      useAdvancedTrackingStore.getState().recordThrow({
+        thrower: august,
+        result: 'complete',
+        toPlayer: meves,
+      });
+      // Coach marks the completion as a goal
+      useAdvancedTrackingStore.getState().amendLastThrowAsGoal();
+
+      const game = getCurrentGame()!;
+      const point = getCurrentPoint(game)!;
+      expect(point.possessions).toHaveLength(1);
+      const lastAction = point.possessions[0].actions.at(-1);
+      expect(lastAction).toMatchObject({ kind: 'throw', result: 'goal' });
+
+      const didUndo = useAdvancedTrackingStore.getState().undoLastOperation();
+      expect(didUndo).toBe(true);
+
+      // After undo, the throw action should be gone, leaving Joe with
+      // the disc from his pickup.
+      const undonePoint = getCurrentPoint(getCurrentGame())!;
+      expect(undonePoint.possessions[0].actions).toHaveLength(2); // pull + pickup
+      expect(undonePoint.possessions[0].actions[0].kind).toBe('pull');
+      expect(undonePoint.possessions[0].actions[1].kind).toBe('disc_pickup');
+    });
+
     it('recomputes effectiveGameTo dynamically when the scoring point after soft_cap is undone', () => {
       // Scenario: score is 5-4, timer at 71 min (past soft cap).
       // Home scores → 6-4. Undo goal. Away scores → 5-5.

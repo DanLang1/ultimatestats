@@ -475,6 +475,7 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
           }
           if (!lastThrow || lastThrow.result !== 'complete') return;
 
+          const actionId = lastThrow.id;
           const previousResult = lastThrow.result;
 
           const now = Date.now();
@@ -483,7 +484,7 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
             const liveGame = getCurrentGame(state);
             const livePoint = liveGame.points.find((p) => p.id === point.id);
             const livePossession = livePoint?.possessions.find((p) => p.id === possession.id);
-            const action = livePossession?.actions.find((a) => a.id === lastThrow!.id);
+            const action = livePossession?.actions.find((a) => a.id === actionId);
             if (action?.kind === 'throw') {
               action.result = 'goal';
             }
@@ -493,11 +494,18 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
                 timerElapsedMs ?? goalTime - getPointAdjustedTimestamp(livePoint);
               livePoint.revivedAt = undefined;
             }
+            // The goal is one atomic operation from the coach's perspective.
+            // Pop the action undo entry that recordThrow just pushed so a
+            // single undo removes the entire throw, not just the goal marker.
+            const topEntry = state.undoStack.at(-1);
+            if (topEntry?.kind === 'action' && topEntry.actionId === actionId) {
+              state.undoStack.pop();
+            }
             pushUndoEntry(state, {
               kind: 'amend_throw_result',
               pointId: point.id,
               possessionId: possession.id,
-              actionId: lastThrow!.id,
+              actionId,
               previousResult,
             });
             const gameStartedAt = liveGame.points[0]?.startedAt;
@@ -726,7 +734,12 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
               );
               if (action?.kind === 'throw') {
                 const wasGoal = action.result === 'goal' || action.result === 'callahan';
-                action.result = lastUndoEntry.previousResult;
+                removeActionById(
+                  liveGame,
+                  lastUndoEntry.pointId,
+                  lastUndoEntry.possessionId,
+                  lastUndoEntry.actionId,
+                );
                 if (wasGoal && point != null) {
                   point.revivedAt = Date.now();
                 }

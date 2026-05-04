@@ -62,18 +62,15 @@ export const BottomCardFrame = ({
               onPress={async () => await buttonMode.onUndo()}
               hitSlop={8}
               style={({ pressed }) => [
-                styles.actionBtn,
-                { backgroundColor: palette.overlay05, borderColor: palette.overlay10 },
+                styles.moreBtn,
+                { backgroundColor: 'transparent', borderColor: palette.overlay10 },
                 pressed && { opacity: 0.7 },
               ]}>
               <MaterialCommunityIcons
                 name="undo"
-                size={scaleBySizeClass(18, sizeClass)}
+                size={scaleBySizeClass(20, sizeClass)}
                 color={palette.textMuted}
               />
-              <ThemedText style={[styles.actionBtnText, { color: palette.inputText }]}>
-                UNDO
-              </ThemedText>
             </Pressable>
           )}
 

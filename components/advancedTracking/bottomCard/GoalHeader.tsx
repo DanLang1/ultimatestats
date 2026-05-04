@@ -39,9 +39,7 @@ export const GoalHeader = ({ goalInfo }: GoalHeaderProps) => {
     );
   }
 
-  return (
-    <ThemedText style={[styles.bold, { color: palette.danger }]}>OPP GOAL / POINT OVER</ThemedText>
-  );
+  return <ThemedText style={[styles.bold, { color: palette.danger }]}>OPP GOAL</ThemedText>;
 };
 
 function createStyles(sizeClass: SizeClass) {

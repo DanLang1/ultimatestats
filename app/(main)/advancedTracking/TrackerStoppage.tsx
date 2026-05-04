@@ -214,14 +214,14 @@ export default function TrackerStoppageScreen() {
               styles.actionBtn,
               styles.resumeBtn,
               {
-                borderColor: palette.warning,
-                backgroundColor: palette.warning + '15',
-                boxShadow: `0 0 16px ${palette.warning}30`,
+                borderColor: palette.success,
+                backgroundColor: palette.success + '15',
+                boxShadow: `0 0 16px ${palette.success}30`,
               },
               pressed && { opacity: 0.7 },
             ]}
             onPress={handleResume}>
-            <ThemedText style={[styles.actionBtnText, { color: palette.warning }]}>
+            <ThemedText style={[styles.actionBtnText, { color: palette.success }]}>
               RESUME
             </ThemedText>
           </Pressable>
