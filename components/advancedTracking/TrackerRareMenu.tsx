@@ -15,6 +15,7 @@ import {
 import { PassModifier } from '@/lib/advancedTracking/types';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { Fonts } from '@/theme/theme';
+import { router } from 'expo-router';
 import React from 'react';
 import { Modal, Pressable, StyleSheet, View } from 'react-native';
 
@@ -29,7 +30,7 @@ export const TrackerRareMenu = ({ visible, onClose, setPassModifier }: TrackerRa
   const { sizeClass } = useLayout();
   const styles = createStyles(sizeClass);
 
-  const { currentGameId, savedGames, recordThrow, recordStoppage } = useAdvancedTrackingStore();
+  const { currentGameId, savedGames, recordThrow } = useAdvancedTrackingStore();
 
   const game = savedGames.find((g) => g.id === currentGameId);
   if (!game) return null;
@@ -61,7 +62,7 @@ export const TrackerRareMenu = ({ visible, onClose, setPassModifier }: TrackerRa
 
   const handleInjury = () => {
     if (pointIsOver) return;
-    recordStoppage({ reason: 'injury', sideId: game.focusSideId });
+    router.push('/advancedTracking/TrackerInjurySub');
   };
 
   const closeAnd = (fn: () => void) => () => {

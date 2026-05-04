@@ -9,18 +9,16 @@ import { Redirect, router, Stack } from 'expo-router';
 import React from 'react';
 
 export default function TrackerInjurySubScreen() {
-  const { currentGameId, savedGames, recordSub } = useAdvancedTrackingStore();
+  const { currentGameId, savedGames, recordStoppage, recordSub, undoLastOperation } =
+    useAdvancedTrackingStore();
   const game = savedGames.find((g) => g.id === currentGameId);
   const point = game ? getCurrentPoint(game) : null;
   const possession = game ? getCurrentPossession(game) : null;
-  const activeStoppage = getActiveStoppage(possession);
+  const existingStoppage = getActiveStoppage(possession);
+  const isEdit = existingStoppage?.reason === 'injury';
 
   if (!currentGameId || !game || !point) {
     return <Redirect href="/Dashboard" />;
-  }
-
-  if (!activeStoppage || activeStoppage.reason !== 'injury') {
-    return <Redirect href="/advancedTracking/Tracker" />;
   }
 
   const sideId = game.focusSideId;
@@ -29,12 +27,17 @@ export default function TrackerInjurySubScreen() {
   const handleConfirm = (nextIds: string[]) => {
     const inIds = nextIds.filter((id) => !effectiveLine.includes(id));
     const outIds = effectiveLine.filter((id) => !nextIds.includes(id));
-    if (inIds.length === 0 && outIds.length === 0) {
-      router.replace('/advancedTracking/TrackerStoppage');
-      return;
+
+    if (isEdit) {
+      undoLastOperation(); // undo previous sub
+      recordSub({ stoppageActionId: existingStoppage!.id, sideId, inIds, outIds });
+    } else {
+      const stoppageId = recordStoppage({ reason: 'injury', sideId });
+      if (inIds.length > 0 || outIds.length > 0) {
+        recordSub({ stoppageActionId: stoppageId, sideId, inIds, outIds });
+      }
     }
-    recordSub({ stoppageActionId: activeStoppage.id, sideId, inIds, outIds });
-    router.replace('/advancedTracking/TrackerStoppage');
+    router.back();
   };
 
   return (
@@ -45,7 +48,8 @@ export default function TrackerInjurySubScreen() {
         initialSelectedIds={effectiveLine}
         title="Injury Sub"
         confirmLabel="CONFIRM SUB"
-        onBack={() => router.replace('/advancedTracking/TrackerStoppage')}
+        requireChanges
+        onBack={() => router.back()}
         onConfirm={handleConfirm}
       />
     </>

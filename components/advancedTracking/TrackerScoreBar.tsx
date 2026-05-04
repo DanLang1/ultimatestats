@@ -70,6 +70,7 @@ export const TrackerScoreBar = ({ pointElapsedMs }: TrackerScoreBarProps) => {
       : null;
 
   const handleTimeout = (sideId: string) => {
+    if (activeStoppage) return;
     const state = sideId === game.focusSideId ? focusTimeouts : oppTimeouts;
     if (!canCallTimeout(state)) return;
     const useFloater = state.regularUsedInHalf >= state.regularPerHalf;
@@ -81,6 +82,7 @@ export const TrackerScoreBar = ({ pointElapsedMs }: TrackerScoreBarProps) => {
   };
 
   const handlePause = () => {
+    if (activeStoppage) return;
     recordStoppage({ reason: 'manual_pause' });
   };
 
@@ -124,13 +126,15 @@ export const TrackerScoreBar = ({ pointElapsedMs }: TrackerScoreBarProps) => {
               PT {currentPointNumber}
             </ThemedText>
             <View style={styles.landscapeTimerInner}>
-              <Pressable onPress={handlePause} hitSlop={8}>
-                <MaterialCommunityIcons
-                  name="pause"
-                  size={scaleBySizeClass(18, sizeClass)}
-                  color={palette.textMuted}
-                />
-              </Pressable>
+              {!isPointTimerPaused && (
+                <Pressable onPress={handlePause} hitSlop={8}>
+                  <MaterialCommunityIcons
+                    name="pause"
+                    size={scaleBySizeClass(18, sizeClass)}
+                    color={palette.textMuted}
+                  />
+                </Pressable>
+              )}
               <ThemedText style={[styles.landscapeTimer, { color: palette.textInverse }]}>
                 {formatPointTime(pointElapsedMs)}
               </ThemedText>
@@ -160,13 +164,15 @@ export const TrackerScoreBar = ({ pointElapsedMs }: TrackerScoreBarProps) => {
 
           <View style={[styles.centerCard, { backgroundColor: palette.primary }]}>
             <View style={styles.centerTimerRow}>
-              <Pressable onPress={handlePause} hitSlop={8}>
-                <MaterialCommunityIcons
-                  name={isPointTimerPaused ? 'play' : 'pause'}
-                  size={scaleBySizeClass(16, sizeClass)}
-                  color={isPointTimerPaused ? palette.warning : palette.textMuted}
-                />
-              </Pressable>
+              {showPointTimer && !isPointTimerPaused && (
+                <Pressable onPress={handlePause} hitSlop={8}>
+                  <MaterialCommunityIcons
+                    name="pause"
+                    size={scaleBySizeClass(16, sizeClass)}
+                    color={palette.textMuted}
+                  />
+                </Pressable>
+              )}
               <ThemedText style={[styles.centerTimer, { color: palette.textInverse }]}>
                 {showPointTimer || pointIsOver ? formatPointTime(pointElapsedMs) : '–:––'}
               </ThemedText>

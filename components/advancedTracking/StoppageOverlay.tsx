@@ -1,5 +1,4 @@
 import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
 import { useTheme } from '@/context/ThemeContext';
 import { useTimestampTimer } from '@/hooks/advancedTracking/useTimer';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
@@ -10,28 +9,34 @@ import {
   getSubForStoppage,
 } from '@/lib/advancedTracking/trackingDisplayHelpers';
 import { getCurrentPoint, getCurrentPossession } from '@/lib/advancedTracking/trackingUtils';
+import type { AdvancedTrackedGame } from '@/lib/advancedTracking/types';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { Fonts } from '@/theme/theme';
-import { Redirect, router, Stack } from 'expo-router';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { router } from 'expo-router';
 import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 const TIMEOUT_DURATION_S = 70;
 
-export default function TrackerStoppageScreen() {
+const formatCountdown = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+
+interface StoppageOverlayProps {
+  game: AdvancedTrackedGame;
+}
+
+export const StoppageOverlay = ({ game }: StoppageOverlayProps) => {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
   const styles = createStyles(sizeClass);
 
-  const { currentGameId, savedGames, resumeStoppage, undoLastOperation } =
-    useAdvancedTrackingStore();
-  const game = savedGames.find((g) => g.id === currentGameId);
-  const point = game ? getCurrentPoint(game) : null;
-  const possession = game ? getCurrentPossession(game) : null;
+  const { resumeStoppage, undoLastOperation } = useAdvancedTrackingStore();
+
+  const point = getCurrentPoint(game);
+  const possession = getCurrentPossession(game);
   const activeStoppage = getActiveStoppage(possession);
 
   const stoppageTimestamp = activeStoppage?.pausedAt ?? activeStoppage?.recordedAt ?? null;
-  const pointTimerBase = point ? getPointAdjustedTimestamp(point) : null;
 
   const timeoutSecondsLeft = useTimestampTimer({
     timestamp: stoppageTimestamp,
@@ -41,23 +46,16 @@ export default function TrackerStoppageScreen() {
     enabled: activeStoppage?.reason === 'timeout',
   });
 
-  if (!currentGameId || !game) {
-    return <Redirect href="/Dashboard" />;
-  }
-
-  if (!activeStoppage) {
-    return <Redirect href="/advancedTracking/Tracker" />;
-  }
+  if (!activeStoppage) return null;
 
   const sideLabel =
     activeStoppage.sideId != null
       ? (game.sides.find((s) => s.id === activeStoppage.sideId)?.label ?? null)
       : null;
 
+  const pointTimerBase = point ? getPointAdjustedTimestamp(point) : null;
   const frozenPointElapsedMs =
     stoppageTimestamp != null && pointTimerBase != null ? stoppageTimestamp - pointTimerBase : 0;
-
-  const formatCountdown = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 
   let timerColor: string;
   if (timeoutSecondsLeft <= 10) {
@@ -68,19 +66,22 @@ export default function TrackerStoppageScreen() {
     timerColor = palette.success;
   }
 
+  const injurySub =
+    activeStoppage.reason === 'injury' ? getSubForStoppage(point, activeStoppage.id) : null;
+
   const handleResume = () => {
     resumeStoppage(activeStoppage.id);
-    router.replace('/advancedTracking/Tracker');
   };
 
   const handleUndo = () => {
-    undoLastOperation();
-    // No navigation needed: if the stoppage was undone, the existing redirect
-    // (activeStoppage == null → Redirect to Tracker) handles navigation automatically.
-    // If only the sub was undone, this screen re-renders in the pre-sub state.
+    if (injurySub) {
+      undoLastOperation(); // undo sub
+    }
+    undoLastOperation(); // undo stoppage
   };
 
   let mainContent: React.ReactNode;
+  let primaryBtn: React.ReactNode;
 
   if (activeStoppage.reason === 'timeout') {
     mainContent = (
@@ -96,6 +97,22 @@ export default function TrackerStoppageScreen() {
         </ThemedText>
       </View>
     );
+    primaryBtn = (
+      <Pressable
+        style={({ pressed }) => [
+          styles.actionBtn,
+          styles.resumeBtn,
+          {
+            borderColor: palette.success,
+            backgroundColor: palette.success + '15',
+            boxShadow: `0 0 16px ${palette.success}30`,
+          },
+          pressed && { opacity: 0.7 },
+        ]}
+        onPress={handleResume}>
+        <ThemedText style={[styles.actionBtnText, { color: palette.success }]}>RESUME</ThemedText>
+      </Pressable>
+    );
   } else if (activeStoppage.reason === 'manual_pause') {
     mainContent = (
       <View style={styles.centerBlock}>
@@ -105,16 +122,30 @@ export default function TrackerStoppageScreen() {
         </ThemedText>
       </View>
     );
+    primaryBtn = (
+      <Pressable
+        style={({ pressed }) => [
+          styles.actionBtn,
+          styles.resumeBtn,
+          {
+            borderColor: palette.success,
+            backgroundColor: palette.success + '15',
+            boxShadow: `0 0 16px ${palette.success}30`,
+          },
+          pressed && { opacity: 0.7 },
+        ]}
+        onPress={handleResume}>
+        <ThemedText style={[styles.actionBtnText, { color: palette.success }]}>RESUME</ThemedText>
+      </Pressable>
+    );
   } else {
-    // injury
-    const existingSub = getSubForStoppage(point, activeStoppage.id);
-    const subInNames = existingSub
-      ? existingSub.inIds
+    const subInNames = injurySub
+      ? injurySub.inIds
           .map((id) => game.participants.find((p) => p.id === id)?.name)
           .filter(Boolean)
       : [];
-    const subOutNames = existingSub
-      ? existingSub.outIds
+    const subOutNames = injurySub
+      ? injurySub.outIds
           .map((id) => game.participants.find((p) => p.id === id)?.name)
           .filter(Boolean)
       : [];
@@ -125,7 +156,7 @@ export default function TrackerStoppageScreen() {
         <ThemedText style={[styles.frozenTimer, { color: palette.textInverse }]}>
           {formatPointTime(frozenPointElapsedMs)}
         </ThemedText>
-        {existingSub && (
+        {injurySub && (
           <View style={styles.subSummary}>
             <View style={styles.subRow}>
               <ThemedText style={[styles.subChipLabel, { color: palette.success }]}>IN</ThemedText>
@@ -144,45 +175,61 @@ export default function TrackerStoppageScreen() {
       </View>
     );
 
-    const primaryBtn = existingSub ? (
-      <Pressable
-        style={({ pressed }) => [
-          styles.actionBtn,
-          styles.resumeBtn,
-          {
-            borderColor: palette.success,
-            backgroundColor: palette.success + '15',
-            boxShadow: `0 0 16px ${palette.success}30`,
-          },
-          pressed && { opacity: 0.7 },
-        ]}
-        onPress={handleResume}>
-        <ThemedText style={[styles.actionBtnText, { color: palette.success }]}>RESUME</ThemedText>
-      </Pressable>
-    ) : (
-      <Pressable
-        style={({ pressed }) => [
-          styles.actionBtn,
-          styles.resumeBtn,
-          {
-            borderColor: palette.warning,
-            backgroundColor: palette.warning + '15',
-            boxShadow: `0 0 16px ${palette.warning}30`,
-          },
-          pressed && { opacity: 0.7 },
-        ]}
-        onPress={() => router.push('/advancedTracking/TrackerInjurySub')}>
-        <ThemedText style={[styles.actionBtnText, { color: palette.warning }]}>
-          RECORD SUB
-        </ThemedText>
-      </Pressable>
-    );
+    primaryBtn = null;
+  }
 
-    return (
-      <ThemedView style={styles.screen}>
-        <Stack.Screen options={{ headerShown: false }} />
-        <View style={styles.content}>
-          {mainContent}
+  return (
+    <View style={styles.container}>
+      <View style={styles.content}>
+        {mainContent}
+        {injurySub ? (
+          <View style={styles.buttonRow}>
+            <Pressable
+              style={({ pressed }) => [
+                styles.actionBtn,
+                styles.resumeBtn,
+                {
+                  borderColor: palette.success,
+                  backgroundColor: palette.success + '15',
+                  boxShadow: `0 0 16px ${palette.success}30`,
+                },
+                pressed && { opacity: 0.7 },
+              ]}
+              onPress={handleResume}>
+              <ThemedText style={[styles.actionBtnText, { color: palette.success }]}>
+                RESUME
+              </ThemedText>
+            </Pressable>
+            <Pressable
+              style={({ pressed }) => [
+                styles.actionBtn,
+                styles.resumeBtn,
+                {
+                  borderColor: palette.neutral,
+                  backgroundColor: palette.overlay10,
+                },
+                pressed && { opacity: 0.7 },
+              ]}
+              onPress={() => router.push('/advancedTracking/TrackerInjurySub')}>
+              <ThemedText style={[styles.actionBtnText, { color: palette.neutral }]}>
+                EDIT SUB
+              </ThemedText>
+            </Pressable>
+            <Pressable
+              onPress={handleUndo}
+              hitSlop={8}
+              style={[
+                styles.undoIconBtn,
+                { borderColor: palette.overlay20, backgroundColor: palette.overlay05 },
+              ]}>
+              <MaterialCommunityIcons
+                name="undo"
+                size={scaleBySizeClass(20, sizeClass)}
+                color={palette.textMuted}
+              />
+            </Pressable>
+          </View>
+        ) : (
           <View style={styles.buttonRow}>
             {primaryBtn}
             <Pressable
@@ -198,57 +245,16 @@ export default function TrackerStoppageScreen() {
               </ThemedText>
             </Pressable>
           </View>
-        </View>
-      </ThemedView>
-    );
-  }
-
-  return (
-    <ThemedView style={styles.screen}>
-      <Stack.Screen options={{ headerShown: false }} />
-      <View style={styles.content}>
-        {mainContent}
-        <View style={styles.buttonRow}>
-          <Pressable
-            style={({ pressed }) => [
-              styles.actionBtn,
-              styles.resumeBtn,
-              {
-                borderColor: palette.success,
-                backgroundColor: palette.success + '15',
-                boxShadow: `0 0 16px ${palette.success}30`,
-              },
-              pressed && { opacity: 0.7 },
-            ]}
-            onPress={handleResume}>
-            <ThemedText style={[styles.actionBtnText, { color: palette.success }]}>
-              RESUME
-            </ThemedText>
-          </Pressable>
-          <Pressable
-            style={({ pressed }) => [
-              styles.actionBtn,
-              styles.undoBtn,
-              { borderColor: palette.overlay20, backgroundColor: palette.overlay05 },
-              pressed && { opacity: 0.7 },
-            ]}
-            onPress={handleUndo}>
-            <ThemedText style={[styles.actionBtnText, { color: palette.textInverse }]}>
-              UNDO
-            </ThemedText>
-          </Pressable>
-        </View>
+        )}
       </View>
-    </ThemedView>
+    </View>
   );
-}
+};
 
 function createStyles(sizeClass: SizeClass) {
   return StyleSheet.create({
-    screen: { flex: 1 },
+    container: { flex: 1, justifyContent: 'center' },
     content: {
-      flex: 1,
-      justifyContent: 'center',
       alignItems: 'center',
       gap: scaleBySizeClass(40, sizeClass),
       paddingHorizontal: scaleBySizeClass(32, sizeClass),
@@ -293,16 +299,21 @@ function createStyles(sizeClass: SizeClass) {
       alignItems: 'center',
       justifyContent: 'center',
     },
-    resumeBtn: {
-      flex: 2,
-    },
-    undoBtn: {
-      flex: 1,
-    },
+    resumeBtn: { flex: 2 },
+    undoBtn: { flex: 1 },
     actionBtnText: {
       fontFamily: Fonts.black,
       fontSize: scaleBySizeClass(14, sizeClass),
       letterSpacing: 1,
+    },
+    undoIconBtn: {
+      width: scaleBySizeClass(56, sizeClass),
+      paddingVertical: scaleBySizeClass(18, sizeClass),
+      borderWidth: 1,
+      borderRadius: 20,
+      borderCurve: 'continuous',
+      alignItems: 'center',
+      justifyContent: 'center',
     },
     subSummary: {
       marginTop: scaleBySizeClass(8, sizeClass),

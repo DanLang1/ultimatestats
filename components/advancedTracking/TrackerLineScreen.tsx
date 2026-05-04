@@ -24,6 +24,7 @@ interface TrackerLineScreenProps {
   confirmLabel?: string;
   expectedRatio?: GenderRatio;
   sequenceNumber?: 1 | 2;
+  requireChanges?: boolean;
 }
 
 export const TrackerLineScreen = ({
@@ -35,6 +36,7 @@ export const TrackerLineScreen = ({
   confirmLabel,
   expectedRatio,
   sequenceNumber,
+  requireChanges,
 }: TrackerLineScreenProps) => {
   const { palette } = useTheme();
   const { sizeClass, isLandscape } = useLayout();
@@ -49,7 +51,9 @@ export const TrackerLineScreen = ({
   const [selectedPresetId, setSelectedPresetId] = useState<string | null>(null);
   const [showLinePicker, setShowLinePicker] = useState(false);
 
-  const canConfirm = selectedIds.length === 7;
+  const initialIds = initialSelectedIds ?? [];
+  const hasSubChanges = !requireChanges || selectedIds.some((id) => !initialIds.includes(id));
+  const canConfirm = selectedIds.length === 7 && hasSubChanges;
 
   const ratioCheck =
     expectedRatio != null && canConfirm

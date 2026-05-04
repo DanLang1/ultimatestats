@@ -12,14 +12,12 @@ import {
   getTrackerInstructionColor,
   getTrackerInstructionText,
   isInjuryJustResumed,
-  isInjuryStoppageAwaitingSub,
   isPullAwaitingPickup,
 } from '../../advancedTracking/trackingDisplayHelpers';
 import type {
   AdvancedTrackedGame,
   PointPossession,
   PointSub,
-  StoppageAction,
   TrackedPoint,
 } from '../../advancedTracking/types';
 
@@ -725,42 +723,6 @@ describe('canCallTimeout', () => {
       isSecondHalf: false,
     };
     expect(canCallTimeout(state)).toBe(false);
-  });
-});
-
-describe('isInjuryStoppageAwaitingSub', () => {
-  const stoppage: StoppageAction = { id: 'stop1', kind: 'stoppage', reason: 'injury' };
-
-  it('returns false if no active stoppage', () => {
-    expect(isInjuryStoppageAwaitingSub(null, null)).toBe(false);
-  });
-
-  it('returns false if stoppage is not an injury', () => {
-    expect(isInjuryStoppageAwaitingSub(null, { ...stoppage, reason: 'timeout' })).toBe(false);
-  });
-
-  it('returns true if injury has no associated sub', () => {
-    const point: TrackedPoint = { id: 'p1', lines: [], possessions: [], subs: [] };
-    expect(isInjuryStoppageAwaitingSub(point, stoppage)).toBe(true);
-  });
-
-  it('returns false if injury has an associated sub', () => {
-    const point: TrackedPoint = {
-      id: 'p1',
-      lines: [],
-      possessions: [],
-      subs: [
-        {
-          id: 's1',
-          sideId: HOME,
-          type: 'injury',
-          stoppageActionId: 'stop1',
-          inIds: [],
-          outIds: [],
-        },
-      ],
-    };
-    expect(isInjuryStoppageAwaitingSub(point, stoppage)).toBe(false);
   });
 });
 

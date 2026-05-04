@@ -384,17 +384,6 @@ export function canCallTimeout(state: SideTimeoutState): boolean {
 }
 
 /**
- * Returns true if an active injury stoppage is waiting for a sub to be recorded.
- */
-export function isInjuryStoppageAwaitingSub(
-  point: TrackedPoint | null,
-  activeStoppage: StoppageAction | null,
-): boolean {
-  if (!activeStoppage || activeStoppage.reason !== 'injury') return false;
-  return !getSubForStoppage(point, activeStoppage.id);
-}
-
-/**
  * Returns the instruction text for the current tracker state.
  */
 export function getTrackerInstructionText(params: {

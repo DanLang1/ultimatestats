@@ -1,6 +1,7 @@
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { DevDebugModal } from '@/components/advancedTracking/DevDebugModal';
+import { StoppageOverlay } from '@/components/advancedTracking/StoppageOverlay';
 import { TrackerBottomCard } from '@/components/advancedTracking/TrackerBottomCard';
 import { TrackerCapBar } from '@/components/advancedTracking/TrackerCapBar';
 import { TrackerHomeMenu } from '@/components/advancedTracking/TrackerHomeMenu';
@@ -17,7 +18,6 @@ import {
   getEffectiveLineParticipantIds,
   getPointAdjustedTimestamp,
   isInjuryJustResumed,
-  isInjuryStoppageAwaitingSub,
 } from '@/lib/advancedTracking/trackingDisplayHelpers';
 import {
   getCurrentPoint,
@@ -106,19 +106,6 @@ export default function AdvancedTrackerScreen() {
 
   if (isHalftimeBreakActive) {
     return <Redirect href="/advancedTracking/TrackerHalftime" />;
-  }
-
-  if (activeStoppage) {
-    const injuryWithNoSub = isInjuryStoppageAwaitingSub(point, activeStoppage);
-    return (
-      <Redirect
-        href={
-          injuryWithNoSub
-            ? '/advancedTracking/TrackerInjurySub'
-            : '/advancedTracking/TrackerStoppage'
-        }
-      />
-    );
   }
 
   if (!game.sides.find((s) => s.id !== game.focusSideId)) {
@@ -272,27 +259,33 @@ export default function AdvancedTrackerScreen() {
             />
             <TrackerScoreBar pointElapsedMs={pointElapsedMs} />
             <View style={{ flex: 1 }} />
-            <TrackerBottomCard
-              pointElapsedMs={pointElapsedMs}
-              passModifier={passModifier}
-              onCancelModifier={() => setPassModifier(null)}
-              onStartNextPoint={handleStartNextPoint}
-              onMorePress={() => setShowRareMenu(true)}
-            />
+            {!activeStoppage && (
+              <TrackerBottomCard
+                pointElapsedMs={pointElapsedMs}
+                passModifier={passModifier}
+                onCancelModifier={() => setPassModifier(null)}
+                onStartNextPoint={handleStartNextPoint}
+                onMorePress={() => setShowRareMenu(true)}
+              />
+            )}
           </View>
           <View
             style={[styles.rightPanel, { paddingRight: insets.right, justifyContent: 'center' }]}>
-            <TrackerPlayerGrid
-              activeParticipants={activeParticipants}
-              discHolderId={discHolderId}
-              oppHasDisc={oppHasDisc}
-              passModifier={passModifier}
-              onPlayerTap={handlePlayerTap}
-              onDrop={handleDrop}
-              onGoal={handleGoal}
-              onThrowaway={handleThrowaway}
-              availableWidth={width - LEFT_PANEL_WIDTH - insets.left - insets.right}
-            />
+            {activeStoppage ? (
+              <StoppageOverlay game={game} />
+            ) : (
+              <TrackerPlayerGrid
+                activeParticipants={activeParticipants}
+                discHolderId={discHolderId}
+                oppHasDisc={oppHasDisc}
+                passModifier={passModifier}
+                onPlayerTap={handlePlayerTap}
+                onDrop={handleDrop}
+                onGoal={handleGoal}
+                onThrowaway={handleThrowaway}
+                availableWidth={width - LEFT_PANEL_WIDTH - insets.left - insets.right}
+              />
+            )}
           </View>
         </View>
       ) : (
@@ -308,32 +301,40 @@ export default function AdvancedTrackerScreen() {
           />
           <TrackerScoreBar pointElapsedMs={pointElapsedMs} />
           <View style={{ flex: 1, justifyContent: 'center' }}>
-            <TrackerPlayerGrid
-              activeParticipants={activeParticipants}
-              discHolderId={discHolderId}
-              oppHasDisc={oppHasDisc}
-              passModifier={passModifier}
-              onPlayerTap={handlePlayerTap}
-              onDrop={handleDrop}
-              onGoal={handleGoal}
-              onThrowaway={handleThrowaway}
-            />
+            {activeStoppage ? (
+              <StoppageOverlay game={game} />
+            ) : (
+              <TrackerPlayerGrid
+                activeParticipants={activeParticipants}
+                discHolderId={discHolderId}
+                oppHasDisc={oppHasDisc}
+                passModifier={passModifier}
+                onPlayerTap={handlePlayerTap}
+                onDrop={handleDrop}
+                onGoal={handleGoal}
+                onThrowaway={handleThrowaway}
+              />
+            )}
           </View>
-          <TrackerBottomCard
-            pointElapsedMs={pointElapsedMs}
-            passModifier={passModifier}
-            onCancelModifier={() => setPassModifier(null)}
-            onStartNextPoint={handleStartNextPoint}
-            onMorePress={() => setShowRareMenu(true)}
-          />
+          {!activeStoppage && (
+            <TrackerBottomCard
+              pointElapsedMs={pointElapsedMs}
+              passModifier={passModifier}
+              onCancelModifier={() => setPassModifier(null)}
+              onStartNextPoint={handleStartNextPoint}
+              onMorePress={() => setShowRareMenu(true)}
+            />
+          )}
         </>
       )}
 
-      <TrackerRareMenu
-        visible={showRareMenu}
-        onClose={() => setShowRareMenu(false)}
-        setPassModifier={setPassModifier}
-      />
+      {!activeStoppage && (
+        <TrackerRareMenu
+          visible={showRareMenu}
+          onClose={() => setShowRareMenu(false)}
+          setPassModifier={setPassModifier}
+        />
+      )}
 
       <TrackerHomeMenu visible={showHomeMenu} onClose={() => setShowHomeMenu(false)} />
 
