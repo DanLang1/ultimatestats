@@ -4,8 +4,7 @@ import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import {
   getActiveSideId,
-  getDiscHolderId,
-  isInjuryJustResumed,
+  getSafeDiscHolderRef,
 } from '@/lib/advancedTracking/trackingDisplayHelpers';
 import {
   getCurrentPoint,
@@ -40,21 +39,20 @@ export const TrackerRareMenu = ({ visible, onClose, setPassModifier }: TrackerRa
   const pointIsOver = hasPointEnded(point);
   const activeSideId = getActiveSideId(possession, game);
   const oppHasDisc = !pointIsOver && activeSideId !== game.focusSideId;
-  const injuryJustResumed = isInjuryJustResumed(possession);
-  const discHolderId = injuryJustResumed ? null : getDiscHolderId(possession, game.focusSideId);
+  const discHolderRef = getSafeDiscHolderRef(possession, game.focusSideId);
 
   const handleOppBlock = () => {
-    if (!discHolderId || pointIsOver) return;
+    if (!discHolderRef || pointIsOver) return;
     recordThrow({
-      thrower: { refType: 'participant', participantId: discHolderId },
+      thrower: discHolderRef,
       result: 'block',
     });
   };
 
   const handleStall = () => {
-    if (!discHolderId || pointIsOver) return;
+    if (!discHolderRef || pointIsOver) return;
     recordThrow({
-      thrower: { refType: 'participant', participantId: discHolderId },
+      thrower: discHolderRef,
       result: 'stall',
     });
     setPassModifier(null);
@@ -121,15 +119,15 @@ export const TrackerRareMenu = ({ visible, onClose, setPassModifier }: TrackerRa
           {!pointIsOver && !oppHasDisc && (
             <>
               <Pressable
-                disabled={!discHolderId}
+                disabled={!discHolderRef}
                 style={({ pressed }) => [
                   styles.btn,
                   {
                     borderColor: palette.overlay15,
                     backgroundColor: palette.overlay05,
-                    opacity: discHolderId ? 1 : 0.4,
+                    opacity: discHolderRef ? 1 : 0.4,
                   },
-                  pressed && discHolderId && { opacity: 0.7 },
+                  pressed && discHolderRef && { opacity: 0.7 },
                 ]}
                 onPress={closeAnd(handleOppBlock)}>
                 <ThemedText style={[styles.btnText, { color: palette.textInverse }]}>
@@ -137,15 +135,15 @@ export const TrackerRareMenu = ({ visible, onClose, setPassModifier }: TrackerRa
                 </ThemedText>
               </Pressable>
               <Pressable
-                disabled={!discHolderId}
+                disabled={!discHolderRef}
                 style={({ pressed }) => [
                   styles.btn,
                   {
                     borderColor: palette.overlay15,
                     backgroundColor: palette.overlay05,
-                    opacity: discHolderId ? 1 : 0.4,
+                    opacity: discHolderRef ? 1 : 0.4,
                   },
-                  pressed && discHolderId && { opacity: 0.7 },
+                  pressed && discHolderRef && { opacity: 0.7 },
                 ]}
                 onPress={closeAnd(() => setPassModifier('fifty-fifty'))}>
                 <ThemedText style={[styles.btnText, { color: palette.textInverse }]}>
@@ -153,15 +151,15 @@ export const TrackerRareMenu = ({ visible, onClose, setPassModifier }: TrackerRa
                 </ThemedText>
               </Pressable>
               <Pressable
-                disabled={!discHolderId}
+                disabled={!discHolderRef}
                 style={({ pressed }) => [
                   styles.btn,
                   {
                     borderColor: palette.overlay15,
                     backgroundColor: palette.overlay05,
-                    opacity: discHolderId ? 1 : 0.4,
+                    opacity: discHolderRef ? 1 : 0.4,
                   },
-                  pressed && discHolderId && { opacity: 0.7 },
+                  pressed && discHolderRef && { opacity: 0.7 },
                 ]}
                 onPress={closeAnd(handleStall)}>
                 <ThemedText style={[styles.btnText, { color: palette.textInverse }]}>

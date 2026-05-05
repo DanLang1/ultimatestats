@@ -38,16 +38,11 @@ export function getGoalInfo(
   const isCallahan = result === 'callahan';
   const isFocusGoal = (lastPossession.sideId === focusSideId) !== isCallahan;
 
-  const getName = (ref: PlayerRef | undefined) =>
-    ref?.refType === 'participant'
-      ? (participants.find((p) => p.id === ref.participantId)?.name ?? null)
-      : null;
-
   return {
     isFocusGoal,
     isCallahan,
-    scorerName: getName(toPlayer),
-    assisterName: isFocusGoal && !isCallahan ? getName(thrower) : null,
+    scorerName: getRefName(toPlayer, participants),
+    assisterName: isFocusGoal && !isCallahan ? getRefName(thrower, participants) : null,
   };
 }
 
@@ -81,29 +76,60 @@ export function getActiveSideId(
   return isPossessionOver(possession) ? getOtherSideId(game, possession.sideId) : possession.sideId;
 }
 
-/** Returns the ID of the player currently holding the disc, if it's our possession. */
-export function getDiscHolderId(
+/** Returns the PlayerRef of the player currently holding the disc, if it's our possession. */
+export function getDiscHolderRef(
   possession: PointPossession | null,
   focusSideId: string,
-): string | null {
+): PlayerRef | null {
   if (!possession || isPossessionOver(possession) || possession.sideId !== focusSideId) {
     return null;
   }
   const actions = possession.actions;
   for (let i = actions.length - 1; i >= 0; i--) {
     const action = actions[i];
-    if (action.kind === 'disc_pickup' && action.player.refType === 'participant') {
-      return action.player.participantId;
-    } else if (action.kind === 'throw' && action.toPlayer?.refType === 'participant') {
-      return action.toPlayer.participantId;
+    if (action.kind === 'disc_pickup') {
+      return action.player;
+    } else if (action.kind === 'throw' && action.toPlayer) {
+      return action.toPlayer;
     }
   }
   return null;
 }
 
+/**
+ * Returns the disc holder ref, accounting for injury-just-resumed state.
+ * After an injury stoppage resumes, the holder is forced to null so the coach must re-tap.
+ */
+export function getSafeDiscHolderRef(
+  possession: PointPossession | null,
+  focusSideId: string,
+): PlayerRef | null {
+  if (isInjuryJustResumed(possession)) return null;
+  return getDiscHolderRef(possession, focusSideId);
+}
+
+/** Returns the ID of the player currently holding the disc, if it's a known participant. */
+export function getDiscHolderId(
+  possession: PointPossession | null,
+  focusSideId: string,
+): string | null {
+  const ref = getDiscHolderRef(possession, focusSideId);
+  return ref?.refType === 'participant' ? ref.participantId : null;
+}
+
 export interface PassChainEvent {
   id: string; // The action ID
   name: string; // The participant name
+}
+
+function getRefName(ref: PlayerRef | undefined, participants: Participant[]): string | null {
+  if (ref?.refType === 'participant') {
+    return participants.find((p) => p.id === ref.participantId)?.name ?? null;
+  }
+  if (ref?.refType === 'unknown') {
+    return 'Unknown';
+  }
+  return null;
 }
 
 /** Generates the pass chain sequence as an array of events for UI mapping. */
@@ -116,29 +142,28 @@ export function getPassChainEvents(
     return { events: [], truncated: false };
   }
 
-  const getParticipantName = (refId: string) =>
-    participants.find((p) => p.id === refId)?.name ?? null;
-
   const chainEvents: PassChainEvent[] = [];
 
   // Capture the initial holder from the first pickup action in the possession
   const firstPickup = possession.actions.find((a) => a.kind === 'disc_pickup');
-  if (firstPickup?.player.refType === 'participant') {
-    const name = getParticipantName(firstPickup.player.participantId);
-    if (name) chainEvents.push({ id: firstPickup.id, name });
+  const pickupName = getRefName(firstPickup?.player, participants);
+  if (pickupName) {
+    chainEvents.push({ id: firstPickup!.id, name: pickupName });
   }
 
   possession.actions.forEach((action) => {
     if (action.kind === 'throw') {
       // If we didn't have an initial holder, infer from the first thrower.
       // ID is suffixed because the action itself is a throw, not a pickup.
-      if (chainEvents.length === 0 && action.thrower?.refType === 'participant') {
-        const throwerName = getParticipantName(action.thrower.participantId);
-        if (throwerName) chainEvents.push({ id: `${action.id}-thrower`, name: throwerName });
+      if (chainEvents.length === 0) {
+        const throwerName = getRefName(action.thrower, participants);
+        if (throwerName) {
+          chainEvents.push({ id: `${action.id}-thrower`, name: throwerName });
+        }
       }
-      if (action.toPlayer?.refType === 'participant') {
-        const receiverName = getParticipantName(action.toPlayer.participantId);
-        if (receiverName) chainEvents.push({ id: action.id, name: receiverName });
+      const receiverName = getRefName(action.toPlayer, participants);
+      if (receiverName) {
+        chainEvents.push({ id: action.id, name: receiverName });
       }
     }
   });
@@ -281,7 +306,7 @@ export function getLastTurnoverEvent(
     const { result, thrower, toPlayer, defender, splitAttribution } = action;
     if (result === 'complete' || result === 'goal') return null;
 
-    const hasDefender = defender?.refType === 'participant';
+    const hasDefender = defender != null && defender.refType !== 'untracked';
 
     const labelMap: Partial<Record<typeof result, string>> = isFocusPossession
       ? {
@@ -302,22 +327,17 @@ export function getLastTurnoverEvent(
     const label = labelMap[result];
     if (!label) return null;
 
-    const getName = (ref: typeof thrower | undefined) =>
-      ref?.refType === 'participant'
-        ? (participants.find((p) => p.id === ref.participantId)?.name ?? null)
-        : null;
-
     // drop → toPlayer (the dropper); block/stall on opp → defender (our player); everything else → thrower
     let responsibleName;
     if (result === 'drop') {
-      responsibleName = getName(toPlayer);
+      responsibleName = getRefName(toPlayer, participants);
     } else if ((result === 'block' || result === 'stall') && !isFocusPossession) {
-      responsibleName = getName(defender);
+      responsibleName = getRefName(defender, participants);
     } else if (result === 'block') {
       // OPP D — no name shown
       responsibleName = null;
     } else {
-      responsibleName = getName(thrower);
+      responsibleName = getRefName(thrower, participants);
     }
 
     const isFiftyFifty = result === 'drop' && (splitAttribution ?? false);
@@ -327,7 +347,7 @@ export function getLastTurnoverEvent(
       isFocusTurnover: isFocusPossession,
       isDropWithSplitAttribution: isFiftyFifty,
       responsibleName,
-      throwerName: isFiftyFifty ? getName(thrower) : null,
+      throwerName: isFiftyFifty ? getRefName(thrower, participants) : null,
     };
   }
 

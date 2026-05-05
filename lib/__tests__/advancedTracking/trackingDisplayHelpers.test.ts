@@ -3,10 +3,12 @@ import {
   getActiveSideId,
   getCompletedPauseMs,
   getDiscHolderId,
+  getDiscHolderRef,
   getEffectiveLineParticipantIds,
   getGoalInfo,
   getPassChainEvents,
   getPointAdjustedTimestamp,
+  getSafeDiscHolderRef,
   getSideTimeoutState,
   getSubForStoppage,
   getTrackerInstructionColor,
@@ -243,6 +245,82 @@ describe('getDiscHolderId', () => {
   });
 });
 
+describe('getDiscHolderRef', () => {
+  const unknown = { refType: 'unknown' as const };
+
+  it('returns null if not focus side possession', () => {
+    const pos = makePossession(AWAY);
+    expect(getDiscHolderRef(pos, HOME)).toBeNull();
+  });
+
+  it('returns participant ref from pickup', () => {
+    const pos = makePossession(HOME, [
+      { id: 'a1', kind: 'disc_pickup', sideId: HOME, player: august },
+    ]);
+    expect(getDiscHolderRef(pos, HOME)).toEqual(august);
+  });
+
+  it('returns unknown ref from pickup', () => {
+    const pos = makePossession(HOME, [
+      { id: 'a1', kind: 'disc_pickup', sideId: HOME, player: unknown },
+    ]);
+    expect(getDiscHolderRef(pos, HOME)).toEqual(unknown);
+  });
+
+  it('returns unknown ref after throw to unknown', () => {
+    const pos = makePossession(HOME, [
+      { id: 'a1', kind: 'disc_pickup', sideId: HOME, player: august },
+      {
+        id: 'a2',
+        kind: 'throw',
+        sideId: HOME,
+        thrower: august,
+        toPlayer: unknown,
+        result: 'complete',
+      },
+    ]);
+    expect(getDiscHolderRef(pos, HOME)).toEqual(unknown);
+    expect(getDiscHolderId(pos, HOME)).toBeNull();
+  });
+});
+
+describe('getSafeDiscHolderRef', () => {
+  const unknown = { refType: 'unknown' as const };
+
+  it('returns null after an injury stoppage resumes', () => {
+    const pos = makePossession(HOME, [
+      { id: 'a1', kind: 'disc_pickup', sideId: HOME, player: august },
+      {
+        id: 's1',
+        kind: 'stoppage',
+        reason: 'injury',
+        recordedAt: 100,
+        pausedAt: 100,
+        resumedAt: 200,
+      },
+    ]);
+    expect(getSafeDiscHolderRef(pos, HOME)).toBeNull();
+  });
+
+  it('returns the holder when no injury-resume is active', () => {
+    const pos = makePossession(HOME, [
+      { id: 'a1', kind: 'disc_pickup', sideId: HOME, player: august },
+    ]);
+    expect(getSafeDiscHolderRef(pos, HOME)).toEqual(august);
+  });
+
+  it('returns null for null possession', () => {
+    expect(getSafeDiscHolderRef(null, HOME)).toBeNull();
+  });
+
+  it('returns unknown ref when holder is unknown', () => {
+    const pos = makePossession(HOME, [
+      { id: 'a1', kind: 'disc_pickup', sideId: HOME, player: unknown },
+    ]);
+    expect(getSafeDiscHolderRef(pos, HOME)).toEqual(unknown);
+  });
+});
+
 describe('getPassChainEvents', () => {
   it('returns empty events for null possession', () => {
     expect(getPassChainEvents(null, baseGame.participants)).toEqual({
@@ -297,6 +375,42 @@ describe('getPassChainEvents', () => {
     const { events, truncated } = getPassChainEvents(pos, participants);
     expect(truncated).toBe(true);
     expect(events.map((e) => e.name)).toEqual(['P2', 'P3', 'P4']);
+  });
+
+  it('includes unknown pickup and throws', () => {
+    const unknown = { refType: 'unknown' as const };
+    const pos = makePossession(HOME, [
+      { id: 'a1', kind: 'disc_pickup', sideId: HOME, player: unknown },
+      {
+        id: 'a2',
+        kind: 'throw',
+        sideId: HOME,
+        thrower: unknown,
+        toPlayer: meves,
+        result: 'complete',
+      },
+    ]);
+    const { events, truncated } = getPassChainEvents(pos, baseGame.participants);
+    expect(truncated).toBe(false);
+    expect(events.map((e) => e.name)).toEqual(['Unknown', 'Meves']);
+  });
+
+  it('includes unknown as throw receiver', () => {
+    const unknown = { refType: 'unknown' as const };
+    const pos = makePossession(HOME, [
+      { id: 'a1', kind: 'disc_pickup', sideId: HOME, player: august },
+      {
+        id: 'a2',
+        kind: 'throw',
+        sideId: HOME,
+        thrower: august,
+        toPlayer: unknown,
+        result: 'complete',
+      },
+    ]);
+    const { events, truncated } = getPassChainEvents(pos, baseGame.participants);
+    expect(truncated).toBe(false);
+    expect(events.map((e) => e.name)).toEqual(['August', 'Unknown']);
   });
 });
 

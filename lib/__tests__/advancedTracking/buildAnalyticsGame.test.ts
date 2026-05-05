@@ -1352,12 +1352,9 @@ describe('disc_pickup attribution', () => {
 });
 
 describe('unknown vs untracked PlayerRef attribution', () => {
-  // 'unknown' = identity matters but wasn't captured → attributions collect under UNKNOWN_PARTICIPANT_ID
-  // 'untracked' = intentionally anonymous (e.g. opponent in single-team mode) → no attribution
-
   const unknown = { refType: 'unknown' as const };
 
-  it('goal to unknown receiver — goal goes to UNKNOWN_PARTICIPANT_ID, not lost', () => {
+  it('goal to unknown receiver — goal attributed to UNKNOWN_PARTICIPANT_ID', () => {
     const game: AdvancedTrackedGame = {
       ...baseGame,
       points: [
@@ -1399,7 +1396,7 @@ describe('unknown vs untracked PlayerRef attribution', () => {
     expect(sumAttributions(attributions, 'p_august', 'assist')).toBe(1);
   });
 
-  it('goal to untracked receiver — goal is not attributed to anyone', () => {
+  it('goal to untracked receiver — no goal or receiving_touch attribution', () => {
     const game: AdvancedTrackedGame = {
       ...baseGame,
       points: [
@@ -1437,10 +1434,11 @@ describe('unknown vs untracked PlayerRef attribution', () => {
     const { attributions } = buildAnalyticsGameWithLog(game);
 
     expect(sumAttributions(attributions, UNKNOWN_PARTICIPANT_ID, 'goal')).toBe(0);
+    expect(attributions.filter((a) => a.type === 'receiving_touch')).toHaveLength(0);
     expect(sumAttributions(attributions, 'p_august', 'assist')).toBe(1);
   });
 
-  it('drop to unknown receiver (no split) — drop goes to UNKNOWN_PARTICIPANT_ID', () => {
+  it('drop to unknown receiver (no split) — drop attributed to UNKNOWN_PARTICIPANT_ID', () => {
     const game: AdvancedTrackedGame = {
       ...baseGame,
       status: 'terminated',
@@ -1482,7 +1480,7 @@ describe('unknown vs untracked PlayerRef attribution', () => {
     expect(sumAttributions(attributions, 'p_august', 'throw_attempt')).toBe(1);
   });
 
-  it('hockey assist to unknown previous thrower — credited to UNKNOWN_PARTICIPANT_ID', () => {
+  it('hockey assist from unknown previous thrower — credited to UNKNOWN_PARTICIPANT_ID', () => {
     const game: AdvancedTrackedGame = {
       ...baseGame,
       points: [
@@ -1503,7 +1501,6 @@ describe('unknown vs untracked PlayerRef attribution', () => {
                   receiver: august,
                   result: 'inbound',
                 },
-                // unknown player completes to August — should be hockey assist source
                 {
                   id: 'a2',
                   kind: 'throw',
@@ -1531,6 +1528,192 @@ describe('unknown vs untracked PlayerRef attribution', () => {
     expect(sumAttributions(attributions, UNKNOWN_PARTICIPANT_ID, 'hockey_assist')).toBe(1);
     expect(sumAttributions(attributions, 'p_august', 'assist')).toBe(1);
     expect(sumAttributions(attributions, 'p_meves', 'goal')).toBe(1);
+  });
+
+  it('unknown player pickup — disc_pickup attributed to UNKNOWN_PARTICIPANT_ID', () => {
+    const game: AdvancedTrackedGame = {
+      ...baseGame,
+      status: 'terminated',
+      points: [
+        {
+          id: 'pt1',
+          lines: [{ sideId: ZOO, participantIds: ['p_august'] }],
+          possessions: [
+            {
+              id: 'pos1',
+              sideId: ZOO,
+              actions: [{ id: 'a1', kind: 'disc_pickup', sideId: ZOO, player: unknown }],
+            },
+          ],
+        },
+      ],
+    };
+    const { attributions } = buildAnalyticsGameWithLog(game);
+
+    expect(sumAttributions(attributions, UNKNOWN_PARTICIPANT_ID, 'disc_pickup')).toBe(1);
+  });
+
+  it('unknown player stall — stall attributed to UNKNOWN_PARTICIPANT_ID', () => {
+    const game: AdvancedTrackedGame = {
+      ...baseGame,
+      status: 'terminated',
+      points: [
+        {
+          id: 'pt1',
+          lines: [{ sideId: RIVALS, participantIds: [] }],
+          possessions: [
+            {
+              id: 'pos1',
+              sideId: RIVALS,
+              actions: [
+                {
+                  id: 'a1',
+                  kind: 'throw',
+                  sideId: RIVALS,
+                  thrower: untracked,
+                  result: 'stall',
+                  defender: unknown,
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+    const { attributions } = buildAnalyticsGameWithLog(game);
+
+    expect(sumAttributions(attributions, UNKNOWN_PARTICIPANT_ID, 'stall')).toBe(1);
+  });
+
+  it('unknown player block — block attributed to UNKNOWN_PARTICIPANT_ID', () => {
+    const game: AdvancedTrackedGame = {
+      ...baseGame,
+      status: 'terminated',
+      points: [
+        {
+          id: 'pt1',
+          lines: [{ sideId: ZOO, participantIds: ['p_august'] }],
+          possessions: [
+            {
+              id: 'pos1',
+              sideId: ZOO,
+              actions: [
+                {
+                  id: 'a1',
+                  kind: 'throw',
+                  sideId: ZOO,
+                  thrower: august,
+                  result: 'block',
+                  defender: unknown,
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+    const { attributions } = buildAnalyticsGameWithLog(game);
+
+    expect(sumAttributions(attributions, UNKNOWN_PARTICIPANT_ID, 'block')).toBe(1);
+  });
+
+  it('unknown player callahan catch — goal and callahan attributed to UNKNOWN_PARTICIPANT_ID', () => {
+    const game: AdvancedTrackedGame = {
+      ...baseGame,
+      points: [
+        {
+          id: 'pt1',
+          lines: [{ sideId: ZOO, participantIds: ['p_august'] }],
+          possessions: [
+            {
+              id: 'pos1',
+              sideId: RIVALS,
+              actions: [
+                {
+                  id: 'a1',
+                  kind: 'throw',
+                  sideId: RIVALS,
+                  thrower: untracked,
+                  result: 'callahan',
+                  defender: unknown,
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+    const { attributions } = buildAnalyticsGameWithLog(game);
+
+    expect(sumAttributions(attributions, UNKNOWN_PARTICIPANT_ID, 'goal')).toBe(1);
+    expect(sumAttributions(attributions, UNKNOWN_PARTICIPANT_ID, 'callahan')).toBe(1);
+    expect(sumAttributions(attributions, UNKNOWN_PARTICIPANT_ID, 'block')).toBe(1);
+  });
+
+  it('callahan recorded via toPlayer (tracker pattern) — resolves from receiver when defender is absent', () => {
+    const game: AdvancedTrackedGame = {
+      ...baseGame,
+      points: [
+        {
+          id: 'pt1',
+          lines: [{ sideId: ZOO, participantIds: ['p_august', 'p_max'] }],
+          possessions: [
+            {
+              id: 'pos1',
+              sideId: RIVALS,
+              actions: [
+                {
+                  id: 'a1',
+                  kind: 'throw',
+                  sideId: RIVALS,
+                  thrower: untracked,
+                  toPlayer: max,
+                  result: 'callahan',
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+    const { attributions } = buildAnalyticsGameWithLog(game);
+
+    expect(sumAttributions(attributions, 'p_max', 'goal')).toBe(1);
+    expect(sumAttributions(attributions, 'p_max', 'callahan')).toBe(1);
+    expect(sumAttributions(attributions, 'p_max', 'block')).toBe(1);
+  });
+
+  it('callahan recorded via toPlayer with unknown — resolves from receiver when defender is absent', () => {
+    const game: AdvancedTrackedGame = {
+      ...baseGame,
+      points: [
+        {
+          id: 'pt1',
+          lines: [{ sideId: ZOO, participantIds: ['p_august'] }],
+          possessions: [
+            {
+              id: 'pos1',
+              sideId: RIVALS,
+              actions: [
+                {
+                  id: 'a1',
+                  kind: 'throw',
+                  sideId: RIVALS,
+                  thrower: untracked,
+                  toPlayer: unknown,
+                  result: 'callahan',
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+    const { attributions } = buildAnalyticsGameWithLog(game);
+
+    expect(sumAttributions(attributions, UNKNOWN_PARTICIPANT_ID, 'goal')).toBe(1);
+    expect(sumAttributions(attributions, UNKNOWN_PARTICIPANT_ID, 'callahan')).toBe(1);
+    expect(sumAttributions(attributions, UNKNOWN_PARTICIPANT_ID, 'block')).toBe(1);
   });
 });
 

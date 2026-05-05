@@ -10,21 +10,20 @@ import { TrackerRareMenu } from '@/components/advancedTracking/TrackerRareMenu';
 import { TrackerScoreBar } from '@/components/advancedTracking/TrackerScoreBar';
 import { useTheme } from '@/context/ThemeContext';
 import { useTimestampTimer } from '@/hooks/advancedTracking/useTimer';
+import { useTrackerHandlers } from '@/hooks/advancedTracking/useTrackerHandlers';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import {
   getActiveSideId,
   getActiveStoppage,
-  getDiscHolderId,
+  getSafeDiscHolderRef,
   getEffectiveLineParticipantIds,
   getPointAdjustedTimestamp,
-  isInjuryJustResumed,
 } from '@/lib/advancedTracking/trackingDisplayHelpers';
 import {
   getCurrentPoint,
   getCurrentPossession,
   hasPointEnded,
   isAdvancedGameOver,
-  isPossessionOver,
 } from '@/lib/advancedTracking/trackingUtils';
 import { computeCapState } from '@/lib/advancedTracking/capUtils';
 import { PassModifier } from '@/lib/advancedTracking/types';
@@ -36,7 +35,6 @@ import { Redirect, router, Stack } from 'expo-router';
 import React, { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { FOCUS_SIDE_ID, OPP_SIDE_ID } from './PreGameConfirm';
 
 export default function AdvancedTrackerScreen() {
   const { palette } = useTheme();
@@ -87,6 +85,24 @@ export default function AdvancedTrackerScreen() {
     softCapMins,
   });
 
+  const pointIsOver = hasPointEnded(point);
+  const activeSideId = game ? getActiveSideId(possession, game) : '';
+  const oppHasDisc = game ? !pointIsOver && activeSideId !== game.focusSideId : false;
+  const discHolderRef = getSafeDiscHolderRef(possession, game?.focusSideId ?? '');
+
+  const handlers = useTrackerHandlers({
+    pointIsOver,
+    oppHasDisc,
+    possession,
+    discHolderRef,
+    pointElapsedMs,
+    passModifier,
+    setPassModifier,
+    recordThrow,
+    recordPickup,
+    amendLastThrowAsGoal,
+  });
+
   if (!game) {
     return (
       <ThemedView style={styles.container}>
@@ -112,122 +128,12 @@ export default function AdvancedTrackerScreen() {
     throw new Error(`Game ${game.id} is missing the opponent side.`);
   }
 
-  const pointIsOver = hasPointEnded(point);
-  const activeSideId = getActiveSideId(possession, game);
-  const oppHasDisc = !pointIsOver && activeSideId !== game.focusSideId;
-
   const activeIds = point ? getEffectiveLineParticipantIds(point, game.focusSideId) : [];
   const activeParticipants = game.participants.filter((p) => activeIds.includes(p.id));
-
-  // After an injury stoppage resumes, force disc-holder to null so the coach must re-tap who has
-  // the disc — handles the subbed-out disc holder case and the general check-in requirement.
-  const injuryJustResumed = isInjuryJustResumed(possession);
-  const discHolderId = injuryJustResumed ? null : getDiscHolderId(possession, game.focusSideId);
 
   const handleStartNextPoint = () => {
     setPassModifier(null);
     router.push('/advancedTracking/TrackerLineSelect');
-  };
-
-  const handlePlayerTap = (participantId: string) => {
-    if (pointIsOver) return;
-    if (passModifier === 'callahan') {
-      handleCallahanCatch(participantId);
-      return;
-    }
-    if (passModifier === 'stall') {
-      handleDefensiveStall(participantId);
-      return;
-    }
-    if (oppHasDisc) {
-      // Tap = our player got a block. Disc hits the ground — tap again to pick up.
-      if (!possession || isPossessionOver(possession)) {
-        recordPickup({ sideId: OPP_SIDE_ID, player: { refType: 'untracked' } });
-      }
-      recordThrow({
-        thrower: { refType: 'untracked' },
-        result: 'block',
-        defender: { refType: 'participant', participantId },
-      });
-      setPassModifier(null);
-      return;
-    }
-
-    if (!possession || isPossessionOver(possession) || discHolderId === null) {
-      recordPickup({ sideId: FOCUS_SIDE_ID, player: { refType: 'participant', participantId } });
-      return;
-    }
-
-    if (passModifier === 'fifty-fifty') {
-      recordThrow({
-        thrower: { refType: 'participant', participantId: discHolderId },
-        toPlayer: { refType: 'participant', participantId },
-        result: 'drop',
-        splitAttribution: true,
-      });
-      setPassModifier(null);
-      return;
-    }
-
-    recordThrow({
-      thrower: { refType: 'participant', participantId: discHolderId },
-      toPlayer: { refType: 'participant', participantId },
-      result: 'complete',
-    });
-  };
-
-  const handleThrowaway = () => {
-    if (!discHolderId) return;
-    recordThrow({
-      thrower: { refType: 'participant', participantId: discHolderId },
-      result: 'throwaway',
-    });
-    setPassModifier(null);
-  };
-
-  const handleGoal = (participantId: string) => {
-    if (!discHolderId || pointIsOver) return;
-    recordThrow({
-      thrower: { refType: 'participant', participantId: discHolderId },
-      toPlayer: { refType: 'participant', participantId },
-      result: 'complete',
-    });
-    amendLastThrowAsGoal(pointElapsedMs);
-  };
-
-  const handleDrop = (participantId: string) => {
-    if (!discHolderId || pointIsOver) return;
-    recordThrow({
-      thrower: { refType: 'participant', participantId: discHolderId },
-      toPlayer: { refType: 'participant', participantId },
-      result: 'drop',
-    });
-    setPassModifier(null);
-  };
-
-  const handleDefensiveStall = (participantId: string) => {
-    if (!possession || isPossessionOver(possession)) {
-      recordPickup({ sideId: OPP_SIDE_ID, player: { refType: 'untracked' } });
-    }
-    recordThrow({
-      thrower: { refType: 'untracked' },
-      result: 'stall',
-      defender: { refType: 'participant', participantId },
-    });
-    setPassModifier(null);
-  };
-
-  const handleCallahanCatch = (participantId: string) => {
-    if (!possession || isPossessionOver(possession)) {
-      recordPickup({ sideId: OPP_SIDE_ID, player: { refType: 'untracked' } });
-    }
-    recordThrow({
-      thrower: { refType: 'untracked' },
-      result: 'callahan',
-      toPlayer: { refType: 'participant', participantId },
-      timerElapsedMs: pointElapsedMs,
-    });
-    setPassModifier(null);
   };
 
   const LEFT_PANEL_WIDTH = 160;
@@ -276,13 +182,10 @@ export default function AdvancedTrackerScreen() {
             ) : (
               <TrackerPlayerGrid
                 activeParticipants={activeParticipants}
-                discHolderId={discHolderId}
+                discHolderRef={discHolderRef}
                 oppHasDisc={oppHasDisc}
                 passModifier={passModifier}
-                onPlayerTap={handlePlayerTap}
-                onDrop={handleDrop}
-                onGoal={handleGoal}
-                onThrowaway={handleThrowaway}
+                handlers={handlers}
                 availableWidth={width - LEFT_PANEL_WIDTH - insets.left - insets.right}
               />
             )}
@@ -306,13 +209,10 @@ export default function AdvancedTrackerScreen() {
             ) : (
               <TrackerPlayerGrid
                 activeParticipants={activeParticipants}
-                discHolderId={discHolderId}
+                discHolderRef={discHolderRef}
                 oppHasDisc={oppHasDisc}
                 passModifier={passModifier}
-                onPlayerTap={handlePlayerTap}
-                onDrop={handleDrop}
-                onGoal={handleGoal}
-                onThrowaway={handleThrowaway}
+                handlers={handlers}
               />
             )}
           </View>

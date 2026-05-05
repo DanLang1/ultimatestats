@@ -176,9 +176,9 @@ function emitAttributions(
       case 'callahan':
         add('throw_attempt', actorId);
         add('throwaway', actorId);
-        add('callahan', defenderId);
-        add('block', defenderId);
-        add('goal', defenderId);
+        add('callahan', defenderId ?? receiverId);
+        add('block', defenderId ?? receiverId);
+        add('goal', defenderId ?? receiverId);
         break;
     }
   }
