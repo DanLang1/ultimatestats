@@ -35,7 +35,11 @@ export const TrackerCapBar = ({
 
   return (
     <View style={styles.container}>
-      <Pressable onPress={onMenuPress} hitSlop={12} style={compact && styles.menuBtnCompact}>
+      <Pressable
+        testID="tracker-menu-button"
+        onPress={onMenuPress}
+        hitSlop={12}
+        style={compact && styles.menuBtnCompact}>
         <MaterialCommunityIcons
           name="menu"
           size={scaleBySizeClass(compact ? 20 : 24, sizeClass)}

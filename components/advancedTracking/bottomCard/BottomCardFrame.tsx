@@ -76,6 +76,7 @@ export const BottomCardFrame = ({
 
           {showMore && (
             <Pressable
+              testID="tracker-more-button"
               onPress={buttonMode.onMore}
               hitSlop={8}
               style={({ pressed }) => [

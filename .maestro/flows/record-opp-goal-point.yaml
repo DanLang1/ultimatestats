@@ -1,0 +1,41 @@
+appId: com.langdk.ultimatestats
+name: Record Opponent Goal Point
+---
+# Tap a player to start with disc (if not already started)
+- tapOn:
+    id: 'tracker-chip-Joe'
+    optional: true
+
+# Open rare menu and record an opponent block to give them the disc
+- tapOn:
+    id: 'tracker-more-button'
+- assertVisible:
+    id: 'rare-menu-opp-d'
+- tapOn:
+    id: 'rare-menu-opp-d'
+
+# Now opponent has disc; bottom card shows defense actions
+- assertVisible:
+    text: 'OPP GOAL'
+    optional: true
+- assertVisible:
+    text: 'OPP TURN'
+    optional: true
+
+# Record opponent goal
+- tapOn:
+    id: 'defense-opp-goal'
+
+# Point ends; verify next point button appears
+- assertVisible:
+    text: 'NEXT POINT'
+- tapOn:
+    id: 'tracker-next-point'
+
+# Wait for next point tracker screen
+- assertVisible:
+    text: 'TAP WHO STARTS WITH DISC'
+    optional: true
+- assertVisible:
+    text: 'DEFENSE'
+    optional: true

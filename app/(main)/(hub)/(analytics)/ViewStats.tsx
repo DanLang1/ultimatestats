@@ -1,3 +1,4 @@
+import AdvancedStatsContent from '@/components/advancedTracking/AdvancedStatsContent';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { useAlert } from '@/components/ui/AlertProvider';
@@ -11,7 +12,10 @@ import ShowcaseHintBanner from '@/components/view-stats/ShowcaseHintBanner';
 import StatsContent from '@/components/view-stats/StatsContent';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { buildAnalyticsGame, getFinalScores } from '@/lib/advancedTracking/buildAnalyticsGame';
+import { hasPointEnded } from '@/lib/advancedTracking/trackingUtils';
 import { formatDate, generateCurrentGameCSV } from '@/lib/statsUtils';
+import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { useGameStore } from '@/store/gameStore';
 import { useTutorialStore } from '@/store/tutorialStore';
 import { Fonts } from '@/theme/theme';
@@ -46,6 +50,10 @@ export default function ViewStatsScreen() {
     team1BgColor,
     team2BgColor,
   } = useGameStore();
+  const { currentGameId: advancedCurrentGameId, savedGames: advancedSavedGames } =
+    useAdvancedTrackingStore();
+  const activeAdvancedGame = advancedSavedGames.find((g) => g.id === advancedCurrentGameId) ?? null;
+  const hasActiveAdvancedGame = activeAdvancedGame != null;
   const { showAlert } = useAlert();
   const { palette } = useTheme();
   const { isLandscape, sizeClass } = useLayout();
@@ -110,12 +118,39 @@ export default function ViewStatsScreen() {
     router.back();
   };
 
+  const analyticsRawGame = (() => {
+    if (!activeAdvancedGame) return null;
+    const lastPoint = activeAdvancedGame.points[activeAdvancedGame.points.length - 1];
+    if (lastPoint && !hasPointEnded(lastPoint)) {
+      return { ...activeAdvancedGame, points: activeAdvancedGame.points.slice(0, -1) };
+    }
+    return activeAdvancedGame;
+  })();
+  const analyticsGame = analyticsRawGame ? buildAnalyticsGame(analyticsRawGame) : null;
+  const myTeamName = analyticsGame?.sideLabels[analyticsGame.focusSideId] ?? 'My Team';
+  const opponentName =
+    analyticsGame?.metadata?.opponentName ??
+    analyticsGame?.sideLabels[analyticsGame.oppSideId] ??
+    'Opponent';
+  const finalScores = analyticsGame ? getFinalScores(analyticsGame) : null;
+  const myScore = analyticsGame && finalScores ? finalScores[analyticsGame.focusSideId] : 0;
+  const opponentScore = analyticsGame && finalScores ? finalScores[analyticsGame.oppSideId] : 0;
+
+  let headerTitle: string;
+  if (hasActiveAdvancedGame) {
+    headerTitle = 'CURRENT GAME';
+  } else if (isCompletedGame) {
+    headerTitle = 'RECENT GAME';
+  } else {
+    headerTitle = 'CURRENT GAME';
+  }
+
   const headerActions: ResponsiveHeaderAction[] = [
     {
       key: 'timeline',
       label: 'Timeline',
       onPress: handleOpenTimeline,
-      visible: showTimelineAction,
+      visible: showTimelineAction && !hasActiveAdvancedGame,
       inlineIcon: (
         <MaterialCommunityIcons
           name="chart-timeline-variant"
@@ -135,7 +170,7 @@ export default function ViewStatsScreen() {
       key: 'csv',
       label: 'Export CSV',
       onPress: handleExportCSV,
-      visible: showExportAction,
+      visible: showExportAction && !hasActiveAdvancedGame,
       inlineIcon: (
         <FontAwesome6
           name="file-csv"
@@ -170,7 +205,7 @@ export default function ViewStatsScreen() {
       <Stack.Screen options={{ headerShown: false }} />
 
       <ScreenHeader
-        title={isCompletedGame ? 'RECENT GAME' : 'CURRENT GAME'}
+        title={headerTitle}
         onBack={handleBack}
         titleColor={palette.textMuted}
         backButtonBackgroundColor={palette.overlay10}
@@ -214,21 +249,34 @@ export default function ViewStatsScreen() {
         <ThemedText style={[styles.sectionLabel, { color: palette.textMuted }]}>
           Live Stats
         </ThemedText>
-        <StatsContent
-          team1Name={team1Name}
-          team2Name={team2Name}
-          team1Score={team1Score}
-          team2Score={team2Score}
-          events={events}
-          roster={currentTeam?.roster}
-          isSavedGame={false}
-          startingPossession={startingPossession}
-          gameTo={gameTo}
-          autoHalftimeEnabled={autoHalftimeEnabled}
-          pointLines={pointLines}
-          team1Color={team1BgColor}
-          team2Color={team2BgColor}
-        />
+        {hasActiveAdvancedGame && analyticsGame ? (
+          <AdvancedStatsContent
+            game={analyticsGame}
+            gameId={activeAdvancedGame.id}
+            myTeamName={myTeamName}
+            opponentName={opponentName}
+            myScore={myScore}
+            opponentScore={opponentScore}
+            focusSideId={analyticsGame.focusSideId}
+            participantNames={analyticsGame.participantNames}
+          />
+        ) : (
+          <StatsContent
+            team1Name={team1Name}
+            team2Name={team2Name}
+            team1Score={team1Score}
+            team2Score={team2Score}
+            events={events}
+            roster={currentTeam?.roster}
+            isSavedGame={false}
+            startingPossession={startingPossession}
+            gameTo={gameTo}
+            autoHalftimeEnabled={autoHalftimeEnabled}
+            pointLines={pointLines}
+            team1Color={team1BgColor}
+            team2Color={team2BgColor}
+          />
+        )}
       </ScrollView>
     </ThemedView>
   );

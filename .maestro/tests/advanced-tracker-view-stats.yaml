@@ -1,0 +1,128 @@
+appId: com.langdk.ultimatestats
+name: Advanced Tracker View Stats Smoke
+---
+# Reuse setup flow to get to tracker screen
+- runFlow:
+    file: ../flows/setup-game.yaml
+
+# Tap a player to start with disc
+- tapOn:
+    id: 'tracker-chip-Joe'
+
+# Open rare menu and record an opponent block to give them the disc
+- tapOn:
+    id: 'tracker-more-button'
+- tapOn:
+    id: 'rare-menu-opp-d'
+
+# Now opponent has disc; record opponent goal
+- tapOn:
+    id: 'defense-opp-goal'
+
+# Point ends; go to next point
+- assertVisible:
+    id: 'tracker-next-point'
+- tapOn:
+    id: 'tracker-next-point'
+
+# After next point, we land on line selection screen
+- assertVisible:
+    text: 'Select Line'
+- tapOn:
+    id: 'player-chip-Joe'
+- tapOn:
+    id: 'player-chip-Jon'
+- tapOn:
+    id: 'player-chip-Mike'
+- tapOn:
+    id: 'player-chip-Molly'
+- tapOn:
+    id: 'player-chip-Kelly'
+- tapOn:
+    id: 'player-chip-Rachel'
+- tapOn:
+    id: 'player-chip-Joel'
+- tapOn:
+    id: 'line-select-confirm'
+
+# Handle pull tracking for second point
+- tapOn:
+    id: 'pull-skip-timing'
+- tapOn:
+    id: 'pull-result-ib'
+    optional: true
+- tapOn:
+    id: 'pull-result-ob'
+    optional: true
+
+# Wait for tracker screen
+- assertVisible:
+    text: 'TAP WHO STARTS WITH DISC'
+    optional: true
+
+# Record another opponent goal point
+- tapOn:
+    id: 'tracker-chip-Joe'
+- tapOn:
+    id: 'tracker-more-button'
+- tapOn:
+    id: 'rare-menu-opp-d'
+- tapOn:
+    id: 'defense-opp-goal'
+- assertVisible:
+    id: 'tracker-next-point'
+- tapOn:
+    id: 'tracker-next-point'
+
+# After third point, land on line selection again
+- assertVisible:
+    text: 'Select Line'
+- tapOn:
+    id: 'player-chip-Joe'
+- tapOn:
+    id: 'player-chip-Jon'
+- tapOn:
+    id: 'player-chip-Mike'
+- tapOn:
+    id: 'player-chip-Molly'
+- tapOn:
+    id: 'player-chip-Kelly'
+- tapOn:
+    id: 'player-chip-Rachel'
+- tapOn:
+    id: 'player-chip-Joel'
+- tapOn:
+    id: 'line-select-confirm'
+
+# Handle pull tracking for third point
+- tapOn:
+    id: 'pull-skip-timing'
+- tapOn:
+    id: 'pull-result-ib'
+    optional: true
+- tapOn:
+    id: 'pull-result-ob'
+    optional: true
+
+# Wait for tracker screen
+- assertVisible:
+    text: 'TAP WHO STARTS WITH DISC'
+    optional: true
+
+# Open tracker menu and navigate to View Stats
+- tapOn:
+    id: 'tracker-menu-button'
+- tapOn:
+    id: 'tracker-menu-view-stats'
+
+# Verify View Stats screen loads with advanced stats content
+- assertVisible:
+    id: 'advanced-stats-summary-card'
+
+# Verify score badge is visible
+- assertVisible:
+    id: 'advanced-stats-score-badge'
+
+# Take screenshot of stats page
+- takeScreenshot:
+    path: .maestro/screenshots/advanced-tracker-view-stats

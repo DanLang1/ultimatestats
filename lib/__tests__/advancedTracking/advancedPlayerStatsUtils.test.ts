@@ -3,6 +3,7 @@ import {
   computeAdvancedPlayerStatsForParticipant,
 } from '../../advancedTracking/advancedPlayerStatsUtils';
 import { buildAnalyticsGame } from '../../advancedTracking/buildAnalyticsGame';
+import type { AttributionType } from '../../advancedTracking/analyticsTypes';
 import type { AdvancedTrackedGame, PlayerRef } from '../../advancedTracking/types';
 
 // ── Shared fixtures ──────────────────────────────────────────────────────────
@@ -878,6 +879,421 @@ describe('advancedPlayerStatsUtils', () => {
       const s = findStats(stats, 'p_august');
       expect(s.pointDurationMs).toBeNull();
       expect(s.playingTimePct).toBeNull();
+    });
+  });
+
+  describe('comprehensive all-stats fixture', () => {
+    // A 6-point game designed to exercise every attribution type.
+    // Players: August, Meves, Joah, Max, Sam
+    const participantsAll = [
+      { id: 'p_august', name: 'August' },
+      { id: 'p_meves', name: 'Meves' },
+      { id: 'p_joah', name: 'Joah' },
+      { id: 'p_max', name: 'Max' },
+      { id: 'p_sam', name: 'Sam' },
+    ];
+
+    const augustAll: PlayerRef = { refType: 'participant', participantId: 'p_august' };
+    const mevesAll: PlayerRef = { refType: 'participant', participantId: 'p_meves' };
+    const joahAll: PlayerRef = { refType: 'participant', participantId: 'p_joah' };
+    const maxAll: PlayerRef = { refType: 'participant', participantId: 'p_max' };
+    const untrackedAll: PlayerRef = { refType: 'untracked' };
+
+    const game: AdvancedTrackedGame = {
+      id: 'g_all_stats',
+      schemaVersion: 1,
+      createdAt: 0,
+      updatedAt: 0,
+      gameType: 'game',
+      status: 'final',
+      focusSideId: ZOO,
+      initialReceivingSideId: ZOO,
+      settings: { locationMode: 'none' },
+      sides: [
+        { id: ZOO, label: 'Zoo', trackingMode: 'full-roster' },
+        { id: RIVALS, label: 'Rivals', trackingMode: 'anonymous' },
+      ],
+      participants: participantsAll,
+      points: [
+        // Pt1 — O-point hold: pull reception, completions, goal, assist, hockey assist
+        {
+          id: 'pt1',
+          lines: [{ sideId: ZOO, participantIds: ['p_august', 'p_meves', 'p_joah', 'p_max'] }],
+          possessions: [
+            {
+              id: 'pos1',
+              sideId: ZOO,
+              actions: [
+                {
+                  id: 'a1',
+                  kind: 'pull',
+                  sideId: RIVALS,
+                  receivingSideId: ZOO,
+                  puller: untrackedAll,
+                  receiver: augustAll,
+                  result: 'inbound',
+                },
+                {
+                  id: 'a2',
+                  kind: 'throw',
+                  sideId: ZOO,
+                  thrower: augustAll,
+                  toPlayer: mevesAll,
+                  result: 'complete',
+                },
+                {
+                  id: 'a3',
+                  kind: 'throw',
+                  sideId: ZOO,
+                  thrower: mevesAll,
+                  toPlayer: joahAll,
+                  result: 'complete',
+                },
+                {
+                  id: 'a4',
+                  kind: 'throw',
+                  sideId: ZOO,
+                  thrower: joahAll,
+                  toPlayer: maxAll,
+                  result: 'goal',
+                },
+              ],
+            },
+          ],
+        },
+        // Pt2 — D-point break: pull, block, disc pickup, goal
+        {
+          id: 'pt2',
+          lines: [{ sideId: ZOO, participantIds: ['p_august', 'p_meves', 'p_joah', 'p_max'] }],
+          possessions: [
+            {
+              id: 'pos2a',
+              sideId: RIVALS,
+              actions: [
+                {
+                  id: 'b1',
+                  kind: 'pull',
+                  sideId: ZOO,
+                  receivingSideId: RIVALS,
+                  puller: augustAll,
+                  receiver: untrackedAll,
+                  result: 'inbound',
+                },
+                {
+                  id: 'b2',
+                  kind: 'throw',
+                  sideId: RIVALS,
+                  thrower: untrackedAll,
+                  result: 'block',
+                  defender: joahAll,
+                },
+              ],
+            },
+            {
+              id: 'pos2b',
+              sideId: ZOO,
+              actions: [
+                { id: 'b3', kind: 'disc_pickup', sideId: ZOO, player: mevesAll },
+                {
+                  id: 'b4',
+                  kind: 'throw',
+                  sideId: ZOO,
+                  thrower: mevesAll,
+                  toPlayer: maxAll,
+                  result: 'goal',
+                },
+              ],
+            },
+          ],
+        },
+        // Pt3 — O-point broken: drop (clean), turnover, opponent goal
+        {
+          id: 'pt3',
+          lines: [{ sideId: ZOO, participantIds: ['p_august', 'p_meves', 'p_joah', 'p_max'] }],
+          possessions: [
+            {
+              id: 'pos3a',
+              sideId: ZOO,
+              actions: [
+                {
+                  id: 'c1',
+                  kind: 'pull',
+                  sideId: RIVALS,
+                  receivingSideId: ZOO,
+                  puller: untrackedAll,
+                  receiver: augustAll,
+                  result: 'inbound',
+                },
+                {
+                  id: 'c2',
+                  kind: 'throw',
+                  sideId: ZOO,
+                  thrower: augustAll,
+                  toPlayer: mevesAll,
+                  result: 'drop',
+                },
+              ],
+            },
+            {
+              id: 'pos3b',
+              sideId: RIVALS,
+              actions: [
+                { id: 'c3', kind: 'disc_pickup', sideId: RIVALS, player: untrackedAll },
+                {
+                  id: 'c4',
+                  kind: 'throw',
+                  sideId: RIVALS,
+                  thrower: untrackedAll,
+                  toPlayer: untrackedAll,
+                  result: 'goal',
+                },
+              ],
+            },
+          ],
+        },
+        // Pt4 — D-point hold (opp hold): split attribution drop, stall on tracked player
+        {
+          id: 'pt4',
+          lines: [{ sideId: ZOO, participantIds: ['p_august', 'p_meves', 'p_joah', 'p_max'] }],
+          possessions: [
+            {
+              id: 'pos4a',
+              sideId: RIVALS,
+              actions: [
+                {
+                  id: 'd1',
+                  kind: 'pull',
+                  sideId: ZOO,
+                  receivingSideId: RIVALS,
+                  puller: augustAll,
+                  receiver: untrackedAll,
+                  result: 'inbound',
+                },
+                {
+                  id: 'd2',
+                  kind: 'throw',
+                  sideId: RIVALS,
+                  thrower: untrackedAll,
+                  toPlayer: untrackedAll,
+                  result: 'stall',
+                  defender: joahAll,
+                },
+              ],
+            },
+            {
+              id: 'pos4b',
+              sideId: ZOO,
+              actions: [
+                { id: 'd3', kind: 'disc_pickup', sideId: ZOO, player: mevesAll },
+                {
+                  id: 'd4',
+                  kind: 'throw',
+                  sideId: ZOO,
+                  thrower: mevesAll,
+                  toPlayer: maxAll,
+                  result: 'drop',
+                  splitAttribution: true,
+                },
+              ],
+            },
+            {
+              id: 'pos4c',
+              sideId: RIVALS,
+              actions: [
+                { id: 'd5', kind: 'disc_pickup', sideId: RIVALS, player: untrackedAll },
+                {
+                  id: 'd6',
+                  kind: 'throw',
+                  sideId: RIVALS,
+                  thrower: untrackedAll,
+                  toPlayer: untrackedAll,
+                  result: 'goal',
+                },
+              ],
+            },
+          ],
+        },
+        // Pt5 — D-point break: callahan
+        {
+          id: 'pt5',
+          lines: [{ sideId: ZOO, participantIds: ['p_august', 'p_meves', 'p_joah', 'p_max'] }],
+          possessions: [
+            {
+              id: 'pos5',
+              sideId: RIVALS,
+              actions: [
+                {
+                  id: 'e1',
+                  kind: 'pull',
+                  sideId: ZOO,
+                  receivingSideId: RIVALS,
+                  puller: augustAll,
+                  receiver: untrackedAll,
+                  result: 'inbound',
+                },
+                {
+                  id: 'e2',
+                  kind: 'throw',
+                  sideId: RIVALS,
+                  thrower: untrackedAll,
+                  result: 'callahan',
+                  defender: maxAll,
+                },
+              ],
+            },
+          ],
+        },
+        // Pt6 — O-point: stall on tracked player (August) to cover stall_conceded
+        {
+          id: 'pt6',
+          lines: [{ sideId: ZOO, participantIds: ['p_august', 'p_meves', 'p_joah', 'p_max'] }],
+          possessions: [
+            {
+              id: 'pos6a',
+              sideId: ZOO,
+              actions: [
+                {
+                  id: 'f1',
+                  kind: 'pull',
+                  sideId: RIVALS,
+                  receivingSideId: ZOO,
+                  puller: untrackedAll,
+                  receiver: augustAll,
+                  result: 'inbound',
+                },
+                {
+                  id: 'f2',
+                  kind: 'throw',
+                  sideId: ZOO,
+                  thrower: augustAll,
+                  toPlayer: mevesAll,
+                  result: 'complete',
+                },
+                {
+                  id: 'f3',
+                  kind: 'throw',
+                  sideId: ZOO,
+                  thrower: mevesAll,
+                  result: 'stall',
+                  defender: joahAll,
+                },
+              ],
+            },
+            {
+              id: 'pos6b',
+              sideId: RIVALS,
+              actions: [
+                { id: 'f4', kind: 'disc_pickup', sideId: RIVALS, player: untrackedAll },
+                {
+                  id: 'f5',
+                  kind: 'throw',
+                  sideId: RIVALS,
+                  thrower: untrackedAll,
+                  toPlayer: untrackedAll,
+                  result: 'goal',
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+
+    const analytics = buildAnalyticsGame(game);
+    const stats = computeAdvancedPlayerStats(analytics);
+
+    it('covers all attribution types across the fixture', () => {
+      // Ensure every attribution type is represented at least once
+      const allTypes = new Set(analytics.attributions.map((a) => a.type));
+      const expectedTypes = [
+        'goal',
+        'assist',
+        'hockey_assist',
+        'completion',
+        'throw_attempt',
+        'receiving_touch',
+        'throwaway',
+        'drop',
+        'stall',
+        'stall_conceded',
+        'block',
+        'callahan',
+        'pull',
+        'pull_reception',
+        'disc_pickup',
+      ];
+      for (const t of expectedTypes as AttributionType[]) {
+        expect(allTypes.has(t)).toBe(true);
+      }
+    });
+
+    it('August stats are correct', () => {
+      const s = findStats(stats, 'p_august');
+      expect(s.pulls).toBe(3); // pt2, pt4, pt5
+      expect(s.pullReceptions).toBe(3); // pt1, pt3, pt6
+      expect(s.completions).toBe(2); // pt1 a2, pt6 f2
+      expect(s.throwAttempts).toBe(3); // pt1 a2, pt3 c2, pt6 f2
+      expect(s.throwaways).toBe(0);
+      expect(s.drops).toBe(0);
+      expect(s.goals).toBe(0);
+      expect(s.assists).toBe(0);
+      expect(s.hockeyAssists).toBe(0);
+      expect(s.blocks).toBe(0);
+      expect(s.callahans).toBe(0);
+      expect(s.stallsConceded).toBe(0);
+      expect(s.stalls).toBe(0);
+      expect(s.receptions).toBe(0);
+      expect(s.pointsPlayed).toBe(6);
+      expect(s.oPoints).toBe(3); // pt1, pt3, pt6
+      expect(s.dPoints).toBe(3); // pt2, pt4, pt5
+      expect(s.plusMinus).toBe(0);
+    });
+
+    it('Meves stats are correct', () => {
+      const s = findStats(stats, 'p_meves');
+      expect(s.completions).toBe(2); // pt1 a3 (complete), pt2 b4 (goal)
+      expect(s.throwAttempts).toBe(3); // pt1 a3, pt4 d4, pt6 f3
+      expect(s.throwaways).toBeCloseTo(0.5); // pt4 split drop
+      expect(s.drops).toBe(1); // pt3 clean drop
+      expect(s.hockeyAssists).toBe(1); // pt1 a3 is hockey assist to a4
+      expect(s.assists).toBe(1); // pt2 b4
+      expect(s.goals).toBe(0);
+      expect(s.receptions).toBe(2); // pt1 a2, pt6 f2
+      expect(s.stallsConceded).toBe(1); // pt6 f3
+      expect(s.pointsPlayed).toBe(6);
+    });
+
+    it('Joah stats are correct', () => {
+      const s = findStats(stats, 'p_joah');
+      expect(s.assists).toBe(1); // pt1 a4
+      expect(s.completions).toBe(1); // pt1 a4
+      expect(s.receptions).toBe(1); // pt1 a3
+      expect(s.blocks).toBe(1); // pt2 b2
+      expect(s.stalls).toBe(2); // pt4 d2, pt6 f3
+      expect(s.goals).toBe(0);
+      expect(s.pointsPlayed).toBe(6);
+    });
+
+    it('Max stats are correct', () => {
+      const s = findStats(stats, 'p_max');
+      expect(s.goals).toBe(3); // pt1 a4, pt2 b4, pt5 e2 callahan
+      expect(s.receptions).toBe(2); // pt1 a4, pt2 b4
+      expect(s.callahans).toBe(1); // pt5 e2
+      expect(s.blocks).toBe(1); // pt5 e2 (callahan implies block)
+      expect(s.drops).toBeCloseTo(0.5); // pt4 d4 split
+      expect(s.pointsPlayed).toBe(6);
+    });
+
+    it('team stats are derivable from the fixture', () => {
+      expect(analytics.points).toHaveLength(6);
+      const stateCounts = new Map<string, number>();
+      for (const p of analytics.points) {
+        stateCounts.set(p.state, (stateCounts.get(p.state) ?? 0) + 1);
+      }
+      expect(stateCounts.get('hold')).toBe(2);
+      expect(stateCounts.get('break')).toBe(1);
+      expect(stateCounts.get('broken')).toBe(1);
+      expect(stateCounts.get('opp_hold')).toBe(2);
     });
   });
 });

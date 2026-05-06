@@ -43,8 +43,12 @@ export function BottomSheet({
   return (
     <View style={StyleSheet.absoluteFill}>
       <View style={[StyleSheet.absoluteFill, { backgroundColor: resolvedOverlayColor }]} />
-      <Pressable style={[styles.overlay, { paddingTop: topInset }]} onPress={onDismiss}>
+      <Pressable
+        accessible={false}
+        style={[styles.overlay, { paddingTop: topInset }]}
+        onPress={onDismiss}>
         <View
+          accessible={false}
           style={[
             styles.sheet,
             sheetStyle,

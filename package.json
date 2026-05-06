@@ -16,8 +16,9 @@
     "format": "prettier --write .",
     "format:changed": "git diff --name-only --diff-filter=d HEAD | xargs -r prettier --write --ignore-unknown",
     "test": "jest",
-    "test:e2e:maestro": "MAESTRO_CLI_NO_ANALYTICS=1",
-    "test:e2e:maestro:advanced": "MAESTRO_CLI_NO_ANALYTICS=1 maestro test .maestro/advanced-tracker-smoke.yml"
+    "maestro": "MAESTRO_CLI_NO_ANALYTICS=1 maestro test .maestro/tests/",
+    "maestro:smoke": "MAESTRO_CLI_NO_ANALYTICS=1 maestro test .maestro/tests/advanced-tracker-smoke.yml",
+    "maestro:all": "MAESTRO_CLI_NO_ANALYTICS=1 maestro test .maestro/tests/"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",

@@ -51,6 +51,7 @@ export default function AdvancedStatsContent({
     <>
       {/* Team Summary Card */}
       <View
+        testID="advanced-stats-summary-card"
         style={[
           styles.summaryCard,
           { backgroundColor: palette.overlay05, borderColor: palette.overlay10 },
@@ -58,6 +59,7 @@ export default function AdvancedStatsContent({
         <View style={styles.matchupRow}>
           <View style={styles.teamBlock}>
             <ThemedText
+              testID="advanced-stats-team-name"
               style={[styles.teamName, styles.teamNameLeft, { color: palette.textInverse }]}
               numberOfLines={2}>
               {myTeamName}
@@ -65,6 +67,7 @@ export default function AdvancedStatsContent({
           </View>
           <View style={styles.summaryCenter}>
             <ScoreBadge
+              testID="advanced-stats-score-badge"
               score1={myScore}
               score2={opponentScore}
               size="large"
@@ -73,6 +76,7 @@ export default function AdvancedStatsContent({
           </View>
           <View style={[styles.teamBlock, styles.teamBlockRight]}>
             <ThemedText
+              testID="advanced-stats-opponent-name"
               style={[styles.teamName, styles.teamNameRight, { color: palette.textMuted }]}
               numberOfLines={2}>
               {opponentName}

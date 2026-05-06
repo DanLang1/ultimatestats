@@ -11,6 +11,7 @@ interface ScoreBadgeProps {
   size?: 'small' | 'medium' | 'large';
   sizeClass?: SizeClass;
   style?: ViewStyle;
+  testID?: string;
 }
 
 export function ScoreBadge({
@@ -19,6 +20,7 @@ export function ScoreBadge({
   size = 'medium',
   sizeClass = 'small',
   style,
+  testID,
 }: ScoreBadgeProps) {
   const { palette } = useTheme();
 
@@ -54,6 +56,7 @@ export function ScoreBadge({
 
   return (
     <View
+      testID={testID}
       style={[
         styles.badge,
         sizeStyles,

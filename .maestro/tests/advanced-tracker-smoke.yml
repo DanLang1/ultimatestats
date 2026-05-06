@@ -1,0 +1,54 @@
+appId: com.langdk.ultimatestats
+name: Advanced Tracker Pass Chain Smoke
+---
+# Reuse setup flow to get to tracker screen
+- runFlow:
+    file: ../flows/setup-game.yaml
+
+# Record a few actions - tap Joe to start with disc
+- tapOn:
+    id: 'tracker-chip-Joe'
+- takeScreenshot:
+    path: .maestro/screenshots/advanced-tracker-after-joe
+
+# Pass to Jon
+- tapOn:
+    id: 'tracker-chip-Jon'
+- takeScreenshot:
+    path: .maestro/screenshots/advanced-tracker-after-jon
+
+# Assert pass chain is visible (shows the throw from Joe to Jon)
+- assertVisible:
+    text: 'JOE'
+
+# Pass to Mike
+- tapOn:
+    id: 'tracker-chip-Mike'
+- takeScreenshot:
+    path: .maestro/screenshots/advanced-tracker-pass-chain
+
+# Assert pass chain updated (shows the throw from Jon to Mike)
+- assertVisible:
+    text: 'JON'
+
+# Open rare menu and record an opponent block on Mike
+- tapOn:
+    id: 'tracker-more-button'
+- tapOn:
+    id: 'rare-menu-opp-d'
+
+# Now opponent has disc; bottom card shows defense actions
+- assertVisible:
+    id: 'defense-opp-goal'
+
+# Record opponent goal
+- tapOn:
+    id: 'defense-opp-goal'
+
+# Point ends; verify goal state and next point button
+- assertVisible:
+    text: 'OPP GOAL'
+- assertVisible:
+    id: 'tracker-next-point'
+- takeScreenshot:
+    path: .maestro/screenshots/advanced-tracker-point-end

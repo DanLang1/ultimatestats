@@ -23,6 +23,11 @@ export const TrackerHomeMenu = ({ visible, onClose }: TrackerHomeMenuProps) => {
     router.dismissTo('/Dashboard');
   };
 
+  const handleViewStats = () => {
+    onClose();
+    router.push('/ViewStats');
+  };
+
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <BottomSheet
@@ -30,10 +35,15 @@ export const TrackerHomeMenu = ({ visible, onClose }: TrackerHomeMenuProps) => {
         overlayColor={palette.overlayDark88}
         sheetStyle={[styles.sheet, { backgroundColor: palette.primary }]}
         minBottomPadding={12}>
-        <View style={styles.content}>
-          <View style={[styles.handle, { backgroundColor: palette.overlay20 }]} />
+        <View accessible={false} style={styles.content}>
+          <View
+            accessible={false}
+            style={[styles.handle, { backgroundColor: palette.overlay20 }]}
+          />
 
-          <View style={[styles.header, { borderBottomColor: palette.overlay10 }]}>
+          <View
+            accessible={false}
+            style={[styles.header, { borderBottomColor: palette.overlay10 }]}>
             <ThemedText style={[styles.title, { color: palette.textMuted }]}>MENU</ThemedText>
             <Pressable onPress={onClose} hitSlop={12}>
               <MaterialCommunityIcons
@@ -45,6 +55,30 @@ export const TrackerHomeMenu = ({ visible, onClose }: TrackerHomeMenuProps) => {
           </View>
 
           <Pressable
+            testID="tracker-menu-view-stats"
+            onPress={handleViewStats}
+            style={({ pressed }) => [
+              styles.action,
+              {
+                backgroundColor: palette.overlay05,
+                borderColor: palette.overlay15,
+              },
+              pressed && { opacity: 0.7 },
+            ]}>
+            <View style={[styles.iconWrap, { backgroundColor: palette.accentOverlay10 }]}>
+              <MaterialCommunityIcons
+                name="chart-bar"
+                size={scaleBySizeClass(20, sizeClass)}
+                color={palette.accent}
+              />
+            </View>
+            <ThemedText style={[styles.actionLabel, { color: palette.textInverse }]}>
+              View Stats
+            </ThemedText>
+          </Pressable>
+
+          <Pressable
+            testID="tracker-menu-home"
             onPress={handleGoHome}
             style={({ pressed }) => [
               styles.action,

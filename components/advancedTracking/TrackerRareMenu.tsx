@@ -75,12 +75,16 @@ export const TrackerRareMenu = ({ visible, onClose, setPassModifier }: TrackerRa
         overlayColor={palette.overlayDark88}
         sheetStyle={{ backgroundColor: palette.primary }}
         minBottomPadding={12}>
-        <View style={styles.content}>
-          <View style={[styles.handle, { backgroundColor: palette.overlay20 }]} />
+        <View accessible={false} style={styles.content}>
+          <View
+            accessible={false}
+            style={[styles.handle, { backgroundColor: palette.overlay20 }]}
+          />
 
           {!pointIsOver && oppHasDisc && (
             <>
               <Pressable
+                testID="rare-menu-callahan"
                 style={({ pressed }) => [
                   styles.btn,
                   { borderColor: palette.overlay15, backgroundColor: palette.overlay05 },
@@ -92,6 +96,7 @@ export const TrackerRareMenu = ({ visible, onClose, setPassModifier }: TrackerRa
                 </ThemedText>
               </Pressable>
               <Pressable
+                testID="rare-menu-stall"
                 style={({ pressed }) => [
                   styles.btn,
                   { borderColor: palette.overlay15, backgroundColor: palette.overlay05 },
@@ -103,6 +108,7 @@ export const TrackerRareMenu = ({ visible, onClose, setPassModifier }: TrackerRa
                 </ThemedText>
               </Pressable>
               <Pressable
+                testID="rare-menu-injury"
                 style={({ pressed }) => [
                   styles.btn,
                   { borderColor: palette.overlay15, backgroundColor: palette.overlay05 },
@@ -119,6 +125,7 @@ export const TrackerRareMenu = ({ visible, onClose, setPassModifier }: TrackerRa
           {!pointIsOver && !oppHasDisc && (
             <>
               <Pressable
+                testID="rare-menu-opp-d"
                 disabled={!discHolderRef}
                 style={({ pressed }) => [
                   styles.btn,
@@ -135,6 +142,7 @@ export const TrackerRareMenu = ({ visible, onClose, setPassModifier }: TrackerRa
                 </ThemedText>
               </Pressable>
               <Pressable
+                testID="rare-menu-50-50"
                 disabled={!discHolderRef}
                 style={({ pressed }) => [
                   styles.btn,
@@ -151,6 +159,7 @@ export const TrackerRareMenu = ({ visible, onClose, setPassModifier }: TrackerRa
                 </ThemedText>
               </Pressable>
               <Pressable
+                testID="rare-menu-stall-offense"
                 disabled={!discHolderRef}
                 style={({ pressed }) => [
                   styles.btn,
@@ -167,6 +176,7 @@ export const TrackerRareMenu = ({ visible, onClose, setPassModifier }: TrackerRa
                 </ThemedText>
               </Pressable>
               <Pressable
+                testID="rare-menu-injury-offense"
                 style={({ pressed }) => [
                   styles.btn,
                   { borderColor: palette.overlay15, backgroundColor: palette.overlay05 },

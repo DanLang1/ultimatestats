@@ -23,7 +23,7 @@ Use Maestro to verify U-Stat's advanced tracker through the installed developmen
   `com.langdk.ultimatestats.dev`
 - Android development package: `com.langdk.ultimatestats.dev`
 - Maestro flows live in `.maestro/`.
-- The basic advanced tracker flow is `.maestro/advanced-tracker-smoke.yml`.
+- The advanced tracker flow is `.maestro/tests/advanced-tracker-smoke.yml`.
 
 Install Maestro outside the repo:
 
@@ -41,13 +41,19 @@ npm run ios
 Run the advanced tracker smoke flow:
 
 ```bash
-npm run test:e2e:maestro:advanced
+npm run maestro:smoke
 ```
 
-Run all Maestro flows:
+Run all Maestro test flows:
 
 ```bash
-npm run test:e2e:maestro
+npm run maestro
+```
+
+Run every flow in `.maestro/tests/`:
+
+```bash
+npm run maestro:all
 ```
 
 The npm scripts set `JAVA_HOME=/opt/homebrew/opt/openjdk` because the Maestro Homebrew formula

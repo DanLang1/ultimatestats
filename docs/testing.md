@@ -25,7 +25,7 @@ build the app and run the advanced tracker smoke check:
 brew tap mobile-dev-inc/tap
 brew install maestro
 npm run ios
-npm run test:e2e:maestro:advanced
+npm run maestro:smoke
 ```
 
 The Maestro npm scripts set `JAVA_HOME=/opt/homebrew/opt/openjdk`, matching the OpenJDK installed by
