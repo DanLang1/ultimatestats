@@ -124,7 +124,7 @@ export default function AdvancedPreGameConfirm() {
   };
 
   return (
-    <ThemedView style={styles.container}>
+    <ThemedView testID="advanced-tracker-pregame-screen" style={styles.container}>
       <Stack.Screen options={{ headerShown: false }} />
       <ScreenHeader
         title="ADVANCED TRACKER"
@@ -333,12 +333,14 @@ export default function AdvancedPreGameConfirm() {
         <Pressable
           onPress={handleSetLine}
           disabled={!canContinue}
+          testID="advanced-tracker-set-line-button"
           style={({ pressed }) => [
             styles.continueButton,
             { backgroundColor: canContinue ? palette.accent : palette.overlay10 },
             pressed && canContinue && { opacity: 0.85, transform: [{ scale: 0.98 }] },
           ]}>
           <ThemedText
+            testID="advanced-tracker-set-line-text"
             style={[
               styles.continueButtonText,
               { color: canContinue ? palette.textOnAccent : palette.textMuted },

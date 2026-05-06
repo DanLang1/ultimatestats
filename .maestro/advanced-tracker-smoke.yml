@@ -1,0 +1,105 @@
+appId: com.langdk.ultimatestats
+name: Advanced Tracker Smoke
+---
+- launchApp
+- scrollUntilVisible:
+    element:
+      id: 'advanced-tracker-new-game-button'
+    direction: DOWN
+    timeout: 10000
+    visibilityPercentage: 10
+- tapOn:
+    id: 'advanced-tracker-new-game-button'
+- assertVisible:
+    text: 'ADVANCED TRACKER'
+- takeScreenshot:
+    path: .maestro/screenshots/advanced-tracker-pregame
+
+# Select receiving team (Zoboomafoo = "us")
+- tapOn:
+    text: 'Zoboomafoo'
+
+# If gender ratio is enabled, select a ratio so Set Line is enabled
+- tapOn:
+    text: 'FMP Majority'
+    optional: true
+
+# Tap Set Line to proceed to line selection
+- tapOn:
+    id: 'advanced-tracker-set-line-button'
+
+# Wait for line selection screen
+- assertVisible:
+    text: 'Starting Line'
+- takeScreenshot:
+    path: .maestro/screenshots/advanced-tracker-line-select
+
+# Select 7 players for the line
+- tapOn:
+    id: 'player-chip-Joe'
+- tapOn:
+    id: 'player-chip-Jon'
+- tapOn:
+    id: 'player-chip-Mike'
+- tapOn:
+    id: 'player-chip-Molly'
+- tapOn:
+    id: 'player-chip-Kelly'
+- tapOn:
+    id: 'player-chip-Rachel'
+- tapOn:
+    id: 'player-chip-Joel'
+
+# Confirm line selection
+- tapOn:
+    id: 'line-select-confirm'
+
+# Handle pull tracking - they are pulling since we are receiving
+- assertVisible:
+    text: 'THEY ARE PULLING'
+- takeScreenshot:
+    path: .maestro/screenshots/advanced-tracker-pull
+
+# Skip pull timing
+- tapOn:
+    id: 'pull-skip-timing'
+
+# Select a pull result - "Out of bounds" means we get the disc at our brick
+- tapOn:
+    id: 'pull-result-ob'
+
+# Wait for tracker screen
+- assertVisible:
+    text: 'TAP WHO STARTS WITH DISC'
+- takeScreenshot:
+    path: .maestro/screenshots/advanced-tracker-active-start
+
+# Record a few actions - tap Joe to start with disc
+- tapOn:
+    id: 'tracker-chip-Joe'
+- takeScreenshot:
+    path: .maestro/screenshots/advanced-tracker-after-joe
+
+# Pass to Jon
+- tapOn:
+    id: 'tracker-chip-Jon'
+- takeScreenshot:
+    path: .maestro/screenshots/advanced-tracker-after-jon
+
+# Pass to Mike
+- tapOn:
+    id: 'tracker-chip-Mike'
+- takeScreenshot:
+    path: .maestro/screenshots/advanced-tracker-after-mike
+
+# Pass to Kelly
+- tapOn:
+    id: 'tracker-chip-Kelly'
+- takeScreenshot:
+    path: .maestro/screenshots/advanced-tracker-after-kelly
+
+# Assert pass chain is visible (shows the throw from Mike to Kelly)
+- assertVisible:
+    text: 'MIKE'
+- takeScreenshot:
+    path: .maestro/screenshots/advanced-tracker-pass-chain

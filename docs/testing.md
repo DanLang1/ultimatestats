@@ -15,6 +15,25 @@ npm test -- gameUtils
 npm test -- --watch
 ```
 
+## Maestro Simulator Checks
+
+Maestro flows live in `.maestro/` and target the installed iOS simulator build
+(`com.langdk.ultimatestats` from the checked-in native project). Install Maestro with Homebrew, then
+build the app and run the advanced tracker smoke check:
+
+```bash
+brew tap mobile-dev-inc/tap
+brew install maestro
+npm run ios
+npm run test:e2e:maestro:advanced
+```
+
+The Maestro npm scripts set `JAVA_HOME=/opt/homebrew/opt/openjdk`, matching the OpenJDK installed by
+the Maestro Homebrew formula. They also disable Maestro CLI analytics for predictable agent runs.
+
+Use `.agent/skills/maestro-advanced-tracker/SKILL.md` before adding or extending advanced tracker
+flows.
+
 ## Test File Location
 
 Tests live in `lib/__tests__/` directory:

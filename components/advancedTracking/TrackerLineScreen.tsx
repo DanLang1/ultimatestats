@@ -140,6 +140,7 @@ export const TrackerLineScreen = ({
           )}
 
           <Pressable
+            testID="line-select-confirm"
             onPress={() => onConfirm(selectedIds)}
             disabled={!canConfirm}
             style={({ pressed }) => [

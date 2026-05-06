@@ -153,6 +153,7 @@ export const TrackerBottomCard = ({
   if (pointIsOver) {
     bottomContent = (
       <Pressable
+        testID="tracker-next-point"
         onPress={onStartNextPoint}
         style={({ pressed }) => [
           s.fullWidthBtn(sizeClass),

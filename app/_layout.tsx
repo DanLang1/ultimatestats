@@ -4,6 +4,7 @@ import { loadPersistedTheme, ThemeProvider, useTheme } from '@/context/ThemeCont
 import { useOrientationLock } from '@/hooks/useOrientationLock';
 import { useSettingsStore } from '@/store/settingsStore';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { requireOptionalNativeModule } from 'expo';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useState } from 'react';
@@ -11,6 +12,17 @@ import 'react-native-reanimated';
 
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+
+if (__DEV__) {
+  const DevMenuPreferences = requireOptionalNativeModule('DevMenuPreferences');
+  DevMenuPreferences?.setPreferencesAsync({
+    showFloatingActionButton: false,
+    motionGestureEnabled: false,
+    touchGestureEnabled: false,
+    keyCommandsEnabled: false,
+    showsAtLaunch: false,
+  });
+}
 
 const queryClient = new QueryClient({
   defaultOptions: {

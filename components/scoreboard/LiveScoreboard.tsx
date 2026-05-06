@@ -213,6 +213,7 @@ export default function LiveScoreboard() {
 
       <Pressable
         onPress={() => router.push('/Dashboard')}
+        testID="scoreboard-home-button"
         hitSlop={homeHitSlop}
         style={styles.floatingHomeButton}>
         <MaterialCommunityIcons

@@ -48,3 +48,6 @@ app-example
 
 # jest
 /coverage
+
+# Maestro generated screenshots
+.maestro/screenshots/

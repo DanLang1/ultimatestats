@@ -19,6 +19,7 @@ export const DefenseActions = ({ onOppScored, onOppTurnover }: DefenseActionsPro
   return (
     <View style={styles.row}>
       <Pressable
+        testID="defense-opp-goal"
         onPress={onOppScored}
         style={({ pressed }) => [
           styles.btn,
@@ -39,6 +40,7 @@ export const DefenseActions = ({ onOppScored, onOppTurnover }: DefenseActionsPro
         </ThemedText>
       </Pressable>
       <Pressable
+        testID="defense-opp-turn"
         onPress={onOppTurnover}
         style={({ pressed }) => [
           styles.btn,

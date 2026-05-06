@@ -153,7 +153,10 @@ export const PullTimingStep = ({
         </View>
 
         {timerState === 'idle' && (
-          <Pressable onPress={() => onNext(selectedPullerId, 0)} style={styles.skipBtn}>
+          <Pressable
+            testID="pull-skip-timing"
+            onPress={() => onNext(selectedPullerId, 0)}
+            style={styles.skipBtn}>
             <ThemedText style={[styles.skipBtnText, { color: palette.textMuted }]}>
               Skip timing
             </ThemedText>

@@ -336,6 +336,7 @@ export default function DashboardScreen() {
           <>
             <Pressable
               onPress={() => router.push('/advancedTracking/PreGameConfirm')}
+              testID="advanced-tracker-new-game-button"
               style={({ pressed }) => [
                 styles.discordBanner,
                 { backgroundColor: palette.accent },

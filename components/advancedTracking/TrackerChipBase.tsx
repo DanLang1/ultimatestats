@@ -148,6 +148,7 @@ export const TrackerChipBase = ({ label, chipWidth, state, actions }: TrackerChi
             },
           ]}>
           <Pressable
+            testID={`tracker-chip-${label}`}
             style={({ pressed }) => [styles.chipBody, pressed && !oppHasDisc && { opacity: 0.75 }]}
             onPress={tap}>
             <ThemedText

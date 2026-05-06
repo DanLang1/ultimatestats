@@ -112,6 +112,7 @@ export function PlayerChip({
         disabled && styles.chipDisabled,
         pressed && styles.chipPressed,
       ]}
+      testID={`player-chip-${name}`}
       onPress={disabled ? undefined : onPress}
       disabled={disabled}>
       <ThemedText

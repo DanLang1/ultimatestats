@@ -91,6 +91,7 @@ export const PullResultStep = ({
             {PULL_RESULTS.map((resultOption) => (
               <Pressable
                 key={resultOption.value}
+                testID={`pull-result-${resultOption.value}`}
                 onPress={() => handleResultSelect(resultOption.value)}
                 style={[
                   styles.chip,

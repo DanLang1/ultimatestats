@@ -15,7 +15,9 @@
     "check:all": "npm run format && npm run check && npm test",
     "format": "prettier --write .",
     "format:changed": "git diff --name-only --diff-filter=d HEAD | xargs -r prettier --write --ignore-unknown",
-    "test": "jest"
+    "test": "jest",
+    "test:e2e:maestro": "MAESTRO_CLI_NO_ANALYTICS=1",
+    "test:e2e:maestro:advanced": "MAESTRO_CLI_NO_ANALYTICS=1 maestro test .maestro/advanced-tracker-smoke.yml"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",
