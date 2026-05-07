@@ -1252,7 +1252,9 @@ describe('advancedPlayerStatsUtils', () => {
     it('Meves stats are correct', () => {
       const s = findStats(stats, 'p_meves');
       expect(s.completions).toBe(2); // pt1 a3 (complete), pt2 b4 (goal)
-      expect(s.throwAttempts).toBe(3); // pt1 a3, pt4 d4, pt6 f3
+      // throwAttempts: pt1 a3 (complete), pt2 b4 (goal), pt4 d4 (split drop)
+      // pt6 f3 is a stall — stalls do NOT count as throw attempts
+      expect(s.throwAttempts).toBe(3);
       expect(s.throwaways).toBeCloseTo(0.5); // pt4 split drop
       expect(s.drops).toBe(1); // pt3 clean drop
       expect(s.hockeyAssists).toBe(1); // pt1 a3 is hockey assist to a4

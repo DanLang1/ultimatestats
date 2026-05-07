@@ -12,6 +12,8 @@ name: Advanced Tracker View Stats Smoke
 # Open rare menu and record an opponent block to give them the disc
 - tapOn:
     id: 'tracker-more-button'
+- waitForAnimationToEnd:
+    timeout: 500
 - tapOn:
     id: 'rare-menu-opp-d'
 
@@ -26,6 +28,8 @@ name: Advanced Tracker View Stats Smoke
     id: 'tracker-next-point'
 
 # After next point, we land on line selection screen
+- waitForAnimationToEnd:
+    timeout: 1000
 - assertVisible:
     text: 'Select Line'
 - tapOn:
@@ -49,7 +53,7 @@ name: Advanced Tracker View Stats Smoke
 - tapOn:
     id: 'pull-skip-timing'
 - tapOn:
-    id: 'pull-result-ib'
+    id: 'pull-result-inbound'
     optional: true
 - tapOn:
     id: 'pull-result-ob'
@@ -65,6 +69,8 @@ name: Advanced Tracker View Stats Smoke
     id: 'tracker-chip-Joe'
 - tapOn:
     id: 'tracker-more-button'
+- waitForAnimationToEnd:
+    timeout: 500
 - tapOn:
     id: 'rare-menu-opp-d'
 - tapOn:
@@ -75,6 +81,8 @@ name: Advanced Tracker View Stats Smoke
     id: 'tracker-next-point'
 
 # After third point, land on line selection again
+- waitForAnimationToEnd:
+    timeout: 1000
 - assertVisible:
     text: 'Select Line'
 - tapOn:
@@ -98,7 +106,7 @@ name: Advanced Tracker View Stats Smoke
 - tapOn:
     id: 'pull-skip-timing'
 - tapOn:
-    id: 'pull-result-ib'
+    id: 'pull-result-inbound'
     optional: true
 - tapOn:
     id: 'pull-result-ob'

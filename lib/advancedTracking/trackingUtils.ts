@@ -222,7 +222,10 @@ export function getEffectiveGameTo(game: AdvancedTrackedGame): number {
   const scoreAtSoftCap = getScoreThroughPoint(game, softCapTransition.afterPointId);
   const highestScore = Math.max(...Object.values(scoreAtSoftCap));
 
-  return highestScore < baseGameTo ? highestScore + 1 : baseGameTo;
+  if (highestScore < baseGameTo) {
+    return highestScore + 1;
+  }
+  return baseGameTo;
 }
 
 export function isAdvancedGameOver(game: AdvancedTrackedGame): boolean {

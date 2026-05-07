@@ -127,7 +127,7 @@ export const TrackerScoreBar = ({ pointElapsedMs }: TrackerScoreBarProps) => {
             </ThemedText>
             <View style={styles.landscapeTimerInner}>
               {!isPointTimerPaused && (
-                <Pressable onPress={handlePause} hitSlop={8}>
+                <Pressable testID="scorebar-pause" onPress={handlePause} hitSlop={8}>
                   <MaterialCommunityIcons
                     name="pause"
                     size={scaleBySizeClass(18, sizeClass)}
@@ -160,12 +160,13 @@ export const TrackerScoreBar = ({ pointElapsedMs }: TrackerScoreBarProps) => {
             timeouts={focusTimeouts}
             color={palette.accent}
             onTimeoutDotsPress={() => setIsExpanded(true)}
+            timeoutDotsTestID="timeout-dots-focus"
           />
 
           <View style={[styles.centerCard, { backgroundColor: palette.primary }]}>
             <View style={styles.centerTimerRow}>
               {showPointTimer && !isPointTimerPaused && (
-                <Pressable onPress={handlePause} hitSlop={8}>
+                <Pressable testID="scorebar-pause" onPress={handlePause} hitSlop={8}>
                   <MaterialCommunityIcons
                     name="pause"
                     size={scaleBySizeClass(16, sizeClass)}
@@ -200,6 +201,7 @@ export const TrackerScoreBar = ({ pointElapsedMs }: TrackerScoreBarProps) => {
             timeouts={oppTimeouts}
             color={palette.success}
             onTimeoutDotsPress={() => setIsExpanded(true)}
+            timeoutDotsTestID="timeout-dots-opp"
           />
         </View>
       </View>

@@ -1,0 +1,72 @@
+appId: com.langdk.ultimatestats
+name: Advanced Tracker Turnover Scenarios
+---
+# Reuse setup flow to get to tracker screen
+- runFlow:
+    file: ../flows/setup-game.yaml
+
+# --- 50-50 ---
+# Tap Joe to start with disc
+- tapOn:
+    id: 'tracker-chip-Joe'
+
+# Pass to Jon
+- tapOn:
+    id: 'tracker-chip-Jon'
+
+# Open rare menu
+- tapOn:
+    id: 'tracker-more-button'
+- waitForAnimationToEnd:
+    timeout: 1000
+- assertVisible:
+    id: 'rare-menu-50-50'
+
+# Select 50/50 modifier
+- tapOn:
+    id: 'rare-menu-50-50'
+
+# Verify modifier prompt
+- assertVisible:
+    text: 'Tap other player at fault'
+
+# Tap Mike for 50-50 attribution
+- tapOn:
+    id: 'tracker-chip-Mike'
+
+# Verify turnover
+- assertVisible:
+    text: 'TURNOVER'
+    optional: true
+
+# Tap Joe to pick up
+- tapOn:
+    id: 'tracker-chip-Joe'
+- waitForAnimationToEnd:
+    timeout: 500
+
+# --- Block via Opp D ---
+# Pass to Jon
+- tapOn:
+    id: 'tracker-chip-Jon'
+
+# Open rare menu
+- tapOn:
+    id: 'tracker-more-button'
+- waitForAnimationToEnd:
+    timeout: 1000
+- assertVisible:
+    id: 'rare-menu-opp-d'
+
+# Select Opp D (block)
+- tapOn:
+    id: 'rare-menu-opp-d'
+
+# Verify defense state
+- assertVisible:
+    text: 'DEFENSE'
+    optional: true
+
+# Take screenshot
+- takeScreenshot:
+    path: .maestro/screenshots/advanced-tracker-turnovers

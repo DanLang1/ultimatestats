@@ -68,13 +68,15 @@ name: Setup Advanced Tracker Game
 
 # Select a pull result
 - tapOn:
-    id: 'pull-result-ib'
+    id: 'pull-result-inbound'
     optional: true
 - tapOn:
     id: 'pull-result-ob'
     optional: true
 
-# Wait for tracker screen
+# Wait for tracker screen transition
+- waitForAnimationToEnd:
+    timeout: 2000
 - assertVisible:
     text: 'TAP WHO STARTS WITH DISC'
     optional: true

@@ -99,6 +99,7 @@ export const StoppageOverlay = ({ game }: StoppageOverlayProps) => {
     );
     primaryBtn = (
       <Pressable
+        testID="stoppage-resume"
         style={({ pressed }) => [
           styles.actionBtn,
           styles.resumeBtn,
@@ -124,6 +125,7 @@ export const StoppageOverlay = ({ game }: StoppageOverlayProps) => {
     );
     primaryBtn = (
       <Pressable
+        testID="stoppage-resume"
         style={({ pressed }) => [
           styles.actionBtn,
           styles.resumeBtn,
@@ -185,6 +187,7 @@ export const StoppageOverlay = ({ game }: StoppageOverlayProps) => {
         {injurySub ? (
           <View style={styles.buttonRow}>
             <Pressable
+              testID="stoppage-resume"
               style={({ pressed }) => [
                 styles.actionBtn,
                 styles.resumeBtn,
@@ -201,6 +204,7 @@ export const StoppageOverlay = ({ game }: StoppageOverlayProps) => {
               </ThemedText>
             </Pressable>
             <Pressable
+              testID="stoppage-edit-sub"
               style={({ pressed }) => [
                 styles.actionBtn,
                 styles.resumeBtn,
@@ -216,6 +220,7 @@ export const StoppageOverlay = ({ game }: StoppageOverlayProps) => {
               </ThemedText>
             </Pressable>
             <Pressable
+              testID="stoppage-undo"
               onPress={handleUndo}
               hitSlop={8}
               style={[
@@ -233,6 +238,7 @@ export const StoppageOverlay = ({ game }: StoppageOverlayProps) => {
           <View style={styles.buttonRow}>
             {primaryBtn}
             <Pressable
+              testID="stoppage-undo"
               style={({ pressed }) => [
                 styles.actionBtn,
                 styles.undoBtn,

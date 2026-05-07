@@ -13,6 +13,7 @@ interface TeamScoreBlockProps {
   timeouts: SideTimeoutState;
   color: string;
   onTimeoutDotsPress?: () => void;
+  timeoutDotsTestID?: string;
 }
 
 export function TeamScoreBlock({
@@ -21,6 +22,7 @@ export function TeamScoreBlock({
   timeouts,
   color,
   onTimeoutDotsPress,
+  timeoutDotsTestID,
 }: TeamScoreBlockProps) {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
@@ -34,7 +36,12 @@ export function TeamScoreBlock({
         </ThemedText>
       </View>
       <View style={styles.dotsWrap}>
-        <TimeoutDots state={timeouts} activeColor={color} onPress={onTimeoutDotsPress} />
+        <TimeoutDots
+          state={timeouts}
+          activeColor={color}
+          onPress={onTimeoutDotsPress}
+          testID={timeoutDotsTestID}
+        />
       </View>
       <ThemedText style={[styles.score, { color: color }]}>{score}</ThemedText>
     </View>

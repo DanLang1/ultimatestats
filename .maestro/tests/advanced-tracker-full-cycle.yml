@@ -1,0 +1,104 @@
+appId: com.langdk.ultimatestats
+name: Advanced Tracker Full Point Cycle
+---
+# Reuse setup flow to get to tracker screen
+- runFlow:
+    file: ../flows/setup-game.yaml
+
+# === POINT 1: Goal via opponent disc transfer ===
+- tapOn:
+    id: 'tracker-chip-Joe'
+- tapOn:
+    id: 'tracker-more-button'
+- waitForAnimationToEnd:
+    timeout: 500
+- tapOn:
+    id: 'rare-menu-opp-d'
+- tapOn:
+    id: 'defense-opp-goal'
+- assertVisible:
+    id: 'tracker-next-point'
+- tapOn:
+    id: 'tracker-next-point'
+
+# === LINE SELECT + PULL ===
+- runFlow:
+    file: ../flows/select-line-and-pull.yaml
+
+# === POINT 2: Opp goal ===
+- tapOn:
+    id: 'tracker-chip-Joe'
+- tapOn:
+    id: 'tracker-more-button'
+- waitForAnimationToEnd:
+    timeout: 500
+- tapOn:
+    id: 'rare-menu-opp-d'
+- tapOn:
+    id: 'defense-opp-goal'
+- assertVisible:
+    id: 'tracker-next-point'
+- tapOn:
+    id: 'tracker-next-point'
+
+# === LINE SELECT + PULL ===
+- runFlow:
+    file: ../flows/select-line-and-pull.yaml
+
+# === POINT 3: Turnover then goal ===
+- tapOn:
+    id: 'tracker-chip-Joe'
+- tapOn:
+    id: 'tracker-chip-Jon'
+- tapOn:
+    id: 'tracker-more-button'
+- waitForAnimationToEnd:
+    timeout: 500
+- tapOn:
+    id: 'rare-menu-opp-d'
+- tapOn:
+    id: 'defense-opp-goal'
+- assertVisible:
+    id: 'tracker-next-point'
+- tapOn:
+    id: 'tracker-next-point'
+
+# === LINE SELECT + PULL ===
+- runFlow:
+    file: ../flows/select-line-and-pull.yaml
+
+# === POINT 4: Pass chain goal ===
+- tapOn:
+    id: 'tracker-chip-Joe'
+- tapOn:
+    id: 'tracker-chip-Jon'
+- tapOn:
+    id: 'tracker-chip-Mike'
+- tapOn:
+    id: 'tracker-chip-Molly'
+- tapOn:
+    id: 'tracker-more-button'
+- waitForAnimationToEnd:
+    timeout: 500
+- tapOn:
+    id: 'rare-menu-opp-d'
+- tapOn:
+    id: 'defense-opp-goal'
+- assertVisible:
+    id: 'tracker-next-point'
+
+# Take screenshot showing multiple points played
+- takeScreenshot:
+    path: .maestro/screenshots/advanced-tracker-full-cycle
+
+# Tap next point to verify cycle continues
+- tapOn:
+    id: 'tracker-next-point'
+
+# Verify line select screen appears again
+- assertVisible:
+    text: 'Select Line'
+    optional: true
+- assertVisible:
+    text: 'Starting Line'
+    optional: true

@@ -122,6 +122,7 @@ export default function TrackerGameCompleteScreen() {
           </ThemedText>
 
           <Pressable
+            testID="game-complete-undo"
             style={[
               styles.secondaryAction,
               { backgroundColor: 'transparent', borderColor: palette.overlay15 },
@@ -143,6 +144,7 @@ export default function TrackerGameCompleteScreen() {
           </Pressable>
 
           <Pressable
+            testID="game-complete-finish"
             style={[styles.primaryAction, { backgroundColor: palette.success }]}
             onPress={handleFinish}>
             <View>
@@ -161,6 +163,7 @@ export default function TrackerGameCompleteScreen() {
           </Pressable>
 
           <Pressable
+            testID="game-complete-home"
             style={[
               styles.secondaryAction,
               { backgroundColor: palette.overlay05, borderColor: palette.overlay10 },

@@ -1,0 +1,102 @@
+appId: com.langdk.ultimatestats
+name: Advanced Tracker Stoppages
+---
+# Reuse setup flow to get to tracker screen
+- runFlow:
+    file: ../flows/setup-game.yaml
+
+# Tap Joe to start with disc
+- tapOn:
+    id: 'tracker-chip-Joe'
+
+# --- Pause ---
+# Tap pause button in score bar
+- tapOn:
+    id: 'scorebar-pause'
+
+# Verify paused overlay
+- assertVisible:
+    text: 'PAUSED'
+
+# Tap resume
+- tapOn:
+    id: 'stoppage-resume'
+
+# Verify back to tracker
+- assertVisible:
+    text: 'DEFENSE'
+    optional: true
+
+# --- Timeout (home) ---
+# Expand score bar to show timeout buttons
+- tapOn:
+    id: 'timeout-dots-focus'
+- waitForAnimationToEnd:
+    timeout: 500
+
+# Tap home timeout
+- tapOn:
+    id: 'timeout-button-home'
+
+# Verify timeout overlay
+- assertVisible:
+    text: 'TIMEOUT'
+
+# Tap resume
+- tapOn:
+    id: 'stoppage-resume'
+
+# Verify back to tracker
+- assertVisible:
+    text: 'DEFENSE'
+    optional: true
+
+# --- Timeout (away) ---
+# Tap away timeout
+- tapOn:
+    id: 'timeout-dots-opp'
+- waitForAnimationToEnd:
+    timeout: 500
+- tapOn:
+    id: 'timeout-button-away'
+
+# Verify timeout overlay
+- assertVisible:
+    text: 'TIMEOUT'
+
+# Tap undo to cancel timeout
+- tapOn:
+    id: 'stoppage-undo'
+
+# Verify back to tracker
+- assertVisible:
+    text: 'DEFENSE'
+    optional: true
+
+# --- Injury ---
+# Open rare menu
+- tapOn:
+    id: 'tracker-more-button'
+- waitForAnimationToEnd:
+    timeout: 500
+
+# Select Injury (offense)
+- tapOn:
+    id: 'rare-menu-injury-offense'
+
+# Verify injury sub screen
+- assertVisible:
+    text: 'Injury Sub'
+
+# Go back without making changes
+- tapOn:
+    id: 'line-select-back'
+
+# Verify back on tracker
+- assertVisible:
+    text: 'DEFENSE'
+    optional: true
+
+# Take screenshot
+- takeScreenshot:
+    path: .maestro/screenshots/advanced-tracker-stoppages

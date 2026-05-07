@@ -322,6 +322,13 @@ describe('getPointScoringSideId', () => {
     ]);
     expect(getPointScoringSideId(baseGame, makePoint([pos]))).toBeNull();
   });
+
+  it('returns the opposing side on a callahan even when the thrower is on the same side', () => {
+    const pos = makePossession(HOME, [
+      { id: 'a1', kind: 'throw', sideId: HOME, thrower: august, result: 'callahan' },
+    ]);
+    expect(getPointScoringSideId(baseGame, makePoint([pos]))).toBe(AWAY);
+  });
 });
 
 // ── getGameScore ──────────────────────────────────────────────────────────────
@@ -442,6 +449,76 @@ describe('isAdvancedGameOver', () => {
         gameTransitions: [{ id: 'hard1', transitionType: 'hard_cap', afterPointId: point.id }],
       }),
     ).toBe(true);
+  });
+
+  it('returns false when hard cap has been reached but the score is tied (universe point continues)', () => {
+    // USAU 6.D.2: if score is tied when hard cap scoring attempt completes, play continues until one additional goal
+    const game: AdvancedTrackedGame = {
+      ...baseGame,
+      settings: { locationMode: 'none', format: { formatType: 'standard', gameTo: 15 } },
+      points: [
+        makePoint([
+          makePossession(HOME, [
+            { id: 'a1', kind: 'throw', sideId: HOME, thrower: august, result: 'goal' },
+          ]),
+        ]),
+        {
+          ...makePoint([
+            makePossession(AWAY, [
+              { id: 'a2', kind: 'throw', sideId: AWAY, thrower: untracked, result: 'goal' },
+            ]),
+          ]),
+          id: 'pt2',
+        },
+      ],
+      gameTransitions: [{ id: 'hard1', transitionType: 'hard_cap', afterPointId: 'pt2' }],
+    };
+    expect(isAdvancedGameOver(game)).toBe(false);
+  });
+});
+
+describe('getEffectiveGameTo — soft cap edge cases', () => {
+  it('adds one to higherScore unconditionally when soft cap is in effect (even if already at or above base gameTo)', () => {
+    // USAU 6.D.1: "one is added to the higher score and the resulting number is the new game total."
+    const point = makePoint([
+      makePossession(HOME, [
+        { id: 'a1', kind: 'throw', sideId: HOME, thrower: august, result: 'goal' },
+      ]),
+    ]);
+    const game: AdvancedTrackedGame = {
+      ...baseGame,
+      settings: { locationMode: 'none', format: { formatType: 'standard', gameTo: 15 } },
+      points: [point],
+      gameTransitions: [{ id: 'soft1', transitionType: 'soft_cap', afterPointId: point.id }],
+    };
+
+    // Score is 1-0. Old code returned 2 (1 < 15). New code also returns 2.
+    expect(getEffectiveGameTo(game)).toBe(2);
+  });
+
+  it('soft cap with tied score at base gameTo minus one sets target to base gameTo', () => {
+    // 14-14 in game to 15 → effective target should be 15
+    const points = Array.from({ length: 28 }, (_, index) => ({
+      ...makePoint([
+        makePossession(index % 2 === 0 ? HOME : AWAY, [
+          {
+            id: `a${index}`,
+            kind: 'throw',
+            sideId: index % 2 === 0 ? HOME : AWAY,
+            thrower: index % 2 === 0 ? august : untracked,
+            result: 'goal',
+          },
+        ]),
+      ]),
+      id: `pt${index}`,
+    }));
+    const game: AdvancedTrackedGame = {
+      ...baseGame,
+      settings: { locationMode: 'none', format: { formatType: 'standard', gameTo: 15 } },
+      points,
+      gameTransitions: [{ id: 'soft1', transitionType: 'soft_cap', afterPointId: 'pt27' }],
+    };
+    expect(getEffectiveGameTo(game)).toBe(15);
   });
 });
 
@@ -585,6 +662,34 @@ describe('getReceivingSideForNextPoint', () => {
     };
     // No halftime flip — normal logic: HOME scored, so AWAY receives
     expect(getReceivingSideForNextPoint(game)).toBe(AWAY);
+  });
+
+  it('callahan by HOME means AWAY receives next (scoring side pulls)', () => {
+    // HOME receives, but AWAY throws a callahan → AWAY scores, HOME receives next
+    const point: TrackedPoint = {
+      id: 'pt1',
+      lines: [{ sideId: HOME, participantIds: [august.participantId] }],
+      possessions: [
+        makePossession(HOME, [
+          { id: 'a1', kind: 'throw', sideId: HOME, thrower: untracked, result: 'callahan' },
+        ]),
+      ],
+    };
+    expect(getReceivingSideForNextPoint(makeGame([point]))).toBe(HOME);
+  });
+
+  it('callahan by AWAY means HOME receives next', () => {
+    // AWAY receives, but HOME throws a callahan → HOME scores, AWAY receives next
+    const point: TrackedPoint = {
+      id: 'pt1',
+      lines: [{ sideId: AWAY, participantIds: [meves.participantId] }],
+      possessions: [
+        makePossession(AWAY, [
+          { id: 'a1', kind: 'throw', sideId: AWAY, thrower: untracked, result: 'callahan' },
+        ]),
+      ],
+    };
+    expect(getReceivingSideForNextPoint(makeGame([point]))).toBe(AWAY);
   });
 });
 

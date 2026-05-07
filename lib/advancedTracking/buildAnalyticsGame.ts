@@ -539,8 +539,11 @@ export function buildAnalyticsGame(game: AdvancedTrackedGame): AnalyticsGame {
     const scoringSideId = deriveScoringSideId(point, ctx);
     const linesBySide = buildLinesBySide(point, ctx);
 
+    const uniquePossessionSides = new Set(point.possessions.map((p) => p.sideId));
     const isCleanHold =
-      scoringSideId !== null ? new Set(point.possessions.map((p) => p.sideId)).size === 1 : null;
+      scoringSideId !== null
+        ? uniquePossessionSides.size === 1 && point.possessions[0].sideId === scoringSideId
+        : null;
 
     const lastPoss = getLastPossession(ctx.gameId, point.id, point.possessions);
     const lastAction = getLastAction(ctx.gameId, point.id, lastPoss.id, lastPoss.actions);

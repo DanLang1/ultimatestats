@@ -60,6 +60,24 @@ The npm scripts set `JAVA_HOME=/opt/homebrew/opt/openjdk` because the Maestro Ho
 installs OpenJDK but macOS may not expose it through `/usr/libexec/java_home`. They also set
 `MAESTRO_CLI_NO_ANALYTICS=1` so first-run analytics setup cannot block automated agent runs.
 
+## Known Quirks
+
+- **React Native `<Modal>` hierarchy capture:** The Modal renders in a separate native view.
+  Maestro's `inspect_screen` / hierarchy snapshot may show an empty app view when a modal is open —
+  the modal content IS present on screen but may not appear in the hierarchy dump. This is a known
+  XCUITest ↔ React Native Modal quirk. Use `takeScreenshot` instead of relying on hierarchy alone
+  to verify what is shown inside a modal.
+- **Disc-on-ground after stall turnover:** After a stall-defense or stall-offense turnover, the disc
+  is on the ground (`discHolderRef` is null). The rare menu offense items (Opp D, 50/50, Stall) are
+  **correctly disabled** in this state — they require a known disc holder to operate. Do not write
+  flows that expect rare-menu offense items to be tappable immediately after a stall turnover without
+  an explicit pickup tap.
+- **Stall-defense flow ordering:** Stall-defense leaves the rare menu offense items disabled
+  (disc-on-ground). Place stall-defense as the **last** scenario in any flow that tests it, since
+  the rare menu can't be meaningfully interacted with afterward. If you need to test something after
+  stall-defense, end the point via `defense-opp-goal` → `tracker-next-point` → `select-line-and-pull`
+  to get a clean point.
+
 ## Flow Authoring Rules
 
 1. Prefer `testID` selectors over visible text for controls.

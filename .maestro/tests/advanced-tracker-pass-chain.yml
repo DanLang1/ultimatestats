@@ -1,0 +1,111 @@
+appId: com.langdk.ultimatestats
+name: Advanced Tracker Pass Chain and Goal
+---
+# Reuse setup flow to get to tracker screen
+- runFlow:
+    file: ../flows/setup-game.yaml
+
+# Tap Joe to start with disc
+- tapOn:
+    id: 'tracker-chip-Joe'
+- assertVisible:
+    text: 'DEFENSE'
+    optional: true
+
+# Pass to Jon
+- tapOn:
+    id: 'tracker-chip-Jon'
+
+# Assert pass chain shows Joe
+- assertVisible:
+    text: 'JOE'
+
+# Pass to Mike
+- tapOn:
+    id: 'tracker-chip-Mike'
+
+# Assert pass chain shows Jon
+- assertVisible:
+    text: 'JON'
+
+# Goal via opponent disc transfer
+- tapOn:
+    id: 'tracker-more-button'
+- waitForAnimationToEnd:
+    timeout: 500
+- tapOn:
+    id: 'rare-menu-opp-d'
+- tapOn:
+    id: 'defense-opp-goal'
+
+# Verify goal state
+- assertVisible:
+    id: 'tracker-next-point'
+
+# Take screenshot of goal state
+- takeScreenshot:
+    path: .maestro/screenshots/advanced-tracker-goal
+
+# Tap next point
+- tapOn:
+    id: 'tracker-next-point'
+
+# Handle line select and pull
+- runFlow:
+    file: ../flows/select-line-and-pull.yaml
+
+# Start new point - tap Joe
+- tapOn:
+    id: 'tracker-chip-Joe'
+
+# Pass to Jon
+- tapOn:
+    id: 'tracker-chip-Jon'
+
+# Quick goal via opponent disc transfer
+- tapOn:
+    id: 'tracker-more-button'
+- waitForAnimationToEnd:
+    timeout: 500
+- tapOn:
+    id: 'rare-menu-opp-d'
+- tapOn:
+    id: 'defense-opp-goal'
+
+# Verify goal
+- assertVisible:
+    id: 'tracker-next-point'
+- tapOn:
+    id: 'tracker-next-point'
+
+# Handle line select and pull again
+- runFlow:
+    file: ../flows/select-line-and-pull.yaml
+
+# Start with disc and pass chain
+- tapOn:
+    id: 'tracker-chip-Joe'
+- tapOn:
+    id: 'tracker-chip-Jon'
+- tapOn:
+    id: 'tracker-chip-Mike'
+- tapOn:
+    id: 'tracker-chip-Molly'
+
+# Goal via opponent disc transfer
+- tapOn:
+    id: 'tracker-more-button'
+- waitForAnimationToEnd:
+    timeout: 500
+- tapOn:
+    id: 'rare-menu-opp-d'
+- tapOn:
+    id: 'defense-opp-goal'
+
+# Verify goal
+- assertVisible:
+    id: 'tracker-next-point'
+
+# Take final screenshot
+- takeScreenshot:
+    path: .maestro/screenshots/advanced-tracker-pass-chain-complete

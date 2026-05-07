@@ -175,6 +175,7 @@ export default function TrackerHalftimeScreen() {
 
             {!hasStats && (
               <Pressable
+                testID="halftime-continue"
                 onPress={handleContinue}
                 style={({ pressed }) => [
                   styles.continueBtn,
@@ -253,6 +254,7 @@ export default function TrackerHalftimeScreen() {
                 </View>
 
                 <Pressable
+                  testID="halftime-continue"
                   onPress={handleContinue}
                   style={({ pressed }) => [
                     styles.continueBtn,

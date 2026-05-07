@@ -1,0 +1,58 @@
+appId: com.langdk.ultimatestats
+name: Advanced Tracker Menus and Navigation
+---
+# Reuse setup flow to get to tracker screen
+- runFlow:
+    file: ../flows/setup-game.yaml
+
+# Tap Joe to start with disc
+- tapOn:
+    id: 'tracker-chip-Joe'
+
+# --- Home Menu ---
+# Tap menu button in cap bar
+- tapOn:
+    id: 'tracker-menu-button'
+- waitForAnimationToEnd:
+    timeout: 500
+
+# Verify menu options
+- assertVisible:
+    id: 'tracker-menu-view-stats'
+- assertVisible:
+    id: 'tracker-menu-home'
+
+# Tap View Stats
+- tapOn:
+    id: 'tracker-menu-view-stats'
+
+# Verify View Stats screen loads with advanced stats content
+- assertVisible:
+    id: 'advanced-stats-summary-card'
+- assertVisible:
+    id: 'advanced-stats-score-badge'
+
+# Take screenshot of stats page
+- takeScreenshot:
+    path: .maestro/screenshots/advanced-tracker-view-stats-menu
+
+# Go back to tracker using screen header back button
+- tapOn:
+    id: 'screen-header-back'
+
+# Verify back on tracker
+- assertVisible:
+    text: 'DEFENSE'
+    optional: true
+
+# Open menu again and go home
+- tapOn:
+    id: 'tracker-menu-button'
+- waitForAnimationToEnd:
+    timeout: 500
+- tapOn:
+    id: 'tracker-menu-home'
+
+# Verify dashboard
+- assertVisible:
+    text: 'DASHBOARD'

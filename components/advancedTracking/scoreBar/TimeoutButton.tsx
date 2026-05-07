@@ -12,9 +12,10 @@ interface TimeoutButtonProps {
   state: SideTimeoutState;
   color: string;
   onPress: () => void;
+  testID?: string;
 }
 
-export function TimeoutButton({ label, state, color, onPress }: TimeoutButtonProps) {
+export function TimeoutButton({ label, state, color, onPress, testID }: TimeoutButtonProps) {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
   const canUse = canCallTimeout(state);
@@ -22,6 +23,7 @@ export function TimeoutButton({ label, state, color, onPress }: TimeoutButtonPro
 
   return (
     <Pressable
+      testID={testID}
       onPress={onPress}
       disabled={!canUse}
       style={({ pressed }) => [styles.action, pressed && canUse && { opacity: 0.7 }]}>

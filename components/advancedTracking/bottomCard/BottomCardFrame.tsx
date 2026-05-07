@@ -59,6 +59,7 @@ export const BottomCardFrame = ({
             </Pressable>
           ) : (
             <Pressable
+              testID="tracker-undo-button"
               onPress={async () => await buttonMode.onUndo()}
               hitSlop={8}
               style={({ pressed }) => [

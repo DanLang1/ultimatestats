@@ -35,6 +35,7 @@ export const PullDropperStep = ({
           {activeParticipants.map((participant) => (
             <Pressable
               key={participant.id}
+              testID={`pull-dropper-${participant.name}`}
               onPress={() => onComplete(participant.id)}
               style={[
                 styles.chip,
@@ -46,6 +47,7 @@ export const PullDropperStep = ({
             </Pressable>
           ))}
           <Pressable
+            testID="pull-dropper-unknown"
             onPress={() => onComplete(null)}
             style={[
               styles.chip,

@@ -35,6 +35,7 @@ export function ScoreBarFooter({
       <View style={{ height: 1, backgroundColor: palette.border }} />
       <View style={styles.row}>
         <TimeoutButton
+          testID="timeout-button-home"
           label="Home TO"
           state={focusTimeouts}
           color={palette.accent}
@@ -60,6 +61,7 @@ export function ScoreBarFooter({
         </View>
 
         <TimeoutButton
+          testID="timeout-button-away"
           label="Away TO"
           state={oppTimeouts}
           color={palette.success}

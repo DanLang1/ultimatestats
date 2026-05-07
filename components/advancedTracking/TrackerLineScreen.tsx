@@ -105,7 +105,11 @@ export const TrackerLineScreen = ({
       <View style={[styles.header, { borderBottomColor: palette.border }]}>
         <View style={styles.headerTop}>
           {onBack && (
-            <Pressable onPress={onBack} style={styles.backBtn} hitSlop={8}>
+            <Pressable
+              testID="line-select-back"
+              onPress={onBack}
+              style={styles.backBtn}
+              hitSlop={8}>
               <MaterialCommunityIcons
                 name="arrow-left"
                 size={scaleBySizeClass(22, sizeClass)}

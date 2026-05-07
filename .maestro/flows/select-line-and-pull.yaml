@@ -1,0 +1,45 @@
+appId: com.langdk.ultimatestats
+name: Select Line and Handle Pull
+---
+# After next point, we land on line selection screen
+- assertVisible:
+    text: 'Select Line'
+    optional: true
+- assertVisible:
+    text: 'Starting Line'
+    optional: true
+
+# Select 7 players for the line
+- tapOn:
+    id: 'player-chip-Joe'
+- tapOn:
+    id: 'player-chip-Jon'
+- tapOn:
+    id: 'player-chip-Mike'
+- tapOn:
+    id: 'player-chip-Molly'
+- tapOn:
+    id: 'player-chip-Kelly'
+- tapOn:
+    id: 'player-chip-Rachel'
+- tapOn:
+    id: 'player-chip-Joel'
+
+# Confirm line selection
+- tapOn:
+    id: 'line-select-confirm'
+
+# Handle pull tracking
+- tapOn:
+    id: 'pull-skip-timing'
+- tapOn:
+    id: 'pull-result-inbound'
+    optional: true
+- tapOn:
+    id: 'pull-result-ob'
+    optional: true
+
+# Wait for tracker screen
+- assertVisible:
+    text: 'TAP WHO STARTS WITH DISC'
+    optional: true

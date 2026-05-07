@@ -49,6 +49,7 @@ export function ScreenHeader({
   return (
     <View style={[styles.header, containerStyle]}>
       <Pressable
+        testID="screen-header-back"
         onPress={onBack}
         disabled={!onBack}
         style={[

@@ -6,11 +6,12 @@ interface TimeoutDotsProps {
   state: SideTimeoutState;
   activeColor: string;
   onPress?: () => void;
+  testID?: string;
 }
 
-export function TimeoutDots({ state, activeColor, onPress }: TimeoutDotsProps) {
+export function TimeoutDots({ state, activeColor, onPress, testID }: TimeoutDotsProps) {
   return (
-    <Pressable onPress={onPress} disabled={!onPress} hitSlop={6}>
+    <Pressable testID={testID} onPress={onPress} disabled={!onPress} hitSlop={6}>
       <View style={styles.row}>
         {Array.from({ length: state.regularPerHalf }, (_, i) => (
           <View

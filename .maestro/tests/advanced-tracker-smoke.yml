@@ -34,6 +34,8 @@ name: Advanced Tracker Pass Chain Smoke
 # Open rare menu and record an opponent block on Mike
 - tapOn:
     id: 'tracker-more-button'
+- waitForAnimationToEnd:
+    timeout: 500
 - tapOn:
     id: 'rare-menu-opp-d'
 

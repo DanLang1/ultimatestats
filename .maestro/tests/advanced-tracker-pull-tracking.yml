@@ -1,0 +1,143 @@
+appId: com.langdk.ultimatestats
+name: Advanced Tracker Pull Tracking
+---
+# Reuse setup flow up to pre-game
+- stopApp
+- launchApp
+
+# Navigate to advanced tracker pre-game
+- scrollUntilVisible:
+    element:
+      id: 'advanced-tracker-new-game-button'
+    direction: DOWN
+    timeout: 10000
+    visibilityPercentage: 10
+- tapOn:
+    id: 'advanced-tracker-new-game-button'
+- assertVisible:
+    text: 'ADVANCED TRACKER'
+
+# Select receiving team (Zoboomafoo = "us")
+- tapOn:
+    text: 'Zoboomafoo'
+
+# If gender ratio is enabled, select a ratio
+- tapOn:
+    text: 'FMP Majority'
+    optional: true
+
+# Tap Set Line to proceed to line selection
+- tapOn:
+    id: 'advanced-tracker-set-line-button'
+
+# Wait for line selection screen
+- assertVisible:
+    text: 'Starting Line'
+
+# Select 7 players for the line
+- tapOn:
+    id: 'player-chip-Joe'
+- tapOn:
+    id: 'player-chip-Jon'
+- tapOn:
+    id: 'player-chip-Mike'
+- tapOn:
+    id: 'player-chip-Molly'
+- tapOn:
+    id: 'player-chip-Kelly'
+- tapOn:
+    id: 'player-chip-Rachel'
+- tapOn:
+    id: 'player-chip-Joel'
+
+# Confirm line selection
+- tapOn:
+    id: 'line-select-confirm'
+
+# --- Pull Timing Step ---
+# Verify pull timing screen
+- assertVisible:
+    text: 'THEY ARE PULLING'
+    optional: true
+- assertVisible:
+    text: 'WE ARE PULLING'
+    optional: true
+
+# Test skip timing
+- tapOn:
+    id: 'pull-skip-timing'
+
+# --- Pull Result Step ---
+# Verify pull result options
+- assertVisible:
+    id: 'pull-result-inbound'
+- assertVisible:
+    id: 'pull-result-ob'
+- assertVisible:
+    id: 'pull-result-dropped'
+
+# Select out of bounds
+- tapOn:
+    id: 'pull-result-ob'
+
+# Wait for tracker screen
+- assertVisible:
+    text: 'TAP WHO STARTS WITH DISC'
+    optional: true
+
+# --- Test another point ---
+# Start a point
+- tapOn:
+    id: 'tracker-chip-Joe'
+- tapOn:
+    id: 'tracker-more-button'
+- waitForAnimationToEnd:
+    timeout: 500
+- tapOn:
+    id: 'rare-menu-opp-d'
+- tapOn:
+    id: 'defense-opp-goal'
+
+# Next point
+- assertVisible:
+    id: 'tracker-next-point'
+- tapOn:
+    id: 'tracker-next-point'
+
+# Line select
+- assertVisible:
+    text: 'Select Line'
+    optional: true
+- tapOn:
+    id: 'player-chip-Joe'
+- tapOn:
+    id: 'player-chip-Jon'
+- tapOn:
+    id: 'player-chip-Mike'
+- tapOn:
+    id: 'player-chip-Molly'
+- tapOn:
+    id: 'player-chip-Kelly'
+- tapOn:
+    id: 'player-chip-Rachel'
+- tapOn:
+    id: 'player-chip-Joel'
+- tapOn:
+    id: 'line-select-confirm'
+
+# Skip timing
+- tapOn:
+    id: 'pull-skip-timing'
+
+# Select inbound this time
+- tapOn:
+    id: 'pull-result-inbound'
+
+# Wait for tracker
+- assertVisible:
+    text: 'TAP WHO STARTS WITH DISC'
+    optional: true
+
+# Take screenshot
+- takeScreenshot:
+    path: .maestro/screenshots/advanced-tracker-pull-tracking
