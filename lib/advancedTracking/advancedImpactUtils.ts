@@ -3,7 +3,7 @@ import type { AnalyticsGame, AttributionType } from './analyticsTypes';
 export interface AdvancedImpactPoint {
   pointIndex: number;
   onField: boolean;
-  state: 'hold' | 'break' | 'broken' | 'opp_hold' | 'terminated' | null;
+  state: 'hold' | 'break' | 'broken' | 'opp_hold' | 'terminated' | 'in_progress' | null;
   plusMinusDelta: number;
   cumulativePlusMinus: number;
   description: string;

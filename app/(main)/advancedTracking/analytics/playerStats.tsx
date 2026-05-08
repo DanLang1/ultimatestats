@@ -102,7 +102,9 @@ export default function AdvancedPlayerStatsScreen() {
   const plusMinusDisplay = stats.plusMinus > 0 ? `+${stats.plusMinus}` : String(stats.plusMinus);
 
   return (
-    <View style={[styles.container, { backgroundColor: palette.primary }]}>
+    <View
+      testID="advanced-player-stats-screen"
+      style={[styles.container, { backgroundColor: palette.primary }]}>
       <Stack.Screen options={{ headerShown: false }} />
       <ScreenHeader
         title="PLAYER STATS"

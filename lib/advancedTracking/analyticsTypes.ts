@@ -8,7 +8,8 @@ export type PointState =
   | 'break' // focus side pulled and scored
   | 'broken' // focus side received, opponent scored
   | 'opp_hold' // focus side pulled, opponent scored
-  | 'terminated'; // game ended mid-point before a score was recorded
+  | 'terminated' // game ended mid-point before a score was recorded
+  | 'in_progress'; // point is still being played (mid-game live view)
 
 export type AttributionType =
   | 'goal'
@@ -37,7 +38,7 @@ export interface AnalyticsPoint {
    */
   receivingSideId: string;
   pullingSideId: string;
-  /** Which side scored this point. Null only when the game ended mid-point. */
+  /** Which side scored this point. Null when the game ended mid-point or the point is in progress. */
   scoringSideId: string | null;
   /**
    * Convenience view of point outcome from game.focusSideId's perspective.
@@ -68,7 +69,7 @@ export interface AnalyticsPoint {
   isCleanHold: boolean | null;
 }
 
-export type AnalyticsPossessionResult = 'scored' | 'turned_over' | 'terminated';
+export type AnalyticsPossessionResult = 'scored' | 'turned_over' | 'terminated' | 'in_progress';
 
 export type AnalyticsTurnoverType = 'drop' | 'throwaway' | 'stall' | 'block' | 'callahan';
 

@@ -1,0 +1,58 @@
+appId: com.langdk.ultimatestats
+name: Advanced Tracker View Stats Mid-Point Smoke
+---
+# Reuse setup flow to get to tracker screen
+- runFlow:
+    file: ../flows/setup-game.yaml
+
+# Start with disc on Joe
+- tapOn:
+    id: 'tracker-chip-Joe'
+
+# Pass to Jon — creates a completion, giving Joe stats mid-point
+- tapOn:
+    id: 'tracker-chip-Jon'
+
+# Open tracker menu and navigate to View Stats mid-point
+- tapOn:
+    id: 'tracker-menu-button'
+- waitForAnimationToEnd:
+    timeout: 500
+- tapOn:
+    id: 'tracker-menu-view-stats'
+
+# Verify View Stats screen loads with advanced stats content
+- assertVisible:
+    id: 'advanced-stats-summary-card'
+- assertVisible:
+    id: 'advanced-stats-score-badge'
+
+# Take screenshot of mid-point stats page
+- takeScreenshot:
+    path: .maestro/screenshots/advanced-tracker-view-stats-midpoint
+
+# Swipe down on the left side of the screen (over the fixed name column,
+# avoiding the horizontal stats scroll view) to scroll the outer vertical ScrollView
+- swipe:
+    start: 20%, 70%
+    end: 20%, 30%
+    duration: 500
+- swipe:
+    start: 20%, 70%
+    end: 20%, 30%
+    duration: 500
+
+# Player table should now be visible
+- assertVisible:
+    id: 'advanced-stats-row-joe'
+- tapOn:
+    id: 'advanced-stats-row-joe'
+    retryTapIfNoChange: true
+
+# Verify the Player Stats screen loaded without crashing
+- assertVisible:
+    id: 'advanced-player-stats-screen'
+
+# Take screenshot of player stats
+- takeScreenshot:
+    path: .maestro/screenshots/advanced-tracker-player-stats-midpoint

@@ -57,14 +57,18 @@ export function computeAdvancedTeamStats(game: AnalyticsGame, sideId: string): A
     const state = getPointStateForSide(point, sideId);
 
     const sideScored = state === 'hold' || state === 'break';
+
+    // O/D classification: include completed and in-progress points
     if (state !== 'terminated') {
-      // O/D classification: side received = O-point, side pulled = D-point
       if (point.receivingSideId === sideId) {
         oPoints++;
       } else {
         dPoints++;
       }
+    }
 
+    // Scoring runs: only for completed points
+    if (state !== 'terminated' && state !== 'in_progress') {
       if (sideScored) {
         currentScoringRun++;
         longestScoringRun = Math.max(longestScoringRun, currentScoringRun);
@@ -92,7 +96,8 @@ export function computeAdvancedTeamStats(game: AnalyticsGame, sideId: string): A
         oppHolds++;
         break;
       case 'terminated':
-        // Terminated points don't contribute to hold/break counts
+      case 'in_progress':
+        // Terminated/in-progress points don't contribute to hold/break counts
         break;
     }
   }

@@ -162,7 +162,7 @@ export default function AdvancedStatsTable({
     return palette.textInverse;
   };
 
-  const tableMinWidth = BASE_COLUMNS.reduce((sum, c) => sum + (c.width ?? 58), 0);
+  const scrollableMinWidth = BASE_COLUMNS.slice(1).reduce((sum, c) => sum + (c.width ?? 58), 0);
 
   return (
     <View>
@@ -207,45 +207,37 @@ export default function AdvancedStatsTable({
         </View>
       )}
 
-      <ScrollView horizontal showsHorizontalScrollIndicator>
-        <View
-          style={[
-            styles.tableContainer,
-            { borderColor: palette.overlay10, minWidth: tableMinWidth },
-          ]}>
-          {/* Header */}
+      <View
+        style={[styles.tableContainer, { borderColor: palette.overlay10, flexDirection: 'row' }]}>
+        {/* Fixed name column */}
+        <View>
           <View
             style={[
               styles.tableHeader,
               { backgroundColor: palette.overlay08, borderBottomColor: palette.overlay10 },
             ]}>
-            {BASE_COLUMNS.map((col) => (
-              <Pressable
-                key={String(col.key)}
-                style={[
-                  styles.headerCell,
-                  { width: col.width ?? 58 },
-                  col.key === 'name' && styles.headerNameCell,
-                  sortConfig.key === col.key && { backgroundColor: palette.overlay05 },
-                ]}
-                onPress={() => handleSort(col.key)}>
-                <View style={styles.sortableHeader}>
-                  <ThemedText
-                    style={[
-                      styles.headerText,
-                      {
-                        color: sortConfig.key === col.key ? palette.accent : palette.textMuted,
-                      },
-                    ]}>
-                    {col.label}
-                  </ThemedText>
-                  {renderSortIcon(col.key)}
-                </View>
-              </Pressable>
-            ))}
+            <Pressable
+              style={[
+                styles.headerCell,
+                styles.headerNameCell,
+                { width: BASE_COLUMNS[0].width ?? 140 },
+                sortConfig.key === 'name' && { backgroundColor: palette.overlay05 },
+              ]}
+              onPress={() => handleSort('name')}>
+              <View style={styles.sortableHeader}>
+                <ThemedText
+                  style={[
+                    styles.headerText,
+                    {
+                      color: sortConfig.key === 'name' ? palette.accent : palette.textMuted,
+                    },
+                  ]}>
+                  {BASE_COLUMNS[0].label}
+                </ThemedText>
+                {renderSortIcon('name')}
+              </View>
+            </Pressable>
           </View>
-
-          {/* Rows */}
           {sorted.map((stats, index) => (
             <View
               key={stats.participantId}
@@ -255,46 +247,90 @@ export default function AdvancedStatsTable({
                 index === sorted.length - 1 && { borderBottomWidth: 0 },
                 index % 2 === 1 && { backgroundColor: palette.overlay02 },
               ]}>
-              {BASE_COLUMNS.map((col) => {
-                if (col.key === 'name') {
-                  return (
-                    <Pressable
-                      key="name"
-                      style={{ width: col.width ?? 140 }}
-                      onPress={() => onPlayerPress?.(stats.participantId)}
-                      disabled={!onPlayerPress}>
-                      <ThemedText
-                        style={[
-                          styles.cell,
-                          styles.nameCell,
-                          {
-                            color: onPlayerPress ? palette.accent : palette.textInverse,
-                          },
-                        ]}
-                        numberOfLines={1}>
-                        {getName(stats.participantId)}
-                      </ThemedText>
-                    </Pressable>
-                  );
-                }
-                const color = getCellColor(stats, col.key);
-                const text = formatCell(stats, col.key);
-                return (
-                  <ThemedText
-                    key={String(col.key)}
-                    style={[
-                      styles.cell,
-                      { width: col.width ?? 58, color },
-                      col.key === 'plusMinus' && styles.plusMinusCell,
-                    ]}>
-                    {col.key === 'plusMinus' && stats.plusMinus > 0 ? `+${stats.plusMinus}` : text}
-                  </ThemedText>
-                );
-              })}
+              <Pressable
+                testID={`advanced-stats-row-${getName(stats.participantId).toLowerCase()}`}
+                onPress={() => onPlayerPress?.(stats.participantId)}
+                disabled={!onPlayerPress}
+                style={{ width: BASE_COLUMNS[0].width ?? 140 }}>
+                <ThemedText
+                  style={[
+                    styles.cell,
+                    styles.nameCell,
+                    {
+                      color: onPlayerPress ? palette.accent : palette.textInverse,
+                    },
+                  ]}
+                  numberOfLines={1}>
+                  {getName(stats.participantId)}
+                </ThemedText>
+              </Pressable>
             </View>
           ))}
         </View>
-      </ScrollView>
+
+        {/* Scrollable stats columns */}
+        <ScrollView horizontal showsHorizontalScrollIndicator style={{ flex: 1 }}>
+          <View style={{ minWidth: scrollableMinWidth }}>
+            <View
+              style={[
+                styles.tableHeader,
+                { backgroundColor: palette.overlay08, borderBottomColor: palette.overlay10 },
+              ]}>
+              {BASE_COLUMNS.slice(1).map((col) => (
+                <Pressable
+                  key={String(col.key)}
+                  style={[
+                    styles.headerCell,
+                    { width: col.width ?? 58 },
+                    sortConfig.key === col.key && { backgroundColor: palette.overlay05 },
+                  ]}
+                  onPress={() => handleSort(col.key)}>
+                  <View style={styles.sortableHeader}>
+                    <ThemedText
+                      style={[
+                        styles.headerText,
+                        {
+                          color: sortConfig.key === col.key ? palette.accent : palette.textMuted,
+                        },
+                      ]}>
+                      {col.label}
+                    </ThemedText>
+                    {renderSortIcon(col.key)}
+                  </View>
+                </Pressable>
+              ))}
+            </View>
+            {sorted.map((stats, index) => (
+              <View
+                key={stats.participantId}
+                style={[
+                  styles.tableRow,
+                  { borderBottomColor: palette.overlay10 },
+                  index === sorted.length - 1 && { borderBottomWidth: 0 },
+                  index % 2 === 1 && { backgroundColor: palette.overlay02 },
+                ]}>
+                {BASE_COLUMNS.slice(1).map((col) => {
+                  const color = getCellColor(stats, col.key);
+                  const text = formatCell(stats, col.key);
+                  return (
+                    <ThemedText
+                      key={String(col.key)}
+                      style={[
+                        styles.cell,
+                        { width: col.width ?? 58, color },
+                        col.key === 'plusMinus' && styles.plusMinusCell,
+                      ]}>
+                      {col.key === 'plusMinus' && stats.plusMinus > 0
+                        ? `+${stats.plusMinus}`
+                        : text}
+                    </ThemedText>
+                  );
+                })}
+              </View>
+            ))}
+          </View>
+        </ScrollView>
+      </View>
     </View>
   );
 }

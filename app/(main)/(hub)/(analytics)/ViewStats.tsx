@@ -13,7 +13,6 @@ import StatsContent from '@/components/view-stats/StatsContent';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { buildAnalyticsGame, getFinalScores } from '@/lib/advancedTracking/buildAnalyticsGame';
-import { hasPointEnded } from '@/lib/advancedTracking/trackingUtils';
 import { formatDate, generateCurrentGameCSV } from '@/lib/statsUtils';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { useGameStore } from '@/store/gameStore';
@@ -118,15 +117,7 @@ export default function ViewStatsScreen() {
     router.back();
   };
 
-  const analyticsRawGame = (() => {
-    if (!activeAdvancedGame) return null;
-    const lastPoint = activeAdvancedGame.points[activeAdvancedGame.points.length - 1];
-    if (lastPoint && !hasPointEnded(lastPoint)) {
-      return { ...activeAdvancedGame, points: activeAdvancedGame.points.slice(0, -1) };
-    }
-    return activeAdvancedGame;
-  })();
-  const analyticsGame = analyticsRawGame ? buildAnalyticsGame(analyticsRawGame) : null;
+  const analyticsGame = activeAdvancedGame ? buildAnalyticsGame(activeAdvancedGame) : null;
   const myTeamName = analyticsGame?.sideLabels[analyticsGame.focusSideId] ?? 'My Team';
   const opponentName =
     analyticsGame?.metadata?.opponentName ??
@@ -214,7 +205,9 @@ export default function ViewStatsScreen() {
         rightSlot={<ResponsiveHeaderActions actions={headerActions} />}
       />
 
-      <ScrollView contentContainerStyle={[styles.scrollContent, { paddingBottom: 100 }]}>
+      <ScrollView
+        testID="view-stats-scroll"
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: 100 }]}>
         {showShowcaseHint && <ShowcaseHintBanner sizeClass={sizeClass} />}
         <View style={styles.shortcutsSection}>
           <ThemedText style={[styles.sectionLabel, { color: palette.textMuted }]}>

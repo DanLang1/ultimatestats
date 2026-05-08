@@ -313,6 +313,9 @@ function derivePointState(
     if (gameStatus === 'terminated' && isLastPoint) {
       return 'terminated';
     }
+    if (gameStatus === 'in_progress' && isLastPoint) {
+      return 'in_progress';
+    }
     throw new Error(
       'buildAnalyticsGame requires every point to end with a score unless the game terminated mid-point',
     );
@@ -377,6 +380,8 @@ function compilePossessionWithActions(
   if (possResult === null) {
     if (ctx.gameStatus === 'terminated' && isLastPoint && isLastPossession) {
       possResult = 'terminated';
+    } else if (ctx.gameStatus === 'in_progress' && isLastPoint && isLastPossession) {
+      possResult = 'in_progress';
     } else {
       throw new Error(
         `buildAnalyticsGame requires possession "${poss.id}" in point "${pointId}" to end with a scoring or turnover throw unless the game terminated mid-possession`,
@@ -653,10 +658,10 @@ export function getFinalScores(game: AnalyticsGame): Record<string, number> {
  * Use this instead of point.state when working with both-team tracking or scrimmages,
  * where you need hold/break rates for either side from a single AnalyticsGame.
  *
- * terminated is perspective-neutral and returns the same value for any sideId.
+ * terminated and in_progress are perspective-neutral and return the same value for any sideId.
  */
 export function getPointStateForSide(point: AnalyticsPoint, sideId: string): PointState {
-  if (point.state === 'terminated') return point.state;
+  if (point.state === 'terminated' || point.state === 'in_progress') return point.state;
   const received = point.receivingSideId === sideId;
   const scored = point.scoringSideId === sideId;
   if (received && scored) return 'hold';

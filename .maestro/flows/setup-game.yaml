@@ -57,29 +57,17 @@ name: Setup Advanced Tracker Game
 # Handle pull tracking - they are pulling since we are receiving
 - assertVisible:
     text: 'THEY ARE PULLING'
-    optional: true
-- assertVisible:
-    text: 'WE ARE PULLING'
-    optional: true
 
 # Skip pull timing
 - tapOn:
     id: 'pull-skip-timing'
 
-# Select a pull result
+# Select an inbound pull result so we always start the tracker on offense
 - tapOn:
     id: 'pull-result-inbound'
-    optional: true
-- tapOn:
-    id: 'pull-result-ob'
-    optional: true
 
 # Wait for tracker screen transition
 - waitForAnimationToEnd:
     timeout: 2000
 - assertVisible:
     text: 'TAP WHO STARTS WITH DISC'
-    optional: true
-- assertVisible:
-    text: 'DEFENSE'
-    optional: true

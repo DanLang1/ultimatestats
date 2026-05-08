@@ -429,14 +429,13 @@ describe('point states', () => {
     expect(points[1].half).toBe(2);
   });
 
-  it('throws when a live game has an unfinished point', () => {
+  it('returns in_progress state when a live game has an unfinished point', () => {
     const game: AdvancedTrackedGame = {
       ...baseGame,
-      status: 'in_progress',
       points: [
         {
           id: 'pt1',
-          lines: [{ sideId: ZOO, participantIds: ['p_august'] }],
+          lines: [{ sideId: ZOO, participantIds: ['p_august', 'p_meves'] }],
           possessions: [
             {
               id: 'pos1',
@@ -465,9 +464,13 @@ describe('point states', () => {
         },
       ],
     };
-    expect(() => buildAnalyticsGame(game)).toThrow(
-      'requires every point to end with a score unless the game terminated mid-point',
-    );
+    const { points, possessions, attributions } = buildAnalyticsGameWithLog(game);
+    expect(points[0].state).toBe('in_progress');
+    expect(possessions[0].result).toBe('in_progress');
+    // Actions from the current possession are still compiled
+    expect(sumAttributions(attributions, 'p_august', 'throw_attempt')).toBe(1);
+    expect(sumAttributions(attributions, 'p_august', 'completion')).toBe(1);
+    expect(sumAttributions(attributions, 'p_meves', 'receiving_touch')).toBe(1);
   });
 
   it('callahan — receivingSideId advances: Zoo scored, Rivals receive next', () => {
