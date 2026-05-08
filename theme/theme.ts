@@ -110,6 +110,14 @@ const midnightElectric = {
   discordBg: '#5865F2',
   discordText: '#FFFFFF',
   discordTextMuted: 'rgba(255, 255, 255, 0.7)',
+
+  // Brand Colors (DH Ultimate)
+  dhYellow: '#FBBF24',
+  dhBlack: '#010101',
+  dhYellowOverlay40: 'rgba(251, 191, 36, 0.4)',
+  dhYellowOverlay20: 'rgba(251, 191, 36, 0.2)',
+  dhYellowOverlay10: 'rgba(251, 191, 36, 0.1)',
+  dhButtonText: '#000000',
 } as const;
 
 // =============================================================================
@@ -238,6 +246,14 @@ export const lightPalette = {
   discordBg: '#5865F2',
   discordText: '#FFFFFF',
   discordTextMuted: 'rgba(255, 255, 255, 0.7)',
+
+  // Brand Colors (DH Ultimate)
+  dhYellow: '#FBBF24',
+  dhBlack: '#010101',
+  dhYellowOverlay40: 'rgba(251, 191, 36, 0.4)',
+  dhYellowOverlay20: 'rgba(251, 191, 36, 0.2)',
+  dhYellowOverlay10: 'rgba(251, 191, 36, 0.1)',
+  dhButtonText: '#000000',
 } as const;
 
 // Default palette export (for backwards compatibility during migration)

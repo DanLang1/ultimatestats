@@ -201,6 +201,15 @@ export default function DashboardScreen() {
           description: 'Browse and import popular games',
           onPress: () => router.push('/Showcase'),
         },
+        {
+          icon: 'tshirt-crew-outline' as const,
+          label: 'Partners',
+          description: 'Setup team order with DH Ultimate',
+          onPress: () => {
+            router.push('/Partners');
+          },
+          showBadge: true,
+        },
       ],
     },
     {
