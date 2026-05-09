@@ -66,7 +66,7 @@ export default function ShowcaseScreen() {
       );
     }
 
-    return games.map((game) => <ShowcaseCard key={game.id} game={game} sizeClass={sizeClass} />);
+    return games.map((game) => <ShowcaseCard key={game.id} game={game} />);
   }
 
   return (

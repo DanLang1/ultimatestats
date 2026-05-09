@@ -1,6 +1,6 @@
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { useTheme } from '@/context/ThemeContext';
-import { scaleBySizeClass, SizeClass } from '@/hooks/useLayout';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
@@ -22,7 +22,6 @@ interface TeamActionsSheetProps {
   showEditPresets: boolean;
   showShareTeam: boolean;
   showClearRoster: boolean;
-  sizeClass?: SizeClass;
 }
 
 interface ActionRowProps {
@@ -30,10 +29,10 @@ interface ActionRowProps {
   label: string;
   onPress: () => void;
   variant?: 'default' | 'danger';
-  sizeClass: SizeClass;
 }
 
-function ActionRow({ icon, label, onPress, variant = 'default', sizeClass }: ActionRowProps) {
+function ActionRow({ icon, label, onPress, variant = 'default' }: ActionRowProps) {
+  const { sizeClass } = useLayout();
   const { palette } = useTheme();
   const styles = createStyles(sizeClass);
   const color = variant === 'danger' ? palette.danger : palette.textInverse;
@@ -63,8 +62,8 @@ export function TeamActionsSheet({
   showEditPresets,
   showShareTeam,
   showClearRoster,
-  sizeClass = 'small',
 }: TeamActionsSheetProps) {
+  const { sizeClass } = useLayout();
   const { palette } = useTheme();
   const styles = createStyles(sizeClass);
 
@@ -80,41 +79,18 @@ export function TeamActionsSheet({
           icon={viewMode === 'chips' ? 'view-list' : 'view-module'}
           label={viewMode === 'chips' ? 'Switch to Cards' : 'Switch to Chips'}
           onPress={wrap(onToggleViewMode)}
-          sizeClass={sizeClass}
         />
         <View style={[styles.divider, { backgroundColor: palette.overlay10 }]} />
-        <ActionRow
-          icon="pencil-outline"
-          label="Rename Team"
-          onPress={wrap(onRenameTeam)}
-          sizeClass={sizeClass}
-        />
-        {showNewTeam && (
-          <ActionRow icon="plus" label="New Team" onPress={wrap(onNewTeam)} sizeClass={sizeClass} />
-        )}
+        <ActionRow icon="pencil-outline" label="Rename Team" onPress={wrap(onRenameTeam)} />
+        {showNewTeam && <ActionRow icon="plus" label="New Team" onPress={wrap(onNewTeam)} />}
         {showSwitchTeam && (
-          <ActionRow
-            icon="swap-horizontal"
-            label="Switch Team"
-            onPress={wrap(onSwitchTeam)}
-            sizeClass={sizeClass}
-          />
+          <ActionRow icon="swap-horizontal" label="Switch Team" onPress={wrap(onSwitchTeam)} />
         )}
         {showEditPresets && (
-          <ActionRow
-            icon="playlist-edit"
-            label="Edit Lines"
-            onPress={wrap(onEditPresets)}
-            sizeClass={sizeClass}
-          />
+          <ActionRow icon="playlist-edit" label="Edit Lines" onPress={wrap(onEditPresets)} />
         )}
         {showShareTeam && (
-          <ActionRow
-            icon="share-variant"
-            label="Share Team"
-            onPress={wrap(onShareTeam)}
-            sizeClass={sizeClass}
-          />
+          <ActionRow icon="share-variant" label="Share Team" onPress={wrap(onShareTeam)} />
         )}
         {showClearRoster && (
           <>
@@ -124,7 +100,6 @@ export function TeamActionsSheet({
               label="Clear Roster"
               onPress={wrap(onClearRoster)}
               variant="danger"
-              sizeClass={sizeClass}
             />
           </>
         )}

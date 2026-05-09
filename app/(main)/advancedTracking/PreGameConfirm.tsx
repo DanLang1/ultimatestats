@@ -177,8 +177,7 @@ export default function AdvancedPreGameConfirm() {
                 quickOptions: [13, 15],
                 onChange: setGameTo,
               })
-            }
-            sizeClass={sizeClass}>
+            }>
             <ThemedText style={[styles.settingValue, { color: palette.textInverse }]}>
               {gameTo}
             </ThemedText>
@@ -201,8 +200,7 @@ export default function AdvancedPreGameConfirm() {
                   if (softCapMins > val) setSoftCapMins(val);
                 },
               })
-            }
-            sizeClass={sizeClass}>
+            }>
             <ThemedText style={[styles.settingValue, { color: palette.textInverse }]}>
               {hardCapMins} min
             </ThemedText>
@@ -220,8 +218,7 @@ export default function AdvancedPreGameConfirm() {
                 suffix: 'min',
                 onChange: (val) => setSoftCapMins(hardCapMins - val),
               })
-            }
-            sizeClass={sizeClass}>
+            }>
             <ThemedText style={[styles.settingValue, { color: palette.textInverse }]}>
               {softCapTime} min
             </ThemedText>
@@ -239,8 +236,7 @@ export default function AdvancedPreGameConfirm() {
                 quickOptions: [3, 5, 7],
                 onChange: setNumPlayers,
               })
-            }
-            sizeClass={sizeClass}>
+            }>
             <ThemedText style={[styles.settingValue, { color: palette.textInverse }]}>
               {numPlayers}v{numPlayers}
             </ThemedText>
@@ -253,8 +249,7 @@ export default function AdvancedPreGameConfirm() {
             onPress={() => {
               setAutoHalftimeEnabled(!autoHalftimeEnabled);
               if (autoHalftimeEnabled) setFloaterEnabled(false);
-            }}
-            sizeClass={sizeClass}>
+            }}>
             <ThemedText
               style={[
                 styles.settingValue,
@@ -270,15 +265,13 @@ export default function AdvancedPreGameConfirm() {
             floaterEnabled={floaterEnabled}
             onResetTimeouts={resetTimeouts}
             onSetFloaterEnabled={setFloaterEnabled}
-            sizeClass={sizeClass}
           />
 
           <EditableSettingCard
             icon="gender-male-female"
             label="Gender Ratio"
             isActive={genderRatioEnabled}
-            onPress={() => setGenderRatioEnabled(!genderRatioEnabled)}
-            sizeClass={sizeClass}>
+            onPress={() => setGenderRatioEnabled(!genderRatioEnabled)}>
             <ThemedText
               style={[
                 styles.settingValue,

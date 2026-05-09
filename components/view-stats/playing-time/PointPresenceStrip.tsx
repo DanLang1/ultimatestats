@@ -1,5 +1,5 @@
 import { useTheme } from '@/context/ThemeContext';
-import { scaleBySizeClass, SizeClass } from '@/hooks/useLayout';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { getAllPlayersByPoint } from '@/lib/lineUtils';
 import { GameEvent, PointLineRecord } from '@/lib/storage';
 import { computePointByPointEvents } from '@/lib/timelineUtils';
@@ -12,7 +12,6 @@ interface PointPresenceStripProps {
   playerId: string;
   events: GameEvent[];
   pointLines: PointLineRecord[];
-  sizeClass: SizeClass;
   startingPossession: 'team1' | 'team2' | null;
   gameTo: number;
   autoHalftimeEnabled?: boolean;
@@ -22,11 +21,11 @@ export default function PointPresenceStrip({
   playerId,
   events,
   pointLines,
-  sizeClass,
   startingPossession,
   gameTo,
   autoHalftimeEnabled,
 }: PointPresenceStripProps) {
+  const { sizeClass } = useLayout();
   const { palette } = useTheme();
   const styles = createStyles(sizeClass);
 

@@ -1,5 +1,4 @@
 import { useTheme } from '@/context/ThemeContext';
-import { useLayout } from '@/hooks/useLayout';
 import { PlayerStats as PlayerStatsType } from '@/lib/statsUtils';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
@@ -19,7 +18,6 @@ export default function PlayerStatsSummary({
   variant = 'horizontal',
 }: PlayerStatsSummaryProps) {
   const { palette } = useTheme();
-  const { sizeClass } = useLayout();
   const styles = createStyles();
   const isVertical = variant === 'vertical';
 
@@ -40,7 +38,6 @@ export default function PlayerStatsSummary({
         type="positive"
         bgColor={positiveBg}
         textColor={positiveText}
-        sizeClass={sizeClass}
       />
       <StatPill
         value={stats.assists}
@@ -48,7 +45,6 @@ export default function PlayerStatsSummary({
         type="positive"
         bgColor={positiveBg}
         textColor={positiveText}
-        sizeClass={sizeClass}
       />
       <StatPill
         value={stats.blocks}
@@ -56,7 +52,6 @@ export default function PlayerStatsSummary({
         type="positive"
         bgColor={positiveBg}
         textColor={positiveText}
-        sizeClass={sizeClass}
       />
 
       <StatPill
@@ -65,7 +60,6 @@ export default function PlayerStatsSummary({
         type="negative"
         bgColor={negativeBg}
         textColor={negativeText}
-        sizeClass={sizeClass}
       />
       <StatPill
         value={stats.drops}
@@ -73,7 +67,6 @@ export default function PlayerStatsSummary({
         type="negative"
         bgColor={negativeBg}
         textColor={negativeText}
-        sizeClass={sizeClass}
       />
       <StatPill
         value={stats.throwaways + stats.drops}
@@ -81,7 +74,6 @@ export default function PlayerStatsSummary({
         type="negative"
         bgColor={negativeBg}
         textColor={negativeText}
-        sizeClass={sizeClass}
       />
     </View>
   );

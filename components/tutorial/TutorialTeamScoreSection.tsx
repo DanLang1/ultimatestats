@@ -124,7 +124,6 @@ export default function TutorialTeamScoreSection({
           <TutorialTeamText
             color={textColor}
             teamName={teamName}
-            sizeClass={sizeClass}
             isCompactVertical={isCompactVertical}
           />
         </View>
@@ -133,7 +132,6 @@ export default function TutorialTeamScoreSection({
             bgColor={backgroundColor}
             textColor={textColor}
             score={score}
-            sizeClass={sizeClass}
             isCompactVertical={isCompactVertical}
           />
         </View>

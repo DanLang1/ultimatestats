@@ -106,7 +106,6 @@ export default function TeamScoreSection({
             color={textColor}
             teamName={teamName}
             hasPossession={hasPossession}
-            sizeClass={sizeClass}
             isCompactVertical={isCompactVertical}
           />
         </View>
@@ -115,7 +114,6 @@ export default function TeamScoreSection({
             bgColor={backgroundColor}
             textColor={textColor}
             score={score}
-            sizeClass={sizeClass}
             isCompactVertical={isCompactVertical}
           />
         </View>

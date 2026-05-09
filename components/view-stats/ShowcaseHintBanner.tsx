@@ -1,6 +1,6 @@
 import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
-import { scaleBySizeClass, SizeClass } from '@/hooks/useLayout';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { useTutorialStore } from '@/store/tutorialStore';
 import { Fonts } from '@/theme/theme';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
@@ -8,11 +8,8 @@ import { router } from 'expo-router';
 import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
-interface ShowcaseHintBannerProps {
-  sizeClass: SizeClass;
-}
-
-export default function ShowcaseHintBanner({ sizeClass }: ShowcaseHintBannerProps) {
+export default function ShowcaseHintBanner() {
+  const { sizeClass } = useLayout();
   const { palette } = useTheme();
   const dismissShowcaseHint = useTutorialStore((s) => s.dismissShowcaseHint);
   const styles = createStyles(sizeClass);

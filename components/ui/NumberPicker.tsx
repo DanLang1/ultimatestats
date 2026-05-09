@@ -1,6 +1,6 @@
 import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
-import { scaleBySizeClass, SizeClass } from '@/hooks/useLayout';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { useNumberPickerStore } from '@/store/numberPickerStore';
 import { Fonts } from '@/theme/theme';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
@@ -19,7 +19,6 @@ interface NumberPickerProps {
   suffix?: string;
   quickOptions?: number[];
   placeholder?: string;
-  sizeClass?: SizeClass;
 }
 
 export function NumberPicker({
@@ -33,8 +32,8 @@ export function NumberPicker({
   suffix,
   quickOptions,
   placeholder = '0',
-  sizeClass = 'small',
 }: NumberPickerProps) {
+  const { sizeClass } = useLayout();
   const { palette } = useTheme();
   const styles = createStyles(sizeClass);
   const metrics = createMetrics(sizeClass);

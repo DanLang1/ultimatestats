@@ -1,15 +1,15 @@
 import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
-import { scaleBySizeClass, SizeClass } from '@/hooks/useLayout';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { StyleSheet, View } from 'react-native';
 import { Fonts } from '@/theme/theme';
 
 interface HalfIndicatorProps {
   gameHalf: number;
-  sizeClass?: SizeClass;
 }
 
-export function HalfIndicator({ gameHalf, sizeClass = 'small' }: HalfIndicatorProps) {
+export function HalfIndicator({ gameHalf }: HalfIndicatorProps) {
+  const { sizeClass } = useLayout();
   const { palette } = useTheme();
   const styles = createStyles(sizeClass);
   const label = gameHalf === 1 ? '1ST HALF' : '2ND HALF';

@@ -353,7 +353,6 @@ export default function EditRosterScreen() {
               {group.players.map((player) => (
                 <PlayerChip
                   key={player.id}
-                  sizeClass={sizeClass}
                   name={player.name}
                   selected={selectionMode && selectedPlayerIds.has(player.id)}
                   isActive={player.isActive}
@@ -374,7 +373,6 @@ export default function EditRosterScreen() {
   } else {
     playerListContent = (
       <QuickEditPlayerList
-        sizeClass={sizeClass}
         roster={visibleRoster}
         onEditPlayer={handleEditPlayer}
         onSetPlayerActive={handleSetPlayerActive}
@@ -418,7 +416,6 @@ export default function EditRosterScreen() {
           {/* Actions bar - medium and large screens */}
           {sizeClass !== 'small' && !selectionMode && (
             <TeamActionsBar
-              sizeClass={sizeClass}
               viewMode={rosterViewMode}
               onToggleViewMode={toggleViewMode}
               onRenameTeam={() => {
@@ -493,7 +490,6 @@ export default function EditRosterScreen() {
 
           {roster.length > 0 && (
             <RosterControlsHeader
-              sizeClass={sizeClass}
               isSelecting={selectionMode}
               activeRoleFilter={roleFilter}
               selectedCount={selectedPlayerIds.size}
@@ -517,7 +513,6 @@ export default function EditRosterScreen() {
 
           {/* Bulk Actions Bar */}
           <RosterBulkActions
-            sizeClass={sizeClass}
             selectedCount={selectedPlayerIds.size}
             onSetMatching={handleBulkSetMatching}
             onSetRole={handleBulkSetRole}
@@ -675,7 +670,6 @@ export default function EditRosterScreen() {
         animationType="fade"
         supportedOrientations={['portrait', 'landscape']}>
         <TeamActionsSheet
-          sizeClass={sizeClass}
           onDismiss={() => setShowActionsSheet(false)}
           onRenameTeam={() => {
             setEditTeamName(currentTeam?.name ?? '');

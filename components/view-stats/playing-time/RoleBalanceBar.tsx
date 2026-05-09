@@ -1,5 +1,5 @@
 import { useTheme } from '@/context/ThemeContext';
-import { scaleBySizeClass, SizeClass } from '@/hooks/useLayout';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
@@ -10,7 +10,6 @@ interface RoleBalanceBarProps {
   dPoints: number;
   oLineHolds: number;
   dLineBreaks: number;
-  sizeClass: SizeClass;
 }
 
 export default function RoleBalanceBar({
@@ -18,8 +17,8 @@ export default function RoleBalanceBar({
   dPoints,
   oLineHolds,
   dLineBreaks,
-  sizeClass,
 }: RoleBalanceBarProps) {
+  const { sizeClass } = useLayout();
   const { palette } = useTheme();
   const styles = createStyles(sizeClass);
   const dLineColor = palette.dLineAccent;

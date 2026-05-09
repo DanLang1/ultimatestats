@@ -1,5 +1,5 @@
 import { useTheme } from '@/context/ThemeContext';
-import { scaleBySizeClass, SizeClass } from '@/hooks/useLayout';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
@@ -20,7 +20,6 @@ interface TeamActionsBarProps {
   showEditPresets: boolean;
   showShareTeam: boolean;
   showClearRoster: boolean;
-  sizeClass?: SizeClass;
 }
 
 interface BarButtonProps {
@@ -28,10 +27,10 @@ interface BarButtonProps {
   label: string;
   onPress: () => void;
   variant?: 'default' | 'danger';
-  sizeClass: SizeClass;
 }
 
-function BarButton({ icon, label, onPress, variant = 'default', sizeClass }: BarButtonProps) {
+function BarButton({ icon, label, onPress, variant = 'default' }: BarButtonProps) {
+  const { sizeClass } = useLayout();
   const { palette } = useTheme();
   const styles = createStyles(sizeClass);
   const color = variant === 'danger' ? palette.danger : palette.textInverse;
@@ -60,8 +59,8 @@ export function TeamActionsBar({
   showEditPresets,
   showShareTeam,
   showClearRoster,
-  sizeClass = 'small',
 }: TeamActionsBarProps) {
+  const { sizeClass } = useLayout();
   const { palette } = useTheme();
   const styles = createStyles(sizeClass);
 
@@ -71,43 +70,20 @@ export function TeamActionsBar({
         icon={viewMode === 'chips' ? 'view-list' : 'view-module'}
         label={viewMode === 'chips' ? 'Cards' : 'Chips'}
         onPress={onToggleViewMode}
-        sizeClass={sizeClass}
       />
-      <BarButton
-        icon="pencil-outline"
-        label="Rename"
-        onPress={onRenameTeam}
-        sizeClass={sizeClass}
-      />
-      {showNewTeam && (
-        <BarButton icon="plus" label="New Team" onPress={onNewTeam} sizeClass={sizeClass} />
-      )}
-      {showSwitchTeam && (
-        <BarButton
-          icon="swap-horizontal"
-          label="Switch"
-          onPress={onSwitchTeam}
-          sizeClass={sizeClass}
-        />
-      )}
+      <BarButton icon="pencil-outline" label="Rename" onPress={onRenameTeam} />
+      {showNewTeam && <BarButton icon="plus" label="New Team" onPress={onNewTeam} />}
+      {showSwitchTeam && <BarButton icon="swap-horizontal" label="Switch" onPress={onSwitchTeam} />}
       {showEditPresets && (
-        <BarButton
-          icon="playlist-edit"
-          label="Edit Lines"
-          onPress={onEditPresets}
-          sizeClass={sizeClass}
-        />
+        <BarButton icon="playlist-edit" label="Edit Lines" onPress={onEditPresets} />
       )}
-      {showShareTeam && (
-        <BarButton icon="share-variant" label="Share" onPress={onShareTeam} sizeClass={sizeClass} />
-      )}
+      {showShareTeam && <BarButton icon="share-variant" label="Share" onPress={onShareTeam} />}
       {showClearRoster && (
         <BarButton
           icon="delete-sweep-outline"
           label="Clear"
           onPress={onClearRoster}
           variant="danger"
-          sizeClass={sizeClass}
         />
       )}
     </View>

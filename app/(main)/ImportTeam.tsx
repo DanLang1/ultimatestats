@@ -226,7 +226,6 @@ export default function ImportTeamScreen() {
               options={NAME_FORMAT_OPTIONS}
               value={nameFormat}
               onChange={setNameFormat}
-              sizeClass={sizeClass}
             />
           </View>
         </View>

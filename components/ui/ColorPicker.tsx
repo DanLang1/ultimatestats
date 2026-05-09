@@ -1,5 +1,5 @@
 import { useTheme } from '@/context/ThemeContext';
-import { scaleBySizeClass, SizeClass } from '@/hooks/useLayout';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { getContrastingTextColor, normalizeHexColor, TEAM_COLOR_PRESETS } from '@/lib/colorUtils';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React, { useState } from 'react';
@@ -13,10 +13,10 @@ interface ColorPickerProps {
   label: string;
   value: string;
   onChange: (color: string) => void;
-  sizeClass?: SizeClass;
 }
 
-export function TeamColorPicker({ label, value, onChange, sizeClass = 'small' }: ColorPickerProps) {
+export function TeamColorPicker({ label, value, onChange }: ColorPickerProps) {
+  const { sizeClass } = useLayout();
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [tempColor, setTempColor] = useState(value);
   const { palette } = useTheme();

@@ -115,7 +115,6 @@ export default function TutorialStatTeamScoreSection({
             bgColor={backgroundColor}
             textColor={textColor}
             score={score}
-            sizeClass={sizeClass}
             isCompactVertical={isCompactVertical}
           />
         </View>

@@ -1,5 +1,5 @@
 import { useTheme } from '@/context/ThemeContext';
-import { getSizeClassValue, scaleBySizeClass, SizeClass } from '@/hooks/useLayout';
+import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { MatchingType, Player, PlayerRole } from '@/lib/storage/types';
 import { useSettingsStore } from '@/store/settingsStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
@@ -11,7 +11,6 @@ import { Fonts } from '@/theme/theme';
 interface QuickEditPlayerRowProps {
   player: Player;
   isLandscape: boolean;
-  sizeClass?: SizeClass;
   onEditPlayer: () => void;
   onSetActive: (isActive: boolean) => void;
   onSetMatching: (matchingType: MatchingType | null) => void;
@@ -29,12 +28,12 @@ const ROLE_ICONS: Record<PlayerRole, IconName> = {
 export function QuickEditPlayerRow({
   player,
   isLandscape,
-  sizeClass = 'small',
   onEditPlayer,
   onSetActive,
   onSetMatching,
   onSetRole,
 }: QuickEditPlayerRowProps) {
+  const { sizeClass } = useLayout();
   const { palette } = useTheme();
   const { mmpColor, fmpColor } = useSettingsStore();
   const styles = createStyles(isLandscape, sizeClass);

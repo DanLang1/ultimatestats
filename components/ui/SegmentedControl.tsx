@@ -3,7 +3,7 @@ import {
   useAttentionBorderRunner,
 } from '@/components/ui/hooks/useAttentionBorderRunner';
 import { useTheme } from '@/context/ThemeContext';
-import { scaleBySizeClass, SizeClass } from '@/hooks/useLayout';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React, { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
@@ -31,7 +31,6 @@ interface SegmentedControlProps<T extends string = string> {
   highlightLeftColor?: string;
   highlightRightColor?: string;
   attentionRunKey?: number;
-  sizeClass?: SizeClass;
 }
 
 export function SegmentedControl<T extends string = string>({
@@ -47,8 +46,8 @@ export function SegmentedControl<T extends string = string>({
   highlightLeftColor,
   highlightRightColor,
   attentionRunKey,
-  sizeClass = 'small',
 }: SegmentedControlProps<T>) {
+  const { sizeClass } = useLayout();
   const { palette, themeMode } = useTheme();
   const styles = createStyles(sizeClass);
   const metrics = createMetrics(sizeClass);

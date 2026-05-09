@@ -1,5 +1,5 @@
 import { useTheme } from '@/context/ThemeContext';
-import { scaleBySizeClass, SizeClass } from '@/hooks/useLayout';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
@@ -13,7 +13,6 @@ interface PlayingTimePillProps {
   borderColor?: string;
   align?: 'center' | 'left';
   compact?: boolean;
-  sizeClass?: SizeClass;
 }
 
 export default function PlayingTimePill({
@@ -24,8 +23,8 @@ export default function PlayingTimePill({
   borderColor,
   align = 'center',
   compact = false,
-  sizeClass = 'small',
 }: PlayingTimePillProps) {
+  const { sizeClass } = useLayout();
   const { palette } = useTheme();
   const styles = createStyles(sizeClass);
   return (

@@ -30,6 +30,7 @@ module.exports = defineConfig([
       'local/no-font-weight': 'error',
       'local/no-raw-colors': 'error',
       'local/no-restricted-hooks': 'error',
+      'local/no-sizeclass-prop': 'error',
       'no-nested-ternary': 'error',
       'no-unneeded-ternary': 'error',
       '@typescript-eslint/no-unsafe-type-assertion': 'error',

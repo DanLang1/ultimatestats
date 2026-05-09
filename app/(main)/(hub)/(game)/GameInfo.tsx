@@ -189,7 +189,7 @@ export default function GameInfoScreen() {
                   <ThemedText style={[styles.centerNumber, { color: palette.textInverse }]}>
                     {gameTo}
                   </ThemedText>
-                  <HalfIndicator gameHalf={gameHalf} sizeClass={sizeClass} />
+                  <HalfIndicator gameHalf={gameHalf} />
                   {isSoftCap && (
                     <View style={styles.capStatusBadge}>
                       <MaterialCommunityIcons
@@ -367,7 +367,7 @@ export default function GameInfoScreen() {
                   <ThemedText style={[styles.centerNumber, { color: palette.textInverse }]}>
                     {gameTo}
                   </ThemedText>
-                  <HalfIndicator gameHalf={gameHalf} sizeClass={sizeClass} />
+                  <HalfIndicator gameHalf={gameHalf} />
                   {isSoftCap && (
                     <View style={styles.capStatusBadge}>
                       <MaterialCommunityIcons

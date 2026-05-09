@@ -1,5 +1,5 @@
 import { useTheme } from '@/context/ThemeContext';
-import { scaleBySizeClass, SizeClass } from '@/hooks/useLayout';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { MatchingType, PlayerRole } from '@/lib/storage/types';
 import { useSettingsStore } from '@/store/settingsStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
@@ -13,7 +13,6 @@ interface RosterBulkActionsProps {
   onSetMatching: (type: MatchingType) => void;
   onSetRole: (role: PlayerRole) => void;
   isVisible: boolean;
-  sizeClass?: SizeClass;
 }
 
 export default function RosterBulkActions({
@@ -21,8 +20,8 @@ export default function RosterBulkActions({
   onSetMatching,
   onSetRole,
   isVisible,
-  sizeClass = 'small',
 }: RosterBulkActionsProps) {
+  const { sizeClass } = useLayout();
   const { palette } = useTheme();
   const styles = createStyles(sizeClass);
   const iconSize = scaleBySizeClass(14, sizeClass);

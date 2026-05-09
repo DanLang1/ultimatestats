@@ -1,5 +1,5 @@
 import { useTheme } from '@/context/ThemeContext';
-import { scaleBySizeClass, SizeClass } from '@/hooks/useLayout';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { PlayerRole } from '@/lib/storage/types';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React, { useState } from 'react';
@@ -18,7 +18,6 @@ interface RosterControlsHeaderProps {
   onToggleSelectMode: () => void;
   onToggleSelectAll: () => void;
   onToggleRoleFilter: (role: Exclude<RoleFilter, null>) => void;
-  sizeClass?: SizeClass;
 }
 
 export function RosterControlsHeader({
@@ -30,8 +29,8 @@ export function RosterControlsHeader({
   onToggleSelectMode,
   onToggleSelectAll,
   onToggleRoleFilter,
-  sizeClass = 'small',
 }: RosterControlsHeaderProps) {
+  const { sizeClass } = useLayout();
   const TRACK_WIDTH = scaleBySizeClass(118, sizeClass);
   const styles = createStyles(sizeClass);
   const metrics = createMetrics(sizeClass);

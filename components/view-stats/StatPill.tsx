@@ -1,4 +1,4 @@
-import { scaleBySizeClass, SizeClass } from '@/hooks/useLayout';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
@@ -10,16 +10,10 @@ interface StatPillProps {
   type: 'positive' | 'negative';
   bgColor: string;
   textColor: string;
-  sizeClass?: SizeClass;
 }
 
-export default function StatPill({
-  value,
-  label,
-  bgColor,
-  textColor,
-  sizeClass = 'small',
-}: StatPillProps) {
+export default function StatPill({ value, label, bgColor, textColor }: StatPillProps) {
+  const { sizeClass } = useLayout();
   const styles = createStyles(sizeClass);
   return (
     <View style={[styles.pill, { backgroundColor: bgColor }]}>

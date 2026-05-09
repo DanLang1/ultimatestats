@@ -1,20 +1,19 @@
 import { ThemedText } from '@/components/ThemedText';
-import { getSizeClassValue, SizeClass } from '@/hooks/useLayout';
+import { getSizeClassValue, useLayout } from '@/hooks/useLayout';
 import { View } from 'react-native';
 
 interface TutorialTeamTextProps {
   teamName: string;
   color: string;
-  sizeClass?: SizeClass;
   isCompactVertical?: boolean;
 }
 
 export default function TutorialTeamText({
   teamName,
   color,
-  sizeClass = 'small',
   isCompactVertical = false,
 }: TutorialTeamTextProps) {
+  const { sizeClass } = useLayout();
   const baseFontSize = getSizeClassValue({ small: 40, medium: 52, large: 60 }, sizeClass);
   const minFontSize = getSizeClassValue({ small: 24, medium: 30, large: 36 }, sizeClass);
   const shrinkThreshold = 8;

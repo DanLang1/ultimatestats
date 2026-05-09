@@ -3,7 +3,7 @@ import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import { Switch } from '@/components/ui/Switch';
 import { AlertModal } from '@/components/ui/AlertModal';
 import { useTheme } from '@/context/ThemeContext';
-import { scaleBySizeClass, SizeClass } from '@/hooks/useLayout';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import React, { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
@@ -15,7 +15,6 @@ interface TimeoutSettingCardProps {
   floaterEnabled: boolean;
   onResetTimeouts: (count: number) => void;
   onSetFloaterEnabled: (enabled: boolean) => void;
-  sizeClass?: SizeClass;
 }
 
 export function TimeoutSettingCard({
@@ -24,8 +23,8 @@ export function TimeoutSettingCard({
   floaterEnabled,
   onResetTimeouts,
   onSetFloaterEnabled,
-  sizeClass = 'small',
 }: TimeoutSettingCardProps) {
+  const { sizeClass } = useLayout();
   const { palette } = useTheme();
   const styles = createStyles(sizeClass);
   const [modalVisible, setModalVisible] = useState(false);
@@ -37,11 +36,7 @@ export function TimeoutSettingCard({
 
   return (
     <>
-      <EditableSettingCard
-        icon="timer-sand"
-        label="Timeouts"
-        onPress={() => setModalVisible(true)}
-        sizeClass={sizeClass}>
+      <EditableSettingCard icon="timer-sand" label="Timeouts" onPress={() => setModalVisible(true)}>
         <ThemedText style={[styles.value, { color: palette.textInverse }]}>{summary}</ThemedText>
       </EditableSettingCard>
 
@@ -55,7 +50,6 @@ export function TimeoutSettingCard({
             ]}
             value={String(timeoutCount)}
             onChange={(val) => onResetTimeouts(Number(val))}
-            sizeClass={sizeClass}
           />
 
           {autoHalftimeEnabled && (
@@ -63,7 +57,6 @@ export function TimeoutSettingCard({
               label="FLOATER TIMEOUT"
               value={floaterEnabled}
               onValueChange={onSetFloaterEnabled}
-              sizeClass={sizeClass}
             />
           )}
         </View>

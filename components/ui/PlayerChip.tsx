@@ -1,5 +1,5 @@
 import { useTheme } from '@/context/ThemeContext';
-import { scaleBySizeClass, SizeClass } from '@/hooks/useLayout';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { getContrastingTextColor } from '@/lib/colorUtils';
 import { MatchingType, PlayerRole } from '@/lib/storage/types';
 import { useSettingsStore } from '@/store/settingsStore';
@@ -20,7 +20,6 @@ interface PlayerChipProps {
   compact?: boolean;
   /** Use modal-appropriate colors (modalText, modalTextMuted) */
   useModalColors?: boolean;
-  sizeClass?: SizeClass;
   onPress: () => void;
 }
 
@@ -43,9 +42,9 @@ export function PlayerChip({
   subtitle,
   compact = false,
   useModalColors = false,
-  sizeClass = 'small',
   onPress,
 }: PlayerChipProps) {
+  const { sizeClass } = useLayout();
   const { palette } = useTheme();
   const { mmpColor, fmpColor } = useSettingsStore();
   const styles = createStyles(sizeClass);

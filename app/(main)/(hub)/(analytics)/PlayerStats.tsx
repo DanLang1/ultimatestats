@@ -322,7 +322,6 @@ export default function PlayerStats() {
                     playerId={playerId}
                     events={stripEvents}
                     pointLines={stripPointLines}
-                    sizeClass={sizeClass}
                     startingPossession={
                       displayGame?.startingPossession ?? startingPossession ?? null
                     }

@@ -1,6 +1,6 @@
 import FlashingIcon from '@/components/ui/FlashingIcon';
 import { useTheme } from '@/context/ThemeContext';
-import { scaleBySizeClass, SizeClass } from '@/hooks/useLayout';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router } from 'expo-router';
@@ -11,13 +11,10 @@ import { Fonts } from '@/theme/theme';
 
 interface HelpContentProps {
   showActionBarLegend?: boolean;
-  sizeClass?: SizeClass;
 }
 
-export default function HelpContent({
-  showActionBarLegend = true,
-  sizeClass = 'small',
-}: HelpContentProps) {
+export default function HelpContent({ showActionBarLegend = true }: HelpContentProps) {
+  const { sizeClass } = useLayout();
   const { palette } = useTheme();
   const styles = createStyles(sizeClass);
   const metrics = createMetrics(sizeClass);

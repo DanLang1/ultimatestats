@@ -208,7 +208,7 @@ export default function ViewStatsScreen() {
       <ScrollView
         testID="view-stats-scroll"
         contentContainerStyle={[styles.scrollContent, { paddingBottom: 100 }]}>
-        {showShowcaseHint && <ShowcaseHintBanner sizeClass={sizeClass} />}
+        {showShowcaseHint && <ShowcaseHintBanner />}
         <View style={styles.shortcutsSection}>
           <ThemedText style={[styles.sectionLabel, { color: palette.textMuted }]}>
             More Analytics

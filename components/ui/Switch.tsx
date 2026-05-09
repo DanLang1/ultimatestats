@@ -1,5 +1,5 @@
 import { useTheme } from '@/context/ThemeContext';
-import { getSizeClassValue, SizeClass } from '@/hooks/useLayout';
+import { getSizeClassValue, SizeClass, useLayout } from '@/hooks/useLayout';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
 import { Platform, Switch as RNSwitch, StyleSheet, View } from 'react-native';
@@ -12,17 +12,10 @@ interface SwitchProps {
   onValueChange: (value: boolean) => void;
   disabled?: boolean;
   locked?: boolean;
-  sizeClass?: SizeClass;
 }
 
-export function Switch({
-  label,
-  value,
-  onValueChange,
-  disabled,
-  locked,
-  sizeClass = 'small',
-}: SwitchProps) {
+export function Switch({ label, value, onValueChange, disabled, locked }: SwitchProps) {
+  const { sizeClass } = useLayout();
   const { palette } = useTheme();
   const styles = createStyles(sizeClass);
   const lockIconSize = getSizeClassValue({ small: 10, medium: 11, large: 12 }, sizeClass);

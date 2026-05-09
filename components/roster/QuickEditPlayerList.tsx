@@ -13,7 +13,6 @@ interface QuickEditPlayerListProps {
   onSetPlayerActive: (playerId: string, isActive: boolean) => void;
   onSetPlayerMatching: (playerId: string, matchingType: MatchingType | null) => void;
   onSetPlayerRole: (playerId: string, role: PlayerRole | null) => void;
-  sizeClass?: SizeClass;
 }
 
 export function QuickEditPlayerList({
@@ -22,12 +21,9 @@ export function QuickEditPlayerList({
   onSetPlayerActive,
   onSetPlayerMatching,
   onSetPlayerRole,
-  sizeClass,
 }: QuickEditPlayerListProps) {
-  const layout = useLayout();
-  const isLandscape = layout.isLandscape;
-  const resolvedSizeClass = sizeClass ?? layout.sizeClass;
-  const styles = createStyles(resolvedSizeClass);
+  const { isLandscape, sizeClass } = useLayout();
+  const styles = createStyles(sizeClass);
   const { palette } = useTheme();
 
   const activePlayers = roster.filter((player) => player.isActive);
@@ -56,7 +52,6 @@ export function QuickEditPlayerList({
       key={player.id}
       player={player}
       isLandscape={isLandscape}
-      sizeClass={resolvedSizeClass}
       onEditPlayer={() => onEditPlayer(player)}
       onSetActive={(isActive) => onSetPlayerActive(player.id, isActive)}
       onSetMatching={(matchingType) => onSetPlayerMatching(player.id, matchingType)}

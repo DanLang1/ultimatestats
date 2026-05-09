@@ -126,7 +126,6 @@ export default function PlayingTimeSection({
           centerLabel={stats.pointsPlayed.toString()}
           centerSubLabel="Points"
           color={palette.accent}
-          sizeClass={sizeClass}
         />
 
         <View style={styles.heroDetails}>
@@ -140,22 +139,14 @@ export default function PlayingTimeSection({
               value={totalPlayingTimeLabel}
               align="left"
               compact
-              sizeClass={sizeClass}
             />
-            <PlayingTimePill
-              label="Avg / pt"
-              value={avgPerPointLabel}
-              align="left"
-              compact
-              sizeClass={sizeClass}
-            />
+            <PlayingTimePill label="Avg / pt" value={avgPerPointLabel} align="left" compact />
             <PlayingTimePill
               label="Score Rate"
               value={`${rates.pointWinRate.toFixed(0)}%`}
               color={scoreRateColor}
               align="left"
               compact
-              sizeClass={sizeClass}
             />
           </View>
         </View>
@@ -170,7 +161,6 @@ export default function PlayingTimeSection({
           dPoints={stats.dPoints}
           oLineHolds={stats.oLineHolds}
           dLineBreaks={stats.dLineBreaks}
-          sizeClass={sizeClass}
         />
       </View>
 
@@ -179,16 +169,12 @@ export default function PlayingTimeSection({
           PER POINT
         </ThemedText>
         <View style={styles.pillGrid}>
-          <PlayingTimePill label="Goals" value={goalsPerPoint.toFixed(2)} sizeClass={sizeClass} />
-          <PlayingTimePill
-            label="Assists"
-            value={assistsPerPoint.toFixed(2)}
-            sizeClass={sizeClass}
-          />
-          <PlayingTimePill label="Blocks" value={blocksPerPoint.toFixed(2)} sizeClass={sizeClass} />
-          <PlayingTimePill label="TO" value={turnoversPerPoint.toFixed(2)} sizeClass={sizeClass} />
-          <PlayingTimePill label="TA" value={throwawaysPerPoint.toFixed(2)} sizeClass={sizeClass} />
-          <PlayingTimePill label="Drops" value={dropsPerPoint.toFixed(2)} sizeClass={sizeClass} />
+          <PlayingTimePill label="Goals" value={goalsPerPoint.toFixed(2)} />
+          <PlayingTimePill label="Assists" value={assistsPerPoint.toFixed(2)} />
+          <PlayingTimePill label="Blocks" value={blocksPerPoint.toFixed(2)} />
+          <PlayingTimePill label="TO" value={turnoversPerPoint.toFixed(2)} />
+          <PlayingTimePill label="TA" value={throwawaysPerPoint.toFixed(2)} />
+          <PlayingTimePill label="Drops" value={dropsPerPoint.toFixed(2)} />
         </View>
       </View>
     </View>

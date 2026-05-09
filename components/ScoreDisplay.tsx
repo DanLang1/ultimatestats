@@ -1,13 +1,12 @@
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import { getSizeClassValue, SizeClass } from '@/hooks/useLayout';
+import { getSizeClassValue, SizeClass, useLayout } from '@/hooks/useLayout';
 import { StyleSheet } from 'react-native';
 
 export interface ScoreDisplayProps {
   bgColor: string;
   textColor: string;
   score: number;
-  sizeClass?: SizeClass;
   isCompactVertical?: boolean;
 }
 
@@ -15,9 +14,9 @@ export default function ScoreDisplay({
   bgColor,
   textColor,
   score,
-  sizeClass = 'small',
   isCompactVertical = false,
 }: ScoreDisplayProps) {
+  const { sizeClass } = useLayout();
   const styles = createStyles(sizeClass, isCompactVertical);
   return (
     <ThemedView style={[styles.scoreContainer, { backgroundColor: bgColor }]}>

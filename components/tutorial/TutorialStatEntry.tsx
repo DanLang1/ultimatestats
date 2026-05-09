@@ -81,7 +81,6 @@ export default function TutorialStatEntry({
               key={player.id}
               name={player.name}
               matchingType={player.matchingType}
-              sizeClass={sizeClass}
               useModalColors
               selected={step === 'assist' && player.id === goalScorerId}
               onPress={() => onSelectPlayer(player.id)}

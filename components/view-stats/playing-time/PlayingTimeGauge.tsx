@@ -1,5 +1,5 @@
 import { useTheme } from '@/context/ThemeContext';
-import { scaleBySizeClass, SizeClass } from '@/hooks/useLayout';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
@@ -12,7 +12,6 @@ interface PlayingTimeGaugeProps {
   centerSubLabel: string;
   bottomLabel?: string;
   color: string;
-  sizeClass: SizeClass;
 }
 
 export default function PlayingTimeGauge({
@@ -21,8 +20,8 @@ export default function PlayingTimeGauge({
   centerSubLabel,
   bottomLabel,
   color,
-  sizeClass,
 }: PlayingTimeGaugeProps) {
+  const { sizeClass } = useLayout();
   const { palette } = useTheme();
   const styles = createStyles(sizeClass);
 

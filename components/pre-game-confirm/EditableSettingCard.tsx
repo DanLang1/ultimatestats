@@ -1,5 +1,5 @@
 import { useTheme } from '@/context/ThemeContext';
-import { scaleBySizeClass, SizeClass } from '@/hooks/useLayout';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
@@ -22,7 +22,6 @@ interface EditableSettingCardProps {
   onPress?: () => void;
   /** When provided, the tile is treated as a toggle: no chevron, icon tints accent when true */
   isActive?: boolean;
-  sizeClass?: SizeClass;
 }
 
 export function EditableSettingCard({
@@ -31,8 +30,8 @@ export function EditableSettingCard({
   children,
   onPress,
   isActive,
-  sizeClass = 'small',
 }: EditableSettingCardProps) {
+  const { sizeClass } = useLayout();
   const { palette } = useTheme();
   const styles = createStyles(sizeClass);
   const scale = useSharedValue(1);

@@ -1,4 +1,4 @@
-import { getSizeClassValue, SizeClass } from '@/hooks/useLayout';
+import { getSizeClassValue, useLayout } from '@/hooks/useLayout';
 import { View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 
@@ -8,7 +8,6 @@ interface TeamTextProps {
   teamName: string;
   color: string;
   hasPossession?: boolean;
-  sizeClass?: SizeClass;
   isCompactVertical?: boolean;
 }
 
@@ -16,9 +15,9 @@ export default function TeamText({
   teamName,
   color,
   hasPossession,
-  sizeClass = 'small',
   isCompactVertical = false,
 }: TeamTextProps) {
+  const { sizeClass } = useLayout();
   // Dynamic font size: starts at baseFontSize, shrinks for longer names
   const baseFontSize = getSizeClassValue({ small: 40, medium: 52, large: 60 }, sizeClass);
   const minFontSize = getSizeClassValue({ small: 24, medium: 30, large: 36 }, sizeClass);

@@ -239,7 +239,6 @@ function SettingsContent() {
               label="MY TEAM COLOR"
               value={team1BgColor}
               onChange={(color) => setTeamBgColor('team1', color)}
-              sizeClass={sizeClass}
             />
           </View>
           <View style={styles.compactColorItem}>
@@ -247,7 +246,6 @@ function SettingsContent() {
               label="OPPOSING TEAM COLOR"
               value={team2BgColor}
               onChange={(color) => setTeamBgColor('team2', color)}
-              sizeClass={sizeClass}
             />
           </View>
         </View>
@@ -257,14 +255,12 @@ function SettingsContent() {
             label="MY TEAM COLOR"
             value={team1BgColor}
             onChange={(color) => setTeamBgColor('team1', color)}
-            sizeClass={sizeClass}
           />
           <View style={styles.colorPickerSpacer} />
           <TeamColorPicker
             label="OPPOSING TEAM COLOR"
             value={team2BgColor}
             onChange={(color) => setTeamBgColor('team2', color)}
-            sizeClass={sizeClass}
           />
         </>
       )}
@@ -285,37 +281,21 @@ function SettingsContent() {
       {compact ? (
         <View style={styles.compactColorGrid}>
           <View style={styles.compactColorItem}>
-            <TeamColorPicker
-              label="MMP (MALE MATCHING)"
-              value={mmpColor}
-              onChange={setMmpColor}
-              sizeClass={sizeClass}
-            />
+            <TeamColorPicker label="MMP (MALE MATCHING)" value={mmpColor} onChange={setMmpColor} />
           </View>
           <View style={styles.compactColorItem}>
             <TeamColorPicker
               label="FMP (FEMALE MATCHING)"
               value={fmpColor}
               onChange={setFmpColor}
-              sizeClass={sizeClass}
             />
           </View>
         </View>
       ) : (
         <>
-          <TeamColorPicker
-            label="MMP (MALE MATCHING)"
-            value={mmpColor}
-            onChange={setMmpColor}
-            sizeClass={sizeClass}
-          />
+          <TeamColorPicker label="MMP (MALE MATCHING)" value={mmpColor} onChange={setMmpColor} />
           <View style={styles.colorPickerSpacer} />
-          <TeamColorPicker
-            label="FMP (FEMALE MATCHING)"
-            value={fmpColor}
-            onChange={setFmpColor}
-            sizeClass={sizeClass}
-          />
+          <TeamColorPicker label="FMP (FEMALE MATCHING)" value={fmpColor} onChange={setFmpColor} />
         </>
       )}
       <Pressable
@@ -339,7 +319,6 @@ function SettingsContent() {
         ]}
         value={themeMode}
         onChange={setThemeMode}
-        sizeClass={sizeClass}
       />
       <SegmentedControl
         label="ORIENTATION"
@@ -350,7 +329,6 @@ function SettingsContent() {
         ]}
         value={orientationMode}
         onChange={handleOrientationModeChange}
-        sizeClass={sizeClass}
       />
       {isAndroidLargeScreen && (
         <ThemedText style={[styles.helperText, textMutedStyle]}>
@@ -500,7 +478,6 @@ function SettingsContent() {
                   quickOptions={gameToQuickOptions}
                   helperText={gameToValidationText}
                   disabled={gameActive && !canEditGameToInGame}
-                  sizeClass={sizeClass}
                 />
                 {gameToSettingsHelperText && (
                   <ThemedText style={[styles.helperText, textMutedStyle]}>
@@ -525,7 +502,6 @@ function SettingsContent() {
                   suffix="min"
                   quickOptions={[90, 105, 110, 120]}
                   disabled={gameActive}
-                  sizeClass={sizeClass}
                 />
               </View>
 
@@ -544,7 +520,6 @@ function SettingsContent() {
                     Math.max(0, hardCapMins - 10),
                   ]}
                   disabled={gameActive}
-                  sizeClass={sizeClass}
                 />
               </View>
 
@@ -557,7 +532,6 @@ function SettingsContent() {
                   max={7}
                   quickOptions={[3, 5, 7]}
                   disabled={gameActive}
-                  sizeClass={sizeClass}
                 />
               </View>
 
@@ -574,7 +548,6 @@ function SettingsContent() {
                     if (!isNaN(num)) resetTimeouts(num);
                   }}
                   disabled={gameActive}
-                  sizeClass={sizeClass}
                 />
               </View>
 
@@ -592,7 +565,6 @@ function SettingsContent() {
                   }}
                   disabled={gameActive}
                   locked={gameActive}
-                  sizeClass={sizeClass}
                 />
               </View>
               {autoHalftimeEnabled && (
@@ -603,7 +575,6 @@ function SettingsContent() {
                     onValueChange={setFloaterEnabled}
                     disabled={gameActive}
                     locked={gameActive}
-                    sizeClass={sizeClass}
                   />
                 </View>
               )}
@@ -625,7 +596,6 @@ function SettingsContent() {
                     }}
                     disabled={gameActive}
                     locked={gameActive}
-                    sizeClass={sizeClass}
                   />
                 </View>
               </View>
@@ -638,7 +608,6 @@ function SettingsContent() {
                       onValueChange={(enabled) =>
                         setStatEntryOrder(enabled ? 'goal_first' : 'assist_first')
                       }
-                      sizeClass={sizeClass}
                     />
                   </View>
                   <View style={styles.inputGroup}>
@@ -648,7 +617,6 @@ function SettingsContent() {
                       onValueChange={setPointTimerEnabled}
                       disabled={gameActive}
                       locked={gameActive}
-                      sizeClass={sizeClass}
                     />
                   </View>
                 </>
@@ -660,7 +628,6 @@ function SettingsContent() {
                   onValueChange={setGenderRatioEnabled}
                   disabled={gameActive}
                   locked={gameActive}
-                  sizeClass={sizeClass}
                 />
               </View>
               {statTrackingEnabled && (
@@ -671,7 +638,6 @@ function SettingsContent() {
                     onValueChange={setLineCallingEnabled}
                     disabled={gameActive}
                     locked={gameActive}
-                    sizeClass={sizeClass}
                   />
                 </View>
               )}
@@ -685,7 +651,6 @@ function SettingsContent() {
                     ]}
                     value={linePlayerSortOrder}
                     onChange={setLinePlayerSortOrder}
-                    sizeClass={sizeClass}
                   />
                 </View>
               )}

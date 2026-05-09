@@ -1,6 +1,6 @@
 import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
-import { scaleBySizeClass, SizeClass } from '@/hooks/useLayout';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import {
   fetchShowcasePayload,
   incrementShowcaseImportCount,
@@ -17,10 +17,10 @@ import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 
 interface ShowcaseCardProps {
   game: ShowcaseGameMeta;
-  sizeClass: SizeClass;
 }
 
-export default function ShowcaseCard({ game, sizeClass }: ShowcaseCardProps) {
+export default function ShowcaseCard({ game }: ShowcaseCardProps) {
+  const { sizeClass } = useLayout();
   const { palette } = useTheme();
   const styles = createStyles(sizeClass);
   const { importGame } = useGameStore();

@@ -209,8 +209,7 @@ export default function PreGameConfirm() {
                     quickOptions: [13, 15],
                     onChange: setGameTo,
                   })
-                }
-                sizeClass={sizeClass}>
+                }>
                 <ThemedText style={[styles.settingValue, { color: palette.textInverse }]}>
                   {gameTo}
                 </ThemedText>
@@ -237,8 +236,7 @@ export default function PreGameConfirm() {
                       }
                     },
                   })
-                }
-                sizeClass={sizeClass}>
+                }>
                 <ThemedText style={[styles.settingValue, { color: palette.textInverse }]}>
                   {hardCapMins} min
                 </ThemedText>
@@ -257,8 +255,7 @@ export default function PreGameConfirm() {
                     suffix: 'min',
                     onChange: (val) => setSoftCapMins(hardCapMins - val),
                   })
-                }
-                sizeClass={sizeClass}>
+                }>
                 <ThemedText style={[styles.settingValue, { color: palette.textInverse }]}>
                   {softCapTime} min
                 </ThemedText>
@@ -277,8 +274,7 @@ export default function PreGameConfirm() {
                     quickOptions: [3, 5, 7],
                     onChange: setNumPlayers,
                   })
-                }
-                sizeClass={sizeClass}>
+                }>
                 <ThemedText style={[styles.settingValue, { color: palette.textInverse }]}>
                   {numPlayers}v{numPlayers}
                 </ThemedText>
@@ -292,8 +288,7 @@ export default function PreGameConfirm() {
                 onPress={() => {
                   setAutoHalftimeEnabled(!autoHalftimeEnabled);
                   if (autoHalftimeEnabled) setFloaterEnabled(false);
-                }}
-                sizeClass={sizeClass}>
+                }}>
                 <ThemedText
                   style={[
                     styles.settingValue,
@@ -310,7 +305,6 @@ export default function PreGameConfirm() {
                 floaterEnabled={floaterEnabled}
                 onResetTimeouts={resetTimeouts}
                 onSetFloaterEnabled={setFloaterEnabled}
-                sizeClass={sizeClass}
               />
 
               {/* Stat Tracking */}
@@ -327,8 +321,7 @@ export default function PreGameConfirm() {
                     setPointTimerEnabled(false);
                     setLineCallingEnabled(false);
                   }
-                }}
-                sizeClass={sizeClass}>
+                }}>
                 <ThemedText
                   style={[
                     styles.settingValue,
@@ -344,8 +337,7 @@ export default function PreGameConfirm() {
                   icon="clipboard-list-outline"
                   label="Line Calling"
                   isActive={lineCallingEnabled}
-                  onPress={() => setLineCallingEnabled(!lineCallingEnabled)}
-                  sizeClass={sizeClass}>
+                  onPress={() => setLineCallingEnabled(!lineCallingEnabled)}>
                   <ThemedText
                     style={[
                       styles.settingValue,
@@ -361,8 +353,7 @@ export default function PreGameConfirm() {
                 icon="account-group"
                 label="Gender Ratio"
                 isActive={genderRatioEnabled}
-                onPress={() => setGenderRatioEnabled(!genderRatioEnabled)}
-                sizeClass={sizeClass}>
+                onPress={() => setGenderRatioEnabled(!genderRatioEnabled)}>
                 <ThemedText
                   style={[
                     styles.settingValue,
@@ -378,8 +369,7 @@ export default function PreGameConfirm() {
                   icon="timer-outline"
                   label="Point Timer"
                   isActive={pointTimerEnabled}
-                  onPress={() => setPointTimerEnabled(!pointTimerEnabled)}
-                  sizeClass={sizeClass}>
+                  onPress={() => setPointTimerEnabled(!pointTimerEnabled)}>
                   <ThemedText
                     style={[
                       styles.settingValue,
