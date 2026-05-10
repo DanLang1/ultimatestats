@@ -99,16 +99,33 @@ export default function AdvancedGameStatsScreen() {
         backButtonBackgroundColor={palette.overlay10}
         centerTitleInLandscape={false}
         rightSlot={
-          <Pressable
-            onPress={handleDelete}
-            style={[styles.deleteButton, { backgroundColor: palette.overlay05 }]}
-            hitSlop={8}>
-            <MaterialCommunityIcons
-              name="delete-outline"
-              size={scaleBySizeClass(20, sizeClass)}
-              color={palette.danger}
-            />
-          </Pressable>
+          <View style={styles.headerActions}>
+            <Pressable
+              onPress={() =>
+                router.push({
+                  pathname: '/advancedTracking/analytics/timeline/[gameId]',
+                  params: { gameId },
+                })
+              }
+              style={[styles.headerButton, { backgroundColor: palette.overlay05 }]}
+              hitSlop={8}>
+              <MaterialCommunityIcons
+                name="timeline-outline"
+                size={scaleBySizeClass(20, sizeClass)}
+                color={palette.accent}
+              />
+            </Pressable>
+            <Pressable
+              onPress={handleDelete}
+              style={[styles.headerButton, { backgroundColor: palette.overlay05 }]}
+              hitSlop={8}>
+              <MaterialCommunityIcons
+                name="delete-outline"
+                size={scaleBySizeClass(20, sizeClass)}
+                color={palette.danger}
+              />
+            </Pressable>
+          </View>
         }
       />
 
@@ -188,7 +205,12 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
       fontSize: scaleBySizeClass(14, sizeClass),
       fontFamily: Fonts.bold,
     },
-    deleteButton: {
+    headerActions: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    headerButton: {
       width: scaleBySizeClass(36, sizeClass),
       height: scaleBySizeClass(36, sizeClass),
       borderRadius: scaleBySizeClass(18, sizeClass),
