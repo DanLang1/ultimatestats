@@ -1,7 +1,7 @@
 // Analytics Layer Types
 // See docs/future-features/advanced-stat-tracking/analytics-layer.md
 
-import type { GameMetadata } from './types';
+import type { GameMetadata, PullResult, ThrowResult } from './types';
 
 export type PointState =
   | 'hold' // focus side received and scored
@@ -83,9 +83,8 @@ export interface AnalyticsPossession {
   turnoverType?: AnalyticsTurnoverType;
 }
 
-export interface AnalyticsAction {
+export interface AnalyticsActionBase {
   id: string;
-  kind: 'pull' | 'disc_pickup' | 'throw' | 'stoppage';
   pointId: string;
   pointIndex: number;
   possessionId: string;
@@ -97,21 +96,44 @@ export interface AnalyticsAction {
   /** toPlayer on throws, receiver on pull. Null if unknown or untracked. */
   receiverId: string | null;
   defenderId: string | null;
-  result?: string;
-  /** Pull hang time in ms when this is a pull action. */
-  hangTimeMs?: number;
   /**
    * Derived during buildAnalyticsGame by walking the possession's actions array.
    * Not stored in the raw model. Used for hockey assist derivation.
    */
   previousActionId: string | null;
-  splitAttribution: boolean;
   /**
    * Ms elapsed since the point started. Derived from action.recordedAt - point.startedAt.
    * Null if either timestamp is absent.
    */
   elapsedMs: number | null;
 }
+
+export interface PullAnalyticsAction extends AnalyticsActionBase {
+  kind: 'pull';
+  result: PullResult;
+  /** Pull hang time in ms. */
+  hangTimeMs?: number;
+}
+
+export interface DiscPickupAnalyticsAction extends AnalyticsActionBase {
+  kind: 'disc_pickup';
+}
+
+export interface ThrowAnalyticsAction extends AnalyticsActionBase {
+  kind: 'throw';
+  result: ThrowResult;
+  splitAttribution: boolean;
+}
+
+export interface StoppageAnalyticsAction extends AnalyticsActionBase {
+  kind: 'stoppage';
+}
+
+export type AnalyticsAction =
+  | PullAnalyticsAction
+  | DiscPickupAnalyticsAction
+  | ThrowAnalyticsAction
+  | StoppageAnalyticsAction;
 
 export interface AnalyticsAttribution {
   type: AttributionType;

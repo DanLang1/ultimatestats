@@ -4,7 +4,11 @@ import type {
   AnalyticsGame,
   AnalyticsPoint,
   AnalyticsPossession,
+  DiscPickupAnalyticsAction,
   PointState,
+  PullAnalyticsAction,
+  StoppageAnalyticsAction,
+  ThrowAnalyticsAction,
 } from './analyticsTypes';
 import { buildAnalyticsGame, UNKNOWN_PARTICIPANT_ID } from './buildAnalyticsGame';
 import type {
@@ -256,36 +260,6 @@ function buildThrowLabel(
   }
 }
 
-// ── Result guards ────────────────────────────────────────────────────────────
-
-type PullResult = 'inbound' | 'ob' | 'dropped';
-
-function resolvePullResult(result: string | null | undefined): PullResult {
-  switch (result) {
-    case 'inbound':
-    case 'ob':
-    case 'dropped':
-      return result;
-    default:
-      return 'inbound';
-  }
-}
-
-function resolveThrowResult(result: string | null | undefined): ThrowResult {
-  switch (result) {
-    case 'complete':
-    case 'goal':
-    case 'drop':
-    case 'throwaway':
-    case 'stall':
-    case 'block':
-    case 'callahan':
-      return result;
-    default:
-      return 'complete';
-  }
-}
-
 // ── Action display builders ──────────────────────────────────────────────────
 
 function actionBase(action: AnalyticsAction) {
@@ -298,12 +272,12 @@ function actionBase(action: AnalyticsAction) {
 }
 
 function buildPullDisplayAction(
-  action: AnalyticsAction,
+  action: PullAnalyticsAction,
   base: ReturnType<typeof actionBase>,
   participantNames: Map<string, string>,
 ): AdvancedTimelineAction {
   const pullerName = resolveName(participantNames, action.actorId) ?? 'Unknown';
-  const pullResult = resolvePullResult(action.result);
+  const pullResult = action.result;
   const hangLabel =
     action.hangTimeMs != null ? `${(action.hangTimeMs / 1000).toFixed(1)}s hang` : null;
 
@@ -334,7 +308,7 @@ function buildPullDisplayAction(
 }
 
 function buildPickupDisplayAction(
-  action: AnalyticsAction,
+  action: DiscPickupAnalyticsAction,
   base: ReturnType<typeof actionBase>,
   participantNames: Map<string, string>,
 ): AdvancedTimelineAction {
@@ -350,13 +324,14 @@ function buildPickupDisplayAction(
 }
 
 function buildThrowDisplayAction(
-  action: AnalyticsAction,
+  action: ThrowAnalyticsAction,
   base: ReturnType<typeof actionBase>,
   participantNames: Map<string, string>,
   scoringSideId: string | null,
   focusSideId: string,
 ): AdvancedTimelineAction {
-  const throwResult = resolveThrowResult(action.result);
+  const throwResult = action.result;
+
   const throwerName = resolveName(participantNames, action.actorId) ?? 'Unknown';
   const receiverName = resolveName(participantNames, action.receiverId);
   const defenderName = resolveName(participantNames, action.defenderId);
@@ -399,7 +374,7 @@ function getStoppageDisplay(reason: string, isFloater?: boolean) {
 }
 
 function buildStoppageDisplayAction(
-  action: AnalyticsAction,
+  action: StoppageAnalyticsAction,
   base: ReturnType<typeof actionBase>,
   rawActionById: Map<string, PossessionAction>,
 ): AdvancedTimelineAction {

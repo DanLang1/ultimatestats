@@ -1,5 +1,6 @@
 import type {
   AnalyticsAction,
+  AnalyticsActionBase,
   AnalyticsAttribution,
   AnalyticsGame,
   AnalyticsPoint,
@@ -36,6 +37,32 @@ function resolveRef(ref: PlayerRef): string | null {
   if (ref.refType === 'participant') return ref.participantId;
   if (ref.refType === 'unknown') return UNKNOWN_PARTICIPANT_ID;
   return null; // 'untracked' — intentionally anonymous, no attribution
+}
+
+function compileAnalyticsAction(
+  action: PossessionAction,
+  base: AnalyticsActionBase,
+): AnalyticsAction {
+  switch (action.kind) {
+    case 'pull':
+      return {
+        ...base,
+        kind: 'pull',
+        result: action.result,
+        ...(action.hangTimeMs != null ? { hangTimeMs: action.hangTimeMs } : {}),
+      };
+    case 'disc_pickup':
+      return { ...base, kind: 'disc_pickup' };
+    case 'throw':
+      return {
+        ...base,
+        kind: 'throw',
+        result: action.result,
+        splitAttribution: action.splitAttribution ?? false,
+      };
+    case 'stoppage':
+      return { ...base, kind: 'stoppage' };
+  }
 }
 
 function otherSide(sideId: string, sideIds: [string, string]): string {
@@ -447,21 +474,16 @@ function compilePossessionWithActions(
     let actorId: string | null = null;
     let receiverId: string | null = null;
     let defenderId: string | null = null;
-    let result: string | undefined;
-    let hangTimeMs: number | undefined;
 
     if (action.kind === 'pull') {
       actorId = resolveRef(action.puller);
       receiverId = action.receiver ? resolveRef(action.receiver) : null;
-      result = action.result;
-      hangTimeMs = action.hangTimeMs;
     } else if (action.kind === 'disc_pickup') {
       actorId = resolveRef(action.player);
     } else if (action.kind === 'throw') {
       actorId = resolveRef(action.thrower);
       receiverId = action.toPlayer ? resolveRef(action.toPlayer) : null;
       defenderId = action.defender ? resolveRef(action.defender) : null;
-      result = action.result;
     }
 
     const globalIndex = actionStartIndex + actionIndex;
@@ -477,9 +499,8 @@ function compilePossessionWithActions(
           action.recordedAt - startedAt - totalPausedMs
         : null;
 
-    const compiledAction: AnalyticsAction = {
+    const base: AnalyticsActionBase = {
       id: action.id,
-      kind: action.kind,
       pointId,
       pointIndex,
       possessionId: poss.id,
@@ -491,12 +512,11 @@ function compilePossessionWithActions(
       actorId,
       receiverId,
       defenderId,
-      result,
-      ...(hangTimeMs != null ? { hangTimeMs } : {}),
       previousActionId,
-      splitAttribution: action.kind === 'throw' ? (action.splitAttribution ?? false) : false,
       elapsedMs,
     };
+
+    const compiledAction = compileAnalyticsAction(action, base);
 
     compiledActions.push(compiledAction);
     emitAttributions(
