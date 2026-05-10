@@ -1,29 +1,16 @@
 import { ThemedText } from '@/components/ThemedText';
 import { LandscapeTimeoutButton } from '@/components/advancedTracking/scoreBar/LandscapeTimeoutButton';
-import { ScoreBarFooter } from '@/components/advancedTracking/scoreBar/ScoreBarFooter';
-import { TeamScoreBlock } from '@/components/advancedTracking/scoreBar/TeamScoreBlock';
+import { ScoreBarActionRow } from '@/components/advancedTracking/scoreBar/ScoreBarActionRow';
+import { ScoreBarMainRow } from '@/components/advancedTracking/scoreBar/ScoreBarMainRow';
+import { ScoreBarPagination } from '@/components/advancedTracking/scoreBar/ScoreBarPagination';
+import { useScoreBarData } from '@/components/advancedTracking/scoreBar/useScoreBarData';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import {
-  canCallTimeout,
-  formatPointTime,
-  getActiveStoppage,
-  getSideTimeoutState,
-} from '@/lib/advancedTracking/trackingDisplayHelpers';
-import {
-  getCurrentPoint,
-  getCurrentPossession,
-  getSideScore,
-  hasPointEnded,
-} from '@/lib/advancedTracking/trackingUtils';
-import { formatRatio, getExpectedRatio, getSequenceNumber } from '@/lib/genderRatioUtils';
-
-import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
-import { useSettingsStore } from '@/store/settingsStore';
+import { formatPointTime } from '@/lib/advancedTracking/trackingDisplayHelpers';
 import { Fonts } from '@/theme/theme';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import React, { useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import React, { useRef, useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 interface TrackerScoreBarProps {
   pointElapsedMs: number;
@@ -31,60 +18,37 @@ interface TrackerScoreBarProps {
 
 export const TrackerScoreBar = ({ pointElapsedMs }: TrackerScoreBarProps) => {
   const { palette } = useTheme();
-  const { sizeClass, isLandscape } = useLayout();
+  const { sizeClass, isLandscape, width } = useLayout();
   const styles = createStyles(sizeClass);
   const [isExpanded, setIsExpanded] = useState(false);
+  const scrollViewRef = useRef<ScrollView>(null);
+  const data = useScoreBarData();
 
-  const { currentGameId, savedGames, recordBetweenPointTimeout, recordStoppage } =
-    useAdvancedTrackingStore();
-  const { genderRatioEnabled, firstPointRatio } = useSettingsStore();
+  const cardWidth = width - 20;
 
-  const game = savedGames.find((g) => g.id === currentGameId);
-
-  if (!game) return null;
-
-  const oppSide = game.sides.find((s) => s.id !== game.focusSideId);
-  if (!oppSide) return null;
-
-  const focusSideName = game.sides.find((s) => s.id === game.focusSideId)?.label ?? '';
-  const oppSideName = oppSide.label;
-  const focusScore = getSideScore(game, game.focusSideId);
-  const oppScore = getSideScore(game, oppSide.id);
-  const focusTimeouts = getSideTimeoutState(game, game.focusSideId);
-  const oppTimeouts = getSideTimeoutState(game, oppSide.id);
-
-  const point = getCurrentPoint(game);
-  const possession = getCurrentPossession(game);
-  const pointIsOver = hasPointEnded(point);
-  const activeStoppage = getActiveStoppage(possession);
-  const isPointTimerPaused = activeStoppage !== null;
-  const showPointTimer = point?.startedAt != null && !hasPointEnded(point);
-
-  const currentPointNumber = game.points.length;
-  const ratioLabel =
-    genderRatioEnabled && firstPointRatio && currentPointNumber > 0
-      ? formatRatio(
-          getExpectedRatio(currentPointNumber, firstPointRatio),
-          getSequenceNumber(currentPointNumber),
-        )
-      : null;
-
-  const handleTimeout = (sideId: string) => {
-    if (activeStoppage) return;
-    const state = sideId === game.focusSideId ? focusTimeouts : oppTimeouts;
-    if (!canCallTimeout(state)) return;
-    const useFloater = state.regularUsedInHalf >= state.regularPerHalf;
-    if (pointIsOver) {
-      recordBetweenPointTimeout({ sideId, isFloater: useFloater });
-    } else {
-      recordStoppage({ reason: 'timeout', sideId, isFloater: useFloater });
-    }
+  const toggleExpanded = () => {
+    const next = !isExpanded;
+    setIsExpanded(next);
+    scrollViewRef.current?.scrollTo({ x: next ? cardWidth : 0, animated: true });
   };
 
-  const handlePause = () => {
-    if (activeStoppage) return;
-    recordStoppage({ reason: 'manual_pause' });
-  };
+  if (!data) return null;
+
+  const {
+    focusSideId,
+    oppSideId,
+    focusSideName,
+    oppSideName,
+    focusScore,
+    oppScore,
+    focusTimeouts,
+    oppTimeouts,
+    showPointTimer,
+    isPointTimerPaused,
+    currentPointNumber,
+    handleTimeout,
+    handlePause,
+  } = data;
 
   if (isLandscape) {
     return (
@@ -100,7 +64,7 @@ export const TrackerScoreBar = ({ pointElapsedMs }: TrackerScoreBarProps) => {
           </ThemedText>
           <LandscapeTimeoutButton
             state={focusTimeouts}
-            onPress={() => handleTimeout(game.focusSideId)}
+            onPress={() => handleTimeout(focusSideId)}
           />
         </View>
 
@@ -115,7 +79,7 @@ export const TrackerScoreBar = ({ pointElapsedMs }: TrackerScoreBarProps) => {
           <ThemedText style={[styles.landscapeScore, { color: palette.textInverse }]}>
             {oppScore}
           </ThemedText>
-          <LandscapeTimeoutButton state={oppTimeouts} onPress={() => handleTimeout(oppSide.id)} />
+          <LandscapeTimeoutButton state={oppTimeouts} onPress={() => handleTimeout(oppSideId)} />
         </View>
 
         <View style={[styles.landscapeDivider, { backgroundColor: palette.overlay15 }]} />
@@ -150,72 +114,32 @@ export const TrackerScoreBar = ({ pointElapsedMs }: TrackerScoreBarProps) => {
       <View
         style={[
           styles.scoreboardCard,
-          isExpanded && styles.scoreboardCardExpanded,
-          { backgroundColor: palette.primary, borderColor: palette.border },
+          { backgroundColor: palette.primary, borderColor: palette.border, overflow: 'hidden' },
         ]}>
-        <View style={styles.scoreRow}>
-          <TeamScoreBlock
-            name={focusSideName}
-            score={focusScore}
-            timeouts={focusTimeouts}
-            color={palette.accent}
-            onTimeoutDotsPress={() => setIsExpanded(true)}
-            timeoutDotsTestID="timeout-dots-focus"
+        <ScrollView
+          ref={scrollViewRef}
+          horizontal
+          pagingEnabled
+          showsHorizontalScrollIndicator={false}
+          bounces={false}
+          onMomentumScrollEnd={(e) => {
+            const page = Math.round(
+              e.nativeEvent.contentOffset.x / e.nativeEvent.layoutMeasurement.width,
+            );
+            setIsExpanded(page === 1);
+          }}
+          scrollEventThrottle={16}>
+          <ScoreBarMainRow
+            width={cardWidth}
+            pointElapsedMs={pointElapsedMs}
+            onToggleExpanded={toggleExpanded}
           />
 
-          <View style={[styles.centerCard, { backgroundColor: palette.primary }]}>
-            <View style={styles.centerTimerRow}>
-              {showPointTimer && !isPointTimerPaused && (
-                <Pressable testID="scorebar-pause" onPress={handlePause} hitSlop={8}>
-                  <MaterialCommunityIcons
-                    name="pause"
-                    size={scaleBySizeClass(16, sizeClass)}
-                    color={palette.textMuted}
-                  />
-                </Pressable>
-              )}
-              <ThemedText style={[styles.centerTimer, { color: palette.textInverse }]}>
-                {showPointTimer || pointIsOver ? formatPointTime(pointElapsedMs) : '–:––'}
-              </ThemedText>
-            </View>
-            {isPointTimerPaused && (
-              <ThemedText style={[styles.pausedText, { color: palette.warning }]}>
-                paused
-              </ThemedText>
-            )}
-            <Pressable
-              onPress={() => setIsExpanded((prev) => !prev)}
-              hitSlop={10}
-              style={[styles.expandButton, { position: 'absolute', bottom: 2 }]}>
-              <MaterialCommunityIcons
-                name={isExpanded ? 'chevron-up' : 'chevron-down'}
-                size={scaleBySizeClass(18, sizeClass)}
-                color={palette.textMuted}
-              />
-            </Pressable>
-          </View>
-
-          <TeamScoreBlock
-            name={oppSideName}
-            score={oppScore}
-            timeouts={oppTimeouts}
-            color={palette.success}
-            onTimeoutDotsPress={() => setIsExpanded(true)}
-            timeoutDotsTestID="timeout-dots-opp"
-          />
-        </View>
+          <ScoreBarActionRow width={cardWidth} />
+        </ScrollView>
       </View>
 
-      {isExpanded && (
-        <ScoreBarFooter
-          focusTimeouts={focusTimeouts}
-          oppTimeouts={oppTimeouts}
-          ratioLabel={ratioLabel}
-          currentPointNumber={currentPointNumber}
-          onFocusTimeout={() => handleTimeout(game.focusSideId)}
-          onOppTimeout={() => handleTimeout(oppSide.id)}
-        />
-      )}
+      <ScoreBarPagination isExpanded={isExpanded} />
     </View>
   );
 };
@@ -234,47 +158,7 @@ function createStyles(sizeClass: SizeClass) {
       borderWidth: 1,
       borderRadius: 22,
       borderCurve: 'continuous',
-      overflow: 'visible',
-    },
-    scoreboardCardExpanded: {
-      borderBottomLeftRadius: 0,
-      borderBottomRightRadius: 0,
-    },
-    scoreRow: {
-      flexDirection: 'row',
-      alignItems: 'stretch',
-      gap: 6,
-      paddingHorizontal: 12,
-      paddingTop: 10,
-      paddingBottom: 10,
-    },
-    centerCard: {
-      width: scaleBySizeClass(106, sizeClass),
-      alignItems: 'center',
-      justifyContent: 'center',
-      paddingHorizontal: 2,
-    },
-    centerTimerRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 2,
-    },
-    centerTimer: {
-      fontSize: scaleBySizeClass(21, sizeClass),
-      fontFamily: Fonts.black,
-      letterSpacing: 0,
-      fontVariant: ['tabular-nums'],
-      lineHeight: scaleBySizeClass(24, sizeClass),
-    },
-    pausedText: {
-      fontSize: scaleBySizeClass(9, sizeClass),
-      fontFamily: Fonts.bold,
-      letterSpacing: 1,
-      textTransform: 'uppercase',
-    },
-    expandButton: {
-      marginTop: 0,
-      paddingTop: 0,
+      overflow: 'hidden',
     },
     landscapeContainer: {
       paddingHorizontal: 12,
