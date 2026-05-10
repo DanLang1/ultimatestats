@@ -101,11 +101,15 @@ export default function ViewStatsScreen() {
       });
     }
   };
-  const showTimelineAction = true;
-  const showExportAction = true;
-
   const handleOpenTimeline = () => {
-    router.push('/GameTimeline');
+    if (activeAdvancedGame) {
+      router.push({
+        pathname: '/advancedTracking/analytics/timeline/[gameId]',
+        params: { gameId: activeAdvancedGame.id },
+      });
+    } else {
+      router.push('/GameTimeline');
+    }
   };
 
   const handleBack = () => {
@@ -141,7 +145,7 @@ export default function ViewStatsScreen() {
       key: 'timeline',
       label: 'Timeline',
       onPress: handleOpenTimeline,
-      visible: showTimelineAction && !hasActiveAdvancedGame,
+      visible: true,
       inlineIcon: (
         <MaterialCommunityIcons
           name="chart-timeline-variant"
@@ -161,7 +165,7 @@ export default function ViewStatsScreen() {
       key: 'csv',
       label: 'Export CSV',
       onPress: handleExportCSV,
-      visible: showExportAction && !hasActiveAdvancedGame,
+      visible: !hasActiveAdvancedGame,
       inlineIcon: (
         <FontAwesome6
           name="file-csv"

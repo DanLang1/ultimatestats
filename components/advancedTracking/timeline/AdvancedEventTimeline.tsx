@@ -1,0 +1,101 @@
+import AdvancedTimelinePointCard from '@/components/advancedTracking/timeline/AdvancedTimelinePointCard';
+import { ThemedText } from '@/components/ThemedText';
+import { useTheme } from '@/context/ThemeContext';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import type { AdvancedTimelinePoint } from '@/lib/advancedTracking/advancedTimelineUtils';
+import { Fonts } from '@/theme/theme';
+import React from 'react';
+import { ScrollView, StyleSheet, View } from 'react-native';
+
+interface AdvancedEventTimelineProps {
+  points: AdvancedTimelinePoint[];
+  focusSideId: string;
+  oppSideId: string;
+  sideLabels: Record<string, string>;
+}
+
+export default function AdvancedEventTimeline({
+  points,
+  focusSideId,
+  oppSideId,
+  sideLabels,
+}: AdvancedEventTimelineProps) {
+  const { palette } = useTheme();
+  const { sizeClass } = useLayout();
+  const styles = createStyles(sizeClass);
+
+  const lastPoint = points.at(-1);
+  const finalScores = lastPoint?.scoreAfter ?? { [focusSideId]: 0, [oppSideId]: 0 };
+
+  const focusScore = finalScores[focusSideId] ?? 0;
+  const oppScore = finalScores[oppSideId] ?? 0;
+
+  const hasInProgress = lastPoint?.state === 'in_progress';
+
+  return (
+    <View style={styles.container}>
+      {/* Score Header */}
+      <View style={[styles.scoreHeader, { backgroundColor: palette.overlay05 }]}>
+        <ThemedText style={[styles.headerScore, { color: palette.success }]}>
+          {focusScore}
+        </ThemedText>
+        <ThemedText style={[styles.headerDivider, { color: palette.textMuted }]}>–</ThemedText>
+        <ThemedText style={[styles.headerScore, { color: palette.danger }]}>{oppScore}</ThemedText>
+        <ThemedText style={[styles.headerLabel, { color: palette.textSecondary }]}>
+          {hasInProgress ? 'In Progress' : 'Final'}
+        </ThemedText>
+      </View>
+
+      {/* Timeline */}
+      <ScrollView contentContainerStyle={styles.listContent} showsVerticalScrollIndicator={false}>
+        {points.map((point) => (
+          <AdvancedTimelinePointCard
+            key={point.pointId}
+            point={point}
+            focusSideId={focusSideId}
+            oppSideId={oppSideId}
+            sideLabels={sideLabels}
+          />
+        ))}
+      </ScrollView>
+    </View>
+  );
+}
+
+function createStyles(sizeClass: SizeClass) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      gap: 12,
+    },
+    scoreHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: 12,
+      paddingHorizontal: 20,
+      marginHorizontal: 16,
+      borderRadius: 12,
+      gap: 10,
+    },
+    headerScore: {
+      fontSize: scaleBySizeClass(28, sizeClass),
+      fontFamily: Fonts.bold,
+    },
+    headerDivider: {
+      fontSize: scaleBySizeClass(20, sizeClass),
+    },
+    headerLabel: {
+      fontSize: scaleBySizeClass(11, sizeClass),
+      fontFamily: Fonts.semiBold,
+      marginLeft: 12,
+      textTransform: 'uppercase',
+      letterSpacing: 1,
+    },
+    listContent: {
+      paddingHorizontal: 16,
+      paddingBottom: 24,
+      gap: 12,
+    },
+  });
+}

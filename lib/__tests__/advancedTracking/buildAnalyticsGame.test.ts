@@ -1289,7 +1289,7 @@ describe('pull attributions', () => {
     const throwAction = actions.find((a) => a.kind === 'throw');
 
     expect(pullAction?.hangTimeMs).toBe(2100);
-    expect(throwAction?.hangTimeMs).toBeUndefined();
+    expect(throwAction && 'hangTimeMs' in throwAction).toBe(false);
   });
 });
 

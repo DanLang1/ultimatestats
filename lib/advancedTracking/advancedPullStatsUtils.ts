@@ -5,11 +5,6 @@ import type { PullAction } from './types';
 
 type PullResult = PullAction['result'];
 
-const PULL_RESULT_VALUES: readonly PullResult[] = ['inbound', 'ob', 'dropped'];
-function isPullResult(r: string): r is PullResult {
-  return (PULL_RESULT_VALUES as readonly string[]).includes(r);
-}
-
 export interface PullStats {
   totalPulls: number;
   /** Pull result → count. E.g. { inbound: 3, ob: 2, dropped: 1 } */
@@ -36,7 +31,7 @@ export function computePullStats(game: AnalyticsGame, sideId?: string): PullStat
 
     totalPulls++;
 
-    if (action.result != null && isPullResult(action.result)) {
+    if (action.result != null) {
       outcomes[action.result] = (outcomes[action.result] ?? 0) + 1;
     }
 
