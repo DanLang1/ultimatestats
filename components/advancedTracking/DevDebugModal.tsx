@@ -6,7 +6,7 @@ import { Fonts } from '@/theme/theme';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import * as Clipboard from 'expo-clipboard';
 import React, { useState } from 'react';
-import { Modal, Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface DevDebugModalProps {
@@ -92,16 +92,15 @@ export const DevDebugModal = ({ visible, onClose, data }: DevDebugModalProps) =>
             </Pressable>
           </View>
 
-          <TextInput
+          <ScrollView
             style={[styles.scrollBox, { backgroundColor: palette.overlay05 }]}
-            value={debugText}
-            multiline
-            editable={false}
-            scrollEnabled
-            selectTextOnFocus={false}
-            textAlignVertical="top"
-            selectionColor={palette.accent}
-          />
+            contentContainerStyle={styles.scrollContent}>
+            <Text
+              style={[styles.codeText, { color: palette.textInverse }]}
+              selectable>
+              {debugText}
+            </Text>
+          </ScrollView>
         </View>
       </View>
     </Modal>
@@ -164,7 +163,11 @@ function createStyles(sizeClass: ReturnType<typeof useLayout>['sizeClass']) {
       marginHorizontal: 16,
       marginBottom: 16,
       borderRadius: 8,
+    },
+    scrollContent: {
       padding: 12,
+    },
+    codeText: {
       fontFamily: 'monospace',
       fontSize: scaleBySizeClass(11, sizeClass),
       lineHeight: scaleBySizeClass(16, sizeClass),

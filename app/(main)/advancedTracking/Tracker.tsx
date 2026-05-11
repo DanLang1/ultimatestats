@@ -3,9 +3,9 @@ import { ThemedView } from '@/components/ThemedView';
 import { DevDebugModal } from '@/components/advancedTracking/DevDebugModal';
 import { StoppageOverlay } from '@/components/advancedTracking/StoppageOverlay';
 import { TrackerActionFooter } from '@/components/advancedTracking/TrackerActionFooter';
-import { TrackerLastActionCard } from '@/components/advancedTracking/TrackerLastActionCard';
 import { TrackerCapBar } from '@/components/advancedTracking/TrackerCapBar';
 import { TrackerHomeMenu } from '@/components/advancedTracking/TrackerHomeMenu';
+import { TrackerLastActionCard } from '@/components/advancedTracking/TrackerLastActionCard';
 import { TrackerPlayerGrid } from '@/components/advancedTracking/TrackerPlayerGrid';
 import { TrackerRareMenu } from '@/components/advancedTracking/TrackerRareMenu';
 import { TrackerScoreBar } from '@/components/advancedTracking/TrackerScoreBar';
@@ -261,7 +261,7 @@ export default function AdvancedTrackerScreen() {
         <>
           <Pressable
             onPress={() => setShowDevModal(true)}
-            style={[styles.devButton, { bottom: insets.bottom + 190 }]}>
+            style={[styles.devButton, { bottom: insets.bottom + 50}]}>
             <ThemedText style={styles.devButtonText}>DEV</ThemedText>
           </Pressable>
           <DevDebugModal

@@ -75,7 +75,10 @@ export const TrackerActionFooter = ({
         onPress={onStartNextPoint}
         style={({ pressed }) => [
           styles.nextPointBtn,
-          { backgroundColor: palette.successOverlay10 },
+          {
+            backgroundColor: palette.successOverlay10,
+            borderColor: palette.successOverlay15,
+          },
           pressed && { opacity: 0.7 },
         ]}>
         <MaterialCommunityIcons
@@ -105,12 +108,15 @@ function createStyles(sizeClass: SizeClass, bottomInset: number) {
       paddingBottom: bottomInset + 24,
     },
     nextPointBtn: {
+      flex: 1,
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
       minHeight: scaleBySizeClass(62, sizeClass),
       borderRadius: 16,
       borderCurve: 'continuous',
+      borderWidth: 1,
+      paddingHorizontal: scaleBySizeClass(12, sizeClass),
     },
     btnText: {
       fontFamily: Fonts.black,
