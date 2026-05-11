@@ -43,6 +43,7 @@ export const TrackerScoreBar = ({ pointElapsedMs }: TrackerScoreBarProps) => {
     oppScore,
     focusTimeouts,
     oppTimeouts,
+    stoppageActive,
     showPointTimer,
     isPointTimerPaused,
     currentPointNumber,
@@ -65,6 +66,7 @@ export const TrackerScoreBar = ({ pointElapsedMs }: TrackerScoreBarProps) => {
           <LandscapeTimeoutButton
             state={focusTimeouts}
             onPress={() => handleTimeout(focusSideId)}
+            stoppageActive={stoppageActive}
           />
         </View>
 
@@ -79,7 +81,11 @@ export const TrackerScoreBar = ({ pointElapsedMs }: TrackerScoreBarProps) => {
           <ThemedText style={[styles.landscapeScore, { color: palette.textInverse }]}>
             {oppScore}
           </ThemedText>
-          <LandscapeTimeoutButton state={oppTimeouts} onPress={() => handleTimeout(oppSideId)} />
+          <LandscapeTimeoutButton
+            state={oppTimeouts}
+            onPress={() => handleTimeout(oppSideId)}
+            stoppageActive={stoppageActive}
+          />
         </View>
 
         <View style={[styles.landscapeDivider, { backgroundColor: palette.overlay15 }]} />

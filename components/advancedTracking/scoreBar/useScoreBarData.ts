@@ -38,6 +38,7 @@ export function useScoreBarData() {
   const possession = getCurrentPossession(game);
   const pointIsOver = hasPointEnded(point);
   const activeStoppage = getActiveStoppage(possession);
+  const stoppageActive = activeStoppage !== null;
   const isPointTimerPaused = activeStoppage !== null;
   const showPointTimer = point?.startedAt != null && !hasPointEnded(point);
 
@@ -81,6 +82,7 @@ export function useScoreBarData() {
     showPointTimer,
     currentPointNumber,
     ratioLabel,
+    stoppageActive,
     handleTimeout,
     handlePause,
   };

@@ -9,15 +9,16 @@ import { Pressable, StyleSheet, View } from 'react-native';
 interface LandscapeTimeoutButtonProps {
   state: SideTimeoutState;
   onPress: () => void;
+  stoppageActive?: boolean;
 }
 
-export function LandscapeTimeoutButton({ state, onPress }: LandscapeTimeoutButtonProps) {
+export function LandscapeTimeoutButton({ state, onPress, stoppageActive }: LandscapeTimeoutButtonProps) {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
   const regularsLeft = Math.max(state.regularPerHalf - state.regularUsedInHalf, 0);
   const floaterAvailable = state.floaterEnabled && !state.floaterUsed;
   const totalLeft = regularsLeft + (floaterAvailable ? 1 : 0);
-  const canUse = canCallTimeout(state);
+  const canUse = canCallTimeout(state) && !stoppageActive;
   const styles = createStyles(sizeClass);
 
   return (

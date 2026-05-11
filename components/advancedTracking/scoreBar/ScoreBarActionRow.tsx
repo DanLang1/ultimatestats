@@ -30,6 +30,7 @@ export const ScoreBarActionRow = ({ width }: ScoreBarActionRowProps) => {
     oppTimeouts,
     ratioLabel,
     currentPointNumber,
+    stoppageActive,
     handleTimeout,
   } = data;
 
@@ -41,6 +42,7 @@ export const ScoreBarActionRow = ({ width }: ScoreBarActionRowProps) => {
         state={focusTimeouts}
         color={palette.accent}
         onPress={() => handleTimeout(focusSideId)}
+        stoppageActive={stoppageActive}
       />
 
       <View
@@ -67,6 +69,7 @@ export const ScoreBarActionRow = ({ width }: ScoreBarActionRowProps) => {
         state={oppTimeouts}
         color={palette.success}
         onPress={() => handleTimeout(oppSideId)}
+        stoppageActive={stoppageActive}
       />
     </View>
   );

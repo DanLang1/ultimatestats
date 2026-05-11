@@ -91,6 +91,7 @@ export default function AdvancedTrackerScreen() {
   const activeSideId = game ? getActiveSideId(possession, game) : '';
   const oppHasDisc = game ? !pointIsOver && activeSideId !== game.focusSideId : false;
   const discHolderRef = getSafeDiscHolderRef(possession, game?.focusSideId ?? '');
+  const canUseVoice = !pointIsOver && !activeStoppage && !oppHasDisc && discHolderRef != null;
   const activeIds = game && point ? getEffectiveLineParticipantIds(point, game.focusSideId) : [];
   const activeParticipants = game ? game.participants.filter((p) => activeIds.includes(p.id)) : [];
 
@@ -185,7 +186,7 @@ export default function AdvancedTrackerScreen() {
                 <TrackerActionFooter
                   pointElapsedMs={pointElapsedMs}
                   onStartNextPoint={handleStartNextPoint}
-                  voiceControls={voiceControls}
+                  voiceControls={canUseVoice ? voiceControls : undefined}
                 />
               </>
             )}
@@ -241,7 +242,7 @@ export default function AdvancedTrackerScreen() {
           <TrackerActionFooter
             pointElapsedMs={pointElapsedMs}
             onStartNextPoint={handleStartNextPoint}
-            voiceControls={voiceControls}
+            voiceControls={canUseVoice ? voiceControls : undefined}
           />
         </>
       )}

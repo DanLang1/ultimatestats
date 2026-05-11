@@ -13,12 +13,13 @@ interface TimeoutButtonProps {
   color: string;
   onPress: () => void;
   testID?: string;
+  stoppageActive?: boolean;
 }
 
-export function TimeoutButton({ label, state, color, onPress, testID }: TimeoutButtonProps) {
+export function TimeoutButton({ label, state, color, onPress, testID, stoppageActive }: TimeoutButtonProps) {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
-  const canUse = canCallTimeout(state);
+  const canUse = canCallTimeout(state) && !stoppageActive;
   const styles = createStyles(sizeClass);
 
   return (
