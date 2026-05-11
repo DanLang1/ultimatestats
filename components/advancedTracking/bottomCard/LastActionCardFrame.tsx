@@ -5,30 +5,26 @@ import { Fonts, Palette } from '@/theme/theme';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
-import { EdgeInsets, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type ButtonMode =
   | { kind: 'undo-more'; onUndo: () => void; onMore: () => void }
   | { kind: 'cancel-more'; onCancel: () => void; onMore: () => void; isDanger?: boolean }
   | { kind: 'undo-only'; onUndo: () => void };
 
-interface BottomCardFrameProps {
+interface LastActionCardFrameProps {
   accentColor: string;
   children: React.ReactNode;
-  bottom: React.ReactNode;
   buttonMode: ButtonMode;
 }
 
-export const BottomCardFrame = ({
+export const LastActionCardFrame = ({
   accentColor,
   children,
-  bottom,
   buttonMode,
-}: BottomCardFrameProps) => {
+}: LastActionCardFrameProps) => {
   const { palette } = useTheme();
   const { sizeClass, isLandscape } = useLayout();
-  const insets = useSafeAreaInsets();
-  const styles = createStyles(sizeClass, isLandscape, palette, insets);
+  const styles = createStyles(sizeClass, isLandscape, palette);
 
   const showMore = buttonMode.kind !== 'undo-only';
 
@@ -94,23 +90,14 @@ export const BottomCardFrame = ({
           )}
         </View>
       </View>
-
-      {bottom ? <View style={styles.bottomRow}>{bottom}</View> : null}
     </View>
   );
 };
 
-function createStyles(
-  sizeClass: SizeClass,
-  isLandscape: boolean,
-  palette: Palette,
-  insets: EdgeInsets,
-) {
+function createStyles(sizeClass: SizeClass, isLandscape: boolean, palette: Palette) {
   return StyleSheet.create({
     outerContainer: {
-      paddingHorizontal: 12,
-      paddingTop: 8,
-      paddingBottom: isLandscape ? 12 : Math.max(Math.floor(insets.bottom * 0.7), 12),
+      padding: scaleBySizeClass(8, sizeClass),
       backgroundColor: 'transparent',
     },
     card: {
@@ -178,10 +165,6 @@ function createStyles(
       justifyContent: 'center',
       alignItems: 'center',
       borderWidth: 1,
-    },
-    bottomRow: {
-      flexDirection: 'row',
-      marginTop: 12,
     },
   });
 }

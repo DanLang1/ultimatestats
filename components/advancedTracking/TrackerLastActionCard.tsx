@@ -1,6 +1,5 @@
 import { ThemedText } from '@/components/ThemedText';
-import { BottomCardFrame } from '@/components/advancedTracking/bottomCard/BottomCardFrame';
-import { DefenseActions } from '@/components/advancedTracking/bottomCard/DefenseActions';
+import { LastActionCardFrame } from '@/components/advancedTracking/bottomCard/LastActionCardFrame';
 import { GoalHeader } from '@/components/advancedTracking/bottomCard/GoalHeader';
 import { ModifierPrompt } from '@/components/advancedTracking/bottomCard/ModifierPrompt';
 import { PassChainHeader } from '@/components/advancedTracking/bottomCard/PassChainHeader';
@@ -17,7 +16,6 @@ import {
   getCurrentPoint,
   getCurrentPossession,
   hasPointEnded,
-  isPossessionOver,
 } from '@/lib/advancedTracking/trackingUtils';
 import {
   Participant,
@@ -27,21 +25,18 @@ import {
 } from '@/lib/advancedTracking/types';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { Fonts, Palette } from '@/theme/theme';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React, { ReactNode } from 'react';
-import { Pressable, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 
-interface TrackerBottomCardProps {
-  pointElapsedMs: number;
+interface TrackerLastActionCardProps {
   passModifier: PassModifier;
   onCancelModifier: () => void;
-  onStartNextPoint: () => void;
   onMorePress: () => void;
 }
 
-type BottomCardButtonMode = React.ComponentProps<typeof BottomCardFrame>['buttonMode'];
+type BottomCardButtonMode = React.ComponentProps<typeof LastActionCardFrame>['buttonMode'];
 
-interface TrackerBottomCardState {
+interface TrackerLastActionCardState {
   passModifier: PassModifier;
   pointIsOver: boolean;
   point: TrackedPoint | null;
@@ -54,7 +49,7 @@ interface TrackerBottomCardState {
   possession: PointPossession | null;
 }
 
-type TrackerBottomCardModel =
+type TrackerLastActionCardModel =
   | {
       kind: 'modifier';
       accentColor: string;
@@ -80,24 +75,18 @@ type TrackerBottomCardModel =
       content: ReactNode;
     };
 
-export const TrackerBottomCard = ({
-  pointElapsedMs,
+export const TrackerLastActionCard = ({
   passModifier,
   onCancelModifier,
-  onStartNextPoint,
   onMorePress,
-}: TrackerBottomCardProps) => {
+}: TrackerLastActionCardProps) => {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
 
-  const { currentGameId, savedGames, recordPickup, recordThrow, undoLastOperation } =
-    useAdvancedTrackingStore();
+  const { currentGameId, savedGames, undoLastOperation } = useAdvancedTrackingStore();
 
   const game = savedGames.find((g) => g.id === currentGameId);
   if (!game) return null;
-
-  const oppSide = game.sides.find((s) => s.id !== game.focusSideId);
-  if (!oppSide) return null;
 
   const point = getCurrentPoint(game);
   const possession = getCurrentPossession(game);
@@ -112,24 +101,6 @@ export const TrackerBottomCard = ({
     point?.possessions.filter((p) => p.sideId === game.focusSideId).at(-1) ?? null;
   const focusHasStarted =
     !!possession && possession.sideId === game.focusSideId && possession.actions.length > 0;
-
-  const handleOppTurnover = async () => {
-    if (!possession || isPossessionOver(possession)) {
-      await recordPickup({ sideId: oppSide.id, player: { refType: 'untracked' } });
-    }
-    await recordThrow({ thrower: { refType: 'untracked' }, result: 'throwaway' });
-  };
-
-  const handleOppScored = async () => {
-    if (!possession || isPossessionOver(possession)) {
-      await recordPickup({ sideId: oppSide.id, player: { refType: 'untracked' } });
-    }
-    await recordThrow({
-      thrower: { refType: 'untracked' },
-      result: 'goal',
-      timerElapsedMs: pointElapsedMs,
-    });
-  };
 
   const eyebrow = (color: string) => (
     <ThemedText
@@ -148,35 +119,7 @@ export const TrackerBottomCard = ({
     <ThemedText style={[s.label(sizeClass), { color: palette.textMuted }]}>{text}</ThemedText>
   );
 
-  // --- Bottom content (same regardless of modifier) ---
-  let bottomContent: ReactNode = null;
-  if (pointIsOver) {
-    bottomContent = (
-      <Pressable
-        testID="tracker-next-point"
-        onPress={onStartNextPoint}
-        style={({ pressed }) => [
-          s.fullWidthBtn(sizeClass),
-          { backgroundColor: palette.successOverlay10 },
-          pressed && { opacity: 0.7 },
-        ]}>
-        <MaterialCommunityIcons
-          name="arrow-right-circle"
-          size={scaleBySizeClass(20, sizeClass)}
-          color={palette.success}
-          style={{ marginRight: 8 }}
-        />
-        <ThemedText style={[s.btnText(sizeClass), { color: palette.success }]}>
-          NEXT POINT
-        </ThemedText>
-      </Pressable>
-    );
-  } else if (oppHasDisc) {
-    bottomContent = (
-      <DefenseActions onOppScored={handleOppScored} onOppTurnover={handleOppTurnover} />
-    );
-  }
-  const bottomCardState: TrackerBottomCardState = {
+  const lastActionCardState: TrackerLastActionCardState = {
     passModifier,
     pointIsOver,
     point,
@@ -188,8 +131,8 @@ export const TrackerBottomCard = ({
     focusHasStarted,
     possession,
   };
-  const model = getTrackerBottomCardModel({
-    state: bottomCardState,
+  const model = getTrackerLastActionCardModel({
+    state: lastActionCardState,
     ui: {
       palette,
       onCancelModifier,
@@ -201,16 +144,13 @@ export const TrackerBottomCard = ({
   });
 
   return (
-    <BottomCardFrame
-      accentColor={model.accentColor}
-      bottom={bottomContent}
-      buttonMode={model.buttonMode}>
+    <LastActionCardFrame accentColor={model.accentColor} buttonMode={model.buttonMode}>
       {model.content}
-    </BottomCardFrame>
+    </LastActionCardFrame>
   );
 };
 
-interface TrackerBottomCardModelUi {
+interface TrackerLastActionCardModelUi {
   palette: Palette;
   onCancelModifier: () => void;
   onMorePress: () => void;
@@ -219,13 +159,13 @@ interface TrackerBottomCardModelUi {
   eyebrow: (color: string) => ReactNode;
 }
 
-function getTrackerBottomCardModel({
+function getTrackerLastActionCardModel({
   state,
   ui,
 }: {
-  state: TrackerBottomCardState;
-  ui: TrackerBottomCardModelUi;
-}): TrackerBottomCardModel {
+  state: TrackerLastActionCardState;
+  ui: TrackerLastActionCardModelUi;
+}): TrackerLastActionCardModel {
   const {
     passModifier,
     pointIsOver,
@@ -339,25 +279,4 @@ const s = {
         flexShrink: 1,
       },
     }).label,
-  btnText: (sizeClass: SizeClass) =>
-    StyleSheet.create({
-      text: {
-        fontFamily: Fonts.black,
-        fontSize: scaleBySizeClass(14, sizeClass),
-        letterSpacing: 0.5,
-        textTransform: 'uppercase',
-      },
-    }).text,
-  fullWidthBtn: (sizeClass: SizeClass) =>
-    StyleSheet.create({
-      btn: {
-        flex: 1,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        minHeight: scaleBySizeClass(56, sizeClass),
-        borderRadius: 16,
-        borderCurve: 'continuous',
-      },
-    }).btn,
 };

@@ -2,7 +2,8 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { DevDebugModal } from '@/components/advancedTracking/DevDebugModal';
 import { StoppageOverlay } from '@/components/advancedTracking/StoppageOverlay';
-import { TrackerBottomCard } from '@/components/advancedTracking/TrackerBottomCard';
+import { TrackerActionFooter } from '@/components/advancedTracking/TrackerActionFooter';
+import { TrackerLastActionCard } from '@/components/advancedTracking/TrackerLastActionCard';
 import { TrackerCapBar } from '@/components/advancedTracking/TrackerCapBar';
 import { TrackerHomeMenu } from '@/components/advancedTracking/TrackerHomeMenu';
 import { TrackerPlayerGrid } from '@/components/advancedTracking/TrackerPlayerGrid';
@@ -12,12 +13,13 @@ import { useTheme } from '@/context/ThemeContext';
 import { useTimestampTimer } from '@/hooks/advancedTracking/useTimer';
 import { useTrackerHandlers } from '@/hooks/advancedTracking/useTrackerHandlers';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { computeCapState } from '@/lib/advancedTracking/capUtils';
 import {
   getActiveSideId,
   getActiveStoppage,
-  getSafeDiscHolderRef,
   getEffectiveLineParticipantIds,
   getPointAdjustedTimestamp,
+  getSafeDiscHolderRef,
 } from '@/lib/advancedTracking/trackingDisplayHelpers';
 import {
   getCurrentPoint,
@@ -25,7 +27,6 @@ import {
   hasPointEnded,
   isAdvancedGameOver,
 } from '@/lib/advancedTracking/trackingUtils';
-import { computeCapState } from '@/lib/advancedTracking/capUtils';
 import { PassModifier } from '@/lib/advancedTracking/types';
 
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
@@ -166,13 +167,17 @@ export default function AdvancedTrackerScreen() {
             <TrackerScoreBar pointElapsedMs={pointElapsedMs} />
             <View style={{ flex: 1 }} />
             {!activeStoppage && (
-              <TrackerBottomCard
-                pointElapsedMs={pointElapsedMs}
-                passModifier={passModifier}
-                onCancelModifier={() => setPassModifier(null)}
-                onStartNextPoint={handleStartNextPoint}
-                onMorePress={() => setShowRareMenu(true)}
-              />
+              <>
+                <TrackerLastActionCard
+                  passModifier={passModifier}
+                  onCancelModifier={() => setPassModifier(null)}
+                  onMorePress={() => setShowRareMenu(true)}
+                />
+                <TrackerActionFooter
+                  pointElapsedMs={pointElapsedMs}
+                  onStartNextPoint={handleStartNextPoint}
+                />
+              </>
             )}
           </View>
           <View
@@ -203,7 +208,14 @@ export default function AdvancedTrackerScreen() {
             gameStarted={gameStartedAt !== null}
           />
           <TrackerScoreBar pointElapsedMs={pointElapsedMs} />
-          <View style={{ flex: 1, justifyContent: 'center' }}>
+          {!activeStoppage && (
+            <TrackerLastActionCard
+              passModifier={passModifier}
+              onCancelModifier={() => setPassModifier(null)}
+              onMorePress={() => setShowRareMenu(true)}
+            />
+          )}
+          <View style={{ flex: 1, justifyContent: 'flex-start', paddingTop: 12 }}>
             {activeStoppage ? (
               <StoppageOverlay game={game} />
             ) : (
@@ -216,15 +228,10 @@ export default function AdvancedTrackerScreen() {
               />
             )}
           </View>
-          {!activeStoppage && (
-            <TrackerBottomCard
-              pointElapsedMs={pointElapsedMs}
-              passModifier={passModifier}
-              onCancelModifier={() => setPassModifier(null)}
-              onStartNextPoint={handleStartNextPoint}
-              onMorePress={() => setShowRareMenu(true)}
-            />
-          )}
+          <TrackerActionFooter
+            pointElapsedMs={pointElapsedMs}
+            onStartNextPoint={handleStartNextPoint}
+          />
         </>
       )}
 
