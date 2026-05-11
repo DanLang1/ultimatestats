@@ -752,6 +752,32 @@ describe('getPointAdjustedTimestamp', () => {
     };
     expect(getPointAdjustedTimestamp(point)).toBe(10000);
   });
+
+  it('freezes timestamp when point has ended with elapsedMsAtEnd', () => {
+    const point: TrackedPoint = {
+      id: 'pt1',
+      lines: [],
+      startedAt: 10000,
+      elapsedMsAtEnd: 45000,
+      possessions: [
+        makePossession(HOME, [
+          {
+            id: 'a1',
+            kind: 'throw',
+            sideId: HOME,
+            thrower: untracked,
+            result: 'goal',
+            recordedAt: 55000,
+          },
+        ]),
+      ],
+    };
+    // When point has ended, adjustedTimestamp should be Date.now() - elapsedMsAtEnd,
+    // so that Date.now() - adjustedTimestamp = elapsedMsAtEnd (frozen point duration).
+    const adjusted = getPointAdjustedTimestamp(point);
+    const elapsed = Date.now() - adjusted;
+    expect(elapsed).toBeCloseTo(45000, -1);
+  });
 });
 
 describe('isInjuryJustResumed', () => {

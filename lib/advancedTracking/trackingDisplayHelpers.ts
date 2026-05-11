@@ -1,5 +1,5 @@
 import { hasItems } from '@/lib/utils';
-import { getOtherSideId, isPossessionOver } from './trackingUtils';
+import { getOtherSideId, hasPointEnded, isPossessionOver } from './trackingUtils';
 import {
   AdvancedTrackedGame,
   Participant,
@@ -281,6 +281,9 @@ export function getCompletedPauseMs(point: TrackedPoint | null): number {
 export function getPointAdjustedTimestamp(point: TrackedPoint): number {
   if (point.revivedAt != null && point.elapsedMsAtEnd != null) {
     return point.revivedAt - point.elapsedMsAtEnd;
+  }
+  if (hasPointEnded(point) && point.elapsedMsAtEnd != null) {
+    return Date.now() - point.elapsedMsAtEnd;
   }
   return (point.startedAt ?? 0) + getCompletedPauseMs(point);
 }
