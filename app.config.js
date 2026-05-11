@@ -91,6 +91,15 @@ export default {
     'expo-sharing',
     'expo-web-browser',
     [
+      'expo-speech-recognition',
+      {
+        microphonePermission: 'Allow $(PRODUCT_NAME) to use the microphone for voice stat entry.',
+        speechRecognitionPermission:
+          'Allow $(PRODUCT_NAME) to use speech recognition for voice stat entry.',
+        androidSpeechServicePackages: ['com.google.android.googlequicksearchbox'],
+      },
+    ],
+    [
       'expo-build-properties',
       {
         buildReactNativeFromSource: true,

@@ -1,0 +1,123 @@
+import { ThemedText } from '@/components/ThemedText';
+import { useTheme } from '@/context/ThemeContext';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { VoiceStatCommandsControls } from '@/hooks/advancedTracking/useVoiceStatCommands';
+import { Fonts, Palette } from '@/theme/theme';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import React from 'react';
+import { Pressable, StyleSheet, View } from 'react-native';
+
+interface TrackerVoiceButtonProps {
+  controls: VoiceStatCommandsControls;
+  disabled: boolean;
+}
+
+export const TrackerVoiceButton = ({ controls, disabled }: TrackerVoiceButtonProps) => {
+  const { palette } = useTheme();
+  const { sizeClass } = useLayout();
+  const styles = createStyles(sizeClass);
+
+  const isActive = controls.isListening;
+  const label = isActive ? 'LISTENING' : 'VOICE';
+  const icon = isActive ? 'stop-circle' : 'microphone';
+  const accentColor = getAccentColor(controls.status, palette);
+  const feedbackColor = getFeedbackColor(controls.feedback.kind, palette);
+
+  return (
+    <Pressable
+      testID="tracker-voice-button"
+      accessibilityRole="button"
+      accessibilityLabel={isActive ? 'Stop voice command' : 'Start voice command'}
+      disabled={disabled}
+      onPress={isActive ? controls.stopListening : controls.startListening}
+      style={({ pressed }) => [
+        styles.button,
+        {
+          backgroundColor: isActive ? palette.accentOverlay15 : palette.overlay05,
+          borderColor: isActive ? palette.accentOverlay30 : palette.overlay10,
+          opacity: disabled ? 0.5 : 1,
+        },
+        pressed && styles.pressed,
+      ]}>
+      <View style={styles.content}>
+        <View style={styles.titleRow}>
+          <MaterialCommunityIcons
+            name={icon}
+            size={scaleBySizeClass(22, sizeClass)}
+            color={accentColor}
+            style={styles.icon}
+          />
+          <ThemedText numberOfLines={1} style={[styles.buttonText, { color: accentColor }]}>
+            {label}
+          </ThemedText>
+        </View>
+        <ThemedText numberOfLines={1} style={[styles.feedbackText, { color: feedbackColor }]}>
+          {controls.feedback.text}
+        </ThemedText>
+      </View>
+    </Pressable>
+  );
+};
+
+function getAccentColor(status: VoiceStatCommandsControls['status'], palette: Palette): string {
+  if (status === 'error') return palette.danger;
+  if (status === 'unsupported') return palette.neutral;
+  return palette.accent;
+}
+
+function getFeedbackColor(
+  kind: VoiceStatCommandsControls['feedback']['kind'],
+  palette: Palette,
+): string {
+  if (kind === 'issue') return palette.warning;
+  if (kind === 'recorded') return palette.accent;
+  return palette.textMuted;
+}
+
+function createStyles(sizeClass: SizeClass) {
+  return StyleSheet.create({
+    button: {
+      flex: 1,
+      minHeight: scaleBySizeClass(62, sizeClass),
+      borderRadius: 16,
+      borderCurve: 'continuous',
+      borderWidth: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingHorizontal: scaleBySizeClass(12, sizeClass),
+    },
+    content: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      minWidth: 0,
+      flex: 1,
+      gap: 2,
+    },
+    titleRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    icon: {
+      marginRight: 8,
+    },
+    pressed: {
+      opacity: 0.7,
+    },
+    buttonText: {
+      fontFamily: Fonts.black,
+      fontSize: scaleBySizeClass(14, sizeClass),
+      letterSpacing: 0.5,
+      textTransform: 'uppercase',
+    },
+    feedbackText: {
+      fontFamily: Fonts.bold,
+      fontSize: scaleBySizeClass(10, sizeClass),
+      letterSpacing: 0.4,
+      textTransform: 'uppercase',
+      textAlign: 'center',
+      maxWidth: '100%',
+    },
+  });
+}

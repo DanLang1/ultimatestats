@@ -1,6 +1,8 @@
 import { ThemedText } from '@/components/ThemedText';
 import { DefenseActions } from '@/components/advancedTracking/bottomCard/DefenseActions';
+import { TrackerVoiceButton } from '@/components/advancedTracking/TrackerVoiceButton';
 import { useTheme } from '@/context/ThemeContext';
+import { VoiceStatCommandsControls } from '@/hooks/advancedTracking/useVoiceStatCommands';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { getActiveSideId } from '@/lib/advancedTracking/trackingDisplayHelpers';
 import {
@@ -19,11 +21,13 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 interface TrackerActionFooterProps {
   pointElapsedMs: number;
   onStartNextPoint: () => void;
+  voiceControls?: VoiceStatCommandsControls;
 }
 
 export const TrackerActionFooter = ({
   pointElapsedMs,
   onStartNextPoint,
+  voiceControls,
 }: TrackerActionFooterProps) => {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
@@ -85,10 +89,11 @@ export const TrackerActionFooter = ({
     );
   } else if (oppHasDisc) {
     content = <DefenseActions onOppScored={handleOppScored} onOppTurnover={handleOppTurnover} />;
+  } else if (voiceControls != null) {
+    content = <TrackerVoiceButton controls={voiceControls} disabled={false} />;
   }
 
-  // Always render the container so bottom safe-area padding is preserved,
-  // even when there are no action buttons (e.g. on offense).
+  // Always render the container so bottom safe-area padding is preserved.
   return <View style={styles.container}>{content}</View>;
 };
 

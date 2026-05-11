@@ -12,6 +12,7 @@ import { TrackerScoreBar } from '@/components/advancedTracking/TrackerScoreBar';
 import { useTheme } from '@/context/ThemeContext';
 import { useTimestampTimer } from '@/hooks/advancedTracking/useTimer';
 import { useTrackerHandlers } from '@/hooks/advancedTracking/useTrackerHandlers';
+import { useVoiceStatCommands } from '@/hooks/advancedTracking/useVoiceStatCommands';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { computeCapState } from '@/lib/advancedTracking/capUtils';
 import {
@@ -90,6 +91,8 @@ export default function AdvancedTrackerScreen() {
   const activeSideId = game ? getActiveSideId(possession, game) : '';
   const oppHasDisc = game ? !pointIsOver && activeSideId !== game.focusSideId : false;
   const discHolderRef = getSafeDiscHolderRef(possession, game?.focusSideId ?? '');
+  const activeIds = game && point ? getEffectiveLineParticipantIds(point, game.focusSideId) : [];
+  const activeParticipants = game ? game.participants.filter((p) => activeIds.includes(p.id)) : [];
 
   const handlers = useTrackerHandlers({
     pointIsOver,
@@ -102,6 +105,15 @@ export default function AdvancedTrackerScreen() {
     recordThrow,
     recordPickup,
     amendLastThrowAsGoal,
+  });
+
+  const voiceControls = useVoiceStatCommands({
+    activeParticipants,
+    pointIsOver,
+    oppHasDisc,
+    possession,
+    discHolderRef,
+    recordThrow,
   });
 
   if (!game) {
@@ -128,9 +140,6 @@ export default function AdvancedTrackerScreen() {
   if (!game.sides.find((s) => s.id !== game.focusSideId)) {
     throw new Error(`Game ${game.id} is missing the opponent side.`);
   }
-
-  const activeIds = point ? getEffectiveLineParticipantIds(point, game.focusSideId) : [];
-  const activeParticipants = game.participants.filter((p) => activeIds.includes(p.id));
 
   const handleStartNextPoint = () => {
     setPassModifier(null);
@@ -176,6 +185,7 @@ export default function AdvancedTrackerScreen() {
                 <TrackerActionFooter
                   pointElapsedMs={pointElapsedMs}
                   onStartNextPoint={handleStartNextPoint}
+                  voiceControls={voiceControls}
                 />
               </>
             )}
@@ -231,6 +241,7 @@ export default function AdvancedTrackerScreen() {
           <TrackerActionFooter
             pointElapsedMs={pointElapsedMs}
             onStartNextPoint={handleStartNextPoint}
+            voiceControls={voiceControls}
           />
         </>
       )}
