@@ -94,6 +94,7 @@ Tracks which team has the disc, enabling turnover detection when user taps the n
 | State          | [state-ownership.md](state-ownership.md)                                           |
 | Navigation     | [navigation-map.md](navigation-map.md)                                             |
 | Events         | [event-model.md](event-model.md)                                                   |
+| Voice Input    | [advanced-tracking-voice.md](advanced-tracking-voice.md)                           |
 | Tech Debt      | [tech-debt.md](tech-debt.md)                                                       |
 
 ## New Screen Checklist
