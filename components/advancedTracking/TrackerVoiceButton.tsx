@@ -18,18 +18,18 @@ export const TrackerVoiceButton = ({ controls, disabled }: TrackerVoiceButtonPro
   const styles = createStyles(sizeClass);
 
   const isActive = controls.isListening;
-  const label = isActive ? 'LISTENING' : 'VOICE';
+  const label = isActive ? 'RELEASE' : 'HOLD TO SPEAK';
   const icon = isActive ? 'stop-circle' : 'microphone';
   const accentColor = getAccentColor(controls.status, palette);
-  const feedbackColor = getFeedbackColor(controls.feedback.kind, palette);
 
   return (
     <Pressable
       testID="tracker-voice-button"
       accessibilityRole="button"
-      accessibilityLabel={isActive ? 'Stop voice command' : 'Start voice command'}
+      accessibilityLabel={isActive ? 'Release to stop voice command' : 'Hold for voice command'}
       disabled={disabled}
-      onPress={isActive ? controls.stopListening : controls.startListening}
+      onPressIn={controls.startListening}
+      onPressOut={controls.stopListening}
       style={({ pressed }) => [
         styles.button,
         {
@@ -51,9 +51,6 @@ export const TrackerVoiceButton = ({ controls, disabled }: TrackerVoiceButtonPro
             {label}
           </ThemedText>
         </View>
-        <ThemedText numberOfLines={1} style={[styles.feedbackText, { color: feedbackColor }]}>
-          {controls.feedback.text}
-        </ThemedText>
       </View>
     </Pressable>
   );
@@ -65,20 +62,11 @@ function getAccentColor(status: VoiceStatCommandsControls['status'], palette: Pa
   return palette.accent;
 }
 
-function getFeedbackColor(
-  kind: VoiceStatCommandsControls['feedback']['kind'],
-  palette: Palette,
-): string {
-  if (kind === 'issue') return palette.warning;
-  if (kind === 'recorded') return palette.accent;
-  return palette.textMuted;
-}
-
 function createStyles(sizeClass: SizeClass) {
   return StyleSheet.create({
     button: {
       flex: 1,
-      minHeight: scaleBySizeClass(62, sizeClass),
+      minHeight: scaleBySizeClass(54, sizeClass),
       borderRadius: 16,
       borderCurve: 'continuous',
       borderWidth: 1,
@@ -110,14 +98,6 @@ function createStyles(sizeClass: SizeClass) {
       fontSize: scaleBySizeClass(14, sizeClass),
       letterSpacing: 0.5,
       textTransform: 'uppercase',
-    },
-    feedbackText: {
-      fontFamily: Fonts.bold,
-      fontSize: scaleBySizeClass(10, sizeClass),
-      letterSpacing: 0.4,
-      textTransform: 'uppercase',
-      textAlign: 'center',
-      maxWidth: '100%',
     },
   });
 }

@@ -11,7 +11,8 @@ what action, if any, was recorded.
 ## Current MVP
 
 - Push-to-talk only.
-- Pass commands only, such as `Joe to Anne` or `Joe Anne`.
+- Receiver-name commands only, such as `Anne`. The thrower is always derived from the current disc
+  holder.
 - Active-line context only: names are matched against the seven players on the field.
 - Every successful voice pass records through the same store path as a tap pass, so the receiver
   becomes the highlighted disc holder through existing UI state.
@@ -24,9 +25,9 @@ No data model changes.
 Show lightweight feedback in the voice action area:
 
 - Listening state.
-- Interim/final transcript, for example `Heard: Joe to Ann`.
+- Interim/final transcript, for example `Heard: Ann`.
 - Successful parse/action, for example `Recorded pass`.
-- Rejection reason, for example `Pass needs two players` or `Thrower is not holding disc`.
+- Rejection reason, for example `Tap who has the disc first` or `Player name is ambiguous`.
 
 This makes voice debuggable during a point without adding settings or alias management to the live
 tracking screen.

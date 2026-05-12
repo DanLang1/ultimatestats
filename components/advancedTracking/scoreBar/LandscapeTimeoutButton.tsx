@@ -12,7 +12,11 @@ interface LandscapeTimeoutButtonProps {
   stoppageActive?: boolean;
 }
 
-export function LandscapeTimeoutButton({ state, onPress, stoppageActive }: LandscapeTimeoutButtonProps) {
+export function LandscapeTimeoutButton({
+  state,
+  onPress,
+  stoppageActive,
+}: LandscapeTimeoutButtonProps) {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
   const regularsLeft = Math.max(state.regularPerHalf - state.regularUsedInHalf, 0);

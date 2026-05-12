@@ -2,7 +2,6 @@ import { Participant } from '@/lib/advancedTracking/types';
 
 export type VoiceStatCommand = {
   kind: 'pass';
-  fromParticipantId: string;
   toParticipantId: string;
 };
 
@@ -16,8 +15,6 @@ export type VoiceCommandParseResult =
       reason: string;
     };
 
-const PASS_WORDS = new Set(['to']);
-
 interface PlayerVoiceAlias {
   participantId: string;
   phrase: string;
@@ -29,7 +26,7 @@ export function buildVoiceContextualStrings(activeParticipants: Participant[]): 
     .map((participant) => participant.name.trim().split(/\s+/)[0])
     .filter((name): name is string => name != null);
 
-  return [...new Set([...names, ...firstNames, 'to'])];
+  return [...new Set([...names, ...firstNames])];
 }
 
 export function parseVoiceStatCommand(
@@ -42,47 +39,24 @@ export function parseVoiceStatCommand(
   }
 
   const aliases = buildAliases(activeParticipants);
-  const parsedPass = parsePass(tokens, aliases);
-  return parsedPass.ok || tokens.some((token) => PASS_WORDS.has(token))
-    ? parsedPass
-    : { ok: false, reason: 'Say a pass like "Tom to Jerry".' };
+  const receiver = matchPlayer(tokens, aliases);
+  return buildReceiverOnlyResult(receiver);
 }
 
-function parsePass(tokens: string[], aliases: PlayerVoiceAlias[]): VoiceCommandParseResult {
-  const connectorIndex = tokens.findIndex((token) => PASS_WORDS.has(token));
-
-  if (connectorIndex !== -1) {
-    const from = matchPlayer(tokens.slice(0, connectorIndex), aliases);
-    const to = matchPlayer(tokens.slice(connectorIndex + 1), aliases);
-    return buildPassResult(from, to);
-  }
-
-  for (let splitIndex = 1; splitIndex < tokens.length; splitIndex += 1) {
-    const from = matchPlayer(tokens.slice(0, splitIndex), aliases);
-    const to = matchPlayer(tokens.slice(splitIndex), aliases);
-    if (from.status === 'match' && to.status === 'match') {
-      return buildPassResult(from, to);
-    }
-  }
-
-  return { ok: false, reason: 'No pass command found.' };
-}
-
-function buildPassResult(from: PlayerMatchResult, to: PlayerMatchResult): VoiceCommandParseResult {
-  if (from.status === 'ambiguous' || to.status === 'ambiguous') {
+function buildReceiverOnlyResult(receiver: PlayerMatchResult): VoiceCommandParseResult {
+  if (receiver.status === 'ambiguous') {
     return { ok: false, reason: 'Player name is ambiguous.' };
   }
 
-  if (from.status !== 'match' || to.status !== 'match') {
-    return { ok: false, reason: 'Pass command needs two active players.' };
+  if (receiver.status !== 'match') {
+    return { ok: false, reason: 'No pass command found.' };
   }
 
   return {
     ok: true,
     command: {
       kind: 'pass',
-      fromParticipantId: from.participantId,
-      toParticipantId: to.participantId,
+      toParticipantId: receiver.participantId,
     },
   };
 }

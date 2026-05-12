@@ -6,7 +6,7 @@ import { Fonts } from '@/theme/theme';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import * as Clipboard from 'expo-clipboard';
 import React, { useState } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface DevDebugModalProps {
@@ -95,11 +95,9 @@ export const DevDebugModal = ({ visible, onClose, data }: DevDebugModalProps) =>
           <ScrollView
             style={[styles.scrollBox, { backgroundColor: palette.overlay05 }]}
             contentContainerStyle={styles.scrollContent}>
-            <Text
-              style={[styles.codeText, { color: palette.textInverse }]}
-              selectable>
+            <ThemedText style={[styles.codeText, { color: palette.textInverse }]} selectable>
               {debugText}
-            </Text>
+            </ThemedText>
           </ScrollView>
         </View>
       </View>

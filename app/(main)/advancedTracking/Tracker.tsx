@@ -109,6 +109,7 @@ export default function AdvancedTrackerScreen() {
   });
 
   const voiceControls = useVoiceStatCommands({
+    enabled: canUseVoice,
     activeParticipants,
     pointIsOver,
     oppHasDisc,
@@ -261,7 +262,7 @@ export default function AdvancedTrackerScreen() {
         <>
           <Pressable
             onPress={() => setShowDevModal(true)}
-            style={[styles.devButton, { bottom: insets.bottom + 50}]}>
+            style={[styles.devButton, { bottom: insets.bottom + 50 }]}>
             <ThemedText style={styles.devButtonText}>DEV</ThemedText>
           </Pressable>
           <DevDebugModal

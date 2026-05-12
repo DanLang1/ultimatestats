@@ -1,6 +1,7 @@
 import { ThemedText } from '@/components/ThemedText';
 import { DefenseActions } from '@/components/advancedTracking/bottomCard/DefenseActions';
 import { TrackerVoiceButton } from '@/components/advancedTracking/TrackerVoiceButton';
+import { TrackerVoiceFeedbackPill } from '@/components/advancedTracking/TrackerVoiceFeedbackPill';
 import { useTheme } from '@/context/ThemeContext';
 import { VoiceStatCommandsControls } from '@/hooks/advancedTracking/useVoiceStatCommands';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
@@ -93,7 +94,12 @@ export const TrackerActionFooter = ({
   } else if (oppHasDisc) {
     content = <DefenseActions onOppScored={handleOppScored} onOppTurnover={handleOppTurnover} />;
   } else if (voiceControls != null) {
-    content = <TrackerVoiceButton controls={voiceControls} disabled={false} />;
+    content = (
+      <View style={styles.voiceStack}>
+        <TrackerVoiceFeedbackPill controls={voiceControls} />
+        <TrackerVoiceButton controls={voiceControls} disabled={false} />
+      </View>
+    );
   }
 
   // Always render the container so bottom safe-area padding is preserved.
@@ -106,6 +112,9 @@ function createStyles(sizeClass: SizeClass, bottomInset: number) {
       paddingHorizontal: 12,
       paddingTop: 8,
       paddingBottom: bottomInset + 24,
+    },
+    voiceStack: {
+      gap: 8,
     },
     nextPointBtn: {
       flex: 1,

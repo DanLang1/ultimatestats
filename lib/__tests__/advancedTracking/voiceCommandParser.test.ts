@@ -17,40 +17,42 @@ const activeParticipants: Participant[] = [
 ];
 
 describe('parseVoiceStatCommand', () => {
-  it('parses explicit and short pass commands', () => {
-    expect(parseVoiceStatCommand('Joe to Ted', activeParticipants)).toEqual({
+  it('parses receiver names', () => {
+    expect(parseVoiceStatCommand('Mark', activeParticipants)).toEqual({
       ok: true,
-      command: { kind: 'pass', fromParticipantId: 'joe', toParticipantId: 'ted' },
+      command: { kind: 'pass', toParticipantId: 'mark' },
     });
 
-    expect(parseVoiceStatCommand('Ted Mark', activeParticipants)).toEqual({
+    expect(parseVoiceStatCommand('Joe Ramirez', activeParticipants)).toEqual({
       ok: true,
-      command: { kind: 'pass', fromParticipantId: 'ted', toParticipantId: 'mark' },
+      command: { kind: 'pass', toParticipantId: 'joe' },
     });
   });
 
-  it('rejects non-pass commands for the MVP', () => {
+  it('rejects commands that include throwers or action words', () => {
+    expect(parseVoiceStatCommand('Joe to Ted', activeParticipants).ok).toBe(false);
+    expect(parseVoiceStatCommand('Ted Mark', activeParticipants).ok).toBe(false);
     expect(parseVoiceStatCommand('Rob drop', activeParticipants).ok).toBe(false);
     expect(parseVoiceStatCommand('Block John', activeParticipants).ok).toBe(false);
     expect(parseVoiceStatCommand('Goal by Sarah', activeParticipants).ok).toBe(false);
   });
 
   it('rejects players outside the active line', () => {
-    const result = parseVoiceStatCommand('Joe to Bench', activeParticipants);
+    const result = parseVoiceStatCommand('Bench', activeParticipants);
 
     expect(result.ok).toBe(false);
   });
 
   it('rejects ambiguous first-name aliases', () => {
-    const result = parseVoiceStatCommand('Taylor to Ted', activeParticipants);
+    const result = parseVoiceStatCommand('Taylor', activeParticipants);
 
     expect(result).toEqual({ ok: false, reason: 'Player name is ambiguous.' });
   });
 
   it('allows full names when first names are ambiguous', () => {
-    expect(parseVoiceStatCommand('Taylor Adams to Ted', activeParticipants)).toEqual({
+    expect(parseVoiceStatCommand('Taylor Adams', activeParticipants)).toEqual({
       ok: true,
-      command: { kind: 'pass', fromParticipantId: 'taylor-a', toParticipantId: 'ted' },
+      command: { kind: 'pass', toParticipantId: 'taylor-a' },
     });
   });
 
@@ -60,9 +62,10 @@ describe('parseVoiceStatCommand', () => {
 });
 
 describe('buildVoiceContextualStrings', () => {
-  it('includes active player names and command vocabulary', () => {
+  it('includes active player names', () => {
     expect(buildVoiceContextualStrings(activeParticipants)).toEqual(
-      expect.arrayContaining(['Joe Ramirez', 'Joe', 'Ted', 'to']),
+      expect.arrayContaining(['Joe Ramirez', 'Joe', 'Ted']),
     );
+    expect(buildVoiceContextualStrings(activeParticipants)).not.toContain('to');
   });
 });
