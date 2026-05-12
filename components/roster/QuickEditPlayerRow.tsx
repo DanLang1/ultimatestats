@@ -1,10 +1,12 @@
 import { useTheme } from '@/context/ThemeContext';
 import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { normalizePlayerNumber } from '@/lib/advancedTracking/voiceNumberUtils';
+import { MAX_PLAYER_NUMBER_LENGTH } from '@/lib/constants';
 import { MatchingType, Player, PlayerRole } from '@/lib/storage/types';
 import { useSettingsStore } from '@/store/settingsStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
-import { Platform, Pressable, StyleSheet, Switch, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, Switch, TextInput, View } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 import { Fonts } from '@/theme/theme';
 
@@ -14,6 +16,7 @@ interface QuickEditPlayerRowProps {
   onEditPlayer: () => void;
   onSetActive: (isActive: boolean) => void;
   onSetMatching: (matchingType: MatchingType | null) => void;
+  onSetNumber: (number: string) => void;
   onSetRole: (role: PlayerRole | null) => void;
 }
 
@@ -31,6 +34,7 @@ export function QuickEditPlayerRow({
   onEditPlayer,
   onSetActive,
   onSetMatching,
+  onSetNumber,
   onSetRole,
 }: QuickEditPlayerRowProps) {
   const { sizeClass } = useLayout();
@@ -94,6 +98,26 @@ export function QuickEditPlayerRow({
       </View>
 
       <View style={styles.controlsRow}>
+        <View style={styles.numberGroup}>
+          <ThemedText style={[styles.groupLabel, { color: palette.textMuted }]}>Number</ThemedText>
+          <TextInput
+            style={[
+              styles.numberInput,
+              {
+                borderColor: palette.overlay20,
+                backgroundColor: palette.overlay08,
+                color: palette.textInverse,
+              },
+            ]}
+            value={player.number ?? ''}
+            onChangeText={(value) => onSetNumber(normalizePlayerNumber(value))}
+            placeholder="#"
+            placeholderTextColor={palette.textMuted}
+            keyboardType="number-pad"
+            maxLength={MAX_PLAYER_NUMBER_LENGTH}
+          />
+        </View>
+
         <View style={styles.controlGroup}>
           <ThemedText style={[styles.groupLabel, { color: palette.textMuted }]}>
             Matching
@@ -276,6 +300,18 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     controlsRow: {
       flexDirection: isLandscape ? 'row' : 'column',
       gap: scaleBySizeClass(12, sizeClass),
+    },
+    numberGroup: {
+      gap: scaleBySizeClass(6, sizeClass),
+      width: isLandscape ? scaleBySizeClass(72, sizeClass) : '100%',
+    },
+    numberInput: {
+      minHeight: scaleBySizeClass(30, sizeClass),
+      borderRadius: scaleBySizeClass(8, sizeClass),
+      borderWidth: 1,
+      paddingHorizontal: scaleBySizeClass(8, sizeClass),
+      fontSize: scaleBySizeClass(12, sizeClass),
+      fontFamily: Fonts.bold,
     },
     controlGroup: {
       flex: 1,

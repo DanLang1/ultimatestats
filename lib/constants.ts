@@ -4,11 +4,8 @@ export const MAX_TEAM_NAME_LENGTH = 30;
 /** Maximum character length for player names (inputs + import truncation). */
 export const MAX_PLAYER_NAME_LENGTH = 20;
 
-/** Maximum character length for a player voice alias. */
-export const MAX_PLAYER_VOICE_ALIAS_LENGTH = 30;
-
-/** Maximum saved voice aliases per player. */
-export const MAX_PLAYER_VOICE_ALIASES = 6;
+/** Maximum character length for player jersey numbers. */
+export const MAX_PLAYER_NUMBER_LENGTH = 3;
 
 /** Duration for transient "event recorded" toast visibility. */
 export const EVENT_RECORDED_TOAST_DURATION_MS = 2000;

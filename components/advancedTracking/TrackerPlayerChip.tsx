@@ -5,6 +5,7 @@ import { TrackerChipBase } from './TrackerChipBase';
 
 interface TrackerPlayerChipProps {
   label: string;
+  playerNumber?: string;
   playerRef: PlayerRef;
   discHolderRef: PlayerRef | null;
   oppHasDisc: boolean;
@@ -26,6 +27,7 @@ function isSameRef(a: PlayerRef | null, b: PlayerRef): boolean {
 
 export const TrackerPlayerChip = ({
   label,
+  playerNumber,
   playerRef,
   discHolderRef,
   oppHasDisc,
@@ -42,6 +44,7 @@ export const TrackerPlayerChip = ({
   return (
     <TrackerChipBase
       label={label}
+      playerNumber={playerNumber}
       chipWidth={chipWidth}
       state={{ isHolder, isTargetable, oppHasDisc, passModifier }}
       actions={{

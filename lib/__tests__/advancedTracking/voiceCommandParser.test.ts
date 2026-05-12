@@ -30,23 +30,42 @@ describe('parseVoiceStatCommand', () => {
   });
 
   it('rejects commands that include throwers or action words', () => {
-    expect(parseVoiceStatCommand('Joe to Ted', activeParticipants).ok).toBe(false);
-    expect(parseVoiceStatCommand('Ted Mark', activeParticipants).ok).toBe(false);
-    expect(parseVoiceStatCommand('Rob drop', activeParticipants).ok).toBe(false);
-    expect(parseVoiceStatCommand('Block John', activeParticipants).ok).toBe(false);
-    expect(parseVoiceStatCommand('Goal by Sarah', activeParticipants).ok).toBe(false);
+    expect(parseVoiceStatCommand('Joe to Ted', activeParticipants)).toMatchObject({
+      ok: false,
+      reasonCode: 'unsupported_command',
+    });
+    expect(parseVoiceStatCommand('Ted Mark', activeParticipants)).toMatchObject({
+      ok: false,
+      reasonCode: 'unsupported_command',
+    });
+    expect(parseVoiceStatCommand('Rob drop', activeParticipants)).toMatchObject({
+      ok: false,
+      reasonCode: 'unsupported_command',
+    });
+    expect(parseVoiceStatCommand('Block John', activeParticipants)).toMatchObject({
+      ok: false,
+      reasonCode: 'unsupported_command',
+    });
+    expect(parseVoiceStatCommand('Goal by Sarah', activeParticipants)).toMatchObject({
+      ok: false,
+      reasonCode: 'unsupported_command',
+    });
   });
 
   it('rejects players outside the active line', () => {
     const result = parseVoiceStatCommand('Bench', activeParticipants);
 
-    expect(result.ok).toBe(false);
+    expect(result).toMatchObject({ ok: false, reasonCode: 'no_player_match' });
   });
 
-  it('rejects ambiguous first-name aliases', () => {
+  it('rejects ambiguous first-name matches', () => {
     const result = parseVoiceStatCommand('Taylor', activeParticipants);
 
-    expect(result).toEqual({ ok: false, reason: 'Player name is ambiguous.' });
+    expect(result).toEqual({
+      ok: false,
+      reason: 'Player name is ambiguous.',
+      reasonCode: 'ambiguous_player',
+    });
   });
 
   it('allows full names when first names are ambiguous', () => {
@@ -56,35 +75,86 @@ describe('parseVoiceStatCommand', () => {
     });
   });
 
-  it('rejects alternate spellings until aliases or fuzzy matching are supported', () => {
-    expect(parseVoiceStatCommand('Sara to Katie', activeParticipants).ok).toBe(false);
+  it('rejects commands that include alternate spelling names and action words', () => {
+    expect(parseVoiceStatCommand('Sara to Katie', activeParticipants)).toMatchObject({
+      ok: false,
+      reasonCode: 'unsupported_command',
+    });
   });
 
-  it('parses saved voice aliases', () => {
-    const participantsWithAliases: VoiceParticipantContext[] = [
-      { id: 'james', name: 'James Donovan', voiceAliases: ['JD', 'J D', 'number four'] },
+  it('parses conservative alternate name spellings', () => {
+    const participantsWithNameVariants: VoiceParticipantContext[] = [
+      { id: 'brian', name: 'Brian' },
       { id: 'anne', name: 'Anne' },
+      { id: 'sarah', name: 'Sarah' },
+      { id: 'katy', name: 'Katy' },
     ];
 
-    expect(parseVoiceStatCommand('j d', participantsWithAliases)).toEqual({
+    expect(parseVoiceStatCommand('Bryan', participantsWithNameVariants)).toEqual({
       ok: true,
-      command: { kind: 'pass', toParticipantId: 'james' },
+      command: { kind: 'pass', toParticipantId: 'brian' },
     });
-    expect(parseVoiceStatCommand('number four', participantsWithAliases)).toEqual({
+    expect(parseVoiceStatCommand('Ann', participantsWithNameVariants)).toEqual({
       ok: true,
-      command: { kind: 'pass', toParticipantId: 'james' },
+      command: { kind: 'pass', toParticipantId: 'anne' },
+    });
+    expect(parseVoiceStatCommand('Sara', participantsWithNameVariants)).toEqual({
+      ok: true,
+      command: { kind: 'pass', toParticipantId: 'sarah' },
+    });
+    expect(parseVoiceStatCommand('Katie', participantsWithNameVariants)).toEqual({
+      ok: true,
+      command: { kind: 'pass', toParticipantId: 'katy' },
     });
   });
 
-  it('rejects ambiguous saved voice aliases', () => {
-    const participantsWithAliases: VoiceParticipantContext[] = [
-      { id: 'anne', name: 'Anne', voiceAliases: ['Ann'] },
-      { id: 'anna', name: 'Anna', voiceAliases: ['Ann'] },
+  it('parses player numbers and spoken number words', () => {
+    const participantsWithNumbers: VoiceParticipantContext[] = [
+      { id: 'tate', name: 'Tate', number: '12' },
+      { id: 'lang', name: 'Lang', number: '7' },
     ];
 
-    expect(parseVoiceStatCommand('Ann', participantsWithAliases)).toEqual({
+    expect(parseVoiceStatCommand('12', participantsWithNumbers)).toEqual({
+      ok: true,
+      command: { kind: 'pass', toParticipantId: 'tate' },
+    });
+    expect(parseVoiceStatCommand('twelve', participantsWithNumbers)).toEqual({
+      ok: true,
+      command: { kind: 'pass', toParticipantId: 'tate' },
+    });
+    expect(parseVoiceStatCommand('number twelve', participantsWithNumbers)).toEqual({
+      ok: true,
+      command: { kind: 'pass', toParticipantId: 'tate' },
+    });
+    expect(parseVoiceStatCommand('seven', participantsWithNumbers)).toEqual({
+      ok: true,
+      command: { kind: 'pass', toParticipantId: 'lang' },
+    });
+  });
+
+  it('rejects ambiguous player numbers', () => {
+    const participantsWithDuplicateNumbers: VoiceParticipantContext[] = [
+      { id: 'one', name: 'One', number: '12' },
+      { id: 'two', name: 'Two', number: '12' },
+    ];
+
+    expect(parseVoiceStatCommand('twelve', participantsWithDuplicateNumbers)).toEqual({
       ok: false,
       reason: 'Player name is ambiguous.',
+      reasonCode: 'ambiguous_player',
+    });
+  });
+
+  it('rejects ambiguous alternate name spellings', () => {
+    const participantsWithSimilarNames: VoiceParticipantContext[] = [
+      { id: 'anne', name: 'Anne' },
+      { id: 'anna', name: 'Anna' },
+    ];
+
+    expect(parseVoiceStatCommand('Ann', participantsWithSimilarNames)).toEqual({
+      ok: false,
+      reason: 'Player name is ambiguous.',
+      reasonCode: 'ambiguous_player',
     });
   });
 });
@@ -97,13 +167,13 @@ describe('buildVoiceContextualStrings', () => {
     expect(buildVoiceContextualStrings(activeParticipants)).not.toContain('to');
   });
 
-  it('includes saved voice aliases', () => {
-    const participantsWithAliases: VoiceParticipantContext[] = [
-      { id: 'james', name: 'James Donovan', voiceAliases: ['JD'] },
+  it('includes player number phrases', () => {
+    const participantsWithNumbers: VoiceParticipantContext[] = [
+      { id: 'tate', name: 'Tate', number: '12' },
     ];
 
-    expect(buildVoiceContextualStrings(participantsWithAliases)).toEqual(
-      expect.arrayContaining(['James Donovan', 'James', 'JD']),
+    expect(buildVoiceContextualStrings(participantsWithNumbers)).toEqual(
+      expect.arrayContaining(['12', 'twelve', 'number twelve']),
     );
   });
 });

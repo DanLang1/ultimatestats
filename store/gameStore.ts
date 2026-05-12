@@ -635,11 +635,11 @@ export const useGameStore = create<GameState>()(
             if (updates.matchingType !== undefined) {
               player.matchingType = updates.matchingType;
             }
+            if (updates.number !== undefined) {
+              player.number = updates.number || undefined;
+            }
             if (updates.role !== undefined) {
               player.role = updates.role;
-            }
-            if (updates.voiceAliases !== undefined) {
-              player.voiceAliases = updates.voiceAliases;
             }
 
             becameInactive = wasActive && player.isActive === false;

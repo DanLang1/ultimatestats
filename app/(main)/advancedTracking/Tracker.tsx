@@ -29,7 +29,10 @@ import {
   isAdvancedGameOver,
 } from '@/lib/advancedTracking/trackingUtils';
 import { PassModifier } from '@/lib/advancedTracking/types';
-import { buildVoiceParticipantContexts } from '@/lib/advancedTracking/voiceContext';
+import {
+  buildVoiceParticipantContexts,
+  mergeRosterNumbersIntoParticipants,
+} from '@/lib/advancedTracking/voiceContext';
 
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { useGameStore } from '@/store/gameStore';
@@ -96,11 +99,13 @@ export default function AdvancedTrackerScreen() {
   const discHolderRef = getSafeDiscHolderRef(possession, game?.focusSideId ?? '');
   const canUseVoice = !pointIsOver && !activeStoppage && !oppHasDisc && discHolderRef != null;
   const activeIds = game && point ? getEffectiveLineParticipantIds(point, game.focusSideId) : [];
-  const activeParticipants = game ? game.participants.filter((p) => activeIds.includes(p.id)) : [];
-  const activeVoiceParticipants = buildVoiceParticipantContexts(
-    activeParticipants,
-    currentTeam?.roster ?? [],
-  );
+  const activeParticipants = game
+    ? mergeRosterNumbersIntoParticipants(
+        game.participants.filter((p) => activeIds.includes(p.id)),
+        currentTeam?.roster ?? [],
+      )
+    : [];
+  const activeVoiceParticipants = buildVoiceParticipantContexts(activeParticipants);
 
   const handlers = useTrackerHandlers({
     pointIsOver,

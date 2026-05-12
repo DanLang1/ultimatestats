@@ -12,6 +12,10 @@ import { ShareConfirmModal } from '@/components/ui/ShareConfirmModal';
 import { useTheme } from '@/context/ThemeContext';
 import { useIsGameActive } from '@/hooks/useIsGameActive';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import {
+  getPlayerNumberIdentity,
+  normalizePlayerNumber,
+} from '@/lib/advancedTracking/voiceNumberUtils';
 import { MAX_TEAM_NAME_LENGTH } from '@/lib/constants';
 import { hasPlayerWithName } from '@/lib/playerUtils';
 import { serializeTeam, uploadPayload } from '@/lib/sharing';
@@ -238,6 +242,28 @@ export default function EditRosterScreen() {
     await saveCurrentTeam();
   };
 
+  const handleSetPlayerNumber = async (playerId: string, number: string) => {
+    const normalizedNumber = normalizePlayerNumber(number);
+    const numberIdentity = getPlayerNumberIdentity(normalizedNumber);
+    if (
+      numberIdentity !== null &&
+      roster.some(
+        (player) =>
+          player.id !== playerId && getPlayerNumberIdentity(player.number) === numberIdentity,
+      )
+    ) {
+      showAlert({
+        title: 'Duplicate Number',
+        message: `Another player already has #${normalizedNumber}.`,
+      });
+      return;
+    }
+
+    const updateResult = updateRosterPlayer(playerId, { number: normalizedNumber });
+    if (updateResult !== 'updated') return;
+    await saveCurrentTeam();
+  };
+
   const handleSetPlayerRole = async (playerId: string, role: Player['role']) => {
     const updateResult = updateRosterPlayer(playerId, { role });
     if (updateResult !== 'updated') return;
@@ -377,6 +403,7 @@ export default function EditRosterScreen() {
         onEditPlayer={handleEditPlayer}
         onSetPlayerActive={handleSetPlayerActive}
         onSetPlayerMatching={handleSetPlayerMatching}
+        onSetPlayerNumber={handleSetPlayerNumber}
         onSetPlayerRole={handleSetPlayerRole}
       />
     );

@@ -18,7 +18,7 @@ export const TrackerVoiceButton = ({ controls, disabled }: TrackerVoiceButtonPro
   const styles = createStyles(sizeClass);
 
   const isActive = controls.isListening;
-  const label = isActive ? 'RELEASE' : 'HOLD TO SPEAK';
+  const label = isActive ? 'CANCEL' : 'TAP TO SPEAK';
   const icon = isActive ? 'stop-circle' : 'microphone';
   const accentColor = getAccentColor(controls.status, palette);
 
@@ -26,10 +26,9 @@ export const TrackerVoiceButton = ({ controls, disabled }: TrackerVoiceButtonPro
     <Pressable
       testID="tracker-voice-button"
       accessibilityRole="button"
-      accessibilityLabel={isActive ? 'Release to stop voice command' : 'Hold for voice command'}
+      accessibilityLabel={isActive ? 'Cancel voice command' : 'Start voice command'}
       disabled={disabled}
-      onPressIn={controls.startListening}
-      onPressOut={controls.stopListening}
+      onPress={controls.toggleListening}
       style={({ pressed }) => [
         styles.button,
         {

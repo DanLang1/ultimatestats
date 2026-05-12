@@ -13,6 +13,7 @@ const CHIP_BORDER_RADIUS = 12;
 
 interface TrackerChipBaseProps {
   label: string;
+  playerNumber?: string;
   chipWidth: number;
   state: {
     isHolder: boolean;
@@ -29,7 +30,13 @@ interface TrackerChipBaseProps {
   };
 }
 
-export const TrackerChipBase = ({ label, chipWidth, state, actions }: TrackerChipBaseProps) => {
+export const TrackerChipBase = ({
+  label,
+  playerNumber,
+  chipWidth,
+  state,
+  actions,
+}: TrackerChipBaseProps) => {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
   const { isHolder, isTargetable, oppHasDisc, passModifier } = state;
@@ -151,6 +158,17 @@ export const TrackerChipBase = ({ label, chipWidth, state, actions }: TrackerChi
             testID={`tracker-chip-${label}`}
             style={({ pressed }) => [styles.chipBody, pressed && !oppHasDisc && { opacity: 0.75 }]}
             onPress={tap}>
+            {playerNumber != null && playerNumber !== '' && (
+              <View style={[styles.numberBadge, { backgroundColor: palette.overlay15 }]}>
+                <ThemedText
+                  style={[
+                    styles.numberText,
+                    { color: textColor, fontSize: scaleBySizeClass(10, sizeClass) },
+                  ]}>
+                  #{playerNumber}
+                </ThemedText>
+              </View>
+            )}
             <ThemedText
               style={[
                 styles.chipText,
@@ -178,6 +196,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     padding: 12,
+  },
+  numberBadge: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    borderRadius: 8,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  numberText: {
+    fontFamily: Fonts.bold,
   },
   chipText: {
     fontFamily: Fonts.extraBold,

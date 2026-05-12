@@ -32,10 +32,10 @@ export type PlayerRole = 'handler' | 'cutter' | 'hybrid';
 export interface Player {
   id: string;
   name: string;
+  number?: string;
   isActive: boolean;
   matchingType: MatchingType | null; // null = not set, 'fmp' = female matching, 'mmp' = male matching
   role: PlayerRole | null; // null = not set
-  voiceAliases?: string[]; // Optional speech-recognition aliases for this player
 }
 
 export interface SavedTeam {

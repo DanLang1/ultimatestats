@@ -6,7 +6,6 @@ import {
   useSpeechRecognitionEvent,
 } from 'expo-speech-recognition';
 import { useEffect, useRef, useState } from 'react';
-import { Platform } from 'react-native';
 
 import {
   buildVoiceContextualStrings,
@@ -20,6 +19,7 @@ import { PlayerRef, PointPossession } from '@/lib/advancedTracking/types';
 const ANDROID_COMPLETE_SILENCE_MS = 400;
 const ANDROID_POSSIBLY_COMPLETE_SILENCE_MS = 250;
 const RESTART_LISTENING_DELAY_MS = 50;
+const VOICE_LISTENING_WINDOW_MS = 3500;
 
 type VoiceCommandStatus = 'idle' | 'listening' | 'recording' | 'unsupported' | 'error';
 
@@ -45,7 +45,7 @@ export interface VoiceStatCommandsControls {
   message: string | null;
   feedback: VoiceFeedback;
   isListening: boolean;
-  startListening: () => Promise<void>;
+  toggleListening: () => Promise<void>;
   stopListening: () => void;
 }
 
@@ -53,17 +53,30 @@ export function useVoiceStatCommands(input: UseVoiceStatCommandsInput): VoiceSta
   const [status, setStatus] = useState<VoiceCommandStatus>('idle');
   const [transcript, setTranscript] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
-  const [isHolding, setIsHolding] = useState(false);
+  const [isArmed, setIsArmed] = useState(false);
   const recordedCommandKeyRef = useRef<string | null>(null);
-  const ignoreNextNativeFailureRef = useRef(false);
   const shouldListenRef = useRef(false);
+  const listeningWindowTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const contextualStrings = buildVoiceContextualStrings(input.activeParticipants);
 
+  const clearListeningWindowTimeout = () => {
+    if (listeningWindowTimeoutRef.current == null) return;
+
+    clearTimeout(listeningWindowTimeoutRef.current);
+    listeningWindowTimeoutRef.current = null;
+  };
+
+  const startListeningWindowTimer = (onTimeout: () => void) => {
+    clearListeningWindowTimeout();
+    listeningWindowTimeoutRef.current = setTimeout(onTimeout, VOICE_LISTENING_WINDOW_MS);
+  };
+
   useEffect(() => {
     return () => {
+      clearListeningWindowTimeout();
       shouldListenRef.current = false;
-      ExpoSpeechRecognitionModule.stop();
+      ExpoSpeechRecognitionModule.abort();
     };
   }, []);
 
@@ -71,23 +84,21 @@ export function useVoiceStatCommands(input: UseVoiceStatCommandsInput): VoiceSta
     if (input.enabled) return;
 
     shouldListenRef.current = false;
-    setIsHolding(false);
+    clearListeningWindowTimeout();
+    setIsArmed(false);
     setStatus('idle');
     setMessage(null);
     setTranscript(null);
-    ExpoSpeechRecognitionModule.stop();
+    ExpoSpeechRecognitionModule.abort();
   }, [input.enabled]);
 
   const beginRecognition = () => {
-    const requiresOnDeviceRecognition =
-      Platform.OS !== 'web' && ExpoSpeechRecognitionModule.supportsOnDeviceRecognition();
-
     ExpoSpeechRecognitionModule.start({
       lang: 'en-US',
       interimResults: true,
       maxAlternatives: 1,
       continuous: true,
-      requiresOnDeviceRecognition,
+      requiresOnDeviceRecognition: true,
       addsPunctuation: false,
       contextualStrings,
       iosTaskHint: TaskHintIOS.confirmation,
@@ -101,7 +112,6 @@ export function useVoiceStatCommands(input: UseVoiceStatCommandsInput): VoiceSta
   };
 
   useSpeechRecognitionEvent('start', () => {
-    ignoreNextNativeFailureRef.current = false;
     setStatus('listening');
     setMessage('Listening');
     setTranscript(null);
@@ -121,22 +131,14 @@ export function useVoiceStatCommands(input: UseVoiceStatCommandsInput): VoiceSta
   });
 
   useSpeechRecognitionEvent('nomatch', () => {
-    if (ignoreNextNativeFailureRef.current) {
-      ignoreNextNativeFailureRef.current = false;
-      return;
-    }
-
+    shouldListenRef.current = false;
+    clearListeningWindowTimeout();
+    setIsArmed(false);
     setStatus('unsupported');
     setMessage('No clear command');
   });
 
   useSpeechRecognitionEvent('error', (event) => {
-    if (ignoreNextNativeFailureRef.current) {
-      ignoreNextNativeFailureRef.current = false;
-      setStatus('idle');
-      return;
-    }
-
     if (shouldListenRef.current && isRestartableSpeechError(event)) {
       setStatus('listening');
       setMessage('Listening');
@@ -169,6 +171,10 @@ export function useVoiceStatCommands(input: UseVoiceStatCommandsInput): VoiceSta
     if (!parseResult.ok) {
       if (event.isFinal) setStatus('unsupported');
       setMessage(parseResult.reason);
+      shouldListenRef.current = false;
+      setIsArmed(false);
+      clearListeningWindowTimeout();
+      ExpoSpeechRecognitionModule.abort();
       return;
     }
 
@@ -176,6 +182,10 @@ export function useVoiceStatCommands(input: UseVoiceStatCommandsInput): VoiceSta
     if (throwerParticipantId == null) {
       setStatus('unsupported');
       setMessage('Tap who has the disc first');
+      shouldListenRef.current = false;
+      setIsArmed(false);
+      clearListeningWindowTimeout();
+      ExpoSpeechRecognitionModule.abort();
       return;
     }
 
@@ -187,12 +197,12 @@ export function useVoiceStatCommands(input: UseVoiceStatCommandsInput): VoiceSta
 
     setStatus('recording');
     const commandResult = recordVoicePass(parseResult.command, throwerParticipantId, input);
+    shouldListenRef.current = false;
+    setIsArmed(false);
+    clearListeningWindowTimeout();
+    ExpoSpeechRecognitionModule.abort();
     if (commandResult.ok) {
-      shouldListenRef.current = false;
-      setIsHolding(false);
-      ignoreNextNativeFailureRef.current = true;
       recordedCommandKeyRef.current = commandKey;
-      ExpoSpeechRecognitionModule.stop();
     }
     setStatus(commandResult.ok ? 'idle' : 'unsupported');
     setMessage(commandResult.message);
@@ -218,7 +228,7 @@ export function useVoiceStatCommands(input: UseVoiceStatCommandsInput): VoiceSta
     }
 
     shouldListenRef.current = true;
-    setIsHolding(true);
+    setIsArmed(true);
     setStatus('listening');
     setMessage('Listening');
 
@@ -228,7 +238,8 @@ export function useVoiceStatCommands(input: UseVoiceStatCommandsInput): VoiceSta
 
     if (!ExpoSpeechRecognitionModule.isRecognitionAvailable()) {
       shouldListenRef.current = false;
-      setIsHolding(false);
+      clearListeningWindowTimeout();
+      setIsArmed(false);
       setStatus('error');
       setMessage('Voice not available');
       return;
@@ -237,7 +248,8 @@ export function useVoiceStatCommands(input: UseVoiceStatCommandsInput): VoiceSta
     const permissions = await ExpoSpeechRecognitionModule.requestPermissionsAsync();
     if (!permissions.granted) {
       shouldListenRef.current = false;
-      setIsHolding(false);
+      clearListeningWindowTimeout();
+      setIsArmed(false);
       setStatus('error');
       setMessage('Microphone permission needed');
       return;
@@ -245,13 +257,33 @@ export function useVoiceStatCommands(input: UseVoiceStatCommandsInput): VoiceSta
 
     if (!shouldListenRef.current) return;
 
+    startListeningWindowTimer(() => {
+      shouldListenRef.current = false;
+      setIsArmed(false);
+      setStatus('unsupported');
+      setMessage('No command heard');
+      ExpoSpeechRecognitionModule.abort();
+    });
     beginRecognition();
   };
 
   const stopListening = () => {
     shouldListenRef.current = false;
-    setIsHolding(false);
-    ExpoSpeechRecognitionModule.stop();
+    clearListeningWindowTimeout();
+    setIsArmed(false);
+    setStatus('idle');
+    setMessage(null);
+    setTranscript(null);
+    ExpoSpeechRecognitionModule.abort();
+  };
+
+  const toggleListening = async () => {
+    if (isArmed || status === 'listening') {
+      stopListening();
+      return;
+    }
+
+    await startListening();
   };
 
   return {
@@ -259,8 +291,8 @@ export function useVoiceStatCommands(input: UseVoiceStatCommandsInput): VoiceSta
     transcript,
     message,
     feedback: getVoiceFeedback(status, transcript, message),
-    isListening: isHolding || status === 'listening',
-    startListening,
+    isListening: isArmed || status === 'listening',
+    toggleListening,
     stopListening,
   };
 }
@@ -286,7 +318,7 @@ function getVoiceFeedback(
     return { kind: 'heard', text: 'Listening' };
   }
 
-  return { kind: 'idle', text: 'Say receiver name' };
+  return { kind: 'idle', text: 'Tap mic, say receiver' };
 }
 
 function recordVoicePass(

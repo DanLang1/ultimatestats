@@ -23,6 +23,7 @@ interface TrackerPlayerGridProps {
 
 function getChipModel(item: Participant | 'unknown'): {
   label: string;
+  playerNumber?: string;
   playerRef: PlayerRef;
   key: string;
 } {
@@ -31,6 +32,7 @@ function getChipModel(item: Participant | 'unknown'): {
   }
   return {
     label: item.name,
+    playerNumber: item.number,
     playerRef: { refType: 'participant', participantId: item.id },
     key: item.id,
   };
@@ -73,6 +75,7 @@ export const TrackerPlayerGrid = ({
           <TrackerPlayerChip
             key={chip.key}
             label={chip.label}
+            playerNumber={chip.playerNumber}
             playerRef={chip.playerRef}
             discHolderRef={discHolderRef}
             oppHasDisc={oppHasDisc}

@@ -106,6 +106,7 @@ export interface GameSide {
 export interface Participant {
   id: string;
   name: string;
+  number?: string;
   /** Set when this participant maps to a saved player in the app. */
   sourcePlayerId?: string | null;
   /**

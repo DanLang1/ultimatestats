@@ -12,6 +12,7 @@ interface QuickEditPlayerListProps {
   onEditPlayer: (player: Player) => void;
   onSetPlayerActive: (playerId: string, isActive: boolean) => void;
   onSetPlayerMatching: (playerId: string, matchingType: MatchingType | null) => void;
+  onSetPlayerNumber: (playerId: string, number: string) => void;
   onSetPlayerRole: (playerId: string, role: PlayerRole | null) => void;
 }
 
@@ -20,6 +21,7 @@ export function QuickEditPlayerList({
   onEditPlayer,
   onSetPlayerActive,
   onSetPlayerMatching,
+  onSetPlayerNumber,
   onSetPlayerRole,
 }: QuickEditPlayerListProps) {
   const { isLandscape, sizeClass } = useLayout();
@@ -55,6 +57,7 @@ export function QuickEditPlayerList({
       onEditPlayer={() => onEditPlayer(player)}
       onSetActive={(isActive) => onSetPlayerActive(player.id, isActive)}
       onSetMatching={(matchingType) => onSetPlayerMatching(player.id, matchingType)}
+      onSetNumber={(number) => onSetPlayerNumber(player.id, number)}
       onSetRole={(role) => onSetPlayerRole(player.id, role)}
     />
   );

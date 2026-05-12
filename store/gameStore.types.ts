@@ -155,8 +155,8 @@ export interface GameState {
     updates: {
       isActive?: boolean;
       matchingType?: MatchingType | null;
+      number?: string;
       role?: PlayerRole | null;
-      voiceAliases?: string[];
     },
   ) => UpdateRosterPlayerResult;
   addGoalEvent: (event: { goalPlayerId: string | null; assistPlayerId: string | null }) => void;

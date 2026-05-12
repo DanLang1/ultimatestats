@@ -19,6 +19,11 @@ import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+const NEXT_POINT_BUTTON_HEIGHT = 62;
+const FOOTER_BOTTOM_PADDING = 24;
+const FOOTER_HORIZONTAL_PADDING = 12;
+const FOOTER_TOP_PADDING = 8;
+
 interface TrackerActionFooterProps {
   pointElapsedMs: number;
   onStartNextPoint: () => void;
@@ -71,25 +76,27 @@ export const TrackerActionFooter = ({
 
   if (pointIsOver) {
     content = (
-      <Pressable
-        testID="tracker-next-point"
-        onPress={onStartNextPoint}
-        style={({ pressed }) => [
-          styles.nextPointBtn,
-          {
-            backgroundColor: palette.successOverlay10,
-            borderColor: palette.successOverlay15,
-          },
-          pressed && { opacity: 0.7 },
-        ]}>
-        <MaterialCommunityIcons
-          name="arrow-right-circle"
-          size={scaleBySizeClass(20, sizeClass)}
-          color={palette.success}
-          style={{ marginRight: 8 }}
-        />
-        <ThemedText style={[styles.btnText, { color: palette.success }]}>NEXT POINT</ThemedText>
-      </Pressable>
+      <View style={styles.pointOverRow}>
+        <Pressable
+          testID="tracker-next-point"
+          onPress={onStartNextPoint}
+          style={({ pressed }) => [
+            styles.nextPointBtn,
+            {
+              backgroundColor: palette.successOverlay10,
+              borderColor: palette.successOverlay15,
+            },
+            pressed && { opacity: 0.7 },
+          ]}>
+          <MaterialCommunityIcons
+            name="arrow-right-circle"
+            size={scaleBySizeClass(20, sizeClass)}
+            color={palette.success}
+            style={{ marginRight: 8 }}
+          />
+          <ThemedText style={[styles.btnText, { color: palette.success }]}>NEXT POINT</ThemedText>
+        </Pressable>
+      </View>
     );
   } else if (oppHasDisc) {
     content = <DefenseActions onOppScored={handleOppScored} onOppTurnover={handleOppTurnover} />;
@@ -109,19 +116,24 @@ export const TrackerActionFooter = ({
 function createStyles(sizeClass: SizeClass, bottomInset: number) {
   return StyleSheet.create({
     container: {
-      paddingHorizontal: 12,
-      paddingTop: 8,
-      paddingBottom: bottomInset + 24,
+      position: 'relative',
+      paddingHorizontal: FOOTER_HORIZONTAL_PADDING,
+      paddingTop: FOOTER_TOP_PADDING,
+      paddingBottom: bottomInset + FOOTER_BOTTOM_PADDING,
     },
     voiceStack: {
       gap: 8,
+    },
+    pointOverRow: {
+      flex: 1,
+      flexDirection: 'row',
     },
     nextPointBtn: {
       flex: 1,
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
-      minHeight: scaleBySizeClass(62, sizeClass),
+      minHeight: scaleBySizeClass(NEXT_POINT_BUTTON_HEIGHT, sizeClass),
       borderRadius: 16,
       borderCurve: 'continuous',
       borderWidth: 1,

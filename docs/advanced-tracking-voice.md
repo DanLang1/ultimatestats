@@ -10,7 +10,8 @@ what action, if any, was recorded.
 
 ## Current MVP
 
-- Push-to-talk only.
+- Tap-to-speak. Tapping the mic opens a short listening window, records the first valid receiver,
+  and then stops automatically. Tapping again cancels the active listening window.
 - Receiver-name commands only, such as `Anne`. The thrower is always derived from the current disc
   holder.
 - Active-line context only: names are matched against the seven players on the field.
@@ -29,67 +30,36 @@ Show lightweight feedback in the voice action area:
 - Successful parse/action, for example `Recorded pass`.
 - Rejection reason, for example `Tap who has the disc first` or `Player name is ambiguous`.
 
-This makes voice debuggable during a point without adding settings or alias management to the live
+This makes voice debuggable during a point without adding name-variant settings to the live
 tracking screen.
 
-## Future Phase B: Per-Point Voice Issues
+## Future Voice UX: Numbers vs Names
 
-Collect unresolved voice chunks in memory during the current point. Examples:
+Jersey numbers may become the primary/recommended voice path because they are more reliable than
+short or uncommon player names. A coach can say `12`, `twelve`, or `number twelve`, and the parser
+maps that phrase to the active player with that number.
 
-- Heard `Ann` for a receiver but could not confidently match it.
-- Heard `Katie` when the active player is `Katy`.
-- Heard a pass where the thrower did not match the current disc holder.
+Product direction to revisit:
 
-When a goal ends the point, keep `NEXT POINT` primary and non-blocking, but optionally show a small
-prompt:
+- Keep names available as a natural bonus path.
+- Teach number voice first in UI copy and player-chip badges.
+- Consider a future setting: `Numbers only` vs `Names and numbers`.
+- Do not make name-variant review the center of the experience. Numbers should carry reliability when name
+  recognition is unclear.
 
-`Voice had trouble with 3 names this point`
-
-The user can ignore it and continue, or open a review surface.
-
-## Future Phase C: Alias Review
-
-A between-point review modal could list repeated voice issues:
-
-- Heard `Ann` 3 times. Suggested player: `Anne`.
-- Heard `Katie` 2 times. Suggested player: `Katy`.
-
-Possible actions:
-
-- Add alias.
-- Ignore for this game.
-- Dismiss.
-
-Alias creation should always be explicit. The app should never automatically save an alias from a
-recognition result.
-
-## Future Phase D: Persistent Voice Aliases
-
-Persistent aliases probably belong on the saved roster player record, not only on an advanced-game
-participant snapshot.
-
-Example:
-
-```ts
-{
-  name: 'James Donovan',
-  number: '4',
-  voiceAliases: ['JD', 'J D', 'C4', 'number four']
-}
-```
-
-During a point, contextual strings would include active player names plus aliases. The parser would
-map any accepted alias back to the player ID.
+Numbers-only voice would simplify the model and reduce name-matching complexity, but it asks
+coaches to associate players with jersey numbers during live play. That tradeoff is likely good for
+teams with stable numbers and weaker for pickup/practice contexts.
 
 ## Matching Strategy
 
 Recommended order:
 
-1. Exact match against active player names and saved aliases.
-2. Conservative generated variants for common speech spellings.
-3. Future fuzzy matching against the active seven only.
+1. Exact match against active player names and jersey number phrases.
+2. Conservative spelling-distance matching for common name variants, scoped to the active seven.
+3. Reject low-confidence or ambiguous matches and show what was heard.
 
-Fuzzy matching should accept a result only when:
+Spelling-distance matching should accept a result only when:
 
 - The top match is above a high threshold.
 - The top match is clearly better than the second-best match.

@@ -84,6 +84,7 @@ export default function AdvancedPreGameConfirm() {
       .map((p) => ({
         id: p.id,
         name: p.name,
+        number: p.number,
         sourcePlayerId: p.id,
         matchingType: p.matchingType,
         role: p.role,
