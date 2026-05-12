@@ -12,9 +12,10 @@ import {
   buildVoiceContextualStrings,
   parseVoiceStatCommand,
   VoiceStatCommand,
+  VoiceParticipantContext,
 } from '@/lib/advancedTracking/voiceCommandParser';
 import { isPossessionOver } from '@/lib/advancedTracking/trackingUtils';
-import { PlayerRef, Participant, PointPossession } from '@/lib/advancedTracking/types';
+import { PlayerRef, PointPossession } from '@/lib/advancedTracking/types';
 
 const ANDROID_COMPLETE_SILENCE_MS = 400;
 const ANDROID_POSSIBLY_COMPLETE_SILENCE_MS = 250;
@@ -30,7 +31,7 @@ type VoiceFeedback =
 
 interface UseVoiceStatCommandsInput {
   enabled: boolean;
-  activeParticipants: Participant[];
+  activeParticipants: VoiceParticipantContext[];
   pointIsOver: boolean;
   oppHasDisc: boolean;
   possession: PointPossession | null;

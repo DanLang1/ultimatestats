@@ -1,4 +1,10 @@
-import { Participant } from '@/lib/advancedTracking/types';
+import { normalizeVoicePhrase } from '@/lib/advancedTracking/voicePhraseUtils';
+
+export interface VoiceParticipantContext {
+  id: string;
+  name: string;
+  voiceAliases?: string[];
+}
 
 export type VoiceStatCommand = {
   kind: 'pass';
@@ -20,18 +26,21 @@ interface PlayerVoiceAlias {
   phrase: string;
 }
 
-export function buildVoiceContextualStrings(activeParticipants: Participant[]): string[] {
+export function buildVoiceContextualStrings(
+  activeParticipants: VoiceParticipantContext[],
+): string[] {
   const names = activeParticipants.map((participant) => participant.name.trim()).filter(Boolean);
   const firstNames = activeParticipants
     .map((participant) => participant.name.trim().split(/\s+/)[0])
     .filter((name): name is string => name != null);
+  const voiceAliases = activeParticipants.flatMap((participant) => participant.voiceAliases ?? []);
 
-  return [...new Set([...names, ...firstNames])];
+  return [...new Set([...names, ...firstNames, ...voiceAliases])];
 }
 
 export function parseVoiceStatCommand(
   transcript: string,
-  activeParticipants: Participant[],
+  activeParticipants: VoiceParticipantContext[],
 ): VoiceCommandParseResult {
   const tokens = normalizeTranscript(transcript);
   if (tokens.length === 0) {
@@ -84,9 +93,9 @@ function matchPlayer(tokens: string[], aliases: PlayerVoiceAlias[]): PlayerMatch
   return { status: 'none' };
 }
 
-function buildAliases(activeParticipants: Participant[]): PlayerVoiceAlias[] {
+function buildAliases(activeParticipants: VoiceParticipantContext[]): PlayerVoiceAlias[] {
   return activeParticipants.flatMap((participant) => {
-    const normalizedName = normalizePhrase(participant.name);
+    const normalizedName = normalizeVoicePhrase(participant.name);
     if (!normalizedName) return [];
 
     const firstName = getFirstName(participant.name);
@@ -94,21 +103,19 @@ function buildAliases(activeParticipants: Participant[]): PlayerVoiceAlias[] {
     if (firstName != null && firstName !== normalizedName) {
       aliasPhrases.add(firstName);
     }
+    for (const alias of participant.voiceAliases ?? []) {
+      const normalizedAlias = normalizeVoicePhrase(alias);
+      if (normalizedAlias) {
+        aliasPhrases.add(normalizedAlias);
+      }
+    }
     return [...aliasPhrases].map((phrase) => ({ participantId: participant.id, phrase }));
   });
 }
 
 function normalizeTranscript(transcript: string): string[] {
-  const normalized = normalizePhrase(transcript);
+  const normalized = normalizeVoicePhrase(transcript);
   return normalized ? normalized.split(' ') : [];
-}
-
-function normalizePhrase(value: string): string {
-  return value
-    .toLowerCase()
-    .replace(/[^a-z0-9\s]/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
 }
 
 function getFirstName(name: string): string | null {

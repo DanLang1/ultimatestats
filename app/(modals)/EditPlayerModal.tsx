@@ -1,14 +1,20 @@
 import { useAlert } from '@/components/ui/AlertProvider';
 import { useTheme } from '@/context/ThemeContext';
-import { MODAL_MAX_WIDTH_FORM } from '@/lib/constants';
+import {
+  MAX_PLAYER_VOICE_ALIASES,
+  MAX_PLAYER_VOICE_ALIAS_LENGTH,
+  MODAL_MAX_WIDTH_FORM,
+} from '@/lib/constants';
 import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { normalizeVoicePhrase } from '@/lib/advancedTracking/voicePhraseUtils';
 import { MatchingType, PlayerRole } from '@/lib/storage/types';
+import { hasItems } from '@/lib/utils';
 import { useGameStore } from '@/store/gameStore';
 import { useLinePresetsStore } from '@/store/linePresetsStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { Redirect, router, useLocalSearchParams } from 'expo-router';
 import React, { useState } from 'react';
-import { Pressable, StyleSheet, Switch, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Switch, TextInput, View } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 import { Fonts } from '@/theme/theme';
 
@@ -33,6 +39,8 @@ export default function EditPlayerModal() {
     player?.matchingType ?? null,
   );
   const [role, setRole] = useState<PlayerRole | null>(player?.role ?? null);
+  const [voiceAliases, setVoiceAliases] = useState<string[]>(player?.voiceAliases ?? []);
+  const [aliasDraft, setAliasDraft] = useState('');
   const [confirmingDelete, setConfirmingDelete] = useState(false);
 
   // Declaratively redirect if player not found (after delete or invalid ID)
@@ -44,6 +52,14 @@ export default function EditPlayerModal() {
   const nameExists =
     name.trim() !== '' &&
     roster.some((p) => p.name.toLowerCase() === name.trim().toLowerCase() && p.id !== player.id);
+  const normalizedAliasDraft = normalizeVoicePhrase(aliasDraft);
+  const aliasExists =
+    normalizedAliasDraft !== '' &&
+    voiceAliases.some((alias) => normalizeVoicePhrase(alias) === normalizedAliasDraft);
+  const aliasConflict = findVoiceAliasConflict(normalizedAliasDraft, player.id, roster);
+  const aliasLimitReached = voiceAliases.length >= MAX_PLAYER_VOICE_ALIASES;
+  const canAddAlias =
+    normalizedAliasDraft !== '' && !aliasExists && aliasConflict === null && !aliasLimitReached;
 
   const handleDismiss = () => {
     router.dismissTo('/EditRoster');
@@ -53,7 +69,12 @@ export default function EditPlayerModal() {
     const trimmedName = name.trim();
     if (!trimmedName || nameExists) return;
 
-    const updateResult = updateRosterPlayer(player.id, { isActive, matchingType, role });
+    const updateResult = updateRosterPlayer(player.id, {
+      isActive,
+      matchingType,
+      role,
+      voiceAliases,
+    });
     if (updateResult === 'blocked-current-game-participation') {
       showAlert({
         title: 'Player Already Participated',
@@ -79,6 +100,18 @@ export default function EditPlayerModal() {
     setCurrentTeam(updatedTeam);
     await saveCurrentTeam(updatedTeam);
     router.dismissTo('/EditRoster');
+  };
+
+  const handleAddAlias = () => {
+    const trimmedAlias = aliasDraft.trim();
+    if (!canAddAlias || !trimmedAlias) return;
+
+    setVoiceAliases((currentAliases) => [...currentAliases, trimmedAlias]);
+    setAliasDraft('');
+  };
+
+  const handleRemoveAlias = (aliasToRemove: string) => {
+    setVoiceAliases((currentAliases) => currentAliases.filter((alias) => alias !== aliasToRemove));
   };
 
   const handleDelete = async () => {
@@ -168,7 +201,10 @@ export default function EditPlayerModal() {
             </View>
           ) : (
             // Normal edit view
-            <>
+            <ScrollView
+              style={styles.scrollArea}
+              contentContainerStyle={styles.scrollContent}
+              keyboardShouldPersistTaps="handled">
               <ThemedText style={[styles.title, { color: palette.modalTextMuted }]}>
                 EDIT PLAYER
               </ThemedText>
@@ -345,6 +381,89 @@ export default function EditPlayerModal() {
                 </View>
               </View>
 
+              <View style={styles.aliasSection}>
+                <View style={styles.aliasHeaderRow}>
+                  <ThemedText style={[styles.toggleLabel, { color: palette.modalText }]}>
+                    Voice aliases
+                  </ThemedText>
+                  <ThemedText style={[styles.aliasCount, { color: palette.modalTextMuted }]}>
+                    {voiceAliases.length}/{MAX_PLAYER_VOICE_ALIASES}
+                  </ThemedText>
+                </View>
+                <View style={styles.aliasInputRow}>
+                  <TextInput
+                    style={[
+                      styles.aliasInput,
+                      {
+                        borderColor:
+                          aliasExists || aliasConflict !== null
+                            ? palette.danger
+                            : palette.overlay20,
+                        color: palette.modalText,
+                        backgroundColor: palette.overlay05,
+                      },
+                    ]}
+                    placeholder="Add voice alias..."
+                    placeholderTextColor={palette.modalTextMuted}
+                    value={aliasDraft}
+                    onChangeText={setAliasDraft}
+                    maxLength={MAX_PLAYER_VOICE_ALIAS_LENGTH}
+                    returnKeyType="done"
+                    onSubmitEditing={handleAddAlias}
+                  />
+                  <Pressable
+                    style={[
+                      styles.aliasAddButton,
+                      { backgroundColor: canAddAlias ? palette.accent : palette.overlay10 },
+                    ]}
+                    onPress={handleAddAlias}
+                    disabled={!canAddAlias}
+                    accessibilityLabel="Add voice alias">
+                    <MaterialCommunityIcons
+                      name="plus"
+                      size={scaleBySizeClass(20, sizeClass)}
+                      color={canAddAlias ? palette.textOnAccent : palette.modalTextMuted}
+                    />
+                  </Pressable>
+                </View>
+                {(aliasExists || aliasConflict !== null) && (
+                  <ThemedText style={[styles.errorText, { color: palette.danger }]}>
+                    {aliasConflict ?? 'This alias is already saved'}
+                  </ThemedText>
+                )}
+                {aliasLimitReached && (
+                  <ThemedText style={[styles.aliasHint, { color: palette.modalTextMuted }]}>
+                    Remove an alias before adding another
+                  </ThemedText>
+                )}
+                {hasItems(voiceAliases) && (
+                  <View style={styles.aliasChipRow}>
+                    {voiceAliases.map((alias) => (
+                      <View
+                        key={alias}
+                        style={[
+                          styles.aliasChip,
+                          { backgroundColor: palette.overlay10, borderColor: palette.overlay20 },
+                        ]}>
+                        <ThemedText style={[styles.aliasChipText, { color: palette.modalText }]}>
+                          {alias}
+                        </ThemedText>
+                        <Pressable
+                          onPress={() => handleRemoveAlias(alias)}
+                          hitSlop={8}
+                          accessibilityLabel={`Remove ${alias} alias`}>
+                          <MaterialCommunityIcons
+                            name="close"
+                            size={scaleBySizeClass(14, sizeClass)}
+                            color={palette.modalTextMuted}
+                          />
+                        </Pressable>
+                      </View>
+                    ))}
+                  </View>
+                )}
+              </View>
+
               {/* Buttons */}
               <View style={styles.buttonRow}>
                 {!hasCurrentGameStats && (
@@ -387,12 +506,36 @@ export default function EditPlayerModal() {
                   </Pressable>
                 </View>
               </View>
-            </>
+            </ScrollView>
           )}
         </Pressable>
       </Pressable>
     </View>
   );
+}
+
+function findVoiceAliasConflict(
+  normalizedAlias: string,
+  playerId: string,
+  roster: { id: string; name: string; voiceAliases?: string[] }[],
+): string | null {
+  if (!normalizedAlias) return null;
+
+  const conflictingPlayer = roster.find((rosterPlayer) => {
+    if (rosterPlayer.id === playerId) return false;
+
+    const normalizedName = normalizeVoicePhrase(rosterPlayer.name);
+    const [firstName] = normalizedName.split(' ');
+    const phrases = [
+      normalizedName,
+      firstName,
+      ...(rosterPlayer.voiceAliases ?? []).map(normalizeVoicePhrase),
+    ];
+
+    return phrases.some((phrase) => phrase === normalizedAlias);
+  });
+
+  return conflictingPlayer ? `This conflicts with ${conflictingPlayer.name}` : null;
 }
 
 function createStyles(sizeClass: SizeClass) {
@@ -406,9 +549,16 @@ function createStyles(sizeClass: SizeClass) {
     sheet: {
       width: '100%',
       maxWidth: getSizeClassValue(MODAL_MAX_WIDTH_FORM, sizeClass),
+      maxHeight: '92%',
       borderRadius: 16,
       padding: 20,
       borderWidth: 1,
+    },
+    scrollArea: {
+      width: '100%',
+    },
+    scrollContent: {
+      paddingBottom: 2,
     },
     title: {
       fontSize: scaleBySizeClass(12, sizeClass),
@@ -459,6 +609,61 @@ function createStyles(sizeClass: SizeClass) {
       minWidth: 0,
     },
     pillText: {
+      fontSize: scaleBySizeClass(12, sizeClass),
+      fontFamily: Fonts.semiBold,
+    },
+    aliasSection: {
+      marginTop: 16,
+      gap: 8,
+    },
+    aliasHeaderRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    aliasCount: {
+      fontSize: scaleBySizeClass(12, sizeClass),
+      fontFamily: Fonts.semiBold,
+    },
+    aliasInputRow: {
+      flexDirection: 'row',
+      gap: 8,
+      alignItems: 'center',
+    },
+    aliasInput: {
+      flex: 1,
+      borderWidth: 1,
+      borderRadius: 10,
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+      fontSize: scaleBySizeClass(14, sizeClass),
+    },
+    aliasAddButton: {
+      width: scaleBySizeClass(42, sizeClass),
+      aspectRatio: 1,
+      borderRadius: 10,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    aliasHint: {
+      fontSize: scaleBySizeClass(12, sizeClass),
+      marginLeft: 4,
+    },
+    aliasChipRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 8,
+    },
+    aliasChip: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      borderWidth: 1,
+      borderRadius: 16,
+      paddingVertical: 6,
+      paddingHorizontal: 10,
+    },
+    aliasChipText: {
       fontSize: scaleBySizeClass(12, sizeClass),
       fontFamily: Fonts.semiBold,
     },

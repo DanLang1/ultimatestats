@@ -1,10 +1,10 @@
 import {
   buildVoiceContextualStrings,
   parseVoiceStatCommand,
+  VoiceParticipantContext,
 } from '@/lib/advancedTracking/voiceCommandParser';
-import { Participant } from '@/lib/advancedTracking/types';
 
-const activeParticipants: Participant[] = [
+const activeParticipants: VoiceParticipantContext[] = [
   { id: 'joe', name: 'Joe Ramirez' },
   { id: 'ted', name: 'Ted' },
   { id: 'mark', name: 'Mark' },
@@ -59,6 +59,34 @@ describe('parseVoiceStatCommand', () => {
   it('rejects alternate spellings until aliases or fuzzy matching are supported', () => {
     expect(parseVoiceStatCommand('Sara to Katie', activeParticipants).ok).toBe(false);
   });
+
+  it('parses saved voice aliases', () => {
+    const participantsWithAliases: VoiceParticipantContext[] = [
+      { id: 'james', name: 'James Donovan', voiceAliases: ['JD', 'J D', 'number four'] },
+      { id: 'anne', name: 'Anne' },
+    ];
+
+    expect(parseVoiceStatCommand('j d', participantsWithAliases)).toEqual({
+      ok: true,
+      command: { kind: 'pass', toParticipantId: 'james' },
+    });
+    expect(parseVoiceStatCommand('number four', participantsWithAliases)).toEqual({
+      ok: true,
+      command: { kind: 'pass', toParticipantId: 'james' },
+    });
+  });
+
+  it('rejects ambiguous saved voice aliases', () => {
+    const participantsWithAliases: VoiceParticipantContext[] = [
+      { id: 'anne', name: 'Anne', voiceAliases: ['Ann'] },
+      { id: 'anna', name: 'Anna', voiceAliases: ['Ann'] },
+    ];
+
+    expect(parseVoiceStatCommand('Ann', participantsWithAliases)).toEqual({
+      ok: false,
+      reason: 'Player name is ambiguous.',
+    });
+  });
 });
 
 describe('buildVoiceContextualStrings', () => {
@@ -67,5 +95,15 @@ describe('buildVoiceContextualStrings', () => {
       expect.arrayContaining(['Joe Ramirez', 'Joe', 'Ted']),
     );
     expect(buildVoiceContextualStrings(activeParticipants)).not.toContain('to');
+  });
+
+  it('includes saved voice aliases', () => {
+    const participantsWithAliases: VoiceParticipantContext[] = [
+      { id: 'james', name: 'James Donovan', voiceAliases: ['JD'] },
+    ];
+
+    expect(buildVoiceContextualStrings(participantsWithAliases)).toEqual(
+      expect.arrayContaining(['James Donovan', 'James', 'JD']),
+    );
   });
 });

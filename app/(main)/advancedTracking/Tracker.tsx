@@ -29,8 +29,10 @@ import {
   isAdvancedGameOver,
 } from '@/lib/advancedTracking/trackingUtils';
 import { PassModifier } from '@/lib/advancedTracking/types';
+import { buildVoiceParticipantContexts } from '@/lib/advancedTracking/voiceContext';
 
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
+import { useGameStore } from '@/store/gameStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { Fonts, Palette } from '@/theme/theme';
 import { Redirect, router, Stack } from 'expo-router';
@@ -52,6 +54,7 @@ export default function AdvancedTrackerScreen() {
     recordPickup,
     amendLastThrowAsGoal,
   } = useAdvancedTrackingStore();
+  const currentTeam = useGameStore((s) => s.currentTeam);
 
   const game = savedGames.find((g) => g.id === currentGameId);
   const [showDevModal, setShowDevModal] = useState(false);
@@ -94,6 +97,10 @@ export default function AdvancedTrackerScreen() {
   const canUseVoice = !pointIsOver && !activeStoppage && !oppHasDisc && discHolderRef != null;
   const activeIds = game && point ? getEffectiveLineParticipantIds(point, game.focusSideId) : [];
   const activeParticipants = game ? game.participants.filter((p) => activeIds.includes(p.id)) : [];
+  const activeVoiceParticipants = buildVoiceParticipantContexts(
+    activeParticipants,
+    currentTeam?.roster ?? [],
+  );
 
   const handlers = useTrackerHandlers({
     pointIsOver,
@@ -110,7 +117,7 @@ export default function AdvancedTrackerScreen() {
 
   const voiceControls = useVoiceStatCommands({
     enabled: canUseVoice,
-    activeParticipants,
+    activeParticipants: activeVoiceParticipants,
     pointIsOver,
     oppHasDisc,
     possession,

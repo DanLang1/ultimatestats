@@ -638,6 +638,9 @@ export const useGameStore = create<GameState>()(
             if (updates.role !== undefined) {
               player.role = updates.role;
             }
+            if (updates.voiceAliases !== undefined) {
+              player.voiceAliases = updates.voiceAliases;
+            }
 
             becameInactive = wasActive && player.isActive === false;
           });
