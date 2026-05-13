@@ -11,9 +11,10 @@ import { Modal, Pressable, StyleSheet, View } from 'react-native';
 interface TrackerHomeMenuProps {
   visible: boolean;
   onClose: () => void;
+  onEditLine: () => void;
 }
 
-export const TrackerHomeMenu = ({ visible, onClose }: TrackerHomeMenuProps) => {
+export const TrackerHomeMenu = ({ visible, onClose, onEditLine }: TrackerHomeMenuProps) => {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
   const styles = createStyles(sizeClass);
@@ -74,6 +75,32 @@ export const TrackerHomeMenu = ({ visible, onClose }: TrackerHomeMenuProps) => {
             </View>
             <ThemedText style={[styles.actionLabel, { color: palette.textInverse }]}>
               View Stats
+            </ThemedText>
+          </Pressable>
+
+          <Pressable
+            testID="tracker-menu-edit-line"
+            onPress={() => {
+              onClose();
+              onEditLine();
+            }}
+            style={({ pressed }) => [
+              styles.action,
+              {
+                backgroundColor: palette.overlay05,
+                borderColor: palette.overlay15,
+              },
+              pressed && { opacity: 0.7 },
+            ]}>
+            <View style={[styles.iconWrap, { backgroundColor: palette.accentOverlay10 }]}>
+              <MaterialCommunityIcons
+                name="account-edit-outline"
+                size={scaleBySizeClass(20, sizeClass)}
+                color={palette.accent}
+              />
+            </View>
+            <ThemedText style={[styles.actionLabel, { color: palette.textInverse }]}>
+              Edit Line
             </ThemedText>
           </Pressable>
 

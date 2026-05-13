@@ -21,6 +21,7 @@ interface UseTrackerHandlersInput {
   }) => void;
   recordPickup: (input: { sideId: string; player: PlayerRef }) => void;
   amendLastThrowAsGoal: (timerElapsedMs?: number) => void;
+  amendOpeningPullAsDropped: (receiver: PlayerRef) => void;
 }
 
 export function useTrackerHandlers(input: UseTrackerHandlersInput): TrackerPlayerGridHandlers {
@@ -35,6 +36,7 @@ export function useTrackerHandlers(input: UseTrackerHandlersInput): TrackerPlaye
     recordThrow,
     recordPickup,
     amendLastThrowAsGoal,
+    amendOpeningPullAsDropped,
   } = input;
 
   const onPlayerTap = (ref: PlayerRef) => {
@@ -113,6 +115,12 @@ export function useTrackerHandlers(input: UseTrackerHandlersInput): TrackerPlaye
     setPassModifier(null);
   };
 
+  const onPullDrop = (ref: PlayerRef) => {
+    if (pointIsOver || discHolderRef !== null || oppHasDisc) return;
+    amendOpeningPullAsDropped(ref);
+    setPassModifier(null);
+  };
+
   const onGoal = (ref: PlayerRef) => {
     if (!discHolderRef || pointIsOver) return;
     recordThrow({
@@ -132,5 +140,5 @@ export function useTrackerHandlers(input: UseTrackerHandlersInput): TrackerPlaye
     setPassModifier(null);
   };
 
-  return { onPlayerTap, onDrop, onGoal, onThrowaway };
+  return { onPlayerTap, onDrop, onPullDrop, onGoal, onThrowaway };
 }

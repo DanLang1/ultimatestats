@@ -68,7 +68,13 @@ export default function PullTrackingScreen() {
       <PullTimingStep
         isOurPull={isOurPull}
         activeParticipants={activeParticipants}
-        onNext={(pullerId, hangTimeMs) => setStep({ name: 'result', pullerId, hangTimeMs })}
+        onNext={(pullerId, hangTimeMs) => {
+          if (!isOurPull) {
+            handleComplete('inbound', pullerId, hangTimeMs);
+            return;
+          }
+          setStep({ name: 'result', pullerId, hangTimeMs });
+        }}
         onBack={() => router.back()}
       />
     );

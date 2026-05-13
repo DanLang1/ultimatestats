@@ -8,6 +8,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 type ButtonMode =
   | { kind: 'undo-more'; onUndo: () => void; onMore: () => void }
+  | { kind: 'more-only'; onMore: () => void }
   | { kind: 'cancel-more'; onCancel: () => void; onMore: () => void; isDanger?: boolean }
   | { kind: 'undo-only'; onUndo: () => void };
 
@@ -27,6 +28,46 @@ export const LastActionCardFrame = ({
   const styles = createStyles(sizeClass, isLandscape, palette);
 
   const showMore = buttonMode.kind !== 'undo-only';
+  const showUndo = buttonMode.kind === 'undo-more' || buttonMode.kind === 'undo-only';
+
+  let primaryAction: React.ReactNode = null;
+  if (buttonMode.kind === 'cancel-more') {
+    primaryAction = (
+      <Pressable
+        onPress={buttonMode.onCancel}
+        hitSlop={8}
+        style={({ pressed }) => [
+          styles.actionBtn,
+          { backgroundColor: palette.overlay05, borderColor: palette.overlay10 },
+          pressed && { opacity: 0.7 },
+        ]}>
+        <MaterialCommunityIcons
+          name="close"
+          size={scaleBySizeClass(18, sizeClass)}
+          color={buttonMode.isDanger ? palette.danger : palette.textMuted}
+        />
+        <ThemedText style={[styles.actionBtnText, { color: palette.inputText }]}>CANCEL</ThemedText>
+      </Pressable>
+    );
+  } else if (showUndo) {
+    primaryAction = (
+      <Pressable
+        testID="tracker-undo-button"
+        onPress={async () => await buttonMode.onUndo()}
+        hitSlop={8}
+        style={({ pressed }) => [
+          styles.moreBtn,
+          { backgroundColor: 'transparent', borderColor: palette.overlay10 },
+          pressed && { opacity: 0.7 },
+        ]}>
+        <MaterialCommunityIcons
+          name="undo"
+          size={scaleBySizeClass(20, sizeClass)}
+          color={palette.textMuted}
+        />
+      </Pressable>
+    );
+  }
 
   return (
     <View style={styles.outerContainer}>
@@ -35,41 +76,7 @@ export const LastActionCardFrame = ({
         <View style={styles.headerCenterContent}>{children}</View>
 
         <View style={styles.cardActionGroup}>
-          {buttonMode.kind === 'cancel-more' ? (
-            <Pressable
-              onPress={buttonMode.onCancel}
-              hitSlop={8}
-              style={({ pressed }) => [
-                styles.actionBtn,
-                { backgroundColor: palette.overlay05, borderColor: palette.overlay10 },
-                pressed && { opacity: 0.7 },
-              ]}>
-              <MaterialCommunityIcons
-                name="close"
-                size={scaleBySizeClass(18, sizeClass)}
-                color={buttonMode.isDanger ? palette.danger : palette.textMuted}
-              />
-              <ThemedText style={[styles.actionBtnText, { color: palette.inputText }]}>
-                CANCEL
-              </ThemedText>
-            </Pressable>
-          ) : (
-            <Pressable
-              testID="tracker-undo-button"
-              onPress={async () => await buttonMode.onUndo()}
-              hitSlop={8}
-              style={({ pressed }) => [
-                styles.moreBtn,
-                { backgroundColor: 'transparent', borderColor: palette.overlay10 },
-                pressed && { opacity: 0.7 },
-              ]}>
-              <MaterialCommunityIcons
-                name="undo"
-                size={scaleBySizeClass(20, sizeClass)}
-                color={palette.textMuted}
-              />
-            </Pressable>
-          )}
+          {primaryAction}
 
           {showMore && (
             <Pressable

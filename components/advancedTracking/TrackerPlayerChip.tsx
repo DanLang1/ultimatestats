@@ -9,9 +9,11 @@ interface TrackerPlayerChipProps {
   playerRef: PlayerRef;
   discHolderRef: PlayerRef | null;
   oppHasDisc: boolean;
+  canDropOpeningPull: boolean;
   passModifier: PassModifier;
   onTap: (ref: PlayerRef) => void;
   onDrop: (ref: PlayerRef) => void;
+  onPullDrop: (ref: PlayerRef) => void;
   onGoal: (ref: PlayerRef) => void;
   onThrowaway: () => void;
   chipWidth: number;
@@ -31,9 +33,11 @@ export const TrackerPlayerChip = ({
   playerRef,
   discHolderRef,
   oppHasDisc,
+  canDropOpeningPull,
   passModifier,
   onTap,
   onDrop,
+  onPullDrop,
   onGoal,
   onThrowaway,
   chipWidth,
@@ -46,12 +50,13 @@ export const TrackerPlayerChip = ({
       label={label}
       playerNumber={playerNumber}
       chipWidth={chipWidth}
-      state={{ isHolder, isTargetable, oppHasDisc, passModifier }}
+      state={{ isHolder, isTargetable, oppHasDisc, canDropOpeningPull, passModifier }}
       actions={{
         tap: () => onTap(playerRef),
         throwaway: onThrowaway,
         goal: () => onGoal(playerRef),
         drop: () => onDrop(playerRef),
+        pullDrop: () => onPullDrop(playerRef),
         oppSwipeDown: () => onTap(playerRef),
       }}
     />

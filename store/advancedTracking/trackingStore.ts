@@ -31,6 +31,7 @@ import { Draft } from 'immer';
 import {
   AdvancedTrackingState,
   AdvancedTrackingUndoEntry,
+  CorrectPointLineInput,
   RecordStoppageInput,
   RecordSubInput,
 } from './trackingStore.types';
@@ -340,6 +341,43 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
           });
 
           return actionId;
+        },
+
+        amendOpeningPullAsDropped: (receiver) => {
+          const game = getCurrentGame(get());
+          assertValidParticipantRefs(game, [receiver]);
+
+          const currentPoint = getCurrentPoint(game);
+          const currentPossession = getCurrentPossession(game);
+          const openingAction = currentPossession?.actions[0];
+          if (currentPoint == null || currentPossession == null || openingAction?.kind !== 'pull') {
+            throw new Error('Cannot mark a dropped pull before a pull has been recorded.');
+          }
+          if (currentPossession.actions.length !== 1 || hasPointEnded(currentPoint)) {
+            throw new Error('Cannot mark a dropped pull after the point has advanced.');
+          }
+
+          set((state) => {
+            const liveGame = getCurrentGame(state);
+            const livePoint = getCurrentPoint(liveGame)!;
+            const livePossession = getCurrentPossession(liveGame)!;
+            const liveOpeningAction = livePossession.actions[0];
+            if (liveOpeningAction.kind !== 'pull') return;
+
+            const previousResult = liveOpeningAction.result;
+            const previousReceiver = liveOpeningAction.receiver;
+            liveOpeningAction.result = 'dropped';
+            liveOpeningAction.receiver = receiver;
+            pushUndoEntry(state, {
+              kind: 'amend_pull_result',
+              pointId: livePoint.id,
+              possessionId: livePossession.id,
+              actionId: liveOpeningAction.id,
+              previousResult,
+              previousReceiver,
+            });
+            liveGame.updatedAt = Date.now();
+          });
         },
 
         recordPickup: (input) => {
@@ -654,6 +692,42 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
           });
         },
 
+        correctPointLine: (input: CorrectPointLineInput) => {
+          const game = getCurrentGame(get());
+          const point = getCurrentPoint(game);
+          if (point == null) throw new Error('No active point.');
+          if (hasPointEnded(point)) {
+            throw new Error('Cannot edit line after the point has ended.');
+          }
+
+          assertValidSideIds(game, [input.sideId]);
+          assertValidLines(game, [{ sideId: input.sideId, participantIds: input.participantIds }]);
+
+          set((state) => {
+            const liveGame = getCurrentGame(state);
+            const livePoint = getCurrentPoint(liveGame)!;
+
+            if (!livePoint.lines.some((l) => l.sideId === input.sideId)) {
+              throw new Error('Cannot edit a line that has not been set yet.');
+            }
+
+            livePoint.lines = livePoint.lines.filter((l) => l.sideId !== input.sideId);
+            livePoint.lines.push({
+              sideId: input.sideId,
+              participantIds: input.participantIds,
+            });
+
+            if (livePoint.subs != null) {
+              livePoint.subs = livePoint.subs.filter((sub) => sub.sideId !== input.sideId);
+              if (livePoint.subs.length === 0) {
+                livePoint.subs = undefined;
+              }
+            }
+
+            liveGame.updatedAt = Date.now();
+          });
+        },
+
         undoLastOperation: () => {
           if (get().currentGameId == null) {
             return false;
@@ -743,6 +817,20 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
                 if (wasGoal && point != null) {
                   point.revivedAt = Date.now();
                 }
+              }
+            } else if (lastUndoEntry.kind === 'amend_pull_result') {
+              const point = liveGame.points.find(
+                (candidate) => candidate.id === lastUndoEntry.pointId,
+              );
+              const possession = point?.possessions.find(
+                (candidate) => candidate.id === lastUndoEntry.possessionId,
+              );
+              const action = possession?.actions.find(
+                (candidate) => candidate.id === lastUndoEntry.actionId,
+              );
+              if (action?.kind === 'pull') {
+                action.result = lastUndoEntry.previousResult;
+                action.receiver = lastUndoEntry.previousReceiver;
               }
             }
 

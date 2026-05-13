@@ -302,6 +302,18 @@ export function getLastTurnoverEvent(
 ): TurnoverEventInfo | null {
   if (!possession) return null;
 
+  // A dropped pull is always the first action and the only action in the possession.
+  const openingAction = possession.actions[0];
+  if (openingAction?.kind === 'pull' && openingAction.result === 'dropped') {
+    return {
+      label: 'DROPPED PULL',
+      isFocusTurnover: isFocusPossession,
+      isDropWithSplitAttribution: false,
+      responsibleName: getRefName(openingAction.receiver, participants),
+      throwerName: null,
+    };
+  }
+
   for (let i = possession.actions.length - 1; i >= 0; i--) {
     const action = possession.actions[i];
     if (action.kind !== 'throw') continue;
@@ -452,7 +464,7 @@ export function isPullAwaitingPickup(params: {
   discHolderId: string | null;
 }): boolean {
   const { possession, pointIsOver, oppHasDisc, discHolderId } = params;
-  if (pointIsOver || oppHasDisc || discHolderId !== null) return false;
-  const lastAction = possession?.actions[possession.actions.length - 1];
+  if (pointIsOver || oppHasDisc || discHolderId !== null || !possession) return false;
+  const lastAction = possession.actions.at(-1);
   return lastAction?.kind === 'pull';
 }

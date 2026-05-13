@@ -12,7 +12,7 @@ import { formatTimerSeconds } from '@/lib/utils';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { Fonts } from '@/theme/theme';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { Redirect, router, Stack } from 'expo-router';
+import { Redirect, Stack } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
@@ -24,7 +24,13 @@ export default function TrackerHalftimeScreen() {
   const { palette } = useTheme();
   const { isLandscape, sizeClass } = useLayout();
 
-  const { currentGameId, savedGames, clearHalftimeBreak } = useAdvancedTrackingStore();
+  const {
+    currentGameId,
+    savedGames,
+    isHalftimeBreakActive,
+    clearHalftimeBreak,
+    undoLastOperation,
+  } = useAdvancedTrackingStore();
   const game = savedGames.find((g) => g.id === currentGameId);
 
   const [startedAt, setStartedAt] = useState<number | null>(null);
@@ -42,6 +48,10 @@ export default function TrackerHalftimeScreen() {
 
   if (!game) {
     return <Redirect href="/Dashboard" />;
+  }
+
+  if (!isHalftimeBreakActive) {
+    return <Redirect href="/advancedTracking/Tracker" />;
   }
 
   const styles = createStyles(isLandscape, sizeClass);
@@ -81,7 +91,10 @@ export default function TrackerHalftimeScreen() {
 
   const handleContinue = () => {
     clearHalftimeBreak();
-    router.replace('/advancedTracking/Tracker');
+  };
+
+  const handleUndo = () => {
+    undoLastOperation();
   };
 
   let timerValueColor: string;
@@ -97,16 +110,7 @@ export default function TrackerHalftimeScreen() {
     <ThemedView style={[styles.screen, { backgroundColor: palette.primary }]}>
       <Stack.Screen options={{ headerShown: false }} />
 
-      <ScreenHeader
-        title="HALFTIME"
-        titleColor={palette.textMuted}
-        onBack={() => {
-          clearHalftimeBreak();
-          router.replace('/Dashboard');
-        }}
-        backIconColor={palette.textMuted}
-        backButtonBackgroundColor="transparent"
-      />
+      <ScreenHeader title="HALFTIME" titleColor={palette.textMuted} />
 
       <ScrollView
         contentContainerStyle={[styles.content, !hasStats && styles.contentCompact]}
@@ -174,23 +178,43 @@ export default function TrackerHalftimeScreen() {
             </View>
 
             {!hasStats && (
-              <Pressable
-                testID="halftime-continue"
-                onPress={handleContinue}
-                style={({ pressed }) => [
-                  styles.continueBtn,
-                  { backgroundColor: palette.accent },
-                  pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
-                ]}>
-                <ThemedText style={[styles.continueBtnText, { color: palette.textOnAccent }]}>
-                  CONTINUE
-                </ThemedText>
-                <MaterialCommunityIcons
-                  name="arrow-right"
-                  size={scaleBySizeClass(16, sizeClass)}
-                  color={palette.textOnAccent}
-                />
-              </Pressable>
+              <View style={styles.actionRow}>
+                <Pressable
+                  testID="halftime-undo"
+                  onPress={handleUndo}
+                  style={({ pressed }) => [
+                    styles.undoBtn,
+                    { backgroundColor: palette.overlay05, borderColor: palette.overlay15 },
+                    pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
+                  ]}>
+                  <MaterialCommunityIcons
+                    name="undo"
+                    size={scaleBySizeClass(16, sizeClass)}
+                    color={palette.textInverse}
+                  />
+                  <ThemedText style={[styles.undoBtnText, { color: palette.textInverse }]}>
+                    UNDO
+                  </ThemedText>
+                </Pressable>
+
+                <Pressable
+                  testID="halftime-continue"
+                  onPress={handleContinue}
+                  style={({ pressed }) => [
+                    styles.continueBtn,
+                    { backgroundColor: palette.accent },
+                    pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
+                  ]}>
+                  <ThemedText style={[styles.continueBtnText, { color: palette.textOnAccent }]}>
+                    CONTINUE
+                  </ThemedText>
+                  <MaterialCommunityIcons
+                    name="arrow-right"
+                    size={scaleBySizeClass(16, sizeClass)}
+                    color={palette.textOnAccent}
+                  />
+                </Pressable>
+              </View>
             )}
           </View>
 
@@ -253,23 +277,43 @@ export default function TrackerHalftimeScreen() {
                   ))}
                 </View>
 
-                <Pressable
-                  testID="halftime-continue"
-                  onPress={handleContinue}
-                  style={({ pressed }) => [
-                    styles.continueBtn,
-                    { backgroundColor: palette.accent },
-                    pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
-                  ]}>
-                  <ThemedText style={[styles.continueBtnText, { color: palette.textOnAccent }]}>
-                    CONTINUE
-                  </ThemedText>
-                  <MaterialCommunityIcons
-                    name="arrow-right"
-                    size={scaleBySizeClass(16, sizeClass)}
-                    color={palette.textOnAccent}
-                  />
-                </Pressable>
+                <View style={styles.actionRow}>
+                  <Pressable
+                    testID="halftime-undo"
+                    onPress={handleUndo}
+                    style={({ pressed }) => [
+                      styles.undoBtn,
+                      { backgroundColor: palette.overlay05, borderColor: palette.overlay15 },
+                      pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
+                    ]}>
+                    <MaterialCommunityIcons
+                      name="undo"
+                      size={scaleBySizeClass(16, sizeClass)}
+                      color={palette.textInverse}
+                    />
+                    <ThemedText style={[styles.undoBtnText, { color: palette.textInverse }]}>
+                      UNDO
+                    </ThemedText>
+                  </Pressable>
+
+                  <Pressable
+                    testID="halftime-continue"
+                    onPress={handleContinue}
+                    style={({ pressed }) => [
+                      styles.continueBtn,
+                      { backgroundColor: palette.accent },
+                      pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
+                    ]}>
+                    <ThemedText style={[styles.continueBtnText, { color: palette.textOnAccent }]}>
+                      CONTINUE
+                    </ThemedText>
+                    <MaterialCommunityIcons
+                      name="arrow-right"
+                      size={scaleBySizeClass(16, sizeClass)}
+                      color={palette.textOnAccent}
+                    />
+                  </Pressable>
+                </View>
               </View>
             </>
           )}
@@ -425,7 +469,24 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
       fontFamily: Fonts.extraBold,
       fontVariant: ['tabular-nums'],
     },
+    actionRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+      width: '100%',
+    },
+    undoBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 6,
+      paddingVertical: scaleBySizeClass(12, sizeClass),
+      paddingHorizontal: 14,
+      borderRadius: 8,
+      borderWidth: 1,
+    },
     continueBtn: {
+      flex: 1,
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
@@ -433,7 +494,11 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
       paddingVertical: scaleBySizeClass(12, sizeClass),
       paddingHorizontal: 16,
       borderRadius: 8,
-      width: '100%',
+    },
+    undoBtnText: {
+      fontSize: scaleBySizeClass(14, sizeClass),
+      fontFamily: Fonts.extraBold,
+      letterSpacing: 1,
     },
     continueBtnText: {
       fontSize: scaleBySizeClass(14, sizeClass),

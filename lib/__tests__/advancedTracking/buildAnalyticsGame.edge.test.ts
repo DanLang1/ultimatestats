@@ -288,6 +288,11 @@ describe('buildAnalyticsGame — edge cases and correctness', () => {
         ['goal', 'block', 'callahan'].includes(a.type),
       );
       expect(scoringAttrs).toHaveLength(0);
+      expect(
+        analytics.attributions.filter(
+          (a) => a.participantId === 'p_august' && a.type === 'throwaway',
+        ),
+      ).toHaveLength(1);
     });
 
     it('completion to unknown player produces receiving_touch for UNKNOWN_PARTICIPANT', () => {

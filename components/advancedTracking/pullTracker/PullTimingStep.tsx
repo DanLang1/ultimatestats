@@ -51,8 +51,11 @@ export const PullTimingStep = ({
       startTimer();
     } else if (timerState === 'running') {
       stopTimer();
-      onNext(selectedPullerId, elapsedMs);
     }
+  };
+
+  const handleContinue = () => {
+    onNext(selectedPullerId, elapsedMs);
   };
 
   return (
@@ -147,25 +150,48 @@ export const PullTimingStep = ({
               {formatHangtime(elapsedMs)}
             </ThemedText>
             <ThemedText style={[styles.timerSub, { color: palette.textMuted }]}>
-              {timerState === 'idle' ? 'TAP TO START' : 'TAP TO STOP'}
+              {getTimerInstruction(timerState)}
             </ThemedText>
           </Pressable>
         </View>
 
-        {timerState === 'idle' && (
-          <Pressable
-            testID="pull-skip-timing"
-            onPress={() => onNext(selectedPullerId, 0)}
-            style={styles.skipBtn}>
-            <ThemedText style={[styles.skipBtnText, { color: palette.textMuted }]}>
-              Skip timing
-            </ThemedText>
-          </Pressable>
-        )}
+        <View style={styles.actionArea}>
+          {timerState === 'stopped' && (
+            <Pressable
+              testID="pull-timing-continue"
+              onPress={handleContinue}
+              style={({ pressed }) => [
+                styles.continueButton,
+                { backgroundColor: palette.accent },
+                pressed && { opacity: 0.8 },
+              ]}>
+              <ThemedText style={[styles.continueButtonText, { color: palette.textOnAccent }]}>
+                Continue
+              </ThemedText>
+            </Pressable>
+          )}
+
+          {timerState === 'idle' && (
+            <Pressable
+              testID="pull-skip-timing"
+              onPress={() => onNext(selectedPullerId, 0)}
+              style={styles.skipBtn}>
+              <ThemedText style={[styles.skipBtnText, { color: palette.textMuted }]}>
+                Skip timing
+              </ThemedText>
+            </Pressable>
+          )}
+        </View>
       </ScrollView>
     </ThemedView>
   );
 };
+
+function getTimerInstruction(timerState: 'running' | 'stopped' | 'idle') {
+  if (timerState === 'idle') return 'TAP TO START';
+  if (timerState === 'running') return 'TAP TO STOP';
+  return 'RECORDED';
+}
 
 function createStyles(sizeClass: SizeClass) {
   return StyleSheet.create({
@@ -180,6 +206,7 @@ function createStyles(sizeClass: SizeClass) {
       paddingHorizontal: 20,
       paddingTop: 8,
       gap: 16,
+      marginBottom: scaleBySizeClass(32, sizeClass),
     },
     label: {
       fontFamily: Fonts.bold,
@@ -198,7 +225,26 @@ function createStyles(sizeClass: SizeClass) {
       letterSpacing: 2,
       marginTop: 4,
     },
-    skipBtn: { alignItems: 'center', paddingVertical: 20 },
+    actionArea: {
+      minHeight: scaleBySizeClass(76, sizeClass),
+      justifyContent: 'center',
+      paddingHorizontal: 20,
+      paddingTop: 4,
+      paddingBottom: 20,
+    },
+    continueButton: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      minHeight: scaleBySizeClass(52, sizeClass),
+      borderRadius: 14,
+      borderCurve: 'continuous',
+      paddingHorizontal: 20,
+    },
+    continueButtonText: {
+      fontFamily: Fonts.black,
+      fontSize: scaleBySizeClass(15, sizeClass),
+    },
+    skipBtn: { alignItems: 'center', paddingVertical: 16 },
     skipBtnText: {
       fontFamily: Fonts.semiBold,
       fontSize: scaleBySizeClass(14, sizeClass),

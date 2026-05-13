@@ -21,6 +21,7 @@ import {
   getEffectiveLineParticipantIds,
   getPointAdjustedTimestamp,
   getSafeDiscHolderRef,
+  isPullAwaitingPickup,
 } from '@/lib/advancedTracking/trackingDisplayHelpers';
 import {
   getCurrentPoint,
@@ -56,6 +57,7 @@ export default function AdvancedTrackerScreen() {
     recordThrow,
     recordPickup,
     amendLastThrowAsGoal,
+    amendOpeningPullAsDropped,
   } = useAdvancedTrackingStore();
   const currentTeam = useGameStore((s) => s.currentTeam);
 
@@ -97,6 +99,12 @@ export default function AdvancedTrackerScreen() {
   const activeSideId = game ? getActiveSideId(possession, game) : '';
   const oppHasDisc = game ? !pointIsOver && activeSideId !== game.focusSideId : false;
   const discHolderRef = getSafeDiscHolderRef(possession, game?.focusSideId ?? '');
+  const isAwaitingPullPickup = isPullAwaitingPickup({
+    possession,
+    pointIsOver,
+    oppHasDisc,
+    discHolderId: discHolderRef?.refType === 'participant' ? discHolderRef.participantId : null,
+  });
   const canUseVoice = !pointIsOver && !activeStoppage && !oppHasDisc && discHolderRef != null;
   const activeIds = game && point ? getEffectiveLineParticipantIds(point, game.focusSideId) : [];
   const activeParticipants = game
@@ -118,6 +126,7 @@ export default function AdvancedTrackerScreen() {
     recordThrow,
     recordPickup,
     amendLastThrowAsGoal,
+    amendOpeningPullAsDropped,
   });
 
   const voiceControls = useVoiceStatCommands({
@@ -158,6 +167,10 @@ export default function AdvancedTrackerScreen() {
   const handleStartNextPoint = () => {
     setPassModifier(null);
     router.push('/advancedTracking/TrackerLineSelect');
+  };
+  const handleEditLine = () => {
+    setPassModifier(null);
+    router.push('/advancedTracking/TrackerEditLine');
   };
 
   const LEFT_PANEL_WIDTH = 160;
@@ -213,6 +226,7 @@ export default function AdvancedTrackerScreen() {
                 activeParticipants={activeParticipants}
                 discHolderRef={discHolderRef}
                 oppHasDisc={oppHasDisc}
+                canDropOpeningPull={isAwaitingPullPickup}
                 passModifier={passModifier}
                 handlers={handlers}
                 availableWidth={width - LEFT_PANEL_WIDTH - insets.left - insets.right}
@@ -247,6 +261,7 @@ export default function AdvancedTrackerScreen() {
                 activeParticipants={activeParticipants}
                 discHolderRef={discHolderRef}
                 oppHasDisc={oppHasDisc}
+                canDropOpeningPull={isAwaitingPullPickup}
                 passModifier={passModifier}
                 handlers={handlers}
               />
@@ -264,11 +279,16 @@ export default function AdvancedTrackerScreen() {
         <TrackerRareMenu
           visible={showRareMenu}
           onClose={() => setShowRareMenu(false)}
+          pointElapsedMs={pointElapsedMs}
           setPassModifier={setPassModifier}
         />
       )}
 
-      <TrackerHomeMenu visible={showHomeMenu} onClose={() => setShowHomeMenu(false)} />
+      <TrackerHomeMenu
+        visible={showHomeMenu}
+        onClose={() => setShowHomeMenu(false)}
+        onEditLine={handleEditLine}
+      />
 
       {__DEV__ && (
         <>

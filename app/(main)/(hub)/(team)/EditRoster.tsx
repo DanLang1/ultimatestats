@@ -380,6 +380,7 @@ export default function EditRosterScreen() {
                 <PlayerChip
                   key={player.id}
                   name={player.name}
+                  subtitle={player.number ? `#${player.number}` : undefined}
                   selected={selectionMode && selectedPlayerIds.has(player.id)}
                   isActive={player.isActive}
                   matchingType={player.matchingType}

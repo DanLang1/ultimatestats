@@ -70,6 +70,11 @@ export interface RecordSubInput {
   outIds: string[];
 }
 
+export interface CorrectPointLineInput {
+  sideId: string;
+  participantIds: string[];
+}
+
 export interface RecordBetweenPointTimeoutInput {
   sideId: string;
   /** True when this consumes the one-per-game floater. */
@@ -104,6 +109,14 @@ export type AdvancedTrackingUndoEntry =
       possessionId: string;
       actionId: string;
       previousResult: ThrowResult;
+    }
+  | {
+      kind: 'amend_pull_result';
+      pointId: string;
+      possessionId: string;
+      actionId: string;
+      previousResult: PullResult;
+      previousReceiver?: PlayerRef;
     };
 
 export interface AdvancedTrackingState {
@@ -120,12 +133,14 @@ export interface AdvancedTrackingState {
   recordGameTransition: (transitionType: 'soft_cap' | 'hard_cap') => void;
   recordBetweenPointTimeout: (input: RecordBetweenPointTimeoutInput) => string;
   recordPull: (input: RecordPullInput) => string;
+  amendOpeningPullAsDropped: (receiver: PlayerRef) => void;
   recordPickup: (input: RecordPickupInput) => string;
   recordThrow: (input: RecordThrowInput) => string;
   amendLastThrowAsGoal: (timerElapsedMs?: number) => void;
   recordStoppage: (input: RecordStoppageInput) => string;
   resumeStoppage: (actionId: string) => void;
   recordSub: (input: RecordSubInput) => void;
+  correctPointLine: (input: CorrectPointLineInput) => void;
   undoLastOperation: () => boolean;
   deleteSavedGame: (gameId: string) => void;
 }

@@ -21,10 +21,16 @@ import { Modal, Pressable, StyleSheet, View } from 'react-native';
 interface TrackerRareMenuProps {
   visible: boolean;
   onClose: () => void;
+  pointElapsedMs: number;
   setPassModifier: (m: PassModifier) => void;
 }
 
-export const TrackerRareMenu = ({ visible, onClose, setPassModifier }: TrackerRareMenuProps) => {
+export const TrackerRareMenu = ({
+  visible,
+  onClose,
+  pointElapsedMs,
+  setPassModifier,
+}: TrackerRareMenuProps) => {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
   const styles = createStyles(sizeClass);
@@ -54,6 +60,17 @@ export const TrackerRareMenu = ({ visible, onClose, setPassModifier }: TrackerRa
     recordThrow({
       thrower: discHolderRef,
       result: 'stall',
+    });
+    setPassModifier(null);
+  };
+
+  const handleThrownCallahan = () => {
+    if (!discHolderRef || pointIsOver) return;
+    recordThrow({
+      thrower: discHolderRef,
+      result: 'callahan',
+      defender: { refType: 'untracked' },
+      timerElapsedMs: pointElapsedMs,
     });
     setPassModifier(null);
   };
@@ -156,6 +173,23 @@ export const TrackerRareMenu = ({ visible, onClose, setPassModifier }: TrackerRa
                 onPress={closeAnd(() => setPassModifier('fifty-fifty'))}>
                 <ThemedText style={[styles.btnText, { color: palette.textInverse }]}>
                   50/50
+                </ThemedText>
+              </Pressable>
+              <Pressable
+                testID="rare-menu-thrown-callahan"
+                disabled={!discHolderRef}
+                style={({ pressed }) => [
+                  styles.btn,
+                  {
+                    borderColor: palette.overlay15,
+                    backgroundColor: palette.overlay05,
+                    opacity: discHolderRef ? 1 : 0.4,
+                  },
+                  pressed && discHolderRef && { opacity: 0.7 },
+                ]}
+                onPress={closeAnd(handleThrownCallahan)}>
+                <ThemedText style={[styles.btnText, { color: palette.textInverse }]}>
+                  OPP CALLAHAN
                 </ThemedText>
               </Pressable>
               <Pressable

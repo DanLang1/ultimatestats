@@ -19,6 +19,7 @@ interface TrackerChipBaseProps {
     isHolder: boolean;
     isTargetable: boolean;
     oppHasDisc: boolean;
+    canDropOpeningPull: boolean;
     passModifier: PassModifier;
   };
   actions: {
@@ -26,6 +27,7 @@ interface TrackerChipBaseProps {
     throwaway: () => void;
     goal: () => void;
     drop: () => void;
+    pullDrop: () => void;
     oppSwipeDown?: () => void;
   };
 }
@@ -39,12 +41,13 @@ export const TrackerChipBase = ({
 }: TrackerChipBaseProps) => {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
-  const { isHolder, isTargetable, oppHasDisc, passModifier } = state;
-  const { tap, throwaway, goal, drop, oppSwipeDown } = actions;
+  const { isHolder, isTargetable, oppHasDisc, canDropOpeningPull, passModifier } = state;
+  const { tap, throwaway, goal, drop, pullDrop, oppSwipeDown } = actions;
 
   const isHolderSV = useDerivedValue(() => isHolder);
   const isTargetableSV = useDerivedValue(() => isTargetable);
   const oppHasDiscSV = useDerivedValue(() => oppHasDisc);
+  const canDropOpeningPullSV = useDerivedValue(() => canDropOpeningPull);
 
   const panGesture = Gesture.Pan()
     .activeOffsetY([-12, 12])
@@ -58,6 +61,10 @@ export const TrackerChipBase = ({
       }
       if (oppHasDiscSV.value && oppSwipeDown != null) {
         if (e.translationY > 0) scheduleOnRN(oppSwipeDown);
+        return;
+      }
+      if (canDropOpeningPullSV.value) {
+        if (e.translationY > 0) scheduleOnRN(pullDrop);
         return;
       }
       if (!isTargetableSV.value) return;
@@ -106,7 +113,7 @@ export const TrackerChipBase = ({
         opacity: 1,
       };
     }
-    if (isTargetable) {
+    if (isTargetable || canDropOpeningPull) {
       if (modifierColor) {
         return {
           bg: modifierColor + '18',

@@ -87,17 +87,17 @@ export const PullResultStep = ({
 
         <ScrollView style={styles.flex} contentContainerStyle={styles.content}>
           <ThemedText style={[styles.label, { color: palette.textMuted }]}>PULL RESULT</ThemedText>
-          <View style={styles.chipGrid}>
+          <View style={styles.resultList}>
             {PULL_RESULTS.map((resultOption) => (
               <Pressable
                 key={resultOption.value}
                 testID={`pull-result-${resultOption.value}`}
                 onPress={() => handleResultSelect(resultOption.value)}
                 style={[
-                  styles.chip,
+                  styles.resultButton,
                   { borderColor: palette.overlay20, backgroundColor: palette.overlay05 },
                 ]}>
-                <ThemedText style={[styles.chipText, { color: palette.textInverse }]}>
+                <ThemedText style={[styles.resultButtonText, { color: palette.textInverse }]}>
                   {resultOption.label}
                 </ThemedText>
               </Pressable>
@@ -120,9 +120,21 @@ function createStyles(sizeClass: SizeClass) {
       letterSpacing: scaleBySizeClass(1.5, sizeClass, { rounding: 'none' }),
       marginBottom: 12,
     },
-    chipGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-    chip: { paddingHorizontal: 16, paddingVertical: 12, borderRadius: 12, borderWidth: 1 },
-    chipText: { fontFamily: Fonts.bold, fontSize: scaleBySizeClass(14, sizeClass) },
+    resultList: { gap: 10 },
+    resultButton: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      minHeight: scaleBySizeClass(56, sizeClass),
+      paddingHorizontal: 16,
+      paddingVertical: 14,
+      borderRadius: 12,
+      borderWidth: 1,
+    },
+    resultButtonText: {
+      fontFamily: Fonts.black,
+      fontSize: scaleBySizeClass(15, sizeClass),
+      textAlign: 'center',
+    },
     hangtimeBanner: {
       flexDirection: 'row',
       alignItems: 'center',

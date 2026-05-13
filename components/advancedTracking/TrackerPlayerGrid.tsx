@@ -8,6 +8,7 @@ import { PassModifier } from './types';
 export interface TrackerPlayerGridHandlers {
   onPlayerTap: (ref: PlayerRef) => void;
   onDrop: (ref: PlayerRef) => void;
+  onPullDrop: (ref: PlayerRef) => void;
   onGoal: (ref: PlayerRef) => void;
   onThrowaway: () => void;
 }
@@ -16,6 +17,7 @@ interface TrackerPlayerGridProps {
   activeParticipants: Participant[];
   discHolderRef: PlayerRef | null;
   oppHasDisc: boolean;
+  canDropOpeningPull: boolean;
   passModifier: PassModifier;
   handlers: TrackerPlayerGridHandlers;
   availableWidth?: number;
@@ -42,6 +44,7 @@ export const TrackerPlayerGrid = ({
   activeParticipants,
   discHolderRef,
   oppHasDisc,
+  canDropOpeningPull,
   passModifier,
   handlers,
   availableWidth,
@@ -79,9 +82,11 @@ export const TrackerPlayerGrid = ({
             playerRef={chip.playerRef}
             discHolderRef={discHolderRef}
             oppHasDisc={oppHasDisc}
+            canDropOpeningPull={canDropOpeningPull}
             passModifier={passModifier}
             onTap={handlers.onPlayerTap}
             onDrop={handlers.onDrop}
+            onPullDrop={handlers.onPullDrop}
             onGoal={handlers.onGoal}
             onThrowaway={handlers.onThrowaway}
             chipWidth={chipWidth}

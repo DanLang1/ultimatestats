@@ -263,7 +263,7 @@ function getTrackerLastActionCardModel({
   return {
     kind: 'label',
     accentColor: palette.neutral,
-    buttonMode: { kind: 'undo-more', onUndo, onMore: onMorePress },
+    buttonMode: { kind: 'more-only', onMore: onMorePress },
     content: frameLabel('TAP WHO STARTS WITH DISC'),
   };
 }
