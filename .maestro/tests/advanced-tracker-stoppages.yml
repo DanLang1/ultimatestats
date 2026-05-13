@@ -74,15 +74,15 @@ name: Advanced Tracker Stoppages
     optional: true
 
 # --- Injury ---
-# Open rare menu
+# Open line change menu
 - tapOn:
-    id: 'tracker-more-button'
+    id: 'tracker-line-action-tile'
 - waitForAnimationToEnd:
     timeout: 500
 
-# Select Injury (offense)
+# Select Injury substitution
 - tapOn:
-    id: 'rare-menu-injury-offense'
+    id: 'line-change-injury-sub'
 
 # Verify injury sub screen
 - assertVisible:

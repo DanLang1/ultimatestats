@@ -4,28 +4,29 @@ import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { Fonts } from '@/theme/theme';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { router } from 'expo-router';
 import React from 'react';
 import { Modal, Pressable, StyleSheet, View } from 'react-native';
 
-interface TrackerHomeMenuProps {
+interface TrackerLineChangeMenuProps {
   visible: boolean;
   onClose: () => void;
+  onCorrectLine: () => void;
+  onInjurySub: () => void;
 }
 
-export const TrackerHomeMenu = ({ visible, onClose }: TrackerHomeMenuProps) => {
+export function TrackerLineChangeMenu({
+  visible,
+  onClose,
+  onCorrectLine,
+  onInjurySub,
+}: TrackerLineChangeMenuProps) {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
   const styles = createStyles(sizeClass);
 
-  const handleGoHome = () => {
+  const closeAnd = (fn: () => void) => () => {
     onClose();
-    router.dismissTo('/Dashboard');
-  };
-
-  const handleViewStats = () => {
-    onClose();
-    router.push('/ViewStats');
+    fn();
   };
 
   return (
@@ -44,7 +45,14 @@ export const TrackerHomeMenu = ({ visible, onClose }: TrackerHomeMenuProps) => {
           <View
             accessible={false}
             style={[styles.header, { borderBottomColor: palette.overlay10 }]}>
-            <ThemedText style={[styles.title, { color: palette.textMuted }]}>MENU</ThemedText>
+            <View style={styles.headerText}>
+              <ThemedText style={[styles.eyebrow, { color: palette.textMuted }]}>
+                LINE CHANGE
+              </ThemedText>
+              <ThemedText style={[styles.title, { color: palette.textInverse }]}>
+                What changed?
+              </ThemedText>
+            </View>
             <Pressable onPress={onClose} hitSlop={12}>
               <MaterialCommunityIcons
                 name="close"
@@ -55,8 +63,8 @@ export const TrackerHomeMenu = ({ visible, onClose }: TrackerHomeMenuProps) => {
           </View>
 
           <Pressable
-            testID="tracker-menu-view-stats"
-            onPress={handleViewStats}
+            testID="line-change-correct-line"
+            onPress={closeAnd(onCorrectLine)}
             style={({ pressed }) => [
               styles.action,
               {
@@ -67,19 +75,24 @@ export const TrackerHomeMenu = ({ visible, onClose }: TrackerHomeMenuProps) => {
             ]}>
             <View style={[styles.iconWrap, { backgroundColor: palette.accentOverlay10 }]}>
               <MaterialCommunityIcons
-                name="chart-bar"
-                size={scaleBySizeClass(20, sizeClass)}
+                name="playlist-edit"
+                size={scaleBySizeClass(22, sizeClass)}
                 color={palette.accent}
               />
             </View>
-            <ThemedText style={[styles.actionLabel, { color: palette.textInverse }]}>
-              View Stats
-            </ThemedText>
+            <View style={styles.actionText}>
+              <ThemedText style={[styles.actionLabel, { color: palette.textInverse }]}>
+                Correct lineup
+              </ThemedText>
+              <ThemedText style={[styles.actionDescription, { color: palette.textMuted }]}>
+                Fix who started this point. Replaces point credit.
+              </ThemedText>
+            </View>
           </Pressable>
 
           <Pressable
-            testID="tracker-menu-home"
-            onPress={handleGoHome}
+            testID="line-change-injury-sub"
+            onPress={closeAnd(onInjurySub)}
             style={({ pressed }) => [
               styles.action,
               {
@@ -88,27 +101,32 @@ export const TrackerHomeMenu = ({ visible, onClose }: TrackerHomeMenuProps) => {
               },
               pressed && { opacity: 0.7 },
             ]}>
-            <View style={[styles.iconWrap, { backgroundColor: palette.accentOverlay10 }]}>
+            <View style={[styles.iconWrap, { backgroundColor: palette.warningOverlay10 }]}>
               <MaterialCommunityIcons
-                name="home-outline"
-                size={scaleBySizeClass(20, sizeClass)}
-                color={palette.accent}
+                name="medical-bag"
+                size={scaleBySizeClass(22, sizeClass)}
+                color={palette.warning}
               />
             </View>
-            <ThemedText style={[styles.actionLabel, { color: palette.textInverse }]}>
-              Home
-            </ThemedText>
+            <View style={styles.actionText}>
+              <ThemedText style={[styles.actionLabel, { color: palette.textInverse }]}>
+                Injury substitution
+              </ThemedText>
+              <ThemedText style={[styles.actionDescription, { color: palette.textMuted }]}>
+                Player changed during the point. Both players get point credit.
+              </ThemedText>
+            </View>
           </Pressable>
         </View>
       </BottomSheet>
     </Modal>
   );
-};
+}
 
 function createStyles(sizeClass: SizeClass) {
   return StyleSheet.create({
     sheet: {
-      maxHeight: '45%',
+      maxHeight: '58%',
     },
     content: {
       paddingHorizontal: 16,
@@ -128,11 +146,20 @@ function createStyles(sizeClass: SizeClass) {
       justifyContent: 'space-between',
       paddingBottom: 12,
       borderBottomWidth: 1,
+      gap: 12,
     },
-    title: {
-      fontSize: scaleBySizeClass(12, sizeClass),
+    headerText: {
+      flex: 1,
+      gap: 3,
+    },
+    eyebrow: {
+      fontSize: scaleBySizeClass(11, sizeClass),
       fontFamily: Fonts.bold,
       letterSpacing: 1,
+    },
+    title: {
+      fontSize: scaleBySizeClass(18, sizeClass),
+      fontFamily: Fonts.extraBold,
     },
     action: {
       flexDirection: 'row',
@@ -144,15 +171,24 @@ function createStyles(sizeClass: SizeClass) {
       paddingVertical: 14,
     },
     iconWrap: {
-      width: scaleBySizeClass(36, sizeClass),
-      height: scaleBySizeClass(36, sizeClass),
+      width: scaleBySizeClass(40, sizeClass),
+      height: scaleBySizeClass(40, sizeClass),
       borderRadius: 10,
       alignItems: 'center',
       justifyContent: 'center',
     },
+    actionText: {
+      flex: 1,
+      gap: 3,
+    },
     actionLabel: {
       fontSize: scaleBySizeClass(16, sizeClass),
       fontFamily: Fonts.semiBold,
+    },
+    actionDescription: {
+      fontSize: scaleBySizeClass(12, sizeClass),
+      fontFamily: Fonts.regular,
+      lineHeight: scaleBySizeClass(16, sizeClass),
     },
   });
 }

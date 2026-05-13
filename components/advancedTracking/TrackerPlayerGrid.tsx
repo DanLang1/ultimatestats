@@ -2,6 +2,7 @@ import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { Participant, PlayerRef } from '@/lib/advancedTracking/types';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
+import { TrackerLineActionTile } from './TrackerLineActionTile';
 import { TrackerPlayerChip } from './TrackerPlayerChip';
 import { PassModifier } from './types';
 
@@ -20,6 +21,7 @@ interface TrackerPlayerGridProps {
   canDropOpeningPull: boolean;
   passModifier: PassModifier;
   handlers: TrackerPlayerGridHandlers;
+  onLineChangePress: () => void;
   availableWidth?: number;
 }
 
@@ -47,6 +49,7 @@ export const TrackerPlayerGrid = ({
   canDropOpeningPull,
   passModifier,
   handlers,
+  onLineChangePress,
   availableWidth,
 }: TrackerPlayerGridProps) => {
   const { width, sizeClass, isLandscape } = useLayout();
@@ -60,7 +63,11 @@ export const TrackerPlayerGrid = ({
 
   const styles = createStyles(sizeClass, isLandscape);
 
-  const items: (Participant | 'unknown' | null)[] = [...activeParticipants, 'unknown'];
+  const items: (Participant | 'unknown' | 'line-action' | null)[] = [
+    ...activeParticipants,
+    'unknown',
+    'line-action',
+  ];
   while (items.length % columns !== 0) {
     items.push(null);
   }
@@ -70,6 +77,16 @@ export const TrackerPlayerGrid = ({
       {items.map((item, i) => {
         if (item === null) {
           return <View key={`placeholder-${i}`} style={{ width: chipWidth, aspectRatio: 1 }} />;
+        }
+
+        if (item === 'line-action') {
+          return (
+            <TrackerLineActionTile
+              key="line-action"
+              chipWidth={chipWidth}
+              onPress={onLineChangePress}
+            />
+          );
         }
 
         const chip = getChipModel(item);

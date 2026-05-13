@@ -14,7 +14,6 @@ import {
 import { PassModifier } from '@/lib/advancedTracking/types';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { Fonts } from '@/theme/theme';
-import { router } from 'expo-router';
 import React from 'react';
 import { Modal, Pressable, StyleSheet, View } from 'react-native';
 
@@ -75,11 +74,6 @@ export const TrackerRareMenu = ({
     setPassModifier(null);
   };
 
-  const handleInjury = () => {
-    if (pointIsOver) return;
-    router.push('/advancedTracking/TrackerInjurySub');
-  };
-
   const closeAnd = (fn: () => void) => () => {
     onClose();
     fn();
@@ -122,18 +116,6 @@ export const TrackerRareMenu = ({
                 onPress={closeAnd(() => setPassModifier('stall'))}>
                 <ThemedText style={[styles.btnText, { color: palette.textInverse }]}>
                   STALL
-                </ThemedText>
-              </Pressable>
-              <Pressable
-                testID="rare-menu-injury"
-                style={({ pressed }) => [
-                  styles.btn,
-                  { borderColor: palette.overlay15, backgroundColor: palette.overlay05 },
-                  pressed && { opacity: 0.7 },
-                ]}
-                onPress={closeAnd(handleInjury)}>
-                <ThemedText style={[styles.btnText, { color: palette.textInverse }]}>
-                  INJURY
                 </ThemedText>
               </Pressable>
             </>
@@ -207,18 +189,6 @@ export const TrackerRareMenu = ({
                 onPress={closeAnd(handleStall)}>
                 <ThemedText style={[styles.btnText, { color: palette.textInverse }]}>
                   STALL
-                </ThemedText>
-              </Pressable>
-              <Pressable
-                testID="rare-menu-injury-offense"
-                style={({ pressed }) => [
-                  styles.btn,
-                  { borderColor: palette.overlay15, backgroundColor: palette.overlay05 },
-                  pressed && { opacity: 0.7 },
-                ]}
-                onPress={closeAnd(handleInjury)}>
-                <ThemedText style={[styles.btnText, { color: palette.textInverse }]}>
-                  INJURY
                 </ThemedText>
               </Pressable>
             </>

@@ -6,6 +6,7 @@ import { TrackerActionFooter } from '@/components/advancedTracking/TrackerAction
 import { TrackerCapBar } from '@/components/advancedTracking/TrackerCapBar';
 import { TrackerHomeMenu } from '@/components/advancedTracking/TrackerHomeMenu';
 import { TrackerLastActionCard } from '@/components/advancedTracking/TrackerLastActionCard';
+import { TrackerLineChangeMenu } from '@/components/advancedTracking/TrackerLineChangeMenu';
 import { TrackerPlayerGrid } from '@/components/advancedTracking/TrackerPlayerGrid';
 import { TrackerRareMenu } from '@/components/advancedTracking/TrackerRareMenu';
 import { TrackerScoreBar } from '@/components/advancedTracking/TrackerScoreBar';
@@ -64,6 +65,7 @@ export default function AdvancedTrackerScreen() {
   const game = savedGames.find((g) => g.id === currentGameId);
   const [showDevModal, setShowDevModal] = useState(false);
   const [showHomeMenu, setShowHomeMenu] = useState(false);
+  const [showLineChangeMenu, setShowLineChangeMenu] = useState(false);
   const [showRareMenu, setShowRareMenu] = useState(false);
   const [passModifier, setPassModifier] = useState<PassModifier>(null);
 
@@ -172,6 +174,10 @@ export default function AdvancedTrackerScreen() {
     setPassModifier(null);
     router.push('/advancedTracking/TrackerEditLine');
   };
+  const handleInjurySub = () => {
+    setPassModifier(null);
+    router.push('/advancedTracking/TrackerInjurySub');
+  };
 
   const LEFT_PANEL_WIDTH = 160;
 
@@ -229,6 +235,7 @@ export default function AdvancedTrackerScreen() {
                 canDropOpeningPull={isAwaitingPullPickup}
                 passModifier={passModifier}
                 handlers={handlers}
+                onLineChangePress={() => setShowLineChangeMenu(true)}
                 availableWidth={width - LEFT_PANEL_WIDTH - insets.left - insets.right}
               />
             )}
@@ -253,7 +260,7 @@ export default function AdvancedTrackerScreen() {
               onMorePress={() => setShowRareMenu(true)}
             />
           )}
-          <View style={{ flex: 1, justifyContent: 'flex-start', paddingTop: 12 }}>
+          <View style={{ flex: 1, justifyContent: 'flex-start', paddingTop: 4 }}>
             {activeStoppage ? (
               <StoppageOverlay game={game} />
             ) : (
@@ -264,6 +271,7 @@ export default function AdvancedTrackerScreen() {
                 canDropOpeningPull={isAwaitingPullPickup}
                 passModifier={passModifier}
                 handlers={handlers}
+                onLineChangePress={() => setShowLineChangeMenu(true)}
               />
             )}
           </View>
@@ -284,17 +292,22 @@ export default function AdvancedTrackerScreen() {
         />
       )}
 
-      <TrackerHomeMenu
-        visible={showHomeMenu}
-        onClose={() => setShowHomeMenu(false)}
-        onEditLine={handleEditLine}
-      />
+      <TrackerHomeMenu visible={showHomeMenu} onClose={() => setShowHomeMenu(false)} />
+
+      {!activeStoppage && (
+        <TrackerLineChangeMenu
+          visible={showLineChangeMenu}
+          onClose={() => setShowLineChangeMenu(false)}
+          onCorrectLine={handleEditLine}
+          onInjurySub={handleInjurySub}
+        />
+      )}
 
       {__DEV__ && (
         <>
           <Pressable
             onPress={() => setShowDevModal(true)}
-            style={[styles.devButton, { bottom: insets.bottom + 50 }]}>
+            style={[styles.devButton, { bottom: insets.bottom + 30 }]}>
             <ThemedText style={styles.devButtonText}>DEV</ThemedText>
           </Pressable>
           <DevDebugModal
