@@ -108,6 +108,44 @@ describe('parseVoiceStatCommand', () => {
     });
   });
 
+  it('makes best-effort guesses for close active-line name variants', () => {
+    const participantsWithShortNames: VoiceParticipantContext[] = [
+      { id: 'lang', name: 'Lang' },
+      { id: 'tate', name: 'Tate' },
+      { id: 'milo', name: 'Milo' },
+      { id: 'riley', name: 'Riley' },
+      { id: 'sloan', name: 'Sloan' },
+      { id: 'wynn', name: 'Wynn' },
+      { id: 'zara', name: 'Zara' },
+    ];
+
+    expect(parseVoiceStatCommand('Lane', participantsWithShortNames)).toEqual({
+      ok: true,
+      command: { kind: 'pass', toParticipantId: 'lang' },
+    });
+    expect(parseVoiceStatCommand('Take', participantsWithShortNames)).toEqual({
+      ok: true,
+      command: { kind: 'pass', toParticipantId: 'tate' },
+    });
+  });
+
+  it('matches last names on the active line', () => {
+    const participantsWithLastNames: VoiceParticipantContext[] = [
+      { id: 'jordan', name: 'Jordan Rasmussen' },
+      { id: 'avery', name: 'Avery Okafor' },
+      { id: 'casey', name: 'Casey Nguyen' },
+    ];
+
+    expect(parseVoiceStatCommand('Rasmussen', participantsWithLastNames)).toEqual({
+      ok: true,
+      command: { kind: 'pass', toParticipantId: 'jordan' },
+    });
+    expect(parseVoiceStatCommand('Okafor', participantsWithLastNames)).toEqual({
+      ok: true,
+      command: { kind: 'pass', toParticipantId: 'avery' },
+    });
+  });
+
   it('parses player numbers and spoken number words', () => {
     const participantsWithNumbers: VoiceParticipantContext[] = [
       { id: 'tate', name: 'Tate', number: '12' },
@@ -157,12 +195,25 @@ describe('parseVoiceStatCommand', () => {
       reasonCode: 'ambiguous_player',
     });
   });
+
+  it('rejects best-effort guesses when nearby active names are too close', () => {
+    const participantsWithCloseNames: VoiceParticipantContext[] = [
+      { id: 'lane', name: 'Lane' },
+      { id: 'lang', name: 'Lang' },
+    ];
+
+    expect(parseVoiceStatCommand('Lan', participantsWithCloseNames)).toEqual({
+      ok: false,
+      reason: 'Player name is ambiguous.',
+      reasonCode: 'ambiguous_player',
+    });
+  });
 });
 
 describe('buildVoiceContextualStrings', () => {
   it('includes active player names', () => {
     expect(buildVoiceContextualStrings(activeParticipants)).toEqual(
-      expect.arrayContaining(['Joe Ramirez', 'Joe', 'Ted']),
+      expect.arrayContaining(['Joe Ramirez', 'Joe', 'Ramirez', 'Ted']),
     );
     expect(buildVoiceContextualStrings(activeParticipants)).not.toContain('to');
   });

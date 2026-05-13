@@ -17,7 +17,8 @@ what action, if any, was recorded.
 - Active-line context only: names are matched against the seven players on the field.
 - Every successful voice pass records through the same store path as a tap pass, so the receiver
   becomes the highlighted disc holder through existing UI state.
-- Unsupported commands and unclear name matches are rejected instead of guessed.
+- Unsupported commands are rejected. Unclear name matches are guessed when the active-line context
+  gives one player a clear best score.
 
 ## Phase A: Live Feedback Only
 
@@ -56,10 +57,11 @@ teams with stable numbers and weaker for pickup/practice contexts.
 Recommended order:
 
 1. Exact match against active player names and jersey number phrases.
-2. Conservative spelling-distance matching for common name variants, scoped to the active seven.
-3. Reject low-confidence or ambiguous matches and show what was heard.
+2. Best-effort name matching for common name variants, partial names, spoken-letter clues, and loose
+   phonetic matches, scoped to the active seven.
+3. Reject low-confidence matches or near-ties and show what was heard.
 
-Spelling-distance matching should accept a result only when:
+Best-effort matching should accept a result only when:
 
 - The top match is above a high threshold.
 - The top match is clearly better than the second-best match.

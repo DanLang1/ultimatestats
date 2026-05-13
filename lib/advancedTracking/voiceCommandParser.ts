@@ -39,14 +39,14 @@ export function buildVoiceContextualStrings(
   activeParticipants: VoiceParticipantContext[],
 ): string[] {
   const names = activeParticipants.map((participant) => participant.name.trim()).filter(Boolean);
-  const firstNames = activeParticipants
-    .map((participant) => participant.name.trim().split(/\s+/)[0])
-    .filter((name): name is string => name != null);
+  const nameParts = activeParticipants.flatMap((participant) =>
+    participant.name.trim().split(/\s+/).filter(Boolean),
+  );
   const numberPhrases = activeParticipants.flatMap((participant) =>
     buildVoiceNumberPhrases(participant.number),
   );
 
-  return [...new Set([...names, ...firstNames, ...numberPhrases])];
+  return [...new Set([...names, ...nameParts, ...numberPhrases])];
 }
 
 export function parseVoiceStatCommand(
@@ -120,7 +120,11 @@ function matchPlayer(tokens: string[], phrases: PlayerVoicePhrase[]): PlayerMatc
     return { status: 'ambiguous' };
   }
 
-  return matchPlayerByConservativeSpelling(phrase, tokens, phrases);
+  if (tokens.some((token) => UNSUPPORTED_COMMAND_WORDS.has(token))) {
+    return { status: 'none' };
+  }
+
+  return matchPlayerByBestEffort(phrase, tokens, phrases);
 }
 
 function buildPlayerVoicePhrases(
@@ -135,6 +139,9 @@ function buildPlayerVoicePhrases(
     if (firstName != null && firstName !== normalizedName) {
       namePhrases.add(firstName);
     }
+    normalizeTranscript(participant.name).forEach((namePart) => {
+      namePhrases.add(namePart);
+    });
     const playerNamePhrases = [...namePhrases].map((phrase) => ({
       participantId: participant.id,
       phrase,
@@ -150,29 +157,57 @@ function buildPlayerVoicePhrases(
   });
 }
 
-function matchPlayerByConservativeSpelling(
+function matchPlayerByBestEffort(
   phrase: string,
   tokens: string[],
   phrases: PlayerVoicePhrase[],
 ): PlayerMatchResult {
-  const candidates = phrases
-    .filter((candidate) => candidate.matchKind === 'name')
-    .filter((candidate) => tokens.length === 1 || candidate.phrase.includes(' '))
-    .map((candidate) => ({
-      participantId: candidate.participantId,
-      score: getDamerauLevenshteinDistance(phrase, candidate.phrase),
-    }))
-    .filter((candidate) => candidate.score <= MAX_SPELLING_DISTANCE)
-    .sort((a, b) => a.score - b.score);
+  const candidates = getBestEffortNameScores(phrase, tokens, phrases)
+    .filter((candidate) => candidate.distance <= getMaxNameEditDistance(phrase, candidate.phrase))
+    .sort((a, b) => a.distance - b.distance);
 
   const [topCandidate, secondCandidate] = candidates;
   if (topCandidate == null) return { status: 'none' };
 
-  if (secondCandidate != null && topCandidate.score === secondCandidate.score) {
+  if (
+    secondCandidate != null &&
+    topCandidate.participantId !== secondCandidate.participantId &&
+    topCandidate.distance === secondCandidate.distance
+  ) {
     return { status: 'ambiguous' };
   }
 
   return { status: 'match', participantId: topCandidate.participantId };
+}
+
+interface PlayerNameScore {
+  participantId: string;
+  phrase: string;
+  distance: number;
+}
+
+function getBestEffortNameScores(
+  phrase: string,
+  tokens: string[],
+  phrases: PlayerVoicePhrase[],
+): PlayerNameScore[] {
+  const bestMatchByParticipant = new Map<string, PlayerNameScore>();
+
+  phrases
+    .filter((candidate) => candidate.matchKind === 'name')
+    .forEach((candidate) => {
+      const currentBestMatch = bestMatchByParticipant.get(candidate.participantId);
+      const distance = getDamerauLevenshteinDistance(phrase, candidate.phrase);
+      if (currentBestMatch != null && currentBestMatch.distance <= distance) return;
+
+      bestMatchByParticipant.set(candidate.participantId, {
+        participantId: candidate.participantId,
+        phrase: candidate.phrase,
+        distance,
+      });
+    });
+
+  return [...bestMatchByParticipant.values()];
 }
 
 function normalizeTranscript(transcript: string): string[] {
@@ -185,7 +220,15 @@ function getFirstName(name: string): string | null {
   return firstName ?? null;
 }
 
-const MAX_SPELLING_DISTANCE = 2;
+const UNSUPPORTED_COMMAND_WORDS = new Set(['assist', 'block', 'by', 'drop', 'goal', 'to']);
+
+function getMaxNameEditDistance(phrase: string, candidatePhrase: string): number {
+  const shortestLength = Math.min(phrase.length, candidatePhrase.length);
+  if (shortestLength <= 4) return 2;
+  if (shortestLength <= 8) return 2;
+
+  return 3;
+}
 
 function getDamerauLevenshteinDistance(left: string, right: string): number {
   const distances = Array.from({ length: left.length + 1 }, () =>
