@@ -1,16 +1,58 @@
-const IS_DEV = process.env.APP_VARIANT === 'development';
+const APP_VARIANT = process.env.APP_VARIANT;
+const IS_DEV = APP_VARIANT === 'development';
+const IS_PREVIEW = APP_VARIANT === 'preview';
+
+function getAppName() {
+  if (IS_DEV) {
+    return 'U-Stat (Dev)';
+  }
+
+  if (IS_PREVIEW) {
+    return 'U-Stat Preview';
+  }
+
+  return 'U-Stat';
+}
+
+function getAppScheme() {
+  if (IS_DEV) {
+    return 'ultimatestats-dev';
+  }
+
+  if (IS_PREVIEW) {
+    return 'ultimatestats-preview';
+  }
+
+  return 'ultimatestats';
+}
+
+function getAppId() {
+  if (IS_DEV) {
+    return 'com.langdk.ultimatestats.dev';
+  }
+
+  if (IS_PREVIEW) {
+    return 'com.langdk.ultimatestats.preview';
+  }
+
+  return 'com.langdk.ultimatestats';
+}
+
+const APP_NAME = getAppName();
+const APP_SCHEME = getAppScheme();
+const APP_ID = getAppId();
 
 export default {
-  name: IS_DEV ? 'U-Stat (Dev)' : 'U-Stat',
+  name: APP_NAME,
   slug: 'ultimatestats',
   version: '1.9.1',
   orientation: 'default',
   icon: './assets/images/icon.png',
-  scheme: IS_DEV ? 'ultimatestats-dev' : 'ultimatestats',
+  scheme: APP_SCHEME,
   userInterfaceStyle: 'automatic',
   ios: {
     supportsTablet: true,
-    bundleIdentifier: IS_DEV ? 'com.langdk.ultimatestats.dev' : 'com.langdk.ultimatestats',
+    bundleIdentifier: APP_ID,
     associatedDomains: ['applinks:u-stat.app'],
     config: {
       usesNonExemptEncryption: false,
@@ -25,7 +67,7 @@ export default {
     },
     edgeToEdgeEnabled: true,
     predictiveBackGestureEnabled: false,
-    package: IS_DEV ? 'com.langdk.ultimatestats.dev' : 'com.langdk.ultimatestats',
+    package: APP_ID,
     intentFilters: [
       {
         action: 'VIEW',

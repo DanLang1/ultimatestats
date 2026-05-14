@@ -70,6 +70,8 @@ export interface RecordSubInput {
   outIds: string[];
 }
 
+export type UpdateSubInput = RecordSubInput;
+
 export interface CorrectPointLineInput {
   sideId: string;
   participantIds: string[];
@@ -140,6 +142,7 @@ export interface AdvancedTrackingState {
   recordStoppage: (input: RecordStoppageInput) => string;
   resumeStoppage: (actionId: string) => void;
   recordSub: (input: RecordSubInput) => void;
+  updateSub: (input: UpdateSubInput) => void;
   correctPointLine: (input: CorrectPointLineInput) => void;
   undoLastOperation: () => boolean;
   deleteSavedGame: (gameId: string) => void;

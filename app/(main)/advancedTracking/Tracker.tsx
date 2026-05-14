@@ -100,6 +100,7 @@ export default function AdvancedTrackerScreen() {
   const pointIsOver = hasPointEnded(point);
   const activeSideId = game ? getActiveSideId(possession, game) : '';
   const oppHasDisc = game ? !pointIsOver && activeSideId !== game.focusSideId : false;
+  const canChangeLine = !pointIsOver;
   const discHolderRef = getSafeDiscHolderRef(possession, game?.focusSideId ?? '');
   const isAwaitingPullPickup = isPullAwaitingPickup({
     possession,
@@ -236,6 +237,7 @@ export default function AdvancedTrackerScreen() {
                 passModifier={passModifier}
                 handlers={handlers}
                 onLineChangePress={() => setShowLineChangeMenu(true)}
+                canChangeLine={canChangeLine}
                 availableWidth={width - LEFT_PANEL_WIDTH - insets.left - insets.right}
               />
             )}
@@ -272,6 +274,7 @@ export default function AdvancedTrackerScreen() {
                 passModifier={passModifier}
                 handlers={handlers}
                 onLineChangePress={() => setShowLineChangeMenu(true)}
+                canChangeLine={canChangeLine}
               />
             )}
           </View>
@@ -294,7 +297,7 @@ export default function AdvancedTrackerScreen() {
 
       <TrackerHomeMenu visible={showHomeMenu} onClose={() => setShowHomeMenu(false)} />
 
-      {!activeStoppage && (
+      {!activeStoppage && canChangeLine && (
         <TrackerLineChangeMenu
           visible={showLineChangeMenu}
           onClose={() => setShowLineChangeMenu(false)}

@@ -420,3 +420,42 @@ export function assertValidLines(game: AdvancedTrackedGame, lines: PointLine[]) 
     }
   }
 }
+
+export interface InjurySubInput {
+  stoppageActionId: string;
+  sideId: string;
+  inIds: string[];
+  outIds: string[];
+}
+
+export function assertValidInjurySubInput(
+  game: AdvancedTrackedGame,
+  point: TrackedPoint,
+  input: InjurySubInput,
+) {
+  let stoppageFound = false;
+  for (const possession of point.possessions) {
+    for (const action of possession.actions) {
+      if (action.id === input.stoppageActionId) {
+        if (action.kind !== 'stoppage') {
+          throw new Error(`Action "${input.stoppageActionId}" is not a stoppage.`);
+        }
+        if (action.reason !== 'injury') {
+          throw new Error('Only injury stoppages can have subs.');
+        }
+        stoppageFound = true;
+        break;
+      }
+    }
+    if (stoppageFound) break;
+  }
+  if (!stoppageFound) {
+    throw new Error(`Stoppage action "${input.stoppageActionId}" not found in current point.`);
+  }
+
+  assertValidSideIds(game, [input.sideId]);
+  assertValidParticipantRefs(game, [
+    ...input.inIds.map((id) => ({ refType: 'participant' as const, participantId: id })),
+    ...input.outIds.map((id) => ({ refType: 'participant' as const, participantId: id })),
+  ]);
+}

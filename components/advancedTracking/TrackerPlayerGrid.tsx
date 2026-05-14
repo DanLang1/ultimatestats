@@ -22,6 +22,7 @@ interface TrackerPlayerGridProps {
   passModifier: PassModifier;
   handlers: TrackerPlayerGridHandlers;
   onLineChangePress: () => void;
+  canChangeLine: boolean;
   availableWidth?: number;
 }
 
@@ -50,6 +51,7 @@ export const TrackerPlayerGrid = ({
   passModifier,
   handlers,
   onLineChangePress,
+  canChangeLine,
   availableWidth,
 }: TrackerPlayerGridProps) => {
   const { width, sizeClass, isLandscape } = useLayout();
@@ -66,8 +68,10 @@ export const TrackerPlayerGrid = ({
   const items: (Participant | 'unknown' | 'line-action' | null)[] = [
     ...activeParticipants,
     'unknown',
-    'line-action',
   ];
+  if (canChangeLine) {
+    items.push('line-action');
+  }
   while (items.length % columns !== 0) {
     items.push(null);
   }

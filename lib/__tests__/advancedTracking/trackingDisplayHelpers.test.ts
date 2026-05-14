@@ -5,6 +5,7 @@ import {
   getDiscHolderId,
   getDiscHolderRef,
   getEffectiveLineParticipantIds,
+  getLineParticipantIdsBeforeSub,
   getGoalInfo,
   getPassChainEvents,
   getPointAdjustedTimestamp,
@@ -496,6 +497,37 @@ describe('getEffectiveLineParticipantIds', () => {
     const result = getEffectiveLineParticipantIds(point, HOME);
     expect(result).toContain('p7');
     expect(result).not.toContain('p8');
+  });
+
+  it('returns the line before a later sub for edit diffs', () => {
+    const initialLine = ['bob', 'jerry', 'mike', 'john'];
+    const subs: PointSub[] = [
+      {
+        id: 's1',
+        sideId: HOME,
+        type: 'injury',
+        outIds: ['bob'],
+        inIds: ['joey'],
+        stoppageActionId: 'stop1',
+      },
+      {
+        id: 's2',
+        sideId: HOME,
+        type: 'injury',
+        outIds: ['joey'],
+        inIds: ['chuck'],
+        stoppageActionId: 'stop2',
+      },
+    ];
+    const point = makePoint(initialLine, subs);
+
+    expect(getEffectiveLineParticipantIds(point, HOME)).toEqual(['jerry', 'mike', 'john', 'chuck']);
+    expect(getLineParticipantIdsBeforeSub(point, HOME, 'stop2')).toEqual([
+      'jerry',
+      'mike',
+      'john',
+      'joey',
+    ]);
   });
 
   it('ignores subs for the other side', () => {

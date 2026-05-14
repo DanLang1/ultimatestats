@@ -25,6 +25,7 @@ interface TrackerLineScreenProps {
   expectedRatio?: GenderRatio;
   sequenceNumber?: 1 | 2;
   requireChanges?: boolean;
+  warningText?: string;
 }
 
 export const TrackerLineScreen = ({
@@ -37,6 +38,7 @@ export const TrackerLineScreen = ({
   expectedRatio,
   sequenceNumber,
   requireChanges,
+  warningText,
 }: TrackerLineScreenProps) => {
   const { palette } = useTheme();
   const { sizeClass, isLandscape } = useLayout();
@@ -282,6 +284,26 @@ export const TrackerLineScreen = ({
         />
       </View>
 
+      {warningText != null && (
+        <View
+          style={[
+            styles.warningBanner,
+            {
+              backgroundColor: palette.warning + '15',
+              borderColor: palette.warning + '30',
+            },
+          ]}>
+          <MaterialCommunityIcons
+            name="alert-outline"
+            size={scaleBySizeClass(16, sizeClass)}
+            color={palette.warning}
+          />
+          <ThemedText style={[styles.warningText, { color: palette.warning }]}>
+            {warningText}
+          </ThemedText>
+        </View>
+      )}
+
       <View style={styles.gridContainer}>
         <ModalPlayerGrid
           roster={players}
@@ -400,6 +422,23 @@ function createStyles(sizeClass: SizeClass) {
       flex: 1,
       paddingHorizontal: 12,
       paddingTop: 8,
+    },
+    warningBanner: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+      marginHorizontal: 16,
+      marginTop: 8,
+      paddingHorizontal: 14,
+      paddingVertical: 12,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderCurve: 'continuous',
+    },
+    warningText: {
+      flex: 1,
+      fontSize: scaleBySizeClass(13, sizeClass),
+      fontFamily: Fonts.semiBold,
     },
   });
 }

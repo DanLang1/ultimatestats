@@ -2,6 +2,7 @@ import { TrackerLineScreen } from '@/components/advancedTracking/TrackerLineScre
 import {
   getActiveStoppage,
   getEffectiveLineParticipantIds,
+  getLineParticipantIdsBeforeSub,
 } from '@/lib/advancedTracking/trackingDisplayHelpers';
 import { getCurrentPoint, getCurrentPossession } from '@/lib/advancedTracking/trackingUtils';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
@@ -9,7 +10,7 @@ import { Redirect, router, Stack } from 'expo-router';
 import React from 'react';
 
 export default function TrackerInjurySubScreen() {
-  const { currentGameId, savedGames, recordStoppage, recordSub, undoLastOperation } =
+  const { currentGameId, savedGames, recordStoppage, recordSub, updateSub } =
     useAdvancedTrackingStore();
   const game = savedGames.find((g) => g.id === currentGameId);
   const point = game ? getCurrentPoint(game) : null;
@@ -23,14 +24,18 @@ export default function TrackerInjurySubScreen() {
 
   const sideId = game.focusSideId;
   const effectiveLine = getEffectiveLineParticipantIds(point, sideId);
+  const lineBeforeEditedSub =
+    isEdit && existingStoppage != null
+      ? getLineParticipantIdsBeforeSub(point, sideId, existingStoppage.id)
+      : effectiveLine;
 
   const handleConfirm = (nextIds: string[]) => {
-    const inIds = nextIds.filter((id) => !effectiveLine.includes(id));
-    const outIds = effectiveLine.filter((id) => !nextIds.includes(id));
+    const baselineIds = isEdit ? lineBeforeEditedSub : effectiveLine;
+    const inIds = nextIds.filter((id) => !baselineIds.includes(id));
+    const outIds = baselineIds.filter((id) => !nextIds.includes(id));
 
     if (isEdit) {
-      undoLastOperation(); // undo previous sub
-      recordSub({ stoppageActionId: existingStoppage!.id, sideId, inIds, outIds });
+      updateSub({ stoppageActionId: existingStoppage!.id, sideId, inIds, outIds });
     } else {
       const stoppageId = recordStoppage({ reason: 'injury', sideId });
       if (inIds.length > 0 || outIds.length > 0) {

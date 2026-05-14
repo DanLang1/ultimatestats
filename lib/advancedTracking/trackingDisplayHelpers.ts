@@ -392,6 +392,33 @@ export function getEffectiveLineParticipantIds(point: TrackedPoint, sideId: stri
 }
 
 /**
+ * Calculates the active line before applying the sub tied to the given stoppage.
+ */
+export function getLineParticipantIdsBeforeSub(
+  point: TrackedPoint,
+  sideId: string,
+  stoppageActionId: string,
+): string[] {
+  const baseLine = point.lines.find((l) => l.sideId === sideId)?.participantIds ?? [];
+  const sideSubs = point.subs?.filter((s) => s.sideId === sideId) ?? [];
+
+  const currentLine = new Set(baseLine);
+  for (const sub of sideSubs) {
+    if (sub.stoppageActionId === stoppageActionId) {
+      break;
+    }
+    for (const outId of sub.outIds) {
+      currentLine.delete(outId);
+    }
+    for (const inId of sub.inIds) {
+      currentLine.add(inId);
+    }
+  }
+
+  return Array.from(currentLine);
+}
+
+/**
  * Returns the PointSub associated with a specific stoppage action ID, if any.
  */
 export function getSubForStoppage(point: TrackedPoint | null, actionId: string): PointSub | null {

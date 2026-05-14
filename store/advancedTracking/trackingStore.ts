@@ -5,6 +5,7 @@ import { immer } from 'zustand/middleware/immer';
 
 import {
   assertTwoSides,
+  assertValidInjurySubInput,
   assertValidLines,
   assertValidParticipantRefs,
   assertValidSideIds,
@@ -34,6 +35,7 @@ import {
   CorrectPointLineInput,
   RecordStoppageInput,
   RecordSubInput,
+  UpdateSubInput,
 } from './trackingStore.types';
 
 const ADVANCED_TRACKING_STORAGE_KEY = 'ultimatestats_advanced_tracking';
@@ -639,33 +641,10 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
           const point = getCurrentPoint(game);
           if (point == null) throw new Error('No active point.');
 
-          let stoppageFound = false;
-          for (const possession of point.possessions) {
-            for (const action of possession.actions) {
-              if (action.id === input.stoppageActionId) {
-                if (action.kind !== 'stoppage') {
-                  throw new Error(`Action "${input.stoppageActionId}" is not a stoppage.`);
-                }
-                if (action.reason !== 'injury') {
-                  throw new Error('Only injury stoppages can have subs.');
-                }
-                stoppageFound = true;
-                break;
-              }
-            }
-            if (stoppageFound) break;
+          assertValidInjurySubInput(game, point, input);
+          if (point.subs?.some((sub) => sub.stoppageActionId === input.stoppageActionId)) {
+            throw new Error(`Sub already recorded for stoppage "${input.stoppageActionId}".`);
           }
-          if (!stoppageFound) {
-            throw new Error(
-              `Stoppage action "${input.stoppageActionId}" not found in current point.`,
-            );
-          }
-
-          assertValidSideIds(game, [input.sideId]);
-          assertValidParticipantRefs(game, [
-            ...input.inIds.map((id) => ({ refType: 'participant' as const, participantId: id })),
-            ...input.outIds.map((id) => ({ refType: 'participant' as const, participantId: id })),
-          ]);
 
           const subId = generateId();
 
@@ -688,6 +667,29 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
               pointId: livePoint.id,
               subId,
             });
+            liveGame.updatedAt = Date.now();
+          });
+        },
+
+        updateSub: (input: UpdateSubInput) => {
+          const game = getCurrentGame(get());
+          const point = getCurrentPoint(game);
+          if (point == null) throw new Error('No active point.');
+
+          assertValidInjurySubInput(game, point, input);
+
+          set((state) => {
+            const liveGame = getCurrentGame(state);
+            const livePoint = getCurrentPoint(liveGame)!;
+            const sub = livePoint.subs?.find(
+              (item) => item.stoppageActionId === input.stoppageActionId,
+            );
+            if (sub == null) {
+              throw new Error(`Sub for stoppage "${input.stoppageActionId}" not found.`);
+            }
+            sub.sideId = input.sideId;
+            sub.inIds = input.inIds;
+            sub.outIds = input.outIds;
             liveGame.updatedAt = Date.now();
           });
         },
