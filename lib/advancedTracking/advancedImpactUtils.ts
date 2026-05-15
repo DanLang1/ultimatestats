@@ -39,7 +39,7 @@ export function computeAdvancedImpact(
     const parts: string[] = [];
 
     if (onField && typeMap) {
-      const get = (t: AttributionType) => Math.round(typeMap.get(t) ?? 0);
+      const get = (t: AttributionType) => typeMap.get(t) ?? 0;
 
       const goals = get('goal');
       const assists = get('assist');

@@ -485,6 +485,70 @@ describe('computeAdvancedImpact', () => {
     expect(impact[0].plusMinusDelta).toBeGreaterThanOrEqual(1); // block (+1) + assist (+1)
   });
 
+  it('50/50 split drop gives -0.5 to each player (not -1)', () => {
+    // Zoo receives, August throws to Meves, Meves drops — but splitAttribution means
+    // they share blame: August gets 0.5 throwaway, Meves gets 0.5 drop.
+    const game: AdvancedTrackedGame = {
+      ...baseGame,
+      points: [
+        {
+          id: 'pt1',
+          lines: [{ sideId: ZOO, participantIds: ['p_august', 'p_meves'] }],
+          possessions: [
+            {
+              id: 'pos1',
+              sideId: ZOO,
+              actions: [
+                {
+                  id: 'pull1',
+                  kind: 'pull' as const,
+                  sideId: RIVALS,
+                  receivingSideId: ZOO,
+                  puller: untracked,
+                  result: 'inbound' as const,
+                },
+                {
+                  id: 'a1',
+                  kind: 'throw' as const,
+                  sideId: ZOO,
+                  thrower: august,
+                  toPlayer: meves,
+                  result: 'drop' as const,
+                  splitAttribution: true,
+                },
+              ],
+            },
+            {
+              id: 'pos2',
+              sideId: RIVALS,
+              actions: [
+                {
+                  id: 'a2',
+                  kind: 'throw' as const,
+                  sideId: RIVALS,
+                  thrower: untracked,
+                  toPlayer: untracked,
+                  result: 'goal' as const,
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+    const analytics = buildAnalyticsGame(game);
+
+    const augustImpact = computeAdvancedImpact(analytics, 'p_august', ZOO);
+    expect(augustImpact[0].onField).toBe(true);
+    expect(augustImpact[0].plusMinusDelta).toBeCloseTo(-0.5);
+    expect(augustImpact[0].description).toBe('T');
+
+    const mevesImpact = computeAdvancedImpact(analytics, 'p_meves', ZOO);
+    expect(mevesImpact[0].onField).toBe(true);
+    expect(mevesImpact[0].plusMinusDelta).toBeCloseTo(-0.5);
+    expect(mevesImpact[0].description).toBe('D');
+  });
+
   it('returns one entry per point', () => {
     const game: AdvancedTrackedGame = {
       ...baseGame,

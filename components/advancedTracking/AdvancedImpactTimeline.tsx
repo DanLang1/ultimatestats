@@ -4,7 +4,7 @@ import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { AdvancedImpactPoint } from '@/lib/advancedTracking/advancedImpactUtils';
 import { Fonts } from '@/theme/theme';
 import React, { useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import Svg, {
   Circle as SvgCircle,
   Line as SvgLine,
@@ -12,25 +12,97 @@ import Svg, {
   Text as SvgText,
 } from 'react-native-svg';
 
+const LABEL_GAP = 4;
+
+type ScaleMode = 'event' | 'game';
+
 interface AdvancedImpactTimelineProps {
   data: AdvancedImpactPoint[];
 }
 
-interface RenderedPoint {
+interface ChartPoint {
   x: number;
   y: number;
   yValue: number;
   description: string;
   score: string;
   onField: boolean;
+  plusMinusDelta: number;
 }
 
 interface LineSegment {
   color: string;
-  points: RenderedPoint[];
+  points: ChartPoint[];
 }
 
-function buildStepPath(points: RenderedPoint[]): string {
+function clamp01(v: number): number {
+  return Math.max(0, Math.min(1, v));
+}
+
+const PART_TO_FULL: Record<string, string> = {
+  GA: 'Goal + Assist',
+  G: 'Goal',
+  A: 'Assist',
+  HA: 'Hockey Assist',
+  C: 'Callahan',
+  B: 'Block',
+  Stl: 'Stall',
+  StlC: 'Stall Conceded',
+  T: 'Throwaway',
+  D: 'Drop',
+};
+
+const PART_TO_ABBREV: Record<string, string> = {
+  GA: 'GA',
+  G: 'G',
+  A: 'A',
+  HA: 'HA',
+  C: 'C',
+  B: 'B',
+  Stl: 'Stl',
+  StlC: 'StlC',
+  T: 'T',
+  D: 'D',
+};
+
+function parsePart(part: string): { count: number; code: string } {
+  const match = part.trim().match(/^(\d*)(.+)$/);
+  if (!match) return { count: 1, code: part };
+  return { count: match[1] ? parseInt(match[1], 10) : 1, code: match[2] };
+}
+
+function formatFullDescription(description: string): string {
+  if (!description) return '';
+  return description
+    .split(',')
+    .map((p) => {
+      const { count, code } = parsePart(p);
+      const base = PART_TO_FULL[code] ?? code;
+      return count > 1 ? `${count} ${base}s` : base;
+    })
+    .join(', ');
+}
+
+function eventAbbrev(description: string): string | null {
+  if (!description) return null;
+  const { code } = parsePart(description.split(',')[0]);
+  return (PART_TO_ABBREV[code] ?? code) || null;
+}
+
+function isPositiveImpactEvent(plusMinusDelta: number): boolean {
+  return plusMinusDelta > 0;
+}
+
+function getImpactEventColor(
+  plusMinusDelta: number,
+  palette: ReturnType<typeof useTheme>['palette'],
+): string {
+  if (plusMinusDelta > 0) return palette.success;
+  if (plusMinusDelta < 0) return palette.danger;
+  return palette.accent;
+}
+
+function buildStepPath(points: ChartPoint[]): string {
   if (points.length === 0) return '';
   const [first, ...rest] = points;
   const commands = [`M ${first.x},${first.y}`];
@@ -42,7 +114,7 @@ function buildStepPath(points: RenderedPoint[]): string {
 }
 
 function buildLineSegments(
-  points: RenderedPoint[],
+  points: ChartPoint[],
   palette: ReturnType<typeof useTheme>['palette'],
 ): LineSegment[] {
   const segments: LineSegment[] = [];
@@ -67,35 +139,80 @@ function buildLineSegments(
   return segments.filter((s) => s.points.length > 1);
 }
 
-function clamp01(v: number): number {
-  return Math.max(0, Math.min(1, v));
+function getAxisLabelTop(centerY: number, chartHeight: number, labelHeight: number): number {
+  const desiredTop = centerY - labelHeight / 2;
+  return Math.max(0, Math.min(chartHeight - labelHeight, desiredTop));
+}
+
+function formatImpactValue(value: number): string {
+  const abs = Math.abs(value);
+  return Number.isInteger(abs) ? String(abs) : abs.toFixed(1);
+}
+
+function formatImpactAxisLabel(value: number): string {
+  if (value === 0) return '0';
+  return value > 0 ? `+${formatImpactValue(value)}` : `-${formatImpactValue(value)}`;
 }
 
 export default function AdvancedImpactTimeline({ data }: AdvancedImpactTimelineProps) {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
 
+  const [scaleMode, setScaleMode] = useState<ScaleMode>('event');
+
   const chartHeight = scaleBySizeClass(150, sizeClass);
-  const pxPerPoint = scaleBySizeClass(44, sizeClass);
+  const pxPerEvent = scaleBySizeClass(55, sizeClass);
   const yAxisWidth = scaleBySizeClass(34, sizeClass);
-  const labelWidth = scaleBySizeClass(44, sizeClass);
+  const labelWidth = scaleBySizeClass(52, sizeClass);
   const dotRadius = scaleBySizeClass(5, sizeClass);
   const strokeWidth = scaleBySizeClass(3, sizeClass);
   const axisLabelHeight = scaleBySizeClass(16, sizeClass);
-  const labelFontSize = scaleBySizeClass(10, sizeClass);
+  const labelFontSize = scaleBySizeClass(11, sizeClass);
   const labelAboveOffset = scaleBySizeClass(14, sizeClass);
   const labelBelowOffset = scaleBySizeClass(16, sizeClass);
-  const padLeft = scaleBySizeClass(8, sizeClass);
-  const padRight = scaleBySizeClass(24, sizeClass);
-  const padTop = scaleBySizeClass(28, sizeClass);
-  const padBottom = scaleBySizeClass(20, sizeClass);
+  const domainPadLeft = scaleBySizeClass(10, sizeClass);
+  const domainPadRight = scaleBySizeClass(36, sizeClass);
+  const domainPadTop = scaleBySizeClass(32, sizeClass);
+  const domainPadBottom = scaleBySizeClass(20, sizeClass);
+  const toggleFontSize = scaleBySizeClass(10, sizeClass);
+  const togglePaddingH = scaleBySizeClass(8, sizeClass);
+  const togglePaddingV = scaleBySizeClass(3, sizeClass);
+  const toggleRadius = scaleBySizeClass(6, sizeClass);
   const styles = createStyles(sizeClass, chartHeight, yAxisWidth, labelWidth, axisLabelHeight);
 
-  const [viewportWidth, setViewportWidth] = useState(0);
-  const [contentWidth, setContentWidth] = useState(0);
-  const [scrollX, setScrollX] = useState(0);
+  const hasImpact = data.some((d) => d.cumulativePlusMinus !== 0);
 
-  const finalValue = data[data.length - 1]?.cumulativePlusMinus ?? 0;
+  // Build chart data
+  const startPoint: ChartPoint = {
+    x: 0,
+    y: 0,
+    yValue: 0,
+    description: 'Start',
+    score: data[0]?.score ?? '0-0',
+    onField: false,
+    plusMinusDelta: 0,
+  };
+
+  const dataPoints: ChartPoint[] = data.map((d, index) => ({
+    x: scaleMode === 'game' ? d.pointIndex : index + 1,
+    y: d.cumulativePlusMinus,
+    yValue: d.cumulativePlusMinus,
+    description: d.description,
+    score: d.score,
+    onField: d.onField,
+    plusMinusDelta: d.plusMinusDelta,
+  }));
+
+  const chartData = [startPoint, ...dataPoints];
+
+  // Event log — only on-field events with descriptions
+  const eventLog = data.filter((d) => d.onField && d.description.length > 0);
+
+  // Calculate min/max/final
+  const allY = chartData.map((d) => d.y);
+  const axisMin = Math.floor(Math.min(...allY, 0));
+  const axisMax = Math.ceil(Math.max(...allY, 0));
+  const finalValue = chartData[chartData.length - 1]?.y ?? 0;
   let finalColor: string;
   if (finalValue > 0) {
     finalColor = palette.success;
@@ -105,13 +222,21 @@ export default function AdvancedImpactTimeline({ data }: AdvancedImpactTimelineP
     finalColor = palette.textMuted;
   }
 
-  const allY = data.map((d) => d.cumulativePlusMinus);
-  const axisMin = Math.floor(Math.min(...allY, 0));
-  const axisMax = Math.ceil(Math.max(...allY, 0));
-  const yRange = Math.max(axisMax - axisMin, 1);
+  // Scrollbar tracking
+  const [viewportWidth, setViewportWidth] = useState(0);
+  const [contentWidth, setContentWidth] = useState(0);
+  const [scrollX, setScrollX] = useState(0);
 
-  const chartScrollWidth = Math.max(viewportWidth || 300, data.length * pxPerPoint);
-  const needsScroll = viewportWidth > 0 && data.length * pxPerPoint > viewportWidth;
+  // Chart width
+  const playerEventCount = chartData.length - 1;
+  const playerMinWidth = playerEventCount * pxPerEvent;
+  const gameEndIdx = data[data.length - 1]?.pointIndex ?? 1;
+  const playerSpan = (chartData[chartData.length - 1]?.x ?? 1) - (chartData[0]?.x ?? 0);
+  const spanRatio = gameEndIdx > 0 ? Math.max(playerSpan / gameEndIdx, 0.15) : 1;
+  const minChartWidth =
+    scaleMode === 'game' ? Math.max(playerMinWidth, playerMinWidth / spanRatio) : playerMinWidth;
+  const chartScrollWidth = Math.max(viewportWidth || 300, minChartWidth);
+  const needsScroll = viewportWidth > 0 && minChartWidth > viewportWidth;
 
   const maxScroll = Math.max(0, contentWidth - viewportWidth);
   const visibleRatio = contentWidth > 0 ? Math.min(1, viewportWidth / contentWidth) : 1;
@@ -119,74 +244,122 @@ export default function AdvancedImpactTimeline({ data }: AdvancedImpactTimelineP
   const indicatorTravel = viewportWidth - indicatorThumbWidth;
   const indicatorLeft = maxScroll > 0 ? (scrollX / maxScroll) * indicatorTravel : 0;
 
-  const plotTop = padTop;
-  const plotBottom = chartHeight - padBottom;
-  const plotLeft = padLeft;
-  const plotRight = chartScrollWidth - padRight;
+  const plotTop = domainPadTop;
+  const plotBottom = chartHeight - domainPadBottom;
+  const plotLeft = domainPadLeft;
+  const plotRight = chartScrollWidth - domainPadRight;
   const plotHeight = plotBottom - plotTop;
   const plotWidth = plotRight - plotLeft;
 
-  const xStep = plotWidth / Math.max(data.length - 1, 1);
-  const getX = (i: number) => plotLeft + i * xStep;
-  const getY = (v: number) => plotBottom - clamp01((v - axisMin) / yRange) * plotHeight;
+  const minIdx = chartData[0]?.x ?? 0;
+  const maxIdx =
+    scaleMode === 'game'
+      ? (data[data.length - 1]?.pointIndex ?? chartData[chartData.length - 1]?.x ?? 1)
+      : (chartData[chartData.length - 1]?.x ?? 1);
+  const xRange = maxIdx - minIdx || 1;
+  const yRange = Math.max(axisMax - axisMin, 1);
 
-  // Build a leading "Start" point at 0
-  const startPoint: RenderedPoint = {
-    x: getX(0),
-    y: getY(0),
-    yValue: 0,
-    description: '',
-    score: data[0]
-      ? `${parseInt(data[0].score.split('-')[0], 10) > 0 ? data[0].score : '0-0'}`
-      : '0-0',
-    onField: false,
-  };
+  const getX = (value: number) => plotLeft + ((value - minIdx) / xRange) * plotWidth;
+  const getY = (value: number) => plotBottom - clamp01((value - axisMin) / yRange) * plotHeight;
 
-  const renderedPoints: RenderedPoint[] = [
-    startPoint,
-    ...data.map((pt, i) => ({
-      x: getX(i + 1),
-      y: getY(pt.cumulativePlusMinus),
-      yValue: pt.cumulativePlusMinus,
-      description: pt.description,
-      score: pt.score,
-      onField: pt.onField,
-    })),
-  ];
+  // Rendered points for SVG
+  const renderedPoints: ChartPoint[] = chartData.map((pt) => ({
+    x: getX(pt.x),
+    y: getY(pt.y),
+    yValue: pt.yValue,
+    description: pt.description,
+    score: pt.score,
+    onField: pt.onField,
+    plusMinusDelta: pt.plusMinusDelta,
+  }));
 
   const lineSegments = buildLineSegments(renderedPoints, palette);
-  const eventPoints = renderedPoints.slice(1);
+  const visibleEventPoints = renderedPoints.slice(1);
 
-  // Score labels — show when score changes
-  const scoreLabelPositions: { score: string; x: number }[] = [];
-  let lastScore = '';
-  for (const pt of renderedPoints) {
-    if (pt.score !== lastScore) {
-      scoreLabelPositions.push({ score: pt.score, x: pt.x });
-      lastScore = pt.score;
-    }
-  }
-
+  // Y-axis ticks
   const tickValues: number[] = [];
   for (let v = axisMin; v <= axisMax; v++) tickValues.push(v);
 
+  // Score label positions — show each unique score once
+  const scorePositions: { score: string; dataIndex: number; x: number }[] = [];
+  chartData.forEach((pt, idx) => {
+    if (
+      pt.score &&
+      pt.description !== 'Start' &&
+      !scorePositions.some((sp) => sp.score === pt.score)
+    ) {
+      scorePositions.push({ score: pt.score, dataIndex: idx, x: getX(pt.x) });
+    }
+  });
+
+  // Add an ending tick: game mode uses the final game point, event mode uses the player's last point.
+  const endScore =
+    scaleMode === 'game'
+      ? (data[data.length - 1]?.score ?? '')
+      : (chartData[chartData.length - 1]?.score ?? '');
+  const endIdx =
+    scaleMode === 'game'
+      ? (data[data.length - 1]?.pointIndex ?? 0)
+      : (chartData[chartData.length - 1]?.x ?? 0);
+  const endX = getX(endIdx);
+  if (endScore) {
+    const dupIdx = scorePositions.findIndex((sp) => sp.score === endScore);
+    if (dupIdx !== -1) scorePositions.splice(dupIdx, 1);
+    scorePositions.push({ score: endScore, dataIndex: chartData.length - 1, x: endX });
+  }
+
+  // Fit score labels without overlapping
+  const lastScorePos = scorePositions[scorePositions.length - 1];
+  const visibleScorePositions: { score: string; dataIndex: number; x: number }[] = [];
+  const reservedLeft = lastScorePos ? lastScorePos.x - labelWidth / 2 : Infinity;
+  let lastLabelRight = -Infinity;
+  scorePositions.forEach((item, i) => {
+    if (i === scorePositions.length - 1) return;
+    const left = item.x - labelWidth / 2;
+    if (left < lastLabelRight + LABEL_GAP) return;
+    if (left + labelWidth + LABEL_GAP > reservedLeft) return;
+    lastLabelRight = left + labelWidth;
+    visibleScorePositions.push(item);
+  });
+  if (lastScorePos) visibleScorePositions.push(lastScorePos);
+
+  // Y-axis label candidates
   const axisLabelCandidates = [
     {
       key: 'max',
       value: axisMax,
       color: axisMax > 0 ? palette.success : palette.textMuted,
-      label: axisMax > 0 ? `+${axisMax}` : String(axisMax),
+      label: formatImpactAxisLabel(axisMax),
+      top: getAxisLabelTop(getY(axisMax), chartHeight, axisLabelHeight),
     },
-    { key: 'neutral', value: 0, color: palette.textMuted, label: '0' },
+    {
+      key: 'neutral',
+      value: 0,
+      color: palette.textMuted,
+      label: '0',
+      top: getAxisLabelTop(getY(0), chartHeight, axisLabelHeight),
+    },
     {
       key: 'min',
       value: axisMin,
       color: axisMin < 0 ? palette.danger : palette.textMuted,
-      label: axisMin < 0 ? `${axisMin}` : String(axisMin),
+      label: formatImpactAxisLabel(axisMin),
+      top: getAxisLabelTop(getY(axisMin), chartHeight, axisLabelHeight),
     },
-  ].filter((a, idx, arr) => arr.findIndex((b) => b.value === a.value) === idx);
+  ];
+  const axisLabels = axisLabelCandidates.filter(
+    (a, idx, arr) => arr.findIndex((b) => b.value === a.value) === idx,
+  );
 
-  const eventLog = data.filter((d) => d.onField && d.description.length > 0);
+  if (!hasImpact && data.length <= 2) {
+    return (
+      <View style={[styles.container, { height: 200, justifyContent: 'center' }]}>
+        <ThemedText style={{ color: palette.textMuted, textAlign: 'center' }}>
+          No impact recorded yet.
+        </ThemedText>
+      </View>
+    );
+  }
 
   if (data.length === 0) return null;
 
@@ -194,28 +367,52 @@ export default function AdvancedImpactTimeline({ data }: AdvancedImpactTimelineP
     <View style={styles.container}>
       <View style={styles.titleRow}>
         <ThemedText style={[styles.title, { color: palette.textMuted }]}>GAME IMPACT</ThemedText>
+        <View style={[styles.scaleToggle, { backgroundColor: palette.overlay08 }]}>
+          {(['event', 'game'] as const).map((mode) => {
+            const isActive = scaleMode === mode;
+            return (
+              <Pressable
+                key={mode}
+                onPress={() => setScaleMode(mode)}
+                style={[
+                  {
+                    paddingHorizontal: togglePaddingH,
+                    paddingVertical: togglePaddingV,
+                    borderRadius: toggleRadius,
+                  },
+                  isActive && { backgroundColor: palette.overlay20 },
+                ]}>
+                <ThemedText
+                  style={{
+                    fontSize: toggleFontSize,
+                    fontFamily: Fonts.semiBold,
+                    color: isActive ? palette.textPrimary : palette.textMuted,
+                  }}>
+                  {mode === 'event' ? 'Event' : 'Game'}
+                </ThemedText>
+              </Pressable>
+            );
+          })}
+        </View>
       </View>
 
       <View style={styles.valueDisplay}>
         <ThemedText style={[styles.currentValue, { color: finalColor }]}>
-          {finalValue > 0 ? `+${finalValue}` : String(finalValue)}
+          {finalValue > 0 ? '+' : ''}
+          {finalValue}
         </ThemedText>
-        <ThemedText style={[styles.valueLabel, { color: palette.textMuted }]}>Final +/-</ThemedText>
+        <ThemedText style={[styles.valueLabel, { color: palette.textMuted }]}>
+          Current +/-
+        </ThemedText>
       </View>
 
       <View style={styles.chartContainer}>
         <View style={styles.yAxis}>
-          {axisLabelCandidates.map((al) => {
-            const top = Math.max(
-              0,
-              Math.min(chartHeight - axisLabelHeight, getY(al.value) - axisLabelHeight / 2),
-            );
-            return (
-              <View key={al.key} style={[styles.axisLabelSlot, { top }]}>
-                <ThemedText style={[styles.axisLabel, { color: al.color }]}>{al.label}</ThemedText>
-              </View>
-            );
-          })}
+          {axisLabels.map((al) => (
+            <View key={al.key} style={[styles.axisLabelSlot, { top: al.top }]}>
+              <ThemedText style={[styles.axisLabel, { color: al.color }]}>{al.label}</ThemedText>
+            </View>
+          ))}
         </View>
 
         <ScrollView
@@ -241,6 +438,18 @@ export default function AdvancedImpactTimeline({ data }: AdvancedImpactTimelineP
                   />
                 ))}
 
+                {visibleScorePositions.map((item) => (
+                  <SvgLine
+                    key={`v-${item.score}-${item.dataIndex}`}
+                    x1={item.x}
+                    y1={plotTop}
+                    x2={item.x}
+                    y2={plotBottom}
+                    stroke={palette.overlay10}
+                    strokeWidth={1}
+                  />
+                ))}
+
                 {lineSegments.map((seg, i) => (
                   <SvgPath
                     key={`seg-${i}`}
@@ -253,30 +462,34 @@ export default function AdvancedImpactTimeline({ data }: AdvancedImpactTimelineP
                   />
                 ))}
 
-                {eventPoints.map((pt, i) => {
+                {visibleEventPoints.map((pt, i) => {
+                  // On-field with description → colored dot + label
                   if (!pt.onField || !pt.description) return null;
-                  const isPositive = pt.yValue >= (renderedPoints[i]?.yValue ?? 0);
-                  const dotColor = isPositive ? palette.success : palette.danger;
-                  const abbrev = pt.description.split(',')[0].trim();
+                  const isPositive = isPositiveImpactEvent(pt.plusMinusDelta);
+                  const dotColor = getImpactEventColor(pt.plusMinusDelta, palette);
+                  const abbrev = eventAbbrev(pt.description);
                   const labelY = isPositive ? pt.y - labelAboveOffset : pt.y + labelBelowOffset;
                   return (
                     <React.Fragment key={`dot-${i}`}>
                       <SvgCircle cx={pt.x} cy={pt.y} r={dotRadius} fill={dotColor} />
-                      <SvgText
-                        x={pt.x}
-                        y={labelY}
-                        fill={dotColor}
-                        fontSize={labelFontSize}
-                        fontFamily={Fonts.bold}
-                        textAnchor="middle">
-                        {abbrev}
-                      </SvgText>
+                      {abbrev ? (
+                        <SvgText
+                          x={pt.x}
+                          y={labelY}
+                          fill={dotColor}
+                          fontSize={labelFontSize}
+                          fontFamily={Fonts.bold}
+                          textAnchor="middle">
+                          {abbrev}
+                        </SvgText>
+                      ) : null}
                     </React.Fragment>
                   );
                 })}
 
-                {eventPoints.map((pt, i) => {
-                  if (pt.onField || pt.description) return null;
+                {visibleEventPoints.map((pt, i) => {
+                  // Off-field or no-description → small gray dot
+                  if (pt.onField && pt.description) return null;
                   return (
                     <SvgCircle
                       key={`off-${i}`}
@@ -291,9 +504,9 @@ export default function AdvancedImpactTimeline({ data }: AdvancedImpactTimelineP
             </View>
 
             <View style={styles.scoreLabelsPositioned}>
-              {scoreLabelPositions.map((item, i) => (
+              {visibleScorePositions.map((item) => (
                 <View
-                  key={`${item.score}-${i}`}
+                  key={`${item.score}-${item.dataIndex}`}
                   style={[styles.scoreLabelWrapper, { left: item.x - labelWidth / 2 }]}>
                   <ThemedText
                     numberOfLines={1}
@@ -346,21 +559,17 @@ export default function AdvancedImpactTimeline({ data }: AdvancedImpactTimelineP
           </ThemedText>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.eventScroll}>
             {eventLog.map((pt, i) => {
-              let eventColor: string;
-              if (pt.plusMinusDelta > 0) {
-                eventColor = palette.success;
-              } else if (pt.plusMinusDelta < 0) {
-                eventColor = palette.danger;
-              } else {
-                eventColor = palette.textMuted;
-              }
               return (
                 <View key={i} style={[styles.eventItem, { backgroundColor: palette.overlay05 }]}>
                   <ThemedText style={[styles.eventScore, { color: palette.textMuted }]}>
                     {pt.score}
                   </ThemedText>
-                  <ThemedText style={[styles.eventDesc, { color: eventColor }]}>
-                    {pt.description}
+                  <ThemedText
+                    style={[
+                      styles.eventDesc,
+                      { color: getImpactEventColor(pt.plusMinusDelta, palette) },
+                    ]}>
+                    {formatFullDescription(pt.description ?? '')}
                   </ThemedText>
                 </View>
               );
@@ -388,6 +597,7 @@ function createStyles(
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
+      gap: scaleBySizeClass(10, sizeClass),
       marginBottom: 8,
     },
     title: {
@@ -395,6 +605,11 @@ function createStyles(
       fontFamily: Fonts.bold,
       letterSpacing: 1,
       textTransform: 'uppercase',
+    },
+    scaleToggle: {
+      flexDirection: 'row',
+      borderRadius: scaleBySizeClass(8, sizeClass),
+      padding: scaleBySizeClass(2, sizeClass),
     },
     valueDisplay: {
       alignItems: 'center',
@@ -445,7 +660,7 @@ function createStyles(
       width: labelWidth,
     },
     scoreText: {
-      fontSize: scaleBySizeClass(10, sizeClass),
+      fontSize: scaleBySizeClass(11, sizeClass),
       fontFamily: Fonts.bold,
     },
     legend: {

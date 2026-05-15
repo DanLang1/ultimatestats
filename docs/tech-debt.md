@@ -174,6 +174,7 @@ This document tracks intentionally deferred cleanup work discovered during the d
   `hooks/useTimeoutTimer.ts` + `hooks/useHalftimeTimer.ts` — nearly identical drift-proof countdown logic
   `app/(main)/GameComplete.tsx` + `app/(main)/advancedTracking/TrackerGameComplete.tsx` — similar post-game summary screens
   `app/(main)/PreGameConfirm.tsx` + `app/(main)/advancedTracking/PreGameConfirm.tsx` — identical card layouts
+  `components/view-stats/ImpactTimeline.tsx` + `components/advancedTracking/AdvancedImpactTimeline.tsx` — duplicated impact chart layout, score label fitting, axis labels, step-path, and scale-mode logic; keep basic/advanced event formatting separate
   `components/lines/ModalPlayerGrid.tsx` + `lib/lineUtils.ts` — `ColumnKey` / `MIXED_COLUMN_LABELS` duplicates `GenderRoleGroup` / `GROUP_LABELS`
   `store/gameStore.types.ts` + `store/gameStore.ts` — `addTurnoverEvent` parameter type defined inline in both
 
