@@ -1,5 +1,6 @@
 import { StatEntryInner } from '@/components/stat-entry/StatEntryInner';
 import { useTheme } from '@/context/ThemeContext';
+import { finishActiveGameSession } from '@/hooks/useGameSessionActions';
 import { checkGameOver } from '@/lib/gameUtils';
 import { shouldShowLinePrompt } from '@/lib/linePromptUtils';
 import { useGameStore } from '@/store/gameStore';
@@ -60,6 +61,7 @@ export default function StatEntryScreen() {
       }
       state.setCurrentGameStatus('finished');
       state.setPostGameFlowPending(true);
+      finishActiveGameSession();
       router.dismissTo('/Scoreboard');
       return;
     }

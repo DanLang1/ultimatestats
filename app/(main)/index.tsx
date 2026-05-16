@@ -1,10 +1,9 @@
 import { Redirect } from 'expo-router';
-import { useGameStore } from '@/store/gameStore';
+import { useActiveGameSession } from '@/hooks/useActiveGameSession';
 import { useTutorialStore } from '@/store/tutorialStore';
 
 export default function IndexRoute() {
-  const currentGameStatus = useGameStore((state) => state.currentGameStatus);
-  const isPostGameFlowPending = useGameStore((state) => state.isPostGameFlowPending);
+  const activeSession = useActiveGameSession();
   const hasHydrated = useTutorialStore((state) => state.hasHydrated);
   const hasSeenOnboarding = useTutorialStore((state) => state.hasSeenOnboarding);
 
@@ -16,13 +15,5 @@ export default function IndexRoute() {
     return <Redirect href="/TutorialIntro" />;
   }
 
-  if (currentGameStatus === 'finished') {
-    return <Redirect href={isPostGameFlowPending ? '/GameComplete' : '/Dashboard'} />;
-  }
-
-  if (currentGameStatus !== 'inProgress') {
-    return <Redirect href="/Dashboard" />;
-  }
-
-  return <Redirect href="/Scoreboard" />;
+  return <Redirect href={activeSession.route} />;
 }

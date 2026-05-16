@@ -10,7 +10,6 @@ import { useTheme } from '@/context/ThemeContext';
 import { useIsGameActive } from '@/hooks/useIsGameActive';
 import { useKeyboardDidHide } from '@/hooks/useKeyboardDidHide';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import { useNewGame } from '@/hooks/useNewGame';
 import { MAX_TEAM_NAME_LENGTH } from '@/lib/constants';
 import { SavedTeam } from '@/lib/storage';
 import { useGameStore } from '@/store/gameStore';
@@ -99,8 +98,6 @@ function SettingsContent() {
     savedTeams,
     saveCurrentTeam,
   } = useGameStore();
-
-  const { confirmNewGame } = useNewGame();
 
   const team1Name = currentTeam?.name ?? 'Team 1';
   const team1Roster = currentTeam?.roster ?? [];
@@ -349,18 +346,6 @@ function SettingsContent() {
         titleColor={palette.textMuted}
         backButtonBackgroundColor={palette.overlay10}
         titleOverlayPaddingPortrait={96}
-        rightSlot={
-          <View style={styles.headerRight}>
-            <Pressable
-              onPress={confirmNewGame}
-              style={({ pressed }) => [styles.newGameButton, pressed && styles.buttonPressed]}
-              hitSlop={12}>
-              <ThemedText style={[styles.newGameButtonText, { color: palette.success }]}>
-                New Game
-              </ThemedText>
-            </Pressable>
-          </View>
-        }
       />
 
       <ScrollView contentContainerStyle={[styles.scrollContent]}>

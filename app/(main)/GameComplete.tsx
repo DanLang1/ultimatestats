@@ -1,14 +1,15 @@
+import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { useTheme } from '@/context/ThemeContext';
+import { useGameSessionActions } from '@/hooks/useGameSessionActions';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { checkGameOver, getWinner } from '@/lib/gameUtils';
 import { useGameStore } from '@/store/gameStore';
+import { Fonts } from '@/theme/theme';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { Redirect, router, Stack } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
-import { ThemedText } from '@/components/ThemedText';
-import { Fonts } from '@/theme/theme';
 
 export default function GameCompleteScreen() {
   const {
@@ -17,7 +18,6 @@ export default function GameCompleteScreen() {
     gameTo,
     currentTeam,
     team2Name,
-    resetGame,
     statTrackingEnabled,
     undoLastAction,
     timerTimeLeft,
@@ -26,6 +26,7 @@ export default function GameCompleteScreen() {
     setPostGameFlowPending,
   } = useGameStore();
   const { palette } = useTheme();
+  const { finishActiveGameSession, restoreBasicGameSession } = useGameSessionActions();
   const { isLandscape, sizeClass } = useLayout();
   const styles = createStyles(isLandscape, sizeClass);
 
@@ -52,23 +53,21 @@ export default function GameCompleteScreen() {
   const handleViewStats = () => {
     setTimerActive(false);
     setPostGameFlowPending(false);
+    finishActiveGameSession();
     router.replace({ pathname: '/ViewStats', params: { from: 'scoreboard' } });
-  };
-
-  const handleNewGame = () => {
-    resetGame();
-    router.replace('/Scoreboard');
   };
 
   const handleGoHome = () => {
     setTimerActive(false);
     setPostGameFlowPending(false);
+    finishActiveGameSession();
     router.replace('/Dashboard');
   };
 
   const handleUndo = () => {
     setPostGameFlowPending(false);
     undoLastAction();
+    restoreBasicGameSession();
     router.replace('/Scoreboard');
   };
 
@@ -144,6 +143,23 @@ export default function GameCompleteScreen() {
           </ThemedText>
 
           <Pressable
+            style={[styles.primaryAction, { backgroundColor: palette.success }]}
+            onPress={handleGoHome}>
+            <View style={styles.actionCopy}>
+              <ThemedText style={[styles.primaryActionTitle, { color: palette.textOnAccent }]}>
+                Done
+              </ThemedText>
+              <ThemedText style={[styles.primaryActionText, { color: palette.textOnAccent }]}>
+                Return to the dashboard
+              </ThemedText>
+            </View>
+            <MaterialCommunityIcons
+              name="check-circle-outline"
+              size={scaleBySizeClass(22, sizeClass)}
+              color={palette.textOnAccent}
+            />
+          </Pressable>
+          <Pressable
             style={[
               styles.secondaryAction,
               { backgroundColor: 'transparent', borderColor: palette.overlay15 },
@@ -159,45 +175,6 @@ export default function GameCompleteScreen() {
             </View>
             <MaterialCommunityIcons
               name="undo"
-              size={scaleBySizeClass(22, sizeClass)}
-              color={palette.textMuted}
-            />
-          </Pressable>
-
-          <Pressable
-            style={[styles.primaryAction, { backgroundColor: palette.success }]}
-            onPress={handleNewGame}>
-            <View>
-              <ThemedText style={[styles.primaryActionTitle, { color: palette.textOnAccent }]}>
-                Start New Game
-              </ThemedText>
-              <ThemedText style={[styles.primaryActionText, { color: palette.textOnAccent }]}>
-                Clear the scoreboard and begin a fresh game
-              </ThemedText>
-            </View>
-            <MaterialCommunityIcons
-              name="restart"
-              size={scaleBySizeClass(22, sizeClass)}
-              color={palette.textOnAccent}
-            />
-          </Pressable>
-
-          <Pressable
-            style={[
-              styles.secondaryAction,
-              { backgroundColor: palette.overlay05, borderColor: palette.overlay10 },
-            ]}
-            onPress={handleGoHome}>
-            <View style={styles.actionCopy}>
-              <ThemedText style={[styles.secondaryActionTitle, { color: palette.textInverse }]}>
-                Home
-              </ThemedText>
-              <ThemedText style={[styles.secondaryActionText, { color: palette.textMuted }]}>
-                Leave the finished game and return to the dashboard
-              </ThemedText>
-            </View>
-            <MaterialCommunityIcons
-              name="home-outline"
               size={scaleBySizeClass(22, sizeClass)}
               color={palette.textMuted}
             />
@@ -331,7 +308,6 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     primaryActionText: {
       fontSize: scaleBySizeClass(14, sizeClass),
       marginTop: 2,
-      maxWidth: '92%',
     },
     secondaryAction: {
       borderRadius: 18,

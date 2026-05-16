@@ -1,4 +1,5 @@
 import { useAlert } from '@/components/ui/AlertProvider';
+import { useGameSessionActions } from '@/hooks/useGameSessionActions';
 import { useGameSessionStatus } from '@/hooks/useGameSessionStatus';
 import { useStatsTutorialPending } from '@/hooks/useStatsTutorialPending';
 import { useGameStore } from '@/store/gameStore';
@@ -11,7 +12,7 @@ interface UseNewGameOptions {
 export function useNewGame(options?: UseNewGameOptions) {
   const { showAlert } = useAlert();
   const sessionStatus = useGameSessionStatus();
-  const resetGame = useGameStore((state) => state.resetGame);
+  const { startBasicGameSession } = useGameSessionActions();
   const statTrackingEnabled = useGameStore((state) => state.statTrackingEnabled);
   const statsTutorialPending = useStatsTutorialPending();
 
@@ -31,13 +32,13 @@ export function useNewGame(options?: UseNewGameOptions) {
 
   const confirmNewGame = () => {
     if (sessionStatus === 'fresh') {
-      resetGame();
+      startBasicGameSession();
       handleSuccess();
       return;
     }
 
     if (sessionStatus === 'finished') {
-      resetGame();
+      startBasicGameSession();
       handleSuccess();
       return;
     }
@@ -55,7 +56,7 @@ export function useNewGame(options?: UseNewGameOptions) {
           text: 'New Game',
           style: 'success',
           onPress: () => {
-            resetGame();
+            startBasicGameSession();
             handleSuccess();
           },
         },

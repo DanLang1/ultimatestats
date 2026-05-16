@@ -1,9 +1,11 @@
 import { useAlert } from '@/components/ui/AlertProvider';
+import { useGameSessionActions } from '@/hooks/useGameSessionActions';
 import { useGameStore } from '@/store/gameStore';
 import { router } from 'expo-router';
 
 export function useEndGame() {
   const { showAlert } = useAlert();
+  const { finishActiveGameSession } = useGameSessionActions();
   const {
     team1Score,
     team2Score,
@@ -48,6 +50,7 @@ export function useEndGame() {
 
             setCurrentGameStatus('finished');
             setPostGameFlowPending(true);
+            finishActiveGameSession();
             router.push('/GameComplete');
           },
         },

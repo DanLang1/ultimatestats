@@ -1,7 +1,8 @@
+import { NewGameSheet } from '@/components/new-game/NewGameSheet';
 import { useTheme } from '@/context/ThemeContext';
-import { useGameSessionStatus } from '@/hooks/useGameSessionStatus';
+import { useActiveGameSession } from '@/hooks/useActiveGameSession';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import { useNewGame } from '@/hooks/useNewGame';
+import { useNewGameLauncher } from '@/hooks/useNewGameLauncher';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { router, usePathname, useSegments, type Href } from 'expo-router';
@@ -57,10 +58,11 @@ const TAB_CONFIG: Record<HubTabRouteName, TabConfig> = {
   '(game)': {
     activeIcon: 'scoreboard',
     activePathnames: ['/Scoreboard', '/GameInfo'],
+    activePathPrefixes: ['/advancedTracking/Tracker', '/advancedTracking/PullTracking'],
     href: '/Scoreboard',
     inactiveIcon: 'scoreboard-outline',
     label: 'Game',
-    rootRoute: 'Scoreboard',
+    rootRoute: 'index',
   },
   '(team)': {
     activeIcon: 'account-group',
@@ -87,12 +89,19 @@ export default function HubTabBar({ state, descriptors, navigation }: BottomTabB
   const { sizeClass } = useLayout();
   const pathname = usePathname();
   const segments = useSegments();
-  const { confirmNewGame } = useNewGame();
+  const activeSession = useActiveGameSession();
+  const {
+    isNewGameSheetVisible,
+    activeGameKind,
+    openNewGameSheet,
+    closeNewGameSheet,
+    startBasicGame,
+    startAdvancedGame,
+  } = useNewGameLauncher();
   const styles = createStyles(sizeClass);
   const iconSize = scaleBySizeClass(20, sizeClass);
   const bottomPadding = scaleBySizeClass(6, sizeClass);
   const isLightTheme = themeMode === 'light';
-  const sessionStatus = useGameSessionStatus();
 
   if (pathname === '/Scoreboard' || segments.some((s) => MODAL_SEGMENTS.has(s))) {
     return null;
@@ -123,13 +132,13 @@ export default function HubTabBar({ state, descriptors, navigation }: BottomTabB
     const buttonBorderColor = isActive ? palette.accentOverlay30 : 'transparent';
 
     const onPress = () => {
-      if (route.name === '(game)' && sessionStatus === 'finished') {
-        confirmNewGame();
-        return;
-      }
-
       if (route.name === '(game)') {
-        router.navigate('/Scoreboard');
+        if (activeSession.kind === 'none') {
+          openNewGameSheet();
+          return;
+        }
+
+        router.navigate(activeSession.route);
         return;
       }
 
@@ -190,23 +199,32 @@ export default function HubTabBar({ state, descriptors, navigation }: BottomTabB
   const teamRoute = hubRoutes.find(({ route }) => route.name === '(team)');
 
   return (
-    <View
-      style={[
-        styles.container,
-        {
-          backgroundColor: isLightTheme ? palette.cardBg : palette.primary,
-          borderTopColor: isLightTheme ? palette.borderLight : palette.overlay10,
-          paddingBottom: bottomPadding,
-          shadowColor: palette.shadow,
-        },
-      ]}>
-      <View style={styles.row}>
-        {homeRoute ? renderHubTabButton(homeRoute) : null}
-        {gameRoute ? renderHubTabButton(gameRoute) : null}
-        {analyticsRoute ? renderHubTabButton(analyticsRoute) : null}
-        {teamRoute ? renderHubTabButton(teamRoute) : null}
+    <>
+      <NewGameSheet
+        visible={isNewGameSheetVisible}
+        activeGameKind={activeGameKind}
+        onClose={closeNewGameSheet}
+        onStartBasic={startBasicGame}
+        onStartAdvanced={startAdvancedGame}
+      />
+      <View
+        style={[
+          styles.container,
+          {
+            backgroundColor: isLightTheme ? palette.cardBg : palette.primary,
+            borderTopColor: isLightTheme ? palette.borderLight : palette.overlay10,
+            paddingBottom: bottomPadding,
+            shadowColor: palette.shadow,
+          },
+        ]}>
+        <View style={styles.row}>
+          {homeRoute ? renderHubTabButton(homeRoute) : null}
+          {gameRoute ? renderHubTabButton(gameRoute) : null}
+          {analyticsRoute ? renderHubTabButton(analyticsRoute) : null}
+          {teamRoute ? renderHubTabButton(teamRoute) : null}
+        </View>
       </View>
-    </View>
+    </>
   );
 }
 

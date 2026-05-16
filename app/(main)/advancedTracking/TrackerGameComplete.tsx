@@ -2,6 +2,7 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { useTheme } from '@/context/ThemeContext';
+import { useGameSessionActions } from '@/hooks/useGameSessionActions';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { getGameScore, isAdvancedGameOver } from '@/lib/advancedTracking/trackingUtils';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
@@ -15,6 +16,7 @@ export default function TrackerGameCompleteScreen() {
   const { isLandscape, sizeClass } = useLayout();
 
   const { currentGameId, savedGames, finalizeGame, undoLastOperation } = useAdvancedTrackingStore();
+  const { finishActiveGameSession, restoreAdvancedGameSession } = useGameSessionActions();
   const game = savedGames.find((g) => g.id === currentGameId);
 
   if (!game || !isAdvancedGameOver(game)) {
@@ -38,11 +40,13 @@ export default function TrackerGameCompleteScreen() {
 
   const handleFinish = () => {
     finalizeGame();
+    finishActiveGameSession();
     router.replace('/Dashboard');
   };
 
   const handleUndo = () => {
     undoLastOperation();
+    restoreAdvancedGameSession();
     router.replace('/advancedTracking/Tracker');
   };
 

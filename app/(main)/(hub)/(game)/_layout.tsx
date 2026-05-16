@@ -3,7 +3,7 @@ import { Stack } from 'expo-router';
 import { useKeepAwake } from 'expo-keep-awake';
 
 export const unstable_settings = {
-  initialRouteName: 'Scoreboard',
+  initialRouteName: 'index',
 };
 
 export default function HubGameLayout() {

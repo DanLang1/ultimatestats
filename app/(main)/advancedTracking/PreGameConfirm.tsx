@@ -5,6 +5,7 @@ import { TimeoutSettingCard } from '@/components/pre-game-confirm/TimeoutSetting
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import { useTheme } from '@/context/ThemeContext';
+import { useGameSessionActions } from '@/hooks/useGameSessionActions';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { GameSide, Participant } from '@/lib/advancedTracking/types';
 import { getContrastingTextColor } from '@/lib/colorUtils';
@@ -26,6 +27,7 @@ export default function AdvancedPreGameConfirm() {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
   const styles = createStyles(sizeClass);
+  const { finishActiveGameSession } = useGameSessionActions();
 
   const {
     currentTeam,
@@ -57,7 +59,7 @@ export default function AdvancedPreGameConfirm() {
   const fmpTextColor = getContrastingTextColor(palette.fmpColor);
   const mmpTextColor = getContrastingTextColor(palette.mmpColor);
 
-  const { resetCurrentGame, createGame } = useAdvancedTrackingStore();
+  const { createGame } = useAdvancedTrackingStore();
 
   const openPicker = useNumberPickerStore((s) => s.open);
 
@@ -94,7 +96,6 @@ export default function AdvancedPreGameConfirm() {
 
     const floaterEnabledForGame = floaterEnabled && autoHalftimeEnabled;
 
-    resetCurrentGame();
     createGame({
       focusSideId: FOCUS_SIDE_ID,
       initialReceivingSideId,
@@ -129,7 +130,10 @@ export default function AdvancedPreGameConfirm() {
       <Stack.Screen options={{ headerShown: false }} />
       <ScreenHeader
         title="ADVANCED TRACKER"
-        onBack={() => router.back()}
+        onBack={() => {
+          finishActiveGameSession();
+          router.dismissTo('/Dashboard');
+        }}
         titleColor={palette.textMuted}
         backButtonBackgroundColor={palette.overlay10}
         rightSlot={

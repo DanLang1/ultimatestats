@@ -1,16 +1,17 @@
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
+import { NewGameSheet } from '@/components/new-game/NewGameSheet';
 import { useTheme } from '@/context/ThemeContext';
+import { useActiveGameSession } from '@/hooks/useActiveGameSession';
 import { useDashboardSession } from '@/hooks/useDashboardSession';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import { useNewGame } from '@/hooks/useNewGame';
+import { useNewGameLauncher } from '@/hooks/useNewGameLauncher';
 import { useRemoteVersionCheck } from '@/hooks/useRemoteVersionCheck';
 import { useVersionCheck } from '@/hooks/useVersionCheck';
 import { APP_STORE_URL, PLAY_STORE_URL } from '@/lib/constants';
 import { LAST_DISMISSED_REMOTE_VERSION_KEY } from '@/lib/remoteVersionUtils';
 import { LAST_SEEN_VERSION_KEY } from '@/lib/versionUtils';
-import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { useTutorialStore } from '@/store/tutorialStore';
 import { Fonts } from '@/theme/theme';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -40,10 +41,15 @@ export default function DashboardScreen() {
   const styles = createStyles(sizeClass);
   const metrics = createMetrics(sizeClass);
   const { resetStatsTutorial } = useTutorialStore();
-  const { currentGameId, savedGames: advancedSavedGames } = useAdvancedTrackingStore();
-  const activeAdvancedGame = advancedSavedGames.find((g) => g.id === currentGameId) ?? null;
-  const hasActiveAdvancedGame = activeAdvancedGame != null;
-  const { confirmNewGame } = useNewGame();
+  const {
+    isNewGameSheetVisible,
+    activeGameKind,
+    openNewGameSheet,
+    closeNewGameSheet,
+    startBasicGame,
+    startAdvancedGame,
+  } = useNewGameLauncher();
+  const activeSession = useActiveGameSession();
   const { hasNewVersion } = useVersionCheck();
   const { hasUpdate: hasRemoteUpdate, dismiss: dismissRemoteUpdate } = useRemoteVersionCheck();
   const {
@@ -53,10 +59,12 @@ export default function DashboardScreen() {
     rosterCount,
     gamesCount,
     sessionStatus,
-    hasInProgressGame,
     hasCompletedGame,
     completedGameSummary,
   } = useDashboardSession();
+  const hasActiveAdvancedGame = activeSession.kind === 'advanced';
+  const hasActiveBasicGame = activeSession.kind === 'basic';
+  const hasLiveGame = activeSession.kind !== 'none';
 
   const sections: MenuSection[] = [
     {
@@ -66,16 +74,17 @@ export default function DashboardScreen() {
           icon: 'plus-circle-outline' as const,
           label: 'New Game',
           description: (() => {
+            if (hasLiveGame) {
+              return 'Leave the current game and start a fresh one';
+            }
             if (sessionStatus === 'finished') {
               return statTrackingEnabled
                 ? 'Completed game is saved. Clear the scoreboard and start fresh'
                 : 'Clear the completed scoreboard and start fresh';
             }
-            return hasInProgressGame
-              ? 'Leave the current game and start a fresh one'
-              : 'Open a fresh scoreboard and start tracking';
+            return 'Open a fresh scoreboard and start tracking';
           })(),
-          onPress: confirmNewGame,
+          onPress: openNewGameSheet,
         },
         {
           icon: 'cog-outline' as const,
@@ -85,7 +94,7 @@ export default function DashboardScreen() {
         },
       ],
     },
-    ...(hasInProgressGame
+    ...(hasLiveGame
       ? [
           {
             title: 'IN PROGRESS',
@@ -93,23 +102,29 @@ export default function DashboardScreen() {
               {
                 icon: 'scoreboard-outline' as const,
                 label: 'Resume Game',
-                description: 'Return to the live scoreboard',
-                onPress: () => router.navigate('/Scoreboard'),
+                description: hasActiveAdvancedGame
+                  ? 'Return to the advanced tracker'
+                  : 'Return to the live scoreboard',
+                onPress: () => router.navigate(activeSession.route),
               },
-              {
-                icon: 'timeline-clock-outline' as const,
-                label: 'Game Timeline',
-                description: 'View play-by-play events',
-                onPress: () => router.push('/GameTimeline'),
-                disabled: !statTrackingEnabled,
-              },
-              {
-                icon: 'chart-bar' as const,
-                label: 'View Stats',
-                description: 'Live player and team stats',
-                onPress: () => router.push('/ViewStats'),
-                disabled: !statTrackingEnabled,
-              },
+              ...(hasActiveAdvancedGame
+                ? []
+                : [
+                    {
+                      icon: 'timeline-clock-outline' as const,
+                      label: 'Game Timeline',
+                      description: 'View play-by-play events',
+                      onPress: () => router.push('/GameTimeline'),
+                      disabled: !hasActiveBasicGame || !statTrackingEnabled,
+                    },
+                    {
+                      icon: 'chart-bar' as const,
+                      label: 'View Stats',
+                      description: 'Live player and team stats',
+                      onPress: () => router.push('/ViewStats'),
+                      disabled: !hasActiveBasicGame || !statTrackingEnabled,
+                    },
+                  ]),
             ],
           },
         ]
@@ -208,6 +223,13 @@ export default function DashboardScreen() {
   return (
     <ThemedView style={[styles.container, { backgroundColor: palette.primary }]}>
       <Stack.Screen options={{ headerShown: false }} />
+      <NewGameSheet
+        visible={isNewGameSheetVisible}
+        activeGameKind={activeGameKind}
+        onClose={closeNewGameSheet}
+        onStartBasic={startBasicGame}
+        onStartAdvanced={startAdvancedGame}
+      />
 
       <ScreenHeader
         title="DASHBOARD"
@@ -334,73 +356,6 @@ export default function DashboardScreen() {
         {/* Dev tools - only visible in development */}
         {__DEV__ && (
           <>
-            <Pressable
-              onPress={() => router.push('/advancedTracking/PreGameConfirm')}
-              testID="advanced-tracker-new-game-button"
-              style={({ pressed }) => [
-                styles.discordBanner,
-                { backgroundColor: palette.accent },
-                pressed && styles.menuItemPressed,
-              ]}>
-              <MaterialCommunityIcons
-                name="disc"
-                size={metrics.bannerIconSize}
-                color={palette.textOnAccent}
-              />
-              <View style={styles.discordText}>
-                <ThemedText style={[styles.discordTitle, { color: palette.textOnAccent }]}>
-                  New Advanced Game
-                </ThemedText>
-                <ThemedText style={[styles.discordSubtitle, { color: palette.textOnAccentMuted }]}>
-                  DEV ONLY - Start a fresh advanced tracking game
-                </ThemedText>
-              </View>
-            </Pressable>
-
-            <Pressable
-              onPress={() => {
-                const resumeRoute =
-                  activeAdvancedGame != null && activeAdvancedGame.points.length > 0
-                    ? '/advancedTracking/Tracker'
-                    : '/advancedTracking/TrackerLineSelect';
-                router.push(resumeRoute);
-              }}
-              disabled={!hasActiveAdvancedGame}
-              style={({ pressed }) => [
-                styles.discordBanner,
-                {
-                  backgroundColor: hasActiveAdvancedGame ? palette.accent : palette.overlay10,
-                  opacity: hasActiveAdvancedGame ? 1 : 0.5,
-                },
-                pressed && hasActiveAdvancedGame && styles.menuItemPressed,
-              ]}>
-              <MaterialCommunityIcons
-                name="play-circle-outline"
-                size={metrics.bannerIconSize}
-                color={hasActiveAdvancedGame ? palette.textOnAccent : palette.textMuted}
-              />
-              <View style={styles.discordText}>
-                <ThemedText
-                  style={[
-                    styles.discordTitle,
-                    { color: hasActiveAdvancedGame ? palette.textOnAccent : palette.textMuted },
-                  ]}>
-                  Resume Advanced Game
-                </ThemedText>
-                <ThemedText
-                  style={[
-                    styles.discordSubtitle,
-                    {
-                      color: hasActiveAdvancedGame ? palette.textOnAccentMuted : palette.textMuted,
-                    },
-                  ]}>
-                  {hasActiveAdvancedGame
-                    ? `DEV ONLY - Resume in-progress game (${activeAdvancedGame?.points.length ?? 0} points)`
-                    : 'DEV ONLY - No active game to resume'}
-                </ThemedText>
-              </View>
-            </Pressable>
-
             <Pressable
               onPress={() => {
                 AsyncStorage.removeItem(LAST_SEEN_VERSION_KEY).then(() => {
