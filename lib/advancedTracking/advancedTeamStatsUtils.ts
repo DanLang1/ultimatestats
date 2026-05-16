@@ -29,6 +29,10 @@ export interface AdvancedTeamStats {
   possessionsPerDPoint: number | null;
   /** Average turnovers per point. Null if 0 points. */
   turnoversPerPoint: number | null;
+  pointsPerTurnover: number;
+  blocksPerDPoint: number;
+  totalTurnovers: number;
+  totalBlocks: number;
   /** Possessions where possessionIndex > 0 and result === 'scored'. */
   scoresAfterTurnovers: number;
   longestScoringRun: number;
@@ -108,6 +112,7 @@ export function computeAdvancedTeamStats(game: AnalyticsGame, sideId: string): A
   let totalPossessionsOnO = 0;
   let totalPossessionsOnD = 0;
   let totalTurnoversInGame = 0;
+  let totalBlocks = 0;
   let scoresAfterTurnovers = 0;
 
   // Build O/D lookup for each point
@@ -129,6 +134,8 @@ export function computeAdvancedTeamStats(game: AnalyticsGame, sideId: string): A
       if (poss.possessionIndex > 0 && poss.result === 'scored') {
         scoresAfterTurnovers++;
       }
+    } else if (poss.turnoverType === 'block' || poss.turnoverType === 'callahan') {
+      totalBlocks++;
     }
   }
 
@@ -144,6 +151,7 @@ export function computeAdvancedTeamStats(game: AnalyticsGame, sideId: string): A
 
   const oTotal = holds + timesBroken;
   const dTotal = breaks + oppHolds;
+  const totalGoals = holds + breaks;
 
   return {
     sideId,
@@ -163,6 +171,10 @@ export function computeAdvancedTeamStats(game: AnalyticsGame, sideId: string): A
     possessionsPerOPoint: oPoints > 0 ? totalPossessionsOnO / oPoints : null,
     possessionsPerDPoint: dPoints > 0 ? totalPossessionsOnD / dPoints : null,
     turnoversPerPoint: pointCount > 0 ? totalTurnoversInGame / pointCount : null,
+    pointsPerTurnover: totalTurnoversInGame > 0 ? totalGoals / totalTurnoversInGame : totalGoals,
+    blocksPerDPoint: dPoints > 0 ? totalBlocks / dPoints : 0,
+    totalTurnovers: totalTurnoversInGame,
+    totalBlocks,
     scoresAfterTurnovers,
     longestScoringRun,
     longestDrought,

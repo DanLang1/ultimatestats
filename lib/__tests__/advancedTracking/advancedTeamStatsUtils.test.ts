@@ -384,4 +384,134 @@ describe('advancedTeamStatsUtils', () => {
       expect(stats.scoresAfterTurnovers).toBe(1);
     });
   });
+
+  describe('normal stats efficiency fields', () => {
+    it('computes points per turnover, blocks per D-point, turnovers, and blocks', () => {
+      const game: AdvancedTrackedGame = {
+        ...baseGame,
+        initialReceivingSideId: ZOO,
+        points: [
+          {
+            id: 'pt1',
+            lines: [{ sideId: ZOO, participantIds: ['p_august', 'p_meves'] }],
+            possessions: [
+              {
+                id: 'pt1_pos1',
+                sideId: ZOO,
+                actions: [
+                  {
+                    id: 'pt1_a1',
+                    kind: 'pull' as const,
+                    sideId: RIVALS,
+                    receivingSideId: ZOO,
+                    puller: untracked,
+                    receiver: august,
+                    result: 'inbound' as const,
+                  },
+                  {
+                    id: 'pt1_a2',
+                    kind: 'throw' as const,
+                    sideId: ZOO,
+                    thrower: august,
+                    result: 'throwaway' as const,
+                  },
+                ],
+              },
+              {
+                id: 'pt1_pos2',
+                sideId: RIVALS,
+                actions: [
+                  {
+                    id: 'pt1_a3',
+                    kind: 'throw' as const,
+                    sideId: RIVALS,
+                    thrower: untracked,
+                    defender: meves,
+                    result: 'block' as const,
+                  },
+                ],
+              },
+              {
+                id: 'pt1_pos3',
+                sideId: ZOO,
+                actions: [
+                  {
+                    id: 'pt1_a4',
+                    kind: 'disc_pickup' as const,
+                    sideId: ZOO,
+                    player: meves,
+                  },
+                  {
+                    id: 'pt1_a5',
+                    kind: 'throw' as const,
+                    sideId: ZOO,
+                    thrower: meves,
+                    toPlayer: august,
+                    result: 'goal' as const,
+                  },
+                ],
+              },
+            ],
+          },
+          {
+            id: 'pt2',
+            lines: [{ sideId: ZOO, participantIds: ['p_august', 'p_meves'] }],
+            possessions: [
+              {
+                id: 'pt2_pos1',
+                sideId: RIVALS,
+                actions: [
+                  {
+                    id: 'pt2_a1',
+                    kind: 'pull' as const,
+                    sideId: ZOO,
+                    receivingSideId: RIVALS,
+                    puller: august,
+                    receiver: untracked,
+                    result: 'inbound' as const,
+                  },
+                  {
+                    id: 'pt2_a2',
+                    kind: 'throw' as const,
+                    sideId: RIVALS,
+                    thrower: untracked,
+                    defender: meves,
+                    result: 'block' as const,
+                  },
+                ],
+              },
+              {
+                id: 'pt2_pos2',
+                sideId: ZOO,
+                actions: [
+                  {
+                    id: 'pt2_a3',
+                    kind: 'disc_pickup' as const,
+                    sideId: ZOO,
+                    player: meves,
+                  },
+                  {
+                    id: 'pt2_a4',
+                    kind: 'throw' as const,
+                    sideId: ZOO,
+                    thrower: meves,
+                    toPlayer: august,
+                    result: 'goal' as const,
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      };
+
+      const analytics = buildAnalyticsGame(game);
+      const stats = computeAdvancedTeamStats(analytics, ZOO);
+
+      expect(stats.totalTurnovers).toBe(1);
+      expect(stats.totalBlocks).toBe(2);
+      expect(stats.pointsPerTurnover).toBe(2);
+      expect(stats.blocksPerDPoint).toBe(2);
+    });
+  });
 });

@@ -15,6 +15,11 @@ import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import AdvancedStatsTable from './AdvancedStatsTable';
 
+const formatDecimal = (value: number) => {
+  if (Number.isInteger(value)) return value.toString();
+  return value.toFixed(1);
+};
+
 interface AdvancedStatsContentProps {
   game: AnalyticsGame;
   gameId: string;
@@ -185,26 +190,20 @@ export default function AdvancedStatsContent({
           />
         </View>
 
-        {teamStats.possessionsPerPoint != null && (
-          <View style={styles.subsectionContainer}>
-            <ThemedText style={[styles.subsectionTitle, { color: palette.textMuted }]}>
-              POSSESSIONS
-            </ThemedText>
-            <StatsGrid
-              stats={[
-                { label: 'Poss/Pt', value: teamStats.possessionsPerPoint.toFixed(1) },
-                ...(teamStats.possessionsPerOPoint != null
-                  ? [{ label: 'Poss/O-Pt', value: teamStats.possessionsPerOPoint.toFixed(1) }]
-                  : []),
-                ...(teamStats.possessionsPerDPoint != null
-                  ? [{ label: 'Poss/D-Pt', value: teamStats.possessionsPerDPoint.toFixed(1) }]
-                  : []),
-                { label: 'Scores After T/O', value: teamStats.scoresAfterTurnovers },
-              ]}
-              columns={isLandscape ? 4 : 2}
-            />
-          </View>
-        )}
+        <View style={styles.subsectionContainer}>
+          <ThemedText style={[styles.subsectionTitle, { color: palette.textMuted }]}>
+            EFFICIENCY
+          </ThemedText>
+          <StatsGrid
+            stats={[
+              { label: 'Pts/Turn', value: formatDecimal(teamStats.pointsPerTurnover) },
+              { label: 'Blk/D-Pt', value: formatDecimal(teamStats.blocksPerDPoint) },
+              { label: 'Turnover(s)', value: teamStats.totalTurnovers },
+              { label: 'Block(s)', value: teamStats.totalBlocks },
+            ]}
+            columns={isLandscape ? 4 : 2}
+          />
+        </View>
         {pullStats.totalPulls > 0 && (
           <View style={styles.subsectionContainer}>
             <ThemedText style={[styles.subsectionTitle, { color: palette.textMuted }]}>
@@ -212,7 +211,6 @@ export default function AdvancedStatsContent({
             </ThemedText>
             <StatsGrid
               stats={[
-                { label: 'Total', value: pullStats.totalPulls },
                 {
                   label: 'Inbound',
                   value: `${Math.round(((pullStats.outcomes.inbound ?? 0) / pullStats.totalPulls) * 100)}%`,
@@ -227,7 +225,7 @@ export default function AdvancedStatsContent({
                     ]
                   : []),
               ]}
-              columns={pullStats.avgHangTimeMs != null ? 3 : 2}
+              columns={pullStats.avgHangTimeMs != null ? 2 : 1}
             />
           </View>
         )}
