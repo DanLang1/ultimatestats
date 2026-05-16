@@ -31,6 +31,10 @@ function clamp01(v: number): number {
   return Math.max(0, Math.min(1, v));
 }
 
+function hasMetric(metric: Metric | null): metric is Metric {
+  return metric != null;
+}
+
 function buildMetrics(
   participantId: string,
   allStats: AdvancedPlayerStats[],
@@ -38,21 +42,26 @@ function buildMetrics(
   const me = allStats.find((s) => s.participantId === participantId);
   if (!me) return {};
 
+  const subjectStats = me;
   const active = allStats.filter((s) => s.pointsPlayed > 0);
 
   function metric(
     key: string,
     label: string,
-    getValue: (s: AdvancedPlayerStats) => number,
+    getValue: (s: AdvancedPlayerStats) => number | null,
     higherIsBetter: boolean,
     formatValue: (v: number) => string,
-  ): Metric {
-    const values = active.map(getValue);
+    comparisonPool: AdvancedPlayerStats[] = active,
+  ): Metric | null {
+    const raw = getValue(subjectStats);
+    if (raw == null) return null;
+
+    const values = comparisonPool.map(getValue).filter((value): value is number => value != null);
     const teamAvg = values.length > 0 ? values.reduce((a, b) => a + b, 0) / values.length : 0;
     return {
       key,
       label,
-      raw: getValue(me!),
+      raw,
       teamAvg,
       teamMax: Math.max(...values, 0),
       teamMin: Math.min(...values, 0),
@@ -70,12 +79,16 @@ function buildMetrics(
     metric('assists', 'Assists', (s) => s.assists, true, int),
     metric('hockeyAssists', 'Hockey Assists', (s) => s.hockeyAssists, true, int),
     metric('blocks', 'Blocks', (s) => s.blocks, true, int),
-  ].filter((m) => m.raw > 0 || m.teamMax > 0);
+  ]
+    .filter(hasMetric)
+    .filter((m) => m.raw > 0 || m.teamMax > 0);
 
   const mistakeMetrics = [
     metric('throwaways', 'Throwaways', (s) => s.throwaways, false, int),
     metric('drops', 'Drops', (s) => s.drops, false, int),
-  ].filter((m) => m.raw > 0 || m.teamMax > 0);
+  ]
+    .filter(hasMetric)
+    .filter((m) => m.raw > 0 || m.teamMax > 0);
 
   const impactMetrics = [
     metric(
@@ -85,39 +98,83 @@ function buildMetrics(
       true,
       (v) => (v > 0 ? `+${Math.round(v)}` : String(Math.round(v))),
     ),
-  ];
+  ].filter(hasMetric);
 
   const throwingMetrics =
     active.filter((s) => s.throwAttempts > 0).length > 1
       ? [
-          metric('completionPct', 'Completion %', (s) => s.completionPct ?? 0, true, pct),
-          metric('throwAttempts', 'Throw Attempts', (s) => s.throwAttempts, true, int),
-        ].filter((m) => m.raw > 0 || m.teamMax > 0)
+          metric(
+            'completionPct',
+            'Completion %',
+            (s) => s.completionPct,
+            true,
+            pct,
+            active.filter((s) => s.throwAttempts > 0),
+          ),
+          metric(
+            'throwAttempts',
+            'Throw Attempts',
+            (s) => s.throwAttempts,
+            true,
+            int,
+            active.filter((s) => s.throwAttempts > 0),
+          ),
+        ]
+          .filter(hasMetric)
+          .filter((m) => m.raw > 0 || m.teamMax > 0)
       : [];
 
   const efficiencyMetrics = [
     ...(active.some((s) => s.oPoints > 0)
-      ? [metric('oEfficiency', 'O-Efficiency', (s) => s.oEfficiency ?? 0, true, pct)]
+      ? [
+          metric(
+            'oEfficiency',
+            'O-Efficiency',
+            (s) => s.oEfficiency,
+            true,
+            pct,
+            active.filter((s) => s.oPoints > 0),
+          ),
+        ]
       : []),
     ...(active.some((s) => s.dPoints > 0)
-      ? [metric('dEfficiency', 'D-Efficiency', (s) => s.dEfficiency ?? 0, true, pct)]
+      ? [
+          metric(
+            'dEfficiency',
+            'D-Efficiency',
+            (s) => s.dEfficiency,
+            true,
+            pct,
+            active.filter((s) => s.dPoints > 0),
+          ),
+        ]
       : []),
     metric('pointsPlayed', 'Points Played', (s) => s.pointsPlayed, true, int),
     ...(active.some((s) => s.playingTimePct != null)
-      ? [metric('playingTimePct', 'Playing Time', (s) => s.playingTimePct ?? 0, true, pct)]
+      ? [
+          metric(
+            'playingTimePct',
+            'Playing Time',
+            (s) => s.playingTimePct,
+            true,
+            pct,
+            active.filter((s) => s.playingTimePct != null),
+          ),
+        ]
       : []),
     ...(active.some((s) => s.pointDurationMs != null)
       ? [
           metric(
             'minutesPlayed',
             'Minutes Played',
-            (s) => (s.pointDurationMs != null ? s.pointDurationMs / 60000 : 0),
+            (s) => (s.pointDurationMs != null ? s.pointDurationMs / 60000 : null),
             true,
             dec1,
+            active.filter((s) => s.pointDurationMs != null),
           ),
         ]
       : []),
-  ];
+  ].filter(hasMetric);
 
   const result: Record<string, Metric[]> = {};
   if (productionMetrics.length > 0) result['PRODUCTION'] = productionMetrics;

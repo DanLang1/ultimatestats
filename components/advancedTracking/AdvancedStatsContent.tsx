@@ -29,6 +29,8 @@ interface AdvancedStatsContentProps {
   opponentScore: number;
   focusSideId: string;
   participantNames: Map<string, string>;
+  aggregateInfo?: { gameCount: number };
+  aggregateGameIds?: string[];
 }
 
 export default function AdvancedStatsContent({
@@ -40,6 +42,8 @@ export default function AdvancedStatsContent({
   opponentScore,
   focusSideId,
   participantNames,
+  aggregateInfo,
+  aggregateGameIds,
 }: AdvancedStatsContentProps) {
   const { palette } = useTheme();
   const { isLandscape, sizeClass } = useLayout();
@@ -51,6 +55,25 @@ export default function AdvancedStatsContent({
 
   const sorted = [...playerStats].sort((a, b) => b.plusMinus - a.plusMinus);
   const topPerformers = sorted.filter((p) => p.plusMinus > 0).slice(0, 3);
+  const summaryCenter = aggregateInfo ? (
+    <View
+      style={[
+        styles.summaryBadge,
+        { backgroundColor: palette.indigoOverlay20, borderColor: palette.accent },
+      ]}>
+      <ThemedText style={[styles.summaryBadgeText, { color: palette.accent }]}>
+        {aggregateInfo.gameCount} Game{aggregateInfo.gameCount !== 1 ? 's' : ''} Combined
+      </ThemedText>
+    </View>
+  ) : (
+    <ScoreBadge
+      testID="advanced-stats-score-badge"
+      score1={myScore}
+      score2={opponentScore}
+      size="large"
+      style={styles.scoreBadge}
+    />
+  );
 
   return (
     <>
@@ -70,15 +93,7 @@ export default function AdvancedStatsContent({
               {myTeamName}
             </ThemedText>
           </View>
-          <View style={styles.summaryCenter}>
-            <ScoreBadge
-              testID="advanced-stats-score-badge"
-              score1={myScore}
-              score2={opponentScore}
-              size="large"
-              style={styles.scoreBadge}
-            />
-          </View>
+          <View style={styles.summaryCenter}>{summaryCenter}</View>
           <View style={[styles.teamBlock, styles.teamBlockRight]}>
             <ThemedText
               testID="advanced-stats-opponent-name"
@@ -247,11 +262,22 @@ export default function AdvancedStatsContent({
         <AdvancedStatsTable
           playerStats={playerStats}
           participantNames={participantNames}
-          onPlayerPress={(participantId) =>
-            router.push({
-              pathname: '/advancedTracking/analytics/playerStats',
-              params: { gameId, participantId },
-            })
+          onPlayerPress={
+            aggregateInfo && aggregateGameIds
+              ? (participantId) =>
+                  router.push({
+                    pathname: '/advancedTracking/analytics/playerStats',
+                    params: {
+                      gameId: 'aggregate',
+                      participantId,
+                      aggregateGameIds: aggregateGameIds.join(','),
+                    },
+                  })
+              : (participantId) =>
+                  router.push({
+                    pathname: '/advancedTracking/analytics/playerStats',
+                    params: { gameId, participantId },
+                  })
           }
         />
       )}
@@ -297,6 +323,16 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     },
     scoreBadge: {
       minWidth: scaleBySizeClass(isLandscape ? 112 : 100, sizeClass),
+    },
+    summaryBadge: {
+      paddingHorizontal: 12,
+      paddingVertical: 4,
+      borderRadius: 12,
+      borderWidth: 1,
+    },
+    summaryBadgeText: {
+      fontSize: scaleBySizeClass(12, sizeClass),
+      fontFamily: Fonts.semiBold,
     },
     topPerformersSection: {
       marginTop: 16,

@@ -14,6 +14,11 @@ import {
   computeAdvancedPlayerStats,
   computeAdvancedPlayerStatsForParticipant,
 } from '@/lib/advancedTracking/advancedPlayerStatsUtils';
+import { aggregateAnalyticsGames } from '@/lib/advancedTracking/aggregateAnalyticsGames';
+import {
+  getAdvancedGameLabel,
+  getAdvancedGameTimestamp,
+} from '@/lib/advancedTracking/advancedGameTeamUtils';
 import { buildAnalyticsGame } from '@/lib/advancedTracking/buildAnalyticsGame';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { Fonts } from '@/theme/theme';
@@ -23,17 +28,39 @@ import React from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 export default function AdvancedPlayerStatsScreen() {
-  const { gameId, participantId } = useLocalSearchParams<{
+  const {
+    gameId,
+    participantId,
+    aggregateGameIds: aggregateGameIdsParam,
+    selectedImpactGameId,
+  } = useLocalSearchParams<{
     gameId?: string;
     participantId?: string;
+    aggregateGameIds?: string;
+    selectedImpactGameId?: string;
   }>();
   const { palette } = useTheme();
   const { isLandscape, sizeClass } = useLayout();
   const styles = createStyles(isLandscape, sizeClass);
   const { savedGames } = useAdvancedTrackingStore();
 
-  const rawGame = gameId ? (savedGames.find((g) => g.id === gameId) ?? null) : null;
-  const analyticsGame = rawGame ? buildAnalyticsGame(rawGame) : null;
+  const aggregateGameIds =
+    gameId === 'aggregate'
+      ? (aggregateGameIdsParam ?? '').split(',').filter((id) => id.length > 0)
+      : [];
+  const rawGame =
+    gameId && gameId !== 'aggregate' ? (savedGames.find((g) => g.id === gameId) ?? null) : null;
+  const aggregateGames = aggregateGameIds
+    .map((id) => savedGames.find((game) => game.id === id))
+    .filter((game) => game != null);
+  let analyticsGame: ReturnType<typeof buildAnalyticsGame> | null;
+  if (gameId === 'aggregate') {
+    analyticsGame = aggregateAnalyticsGames(aggregateGames.map(buildAnalyticsGame));
+  } else if (rawGame) {
+    analyticsGame = buildAnalyticsGame(rawGame);
+  } else {
+    analyticsGame = null;
+  }
   const participantName = analyticsGame?.participantNames.get(participantId ?? '') ?? null;
 
   const allPlayerStats = analyticsGame
@@ -57,7 +84,96 @@ export default function AdvancedPlayerStatsScreen() {
       ? computeAdvancedImpact(analyticsGame, participantId, analyticsGame.focusSideId)
       : [];
 
-  const hasImpact = impactData.length > 0;
+  const aggregateImpactSections =
+    participantId && gameId === 'aggregate'
+      ? aggregateGames
+          .map((game) => {
+            const gameAnalytics = buildAnalyticsGame(game);
+            return {
+              gameId: game.id,
+              label: getAdvancedGameLabel(game),
+              impact: computeAdvancedImpact(
+                gameAnalytics,
+                participantId,
+                gameAnalytics.focusSideId,
+              ),
+            };
+          })
+          .filter((section) =>
+            section.impact.some((point) => point.onField || point.description.length > 0),
+          )
+      : [];
+  const sortedAggregateImpactSections = [...aggregateImpactSections].sort((a, b) => {
+    const aGame = aggregateGames.find((game) => game.id === a.gameId);
+    const bGame = aggregateGames.find((game) => game.id === b.gameId);
+    const aTimestamp = aGame ? getAdvancedGameTimestamp(aGame) : 0;
+    const bTimestamp = bGame ? getAdvancedGameTimestamp(bGame) : 0;
+    return bTimestamp - aTimestamp;
+  });
+  const selectedImpactSection =
+    sortedAggregateImpactSections.find((section) => section.gameId === selectedImpactGameId) ??
+    sortedAggregateImpactSections[0] ??
+    null;
+  const hasMultipleImpactSections = sortedAggregateImpactSections.length > 1;
+  const hasImpact = gameId === 'aggregate' ? selectedImpactSection != null : impactData.length > 0;
+  let impactContent: React.ReactNode = null;
+  if (gameId === 'aggregate' && selectedImpactSection) {
+    impactContent = (
+      <View
+        style={[
+          styles.card,
+          { backgroundColor: palette.overlay02, borderColor: palette.overlay05 },
+        ]}>
+        <View style={styles.gameContextHeader}>
+          <ThemedText style={[styles.gameContextLabel, { color: palette.textMuted }]}>
+            GAME IMPACT
+          </ThemedText>
+          <Pressable
+            disabled={!hasMultipleImpactSections}
+            onPress={() =>
+              router.push({
+                pathname: '/AdvancedGameSelectorModal',
+                params: {
+                  participantId,
+                  aggregateGameIds: aggregateGameIds.join(','),
+                  selectedImpactGameId: selectedImpactSection.gameId,
+                },
+              })
+            }
+            style={[styles.gameContextPill, { backgroundColor: palette.overlay05 }]}>
+            <MaterialCommunityIcons
+              name="calendar"
+              size={scaleBySizeClass(16, sizeClass)}
+              color={palette.textMuted}
+            />
+            <ThemedText style={[styles.gameContextText, { color: palette.textInverse }]}>
+              {selectedImpactSection.label}
+            </ThemedText>
+            {hasMultipleImpactSections && (
+              <MaterialCommunityIcons
+                name="chevron-down"
+                size={scaleBySizeClass(18, sizeClass)}
+                color={palette.textMuted}
+              />
+            )}
+          </Pressable>
+        </View>
+        <AdvancedImpactTimeline data={selectedImpactSection.impact} />
+        <AdvancedPointPresenceStrip impactPoints={selectedImpactSection.impact} />
+      </View>
+    );
+  } else if (hasImpact) {
+    impactContent = (
+      <View
+        style={[
+          styles.card,
+          { backgroundColor: palette.overlay02, borderColor: palette.overlay05 },
+        ]}>
+        <AdvancedImpactTimeline data={impactData} />
+        <AdvancedPointPresenceStrip impactPoints={impactData} />
+      </View>
+    );
+  }
 
   if (!analyticsGame || !participantId || !stats || !participantName) {
     return (
@@ -200,16 +316,7 @@ export default function AdvancedPlayerStatsScreen() {
         </View>
 
         <View style={styles.grid}>
-          {hasImpact && (
-            <View
-              style={[
-                styles.card,
-                { backgroundColor: palette.overlay02, borderColor: palette.overlay05 },
-              ]}>
-              <AdvancedImpactTimeline data={impactData} />
-              <AdvancedPointPresenceStrip impactPoints={impactData} />
-            </View>
-          )}
+          {impactContent}
 
           <AdvancedRelativeStatsSection
             participantId={participantId}
@@ -362,6 +469,29 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
       overflow: 'hidden',
       paddingVertical: 12,
       minHeight: 250,
+    },
+    gameContextHeader: {
+      paddingHorizontal: 16,
+      marginBottom: 12,
+      gap: 6,
+    },
+    gameContextLabel: {
+      fontSize: scaleBySizeClass(10, sizeClass),
+      fontFamily: Fonts.semiBold,
+      letterSpacing: 0.5,
+    },
+    gameContextPill: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      alignSelf: 'flex-start',
+      gap: 6,
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+      borderRadius: 8,
+    },
+    gameContextText: {
+      fontSize: scaleBySizeClass(14, sizeClass),
+      fontFamily: Fonts.semiBold,
     },
   });
 }

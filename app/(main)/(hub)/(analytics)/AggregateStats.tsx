@@ -1,4 +1,7 @@
 import { ThemedView } from '@/components/ThemedView';
+import AdvancedAggregateGamesList from '@/components/advancedTracking/AdvancedAggregateGamesList';
+import AdvancedStatsContent from '@/components/advancedTracking/AdvancedStatsContent';
+import { ThemedText } from '@/components/ThemedText';
 import { useAlert } from '@/components/ui/AlertProvider';
 import {
   ResponsiveHeaderAction,
@@ -12,19 +15,29 @@ import AggregateGamesList from '@/components/view-stats/AggregateGamesList';
 import StatsContent from '@/components/view-stats/StatsContent';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { aggregateAnalyticsGames } from '@/lib/advancedTracking/aggregateAnalyticsGames';
+import {
+  getAdvancedFocusTeamId,
+  getAdvancedFocusTeamName,
+} from '@/lib/advancedTracking/advancedGameTeamUtils';
+import { buildAnalyticsGame } from '@/lib/advancedTracking/buildAnalyticsGame';
 import { MAX_SHARE_GAMES } from '@/lib/constants';
 import { resolveTeamName } from '@/lib/playerUtils';
 import { serializeGames, uploadPayload } from '@/lib/sharing';
 import { generateAggregateCSV } from '@/lib/statsUtils';
 import { GameEvent, Player, SavedGame } from '@/lib/storage';
+import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { useGameStore } from '@/store/gameStore';
 import { useTournamentStore } from '@/store/tournamentStore';
+import { Fonts } from '@/theme/theme';
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 import { File, Paths } from 'expo-file-system';
 import { router, Stack } from 'expo-router';
 import * as Sharing from 'expo-sharing';
 import React, { useState } from 'react';
-import { ScrollView, Share, StyleSheet } from 'react-native';
+import { Pressable, ScrollView, Share, StyleSheet, View } from 'react-native';
+
+type AggregateMode = 'basic' | 'advanced';
 
 export default function AggregateStatsScreen() {
   const { palette } = useTheme();
@@ -32,8 +45,11 @@ export default function AggregateStatsScreen() {
   const styles = createStyles(isLandscape, sizeClass);
   const { showAlert } = useAlert();
   const { savedGames, savedTeams, updateSavedGameTournament } = useGameStore();
+  const { savedGames: advancedSavedGames } = useAdvancedTrackingStore();
   const { tournaments } = useTournamentStore();
+  const [aggregateMode, setAggregateMode] = useState<AggregateMode>('basic');
   const [selectedTeam, setSelectedTeam] = useState<string | null>(null);
+  const [selectedAdvancedTeamId, setSelectedAdvancedTeamId] = useState<string | null>(null);
   const [selectedGameIds, setSelectedGameIds] = useState<Set<string>>(new Set());
   const [showingAggregatedStats, setShowingAggregatedStats] = useState(false);
   const [tournamentFilter, setTournamentFilter] = useState<string | null>(null);
@@ -74,8 +90,33 @@ export default function AggregateStatsScreen() {
     }
   }
 
+  const selectedAdvancedGames =
+    aggregateMode === 'advanced'
+      ? advancedSavedGames.filter((game) => selectedGameIds.has(game.id))
+      : [];
+  const advancedAnalyticsGames = selectedAdvancedGames.map(buildAnalyticsGame);
+  const aggregatedAdvancedGame =
+    advancedAnalyticsGames.length > 0 ? aggregateAnalyticsGames(advancedAnalyticsGames) : null;
+  const advancedTeamName =
+    aggregatedAdvancedGame?.sideLabels[aggregatedAdvancedGame.focusSideId] ?? 'My Team';
+
   const handleSelectTeam = (teamId: string) => {
     setSelectedTeam(teamId);
+    setSelectedGameIds(new Set());
+    setShowingAggregatedStats(false);
+    setTournamentFilter(null);
+  };
+
+  const handleSelectAdvancedTeam = (teamId: string) => {
+    setSelectedAdvancedTeamId(teamId);
+    setSelectedGameIds(new Set());
+    setShowingAggregatedStats(false);
+  };
+
+  const handleSetAggregateMode = (mode: AggregateMode) => {
+    setAggregateMode(mode);
+    setSelectedTeam(null);
+    setSelectedAdvancedTeamId(null);
     setSelectedGameIds(new Set());
     setShowingAggregatedStats(false);
     setTournamentFilter(null);
@@ -182,11 +223,25 @@ export default function AggregateStatsScreen() {
       return;
     }
 
+    if (selectedAdvancedTeamId) {
+      setSelectedAdvancedTeamId(null);
+      setSelectedGameIds(new Set());
+      setShowingAggregatedStats(false);
+      return;
+    }
+
     router.back();
   };
 
   const getHeaderTitle = () => {
     if (showingAggregatedStats) return 'COMBINED STATS';
+    if (aggregateMode === 'advanced' && selectedAdvancedTeamId) {
+      const gameForSide = advancedSavedGames.find(
+        (game) => getAdvancedFocusTeamId(game) === selectedAdvancedTeamId,
+      );
+      const sideName = gameForSide ? getAdvancedFocusTeamName(gameForSide) : 'Advanced Team';
+      return sideName.toUpperCase();
+    }
     if (!selectedTeam) return 'AGGREGATE STATS';
 
     const gameForTeam = savedGames.find((game) => game.team1.id === selectedTeam);
@@ -203,7 +258,7 @@ export default function AggregateStatsScreen() {
       key: 'csv',
       label: 'Export CSV',
       onPress: handleExportCSV,
-      visible: showingAggregatedStats,
+      visible: showingAggregatedStats && aggregateMode === 'basic',
       inlineIcon: (
         <FontAwesome6
           name="file-csv"
@@ -221,7 +276,73 @@ export default function AggregateStatsScreen() {
     },
   ];
 
-  const scrollKey = `aggregate-${showingAggregatedStats ? 'stats' : 'picker'}-${selectedTeam ?? ''}`;
+  const scrollKey = `aggregate-${aggregateMode}-${showingAggregatedStats ? 'stats' : 'picker'}-${selectedTeam ?? selectedAdvancedTeamId ?? ''}`;
+
+  let mainContent: React.ReactNode;
+  if (showingAggregatedStats && aggregatedAdvancedGame && aggregateMode === 'advanced') {
+    mainContent = (
+      <AdvancedStatsContent
+        game={aggregatedAdvancedGame}
+        gameId="aggregate"
+        myTeamName={advancedTeamName}
+        opponentName="Opponents"
+        myScore={0}
+        opponentScore={0}
+        focusSideId={aggregatedAdvancedGame.focusSideId}
+        participantNames={aggregatedAdvancedGame.participantNames}
+        aggregateInfo={{ gameCount: selectedAdvancedGames.length }}
+        aggregateGameIds={selectedAdvancedGames.map((game) => game.id)}
+      />
+    );
+  } else if (showingAggregatedStats && aggregatedData) {
+    mainContent = (
+      <StatsContent
+        team1Name={aggregatedData.teamName}
+        team2Name=""
+        events={aggregatedData.events}
+        roster={aggregatedData.roster}
+        aggregateInfo={{
+          teamName: aggregatedData.teamName,
+          gameCount: aggregatedData.gameCount,
+        }}
+        startingPossession={null}
+        gameTo={15}
+        games={aggregatedData.games}
+        pointLines={aggregatedData.games.flatMap((game) => game.pointLines ?? [])}
+      />
+    );
+  } else if (aggregateMode === 'advanced') {
+    mainContent = (
+      <AdvancedAggregateGamesList
+        games={advancedSavedGames}
+        selectedTeamId={selectedAdvancedTeamId}
+        selectedGameIds={selectedGameIds}
+        onSelectTeam={handleSelectAdvancedTeam}
+        onToggleGameSelection={handleToggleGameSelection}
+        onSelectAllGames={handleSelectAllGames}
+        onDeselectAllGames={handleDeselectAllGames}
+      />
+    );
+  } else {
+    mainContent = (
+      <AggregateGamesList
+        games={savedGames}
+        selectedTeam={selectedTeam}
+        selectedGameIds={selectedGameIds}
+        onSelectTeam={handleSelectTeam}
+        onToggleGameSelection={handleToggleGameSelection}
+        onSelectAllGames={handleSelectAllGames}
+        onDeselectAllGames={handleDeselectAllGames}
+        tournaments={tournaments}
+        tournamentFilter={tournamentFilter}
+        onSetTournamentFilter={(id) => {
+          setTournamentFilter(id);
+          setSelectedGameIds(new Set());
+        }}
+        onCreateTournament={() => router.push('/CreateTournament')}
+      />
+    );
+  }
 
   return (
     <ThemedView style={[styles.container, { backgroundColor: palette.primary }]}>
@@ -237,48 +358,54 @@ export default function AggregateStatsScreen() {
       />
 
       <ScrollView key={scrollKey} contentContainerStyle={styles.scrollContent}>
-        {showingAggregatedStats && aggregatedData ? (
-          <StatsContent
-            team1Name={aggregatedData.teamName}
-            team2Name=""
-            events={aggregatedData.events}
-            roster={aggregatedData.roster}
-            aggregateInfo={{
-              teamName: aggregatedData.teamName,
-              gameCount: aggregatedData.gameCount,
-            }}
-            startingPossession={null}
-            gameTo={15}
-            games={aggregatedData.games}
-            pointLines={aggregatedData.games.flatMap((game) => game.pointLines ?? [])}
-          />
-        ) : (
-          <AggregateGamesList
-            games={savedGames}
-            selectedTeam={selectedTeam}
-            selectedGameIds={selectedGameIds}
-            onSelectTeam={handleSelectTeam}
-            onToggleGameSelection={handleToggleGameSelection}
-            onSelectAllGames={handleSelectAllGames}
-            onDeselectAllGames={handleDeselectAllGames}
-            tournaments={tournaments}
-            tournamentFilter={tournamentFilter}
-            onSetTournamentFilter={(id) => {
-              setTournamentFilter(id);
-              setSelectedGameIds(new Set());
-            }}
-            onCreateTournament={() => router.push('/CreateTournament')}
-          />
+        {!showingAggregatedStats && (
+          <View style={styles.modeSwitch}>
+            {(['basic', 'advanced'] as const).map((mode) => {
+              const isActive = aggregateMode === mode;
+              return (
+                <Pressable
+                  key={mode}
+                  onPress={() => handleSetAggregateMode(mode)}
+                  style={[
+                    styles.modeButton,
+                    { backgroundColor: isActive ? palette.accent : palette.overlay05 },
+                  ]}>
+                  <View style={styles.modeButtonContent}>
+                    <FontAwesome6
+                      name={mode === 'basic' ? 'chart-simple' : 'chart-line'}
+                      size={scaleBySizeClass(14, sizeClass)}
+                      color={isActive ? palette.textOnAccent : palette.textMuted}
+                    />
+                    <ThemedText
+                      style={[
+                        styles.modeButtonText,
+                        { color: isActive ? palette.textOnAccent : palette.textMuted },
+                      ]}>
+                      {mode === 'basic' ? 'Basic' : 'Advanced'}
+                    </ThemedText>
+                  </View>
+                </Pressable>
+              );
+            })}
+          </View>
         )}
+
+        {mainContent}
       </ScrollView>
 
       <AggregateBottomBar
-        isVisible={!!selectedTeam && !showingAggregatedStats}
+        isVisible={
+          ((aggregateMode === 'basic' && !!selectedTeam) ||
+            (aggregateMode === 'advanced' && !!selectedAdvancedTeamId)) &&
+          !showingAggregatedStats
+        }
         selectedCount={selectedGameIds.size}
         onViewAggregated={() => setShowingAggregatedStats(true)}
-        showAddToTournament={!tournamentFilter && selectedGameIds.size > 0}
+        showAddToTournament={
+          aggregateMode === 'basic' && !tournamentFilter && selectedGameIds.size > 0
+        }
         onAddToTournament={() => setShowTournamentPicker(true)}
-        showShare={selectedGameIds.size > 0}
+        showShare={aggregateMode === 'basic' && selectedGameIds.size > 0}
         onShare={handleShareGames}
       />
 
@@ -318,6 +445,26 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
       padding: isLandscape ? 14 : 24,
       paddingTop: isLandscape ? 8 : 16,
       paddingBottom: 100,
+    },
+    modeSwitch: {
+      flexDirection: 'row',
+      gap: 8,
+      marginBottom: 16,
+    },
+    modeButton: {
+      flex: 1,
+      borderRadius: 8,
+      paddingVertical: 10,
+      alignItems: 'center',
+    },
+    modeButtonContent: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    modeButtonText: {
+      fontSize: scaleBySizeClass(13, sizeClass),
+      fontFamily: Fonts.semiBold,
     },
   });
 }
