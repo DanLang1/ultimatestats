@@ -1,6 +1,6 @@
-import { Redirect } from 'expo-router';
 import { useActiveGameSession } from '@/hooks/useActiveGameSession';
 import { useTutorialStore } from '@/store/tutorialStore';
+import { Redirect } from 'expo-router';
 
 export default function IndexRoute() {
   const activeSession = useActiveGameSession();

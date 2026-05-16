@@ -16,7 +16,7 @@ Defined across:
 
 ### Primary Screens
 
-- `/` (`app/(main)/index.tsx`)
+- `/` (`app/index.tsx`)
 - `/TutorialIntro` (`app/(main)/TutorialIntro.tsx`)
 - `/TutorialScoreboard` (`app/(main)/TutorialScoreboard.tsx`)
 - `/TutorialComplete` (`app/(main)/TutorialComplete.tsx`)
@@ -51,7 +51,7 @@ Defined across:
   - Stats: `/ViewStats`, `/PlayerStats`, `/SavedGameStats`, `/AggregateStats`, `/GameTimeline`, `/saved-games/[gameId]`
   - Team: `/EditRoster`
 - Scoreboard is a real hub tab, but the tab bar is hidden while `/Scoreboard` is visible. Pressing the Game tab routes to `/Scoreboard` for fresh/in-progress sessions or starts a fresh game flow for completed sessions when the current session is finished.
-- Entry-route behavior: `/` is a declarative entry route. It waits for `useTutorialStore` hydration, sends first-launch users to `/TutorialIntro`, redirects to `/Scoreboard` for active/in-progress sessions, redirects to `/GameComplete` for finished sessions with a pending post-game decision, and otherwise lands on `/Dashboard`.
+- Entry-route behavior: `/` is the root declarative entry route. It waits for `useTutorialStore` hydration, sends first-launch users to `/TutorialIntro`, redirects to the active game session route when one exists, and otherwise lands on `/Dashboard`.
 
 ### Onboarding Flow
 

@@ -62,7 +62,7 @@ const TAB_CONFIG: Record<HubTabRouteName, TabConfig> = {
     href: '/Scoreboard',
     inactiveIcon: 'scoreboard-outline',
     label: 'Game',
-    rootRoute: 'index',
+    rootRoute: 'Scoreboard',
   },
   '(team)': {
     activeIcon: 'account-group',
