@@ -212,7 +212,7 @@ describe('advancedTrackingStore — edge cases', () => {
       expect(game.points[0].possessions).toHaveLength(1);
     });
 
-    it('undoing a stoppage also removes linked subs', () => {
+    it('canceling an active stoppage also removes linked subs', () => {
       createGame();
       useAdvancedTrackingStore.getState().recordPull({
         lines: [
@@ -235,14 +235,9 @@ describe('advancedTrackingStore — edge cases', () => {
       let game = getCurrentGame()!;
       expect(getCurrentPoint(game)?.subs).toHaveLength(1);
 
-      // Undo sub first
-      useAdvancedTrackingStore.getState().undoLastOperation();
+      useAdvancedTrackingStore.getState().cancelStoppage(stoppageId);
       game = getCurrentGame()!;
       expect(getCurrentPoint(game)?.subs).toBeUndefined();
-
-      // Undo stoppage
-      useAdvancedTrackingStore.getState().undoLastOperation();
-      game = getCurrentGame()!;
       expect(getCurrentPoint(game)?.possessions[0].actions.at(-1)?.kind).toBe('pull');
     });
   });

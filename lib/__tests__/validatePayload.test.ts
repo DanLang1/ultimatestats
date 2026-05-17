@@ -1,5 +1,5 @@
-import { validatePayload } from '../sharing/validate';
 import type { AdvancedTrackedGame } from '../advancedTracking/types';
+import { validatePayload } from '../sharing/validate';
 
 function makeGamePayload(overrides: Record<string, unknown> = {}): unknown {
   return {
@@ -305,7 +305,7 @@ describe('validatePayload', () => {
     });
 
     it('throws when advanced actions exceed limit', () => {
-      const actions = Array.from({ length: 1501 }, (_, index) => ({
+      const actions = Array.from({ length: 10000 }, (_, index) => ({
         id: `throw-${index}`,
         kind: 'throw',
         sideId: 'home',

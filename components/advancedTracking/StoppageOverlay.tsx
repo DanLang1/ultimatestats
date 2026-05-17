@@ -30,7 +30,7 @@ export const StoppageOverlay = ({ game }: StoppageOverlayProps) => {
   const { sizeClass } = useLayout();
   const styles = createStyles(sizeClass);
 
-  const { resumeStoppage, undoLastOperation } = useAdvancedTrackingStore();
+  const { cancelStoppage, resumeStoppage } = useAdvancedTrackingStore();
 
   const point = getCurrentPoint(game);
   const possession = getCurrentPossession(game);
@@ -73,11 +73,8 @@ export const StoppageOverlay = ({ game }: StoppageOverlayProps) => {
     resumeStoppage(activeStoppage.id);
   };
 
-  const handleUndo = () => {
-    if (injurySub) {
-      undoLastOperation(); // undo sub
-    }
-    undoLastOperation(); // undo stoppage
+  const handleCancel = () => {
+    cancelStoppage(activeStoppage.id);
   };
 
   let mainContent: React.ReactNode;
@@ -220,15 +217,15 @@ export const StoppageOverlay = ({ game }: StoppageOverlayProps) => {
               </ThemedText>
             </Pressable>
             <Pressable
-              testID="stoppage-undo"
-              onPress={handleUndo}
+              testID="stoppage-cancel"
+              onPress={handleCancel}
               hitSlop={8}
               style={[
-                styles.undoIconBtn,
+                styles.cancelIconBtn,
                 { borderColor: palette.overlay20, backgroundColor: palette.overlay05 },
               ]}>
               <MaterialCommunityIcons
-                name="undo"
+                name="close"
                 size={scaleBySizeClass(20, sizeClass)}
                 color={palette.textMuted}
               />
@@ -238,16 +235,16 @@ export const StoppageOverlay = ({ game }: StoppageOverlayProps) => {
           <View style={styles.buttonRow}>
             {primaryBtn}
             <Pressable
-              testID="stoppage-undo"
+              testID="stoppage-cancel"
               style={({ pressed }) => [
                 styles.actionBtn,
-                styles.undoBtn,
+                styles.cancelBtn,
                 { borderColor: palette.overlay20, backgroundColor: palette.overlay05 },
                 pressed && { opacity: 0.7 },
               ]}
-              onPress={handleUndo}>
+              onPress={handleCancel}>
               <ThemedText style={[styles.actionBtnText, { color: palette.textInverse }]}>
-                UNDO
+                CANCEL
               </ThemedText>
             </Pressable>
           </View>
@@ -306,13 +303,13 @@ function createStyles(sizeClass: SizeClass) {
       justifyContent: 'center',
     },
     resumeBtn: { flex: 2 },
-    undoBtn: { flex: 1 },
+    cancelBtn: { flex: 1 },
     actionBtnText: {
       fontFamily: Fonts.black,
       fontSize: scaleBySizeClass(14, sizeClass),
       letterSpacing: 1,
     },
-    undoIconBtn: {
+    cancelIconBtn: {
       width: scaleBySizeClass(56, sizeClass),
       paddingVertical: scaleBySizeClass(18, sizeClass),
       borderWidth: 1,

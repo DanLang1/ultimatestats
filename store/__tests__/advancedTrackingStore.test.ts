@@ -761,6 +761,7 @@ describe('advancedTrackingStore', () => {
       receiver: august,
       result: 'inbound',
     });
+    const undoCountBefore = useAdvancedTrackingStore.getState().undoStack.length;
 
     const stoppageId = useAdvancedTrackingStore.getState().recordStoppage({
       reason: 'timeout',
@@ -777,6 +778,7 @@ describe('advancedTrackingStore', () => {
       expect(lastAction.sideId).toBe(homeSideId);
       expect(lastAction.pausedAt).toBeDefined();
     }
+    expect(useAdvancedTrackingStore.getState().undoStack).toHaveLength(undoCountBefore);
   });
 
   it('resumeStoppage sets resumedAt on the stoppage action', () => {
@@ -802,7 +804,7 @@ describe('advancedTrackingStore', () => {
     }
   });
 
-  it('undoLastOperation reverts a stoppage resume', () => {
+  it('resumeStoppage does not add to the stat undo stack', () => {
     createGame();
 
     useAdvancedTrackingStore.getState().recordPull({
@@ -813,18 +815,18 @@ describe('advancedTrackingStore', () => {
     });
 
     const stoppageId = useAdvancedTrackingStore.getState().recordStoppage({ reason: 'injury' });
+    const undoCountBefore = useAdvancedTrackingStore.getState().undoStack.length;
     useAdvancedTrackingStore.getState().resumeStoppage(stoppageId);
-
-    expect(useAdvancedTrackingStore.getState().undoLastOperation()).toBe(true);
 
     const point = getCurrentPoint(getCurrentGame());
     const lastAction = point?.possessions[0].actions.at(-1);
 
     if (lastAction?.kind === 'stoppage') {
-      expect(lastAction.resumedAt).toBeUndefined();
+      expect(lastAction.resumedAt).toBeDefined();
     } else {
       fail('Expected last action to be a stoppage');
     }
+    expect(useAdvancedTrackingStore.getState().undoStack).toHaveLength(undoCountBefore);
   });
 
   it('recordSub attaches a PointSub to the current point', () => {
@@ -838,6 +840,7 @@ describe('advancedTrackingStore', () => {
     });
 
     const stoppageId = useAdvancedTrackingStore.getState().recordStoppage({ reason: 'injury' });
+    const undoCountBefore = useAdvancedTrackingStore.getState().undoStack.length;
     useAdvancedTrackingStore.getState().recordSub({
       stoppageActionId: stoppageId,
       sideId: homeSideId,
@@ -851,6 +854,7 @@ describe('advancedTrackingStore', () => {
     expect(point?.subs![0].inIds).toEqual([meves.participantId]);
     expect(point?.subs![0].outIds).toEqual([august.participantId]);
     expect(point?.subs![0].type).toBe('injury');
+    expect(useAdvancedTrackingStore.getState().undoStack).toHaveLength(undoCountBefore);
   });
 
   it('recordSub appends multiple injury subs in the same point', () => {
@@ -975,7 +979,7 @@ describe('advancedTrackingStore', () => {
     });
   });
 
-  it('undoLastOperation first removes the latest sub, then the linked stoppage', () => {
+  it('cancelStoppage removes the active stoppage and linked sub', () => {
     createGame();
 
     useAdvancedTrackingStore.getState().recordPull({
@@ -995,16 +999,90 @@ describe('advancedTrackingStore', () => {
 
     expect(getCurrentPoint(getCurrentGame())?.subs).toHaveLength(1);
 
-    useAdvancedTrackingStore.getState().undoLastOperation(); // undo sub
+    useAdvancedTrackingStore.getState().cancelStoppage(stoppageId);
 
-    let point = getCurrentPoint(getCurrentGame());
+    const point = getCurrentPoint(getCurrentGame());
     expect(point?.subs).toBeUndefined();
-    expect(point?.possessions[0].actions.at(-1)?.kind).toBe('stoppage');
-
-    useAdvancedTrackingStore.getState().undoLastOperation(); // undo stoppage
-
-    point = getCurrentPoint(getCurrentGame());
     expect(point?.possessions[0].actions.at(-1)?.kind).toBe('pull');
+  });
+
+  it('cancelStoppage removes a timeout stoppage without subs', () => {
+    createGame();
+
+    useAdvancedTrackingStore.getState().recordPull({
+      lines: homeLinesAugust,
+      puller: untracked,
+      receiver: august,
+      result: 'inbound',
+    });
+
+    const stoppageId = useAdvancedTrackingStore
+      .getState()
+      .recordStoppage({ reason: 'timeout', sideId: homeSideId });
+
+    const pointBefore = getCurrentPoint(getCurrentGame());
+    expect(pointBefore?.possessions[0].actions.at(-1)?.kind).toBe('stoppage');
+
+    useAdvancedTrackingStore.getState().cancelStoppage(stoppageId);
+
+    const pointAfter = getCurrentPoint(getCurrentGame());
+    expect(pointAfter?.possessions[0].actions.at(-1)?.kind).toBe('pull');
+  });
+
+  it('cancelStoppage throws after the stoppage has been resumed', () => {
+    createGame();
+
+    useAdvancedTrackingStore.getState().recordPull({
+      lines: homeLinesAugust,
+      puller: untracked,
+      receiver: august,
+      result: 'inbound',
+    });
+
+    const stoppageId = useAdvancedTrackingStore.getState().recordStoppage({ reason: 'injury' });
+    useAdvancedTrackingStore.getState().resumeStoppage(stoppageId);
+
+    expect(() => useAdvancedTrackingStore.getState().cancelStoppage(stoppageId)).toThrow(
+      'Cannot cancel a stoppage after it has resumed.',
+    );
+  });
+
+  it('cancelStoppage throws when the action is not the last action', () => {
+    createGame();
+
+    useAdvancedTrackingStore.getState().recordPull({
+      lines: homeLinesAugust,
+      puller: untracked,
+      receiver: august,
+      result: 'inbound',
+    });
+
+    const firstStoppageId = useAdvancedTrackingStore
+      .getState()
+      .recordStoppage({ reason: 'manual_pause' });
+    useAdvancedTrackingStore.getState().resumeStoppage(firstStoppageId);
+
+    useAdvancedTrackingStore.getState().recordThrow({
+      thrower: august,
+      result: 'complete',
+    });
+
+    expect(() => useAdvancedTrackingStore.getState().cancelStoppage(firstStoppageId)).toThrow(
+      `Stoppage action "${firstStoppageId}" not found as last action.`,
+    );
+  });
+
+  it('cancelStoppage throws when there is no active game', () => {
+    expect(() => useAdvancedTrackingStore.getState().cancelStoppage('nonexistent')).toThrow(
+      'No active game.',
+    );
+  });
+
+  it('cancelStoppage throws when there are no points yet', () => {
+    createGame();
+    expect(() => useAdvancedTrackingStore.getState().cancelStoppage('nonexistent')).toThrow(
+      'No active point.',
+    );
   });
 
   it('finalizeGame succeeds when the score reaches the effective gameTo target', () => {

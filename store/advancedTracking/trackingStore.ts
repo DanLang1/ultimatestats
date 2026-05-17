@@ -592,12 +592,6 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
               recordedAt: now,
               pausedAt: now,
             });
-            pushUndoEntry(state, {
-              kind: 'action',
-              pointId: currentPoint.id,
-              possessionId: possession.id,
-              actionId,
-            });
             liveGame.updatedAt = now;
           });
 
@@ -621,18 +615,35 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
           const now = Date.now();
           set((state) => {
             const liveGame = getCurrentGame(state);
-            const livePoint = getCurrentPoint(liveGame)!;
             const livePossession = getCurrentPossession(liveGame)!;
             const action = livePossession.actions[livePossession.actions.length - 1];
             if (action?.kind === 'stoppage') {
               action.resumedAt = now;
             }
-            pushUndoEntry(state, {
-              kind: 'resume_stoppage',
-              pointId: livePoint.id,
-              actionId,
-            });
             liveGame.updatedAt = now;
+          });
+        },
+
+        cancelStoppage: (actionId: string) => {
+          const game = getCurrentGame(get());
+          const point = getCurrentPoint(game);
+          if (point == null) throw new Error('No active point.');
+
+          const possession = getCurrentPossession(game);
+          const last = possession?.actions[possession.actions.length - 1];
+          if (!last || last.kind !== 'stoppage' || last.id !== actionId) {
+            throw new Error(`Stoppage action "${actionId}" not found as last action.`);
+          }
+          if (last.resumedAt != null) {
+            throw new Error('Cannot cancel a stoppage after it has resumed.');
+          }
+
+          set((state) => {
+            const liveGame = getCurrentGame(state);
+            const livePoint = getCurrentPoint(liveGame)!;
+            const livePossession = getCurrentPossession(liveGame)!;
+            removeActionById(liveGame, livePoint.id, livePossession.id, actionId);
+            liveGame.updatedAt = Date.now();
           });
         },
 
@@ -661,11 +672,6 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
               inIds: input.inIds,
               outIds: input.outIds,
               stoppageActionId: input.stoppageActionId,
-            });
-            pushUndoEntry(state, {
-              kind: 'sub',
-              pointId: livePoint.id,
-              subId,
             });
             liveGame.updatedAt = Date.now();
           });
@@ -774,28 +780,6 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
                 );
                 if (point.transitionsAfter.length === 0) {
                   point.transitionsAfter = undefined;
-                }
-              }
-            } else if (lastUndoEntry.kind === 'sub') {
-              const point = liveGame.points.find(
-                (candidate) => candidate.id === lastUndoEntry.pointId,
-              );
-              if (point?.subs != null) {
-                point.subs = point.subs.filter((sub) => sub.id !== lastUndoEntry.subId);
-                if (point.subs.length === 0) {
-                  point.subs = undefined;
-                }
-              }
-            } else if (lastUndoEntry.kind === 'resume_stoppage') {
-              const point = liveGame.points.find(
-                (candidate) => candidate.id === lastUndoEntry.pointId,
-              );
-              for (const possession of point?.possessions ?? []) {
-                const action = possession.actions.find(
-                  (candidate) => candidate.id === lastUndoEntry.actionId,
-                );
-                if (action?.kind === 'stoppage') {
-                  action.resumedAt = undefined;
                 }
               }
             } else if (lastUndoEntry.kind === 'amend_throw_result') {

@@ -397,12 +397,12 @@ Undo is still important, but it does not need to mean arbitrary historical rewri
 For v1, undo should be scoped to recent user operations:
 
 - expose one store-level undo entry point
-- undo the most recent undoable user operation, regardless of whether it was an action, a between-point timeout, or an in-session edit like a stoppage resume or injury sub
+- undo the most recent undoable stat operation, regardless of whether it was an action or a between-point timeout
 - allow the scoring action that caused a derived halftime transition to be undone normally, with halftime re-derived from the updated score progression
 
 That is much closer to the existing app behavior, where undo is mainly a quick recovery tool for recent mistakes rather than a full "edit old history and replay the game" system.
 
-Cap events are the exception: `soft_cap` and `hard_cap` are timer-driven rule changes, not coach-entered game edits, so they should be append-only rather than undoable.
+Clock and injury-flow operations are corrected from their own UI instead of the generic stat undo stack. Active stoppages can be cancelled before resuming; injury subs can be edited from the injury-sub flow. Cap events are also an exception: `soft_cap` and `hard_cap` are timer-driven rule changes, not coach-entered game edits, so they should be append-only rather than undoable.
 
 The recommended implementation approach is:
 

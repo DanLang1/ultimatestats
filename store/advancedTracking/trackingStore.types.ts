@@ -96,16 +96,6 @@ export type AdvancedTrackingUndoEntry =
       transitionId: string;
     }
   | {
-      kind: 'sub';
-      pointId: string;
-      subId: string;
-    }
-  | {
-      kind: 'resume_stoppage';
-      pointId: string;
-      actionId: string;
-    }
-  | {
       kind: 'amend_throw_result';
       pointId: string;
       possessionId: string;
@@ -141,6 +131,7 @@ export interface AdvancedTrackingState {
   amendLastThrowAsGoal: (timerElapsedMs?: number) => void;
   recordStoppage: (input: RecordStoppageInput) => string;
   resumeStoppage: (actionId: string) => void;
+  cancelStoppage: (actionId: string) => void;
   recordSub: (input: RecordSubInput) => void;
   updateSub: (input: UpdateSubInput) => void;
   correctPointLine: (input: CorrectPointLineInput) => void;
