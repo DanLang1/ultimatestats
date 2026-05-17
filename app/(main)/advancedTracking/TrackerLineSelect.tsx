@@ -13,7 +13,7 @@ import React from 'react';
 import { FOCUS_SIDE_ID } from './PreGameConfirm';
 
 export default function TrackerLineSelectScreen() {
-  const { currentGameId, savedGames } = useAdvancedTrackingStore();
+  const { currentGameId, savedGames, resetCurrentGame } = useAdvancedTrackingStore();
   const { genderRatioEnabled, firstPointRatio } = useSettingsStore();
 
   const game = savedGames.find((g) => g.id === currentGameId);
@@ -28,6 +28,15 @@ export default function TrackerLineSelectScreen() {
   const nextSequenceNumber = nextRatio != null ? getSequenceNumber(nextPointNumber) : undefined;
 
   const isInitialLine = game.points.length === 0;
+  const handleBack = () => {
+    if (isInitialLine) {
+      resetCurrentGame();
+      router.dismissTo('/advancedTracking/PreGameConfirm');
+      return;
+    }
+
+    router.dismissTo('/advancedTracking/Tracker');
+  };
 
   return (
     <TrackerLineScreen
@@ -35,7 +44,7 @@ export default function TrackerLineSelectScreen() {
       title={isInitialLine ? 'Starting Line' : undefined}
       expectedRatio={nextRatio}
       sequenceNumber={nextSequenceNumber}
-      onBack={() => router.back()}
+      onBack={handleBack}
       onConfirm={(ids) => {
         const receivingSideId = getReceivingSideForNextPoint(game);
         const isOurPull = receivingSideId !== game.focusSideId;

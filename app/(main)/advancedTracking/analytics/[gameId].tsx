@@ -2,14 +2,22 @@ import AdvancedStatsContent from '@/components/advancedTracking/AdvancedStatsCon
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { useAlert } from '@/components/ui/AlertProvider';
+import {
+  ResponsiveHeaderAction,
+  ResponsiveHeaderActions,
+} from '@/components/ui/ResponsiveHeaderActions';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { generateAdvancedGameCSV } from '@/lib/advancedTracking/advancedCSVUtils';
 import { buildAnalyticsGame, getFinalScores } from '@/lib/advancedTracking/buildAnalyticsGame';
+import { shareFileAndDelete } from '@/lib/shareFileAndDelete';
 import { formatDate } from '@/lib/statsUtils';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { Fonts } from '@/theme/theme';
+import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { File, Paths } from 'expo-file-system';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import React from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
@@ -71,6 +79,31 @@ export default function AdvancedGameStatsScreen() {
     ? new Date(analyticsGame.metadata.date).getTime() || analyticsGame.createdAt
     : analyticsGame.createdAt;
 
+  const handleExportCSV = async () => {
+    try {
+      const csv = generateAdvancedGameCSV(analyticsGame);
+      const safeName = myTeamName.replace(/[^a-zA-Z0-9]/g, '_');
+      const safeOpp = opponentName.replace(/[^a-zA-Z0-9]/g, '_');
+      const filename = `${safeName}_vs_${safeOpp}_advanced`;
+      const file = new File(Paths.cache, `${filename}.csv`);
+      file.write(csv);
+
+      if (await shareFileAndDelete(file)) {
+        return;
+      }
+
+      showAlert({
+        title: 'Sharing not available',
+        message: 'Sharing is not available on this device.',
+      });
+    } catch {
+      showAlert({
+        title: 'Export failed',
+        message: 'Could not export stats to CSV.',
+      });
+    }
+  };
+
   const handleDelete = () => {
     showAlert({
       title: 'Delete Game?',
@@ -89,6 +122,70 @@ export default function AdvancedGameStatsScreen() {
     });
   };
 
+  const headerActions: ResponsiveHeaderAction[] = [
+    {
+      key: 'csv',
+      label: 'Export CSV',
+      onPress: handleExportCSV,
+      inlineIcon: (
+        <FontAwesome6
+          name="file-csv"
+          size={scaleBySizeClass(20, sizeClass)}
+          color={palette.accent}
+        />
+      ),
+      menuIcon: (
+        <FontAwesome6
+          name="file-csv"
+          size={scaleBySizeClass(18, sizeClass)}
+          color={palette.accent}
+        />
+      ),
+    },
+    {
+      key: 'timeline',
+      label: 'Timeline',
+      onPress: () =>
+        router.push({
+          pathname: '/advancedTracking/analytics/timeline/[gameId]',
+          params: { gameId },
+        }),
+      inlineIcon: (
+        <MaterialCommunityIcons
+          name="chart-timeline-variant"
+          size={scaleBySizeClass(24, sizeClass)}
+          color={palette.accent}
+        />
+      ),
+      menuIcon: (
+        <MaterialCommunityIcons
+          name="chart-timeline-variant"
+          size={scaleBySizeClass(20, sizeClass)}
+          color={palette.accent}
+        />
+      ),
+    },
+    {
+      key: 'delete',
+      label: 'Delete',
+      onPress: handleDelete,
+      inlineIcon: (
+        <MaterialCommunityIcons
+          name="delete-outline"
+          size={scaleBySizeClass(20, sizeClass)}
+          color={palette.danger}
+        />
+      ),
+      menuIcon: (
+        <MaterialCommunityIcons
+          name="delete-outline"
+          size={scaleBySizeClass(20, sizeClass)}
+          color={palette.danger}
+        />
+      ),
+    },
+  ];
+
   return (
     <ThemedView style={[styles.container, { backgroundColor: palette.primary }]}>
       <Stack.Screen options={{ headerShown: false }} />
@@ -98,35 +195,7 @@ export default function AdvancedGameStatsScreen() {
         titleColor={palette.textMuted}
         backButtonBackgroundColor={palette.overlay10}
         centerTitleInLandscape={false}
-        rightSlot={
-          <View style={styles.headerActions}>
-            <Pressable
-              onPress={() =>
-                router.push({
-                  pathname: '/advancedTracking/analytics/timeline/[gameId]',
-                  params: { gameId },
-                })
-              }
-              style={[styles.headerButton, { backgroundColor: palette.overlay05 }]}
-              hitSlop={8}>
-              <MaterialCommunityIcons
-                name="timeline-outline"
-                size={scaleBySizeClass(20, sizeClass)}
-                color={palette.accent}
-              />
-            </Pressable>
-            <Pressable
-              onPress={handleDelete}
-              style={[styles.headerButton, { backgroundColor: palette.overlay05 }]}
-              hitSlop={8}>
-              <MaterialCommunityIcons
-                name="delete-outline"
-                size={scaleBySizeClass(20, sizeClass)}
-                color={palette.danger}
-              />
-            </Pressable>
-          </View>
-        }
+        rightSlot={<ResponsiveHeaderActions actions={headerActions} />}
       />
 
       <ScrollView contentContainerStyle={[styles.scrollContent, { paddingBottom: 100 }]}>
@@ -204,18 +273,6 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     recoverButtonText: {
       fontSize: scaleBySizeClass(14, sizeClass),
       fontFamily: Fonts.bold,
-    },
-    headerActions: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 8,
-    },
-    headerButton: {
-      width: scaleBySizeClass(36, sizeClass),
-      height: scaleBySizeClass(36, sizeClass),
-      borderRadius: scaleBySizeClass(18, sizeClass),
-      alignItems: 'center',
-      justifyContent: 'center',
     },
     dateCard: {
       borderRadius: 14,

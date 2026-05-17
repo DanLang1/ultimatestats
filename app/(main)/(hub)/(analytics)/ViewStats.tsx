@@ -13,6 +13,7 @@ import StatsContent from '@/components/view-stats/StatsContent';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { buildAnalyticsGame, getFinalScores } from '@/lib/advancedTracking/buildAnalyticsGame';
+import { shareFileAndDelete } from '@/lib/shareFileAndDelete';
 import { formatDate, generateCurrentGameCSV } from '@/lib/statsUtils';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { useGameStore } from '@/store/gameStore';
@@ -22,7 +23,6 @@ import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { File, Paths } from 'expo-file-system';
 import { Redirect, router, Stack, useLocalSearchParams } from 'expo-router';
-import * as Sharing from 'expo-sharing';
 import React from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 
@@ -86,8 +86,8 @@ export default function ViewStatsScreen() {
       const file = new File(Paths.cache, `${filename}.csv`);
       file.write(csv);
 
-      if (await Sharing.isAvailableAsync()) {
-        await Sharing.shareAsync(file.uri);
+      if (await shareFileAndDelete(file)) {
+        return;
       } else {
         showAlert({
           title: 'Sharing not available',

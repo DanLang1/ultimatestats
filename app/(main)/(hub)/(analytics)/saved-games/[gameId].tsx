@@ -12,6 +12,7 @@ import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { MIN_PLAYED_AT_YEAR } from '@/lib/constants';
 import { resolveTeamName } from '@/lib/playerUtils';
 import { getGameDisplayTimestamp } from '@/lib/savedGameUtils';
+import { shareFileAndDelete } from '@/lib/shareFileAndDelete';
 import { serializeGame, uploadPayload } from '@/lib/sharing';
 import { formatDate, generateSavedGameCSV } from '@/lib/statsUtils';
 import { useGameStore } from '@/store/gameStore';
@@ -23,7 +24,6 @@ import DateTimePicker, {
 } from '@react-native-community/datetimepicker';
 import { File, Paths } from 'expo-file-system';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
-import * as Sharing from 'expo-sharing';
 import React, { useState } from 'react';
 import { Platform, Pressable, ScrollView, Share, StyleSheet, View } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
@@ -65,8 +65,7 @@ export default function SavedGameStatsScreen() {
       const file = new File(Paths.cache, `${filename}.csv`);
       file.write(csv);
 
-      if (await Sharing.isAvailableAsync()) {
-        await Sharing.shareAsync(file.uri);
+      if (await shareFileAndDelete(file)) {
         return;
       }
 

@@ -72,6 +72,7 @@ export const TrackerLineScreen = ({
   const players: Player[] = participants.map((p) => ({
     id: p.id,
     name: p.name,
+    number: p.number,
     matchingType: p.matchingType ?? null,
     role: p.role ?? null,
     isActive: true,

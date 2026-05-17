@@ -16,6 +16,7 @@ import StatsContent from '@/components/view-stats/StatsContent';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { aggregateAnalyticsGames } from '@/lib/advancedTracking/aggregateAnalyticsGames';
+import { generateAggregateAdvancedCSV } from '@/lib/advancedTracking/advancedCSVUtils';
 import {
   getAdvancedFocusTeamId,
   getAdvancedFocusTeamName,
@@ -23,6 +24,7 @@ import {
 import { buildAnalyticsGame } from '@/lib/advancedTracking/buildAnalyticsGame';
 import { MAX_SHARE_GAMES } from '@/lib/constants';
 import { resolveTeamName } from '@/lib/playerUtils';
+import { shareFileAndDelete } from '@/lib/shareFileAndDelete';
 import { serializeGames, uploadPayload } from '@/lib/sharing';
 import { generateAggregateCSV } from '@/lib/statsUtils';
 import { GameEvent, Player, SavedGame } from '@/lib/storage';
@@ -33,7 +35,6 @@ import { Fonts } from '@/theme/theme';
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 import { File, Paths } from 'expo-file-system';
 import { router, Stack } from 'expo-router';
-import * as Sharing from 'expo-sharing';
 import React, { useState } from 'react';
 import { Pressable, ScrollView, Share, StyleSheet, View } from 'react-native';
 
@@ -183,6 +184,36 @@ export default function AggregateStatsScreen() {
   };
 
   const handleExportCSV = async () => {
+    if (aggregateMode === 'advanced') {
+      if (!aggregatedAdvancedGame || selectedAdvancedGames.length === 0) return;
+
+      try {
+        const csv = generateAggregateAdvancedCSV(
+          advancedAnalyticsGames,
+          aggregatedAdvancedGame,
+          advancedTeamName,
+        );
+        const filename = `${advancedTeamName.replace(/[^a-zA-Z0-9]/g, '_')}_${selectedAdvancedGames.length}_games_advanced`;
+        const file = new File(Paths.cache, `${filename}.csv`);
+        file.write(csv);
+
+        if (await shareFileAndDelete(file)) {
+          return;
+        }
+
+        showAlert({
+          title: 'Sharing not available',
+          message: 'Sharing is not available on this device.',
+        });
+      } catch {
+        showAlert({
+          title: 'Export failed',
+          message: 'Could not export stats to CSV.',
+        });
+      }
+      return;
+    }
+
     if (!aggregatedData) return;
 
     try {
@@ -195,8 +226,7 @@ export default function AggregateStatsScreen() {
       const file = new File(Paths.cache, `${filename}.csv`);
       file.write(csv);
 
-      if (await Sharing.isAvailableAsync()) {
-        await Sharing.shareAsync(file.uri);
+      if (await shareFileAndDelete(file)) {
         return;
       }
 
@@ -258,7 +288,7 @@ export default function AggregateStatsScreen() {
       key: 'csv',
       label: 'Export CSV',
       onPress: handleExportCSV,
-      visible: showingAggregatedStats && aggregateMode === 'basic',
+      visible: showingAggregatedStats,
       inlineIcon: (
         <FontAwesome6
           name="file-csv"

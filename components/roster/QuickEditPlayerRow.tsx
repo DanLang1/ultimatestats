@@ -5,7 +5,7 @@ import { MAX_PLAYER_NUMBER_LENGTH } from '@/lib/constants';
 import { MatchingType, Player, PlayerRole } from '@/lib/storage/types';
 import { useSettingsStore } from '@/store/settingsStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import React from 'react';
+import React, { useState } from 'react';
 import { Platform, Pressable, StyleSheet, Switch, TextInput, View } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 import { Fonts } from '@/theme/theme';
@@ -16,7 +16,7 @@ interface QuickEditPlayerRowProps {
   onEditPlayer: () => void;
   onSetActive: (isActive: boolean) => void;
   onSetMatching: (matchingType: MatchingType | null) => void;
-  onSetNumber: (number: string) => void;
+  onSetNumber: (number: string) => Promise<boolean>;
   onSetRole: (role: PlayerRole | null) => void;
 }
 
@@ -42,6 +42,15 @@ export function QuickEditPlayerRow({
   const { mmpColor, fmpColor } = useSettingsStore();
   const styles = createStyles(isLandscape, sizeClass);
   const metrics = createMetrics(sizeClass);
+  const [draftNumber, setDraftNumber] = useState(player.number ?? '');
+
+  const handleNumberBlur = async () => {
+    if (draftNumber === (player.number ?? '')) return;
+    const didSave = await onSetNumber(draftNumber);
+    if (!didSave) {
+      setDraftNumber(player.number ?? '');
+    }
+  };
 
   return (
     <View
@@ -109,8 +118,9 @@ export function QuickEditPlayerRow({
                 color: palette.textInverse,
               },
             ]}
-            value={player.number ?? ''}
-            onChangeText={(value) => onSetNumber(normalizePlayerNumber(value))}
+            value={draftNumber}
+            onChangeText={(value) => setDraftNumber(normalizePlayerNumber(value))}
+            onBlur={handleNumberBlur}
             placeholder="#"
             placeholderTextColor={palette.textMuted}
             keyboardType="number-pad"

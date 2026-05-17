@@ -11,6 +11,7 @@ import { Fonts } from '@/theme/theme';
 
 interface PlayerChipProps {
   name: string;
+  number?: string;
   selected?: boolean;
   disabled?: boolean;
   isActive?: boolean;
@@ -34,6 +35,7 @@ const ROLE_ICONS: Record<PlayerRole, IconName> = {
 
 export function PlayerChip({
   name,
+  number,
   selected = false,
   disabled = false,
   isActive = true,
@@ -114,6 +116,16 @@ export function PlayerChip({
       testID={`player-chip-${name}`}
       onPress={disabled ? undefined : onPress}
       disabled={disabled}>
+      {number && (
+        <ThemedText
+          style={[
+            compact ? styles.numberTextCompact : styles.numberText,
+            { color: selected ? selectedTextColor : subtitleColor },
+          ]}
+          numberOfLines={1}>
+          #{number}
+        </ThemedText>
+      )}
       <ThemedText
         style={[compact ? styles.chipTextCompact : styles.chipText, { color: textColor }]}
         numberOfLines={1}>
@@ -174,9 +186,17 @@ function createStyles(sizeClass: SizeClass) {
       fontSize: scaleBySizeClass(15, sizeClass),
       fontFamily: Fonts.semiBold,
     },
+    numberText: {
+      fontSize: scaleBySizeClass(12, sizeClass),
+      fontFamily: Fonts.bold,
+    },
     chipTextCompact: {
       fontSize: scaleBySizeClass(13, sizeClass),
       fontFamily: Fonts.semiBold,
+    },
+    numberTextCompact: {
+      fontSize: scaleBySizeClass(11, sizeClass),
+      fontFamily: Fonts.bold,
     },
     chipSubtitle: {
       fontSize: scaleBySizeClass(11, sizeClass),

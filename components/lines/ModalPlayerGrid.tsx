@@ -120,6 +120,7 @@ export function ModalPlayerGrid({
     <PlayerChip
       key={player.id}
       name={player.name}
+      number={player.number}
       selected={selectedSet.has(player.id)}
       matchingType={player.matchingType}
       subtitle={gameActive ? formatPlayingTime(player.id, playingTime) : undefined}

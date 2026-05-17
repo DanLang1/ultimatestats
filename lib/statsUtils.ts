@@ -1,4 +1,5 @@
 import { GameEvent, Player, PointLineRecord, SavedGame } from '@/lib/storage';
+import { csvRow } from './csvUtils';
 import { getPlayerName, UNKNOWN_PLAYER_ID } from './playerUtils';
 import { getGameDisplayTimestamp } from './savedGameUtils';
 import {
@@ -1000,7 +1001,14 @@ export function generateAggregateCSV(
       const date = formatDateForCSV(getGameDisplayTimestamp(g));
       const win = g.team1Score > g.team2Score;
       const result = win ? 'Win' : 'Loss';
-      return `${date},${g.team2Name},${result},${g.team1Score}-${g.team2Score},${g.team1Score},${g.team2Score}`;
+      return csvRow([
+        date,
+        g.team2Name,
+        result,
+        `${g.team1Score}-${g.team2Score}`,
+        g.team1Score,
+        g.team2Score,
+      ]);
     })
     .join('\n');
 
@@ -1142,19 +1150,36 @@ function mergePlayerRows(
 
 function playerSummaryCSV(stats: PlayerSummaryCSVRow[], includePlayingTimeStats = false): string {
   const hasCallahans = stats.some((p) => p.callahans > 0);
-  const headerBase = hasCallahans
-    ? 'Player,Goals,Assists,Blocks,Throwaways,Drops,Callahans,Plus/Minus'
-    : 'Player,Goals,Assists,Blocks,Throwaways,Drops,Plus/Minus';
-  const header = includePlayingTimeStats
-    ? `${headerBase},Points Played,O-Points,D-Points,O-Line Holds,D-Line Breaks,Minutes Played,O-Eff,D-Eff`
-    : headerBase;
+  const columns = ['Player', 'Goals', 'Assists', 'Blocks', 'Throwaways', 'Drops'];
+  if (hasCallahans) columns.push('Callahans');
+  columns.push('Plus/Minus');
+  if (includePlayingTimeStats) {
+    columns.push(
+      'Points Played',
+      'O-Points',
+      'D-Points',
+      'O-Line Holds',
+      'D-Line Breaks',
+      'Minutes Played',
+      'O-Eff',
+      'D-Eff',
+    );
+  }
 
   const rows = stats.map((p) => {
-    const rowBase = hasCallahans
-      ? `${p.name},${p.goals},${p.assists},${p.blocks},${p.throwaways},${p.drops},${p.callahans},${p.plusMinus}`
-      : `${p.name},${p.goals},${p.assists},${p.blocks},${p.throwaways},${p.drops},${p.plusMinus}`;
+    const cells: (string | number)[] = [
+      p.name,
+      p.goals,
+      p.assists,
+      p.blocks,
+      p.throwaways,
+      p.drops,
+    ];
+    if (hasCallahans) cells.push(p.callahans);
+    cells.push(p.plusMinus);
+
     if (!includePlayingTimeStats) {
-      return rowBase;
+      return csvRow(cells);
     }
 
     const pointsPlayed = p.pointsPlayed ?? 0;
@@ -1165,10 +1190,11 @@ function playerSummaryCSV(stats: PlayerSummaryCSVRow[], includePlayingTimeStats 
     const minutesPlayed = formatMinutesPlayed(p.minutesPlayed);
     const oEff = p.oEfficiency !== undefined ? formatEfficiency(p.oEfficiency) : '-';
     const dEff = p.dEfficiency !== undefined ? formatEfficiency(p.dEfficiency) : '-';
-    return `${rowBase},${pointsPlayed},${oPoints},${dPoints},${oLineHolds},${dLineBreaks},${minutesPlayed},${oEff},${dEff}`;
+    cells.push(pointsPlayed, oPoints, dPoints, oLineHolds, dLineBreaks, minutesPlayed, oEff, dEff);
+    return csvRow(cells);
   });
 
-  return header + '\n' + rows.join('\n');
+  return csvRow(columns) + '\n' + rows.join('\n');
 }
 
 function teamStatsCSV(stats: TeamStats): string {
@@ -1176,27 +1202,39 @@ function teamStatsCSV(stats: TeamStats): string {
   const formatDecimal = (value: number) =>
     Number.isInteger(value) ? value.toString() : value.toFixed(2);
 
-  return (
-    'Stat,Value,Detail\n' +
-    `Hold %,${formatPercent(stats.holdPercentage)},${stats.holds}/${stats.offensivePoints} O-points\n` +
-    `Break Efficiency,${formatPercent(stats.breakEfficiency)},${stats.breaks}/${stats.dPointsWithTurnover} D-points with turnover\n` +
-    `D-Efficiency,${formatPercent(stats.dEfficiency)},${stats.breaks}/${stats.defensivePoints} D-points\n` +
-    `Conversion Rate,${formatPercent(stats.conversionRate)},Goals / Possessions\n` +
-    `Clean Holds,${stats.cleanHolds},\n` +
-    `Dirty Holds,${stats.dirtyHolds},\n` +
-    `Total Breaks,${stats.breaks},\n` +
-    `Times Broken,${stats.timesBroken},\n` +
-    `Offensive Points,${stats.offensivePoints},\n` +
-    `Defensive Points,${stats.defensivePoints},\n` +
-    `Total Turnovers,${stats.totalTurnovers},Our turnovers\n` +
-    `Opponent Turnovers,${stats.opponentTurnovers},Gives us possession\n` +
-    `Turnovers per Point,${formatDecimal(stats.turnoversPerPoint)},\n` +
-    `Points per Turnover,${formatDecimal(stats.pointsPerTurnover)},\n` +
-    `Blocks per D-Point,${formatDecimal(stats.blocksPerDPoint)},\n` +
-    `Total Blocks,${stats.totalBlocks},\n` +
-    `Longest Scoring Run,${stats.longestScoringRun},\n` +
-    `Longest Drought,${stats.longestDrought},`
-  );
+  return [
+    csvRow(['Stat', 'Value', 'Detail']),
+    csvRow([
+      'Hold %',
+      formatPercent(stats.holdPercentage),
+      `${stats.holds}/${stats.offensivePoints} O-points`,
+    ]),
+    csvRow([
+      'Break Efficiency',
+      formatPercent(stats.breakEfficiency),
+      `${stats.breaks}/${stats.dPointsWithTurnover} D-points with turnover`,
+    ]),
+    csvRow([
+      'D-Efficiency',
+      formatPercent(stats.dEfficiency),
+      `${stats.breaks}/${stats.defensivePoints} D-points`,
+    ]),
+    csvRow(['Conversion Rate', formatPercent(stats.conversionRate), 'Goals / Possessions']),
+    csvRow(['Clean Holds', stats.cleanHolds, '']),
+    csvRow(['Dirty Holds', stats.dirtyHolds, '']),
+    csvRow(['Total Breaks', stats.breaks, '']),
+    csvRow(['Times Broken', stats.timesBroken, '']),
+    csvRow(['Offensive Points', stats.offensivePoints, '']),
+    csvRow(['Defensive Points', stats.defensivePoints, '']),
+    csvRow(['Total Turnovers', stats.totalTurnovers, 'Our turnovers']),
+    csvRow(['Opponent Turnovers', stats.opponentTurnovers, 'Gives us possession']),
+    csvRow(['Turnovers per Point', formatDecimal(stats.turnoversPerPoint), '']),
+    csvRow(['Points per Turnover', formatDecimal(stats.pointsPerTurnover), '']),
+    csvRow(['Blocks per D-Point', formatDecimal(stats.blocksPerDPoint), '']),
+    csvRow(['Total Blocks', stats.totalBlocks, '']),
+    csvRow(['Longest Scoring Run', stats.longestScoringRun, '']),
+    csvRow(['Longest Drought', stats.longestDrought, '']),
+  ].join('\n');
 }
 
 function timingStatsCSV(stats: TimingStats): string {
@@ -1213,12 +1251,26 @@ function timingStatsCSV(stats: TimingStats): string {
 
   return (
     '\n# Timing Stats\n' +
-    'Stat,Value,Detail\n' +
-    `Avg Point Duration,${formatDuration(stats.avgPointDurationMs)},${stats.timedPointCount} points\n` +
-    `Avg O-Point Duration,${formatDuration(stats.avgOPointDurationMs)},${stats.timedOPointCount} O-points\n` +
-    `Avg D-Point Duration,${formatDuration(stats.avgDPointDurationMs)},${stats.timedDPointCount} D-points\n` +
-    `Longest Point,${formatDuration(stats.longestPointDurationMs)},\n` +
-    `Shortest Point,${formatDuration(stats.shortestPointDurationMs)},`
+    [
+      csvRow(['Stat', 'Value', 'Detail']),
+      csvRow([
+        'Avg Point Duration',
+        formatDuration(stats.avgPointDurationMs),
+        `${stats.timedPointCount} points`,
+      ]),
+      csvRow([
+        'Avg O-Point Duration',
+        formatDuration(stats.avgOPointDurationMs),
+        `${stats.timedOPointCount} O-points`,
+      ]),
+      csvRow([
+        'Avg D-Point Duration',
+        formatDuration(stats.avgDPointDurationMs),
+        `${stats.timedDPointCount} D-points`,
+      ]),
+      csvRow(['Longest Point', formatDuration(stats.longestPointDurationMs), '']),
+      csvRow(['Shortest Point', formatDuration(stats.shortestPointDurationMs), '']),
+    ].join('\n')
   );
 }
 
@@ -1236,10 +1288,20 @@ function topStatsCSV(stats: TimeOfPossessionStats, team1Name: string, team2Name:
 
   return (
     '\n# Time of Possession\n' +
-    'Stat,Value,Detail\n' +
-    `${team1Name} Possession,${formatMs(stats.team1TotalPossessionMs)},${stats.team1PossessionPct.toFixed(1)}%\n` +
-    `${team2Name} Possession,${formatMs(stats.team2TotalPossessionMs)},${stats.team2PossessionPct.toFixed(1)}%\n` +
-    `Points (timed),${stats.timedPointCount},`
+    [
+      csvRow(['Stat', 'Value', 'Detail']),
+      csvRow([
+        `${team1Name} Possession`,
+        formatMs(stats.team1TotalPossessionMs),
+        `${stats.team1PossessionPct.toFixed(1)}%`,
+      ]),
+      csvRow([
+        `${team2Name} Possession`,
+        formatMs(stats.team2TotalPossessionMs),
+        `${stats.team2PossessionPct.toFixed(1)}%`,
+      ]),
+      csvRow(['Points (timed)', stats.timedPointCount, '']),
+    ].join('\n')
   );
 }
 
@@ -1268,7 +1330,16 @@ function playByPlayCSV(
     undefined,
     autoHalftimeEnabled,
   );
-  let csv = 'Point Number,Curr Score,Pulling Team,Goal Team,Goal,Assist,Duration\n';
+  let csv =
+    csvRow([
+      'Point Number',
+      'Curr Score',
+      'Pulling Team',
+      'Goal Team',
+      'Goal',
+      'Assist',
+      'Duration',
+    ]) + '\n';
 
   const resolveName = (playerId: string | null) => getPlayerName(roster, playerId);
 
@@ -1286,7 +1357,16 @@ function playByPlayCSV(
     const goalName = resolveName(point.goalPlayerId);
     const assistName = resolveName(point.assistPlayerId);
 
-    csv += `${point.pointNumber},${scoreBefore},${pullingTeam},${goalTeamName},${goalName || ''},${assistName || ''},${formatDurationForCSV(point.pointDurationMs)}\n`;
+    csv +=
+      csvRow([
+        point.pointNumber,
+        scoreBefore,
+        pullingTeam,
+        goalTeamName,
+        goalName || '',
+        assistName || '',
+        formatDurationForCSV(point.pointDurationMs),
+      ]) + '\n';
   }
 
   return csv.trimEnd();
@@ -1298,7 +1378,7 @@ function turnoversCSV(
   team2Name: string,
   roster?: Player[],
 ): string {
-  let csv = 'Team,Type,Player,Player2,Timestamp\n';
+  let csv = csvRow(['Team', 'Type', 'Player', 'Player2', 'Timestamp']) + '\n';
 
   const resolveName = (playerId: string | null) => getPlayerName(roster, playerId);
 
@@ -1307,7 +1387,14 @@ function turnoversCSV(
       const teamName = event.team === 'team1' ? team1Name : team2Name;
       const p1Name = resolveName(event.playerId);
       const p2Name = resolveName(event.player2Id || null);
-      csv += `${teamName},${event.subtype},${p1Name || ''},${p2Name || ''},${formatDurationForCSV(event.elapsedMs)}\n`;
+      csv +=
+        csvRow([
+          teamName,
+          event.subtype,
+          p1Name || '',
+          p2Name || '',
+          formatDurationForCSV(event.elapsedMs),
+        ]) + '\n';
     }
   }
 

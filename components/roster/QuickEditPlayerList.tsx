@@ -12,7 +12,7 @@ interface QuickEditPlayerListProps {
   onEditPlayer: (player: Player) => void;
   onSetPlayerActive: (playerId: string, isActive: boolean) => void;
   onSetPlayerMatching: (playerId: string, matchingType: MatchingType | null) => void;
-  onSetPlayerNumber: (playerId: string, number: string) => void;
+  onSetPlayerNumber: (playerId: string, number: string) => Promise<boolean>;
   onSetPlayerRole: (playerId: string, role: PlayerRole | null) => void;
 }
 
@@ -51,7 +51,7 @@ export function QuickEditPlayerList({
 
   const renderPlayerRow = (player: Player) => (
     <QuickEditPlayerRow
-      key={player.id}
+      key={`${player.id}-${player.number ?? ''}`}
       player={player}
       isLandscape={isLandscape}
       onEditPlayer={() => onEditPlayer(player)}

@@ -256,12 +256,13 @@ export default function EditRosterScreen() {
         title: 'Duplicate Number',
         message: `Another player already has #${normalizedNumber}.`,
       });
-      return;
+      return false;
     }
 
     const updateResult = updateRosterPlayer(playerId, { number: normalizedNumber });
-    if (updateResult !== 'updated') return;
+    if (updateResult !== 'updated') return false;
     await saveCurrentTeam();
+    return true;
   };
 
   const handleSetPlayerRole = async (playerId: string, role: Player['role']) => {
