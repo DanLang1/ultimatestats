@@ -355,7 +355,6 @@ export default function SavedGameStatsScreen() {
               title: 'Share failed',
               message: 'Could not upload data for sharing. Please try again.',
             });
-            throw new Error('share failed');
           }
         }}
         onCancel={() => setPendingShareAction(null)}

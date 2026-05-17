@@ -844,6 +844,17 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
           return true;
         },
 
+        importAdvancedGame: (game) => {
+          set((state) => {
+            const idx = state.savedGames.findIndex((savedGame) => savedGame.id === game.id);
+            if (idx >= 0) {
+              state.savedGames[idx] = game;
+            } else {
+              state.savedGames.push(game);
+            }
+          });
+        },
+
         deleteSavedGame: (gameId) => {
           set((state) => {
             const remainingGames = state.savedGames.filter((game) => game.id !== gameId);

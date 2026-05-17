@@ -626,19 +626,18 @@ function SettingsContent() {
                   />
                 </View>
               )}
-              {statTrackingEnabled && lineCallingEnabled && (
-                <View style={styles.inputGroupFullWidth}>
-                  <SegmentedControl
-                    label="SORT PLAYERS"
-                    options={[
-                      { value: 'alpha', label: 'Alphabetically' },
-                      { value: 'points', label: 'Points Played' },
-                    ]}
-                    value={linePlayerSortOrder}
-                    onChange={setLinePlayerSortOrder}
-                  />
-                </View>
-              )}
+              <View style={styles.inputGroupFullWidth}>
+                <SegmentedControl
+                  label="SORT PLAYERS"
+                  options={[
+                    { value: 'alpha', label: 'A-Z' },
+                    { value: 'number', label: '#s' },
+                    { value: 'points', label: 'Points Played' },
+                  ]}
+                  value={linePlayerSortOrder}
+                  onChange={setLinePlayerSortOrder}
+                />
+              </View>
             </View>
           </View>
         </View>

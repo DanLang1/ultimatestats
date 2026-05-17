@@ -16,6 +16,7 @@ export interface AdvancedTrackedGame {
   schemaVersion: number;
   createdAt: number;
   updatedAt: number;
+  importedAt?: number;
 
   gameType: 'game' | 'scrimmage' | 'practice' | 'other';
   status: GameStatus;

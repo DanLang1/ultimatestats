@@ -7,11 +7,13 @@ import {
   ResponsiveHeaderActions,
 } from '@/components/ui/ResponsiveHeaderActions';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
+import { ShareConfirmModal } from '@/components/ui/ShareConfirmModal';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { generateAdvancedGameCSV } from '@/lib/advancedTracking/advancedCSVUtils';
 import { buildAnalyticsGame, getFinalScores } from '@/lib/advancedTracking/buildAnalyticsGame';
 import { shareFileAndDelete } from '@/lib/shareFileAndDelete';
+import { serializeAdvancedGame, uploadPayload } from '@/lib/sharing';
 import { formatDate } from '@/lib/statsUtils';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { Fonts } from '@/theme/theme';
@@ -19,8 +21,8 @@ import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { File, Paths } from 'expo-file-system';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
-import React from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import React, { useState } from 'react';
+import { Pressable, ScrollView, Share, StyleSheet, View } from 'react-native';
 
 export default function AdvancedGameStatsScreen() {
   const { gameId } = useLocalSearchParams<{ gameId?: string }>();
@@ -29,6 +31,9 @@ export default function AdvancedGameStatsScreen() {
   const styles = createStyles(isLandscape, sizeClass);
   const { showAlert } = useAlert();
   const { savedGames, deleteSavedGame } = useAdvancedTrackingStore();
+  const [pendingShareAction, setPendingShareAction] = useState<(() => Promise<string>) | null>(
+    null,
+  );
 
   const rawGame = gameId ? (savedGames.find((g) => g.id === gameId) ?? null) : null;
 
@@ -104,6 +109,14 @@ export default function AdvancedGameStatsScreen() {
     }
   };
 
+  const handleShareGame = () => {
+    setPendingShareAction(() => async () => {
+      const payload = serializeAdvancedGame(rawGame);
+      const { url } = await uploadPayload(payload);
+      return url;
+    });
+  };
+
   const handleDelete = () => {
     showAlert({
       title: 'Delete Game?',
@@ -123,6 +136,26 @@ export default function AdvancedGameStatsScreen() {
   };
 
   const headerActions: ResponsiveHeaderAction[] = [
+    {
+      key: 'share',
+      label: 'Share',
+      visible: rawGame.status === 'final',
+      onPress: handleShareGame,
+      inlineIcon: (
+        <MaterialCommunityIcons
+          name="share-variant"
+          size={scaleBySizeClass(22, sizeClass)}
+          color={palette.accent}
+        />
+      ),
+      menuIcon: (
+        <MaterialCommunityIcons
+          name="share-variant"
+          size={scaleBySizeClass(20, sizeClass)}
+          color={palette.accent}
+        />
+      ),
+    },
     {
       key: 'csv',
       label: 'Export CSV',
@@ -238,6 +271,23 @@ export default function AdvancedGameStatsScreen() {
           participantNames={analyticsGame.participantNames}
         />
       </ScrollView>
+
+      <ShareConfirmModal
+        visible={pendingShareAction !== null}
+        onConfirm={async () => {
+          try {
+            const url = await pendingShareAction!();
+            setPendingShareAction(null);
+            await Share.share({ message: url });
+          } catch {
+            showAlert({
+              title: 'Share failed',
+              message: 'Could not upload data for sharing. Please try again.',
+            });
+          }
+        }}
+        onCancel={() => setPendingShareAction(null)}
+      />
     </ThemedView>
   );
 }

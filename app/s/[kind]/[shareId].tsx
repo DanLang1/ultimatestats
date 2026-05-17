@@ -21,7 +21,13 @@ export default function ShareLinkRedirectScreen() {
   }
 
   const normalizedType = shareType.toLowerCase();
-  if (normalizedType !== 'game' && normalizedType !== 'team' && normalizedType !== 'games') {
+  if (
+    normalizedType !== 'game' &&
+    normalizedType !== 'advanced-game' &&
+    normalizedType !== 'advanced-games' &&
+    normalizedType !== 'team' &&
+    normalizedType !== 'games'
+  ) {
     return <Redirect href="/" />;
   }
 

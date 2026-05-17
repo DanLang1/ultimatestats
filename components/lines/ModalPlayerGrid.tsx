@@ -1,8 +1,9 @@
 import { PlayerChip } from '@/components/ui/PlayerChip';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import { computePlayingTime, formatPlayingTime } from '@/lib/lineUtils';
+import { computePlayingTime, formatPlayingTime, sortByPlayerNumber } from '@/lib/lineUtils';
 import { Player, PointLineRecord } from '@/lib/storage/types';
+import type { LinePlayerSortOrder } from '@/store/settingsStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
@@ -14,6 +15,9 @@ function sortPlayers(
   playingTime: Map<string, number>,
   direction: SortDirection,
 ): Player[] {
+  if (direction === 'number') {
+    return sortByPlayerNumber(players);
+  }
   return [...players].sort((a, b) => {
     if (direction === 'points') {
       const aPoints = playingTime.get(a.id) ?? 0;
@@ -24,7 +28,7 @@ function sortPlayers(
   });
 }
 
-export type SortDirection = 'alpha' | 'points';
+export type SortDirection = LinePlayerSortOrder;
 
 export interface ModalPlayerGridProps {
   roster: Player[];

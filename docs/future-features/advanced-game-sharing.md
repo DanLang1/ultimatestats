@@ -1,6 +1,6 @@
 # Advanced Game Sharing
 
-> **Status**: Not started
+> **Status**: Implemented in app — verify Supabase type constraints before release
 
 ## Overview
 
@@ -46,10 +46,11 @@ Additional fields not present in basic games:
 
 ### 1. `lib/sharing/types.ts`
 
-Add a new arm to the `SharedPayload` discriminated union:
+Add new arms to the `SharedPayload` discriminated union:
 
 ```typescript
 | (SharedPayloadBase & { type: 'advanced-game'; data: AdvancedTrackedGame })
+| (SharedPayloadBase & { type: 'advanced-games'; data: AdvancedTrackedGame[] })
 ```
 
 ### 2. `lib/sharing/validate.ts`
@@ -64,7 +65,7 @@ Add a new validation branch for `advanced-game`. Key considerations:
 
 ### 3. `lib/sharing/serialize.ts`
 
-Add `serializeAdvancedGame()`:
+Add `serializeAdvancedGame()` and `serializeAdvancedGames()`:
 
 ```typescript
 export function serializeAdvancedGame(game: AdvancedTrackedGame): SharedPayload {
@@ -118,6 +119,7 @@ Check if the `type` column on `shared_payloads` has a check constraint. If so, a
 
 ```
 https://u-stat.app/s/advanced-game/<id>
+https://u-stat.app/s/advanced-games/<id>
 ```
 
 Consistent with existing `/s/game/<id>`, `/s/team/<id>`, `/s/games/<id>` pattern.
@@ -134,7 +136,7 @@ Advanced games are denser than basic games due to field location data and per-ac
 
 | File                                      | Change                                                |
 | ----------------------------------------- | ----------------------------------------------------- |
-| `lib/sharing/types.ts`                    | Add `type: 'advanced-game'` arm                       |
+| `lib/sharing/types.ts`                    | Add `type: 'advanced-game'` / `advanced-games` arms   |
 | `lib/sharing/validate.ts`                 | New validation branch + new size limits               |
 | `lib/sharing/serialize.ts`                | Add `serializeAdvancedGame()`                         |
 | `hooks/useShareImport.ts`                 | New payload type + new `ShareImportState` arms        |

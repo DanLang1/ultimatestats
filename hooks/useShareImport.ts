@@ -1,32 +1,56 @@
 import { fetchPayload, SharedPayload } from '@/lib/sharing';
 import { SavedGame, SavedTeam } from '@/lib/storage';
+import type { AdvancedTrackedGame } from '@/lib/advancedTracking/types';
+import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { supabase } from '@/lib/supabase';
 import { useGameStore } from '@/store/gameStore';
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 
 type GamePayload = Extract<SharedPayload, { type: 'game' }>;
+type AdvancedGamePayload = Extract<SharedPayload, { type: 'advanced-game' }>;
 type TeamPayload = Extract<SharedPayload, { type: 'team' }>;
 type GamesPayload = Extract<SharedPayload, { type: 'games' }>;
+type AdvancedGamesPayload = Extract<SharedPayload, { type: 'advanced-games' }>;
 
 export type ShareImportState =
   | { status: 'preview-game'; payload: GamePayload; isUpdate: boolean }
+  | { status: 'preview-advanced-game'; payload: AdvancedGamePayload; isUpdate: boolean }
   | { status: 'preview-team'; payload: TeamPayload }
   | { status: 'preview-games'; payload: GamesPayload; games: SavedGame[]; updateCount: number }
+  | {
+      status: 'preview-advanced-games';
+      payload: AdvancedGamesPayload;
+      games: AdvancedTrackedGame[];
+      updateCount: number;
+    }
   | { status: 'team-exists'; payload: TeamPayload; existingTeam: SavedTeam }
   | { status: 'error'; message: string }
   | { status: 'done'; type: 'game'; gameId: string }
+  | { status: 'done'; type: 'advanced-game'; gameId: string }
   | { status: 'done'; type: 'team' }
-  | { status: 'done'; type: 'games'; count: number };
+  | { status: 'done'; type: 'games' | 'advanced-games'; count: number };
 
 function deriveImportState(
   payload: SharedPayload,
   savedGames: SavedGame[],
+  advancedSavedGames: AdvancedTrackedGame[],
   savedTeams: SavedTeam[],
 ): ShareImportState {
   if (payload.type === 'game') {
     const isUpdate = savedGames.some((g) => g.id === payload.data.id);
     return { status: 'preview-game', payload, isUpdate };
+  }
+
+  if (payload.type === 'advanced-game') {
+    const isUpdate = advancedSavedGames.some((g) => g.id === payload.data.id);
+    return { status: 'preview-advanced-game', payload, isUpdate };
+  }
+
+  if (payload.type === 'advanced-games') {
+    const existingIds = new Set(advancedSavedGames.map((g) => g.id));
+    const updateCount = payload.data.filter((g) => existingIds.has(g.id)).length;
+    return { status: 'preview-advanced-games', payload, games: payload.data, updateCount };
   }
 
   if (payload.type === 'team') {
@@ -44,6 +68,7 @@ function deriveImportState(
 
 export function useShareImport(shareId: string | undefined) {
   const { savedGames, savedTeams } = useGameStore();
+  const { savedGames: advancedSavedGames } = useAdvancedTrackingStore();
   // Only set after a user action (import confirmed/cancelled) to override the derived state
   const [doneState, setDoneState] = useState<ShareImportState | null>(null);
 
@@ -67,7 +92,7 @@ export function useShareImport(shareId: string | undefined) {
       message: 'Could not load shared data. The link may have expired.',
     };
   } else if (query.data) {
-    importState = deriveImportState(query.data, savedGames, savedTeams);
+    importState = deriveImportState(query.data, savedGames, advancedSavedGames, savedTeams);
   }
 
   return { isPending: query.isPending, importState, setImportState: setDoneState };

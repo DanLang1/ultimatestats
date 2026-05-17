@@ -1,4 +1,5 @@
 import { validatePayload } from '../sharing/validate';
+import type { AdvancedTrackedGame } from '../advancedTracking/types';
 
 function makeGamePayload(overrides: Record<string, unknown> = {}): unknown {
   return {
@@ -41,6 +42,79 @@ function makeGamesPayload(overrides: Record<string, unknown> = {}): unknown {
     schemaVersion: 1,
     sharedAt: Date.now(),
     data: [makeGameData()],
+    ...overrides,
+  };
+}
+
+function makeAdvancedGameData(overrides: Partial<AdvancedTrackedGame> = {}): AdvancedTrackedGame {
+  return {
+    id: 'advanced-game-1',
+    schemaVersion: 1,
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+    gameType: 'game',
+    status: 'final',
+    focusSideId: 'home',
+    initialReceivingSideId: 'home',
+    settings: { locationMode: 'none', format: { formatType: 'standard', gameTo: 15 } },
+    sides: [
+      { id: 'home', label: 'Home', trackingMode: 'full-roster' },
+      { id: 'away', label: 'Away', trackingMode: 'anonymous' },
+    ],
+    participants: [{ id: 'p1', name: 'Alex' }],
+    points: [
+      {
+        id: 'point-1',
+        lines: [{ sideId: 'home', participantIds: ['p1'] }],
+        possessions: [
+          {
+            id: 'possession-1',
+            sideId: 'home',
+            actions: [
+              {
+                id: 'pull-1',
+                kind: 'pull',
+                sideId: 'away',
+                receivingSideId: 'home',
+                puller: { refType: 'untracked' },
+                receiver: { refType: 'participant', participantId: 'p1' },
+                result: 'inbound',
+              },
+              {
+                id: 'throw-1',
+                kind: 'throw',
+                sideId: 'home',
+                thrower: { refType: 'participant', participantId: 'p1' },
+                toPlayer: { refType: 'participant', participantId: 'p1' },
+                result: 'goal',
+              },
+            ],
+          },
+        ],
+      },
+    ],
+    ...overrides,
+  };
+}
+
+function makeAdvancedGamePayload(overrides: Record<string, unknown> = {}): unknown {
+  return {
+    type: 'advanced-game',
+    appVersion: '1.0.0',
+    schemaVersion: 1,
+    sharedAt: Date.now(),
+    data: makeAdvancedGameData(),
+    ...overrides,
+  };
+}
+
+function makeAdvancedGamesPayload(overrides: Record<string, unknown> = {}): unknown {
+  return {
+    type: 'advanced-games',
+    appVersion: '1.0.0',
+    schemaVersion: 1,
+    sharedAt: Date.now(),
+    data: [makeAdvancedGameData()],
     ...overrides,
   };
 }
@@ -196,6 +270,76 @@ describe('validatePayload', () => {
       expect(() => validatePayload(makeGamesPayload({ data: ['not-an-object'] }))).toThrow(
         'missing data',
       );
+    });
+  });
+
+  describe('advanced game payload', () => {
+    it('accepts a valid advanced game payload', () => {
+      const result = validatePayload(makeAdvancedGamePayload());
+      expect(result.type).toBe('advanced-game');
+      expect(result.schemaVersion).toBe(1);
+    });
+
+    it('throws for missing advanced points', () => {
+      const data = makeAdvancedGameData({ points: undefined as never });
+      expect(() => validatePayload(makeAdvancedGamePayload({ data }))).toThrow('points');
+    });
+
+    it('throws for invalid advanced action kind', () => {
+      const data = makeAdvancedGameData({
+        points: [
+          {
+            id: 'point-1',
+            lines: [{ sideId: 'home', participantIds: ['p1'] }],
+            possessions: [
+              {
+                id: 'possession-1',
+                sideId: 'home',
+                actions: [{ id: 'bad-action', kind: 'travel' }],
+              },
+            ],
+          },
+        ],
+      } as never);
+      expect(() => validatePayload(makeAdvancedGamePayload({ data }))).toThrow('action kind');
+    });
+
+    it('throws when advanced actions exceed limit', () => {
+      const actions = Array.from({ length: 1501 }, (_, index) => ({
+        id: `throw-${index}`,
+        kind: 'throw',
+        sideId: 'home',
+        thrower: { refType: 'participant', participantId: 'p1' },
+        result: 'complete',
+      }));
+      const data = makeAdvancedGameData({
+        points: [
+          {
+            id: 'point-1',
+            lines: [{ sideId: 'home', participantIds: ['p1'] }],
+            possessions: [{ id: 'possession-1', sideId: 'home', actions }],
+          },
+        ],
+      } as never);
+      expect(() => validatePayload(makeAdvancedGamePayload({ data }))).toThrow('too many actions');
+    });
+  });
+
+  describe('advanced games (bulk) payload', () => {
+    it('accepts a valid advanced games payload', () => {
+      const result = validatePayload(makeAdvancedGamesPayload());
+      expect(result.type).toBe('advanced-games');
+    });
+
+    it('throws for empty advanced games array', () => {
+      expect(() => validatePayload(makeAdvancedGamesPayload({ data: [] }))).toThrow('no games');
+    });
+
+    it('throws when advanced games exceed 10 games', () => {
+      const data = Array.from({ length: 11 }, (_, index) =>
+        makeAdvancedGameData({ id: `advanced-game-${index}` }),
+      );
+      expect(() => validatePayload(makeAdvancedGamesPayload({ data }))).toThrow('too many games');
     });
   });
 

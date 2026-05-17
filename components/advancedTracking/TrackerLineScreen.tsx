@@ -10,6 +10,7 @@ import { checkLineRatio, formatRatio, GenderRatio } from '@/lib/genderRatioUtils
 import { Player } from '@/lib/storage/types';
 import { useGameStore } from '@/store/gameStore';
 import { useLinePresetsStore } from '@/store/linePresetsStore';
+import { useSettingsStore } from '@/store/settingsStore';
 import { Fonts } from '@/theme/theme';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React, { useState } from 'react';
@@ -46,6 +47,7 @@ export const TrackerLineScreen = ({
 
   const currentTeamId = useGameStore((s) => s.currentTeam?.id);
   const allPresets = useLinePresetsStore((s) => s.presets);
+  const linePlayerSortOrder = useSettingsStore((s) => s.linePlayerSortOrder);
   const presets = allPresets.filter((p) => p.teamId === (currentTeamId ?? ''));
   const quickPresets = presets.slice(0, 3);
 
@@ -311,6 +313,7 @@ export const TrackerLineScreen = ({
           pointLines={[]}
           selectedIds={selectedIds}
           onTogglePlayer={togglePlayer}
+          sortDirection={linePlayerSortOrder}
           useModalColors={false}
         />
       </View>

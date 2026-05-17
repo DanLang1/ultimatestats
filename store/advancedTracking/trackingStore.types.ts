@@ -145,5 +145,6 @@ export interface AdvancedTrackingState {
   updateSub: (input: UpdateSubInput) => void;
   correctPointLine: (input: CorrectPointLineInput) => void;
   undoLastOperation: () => boolean;
+  importAdvancedGame: (game: AdvancedTrackedGame) => void;
   deleteSavedGame: (gameId: string) => void;
 }

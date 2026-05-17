@@ -190,6 +190,31 @@ export function sortByPointsPlayed(players: Player[], playingTime: Map<string, n
   });
 }
 
+function getNumericPlayerNumber(player: Player): number | null {
+  if (player.number == null || player.number.trim() === '') {
+    return null;
+  }
+  const parsed = Number(player.number);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+export function sortByPlayerNumber(players: Player[]): Player[] {
+  return [...players].sort((a, b) => {
+    const aNumber = getNumericPlayerNumber(a);
+    const bNumber = getNumericPlayerNumber(b);
+    if (aNumber != null && bNumber != null && aNumber !== bNumber) {
+      return aNumber - bNumber;
+    }
+    if (aNumber != null && bNumber == null) {
+      return -1;
+    }
+    if (aNumber == null && bNumber != null) {
+      return 1;
+    }
+    return a.name.localeCompare(b.name);
+  });
+}
+
 /**
  * Formats playing time for display, e.g., "(3 pts)"
  */

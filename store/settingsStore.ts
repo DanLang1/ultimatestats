@@ -8,6 +8,7 @@ const DEFAULT_MMP_COLOR = '#60A5FA'; // Blue 400
 const DEFAULT_FMP_COLOR = '#F472B6'; // Pink 400
 
 export type OrientationMode = 'system' | 'portrait' | 'landscape';
+export type LinePlayerSortOrder = 'alpha' | 'points' | 'number';
 
 interface SettingsState {
   // Matching type player name colors
@@ -46,8 +47,8 @@ interface SettingsState {
   setSoftCapMins: (minutes: number) => void;
   statEntryOrder: 'goal_first' | 'assist_first';
   setStatEntryOrder: (order: 'goal_first' | 'assist_first') => void;
-  linePlayerSortOrder: 'alpha' | 'points';
-  setLinePlayerSortOrder: (order: 'alpha' | 'points') => void;
+  linePlayerSortOrder: LinePlayerSortOrder;
+  setLinePlayerSortOrder: (order: LinePlayerSortOrder) => void;
 }
 
 export const useSettingsStore = create<SettingsState>()(

@@ -81,6 +81,16 @@ export default {
           {
             scheme: 'https',
             host: 'u-stat.app',
+            pathPrefix: '/s/advanced-game/',
+          },
+          {
+            scheme: 'https',
+            host: 'u-stat.app',
+            pathPrefix: '/s/advanced-games/',
+          },
+          {
+            scheme: 'https',
+            host: 'u-stat.app',
             pathPrefix: '/s/team/',
           },
           {

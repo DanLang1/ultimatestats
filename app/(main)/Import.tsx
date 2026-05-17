@@ -5,11 +5,14 @@ import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { useIsGameActive } from '@/hooks/useIsGameActive';
 import { useShareImport } from '@/hooks/useShareImport';
+import { advancedGameToListItem } from '@/lib/gameListUtils';
 import { resolveTeamName } from '@/lib/playerUtils';
 import { getGameDisplayTimestamp } from '@/lib/savedGameUtils';
 import { SharedPayload } from '@/lib/sharing';
 import { formatDate } from '@/lib/statsUtils';
 import { SavedGame, SavedTeam } from '@/lib/storage';
+import type { AdvancedTrackedGame } from '@/lib/advancedTracking/types';
+import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { useGameStore } from '@/store/gameStore';
 import { useLinePresetsStore } from '@/store/linePresetsStore';
 import { Fonts } from '@/theme/theme';
@@ -20,6 +23,7 @@ import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'reac
 import Animated, { FadeIn } from 'react-native-reanimated';
 
 type GamePayload = Extract<SharedPayload, { type: 'game' }>;
+type AdvancedGamePayload = Extract<SharedPayload, { type: 'advanced-game' }>;
 type TeamPayload = Extract<SharedPayload, { type: 'team' }>;
 
 export default function ImportScreen() {
@@ -28,6 +32,7 @@ export default function ImportScreen() {
   const { sizeClass } = useLayout();
   const styles = createStyles(sizeClass);
   const { savedTeams, importGame, importTeam, loadTeam } = useGameStore();
+  const { importAdvancedGame } = useAdvancedTrackingStore();
   const { isPending, importState, setImportState } = useShareImport(shareId);
   const gameActive = useIsGameActive();
 
@@ -44,14 +49,31 @@ export default function ImportScreen() {
     router.push({ pathname: '/saved-games/[gameId]', params: { gameId } });
   };
 
+  const handleGoToAdvancedGame = (gameId: string) => {
+    router.dismissTo('/');
+    router.push({ pathname: '/advancedTracking/analytics/[gameId]', params: { gameId } });
+  };
+
   const handleGoToTeam = () => {
     router.dismissTo('/');
     router.push('/EditRoster');
   };
 
-  const handleImportGame = async (payload: GamePayload, isUpdate: boolean) => {
+  const handleImportGame = async (payload: GamePayload) => {
     setImportState({ status: 'done', type: 'game', gameId: payload.data.id });
     await importGame({ ...payload.data, importedAt: Date.now() });
+  };
+
+  const handleImportAdvancedGame = (payload: AdvancedGamePayload) => {
+    setImportState({ status: 'done', type: 'advanced-game', gameId: payload.data.id });
+    importAdvancedGame({ ...payload.data, importedAt: Date.now() });
+  };
+
+  const handleImportAdvancedGames = (games: AdvancedTrackedGame[]) => {
+    setImportState({ status: 'done', type: 'advanced-games', count: games.length });
+    for (const game of games) {
+      importAdvancedGame({ ...game, importedAt: Date.now() });
+    }
   };
 
   const handleImportGames = async (games: SavedGame[]) => {
@@ -96,7 +118,7 @@ export default function ImportScreen() {
               payload={importState.payload}
               savedTeams={savedTeams}
               isUpdate={importState.isUpdate}
-              onImport={() => handleImportGame(importState.payload, importState.isUpdate)}
+              onImport={() => handleImportGame(importState.payload)}
               onCancel={handleDone}
             />
           )}
@@ -108,6 +130,26 @@ export default function ImportScreen() {
               updateCount={importState.updateCount}
               savedTeams={savedTeams}
               onImport={() => handleImportGames(importState.games)}
+              onCancel={handleDone}
+            />
+          )}
+
+          {importState?.status === 'preview-advanced-game' && (
+            <AdvancedGamePreviewContent
+              palette={palette}
+              payload={importState.payload}
+              isUpdate={importState.isUpdate}
+              onImport={() => handleImportAdvancedGame(importState.payload)}
+              onCancel={handleDone}
+            />
+          )}
+
+          {importState?.status === 'preview-advanced-games' && (
+            <AdvancedGamesPreviewContent
+              palette={palette}
+              games={importState.games}
+              updateCount={importState.updateCount}
+              onImport={() => handleImportAdvancedGames(importState.games)}
               onCancel={handleDone}
             />
           )}
@@ -149,15 +191,25 @@ export default function ImportScreen() {
             />
           )}
 
-          {importState?.status === 'done' && importState.type === 'games' && (
+          {importState?.status === 'done' && importState.type === 'advanced-game' && (
             <DoneContent
               palette={palette}
-              type="games"
-              count={importState.count}
-              onAction={handleGoToGames}
-              actionLabel="View Games"
+              type="advanced-game"
+              onAction={() => handleGoToAdvancedGame(importState.gameId)}
+              actionLabel="View Game"
             />
           )}
+
+          {importState?.status === 'done' &&
+            (importState.type === 'games' || importState.type === 'advanced-games') && (
+              <DoneContent
+                palette={palette}
+                type="games"
+                count={importState.count}
+                onAction={handleGoToGames}
+                actionLabel="View Games"
+              />
+            )}
         </View>
       </View>
     </ThemedView>
@@ -344,6 +396,138 @@ function GamesPreviewContent({
   );
 }
 
+function AdvancedGamePreviewContent({
+  palette,
+  payload,
+  isUpdate,
+  onImport,
+  onCancel,
+}: {
+  palette: ReturnType<typeof useTheme>['palette'];
+  payload: AdvancedGamePayload;
+  isUpdate: boolean;
+  onImport: () => void;
+  onCancel: () => void;
+}) {
+  const { styles, metrics } = useImportUi();
+  const game = advancedGameToListItem(payload.data);
+
+  return (
+    <Animated.View entering={FadeIn.duration(200)} style={styles.content}>
+      <MaterialCommunityIcons
+        name="cloud-download-outline"
+        size={metrics.statusIconMedium}
+        color={palette.accent}
+      />
+      <ThemedText style={[styles.title, { color: palette.modalText }]}>Import game?</ThemedText>
+      {isUpdate && (
+        <ThemedText style={[styles.subtitle, { color: palette.modalTextMuted }]}>
+          You already have this game. Importing will replace your saved copy.
+        </ThemedText>
+      )}
+
+      <View style={styles.previewCard}>
+        <ThemedText style={[styles.previewTeams, { color: palette.modalText }]}>
+          {game.myTeamName} vs {game.opponentName}
+        </ThemedText>
+        <ScoreBadge score1={game.myScore} score2={game.opponentScore} size="large" />
+        <ThemedText style={[styles.previewMeta, { color: palette.modalTextMuted }]}>
+          {formatDate(game.timestamp)} &middot; {game.pointsTracked} point
+          {game.pointsTracked !== 1 ? 's' : ''} tracked
+        </ThemedText>
+      </View>
+
+      <View style={styles.buttonRow}>
+        <Pressable
+          style={[styles.button, { backgroundColor: palette.overlay10 }]}
+          onPress={onCancel}>
+          <ThemedText style={[styles.buttonText, { color: palette.modalText }]}>Cancel</ThemedText>
+        </Pressable>
+        <Pressable style={[styles.button, { backgroundColor: palette.accent }]} onPress={onImport}>
+          <ThemedText style={[styles.buttonText, { color: palette.textOnAccent }]}>
+            Import
+          </ThemedText>
+        </Pressable>
+      </View>
+    </Animated.View>
+  );
+}
+
+function AdvancedGamesPreviewContent({
+  palette,
+  games,
+  updateCount,
+  onImport,
+  onCancel,
+}: {
+  palette: ReturnType<typeof useTheme>['palette'];
+  games: AdvancedTrackedGame[];
+  updateCount: number;
+  onImport: () => void;
+  onCancel: () => void;
+}) {
+  const { styles, metrics } = useImportUi();
+  const newCount = games.length - updateCount;
+
+  return (
+    <Animated.View entering={FadeIn.duration(200)} style={styles.content}>
+      <MaterialCommunityIcons
+        name="cloud-download-outline"
+        size={metrics.statusIconMedium}
+        color={palette.accent}
+      />
+      <ThemedText style={[styles.title, { color: palette.modalText }]}>
+        Import {games.length} advanced game{games.length !== 1 ? 's' : ''}?
+      </ThemedText>
+
+      {updateCount > 0 && newCount > 0 && (
+        <ThemedText style={[styles.subtitle, { color: palette.modalTextMuted }]}>
+          {newCount} new · {updateCount} re-imported
+        </ThemedText>
+      )}
+      {updateCount > 0 && newCount === 0 && (
+        <ThemedText style={[styles.subtitle, { color: palette.modalTextMuted }]}>
+          {updateCount === 1 ? 'This game' : 'All games'} will be re-imported
+        </ThemedText>
+      )}
+
+      <ScrollView style={styles.gamesList} contentContainerStyle={styles.gamesListContent}>
+        {games.map((rawGame) => {
+          const game = advancedGameToListItem(rawGame);
+          return (
+            <View key={game.id} style={[styles.gameRow, { backgroundColor: palette.overlay05 }]}>
+              <View style={styles.gameRowInfo}>
+                <ThemedText
+                  style={[styles.gameRowTeams, { color: palette.modalText }]}
+                  numberOfLines={1}>
+                  {game.myTeamName} vs {game.opponentName}
+                </ThemedText>
+                <ThemedText style={[styles.previewMeta, { color: palette.modalTextMuted }]}>
+                  {formatDate(game.timestamp)}
+                </ThemedText>
+              </View>
+              <ScoreBadge score1={game.myScore} score2={game.opponentScore} size="small" />
+            </View>
+          );
+        })}
+      </ScrollView>
+
+      <View style={styles.buttonRow}>
+        <Pressable
+          style={[styles.button, { backgroundColor: palette.overlay10 }]}
+          onPress={onCancel}>
+          <ThemedText style={[styles.buttonText, { color: palette.modalText }]}>Cancel</ThemedText>
+        </Pressable>
+        <Pressable style={[styles.button, { backgroundColor: palette.accent }]} onPress={onImport}>
+          <ThemedText style={[styles.buttonText, { color: palette.textOnAccent }]}>
+            Import
+          </ThemedText>
+        </Pressable>
+      </View>
+    </Animated.View>
+  );
+}
+
 function TeamPreviewContent({
   palette,
   payload,
@@ -460,7 +644,7 @@ function DoneContent({
   actionLabel,
 }: {
   palette: ReturnType<typeof useTheme>['palette'];
-  type: 'game' | 'team' | 'games';
+  type: 'game' | 'advanced-game' | 'team' | 'games';
   count?: number;
   onAction: () => void;
   actionLabel: string;
@@ -469,7 +653,7 @@ function DoneContent({
   let message: string;
   if (type === 'games') {
     message = `${count} game${count !== 1 ? 's' : ''} imported!`;
-  } else if (type === 'game') {
+  } else if (type === 'game' || type === 'advanced-game') {
     message = 'Game imported!';
   } else {
     message = 'Team imported!';

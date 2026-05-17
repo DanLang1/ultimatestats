@@ -21,6 +21,7 @@ import { hasPlayerWithName } from '@/lib/playerUtils';
 import { serializeTeam, uploadPayload } from '@/lib/sharing';
 import { SavedTeam } from '@/lib/storage';
 import { MatchingType, Player, PlayerRole } from '@/lib/storage/types';
+import { sortByPlayerNumber } from '@/lib/lineUtils';
 import { generateId } from '@/lib/utils';
 import { useGameStore } from '@/store/gameStore';
 import { useLinePresetsStore } from '@/store/linePresetsStore';
@@ -52,7 +53,7 @@ export default function EditRosterScreen() {
   } = useGameStore();
   const { showAlert } = useAlert();
   const { palette } = useTheme();
-  const { rosterViewMode, setRosterViewMode } = useSettingsStore();
+  const { rosterViewMode, setRosterViewMode, linePlayerSortOrder } = useSettingsStore();
 
   // Derived values
   const roster = currentTeam?.roster ?? EMPTY_ROSTER;
@@ -85,9 +86,13 @@ export default function EditRosterScreen() {
   const hasRoster = roster.length > 0;
 
   // Sorted roster: active first
-  const displayRoster = [...roster].sort((a, b) => {
+  const sortedRoster = linePlayerSortOrder === 'number' ? sortByPlayerNumber(roster) : [...roster];
+  const displayRoster = sortedRoster.sort((a, b) => {
     if (a.isActive !== b.isActive) {
       return a.isActive ? -1 : 1;
+    }
+    if (linePlayerSortOrder === 'number') {
+      return 0;
     }
     return a.name.localeCompare(b.name);
   });
@@ -687,7 +692,6 @@ export default function EditRosterScreen() {
               title: 'Share failed',
               message: 'Could not upload team for sharing. Please try again.',
             });
-            throw new Error('share failed');
           }
         }}
         onCancel={() => setShowShareConfirm(false)}

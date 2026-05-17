@@ -12,7 +12,7 @@ import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { MAX_SHARE_GAMES } from '@/lib/constants';
 import { advancedGameToListItem, basicGameToListItem, GameListItem } from '@/lib/gameListUtils';
-import { serializeGames, uploadPayload } from '@/lib/sharing';
+import { serializeAdvancedGames, serializeGames, uploadPayload } from '@/lib/sharing';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { useGameStore } from '@/store/gameStore';
 import { useTournamentStore } from '@/store/tournamentStore';
@@ -107,8 +107,27 @@ export default function SavedGameStatsScreen() {
       return;
     }
 
-    const gameIds = new Set(selectedSavedGameIds);
+    const selectedGames = allGames.filter((game) => selectedSavedGameIds.has(game.id));
+    const hasBasicGames = selectedGames.some((game) => game.kind === 'basic');
+    const hasAdvancedGames = selectedGames.some((game) => game.kind === 'advanced');
+
+    if (hasBasicGames && hasAdvancedGames) {
+      showAlert({
+        title: 'Choose one game type',
+        message: 'Share basic games or advanced games separately.',
+      });
+      return;
+    }
+
+    const gameIds = new Set(selectedGames.map((game) => game.id));
     setPendingShareAction(() => async () => {
+      if (hasAdvancedGames) {
+        const games = advancedSavedGames.filter((game) => gameIds.has(game.id));
+        const payload = serializeAdvancedGames(games);
+        const { url } = await uploadPayload(payload);
+        return url;
+      }
+
       const games = savedGames.filter((game) => gameIds.has(game.id));
       const payload = serializeGames(games);
       const { url } = await uploadPayload(payload);
@@ -204,7 +223,6 @@ export default function SavedGameStatsScreen() {
               title: 'Share failed',
               message: 'Could not upload data for sharing. Please try again.',
             });
-            throw new Error('share failed');
           }
         }}
         onCancel={() => setPendingShareAction(null)}

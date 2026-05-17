@@ -5,6 +5,7 @@ import {
   getLatestLineForPoint,
   getRecentLines,
   groupPlayersByGenderRole,
+  sortByPlayerNumber,
   sortByPointsPlayed,
 } from '../lineUtils';
 
@@ -14,12 +15,40 @@ const createPlayer = (
   matchingType: 'mmp' | 'fmp' | null = null,
   role: 'handler' | 'cutter' | 'hybrid' | null = null,
   isActive = true,
+  number?: string,
 ): Player => ({
   id,
   name,
+  number,
   matchingType,
   role,
   isActive,
+});
+
+describe('sortByPlayerNumber', () => {
+  it('sorts numeric player numbers ascending', () => {
+    const players: Player[] = [
+      createPlayer('1', 'Alice', null, null, true, '12'),
+      createPlayer('2', 'Bob', null, null, true, '3'),
+      createPlayer('3', 'Carol', null, null, true, '21'),
+    ];
+
+    const sorted = sortByPlayerNumber(players);
+
+    expect(sorted.map((p) => p.name)).toEqual(['Bob', 'Alice', 'Carol']);
+  });
+
+  it('places unnumbered players after numbered players alphabetically', () => {
+    const players: Player[] = [
+      createPlayer('1', 'Charlie'),
+      createPlayer('2', 'Bob', null, null, true, '7'),
+      createPlayer('3', 'Alice'),
+    ];
+
+    const sorted = sortByPlayerNumber(players);
+
+    expect(sorted.map((p) => p.name)).toEqual(['Bob', 'Alice', 'Charlie']);
+  });
 });
 
 describe('groupPlayersByGenderRole', () => {
