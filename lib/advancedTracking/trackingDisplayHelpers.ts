@@ -2,6 +2,7 @@ import { hasItems } from '@/lib/utils';
 import { getOtherSideId, hasPointEnded, isPossessionOver } from './trackingUtils';
 import {
   AdvancedTrackedGame,
+  GameClockPause,
   Participant,
   PassModifier,
   PlayerRef,
@@ -251,6 +252,41 @@ export function formatPointTime(ms: number): string {
   return `${minutes}:${String(seconds).padStart(2, '0')}`;
 }
 
+export function getActiveGameClockPause(game: AdvancedTrackedGame | null): GameClockPause | null {
+  if (!game) return null;
+  return game.gameClockPauses?.find((pause) => pause.resumedAt == null) ?? null;
+}
+
+export function getCompletedGameClockPauseMs(game: AdvancedTrackedGame | null): number {
+  if (!game) return 0;
+  return (game.gameClockPauses ?? []).reduce((total, pause) => {
+    if (pause.resumedAt == null) return total;
+    return total + Math.max(0, pause.resumedAt - pause.pausedAt);
+  }, 0);
+}
+
+export function getGameClockElapsedMs(game: AdvancedTrackedGame | null, now: number): number {
+  const gameStartedAt = game?.points[0]?.startedAt;
+  if (gameStartedAt == null) return 0;
+  const activePause = getActiveGameClockPause(game);
+  const currentTime = activePause?.pausedAt ?? now;
+  return Math.max(0, currentTime - gameStartedAt - getCompletedGameClockPauseMs(game));
+}
+
+export function getCompletedGameClockPauseMsDuringPoint(
+  game: AdvancedTrackedGame | null | undefined,
+  point: TrackedPoint,
+  pointEndMs: number,
+): number {
+  if (!game || point.startedAt == null) return 0;
+  return (game.gameClockPauses ?? []).reduce((total, pause) => {
+    if (pause.resumedAt == null) return total;
+    const overlapStart = Math.max(point.startedAt!, pause.pausedAt);
+    const overlapEnd = Math.min(pointEndMs, pause.resumedAt);
+    return total + Math.max(0, overlapEnd - overlapStart);
+  }, 0);
+}
+
 /** Returns the active (unresolved) stoppage action in the current possession, if any. */
 export function getActiveStoppage(possession: PointPossession | null): StoppageAction | null {
   if (!possession) return null;
@@ -278,14 +314,21 @@ export function getCompletedPauseMs(point: TrackedPoint | null): number {
  * Accounts for completed stoppages and revived (undo-after-goal) state.
  * Use `Date.now() - getPointAdjustedTimestamp(point)` to get elapsed ms.
  */
-export function getPointAdjustedTimestamp(point: TrackedPoint): number {
+export function getPointAdjustedTimestamp(
+  point: TrackedPoint,
+  game?: AdvancedTrackedGame | null,
+): number {
   if (point.revivedAt != null && point.elapsedMsAtEnd != null) {
     return point.revivedAt - point.elapsedMsAtEnd;
   }
   if (hasPointEnded(point) && point.elapsedMsAtEnd != null) {
     return Date.now() - point.elapsedMsAtEnd;
   }
-  return (point.startedAt ?? 0) + getCompletedPauseMs(point);
+  return (
+    (point.startedAt ?? 0) +
+    getCompletedPauseMs(point) +
+    getCompletedGameClockPauseMsDuringPoint(game, point, Date.now())
+  );
 }
 
 /**

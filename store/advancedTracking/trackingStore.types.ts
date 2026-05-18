@@ -1,6 +1,7 @@
 import type {
   AdvancedTrackedGame,
   FieldLocation,
+  GameClockPauseReason,
   GameMetadata,
   GameSide,
   Participant,
@@ -123,6 +124,8 @@ export interface AdvancedTrackingState {
   terminateGame: (endReason: NonNullable<AdvancedTrackedGame['endReason']>) => void;
   updateGameMetadata: (metadata: GameMetadata) => void;
   recordGameTransition: (transitionType: 'soft_cap' | 'hard_cap') => void;
+  startGameClockPause: (reason: GameClockPauseReason) => string;
+  resumeGameClockPause: (pauseId: string) => void;
   recordBetweenPointTimeout: (input: RecordBetweenPointTimeoutInput) => string;
   recordPull: (input: RecordPullInput) => string;
   amendOpeningPullAsDropped: (receiver: PlayerRef) => void;

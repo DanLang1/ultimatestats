@@ -11,6 +11,16 @@ export const ADVANCED_TRACKING_SCHEMA_VERSION = 1;
 
 export type GameStatus = 'in_progress' | 'final' | 'terminated';
 
+export type GameClockPauseReason = 'weather' | 'field' | 'admin' | 'manual';
+
+export interface GameClockPause {
+  id: string;
+  reason: GameClockPauseReason;
+  pausedAt: number;
+  resumedAt?: number;
+  pointId?: string;
+}
+
 export interface AdvancedTrackedGame {
   id: string;
   schemaVersion: number;
@@ -56,6 +66,7 @@ export interface AdvancedTrackedGame {
    * `TrackedPoint.transitionsAfter` instead.
    */
   gameTransitions?: GameTransition[];
+  gameClockPauses?: GameClockPause[];
   points: TrackedPoint[];
 }
 

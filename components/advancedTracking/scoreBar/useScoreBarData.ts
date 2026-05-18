@@ -1,5 +1,6 @@
 import {
   getActiveStoppage,
+  getActiveGameClockPause,
   getSideTimeoutState,
 } from '@/lib/advancedTracking/trackingDisplayHelpers';
 import {
@@ -38,8 +39,9 @@ export function useScoreBarData() {
   const possession = getCurrentPossession(game);
   const pointIsOver = hasPointEnded(point);
   const activeStoppage = getActiveStoppage(possession);
-  const stoppageActive = activeStoppage !== null;
-  const isPointTimerPaused = activeStoppage !== null;
+  const activeGameClockPause = getActiveGameClockPause(game);
+  const stoppageActive = activeStoppage !== null || activeGameClockPause !== null;
+  const isPointTimerPaused = stoppageActive;
   const showPointTimer = point?.startedAt != null && !hasPointEnded(point);
 
   const currentPointNumber = game.points.length;
@@ -52,7 +54,7 @@ export function useScoreBarData() {
       : null;
 
   const handleTimeout = (sideId: string) => {
-    if (activeStoppage) return;
+    if (stoppageActive) return;
     const state = sideId === focusSideId ? focusTimeouts : oppTimeouts;
     const isFloater = state.regularUsedInHalf >= state.regularPerHalf;
     if (pointIsOver) {
@@ -63,7 +65,7 @@ export function useScoreBarData() {
   };
 
   const handlePause = () => {
-    if (activeStoppage) return;
+    if (stoppageActive) return;
     recordStoppage({ reason: 'manual_pause' });
   };
 

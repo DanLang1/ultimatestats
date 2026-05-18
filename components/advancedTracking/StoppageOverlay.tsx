@@ -53,7 +53,7 @@ export const StoppageOverlay = ({ game }: StoppageOverlayProps) => {
       ? (game.sides.find((s) => s.id === activeStoppage.sideId)?.label ?? null)
       : null;
 
-  const pointTimerBase = point ? getPointAdjustedTimestamp(point) : null;
+  const pointTimerBase = point ? getPointAdjustedTimestamp(point, game) : null;
   const frozenPointElapsedMs =
     stoppageTimestamp != null && pointTimerBase != null ? stoppageTimestamp - pointTimerBase : 0;
 

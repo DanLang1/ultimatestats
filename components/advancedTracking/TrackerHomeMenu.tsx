@@ -11,9 +11,16 @@ import { Modal, Pressable, StyleSheet, View } from 'react-native';
 interface TrackerHomeMenuProps {
   visible: boolean;
   onClose: () => void;
+  canPauseGameClock: boolean;
+  onGameClockPause: () => void;
 }
 
-export const TrackerHomeMenu = ({ visible, onClose }: TrackerHomeMenuProps) => {
+export const TrackerHomeMenu = ({
+  visible,
+  onClose,
+  canPauseGameClock,
+  onGameClockPause,
+}: TrackerHomeMenuProps) => {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
   const styles = createStyles(sizeClass);
@@ -26,6 +33,11 @@ export const TrackerHomeMenu = ({ visible, onClose }: TrackerHomeMenuProps) => {
   const handleViewStats = () => {
     onClose();
     router.push('/ViewStats');
+  };
+
+  const handleGameClockPause = () => {
+    onClose();
+    onGameClockPause();
   };
 
   return (
@@ -97,6 +109,30 @@ export const TrackerHomeMenu = ({ visible, onClose }: TrackerHomeMenuProps) => {
             </View>
             <ThemedText style={[styles.actionLabel, { color: palette.textInverse }]}>
               Home
+            </ThemedText>
+          </Pressable>
+          <Pressable
+            testID="tracker-menu-game-pause"
+            disabled={!canPauseGameClock}
+            onPress={handleGameClockPause}
+            style={({ pressed }) => [
+              styles.action,
+              {
+                backgroundColor: palette.overlay05,
+                borderColor: palette.overlay15,
+                opacity: canPauseGameClock ? 1 : 0.45,
+              },
+              pressed && canPauseGameClock && { opacity: 0.7 },
+            ]}>
+            <View style={[styles.iconWrap, { backgroundColor: palette.accentOverlay10 }]}>
+              <MaterialCommunityIcons
+                name="pause-circle-outline"
+                size={scaleBySizeClass(20, sizeClass)}
+                color={palette.accent}
+              />
+            </View>
+            <ThemedText style={[styles.actionLabel, { color: palette.textInverse }]}>
+              Pause Cap Clock
             </ThemedText>
           </Pressable>
         </View>

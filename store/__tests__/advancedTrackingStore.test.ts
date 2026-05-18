@@ -781,6 +781,63 @@ describe('advancedTrackingStore', () => {
     expect(useAdvancedTrackingStore.getState().undoStack).toHaveLength(undoCountBefore);
   });
 
+  it('startGameClockPause records an active game-level delay outside stat undo', () => {
+    const nowSpy = jest.spyOn(Date, 'now');
+    nowSpy.mockReturnValue(1_000);
+    createGame();
+
+    nowSpy.mockReturnValue(2_000);
+    useAdvancedTrackingStore.getState().recordPull({
+      lines: homeLinesAugust,
+      puller: untracked,
+      receiver: august,
+      result: 'inbound',
+    });
+    const undoCountBefore = useAdvancedTrackingStore.getState().undoStack.length;
+
+    nowSpy.mockReturnValue(5_000);
+    const pauseId = useAdvancedTrackingStore.getState().startGameClockPause('manual');
+
+    const game = getCurrentGame();
+    expect(game?.gameClockPauses).toEqual([
+      {
+        id: pauseId,
+        reason: 'manual',
+        pausedAt: 5_000,
+        pointId: game?.points[0].id,
+      },
+    ]);
+    expect(useAdvancedTrackingStore.getState().undoStack).toHaveLength(undoCountBefore);
+
+    nowSpy.mockRestore();
+  });
+
+  it('resumeGameClockPause completes the active delay without adding to stat undo', () => {
+    const nowSpy = jest.spyOn(Date, 'now');
+    nowSpy.mockReturnValue(1_000);
+    createGame();
+    useAdvancedTrackingStore.getState().recordPull({
+      lines: homeLinesAugust,
+      puller: untracked,
+      receiver: august,
+      result: 'inbound',
+    });
+    nowSpy.mockReturnValue(5_000);
+    const pauseId = useAdvancedTrackingStore.getState().startGameClockPause('manual');
+    const undoCountBefore = useAdvancedTrackingStore.getState().undoStack.length;
+
+    nowSpy.mockReturnValue(15_000);
+    useAdvancedTrackingStore.getState().resumeGameClockPause(pauseId);
+
+    expect(getCurrentGame()?.gameClockPauses?.[0]).toMatchObject({
+      id: pauseId,
+      resumedAt: 15_000,
+    });
+    expect(useAdvancedTrackingStore.getState().undoStack).toHaveLength(undoCountBefore);
+
+    nowSpy.mockRestore();
+  });
+
   it('resumeStoppage sets resumedAt on the stoppage action', () => {
     createGame();
 
@@ -1188,6 +1245,35 @@ describe('advancedTrackingStore', () => {
       recordGoalAtElapsedMinutes(60);
 
       expect(getCurrentGameTransitions()).toHaveLength(0);
+    });
+
+    it('does not record soft_cap from wall-clock time spent in a game clock pause', () => {
+      setupGameAndPull();
+      jest.setSystemTime(65 * 60_000);
+      const pauseId = useAdvancedTrackingStore.getState().startGameClockPause('manual');
+      jest.setSystemTime(75 * 60_000);
+      useAdvancedTrackingStore.getState().resumeGameClockPause(pauseId);
+
+      recordGoalAtElapsedMinutes(75);
+
+      expect(getCurrentGameTransitions()).toHaveLength(0);
+    });
+
+    it('records soft_cap once adjusted game-clock time reaches the threshold after a pause', () => {
+      setupGameAndPull();
+      jest.setSystemTime(65 * 60_000);
+      const pauseId = useAdvancedTrackingStore.getState().startGameClockPause('manual');
+      jest.setSystemTime(75 * 60_000);
+      useAdvancedTrackingStore.getState().resumeGameClockPause(pauseId);
+
+      recordGoalAtElapsedMinutes(80);
+
+      expect(getCurrentGameTransitions()).toEqual([
+        expect.objectContaining({
+          transitionType: 'soft_cap',
+          afterPointId: getCurrentGame()!.points[0].id,
+        }),
+      ]);
     });
 
     it('is idempotent — a second goal does not re-add the same cap', () => {

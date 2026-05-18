@@ -1,6 +1,7 @@
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { DevDebugModal } from '@/components/advancedTracking/DevDebugModal';
+import { GameClockPauseOverlay } from '@/components/advancedTracking/GameClockPauseOverlay';
 import { StoppageOverlay } from '@/components/advancedTracking/StoppageOverlay';
 import { TrackerActionFooter } from '@/components/advancedTracking/TrackerActionFooter';
 import { TrackerCapBar } from '@/components/advancedTracking/TrackerCapBar';
@@ -18,8 +19,11 @@ import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { computeCapState } from '@/lib/advancedTracking/capUtils';
 import {
   getActiveSideId,
+  getActiveGameClockPause,
   getActiveStoppage,
+  getCompletedGameClockPauseMs,
   getEffectiveLineParticipantIds,
+  getGameClockElapsedMs,
   getPointAdjustedTimestamp,
   getSafeDiscHolderRef,
   isPullAwaitingPickup,
@@ -59,6 +63,7 @@ export default function AdvancedTrackerScreen() {
     recordPickup,
     amendLastThrowAsGoal,
     amendOpeningPullAsDropped,
+    startGameClockPause,
   } = useAdvancedTrackingStore();
   const currentTeam = useGameStore((s) => s.currentTeam);
 
@@ -72,23 +77,33 @@ export default function AdvancedTrackerScreen() {
   const point = game ? getCurrentPoint(game) : null;
   const possession = game ? getCurrentPossession(game) : null;
   const activeStoppage = getActiveStoppage(possession);
-  const isPointTimerPaused = activeStoppage !== null;
+  const activeGameClockPause = game ? getActiveGameClockPause(game) : null;
+  const isPointTimerPaused = activeStoppage !== null || activeGameClockPause !== null;
   const showPointTimer = point?.startedAt != null && !hasPointEnded(point);
-  const pointTimerAdjustedTimestamp = point ? getPointAdjustedTimestamp(point) : null;
-  const pointElapsedMs = useTimestampTimer({
+  const pointTimerAdjustedTimestamp = point ? getPointAdjustedTimestamp(point, game) : null;
+  const runningPointElapsedMs = useTimestampTimer({
     timestamp: pointTimerAdjustedTimestamp,
     mode: 'elapsed',
     intervalMs: 250,
     enabled: showPointTimer && !isPointTimerPaused,
   });
+  const pointElapsedMs =
+    activeGameClockPause != null && pointTimerAdjustedTimestamp != null
+      ? Math.max(0, activeGameClockPause.pausedAt - pointTimerAdjustedTimestamp)
+      : runningPointElapsedMs;
 
   const gameStartedAt = game?.points[0]?.startedAt ?? null;
-  const gameElapsedMs = useTimestampTimer({
+  const rawGameElapsedMs = useTimestampTimer({
     timestamp: gameStartedAt,
     mode: 'elapsed',
     intervalMs: 1000,
-    enabled: gameStartedAt !== null,
+    enabled: gameStartedAt !== null && activeGameClockPause === null,
   });
+  const completedGameClockPauseMs = game ? getCompletedGameClockPauseMs(game) : 0;
+  const gameElapsedMs =
+    activeGameClockPause !== null
+      ? getGameClockElapsedMs(game ?? null, Date.now())
+      : Math.max(0, rawGameElapsedMs - completedGameClockPauseMs);
   const { hardCapMins, softCapMins } = useSettingsStore();
   const { capLabel, capProgress, capTimeLeftMs, capIsWarning } = computeCapState({
     gameElapsedMs,
@@ -96,6 +111,7 @@ export default function AdvancedTrackerScreen() {
     gameLengthMinutes: hardCapMins,
     softCapMins,
   });
+  const capDisplayLabel = activeGameClockPause !== null ? 'CAP PAUSED' : capLabel;
 
   const pointIsOver = hasPointEnded(point);
   const activeSideId = game ? getActiveSideId(possession, game) : '';
@@ -108,7 +124,12 @@ export default function AdvancedTrackerScreen() {
     oppHasDisc,
     discHolderId: discHolderRef?.refType === 'participant' ? discHolderRef.participantId : null,
   });
-  const canUseVoice = !pointIsOver && !activeStoppage && !oppHasDisc && discHolderRef != null;
+  const canUseVoice =
+    !pointIsOver &&
+    !activeStoppage &&
+    activeGameClockPause === null &&
+    !oppHasDisc &&
+    discHolderRef != null;
   const activeIds = game && point ? getEffectiveLineParticipantIds(point, game.focusSideId) : [];
   const activeParticipants = game
     ? mergeRosterNumbersIntoParticipants(
@@ -179,8 +200,32 @@ export default function AdvancedTrackerScreen() {
     setPassModifier(null);
     router.push('/advancedTracking/TrackerInjurySub');
   };
+  const handleGamePause = () => {
+    startGameClockPause('manual');
+  };
 
   const LEFT_PANEL_WIDTH = 160;
+  const renderTrackingSurface = (availableWidth?: number) => {
+    if (activeGameClockPause) {
+      return <GameClockPauseOverlay pause={activeGameClockPause} />;
+    }
+    if (activeStoppage) {
+      return <StoppageOverlay game={game} />;
+    }
+    return (
+      <TrackerPlayerGrid
+        activeParticipants={activeParticipants}
+        discHolderRef={discHolderRef}
+        oppHasDisc={oppHasDisc}
+        canDropOpeningPull={isAwaitingPullPickup}
+        passModifier={passModifier}
+        handlers={handlers}
+        onLineChangePress={() => setShowLineChangeMenu(true)}
+        canChangeLine={canChangeLine}
+        availableWidth={availableWidth}
+      />
+    );
+  };
 
   return (
     <ThemedView style={styles.container}>
@@ -201,7 +246,7 @@ export default function AdvancedTrackerScreen() {
             <TrackerCapBar
               compact
               onMenuPress={() => setShowHomeMenu(true)}
-              capLabel={capLabel}
+              capLabel={capDisplayLabel}
               capProgress={capProgress}
               capIsWarning={capIsWarning}
               capTimeLeftMs={capTimeLeftMs}
@@ -209,7 +254,7 @@ export default function AdvancedTrackerScreen() {
             />
             <TrackerScoreBar pointElapsedMs={pointElapsedMs} />
             <View style={{ flex: 1 }} />
-            {!activeStoppage && (
+            {!activeStoppage && !activeGameClockPause && (
               <>
                 <TrackerLastActionCard
                   passModifier={passModifier}
@@ -226,21 +271,7 @@ export default function AdvancedTrackerScreen() {
           </View>
           <View
             style={[styles.rightPanel, { paddingRight: insets.right, justifyContent: 'center' }]}>
-            {activeStoppage ? (
-              <StoppageOverlay game={game} />
-            ) : (
-              <TrackerPlayerGrid
-                activeParticipants={activeParticipants}
-                discHolderRef={discHolderRef}
-                oppHasDisc={oppHasDisc}
-                canDropOpeningPull={isAwaitingPullPickup}
-                passModifier={passModifier}
-                handlers={handlers}
-                onLineChangePress={() => setShowLineChangeMenu(true)}
-                canChangeLine={canChangeLine}
-                availableWidth={width - LEFT_PANEL_WIDTH - insets.left - insets.right}
-              />
-            )}
+            {renderTrackingSurface(width - LEFT_PANEL_WIDTH - insets.left - insets.right)}
           </View>
         </View>
       ) : (
@@ -248,14 +279,14 @@ export default function AdvancedTrackerScreen() {
           <TrackerCapBar
             compact={false}
             onMenuPress={() => setShowHomeMenu(true)}
-            capLabel={capLabel}
+            capLabel={capDisplayLabel}
             capProgress={capProgress}
             capIsWarning={capIsWarning}
             capTimeLeftMs={capTimeLeftMs}
             gameStarted={gameStartedAt !== null}
           />
           <TrackerScoreBar pointElapsedMs={pointElapsedMs} />
-          {!activeStoppage && (
+          {!activeStoppage && !activeGameClockPause && (
             <TrackerLastActionCard
               passModifier={passModifier}
               onCancelModifier={() => setPassModifier(null)}
@@ -263,30 +294,19 @@ export default function AdvancedTrackerScreen() {
             />
           )}
           <View style={{ flex: 1, justifyContent: 'flex-start', paddingTop: 4 }}>
-            {activeStoppage ? (
-              <StoppageOverlay game={game} />
-            ) : (
-              <TrackerPlayerGrid
-                activeParticipants={activeParticipants}
-                discHolderRef={discHolderRef}
-                oppHasDisc={oppHasDisc}
-                canDropOpeningPull={isAwaitingPullPickup}
-                passModifier={passModifier}
-                handlers={handlers}
-                onLineChangePress={() => setShowLineChangeMenu(true)}
-                canChangeLine={canChangeLine}
-              />
-            )}
+            {renderTrackingSurface()}
           </View>
-          <TrackerActionFooter
-            pointElapsedMs={pointElapsedMs}
-            onStartNextPoint={handleStartNextPoint}
-            voiceControls={canUseVoice ? voiceControls : undefined}
-          />
+          {!activeGameClockPause && (
+            <TrackerActionFooter
+              pointElapsedMs={pointElapsedMs}
+              onStartNextPoint={handleStartNextPoint}
+              voiceControls={canUseVoice ? voiceControls : undefined}
+            />
+          )}
         </>
       )}
 
-      {!activeStoppage && (
+      {!activeStoppage && !activeGameClockPause && (
         <TrackerRareMenu
           visible={showRareMenu}
           onClose={() => setShowRareMenu(false)}
@@ -295,9 +315,16 @@ export default function AdvancedTrackerScreen() {
         />
       )}
 
-      <TrackerHomeMenu visible={showHomeMenu} onClose={() => setShowHomeMenu(false)} />
+      <TrackerHomeMenu
+        visible={showHomeMenu}
+        onClose={() => setShowHomeMenu(false)}
+        canPauseGameClock={
+          gameStartedAt !== null && activeStoppage === null && activeGameClockPause === null
+        }
+        onGameClockPause={handleGamePause}
+      />
 
-      {!activeStoppage && canChangeLine && (
+      {!activeStoppage && !activeGameClockPause && canChangeLine && (
         <TrackerLineChangeMenu
           visible={showLineChangeMenu}
           onClose={() => setShowLineChangeMenu(false)}

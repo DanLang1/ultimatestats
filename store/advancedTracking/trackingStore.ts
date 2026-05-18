@@ -22,7 +22,11 @@ import {
   syncDerivedHalftimeTransition,
 } from '@/lib/advancedTracking/trackingUtils';
 import { useSettingsStore } from '@/store/settingsStore';
-import { getPointAdjustedTimestamp } from '@/lib/advancedTracking/trackingDisplayHelpers';
+import {
+  getActiveGameClockPause,
+  getGameClockElapsedMs,
+  getPointAdjustedTimestamp,
+} from '@/lib/advancedTracking/trackingDisplayHelpers';
 import {
   ADVANCED_TRACKING_SCHEMA_VERSION,
   AdvancedTrackedGame,
@@ -201,6 +205,53 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
             const liveGame = getCurrentGame(state);
             liveGame.metadata = metadata;
             liveGame.updatedAt = Date.now();
+          });
+        },
+
+        startGameClockPause: (reason) => {
+          const game = getCurrentGame(get());
+          if (game.points[0]?.startedAt == null) {
+            throw new Error('Cannot pause the game clock before the game has started.');
+          }
+          if (getActiveGameClockPause(game) != null) {
+            throw new Error('Game clock is already paused.');
+          }
+
+          const pauseId = generateId();
+          const point = getCurrentPoint(game);
+          const now = Date.now();
+
+          set((state) => {
+            const liveGame = getCurrentGame(state);
+            if (liveGame.gameClockPauses == null) {
+              liveGame.gameClockPauses = [];
+            }
+            liveGame.gameClockPauses.push({
+              id: pauseId,
+              reason,
+              pausedAt: now,
+              pointId: point != null && !hasPointEnded(point) ? point.id : undefined,
+            });
+            liveGame.updatedAt = now;
+          });
+
+          return pauseId;
+        },
+
+        resumeGameClockPause: (pauseId) => {
+          const game = getCurrentGame(get());
+          const activePause = getActiveGameClockPause(game);
+          if (activePause?.id !== pauseId) {
+            throw new Error(`Game clock pause "${pauseId}" is not active.`);
+          }
+
+          const now = Date.now();
+          set((state) => {
+            const liveGame = getCurrentGame(state);
+            const pause = liveGame.gameClockPauses?.find((candidate) => candidate.id === pauseId);
+            if (pause == null || pause.resumedAt != null) return;
+            pause.resumedAt = now;
+            liveGame.updatedAt = now;
           });
         },
 
@@ -470,7 +521,7 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
             });
             if (input.result === 'goal' || input.result === 'callahan') {
               livePoint.elapsedMsAtEnd =
-                input.timerElapsedMs ?? now - getPointAdjustedTimestamp(livePoint);
+                input.timerElapsedMs ?? now - getPointAdjustedTimestamp(livePoint, liveGame);
               livePoint.revivedAt = undefined;
             }
             pushUndoEntry(state, {
@@ -484,7 +535,7 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
               if (gameStartedAt != null) {
                 const { hardCapMins, softCapMins } = useSettingsStore.getState();
                 syncCapTransitions(liveGame, {
-                  gameElapsedMs: now - gameStartedAt,
+                  gameElapsedMs: getGameClockElapsedMs(liveGame, now),
                   gameLengthMinutes: hardCapMins,
                   softCapMins,
                 });
@@ -531,7 +582,7 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
             if (livePoint) {
               const goalTime = action?.kind === 'throw' ? (action.recordedAt ?? now) : now;
               livePoint.elapsedMsAtEnd =
-                timerElapsedMs ?? goalTime - getPointAdjustedTimestamp(livePoint);
+                timerElapsedMs ?? goalTime - getPointAdjustedTimestamp(livePoint, liveGame);
               livePoint.revivedAt = undefined;
             }
             // The goal is one atomic operation from the coach's perspective.
@@ -552,7 +603,7 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
             if (gameStartedAt != null) {
               const { hardCapMins, softCapMins } = useSettingsStore.getState();
               syncCapTransitions(liveGame, {
-                gameElapsedMs: now - gameStartedAt,
+                gameElapsedMs: getGameClockElapsedMs(liveGame, now),
                 gameLengthMinutes: hardCapMins,
                 softCapMins,
               });
