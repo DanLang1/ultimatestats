@@ -97,6 +97,11 @@ export type AdvancedTrackingUndoEntry =
       transitionId: string;
     }
   | {
+      kind: 'halftime_early';
+      pointId: string;
+      transitionId: string;
+    }
+  | {
       kind: 'amend_throw_result';
       pointId: string;
       possessionId: string;
@@ -125,6 +130,7 @@ export interface AdvancedTrackingState {
   finishTerminatedGame: () => void;
   updateGameMetadata: (metadata: GameMetadata) => void;
   recordGameTransition: (transitionType: 'soft_cap' | 'hard_cap') => void;
+  triggerHalftimeEarly: () => boolean;
   startGameClockPause: (reason: GameClockPauseReason) => string;
   resumeGameClockPause: (pauseId: string) => void;
   recordBetweenPointTimeout: (input: RecordBetweenPointTimeoutInput) => string;

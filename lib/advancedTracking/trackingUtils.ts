@@ -12,6 +12,11 @@ import {
   TrackedPoint,
 } from './types';
 
+export interface AdvancedHalftimeEarlyUndoEntry {
+  kind: string;
+  pointId: string;
+}
+
 // --- Traversal ---
 
 export function getCurrentPoint(game: AdvancedTrackedGame | null): TrackedPoint | null {
@@ -249,15 +254,57 @@ export function isAdvancedGameOver(game: AdvancedTrackedGame): boolean {
   return (firstScore >= effectiveGameTo || secondScore >= effectiveGameTo) && notTied;
 }
 
+export function didLastOperationEndCurrentPoint(
+  game: AdvancedTrackedGame,
+  lastUndoEntry: AdvancedHalftimeEarlyUndoEntry | undefined,
+): boolean {
+  const currentPoint = getCurrentPoint(game);
+  return (
+    currentPoint != null &&
+    (lastUndoEntry?.kind === 'action' || lastUndoEntry?.kind === 'amend_throw_result') &&
+    lastUndoEntry.pointId === currentPoint.id
+  );
+}
+
+export function canStartSecondHalfEarly(
+  game: AdvancedTrackedGame | undefined,
+  lastUndoEntry: AdvancedHalftimeEarlyUndoEntry | undefined,
+): boolean {
+  if (game === undefined) {
+    return false;
+  }
+  const currentPoint = getCurrentPoint(game);
+  if (currentPoint == null) {
+    return false;
+  }
+
+  return (
+    game.settings.format?.halftimeAt != null &&
+    hasPointEnded(currentPoint) &&
+    didLastOperationEndCurrentPoint(game, lastUndoEntry) &&
+    !isAdvancedGameOver(game) &&
+    !game.gameTransitions?.some((transition) => transition.transitionType === 'halftime')
+  );
+}
+
 export function syncDerivedHalftimeTransition(game: AdvancedTrackedGame): boolean {
   const halftimeAt = game.settings.format?.halftimeAt;
   const existingTransitions = game.gameTransitions ?? [];
   const existingHalftime = existingTransitions.find(
     (transition) => transition.transitionType === 'halftime',
   );
+  const existingEarlyHalftime =
+    existingHalftime?.transitionType === 'halftime' && existingHalftime.triggeredEarly === true
+      ? existingHalftime
+      : undefined;
 
   let halftimeAfterPointId: string | undefined;
-  if (halftimeAt != null) {
+  if (existingEarlyHalftime != null) {
+    const earlyPoint = game.points.find((point) => point.id === existingEarlyHalftime.afterPointId);
+    if (earlyPoint != null && hasPointEnded(earlyPoint)) {
+      halftimeAfterPointId = existingEarlyHalftime.afterPointId;
+    }
+  } else if (halftimeAt != null) {
     const runningScore: Record<string, number> = {};
     for (const side of game.sides) {
       runningScore[side.id] = 0;
@@ -285,6 +332,7 @@ export function syncDerivedHalftimeTransition(game: AdvancedTrackedGame): boolea
       id: existingHalftime?.id ?? `halftime_${game.id}`,
       transitionType: 'halftime',
       afterPointId: halftimeAfterPointId,
+      ...(existingEarlyHalftime != null ? { triggeredEarly: true } : {}),
     });
   }
 

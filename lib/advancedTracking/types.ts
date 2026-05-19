@@ -226,9 +226,10 @@ export type BetweenPointTransition =
 export type GameTransition =
   | {
       id: string;
-      /** Derived from score progression at halftimeAt. */
+      /** Derived from score progression at halftimeAt, unless marked as an early start. */
       transitionType: 'halftime';
       afterPointId: string;
+      triggeredEarly?: boolean;
     }
   | {
       id: string;

@@ -3,8 +3,10 @@ import {
   assertValidLines,
   assertValidParticipantRefs,
   assertValidSideIds,
+  canStartSecondHalfEarly,
   cloneGame,
   didPullTurnOver,
+  didLastOperationEndCurrentPoint,
   getCurrentPoint,
   getCurrentPossession,
   getEffectiveGameTo,
@@ -519,6 +521,125 @@ describe('getEffectiveGameTo — soft cap edge cases', () => {
       gameTransitions: [{ id: 'soft1', transitionType: 'soft_cap', afterPointId: 'pt27' }],
     };
     expect(getEffectiveGameTo(game)).toBe(15);
+  });
+});
+
+describe('didLastOperationEndCurrentPoint', () => {
+  const endedPoint = makePoint([
+    makePossession(HOME, [
+      { id: 'a1', kind: 'throw', sideId: HOME, thrower: august, result: 'goal' },
+    ]),
+  ]);
+
+  it('returns true when the last undoable action belongs to the current point', () => {
+    const game = makeGame([{ ...endedPoint, id: 'pt1' }]);
+
+    expect(didLastOperationEndCurrentPoint(game, { kind: 'action', pointId: 'pt1' })).toBe(true);
+  });
+
+  it('returns true for an amended goal on the current point', () => {
+    const game = makeGame([{ ...endedPoint, id: 'pt1' }]);
+
+    expect(
+      didLastOperationEndCurrentPoint(game, { kind: 'amend_throw_result', pointId: 'pt1' }),
+    ).toBe(true);
+  });
+
+  it('returns false for between-point operations', () => {
+    const game = makeGame([{ ...endedPoint, id: 'pt1' }]);
+
+    expect(
+      didLastOperationEndCurrentPoint(game, { kind: 'between_point_timeout', pointId: 'pt1' }),
+    ).toBe(false);
+  });
+
+  it('returns false for the early-halftime undo marker', () => {
+    const game = makeGame([{ ...endedPoint, id: 'pt1' }]);
+
+    expect(didLastOperationEndCurrentPoint(game, { kind: 'halftime_early', pointId: 'pt1' })).toBe(
+      false,
+    );
+  });
+
+  it('returns false when the undo entry belongs to an earlier point', () => {
+    const game = makeGame([
+      { ...endedPoint, id: 'pt1' },
+      { ...endedPoint, id: 'pt2' },
+    ]);
+
+    expect(didLastOperationEndCurrentPoint(game, { kind: 'action', pointId: 'pt1' })).toBe(false);
+  });
+});
+
+describe('canStartSecondHalfEarly', () => {
+  const endedPoint = makePoint([
+    makePossession(HOME, [
+      { id: 'a1', kind: 'throw', sideId: HOME, thrower: august, result: 'goal' },
+    ]),
+  ]);
+
+  function makeHalftimeGame(point: TrackedPoint): AdvancedTrackedGame {
+    return {
+      ...baseGame,
+      settings: {
+        locationMode: 'none',
+        format: { formatType: 'standard', gameTo: 15, halftimeAt: 8 },
+      },
+      points: [point],
+    };
+  }
+
+  it('returns true after the latest point-ending operation', () => {
+    const game = makeHalftimeGame({ ...endedPoint, id: 'pt1' });
+
+    expect(canStartSecondHalfEarly(game, { kind: 'action', pointId: 'pt1' })).toBe(true);
+  });
+
+  it('returns false when halftime is disabled', () => {
+    const game: AdvancedTrackedGame = {
+      ...makeHalftimeGame({ ...endedPoint, id: 'pt1' }),
+      settings: { locationMode: 'none', format: { formatType: 'standard', gameTo: 15 } },
+    };
+
+    expect(canStartSecondHalfEarly(game, { kind: 'action', pointId: 'pt1' })).toBe(false);
+  });
+
+  it('returns false while the current point is still active', () => {
+    const game = makeHalftimeGame({
+      ...makePoint([makePossession(HOME, [])]),
+      id: 'pt1',
+    });
+
+    expect(canStartSecondHalfEarly(game, { kind: 'action', pointId: 'pt1' })).toBe(false);
+  });
+
+  it('returns false when a halftime transition already exists', () => {
+    const game: AdvancedTrackedGame = {
+      ...makeHalftimeGame({ ...endedPoint, id: 'pt1' }),
+      gameTransitions: [{ id: 'ht1', transitionType: 'halftime', afterPointId: 'pt1' }],
+    };
+
+    expect(canStartSecondHalfEarly(game, { kind: 'action', pointId: 'pt1' })).toBe(false);
+  });
+
+  it('returns false after a non-point-ending undoable operation', () => {
+    const game = makeHalftimeGame({ ...endedPoint, id: 'pt1' });
+
+    expect(canStartSecondHalfEarly(game, { kind: 'between_point_timeout', pointId: 'pt1' })).toBe(
+      false,
+    );
+  });
+
+  it('returns false when the game is already over', () => {
+    const game: AdvancedTrackedGame = {
+      ...makeHalftimeGame({ ...endedPoint, id: 'pt1' }),
+      settings: {
+        locationMode: 'none',
+        format: { formatType: 'standard', gameTo: 1, halftimeAt: 1 },
+      },
+    };
+
+    expect(canStartSecondHalfEarly(game, { kind: 'action', pointId: 'pt1' })).toBe(false);
   });
 });
 

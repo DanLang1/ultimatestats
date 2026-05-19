@@ -12,7 +12,9 @@ interface TrackerHomeMenuProps {
   visible: boolean;
   onClose: () => void;
   canPauseGameClock: boolean;
+  canStartSecondHalfEarly: boolean;
   onGameClockPause: () => void;
+  onStartSecondHalfEarly: () => void;
   onEndGameEarly: () => void;
 }
 
@@ -20,7 +22,9 @@ export const TrackerHomeMenu = ({
   visible,
   onClose,
   canPauseGameClock,
+  canStartSecondHalfEarly,
   onGameClockPause,
+  onStartSecondHalfEarly,
   onEndGameEarly,
 }: TrackerHomeMenuProps) => {
   const { palette } = useTheme();
@@ -40,6 +44,11 @@ export const TrackerHomeMenu = ({
   const handleGameClockPause = () => {
     onClose();
     onGameClockPause();
+  };
+
+  const handleStartSecondHalfEarly = () => {
+    onClose();
+    onStartSecondHalfEarly();
   };
 
   const handleEndGameEarly = () => {
@@ -145,8 +154,32 @@ export const TrackerHomeMenu = ({
 
           <View style={[styles.section, { borderTopColor: palette.overlay10 }]}>
             <ThemedText style={[styles.sectionTitle, { color: palette.textMuted }]}>
-              END GAME EARLY
+              GAME MANAGEMENT
             </ThemedText>
+            {canStartSecondHalfEarly && (
+              <Pressable
+                testID="tracker-menu-start-second-half-early"
+                onPress={handleStartSecondHalfEarly}
+                style={({ pressed }) => [
+                  styles.action,
+                  {
+                    backgroundColor: palette.warning + '10',
+                    borderColor: palette.warning + '20',
+                  },
+                  pressed && { opacity: 0.7 },
+                ]}>
+                <View style={[styles.iconWrap, { backgroundColor: palette.overlay10 }]}>
+                  <MaterialCommunityIcons
+                    name="skip-next-circle-outline"
+                    size={scaleBySizeClass(20, sizeClass)}
+                    color={palette.warning}
+                  />
+                </View>
+                <ThemedText style={[styles.actionLabel, { color: palette.textInverse }]}>
+                  Start 2nd Half Early
+                </ThemedText>
+              </Pressable>
+            )}
             <Pressable
               testID="tracker-menu-end-game"
               onPress={handleEndGameEarly}

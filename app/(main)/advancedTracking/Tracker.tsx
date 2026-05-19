@@ -18,8 +18,8 @@ import { useVoiceStatCommands } from '@/hooks/advancedTracking/useVoiceStatComma
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { computeCapState } from '@/lib/advancedTracking/capUtils';
 import {
-  getActiveSideId,
   getActiveGameClockPause,
+  getActiveSideId,
   getActiveStoppage,
   getCompletedGameClockPauseMs,
   getEffectiveLineParticipantIds,
@@ -29,6 +29,7 @@ import {
   isPullAwaitingPickup,
 } from '@/lib/advancedTracking/trackingDisplayHelpers';
 import {
+  canStartSecondHalfEarly,
   getCurrentPoint,
   getCurrentPossession,
   hasPointEnded,
@@ -58,12 +59,14 @@ export default function AdvancedTrackerScreen() {
   const {
     currentGameId,
     savedGames,
+    undoStack,
     isHalftimeBreakActive,
     recordThrow,
     recordPickup,
     amendLastThrowAsGoal,
     amendOpeningPullAsDropped,
     startGameClockPause,
+    triggerHalftimeEarly,
   } = useAdvancedTrackingStore();
   const currentTeam = useGameStore((s) => s.currentTeam);
 
@@ -114,6 +117,8 @@ export default function AdvancedTrackerScreen() {
   const capDisplayLabel = activeGameClockPause !== null ? 'CAP PAUSED' : capLabel;
 
   const pointIsOver = hasPointEnded(point);
+  const lastUndoEntry = undoStack.at(-1);
+  const showStartSecondHalfEarly = canStartSecondHalfEarly(game, lastUndoEntry);
   const activeSideId = game ? getActiveSideId(possession, game) : '';
   const oppHasDisc = game ? !pointIsOver && activeSideId !== game.focusSideId : false;
   const canChangeLine = !pointIsOver;
@@ -328,7 +333,9 @@ export default function AdvancedTrackerScreen() {
         canPauseGameClock={
           gameStartedAt !== null && activeStoppage === null && activeGameClockPause === null
         }
+        canStartSecondHalfEarly={showStartSecondHalfEarly}
         onGameClockPause={handleGamePause}
+        onStartSecondHalfEarly={triggerHalftimeEarly}
         onEndGameEarly={handleEndGameEarly}
       />
 

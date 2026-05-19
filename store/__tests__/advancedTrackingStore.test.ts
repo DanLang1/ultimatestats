@@ -44,6 +44,7 @@ function resetStore() {
     currentGameId: null,
     savedGames: [],
     undoStack: [],
+    isHalftimeBreakActive: false,
   });
 }
 
@@ -354,6 +355,177 @@ describe('advancedTrackingStore', () => {
 
     useAdvancedTrackingStore.getState().undoLastOperation();
 
+    expect(getCurrentGame()?.gameTransitions).toBeUndefined();
+  });
+
+  it('starts the second half early after the latest completed point', () => {
+    createGame();
+
+    useAdvancedTrackingStore.getState().recordPull({
+      lines: homeLinesAugust,
+      puller: untracked,
+      receiver: august,
+      result: 'inbound',
+    });
+    useAdvancedTrackingStore
+      .getState()
+      .recordThrow({ thrower: august, result: 'goal', toPlayer: meves });
+
+    const didTrigger = useAdvancedTrackingStore.getState().triggerHalftimeEarly();
+
+    const game = getCurrentGame() as AdvancedTrackedGame;
+    expect(didTrigger).toBe(true);
+    expect(useAdvancedTrackingStore.getState().isHalftimeBreakActive).toBe(true);
+    expect(game.gameTransitions).toEqual([
+      {
+        id: expect.any(String),
+        transitionType: 'halftime',
+        afterPointId: game.points[0].id,
+        triggeredEarly: true,
+      },
+    ]);
+    expect(useAdvancedTrackingStore.getState().undoStack.at(-1)).toEqual({
+      kind: 'halftime_early',
+      pointId: game.points[0].id,
+      transitionId: game.gameTransitions?.[0].id,
+    });
+  });
+
+  it('does not start the second half early when halftime is disabled', () => {
+    useAdvancedTrackingStore.getState().createGame({
+      focusSideId: homeSideId,
+      initialReceivingSideId: homeSideId,
+      sides: [
+        { id: homeSideId, label: 'Home', trackingMode: 'full-roster' },
+        { id: awaySideId, label: 'Away', trackingMode: 'anonymous' },
+      ],
+      participants: [
+        { id: august.participantId, name: 'August' },
+        { id: meves.participantId, name: 'Meves' },
+      ],
+      format: { gameTo: 15, halftimeEnabled: false },
+    });
+
+    useAdvancedTrackingStore.getState().recordPull({
+      lines: homeLinesAugust,
+      puller: untracked,
+      receiver: august,
+      result: 'inbound',
+    });
+    useAdvancedTrackingStore
+      .getState()
+      .recordThrow({ thrower: august, result: 'goal', toPlayer: meves });
+
+    const didTrigger = useAdvancedTrackingStore.getState().triggerHalftimeEarly();
+
+    expect(didTrigger).toBe(false);
+    expect(useAdvancedTrackingStore.getState().isHalftimeBreakActive).toBe(false);
+    expect(getCurrentGame()?.gameTransitions).toBeUndefined();
+  });
+
+  it('undoes an early halftime marker without undoing the scoring point', () => {
+    createGame();
+
+    useAdvancedTrackingStore.getState().recordPull({
+      lines: homeLinesAugust,
+      puller: untracked,
+      receiver: august,
+      result: 'inbound',
+    });
+    useAdvancedTrackingStore
+      .getState()
+      .recordThrow({ thrower: august, result: 'goal', toPlayer: meves });
+
+    expect(useAdvancedTrackingStore.getState().triggerHalftimeEarly()).toBe(true);
+
+    const didUndo = useAdvancedTrackingStore.getState().undoLastOperation();
+
+    expect(didUndo).toBe(true);
+    expect(getCurrentGame()?.gameTransitions).toBeUndefined();
+    expect(useAdvancedTrackingStore.getState().isHalftimeBreakActive).toBe(false);
+    expect(hasPointEnded(getCurrentPoint(getCurrentGame()))).toBe(true);
+  });
+
+  it('can undo the scoring point after undoing early halftime', () => {
+    createGame();
+
+    useAdvancedTrackingStore.getState().recordPull({
+      lines: homeLinesAugust,
+      puller: untracked,
+      receiver: august,
+      result: 'inbound',
+    });
+    useAdvancedTrackingStore
+      .getState()
+      .recordThrow({ thrower: august, result: 'goal', toPlayer: meves });
+
+    expect(useAdvancedTrackingStore.getState().triggerHalftimeEarly()).toBe(true);
+    expect(useAdvancedTrackingStore.getState().undoLastOperation()).toBe(true);
+    expect(useAdvancedTrackingStore.getState().undoLastOperation()).toBe(true);
+
+    expect(getCurrentGame()?.gameTransitions).toBeUndefined();
+    expect(hasPointEnded(getCurrentPoint(getCurrentGame()))).toBe(false);
+  });
+
+  it('preserves early halftime when later scoring re-syncs transitions', () => {
+    createGame();
+
+    useAdvancedTrackingStore.getState().recordPull({
+      lines: homeLinesAugust,
+      puller: untracked,
+      receiver: august,
+      result: 'inbound',
+    });
+    useAdvancedTrackingStore
+      .getState()
+      .recordThrow({ thrower: august, result: 'goal', toPlayer: meves });
+
+    expect(useAdvancedTrackingStore.getState().triggerHalftimeEarly()).toBe(true);
+    useAdvancedTrackingStore.getState().clearHalftimeBreak();
+
+    const halftimePointId = getCurrentGame()?.points[0].id;
+
+    useAdvancedTrackingStore.getState().recordPull({
+      lines: homeLinesAugust,
+      puller: august,
+      receiver: untracked,
+      result: 'inbound',
+    });
+    useAdvancedTrackingStore
+      .getState()
+      .recordThrow({ thrower: untracked, result: 'goal', toPlayer: untracked });
+
+    expect(getCurrentGame()?.gameTransitions).toEqual([
+      {
+        id: expect.any(String),
+        transitionType: 'halftime',
+        afterPointId: halftimePointId,
+        triggeredEarly: true,
+      },
+    ]);
+  });
+
+  it('does not start the second half early after a between-point timeout', () => {
+    createGame();
+
+    useAdvancedTrackingStore.getState().recordPull({
+      lines: homeLinesAugust,
+      puller: untracked,
+      receiver: august,
+      result: 'inbound',
+    });
+    useAdvancedTrackingStore
+      .getState()
+      .recordThrow({ thrower: august, result: 'goal', toPlayer: meves });
+    useAdvancedTrackingStore.getState().recordBetweenPointTimeout({
+      sideId: homeSideId,
+      isFloater: false,
+    });
+
+    const didTrigger = useAdvancedTrackingStore.getState().triggerHalftimeEarly();
+
+    expect(didTrigger).toBe(false);
+    expect(useAdvancedTrackingStore.getState().isHalftimeBreakActive).toBe(false);
     expect(getCurrentGame()?.gameTransitions).toBeUndefined();
   });
 

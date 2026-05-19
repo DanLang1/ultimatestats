@@ -9,6 +9,7 @@ import {
   assertValidLines,
   assertValidParticipantRefs,
   assertValidSideIds,
+  canStartSecondHalfEarly,
   getCurrentPoint,
   getCurrentPossession,
   getEffectiveGameTo,
@@ -310,6 +311,46 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
             }
             liveGame.updatedAt = Date.now();
           });
+        },
+
+        triggerHalftimeEarly: () => {
+          if (get().currentGameId == null) {
+            return false;
+          }
+
+          const game = getCurrentGame(get());
+          const currentPoint = getCurrentPoint(game);
+          const lastUndoEntry = get().undoStack.at(-1);
+
+          if (!canStartSecondHalfEarly(game, lastUndoEntry)) {
+            return false;
+          }
+
+          const currentPointId = currentPoint!.id;
+          const transitionId = generateId();
+          const now = Date.now();
+
+          set((state) => {
+            const liveGame = getCurrentGame(state);
+            if (liveGame.gameTransitions == null) {
+              liveGame.gameTransitions = [];
+            }
+            liveGame.gameTransitions.push({
+              id: transitionId,
+              transitionType: 'halftime',
+              afterPointId: currentPointId,
+              triggeredEarly: true,
+            });
+            pushUndoEntry(state, {
+              kind: 'halftime_early',
+              pointId: currentPointId,
+              transitionId,
+            });
+            liveGame.updatedAt = now;
+            state.isHalftimeBreakActive = true;
+          });
+
+          return true;
         },
 
         recordBetweenPointTimeout: (input) => {
@@ -841,6 +882,13 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
                 if (point.transitionsAfter.length === 0) {
                   point.transitionsAfter = undefined;
                 }
+              }
+            } else if (lastUndoEntry.kind === 'halftime_early') {
+              liveGame.gameTransitions = liveGame.gameTransitions?.filter(
+                (transition) => transition.id !== lastUndoEntry.transitionId,
+              );
+              if (liveGame.gameTransitions?.length === 0) {
+                liveGame.gameTransitions = undefined;
               }
             } else if (lastUndoEntry.kind === 'amend_throw_result') {
               const point = liveGame.points.find(
