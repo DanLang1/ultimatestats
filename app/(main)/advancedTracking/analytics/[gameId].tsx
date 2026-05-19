@@ -128,7 +128,7 @@ export default function AdvancedGameStatsScreen() {
           style: 'destructive',
           onPress: () => {
             deleteSavedGame(gameId);
-            router.back();
+            router.replace('/SavedGameStats');
           },
         },
       ],

@@ -122,7 +122,7 @@ export default function SavedGameStatsScreen() {
           style: 'destructive',
           onPress: async () => {
             await deleteSavedGame(selectedGame.id);
-            router.back();
+            router.replace('/SavedGameStats');
           },
         },
       ],
