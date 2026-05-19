@@ -1,3 +1,4 @@
+import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { useAlert } from '@/components/ui/AlertProvider';
 import {
@@ -16,6 +17,7 @@ import { shareFileAndDelete } from '@/lib/shareFileAndDelete';
 import { serializeGame, uploadPayload } from '@/lib/sharing';
 import { formatDate, generateSavedGameCSV } from '@/lib/statsUtils';
 import { useGameStore } from '@/store/gameStore';
+import { Fonts } from '@/theme/theme';
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import DateTimePicker, {
@@ -26,8 +28,6 @@ import { File, Paths } from 'expo-file-system';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import React, { useState } from 'react';
 import { Platform, Pressable, ScrollView, Share, StyleSheet, View } from 'react-native';
-import { ThemedText } from '@/components/ThemedText';
-import { Fonts } from '@/theme/theme';
 
 const MIN_PLAYED_AT_DATE = new Date(MIN_PLAYED_AT_YEAR, 0, 1);
 
@@ -355,6 +355,7 @@ export default function SavedGameStatsScreen() {
               title: 'Share failed',
               message: 'Could not upload data for sharing. Please try again.',
             });
+            throw new Error('share failed');
           }
         }}
         onCancel={() => setPendingShareAction(null)}

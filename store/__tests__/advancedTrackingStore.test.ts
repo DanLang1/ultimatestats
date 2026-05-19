@@ -286,10 +286,21 @@ describe('advancedTrackingStore', () => {
     useAdvancedTrackingStore.getState().terminateGame('weather');
     const { currentGameId, savedGames } = useAdvancedTrackingStore.getState();
 
-    expect(currentGameId).toBeNull();
+    expect(currentGameId).toBe(gameId);
     expect(savedGames[0].id).toBe(gameId);
     expect(savedGames[0].status).toBe('terminated');
     expect(savedGames[0].endReason).toBe('weather');
+  });
+
+  it('finishTerminatedGame clears the current game pointer without deleting the saved game', () => {
+    const gameId = createGame();
+    useAdvancedTrackingStore.getState().terminateGame('manual');
+    useAdvancedTrackingStore.getState().finishTerminatedGame();
+    const { currentGameId, savedGames } = useAdvancedTrackingStore.getState();
+
+    expect(currentGameId).toBeNull();
+    expect(savedGames[0].id).toBe(gameId);
+    expect(savedGames[0].status).toBe('terminated');
   });
 
   it('updateGameMetadata replaces the metadata on the active game', () => {

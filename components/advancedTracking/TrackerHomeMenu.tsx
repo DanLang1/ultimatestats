@@ -13,6 +13,7 @@ interface TrackerHomeMenuProps {
   onClose: () => void;
   canPauseGameClock: boolean;
   onGameClockPause: () => void;
+  onEndGameEarly: () => void;
 }
 
 export const TrackerHomeMenu = ({
@@ -20,6 +21,7 @@ export const TrackerHomeMenu = ({
   onClose,
   canPauseGameClock,
   onGameClockPause,
+  onEndGameEarly,
 }: TrackerHomeMenuProps) => {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
@@ -38,6 +40,11 @@ export const TrackerHomeMenu = ({
   const handleGameClockPause = () => {
     onClose();
     onGameClockPause();
+  };
+
+  const handleEndGameEarly = () => {
+    onClose();
+    onEndGameEarly();
   };
 
   return (
@@ -135,6 +142,34 @@ export const TrackerHomeMenu = ({
               Pause Cap Clock
             </ThemedText>
           </Pressable>
+
+          <View style={[styles.section, { borderTopColor: palette.overlay10 }]}>
+            <ThemedText style={[styles.sectionTitle, { color: palette.textMuted }]}>
+              END GAME EARLY
+            </ThemedText>
+            <Pressable
+              testID="tracker-menu-end-game"
+              onPress={handleEndGameEarly}
+              style={({ pressed }) => [
+                styles.action,
+                {
+                  backgroundColor: palette.overlay05,
+                  borderColor: palette.overlay15,
+                },
+                pressed && { opacity: 0.7 },
+              ]}>
+              <View style={[styles.iconWrap, { backgroundColor: palette.overlay10 }]}>
+                <MaterialCommunityIcons
+                  name="stop-circle-outline"
+                  size={scaleBySizeClass(20, sizeClass)}
+                  color={palette.danger}
+                />
+              </View>
+              <ThemedText style={[styles.actionLabel, { color: palette.textInverse }]}>
+                End Game
+              </ThemedText>
+            </Pressable>
+          </View>
         </View>
       </BottomSheet>
     </Modal>
@@ -144,7 +179,7 @@ export const TrackerHomeMenu = ({
 function createStyles(sizeClass: SizeClass) {
   return StyleSheet.create({
     sheet: {
-      maxHeight: '45%',
+      maxHeight: '82%',
     },
     content: {
       paddingHorizontal: 16,
@@ -189,6 +224,16 @@ function createStyles(sizeClass: SizeClass) {
     actionLabel: {
       fontSize: scaleBySizeClass(16, sizeClass),
       fontFamily: Fonts.semiBold,
+    },
+    section: {
+      borderTopWidth: 1,
+      paddingTop: 12,
+      gap: 12,
+    },
+    sectionTitle: {
+      fontSize: scaleBySizeClass(11, sizeClass),
+      fontFamily: Fonts.bold,
+      letterSpacing: 1,
     },
   });
 }

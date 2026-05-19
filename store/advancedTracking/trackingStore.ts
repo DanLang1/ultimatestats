@@ -195,6 +195,15 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
             liveGame.status = 'terminated';
             liveGame.endReason = endReason;
             liveGame.updatedAt = now;
+          });
+        },
+
+        finishTerminatedGame: () => {
+          set((state) => {
+            const liveGame = getCurrentGame(state);
+            if (liveGame.status !== 'terminated') {
+              throw new Error('Cannot finish a game that has not been terminated.');
+            }
             state.currentGameId = null;
             state.undoStack = [];
           });

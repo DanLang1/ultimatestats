@@ -8,18 +8,35 @@ import { getGameScore, isAdvancedGameOver } from '@/lib/advancedTracking/trackin
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { Fonts } from '@/theme/theme';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { Redirect, router, Stack } from 'expo-router';
+import { Redirect, router, Stack, useLocalSearchParams } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 export default function TrackerGameCompleteScreen() {
   const { palette } = useTheme();
   const { isLandscape, sizeClass } = useLayout();
+  const { mode } = useLocalSearchParams<{ mode?: string }>();
+  const isEarlyEndPending = mode === 'earlyEnd';
 
-  const { currentGameId, savedGames, finalizeGame, undoLastOperation } = useAdvancedTrackingStore();
+  const {
+    currentGameId,
+    savedGames,
+    finalizeGame,
+    finishTerminatedGame,
+    undoLastOperation,
+    terminateGame,
+  } = useAdvancedTrackingStore();
   const { finishActiveGameSession, restoreAdvancedGameSession } = useGameSessionActions();
   const game = savedGames.find((g) => g.id === currentGameId);
 
-  if (!game || !isAdvancedGameOver(game)) {
+  if (!game) {
+    return <Redirect href="/advancedTracking/Tracker" />;
+  }
+
+  const isTerminated = game.status === 'terminated';
+  const gameIsOver = isAdvancedGameOver(game);
+  const isEarlyEndFlow = isEarlyEndPending || isTerminated;
+
+  if (!isEarlyEndPending && !isTerminated && !gameIsOver) {
     return <Redirect href="/advancedTracking/Tracker" />;
   }
 
@@ -37,28 +54,67 @@ export default function TrackerGameCompleteScreen() {
   const loserName = focusWon ? oppSide.label : focusSide.label;
   const winnerScore = focusWon ? focusScore : oppScore;
   const loserScore = focusWon ? oppScore : focusScore;
+  let heroTitle = winnerName;
+  if (isEarlyEndFlow) {
+    heroTitle = 'Final Score';
+  } else if (isTie) {
+    heroTitle = "It's a Tie";
+  }
+
+  let heroIcon: keyof typeof MaterialCommunityIcons.glyphMap = 'trophy';
+  if (isEarlyEndFlow) {
+    heroIcon = 'stop-circle-outline';
+  } else if (isTie) {
+    heroIcon = 'handshake-outline';
+  }
+  const heroIconColor = isEarlyEndFlow || isTie ? palette.textMuted : palette.warning;
+  let undoActionTitle = 'Undo Winning Point';
+  if (isEarlyEndFlow) {
+    undoActionTitle = 'Undo End Game';
+  } else if (isTie) {
+    undoActionTitle = 'Undo Last Point';
+  }
+  const finishActionText = isEarlyEndFlow
+    ? 'Save the game and review stats'
+    : 'Save the result and review stats';
 
   const handleFinish = () => {
-    finalizeGame();
+    const finishedGameId = game.id;
+    if (isEarlyEndPending) {
+      terminateGame('manual');
+      finishTerminatedGame();
+    } else if (isTerminated) {
+      finishTerminatedGame();
+    } else {
+      finalizeGame();
+    }
     finishActiveGameSession();
-    router.replace('/Dashboard');
+    router.replace({
+      pathname: '/advancedTracking/analytics/[gameId]',
+      params: { gameId: finishedGameId },
+    });
   };
 
   const handleUndo = () => {
+    if (isEarlyEndFlow) {
+      restoreAdvancedGameSession();
+      router.replace('/advancedTracking/Tracker');
+      return;
+    }
+
     undoLastOperation();
     restoreAdvancedGameSession();
     router.replace('/advancedTracking/Tracker');
-  };
-
-  const handleGoHome = () => {
-    router.replace('/Dashboard');
   };
 
   return (
     <ThemedView style={[styles.screen, { backgroundColor: palette.primary }]}>
       <Stack.Screen options={{ headerShown: false }} />
 
-      <ScreenHeader title="GAME COMPLETE" titleColor={palette.textMuted} />
+      <ScreenHeader
+        title={isEarlyEndFlow ? 'END GAME' : 'GAME COMPLETE'}
+        titleColor={palette.textMuted}
+      />
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}
@@ -75,21 +131,26 @@ export default function TrackerGameCompleteScreen() {
               { backgroundColor: palette.overlay08, borderColor: palette.overlay15 },
             ]}>
             <MaterialCommunityIcons
-              name={isTie ? 'handshake-outline' : 'trophy'}
+              name={heroIcon}
               size={scaleBySizeClass(34, sizeClass)}
-              color={isTie ? palette.textMuted : palette.warning}
+              color={heroIconColor}
             />
           </View>
 
           <ThemedText style={[styles.eyebrow, { color: palette.textMuted }]}>
-            FINAL RESULT
+            {isEarlyEndFlow ? 'END EARLY' : 'FINAL RESULT'}
           </ThemedText>
           <ThemedText style={[styles.winnerName, { color: palette.textInverse }]} numberOfLines={2}>
-            {isTie ? "It's a Tie" : winnerName}
+            {heroTitle}
           </ThemedText>
-          {!isTie && (
+          {!isEarlyEndFlow && !isTie && (
             <ThemedText style={[styles.subhead, { color: palette.textMuted }]}>
               wins the game
+            </ThemedText>
+          )}
+          {isEarlyEndFlow && (
+            <ThemedText style={[styles.subhead, { color: palette.textMuted }]}>
+              End this game before reaching the target score
             </ThemedText>
           )}
 
@@ -134,7 +195,7 @@ export default function TrackerGameCompleteScreen() {
             onPress={handleUndo}>
             <View style={styles.actionCopy}>
               <ThemedText style={[styles.secondaryActionTitle, { color: palette.textInverse }]}>
-                {isTie ? 'Undo Last Point' : 'Undo Winning Point'}
+                {undoActionTitle}
               </ThemedText>
               <ThemedText style={[styles.secondaryActionText, { color: palette.textMuted }]}>
                 Return to the tracker and continue the game
@@ -153,38 +214,16 @@ export default function TrackerGameCompleteScreen() {
             onPress={handleFinish}>
             <View>
               <ThemedText style={[styles.primaryActionTitle, { color: palette.textOnAccent }]}>
-                Finish Game
+                Done
               </ThemedText>
               <ThemedText style={[styles.primaryActionText, { color: palette.textOnAccent }]}>
-                Save the result and return to the dashboard
+                {finishActionText}
               </ThemedText>
             </View>
             <MaterialCommunityIcons
               name="check-circle-outline"
               size={scaleBySizeClass(22, sizeClass)}
               color={palette.textOnAccent}
-            />
-          </Pressable>
-
-          <Pressable
-            testID="game-complete-home"
-            style={[
-              styles.secondaryAction,
-              { backgroundColor: palette.overlay05, borderColor: palette.overlay10 },
-            ]}
-            onPress={handleGoHome}>
-            <View style={styles.actionCopy}>
-              <ThemedText style={[styles.secondaryActionTitle, { color: palette.textInverse }]}>
-                Home
-              </ThemedText>
-              <ThemedText style={[styles.secondaryActionText, { color: palette.textMuted }]}>
-                Leave without finalizing and return to the dashboard
-              </ThemedText>
-            </View>
-            <MaterialCommunityIcons
-              name="home-outline"
-              size={scaleBySizeClass(22, sizeClass)}
-              color={palette.textMuted}
             />
           </Pressable>
         </View>

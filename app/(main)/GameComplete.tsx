@@ -24,6 +24,7 @@ export default function GameCompleteScreen() {
     currentGameStatus,
     setTimerActive,
     setPostGameFlowPending,
+    currentGameId,
   } = useGameStore();
   const { palette } = useTheme();
   const { finishActiveGameSession, restoreBasicGameSession } = useGameSessionActions();
@@ -50,17 +51,14 @@ export default function GameCompleteScreen() {
   const winnerScore = team1Won ? team1Score : team2Score;
   const loserScore = team1Won ? team2Score : team1Score;
 
-  const handleViewStats = () => {
-    setTimerActive(false);
-    setPostGameFlowPending(false);
-    finishActiveGameSession();
-    router.replace({ pathname: '/ViewStats', params: { from: 'scoreboard' } });
-  };
-
   const handleGoHome = () => {
     setTimerActive(false);
     setPostGameFlowPending(false);
     finishActiveGameSession();
+    if (statTrackingEnabled && currentGameId != null) {
+      router.replace({ pathname: '/saved-games/[gameId]', params: { gameId: currentGameId } });
+      return;
+    }
     router.replace('/Dashboard');
   };
 
@@ -150,7 +148,7 @@ export default function GameCompleteScreen() {
                 Done
               </ThemedText>
               <ThemedText style={[styles.primaryActionText, { color: palette.textOnAccent }]}>
-                Return to the dashboard
+                {statTrackingEnabled ? 'Review the finished game stats' : 'Return to the dashboard'}
               </ThemedText>
             </View>
             <MaterialCommunityIcons
@@ -179,32 +177,6 @@ export default function GameCompleteScreen() {
               color={palette.textMuted}
             />
           </Pressable>
-
-          {statTrackingEnabled && (
-            <Pressable
-              style={[
-                styles.secondaryAction,
-                {
-                  backgroundColor: palette.accentOverlay10,
-                  borderColor: palette.accentOverlay30,
-                },
-              ]}
-              onPress={handleViewStats}>
-              <View style={styles.actionCopy}>
-                <ThemedText style={[styles.secondaryActionTitle, { color: palette.accent }]}>
-                  View Stats
-                </ThemedText>
-                <ThemedText style={[styles.secondaryActionText, { color: palette.textMuted }]}>
-                  Review the finished game stats and timeline
-                </ThemedText>
-              </View>
-              <MaterialCommunityIcons
-                name="chart-bar"
-                size={scaleBySizeClass(22, sizeClass)}
-                color={palette.accent}
-              />
-            </Pressable>
-          )}
         </View>
       </ScrollView>
     </ThemedView>

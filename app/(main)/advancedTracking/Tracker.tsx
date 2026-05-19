@@ -204,6 +204,13 @@ export default function AdvancedTrackerScreen() {
     startGameClockPause('manual');
   };
 
+  const handleEndGameEarly = () => {
+    router.push({
+      pathname: '/advancedTracking/TrackerGameComplete',
+      params: { mode: 'earlyEnd' },
+    });
+  };
+
   const LEFT_PANEL_WIDTH = 160;
   const renderTrackingSurface = (availableWidth?: number) => {
     if (activeGameClockPause) {
@@ -322,6 +329,7 @@ export default function AdvancedTrackerScreen() {
           gameStartedAt !== null && activeStoppage === null && activeGameClockPause === null
         }
         onGameClockPause={handleGamePause}
+        onEndGameEarly={handleEndGameEarly}
       />
 
       {!activeStoppage && !activeGameClockPause && canChangeLine && (

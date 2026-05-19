@@ -122,6 +122,7 @@ export interface AdvancedTrackingState {
   resetCurrentGame: () => void;
   finalizeGame: () => void;
   terminateGame: (endReason: NonNullable<AdvancedTrackedGame['endReason']>) => void;
+  finishTerminatedGame: () => void;
   updateGameMetadata: (metadata: GameMetadata) => void;
   recordGameTransition: (transitionType: 'soft_cap' | 'hard_cap') => void;
   startGameClockPause: (reason: GameClockPauseReason) => string;
