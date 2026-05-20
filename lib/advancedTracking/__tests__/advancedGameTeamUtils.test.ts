@@ -4,8 +4,8 @@ import {
   getAdvancedOpponentName,
   getAdvancedFocusTeamId,
   getAdvancedFocusTeamName,
-} from '../../advancedTracking/advancedGameTeamUtils';
-import type { AdvancedTrackedGame } from '../../advancedTracking/types';
+} from '../advancedGameTeamUtils';
+import type { AdvancedTrackedGame } from '../types';
 
 const baseGame: AdvancedTrackedGame = {
   id: 'g1',

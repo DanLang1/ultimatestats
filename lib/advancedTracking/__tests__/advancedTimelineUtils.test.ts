@@ -2,8 +2,8 @@ import {
   buildAdvancedTimeline,
   getPointStateLabel,
   getTransitionLabel,
-} from '../../advancedTracking/advancedTimelineUtils';
-import type { AdvancedTrackedGame } from '../../advancedTracking/types';
+} from '../advancedTimelineUtils';
+import type { AdvancedTrackedGame } from '../types';
 
 const ZOO = 'Zoo';
 const RIVALS = 'rivals';

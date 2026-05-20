@@ -1,6 +1,6 @@
-import { computePullStats } from '../../advancedTracking/advancedPullStatsUtils';
-import { buildAnalyticsGame } from '../../advancedTracking/buildAnalyticsGame';
-import type { AdvancedTrackedGame } from '../../advancedTracking/types';
+import { computePullStats } from '../advancedPullStatsUtils';
+import { buildAnalyticsGame } from '../buildAnalyticsGame';
+import type { AdvancedTrackedGame } from '../types';
 
 // ── Shared fixtures ──────────────────────────────────────────────────────────
 

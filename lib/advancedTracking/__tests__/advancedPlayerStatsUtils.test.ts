@@ -1,10 +1,10 @@
 import {
   computeAdvancedPlayerStats,
   computeAdvancedPlayerStatsForParticipant,
-} from '../../advancedTracking/advancedPlayerStatsUtils';
-import { buildAnalyticsGame } from '../../advancedTracking/buildAnalyticsGame';
-import type { AttributionType } from '../../advancedTracking/analyticsTypes';
-import type { AdvancedTrackedGame, PlayerRef } from '../../advancedTracking/types';
+} from '../advancedPlayerStatsUtils';
+import { buildAnalyticsGame } from '../buildAnalyticsGame';
+import type { AttributionType } from '../analyticsTypes';
+import type { AdvancedTrackedGame, PlayerRef } from '../types';
 
 // ── Shared fixtures ──────────────────────────────────────────────────────────
 

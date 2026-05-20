@@ -1,15 +1,11 @@
-import type {
-  AnalyticsAttribution,
-  AnalyticsGame,
-  AttributionType,
-} from '../../advancedTracking/analyticsTypes';
+import type { AnalyticsAttribution, AnalyticsGame, AttributionType } from '../analyticsTypes';
 import {
   UNKNOWN_PARTICIPANT_ID,
   buildAnalyticsGame,
   getFinalScores,
   getPointStateForSide,
-} from '../../advancedTracking/buildAnalyticsGame';
-import type { AdvancedTrackedGame } from '../../advancedTracking/types';
+} from '../buildAnalyticsGame';
+import type { AdvancedTrackedGame } from '../types';
 
 // ── Shared fixtures ──────────────────────────────────────────────────────────
 

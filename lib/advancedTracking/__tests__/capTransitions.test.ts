@@ -1,9 +1,5 @@
-import { syncCapTransitions } from '../../advancedTracking/trackingUtils';
-import type {
-  AdvancedTrackedGame,
-  GameTransition,
-  TrackedPoint,
-} from '../../advancedTracking/types';
+import { syncCapTransitions } from '../trackingUtils';
+import type { AdvancedTrackedGame, GameTransition, TrackedPoint } from '../types';
 
 const MIN_MS = 60 * 1000;
 const HOME = 'home';

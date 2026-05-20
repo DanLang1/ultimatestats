@@ -1,8 +1,8 @@
-import { aggregateAnalyticsGames } from '../../advancedTracking/aggregateAnalyticsGames';
-import { buildAnalyticsGame } from '../../advancedTracking/buildAnalyticsGame';
-import { computeAdvancedPlayerStats } from '../../advancedTracking/advancedPlayerStatsUtils';
-import { computeAdvancedTeamStats } from '../../advancedTracking/advancedTeamStatsUtils';
-import type { AdvancedTrackedGame } from '../../advancedTracking/types';
+import { aggregateAnalyticsGames } from '../aggregateAnalyticsGames';
+import { buildAnalyticsGame } from '../buildAnalyticsGame';
+import { computeAdvancedPlayerStats } from '../advancedPlayerStatsUtils';
+import { computeAdvancedTeamStats } from '../advancedTeamStatsUtils';
+import type { AdvancedTrackedGame } from '../types';
 
 const ZOO = 'zoo';
 const RIVALS = 'rivals';

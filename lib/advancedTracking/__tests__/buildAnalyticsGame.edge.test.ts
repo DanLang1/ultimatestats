@@ -1,5 +1,5 @@
-import { buildAnalyticsGame } from '../../advancedTracking/buildAnalyticsGame';
-import type { AdvancedTrackedGame } from '../../advancedTracking/types';
+import { buildAnalyticsGame } from '../buildAnalyticsGame';
+import type { AdvancedTrackedGame } from '../types';
 
 // ── Shared fixtures ──────────────────────────────────────────────────────────
 

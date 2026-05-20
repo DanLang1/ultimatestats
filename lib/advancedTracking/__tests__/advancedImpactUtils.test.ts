@@ -1,6 +1,6 @@
-import { computeAdvancedImpact } from '../../advancedTracking/advancedImpactUtils';
-import { buildAnalyticsGame } from '../../advancedTracking/buildAnalyticsGame';
-import type { AdvancedTrackedGame } from '../../advancedTracking/types';
+import { computeAdvancedImpact } from '../advancedImpactUtils';
+import { buildAnalyticsGame } from '../buildAnalyticsGame';
+import type { AdvancedTrackedGame } from '../types';
 
 // ── Shared fixtures ─────────────────────────────────────────────────���────────
 

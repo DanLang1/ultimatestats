@@ -19,13 +19,8 @@ import {
   getTrackerInstructionText,
   isInjuryJustResumed,
   isPullAwaitingPickup,
-} from '../../advancedTracking/trackingDisplayHelpers';
-import type {
-  AdvancedTrackedGame,
-  PointPossession,
-  PointSub,
-  TrackedPoint,
-} from '../../advancedTracking/types';
+} from '../trackingDisplayHelpers';
+import type { AdvancedTrackedGame, PointPossession, PointSub, TrackedPoint } from '../types';
 
 // ── Fixtures ─────────────────────────────────────────────────────────────────
 

@@ -8,7 +8,7 @@ import type {
   PointPossession,
   PossessionAction,
   TrackedPoint,
-} from '../../advancedTracking/types';
+} from '../types';
 
 function resolveRef(ref: PlayerRef, participants: Participant[]): string {
   if (ref.refType === 'participant') {

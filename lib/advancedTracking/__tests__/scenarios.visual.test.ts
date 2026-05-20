@@ -1,4 +1,4 @@
-import type { AdvancedTrackedGame } from '../../advancedTracking/types';
+import type { AdvancedTrackedGame } from '../types';
 import { formatGame } from './formatGame';
 
 // mostly visual tests to verify output

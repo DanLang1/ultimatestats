@@ -1,4 +1,4 @@
-import { computeCapState } from '../../advancedTracking/capUtils';
+import { computeCapState } from '../capUtils';
 import { CAP_WARNING_THRESHOLD_MS } from '../../constants';
 
 const MIN_MS = 60 * 1000;

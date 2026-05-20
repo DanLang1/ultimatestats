@@ -1,6 +1,6 @@
-import { computeAdvancedTeamStats } from '../../advancedTracking/advancedTeamStatsUtils';
-import { buildAnalyticsGame } from '../../advancedTracking/buildAnalyticsGame';
-import type { AdvancedTrackedGame } from '../../advancedTracking/types';
+import { computeAdvancedTeamStats } from '../advancedTeamStatsUtils';
+import { buildAnalyticsGame } from '../buildAnalyticsGame';
+import type { AdvancedTrackedGame } from '../types';
 
 // ── Shared fixtures ──────────────────────────────────────────────────────────
 
