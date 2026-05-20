@@ -29,10 +29,11 @@ export const ScoreBarActionRow = ({ width }: ScoreBarActionRowProps) => {
     oppSideName,
     oppTimeouts,
     ratioLabel,
-    currentPointNumber,
+    gameTo,
     stoppageActive,
     handleTimeout,
   } = data;
+  const pointLabel = getPointLabel(ratioLabel, gameTo);
 
   return (
     <View style={[styles.container, { width }]}>
@@ -57,9 +58,7 @@ export const ScoreBarActionRow = ({ width }: ScoreBarActionRowProps) => {
           color={palette.textMuted}
         />
         <ThemedText style={[styles.centerLabel, { color: palette.textInverse }]}>
-          {ratioLabel
-            ? `${ratioLabel} · Point ${currentPointNumber}`
-            : `Point ${currentPointNumber}`}
+          {pointLabel}
         </ThemedText>
       </View>
 
@@ -98,4 +97,14 @@ function createStyles(sizeClass: SizeClass) {
       textAlign: 'center',
     },
   });
+}
+
+function getPointLabel(ratioLabel: string | null, gameTo: number) {
+  const gameToLabel = `Game to ${gameTo}`;
+
+  if (ratioLabel) {
+    return `${ratioLabel} · ${gameToLabel}`;
+  }
+
+  return gameToLabel;
 }

@@ -39,10 +39,10 @@ export const TrackerCapBar = ({
         testID="tracker-menu-button"
         onPress={onMenuPress}
         hitSlop={12}
-        style={compact && styles.menuBtnCompact}>
+        style={[styles.menuBtn, compact && styles.menuBtnCompact]}>
         <MaterialCommunityIcons
           name="menu"
-          size={scaleBySizeClass(compact ? 20 : 24, sizeClass)}
+          size={scaleBySizeClass(compact ? 24 : 28, sizeClass)}
           color={palette.textInverse}
         />
       </Pressable>
@@ -83,8 +83,17 @@ function createStyles(sizeClass: SizeClass, compact: boolean) {
       paddingBottom: 4,
       gap: compact ? 6 : 10,
     },
+    menuBtn: {
+      minWidth: 30,
+      minHeight: 30,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingLeft: compact ? 4 : 2,
+      paddingRight: 8,
+    },
     menuBtnCompact: {
-      paddingTop: 2,
+      minWidth: 30,
+      minHeight: 30,
     },
     center: {
       flex: 1,

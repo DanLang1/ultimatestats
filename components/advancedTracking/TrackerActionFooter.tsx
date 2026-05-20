@@ -1,7 +1,7 @@
-import { ThemedText } from '@/components/ThemedText';
 import { DefenseActions } from '@/components/advancedTracking/bottomCard/DefenseActions';
 import { TrackerVoiceButton } from '@/components/advancedTracking/TrackerVoiceButton';
 import { TrackerVoiceFeedbackPill } from '@/components/advancedTracking/TrackerVoiceFeedbackPill';
+import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
 import { VoiceStatCommandsControls } from '@/hooks/advancedTracking/useVoiceStatCommands';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
@@ -20,7 +20,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const NEXT_POINT_BUTTON_HEIGHT = 62;
-const FOOTER_BOTTOM_PADDING = 24;
+const FOOTER_BOTTOM_PADDING = 48;
 const FOOTER_HORIZONTAL_PADDING = 12;
 const FOOTER_TOP_PADDING = 8;
 
@@ -119,7 +119,7 @@ function createStyles(sizeClass: SizeClass, bottomInset: number) {
       position: 'relative',
       paddingHorizontal: FOOTER_HORIZONTAL_PADDING,
       paddingTop: FOOTER_TOP_PADDING,
-      paddingBottom: bottomInset + FOOTER_BOTTOM_PADDING,
+      paddingBottom: bottomInset + scaleBySizeClass(FOOTER_BOTTOM_PADDING, sizeClass),
     },
     voiceStack: {
       gap: 8,

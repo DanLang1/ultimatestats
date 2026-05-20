@@ -46,10 +46,12 @@ export const TrackerScoreBar = ({ pointElapsedMs }: TrackerScoreBarProps) => {
     stoppageActive,
     showPointTimer,
     isPointTimerPaused,
-    currentPointNumber,
+    ratioLabel,
+    gameTo,
     handleTimeout,
     handlePause,
   } = data;
+  const landscapePointLabel = getLandscapePointLabel(ratioLabel, gameTo);
 
   if (isLandscape) {
     return (
@@ -93,7 +95,7 @@ export const TrackerScoreBar = ({ pointElapsedMs }: TrackerScoreBarProps) => {
         {showPointTimer && (
           <View style={styles.landscapeTimerRow}>
             <ThemedText style={[styles.landscapePointLabel, { color: palette.textMuted }]}>
-              PT {currentPointNumber}
+              {landscapePointLabel}
             </ThemedText>
             <View style={styles.landscapeTimerInner}>
               {!isPointTimerPaused && (
@@ -216,4 +218,14 @@ function createStyles(sizeClass: SizeClass) {
       letterSpacing: 0.5,
     },
   });
+}
+
+function getLandscapePointLabel(ratioLabel: string | null, gameTo: number) {
+  const gameToLabel = `TO ${gameTo}`;
+
+  if (ratioLabel) {
+    return `${ratioLabel} · ${gameToLabel}`;
+  }
+
+  return gameToLabel;
 }

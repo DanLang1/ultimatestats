@@ -6,6 +6,7 @@ import {
 import {
   getCurrentPoint,
   getCurrentPossession,
+  getEffectiveGameTo,
   getSideScore,
   hasPointEnded,
 } from '@/lib/advancedTracking/trackingUtils';
@@ -31,6 +32,7 @@ export function useScoreBarData() {
 
   const focusScore = getSideScore(game, focusSideId);
   const oppScore = getSideScore(game, oppSideId);
+  const gameTo = getEffectiveGameTo(game);
 
   const focusTimeouts = getSideTimeoutState(game, focusSideId);
   const oppTimeouts = getSideTimeoutState(game, oppSideId);
@@ -77,6 +79,7 @@ export function useScoreBarData() {
     oppSideName,
     focusScore,
     oppScore,
+    gameTo,
     focusTimeouts,
     oppTimeouts,
     pointIsOver,
