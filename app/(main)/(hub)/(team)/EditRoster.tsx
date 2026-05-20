@@ -19,6 +19,7 @@ import {
 import { MAX_TEAM_NAME_LENGTH } from '@/lib/constants';
 import { hasPlayerWithName } from '@/lib/playerUtils';
 import { serializeTeam, uploadPayload } from '@/lib/sharing';
+import { SHARE_TEAM_UPLOAD_ERROR_MESSAGE } from '@/lib/sharing/shareActionUtils';
 import { SavedTeam } from '@/lib/storage';
 import { MatchingType, Player, PlayerRole } from '@/lib/storage/types';
 import { sortByPlayerNumber } from '@/lib/lineUtils';
@@ -30,7 +31,7 @@ import { Fonts } from '@/theme/theme';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import React, { useState } from 'react';
-import { Modal, Pressable, ScrollView, Share, StyleSheet, TextInput, View } from 'react-native';
+import { Modal, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 
 const EMPTY_ROSTER: Player[] = [];
 type RoleFilter = PlayerRole | 'unset' | null;
@@ -212,6 +213,16 @@ export default function EditRosterScreen() {
     if (!currentTeam) return;
     if (selectionMode) return;
     setShowShareConfirm(true);
+  };
+
+  const handleConfirmShare = async () => {
+    const payload = serializeTeam(currentTeam!, useLinePresetsStore.getState().presets);
+    const { url } = await uploadPayload(payload);
+    return url;
+  };
+
+  const handleCancelShare = () => {
+    setShowShareConfirm(false);
   };
 
   const handleAddPlayer = async () => {
@@ -681,20 +692,10 @@ export default function EditRosterScreen() {
 
       <ShareConfirmModal
         visible={showShareConfirm}
-        onConfirm={async () => {
-          try {
-            const payload = serializeTeam(currentTeam!, useLinePresetsStore.getState().presets);
-            const { url } = await uploadPayload(payload);
-            setShowShareConfirm(false);
-            await Share.share({ message: url });
-          } catch {
-            showAlert({
-              title: 'Share failed',
-              message: 'Could not upload team for sharing. Please try again.',
-            });
-          }
-        }}
-        onCancel={() => setShowShareConfirm(false)}
+        onConfirm={handleConfirmShare}
+        errorMessage={SHARE_TEAM_UPLOAD_ERROR_MESSAGE}
+        onCancel={handleCancelShare}
+        onCloseReady={handleCancelShare}
       />
 
       <Modal

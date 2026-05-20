@@ -26,6 +26,10 @@ import { MAX_SHARE_GAMES } from '@/lib/constants';
 import { resolveTeamName } from '@/lib/playerUtils';
 import { shareFileAndDelete } from '@/lib/shareFileAndDelete';
 import { serializeGames, uploadPayload } from '@/lib/sharing';
+import {
+  runPendingShareAction,
+  SHARE_DATA_UPLOAD_ERROR_MESSAGE,
+} from '@/lib/sharing/shareActionUtils';
 import { generateAggregateCSV } from '@/lib/statsUtils';
 import { GameEvent, Player, SavedGame } from '@/lib/storage';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
@@ -36,7 +40,7 @@ import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 import { File, Paths } from 'expo-file-system';
 import { router, Stack } from 'expo-router';
 import React, { useState } from 'react';
-import { Pressable, ScrollView, Share, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 type AggregateMode = 'basic' | 'advanced';
 
@@ -181,6 +185,12 @@ export default function AggregateStatsScreen() {
       const { url } = await uploadPayload(payload);
       return url;
     });
+  };
+
+  const handleConfirmShare = () => runPendingShareAction(pendingShareAction);
+
+  const handleCancelShare = () => {
+    setPendingShareAction(null);
   };
 
   const handleExportCSV = async () => {
@@ -447,20 +457,10 @@ export default function AggregateStatsScreen() {
 
       <ShareConfirmModal
         visible={pendingShareAction !== null}
-        onConfirm={async () => {
-          try {
-            const url = await pendingShareAction!();
-            setPendingShareAction(null);
-            await Share.share({ message: url });
-          } catch {
-            showAlert({
-              title: 'Share failed',
-              message: 'Could not upload data for sharing. Please try again.',
-            });
-            throw new Error('share failed');
-          }
-        }}
-        onCancel={() => setPendingShareAction(null)}
+        onConfirm={handleConfirmShare}
+        errorMessage={SHARE_DATA_UPLOAD_ERROR_MESSAGE}
+        onCancel={handleCancelShare}
+        onCloseReady={handleCancelShare}
       />
     </ThemedView>
   );

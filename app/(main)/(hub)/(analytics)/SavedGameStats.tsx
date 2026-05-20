@@ -13,20 +13,25 @@ import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { MAX_SHARE_GAMES } from '@/lib/constants';
 import { advancedGameToListItem, basicGameToListItem, GameListItem } from '@/lib/gameListUtils';
 import { serializeAdvancedGames, serializeGames, uploadPayload } from '@/lib/sharing';
+import {
+  runPendingShareAction,
+  SHARE_DATA_UPLOAD_ERROR_MESSAGE,
+} from '@/lib/sharing/shareActionUtils';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { useGameStore } from '@/store/gameStore';
 import { useTournamentStore } from '@/store/tournamentStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router, Stack } from 'expo-router';
 import React, { useState } from 'react';
-import { ScrollView, Share, StyleSheet } from 'react-native';
+import { ScrollView, StyleSheet } from 'react-native';
 
 export default function SavedGameStatsScreen() {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
   const styles = createStyles(sizeClass);
   const { savedGames, savedTeams, deleteSavedGames } = useGameStore();
-  const { savedGames: advancedSavedGames } = useAdvancedTrackingStore();
+  const { savedGames: advancedSavedGames, deleteSavedGame: deleteAdvancedSavedGame } =
+    useAdvancedTrackingStore();
   const { showAlert } = useAlert();
   const { tournaments } = useTournamentStore();
   const [selectedSavedGameIds, setSelectedSavedGameIds] = useState<Set<string>>(new Set());
@@ -38,6 +43,8 @@ export default function SavedGameStatsScreen() {
   const basicItems = savedGames.map((g) => basicGameToListItem(g, savedTeams));
   const advancedItems = advancedSavedGames.map(advancedGameToListItem);
   const allGames = [...basicItems, ...advancedItems].sort((a, b) => b.timestamp - a.timestamp);
+  const selectedGames = allGames.filter((game) => selectedSavedGameIds.has(game.id));
+  const selectedGameKind = selectedGames[0]?.kind ?? null;
 
   const handleSelectGame = (game: GameListItem) => {
     if (game.kind === 'advanced') {
@@ -51,10 +58,22 @@ export default function SavedGameStatsScreen() {
   };
 
   const handleToggleSavedGameSelection = (gameId: string) => {
+    const game = allGames.find((item) => item.id === gameId);
+    if (!game) return;
+
     setSelectedSavedGameIds((prev) => {
       const next = new Set(prev);
-      if (next.has(gameId)) next.delete(gameId);
-      else next.add(gameId);
+      if (next.has(gameId)) {
+        next.delete(gameId);
+        return next;
+      }
+
+      const firstSelectedGame = allGames.find((item) => next.has(item.id));
+      if (firstSelectedGame && firstSelectedGame.kind !== game.kind) {
+        return next;
+      }
+
+      next.add(gameId);
       return next;
     });
   };
@@ -87,7 +106,20 @@ export default function SavedGameStatsScreen() {
           text: 'Delete',
           style: 'destructive',
           onPress: async () => {
-            await deleteSavedGames(Array.from(selectedSavedGameIds));
+            const basicIds = selectedGames
+              .filter((game) => game.kind === 'basic')
+              .map((game) => game.id);
+            const advancedIds = selectedGames
+              .filter((game) => game.kind === 'advanced')
+              .map((game) => game.id);
+
+            if (basicIds.length > 0) {
+              await deleteSavedGames(basicIds);
+            }
+            // Advanced game deletion is synchronous in the advanced tracking store.
+            for (const gameId of advancedIds) {
+              deleteAdvancedSavedGame(gameId);
+            }
             setSelectedSavedGameIds(new Set());
           },
         },
@@ -107,7 +139,6 @@ export default function SavedGameStatsScreen() {
       return;
     }
 
-    const selectedGames = allGames.filter((game) => selectedSavedGameIds.has(game.id));
     const hasBasicGames = selectedGames.some((game) => game.kind === 'basic');
     const hasAdvancedGames = selectedGames.some((game) => game.kind === 'advanced');
 
@@ -133,6 +164,17 @@ export default function SavedGameStatsScreen() {
       const { url } = await uploadPayload(payload);
       return url;
     });
+  };
+
+  const handleConfirmShare = () => runPendingShareAction(pendingShareAction);
+
+  const handleCancelShare = () => {
+    setPendingShareAction(null);
+  };
+
+  const handleCloseShareReady = () => {
+    setPendingShareAction(null);
+    handleExitSelectionMode();
   };
 
   const selectIconColor = selectionMode ? palette.accent : palette.textMuted;
@@ -195,6 +237,7 @@ export default function SavedGameStatsScreen() {
           games={allGames}
           onSelectGame={handleSelectGame}
           selectedGameIds={selectedSavedGameIds}
+          selectedGameKind={selectedGameKind}
           onToggleGameSelection={handleToggleSavedGameSelection}
           onEnterSelectionWithGame={handleEnterSelectionWithGame}
           onClearSelection={() => setSelectedSavedGameIds(new Set())}
@@ -213,20 +256,10 @@ export default function SavedGameStatsScreen() {
 
       <ShareConfirmModal
         visible={pendingShareAction !== null}
-        onConfirm={async () => {
-          try {
-            const url = await pendingShareAction!();
-            setPendingShareAction(null);
-            await Share.share({ message: url });
-          } catch {
-            showAlert({
-              title: 'Share failed',
-              message: 'Could not upload data for sharing. Please try again.',
-            });
-            throw new Error('share failed');
-          }
-        }}
-        onCancel={() => setPendingShareAction(null)}
+        onConfirm={handleConfirmShare}
+        errorMessage={SHARE_DATA_UPLOAD_ERROR_MESSAGE}
+        onCancel={handleCancelShare}
+        onCloseReady={handleCloseShareReady}
       />
     </ThemedView>
   );

@@ -15,6 +15,10 @@ import { resolveTeamName } from '@/lib/playerUtils';
 import { getGameDisplayTimestamp } from '@/lib/savedGameUtils';
 import { shareFileAndDelete } from '@/lib/shareFileAndDelete';
 import { serializeGame, uploadPayload } from '@/lib/sharing';
+import {
+  runPendingShareAction,
+  SHARE_DATA_UPLOAD_ERROR_MESSAGE,
+} from '@/lib/sharing/shareActionUtils';
 import { formatDate, generateSavedGameCSV } from '@/lib/statsUtils';
 import { useGameStore } from '@/store/gameStore';
 import { Fonts } from '@/theme/theme';
@@ -27,7 +31,7 @@ import DateTimePicker, {
 import { File, Paths } from 'expo-file-system';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import React, { useState } from 'react';
-import { Platform, Pressable, ScrollView, Share, StyleSheet, View } from 'react-native';
+import { Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 const MIN_PLAYED_AT_DATE = new Date(MIN_PLAYED_AT_YEAR, 0, 1);
 
@@ -89,6 +93,12 @@ export default function SavedGameStatsScreen() {
       const { url } = await uploadPayload(payload);
       return url;
     });
+  };
+
+  const handleConfirmShare = () => runPendingShareAction(pendingShareAction);
+
+  const handleCancelShare = () => {
+    setPendingShareAction(null);
   };
 
   const handleGoToSavedGames = () => {
@@ -345,20 +355,10 @@ export default function SavedGameStatsScreen() {
       ) : null}
       <ShareConfirmModal
         visible={pendingShareAction !== null}
-        onConfirm={async () => {
-          try {
-            const url = await pendingShareAction!();
-            setPendingShareAction(null);
-            await Share.share({ message: url });
-          } catch {
-            showAlert({
-              title: 'Share failed',
-              message: 'Could not upload data for sharing. Please try again.',
-            });
-            throw new Error('share failed');
-          }
-        }}
-        onCancel={() => setPendingShareAction(null)}
+        onConfirm={handleConfirmShare}
+        errorMessage={SHARE_DATA_UPLOAD_ERROR_MESSAGE}
+        onCancel={handleCancelShare}
+        onCloseReady={handleCancelShare}
       />
     </ThemedView>
   );

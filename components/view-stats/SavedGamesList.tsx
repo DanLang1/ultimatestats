@@ -3,7 +3,7 @@ import { ScoreBadge } from '@/components/ui/ScoreBadge';
 import { TournamentFilterModal } from '@/components/ui/TournamentFilterModal';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import { GameListItem } from '@/lib/gameListUtils';
+import { GameKind, GameListItem } from '@/lib/gameListUtils';
 import { formatDate } from '@/lib/statsUtils';
 import { Tournament } from '@/lib/storage/types';
 import { useTutorialStore } from '@/store/tutorialStore';
@@ -17,6 +17,8 @@ interface SavedGamesListProps {
   games: GameListItem[];
   onSelectGame: (game: GameListItem) => void;
   selectedGameIds?: Set<string>;
+  /** Required by selection-mode callers to keep basic and advanced bulk actions separate. */
+  selectedGameKind?: GameKind | null;
   onToggleGameSelection?: (gameId: string) => void;
   onEnterSelectionWithGame?: (gameId: string) => void;
   onClearSelection?: () => void;
@@ -31,6 +33,7 @@ export default function SavedGamesList({
   games,
   onSelectGame,
   selectedGameIds = new Set(),
+  selectedGameKind = null,
   onToggleGameSelection,
   onEnterSelectionWithGame,
   onClearSelection,
@@ -239,8 +242,9 @@ export default function SavedGamesList({
       <View style={styles.savedGamesList}>
         {filteredAndSortedGames.map((game) => {
           const isAdvanced = game.kind === 'advanced';
-          const isSelectable = !isAdvanced;
-          const isSelected = isSelectable && selectedGameIds.has(game.id);
+          const isSelectable = selectedGameKind == null || selectedGameKind === game.kind;
+          const isSelected = selectedGameIds.has(game.id);
+          const isSelectionDisabled = selectionMode && !isSelectable;
 
           let myScoreColor: string;
           if (game.myScore > game.opponentScore) {
@@ -270,17 +274,21 @@ export default function SavedGamesList({
                   styles.savedGameCard,
                   { backgroundColor: palette.overlay05, borderColor: palette.overlay10 },
                   isSelected && { borderColor: palette.accent },
+                  isSelectionDisabled && styles.disabledCard,
                 ]}>
-                {/* Checkbox Section — only for selectable (basic) games */}
-                {selectionMode && isSelectable && (
+                {selectionMode && (
                   <Pressable
                     style={styles.checkboxWrapper}
-                    onPress={() => onToggleGameSelection?.(game.id)}
+                    onPress={() => {
+                      if (isSelectable) {
+                        onToggleGameSelection?.(game.id);
+                      }
+                    }}
                     hitSlop={8}>
                     <View
                       style={[
                         styles.checkbox,
-                        { borderColor: palette.overlay20 },
+                        { borderColor: isSelectable ? palette.overlay20 : palette.overlay10 },
                         isSelected && {
                           backgroundColor: palette.accent,
                           borderColor: palette.accent,
@@ -297,9 +305,8 @@ export default function SavedGamesList({
                   </Pressable>
                 )}
 
-                {/* Content Section */}
                 <Pressable
-                  style={[styles.cardContent, selectionMode && isSelectable && { paddingLeft: 8 }]}
+                  style={[styles.cardContent, selectionMode && { paddingLeft: 8 }]}
                   onPress={() => {
                     if (selectionMode && isSelectable) {
                       onToggleGameSelection?.(game.id);
@@ -308,7 +315,7 @@ export default function SavedGamesList({
                     }
                   }}
                   onLongPress={() => {
-                    if (!selectionMode && isSelectable) {
+                    if (!selectionMode) {
                       dismissLongPressSelectHint();
                       onEnterSelectionWithGame?.(game.id);
                     }
@@ -517,6 +524,9 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
       flexDirection: 'row',
       alignItems: 'center',
       overflow: 'hidden',
+    },
+    disabledCard: {
+      opacity: 0.45,
     },
     checkboxWrapper: {
       paddingLeft: 16,

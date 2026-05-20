@@ -4,6 +4,8 @@ import { SavedGame, SavedTeam } from '@/lib/storage';
 import { AdvancedTrackedGame } from '@/lib/advancedTracking/types';
 import { getGameScore } from '@/lib/advancedTracking/trackingUtils';
 
+export type GameKind = 'basic' | 'advanced';
+
 export type GameListItem =
   | {
       kind: 'basic';

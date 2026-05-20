@@ -14,6 +14,10 @@ import { generateAdvancedGameCSV } from '@/lib/advancedTracking/advancedCSVUtils
 import { buildAnalyticsGame, getFinalScores } from '@/lib/advancedTracking/buildAnalyticsGame';
 import { shareFileAndDelete } from '@/lib/shareFileAndDelete';
 import { serializeAdvancedGame, uploadPayload } from '@/lib/sharing';
+import {
+  runPendingShareAction,
+  SHARE_DATA_UPLOAD_ERROR_MESSAGE,
+} from '@/lib/sharing/shareActionUtils';
 import { formatDate } from '@/lib/statsUtils';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { Fonts } from '@/theme/theme';
@@ -22,7 +26,7 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { File, Paths } from 'expo-file-system';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import React, { useState } from 'react';
-import { Pressable, ScrollView, Share, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 export default function AdvancedGameStatsScreen() {
   const { gameId } = useLocalSearchParams<{ gameId?: string }>();
@@ -115,6 +119,12 @@ export default function AdvancedGameStatsScreen() {
       const { url } = await uploadPayload(payload);
       return url;
     });
+  };
+
+  const handleConfirmShare = () => runPendingShareAction(pendingShareAction);
+
+  const handleCancelShare = () => {
+    setPendingShareAction(null);
   };
 
   const handleDelete = () => {
@@ -274,19 +284,10 @@ export default function AdvancedGameStatsScreen() {
 
       <ShareConfirmModal
         visible={pendingShareAction !== null}
-        onConfirm={async () => {
-          try {
-            const url = await pendingShareAction!();
-            setPendingShareAction(null);
-            await Share.share({ message: url });
-          } catch {
-            showAlert({
-              title: 'Share failed',
-              message: 'Could not upload data for sharing. Please try again.',
-            });
-          }
-        }}
-        onCancel={() => setPendingShareAction(null)}
+        onConfirm={handleConfirmShare}
+        errorMessage={SHARE_DATA_UPLOAD_ERROR_MESSAGE}
+        onCancel={handleCancelShare}
+        onCloseReady={handleCancelShare}
       />
     </ThemedView>
   );
