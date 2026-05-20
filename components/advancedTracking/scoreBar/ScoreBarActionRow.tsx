@@ -3,8 +3,8 @@ import { TimeoutButton } from '@/components/advancedTracking/scoreBar/TimeoutBut
 import { useScoreBarData } from '@/components/advancedTracking/scoreBar/useScoreBarData';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { useSettingsStore } from '@/store/settingsStore';
 import { Fonts } from '@/theme/theme';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 
@@ -17,10 +17,10 @@ export const ScoreBarActionRow = ({ width }: ScoreBarActionRowProps) => {
   const { sizeClass } = useLayout();
   const styles = createStyles(sizeClass);
   const data = useScoreBarData();
+  const { mmpColor, fmpColor } = useSettingsStore();
 
   if (!data) return null;
 
-  // ... (rest of the destructuring)
   const {
     focusSideId,
     oppSideId,
@@ -33,53 +33,50 @@ export const ScoreBarActionRow = ({ width }: ScoreBarActionRowProps) => {
     stoppageActive,
     handleTimeout,
   } = data;
-  const pointLabel = getPointLabel(ratioLabel, gameTo);
+
+  const isFmp = ratioLabel?.startsWith('F');
+  const isMmp = ratioLabel?.startsWith('M');
+  let ratioColor = palette.border;
+  if (isFmp) {
+    ratioColor = fmpColor;
+  } else if (isMmp) {
+    ratioColor = mmpColor;
+  }
 
   return (
     <View style={[styles.container, { width }]}>
-      <View
-        style={[
-          styles.contextPanel,
-          { backgroundColor: palette.cardBgAlt, borderColor: palette.borderLight },
-        ]}>
-        <View style={[styles.contextIcon, { backgroundColor: palette.primary }]}>
-          <MaterialCommunityIcons
-            name="flag-outline"
-            size={scaleBySizeClass(17, sizeClass)}
-            color={palette.textMuted}
-          />
-        </View>
-        <View style={styles.contextText}>
-          <ThemedText style={[styles.contextEyebrow, { color: palette.textMuted }]}>
-            POINT INFO
-          </ThemedText>
-          <ThemedText
-            style={[styles.centerLabel, { color: palette.textInverse }]}
-            numberOfLines={1}>
-            {pointLabel}
-          </ThemedText>
-        </View>
+      <TimeoutButton
+        testID="timeout-button-home"
+        teamName={focusSideName}
+        state={focusTimeouts}
+        color={palette.accent}
+        onPress={() => handleTimeout(focusSideId)}
+        stoppageActive={stoppageActive}
+      />
+
+      <View style={styles.centerInfoCard}>
+        {ratioLabel && (
+          <View
+            style={[
+              styles.ratioChip,
+              { backgroundColor: ratioColor + '15', borderColor: ratioColor },
+            ]}>
+            <ThemedText style={[styles.ratioText, { color: ratioColor }]}>{ratioLabel}</ThemedText>
+          </View>
+        )}
+        <ThemedText style={[styles.gameToText, { color: palette.textInverse }]} numberOfLines={1}>
+          {`Game to ${gameTo}`}
+        </ThemedText>
       </View>
 
-      <View style={styles.timeoutRow}>
-        <TimeoutButton
-          testID="timeout-button-home"
-          teamName={focusSideName}
-          state={focusTimeouts}
-          color={palette.accent}
-          onPress={() => handleTimeout(focusSideId)}
-          stoppageActive={stoppageActive}
-        />
-
-        <TimeoutButton
-          testID="timeout-button-away"
-          teamName={oppSideName}
-          state={oppTimeouts}
-          color={palette.success}
-          onPress={() => handleTimeout(oppSideId)}
-          stoppageActive={stoppageActive}
-        />
-      </View>
+      <TimeoutButton
+        testID="timeout-button-away"
+        teamName={oppSideName}
+        state={oppTimeouts}
+        color={palette.success}
+        onPress={() => handleTimeout(oppSideId)}
+        stoppageActive={stoppageActive}
+      />
     </View>
   );
 };
@@ -88,60 +85,37 @@ function createStyles(sizeClass: SizeClass) {
   return StyleSheet.create({
     container: {
       flex: 1,
-      gap: 8,
-      minHeight: 116,
+      flexDirection: 'row',
+      alignItems: 'stretch',
+      gap: 6,
       paddingHorizontal: 12,
       paddingTop: 10,
       paddingBottom: 10,
     },
-    contextPanel: {
-      minHeight: 44,
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 10,
-      paddingHorizontal: 12,
-      paddingVertical: 8,
-      borderWidth: 1,
-      borderRadius: 16,
-      borderCurve: 'continuous',
-    },
-    contextIcon: {
-      width: scaleBySizeClass(32, sizeClass),
-      height: scaleBySizeClass(32, sizeClass),
-      borderRadius: 999,
+    centerInfoCard: {
+      width: scaleBySizeClass(106, sizeClass),
       alignItems: 'center',
       justifyContent: 'center',
+      gap: 6,
+      paddingHorizontal: 2,
     },
-    contextText: {
-      flex: 1,
-      minWidth: 0,
-      gap: 1,
+    ratioChip: {
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      borderRadius: 8,
+      borderWidth: 1.5,
+      borderCurve: 'continuous',
     },
-    contextEyebrow: {
-      fontSize: scaleBySizeClass(8, sizeClass),
+    ratioText: {
+      fontSize: scaleBySizeClass(12, sizeClass),
       fontFamily: Fonts.black,
-      letterSpacing: 1.2,
+      letterSpacing: 0.5,
     },
-    timeoutRow: {
-      flex: 1,
-      flexDirection: 'row',
-      alignItems: 'stretch',
-      gap: 10,
-    },
-    centerLabel: {
-      fontSize: scaleBySizeClass(13, sizeClass),
-      fontFamily: Fonts.extraBold,
-      letterSpacing: 0,
+    gameToText: {
+      fontSize: scaleBySizeClass(14, sizeClass),
+      fontFamily: Fonts.black,
+      letterSpacing: 0.2,
+      textAlign: 'center',
     },
   });
-}
-
-function getPointLabel(ratioLabel: string | null, gameTo: number) {
-  const gameToLabel = `Game to ${gameTo}`;
-
-  if (ratioLabel) {
-    return `${ratioLabel} · ${gameToLabel}`;
-  }
-
-  return gameToLabel;
 }

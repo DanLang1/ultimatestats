@@ -3,7 +3,6 @@ import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { canCallTimeout, SideTimeoutState } from '@/lib/advancedTracking/trackingDisplayHelpers';
 import { Fonts } from '@/theme/theme';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
@@ -35,43 +34,33 @@ export function TimeoutButton({
       testID={testID}
       onPress={onPress}
       disabled={!canUse}
-      style={({ pressed }) => [
-        styles.action,
-        {
-          backgroundColor: canUse ? palette.primary : palette.overlay02,
-          borderColor: canUse ? palette.borderLight : palette.border,
-        },
-        pressed && canUse && { opacity: 0.7 },
-      ]}>
-      <View style={styles.contentRow}>
-        <View
+      style={({ pressed }) => [styles.action, pressed && canUse && { opacity: 0.5 }]}>
+      <ThemedText
+        style={[styles.teamName, { color: canUse ? palette.textInverse : palette.textMuted }]}
+        numberOfLines={1}>
+        {teamName}
+      </ThemedText>
+      <View
+        style={[
+          styles.pillButton,
+          {
+            backgroundColor: canUse ? palette.cardBgAlt : palette.overlay05,
+            borderColor: canUse ? color : palette.border,
+          },
+        ]}>
+        <ThemedText
           style={[
-            styles.iconCircle,
+            styles.pillText,
             {
-              backgroundColor: canUse ? palette.cardBgAlt : palette.overlay05,
-              borderColor: canUse ? color : palette.border,
+              color: canUse ? color : palette.textMuted,
             },
           ]}>
-          <MaterialCommunityIcons
-            name="pause"
-            size={scaleBySizeClass(15, sizeClass)}
-            color={canUse ? color : palette.textMuted}
-          />
-        </View>
-        <View style={styles.textStack}>
-          <ThemedText
-            style={[styles.teamName, { color: canUse ? palette.textInverse : palette.textMuted }]}
-            numberOfLines={1}>
-            {teamName}
-          </ThemedText>
-          <ThemedText style={[styles.actionLabel, { color: canUse ? color : palette.textMuted }]}>
-            TIMEOUT
-          </ThemedText>
-          <ThemedText style={[styles.remainingLabel, { color: palette.textMuted }]}>
-            {remainingLabel}
-          </ThemedText>
-        </View>
+          Take T/O
+        </ThemedText>
       </View>
+      <ThemedText style={[styles.remainingLabel, { color: palette.textMuted }]} numberOfLines={1}>
+        {remainingLabel}
+      </ThemedText>
     </Pressable>
   );
 }
@@ -80,53 +69,42 @@ function createStyles(sizeClass: SizeClass) {
   return StyleSheet.create({
     action: {
       flex: 1,
-      alignItems: 'stretch',
+      alignItems: 'center',
       justifyContent: 'center',
       minWidth: 0,
-      paddingHorizontal: 14,
-      paddingVertical: 11,
-      borderWidth: 1,
-      borderRadius: 16,
-      borderCurve: 'continuous',
+      paddingHorizontal: 8,
+      paddingVertical: 8,
+      gap: 6,
     },
-    contentRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'flex-start',
-      gap: 10,
-      minWidth: 0,
-    },
-    iconCircle: {
-      width: scaleBySizeClass(28, sizeClass),
-      height: scaleBySizeClass(28, sizeClass),
+    pillButton: {
+      paddingHorizontal: scaleBySizeClass(10, sizeClass),
+      paddingVertical: scaleBySizeClass(4, sizeClass),
       borderRadius: 999,
       borderWidth: 1.5,
       alignItems: 'center',
       justifyContent: 'center',
     },
-    textStack: {
-      flex: 1,
-      minWidth: 0,
-      gap: 1,
-    },
-    teamName: {
-      flexShrink: 1,
-      fontSize: scaleBySizeClass(11, sizeClass),
-      fontFamily: Fonts.bold,
-      letterSpacing: 0.5,
-      textTransform: 'uppercase',
-    },
-    actionLabel: {
+    pillText: {
       fontSize: scaleBySizeClass(10, sizeClass),
       fontFamily: Fonts.black,
-      letterSpacing: 1,
+      letterSpacing: 0.5,
       textTransform: 'uppercase',
+      includeFontPadding: false,
+      textAlign: 'center',
+    },
+    teamName: {
+      fontSize: scaleBySizeClass(11, sizeClass),
+      fontFamily: Fonts.extraBold,
+      letterSpacing: 0.5,
+      textTransform: 'uppercase',
+      textAlign: 'center',
     },
     remainingLabel: {
       fontSize: scaleBySizeClass(9, sizeClass),
       fontFamily: Fonts.semiBold,
       letterSpacing: 0,
       textTransform: 'uppercase',
+      textAlign: 'center',
     },
   });
 }
@@ -140,5 +118,5 @@ function getTimeoutSummary(state: SideTimeoutState) {
     return regularLabel;
   }
 
-  return `${regularLabel} • ${floaterRemaining} Floater`;
+  return `${regularLabel} • ${floaterRemaining} FLOATER`;
 }

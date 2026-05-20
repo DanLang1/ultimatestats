@@ -91,7 +91,7 @@ export default function TrackerGameCompleteScreen() {
     finishActiveGameSession();
     router.replace({
       pathname: '/advancedTracking/analytics/[gameId]',
-      params: { gameId: finishedGameId },
+      params: { gameId: finishedGameId, from: 'gameComplete' },
     });
   };
 

@@ -28,8 +28,13 @@ import { router, Stack, useLocalSearchParams } from 'expo-router';
 import React, { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
+type AdvancedGameStatsOrigin = 'gameComplete';
+
 export default function AdvancedGameStatsScreen() {
-  const { gameId } = useLocalSearchParams<{ gameId?: string }>();
+  const { gameId, from } = useLocalSearchParams<{
+    gameId?: string;
+    from?: AdvancedGameStatsOrigin;
+  }>();
   const { palette } = useTheme();
   const { isLandscape, sizeClass } = useLayout();
   const styles = createStyles(isLandscape, sizeClass);
@@ -43,13 +48,22 @@ export default function AdvancedGameStatsScreen() {
 
   const analyticsGame = rawGame ? buildAnalyticsGame(rawGame) : null;
 
+  const handleBack = () => {
+    if (from === 'gameComplete') {
+      router.replace('/Dashboard');
+      return;
+    }
+
+    router.back();
+  };
+
   if (!gameId || !rawGame || !analyticsGame) {
     return (
       <ThemedView style={[styles.container, { backgroundColor: palette.primary }]}>
         <Stack.Screen options={{ headerShown: false }} />
         <ScreenHeader
           title="ADVANCED GAME"
-          onBack={() => router.back()}
+          onBack={handleBack}
           titleColor={palette.textMuted}
           backButtonBackgroundColor={palette.overlay10}
           centerTitleInLandscape={false}
@@ -234,7 +248,7 @@ export default function AdvancedGameStatsScreen() {
       <Stack.Screen options={{ headerShown: false }} />
       <ScreenHeader
         title="ADVANCED GAME"
-        onBack={() => router.back()}
+        onBack={handleBack}
         titleColor={palette.textMuted}
         backButtonBackgroundColor={palette.overlay10}
         centerTitleInLandscape={false}
