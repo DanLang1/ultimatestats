@@ -2,6 +2,7 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { DevDebugModal } from '@/components/advancedTracking/DevDebugModal';
 import { GameClockPauseOverlay } from '@/components/advancedTracking/GameClockPauseOverlay';
+import { LandscapeUnsupported } from '@/components/advancedTracking/LandscapeUnsupported';
 import { StoppageOverlay } from '@/components/advancedTracking/StoppageOverlay';
 import { TrackerActionFooter } from '@/components/advancedTracking/TrackerActionFooter';
 import { TrackerCapBar } from '@/components/advancedTracking/TrackerCapBar';
@@ -187,6 +188,10 @@ export default function AdvancedTrackerScreen() {
 
   if (isHalftimeBreakActive) {
     return <Redirect href="/advancedTracking/TrackerHalftime" />;
+  }
+
+  if (sizeClass === 'small' && isLandscape) {
+    return <LandscapeUnsupported />;
   }
 
   if (!game.sides.find((s) => s.id !== game.focusSideId)) {
