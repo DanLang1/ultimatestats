@@ -148,7 +148,7 @@ export const TrackerHomeMenu = ({
               />
             </View>
             <ThemedText style={[styles.actionLabel, { color: palette.textInverse }]}>
-              Pause Cap Clock
+              Pause Game
             </ThemedText>
           </Pressable>
 

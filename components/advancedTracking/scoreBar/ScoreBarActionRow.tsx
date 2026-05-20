@@ -37,39 +37,49 @@ export const ScoreBarActionRow = ({ width }: ScoreBarActionRowProps) => {
 
   return (
     <View style={[styles.container, { width }]}>
-      <TimeoutButton
-        testID="timeout-button-home"
-        label={`${focusSideName} TO`}
-        state={focusTimeouts}
-        color={palette.accent}
-        onPress={() => handleTimeout(focusSideId)}
-        stoppageActive={stoppageActive}
-      />
-
       <View
         style={[
-          styles.actionCenter,
-          { borderLeftWidth: 1, borderLeftColor: palette.border },
-          { borderRightWidth: 1, borderRightColor: palette.border },
+          styles.contextPanel,
+          { backgroundColor: palette.cardBgAlt, borderColor: palette.borderLight },
         ]}>
-        <MaterialCommunityIcons
-          name="flag-outline"
-          size={scaleBySizeClass(22, sizeClass)}
-          color={palette.textMuted}
-        />
-        <ThemedText style={[styles.centerLabel, { color: palette.textInverse }]}>
-          {pointLabel}
-        </ThemedText>
+        <View style={[styles.contextIcon, { backgroundColor: palette.primary }]}>
+          <MaterialCommunityIcons
+            name="flag-outline"
+            size={scaleBySizeClass(17, sizeClass)}
+            color={palette.textMuted}
+          />
+        </View>
+        <View style={styles.contextText}>
+          <ThemedText style={[styles.contextEyebrow, { color: palette.textMuted }]}>
+            POINT INFO
+          </ThemedText>
+          <ThemedText
+            style={[styles.centerLabel, { color: palette.textInverse }]}
+            numberOfLines={1}>
+            {pointLabel}
+          </ThemedText>
+        </View>
       </View>
 
-      <TimeoutButton
-        testID="timeout-button-away"
-        label={`${oppSideName} TO`}
-        state={oppTimeouts}
-        color={palette.success}
-        onPress={() => handleTimeout(oppSideId)}
-        stoppageActive={stoppageActive}
-      />
+      <View style={styles.timeoutRow}>
+        <TimeoutButton
+          testID="timeout-button-home"
+          teamName={focusSideName}
+          state={focusTimeouts}
+          color={palette.accent}
+          onPress={() => handleTimeout(focusSideId)}
+          stoppageActive={stoppageActive}
+        />
+
+        <TimeoutButton
+          testID="timeout-button-away"
+          teamName={oppSideName}
+          state={oppTimeouts}
+          color={palette.success}
+          onPress={() => handleTimeout(oppSideId)}
+          stoppageActive={stoppageActive}
+        />
+      </View>
     </View>
   );
 };
@@ -78,23 +88,50 @@ function createStyles(sizeClass: SizeClass) {
   return StyleSheet.create({
     container: {
       flex: 1,
-      flexDirection: 'row',
-      alignItems: 'stretch',
-      minHeight: 96,
+      gap: 8,
+      minHeight: 116,
+      paddingHorizontal: 12,
+      paddingTop: 10,
+      paddingBottom: 10,
     },
-    actionCenter: {
-      flex: 1,
+    contextPanel: {
+      minHeight: 44,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      borderWidth: 1,
+      borderRadius: 16,
+      borderCurve: 'continuous',
+    },
+    contextIcon: {
+      width: scaleBySizeClass(32, sizeClass),
+      height: scaleBySizeClass(32, sizeClass),
+      borderRadius: 999,
       alignItems: 'center',
       justifyContent: 'center',
-      gap: 8,
-      paddingHorizontal: 10,
-      paddingVertical: 14,
+    },
+    contextText: {
+      flex: 1,
+      minWidth: 0,
+      gap: 1,
+    },
+    contextEyebrow: {
+      fontSize: scaleBySizeClass(8, sizeClass),
+      fontFamily: Fonts.black,
+      letterSpacing: 1.2,
+    },
+    timeoutRow: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'stretch',
+      gap: 10,
     },
     centerLabel: {
       fontSize: scaleBySizeClass(13, sizeClass),
-      fontFamily: Fonts.semiBold,
-      letterSpacing: 0.5,
-      textAlign: 'center',
+      fontFamily: Fonts.extraBold,
+      letterSpacing: 0,
     },
   });
 }
