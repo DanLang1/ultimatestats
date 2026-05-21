@@ -1,7 +1,18 @@
 import {
+  appendActionFlowItems,
   buildAdvancedTimeline,
+  createPointFlowItems,
+  getActionNodeColorKey,
+  getHeaderNodeColorKey,
   getPointStateLabel,
+  getTransitionIcon,
   getTransitionLabel,
+  isCompleteThrow,
+} from '../advancedTimelineUtils';
+import type {
+  AdvancedTimelinePossession,
+  StoppageDisplayAction,
+  ThrowDisplayAction,
 } from '../advancedTimelineUtils';
 import type { AdvancedTrackedGame } from '../types';
 
@@ -945,5 +956,252 @@ describe('getTransitionLabel', () => {
       'Soft Cap',
     );
     expect(getTransitionLabel({ id: 'gt1', transitionType: 'hard_cap' })).toBe('Hard Cap');
+  });
+});
+
+const mockCompleteThrow = (overrides: Partial<ThrowDisplayAction> = {}): ThrowDisplayAction => ({
+  id: 't1',
+  kind: 'throw',
+  throwResult: 'complete',
+  sideId: 'teamA',
+  elapsedMs: 1000,
+  primaryLabel: 'Complete',
+  secondaryLabel: null,
+  tone: 'success',
+  throwerName: 'Alice',
+  receiverName: 'Bob',
+  defenderName: null,
+  splitAttribution: false,
+  ...overrides,
+});
+
+const mockStoppage = (overrides: Partial<StoppageDisplayAction> = {}): StoppageDisplayAction => ({
+  id: 's1',
+  kind: 'stoppage',
+  reason: 'timeout',
+  sideId: 'teamA',
+  elapsedMs: 2000,
+  primaryLabel: 'Time Out',
+  secondaryLabel: null,
+  tone: 'muted',
+  resumed: true,
+  ...overrides,
+});
+
+const mockPossession = (
+  overrides: Partial<AdvancedTimelinePossession> = {},
+): AdvancedTimelinePossession => ({
+  possessionId: 'pos1',
+  sideId: 'teamA',
+  result: 'scored',
+  actions: [],
+  ...overrides,
+});
+
+describe('isCompleteThrow', () => {
+  it('returns true for a complete throw', () => {
+    expect(isCompleteThrow(mockCompleteThrow())).toBe(true);
+  });
+
+  it('returns false for an incomplete throw', () => {
+    expect(isCompleteThrow(mockCompleteThrow({ throwResult: 'drop' }))).toBe(false);
+  });
+
+  it('returns false for a non-throw action (stoppage)', () => {
+    expect(isCompleteThrow(mockStoppage())).toBe(false);
+  });
+});
+
+describe('appendActionFlowItems', () => {
+  it('adds nothing for empty actions', () => {
+    const items: ReturnType<typeof createPointFlowItems> = [];
+    appendActionFlowItems(items, mockPossession({ actions: [] }));
+    expect(items).toEqual([]);
+  });
+
+  it('adds a single action_single for a non-throw action', () => {
+    const items: ReturnType<typeof createPointFlowItems> = [];
+    const stoppage = mockStoppage({ id: 's1' });
+    const possession = mockPossession({ actions: [stoppage] });
+    appendActionFlowItems(items, possession);
+    expect(items).toHaveLength(1);
+    expect(items[0]).toMatchObject({
+      id: 's1',
+      type: 'action_single',
+      action: { id: 's1' },
+      possession,
+    });
+  });
+
+  it('adds a single action_single for a lone complete throw', () => {
+    const items: ReturnType<typeof createPointFlowItems> = [];
+    const throwAction = mockCompleteThrow({ id: 't1' });
+    const possession = mockPossession({ actions: [throwAction] });
+    appendActionFlowItems(items, possession);
+    expect(items).toHaveLength(1);
+    expect(items[0]).toMatchObject({ id: 't1', type: 'action_single' });
+  });
+
+  it('groups two consecutive complete throws into an action_chain', () => {
+    const items: ReturnType<typeof createPointFlowItems> = [];
+    const t1 = mockCompleteThrow({ id: 't1', throwerName: 'Alice' });
+    const t2 = mockCompleteThrow({ id: 't2', throwerName: 'Bob' });
+    const possession = mockPossession({ actions: [t1, t2] });
+    appendActionFlowItems(items, possession);
+    expect(items).toHaveLength(1);
+    expect(items[0]).toMatchObject({
+      id: 'chain-t1',
+      type: 'action_chain',
+      chainActions: [t1, t2],
+    });
+  });
+
+  it('groups three consecutive complete throws into one action_chain', () => {
+    const items: ReturnType<typeof createPointFlowItems> = [];
+    const t1 = mockCompleteThrow({ id: 't1' });
+    const t2 = mockCompleteThrow({ id: 't2' });
+    const t3 = mockCompleteThrow({ id: 't3' });
+    const possession = mockPossession({ actions: [t1, t2, t3] });
+    appendActionFlowItems(items, possession);
+    expect(items).toHaveLength(1);
+    expect(items[0]).toMatchObject({ type: 'action_chain' });
+    expect(items[0].type === 'action_chain' && items[0].chainActions).toHaveLength(3);
+  });
+
+  it('does not group throws separated by a non-throw action', () => {
+    const items: ReturnType<typeof createPointFlowItems> = [];
+    const t1 = mockCompleteThrow({ id: 't1' });
+    const s1 = mockStoppage({ id: 's1' });
+    const t2 = mockCompleteThrow({ id: 't2' });
+    const possession = mockPossession({ actions: [t1, s1, t2] });
+    appendActionFlowItems(items, possession);
+    expect(items).toHaveLength(3);
+    expect(items[0]).toMatchObject({ id: 't1', type: 'action_single' });
+    expect(items[1]).toMatchObject({ id: 's1', type: 'action_single' });
+    expect(items[2]).toMatchObject({ id: 't2', type: 'action_single' });
+  });
+
+  it('groups leading complete throws, keeps non-throw single, then groups trailing throws separately', () => {
+    const items: ReturnType<typeof createPointFlowItems> = [];
+    const t1 = mockCompleteThrow({ id: 't1' });
+    const t2 = mockCompleteThrow({ id: 't2' });
+    const s1 = mockStoppage({ id: 's1' });
+    const t3 = mockCompleteThrow({ id: 't3' });
+    const t4 = mockCompleteThrow({ id: 't4' });
+    const possession = mockPossession({ actions: [t1, t2, s1, t3, t4] });
+    appendActionFlowItems(items, possession);
+    expect(items).toHaveLength(3);
+    expect(items[0]).toMatchObject({ id: 'chain-t1', type: 'action_chain' });
+    expect(items[1]).toMatchObject({ id: 's1', type: 'action_single' });
+    expect(items[2]).toMatchObject({ id: 'chain-t3', type: 'action_chain' });
+  });
+});
+
+describe('createPointFlowItems', () => {
+  it('returns an empty array for empty possessions', () => {
+    expect(createPointFlowItems([])).toEqual([]);
+  });
+
+  it('creates a header followed by action items for a single possession', () => {
+    const t1 = mockCompleteThrow({ id: 't1' });
+    const t2 = mockCompleteThrow({ id: 't2' });
+    const possession = mockPossession({
+      possessionId: 'pos1',
+      sideId: 'teamA',
+      actions: [t1, t2],
+    });
+    const result = createPointFlowItems([possession]);
+    expect(result).toHaveLength(2);
+    expect(result[0]).toMatchObject({ id: 'header-pos1', type: 'header', sideId: 'teamA' });
+    expect(result[1]).toMatchObject({ id: 'chain-t1', type: 'action_chain' });
+  });
+
+  it('interleaves headers and action items for multiple possessions', () => {
+    const pos1 = mockPossession({
+      possessionId: 'pos1',
+      sideId: 'teamA',
+      actions: [mockCompleteThrow({ id: 't1' })],
+    });
+    const pos2 = mockPossession({
+      possessionId: 'pos2',
+      sideId: 'teamB',
+      actions: [mockStoppage({ id: 's1' })],
+    });
+    const result = createPointFlowItems([pos1, pos2]);
+    expect(result).toHaveLength(4);
+    expect(result[0]).toMatchObject({ id: 'header-pos1', type: 'header' });
+    expect(result[1]).toMatchObject({ id: 't1', type: 'action_single' });
+    expect(result[2]).toMatchObject({ id: 'header-pos2', type: 'header', sideId: 'teamB' });
+    expect(result[3]).toMatchObject({ id: 's1', type: 'action_single' });
+  });
+});
+
+describe('getHeaderNodeColorKey', () => {
+  const FOCUS = 'Zoo';
+  const OPP = 'rivals';
+  const OTHER = 'other';
+
+  it('returns accent for the focus side', () => {
+    expect(getHeaderNodeColorKey(FOCUS, 'scored', FOCUS, OPP)).toBe('accent');
+    expect(getHeaderNodeColorKey(FOCUS, 'turned_over', FOCUS, OPP)).toBe('accent');
+  });
+
+  it('returns danger for opponent side that scored', () => {
+    expect(getHeaderNodeColorKey(OPP, 'scored', FOCUS, OPP)).toBe('danger');
+  });
+
+  it('returns secondary for opponent side that did not score', () => {
+    expect(getHeaderNodeColorKey(OPP, 'turned_over', FOCUS, OPP)).toBe('secondary');
+    expect(getHeaderNodeColorKey(OPP, 'terminated', FOCUS, OPP)).toBe('secondary');
+  });
+
+  it('returns neutral for a side that is neither focus nor opponent', () => {
+    expect(getHeaderNodeColorKey(OTHER, 'scored', FOCUS, OPP)).toBe('neutral');
+  });
+});
+
+describe('getActionNodeColorKey', () => {
+  it('returns the palette key matching the action tone', () => {
+    expect(getActionNodeColorKey('success')).toBe('success');
+    expect(getActionNodeColorKey('danger')).toBe('danger');
+    expect(getActionNodeColorKey('warning')).toBe('warning');
+    expect(getActionNodeColorKey('accent')).toBe('accent');
+  });
+
+  it('returns overlay20 for muted tone', () => {
+    expect(getActionNodeColorKey('muted')).toBe('overlay20');
+  });
+});
+
+describe('getTransitionIcon', () => {
+  it('returns whistle-outline for halftime', () => {
+    expect(getTransitionIcon({ id: 'gt1', transitionType: 'halftime', afterPointId: 'pt1' })).toBe(
+      'whistle-outline',
+    );
+  });
+
+  it('returns flag-outline for soft_cap and hard_cap', () => {
+    expect(getTransitionIcon({ id: 'gt1', transitionType: 'soft_cap', afterPointId: 'pt1' })).toBe(
+      'flag-outline',
+    );
+    expect(getTransitionIcon({ id: 'gt1', transitionType: 'hard_cap' })).toBe('flag-outline');
+  });
+
+  it('returns timer-pause-outline for timeout variants', () => {
+    expect(getTransitionIcon({ id: 't1', transitionType: 'timeout', sideId: 'Zoo' })).toBe(
+      'timer-pause-outline',
+    );
+    expect(getTransitionIcon({ id: 't1', transitionType: 'spirit_timeout' })).toBe(
+      'timer-pause-outline',
+    );
+    expect(getTransitionIcon({ id: 't1', transitionType: 'heat_timeout' })).toBe(
+      'timer-pause-outline',
+    );
+  });
+
+  it('returns clipboard-text-outline for administrative', () => {
+    expect(getTransitionIcon({ id: 't1', transitionType: 'administrative' })).toBe(
+      'clipboard-text-outline',
+    );
   });
 });

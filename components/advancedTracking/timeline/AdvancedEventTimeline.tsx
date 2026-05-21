@@ -1,10 +1,12 @@
 import AdvancedTimelinePointCard from '@/components/advancedTracking/timeline/AdvancedTimelinePointCard';
+import AdvancedTimelineTransitionDivider from '@/components/advancedTracking/timeline/AdvancedTimelineTransitionDivider';
 import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import type { AdvancedTimelinePoint } from '@/lib/advancedTracking/advancedTimelineUtils';
+import { hasItems } from '@/lib/utils';
 import { Fonts } from '@/theme/theme';
-import React from 'react';
+import React, { Fragment } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 
 interface AdvancedEventTimelineProps {
@@ -49,13 +51,30 @@ export default function AdvancedEventTimeline({
       {/* Timeline */}
       <ScrollView contentContainerStyle={styles.listContent} showsVerticalScrollIndicator={false}>
         {points.map((point) => (
-          <AdvancedTimelinePointCard
-            key={point.pointId}
-            point={point}
-            focusSideId={focusSideId}
-            oppSideId={oppSideId}
-            sideLabels={sideLabels}
-          />
+          <Fragment key={point.pointId}>
+            <AdvancedTimelinePointCard
+              point={point}
+              focusSideId={focusSideId}
+              oppSideId={oppSideId}
+              sideLabels={sideLabels}
+            />
+            {hasItems(point.transitionsAfter) &&
+              point.transitionsAfter.map((transition) => (
+                <AdvancedTimelineTransitionDivider
+                  key={transition.id}
+                  transition={transition}
+                  sideLabels={sideLabels}
+                />
+              ))}
+            {hasItems(point.gameTransitionsAfter) &&
+              point.gameTransitionsAfter.map((transition) => (
+                <AdvancedTimelineTransitionDivider
+                  key={transition.id}
+                  transition={transition}
+                  sideLabels={sideLabels}
+                />
+              ))}
+          </Fragment>
         ))}
       </ScrollView>
     </View>

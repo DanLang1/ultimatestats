@@ -44,8 +44,8 @@ export default function AdvancedTimelinePassChain({
           numberOfLines={isTextExpanded ? undefined : 2}>
           {fullText}
         </ThemedText>
-        <View style={[styles.badge, { backgroundColor: palette.overlay12 }]}>
-          <ThemedText style={[styles.badgeText, { color: palette.textSecondary }]}>
+        <View style={[styles.badge, { backgroundColor: palette.accentOverlay15 }]}>
+          <ThemedText style={[styles.badgeText, { color: palette.accent }]}>
             {actions.length} pass{actions.length !== 1 ? 'es' : ''}
           </ThemedText>
         </View>

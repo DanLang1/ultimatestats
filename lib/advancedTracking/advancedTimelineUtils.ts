@@ -213,7 +213,7 @@ function buildThrowLabel(
 
     case 'goal':
       return {
-        primaryLabel: knownThrower ? `${throwerName} -> ${receiverName ?? '?'} · Goal` : 'Goal',
+        primaryLabel: knownThrower ? `${throwerName} + ${receiverName ?? '?'} · Goal` : 'Goal',
       };
 
     case 'drop':
@@ -620,5 +620,131 @@ export function getTransitionLabel(transition: BetweenPointTransition | GameTran
       return 'Soft Cap';
     case 'hard_cap':
       return 'Hard Cap';
+  }
+}
+
+export type FlowItem =
+  | {
+      id: string;
+      type: 'header';
+      sideId: string;
+      possession: AdvancedTimelinePossession;
+    }
+  | {
+      id: string;
+      type: 'action_single';
+      possession: AdvancedTimelinePossession;
+      action: AdvancedTimelineAction;
+    }
+  | {
+      id: string;
+      type: 'action_chain';
+      possession: AdvancedTimelinePossession;
+      chainActions: ThrowDisplayAction[];
+    };
+
+export function isCompleteThrow(action: AdvancedTimelineAction): action is ThrowDisplayAction {
+  return action.kind === 'throw' && action.throwResult === 'complete';
+}
+
+export function appendActionFlowItems(
+  flowItems: FlowItem[],
+  possession: AdvancedTimelinePossession,
+): void {
+  const { actions } = possession;
+
+  for (let i = 0; i < actions.length; i++) {
+    const action = actions[i];
+
+    if (!isCompleteThrow(action)) {
+      flowItems.push({
+        id: action.id,
+        type: 'action_single',
+        action,
+        possession,
+      });
+      continue;
+    }
+
+    const chainActions: ThrowDisplayAction[] = [action];
+
+    while (i + 1 < actions.length) {
+      const nextAction = actions[i + 1];
+      if (!isCompleteThrow(nextAction)) break;
+
+      chainActions.push(nextAction);
+      i++;
+    }
+
+    if (chainActions.length >= 2) {
+      flowItems.push({
+        id: `chain-${chainActions[0].id}`,
+        type: 'action_chain',
+        chainActions,
+        possession,
+      });
+      continue;
+    }
+
+    flowItems.push({
+      id: action.id,
+      type: 'action_single',
+      action,
+      possession,
+    });
+  }
+}
+
+export function createPointFlowItems(possessions: AdvancedTimelinePossession[]): FlowItem[] {
+  const flowItems: FlowItem[] = [];
+
+  possessions.forEach((possession) => {
+    flowItems.push({
+      id: `header-${possession.possessionId}`,
+      type: 'header',
+      sideId: possession.sideId,
+      possession,
+    });
+
+    appendActionFlowItems(flowItems, possession);
+  });
+
+  return flowItems;
+}
+
+export type HeaderNodeColorKey = 'accent' | 'danger' | 'secondary' | 'neutral';
+
+export function getHeaderNodeColorKey(
+  sideId: string,
+  possessionResult: string,
+  focusSideId: string,
+  oppSideId: string,
+): HeaderNodeColorKey {
+  if (sideId === focusSideId) return 'accent';
+  if (sideId === oppSideId && possessionResult === 'scored') return 'danger';
+  if (sideId === oppSideId) return 'secondary';
+  return 'neutral';
+}
+
+export type ActionNodeColorKey = 'success' | 'danger' | 'warning' | 'accent' | 'overlay20';
+
+export function getActionNodeColorKey(tone: ActionTone): ActionNodeColorKey {
+  if (tone !== 'muted') return tone;
+  return 'overlay20';
+}
+
+export function getTransitionIcon(transition: BetweenPointTransition | GameTransition) {
+  switch (transition.transitionType) {
+    case 'halftime':
+      return 'whistle-outline';
+    case 'soft_cap':
+    case 'hard_cap':
+      return 'flag-outline';
+    case 'timeout':
+    case 'spirit_timeout':
+    case 'heat_timeout':
+      return 'timer-pause-outline';
+    case 'administrative':
+      return 'clipboard-text-outline';
   }
 }

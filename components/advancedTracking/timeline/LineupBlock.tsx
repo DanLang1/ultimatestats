@@ -7,11 +7,10 @@ import React from 'react';
 import { StyleSheet, View } from 'react-native';
 
 interface LineupBlockProps {
-  sideLabel: string;
   players: { participantId: string; name: string; isSubIn: boolean; isInjuredOut: boolean }[];
 }
 
-export default function LineupBlock({ sideLabel, players }: LineupBlockProps) {
+export default function LineupBlock({ players }: LineupBlockProps) {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
   const styles = createStyles(sizeClass);
@@ -19,9 +18,6 @@ export default function LineupBlock({ sideLabel, players }: LineupBlockProps) {
 
   return (
     <View style={styles.lineupBlock}>
-      <ThemedText style={[styles.lineupSideLabel, { color: palette.textMuted }]}>
-        {sideLabel}
-      </ThemedText>
       <View style={styles.lineupChips}>
         {players.map((p) => (
           <View
@@ -60,13 +56,7 @@ export default function LineupBlock({ sideLabel, players }: LineupBlockProps) {
 function createStyles(sizeClass: SizeClass) {
   return StyleSheet.create({
     lineupBlock: {
-      gap: 6,
-    },
-    lineupSideLabel: {
-      fontSize: scaleBySizeClass(10, sizeClass),
-      fontFamily: Fonts.bold,
-      letterSpacing: 0.5,
-      textTransform: 'uppercase',
+      flexDirection: 'row',
     },
     lineupChips: {
       flexDirection: 'row',

@@ -1,14 +1,13 @@
 import LineupBlock from '@/components/advancedTracking/timeline/LineupBlock';
-import PossessionActions from '@/components/advancedTracking/timeline/PossessionActions';
-import PossessionResultBadge from '@/components/advancedTracking/timeline/PossessionResultBadge';
+import TimelineFlowRow from '@/components/advancedTracking/timeline/TimelineFlowRow';
 import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import type { AdvancedTimelinePoint } from '@/lib/advancedTracking/advancedTimelineUtils';
 import {
+  createPointFlowItems,
   getPointStateLabel,
-  getTransitionLabel,
 } from '@/lib/advancedTracking/advancedTimelineUtils';
+import type { AdvancedTimelinePoint } from '@/lib/advancedTracking/advancedTimelineUtils';
 import { formatClockDuration } from '@/lib/timelineUtils';
 import { hasItems } from '@/lib/utils';
 import { Fonts } from '@/theme/theme';
@@ -35,6 +34,7 @@ export default function AdvancedTimelinePointCard({
 
   const focusScore = point.scoreAfter[focusSideId] ?? 0;
   const oppScore = point.scoreAfter[oppSideId] ?? 0;
+  const flowItems = createPointFlowItems(point.possessions);
 
   const isFocusScored = point.scoringSideId === focusSideId;
   const isOppScored = point.scoringSideId === oppSideId;
@@ -95,58 +95,27 @@ export default function AdvancedTimelinePointCard({
         </View>
       </View>
 
-      {/* Body — actions, pass chains, subs */}
+      {/* Body - unified possession and action flow */}
       <View style={styles.body}>
-        {point.possessions.map((possession) => (
-          <View key={possession.possessionId} style={styles.possessionBlock}>
-            <View style={styles.possessionHeader}>
-              <ThemedText style={[styles.possessionSide, { color: palette.textInverse }]}>
-                {sideLabels[possession.sideId] ?? possession.sideId}
-              </ThemedText>
-              <PossessionResultBadge possession={possession} />
-            </View>
-
-            <PossessionActions actions={possession.actions} subs={point.subs} />
-          </View>
+        {flowItems.map((item, index) => (
+          <TimelineFlowRow
+            key={item.id}
+            item={item}
+            isFirst={index === 0}
+            isLast={index === flowItems.length - 1}
+            sideLabels={sideLabels}
+            focusSideId={focusSideId}
+            oppSideId={oppSideId}
+            subs={point.subs}
+          />
         ))}
       </View>
 
-      {/* Transitions */}
-      {(hasItems(point.transitionsAfter) || hasItems(point.gameTransitionsAfter)) && (
-        <View style={[styles.transitionsSection, { borderTopColor: palette.overlay10 }]}>
-          {point.transitionsAfter.map((t) => (
-            <View
-              key={t.id}
-              style={[styles.transitionBand, { backgroundColor: palette.accentOverlay10 }]}>
-              <ThemedText style={[styles.transitionText, { color: palette.accent }]}>
-                {getTransitionLabel(t)}
-                {'sideId' in t && t.sideId ? ` · ${sideLabels[t.sideId] ?? t.sideId}` : ''}
-              </ThemedText>
-            </View>
-          ))}
-          {point.gameTransitionsAfter.map((t) => (
-            <View
-              key={t.id}
-              style={[styles.transitionBand, { backgroundColor: palette.warningOverlay10 }]}>
-              <ThemedText style={[styles.transitionText, { color: palette.warning }]}>
-                {getTransitionLabel(t)}
-              </ThemedText>
-            </View>
-          ))}
-        </View>
-      )}
-
       {/* Lineup footer */}
       <View style={[styles.lineupSection, { borderTopColor: palette.overlay10 }]}>
-        <LineupBlock
-          sideLabel={sideLabels[focusSideId] ?? 'My Team'}
-          players={point.linesBySide[focusSideId] ?? []}
-        />
+        <LineupBlock players={point.linesBySide[focusSideId] ?? []} />
         {hasItems(point.linesBySide[oppSideId]) ? (
-          <LineupBlock
-            sideLabel={sideLabels[oppSideId] ?? 'Opponent'}
-            players={point.linesBySide[oppSideId] ?? []}
-          />
+          <LineupBlock players={point.linesBySide[oppSideId] ?? []} />
         ) : null}
       </View>
     </View>
@@ -222,35 +191,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     body: {
       padding: 12,
-      gap: 14,
-    },
-    possessionBlock: {
-      gap: 8,
-    },
-    possessionHeader: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-    },
-    possessionSide: {
-      fontSize: scaleBySizeClass(13, sizeClass),
-      fontFamily: Fonts.semiBold,
-    },
-    transitionsSection: {
-      padding: 12,
-      gap: 6,
-      borderTopWidth: 1,
-    },
-    transitionBand: {
-      paddingHorizontal: 10,
-      paddingVertical: 5,
-      borderRadius: 6,
-      alignItems: 'center',
-    },
-    transitionText: {
-      fontSize: scaleBySizeClass(11, sizeClass),
-      fontFamily: Fonts.bold,
-      letterSpacing: 0.3,
+      paddingLeft: 10,
     },
     lineupSection: {
       padding: 12,
