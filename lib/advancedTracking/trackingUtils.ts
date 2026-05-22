@@ -1,4 +1,6 @@
 import { hasItems } from '@/lib/utils';
+import { getRecentLines, RecentLine } from '@/lib/lineUtils';
+import { PointLineRecord } from '@/lib/storage/types';
 import {
   AdvancedTrackedGame,
   GameSide,
@@ -506,4 +508,27 @@ export function assertValidInjurySubInput(
     ...input.inIds.map((id) => ({ refType: 'participant' as const, participantId: id })),
     ...input.outIds.map((id) => ({ refType: 'participant' as const, participantId: id })),
   ]);
+}
+
+/**
+ * Returns the last N distinct lines played by the focus side, for quick
+ * re-selection in the line picker. Delegates to {@link getRecentLines} after
+ * converting {@link TrackedPoint} data to the shared {@link PointLineRecord} format.
+ *
+ * Points are 1-indexed to match the convention in `getRecentLines`.
+ */
+export function getAdvancedRecentLines(game: AdvancedTrackedGame): RecentLine[] {
+  const pointLineRecords: PointLineRecord[] = [];
+  for (let i = 0; i < game.points.length; i++) {
+    const point = game.points[i];
+    const focusLine = point.lines.find((l) => l.sideId === game.focusSideId);
+    if (focusLine && focusLine.participantIds.length > 0) {
+      pointLineRecords.push({
+        pointNumber: i + 1,
+        playerIds: focusLine.participantIds,
+        timestamp: 0,
+      });
+    }
+  }
+  return getRecentLines(pointLineRecords, game.points.length + 1);
 }

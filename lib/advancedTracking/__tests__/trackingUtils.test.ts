@@ -8,6 +8,7 @@ import {
   cloneGame,
   didPullTurnOver,
   didLastOperationEndCurrentPoint,
+  getAdvancedRecentLines,
   getCurrentPoint,
   getCurrentPossession,
   getEffectiveGameTo,
@@ -25,6 +26,7 @@ import {
 } from '../trackingUtils';
 import type {
   AdvancedTrackedGame,
+  PointLine,
   PointPossession,
   StoppageAction,
   ThrowAction,
@@ -1031,5 +1033,112 @@ describe('assertValidInjurySubInput', () => {
     expect(() => assertValidInjurySubInput(game, point, input)).toThrow(
       'Stoppage action "stoppage-1" not found in current point.',
     );
+  });
+});
+
+// ── getAdvancedRecentLines ────────────────────────────────────────────────────
+
+const _sid = (id: string, label: string) => ({ id, label, trackingMode: 'full-roster' }) as const;
+
+const _participant = (id: string, name: string) => ({ id, name });
+
+const _line = (sideId: string, participantIds: string[]): PointLine =>
+  ({ sideId, participantIds }) as PointLine;
+
+const _point = (id: string, lines: PointLine[]): TrackedPoint =>
+  ({ id, lines, possessions: [] }) as TrackedPoint;
+
+const _makeGame = (overrides: Partial<AdvancedTrackedGame> = {}): AdvancedTrackedGame => ({
+  id: 'rg1',
+  schemaVersion: 1,
+  createdAt: 0,
+  updatedAt: 0,
+  gameType: 'game',
+  status: 'in_progress',
+  focusSideId: 'side-a',
+  initialReceivingSideId: 'side-a',
+  sides: [_sid('side-a', 'Us'), _sid('side-b', 'Them')],
+  participants: [
+    _participant('p1', 'Alice'),
+    _participant('p2', 'Bob'),
+    _participant('p3', 'Carol'),
+    _participant('p4', 'Dave'),
+    _participant('p5', 'Eve'),
+    _participant('p6', 'Frank'),
+    _participant('p7', 'Grace'),
+  ],
+  points: [],
+  settings: { locationMode: 'none' },
+  ...overrides,
+});
+
+describe('getAdvancedRecentLines', () => {
+  it('returns empty when there are no points', () => {
+    const game = _makeGame();
+    expect(getAdvancedRecentLines(game)).toEqual([]);
+  });
+
+  it('returns empty when the focus side has no lines in any point', () => {
+    const game = _makeGame({
+      points: [
+        _point('pt1', [_line('side-b', ['p1', 'p2', 'p3'])]),
+        _point('pt2', [_line('side-b', ['p4', 'p5', 'p6'])]),
+      ],
+    });
+    expect(getAdvancedRecentLines(game)).toEqual([]);
+  });
+
+  it('returns the last 3 distinct focus-side lines (most recent first)', () => {
+    const game = _makeGame({
+      focusSideId: 'side-a',
+      points: [
+        _point('pt1', [_line('side-a', ['p1', 'p2', 'p3']), _line('side-b', ['p4', 'p5', 'p6'])]),
+        _point('pt2', [_line('side-a', ['p2', 'p3', 'p4']), _line('side-b', ['p5', 'p6', 'p7'])]),
+        _point('pt3', [_line('side-a', ['p3', 'p4', 'p5']), _line('side-b', ['p6', 'p7', 'p1'])]),
+        _point('pt4', [_line('side-a', ['p4', 'p5', 'p6']), _line('side-b', ['p7', 'p1', 'p2'])]),
+        _point('pt5', [_line('side-a', ['p5', 'p6', 'p7']), _line('side-b', ['p1', 'p2', 'p3'])]),
+      ],
+    });
+
+    const result = getAdvancedRecentLines(game);
+
+    expect(result).toEqual([
+      { pointNumber: 5, playerIds: ['p5', 'p6', 'p7'] },
+      { pointNumber: 4, playerIds: ['p4', 'p5', 'p6'] },
+      { pointNumber: 3, playerIds: ['p3', 'p4', 'p5'] },
+    ]);
+  });
+
+  it('deduplicates by player set (order-independent)', () => {
+    const game = _makeGame({
+      focusSideId: 'side-a',
+      points: [
+        _point('pt1', [_line('side-a', ['p1', 'p2', 'p3'])]),
+        _point('pt2', [_line('side-a', ['p3', 'p2', 'p1'])]),
+        _point('pt3', [_line('side-a', ['p1', 'p2', 'p4'])]),
+      ],
+    });
+
+    const result = getAdvancedRecentLines(game);
+
+    expect(result).toEqual([
+      { pointNumber: 3, playerIds: ['p1', 'p2', 'p4'] },
+      { pointNumber: 2, playerIds: ['p3', 'p2', 'p1'] },
+    ]);
+  });
+
+  it('skips points where focus side line is missing', () => {
+    const game = _makeGame({
+      focusSideId: 'side-a',
+      points: [
+        _point('pt1', [_line('side-b', ['p1', 'p2', 'p3'])]),
+        _point('pt2', [_line('side-a', ['p4', 'p5', 'p6'])]),
+        _point('pt3', [_line('side-b', ['p1', 'p2', 'p3'])]),
+      ],
+    });
+
+    const result = getAdvancedRecentLines(game);
+
+    expect(result).toEqual([{ pointNumber: 2, playerIds: ['p4', 'p5', 'p6'] }]);
   });
 });

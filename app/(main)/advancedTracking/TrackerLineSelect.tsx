@@ -1,6 +1,8 @@
 import { TrackerLineScreen } from '@/components/advancedTracking/TrackerLineScreen';
+import type { RecentLine as RecentLineType } from '@/components/advancedTracking/TrackerLineScreen';
 import { getEffectiveLineParticipantIds } from '@/lib/advancedTracking/trackingDisplayHelpers';
 import {
+  getAdvancedRecentLines,
   getCurrentPoint,
   getReceivingSideForNextPoint,
 } from '@/lib/advancedTracking/trackingUtils';
@@ -28,6 +30,8 @@ export default function TrackerLineSelectScreen() {
   const nextSequenceNumber = nextRatio != null ? getSequenceNumber(nextPointNumber) : undefined;
 
   const isInitialLine = game.points.length === 0;
+
+  const recentLines: RecentLineType[] = getAdvancedRecentLines(game);
   const handleBack = () => {
     if (isInitialLine) {
       resetCurrentGame();
@@ -45,6 +49,7 @@ export default function TrackerLineSelectScreen() {
       expectedRatio={nextRatio}
       sequenceNumber={nextSequenceNumber}
       onBack={handleBack}
+      recentLines={recentLines}
       onConfirm={(ids) => {
         const receivingSideId = getReceivingSideForNextPoint(game);
         const isOurPull = receivingSideId !== game.focusSideId;

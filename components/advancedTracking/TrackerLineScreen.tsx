@@ -13,8 +13,14 @@ import { useLinePresetsStore } from '@/store/linePresetsStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { Fonts } from '@/theme/theme';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { router } from 'expo-router';
 import React, { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
+
+export interface RecentLine {
+  pointNumber: number;
+  playerIds: string[];
+}
 
 interface TrackerLineScreenProps {
   participants: Participant[];
@@ -27,6 +33,7 @@ interface TrackerLineScreenProps {
   sequenceNumber?: 1 | 2;
   requireChanges?: boolean;
   warningText?: string;
+  recentLines?: RecentLine[];
 }
 
 export const TrackerLineScreen = ({
@@ -40,6 +47,7 @@ export const TrackerLineScreen = ({
   sequenceNumber,
   requireChanges,
   warningText,
+  recentLines = [],
 }: TrackerLineScreenProps) => {
   const { palette } = useTheme();
   const { sizeClass, isLandscape } = useLayout();
@@ -53,6 +61,7 @@ export const TrackerLineScreen = ({
 
   const [selectedIds, setSelectedIds] = useState<string[]>(initialSelectedIds ?? []);
   const [selectedPresetId, setSelectedPresetId] = useState<string | null>(null);
+  const [selectedRecentPointNumber, setSelectedRecentPointNumber] = useState<number | null>(null);
   const [showLinePicker, setShowLinePicker] = useState(false);
 
   const initialIds = initialSelectedIds ?? [];
@@ -98,11 +107,22 @@ export const TrackerLineScreen = ({
     setSelectedIds(preset.playerIds);
   };
 
+  const handleSelectRecentLine = (recent: RecentLine) => {
+    if (selectedRecentPointNumber === recent.pointNumber) {
+      setSelectedRecentPointNumber(null);
+      setSelectedIds([]);
+      return;
+    }
+    setSelectedRecentPointNumber(recent.pointNumber);
+    setSelectedPresetId(null);
+    setSelectedIds(recent.playerIds);
+  };
+
   const { active: loadLineButtonActive, label: loadLineButtonLabel } = getLoadLineButtonState({
     presets,
     quickPresetIds: quickPresets.map((p) => p.id),
     selectedPresetId,
-    selectedRecentPointNumber: null,
+    selectedRecentPointNumber,
   });
 
   return (
@@ -255,6 +275,7 @@ export const TrackerLineScreen = ({
               onPress={() => {
                 setSelectedIds([]);
                 setSelectedPresetId(null);
+                setSelectedRecentPointNumber(null);
               }}
               style={({ pressed }) => [
                 styles.clearBtn,
@@ -279,10 +300,16 @@ export const TrackerLineScreen = ({
             handleSelectPreset(preset);
             setShowLinePicker(false);
           }}
-          onEditPresets={() => setShowLinePicker(false)}
-          recentLines={[]}
-          selectedRecentPointNumber={null}
-          onSelectRecentLine={() => {}}
+          onEditPresets={() => {
+            setShowLinePicker(false);
+            router.push('/LinePresetEditor');
+          }}
+          recentLines={recentLines}
+          selectedRecentPointNumber={selectedRecentPointNumber}
+          onSelectRecentLine={(recent) => {
+            handleSelectRecentLine(recent);
+            setShowLinePicker(false);
+          }}
           roster={players}
         />
       </View>
