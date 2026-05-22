@@ -24,7 +24,7 @@ export const PassChainHeader = ({ events }: PassChainHeaderProps) => {
           {lastTwo[0].name}
         </ThemedText>
         <ThemedText style={[styles.sep, { color: palette.textMuted }]}>→</ThemedText>
-        <ThemedText numberOfLines={1} style={[styles.bold, { color: palette.inputText }]}>
+        <ThemedText numberOfLines={1} style={[styles.bold, { color: palette.textInverse }]}>
           {lastTwo[1].name}
         </ThemedText>
       </View>
@@ -33,7 +33,7 @@ export const PassChainHeader = ({ events }: PassChainHeaderProps) => {
 
   return (
     <View style={styles.row}>
-      <ThemedText numberOfLines={1} style={[styles.bold, { color: palette.inputText }]}>
+      <ThemedText numberOfLines={1} style={[styles.bold, { color: palette.textInverse }]}>
         {lastTwo[0].name}
       </ThemedText>
       <ThemedText style={[styles.sep, { color: palette.textMuted }]}>·</ThemedText>
@@ -52,21 +52,21 @@ function createStyles(sizeClass: SizeClass) {
     },
     bold: {
       fontFamily: Fonts.black,
-      fontSize: scaleBySizeClass(13, sizeClass),
+      fontSize: scaleBySizeClass(14, sizeClass),
       letterSpacing: 0.5,
       textTransform: 'uppercase',
       flexShrink: 1,
     },
     label: {
       fontFamily: Fonts.bold,
-      fontSize: scaleBySizeClass(12, sizeClass),
+      fontSize: scaleBySizeClass(13, sizeClass),
       letterSpacing: 0.5,
       textTransform: 'uppercase',
       flexShrink: 1,
     },
     sep: {
       fontFamily: Fonts.black,
-      fontSize: scaleBySizeClass(12, sizeClass),
+      fontSize: scaleBySizeClass(13, sizeClass),
     },
   });
 }

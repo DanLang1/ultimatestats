@@ -20,19 +20,19 @@ export const GoalHeader = ({ goalInfo }: GoalHeaderProps) => {
       <View style={styles.row}>
         {goalInfo.assisterName && (
           <>
-            <ThemedText numberOfLines={1} style={[styles.bold, { color: palette.inputText }]}>
+            <ThemedText numberOfLines={1} style={[styles.bold, { color: palette.textInverse }]}>
               {goalInfo.assisterName}
             </ThemedText>
             <ThemedText style={[styles.sep, { color: palette.textMuted }]}>+</ThemedText>
           </>
         )}
         {goalInfo.scorerName && (
-          <ThemedText numberOfLines={1} style={[styles.bold, { color: palette.inputText }]}>
+          <ThemedText numberOfLines={1} style={[styles.bold, { color: palette.textInverse }]}>
             {goalInfo.scorerName}
           </ThemedText>
         )}
         <ThemedText style={[styles.sep, { color: palette.textMuted }]}>·</ThemedText>
-        <ThemedText style={[styles.label, { color: palette.inputText }]}>
+        <ThemedText style={[styles.label, { color: palette.textInverse }]}>
           {goalInfo.isCallahan ? 'CALLAHAN' : 'GOAL'}
         </ThemedText>
       </View>
@@ -52,21 +52,21 @@ function createStyles(sizeClass: SizeClass) {
     },
     bold: {
       fontFamily: Fonts.black,
-      fontSize: scaleBySizeClass(13, sizeClass),
+      fontSize: scaleBySizeClass(14, sizeClass),
       letterSpacing: 0.5,
       textTransform: 'uppercase',
       flexShrink: 1,
     },
     label: {
       fontFamily: Fonts.bold,
-      fontSize: scaleBySizeClass(12, sizeClass),
+      fontSize: scaleBySizeClass(13, sizeClass),
       letterSpacing: 0.5,
       textTransform: 'uppercase',
       flexShrink: 1,
     },
     sep: {
       fontFamily: Fonts.black,
-      fontSize: scaleBySizeClass(12, sizeClass),
+      fontSize: scaleBySizeClass(13, sizeClass),
     },
   });
 }

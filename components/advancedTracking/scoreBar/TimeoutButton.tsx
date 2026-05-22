@@ -44,7 +44,7 @@ export function TimeoutButton({
         style={[
           styles.pillButton,
           {
-            backgroundColor: canUse ? palette.cardBgAlt : palette.overlay05,
+            backgroundColor: canUse ? color + '18' : palette.overlay05,
             borderColor: canUse ? color : palette.border,
           },
         ]}>
@@ -85,7 +85,7 @@ function createStyles(sizeClass: SizeClass) {
       justifyContent: 'center',
     },
     pillText: {
-      fontSize: scaleBySizeClass(10, sizeClass),
+      fontSize: scaleBySizeClass(11, sizeClass),
       fontFamily: Fonts.black,
       letterSpacing: 0.5,
       textTransform: 'uppercase',
@@ -93,14 +93,14 @@ function createStyles(sizeClass: SizeClass) {
       textAlign: 'center',
     },
     teamName: {
-      fontSize: scaleBySizeClass(11, sizeClass),
+      fontSize: scaleBySizeClass(12, sizeClass),
       fontFamily: Fonts.extraBold,
       letterSpacing: 0.5,
       textTransform: 'uppercase',
       textAlign: 'center',
     },
     remainingLabel: {
-      fontSize: scaleBySizeClass(9, sizeClass),
+      fontSize: scaleBySizeClass(10, sizeClass),
       fontFamily: Fonts.semiBold,
       letterSpacing: 0,
       textTransform: 'uppercase',

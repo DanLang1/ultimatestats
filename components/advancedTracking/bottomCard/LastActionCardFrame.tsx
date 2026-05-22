@@ -46,7 +46,9 @@ export const LastActionCardFrame = ({
           size={scaleBySizeClass(18, sizeClass)}
           color={buttonMode.isDanger ? palette.danger : palette.textMuted}
         />
-        <ThemedText style={[styles.actionBtnText, { color: palette.inputText }]}>CANCEL</ThemedText>
+        <ThemedText style={[styles.actionBtnText, { color: palette.textInverse }]}>
+          CANCEL
+        </ThemedText>
       </Pressable>
     );
   } else if (showUndo) {
@@ -112,7 +114,7 @@ function createStyles(sizeClass: SizeClass, isLandscape: boolean, palette: Palet
       alignItems: isLandscape ? 'stretch' : 'center',
       gap: scaleBySizeClass(isLandscape ? 8 : 12, sizeClass),
       minHeight: scaleBySizeClass(isLandscape ? 76 : 92, sizeClass),
-      backgroundColor: palette.cardBg,
+      backgroundColor: palette.trackerActionCardBg,
       borderRadius: 18,
       borderCurve: 'continuous',
       overflow: 'hidden',
@@ -124,7 +126,7 @@ function createStyles(sizeClass: SizeClass, isLandscape: boolean, palette: Palet
       shadowRadius: 16,
       elevation: 4,
       borderWidth: 1,
-      borderColor: palette.borderLight,
+      borderColor: palette.trackerActionCardBorder,
     },
     accentRail: {
       position: 'absolute',

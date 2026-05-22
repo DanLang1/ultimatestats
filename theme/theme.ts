@@ -42,6 +42,8 @@ const midnightElectric = {
   inputText: '#0F172A', // Slate 900 - text in inputs (always dark)
   cardBg: '#F8FAFC', // Slate 50 - card backgrounds
   cardBgAlt: '#F1F5F9', // Slate 100 - alternating rows
+  trackerActionCardBg: '#1E293B', // Slate 800 - tracker action surface on dark screens
+  trackerActionCardBorder: 'rgba(255,255,255,0.15)', // tracker action card border on dark screens
   timelineLineupChipBg: 'rgba(255,255,255,0.1)', // subdued lineup chip surface on dark cards
   timelineLineupChipBorder: 'rgba(255,255,255,0.2)', // lineup chip border on dark cards
   shadow: '#000000', // Shadow color (use with opacity)
@@ -163,6 +165,8 @@ export const lightPalette = {
   inputText: '#0F172A', // Slate 900 - text in inputs (always dark)
   cardBg: '#FFFFFF', // White - card backgrounds
   cardBgAlt: '#F8FAFC', // Slate 50 - alternating rows
+  trackerActionCardBg: '#FFFFFF', // tracker action surface on light screens
+  trackerActionCardBorder: '#E2E8F0', // tracker action card border on light screens
   timelineLineupChipBg: '#FFFFFF', // lineup chip surface on light cards
   timelineLineupChipBorder: '#CBD5E1', // lineup chip border on light cards
   shadow: '#000000', // Shadow color (use with opacity)
@@ -249,6 +253,8 @@ export type Palette = {
   overlayModal: string;
   textOnAccent: string;
   glassBg: string;
+  trackerActionCardBg: string;
+  trackerActionCardBorder: string;
   chrome: string;
   lockScreenText: string;
   lockScreenBtnPrimaryBg: string;

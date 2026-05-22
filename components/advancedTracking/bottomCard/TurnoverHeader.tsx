@@ -62,21 +62,21 @@ function createStyles(sizeClass: SizeClass) {
     },
     bold: {
       fontFamily: Fonts.black,
-      fontSize: scaleBySizeClass(13, sizeClass),
+      fontSize: scaleBySizeClass(14, sizeClass),
       letterSpacing: 0.5,
       textTransform: 'uppercase',
       flexShrink: 1,
     },
     label: {
       fontFamily: Fonts.bold,
-      fontSize: scaleBySizeClass(12, sizeClass),
+      fontSize: scaleBySizeClass(13, sizeClass),
       letterSpacing: 0.5,
       textTransform: 'uppercase',
       flexShrink: 1,
     },
     sep: {
       fontFamily: Fonts.black,
-      fontSize: scaleBySizeClass(12, sizeClass),
+      fontSize: scaleBySizeClass(13, sizeClass),
     },
   });
 }

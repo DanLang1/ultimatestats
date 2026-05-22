@@ -53,10 +53,10 @@ export const DefenseActions = ({ onOppScored, onOppTurnover }: DefenseActionsPro
         <MaterialCommunityIcons
           name="swap-horizontal"
           size={scaleBySizeClass(24, sizeClass)}
-          color={palette.neutral}
+          color={palette.textInverse}
           style={styles.icon}
         />
-        <ThemedText numberOfLines={1} style={[styles.btnText, { color: palette.neutral }]}>
+        <ThemedText numberOfLines={1} style={[styles.btnText, { color: palette.textInverse }]}>
           OPP TURN
         </ThemedText>
       </Pressable>
