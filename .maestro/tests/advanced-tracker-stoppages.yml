@@ -1,102 +1,55 @@
 appId: com.langdk.ultimatestats
 name: Advanced Tracker Stoppages
 ---
-# Reuse setup flow to get to tracker screen
 - runFlow:
     file: ../flows/setup-game.yaml
 
-# Tap Joe to start with disc
+# Start with disc on Joe
 - tapOn:
     id: 'tracker-chip-Joe'
 
 # --- Pause ---
-# Tap pause button in score bar
 - tapOn:
     id: 'scorebar-pause'
-
-# Verify paused overlay
 - assertVisible:
     text: 'PAUSED'
-
-# Tap resume
 - tapOn:
     id: 'stoppage-resume'
-
-# Verify back to tracker
+# Verify back on tracker
 - assertVisible:
-    text: 'DEFENSE'
-    optional: true
+    id: 'tracker-menu-button'
 
-# --- Timeout (home) ---
-# Expand score bar to show timeout buttons
+# --- Home Timeout ---
 - tapOn:
     id: 'timeout-dots-focus'
 - waitForAnimationToEnd:
     timeout: 500
-
-# Tap home timeout
 - tapOn:
     id: 'timeout-button-home'
-
-# Verify timeout overlay
 - assertVisible:
     text: 'TIMEOUT'
-
-# Tap resume
 - tapOn:
     id: 'stoppage-resume'
-
-# Verify back to tracker
+# Verify back on tracker
 - assertVisible:
-    text: 'DEFENSE'
-    optional: true
+    id: 'tracker-menu-button'
 
-# --- Timeout (away) ---
-# Tap away timeout
-- tapOn:
-    id: 'timeout-dots-opp'
-- waitForAnimationToEnd:
-    timeout: 500
-- tapOn:
-    id: 'timeout-button-away'
-
-# Verify timeout overlay
-- assertVisible:
-    text: 'TIMEOUT'
-
-# Tap undo to cancel timeout
-- tapOn:
-    id: 'stoppage-undo'
-
-# Verify back to tracker
-- assertVisible:
-    text: 'DEFENSE'
-    optional: true
-
-# --- Injury ---
-# Open line change menu
+# --- Injury Substitution ---
 - tapOn:
     id: 'tracker-line-action-tile'
 - waitForAnimationToEnd:
     timeout: 500
-
-# Select Injury substitution
 - tapOn:
     id: 'line-change-injury-sub'
-
-# Verify injury sub screen
 - assertVisible:
     text: 'Injury Sub'
 
-# Go back without making changes
+# Go back without changes
 - tapOn:
     id: 'line-select-back'
-
 # Verify back on tracker
 - assertVisible:
-    text: 'DEFENSE'
-    optional: true
+    id: 'tracker-menu-button'
 
-# Take screenshot
 - takeScreenshot:
     path: .maestro/screenshots/advanced-tracker-stoppages

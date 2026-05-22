@@ -1,39 +1,33 @@
 appId: com.langdk.ultimatestats
 name: Advanced Tracker Score Bar
 ---
-# Reuse setup flow to get to tracker screen
 - runFlow:
     file: ../flows/setup-game.yaml
 
-# Tap Joe to start with disc
+# Start with disc on Joe
 - tapOn:
     id: 'tracker-chip-Joe'
 
-# --- Pause via score bar ---
+# Pause via score bar
 - tapOn:
     id: 'scorebar-pause'
-
-# Verify paused overlay
 - assertVisible:
     text: 'PAUSED'
 
 # Resume
 - tapOn:
     id: 'stoppage-resume'
-
-# Verify tracker resumed
+# Verify back on tracker
 - assertVisible:
-    text: 'DEFENSE'
-    optional: true
+    id: 'tracker-menu-button'
 
-# --- Expand score bar and timeouts ---
-# Tap timeout dots to expand score bar footer
+# Expand score bar to reveal timeout buttons
 - tapOn:
     id: 'timeout-dots-focus'
 - waitForAnimationToEnd:
     timeout: 500
 
-# Verify timeout buttons are visible
+# Verify timeout buttons
 - assertVisible:
     id: 'timeout-button-home'
 - assertVisible:
@@ -42,33 +36,25 @@ name: Advanced Tracker Score Bar
 # Call home timeout
 - tapOn:
     id: 'timeout-button-home'
-
-# Verify timeout overlay
 - assertVisible:
     text: 'TIMEOUT'
 
 # Resume
 - tapOn:
     id: 'stoppage-resume'
-
-# Verify tracker
+# Verify back on tracker
 - assertVisible:
-    text: 'DEFENSE'
-    optional: true
+    id: 'tracker-menu-button'
 
-# --- Undo last action ---
-# Pass to Jon
+# Undo last action - pass to Jon then undo
 - tapOn:
     id: 'tracker-chip-Jon'
-
-# Tap undo button in bottom card
 - tapOn:
     id: 'tracker-undo-button'
 
-# Verify undo worked - should be back to Joe having disc
+# Verify undo worked - pass chain cleared, only pickup remains
 - assertVisible:
     text: 'HAS DISC'
 
-# Take screenshot
 - takeScreenshot:
     path: .maestro/screenshots/advanced-tracker-scorebar

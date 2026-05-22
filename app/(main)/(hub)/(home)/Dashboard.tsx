@@ -10,6 +10,7 @@ import { useNewGameLauncher } from '@/hooks/useNewGameLauncher';
 import { useRemoteVersionCheck } from '@/hooks/useRemoteVersionCheck';
 import { useVersionCheck } from '@/hooks/useVersionCheck';
 import { APP_STORE_URL, PLAY_STORE_URL } from '@/lib/constants';
+import { seedTestTeam } from '@/lib/maestroUtils';
 import { LAST_DISMISSED_REMOTE_VERSION_KEY } from '@/lib/remoteVersionUtils';
 import { LAST_SEEN_VERSION_KEY } from '@/lib/versionUtils';
 import { useTutorialStore } from '@/store/tutorialStore';
@@ -28,6 +29,7 @@ interface MenuItem {
   onPress: () => void;
   disabled?: boolean;
   showBadge?: boolean;
+  testID?: string;
 }
 
 interface MenuSection {
@@ -85,6 +87,7 @@ export default function DashboardScreen() {
             return 'Open a fresh scoreboard and start tracking';
           })(),
           onPress: openNewGameSheet,
+          testID: 'dashboard-new-game-button',
         },
         {
           icon: 'cog-outline' as const,
@@ -281,6 +284,7 @@ export default function DashboardScreen() {
               {section.items.map((item, index) => (
                 <Pressable
                   key={index}
+                  testID={item.testID}
                   onPress={item.onPress}
                   disabled={item.disabled}
                   style={({ pressed }) => [
@@ -356,6 +360,28 @@ export default function DashboardScreen() {
         {/* Dev tools - only visible in development */}
         {__DEV__ && (
           <>
+            <Pressable
+              onPress={seedTestTeam}
+              style={({ pressed }) => [
+                styles.discordBanner,
+                { backgroundColor: palette.success, marginTop: 12 },
+                pressed && styles.menuItemPressed,
+              ]}>
+              <MaterialCommunityIcons
+                name="seed-outline"
+                size={metrics.bannerIconSize}
+                color={palette.textOnAccent}
+              />
+              <View style={styles.discordText}>
+                <ThemedText style={[styles.discordTitle, { color: palette.textOnAccent }]}>
+                  Seed Test Team
+                </ThemedText>
+                <ThemedText style={[styles.discordSubtitle, { color: palette.textOnAccentMuted }]}>
+                  DEV ONLY - Creates Zoboomafoo with 7 test players
+                </ThemedText>
+              </View>
+            </Pressable>
+
             <Pressable
               onPress={() => {
                 AsyncStorage.removeItem(LAST_SEEN_VERSION_KEY).then(() => {

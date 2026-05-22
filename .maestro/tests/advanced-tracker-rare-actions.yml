@@ -1,30 +1,26 @@
 appId: com.langdk.ultimatestats
 name: Advanced Tracker Rare Actions
 ---
-# Reuse setup flow to get to tracker screen
 - runFlow:
     file: ../flows/setup-game.yaml
 
-# --- Stall (offense - focus has disc) ---
-# Tap Joe to start with disc
+# --- Stall (Offense) ---
 - tapOn:
     id: 'tracker-chip-Joe'
 
-# Open rare menu
+# Open rare menu, select Stall (Offense)
 - tapOn:
     id: 'tracker-more-button'
 - waitForAnimationToEnd:
     timeout: 500
-
-# Tap Stall (offense) - records throw from disc holder directly
 - tapOn:
     id: 'rare-menu-stall-offense'
 
-# Stall-offense records turnover -> opponent now has disc
+# Stall-offense records a turnover, opponent gets disc
 - waitForAnimationToEnd:
     timeout: 1500
 
-# Opponent has disc; record opponent goal to end point
+# Record opponent goal to end point
 - tapOn:
     id: 'defense-opp-goal'
 - assertVisible:
@@ -32,16 +28,14 @@ name: Advanced Tracker Rare Actions
 - tapOn:
     id: 'tracker-next-point'
 
-# Handle line select and pull for new point
 - runFlow:
     file: ../flows/select-line-and-pull.yaml
 
-# --- Callahan (requires opponent to have disc) ---
-# Tap Joe to start with disc
+# --- Callahan ---
 - tapOn:
     id: 'tracker-chip-Joe'
 
-# Give disc to opponent first
+# Give disc to opponent via Opp D
 - tapOn:
     id: 'tracker-more-button'
 - waitForAnimationToEnd:
@@ -49,17 +43,15 @@ name: Advanced Tracker Rare Actions
 - tapOn:
     id: 'rare-menu-opp-d'
 
-# Now opponent has disc - open rare menu for Callahan
+# Now opponent has disc, open rare menu for Callahan
 - tapOn:
     id: 'tracker-more-button'
 - waitForAnimationToEnd:
     timeout: 500
-
-# Select Callahan modifier
 - tapOn:
     id: 'rare-menu-callahan'
 
-# Verify modifier prompt
+# Verify Callahan prompt
 - assertVisible:
     text: 'Tap player who got the Callahan'
 
@@ -73,20 +65,16 @@ name: Advanced Tracker Rare Actions
 - tapOn:
     id: 'tracker-next-point'
 
-# Handle line select and pull
 - runFlow:
     file: ../flows/select-line-and-pull.yaml
 
-# --- Stall (defense - opponent has disc) ---
-# Tap Joe to start with disc
+# --- Stall (Defense) ---
 - tapOn:
     id: 'tracker-chip-Joe'
-
-# Pass to Jon
 - tapOn:
     id: 'tracker-chip-Jon'
 
-# Open rare menu -> Opp D to give opponent disc
+# Opp D to give opponent disc
 - tapOn:
     id: 'tracker-more-button'
 - waitForAnimationToEnd:
@@ -94,24 +82,21 @@ name: Advanced Tracker Rare Actions
 - tapOn:
     id: 'rare-menu-opp-d'
 
-# Open rare menu for Stall (defense)
+# Open rare menu for Stall (Defense)
 - tapOn:
     id: 'tracker-more-button'
 - waitForAnimationToEnd:
     timeout: 500
-
-# Select Stall modifier (defense - stalls the opponent)
 - tapOn:
     id: 'rare-menu-stall'
 
-# Verify modifier prompt
+# Verify stall prompt
 - assertVisible:
     text: 'Tap player who got the stall'
 
-# Tap Joe for stall (opponent stalled)
+# Tap Joe for stall
 - tapOn:
     id: 'tracker-chip-Joe'
 
-# Take screenshot
 - takeScreenshot:
     path: .maestro/screenshots/advanced-tracker-rare-actions

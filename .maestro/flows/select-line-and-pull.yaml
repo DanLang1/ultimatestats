@@ -1,13 +1,9 @@
 appId: com.langdk.ultimatestats
-name: Select Line and Handle Pull
+name: Select Line and Handle Pull (Deterministic)
 ---
 # After next point, we land on line selection screen
 - assertVisible:
     text: 'Select Line'
-    optional: true
-- assertVisible:
-    text: 'Starting Line'
-    optional: true
 
 # Select 7 players for the line
 - tapOn:
@@ -29,17 +25,20 @@ name: Select Line and Handle Pull
 - tapOn:
     id: 'line-select-confirm'
 
-# Handle pull tracking
+# Handle pull tracking - skip timing
 - tapOn:
     id: 'pull-skip-timing'
+
+# Pull result step only appears when WE are pulling
+# When THEY are pulling, auto-completes as inbound and skips this step
 - tapOn:
     id: 'pull-result-inbound'
     optional: true
-- tapOn:
-    id: 'pull-result-ob'
-    optional: true
 
 # Wait for tracker screen
+- waitForAnimationToEnd:
+    timeout: 2000
+# Verify on tracker (card text varies: TAP WHO STARTS WITH DISC when we have disc,
+# DEFENSE or turnover header when opponent has disc after our pull)
 - assertVisible:
-    text: 'TAP WHO STARTS WITH DISC'
-    optional: true
+    id: 'tracker-menu-button'

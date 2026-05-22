@@ -1,34 +1,26 @@
 appId: com.langdk.ultimatestats
 name: Advanced Tracker Pass Chain and Goal
 ---
-# Reuse setup flow to get to tracker screen
 - runFlow:
     file: ../flows/setup-game.yaml
 
-# Tap Joe to start with disc
+# Start with disc on Joe
 - tapOn:
     id: 'tracker-chip-Joe'
-- assertVisible:
-    text: 'DEFENSE'
-    optional: true
 
 # Pass to Jon
 - tapOn:
     id: 'tracker-chip-Jon'
-
-# Assert pass chain shows Joe
 - assertVisible:
     text: 'JOE'
 
 # Pass to Mike
 - tapOn:
     id: 'tracker-chip-Mike'
-
-# Assert pass chain shows Jon
 - assertVisible:
     text: 'JON'
 
-# Goal via opponent disc transfer
+# Opponent block and goal to end point
 - tapOn:
     id: 'tracker-more-button'
 - waitForAnimationToEnd:
@@ -37,32 +29,19 @@ name: Advanced Tracker Pass Chain and Goal
     id: 'rare-menu-opp-d'
 - tapOn:
     id: 'defense-opp-goal'
-
-# Verify goal state
 - assertVisible:
     id: 'tracker-next-point'
-
-# Take screenshot of goal state
-- takeScreenshot:
-    path: .maestro/screenshots/advanced-tracker-goal
-
-# Tap next point
 - tapOn:
     id: 'tracker-next-point'
 
-# Handle line select and pull
 - runFlow:
     file: ../flows/select-line-and-pull.yaml
 
-# Start new point - tap Joe
+# Point 2: Quick goal
 - tapOn:
     id: 'tracker-chip-Joe'
-
-# Pass to Jon
 - tapOn:
     id: 'tracker-chip-Jon'
-
-# Quick goal via opponent disc transfer
 - tapOn:
     id: 'tracker-more-button'
 - waitForAnimationToEnd:
@@ -71,18 +50,15 @@ name: Advanced Tracker Pass Chain and Goal
     id: 'rare-menu-opp-d'
 - tapOn:
     id: 'defense-opp-goal'
-
-# Verify goal
 - assertVisible:
     id: 'tracker-next-point'
 - tapOn:
     id: 'tracker-next-point'
 
-# Handle line select and pull again
 - runFlow:
     file: ../flows/select-line-and-pull.yaml
 
-# Start with disc and pass chain
+# Point 3: Longer pass chain then goal
 - tapOn:
     id: 'tracker-chip-Joe'
 - tapOn:
@@ -91,8 +67,6 @@ name: Advanced Tracker Pass Chain and Goal
     id: 'tracker-chip-Mike'
 - tapOn:
     id: 'tracker-chip-Molly'
-
-# Goal via opponent disc transfer
 - tapOn:
     id: 'tracker-more-button'
 - waitForAnimationToEnd:
@@ -101,11 +75,8 @@ name: Advanced Tracker Pass Chain and Goal
     id: 'rare-menu-opp-d'
 - tapOn:
     id: 'defense-opp-goal'
-
-# Verify goal
 - assertVisible:
     id: 'tracker-next-point'
 
-# Take final screenshot
 - takeScreenshot:
-    path: .maestro/screenshots/advanced-tracker-pass-chain-complete
+    path: .maestro/screenshots/advanced-tracker-pass-chain

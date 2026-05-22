@@ -1,19 +1,46 @@
 appId: com.langdk.ultimatestats
 name: Setup Advanced Tracker Game
 ---
-# Ensure fresh app start
-- stopApp
+- stopApp:
+    optional: false
 - launchApp
 
-# Navigate to advanced tracker pre-game
-- scrollUntilVisible:
-    element:
-      id: 'advanced-tracker-new-game-button'
-    direction: DOWN
-    timeout: 10000
-    visibilityPercentage: 10
+# Navigate to Dashboard from any active game state:
+# - Advanced Tracker: menu → Home
+# - TrackerLineSelect / PreGameConfirm: back button (×2 for nesting)
+# - Basic Scoreboard: floating home button
+# - Dashboard (no active game): all taps are no-ops
+
 - tapOn:
-    id: 'advanced-tracker-new-game-button'
+    id: 'tracker-menu-button'
+    optional: true
+- waitForAnimationToEnd:
+    timeout: 500
+- tapOn:
+    id: 'tracker-menu-home'
+    optional: true
+- tapOn:
+    id: 'screen-header-back'
+    optional: true
+- tapOn:
+    id: 'screen-header-back'
+    optional: true
+- tapOn:
+    id: 'scoreboard-home-button'
+    optional: true
+
+# Assert we're on the Dashboard
+- assertVisible:
+    text: 'DASHBOARD'
+
+# Tap "New Game" on the Dashboard
+- tapOn:
+    id: 'dashboard-new-game-button'
+
+# Tap "Advanced Tracker" in the modal
+- tapOn:
+    id: 'new-game-sheet-advanced'
+
 - assertVisible:
     text: 'ADVANCED TRACKER'
 
@@ -21,7 +48,8 @@ name: Setup Advanced Tracker Game
 - tapOn:
     text: 'Zoboomafoo'
 
-# If gender ratio is enabled, select a ratio so Set Line is enabled
+# Select FMP Majority if gender ratio is ON (otherwise this step is skipped)
+# When ratio is OFF, Set Line is already enabled after selecting a team.
 - tapOn:
     text: 'FMP Majority'
     optional: true
@@ -58,13 +86,9 @@ name: Setup Advanced Tracker Game
 - assertVisible:
     text: 'THEY ARE PULLING'
 
-# Skip pull timing
+# Skip pull timing (auto-completes as inbound when opponent pulls)
 - tapOn:
     id: 'pull-skip-timing'
-
-# Select an inbound pull result so we always start the tracker on offense
-- tapOn:
-    id: 'pull-result-inbound'
 
 # Wait for tracker screen transition
 - waitForAnimationToEnd:

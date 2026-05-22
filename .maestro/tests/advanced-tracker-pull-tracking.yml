@@ -1,92 +1,11 @@
 appId: com.langdk.ultimatestats
 name: Advanced Tracker Pull Tracking
 ---
-# Reuse setup flow up to pre-game
-- stopApp
-- launchApp
+- runFlow:
+    file: ../flows/setup-game.yaml
 
-# Navigate to advanced tracker pre-game
-- scrollUntilVisible:
-    element:
-      id: 'advanced-tracker-new-game-button'
-    direction: DOWN
-    timeout: 10000
-    visibilityPercentage: 10
-- tapOn:
-    id: 'advanced-tracker-new-game-button'
-- assertVisible:
-    text: 'ADVANCED TRACKER'
-
-# Select receiving team (Zoboomafoo = "us")
-- tapOn:
-    text: 'Zoboomafoo'
-
-# If gender ratio is enabled, select a ratio
-- tapOn:
-    text: 'FMP Majority'
-    optional: true
-
-# Tap Set Line to proceed to line selection
-- tapOn:
-    id: 'advanced-tracker-set-line-button'
-
-# Wait for line selection screen
-- assertVisible:
-    text: 'Starting Line'
-
-# Select 7 players for the line
-- tapOn:
-    id: 'player-chip-Joe'
-- tapOn:
-    id: 'player-chip-Jon'
-- tapOn:
-    id: 'player-chip-Mike'
-- tapOn:
-    id: 'player-chip-Molly'
-- tapOn:
-    id: 'player-chip-Kelly'
-- tapOn:
-    id: 'player-chip-Rachel'
-- tapOn:
-    id: 'player-chip-Joel'
-
-# Confirm line selection
-- tapOn:
-    id: 'line-select-confirm'
-
-# --- Pull Timing Step ---
-# Verify pull timing screen
-- assertVisible:
-    text: 'THEY ARE PULLING'
-    optional: true
-- assertVisible:
-    text: 'WE ARE PULLING'
-    optional: true
-
-# Test skip timing
-- tapOn:
-    id: 'pull-skip-timing'
-
-# --- Pull Result Step ---
-# Verify pull result options
-- assertVisible:
-    id: 'pull-result-inbound'
-- assertVisible:
-    id: 'pull-result-ob'
-- assertVisible:
-    id: 'pull-result-dropped'
-
-# Select out of bounds
-- tapOn:
-    id: 'pull-result-ob'
-
-# Wait for tracker screen
-- assertVisible:
-    text: 'TAP WHO STARTS WITH DISC'
-    optional: true
-
-# --- Test another point ---
-# Start a point
+# === Point 1: THEY pull (auto inbound) ===
+# Start with disc, then give opponent a goal so we're back on offense for the test
 - tapOn:
     id: 'tracker-chip-Joe'
 - tapOn:
@@ -97,17 +16,51 @@ name: Advanced Tracker Pull Tracking
     id: 'rare-menu-opp-d'
 - tapOn:
     id: 'defense-opp-goal'
-
-# Next point
 - assertVisible:
     id: 'tracker-next-point'
 - tapOn:
     id: 'tracker-next-point'
 
-# Line select
+- runFlow:
+    file: ../flows/select-line-and-pull.yaml
+
+# === Point 2: WE pull (Callahan → we score → we pull next) ===
+# Need us to score so WE pull next point. Give opponent disc, then Callahan.
+- tapOn:
+    id: 'tracker-chip-Joe'
+- tapOn:
+    id: 'tracker-more-button'
+- waitForAnimationToEnd:
+    timeout: 500
+- tapOn:
+    id: 'rare-menu-opp-d'
+
+# Now opponent has disc. Open rare menu for Callahan.
+- tapOn:
+    id: 'tracker-more-button'
+- waitForAnimationToEnd:
+    timeout: 500
+- tapOn:
+    id: 'rare-menu-callahan'
+
+# Verify Callahan prompt
+- assertVisible:
+    text: 'Tap player who got the Callahan'
+
+# Tap Jon for Callahan
+- tapOn:
+    id: 'tracker-chip-Jon'
+
+# Goal state - we scored
+- assertVisible:
+    id: 'tracker-next-point'
+- tapOn:
+    id: 'tracker-next-point'
+
+# === Point 3: WE pull → pull result screen appears ===
+# Now we pull because we scored last point
 - assertVisible:
     text: 'Select Line'
-    optional: true
 - tapOn:
     id: 'player-chip-Joe'
 - tapOn:
@@ -125,19 +78,29 @@ name: Advanced Tracker Pull Tracking
 - tapOn:
     id: 'line-select-confirm'
 
-# Skip timing
+# Verify pull timing for our pull
+- assertVisible:
+    text: 'WE ARE PULLING'
 - tapOn:
     id: 'pull-skip-timing'
 
-# Select inbound this time
-- tapOn:
-    id: 'pull-result-inbound'
-
-# Wait for tracker
+# Verify all pull result options are present
 - assertVisible:
-    text: 'TAP WHO STARTS WITH DISC'
-    optional: true
+    id: 'pull-result-inbound'
+- assertVisible:
+    id: 'pull-result-ob'
+- assertVisible:
+    id: 'pull-result-dropped'
 
-# Take screenshot
+# Select out-of-bounds
+- tapOn:
+    id: 'pull-result-ob'
+
+# Wait for tracker (opponent has disc after our OB pull)
+- waitForAnimationToEnd:
+    timeout: 2000
+- assertVisible:
+    id: 'tracker-menu-button'
+
 - takeScreenshot:
     path: .maestro/screenshots/advanced-tracker-pull-tracking

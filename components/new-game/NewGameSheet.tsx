@@ -103,6 +103,7 @@ export function NewGameSheet({
           </Pressable>
 
           <Pressable
+            testID="new-game-sheet-advanced"
             onPress={onStartAdvanced}
             style={({ pressed }) => [
               styles.option,

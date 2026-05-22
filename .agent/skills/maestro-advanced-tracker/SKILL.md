@@ -97,43 +97,40 @@ installs OpenJDK but macOS may not expose it through `/usr/libexec/java_home`. T
 Use stable kebab-case ids:
 
 - Screen roots: `advanced-tracker-pregame-screen`
-- Navigation: `scoreboard-home-button`
+- Navigation: `dashboard-new-game-button` (Dashboard), `new-game-sheet-advanced` (modal)
 - Primary actions: `advanced-tracker-new-game-button`
 - Tracker actions: `advanced-tracker-set-line-button`
 - Player chips, later: `advanced-tracker-player-<stable-player-id>`
 
 When adding a selector, put `testID` on the actual `Pressable`, `TextInput`, or screen root being asserted.
 
-## Current Smoke Flow
+## Deterministic Flow Principles
 
-The first flow verifies that an already-installed dev app can open the advanced tracker setup screen:
+- **No `optional: true`** — every assertion and action must be required. This makes tests fail fast on real issues instead of silently tolerating wrong states.
+- **One path per flow** — always pick a single pull result (`inbound` by default), assert a single screen title, never offer "either/or" branching.
+- **One screenshot per test** — only at the end to confirm final state, not at every intermediate step. Each screenshot adds ~500ms-1s overhead.
+- **Consistent tracker arrival** — always assert `TAP WHO STARTS WITH DISC` after setup or pull navigation to verify correct state before acting.
+
+## Current Game Entry Flow
+
+Tap `dashboard-new-game-button` on the Dashboard to open the `NewGameSheet` modal, then tap `new-game-sheet-advanced` to navigate to the Advanced Tracker pre-game screen. No scrolling required.
 
 ```yaml
 appId: com.langdk.ultimatestats
-name: Advanced Tracker Smoke
+name: Advanced Tracker Setup
 ---
+- stopApp
 - launchApp
 - tapOn:
-    id: 'scoreboard-home-button'
-- assertVisible:
-    text: 'DASHBOARD'
-- scrollUntilVisible:
-    element:
-      id: 'advanced-tracker-new-game-button'
-    direction: DOWN
-    timeout: 10000
-    visibilityPercentage: 10
+    id: 'dashboard-new-game-button'
 - tapOn:
-    id: 'advanced-tracker-new-game-button'
+    id: 'new-game-sheet-advanced'
 - assertVisible:
     text: 'ADVANCED TRACKER'
-- takeScreenshot:
-    path: .maestro/screenshots/advanced-tracker-pregame
 ```
 
-## Next Useful Flows
+## Shared Flows
 
-- Pre-game setup: select receiving side, confirm line setup is disabled until seven players are selected.
-- Line select: add player-chip `testID`s and verify seven selected players enables `advanced-tracker-set-line-button`.
-- Pull tracking: verify pull timing, pull result, and transition into `advancedTracking/Tracker`.
-- Output checks: score bar, cap bar, possession state, and player grid screenshots after known actions.
+- `flows/setup-game.yaml` — full setup: launch → Dashboard → modal → pre-game → line select → pull → tracker.
+- `flows/select-line-and-pull.yaml` — between-point flow: line select → pull → tracker (always inbound, always asserts `Select Line` and `TAP WHO STARTS WITH DISC`).
+- No more `record-opp-goal-point.yaml` — the opponent-goal pattern is only 3-4 steps, so it's inlined into tests.

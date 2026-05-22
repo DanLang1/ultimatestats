@@ -1,11 +1,10 @@
 appId: com.langdk.ultimatestats
 name: Advanced Tracker Full Point Cycle
 ---
-# Reuse setup flow to get to tracker screen
 - runFlow:
     file: ../flows/setup-game.yaml
 
-# === POINT 1: Goal via opponent disc transfer ===
+# === POINT 1: Opponent goal ===
 - tapOn:
     id: 'tracker-chip-Joe'
 - tapOn:
@@ -21,11 +20,10 @@ name: Advanced Tracker Full Point Cycle
 - tapOn:
     id: 'tracker-next-point'
 
-# === LINE SELECT + PULL ===
 - runFlow:
     file: ../flows/select-line-and-pull.yaml
 
-# === POINT 2: Opp goal ===
+# === POINT 2: Opponent goal ===
 - tapOn:
     id: 'tracker-chip-Joe'
 - tapOn:
@@ -41,11 +39,10 @@ name: Advanced Tracker Full Point Cycle
 - tapOn:
     id: 'tracker-next-point'
 
-# === LINE SELECT + PULL ===
 - runFlow:
     file: ../flows/select-line-and-pull.yaml
 
-# === POINT 3: Turnover then goal ===
+# === POINT 3: Pass chain then opponent goal ===
 - tapOn:
     id: 'tracker-chip-Joe'
 - tapOn:
@@ -63,11 +60,10 @@ name: Advanced Tracker Full Point Cycle
 - tapOn:
     id: 'tracker-next-point'
 
-# === LINE SELECT + PULL ===
 - runFlow:
     file: ../flows/select-line-and-pull.yaml
 
-# === POINT 4: Pass chain goal ===
+# === POINT 4: Longer pass chain then opponent goal ===
 - tapOn:
     id: 'tracker-chip-Joe'
 - tapOn:
@@ -87,18 +83,5 @@ name: Advanced Tracker Full Point Cycle
 - assertVisible:
     id: 'tracker-next-point'
 
-# Take screenshot showing multiple points played
 - takeScreenshot:
     path: .maestro/screenshots/advanced-tracker-full-cycle
-
-# Tap next point to verify cycle continues
-- tapOn:
-    id: 'tracker-next-point'
-
-# Verify line select screen appears again
-- assertVisible:
-    text: 'Select Line'
-    optional: true
-- assertVisible:
-    text: 'Starting Line'
-    optional: true
