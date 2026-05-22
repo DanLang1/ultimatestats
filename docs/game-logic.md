@@ -46,8 +46,9 @@ if (result.isGameOver) {
 
 1. Game starts with `possession: null`
 2. `/PreGameConfirm` is required before the scoreboard can be used
-3. User selects receiving team -> `setPossession(team)` + `startingPossession = team`
-4. If gender ratio tracking is enabled, user must also select the starting ratio
+3. User confirms game format settings before starting
+4. If stat tracking is enabled, user selects receiving team -> `setPossession(team)` + `startingPossession = team`
+5. If gender ratio tracking is enabled, user must also select the starting ratio
 
 ### After a Goal
 

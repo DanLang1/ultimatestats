@@ -91,8 +91,8 @@ export default function DashboardScreen() {
         },
         {
           icon: 'cog-outline' as const,
-          label: 'Game Settings',
-          description: 'Score limit, timer, timeouts',
+          label: 'App Settings',
+          description: 'Teams, colors, display, player preferences',
           onPress: () => router.push('/Settings'),
         },
       ],

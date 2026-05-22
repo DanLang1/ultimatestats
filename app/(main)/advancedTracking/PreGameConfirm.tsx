@@ -9,7 +9,7 @@ import { useGameSessionActions } from '@/hooks/useGameSessionActions';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { GameSide, Participant } from '@/lib/advancedTracking/types';
 import { getContrastingTextColor } from '@/lib/colorUtils';
-import { formatRatioFull } from '@/lib/genderRatioUtils';
+import { formatRatioFull, GenderRatio } from '@/lib/genderRatioUtils';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { useGameStore } from '@/store/gameStore';
 import { useNumberPickerStore } from '@/store/numberPickerStore';
@@ -41,6 +41,8 @@ export default function AdvancedPreGameConfirm() {
     floaterEnabled,
     setFloaterEnabled,
     resetTimeouts,
+    team1BgColor,
+    team2BgColor,
   } = useGameStore();
 
   const {
@@ -58,6 +60,10 @@ export default function AdvancedPreGameConfirm() {
 
   const fmpTextColor = getContrastingTextColor(palette.fmpColor);
   const mmpTextColor = getContrastingTextColor(palette.mmpColor);
+  const t1Color = team1BgColor || palette.primary;
+  const t2Color = team2BgColor || palette.accent;
+  const t1TextColor = getContrastingTextColor(t1Color);
+  const t2TextColor = getContrastingTextColor(t2Color);
 
   const { createGame } = useAdvancedTrackingStore();
 
@@ -67,8 +73,13 @@ export default function AdvancedPreGameConfirm() {
   const timeoutCount = team1Timeouts.length;
 
   const [receivingTeam, setReceivingTeam] = useState<'us' | 'them' | ''>('');
+  const [teamOrbitRunKey, setTeamOrbitRunKey] = useState(0);
+  const [ratioOrbitRunKey, setRatioOrbitRunKey] = useState(0);
 
   const canContinue = receivingTeam !== '' && (!genderRatioEnabled || firstPointRatio !== null);
+  const selectedTeamOrbitColor = receivingTeam === 'them' ? t2Color : t1Color;
+  const selectedRatioOrbitColor =
+    firstPointRatio === 'more-men' ? palette.mmpColor : palette.fmpColor;
 
   const handleSetLine = () => {
     const sides: GameSide[] = [
@@ -305,10 +316,17 @@ export default function AdvancedPreGameConfirm() {
               },
             ]}
             value={firstPointRatio ?? ''}
-            onChange={setFirstPointRatio}
+            onChange={(value) => {
+              setFirstPointRatio(value as GenderRatio);
+              setRatioOrbitRunKey((prev) => prev + 1);
+            }}
             showRequired={firstPointRatio === null}
             highlightBorder={firstPointRatio === null}
             highlightColor={palette.warning}
+            highlightLeftColor={firstPointRatio === null ? palette.fmpColor : undefined}
+            highlightRightColor={firstPointRatio === null ? palette.mmpColor : undefined}
+            attentionColor={selectedRatioOrbitColor}
+            attentionRunKey={ratioOrbitRunKey}
           />
         )}
 
@@ -318,14 +336,31 @@ export default function AdvancedPreGameConfirm() {
         <SegmentedControl
           label="WHO IS RECEIVING?"
           options={[
-            { value: 'us', label: currentTeam?.name ?? 'Us' },
-            { value: 'them', label: team2Name || 'Them' },
+            {
+              value: 'us',
+              label: currentTeam?.name ?? 'Us',
+              activeColor: t1Color,
+              activeTextColor: t1TextColor,
+            },
+            {
+              value: 'them',
+              label: team2Name || 'Them',
+              activeColor: t2Color,
+              activeTextColor: t2TextColor,
+            },
           ]}
           value={receivingTeam}
-          onChange={setReceivingTeam}
+          onChange={(value) => {
+            setReceivingTeam(value as 'us' | 'them');
+            setTeamOrbitRunKey((prev) => prev + 1);
+          }}
           showRequired={receivingTeam === ''}
           highlightBorder={receivingTeam === ''}
           highlightColor={palette.warning}
+          highlightLeftColor={receivingTeam === '' ? t1Color : undefined}
+          highlightRightColor={receivingTeam === '' ? t2Color : undefined}
+          attentionColor={selectedTeamOrbitColor}
+          attentionRunKey={teamOrbitRunKey}
         />
 
         <Pressable

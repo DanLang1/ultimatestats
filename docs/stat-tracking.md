@@ -93,13 +93,18 @@ sequenceDiagram
 - Reusable chip for player selection
 - Selected/unselected states using palette colors
 
-## Settings
+## Pregame Setup
 
-In Settings screen (`app/Settings.tsx`):
+In the pregame confirmation screen (`app/(main)/PreGameConfirm.tsx`):
 
-- **Track My Team Stats**: Toggle switch to enable/disable stat tracking
-- **Track Goal First**: Toggle switch to configure stat entry order (Goal -> Assist vs. Assist -> Goal)
-- **Clear Player Rosters**: Button to reset rosters (appears when roster has players)
+- **Stat Tracking**: Toggle card to enable/disable stat tracking for the game
+- **Point Timer**: Toggle card to record point durations when stat tracking is enabled
+- **Line Calling**: Toggle card to require selecting a line before each point when stat tracking is enabled
+
+## Related Screens
+
+- **Stat Entry Order**: Configure Goal -> Assist vs. Assist -> Goal in `app/(main)/Settings.tsx`
+- **Roster Management**: Edit or clear rosters from `app/(main)/(hub)/(team)/EditRoster.tsx`
 - **View Stats**: Access the [View Stats](view-stats.md) screen to see player breakdowns and export data
 - **Reset Stats Tutorial** (Dev Only): Available at the bottom of the Dashboard in dev builds to reset the tutorial acknowledgement flag.
 

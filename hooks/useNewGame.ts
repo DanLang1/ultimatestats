@@ -23,11 +23,11 @@ export function useNewGame(options?: UseNewGameOptions) {
     }
 
     if (statsTutorialPending) {
-      router.navigate('/TutorialStatIntro');
+      router.replace('/TutorialStatIntro');
       return;
     }
 
-    router.navigate('/Scoreboard');
+    router.replace('/PreGameConfirm');
   };
 
   const confirmNewGame = () => {

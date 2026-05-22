@@ -86,16 +86,6 @@ This document tracks intentionally deferred cleanup work discovered during the d
   `store/gameStore.ts`
   `store/gameStore.types.ts`
 
-## P3 - Stats Tutorial Trigger Consistency
-
-- First-time stats onboarding currently only triggers from Settings. Enabling stat tracking from the pre-game screen bypasses that tutorial path.
-- If multiple entry points for stat tracking remain, the first-enable tutorial check should be centralized so onboarding behavior stays consistent.
-- References:
-  `app/(main)/PreGameConfirm.tsx:305`
-  `app/(main)/Settings.tsx:597`
-  `app/(main)/Settings.tsx:598`
-  `store/tutorialStore.ts`
-
 ## P3 - Manual Halftime Correction For Legacy Saved Games
 
 - Legacy saved games are now normalized to a single persisted `triggeredHalftime` goal marker so timeline/stats replay can stay simple, but old soft-cap-adjusted games can still end up with an inferred halftime goal that is unknowable from the stored data alone.

@@ -2,19 +2,15 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { useAlert } from '@/components/ui/AlertProvider';
 import { TeamColorPicker } from '@/components/ui/ColorPicker';
-import { NumberPicker } from '@/components/ui/NumberPicker';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { SegmentedControl } from '@/components/ui/SegmentedControl';
-import { Switch } from '@/components/ui/Switch';
 import { useTheme } from '@/context/ThemeContext';
-import { useIsGameActive } from '@/hooks/useIsGameActive';
 import { useKeyboardDidHide } from '@/hooks/useKeyboardDidHide';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { MAX_TEAM_NAME_LENGTH } from '@/lib/constants';
 import { SavedTeam } from '@/lib/storage';
 import { useGameStore } from '@/store/gameStore';
 import { OrientationMode, useSettingsStore } from '@/store/settingsStore';
-import { useTutorialStore } from '@/store/tutorialStore';
 import { Fonts } from '@/theme/theme';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router, Stack } from 'expo-router';
@@ -43,29 +39,18 @@ function SettingsContent() {
   const useCompactColorLayout = sizeClass !== 'small';
   const { palette, themeMode, setThemeMode } = useTheme();
   const { showAlert } = useAlert();
-  const { hasSeenStatsTutorial, queueStatsTutorialForNextGameStart } = useTutorialStore();
   const {
     mmpColor,
     fmpColor,
     setMmpColor,
     setFmpColor,
     resetMatchingTypeColors,
-    genderRatioEnabled,
-    setGenderRatioEnabled,
-    lineCallingEnabled,
-    setLineCallingEnabled,
-    numPlayers,
-    setNumPlayers,
     orientationMode,
     setOrientationMode,
     statEntryOrder,
     setStatEntryOrder,
     linePlayerSortOrder,
     setLinePlayerSortOrder,
-    hardCapMins,
-    setHardCapMins,
-    softCapMins,
-    setSoftCapMins,
   } = useSettingsStore();
 
   const {
@@ -75,26 +60,7 @@ function SettingsContent() {
     setTeam2Name,
     team1BgColor,
     team2BgColor,
-    gameTo,
-    team1Score,
-    team2Score,
-    team1Timeouts,
     setTeamBgColor,
-    isSoftCap,
-    softCapPending,
-    setGameTo,
-    setGameToInGame,
-    resetTimeouts,
-    floaterEnabled,
-    setFloaterEnabled,
-    autoHalftimeEnabled,
-    gameHalf,
-    setAutoHalftimeEnabled,
-    setTimerTimeLeft,
-    statTrackingEnabled,
-    setStatTrackingEnabled,
-    pointTimerEnabled,
-    setPointTimerEnabled,
     savedTeams,
     saveCurrentTeam,
   } = useGameStore();
@@ -102,40 +68,9 @@ function SettingsContent() {
   const team1Name = currentTeam?.name ?? 'Team 1';
   const team1Roster = currentTeam?.roster ?? [];
 
-  const timeoutsCount = team1Timeouts.length;
   const [team1NameDraft, setTeam1NameDraft] = useState(team1Name);
 
-  const softCapTime = hardCapMins - softCapMins;
   const isAndroidLargeScreen = Platform.OS === 'android' && sizeClass !== 'small';
-
-  const gameActive = useIsGameActive();
-  const maxScore = Math.max(team1Score, team2Score);
-  const canEditGameToInGame = gameHalf === 1 && !isSoftCap && !softCapPending;
-  let gameToMin: number;
-  if (gameActive && canEditGameToInGame) {
-    gameToMin = autoHalftimeEnabled ? 2 * maxScore + 1 : maxScore + 1;
-  } else {
-    gameToMin = 1;
-  }
-
-  let gameToSettingsHelperText: string | null;
-  if (!gameActive) {
-    gameToSettingsHelperText = null;
-  } else {
-    gameToSettingsHelperText = autoHalftimeEnabled
-      ? 'Adjustable during first half'
-      : 'Adjustable until soft cap';
-  }
-
-  let gameToValidationText: string | undefined;
-  if (gameActive && canEditGameToInGame) {
-    gameToValidationText = autoHalftimeEnabled
-      ? `Must be at least ${gameToMin} to keep halftime reachable`
-      : `Must be at least ${gameToMin}`;
-  } else {
-    gameToValidationText = undefined;
-  }
-  const gameToQuickOptions = gameActive ? undefined : [13, 15];
 
   const handleOrientationModeChange = (nextMode: OrientationMode) => {
     if (nextMode === orientationMode) return;
@@ -349,23 +284,6 @@ function SettingsContent() {
       />
 
       <ScrollView contentContainerStyle={[styles.scrollContent]}>
-        {gameActive && (
-          <View
-            style={[
-              styles.activeGameBanner,
-              { backgroundColor: palette.warning + '15', borderColor: palette.warning + '30' },
-            ]}>
-            <MaterialCommunityIcons
-              name="lock-outline"
-              size={metrics.bannerIconSize}
-              color={palette.warning}
-            />
-            <ThemedText style={[styles.activeGameBannerText, { color: palette.warning }]}>
-              Game in progress: some settings are locked
-            </ThemedText>
-          </View>
-        )}
-
         <View key={isLandscape ? 'landscape' : 'portrait'} style={styles.columnsContainer}>
           <View style={styles.column}>
             <ThemedText style={[styles.sectionTitle, textInverseStyle]}>TEAMS</ThemedText>
@@ -450,194 +368,30 @@ function SettingsContent() {
           </View>
 
           <View style={styles.column}>
-            <ThemedText style={[styles.sectionTitle, textInverseStyle]}>GAME SETTINGS</ThemedText>
+            <ThemedText style={[styles.sectionTitle, textInverseStyle]}>
+              STAT PREFERENCES
+            </ThemedText>
 
-            <View style={styles.inputsGrid}>
-              <View style={styles.inputGroup}>
-                <NumberPicker
-                  label="GAME TO"
-                  value={gameTo}
-                  onChange={gameActive ? setGameToInGame : setGameTo}
-                  min={gameToMin}
-                  max={99}
-                  quickOptions={gameToQuickOptions}
-                  helperText={gameToValidationText}
-                  disabled={gameActive && !canEditGameToInGame}
-                />
-                {gameToSettingsHelperText && (
-                  <ThemedText style={[styles.helperText, textMutedStyle]}>
-                    {gameToSettingsHelperText}
-                  </ThemedText>
-                )}
-              </View>
-
-              <View style={styles.inputGroup}>
-                <NumberPicker
-                  label="HARD CAP"
-                  value={hardCapMins}
-                  onChange={(val) => {
-                    setHardCapMins(val);
-                    setTimerTimeLeft(val * 60);
-                    if (softCapTime > val) {
-                      setSoftCapMins(Math.max(0, val - softCapTime));
-                    }
-                  }}
-                  min={1}
-                  max={180}
-                  suffix="min"
-                  quickOptions={[90, 105, 110, 120]}
-                  disabled={gameActive}
-                />
-              </View>
-
-              <View style={styles.inputGroup}>
-                <NumberPicker
-                  label="SOFT CAP"
-                  value={softCapTime}
-                  onChange={(val) => setSoftCapMins(hardCapMins - val)}
-                  min={0}
-                  max={hardCapMins}
-                  suffix="min"
-                  quickOptions={[
-                    Math.max(0, hardCapMins - 30),
-                    Math.max(0, hardCapMins - 20),
-                    Math.max(0, hardCapMins - 15),
-                    Math.max(0, hardCapMins - 10),
-                  ]}
-                  disabled={gameActive}
-                />
-              </View>
-
-              <View style={styles.inputGroup}>
-                <NumberPicker
-                  label="NUM PLAYERS"
-                  value={numPlayers}
-                  onChange={setNumPlayers}
-                  min={1}
-                  max={7}
-                  quickOptions={[3, 5, 7]}
-                  disabled={gameActive}
-                />
-              </View>
-
-              <View style={styles.inputGroup}>
-                <SegmentedControl
-                  label={autoHalftimeEnabled ? 'TIMEOUTS/HALF' : 'TIMEOUTS'}
-                  options={[
-                    { value: '1', label: '1' },
-                    { value: '2', label: '2' },
-                  ]}
-                  value={timeoutsCount.toString()}
-                  onChange={(val) => {
-                    const num = parseInt(val, 10);
-                    if (!isNaN(num)) resetTimeouts(num);
-                  }}
-                  disabled={gameActive}
-                />
-              </View>
-
-              <View style={styles.inputGroup} />
-
-              <View style={styles.inputGroup}>
-                <Switch
-                  label="Halftime"
-                  value={autoHalftimeEnabled}
-                  onValueChange={(enabled) => {
-                    setAutoHalftimeEnabled(enabled);
-                    if (!enabled) {
-                      setFloaterEnabled(false);
-                    }
-                  }}
-                  disabled={gameActive}
-                  locked={gameActive}
-                />
-              </View>
-              {autoHalftimeEnabled && (
-                <View style={styles.inputGroup}>
-                  <Switch
-                    label="Floater"
-                    value={floaterEnabled}
-                    onValueChange={setFloaterEnabled}
-                    disabled={gameActive}
-                    locked={gameActive}
-                  />
-                </View>
-              )}
-
-              <View style={styles.inputGroup}>
-                <View style={styles.switchWithHelp}>
-                  <Switch
-                    label="Track Stats"
-                    value={statTrackingEnabled}
-                    onValueChange={(enabled) => {
-                      if (enabled && !statTrackingEnabled && !hasSeenStatsTutorial) {
-                        queueStatsTutorialForNextGameStart();
-                      }
-                      setStatTrackingEnabled(enabled);
-                      if (!enabled) {
-                        setPointTimerEnabled(false);
-                        setLineCallingEnabled(false);
-                      }
-                    }}
-                    disabled={gameActive}
-                    locked={gameActive}
-                  />
-                </View>
-              </View>
-              {statTrackingEnabled && (
-                <>
-                  <View style={styles.inputGroup}>
-                    <Switch
-                      label="Track Goal First"
-                      value={statEntryOrder === 'goal_first'}
-                      onValueChange={(enabled) =>
-                        setStatEntryOrder(enabled ? 'goal_first' : 'assist_first')
-                      }
-                    />
-                  </View>
-                  <View style={styles.inputGroup}>
-                    <Switch
-                      label="Point Timer"
-                      value={pointTimerEnabled}
-                      onValueChange={setPointTimerEnabled}
-                      disabled={gameActive}
-                      locked={gameActive}
-                    />
-                  </View>
-                </>
-              )}
-              <View style={styles.inputGroup}>
-                <Switch
-                  label="Gender Ratio"
-                  value={genderRatioEnabled}
-                  onValueChange={setGenderRatioEnabled}
-                  disabled={gameActive}
-                  locked={gameActive}
-                />
-              </View>
-              {statTrackingEnabled && (
-                <View style={styles.inputGroup}>
-                  <Switch
-                    label="Line Calling"
-                    value={lineCallingEnabled}
-                    onValueChange={setLineCallingEnabled}
-                    disabled={gameActive}
-                    locked={gameActive}
-                  />
-                </View>
-              )}
-              <View style={styles.inputGroupFullWidth}>
-                <SegmentedControl
-                  label="SORT PLAYERS"
-                  options={[
-                    { value: 'alpha', label: 'A-Z' },
-                    { value: 'number', label: '#s' },
-                    { value: 'points', label: 'Points Played' },
-                  ]}
-                  value={linePlayerSortOrder}
-                  onChange={setLinePlayerSortOrder}
-                />
-              </View>
+            <View style={styles.preferencesStack}>
+              <SegmentedControl
+                label="STAT ENTRY (BASIC)"
+                options={[
+                  { value: 'goal_first', label: 'Goal First' },
+                  { value: 'assist_first', label: 'Assist First' },
+                ]}
+                value={statEntryOrder}
+                onChange={setStatEntryOrder}
+              />
+              <SegmentedControl
+                label="SORT PLAYERS"
+                options={[
+                  { value: 'alpha', label: 'A-Z' },
+                  { value: 'number', label: '#s' },
+                  { value: 'points', label: 'Points Played' },
+                ]}
+                value={linePlayerSortOrder}
+                onChange={setLinePlayerSortOrder}
+              />
             </View>
           </View>
         </View>
@@ -684,13 +438,8 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
       height: 1,
       marginVertical: scaleBySizeClass(12, sizeClass),
     },
-    inputsGrid: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
+    preferencesStack: {
       gap: scaleBySizeClass(12, sizeClass),
-    },
-    inputGroup: {
-      width: '48%',
     },
     inputGroupFullWidth: {
       width: '100%',
@@ -753,34 +502,6 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     buttonPressed: {
       opacity: 0.8,
     },
-    newGameButton: {
-      paddingVertical: scaleBySizeClass(6, sizeClass),
-      paddingHorizontal: scaleBySizeClass(10, sizeClass),
-      borderRadius: scaleBySizeClass(8, sizeClass),
-      backgroundColor: 'transparent',
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    newGameButtonText: {
-      fontSize: scaleBySizeClass(13, sizeClass),
-      fontFamily: Fonts.bold,
-      letterSpacing: scaleBySizeClass(0.4, sizeClass, { rounding: 'none' }),
-    },
-    activeGameBanner: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: scaleBySizeClass(8, sizeClass),
-      paddingHorizontal: scaleBySizeClass(12, sizeClass),
-      paddingVertical: scaleBySizeClass(10, sizeClass),
-      borderRadius: scaleBySizeClass(10, sizeClass),
-      borderWidth: 1,
-      marginBottom: scaleBySizeClass(16, sizeClass),
-    },
-    activeGameBannerText: {
-      fontSize: scaleBySizeClass(12, sizeClass),
-      fontFamily: Fonts.semiBold,
-      flex: 1,
-    },
     compactColorGrid: {
       flexDirection: isLandscape ? 'row' : 'column',
       gap: scaleBySizeClass(12, sizeClass),
@@ -803,15 +524,11 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
       marginTop: scaleBySizeClass(20, sizeClass),
       gap: scaleBySizeClass(12, sizeClass),
     },
-    switchWithHelp: {
-      gap: scaleBySizeClass(8, sizeClass),
-    },
   });
 }
 
 function createMetrics(sizeClass: SizeClass) {
   return {
     actionIconSize: scaleBySizeClass(18, sizeClass),
-    bannerIconSize: scaleBySizeClass(18, sizeClass),
   };
 }

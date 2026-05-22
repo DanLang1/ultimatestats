@@ -23,7 +23,7 @@ export function useNewGameLauncher() {
     }
 
     startBasicGameSession();
-    router.replace('/Scoreboard');
+    router.replace('/PreGameConfirm');
   };
 
   return {

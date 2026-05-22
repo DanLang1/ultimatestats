@@ -1,6 +1,7 @@
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { useTheme } from '@/context/ThemeContext';
+import { useGameSessionActions } from '@/hooks/useGameSessionActions';
 import { getSizeClassValue, scaleBySizeClass, useLayout } from '@/hooks/useLayout';
 import { useNewGame } from '@/hooks/useNewGame';
 import { useTutorialStore } from '@/store/tutorialStore';
@@ -16,18 +17,19 @@ export default function TutorialCompleteRoute() {
   const { sizeClass, isLandscape } = useLayout();
   const useRowLayout = isLandscape && sizeClass !== 'large';
   const styles = createStyles(sizeClass, useRowLayout);
+  const { startBasicGameSession } = useGameSessionActions();
 
   const { confirmNewGame } = useNewGame({
     onSuccess: () => {
       useTutorialStore.getState().completeTutorial();
-      router.dismissTo('/Scoreboard');
+      router.dismissTo('/PreGameConfirm');
     },
   });
 
   const handleStatTracking = () => {
     useTutorialStore.getState().completeTutorial();
-    router.replace('/Dashboard');
-    router.push('/Settings');
+    startBasicGameSession();
+    router.replace('/PreGameConfirm');
   };
 
   const iconSize = scaleBySizeClass(useRowLayout ? 24 : 28, sizeClass);
@@ -110,10 +112,10 @@ export default function TutorialCompleteRoute() {
                   </View>
                   <View style={styles.optionText}>
                     <ThemedText style={[styles.optionTitle, { color: palette.textInverse }]}>
-                      Explore Settings
+                      Configure Game
                     </ThemedText>
                     <ThemedText style={[styles.optionDescription, { color: palette.textMuted }]}>
-                      Setup stat tracking, import a team from USA Ultimate, and more.
+                      Set up stat tracking, caps, timeouts, and starting options.
                     </ThemedText>
                   </View>
                 </Pressable>

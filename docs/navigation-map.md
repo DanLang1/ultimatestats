@@ -59,7 +59,7 @@ Defined across:
 2. If onboarding is incomplete, `/` -> `/TutorialIntro`
 3. `/TutorialIntro` -> `/TutorialScoreboard`
 4. `/TutorialScoreboard` -> `/TutorialComplete`
-5. `/TutorialComplete` -> `/Scoreboard` for "Start New Game" or `/Dashboard` then `/Settings` for "Explore Settings"
+5. `/TutorialComplete` -> `/PreGameConfirm` for new-game setup
 
 ### Transparent Modals
 
@@ -78,10 +78,9 @@ Defined across:
 
 ### Live Scoring Flow
 
-1. `/` (entry route) -> `/Scoreboard`
-2. Optional pre-point setup:
-   `/PreGameConfirm` (full-screen) when start-of-game inputs are required
-   Triggered declaratively from `/Scoreboard` when starting possession or first-point ratio is missing
+1. `/` (entry route) -> `/Scoreboard` for an active basic game, or `/Dashboard` when idle
+2. Pregame setup:
+   `/PreGameConfirm` (full-screen) for game format, stat tracking, and starting options before a basic game starts
 3. Optional modal step:
    `/StatEntryModal` or `/TurnoverEntryModal` or `/TimeoutModal`
 4. Line editor / summary step:
@@ -95,7 +94,7 @@ Defined across:
 - `/Scoreboard` redirects to `/GameComplete` when the game is finished and the post-game decision is still pending.
 - `/Scoreboard` redirects to `/Dashboard` when the game is finished and the post-game decision has already been acknowledged.
 - `/Scoreboard` redirects to `/HalftimeModal` when halftime is active, stat entry is clear, and the game is not over.
-- `/Scoreboard` redirects to `/PreGameConfirm` when pre-game inputs are still required.
+- `/Scoreboard` redirects to `/PreGameConfirm` when required pre-game inputs are still missing.
 - Otherwise `/Scoreboard` renders the live scoreboard UI.
 
 ### Team/Roster Management Flow

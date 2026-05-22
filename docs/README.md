@@ -13,7 +13,7 @@ Platform support details are documented in [platform-support.md](platform-suppor
 ```
 ├── app/               # Expo Router screens
 │   ├── index.tsx      # Main scoreboard
-│   ├── Settings.tsx   # Game and app settings
+│   ├── Settings.tsx   # Team and app settings
 │   ├── ViewStats.tsx  # Stats viewer
 │   ├── PlayerStats.tsx # Individual player stats
 │   ├── EditRoster.tsx # Roster management

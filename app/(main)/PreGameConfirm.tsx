@@ -15,7 +15,7 @@ import { useStatsTutorialPending } from '@/hooks/useStatsTutorialPending';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useTutorialStore } from '@/store/tutorialStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { Redirect, router, Stack } from 'expo-router';
+import { router, Stack } from 'expo-router';
 import React, { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
@@ -77,11 +77,6 @@ export default function PreGameConfirm() {
   const [selectedRatio, setSelectedRatio] = useState<GenderRatio | ''>(firstPointRatio ?? '');
   const [teamOrbitRunKey, setTeamOrbitRunKey] = useState(0);
   const [ratioOrbitRunKey, setRatioOrbitRunKey] = useState(0);
-
-  // If nothing is needed, don't show the page
-  if (!needPossession && !needRatio) {
-    return <Redirect href="/Scoreboard" />;
-  }
 
   // Derived values
   const softCapTime = hardCapMins - softCapMins;
@@ -152,7 +147,7 @@ export default function PreGameConfirm() {
       <Stack.Screen options={{ headerShown: false }} />
 
       <ScreenHeader
-        title="PRE-GAME"
+        title="BASIC SCOREBOARD"
         onBack={handleBack}
         backHitSlop={24}
         titleColor={palette.textMuted}
