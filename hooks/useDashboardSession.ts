@@ -1,10 +1,12 @@
 import { getGameSessionStatus } from '@/lib/gameSessionUtils';
+import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { useGameStore } from '@/store/gameStore';
 
 export function useDashboardSession() {
   const statTrackingEnabled = useGameStore((state) => state.statTrackingEnabled);
   const currentTeam = useGameStore((state) => state.currentTeam);
   const savedGames = useGameStore((state) => state.savedGames);
+  const advancedSavedGames = useAdvancedTrackingStore((state) => state.savedGames);
   const team1Score = useGameStore((state) => state.team1Score);
   const team2Score = useGameStore((state) => state.team2Score);
   const gameTo = useGameStore((state) => state.gameTo);
@@ -25,7 +27,7 @@ export function useDashboardSession() {
 
   const team1Name = currentTeam?.name ?? 'Team 1';
   const rosterCount = currentTeam?.roster?.length ?? 0;
-  const gamesCount = savedGames?.length ?? 0;
+  const gamesCount = (savedGames?.length ?? 0) + (advancedSavedGames?.length ?? 0);
   const sessionStatus = getGameSessionStatus({
     team1Score,
     team2Score,
