@@ -31,8 +31,7 @@ export default function PullTrackingScreen() {
   const lineParticipantIds: string[] = idsParam ? JSON.parse(idsParam) : [];
   const genderRatio = genderRatioParam;
 
-  const { currentGameId, savedGames, recordPull } = useAdvancedTrackingStore();
-  const game = savedGames.find((g) => g.id === currentGameId);
+  const { currentGame: game, recordPull } = useAdvancedTrackingStore();
 
   const [step, setStep] = useState<Step>({ name: 'timing' });
 

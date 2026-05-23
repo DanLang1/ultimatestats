@@ -25,13 +25,11 @@ export default function TrackerHalftimeScreen() {
   const { isLandscape, sizeClass } = useLayout();
 
   const {
-    currentGameId,
-    savedGames,
+    currentGame: game,
     isHalftimeBreakActive,
     clearHalftimeBreak,
     undoLastOperation,
   } = useAdvancedTrackingStore();
-  const game = savedGames.find((g) => g.id === currentGameId);
 
   const [startedAt, setStartedAt] = useState<number | null>(null);
   const [duration, setDuration] = useState(HALFTIME_DEFAULT_SECONDS);

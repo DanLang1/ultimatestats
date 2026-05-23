@@ -10,9 +10,13 @@ import { Redirect, router, Stack } from 'expo-router';
 import React from 'react';
 
 export default function TrackerInjurySubScreen() {
-  const { currentGameId, savedGames, recordStoppage, recordSub, updateSub } =
-    useAdvancedTrackingStore();
-  const game = savedGames.find((g) => g.id === currentGameId);
+  const {
+    currentGameId,
+    currentGame: game,
+    recordStoppage,
+    recordSub,
+    updateSub,
+  } = useAdvancedTrackingStore();
   const point = game ? getCurrentPoint(game) : null;
   const possession = game ? getCurrentPossession(game) : null;
   const existingStoppage = getActiveStoppage(possession);

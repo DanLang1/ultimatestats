@@ -14,13 +14,10 @@ import AggregateBottomBar from '@/components/view-stats/AggregateBottomBar';
 import AggregateGamesList from '@/components/view-stats/AggregateGamesList';
 import StatsContent from '@/components/view-stats/StatsContent';
 import { useTheme } from '@/context/ThemeContext';
+import { useAdvancedGames } from '@/hooks/advancedTracking/useAdvancedGameQueries';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { aggregateAnalyticsGames } from '@/lib/advancedTracking/aggregateAnalyticsGames';
 import { generateAggregateAdvancedCSV } from '@/lib/advancedTracking/advancedCSVUtils';
-import {
-  getAdvancedFocusTeamId,
-  getAdvancedFocusTeamName,
-} from '@/lib/advancedTracking/advancedGameTeamUtils';
 import { buildAnalyticsGame } from '@/lib/advancedTracking/buildAnalyticsGame';
 import { MAX_SHARE_GAMES } from '@/lib/constants';
 import { resolveTeamName } from '@/lib/playerUtils';
@@ -50,7 +47,7 @@ export default function AggregateStatsScreen() {
   const styles = createStyles(isLandscape, sizeClass);
   const { showAlert } = useAlert();
   const { savedGames, savedTeams, updateSavedGameTournament } = useGameStore();
-  const { savedGames: advancedSavedGames } = useAdvancedTrackingStore();
+  const { savedGameSummaries: advancedSavedGameSummaries } = useAdvancedTrackingStore();
   const { tournaments } = useTournamentStore();
   const [aggregateMode, setAggregateMode] = useState<AggregateMode>('basic');
   const [selectedTeam, setSelectedTeam] = useState<string | null>(null);
@@ -95,10 +92,9 @@ export default function AggregateStatsScreen() {
     }
   }
 
-  const selectedAdvancedGames =
-    aggregateMode === 'advanced'
-      ? advancedSavedGames.filter((game) => selectedGameIds.has(game.id))
-      : [];
+  const selectedAdvancedGameIds = aggregateMode === 'advanced' ? [...selectedGameIds].sort() : [];
+  const { data: selectedAdvancedGames = [] } = useAdvancedGames(selectedAdvancedGameIds);
+
   const advancedAnalyticsGames = selectedAdvancedGames.map(buildAnalyticsGame);
   const aggregatedAdvancedGame =
     advancedAnalyticsGames.length > 0 ? aggregateAnalyticsGames(advancedAnalyticsGames) : null;
@@ -276,10 +272,10 @@ export default function AggregateStatsScreen() {
   const getHeaderTitle = () => {
     if (showingAggregatedStats) return 'COMBINED STATS';
     if (aggregateMode === 'advanced' && selectedAdvancedTeamId) {
-      const gameForSide = advancedSavedGames.find(
-        (game) => getAdvancedFocusTeamId(game) === selectedAdvancedTeamId,
+      const gameForSide = advancedSavedGameSummaries.find(
+        (game) => (game.focusSourceTeamId ?? game.focusSideId) === selectedAdvancedTeamId,
       );
-      const sideName = gameForSide ? getAdvancedFocusTeamName(gameForSide) : 'Advanced Team';
+      const sideName = gameForSide ? gameForSide.myTeamName : 'Advanced Team';
       return sideName.toUpperCase();
     }
     if (!selectedTeam) return 'AGGREGATE STATS';
@@ -354,7 +350,7 @@ export default function AggregateStatsScreen() {
   } else if (aggregateMode === 'advanced') {
     mainContent = (
       <AdvancedAggregateGamesList
-        games={advancedSavedGames}
+        games={advancedSavedGameSummaries}
         selectedTeamId={selectedAdvancedTeamId}
         selectedGameIds={selectedGameIds}
         onSelectTeam={handleSelectAdvancedTeam}

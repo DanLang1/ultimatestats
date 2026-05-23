@@ -6,8 +6,7 @@ import { Redirect, router, Stack } from 'expo-router';
 import React from 'react';
 
 export default function TrackerEditLineScreen() {
-  const { currentGameId, savedGames, correctPointLine } = useAdvancedTrackingStore();
-  const game = savedGames.find((g) => g.id === currentGameId);
+  const { currentGameId, currentGame: game, correctPointLine } = useAdvancedTrackingStore();
   const point = game ? getCurrentPoint(game) : null;
 
   if (!currentGameId || !game || !point) {

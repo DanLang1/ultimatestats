@@ -18,6 +18,31 @@ jest.mock('@react-native-async-storage/async-storage', () => ({
   removeItem: jest.fn(),
 }));
 
+jest.mock('@/lib/advancedTracking/storage', () => ({
+  deleteAdvancedGameRecord: jest.fn().mockResolvedValue(undefined),
+  loadAdvancedGame: jest.fn().mockResolvedValue(null),
+  loadAdvancedGames: jest.fn().mockResolvedValue([]),
+  loadAdvancedGameSummaries: jest.fn().mockResolvedValue([]),
+  upsertAdvancedGame: jest.fn(async (game) => ({
+    id: game.id,
+    schemaVersion: game.schemaVersion,
+    createdAt: game.createdAt,
+    updatedAt: game.updatedAt,
+    importedAt: game.importedAt,
+    playedAt: null,
+    sortTimestamp: game.createdAt,
+    status: game.status,
+    gameType: game.gameType,
+    focusSideId: game.focusSideId,
+    focusSourceTeamId: null,
+    myTeamName: 'Home',
+    opponentName: 'Away',
+    myScore: 0,
+    opponentScore: 0,
+    pointsTracked: game.points?.length ?? 0,
+  })),
+}));
+
 jest.mock('react-native', () => ({
   Platform: {
     OS: 'ios',
@@ -42,7 +67,8 @@ const homeLinesAugust = [{ sideId: homeSideId, participantIds: [august.participa
 function resetStore() {
   useAdvancedTrackingStore.setState({
     currentGameId: null,
-    savedGames: [],
+    currentGame: null,
+    savedGameSummaries: [],
     undoStack: [],
     isHalftimeBreakActive: false,
   });
@@ -66,8 +92,8 @@ function createGame(gameTo = 15): string {
 }
 
 function getCurrentGame(): AdvancedTrackedGame | null {
-  const { currentGameId, savedGames } = useAdvancedTrackingStore.getState();
-  return savedGames.find((g) => g.id === currentGameId) ?? null;
+  const { currentGameId, currentGame } = useAdvancedTrackingStore.getState();
+  return currentGame?.id === currentGameId ? currentGame : null;
 }
 
 describe('advancedTrackingStore', () => {
@@ -80,17 +106,17 @@ describe('advancedTrackingStore', () => {
 
   it('creates a fresh advanced game directly in savedGames', () => {
     const gameId = createGame();
-    const { currentGameId, savedGames } = useAdvancedTrackingStore.getState();
+    const { currentGameId, currentGame } = useAdvancedTrackingStore.getState();
 
     expect(currentGameId).toBe(gameId);
-    expect(savedGames).toHaveLength(1);
-    expect(savedGames[0].id).toBe(gameId);
-    expect(savedGames[0].status).toBe('in_progress');
-    expect(savedGames[0].gameType).toBe('game');
-    expect(savedGames[0].points).toEqual([]);
-    expect(savedGames[0].settings.locationMode).toBe('none');
-    expect(savedGames[0].settings.format?.gameTo).toBe(15);
-    expect(savedGames[0].settings.format?.halftimeAt).toBe(8);
+    expect(currentGame).not.toBeNull();
+    expect(currentGame!.id).toBe(gameId);
+    expect(currentGame!.status).toBe('in_progress');
+    expect(currentGame!.gameType).toBe('game');
+    expect(currentGame!.points).toEqual([]);
+    expect(currentGame!.settings.locationMode).toBe('none');
+    expect(currentGame!.settings.format?.gameTo).toBe(15);
+    expect(currentGame!.settings.format?.halftimeAt).toBe(8);
     expect(mockedAsyncStorage.setItem).toHaveBeenCalledWith(
       'ultimatestats_advanced_tracking',
       expect.any(String),
@@ -108,8 +134,8 @@ describe('advancedTrackingStore', () => {
       participants: [],
       format: { gameTo: 11 },
     });
-    const { savedGames } = useAdvancedTrackingStore.getState();
-    expect(savedGames[0].settings.format?.halftimeAt).toBe(6);
+    const { currentGame } = useAdvancedTrackingStore.getState();
+    expect(currentGame!.settings.format?.halftimeAt).toBe(6);
   });
 
   it('recordPull creates the point and records the pull atomically', () => {
@@ -256,22 +282,22 @@ describe('advancedTrackingStore', () => {
 
   it('resetCurrentGame removes the in-progress game from savedGames', () => {
     createGame();
-    expect(useAdvancedTrackingStore.getState().savedGames).toHaveLength(1);
+    expect(useAdvancedTrackingStore.getState().currentGame).not.toBeNull();
 
     useAdvancedTrackingStore.getState().resetCurrentGame();
-    const { currentGameId, savedGames } = useAdvancedTrackingStore.getState();
+    const { currentGameId, currentGame } = useAdvancedTrackingStore.getState();
 
     expect(currentGameId).toBeNull();
-    expect(savedGames).toHaveLength(0);
+    expect(currentGame).toBeNull();
   });
 
-  it('deleteSavedGame clears currentGameId when deleting the active game', () => {
+  it('deleteSavedGame clears currentGameId when deleting the active game', async () => {
     const gameId = createGame();
-    useAdvancedTrackingStore.getState().deleteSavedGame(gameId);
-    const { currentGameId, savedGames } = useAdvancedTrackingStore.getState();
+    await useAdvancedTrackingStore.getState().deleteSavedGame(gameId);
+    const { currentGameId, currentGame } = useAdvancedTrackingStore.getState();
 
     expect(currentGameId).toBeNull();
-    expect(savedGames).toHaveLength(0);
+    expect(currentGame).toBeNull();
   });
 
   it('finalizeGame throws if the game has not reached a valid game-over state', () => {
@@ -285,23 +311,23 @@ describe('advancedTrackingStore', () => {
   it('terminateGame sets status to terminated with endReason', () => {
     const gameId = createGame();
     useAdvancedTrackingStore.getState().terminateGame('weather');
-    const { currentGameId, savedGames } = useAdvancedTrackingStore.getState();
+    const { currentGameId, currentGame } = useAdvancedTrackingStore.getState();
 
     expect(currentGameId).toBe(gameId);
-    expect(savedGames[0].id).toBe(gameId);
-    expect(savedGames[0].status).toBe('terminated');
-    expect(savedGames[0].endReason).toBe('weather');
+    expect(currentGame!.id).toBe(gameId);
+    expect(currentGame!.status).toBe('terminated');
+    expect(currentGame!.endReason).toBe('weather');
   });
 
   it('finishTerminatedGame clears the current game pointer without deleting the saved game', () => {
     const gameId = createGame();
     useAdvancedTrackingStore.getState().terminateGame('manual');
     useAdvancedTrackingStore.getState().finishTerminatedGame();
-    const { currentGameId, savedGames } = useAdvancedTrackingStore.getState();
+    const { currentGameId, currentGame } = useAdvancedTrackingStore.getState();
 
     expect(currentGameId).toBeNull();
-    expect(savedGames[0].id).toBe(gameId);
-    expect(savedGames[0].status).toBe('terminated');
+    expect(currentGame!.id).toBe(gameId);
+    expect(currentGame!.status).toBe('terminated');
   });
 
   it('updateGameMetadata replaces the metadata on the active game', () => {
@@ -630,8 +656,8 @@ describe('advancedTrackingStore', () => {
 
     it('does not set halftimeAt on the stored game format', () => {
       createGameNoHalftime();
-      const { savedGames } = useAdvancedTrackingStore.getState();
-      expect(savedGames[0].settings.format?.halftimeAt).toBeUndefined();
+      const { currentGame } = useAdvancedTrackingStore.getState();
+      expect(currentGame!.settings.format?.halftimeAt).toBeUndefined();
     });
 
     it('does not derive a halftime transition when a side reaches the would-be halftime score', () => {
@@ -1341,7 +1367,7 @@ describe('advancedTrackingStore', () => {
     useAdvancedTrackingStore.getState().finalizeGame();
 
     expect(useAdvancedTrackingStore.getState().currentGameId).toBeNull();
-    expect(useAdvancedTrackingStore.getState().savedGames[0].status).toBe('final');
+    expect(useAdvancedTrackingStore.getState().currentGame!.status).toBe('final');
   });
 
   describe('cap transition auto-recording', () => {

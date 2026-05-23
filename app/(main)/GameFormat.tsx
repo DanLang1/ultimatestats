@@ -49,7 +49,7 @@ export default function GameFormatScreen() {
     events,
     setGameToInGame,
   } = useGameStore();
-  const { currentGameId, savedGames } = useAdvancedTrackingStore();
+  const { currentGame: advancedGame } = useAdvancedTrackingStore();
   const openPicker = useNumberPickerStore((state) => state.open);
   const {
     hardCapMins,
@@ -59,8 +59,6 @@ export default function GameFormatScreen() {
     firstPointRatio,
     lineCallingEnabled,
   } = useSettingsStore();
-
-  const advancedGame = savedGames.find((game) => game.id === currentGameId);
   if (activeGameType === null) {
     return <Redirect href="/Dashboard" />;
   }

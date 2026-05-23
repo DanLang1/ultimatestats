@@ -58,8 +58,7 @@ export default function AdvancedTrackerScreen() {
   const insets = useSafeAreaInsets();
 
   const {
-    currentGameId,
-    savedGames,
+    currentGame: game,
     undoStack,
     isHalftimeBreakActive,
     recordThrow,
@@ -70,8 +69,6 @@ export default function AdvancedTrackerScreen() {
     triggerHalftimeEarly,
   } = useAdvancedTrackingStore();
   const currentTeam = useGameStore((s) => s.currentTeam);
-
-  const game = savedGames.find((g) => g.id === currentGameId);
   const [showDevModal, setShowDevModal] = useState(false);
   const [showHomeMenu, setShowHomeMenu] = useState(false);
   const [showLineChangeMenu, setShowLineChangeMenu] = useState(false);
@@ -119,7 +116,7 @@ export default function AdvancedTrackerScreen() {
 
   const pointIsOver = hasPointEnded(point);
   const lastUndoEntry = undoStack.at(-1);
-  const showStartSecondHalfEarly = canStartSecondHalfEarly(game, lastUndoEntry);
+  const showStartSecondHalfEarly = canStartSecondHalfEarly(game ?? undefined, lastUndoEntry);
   const activeSideId = game ? getActiveSideId(possession, game) : '';
   const oppHasDisc = game ? !pointIsOver && activeSideId !== game.focusSideId : false;
   const canChangeLine = !pointIsOver;

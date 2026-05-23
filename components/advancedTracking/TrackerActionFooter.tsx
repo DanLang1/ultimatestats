@@ -40,9 +40,7 @@ export const TrackerActionFooter = ({
   const insets = useSafeAreaInsets();
   const styles = createStyles(sizeClass, insets.bottom);
 
-  const { currentGameId, savedGames, recordPickup, recordThrow } = useAdvancedTrackingStore();
-
-  const game = savedGames.find((g) => g.id === currentGameId);
+  const { currentGame: game, recordPickup, recordThrow } = useAdvancedTrackingStore();
   if (!game) return null;
 
   const oppSide = game.sides.find((s) => s.id !== game.focusSideId);

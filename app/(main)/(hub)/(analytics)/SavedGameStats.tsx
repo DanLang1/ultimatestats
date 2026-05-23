@@ -11,7 +11,11 @@ import SavedGamesList from '@/components/view-stats/SavedGamesList';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { MAX_SHARE_GAMES } from '@/lib/constants';
-import { advancedGameToListItem, basicGameToListItem, GameListItem } from '@/lib/gameListUtils';
+import {
+  advancedGameSummaryToListItem,
+  basicGameToListItem,
+  GameListItem,
+} from '@/lib/gameListUtils';
 import { serializeAdvancedGames, serializeGames, uploadPayload } from '@/lib/sharing';
 import {
   runPendingShareAction,
@@ -30,8 +34,11 @@ export default function SavedGameStatsScreen() {
   const { sizeClass } = useLayout();
   const styles = createStyles(sizeClass);
   const { savedGames, savedTeams, deleteSavedGames } = useGameStore();
-  const { savedGames: advancedSavedGames, deleteSavedGame: deleteAdvancedSavedGame } =
-    useAdvancedTrackingStore();
+  const {
+    savedGameSummaries: advancedSavedGameSummaries,
+    deleteSavedGame: deleteAdvancedSavedGame,
+    loadGames: loadAdvancedGames,
+  } = useAdvancedTrackingStore();
   const { showAlert } = useAlert();
   const { tournaments } = useTournamentStore();
   const [selectedSavedGameIds, setSelectedSavedGameIds] = useState<Set<string>>(new Set());
@@ -41,7 +48,7 @@ export default function SavedGameStatsScreen() {
   );
 
   const basicItems = savedGames.map((g) => basicGameToListItem(g, savedTeams));
-  const advancedItems = advancedSavedGames.map(advancedGameToListItem);
+  const advancedItems = advancedSavedGameSummaries.map(advancedGameSummaryToListItem);
   const allGames = [...basicItems, ...advancedItems].sort((a, b) => b.timestamp - a.timestamp);
   const selectedGames = allGames.filter((game) => selectedSavedGameIds.has(game.id));
   const selectedGameKind = selectedGames[0]?.kind ?? null;
@@ -118,7 +125,7 @@ export default function SavedGameStatsScreen() {
             }
             // Advanced game deletion is synchronous in the advanced tracking store.
             for (const gameId of advancedIds) {
-              deleteAdvancedSavedGame(gameId);
+              await deleteAdvancedSavedGame(gameId);
             }
             setSelectedSavedGameIds(new Set());
           },
@@ -153,7 +160,7 @@ export default function SavedGameStatsScreen() {
     const gameIds = new Set(selectedGames.map((game) => game.id));
     setPendingShareAction(() => async () => {
       if (hasAdvancedGames) {
-        const games = advancedSavedGames.filter((game) => gameIds.has(game.id));
+        const games = await loadAdvancedGames([...gameIds]);
         const payload = serializeAdvancedGames(games);
         const { url } = await uploadPayload(payload);
         return url;

@@ -1,4 +1,9 @@
-import { advancedGameToListItem, basicGameToListItem } from '../gameListUtils';
+import {
+  advancedGameSummaryToListItem,
+  advancedGameToListItem,
+  basicGameToListItem,
+} from '../gameListUtils';
+import type { AdvancedGameSummary } from '../advancedTracking/summary';
 import type { AdvancedTrackedGame } from '../advancedTracking/types';
 import type { SavedGame, SavedTeam } from '../storage';
 
@@ -192,5 +197,42 @@ describe('advancedGameToListItem', () => {
   it('counts total points for pointsTracked', () => {
     const item = advancedGameToListItem(baseAdvancedGame);
     expect(item.pointsTracked).toBe(1);
+  });
+});
+
+// ── advancedGameSummaryToListItem ─────────────────────────────────────────────
+
+const advancedSummary: AdvancedGameSummary = {
+  id: 'summary1',
+  schemaVersion: 1,
+  createdAt: 1000,
+  updatedAt: 2000,
+  playedAt: 1500,
+  sortTimestamp: 1500,
+  status: 'final',
+  gameType: 'game',
+  focusSideId: ZOO,
+  focusSourceTeamId: null,
+  myTeamName: 'Zoo',
+  opponentName: 'Rivals',
+  myScore: 12,
+  opponentScore: 10,
+  pointsTracked: 22,
+};
+
+describe('advancedGameSummaryToListItem', () => {
+  it('maps summary fields without requiring the full game record', () => {
+    const item = advancedGameSummaryToListItem(advancedSummary);
+
+    expect(item).toEqual({
+      kind: 'advanced',
+      id: 'summary1',
+      timestamp: 1500,
+      myTeamName: 'Zoo',
+      opponentName: 'Rivals',
+      myScore: 12,
+      opponentScore: 10,
+      pointsTracked: 22,
+    });
   });
 });

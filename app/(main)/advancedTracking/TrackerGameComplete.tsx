@@ -18,15 +18,13 @@ export default function TrackerGameCompleteScreen() {
   const isEarlyEndPending = mode === 'earlyEnd';
 
   const {
-    currentGameId,
-    savedGames,
+    currentGame: game,
     finalizeGame,
     finishTerminatedGame,
     undoLastOperation,
     terminateGame,
   } = useAdvancedTrackingStore();
   const { finishActiveGameSession, restoreAdvancedGameSession } = useGameSessionActions();
-  const game = savedGames.find((g) => g.id === currentGameId);
 
   if (!game) {
     return <Redirect href="/advancedTracking/Tracker" />;

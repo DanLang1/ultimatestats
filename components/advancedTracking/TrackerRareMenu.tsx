@@ -34,9 +34,7 @@ export const TrackerRareMenu = ({
   const { sizeClass } = useLayout();
   const styles = createStyles(sizeClass);
 
-  const { currentGameId, savedGames, recordThrow } = useAdvancedTrackingStore();
-
-  const game = savedGames.find((g) => g.id === currentGameId);
+  const { currentGame: game, recordThrow } = useAdvancedTrackingStore();
   if (!game) return null;
 
   const point = getCurrentPoint(game);

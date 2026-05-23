@@ -9,6 +9,31 @@ jest.mock('@react-native-async-storage/async-storage', () => ({
   removeItem: jest.fn(),
 }));
 
+jest.mock('@/lib/advancedTracking/storage', () => ({
+  deleteAdvancedGameRecord: jest.fn().mockResolvedValue(undefined),
+  loadAdvancedGame: jest.fn().mockResolvedValue(null),
+  loadAdvancedGames: jest.fn().mockResolvedValue([]),
+  loadAdvancedGameSummaries: jest.fn().mockResolvedValue([]),
+  upsertAdvancedGame: jest.fn(async (game) => ({
+    id: game.id,
+    schemaVersion: game.schemaVersion,
+    createdAt: game.createdAt,
+    updatedAt: game.updatedAt,
+    importedAt: game.importedAt,
+    playedAt: null,
+    sortTimestamp: game.createdAt,
+    status: game.status,
+    gameType: game.gameType,
+    focusSideId: game.focusSideId,
+    focusSourceTeamId: null,
+    myTeamName: 'Home',
+    opponentName: 'Away',
+    myScore: 0,
+    opponentScore: 0,
+    pointsTracked: game.points?.length ?? 0,
+  })),
+}));
+
 jest.mock('react-native', () => ({
   Platform: {
     OS: 'ios',
@@ -28,7 +53,8 @@ const untracked = { refType: 'untracked' as const };
 function resetStore() {
   useAdvancedTrackingStore.setState({
     currentGameId: null,
-    savedGames: [],
+    currentGame: null,
+    savedGameSummaries: [],
     undoStack: [],
   });
 }
@@ -50,8 +76,8 @@ function createGame(gameTo = 15): string {
 }
 
 function getCurrentGame(): AdvancedTrackedGame | null {
-  const { currentGameId, savedGames } = useAdvancedTrackingStore.getState();
-  return savedGames.find((g) => g.id === currentGameId) ?? null;
+  const { currentGameId, currentGame } = useAdvancedTrackingStore.getState();
+  return currentGame?.id === currentGameId ? currentGame : null;
 }
 
 describe('advancedTrackingStore — edge cases', () => {
@@ -358,7 +384,7 @@ describe('advancedTrackingStore — edge cases', () => {
 
       expect(() => useAdvancedTrackingStore.getState().finalizeGame()).not.toThrow();
       expect(useAdvancedTrackingStore.getState().currentGameId).toBeNull();
-      expect(useAdvancedTrackingStore.getState().savedGames[0].status).toBe('final');
+      expect(useAdvancedTrackingStore.getState().currentGame!.status).toBe('final');
     });
   });
 
@@ -511,7 +537,7 @@ describe('advancedTrackingStore — edge cases', () => {
   });
 
   describe('deleteSavedGame cleanup', () => {
-    it('removes undo entries for deleted game points', () => {
+    it('removes undo entries for deleted game points', async () => {
       const gameId = createGame();
       useAdvancedTrackingStore.getState().recordPull({
         lines: [{ sideId: homeSideId, participantIds: [august.participantId] }],
@@ -527,9 +553,9 @@ describe('advancedTrackingStore — edge cases', () => {
 
       expect(useAdvancedTrackingStore.getState().undoStack.length).toBeGreaterThan(0);
 
-      useAdvancedTrackingStore.getState().deleteSavedGame(gameId);
+      await useAdvancedTrackingStore.getState().deleteSavedGame(gameId);
 
-      expect(useAdvancedTrackingStore.getState().savedGames).toHaveLength(0);
+      expect(useAdvancedTrackingStore.getState().currentGame).toBeNull();
       expect(useAdvancedTrackingStore.getState().undoStack).toHaveLength(0);
     });
   });

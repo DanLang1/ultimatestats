@@ -1,6 +1,7 @@
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
+import { useAdvancedGames } from '@/hooks/advancedTracking/useAdvancedGameQueries';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { computeAdvancedImpact } from '@/lib/advancedTracking/advancedImpactUtils';
 import {
@@ -8,17 +9,11 @@ import {
   getAdvancedGameTimestamp,
 } from '@/lib/advancedTracking/advancedGameTeamUtils';
 import { buildAnalyticsGame } from '@/lib/advancedTracking/buildAnalyticsGame';
-import type { AdvancedTrackedGame } from '@/lib/advancedTracking/types';
 import { Fonts } from '@/theme/theme';
-import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router, useLocalSearchParams } from 'expo-router';
 import React from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
-
-function isDefined(game: AdvancedTrackedGame | undefined): game is AdvancedTrackedGame {
-  return game != null;
-}
 
 export default function AdvancedGameSelectorModal() {
   const {
@@ -33,12 +28,12 @@ export default function AdvancedGameSelectorModal() {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
   const styles = createStyles(sizeClass);
-  const savedGames = useAdvancedTrackingStore((state) => state.savedGames);
 
-  const gameIds = aggregateGameIds.split(',').filter((id) => id.length > 0);
-  const selectableGames = gameIds
-    .map((id) => savedGames.find((game) => game.id === id))
-    .filter(isDefined)
+  const gameIdsParamValue = aggregateGameIds;
+  const gameIds = gameIdsParamValue.split(',').filter((id) => id.length > 0);
+  const { data: loadedGames = [] } = useAdvancedGames(gameIds);
+
+  const selectableGames = loadedGames
     .filter((game) => {
       if (!participantId) return false;
       const analyticsGame = buildAnalyticsGame(game);

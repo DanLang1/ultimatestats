@@ -17,6 +17,30 @@ jest.mock('@react-native-async-storage/async-storage', () => ({
   removeItem: jest.fn(),
 }));
 
+jest.mock('@/lib/advancedTracking/storage', () => ({
+  deleteAdvancedGameRecord: jest.fn().mockResolvedValue(undefined),
+  loadAdvancedGame: jest.fn().mockResolvedValue(null),
+  loadAdvancedGames: jest.fn().mockResolvedValue([]),
+  loadAdvancedGameSummaries: jest.fn().mockResolvedValue([]),
+  upsertAdvancedGame: jest.fn().mockResolvedValue({
+    id: 'advanced-game',
+    schemaVersion: 1,
+    createdAt: 0,
+    updatedAt: 0,
+    playedAt: null,
+    sortTimestamp: 0,
+    status: 'in_progress',
+    gameType: 'game',
+    focusSideId: 'home',
+    focusSourceTeamId: null,
+    myTeamName: 'Home',
+    opponentName: 'Away',
+    myScore: 0,
+    opponentScore: 0,
+    pointsTracked: 0,
+  }),
+}));
+
 jest.mock('react-native', () => ({
   Platform: {
     OS: 'ios',
@@ -30,7 +54,8 @@ function resetStores() {
   useGameSessionStore.setState({ activeGameType: null });
   useAdvancedTrackingStore.setState({
     currentGameId: null,
-    savedGames: [],
+    currentGame: null,
+    savedGameSummaries: [],
     undoStack: [],
     isHalftimeBreakActive: false,
   });
@@ -49,7 +74,7 @@ describe('game session actions', () => {
   it('starts a basic session and clears advanced draft state', () => {
     useAdvancedTrackingStore.setState({
       currentGameId: 'advanced-game',
-      savedGames: [{ id: 'advanced-game', status: 'in_progress', points: [] } as never],
+      currentGame: { id: 'advanced-game', status: 'in_progress', points: [] } as never,
     });
     useGameStore.setState({ team1Score: 4, currentGameStatus: 'inProgress' });
 
@@ -57,7 +82,7 @@ describe('game session actions', () => {
 
     expect(useGameSessionStore.getState().activeGameType).toBe('basic');
     expect(useAdvancedTrackingStore.getState().currentGameId).toBeNull();
-    expect(useAdvancedTrackingStore.getState().savedGames).toEqual([]);
+    expect(useAdvancedTrackingStore.getState().currentGame).toBeNull();
     expect(useGameStore.getState().team1Score).toBe(0);
     expect(useGameStore.getState().currentGameStatus).toBe('fresh');
   });

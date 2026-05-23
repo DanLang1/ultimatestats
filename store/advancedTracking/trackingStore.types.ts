@@ -10,6 +10,7 @@ import type {
   PullResult,
   ThrowResult,
 } from '@/lib/advancedTracking/types';
+import type { AdvancedGameSummary } from '@/lib/advancedTracking/summary';
 import type { GenderRatio } from '@/lib/genderRatioUtils';
 
 export type { PullResult, ThrowResult };
@@ -119,9 +120,14 @@ export type AdvancedTrackingUndoEntry =
 
 export interface AdvancedTrackingState {
   currentGameId: string | null;
-  savedGames: AdvancedTrackedGame[];
+  currentGame: AdvancedTrackedGame | null;
+  savedGameSummaries: AdvancedGameSummary[];
   undoStack: AdvancedTrackingUndoEntry[];
   isHalftimeBreakActive: boolean;
+  loadSavedGameSummaries: () => Promise<void>;
+  loadGame: (gameId: string) => Promise<AdvancedTrackedGame | null>;
+  loadGames: (gameIds: string[]) => Promise<AdvancedTrackedGame[]>;
+  loadCurrentGame: () => Promise<AdvancedTrackedGame | null>;
   createGame: (input: CreateAdvancedGameInput) => string;
   clearHalftimeBreak: () => void;
   resetCurrentGame: () => void;
@@ -146,6 +152,6 @@ export interface AdvancedTrackingState {
   updateSub: (input: UpdateSubInput) => void;
   correctPointLine: (input: CorrectPointLineInput) => void;
   undoLastOperation: () => boolean;
-  importAdvancedGame: (game: AdvancedTrackedGame) => void;
-  deleteSavedGame: (gameId: string) => void;
+  importAdvancedGame: (game: AdvancedTrackedGame) => Promise<void>;
+  deleteSavedGame: (gameId: string) => Promise<void>;
 }

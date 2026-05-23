@@ -8,6 +8,7 @@ import {
 } from '@/components/ui/ResponsiveHeaderActions';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { ShareConfirmModal } from '@/components/ui/ShareConfirmModal';
+import { useAdvancedGame } from '@/hooks/advancedTracking/useAdvancedGameQueries';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { generateAdvancedGameCSV } from '@/lib/advancedTracking/advancedCSVUtils';
@@ -39,12 +40,11 @@ export default function AdvancedGameStatsScreen() {
   const { isLandscape, sizeClass } = useLayout();
   const styles = createStyles(isLandscape, sizeClass);
   const { showAlert } = useAlert();
-  const { savedGames, deleteSavedGame } = useAdvancedTrackingStore();
+  const { deleteSavedGame } = useAdvancedTrackingStore();
+  const { data: rawGame = null } = useAdvancedGame(gameId);
   const [pendingShareAction, setPendingShareAction] = useState<(() => Promise<string>) | null>(
     null,
   );
-
-  const rawGame = gameId ? (savedGames.find((g) => g.id === gameId) ?? null) : null;
 
   const analyticsGame = rawGame ? buildAnalyticsGame(rawGame) : null;
 
@@ -150,8 +150,8 @@ export default function AdvancedGameStatsScreen() {
         {
           text: 'Delete',
           style: 'destructive',
-          onPress: () => {
-            deleteSavedGame(gameId);
+          onPress: async () => {
+            await deleteSavedGame(gameId);
             router.replace('/SavedGameStats');
           },
         },

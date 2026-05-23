@@ -32,6 +32,17 @@ import {
   ADVANCED_TRACKING_SCHEMA_VERSION,
   AdvancedTrackedGame,
 } from '@/lib/advancedTracking/types';
+import {
+  compareAdvancedGameSummaries,
+  deriveAdvancedGameSummary,
+} from '@/lib/advancedTracking/summary';
+import {
+  deleteAdvancedGameRecord,
+  loadAdvancedGame,
+  loadAdvancedGames,
+  loadAdvancedGameSummaries,
+  upsertAdvancedGame,
+} from '@/lib/advancedTracking/storage';
 import { generateId } from '@/lib/utils';
 import { Draft } from 'immer';
 import {
@@ -45,14 +56,25 @@ import {
 
 const ADVANCED_TRACKING_STORAGE_KEY = 'ultimatestats_advanced_tracking';
 
-type GameLookupState = { currentGameId: string | null; savedGames: AdvancedTrackedGame[] };
+type GameLookupState = { currentGameId: string | null; currentGame: AdvancedTrackedGame | null };
 
 function getCurrentGame(state: GameLookupState): AdvancedTrackedGame {
   if (state.currentGameId == null) throw new Error('No active game.');
-  const game = state.savedGames.find((g) => g.id === state.currentGameId);
-  if (game == null)
-    throw new Error(`currentGameId "${state.currentGameId}" not found in savedGames.`);
-  return game;
+  if (state.currentGame == null || state.currentGame.id !== state.currentGameId) {
+    throw new Error(`currentGameId "${state.currentGameId}" not loaded.`);
+  }
+  return state.currentGame;
+}
+
+function updateSummaryState(state: Draft<AdvancedTrackingState>, game: AdvancedTrackedGame) {
+  const summary = deriveAdvancedGameSummary(game);
+  const idx = state.savedGameSummaries.findIndex((candidate) => candidate.id === summary.id);
+  if (idx >= 0) {
+    state.savedGameSummaries[idx] = summary;
+  } else {
+    state.savedGameSummaries.push(summary);
+  }
+  state.savedGameSummaries.sort(compareAdvancedGameSummaries);
 }
 
 function pushUndoEntry(state: Draft<AdvancedTrackingState>, entry: AdvancedTrackingUndoEntry) {
@@ -97,9 +119,48 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
     persist(
       (set, get) => ({
         currentGameId: null,
-        savedGames: [],
+        currentGame: null,
+        savedGameSummaries: [],
         undoStack: [],
         isHalftimeBreakActive: false,
+
+        loadSavedGameSummaries: async () => {
+          const summaries = await loadAdvancedGameSummaries();
+          set((state) => {
+            state.savedGameSummaries = summaries;
+          });
+        },
+
+        loadGame: async (gameId) => {
+          const inMemoryGame = get().currentGame;
+          if (inMemoryGame?.id === gameId) {
+            return inMemoryGame;
+          }
+          const game = await loadAdvancedGame(gameId);
+          return game;
+        },
+
+        loadGames: async (gameIds) => {
+          const inMemoryGame = get().currentGame;
+          const loadedGames = await loadAdvancedGames(gameIds);
+          if (inMemoryGame == null || !gameIds.includes(inMemoryGame.id)) {
+            return loadedGames;
+          }
+          return [...loadedGames.filter((game) => game.id !== inMemoryGame.id), inMemoryGame];
+        },
+
+        loadCurrentGame: async () => {
+          const currentGameId = get().currentGameId;
+          if (currentGameId == null) return null;
+          const game = await loadAdvancedGame(currentGameId);
+          set((state) => {
+            state.currentGame = game;
+            if (game != null) {
+              updateSummaryState(state, game);
+            }
+          });
+          return game;
+        },
 
         clearHalftimeBreak: () => {
           set((state) => {
@@ -123,51 +184,60 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
           }
 
           const gameId = generateId();
+          const game: AdvancedTrackedGame = {
+            id: gameId,
+            schemaVersion: ADVANCED_TRACKING_SCHEMA_VERSION,
+            createdAt: now,
+            updatedAt: now,
+            gameType: input.gameType ?? 'game',
+            status: 'in_progress',
+            focusSideId: input.focusSideId,
+            initialReceivingSideId: input.initialReceivingSideId,
+            metadata: input.metadata,
+            settings: {
+              locationMode: 'none',
+              format: {
+                formatType: 'standard',
+                gameTo: input.format.gameTo,
+                halftimeAt:
+                  (input.format.halftimeEnabled ?? true)
+                    ? Math.ceil(input.format.gameTo / 2)
+                    : undefined,
+                softCapAt: input.format.softCapAt,
+                hardCapAt: input.format.hardCapAt,
+                timeoutsPerHalf: input.format.timeoutsPerHalf,
+                floaterEnabled: input.format.floaterEnabled,
+              },
+            },
+            sides: input.sides,
+            participants: input.participants,
+            points: [],
+          };
 
           set((state) => {
-            state.savedGames.push({
-              id: gameId,
-              schemaVersion: ADVANCED_TRACKING_SCHEMA_VERSION,
-              createdAt: now,
-              updatedAt: now,
-              gameType: input.gameType ?? 'game',
-              status: 'in_progress',
-              focusSideId: input.focusSideId,
-              initialReceivingSideId: input.initialReceivingSideId,
-              metadata: input.metadata,
-              settings: {
-                locationMode: 'none',
-                format: {
-                  formatType: 'standard',
-                  gameTo: input.format.gameTo,
-                  halftimeAt:
-                    (input.format.halftimeEnabled ?? true)
-                      ? Math.ceil(input.format.gameTo / 2)
-                      : undefined,
-                  softCapAt: input.format.softCapAt,
-                  hardCapAt: input.format.hardCapAt,
-                  timeoutsPerHalf: input.format.timeoutsPerHalf,
-                  floaterEnabled: input.format.floaterEnabled,
-                },
-              },
-              sides: input.sides,
-              participants: input.participants,
-              points: [],
-            });
+            state.currentGame = game;
             state.currentGameId = gameId;
             state.undoStack = [];
             state.isHalftimeBreakActive = false;
+            updateSummaryState(state, game);
           });
 
           return gameId;
         },
 
         resetCurrentGame: () => {
+          const gameId = get().currentGameId;
           set((state) => {
-            state.savedGames = state.savedGames.filter((g) => g.id !== state.currentGameId);
+            if (gameId != null) {
+              state.savedGameSummaries = state.savedGameSummaries.filter((g) => g.id !== gameId);
+            }
+            state.currentGame = null;
             state.currentGameId = null;
             state.undoStack = [];
           });
+          if (gameId != null) {
+            void deleteAdvancedGameRecord(gameId);
+          }
         },
 
         finalizeGame: () => {
@@ -184,6 +254,8 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
             const liveGame = getCurrentGame(state);
             liveGame.status = 'final';
             liveGame.updatedAt = now;
+            // Keep currentGame in memory so the post-finish analytics route can read it
+            // while the SQLite autosave settles.
             state.currentGameId = null;
             state.undoStack = [];
           });
@@ -205,6 +277,8 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
             if (liveGame.status !== 'terminated') {
               throw new Error('Cannot finish a game that has not been terminated.');
             }
+            // Keep currentGame in memory so the post-finish analytics route can read it
+            // while the SQLite autosave settles.
             state.currentGameId = null;
             state.undoStack = [];
           });
@@ -936,40 +1010,65 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
           return true;
         },
 
-        importAdvancedGame: (game) => {
+        importAdvancedGame: async (game) => {
+          await upsertAdvancedGame(game);
           set((state) => {
-            const idx = state.savedGames.findIndex((savedGame) => savedGame.id === game.id);
-            if (idx >= 0) {
-              state.savedGames[idx] = game;
-            } else {
-              state.savedGames.push(game);
+            updateSummaryState(state, game);
+            if (state.currentGameId === game.id) {
+              state.currentGame = game;
             }
           });
         },
 
-        deleteSavedGame: (gameId) => {
+        deleteSavedGame: async (gameId) => {
+          await deleteAdvancedGameRecord(gameId);
           set((state) => {
-            const remainingGames = state.savedGames.filter((game) => game.id !== gameId);
-            state.savedGames = remainingGames;
+            state.savedGameSummaries = state.savedGameSummaries.filter(
+              (game) => game.id !== gameId,
+            );
             if (state.currentGameId === gameId) {
               state.currentGameId = null;
+              state.currentGame = null;
+              state.undoStack = [];
             }
-            state.undoStack = state.undoStack.filter((entry) =>
-              remainingGames.some((game) =>
-                game.points.some((point) => point.id === entry.pointId),
-              ),
-            );
           });
         },
       }),
       {
         name: ADVANCED_TRACKING_STORAGE_KEY,
         storage: createJSONStorage(() => AsyncStorage),
+        onRehydrateStorage: () => (state) => {
+          if (state?.currentGameId != null) {
+            void state.loadCurrentGame();
+          }
+        },
         partialize: (state) => ({
           currentGameId: state.currentGameId,
-          savedGames: state.savedGames,
         }),
       },
     ),
   ),
 );
+
+let lastPersistedGameRef: AdvancedTrackedGame | null = null;
+
+useAdvancedTrackingStore.subscribe((state) => {
+  if (state.currentGame == null || state.currentGame === lastPersistedGameRef) {
+    return;
+  }
+  lastPersistedGameRef = state.currentGame;
+  const game = state.currentGame;
+  void upsertAdvancedGame(game).then((summary) => {
+    const summaries = [...useAdvancedTrackingStore.getState().savedGameSummaries];
+    const idx = summaries.findIndex((candidate) => candidate.id === summary.id);
+    if (idx >= 0) {
+      summaries[idx] = summary;
+    } else {
+      summaries.push(summary);
+    }
+    summaries.sort(compareAdvancedGameSummaries);
+    useAdvancedTrackingStore.setState({ savedGameSummaries: summaries });
+  });
+});
+
+void useAdvancedTrackingStore.getState().loadSavedGameSummaries();

@@ -49,9 +49,15 @@ export default function ViewStatsScreen() {
     team1BgColor,
     team2BgColor,
   } = useGameStore();
-  const { currentGameId: advancedCurrentGameId, savedGames: advancedSavedGames } =
+  const { currentGameId: advancedCurrentGameId, currentGame: currentAdvancedGame } =
     useAdvancedTrackingStore();
-  const activeAdvancedGame = advancedSavedGames.find((g) => g.id === advancedCurrentGameId) ?? null;
+  const advancedSavedGameCount = useAdvancedTrackingStore(
+    (state) => state.savedGameSummaries.length,
+  );
+  const activeAdvancedGame =
+    advancedCurrentGameId != null && currentAdvancedGame?.id === advancedCurrentGameId
+      ? currentAdvancedGame
+      : null;
   const hasActiveAdvancedGame = activeAdvancedGame != null;
   const { showAlert } = useAlert();
   const { palette } = useTheme();
@@ -223,9 +229,11 @@ export default function ViewStatsScreen() {
                 title="Saved Games"
                 description="Browse, share, manage past games."
                 detail={
-                  savedGames.length === 0
+                  savedGames.length + advancedSavedGameCount === 0
                     ? 'No saved games yet'
-                    : `${savedGames.length} saved game${savedGames.length === 1 ? '' : 's'}`
+                    : `${savedGames.length + advancedSavedGameCount} saved game${
+                        savedGames.length + advancedSavedGameCount === 1 ? '' : 's'
+                      }`
                 }
                 icon="history"
                 onPress={() => router.push('/SavedGameStats')}
@@ -235,7 +243,11 @@ export default function ViewStatsScreen() {
               <AnalyticsShortcutCard
                 title="Combine Games"
                 description="Aggregate games into a combined stat view / add to tourneys."
-                detail={savedGames.length === 0 ? 'Start by saving a game' : 'Build combined stats'}
+                detail={
+                  savedGames.length + advancedSavedGameCount === 0
+                    ? 'Start by saving a game'
+                    : 'Build combined stats'
+                }
                 icon="chart-box-outline"
                 onPress={() => router.push('/AggregateStats')}
               />

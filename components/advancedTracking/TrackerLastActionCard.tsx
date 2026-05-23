@@ -83,9 +83,7 @@ export const TrackerLastActionCard = ({
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
 
-  const { currentGameId, savedGames, undoLastOperation } = useAdvancedTrackingStore();
-
-  const game = savedGames.find((g) => g.id === currentGameId);
+  const { currentGame: game, undoLastOperation } = useAdvancedTrackingStore();
   if (!game) return null;
 
   const point = getCurrentPoint(game);

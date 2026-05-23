@@ -2,10 +2,10 @@ import AdvancedEventTimeline from '@/components/advancedTracking/timeline/Advanc
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { useTheme } from '@/context/ThemeContext';
+import { useAdvancedGame } from '@/hooks/advancedTracking/useAdvancedGameQueries';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { buildAdvancedTimeline } from '@/lib/advancedTracking/advancedTimelineUtils';
 import { hasItems } from '@/lib/utils';
-import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { Fonts } from '@/theme/theme';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
@@ -17,7 +17,7 @@ export default function AdvancedGameTimelineScreen() {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
   const styles = createStyles(sizeClass);
-  const savedGames = useAdvancedTrackingStore((s) => s.savedGames);
+  const { data: rawGame = null } = useAdvancedGame(gameId);
 
   if (!gameId) {
     return (
@@ -52,8 +52,6 @@ export default function AdvancedGameTimelineScreen() {
       </ThemedView>
     );
   }
-
-  const rawGame = savedGames.find((g) => g.id === gameId);
 
   if (!rawGame) {
     return (

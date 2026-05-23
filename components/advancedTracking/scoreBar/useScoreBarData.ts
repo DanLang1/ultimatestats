@@ -15,11 +15,12 @@ import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore
 import { useSettingsStore } from '@/store/settingsStore';
 
 export function useScoreBarData() {
-  const { currentGameId, savedGames, recordBetweenPointTimeout, recordStoppage } =
-    useAdvancedTrackingStore();
+  const {
+    currentGame: game,
+    recordBetweenPointTimeout,
+    recordStoppage,
+  } = useAdvancedTrackingStore();
   const { genderRatioEnabled, firstPointRatio } = useSettingsStore();
-
-  const game = savedGames.find((g) => g.id === currentGameId);
 
   if (!game) return null;
 

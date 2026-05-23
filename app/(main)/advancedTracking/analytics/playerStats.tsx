@@ -7,6 +7,7 @@ import AdvancedRelativeStatsSection from '@/components/advancedTracking/Advanced
 import { ThemedText } from '@/components/ThemedText';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { useTheme } from '@/context/ThemeContext';
+import { useAdvancedGame, useAdvancedGames } from '@/hooks/advancedTracking/useAdvancedGameQueries';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { computeAdvancedChemistry } from '@/lib/advancedTracking/advancedChemistryUtils';
 import { computeAdvancedImpact } from '@/lib/advancedTracking/advancedImpactUtils';
@@ -20,7 +21,6 @@ import {
   getAdvancedGameTimestamp,
 } from '@/lib/advancedTracking/advancedGameTeamUtils';
 import { buildAnalyticsGame } from '@/lib/advancedTracking/buildAnalyticsGame';
-import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { Fonts } from '@/theme/theme';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
@@ -42,17 +42,11 @@ export default function AdvancedPlayerStatsScreen() {
   const { palette } = useTheme();
   const { isLandscape, sizeClass } = useLayout();
   const styles = createStyles(isLandscape, sizeClass);
-  const { savedGames } = useAdvancedTrackingStore();
 
-  const aggregateGameIds =
-    gameId === 'aggregate'
-      ? (aggregateGameIdsParam ?? '').split(',').filter((id) => id.length > 0)
-      : [];
-  const rawGame =
-    gameId && gameId !== 'aggregate' ? (savedGames.find((g) => g.id === gameId) ?? null) : null;
-  const aggregateGames = aggregateGameIds
-    .map((id) => savedGames.find((game) => game.id === id))
-    .filter((game) => game != null);
+  const aggregateGameIdsParamValue = gameId === 'aggregate' ? (aggregateGameIdsParam ?? '') : '';
+  const aggregateGameIds = aggregateGameIdsParamValue.split(',').filter((id) => id.length > 0);
+  const { data: rawGame = null } = useAdvancedGame(gameId !== 'aggregate' ? gameId : undefined);
+  const { data: aggregateGames = [] } = useAdvancedGames(aggregateGameIds);
   let analyticsGame: ReturnType<typeof buildAnalyticsGame> | null;
   if (gameId === 'aggregate') {
     analyticsGame = aggregateAnalyticsGames(aggregateGames.map(buildAnalyticsGame));

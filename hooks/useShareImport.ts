@@ -1,6 +1,7 @@
 import { fetchPayload, SharedPayload } from '@/lib/sharing';
 import { SavedGame, SavedTeam } from '@/lib/storage';
 import type { AdvancedTrackedGame } from '@/lib/advancedTracking/types';
+import type { AdvancedGameSummary } from '@/lib/advancedTracking/summary';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { supabase } from '@/lib/supabase';
 import { useGameStore } from '@/store/gameStore';
@@ -34,7 +35,7 @@ export type ShareImportState =
 function deriveImportState(
   payload: SharedPayload,
   savedGames: SavedGame[],
-  advancedSavedGames: AdvancedTrackedGame[],
+  advancedGameSummaries: AdvancedGameSummary[],
   savedTeams: SavedTeam[],
 ): ShareImportState {
   if (payload.type === 'game') {
@@ -43,12 +44,12 @@ function deriveImportState(
   }
 
   if (payload.type === 'advanced-game') {
-    const isUpdate = advancedSavedGames.some((g) => g.id === payload.data.id);
+    const isUpdate = advancedGameSummaries.some((g) => g.id === payload.data.id);
     return { status: 'preview-advanced-game', payload, isUpdate };
   }
 
   if (payload.type === 'advanced-games') {
-    const existingIds = new Set(advancedSavedGames.map((g) => g.id));
+    const existingIds = new Set(advancedGameSummaries.map((g) => g.id));
     const updateCount = payload.data.filter((g) => existingIds.has(g.id)).length;
     return { status: 'preview-advanced-games', payload, games: payload.data, updateCount };
   }
@@ -68,7 +69,7 @@ function deriveImportState(
 
 export function useShareImport(shareId: string | undefined) {
   const { savedGames, savedTeams } = useGameStore();
-  const { savedGames: advancedSavedGames } = useAdvancedTrackingStore();
+  const advancedGameSummaries = useAdvancedTrackingStore((state) => state.savedGameSummaries);
   // Only set after a user action (import confirmed/cancelled) to override the derived state
   const [doneState, setDoneState] = useState<ShareImportState | null>(null);
 
@@ -92,7 +93,7 @@ export function useShareImport(shareId: string | undefined) {
       message: 'Could not load shared data. The link may have expired.',
     };
   } else if (query.data) {
-    importState = deriveImportState(query.data, savedGames, advancedSavedGames, savedTeams);
+    importState = deriveImportState(query.data, savedGames, advancedGameSummaries, savedTeams);
   }
 
   return { isPending: query.isPending, importState, setImportState: setDoneState };

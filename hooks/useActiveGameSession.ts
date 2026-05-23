@@ -14,7 +14,7 @@ export function useActiveGameSession(): ActiveGameSession {
   const activeGameType = useGameSessionStore((state) => state.activeGameType);
   const activeAdvancedGameRoute = useAdvancedTrackingStore((state) => {
     const activeAdvancedGame =
-      state.savedGames.find((game) => game.id === state.currentGameId) ?? null;
+      state.currentGame?.id === state.currentGameId ? state.currentGame : null;
     if (activeAdvancedGame?.status !== 'in_progress') {
       return null;
     }

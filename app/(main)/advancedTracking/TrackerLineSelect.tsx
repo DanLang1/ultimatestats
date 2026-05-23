@@ -15,10 +15,8 @@ import React from 'react';
 import { FOCUS_SIDE_ID } from './PreGameConfirm';
 
 export default function TrackerLineSelectScreen() {
-  const { currentGameId, savedGames, resetCurrentGame } = useAdvancedTrackingStore();
+  const { currentGame: game, resetCurrentGame } = useAdvancedTrackingStore();
   const { genderRatioEnabled, firstPointRatio } = useSettingsStore();
-
-  const game = savedGames.find((g) => g.id === currentGameId);
   if (!game) return <Redirect href="/advancedTracking/Tracker" />;
 
   const point = getCurrentPoint(game);

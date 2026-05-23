@@ -3,6 +3,7 @@ import { getGameDisplayTimestamp } from '@/lib/savedGameUtils';
 import { SavedGame, SavedTeam } from '@/lib/storage';
 import { AdvancedTrackedGame } from '@/lib/advancedTracking/types';
 import { getGameScore } from '@/lib/advancedTracking/trackingUtils';
+import type { AdvancedGameSummary } from '@/lib/advancedTracking/summary';
 
 export type GameKind = 'basic' | 'advanced';
 
@@ -70,5 +71,18 @@ export function advancedGameToListItem(game: AdvancedTrackedGame): GameListItem 
     myScore,
     opponentScore,
     pointsTracked: game.points.length,
+  };
+}
+
+export function advancedGameSummaryToListItem(summary: AdvancedGameSummary): GameListItem {
+  return {
+    kind: 'advanced',
+    id: summary.id,
+    timestamp: summary.sortTimestamp,
+    myTeamName: summary.myTeamName,
+    opponentName: summary.opponentName,
+    myScore: summary.myScore,
+    opponentScore: summary.opponentScore,
+    pointsTracked: summary.pointsTracked,
   };
 }

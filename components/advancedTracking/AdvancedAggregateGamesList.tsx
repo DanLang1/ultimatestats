@@ -2,14 +2,7 @@ import { ThemedText } from '@/components/ThemedText';
 import { ScoreBadge } from '@/components/ui/ScoreBadge';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import {
-  getAdvancedGameTimestamp,
-  getAdvancedFocusTeamId,
-  getAdvancedFocusTeamName,
-  getAdvancedOpponentName,
-} from '@/lib/advancedTracking/advancedGameTeamUtils';
-import type { AdvancedTrackedGame } from '@/lib/advancedTracking/types';
-import { getGameScore } from '@/lib/advancedTracking/trackingUtils';
+import type { AdvancedGameSummary } from '@/lib/advancedTracking/summary';
 import { formatDate } from '@/lib/statsUtils';
 import { hasItems } from '@/lib/utils';
 import { Fonts } from '@/theme/theme';
@@ -18,7 +11,7 @@ import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 interface AdvancedAggregateGamesListProps {
-  games: AdvancedTrackedGame[];
+  games: AdvancedGameSummary[];
   selectedTeamId: string | null;
   selectedGameIds: Set<string>;
   onSelectTeam: (teamId: string) => void;
@@ -34,22 +27,21 @@ interface SideGroup {
   totalPoints: number;
 }
 
-function getSideGroups(games: AdvancedTrackedGame[]): SideGroup[] {
+function getSideGroups(games: AdvancedGameSummary[]): SideGroup[] {
   const groupMap = new Map<string, SideGroup>();
 
   for (const game of games) {
-    const score = getGameScore(game);
-    const teamId = getAdvancedFocusTeamId(game);
+    const teamId = game.focusSourceTeamId ?? game.focusSideId;
     const existing = groupMap.get(teamId);
     if (existing) {
       existing.gameCount++;
-      existing.totalPoints += score[game.focusSideId] ?? 0;
+      existing.totalPoints += game.myScore;
     } else {
       groupMap.set(teamId, {
         id: teamId,
-        name: getAdvancedFocusTeamName(game),
+        name: game.myTeamName,
         gameCount: 1,
-        totalPoints: score[game.focusSideId] ?? 0,
+        totalPoints: game.myScore,
       });
     }
   }
@@ -87,8 +79,8 @@ export default function AdvancedAggregateGamesList({
 
   if (selectedTeamId) {
     const gamesForSide = games
-      .filter((game) => getAdvancedFocusTeamId(game) === selectedTeamId)
-      .sort((a, b) => getAdvancedGameTimestamp(b) - getAdvancedGameTimestamp(a));
+      .filter((game) => (game.focusSourceTeamId ?? game.focusSideId) === selectedTeamId)
+      .sort((a, b) => b.sortTimestamp - a.sortTimestamp);
     const visibleIds = gamesForSide.map((game) => game.id);
     const allVisibleSelected =
       hasItems(gamesForSide) && visibleIds.every((id) => selectedGameIds.has(id));
@@ -116,9 +108,6 @@ export default function AdvancedAggregateGamesList({
 
         <View style={styles.gamesList}>
           {gamesForSide.map((game) => {
-            const score = getGameScore(game);
-            const opponentSide = game.sides.find((side) => side.id !== game.focusSideId);
-            const opponentScore = opponentSide ? (score[opponentSide.id] ?? 0) : 0;
             const isSelected = selectedGameIds.has(game.id);
 
             return (
@@ -147,16 +136,12 @@ export default function AdvancedAggregateGamesList({
 
                 <View style={styles.gameInfo}>
                   <ThemedText style={[styles.opponentText, { color: palette.textInverse }]}>
-                    vs {getAdvancedOpponentName(game)}
+                    vs {game.opponentName}
                   </ThemedText>
                   <View style={styles.gameDetails}>
-                    <ScoreBadge
-                      score1={score[game.focusSideId] ?? 0}
-                      score2={opponentScore}
-                      size="small"
-                    />
+                    <ScoreBadge score1={game.myScore} score2={game.opponentScore} size="small" />
                     <ThemedText style={[styles.dateText, { color: palette.textMuted }]}>
-                      {formatDate(getAdvancedGameTimestamp(game))}
+                      {formatDate(game.sortTimestamp)}
                     </ThemedText>
                   </View>
                 </View>
