@@ -41,6 +41,11 @@ export const TrackerHomeMenu = ({
     router.push('/ViewStats');
   };
 
+  const handleGameFormat = () => {
+    onClose();
+    router.push('/GameFormat');
+  };
+
   const handleGameClockPause = () => {
     onClose();
     onGameClockPause();
@@ -149,6 +154,29 @@ export const TrackerHomeMenu = ({
             </View>
             <ThemedText style={[styles.actionLabel, { color: palette.textInverse }]}>
               Pause Game
+            </ThemedText>
+          </Pressable>
+
+          <Pressable
+            testID="tracker-menu-game-format"
+            onPress={handleGameFormat}
+            style={({ pressed }) => [
+              styles.action,
+              {
+                backgroundColor: palette.overlay05,
+                borderColor: palette.overlay15,
+              },
+              pressed && { opacity: 0.7 },
+            ]}>
+            <View style={[styles.iconWrap, { backgroundColor: palette.accentOverlay10 }]}>
+              <MaterialCommunityIcons
+                name="clipboard-text-outline"
+                size={scaleBySizeClass(20, sizeClass)}
+                color={palette.accent}
+              />
+            </View>
+            <ThemedText style={[styles.actionLabel, { color: palette.textInverse }]}>
+              Game Format
             </ThemedText>
           </Pressable>
 

@@ -123,3 +123,35 @@ export function canTriggerHalftimeEarly(state: HalftimeEarlyGuardState): boolean
   const lastEvent = state.events[state.events.length - 1];
   return isHalftimeEarlyRelevant(state) && lastEvent?.type === 'goal';
 }
+
+export interface HalftimeScoreResult {
+  score: number;
+  triggeredEarly: boolean;
+}
+
+export function getActualHalftimeScore(
+  events: GameEvent[],
+  scheduledHalftimeScore: number,
+): HalftimeScoreResult | null {
+  const halftimeGoalIndex = events.findIndex(
+    (event) => event.type === 'goal' && event.triggeredHalftime === true,
+  );
+  if (halftimeGoalIndex < 0) return null;
+
+  let team1Score = 0;
+  let team2Score = 0;
+
+  for (let i = 0; i <= halftimeGoalIndex; i++) {
+    const event = events[i];
+    if (event.type !== 'goal') continue;
+    if (event.team === 'team1') team1Score++;
+    else team2Score++;
+  }
+
+  const maxScore = Math.max(team1Score, team2Score);
+
+  return {
+    score: maxScore,
+    triggeredEarly: maxScore < scheduledHalftimeScore,
+  };
+}

@@ -1,5 +1,5 @@
-import HelpContent from '@/components/HelpContent';
 import { HalfIndicator } from '@/components/game-info/HalfIndicator';
+import HelpContent from '@/components/HelpContent';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { AlertModal } from '@/components/ui/AlertModal';
@@ -110,6 +110,22 @@ export default function GameInfoScreen() {
         onBack={() => router.back()}
         titleColor={palette.textMuted}
         backButtonBackgroundColor={palette.overlay10}
+        rightSlot={
+          <Pressable
+            onPress={() => router.push('/GameFormat')}
+            style={({ pressed }) => [
+              styles.headerIconButton,
+              { backgroundColor: palette.overlay10 },
+              pressed && styles.headerIconButtonPressed,
+            ]}
+            hitSlop={12}>
+            <MaterialCommunityIcons
+              name="clipboard-text-outline"
+              size={actionIconSize}
+              color={palette.textInverse}
+            />
+          </Pressable>
+        }
       />
 
       <ScrollView contentContainerStyle={[styles.scrollContent]}>
@@ -462,44 +478,58 @@ export default function GameInfoScreen() {
           </View>
         )}
 
+        <View style={[styles.divider, { backgroundColor: palette.overlay10 }]} />
+
         {/* Action Section */}
         <View
           key={isLandscape ? 'actions-landscape' : 'actions-portrait'}
           style={styles.actionSection}>
-          {canTriggerHalftimeEarly && (
+          <ThemedText style={[styles.sectionTitle, { color: palette.textMuted }]}>
+            GAME ACTIONS
+          </ThemedText>
+          <View style={styles.actionButtonRow}>
+            {canTriggerHalftimeEarly && (
+              <Pressable
+                onPress={confirmHalftimeEarly}
+                style={({ pressed }) => [
+                  styles.actionButton,
+                  {
+                    backgroundColor: palette.accentOverlay10,
+                    borderColor: palette.accentOverlay30,
+                  },
+                  pressed && { backgroundColor: palette.accentOverlay15 },
+                ]}>
+                <View style={styles.actionIconSlot}>
+                  <MaterialCommunityIcons
+                    name="skip-next-circle"
+                    size={actionIconSize}
+                    color={palette.accent}
+                  />
+                </View>
+                <ThemedText style={[styles.actionButtonText, { color: palette.accent }]}>
+                  START 2ND HALF
+                </ThemedText>
+              </Pressable>
+            )}
             <Pressable
-              onPress={confirmHalftimeEarly}
+              onPress={confirmEndGame}
               style={({ pressed }) => [
                 styles.actionButton,
-                { backgroundColor: palette.warning + '10', borderColor: palette.warning + '20' },
-                pressed && { backgroundColor: palette.warning + '20' },
+                { backgroundColor: palette.accentOverlay10, borderColor: palette.accentOverlay30 },
+                pressed && { backgroundColor: palette.accentOverlay15 },
               ]}>
-              <MaterialCommunityIcons
-                name="skip-next-circle"
-                size={actionIconSize}
-                color={palette.warning}
-              />
-              <ThemedText style={[styles.actionButtonText, { color: palette.warning }]}>
-                START 2ND HALF EARLY
+              <View style={styles.actionIconSlot}>
+                <MaterialCommunityIcons
+                  name="flag-checkered"
+                  size={actionIconSize}
+                  color={palette.accent}
+                />
+              </View>
+              <ThemedText style={[styles.actionButtonText, { color: palette.accent }]}>
+                END GAME
               </ThemedText>
             </Pressable>
-          )}
-          <Pressable
-            onPress={confirmEndGame}
-            style={({ pressed }) => [
-              styles.actionButton,
-              { backgroundColor: palette.danger + '10', borderColor: palette.danger + '20' },
-              pressed && { backgroundColor: palette.danger + '20' },
-            ]}>
-            <MaterialCommunityIcons
-              name="flag-checkered"
-              size={actionIconSize}
-              color={palette.danger}
-            />
-            <ThemedText style={[styles.actionButtonText, { color: palette.danger }]}>
-              END GAME EARLY
-            </ThemedText>
-          </Pressable>
+          </View>
         </View>
 
         <View style={[styles.divider, { backgroundColor: palette.overlay10 }]} />
@@ -677,29 +707,42 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
       letterSpacing: 1.5,
       marginBottom: 16,
     },
-    actionSection: {
-      flexDirection: isLandscape ? 'row' : 'column',
+    headerIconButton: {
+      padding: scaleBySizeClass(8, sizeClass),
+      borderRadius: scaleBySizeClass(20, sizeClass),
+      alignItems: 'center',
       justifyContent: 'center',
-      alignItems: isLandscape ? undefined : 'stretch',
+    },
+    headerIconButtonPressed: {
+      opacity: 0.8,
+    },
+    actionSection: {
+      paddingBottom: 8,
+    },
+    actionButtonRow: {
+      flexDirection: 'row',
       gap: 12,
-      paddingTop: isLandscape ? 24 : 16,
-      paddingVertical: 8,
     },
     actionButton: {
+      flex: 1,
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
-      width: isLandscape ? undefined : '100%',
-      gap: 10,
+      gap: 8,
       paddingVertical: 12,
-      paddingHorizontal: 20,
+      paddingHorizontal: isLandscape ? 20 : 14,
       borderRadius: 12,
       borderWidth: 1,
     },
+    actionIconSlot: {
+      width: scaleBySizeClass(22, sizeClass),
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
     actionButtonText: {
-      fontSize: scaleBySizeClass(14, sizeClass),
+      fontSize: scaleBySizeClass(isLandscape ? 14 : 12, sizeClass),
       fontFamily: Fonts.bold,
-      letterSpacing: 1,
+      letterSpacing: 0.8,
     },
     // Gender Ratio Section
     ratioSection: {
