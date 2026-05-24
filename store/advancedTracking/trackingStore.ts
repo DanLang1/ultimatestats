@@ -994,6 +994,7 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
         },
         partialize: (state) => ({
           currentGameId: state.currentGameId,
+          undoStack: state.undoStack,
         }),
       },
     ),

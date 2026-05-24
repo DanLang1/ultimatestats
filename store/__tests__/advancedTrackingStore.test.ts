@@ -122,6 +122,28 @@ describe('advancedTrackingStore', () => {
     );
   });
 
+  it('persists undo history for an active advanced game session', () => {
+    createGame();
+
+    useAdvancedTrackingStore.getState().recordPull({
+      lines: homeLinesAugust,
+      puller: untracked,
+      receiver: august,
+      result: 'inbound',
+    });
+
+    const undoStack = useAdvancedTrackingStore.getState().undoStack;
+    const advancedTrackingWrites = mockedAsyncStorage.setItem.mock.calls.filter(
+      ([key]) => key === 'ultimatestats_advanced_tracking',
+    );
+    const lastWrite = advancedTrackingWrites.at(-1);
+    expect(lastWrite).toBeDefined();
+
+    const persistedPayload = JSON.parse(lastWrite![1]);
+    expect(persistedPayload.state.undoStack).toEqual(undoStack);
+    expect(persistedPayload.state.undoStack).toHaveLength(1);
+  });
+
   it('derives halftimeAt as ceil(gameTo / 2)', () => {
     useAdvancedTrackingStore.getState().createGame({
       focusSideId: homeSideId,
