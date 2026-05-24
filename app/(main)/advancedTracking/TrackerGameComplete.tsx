@@ -76,15 +76,15 @@ export default function TrackerGameCompleteScreen() {
     ? 'Save the game and review stats'
     : 'Save the result and review stats';
 
-  const handleFinish = () => {
+  const handleFinish = async () => {
     const finishedGameId = game.id;
     if (isEarlyEndPending) {
       terminateGame('manual');
-      finishTerminatedGame();
+      await finishTerminatedGame();
     } else if (isTerminated) {
-      finishTerminatedGame();
+      await finishTerminatedGame();
     } else {
-      finalizeGame();
+      await finalizeGame();
     }
     finishActiveGameSession();
     router.replace({

@@ -65,15 +65,17 @@ export default function ImportScreen() {
   };
 
   const handleImportAdvancedGame = async (payload: AdvancedGamePayload) => {
-    setImportState({ status: 'done', type: 'advanced-game', gameId: payload.data.id });
-    await importAdvancedGame({ ...payload.data, importedAt: Date.now() });
+    const game = { ...payload.data, importedAt: Date.now() };
+    await importAdvancedGame(game);
+    setImportState({ status: 'done', type: 'advanced-game', gameId: game.id });
   };
 
   const handleImportAdvancedGames = async (games: AdvancedTrackedGame[]) => {
-    setImportState({ status: 'done', type: 'advanced-games', count: games.length });
     for (const game of games) {
-      await importAdvancedGame({ ...game, importedAt: Date.now() });
+      const importedGame = { ...game, importedAt: Date.now() };
+      await importAdvancedGame(importedGame);
     }
+    setImportState({ status: 'done', type: 'advanced-games', count: games.length });
   };
 
   const handleImportGames = async (games: SavedGame[]) => {

@@ -54,7 +54,6 @@ function resetStore() {
   useAdvancedTrackingStore.setState({
     currentGameId: null,
     currentGame: null,
-    savedGameSummaries: [],
     undoStack: [],
   });
 }
@@ -317,7 +316,7 @@ describe('advancedTrackingStore — edge cases', () => {
   });
 
   describe('finalizeGame edge cases', () => {
-    it('throws when game is not over (score below gameTo)', () => {
+    it('throws when game is not over (score below gameTo)', async () => {
       createGame(15);
       useAdvancedTrackingStore.getState().recordPull({
         lines: [{ sideId: homeSideId, participantIds: [august.participantId] }],
@@ -331,12 +330,12 @@ describe('advancedTrackingStore — edge cases', () => {
         result: 'goal',
       });
 
-      expect(() => useAdvancedTrackingStore.getState().finalizeGame()).toThrow(
+      await expect(useAdvancedTrackingStore.getState().finalizeGame()).rejects.toThrow(
         'Cannot finalize game before it is over.',
       );
     });
 
-    it('throws when game is tied at gameTo (needs to win by 1)', () => {
+    it('throws when game is tied at gameTo (needs to win by 1)', async () => {
       createGame(1);
       // Home scores
       useAdvancedTrackingStore.getState().recordPull({
@@ -363,12 +362,12 @@ describe('advancedTrackingStore — edge cases', () => {
         result: 'goal',
       });
 
-      expect(() => useAdvancedTrackingStore.getState().finalizeGame()).toThrow(
+      await expect(useAdvancedTrackingStore.getState().finalizeGame()).rejects.toThrow(
         'Cannot finalize game before it is over.',
       );
     });
 
-    it('succeeds when score is ahead by 1 at gameTo', () => {
+    it('succeeds when score is ahead by 1 at gameTo', async () => {
       createGame(1);
       useAdvancedTrackingStore.getState().recordPull({
         lines: [{ sideId: homeSideId, participantIds: [august.participantId] }],
@@ -382,7 +381,7 @@ describe('advancedTrackingStore — edge cases', () => {
         result: 'goal',
       });
 
-      expect(() => useAdvancedTrackingStore.getState().finalizeGame()).not.toThrow();
+      await expect(useAdvancedTrackingStore.getState().finalizeGame()).resolves.toBeUndefined();
       expect(useAdvancedTrackingStore.getState().currentGameId).toBeNull();
       expect(useAdvancedTrackingStore.getState().currentGame!.status).toBe('final');
     });

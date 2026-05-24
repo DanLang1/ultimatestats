@@ -8,8 +8,8 @@ import {
 } from '@/components/ui/ResponsiveHeaderActions';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { ShareConfirmModal } from '@/components/ui/ShareConfirmModal';
-import { useAdvancedGame } from '@/hooks/advancedTracking/useAdvancedGameQueries';
 import { useTheme } from '@/context/ThemeContext';
+import { useAdvancedGame } from '@/hooks/advancedTracking/useAdvancedGameQueries';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { generateAdvancedGameCSV } from '@/lib/advancedTracking/advancedCSVUtils';
 import { buildAnalyticsGame, getFinalScores } from '@/lib/advancedTracking/buildAnalyticsGame';
@@ -27,7 +27,7 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { File, Paths } from 'expo-file-system';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import React, { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 type AdvancedGameStatsOrigin = 'gameComplete';
 
@@ -41,12 +41,16 @@ export default function AdvancedGameStatsScreen() {
   const styles = createStyles(isLandscape, sizeClass);
   const { showAlert } = useAlert();
   const { deleteSavedGame } = useAdvancedTrackingStore();
-  const { data: rawGame = null } = useAdvancedGame(gameId);
+  const { data: rawGame, isLoading } = useAdvancedGame(gameId!);
   const [pendingShareAction, setPendingShareAction] = useState<(() => Promise<string>) | null>(
     null,
   );
 
   const analyticsGame = rawGame ? buildAnalyticsGame(rawGame) : null;
+  let emptyStateText = 'Game not found.';
+  if (isLoading) {
+    emptyStateText = 'Loading game...';
+  }
 
   const handleBack = () => {
     if (from === 'gameComplete') {
@@ -57,7 +61,7 @@ export default function AdvancedGameStatsScreen() {
     router.back();
   };
 
-  if (!gameId || !rawGame || !analyticsGame) {
+  if (!gameId || isLoading || !rawGame || !analyticsGame) {
     return (
       <ThemedView style={[styles.container, { backgroundColor: palette.primary }]}>
         <Stack.Screen options={{ headerShown: false }} />
@@ -69,21 +73,27 @@ export default function AdvancedGameStatsScreen() {
           centerTitleInLandscape={false}
         />
         <View style={styles.centeredState}>
-          <MaterialCommunityIcons
-            name="alert-circle-outline"
-            size={scaleBySizeClass(42, sizeClass)}
-            color={palette.textMuted}
-          />
+          {isLoading ? (
+            <ActivityIndicator color={palette.accent} size="large" />
+          ) : (
+            <MaterialCommunityIcons
+              name="alert-circle-outline"
+              size={scaleBySizeClass(42, sizeClass)}
+              color={palette.textMuted}
+            />
+          )}
           <ThemedText style={[styles.stateText, { color: palette.textMuted }]}>
-            {!gameId ? 'Missing game link.' : 'Game not found.'}
+            {emptyStateText}
           </ThemedText>
-          <Pressable
-            onPress={() => router.replace('/SavedGameStats')}
-            style={[styles.recoverButton, { backgroundColor: palette.overlay10 }]}>
-            <ThemedText style={[styles.recoverButtonText, { color: palette.accent }]}>
-              Go to Saved Games
-            </ThemedText>
-          </Pressable>
+          {!isLoading && (
+            <Pressable
+              onPress={() => router.replace('/SavedGameStats')}
+              style={[styles.recoverButton, { backgroundColor: palette.overlay10 }]}>
+              <ThemedText style={[styles.recoverButtonText, { color: palette.accent }]}>
+                Go to Saved Games
+              </ThemedText>
+            </Pressable>
+          )}
         </View>
       </ThemedView>
     );

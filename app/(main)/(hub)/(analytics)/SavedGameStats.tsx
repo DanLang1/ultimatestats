@@ -9,6 +9,7 @@ import { ShareConfirmModal } from '@/components/ui/ShareConfirmModal';
 import SavedGamesBulkActions from '@/components/view-stats/SavedGamesBulkActions';
 import SavedGamesList from '@/components/view-stats/SavedGamesList';
 import { useTheme } from '@/context/ThemeContext';
+import { useAdvancedGameSummaries } from '@/hooks/advancedTracking/useAdvancedGameQueries';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { MAX_SHARE_GAMES } from '@/lib/constants';
 import {
@@ -21,24 +22,26 @@ import {
   runPendingShareAction,
   SHARE_DATA_UPLOAD_ERROR_MESSAGE,
 } from '@/lib/sharing/shareActionUtils';
+import { useSavedAdvancedGamesStore } from '@/store/advancedTracking/savedGamesStore';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { useGameStore } from '@/store/gameStore';
 import { useTournamentStore } from '@/store/tournamentStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router, Stack } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { ScrollView, StyleSheet } from 'react-native';
+
+const GAME_NAVIGATION_GUARD_MS = 750;
 
 export default function SavedGameStatsScreen() {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
   const styles = createStyles(sizeClass);
   const { savedGames, savedTeams, deleteSavedGames } = useGameStore();
-  const {
-    savedGameSummaries: advancedSavedGameSummaries,
-    deleteSavedGame: deleteAdvancedSavedGame,
-    loadGames: loadAdvancedGames,
-  } = useAdvancedTrackingStore();
+  const { data: advancedSavedGameSummaries = [] } = useAdvancedGameSummaries();
+  const { deleteSavedGame: deleteAdvancedSavedGame } = useAdvancedTrackingStore();
+  const loadAdvancedGame = useSavedAdvancedGamesStore((state) => state.loadGame);
+  const loadAdvancedGames = useSavedAdvancedGamesStore((state) => state.loadGames);
   const { showAlert } = useAlert();
   const { tournaments } = useTournamentStore();
   const [selectedSavedGameIds, setSelectedSavedGameIds] = useState<Set<string>>(new Set());
@@ -46,6 +49,7 @@ export default function SavedGameStatsScreen() {
   const [pendingShareAction, setPendingShareAction] = useState<(() => Promise<string>) | null>(
     null,
   );
+  const isNavigatingToGameRef = useRef(false);
 
   const basicItems = savedGames.map((g) => basicGameToListItem(g, savedTeams));
   const advancedItems = advancedSavedGameSummaries.map(advancedGameSummaryToListItem);
@@ -53,14 +57,31 @@ export default function SavedGameStatsScreen() {
   const selectedGames = allGames.filter((game) => selectedSavedGameIds.has(game.id));
   const selectedGameKind = selectedGames[0]?.kind ?? null;
 
-  const handleSelectGame = (game: GameListItem) => {
-    if (game.kind === 'advanced') {
-      router.push({
-        pathname: '/advancedTracking/analytics/[gameId]',
-        params: { gameId: game.id },
-      });
-    } else {
+  const releaseNavigationGuard = () => {
+    setTimeout(() => {
+      isNavigatingToGameRef.current = false;
+    }, GAME_NAVIGATION_GUARD_MS);
+  };
+
+  const handleSelectGame = async (game: GameListItem) => {
+    if (isNavigatingToGameRef.current) return;
+
+    isNavigatingToGameRef.current = true;
+
+    try {
+      if (game.kind === 'advanced') {
+        await loadAdvancedGame(game.id);
+
+        router.push({
+          pathname: '/advancedTracking/analytics/[gameId]',
+          params: { gameId: game.id },
+        });
+        return;
+      }
+
       router.push({ pathname: '/saved-games/[gameId]', params: { gameId: game.id } });
+    } finally {
+      releaseNavigationGuard();
     }
   };
 

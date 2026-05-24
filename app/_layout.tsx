@@ -1,9 +1,9 @@
 import { AlertProvider } from '@/components/ui/AlertProvider';
-import { DEFAULT_QUERY_STALE_TIME_MS } from '@/lib/constants';
 import { loadPersistedTheme, ThemeProvider, useTheme } from '@/context/ThemeContext';
 import { useOrientationLock } from '@/hooks/useOrientationLock';
+import { queryClient } from '@/lib/queryClient';
 import { useSettingsStore } from '@/store/settingsStore';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { requireOptionalNativeModule } from 'expo';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -23,15 +23,6 @@ if (__DEV__) {
     showsAtLaunch: false,
   });
 }
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: false,
-      staleTime: DEFAULT_QUERY_STALE_TIME_MS,
-    },
-  },
-});
 
 // KEEP THIS: If we need to suppress the deep link logs, this is how
 // Think it's just a dev issue, won't happen in prod

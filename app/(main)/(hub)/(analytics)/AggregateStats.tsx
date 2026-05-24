@@ -14,7 +14,10 @@ import AggregateBottomBar from '@/components/view-stats/AggregateBottomBar';
 import AggregateGamesList from '@/components/view-stats/AggregateGamesList';
 import StatsContent from '@/components/view-stats/StatsContent';
 import { useTheme } from '@/context/ThemeContext';
-import { useAdvancedGames } from '@/hooks/advancedTracking/useAdvancedGameQueries';
+import {
+  useAdvancedGameSummaries,
+  useAdvancedGames,
+} from '@/hooks/advancedTracking/useAdvancedGameQueries';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { aggregateAnalyticsGames } from '@/lib/advancedTracking/aggregateAnalyticsGames';
 import { generateAggregateAdvancedCSV } from '@/lib/advancedTracking/advancedCSVUtils';
@@ -29,7 +32,6 @@ import {
 } from '@/lib/sharing/shareActionUtils';
 import { generateAggregateCSV } from '@/lib/statsUtils';
 import { GameEvent, Player, SavedGame } from '@/lib/storage';
-import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { useGameStore } from '@/store/gameStore';
 import { useTournamentStore } from '@/store/tournamentStore';
 import { Fonts } from '@/theme/theme';
@@ -47,7 +49,7 @@ export default function AggregateStatsScreen() {
   const styles = createStyles(isLandscape, sizeClass);
   const { showAlert } = useAlert();
   const { savedGames, savedTeams, updateSavedGameTournament } = useGameStore();
-  const { savedGameSummaries: advancedSavedGameSummaries } = useAdvancedTrackingStore();
+  const { data: advancedSavedGameSummaries = [] } = useAdvancedGameSummaries();
   const { tournaments } = useTournamentStore();
   const [aggregateMode, setAggregateMode] = useState<AggregateMode>('basic');
   const [selectedTeam, setSelectedTeam] = useState<string | null>(null);

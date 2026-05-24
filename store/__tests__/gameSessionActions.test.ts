@@ -55,7 +55,6 @@ function resetStores() {
   useAdvancedTrackingStore.setState({
     currentGameId: null,
     currentGame: null,
-    savedGameSummaries: [],
     undoStack: [],
     isHalftimeBreakActive: false,
   });

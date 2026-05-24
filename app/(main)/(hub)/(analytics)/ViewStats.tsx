@@ -11,6 +11,7 @@ import AnalyticsShortcutCard from '@/components/view-stats/AnalyticsShortcutCard
 import ShowcaseHintBanner from '@/components/view-stats/ShowcaseHintBanner';
 import StatsContent from '@/components/view-stats/StatsContent';
 import { useTheme } from '@/context/ThemeContext';
+import { useAdvancedGameSummaries } from '@/hooks/advancedTracking/useAdvancedGameQueries';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { buildAnalyticsGame, getFinalScores } from '@/lib/advancedTracking/buildAnalyticsGame';
 import { shareFileAndDelete } from '@/lib/shareFileAndDelete';
@@ -51,9 +52,8 @@ export default function ViewStatsScreen() {
   } = useGameStore();
   const { currentGameId: advancedCurrentGameId, currentGame: currentAdvancedGame } =
     useAdvancedTrackingStore();
-  const advancedSavedGameCount = useAdvancedTrackingStore(
-    (state) => state.savedGameSummaries.length,
-  );
+  const { data: advancedSavedGameSummaries = [] } = useAdvancedGameSummaries();
+  const advancedSavedGameCount = advancedSavedGameSummaries.length;
   const activeAdvancedGame =
     advancedCurrentGameId != null && currentAdvancedGame?.id === advancedCurrentGameId
       ? currentAdvancedGame

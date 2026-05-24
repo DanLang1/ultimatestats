@@ -32,17 +32,7 @@ import {
   ADVANCED_TRACKING_SCHEMA_VERSION,
   AdvancedTrackedGame,
 } from '@/lib/advancedTracking/types';
-import {
-  compareAdvancedGameSummaries,
-  deriveAdvancedGameSummary,
-} from '@/lib/advancedTracking/summary';
-import {
-  deleteAdvancedGameRecord,
-  loadAdvancedGame,
-  loadAdvancedGames,
-  loadAdvancedGameSummaries,
-  upsertAdvancedGame,
-} from '@/lib/advancedTracking/storage';
+import { useSavedAdvancedGamesStore } from '@/store/advancedTracking/savedGamesStore';
 import { generateId } from '@/lib/utils';
 import { Draft } from 'immer';
 import {
@@ -64,17 +54,6 @@ function getCurrentGame(state: GameLookupState): AdvancedTrackedGame {
     throw new Error(`currentGameId "${state.currentGameId}" not loaded.`);
   }
   return state.currentGame;
-}
-
-function updateSummaryState(state: Draft<AdvancedTrackingState>, game: AdvancedTrackedGame) {
-  const summary = deriveAdvancedGameSummary(game);
-  const idx = state.savedGameSummaries.findIndex((candidate) => candidate.id === summary.id);
-  if (idx >= 0) {
-    state.savedGameSummaries[idx] = summary;
-  } else {
-    state.savedGameSummaries.push(summary);
-  }
-  state.savedGameSummaries.sort(compareAdvancedGameSummaries);
 }
 
 function pushUndoEntry(state: Draft<AdvancedTrackingState>, entry: AdvancedTrackingUndoEntry) {
@@ -120,44 +99,15 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
       (set, get) => ({
         currentGameId: null,
         currentGame: null,
-        savedGameSummaries: [],
         undoStack: [],
         isHalftimeBreakActive: false,
-
-        loadSavedGameSummaries: async () => {
-          const summaries = await loadAdvancedGameSummaries();
-          set((state) => {
-            state.savedGameSummaries = summaries;
-          });
-        },
-
-        loadGame: async (gameId) => {
-          const inMemoryGame = get().currentGame;
-          if (inMemoryGame?.id === gameId) {
-            return inMemoryGame;
-          }
-          const game = await loadAdvancedGame(gameId);
-          return game;
-        },
-
-        loadGames: async (gameIds) => {
-          const inMemoryGame = get().currentGame;
-          const loadedGames = await loadAdvancedGames(gameIds);
-          if (inMemoryGame == null || !gameIds.includes(inMemoryGame.id)) {
-            return loadedGames;
-          }
-          return [...loadedGames.filter((game) => game.id !== inMemoryGame.id), inMemoryGame];
-        },
 
         loadCurrentGame: async () => {
           const currentGameId = get().currentGameId;
           if (currentGameId == null) return null;
-          const game = await loadAdvancedGame(currentGameId);
+          const game = await useSavedAdvancedGamesStore.getState().loadGame(currentGameId);
           set((state) => {
             state.currentGame = game;
-            if (game != null) {
-              updateSummaryState(state, game);
-            }
           });
           return game;
         },
@@ -219,7 +169,6 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
             state.currentGameId = gameId;
             state.undoStack = [];
             state.isHalftimeBreakActive = false;
-            updateSummaryState(state, game);
           });
 
           return gameId;
@@ -228,19 +177,16 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
         resetCurrentGame: () => {
           const gameId = get().currentGameId;
           set((state) => {
-            if (gameId != null) {
-              state.savedGameSummaries = state.savedGameSummaries.filter((g) => g.id !== gameId);
-            }
             state.currentGame = null;
             state.currentGameId = null;
             state.undoStack = [];
           });
           if (gameId != null) {
-            void deleteAdvancedGameRecord(gameId);
+            void useSavedAdvancedGamesStore.getState().deleteGame(gameId);
           }
         },
 
-        finalizeGame: () => {
+        finalizeGame: async () => {
           const now = Date.now();
           const game = getCurrentGame(get());
           if (!isAdvancedGameOver(game)) {
@@ -254,8 +200,12 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
             const liveGame = getCurrentGame(state);
             liveGame.status = 'final';
             liveGame.updatedAt = now;
-            // Keep currentGame in memory so the post-finish analytics route can read it
-            // while the SQLite autosave settles.
+          });
+          const gameToPersist = get().currentGame;
+          if (gameToPersist != null) {
+            await useSavedAdvancedGamesStore.getState().saveGame(gameToPersist);
+          }
+          set((state) => {
             state.currentGameId = null;
             state.undoStack = [];
           });
@@ -271,14 +221,18 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
           });
         },
 
-        finishTerminatedGame: () => {
+        finishTerminatedGame: async () => {
           set((state) => {
             const liveGame = getCurrentGame(state);
             if (liveGame.status !== 'terminated') {
               throw new Error('Cannot finish a game that has not been terminated.');
             }
-            // Keep currentGame in memory so the post-finish analytics route can read it
-            // while the SQLite autosave settles.
+          });
+          const gameToPersist = get().currentGame;
+          if (gameToPersist != null) {
+            await useSavedAdvancedGamesStore.getState().saveGame(gameToPersist);
+          }
+          set((state) => {
             state.currentGameId = null;
             state.undoStack = [];
           });
@@ -1011,9 +965,8 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
         },
 
         importAdvancedGame: async (game) => {
-          await upsertAdvancedGame(game);
+          await useSavedAdvancedGamesStore.getState().saveGame(game);
           set((state) => {
-            updateSummaryState(state, game);
             if (state.currentGameId === game.id) {
               state.currentGame = game;
             }
@@ -1021,11 +974,8 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
         },
 
         deleteSavedGame: async (gameId) => {
-          await deleteAdvancedGameRecord(gameId);
+          await useSavedAdvancedGamesStore.getState().deleteGame(gameId);
           set((state) => {
-            state.savedGameSummaries = state.savedGameSummaries.filter(
-              (game) => game.id !== gameId,
-            );
             if (state.currentGameId === gameId) {
               state.currentGameId = null;
               state.currentGame = null;
@@ -1050,25 +1000,17 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
   ),
 );
 
-let lastPersistedGameRef: AdvancedTrackedGame | null = null;
+let lastPersistedGameStamp: string | null = null;
 
 useAdvancedTrackingStore.subscribe((state) => {
-  if (state.currentGame == null || state.currentGame === lastPersistedGameRef) {
+  const game = state.currentGame;
+  if (game == null) {
     return;
   }
-  lastPersistedGameRef = state.currentGame;
-  const game = state.currentGame;
-  void upsertAdvancedGame(game).then((summary) => {
-    const summaries = [...useAdvancedTrackingStore.getState().savedGameSummaries];
-    const idx = summaries.findIndex((candidate) => candidate.id === summary.id);
-    if (idx >= 0) {
-      summaries[idx] = summary;
-    } else {
-      summaries.push(summary);
-    }
-    summaries.sort(compareAdvancedGameSummaries);
-    useAdvancedTrackingStore.setState({ savedGameSummaries: summaries });
-  });
+  const nextStamp = `${game.id}:${game.updatedAt}`;
+  if (nextStamp === lastPersistedGameStamp) {
+    return;
+  }
+  lastPersistedGameStamp = nextStamp;
+  void useSavedAdvancedGamesStore.getState().saveGame(game);
 });
-
-void useAdvancedTrackingStore.getState().loadSavedGameSummaries();

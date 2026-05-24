@@ -10,16 +10,16 @@ import { Fonts } from '@/theme/theme';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import React from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 
 export default function AdvancedGameTimelineScreen() {
   const { gameId } = useLocalSearchParams<{ gameId?: string }>();
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
   const styles = createStyles(sizeClass);
-  const { data: rawGame = null } = useAdvancedGame(gameId);
+  const { data: rawGame, isLoading } = useAdvancedGame(gameId!);
 
-  if (!gameId) {
+  if (isLoading || !rawGame) {
     return (
       <ThemedView style={[styles.container, { backgroundColor: palette.primary }]}>
         <Stack.Screen options={{ headerShown: false }} />
@@ -40,47 +40,17 @@ export default function AdvancedGameTimelineScreen() {
           <View style={styles.headerSpacer} />
         </View>
         <View style={styles.centeredState}>
-          <MaterialCommunityIcons
-            name="alert-circle-outline"
-            size={scaleBySizeClass(42, sizeClass)}
-            color={palette.textMuted}
-          />
-          <ThemedText style={[styles.stateText, { color: palette.textMuted }]}>
-            Missing game link.
-          </ThemedText>
-        </View>
-      </ThemedView>
-    );
-  }
-
-  if (!rawGame) {
-    return (
-      <ThemedView style={[styles.container, { backgroundColor: palette.primary }]}>
-        <Stack.Screen options={{ headerShown: false }} />
-        <View style={styles.header}>
-          <Pressable
-            onPress={() => router.back()}
-            style={[styles.backButton, { backgroundColor: palette.overlay10 }]}
-            hitSlop={12}>
+          {isLoading ? (
+            <ActivityIndicator color={palette.accent} size="large" />
+          ) : (
             <MaterialCommunityIcons
-              name="arrow-left"
-              size={scaleBySizeClass(24, sizeClass)}
-              color={palette.textInverse}
+              name="alert-circle-outline"
+              size={scaleBySizeClass(42, sizeClass)}
+              color={palette.textMuted}
             />
-          </Pressable>
-          <ThemedText style={[styles.headerTitle, { color: palette.textMuted }]}>
-            TIMELINE
-          </ThemedText>
-          <View style={styles.headerSpacer} />
-        </View>
-        <View style={styles.centeredState}>
-          <MaterialCommunityIcons
-            name="alert-circle-outline"
-            size={scaleBySizeClass(42, sizeClass)}
-            color={palette.textMuted}
-          />
+          )}
           <ThemedText style={[styles.stateText, { color: palette.textMuted }]}>
-            Game not found.
+            {isLoading ? 'Loading game...' : 'Game not found.'}
           </ThemedText>
         </View>
       </ThemedView>

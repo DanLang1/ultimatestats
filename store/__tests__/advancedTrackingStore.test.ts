@@ -68,7 +68,6 @@ function resetStore() {
   useAdvancedTrackingStore.setState({
     currentGameId: null,
     currentGame: null,
-    savedGameSummaries: [],
     undoStack: [],
     isHalftimeBreakActive: false,
   });
@@ -300,10 +299,10 @@ describe('advancedTrackingStore', () => {
     expect(currentGame).toBeNull();
   });
 
-  it('finalizeGame throws if the game has not reached a valid game-over state', () => {
+  it('finalizeGame throws if the game has not reached a valid game-over state', async () => {
     createGame();
 
-    expect(() => useAdvancedTrackingStore.getState().finalizeGame()).toThrow(
+    await expect(useAdvancedTrackingStore.getState().finalizeGame()).rejects.toThrow(
       'Cannot finalize game before it is over.',
     );
   });
@@ -319,10 +318,10 @@ describe('advancedTrackingStore', () => {
     expect(currentGame!.endReason).toBe('weather');
   });
 
-  it('finishTerminatedGame clears the current game pointer without deleting the saved game', () => {
+  it('finishTerminatedGame clears the current game pointer without deleting the saved game', async () => {
     const gameId = createGame();
     useAdvancedTrackingStore.getState().terminateGame('manual');
-    useAdvancedTrackingStore.getState().finishTerminatedGame();
+    await useAdvancedTrackingStore.getState().finishTerminatedGame();
     const { currentGameId, currentGame } = useAdvancedTrackingStore.getState();
 
     expect(currentGameId).toBeNull();
@@ -1351,7 +1350,7 @@ describe('advancedTrackingStore', () => {
     );
   });
 
-  it('finalizeGame succeeds when the score reaches the effective gameTo target', () => {
+  it('finalizeGame succeeds when the score reaches the effective gameTo target', async () => {
     createGame(1);
 
     useAdvancedTrackingStore.getState().recordPull({
@@ -1364,7 +1363,7 @@ describe('advancedTrackingStore', () => {
       .getState()
       .recordThrow({ thrower: august, result: 'goal', toPlayer: meves });
 
-    useAdvancedTrackingStore.getState().finalizeGame();
+    await useAdvancedTrackingStore.getState().finalizeGame();
 
     expect(useAdvancedTrackingStore.getState().currentGameId).toBeNull();
     expect(useAdvancedTrackingStore.getState().currentGame!.status).toBe('final');

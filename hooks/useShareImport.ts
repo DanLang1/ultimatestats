@@ -2,7 +2,7 @@ import { fetchPayload, SharedPayload } from '@/lib/sharing';
 import { SavedGame, SavedTeam } from '@/lib/storage';
 import type { AdvancedTrackedGame } from '@/lib/advancedTracking/types';
 import type { AdvancedGameSummary } from '@/lib/advancedTracking/summary';
-import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
+import { useAdvancedGameSummaries } from '@/hooks/advancedTracking/useAdvancedGameQueries';
 import { supabase } from '@/lib/supabase';
 import { useGameStore } from '@/store/gameStore';
 import { useQuery } from '@tanstack/react-query';
@@ -69,7 +69,7 @@ function deriveImportState(
 
 export function useShareImport(shareId: string | undefined) {
   const { savedGames, savedTeams } = useGameStore();
-  const advancedGameSummaries = useAdvancedTrackingStore((state) => state.savedGameSummaries);
+  const { data: advancedGameSummaries = [] } = useAdvancedGameSummaries();
   // Only set after a user action (import confirmed/cancelled) to override the derived state
   const [doneState, setDoneState] = useState<ShareImportState | null>(null);
 
