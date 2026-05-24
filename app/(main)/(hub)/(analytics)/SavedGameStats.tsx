@@ -9,7 +9,7 @@ import { ShareConfirmModal } from '@/components/ui/ShareConfirmModal';
 import SavedGamesBulkActions from '@/components/view-stats/SavedGamesBulkActions';
 import SavedGamesList from '@/components/view-stats/SavedGamesList';
 import { useTheme } from '@/context/ThemeContext';
-import { useAdvancedGameSummaries } from '@/hooks/advancedTracking/useAdvancedGameQueries';
+import { useCompletedAdvancedGameSummaries } from '@/hooks/advancedTracking/useAdvancedGameQueries';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { MAX_SHARE_GAMES } from '@/lib/constants';
 import {
@@ -38,7 +38,7 @@ export default function SavedGameStatsScreen() {
   const { sizeClass } = useLayout();
   const styles = createStyles(sizeClass);
   const { savedGames, savedTeams, deleteSavedGames } = useGameStore();
-  const { data: advancedSavedGameSummaries = [] } = useAdvancedGameSummaries();
+  const { data: completedAdvancedSavedGameSummaries = [] } = useCompletedAdvancedGameSummaries();
   const { deleteSavedGame: deleteAdvancedSavedGame } = useAdvancedTrackingStore();
   const loadAdvancedGame = useSavedAdvancedGamesStore((state) => state.loadGame);
   const loadAdvancedGames = useSavedAdvancedGamesStore((state) => state.loadGames);
@@ -52,7 +52,7 @@ export default function SavedGameStatsScreen() {
   const isNavigatingToGameRef = useRef(false);
 
   const basicItems = savedGames.map((g) => basicGameToListItem(g, savedTeams));
-  const advancedItems = advancedSavedGameSummaries.map(advancedGameSummaryToListItem);
+  const advancedItems = completedAdvancedSavedGameSummaries.map(advancedGameSummaryToListItem);
   const allGames = [...basicItems, ...advancedItems].sort((a, b) => b.timestamp - a.timestamp);
   const selectedGames = allGames.filter((game) => selectedSavedGameIds.has(game.id));
   const selectedGameKind = selectedGames[0]?.kind ?? null;

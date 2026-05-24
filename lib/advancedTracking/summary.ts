@@ -56,6 +56,10 @@ export function deriveAdvancedGameSummary(game: AdvancedTrackedGame): AdvancedGa
   };
 }
 
+export function isCompletedAdvancedGameSummary(summary: AdvancedGameSummary): boolean {
+  return summary.status === 'final' || summary.status === 'terminated';
+}
+
 export function compareAdvancedGameSummaries(
   a: AdvancedGameSummary,
   b: AdvancedGameSummary,

@@ -1,13 +1,13 @@
 import { getGameSessionStatus } from '@/lib/gameSessionUtils';
-import { useAdvancedGameSummaries } from '@/hooks/advancedTracking/useAdvancedGameQueries';
+import { useCompletedAdvancedGameSummaries } from '@/hooks/advancedTracking/useAdvancedGameQueries';
 import { useGameStore } from '@/store/gameStore';
 
 export function useDashboardSession() {
   const statTrackingEnabled = useGameStore((state) => state.statTrackingEnabled);
   const currentTeam = useGameStore((state) => state.currentTeam);
   const savedGames = useGameStore((state) => state.savedGames);
-  const { data: advancedSavedGameSummaries = [] } = useAdvancedGameSummaries();
-  const advancedSavedGameCount = advancedSavedGameSummaries.length;
+  const { data: completedAdvancedSavedGameSummaries = [] } = useCompletedAdvancedGameSummaries();
+  const advancedSavedGameCount = completedAdvancedSavedGameSummaries.length;
   const team1Score = useGameStore((state) => state.team1Score);
   const team2Score = useGameStore((state) => state.team2Score);
   const gameTo = useGameStore((state) => state.gameTo);

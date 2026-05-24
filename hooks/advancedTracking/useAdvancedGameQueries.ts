@@ -1,5 +1,8 @@
 import type { AdvancedTrackedGame } from '@/lib/advancedTracking/types';
-import type { AdvancedGameSummary } from '@/lib/advancedTracking/summary';
+import {
+  isCompletedAdvancedGameSummary,
+  type AdvancedGameSummary,
+} from '@/lib/advancedTracking/summary';
 import { useSavedAdvancedGamesStore } from '@/store/advancedTracking/savedGamesStore';
 import { useQuery } from '@tanstack/react-query';
 import { useShallow } from 'zustand/react/shallow';
@@ -47,6 +50,14 @@ export function useAdvancedGameSummaries(): AdvancedGameResult<AdvancedGameSumma
 
   const isLoading = !summariesLoaded && query.isLoading;
   return { data: summaries, isLoading, isFetching: query.isFetching };
+}
+
+export function useCompletedAdvancedGameSummaries(): AdvancedGameResult<AdvancedGameSummary[]> {
+  const result = useAdvancedGameSummaries();
+  return {
+    ...result,
+    data: result.data.filter(isCompletedAdvancedGameSummary),
+  };
 }
 
 export function useAdvancedGames(gameIds: string[]): AdvancedGameResult<AdvancedTrackedGame[]> {

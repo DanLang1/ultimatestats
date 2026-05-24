@@ -3,6 +3,7 @@ import {
   advancedGameToListItem,
   basicGameToListItem,
 } from '../gameListUtils';
+import { isCompletedAdvancedGameSummary } from '../advancedTracking/summary';
 import type { AdvancedGameSummary } from '../advancedTracking/summary';
 import type { AdvancedTrackedGame } from '../advancedTracking/types';
 import type { SavedGame, SavedTeam } from '../storage';
@@ -234,5 +235,13 @@ describe('advancedGameSummaryToListItem', () => {
       opponentScore: 10,
       pointsTracked: 22,
     });
+  });
+
+  it('identifies only finished advanced summaries as completed saved games', () => {
+    expect(isCompletedAdvancedGameSummary({ ...advancedSummary, status: 'final' })).toBe(true);
+    expect(isCompletedAdvancedGameSummary({ ...advancedSummary, status: 'terminated' })).toBe(true);
+    expect(isCompletedAdvancedGameSummary({ ...advancedSummary, status: 'in_progress' })).toBe(
+      false,
+    );
   });
 });
