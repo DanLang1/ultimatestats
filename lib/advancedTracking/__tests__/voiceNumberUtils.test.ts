@@ -19,6 +19,28 @@ describe('voiceNumberUtils', () => {
     );
   });
 
+  it('uses natural spoken numbers instead of digit-by-digit phrases', () => {
+    expect(buildVoiceNumberPhrases('21')).toEqual(
+      expect.arrayContaining(['21', 'number 21', 'twenty one', 'number twenty one']),
+    );
+    expect(buildVoiceNumberPhrases('21')).not.toEqual(
+      expect.arrayContaining(['two one', 'number two one']),
+    );
+    expect(buildVoiceNumberPhrases('33')).not.toEqual(
+      expect.arrayContaining(['three three', 'number three three']),
+    );
+  });
+
+  it('includes common speech-recognition aliases for single-digit numbers', () => {
+    expect(buildVoiceNumberPhrases('1')).toEqual(
+      expect.arrayContaining(['1', 'one', 'won', 'number won']),
+    );
+    expect(buildVoiceNumberPhrases('2')).toEqual(expect.arrayContaining(['two', 'to', 'too']));
+    expect(buildVoiceNumberPhrases('3')).toEqual(expect.arrayContaining(['three', 'tree']));
+    expect(buildVoiceNumberPhrases('4')).toEqual(expect.arrayContaining(['four', 'for', 'fore']));
+    expect(buildVoiceNumberPhrases('8')).toEqual(expect.arrayContaining(['eight', 'ate']));
+  });
+
   it('collapses leading-zero numbers to canonical numeric phrases', () => {
     expect(buildVoiceNumberPhrases('07')).toEqual(
       expect.arrayContaining(['7', 'number 7', 'seven', 'number seven']),

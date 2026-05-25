@@ -12,6 +12,8 @@ export type VoiceStatCommand = {
   toParticipantId: string;
 };
 
+export type VoiceCommandMatchKind = 'name' | 'number';
+
 export type VoiceCommandParseFailureReason =
   | 'empty'
   | 'ambiguous_player'
@@ -22,6 +24,8 @@ export type VoiceCommandParseResult =
   | {
       ok: true;
       command: VoiceStatCommand;
+      matchKind: VoiceCommandMatchKind;
+      matchedPhrase: string;
     }
   | {
       ok: false;
@@ -32,7 +36,7 @@ export type VoiceCommandParseResult =
 interface PlayerVoicePhrase {
   participantId: string;
   phrase: string;
-  matchKind: 'name' | 'number';
+  matchKind: VoiceCommandMatchKind;
 }
 
 export function buildVoiceContextualStrings(
@@ -97,11 +101,18 @@ function buildReceiverOnlyResult(
       kind: 'pass',
       toParticipantId: receiver.participantId,
     },
+    matchKind: receiver.matchKind,
+    matchedPhrase: receiver.matchedPhrase,
   };
 }
 
 type PlayerMatchResult =
-  | { status: 'match'; participantId: string }
+  | {
+      status: 'match';
+      participantId: string;
+      matchKind: VoiceCommandMatchKind;
+      matchedPhrase: string;
+    }
   | { status: 'ambiguous' }
   | { status: 'none' };
 
@@ -113,7 +124,13 @@ function matchPlayer(tokens: string[], phrases: PlayerVoicePhrase[]): PlayerMatc
   const uniqueParticipantIds = [...new Set(matches.map((match) => match.participantId))];
 
   if (uniqueParticipantIds.length === 1) {
-    return { status: 'match', participantId: uniqueParticipantIds[0] };
+    const [match] = matches;
+    return {
+      status: 'match',
+      participantId: uniqueParticipantIds[0],
+      matchKind: match.matchKind,
+      matchedPhrase: match.phrase,
+    };
   }
 
   if (uniqueParticipantIds.length > 1) {
@@ -122,6 +139,11 @@ function matchPlayer(tokens: string[], phrases: PlayerVoicePhrase[]): PlayerMatc
 
   if (tokens.some((token) => UNSUPPORTED_COMMAND_WORDS.has(token))) {
     return { status: 'none' };
+  }
+
+  const numberMatch = matchPlayerByBestEffortNumber(phrase, phrases);
+  if (numberMatch.status !== 'none') {
+    return numberMatch;
   }
 
   return matchPlayerByBestEffort(phrase, tokens, phrases);
@@ -177,7 +199,39 @@ function matchPlayerByBestEffort(
     return { status: 'ambiguous' };
   }
 
-  return { status: 'match', participantId: topCandidate.participantId };
+  return {
+    status: 'match',
+    participantId: topCandidate.participantId,
+    matchKind: 'name',
+    matchedPhrase: topCandidate.phrase,
+  };
+}
+
+function matchPlayerByBestEffortNumber(
+  phrase: string,
+  phrases: PlayerVoicePhrase[],
+): PlayerMatchResult {
+  const candidates = getBestEffortNumberScores(phrase, phrases)
+    .filter((candidate) => candidate.distance <= getMaxNumberEditDistance(phrase, candidate.phrase))
+    .sort((a, b) => a.distance - b.distance);
+
+  const [topCandidate, secondCandidate] = candidates;
+  if (topCandidate == null) return { status: 'none' };
+
+  if (
+    secondCandidate != null &&
+    topCandidate.participantId !== secondCandidate.participantId &&
+    topCandidate.distance === secondCandidate.distance
+  ) {
+    return { status: 'ambiguous' };
+  }
+
+  return {
+    status: 'match',
+    participantId: topCandidate.participantId,
+    matchKind: 'number',
+    matchedPhrase: topCandidate.phrase,
+  };
 }
 
 interface PlayerNameScore {
@@ -195,6 +249,29 @@ function getBestEffortNameScores(
 
   phrases
     .filter((candidate) => candidate.matchKind === 'name')
+    .forEach((candidate) => {
+      const currentBestMatch = bestMatchByParticipant.get(candidate.participantId);
+      const distance = getDamerauLevenshteinDistance(phrase, candidate.phrase);
+      if (currentBestMatch != null && currentBestMatch.distance <= distance) return;
+
+      bestMatchByParticipant.set(candidate.participantId, {
+        participantId: candidate.participantId,
+        phrase: candidate.phrase,
+        distance,
+      });
+    });
+
+  return [...bestMatchByParticipant.values()];
+}
+
+function getBestEffortNumberScores(
+  phrase: string,
+  phrases: PlayerVoicePhrase[],
+): PlayerNameScore[] {
+  const bestMatchByParticipant = new Map<string, PlayerNameScore>();
+
+  phrases
+    .filter((candidate) => candidate.matchKind === 'number')
     .forEach((candidate) => {
       const currentBestMatch = bestMatchByParticipant.get(candidate.participantId);
       const distance = getDamerauLevenshteinDistance(phrase, candidate.phrase);
@@ -228,6 +305,14 @@ function getMaxNameEditDistance(phrase: string, candidatePhrase: string): number
   if (shortestLength <= 8) return 2;
 
   return 3;
+}
+
+function getMaxNumberEditDistance(phrase: string, candidatePhrase: string): number {
+  const shortestLength = Math.min(phrase.length, candidatePhrase.length);
+  if (shortestLength <= 2) return 0;
+  if (shortestLength <= 5) return 1;
+
+  return 2;
 }
 
 function getDamerauLevenshteinDistance(left: string, right: string): number {

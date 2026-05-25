@@ -34,6 +34,19 @@ const TENS_WORDS: Record<number, string> = {
   90: 'ninety',
 };
 
+const SINGLE_DIGIT_VOICE_ALIASES: Record<number, string[]> = {
+  0: ['oh'],
+  1: ['won'],
+  2: ['to', 'too'],
+  3: ['tree'],
+  4: ['for', 'fore'],
+  5: [],
+  6: [],
+  7: [],
+  8: ['ate'],
+  9: [],
+};
+
 export function normalizePlayerNumber(value: string): string {
   const digits = value.replace(/\D/g, '').slice(0, 3);
   if (!digits) return '';
@@ -59,23 +72,23 @@ export function buildVoiceNumberPhrases(playerNumber: string | undefined): strin
   const phrases = new Set<string>([normalizedNumber]);
   const numericValue = Number(normalizedNumber);
   const numericPhrase = numberToWords(numericValue);
-  const digitPhrase = normalizedNumber
-    .split('')
-    .map((digit) => NUMBER_WORDS_UNDER_TWENTY[Number(digit)])
-    .join(' ');
 
   if (numericPhrase != null) {
     phrases.add(numericPhrase);
   }
-  if (digitPhrase) {
-    phrases.add(digitPhrase);
-  }
+  getVoiceAliasesForNumber(numericValue).forEach((alias) => {
+    phrases.add(alias);
+  });
 
   return [...phrases].flatMap((phrase) => {
     const normalizedPhrase = normalizeVoicePhrase(phrase);
     if (!normalizedPhrase) return [];
     return [normalizedPhrase, `number ${normalizedPhrase}`];
   });
+}
+
+function getVoiceAliasesForNumber(value: number): string[] {
+  return SINGLE_DIGIT_VOICE_ALIASES[value] ?? [];
 }
 
 function numberToWords(value: number): string | null {

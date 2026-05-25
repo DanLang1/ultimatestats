@@ -16,11 +16,12 @@ import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore
 import { Fonts } from '@/theme/theme';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const NEXT_POINT_BUTTON_HEIGHT = 62;
 const FOOTER_BOTTOM_PADDING = 48;
+const ANDROID_FOOTER_BOTTOM_PADDING = 20;
 const FOOTER_HORIZONTAL_PADDING = 12;
 const FOOTER_TOP_PADDING = 8;
 
@@ -112,12 +113,15 @@ export const TrackerActionFooter = ({
 };
 
 function createStyles(sizeClass: SizeClass, bottomInset: number) {
+  const footerBottomPadding =
+    Platform.OS === 'android' ? ANDROID_FOOTER_BOTTOM_PADDING : FOOTER_BOTTOM_PADDING;
+
   return StyleSheet.create({
     container: {
       position: 'relative',
       paddingHorizontal: FOOTER_HORIZONTAL_PADDING,
       paddingTop: FOOTER_TOP_PADDING,
-      paddingBottom: bottomInset + scaleBySizeClass(FOOTER_BOTTOM_PADDING, sizeClass),
+      paddingBottom: bottomInset + scaleBySizeClass(footerBottomPadding, sizeClass),
     },
     voiceStack: {
       gap: 8,

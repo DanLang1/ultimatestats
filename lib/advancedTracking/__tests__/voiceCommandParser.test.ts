@@ -18,14 +18,18 @@ const activeParticipants: VoiceParticipantContext[] = [
 
 describe('parseVoiceStatCommand', () => {
   it('parses receiver names', () => {
-    expect(parseVoiceStatCommand('Mark', activeParticipants)).toEqual({
+    expect(parseVoiceStatCommand('Mark', activeParticipants)).toMatchObject({
       ok: true,
       command: { kind: 'pass', toParticipantId: 'mark' },
+      matchKind: 'name',
+      matchedPhrase: 'mark',
     });
 
-    expect(parseVoiceStatCommand('Joe Ramirez', activeParticipants)).toEqual({
+    expect(parseVoiceStatCommand('Joe Ramirez', activeParticipants)).toMatchObject({
       ok: true,
       command: { kind: 'pass', toParticipantId: 'joe' },
+      matchKind: 'name',
+      matchedPhrase: 'joe ramirez',
     });
   });
 
@@ -69,7 +73,7 @@ describe('parseVoiceStatCommand', () => {
   });
 
   it('allows full names when first names are ambiguous', () => {
-    expect(parseVoiceStatCommand('Taylor Adams', activeParticipants)).toEqual({
+    expect(parseVoiceStatCommand('Taylor Adams', activeParticipants)).toMatchObject({
       ok: true,
       command: { kind: 'pass', toParticipantId: 'taylor-a' },
     });
@@ -90,19 +94,19 @@ describe('parseVoiceStatCommand', () => {
       { id: 'katy', name: 'Katy' },
     ];
 
-    expect(parseVoiceStatCommand('Bryan', participantsWithNameVariants)).toEqual({
+    expect(parseVoiceStatCommand('Bryan', participantsWithNameVariants)).toMatchObject({
       ok: true,
       command: { kind: 'pass', toParticipantId: 'brian' },
     });
-    expect(parseVoiceStatCommand('Ann', participantsWithNameVariants)).toEqual({
+    expect(parseVoiceStatCommand('Ann', participantsWithNameVariants)).toMatchObject({
       ok: true,
       command: { kind: 'pass', toParticipantId: 'anne' },
     });
-    expect(parseVoiceStatCommand('Sara', participantsWithNameVariants)).toEqual({
+    expect(parseVoiceStatCommand('Sara', participantsWithNameVariants)).toMatchObject({
       ok: true,
       command: { kind: 'pass', toParticipantId: 'sarah' },
     });
-    expect(parseVoiceStatCommand('Katie', participantsWithNameVariants)).toEqual({
+    expect(parseVoiceStatCommand('Katie', participantsWithNameVariants)).toMatchObject({
       ok: true,
       command: { kind: 'pass', toParticipantId: 'katy' },
     });
@@ -119,11 +123,11 @@ describe('parseVoiceStatCommand', () => {
       { id: 'zara', name: 'Zara' },
     ];
 
-    expect(parseVoiceStatCommand('Lane', participantsWithShortNames)).toEqual({
+    expect(parseVoiceStatCommand('Lane', participantsWithShortNames)).toMatchObject({
       ok: true,
       command: { kind: 'pass', toParticipantId: 'lang' },
     });
-    expect(parseVoiceStatCommand('Take', participantsWithShortNames)).toEqual({
+    expect(parseVoiceStatCommand('Take', participantsWithShortNames)).toMatchObject({
       ok: true,
       command: { kind: 'pass', toParticipantId: 'tate' },
     });
@@ -136,11 +140,11 @@ describe('parseVoiceStatCommand', () => {
       { id: 'casey', name: 'Casey Nguyen' },
     ];
 
-    expect(parseVoiceStatCommand('Rasmussen', participantsWithLastNames)).toEqual({
+    expect(parseVoiceStatCommand('Rasmussen', participantsWithLastNames)).toMatchObject({
       ok: true,
       command: { kind: 'pass', toParticipantId: 'jordan' },
     });
-    expect(parseVoiceStatCommand('Okafor', participantsWithLastNames)).toEqual({
+    expect(parseVoiceStatCommand('Okafor', participantsWithLastNames)).toMatchObject({
       ok: true,
       command: { kind: 'pass', toParticipantId: 'avery' },
     });
@@ -150,23 +154,77 @@ describe('parseVoiceStatCommand', () => {
     const participantsWithNumbers: VoiceParticipantContext[] = [
       { id: 'tate', name: 'Tate', number: '12' },
       { id: 'lang', name: 'Lang', number: '7' },
+      { id: 'piper', name: 'Piper', number: '1' },
+      { id: 'river', name: 'River', number: '2' },
+      { id: 'mika', name: 'Mika', number: '3' },
+      { id: 'noor', name: 'Noor', number: '4' },
     ];
 
-    expect(parseVoiceStatCommand('12', participantsWithNumbers)).toEqual({
+    expect(parseVoiceStatCommand('12', participantsWithNumbers)).toMatchObject({
       ok: true,
       command: { kind: 'pass', toParticipantId: 'tate' },
+      matchKind: 'number',
+      matchedPhrase: '12',
     });
-    expect(parseVoiceStatCommand('twelve', participantsWithNumbers)).toEqual({
+    expect(parseVoiceStatCommand('twelve', participantsWithNumbers)).toMatchObject({
       ok: true,
       command: { kind: 'pass', toParticipantId: 'tate' },
+      matchKind: 'number',
+      matchedPhrase: 'twelve',
     });
-    expect(parseVoiceStatCommand('number twelve', participantsWithNumbers)).toEqual({
+    expect(parseVoiceStatCommand('number twelve', participantsWithNumbers)).toMatchObject({
       ok: true,
       command: { kind: 'pass', toParticipantId: 'tate' },
+      matchKind: 'number',
+      matchedPhrase: 'number twelve',
     });
-    expect(parseVoiceStatCommand('seven', participantsWithNumbers)).toEqual({
+    expect(parseVoiceStatCommand('seven', participantsWithNumbers)).toMatchObject({
       ok: true,
       command: { kind: 'pass', toParticipantId: 'lang' },
+      matchKind: 'number',
+      matchedPhrase: 'seven',
+    });
+    expect(parseVoiceStatCommand('won', participantsWithNumbers)).toMatchObject({
+      ok: true,
+      command: { kind: 'pass', toParticipantId: 'piper' },
+      matchKind: 'number',
+    });
+    expect(parseVoiceStatCommand('to', participantsWithNumbers)).toMatchObject({
+      ok: true,
+      command: { kind: 'pass', toParticipantId: 'river' },
+      matchKind: 'number',
+    });
+    expect(parseVoiceStatCommand('tree', participantsWithNumbers)).toMatchObject({
+      ok: true,
+      command: { kind: 'pass', toParticipantId: 'mika' },
+      matchKind: 'number',
+    });
+    expect(parseVoiceStatCommand('for', participantsWithNumbers)).toMatchObject({
+      ok: true,
+      command: { kind: 'pass', toParticipantId: 'noor' },
+      matchKind: 'number',
+    });
+    expect(parseVoiceStatCommand('free', participantsWithNumbers)).toMatchObject({
+      ok: true,
+      command: { kind: 'pass', toParticipantId: 'mika' },
+      matchKind: 'number',
+    });
+  });
+
+  it('parses two-word player numbers', () => {
+    const participantsWithNumbers: VoiceParticipantContext[] = [
+      { id: 'maya', name: 'Maya', number: '33' },
+    ];
+
+    expect(parseVoiceStatCommand('thirty three', participantsWithNumbers)).toMatchObject({
+      ok: true,
+      command: { kind: 'pass', toParticipantId: 'maya' },
+      matchKind: 'number',
+      matchedPhrase: 'thirty three',
+    });
+    expect(parseVoiceStatCommand('three three', participantsWithNumbers)).toMatchObject({
+      ok: false,
+      reasonCode: 'unsupported_command',
     });
   });
 

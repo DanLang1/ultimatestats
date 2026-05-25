@@ -103,6 +103,11 @@ export function useVoiceStatCommands(input: UseVoiceStatCommandsInput): VoiceSta
     const androidRecognitionServicePackage = getAndroidRecognitionServicePackage();
     logVoiceDebug('start requested', {
       activeParticipantCount: input.activeParticipants.length,
+      activeParticipants: input.activeParticipants.map((participant) => ({
+        id: participant.id,
+        name: participant.name,
+        number: participant.number ?? null,
+      })),
       androidRecognitionServicePackage,
       contextualStrings,
       continuous: true,
@@ -242,6 +247,7 @@ export function useVoiceStatCommands(input: UseVoiceStatCommandsInput): VoiceSta
     logVoiceDebug('parse result', {
       isFinal: event.isFinal,
       ok: parseResult?.result.ok,
+      result: parseResult?.result,
       reasonCode: getParseFailureReasonCode(parseResult),
       transcript: parseResult?.transcript,
     });
@@ -268,7 +274,7 @@ export function useVoiceStatCommands(input: UseVoiceStatCommandsInput): VoiceSta
       }
 
       setStatus('unsupported');
-      setMessage(parseResult.result.reason);
+      setMessage(`Heard: ${parseResult.transcript}`);
       shouldListenRef.current = false;
       setIsArmed(false);
       clearListeningWindowTimeout();
@@ -428,7 +434,7 @@ function getVoiceFeedback(
     return { kind: 'heard', text: 'Listening' };
   }
 
-  return { kind: 'idle', text: 'Tap mic, say receiver' };
+  return { kind: 'idle', text: 'Tap mic, say number three' };
 }
 
 function getDisplayTranscript(results: ExpoSpeechRecognitionResult[]): string | null {
@@ -450,9 +456,26 @@ function parseBestVoiceStatCommand(
     .map((transcript) => ({
       transcript,
       result: parseVoiceStatCommand(transcript, activeParticipants),
-    }));
+    }))
+    .sort((left, right) => getVoiceParseCandidateScore(right) - getVoiceParseCandidateScore(left));
 
   return candidates.find((candidate) => candidate.result.ok) ?? candidates[0] ?? null;
+}
+
+function getVoiceParseCandidateScore(candidate: {
+  transcript: string;
+  result: ReturnType<typeof parseVoiceStatCommand>;
+}): number {
+  if (!candidate.result.ok) return 0;
+
+  const normalizedTranscriptLength = candidate.transcript
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean).length;
+  const matchedPhraseLength = candidate.result.matchedPhrase.split(/\s+/).filter(Boolean).length;
+  const matchKindWeight = candidate.result.matchKind === 'number' ? 100 : 50;
+
+  return matchKindWeight + matchedPhraseLength * 10 + normalizedTranscriptLength;
 }
 
 function getParseFailureReasonCode(
@@ -465,8 +488,7 @@ function getParseFailureReasonCode(
 
 function logVoiceDebug(event: string, data?: Record<string, unknown>) {
   if (!__DEV__) return;
-  // uncomment to add debug
-  //console.log('[voice]', event, data ?? '');
+  console.log('[voice]', event, data ?? '');
 }
 
 function getAndroidRecognitionServicePackage(): string | undefined {
