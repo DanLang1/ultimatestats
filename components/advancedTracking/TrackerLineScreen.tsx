@@ -7,7 +7,7 @@ import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { getLoadLineButtonState } from '@/lib/lineEditorUtils';
 import { Participant } from '@/lib/advancedTracking/types';
 import { checkLineRatio, formatRatio, GenderRatio } from '@/lib/genderRatioUtils';
-import { Player } from '@/lib/storage/types';
+import { Player, PointLineRecord } from '@/lib/storage/types';
 import { useGameStore } from '@/store/gameStore';
 import { useLinePresetsStore } from '@/store/linePresetsStore';
 import { useSettingsStore } from '@/store/settingsStore';
@@ -16,6 +16,7 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
+import { hasItems } from '@/lib/utils';
 
 export interface RecentLine {
   pointNumber: number;
@@ -34,6 +35,8 @@ interface TrackerLineScreenProps {
   requireChanges?: boolean;
   warningText?: string;
   recentLines?: RecentLine[];
+  pointLines?: PointLineRecord[];
+  currentPoint?: number;
 }
 
 export const TrackerLineScreen = ({
@@ -48,6 +51,8 @@ export const TrackerLineScreen = ({
   requireChanges,
   warningText,
   recentLines = [],
+  pointLines = [],
+  currentPoint,
 }: TrackerLineScreenProps) => {
   const { palette } = useTheme();
   const { sizeClass, isLandscape } = useLayout();
@@ -337,11 +342,13 @@ export const TrackerLineScreen = ({
       <View style={styles.gridContainer}>
         <ModalPlayerGrid
           roster={players}
-          pointLines={[]}
+          pointLines={pointLines}
           selectedIds={selectedIds}
           onTogglePlayer={togglePlayer}
           sortDirection={linePlayerSortOrder}
           useModalColors={false}
+          gameActive={hasItems(pointLines)}
+          currentPoint={currentPoint}
         />
       </View>
     </ThemedView>

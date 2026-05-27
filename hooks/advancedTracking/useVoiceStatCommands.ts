@@ -488,7 +488,7 @@ function getParseFailureReasonCode(
 
 function logVoiceDebug(event: string, data?: Record<string, unknown>) {
   if (!__DEV__) return;
-  console.log('[voice]', event, data ?? '');
+  //console.log('[voice]', event, data ?? '');
 }
 
 function getAndroidRecognitionServicePackage(): string | undefined {
