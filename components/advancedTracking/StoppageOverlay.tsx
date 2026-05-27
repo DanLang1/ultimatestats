@@ -10,16 +10,17 @@ import {
 } from '@/lib/advancedTracking/trackingDisplayHelpers';
 import { getCurrentPoint, getCurrentPossession } from '@/lib/advancedTracking/trackingUtils';
 import type { AdvancedTrackedGame } from '@/lib/advancedTracking/types';
+import { formatTimerSeconds } from '@/lib/utils';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { Fonts } from '@/theme/theme';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router } from 'expo-router';
-import React from 'react';
+import React, { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 const TIMEOUT_DURATION_S = 70;
-
-const formatCountdown = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+const TIMEOUT_MIN_S = 0;
+const TIMEOUT_MAX_S = 5 * 60;
 
 interface StoppageOverlayProps {
   game: AdvancedTrackedGame;
@@ -38,13 +39,40 @@ export const StoppageOverlay = ({ game }: StoppageOverlayProps) => {
 
   const stoppageTimestamp = activeStoppage?.pausedAt ?? activeStoppage?.recordedAt ?? null;
 
+  const activeStoppageId = activeStoppage?.id ?? null;
+  const [timeoutAdjustment, setTimeoutAdjustment] = useState<{
+    stoppageId: string | null;
+    offsetSeconds: number;
+  }>({ stoppageId: null, offsetSeconds: 0 });
+  const durationOffset =
+    timeoutAdjustment.stoppageId === activeStoppageId ? timeoutAdjustment.offsetSeconds : 0;
+  const effectiveDuration = TIMEOUT_DURATION_S + durationOffset;
+
   const timeoutSecondsLeft = useTimestampTimer({
     timestamp: stoppageTimestamp,
     mode: 'countdown',
-    durationSeconds: TIMEOUT_DURATION_S,
+    durationSeconds: effectiveDuration,
     intervalMs: 250,
     enabled: activeStoppage?.reason === 'timeout',
+    allowNegative: true,
   });
+
+  const adjustTimeout = (deltaSeconds: number) => {
+    if (activeStoppageId === null) return;
+
+    const currentDuration = effectiveDuration;
+    const newDuration = Math.max(
+      TIMEOUT_MIN_S,
+      Math.min(TIMEOUT_MAX_S, currentDuration + deltaSeconds),
+    );
+    setTimeoutAdjustment({
+      stoppageId: activeStoppageId,
+      offsetSeconds: newDuration - TIMEOUT_DURATION_S,
+    });
+  };
+
+  const canDecrement = effectiveDuration > TIMEOUT_MIN_S;
+  const canIncrement = effectiveDuration < TIMEOUT_MAX_S;
 
   if (!activeStoppage) return null;
 
@@ -89,9 +117,33 @@ export const StoppageOverlay = ({ game }: StoppageOverlayProps) => {
           </ThemedText>
         )}
         <ThemedText style={[styles.bannerLabel, { color: palette.textMuted }]}>TIMEOUT</ThemedText>
-        <ThemedText style={[styles.countdownTimer, { color: timerColor }]}>
-          {formatCountdown(timeoutSecondsLeft)}
-        </ThemedText>
+        <View style={styles.timerAdjustRow}>
+          <Pressable
+            onPress={() => adjustTimeout(-10)}
+            disabled={!canDecrement}
+            style={styles.timerAdjustBtn}
+            hitSlop={8}>
+            <MaterialCommunityIcons
+              name="minus"
+              size={scaleBySizeClass(22, sizeClass)}
+              color={!canDecrement ? palette.textMuted : palette.textInverse}
+            />
+          </Pressable>
+          <ThemedText style={[styles.countdownTimer, { color: timerColor }]}>
+            {formatTimerSeconds(timeoutSecondsLeft)}
+          </ThemedText>
+          <Pressable
+            onPress={() => adjustTimeout(10)}
+            disabled={!canIncrement}
+            style={styles.timerAdjustBtn}
+            hitSlop={8}>
+            <MaterialCommunityIcons
+              name="plus"
+              size={scaleBySizeClass(22, sizeClass)}
+              color={!canIncrement ? palette.textMuted : palette.textInverse}
+            />
+          </Pressable>
+        </View>
       </View>
     );
     primaryBtn = (
@@ -103,7 +155,6 @@ export const StoppageOverlay = ({ game }: StoppageOverlayProps) => {
           {
             borderColor: palette.success,
             backgroundColor: palette.success + '15',
-            boxShadow: `0 0 16px ${palette.success}30`,
           },
           pressed && { opacity: 0.7 },
         ]}
@@ -129,7 +180,6 @@ export const StoppageOverlay = ({ game }: StoppageOverlayProps) => {
           {
             borderColor: palette.success,
             backgroundColor: palette.success + '15',
-            boxShadow: `0 0 16px ${palette.success}30`,
           },
           pressed && { opacity: 0.7 },
         ]}
@@ -191,7 +241,6 @@ export const StoppageOverlay = ({ game }: StoppageOverlayProps) => {
                 {
                   borderColor: palette.success,
                   backgroundColor: palette.success + '15',
-                  boxShadow: `0 0 16px ${palette.success}30`,
                 },
                 pressed && { opacity: 0.7 },
               ]}
@@ -281,6 +330,14 @@ function createStyles(sizeClass: SizeClass) {
       fontFamily: Fonts.black,
       fontVariant: ['tabular-nums'],
       letterSpacing: 2,
+    },
+    timerAdjustRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: scaleBySizeClass(12, sizeClass),
+    },
+    timerAdjustBtn: {
+      padding: scaleBySizeClass(12, sizeClass),
     },
     frozenTimer: {
       fontSize: scaleBySizeClass(64, sizeClass),

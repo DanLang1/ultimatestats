@@ -6,6 +6,7 @@ interface TimestampTimerOptions {
   durationSeconds?: number;
   intervalMs?: number;
   enabled?: boolean;
+  allowNegative?: boolean;
 }
 
 // TODO: refactor other timers to use this hook
@@ -22,13 +23,15 @@ export function useTimestampTimer({
   durationSeconds = 0,
   intervalMs = 1000,
   enabled = true,
+  allowNegative = false,
 }: TimestampTimerOptions) {
   const [value, setValue] = useState(() => {
     if (timestamp === null) return mode === 'countdown' ? durationSeconds : 0;
     const now = Date.now();
     if (mode === 'countdown') {
       const totalMs = durationSeconds * 1000;
-      return Math.max(0, Math.ceil((totalMs - (now - timestamp)) / 1000));
+      const left = Math.ceil((totalMs - (now - timestamp)) / 1000);
+      return allowNegative ? left : Math.max(0, left);
     }
     return now - timestamp;
   });
@@ -45,8 +48,8 @@ export function useTimestampTimer({
       const now = Date.now();
       if (mode === 'countdown') {
         const totalMs = durationSeconds * 1000;
-        const left = Math.max(0, Math.ceil((totalMs - (now - timestamp)) / 1000));
-        setValue(left);
+        const left = Math.ceil((totalMs - (now - timestamp)) / 1000);
+        setValue(allowNegative ? left : Math.max(0, left));
       } else {
         setValue(now - timestamp);
       }
@@ -55,7 +58,7 @@ export function useTimestampTimer({
     update();
     const id = setInterval(update, intervalMs);
     return () => clearInterval(id);
-  }, [timestamp, mode, durationSeconds, intervalMs, enabled]);
+  }, [timestamp, mode, durationSeconds, intervalMs, enabled, allowNegative]);
 
   return value;
 }

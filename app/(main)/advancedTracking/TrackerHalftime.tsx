@@ -42,9 +42,9 @@ export default function TrackerHalftimeScreen() {
     mode: 'countdown',
     durationSeconds: duration,
     intervalMs: 500,
+    allowNegative: true,
   });
-  const isComplete = timeLeft === 0;
-  const isOvertime = isRunning && isComplete;
+  const isOvertime = timeLeft < 0;
 
   if (!game) {
     return <Redirect href="/Dashboard" />;
@@ -100,7 +100,7 @@ export default function TrackerHalftimeScreen() {
   let timerValueColor: string;
   if (isOvertime) {
     timerValueColor = palette.danger;
-  } else if (isComplete) {
+  } else if (timeLeft === 0) {
     timerValueColor = palette.success;
   } else {
     timerValueColor = palette.textInverse;
