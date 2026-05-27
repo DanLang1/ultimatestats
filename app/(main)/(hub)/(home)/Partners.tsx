@@ -31,7 +31,7 @@ export default function PartnersScreen() {
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         contentInsetAdjustmentBehavior="automatic">
-        {/* <Animated.View style={styles.card} entering={FadeIn.duration(400)}> */}
+        {/* Card 1: Centered Layout */}
         <View style={styles.card}>
           <Animated.View
             entering={FadeInRight.duration(400)}
@@ -44,11 +44,21 @@ export default function PartnersScreen() {
             />
           </Animated.View>
 
-          <Animated.View entering={FadeInRight.duration(400).delay(200)} style={{ width: '100%' }}>
+          <Animated.View
+            entering={FadeInRight.duration(400).delay(200)}
+            style={{ width: '100%', alignItems: 'center' }}>
             <ThemedText style={styles.title}>DH Ultimate</ThemedText>
           </Animated.View>
 
           <Animated.View entering={FadeInRight.duration(400).delay(300)} style={{ width: '100%' }}>
+            <View style={styles.badgeContainer}>
+              <MaterialCommunityIcons
+                name="shield-check"
+                size={scaleBySizeClass(14, sizeClass)}
+                color={palette.dhYellow}
+              />
+              <ThemedText style={styles.badgeText}>USA Ultimate Approved Vendor</ThemedText>
+            </View>
             <ThemedText style={styles.description}>
               Custom jerseys, proudly made in the Philippines.
             </ThemedText>
@@ -58,14 +68,92 @@ export default function PartnersScreen() {
             entering={FadeInRight.duration(400).delay(400)}
             style={styles.actionContainer}>
             <Pressable
-              onPress={() => Linking.openURL('https://dhultimate.com/pages/order1')}
+              onPress={() => Linking.openURL('https://dhultimate.com')}
               style={({ pressed }) => [styles.primaryButton, pressed && styles.buttonPressed]}>
               <MaterialCommunityIcons
-                name="tshirt-crew"
-                size={scaleBySizeClass(20, sizeClass)}
+                name="web"
+                size={scaleBySizeClass(16, sizeClass)}
                 color={palette.dhButtonText}
               />
-              <ThemedText style={styles.primaryButtonText}>Start a Team Order</ThemedText>
+              <ThemedText style={styles.primaryButtonText}>Website</ThemedText>
+            </Pressable>
+
+            <Pressable
+              onPress={() => Linking.openURL('https://www.instagram.com/dhultimate/')}
+              style={({ pressed }) => [styles.secondaryButton, pressed && styles.buttonPressed]}>
+              <MaterialCommunityIcons
+                name="instagram"
+                size={scaleBySizeClass(16, sizeClass)}
+                color={palette.dhYellow}
+              />
+              <ThemedText style={styles.secondaryButtonText}>Instagram</ThemedText>
+            </Pressable>
+          </Animated.View>
+        </View>
+
+        {/* Card 2: Left-aligned Layout */}
+        <View style={styles.card2}>
+          <Animated.View entering={FadeInRight.duration(400).delay(100)} style={styles.topRow}>
+            <Image
+              source={require('@/public/dh.jpg')}
+              style={styles.logoLeft}
+              contentFit="contain"
+              transition={400}
+            />
+            <View style={styles.badgeContainerRight}>
+              <MaterialCommunityIcons
+                name="shield-check"
+                size={scaleBySizeClass(14, sizeClass)}
+                color={palette.dhYellow}
+              />
+              <View style={styles.badgeTextContainer}>
+                <ThemedText style={styles.badgeTextRow1}>USA ULTIMATE</ThemedText>
+                <ThemedText style={styles.badgeTextRow2}>APPROVED VENDOR</ThemedText>
+              </View>
+            </View>
+          </Animated.View>
+
+          <Animated.View
+            entering={FadeInRight.duration(400).delay(200)}
+            style={{ width: '100%', alignItems: 'flex-start' }}>
+            <ThemedText style={styles.titleLeft}>DH Ultimate</ThemedText>
+          </Animated.View>
+
+          <Animated.View
+            entering={FadeInRight.duration(400).delay(250)}
+            style={{ alignItems: 'flex-start' }}>
+            <View style={styles.dividerLeft} />
+          </Animated.View>
+
+          <Animated.View entering={FadeInRight.duration(400).delay(300)} style={{ width: '100%' }}>
+            <ThemedText style={styles.descriptionLeft}>
+              Custom jerseys, proudly made in the Philippines.
+            </ThemedText>
+          </Animated.View>
+
+          <Animated.View
+            entering={FadeInRight.duration(400).delay(400)}
+            style={styles.actionContainer}>
+            <Pressable
+              onPress={() => Linking.openURL('https://dhultimate.com')}
+              style={({ pressed }) => [styles.primaryButton, pressed && styles.buttonPressed]}>
+              <MaterialCommunityIcons
+                name="web"
+                size={scaleBySizeClass(16, sizeClass)}
+                color={palette.dhButtonText}
+              />
+              <ThemedText style={styles.primaryButtonText}>Website</ThemedText>
+            </Pressable>
+
+            <Pressable
+              onPress={() => Linking.openURL('https://www.instagram.com/dhultimate/')}
+              style={({ pressed }) => [styles.secondaryButton, pressed && styles.buttonPressed]}>
+              <MaterialCommunityIcons
+                name="instagram"
+                size={scaleBySizeClass(16, sizeClass)}
+                color={palette.dhYellow}
+              />
+              <ThemedText style={styles.secondaryButtonText}>Instagram</ThemedText>
             </Pressable>
           </Animated.View>
         </View>
@@ -89,7 +177,7 @@ function createStyles(sizeClass: SizeClass, palette: Palette) {
       borderRadius: scaleBySizeClass(16, sizeClass),
       padding: scaleBySizeClass(20, sizeClass),
       alignItems: 'center',
-      gap: scaleBySizeClass(10, sizeClass),
+      gap: scaleBySizeClass(16, sizeClass),
       borderWidth: 1,
       borderColor: palette.dhYellow,
       boxShadow: `0 8px 32px ${palette.dhYellowOverlay20}`,
@@ -100,7 +188,7 @@ function createStyles(sizeClass: SizeClass, palette: Palette) {
     logo: {
       width: '100%',
       height: scaleBySizeClass(94, sizeClass),
-      marginBottom: -scaleBySizeClass(12, sizeClass),
+      marginBottom: -scaleBySizeClass(28, sizeClass),
       opacity: 1,
     },
     title: {
@@ -111,35 +199,136 @@ function createStyles(sizeClass: SizeClass, palette: Palette) {
       textTransform: 'uppercase',
       letterSpacing: scaleBySizeClass(1, sizeClass, { rounding: 'none' }),
     },
-    description: {
-      fontSize: scaleBySizeClass(15, sizeClass),
+    badgeContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: scaleBySizeClass(6, sizeClass),
+      justifyContent: 'center',
+      marginBottom: scaleBySizeClass(6, sizeClass),
+    },
+    badgeText: {
+      fontSize: scaleBySizeClass(13, sizeClass),
+      fontFamily: Fonts.semiBold,
       color: palette.dhYellow,
+    },
+    description: {
+      fontSize: scaleBySizeClass(14, sizeClass),
+      color: palette.textOnAccentMuted,
       textAlign: 'center',
-      lineHeight: scaleBySizeClass(22, sizeClass),
+      lineHeight: scaleBySizeClass(20, sizeClass),
     },
     actionContainer: {
+      flexDirection: 'row',
       width: '100%',
-      marginTop: scaleBySizeClass(8, sizeClass),
+      marginTop: scaleBySizeClass(4, sizeClass),
+      gap: scaleBySizeClass(10, sizeClass),
     },
     primaryButton: {
+      flex: 1,
       backgroundColor: palette.dhYellow,
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
-      padding: scaleBySizeClass(14, sizeClass),
-      borderRadius: scaleBySizeClass(12, sizeClass),
-      gap: scaleBySizeClass(8, sizeClass),
+      padding: scaleBySizeClass(12, sizeClass),
+      borderRadius: scaleBySizeClass(10, sizeClass),
+      gap: scaleBySizeClass(6, sizeClass),
     },
     primaryButtonText: {
       color: palette.dhButtonText,
-      fontFamily: Fonts.extraBold,
-      fontSize: scaleBySizeClass(15, sizeClass),
+      fontFamily: Fonts.bold,
+      fontSize: scaleBySizeClass(13, sizeClass),
+      textTransform: 'uppercase',
+      letterSpacing: scaleBySizeClass(0.5, sizeClass, { rounding: 'none' }),
+    },
+    secondaryButton: {
+      flex: 1,
+      backgroundColor: 'transparent',
+      borderWidth: 1,
+      borderColor: palette.dhYellow,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: scaleBySizeClass(12, sizeClass),
+      borderRadius: scaleBySizeClass(10, sizeClass),
+      gap: scaleBySizeClass(6, sizeClass),
+    },
+    secondaryButtonText: {
+      color: palette.dhYellow,
+      fontFamily: Fonts.bold,
+      fontSize: scaleBySizeClass(13, sizeClass),
       textTransform: 'uppercase',
       letterSpacing: scaleBySizeClass(0.5, sizeClass, { rounding: 'none' }),
     },
     buttonPressed: {
       opacity: 0.8,
       transform: [{ scale: 0.98 }],
+    },
+    card2: {
+      backgroundColor: palette.dhBlack,
+      borderRadius: scaleBySizeClass(16, sizeClass),
+      padding: scaleBySizeClass(20, sizeClass),
+      alignItems: 'flex-start',
+      gap: scaleBySizeClass(16, sizeClass),
+      borderWidth: 1,
+      borderColor: palette.dhYellow,
+      boxShadow: `0 8px 32px ${palette.dhYellowOverlay20}`,
+      alignSelf: 'center',
+      width: '100%',
+      maxWidth: scaleBySizeClass(400, sizeClass),
+    },
+    topRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      width: '100%',
+      gap: scaleBySizeClass(12, sizeClass),
+      marginBottom: -scaleBySizeClass(28, sizeClass),
+    },
+    logoLeft: {
+      width: scaleBySizeClass(94, sizeClass),
+      height: scaleBySizeClass(94, sizeClass),
+      opacity: 1,
+    },
+    badgeContainerRight: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: scaleBySizeClass(6, sizeClass),
+      flexShrink: 1,
+    },
+    badgeTextContainer: {
+      flexDirection: 'column',
+    },
+    badgeTextRow1: {
+      fontSize: scaleBySizeClass(11, sizeClass),
+      fontFamily: Fonts.bold,
+      color: palette.dhYellow,
+      letterSpacing: scaleBySizeClass(0.5, sizeClass, { rounding: 'none' }),
+      lineHeight: scaleBySizeClass(14, sizeClass),
+    },
+    badgeTextRow2: {
+      fontSize: scaleBySizeClass(11, sizeClass),
+      fontFamily: Fonts.bold,
+      color: palette.dhYellow,
+      letterSpacing: scaleBySizeClass(0.5, sizeClass, { rounding: 'none' }),
+      lineHeight: scaleBySizeClass(14, sizeClass),
+    },
+    titleLeft: {
+      fontSize: scaleBySizeClass(24, sizeClass),
+      fontFamily: Fonts.black,
+      color: palette.textOnAccent,
+      textAlign: 'left',
+      textTransform: 'uppercase',
+      letterSpacing: scaleBySizeClass(1, sizeClass, { rounding: 'none' }),
+    },
+    dividerLeft: {
+      width: scaleBySizeClass(32, sizeClass),
+      height: scaleBySizeClass(1.5, sizeClass),
+      backgroundColor: palette.dhYellow,
+    },
+    descriptionLeft: {
+      fontSize: scaleBySizeClass(14, sizeClass),
+      color: palette.textOnAccentMuted,
+      textAlign: 'left',
+      lineHeight: scaleBySizeClass(20, sizeClass),
     },
   });
 }
