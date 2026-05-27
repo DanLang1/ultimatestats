@@ -7,6 +7,8 @@ import { Fonts } from '@/theme/theme';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 
+const TEAM_NAME_MIN_FONT_SCALE = 0.82;
+
 interface TeamScoreBlockProps {
   name: string;
   score: number;
@@ -31,7 +33,11 @@ export function TeamScoreBlock({
   return (
     <View style={styles.block}>
       <View style={styles.nameWrap}>
-        <ThemedText style={[styles.name, { color: palette.textInverse }]} numberOfLines={2}>
+        <ThemedText
+          style={[styles.name, { color: palette.textInverse }]}
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={TEAM_NAME_MIN_FONT_SCALE}>
           {name}
         </ThemedText>
       </View>
@@ -60,6 +66,7 @@ function createStyles(sizeClass: SizeClass) {
       minHeight: scaleBySizeClass(34, sizeClass),
       justifyContent: 'center',
       alignItems: 'center',
+      alignSelf: 'stretch',
     },
     name: {
       fontSize: scaleBySizeClass(14, sizeClass),

@@ -1,7 +1,4 @@
-import {
-  buildVoiceParticipantContexts,
-  mergeRosterNumbersIntoParticipants,
-} from '@/lib/advancedTracking/voiceContext';
+import { buildVoiceParticipantContexts } from '@/lib/advancedTracking/voiceContext';
 import { Participant } from '@/lib/advancedTracking/types';
 
 describe('buildVoiceParticipantContexts', () => {
@@ -57,28 +54,5 @@ describe('buildVoiceParticipantContexts', () => {
         number: '9',
       },
     ]);
-  });
-});
-
-describe('mergeRosterNumbersIntoParticipants', () => {
-  it('merges saved roster numbers into participant snapshots', () => {
-    const merged = mergeRosterNumbersIntoParticipants(
-      [
-        { id: 'anne', name: 'Anne Wilson', sourcePlayerId: 'saved-anne' },
-        { id: 'katy', name: 'Katy Morris', number: '8' },
-      ],
-      [
-        {
-          id: 'saved-anne',
-          name: 'Anne Wilson',
-          number: '12',
-          isActive: true,
-          matchingType: null,
-          role: null,
-        },
-      ],
-    );
-
-    expect(merged.map((participant) => participant.number)).toEqual(['12', '8']);
   });
 });

@@ -2,6 +2,7 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { useTheme } from '@/context/ThemeContext';
+import { useLiveRosterParticipants } from '@/hooks/advancedTracking/useLiveRosterParticipants';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { computeAdvancedPlayerStats } from '@/lib/advancedTracking/advancedPlayerStatsUtils';
 import { computeAdvancedTeamStats } from '@/lib/advancedTracking/advancedTeamStatsUtils';
@@ -30,6 +31,7 @@ export default function TrackerHalftimeScreen() {
     clearHalftimeBreak,
     undoLastOperation,
   } = useAdvancedTrackingStore();
+  const participants = useLiveRosterParticipants(game?.participants ?? []);
 
   const [startedAt, setStartedAt] = useState<number | null>(null);
   const [duration, setDuration] = useState(HALFTIME_DEFAULT_SECONDS);
@@ -64,7 +66,7 @@ export default function TrackerHalftimeScreen() {
   const playerStats = computeAdvancedPlayerStats(analyticsGame, game.focusSideId);
   const sortedPlayers = [...playerStats].sort((a, b) => b.plusMinus - a.plusMinus);
   const topPerformers = sortedPlayers.slice(0, 3).map((p) => ({
-    name: game.participants.find((part) => part.id === p.participantId)?.name ?? p.participantId,
+    name: participants.find((part) => part.id === p.participantId)?.name ?? p.participantId,
     plusMinus: p.plusMinus,
   }));
 

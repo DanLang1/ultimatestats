@@ -13,6 +13,7 @@ import { TrackerPlayerGrid } from '@/components/advancedTracking/TrackerPlayerGr
 import { TrackerRareMenu } from '@/components/advancedTracking/TrackerRareMenu';
 import { TrackerScoreBar } from '@/components/advancedTracking/TrackerScoreBar';
 import { useTheme } from '@/context/ThemeContext';
+import { useLiveRosterParticipants } from '@/hooks/advancedTracking/useLiveRosterParticipants';
 import { useTimestampTimer } from '@/hooks/advancedTracking/useTimer';
 import { useTrackerHandlers } from '@/hooks/advancedTracking/useTrackerHandlers';
 import { useVoiceStatCommands } from '@/hooks/advancedTracking/useVoiceStatCommands';
@@ -37,13 +38,9 @@ import {
   isAdvancedGameOver,
 } from '@/lib/advancedTracking/trackingUtils';
 import { PassModifier } from '@/lib/advancedTracking/types';
-import {
-  buildVoiceParticipantContexts,
-  mergeRosterNumbersIntoParticipants,
-} from '@/lib/advancedTracking/voiceContext';
+import { buildVoiceParticipantContexts } from '@/lib/advancedTracking/voiceContext';
 
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
-import { useGameStore } from '@/store/gameStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { Fonts, Palette } from '@/theme/theme';
 import { Redirect, router, Stack } from 'expo-router';
@@ -68,7 +65,7 @@ export default function AdvancedTrackerScreen() {
     startGameClockPause,
     triggerHalftimeEarly,
   } = useAdvancedTrackingStore();
-  const currentTeam = useGameStore((s) => s.currentTeam);
+  const participants = useLiveRosterParticipants(game?.participants ?? []);
   const [showDevModal, setShowDevModal] = useState(false);
   const [showHomeMenu, setShowHomeMenu] = useState(false);
   const [showLineChangeMenu, setShowLineChangeMenu] = useState(false);
@@ -134,12 +131,7 @@ export default function AdvancedTrackerScreen() {
     !oppHasDisc &&
     discHolderRef != null;
   const activeIds = game && point ? getEffectiveLineParticipantIds(point, game.focusSideId) : [];
-  const activeParticipants = game
-    ? mergeRosterNumbersIntoParticipants(
-        game.participants.filter((p) => activeIds.includes(p.id)),
-        currentTeam?.roster ?? [],
-      )
-    : [];
+  const activeParticipants = participants.filter((p) => activeIds.includes(p.id));
   const activeVoiceParticipants = buildVoiceParticipantContexts(activeParticipants);
 
   const handlers = useTrackerHandlers({

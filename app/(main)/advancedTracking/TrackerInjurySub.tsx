@@ -1,4 +1,5 @@
 import { TrackerLineScreen } from '@/components/advancedTracking/TrackerLineScreen';
+import { useLiveRosterParticipants } from '@/hooks/advancedTracking/useLiveRosterParticipants';
 import {
   getActiveStoppage,
   getEffectiveLineParticipantIds,
@@ -17,6 +18,7 @@ export default function TrackerInjurySubScreen() {
     recordSub,
     updateSub,
   } = useAdvancedTrackingStore();
+  const participants = useLiveRosterParticipants(game?.participants ?? []);
   const point = game ? getCurrentPoint(game) : null;
   const possession = game ? getCurrentPossession(game) : null;
   const existingStoppage = getActiveStoppage(possession);
@@ -53,7 +55,7 @@ export default function TrackerInjurySubScreen() {
     <>
       <Stack.Screen options={{ headerShown: false }} />
       <TrackerLineScreen
-        participants={game.participants}
+        participants={participants}
         initialSelectedIds={effectiveLine}
         title="Injury Sub"
         confirmLabel="CONFIRM SUB"

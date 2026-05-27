@@ -1,4 +1,5 @@
 import { TrackerLineScreen } from '@/components/advancedTracking/TrackerLineScreen';
+import { useLiveRosterParticipants } from '@/hooks/advancedTracking/useLiveRosterParticipants';
 import { getCurrentPoint } from '@/lib/advancedTracking/trackingUtils';
 import { getSequenceNumber } from '@/lib/genderRatioUtils';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
@@ -7,6 +8,7 @@ import React from 'react';
 
 export default function TrackerEditLineScreen() {
   const { currentGameId, currentGame: game, correctPointLine } = useAdvancedTrackingStore();
+  const participants = useLiveRosterParticipants(game?.participants ?? []);
   const point = game ? getCurrentPoint(game) : null;
 
   if (!currentGameId || !game || !point) {
@@ -27,7 +29,7 @@ export default function TrackerEditLineScreen() {
       for (const id of sub.outIds) allIds.add(id);
     }
     const names = [...allIds]
-      .map((id) => game.participants.find((p) => p.id === id)?.name ?? 'Unknown')
+      .map((id) => participants.find((p) => p.id === id)?.name ?? 'Unknown')
       .join(', ');
     warningText =
       sideSubs.length === 1
@@ -44,7 +46,7 @@ export default function TrackerEditLineScreen() {
     <>
       <Stack.Screen options={{ headerShown: false }} />
       <TrackerLineScreen
-        participants={game.participants}
+        participants={participants}
         initialSelectedIds={baseLine}
         title="Edit Line"
         confirmLabel="SAVE LINE"

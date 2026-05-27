@@ -1,12 +1,13 @@
-import { TrackerLineScreen } from '@/components/advancedTracking/TrackerLineScreen';
 import type { RecentLine as RecentLineType } from '@/components/advancedTracking/TrackerLineScreen';
+import { TrackerLineScreen } from '@/components/advancedTracking/TrackerLineScreen';
+import { useLiveRosterParticipants } from '@/hooks/advancedTracking/useLiveRosterParticipants';
 import { getEffectiveLineParticipantIds } from '@/lib/advancedTracking/trackingDisplayHelpers';
 import {
   getAdvancedRecentLines,
   getCurrentPoint,
   getReceivingSideForNextPoint,
 } from '@/lib/advancedTracking/trackingUtils';
-import { getExpectedRatio, getSequenceNumber, GenderRatio } from '@/lib/genderRatioUtils';
+import { GenderRatio, getExpectedRatio, getSequenceNumber } from '@/lib/genderRatioUtils';
 import { hasItems } from '@/lib/utils';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { useSettingsStore } from '@/store/settingsStore';
@@ -16,6 +17,7 @@ import { FOCUS_SIDE_ID } from './PreGameConfirm';
 
 export default function TrackerLineSelectScreen() {
   const { currentGame: game, resetCurrentGame } = useAdvancedTrackingStore();
+  const participants = useLiveRosterParticipants(game?.participants ?? []);
   const { genderRatioEnabled, firstPointRatio } = useSettingsStore();
   if (!game) return <Redirect href="/advancedTracking/Tracker" />;
 
@@ -42,7 +44,7 @@ export default function TrackerLineSelectScreen() {
 
   return (
     <TrackerLineScreen
-      participants={game.participants}
+      participants={participants}
       title={isInitialLine ? 'Starting Line' : undefined}
       expectedRatio={nextRatio}
       sequenceNumber={nextSequenceNumber}
