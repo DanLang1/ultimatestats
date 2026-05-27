@@ -14,12 +14,14 @@ interface TeamActionsBarProps {
   onShareTeam: () => void;
   onClearRoster: () => void;
   onToggleViewMode: () => void;
+  onImportTeam: () => void;
   viewMode: 'chips' | 'cards';
   showNewTeam: boolean;
   showSwitchTeam: boolean;
   showEditPresets: boolean;
   showShareTeam: boolean;
   showClearRoster: boolean;
+  showImportTeam: boolean;
 }
 
 interface BarButtonProps {
@@ -53,12 +55,14 @@ export function TeamActionsBar({
   onShareTeam,
   onClearRoster,
   onToggleViewMode,
+  onImportTeam,
   viewMode,
   showNewTeam,
   showSwitchTeam,
   showEditPresets,
   showShareTeam,
   showClearRoster,
+  showImportTeam,
 }: TeamActionsBarProps) {
   const { sizeClass } = useLayout();
   const { palette } = useTheme();
@@ -74,6 +78,9 @@ export function TeamActionsBar({
       <BarButton icon="pencil-outline" label="Rename" onPress={onRenameTeam} />
       {showNewTeam && <BarButton icon="plus" label="New Team" onPress={onNewTeam} />}
       {showSwitchTeam && <BarButton icon="swap-horizontal" label="Switch" onPress={onSwitchTeam} />}
+      {showImportTeam && (
+        <BarButton icon="file-import-outline" label="Import" onPress={onImportTeam} />
+      )}
       {showEditPresets && (
         <BarButton icon="playlist-edit" label="Edit Lines" onPress={onEditPresets} />
       )}

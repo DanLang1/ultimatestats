@@ -10,7 +10,7 @@ import { PlayerChip } from '@/components/ui/PlayerChip';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { ShareConfirmModal } from '@/components/ui/ShareConfirmModal';
 import { useTheme } from '@/context/ThemeContext';
-import { useIsGameActive } from '@/hooks/useIsGameActive';
+import { useActiveGameSession } from '@/hooks/useActiveGameSession';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import {
   getPlayerNumberIdentity,
@@ -58,7 +58,8 @@ export default function EditRosterScreen() {
 
   // Derived values
   const roster = currentTeam?.roster ?? EMPTY_ROSTER;
-  const gameActive = useIsGameActive();
+  const { kind: activeGameKind } = useActiveGameSession();
+  const gameActive = activeGameKind !== 'none';
 
   const [showShareConfirm, setShowShareConfirm] = useState(false);
   const [showActionsSheet, setShowActionsSheet] = useState(false);
@@ -213,6 +214,11 @@ export default function EditRosterScreen() {
     if (!currentTeam) return;
     if (selectionMode) return;
     setShowShareConfirm(true);
+  };
+
+  const handleImportTeam = () => {
+    resetSelectionState();
+    router.push('/ImportTeam');
   };
 
   const handleConfirmShare = async () => {
@@ -476,12 +482,14 @@ export default function EditRosterScreen() {
                 resetSelectionState();
                 router.push('/LinePresetEditor');
               }}
+              onImportTeam={handleImportTeam}
               onShareTeam={handleShareTeam}
               onClearRoster={handleClearAll}
               showNewTeam={!gameActive}
               showSwitchTeam={!gameActive && hasOtherTeams}
               showEditPresets={roster.length > 0}
               showShareTeam={roster.length > 0}
+              showImportTeam={!gameActive}
               showClearRoster={roster.length > 0}
             />
           )}
@@ -718,6 +726,7 @@ export default function EditRosterScreen() {
             resetSelectionState();
             router.push('/LinePresetEditor');
           }}
+          onImportTeam={handleImportTeam}
           onShareTeam={handleShareTeam}
           onClearRoster={handleClearAll}
           viewMode={rosterViewMode}
@@ -726,6 +735,7 @@ export default function EditRosterScreen() {
           showSwitchTeam={!gameActive && hasOtherTeams}
           showEditPresets={roster.length > 0}
           showShareTeam={roster.length > 0}
+          showImportTeam={!gameActive}
           showClearRoster={roster.length > 0}
         />
       </Modal>

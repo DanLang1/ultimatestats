@@ -16,12 +16,14 @@ interface TeamActionsSheetProps {
   onShareTeam: () => void;
   onClearRoster: () => void;
   onToggleViewMode: () => void;
+  onImportTeam: () => void;
   viewMode: 'chips' | 'cards';
   showNewTeam: boolean;
   showSwitchTeam: boolean;
   showEditPresets: boolean;
   showShareTeam: boolean;
   showClearRoster: boolean;
+  showImportTeam: boolean;
 }
 
 interface ActionRowProps {
@@ -56,12 +58,14 @@ export function TeamActionsSheet({
   onShareTeam,
   onClearRoster,
   onToggleViewMode,
+  onImportTeam,
   viewMode,
   showNewTeam,
   showSwitchTeam,
   showEditPresets,
   showShareTeam,
   showClearRoster,
+  showImportTeam,
 }: TeamActionsSheetProps) {
   const { sizeClass } = useLayout();
   const { palette } = useTheme();
@@ -81,6 +85,13 @@ export function TeamActionsSheet({
           onPress={wrap(onToggleViewMode)}
         />
         <View style={[styles.divider, { backgroundColor: palette.overlay10 }]} />
+        {showImportTeam && (
+          <ActionRow
+            icon="file-import-outline"
+            label="Import from USAU"
+            onPress={wrap(onImportTeam)}
+          />
+        )}
         <ActionRow icon="pencil-outline" label="Rename Team" onPress={wrap(onRenameTeam)} />
         {showNewTeam && <ActionRow icon="plus" label="New Team" onPress={wrap(onNewTeam)} />}
         {showSwitchTeam && (

@@ -302,7 +302,7 @@ export default function AdvancedTrackerScreen() {
           <View style={{ flex: 1, justifyContent: 'flex-start', paddingTop: 4 }}>
             {renderTrackingSurface()}
           </View>
-          {!activeGameClockPause && (
+          {!activeStoppage && !activeGameClockPause && (
             <TrackerActionFooter
               pointElapsedMs={pointElapsedMs}
               onStartNextPoint={handleStartNextPoint}
