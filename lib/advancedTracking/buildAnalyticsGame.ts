@@ -102,6 +102,22 @@ function getLastAction(
   return last;
 }
 
+function getLastNonStoppageAction(
+  gameId: string,
+  pointId: string,
+  possessionId: string,
+  actions: PossessionAction[],
+): PossessionAction {
+  getLastAction(gameId, pointId, possessionId, actions);
+  const last = actions.findLast((action) => action.kind !== 'stoppage');
+  if (last == null) {
+    throw new Error(
+      `buildAnalyticsGame requires possession "${possessionId}" in point "${pointId}" for game "${gameId}" to have at least one non-stoppage action`,
+    );
+  }
+  return last;
+}
+
 function assertSideId(sideId: string, sideIds: [string, string], message: string): void {
   if (!sideIds.includes(sideId)) throw new Error(message);
 }
@@ -289,7 +305,7 @@ function getCompletedGameClockPauseMsBefore(
 /** Derives which side scored from the last action of the last possession. */
 function deriveScoringSideId(point: TrackedPoint, ctx: GameBuildContext): string | null {
   const lastPoss = getLastPossession(ctx.gameId, point.id, point.possessions);
-  const lastAction = getLastAction(ctx.gameId, point.id, lastPoss.id, lastPoss.actions);
+  const lastAction = getLastNonStoppageAction(ctx.gameId, point.id, lastPoss.id, lastPoss.actions);
   if (lastAction.kind !== 'throw') return null;
   if (lastAction.result === 'goal') return lastPoss.sideId;
   if (lastAction.result === 'callahan') return otherSide(lastPoss.sideId, ctx.sideIds);
@@ -407,7 +423,7 @@ function compilePossessionWithActions(
   const possActionIds = poss.actions.map((a) => a.id);
 
   // Derive possession result
-  const possLastAction = getLastAction(ctx.gameId, pointId, poss.id, poss.actions);
+  const possLastAction = getLastNonStoppageAction(ctx.gameId, pointId, poss.id, poss.actions);
   let possResult: AnalyticsPossessionResult | null = null;
   let turnoverType: AnalyticsTurnoverType | undefined;
   if (possLastAction.kind === 'throw') {
@@ -591,7 +607,12 @@ export function buildAnalyticsGame(game: AdvancedTrackedGame): AnalyticsGame {
         : null;
 
     const lastPoss = getLastPossession(ctx.gameId, point.id, point.possessions);
-    const lastAction = getLastAction(ctx.gameId, point.id, lastPoss.id, lastPoss.actions);
+    const lastAction = getLastNonStoppageAction(
+      ctx.gameId,
+      point.id,
+      lastPoss.id,
+      lastPoss.actions,
+    );
     const durationMs =
       lastAction.recordedAt != null && point.startedAt != null
         ? lastAction.recordedAt -

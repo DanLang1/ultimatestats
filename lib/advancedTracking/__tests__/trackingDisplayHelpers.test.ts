@@ -17,7 +17,6 @@ import {
   getSubForStoppage,
   getTrackerInstructionColor,
   getTrackerInstructionText,
-  isInjuryJustResumed,
   isPullAwaitingPickup,
 } from '../trackingDisplayHelpers';
 import type { AdvancedTrackedGame, PointPossession, PointSub, TrackedPoint } from '../types';
@@ -206,6 +205,29 @@ describe('getActiveSideId', () => {
     ]);
     expect(getActiveSideId(pos, baseGame)).toBe(AWAY);
   });
+
+  it('returns other side after a turnover followed by an injury stoppage', () => {
+    const pos = makePossession(HOME, [
+      {
+        id: 'a1',
+        kind: 'throw',
+        sideId: HOME,
+        thrower: august,
+        toPlayer: meves,
+        result: 'drop',
+      },
+      {
+        id: 'a2',
+        kind: 'stoppage',
+        reason: 'injury',
+        sideId: HOME,
+        recordedAt: 100,
+        pausedAt: 100,
+        resumedAt: 200,
+      },
+    ]);
+    expect(getActiveSideId(pos, baseGame)).toBe(AWAY);
+  });
 });
 
 describe('getDiscHolderId', () => {
@@ -286,9 +308,69 @@ describe('getDiscHolderRef', () => {
 describe('getSafeDiscHolderRef', () => {
   const unknown = { refType: 'unknown' as const };
 
-  it('returns null after an injury stoppage resumes', () => {
+  it('returns the holder after an off-disc injury stoppage resumes', () => {
     const pos = makePossession(HOME, [
       { id: 'a1', kind: 'disc_pickup', sideId: HOME, player: august },
+      {
+        id: 's1',
+        kind: 'stoppage',
+        reason: 'injury',
+        recordedAt: 100,
+        pausedAt: 100,
+        resumedAt: 200,
+      },
+    ]);
+    const point: TrackedPoint = {
+      id: 'pt1',
+      lines: [],
+      possessions: [pos],
+      subs: [
+        {
+          id: 'sub1',
+          sideId: HOME,
+          type: 'injury',
+          inIds: ['p_extra'],
+          outIds: [meves.participantId],
+          stoppageActionId: 's1',
+        },
+      ],
+    };
+    expect(getSafeDiscHolderRef(pos, HOME, point)).toEqual(august);
+  });
+
+  it('returns null after an injury sub removes the holder', () => {
+    const pos = makePossession(HOME, [
+      { id: 'a1', kind: 'disc_pickup', sideId: HOME, player: august },
+      {
+        id: 's1',
+        kind: 'stoppage',
+        reason: 'injury',
+        recordedAt: 100,
+        pausedAt: 100,
+        resumedAt: 200,
+      },
+    ]);
+    const point: TrackedPoint = {
+      id: 'pt1',
+      lines: [],
+      possessions: [pos],
+      subs: [
+        {
+          id: 'sub1',
+          sideId: HOME,
+          type: 'injury',
+          inIds: ['p_extra'],
+          outIds: [august.participantId],
+          stoppageActionId: 's1',
+        },
+      ],
+    };
+    expect(getSafeDiscHolderRef(pos, HOME, point)).toBeNull();
+  });
+
+  it('returns null after an injury stoppage when the holder is unknown', () => {
+    const pos = makePossession(HOME, [
+      { id: 'a1', kind: 'disc_pickup', sideId: HOME, player: unknown },
       {
         id: 's1',
         kind: 'stoppage',
@@ -410,6 +492,127 @@ describe('getPassChainEvents', () => {
     const { events, truncated } = getPassChainEvents(pos, baseGame.participants);
     expect(truncated).toBe(false);
     expect(events.map((e) => e.name)).toEqual(['August', 'Unknown']);
+  });
+
+  it('keeps the visible chain after an off-disc injury sub', () => {
+    const pos = makePossession(HOME, [
+      { id: 'a1', kind: 'disc_pickup', sideId: HOME, player: august },
+      {
+        id: 'a2',
+        kind: 'throw',
+        sideId: HOME,
+        thrower: august,
+        toPlayer: meves,
+        result: 'complete',
+      },
+      {
+        id: 's1',
+        kind: 'stoppage',
+        reason: 'injury',
+        recordedAt: 100,
+        pausedAt: 100,
+        resumedAt: 200,
+      },
+    ]);
+    const point: TrackedPoint = {
+      id: 'pt1',
+      lines: [],
+      possessions: [pos],
+      subs: [
+        {
+          id: 'sub1',
+          sideId: HOME,
+          type: 'injury',
+          inIds: ['p_extra'],
+          outIds: ['p_other'],
+          stoppageActionId: 's1',
+        },
+      ],
+    };
+
+    const { events, truncated } = getPassChainEvents(pos, baseGame.participants, 3, point);
+
+    expect(truncated).toBe(false);
+    expect(events.map((e) => e.name)).toEqual(['August', 'Meves']);
+  });
+
+  it('returns empty events while waiting for the post-injury restart pickup', () => {
+    const pos = makePossession(HOME, [
+      { id: 'a1', kind: 'disc_pickup', sideId: HOME, player: august },
+      {
+        id: 'a2',
+        kind: 'throw',
+        sideId: HOME,
+        thrower: august,
+        toPlayer: meves,
+        result: 'complete',
+      },
+      {
+        id: 's1',
+        kind: 'stoppage',
+        reason: 'injury',
+        recordedAt: 100,
+        pausedAt: 100,
+        resumedAt: 200,
+      },
+    ]);
+    const point: TrackedPoint = {
+      id: 'pt1',
+      lines: [],
+      possessions: [pos],
+      subs: [
+        {
+          id: 'sub1',
+          sideId: HOME,
+          type: 'injury',
+          inIds: ['p_extra'],
+          outIds: [meves.participantId],
+          stoppageActionId: 's1',
+        },
+      ],
+    };
+
+    const { events, truncated } = getPassChainEvents(pos, baseGame.participants, 3, point);
+
+    expect(truncated).toBe(false);
+    expect(events).toEqual([]);
+  });
+
+  it('restarts the displayed chain after a resumed injury pickup', () => {
+    const pos = makePossession(HOME, [
+      { id: 'a1', kind: 'disc_pickup', sideId: HOME, player: august },
+      {
+        id: 'a2',
+        kind: 'throw',
+        sideId: HOME,
+        thrower: august,
+        toPlayer: meves,
+        result: 'complete',
+      },
+      {
+        id: 's1',
+        kind: 'stoppage',
+        reason: 'injury',
+        recordedAt: 100,
+        pausedAt: 100,
+        resumedAt: 200,
+      },
+      { id: 'a3', kind: 'disc_pickup', sideId: HOME, player: august },
+      {
+        id: 'a4',
+        kind: 'throw',
+        sideId: HOME,
+        thrower: august,
+        toPlayer: meves,
+        result: 'complete',
+      },
+    ]);
+
+    const { events, truncated } = getPassChainEvents(pos, baseGame.participants);
+
+    expect(truncated).toBe(false);
+    expect(events.map((e) => e.name)).toEqual(['August', 'Meves']);
+    expect(events.map((e) => e.id)).toEqual(['a3', 'a4']);
   });
 });
 
@@ -915,46 +1118,6 @@ describe('game clock pause helpers', () => {
     };
 
     expect(getCompletedGameClockPauseMsDuringPoint(game, point, 70000)).toBe(0);
-  });
-});
-
-describe('isInjuryJustResumed', () => {
-  it('returns false for null possession', () => {
-    expect(isInjuryJustResumed(null)).toBe(false);
-  });
-
-  it('returns true if last action was injury stoppage and is resumed', () => {
-    const pos = makePossession(HOME, [
-      {
-        id: 's1',
-        kind: 'stoppage',
-        reason: 'injury',
-        recordedAt: 100,
-        pausedAt: 100,
-        resumedAt: 200,
-      },
-    ]);
-    expect(isInjuryJustResumed(pos)).toBe(true);
-  });
-
-  it('returns false if last action was injury stoppage but not yet resumed', () => {
-    const pos = makePossession(HOME, [
-      {
-        id: 's1',
-        kind: 'stoppage',
-        reason: 'injury',
-        recordedAt: 100,
-        pausedAt: 100,
-      },
-    ]);
-    expect(isInjuryJustResumed(pos)).toBe(false);
-  });
-
-  it('returns false if last action was not an injury stoppage', () => {
-    const pos = makePossession(HOME, [
-      { id: 'a1', kind: 'disc_pickup', sideId: HOME, player: august },
-    ]);
-    expect(isInjuryJustResumed(pos)).toBe(false);
   });
 });
 

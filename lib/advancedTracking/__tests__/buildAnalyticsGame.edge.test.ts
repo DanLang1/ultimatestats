@@ -40,6 +40,156 @@ const baseGame: Omit<AdvancedTrackedGame, 'points'> = {
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
 describe('buildAnalyticsGame — edge cases and correctness', () => {
+  describe('stoppages after possession-ending actions', () => {
+    it('builds stats when a turnover is followed by an injury stoppage', () => {
+      const game: AdvancedTrackedGame = {
+        ...baseGame,
+        points: [
+          {
+            id: 'pt1',
+            lines: [{ sideId: ZOO, participantIds: ['p_august', 'p_meves', 'p_joah'] }],
+            startedAt: 1_000,
+            elapsedMsAtEnd: 20_533,
+            possessions: [
+              {
+                id: 'pos1',
+                sideId: ZOO,
+                actions: [
+                  {
+                    id: 'a1',
+                    kind: 'pull',
+                    sideId: RIVALS,
+                    receivingSideId: ZOO,
+                    puller: untracked,
+                    result: 'inbound',
+                    recordedAt: 1_000,
+                  },
+                  {
+                    id: 'a2',
+                    kind: 'disc_pickup',
+                    sideId: ZOO,
+                    player: august,
+                    recordedAt: 2_000,
+                  },
+                  {
+                    id: 'a3',
+                    kind: 'throw',
+                    sideId: ZOO,
+                    thrower: august,
+                    toPlayer: meves,
+                    result: 'drop',
+                    recordedAt: 3_000,
+                  },
+                  {
+                    id: 'a4',
+                    kind: 'stoppage',
+                    reason: 'injury',
+                    sideId: ZOO,
+                    recordedAt: 4_000,
+                    pausedAt: 4_000,
+                    resumedAt: 5_000,
+                  },
+                ],
+              },
+              {
+                id: 'pos2',
+                sideId: RIVALS,
+                actions: [
+                  {
+                    id: 'a5',
+                    kind: 'disc_pickup',
+                    sideId: RIVALS,
+                    player: untracked,
+                    recordedAt: 6_000,
+                  },
+                  {
+                    id: 'a6',
+                    kind: 'throw',
+                    sideId: RIVALS,
+                    thrower: untracked,
+                    result: 'goal',
+                    recordedAt: 7_000,
+                  },
+                ],
+              },
+            ],
+            subs: [
+              {
+                id: 'sub1',
+                sideId: ZOO,
+                type: 'injury',
+                inIds: ['p_max'],
+                outIds: ['p_joah'],
+                stoppageActionId: 'a4',
+              },
+            ],
+          },
+        ],
+      };
+
+      const analytics = buildAnalyticsGame(game);
+
+      expect(analytics.points[0].state).toBe('broken');
+      expect(analytics.points[0].scoringSideId).toBe(RIVALS);
+      expect(analytics.possessions[0]).toMatchObject({
+        result: 'turned_over',
+        turnoverType: 'drop',
+      });
+      expect(analytics.possessions[1]).toMatchObject({ result: 'scored' });
+    });
+
+    it('derives the scorer when a goal is followed by a stoppage', () => {
+      const game: AdvancedTrackedGame = {
+        ...baseGame,
+        points: [
+          {
+            id: 'pt1',
+            lines: [{ sideId: ZOO, participantIds: ['p_august'] }],
+            possessions: [
+              {
+                id: 'pos1',
+                sideId: ZOO,
+                actions: [
+                  {
+                    id: 'a1',
+                    kind: 'pull',
+                    sideId: RIVALS,
+                    receivingSideId: ZOO,
+                    puller: untracked,
+                    result: 'inbound',
+                  },
+                  {
+                    id: 'a2',
+                    kind: 'throw',
+                    sideId: ZOO,
+                    thrower: august,
+                    toPlayer: meves,
+                    result: 'goal',
+                  },
+                  {
+                    id: 'a3',
+                    kind: 'stoppage',
+                    reason: 'injury',
+                    sideId: ZOO,
+                    recordedAt: 100,
+                    pausedAt: 100,
+                    resumedAt: 200,
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      };
+
+      const analytics = buildAnalyticsGame(game);
+
+      expect(analytics.points[0].state).toBe('hold');
+      expect(analytics.points[0].scoringSideId).toBe(ZOO);
+      expect(analytics.possessions[0].result).toBe('scored');
+    });
+  });
+
   describe('callahan break points', () => {
     it('does NOT mark a callahan break as a clean hold', () => {
       const game: AdvancedTrackedGame = {

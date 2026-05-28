@@ -248,7 +248,7 @@ function getTrackerLastActionCardModel({
     };
   }
 
-  const passChainEvents = getPassChainEvents(possession, participants);
+  const passChainEvents = getPassChainEvents(possession, participants, undefined, point);
   if (passChainEvents.events.length > 0) {
     return {
       kind: 'turnover',

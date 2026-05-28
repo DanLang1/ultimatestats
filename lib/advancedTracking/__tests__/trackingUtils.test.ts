@@ -254,6 +254,52 @@ describe('isPossessionOver', () => {
     expect(isPossessionOver(pos)).toBe(true);
   });
 
+  it('returns true after a turnover followed by an injury stoppage', () => {
+    const pos = makePossession(HOME, [
+      {
+        id: 'a1',
+        kind: 'throw',
+        sideId: HOME,
+        thrower: august,
+        toPlayer: meves,
+        result: 'drop',
+      },
+      {
+        id: 'a2',
+        kind: 'stoppage',
+        reason: 'injury',
+        sideId: HOME,
+        recordedAt: 100,
+        pausedAt: 100,
+        resumedAt: 200,
+      },
+    ]);
+    expect(isPossessionOver(pos)).toBe(true);
+  });
+
+  it('returns false after a completion followed by an injury stoppage', () => {
+    const pos = makePossession(HOME, [
+      {
+        id: 'a1',
+        kind: 'throw',
+        sideId: HOME,
+        thrower: august,
+        toPlayer: meves,
+        result: 'complete',
+      },
+      {
+        id: 'a2',
+        kind: 'stoppage',
+        reason: 'injury',
+        sideId: HOME,
+        recordedAt: 100,
+        pausedAt: 100,
+        resumedAt: 200,
+      },
+    ]);
+    expect(isPossessionOver(pos)).toBe(false);
+  });
+
   it('returns true after a dropped pull', () => {
     const pos = makePossession(HOME, [
       {

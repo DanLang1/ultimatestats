@@ -42,7 +42,7 @@ export const TrackerRareMenu = ({
   const pointIsOver = hasPointEnded(point);
   const activeSideId = getActiveSideId(possession, game);
   const oppHasDisc = !pointIsOver && activeSideId !== game.focusSideId;
-  const discHolderRef = getSafeDiscHolderRef(possession, game.focusSideId);
+  const discHolderRef = getSafeDiscHolderRef(possession, game.focusSideId, point);
 
   const handleOppBlock = () => {
     if (!discHolderRef || pointIsOver) return;

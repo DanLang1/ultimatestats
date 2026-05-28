@@ -98,7 +98,7 @@ export function didPullTurnOver(result: PullAction['result']): boolean {
 }
 
 export function isPossessionOver(possession: PointPossession | null): boolean {
-  const lastAction = getLastAction(possession);
+  const lastAction = possession?.actions.findLast((action) => action.kind !== 'stoppage') ?? null;
   if (lastAction == null) {
     return false;
   }

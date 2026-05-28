@@ -117,7 +117,7 @@ export default function AdvancedTrackerScreen() {
   const activeSideId = game ? getActiveSideId(possession, game) : '';
   const oppHasDisc = game ? !pointIsOver && activeSideId !== game.focusSideId : false;
   const canChangeLine = !pointIsOver;
-  const discHolderRef = getSafeDiscHolderRef(possession, game?.focusSideId ?? '');
+  const discHolderRef = getSafeDiscHolderRef(possession, game?.focusSideId ?? '', point);
   const isAwaitingPullPickup = isPullAwaitingPickup({
     possession,
     pointIsOver,

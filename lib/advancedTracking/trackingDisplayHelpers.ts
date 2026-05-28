@@ -30,7 +30,7 @@ export function getGoalInfo(
   if (!point || point.possessions.length === 0) return null;
 
   const lastPossession = point.possessions[point.possessions.length - 1];
-  const lastAction = lastPossession.actions[lastPossession.actions.length - 1];
+  const lastAction = lastPossession.actions.findLast((action) => action.kind !== 'stoppage');
 
   if (!lastAction || lastAction.kind !== 'throw') return null;
   const { result, thrower, toPlayer } = lastAction;
@@ -85,7 +85,10 @@ export function getDiscHolderRef(
   if (!possession || isPossessionOver(possession) || possession.sideId !== focusSideId) {
     return null;
   }
-  const actions = possession.actions;
+  return getDiscHolderRefFromActions(possession.actions);
+}
+
+function getDiscHolderRefFromActions(actions: PointPossession['actions']): PlayerRef | null {
   for (let i = actions.length - 1; i >= 0; i--) {
     const action = actions[i];
     if (action.kind === 'disc_pickup') {
@@ -97,15 +100,55 @@ export function getDiscHolderRef(
   return null;
 }
 
+function getPostInjuryPickupState(
+  possession: PointPossession,
+  point: TrackedPoint | null | undefined,
+): { shouldPromptForPickup: boolean; pickupIndex: number } | null {
+  // Injury stoppages can change the player restarting with a dead disc. Timeouts pause play
+  // without changing the holder, so they intentionally do not reset holder/pass-chain state.
+  const injuryIndex = possession.actions.findLastIndex(
+    (action) =>
+      action.kind === 'stoppage' && action.reason === 'injury' && action.resumedAt != null,
+  );
+  if (injuryIndex === -1) return null;
+
+  const pickupIndex = possession.actions.findIndex(
+    (action, index) => index > injuryIndex && action.kind === 'disc_pickup',
+  );
+  if (pickupIndex !== -1) {
+    return { shouldPromptForPickup: false, pickupIndex };
+  }
+
+  const injuryAction = possession.actions[injuryIndex];
+  const holderBeforeInjury = getDiscHolderRefFromActions(possession.actions.slice(0, injuryIndex));
+  if (holderBeforeInjury?.refType !== 'participant') {
+    return { shouldPromptForPickup: true, pickupIndex: -1 };
+  }
+
+  const sub = getSubForStoppage(point ?? null, injuryAction.id);
+  return {
+    shouldPromptForPickup: sub?.outIds.includes(holderBeforeInjury.participantId) ?? false,
+    pickupIndex: -1,
+  };
+}
+
 /**
  * Returns the disc holder ref, accounting for injury-just-resumed state.
- * After an injury stoppage resumes, the holder is forced to null so the coach must re-tap.
+ * After injury, the holder is forced to null only when the holder is unknown or subbed out.
  */
 export function getSafeDiscHolderRef(
   possession: PointPossession | null,
   focusSideId: string,
+  point?: TrackedPoint | null,
 ): PlayerRef | null {
-  if (isInjuryJustResumed(possession)) return null;
+  if (
+    possession &&
+    !isPossessionOver(possession) &&
+    possession.sideId === focusSideId &&
+    getPostInjuryPickupState(possession, point)?.shouldPromptForPickup
+  ) {
+    return null;
+  }
   return getDiscHolderRef(possession, focusSideId);
 }
 
@@ -123,6 +166,24 @@ export interface PassChainEvent {
   name: string; // The participant name
 }
 
+function getPassChainActions(
+  possession: PointPossession,
+  point?: TrackedPoint | null,
+): PointPossession['actions'] {
+  const postInjuryPickupState = getPostInjuryPickupState(possession, point);
+  if (postInjuryPickupState === null) {
+    return possession.actions;
+  }
+  if (postInjuryPickupState.shouldPromptForPickup) {
+    return [];
+  }
+  if (postInjuryPickupState.pickupIndex !== -1) {
+    return possession.actions.slice(postInjuryPickupState.pickupIndex);
+  }
+
+  return possession.actions;
+}
+
 function getRefName(ref: PlayerRef | undefined, participants: Participant[]): string | null {
   if (ref?.refType === 'participant') {
     return participants.find((p) => p.id === ref.participantId)?.name ?? null;
@@ -138,21 +199,27 @@ export function getPassChainEvents(
   possession: PointPossession | null,
   participants: Participant[],
   maxDisplay: number = 3,
+  point?: TrackedPoint | null,
 ): { events: PassChainEvent[]; truncated: boolean } {
   if (!possession || !hasItems(possession.actions)) {
+    return { events: [], truncated: false };
+  }
+
+  const actions = getPassChainActions(possession, point);
+  if (!hasItems(actions)) {
     return { events: [], truncated: false };
   }
 
   const chainEvents: PassChainEvent[] = [];
 
   // Capture the initial holder from the first pickup action in the possession
-  const firstPickup = possession.actions.find((a) => a.kind === 'disc_pickup');
+  const firstPickup = actions.find((a) => a.kind === 'disc_pickup');
   const pickupName = getRefName(firstPickup?.player, participants);
   if (pickupName) {
     chainEvents.push({ id: firstPickup!.id, name: pickupName });
   }
 
-  possession.actions.forEach((action) => {
+  actions.forEach((action) => {
     if (action.kind === 'throw') {
       // If we didn't have an initial holder, infer from the first thrower.
       // ID is suffixed because the action itself is a throw, not a pickup.
@@ -467,16 +534,6 @@ export function getLineParticipantIdsBeforeSub(
 export function getSubForStoppage(point: TrackedPoint | null, actionId: string): PointSub | null {
   if (!point?.subs) return null;
   return point.subs.find((s) => s.stoppageActionId === actionId) ?? null;
-}
-
-/**
- * Returns true if the last action was an injury stoppage that has resumed.
- * Used to force re-selecting the disc holder after an injury.
- */
-export function isInjuryJustResumed(possession: PointPossession | null): boolean {
-  if (!possession) return false;
-  const last = possession.actions[possession.actions.length - 1];
-  return last?.kind === 'stoppage' && last.reason === 'injury' && last.resumedAt != null;
 }
 
 /**

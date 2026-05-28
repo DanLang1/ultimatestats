@@ -1116,6 +1116,43 @@ describe('advancedTrackingStore', () => {
     expect(useAdvancedTrackingStore.getState().undoStack).toHaveLength(undoCountBefore);
   });
 
+  it('undo after an injury stoppage removes the last stat action and keeps the injury records', () => {
+    createGame();
+
+    useAdvancedTrackingStore.getState().recordPull({
+      lines: homeLines,
+      puller: untracked,
+      receiver: august,
+      result: 'inbound',
+    });
+    useAdvancedTrackingStore.getState().recordThrow({
+      thrower: august,
+      toPlayer: meves,
+      result: 'complete',
+    });
+
+    const stoppageId = useAdvancedTrackingStore.getState().recordStoppage({
+      reason: 'injury',
+      sideId: homeSideId,
+    });
+    useAdvancedTrackingStore.getState().recordSub({
+      stoppageActionId: stoppageId,
+      sideId: homeSideId,
+      inIds: [],
+      outIds: [meves.participantId],
+    });
+    useAdvancedTrackingStore.getState().resumeStoppage(stoppageId);
+
+    expect(useAdvancedTrackingStore.getState().undoLastOperation()).toBe(true);
+
+    const point = getCurrentPoint(getCurrentGame());
+    expect(point?.subs).toHaveLength(1);
+    expect(point?.possessions[0].actions.map((action) => action.kind)).toEqual([
+      'pull',
+      'stoppage',
+    ]);
+  });
+
   it('recordSub attaches a PointSub to the current point', () => {
     createGame();
 
