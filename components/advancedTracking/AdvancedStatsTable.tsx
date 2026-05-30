@@ -9,6 +9,7 @@ import React, { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 type SortKey = keyof AdvancedPlayerStats | 'name';
+type StatGroupKey = 'core' | 'throwing' | 'touches' | 'points';
 
 interface AdvancedStatsTableProps {
   playerStats: AdvancedPlayerStats[];
@@ -17,28 +18,65 @@ interface AdvancedStatsTableProps {
 }
 
 type ColumnDef = { key: SortKey; label: string; width?: number };
+type StatGroup = { key: StatGroupKey; label: string; columns: ColumnDef[] };
 
-const BASE_COLUMNS: ColumnDef[] = [
-  { key: 'name', label: 'PLAYER', width: 140 },
-  { key: 'plusMinus', label: '+/-', width: 58 },
-  { key: 'goals', label: 'Goals', width: 58 },
-  { key: 'assists', label: 'Ast', width: 58 },
-  { key: 'hockeyAssists', label: 'HA', width: 58 },
-  { key: 'blocks', label: 'Blk', width: 58 },
-  { key: 'throwaways', label: 'T/A', width: 58 },
-  { key: 'drops', label: 'Drp', width: 58 },
-  { key: 'stalls', label: 'Stl', width: 58 },
-  { key: 'completions', label: 'Cmp', width: 58 },
-  { key: 'throwAttempts', label: 'Att', width: 58 },
-  { key: 'completionPct', label: 'Cmp%', width: 68 },
-  { key: 'receptions', label: 'Rec', width: 58 },
-  { key: 'totalTouches', label: 'Tch', width: 58 },
-  { key: 'pulls', label: 'Pls', width: 58 },
-  { key: 'oEfficiency', label: 'O-Eff', width: 72 },
-  { key: 'dEfficiency', label: 'D-Eff', width: 72 },
-  { key: 'pointsPlayed', label: 'PP', width: 58 },
-  { key: 'oPoints', label: 'O-Pts', width: 66 },
-  { key: 'dPoints', label: 'D-Pts', width: 66 },
+const NAME_COLUMN: ColumnDef = { key: 'name', label: 'PLAYER' };
+const NAME_COLUMN_MIN_WIDTH = 92;
+const NAME_COLUMN_MAX_WIDTH = 140;
+const NAME_COLUMN_HORIZONTAL_PADDING = 24;
+const NAME_COLUMN_CHARACTER_WIDTH = 10;
+
+const STAT_GROUPS: StatGroup[] = [
+  {
+    key: 'core',
+    label: 'Core',
+    columns: [
+      { key: 'plusMinus', label: '+/-', width: 58 },
+      { key: 'goals', label: 'Goals', width: 58 },
+      { key: 'assists', label: 'Ast', width: 58 },
+      { key: 'hockeyAssists', label: 'HA', width: 58 },
+      { key: 'blocks', label: 'Blk', width: 58 },
+      { key: 'throwaways', label: 'T/A', width: 58 },
+      { key: 'drops', label: 'Drp', width: 58 },
+    ],
+  },
+  {
+    key: 'throwing',
+    label: 'Throw',
+    columns: [
+      { key: 'completions', label: 'Cmp', width: 58 },
+      { key: 'throwAttempts', label: 'Att', width: 58 },
+      { key: 'completionPct', label: 'Cmp%', width: 68 },
+      { key: 'assists', label: 'Ast', width: 58 },
+      { key: 'hockeyAssists', label: 'HA', width: 58 },
+      { key: 'throwaways', label: 'T/A', width: 58 },
+      { key: 'stalls', label: 'Stl', width: 58 },
+    ],
+  },
+  {
+    key: 'touches',
+    label: 'Touch',
+    columns: [
+      { key: 'totalTouches', label: 'Tch', width: 58 },
+      { key: 'receptions', label: 'Rec', width: 58 },
+      { key: 'completions', label: 'Cmp', width: 58 },
+      { key: 'throwAttempts', label: 'Att', width: 58 },
+      { key: 'pulls', label: 'Pls', width: 58 },
+      { key: 'blocks', label: 'Blk', width: 58 },
+    ],
+  },
+  {
+    key: 'points',
+    label: 'Points',
+    columns: [
+      { key: 'oEfficiency', label: 'O-Eff', width: 72 },
+      { key: 'dEfficiency', label: 'D-Eff', width: 72 },
+      { key: 'pointsPlayed', label: 'PP', width: 58 },
+      { key: 'oPoints', label: 'O-Pts', width: 66 },
+      { key: 'dPoints', label: 'D-Pts', width: 66 },
+      { key: 'plusMinus', label: '+/-', width: 58 },
+    ],
+  },
 ];
 
 const LEGEND_ITEMS: { abbr: string; label: string }[] = [
@@ -81,6 +119,23 @@ function formatCell(stats: AdvancedPlayerStats, key: SortKey): string {
   return v != null && v !== 0 ? String(v) : '-';
 }
 
+function getStatGroup(key: StatGroupKey): StatGroup {
+  const group = STAT_GROUPS.find((item) => item.key === key);
+  if (group) return group;
+  return STAT_GROUPS[0];
+}
+
+function hasColumn(columns: ColumnDef[], key: SortKey): boolean {
+  return columns.some((column) => column.key === key);
+}
+
+function getNameColumnWidth(names: string[]): number {
+  const longestNameLength = names.reduce((max, name) => Math.max(max, name.trim().length), 0);
+  const contentWidth = longestNameLength * NAME_COLUMN_CHARACTER_WIDTH;
+  const desiredWidth = contentWidth + NAME_COLUMN_HORIZONTAL_PADDING;
+  return Math.min(NAME_COLUMN_MAX_WIDTH, Math.max(NAME_COLUMN_MIN_WIDTH, desiredWidth));
+}
+
 export default function AdvancedStatsTable({
   playerStats,
   participantNames,
@@ -92,10 +147,15 @@ export default function AdvancedStatsTable({
     key: 'plusMinus',
     direction: 'desc',
   });
+  const [activeGroupKey, setActiveGroupKey] = useState<StatGroupKey>('core');
   const [showLegend, setShowLegend] = useState(false);
   const styles = createStyles(isLandscape, sizeClass);
 
   const getName = (id: string) => participantNames.get(id) ?? id;
+  const activeGroup = getStatGroup(activeGroupKey);
+  const visibleStatColumns = activeGroup.columns;
+  const playerNames = playerStats.map((stats) => getName(stats.participantId));
+  const nameColumnWidth = getNameColumnWidth(playerNames);
 
   const sorted = [...playerStats].sort((a, b) => {
     const dir = sortConfig.direction === 'asc' ? 1 : -1;
@@ -112,6 +172,15 @@ export default function AdvancedStatsTable({
       key,
       direction: c.key === key && c.direction === 'desc' ? 'asc' : 'desc',
     }));
+  };
+
+  const handleGroupPress = (key: StatGroupKey) => {
+    const nextGroup = getStatGroup(key);
+    setActiveGroupKey(key);
+    setSortConfig((current) => {
+      if (current.key === 'name' || hasColumn(nextGroup.columns, current.key)) return current;
+      return { key: nextGroup.columns[0].key, direction: 'desc' };
+    });
   };
 
   const renderSortIcon = (key: SortKey) => {
@@ -162,7 +231,7 @@ export default function AdvancedStatsTable({
     return palette.textInverse;
   };
 
-  const scrollableMinWidth = BASE_COLUMNS.slice(1).reduce((sum, c) => sum + (c.width ?? 58), 0);
+  const scrollableMinWidth = visibleStatColumns.reduce((sum, c) => sum + (c.width ?? 58), 0);
 
   return (
     <View>
@@ -181,9 +250,35 @@ export default function AdvancedStatsTable({
         </View>
         <View style={styles.headerHint}>
           <ThemedText style={[styles.headerHintText, { color: palette.textMuted }]}>
-            Scroll right for more
+            Tap row for player
           </ThemedText>
         </View>
+      </View>
+
+      <View
+        style={[
+          styles.groupControl,
+          { backgroundColor: palette.overlay05, borderColor: palette.overlay10 },
+        ]}>
+        {STAT_GROUPS.map((group) => {
+          const isActive = activeGroupKey === group.key;
+          return (
+            <Pressable
+              key={group.key}
+              onPress={() => handleGroupPress(group.key)}
+              style={[styles.groupButton, isActive && { backgroundColor: palette.accent }]}>
+              <ThemedText
+                style={[
+                  styles.groupButtonText,
+                  { color: palette.textMuted },
+                  isActive && { color: palette.textOnAccent },
+                ]}
+                numberOfLines={1}>
+                {group.label}
+              </ThemedText>
+            </Pressable>
+          );
+        })}
       </View>
 
       {showLegend && (
@@ -220,7 +315,7 @@ export default function AdvancedStatsTable({
               style={[
                 styles.headerCell,
                 styles.headerNameCell,
-                { width: BASE_COLUMNS[0].width ?? 140 },
+                { width: nameColumnWidth },
                 sortConfig.key === 'name' && { backgroundColor: palette.overlay05 },
               ]}
               onPress={() => handleSort('name')}>
@@ -232,39 +327,37 @@ export default function AdvancedStatsTable({
                       color: sortConfig.key === 'name' ? palette.accent : palette.textMuted,
                     },
                   ]}>
-                  {BASE_COLUMNS[0].label}
+                  {NAME_COLUMN.label}
                 </ThemedText>
                 {renderSortIcon('name')}
               </View>
             </Pressable>
           </View>
           {sorted.map((stats, index) => (
-            <View
+            <Pressable
               key={stats.participantId}
+              testID={`advanced-stats-row-${getName(stats.participantId).toLowerCase()}`}
+              onPress={() => onPlayerPress?.(stats.participantId)}
+              disabled={!onPlayerPress}
               style={[
                 styles.tableRow,
                 { borderBottomColor: palette.overlay10 },
                 index === sorted.length - 1 && { borderBottomWidth: 0 },
                 index % 2 === 1 && { backgroundColor: palette.overlay02 },
               ]}>
-              <Pressable
-                testID={`advanced-stats-row-${getName(stats.participantId).toLowerCase()}`}
-                onPress={() => onPlayerPress?.(stats.participantId)}
-                disabled={!onPlayerPress}
-                style={{ width: BASE_COLUMNS[0].width ?? 140 }}>
-                <ThemedText
-                  style={[
-                    styles.cell,
-                    styles.nameCell,
-                    {
-                      color: onPlayerPress ? palette.accent : palette.textInverse,
-                    },
-                  ]}
-                  numberOfLines={1}>
-                  {getName(stats.participantId)}
-                </ThemedText>
-              </Pressable>
-            </View>
+              <ThemedText
+                style={[
+                  styles.cell,
+                  styles.nameCell,
+                  {
+                    width: nameColumnWidth,
+                    color: onPlayerPress ? palette.accent : palette.textInverse,
+                  },
+                ]}
+                numberOfLines={1}>
+                {getName(stats.participantId)}
+              </ThemedText>
+            </Pressable>
           ))}
         </View>
 
@@ -276,7 +369,7 @@ export default function AdvancedStatsTable({
                 styles.tableHeader,
                 { backgroundColor: palette.overlay08, borderBottomColor: palette.overlay10 },
               ]}>
-              {BASE_COLUMNS.slice(1).map((col) => (
+              {visibleStatColumns.map((col) => (
                 <Pressable
                   key={String(col.key)}
                   style={[
@@ -301,15 +394,17 @@ export default function AdvancedStatsTable({
               ))}
             </View>
             {sorted.map((stats, index) => (
-              <View
+              <Pressable
                 key={stats.participantId}
+                onPress={() => onPlayerPress?.(stats.participantId)}
+                disabled={!onPlayerPress}
                 style={[
                   styles.tableRow,
                   { borderBottomColor: palette.overlay10 },
                   index === sorted.length - 1 && { borderBottomWidth: 0 },
                   index % 2 === 1 && { backgroundColor: palette.overlay02 },
                 ]}>
-                {BASE_COLUMNS.slice(1).map((col) => {
+                {visibleStatColumns.map((col) => {
                   const color = getCellColor(stats, col.key);
                   const text = formatCell(stats, col.key);
                   return (
@@ -326,7 +421,7 @@ export default function AdvancedStatsTable({
                     </ThemedText>
                   );
                 })}
-              </View>
+              </Pressable>
             ))}
           </View>
         </ScrollView>
@@ -391,6 +486,26 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
       fontSize: scaleBySizeClass(12, sizeClass),
       fontFamily: Fonts.bold,
       letterSpacing: 1,
+    },
+    groupControl: {
+      flexDirection: 'row',
+      borderRadius: 8,
+      borderWidth: 1,
+      padding: 3,
+      marginBottom: 10,
+      gap: 3,
+    },
+    groupButton: {
+      flex: 1,
+      minHeight: 32,
+      borderRadius: 6,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingHorizontal: 4,
+    },
+    groupButtonText: {
+      fontSize: scaleBySizeClass(11, sizeClass),
+      fontFamily: Fonts.bold,
     },
     tableContainer: {
       borderRadius: 12,

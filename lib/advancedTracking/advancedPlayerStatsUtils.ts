@@ -32,7 +32,7 @@ export interface AdvancedPlayerStats {
   drops: number;
 
   // Touches
-  /** completions + receptions + disc_pickup + pull_reception */
+  /** receptions + disc_pickup + pull_reception */
   totalTouches: number;
 
   // Defense
@@ -192,8 +192,7 @@ export function computeAdvancedPlayerStats(
 
     // Derived calculations
     stats.completionPct = stats.throwAttempts > 0 ? stats.completions / stats.throwAttempts : null;
-    stats.totalTouches =
-      stats.completions + stats.receptions + sum('disc_pickup') + stats.pullReceptions;
+    stats.totalTouches = stats.receptions + sum('disc_pickup') + stats.pullReceptions;
     stats.plusMinus =
       stats.goals +
       stats.assists +

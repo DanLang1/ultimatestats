@@ -144,13 +144,13 @@ describe('advancedPlayerStatsUtils', () => {
     });
 
     it('total touches', () => {
-      // August: 1 completion + 0 receptions + 0 disc_pickup + 1 pull_reception = 2
-      expect(findStats(stats, 'p_august').totalTouches).toBe(2);
-      // Meves: 1 completion + 1 reception = 2
-      expect(findStats(stats, 'p_meves').totalTouches).toBe(2);
-      // Joah: 1 completion + 1 reception = 2
-      expect(findStats(stats, 'p_joah').totalTouches).toBe(2);
-      // Max: 0 completions + 1 reception = 1
+      // August: 0 receptions + 0 disc_pickup + 1 pull_reception = 1
+      expect(findStats(stats, 'p_august').totalTouches).toBe(1);
+      // Meves: 1 reception = 1
+      expect(findStats(stats, 'p_meves').totalTouches).toBe(1);
+      // Joah: 1 reception = 1
+      expect(findStats(stats, 'p_joah').totalTouches).toBe(1);
+      // Max: 1 reception = 1
       expect(findStats(stats, 'p_max').totalTouches).toBe(1);
     });
 

@@ -434,18 +434,16 @@ describe('computeAdvancedPlayerStats — edge cases', () => {
     const analytics = buildAnalyticsGame(game);
     const stats = computeAdvancedPlayerStats(analytics);
     const augustStats = findStats(stats, 'p_august');
-    // completions: 2 (a2, a3)
     // receptions: 1 (a3)
     // disc_pickups: 0
     // pull_receptions: 1 (a1)
-    expect(augustStats.totalTouches).toBe(4);
+    expect(augustStats.totalTouches).toBe(2);
 
     const mevesStats = findStats(stats, 'p_meves');
-    // completions: 1 (a4)
     // receptions: 2 (a2, a4)
     // disc_pickups: 0
     // pull_receptions: 0
-    expect(mevesStats.totalTouches).toBe(3);
+    expect(mevesStats.totalTouches).toBe(2);
   });
 
   it('player who was subbed in still gets point credit', () => {
