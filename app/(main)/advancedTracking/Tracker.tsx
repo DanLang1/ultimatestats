@@ -1,17 +1,18 @@
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { DevDebugModal } from '@/components/advancedTracking/DevDebugModal';
-import { GameClockPauseOverlay } from '@/components/advancedTracking/GameClockPauseOverlay';
 import { LandscapeUnsupported } from '@/components/advancedTracking/LandscapeUnsupported';
-import { StoppageOverlay } from '@/components/advancedTracking/StoppageOverlay';
 import { TrackerActionFooter } from '@/components/advancedTracking/TrackerActionFooter';
 import { TrackerCapBar } from '@/components/advancedTracking/TrackerCapBar';
 import { TrackerHomeMenu } from '@/components/advancedTracking/TrackerHomeMenu';
 import { TrackerLastActionCard } from '@/components/advancedTracking/TrackerLastActionCard';
 import { TrackerLineChangeMenu } from '@/components/advancedTracking/TrackerLineChangeMenu';
-import { TrackerPlayerGrid } from '@/components/advancedTracking/TrackerPlayerGrid';
 import { TrackerRareMenu } from '@/components/advancedTracking/TrackerRareMenu';
 import { TrackerScoreBar } from '@/components/advancedTracking/TrackerScoreBar';
+import {
+  getTrackerSurfaceState,
+  TrackerSurface,
+} from '@/components/advancedTracking/TrackerSurface';
 import { useTheme } from '@/context/ThemeContext';
 import { useLiveRosterParticipants } from '@/hooks/advancedTracking/useLiveRosterParticipants';
 import { useTimestampTimer } from '@/hooks/advancedTracking/useTimer';
@@ -114,6 +115,7 @@ export default function AdvancedTrackerScreen() {
   const pointIsOver = hasPointEnded(point);
   const lastUndoEntry = undoStack.at(-1);
   const showStartSecondHalfEarly = canStartSecondHalfEarly(game ?? undefined, lastUndoEntry);
+  const showInPointControls = !activeStoppage && !activeGameClockPause && !pointIsOver;
   const activeSideId = game ? getActiveSideId(possession, game) : '';
   const oppHasDisc = game ? !pointIsOver && activeSideId !== game.focusSideId : false;
   const canChangeLine = !pointIsOver;
@@ -210,16 +212,19 @@ export default function AdvancedTrackerScreen() {
     });
   };
 
+  const surfaceState = getTrackerSurfaceState({
+    game,
+    activeGameClockPause,
+    activeStoppage,
+    pointIsOver,
+  });
+
   const LEFT_PANEL_WIDTH = 160;
   const renderTrackingSurface = (availableWidth?: number) => {
-    if (activeGameClockPause) {
-      return <GameClockPauseOverlay pause={activeGameClockPause} />;
-    }
-    if (activeStoppage) {
-      return <StoppageOverlay game={game} />;
-    }
     return (
-      <TrackerPlayerGrid
+      <TrackerSurface
+        state={surfaceState}
+        participants={participants}
         activeParticipants={activeParticipants}
         discHolderRef={discHolderRef}
         oppHasDisc={oppHasDisc}
@@ -227,6 +232,7 @@ export default function AdvancedTrackerScreen() {
         passModifier={passModifier}
         handlers={handlers}
         onLineChangePress={() => setShowLineChangeMenu(true)}
+        onStartNextPoint={handleStartNextPoint}
         canChangeLine={canChangeLine}
         availableWidth={availableWidth}
       />
@@ -260,7 +266,7 @@ export default function AdvancedTrackerScreen() {
             />
             <TrackerScoreBar pointElapsedMs={pointElapsedMs} />
             <View style={{ flex: 1 }} />
-            {!activeStoppage && !activeGameClockPause && (
+            {showInPointControls && (
               <>
                 <TrackerLastActionCard
                   passModifier={passModifier}
@@ -292,7 +298,7 @@ export default function AdvancedTrackerScreen() {
             gameStarted={gameStartedAt !== null}
           />
           <TrackerScoreBar pointElapsedMs={pointElapsedMs} />
-          {!activeStoppage && !activeGameClockPause && (
+          {showInPointControls && (
             <TrackerLastActionCard
               passModifier={passModifier}
               onCancelModifier={() => setPassModifier(null)}
@@ -302,7 +308,7 @@ export default function AdvancedTrackerScreen() {
           <View style={{ flex: 1, justifyContent: 'flex-start', paddingTop: 4 }}>
             {renderTrackingSurface()}
           </View>
-          {!activeStoppage && !activeGameClockPause && (
+          {showInPointControls && (
             <TrackerActionFooter
               pointElapsedMs={pointElapsedMs}
               onStartNextPoint={handleStartNextPoint}
@@ -312,7 +318,7 @@ export default function AdvancedTrackerScreen() {
         </>
       )}
 
-      {!activeStoppage && !activeGameClockPause && (
+      {showInPointControls && (
         <TrackerRareMenu
           visible={showRareMenu}
           onClose={() => setShowRareMenu(false)}

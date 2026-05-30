@@ -215,6 +215,10 @@ export type BetweenPointTransition =
       sideId: string;
       /** True when this was the one-per-game floater rather than a regular timeout. */
       isFloater?: boolean;
+      /** Absolute timestamp (ms epoch) when the between-point timeout was called. */
+      startedAt?: number;
+      /** Absolute timestamp (ms epoch) when the between-point timeout display was ended. */
+      endedAt?: number;
     }
   | {
       id: string;

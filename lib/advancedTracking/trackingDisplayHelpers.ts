@@ -2,6 +2,7 @@ import { hasItems } from '@/lib/utils';
 import { getOtherSideId, hasPointEnded, isPossessionOver } from './trackingUtils';
 import {
   AdvancedTrackedGame,
+  BetweenPointTransition,
   GameClockPause,
   Participant,
   PassModifier,
@@ -11,6 +12,29 @@ import {
   StoppageAction,
   TrackedPoint,
 } from './types';
+
+export interface ActiveBetweenPointTimeout {
+  point: TrackedPoint;
+  transition: Extract<BetweenPointTransition, { transitionType: 'timeout' }>;
+}
+
+export function getActiveBetweenPointTimeout(
+  game: AdvancedTrackedGame | null,
+): ActiveBetweenPointTimeout | null {
+  if (game == null) return null;
+
+  const currentPoint = game.points.at(-1) ?? null;
+  if (currentPoint == null || !hasPointEnded(currentPoint)) return null;
+
+  const latestTransition = currentPoint.transitionsAfter?.at(-1);
+  if (latestTransition == null || latestTransition.transitionType !== 'timeout') return null;
+  if (latestTransition.endedAt != null) return null;
+
+  return {
+    point: currentPoint,
+    transition: latestTransition,
+  };
+}
 
 export interface GoalInfo {
   /** True when the focus team scored (including callahan). */

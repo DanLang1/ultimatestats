@@ -866,6 +866,7 @@ describe('advancedTrackingStore', () => {
         id: transitionId,
         transitionType: 'timeout',
         sideId: homeSideId,
+        startedAt: expect.any(Number),
       },
     ]);
   });

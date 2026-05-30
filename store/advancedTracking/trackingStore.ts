@@ -403,7 +403,8 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
               id: transitionId,
               transitionType: 'timeout',
               sideId: input.sideId,
-              isFloater: input.isFloater,
+              ...(input.isFloater === true ? { isFloater: true } : {}),
+              startedAt: now,
             });
             liveGame.updatedAt = now;
             pushUndoEntry(state, {
@@ -414,6 +415,22 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
           });
 
           return transitionId;
+        },
+
+        endBetweenPointTimeout: (transitionId) => {
+          set((state) => {
+            const liveGame = getCurrentGame(state);
+            const currentPoint = getCurrentPoint(liveGame);
+            const timeout = currentPoint?.transitionsAfter?.find(
+              (transition) => transition.id === transitionId,
+            );
+            if (timeout == null || timeout.transitionType !== 'timeout') {
+              return;
+            }
+
+            timeout.endedAt = Date.now();
+            liveGame.updatedAt = Date.now();
+          });
         },
 
         recordPull: (input) => {
