@@ -1,6 +1,6 @@
 import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
-import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { canCallTimeout, SideTimeoutState } from '@/lib/advancedTracking/trackingDisplayHelpers';
 import { Fonts } from '@/theme/theme';
 import React from 'react';
@@ -14,6 +14,12 @@ interface TimeoutButtonProps {
   testID?: string;
   stoppageActive?: boolean;
 }
+
+const TEAM_NAME_FONT_SIZE: Record<SizeClass, number> = { small: 12, medium: 16, large: 20 };
+const PILL_TEXT_FONT_SIZE: Record<SizeClass, number> = { small: 11, medium: 14, large: 17 };
+const REMAINING_FONT_SIZE: Record<SizeClass, number> = { small: 10, medium: 13, large: 16 };
+const PILL_HORIZONTAL_PADDING: Record<SizeClass, number> = { small: 10, medium: 16, large: 22 };
+const PILL_VERTICAL_PADDING: Record<SizeClass, number> = { small: 4, medium: 7, large: 10 };
 
 export function TimeoutButton({
   teamName,
@@ -30,23 +36,24 @@ export function TimeoutButton({
   const remainingLabel = getTimeoutSummary(state);
 
   return (
-    <Pressable
-      testID={testID}
-      onPress={onPress}
-      disabled={!canUse}
-      style={({ pressed }) => [styles.action, pressed && canUse && { opacity: 0.5 }]}>
+    <View style={styles.action}>
       <ThemedText
         style={[styles.teamName, { color: canUse ? palette.textInverse : palette.textMuted }]}
         numberOfLines={1}>
         {teamName}
       </ThemedText>
-      <View
-        style={[
+      <Pressable
+        testID={testID}
+        onPress={onPress}
+        disabled={!canUse}
+        hitSlop={4}
+        style={({ pressed }) => [
           styles.pillButton,
           {
             backgroundColor: canUse ? color + '18' : palette.overlay05,
             borderColor: canUse ? color : palette.border,
           },
+          pressed && canUse && { opacity: 0.5 },
         ]}>
         <ThemedText
           style={[
@@ -57,11 +64,11 @@ export function TimeoutButton({
           ]}>
           Take T/O
         </ThemedText>
-      </View>
+      </Pressable>
       <ThemedText style={[styles.remainingLabel, { color: palette.textMuted }]} numberOfLines={1}>
         {remainingLabel}
       </ThemedText>
-    </Pressable>
+    </View>
   );
 }
 
@@ -77,15 +84,15 @@ function createStyles(sizeClass: SizeClass) {
       gap: 6,
     },
     pillButton: {
-      paddingHorizontal: scaleBySizeClass(10, sizeClass),
-      paddingVertical: scaleBySizeClass(4, sizeClass),
+      paddingHorizontal: getSizeClassValue(PILL_HORIZONTAL_PADDING, sizeClass),
+      paddingVertical: getSizeClassValue(PILL_VERTICAL_PADDING, sizeClass),
       borderRadius: 999,
-      borderWidth: 1.5,
+      borderWidth: scaleBySizeClass(1.5, sizeClass, { rounding: 'none' }),
       alignItems: 'center',
       justifyContent: 'center',
     },
     pillText: {
-      fontSize: scaleBySizeClass(11, sizeClass),
+      fontSize: getSizeClassValue(PILL_TEXT_FONT_SIZE, sizeClass),
       fontFamily: Fonts.black,
       letterSpacing: 0.5,
       textTransform: 'uppercase',
@@ -93,14 +100,14 @@ function createStyles(sizeClass: SizeClass) {
       textAlign: 'center',
     },
     teamName: {
-      fontSize: scaleBySizeClass(12, sizeClass),
+      fontSize: getSizeClassValue(TEAM_NAME_FONT_SIZE, sizeClass),
       fontFamily: Fonts.extraBold,
       letterSpacing: 0.5,
       textTransform: 'uppercase',
       textAlign: 'center',
     },
     remainingLabel: {
-      fontSize: scaleBySizeClass(10, sizeClass),
+      fontSize: getSizeClassValue(REMAINING_FONT_SIZE, sizeClass),
       fontFamily: Fonts.semiBold,
       letterSpacing: 0,
       textTransform: 'uppercase',

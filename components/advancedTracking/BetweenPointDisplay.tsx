@@ -1,7 +1,7 @@
 import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
 import { useTimestampTimer } from '@/hooks/advancedTracking/useTimer';
-import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import {
   getActiveBetweenPointTimeout,
   getGoalInfo,
@@ -29,6 +29,33 @@ interface BetweenPointDisplayProps {
   participants: Participant[];
   onStartNextPoint: () => void;
 }
+
+const SUMMARY_MAX_WIDTH: Record<SizeClass, number> = { small: 360, medium: 640, large: 920 };
+const TIMEOUT_MAX_WIDTH: Record<SizeClass, number> = { small: 340, medium: 560, large: 700 };
+const ACTION_ROW_MAX_WIDTH: Record<SizeClass, number> = { small: 340, medium: 560, large: 760 };
+const METRIC_CARD_WIDTH: Record<SizeClass, number> = { small: 156, medium: 260, large: 360 };
+const METRIC_CARD_HEIGHT: Record<SizeClass, number> = { small: 54, medium: 72, large: 88 };
+const SCORED_FONT_SIZE: Record<SizeClass, number> = { small: 32, medium: 46, large: 62 };
+const OUTCOME_FONT_SIZE: Record<SizeClass, number> = { small: 18, medium: 25, large: 34 };
+const METRIC_VALUE_FONT_SIZE: Record<SizeClass, number> = { small: 18, medium: 26, large: 34 };
+const METRIC_LABEL_FONT_SIZE: Record<SizeClass, number> = { small: 10, medium: 13, large: 16 };
+const ATTRIBUTION_LABEL_FONT_SIZE: Record<SizeClass, number> = {
+  small: 9,
+  medium: 12,
+  large: 15,
+};
+const ATTRIBUTION_NAME_FONT_SIZE: Record<SizeClass, number> = {
+  small: 13,
+  medium: 18,
+  large: 24,
+};
+const LAST_POINT_LABEL_FONT_SIZE: Record<SizeClass, number> = {
+  small: 10,
+  medium: 13,
+  large: 16,
+};
+const ACTION_TEXT_FONT_SIZE: Record<SizeClass, number> = { small: 13, medium: 16, large: 20 };
+const ICON_BUTTON_WIDTH: Record<SizeClass, number> = { small: 58, medium: 76, large: 92 };
 
 export const BetweenPointDisplay = ({
   game,
@@ -267,7 +294,7 @@ export const BetweenPointDisplay = ({
                       name={player.name}
                       number={player.number}
                       matchingType={player.matchingType}
-                      compact
+                      compact={sizeClass === 'small'}
                       onPress={() => {}}
                     />
                   ))}
@@ -324,15 +351,15 @@ function createStyles(sizeClass: SizeClass, palette: Palette) {
     container: { flex: 1, justifyContent: 'flex-start' },
     summaryContent: {
       alignItems: 'center',
-      paddingTop: scaleBySizeClass(28, sizeClass),
+      paddingTop: scaleBySizeClass(34, sizeClass),
       paddingHorizontal: scaleBySizeClass(24, sizeClass),
       width: '100%',
       flex: 1,
     },
     summaryBand: {
       width: '100%',
-      maxWidth: scaleBySizeClass(360, sizeClass),
-      gap: scaleBySizeClass(16, sizeClass),
+      maxWidth: getSizeClassValue(SUMMARY_MAX_WIDTH, sizeClass),
+      gap: scaleBySizeClass(20, sizeClass),
     },
     summaryHeaderColumn: {
       alignItems: 'center',
@@ -347,7 +374,7 @@ function createStyles(sizeClass: SizeClass, palette: Palette) {
     },
     scoredText: {
       fontFamily: Fonts.black,
-      fontSize: scaleBySizeClass(32, sizeClass),
+      fontSize: getSizeClassValue(SCORED_FONT_SIZE, sizeClass),
       letterSpacing: 0.5,
       textTransform: 'uppercase',
       textAlign: 'center',
@@ -355,7 +382,7 @@ function createStyles(sizeClass: SizeClass, palette: Palette) {
     },
     outcomeText: {
       fontFamily: Fonts.black,
-      fontSize: scaleBySizeClass(18, sizeClass),
+      fontSize: getSizeClassValue(OUTCOME_FONT_SIZE, sizeClass),
       letterSpacing: 0.3,
       textAlign: 'center',
       textTransform: 'uppercase',
@@ -363,14 +390,14 @@ function createStyles(sizeClass: SizeClass, palette: Palette) {
     metricCardRow: {
       flexDirection: 'row',
       justifyContent: 'center',
-      gap: scaleBySizeClass(10, sizeClass),
+      gap: scaleBySizeClass(14, sizeClass),
       width: '100%',
       marginTop: scaleBySizeClass(8, sizeClass),
       flexWrap: 'wrap',
     },
     metricCard: {
-      width: scaleBySizeClass(156, sizeClass),
-      minHeight: scaleBySizeClass(54, sizeClass),
+      width: getSizeClassValue(METRIC_CARD_WIDTH, sizeClass),
+      minHeight: getSizeClassValue(METRIC_CARD_HEIGHT, sizeClass),
       borderRadius: scaleBySizeClass(8, sizeClass),
       borderCurve: 'continuous',
       flexDirection: 'row',
@@ -386,12 +413,12 @@ function createStyles(sizeClass: SizeClass, palette: Palette) {
     },
     metricValue: {
       fontFamily: Fonts.black,
-      fontSize: scaleBySizeClass(18, sizeClass),
+      fontSize: getSizeClassValue(METRIC_VALUE_FONT_SIZE, sizeClass),
       fontVariant: ['tabular-nums'],
     },
     metricLabel: {
       fontFamily: Fonts.black,
-      fontSize: scaleBySizeClass(10, sizeClass),
+      fontSize: getSizeClassValue(METRIC_LABEL_FONT_SIZE, sizeClass),
       textTransform: 'uppercase',
       letterSpacing: 0.3,
     },
@@ -412,17 +439,17 @@ function createStyles(sizeClass: SizeClass, palette: Palette) {
     },
     statLabel: {
       fontFamily: Fonts.bold,
-      fontSize: scaleBySizeClass(9, sizeClass),
+      fontSize: getSizeClassValue(ATTRIBUTION_LABEL_FONT_SIZE, sizeClass),
       textTransform: 'uppercase',
       letterSpacing: 0.5,
     },
     statName: {
       fontFamily: Fonts.bold,
-      fontSize: scaleBySizeClass(13, sizeClass),
+      fontSize: getSizeClassValue(ATTRIBUTION_NAME_FONT_SIZE, sizeClass),
       textAlign: 'center',
     },
     lastPointSection: {
-      gap: scaleBySizeClass(8, sizeClass),
+      gap: scaleBySizeClass(12, sizeClass),
     },
     lastPointHeader: {
       flexDirection: 'row',
@@ -432,7 +459,7 @@ function createStyles(sizeClass: SizeClass, palette: Palette) {
     },
     lastPointLabel: {
       fontFamily: Fonts.bold,
-      fontSize: scaleBySizeClass(10, sizeClass),
+      fontSize: getSizeClassValue(LAST_POINT_LABEL_FONT_SIZE, sizeClass),
       textTransform: 'uppercase',
       letterSpacing: 0.6,
     },
@@ -440,7 +467,7 @@ function createStyles(sizeClass: SizeClass, palette: Palette) {
       flexDirection: 'row',
       flexWrap: 'wrap',
       justifyContent: 'center',
-      gap: scaleBySizeClass(8, sizeClass),
+      gap: scaleBySizeClass(10, sizeClass),
     },
     timeoutContent: {
       alignItems: 'center',
@@ -451,7 +478,7 @@ function createStyles(sizeClass: SizeClass, palette: Palette) {
     },
     timeoutBlock: {
       width: '100%',
-      maxWidth: scaleBySizeClass(340, sizeClass),
+      maxWidth: getSizeClassValue(TIMEOUT_MAX_WIDTH, sizeClass),
       alignItems: 'center',
       gap: scaleBySizeClass(8, sizeClass),
     },
@@ -480,7 +507,7 @@ function createStyles(sizeClass: SizeClass, palette: Palette) {
       flexDirection: 'row',
       gap: scaleBySizeClass(12, sizeClass),
       width: '100%',
-      maxWidth: scaleBySizeClass(340, sizeClass),
+      maxWidth: getSizeClassValue(ACTION_ROW_MAX_WIDTH, sizeClass),
     },
     bottomActions: {
       alignItems: 'center',
@@ -489,7 +516,7 @@ function createStyles(sizeClass: SizeClass, palette: Palette) {
       paddingBottom: scaleBySizeClass(48, sizeClass),
     },
     actionBtn: {
-      paddingVertical: scaleBySizeClass(16, sizeClass),
+      paddingVertical: scaleBySizeClass(20, sizeClass),
       borderWidth: 1,
       borderRadius: 16,
       borderCurve: 'continuous',
@@ -497,8 +524,8 @@ function createStyles(sizeClass: SizeClass, palette: Palette) {
       justifyContent: 'center',
     },
     iconBtn: {
-      width: scaleBySizeClass(58, sizeClass),
-      paddingVertical: scaleBySizeClass(16, sizeClass),
+      width: getSizeClassValue(ICON_BUTTON_WIDTH, sizeClass),
+      paddingVertical: scaleBySizeClass(20, sizeClass),
       borderWidth: 1,
       borderRadius: 16,
       borderCurve: 'continuous',
@@ -509,7 +536,7 @@ function createStyles(sizeClass: SizeClass, palette: Palette) {
     endTimeoutBtn: { flex: 1.6 },
     actionBtnText: {
       fontFamily: Fonts.black,
-      fontSize: scaleBySizeClass(13, sizeClass),
+      fontSize: getSizeClassValue(ACTION_TEXT_FONT_SIZE, sizeClass),
       letterSpacing: 1,
       textAlign: 'center',
     },

@@ -2,7 +2,7 @@ import { ThemedText } from '@/components/ThemedText';
 import { TimeoutButton } from '@/components/advancedTracking/scoreBar/TimeoutButton';
 import { useScoreBarData } from '@/components/advancedTracking/scoreBar/useScoreBarData';
 import { useTheme } from '@/context/ThemeContext';
-import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { useSettingsStore } from '@/store/settingsStore';
 import { Fonts } from '@/theme/theme';
 import React from 'react';
@@ -11,6 +11,13 @@ import { StyleSheet, View } from 'react-native';
 interface ScoreBarActionRowProps {
   width: number;
 }
+
+const CENTER_CARD_WIDTH: Record<SizeClass, number> = { small: 106, medium: 150, large: 190 };
+const RATIO_FONT_SIZE: Record<SizeClass, number> = { small: 12, medium: 15, large: 18 };
+const GAME_TO_FONT_SIZE: Record<SizeClass, number> = { small: 14, medium: 18, large: 22 };
+const ROW_GAP: Record<SizeClass, number> = { small: 6, medium: 10, large: 14 };
+const ROW_HORIZONTAL_PADDING: Record<SizeClass, number> = { small: 12, medium: 18, large: 24 };
+const ROW_VERTICAL_PADDING: Record<SizeClass, number> = { small: 10, medium: 14, large: 18 };
 
 export const ScoreBarActionRow = ({ width }: ScoreBarActionRowProps) => {
   const { palette } = useTheme();
@@ -87,32 +94,32 @@ function createStyles(sizeClass: SizeClass) {
       flex: 1,
       flexDirection: 'row',
       alignItems: 'stretch',
-      gap: 6,
-      paddingHorizontal: 12,
-      paddingTop: 10,
-      paddingBottom: 10,
+      gap: getSizeClassValue(ROW_GAP, sizeClass),
+      paddingHorizontal: getSizeClassValue(ROW_HORIZONTAL_PADDING, sizeClass),
+      paddingTop: getSizeClassValue(ROW_VERTICAL_PADDING, sizeClass),
+      paddingBottom: getSizeClassValue(ROW_VERTICAL_PADDING, sizeClass),
     },
     centerInfoCard: {
-      width: scaleBySizeClass(106, sizeClass),
+      width: getSizeClassValue(CENTER_CARD_WIDTH, sizeClass),
       alignItems: 'center',
       justifyContent: 'center',
-      gap: 6,
+      gap: scaleBySizeClass(6, sizeClass),
       paddingHorizontal: 2,
     },
     ratioChip: {
-      paddingHorizontal: 10,
-      paddingVertical: 4,
+      paddingHorizontal: scaleBySizeClass(10, sizeClass),
+      paddingVertical: scaleBySizeClass(4, sizeClass),
       borderRadius: 8,
-      borderWidth: 1.5,
+      borderWidth: scaleBySizeClass(1.5, sizeClass, { rounding: 'none' }),
       borderCurve: 'continuous',
     },
     ratioText: {
-      fontSize: scaleBySizeClass(12, sizeClass),
+      fontSize: getSizeClassValue(RATIO_FONT_SIZE, sizeClass),
       fontFamily: Fonts.black,
       letterSpacing: 0.5,
     },
     gameToText: {
-      fontSize: scaleBySizeClass(14, sizeClass),
+      fontSize: getSizeClassValue(GAME_TO_FONT_SIZE, sizeClass),
       fontFamily: Fonts.black,
       letterSpacing: 0.2,
       textAlign: 'center',

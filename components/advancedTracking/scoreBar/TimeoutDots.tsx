@@ -1,3 +1,4 @@
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { SideTimeoutState } from '@/lib/advancedTracking/trackingDisplayHelpers';
 import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
@@ -10,6 +11,9 @@ interface TimeoutDotsProps {
 }
 
 export function TimeoutDots({ state, activeColor, onPress, testID }: TimeoutDotsProps) {
+  const { sizeClass } = useLayout();
+  const styles = createStyles(sizeClass);
+
   return (
     <Pressable testID={testID} onPress={onPress} disabled={!onPress} hitSlop={6}>
       <View style={styles.row}>
@@ -41,24 +45,26 @@ export function TimeoutDots({ state, activeColor, onPress, testID }: TimeoutDots
   );
 }
 
-const styles = StyleSheet.create({
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  dot: {
-    width: 10,
-    height: 10,
-    borderRadius: 999,
-    borderWidth: 1.5,
-  },
-  diamond: {
-    width: 9,
-    height: 9,
-    borderRadius: 1,
-    borderWidth: 1.5,
-    transform: [{ rotate: '45deg' }],
-    marginHorizontal: 2,
-  },
-});
+function createStyles(sizeClass: SizeClass) {
+  return StyleSheet.create({
+    row: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: scaleBySizeClass(6, sizeClass),
+    },
+    dot: {
+      width: scaleBySizeClass(10, sizeClass),
+      height: scaleBySizeClass(10, sizeClass),
+      borderRadius: 999,
+      borderWidth: scaleBySizeClass(1.5, sizeClass, { rounding: 'none' }),
+    },
+    diamond: {
+      width: scaleBySizeClass(9, sizeClass),
+      height: scaleBySizeClass(9, sizeClass),
+      borderRadius: scaleBySizeClass(1, sizeClass),
+      borderWidth: scaleBySizeClass(1.5, sizeClass, { rounding: 'none' }),
+      transform: [{ rotate: '45deg' }],
+      marginHorizontal: scaleBySizeClass(2, sizeClass),
+    },
+  });
+}

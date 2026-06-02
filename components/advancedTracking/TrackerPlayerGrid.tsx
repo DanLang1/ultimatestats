@@ -1,4 +1,4 @@
-import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { Participant, PlayerRef } from '@/lib/advancedTracking/types';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
@@ -25,6 +25,8 @@ interface TrackerPlayerGridProps {
   canChangeLine: boolean;
   availableWidth?: number;
 }
+
+const MAX_CHIP_WIDTH = { small: 180, medium: 220, large: 260 } as const;
 
 function getChipModel(item: Participant | 'unknown'): {
   label: string;
@@ -56,12 +58,15 @@ export const TrackerPlayerGrid = ({
 }: TrackerPlayerGridProps) => {
   const { width, sizeClass, isLandscape } = useLayout();
 
-  const columns = isLandscape ? 4 : 3;
-  const hPadding = scaleBySizeClass(24, sizeClass) * 2;
+  const columns = 3;
+  const horizontalPadding = scaleBySizeClass(20, sizeClass);
+  const hPadding = horizontalPadding * 2;
   const gap = scaleBySizeClass(12, sizeClass);
-  const chipWidth = Math.floor(
+  const availableChipWidth = Math.floor(
     ((availableWidth ?? width) - hPadding - gap * (columns - 1)) / columns,
   );
+  const chipWidth = Math.min(availableChipWidth, getSizeClassValue(MAX_CHIP_WIDTH, sizeClass));
+  const gridWidth = chipWidth * columns + gap * (columns - 1) + hPadding;
 
   const styles = createStyles(sizeClass, isLandscape);
 
@@ -77,7 +82,7 @@ export const TrackerPlayerGrid = ({
   }
 
   return (
-    <View style={styles.gridContainer}>
+    <View style={[styles.gridContainer, { width: gridWidth }]}>
       {items.map((item, i) => {
         if (item === null) {
           return <View key={`placeholder-${i}`} style={{ width: chipWidth, aspectRatio: 1 }} />;
@@ -121,6 +126,7 @@ export const TrackerPlayerGrid = ({
 function createStyles(sizeClass: SizeClass, isLandscape: boolean) {
   return StyleSheet.create({
     gridContainer: {
+      alignSelf: 'center',
       flexDirection: 'row',
       flexWrap: 'wrap',
       justifyContent: 'center',

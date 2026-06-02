@@ -88,6 +88,29 @@ export const TrackerHomeMenu = ({
           </View>
 
           <Pressable
+            testID="tracker-menu-home"
+            onPress={handleGoHome}
+            style={({ pressed }) => [
+              styles.action,
+              {
+                backgroundColor: palette.overlay05,
+                borderColor: palette.overlay15,
+              },
+              pressed && { opacity: 0.7 },
+            ]}>
+            <View style={[styles.iconWrap, { backgroundColor: palette.accentOverlay10 }]}>
+              <MaterialCommunityIcons
+                name="home-outline"
+                size={scaleBySizeClass(20, sizeClass)}
+                color={palette.accent}
+              />
+            </View>
+            <ThemedText style={[styles.actionLabel, { color: palette.textInverse }]}>
+              Home
+            </ThemedText>
+          </Pressable>
+
+          <Pressable
             testID="tracker-menu-view-stats"
             onPress={handleViewStats}
             style={({ pressed }) => [
@@ -110,80 +133,56 @@ export const TrackerHomeMenu = ({
             </ThemedText>
           </Pressable>
 
-          <Pressable
-            testID="tracker-menu-home"
-            onPress={handleGoHome}
-            style={({ pressed }) => [
-              styles.action,
-              {
-                backgroundColor: palette.overlay05,
-                borderColor: palette.overlay15,
-              },
-              pressed && { opacity: 0.7 },
-            ]}>
-            <View style={[styles.iconWrap, { backgroundColor: palette.accentOverlay10 }]}>
-              <MaterialCommunityIcons
-                name="home-outline"
-                size={scaleBySizeClass(20, sizeClass)}
-                color={palette.accent}
-              />
-            </View>
-            <ThemedText style={[styles.actionLabel, { color: palette.textInverse }]}>
-              Home
-            </ThemedText>
-          </Pressable>
-          <Pressable
-            testID="tracker-menu-game-pause"
-            disabled={!canPauseGameClock}
-            onPress={handleGameClockPause}
-            style={({ pressed }) => [
-              styles.action,
-              {
-                backgroundColor: palette.overlay05,
-                borderColor: palette.overlay15,
-                opacity: canPauseGameClock ? 1 : 0.45,
-              },
-              pressed && canPauseGameClock && { opacity: 0.7 },
-            ]}>
-            <View style={[styles.iconWrap, { backgroundColor: palette.accentOverlay10 }]}>
-              <MaterialCommunityIcons
-                name="pause-circle-outline"
-                size={scaleBySizeClass(20, sizeClass)}
-                color={palette.accent}
-              />
-            </View>
-            <ThemedText style={[styles.actionLabel, { color: palette.textInverse }]}>
-              Pause Game
-            </ThemedText>
-          </Pressable>
-
-          <Pressable
-            testID="tracker-menu-game-format"
-            onPress={handleGameFormat}
-            style={({ pressed }) => [
-              styles.action,
-              {
-                backgroundColor: palette.overlay05,
-                borderColor: palette.overlay15,
-              },
-              pressed && { opacity: 0.7 },
-            ]}>
-            <View style={[styles.iconWrap, { backgroundColor: palette.accentOverlay10 }]}>
-              <MaterialCommunityIcons
-                name="clipboard-text-outline"
-                size={scaleBySizeClass(20, sizeClass)}
-                color={palette.accent}
-              />
-            </View>
-            <ThemedText style={[styles.actionLabel, { color: palette.textInverse }]}>
-              Game Format
-            </ThemedText>
-          </Pressable>
-
           <View style={[styles.section, { borderTopColor: palette.overlay10 }]}>
             <ThemedText style={[styles.sectionTitle, { color: palette.textMuted }]}>
               GAME MANAGEMENT
             </ThemedText>
+            <Pressable
+              testID="tracker-menu-game-pause"
+              disabled={!canPauseGameClock}
+              onPress={handleGameClockPause}
+              style={({ pressed }) => [
+                styles.action,
+                {
+                  backgroundColor: palette.overlay05,
+                  borderColor: palette.overlay15,
+                  opacity: canPauseGameClock ? 1 : 0.45,
+                },
+                pressed && canPauseGameClock && { opacity: 0.7 },
+              ]}>
+              <View style={[styles.iconWrap, { backgroundColor: palette.accentOverlay10 }]}>
+                <MaterialCommunityIcons
+                  name="pause-circle-outline"
+                  size={scaleBySizeClass(20, sizeClass)}
+                  color={palette.accent}
+                />
+              </View>
+              <ThemedText style={[styles.actionLabel, { color: palette.textInverse }]}>
+                Pause Game
+              </ThemedText>
+            </Pressable>
+            <Pressable
+              testID="tracker-menu-game-format"
+              onPress={handleGameFormat}
+              style={({ pressed }) => [
+                styles.action,
+                {
+                  backgroundColor: palette.overlay05,
+                  borderColor: palette.overlay15,
+                },
+                pressed && { opacity: 0.7 },
+              ]}>
+              <View style={[styles.iconWrap, { backgroundColor: palette.accentOverlay10 }]}>
+                <MaterialCommunityIcons
+                  name="clipboard-text-outline"
+                  size={scaleBySizeClass(20, sizeClass)}
+                  color={palette.accent}
+                />
+              </View>
+              <ThemedText style={[styles.actionLabel, { color: palette.textInverse }]}>
+                Game Format
+              </ThemedText>
+            </Pressable>
             {canStartSecondHalfEarly && (
               <Pressable
                 testID="tracker-menu-start-second-half-early"

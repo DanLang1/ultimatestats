@@ -327,7 +327,6 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     primaryActionText: {
       fontSize: scaleBySizeClass(14, sizeClass),
       marginTop: 2,
-      maxWidth: '92%',
     },
     secondaryAction: {
       borderRadius: 18,

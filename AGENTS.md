@@ -15,6 +15,7 @@ See `docs/README.md` for directory structure, key concepts, and the New Screen C
 - No magic numbers for app-wide limits; define constants in `lib/constants.ts`.
 - No sub-components in the same file; one component per file.
 - Use early returns where practical.
+- Prefer a function with early returns over `let` + conditional reassignment for derived values.
 - Prefer direct, explicit types over indexed-access types (for example, use `PointLineRecord[]` instead of `GameState['pointLines']`) unless the coupling is intentionally required.
 - Prefer `hasItems(...)` from `lib/utils.ts` for array presence checks instead of `!!arr?.length`.
 - Use `AlertProvider`; do not use native `Alert.alert`.
