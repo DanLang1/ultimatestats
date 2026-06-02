@@ -269,7 +269,7 @@ export const BetweenPointDisplay = ({
             <View style={styles.statsRow}>
               {renderAttributionItem('Goal', goalInfo.scorerName)}
               {renderAttributionItem('Assist', goalInfo.assisterName)}
-              {renderAttributionItem('Hockey', hockeyAssistName)}
+              {renderAttributionItem('Hockey Assist', hockeyAssistName)}
             </View>
           )}
 

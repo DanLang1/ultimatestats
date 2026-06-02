@@ -2,7 +2,7 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { useTheme } from '@/context/ThemeContext';
-import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import {
   formatHangtime,
   getPullerName,
@@ -12,6 +12,12 @@ import { Participant, PullResult } from '@/lib/advancedTracking/types';
 import { Fonts } from '@/theme/theme';
 import React from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+
+const RESULT_MIN_H: Record<SizeClass, number> = { small: 56, medium: 64, large: 72 };
+const RESULT_FONT_SIZE: Record<SizeClass, number> = { small: 15, medium: 17, large: 20 };
+const BANNER_LABEL_FONT_SIZE: Record<SizeClass, number> = { small: 11, medium: 13, large: 15 };
+const BANNER_VALUE_FONT_SIZE: Record<SizeClass, number> = { small: 22, medium: 26, large: 32 };
+const LABEL_FONT_SIZE: Record<SizeClass, number> = { small: 11, medium: 14, large: 18 };
 
 interface PullResultStepProps {
   isOurPull: boolean;
@@ -116,7 +122,7 @@ function createStyles(sizeClass: SizeClass) {
     content: { padding: 20, paddingTop: 24, flexGrow: 1 },
     label: {
       fontFamily: Fonts.bold,
-      fontSize: scaleBySizeClass(11, sizeClass),
+      fontSize: getSizeClassValue(LABEL_FONT_SIZE, sizeClass),
       letterSpacing: scaleBySizeClass(1.5, sizeClass, { rounding: 'none' }),
       marginBottom: 12,
     },
@@ -124,7 +130,7 @@ function createStyles(sizeClass: SizeClass) {
     resultButton: {
       alignItems: 'center',
       justifyContent: 'center',
-      minHeight: scaleBySizeClass(56, sizeClass),
+      minHeight: getSizeClassValue(RESULT_MIN_H, sizeClass),
       paddingHorizontal: 16,
       paddingVertical: 14,
       borderRadius: 12,
@@ -132,7 +138,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     resultButtonText: {
       fontFamily: Fonts.black,
-      fontSize: scaleBySizeClass(15, sizeClass),
+      fontSize: getSizeClassValue(RESULT_FONT_SIZE, sizeClass),
       textAlign: 'center',
     },
     hangtimeBanner: {
@@ -146,12 +152,12 @@ function createStyles(sizeClass: SizeClass) {
     hangtimeBannerItem: { gap: 2 },
     hangtimeBannerLabel: {
       fontFamily: Fonts.bold,
-      fontSize: scaleBySizeClass(11, sizeClass),
+      fontSize: getSizeClassValue(BANNER_LABEL_FONT_SIZE, sizeClass),
       letterSpacing: 1.5,
     },
     hangtimeBannerValue: {
       fontFamily: Fonts.black,
-      fontSize: scaleBySizeClass(22, sizeClass),
+      fontSize: getSizeClassValue(BANNER_VALUE_FONT_SIZE, sizeClass),
     },
   });
 }

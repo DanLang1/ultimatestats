@@ -2,13 +2,26 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { useTheme } from '@/context/ThemeContext';
-import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { useStopwatch } from '@/hooks/advancedTracking/useTimer';
 import { formatHangtime } from '@/lib/advancedTracking/pullTrackingUtils';
 import { Participant } from '@/lib/advancedTracking/types';
 import { Fonts } from '@/theme/theme';
 import React, { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+
+const TIMER_CIRCLE_SIZE: Record<SizeClass, number> = { small: 260, medium: 360, large: 520 };
+const TIMER_FONT_SIZE: Record<SizeClass, number> = { small: 72, medium: 104, large: 150 };
+const LABEL_FONT_SIZE: Record<SizeClass, number> = { small: 13, medium: 16, large: 20 };
+const CHIP_FONT_SIZE: Record<SizeClass, number> = { small: 14, medium: 16, large: 20 };
+const CHIP_PAD_H: Record<SizeClass, number> = { small: 16, medium: 20, large: 28 };
+const CHIP_PAD_V: Record<SizeClass, number> = { small: 12, medium: 14, large: 18 };
+const CHIP_RADIUS: Record<SizeClass, number> = { small: 12, medium: 13, large: 16 };
+const TIMER_SUB_FONT_SIZE: Record<SizeClass, number> = { small: 13, medium: 16, large: 22 };
+const ACTION_AREA_MIN_H: Record<SizeClass, number> = { small: 76, medium: 88, large: 110 };
+const CONTINUE_MIN_H: Record<SizeClass, number> = { small: 52, medium: 58, large: 68 };
+const CONTINUE_FONT_SIZE: Record<SizeClass, number> = { small: 15, medium: 17, large: 22 };
+const SKIP_FONT_SIZE: Record<SizeClass, number> = { small: 14, medium: 16, large: 22 };
 
 interface PullTimingStepProps {
   isOurPull: boolean;
@@ -25,7 +38,11 @@ export const PullTimingStep = ({
 }: PullTimingStepProps) => {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
-  const styles = createStyles(sizeClass);
+
+  const timerSize = getSizeClassValue(TIMER_CIRCLE_SIZE, sizeClass);
+  const timerFontSize = getSizeClassValue(TIMER_FONT_SIZE, sizeClass);
+
+  const styles = createStyles(sizeClass, timerFontSize);
 
   const [selectedPullerId, setSelectedPullerId] = useState<string | null | undefined>(undefined);
   const {
@@ -43,8 +60,6 @@ export const PullTimingStep = ({
   } else {
     timerState = 'idle';
   }
-  const timerSize = scaleBySizeClass(260, sizeClass);
-  const timerFontSize = scaleBySizeClass(72, sizeClass);
 
   const handleTimerPress = () => {
     if (timerState === 'idle') {
@@ -193,7 +208,7 @@ function getTimerInstruction(timerState: 'running' | 'stopped' | 'idle') {
   return 'RECORDED';
 }
 
-function createStyles(sizeClass: SizeClass) {
+function createStyles(sizeClass: SizeClass, timerFontSize: number) {
   return StyleSheet.create({
     container: { flex: 1 },
     flex: { flex: 1 },
@@ -210,23 +225,28 @@ function createStyles(sizeClass: SizeClass) {
     },
     label: {
       fontFamily: Fonts.bold,
-      fontSize: scaleBySizeClass(11, sizeClass),
+      fontSize: getSizeClassValue(LABEL_FONT_SIZE, sizeClass),
       letterSpacing: scaleBySizeClass(1.5, sizeClass, { rounding: 'none' }),
       marginBottom: 12,
     },
-    chipGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-    chip: { paddingHorizontal: 16, paddingVertical: 12, borderRadius: 12, borderWidth: 1 },
-    chipText: { fontFamily: Fonts.bold, fontSize: scaleBySizeClass(14, sizeClass) },
+    chipGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
+    chip: {
+      paddingHorizontal: getSizeClassValue(CHIP_PAD_H, sizeClass),
+      paddingVertical: getSizeClassValue(CHIP_PAD_V, sizeClass),
+      borderRadius: getSizeClassValue(CHIP_RADIUS, sizeClass),
+      borderWidth: 1,
+    },
+    chipText: { fontFamily: Fonts.bold, fontSize: getSizeClassValue(CHIP_FONT_SIZE, sizeClass) },
     timerCircle: { borderWidth: 4, alignItems: 'center', justifyContent: 'center' },
-    timerSecs: { fontFamily: Fonts.black, lineHeight: scaleBySizeClass(70, sizeClass) },
+    timerSecs: { fontFamily: Fonts.black, lineHeight: timerFontSize * 1.05 },
     timerSub: {
       fontFamily: Fonts.bold,
-      fontSize: scaleBySizeClass(13, sizeClass),
+      fontSize: getSizeClassValue(TIMER_SUB_FONT_SIZE, sizeClass),
       letterSpacing: 2,
       marginTop: 4,
     },
     actionArea: {
-      minHeight: scaleBySizeClass(76, sizeClass),
+      minHeight: getSizeClassValue(ACTION_AREA_MIN_H, sizeClass),
       justifyContent: 'center',
       paddingHorizontal: 20,
       paddingTop: 4,
@@ -235,19 +255,19 @@ function createStyles(sizeClass: SizeClass) {
     continueButton: {
       alignItems: 'center',
       justifyContent: 'center',
-      minHeight: scaleBySizeClass(52, sizeClass),
+      minHeight: getSizeClassValue(CONTINUE_MIN_H, sizeClass),
       borderRadius: 14,
       borderCurve: 'continuous',
       paddingHorizontal: 20,
     },
     continueButtonText: {
       fontFamily: Fonts.black,
-      fontSize: scaleBySizeClass(15, sizeClass),
+      fontSize: getSizeClassValue(CONTINUE_FONT_SIZE, sizeClass),
     },
     skipBtn: { alignItems: 'center', paddingVertical: 16 },
     skipBtnText: {
       fontFamily: Fonts.semiBold,
-      fontSize: scaleBySizeClass(14, sizeClass),
+      fontSize: getSizeClassValue(SKIP_FONT_SIZE, sizeClass),
       textDecorationLine: 'underline',
     },
   });

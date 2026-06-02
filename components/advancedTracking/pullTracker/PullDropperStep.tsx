@@ -2,11 +2,17 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { useTheme } from '@/context/ThemeContext';
-import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { Participant } from '@/lib/advancedTracking/types';
 import { Fonts } from '@/theme/theme';
 import React from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+
+const DROP_LABEL_FONT_SIZE: Record<SizeClass, number> = { small: 11, medium: 14, large: 18 };
+const DROP_CHIP_FONT_SIZE: Record<SizeClass, number> = { small: 14, medium: 16, large: 18 };
+const DROP_CHIP_PAD_H: Record<SizeClass, number> = { small: 16, medium: 20, large: 24 };
+const DROP_CHIP_PAD_V: Record<SizeClass, number> = { small: 12, medium: 14, large: 16 };
+const DROP_CHIP_RADIUS: Record<SizeClass, number> = { small: 12, medium: 13, large: 14 };
 
 interface PullDropperStepProps {
   activeParticipants: Participant[];
@@ -68,12 +74,20 @@ function createStyles(sizeClass: SizeClass) {
     content: { padding: 20, paddingTop: 24, flexGrow: 1 },
     label: {
       fontFamily: Fonts.bold,
-      fontSize: scaleBySizeClass(11, sizeClass),
+      fontSize: getSizeClassValue(DROP_LABEL_FONT_SIZE, sizeClass),
       letterSpacing: scaleBySizeClass(1.5, sizeClass, { rounding: 'none' }),
       marginBottom: 12,
     },
     chipGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-    chip: { paddingHorizontal: 16, paddingVertical: 12, borderRadius: 12, borderWidth: 1 },
-    chipText: { fontFamily: Fonts.bold, fontSize: scaleBySizeClass(14, sizeClass) },
+    chip: {
+      paddingHorizontal: getSizeClassValue(DROP_CHIP_PAD_H, sizeClass),
+      paddingVertical: getSizeClassValue(DROP_CHIP_PAD_V, sizeClass),
+      borderRadius: getSizeClassValue(DROP_CHIP_RADIUS, sizeClass),
+      borderWidth: 1,
+    },
+    chipText: {
+      fontFamily: Fonts.bold,
+      fontSize: getSizeClassValue(DROP_CHIP_FONT_SIZE, sizeClass),
+    },
   });
 }

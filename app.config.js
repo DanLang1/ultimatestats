@@ -54,6 +54,12 @@ export default {
     supportsTablet: true,
     bundleIdentifier: APP_ID,
     associatedDomains: ['applinks:u-stat.app'],
+    infoPlist: {
+      NSMicrophoneUsageDescription:
+        'Allow $(PRODUCT_NAME) to use the microphone for voice stat entry.',
+      NSSpeechRecognitionUsageDescription:
+        'Allow $(PRODUCT_NAME) to use speech recognition for voice stat entry.',
+    },
     config: {
       usesNonExemptEncryption: false,
     },
