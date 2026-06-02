@@ -352,7 +352,7 @@ export default function AdvancedTrackerScreen() {
         <>
           <Pressable
             onPress={() => setShowDevModal(true)}
-            style={[styles.devButton, { bottom: insets.bottom + 30 }]}>
+            style={[styles.devButton, { bottom: insets.bottom + (pointIsOver ? 120 : 30) }]}>
             <ThemedText style={styles.devButtonText}>DEV</ThemedText>
           </Pressable>
           <DevDebugModal

@@ -56,6 +56,7 @@ const LAST_POINT_LABEL_FONT_SIZE: Record<SizeClass, number> = {
 };
 const ACTION_TEXT_FONT_SIZE: Record<SizeClass, number> = { small: 13, medium: 16, large: 20 };
 const ICON_BUTTON_WIDTH: Record<SizeClass, number> = { small: 58, medium: 76, large: 92 };
+const SUMMARY_TOP_PADDING = 4;
 
 export const BetweenPointDisplay = ({
   game,
@@ -64,7 +65,8 @@ export const BetweenPointDisplay = ({
 }: BetweenPointDisplayProps) => {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
-  const styles = createStyles(sizeClass, palette);
+
+  const styles = createStyles(sizeClass);
   const { endBetweenPointTimeout, undoLastOperation } = useAdvancedTrackingStore();
 
   const point = getCurrentPoint(game);
@@ -346,20 +348,20 @@ export const BetweenPointDisplay = ({
   );
 };
 
-function createStyles(sizeClass: SizeClass, palette: Palette) {
+function createStyles(sizeClass: SizeClass) {
   return StyleSheet.create({
-    container: { flex: 1, justifyContent: 'flex-start' },
+    container: { flex: 1, justifyContent: 'space-between' },
     summaryContent: {
       alignItems: 'center',
-      paddingTop: scaleBySizeClass(34, sizeClass),
+      paddingTop: scaleBySizeClass(SUMMARY_TOP_PADDING, sizeClass),
       paddingHorizontal: scaleBySizeClass(24, sizeClass),
       width: '100%',
-      flex: 1,
+      flexShrink: 1,
     },
     summaryBand: {
       width: '100%',
       maxWidth: getSizeClassValue(SUMMARY_MAX_WIDTH, sizeClass),
-      gap: scaleBySizeClass(20, sizeClass),
+      gap: scaleBySizeClass(16, sizeClass),
     },
     summaryHeaderColumn: {
       alignItems: 'center',
@@ -390,9 +392,9 @@ function createStyles(sizeClass: SizeClass, palette: Palette) {
     metricCardRow: {
       flexDirection: 'row',
       justifyContent: 'center',
-      gap: scaleBySizeClass(14, sizeClass),
+      gap: scaleBySizeClass(12, sizeClass),
       width: '100%',
-      marginTop: scaleBySizeClass(8, sizeClass),
+      marginTop: scaleBySizeClass(6, sizeClass),
       flexWrap: 'wrap',
     },
     metricCard: {
@@ -449,7 +451,7 @@ function createStyles(sizeClass: SizeClass, palette: Palette) {
       textAlign: 'center',
     },
     lastPointSection: {
-      gap: scaleBySizeClass(12, sizeClass),
+      gap: scaleBySizeClass(10, sizeClass),
     },
     lastPointHeader: {
       flexDirection: 'row',
@@ -467,7 +469,7 @@ function createStyles(sizeClass: SizeClass, palette: Palette) {
       flexDirection: 'row',
       flexWrap: 'wrap',
       justifyContent: 'center',
-      gap: scaleBySizeClass(10, sizeClass),
+      gap: scaleBySizeClass(8, sizeClass),
     },
     timeoutContent: {
       alignItems: 'center',
@@ -513,7 +515,7 @@ function createStyles(sizeClass: SizeClass, palette: Palette) {
       alignItems: 'center',
       width: '100%',
       paddingHorizontal: scaleBySizeClass(24, sizeClass),
-      paddingBottom: scaleBySizeClass(48, sizeClass),
+      paddingBottom: scaleBySizeClass(12, sizeClass),
     },
     actionBtn: {
       paddingVertical: scaleBySizeClass(20, sizeClass),
