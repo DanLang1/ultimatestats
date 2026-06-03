@@ -19,16 +19,12 @@ export default function OpeningPullSplit({ stats }: OpeningPullSplitProps) {
       <View style={[styles.panelRow, !isLandscape && styles.panelRowPortrait]}>
         <OpeningPullSplitPanel
           bucket={stats.receivingFirst}
-          iconName="disc"
-          label="Started on Offense"
-          subtitle="Received first pull"
+          label="Starting on Offense"
           accentColor={palette.success}
         />
         <OpeningPullSplitPanel
           bucket={stats.pullingFirst}
-          iconName="shield-outline"
-          label="Started on Defense"
-          subtitle="Pulled first"
+          label="Starting on Defense"
           accentColor={palette.accent}
         />
       </View>

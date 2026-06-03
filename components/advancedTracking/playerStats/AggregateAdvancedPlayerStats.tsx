@@ -14,12 +14,7 @@ export default function AggregateAdvancedPlayerStats({
   participantId,
   selectedImpactGameId,
 }: AggregateAdvancedPlayerStatsProps) {
-  const {
-    data: aggregateGames,
-    isLoading,
-    isError,
-    isComplete,
-  } = useAdvancedGames(gameIds);
+  const { data: aggregateGames, isLoading, isError, isComplete } = useAdvancedGames(gameIds);
   const analyticsGame =
     isComplete && !isError ? aggregateAnalyticsGames(aggregateGames.map(buildAnalyticsGame)) : null;
 

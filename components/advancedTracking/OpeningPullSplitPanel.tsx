@@ -3,38 +3,27 @@ import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { AdvancedInitialPullWinBucket } from '@/lib/advancedTracking/advancedAggregateStatsUtils';
 import { Fonts } from '@/theme/theme';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 
 interface OpeningPullSplitPanelProps {
   bucket: AdvancedInitialPullWinBucket;
-  iconName: React.ComponentProps<typeof MaterialCommunityIcons>['name'];
   label: string;
-  subtitle: string;
   accentColor: string;
-}
-
-function formatRecord(bucket: AdvancedInitialPullWinBucket) {
-  if (bucket.games === 0) return 'No games';
-  return `${bucket.wins}-${bucket.losses}`;
-}
-
-function formatGameCount(bucket: AdvancedInitialPullWinBucket) {
-  if (bucket.games === 1) return '1 game';
-  return `${bucket.games} games`;
 }
 
 export default function OpeningPullSplitPanel({
   bucket,
-  iconName,
   label,
-  subtitle,
   accentColor,
 }: OpeningPullSplitPanelProps) {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
   const styles = createStyles(sizeClass);
+
+  const hasGames = bucket.games > 0;
+  const winPctString =
+    hasGames && bucket.winPercentage !== null ? `${Math.round(bucket.winPercentage * 100)}%` : '—';
 
   return (
     <View
@@ -43,29 +32,36 @@ export default function OpeningPullSplitPanel({
         { backgroundColor: palette.overlay05, borderColor: palette.overlay10 },
       ]}>
       <View style={styles.panelHeader}>
-        <View style={[styles.iconBadge, { backgroundColor: palette.accentOverlay10 }]}>
-          <MaterialCommunityIcons
-            name={iconName}
-            size={scaleBySizeClass(18, sizeClass)}
-            color={accentColor}
-          />
-        </View>
-        <View style={styles.labelBlock}>
-          <ThemedText style={[styles.panelLabel, { color: palette.textInverse }]}>
-            {label}
-          </ThemedText>
-          <ThemedText style={[styles.panelSubtitle, { color: palette.textMuted }]}>
-            {subtitle}
-          </ThemedText>
-        </View>
+        <ThemedText style={[styles.panelLabel, { color: palette.textInverse }]}>{label}</ThemedText>
       </View>
 
-      <ThemedText style={[styles.record, { color: accentColor }]}>
-        {formatRecord(bucket)}
-      </ThemedText>
-      <ThemedText style={[styles.gameCount, { color: palette.textMuted }]}>
-        {formatGameCount(bucket)}
-      </ThemedText>
+      <View style={styles.statsRow}>
+        <View style={styles.statGroup}>
+          <ThemedText
+            style={[styles.winPctText, { color: hasGames ? accentColor : palette.textMuted }]}>
+            {winPctString}
+          </ThemedText>
+          <ThemedText style={[styles.statLabel, { color: palette.textMuted }]}>WIN RATE</ThemedText>
+        </View>
+
+        <View style={[styles.divider, { backgroundColor: palette.overlay10 }]} />
+
+        <View style={styles.statGroup}>
+          <ThemedText style={[styles.recordText, { color: palette.textInverse }]}>
+            {hasGames ? `${bucket.wins}-${bucket.losses}` : '0-0'}
+          </ThemedText>
+          <ThemedText style={[styles.statLabel, { color: palette.textMuted }]}>RECORD</ThemedText>
+        </View>
+
+        <View style={[styles.divider, { backgroundColor: palette.overlay10 }]} />
+
+        <View style={styles.statGroup}>
+          <ThemedText style={[styles.gamesText, { color: palette.textInverse }]}>
+            {bucket.games}
+          </ThemedText>
+          <ThemedText style={[styles.statLabel, { color: palette.textMuted }]}>GAMES</ThemedText>
+        </View>
+      </View>
     </View>
   );
 }
@@ -74,46 +70,58 @@ function createStyles(sizeClass: SizeClass) {
   return StyleSheet.create({
     panel: {
       flex: 1,
-      borderRadius: 10,
+      borderRadius: 12,
       borderWidth: 1,
-      padding: 12,
-      minHeight: 122,
-      justifyContent: 'space-between',
+      padding: 16,
     },
     panelHeader: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 8,
-      marginBottom: 12,
-    },
-    iconBadge: {
-      width: scaleBySizeClass(32, sizeClass),
-      height: scaleBySizeClass(32, sizeClass),
-      borderRadius: 8,
-      alignItems: 'center',
-      justifyContent: 'center',
+      gap: 10,
     },
     labelBlock: {
       flex: 1,
     },
     panelLabel: {
-      fontSize: scaleBySizeClass(13, sizeClass),
+      fontSize: scaleBySizeClass(14, sizeClass),
       fontFamily: Fonts.bold,
     },
-    panelSubtitle: {
-      fontSize: scaleBySizeClass(10, sizeClass),
-      fontFamily: Fonts.semiBold,
-      marginTop: 2,
+    statsRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginTop: 8,
     },
-    record: {
-      fontSize: scaleBySizeClass(30, sizeClass),
-      lineHeight: scaleBySizeClass(34, sizeClass),
+    statGroup: {
+      flex: 1,
+      alignItems: 'center',
+    },
+    winPctText: {
+      fontSize: scaleBySizeClass(22, sizeClass),
       fontFamily: Fonts.extraBold,
+      lineHeight: scaleBySizeClass(26, sizeClass),
     },
-    gameCount: {
-      fontSize: scaleBySizeClass(11, sizeClass),
+    recordText: {
+      fontSize: scaleBySizeClass(18, sizeClass),
+      fontFamily: Fonts.bold,
+      lineHeight: scaleBySizeClass(22, sizeClass),
+    },
+    gamesText: {
+      fontSize: scaleBySizeClass(18, sizeClass),
+      fontFamily: Fonts.bold,
+      lineHeight: scaleBySizeClass(22, sizeClass),
+    },
+    statLabel: {
+      fontSize: scaleBySizeClass(8, sizeClass),
       fontFamily: Fonts.semiBold,
-      marginTop: 2,
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+      marginTop: 4,
+      textAlign: 'center',
+    },
+    divider: {
+      width: 1,
+      height: 28,
     },
   });
 }
