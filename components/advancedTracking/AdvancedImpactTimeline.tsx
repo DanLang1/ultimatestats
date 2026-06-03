@@ -47,7 +47,7 @@ const PART_TO_FULL: Record<string, string> = {
   C: 'Callahan',
   B: 'Block',
   Stl: 'Stall',
-  StlC: 'Stall Conceded',
+  StlC: 'Stalled',
   T: 'Throwaway',
   D: 'Drop',
 };
@@ -60,7 +60,7 @@ const PART_TO_ABBREV: Record<string, string> = {
   C: 'C',
   B: 'B',
   Stl: 'Stl',
-  StlC: 'StlC',
+  StlC: 'Stld',
   T: 'T',
   D: 'D',
 };
@@ -487,19 +487,21 @@ export default function AdvancedImpactTimeline({ data }: AdvancedImpactTimelineP
                   );
                 })}
 
-                {visibleEventPoints.map((pt, i) => {
-                  // Off-field or no-description → small gray dot
-                  if (pt.onField && pt.description) return null;
-                  return (
-                    <SvgCircle
-                      key={`off-${i}`}
-                      cx={pt.x}
-                      cy={pt.y}
-                      r={dotRadius * 0.6}
-                      fill={palette.overlay20}
-                    />
-                  );
-                })}
+                {scaleMode === 'game' &&
+                  visibleEventPoints.map((pt, i) => {
+                    // On-field with no description -> point played with no impact event.
+                    if (!pt.onField || pt.description) return null;
+                    return (
+                      <SvgCircle
+                        key={`off-${i}`}
+                        cx={pt.x}
+                        cy={pt.y}
+                        r={dotRadius * 0.7}
+                        fill={palette.textMuted}
+                        opacity={0.45}
+                      />
+                    );
+                  })}
               </Svg>
             </View>
 
@@ -546,10 +548,24 @@ export default function AdvancedImpactTimeline({ data }: AdvancedImpactTimelineP
         </View>
         <View style={styles.legendItem}>
           <View style={[styles.legendDot, { backgroundColor: palette.danger }]} />
-          <ThemedText style={[styles.legendText, { color: palette.textMuted }]}>
-            Drops/Throwaways
-          </ThemedText>
+          <ThemedText style={[styles.legendText, { color: palette.textMuted }]}>Turns</ThemedText>
         </View>
+        {scaleMode === 'game' && (
+          <View style={styles.legendItem}>
+            <View
+              style={[
+                styles.legendDot,
+                {
+                  backgroundColor: palette.textMuted,
+                  opacity: 0.45,
+                },
+              ]}
+            />
+            <ThemedText style={[styles.legendText, { color: palette.textMuted }]}>
+              No impact
+            </ThemedText>
+          </View>
+        )}
       </View>
 
       {eventLog.length > 0 && (

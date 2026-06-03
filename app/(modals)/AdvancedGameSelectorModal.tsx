@@ -47,7 +47,7 @@ export default function AdvancedGameSelectorModal() {
   };
 
   const handleSelectGame = (gameId: string) => {
-    router.replace({
+    router.dismissTo({
       pathname: '/advancedTracking/analytics/playerStats',
       params: {
         gameId: 'aggregate',
