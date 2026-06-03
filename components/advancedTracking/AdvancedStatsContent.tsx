@@ -59,6 +59,21 @@ export default function AdvancedStatsContent({
   const teamStats = computeAdvancedTeamStats(game, focusSideId);
   const pullStats = computePullStats(game, focusSideId);
 
+  const possessionFlowStats = [
+    ...(teamStats.possessionsPerPoint != null
+      ? [{ label: 'Avg Poss/Pt', value: teamStats.possessionsPerPoint.toFixed(1) }]
+      : []),
+    ...(teamStats.multiPossessionPointPct != null
+      ? [
+          {
+            label: 'Multi-Turn Pts',
+            value: formatPercent(teamStats.multiPossessionPointPct),
+            sublabel: `${teamStats.multiPossessionPoints}/${teamStats.completedPoints}`,
+          },
+        ]
+      : []),
+  ];
+
   const sorted = [...playerStats].sort((a, b) => b.plusMinus - a.plusMinus);
   const topPerformers = sorted.filter((p) => p.plusMinus > 0).slice(0, 3);
   const summaryCenter = aggregateInfo ? (
@@ -220,23 +235,7 @@ Formula: Holds ÷ O-Points`}
           <ThemedText style={[styles.subsectionTitle, { color: palette.textMuted }]}>
             OUR POSSESSION FLOW
           </ThemedText>
-          <StatsGrid
-            stats={[
-              ...(teamStats.possessionsPerPoint != null
-                ? [{ label: 'Avg Poss/Pt', value: teamStats.possessionsPerPoint.toFixed(1) }]
-                : []),
-              ...(teamStats.multiPossessionPointPct != null
-                ? [
-                    {
-                      label: 'Multi-Turn Pts',
-                      value: formatPercent(teamStats.multiPossessionPointPct),
-                      sublabel: `${teamStats.multiPossessionPoints}/${teamStats.completedPoints}`,
-                    },
-                  ]
-                : []),
-            ]}
-            columns={isLandscape ? 4 : 2}
-          />
+          <StatsGrid stats={possessionFlowStats} columns={possessionFlowStats.length || 1} />
         </View>
 
         <View style={styles.subsectionContainer}>

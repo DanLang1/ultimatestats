@@ -363,8 +363,12 @@ export default function AdvancedStatsTable({
         </View>
 
         {/* Scrollable stats columns */}
-        <ScrollView horizontal showsHorizontalScrollIndicator style={{ flex: 1 }}>
-          <View style={{ minWidth: scrollableMinWidth }}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator
+          style={styles.statsScroll}
+          contentContainerStyle={styles.statsScrollContent}>
+          <View style={[styles.statsColumns, { minWidth: scrollableMinWidth }]}>
             <View
               style={[
                 styles.tableHeader,
@@ -512,6 +516,15 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
       borderRadius: 12,
       overflow: 'hidden',
       borderWidth: 1,
+    },
+    statsScroll: {
+      flex: 1,
+    },
+    statsScrollContent: {
+      flexGrow: 1,
+    },
+    statsColumns: {
+      flexGrow: 1,
     },
     tableHeader: {
       flexDirection: 'row',
