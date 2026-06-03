@@ -511,7 +511,14 @@ describe('advancedTeamStatsUtils', () => {
       expect(stats.totalTurnovers).toBe(1);
       expect(stats.totalBlocks).toBe(2);
       expect(stats.pointsPerTurnover).toBe(2);
+      expect(stats.totalGoals).toBe(2);
+      expect(stats.totalPossessions).toBe(3);
+      expect(stats.possessionConversionPct).toBeCloseTo(2 / 3);
       expect(stats.blocksPerDPoint).toBe(2);
+      expect(stats.breakChances).toBe(1);
+      expect(stats.completedPoints).toBe(2);
+      expect(stats.multiPossessionPoints).toBe(1);
+      expect(stats.multiPossessionPointPct).toBeCloseTo(0.5);
     });
   });
 });

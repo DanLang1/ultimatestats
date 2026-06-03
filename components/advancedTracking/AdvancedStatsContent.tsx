@@ -22,6 +22,8 @@ const formatDecimal = (value: number) => {
   return value.toFixed(1);
 };
 
+const formatPercent = (value: number) => `${Math.round(value * 100)}%`;
+
 interface AdvancedStatsContentProps {
   game: AnalyticsGame;
   gameId: string;
@@ -201,11 +203,31 @@ export default function AdvancedStatsContent({
             stats={[
               { label: 'Run', value: teamStats.longestScoringRun, sublabel: 'Longest' },
               { label: 'Drought', value: teamStats.longestDrought, sublabel: 'Longest' },
-              ...(teamStats.turnoversPerPoint != null
-                ? [{ label: 'TO/Pt', value: teamStats.turnoversPerPoint.toFixed(1) }]
+            ]}
+            columns={2}
+          />
+        </View>
+
+        <View style={styles.subsectionContainer}>
+          <ThemedText style={[styles.subsectionTitle, { color: palette.textMuted }]}>
+            OUR POSSESSION FLOW
+          </ThemedText>
+          <StatsGrid
+            stats={[
+              ...(teamStats.possessionsPerPoint != null
+                ? [{ label: 'Avg Poss/Pt', value: teamStats.possessionsPerPoint.toFixed(1) }]
+                : []),
+              ...(teamStats.multiPossessionPointPct != null
+                ? [
+                    {
+                      label: 'Multi-Turn Pts',
+                      value: formatPercent(teamStats.multiPossessionPointPct),
+                      sublabel: `${teamStats.multiPossessionPoints}/${teamStats.completedPoints}`,
+                    },
+                  ]
                 : []),
             ]}
-            columns={3}
+            columns={isLandscape ? 4 : 2}
           />
         </View>
 
@@ -215,9 +237,17 @@ export default function AdvancedStatsContent({
           </ThemedText>
           <StatsGrid
             stats={[
-              { label: 'Pts/Turn', value: formatDecimal(teamStats.pointsPerTurnover) },
+              ...(teamStats.possessionConversionPct != null
+                ? [
+                    {
+                      label: 'Poss Conv',
+                      value: formatPercent(teamStats.possessionConversionPct),
+                      sublabel: `${teamStats.totalGoals}/${teamStats.totalPossessions}`,
+                    },
+                  ]
+                : []),
               { label: 'Blk/D-Pt', value: formatDecimal(teamStats.blocksPerDPoint) },
-              { label: 'Turnover(s)', value: teamStats.totalTurnovers },
+              { label: 'Turn(s)', value: teamStats.totalTurnovers },
               { label: 'Block(s)', value: teamStats.totalBlocks },
             ]}
             columns={isLandscape ? 4 : 2}

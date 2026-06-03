@@ -118,15 +118,14 @@ export default function TeamStatsSection({
   // Game flow stats
   const gameFlowStats = [
     { label: 'Run', value: stats.longestScoringRun, sublabel: 'Longest' },
-    { label: 'Drought', value: stats.longestDrought, sublabel: 'Longest' },
-    { label: 'TO/Pt', value: formatDecimal(stats.turnoversPerPoint) },
+    { label: 'Turns/Pt', value: formatDecimal(stats.turnoversPerPoint) },
+    { label: 'Turns/O-Pt', value: formatDecimal(stats.turnoversPerOPoint) },
   ];
 
   // Efficiency stats
   const efficiencyStats = [
-    { label: 'Pts/Turn', value: formatDecimal(stats.pointsPerTurnover) },
     { label: 'Blk/D-Pt', value: formatDecimal(stats.blocksPerDPoint) },
-    { label: 'Turnover(s)', value: stats.totalTurnovers },
+    { label: 'Turn(s)', value: stats.totalTurnovers },
     { label: 'Block(s)', value: stats.totalBlocks },
   ];
 

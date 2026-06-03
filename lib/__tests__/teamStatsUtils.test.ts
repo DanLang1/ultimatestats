@@ -164,6 +164,21 @@ describe('computeTeamStats', () => {
       // 3 turnovers over 2 points = 1.5
       expect(stats.turnoversPerPoint).toBe(1.5);
     });
+
+    it('calculates turnovers per O-point', () => {
+      // Point 1: team1 O, 1 turnover -> counts
+      // Point 2: team2 O (team1 D), 1 turnover -> does NOT count
+      const events: GameEvent[] = [
+        turnover('team1', 'throwaway'),
+        goal('team1'),
+        turnover('team1', 'throwaway'),
+        goal('team2'),
+      ];
+      const stats = computeTeamStats(events, 'team1', 15);
+
+      expect(stats.turnoversOnOPoint).toBe(1);
+      expect(stats.turnoversPerOPoint).toBe(1); // 1 turnover / 1 O-point
+    });
   });
 
   describe('efficiency metrics', () => {

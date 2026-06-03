@@ -25,6 +25,8 @@ export interface TeamStats {
   longestScoringRun: number;
   longestDrought: number;
   turnoversPerPoint: number;
+  turnoversOnOPoint: number;
+  turnoversPerOPoint: number;
 
   // Efficiency
   pointsPerTurnover: number;
@@ -64,6 +66,7 @@ export function computeTeamStats(
   let totalTurnovers = 0;
   let opponentTurnovers = 0;
   let team1Blocks = 0;
+  let turnoversOnOPoint = 0;
 
   // Game flow tracking
   let currentRun = 0;
@@ -90,6 +93,9 @@ export function computeTeamStats(
         (t.team === 'team1' && t.type !== 'block') || (t.team === 'team2' && t.type === 'block'),
     ).length;
     totalTurnovers += team1TurnoversThisPoint;
+    if (isTeam1Offense) {
+      turnoversOnOPoint += team1TurnoversThisPoint;
+    }
 
     // Count ALL opponent turnovers (gives us possession)
     // Logic: team2 made a throwaway/drop OR team1 got a block on team2
@@ -150,6 +156,7 @@ export function computeTeamStats(
   // Calculate efficiency stats
   const totalPoints = pointEvents.length;
   const turnoversPerPoint = totalPoints > 0 ? totalTurnovers / totalPoints : 0;
+  const turnoversPerOPoint = offensivePoints > 0 ? turnoversOnOPoint / offensivePoints : 0;
   const pointsPerTurnover = totalTurnovers > 0 ? team1Goals / totalTurnovers : team1Goals;
   const blocksPerDPoint = defensivePoints > 0 ? team1Blocks / defensivePoints : 0;
 
@@ -174,6 +181,8 @@ export function computeTeamStats(
     longestScoringRun,
     longestDrought,
     turnoversPerPoint,
+    turnoversOnOPoint,
+    turnoversPerOPoint,
     pointsPerTurnover,
     blocksPerDPoint,
     totalBlocks: team1Blocks,
@@ -204,6 +213,8 @@ export function aggregateTeamStats(allStats: TeamStats[]): TeamStats {
       longestScoringRun: 0,
       longestDrought: 0,
       turnoversPerPoint: 0,
+      turnoversOnOPoint: 0,
+      turnoversPerOPoint: 0,
       pointsPerTurnover: 0,
       blocksPerDPoint: 0,
       totalBlocks: 0,
@@ -240,6 +251,8 @@ export function aggregateTeamStats(allStats: TeamStats[]): TeamStats {
     longestScoringRun: Math.max(...allStats.map((s) => s.longestScoringRun)),
     longestDrought: Math.max(...allStats.map((s) => s.longestDrought)),
     turnoversPerPoint: totalPoints > 0 ? totalTurnovers / totalPoints : 0,
+    turnoversOnOPoint: sum('turnoversOnOPoint'),
+    turnoversPerOPoint: offensivePoints > 0 ? sum('turnoversOnOPoint') / offensivePoints : 0,
     pointsPerTurnover: totalTurnovers > 0 ? team1Goals / totalTurnovers : team1Goals,
     blocksPerDPoint:
       defensivePoints > 0

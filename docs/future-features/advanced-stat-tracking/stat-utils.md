@@ -24,47 +24,50 @@ Target coverage is aligned with [UFA game stats](https://www.watchufa.com/stats/
 
 ### Derivable Now
 
-| Stat                     | Source                                                               | Notes                                                        |
-| ------------------------ | -------------------------------------------------------------------- | ------------------------------------------------------------ |
-| Goals                    | `attributions` where `type === 'goal'`                               | Sum `weight`                                                 |
-| Assists                  | `attributions` where `type === 'assist'`                             | Sum `weight`                                                 |
-| Hockey Assists           | `attributions` where `type === 'hockey_assist'`                      | Sum `weight`                                                 |
-| Callahans                | `attributions` where `type === 'callahan'`                           | Sum `weight`                                                 |
-| Plus/Minus               | `goals + assists + blocks - throwaways - drops`                      | Mirrors basic tracking                                       |
-| Completions              | `attributions` where `type === 'completion'`                         | Successful throws                                            |
-| Throw Attempts           | `attributions` where `type === 'throw_attempt'`                      | Actual releases only — stalls are excluded                   |
-| Completion %             | completions / throw attempts                                         | Null if 0 attempts                                           |
-| Receptions               | `attributions` where `type === 'receiving_touch'`                    | Catches of throws                                            |
-| Drops                    | `attributions` where `type === 'drop'`                               | Sum `weight`                                                 |
-| Throwaways               | `attributions` where `type === 'throwaway'`                          | Sum `weight`                                                 |
-| Stalls                   | `attributions` where `type === 'stall'`                              | Sum `weight`                                                 |
-| Blocks                   | `attributions` where `type === 'block'`                              | Sum `weight`                                                 |
-| Pulls                    | `attributions` where `type === 'pull'`                               | Per-player pull count                                        |
-| Pull Receptions          | `attributions` where `type === 'pull_reception'`                     | Caught pulls                                                 |
-| Total Touches            | `completion + receiving_touch + disc_pickup + pull_reception`        | Combines all touch types                                     |
-| Points Played            | `points` where participant in `linesBySide`                          | Count                                                        |
-| O-Points Played          | Points where participant's side === `receivingSideId`                | Subset of PP                                                 |
-| D-Points Played          | Points where participant's side === `pullingSideId`                  | Subset of PP                                                 |
-| Playing Time (ms)        | Sum of `durationMs` for points where participant is in `linesBySide` | Null if no timing data                                       |
-| Playing Time %           | Player playing time / total game time                                | Null if no timing data                                       |
-| Holds                    | `points` where `state === 'hold'` (or via `getPointStateForSide`)    | Count                                                        |
-| Breaks                   | `points` where `state === 'break'`                                   | Count                                                        |
-| Times Broken             | `points` where `state === 'broken'`                                  | Count                                                        |
-| O-Efficiency             | holds / (holds + timesBroken)                                        | Null if 0 O-points. Available at both team and player level. |
-| D-Efficiency             | breaks / (breaks + oppHolds)                                         | Null if 0 D-points. Available at both team and player level. |
-| O-Line Conversion %      | holds / oPoints                                                      | UFA metric                                                   |
-| D-Line Conversion %      | breaks / dPoints                                                     | UFA metric                                                   |
-| Clean Holds              | `points` where `state === 'hold'` and `isCleanHold === true`         | Count                                                        |
-| Dirty Holds              | `points` where `state === 'hold'` and `isCleanHold === false`        | Count                                                        |
-| Possessions Per Point    | `possessions` grouped by `pointId`, average count                    | Team-level; also split as per-O-point and per-D-point        |
-| Turnovers Per Point      | `possessions` where `result === 'turned_over'`, average per point    | Team-level                                                   |
-| Scores After Turnovers   | `possessions` where `possessionIndex > 0` and `result === 'scored'`  | Count                                                        |
-| Longest Scoring Run      | Max consecutive points where side scored                             | Team-level                                                   |
-| Longest Drought          | Max consecutive points where side did not score                      | Team-level                                                   |
-| Pull Outcomes            | `actions` where `kind === 'pull'`, group by `result`                 | Team-level                                                   |
-| Pull Hang Time           | `actions` where `kind === 'pull'`, average `hangTimeMs`              | Team-level                                                   |
-| Avg Point Duration       | Average of `durationMs` across scored points                         | Exclude nulls                                                |
-| Longest / Shortest Point | Max / min `durationMs`                                               | Exclude nulls                                                |
+| Stat                     | Source                                                                  | Notes                                                        |
+| ------------------------ | ----------------------------------------------------------------------- | ------------------------------------------------------------ |
+| Goals                    | `attributions` where `type === 'goal'`                                  | Sum `weight`                                                 |
+| Assists                  | `attributions` where `type === 'assist'`                                | Sum `weight`                                                 |
+| Hockey Assists           | `attributions` where `type === 'hockey_assist'`                         | Sum `weight`                                                 |
+| Callahans                | `attributions` where `type === 'callahan'`                              | Sum `weight`                                                 |
+| Plus/Minus               | `goals + assists + blocks - throwaways - drops`                         | Mirrors basic tracking                                       |
+| Completions              | `attributions` where `type === 'completion'`                            | Successful throws                                            |
+| Throw Attempts           | `attributions` where `type === 'throw_attempt'`                         | Actual releases only — stalls are excluded                   |
+| Completion %             | completions / throw attempts                                            | Null if 0 attempts                                           |
+| Receptions               | `attributions` where `type === 'receiving_touch'`                       | Catches of throws                                            |
+| Drops                    | `attributions` where `type === 'drop'`                                  | Sum `weight`                                                 |
+| Throwaways               | `attributions` where `type === 'throwaway'`                             | Sum `weight`                                                 |
+| Stalls                   | `attributions` where `type === 'stall'`                                 | Sum `weight`                                                 |
+| Blocks                   | `attributions` where `type === 'block'`                                 | Sum `weight`                                                 |
+| Pulls                    | `attributions` where `type === 'pull'`                                  | Per-player pull count                                        |
+| Pull Receptions          | `attributions` where `type === 'pull_reception'`                        | Caught pulls                                                 |
+| Total Touches            | `completion + receiving_touch + disc_pickup + pull_reception`           | Combines all touch types                                     |
+| Points Played            | `points` where participant in `linesBySide`                             | Count                                                        |
+| O-Points Played          | Points where participant's side === `receivingSideId`                   | Subset of PP                                                 |
+| D-Points Played          | Points where participant's side === `pullingSideId`                     | Subset of PP                                                 |
+| Playing Time (ms)        | Sum of `durationMs` for points where participant is in `linesBySide`    | Null if no timing data                                       |
+| Playing Time %           | Player playing time / total game time                                   | Null if no timing data                                       |
+| Holds                    | `points` where `state === 'hold'` (or via `getPointStateForSide`)       | Count                                                        |
+| Breaks                   | `points` where `state === 'break'`                                      | Count                                                        |
+| Times Broken             | `points` where `state === 'broken'`                                     | Count                                                        |
+| O-Efficiency             | holds / (holds + timesBroken)                                           | Null if 0 O-points. Available at both team and player level. |
+| D-Efficiency             | breaks / (breaks + oppHolds)                                            | Null if 0 D-points. Available at both team and player level. |
+| O-Line Conversion %      | holds / oPoints                                                         | UFA metric                                                   |
+| D-Line Conversion %      | breaks / dPoints                                                        | UFA metric                                                   |
+| Clean Holds              | `points` where `state === 'hold'` and `isCleanHold === true`            | Count                                                        |
+| Dirty Holds              | `points` where `state === 'hold'` and `isCleanHold === false`           | Count                                                        |
+| Break Chances            | Completed D-points where side gained at least one possession            | Count                                                        |
+| Possessions Per Point    | `possessions` grouped by `pointId`, average count                       | Team-level; also split as per-O-point and per-D-point        |
+| Turnovers Per Point      | `possessions` where `result === 'turned_over'`, average per point       | Team-level                                                   |
+| Scores After Turnovers   | Our `possessions` where `possessionIndex > 0` and `result === 'scored'` | Count                                                        |
+| Possession Conversion    | Goals scored by side divided by possessions by side                     | Percent                                                      |
+| Multi-Possession Points  | Completed points where side had two or more possessions                 | Count / percent                                              |
+| Longest Scoring Run      | Max consecutive points where side scored                                | Team-level                                                   |
+| Longest Drought          | Max consecutive points where side did not score                         | Team-level                                                   |
+| Pull Outcomes            | `actions` where `kind === 'pull'`, group by `result`                    | Team-level                                                   |
+| Pull Hang Time           | `actions` where `kind === 'pull'`, average `hangTimeMs`                 | Team-level                                                   |
+| Avg Point Duration       | Average of `durationMs` across scored points                            | Exclude nulls                                                |
+| Longest / Shortest Point | Max / min `durationMs`                                                  | Exclude nulls                                                |
 
 ### Requires Field Location Data (Future)
 

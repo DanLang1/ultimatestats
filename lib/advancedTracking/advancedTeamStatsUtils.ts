@@ -21,20 +21,34 @@ export interface AdvancedTeamStats {
   oLineConversionPct: number | null;
   /** breaks / dPoints. Null if 0 D-points. */
   dLineConversionPct: number | null;
-  /** Average number of possessions per point. Null if 0 points. */
+  /** Average number of possessions by this side per point. Null if 0 points. */
   possessionsPerPoint: number | null;
-  /** Average possessions per O-point. Null if 0 O-points. */
+  /** Average possessions by this side per O-point. Null if 0 O-points. */
   possessionsPerOPoint: number | null;
-  /** Average possessions per D-point. Null if 0 D-points. */
+  /** Average possessions by this side per D-point. Null if 0 D-points. */
   possessionsPerDPoint: number | null;
   /** Average turnovers per point. Null if 0 points. */
   turnoversPerPoint: number | null;
   pointsPerTurnover: number;
+  /** Goals by this side divided by possessions by this side. Null if 0 possessions. */
+  possessionConversionPct: number | null;
+  /** Goals scored by this side. */
+  totalGoals: number;
+  /** Possessions by this side. */
+  totalPossessions: number;
   blocksPerDPoint: number;
   totalTurnovers: number;
   totalBlocks: number;
-  /** Possessions where possessionIndex > 0 and result === 'scored'. */
+  /** Possessions by this side where possessionIndex > 0 and result === 'scored'. */
   scoresAfterTurnovers: number;
+  /** D-points where this side gained at least one possession. */
+  breakChances: number;
+  /** Completed points used for game-flow percentages. */
+  completedPoints: number;
+  /** Completed points where this side had two or more possessions. */
+  multiPossessionPoints: number;
+  /** multiPossessionPoints / completed points. Null if 0 completed points. */
+  multiPossessionPointPct: number | null;
   longestScoringRun: number;
   longestDrought: number;
 }
@@ -56,6 +70,7 @@ export function computeAdvancedTeamStats(game: AnalyticsGame, sideId: string): A
   let longestScoringRun = 0;
   let currentDrought = 0;
   let longestDrought = 0;
+  let completedPointCount = 0;
 
   for (const point of game.points) {
     const state = getPointStateForSide(point, sideId);
@@ -73,6 +88,7 @@ export function computeAdvancedTeamStats(game: AnalyticsGame, sideId: string): A
 
     // Scoring runs: only for completed points
     if (state !== 'terminated' && state !== 'in_progress') {
+      completedPointCount++;
       if (sideScored) {
         currentScoringRun++;
         longestScoringRun = Math.max(longestScoringRun, currentScoringRun);
@@ -147,11 +163,25 @@ export function computeAdvancedTeamStats(game: AnalyticsGame, sideId: string): A
       totalPossessionsOnD += count;
     }
   }
-  for (const count of turnoversByPoint.values()) totalTurnoversInGame += count;
+  for (const count of turnoversByPoint.values()) {
+    totalTurnoversInGame += count;
+  }
 
   const oTotal = holds + timesBroken;
   const dTotal = breaks + oppHolds;
   const totalGoals = holds + breaks;
+  let multiPossessionPoints = 0;
+  let breakChances = 0;
+  for (const point of game.points) {
+    const state = getPointStateForSide(point, sideId);
+    if (state === 'terminated' || state === 'in_progress') continue;
+    if (point.receivingSideId !== sideId && (possessionsByPoint.get(point.id) ?? 0) > 0) {
+      breakChances++;
+    }
+    if ((possessionsByPoint.get(point.id) ?? 0) >= 2) {
+      multiPossessionPoints++;
+    }
+  }
 
   return {
     sideId,
@@ -172,10 +202,19 @@ export function computeAdvancedTeamStats(game: AnalyticsGame, sideId: string): A
     possessionsPerDPoint: dPoints > 0 ? totalPossessionsOnD / dPoints : null,
     turnoversPerPoint: pointCount > 0 ? totalTurnoversInGame / pointCount : null,
     pointsPerTurnover: totalTurnoversInGame > 0 ? totalGoals / totalTurnoversInGame : totalGoals,
+    possessionConversionPct:
+      totalPossessionsInGame > 0 ? totalGoals / totalPossessionsInGame : null,
+    totalGoals,
+    totalPossessions: totalPossessionsInGame,
     blocksPerDPoint: dPoints > 0 ? totalBlocks / dPoints : 0,
     totalTurnovers: totalTurnoversInGame,
     totalBlocks,
     scoresAfterTurnovers,
+    breakChances,
+    completedPoints: completedPointCount,
+    multiPossessionPoints,
+    multiPossessionPointPct:
+      completedPointCount > 0 ? multiPossessionPoints / completedPointCount : null,
     longestScoringRun,
     longestDrought,
   };
