@@ -48,7 +48,9 @@ export default function AdvancedPlayingTimeSection({ stats }: AdvancedPlayingTim
             percentage={stats.oPoints > 0 ? oEffPct : 0}
             label="O-Eff"
             sublabel={stats.oPoints > 0 ? `${stats.oPoints} O-pts` : 'No O-pts'}
-            info="How often your O-line scored when you were on the field.\n\nFormula: Holds ÷ O-Points"
+            info={`How often your O-line scored when you were on the field.
+
+Formula: Holds ÷ O-Points`}
             infoLabel="O Efficiency"
           />
         </View>
@@ -57,7 +59,9 @@ export default function AdvancedPlayingTimeSection({ stats }: AdvancedPlayingTim
             percentage={stats.dPoints > 0 ? dEffPct : 0}
             label="D-Eff"
             sublabel={stats.dPoints > 0 ? `${stats.dPoints} D-pts` : 'No D-pts'}
-            info="How often your D-line converted when you were on the field.\n\nFormula: Breaks ÷ D-Points"
+            info={`How often your D-line converted when you were on the field.
+
+Formula: Breaks ÷ D-Points`}
             infoLabel="D Efficiency"
           />
         </View>

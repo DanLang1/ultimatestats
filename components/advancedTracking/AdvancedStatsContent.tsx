@@ -152,7 +152,9 @@ export default function AdvancedStatsContent({
               percentage={(teamStats.oEfficiency ?? 0) * 100}
               label="Hold"
               sublabel={`${teamStats.holds}/${teamStats.holds + teamStats.timesBroken}`}
-              info="How often you score when starting on offense.\n\nFormula: Holds ÷ (Holds + Times Broken)"
+              info={`How often you score when starting on offense.
+
+Formula: Holds ÷ (Holds + Times Broken)`}
               infoLabel="Hold Rate"
             />
           </View>
@@ -161,7 +163,9 @@ export default function AdvancedStatsContent({
               percentage={(teamStats.dLineConversionPct ?? 0) * 100}
               label="Break Eff"
               sublabel={`${teamStats.breaks}/${teamStats.dPoints}`}
-              info="How often you score when starting on defense.\n\nFormula: Breaks ÷ D-Points"
+              info={`How often you score when starting on defense.
+
+Formula: Breaks ÷ D-Points`}
               infoLabel="Break Efficiency"
             />
           </View>
@@ -170,7 +174,9 @@ export default function AdvancedStatsContent({
               percentage={(teamStats.dEfficiency ?? 0) * 100}
               label="D-Eff"
               sublabel={`${teamStats.breaks}/${teamStats.breaks + teamStats.oppHolds}`}
-              info="When you force a turnover on D, how often do you convert?\n\nFormula: Breaks ÷ (Breaks + Opp Holds)"
+              info={`When you force a turnover on D, how often do you convert?
+
+Formula: Breaks ÷ (Breaks + Opp Holds)`}
               infoLabel="Defensive Efficiency"
             />
           </View>
@@ -179,7 +185,9 @@ export default function AdvancedStatsContent({
               percentage={(teamStats.oLineConversionPct ?? 0) * 100}
               label="O-Line Conv"
               sublabel={`${teamStats.holds}/${teamStats.oPoints}`}
-              info="How often you score when your O-line takes the field.\n\nFormula: Holds ÷ O-Points"
+              info={`How often you score when your O-line takes the field.
+
+Formula: Holds ÷ O-Points`}
               infoLabel="O-Line Conversion"
             />
           </View>

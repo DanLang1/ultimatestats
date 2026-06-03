@@ -81,28 +81,38 @@ export default function TeamStatsSection({
       percentage: stats.holdPercentage,
       label: 'Hold',
       sublabel: `${stats.holds}/${stats.offensivePoints}`,
-      info: 'How often you score when starting on offense.\n\nFormula: Holds ÷ O-Points',
+      info: `How often you score when starting on offense.
+
+Formula: Holds ÷ O-Points`,
       infoLabel: 'Hold',
     },
     {
       percentage: stats.breakEfficiency,
       label: 'Break Eff',
       sublabel: `${stats.breaks}/${stats.dPointsWithTurnover}`,
-      info: 'When you force a turnover, how often do you convert it to a score?\n\nFormula: Breaks ÷ D-Points with Forced Turn',
+      info: `When you force a turnover, how often do you convert it to a score?
+
+Formula: Breaks ÷ D-Points with Forced Turn`,
       infoLabel: 'Break Efficiency',
     },
     {
       percentage: stats.dEfficiency,
       label: 'D-Eff',
       sublabel: `${stats.breaks}/${stats.defensivePoints}`,
-      info: 'How often you score when starting on defense.\n\nFormula: Breaks ÷ D-Points',
+      info: `How often you score when starting on defense.
+
+Formula: Breaks ÷ D-Points`,
       infoLabel: 'Defensive Efficiency',
     },
     {
       percentage: stats.conversionRate,
       label: 'Conversion',
       sublabel: `${stats.holds + stats.breaks}/${stats.offensivePoints + stats.opponentTurnovers}`,
-      info: 'How often you score when you have the disc.\n\nFormula: Goals ÷ Possessions\n\nPossessions = O-Points + Opponent Turnovers',
+      info: `How often you score when you have the disc.
+
+Formula: Goals ÷ Possessions
+
+Possessions = O-Points + Opponent Turnovers`,
       infoLabel: 'Conversion Rate',
     },
   ];
