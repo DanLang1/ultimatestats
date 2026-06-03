@@ -691,6 +691,7 @@ export function buildAnalyticsGame(game: AdvancedTrackedGame): AnalyticsGame {
     gameType: game.gameType,
     focusSideId: game.focusSideId,
     oppSideId,
+    initialReceivingSideId: game.initialReceivingSideId,
     sideLabels: Object.fromEntries(game.sides.map((s) => [s.id, s.label])),
     participantNames: new Map(game.participants.map((p) => [p.id, p.name])),
     metadata: game.metadata,

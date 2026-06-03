@@ -14,15 +14,21 @@ export default function AggregateAdvancedPlayerStats({
   participantId,
   selectedImpactGameId,
 }: AggregateAdvancedPlayerStatsProps) {
-  const { data: aggregateGames, isFetching } = useAdvancedGames(gameIds);
-  const analyticsGame = aggregateAnalyticsGames(aggregateGames.map(buildAnalyticsGame));
+  const {
+    data: aggregateGames,
+    isLoading,
+    isError,
+    isComplete,
+  } = useAdvancedGames(gameIds);
+  const analyticsGame =
+    isComplete && !isError ? aggregateAnalyticsGames(aggregateGames.map(buildAnalyticsGame)) : null;
 
   return (
     <AdvancedPlayerStatsView
       analyticsGame={analyticsGame}
       participantId={participantId}
-      isLoading={isFetching}
-      aggregateGames={aggregateGames}
+      isLoading={!isComplete && isLoading}
+      aggregateGames={isComplete ? aggregateGames : []}
       aggregateGameIds={gameIds}
       selectedImpactGameId={selectedImpactGameId}
     />

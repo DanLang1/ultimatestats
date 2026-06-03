@@ -10,7 +10,8 @@ import { useShallow } from 'zustand/react/shallow';
 type AdvancedGameResult<T> = {
   data: T;
   isLoading: boolean;
-  isFetching: boolean;
+  isError: boolean;
+  isComplete: boolean;
 };
 
 const advancedGameQueryKeys = {
@@ -18,6 +19,20 @@ const advancedGameQueryKeys = {
   game: (gameId: string) => ['advancedGames', 'game', gameId] as const,
   games: (gameIds: string[]) => ['advancedGames', 'games', [...gameIds].sort().join('|')] as const,
 };
+
+function mergeAdvancedGamesById(
+  cachedGames: AdvancedTrackedGame[],
+  loadedGames: AdvancedTrackedGame[] | undefined,
+): AdvancedTrackedGame[] {
+  const gamesById = new Map<string, AdvancedTrackedGame>();
+  for (const game of loadedGames ?? []) {
+    gamesById.set(game.id, game);
+  }
+  for (const game of cachedGames) {
+    gamesById.set(game.id, game);
+  }
+  return Array.from(gamesById.values());
+}
 
 export function useAdvancedGame(gameId: string): AdvancedGameResult<AdvancedTrackedGame | null> {
   if (!gameId) {
@@ -34,7 +49,12 @@ export function useAdvancedGame(gameId: string): AdvancedGameResult<AdvancedTrac
   });
 
   const data = game ?? query.data ?? null;
-  return { data, isLoading: query.isLoading, isFetching: query.isFetching };
+  return {
+    data,
+    isLoading: query.isLoading || query.isFetching,
+    isError: query.isError,
+    isComplete: data != null,
+  };
 }
 
 export function useAdvancedGameSummaries(): AdvancedGameResult<AdvancedGameSummary[]> {
@@ -48,8 +68,13 @@ export function useAdvancedGameSummaries(): AdvancedGameResult<AdvancedGameSumma
     enabled: !summariesLoaded,
   });
 
-  const isLoading = !summariesLoaded && query.isLoading;
-  return { data: summaries, isLoading, isFetching: query.isFetching };
+  const isLoading = !summariesLoaded && (query.isLoading || query.isFetching);
+  return {
+    data: summaries,
+    isLoading,
+    isError: query.isError,
+    isComplete: summariesLoaded,
+  };
 }
 
 export function useCompletedAdvancedGameSummaries(): AdvancedGameResult<AdvancedGameSummary[]> {
@@ -77,9 +102,20 @@ export function useAdvancedGames(gameIds: string[]): AdvancedGameResult<Advanced
     queryKey: advancedGameQueryKeys.games(sortedGameIds),
     queryFn: () => loadGames(sortedGameIds),
     enabled: sortedGameIds.length > 0 && hasMissingGames,
-    initialData: [],
+    staleTime: 0,
   });
 
-  const isLoading = hasMissingGames && query.isLoading;
-  return { data: games, isLoading, isFetching: query.isFetching };
+  const isLoading = hasMissingGames && (query.isLoading || query.isFetching);
+  const data = mergeAdvancedGamesById(games, query.data);
+  const isComplete = data.length === sortedGameIds.length;
+
+  return {
+    data,
+    isLoading,
+    isError: query.isError,
+    // `data` may be partial while a missing SQLite-backed record is loading.
+    // Row-style consumers can render partial results, but aggregate math should
+    // wait for isComplete so a cached subset is not treated as the full selection.
+    isComplete,
+  };
 }

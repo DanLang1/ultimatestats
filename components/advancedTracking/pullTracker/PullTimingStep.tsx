@@ -1,5 +1,6 @@
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import { PlayerChip } from '@/components/ui/PlayerChip';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { useTheme } from '@/context/ThemeContext';
 import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
@@ -13,10 +14,6 @@ import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 const TIMER_CIRCLE_SIZE: Record<SizeClass, number> = { small: 260, medium: 360, large: 520 };
 const TIMER_FONT_SIZE: Record<SizeClass, number> = { small: 72, medium: 104, large: 150 };
 const LABEL_FONT_SIZE: Record<SizeClass, number> = { small: 13, medium: 16, large: 20 };
-const CHIP_FONT_SIZE: Record<SizeClass, number> = { small: 14, medium: 16, large: 20 };
-const CHIP_PAD_H: Record<SizeClass, number> = { small: 16, medium: 20, large: 28 };
-const CHIP_PAD_V: Record<SizeClass, number> = { small: 12, medium: 14, large: 18 };
-const CHIP_RADIUS: Record<SizeClass, number> = { small: 12, medium: 13, large: 16 };
 const TIMER_SUB_FONT_SIZE: Record<SizeClass, number> = { small: 13, medium: 16, large: 22 };
 const ACTION_AREA_MIN_H: Record<SizeClass, number> = { small: 76, medium: 88, large: 110 };
 const CONTINUE_MIN_H: Record<SizeClass, number> = { small: 52, medium: 58, large: 68 };
@@ -86,48 +83,26 @@ export const PullTimingStep = ({
           <View style={styles.section}>
             <ThemedText style={[styles.label, { color: palette.textMuted }]}>PULLER</ThemedText>
             <View style={styles.chipGrid}>
-              {activeParticipants.map((participant) => {
-                const selected = selectedPullerId === participant.id;
-                return (
-                  <Pressable
-                    key={participant.id}
-                    onPress={() => setSelectedPullerId(participant.id)}
-                    style={[
-                      styles.chip,
-                      { borderColor: palette.overlay20, backgroundColor: palette.overlay05 },
-                      selected && {
-                        borderColor: palette.accent,
-                        backgroundColor: palette.accent + '25',
-                      },
-                    ]}>
-                    <ThemedText
-                      style={[
-                        styles.chipText,
-                        { color: selected ? palette.accent : palette.textInverse },
-                      ]}>
-                      {participant.name}
-                    </ThemedText>
-                  </Pressable>
-                );
-              })}
-              <Pressable
+              {activeParticipants.map((participant) => (
+                <PlayerChip
+                  key={participant.id}
+                  name={participant.name}
+                  number={participant.number}
+                  matchingType={participant.matchingType}
+                  role={participant.role}
+                  selected={selectedPullerId === participant.id}
+                  size="large"
+                  compact={sizeClass === 'small'}
+                  onPress={() => setSelectedPullerId(participant.id)}
+                />
+              ))}
+              <PlayerChip
+                name="Unknown"
+                selected={selectedPullerId === null}
+                size="large"
+                compact={sizeClass === 'small'}
                 onPress={() => setSelectedPullerId(null)}
-                style={[
-                  styles.chip,
-                  { borderColor: palette.overlay20, backgroundColor: palette.overlay05 },
-                  selectedPullerId === null && {
-                    borderColor: palette.accent,
-                    backgroundColor: palette.accent + '25',
-                  },
-                ]}>
-                <ThemedText
-                  style={[
-                    styles.chipText,
-                    { color: selectedPullerId === null ? palette.accent : palette.textMuted },
-                  ]}>
-                  Unknown
-                </ThemedText>
-              </Pressable>
+              />
             </View>
           </View>
         )}
@@ -230,13 +205,6 @@ function createStyles(sizeClass: SizeClass, timerFontSize: number) {
       marginBottom: 12,
     },
     chipGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
-    chip: {
-      paddingHorizontal: getSizeClassValue(CHIP_PAD_H, sizeClass),
-      paddingVertical: getSizeClassValue(CHIP_PAD_V, sizeClass),
-      borderRadius: getSizeClassValue(CHIP_RADIUS, sizeClass),
-      borderWidth: 1,
-    },
-    chipText: { fontFamily: Fonts.bold, fontSize: getSizeClassValue(CHIP_FONT_SIZE, sizeClass) },
     timerCircle: { borderWidth: 4, alignItems: 'center', justifyContent: 'center' },
     timerSecs: { fontFamily: Fonts.black, lineHeight: timerFontSize * 1.05 },
     timerSub: {

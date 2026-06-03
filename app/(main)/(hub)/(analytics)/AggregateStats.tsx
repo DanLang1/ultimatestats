@@ -20,7 +20,12 @@ import {
 } from '@/hooks/advancedTracking/useAdvancedGameQueries';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { aggregateAnalyticsGames } from '@/lib/advancedTracking/aggregateAnalyticsGames';
+import {
+  AdvancedInitialPullWinStats,
+  computeInitialPullWinStats,
+} from '@/lib/advancedTracking/advancedAggregateStatsUtils';
 import { generateAggregateAdvancedCSV } from '@/lib/advancedTracking/advancedCSVUtils';
+import type { AnalyticsGame } from '@/lib/advancedTracking/analyticsTypes';
 import { buildAnalyticsGame } from '@/lib/advancedTracking/buildAnalyticsGame';
 import { MAX_SHARE_GAMES } from '@/lib/constants';
 import { resolveTeamName } from '@/lib/playerUtils';
@@ -39,9 +44,16 @@ import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 import { File, Paths } from 'expo-file-system';
 import { router, Stack } from 'expo-router';
 import React, { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 type AggregateMode = 'basic' | 'advanced';
+
+function getAdvancedAggregateErrorMessage(error: unknown): string {
+  if (error instanceof Error && error.message.includes('same focus side')) {
+    return 'These games cannot be combined because they use incompatible advanced team records.';
+  }
+  return 'Could not combine the selected advanced games.';
+}
 
 export default function AggregateStatsScreen() {
   const { palette } = useTheme();
@@ -95,11 +107,42 @@ export default function AggregateStatsScreen() {
   }
 
   const selectedAdvancedGameIds = aggregateMode === 'advanced' ? [...selectedGameIds].sort() : [];
-  const { data: selectedAdvancedGames = [] } = useAdvancedGames(selectedAdvancedGameIds);
+  const {
+    data: selectedAdvancedGames = [],
+    isLoading: selectedAdvancedGamesLoading,
+    isError: selectedAdvancedGamesError,
+    isComplete: selectedAdvancedGamesComplete,
+  } = useAdvancedGames(selectedAdvancedGameIds);
 
-  const advancedAnalyticsGames = selectedAdvancedGames.map(buildAnalyticsGame);
-  const aggregatedAdvancedGame =
-    advancedAnalyticsGames.length > 0 ? aggregateAnalyticsGames(advancedAnalyticsGames) : null;
+  const advancedFullRecordsLoading =
+    selectedAdvancedGameIds.length > 0 &&
+    !selectedAdvancedGamesComplete &&
+    selectedAdvancedGamesLoading;
+  const advancedFullRecordsMissing =
+    selectedAdvancedGameIds.length > 0 &&
+    !selectedAdvancedGamesComplete &&
+    !advancedFullRecordsLoading;
+
+  let advancedAnalyticsGames: AnalyticsGame[] = [];
+  let aggregatedAdvancedGame: AnalyticsGame | null = null;
+  let initialPullWinStats: AdvancedInitialPullWinStats | null = null;
+  let advancedAggregateError: string | null = null;
+
+  if (!advancedFullRecordsLoading && !advancedFullRecordsMissing && !selectedAdvancedGamesError) {
+    try {
+      advancedAnalyticsGames = selectedAdvancedGames.map(buildAnalyticsGame);
+      if (advancedAnalyticsGames.length > 0) {
+        aggregatedAdvancedGame = aggregateAnalyticsGames(advancedAnalyticsGames);
+        initialPullWinStats = computeInitialPullWinStats(advancedAnalyticsGames);
+      }
+    } catch (error) {
+      advancedAggregateError = getAdvancedAggregateErrorMessage(error);
+    }
+  }
+
+  const advancedAggregateUnavailable =
+    selectedAdvancedGamesError || advancedFullRecordsMissing || advancedAggregateError != null;
+
   const advancedTeamName =
     aggregatedAdvancedGame?.sideLabels[aggregatedAdvancedGame.focusSideId] ?? 'My Team';
 
@@ -317,7 +360,48 @@ export default function AggregateStatsScreen() {
   const scrollKey = `aggregate-${aggregateMode}-${showingAggregatedStats ? 'stats' : 'picker'}-${selectedTeam ?? selectedAdvancedTeamId ?? ''}`;
 
   let mainContent: React.ReactNode;
-  if (showingAggregatedStats && aggregatedAdvancedGame && aggregateMode === 'advanced') {
+  if (showingAggregatedStats && aggregateMode === 'advanced' && advancedFullRecordsLoading) {
+    mainContent = (
+      <View style={styles.statusState}>
+        <ActivityIndicator color={palette.accent} />
+        <ThemedText style={[styles.statusTitle, { color: palette.textInverse }]}>
+          Loading combined stats
+        </ThemedText>
+        <ThemedText style={[styles.statusText, { color: palette.textMuted }]}>
+          Fetching full advanced game records...
+        </ThemedText>
+      </View>
+    );
+  } else if (
+    showingAggregatedStats &&
+    aggregateMode === 'advanced' &&
+    advancedAggregateUnavailable
+  ) {
+    const message = selectedAdvancedGamesError
+      ? 'Could not load the selected advanced games.'
+      : (advancedAggregateError ?? 'Some selected advanced games could not be loaded.');
+
+    mainContent = (
+      <View style={styles.statusState}>
+        <FontAwesome6
+          name="triangle-exclamation"
+          size={scaleBySizeClass(28, sizeClass)}
+          color={palette.accent}
+        />
+        <ThemedText style={[styles.statusTitle, { color: palette.textInverse }]}>
+          Combined stats unavailable
+        </ThemedText>
+        <ThemedText style={[styles.statusText, { color: palette.textMuted }]}>{message}</ThemedText>
+        <Pressable
+          style={[styles.statusButton, { backgroundColor: palette.accent }]}
+          onPress={() => setShowingAggregatedStats(false)}>
+          <ThemedText style={[styles.statusButtonText, { color: palette.textOnAccent }]}>
+            Back to Games
+          </ThemedText>
+        </Pressable>
+      </View>
+    );
+  } else if (showingAggregatedStats && aggregatedAdvancedGame && aggregateMode === 'advanced') {
     mainContent = (
       <AdvancedStatsContent
         game={aggregatedAdvancedGame}
@@ -330,6 +414,7 @@ export default function AggregateStatsScreen() {
         participantNames={aggregatedAdvancedGame.participantNames}
         aggregateInfo={{ gameCount: selectedAdvancedGames.length }}
         aggregateGameIds={selectedAdvancedGames.map((game) => game.id)}
+        initialPullWinStats={initialPullWinStats ?? undefined}
       />
     );
   } else if (showingAggregatedStats && aggregatedData) {
@@ -491,6 +576,33 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
       gap: 8,
     },
     modeButtonText: {
+      fontSize: scaleBySizeClass(13, sizeClass),
+      fontFamily: Fonts.semiBold,
+    },
+    statusState: {
+      alignItems: 'center',
+      gap: 12,
+      paddingHorizontal: 24,
+      paddingVertical: 48,
+    },
+    statusTitle: {
+      fontSize: scaleBySizeClass(18, sizeClass),
+      fontFamily: Fonts.bold,
+      textAlign: 'center',
+    },
+    statusText: {
+      fontSize: scaleBySizeClass(14, sizeClass),
+      fontFamily: Fonts.regular,
+      lineHeight: scaleBySizeClass(20, sizeClass),
+      textAlign: 'center',
+    },
+    statusButton: {
+      borderRadius: 8,
+      marginTop: 4,
+      paddingHorizontal: 18,
+      paddingVertical: 10,
+    },
+    statusButtonText: {
       fontSize: scaleBySizeClass(13, sizeClass),
       fontFamily: Fonts.semiBold,
     },

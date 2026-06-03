@@ -169,6 +169,9 @@ export function aggregateAnalyticsGames(games: AnalyticsGame[]): AnalyticsGame |
     gameType: firstGame.gameType,
     focusSideId,
     oppSideId: 'aggregate-opponents',
+    // initialReceivingSideId is only meaningful for individual games;
+    // aggregate consumers should rely on the original game list.
+    initialReceivingSideId: firstGame.initialReceivingSideId,
     sideLabels: aggregateSideLabels(games, focusSideId),
     participantNames,
     metadata: {

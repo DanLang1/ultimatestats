@@ -11,7 +11,7 @@ import type { AdvancedTrackedGame, Participant, TrackedPoint } from '@/lib/advan
 import { DEFAULT_TIMEOUT_SECONDS } from '@/lib/constants';
 import { formatTimerSeconds, hasItems } from '@/lib/utils';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
-import { Fonts, Palette } from '@/theme/theme';
+import { Fonts } from '@/theme/theme';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';

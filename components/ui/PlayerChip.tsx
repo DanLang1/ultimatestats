@@ -18,6 +18,7 @@ interface PlayerChipProps {
   matchingType?: MatchingType | null;
   role?: PlayerRole | null;
   subtitle?: string;
+  size?: 'default' | 'large';
   compact?: boolean;
   /** Use modal-appropriate colors (modalText, modalTextMuted) */
   useModalColors?: boolean;
@@ -42,6 +43,7 @@ export function PlayerChip({
   matchingType,
   role,
   subtitle,
+  size = 'default',
   compact = false,
   useModalColors = false,
   onPress,
@@ -104,7 +106,7 @@ export function PlayerChip({
   return (
     <Pressable
       style={({ pressed }) => [
-        compact ? styles.chipCompact : styles.chip,
+        getChipStyle({ compact, size, styles }),
         {
           backgroundColor: selected ? activeColor : palette.overlay12,
           borderColor,
@@ -119,7 +121,7 @@ export function PlayerChip({
       {number && (
         <ThemedText
           style={[
-            compact ? styles.numberTextCompact : styles.numberText,
+            getNumberTextStyle({ compact, size, styles }),
             { color: selected ? selectedTextColor : subtitleColor },
           ]}
           numberOfLines={1}>
@@ -127,29 +129,90 @@ export function PlayerChip({
         </ThemedText>
       )}
       <ThemedText
-        style={[compact ? styles.chipTextCompact : styles.chipText, { color: textColor }]}
+        style={[getChipTextStyle({ compact, size, styles }), { color: textColor }]}
         numberOfLines={1}>
         {name}
       </ThemedText>
       {subtitle && (
         <ThemedText
-          style={[
-            compact ? styles.chipSubtitleCompact : styles.chipSubtitle,
-            { color: subtitleColor },
-          ]}>
+          style={[getSubtitleTextStyle({ compact, size, styles }), { color: subtitleColor }]}>
           {subtitle}
         </ThemedText>
       )}
       {role && (
         <MaterialCommunityIcons
           name={ROLE_ICONS[role]}
-          size={compact ? scaleBySizeClass(10, sizeClass) : scaleBySizeClass(12, sizeClass)}
+          size={getRoleIconSize({ compact, size, sizeClass })}
           color={selected ? selectedTextColor : roleColor}
           style={styles.roleIcon}
         />
       )}
     </Pressable>
   );
+}
+
+interface PlayerChipStyleOptions {
+  compact: boolean;
+  size: 'default' | 'large';
+  styles: ReturnType<typeof createStyles>;
+}
+
+function getChipStyle({ compact, size, styles }: PlayerChipStyleOptions) {
+  if (compact) {
+    return styles.chipCompact;
+  }
+  if (size === 'large') {
+    return styles.chipLarge;
+  }
+  return styles.chip;
+}
+
+function getChipTextStyle({ compact, size, styles }: PlayerChipStyleOptions) {
+  if (compact) {
+    return styles.chipTextCompact;
+  }
+  if (size === 'large') {
+    return styles.chipTextLarge;
+  }
+  return styles.chipText;
+}
+
+function getNumberTextStyle({ compact, size, styles }: PlayerChipStyleOptions) {
+  if (compact) {
+    return styles.numberTextCompact;
+  }
+  if (size === 'large') {
+    return styles.numberTextLarge;
+  }
+  return styles.numberText;
+}
+
+function getSubtitleTextStyle({ compact, size, styles }: PlayerChipStyleOptions) {
+  if (compact) {
+    return styles.chipSubtitleCompact;
+  }
+  if (size === 'large') {
+    return styles.chipSubtitleLarge;
+  }
+  return styles.chipSubtitle;
+}
+
+function getRoleIconSize({
+  compact,
+  size,
+  sizeClass,
+}: {
+  compact: boolean;
+  size: 'default' | 'large';
+  sizeClass: SizeClass;
+}) {
+  if (compact) {
+    return scaleBySizeClass(10, sizeClass);
+  }
+  if (size === 'large') {
+    return scaleBySizeClass(15, sizeClass);
+  }
+  return scaleBySizeClass(12, sizeClass);
 }
 
 function createStyles(sizeClass: SizeClass) {
@@ -162,6 +225,15 @@ function createStyles(sizeClass: SizeClass) {
       borderRadius: scaleBySizeClass(20, sizeClass),
       borderWidth: 2,
       gap: scaleBySizeClass(4, sizeClass),
+    },
+    chipLarge: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: scaleBySizeClass(12, sizeClass),
+      paddingHorizontal: scaleBySizeClass(20, sizeClass),
+      borderRadius: scaleBySizeClass(24, sizeClass),
+      borderWidth: 2,
+      gap: scaleBySizeClass(6, sizeClass),
     },
     chipCompact: {
       flexDirection: 'row',
@@ -190,6 +262,14 @@ function createStyles(sizeClass: SizeClass) {
       fontSize: scaleBySizeClass(12, sizeClass),
       fontFamily: Fonts.bold,
     },
+    chipTextLarge: {
+      fontSize: scaleBySizeClass(18, sizeClass),
+      fontFamily: Fonts.semiBold,
+    },
+    numberTextLarge: {
+      fontSize: scaleBySizeClass(14, sizeClass),
+      fontFamily: Fonts.bold,
+    },
     chipTextCompact: {
       fontSize: scaleBySizeClass(13, sizeClass),
       fontFamily: Fonts.semiBold,
@@ -200,6 +280,10 @@ function createStyles(sizeClass: SizeClass) {
     },
     chipSubtitle: {
       fontSize: scaleBySizeClass(11, sizeClass),
+      fontFamily: Fonts.semiBold,
+    },
+    chipSubtitleLarge: {
+      fontSize: scaleBySizeClass(13, sizeClass),
       fontFamily: Fonts.semiBold,
     },
     chipSubtitleCompact: {

@@ -1,16 +1,18 @@
 import { ThemedText } from '@/components/ThemedText';
+import OpeningPullSplit from '@/components/advancedTracking/OpeningPullSplit';
 import { ScoreBadge } from '@/components/ui/ScoreBadge';
 import StatRing from '@/components/view-stats/StatRing';
 import StatsGrid from '@/components/view-stats/StatsGrid';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { AdvancedInitialPullWinStats } from '@/lib/advancedTracking/advancedAggregateStatsUtils';
 import { computeAdvancedPlayerStats } from '@/lib/advancedTracking/advancedPlayerStatsUtils';
-import { router } from 'expo-router';
 import { computePullStats } from '@/lib/advancedTracking/advancedPullStatsUtils';
 import { computeAdvancedTeamStats } from '@/lib/advancedTracking/advancedTeamStatsUtils';
 import { AnalyticsGame } from '@/lib/advancedTracking/analyticsTypes';
 import { Fonts } from '@/theme/theme';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { router } from 'expo-router';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import AdvancedStatsTable from './AdvancedStatsTable';
@@ -31,6 +33,7 @@ interface AdvancedStatsContentProps {
   participantNames: Map<string, string>;
   aggregateInfo?: { gameCount: number };
   aggregateGameIds?: string[];
+  initialPullWinStats?: AdvancedInitialPullWinStats;
 }
 
 export default function AdvancedStatsContent({
@@ -44,6 +47,7 @@ export default function AdvancedStatsContent({
   participantNames,
   aggregateInfo,
   aggregateGameIds,
+  initialPullWinStats,
 }: AdvancedStatsContentProps) {
   const { palette } = useTheme();
   const { isLandscape, sizeClass } = useLayout();
@@ -242,6 +246,15 @@ export default function AdvancedStatsContent({
               ]}
               columns={pullStats.avgHangTimeMs != null ? 2 : 1}
             />
+          </View>
+        )}
+
+        {initialPullWinStats && (
+          <View style={styles.subsectionContainer}>
+            <ThemedText style={[styles.subsectionTitle, { color: palette.textMuted }]}>
+              FLIP STATS
+            </ThemedText>
+            <OpeningPullSplit stats={initialPullWinStats} />
           </View>
         )}
       </View>

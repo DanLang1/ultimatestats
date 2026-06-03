@@ -150,6 +150,8 @@ export interface AnalyticsGame {
   focusSideId: string;
   /** The opposing side (non-focus). */
   oppSideId: string;
+  /** Which side received the opening pull. */
+  initialReceivingSideId: string;
   /** Display label for each side, keyed by sideId. */
   sideLabels: Record<string, string>;
   /** Display name for each participant, keyed by participantId. */
