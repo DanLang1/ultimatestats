@@ -11,6 +11,8 @@ import {
   getGoalInfo,
   getLastTurnoverEvent,
   getPassChainEvents,
+  getSafeDiscHolderRef,
+  TurnoverEventInfo,
 } from '@/lib/advancedTracking/trackingDisplayHelpers';
 import {
   getCurrentPoint,
@@ -28,6 +30,8 @@ import { Fonts, Palette } from '@/theme/theme';
 import React, { ReactNode } from 'react';
 import { StyleSheet } from 'react-native';
 
+const EXPANDED_TURNOVER_TEXT_LIMIT = 12;
+
 interface TrackerLastActionCardProps {
   passModifier: PassModifier;
   onCancelModifier: () => void;
@@ -43,6 +47,7 @@ interface TrackerLastActionCardState {
   focusSideId: string;
   participants: Participant[];
   oppHasDisc: boolean;
+  canUseRareMenu: boolean;
   lastFocusPossession: PointPossession | null;
   lastOppPossession: PointPossession | null;
   focusHasStarted: boolean;
@@ -55,24 +60,28 @@ type TrackerLastActionCardModel =
       accentColor: string;
       buttonMode: BottomCardButtonMode;
       content: ReactNode;
+      preferCompactActions?: boolean;
     }
   | {
       kind: 'goal';
       accentColor: string;
       buttonMode: BottomCardButtonMode;
       content: ReactNode;
+      preferCompactActions?: boolean;
     }
   | {
       kind: 'turnover';
       accentColor: string;
       buttonMode: BottomCardButtonMode;
       content: ReactNode;
+      preferCompactActions?: boolean;
     }
   | {
       kind: 'label';
       accentColor: string;
       buttonMode: BottomCardButtonMode;
       content: ReactNode;
+      preferCompactActions?: boolean;
     };
 
 export const TrackerLastActionCard = ({
@@ -92,6 +101,7 @@ export const TrackerLastActionCard = ({
 
   const activeSideId = getActiveSideId(possession, game);
   const oppHasDisc = !pointIsOver && activeSideId !== game.focusSideId;
+  const discHolderRef = getSafeDiscHolderRef(possession, game.focusSideId, point);
 
   const lastOppPossession =
     point?.possessions.filter((p) => p.sideId !== game.focusSideId).at(-1) ?? null;
@@ -124,6 +134,7 @@ export const TrackerLastActionCard = ({
     focusSideId: game.focusSideId,
     participants: game.participants,
     oppHasDisc,
+    canUseRareMenu: !pointIsOver && (oppHasDisc || discHolderRef != null),
     lastFocusPossession,
     lastOppPossession,
     focusHasStarted,
@@ -142,7 +153,10 @@ export const TrackerLastActionCard = ({
   });
 
   return (
-    <LastActionCardFrame accentColor={model.accentColor} buttonMode={model.buttonMode}>
+    <LastActionCardFrame
+      accentColor={model.accentColor}
+      buttonMode={model.buttonMode}
+      preferCompactActions={model.preferCompactActions}>
       {model.content}
     </LastActionCardFrame>
   );
@@ -171,12 +185,16 @@ function getTrackerLastActionCardModel({
     focusSideId,
     participants,
     oppHasDisc,
+    canUseRareMenu,
     lastFocusPossession,
     lastOppPossession,
     focusHasStarted,
     possession,
   } = state;
   const { palette, onCancelModifier, onMorePress, onUndo, frameLabel, eyebrow } = ui;
+  const undoRareButtonMode: BottomCardButtonMode = canUseRareMenu
+    ? { kind: 'undo-more', onUndo, onMore: onMorePress }
+    : { kind: 'undo-only', onUndo };
 
   if (passModifier) {
     const isFiftyFifty = passModifier === 'fifty-fifty';
@@ -189,6 +207,7 @@ function getTrackerLastActionCardModel({
         onMore: onMorePress,
         isDanger: isFiftyFifty,
       },
+      preferCompactActions: true,
       content: <ModifierPrompt modifier={passModifier} />,
     };
   }
@@ -211,7 +230,8 @@ function getTrackerLastActionCardModel({
       return {
         kind: 'turnover',
         accentColor,
-        buttonMode: { kind: 'undo-more', onUndo, onMore: onMorePress },
+        buttonMode: undoRareButtonMode,
+        preferCompactActions: shouldPreferCompactForTurnover(turnoverEvent),
         content: (
           <>
             {eyebrow(accentColor)}
@@ -224,7 +244,8 @@ function getTrackerLastActionCardModel({
     return {
       kind: 'label',
       accentColor: palette.neutral,
-      buttonMode: { kind: 'undo-more', onUndo, onMore: onMorePress },
+      buttonMode: undoRareButtonMode,
+      preferCompactActions: true,
       content: frameLabel('DEFENSE'),
     };
   }
@@ -238,7 +259,8 @@ function getTrackerLastActionCardModel({
     return {
       kind: 'turnover',
       accentColor,
-      buttonMode: { kind: 'undo-more', onUndo, onMore: onMorePress },
+      buttonMode: undoRareButtonMode,
+      preferCompactActions: shouldPreferCompactForTurnover(turnoverEvent),
       content: (
         <>
           {eyebrow(accentColor)}
@@ -253,7 +275,7 @@ function getTrackerLastActionCardModel({
     return {
       kind: 'turnover',
       accentColor: palette.accent,
-      buttonMode: { kind: 'undo-more', onUndo, onMore: onMorePress },
+      buttonMode: undoRareButtonMode,
       content: <PassChainHeader events={passChainEvents.events} />,
     };
   }
@@ -262,8 +284,18 @@ function getTrackerLastActionCardModel({
     kind: 'label',
     accentColor: palette.neutral,
     buttonMode: { kind: 'more-only', onMore: onMorePress },
+    preferCompactActions: true,
     content: frameLabel('TAP WHO STARTS WITH DISC'),
   };
+}
+
+function shouldPreferCompactForTurnover(event: TurnoverEventInfo) {
+  if (event.isDropWithSplitAttribution) {
+    return true;
+  }
+
+  const displayText = [event.responsibleName, event.label].filter(Boolean).join(' ');
+  return displayText.length > EXPANDED_TURNOVER_TEXT_LIMIT;
 }
 
 const s = {

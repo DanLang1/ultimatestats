@@ -3,8 +3,11 @@ import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { Fonts, Palette } from '@/theme/theme';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import React from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import React, { useState } from 'react';
+import { LayoutChangeEvent, Pressable, StyleSheet, View } from 'react-native';
+
+const COMPACT_ACTIONS_CARD_WIDTH = 360;
+const LANDSCAPE_COMPACT_ACTIONS_CARD_WIDTH = 220;
 
 type ButtonMode =
   | { kind: 'undo-more'; onUndo: () => void; onMore: () => void }
@@ -16,19 +19,35 @@ interface LastActionCardFrameProps {
   accentColor: string;
   children: React.ReactNode;
   buttonMode: ButtonMode;
+  preferCompactActions?: boolean;
 }
 
 export const LastActionCardFrame = ({
   accentColor,
   children,
   buttonMode,
+  preferCompactActions = false,
 }: LastActionCardFrameProps) => {
   const { palette } = useTheme();
   const { sizeClass, isLandscape } = useLayout();
   const styles = createStyles(sizeClass, isLandscape, palette);
+  const [cardWidth, setCardWidth] = useState(0);
 
   const showMore = buttonMode.kind !== 'undo-only';
   const showUndo = buttonMode.kind === 'undo-more' || buttonMode.kind === 'undo-only';
+  const canUseCompactActions = sizeClass === 'small';
+  const compactActionThreshold = scaleBySizeClass(
+    isLandscape ? LANDSCAPE_COMPACT_ACTIONS_CARD_WIDTH : COMPACT_ACTIONS_CARD_WIDTH,
+    sizeClass,
+  );
+  const useCompactActions =
+    canUseCompactActions &&
+    (preferCompactActions || (cardWidth > 0 && cardWidth < compactActionThreshold));
+
+  const handleCardLayout = (event: LayoutChangeEvent) => {
+    const measuredWidth = Math.round(event.nativeEvent.layout.width);
+    setCardWidth((currentWidth) => (currentWidth === measuredWidth ? currentWidth : measuredWidth));
+  };
 
   let primaryAction: React.ReactNode = null;
   if (buttonMode.kind === 'cancel-more') {
@@ -37,7 +56,7 @@ export const LastActionCardFrame = ({
         onPress={buttonMode.onCancel}
         hitSlop={8}
         style={({ pressed }) => [
-          styles.actionBtn,
+          useCompactActions ? styles.compactBtn : styles.actionBtn,
           { backgroundColor: palette.overlay05, borderColor: palette.overlay10 },
           pressed && { opacity: 0.7 },
         ]}>
@@ -46,9 +65,11 @@ export const LastActionCardFrame = ({
           size={scaleBySizeClass(18, sizeClass)}
           color={buttonMode.isDanger ? palette.danger : palette.textMuted}
         />
-        <ThemedText style={[styles.actionBtnText, { color: palette.textInverse }]}>
-          CANCEL
-        </ThemedText>
+        {!useCompactActions && (
+          <ThemedText style={[styles.actionBtnText, { color: palette.textInverse }]}>
+            CANCEL
+          </ThemedText>
+        )}
       </Pressable>
     );
   } else if (showUndo) {
@@ -58,22 +79,27 @@ export const LastActionCardFrame = ({
         onPress={async () => await buttonMode.onUndo()}
         hitSlop={8}
         style={({ pressed }) => [
-          styles.moreBtn,
+          useCompactActions ? styles.compactBtn : styles.actionBtn,
           { backgroundColor: 'transparent', borderColor: palette.overlay10 },
           pressed && { opacity: 0.7 },
         ]}>
         <MaterialCommunityIcons
           name="undo"
-          size={scaleBySizeClass(20, sizeClass)}
+          size={scaleBySizeClass(useCompactActions ? 20 : 18, sizeClass)}
           color={palette.textMuted}
         />
+        {!useCompactActions && (
+          <ThemedText style={[styles.actionBtnText, { color: palette.textInverse }]}>
+            UNDO
+          </ThemedText>
+        )}
       </Pressable>
     );
   }
 
   return (
     <View style={styles.outerContainer}>
-      <View style={styles.card}>
+      <View style={styles.card} onLayout={handleCardLayout}>
         <View style={[styles.accentRail, { backgroundColor: accentColor }]} />
         <View style={styles.headerCenterContent}>{children}</View>
 
@@ -86,15 +112,22 @@ export const LastActionCardFrame = ({
               onPress={buttonMode.onMore}
               hitSlop={8}
               style={({ pressed }) => [
-                styles.moreBtn,
+                useCompactActions ? styles.compactBtn : styles.actionBtn,
                 { backgroundColor: 'transparent', borderColor: palette.overlay10 },
                 pressed && { opacity: 0.7 },
               ]}>
-              <MaterialCommunityIcons
-                name="dots-vertical"
-                size={scaleBySizeClass(20, sizeClass)}
-                color={palette.textMuted}
-              />
+              {useCompactActions && (
+                <MaterialCommunityIcons
+                  name="dots-horizontal"
+                  size={scaleBySizeClass(20, sizeClass)}
+                  color={palette.textMuted}
+                />
+              )}
+              {!useCompactActions && (
+                <ThemedText style={[styles.actionBtnText, { color: palette.textInverse }]}>
+                  MORE
+                </ThemedText>
+              )}
             </Pressable>
           )}
         </View>
@@ -145,6 +178,7 @@ function createStyles(sizeClass: SizeClass, isLandscape: boolean, palette: Palet
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: isLandscape ? 'space-between' : 'flex-start',
+      flexShrink: 0,
       gap: 6,
     },
     actionBtn: {
@@ -153,20 +187,14 @@ function createStyles(sizeClass: SizeClass, isLandscape: boolean, palette: Palet
       justifyContent: 'center',
       gap: 7,
       minHeight: scaleBySizeClass(44, sizeClass),
-      minWidth: scaleBySizeClass(isLandscape ? 82 : 96, sizeClass),
+      minWidth: scaleBySizeClass(isLandscape ? 0 : 86, sizeClass),
       flex: isLandscape ? 1 : 0,
       borderRadius: 14,
       borderCurve: 'continuous',
-      paddingHorizontal: scaleBySizeClass(12, sizeClass),
+      paddingHorizontal: scaleBySizeClass(isLandscape ? 8 : 12, sizeClass),
       borderWidth: 1,
     },
-    actionBtnText: {
-      fontFamily: Fonts.black,
-      fontSize: scaleBySizeClass(12, sizeClass),
-      letterSpacing: 0.5,
-      textTransform: 'uppercase',
-    },
-    moreBtn: {
+    compactBtn: {
       width: scaleBySizeClass(40, sizeClass),
       height: scaleBySizeClass(44, sizeClass),
       borderRadius: 14,
@@ -174,6 +202,12 @@ function createStyles(sizeClass: SizeClass, isLandscape: boolean, palette: Palet
       justifyContent: 'center',
       alignItems: 'center',
       borderWidth: 1,
+    },
+    actionBtnText: {
+      fontFamily: Fonts.black,
+      fontSize: scaleBySizeClass(12, sizeClass),
+      letterSpacing: 0.5,
+      textTransform: 'uppercase',
     },
   });
 }
