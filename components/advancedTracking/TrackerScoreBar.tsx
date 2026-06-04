@@ -5,6 +5,7 @@ import { ScoreBarMainRow } from '@/components/advancedTracking/scoreBar/ScoreBar
 import { ScoreBarPagination } from '@/components/advancedTracking/scoreBar/ScoreBarPagination';
 import { useScoreBarData } from '@/components/advancedTracking/scoreBar/useScoreBarData';
 import { useTheme } from '@/context/ThemeContext';
+import { useTimestampTimer } from '@/hooks/advancedTracking/useTimer';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { formatPointTime } from '@/lib/advancedTracking/trackingDisplayHelpers';
 import { Fonts } from '@/theme/theme';
@@ -13,16 +14,30 @@ import React, { useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 interface TrackerScoreBarProps {
-  pointElapsedMs: number;
+  pointTimerAdjustedTimestamp: number | null;
+  pointTimerPausedAt: number | null;
 }
 
-export const TrackerScoreBar = ({ pointElapsedMs }: TrackerScoreBarProps) => {
+export const TrackerScoreBar = ({
+  pointTimerAdjustedTimestamp,
+  pointTimerPausedAt,
+}: TrackerScoreBarProps) => {
   const { palette } = useTheme();
   const { sizeClass, isLandscape, width } = useLayout();
   const styles = createStyles(sizeClass);
   const [isExpanded, setIsExpanded] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
   const data = useScoreBarData();
+  const runningPointElapsedMs = useTimestampTimer({
+    timestamp: pointTimerAdjustedTimestamp,
+    mode: 'elapsed',
+    intervalMs: 1000,
+    enabled: (data?.showPointTimer ?? false) && !(data?.isPointTimerPaused ?? false),
+  });
+  const pointElapsedMs =
+    pointTimerAdjustedTimestamp != null && pointTimerPausedAt != null
+      ? Math.max(0, pointTimerPausedAt - pointTimerAdjustedTimestamp)
+      : runningPointElapsedMs;
 
   const cardWidth = width - 20;
 
@@ -139,8 +154,8 @@ export const TrackerScoreBar = ({ pointElapsedMs }: TrackerScoreBarProps) => {
           scrollEventThrottle={16}>
           <ScoreBarMainRow
             width={cardWidth}
-            pointElapsedMs={pointElapsedMs}
             onToggleExpanded={toggleExpanded}
+            pointElapsedMs={pointElapsedMs}
           />
 
           <ScoreBarActionRow width={cardWidth} />

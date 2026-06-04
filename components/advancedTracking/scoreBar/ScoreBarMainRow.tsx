@@ -11,14 +11,14 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 interface ScoreBarMainRowProps {
   width: number;
-  pointElapsedMs: number;
   onToggleExpanded: () => void;
+  pointElapsedMs: number;
 }
 
 export const ScoreBarMainRow = ({
   width,
-  pointElapsedMs,
   onToggleExpanded,
+  pointElapsedMs,
 }: ScoreBarMainRowProps) => {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();

@@ -15,12 +15,13 @@ import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore
 import { useSettingsStore } from '@/store/settingsStore';
 
 export function useScoreBarData() {
-  const {
-    currentGame: game,
-    recordBetweenPointTimeout,
-    recordStoppage,
-  } = useAdvancedTrackingStore();
-  const { genderRatioEnabled, firstPointRatio } = useSettingsStore();
+  const game = useAdvancedTrackingStore((state) => state.currentGame);
+  const recordBetweenPointTimeout = useAdvancedTrackingStore(
+    (state) => state.recordBetweenPointTimeout,
+  );
+  const recordStoppage = useAdvancedTrackingStore((state) => state.recordStoppage);
+  const genderRatioEnabled = useSettingsStore((state) => state.genderRatioEnabled);
+  const firstPointRatio = useSettingsStore((state) => state.firstPointRatio);
 
   if (!game) return null;
 

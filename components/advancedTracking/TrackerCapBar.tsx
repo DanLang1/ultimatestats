@@ -1,7 +1,16 @@
 import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
+import { useTimestampTimer } from '@/hooks/advancedTracking/useTimer';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import { formatPointTime } from '@/lib/advancedTracking/trackingDisplayHelpers';
+import { computeCapState } from '@/lib/advancedTracking/capUtils';
+import {
+  getActiveGameClockPause,
+  getCompletedGameClockPauseMs,
+  getGameClockElapsedMs,
+  formatPointTime,
+} from '@/lib/advancedTracking/trackingDisplayHelpers';
+import { AdvancedTrackedGame } from '@/lib/advancedTracking/types';
+import { useSettingsStore } from '@/store/settingsStore';
 import { Fonts } from '@/theme/theme';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
@@ -11,24 +20,34 @@ interface TrackerCapBarProps {
   /** Compact layout for landscape side panel. */
   compact: boolean;
   onMenuPress: () => void;
-  capLabel: string;
-  capProgress: number;
-  capIsWarning: boolean;
-  capTimeLeftMs: number;
-  gameStarted: boolean;
+  game: AdvancedTrackedGame;
 }
 
-export const TrackerCapBar = ({
-  compact,
-  onMenuPress,
-  capLabel,
-  capProgress,
-  capIsWarning,
-  capTimeLeftMs,
-  gameStarted,
-}: TrackerCapBarProps) => {
+export const TrackerCapBar = ({ compact, onMenuPress, game }: TrackerCapBarProps) => {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
+  const activeGameClockPause = getActiveGameClockPause(game);
+  const gameStartedAt = game.points[0]?.startedAt ?? null;
+  const rawGameElapsedMs = useTimestampTimer({
+    timestamp: gameStartedAt,
+    mode: 'elapsed',
+    intervalMs: 1000,
+    enabled: gameStartedAt !== null && activeGameClockPause === null,
+  });
+  const completedGameClockPauseMs = getCompletedGameClockPauseMs(game);
+  const gameElapsedMs =
+    activeGameClockPause !== null
+      ? getGameClockElapsedMs(game, Date.now())
+      : Math.max(0, rawGameElapsedMs - completedGameClockPauseMs);
+  const hardCapMins = useSettingsStore((state) => state.hardCapMins);
+  const softCapMins = useSettingsStore((state) => state.softCapMins);
+  const { capLabel, capProgress, capTimeLeftMs, capIsWarning } = computeCapState({
+    gameElapsedMs,
+    gameStarted: gameStartedAt !== null,
+    gameLengthMinutes: hardCapMins,
+    softCapMins,
+  });
+  const capDisplayLabel = activeGameClockPause !== null ? 'CAP PAUSED' : capLabel;
   const styles = createStyles(sizeClass, compact);
   const capFillColor = capIsWarning ? palette.danger : palette.accent;
   const capTextColor = capIsWarning ? palette.danger : palette.textMuted;
@@ -49,13 +68,15 @@ export const TrackerCapBar = ({
       <View style={compact ? styles.centerCompact : styles.center}>
         {compact ? (
           <ThemedText style={[styles.labelCompact, { color: capTextColor }]} numberOfLines={1}>
-            {capLabel}
+            {capDisplayLabel}
           </ThemedText>
         ) : (
           <View style={styles.labelRow}>
-            <ThemedText style={[styles.label, { color: capTextColor }]}>{capLabel}</ThemedText>
+            <ThemedText style={[styles.label, { color: capTextColor }]}>
+              {capDisplayLabel}
+            </ThemedText>
             <ThemedText style={[styles.timeLeft, { color: capTextColor }]}>
-              {gameStarted ? `${formatPointTime(capTimeLeftMs)} left` : '—'}
+              {gameStartedAt !== null ? `${formatPointTime(capTimeLeftMs)} left` : '—'}
             </ThemedText>
           </View>
         )}

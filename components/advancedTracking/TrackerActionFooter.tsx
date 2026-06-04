@@ -26,13 +26,13 @@ const FOOTER_HORIZONTAL_PADDING = 12;
 const FOOTER_TOP_PADDING = 8;
 
 interface TrackerActionFooterProps {
-  pointElapsedMs: number;
+  getPointElapsedMs: () => number;
   onStartNextPoint: () => void;
   voiceControls?: VoiceStatCommandsControls;
 }
 
 export const TrackerActionFooter = ({
-  pointElapsedMs,
+  getPointElapsedMs,
   onStartNextPoint,
   voiceControls,
 }: TrackerActionFooterProps) => {
@@ -41,7 +41,9 @@ export const TrackerActionFooter = ({
   const insets = useSafeAreaInsets();
   const styles = createStyles(sizeClass, insets.bottom);
 
-  const { currentGame: game, recordPickup, recordThrow } = useAdvancedTrackingStore();
+  const game = useAdvancedTrackingStore((state) => state.currentGame);
+  const recordPickup = useAdvancedTrackingStore((state) => state.recordPickup);
+  const recordThrow = useAdvancedTrackingStore((state) => state.recordThrow);
   if (!game) return null;
 
   const oppSide = game.sides.find((s) => s.id !== game.focusSideId);
@@ -67,7 +69,7 @@ export const TrackerActionFooter = ({
     await recordThrow({
       thrower: { refType: 'untracked' },
       result: 'goal',
-      timerElapsedMs: pointElapsedMs,
+      timerElapsedMs: getPointElapsedMs(),
     });
   };
 

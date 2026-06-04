@@ -15,18 +15,14 @@ import {
 } from '@/components/advancedTracking/TrackerSurface';
 import { useTheme } from '@/context/ThemeContext';
 import { useLiveRosterParticipants } from '@/hooks/advancedTracking/useLiveRosterParticipants';
-import { useTimestampTimer } from '@/hooks/advancedTracking/useTimer';
 import { useTrackerHandlers } from '@/hooks/advancedTracking/useTrackerHandlers';
 import { useVoiceStatCommands } from '@/hooks/advancedTracking/useVoiceStatCommands';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import { computeCapState } from '@/lib/advancedTracking/capUtils';
 import {
   getActiveGameClockPause,
   getActiveSideId,
   getActiveStoppage,
-  getCompletedGameClockPauseMs,
   getEffectiveLineParticipantIds,
-  getGameClockElapsedMs,
   getPointAdjustedTimestamp,
   getSafeDiscHolderRef,
   isPullAwaitingPickup,
@@ -42,7 +38,6 @@ import { PassModifier } from '@/lib/advancedTracking/types';
 import { buildVoiceParticipantContexts } from '@/lib/advancedTracking/voiceContext';
 
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
-import { useSettingsStore } from '@/store/settingsStore';
 import { Fonts, Palette } from '@/theme/theme';
 import { Redirect, router, Stack } from 'expo-router';
 import React, { useState } from 'react';
@@ -55,17 +50,17 @@ export default function AdvancedTrackerScreen() {
   const styles = createStyles(palette, sizeClass);
   const insets = useSafeAreaInsets();
 
-  const {
-    currentGame: game,
-    undoStack,
-    isHalftimeBreakActive,
-    recordThrow,
-    recordPickup,
-    amendLastThrowAsGoal,
-    amendOpeningPullAsDropped,
-    startGameClockPause,
-    triggerHalftimeEarly,
-  } = useAdvancedTrackingStore();
+  const game = useAdvancedTrackingStore((state) => state.currentGame);
+  const undoStack = useAdvancedTrackingStore((state) => state.undoStack);
+  const isHalftimeBreakActive = useAdvancedTrackingStore((state) => state.isHalftimeBreakActive);
+  const recordThrow = useAdvancedTrackingStore((state) => state.recordThrow);
+  const recordPickup = useAdvancedTrackingStore((state) => state.recordPickup);
+  const amendLastThrowAsGoal = useAdvancedTrackingStore((state) => state.amendLastThrowAsGoal);
+  const amendOpeningPullAsDropped = useAdvancedTrackingStore(
+    (state) => state.amendOpeningPullAsDropped,
+  );
+  const startGameClockPause = useAdvancedTrackingStore((state) => state.startGameClockPause);
+  const triggerHalftimeEarly = useAdvancedTrackingStore((state) => state.triggerHalftimeEarly);
   const participants = useLiveRosterParticipants(game?.participants ?? []);
   const [showDevModal, setShowDevModal] = useState(false);
   const [showHomeMenu, setShowHomeMenu] = useState(false);
@@ -77,40 +72,14 @@ export default function AdvancedTrackerScreen() {
   const possession = game ? getCurrentPossession(game) : null;
   const activeStoppage = getActiveStoppage(possession);
   const activeGameClockPause = game ? getActiveGameClockPause(game) : null;
-  const isPointTimerPaused = activeStoppage !== null || activeGameClockPause !== null;
-  const showPointTimer = point?.startedAt != null && !hasPointEnded(point);
   const pointTimerAdjustedTimestamp = point ? getPointAdjustedTimestamp(point, game) : null;
-  const runningPointElapsedMs = useTimestampTimer({
-    timestamp: pointTimerAdjustedTimestamp,
-    mode: 'elapsed',
-    intervalMs: 250,
-    enabled: showPointTimer && !isPointTimerPaused,
-  });
-  const pointElapsedMs =
-    activeGameClockPause != null && pointTimerAdjustedTimestamp != null
-      ? Math.max(0, activeGameClockPause.pausedAt - pointTimerAdjustedTimestamp)
-      : runningPointElapsedMs;
+  const pointTimerPausedAt = activeGameClockPause?.pausedAt ?? activeStoppage?.pausedAt ?? null;
+  const getPointElapsedMs = () => {
+    if (pointTimerAdjustedTimestamp == null) return 0;
+    return Math.max(0, (pointTimerPausedAt ?? Date.now()) - pointTimerAdjustedTimestamp);
+  };
 
   const gameStartedAt = game?.points[0]?.startedAt ?? null;
-  const rawGameElapsedMs = useTimestampTimer({
-    timestamp: gameStartedAt,
-    mode: 'elapsed',
-    intervalMs: 1000,
-    enabled: gameStartedAt !== null && activeGameClockPause === null,
-  });
-  const completedGameClockPauseMs = game ? getCompletedGameClockPauseMs(game) : 0;
-  const gameElapsedMs =
-    activeGameClockPause !== null
-      ? getGameClockElapsedMs(game ?? null, Date.now())
-      : Math.max(0, rawGameElapsedMs - completedGameClockPauseMs);
-  const { hardCapMins, softCapMins } = useSettingsStore();
-  const { capLabel, capProgress, capTimeLeftMs, capIsWarning } = computeCapState({
-    gameElapsedMs,
-    gameStarted: gameStartedAt !== null,
-    gameLengthMinutes: hardCapMins,
-    softCapMins,
-  });
-  const capDisplayLabel = activeGameClockPause !== null ? 'CAP PAUSED' : capLabel;
 
   const pointIsOver = hasPointEnded(point);
   const lastUndoEntry = undoStack.at(-1);
@@ -141,7 +110,7 @@ export default function AdvancedTrackerScreen() {
     oppHasDisc,
     possession,
     discHolderRef,
-    pointElapsedMs,
+    getPointElapsedMs,
     passModifier,
     setPassModifier,
     recordThrow,
@@ -255,16 +224,11 @@ export default function AdvancedTrackerScreen() {
                 borderRightColor: palette.overlay15,
               },
             ]}>
-            <TrackerCapBar
-              compact
-              onMenuPress={() => setShowHomeMenu(true)}
-              capLabel={capDisplayLabel}
-              capProgress={capProgress}
-              capIsWarning={capIsWarning}
-              capTimeLeftMs={capTimeLeftMs}
-              gameStarted={gameStartedAt !== null}
+            <TrackerCapBar compact onMenuPress={() => setShowHomeMenu(true)} game={game} />
+            <TrackerScoreBar
+              pointTimerAdjustedTimestamp={pointTimerAdjustedTimestamp}
+              pointTimerPausedAt={pointTimerPausedAt}
             />
-            <TrackerScoreBar pointElapsedMs={pointElapsedMs} />
             <View style={{ flex: 1 }} />
             {showInPointControls && (
               <>
@@ -274,7 +238,7 @@ export default function AdvancedTrackerScreen() {
                   onMorePress={() => setShowRareMenu(true)}
                 />
                 <TrackerActionFooter
-                  pointElapsedMs={pointElapsedMs}
+                  getPointElapsedMs={getPointElapsedMs}
                   onStartNextPoint={handleStartNextPoint}
                   voiceControls={canUseVoice ? voiceControls : undefined}
                 />
@@ -288,16 +252,11 @@ export default function AdvancedTrackerScreen() {
         </View>
       ) : (
         <>
-          <TrackerCapBar
-            compact={false}
-            onMenuPress={() => setShowHomeMenu(true)}
-            capLabel={capDisplayLabel}
-            capProgress={capProgress}
-            capIsWarning={capIsWarning}
-            capTimeLeftMs={capTimeLeftMs}
-            gameStarted={gameStartedAt !== null}
+          <TrackerCapBar compact={false} onMenuPress={() => setShowHomeMenu(true)} game={game} />
+          <TrackerScoreBar
+            pointTimerAdjustedTimestamp={pointTimerAdjustedTimestamp}
+            pointTimerPausedAt={pointTimerPausedAt}
           />
-          <TrackerScoreBar pointElapsedMs={pointElapsedMs} />
           {showInPointControls && (
             <TrackerLastActionCard
               passModifier={passModifier}
@@ -310,7 +269,7 @@ export default function AdvancedTrackerScreen() {
           </View>
           {showInPointControls && (
             <TrackerActionFooter
-              pointElapsedMs={pointElapsedMs}
+              getPointElapsedMs={getPointElapsedMs}
               onStartNextPoint={handleStartNextPoint}
               voiceControls={canUseVoice ? voiceControls : undefined}
             />
@@ -322,7 +281,7 @@ export default function AdvancedTrackerScreen() {
         <TrackerRareMenu
           visible={showRareMenu}
           onClose={() => setShowRareMenu(false)}
-          pointElapsedMs={pointElapsedMs}
+          getPointElapsedMs={getPointElapsedMs}
           setPassModifier={setPassModifier}
         />
       )}

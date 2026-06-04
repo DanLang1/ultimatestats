@@ -8,7 +8,7 @@ interface UseTrackerHandlersInput {
   oppHasDisc: boolean;
   possession: PointPossession | null;
   discHolderRef: PlayerRef | null;
-  pointElapsedMs: number;
+  getPointElapsedMs: () => number;
   passModifier: PassModifier;
   setPassModifier: (m: PassModifier) => void;
   recordThrow: (input: {
@@ -30,7 +30,7 @@ export function useTrackerHandlers(input: UseTrackerHandlersInput): TrackerPlaye
     oppHasDisc,
     possession,
     discHolderRef,
-    pointElapsedMs,
+    getPointElapsedMs,
     passModifier,
     setPassModifier,
     recordThrow,
@@ -50,7 +50,7 @@ export function useTrackerHandlers(input: UseTrackerHandlersInput): TrackerPlaye
         thrower: { refType: 'untracked' },
         result: 'callahan',
         toPlayer: ref,
-        timerElapsedMs: pointElapsedMs,
+        timerElapsedMs: getPointElapsedMs(),
       });
       setPassModifier(null);
       return;
@@ -128,7 +128,7 @@ export function useTrackerHandlers(input: UseTrackerHandlersInput): TrackerPlaye
       toPlayer: ref,
       result: 'complete',
     });
-    amendLastThrowAsGoal(pointElapsedMs);
+    amendLastThrowAsGoal(getPointElapsedMs());
   };
 
   const onThrowaway = () => {

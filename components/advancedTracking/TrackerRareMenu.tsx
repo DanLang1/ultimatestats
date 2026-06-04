@@ -20,7 +20,7 @@ import { Modal, Pressable, StyleSheet, View } from 'react-native';
 interface TrackerRareMenuProps {
   visible: boolean;
   onClose: () => void;
-  pointElapsedMs: number;
+  getPointElapsedMs: () => number;
   setPassModifier: (m: PassModifier) => void;
 }
 
@@ -34,7 +34,7 @@ type RareAction = {
 export const TrackerRareMenu = ({
   visible,
   onClose,
-  pointElapsedMs,
+  getPointElapsedMs,
   setPassModifier,
 }: TrackerRareMenuProps) => {
   const { palette } = useTheme();
@@ -74,7 +74,7 @@ export const TrackerRareMenu = ({
       thrower: discHolderRef,
       result: 'callahan',
       defender: { refType: 'untracked' },
-      timerElapsedMs: pointElapsedMs,
+      timerElapsedMs: getPointElapsedMs(),
     });
     setPassModifier(null);
   };
