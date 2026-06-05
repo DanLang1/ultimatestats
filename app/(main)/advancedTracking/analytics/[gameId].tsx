@@ -13,6 +13,7 @@ import { useAdvancedGame } from '@/hooks/advancedTracking/useAdvancedGameQueries
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { generateAdvancedGameCSV } from '@/lib/advancedTracking/advancedCSVUtils';
 import { buildAnalyticsGame, getFinalScores } from '@/lib/advancedTracking/buildAnalyticsGame';
+import { MIN_PLAYED_AT_YEAR } from '@/lib/constants';
 import { shareFileAndDelete } from '@/lib/shareFileAndDelete';
 import { serializeAdvancedGame, uploadPayload } from '@/lib/sharing';
 import {
@@ -20,27 +21,35 @@ import {
   SHARE_DATA_UPLOAD_ERROR_MESSAGE,
 } from '@/lib/sharing/shareActionUtils';
 import { formatDate } from '@/lib/statsUtils';
+import { useSavedAdvancedGamesStore } from '@/store/advancedTracking/savedGamesStore';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { Fonts } from '@/theme/theme';
+import DateTimePicker, {
+  DateTimePickerAndroid,
+  DateTimePickerEvent,
+} from '@react-native-community/datetimepicker';
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { File, Paths } from 'expo-file-system';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import React, { useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 type AdvancedGameStatsOrigin = 'gameComplete';
+
+const MIN_PLAYED_AT_DATE = new Date(MIN_PLAYED_AT_YEAR, 0, 1);
 
 export default function AdvancedGameStatsScreen() {
   const { gameId, from } = useLocalSearchParams<{
     gameId?: string;
     from?: AdvancedGameStatsOrigin;
   }>();
-  const { palette } = useTheme();
+  const { palette, themeMode } = useTheme();
   const { isLandscape, sizeClass } = useLayout();
   const styles = createStyles(isLandscape, sizeClass);
   const { showAlert } = useAlert();
   const { deleteSavedGame } = useAdvancedTrackingStore();
+  const saveAdvancedGame = useSavedAdvancedGamesStore((state) => state.saveGame);
   const { data: rawGame, isLoading } = useAdvancedGame(gameId!);
   const [pendingShareAction, setPendingShareAction] = useState<(() => Promise<string>) | null>(
     null,
@@ -111,6 +120,48 @@ export default function AdvancedGameStatsScreen() {
   const timestamp = analyticsGame.metadata?.date
     ? new Date(analyticsGame.metadata.date).getTime() || analyticsGame.createdAt
     : analyticsGame.createdAt;
+  const hasPlayedAt = Boolean(rawGame.metadata?.date);
+
+  const handleUpdatePlayedAt = async (playedAt: number) => {
+    await saveAdvancedGame({
+      ...rawGame,
+      updatedAt: Date.now(),
+      metadata: {
+        ...rawGame.metadata,
+        date: new Date(playedAt).toISOString(),
+      },
+    });
+  };
+
+  const handleDateChange = (_event: DateTimePickerEvent, selectedValue?: Date) => {
+    if (!selectedValue) return;
+    const now = new Date();
+    if (selectedValue.getTime() > now.getTime()) return;
+    handleUpdatePlayedAt(selectedValue.getTime());
+  };
+
+  const handleOpenAndroidDatePicker = () => {
+    const now = new Date();
+    DateTimePickerAndroid.open({
+      value: new Date(timestamp),
+      mode: 'date',
+      maximumDate: now,
+      minimumDate: MIN_PLAYED_AT_DATE,
+      onChange: (event, date) => {
+        if (event.type !== 'set' || !date) return;
+        DateTimePickerAndroid.open({
+          value: date,
+          mode: 'time',
+          is24Hour: false,
+          onChange: (timeEvent, finalDate) => {
+            if (timeEvent.type === 'set' && finalDate && finalDate.getTime() <= now.getTime()) {
+              handleUpdatePlayedAt(finalDate.getTime());
+            }
+          },
+        });
+      },
+    });
+  };
 
   const handleExportCSV = async () => {
     try {
@@ -277,33 +328,87 @@ export default function AdvancedGameStatsScreen() {
       />
 
       <ScrollView contentContainerStyle={[styles.scrollContent, { paddingBottom: 100 }]}>
-        {/* Date card */}
-        <View
-          style={[
-            styles.dateCard,
-            { backgroundColor: palette.overlay05, borderColor: palette.overlay10 },
-          ]}>
-          <View style={styles.dateCardContent}>
-            <ThemedText style={[styles.dateLabel, { color: palette.textMuted }]}>
-              PLAYED AT
-            </ThemedText>
-            <ThemedText style={[styles.dateValue, { color: palette.textInverse }]}>
-              {formatDate(timestamp)}
-            </ThemedText>
+        {Platform.OS === 'ios' ? (
+          <View
+            style={[
+              styles.dateCard,
+              { backgroundColor: palette.overlay05, borderColor: palette.overlay10 },
+            ]}>
+            <View style={styles.dateCardContent}>
+              <ThemedText style={[styles.dateLabel, { color: palette.textMuted }]}>
+                PLAYED AT
+              </ThemedText>
+              <DateTimePicker
+                value={new Date(timestamp)}
+                mode="datetime"
+                display="compact"
+                maximumDate={new Date()}
+                minimumDate={MIN_PLAYED_AT_DATE}
+                onChange={handleDateChange}
+                themeVariant={themeMode}
+                accentColor={palette.accent}
+              />
+              {hasPlayedAt ? (
+                <ThemedText style={[styles.dateSecondary, { color: palette.textMuted }]}>
+                  Recorded {formatDate(rawGame.createdAt)}
+                </ThemedText>
+              ) : null}
+            </View>
+            {analyticsGame.metadata?.location ? (
+              <View style={styles.locationRow}>
+                <MaterialCommunityIcons
+                  name="map-marker-outline"
+                  size={scaleBySizeClass(14, sizeClass)}
+                  color={palette.textMuted}
+                />
+                <ThemedText style={[styles.locationText, { color: palette.textMuted }]}>
+                  {analyticsGame.metadata.location}
+                </ThemedText>
+              </View>
+            ) : null}
           </View>
-          {analyticsGame.metadata?.location ? (
-            <View style={styles.locationRow}>
+        ) : (
+          <Pressable
+            style={({ pressed }) => [
+              styles.dateCard,
+              { backgroundColor: palette.overlay05, borderColor: palette.overlay10 },
+              pressed && styles.dateCardPressed,
+            ]}
+            onPress={handleOpenAndroidDatePicker}>
+            <View style={styles.dateCardContent}>
+              <ThemedText style={[styles.dateLabel, { color: palette.textMuted }]}>
+                PLAYED AT
+              </ThemedText>
+              <ThemedText style={[styles.dateValue, { color: palette.textInverse }]}>
+                {formatDate(timestamp)}
+              </ThemedText>
+              {hasPlayedAt ? (
+                <ThemedText style={[styles.dateSecondary, { color: palette.textMuted }]}>
+                  Recorded {formatDate(rawGame.createdAt)}
+                </ThemedText>
+              ) : null}
+            </View>
+            <View style={styles.dateCardTrailing}>
+              {analyticsGame.metadata?.location ? (
+                <View style={styles.locationRow}>
+                  <MaterialCommunityIcons
+                    name="map-marker-outline"
+                    size={scaleBySizeClass(14, sizeClass)}
+                    color={palette.textMuted}
+                  />
+                  <ThemedText style={[styles.locationText, { color: palette.textMuted }]}>
+                    {analyticsGame.metadata.location}
+                  </ThemedText>
+                </View>
+              ) : null}
               <MaterialCommunityIcons
-                name="map-marker-outline"
-                size={scaleBySizeClass(14, sizeClass)}
+                name="calendar-edit"
+                size={scaleBySizeClass(20, sizeClass)}
                 color={palette.textMuted}
               />
-              <ThemedText style={[styles.locationText, { color: palette.textMuted }]}>
-                {analyticsGame.metadata.location}
-              </ThemedText>
             </View>
-          ) : null}
-        </View>
+          </Pressable>
+        )}
 
         <AdvancedStatsContent
           game={analyticsGame}
@@ -365,10 +470,20 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
       borderWidth: 1,
       paddingHorizontal: 16,
       paddingVertical: 14,
-      gap: 8,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+    },
+    dateCardPressed: {
+      opacity: 0.8,
     },
     dateCardContent: {
+      flex: 1,
       gap: 4,
+    },
+    dateCardTrailing: {
+      alignItems: 'flex-end',
+      gap: 8,
     },
     dateLabel: {
       fontSize: scaleBySizeClass(10, sizeClass),
@@ -378,6 +493,9 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     dateValue: {
       fontSize: scaleBySizeClass(16, sizeClass),
       fontFamily: Fonts.bold,
+    },
+    dateSecondary: {
+      fontSize: scaleBySizeClass(12, sizeClass),
     },
     locationRow: {
       flexDirection: 'row',
