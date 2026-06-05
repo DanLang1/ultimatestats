@@ -14,13 +14,16 @@ export interface BetweenPointMetric {
   icon: keyof typeof MaterialCommunityIcons.glyphMap;
 }
 
-export function getPointDetails(actions: PossessionAction[]) {
+export function getPointDetails(actions: PossessionAction[], focusSideId: string) {
   let passCount = 0;
   let turnCount = 0;
 
   for (const action of actions) {
     if (action.kind === 'throw') {
-      if (action.result === 'complete' || action.result === 'goal') {
+      if (
+        action.sideId === focusSideId &&
+        (action.result === 'complete' || action.result === 'goal')
+      ) {
         passCount++;
       }
       if (
@@ -61,7 +64,7 @@ export function getPointContextStats({
       {
         label: 'O efficiency',
         value: `${teamStats.holds}/${teamStats.oPoints}`,
-        icon: 'trending-up',
+        icon: 'chart-bar',
       },
       {
         label: 'clean holds',
@@ -76,7 +79,7 @@ export function getPointContextStats({
       {
         label: 'D efficiency',
         value: `${teamStats.breaks}/${teamStats.dPoints}`,
-        icon: 'trending-down',
+        icon: 'chart-bar',
       },
       {
         label: 'pull hang',
@@ -90,7 +93,7 @@ export function getPointContextStats({
     {
       label: 'D efficiency',
       value: `${teamStats.breaks}/${teamStats.dPoints}`,
-      icon: 'trending-down',
+      icon: 'chart-bar',
     },
     {
       label: 'breaks',

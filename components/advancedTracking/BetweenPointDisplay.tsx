@@ -109,6 +109,7 @@ export const BetweenPointDisplay = ({
   });
   const pointDetails = getPointDetails(
     point?.possessions.flatMap((possession) => possession.actions) ?? [],
+    game.focusSideId,
   );
   const hockeyAssistName = getHockeyAssistName(point, participants);
   const pointContextStats = getPointContextStats({
