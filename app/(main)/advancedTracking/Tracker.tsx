@@ -146,10 +146,6 @@ export default function AdvancedTrackerScreen() {
     return <Redirect href="/advancedTracking/TrackerGameComplete" />;
   }
 
-  if (isHalftimeBreakActive) {
-    return <Redirect href="/advancedTracking/TrackerHalftime" />;
-  }
-
   if (sizeClass === 'small' && isLandscape) {
     return <LandscapeUnsupported />;
   }
@@ -195,6 +191,7 @@ export default function AdvancedTrackerScreen() {
         state={surfaceState}
         participants={participants}
         activeParticipants={activeParticipants}
+        isHalftimeBreakActive={isHalftimeBreakActive}
         discHolderRef={discHolderRef}
         oppHasDisc={oppHasDisc}
         canDropOpeningPull={isAwaitingPullPickup}

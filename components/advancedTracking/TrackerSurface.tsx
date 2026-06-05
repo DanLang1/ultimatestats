@@ -1,5 +1,6 @@
 import { BetweenPointDisplay } from '@/components/advancedTracking/BetweenPointDisplay';
 import { GameClockPauseOverlay } from '@/components/advancedTracking/GameClockPauseOverlay';
+import { HalftimeBetweenPointDisplay } from '@/components/advancedTracking/HalftimeBetweenPointDisplay';
 import { StoppageOverlay } from '@/components/advancedTracking/StoppageOverlay';
 import {
   TrackerPlayerGrid,
@@ -48,6 +49,7 @@ export function getTrackerSurfaceState({
 interface TrackerSurfaceProps {
   state: TrackerSurfaceState;
   participants: Participant[];
+  isHalftimeBreakActive: boolean;
   activeParticipants: Participant[];
   discHolderRef: PlayerRef | null;
   oppHasDisc: boolean;
@@ -70,6 +72,7 @@ export const TrackerSurface = ({
   passModifier,
   handlers,
   onStartNextPoint,
+  isHalftimeBreakActive,
   onLineChangePress,
   canChangeLine,
   availableWidth,
@@ -80,6 +83,11 @@ export const TrackerSurface = ({
     case 'stoppage':
       return <StoppageOverlay game={state.game} />;
     case 'between-points':
+      if (isHalftimeBreakActive) {
+        return (
+          <HalftimeBetweenPointDisplay game={state.game} onStartNextPoint={onStartNextPoint} />
+        );
+      }
       return (
         <BetweenPointDisplay
           game={state.game}

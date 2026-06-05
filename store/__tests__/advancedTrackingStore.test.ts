@@ -9,6 +9,7 @@ import {
 } from '@/lib/advancedTracking/trackingUtils';
 import { getEffectiveLineParticipantIds } from '@/lib/advancedTracking/trackingDisplayHelpers';
 import { AdvancedTrackedGame } from '@/lib/advancedTracking/types';
+import { DEFAULT_HALFTIME_BREAK_SECONDS } from '@/lib/constants';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useAdvancedTrackingStore } from '../advancedTracking/trackingStore';
 
@@ -70,6 +71,8 @@ function resetStore() {
     currentGame: null,
     undoStack: [],
     isHalftimeBreakActive: false,
+    halftimeTimerStartedAt: null,
+    halftimeTimerDurationSeconds: DEFAULT_HALFTIME_BREAK_SECONDS,
   });
 }
 
@@ -142,6 +145,39 @@ describe('advancedTrackingStore', () => {
     const persistedPayload = JSON.parse(lastWrite![1]);
     expect(persistedPayload.state.undoStack).toEqual(undoStack);
     expect(persistedPayload.state.undoStack).toHaveLength(1);
+  });
+
+  it('persists active halftime timer state', () => {
+    createGame();
+
+    useAdvancedTrackingStore.getState().recordPull({
+      lines: homeLinesAugust,
+      puller: untracked,
+      receiver: august,
+      result: 'inbound',
+    });
+    useAdvancedTrackingStore.getState().recordThrow({
+      thrower: august,
+      result: 'goal',
+      toPlayer: meves,
+    });
+
+    expect(useAdvancedTrackingStore.getState().triggerHalftimeEarly()).toBe(true);
+    useAdvancedTrackingStore.getState().startHalftimeTimer();
+
+    const { halftimeTimerStartedAt } = useAdvancedTrackingStore.getState();
+    const advancedTrackingWrites = mockedAsyncStorage.setItem.mock.calls.filter(
+      ([key]) => key === 'ultimatestats_advanced_tracking',
+    );
+    const lastWrite = advancedTrackingWrites.at(-1);
+    expect(lastWrite).toBeDefined();
+
+    const persistedPayload = JSON.parse(lastWrite![1]);
+    expect(persistedPayload.state.isHalftimeBreakActive).toBe(true);
+    expect(persistedPayload.state.halftimeTimerStartedAt).toBe(halftimeTimerStartedAt);
+    expect(persistedPayload.state.halftimeTimerDurationSeconds).toBe(
+      DEFAULT_HALFTIME_BREAK_SECONDS,
+    );
   });
 
   it('derives halftimeAt as ceil(gameTo / 2)', () => {

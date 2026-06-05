@@ -32,6 +32,10 @@ import {
   ADVANCED_TRACKING_SCHEMA_VERSION,
   AdvancedTrackedGame,
 } from '@/lib/advancedTracking/types';
+import {
+  getAdjustedHalftimeTimerDuration,
+  getDefaultHalftimeTimerState,
+} from '@/lib/advancedTracking/halftimeTimerUtils';
 import { useSavedAdvancedGamesStore } from '@/store/advancedTracking/savedGamesStore';
 import { generateId } from '@/lib/utils';
 import { Draft } from 'immer';
@@ -58,6 +62,23 @@ function getCurrentGame(state: GameLookupState): AdvancedTrackedGame {
 
 function pushUndoEntry(state: Draft<AdvancedTrackingState>, entry: AdvancedTrackingUndoEntry) {
   state.undoStack.push(entry);
+}
+
+function resetHalftimeTimerState(state: Draft<AdvancedTrackingState>) {
+  Object.assign(state, getDefaultHalftimeTimerState());
+}
+
+function setHalftimeBreakActive(state: Draft<AdvancedTrackingState>, isActive: boolean) {
+  if (isActive) {
+    if (!state.isHalftimeBreakActive) {
+      resetHalftimeTimerState(state);
+    }
+    state.isHalftimeBreakActive = true;
+    return;
+  }
+
+  state.isHalftimeBreakActive = false;
+  resetHalftimeTimerState(state);
 }
 
 function removeActionById(
@@ -101,6 +122,7 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
         currentGame: null,
         undoStack: [],
         isHalftimeBreakActive: false,
+        ...getDefaultHalftimeTimerState(),
 
         loadCurrentGame: async () => {
           const currentGameId = get().currentGameId;
@@ -114,7 +136,41 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
 
         clearHalftimeBreak: () => {
           set((state) => {
-            state.isHalftimeBreakActive = false;
+            setHalftimeBreakActive(state, false);
+          });
+        },
+
+        startHalftimeTimer: () => {
+          set((state) => {
+            if (!state.isHalftimeBreakActive || state.halftimeTimerStartedAt != null) return;
+            state.halftimeTimerStartedAt = Date.now();
+          });
+        },
+
+        pauseHalftimeTimer: (timeLeftSeconds) => {
+          set((state) => {
+            if (!state.isHalftimeBreakActive) return;
+            state.halftimeTimerDurationSeconds = timeLeftSeconds;
+            state.halftimeTimerStartedAt = null;
+          });
+        },
+
+        adjustHalftimeTimer: (timeLeftSeconds, deltaMinutes) => {
+          set((state) => {
+            if (!state.isHalftimeBreakActive) return;
+            state.halftimeTimerDurationSeconds = getAdjustedHalftimeTimerDuration(
+              timeLeftSeconds,
+              deltaMinutes,
+            );
+            if (state.halftimeTimerStartedAt != null) {
+              state.halftimeTimerStartedAt = Date.now();
+            }
+          });
+        },
+
+        resetHalftimeTimer: () => {
+          set((state) => {
+            resetHalftimeTimerState(state);
           });
         },
 
@@ -168,7 +224,7 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
             state.currentGame = game;
             state.currentGameId = gameId;
             state.undoStack = [];
-            state.isHalftimeBreakActive = false;
+            setHalftimeBreakActive(state, false);
           });
 
           return gameId;
@@ -180,6 +236,7 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
             state.currentGame = null;
             state.currentGameId = null;
             state.undoStack = [];
+            setHalftimeBreakActive(state, false);
           });
           if (gameId != null) {
             void useSavedAdvancedGamesStore.getState().deleteGame(gameId);
@@ -208,6 +265,7 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
           set((state) => {
             state.currentGameId = null;
             state.undoStack = [];
+            setHalftimeBreakActive(state, false);
           });
         },
 
@@ -235,6 +293,7 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
           set((state) => {
             state.currentGameId = null;
             state.undoStack = [];
+            setHalftimeBreakActive(state, false);
           });
         },
 
@@ -375,7 +434,7 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
               transitionId,
             });
             liveGame.updatedAt = now;
-            state.isHalftimeBreakActive = true;
+            setHalftimeBreakActive(state, true);
           });
 
           return true;
@@ -637,7 +696,7 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
               }
             }
             if (syncDerivedHalftimeTransition(liveGame)) {
-              state.isHalftimeBreakActive = true;
+              setHalftimeBreakActive(state, true);
             }
             liveGame.updatedAt = now;
           });
@@ -704,7 +763,7 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
               });
             }
             if (syncDerivedHalftimeTransition(liveGame)) {
-              state.isHalftimeBreakActive = true;
+              setHalftimeBreakActive(state, true);
             }
             liveGame.updatedAt = now;
           });
@@ -974,7 +1033,7 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
             }
 
             state.undoStack.pop();
-            state.isHalftimeBreakActive = syncDerivedHalftimeTransition(liveGame);
+            setHalftimeBreakActive(state, syncDerivedHalftimeTransition(liveGame));
             liveGame.updatedAt = Date.now();
           });
 
@@ -997,6 +1056,7 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
               state.currentGameId = null;
               state.currentGame = null;
               state.undoStack = [];
+              setHalftimeBreakActive(state, false);
             }
           });
         },
@@ -1012,6 +1072,9 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
         partialize: (state) => ({
           currentGameId: state.currentGameId,
           undoStack: state.undoStack,
+          isHalftimeBreakActive: state.isHalftimeBreakActive,
+          halftimeTimerStartedAt: state.halftimeTimerStartedAt,
+          halftimeTimerDurationSeconds: state.halftimeTimerDurationSeconds,
         }),
       },
     ),

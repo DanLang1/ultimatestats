@@ -31,7 +31,12 @@ export default function PullTrackingScreen() {
   const lineParticipantIds: string[] = idsParam ? JSON.parse(idsParam) : [];
   const genderRatio = genderRatioParam;
 
-  const { currentGame: game, recordPull } = useAdvancedTrackingStore();
+  const {
+    currentGame: game,
+    clearHalftimeBreak,
+    isHalftimeBreakActive,
+    recordPull,
+  } = useAdvancedTrackingStore();
 
   const [step, setStep] = useState<Step>({ name: 'timing' });
 
@@ -59,6 +64,9 @@ export default function PullTrackingScreen() {
         genderRatio,
       }),
     );
+    if (isHalftimeBreakActive) {
+      clearHalftimeBreak();
+    }
     router.dismissTo('/advancedTracking/Tracker');
   };
 

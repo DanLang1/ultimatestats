@@ -122,9 +122,15 @@ export interface AdvancedTrackingState {
   currentGame: AdvancedTrackedGame | null;
   undoStack: AdvancedTrackingUndoEntry[];
   isHalftimeBreakActive: boolean;
+  halftimeTimerStartedAt: number | null;
+  halftimeTimerDurationSeconds: number;
   loadCurrentGame: () => Promise<AdvancedTrackedGame | null>;
   createGame: (input: CreateAdvancedGameInput) => string;
   clearHalftimeBreak: () => void;
+  startHalftimeTimer: () => void;
+  pauseHalftimeTimer: (timeLeftSeconds: number) => void;
+  adjustHalftimeTimer: (timeLeftSeconds: number, deltaMinutes: number) => void;
+  resetHalftimeTimer: () => void;
   resetCurrentGame: () => void;
   finalizeGame: () => Promise<void>;
   terminateGame: (endReason: NonNullable<AdvancedTrackedGame['endReason']>) => void;

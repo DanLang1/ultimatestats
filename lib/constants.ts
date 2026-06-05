@@ -16,6 +16,12 @@ export const MAX_POINT_DURATION_MINUTES = 50;
 /** Default halftime break length in seconds. */
 export const DEFAULT_HALFTIME_BREAK_SECONDS = 7 * 60;
 
+/** Minimum halftime break length in seconds. */
+export const MIN_HALFTIME_BREAK_SECONDS = 0;
+
+/** Maximum halftime break length in seconds. */
+export const MAX_HALFTIME_BREAK_SECONDS = 15 * 60;
+
 /** Default timeout length in seconds. */
 export const DEFAULT_TIMEOUT_SECONDS = 70;
 
