@@ -1,4 +1,5 @@
 import { ThemedText } from '@/components/ThemedText';
+import { BottomSheetActionRow } from '@/components/ui/BottomSheetActionRow';
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
@@ -87,148 +88,53 @@ export const TrackerHomeMenu = ({
             </Pressable>
           </View>
 
-          <Pressable
+          <BottomSheetActionRow
             testID="tracker-menu-home"
+            icon="home-outline"
+            label="Home"
             onPress={handleGoHome}
-            style={({ pressed }) => [
-              styles.action,
-              {
-                backgroundColor: palette.overlay05,
-                borderColor: palette.overlay15,
-              },
-              pressed && { opacity: 0.7 },
-            ]}>
-            <View style={[styles.iconWrap, { backgroundColor: palette.accentOverlay10 }]}>
-              <MaterialCommunityIcons
-                name="home-outline"
-                size={scaleBySizeClass(20, sizeClass)}
-                color={palette.accent}
-              />
-            </View>
-            <ThemedText style={[styles.actionLabel, { color: palette.textInverse }]}>
-              Home
-            </ThemedText>
-          </Pressable>
+          />
 
-          <Pressable
+          <BottomSheetActionRow
             testID="tracker-menu-view-stats"
+            icon="chart-bar"
+            label="View Stats"
             onPress={handleViewStats}
-            style={({ pressed }) => [
-              styles.action,
-              {
-                backgroundColor: palette.overlay05,
-                borderColor: palette.overlay15,
-              },
-              pressed && { opacity: 0.7 },
-            ]}>
-            <View style={[styles.iconWrap, { backgroundColor: palette.accentOverlay10 }]}>
-              <MaterialCommunityIcons
-                name="chart-bar"
-                size={scaleBySizeClass(20, sizeClass)}
-                color={palette.accent}
-              />
-            </View>
-            <ThemedText style={[styles.actionLabel, { color: palette.textInverse }]}>
-              View Stats
-            </ThemedText>
-          </Pressable>
+          />
 
           <View style={[styles.section, { borderTopColor: palette.overlay10 }]}>
             <ThemedText style={[styles.sectionTitle, { color: palette.textMuted }]}>
               GAME MANAGEMENT
             </ThemedText>
-            <Pressable
+            <BottomSheetActionRow
               testID="tracker-menu-game-pause"
               disabled={!canPauseGameClock}
+              icon="pause-circle-outline"
+              label="Pause Game"
               onPress={handleGameClockPause}
-              style={({ pressed }) => [
-                styles.action,
-                {
-                  backgroundColor: palette.overlay05,
-                  borderColor: palette.overlay15,
-                  opacity: canPauseGameClock ? 1 : 0.45,
-                },
-                pressed && canPauseGameClock && { opacity: 0.7 },
-              ]}>
-              <View style={[styles.iconWrap, { backgroundColor: palette.accentOverlay10 }]}>
-                <MaterialCommunityIcons
-                  name="pause-circle-outline"
-                  size={scaleBySizeClass(20, sizeClass)}
-                  color={palette.accent}
-                />
-              </View>
-              <ThemedText style={[styles.actionLabel, { color: palette.textInverse }]}>
-                Pause Game
-              </ThemedText>
-            </Pressable>
-            <Pressable
+            />
+            <BottomSheetActionRow
               testID="tracker-menu-game-format"
+              icon="clipboard-text-outline"
+              label="Game Format"
               onPress={handleGameFormat}
-              style={({ pressed }) => [
-                styles.action,
-                {
-                  backgroundColor: palette.overlay05,
-                  borderColor: palette.overlay15,
-                },
-                pressed && { opacity: 0.7 },
-              ]}>
-              <View style={[styles.iconWrap, { backgroundColor: palette.accentOverlay10 }]}>
-                <MaterialCommunityIcons
-                  name="clipboard-text-outline"
-                  size={scaleBySizeClass(20, sizeClass)}
-                  color={palette.accent}
-                />
-              </View>
-              <ThemedText style={[styles.actionLabel, { color: palette.textInverse }]}>
-                Game Format
-              </ThemedText>
-            </Pressable>
+            />
             {canStartSecondHalfEarly && (
-              <Pressable
+              <BottomSheetActionRow
                 testID="tracker-menu-start-second-half-early"
+                icon="skip-next-circle-outline"
+                label="Start 2nd Half Early"
+                tone="warning"
                 onPress={handleStartSecondHalfEarly}
-                style={({ pressed }) => [
-                  styles.action,
-                  {
-                    backgroundColor: palette.warning + '10',
-                    borderColor: palette.warning + '20',
-                  },
-                  pressed && { opacity: 0.7 },
-                ]}>
-                <View style={[styles.iconWrap, { backgroundColor: palette.overlay10 }]}>
-                  <MaterialCommunityIcons
-                    name="skip-next-circle-outline"
-                    size={scaleBySizeClass(20, sizeClass)}
-                    color={palette.warning}
-                  />
-                </View>
-                <ThemedText style={[styles.actionLabel, { color: palette.textInverse }]}>
-                  Start 2nd Half Early
-                </ThemedText>
-              </Pressable>
+              />
             )}
-            <Pressable
+            <BottomSheetActionRow
               testID="tracker-menu-end-game"
+              icon="stop-circle-outline"
+              label="End Game"
+              tone="danger"
               onPress={handleEndGameEarly}
-              style={({ pressed }) => [
-                styles.action,
-                {
-                  backgroundColor: palette.overlay05,
-                  borderColor: palette.overlay15,
-                },
-                pressed && { opacity: 0.7 },
-              ]}>
-              <View style={[styles.iconWrap, { backgroundColor: palette.overlay10 }]}>
-                <MaterialCommunityIcons
-                  name="stop-circle-outline"
-                  size={scaleBySizeClass(20, sizeClass)}
-                  color={palette.danger}
-                />
-              </View>
-              <ThemedText style={[styles.actionLabel, { color: palette.textInverse }]}>
-                End Game
-              </ThemedText>
-            </Pressable>
+            />
           </View>
         </View>
       </BottomSheet>
@@ -264,26 +170,6 @@ function createStyles(sizeClass: SizeClass) {
       fontSize: scaleBySizeClass(12, sizeClass),
       fontFamily: Fonts.bold,
       letterSpacing: 1,
-    },
-    action: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 12,
-      borderWidth: 1,
-      borderRadius: 14,
-      paddingHorizontal: 14,
-      paddingVertical: 14,
-    },
-    iconWrap: {
-      width: scaleBySizeClass(36, sizeClass),
-      height: scaleBySizeClass(36, sizeClass),
-      borderRadius: 10,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    actionLabel: {
-      fontSize: scaleBySizeClass(16, sizeClass),
-      fontFamily: Fonts.semiBold,
     },
     section: {
       borderTopWidth: 1,

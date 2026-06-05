@@ -1,11 +1,9 @@
 import { BottomSheet } from '@/components/ui/BottomSheet';
+import { BottomSheetActionRow } from '@/components/ui/BottomSheetActionRow';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
-import { ThemedText } from '@/components/ThemedText';
-import { Fonts } from '@/theme/theme';
+import { StyleSheet, View } from 'react-native';
 
 interface TeamActionsSheetProps {
   onDismiss: () => void;
@@ -24,29 +22,6 @@ interface TeamActionsSheetProps {
   showShareTeam: boolean;
   showClearRoster: boolean;
   showImportTeam: boolean;
-}
-
-interface ActionRowProps {
-  icon: keyof typeof MaterialCommunityIcons.glyphMap;
-  label: string;
-  onPress: () => void;
-  variant?: 'default' | 'danger';
-}
-
-function ActionRow({ icon, label, onPress, variant = 'default' }: ActionRowProps) {
-  const { sizeClass } = useLayout();
-  const { palette } = useTheme();
-  const styles = createStyles(sizeClass);
-  const color = variant === 'danger' ? palette.danger : palette.textInverse;
-
-  return (
-    <Pressable
-      style={({ pressed }) => [styles.row, pressed && styles.rowPressed]}
-      onPress={onPress}>
-      <MaterialCommunityIcons name={icon} size={scaleBySizeClass(22, sizeClass)} color={color} />
-      <ThemedText style={[styles.rowLabel, { color }]}>{label}</ThemedText>
-    </Pressable>
-  );
 }
 
 export function TeamActionsSheet({
@@ -79,38 +54,68 @@ export function TeamActionsSheet({
   return (
     <BottomSheet onDismiss={onDismiss} sheetStyle={{ backgroundColor: palette.secondary }}>
       <View style={styles.sheet}>
-        <ActionRow
+        <BottomSheetActionRow
+          testID="team-actions-toggle-view"
           icon={viewMode === 'chips' ? 'view-list' : 'view-module'}
           label={viewMode === 'chips' ? 'Switch to Cards' : 'Switch to Chips'}
           onPress={wrap(onToggleViewMode)}
         />
         <View style={[styles.divider, { backgroundColor: palette.overlay10 }]} />
         {showImportTeam && (
-          <ActionRow
+          <BottomSheetActionRow
+            testID="team-actions-import"
             icon="file-import-outline"
             label="Import from USAU"
             onPress={wrap(onImportTeam)}
           />
         )}
-        <ActionRow icon="pencil-outline" label="Rename Team" onPress={wrap(onRenameTeam)} />
-        {showNewTeam && <ActionRow icon="plus" label="New Team" onPress={wrap(onNewTeam)} />}
+        <BottomSheetActionRow
+          testID="team-actions-rename"
+          icon="pencil-outline"
+          label="Rename Team"
+          onPress={wrap(onRenameTeam)}
+        />
+        {showNewTeam && (
+          <BottomSheetActionRow
+            testID="team-actions-new"
+            icon="plus"
+            label="New Team"
+            onPress={wrap(onNewTeam)}
+          />
+        )}
         {showSwitchTeam && (
-          <ActionRow icon="swap-horizontal" label="Switch Team" onPress={wrap(onSwitchTeam)} />
+          <BottomSheetActionRow
+            testID="team-actions-switch"
+            icon="swap-horizontal"
+            label="Switch Team"
+            onPress={wrap(onSwitchTeam)}
+          />
         )}
         {showEditPresets && (
-          <ActionRow icon="playlist-edit" label="Edit Lines" onPress={wrap(onEditPresets)} />
+          <BottomSheetActionRow
+            testID="team-actions-edit-lines"
+            icon="playlist-edit"
+            label="Edit Lines"
+            onPress={wrap(onEditPresets)}
+          />
         )}
         {showShareTeam && (
-          <ActionRow icon="share-variant" label="Share Team" onPress={wrap(onShareTeam)} />
+          <BottomSheetActionRow
+            testID="team-actions-share"
+            icon="share-variant"
+            label="Share Team"
+            onPress={wrap(onShareTeam)}
+          />
         )}
         {showClearRoster && (
           <>
             <View style={[styles.divider, { backgroundColor: palette.overlay10 }]} />
-            <ActionRow
+            <BottomSheetActionRow
+              testID="team-actions-clear-roster"
               icon="delete-sweep-outline"
               label="Clear Roster"
               onPress={wrap(onClearRoster)}
-              variant="danger"
+              tone="danger"
             />
           </>
         )}
@@ -124,21 +129,6 @@ function createStyles(sizeClass: SizeClass) {
     sheet: {
       paddingHorizontal: scaleBySizeClass(8, sizeClass),
       paddingTop: scaleBySizeClass(12, sizeClass),
-    },
-    row: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: scaleBySizeClass(16, sizeClass),
-      paddingVertical: scaleBySizeClass(14, sizeClass),
-      paddingHorizontal: scaleBySizeClass(12, sizeClass),
-      borderRadius: scaleBySizeClass(10, sizeClass),
-    },
-    rowPressed: {
-      opacity: 0.7,
-    },
-    rowLabel: {
-      fontSize: scaleBySizeClass(16, sizeClass),
-      fontFamily: Fonts.semiBold,
     },
     divider: {
       height: 1,

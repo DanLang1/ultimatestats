@@ -1,4 +1,5 @@
 import { ThemedText } from '@/components/ThemedText';
+import { BottomSheetActionRow } from '@/components/ui/BottomSheetActionRow';
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
@@ -45,14 +46,9 @@ export function TrackerLineChangeMenu({
           <View
             accessible={false}
             style={[styles.header, { borderBottomColor: palette.overlay10 }]}>
-            <View style={styles.headerText}>
-              <ThemedText style={[styles.eyebrow, { color: palette.textMuted }]}>
-                LINE CHANGE
-              </ThemedText>
-              <ThemedText style={[styles.title, { color: palette.textInverse }]}>
-                What changed?
-              </ThemedText>
-            </View>
+            <ThemedText style={[styles.title, { color: palette.textMuted }]}>
+              LINE CHANGE
+            </ThemedText>
             <Pressable onPress={onClose} hitSlop={12}>
               <MaterialCommunityIcons
                 name="close"
@@ -62,61 +58,22 @@ export function TrackerLineChangeMenu({
             </Pressable>
           </View>
 
-          <Pressable
+          <BottomSheetActionRow
             testID="line-change-correct-line"
+            icon="playlist-edit"
+            label="Correct lineup"
+            description="Fix who started this point. Replaces point credit."
             onPress={closeAnd(onCorrectLine)}
-            style={({ pressed }) => [
-              styles.action,
-              {
-                backgroundColor: palette.overlay05,
-                borderColor: palette.overlay15,
-              },
-              pressed && { opacity: 0.7 },
-            ]}>
-            <View style={[styles.iconWrap, { backgroundColor: palette.accentOverlay10 }]}>
-              <MaterialCommunityIcons
-                name="playlist-edit"
-                size={scaleBySizeClass(22, sizeClass)}
-                color={palette.accent}
-              />
-            </View>
-            <View style={styles.actionText}>
-              <ThemedText style={[styles.actionLabel, { color: palette.textInverse }]}>
-                Correct lineup
-              </ThemedText>
-              <ThemedText style={[styles.actionDescription, { color: palette.textMuted }]}>
-                Fix who started this point. Replaces point credit.
-              </ThemedText>
-            </View>
-          </Pressable>
+          />
 
-          <Pressable
+          <BottomSheetActionRow
             testID="line-change-injury-sub"
+            icon="medical-bag"
+            label="Injury substitution"
+            description="Player changed during the point. Both players get point credit."
+            tone="warning"
             onPress={closeAnd(onInjurySub)}
-            style={({ pressed }) => [
-              styles.action,
-              {
-                backgroundColor: palette.overlay05,
-                borderColor: palette.overlay15,
-              },
-              pressed && { opacity: 0.7 },
-            ]}>
-            <View style={[styles.iconWrap, { backgroundColor: palette.warningOverlay10 }]}>
-              <MaterialCommunityIcons
-                name="medical-bag"
-                size={scaleBySizeClass(22, sizeClass)}
-                color={palette.warning}
-              />
-            </View>
-            <View style={styles.actionText}>
-              <ThemedText style={[styles.actionLabel, { color: palette.textInverse }]}>
-                Injury substitution
-              </ThemedText>
-              <ThemedText style={[styles.actionDescription, { color: palette.textMuted }]}>
-                Player changed during the point. Both players get point credit.
-              </ThemedText>
-            </View>
-          </Pressable>
+          />
         </View>
       </BottomSheet>
     </Modal>
@@ -148,47 +105,10 @@ function createStyles(sizeClass: SizeClass) {
       borderBottomWidth: 1,
       gap: 12,
     },
-    headerText: {
-      flex: 1,
-      gap: 3,
-    },
-    eyebrow: {
-      fontSize: scaleBySizeClass(11, sizeClass),
+    title: {
+      fontSize: scaleBySizeClass(12, sizeClass),
       fontFamily: Fonts.bold,
       letterSpacing: 1,
-    },
-    title: {
-      fontSize: scaleBySizeClass(18, sizeClass),
-      fontFamily: Fonts.extraBold,
-    },
-    action: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 12,
-      borderWidth: 1,
-      borderRadius: 14,
-      paddingHorizontal: 14,
-      paddingVertical: 14,
-    },
-    iconWrap: {
-      width: scaleBySizeClass(40, sizeClass),
-      height: scaleBySizeClass(40, sizeClass),
-      borderRadius: 10,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    actionText: {
-      flex: 1,
-      gap: 3,
-    },
-    actionLabel: {
-      fontSize: scaleBySizeClass(16, sizeClass),
-      fontFamily: Fonts.semiBold,
-    },
-    actionDescription: {
-      fontSize: scaleBySizeClass(12, sizeClass),
-      fontFamily: Fonts.regular,
-      lineHeight: scaleBySizeClass(16, sizeClass),
     },
   });
 }

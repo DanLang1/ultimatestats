@@ -175,6 +175,7 @@ export default function AdvancedGameStatsScreen() {
       label: 'Share',
       visible: rawGame.status === 'final',
       onPress: handleShareGame,
+      advancedMenuIcon: 'share-variant',
       inlineIcon: (
         <MaterialCommunityIcons
           name="share-variant"
@@ -194,6 +195,7 @@ export default function AdvancedGameStatsScreen() {
       key: 'csv',
       label: 'Export CSV',
       onPress: handleExportCSV,
+      advancedMenuIcon: 'file-delimited-outline',
       inlineIcon: (
         <FontAwesome6
           name="file-csv"
@@ -217,6 +219,7 @@ export default function AdvancedGameStatsScreen() {
           pathname: '/advancedTracking/analytics/timeline/[gameId]',
           params: { gameId },
         }),
+      advancedMenuIcon: 'chart-timeline-variant',
       inlineIcon: (
         <MaterialCommunityIcons
           name="chart-timeline-variant"
@@ -236,6 +239,8 @@ export default function AdvancedGameStatsScreen() {
       key: 'delete',
       label: 'Delete',
       onPress: handleDelete,
+      advancedMenuIcon: 'delete-outline',
+      advancedMenuTone: 'danger',
       inlineIcon: (
         <MaterialCommunityIcons
           name="delete-outline"
@@ -262,7 +267,13 @@ export default function AdvancedGameStatsScreen() {
         titleColor={palette.textMuted}
         backButtonBackgroundColor={palette.overlay10}
         centerTitleInLandscape={false}
-        rightSlot={<ResponsiveHeaderActions actions={headerActions} />}
+        rightSlot={
+          <ResponsiveHeaderActions
+            actions={headerActions}
+            menuVariant="advanced"
+            menuTitle="GAME ACTIONS"
+          />
+        }
       />
 
       <ScrollView contentContainerStyle={[styles.scrollContent, { paddingBottom: 100 }]}>

@@ -1,3 +1,7 @@
+import {
+  BottomSheetActionRow,
+  BottomSheetActionRowTone,
+} from '@/components/ui/BottomSheetActionRow';
 import { ThemedText } from '@/components/ThemedText';
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { useTheme } from '@/context/ThemeContext';
@@ -14,6 +18,7 @@ import {
 import { PassModifier } from '@/lib/advancedTracking/types';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { Fonts } from '@/theme/theme';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
 import { Modal, Pressable, StyleSheet, View } from 'react-native';
 
@@ -27,6 +32,8 @@ interface TrackerRareMenuProps {
 type RareAction = {
   testID: string;
   label: string;
+  icon: keyof typeof MaterialCommunityIcons.glyphMap;
+  tone?: BottomSheetActionRowTone;
   disabled?: boolean;
   onPress: () => void;
 };
@@ -90,11 +97,15 @@ export const TrackerRareMenu = ({
         {
           testID: 'rare-menu-callahan',
           label: 'Callahan',
+          icon: 'shield-alert-outline',
+          tone: 'success',
           onPress: closeAnd(() => setPassModifier('callahan')),
         },
         {
           testID: 'rare-menu-stall',
           label: 'Stall',
+          icon: 'timer-alert-outline',
+          tone: 'success',
           onPress: closeAnd(() => setPassModifier('stall')),
         },
       ];
@@ -104,25 +115,33 @@ export const TrackerRareMenu = ({
       return [
         {
           testID: 'rare-menu-opp-d',
-          label: 'Opp D',
+          label: 'Opponent Block',
+          icon: 'hand-front-left-outline',
+          tone: 'danger',
           disabled: !discHolderRef,
           onPress: closeAnd(handleOppBlock),
         },
         {
           testID: 'rare-menu-50-50',
-          label: '50/50',
+          label: '50/50 (shared fault)',
+          icon: 'scale-balance',
+          tone: 'danger',
           disabled: !discHolderRef,
           onPress: closeAnd(() => setPassModifier('fifty-fifty')),
         },
         {
           testID: 'rare-menu-thrown-callahan',
-          label: 'Opp Callahan',
+          label: 'Opponent Callahan',
+          icon: 'shield-alert-outline',
+          tone: 'danger',
           disabled: !discHolderRef,
           onPress: closeAnd(handleThrownCallahan),
         },
         {
           testID: 'rare-menu-stall-offense',
-          label: 'Stall',
+          label: 'Stalled',
+          icon: 'timer-alert-outline',
+          tone: 'danger',
           disabled: !discHolderRef,
           onPress: closeAnd(handleStall),
         },
@@ -154,26 +173,32 @@ export const TrackerRareMenu = ({
             style={[styles.handle, { backgroundColor: palette.overlay20 }]}
           />
 
+          <View
+            accessible={false}
+            style={[styles.header, { borderBottomColor: palette.overlay10 }]}>
+            <ThemedText style={[styles.title, { color: palette.textMuted }]}>
+              RARE ACTIONS
+            </ThemedText>
+            <Pressable onPress={onClose} hitSlop={12}>
+              <MaterialCommunityIcons
+                name="close"
+                size={getSizeClassValue({ small: 20, medium: 22, large: 24 }, sizeClass)}
+                color={palette.textMuted}
+              />
+            </Pressable>
+          </View>
+
           <View style={styles.list}>
-            {actions.map((action, index) => (
-              <Pressable
+            {actions.map((action) => (
+              <BottomSheetActionRow
                 key={action.testID}
                 testID={action.testID}
+                icon={action.icon}
+                label={action.label}
+                tone={action.tone}
                 disabled={action.disabled}
-                style={({ pressed }) => [
-                  styles.row,
-                  index < actions.length - 1 && {
-                    borderBottomColor: palette.overlay20,
-                    borderBottomWidth: 2,
-                  },
-                  action.disabled && { opacity: 0.4 },
-                  pressed && !action.disabled && { backgroundColor: palette.overlay08 },
-                ]}
-                onPress={action.onPress}>
-                <ThemedText style={[styles.rowText, { color: palette.textInverse }]}>
-                  {action.label}
-                </ThemedText>
-              </Pressable>
+                onPress={action.onPress}
+              />
             ))}
           </View>
         </View>
@@ -215,19 +240,23 @@ function createStyles(sizeClass: SizeClass) {
       alignSelf: 'center',
       marginBottom: getSizeClassValue({ small: 2, medium: 4, large: 6 }, sizeClass),
     },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginHorizontal: getSizeClassValue({ small: 16, medium: 16, large: 20 }, sizeClass),
+      paddingBottom: getSizeClassValue({ small: 12, medium: 14, large: 16 }, sizeClass),
+      borderBottomWidth: 1,
+      gap: 12,
+    },
+    title: {
+      fontSize: getSizeClassValue({ small: 12, medium: 13, large: 15 }, sizeClass),
+      fontFamily: Fonts.bold,
+      letterSpacing: 1,
+    },
     list: {
       width: '100%',
-    },
-    row: {
-      minHeight: getSizeClassValue({ small: 48, medium: 58, large: 68 }, sizeClass),
-      justifyContent: 'center',
-      paddingHorizontal: getSizeClassValue({ small: 28, medium: 44, large: 56 }, sizeClass),
-    },
-    rowText: {
-      fontFamily: Fonts.black,
-      fontSize: getSizeClassValue({ small: 14, medium: 17, large: 21 }, sizeClass),
-      letterSpacing: 0.8,
-      textTransform: 'uppercase',
+      gap: getSizeClassValue({ small: 4, medium: 6, large: 8 }, sizeClass),
     },
   });
 }

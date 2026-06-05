@@ -1,5 +1,6 @@
 import { ThemedText } from '@/components/ThemedText';
 import { BottomSheet } from '@/components/ui/BottomSheet';
+import { BottomSheetActionRow } from '@/components/ui/BottomSheetActionRow';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { Fonts } from '@/theme/theme';
@@ -76,58 +77,22 @@ export function NewGameSheet({
             </View>
           )}
 
-          <Pressable
+          <BottomSheetActionRow
+            testID="new-game-sheet-basic"
+            icon="scoreboard-outline"
+            label="Basic Scoreboard"
+            trailingIcon="chevron-right"
             onPress={onStartBasic}
-            style={({ pressed }) => [
-              styles.option,
-              { backgroundColor: palette.overlay05, borderColor: palette.overlay15 },
-              pressed && styles.optionPressed,
-            ]}>
-            <View style={[styles.iconWrap, { backgroundColor: palette.accentOverlay10 }]}>
-              <MaterialCommunityIcons
-                name="scoreboard-outline"
-                size={scaleBySizeClass(22, sizeClass)}
-                color={palette.accent}
-              />
-            </View>
-            <View style={styles.optionCopy}>
-              <ThemedText style={[styles.optionTitle, { color: palette.textInverse }]}>
-                Basic Scoreboard
-              </ThemedText>
-            </View>
-            <MaterialCommunityIcons
-              name="chevron-right"
-              size={scaleBySizeClass(22, sizeClass)}
-              color={palette.textMuted}
-            />
-          </Pressable>
+          />
 
-          <Pressable
+          <BottomSheetActionRow
             testID="new-game-sheet-advanced"
+            icon="clipboard-pulse-outline"
+            label="Advanced Tracker"
+            tone="success"
+            trailingIcon="chevron-right"
             onPress={onStartAdvanced}
-            style={({ pressed }) => [
-              styles.option,
-              { backgroundColor: palette.successOverlay10, borderColor: palette.overlay15 },
-              pressed && styles.optionPressed,
-            ]}>
-            <View style={[styles.iconWrap, { backgroundColor: palette.successOverlay15 }]}>
-              <MaterialCommunityIcons
-                name="clipboard-pulse-outline"
-                size={scaleBySizeClass(22, sizeClass)}
-                color={palette.success}
-              />
-            </View>
-            <View style={styles.optionCopy}>
-              <ThemedText style={[styles.optionTitle, { color: palette.textInverse }]}>
-                Advanced Tracker
-              </ThemedText>
-            </View>
-            <MaterialCommunityIcons
-              name="chevron-right"
-              size={scaleBySizeClass(22, sizeClass)}
-              color={palette.textMuted}
-            />
-          </Pressable>
+          />
         </View>
       </BottomSheet>
     </Modal>
@@ -162,24 +127,6 @@ function createStyles(sizeClass: SizeClass) {
       fontSize: scaleBySizeClass(20, sizeClass),
       fontFamily: Fonts.bold,
     },
-    subtitle: {
-      marginTop: 4,
-      fontSize: scaleBySizeClass(13, sizeClass),
-      fontFamily: Fonts.regular,
-    },
-    option: {
-      minHeight: scaleBySizeClass(86, sizeClass),
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 12,
-      borderWidth: 1,
-      borderRadius: 8,
-      paddingHorizontal: 14,
-      paddingVertical: 14,
-    },
-    optionPressed: {
-      opacity: 0.75,
-    },
     warning: {
       minHeight: scaleBySizeClass(54, sizeClass),
       flexDirection: 'row',
@@ -195,26 +142,6 @@ function createStyles(sizeClass: SizeClass) {
       fontSize: scaleBySizeClass(13, sizeClass),
       lineHeight: scaleBySizeClass(18, sizeClass),
       fontFamily: Fonts.semiBold,
-    },
-    iconWrap: {
-      width: scaleBySizeClass(42, sizeClass),
-      height: scaleBySizeClass(42, sizeClass),
-      borderRadius: 8,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    optionCopy: {
-      flex: 1,
-      gap: 4,
-    },
-    optionTitle: {
-      fontSize: scaleBySizeClass(16, sizeClass),
-      fontFamily: Fonts.semiBold,
-    },
-    optionDescription: {
-      fontSize: scaleBySizeClass(13, sizeClass),
-      lineHeight: scaleBySizeClass(18, sizeClass),
-      fontFamily: Fonts.regular,
     },
   });
 }

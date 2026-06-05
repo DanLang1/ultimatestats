@@ -50,6 +50,18 @@ This document tracks intentionally deferred cleanup work discovered during the d
   `app/(modals)/EditDurationModal.tsx:375`
   `app/(modals)/EditEventModal.tsx:308`
 
+## P2 - BottomSheet Modal Wrapper
+
+- Several bottom-sheet callers manually wrap `BottomSheet` in a transparent React Native `Modal`. `BottomSheet` owns the overlay and sheet layout, but the caller-owned `Modal` is still needed today for native modal presentation and z-order.
+- Cleanup: introduce a shared `BottomSheetModal` wrapper that owns `Modal`, `transparent`, `animationType`, `onRequestClose`, and the `BottomSheet` shell. Keep `BottomSheet` as the low-level layout primitive or fold it into the wrapper once all callers migrate.
+- References:
+  `components/ui/BottomSheet.tsx`
+  `components/ui/ResponsiveHeaderActions.tsx`
+  `components/advancedTracking/TrackerHomeMenu.tsx`
+  `components/advancedTracking/TrackerRareMenu.tsx`
+  `components/advancedTracking/TrackerLineChangeMenu.tsx`
+  `components/new-game/NewGameSheet.tsx`
+
 ## P2 - Remove Raw Color Literals
 
 - Replace hardcoded color values with theme tokens.
