@@ -46,7 +46,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function AdvancedTrackerScreen() {
   const { palette } = useTheme();
-  const { isLandscape, width, sizeClass } = useLayout();
+  const { isLandscape, sizeClass } = useLayout();
   const styles = createStyles(palette, sizeClass);
   const insets = useSafeAreaInsets();
 
@@ -184,8 +184,7 @@ export default function AdvancedTrackerScreen() {
     pointIsOver,
   });
 
-  const LEFT_PANEL_WIDTH = 160;
-  const renderTrackingSurface = (availableWidth?: number) => {
+  const renderTrackingSurface = () => {
     return (
       <TrackerSurface
         state={surfaceState}
@@ -200,7 +199,6 @@ export default function AdvancedTrackerScreen() {
         onLineChangePress={() => setShowLineChangeMenu(true)}
         onStartNextPoint={handleStartNextPoint}
         canChangeLine={canChangeLine}
-        availableWidth={availableWidth}
       />
     );
   };
@@ -209,69 +207,25 @@ export default function AdvancedTrackerScreen() {
     <ThemedView style={styles.container}>
       <Stack.Screen options={{ headerShown: false }} />
 
-      {isLandscape ? (
-        <View style={styles.landscapeContainer}>
-          <View
-            style={[
-              styles.leftPanel,
-              {
-                width: LEFT_PANEL_WIDTH + insets.left,
-                paddingLeft: insets.left,
-                paddingTop: 4,
-                borderRightColor: palette.overlay15,
-              },
-            ]}>
-            <TrackerCapBar compact onMenuPress={() => setShowHomeMenu(true)} game={game} />
-            <TrackerScoreBar
-              pointTimerAdjustedTimestamp={pointTimerAdjustedTimestamp}
-              pointTimerPausedAt={pointTimerPausedAt}
-            />
-            <View style={{ flex: 1 }} />
-            {showInPointControls && (
-              <>
-                <TrackerLastActionCard
-                  passModifier={passModifier}
-                  onCancelModifier={() => setPassModifier(null)}
-                  onMorePress={() => setShowRareMenu(true)}
-                />
-                <TrackerActionFooter
-                  getPointElapsedMs={getPointElapsedMs}
-                  onStartNextPoint={handleStartNextPoint}
-                  voiceControls={canUseVoice ? voiceControls : undefined}
-                />
-              </>
-            )}
-          </View>
-          <View
-            style={[styles.rightPanel, { paddingRight: insets.right, justifyContent: 'center' }]}>
-            {renderTrackingSurface(width - LEFT_PANEL_WIDTH - insets.left - insets.right)}
-          </View>
-        </View>
-      ) : (
-        <>
-          <TrackerCapBar compact={false} onMenuPress={() => setShowHomeMenu(true)} game={game} />
-          <TrackerScoreBar
-            pointTimerAdjustedTimestamp={pointTimerAdjustedTimestamp}
-            pointTimerPausedAt={pointTimerPausedAt}
-          />
-          {showInPointControls && (
-            <TrackerLastActionCard
-              passModifier={passModifier}
-              onCancelModifier={() => setPassModifier(null)}
-              onMorePress={() => setShowRareMenu(true)}
-            />
-          )}
-          <View style={{ flex: 1, justifyContent: 'flex-start', paddingTop: 4 }}>
-            {renderTrackingSurface()}
-          </View>
-          {showInPointControls && (
-            <TrackerActionFooter
-              getPointElapsedMs={getPointElapsedMs}
-              onStartNextPoint={handleStartNextPoint}
-              voiceControls={canUseVoice ? voiceControls : undefined}
-            />
-          )}
-        </>
+      <TrackerCapBar onMenuPress={() => setShowHomeMenu(true)} game={game} />
+      <TrackerScoreBar
+        pointTimerAdjustedTimestamp={pointTimerAdjustedTimestamp}
+        pointTimerPausedAt={pointTimerPausedAt}
+      />
+      {showInPointControls && (
+        <TrackerLastActionCard
+          passModifier={passModifier}
+          onCancelModifier={() => setPassModifier(null)}
+          onMorePress={() => setShowRareMenu(true)}
+        />
+      )}
+      <View style={styles.trackingSurface}>{renderTrackingSurface()}</View>
+      {showInPointControls && (
+        <TrackerActionFooter
+          getPointElapsedMs={getPointElapsedMs}
+          onStartNextPoint={handleStartNextPoint}
+          voiceControls={canUseVoice ? voiceControls : undefined}
+        />
       )}
 
       {showInPointControls && (
@@ -327,13 +281,11 @@ export default function AdvancedTrackerScreen() {
 function createStyles(palette: Palette, sizeClass: SizeClass) {
   return StyleSheet.create({
     container: { flex: 1 },
-    landscapeContainer: { flex: 1, flexDirection: 'row' },
-    leftPanel: {
-      flexDirection: 'column',
-      justifyContent: 'space-between',
-      borderRightWidth: 1,
+    trackingSurface: {
+      flex: 1,
+      justifyContent: 'flex-start',
+      paddingTop: 4,
     },
-    rightPanel: { flex: 1 },
     devButton: {
       position: 'absolute',
       right: 20,

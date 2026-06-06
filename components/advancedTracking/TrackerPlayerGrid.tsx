@@ -23,10 +23,11 @@ interface TrackerPlayerGridProps {
   handlers: TrackerPlayerGridHandlers;
   onLineChangePress: () => void;
   canChangeLine: boolean;
-  availableWidth?: number;
 }
 
 const MAX_CHIP_WIDTH = { small: 180, medium: 220, large: 260 } as const;
+const PORTRAIT_COLUMNS = 3;
+const LANDSCAPE_COLUMNS = 5;
 
 function getChipModel(item: Participant | 'unknown'): {
   label: string;
@@ -54,21 +55,18 @@ export const TrackerPlayerGrid = ({
   handlers,
   onLineChangePress,
   canChangeLine,
-  availableWidth,
 }: TrackerPlayerGridProps) => {
   const { width, sizeClass, isLandscape } = useLayout();
 
-  const columns = 3;
+  const columns = isLandscape ? LANDSCAPE_COLUMNS : PORTRAIT_COLUMNS;
   const horizontalPadding = scaleBySizeClass(20, sizeClass);
   const hPadding = horizontalPadding * 2;
-  const gap = scaleBySizeClass(12, sizeClass);
-  const availableChipWidth = Math.floor(
-    ((availableWidth ?? width) - hPadding - gap * (columns - 1)) / columns,
-  );
+  const gap = scaleBySizeClass(isLandscape ? 10 : 12, sizeClass);
+  const availableChipWidth = Math.floor((width - hPadding - gap * (columns - 1)) / columns);
   const chipWidth = Math.min(availableChipWidth, getSizeClassValue(MAX_CHIP_WIDTH, sizeClass));
   const gridWidth = chipWidth * columns + gap * (columns - 1) + hPadding;
 
-  const styles = createStyles(sizeClass, isLandscape);
+  const styles = createStyles(sizeClass, gap);
 
   const items: (Participant | 'unknown' | 'line-action' | null)[] = [
     ...activeParticipants,
@@ -123,7 +121,7 @@ export const TrackerPlayerGrid = ({
   );
 };
 
-function createStyles(sizeClass: SizeClass, isLandscape: boolean) {
+function createStyles(sizeClass: SizeClass, gap: number) {
   return StyleSheet.create({
     gridContainer: {
       alignSelf: 'center',
@@ -131,7 +129,7 @@ function createStyles(sizeClass: SizeClass, isLandscape: boolean) {
       flexWrap: 'wrap',
       justifyContent: 'center',
       alignContent: 'center',
-      gap: isLandscape ? scaleBySizeClass(10, sizeClass) : scaleBySizeClass(12, sizeClass),
+      gap,
       padding: scaleBySizeClass(12, sizeClass),
       paddingHorizontal: scaleBySizeClass(20, sizeClass),
     },

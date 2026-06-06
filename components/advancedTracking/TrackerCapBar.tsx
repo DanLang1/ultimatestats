@@ -17,13 +17,11 @@ import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 interface TrackerCapBarProps {
-  /** Compact layout for landscape side panel. */
-  compact: boolean;
   onMenuPress: () => void;
   game: AdvancedTrackedGame;
 }
 
-export const TrackerCapBar = ({ compact, onMenuPress, game }: TrackerCapBarProps) => {
+export const TrackerCapBar = ({ onMenuPress, game }: TrackerCapBarProps) => {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
   const activeGameClockPause = getActiveGameClockPause(game);
@@ -48,7 +46,7 @@ export const TrackerCapBar = ({ compact, onMenuPress, game }: TrackerCapBarProps
     softCapMins,
   });
   const capDisplayLabel = activeGameClockPause !== null ? 'CAP PAUSED' : capLabel;
-  const styles = createStyles(sizeClass, compact);
+  const styles = createStyles(sizeClass);
   const capFillColor = capIsWarning ? palette.danger : palette.accent;
   const capTextColor = capIsWarning ? palette.danger : palette.textMuted;
 
@@ -58,28 +56,20 @@ export const TrackerCapBar = ({ compact, onMenuPress, game }: TrackerCapBarProps
         testID="tracker-menu-button"
         onPress={onMenuPress}
         hitSlop={12}
-        style={[styles.menuBtn, compact && styles.menuBtnCompact]}>
+        style={styles.menuBtn}>
         <MaterialCommunityIcons
           name="menu"
-          size={scaleBySizeClass(compact ? 24 : 28, sizeClass)}
+          size={scaleBySizeClass(28, sizeClass)}
           color={palette.textInverse}
         />
       </Pressable>
-      <View style={compact ? styles.centerCompact : styles.center}>
-        {compact ? (
-          <ThemedText style={[styles.labelCompact, { color: capTextColor }]} numberOfLines={1}>
-            {capDisplayLabel}
+      <View style={styles.center}>
+        <View style={styles.labelRow}>
+          <ThemedText style={[styles.label, { color: capTextColor }]}>{capDisplayLabel}</ThemedText>
+          <ThemedText style={[styles.timeLeft, { color: capTextColor }]}>
+            {gameStartedAt !== null ? `${formatPointTime(capTimeLeftMs)} left` : '—'}
           </ThemedText>
-        ) : (
-          <View style={styles.labelRow}>
-            <ThemedText style={[styles.label, { color: capTextColor }]}>
-              {capDisplayLabel}
-            </ThemedText>
-            <ThemedText style={[styles.timeLeft, { color: capTextColor }]}>
-              {gameStartedAt !== null ? `${formatPointTime(capTimeLeftMs)} left` : '—'}
-            </ThemedText>
-          </View>
-        )}
+        </View>
         <View style={[styles.barTrack, { backgroundColor: palette.overlay10 }]}>
           <View
             style={[
@@ -93,35 +83,26 @@ export const TrackerCapBar = ({ compact, onMenuPress, game }: TrackerCapBarProps
   );
 };
 
-function createStyles(sizeClass: SizeClass, compact: boolean) {
+function createStyles(sizeClass: SizeClass) {
   return StyleSheet.create({
     container: {
       flexDirection: 'row',
-      alignItems: compact ? 'center' : 'flex-start',
-      paddingLeft: compact ? 12 : 0,
-      paddingTop: compact ? 2 : 6,
-      paddingHorizontal: compact ? 0 : 14,
+      alignItems: 'flex-start',
+      paddingTop: 6,
+      paddingHorizontal: 14,
       paddingBottom: 4,
-      gap: compact ? 6 : 10,
+      gap: 10,
     },
     menuBtn: {
       minWidth: 30,
       minHeight: 30,
       alignItems: 'center',
       justifyContent: 'center',
-      paddingLeft: compact ? 4 : 2,
+      paddingLeft: 2,
       paddingRight: 8,
-    },
-    menuBtnCompact: {
-      minWidth: 30,
-      minHeight: 30,
     },
     center: {
       flex: 1,
-    },
-    centerCompact: {
-      flex: 1,
-      minWidth: 0,
     },
     labelRow: {
       flexDirection: 'row',
@@ -133,12 +114,6 @@ function createStyles(sizeClass: SizeClass, compact: boolean) {
       fontFamily: Fonts.black,
       letterSpacing: 1.5,
     },
-    labelCompact: {
-      fontSize: scaleBySizeClass(8, sizeClass),
-      fontFamily: Fonts.black,
-      letterSpacing: 1,
-      marginBottom: 2,
-    },
     timeLeft: {
       fontSize: scaleBySizeClass(10, sizeClass),
       fontFamily: Fonts.black,
@@ -146,7 +121,7 @@ function createStyles(sizeClass: SizeClass, compact: boolean) {
     barTrack: {
       borderRadius: 999,
       overflow: 'hidden',
-      height: compact ? 4 : 5,
+      height: 5,
     },
     barFill: {
       height: '100%',

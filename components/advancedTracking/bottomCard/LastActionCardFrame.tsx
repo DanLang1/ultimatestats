@@ -7,7 +7,6 @@ import React, { useState } from 'react';
 import { LayoutChangeEvent, Pressable, StyleSheet, View } from 'react-native';
 
 const COMPACT_ACTIONS_CARD_WIDTH = 360;
-const LANDSCAPE_COMPACT_ACTIONS_CARD_WIDTH = 220;
 
 type ButtonMode =
   | { kind: 'undo-more'; onUndo: () => void; onMore: () => void }
@@ -29,17 +28,14 @@ export const LastActionCardFrame = ({
   preferCompactActions = false,
 }: LastActionCardFrameProps) => {
   const { palette } = useTheme();
-  const { sizeClass, isLandscape } = useLayout();
-  const styles = createStyles(sizeClass, isLandscape, palette);
+  const { sizeClass } = useLayout();
+  const styles = createStyles(sizeClass, palette);
   const [cardWidth, setCardWidth] = useState(0);
 
   const showMore = buttonMode.kind !== 'undo-only';
   const showUndo = buttonMode.kind === 'undo-more' || buttonMode.kind === 'undo-only';
   const canUseCompactActions = sizeClass === 'small';
-  const compactActionThreshold = scaleBySizeClass(
-    isLandscape ? LANDSCAPE_COMPACT_ACTIONS_CARD_WIDTH : COMPACT_ACTIONS_CARD_WIDTH,
-    sizeClass,
-  );
+  const compactActionThreshold = scaleBySizeClass(COMPACT_ACTIONS_CARD_WIDTH, sizeClass);
   const useCompactActions =
     canUseCompactActions &&
     (preferCompactActions || (cardWidth > 0 && cardWidth < compactActionThreshold));
@@ -136,22 +132,22 @@ export const LastActionCardFrame = ({
   );
 };
 
-function createStyles(sizeClass: SizeClass, isLandscape: boolean, palette: Palette) {
+function createStyles(sizeClass: SizeClass, palette: Palette) {
   return StyleSheet.create({
     outerContainer: {
       padding: scaleBySizeClass(8, sizeClass),
       backgroundColor: 'transparent',
     },
     card: {
-      flexDirection: isLandscape ? 'column' : 'row',
-      alignItems: isLandscape ? 'stretch' : 'center',
-      gap: scaleBySizeClass(isLandscape ? 8 : 12, sizeClass),
-      minHeight: scaleBySizeClass(isLandscape ? 76 : 92, sizeClass),
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: scaleBySizeClass(12, sizeClass),
+      minHeight: scaleBySizeClass(92, sizeClass),
       backgroundColor: palette.trackerActionCardBg,
       borderRadius: 18,
       borderCurve: 'continuous',
       overflow: 'hidden',
-      paddingHorizontal: scaleBySizeClass(isLandscape ? 10 : 14, sizeClass),
+      paddingHorizontal: scaleBySizeClass(14, sizeClass),
       paddingVertical: scaleBySizeClass(12, sizeClass),
       shadowColor: palette.shadow,
       shadowOffset: { width: 0, height: 5 },
@@ -177,7 +173,7 @@ function createStyles(sizeClass: SizeClass, isLandscape: boolean, palette: Palet
     cardActionGroup: {
       flexDirection: 'row',
       alignItems: 'center',
-      justifyContent: isLandscape ? 'space-between' : 'flex-start',
+      justifyContent: 'flex-start',
       flexShrink: 0,
       gap: 6,
     },
@@ -187,11 +183,10 @@ function createStyles(sizeClass: SizeClass, isLandscape: boolean, palette: Palet
       justifyContent: 'center',
       gap: 7,
       minHeight: scaleBySizeClass(44, sizeClass),
-      minWidth: scaleBySizeClass(isLandscape ? 0 : 86, sizeClass),
-      flex: isLandscape ? 1 : 0,
+      minWidth: scaleBySizeClass(86, sizeClass),
       borderRadius: 14,
       borderCurve: 'continuous',
-      paddingHorizontal: scaleBySizeClass(isLandscape ? 8 : 12, sizeClass),
+      paddingHorizontal: scaleBySizeClass(12, sizeClass),
       borderWidth: 1,
     },
     compactBtn: {
