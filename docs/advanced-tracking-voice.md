@@ -10,10 +10,11 @@ what action, if any, was recorded.
 
 ## Current MVP
 
-- Tap-to-speak. Tapping the mic opens a short listening window, records the first valid receiver,
-  and then stops automatically. Tapping again cancels the active listening window.
-- Receiver-name commands only, such as `Anne`. The thrower is always derived from the current disc
-  holder.
+- Tap-to-speak. Tapping the mic starts one non-continuous recognition session and records from its
+  final result. A ten-second safety window asks the recognizer to finish without immediately
+  rejecting the command. Tapping again cancels the active listening window.
+- Recommended commands use jersey numbers, such as `number twelve`. Receiver-only names such as
+  `Anne` remain supported. The thrower is always derived from the current disc holder.
 - Active-line context only: names are matched against the seven players on the field.
 - Every successful voice pass records through the same store path as a tap pass, so the receiver
   becomes the highlighted disc holder through existing UI state.
@@ -28,17 +29,22 @@ Show lightweight feedback in the voice action area:
 
 - Listening state.
 - Interim/final transcript, for example `Heard: Ann`.
+- Recognition confidence is retained for candidate ranking and development logs, but is not shown
+  to users. Valid number matches may record from an interim result to keep pass entry fast; name
+  matches wait for the final result.
 - Successful parse/action, for example `Recorded pass`.
 - Rejection reason, for example `Tap who has the disc first` or `Player name is ambiguous`.
+- On iOS, first-time offline recognition may require enabling and using keyboard Dictation once so
+  the system installs its local speech assets. This setup guidance remains visible until retry.
 
 This makes voice debuggable during a point without adding name-variant settings to the live
 tracking screen.
 
 ## Future Voice UX: Numbers vs Names
 
-Jersey numbers may become the primary/recommended voice path because they are more reliable than
-short or uncommon player names. A coach can say `12`, `twelve`, or `number twelve`, and the parser
-maps that phrase to the active player with that number.
+Jersey numbers are the primary/recommended voice path because they are more reliable than short or
+uncommon player names. A coach can say `number twelve`, and the parser maps that phrase to the
+active player with that number.
 
 Product direction to revisit:
 

@@ -34,6 +34,14 @@ describe('parseVoiceStatCommand', () => {
   });
 
   it('rejects commands that include throwers or action words', () => {
+    expect(parseVoiceStatCommand('pass Mark', activeParticipants)).toMatchObject({
+      ok: false,
+      reasonCode: 'unsupported_command',
+    });
+    expect(parseVoiceStatCommand('past Mark', activeParticipants)).toMatchObject({
+      ok: false,
+      reasonCode: 'unsupported_command',
+    });
     expect(parseVoiceStatCommand('Joe to Ted', activeParticipants)).toMatchObject({
       ok: false,
       reasonCode: 'unsupported_command',

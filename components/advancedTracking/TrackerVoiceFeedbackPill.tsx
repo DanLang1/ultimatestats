@@ -21,7 +21,9 @@ export const TrackerVoiceFeedbackPill = ({
   const { sizeClass } = useLayout();
   const styles = createStyles(sizeClass, compact);
 
-  const autoDismiss = controls.feedback.kind === 'recorded' || controls.feedback.kind === 'issue';
+  const autoDismiss =
+    controls.feedback.kind === 'recorded' ||
+    (controls.feedback.kind === 'issue' && !controls.feedback.persistent);
   const dismissed = useAutoDismissFeedback(autoDismiss, controls.feedback.text);
 
   const hidden = dismissed || (controls.feedback.kind === 'idle' && !controls.isListening);

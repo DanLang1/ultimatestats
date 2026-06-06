@@ -7,6 +7,7 @@ import {
   useSpeechRecognitionEvent,
 } from 'expo-speech-recognition';
 import { useEffect, useRef, useState } from 'react';
+import { Platform } from 'react-native';
 
 import { isPossessionOver } from '@/lib/advancedTracking/trackingUtils';
 import { PlayerRef, PointPossession } from '@/lib/advancedTracking/types';
@@ -17,12 +18,9 @@ import {
   VoiceStatCommand,
 } from '@/lib/advancedTracking/voiceCommandParser';
 
-const ANDROID_COMPLETE_SILENCE_MS = 1200;
 const ANDROID_ON_DEVICE_RECOGNITION_SERVICE_PACKAGE = 'com.google.android.as';
-const ANDROID_POSSIBLY_COMPLETE_SILENCE_MS = 800;
 const MAX_SPEECH_ALTERNATIVES = 5;
-const RESTART_LISTENING_DELAY_MS = 50;
-const VOICE_LISTENING_WINDOW_MS = 5000;
+const VOICE_LISTENING_WINDOW_MS = 10000;
 
 type VoiceCommandStatus = 'idle' | 'listening' | 'recording' | 'unsupported' | 'error';
 
@@ -30,7 +28,7 @@ type VoiceFeedback =
   | { kind: 'idle'; text: string }
   | { kind: 'heard'; text: string }
   | { kind: 'recorded'; text: string }
-  | { kind: 'issue'; text: string };
+  | { kind: 'issue'; text: string; persistent?: boolean };
 
 interface UseVoiceStatCommandsInput {
   enabled: boolean;
@@ -61,6 +59,7 @@ export function useVoiceStatCommands(input: UseVoiceStatCommandsInput): VoiceSta
   const shouldListenRef = useRef(false);
   const listeningWindowTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const loggedAudibleVolumeRef = useRef(false);
+  const recognitionCompletedRef = useRef(false);
 
   const contextualStrings = buildVoiceContextualStrings(input.activeParticipants);
 
@@ -95,6 +94,7 @@ export function useVoiceStatCommands(input: UseVoiceStatCommandsInput): VoiceSta
     setStatus('idle');
     setMessage(null);
     setTranscript(null);
+    recognitionCompletedRef.current = true;
     ExpoSpeechRecognitionModule.abort();
   }, [input.enabled]);
 
@@ -110,7 +110,7 @@ export function useVoiceStatCommands(input: UseVoiceStatCommandsInput): VoiceSta
       })),
       androidRecognitionServicePackage,
       contextualStrings,
-      continuous: true,
+      continuous: false,
       maxAlternatives: MAX_SPEECH_ALTERNATIVES,
       requiresOnDeviceRecognition: true,
     });
@@ -118,7 +118,7 @@ export function useVoiceStatCommands(input: UseVoiceStatCommandsInput): VoiceSta
       lang: 'en-US',
       interimResults: true,
       maxAlternatives: MAX_SPEECH_ALTERNATIVES,
-      continuous: true,
+      continuous: false,
       requiresOnDeviceRecognition: true,
       addsPunctuation: false,
       contextualStrings,
@@ -126,9 +126,6 @@ export function useVoiceStatCommands(input: UseVoiceStatCommandsInput): VoiceSta
       androidRecognitionServicePackage,
       androidIntentOptions: {
         EXTRA_LANGUAGE_MODEL: RecognizerIntentExtraLanguageModel.LANGUAGE_MODEL_WEB_SEARCH,
-        EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS: ANDROID_COMPLETE_SILENCE_MS,
-        EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS:
-          ANDROID_POSSIBLY_COMPLETE_SILENCE_MS,
       },
     });
   };
@@ -138,6 +135,7 @@ export function useVoiceStatCommands(input: UseVoiceStatCommandsInput): VoiceSta
     setStatus('listening');
     setMessage('Listening');
     setTranscript(null);
+    recognitionCompletedRef.current = false;
     recordedCommandKeyRef.current = null;
   });
 
@@ -173,20 +171,29 @@ export function useVoiceStatCommands(input: UseVoiceStatCommandsInput): VoiceSta
   });
 
   useSpeechRecognitionEvent('end', () => {
-    logVoiceDebug('end', { shouldRestart: shouldListenRef.current });
-    if (shouldListenRef.current) {
-      setStatus('listening');
-      setTimeout(() => {
-        if (shouldListenRef.current) beginRecognition();
-      }, RESTART_LISTENING_DELAY_MS);
-      return;
-    }
+    logVoiceDebug('end', { recognitionCompleted: recognitionCompletedRef.current });
+    shouldListenRef.current = false;
+    clearListeningWindowTimeout();
+    setIsArmed(false);
+    if (recognitionCompletedRef.current) return;
 
-    setStatus((currentStatus) => (currentStatus === 'listening' ? 'idle' : currentStatus));
+    setStatus('unsupported');
+    setMessage((currentMessage) => {
+      if (
+        currentMessage &&
+        currentMessage !== 'Listening' &&
+        currentMessage !== 'Finishing command'
+      ) {
+        return currentMessage;
+      }
+
+      return 'No final command heard';
+    });
   });
 
   useSpeechRecognitionEvent('nomatch', () => {
     logVoiceDebug('nomatch');
+    recognitionCompletedRef.current = true;
     shouldListenRef.current = false;
     clearListeningWindowTimeout();
     setIsArmed(false);
@@ -199,22 +206,25 @@ export function useVoiceStatCommands(input: UseVoiceStatCommandsInput): VoiceSta
       code: event.code,
       error: event.error,
       message: event.message,
-      shouldRestart: shouldListenRef.current && isRestartableSpeechError(event),
+      platform: Platform.OS,
+      recognitionAvailable: ExpoSpeechRecognitionModule.isRecognitionAvailable(),
+      shouldListen: shouldListenRef.current,
+      supportsOnDeviceRecognition: ExpoSpeechRecognitionModule.supportsOnDeviceRecognition(),
     });
-    if (shouldListenRef.current && isRestartableSpeechError(event)) {
-      setStatus('listening');
-      setMessage('Listening');
-      setTimeout(() => {
-        if (shouldListenRef.current) beginRecognition();
-      }, RESTART_LISTENING_DELAY_MS);
-      return;
-    }
 
     if (event.error === 'aborted') {
+      if (recognitionCompletedRef.current) return;
+
+      recognitionCompletedRef.current = true;
       setStatus('idle');
       setMessage(null);
       return;
     }
+
+    recognitionCompletedRef.current = true;
+    shouldListenRef.current = false;
+    clearListeningWindowTimeout();
+    setIsArmed(false);
 
     if (transcript != null && transcript.trim()) {
       setStatus('unsupported');
@@ -227,6 +237,11 @@ export function useVoiceStatCommands(input: UseVoiceStatCommandsInput): VoiceSta
   });
 
   useSpeechRecognitionEvent('result', (event) => {
+    if (recognitionCompletedRef.current) {
+      logVoiceDebug('ignored result after command completed', { isFinal: event.isFinal });
+      return;
+    }
+
     logVoiceDebug('result', {
       isFinal: event.isFinal,
       results: event.results.map((result) => ({
@@ -244,7 +259,9 @@ export function useVoiceStatCommands(input: UseVoiceStatCommandsInput): VoiceSta
 
     setTranscript(transcript);
     const parseResult = parseBestVoiceStatCommand(event.results, input.activeParticipants);
+    const resultConfidence = event.isFinal ? getAvailableConfidence(parseResult?.confidence) : null;
     logVoiceDebug('parse result', {
+      confidence: resultConfidence,
       isFinal: event.isFinal,
       ok: parseResult?.result.ok,
       result: parseResult?.result,
@@ -252,10 +269,17 @@ export function useVoiceStatCommands(input: UseVoiceStatCommandsInput): VoiceSta
       transcript: parseResult?.transcript,
     });
 
-    if (!event.isFinal && parseResult?.result.ok !== true) {
+    const canRecordInterimNumber =
+      !event.isFinal &&
+      parseResult?.result.ok === true &&
+      parseResult.result.matchKind === 'number' &&
+      !isCurrentDiscHolder(parseResult.result.command.toParticipantId, input.discHolderRef);
+    if (!event.isFinal && !canRecordInterimNumber) {
       setMessage(transcript);
       return;
     }
+
+    recognitionCompletedRef.current = true;
 
     if (parseResult == null) {
       if (event.isFinal) setStatus('unsupported');
@@ -371,9 +395,7 @@ export function useVoiceStatCommands(input: UseVoiceStatCommandsInput): VoiceSta
     startListeningWindowTimer(() => {
       logVoiceDebug('listening window timeout');
       shouldListenRef.current = false;
-      setIsArmed(false);
-      setStatus('unsupported');
-      setMessage((currentMessage) => currentMessage ?? 'Finishing voice command');
+      setMessage('Finishing command');
       ExpoSpeechRecognitionModule.stop();
     });
     beginRecognition();
@@ -386,6 +408,7 @@ export function useVoiceStatCommands(input: UseVoiceStatCommandsInput): VoiceSta
     setStatus('idle');
     setMessage(null);
     setTranscript(null);
+    recognitionCompletedRef.current = true;
     ExpoSpeechRecognitionModule.abort();
   };
 
@@ -423,7 +446,11 @@ function getVoiceFeedback(
       return { kind: 'heard', text: `Heard: ${message}` };
     }
 
-    return { kind: 'issue', text: message ?? 'Voice command not recorded' };
+    return {
+      kind: 'issue',
+      text: message ?? 'Voice command not recorded',
+      persistent: isPersistentVoiceIssue(message),
+    };
   }
 
   if (status === 'listening' && transcript != null && transcript.trim()) {
@@ -448,14 +475,18 @@ function parseBestVoiceStatCommand(
   activeParticipants: VoiceParticipantContext[],
 ): {
   transcript: string;
+  confidence: number;
   result: ReturnType<typeof parseVoiceStatCommand>;
 } | null {
   const candidates = results
-    .map((result) => result.transcript.trim())
-    .filter(Boolean)
-    .map((transcript) => ({
-      transcript,
-      result: parseVoiceStatCommand(transcript, activeParticipants),
+    .map((recognitionResult) => ({
+      transcript: recognitionResult.transcript.trim(),
+      confidence: recognitionResult.confidence,
+    }))
+    .filter((recognitionResult) => Boolean(recognitionResult.transcript))
+    .map((recognitionResult) => ({
+      ...recognitionResult,
+      result: parseVoiceStatCommand(recognitionResult.transcript, activeParticipants),
     }))
     .sort((left, right) => getVoiceParseCandidateScore(right) - getVoiceParseCandidateScore(left));
 
@@ -464,6 +495,7 @@ function parseBestVoiceStatCommand(
 
 function getVoiceParseCandidateScore(candidate: {
   transcript: string;
+  confidence: number;
   result: ReturnType<typeof parseVoiceStatCommand>;
 }): number {
   if (!candidate.result.ok) return 0;
@@ -474,8 +506,15 @@ function getVoiceParseCandidateScore(candidate: {
     .filter(Boolean).length;
   const matchedPhraseLength = candidate.result.matchedPhrase.split(/\s+/).filter(Boolean).length;
   const matchKindWeight = candidate.result.matchKind === 'number' ? 100 : 50;
+  const confidenceWeight = getAvailableConfidence(candidate.confidence) ?? 0;
 
-  return matchKindWeight + matchedPhraseLength * 10 + normalizedTranscriptLength;
+  return matchKindWeight + matchedPhraseLength * 10 + normalizedTranscriptLength + confidenceWeight;
+}
+
+function getAvailableConfidence(confidence: number | undefined): number | null {
+  if (confidence == null || confidence <= 0 || confidence > 1) return null;
+
+  return confidence;
 }
 
 function getParseFailureReasonCode(
@@ -488,7 +527,7 @@ function getParseFailureReasonCode(
 
 function logVoiceDebug(event: string, data?: Record<string, unknown>) {
   if (!__DEV__) return;
-  //console.log('[voice]', event, data ?? '');
+  // console.log('[voice]', event, data ?? '');
 }
 
 function getAndroidRecognitionServicePackage(): string | undefined {
@@ -504,8 +543,11 @@ function logVoiceEnvironment() {
   if (!__DEV__) return;
 
   logVoiceDebug('environment', {
+    locale: 'en-US',
+    platform: Platform.OS,
     defaultRecognitionService: ExpoSpeechRecognitionModule.getDefaultRecognitionService(),
     recognitionAvailable: ExpoSpeechRecognitionModule.isRecognitionAvailable(),
+    requiresOnDeviceRecognition: true,
     services: ExpoSpeechRecognitionModule.getSpeechRecognitionServices(),
     supportsOnDeviceRecognition: ExpoSpeechRecognitionModule.supportsOnDeviceRecognition(),
   });
@@ -557,6 +599,10 @@ function resolveVoiceThrowerParticipantId(input: UseVoiceStatCommandsInput): str
   return input.discHolderRef.participantId;
 }
 
+function isCurrentDiscHolder(participantId: string, discHolderRef: PlayerRef | null): boolean {
+  return discHolderRef?.refType === 'participant' && discHolderRef.participantId === participantId;
+}
+
 function participantRef(participantId: string): PlayerRef {
   return { refType: 'participant', participantId };
 }
@@ -567,6 +613,9 @@ function getSpeechErrorMessage(event: ExpoSpeechRecognitionErrorEvent): string {
   }
   if (event.error === 'not-allowed') {
     return 'Microphone permission needed';
+  }
+  if (Platform.OS === 'ios' && event.error === 'service-not-allowed') {
+    return 'Enable/use keyboard Dictation once, then retry';
   }
   if (event.error === 'language-not-supported' || event.error === 'service-not-allowed') {
     return 'Offline voice unavailable';
@@ -586,6 +635,6 @@ function getSpeechErrorMessage(event: ExpoSpeechRecognitionErrorEvent): string {
   return 'Voice command failed';
 }
 
-function isRestartableSpeechError(event: ExpoSpeechRecognitionErrorEvent): boolean {
-  return event.error === 'no-speech' || event.error === 'speech-timeout';
+function isPersistentVoiceIssue(message: string | null): boolean {
+  return message === 'Enable/use keyboard Dictation once, then retry';
 }
