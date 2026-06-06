@@ -45,11 +45,26 @@ export interface SavedTeam {
   // Future: add updatedAt/importedAt for cloud sync and import tracking
 }
 
+export type TournamentKind = 'basic' | 'advanced';
+
 export interface Tournament {
   id: string;
+  schemaVersion: number;
+  kind: TournamentKind | null;
   name: string;
   startDate: string; // ISO date string, e.g. "2026-03-12"
   endDate: string; // ISO date string, e.g. "2026-03-14"
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface TournamentGameLink {
+  id: string;
+  schemaVersion: number;
+  tournamentId: string;
+  gameKind: TournamentKind;
+  gameId: string;
+  createdAt: number;
 }
 
 // Line Calling Types

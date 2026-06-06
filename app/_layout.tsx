@@ -1,6 +1,7 @@
 import { AlertProvider } from '@/components/ui/AlertProvider';
 import { loadPersistedTheme, ThemeProvider, useTheme } from '@/context/ThemeContext';
 import { useOrientationLock } from '@/hooks/useOrientationLock';
+import { useStartupMigrations } from '@/hooks/useStartupMigrations';
 import { queryClient } from '@/lib/queryClient';
 import { useSettingsStore } from '@/store/settingsStore';
 import { QueryClientProvider } from '@tanstack/react-query';
@@ -35,6 +36,7 @@ function RootLayoutInner() {
   const { palette } = useTheme();
   const orientationMode = useSettingsStore((state) => state.orientationMode);
   useOrientationLock(orientationMode);
+  useStartupMigrations();
 
   return (
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: palette.chrome }}>

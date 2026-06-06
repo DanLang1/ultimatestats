@@ -22,6 +22,7 @@ import {
   runPendingShareAction,
   SHARE_DATA_UPLOAD_ERROR_MESSAGE,
 } from '@/lib/sharing/shareActionUtils';
+import { getTournamentIdsByGame } from '@/lib/tournamentUtils';
 import { useSavedAdvancedGamesStore } from '@/store/advancedTracking/savedGamesStore';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { useGameStore } from '@/store/gameStore';
@@ -43,7 +44,7 @@ export default function SavedGameStatsScreen() {
   const loadAdvancedGame = useSavedAdvancedGamesStore((state) => state.loadGame);
   const loadAdvancedGames = useSavedAdvancedGamesStore((state) => state.loadGames);
   const { showAlert } = useAlert();
-  const { tournaments } = useTournamentStore();
+  const { tournaments, gameLinks, removeGameFromTournament } = useTournamentStore();
   const [selectedSavedGameIds, setSelectedSavedGameIds] = useState<Set<string>>(new Set());
   const [selectionMode, setSelectionMode] = useState(false);
   const [pendingShareAction, setPendingShareAction] = useState<(() => Promise<string>) | null>(
@@ -51,8 +52,16 @@ export default function SavedGameStatsScreen() {
   );
   const isNavigatingToGameRef = useRef(false);
 
-  const basicItems = savedGames.map((g) => basicGameToListItem(g, savedTeams));
-  const advancedItems = completedAdvancedSavedGameSummaries.map(advancedGameSummaryToListItem);
+  const basicTournamentIdsByGame = getTournamentIdsByGame(gameLinks, 'basic');
+  const advancedTournamentIdsByGame = getTournamentIdsByGame(gameLinks, 'advanced');
+  const basicItems = savedGames.map((g) => ({
+    ...basicGameToListItem(g, savedTeams),
+    tournamentId: basicTournamentIdsByGame.get(g.id),
+  }));
+  const advancedItems = completedAdvancedSavedGameSummaries.map((summary) => ({
+    ...advancedGameSummaryToListItem(summary),
+    tournamentId: advancedTournamentIdsByGame.get(summary.id),
+  }));
   const allGames = [...basicItems, ...advancedItems].sort((a, b) => b.timestamp - a.timestamp);
   const selectedGames = allGames.filter((game) => selectedSavedGameIds.has(game.id));
   const selectedGameKind = selectedGames[0]?.kind ?? null;
@@ -142,10 +151,14 @@ export default function SavedGameStatsScreen() {
               .map((game) => game.id);
 
             if (basicIds.length > 0) {
+              await Promise.all(
+                basicIds.map((gameId) => removeGameFromTournament('basic', gameId)),
+              );
               await deleteSavedGames(basicIds);
             }
             // Advanced game deletion is synchronous in the advanced tracking store.
             for (const gameId of advancedIds) {
+              await removeGameFromTournament('advanced', gameId);
               await deleteAdvancedSavedGame(gameId);
             }
             setSelectedSavedGameIds(new Set());

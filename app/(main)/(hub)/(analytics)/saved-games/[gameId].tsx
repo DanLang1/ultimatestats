@@ -21,6 +21,7 @@ import {
 } from '@/lib/sharing/shareActionUtils';
 import { formatDate, generateSavedGameCSV } from '@/lib/statsUtils';
 import { useGameStore } from '@/store/gameStore';
+import { useTournamentStore } from '@/store/tournamentStore';
 import { Fonts } from '@/theme/theme';
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
@@ -42,6 +43,7 @@ export default function SavedGameStatsScreen() {
   const { isLandscape, sizeClass } = useLayout();
   const styles = createStyles(isLandscape, sizeClass);
   const { savedGames, savedTeams, updateSavedGamePlayedAt, deleteSavedGame } = useGameStore();
+  const removeGameFromTournament = useTournamentStore((state) => state.removeGameFromTournament);
   const [pendingShareAction, setPendingShareAction] = useState<(() => Promise<string>) | null>(
     null,
   );
@@ -132,6 +134,7 @@ export default function SavedGameStatsScreen() {
           style: 'destructive',
           onPress: async () => {
             await deleteSavedGame(selectedGame.id);
+            await removeGameFromTournament('basic', selectedGame.id);
             router.replace('/SavedGameStats');
           },
         },

@@ -23,6 +23,7 @@ import {
 import { formatDate } from '@/lib/statsUtils';
 import { useSavedAdvancedGamesStore } from '@/store/advancedTracking/savedGamesStore';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
+import { useTournamentStore } from '@/store/tournamentStore';
 import { Fonts } from '@/theme/theme';
 import DateTimePicker, {
   DateTimePickerAndroid,
@@ -49,6 +50,7 @@ export default function AdvancedGameStatsScreen() {
   const styles = createStyles(isLandscape, sizeClass);
   const { showAlert } = useAlert();
   const { deleteSavedGame } = useAdvancedTrackingStore();
+  const removeGameFromTournament = useTournamentStore((state) => state.removeGameFromTournament);
   const saveAdvancedGame = useSavedAdvancedGamesStore((state) => state.saveGame);
   const { data: rawGame, isLoading } = useAdvancedGame(gameId!);
   const [pendingShareAction, setPendingShareAction] = useState<(() => Promise<string>) | null>(
@@ -213,6 +215,7 @@ export default function AdvancedGameStatsScreen() {
           style: 'destructive',
           onPress: async () => {
             await deleteSavedGame(gameId);
+            await removeGameFromTournament('advanced', gameId);
             router.replace('/SavedGameStats');
           },
         },

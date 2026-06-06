@@ -22,6 +22,7 @@ interface AggregateGamesListProps {
   onSelectAllGames: (gameIds: string[]) => void;
   onDeselectAllGames: () => void;
   tournaments: Tournament[];
+  tournamentIdsByGame: Map<string, string>;
   tournamentFilter: string | null; // null = all games
   onSetTournamentFilter: (tournamentId: string | null) => void;
   onCreateTournament: () => void;
@@ -43,6 +44,7 @@ export default function AggregateGamesList({
   onSelectAllGames,
   onDeselectAllGames,
   tournaments,
+  tournamentIdsByGame,
   tournamentFilter,
   onSetTournamentFilter,
   onCreateTournament,
@@ -86,17 +88,15 @@ export default function AggregateGamesList({
     : [];
 
   const gamesForTeam = tournamentFilter
-    ? allGamesForTeam.filter((g) => g.tournamentId === tournamentFilter)
+    ? allGamesForTeam.filter((g) => tournamentIdsByGame.get(g.id) === tournamentFilter)
     : allGamesForTeam;
 
   // Game counts per tournament for this team
   const tournamentGameCounts = new Map<string, number>();
   for (const game of allGamesForTeam) {
-    if (game.tournamentId) {
-      tournamentGameCounts.set(
-        game.tournamentId,
-        (tournamentGameCounts.get(game.tournamentId) ?? 0) + 1,
-      );
+    const tournamentId = tournamentIdsByGame.get(game.id);
+    if (tournamentId) {
+      tournamentGameCounts.set(tournamentId, (tournamentGameCounts.get(tournamentId) ?? 0) + 1);
     }
   }
 

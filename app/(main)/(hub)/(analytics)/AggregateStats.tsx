@@ -37,6 +37,7 @@ import {
 } from '@/lib/sharing/shareActionUtils';
 import { generateAggregateCSV } from '@/lib/statsUtils';
 import { GameEvent, Player, SavedGame } from '@/lib/storage';
+import { getTournamentIdsByGame } from '@/lib/tournamentUtils';
 import { useGameStore } from '@/store/gameStore';
 import { useTournamentStore } from '@/store/tournamentStore';
 import { Fonts } from '@/theme/theme';
@@ -60,9 +61,9 @@ export default function AggregateStatsScreen() {
   const { isLandscape, sizeClass } = useLayout();
   const styles = createStyles(isLandscape, sizeClass);
   const { showAlert } = useAlert();
-  const { savedGames, savedTeams, updateSavedGameTournament } = useGameStore();
+  const { savedGames, savedTeams } = useGameStore();
   const { data: completedAdvancedSavedGameSummaries = [] } = useCompletedAdvancedGameSummaries();
-  const { tournaments } = useTournamentStore();
+  const { tournaments, gameLinks, addGamesToTournament } = useTournamentStore();
   const [aggregateMode, setAggregateMode] = useState<AggregateMode>('basic');
   const [selectedTeam, setSelectedTeam] = useState<string | null>(null);
   const [selectedAdvancedTeamId, setSelectedAdvancedTeamId] = useState<string | null>(null);
@@ -73,6 +74,11 @@ export default function AggregateStatsScreen() {
   const [pendingShareAction, setPendingShareAction] = useState<(() => Promise<string>) | null>(
     null,
   );
+  const compatibleTournaments = tournaments.filter(
+    (tournament) => tournament.kind === null || tournament.kind === aggregateMode,
+  );
+  const tournamentIdsByBasicGame = getTournamentIdsByGame(gameLinks, 'basic');
+  const tournamentIdsByAdvancedGame = getTournamentIdsByGame(gameLinks, 'advanced');
 
   let aggregatedData: {
     teamName: string;
@@ -178,8 +184,13 @@ export default function AggregateStatsScreen() {
   const handleTournamentSelected = async (tournamentId: string) => {
     try {
       const ids = Array.from(selectedGameIds);
-      for (const gameId of ids) {
-        await updateSavedGameTournament(gameId, tournamentId);
+      const didAdd = await addGamesToTournament(tournamentId, aggregateMode, ids);
+      if (!didAdd) {
+        showAlert({
+          title: 'Tournament unavailable',
+          message: 'Could not add the selected games to this tournament.',
+        });
+        return;
       }
       setSelectedGameIds(new Set());
     } catch {
@@ -444,6 +455,14 @@ export default function AggregateStatsScreen() {
         onToggleGameSelection={handleToggleGameSelection}
         onSelectAllGames={handleSelectAllGames}
         onDeselectAllGames={handleDeselectAllGames}
+        tournaments={compatibleTournaments}
+        tournamentIdsByGame={tournamentIdsByAdvancedGame}
+        tournamentFilter={tournamentFilter}
+        onSetTournamentFilter={(id) => {
+          setTournamentFilter(id);
+          setSelectedGameIds(new Set());
+        }}
+        onCreateTournament={() => router.push('/CreateTournament')}
       />
     );
   } else {
@@ -456,7 +475,8 @@ export default function AggregateStatsScreen() {
         onToggleGameSelection={handleToggleGameSelection}
         onSelectAllGames={handleSelectAllGames}
         onDeselectAllGames={handleDeselectAllGames}
-        tournaments={tournaments}
+        tournaments={compatibleTournaments}
+        tournamentIdsByGame={tournamentIdsByBasicGame}
         tournamentFilter={tournamentFilter}
         onSetTournamentFilter={(id) => {
           setTournamentFilter(id);
@@ -524,9 +544,7 @@ export default function AggregateStatsScreen() {
         }
         selectedCount={selectedGameIds.size}
         onViewAggregated={() => setShowingAggregatedStats(true)}
-        showAddToTournament={
-          aggregateMode === 'basic' && !tournamentFilter && selectedGameIds.size > 0
-        }
+        showAddToTournament={!tournamentFilter && selectedGameIds.size > 0}
         onAddToTournament={() => setShowTournamentPicker(true)}
         showShare={aggregateMode === 'basic' && selectedGameIds.size > 0}
         onShare={handleShareGames}
@@ -534,6 +552,7 @@ export default function AggregateStatsScreen() {
 
       <TournamentPickerModal
         visible={showTournamentPicker}
+        gameKind={aggregateMode}
         onSelect={handleTournamentSelected}
         onClose={() => setShowTournamentPicker(false)}
       />

@@ -51,26 +51,32 @@ export default function SavedGamesList({
   const [tournamentFilter, setTournamentFilter] = useState<string | null>(null);
   const [showTournamentFilter, setShowTournamentFilter] = useState(false);
 
-  // Tournaments that have at least one basic saved game, with counts
+  // Tournaments that have at least one linked saved game, with counts
   const tournamentGameCounts = new Map<string, number>();
   for (const game of games) {
-    if (game.kind === 'basic' && game.tournamentId) {
+    if (game.tournamentId) {
       tournamentGameCounts.set(
         game.tournamentId,
         (tournamentGameCounts.get(game.tournamentId) ?? 0) + 1,
       );
     }
   }
-  const visibleTournaments = tournaments.filter((t) => tournamentGameCounts.has(t.id));
+  const visibleTournaments = tournaments.filter((t) => {
+    if (!tournamentGameCounts.has(t.id)) return false;
+    if (selectionMode && selectedGameKind != null) {
+      return t.kind === selectedGameKind;
+    }
+    return t.kind !== null;
+  });
   const activeTournament = visibleTournaments.find((t) => t.id === tournamentFilter) ?? null;
   const effectiveTournamentFilter = activeTournament ? tournamentFilter : null;
 
   let filteredAndSortedGames = [...games];
 
-  // Tournament filter — only applies to basic games; advanced games are unaffected
   if (effectiveTournamentFilter) {
     filteredAndSortedGames = filteredAndSortedGames.filter(
-      (game) => game.kind === 'advanced' || game.tournamentId === effectiveTournamentFilter,
+      (game) =>
+        game.kind === activeTournament?.kind && game.tournamentId === effectiveTournamentFilter,
     );
   }
 

@@ -4,11 +4,12 @@ import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import type { AdvancedGameSummary } from '@/lib/advancedTracking/summary';
 import { formatDate } from '@/lib/statsUtils';
+import { Tournament } from '@/lib/storage/types';
 import { hasItems } from '@/lib/utils';
 import { Fonts } from '@/theme/theme';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 interface AdvancedAggregateGamesListProps {
   games: AdvancedGameSummary[];
@@ -18,6 +19,11 @@ interface AdvancedAggregateGamesListProps {
   onToggleGameSelection: (gameId: string) => void;
   onSelectAllGames: (gameIds: string[]) => void;
   onDeselectAllGames: () => void;
+  tournaments: Tournament[];
+  tournamentIdsByGame: Map<string, string>;
+  tournamentFilter: string | null;
+  onSetTournamentFilter: (tournamentId: string | null) => void;
+  onCreateTournament: () => void;
 }
 
 interface SideGroup {
@@ -57,6 +63,11 @@ export default function AdvancedAggregateGamesList({
   onToggleGameSelection,
   onSelectAllGames,
   onDeselectAllGames,
+  tournaments,
+  tournamentIdsByGame,
+  tournamentFilter,
+  onSetTournamentFilter,
+  onCreateTournament,
 }: AdvancedAggregateGamesListProps) {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
@@ -78,19 +89,97 @@ export default function AdvancedAggregateGamesList({
   }
 
   if (selectedTeamId) {
-    const gamesForSide = games
+    const allGamesForSide = games
       .filter((game) => (game.focusSourceTeamId ?? game.focusSideId) === selectedTeamId)
       .sort((a, b) => b.sortTimestamp - a.sortTimestamp);
+    const gamesForSide = tournamentFilter
+      ? allGamesForSide.filter((game) => tournamentIdsByGame.get(game.id) === tournamentFilter)
+      : allGamesForSide;
     const visibleIds = gamesForSide.map((game) => game.id);
     const allVisibleSelected =
       hasItems(gamesForSide) && visibleIds.every((id) => selectedGameIds.has(id));
+    const tournamentGameCounts = new Map<string, number>();
+    for (const game of allGamesForSide) {
+      const tournamentId = tournamentIdsByGame.get(game.id);
+      if (tournamentId) {
+        tournamentGameCounts.set(tournamentId, (tournamentGameCounts.get(tournamentId) ?? 0) + 1);
+      }
+    }
 
     return (
       <View style={styles.container}>
-        <View style={styles.headerRow}>
+        <View style={styles.tournamentSection}>
           <ThemedText style={[styles.instructions, { color: palette.textMuted }]}>
-            Advanced Games
+            Tournaments
           </ThemedText>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.tournamentCards}>
+            {tournaments.map((t) => {
+              const gameCount = tournamentGameCounts.get(t.id) ?? 0;
+              const isActive = tournamentFilter === t.id;
+
+              return (
+                <Pressable
+                  key={t.id}
+                  style={[
+                    styles.tournamentCard,
+                    { backgroundColor: palette.overlay05, borderColor: palette.overlay10 },
+                    isActive && { borderColor: palette.accent },
+                  ]}
+                  onPress={() => onSetTournamentFilter(isActive ? null : t.id)}>
+                  <MaterialCommunityIcons
+                    name="trophy"
+                    size={scaleBySizeClass(16, sizeClass)}
+                    color={isActive ? palette.accent : palette.textMuted}
+                  />
+                  <ThemedText
+                    style={[
+                      styles.tournamentCardName,
+                      { color: isActive ? palette.accent : palette.textInverse },
+                    ]}
+                    numberOfLines={1}>
+                    {t.name}
+                  </ThemedText>
+                  <ThemedText style={[styles.tournamentCardMeta, { color: palette.textMuted }]}>
+                    {gameCount} game{gameCount !== 1 ? 's' : ''}
+                  </ThemedText>
+                </Pressable>
+              );
+            })}
+            <Pressable
+              style={[
+                styles.tournamentCard,
+                styles.createTournamentCard,
+                { borderColor: palette.overlay10 },
+              ]}
+              onPress={onCreateTournament}>
+              <MaterialCommunityIcons
+                name="plus"
+                size={scaleBySizeClass(20, sizeClass)}
+                color={palette.accent}
+              />
+              <ThemedText style={[styles.tournamentCardName, { color: palette.accent }]}>
+                Create
+              </ThemedText>
+            </Pressable>
+          </ScrollView>
+        </View>
+
+        <View style={styles.headerRow}>
+          <View style={styles.gamesHeaderLeft}>
+            <ThemedText style={[styles.instructions, { color: palette.textMuted }]}>
+              {tournamentFilter ? 'Tournament Games' : 'Advanced Games'}
+            </ThemedText>
+            {tournamentFilter && (
+              <Pressable hitSlop={8} onPress={() => onSetTournamentFilter(null)}>
+                <ThemedText style={[styles.clearFilterText, { color: palette.accent }]}>
+                  Show All
+                </ThemedText>
+              </Pressable>
+            )}
+          </View>
           <Pressable
             hitSlop={8}
             onPress={() => {
@@ -105,6 +194,12 @@ export default function AdvancedAggregateGamesList({
             </ThemedText>
           </Pressable>
         </View>
+
+        {gamesForSide.length === 0 && tournamentFilter && (
+          <ThemedText style={[styles.emptyFilterText, { color: palette.textMuted }]}>
+            No advanced games in this tournament
+          </ThemedText>
+        )}
 
         <View style={styles.gamesList}>
           {gamesForSide.map((game) => {
@@ -215,6 +310,45 @@ function createStyles(sizeClass: SizeClass) {
       justifyContent: 'space-between',
       alignItems: 'center',
       marginBottom: 4,
+    },
+    gamesHeaderLeft: {
+      gap: 4,
+    },
+    tournamentSection: {
+      gap: 8,
+    },
+    tournamentCards: {
+      gap: 10,
+      paddingRight: 16,
+    },
+    tournamentCard: {
+      width: scaleBySizeClass(130, sizeClass),
+      minHeight: 84,
+      borderRadius: 12,
+      borderWidth: 1,
+      padding: 12,
+      gap: 6,
+      justifyContent: 'center',
+    },
+    createTournamentCard: {
+      borderStyle: 'dashed',
+      alignItems: 'center',
+    },
+    tournamentCardName: {
+      fontSize: scaleBySizeClass(13, sizeClass),
+      fontFamily: Fonts.semiBold,
+    },
+    tournamentCardMeta: {
+      fontSize: scaleBySizeClass(11, sizeClass),
+    },
+    clearFilterText: {
+      fontSize: scaleBySizeClass(12, sizeClass),
+      fontFamily: Fonts.semiBold,
+    },
+    emptyFilterText: {
+      textAlign: 'center',
+      paddingVertical: 12,
+      fontSize: scaleBySizeClass(14, sizeClass),
     },
     selectAllText: {
       fontSize: scaleBySizeClass(14, sizeClass),

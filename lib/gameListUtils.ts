@@ -29,6 +29,7 @@ export type GameListItem =
       myScore: number;
       opponentScore: number;
       pointsTracked: number;
+      tournamentId?: string;
     };
 
 export function basicGameToListItem(game: SavedGame, savedTeams: SavedTeam[]): GameListItem {

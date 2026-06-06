@@ -1,9 +1,8 @@
 import { useAlert } from '@/components/ui/AlertProvider';
 import { formatISODateForDisplay } from '@/lib/dateUtils';
 import { useTheme } from '@/context/ThemeContext';
-import { useGameStore } from '@/store/gameStore';
 import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import { Tournament } from '@/lib/storage/types';
+import { Tournament, TournamentKind } from '@/lib/storage/types';
 import { useTournamentStore } from '@/store/tournamentStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router } from 'expo-router';
@@ -15,18 +14,26 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 
 interface TournamentPickerModalProps {
   visible: boolean;
+  gameKind: TournamentKind;
   onSelect: (tournamentId: string) => void;
   onClose: () => void;
 }
 
-export function TournamentPickerModal({ visible, onSelect, onClose }: TournamentPickerModalProps) {
+export function TournamentPickerModal({
+  visible,
+  gameKind,
+  onSelect,
+  onClose,
+}: TournamentPickerModalProps) {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
   const styles = createStyles(sizeClass);
   const insets = useSafeAreaInsets();
   const { showAlert } = useAlert();
   const { tournaments, deleteTournament } = useTournamentStore();
-  const { clearTournamentFromGames } = useGameStore();
+  const compatibleTournaments = tournaments.filter((tournament) => {
+    return tournament.kind === null || tournament.kind === gameKind;
+  });
 
   const handleSelectTournament = (tournament: Tournament) => {
     onSelect(tournament.id);
@@ -49,16 +56,6 @@ export function TournamentPickerModal({ visible, onSelect, onClose }: Tournament
               showAlert({
                 title: 'Delete failed',
                 message: 'Could not delete the tournament. Please try again.',
-              });
-              return;
-            }
-            try {
-              await clearTournamentFromGames(tournament.id);
-            } catch {
-              showAlert({
-                title: 'Cleanup failed',
-                message:
-                  'Tournament deleted, but some games may still reference it. Please reload the app.',
               });
             }
           },
@@ -111,7 +108,7 @@ export function TournamentPickerModal({ visible, onSelect, onClose }: Tournament
               </Pressable>
 
               {/* Existing tournaments */}
-              {tournaments.map((tournament) => (
+              {compatibleTournaments.map((tournament) => (
                 <Pressable
                   key={tournament.id}
                   style={[styles.row, { borderBottomColor: palette.overlay10 }]}
@@ -139,7 +136,7 @@ export function TournamentPickerModal({ visible, onSelect, onClose }: Tournament
                 </Pressable>
               ))}
 
-              {tournaments.length === 0 && (
+              {compatibleTournaments.length === 0 && (
                 <ThemedText style={[styles.emptyText, { color: palette.modalTextMuted }]}>
                   No tournaments yet
                 </ThemedText>
