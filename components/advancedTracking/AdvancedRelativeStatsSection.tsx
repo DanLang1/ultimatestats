@@ -3,6 +3,10 @@ import { useAlert } from '@/components/ui/AlertProvider';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { AdvancedPlayerStats } from '@/lib/advancedTracking/advancedPlayerStatsUtils';
+import {
+  getRoundedDecimalDelta,
+  getRoundedPercentagePointDelta,
+} from '@/lib/relativeStatsViewUtils';
 import { Fonts } from '@/theme/theme';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React, { useState } from 'react';
@@ -33,6 +37,24 @@ function clamp01(v: number): number {
 
 function hasMetric(metric: Metric | null): metric is Metric {
   return metric != null;
+}
+
+function isPercentageMetric(metric: Metric): boolean {
+  return (
+    metric.key === 'completionPct' ||
+    metric.key === 'oEfficiency' ||
+    metric.key === 'dEfficiency' ||
+    metric.key === 'playingTimePct'
+  );
+}
+
+function formatTeamAverage(metric: Metric): string {
+  if (isPercentageMetric(metric) || metric.key === 'minutesPlayed') {
+    return metric.formatValue(metric.teamAvg);
+  }
+
+  const rounded = Math.round(metric.teamAvg * 10) / 10;
+  return Number.isInteger(rounded) ? rounded.toString() : rounded.toFixed(1);
 }
 
 function buildMetrics(
@@ -290,19 +312,19 @@ export default function AdvancedRelativeStatsSection({
           </ThemedText>
           <View style={styles.groupRows}>
             {metrics.map((metric) => {
-              const isGood =
-                metric.raw > metric.teamAvg
-                  ? metric.higherIsBetter
-                  : !metric.higherIsBetter && metric.raw < metric.teamAvg;
+              const diff = isPercentageMetric(metric)
+                ? getRoundedPercentagePointDelta(metric.raw, metric.teamAvg)
+                : getRoundedDecimalDelta(metric.raw, metric.teamAvg);
+              const isGood = diff > 0 ? metric.higherIsBetter : !metric.higherIsBetter && diff < 0;
 
               let barColor: string;
-              if (metric.raw > metric.teamAvg && metric.higherIsBetter) {
+              if (diff > 0 && metric.higherIsBetter) {
                 barColor = palette.success;
-              } else if (metric.raw < metric.teamAvg && !metric.higherIsBetter) {
+              } else if (diff < 0 && !metric.higherIsBetter) {
                 barColor = palette.success;
-              } else if (metric.raw < metric.teamAvg && metric.higherIsBetter) {
+              } else if (diff < 0 && metric.higherIsBetter) {
                 barColor = palette.danger;
-              } else if (metric.raw > metric.teamAvg && !metric.higherIsBetter) {
+              } else if (diff > 0 && !metric.higherIsBetter) {
                 barColor = palette.danger;
               } else {
                 barColor = palette.accent;
@@ -311,7 +333,7 @@ export default function AdvancedRelativeStatsSection({
               let relativeColor: string;
               if (isGood) {
                 relativeColor = palette.success;
-              } else if (!isGood && metric.raw !== metric.teamAvg) {
+              } else if (!isGood && diff !== 0) {
                 relativeColor = palette.danger;
               } else {
                 relativeColor = palette.textInverse;
@@ -325,15 +347,9 @@ export default function AdvancedRelativeStatsSection({
               const relativeLabel =
                 mode === 'avg'
                   ? (() => {
-                      const diff = metric.raw - metric.teamAvg;
                       const sign = diff > 0 ? '+' : '';
-                      if (
-                        metric.key === 'completionPct' ||
-                        metric.key === 'oEfficiency' ||
-                        metric.key === 'dEfficiency' ||
-                        metric.key === 'playingTimePct'
-                      ) {
-                        return `${sign}${Math.round(diff * 100)}pp`;
+                      if (isPercentageMetric(metric)) {
+                        return `${sign}${diff}pp`;
                       }
                       if (metric.key === 'minutesPlayed') {
                         return `${sign}${diff.toFixed(1)} min`;
@@ -344,7 +360,7 @@ export default function AdvancedRelativeStatsSection({
 
               const contextLabel =
                 mode === 'avg'
-                  ? `Team avg: ${metric.formatValue(metric.teamAvg)}`
+                  ? `Team avg: ${formatTeamAverage(metric)}`
                   : `Team best: ${metric.formatValue(metric.teamMax)}`;
 
               return (

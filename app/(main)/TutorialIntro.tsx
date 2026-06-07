@@ -13,18 +13,18 @@ const FEATURES = [
   {
     icon: 'account-group' as const,
     title: 'Gender Ratio Tracking',
-    description: 'Supports Ratio Rule A (ABBA) gender ratio tracking.',
+    description: 'Supports Ratio Rule A (ABBA) gender ratio tracking',
   },
   {
     icon: 'timer-outline' as const,
     title: 'Game Timing',
-    description: 'Soft/hard cap and point timer tracking.',
+    description: 'Soft/hard cap and point timer tracking',
   },
   {
     icon: 'chart-bar' as const,
     title: 'Detailed Player Stats',
     description:
-      'More than simple +- stats. Playing time, efficiency, time of possession, and more.',
+      'More than simple +- stats. Playing time, efficiency, time of possession, and more',
   },
 ] as const;
 

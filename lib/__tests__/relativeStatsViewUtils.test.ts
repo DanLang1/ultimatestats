@@ -4,6 +4,8 @@ import {
   getContextLabel,
   getMetricTone,
   getRelativeLabel,
+  getRoundedDecimalDelta,
+  getRoundedPercentagePointDelta,
   getSampleWarningLabel,
   RelativeEventRow,
   RelativePlayingTimeRow,
@@ -206,6 +208,25 @@ describe('relativeStatsViewUtils', () => {
       expect(clamp01(-1)).toBe(0);
       expect(clamp01(0.25)).toBe(0.25);
       expect(clamp01(2)).toBe(1);
+    });
+  });
+
+  describe('getRoundedPercentagePointDelta', () => {
+    it('matches the difference between displayed whole percentages', () => {
+      expect(getRoundedPercentagePointDelta(0.818, 0.883)).toBe(-6);
+      expect(getRoundedPercentagePointDelta(0.824, 0.823)).toBe(0);
+    });
+  });
+
+  describe('getRoundedDecimalDelta', () => {
+    it('matches the difference between displayed one-decimal values', () => {
+      expect(getRoundedDecimalDelta(2, 0.65)).toBe(1.3);
+      expect(getRoundedDecimalDelta(1, 0.65)).toBe(0.3);
+      expect(getRoundedDecimalDelta(0, 0.35)).toBe(-0.4);
+    });
+
+    it('avoids floating-point artifacts', () => {
+      expect(getRoundedDecimalDelta(0.3, 0.1 + 0.2)).toBe(0);
     });
   });
 });

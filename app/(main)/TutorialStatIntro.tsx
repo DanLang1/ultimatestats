@@ -13,17 +13,17 @@ const FEATURES = [
   {
     icon: 'account-group' as const,
     title: 'Line Selection',
-    description: 'Choose which players are on the field before each point starts.',
+    description: 'Choose which players are on the field before each point starts',
   },
   {
     icon: 'target' as const,
     title: 'Goals & Assists',
-    description: 'Tap your team score to record a goal, then select the scorer and assister.',
+    description: 'Tap your team score to record a goal, then select the scorer and assister',
   },
   {
     icon: 'hand-back-left-outline' as const,
     title: 'Blocks & Turnovers',
-    description: 'Record defensive blocks and turnovers as they happen.',
+    description: 'Record defensive blocks and turnovers as they happen',
   },
 ] as const;
 
