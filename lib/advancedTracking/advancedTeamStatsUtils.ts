@@ -29,6 +29,16 @@ export interface AdvancedTeamStats {
   possessionsPerDPoint: number | null;
   /** Average turnovers per point. Null if 0 points. */
   turnoversPerPoint: number | null;
+  /** Completed passes by this side divided by points. Null if 0 points. */
+  completedPassesPerPoint: number | null;
+  /** Completed passes by this side divided by possessions. Null if 0 possessions. */
+  completedPassesPerPossession: number | null;
+  /** Completed passes divided by throw attempts. Null if 0 attempts. */
+  completionPct: number | null;
+  /** Throw attempts by this side. Stalls are excluded. */
+  totalThrowAttempts: number;
+  /** Completed passes by this side, including goal throws. */
+  totalCompletedPasses: number;
   pointsPerTurnover: number;
   /** Goals by this side divided by possessions by this side. Null if 0 possessions. */
   possessionConversionPct: number | null;
@@ -130,6 +140,8 @@ export function computeAdvancedTeamStats(game: AnalyticsGame, sideId: string): A
   let totalTurnoversInGame = 0;
   let totalBlocks = 0;
   let scoresAfterTurnovers = 0;
+  let totalThrowAttempts = 0;
+  let totalCompletedPasses = 0;
 
   // Build O/D lookup for each point
   const isOPointById = new Map<string, boolean>();
@@ -152,6 +164,16 @@ export function computeAdvancedTeamStats(game: AnalyticsGame, sideId: string): A
       }
     } else if (poss.turnoverType === 'block' || poss.turnoverType === 'callahan') {
       totalBlocks++;
+    }
+  }
+
+  for (const action of game.actions) {
+    if (action.sideId !== sideId) continue;
+    if (action.kind !== 'throw') continue;
+
+    if (action.result !== 'stall') totalThrowAttempts++;
+    if (action.result === 'complete' || action.result === 'goal') {
+      totalCompletedPasses++;
     }
   }
 
@@ -201,6 +223,12 @@ export function computeAdvancedTeamStats(game: AnalyticsGame, sideId: string): A
     possessionsPerOPoint: oPoints > 0 ? totalPossessionsOnO / oPoints : null,
     possessionsPerDPoint: dPoints > 0 ? totalPossessionsOnD / dPoints : null,
     turnoversPerPoint: pointCount > 0 ? totalTurnoversInGame / pointCount : null,
+    completedPassesPerPoint: pointCount > 0 ? totalCompletedPasses / pointCount : null,
+    completedPassesPerPossession:
+      totalPossessionsInGame > 0 ? totalCompletedPasses / totalPossessionsInGame : null,
+    completionPct: totalThrowAttempts > 0 ? totalCompletedPasses / totalThrowAttempts : null,
+    totalThrowAttempts,
+    totalCompletedPasses,
     pointsPerTurnover: totalTurnoversInGame > 0 ? totalGoals / totalTurnoversInGame : totalGoals,
     possessionConversionPct:
       totalPossessionsInGame > 0 ? totalGoals / totalPossessionsInGame : null,

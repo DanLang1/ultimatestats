@@ -59,20 +59,56 @@ export default function AdvancedStatsContent({
   const teamStats = computeAdvancedTeamStats(game, focusSideId);
   const pullStats = computePullStats(game, focusSideId);
 
-  const possessionFlowStats = [
-    ...(teamStats.possessionsPerPoint != null
-      ? [{ label: 'Avg Poss/Pt', value: teamStats.possessionsPerPoint.toFixed(1) }]
-      : []),
-    ...(teamStats.multiPossessionPointPct != null
-      ? [
-          {
-            label: 'Multi-Turn Pts',
-            value: formatPercent(teamStats.multiPossessionPointPct),
-            sublabel: `${teamStats.multiPossessionPoints}/${teamStats.completedPoints}`,
-          },
-        ]
-      : []),
-  ];
+  const possessionFlowStats: { label: string; value: string | number; sublabel?: string }[] = [];
+
+  if (teamStats.possessionsPerPoint != null) {
+    possessionFlowStats.push({
+      label: 'Avg Poss/Pt',
+      value: teamStats.possessionsPerPoint.toFixed(1),
+    });
+  }
+  if (teamStats.multiPossessionPointPct != null) {
+    possessionFlowStats.push({
+      label: 'Multi-Turn Pts',
+      value: formatPercent(teamStats.multiPossessionPointPct),
+      sublabel: `${teamStats.multiPossessionPoints}/${teamStats.completedPoints}`,
+    });
+  }
+  if (teamStats.completedPassesPerPoint != null) {
+    possessionFlowStats.push({
+      label: 'Passes/Point',
+      value: formatDecimal(teamStats.completedPassesPerPoint),
+    });
+  }
+  if (teamStats.completedPassesPerPossession != null) {
+    possessionFlowStats.push({
+      label: 'Passes/Poss',
+      value: formatDecimal(teamStats.completedPassesPerPossession),
+    });
+  }
+
+  const efficiencyStats: { label: string; value: string | number; sublabel?: string }[] = [];
+
+  if (teamStats.possessionConversionPct != null) {
+    efficiencyStats.push({
+      label: 'Poss Conv',
+      value: formatPercent(teamStats.possessionConversionPct),
+      sublabel: `${teamStats.totalGoals}/${teamStats.totalPossessions}`,
+    });
+  }
+  if (teamStats.completionPct != null) {
+    efficiencyStats.push({
+      label: 'Completion',
+      value: formatPercent(teamStats.completionPct),
+      sublabel: `${teamStats.totalCompletedPasses}/${teamStats.totalThrowAttempts}`,
+    });
+  }
+  efficiencyStats.push(
+    { label: 'Passes', value: teamStats.totalCompletedPasses },
+    { label: 'Blk/D-Pt', value: formatDecimal(teamStats.blocksPerDPoint) },
+    { label: 'Turn(s)', value: teamStats.totalTurnovers },
+    { label: 'Block(s)', value: teamStats.totalBlocks },
+  );
 
   const sorted = [...playerStats].sort((a, b) => b.plusMinus - a.plusMinus);
   const topPerformers = sorted.filter((p) => p.plusMinus > 0).slice(0, 3);
@@ -242,23 +278,7 @@ Formula: Holds ÷ O-Points`}
           <ThemedText style={[styles.subsectionTitle, { color: palette.textMuted }]}>
             EFFICIENCY
           </ThemedText>
-          <StatsGrid
-            stats={[
-              ...(teamStats.possessionConversionPct != null
-                ? [
-                    {
-                      label: 'Poss Conv',
-                      value: formatPercent(teamStats.possessionConversionPct),
-                      sublabel: `${teamStats.totalGoals}/${teamStats.totalPossessions}`,
-                    },
-                  ]
-                : []),
-              { label: 'Blk/D-Pt', value: formatDecimal(teamStats.blocksPerDPoint) },
-              { label: 'Turn(s)', value: teamStats.totalTurnovers },
-              { label: 'Block(s)', value: teamStats.totalBlocks },
-            ]}
-            columns={isLandscape ? 4 : 2}
-          />
+          <StatsGrid stats={efficiencyStats} columns={isLandscape ? 4 : 2} />
         </View>
         {pullStats.totalPulls > 0 && (
           <View style={styles.subsectionContainer}>

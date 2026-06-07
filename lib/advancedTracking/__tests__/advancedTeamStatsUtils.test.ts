@@ -351,6 +351,95 @@ describe('advancedTeamStatsUtils', () => {
     });
   });
 
+  describe('passing flow', () => {
+    it('computes completed passes per point, per possession, and completion rate', () => {
+      const game: AdvancedTrackedGame = {
+        ...baseGame,
+        points: [
+          {
+            id: 'pt1',
+            lines: [{ sideId: ZOO, participantIds: ['p_august', 'p_meves'] }],
+            possessions: [
+              {
+                id: 'pt1_pos1',
+                sideId: ZOO,
+                actions: [
+                  {
+                    id: 'pt1_a1',
+                    kind: 'pull',
+                    sideId: RIVALS,
+                    receivingSideId: ZOO,
+                    puller: untracked,
+                    receiver: august,
+                    result: 'inbound',
+                  },
+                  {
+                    id: 'pt1_a2',
+                    kind: 'throw',
+                    sideId: ZOO,
+                    thrower: august,
+                    toPlayer: meves,
+                    result: 'complete',
+                  },
+                  {
+                    id: 'pt1_a3',
+                    kind: 'throw',
+                    sideId: ZOO,
+                    thrower: meves,
+                    result: 'throwaway',
+                  },
+                ],
+              },
+              {
+                id: 'pt1_pos2',
+                sideId: RIVALS,
+                actions: [
+                  {
+                    id: 'pt1_a4',
+                    kind: 'throw',
+                    sideId: RIVALS,
+                    thrower: untracked,
+                    defender: august,
+                    result: 'block',
+                  },
+                ],
+              },
+              {
+                id: 'pt1_pos3',
+                sideId: ZOO,
+                actions: [
+                  {
+                    id: 'pt1_a5',
+                    kind: 'disc_pickup',
+                    sideId: ZOO,
+                    player: august,
+                  },
+                  {
+                    id: 'pt1_a6',
+                    kind: 'throw',
+                    sideId: ZOO,
+                    thrower: august,
+                    toPlayer: meves,
+                    result: 'goal',
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      };
+
+      const analytics = buildAnalyticsGame(game);
+      const stats = computeAdvancedTeamStats(analytics, ZOO);
+
+      expect(stats.totalThrowAttempts).toBe(3);
+      expect(stats.totalCompletedPasses).toBe(2);
+      expect(stats.completedPassesPerPoint).toBe(2);
+      expect(stats.completedPassesPerPossession).toBe(1);
+      expect(stats.completionPct).toBeCloseTo(2 / 3);
+    });
+  });
+
   describe('scores after turnovers', () => {
     it('counts possessions scoring after index > 0', () => {
       // Break point: turnover causes possession 2 which scores
