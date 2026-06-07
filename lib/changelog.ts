@@ -6,6 +6,14 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.0.0',
+    date: 'June 7, 2026',
+    changes: [
+      'Advanced Tracking Beta (now tracks passes, updated stats, and a preview of voice commands)',
+      'Added partner page for DH Ultimate',
+    ],
+  },
+  {
     version: '1.9.1',
     date: 'March 31, 2026',
     changes: ['Start 2nd half early button available from GameInfo page (in case of halftime cap)'],
