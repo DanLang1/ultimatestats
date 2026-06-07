@@ -4,8 +4,10 @@ import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { VoiceStatCommandsControls } from '@/hooks/advancedTracking/useVoiceStatCommands';
 import { Fonts, Palette } from '@/theme/theme';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import React from 'react';
+import React, { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
+import { useTutorialStore } from '@/store/tutorialStore';
+import { AdvancedVoiceHintModal } from './AdvancedVoiceHintModal';
 
 interface TrackerVoiceButtonProps {
   controls: VoiceStatCommandsControls;
@@ -16,42 +18,66 @@ export const TrackerVoiceButton = ({ controls, disabled }: TrackerVoiceButtonPro
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
   const styles = createStyles(sizeClass);
+  const hasSeenAdvancedVoiceHint = useTutorialStore((state) => state.hasSeenAdvancedVoiceHint);
+  const [showVoiceHint, setShowVoiceHint] = useState(false);
 
   const isActive = controls.isListening;
   const label = isActive ? 'CANCEL' : 'TAP TO SPEAK';
   const icon = isActive ? 'stop-circle' : 'microphone';
   const accentColor = getAccentColor(controls.status, palette);
+  const dismissVoiceHint = () => {
+    useTutorialStore.getState().dismissAdvancedVoiceHint();
+    setShowVoiceHint(false);
+  };
+  const continueToVoice = () => {
+    dismissVoiceHint();
+    controls.toggleListening();
+  };
+  const handlePress = () => {
+    if (!hasSeenAdvancedVoiceHint) {
+      setShowVoiceHint(true);
+      return;
+    }
+    controls.toggleListening();
+  };
 
   return (
-    <Pressable
-      testID="tracker-voice-button"
-      accessibilityRole="button"
-      accessibilityLabel={isActive ? 'Cancel voice command' : 'Start voice command'}
-      disabled={disabled}
-      onPress={controls.toggleListening}
-      style={({ pressed }) => [
-        styles.button,
-        {
-          backgroundColor: isActive ? palette.accentOverlay15 : palette.overlay05,
-          borderColor: isActive ? palette.accentOverlay30 : palette.overlay10,
-          opacity: disabled ? 0.5 : 1,
-        },
-        pressed && styles.pressed,
-      ]}>
-      <View style={styles.content}>
-        <View style={styles.titleRow}>
-          <MaterialCommunityIcons
-            name={icon}
-            size={scaleBySizeClass(22, sizeClass)}
-            color={accentColor}
-            style={styles.icon}
-          />
-          <ThemedText numberOfLines={1} style={[styles.buttonText, { color: accentColor }]}>
-            {label}
-          </ThemedText>
+    <>
+      <Pressable
+        testID="tracker-voice-button"
+        accessibilityRole="button"
+        accessibilityLabel={isActive ? 'Cancel voice command' : 'Start voice command'}
+        disabled={disabled}
+        onPress={handlePress}
+        style={({ pressed }) => [
+          styles.button,
+          {
+            backgroundColor: isActive ? palette.accentOverlay15 : palette.overlay05,
+            borderColor: isActive ? palette.accentOverlay30 : palette.overlay10,
+            opacity: disabled ? 0.5 : 1,
+          },
+          pressed && styles.pressed,
+        ]}>
+        <View style={styles.content}>
+          <View style={styles.titleRow}>
+            <MaterialCommunityIcons
+              name={icon}
+              size={scaleBySizeClass(22, sizeClass)}
+              color={accentColor}
+              style={styles.icon}
+            />
+            <ThemedText numberOfLines={1} style={[styles.buttonText, { color: accentColor }]}>
+              {label}
+            </ThemedText>
+          </View>
         </View>
-      </View>
-    </Pressable>
+      </Pressable>
+      <AdvancedVoiceHintModal
+        visible={showVoiceHint}
+        onDismiss={dismissVoiceHint}
+        onContinue={continueToVoice}
+      />
+    </>
   );
 };
 

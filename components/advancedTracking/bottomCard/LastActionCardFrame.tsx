@@ -8,9 +8,11 @@ import { LayoutChangeEvent, Pressable, StyleSheet, View } from 'react-native';
 
 const COMPACT_ACTIONS_CARD_WIDTH = 360;
 
-type ButtonMode =
+export type ButtonMode =
   | { kind: 'undo-more'; onUndo: () => void; onMore: () => void }
   | { kind: 'more-only'; onMore: () => void }
+  | { kind: 'next-only'; onNext: () => void; label?: string }
+  | { kind: 'none' }
   | { kind: 'cancel-more'; onCancel: () => void; onMore: () => void; isDanger?: boolean }
   | { kind: 'undo-only'; onUndo: () => void };
 
@@ -19,6 +21,7 @@ interface LastActionCardFrameProps {
   children: React.ReactNode;
   buttonMode: ButtonMode;
   preferCompactActions?: boolean;
+  moreAdornment?: React.ReactNode;
 }
 
 export const LastActionCardFrame = ({
@@ -26,13 +29,17 @@ export const LastActionCardFrame = ({
   children,
   buttonMode,
   preferCompactActions = false,
+  moreAdornment,
 }: LastActionCardFrameProps) => {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
   const styles = createStyles(sizeClass, palette);
   const [cardWidth, setCardWidth] = useState(0);
 
-  const showMore = buttonMode.kind !== 'undo-only';
+  const showMore =
+    buttonMode.kind === 'undo-more' ||
+    buttonMode.kind === 'more-only' ||
+    buttonMode.kind === 'cancel-more';
   const showUndo = buttonMode.kind === 'undo-more' || buttonMode.kind === 'undo-only';
   const canUseCompactActions = sizeClass === 'small';
   const compactActionThreshold = scaleBySizeClass(COMPACT_ACTIONS_CARD_WIDTH, sizeClass);
@@ -91,6 +98,31 @@ export const LastActionCardFrame = ({
         )}
       </Pressable>
     );
+  } else if (buttonMode.kind === 'next-only') {
+    primaryAction = (
+      <Pressable
+        testID="tutorial-next-step"
+        onPress={buttonMode.onNext}
+        hitSlop={8}
+        style={({ pressed }) => [
+          useCompactActions ? styles.compactBtn : styles.actionBtn,
+          { backgroundColor: palette.accent, borderColor: palette.accent },
+          pressed && { opacity: 0.7 },
+        ]}>
+        {useCompactActions && (
+          <MaterialCommunityIcons
+            name="arrow-right"
+            size={scaleBySizeClass(20, sizeClass)}
+            color={palette.textOnAccent}
+          />
+        )}
+        {!useCompactActions && (
+          <ThemedText style={[styles.actionBtnText, { color: palette.textOnAccent }]}>
+            {buttonMode.label ?? 'NEXT STEP'}
+          </ThemedText>
+        )}
+      </Pressable>
+    );
   }
 
   return (
@@ -103,28 +135,34 @@ export const LastActionCardFrame = ({
           {primaryAction}
 
           {showMore && (
-            <Pressable
-              testID="tracker-more-button"
-              onPress={buttonMode.onMore}
-              hitSlop={8}
-              style={({ pressed }) => [
-                useCompactActions ? styles.compactBtn : styles.actionBtn,
-                { backgroundColor: 'transparent', borderColor: palette.overlay10 },
-                pressed && { opacity: 0.7 },
-              ]}>
-              {useCompactActions && (
-                <MaterialCommunityIcons
-                  name="dots-horizontal"
-                  size={scaleBySizeClass(20, sizeClass)}
-                  color={palette.textMuted}
-                />
-              )}
-              {!useCompactActions && (
-                <ThemedText style={[styles.actionBtnText, { color: palette.textInverse }]}>
-                  MORE
-                </ThemedText>
-              )}
-            </Pressable>
+            <View style={styles.moreButtonWrap}>
+              {moreAdornment}
+              <Pressable
+                testID="tracker-more-button"
+                onPress={buttonMode.onMore}
+                hitSlop={8}
+                style={({ pressed }) => [
+                  useCompactActions ? styles.compactBtn : styles.actionBtn,
+                  {
+                    backgroundColor: 'transparent',
+                    borderColor: palette.overlay10,
+                  },
+                  pressed && { opacity: 0.7 },
+                ]}>
+                {useCompactActions && (
+                  <MaterialCommunityIcons
+                    name="dots-horizontal"
+                    size={scaleBySizeClass(20, sizeClass)}
+                    color={palette.textMuted}
+                  />
+                )}
+                {!useCompactActions && (
+                  <ThemedText style={[styles.actionBtnText, { color: palette.textInverse }]}>
+                    MORE
+                  </ThemedText>
+                )}
+              </Pressable>
+            </View>
           )}
         </View>
       </View>
@@ -203,6 +241,9 @@ function createStyles(sizeClass: SizeClass, palette: Palette) {
       fontSize: scaleBySizeClass(12, sizeClass),
       letterSpacing: 0.5,
       textTransform: 'uppercase',
+    },
+    moreButtonWrap: {
+      position: 'relative',
     },
   });
 }

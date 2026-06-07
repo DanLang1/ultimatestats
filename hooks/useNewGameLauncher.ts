@@ -2,6 +2,7 @@ import { useActiveGameSession } from '@/hooks/useActiveGameSession';
 import { useGameSessionActions } from '@/hooks/useGameSessionActions';
 import { router } from 'expo-router';
 import { useState } from 'react';
+import { useTutorialStore } from '@/store/tutorialStore';
 
 type GameMode = 'advanced' | 'basic';
 
@@ -18,7 +19,10 @@ export function useNewGameLauncher() {
 
     if (mode === 'advanced') {
       startAdvancedGameSession();
-      router.replace('/advancedTracking/PreGameConfirm');
+      const hasSeenAdvancedTutorial = useTutorialStore.getState().hasSeenAdvancedTutorial;
+      router.replace(
+        hasSeenAdvancedTutorial ? '/advancedTracking/PreGameConfirm' : '/TutorialAdvancedTracker',
+      );
       return;
     }
 

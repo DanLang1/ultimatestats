@@ -6,6 +6,8 @@ interface TutorialState {
   // Persisted
   hasSeenOnboarding: boolean;
   hasSeenStatsTutorial: boolean;
+  hasSeenAdvancedTutorial: boolean;
+  hasSeenAdvancedVoiceHint: boolean;
   shouldShowStatsTutorialOnNextGameStart: boolean;
   hasSeenShowcaseHint: boolean;
   hasSeenLongPressSelectHint: boolean;
@@ -18,6 +20,8 @@ interface TutorialState {
   queueStatsTutorialForNextGameStart: () => void;
   closeStatsTutorial: () => void;
   resetStatsTutorial: () => void;
+  completeAdvancedTutorial: () => void;
+  dismissAdvancedVoiceHint: () => void;
   dismissShowcaseHint: () => void;
   dismissLongPressSelectHint: () => void;
   setHasHydrated: (hasHydrated: boolean) => void;
@@ -28,6 +32,8 @@ export const useTutorialStore = create<TutorialState>()(
     (set) => ({
       hasSeenOnboarding: false,
       hasSeenStatsTutorial: false,
+      hasSeenAdvancedTutorial: false,
+      hasSeenAdvancedVoiceHint: false,
       shouldShowStatsTutorialOnNextGameStart: false,
       hasSeenShowcaseHint: false,
       hasSeenLongPressSelectHint: false,
@@ -52,6 +58,10 @@ export const useTutorialStore = create<TutorialState>()(
           shouldShowStatsTutorialOnNextGameStart: false,
         }),
 
+      completeAdvancedTutorial: () => set({ hasSeenAdvancedTutorial: true }),
+
+      dismissAdvancedVoiceHint: () => set({ hasSeenAdvancedVoiceHint: true }),
+
       dismissShowcaseHint: () => set({ hasSeenShowcaseHint: true }),
 
       dismissLongPressSelectHint: () => set({ hasSeenLongPressSelectHint: true }),
@@ -64,6 +74,8 @@ export const useTutorialStore = create<TutorialState>()(
       partialize: (state) => ({
         hasSeenOnboarding: state.hasSeenOnboarding,
         hasSeenStatsTutorial: state.hasSeenStatsTutorial,
+        hasSeenAdvancedTutorial: state.hasSeenAdvancedTutorial,
+        hasSeenAdvancedVoiceHint: state.hasSeenAdvancedVoiceHint,
         shouldShowStatsTutorialOnNextGameStart: state.shouldShowStatsTutorialOnNextGameStart,
         hasSeenShowcaseHint: state.hasSeenShowcaseHint,
         hasSeenLongPressSelectHint: state.hasSeenLongPressSelectHint,

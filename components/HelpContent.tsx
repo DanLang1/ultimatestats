@@ -1,13 +1,13 @@
+import { ThemedText } from '@/components/ThemedText';
 import FlashingIcon from '@/components/ui/FlashingIcon';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { Fonts } from '@/theme/theme';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router } from 'expo-router';
 import React from 'react';
 import { Linking, Pressable, StyleSheet, View } from 'react-native';
-import { ThemedText } from '@/components/ThemedText';
-import { Fonts } from '@/theme/theme';
 
 interface HelpContentProps {
   showActionBarLegend?: boolean;
@@ -225,6 +225,33 @@ export default function HelpContent({ showActionBarLegend = true }: HelpContentP
           </ThemedText>
           <ThemedText style={[styles.tutorialButtonSubtitle, { color: palette.textMuted }]}>
             Learn how to use U-Stat
+          </ThemedText>
+        </View>
+        <MaterialCommunityIcons
+          name="chevron-right"
+          size={metrics.buttonIconSize}
+          color={palette.textMuted}
+        />
+      </Pressable>
+
+      <View style={styles.buttonSpacer} />
+
+      <Pressable
+        style={[styles.tutorialButton, { backgroundColor: palette.overlay08 }]}
+        onPress={() => {
+          router.push({ pathname: '/TutorialAdvancedTracker', params: { origin: 'help' } });
+        }}>
+        <MaterialCommunityIcons
+          name="gesture-swipe-vertical"
+          size={metrics.buttonIconSize}
+          color={palette.accent}
+        />
+        <View style={styles.tutorialButtonContent}>
+          <ThemedText style={[styles.tutorialButtonTitle, { color: palette.textInverse }]}>
+            Advanced Guide
+          </ThemedText>
+          <ThemedText style={[styles.tutorialButtonSubtitle, { color: palette.textMuted }]}>
+            Advanced tracking gestures
           </ThemedText>
         </View>
         <MaterialCommunityIcons

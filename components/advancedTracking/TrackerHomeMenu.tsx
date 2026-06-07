@@ -17,6 +17,7 @@ interface TrackerHomeMenuProps {
   onGameClockPause: () => void;
   onStartSecondHalfEarly: () => void;
   onEndGameEarly: () => void;
+  onAdvancedTutorial: () => void;
 }
 
 export const TrackerHomeMenu = ({
@@ -27,6 +28,7 @@ export const TrackerHomeMenu = ({
   onGameClockPause,
   onStartSecondHalfEarly,
   onEndGameEarly,
+  onAdvancedTutorial,
 }: TrackerHomeMenuProps) => {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
@@ -60,6 +62,11 @@ export const TrackerHomeMenu = ({
   const handleEndGameEarly = () => {
     onClose();
     onEndGameEarly();
+  };
+
+  const handleAdvancedTutorial = () => {
+    onClose();
+    onAdvancedTutorial();
   };
 
   return (
@@ -100,6 +107,13 @@ export const TrackerHomeMenu = ({
             icon="chart-bar"
             label="View Stats"
             onPress={handleViewStats}
+          />
+
+          <BottomSheetActionRow
+            testID="tracker-menu-advanced-tutorial"
+            icon="gesture-swipe-vertical"
+            label="Advanced Tutorial"
+            onPress={handleAdvancedTutorial}
           />
 
           <View style={[styles.section, { borderTopColor: palette.overlay10 }]}>

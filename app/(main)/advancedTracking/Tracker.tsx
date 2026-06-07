@@ -177,6 +177,12 @@ export default function AdvancedTrackerScreen() {
       params: { mode: 'earlyEnd' },
     });
   };
+  const handleAdvancedTutorial = () => {
+    router.push({
+      pathname: '/TutorialAdvancedTracker',
+      params: { origin: 'tracker' },
+    });
+  };
 
   const surfaceState = getTrackerSurfaceState({
     game,
@@ -255,6 +261,7 @@ export default function AdvancedTrackerScreen() {
         onGameClockPause={handleGamePause}
         onStartSecondHalfEarly={triggerHalftimeEarly}
         onEndGameEarly={handleEndGameEarly}
+        onAdvancedTutorial={handleAdvancedTutorial}
       />
 
       {!activeStoppage && !activeGameClockPause && canChangeLine && (
