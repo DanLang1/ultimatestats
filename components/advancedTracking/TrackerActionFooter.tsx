@@ -104,7 +104,9 @@ export const TrackerActionFooter = ({
   } else if (voiceControls != null) {
     content = (
       <View style={styles.voiceStack}>
-        <TrackerVoiceFeedbackPill controls={voiceControls} />
+        <View pointerEvents="none" style={styles.voiceFeedbackOverlay}>
+          <TrackerVoiceFeedbackPill controls={voiceControls} />
+        </View>
         <TrackerVoiceButton controls={voiceControls} disabled={false} />
       </View>
     );
@@ -126,7 +128,15 @@ function createStyles(sizeClass: SizeClass, bottomInset: number) {
       paddingBottom: bottomInset + scaleBySizeClass(footerBottomPadding, sizeClass),
     },
     voiceStack: {
-      gap: 8,
+      position: 'relative',
+    },
+    voiceFeedbackOverlay: {
+      position: 'absolute',
+      bottom: '100%',
+      left: 0,
+      right: 0,
+      paddingBottom: 8,
+      zIndex: 20,
     },
     pointOverRow: {
       flex: 1,

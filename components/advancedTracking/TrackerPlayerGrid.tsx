@@ -23,9 +23,11 @@ interface TrackerPlayerGridProps {
   handlers: TrackerPlayerGridHandlers;
   onLineChangePress: () => void;
   canChangeLine: boolean;
+  availableHeight: number;
 }
 
-const MAX_CHIP_WIDTH = { small: 180, medium: 220, large: 260 } as const;
+const PORTRAIT_MAX_CHIP_WIDTH = { small: 180, medium: 170, large: 190 } as const;
+const LANDSCAPE_MAX_CHIP_WIDTH = { small: 180, medium: 220, large: 260 } as const;
 const PORTRAIT_COLUMNS = 3;
 const LANDSCAPE_COLUMNS = 5;
 
@@ -55,18 +57,15 @@ export const TrackerPlayerGrid = ({
   handlers,
   onLineChangePress,
   canChangeLine,
+  availableHeight,
 }: TrackerPlayerGridProps) => {
   const { width, sizeClass, isLandscape } = useLayout();
 
   const columns = isLandscape ? LANDSCAPE_COLUMNS : PORTRAIT_COLUMNS;
   const horizontalPadding = scaleBySizeClass(20, sizeClass);
+  const verticalPadding = scaleBySizeClass(12, sizeClass);
   const hPadding = horizontalPadding * 2;
   const gap = scaleBySizeClass(isLandscape ? 10 : 12, sizeClass);
-  const availableChipWidth = Math.floor((width - hPadding - gap * (columns - 1)) / columns);
-  const chipWidth = Math.min(availableChipWidth, getSizeClassValue(MAX_CHIP_WIDTH, sizeClass));
-  const gridWidth = chipWidth * columns + gap * (columns - 1) + hPadding;
-
-  const styles = createStyles(sizeClass, gap);
 
   const items: (Participant | 'unknown' | 'line-action' | null)[] = [
     ...activeParticipants,
@@ -78,6 +77,22 @@ export const TrackerPlayerGrid = ({
   while (items.length % columns !== 0) {
     items.push(null);
   }
+
+  const rows = items.length / columns;
+  const availableChipWidth = Math.floor((width - hPadding - gap * (columns - 1)) / columns);
+  const availableChipHeight =
+    availableHeight > 0
+      ? Math.floor((availableHeight - verticalPadding * 2 - gap * (rows - 1)) / rows)
+      : availableChipWidth;
+  const maxChipWidths = isLandscape ? LANDSCAPE_MAX_CHIP_WIDTH : PORTRAIT_MAX_CHIP_WIDTH;
+  const chipWidth = Math.min(
+    availableChipWidth,
+    availableChipHeight,
+    getSizeClassValue(maxChipWidths, sizeClass),
+  );
+  const gridWidth = chipWidth * columns + gap * (columns - 1) + hPadding;
+
+  const styles = createStyles(sizeClass, gap);
 
   return (
     <View style={[styles.gridContainer, { width: gridWidth }]}>

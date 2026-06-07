@@ -6,7 +6,7 @@ import { formatEfficiency } from '@/lib/playingTimeStatsUtils';
 import { Fonts } from '@/theme/theme';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React, { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { LayoutChangeEvent, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 type SortKey = keyof AdvancedPlayerStats | 'name';
 type StatGroupKey = 'core' | 'throwing' | 'touches' | 'points';
@@ -150,6 +150,7 @@ export default function AdvancedStatsTable({
   });
   const [activeGroupKey, setActiveGroupKey] = useState<StatGroupKey>('core');
   const [showLegend, setShowLegend] = useState(false);
+  const [tableWidth, setTableWidth] = useState(0);
   const styles = createStyles(isLandscape, sizeClass);
 
   const getName = (id: string) => participantNames.get(id) ?? id;
@@ -233,6 +234,14 @@ export default function AdvancedStatsTable({
   };
 
   const scrollableMinWidth = visibleStatColumns.reduce((sum, c) => sum + (c.width ?? 58), 0);
+  const availableStatsWidth = Math.max(0, tableWidth - nameColumnWidth);
+  const extraColumnWidth = Math.max(0, availableStatsWidth - scrollableMinWidth);
+  const distributedExtraWidth = extraColumnWidth / visibleStatColumns.length;
+  const getColumnWidth = (column: ColumnDef) => (column.width ?? 58) + distributedExtraWidth;
+
+  const handleTableLayout = (event: LayoutChangeEvent) => {
+    setTableWidth(event.nativeEvent.layout.width);
+  };
 
   return (
     <View>
@@ -304,6 +313,7 @@ export default function AdvancedStatsTable({
       )}
 
       <View
+        onLayout={handleTableLayout}
         style={[styles.tableContainer, { borderColor: palette.overlay10, flexDirection: 'row' }]}>
         {/* Fixed name column */}
         <View>
@@ -379,7 +389,7 @@ export default function AdvancedStatsTable({
                   key={String(col.key)}
                   style={[
                     styles.headerCell,
-                    { width: col.width ?? 58 },
+                    { width: getColumnWidth(col) },
                     sortConfig.key === col.key && { backgroundColor: palette.overlay05 },
                   ]}
                   onPress={() => handleSort(col.key)}>
@@ -417,7 +427,7 @@ export default function AdvancedStatsTable({
                       key={String(col.key)}
                       style={[
                         styles.cell,
-                        { width: col.width ?? 58, color },
+                        { width: getColumnWidth(col), color },
                         col.key === 'plusMinus' && styles.plusMinusCell,
                       ]}>
                       {col.key === 'plusMinus' && stats.plusMinus > 0

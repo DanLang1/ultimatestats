@@ -64,9 +64,9 @@ export const BetweenPointDisplay = ({
   onStartNextPoint,
 }: BetweenPointDisplayProps) => {
   const { palette } = useTheme();
-  const { sizeClass } = useLayout();
+  const { isLandscape, sizeClass } = useLayout();
 
-  const styles = createStyles(sizeClass);
+  const styles = createStyles(sizeClass, isLandscape);
   const { endBetweenPointTimeout, undoLastOperation } = useAdvancedTrackingStore();
 
   const point = getCurrentPoint(game);
@@ -297,7 +297,7 @@ export const BetweenPointDisplay = ({
                       name={player.name}
                       number={player.number}
                       matchingType={player.matchingType}
-                      compact={sizeClass === 'small'}
+                      compact={sizeClass === 'small' || isLandscape}
                       onPress={() => {}}
                     />
                   ))}
@@ -349,35 +349,37 @@ export const BetweenPointDisplay = ({
   );
 };
 
-function createStyles(sizeClass: SizeClass) {
+function createStyles(sizeClass: SizeClass, isLandscape: boolean) {
+  const densitySizeClass = isLandscape ? 'small' : sizeClass;
+
   return StyleSheet.create({
     container: { flex: 1, justifyContent: 'space-between' },
     summaryContent: {
       alignItems: 'center',
-      paddingTop: scaleBySizeClass(SUMMARY_TOP_PADDING, sizeClass),
-      paddingHorizontal: scaleBySizeClass(24, sizeClass),
+      paddingTop: scaleBySizeClass(SUMMARY_TOP_PADDING, densitySizeClass),
+      paddingHorizontal: scaleBySizeClass(24, densitySizeClass),
       width: '100%',
       flexShrink: 1,
     },
     summaryBand: {
       width: '100%',
       maxWidth: getSizeClassValue(SUMMARY_MAX_WIDTH, sizeClass),
-      gap: scaleBySizeClass(16, sizeClass),
+      gap: scaleBySizeClass(16, densitySizeClass),
     },
     summaryHeaderColumn: {
       alignItems: 'center',
-      gap: scaleBySizeClass(8, sizeClass),
+      gap: scaleBySizeClass(8, densitySizeClass),
     },
     scoredRow: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
-      gap: scaleBySizeClass(8, sizeClass),
+      gap: scaleBySizeClass(8, densitySizeClass),
       width: '100%',
     },
     scoredText: {
       fontFamily: Fonts.black,
-      fontSize: getSizeClassValue(SCORED_FONT_SIZE, sizeClass),
+      fontSize: getSizeClassValue(SCORED_FONT_SIZE, densitySizeClass),
       letterSpacing: 0.5,
       textTransform: 'uppercase',
       textAlign: 'center',
@@ -385,7 +387,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     outcomeText: {
       fontFamily: Fonts.black,
-      fontSize: getSizeClassValue(OUTCOME_FONT_SIZE, sizeClass),
+      fontSize: getSizeClassValue(OUTCOME_FONT_SIZE, densitySizeClass),
       letterSpacing: 0.3,
       textAlign: 'center',
       textTransform: 'uppercase',
@@ -393,35 +395,35 @@ function createStyles(sizeClass: SizeClass) {
     metricCardRow: {
       flexDirection: 'row',
       justifyContent: 'center',
-      gap: scaleBySizeClass(12, sizeClass),
+      gap: scaleBySizeClass(12, densitySizeClass),
       width: '100%',
-      marginTop: scaleBySizeClass(6, sizeClass),
+      marginTop: scaleBySizeClass(6, densitySizeClass),
       flexWrap: 'wrap',
     },
     metricCard: {
       width: getSizeClassValue(METRIC_CARD_WIDTH, sizeClass),
-      minHeight: getSizeClassValue(METRIC_CARD_HEIGHT, sizeClass),
-      borderRadius: scaleBySizeClass(8, sizeClass),
+      minHeight: getSizeClassValue(METRIC_CARD_HEIGHT, densitySizeClass),
+      borderRadius: scaleBySizeClass(8, densitySizeClass),
       borderCurve: 'continuous',
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
-      gap: scaleBySizeClass(8, sizeClass),
-      paddingHorizontal: scaleBySizeClass(12, sizeClass),
+      gap: scaleBySizeClass(8, densitySizeClass),
+      paddingHorizontal: scaleBySizeClass(12, densitySizeClass),
     },
     metricTextBlock: {
       flexDirection: 'row',
       alignItems: 'baseline',
-      gap: scaleBySizeClass(4, sizeClass),
+      gap: scaleBySizeClass(4, densitySizeClass),
     },
     metricValue: {
       fontFamily: Fonts.black,
-      fontSize: getSizeClassValue(METRIC_VALUE_FONT_SIZE, sizeClass),
+      fontSize: getSizeClassValue(METRIC_VALUE_FONT_SIZE, densitySizeClass),
       fontVariant: ['tabular-nums'],
     },
     metricLabel: {
       fontFamily: Fonts.black,
-      fontSize: getSizeClassValue(METRIC_LABEL_FONT_SIZE, sizeClass),
+      fontSize: getSizeClassValue(METRIC_LABEL_FONT_SIZE, densitySizeClass),
       textTransform: 'uppercase',
       letterSpacing: 0.3,
     },
@@ -432,37 +434,37 @@ function createStyles(sizeClass: SizeClass) {
     statsRow: {
       flexDirection: 'row',
       justifyContent: 'space-between',
-      gap: scaleBySizeClass(10, sizeClass),
+      gap: scaleBySizeClass(10, densitySizeClass),
       width: '100%',
     },
     statItem: {
       alignItems: 'center',
-      gap: scaleBySizeClass(6, sizeClass),
+      gap: scaleBySizeClass(6, densitySizeClass),
       flex: 1,
     },
     statLabel: {
       fontFamily: Fonts.bold,
-      fontSize: getSizeClassValue(ATTRIBUTION_LABEL_FONT_SIZE, sizeClass),
+      fontSize: getSizeClassValue(ATTRIBUTION_LABEL_FONT_SIZE, densitySizeClass),
       textTransform: 'uppercase',
       letterSpacing: 0.5,
     },
     statName: {
       fontFamily: Fonts.bold,
-      fontSize: getSizeClassValue(ATTRIBUTION_NAME_FONT_SIZE, sizeClass),
+      fontSize: getSizeClassValue(ATTRIBUTION_NAME_FONT_SIZE, densitySizeClass),
       textAlign: 'center',
     },
     lastPointSection: {
-      gap: scaleBySizeClass(10, sizeClass),
+      gap: scaleBySizeClass(10, densitySizeClass),
     },
     lastPointHeader: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
-      gap: scaleBySizeClass(6, sizeClass),
+      gap: scaleBySizeClass(6, densitySizeClass),
     },
     lastPointLabel: {
       fontFamily: Fonts.bold,
-      fontSize: getSizeClassValue(LAST_POINT_LABEL_FONT_SIZE, sizeClass),
+      fontSize: getSizeClassValue(LAST_POINT_LABEL_FONT_SIZE, densitySizeClass),
       textTransform: 'uppercase',
       letterSpacing: 0.6,
     },
@@ -470,12 +472,12 @@ function createStyles(sizeClass: SizeClass) {
       flexDirection: 'row',
       flexWrap: 'wrap',
       justifyContent: 'center',
-      gap: scaleBySizeClass(8, sizeClass),
+      gap: scaleBySizeClass(8, densitySizeClass),
     },
     timeoutContent: {
       alignItems: 'center',
-      paddingTop: scaleBySizeClass(80, sizeClass),
-      paddingHorizontal: scaleBySizeClass(32, sizeClass),
+      paddingTop: scaleBySizeClass(isLandscape ? 24 : 80, densitySizeClass),
+      paddingHorizontal: scaleBySizeClass(32, densitySizeClass),
       width: '100%',
       flex: 1,
     },
@@ -483,43 +485,43 @@ function createStyles(sizeClass: SizeClass) {
       width: '100%',
       maxWidth: getSizeClassValue(TIMEOUT_MAX_WIDTH, sizeClass),
       alignItems: 'center',
-      gap: scaleBySizeClass(8, sizeClass),
+      gap: scaleBySizeClass(8, densitySizeClass),
     },
     sideLabel: {
       fontFamily: Fonts.bold,
-      fontSize: scaleBySizeClass(12, sizeClass),
+      fontSize: scaleBySizeClass(12, densitySizeClass),
       letterSpacing: 2,
     },
     iconRow: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: scaleBySizeClass(8, sizeClass),
+      gap: scaleBySizeClass(8, densitySizeClass),
     },
     timeoutLabel: {
       fontFamily: Fonts.black,
-      fontSize: scaleBySizeClass(16, sizeClass),
+      fontSize: scaleBySizeClass(16, densitySizeClass),
       letterSpacing: 3,
     },
     countdownTimer: {
       fontFamily: Fonts.black,
-      fontSize: scaleBySizeClass(72, sizeClass),
+      fontSize: scaleBySizeClass(72, densitySizeClass),
       fontVariant: ['tabular-nums'],
       letterSpacing: 2,
     },
     buttonRow: {
       flexDirection: 'row',
-      gap: scaleBySizeClass(12, sizeClass),
+      gap: scaleBySizeClass(12, densitySizeClass),
       width: '100%',
       maxWidth: getSizeClassValue(ACTION_ROW_MAX_WIDTH, sizeClass),
     },
     bottomActions: {
       alignItems: 'center',
       width: '100%',
-      paddingHorizontal: scaleBySizeClass(24, sizeClass),
-      paddingBottom: scaleBySizeClass(12, sizeClass),
+      paddingHorizontal: scaleBySizeClass(24, densitySizeClass),
+      paddingBottom: scaleBySizeClass(12, densitySizeClass),
     },
     actionBtn: {
-      paddingVertical: scaleBySizeClass(20, sizeClass),
+      paddingVertical: scaleBySizeClass(20, densitySizeClass),
       borderWidth: 1,
       borderRadius: 16,
       borderCurve: 'continuous',
@@ -528,7 +530,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     iconBtn: {
       width: getSizeClassValue(ICON_BUTTON_WIDTH, sizeClass),
-      paddingVertical: scaleBySizeClass(20, sizeClass),
+      paddingVertical: scaleBySizeClass(20, densitySizeClass),
       borderWidth: 1,
       borderRadius: 16,
       borderCurve: 'continuous',
@@ -539,7 +541,7 @@ function createStyles(sizeClass: SizeClass) {
     endTimeoutBtn: { flex: 1.6 },
     actionBtnText: {
       fontFamily: Fonts.black,
-      fontSize: getSizeClassValue(ACTION_TEXT_FONT_SIZE, sizeClass),
+      fontSize: getSizeClassValue(ACTION_TEXT_FONT_SIZE, densitySizeClass),
       letterSpacing: 1,
       textAlign: 'center',
     },
