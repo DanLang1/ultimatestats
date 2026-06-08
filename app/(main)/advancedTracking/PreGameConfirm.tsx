@@ -9,6 +9,7 @@ import { useGameSessionActions } from '@/hooks/useGameSessionActions';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { GameSide, Participant } from '@/lib/advancedTracking/types';
 import { getContrastingTextColor } from '@/lib/colorUtils';
+import { MAX_TEAM_NAME_LENGTH } from '@/lib/constants';
 import { formatRatioFull, GenderRatio } from '@/lib/genderRatioUtils';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { useGameStore } from '@/store/gameStore';
@@ -32,6 +33,7 @@ export default function AdvancedPreGameConfirm() {
   const {
     currentTeam,
     team2Name,
+    setTeam2Name,
     gameTo,
     setGameTo,
     setTimerTimeLeft,
@@ -50,8 +52,6 @@ export default function AdvancedPreGameConfirm() {
     setGenderRatioEnabled,
     firstPointRatio,
     setFirstPointRatio,
-    numPlayers,
-    setNumPlayers,
     hardCapMins,
     setHardCapMins,
     softCapMins,
@@ -73,6 +73,8 @@ export default function AdvancedPreGameConfirm() {
   const timeoutCount = team1Timeouts.length;
 
   const [receivingTeam, setReceivingTeam] = useState<'us' | 'them' | ''>('');
+  const [opponentNameDraft, setOpponentNameDraft] = useState(team2Name);
+  const [isEditingOpponentName, setIsEditingOpponentName] = useState(false);
   const [teamOrbitRunKey, setTeamOrbitRunKey] = useState(0);
   const [ratioOrbitRunKey, setRatioOrbitRunKey] = useState(0);
 
@@ -134,6 +136,16 @@ export default function AdvancedPreGameConfirm() {
   }) => {
     openPicker(config);
     router.push('/NumberPickerModal');
+  };
+
+  const handleOpponentNameCommit = () => {
+    const newName = opponentNameDraft.trim();
+    if (newName) {
+      setTeam2Name(newName);
+    } else {
+      setOpponentNameDraft(team2Name);
+    }
+    setIsEditingOpponentName(false);
   };
 
   return (
@@ -241,24 +253,6 @@ export default function AdvancedPreGameConfirm() {
           </EditableSettingCard>
 
           <EditableSettingCard
-            icon="account-multiple-outline"
-            label="Players"
-            onPress={() =>
-              openNumberPicker({
-                value: numPlayers,
-                min: 1,
-                max: 7,
-                label: 'Players',
-                quickOptions: [3, 5, 7],
-                onChange: setNumPlayers,
-              })
-            }>
-            <ThemedText style={[styles.settingValue, { color: palette.textInverse }]}>
-              {numPlayers}v{numPlayers}
-            </ThemedText>
-          </EditableSettingCard>
-
-          <EditableSettingCard
             icon="swap-vertical"
             label="Halftime"
             isActive={autoHalftimeEnabled}
@@ -298,6 +292,46 @@ export default function AdvancedPreGameConfirm() {
           </EditableSettingCard>
         </View>
 
+        <SegmentedControl
+          label="WHO IS RECEIVING?"
+          options={[
+            {
+              value: 'us',
+              label: currentTeam?.name ?? 'Us',
+              activeColor: t1Color,
+              activeTextColor: t1TextColor,
+            },
+            {
+              value: 'them',
+              label: team2Name || 'Them',
+              activeColor: t2Color,
+              activeTextColor: t2TextColor,
+              actionIcon: 'pencil-outline',
+              onAction: () => {
+                setOpponentNameDraft(team2Name || 'Them');
+                setIsEditingOpponentName(true);
+              },
+              isEditing: isEditingOpponentName,
+              editValue: opponentNameDraft,
+              onEditValueChange: setOpponentNameDraft,
+              onEditComplete: handleOpponentNameCommit,
+              maxEditLength: MAX_TEAM_NAME_LENGTH,
+            },
+          ]}
+          value={receivingTeam}
+          onChange={(value) => {
+            setReceivingTeam(value as 'us' | 'them');
+            setTeamOrbitRunKey((prev) => prev + 1);
+          }}
+          showRequired={receivingTeam === ''}
+          highlightBorder={receivingTeam === ''}
+          highlightColor={palette.warning}
+          highlightLeftColor={receivingTeam === '' ? t1Color : undefined}
+          highlightRightColor={receivingTeam === '' ? t2Color : undefined}
+          attentionColor={selectedTeamOrbitColor}
+          attentionRunKey={teamOrbitRunKey}
+        />
+
         {genderRatioEnabled && (
           <SegmentedControl
             label="STARTING GENDER RATIO"
@@ -329,39 +363,6 @@ export default function AdvancedPreGameConfirm() {
             attentionRunKey={ratioOrbitRunKey}
           />
         )}
-
-        <ThemedText style={[styles.sectionTitle, { color: palette.textMuted }]}>
-          STARTING OPTIONS
-        </ThemedText>
-        <SegmentedControl
-          label="WHO IS RECEIVING?"
-          options={[
-            {
-              value: 'us',
-              label: currentTeam?.name ?? 'Us',
-              activeColor: t1Color,
-              activeTextColor: t1TextColor,
-            },
-            {
-              value: 'them',
-              label: team2Name || 'Them',
-              activeColor: t2Color,
-              activeTextColor: t2TextColor,
-            },
-          ]}
-          value={receivingTeam}
-          onChange={(value) => {
-            setReceivingTeam(value as 'us' | 'them');
-            setTeamOrbitRunKey((prev) => prev + 1);
-          }}
-          showRequired={receivingTeam === ''}
-          highlightBorder={receivingTeam === ''}
-          highlightColor={palette.warning}
-          highlightLeftColor={receivingTeam === '' ? t1Color : undefined}
-          highlightRightColor={receivingTeam === '' ? t2Color : undefined}
-          attentionColor={selectedTeamOrbitColor}
-          attentionRunKey={teamOrbitRunKey}
-        />
 
         <Pressable
           onPress={handleSetLine}

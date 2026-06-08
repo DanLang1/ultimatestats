@@ -1,7 +1,7 @@
+import { NewGameSheet } from '@/components/new-game/NewGameSheet';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
-import { NewGameSheet } from '@/components/new-game/NewGameSheet';
 import { useTheme } from '@/context/ThemeContext';
 import { useActiveGameSession } from '@/hooks/useActiveGameSession';
 import { useDashboardSession } from '@/hooks/useDashboardSession';
@@ -204,7 +204,7 @@ export default function DashboardScreen() {
         {
           icon: 'tshirt-crew-outline' as const,
           label: 'Partners',
-          description: 'Setup team order with DH Ultimate',
+          description: 'Checkout DH Ultimate',
           onPress: () => {
             router.push('/Partners');
           },

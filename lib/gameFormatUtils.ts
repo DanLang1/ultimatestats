@@ -56,15 +56,9 @@ export function createFormatSections(rows: FormatRow[]): FormatSection[] {
     {
       title: 'GAME RULES',
       rows: rows.filter((row) =>
-        [
-          'Game To',
-          'Hard Cap',
-          'Soft Cap',
-          'Halftime',
-          'Timeouts',
-          'On Field',
-          'Gender Ratio',
-        ].includes(row.label),
+        ['Game To', 'Hard Cap', 'Soft Cap', 'Halftime', 'Timeouts', 'Gender Ratio'].includes(
+          row.label,
+        ),
       ),
     },
     {

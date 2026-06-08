@@ -51,14 +51,8 @@ export default function GameFormatScreen() {
   } = useGameStore();
   const { currentGame: advancedGame } = useAdvancedTrackingStore();
   const openPicker = useNumberPickerStore((state) => state.open);
-  const {
-    hardCapMins,
-    softCapMins,
-    numPlayers,
-    genderRatioEnabled,
-    firstPointRatio,
-    lineCallingEnabled,
-  } = useSettingsStore();
+  const { hardCapMins, softCapMins, genderRatioEnabled, firstPointRatio, lineCallingEnabled } =
+    useSettingsStore();
   if (activeGameType === null) {
     return <Redirect href="/Dashboard" />;
   }
@@ -87,7 +81,6 @@ export default function GameFormatScreen() {
       { label: 'Game To', value: formatValue(format?.gameTo) },
       { label: 'Hard Cap', value: `${hardCapMins} min` },
       { label: 'Soft Cap', value: `${softCapTime} min` },
-      { label: 'On Field', value: `${numPlayers}v${numPlayers}` },
       {
         label: 'Halftime',
         value: formatAdvancedHalftime(advancedGame),
@@ -147,7 +140,6 @@ export default function GameFormatScreen() {
       },
       { label: 'Hard Cap', value: `${hardCapMins} min` },
       { label: 'Soft Cap', value: `${softCapTime} min` },
-      { label: 'On Field', value: `${numPlayers}v${numPlayers}` },
       {
         label: 'Halftime',
         value: formatBasicHalftime(events, autoHalftimeEnabled, baseGameTo),

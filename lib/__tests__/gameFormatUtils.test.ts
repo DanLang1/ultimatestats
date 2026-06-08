@@ -175,20 +175,12 @@ describe('createFormatSections', () => {
 
   describe('GAME RULES section', () => {
     it('puts all game rule labels into GAME RULES', () => {
-      const labels = [
-        'Game To',
-        'Hard Cap',
-        'Soft Cap',
-        'Halftime',
-        'Timeouts',
-        'On Field',
-        'Gender Ratio',
-      ];
+      const labels = ['Game To', 'Hard Cap', 'Soft Cap', 'Halftime', 'Timeouts', 'Gender Ratio'];
       const rows = labels.map(mockRow);
       const sections = createFormatSections(rows);
       const rulesSection = sections.find((s) => s.title === 'GAME RULES');
       expect(rulesSection).toBeDefined();
-      expect(rulesSection!.rows).toHaveLength(7);
+      expect(rulesSection!.rows).toHaveLength(6);
     });
   });
 

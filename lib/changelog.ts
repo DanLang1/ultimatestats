@@ -10,6 +10,7 @@ export const CHANGELOG: ChangelogEntry[] = [
     date: 'June 7, 2026',
     changes: [
       'Advanced Tracking Beta (now tracks passes, updated stats, and a preview of voice commands)',
+      'Added jersey numbers for players (jersey numbers work best for voice tracking, names are less consistent)',
       'Added partner page for DH Ultimate',
     ],
   },

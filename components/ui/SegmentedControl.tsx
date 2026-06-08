@@ -6,7 +6,7 @@ import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React, { useEffect, useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 import { Fonts } from '@/theme/theme';
 import Animated from 'react-native-reanimated';
@@ -16,6 +16,13 @@ interface SegmentOption<T extends string = string> {
   label: string;
   activeColor?: string;
   activeTextColor?: string;
+  actionIcon?: keyof typeof MaterialCommunityIcons.glyphMap;
+  onAction?: () => void;
+  isEditing?: boolean;
+  editValue?: string;
+  onEditValueChange?: (value: string) => void;
+  onEditComplete?: () => void;
+  maxEditLength?: number;
 }
 
 interface SegmentedControlProps<T extends string = string> {
@@ -147,24 +154,72 @@ export function SegmentedControl<T extends string = string>({
                 {!isFirst && (
                   <View style={[styles.separator, { backgroundColor: palette.overlay20 }]} />
                 )}
-                <Pressable
+                <View
                   style={[
-                    styles.button,
+                    styles.segment,
                     isActive && { backgroundColor: option.activeColor ?? palette.accent },
-                    disabled && styles.buttonDisabled,
-                  ]}
-                  onPress={() => onChange(option.value)}
-                  disabled={disabled}>
-                  <ThemedText
-                    style={[
-                      styles.buttonText,
-                      { color: palette.textMuted },
-                      isActive && { color: option.activeTextColor ?? palette.textOnAccent },
-                    ]}
-                    numberOfLines={1}>
-                    {option.label}
-                  </ThemedText>
-                </Pressable>
+                  ]}>
+                  {option.isEditing ? (
+                    <TextInput
+                      autoFocus
+                      value={option.editValue}
+                      onChangeText={option.onEditValueChange}
+                      onBlur={option.onEditComplete}
+                      onSubmitEditing={option.onEditComplete}
+                      returnKeyType="done"
+                      maxLength={option.maxEditLength}
+                      selectTextOnFocus
+                      style={[
+                        styles.editInput,
+                        {
+                          color: isActive
+                            ? (option.activeTextColor ?? palette.textOnAccent)
+                            : palette.textInverse,
+                        },
+                      ]}
+                    />
+                  ) : (
+                    <Pressable
+                      style={[styles.button, disabled && styles.buttonDisabled]}
+                      onPress={() => onChange(option.value)}
+                      disabled={disabled}>
+                      <ThemedText
+                        style={[
+                          styles.buttonText,
+                          { color: palette.textMuted },
+                          isActive && { color: option.activeTextColor ?? palette.textOnAccent },
+                        ]}
+                        numberOfLines={1}>
+                        {option.label}
+                      </ThemedText>
+                    </Pressable>
+                  )}
+                  {option.actionIcon && option.onAction && !option.isEditing && (
+                    <Pressable
+                      hitSlop={8}
+                      onPress={option.onAction}
+                      style={({ pressed }) => [
+                        styles.actionButton,
+                        {
+                          borderLeftColor: isActive
+                            ? (option.activeTextColor ?? palette.textOnAccent)
+                            : palette.overlay20,
+                          backgroundColor: isActive ? palette.overlay10 : palette.overlay05,
+                        },
+                        pressed && styles.actionButtonPressed,
+                      ]}>
+                      <MaterialCommunityIcons
+                        name={option.actionIcon}
+                        size={scaleBySizeClass(17, sizeClass)}
+                        color={
+                          isActive
+                            ? (option.activeTextColor ?? palette.textOnAccent)
+                            : palette.textMuted
+                        }
+                      />
+                    </Pressable>
+                  )}
+                </View>
               </React.Fragment>
             );
           })}
@@ -285,6 +340,11 @@ function createStyles(sizeClass: SizeClass) {
     separator: {
       width: 1,
     },
+    segment: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
     button: {
       flex: 1,
       alignItems: 'center',
@@ -297,6 +357,23 @@ function createStyles(sizeClass: SizeClass) {
     buttonText: {
       fontSize: scaleBySizeClass(18, sizeClass),
       fontFamily: Fonts.semiBold,
+    },
+    actionButton: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      alignSelf: 'stretch',
+      paddingHorizontal: scaleBySizeClass(10, sizeClass),
+      borderLeftWidth: 1,
+    },
+    actionButtonPressed: {
+      opacity: 0.65,
+    },
+    editInput: {
+      flex: 1,
+      paddingHorizontal: scaleBySizeClass(10, sizeClass),
+      fontSize: scaleBySizeClass(16, sizeClass),
+      fontFamily: Fonts.semiBold,
+      textAlign: 'center',
     },
   });
 }
