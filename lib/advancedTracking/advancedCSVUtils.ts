@@ -268,7 +268,18 @@ function playerSummaryCSV(
   if (hasCallahans) columns.push('Callahans');
   columns.push('Completions', 'Throw Attempts', 'Completion %', 'Throwaways', 'Drops');
   if (hasStalls) columns.push('Stalls', 'Stalls Conceded');
-  if (hasPulls) columns.push('Pulls', 'Pull Receptions');
+  if (hasPulls) {
+    columns.push(
+      'Pulls',
+      'Inbound Pulls',
+      'Out of Bounds Pulls',
+      'Dropped Pulls',
+      'Avg Pull Hang Time',
+      'Max Pull Hang Time',
+      'Min Pull Hang Time',
+      'Pull Receptions',
+    );
+  }
   columns.push('Blocks', 'Receptions', 'Total Touches', 'Plus/Minus');
 
   if (hasTimingData) {
@@ -300,6 +311,18 @@ function playerSummaryCSV(
       }
       if (hasPulls) {
         cells.push(p.pulls);
+        cells.push(p.inboundPulls);
+        cells.push(p.outOfBoundsPulls);
+        cells.push(p.droppedPulls);
+        cells.push(
+          p.avgPullHangTimeMs != null ? `${(p.avgPullHangTimeMs / 1000).toFixed(1)}s` : '-',
+        );
+        cells.push(
+          p.maxPullHangTimeMs != null ? `${(p.maxPullHangTimeMs / 1000).toFixed(1)}s` : '-',
+        );
+        cells.push(
+          p.minPullHangTimeMs != null ? `${(p.minPullHangTimeMs / 1000).toFixed(1)}s` : '-',
+        );
         cells.push(p.pullReceptions);
       }
       cells.push(p.blocks);

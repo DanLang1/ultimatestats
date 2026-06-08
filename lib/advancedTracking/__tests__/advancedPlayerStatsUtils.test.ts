@@ -50,6 +50,105 @@ function findStats(stats: ReturnType<typeof computeAdvancedPlayerStats>, partici
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
 describe('advancedPlayerStatsUtils', () => {
+  describe('pull summary', () => {
+    const game: AdvancedTrackedGame = {
+      ...baseGame,
+      status: 'terminated',
+      points: [
+        {
+          id: 'pt1',
+          lines: [{ sideId: ZOO, participantIds: ['p_august'] }],
+          possessions: [
+            {
+              id: 'pos1',
+              sideId: RIVALS,
+              actions: [
+                {
+                  id: 'pull1',
+                  kind: 'pull',
+                  sideId: ZOO,
+                  receivingSideId: RIVALS,
+                  puller: august,
+                  result: 'inbound',
+                  hangTimeMs: 6000,
+                },
+                {
+                  id: 'goal1',
+                  kind: 'throw',
+                  sideId: RIVALS,
+                  thrower: untracked,
+                  toPlayer: untracked,
+                  result: 'goal',
+                },
+              ],
+            },
+          ],
+        },
+        {
+          id: 'pt2',
+          lines: [{ sideId: ZOO, participantIds: ['p_august'] }],
+          possessions: [
+            {
+              id: 'pos2',
+              sideId: RIVALS,
+              actions: [
+                {
+                  id: 'pull2',
+                  kind: 'pull',
+                  sideId: ZOO,
+                  receivingSideId: RIVALS,
+                  puller: august,
+                  result: 'ob',
+                  hangTimeMs: 8000,
+                },
+                {
+                  id: 'goal2',
+                  kind: 'throw',
+                  sideId: RIVALS,
+                  thrower: untracked,
+                  toPlayer: untracked,
+                  result: 'goal',
+                },
+              ],
+            },
+          ],
+        },
+        {
+          id: 'pt3',
+          lines: [{ sideId: ZOO, participantIds: ['p_august'] }],
+          possessions: [
+            {
+              id: 'pos3',
+              sideId: RIVALS,
+              actions: [
+                {
+                  id: 'pull3',
+                  kind: 'pull',
+                  sideId: ZOO,
+                  receivingSideId: RIVALS,
+                  puller: august,
+                  result: 'dropped',
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+
+    it('computes outcomes and hangtime from tracked pulls', () => {
+      const stats = findStats(computeAdvancedPlayerStats(buildAnalyticsGame(game)), 'p_august');
+
+      expect(stats.pulls).toBe(3);
+      expect(stats.inboundPulls).toBe(1);
+      expect(stats.outOfBoundsPulls).toBe(1);
+      expect(stats.droppedPulls).toBe(1);
+      expect(stats.avgPullHangTimeMs).toBe(7000);
+      expect(stats.maxPullHangTimeMs).toBe(8000);
+      expect(stats.minPullHangTimeMs).toBe(6000);
+    });
+  });
+
   describe('clean offensive hold', () => {
     // August catches pull → August→Meves (complete) → Meves→Joah (complete) → Joah→Max (goal)
     const game: AdvancedTrackedGame = {

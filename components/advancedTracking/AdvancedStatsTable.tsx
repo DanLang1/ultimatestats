@@ -9,7 +9,7 @@ import React, { useState } from 'react';
 import { LayoutChangeEvent, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 type SortKey = keyof AdvancedPlayerStats | 'name';
-type StatGroupKey = 'core' | 'throwing' | 'touches' | 'points';
+type StatGroupKey = 'core' | 'throwing' | 'touches' | 'pulls' | 'points';
 
 interface AdvancedStatsTableProps {
   playerStats: AdvancedPlayerStats[];
@@ -77,6 +77,19 @@ const STAT_GROUPS: StatGroup[] = [
       { key: 'plusMinus', label: '+/-', width: 58 },
     ],
   },
+  {
+    key: 'pulls',
+    label: 'Pull',
+    columns: [
+      { key: 'pulls', label: 'Pls', width: 58 },
+      { key: 'inboundPulls', label: 'In', width: 58 },
+      { key: 'outOfBoundsPulls', label: 'OB', width: 58 },
+      { key: 'droppedPulls', label: 'Drop', width: 58 },
+      { key: 'avgPullHangTimeMs', label: 'Avg', width: 68 },
+      { key: 'maxPullHangTimeMs', label: 'Max', width: 68 },
+      { key: 'minPullHangTimeMs', label: 'Min', width: 68 },
+    ],
+  },
 ];
 
 const LEGEND_ITEMS: { abbr: string; label: string }[] = [
@@ -92,6 +105,11 @@ const LEGEND_ITEMS: { abbr: string; label: string }[] = [
   { abbr: 'Rec', label: 'Receptions' },
   { abbr: 'Tch', label: 'Total Touches' },
   { abbr: 'Pls', label: 'Pulls' },
+  { abbr: 'In', label: 'Inbound Pulls' },
+  { abbr: 'OB', label: 'Out-of-Bounds Pulls' },
+  { abbr: 'Avg', label: 'Average Pull Hangtime' },
+  { abbr: 'Max', label: 'Longest Pull Hangtime' },
+  { abbr: 'Min', label: 'Shortest Pull Hangtime' },
   { abbr: 'O-Eff', label: 'Off. Efficiency' },
   { abbr: 'D-Eff', label: 'Def. Efficiency' },
   { abbr: 'PP', label: 'Points Played' },
@@ -107,6 +125,10 @@ function getCellValue(stats: AdvancedPlayerStats, key: SortKey): number | null {
 
 function formatCell(stats: AdvancedPlayerStats, key: SortKey): string {
   if (key === 'name') return '';
+  if (key === 'avgPullHangTimeMs' || key === 'maxPullHangTimeMs' || key === 'minPullHangTimeMs') {
+    const hangTimeMs = stats[key];
+    return hangTimeMs != null ? `${(hangTimeMs / 1000).toFixed(1)}s` : '-';
+  }
   if (key === 'completionPct') {
     return stats.completionPct != null ? `${Math.round(stats.completionPct * 100)}%` : '-';
   }
@@ -156,10 +178,12 @@ export default function AdvancedStatsTable({
   const getName = (id: string) => participantNames.get(id) ?? id;
   const activeGroup = getStatGroup(activeGroupKey);
   const visibleStatColumns = activeGroup.columns;
-  const playerNames = playerStats.map((stats) => getName(stats.participantId));
+  const visiblePlayerStats =
+    activeGroupKey === 'pulls' ? playerStats.filter((stats) => stats.pulls > 0) : playerStats;
+  const playerNames = visiblePlayerStats.map((stats) => getName(stats.participantId));
   const nameColumnWidth = getNameColumnWidth(playerNames);
 
-  const sorted = [...playerStats].sort((a, b) => {
+  const sorted = [...visiblePlayerStats].sort((a, b) => {
     const dir = sortConfig.direction === 'asc' ? 1 : -1;
     if (sortConfig.key === 'name') {
       return dir * getName(a.participantId).localeCompare(getName(b.participantId));

@@ -271,7 +271,7 @@ Formula: Holds ÷ O-Points`}
           <ThemedText style={[styles.subsectionTitle, { color: palette.textMuted }]}>
             OUR POSSESSION FLOW
           </ThemedText>
-          <StatsGrid stats={possessionFlowStats} columns={possessionFlowStats.length || 1} />
+          <StatsGrid stats={possessionFlowStats} columns={2} />
         </View>
 
         <View style={styles.subsectionContainer}>

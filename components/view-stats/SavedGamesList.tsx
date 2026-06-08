@@ -346,7 +346,7 @@ export default function SavedGamesList({
                           </ThemedText>
                         </View>
                       )}
-                      {game.kind === 'basic' && game.importedAt != null && (
+                      {game.importedAt != null && (
                         <MaterialCommunityIcons
                           name="cloud-download-outline"
                           size={scaleBySizeClass(14, sizeClass)}

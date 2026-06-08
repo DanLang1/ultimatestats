@@ -41,6 +41,15 @@ export interface AdvancedPlayerStats {
   // Pulls
   pulls: number;
   pullReceptions: number;
+  inboundPulls: number;
+  outOfBoundsPulls: number;
+  droppedPulls: number;
+  /** Average hang time across timed pulls. Null if no pulls have timing data. */
+  avgPullHangTimeMs: number | null;
+  /** Longest timed pull. Null if no pulls have timing data. */
+  maxPullHangTimeMs: number | null;
+  /** Shortest timed pull. Null if no pulls have timing data. */
+  minPullHangTimeMs: number | null;
 
   // Playing time
   pointsPlayed: number;
@@ -80,6 +89,12 @@ function createEmptyStats(participantId: string): AdvancedPlayerStats {
     blocks: 0,
     pulls: 0,
     pullReceptions: 0,
+    inboundPulls: 0,
+    outOfBoundsPulls: 0,
+    droppedPulls: 0,
+    avgPullHangTimeMs: null,
+    maxPullHangTimeMs: null,
+    minPullHangTimeMs: null,
     pointsPlayed: 0,
     oPoints: 0,
     dPoints: 0,
@@ -201,6 +216,28 @@ export function computeAdvancedPlayerStats(
       stats.throwaways -
       stats.drops -
       stats.stallsConceded;
+
+    let pullHangTimeSumMs = 0;
+    let timedPullCount = 0;
+    for (const action of game.actions) {
+      if (action.kind !== 'pull' || action.actorId !== participantId) continue;
+      // Only count pulls thrown by our side (sideId is the pulling side for pull actions).
+      if (sideId != null && action.sideId !== sideId) continue;
+
+      if (action.result === 'inbound') stats.inboundPulls++;
+      if (action.result === 'ob') stats.outOfBoundsPulls++;
+      if (action.result === 'dropped') stats.droppedPulls++;
+
+      if (action.hangTimeMs == null) continue;
+      pullHangTimeSumMs += action.hangTimeMs;
+      timedPullCount++;
+      stats.maxPullHangTimeMs = Math.max(stats.maxPullHangTimeMs ?? 0, action.hangTimeMs);
+      stats.minPullHangTimeMs = Math.min(
+        stats.minPullHangTimeMs ?? action.hangTimeMs,
+        action.hangTimeMs,
+      );
+    }
+    stats.avgPullHangTimeMs = timedPullCount > 0 ? pullHangTimeSumMs / timedPullCount : null;
 
     // Points played, O/D split, and efficiency from linesBySide
     let playerDurationMs = 0;

@@ -30,6 +30,7 @@ export type GameListItem =
       opponentScore: number;
       pointsTracked: number;
       tournamentId?: string;
+      importedAt?: number;
     };
 
 export function basicGameToListItem(game: SavedGame, savedTeams: SavedTeam[]): GameListItem {
@@ -72,6 +73,7 @@ export function advancedGameToListItem(game: AdvancedTrackedGame): GameListItem 
     myScore,
     opponentScore,
     pointsTracked: game.points.length,
+    importedAt: game.importedAt,
   };
 }
 
@@ -85,5 +87,6 @@ export function advancedGameSummaryToListItem(summary: AdvancedGameSummary): Gam
     myScore: summary.myScore,
     opponentScore: summary.opponentScore,
     pointsTracked: summary.pointsTracked,
+    importedAt: summary.importedAt,
   };
 }
