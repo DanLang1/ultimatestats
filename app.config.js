@@ -57,6 +57,8 @@ export default {
     infoPlist: {
       NSMicrophoneUsageDescription:
         'Allow $(PRODUCT_NAME) to use the microphone for voice stat entry.',
+      NSPhotoLibraryUsageDescription:
+        'Allow $(PRODUCT_NAME) to access your photo library when you choose content to share.',
       NSSpeechRecognitionUsageDescription:
         'Allow $(PRODUCT_NAME) to use speech recognition for voice stat entry.',
     },
