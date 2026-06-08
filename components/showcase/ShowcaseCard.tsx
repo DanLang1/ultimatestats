@@ -1,5 +1,6 @@
 import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
+import { useAdvancedGameSummaries } from '@/hooks/advancedTracking/useAdvancedGameQueries';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import {
   fetchShowcasePayload,
@@ -7,6 +8,7 @@ import {
   ShowcaseGameMeta,
 } from '@/lib/sharing';
 import { hasItems } from '@/lib/utils';
+import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { useGameStore } from '@/store/gameStore';
 import { Fonts } from '@/theme/theme';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
@@ -24,9 +26,16 @@ export default function ShowcaseCard({ game }: ShowcaseCardProps) {
   const { palette } = useTheme();
   const styles = createStyles(sizeClass);
   const { importGame } = useGameStore();
+  const { importAdvancedGame } = useAdvancedTrackingStore();
 
   const { savedGames } = useGameStore();
-  const alreadyImported = savedGames.some((g) => g.id === game.game_id);
+  const { data: advancedSummaries } = useAdvancedGameSummaries();
+  const basicGameImported =
+    game.game_type === 'game' && savedGames.some((savedGame) => savedGame.id === game.game_id);
+  const advancedGameImported =
+    game.game_type === 'advanced-game' &&
+    advancedSummaries.some((summary) => summary.id === game.game_id);
+  const alreadyImported = basicGameImported || advancedGameImported;
 
   const {
     mutate,
@@ -37,14 +46,22 @@ export default function ShowcaseCard({ game }: ShowcaseCardProps) {
   } = useMutation({
     mutationFn: async () => {
       const payload = await fetchShowcasePayload(game.id);
+      if (payload.type === 'advanced-game') {
+        const importedGame = { ...payload.data, importedAt: Date.now() };
+        await importAdvancedGame(importedGame);
+        incrementShowcaseImportCount(game.id);
+        return { id: importedGame.id, type: payload.type };
+      }
+
       const importedGame = { ...payload.data, importedAt: Date.now() };
       await importGame(importedGame);
       incrementShowcaseImportCount(game.id);
-      return importedGame.id;
+      return { id: importedGame.id, type: payload.type };
     },
   });
 
-  const viewGameId = importedGameId ?? (alreadyImported ? game.game_id : null);
+  const viewGameId = importedGameId?.id ?? (alreadyImported ? game.game_id : null);
+  const viewGameType = importedGameId?.type ?? game.game_type;
   const showViewGame = isSuccess || alreadyImported;
   const importCountLabel = `${game.import_count} ${game.import_count === 1 ? 'import' : 'imports'}`;
 
@@ -136,6 +153,13 @@ export default function ShowcaseCard({ game }: ShowcaseCardProps) {
       <Pressable
         onPress={() => {
           if (showViewGame && viewGameId) {
+            if (viewGameType === 'advanced-game') {
+              router.push({
+                pathname: '/advancedTracking/analytics/[gameId]',
+                params: { gameId: viewGameId },
+              });
+              return;
+            }
             router.push({ pathname: '/saved-games/[gameId]', params: { gameId: viewGameId } });
             return;
           }

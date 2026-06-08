@@ -1,15 +1,14 @@
-import type { SavedGame } from '@/lib/storage';
 import { supabase } from '@/lib/supabase';
 import type { ShowcaseGameMeta } from './showcaseTypes';
 import type { SharedPayload } from './types';
 import { validatePayload } from './validate';
 
-export type ShowcasePayload = SharedPayload & { type: 'game'; data: SavedGame };
+export type ShowcasePayload = Extract<SharedPayload, { type: 'game' | 'advanced-game' }>;
 
 export async function fetchShowcaseList(): Promise<ShowcaseGameMeta[]> {
   const { data, error } = await supabase
     .from('showcase_games')
-    .select('id, game_id, title, description, tags, created_at, import_count')
+    .select('id, game_id, game_type, title, description, tags, created_at, import_count')
     .eq('is_published', true)
     .order('import_count', { ascending: false })
     .order('created_at', { ascending: false });
@@ -34,8 +33,8 @@ export async function fetchShowcasePayload(id: string): Promise<ShowcasePayload>
   }
 
   const result = validatePayload(data.payload);
-  if (result.type !== 'game') {
-    throw new Error('Expected game payload in showcase');
+  if (result.type !== 'game' && result.type !== 'advanced-game') {
+    throw new Error('Expected a single game payload in showcase');
   }
   return result;
 }
