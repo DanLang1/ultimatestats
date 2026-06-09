@@ -44,6 +44,7 @@ export default function GameFormatScreen() {
     softCapPending,
     statTrackingEnabled,
     pointTimerEnabled,
+    currentPoint,
     startingPossession,
     baseGameTo,
     events,
@@ -99,7 +100,11 @@ export default function GameFormatScreen() {
       },
       {
         label: 'Gender Ratio',
-        value: formatGenderRatio(genderRatioEnabled, firstPointRatio),
+        value: formatGenderRatio(
+          genderRatioEnabled,
+          firstPointRatio,
+          Math.max(advancedGame.points.length, 1),
+        ),
       },
     ];
   } else {
@@ -160,7 +165,7 @@ export default function GameFormatScreen() {
       },
       {
         label: 'Gender Ratio',
-        value: formatGenderRatio(genderRatioEnabled, firstPointRatio),
+        value: formatGenderRatio(genderRatioEnabled, firstPointRatio, currentPoint),
       },
     ];
   }

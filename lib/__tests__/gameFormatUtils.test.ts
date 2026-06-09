@@ -115,25 +115,29 @@ describe('formatTimeouts', () => {
 describe('formatGenderRatio', () => {
   describe('when gender ratio is disabled', () => {
     it('returns "Off" with more-women ratio', () => {
-      expect(formatGenderRatio(false, 'more-women')).toBe('Off');
+      expect(formatGenderRatio(false, 'more-women', 1)).toBe('Off');
     });
 
     it('returns "Off" with null ratio', () => {
-      expect(formatGenderRatio(false, null)).toBe('Off');
+      expect(formatGenderRatio(false, null, 1)).toBe('Off');
     });
   });
 
   describe('when gender ratio is enabled', () => {
     it('returns "On" when firstPointRatio is null', () => {
-      expect(formatGenderRatio(true, null)).toBe('On');
+      expect(formatGenderRatio(true, null, 1)).toBe('On');
     });
 
-    it('returns FMP for more-women', () => {
-      expect(formatGenderRatio(true, 'more-women')).toBe('FMP');
+    it('formats the active point in an ABBA sequence starting with more-women', () => {
+      expect(formatGenderRatio(true, 'more-women', 1)).toBe('F2');
+      expect(formatGenderRatio(true, 'more-women', 2)).toBe('M1');
+      expect(formatGenderRatio(true, 'more-women', 3)).toBe('M2');
     });
 
-    it('returns MMP for more-men', () => {
-      expect(formatGenderRatio(true, 'more-men')).toBe('MMP');
+    it('formats the active point in an ABBA sequence starting with more-men', () => {
+      expect(formatGenderRatio(true, 'more-men', 1)).toBe('M2');
+      expect(formatGenderRatio(true, 'more-men', 2)).toBe('F1');
+      expect(formatGenderRatio(true, 'more-men', 3)).toBe('F2');
     });
   });
 });

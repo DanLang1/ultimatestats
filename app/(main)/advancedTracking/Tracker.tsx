@@ -39,9 +39,9 @@ import { buildVoiceParticipantContexts } from '@/lib/advancedTracking/voiceConte
 
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { Fonts, Palette } from '@/theme/theme';
-import { Redirect, router, Stack } from 'expo-router';
+import { Redirect, router, Stack, useFocusEffect } from 'expo-router';
 import React, { useState } from 'react';
-import { LayoutChangeEvent, Pressable, StyleSheet, View } from 'react-native';
+import { BackHandler, LayoutChangeEvent, Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function AdvancedTrackerScreen() {
@@ -130,17 +130,17 @@ export default function AdvancedTrackerScreen() {
     recordThrow,
   });
 
+  useFocusEffect(() => {
+    const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
+      router.dismissTo('/Dashboard');
+      return true;
+    });
+
+    return () => subscription.remove();
+  });
+
   if (!game) {
-    return (
-      <ThemedView style={styles.container}>
-        <Stack.Screen options={{ headerShown: false }} />
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <ThemedText style={{ color: palette.textMuted }}>
-            No active game. Go back and set one up.
-          </ThemedText>
-        </View>
-      </ThemedView>
-    );
+    return <Redirect href="/Dashboard" />;
   }
 
   if (isAdvancedGameOver(game)) {
@@ -217,7 +217,7 @@ export default function AdvancedTrackerScreen() {
 
   return (
     <ThemedView style={styles.container}>
-      <Stack.Screen options={{ headerShown: false }} />
+      <Stack.Screen options={{ headerShown: false, gestureEnabled: false }} />
 
       <TrackerCapBar onMenuPress={() => setShowHomeMenu(true)} game={game} />
       <TrackerScoreBar

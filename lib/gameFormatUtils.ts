@@ -1,6 +1,11 @@
 import type { AdvancedTrackedGame } from './advancedTracking/types';
 import { getScoreThroughPoint } from './advancedTracking/trackingUtils';
-import type { GenderRatio } from './genderRatioUtils';
+import {
+  formatRatio,
+  getExpectedRatio,
+  getSequenceNumber,
+  type GenderRatio,
+} from './genderRatioUtils';
 import { getActualHalftimeScore } from './halftimeUtils';
 import type { GameEvent } from '@/store/gameStore.types';
 
@@ -31,10 +36,17 @@ export function formatTimeouts(
   return floaterEnabled ? `${timeoutCount}${suffix} + floater` : `${timeoutCount}${suffix}`;
 }
 
-export function formatGenderRatio(enabled: boolean, firstPointRatio: GenderRatio | null): string {
+export function formatGenderRatio(
+  enabled: boolean,
+  firstPointRatio: GenderRatio | null,
+  pointNumber: number,
+): string {
   if (!enabled) return 'Off';
   if (firstPointRatio == null) return 'On';
-  return firstPointRatio === 'more-women' ? 'FMP' : 'MMP';
+  return formatRatio(
+    getExpectedRatio(pointNumber, firstPointRatio),
+    getSequenceNumber(pointNumber),
+  );
 }
 
 export function formatBasicReceiver(

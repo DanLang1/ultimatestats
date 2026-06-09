@@ -43,6 +43,7 @@ type BottomCardButtonMode = React.ComponentProps<typeof LastActionCardFrame>['bu
 interface TrackerLastActionCardState {
   passModifier: PassModifier;
   pointIsOver: boolean;
+  isOpeningDefensivePull: boolean;
   point: TrackedPoint | null;
   focusSideId: string;
   participants: Participant[];
@@ -109,6 +110,11 @@ export const TrackerLastActionCard = ({
     point?.possessions.filter((p) => p.sideId === game.focusSideId).at(-1) ?? null;
   const focusHasStarted =
     !!possession && possession.sideId === game.focusSideId && possession.actions.length > 0;
+  const isOpeningDefensivePull =
+    game.points.length === 1 &&
+    possession?.sideId !== game.focusSideId &&
+    possession?.actions.length === 1 &&
+    possession.actions[0]?.kind === 'pull';
 
   const eyebrow = (color: string) => (
     <ThemedText
@@ -130,6 +136,7 @@ export const TrackerLastActionCard = ({
   const lastActionCardState: TrackerLastActionCardState = {
     passModifier,
     pointIsOver,
+    isOpeningDefensivePull,
     point,
     focusSideId: game.focusSideId,
     participants: game.participants,
@@ -181,6 +188,7 @@ function getTrackerLastActionCardModel({
   const {
     passModifier,
     pointIsOver,
+    isOpeningDefensivePull,
     point,
     focusSideId,
     participants,
@@ -195,6 +203,9 @@ function getTrackerLastActionCardModel({
   const undoRareButtonMode: BottomCardButtonMode = canUseRareMenu
     ? { kind: 'undo-more', onUndo, onMore: onMorePress }
     : { kind: 'undo-only', onUndo };
+  const defensiveButtonMode: BottomCardButtonMode = isOpeningDefensivePull
+    ? { kind: 'more-only', onMore: onMorePress }
+    : undoRareButtonMode;
 
   if (passModifier) {
     const isFiftyFifty = passModifier === 'fifty-fifty';
@@ -244,7 +255,7 @@ function getTrackerLastActionCardModel({
     return {
       kind: 'label',
       accentColor: palette.neutral,
-      buttonMode: undoRareButtonMode,
+      buttonMode: defensiveButtonMode,
       preferCompactActions: true,
       content: frameLabel('DEFENSE'),
     };
