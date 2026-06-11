@@ -49,11 +49,8 @@ For transparent modal routes:
 2. Use overlay backdrop + centered/bottom sheet content.
 3. Set modal route options in `_layout.tsx`:
    `presentation: 'transparentModal'`
-   `gestureEnabled: false`
    `contentStyle: { backgroundColor: 'transparent' }`
 4. Use `router.dismissTo(...)` for deterministic exits.
-
-Reference: `/add-modal` skill.
 
 ## Safe Area Pattern
 
@@ -65,7 +62,7 @@ Reference: `/add-modal` skill.
 
 - Do not hardcode colors.
 - Use tokens from `theme/theme.ts` and theme palette via `useTheme()`.
-- For modals, follow modal token guidance in the `/add-modal` skill.
+- For modal content, prefer `modalBg`, `modalText`, and `modalTextMuted`.
 
 ## Required Field Attention Pattern
 

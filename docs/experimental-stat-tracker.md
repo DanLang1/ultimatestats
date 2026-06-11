@@ -561,7 +561,6 @@ Add modal route registration:
   options={{
     presentation: 'transparentModal',
     animation: 'fade',
-    gestureEnabled: false,
     contentStyle: { backgroundColor: 'transparent' },
   }}
 />

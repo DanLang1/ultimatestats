@@ -28,7 +28,7 @@ See `docs/README.md` for directory structure, key concepts, and the New Screen C
 - Keep a single root `SafeAreaProvider`; avoid extra per-screen `SafeAreaView`.
 - Screen headers: keep `paddingTop: 8` so controls don't sit flush to the top edge in landscape.
 - Every navigator shell must set an explicit themed background on its scene container (`contentStyle` for stacks, `sceneStyle` for tabs/drawers) to avoid white flashes during transitions, especially in dark mode.
-- For modals, set `gestureEnabled: false` and handle dismissal explicitly. Use `/add-modal` for full modal patterns.
+- For modal dismissal patterns, see `docs/ui-patterns.md` and `docs/navigation-map.md`.
 - App supports both portrait and landscape via `useLayout()` + `createStyles()` (see `docs/responsive-layout.md`).
 - Do not use `useWindowDimensions` directly in screens/components; use `useLayout()` instead.
 - Do not use orientation-based conditional style arrays (`!isLandscape && ...`); encode orientation in `createStyles()`.
