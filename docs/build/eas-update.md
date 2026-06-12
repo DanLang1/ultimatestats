@@ -1,7 +1,3 @@
----
-description: Push OTA update to production Android app via EAS
----
-
 # Deploy OTA Update to Production
 
 This workflow pushes a JavaScript/asset update to the production Android app. Use this for bug fixes and UI changes that don't require native code changes.
@@ -26,7 +22,6 @@ npx tsc --noEmit
 ```
 
 3. Push the update to production:
-   // turbo
 
 ```bash
 eas update --channel production --platform android --message "<describe your changes>"
@@ -34,7 +29,7 @@ eas update --channel production --platform android --message "<describe your cha
 
 Replace `<describe your changes>` with a brief description (like a git commit message).
 
-3. Verify the update was published by checking the EAS Dashboard link in the output.
+4. Verify the update was published by checking the EAS Dashboard link in the output.
 
 ## Notes
 

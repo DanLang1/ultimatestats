@@ -1,7 +1,3 @@
----
-description: Build and release a production native app to app stores
----
-
 # Production Build Checklist
 
 ## Pre-Build Checklist
@@ -33,7 +29,7 @@ description: Build and release a production native app to app stores
 
 ## Build
 
-// turbo 4. **Run EAS build:**
+4. **Run EAS build:**
 
 ```bash
 eas build --platform android --profile production --local
@@ -65,7 +61,7 @@ release builds are materially heavier than dev builds.
 
 | Scenario                | Use                 |
 | ----------------------- | ------------------- |
-| JS-only changes         | `/eas-update` (OTA) |
+| JS-only changes         | [EAS update](eas-update.md) |
 | New native module added | This workflow       |
 | Expo SDK upgrade        | This workflow       |
 | Permission changes      | This workflow       |

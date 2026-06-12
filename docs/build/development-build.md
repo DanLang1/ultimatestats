@@ -1,10 +1,6 @@
----
-description: Create, build, and upload a development build for native testing
----
+# Development Build
 
-# Development Build Workflow
-
-This workflow is for creating a new **Development Build** (or "dev client"). You only need to run this when you add new native modules, change `app.config.js` settings that affect the native layer, or upgrade the Expo SDK.
+Info for creating a new **Development Build** (or "dev client"). You only need to run this when you add new native modules, change `app.config.js` settings that affect the native layer, or upgrade the Expo SDK.
 
 ## 1. Pre-Build Checklist
 
@@ -12,20 +8,31 @@ This workflow is for creating a new **Development Build** (or "dev client"). You
 
    ```bash
    git add .
-   git commit -m "chore: prepare for new dev build"
+   git commit -m "commit message"
    ```
 
 2. **Verify `app.config.js`**:
    The `development` profile uses `APP_VARIANT=development`. This should automatically change your app name to "U-Stat (Dev)" and use a separate bundle identifier.
 
+3. **Verify `checks`**:
+   ```bash
+   npm run check:all
+   ```
+
 ## 2. Build Locally
 
 Building locally is faster and doesn't use EAS build credits.
 
-// turbo
+Android:
 
 ```bash
 eas build --platform android --profile development --local
+```
+
+iOS:
+
+```bash
+eas build --platform ios --profile development --local
 ```
 
 Wait for the build to finish. It will generate an `.apk` file in your root project directory (e.g., `build-12345.apk`).
@@ -59,14 +66,3 @@ _Replace `./path-to-your-build.apk` with the actual filename generated in the pr
 
 3. **Open the app**:
    Open the "U-Stat (Dev)" app on your phone. It should automatically detect the local server, or you can enter the URL manually.
-
-## When to Use This
-
-| Scenario                                          | Use                             |
-| :------------------------------------------------ | :------------------------------ |
-| Adding a new native library (e.g., `expo-camera`) | This workflow                   |
-| Changing app icons or splash screens              | This workflow                   |
-| Upgrading Expo SDK                                | This workflow                   |
-| Changing `package` name or `bundleIdentifier`     | This workflow                   |
-| Normal UI/Logic changes                           | `npm run dev` (no build needed) |
-| Bug fixes for production users                    | `/eas-update` (OTA)             |

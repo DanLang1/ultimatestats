@@ -193,5 +193,5 @@ This document tracks intentionally deferred cleanup work discovered during the d
 ### Documentation Hygiene
 
 - Refresh `docs/responsive-layout.md` migration list to remove files already migrated.
-- Add `.agent/workflows/dev-build.md` to runbook index in `AGENTS.md`.
+- Add `docs/build/development-build.md` to the documentation runbook index.
 - Consider adding `docs/responsive-layout.md` to quick links in `docs/README.md`.
