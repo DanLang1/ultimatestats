@@ -62,23 +62,6 @@ This document tracks intentionally deferred cleanup work discovered during the d
   `components/advancedTracking/TrackerLineChangeMenu.tsx`
   `components/new-game/NewGameSheet.tsx`
 
-## P2 - Remove Raw Color Literals
-
-- Replace hardcoded color values with theme tokens.
-- References:
-  `AGENTS.md:92`
-  `app/(modals)/EditPlayerModal.tsx:161`
-  `app/(modals)/HalftimeModal.tsx:78`
-  `app/(modals)/HalftimeModal.tsx:353`
-  `app/(modals)/TeamManagementModal.tsx:113`
-  `app/(modals)/TimeoutModal.tsx:55`
-  `app/(modals)/TimeoutModal.tsx:165`
-  `app/(modals)/PointSummaryModal.tsx:281`
-  `app/(main)/(hub)/(home)/Dashboard.tsx:297`
-  `app/(main)/(hub)/(home)/Dashboard.tsx:319`
-  `app/(main)/(hub)/(home)/Dashboard.tsx:361`
-  `app/(main)/(hub)/(analytics)/PlayerStats.tsx:165`
-
 ## P3 - Store Architecture Refactor
 
 - `gameStore` is a god store spanning six concerns: live game state, timers, roster, game catalog, UI signals, and game config.
@@ -98,16 +81,6 @@ This document tracks intentionally deferred cleanup work discovered during the d
   `store/gameStore.ts`
   `store/gameStore.types.ts`
 
-## P3 - Manual Halftime Correction For Legacy Saved Games
-
-- Legacy saved games are now normalized to a single persisted `triggeredHalftime` goal marker so timeline/stats replay can stay simple, but old soft-cap-adjusted games can still end up with an inferred halftime goal that is unknowable from the stored data alone.
-- Future UX: show halftime in the saved-game timeline and allow the user to move the halftime marker to a different goal event. That would correct downstream possession-flip and timeout-reset replay without reintroducing special-case legacy halftime math throughout stats utilities.
-- References:
-  `lib/storage/migrations/v3_stamp_halftime.ts`
-  `lib/timelineUtils.ts`
-  `lib/timeoutUtils.ts`
-  `store/gameStore.types.ts`
-
 ## P3 - Expo Router Naming and Feature Grouping
 
 - Standardize route filenames to lowercase kebab-case for long-term consistency (for example `GameInfo.tsx` -> `game-info.tsx`) with a planned migration that preserves existing links during rollout.
@@ -122,7 +95,7 @@ This document tracks intentionally deferred cleanup work discovered during the d
 
 - Delete unused component and empty files.
 - References:
-  `components/advanced/TrackerLineScreen.tsx` (empty; real component is in `components/advancedTracking/`)
+
   `components/game-info/TimeoutCounter.tsx`
   `components/ui/TeamDropdown.tsx`
   `components/view-stats/playing-time/ShiftTimeline.tsx`

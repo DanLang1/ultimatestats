@@ -6,8 +6,8 @@ import { BottomSheet } from '@/components/ui/BottomSheet';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import React, { useState } from 'react';
-import { Modal, Pressable, StyleSheet, View } from 'react-native';
+import React, { useRef, useState } from 'react';
+import { Modal, Platform, Pressable, StyleSheet, View } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 import { Fonts } from '@/theme/theme';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -40,6 +40,7 @@ export function ResponsiveHeaderActions({
   const { palette } = useTheme();
   const insets = useSafeAreaInsets();
   const [isMenuVisible, setIsMenuVisible] = useState(false);
+  const pendingActionRef = useRef<(() => void) | null>(null);
 
   const visibleActions = actions.filter((action) => action.visible !== false);
   const showInlineHeaderActions =
@@ -50,6 +51,23 @@ export function ResponsiveHeaderActions({
   if (!hasActions) {
     return <View style={styles.headerSpacer} />;
   }
+
+  const handleMenuAction = (action: () => void) => {
+    setIsMenuVisible(false);
+
+    if (Platform.OS !== 'ios') {
+      action();
+      return;
+    }
+
+    pendingActionRef.current = action;
+  };
+
+  const handleMenuDismiss = () => {
+    const pendingAction = pendingActionRef.current;
+    pendingActionRef.current = null;
+    pendingAction?.();
+  };
 
   return (
     <>
@@ -95,6 +113,7 @@ export function ResponsiveHeaderActions({
           visible={isMenuVisible}
           transparent
           animationType="fade"
+          onDismiss={handleMenuDismiss}
           onRequestClose={() => setIsMenuVisible(false)}>
           <BottomSheet
             onDismiss={() => setIsMenuVisible(false)}
@@ -129,10 +148,7 @@ export function ResponsiveHeaderActions({
                     label={action.label}
                     tone={action.advancedMenuTone}
                     disabled={action.disabled}
-                    onPress={() => {
-                      setIsMenuVisible(false);
-                      action.onPress();
-                    }}
+                    onPress={() => handleMenuAction(action.onPress)}
                   />
                 ))}
               </View>
@@ -144,6 +160,7 @@ export function ResponsiveHeaderActions({
           visible={isMenuVisible}
           transparent
           animationType="fade"
+          onDismiss={handleMenuDismiss}
           onRequestClose={() => setIsMenuVisible(false)}>
           <View style={StyleSheet.absoluteFill}>
             <Pressable
@@ -167,10 +184,7 @@ export function ResponsiveHeaderActions({
                     pressed && !action.disabled && styles.buttonPressed,
                   ]}
                   disabled={action.disabled}
-                  onPress={() => {
-                    setIsMenuVisible(false);
-                    action.onPress();
-                  }}>
+                  onPress={() => handleMenuAction(action.onPress)}>
                   {action.menuIcon ?? action.inlineIcon}
                   <ThemedText style={[styles.menuActionText, { color: palette.modalText }]}>
                     {action.label}
