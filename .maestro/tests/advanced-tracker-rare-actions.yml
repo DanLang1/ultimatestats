@@ -24,9 +24,9 @@ name: Advanced Tracker Rare Actions
 - tapOn:
     id: 'defense-opp-goal'
 - assertVisible:
-    id: 'tracker-next-point'
+    id: 'between-point-start-next'
 - tapOn:
-    id: 'tracker-next-point'
+    id: 'between-point-start-next'
 
 - runFlow:
     file: ../flows/select-line-and-pull.yaml
@@ -61,9 +61,9 @@ name: Advanced Tracker Rare Actions
 
 # Verify goal state
 - assertVisible:
-    id: 'tracker-next-point'
+    id: 'between-point-start-next'
 - tapOn:
-    id: 'tracker-next-point'
+    id: 'between-point-start-next'
 
 - runFlow:
     file: ../flows/select-line-and-pull.yaml

@@ -5,6 +5,20 @@ name: Setup Advanced Tracker Game
     optional: false
 - launchApp
 
+# A freshly installed development build may show Expo's one-time dev menu introduction.
+- runFlow:
+    when:
+      visible: 'Continue'
+    commands:
+      - tapOn:
+          text: 'Continue'
+- runFlow:
+    when:
+      visible: 'Close'
+    commands:
+      - tapOn:
+          text: 'Close'
+
 # Navigate to Dashboard from any active game state:
 # - Advanced Tracker: menu → Home
 # - TrackerLineSelect / PreGameConfirm: back button (×2 for nesting)

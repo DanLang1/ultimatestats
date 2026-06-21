@@ -42,7 +42,7 @@ name: Advanced Tracker Smoke
 
 # Verify point end
 - assertVisible:
-    id: 'tracker-next-point'
+    id: 'between-point-start-next'
 
 - takeScreenshot:
     path: .maestro/screenshots/advanced-tracker-smoke

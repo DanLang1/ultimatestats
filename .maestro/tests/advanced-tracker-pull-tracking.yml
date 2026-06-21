@@ -17,9 +17,9 @@ name: Advanced Tracker Pull Tracking
 - tapOn:
     id: 'defense-opp-goal'
 - assertVisible:
-    id: 'tracker-next-point'
+    id: 'between-point-start-next'
 - tapOn:
-    id: 'tracker-next-point'
+    id: 'between-point-start-next'
 
 - runFlow:
     file: ../flows/select-line-and-pull.yaml
@@ -53,9 +53,9 @@ name: Advanced Tracker Pull Tracking
 
 # Goal state - we scored
 - assertVisible:
-    id: 'tracker-next-point'
+    id: 'between-point-start-next'
 - tapOn:
-    id: 'tracker-next-point'
+    id: 'between-point-start-next'
 
 # === Point 3: WE pull → pull result screen appears ===
 # Now we pull because we scored last point

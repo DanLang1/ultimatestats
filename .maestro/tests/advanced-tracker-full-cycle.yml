@@ -16,9 +16,9 @@ name: Advanced Tracker Full Point Cycle
 - tapOn:
     id: 'defense-opp-goal'
 - assertVisible:
-    id: 'tracker-next-point'
+    id: 'between-point-start-next'
 - tapOn:
-    id: 'tracker-next-point'
+    id: 'between-point-start-next'
 
 - runFlow:
     file: ../flows/select-line-and-pull.yaml
@@ -35,9 +35,9 @@ name: Advanced Tracker Full Point Cycle
 - tapOn:
     id: 'defense-opp-goal'
 - assertVisible:
-    id: 'tracker-next-point'
+    id: 'between-point-start-next'
 - tapOn:
-    id: 'tracker-next-point'
+    id: 'between-point-start-next'
 
 - runFlow:
     file: ../flows/select-line-and-pull.yaml
@@ -56,9 +56,9 @@ name: Advanced Tracker Full Point Cycle
 - tapOn:
     id: 'defense-opp-goal'
 - assertVisible:
-    id: 'tracker-next-point'
+    id: 'between-point-start-next'
 - tapOn:
-    id: 'tracker-next-point'
+    id: 'between-point-start-next'
 
 - runFlow:
     file: ../flows/select-line-and-pull.yaml
@@ -81,7 +81,7 @@ name: Advanced Tracker Full Point Cycle
 - tapOn:
     id: 'defense-opp-goal'
 - assertVisible:
-    id: 'tracker-next-point'
+    id: 'between-point-start-next'
 
 - takeScreenshot:
     path: .maestro/screenshots/advanced-tracker-full-cycle

@@ -16,9 +16,9 @@ name: Advanced Tracker View Stats
 - tapOn:
     id: 'defense-opp-goal'
 - assertVisible:
-    id: 'tracker-next-point'
+    id: 'between-point-start-next'
 - tapOn:
-    id: 'tracker-next-point'
+    id: 'between-point-start-next'
 
 - runFlow:
     file: ../flows/select-line-and-pull.yaml
@@ -35,9 +35,9 @@ name: Advanced Tracker View Stats
 - tapOn:
     id: 'defense-opp-goal'
 - assertVisible:
-    id: 'tracker-next-point'
+    id: 'between-point-start-next'
 - tapOn:
-    id: 'tracker-next-point'
+    id: 'between-point-start-next'
 
 - runFlow:
     file: ../flows/select-line-and-pull.yaml
@@ -54,9 +54,9 @@ name: Advanced Tracker View Stats
 - tapOn:
     id: 'defense-opp-goal'
 - assertVisible:
-    id: 'tracker-next-point'
+    id: 'between-point-start-next'
 - tapOn:
-    id: 'tracker-next-point'
+    id: 'between-point-start-next'
 
 - runFlow:
     file: ../flows/select-line-and-pull.yaml
