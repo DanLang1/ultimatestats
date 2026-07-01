@@ -25,24 +25,22 @@ name: Advanced Tracker Smoke
     text: 'JON'
 
 # Open rare menu and record opponent block
-- tapOn:
-    id: 'tracker-more-button'
-- waitForAnimationToEnd:
-    timeout: 500
-- tapOn:
-    id: 'rare-menu-opp-d'
+- runFlow:
+    file: ../flows/open-rare-menu.yaml
+- runFlow:
+    file: ../flows/select-opponent-block.yaml
 
 # Verify defense actions appear
 - assertVisible:
     id: 'defense-opp-goal'
-
-# Record opponent goal
-- tapOn:
-    id: 'defense-opp-goal'
-
-# Verify point end
 - assertVisible:
-    id: 'between-point-start-next'
+    id: 'defense-opp-turn'
+- waitForAnimationToEnd:
+    timeout: 500
+
+# Record opponent goal and verify point end
+- runFlow:
+    file: ../flows/record-opponent-goal.yaml
 
 - takeScreenshot:
     path: .maestro/screenshots/advanced-tracker-smoke

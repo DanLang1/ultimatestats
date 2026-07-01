@@ -1,5 +1,7 @@
 appId: com.langdk.ultimatestats
 name: Advanced Tracker Full Point Cycle
+tags:
+  - extended
 ---
 - runFlow:
     file: ../flows/setup-game.yaml
@@ -7,16 +9,12 @@ name: Advanced Tracker Full Point Cycle
 # === POINT 1: Opponent goal ===
 - tapOn:
     id: 'tracker-chip-Joe'
-- tapOn:
-    id: 'tracker-more-button'
-- waitForAnimationToEnd:
-    timeout: 500
-- tapOn:
-    id: 'rare-menu-opp-d'
-- tapOn:
-    id: 'defense-opp-goal'
-- assertVisible:
-    id: 'between-point-start-next'
+- runFlow:
+    file: ../flows/open-rare-menu.yaml
+- runFlow:
+    file: ../flows/select-opponent-block.yaml
+- runFlow:
+    file: ../flows/record-opponent-goal.yaml
 - tapOn:
     id: 'between-point-start-next'
 
@@ -26,16 +24,12 @@ name: Advanced Tracker Full Point Cycle
 # === POINT 2: Opponent goal ===
 - tapOn:
     id: 'tracker-chip-Joe'
-- tapOn:
-    id: 'tracker-more-button'
-- waitForAnimationToEnd:
-    timeout: 500
-- tapOn:
-    id: 'rare-menu-opp-d'
-- tapOn:
-    id: 'defense-opp-goal'
-- assertVisible:
-    id: 'between-point-start-next'
+- runFlow:
+    file: ../flows/open-rare-menu.yaml
+- runFlow:
+    file: ../flows/select-opponent-block.yaml
+- runFlow:
+    file: ../flows/record-opponent-goal.yaml
 - tapOn:
     id: 'between-point-start-next'
 
@@ -47,16 +41,12 @@ name: Advanced Tracker Full Point Cycle
     id: 'tracker-chip-Joe'
 - tapOn:
     id: 'tracker-chip-Jon'
-- tapOn:
-    id: 'tracker-more-button'
-- waitForAnimationToEnd:
-    timeout: 500
-- tapOn:
-    id: 'rare-menu-opp-d'
-- tapOn:
-    id: 'defense-opp-goal'
-- assertVisible:
-    id: 'between-point-start-next'
+- runFlow:
+    file: ../flows/open-rare-menu.yaml
+- runFlow:
+    file: ../flows/select-opponent-block.yaml
+- runFlow:
+    file: ../flows/record-opponent-goal.yaml
 - tapOn:
     id: 'between-point-start-next'
 
@@ -72,16 +62,12 @@ name: Advanced Tracker Full Point Cycle
     id: 'tracker-chip-Mike'
 - tapOn:
     id: 'tracker-chip-Molly'
-- tapOn:
-    id: 'tracker-more-button'
-- waitForAnimationToEnd:
-    timeout: 500
-- tapOn:
-    id: 'rare-menu-opp-d'
-- tapOn:
-    id: 'defense-opp-goal'
-- assertVisible:
-    id: 'between-point-start-next'
+- runFlow:
+    file: ../flows/open-rare-menu.yaml
+- runFlow:
+    file: ../flows/select-opponent-block.yaml
+- runFlow:
+    file: ../flows/record-opponent-goal.yaml
 
 - takeScreenshot:
     path: .maestro/screenshots/advanced-tracker-full-cycle

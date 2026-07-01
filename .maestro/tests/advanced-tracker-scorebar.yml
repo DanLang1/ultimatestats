@@ -36,6 +36,7 @@ name: Advanced Tracker Score Bar
 # Call home timeout
 - tapOn:
     id: 'timeout-button-home'
+    retryTapIfNoChange: true
 - assertVisible:
     text: 'TIMEOUT'
 

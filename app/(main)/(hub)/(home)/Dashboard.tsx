@@ -109,6 +109,7 @@ export default function DashboardScreen() {
                   ? 'Return to the advanced tracker'
                   : 'Return to the live scoreboard',
                 onPress: () => router.navigate(activeSession.route),
+                testID: 'dashboard-resume-game-button',
               },
               ...(hasActiveAdvancedGame
                 ? []

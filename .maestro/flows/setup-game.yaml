@@ -1,111 +1,20 @@
 appId: com.langdk.ultimatestats
-name: Setup Advanced Tracker Game
+name: Seed Advanced Tracker Game
 ---
 - stopApp:
     optional: false
 - launchApp
+- openLink: ultimatestats:///__maestro_seed__
 
-# A freshly installed development build may show Expo's one-time dev menu introduction.
-- runFlow:
-    when:
-      visible: 'Continue'
-    commands:
-      - tapOn:
-          text: 'Continue'
-- runFlow:
-    when:
-      visible: 'Close'
-    commands:
-      - tapOn:
-          text: 'Close'
-
-# Navigate to Dashboard from any active game state:
-# - Advanced Tracker: menu → Home
-# - TrackerLineSelect / PreGameConfirm: back button (×2 for nesting)
-# - Basic Scoreboard: floating home button
-# - Dashboard (no active game): all taps are no-ops
-
+- extendedWaitUntil:
+    visible:
+      id: 'maestro-setup-ready'
+    timeout: 15000
 - tapOn:
-    id: 'tracker-menu-button'
-    optional: true
-- waitForAnimationToEnd:
-    timeout: 500
-- tapOn:
-    id: 'tracker-menu-home'
-    optional: true
-- tapOn:
-    id: 'screen-header-back'
-    optional: true
-- tapOn:
-    id: 'screen-header-back'
-    optional: true
-- tapOn:
-    id: 'scoreboard-home-button'
-    optional: true
-
-# Assert we're on the Dashboard
-- assertVisible:
-    text: 'DASHBOARD'
-
-# Tap "New Game" on the Dashboard
-- tapOn:
-    id: 'dashboard-new-game-button'
-
-# Tap "Advanced Tracker" in the modal
-- tapOn:
-    id: 'new-game-sheet-advanced'
-
-- assertVisible:
-    text: 'ADVANCED TRACKER'
-
-# Select receiving team (Zoboomafoo = "us")
-- tapOn:
-    text: 'Zoboomafoo'
-
-# Select FMP Majority if gender ratio is ON (otherwise this step is skipped)
-# When ratio is OFF, Set Line is already enabled after selecting a team.
-- tapOn:
-    text: 'FMP Majority'
-    optional: true
-
-# Tap Set Line to proceed to line selection
-- tapOn:
-    id: 'advanced-tracker-set-line-button'
-
-# Wait for line selection screen
-- assertVisible:
-    text: 'Starting Line'
-
-# Select 7 players for the line
-- tapOn:
-    id: 'player-chip-Joe'
-- tapOn:
-    id: 'player-chip-Jon'
-- tapOn:
-    id: 'player-chip-Mike'
-- tapOn:
-    id: 'player-chip-Molly'
-- tapOn:
-    id: 'player-chip-Kelly'
-- tapOn:
-    id: 'player-chip-Rachel'
-- tapOn:
-    id: 'player-chip-Joel'
-
-# Confirm line selection
-- tapOn:
-    id: 'line-select-confirm'
-
-# Handle pull tracking - they are pulling since we are receiving
-- assertVisible:
-    text: 'THEY ARE PULLING'
-
-# Skip pull timing (auto-completes as inbound when opponent pulls)
-- tapOn:
-    id: 'pull-skip-timing'
-
-# Wait for tracker screen transition
-- waitForAnimationToEnd:
-    timeout: 2000
+    id: 'maestro-setup-ready'
+- extendedWaitUntil:
+    visible:
+      id: 'tracker-menu-button'
+    timeout: 15000
 - assertVisible:
     text: 'TAP WHO STARTS WITH DISC'

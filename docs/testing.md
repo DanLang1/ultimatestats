@@ -28,8 +28,12 @@ npm run ios
 npm run maestro:smoke
 ```
 
-The Maestro npm scripts set `JAVA_HOME=/opt/homebrew/opt/openjdk`, matching the OpenJDK installed by
-the Maestro Homebrew formula. They also disable Maestro CLI analytics for predictable agent runs.
+Run the default single-simulator suite with `npm run maestro`; it uses the fast seeded tracker setup
+for most flows and keeps one UI setup smoke test for the real Dashboard → New Game → line/pull path.
+It excludes repetitive multi-point stress flows to keep feedback fast. Use `npm run maestro:all` to
+run all core and extended scenarios.
+
+The Maestro npm scripts disable Maestro CLI analytics for predictable agent runs.
 
 Use `.agent/skills/maestro-advanced-tracker/SKILL.md` before adding or extending advanced tracker
 flows.

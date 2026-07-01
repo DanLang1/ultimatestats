@@ -29,11 +29,14 @@ name: Select Line and Handle Pull (Deterministic)
 - tapOn:
     id: 'pull-skip-timing'
 
-# Pull result step only appears when WE are pulling
-# When THEY are pulling, auto-completes as inbound and skips this step
-- tapOn:
-    id: 'pull-result-inbound'
-    optional: true
+# Pull result step only appears when WE are pulling.
+- runFlow:
+    when:
+      visible:
+        id: 'pull-result-inbound'
+    commands:
+      - tapOn:
+          id: 'pull-result-inbound'
 
 # Wait for tracker screen
 - waitForAnimationToEnd:

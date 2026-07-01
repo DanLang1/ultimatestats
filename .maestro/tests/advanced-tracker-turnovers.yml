@@ -11,18 +11,19 @@ name: Advanced Tracker Turnover Scenarios
     id: 'tracker-chip-Jon'
 
 # Open rare menu, select 50/50
-- tapOn:
-    id: 'tracker-more-button'
-- waitForAnimationToEnd:
-    timeout: 500
+- runFlow:
+    file: ../flows/open-rare-menu.yaml
 - assertVisible:
     id: 'rare-menu-50-50'
 - tapOn:
     id: 'rare-menu-50-50'
+    retryTapIfNoChange: true
 
 # Verify modifier prompt
 - assertVisible:
     text: 'Tap other player at fault'
+- waitForAnimationToEnd:
+    timeout: 500
 
 # Tap Mike for 50/50 attribution
 - tapOn:
@@ -31,6 +32,8 @@ name: Advanced Tracker Turnover Scenarios
 # Verify turnover label (50/50 appears in turnover header)
 - assertVisible:
     text: '50/50'
+- waitForAnimationToEnd:
+    timeout: 500
 
 # Tap Joe to pick up disc
 - tapOn:
@@ -44,14 +47,10 @@ name: Advanced Tracker Turnover Scenarios
     id: 'tracker-chip-Jon'
 
 # Open rare menu, select Opp D
-- tapOn:
-    id: 'tracker-more-button'
-- waitForAnimationToEnd:
-    timeout: 500
-- assertVisible:
-    id: 'rare-menu-opp-d'
-- tapOn:
-    id: 'rare-menu-opp-d'
+- runFlow:
+    file: ../flows/open-rare-menu.yaml
+- runFlow:
+    file: ../flows/select-opponent-block.yaml
 
 # Verify on tracker after opponent block
 - assertVisible:

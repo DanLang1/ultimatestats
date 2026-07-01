@@ -15,6 +15,7 @@ import type { GenderRatio } from '@/lib/genderRatioUtils';
 export type { PullResult, ThrowResult };
 
 export interface CreateAdvancedGameInput {
+  id?: string;
   gameType?: AdvancedTrackedGame['gameType'];
   focusSideId: string;
   initialReceivingSideId: string;

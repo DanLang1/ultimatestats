@@ -8,16 +8,12 @@ name: Advanced Tracker Pull Tracking
 # Start with disc, then give opponent a goal so we're back on offense for the test
 - tapOn:
     id: 'tracker-chip-Joe'
-- tapOn:
-    id: 'tracker-more-button'
-- waitForAnimationToEnd:
-    timeout: 500
-- tapOn:
-    id: 'rare-menu-opp-d'
-- tapOn:
-    id: 'defense-opp-goal'
-- assertVisible:
-    id: 'between-point-start-next'
+- runFlow:
+    file: ../flows/open-rare-menu.yaml
+- runFlow:
+    file: ../flows/select-opponent-block.yaml
+- runFlow:
+    file: ../flows/record-opponent-goal.yaml
 - tapOn:
     id: 'between-point-start-next'
 
@@ -28,20 +24,17 @@ name: Advanced Tracker Pull Tracking
 # Need us to score so WE pull next point. Give opponent disc, then Callahan.
 - tapOn:
     id: 'tracker-chip-Joe'
-- tapOn:
-    id: 'tracker-more-button'
-- waitForAnimationToEnd:
-    timeout: 500
-- tapOn:
-    id: 'rare-menu-opp-d'
+- runFlow:
+    file: ../flows/open-rare-menu.yaml
+- runFlow:
+    file: ../flows/select-opponent-block.yaml
 
 # Now opponent has disc. Open rare menu for Callahan.
-- tapOn:
-    id: 'tracker-more-button'
-- waitForAnimationToEnd:
-    timeout: 500
+- runFlow:
+    file: ../flows/open-rare-menu.yaml
 - tapOn:
     id: 'rare-menu-callahan'
+    retryTapIfNoChange: true
 
 # Verify Callahan prompt
 - assertVisible:

@@ -16,7 +16,7 @@
     "format": "prettier --write .",
     "format:changed": "git diff --name-only --diff-filter=d HEAD | xargs -r prettier --write --ignore-unknown",
     "test": "jest",
-    "maestro": "MAESTRO_CLI_NO_ANALYTICS=1 maestro test .maestro/tests/",
+    "maestro": "MAESTRO_CLI_NO_ANALYTICS=1 maestro test --exclude-tags extended .maestro/tests/",
     "maestro:smoke": "MAESTRO_CLI_NO_ANALYTICS=1 maestro test .maestro/tests/advanced-tracker-smoke.yml",
     "maestro:all": "MAESTRO_CLI_NO_ANALYTICS=1 maestro test .maestro/tests/"
   },

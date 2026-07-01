@@ -1,5 +1,7 @@
 appId: com.langdk.ultimatestats
 name: Advanced Tracker View Stats
+tags:
+  - extended
 ---
 - runFlow:
     file: ../flows/setup-game.yaml
@@ -7,54 +9,12 @@ name: Advanced Tracker View Stats
 # --- Point 1: Opponent goal ---
 - tapOn:
     id: 'tracker-chip-Joe'
-- tapOn:
-    id: 'tracker-more-button'
-- waitForAnimationToEnd:
-    timeout: 500
-- tapOn:
-    id: 'rare-menu-opp-d'
-- tapOn:
-    id: 'defense-opp-goal'
-- assertVisible:
-    id: 'between-point-start-next'
-- tapOn:
-    id: 'between-point-start-next'
-
 - runFlow:
-    file: ../flows/select-line-and-pull.yaml
-
-# --- Point 2: Opponent goal ---
-- tapOn:
-    id: 'tracker-chip-Joe'
-- tapOn:
-    id: 'tracker-more-button'
-- waitForAnimationToEnd:
-    timeout: 500
-- tapOn:
-    id: 'rare-menu-opp-d'
-- tapOn:
-    id: 'defense-opp-goal'
-- assertVisible:
-    id: 'between-point-start-next'
-- tapOn:
-    id: 'between-point-start-next'
-
+    file: ../flows/open-rare-menu.yaml
 - runFlow:
-    file: ../flows/select-line-and-pull.yaml
-
-# --- Point 3: Opponent goal ---
-- tapOn:
-    id: 'tracker-chip-Joe'
-- tapOn:
-    id: 'tracker-more-button'
-- waitForAnimationToEnd:
-    timeout: 500
-- tapOn:
-    id: 'rare-menu-opp-d'
-- tapOn:
-    id: 'defense-opp-goal'
-- assertVisible:
-    id: 'between-point-start-next'
+    file: ../flows/select-opponent-block.yaml
+- runFlow:
+    file: ../flows/record-opponent-goal.yaml
 - tapOn:
     id: 'between-point-start-next'
 

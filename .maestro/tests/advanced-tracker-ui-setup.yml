@@ -1,0 +1,8 @@
+appId: com.langdk.ultimatestats
+name: Advanced Tracker UI Setup
+---
+- runFlow:
+    file: ../flows/setup-game-ui.yaml
+
+- takeScreenshot:
+    path: .maestro/screenshots/advanced-tracker-ui-setup

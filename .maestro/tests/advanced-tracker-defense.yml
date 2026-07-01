@@ -1,5 +1,7 @@
 appId: com.langdk.ultimatestats
 name: Advanced Tracker Defense Actions
+tags:
+  - extended
 ---
 - runFlow:
     file: ../flows/setup-game.yaml
@@ -9,12 +11,10 @@ name: Advanced Tracker Defense Actions
     id: 'tracker-chip-Joe'
 
 # Open rare menu and record opponent block
-- tapOn:
-    id: 'tracker-more-button'
-- waitForAnimationToEnd:
-    timeout: 500
-- tapOn:
-    id: 'rare-menu-opp-d'
+- runFlow:
+    file: ../flows/open-rare-menu.yaml
+- runFlow:
+    file: ../flows/select-opponent-block.yaml
 
 # Verify defense actions appear
 - assertVisible:
@@ -23,10 +23,8 @@ name: Advanced Tracker Defense Actions
     id: 'defense-opp-turn'
 
 # Record opponent goal
-- tapOn:
-    id: 'defense-opp-goal'
-- assertVisible:
-    id: 'between-point-start-next'
+- runFlow:
+    file: ../flows/record-opponent-goal.yaml
 - tapOn:
     id: 'between-point-start-next'
 
@@ -36,16 +34,12 @@ name: Advanced Tracker Defense Actions
 # Point 2: Repeat defense flow
 - tapOn:
     id: 'tracker-chip-Joe'
-- tapOn:
-    id: 'tracker-more-button'
-- waitForAnimationToEnd:
-    timeout: 500
-- tapOn:
-    id: 'rare-menu-opp-d'
-- tapOn:
-    id: 'defense-opp-goal'
-- assertVisible:
-    id: 'between-point-start-next'
+- runFlow:
+    file: ../flows/open-rare-menu.yaml
+- runFlow:
+    file: ../flows/select-opponent-block.yaml
+- runFlow:
+    file: ../flows/record-opponent-goal.yaml
 
 - takeScreenshot:
     path: .maestro/screenshots/advanced-tracker-defense

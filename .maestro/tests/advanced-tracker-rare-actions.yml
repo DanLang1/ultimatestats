@@ -9,22 +9,23 @@ name: Advanced Tracker Rare Actions
     id: 'tracker-chip-Joe'
 
 # Open rare menu, select Stall (Offense)
-- tapOn:
-    id: 'tracker-more-button'
-- waitForAnimationToEnd:
-    timeout: 500
+- runFlow:
+    file: ../flows/open-rare-menu.yaml
 - tapOn:
     id: 'rare-menu-stall-offense'
+    retryTapIfNoChange: true
 
 # Stall-offense records a turnover, opponent gets disc
 - waitForAnimationToEnd:
     timeout: 1500
+- assertVisible:
+    id: 'defense-opp-goal'
+- waitForAnimationToEnd:
+    timeout: 500
 
 # Record opponent goal to end point
-- tapOn:
-    id: 'defense-opp-goal'
-- assertVisible:
-    id: 'between-point-start-next'
+- runFlow:
+    file: ../flows/record-opponent-goal.yaml
 - tapOn:
     id: 'between-point-start-next'
 
@@ -36,20 +37,17 @@ name: Advanced Tracker Rare Actions
     id: 'tracker-chip-Joe'
 
 # Give disc to opponent via Opp D
-- tapOn:
-    id: 'tracker-more-button'
-- waitForAnimationToEnd:
-    timeout: 500
-- tapOn:
-    id: 'rare-menu-opp-d'
+- runFlow:
+    file: ../flows/open-rare-menu.yaml
+- runFlow:
+    file: ../flows/select-opponent-block.yaml
 
 # Now opponent has disc, open rare menu for Callahan
-- tapOn:
-    id: 'tracker-more-button'
-- waitForAnimationToEnd:
-    timeout: 500
+- runFlow:
+    file: ../flows/open-rare-menu.yaml
 - tapOn:
     id: 'rare-menu-callahan'
+    retryTapIfNoChange: true
 
 # Verify Callahan prompt
 - assertVisible:
@@ -75,20 +73,17 @@ name: Advanced Tracker Rare Actions
     id: 'tracker-chip-Jon'
 
 # Opp D to give opponent disc
-- tapOn:
-    id: 'tracker-more-button'
-- waitForAnimationToEnd:
-    timeout: 500
-- tapOn:
-    id: 'rare-menu-opp-d'
+- runFlow:
+    file: ../flows/open-rare-menu.yaml
+- runFlow:
+    file: ../flows/select-opponent-block.yaml
 
 # Open rare menu for Stall (Defense)
-- tapOn:
-    id: 'tracker-more-button'
-- waitForAnimationToEnd:
-    timeout: 500
+- runFlow:
+    file: ../flows/open-rare-menu.yaml
 - tapOn:
     id: 'rare-menu-stall'
+    retryTapIfNoChange: true
 
 # Verify stall prompt
 - assertVisible:

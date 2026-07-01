@@ -32,43 +32,36 @@ export function BottomSheet({
   children,
 }: BottomSheetProps) {
   const { palette } = useTheme();
-  const {
-    bottom: bottomInset,
-    left: leftInset,
-    right: rightInset,
-    top: topInset,
-  } = useSafeAreaInsets();
+  const { bottom: bottomInset, left: leftInset, right: rightInset } = useSafeAreaInsets();
   const resolvedOverlayColor = overlayColor ?? palette.overlayDark60;
 
   return (
-    <View style={StyleSheet.absoluteFill}>
-      <View style={[StyleSheet.absoluteFill, { backgroundColor: resolvedOverlayColor }]} />
+    <View style={styles.container}>
       <Pressable
         accessible={false}
-        style={[styles.overlay, { paddingTop: topInset }]}
-        onPress={onDismiss}>
-        <View
-          accessible={false}
-          style={[
-            styles.sheet,
-            sheetStyle,
-            {
-              paddingBottom: Math.max(minBottomPadding, bottomInset),
-              paddingLeft: leftInset,
-              paddingRight: rightInset,
-            },
-          ]}
-          onStartShouldSetResponder={() => true}>
-          {children}
-        </View>
-      </Pressable>
+        style={[StyleSheet.absoluteFill, { backgroundColor: resolvedOverlayColor }]}
+        onPress={onDismiss}
+      />
+      <View
+        accessible={false}
+        style={[
+          styles.sheet,
+          sheetStyle,
+          {
+            paddingBottom: Math.max(minBottomPadding, bottomInset),
+            paddingLeft: leftInset,
+            paddingRight: rightInset,
+          },
+        ]}>
+        {children}
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
+  container: {
+    ...StyleSheet.absoluteFill,
     justifyContent: 'flex-end',
   },
   sheet: {

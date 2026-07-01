@@ -1,0 +1,14 @@
+appId: com.langdk.ultimatestats
+name: Select Opponent Block
+---
+- extendedWaitUntil:
+    visible:
+      id: 'rare-menu-opp-d'
+    timeout: 2000
+- tapOn:
+    id: 'rare-menu-opp-d'
+    retryTapIfNoChange: true
+- extendedWaitUntil:
+    visible:
+      id: 'defense-opp-goal'
+    timeout: 5000

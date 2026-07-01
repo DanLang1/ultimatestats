@@ -1,0 +1,13 @@
+appId: com.langdk.ultimatestats
+name: Open Rare Actions Menu
+---
+- extendedWaitUntil:
+    visible:
+      id: 'tracker-more-button'
+    timeout: 2000
+- tapOn:
+    id: 'tracker-more-button'
+    retryTapIfNoChange: true
+- extendedWaitUntil:
+    visible: 'RARE ACTIONS'
+    timeout: 5000

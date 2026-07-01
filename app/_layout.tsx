@@ -47,6 +47,7 @@ function RootLayoutInner() {
           contentStyle: { backgroundColor: palette.chrome },
         }}>
         <Stack.Screen name="(main)" />
+        <Stack.Screen name="__maestro_seed__" />
         <Stack.Screen
           name="(modals)"
           options={{

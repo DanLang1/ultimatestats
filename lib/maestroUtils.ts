@@ -1,15 +1,56 @@
-import { generateId } from '@/lib/utils';
+import type { Participant } from '@/lib/advancedTracking/types';
+import {
+  getMaestroSeedPlayerId,
+  MAESTRO_SEED_GAME_ID,
+  MAESTRO_SEED_PLAYERS,
+  MAESTRO_SEED_TEAM_ID,
+} from '@/lib/maestroConstants';
+import { useSavedAdvancedGamesStore } from '@/store/advancedTracking/savedGamesStore';
+import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { useGameStore } from '@/store/gameStore';
+import { useGameSessionStore } from '@/store/gameSessionStore';
+import { useTutorialStore } from '@/store/tutorialStore';
 import type { SavedTeam } from '@/lib/storage/types';
 
-const SEED_PLAYERS = ['Joe', 'Jon', 'Mike', 'Molly', 'Kelly', 'Rachel', 'Joel'];
+const FOCUS_SIDE_ID = 'focus-side';
+const OPP_SIDE_ID = 'opp-side';
+const MAESTRO_SEED_TEAM_NAME = 'Zoboomafoo';
+
+type PersistHydrationApi = {
+  hasHydrated: () => boolean;
+  onFinishHydration: (callback: () => void) => () => void;
+};
+
+function waitForHydration(persist: PersistHydrationApi) {
+  if (persist.hasHydrated()) return Promise.resolve();
+
+  return new Promise<void>((resolve) => {
+    const unsubscribe = persist.onFinishHydration(() => {
+      unsubscribe();
+      resolve();
+    });
+    if (persist.hasHydrated()) {
+      unsubscribe();
+      resolve();
+    }
+  });
+}
+
+export async function waitForMaestroStoresToHydrate() {
+  await Promise.all([
+    waitForHydration(useAdvancedTrackingStore.persist),
+    waitForHydration(useGameStore.persist),
+    waitForHydration(useGameSessionStore.persist),
+    waitForHydration(useTutorialStore.persist),
+  ]);
+}
 
 export function buildSeedTeam(): SavedTeam {
   return {
-    id: generateId(),
-    name: 'Zoboomafoo',
-    roster: SEED_PLAYERS.map((name) => ({
-      id: generateId(),
+    id: MAESTRO_SEED_TEAM_ID,
+    name: MAESTRO_SEED_TEAM_NAME,
+    roster: MAESTRO_SEED_PLAYERS.map((name) => ({
+      id: getMaestroSeedPlayerId(name),
       name,
       isActive: true,
       matchingType: null,
@@ -18,9 +59,92 @@ export function buildSeedTeam(): SavedTeam {
   };
 }
 
-export function seedTestTeam() {
+export async function seedTestTeam() {
   const { saveCurrentTeam, setCurrentTeam } = useGameStore.getState();
   const team = buildSeedTeam();
-  saveCurrentTeam(team);
   setCurrentTeam(team);
+  await saveCurrentTeam(team);
+}
+
+async function clearActiveAdvancedGame() {
+  const activeAdvancedGameId = useAdvancedTrackingStore.getState().currentGameId;
+  useAdvancedTrackingStore.getState().resetCurrentGame();
+  if (activeAdvancedGameId != null) {
+    await useSavedAdvancedGamesStore.getState().deleteGame(activeAdvancedGameId);
+  }
+}
+
+export async function seedMaestroTeamPrerequisites(options: { clearActiveGame?: boolean } = {}) {
+  if (options.clearActiveGame === true) {
+    await clearActiveAdvancedGame();
+    useGameStore.getState().resetGame();
+    useGameSessionStore.getState().clearActiveGame();
+  }
+
+  await seedTestTeam();
+  useTutorialStore.getState().completeAdvancedTutorial();
+}
+
+export async function seedAdvancedTrackerTestGame() {
+  const advancedStore = useAdvancedTrackingStore.getState();
+  const gameStore = useGameStore.getState();
+  const sessionStore = useGameSessionStore.getState();
+  const savedAdvancedGamesStore = useSavedAdvancedGamesStore.getState();
+
+  await clearActiveAdvancedGame();
+  gameStore.resetGame();
+  sessionStore.setActiveGameType('advanced');
+  await seedMaestroTeamPrerequisites();
+  await savedAdvancedGamesStore.deleteGame(MAESTRO_SEED_GAME_ID);
+  const team = buildSeedTeam();
+
+  const participants: Participant[] = team.roster.map((player) => ({
+    id: player.id,
+    name: player.name,
+    sourcePlayerId: player.id,
+    matchingType: player.matchingType,
+    role: player.role,
+  }));
+
+  advancedStore.createGame({
+    id: MAESTRO_SEED_GAME_ID,
+    focusSideId: FOCUS_SIDE_ID,
+    initialReceivingSideId: FOCUS_SIDE_ID,
+    sides: [
+      {
+        id: FOCUS_SIDE_ID,
+        label: team.name,
+        sourceTeamId: team.id,
+        trackingMode: 'full-roster',
+      },
+      {
+        id: OPP_SIDE_ID,
+        label: gameStore.team2Name,
+        trackingMode: 'anonymous',
+      },
+    ],
+    participants,
+    format: {
+      gameTo: 15,
+      halftimeEnabled: true,
+      timeoutsPerHalf: 2,
+      floaterEnabled: true,
+    },
+  });
+
+  advancedStore.recordPull({
+    lines: [
+      {
+        sideId: FOCUS_SIDE_ID,
+        participantIds: participants.map((participant) => participant.id),
+      },
+    ],
+    puller: { refType: 'untracked' },
+    result: 'inbound',
+  });
+
+  const seededGame = useAdvancedTrackingStore.getState().currentGame;
+  if (seededGame != null) {
+    await savedAdvancedGamesStore.saveGame(seededGame);
+  }
 }

@@ -12,6 +12,7 @@ import { AdvancedTrackedGame } from '@/lib/advancedTracking/types';
 import { DEFAULT_HALFTIME_BREAK_SECONDS } from '@/lib/constants';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useAdvancedTrackingStore } from '../advancedTracking/trackingStore';
+import { useSavedAdvancedGamesStore } from '../advancedTracking/savedGamesStore';
 
 jest.mock('@react-native-async-storage/async-storage', () => ({
   getItem: jest.fn(),
@@ -123,6 +124,29 @@ describe('advancedTrackingStore', () => {
       'ultimatestats_advanced_tracking',
       expect.any(String),
     );
+  });
+
+  it('does not replace a new game with a stale async load', async () => {
+    createGame();
+    const staleGame = useAdvancedTrackingStore.getState().currentGame!;
+    useAdvancedTrackingStore.setState({ currentGameId: staleGame.id, currentGame: null });
+
+    let resolveLoad: (game: AdvancedTrackedGame) => void = () => undefined;
+    const loadPromise = new Promise<AdvancedTrackedGame>((resolve) => {
+      resolveLoad = resolve;
+    });
+    const loadGameSpy = jest
+      .spyOn(useSavedAdvancedGamesStore.getState(), 'loadGame')
+      .mockReturnValue(loadPromise);
+
+    const staleLoad = useAdvancedTrackingStore.getState().loadCurrentGame();
+    const newGameId = createGame();
+    resolveLoad(staleGame);
+    await staleLoad;
+
+    expect(useAdvancedTrackingStore.getState().currentGameId).toBe(newGameId);
+    expect(useAdvancedTrackingStore.getState().currentGame?.id).toBe(newGameId);
+    loadGameSpy.mockRestore();
   });
 
   it('persists undo history for an active advanced game session', () => {

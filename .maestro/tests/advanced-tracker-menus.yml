@@ -52,3 +52,5 @@ name: Advanced Tracker Menus and Navigation
 # Verify Dashboard
 - assertVisible:
     text: 'DASHBOARD'
+- assertVisible:
+    id: 'dashboard-resume-game-button'

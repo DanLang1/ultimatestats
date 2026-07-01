@@ -129,6 +129,7 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
           if (currentGameId == null) return null;
           const game = await useSavedAdvancedGamesStore.getState().loadGame(currentGameId);
           set((state) => {
+            if (state.currentGameId !== currentGameId) return;
             state.currentGame = game;
           });
           return game;
@@ -189,7 +190,7 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
             );
           }
 
-          const gameId = generateId();
+          const gameId = input.id ?? generateId();
           const game: AdvancedTrackedGame = {
             id: gameId,
             schemaVersion: ADVANCED_TRACKING_SCHEMA_VERSION,

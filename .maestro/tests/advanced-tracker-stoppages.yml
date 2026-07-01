@@ -8,32 +8,6 @@ name: Advanced Tracker Stoppages
 - tapOn:
     id: 'tracker-chip-Joe'
 
-# --- Pause ---
-- tapOn:
-    id: 'scorebar-pause'
-- assertVisible:
-    text: 'PAUSED'
-- tapOn:
-    id: 'stoppage-resume'
-# Verify back on tracker
-- assertVisible:
-    id: 'tracker-menu-button'
-
-# --- Home Timeout ---
-- tapOn:
-    id: 'timeout-dots-focus'
-- waitForAnimationToEnd:
-    timeout: 500
-- tapOn:
-    id: 'timeout-button-home'
-- assertVisible:
-    text: 'TIMEOUT'
-- tapOn:
-    id: 'stoppage-resume'
-# Verify back on tracker
-- assertVisible:
-    id: 'tracker-menu-button'
-
 # --- Injury Substitution ---
 - tapOn:
     id: 'tracker-line-action-tile'
