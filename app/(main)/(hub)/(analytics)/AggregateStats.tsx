@@ -163,6 +163,7 @@ export default function AggregateStatsScreen() {
     setSelectedAdvancedTeamId(teamId);
     setSelectedGameIds(new Set());
     setShowingAggregatedStats(false);
+    setTournamentFilter(null);
   };
 
   const handleSetAggregateMode = (mode: AggregateMode) => {
@@ -216,6 +217,47 @@ export default function AggregateStatsScreen() {
 
   const handleDeselectAllGames = () => {
     setSelectedGameIds(new Set());
+  };
+
+  const getBasicTournamentGameIds = (tournamentId: string) => {
+    if (!selectedTeam) return [];
+
+    return savedGames
+      .filter(
+        (game) =>
+          game.team1.id === selectedTeam && tournamentIdsByBasicGame.get(game.id) === tournamentId,
+      )
+      .map((game) => game.id);
+  };
+
+  const getAdvancedTournamentGameIds = (tournamentId: string) => {
+    if (!selectedAdvancedTeamId) return [];
+
+    return completedAdvancedSavedGameSummaries
+      .filter((game) => {
+        const teamId = game.focusSourceTeamId ?? game.focusSideId;
+        return (
+          teamId === selectedAdvancedTeamId &&
+          tournamentIdsByAdvancedGame.get(game.id) === tournamentId
+        );
+      })
+      .map((game) => game.id);
+  };
+
+  const handleSetTournamentFilter = (tournamentId: string | null) => {
+    setTournamentFilter(tournamentId);
+
+    if (!tournamentId) {
+      setSelectedGameIds(new Set());
+      return;
+    }
+
+    if (aggregateMode === 'advanced') {
+      setSelectedGameIds(new Set(getAdvancedTournamentGameIds(tournamentId)));
+      return;
+    }
+
+    setSelectedGameIds(new Set(getBasicTournamentGameIds(tournamentId)));
   };
 
   const handleShareGames = () => {
@@ -458,10 +500,7 @@ export default function AggregateStatsScreen() {
         tournaments={compatibleTournaments}
         tournamentIdsByGame={tournamentIdsByAdvancedGame}
         tournamentFilter={tournamentFilter}
-        onSetTournamentFilter={(id) => {
-          setTournamentFilter(id);
-          setSelectedGameIds(new Set());
-        }}
+        onSetTournamentFilter={handleSetTournamentFilter}
         onCreateTournament={() => router.push('/CreateTournament')}
       />
     );
@@ -478,10 +517,7 @@ export default function AggregateStatsScreen() {
         tournaments={compatibleTournaments}
         tournamentIdsByGame={tournamentIdsByBasicGame}
         tournamentFilter={tournamentFilter}
-        onSetTournamentFilter={(id) => {
-          setTournamentFilter(id);
-          setSelectedGameIds(new Set());
-        }}
+        onSetTournamentFilter={handleSetTournamentFilter}
         onCreateTournament={() => router.push('/CreateTournament')}
       />
     );
