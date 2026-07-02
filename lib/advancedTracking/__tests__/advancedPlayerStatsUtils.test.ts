@@ -143,8 +143,8 @@ describe('advancedPlayerStatsUtils', () => {
       expect(stats.inboundPulls).toBe(1);
       expect(stats.outOfBoundsPulls).toBe(1);
       expect(stats.droppedPulls).toBe(1);
-      expect(stats.avgPullHangTimeMs).toBe(7000);
-      expect(stats.maxPullHangTimeMs).toBe(8000);
+      expect(stats.avgPullHangTimeMs).toBe(6000);
+      expect(stats.maxPullHangTimeMs).toBe(6000);
       expect(stats.minPullHangTimeMs).toBe(6000);
     });
   });

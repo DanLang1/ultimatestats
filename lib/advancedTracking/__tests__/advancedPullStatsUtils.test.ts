@@ -186,6 +186,120 @@ describe('advancedPullStatsUtils', () => {
       expect(stats.avgHangTimeMs).toBeCloseTo(4000); // (3000 + 5000) / 2
     });
 
+    it('excludes out-of-bounds pulls from average hang time', () => {
+      const game: AdvancedTrackedGame = {
+        ...baseGame,
+        initialReceivingSideId: RIVALS,
+        points: [
+          {
+            id: 'pt1',
+            lines: [{ sideId: ZOO, participantIds: ['p_august'] }],
+            possessions: [
+              {
+                id: 'pos1',
+                sideId: RIVALS,
+                actions: [
+                  {
+                    id: 'a1',
+                    kind: 'pull',
+                    sideId: ZOO,
+                    receivingSideId: RIVALS,
+                    puller: august,
+                    receiver: untracked,
+                    result: 'inbound',
+                    hangTimeMs: 3000,
+                  },
+                  {
+                    id: 'a2',
+                    kind: 'throw',
+                    sideId: RIVALS,
+                    thrower: untracked,
+                    toPlayer: untracked,
+                    result: 'goal',
+                  },
+                ],
+              },
+            ],
+          },
+          {
+            id: 'pt2',
+            lines: [{ sideId: ZOO, participantIds: ['p_august'] }],
+            possessions: [
+              {
+                id: 'pos2',
+                sideId: RIVALS,
+                actions: [
+                  {
+                    id: 'b1',
+                    kind: 'pull',
+                    sideId: ZOO,
+                    receivingSideId: RIVALS,
+                    puller: august,
+                    result: 'ob',
+                    hangTimeMs: 9000,
+                  },
+                  { id: 'b2', kind: 'disc_pickup', sideId: RIVALS, player: untracked },
+                  {
+                    id: 'b3',
+                    kind: 'throw',
+                    sideId: RIVALS,
+                    thrower: untracked,
+                    toPlayer: untracked,
+                    result: 'goal',
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      };
+
+      const analytics = buildAnalyticsGame(game);
+      const stats = computePullStats(analytics);
+
+      expect(stats.totalPulls).toBe(2);
+      expect(stats.outcomes).toEqual({ inbound: 1, ob: 1 });
+      expect(stats.avgHangTimeMs).toBeCloseTo(3000);
+    });
+
+    it('returns null when only out-of-bounds pulls have hang time', () => {
+      const game: AdvancedTrackedGame = {
+        ...baseGame,
+        initialReceivingSideId: RIVALS,
+        points: [
+          {
+            id: 'pt1',
+            lines: [{ sideId: ZOO, participantIds: ['p_august'] }],
+            possessions: [
+              {
+                id: 'pos1',
+                sideId: RIVALS,
+                actions: [
+                  {
+                    id: 'a1',
+                    kind: 'pull',
+                    sideId: ZOO,
+                    receivingSideId: RIVALS,
+                    puller: august,
+                    result: 'ob',
+                    hangTimeMs: 9000,
+                  },
+                  { id: 'a2', kind: 'disc_pickup', sideId: RIVALS, player: untracked },
+                ],
+              },
+            ],
+          },
+        ],
+      };
+
+      const analytics = buildAnalyticsGame(game);
+      const stats = computePullStats(analytics);
+
+      expect(stats.totalPulls).toBe(1);
+      expect(stats.outcomes).toEqual({ ob: 1 });
+      expect(stats.avgHangTimeMs).toBeNull();
+    });
+
     it('returns null when no pulls have hang time', () => {
       const game: AdvancedTrackedGame = {
         ...baseGame,

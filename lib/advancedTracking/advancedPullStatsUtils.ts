@@ -9,7 +9,7 @@ export interface PullStats {
   totalPulls: number;
   /** Pull result → count. E.g. { inbound: 3, ob: 2, dropped: 1 } */
   outcomes: Partial<Record<PullResult, number>>;
-  /** Average hang time in ms across pulls that have hangTimeMs. Null if none have it. */
+  /** Average hang time in ms across non-OB pulls that have hangTimeMs. Null if none have it. */
   avgHangTimeMs: number | null;
 }
 
@@ -35,7 +35,7 @@ export function computePullStats(game: AnalyticsGame, sideId?: string): PullStat
       outcomes[action.result] = (outcomes[action.result] ?? 0) + 1;
     }
 
-    if (action.hangTimeMs != null) {
+    if (action.result !== 'ob' && action.hangTimeMs != null) {
       hangTimeSum += action.hangTimeMs;
       hangTimeCount++;
     }

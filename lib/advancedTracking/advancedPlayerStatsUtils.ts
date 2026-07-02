@@ -44,11 +44,11 @@ export interface AdvancedPlayerStats {
   inboundPulls: number;
   outOfBoundsPulls: number;
   droppedPulls: number;
-  /** Average hang time across timed pulls. Null if no pulls have timing data. */
+  /** Average hang time across timed non-OB pulls. Null if no pulls have timing data. */
   avgPullHangTimeMs: number | null;
-  /** Longest timed pull. Null if no pulls have timing data. */
+  /** Longest timed non-OB pull. Null if no pulls have timing data. */
   maxPullHangTimeMs: number | null;
-  /** Shortest timed pull. Null if no pulls have timing data. */
+  /** Shortest timed non-OB pull. Null if no pulls have timing data. */
   minPullHangTimeMs: number | null;
 
   // Playing time
@@ -228,7 +228,7 @@ export function computeAdvancedPlayerStats(
       if (action.result === 'ob') stats.outOfBoundsPulls++;
       if (action.result === 'dropped') stats.droppedPulls++;
 
-      if (action.hangTimeMs == null) continue;
+      if (action.result === 'ob' || action.hangTimeMs == null) continue;
       pullHangTimeSumMs += action.hangTimeMs;
       timedPullCount++;
       stats.maxPullHangTimeMs = Math.max(stats.maxPullHangTimeMs ?? 0, action.hangTimeMs);
