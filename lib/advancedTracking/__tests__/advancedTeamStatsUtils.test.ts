@@ -257,6 +257,73 @@ describe('advancedTeamStatsUtils', () => {
       expect(stats.dLineConversionPct).toBeCloseTo(0);
     });
 
+    it('computes break efficiency from D-point break chances', () => {
+      const game: AdvancedTrackedGame = {
+        ...baseGame,
+        initialReceivingSideId: RIVALS,
+        points: [
+          makeHoldPoint('pt1', ZOO, RIVALS), // break with a Zoo possession
+          makeHoldPoint('pt2', RIVALS, RIVALS), // opp hold without a Zoo possession
+        ],
+      };
+
+      const analytics = buildAnalyticsGame(game);
+      const stats = computeAdvancedTeamStats(analytics, ZOO);
+
+      expect(stats.dPoints).toBe(2);
+      expect(stats.breaks).toBe(1);
+      expect(stats.dPointsWithTurnover).toBe(1);
+      expect(stats.dLineConversionPct).toBeCloseTo(0.5);
+      expect(stats.breakEfficiencyPct).toBeCloseTo(1);
+    });
+
+    it('counts Callahan breaks as D-points with turnover', () => {
+      const game: AdvancedTrackedGame = {
+        ...baseGame,
+        initialReceivingSideId: RIVALS,
+        points: [
+          {
+            id: 'pt1',
+            lines: [{ sideId: ZOO, participantIds: ['p_august'] }],
+            possessions: [
+              {
+                id: 'pt1_pos1',
+                sideId: RIVALS,
+                actions: [
+                  {
+                    id: 'pt1_a1',
+                    kind: 'pull',
+                    sideId: ZOO,
+                    receivingSideId: RIVALS,
+                    puller: august,
+                    receiver: untracked,
+                    result: 'inbound',
+                  },
+                  {
+                    id: 'pt1_a2',
+                    kind: 'throw',
+                    sideId: RIVALS,
+                    thrower: untracked,
+                    defender: august,
+                    result: 'callahan',
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      };
+
+      const analytics = buildAnalyticsGame(game);
+      const stats = computeAdvancedTeamStats(analytics, ZOO);
+
+      expect(stats.breaks).toBe(1);
+      expect(stats.dPointsWithTurnover).toBe(1);
+      expect(stats.breakEfficiencyPct).toBeCloseTo(1);
+      expect(stats.totalPossessions).toBe(1);
+      expect(stats.possessionConversionPct).toBeCloseTo(1);
+    });
+
     it('excludes terminated points from O/D conversion denominators', () => {
       const game: AdvancedTrackedGame = {
         ...baseGame,
@@ -604,7 +671,7 @@ describe('advancedTeamStatsUtils', () => {
       expect(stats.totalPossessions).toBe(3);
       expect(stats.possessionConversionPct).toBeCloseTo(2 / 3);
       expect(stats.blocksPerDPoint).toBe(2);
-      expect(stats.breakChances).toBe(1);
+      expect(stats.dPointsWithTurnover).toBe(1);
       expect(stats.completedPoints).toBe(2);
       expect(stats.multiPossessionPoints).toBe(1);
       expect(stats.multiPossessionPointPct).toBeCloseTo(0.5);

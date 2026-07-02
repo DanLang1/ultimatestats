@@ -193,7 +193,11 @@ function teamStatsCSV(stats: AdvancedTeamStats, teamName: string): string {
     ]),
     csvRow(['Clean Holds', stats.cleanHolds, '']),
     csvRow(['Dirty Holds', stats.dirtyHolds, '']),
-    csvRow(['Break Chances', stats.breakChances, `${stats.breaks}/${stats.dPoints} D-points`]),
+    csvRow([
+      'D-Points with Turnover',
+      stats.dPointsWithTurnover,
+      `${stats.breaks}/${stats.dPoints} D-points`,
+    ]),
     csvRow(['Scores After Turnover', stats.scoresAfterTurnovers, 'Our scores on possession 2+']),
     csvRow(['Offensive Points', stats.oPoints, '']),
     csvRow(['Defensive Points', stats.dPoints, '']),

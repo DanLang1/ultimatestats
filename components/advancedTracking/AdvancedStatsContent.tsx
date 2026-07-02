@@ -89,13 +89,6 @@ export default function AdvancedStatsContent({
 
   const efficiencyStats: { label: string; value: string | number; sublabel?: string }[] = [];
 
-  if (teamStats.possessionConversionPct != null) {
-    efficiencyStats.push({
-      label: 'Poss Conv',
-      value: formatPercent(teamStats.possessionConversionPct),
-      sublabel: `${teamStats.totalGoals}/${teamStats.totalPossessions}`,
-    });
-  }
   if (teamStats.completionPct != null) {
     efficiencyStats.push({
       label: 'Completion',
@@ -200,46 +193,46 @@ export default function AdvancedStatsContent({
         <View style={styles.ringRow}>
           <View style={styles.ringWrapper}>
             <StatRing
-              percentage={(teamStats.oEfficiency ?? 0) * 100}
+              percentage={(teamStats.oLineConversionPct ?? 0) * 100}
               label="Hold"
-              sublabel={`${teamStats.holds}/${teamStats.holds + teamStats.timesBroken}`}
+              sublabel={`${teamStats.holds}/${teamStats.oPoints}`}
               info={`How often you score when starting on offense.
 
-Formula: Holds ÷ (Holds + Times Broken)`}
+Formula: Holds ÷ O-Points`}
               infoLabel="Hold Rate"
             />
           </View>
           <View style={styles.ringWrapper}>
             <StatRing
-              percentage={(teamStats.dLineConversionPct ?? 0) * 100}
+              percentage={(teamStats.breakEfficiencyPct ?? 0) * 100}
               label="Break Eff"
-              sublabel={`${teamStats.breaks}/${teamStats.dPoints}`}
-              info={`How often you score when starting on defense.
+              sublabel={`${teamStats.breaks}/${teamStats.dPointsWithTurnover}`}
+              info={`When you force a turnover on D, how often do you convert?
 
-Formula: Breaks ÷ D-Points`}
+Formula: Breaks ÷ D-Points with Turnover`}
               infoLabel="Break Efficiency"
             />
           </View>
           <View style={styles.ringWrapper}>
             <StatRing
-              percentage={(teamStats.dEfficiency ?? 0) * 100}
+              percentage={(teamStats.dLineConversionPct ?? 0) * 100}
               label="D-Eff"
-              sublabel={`${teamStats.breaks}/${teamStats.breaks + teamStats.oppHolds}`}
-              info={`When you force a turnover on D, how often do you convert?
+              sublabel={`${teamStats.breaks}/${teamStats.dPoints}`}
+              info={`How often you score when starting on defense.
 
-Formula: Breaks ÷ (Breaks + Opp Holds)`}
+Formula: Breaks ÷ D-Points`}
               infoLabel="Defensive Efficiency"
             />
           </View>
           <View style={styles.ringWrapper}>
             <StatRing
-              percentage={(teamStats.oLineConversionPct ?? 0) * 100}
-              label="O-Line Conv"
-              sublabel={`${teamStats.holds}/${teamStats.oPoints}`}
-              info={`How often you score when your O-line takes the field.
+              percentage={(teamStats.possessionConversionPct ?? 0) * 100}
+              label="Conversion"
+              sublabel={`${teamStats.totalGoals}/${teamStats.totalPossessions}`}
+              info={`How often you score when you have the disc.
 
-Formula: Holds ÷ O-Points`}
-              infoLabel="O-Line Conversion"
+Formula: Goals ÷ Possessions`}
+              infoLabel="Conversion Rate"
             />
           </View>
         </View>

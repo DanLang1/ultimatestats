@@ -21,6 +21,8 @@ export interface AdvancedTeamStats {
   oLineConversionPct: number | null;
   /** breaks / dPoints. Null if 0 D-points. */
   dLineConversionPct: number | null;
+  /** breaks / dPointsWithTurnover. Null if no D-point break chances. */
+  breakEfficiencyPct: number | null;
   /** Average number of possessions by this side per point. Null if 0 points. */
   possessionsPerPoint: number | null;
   /** Average possessions by this side per O-point. Null if 0 O-points. */
@@ -51,8 +53,8 @@ export interface AdvancedTeamStats {
   totalBlocks: number;
   /** Possessions by this side where possessionIndex > 0 and result === 'scored'. */
   scoresAfterTurnovers: number;
-  /** D-points where this side gained at least one possession. */
-  breakChances: number;
+  /** D-points where this side gained possession or scored. */
+  dPointsWithTurnover: number;
   /** Completed points used for game-flow percentages. */
   completedPoints: number;
   /** Completed points where this side had two or more possessions. */
@@ -164,6 +166,12 @@ export function computeAdvancedTeamStats(game: AnalyticsGame, sideId: string): A
       }
     } else if (poss.turnoverType === 'block' || poss.turnoverType === 'callahan') {
       totalBlocks++;
+      if (poss.turnoverType === 'callahan') {
+        // Raw tracking records a Callahan inside the thrower's possession, because the point ends
+        // immediately. For team conversion stats, credit the scoring defense with one derived
+        // possession so a Callahan goal is not counted as a goal with zero possessions.
+        possessionsByPoint.set(poss.pointId, (possessionsByPoint.get(poss.pointId) ?? 0) + 1);
+      }
     }
   }
 
@@ -193,12 +201,15 @@ export function computeAdvancedTeamStats(game: AnalyticsGame, sideId: string): A
   const dTotal = breaks + oppHolds;
   const totalGoals = holds + breaks;
   let multiPossessionPoints = 0;
-  let breakChances = 0;
+  let dPointsWithTurnover = 0;
   for (const point of game.points) {
     const state = getPointStateForSide(point, sideId);
     if (state === 'terminated' || state === 'in_progress') continue;
-    if (point.receivingSideId !== sideId && (possessionsByPoint.get(point.id) ?? 0) > 0) {
-      breakChances++;
+    if (
+      point.receivingSideId !== sideId &&
+      ((possessionsByPoint.get(point.id) ?? 0) > 0 || state === 'break')
+    ) {
+      dPointsWithTurnover++;
     }
     if ((possessionsByPoint.get(point.id) ?? 0) >= 2) {
       multiPossessionPoints++;
@@ -219,6 +230,7 @@ export function computeAdvancedTeamStats(game: AnalyticsGame, sideId: string): A
     dPoints,
     oLineConversionPct: oPoints > 0 ? holds / oPoints : null,
     dLineConversionPct: dPoints > 0 ? breaks / dPoints : null,
+    breakEfficiencyPct: dPointsWithTurnover > 0 ? breaks / dPointsWithTurnover : null,
     possessionsPerPoint: pointCount > 0 ? totalPossessionsInGame / pointCount : null,
     possessionsPerOPoint: oPoints > 0 ? totalPossessionsOnO / oPoints : null,
     possessionsPerDPoint: dPoints > 0 ? totalPossessionsOnD / dPoints : null,
@@ -238,7 +250,7 @@ export function computeAdvancedTeamStats(game: AnalyticsGame, sideId: string): A
     totalTurnovers: totalTurnoversInGame,
     totalBlocks,
     scoresAfterTurnovers,
-    breakChances,
+    dPointsWithTurnover,
     completedPoints: completedPointCount,
     multiPossessionPoints,
     multiPossessionPointPct:
