@@ -84,6 +84,8 @@ name: Advanced Tracker Pull Tracking
     id: 'pull-result-ob'
 - assertVisible:
     id: 'pull-result-dropped'
+- assertVisible:
+    id: 'pull-result-roller'
 
 # Select out-of-bounds
 - tapOn:

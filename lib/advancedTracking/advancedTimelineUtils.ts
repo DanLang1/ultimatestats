@@ -17,6 +17,7 @@ import type {
   GameTransition,
   PointSub,
   PossessionAction,
+  PullResult,
   ThrowResult,
   TrackedPoint,
 } from './types';
@@ -69,7 +70,7 @@ export interface AdvancedTimelineActionBase {
 
 export interface PullDisplayAction extends AdvancedTimelineActionBase {
   kind: 'pull';
-  pullResult: 'inbound' | 'ob' | 'dropped';
+  pullResult: PullResult;
   hangTimeMs?: number;
   pullerName: string;
 }
@@ -290,6 +291,9 @@ function buildPullDisplayAction(
   } else if (pullResult === 'ob') {
     tone = 'warning';
     secondaryLabel = hangLabel != null ? `OB · ${hangLabel}` : 'OB';
+  } else if (pullResult === 'roller') {
+    tone = 'muted';
+    secondaryLabel = hangLabel != null ? `Roller · ${hangLabel}` : 'Roller';
   } else {
     tone = 'muted';
     secondaryLabel = hangLabel;

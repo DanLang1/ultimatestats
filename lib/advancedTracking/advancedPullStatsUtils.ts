@@ -7,10 +7,14 @@ type PullResult = PullAction['result'];
 
 export interface PullStats {
   totalPulls: number;
-  /** Pull result → count. E.g. { inbound: 3, ob: 2, dropped: 1 } */
+  /** Pull result → count. E.g. { inbound: 3, ob: 2, dropped: 1, roller: 1 } */
   outcomes: Partial<Record<PullResult, number>>;
-  /** Average hang time in ms across non-OB pulls that have hangTimeMs. Null if none have it. */
+  /** Average hang time in ms across timed inbound/dropped pulls. Null if none have it. */
   avgHangTimeMs: number | null;
+}
+
+export function getInboundPullCount(stats: Pick<PullStats, 'outcomes'>): number {
+  return (stats.outcomes.inbound ?? 0) + (stats.outcomes.roller ?? 0);
 }
 
 // ── Main ──────────────────────────────────────────────────────────────────────
@@ -35,7 +39,7 @@ export function computePullStats(game: AnalyticsGame, sideId?: string): PullStat
       outcomes[action.result] = (outcomes[action.result] ?? 0) + 1;
     }
 
-    if (action.result !== 'ob' && action.hangTimeMs != null) {
+    if (action.result !== 'ob' && action.result !== 'roller' && action.hangTimeMs != null) {
       hangTimeSum += action.hangTimeMs;
       hangTimeCount++;
     }

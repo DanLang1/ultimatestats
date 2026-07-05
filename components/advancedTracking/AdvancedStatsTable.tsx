@@ -85,6 +85,7 @@ const STAT_GROUPS: StatGroup[] = [
       { key: 'inboundPulls', label: 'In', width: 58 },
       { key: 'outOfBoundsPulls', label: 'OB', width: 58 },
       { key: 'droppedPulls', label: 'Drop', width: 58 },
+      { key: 'rollerPulls', label: 'Rol', width: 58 },
       { key: 'avgPullHangTimeMs', label: 'Avg', width: 68 },
       { key: 'maxPullHangTimeMs', label: 'Max', width: 68 },
       { key: 'minPullHangTimeMs', label: 'Min', width: 68 },
@@ -107,6 +108,7 @@ const LEGEND_ITEMS: { abbr: string; label: string }[] = [
   { abbr: 'Pls', label: 'Pulls' },
   { abbr: 'In', label: 'Inbound Pulls' },
   { abbr: 'OB', label: 'Out-of-Bounds Pulls' },
+  { abbr: 'Rol', label: 'Roller Pulls' },
   { abbr: 'Avg', label: 'Average Pull Hangtime' },
   { abbr: 'Max', label: 'Longest Pull Hangtime' },
   { abbr: 'Min', label: 'Shortest Pull Hangtime' },
@@ -465,6 +467,11 @@ export default function AdvancedStatsTable({
           </View>
         </ScrollView>
       </View>
+      {activeGroupKey === 'pulls' && (
+        <ThemedText style={[styles.tableNote, { color: palette.textMuted }]}>
+          * Hangtime stats exclude OB and roller pulls.
+        </ThemedText>
+      )}
     </View>
   );
 }
@@ -605,6 +612,11 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     },
     plusMinusCell: {
       fontFamily: Fonts.extraBold,
+    },
+    tableNote: {
+      fontSize: scaleBySizeClass(11, sizeClass),
+      fontFamily: Fonts.semiBold,
+      marginTop: 8,
     },
   });
 }

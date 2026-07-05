@@ -127,6 +127,35 @@ describe('advancedPlayerStatsUtils', () => {
                   sideId: ZOO,
                   receivingSideId: RIVALS,
                   puller: august,
+                  result: 'roller',
+                  hangTimeMs: 9000,
+                },
+                {
+                  id: 'goal3',
+                  kind: 'throw',
+                  sideId: RIVALS,
+                  thrower: untracked,
+                  toPlayer: untracked,
+                  result: 'goal',
+                },
+              ],
+            },
+          ],
+        },
+        {
+          id: 'pt4',
+          lines: [{ sideId: ZOO, participantIds: ['p_august'] }],
+          possessions: [
+            {
+              id: 'pos4',
+              sideId: RIVALS,
+              actions: [
+                {
+                  id: 'pull4',
+                  kind: 'pull',
+                  sideId: ZOO,
+                  receivingSideId: RIVALS,
+                  puller: august,
                   result: 'dropped',
                 },
               ],
@@ -139,10 +168,11 @@ describe('advancedPlayerStatsUtils', () => {
     it('computes outcomes and hangtime from tracked pulls', () => {
       const stats = findStats(computeAdvancedPlayerStats(buildAnalyticsGame(game)), 'p_august');
 
-      expect(stats.pulls).toBe(3);
-      expect(stats.inboundPulls).toBe(1);
+      expect(stats.pulls).toBe(4);
+      expect(stats.inboundPulls).toBe(2);
       expect(stats.outOfBoundsPulls).toBe(1);
       expect(stats.droppedPulls).toBe(1);
+      expect(stats.rollerPulls).toBe(1);
       expect(stats.avgPullHangTimeMs).toBe(6000);
       expect(stats.maxPullHangTimeMs).toBe(6000);
       expect(stats.minPullHangTimeMs).toBe(6000);

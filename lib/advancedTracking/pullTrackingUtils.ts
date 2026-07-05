@@ -11,6 +11,7 @@ import { RecordPullInput } from '@/store/advancedTracking/trackingStore.types';
 export const PULL_RESULTS: { value: PullResult; label: string }[] = [
   { value: 'inbound', label: 'INBOUND' },
   { value: 'ob', label: 'OUT OF BOUNDS' },
+  { value: 'roller', label: 'ROLLER' },
   { value: 'dropped', label: 'DROPPED' },
 ];
 

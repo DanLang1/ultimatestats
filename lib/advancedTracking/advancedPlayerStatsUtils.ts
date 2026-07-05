@@ -44,11 +44,12 @@ export interface AdvancedPlayerStats {
   inboundPulls: number;
   outOfBoundsPulls: number;
   droppedPulls: number;
-  /** Average hang time across timed non-OB pulls. Null if no pulls have timing data. */
+  rollerPulls: number;
+  /** Average hang time across timed inbound/dropped pulls. Null if no pulls have timing data. */
   avgPullHangTimeMs: number | null;
-  /** Longest timed non-OB pull. Null if no pulls have timing data. */
+  /** Longest timed inbound/dropped pull. Null if no pulls have timing data. */
   maxPullHangTimeMs: number | null;
-  /** Shortest timed non-OB pull. Null if no pulls have timing data. */
+  /** Shortest timed inbound/dropped pull. Null if no pulls have timing data. */
   minPullHangTimeMs: number | null;
 
   // Playing time
@@ -92,6 +93,7 @@ function createEmptyStats(participantId: string): AdvancedPlayerStats {
     inboundPulls: 0,
     outOfBoundsPulls: 0,
     droppedPulls: 0,
+    rollerPulls: 0,
     avgPullHangTimeMs: null,
     maxPullHangTimeMs: null,
     minPullHangTimeMs: null,
@@ -224,11 +226,14 @@ export function computeAdvancedPlayerStats(
       // Only count pulls thrown by our side (sideId is the pulling side for pull actions).
       if (sideId != null && action.sideId !== sideId) continue;
 
-      if (action.result === 'inbound') stats.inboundPulls++;
+      if (action.result === 'inbound' || action.result === 'roller') stats.inboundPulls++;
       if (action.result === 'ob') stats.outOfBoundsPulls++;
       if (action.result === 'dropped') stats.droppedPulls++;
+      if (action.result === 'roller') stats.rollerPulls++;
 
-      if (action.result === 'ob' || action.hangTimeMs == null) continue;
+      if (action.result === 'ob' || action.result === 'roller' || action.hangTimeMs == null) {
+        continue;
+      }
       pullHangTimeSumMs += action.hangTimeMs;
       timedPullCount++;
       stats.maxPullHangTimeMs = Math.max(stats.maxPullHangTimeMs ?? 0, action.hangTimeMs);

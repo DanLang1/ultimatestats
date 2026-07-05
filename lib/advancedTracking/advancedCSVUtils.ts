@@ -3,7 +3,7 @@ import { getFinalScores, getPointStateForSide, UNKNOWN_PARTICIPANT_ID } from './
 import { computeAdvancedPlayerStats, type AdvancedPlayerStats } from './advancedPlayerStatsUtils';
 import { computeAdvancedTeamStats, type AdvancedTeamStats } from './advancedTeamStatsUtils';
 import { computeAdvancedTimingStats, type AdvancedTimingStats } from './advancedTimingStatsUtils';
-import { computePullStats, type PullStats } from './advancedPullStatsUtils';
+import { computePullStats, getInboundPullCount, type PullStats } from './advancedPullStatsUtils';
 import { getPointStateLabel } from './advancedTimelineUtils';
 import { csvRow, type CSVCell } from '@/lib/csvUtils';
 import { formatDateForCSV } from '@/lib/statsUtils';
@@ -244,9 +244,10 @@ function pullStatsCSV(stats: PullStats): string {
     [
       csvRow(['Stat', 'Value']),
       csvRow(['Total Pulls', stats.totalPulls]),
-      csvRow(['Inbound', stats.outcomes.inbound ?? 0]),
+      csvRow(['Inbound', getInboundPullCount(stats)]),
       csvRow(['Out of Bounds', stats.outcomes.ob ?? 0]),
       csvRow(['Dropped', stats.outcomes.dropped ?? 0]),
+      csvRow(['Roller', stats.outcomes.roller ?? 0]),
       csvRow([
         'Avg Hang Time',
         stats.avgHangTimeMs != null ? `${(stats.avgHangTimeMs / 1000).toFixed(1)}s` : '-',
@@ -278,6 +279,7 @@ function playerSummaryCSV(
       'Inbound Pulls',
       'Out of Bounds Pulls',
       'Dropped Pulls',
+      'Roller Pulls',
       'Avg Pull Hang Time',
       'Max Pull Hang Time',
       'Min Pull Hang Time',
@@ -318,6 +320,7 @@ function playerSummaryCSV(
         cells.push(p.inboundPulls);
         cells.push(p.outOfBoundsPulls);
         cells.push(p.droppedPulls);
+        cells.push(p.rollerPulls);
         cells.push(
           p.avgPullHangTimeMs != null ? `${(p.avgPullHangTimeMs / 1000).toFixed(1)}s` : '-',
         );

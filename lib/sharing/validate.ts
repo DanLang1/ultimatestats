@@ -143,7 +143,12 @@ function validateAdvancedAction(action: unknown): asserts action is PossessionAc
     validateOptionalPlayerRef(action.receiver);
     validateOptionalFieldLocation(action.origin);
     validateOptionalFieldLocation(action.landing);
-    if (action.result !== 'inbound' && action.result !== 'ob' && action.result !== 'dropped') {
+    if (
+      action.result !== 'inbound' &&
+      action.result !== 'ob' &&
+      action.result !== 'dropped' &&
+      action.result !== 'roller'
+    ) {
       throw new Error('Invalid advanced game: invalid pull result');
     }
     return;

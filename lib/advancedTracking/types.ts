@@ -271,7 +271,7 @@ export type FieldLocation =
 
 export type PossessionAction = PullAction | DiscPickupAction | ThrowAction | StoppageAction;
 
-export type PullResult = 'inbound' | 'ob' | 'dropped';
+export type PullResult = 'inbound' | 'ob' | 'dropped' | 'roller';
 
 export interface PullAction {
   id: string;

@@ -7,7 +7,10 @@ import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { AdvancedInitialPullWinStats } from '@/lib/advancedTracking/advancedAggregateStatsUtils';
 import { computeAdvancedPlayerStats } from '@/lib/advancedTracking/advancedPlayerStatsUtils';
-import { computePullStats } from '@/lib/advancedTracking/advancedPullStatsUtils';
+import {
+  computePullStats,
+  getInboundPullCount,
+} from '@/lib/advancedTracking/advancedPullStatsUtils';
 import { computeAdvancedTeamStats } from '@/lib/advancedTracking/advancedTeamStatsUtils';
 import { AnalyticsGame } from '@/lib/advancedTracking/analyticsTypes';
 import { Fonts } from '@/theme/theme';
@@ -58,6 +61,7 @@ export default function AdvancedStatsContent({
   const playerStats = computeAdvancedPlayerStats(game, focusSideId);
   const teamStats = computeAdvancedTeamStats(game, focusSideId);
   const pullStats = computePullStats(game, focusSideId);
+  const inboundPullCount = getInboundPullCount(pullStats);
 
   const possessionFlowStats: { label: string; value: string | number; sublabel?: string }[] = [];
 
@@ -282,8 +286,8 @@ Formula: Goals ÷ Possessions`}
               stats={[
                 {
                   label: 'Inbound',
-                  value: `${Math.round(((pullStats.outcomes.inbound ?? 0) / pullStats.totalPulls) * 100)}%`,
-                  sublabel: `${pullStats.outcomes.inbound ?? 0}/${pullStats.totalPulls}`,
+                  value: `${Math.round((inboundPullCount / pullStats.totalPulls) * 100)}%`,
+                  sublabel: `${inboundPullCount}/${pullStats.totalPulls}`,
                 },
                 ...(pullStats.avgHangTimeMs != null
                   ? [
