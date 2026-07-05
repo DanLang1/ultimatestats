@@ -441,7 +441,7 @@ it('scenario: full game — both teams tracked, every field', () => {
     },
     settings: {
       locationMode: 'none',
-      format: { formatType: 'standard', gameTo: 7, halftimeAt: 4, softCapAt: 6 },
+      format: { formatType: 'standard', gameTo: 7, halftimeAt: 4 },
     },
     sides: [
       {

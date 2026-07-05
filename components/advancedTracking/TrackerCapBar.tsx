@@ -2,7 +2,7 @@ import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
 import { useTimestampTimer } from '@/hooks/advancedTracking/useTimer';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import { computeCapState } from '@/lib/advancedTracking/capUtils';
+import { computeCapState, getCapThresholdMinutes } from '@/lib/advancedTracking/capUtils';
 import {
   getActiveGameClockPause,
   getCompletedGameClockPauseMs,
@@ -38,17 +38,20 @@ export const TrackerCapBar = ({ onMenuPress, game }: TrackerCapBarProps) => {
       ? getGameClockElapsedMs(game, Date.now())
       : Math.max(0, rawGameElapsedMs - completedGameClockPauseMs);
   const hardCapMins = useSettingsStore((state) => state.hardCapMins);
-  const softCapMins = useSettingsStore((state) => state.softCapMins);
-  const { capLabel, capProgress, capTimeLeftMs, capIsWarning } = computeCapState({
+  const advancedSoftCapAtMins = useSettingsStore((state) => state.advancedSoftCapAtMins);
+  const capThresholds = getCapThresholdMinutes(game, {
+    softCapAtMinutes: advancedSoftCapAtMins,
+    hardCapAtMinutes: hardCapMins,
+  });
+  const capState = computeCapState({
     gameElapsedMs,
     gameStarted: gameStartedAt !== null,
-    gameLengthMinutes: hardCapMins,
-    softCapMins,
+    ...capThresholds,
   });
-  const capDisplayLabel = activeGameClockPause !== null ? 'CAP PAUSED' : capLabel;
   const styles = createStyles(sizeClass);
-  const capFillColor = capIsWarning ? palette.danger : palette.accent;
-  const capTextColor = capIsWarning ? palette.danger : palette.textMuted;
+  const capDisplayLabel = activeGameClockPause !== null ? 'CAP PAUSED' : capState?.capLabel;
+  const capFillColor = capState?.capIsWarning ? palette.danger : palette.accent;
+  const capTextColor = capState?.capIsWarning ? palette.danger : palette.textMuted;
 
   return (
     <View style={styles.container}>
@@ -63,22 +66,26 @@ export const TrackerCapBar = ({ onMenuPress, game }: TrackerCapBarProps) => {
           color={palette.textInverse}
         />
       </Pressable>
-      <View style={styles.center}>
-        <View style={styles.labelRow}>
-          <ThemedText style={[styles.label, { color: capTextColor }]}>{capDisplayLabel}</ThemedText>
-          <ThemedText style={[styles.timeLeft, { color: capTextColor }]}>
-            {gameStartedAt !== null ? `${formatPointTime(capTimeLeftMs)} left` : '—'}
-          </ThemedText>
+      {capState !== null && (
+        <View style={styles.center} testID="tracker-cap-bar">
+          <View style={styles.labelRow}>
+            <ThemedText style={[styles.label, { color: capTextColor }]} testID="tracker-cap-label">
+              {capDisplayLabel}
+            </ThemedText>
+            <ThemedText style={[styles.timeLeft, { color: capTextColor }]}>
+              {gameStartedAt !== null ? `${formatPointTime(capState.capTimeLeftMs)} left` : '—'}
+            </ThemedText>
+          </View>
+          <View style={[styles.barTrack, { backgroundColor: palette.overlay10 }]}>
+            <View
+              style={[
+                styles.barFill,
+                { width: `${capState.capProgress * 100}%`, backgroundColor: capFillColor },
+              ]}
+            />
+          </View>
         </View>
-        <View style={[styles.barTrack, { backgroundColor: palette.overlay10 }]}>
-          <View
-            style={[
-              styles.barFill,
-              { width: `${capProgress * 100}%`, backgroundColor: capFillColor },
-            ]}
-          />
-        </View>
-      </View>
+      )}
     </View>
   );
 };

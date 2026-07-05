@@ -89,10 +89,10 @@ export interface GameFormatSettings {
   gameTo?: number;
   /** Score at which halftime is called, e.g. `8` in a game to 15. */
   halftimeAt?: number;
-  /** Score at which soft cap activates. */
-  softCapAt?: number;
-  /** Score at which hard cap activates. */
-  hardCapAt?: number;
+  /** Whether soft cap tracking is enabled for this game. Missing means enabled for legacy games. */
+  softCapEnabled?: boolean;
+  /** Whether hard cap tracking is enabled for this game. Missing means enabled for legacy games. */
+  hardCapEnabled?: boolean;
   /** Regular timeouts per team per half. */
   timeoutsPerHalf?: number;
   /** Whether a once-per-game floater timeout is available after regulars are used. */

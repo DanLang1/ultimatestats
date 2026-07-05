@@ -525,6 +525,26 @@ describe('isAdvancedGameOver', () => {
     ).toBe(true);
   });
 
+  it('ignores a hard_cap transition when hard cap tracking is disabled', () => {
+    const point = makePoint([
+      makePossession(HOME, [
+        { id: 'a1', kind: 'throw', sideId: HOME, thrower: august, result: 'goal' },
+      ]),
+    ]);
+
+    expect(
+      isAdvancedGameOver({
+        ...baseGame,
+        settings: {
+          locationMode: 'none',
+          format: { formatType: 'standard', gameTo: 15, hardCapEnabled: false },
+        },
+        points: [point],
+        gameTransitions: [{ id: 'hard1', transitionType: 'hard_cap', afterPointId: point.id }],
+      }),
+    ).toBe(false);
+  });
+
   it('returns false when hard cap has been reached but the score is tied (universe point continues)', () => {
     // USAU 6.D.2: if score is tied when hard cap scoring attempt completes, play continues until one additional goal
     const game: AdvancedTrackedGame = {
@@ -592,6 +612,25 @@ describe('getEffectiveGameTo — soft cap edge cases', () => {
       points,
       gameTransitions: [{ id: 'soft1', transitionType: 'soft_cap', afterPointId: 'pt27' }],
     };
+    expect(getEffectiveGameTo(game)).toBe(15);
+  });
+
+  it('ignores a soft_cap transition when soft cap tracking is disabled', () => {
+    const point = makePoint([
+      makePossession(HOME, [
+        { id: 'a1', kind: 'throw', sideId: HOME, thrower: august, result: 'goal' },
+      ]),
+    ]);
+    const game: AdvancedTrackedGame = {
+      ...baseGame,
+      settings: {
+        locationMode: 'none',
+        format: { formatType: 'standard', gameTo: 15, softCapEnabled: false },
+      },
+      points: [point],
+      gameTransitions: [{ id: 'soft1', transitionType: 'soft_cap', afterPointId: point.id }],
+    };
+
     expect(getEffectiveGameTo(game)).toBe(15);
   });
 });

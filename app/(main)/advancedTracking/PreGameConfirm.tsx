@@ -56,6 +56,12 @@ export default function AdvancedPreGameConfirm() {
     setHardCapMins,
     softCapMins,
     setSoftCapMins,
+    advancedSoftCapAtMins,
+    setAdvancedSoftCapAtMins,
+    advancedHardCapEnabled,
+    setAdvancedHardCapEnabled,
+    advancedSoftCapEnabled,
+    setAdvancedSoftCapEnabled,
   } = useSettingsStore();
 
   const fmpTextColor = getContrastingTextColor(palette.fmpColor);
@@ -69,7 +75,6 @@ export default function AdvancedPreGameConfirm() {
 
   const openPicker = useNumberPickerStore((s) => s.open);
 
-  const softCapTime = hardCapMins - softCapMins;
   const timeoutCount = team1Timeouts.length;
 
   const [receivingTeam, setReceivingTeam] = useState<'us' | 'them' | ''>('');
@@ -117,6 +122,8 @@ export default function AdvancedPreGameConfirm() {
       format: {
         gameTo,
         halftimeEnabled: autoHalftimeEnabled,
+        softCapEnabled: advancedSoftCapEnabled,
+        hardCapEnabled: advancedHardCapEnabled,
         timeoutsPerHalf: timeoutCount,
         floaterEnabled: floaterEnabledForGame,
       },
@@ -146,6 +153,14 @@ export default function AdvancedPreGameConfirm() {
       setOpponentNameDraft(team2Name);
     }
     setIsEditingOpponentName(false);
+  };
+
+  const handleHardCapToggle = () => {
+    const nextEnabled = !advancedHardCapEnabled;
+    setAdvancedHardCapEnabled(nextEnabled);
+    if (nextEnabled && advancedSoftCapAtMins > hardCapMins) {
+      setAdvancedSoftCapAtMins(hardCapMins);
+    }
   };
 
   return (
@@ -214,43 +229,68 @@ export default function AdvancedPreGameConfirm() {
           <EditableSettingCard
             icon="clock-outline"
             label="Hard Cap"
-            onPress={() =>
-              openNumberPicker({
-                value: hardCapMins,
-                min: 1,
-                max: 180,
-                label: 'Hard Cap',
-                suffix: 'min',
-                quickOptions: [90, 105, 110, 120],
-                onChange: (val) => {
-                  setHardCapMins(val);
-                  setTimerTimeLeft(val * 60);
-                  if (softCapMins > val) setSoftCapMins(val);
-                },
-              })
-            }>
+            isActive={advancedHardCapEnabled}
+            onPress={handleHardCapToggle}>
             <ThemedText style={[styles.settingValue, { color: palette.textInverse }]}>
-              {hardCapMins} min
+              {advancedHardCapEnabled ? 'ON' : 'OFF'}
             </ThemedText>
           </EditableSettingCard>
+
+          {advancedHardCapEnabled && (
+            <EditableSettingCard
+              icon="timer-outline"
+              label="Hard Cap Time"
+              onPress={() =>
+                openNumberPicker({
+                  value: hardCapMins,
+                  min: 1,
+                  max: 180,
+                  label: 'Hard Cap',
+                  suffix: 'min',
+                  quickOptions: [90, 105, 110, 120],
+                  onChange: (val) => {
+                    setHardCapMins(val);
+                    setTimerTimeLeft(val * 60);
+                    if (softCapMins > val) setSoftCapMins(val);
+                    if (advancedSoftCapAtMins > val) setAdvancedSoftCapAtMins(val);
+                  },
+                })
+              }>
+              <ThemedText style={[styles.settingValue, { color: palette.textInverse }]}>
+                {hardCapMins} min
+              </ThemedText>
+            </EditableSettingCard>
+          )}
 
           <EditableSettingCard
             icon="clock-alert-outline"
             label="Soft Cap"
-            onPress={() =>
-              openNumberPicker({
-                value: softCapTime,
-                min: 0,
-                max: hardCapMins,
-                label: 'Soft Cap',
-                suffix: 'min',
-                onChange: (val) => setSoftCapMins(hardCapMins - val),
-              })
-            }>
+            isActive={advancedSoftCapEnabled}
+            onPress={() => setAdvancedSoftCapEnabled(!advancedSoftCapEnabled)}>
             <ThemedText style={[styles.settingValue, { color: palette.textInverse }]}>
-              {softCapTime} min
+              {advancedSoftCapEnabled ? 'ON' : 'OFF'}
             </ThemedText>
           </EditableSettingCard>
+
+          {advancedSoftCapEnabled && (
+            <EditableSettingCard
+              icon="timer-sand"
+              label="Soft Cap Time"
+              onPress={() =>
+                openNumberPicker({
+                  value: advancedSoftCapAtMins,
+                  min: 0,
+                  max: advancedHardCapEnabled ? hardCapMins : 180,
+                  label: 'Soft Cap',
+                  suffix: 'min',
+                  onChange: setAdvancedSoftCapAtMins,
+                })
+              }>
+              <ThemedText style={[styles.settingValue, { color: palette.textInverse }]}>
+                {advancedSoftCapAtMins} min
+              </ThemedText>
+            </EditableSettingCard>
+          )}
 
           <EditableSettingCard
             icon="swap-vertical"

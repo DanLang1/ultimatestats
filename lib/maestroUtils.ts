@@ -9,12 +9,16 @@ import { useSavedAdvancedGamesStore } from '@/store/advancedTracking/savedGamesS
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { useGameStore } from '@/store/gameStore';
 import { useGameSessionStore } from '@/store/gameSessionStore';
+import { useSettingsStore } from '@/store/settingsStore';
 import { useTutorialStore } from '@/store/tutorialStore';
 import type { SavedTeam } from '@/lib/storage/types';
 
 const FOCUS_SIDE_ID = 'focus-side';
 const OPP_SIDE_ID = 'opp-side';
 const MAESTRO_SEED_TEAM_NAME = 'Zoboomafoo';
+const MAESTRO_CAP_SOFT_ACTIVE_ELAPSED_MS = 75 * 60 * 1000;
+
+export type MaestroCapMode = 'both' | 'hard' | 'soft' | 'none' | 'softActive';
 
 type PersistHydrationApi = {
   hasHydrated: () => boolean;
@@ -85,16 +89,78 @@ export async function seedMaestroTeamPrerequisites(options: { clearActiveGame?: 
   useTutorialStore.getState().completeAdvancedTutorial();
 }
 
-export async function seedAdvancedTrackerTestGame() {
+function getSeedCapFormat(capMode: MaestroCapMode) {
+  if (capMode === 'hard') {
+    return {
+      softCapEnabled: false,
+      hardCapEnabled: true,
+    };
+  }
+
+  if (capMode === 'soft' || capMode === 'softActive') {
+    return {
+      softCapEnabled: true,
+      hardCapEnabled: false,
+    };
+  }
+
+  if (capMode === 'none') {
+    return {
+      softCapEnabled: false,
+      hardCapEnabled: false,
+    };
+  }
+
+  return {
+    softCapEnabled: true,
+    hardCapEnabled: true,
+  };
+}
+
+function setSeedCapTiming() {
+  const settingsStore = useSettingsStore.getState();
+  settingsStore.setHardCapMins(90);
+  settingsStore.setAdvancedSoftCapAtMins(70);
+}
+
+function backdateCurrentPointStartForSoftCapActive() {
+  const game = useAdvancedTrackingStore.getState().currentGame;
+  const firstPoint = game?.points[0];
+  if (game == null || firstPoint == null) {
+    return;
+  }
+
+  const startedAt = Date.now() - MAESTRO_CAP_SOFT_ACTIVE_ELAPSED_MS;
+  useAdvancedTrackingStore.setState({
+    currentGame: {
+      ...game,
+      updatedAt: Date.now(),
+      points: game.points.map((point, index) => {
+        if (index !== 0) {
+          return point;
+        }
+
+        return {
+          ...point,
+          startedAt,
+        };
+      }),
+    },
+  });
+}
+
+export async function seedAdvancedTrackerTestGame(options: { capMode?: MaestroCapMode } = {}) {
   const advancedStore = useAdvancedTrackingStore.getState();
   const gameStore = useGameStore.getState();
   const sessionStore = useGameSessionStore.getState();
   const savedAdvancedGamesStore = useSavedAdvancedGamesStore.getState();
+  const capMode = options.capMode ?? 'both';
 
   await clearActiveAdvancedGame();
   gameStore.resetGame();
   sessionStore.setActiveGameType('advanced');
   await seedMaestroTeamPrerequisites();
+  setSeedCapTiming();
   await savedAdvancedGamesStore.deleteGame(MAESTRO_SEED_GAME_ID);
   const team = buildSeedTeam();
 
@@ -127,6 +193,7 @@ export async function seedAdvancedTrackerTestGame() {
     format: {
       gameTo: 15,
       halftimeEnabled: true,
+      ...getSeedCapFormat(capMode),
       timeoutsPerHalf: 2,
       floaterEnabled: true,
     },
@@ -142,6 +209,10 @@ export async function seedAdvancedTrackerTestGame() {
     puller: { refType: 'untracked' },
     result: 'inbound',
   });
+
+  if (capMode === 'softActive') {
+    backdateCurrentPointStartForSoftCapActive();
+  }
 
   const seededGame = useAdvancedTrackingStore.getState().currentGame;
   if (seededGame != null) {

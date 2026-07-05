@@ -32,6 +32,9 @@ interface SettingsState {
   // Hard Cap / Cap Timing (minutes)
   hardCapMins: number;
   softCapMins: number;
+  advancedSoftCapAtMins: number;
+  advancedHardCapEnabled: boolean;
+  advancedSoftCapEnabled: boolean;
 
   // Actions
   setMmpColor: (color: string) => void;
@@ -45,6 +48,9 @@ interface SettingsState {
   setOrientationMode: (mode: OrientationMode) => void;
   setHardCapMins: (minutes: number) => void;
   setSoftCapMins: (minutes: number) => void;
+  setAdvancedSoftCapAtMins: (minutes: number) => void;
+  setAdvancedHardCapEnabled: (enabled: boolean) => void;
+  setAdvancedSoftCapEnabled: (enabled: boolean) => void;
   statEntryOrder: 'goal_first' | 'assist_first';
   setStatEntryOrder: (order: 'goal_first' | 'assist_first') => void;
   linePlayerSortOrder: LinePlayerSortOrder;
@@ -64,6 +70,9 @@ export const useSettingsStore = create<SettingsState>()(
       orientationMode: 'system',
       hardCapMins: 90,
       softCapMins: 20,
+      advancedSoftCapAtMins: 70,
+      advancedHardCapEnabled: true,
+      advancedSoftCapEnabled: true,
 
       setMmpColor: (color) => set({ mmpColor: color }),
       setFmpColor: (color) => set({ fmpColor: color }),
@@ -80,6 +89,9 @@ export const useSettingsStore = create<SettingsState>()(
       setOrientationMode: (mode) => set({ orientationMode: mode }),
       setHardCapMins: (minutes) => set({ hardCapMins: minutes }),
       setSoftCapMins: (minutes) => set({ softCapMins: minutes }),
+      setAdvancedSoftCapAtMins: (minutes) => set({ advancedSoftCapAtMins: minutes }),
+      setAdvancedHardCapEnabled: (enabled) => set({ advancedHardCapEnabled: enabled }),
+      setAdvancedSoftCapEnabled: (enabled) => set({ advancedSoftCapEnabled: enabled }),
       statEntryOrder: 'goal_first',
       setStatEntryOrder: (order) => set({ statEntryOrder: order }),
       linePlayerSortOrder: 'alpha',

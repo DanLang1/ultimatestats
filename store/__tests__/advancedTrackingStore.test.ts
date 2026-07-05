@@ -12,6 +12,7 @@ import { AdvancedTrackedGame } from '@/lib/advancedTracking/types';
 import { DEFAULT_HALFTIME_BREAK_SECONDS } from '@/lib/constants';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useAdvancedTrackingStore } from '../advancedTracking/trackingStore';
+import type { CreateAdvancedGameInput } from '../advancedTracking/trackingStore.types';
 import { useSavedAdvancedGamesStore } from '../advancedTracking/savedGamesStore';
 
 jest.mock('@react-native-async-storage/async-storage', () => ({
@@ -124,6 +125,32 @@ describe('advancedTrackingStore', () => {
       'ultimatestats_advanced_tracking',
       expect.any(String),
     );
+  });
+
+  it('stores advanced cap settings on the game format when provided', () => {
+    useAdvancedTrackingStore.getState().createGame({
+      focusSideId: homeSideId,
+      initialReceivingSideId: homeSideId,
+      sides: [
+        { id: homeSideId, label: 'Home', trackingMode: 'full-roster' },
+        { id: awaySideId, label: 'Away', trackingMode: 'anonymous' },
+      ],
+      participants: [
+        { id: august.participantId, name: 'August' },
+        { id: meves.participantId, name: 'Meves' },
+      ],
+      format: {
+        gameTo: 15,
+        softCapEnabled: false,
+        hardCapEnabled: true,
+      },
+    });
+
+    const { currentGame } = useAdvancedTrackingStore.getState();
+    expect(currentGame!.settings.format).toMatchObject({
+      softCapEnabled: false,
+      hardCapEnabled: true,
+    });
   });
 
   it('does not replace a new game with a stale async load', async () => {
@@ -1500,11 +1527,28 @@ describe('advancedTrackingStore', () => {
 
     beforeEach(() => {
       jest.setSystemTime(0);
-      useSettingsStore.setState({ hardCapMins: 90, softCapMins: 20 });
+      useSettingsStore.setState({ hardCapMins: 90, softCapMins: 20, advancedSoftCapAtMins: 70 });
     });
 
-    function setupGameAndPull() {
-      createGame();
+    function setupGameAndPull(formatOverrides: Partial<CreateAdvancedGameInput['format']> = {}) {
+      useAdvancedTrackingStore.getState().createGame({
+        focusSideId: homeSideId,
+        initialReceivingSideId: homeSideId,
+        sides: [
+          { id: homeSideId, label: 'Home', trackingMode: 'full-roster' },
+          { id: awaySideId, label: 'Away', trackingMode: 'anonymous' },
+        ],
+        participants: [
+          { id: august.participantId, name: 'August' },
+          { id: meves.participantId, name: 'Meves' },
+        ],
+        format: {
+          gameTo: 15,
+          softCapEnabled: true,
+          hardCapEnabled: true,
+          ...formatOverrides,
+        },
+      });
       useAdvancedTrackingStore.getState().recordPull({
         lines: homeLinesAugust,
         puller: untracked,
@@ -1566,6 +1610,30 @@ describe('advancedTrackingStore', () => {
         .map((t) => t.transitionType)
         .sort();
       expect(types).toEqual(['hard_cap', 'soft_cap']);
+    });
+
+    it('records only soft_cap when soft cap is enabled and hard cap is disabled', () => {
+      setupGameAndPull({ hardCapEnabled: false });
+      recordGoalAtElapsedMinutes(95);
+
+      expect(getCurrentGameTransitions().map((t) => t.transitionType)).toEqual(['soft_cap']);
+    });
+
+    it('records only hard_cap when hard cap is enabled and soft cap is disabled', () => {
+      setupGameAndPull({ softCapEnabled: false });
+      recordGoalAtElapsedMinutes(95);
+
+      expect(getCurrentGameTransitions().map((t) => t.transitionType)).toEqual(['hard_cap']);
+    });
+
+    it('records no cap transitions when neither cap is enabled', () => {
+      setupGameAndPull({
+        softCapEnabled: false,
+        hardCapEnabled: false,
+      });
+      recordGoalAtElapsedMinutes(95);
+
+      expect(getCurrentGameTransitions()).toHaveLength(0);
     });
 
     it('does not record a cap before the threshold', () => {
@@ -1712,7 +1780,12 @@ describe('advancedTrackingStore', () => {
           { id: august.participantId, name: 'August' },
           { id: meves.participantId, name: 'Meves' },
         ],
-        format: { gameTo: 15, halftimeEnabled: false },
+        format: {
+          gameTo: 15,
+          halftimeEnabled: false,
+          softCapEnabled: true,
+          hardCapEnabled: true,
+        },
       });
 
       const scoreHomePoint = () => {

@@ -59,10 +59,10 @@ release builds are materially heavier than dev builds.
 
 ## When to Use This vs OTA Update
 
-| Scenario                | Use                 |
-| ----------------------- | ------------------- |
+| Scenario                | Use                         |
+| ----------------------- | --------------------------- |
 | JS-only changes         | [EAS update](eas-update.md) |
-| New native module added | This workflow       |
-| Expo SDK upgrade        | This workflow       |
-| Permission changes      | This workflow       |
-| First-time release      | This workflow       |
+| New native module added | This workflow               |
+| Expo SDK upgrade        | This workflow               |
+| Permission changes      | This workflow               |
+| First-time release      | This workflow               |

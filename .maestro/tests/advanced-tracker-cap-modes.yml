@@ -1,0 +1,95 @@
+appId: com.langdk.ultimatestats
+name: Advanced Tracker Cap Modes
+---
+- stopApp:
+    optional: false
+- launchApp
+- openLink: ultimatestats:///__maestro_seed__?capMode=both
+- extendedWaitUntil:
+    visible:
+      id: 'maestro-setup-ready'
+    timeout: 15000
+- tapOn:
+    id: 'maestro-setup-ready'
+- extendedWaitUntil:
+    visible:
+      id: 'tracker-menu-button'
+    timeout: 15000
+- assertVisible:
+    id: 'tracker-cap-bar'
+- assertVisible:
+    text: 'SOFT CAP'
+
+- stopApp:
+    optional: false
+- launchApp
+- openLink: ultimatestats:///__maestro_seed__?capMode=hard
+- extendedWaitUntil:
+    visible:
+      id: 'maestro-setup-ready'
+    timeout: 15000
+- tapOn:
+    id: 'maestro-setup-ready'
+- extendedWaitUntil:
+    visible:
+      id: 'tracker-menu-button'
+    timeout: 15000
+- assertVisible:
+    id: 'tracker-cap-bar'
+- assertVisible:
+    text: 'HARD CAP'
+
+- stopApp:
+    optional: false
+- launchApp
+- openLink: ultimatestats:///__maestro_seed__?capMode=soft
+- extendedWaitUntil:
+    visible:
+      id: 'maestro-setup-ready'
+    timeout: 15000
+- tapOn:
+    id: 'maestro-setup-ready'
+- extendedWaitUntil:
+    visible:
+      id: 'tracker-menu-button'
+    timeout: 15000
+- assertVisible:
+    id: 'tracker-cap-bar'
+- assertVisible:
+    text: 'SOFT CAP'
+
+- stopApp:
+    optional: false
+- launchApp
+- openLink: ultimatestats:///__maestro_seed__?capMode=softActive
+- extendedWaitUntil:
+    visible:
+      id: 'maestro-setup-ready'
+    timeout: 15000
+- tapOn:
+    id: 'maestro-setup-ready'
+- extendedWaitUntil:
+    visible:
+      id: 'tracker-menu-button'
+    timeout: 15000
+- assertVisible:
+    id: 'tracker-cap-bar'
+- assertVisible:
+    text: 'SOFT CAP ACTIVE'
+
+- stopApp:
+    optional: false
+- launchApp
+- openLink: ultimatestats:///__maestro_seed__?capMode=none
+- extendedWaitUntil:
+    visible:
+      id: 'maestro-setup-ready'
+    timeout: 15000
+- tapOn:
+    id: 'maestro-setup-ready'
+- extendedWaitUntil:
+    visible:
+      id: 'tracker-menu-button'
+    timeout: 15000
+- assertNotVisible:
+    id: 'tracker-cap-bar'

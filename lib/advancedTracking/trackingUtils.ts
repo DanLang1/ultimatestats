@@ -1,6 +1,7 @@
 import { hasItems } from '@/lib/utils';
 import { getRecentLines, RecentLine } from '@/lib/lineUtils';
 import { PointLineRecord } from '@/lib/storage/types';
+import { getCapThresholdMinutes, type CapTimingSettings } from './capUtils';
 import {
   AdvancedTrackedGame,
   GameSide,
@@ -219,6 +220,10 @@ export function getEffectiveGameTo(game: AdvancedTrackedGame): number {
     throw new Error(`Advanced tracking game "${game.id}" is missing settings.format.gameTo.`);
   }
 
+  if (game.settings.format?.softCapEnabled === false) {
+    return baseGameTo;
+  }
+
   const softCapTransition = game.gameTransitions?.find(
     (transition) => transition.transitionType === 'soft_cap',
   );
@@ -247,7 +252,11 @@ export function isAdvancedGameOver(game: AdvancedTrackedGame): boolean {
   const secondScore = score[secondSide.id] ?? 0;
   const notTied = firstScore !== secondScore;
 
-  if (game.gameTransitions?.some((transition) => transition.transitionType === 'hard_cap')) {
+  const hardCapEnabled = game.settings.format?.hardCapEnabled !== false;
+  if (
+    hardCapEnabled &&
+    game.gameTransitions?.some((transition) => transition.transitionType === 'hard_cap')
+  ) {
     return notTied;
   }
 
@@ -365,13 +374,13 @@ export function syncCapTransitions(
   game: AdvancedTrackedGame,
   input: {
     gameElapsedMs: number;
-    gameLengthMinutes: number;
-    softCapMins: number;
+    capTiming: CapTimingSettings;
   },
 ): boolean {
-  const { gameElapsedMs, gameLengthMinutes, softCapMins } = input;
-  const softCapMs = Math.max(0, (gameLengthMinutes - softCapMins) * 60 * 1000);
-  const hardCapMs = Math.max(softCapMs, gameLengthMinutes * 60 * 1000);
+  const { gameElapsedMs, capTiming } = input;
+  const { softCapAtMinutes, hardCapAtMinutes } = getCapThresholdMinutes(game, capTiming);
+  const softCapMs = softCapAtMinutes == null ? null : Math.max(0, softCapAtMinutes * 60 * 1000);
+  const hardCapMs = hardCapAtMinutes == null ? null : Math.max(0, hardCapAtMinutes * 60 * 1000);
 
   const transitions = game.gameTransitions ?? [];
   const hasSoftCap = transitions.some((t) => t.transitionType === 'soft_cap');
@@ -383,7 +392,7 @@ export function syncCapTransitions(
   const next: GameTransition[] = [...transitions];
   let didChange = false;
 
-  if (!hasSoftCap && pointEnded && gameElapsedMs >= softCapMs) {
+  if (softCapMs != null && !hasSoftCap && pointEnded && gameElapsedMs >= softCapMs) {
     next.push({
       id: `soft_cap_${game.id}`,
       transitionType: 'soft_cap',
@@ -392,7 +401,7 @@ export function syncCapTransitions(
     didChange = true;
   }
 
-  if (!hasHardCap && gameElapsedMs >= hardCapMs) {
+  if (hardCapMs != null && !hasHardCap && gameElapsedMs >= hardCapMs) {
     next.push({
       id: `hard_cap_${game.id}`,
       transitionType: 'hard_cap',

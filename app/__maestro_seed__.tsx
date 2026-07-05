@@ -1,5 +1,6 @@
 import { useTheme } from '@/context/ThemeContext';
 import {
+  MaestroCapMode,
   seedAdvancedTrackerTestGame,
   seedMaestroTeamPrerequisites,
   waitForMaestroStoresToHydrate,
@@ -10,7 +11,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 export default function MaestroSeedScreen() {
   const { palette } = useTheme();
-  const { mode } = useLocalSearchParams<{ mode?: string }>();
+  const { capMode, mode } = useLocalSearchParams<{ capMode?: string; mode?: string }>();
   const [isSeeding, setIsSeeding] = useState(false);
 
   if (!__DEV__) {
@@ -28,7 +29,7 @@ export default function MaestroSeedScreen() {
       return;
     }
 
-    await seedAdvancedTrackerTestGame();
+    await seedAdvancedTrackerTestGame({ capMode: parseCapMode(capMode) });
     router.replace('/advancedTracking/Tracker');
   };
 
@@ -43,6 +44,20 @@ export default function MaestroSeedScreen() {
       <View style={styles.content} />
     </Pressable>
   );
+}
+
+function parseCapMode(capMode: string | undefined): MaestroCapMode {
+  if (
+    capMode === 'both' ||
+    capMode === 'hard' ||
+    capMode === 'soft' ||
+    capMode === 'none' ||
+    capMode === 'softActive'
+  ) {
+    return capMode;
+  }
+
+  return 'both';
 }
 
 const styles = StyleSheet.create({

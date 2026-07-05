@@ -13,6 +13,7 @@ import {
   formatTimeouts,
   formatValue,
 } from '@/lib/gameFormatUtils';
+import { getCapThresholdMinutes } from '@/lib/advancedTracking/capUtils';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { useGameSessionStore } from '@/store/gameSessionStore';
 import { useGameStore } from '@/store/gameStore';
@@ -52,8 +53,14 @@ export default function GameFormatScreen() {
   } = useGameStore();
   const { currentGame: advancedGame } = useAdvancedTrackingStore();
   const openPicker = useNumberPickerStore((state) => state.open);
-  const { hardCapMins, softCapMins, genderRatioEnabled, firstPointRatio, lineCallingEnabled } =
-    useSettingsStore();
+  const {
+    hardCapMins,
+    softCapMins,
+    advancedSoftCapAtMins,
+    genderRatioEnabled,
+    firstPointRatio,
+    lineCallingEnabled,
+  } = useSettingsStore();
   if (activeGameType === null) {
     return <Redirect href="/Dashboard" />;
   }
@@ -72,6 +79,10 @@ export default function GameFormatScreen() {
   let title: string;
   let rows: FormatRow[];
   if (activeGameType === 'advanced' && advancedGame) {
+    const capThresholds = getCapThresholdMinutes(advancedGame, {
+      softCapAtMinutes: advancedSoftCapAtMins,
+      hardCapAtMinutes: hardCapMins,
+    });
     title = 'Advanced Tracker';
     rows = [
       { label: 'My Team', value: focusSide?.label ?? team1Name },
@@ -80,8 +91,16 @@ export default function GameFormatScreen() {
         value: opponentSide?.label ?? team2Name,
       },
       { label: 'Game To', value: formatValue(format?.gameTo) },
-      { label: 'Hard Cap', value: `${hardCapMins} min` },
-      { label: 'Soft Cap', value: `${softCapTime} min` },
+      {
+        label: 'Hard Cap',
+        value:
+          capThresholds.hardCapAtMinutes == null ? 'Off' : `${capThresholds.hardCapAtMinutes} min`,
+      },
+      {
+        label: 'Soft Cap',
+        value:
+          capThresholds.softCapAtMinutes == null ? 'Off' : `${capThresholds.softCapAtMinutes} min`,
+      },
       {
         label: 'Halftime',
         value: formatAdvancedHalftime(advancedGame),

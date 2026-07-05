@@ -210,8 +210,8 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
                   (input.format.halftimeEnabled ?? true)
                     ? Math.ceil(input.format.gameTo / 2)
                     : undefined,
-                softCapAt: input.format.softCapAt,
-                hardCapAt: input.format.hardCapAt,
+                softCapEnabled: input.format.softCapEnabled,
+                hardCapEnabled: input.format.hardCapEnabled,
                 timeoutsPerHalf: input.format.timeoutsPerHalf,
                 floaterEnabled: input.format.floaterEnabled,
               },
@@ -357,6 +357,12 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
           const game = getCurrentGame(get());
           const currentPoint = getCurrentPoint(game);
 
+          if (transitionType === 'soft_cap' && game.settings.format?.softCapEnabled === false) {
+            throw new Error('Cannot record soft_cap when soft cap tracking is disabled.');
+          }
+          if (transitionType === 'hard_cap' && game.settings.format?.hardCapEnabled === false) {
+            throw new Error('Cannot record hard_cap when hard cap tracking is disabled.');
+          }
           if (transitionType === 'soft_cap' && currentPoint == null) {
             throw new Error('Cannot record soft_cap before the first point is completed.');
           }
@@ -688,11 +694,13 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
             if (input.result === 'goal' || input.result === 'callahan') {
               const gameStartedAt = liveGame.points[0]?.startedAt;
               if (gameStartedAt != null) {
-                const { hardCapMins, softCapMins } = useSettingsStore.getState();
+                const { hardCapMins, advancedSoftCapAtMins } = useSettingsStore.getState();
                 syncCapTransitions(liveGame, {
                   gameElapsedMs: getGameClockElapsedMs(liveGame, now),
-                  gameLengthMinutes: hardCapMins,
-                  softCapMins,
+                  capTiming: {
+                    softCapAtMinutes: advancedSoftCapAtMins,
+                    hardCapAtMinutes: hardCapMins,
+                  },
                 });
               }
             }
@@ -756,11 +764,13 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
             });
             const gameStartedAt = liveGame.points[0]?.startedAt;
             if (gameStartedAt != null) {
-              const { hardCapMins, softCapMins } = useSettingsStore.getState();
+              const { hardCapMins, advancedSoftCapAtMins } = useSettingsStore.getState();
               syncCapTransitions(liveGame, {
                 gameElapsedMs: getGameClockElapsedMs(liveGame, now),
-                gameLengthMinutes: hardCapMins,
-                softCapMins,
+                capTiming: {
+                  softCapAtMinutes: advancedSoftCapAtMins,
+                  hardCapAtMinutes: hardCapMins,
+                },
               });
             }
             if (syncDerivedHalftimeTransition(liveGame)) {

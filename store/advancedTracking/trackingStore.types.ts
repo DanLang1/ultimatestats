@@ -24,8 +24,8 @@ export interface CreateAdvancedGameInput {
   format: {
     gameTo: number;
     halftimeEnabled?: boolean;
-    softCapAt?: number;
-    hardCapAt?: number;
+    softCapEnabled?: boolean;
+    hardCapEnabled?: boolean;
     timeoutsPerHalf?: number;
     floaterEnabled?: boolean;
   };
