@@ -147,7 +147,9 @@ export const TrackerLineScreen = ({
               />
             </Pressable>
           )}
-          <ThemedText style={[styles.headerTitle, { color: palette.textInverse }]}>
+          <ThemedText
+            style={[styles.headerTitle, { color: palette.textInverse }]}
+            numberOfLines={1}>
             {title ?? 'Select Line'}
           </ThemedText>
 

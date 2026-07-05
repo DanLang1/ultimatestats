@@ -7,6 +7,7 @@ import {
   getAdvancedRecentLines,
   getCurrentPoint,
   getReceivingSideForNextPoint,
+  getSideScore,
 } from '@/lib/advancedTracking/trackingUtils';
 import { GenderRatio, getExpectedRatio, getSequenceNumber } from '@/lib/genderRatioUtils';
 import { hasItems } from '@/lib/utils';
@@ -31,6 +32,12 @@ export default function TrackerLineSelectScreen() {
   const nextSequenceNumber = nextRatio != null ? getSequenceNumber(nextPointNumber) : undefined;
 
   const isInitialLine = game.points.length === 0;
+  const oppSide = game.sides.find((side) => side.id !== game.focusSideId);
+  const focusScore = getSideScore(game, game.focusSideId);
+  const oppScore = oppSide != null ? getSideScore(game, oppSide.id) : 0;
+  const lineSelectTitle = isInitialLine
+    ? `Starting Line · ${focusScore}-${oppScore}`
+    : `Point ${nextPointNumber} · ${focusScore}-${oppScore}`;
 
   const recentLines: RecentLineType[] = getAdvancedRecentLines(game);
   const pointLines = getAdvancedPointLineRecords(game);
@@ -47,7 +54,7 @@ export default function TrackerLineSelectScreen() {
   return (
     <TrackerLineScreen
       participants={participants}
-      title={isInitialLine ? 'Starting Line' : undefined}
+      title={lineSelectTitle}
       expectedRatio={nextRatio}
       sequenceNumber={nextSequenceNumber}
       onBack={handleBack}
