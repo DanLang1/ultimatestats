@@ -93,31 +93,37 @@ const STAT_GROUPS: StatGroup[] = [
   },
 ];
 
-const LEGEND_ITEMS: { abbr: string; label: string }[] = [
-  { abbr: '+/-', label: 'Plus/Minus' },
-  { abbr: 'HA', label: 'Hockey Assist' },
-  { abbr: 'T/A', label: 'Throwaway' },
-  { abbr: 'Drp', label: 'Drop' },
-  { abbr: 'Stl', label: 'Stall Forced' },
-  { abbr: 'Stld', label: 'Stalled Out' },
-  { abbr: 'Cmp', label: 'Completions' },
-  { abbr: 'Att', label: 'Throw Attempts' },
-  { abbr: 'Cmp%', label: 'Completion %' },
-  { abbr: 'Rec', label: 'Receptions' },
-  { abbr: 'Tch', label: 'Total Touches' },
-  { abbr: 'Pls', label: 'Pulls' },
-  { abbr: 'In', label: 'Inbound Pulls' },
-  { abbr: 'OB', label: 'Out-of-Bounds Pulls' },
-  { abbr: 'Rol', label: 'Roller Pulls' },
-  { abbr: 'Avg', label: 'Average Pull Hangtime' },
-  { abbr: 'Max', label: 'Longest Pull Hangtime' },
-  { abbr: 'Min', label: 'Shortest Pull Hangtime' },
-  { abbr: 'O-Eff', label: 'Off. Efficiency' },
-  { abbr: 'D-Eff', label: 'Def. Efficiency' },
-  { abbr: 'PP', label: 'Points Played' },
-  { abbr: 'O-Pts', label: 'O-Points' },
-  { abbr: 'D-Pts', label: 'D-Points' },
-];
+// Key legend meanings by stat field, not display abbreviation. Header labels are short UI
+// text and may be reused across groups; stat keys keep repeated abbreviations unambiguous.
+const LEGEND_LABELS_BY_KEY: Partial<Record<SortKey, string>> = {
+  plusMinus: 'Plus/Minus',
+  goals: 'Goals',
+  assists: 'Assists',
+  blocks: 'Blocks',
+  throwaways: 'Throwaways',
+  drops: 'Drops',
+  stalls: 'Stalls Forced',
+  stallsConceded: 'Stalled Out',
+  completions: 'Completions',
+  throwAttempts: 'Throw Attempts',
+  completionPct: 'Completion %',
+  hockeyAssists: 'Hockey Assists',
+  totalTouches: 'Total Touches',
+  receptions: 'Receptions',
+  pulls: 'Pulls',
+  inboundPulls: 'Inbound Pulls',
+  outOfBoundsPulls: 'Out-of-Bounds Pulls',
+  droppedPulls: 'Dropped Pulls',
+  rollerPulls: 'Roller Pulls',
+  avgPullHangTimeMs: 'Average Pull Hangtime',
+  maxPullHangTimeMs: 'Longest Pull Hangtime',
+  minPullHangTimeMs: 'Shortest Pull Hangtime',
+  oEfficiency: 'Offensive Efficiency',
+  dEfficiency: 'Defensive Efficiency',
+  pointsPlayed: 'Points Played',
+  oPoints: 'O-Points',
+  dPoints: 'D-Points',
+};
 
 function getCellValue(stats: AdvancedPlayerStats, key: SortKey): number | null {
   if (key === 'name') return null;
@@ -180,6 +186,10 @@ export default function AdvancedStatsTable({
   const getName = (id: string) => participantNames.get(id) ?? id;
   const activeGroup = getStatGroup(activeGroupKey);
   const visibleStatColumns = activeGroup.columns;
+  const visibleLegendItems = visibleStatColumns.map((column) => ({
+    abbr: column.label,
+    label: LEGEND_LABELS_BY_KEY[column.key] ?? column.label,
+  }));
   const visiblePlayerStats =
     activeGroupKey === 'pulls' ? playerStats.filter((stats) => stats.pulls > 0) : playerStats;
   const playerNames = visiblePlayerStats.map((stats) => getName(stats.participantId));
@@ -324,8 +334,8 @@ export default function AdvancedStatsTable({
             { backgroundColor: palette.overlay05, borderColor: palette.overlay10 },
           ]}>
           <View style={styles.legendGrid}>
-            {LEGEND_ITEMS.map((item) => (
-              <View key={item.abbr} style={styles.legendItem}>
+            {visibleLegendItems.map((item) => (
+              <View key={`${activeGroupKey}-${item.abbr}`} style={styles.legendItem}>
                 <ThemedText style={[styles.legendAbbr, { color: palette.textInverse }]}>
                   {item.abbr}
                 </ThemedText>
@@ -335,6 +345,18 @@ export default function AdvancedStatsTable({
               </View>
             ))}
           </View>
+          {activeGroupKey === 'pulls' && (
+            <View style={[styles.legendNoteRow, { borderTopColor: palette.overlay10 }]}>
+              <MaterialCommunityIcons
+                name="information-outline"
+                size={scaleBySizeClass(13, sizeClass)}
+                color={palette.textMuted}
+              />
+              <ThemedText style={[styles.legendNote, { color: palette.textMuted }]}>
+                Hangtime stats exclude OB and roller pulls
+              </ThemedText>
+            </View>
+          )}
         </View>
       )}
 
@@ -467,11 +489,6 @@ export default function AdvancedStatsTable({
           </View>
         </ScrollView>
       </View>
-      {activeGroupKey === 'pulls' && (
-        <ThemedText style={[styles.tableNote, { color: palette.textMuted }]}>
-          * Hangtime stats exclude OB and roller pulls.
-        </ThemedText>
-      )}
     </View>
   );
 }
@@ -527,6 +544,19 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     },
     legendLabel: {
       fontSize: scaleBySizeClass(11, sizeClass),
+    },
+    legendNoteRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      borderTopWidth: 1,
+      marginTop: 8,
+      paddingTop: 8,
+    },
+    legendNote: {
+      flex: 1,
+      fontSize: scaleBySizeClass(10, sizeClass),
+      fontFamily: Fonts.semiBold,
     },
     sectionTitle: {
       fontSize: scaleBySizeClass(12, sizeClass),
@@ -612,11 +642,6 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     },
     plusMinusCell: {
       fontFamily: Fonts.extraBold,
-    },
-    tableNote: {
-      fontSize: scaleBySizeClass(11, sizeClass),
-      fontFamily: Fonts.semiBold,
-      marginTop: 8,
     },
   });
 }
