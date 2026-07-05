@@ -46,7 +46,7 @@ export default function GameInfoScreen() {
 
   const [showAbbaModal, setShowAbbaModal] = useState(false);
 
-  const team1Name = currentTeam?.name ?? 'Team 1';
+  const team1Name = currentTeam.name;
 
   const { timeLeft } = useGameTimer();
   const isHardcap = timeLeft === 0;

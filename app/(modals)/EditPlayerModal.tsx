@@ -27,7 +27,7 @@ export default function EditPlayerModal() {
 
   const { removePlayerFromPresets } = useLinePresetsStore();
 
-  const roster = currentTeam?.roster ?? [];
+  const roster = currentTeam.roster;
   const player = roster.find((p) => p.id === playerId);
 
   // Initialize state from player
@@ -41,7 +41,7 @@ export default function EditPlayerModal() {
   const [confirmingDelete, setConfirmingDelete] = useState(false);
 
   // Declaratively redirect if player not found (after delete or invalid ID)
-  if (!player || !currentTeam) {
+  if (!player) {
     return <Redirect href="/EditRoster" />;
   }
 

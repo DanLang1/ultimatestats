@@ -68,7 +68,7 @@ export default function LiveScoreboard() {
   const floatingEditIconColor = getContrastingTextColor(
     layout.isLandscape ? team2BgColor : team1BgColor,
   );
-  const roster = currentTeam?.roster ?? [];
+  const roster = currentTeam.roster;
   const { toast, toastInstanceId } = useEventToast({
     roster,
     team2Name,
@@ -76,7 +76,7 @@ export default function LiveScoreboard() {
     clearEventToastSignal,
   });
 
-  const team1Name = currentTeam?.name ?? 'Team 1';
+  const team1Name = currentTeam.name;
 
   const undo = () => {
     undoLastAction();

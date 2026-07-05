@@ -29,19 +29,16 @@ import { useLinePresetsStore } from '@/store/linePresetsStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { Fonts } from '@/theme/theme';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { router, Stack, useLocalSearchParams } from 'expo-router';
+import { router, Stack } from 'expo-router';
 import React, { useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 
-const EMPTY_ROSTER: Player[] = [];
 type RoleFilter = PlayerRole | 'unset' | null;
 
 export default function EditRosterScreen() {
   const { isLandscape, sizeClass } = useLayout();
   const styles = createStyles(isLandscape, sizeClass);
   const metrics = createMetrics(sizeClass);
-
-  const { teamName } = useLocalSearchParams<{ teamName: string }>();
 
   const {
     currentTeam,
@@ -57,7 +54,7 @@ export default function EditRosterScreen() {
   const { rosterViewMode, setRosterViewMode, linePlayerSortOrder } = useSettingsStore();
 
   // Derived values
-  const roster = currentTeam?.roster ?? EMPTY_ROSTER;
+  const roster = currentTeam.roster;
   const { kind: activeGameKind } = useActiveGameSession();
   const gameActive = activeGameKind !== 'none';
 
@@ -84,7 +81,7 @@ export default function EditRosterScreen() {
   const isDuplicateName =
     newPlayerName.trim() !== '' && hasPlayerWithName(roster, newPlayerName.trim());
 
-  const hasOtherTeams = savedTeams.filter((t) => t.id !== currentTeam?.id).length > 0;
+  const hasOtherTeams = savedTeams.filter((t) => t.id !== currentTeam.id).length > 0;
   const hasRoster = roster.length > 0;
 
   // Sorted roster: active first
@@ -116,7 +113,7 @@ export default function EditRosterScreen() {
     editTeamName.trim() !== '' &&
     savedTeams.some(
       (t: SavedTeam) =>
-        t.name.toLowerCase() === editTeamName.trim().toLowerCase() && t.id !== currentTeam?.id,
+        t.name.toLowerCase() === editTeamName.trim().toLowerCase() && t.id !== currentTeam.id,
     );
 
   // Derived: check if new team name already exists
@@ -173,7 +170,7 @@ export default function EditRosterScreen() {
 
   const handleRenameTeam = async () => {
     const newName = editTeamName.trim();
-    if (!newName || !currentTeam || teamNameExists) {
+    if (!newName || teamNameExists) {
       if (!newName) setRenameModalVisible(false);
       return;
     }
@@ -196,7 +193,7 @@ export default function EditRosterScreen() {
     resetSelectionState();
 
     // Save current team first if it has a roster
-    if (hasRoster && currentTeam) {
+    if (hasRoster) {
       await saveCurrentTeam();
     }
 
@@ -211,7 +208,6 @@ export default function EditRosterScreen() {
   };
 
   const handleShareTeam = () => {
-    if (!currentTeam) return;
     if (selectionMode) return;
     setShowShareConfirm(true);
   };
@@ -222,7 +218,7 @@ export default function EditRosterScreen() {
   };
 
   const handleConfirmShare = async () => {
-    const payload = serializeTeam(currentTeam!, useLinePresetsStore.getState().presets);
+    const payload = serializeTeam(currentTeam, useLinePresetsStore.getState().presets);
     const { url } = await uploadPayload(payload);
     return url;
   };
@@ -441,7 +437,7 @@ export default function EditRosterScreen() {
         {/* Main Content */}
         <View style={styles.mainContent}>
           <ScreenHeader
-            title={(currentTeam?.name ?? teamName ?? 'TEAM').toUpperCase()}
+            title={currentTeam.name.toUpperCase()}
             onBack={handleBack}
             titleColor={palette.textMuted}
             backButtonBackgroundColor={palette.overlay10}
@@ -470,7 +466,7 @@ export default function EditRosterScreen() {
               viewMode={rosterViewMode}
               onToggleViewMode={toggleViewMode}
               onRenameTeam={() => {
-                setEditTeamName(currentTeam?.name ?? '');
+                setEditTeamName(currentTeam.name);
                 setRenameModalVisible(true);
               }}
               onNewTeam={handleNewTeam}
@@ -714,7 +710,7 @@ export default function EditRosterScreen() {
         <TeamActionsSheet
           onDismiss={() => setShowActionsSheet(false)}
           onRenameTeam={() => {
-            setEditTeamName(currentTeam?.name ?? '');
+            setEditTeamName(currentTeam.name);
             setRenameModalVisible(true);
           }}
           onNewTeam={handleNewTeam}

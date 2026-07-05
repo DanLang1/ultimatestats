@@ -26,9 +26,9 @@ export function useDashboardSession() {
   const currentGameId = useGameStore((state) => state.currentGameId);
   const team2Name = useGameStore((state) => state.team2Name);
 
-  const team1Name = currentTeam?.name ?? 'Team 1';
-  const rosterCount = currentTeam?.roster?.length ?? 0;
-  const gamesCount = (savedGames?.length ?? 0) + advancedSavedGameCount;
+  const team1Name = currentTeam.name;
+  const rosterCount = currentTeam.roster.length;
+  const gamesCount = savedGames.length + advancedSavedGameCount;
   const sessionStatus = getGameSessionStatus({
     team1Score,
     team2Score,

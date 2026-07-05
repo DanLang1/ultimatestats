@@ -36,7 +36,7 @@ export default function GameTimelineScreen() {
     pointTimerEnabled,
     pointLines: currentPointLines,
   } = useGameStore();
-  const team1Name = currentTeam?.name ?? 'Team 1';
+  const team1Name = currentTeam.name;
 
   const gameData = params.gameId
     ? (() => {
@@ -69,7 +69,7 @@ export default function GameTimelineScreen() {
         startingPossession,
         gameTo,
         autoHalftimeEnabled,
-        roster: currentTeam?.roster ?? [],
+        roster: currentTeam.roster,
         pointStartTimestamps,
         timingEnabled: pointTimerEnabled,
         pointLines: currentPointLines,

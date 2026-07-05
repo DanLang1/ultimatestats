@@ -99,7 +99,7 @@ export default function AdvancedPreGameConfirm() {
       { id: OPP_SIDE_ID, label: team2Name, trackingMode: 'anonymous' },
     ];
 
-    const participants: Participant[] = (currentTeam?.roster ?? [])
+    const participants: Participant[] = currentTeam.roster
       .filter((p) => p.isActive)
       .map((p) => ({
         id: p.id,
@@ -337,7 +337,7 @@ export default function AdvancedPreGameConfirm() {
           options={[
             {
               value: 'us',
-              label: currentTeam?.name ?? 'Us',
+              label: currentTeam.name,
               activeColor: t1Color,
               activeTextColor: t1TextColor,
             },

@@ -58,10 +58,10 @@ export const TrackerLineScreen = ({
   const { sizeClass, isLandscape } = useLayout();
   const styles = createStyles(sizeClass);
 
-  const currentTeamId = useGameStore((s) => s.currentTeam?.id);
+  const currentTeamId = useGameStore((s) => s.currentTeam.id);
   const allPresets = useLinePresetsStore((s) => s.presets);
   const linePlayerSortOrder = useSettingsStore((s) => s.linePlayerSortOrder);
-  const presets = allPresets.filter((p) => p.teamId === (currentTeamId ?? ''));
+  const presets = allPresets.filter((p) => p.teamId === currentTeamId);
   const quickPresets = presets.slice(0, 3);
 
   const [selectedIds, setSelectedIds] = useState<string[]>(initialSelectedIds ?? []);

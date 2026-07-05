@@ -66,7 +66,7 @@ export default function ViewStatsScreen() {
   const isCompletedGame = useGameStore((state) => state.currentGameStatus === 'finished');
   const showShowcaseHint = useTutorialStore((s) => !s.hasSeenShowcaseHint);
 
-  const team1Name = currentTeam?.name ?? 'Team 1';
+  const team1Name = currentTeam.name;
 
   // Helper to generate filename for single game exports
   const generateGameFilename = (t1Name: string, t2Name: string, date?: number) => {
@@ -84,7 +84,7 @@ export default function ViewStatsScreen() {
         startingPossession,
         gameTo,
         autoHalftimeEnabled,
-        currentTeam?.roster,
+        currentTeam.roster,
         pointLines,
       );
       const filename = generateGameFilename(team1Name, team2Name);
@@ -276,7 +276,7 @@ export default function ViewStatsScreen() {
             team1Score={team1Score}
             team2Score={team2Score}
             events={events}
-            roster={currentTeam?.roster}
+            roster={currentTeam.roster}
             isSavedGame={false}
             startingPossession={startingPossession}
             gameTo={gameTo}

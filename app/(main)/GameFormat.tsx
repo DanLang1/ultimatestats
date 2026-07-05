@@ -69,7 +69,7 @@ export default function GameFormatScreen() {
   }
 
   const softCapTime = hardCapMins - softCapMins;
-  const team1Name = currentTeam?.name ?? 'Team 1';
+  const team1Name = currentTeam.name;
   const format = advancedGame?.settings.format;
   const focusSide = advancedGame?.sides.find((side) => side.id === advancedGame.focusSideId);
   const opponentSide = advancedGame?.sides.find((side) => side.id !== advancedGame.focusSideId);

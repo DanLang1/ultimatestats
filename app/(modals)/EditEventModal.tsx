@@ -83,7 +83,7 @@ export default function EditEventModal() {
   // Get roster from either current game or saved game
   const isSavedGame = params.gameId && params.gameId !== 'current';
   const savedGame = isSavedGame ? savedGames.find((g) => g.id === params.gameId) : null;
-  const roster = savedGame?.team1.roster ?? currentTeam?.roster ?? [];
+  const roster = savedGame?.team1.roster ?? currentTeam.roster;
   const activeEvents = savedGame?.events ?? events;
   const activePointLines = savedGame?.pointLines ?? pointLines;
 

@@ -18,7 +18,7 @@ export function useEndGame() {
     statTrackingEnabled,
   } = useGameStore();
 
-  const team1Name = currentTeam?.name ?? 'Team 1';
+  const team1Name = currentTeam.name;
 
   const confirmEndGame = () => {
     // Build contextual message based on score state

@@ -30,7 +30,7 @@ export default function SettingsBar({ onUndo }: SettingsBarProps) {
 
   const [showAbbaModal, setShowAbbaModal] = useState(false);
 
-  const canUndo = (events?.length ?? 0) > 0;
+  const canUndo = events.length > 0;
 
   // Match the floating action bar's glassmorphic background
   const barBg = palette.glassBg;

@@ -67,7 +67,7 @@ export default function PreGameConfirm() {
 
   const openPicker = useNumberPickerStore((s) => s.open);
 
-  const team1Name = currentTeam?.name ?? 'Team 1';
+  const team1Name = currentTeam.name;
 
   // Determine what's needed
   const needPossession = statTrackingEnabled && possession === null;

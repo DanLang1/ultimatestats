@@ -19,9 +19,9 @@ export default function LinePresetEditor() {
   const gameActive = useIsGameActive();
   const { presets, addPreset, updatePreset, deletePreset, reorderPresets } = useLinePresetsStore();
 
-  const teamId = currentTeam?.id ?? '';
+  const teamId = currentTeam.id;
   const teamPresets = presets.filter((p) => p.teamId === teamId);
-  const roster = currentTeam?.roster ?? [];
+  const roster = currentTeam.roster;
   const activePlayers = roster.filter((p) => p.isActive !== false);
 
   // If presetId is passed, initialize directly in edit mode

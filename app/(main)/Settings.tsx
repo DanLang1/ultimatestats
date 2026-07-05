@@ -28,7 +28,7 @@ import {
 
 export default function SettingsScreen() {
   const { currentTeam } = useGameStore();
-  const settingsKey = `${currentTeam?.id ?? 'no-team'}:${currentTeam?.name ?? 'Team 1'}`;
+  const settingsKey = `${currentTeam.id}:${currentTeam.name}`;
   return <SettingsContent key={settingsKey} />;
 }
 
@@ -65,8 +65,8 @@ function SettingsContent() {
     saveCurrentTeam,
   } = useGameStore();
 
-  const team1Name = currentTeam?.name ?? 'Team 1';
-  const team1Roster = currentTeam?.roster ?? [];
+  const team1Name = currentTeam.name;
+  const team1Roster = currentTeam.roster;
 
   const [team1NameDraft, setTeam1NameDraft] = useState(team1Name);
 
@@ -132,7 +132,7 @@ function SettingsContent() {
     }
 
     const existingTeam = savedTeams.find(
-      (t) => t.name.toLowerCase() === newName.toLowerCase() && t.id !== currentTeam?.id,
+      (t) => t.name.toLowerCase() === newName.toLowerCase() && t.id !== currentTeam.id,
     );
 
     if (existingTeam) {
@@ -144,8 +144,6 @@ function SettingsContent() {
       setTeam1NameDraft(team1Name);
       return;
     }
-
-    if (!currentTeam) return;
 
     const updatedTeam: SavedTeam = { ...currentTeam, name: newName };
     setCurrentTeam(updatedTeam);

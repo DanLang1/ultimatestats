@@ -31,7 +31,7 @@ export default function GameCompleteScreen() {
   const { isLandscape, sizeClass } = useLayout();
   const styles = createStyles(isLandscape, sizeClass);
 
-  const team1Name = currentTeam?.name ?? 'Team 1';
+  const team1Name = currentTeam.name;
   const isGameOver = checkGameOver({
     team1Score,
     team2Score,

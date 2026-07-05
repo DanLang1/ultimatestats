@@ -44,13 +44,13 @@ export default function HalftimeModal() {
 
   const styles = createStyles(isLandscape, sizeClass);
 
-  const team1Name = currentTeam?.name ?? 'Team 1';
+  const team1Name = currentTeam.name;
   const receivingTeamKey = startingPossession === 'team1' ? 'team2' : 'team1';
   const receivingLabel = receivingTeamKey === 'team1' ? 'YOU RECEIVE' : 'THEY RECEIVE';
 
   // Compute halftime stats
   const teamStats = computeTeamStats(events, startingPossession, gameTo, autoHalftimeEnabled);
-  const playerStats = computePlayerStats(events, 'team1', currentTeam?.roster);
+  const playerStats = computePlayerStats(events, 'team1', currentTeam.roster);
   const topPerformers = playerStats.slice(0, 3);
 
   const hasStats = statTrackingEnabled && events.length > 0;

@@ -24,8 +24,8 @@ export default function StatEntryScreen() {
   const { lineCallingEnabled } = useSettingsStore();
   const { palette } = useTheme();
 
-  const team1Name = currentTeam?.name ?? 'Team 1';
-  const team1Roster = currentTeam?.roster ?? [];
+  const team1Name = currentTeam.name;
+  const team1Roster = currentTeam.roster;
 
   // Filter roster by current line if set
   const currentLineSet = new Set(currentLine);

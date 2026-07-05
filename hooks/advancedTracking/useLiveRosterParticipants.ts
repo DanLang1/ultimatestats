@@ -5,5 +5,5 @@ import { useGameStore } from '@/store/gameStore';
 export function useLiveRosterParticipants(participants: Participant[]): Participant[] {
   const currentTeam = useGameStore((s) => s.currentTeam);
 
-  return mergeRosterMetadataIntoParticipants(participants, currentTeam?.roster ?? []);
+  return mergeRosterMetadataIntoParticipants(participants, currentTeam.roster);
 }

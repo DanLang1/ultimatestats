@@ -17,15 +17,15 @@ export default function TeamManagementModal() {
   const { showAlert } = useAlert();
   const { currentTeam, savedTeams, loadTeam, deleteTeam, saveCurrentTeam } = useGameStore();
 
-  const hasRoster = (currentTeam?.roster?.length ?? 0) > 0;
-  const otherTeams = savedTeams.filter((t) => t.id !== currentTeam?.id);
+  const hasRoster = currentTeam.roster.length > 0;
+  const otherTeams = savedTeams.filter((t) => t.id !== currentTeam.id);
 
   const handleDismiss = () => {
     router.dismissTo('/EditRoster');
   };
 
   const handleLoadTeam = async (teamId: string) => {
-    if (hasRoster && currentTeam) {
+    if (hasRoster) {
       await saveCurrentTeam();
     }
     loadTeam(teamId);

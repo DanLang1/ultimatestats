@@ -78,7 +78,7 @@ export default function LineEditor() {
   const setLineConfirmedForNextPoint = useLinePresetsStore(
     (state) => state.setLineConfirmedForNextPoint,
   );
-  const presets = allPresets.filter((p) => p.teamId === (currentTeam?.id ?? ''));
+  const presets = allPresets.filter((p) => p.teamId === currentTeam.id);
   const quickPresets = presets.slice(0, 3);
   const recentLines: RecentLine[] = getRecentLines(pointLines, currentPoint);
 
@@ -113,7 +113,7 @@ export default function LineEditor() {
     ? getPointOutcome(lastPoint.scoringTeam, lastPoint.offensiveTeam, totalTurnovers)
     : null;
 
-  const roster = currentTeam?.roster ?? [];
+  const roster = currentTeam.roster;
   const activePlayers = roster.filter((p) => p.isActive !== false);
   const hasExistingLine = pointLines.some((record) => record.pointNumber === currentPoint);
 
