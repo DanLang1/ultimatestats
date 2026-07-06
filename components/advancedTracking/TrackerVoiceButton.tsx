@@ -9,6 +9,8 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { useTutorialStore } from '@/store/tutorialStore';
 import { AdvancedVoiceHintModal } from './AdvancedVoiceHintModal';
 
+const VOICE_BUTTON_HEIGHT = 62;
+
 interface TrackerVoiceButtonProps {
   controls: VoiceStatCommandsControls;
   disabled: boolean;
@@ -91,7 +93,7 @@ function createStyles(sizeClass: SizeClass) {
   return StyleSheet.create({
     button: {
       flex: 1,
-      minHeight: scaleBySizeClass(54, sizeClass),
+      minHeight: scaleBySizeClass(VOICE_BUTTON_HEIGHT, sizeClass),
       borderRadius: 16,
       borderCurve: 'continuous',
       borderWidth: 1,

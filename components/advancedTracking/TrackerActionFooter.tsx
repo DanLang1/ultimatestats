@@ -22,7 +22,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 const NEXT_POINT_BUTTON_HEIGHT = 62;
 const FOOTER_BOTTOM_PADDING = 48;
 const ANDROID_FOOTER_BOTTOM_PADDING = 20;
-const VOICE_FOOTER_BOTTOM_PADDING = 0;
 const FOOTER_HORIZONTAL_PADDING = 12;
 const FOOTER_TOP_PADDING = 8;
 
@@ -54,8 +53,7 @@ export const TrackerActionFooter = ({
   const pointIsOver = hasPointEnded(point);
   const activeSideId = getActiveSideId(possession, game);
   const oppHasDisc = !pointIsOver && activeSideId !== game.focusSideId;
-  const isVoiceFooter = !pointIsOver && !oppHasDisc && voiceControls != null;
-  const styles = createStyles(sizeClass, insets.bottom, isVoiceFooter);
+  const styles = createStyles(sizeClass, insets.bottom);
 
   const handleOppTurnover = async () => {
     if (!possession || isPossessionOver(possession)) {
@@ -105,7 +103,7 @@ export const TrackerActionFooter = ({
     content = <DefenseActions onOppScored={handleOppScored} onOppTurnover={handleOppTurnover} />;
   } else if (voiceControls != null) {
     content = (
-      <View style={styles.voiceStack}>
+      <View style={styles.actionRow}>
         <View pointerEvents="none" style={styles.voiceFeedbackOverlay}>
           <TrackerVoiceFeedbackPill controls={voiceControls} />
         </View>
@@ -118,12 +116,10 @@ export const TrackerActionFooter = ({
   return <View style={styles.container}>{content}</View>;
 };
 
-function createStyles(sizeClass: SizeClass, bottomInset: number, isVoiceFooter: boolean) {
+function createStyles(sizeClass: SizeClass, bottomInset: number) {
   let footerBottomPadding = FOOTER_BOTTOM_PADDING;
   if (Platform.OS === 'android') {
     footerBottomPadding = ANDROID_FOOTER_BOTTOM_PADDING;
-  } else if (isVoiceFooter) {
-    footerBottomPadding = VOICE_FOOTER_BOTTOM_PADDING;
   }
 
   return StyleSheet.create({
@@ -133,7 +129,9 @@ function createStyles(sizeClass: SizeClass, bottomInset: number, isVoiceFooter: 
       paddingTop: FOOTER_TOP_PADDING,
       paddingBottom: bottomInset + scaleBySizeClass(footerBottomPadding, sizeClass),
     },
-    voiceStack: {
+    actionRow: {
+      flex: 1,
+      flexDirection: 'row',
       position: 'relative',
     },
     voiceFeedbackOverlay: {
