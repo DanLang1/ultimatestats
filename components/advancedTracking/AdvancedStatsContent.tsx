@@ -3,6 +3,7 @@ import OpeningPullSplit from '@/components/advancedTracking/OpeningPullSplit';
 import { ScoreBadge } from '@/components/ui/ScoreBadge';
 import StatRing from '@/components/view-stats/StatRing';
 import StatsGrid from '@/components/view-stats/StatsGrid';
+import TimeOfPossessionSection from '@/components/view-stats/TimeOfPossessionSection';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { AdvancedInitialPullWinStats } from '@/lib/advancedTracking/advancedAggregateStatsUtils';
@@ -12,11 +13,11 @@ import {
   getInboundPullCount,
 } from '@/lib/advancedTracking/advancedPullStatsUtils';
 import { computeAdvancedTeamStats } from '@/lib/advancedTracking/advancedTeamStatsUtils';
+import { computeAdvancedTimeOfPossessionStats } from '@/lib/advancedTracking/advancedTimeOfPossessionUtils';
 import { AnalyticsGame } from '@/lib/advancedTracking/analyticsTypes';
 import { Fonts } from '@/theme/theme';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router } from 'expo-router';
-import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import AdvancedStatsTable from './AdvancedStatsTable';
 
@@ -62,6 +63,10 @@ export default function AdvancedStatsContent({
   const teamStats = computeAdvancedTeamStats(game, focusSideId);
   const pullStats = computePullStats(game, focusSideId);
   const inboundPullCount = getInboundPullCount(pullStats);
+  // don't show TOP stats for combined games
+  const topStats = aggregateInfo
+    ? null
+    : computeAdvancedTimeOfPossessionStats(game, focusSideId, game.oppSideId);
 
   const possessionFlowStats: { label: string; value: string | number; sublabel?: string }[] = [];
 
@@ -277,6 +282,7 @@ Formula: Goals ÷ Possessions`}
           </ThemedText>
           <StatsGrid stats={efficiencyStats} columns={isLandscape ? 4 : 2} />
         </View>
+
         {pullStats.totalPulls > 0 && (
           <View style={styles.subsectionContainer}>
             <ThemedText style={[styles.subsectionTitle, { color: palette.textMuted }]}>
@@ -310,6 +316,14 @@ Formula: Goals ÷ Possessions`}
             </ThemedText>
             <OpeningPullSplit stats={initialPullWinStats} />
           </View>
+        )}
+
+        {topStats && (
+          <TimeOfPossessionSection
+            topStats={topStats}
+            team1Name={myTeamName}
+            team2Name={opponentName}
+          />
         )}
       </View>
 

@@ -84,6 +84,15 @@ export function getReceivingSideForNextPoint(game: AdvancedTrackedGame): string 
   return receivingSideId;
 }
 
+export function getLineReceivingSideId(
+  game: AdvancedTrackedGame,
+  point: TrackedPoint | null,
+): string {
+  if (point == null) return game.initialReceivingSideId;
+  if (hasPointEnded(point)) return getReceivingSideForNextPoint(game);
+  return point.possessions[0]?.sideId ?? game.initialReceivingSideId;
+}
+
 // --- Classification ---
 
 export function isPointEndingThrow(result: ThrowResult): boolean {

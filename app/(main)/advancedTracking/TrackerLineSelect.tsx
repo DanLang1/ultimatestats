@@ -6,7 +6,7 @@ import {
   getAdvancedPointLineRecords,
   getAdvancedRecentLines,
   getCurrentPoint,
-  getReceivingSideForNextPoint,
+  getLineReceivingSideId,
   getSideScore,
 } from '@/lib/advancedTracking/trackingUtils';
 import { GenderRatio, getExpectedRatio, getSequenceNumber } from '@/lib/genderRatioUtils';
@@ -35,9 +35,9 @@ export default function TrackerLineSelectScreen() {
   const oppSide = game.sides.find((side) => side.id !== game.focusSideId);
   const focusScore = getSideScore(game, game.focusSideId);
   const oppScore = oppSide != null ? getSideScore(game, oppSide.id) : 0;
-  const lineSelectTitle = isInitialLine
-    ? `Starting Line · ${focusScore}-${oppScore}`
-    : `Point ${nextPointNumber} · ${focusScore}-${oppScore}`;
+  const receivingSideId = getLineReceivingSideId(game, point);
+  const pointTypeLabel = receivingSideId === game.focusSideId ? 'O-Point' : 'D-Point';
+  const lineSelectTitle = `${pointTypeLabel} · ${focusScore}-${oppScore}`;
 
   const recentLines: RecentLineType[] = getAdvancedRecentLines(game);
   const pointLines = getAdvancedPointLineRecords(game);
@@ -62,7 +62,6 @@ export default function TrackerLineSelectScreen() {
       pointLines={pointLines}
       currentPoint={nextPointNumber}
       onConfirm={(ids) => {
-        const receivingSideId = getReceivingSideForNextPoint(game);
         const isOurPull = receivingSideId !== game.focusSideId;
 
         let lineIds: string[];

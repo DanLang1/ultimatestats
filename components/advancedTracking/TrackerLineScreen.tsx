@@ -27,7 +27,7 @@ interface TrackerLineScreenProps {
   participants: Participant[];
   onConfirm: (participantIds: string[]) => void;
   initialSelectedIds?: string[];
-  title?: string;
+  title: string;
   onBack?: () => void;
   confirmLabel?: string;
   expectedRatio?: GenderRatio;
@@ -84,6 +84,7 @@ export const TrackerLineScreen = ({
   const ratioMismatch = ratioCheck != null && !ratioCheck.isCorrect;
   const expectedRatioLabel =
     expectedRatio != null ? formatRatio(expectedRatio, sequenceNumber ?? 1) : null;
+  const headerTitle = `${title}${expectedRatioLabel ? ` · ${expectedRatioLabel}` : ''}`;
 
   const players: Player[] = participants.map((p) => ({
     id: p.id,
@@ -150,28 +151,21 @@ export const TrackerLineScreen = ({
           <ThemedText
             style={[styles.headerTitle, { color: palette.textInverse }]}
             numberOfLines={1}>
-            {title ?? 'Select Line'}
+            {headerTitle}
           </ThemedText>
 
-          {isLandscape && (expectedRatio != null || ratioMismatch) && (
+          {isLandscape && ratioMismatch && (
             <View style={styles.ratioInline}>
-              {expectedRatio != null && (
-                <ThemedText style={[styles.nextPointLabel, { color: palette.textMuted }]}>
-                  Ratio{expectedRatioLabel ? ` · ${expectedRatioLabel}` : ''}
+              <View style={[styles.infoChip, { backgroundColor: palette.warning + '20' }]}>
+                <MaterialCommunityIcons
+                  name="alert"
+                  size={scaleBySizeClass(14, sizeClass)}
+                  color={palette.warning}
+                />
+                <ThemedText style={[styles.infoChipText, { color: palette.warning }]}>
+                  Expecting {expectedRatio === 'more-women' ? 'F' : 'M'} majority
                 </ThemedText>
-              )}
-              {ratioMismatch && (
-                <View style={[styles.infoChip, { backgroundColor: palette.warning + '20' }]}>
-                  <MaterialCommunityIcons
-                    name="alert"
-                    size={scaleBySizeClass(14, sizeClass)}
-                    color={palette.warning}
-                  />
-                  <ThemedText style={[styles.infoChipText, { color: palette.warning }]}>
-                    Expecting {expectedRatio === 'more-women' ? 'F' : 'M'} majority
-                  </ThemedText>
-                </View>
-              )}
+              </View>
             </View>
           )}
 
@@ -204,25 +198,18 @@ export const TrackerLineScreen = ({
           </Pressable>
         </View>
 
-        {!isLandscape && (expectedRatio != null || ratioMismatch) && (
+        {!isLandscape && ratioMismatch && (
           <View style={styles.infoRow}>
-            {expectedRatio != null && (
-              <ThemedText style={[styles.nextPointLabel, { color: palette.textMuted }]}>
-                Ratio{expectedRatioLabel ? ` · ${expectedRatioLabel}` : ''}
+            <View style={[styles.infoChip, { backgroundColor: palette.warning + '20' }]}>
+              <MaterialCommunityIcons
+                name="alert"
+                size={scaleBySizeClass(14, sizeClass)}
+                color={palette.warning}
+              />
+              <ThemedText style={[styles.infoChipText, { color: palette.warning }]}>
+                Expecting {expectedRatio === 'more-women' ? 'F' : 'M'} majority
               </ThemedText>
-            )}
-            {ratioMismatch && (
-              <View style={[styles.infoChip, { backgroundColor: palette.warning + '20' }]}>
-                <MaterialCommunityIcons
-                  name="alert"
-                  size={scaleBySizeClass(14, sizeClass)}
-                  color={palette.warning}
-                />
-                <ThemedText style={[styles.infoChipText, { color: palette.warning }]}>
-                  Expecting {expectedRatio === 'more-women' ? 'F' : 'M'} majority
-                </ThemedText>
-              </View>
-            )}
+            </View>
           </View>
         )}
 
@@ -421,10 +408,6 @@ function createStyles(sizeClass: SizeClass) {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 8,
-    },
-    nextPointLabel: {
-      fontSize: scaleBySizeClass(12, sizeClass),
-      fontFamily: Fonts.semiBold,
     },
     quickPresetBtn: {
       paddingVertical: 5,

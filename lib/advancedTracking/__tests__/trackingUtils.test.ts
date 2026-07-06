@@ -14,6 +14,7 @@ import {
   getEffectiveGameTo,
   getGameScore,
   getLastAction,
+  getLineReceivingSideId,
   getOtherSideId,
   getPointScoringSideId,
   getReceivingSideForNextPoint,
@@ -922,6 +923,47 @@ describe('getReceivingSideForNextPoint', () => {
       ],
     };
     expect(getReceivingSideForNextPoint(makeGame([point]))).toBe(AWAY);
+  });
+});
+
+// ── getLineReceivingSideId ───────────────────────────────────────────────────
+
+describe('getLineReceivingSideId', () => {
+  it('returns initialReceivingSideId before any point exists', () => {
+    expect(getLineReceivingSideId(makeGame([]), null)).toBe(HOME);
+  });
+
+  it('returns the current point receiving side while a point is in progress', () => {
+    const point = makePoint([
+      makePossession(AWAY, [
+        {
+          id: 'a1',
+          kind: 'pull',
+          sideId: HOME,
+          receivingSideId: AWAY,
+          puller: august,
+          result: 'inbound',
+        },
+      ]),
+    ]);
+
+    expect(getLineReceivingSideId(makeGame([point]), point)).toBe(AWAY);
+  });
+
+  it('returns initialReceivingSideId for an empty in-progress point shell', () => {
+    const point = { ...makePoint([]), possessions: [] };
+
+    expect(getLineReceivingSideId(makeGame([point]), point)).toBe(HOME);
+  });
+
+  it('returns the next receiving side after a completed point', () => {
+    const point = makePoint([
+      makePossession(HOME, [
+        { id: 'a1', kind: 'throw', sideId: HOME, thrower: august, result: 'goal' },
+      ]),
+    ]);
+
+    expect(getLineReceivingSideId(makeGame([point]), point)).toBe(AWAY);
   });
 });
 
