@@ -10,14 +10,12 @@ import { scaleBySizeClass, useLayout } from '@/hooks/useLayout';
 import { useTutorialStore } from '@/store/tutorialStore';
 import { Fonts } from '@/theme/theme';
 import { router, useLocalSearchParams } from 'expo-router';
-import { LayoutChangeEvent, Pressable, StyleSheet, View } from 'react-native';
-import { useState } from 'react';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 export default function TutorialAdvancedTrackerRoute() {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
   const { origin } = useLocalSearchParams<{ origin?: string }>();
-  const [surfaceHeight, setSurfaceHeight] = useState(0);
   const styles = createStyles(sizeClass);
 
   const finish = () => {
@@ -71,10 +69,6 @@ export default function TutorialAdvancedTrackerRoute() {
     finish();
   };
 
-  const onSurfaceLayout = (event: LayoutChangeEvent) => {
-    setSurfaceHeight(event.nativeEvent.layout.height);
-  };
-
   return (
     <View style={[styles.container, { backgroundColor: palette.primary }]}>
       <View style={[styles.header, { borderBottomColor: palette.overlay10 }]}>
@@ -112,13 +106,12 @@ export default function TutorialAdvancedTrackerRoute() {
               </ThemedText>
             </View>
           )}
-          <View style={styles.grid} onLayout={onSurfaceLayout}>
+          <View style={styles.grid}>
             <TutorialAdvancedPlayerGrid
               participants={TUTORIAL_ADVANCED_PARTICIPANTS}
               discHolderRef={gameState.discHolderRef}
               oppHasDisc={gameState.oppHasDisc}
               handlers={gameState.handlers}
-              availableHeight={surfaceHeight}
               cuePlayerId={cue.playerId}
               cueDirection={cue.direction}
               passModifier={passModifier}

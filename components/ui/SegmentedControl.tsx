@@ -292,7 +292,7 @@ function createStyles(sizeClass: SizeClass) {
       position: 'relative',
     },
     sideHighlightLayer: {
-      ...StyleSheet.absoluteFillObject,
+      ...StyleSheet.absoluteFill,
       borderRadius: scaleBySizeClass(10, sizeClass),
       overflow: 'hidden',
     },
@@ -309,12 +309,12 @@ function createStyles(sizeClass: SizeClass) {
       bottom: 0,
     },
     attentionLayer: {
-      ...StyleSheet.absoluteFillObject,
+      ...StyleSheet.absoluteFill,
       borderRadius: scaleBySizeClass(10, sizeClass),
       overflow: 'hidden',
     },
     attentionBase: {
-      ...StyleSheet.absoluteFillObject,
+      ...StyleSheet.absoluteFill,
       borderRadius: scaleBySizeClass(10, sizeClass),
       borderWidth: 1,
     },

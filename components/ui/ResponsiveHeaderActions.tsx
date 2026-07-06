@@ -232,7 +232,7 @@ function createStyles(sizeClass: SizeClass) {
       gap: 8,
     },
     menuOverlay: {
-      ...StyleSheet.absoluteFillObject,
+      ...StyleSheet.absoluteFill,
     },
     menuSheet: {
       position: 'absolute',

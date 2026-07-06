@@ -95,7 +95,7 @@ export default function TutorialStatEntry({
 function createStyles(sizeClass: SizeClass) {
   return StyleSheet.create({
     overlay: {
-      ...StyleSheet.absoluteFillObject,
+      ...StyleSheet.absoluteFill,
       zIndex: 400,
       justifyContent: 'flex-end',
     },

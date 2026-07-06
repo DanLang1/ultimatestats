@@ -59,7 +59,6 @@ interface TrackerSurfaceProps {
   onStartNextPoint: () => void;
   onLineChangePress: () => void;
   canChangeLine: boolean;
-  availableHeight: number;
 }
 
 export const TrackerSurface = ({
@@ -75,7 +74,6 @@ export const TrackerSurface = ({
   isHalftimeBreakActive,
   onLineChangePress,
   canChangeLine,
-  availableHeight,
 }: TrackerSurfaceProps) => {
   switch (state.kind) {
     case 'game-clock-pause':
@@ -106,7 +104,6 @@ export const TrackerSurface = ({
           handlers={handlers}
           onLineChangePress={onLineChangePress}
           canChangeLine={canChangeLine}
-          availableHeight={availableHeight}
         />
       );
   }

@@ -137,10 +137,10 @@ function createStyles(sizeClass: SizeClass, isCompactVertical: boolean) {
       position: 'relative',
     },
     scoreTapArea: {
-      ...StyleSheet.absoluteFillObject,
+      ...StyleSheet.absoluteFill,
     },
     overlayContent: {
-      ...StyleSheet.absoluteFillObject,
+      ...StyleSheet.absoluteFill,
       justifyContent: 'center',
       alignItems: 'center',
       gap: effectiveGap,

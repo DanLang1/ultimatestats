@@ -41,7 +41,7 @@ import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore
 import { Fonts, Palette } from '@/theme/theme';
 import { Redirect, router, Stack, useFocusEffect } from 'expo-router';
 import React, { useState } from 'react';
-import { BackHandler, LayoutChangeEvent, Pressable, StyleSheet, View } from 'react-native';
+import { BackHandler, Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function AdvancedTrackerScreen() {
@@ -67,7 +67,6 @@ export default function AdvancedTrackerScreen() {
   const [showLineChangeMenu, setShowLineChangeMenu] = useState(false);
   const [showRareMenu, setShowRareMenu] = useState(false);
   const [passModifier, setPassModifier] = useState<PassModifier>(null);
-  const [trackingSurfaceHeight, setTrackingSurfaceHeight] = useState(0);
 
   const point = game ? getCurrentPoint(game) : null;
   const possession = game ? getCurrentPossession(game) : null;
@@ -206,13 +205,8 @@ export default function AdvancedTrackerScreen() {
         onLineChangePress={() => setShowLineChangeMenu(true)}
         onStartNextPoint={handleStartNextPoint}
         canChangeLine={canChangeLine}
-        availableHeight={trackingSurfaceHeight}
       />
     );
-  };
-
-  const handleTrackingSurfaceLayout = (event: LayoutChangeEvent) => {
-    setTrackingSurfaceHeight(event.nativeEvent.layout.height);
   };
 
   return (
@@ -231,9 +225,7 @@ export default function AdvancedTrackerScreen() {
           onMorePress={() => setShowRareMenu(true)}
         />
       )}
-      <View style={styles.trackingSurface} onLayout={handleTrackingSurfaceLayout}>
-        {renderTrackingSurface()}
-      </View>
+      <View style={styles.trackingSurface}>{renderTrackingSurface()}</View>
       {showInPointControls && (
         <TrackerActionFooter
           getPointElapsedMs={getPointElapsedMs}

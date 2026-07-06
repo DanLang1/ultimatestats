@@ -100,7 +100,7 @@ function createStyles(sizeClass: SizeClass) {
       gap: 8,
     },
     centerContent: {
-      ...StyleSheet.absoluteFillObject,
+      ...StyleSheet.absoluteFill,
       alignItems: 'center',
       justifyContent: 'center',
     },

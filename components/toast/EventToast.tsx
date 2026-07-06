@@ -103,11 +103,11 @@ function createStyles(sizeClass: SizeClass, toastHeight: number) {
       elevation: 6,
     },
     borderLayer: {
-      ...StyleSheet.absoluteFillObject,
+      ...StyleSheet.absoluteFill,
       borderRadius: 10,
     },
     borderBase: {
-      ...StyleSheet.absoluteFillObject,
+      ...StyleSheet.absoluteFill,
       borderRadius: 10,
       borderWidth: 3,
     },

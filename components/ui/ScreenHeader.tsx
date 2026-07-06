@@ -122,7 +122,7 @@ function createStyles(sizeClass: SizeClass) {
       backgroundColor: 'transparent',
     },
     titleOverlay: {
-      ...StyleSheet.absoluteFillObject,
+      ...StyleSheet.absoluteFill,
       justifyContent: 'center',
       alignItems: 'center',
     },

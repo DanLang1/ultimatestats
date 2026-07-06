@@ -73,7 +73,6 @@ export default {
       backgroundImage: './assets/images/icon.png',
       monochromeImage: './assets/images/icon.png',
     },
-    edgeToEdgeEnabled: true,
     predictiveBackGestureEnabled: false,
     package: APP_ID,
     intentFilters: [
@@ -150,6 +149,9 @@ export default {
     'expo-image',
     'expo-sharing',
     'expo-web-browser',
+    '@react-native-community/datetimepicker',
+    'expo-sqlite',
+    'expo-status-bar',
     [
       'expo-speech-recognition',
       {

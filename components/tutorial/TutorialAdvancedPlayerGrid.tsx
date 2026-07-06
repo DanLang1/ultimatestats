@@ -12,7 +12,6 @@ interface TutorialAdvancedPlayerGridProps {
   discHolderRef: PlayerRef | null;
   oppHasDisc: boolean;
   handlers: TrackerPlayerGridHandlers;
-  availableHeight: number;
   cuePlayerId: string | null;
   cueDirection: 'up' | 'down' | 'right' | null;
   passModifier: PassModifier;
@@ -28,7 +27,6 @@ export default function TutorialAdvancedPlayerGrid({
   discHolderRef,
   oppHasDisc,
   handlers,
-  availableHeight,
   cuePlayerId,
   cueDirection,
   passModifier,
@@ -43,20 +41,11 @@ export default function TutorialAdvancedPlayerGrid({
 
   while (items.length % columns !== 0) items.push(null);
 
-  const rows = items.length / columns;
   const availableChipWidth = Math.floor(
     (width - horizontalPadding * 2 - gap * (columns - 1)) / columns,
   );
-  const availableChipHeight =
-    availableHeight > 0
-      ? Math.floor((availableHeight - verticalPadding * 2 - gap * (rows - 1)) / rows)
-      : availableChipWidth;
   const maxChipWidths = isLandscape ? LANDSCAPE_MAX_CHIP_WIDTH : PORTRAIT_MAX_CHIP_WIDTH;
-  const chipWidth = Math.min(
-    availableChipWidth,
-    availableChipHeight,
-    getSizeClassValue(maxChipWidths, sizeClass),
-  );
+  const chipWidth = Math.min(availableChipWidth, getSizeClassValue(maxChipWidths, sizeClass));
   const gridWidth = chipWidth * columns + gap * (columns - 1) + horizontalPadding * 2;
 
   return (

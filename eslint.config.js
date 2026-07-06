@@ -42,6 +42,10 @@ module.exports = defineConfig([
           message: 'Use named React hook imports (e.g. useState()) instead of React.useState().',
         },
       ],
+      'react-hooks/immutability': 'warn',
+      'react-hooks/purity': 'warn',
+      'react-hooks/refs': 'warn',
+      'react-hooks/set-state-in-effect': 'warn',
     },
   },
   {

@@ -93,7 +93,7 @@ export default function TutorialTurnoverEntry({
 function createStyles(sizeClass: 'small' | 'medium' | 'large') {
   return StyleSheet.create({
     overlay: {
-      ...StyleSheet.absoluteFillObject,
+      ...StyleSheet.absoluteFill,
       zIndex: 400,
       justifyContent: 'flex-end',
     },

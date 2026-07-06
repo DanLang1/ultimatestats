@@ -103,7 +103,7 @@ function createStyles(sizeClass: SizeClass) {
       gap: 4,
     },
     valueContainer: {
-      ...StyleSheet.absoluteFillObject,
+      ...StyleSheet.absoluteFill,
       alignItems: 'center',
       justifyContent: 'center',
     },

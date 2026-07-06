@@ -23,7 +23,6 @@ interface TrackerPlayerGridProps {
   handlers: TrackerPlayerGridHandlers;
   onLineChangePress: () => void;
   canChangeLine: boolean;
-  availableHeight: number;
 }
 
 const PORTRAIT_MAX_CHIP_WIDTH = { small: 180, medium: 170, large: 190 } as const;
@@ -57,13 +56,11 @@ export const TrackerPlayerGrid = ({
   handlers,
   onLineChangePress,
   canChangeLine,
-  availableHeight,
 }: TrackerPlayerGridProps) => {
   const { width, sizeClass, isLandscape } = useLayout();
 
   const columns = isLandscape ? LANDSCAPE_COLUMNS : PORTRAIT_COLUMNS;
   const horizontalPadding = scaleBySizeClass(20, sizeClass);
-  const verticalPadding = scaleBySizeClass(12, sizeClass);
   const hPadding = horizontalPadding * 2;
   const gap = scaleBySizeClass(isLandscape ? 10 : 12, sizeClass);
 
@@ -78,18 +75,9 @@ export const TrackerPlayerGrid = ({
     items.push(null);
   }
 
-  const rows = items.length / columns;
   const availableChipWidth = Math.floor((width - hPadding - gap * (columns - 1)) / columns);
-  const availableChipHeight =
-    availableHeight > 0
-      ? Math.floor((availableHeight - verticalPadding * 2 - gap * (rows - 1)) / rows)
-      : availableChipWidth;
   const maxChipWidths = isLandscape ? LANDSCAPE_MAX_CHIP_WIDTH : PORTRAIT_MAX_CHIP_WIDTH;
-  const chipWidth = Math.min(
-    availableChipWidth,
-    availableChipHeight,
-    getSizeClassValue(maxChipWidths, sizeClass),
-  );
+  const chipWidth = Math.min(availableChipWidth, getSizeClassValue(maxChipWidths, sizeClass));
   const gridWidth = chipWidth * columns + gap * (columns - 1) + hPadding;
 
   const styles = createStyles(sizeClass, gap);
