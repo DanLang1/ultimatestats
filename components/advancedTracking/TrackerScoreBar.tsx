@@ -3,7 +3,6 @@ import { ScoreBarMainRow } from '@/components/advancedTracking/scoreBar/ScoreBar
 import { ScoreBarPagination } from '@/components/advancedTracking/scoreBar/ScoreBarPagination';
 import { useScoreBarData } from '@/components/advancedTracking/scoreBar/useScoreBarData';
 import { useTheme } from '@/context/ThemeContext';
-import { useTimestampTimer } from '@/hooks/advancedTracking/useTimer';
 import { useLayout } from '@/hooks/useLayout';
 import React, { useRef, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
@@ -23,16 +22,6 @@ export const TrackerScoreBar = ({
   const [isExpanded, setIsExpanded] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
   const data = useScoreBarData();
-  const runningPointElapsedMs = useTimestampTimer({
-    timestamp: pointTimerAdjustedTimestamp,
-    mode: 'elapsed',
-    intervalMs: 1000,
-    enabled: (data?.showPointTimer ?? false) && !(data?.isPointTimerPaused ?? false),
-  });
-  const pointElapsedMs =
-    pointTimerAdjustedTimestamp != null && pointTimerPausedAt != null
-      ? Math.max(0, pointTimerPausedAt - pointTimerAdjustedTimestamp)
-      : runningPointElapsedMs;
 
   const cardWidth = width - 20;
 
@@ -67,7 +56,8 @@ export const TrackerScoreBar = ({
           <ScoreBarMainRow
             width={cardWidth}
             onToggleExpanded={toggleExpanded}
-            pointElapsedMs={pointElapsedMs}
+            pointTimerAdjustedTimestamp={pointTimerAdjustedTimestamp}
+            pointTimerPausedAt={pointTimerPausedAt}
           />
 
           <ScoreBarActionRow width={cardWidth} />

@@ -1,9 +1,9 @@
 import { ThemedText } from '@/components/ThemedText';
+import { PointTimerText } from '@/components/advancedTracking/scoreBar/PointTimerText';
 import { TeamScoreBlock } from '@/components/advancedTracking/scoreBar/TeamScoreBlock';
 import { useScoreBarData } from '@/components/advancedTracking/scoreBar/useScoreBarData';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import { formatPointTime } from '@/lib/advancedTracking/trackingDisplayHelpers';
 import { Fonts } from '@/theme/theme';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
@@ -12,13 +12,15 @@ import { Pressable, StyleSheet, View } from 'react-native';
 interface ScoreBarMainRowProps {
   width: number;
   onToggleExpanded: () => void;
-  pointElapsedMs: number;
+  pointTimerAdjustedTimestamp: number | null;
+  pointTimerPausedAt: number | null;
 }
 
 export const ScoreBarMainRow = ({
   width,
   onToggleExpanded,
-  pointElapsedMs,
+  pointTimerAdjustedTimestamp,
+  pointTimerPausedAt,
 }: ScoreBarMainRowProps) => {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
@@ -63,9 +65,14 @@ export const ScoreBarMainRow = ({
               />
             </Pressable>
           )}
-          <ThemedText style={[styles.centerTimer, { color: palette.textInverse }]}>
-            {showPointTimer || pointIsOver ? formatPointTime(pointElapsedMs) : '–:––'}
-          </ThemedText>
+          <PointTimerText
+            pointTimerAdjustedTimestamp={pointTimerAdjustedTimestamp}
+            pointTimerPausedAt={pointTimerPausedAt}
+            showPointTimer={showPointTimer}
+            pointIsOver={pointIsOver}
+            isPointTimerPaused={isPointTimerPaused}
+            style={[styles.centerTimer, { color: palette.textInverse }]}
+          />
         </View>
         {isPointTimerPaused && (
           <ThemedText style={[styles.pausedText, { color: palette.warning }]}>paused</ThemedText>
