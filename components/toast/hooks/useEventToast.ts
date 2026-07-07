@@ -207,8 +207,11 @@ export function useEventToast({
       icon = { library: 'material', name: 'bullseye-arrow' };
     }
 
+    // The signal is an external store event; consume it synchronously so feedback is not lost.
+    /* eslint-disable react-hooks/set-state-in-effect */
     setToast({ visible: true, message, tone, icon });
     setToastInstanceId((current) => current + 1);
+    /* eslint-enable react-hooks/set-state-in-effect */
     clearEventToastSignal();
   }, [eventToastSignal, roster, team2Name, clearEventToastSignal]);
 

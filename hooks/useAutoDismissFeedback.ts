@@ -7,14 +7,24 @@ export function useAutoDismissFeedback(autoDismiss: boolean, feedbackText: strin
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
+    if (timerRef.current != null) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+
+    // Reset immediately when the feedback text changes so the new message is visible.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setDismissed(false);
+
     if (autoDismiss) {
-      setDismissed(false);
       timerRef.current = setTimeout(() => setDismissed(true), AUTO_DISMISS_MS);
       return () => {
-        if (timerRef.current != null) clearTimeout(timerRef.current);
+        if (timerRef.current != null) {
+          clearTimeout(timerRef.current);
+          timerRef.current = null;
+        }
       };
     }
-    setDismissed(false);
   }, [autoDismiss, feedbackText]);
 
   return dismissed;

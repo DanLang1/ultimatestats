@@ -35,7 +35,7 @@ export const TrackerCapBar = ({ onMenuPress, game }: TrackerCapBarProps) => {
   const completedGameClockPauseMs = getCompletedGameClockPauseMs(game);
   const gameElapsedMs =
     activeGameClockPause !== null
-      ? getGameClockElapsedMs(game, Date.now())
+      ? getGameClockElapsedMs(game, activeGameClockPause.pausedAt)
       : Math.max(0, rawGameElapsedMs - completedGameClockPauseMs);
   const hardCapMins = useSettingsStore((state) => state.hardCapMins);
   const advancedSoftCapAtMins = useSettingsStore((state) => state.advancedSoftCapAtMins);

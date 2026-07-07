@@ -4,6 +4,10 @@
 
 See `docs/README.md` for directory structure, key concepts, and the New Screen Checklist.
 
+## Base Guideline
+
+- When in doubt, surface question to user, avoid making assumptions about code or behavior
+
 ## Engineering Rules (Project-Specific)
 
 - Prefer derived state over `useEffect`.
@@ -20,6 +24,7 @@ See `docs/README.md` for directory structure, key concepts, and the New Screen C
 - Prefer `hasItems(...)` from `lib/utils.ts` for array presence checks instead of `!!arr?.length`.
 - Use `AlertProvider`; do not use native `Alert.alert`.
 - Do not use `runOnJs`; use `scheduleOnRn`.
+- Avoid unnecessary or noisy fallbacks. Sometimes throwing an error or returning early is better than silently passing 'invalid' or odd fallbacks through the code.
 
 ## Navigation/Modal Rules
 

@@ -1,5 +1,5 @@
 import { useFocusEffect } from 'expo-router';
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { Keyboard } from 'react-native';
 
 /**
@@ -10,7 +10,10 @@ import { Keyboard } from 'react-native';
  */
 export function useKeyboardDidHide(callback: () => void) {
   const callbackRef = useRef(callback);
-  callbackRef.current = callback;
+
+  useEffect(() => {
+    callbackRef.current = callback;
+  }, [callback]);
 
   useFocusEffect(() => {
     const subscription = Keyboard.addListener('keyboardDidHide', () => {

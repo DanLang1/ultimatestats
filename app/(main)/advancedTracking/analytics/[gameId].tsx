@@ -25,15 +25,15 @@ import { useSavedAdvancedGamesStore } from '@/store/advancedTracking/savedGamesS
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { useTournamentStore } from '@/store/tournamentStore';
 import { Fonts } from '@/theme/theme';
+import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import DateTimePicker, {
   DateTimePickerAndroid,
   DateTimePickerEvent,
 } from '@react-native-community/datetimepicker';
-import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { File, Paths } from 'expo-file-system';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { ActivityIndicator, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 type AdvancedGameStatsOrigin = 'gameComplete';
@@ -125,14 +125,16 @@ export default function AdvancedGameStatsScreen() {
   const hasPlayedAt = Boolean(rawGame.metadata?.date);
 
   const handleUpdatePlayedAt = async (playedAt: number) => {
-    await saveAdvancedGame({
-      ...rawGame,
-      updatedAt: Date.now(),
-      metadata: {
-        ...rawGame.metadata,
-        date: new Date(playedAt).toISOString(),
+    await saveAdvancedGame(
+      {
+        ...rawGame,
+        metadata: {
+          ...rawGame.metadata,
+          date: new Date(playedAt).toISOString(),
+        },
       },
-    });
+      { touchUpdatedAt: true },
+    );
   };
 
   const handleDateChange = (_event: DateTimePickerEvent, selectedValue?: Date) => {

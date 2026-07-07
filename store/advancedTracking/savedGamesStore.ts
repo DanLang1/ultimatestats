@@ -17,8 +17,15 @@ type SavedAdvancedGamesState = {
   loadSummaries: () => Promise<AdvancedGameSummary[]>;
   loadGame: (gameId: string) => Promise<AdvancedTrackedGame | null>;
   loadGames: (gameIds: string[]) => Promise<AdvancedTrackedGame[]>;
-  saveGame: (game: AdvancedTrackedGame) => Promise<AdvancedGameSummary>;
+  saveGame: (
+    game: AdvancedTrackedGame,
+    options?: SaveAdvancedGameOptions,
+  ) => Promise<AdvancedGameSummary>;
   deleteGame: (gameId: string) => Promise<void>;
+};
+
+type SaveAdvancedGameOptions = {
+  touchUpdatedAt?: boolean;
 };
 
 let summariesLoadPromise: Promise<AdvancedGameSummary[]> | null = null;
@@ -97,13 +104,14 @@ export const useSavedAdvancedGamesStore = create<SavedAdvancedGamesState>()(
         .filter((game): game is AdvancedTrackedGame => game != null);
     },
 
-    saveGame: async (game) => {
-      const summary = await upsertAdvancedGame(game);
+    saveGame: async (game, options) => {
+      const gameToSave = options?.touchUpdatedAt ? { ...game, updatedAt: Date.now() } : game;
+      const summary = await upsertAdvancedGame(gameToSave);
       set((state) => {
         if (state.summariesLoaded) {
           state.summaries = upsertSummary(state.summaries, summary);
         }
-        state.gamesById[game.id] = game;
+        state.gamesById[gameToSave.id] = gameToSave;
       });
       return summary;
     },

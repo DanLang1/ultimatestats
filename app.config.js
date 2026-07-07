@@ -132,6 +132,11 @@ export default {
       'expo-dev-client',
       {
         addGeneratedScheme: IS_DEV,
+        // Expo 57 Android dev builds can hang for a long time while trying a stale
+        // "most recent" Metro URL before falling back to the launcher.
+        android: {
+          launchMode: 'launcher',
+        },
       },
     ],
     [

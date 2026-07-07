@@ -76,6 +76,8 @@ export default function AdvancedTrackerScreen() {
   const pointTimerPausedAt = activeGameClockPause?.pausedAt ?? activeStoppage?.pausedAt ?? null;
   const getPointElapsedMs = () => {
     if (pointTimerAdjustedTimestamp == null) return 0;
+    // Event-time callback, not render output; use the exact current time for stat timestamps.
+    // eslint-disable-next-line react-hooks/purity
     return Math.max(0, (pointTimerPausedAt ?? Date.now()) - pointTimerAdjustedTimestamp);
   };
 

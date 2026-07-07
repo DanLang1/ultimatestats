@@ -27,6 +27,7 @@ export function useReclampOnResize({
   const insets = useSafeAreaInsets();
   const wasLandscape = useRef(isLandscape);
 
+  /* eslint-disable react-hooks/immutability -- Reanimated SharedValue positions are external mutable animation state. */
   useEffect(() => {
     const leftBound = 8;
     const rightBound = screenWidth - insets.left - insets.right - effectiveWidth - 24;
@@ -54,4 +55,5 @@ export function useReclampOnResize({
     translateY,
     isLandscape,
   ]);
+  /* eslint-enable react-hooks/immutability */
 }

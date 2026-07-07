@@ -39,6 +39,8 @@ export function useTimestampTimer({
   useEffect(() => {
     if (!enabled || timestamp === null) {
       if (timestamp === null) {
+        // Keep the display reset in the same commit cycle as the timer inputs.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setValue(mode === 'countdown' ? durationSeconds : 0);
       }
       return;

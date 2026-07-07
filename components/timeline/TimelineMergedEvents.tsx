@@ -38,13 +38,14 @@ export default function TimelineMergedEvents({
   onEditEvent,
   onEditEventTime,
 }: TimelineMergedEventsProps) {
-  let previousElapsedMs: number | undefined;
+  const previousElapsedByIndex = getPreviousElapsedByIndex(events);
 
   return (
     <>
       {events.map((event, index) => {
         const isFirst = index === 0;
         const currentElapsedMs = event.data.elapsedMs;
+        const previousElapsedMs = previousElapsedByIndex[index];
         const splitMs =
           !isFirst &&
           timingEnabled &&
@@ -57,10 +58,6 @@ export default function TimelineMergedEvents({
 
         const relativeTime =
           currentElapsedMs !== undefined ? formatClockDuration(currentElapsedMs) : undefined;
-
-        if (currentElapsedMs !== undefined) {
-          previousElapsedMs = currentElapsedMs;
-        }
 
         if (event.kind === 'timeout') {
           const timeout = event.data;
@@ -126,4 +123,18 @@ export default function TimelineMergedEvents({
       })}
     </>
   );
+}
+
+function getPreviousElapsedByIndex(events: TimelineEvent[]) {
+  const previousElapsedByIndex: (number | undefined)[] = [];
+  let previousElapsedMs: number | undefined;
+
+  for (const event of events) {
+    previousElapsedByIndex.push(previousElapsedMs);
+    if (event.data.elapsedMs !== undefined) {
+      previousElapsedMs = event.data.elapsedMs;
+    }
+  }
+
+  return previousElapsedByIndex;
 }
