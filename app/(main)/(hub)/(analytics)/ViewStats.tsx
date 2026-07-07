@@ -15,9 +15,9 @@ import { useCompletedAdvancedGameSummaries } from '@/hooks/advancedTracking/useA
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { buildAnalyticsGame, getFinalScores } from '@/lib/advancedTracking/buildAnalyticsGame';
 import { shareFileAndDelete } from '@/lib/shareFileAndDelete';
-import { formatDate, generateCurrentGameCSV } from '@/lib/statsUtils';
+import { formatDate, generateCurrentGameCSV } from '@/lib/basic/statsUtils';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
-import { useGameStore } from '@/store/gameStore';
+import { useGameStore } from '@/store/basic/gameStore';
 import { useTutorialStore } from '@/store/tutorialStore';
 import { Fonts } from '@/theme/theme';
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';

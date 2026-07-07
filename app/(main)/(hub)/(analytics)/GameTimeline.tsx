@@ -1,10 +1,10 @@
 import { ThemedView } from '@/components/ThemedView';
-import EventTimeline from '@/components/timeline/EventTimeline';
+import EventTimeline from '@/components/basic/timeline/EventTimeline';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { resolveTeamName } from '@/lib/playerUtils';
-import { computePointByPointEvents } from '@/lib/timelineUtils';
-import { useGameStore } from '@/store/gameStore';
+import { computePointByPointEvents } from '@/lib/basic/timelineUtils';
+import { useGameStore } from '@/store/basic/gameStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import * as Haptics from 'expo-haptics';
 import { router, Stack, useLocalSearchParams } from 'expo-router';

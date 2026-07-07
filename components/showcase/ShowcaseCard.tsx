@@ -9,7 +9,7 @@ import {
 } from '@/lib/sharing';
 import { hasItems } from '@/lib/utils';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
-import { useGameStore } from '@/store/gameStore';
+import { useGameStore } from '@/store/basic/gameStore';
 import { Fonts } from '@/theme/theme';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useMutation } from '@tanstack/react-query';

@@ -2,7 +2,7 @@ import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import type { ThrowDisplayAction } from '@/lib/advancedTracking/advancedTimelineUtils';
-import { formatClockDuration } from '@/lib/timelineUtils';
+import { formatClockDuration } from '@/lib/durationFormatUtils';
 import { hasItems } from '@/lib/utils';
 import { Fonts } from '@/theme/theme';
 import React, { useState } from 'react';

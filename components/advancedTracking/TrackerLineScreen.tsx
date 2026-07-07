@@ -8,7 +8,7 @@ import { getLoadLineButtonState } from '@/lib/lineEditorUtils';
 import { Participant } from '@/lib/advancedTracking/types';
 import { checkLineRatio, formatRatio, GenderRatio } from '@/lib/genderRatioUtils';
 import { Player, PointLineRecord } from '@/lib/storage/types';
-import { useGameStore } from '@/store/gameStore';
+import { useGameStore } from '@/store/basic/gameStore';
 import { useLinePresetsStore } from '@/store/linePresetsStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { Fonts } from '@/theme/theme';

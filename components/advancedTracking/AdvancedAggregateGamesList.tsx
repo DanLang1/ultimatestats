@@ -3,7 +3,7 @@ import { ScoreBadge } from '@/components/ui/ScoreBadge';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import type { AdvancedGameSummary } from '@/lib/advancedTracking/summary';
-import { formatDate } from '@/lib/statsUtils';
+import { formatTimestampForDisplay as formatDate } from '@/lib/dateUtils';
 import { Tournament } from '@/lib/storage/types';
 import { hasItems } from '@/lib/utils';
 import { Fonts } from '@/theme/theme';

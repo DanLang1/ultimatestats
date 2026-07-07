@@ -24,7 +24,7 @@ import { SavedTeam } from '@/lib/storage';
 import { MatchingType, Player, PlayerRole } from '@/lib/storage/types';
 import { sortByPlayerNumber } from '@/lib/lineUtils';
 import { generateId } from '@/lib/utils';
-import { useGameStore } from '@/store/gameStore';
+import { useGameStore } from '@/store/basic/gameStore';
 import { useLinePresetsStore } from '@/store/linePresetsStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { Fonts } from '@/theme/theme';

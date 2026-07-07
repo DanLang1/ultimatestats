@@ -6,8 +6,8 @@ import {
   computePointByPointEvents,
   getEventTimeValidationError,
   getPointDurationValidationError,
-} from '@/lib/timelineUtils';
-import { useGameStore } from '@/store/gameStore';
+} from '@/lib/basic/timelineUtils';
+import { useGameStore } from '@/store/basic/gameStore';
 import { Fonts } from '@/theme/theme';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router, useLocalSearchParams } from 'expo-router';

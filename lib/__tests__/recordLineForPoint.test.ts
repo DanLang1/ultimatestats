@@ -1,5 +1,5 @@
 import { computePlayingTime } from '@/lib/lineUtils';
-import { useGameStore } from '@/store/gameStore';
+import { useGameStore } from '@/store/basic/gameStore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 jest.mock('@react-native-async-storage/async-storage', () => ({

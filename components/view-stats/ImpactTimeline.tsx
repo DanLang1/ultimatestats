@@ -2,7 +2,7 @@ import { ThemedText } from '@/components/ThemedText';
 import { Fonts } from '@/theme/theme';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import { ImpactPoint } from '@/lib/statsUtils';
+import { ImpactPoint } from '@/lib/basic/statsUtils';
 import React, { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import Svg, {

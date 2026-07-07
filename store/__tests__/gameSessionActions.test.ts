@@ -8,7 +8,7 @@ import {
   startBasicGameSession,
 } from '@/hooks/useGameSessionActions';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
-import { useGameStore } from '@/store/gameStore';
+import { useGameStore } from '@/store/basic/gameStore';
 import { useGameSessionStore } from '@/store/gameSessionStore';
 
 jest.mock('@react-native-async-storage/async-storage', () => ({

@@ -4,7 +4,7 @@ import { TournamentFilterModal } from '@/components/ui/TournamentFilterModal';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { GameKind, GameListItem } from '@/lib/gameListUtils';
-import { formatDate } from '@/lib/statsUtils';
+import { formatDate } from '@/lib/basic/statsUtils';
 import { Tournament } from '@/lib/storage/types';
 import { useTutorialStore } from '@/store/tutorialStore';
 import { Fonts } from '@/theme/theme';

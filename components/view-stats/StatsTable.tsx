@@ -7,10 +7,10 @@ import {
   computePlayingTimeStats,
   formatEfficiency,
   PlayingTimeStats,
-} from '@/lib/playingTimeStatsUtils';
-import { computePlayerStats, PlayerStats } from '@/lib/statsUtils';
+} from '@/lib/basic/playingTimeStatsUtils';
+import { computePlayerStats, PlayerStats } from '@/lib/basic/statsUtils';
 import { Player, PointLineRecord, SavedGame } from '@/lib/storage';
-import { GameEvent } from '@/store/gameStore.types';
+import { GameEvent } from '@/store/basic/gameStore.types';
 import { usePlayerStatsStore } from '@/store/playerStatsStore';
 import { Fonts } from '@/theme/theme';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';

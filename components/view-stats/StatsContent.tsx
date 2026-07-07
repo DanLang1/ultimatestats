@@ -2,7 +2,7 @@ import { ScoreBadge } from '@/components/ui/ScoreBadge';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { ensureContrast } from '@/lib/colorUtils';
-import { computePlayerStats } from '@/lib/statsUtils';
+import { computePlayerStats } from '@/lib/basic/statsUtils';
 import { GameEvent, Player, PointLineRecord, SavedGame } from '@/lib/storage';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';

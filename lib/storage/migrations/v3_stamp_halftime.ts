@@ -1,4 +1,4 @@
-import { normalizeHalftimeMarkers } from '@/lib/halftimeUtils';
+import { normalizeHalftimeMarkers } from '@/lib/basic/halftimeUtils';
 import { SavedGame } from '../types';
 import type { SavedGameMigration } from './index';
 

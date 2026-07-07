@@ -7,7 +7,7 @@ import {
   computePlayingTimeStats,
   computeRates,
   formatMinutesPlayed,
-} from '@/lib/playingTimeStatsUtils';
+} from '@/lib/basic/playingTimeStatsUtils';
 import { GameEvent, PointLineRecord, SavedGame } from '@/lib/storage';
 import { Fonts } from '@/theme/theme';
 import React from 'react';

@@ -1,7 +1,7 @@
 import { EVENT_RECORDED_TOAST_DURATION_MS } from '@/lib/constants';
 import { getPlayerName as getPlayerNameFromRoster, UNKNOWN_PLAYER_ID } from '@/lib/playerUtils';
 import { Player } from '@/lib/storage';
-import { EventToastSignal, GameEvent, TurnoverEvent } from '@/store/gameStore.types';
+import { EventToastSignal, GameEvent, TurnoverEvent } from '@/store/basic/gameStore.types';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useEffect, useState } from 'react';

@@ -1,9 +1,9 @@
-import { StatEntryInner } from '@/components/stat-entry/StatEntryInner';
+import { StatEntryInner } from '@/components/basic/stat-entry/StatEntryInner';
 import { useTheme } from '@/context/ThemeContext';
 import { finishActiveGameSession } from '@/hooks/useGameSessionActions';
-import { checkGameOver } from '@/lib/gameUtils';
-import { shouldShowLinePrompt } from '@/lib/linePromptUtils';
-import { useGameStore } from '@/store/gameStore';
+import { checkGameOver } from '@/lib/basic/gameUtils';
+import { shouldShowLinePrompt } from '@/lib/basic/linePromptUtils';
+import { useGameStore } from '@/store/basic/gameStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { router } from 'expo-router';
 import React from 'react';

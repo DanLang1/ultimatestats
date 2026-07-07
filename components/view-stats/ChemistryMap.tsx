@@ -1,6 +1,6 @@
 import { useTheme } from '@/context/ThemeContext';
 import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import { ChemistryConnection } from '@/lib/statsUtils';
+import { ChemistryConnection } from '@/lib/basic/statsUtils';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';

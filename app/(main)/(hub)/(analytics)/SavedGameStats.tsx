@@ -25,11 +25,11 @@ import {
 import { getTournamentIdsByGame } from '@/lib/tournamentUtils';
 import { useSavedAdvancedGamesStore } from '@/store/advancedTracking/savedGamesStore';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
-import { useGameStore } from '@/store/gameStore';
+import { useGameStore } from '@/store/basic/gameStore';
 import { useTournamentStore } from '@/store/tournamentStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router, Stack } from 'expo-router';
-import React, { useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { ScrollView, StyleSheet } from 'react-native';
 
 const GAME_NAVIGATION_GUARD_MS = 750;

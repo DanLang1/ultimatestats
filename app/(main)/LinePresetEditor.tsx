@@ -1,10 +1,10 @@
 import { PresetEditView } from '@/components/lines/PresetEditView';
 import { PresetListView } from '@/components/lines/PresetListView';
 import { useAlert } from '@/components/ui/AlertProvider';
-import { useIsGameActive } from '@/hooks/useIsGameActive';
+import { useIsGameActive } from '@/hooks/basic/useIsGameActive';
 import { MAX_LINE_SIZE } from '@/lib/lineUtils';
 import { LinePreset } from '@/lib/storage/types';
-import { useGameStore } from '@/store/gameStore';
+import { useGameStore } from '@/store/basic/gameStore';
 import { useLinePresetsStore } from '@/store/linePresetsStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { router, useLocalSearchParams } from 'expo-router';

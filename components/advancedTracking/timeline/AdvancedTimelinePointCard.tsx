@@ -8,7 +8,7 @@ import {
   getPointStateLabel,
 } from '@/lib/advancedTracking/advancedTimelineUtils';
 import type { AdvancedTimelinePoint } from '@/lib/advancedTracking/advancedTimelineUtils';
-import { formatClockDuration } from '@/lib/timelineUtils';
+import { formatClockDuration } from '@/lib/durationFormatUtils';
 import { hasItems } from '@/lib/utils';
 import { Fonts } from '@/theme/theme';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';

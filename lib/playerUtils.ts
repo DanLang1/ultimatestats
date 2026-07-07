@@ -1,4 +1,4 @@
-import { GameEvent } from '@/store/gameStore.types';
+import { GameEvent } from '@/store/basic/gameStore.types';
 import { MatchingType, Player, PointLineRecord, SavedTeam } from './storage/types';
 
 /** Special ID for recording plays when the player is unknown */

@@ -1,6 +1,6 @@
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import { RoleStats } from '@/lib/statsUtils';
+import { RoleStats } from '@/lib/basic/statsUtils';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';

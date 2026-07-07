@@ -3,10 +3,7 @@ import { useAlert } from '@/components/ui/AlertProvider';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { AdvancedPlayerStats } from '@/lib/advancedTracking/advancedPlayerStatsUtils';
-import {
-  getRoundedDecimalDelta,
-  getRoundedPercentagePointDelta,
-} from '@/lib/relativeStatsViewUtils';
+import { getRoundedDecimalDelta, getRoundedPercentagePointDelta } from '@/lib/relativeMetricUtils';
 import { Fonts } from '@/theme/theme';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React, { useState } from 'react';

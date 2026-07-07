@@ -5,7 +5,7 @@ import {
   computeTeamStats,
   computeTimingStats,
   computeTimeOfPossessionStats,
-} from '@/lib/teamStatsUtils';
+} from '@/lib/basic/teamStatsUtils';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';

@@ -12,31 +12,32 @@ Platform support details are documented in [platform-support.md](platform-suppor
 
 ```
 ├── app/               # Expo Router screens
-│   ├── index.tsx      # Main scoreboard
-│   ├── Settings.tsx   # Team and app settings
-│   ├── ViewStats.tsx  # Stats viewer
-│   ├── PlayerStats.tsx # Individual player stats
-│   ├── EditRoster.tsx # Roster management
-│   ├── *Modal.tsx     # Modal screens (transparent overlays)
+│   ├── (main)/(hub)/  # Main tabs for dashboard, game, team, and analytics
+│   ├── (main)/advancedTracking/ # Advanced tracker routes
+│   ├── (modals)/      # Modal routes
 │   └── _layout.tsx    # Navigation configuration
 ├── components/        # Reusable components
+│   ├── advancedTracking/ # Advanced-mode tracker and analytics UI
+│   ├── basic/         # Basic-mode scoreboard, timeline, and entry UI
 │   ├── ui/            # Generic UI (buttons, chips, etc.)
-│   ├── stat-entry/    # Stat entry flow components
 │   ├── view-stats/    # Stats display components
 │   ├── tutorial/      # Routed onboarding and tutorial components
-│   └── *.tsx          # Feature components
+│   └── *.tsx          # Shared visual primitives
 ├── store/             # Zustand stores with Immer
-│   ├── gameStore.ts   # Main game state
-│   └── *.types.ts     # TypeScript interfaces
+│   ├── basic/         # Basic-mode game state
+│   ├── advancedTracking/ # Advanced-mode tracking and saved game state
+│   └── *.ts           # Shared app stores
 ├── lib/               # Utilities and helpers
+│   ├── basic/         # Basic-mode game logic, stats, timeline, and tests
+│   ├── advancedTracking/ # Advanced-mode domain logic, analytics, and tests
 │   ├── constants.ts   # App-wide constants (name limits, etc.)
-│   ├── gameUtils.ts   # Game logic (checkGameOver)
-│   ├── statsUtils.ts  # Stats calculations, CSV export
 │   ├── storage/       # AsyncStorage helpers
-│   └── __tests__/     # Unit tests
+│   └── *.ts           # Shared helpers and infrastructure
 ├── theme/             # Theming system
 │   └── theme.ts       # Color palettes, dark/light mode
 ├── hooks/             # Custom React hooks
+│   ├── basic/         # Basic-mode gameplay hooks
+│   └── advancedTracking/ # Advanced-mode tracker hooks
 ├── context/           # React contexts (Theme, Alert)
 └── docs/              # Documentation (you are here)
 ```

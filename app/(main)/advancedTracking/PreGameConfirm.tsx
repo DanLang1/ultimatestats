@@ -12,7 +12,7 @@ import { getContrastingTextColor } from '@/lib/colorUtils';
 import { MAX_TEAM_NAME_LENGTH } from '@/lib/constants';
 import { formatRatioFull, GenderRatio } from '@/lib/genderRatioUtils';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
-import { useGameStore } from '@/store/gameStore';
+import { useGameStore } from '@/store/basic/gameStore';
 import { useNumberPickerStore } from '@/store/numberPickerStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { Fonts } from '@/theme/theme';

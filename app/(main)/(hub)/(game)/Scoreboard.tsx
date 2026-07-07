@@ -1,7 +1,7 @@
-import LiveScoreboard from '@/components/scoreboard/LiveScoreboard';
-import { useStatsTutorialPending } from '@/hooks/useStatsTutorialPending';
-import { checkGameOver } from '@/lib/gameUtils';
-import { useGameStore } from '@/store/gameStore';
+import LiveScoreboard from '@/components/basic/scoreboard/LiveScoreboard';
+import { useStatsTutorialPending } from '@/hooks/basic/useStatsTutorialPending';
+import { checkGameOver } from '@/lib/basic/gameUtils';
+import { useGameStore } from '@/store/basic/gameStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { Redirect, usePathname } from 'expo-router';
 

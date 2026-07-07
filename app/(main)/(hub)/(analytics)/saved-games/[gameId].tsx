@@ -19,8 +19,8 @@ import {
   runPendingShareAction,
   SHARE_DATA_UPLOAD_ERROR_MESSAGE,
 } from '@/lib/sharing/shareActionUtils';
-import { formatDate, generateSavedGameCSV } from '@/lib/statsUtils';
-import { useGameStore } from '@/store/gameStore';
+import { formatDate, generateSavedGameCSV } from '@/lib/basic/statsUtils';
+import { useGameStore } from '@/store/basic/gameStore';
 import { useTournamentStore } from '@/store/tournamentStore';
 import { Fonts } from '@/theme/theme';
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';

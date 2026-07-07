@@ -35,10 +35,10 @@ import {
   runPendingShareAction,
   SHARE_DATA_UPLOAD_ERROR_MESSAGE,
 } from '@/lib/sharing/shareActionUtils';
-import { generateAggregateCSV } from '@/lib/statsUtils';
+import { generateAggregateCSV } from '@/lib/basic/statsUtils';
 import { GameEvent, Player, SavedGame } from '@/lib/storage';
 import { getTournamentIdsByGame } from '@/lib/tournamentUtils';
-import { useGameStore } from '@/store/gameStore';
+import { useGameStore } from '@/store/basic/gameStore';
 import { useTournamentStore } from '@/store/tournamentStore';
 import { Fonts } from '@/theme/theme';
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';

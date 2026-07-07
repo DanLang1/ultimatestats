@@ -1,6 +1,6 @@
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass } from '@/hooks/useLayout';
-import { PointEvents } from '@/lib/timelineUtils';
+import { PointEvents } from '@/lib/basic/timelineUtils';
 import React from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';

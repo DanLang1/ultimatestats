@@ -5,7 +5,7 @@ import type {
   ActionTone,
   AdvancedTimelineAction,
 } from '@/lib/advancedTracking/advancedTimelineUtils';
-import { formatClockDuration } from '@/lib/timelineUtils';
+import { formatClockDuration } from '@/lib/durationFormatUtils';
 import { Fonts } from '@/theme/theme';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';

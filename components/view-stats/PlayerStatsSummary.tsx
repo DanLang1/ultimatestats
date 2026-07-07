@@ -1,5 +1,5 @@
 import { useTheme } from '@/context/ThemeContext';
-import { PlayerStats as PlayerStatsType } from '@/lib/statsUtils';
+import { PlayerStats as PlayerStatsType } from '@/lib/basic/statsUtils';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import StatPill from './StatPill';

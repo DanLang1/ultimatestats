@@ -2,7 +2,7 @@ import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { getAllPlayersByPoint } from '@/lib/lineUtils';
 import { GameEvent, PointLineRecord } from '@/lib/storage';
-import { computePointByPointEvents } from '@/lib/timelineUtils';
+import { computePointByPointEvents } from '@/lib/basic/timelineUtils';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';

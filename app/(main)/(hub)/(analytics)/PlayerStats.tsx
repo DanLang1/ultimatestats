@@ -18,7 +18,7 @@ import {
   getRoleStats,
   getSelectablePlayerStatGames,
   hasImpactTimelineData,
-} from '@/lib/statsUtils';
+} from '@/lib/basic/statsUtils';
 import { hasItems } from '@/lib/utils';
 import { usePlayerStatsStore } from '@/store/playerStatsStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';

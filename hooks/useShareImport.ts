@@ -4,7 +4,7 @@ import type { AdvancedTrackedGame } from '@/lib/advancedTracking/types';
 import type { AdvancedGameSummary } from '@/lib/advancedTracking/summary';
 import { useAdvancedGameSummaries } from '@/hooks/advancedTracking/useAdvancedGameQueries';
 import { supabase } from '@/lib/supabase';
-import { useGameStore } from '@/store/gameStore';
+import { useGameStore } from '@/store/basic/gameStore';
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 

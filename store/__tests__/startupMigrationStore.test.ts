@@ -5,7 +5,7 @@ import {
   type StartupMigration,
 } from '@/hooks/useStartupMigrations';
 import { SavedGame, Tournament } from '@/lib/storage/types';
-import { useGameStore } from '../gameStore';
+import { useGameStore } from '../basic/gameStore';
 import { useStartupMigrationStore } from '../startupMigrationStore';
 import { useTournamentStore } from '../tournamentStore';
 

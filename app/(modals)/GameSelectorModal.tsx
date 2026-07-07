@@ -2,7 +2,7 @@ import { BottomSheet } from '@/components/ui/BottomSheet';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { getGameDisplayTimestamp } from '@/lib/savedGameUtils';
-import { getSelectablePlayerStatGames } from '@/lib/statsUtils';
+import { getSelectablePlayerStatGames } from '@/lib/basic/statsUtils';
 import { usePlayerStatsStore } from '@/store/playerStatsStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router } from 'expo-router';

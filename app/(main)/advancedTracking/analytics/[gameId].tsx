@@ -20,7 +20,7 @@ import {
   runPendingShareAction,
   SHARE_DATA_UPLOAD_ERROR_MESSAGE,
 } from '@/lib/sharing/shareActionUtils';
-import { formatDate } from '@/lib/statsUtils';
+import { formatTimestampForDisplay as formatDate } from '@/lib/dateUtils';
 import { useSavedAdvancedGamesStore } from '@/store/advancedTracking/savedGamesStore';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { useTournamentStore } from '@/store/tournamentStore';

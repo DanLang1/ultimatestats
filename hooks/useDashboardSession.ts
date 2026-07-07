@@ -1,6 +1,6 @@
-import { getGameSessionStatus } from '@/lib/gameSessionUtils';
+import { getGameSessionStatus } from '@/lib/basic/gameSessionUtils';
 import { useCompletedAdvancedGameSummaries } from '@/hooks/advancedTracking/useAdvancedGameQueries';
-import { useGameStore } from '@/store/gameStore';
+import { useGameStore } from '@/store/basic/gameStore';
 
 export function useDashboardSession() {
   const statTrackingEnabled = useGameStore((state) => state.statTrackingEnabled);

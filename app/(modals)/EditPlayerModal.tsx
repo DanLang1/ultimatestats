@@ -7,7 +7,7 @@ import {
   normalizePlayerNumber,
 } from '@/lib/advancedTracking/voiceNumberUtils';
 import { MatchingType, PlayerRole } from '@/lib/storage/types';
-import { useGameStore } from '@/store/gameStore';
+import { useGameStore } from '@/store/basic/gameStore';
 import { useLinePresetsStore } from '@/store/linePresetsStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { Redirect, router, useLocalSearchParams } from 'expo-router';

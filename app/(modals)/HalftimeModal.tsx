@@ -1,10 +1,10 @@
 import { useTheme } from '@/context/ThemeContext';
-import { useHalftimeTimer } from '@/hooks/useHalftimeTimer';
+import { useHalftimeTimer } from '@/hooks/basic/useHalftimeTimer';
 import { MODAL_MAX_WIDTH_LARGE } from '@/lib/constants';
 import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import { computePlayerStats } from '@/lib/statsUtils';
-import { computeTeamStats } from '@/lib/teamStatsUtils';
-import { useGameStore } from '@/store/gameStore';
+import { computePlayerStats } from '@/lib/basic/statsUtils';
+import { computeTeamStats } from '@/lib/basic/teamStatsUtils';
+import { useGameStore } from '@/store/basic/gameStore';
 import { useLinePresetsStore } from '@/store/linePresetsStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';

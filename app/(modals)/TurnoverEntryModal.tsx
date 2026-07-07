@@ -1,7 +1,7 @@
-import { TurnoverEntryInner } from '@/components/turnover-entry/TurnoverEntryInner';
+import { TurnoverEntryInner } from '@/components/basic/turnover-entry/TurnoverEntryInner';
 import { useTheme } from '@/context/ThemeContext';
-import { useGameStore } from '@/store/gameStore';
-import { TurnoverType } from '@/store/gameStore.types';
+import { useGameStore } from '@/store/basic/gameStore';
+import { TurnoverType } from '@/store/basic/gameStore.types';
 import { useSettingsStore } from '@/store/settingsStore';
 import { router, useLocalSearchParams } from 'expo-router';
 import React from 'react';

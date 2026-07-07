@@ -1,8 +1,8 @@
 import { useTheme } from '@/context/ThemeContext';
 import { MODAL_MAX_WIDTH_INFO } from '@/lib/constants';
 import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import { useTimeoutTimer } from '@/hooks/useTimeoutTimer';
-import { useGameStore } from '@/store/gameStore';
+import { useTimeoutTimer } from '@/hooks/basic/useTimeoutTimer';
+import { useGameStore } from '@/store/basic/gameStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { Redirect, router } from 'expo-router';
 import React from 'react';

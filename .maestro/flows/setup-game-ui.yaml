@@ -34,7 +34,7 @@ name: Setup Advanced Tracker Game Through UI
 - tapOn:
     id: 'advanced-tracker-set-line-button'
 - assertVisible:
-    text: 'Starting Line'
+    text: '.*-Point.*[0-9]+-[0-9]+'
 - tapOn:
     id: 'player-chip-Joe'
 - tapOn:

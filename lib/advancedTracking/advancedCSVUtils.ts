@@ -6,7 +6,7 @@ import { computeAdvancedTimingStats, type AdvancedTimingStats } from './advanced
 import { computePullStats, getInboundPullCount, type PullStats } from './advancedPullStatsUtils';
 import { getPointStateLabel } from './advancedTimelineUtils';
 import { csvRow, type CSVCell } from '@/lib/csvUtils';
-import { formatDateForCSV } from '@/lib/statsUtils';
+import { formatTimestampForCSV } from '@/lib/dateUtils';
 
 function formatDuration(ms: number): string {
   const totalSeconds = Math.round(ms / 1000);
@@ -65,7 +65,7 @@ export function generateAdvancedGameCSV(analyticsGame: AnalyticsGame): string {
   const opponentName = getOpponentName(analyticsGame);
   const timestamp = getGameTimestamp(analyticsGame);
 
-  let csv = `# Game: ${myTeamName} vs ${opponentName} - ${formatDateForCSV(timestamp)}\n`;
+  let csv = `# Game: ${myTeamName} vs ${opponentName} - ${formatTimestampForCSV(timestamp)}\n`;
 
   csv += '\n# Team Stats\n';
   csv += teamStatsCSV(computeAdvancedTeamStats(analyticsGame, focusSideId), myTeamName);
@@ -127,7 +127,7 @@ export function generateAggregateAdvancedCSV(
   csv += csvRow(['Date', 'Opponent', 'Result', 'Score', 'Our Score', 'Their Score']) + '\n';
   csv += games
     .map((game) => {
-      const date = formatDateForCSV(getGameTimestamp(game));
+      const date = formatTimestampForCSV(getGameTimestamp(game));
       const oppName = getOpponentName(game);
       const finalScores = getFinalScores(game);
       const ourScore = finalScores[game.focusSideId] ?? 0;
@@ -144,7 +144,7 @@ export function generateAggregateAdvancedCSV(
     const gameFocusSideId = game.focusSideId;
     const gameTeamName = game.sideLabels[gameFocusSideId] ?? teamName;
 
-    csv += `\n\n## Game: vs ${oppName} - ${formatDateForCSV(timestamp)}`;
+    csv += `\n\n## Game: vs ${oppName} - ${formatTimestampForCSV(timestamp)}`;
 
     csv += '\n\n### Team Stats\n';
     csv += teamStatsCSV(computeAdvancedTeamStats(game, gameFocusSideId), gameTeamName);

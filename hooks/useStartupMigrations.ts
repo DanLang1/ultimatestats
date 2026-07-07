@@ -1,4 +1,4 @@
-import { useGameStore } from '@/store/gameStore';
+import { useGameStore } from '@/store/basic/gameStore';
 import { useStartupMigrationStore } from '@/store/startupMigrationStore';
 import { useTournamentStore } from '@/store/tournamentStore';
 import { useEffect, useRef } from 'react';

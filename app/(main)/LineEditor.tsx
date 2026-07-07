@@ -1,7 +1,7 @@
 import { ModalPlayerGrid } from '@/components/lines/ModalPlayerGrid';
 import { PresetPickerModal } from '@/components/lines/PresetPickerModal';
 import { useTheme } from '@/context/ThemeContext';
-import { useIsGameActive } from '@/hooks/useIsGameActive';
+import { useIsGameActive } from '@/hooks/basic/useIsGameActive';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import {
   checkLineRatio,
@@ -10,9 +10,9 @@ import {
   getSequenceNumber,
 } from '@/lib/genderRatioUtils';
 import { getLoadLineButtonState } from '@/lib/lineEditorUtils';
-import { computePointByPointEvents } from '@/lib/timelineUtils';
+import { computePointByPointEvents } from '@/lib/basic/timelineUtils';
 import { getRecentLines, RecentLine } from '@/lib/lineUtils';
-import { useGameStore } from '@/store/gameStore';
+import { useGameStore } from '@/store/basic/gameStore';
 import { useLinePresetsStore } from '@/store/linePresetsStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';

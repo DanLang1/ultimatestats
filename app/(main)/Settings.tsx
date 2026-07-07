@@ -9,7 +9,7 @@ import { useKeyboardDidHide } from '@/hooks/useKeyboardDidHide';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { MAX_TEAM_NAME_LENGTH } from '@/lib/constants';
 import { SavedTeam } from '@/lib/storage';
-import { useGameStore } from '@/store/gameStore';
+import { useGameStore } from '@/store/basic/gameStore';
 import { OrientationMode, useSettingsStore } from '@/store/settingsStore';
 import { Fonts } from '@/theme/theme';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';

@@ -7,7 +7,7 @@ import {
 } from '@/lib/maestroConstants';
 import { useSavedAdvancedGamesStore } from '@/store/advancedTracking/savedGamesStore';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
-import { useGameStore } from '@/store/gameStore';
+import { useGameStore } from '@/store/basic/gameStore';
 import { useGameSessionStore } from '@/store/gameSessionStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useTutorialStore } from '@/store/tutorialStore';

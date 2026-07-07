@@ -3,7 +3,7 @@ import type {
   AnalyticsGame,
   AnalyticsPossession,
 } from '@/lib/advancedTracking/analyticsTypes';
-import type { TimeOfPossessionStats } from '@/lib/teamStatsUtils';
+import type { TimeOfPossessionStats } from '@/lib/timeOfPossessionTypes';
 
 function getPossessionEndingAction(
   possession: AnalyticsPossession,

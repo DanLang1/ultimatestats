@@ -1,4 +1,4 @@
-import { useGameStore } from '@/store/gameStore';
+import { useGameStore } from '@/store/basic/gameStore';
 import { useLinePresetsStore } from '@/store/linePresetsStore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 

@@ -10,7 +10,7 @@ import {
   getSampleWarningLabel,
   RelativeMode,
   RelativeRowMetric,
-} from '@/lib/relativeStatsViewUtils';
+} from '@/lib/basic/relativeStatsViewUtils';
 import {
   computeRelativePlayerStats,
   computeRelativePlayingTimeStats,
@@ -19,7 +19,7 @@ import {
   RelativePlayerMetricKey,
   RelativePlayingTimeMetric,
   RelativePlayingTimeMetricKey,
-} from '@/lib/statsUtils';
+} from '@/lib/basic/statsUtils';
 import { GameEvent, Player, PointLineRecord, SavedGame } from '@/lib/storage';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React, { useState } from 'react';

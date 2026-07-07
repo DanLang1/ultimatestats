@@ -3,7 +3,7 @@ import { ThemedView } from '@/components/ThemedView';
 import { useTheme } from '@/context/ThemeContext';
 import { useGameSessionActions } from '@/hooks/useGameSessionActions';
 import { getSizeClassValue, scaleBySizeClass, useLayout } from '@/hooks/useLayout';
-import { useNewGame } from '@/hooks/useNewGame';
+import { useNewGame } from '@/hooks/basic/useNewGame';
 import { useTutorialStore } from '@/store/tutorialStore';
 import { Fonts } from '@/theme/theme';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';

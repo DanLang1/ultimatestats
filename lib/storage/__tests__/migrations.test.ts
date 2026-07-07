@@ -1,4 +1,4 @@
-import { GoalEvent } from '@/store/gameStore.types';
+import { GoalEvent } from '@/store/basic/gameStore.types';
 import { migrateSavedGame, migrateSavedGames } from '../migrations';
 import { CURRENT_SCHEMA_VERSION, SavedGame } from '../types';
 

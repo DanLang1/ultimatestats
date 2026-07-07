@@ -6,8 +6,8 @@ import {
   getSequenceNumber,
   type GenderRatio,
 } from './genderRatioUtils';
-import { getActualHalftimeScore } from './halftimeUtils';
-import type { GameEvent } from '@/store/gameStore.types';
+import { getActualHalftimeScore } from './basic/halftimeUtils';
+import type { GameEvent } from '@/store/basic/gameStore.types';
 
 export type FormatRow = {
   label: string;

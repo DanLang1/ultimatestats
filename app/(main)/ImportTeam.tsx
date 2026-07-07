@@ -4,7 +4,7 @@ import { useAlert } from '@/components/ui/AlertProvider';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import { useTheme } from '@/context/ThemeContext';
-import { useIsGameActive } from '@/hooks/useIsGameActive';
+import { useIsGameActive } from '@/hooks/basic/useIsGameActive';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import {
   extractApiErrorMessage,
@@ -13,7 +13,7 @@ import {
 } from '@/lib/import-team/client';
 import { buildImportedTeam } from '@/lib/import-team/transform';
 import { NAME_FORMAT_OPTIONS, NameFormatOption } from '@/lib/import-team/types';
-import { useGameStore } from '@/store/gameStore';
+import { useGameStore } from '@/store/basic/gameStore';
 import { Fonts } from '@/theme/theme';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import * as Clipboard from 'expo-clipboard';
