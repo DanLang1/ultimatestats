@@ -45,7 +45,7 @@ const APP_ID = getAppId();
 export default {
   name: APP_NAME,
   slug: 'ultimatestats',
-  version: '2.0.1',
+  version: '2.1.0',
   orientation: 'default',
   icon: './assets/images/icon.png',
   scheme: APP_SCHEME,

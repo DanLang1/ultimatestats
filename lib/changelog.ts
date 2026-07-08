@@ -6,6 +6,16 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.1.0',
+    date: 'July 8, 2026',
+    changes: [
+      'Added option for roller pulls',
+      'Added display to show passes/receptions between players',
+      'Added score/gender ratio to line selection screen',
+      'Made softcap/hardcap optional for advanced stat mode',
+    ],
+  },
+  {
     version: '2.0.1',
     date: 'June 18, 2026',
     changes: ['Fixed bug with export to CSV for iOS'],
