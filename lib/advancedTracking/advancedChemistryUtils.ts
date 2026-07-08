@@ -1,11 +1,35 @@
 import type { AnalyticsGame } from './analyticsTypes';
 
+export type AdvancedChemistryMode = 'scoring' | 'passing';
+
 export interface AdvancedChemistryConnection {
   participantId: string;
   participantName: string;
   goalsFrom: number;
   assistsTo: number;
   totalConnections: number;
+}
+
+export interface AdvancedPassConnection {
+  participantId: string;
+  participantName: string;
+  caughtFrom: number;
+  threwTo: number;
+  totalPasses: number;
+}
+
+export function getVisibleAdvancedChemistryMode(
+  requestedMode: AdvancedChemistryMode,
+  hasChemistry: boolean,
+  hasPassConnections: boolean,
+): AdvancedChemistryMode {
+  if (requestedMode === 'scoring' && !hasChemistry && hasPassConnections) {
+    return 'passing';
+  }
+  if (requestedMode === 'passing' && !hasPassConnections && hasChemistry) {
+    return 'scoring';
+  }
+  return requestedMode;
 }
 
 /**
@@ -58,4 +82,48 @@ export function computeAdvancedChemistry(
       totalConnections: goalsFrom + assistsTo,
     }))
     .sort((a, b) => b.totalConnections - a.totalConnections);
+}
+
+/**
+ * Derives player-to-player completed pass connections from analytics actions.
+ * Counts completed throws and goal throws only; attempted but incomplete throws are
+ * intentionally excluded from this first-pass possession chemistry view.
+ */
+export function computeAdvancedPassConnections(
+  game: AnalyticsGame,
+  participantId: string,
+  participantNames: Map<string, string>,
+): AdvancedPassConnection[] {
+  const connections = new Map<string, { caughtFrom: number; threwTo: number }>();
+
+  for (const action of game.actions) {
+    if (action.kind !== 'throw') continue;
+    if (action.result !== 'complete' && action.result !== 'goal') continue;
+    if (!action.actorId || !action.receiverId) continue;
+    if (!participantNames.has(action.actorId) || !participantNames.has(action.receiverId)) continue;
+    if (action.actorId === action.receiverId) continue;
+
+    if (action.receiverId === participantId) {
+      const conn = connections.get(action.actorId) ?? { caughtFrom: 0, threwTo: 0 };
+      conn.caughtFrom++;
+      connections.set(action.actorId, conn);
+    }
+
+    if (action.actorId === participantId) {
+      const conn = connections.get(action.receiverId) ?? { caughtFrom: 0, threwTo: 0 };
+      conn.threwTo++;
+      connections.set(action.receiverId, conn);
+    }
+  }
+
+  return Array.from(connections.entries())
+    .filter(([, { caughtFrom, threwTo }]) => caughtFrom > 0 || threwTo > 0)
+    .map(([id, { caughtFrom, threwTo }]) => ({
+      participantId: id,
+      participantName: participantNames.get(id) ?? id,
+      caughtFrom,
+      threwTo,
+      totalPasses: caughtFrom + threwTo,
+    }))
+    .sort((a, b) => b.totalPasses - a.totalPasses);
 }

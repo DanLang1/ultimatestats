@@ -1,4 +1,4 @@
-import AdvancedChemistryMap from '@/components/advancedTracking/AdvancedChemistryMap';
+import AdvancedChemistrySection from '@/components/advancedTracking/AdvancedChemistrySection';
 import AdvancedImpactTimeline from '@/components/advancedTracking/AdvancedImpactTimeline';
 import AdvancedPlayingTimeSection from '@/components/advancedTracking/AdvancedPlayingTimeSection';
 import AdvancedPointPresenceStrip from '@/components/advancedTracking/AdvancedPointPresenceStrip';
@@ -12,7 +12,10 @@ import {
   getAdvancedGameLabel,
   getAdvancedGameTimestamp,
 } from '@/lib/advancedTracking/advancedGameTeamUtils';
-import { computeAdvancedChemistry } from '@/lib/advancedTracking/advancedChemistryUtils';
+import {
+  computeAdvancedChemistry,
+  computeAdvancedPassConnections,
+} from '@/lib/advancedTracking/advancedChemistryUtils';
 import { computeAdvancedImpact } from '@/lib/advancedTracking/advancedImpactUtils';
 import {
   computeAdvancedPlayerStats,
@@ -20,6 +23,7 @@ import {
 } from '@/lib/advancedTracking/advancedPlayerStatsUtils';
 import { buildAnalyticsGame } from '@/lib/advancedTracking/buildAnalyticsGame';
 import type { AdvancedTrackedGame } from '@/lib/advancedTracking/types';
+import { hasItems } from '@/lib/utils';
 import { Fonts } from '@/theme/theme';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router, Stack } from 'expo-router';
@@ -65,7 +69,12 @@ export default function AdvancedPlayerStatsView({
       ? computeAdvancedChemistry(analyticsGame, participantId, analyticsGame.participantNames)
       : [];
 
-  const hasChemistry = chemistry.some((c) => c.goalsFrom > 0 || c.assistsTo > 0);
+  const hasChemistry = hasItems(chemistry);
+  const passConnections =
+    analyticsGame && participantId
+      ? computeAdvancedPassConnections(analyticsGame, participantId, analyticsGame.participantNames)
+      : [];
+  const hasPassConnections = hasItems(passConnections);
 
   const impactData =
     analyticsGame && participantId
@@ -312,13 +321,17 @@ export default function AdvancedPlayerStatsView({
             participantNames={analyticsGame.participantNames}
           />
 
-          {hasChemistry && (
+          {(hasChemistry || hasPassConnections) && (
             <View
               style={[
                 styles.card,
                 { backgroundColor: palette.overlay02, borderColor: palette.overlay05 },
               ]}>
-              <AdvancedChemistryMap participantName={participantName} connections={chemistry} />
+              <AdvancedChemistrySection
+                participantName={participantName}
+                chemistry={chemistry}
+                passConnections={passConnections}
+              />
             </View>
           )}
 
