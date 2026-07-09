@@ -3,6 +3,8 @@ import { NameFormatOption } from '@/lib/import-team/types';
 // Local dev endpoint:
 // const IMPORT_API_URL = 'http://127.0.0.1:8000/scrape';
 const IMPORT_API_URL = 'https://ustatscraper-831518529550.us-central1.run.app/scrape';
+// technically api key not private since it's client side and could be extracted
+// but the api is very simple itself and if someone really wants to find the api key it's not a huge deal
 const IMPORT_API_KEY = process.env.EXPO_PUBLIC_IMPORT_API_KEY;
 
 export type ImportTeamApiRawResponse = {
