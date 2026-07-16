@@ -146,7 +146,7 @@ function matchPlayer(tokens: string[], phrases: PlayerVoicePhrase[]): PlayerMatc
     return numberMatch;
   }
 
-  return matchPlayerByBestEffort(phrase, tokens, phrases);
+  return matchPlayerByBestEffort(phrase, phrases);
 }
 
 function buildPlayerVoicePhrases(
@@ -179,12 +179,8 @@ function buildPlayerVoicePhrases(
   });
 }
 
-function matchPlayerByBestEffort(
-  phrase: string,
-  tokens: string[],
-  phrases: PlayerVoicePhrase[],
-): PlayerMatchResult {
-  const candidates = getBestEffortNameScores(phrase, tokens, phrases)
+function matchPlayerByBestEffort(phrase: string, phrases: PlayerVoicePhrase[]): PlayerMatchResult {
+  const candidates = getBestEffortNameScores(phrase, phrases)
     .filter((candidate) => candidate.distance <= getMaxNameEditDistance(phrase, candidate.phrase))
     .sort((a, b) => a.distance - b.distance);
 
@@ -240,11 +236,7 @@ interface PlayerNameScore {
   distance: number;
 }
 
-function getBestEffortNameScores(
-  phrase: string,
-  tokens: string[],
-  phrases: PlayerVoicePhrase[],
-): PlayerNameScore[] {
+function getBestEffortNameScores(phrase: string, phrases: PlayerVoicePhrase[]): PlayerNameScore[] {
   const bestMatchByParticipant = new Map<string, PlayerNameScore>();
 
   phrases

@@ -85,7 +85,7 @@ export function generateAdvancedGameCSV(analyticsGame: AnalyticsGame): string {
   csv += playerSummaryCSV(focusPlayers, names, timingStats.hasTimingData);
 
   csv += '\n\n# Point-by-Point\n';
-  csv += pointByPointCSV(analyticsGame, names);
+  csv += pointByPointCSV(analyticsGame);
 
   csv += '\n\n# Action Log\n';
   csv += actionLogCSV(analyticsGame, names);
@@ -164,7 +164,7 @@ export function generateAggregateAdvancedCSV(
     csv += playerSummaryCSV(gameFocusPlayers, game.participantNames, gameTiming.hasTimingData);
 
     csv += '\n\n### Point-by-Point\n';
-    csv += pointByPointCSV(game, game.participantNames);
+    csv += pointByPointCSV(game);
 
     csv += '\n\n### Action Log\n';
     csv += actionLogCSV(game, game.participantNames);
@@ -351,7 +351,7 @@ function playerSummaryCSV(
   return header + '\n' + rows.join('\n');
 }
 
-function pointByPointCSV(game: AnalyticsGame, names: Map<string, string>): string {
+function pointByPointCSV(game: AnalyticsGame): string {
   if (game.points.length === 0) {
     return (
       csvRow([

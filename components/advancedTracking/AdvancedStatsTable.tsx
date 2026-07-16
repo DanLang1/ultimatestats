@@ -173,7 +173,7 @@ export default function AdvancedStatsTable({
   onPlayerPress,
 }: AdvancedStatsTableProps) {
   const { palette } = useTheme();
-  const { isLandscape, sizeClass } = useLayout();
+  const { sizeClass } = useLayout();
   const [sortConfig, setSortConfig] = useState<{ key: SortKey; direction: 'asc' | 'desc' }>({
     key: 'plusMinus',
     direction: 'desc',
@@ -181,7 +181,7 @@ export default function AdvancedStatsTable({
   const [activeGroupKey, setActiveGroupKey] = useState<StatGroupKey>('core');
   const [showLegend, setShowLegend] = useState(false);
   const [tableWidth, setTableWidth] = useState(0);
-  const styles = createStyles(isLandscape, sizeClass);
+  const styles = createStyles(sizeClass);
 
   const getName = (id: string) => participantNames.get(id) ?? id;
   const activeGroup = getStatGroup(activeGroupKey);
@@ -493,7 +493,7 @@ export default function AdvancedStatsTable({
   );
 }
 
-function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
+function createStyles(sizeClass: SizeClass) {
   return StyleSheet.create({
     sectionHeader: {
       flexDirection: 'row',

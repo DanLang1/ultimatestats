@@ -36,8 +36,8 @@ import { Modal, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react
 type RoleFilter = PlayerRole | 'unset' | null;
 
 export default function EditRosterScreen() {
-  const { isLandscape, sizeClass } = useLayout();
-  const styles = createStyles(isLandscape, sizeClass);
+  const { sizeClass } = useLayout();
+  const styles = createStyles(sizeClass);
   const metrics = createMetrics(sizeClass);
 
   const {
@@ -739,7 +739,7 @@ export default function EditRosterScreen() {
   );
 }
 
-function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
+function createStyles(sizeClass: SizeClass) {
   return StyleSheet.create({
     container: {
       flex: 1,

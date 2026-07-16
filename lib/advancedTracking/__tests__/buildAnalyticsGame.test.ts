@@ -57,8 +57,8 @@ function sumAttributions(
 
 function buildAnalyticsGameWithLog(game: AdvancedTrackedGame) {
   const analytics = buildAnalyticsGame(game);
-  console.log('\n=== RAW ANALYTICS JSON ===\n');
-  console.log(JSON.stringify(analytics));
+  //console.log('\n=== RAW ANALYTICS JSON ===\n');
+  //console.log(JSON.stringify(analytics));
   return analytics;
 }
 

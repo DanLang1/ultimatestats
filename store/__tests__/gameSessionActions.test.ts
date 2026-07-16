@@ -20,7 +20,6 @@ jest.mock('@react-native-async-storage/async-storage', () => ({
 jest.mock('@/lib/advancedTracking/storage', () => ({
   deleteAdvancedGameRecord: jest.fn().mockResolvedValue(undefined),
   loadAdvancedGame: jest.fn().mockResolvedValue(null),
-  loadAdvancedGames: jest.fn().mockResolvedValue([]),
   loadAdvancedGameSummaries: jest.fn().mockResolvedValue([]),
   upsertAdvancedGame: jest.fn().mockResolvedValue({
     id: 'advanced-game',

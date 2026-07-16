@@ -18,7 +18,7 @@ import { scheduleOnRN } from 'react-native-worklets';
 
 const ITEM_HEIGHT = 48;
 const GAP = 8;
-export const ROW_HEIGHT = ITEM_HEIGHT + GAP;
+const ROW_HEIGHT = ITEM_HEIGHT + GAP;
 
 interface DraggablePresetItemProps {
   preset: LinePreset;

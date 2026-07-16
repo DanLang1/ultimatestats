@@ -54,9 +54,6 @@ export const SIZE_CLASS_LARGE_THRESHOLD = 790;
 // ── Modal max widths by size class (dp) ──────────────────────────────
 // Use with getSizeClassValue() for responsive modal sheet sizing.
 
-/** Compact modal card (e.g. WinModal). */
-export const MODAL_MAX_WIDTH_COMPACT = { small: 320, medium: 440, large: 520 } as const;
-
 /** Standard info/alert modal (e.g. TimeoutModal, PointSummaryModal). */
 export const MODAL_MAX_WIDTH_INFO = { small: 400, medium: 520, large: 600 } as const;
 

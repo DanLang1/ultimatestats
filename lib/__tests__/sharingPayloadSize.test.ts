@@ -134,8 +134,6 @@ describe('Sharing Payload Size Measurement', () => {
 
   it.each(scenarios)('$label', ({ rosterSize, pointCount }) => {
     const game = makeSavedGame({ rosterSize, pointCount });
-    // const gameJson = JSON.stringify(game);
-    // const gameBytes = new TextEncoder().encode(gameJson).length;
 
     const payload = {
       type: 'game' as const,
@@ -146,15 +144,6 @@ describe('Sharing Payload Size Measurement', () => {
     };
     const payloadJson = JSON.stringify(payload);
     const payloadBytes = new TextEncoder().encode(payloadJson).length;
-
-    // const eventCount = game.events.length;
-
-    // Log results
-    // console.log(`\n--- ${pointCount} points, ${rosterSize} players ---`);
-    // console.log(`Events: ${eventCount}`);
-    // console.log(`SavedGame JSON: ${formatBytes(gameBytes)}`);
-    // console.log(`SharedPayload JSON: ${formatBytes(payloadBytes)}`);
-    // console.log(`Base64 (for URL): ${formatBytes(Math.ceil((payloadBytes * 4) / 3))}`);
 
     // Sanity check - should be under 100KB even for extreme cases
     expect(payloadBytes).toBeLessThan(100 * 1024);

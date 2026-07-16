@@ -103,6 +103,3 @@ export const useSettingsStore = create<SettingsState>()(
     },
   ),
 );
-
-// Re-export defaults for use elsewhere (e.g., theme fallback)
-export { DEFAULT_FMP_COLOR, DEFAULT_MMP_COLOR };

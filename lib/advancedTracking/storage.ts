@@ -139,11 +139,6 @@ export async function loadAdvancedGame(gameId: string): Promise<AdvancedTrackedG
   return parsed;
 }
 
-export async function loadAdvancedGames(gameIds: string[]): Promise<AdvancedTrackedGame[]> {
-  const games = await Promise.all(gameIds.map((id) => loadAdvancedGame(id)));
-  return games.filter((game): game is AdvancedTrackedGame => game != null);
-}
-
 export async function upsertAdvancedGame(game: AdvancedTrackedGame): Promise<AdvancedGameSummary> {
   return enqueueWrite(async () => {
     const db = await getDb();

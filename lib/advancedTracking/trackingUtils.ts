@@ -124,24 +124,6 @@ export function isPossessionOver(possession: PointPossession | null): boolean {
   return false;
 }
 
-/**
- * Returns true when the current disc holder received their disc via a completed throw,
- * meaning pressing GOAL can retroactively mark that throw as a goal.
- */
-export function canRecordGoal(possession: PointPossession | null): boolean {
-  if (!possession || isPossessionOver(possession)) return false;
-  for (let i = possession.actions.length - 1; i >= 0; i--) {
-    const action = possession.actions[i];
-    if (action.kind === 'throw') {
-      return action.result === 'complete' && action.toPlayer?.refType === 'participant';
-    }
-    if (action.kind === 'disc_pickup') {
-      return false;
-    }
-  }
-  return false;
-}
-
 export function hasPointEnded(point: TrackedPoint | null): boolean {
   if (point == null || !hasItems(point.possessions)) {
     return false;

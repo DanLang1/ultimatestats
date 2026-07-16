@@ -28,13 +28,6 @@ export function getActiveRoster(roster: Player[]): Player[] {
 }
 
 /**
- * Find a player by their ID
- */
-export function getPlayerById(roster: Player[], id: string): Player | undefined {
-  return roster.find((p) => p.id === id);
-}
-
-/**
  * Get a player's name by their ID.
  * Performance: O(n) scan.
  * Fallbacks:
@@ -53,13 +46,6 @@ export function getPlayerName(
   if (id === UNKNOWN_PLAYER_ID) return 'Unknown';
   if (!roster) return id;
   return roster.find((p) => p.id === id)?.name ?? `Deleted Player (${id.slice(0, 4)})`;
-}
-
-/**
- * Find a player by their name
- */
-export function getPlayerByName(roster: Player[], name: string): Player | undefined {
-  return roster.find((p) => p.name === name);
 }
 
 /**

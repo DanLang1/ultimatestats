@@ -1,7 +1,7 @@
 import { checkGameOver } from '@/lib/basic/gameUtils';
 import type { GameEvent, GoalEvent } from '@/store/basic/gameStore.types';
 
-export function inferHalftimeGoalEventIndex(
+function inferHalftimeGoalEventIndex(
   events: GameEvent[],
   gameTo: number,
   autoHalftimeEnabled = true,

@@ -657,28 +657,6 @@ export function getImpactStats(
   return points;
 }
 
-export interface ImpactGameMeta {
-  totalPoints: number;
-  halftimePointNumber?: number; // point number after which halftime occurred
-}
-
-/**
- * Derive game-level metadata (total points, halftime boundary) from events.
- */
-export function getImpactGameMeta(events: GameEvent[]): ImpactGameMeta {
-  let totalPoints = 0;
-  let halftimePointNumber: number | undefined;
-  for (const event of events) {
-    if (event.type === 'goal') {
-      totalPoints++;
-      if (event.triggeredHalftime) {
-        halftimePointNumber = totalPoints;
-      }
-    }
-  }
-  return { totalPoints, halftimePointNumber };
-}
-
 export interface RoleStats {
   goals: number; // Normalized Goals (0-1)
   assists: number; // Normalized Assists (0-1)

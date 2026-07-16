@@ -184,13 +184,6 @@ export function ensureContrast(color: string, bgColor: string, minRatio: number)
 }
 
 /**
- * Validate if a string is a valid hex color
- */
-export function isValidHexColor(color: string): boolean {
-  return /^#?([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/.test(color);
-}
-
-/**
  * Ensure hex color has # prefix and is 6-char format (strips alpha if 8-char)
  */
 export function normalizeHexColor(color: string): string {

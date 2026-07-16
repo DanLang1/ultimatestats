@@ -13,14 +13,14 @@ export function getCurrentVersion(): string {
 /**
  * Get the last version the user has seen/acknowledged
  */
-export async function getLastSeenVersion(): Promise<string | null> {
+async function getLastSeenVersion(): Promise<string | null> {
   return AsyncStorage.getItem(LAST_SEEN_VERSION_KEY);
 }
 
 /**
  * Save the current version as the last seen version
  */
-export async function setLastSeenVersion(version: string): Promise<void> {
+async function setLastSeenVersion(version: string): Promise<void> {
   await AsyncStorage.setItem(LAST_SEEN_VERSION_KEY, version);
 }
 

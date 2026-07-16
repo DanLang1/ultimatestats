@@ -10,7 +10,7 @@ import SavedGamesBulkActions from '@/components/view-stats/SavedGamesBulkActions
 import SavedGamesList from '@/components/view-stats/SavedGamesList';
 import { useTheme } from '@/context/ThemeContext';
 import { useCompletedAdvancedGameSummaries } from '@/hooks/advancedTracking/useAdvancedGameQueries';
-import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { scaleBySizeClass, useLayout } from '@/hooks/useLayout';
 import { MAX_SHARE_GAMES } from '@/lib/constants';
 import {
   advancedGameSummaryToListItem,
@@ -37,7 +37,7 @@ const GAME_NAVIGATION_GUARD_MS = 750;
 export default function SavedGameStatsScreen() {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
-  const styles = createStyles(sizeClass);
+  const styles = createStyles();
   const { savedGames, savedTeams, deleteSavedGames } = useGameStore();
   const { data: completedAdvancedSavedGameSummaries = [] } = useCompletedAdvancedGameSummaries();
   const { deleteSavedGame: deleteAdvancedSavedGame } = useAdvancedTrackingStore();
@@ -306,7 +306,7 @@ export default function SavedGameStatsScreen() {
   );
 }
 
-function createStyles(sizeClass: SizeClass) {
+function createStyles() {
   return StyleSheet.create({
     container: {
       flex: 1,

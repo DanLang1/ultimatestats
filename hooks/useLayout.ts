@@ -3,7 +3,7 @@ import { useWindowDimensions } from 'react-native';
 
 export type SizeClass = 'small' | 'medium' | 'large';
 
-export const SIZE_CLASS_SCALE: Record<SizeClass, number> = {
+const SIZE_CLASS_SCALE: Record<SizeClass, number> = {
   small: 1,
   medium: 1.1,
   large: 1.2,

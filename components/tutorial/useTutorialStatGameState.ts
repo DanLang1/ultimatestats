@@ -185,7 +185,7 @@ export default function useTutorialStatGameState(onComplete?: () => void) {
     }
   };
 
-  const handleSelectBlocker = (playerId: string) => {
+  const handleSelectBlocker = () => {
     setPossession('team1');
 
     if (step?.expectedAction === 'select-blocker') {
@@ -212,7 +212,7 @@ export default function useTutorialStatGameState(onComplete?: () => void) {
     }
   };
 
-  const handleSelectAssist = (playerId: string) => {
+  const handleSelectAssist = () => {
     if (step?.expectedAction === 'select-assist') {
       // Clear line for the line editor phase (next step)
       setCurrentLine([]);

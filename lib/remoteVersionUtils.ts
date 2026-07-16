@@ -21,7 +21,7 @@ async function fetchLatestVersion(): Promise<string | null> {
   }
 }
 
-export async function getLastDismissedRemoteVersion(): Promise<string | null> {
+async function getLastDismissedRemoteVersion(): Promise<string | null> {
   return AsyncStorage.getItem(LAST_DISMISSED_REMOTE_VERSION_KEY);
 }
 
