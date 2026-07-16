@@ -14,10 +14,13 @@ export default function HubLayout() {
         headerShown: false,
         sceneStyle: { backgroundColor: palette.primary },
       }}>
-      <Tabs.Screen name="(home)" options={{ title: 'Home' }} />
-      <Tabs.Screen name="(game)" options={{ title: 'Game' }} />
-      <Tabs.Screen name="(analytics)" options={{ title: 'Stats' }} />
-      <Tabs.Screen name="(team)" options={{ title: 'Team' }} />
+      <Tabs.Screen name="(home)" options={{ title: 'Home', tabBarButtonTestID: 'hub-tab-home' }} />
+      <Tabs.Screen name="(game)" options={{ title: 'Game', tabBarButtonTestID: 'hub-tab-game' }} />
+      <Tabs.Screen
+        name="(analytics)"
+        options={{ title: 'Stats', tabBarButtonTestID: 'hub-tab-stats' }}
+      />
+      <Tabs.Screen name="(team)" options={{ title: 'Team', tabBarButtonTestID: 'hub-tab-team' }} />
     </Tabs>
   );
 }

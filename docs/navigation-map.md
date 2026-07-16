@@ -33,6 +33,9 @@ Defined across:
 - `/LinePresetEditor` (`app/(main)/LinePresetEditor.tsx`)
 - `/SavedGameStats` (`app/(main)/(hub)/(analytics)/SavedGameStats.tsx`)
 - `/saved-games/[gameId]` (`app/(main)/(hub)/(analytics)/saved-games/[gameId].tsx`)
+- `/advancedTracking/analytics/[gameId]` (`app/(main)/(hub)/(analytics)/advancedTracking/analytics/[gameId].tsx`)
+- `/advancedTracking/analytics/playerStats` (`app/(main)/(hub)/(analytics)/advancedTracking/analytics/playerStats.tsx`)
+- `/advancedTracking/analytics/timeline/[gameId]` (`app/(main)/(hub)/(analytics)/advancedTracking/analytics/timeline/[gameId].tsx`)
 - `/LineEditor` (`app/(main)/LineEditor.tsx`)
 - `/PreGameConfirm` (`app/(main)/PreGameConfirm.tsx`)
 - `/GameComplete` (`app/(main)/GameComplete.tsx`)
@@ -48,7 +51,7 @@ Defined across:
 - Tab sections:
   - Home: `/Dashboard`, `/Help`, `/About`
   - Game: `/Scoreboard`, `/GameInfo`
-  - Stats: `/ViewStats`, `/PlayerStats`, `/SavedGameStats`, `/AggregateStats`, `/GameTimeline`, `/saved-games/[gameId]`
+  - Stats: `/ViewStats`, `/PlayerStats`, `/SavedGameStats`, `/AggregateStats`, `/GameTimeline`, `/saved-games/[gameId]`, and `/advancedTracking/analytics/*`
   - Team: `/EditRoster`
 - Scoreboard is a real hub tab, but the tab bar is hidden while `/Scoreboard` is visible. Pressing the Game tab routes to `/Scoreboard` for fresh/in-progress sessions or starts a fresh game flow for completed sessions when the current session is finished.
 - Entry-route behavior: `/` is the root declarative entry route. It waits for `useTutorialStore` hydration, sends first-launch users to `/TutorialIntro`, redirects to the active game session route when one exists, and otherwise lands on `/Dashboard`.
