@@ -80,8 +80,11 @@ export const useTutorialStore = create<TutorialState>()(
         hasSeenShowcaseHint: state.hasSeenShowcaseHint,
         hasSeenLongPressSelectHint: state.hasSeenLongPressSelectHint,
       }),
-      onRehydrateStorage: () => (state) => {
-        state?.setHasHydrated(true);
+      onRehydrateStorage: (state) => (_rehydratedState, error) => {
+        if (error) {
+          console.error('Failed to hydrate tutorial state', error);
+        }
+        state.setHasHydrated(true);
       },
     },
   ),

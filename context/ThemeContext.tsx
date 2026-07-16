@@ -45,6 +45,11 @@ export function useTheme(): ThemeContextValue {
 }
 
 export async function loadPersistedTheme(): Promise<ThemeMode> {
-  const stored = await AsyncStorage.getItem(THEME_STORAGE_KEY);
-  return stored === 'light' ? 'light' : 'dark';
+  try {
+    const stored = await AsyncStorage.getItem(THEME_STORAGE_KEY);
+    return stored === 'light' ? 'light' : 'dark';
+  } catch (error) {
+    console.error('Failed to load persisted theme', error);
+    return 'dark';
+  }
 }

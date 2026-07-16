@@ -2,23 +2,22 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { ScoreBadge } from '@/components/ui/ScoreBadge';
 import { useTheme } from '@/context/ThemeContext';
-import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { useIsGameActive } from '@/hooks/basic/useIsGameActive';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { useShareImport } from '@/hooks/useShareImport';
+import type { AdvancedTrackedGame } from '@/lib/advancedTracking/types';
+import { formatDate } from '@/lib/basic/statsUtils';
 import { advancedGameToListItem } from '@/lib/gameListUtils';
 import { resolveTeamName } from '@/lib/playerUtils';
 import { getGameDisplayTimestamp } from '@/lib/savedGameUtils';
 import { SharedPayload } from '@/lib/sharing';
-import { formatDate } from '@/lib/basic/statsUtils';
 import { SavedGame, SavedTeam } from '@/lib/storage';
-import type { AdvancedTrackedGame } from '@/lib/advancedTracking/types';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { useGameStore } from '@/store/basic/gameStore';
 import { useLinePresetsStore } from '@/store/linePresetsStore';
 import { Fonts } from '@/theme/theme';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
-import React from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 
@@ -36,13 +35,31 @@ export default function ImportScreen() {
   const { isPending, importState, setImportState } = useShareImport(shareId);
   const gameActive = useIsGameActive();
 
-  if (!shareId) {
-    return null;
-  }
-
   const handleDone = () => {
     router.dismissTo('/');
   };
+
+  if (!shareId) {
+    return (
+      <ThemedView style={[styles.container, { backgroundColor: palette.primary }]}>
+        <Stack.Screen options={{ headerShown: false }} />
+
+        <View style={styles.centered}>
+          <View
+            style={[
+              styles.card,
+              { backgroundColor: palette.modalBg, shadowColor: palette.shadow },
+            ]}>
+            <ErrorContent
+              palette={palette}
+              message="This import link is missing its share ID. Please open the original link and try again."
+              onDismiss={handleDone}
+            />
+          </View>
+        </View>
+      </ThemedView>
+    );
+  }
 
   const handleGoToGame = (gameId: string) => {
     router.dismissTo('/');
