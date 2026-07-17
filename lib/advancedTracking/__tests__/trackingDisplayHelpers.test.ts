@@ -9,6 +9,7 @@ import {
   getEffectiveLineParticipantIds,
   getGameClockElapsedMs,
   getLineParticipantIdsBeforeSub,
+  getLastTurnoverEvent,
   getGoalInfo,
   getPassChainEvents,
   getPointAdjustedTimestamp,
@@ -1245,6 +1246,16 @@ describe('getTrackerInstructionText', () => {
         isAwaitingPullPickup: false,
       }),
     ).toBe('TAP PLAYER FOR CALLAHAN');
+
+    expect(
+      getTrackerInstructionText({
+        pointIsOver: false,
+        passModifier: 'pressure',
+        oppHasDisc: true,
+        discHolderId: null,
+        isAwaitingPullPickup: false,
+      }),
+    ).toBe('TAP PLAYER WHO APPLIED PRESSURE');
   });
 
   it('handles opponent having disc', () => {
@@ -1297,9 +1308,10 @@ describe('getTrackerInstructionText', () => {
 describe('getTrackerInstructionColor', () => {
   const palette = { success: 'green', warning: 'orange', textMuted: 'grey' };
 
-  it('returns success for callahan and stall', () => {
+  it('returns success for positive defensive modifiers', () => {
     expect(getTrackerInstructionColor('callahan', palette)).toBe('green');
     expect(getTrackerInstructionColor('stall', palette)).toBe('green');
+    expect(getTrackerInstructionColor('pressure', palette)).toBe('green');
   });
 
   it('returns warning for fifty-fifty', () => {
@@ -1308,5 +1320,28 @@ describe('getTrackerInstructionColor', () => {
 
   it('returns textMuted for null modifier', () => {
     expect(getTrackerInstructionColor(null, palette)).toBe('grey');
+  });
+});
+
+describe('getLastTurnoverEvent', () => {
+  it('shows the credited defender for pressure', () => {
+    const possession = makePossession(AWAY, [
+      {
+        id: 'pressure1',
+        kind: 'throw',
+        sideId: AWAY,
+        thrower: untracked,
+        defender: august,
+        result: 'pressure',
+      },
+    ]);
+
+    expect(getLastTurnoverEvent(possession, false, participants)).toEqual({
+      label: 'PRESSURE',
+      isFocusTurnover: false,
+      isDropWithSplitAttribution: false,
+      responsibleName: 'August',
+      throwerName: null,
+    });
   });
 });

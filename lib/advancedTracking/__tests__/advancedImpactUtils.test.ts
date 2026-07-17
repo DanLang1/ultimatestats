@@ -485,6 +485,49 @@ describe('computeAdvancedImpact', () => {
     expect(impact[0].plusMinusDelta).toBeGreaterThanOrEqual(1); // block (+1) + assist (+1)
   });
 
+  it('description and delta show a half-point pressure', () => {
+    const game: AdvancedTrackedGame = {
+      ...baseGame,
+      status: 'terminated',
+      initialReceivingSideId: RIVALS,
+      points: [
+        {
+          id: 'pt1',
+          lines: [{ sideId: ZOO, participantIds: ['p_august'] }],
+          possessions: [
+            {
+              id: 'pos1',
+              sideId: RIVALS,
+              actions: [
+                {
+                  id: 'pull1',
+                  kind: 'pull',
+                  sideId: ZOO,
+                  receivingSideId: RIVALS,
+                  puller: august,
+                  result: 'inbound',
+                },
+                {
+                  id: 'pressure1',
+                  kind: 'throw',
+                  sideId: RIVALS,
+                  thrower: untracked,
+                  defender: august,
+                  result: 'pressure',
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+
+    const impact = computeAdvancedImpact(buildAnalyticsGame(game), 'p_august', ZOO);
+    expect(impact[0].description).toBe('P');
+    expect(impact[0].plusMinusDelta).toBe(0.5);
+    expect(impact[0].cumulativePlusMinus).toBe(0.5);
+  });
+
   it('50/50 split drop gives -0.5 to each player (not -1)', () => {
     // Zoo receives, August throws to Meves, Meves drops — but splitAttribution means
     // they share blame: August gets 0.5 throwaway, Meves gets 0.5 drop.

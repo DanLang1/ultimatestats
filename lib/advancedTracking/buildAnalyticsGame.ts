@@ -24,6 +24,7 @@ const TURNOVER_RESULTS: readonly AnalyticsTurnoverType[] = [
   'throwaway',
   'stall',
   'block',
+  'pressure',
   'callahan',
 ];
 function isTurnoverResult(r: string): r is AnalyticsTurnoverType {
@@ -214,6 +215,12 @@ function emitAttributions(
         add('throw_attempt', actorId);
         add('throwaway', actorId);
         add('block', defenderId);
+        break;
+
+      case 'pressure':
+        add('throw_attempt', actorId);
+        add('throwaway', actorId);
+        add('pressure', defenderId);
         break;
 
       case 'callahan':

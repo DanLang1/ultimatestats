@@ -31,6 +31,7 @@ export function getPointDetails(actions: PossessionAction[], focusSideId: string
         action.result === 'throwaway' ||
         action.result === 'stall' ||
         action.result === 'block' ||
+        action.result === 'pressure' ||
         action.result === 'callahan'
       ) {
         turnCount++;

@@ -248,7 +248,7 @@ interface ThrowAction {
   thrower: PlayerRef;
   toPlayer?: PlayerRef;
   // 'stall': count reached 10, no throw — disc turns over at the spot. Attributed to thrower, no toPlayer.
-  result: 'complete' | 'goal' | 'drop' | 'throwaway' | 'stall' | 'block' | 'callahan';
+  result: 'complete' | 'goal' | 'drop' | 'throwaway' | 'stall' | 'block' | 'pressure' | 'callahan';
   defender?: PlayerRef;
   /** True when blame is shared 50/50 between thrower and toPlayer. Single attribution is derived from result + thrower/toPlayer. */
   splitAttribution?: boolean;
@@ -480,16 +480,19 @@ It supports:
 - throwaways
 - stall outs
 - blocks
+- pressures
 - Callahans
 
-`toPlayer` is optional. Present on `complete` and `goal` (the receiver), and optionally on `drop`. Absent on `throwaway`, `stall`, `block`, and `callahan` — coaches record what happened, not intent.
+`toPlayer` is optional. Present on `complete` and `goal` (the receiver), and optionally on `drop`. Absent on `throwaway`, `stall`, `block`, `pressure`, and `callahan` — coaches record what happened, not intent.
 
 - for `complete` and `goal`, `toPlayer` is the player who caught the disc
 - for `drop`, `toPlayer` is optionally the player who dropped it
 - for `stall`, the `thrower` is the player who was holding the disc when the count reached 10
-- for `throwaway`, `stall`, `block`, and `callahan`, omit `toPlayer` — no receiver to record
+- for `throwaway`, `stall`, `block`, `pressure`, and `callahan`, omit `toPlayer` — no receiver to record
 
 A "block" covers both cases where the D knocks the disc to the ground and where the D catches it cleanly (what some folks call an interception). Both resolve to the same stat credits — the next possession's side and starter already tell you whether the D retained the disc.
+
+A "pressure" is a turnover directly caused by a tracked defender without awarding a block or stall. It stores that player in `defender`, emits one pressure attribution, and is worth half a block in plus/minus.
 
 ### `splitAttribution`
 

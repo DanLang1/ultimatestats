@@ -108,8 +108,10 @@ export default function AdvancedStatsContent({
   efficiencyStats.push(
     { label: 'Passes', value: teamStats.totalCompletedPasses },
     { label: 'Blk/D-Pt', value: formatDecimal(teamStats.blocksPerDPoint) },
+    { label: 'Prs/D-Pt', value: formatDecimal(teamStats.pressuresPerDPoint) },
     { label: 'Turn(s)', value: teamStats.totalTurnovers },
     { label: 'Block(s)', value: teamStats.totalBlocks },
+    { label: 'Pressure(s)', value: teamStats.totalPressures },
   );
 
   const sorted = [...playerStats].sort((a, b) => b.plusMinus - a.plusMinus);

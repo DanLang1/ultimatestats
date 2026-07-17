@@ -13,7 +13,15 @@ interface UseTrackerHandlersInput {
   setPassModifier: (m: PassModifier) => void;
   recordThrow: (input: {
     thrower: PlayerRef;
-    result: 'complete' | 'drop' | 'block' | 'stall' | 'throwaway' | 'callahan' | 'goal';
+    result:
+      | 'complete'
+      | 'drop'
+      | 'block'
+      | 'pressure'
+      | 'stall'
+      | 'throwaway'
+      | 'callahan'
+      | 'goal';
     toPlayer?: PlayerRef;
     defender?: PlayerRef;
     splitAttribution?: boolean;
@@ -63,6 +71,19 @@ export function useTrackerHandlers(input: UseTrackerHandlersInput): TrackerPlaye
       recordThrow({
         thrower: { refType: 'untracked' },
         result: 'stall',
+        defender: ref,
+      });
+      setPassModifier(null);
+      return;
+    }
+
+    if (passModifier === 'pressure') {
+      if (!possession || isPossessionOver(possession)) {
+        recordPickup({ sideId: OPP_SIDE_ID, player: { refType: 'untracked' } });
+      }
+      recordThrow({
+        thrower: { refType: 'untracked' },
+        result: 'pressure',
         defender: ref,
       });
       setPassModifier(null);

@@ -1,4 +1,5 @@
 import type { AnalyticsGame, AttributionType } from './analyticsTypes';
+import { PRESSURE_PLUS_MINUS_VALUE } from './statConstants';
 
 export interface AdvancedImpactPoint {
   pointIndex: number;
@@ -45,6 +46,7 @@ export function computeAdvancedImpact(
       const assists = get('assist');
       const ha = get('hockey_assist');
       const blocks = get('block');
+      const pressures = get('pressure');
       const callahans = get('callahan');
       const throwaways = get('throwaway');
       const drops = get('drop');
@@ -52,7 +54,15 @@ export function computeAdvancedImpact(
       const stallsConceded = get('stall_conceded');
 
       plusMinusDelta =
-        goals + assists + blocks + stalls + callahans - throwaways - drops - stallsConceded;
+        goals +
+        assists +
+        blocks +
+        pressures * PRESSURE_PLUS_MINUS_VALUE +
+        stalls +
+        callahans -
+        throwaways -
+        drops -
+        stallsConceded;
 
       if (goals > 0 && assists > 0) parts.push('GA');
       else {
@@ -62,6 +72,7 @@ export function computeAdvancedImpact(
       if (ha > 0) parts.push(ha > 1 ? `${ha}HA` : 'HA');
       if (callahans > 0) parts.push('C');
       if (blocks > 0) parts.push(blocks > 1 ? `${blocks}B` : 'B');
+      if (pressures > 0) parts.push(pressures > 1 ? `${pressures}P` : 'P');
       if (stalls > 0) parts.push(stalls > 1 ? `${stalls}Stl` : 'Stl');
       if (stallsConceded > 0) parts.push(stallsConceded > 1 ? `${stallsConceded}StlC` : 'StlC');
       if (throwaways > 0) parts.push(throwaways > 1 ? `${throwaways}T` : 'T');

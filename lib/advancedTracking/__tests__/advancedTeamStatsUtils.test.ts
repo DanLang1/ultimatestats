@@ -676,5 +676,67 @@ describe('advancedTeamStatsUtils', () => {
       expect(stats.multiPossessionPoints).toBe(1);
       expect(stats.multiPossessionPointPct).toBeCloseTo(0.5);
     });
+
+    it('counts pressures separately from blocks on defense', () => {
+      const game: AdvancedTrackedGame = {
+        ...baseGame,
+        initialReceivingSideId: RIVALS,
+        points: [
+          {
+            id: 'pt1',
+            lines: [{ sideId: ZOO, participantIds: ['p_august', 'p_meves'] }],
+            possessions: [
+              {
+                id: 'opp-possession',
+                sideId: RIVALS,
+                actions: [
+                  {
+                    id: 'pull1',
+                    kind: 'pull',
+                    sideId: ZOO,
+                    receivingSideId: RIVALS,
+                    puller: august,
+                    result: 'inbound',
+                  },
+                  {
+                    id: 'pressure1',
+                    kind: 'throw',
+                    sideId: RIVALS,
+                    thrower: untracked,
+                    defender: august,
+                    result: 'pressure',
+                  },
+                ],
+              },
+              {
+                id: 'zoo-possession',
+                sideId: ZOO,
+                actions: [
+                  {
+                    id: 'pickup1',
+                    kind: 'disc_pickup',
+                    sideId: ZOO,
+                    player: august,
+                  },
+                  {
+                    id: 'goal1',
+                    kind: 'throw',
+                    sideId: ZOO,
+                    thrower: august,
+                    toPlayer: meves,
+                    result: 'goal',
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      };
+
+      const stats = computeAdvancedTeamStats(buildAnalyticsGame(game), ZOO);
+      expect(stats.totalPressures).toBe(1);
+      expect(stats.pressuresPerDPoint).toBe(1);
+      expect(stats.totalBlocks).toBe(0);
+    });
   });
 });

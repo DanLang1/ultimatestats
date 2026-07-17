@@ -49,8 +49,10 @@ export interface AdvancedTeamStats {
   /** Possessions by this side. */
   totalPossessions: number;
   blocksPerDPoint: number;
+  pressuresPerDPoint: number;
   totalTurnovers: number;
   totalBlocks: number;
+  totalPressures: number;
   /** Possessions by this side where possessionIndex > 0 and result === 'scored'. */
   scoresAfterTurnovers: number;
   /** D-points where this side gained possession or scored. */
@@ -141,6 +143,7 @@ export function computeAdvancedTeamStats(game: AnalyticsGame, sideId: string): A
   let totalPossessionsOnD = 0;
   let totalTurnoversInGame = 0;
   let totalBlocks = 0;
+  let totalPressures = 0;
   let scoresAfterTurnovers = 0;
   let totalThrowAttempts = 0;
   let totalCompletedPasses = 0;
@@ -164,8 +167,13 @@ export function computeAdvancedTeamStats(game: AnalyticsGame, sideId: string): A
       if (poss.possessionIndex > 0 && poss.result === 'scored') {
         scoresAfterTurnovers++;
       }
-    } else if (poss.turnoverType === 'block' || poss.turnoverType === 'callahan') {
-      totalBlocks++;
+    } else {
+      if (poss.turnoverType === 'block' || poss.turnoverType === 'callahan') {
+        totalBlocks++;
+      }
+      if (poss.turnoverType === 'pressure') {
+        totalPressures++;
+      }
       if (poss.turnoverType === 'callahan') {
         // Raw tracking records a Callahan inside the thrower's possession, because the point ends
         // immediately. For team conversion stats, credit the scoring defense with one derived
@@ -247,8 +255,10 @@ export function computeAdvancedTeamStats(game: AnalyticsGame, sideId: string): A
     totalGoals,
     totalPossessions: totalPossessionsInGame,
     blocksPerDPoint: dPoints > 0 ? totalBlocks / dPoints : 0,
+    pressuresPerDPoint: dPoints > 0 ? totalPressures / dPoints : 0,
     totalTurnovers: totalTurnoversInGame,
     totalBlocks,
+    totalPressures,
     scoresAfterTurnovers,
     dPointsWithTurnover,
     completedPoints: completedPointCount,

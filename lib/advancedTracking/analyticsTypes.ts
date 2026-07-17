@@ -23,6 +23,7 @@ export type AttributionType =
   | 'stall'
   | 'stall_conceded'
   | 'block'
+  | 'pressure'
   | 'callahan'
   | 'pull'
   | 'pull_reception'
@@ -71,7 +72,13 @@ export interface AnalyticsPoint {
 
 export type AnalyticsPossessionResult = 'scored' | 'turned_over' | 'terminated' | 'in_progress';
 
-export type AnalyticsTurnoverType = 'drop' | 'throwaway' | 'stall' | 'block' | 'callahan';
+export type AnalyticsTurnoverType =
+  | 'drop'
+  | 'throwaway'
+  | 'stall'
+  | 'block'
+  | 'pressure'
+  | 'callahan';
 
 export interface AnalyticsPossession {
   id: string;

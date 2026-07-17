@@ -1,0 +1,1 @@
+export const PRESSURE_PLUS_MINUS_VALUE = 0.5;

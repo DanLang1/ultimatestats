@@ -238,6 +238,61 @@ describe('buildAdvancedTimeline', () => {
     expect(goalAction.tone).toBe('success');
   });
 
+  it('shows pressure with the defender and a positive tone', () => {
+    const game: AdvancedTrackedGame = {
+      ...baseGame,
+      initialReceivingSideId: RIVALS,
+      points: [
+        {
+          id: 'pt1',
+          lines: [{ sideId: ZOO, participantIds: ['p_august', 'p_meves'] }],
+          possessions: [
+            {
+              id: 'pos1',
+              sideId: RIVALS,
+              actions: [
+                {
+                  id: 'pull1',
+                  kind: 'pull',
+                  sideId: ZOO,
+                  receivingSideId: RIVALS,
+                  puller: august,
+                  result: 'inbound',
+                },
+                {
+                  id: 'pressure1',
+                  kind: 'throw',
+                  sideId: RIVALS,
+                  thrower: untracked,
+                  defender: august,
+                  result: 'pressure',
+                },
+              ],
+            },
+            {
+              id: 'pos2',
+              sideId: ZOO,
+              actions: [
+                {
+                  id: 'goal1',
+                  kind: 'throw',
+                  sideId: ZOO,
+                  thrower: august,
+                  toPlayer: meves,
+                  result: 'goal',
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+
+    const pressureAction = buildAdvancedTimeline(game)[0].possessions[0].actions[1];
+    expect(pressureAction.primaryLabel).toBe('August · Pressure');
+    expect(pressureAction.tone).toBe('success');
+  });
+
   it('callahan scoring side and scoreAfter', () => {
     const game: AdvancedTrackedGame = {
       ...baseGame,

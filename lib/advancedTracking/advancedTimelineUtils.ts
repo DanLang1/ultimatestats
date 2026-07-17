@@ -189,6 +189,8 @@ function getThrowTone(
       return actionSideId === focusSideId ? 'danger' : 'success';
     case 'block':
       return actionSideId === focusSideId ? 'danger' : 'success';
+    case 'pressure':
+      return actionSideId === focusSideId ? 'danger' : 'success';
     case 'callahan':
       return scoringSideId === focusSideId ? 'success' : 'danger';
   }
@@ -251,6 +253,14 @@ function buildThrowLabel(
         return { primaryLabel: 'OPP D' };
       }
       return { primaryLabel: defenderName ? `${defenderName} · D` : 'D' };
+
+    case 'pressure':
+      if (actionSideId === focusSideId) {
+        return { primaryLabel: 'OPP PRESSURE' };
+      }
+      return {
+        primaryLabel: defenderName ? `${defenderName} · Pressure` : 'Pressure',
+      };
 
     default: {
       const callahanScorer = defenderName ?? receiverName;

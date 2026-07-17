@@ -112,7 +112,7 @@ type AnalyticsPossession = {
 
   sideId: string;
   result: 'scored' | 'turned_over' | 'terminated';
-  turnoverType?: 'drop' | 'throwaway' | 'stall' | 'block' | 'callahan';
+  turnoverType?: 'drop' | 'throwaway' | 'stall' | 'block' | 'pressure' | 'callahan';
 };
 ```
 
@@ -174,6 +174,7 @@ type AttributionType =
   | 'drop'
   | 'stall'
   | 'block'
+  | 'pressure'
   | 'callahan'
   | 'pull'
   | 'pull_reception' // caught the pull — tracked separately from receiving_touch
@@ -199,6 +200,7 @@ These rules are applied once during `buildAnalyticsGame`. Stat utils never need 
 | `throw` result `throwaway` | `throwaway` + `throw_attempt` → actor (always weight 1.0 — no receiver to share blame with, so `splitAttribution` is ignored)                                                                  |
 | `throw` result `stall`     | `stall` + `throw_attempt` → actor                                                                                                                                                              |
 | `throw` result `block`     | `throwaway` + `throw_attempt` → actor; `block` → defender                                                                                                                                      |
+| `throw` result `pressure`  | `throwaway` + `throw_attempt` → actor; `pressure` → defender                                                                                                                                   |
 | `throw` result `callahan`  | `throwaway` + `throw_attempt` → actor; `callahan` + `block` + `goal` → defender                                                                                                                |
 | `pull` result `inbound`    | `pull` → actor; `pull_reception` → receiver                                                                                                                                                    |
 | `pull` result `dropped`    | `pull` → actor; `drop` → receiver (puller is opposing team — no throwaway credit)                                                                                                              |
@@ -214,25 +216,26 @@ These rules are applied once during `buildAnalyticsGame`. Stat utils never need 
 
 ### Player stats
 
-| Stat              | Derivation                                                                              |
-| ----------------- | --------------------------------------------------------------------------------------- |
-| Goals             | `attributions` where `type === 'goal'`, sum `weight` by `participantId`                 |
-| Assists           | `attributions` where `type === 'assist'`, sum `weight`                                  |
-| Hockey assists    | `attributions` where `type === 'hockey_assist'`, sum `weight`                           |
-| Completions       | `attributions` where `type === 'completion'`, sum `weight`                              |
-| Completion %      | completions / throw attempts                                                            |
-| Throw attempts    | `attributions` where `type === 'throw_attempt'`, sum `weight`                           |
-| Receiving touches | `attributions` where `type === 'receiving_touch'`, sum `weight`                         |
-| Total touches     | sum of `completion` + `receiving_touch` + `disc_pickup` + `pull_reception` attributions |
-| Throwaways        | `attributions` where `type === 'throwaway'`, sum `weight`                               |
-| Drops             | `attributions` where `type === 'drop'`, sum `weight`                                    |
-| Stalls            | `attributions` where `type === 'stall'`, sum `weight`                                   |
-| Blocks            | `attributions` where `type === 'block'`, sum `weight`                                   |
-| Callahans         | `attributions` where `type === 'callahan'`, sum `weight`                                |
-| Points played     | `points` where `participantId` in `linesBySide[sideId]`, count                          |
-| Plus/minus        | `goals + assists + blocks - throwaways - drops` (mirrors basic tracking)                |
-| Playing time (ms) | sum of `durationMs` for points where participant is in `linesBySide`                    |
-| Playing time %    | player playing time / total game time (sum of all point durations)                      |
+| Stat              | Derivation                                                                                    |
+| ----------------- | --------------------------------------------------------------------------------------------- |
+| Goals             | `attributions` where `type === 'goal'`, sum `weight` by `participantId`                       |
+| Assists           | `attributions` where `type === 'assist'`, sum `weight`                                        |
+| Hockey assists    | `attributions` where `type === 'hockey_assist'`, sum `weight`                                 |
+| Completions       | `attributions` where `type === 'completion'`, sum `weight`                                    |
+| Completion %      | completions / throw attempts                                                                  |
+| Throw attempts    | `attributions` where `type === 'throw_attempt'`, sum `weight`                                 |
+| Receiving touches | `attributions` where `type === 'receiving_touch'`, sum `weight`                               |
+| Total touches     | sum of `completion` + `receiving_touch` + `disc_pickup` + `pull_reception` attributions       |
+| Throwaways        | `attributions` where `type === 'throwaway'`, sum `weight`                                     |
+| Drops             | `attributions` where `type === 'drop'`, sum `weight`                                          |
+| Stalls            | `attributions` where `type === 'stall'`, sum `weight`                                         |
+| Blocks            | `attributions` where `type === 'block'`, sum `weight`                                         |
+| Pressures         | `attributions` where `type === 'pressure'`, sum `weight`                                      |
+| Callahans         | `attributions` where `type === 'callahan'`, sum `weight`                                      |
+| Points played     | `points` where `participantId` in `linesBySide[sideId]`, count                                |
+| Plus/minus        | `goals + assists + blocks + stalls + (0.5 × pressures) - throwaways - drops - stallsConceded` |
+| Playing time (ms) | sum of `durationMs` for points where participant is in `linesBySide`                          |
+| Playing time %    | player playing time / total game time (sum of all point durations)                            |
 
 ### Team / possession stats
 

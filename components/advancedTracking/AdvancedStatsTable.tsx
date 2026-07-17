@@ -35,6 +35,7 @@ const STAT_GROUPS: StatGroup[] = [
       { key: 'goals', label: 'Goals', width: 58 },
       { key: 'assists', label: 'Ast', width: 58 },
       { key: 'blocks', label: 'Blk', width: 58 },
+      { key: 'pressures', label: 'Prs', width: 58 },
       { key: 'throwaways', label: 'T/A', width: 58 },
       { key: 'drops', label: 'Drp', width: 58 },
       { key: 'stalls', label: 'Stl', width: 58 },
@@ -63,6 +64,7 @@ const STAT_GROUPS: StatGroup[] = [
       { key: 'throwAttempts', label: 'Att', width: 58 },
       { key: 'pulls', label: 'Pls', width: 58 },
       { key: 'blocks', label: 'Blk', width: 58 },
+      { key: 'pressures', label: 'Prs', width: 58 },
     ],
   },
   {
@@ -100,6 +102,7 @@ const LEGEND_LABELS_BY_KEY: Partial<Record<SortKey, string>> = {
   goals: 'Goals',
   assists: 'Assists',
   blocks: 'Blocks',
+  pressures: 'Pressures',
   throwaways: 'Throwaways',
   drops: 'Drops',
   stalls: 'Stalls Forced',

@@ -463,6 +463,7 @@ export function getLastTurnoverEvent(
           drop: splitAttribution ? '50/50' : 'DROP',
           stall: 'STALLED',
           block: 'OPP D',
+          pressure: 'OPP PRESSURE',
           callahan: 'CALLAHAN',
         }
       : {
@@ -470,17 +471,21 @@ export function getLastTurnoverEvent(
           drop: 'OPP TURN',
           stall: hasDefender ? 'STALL' : 'OPP TURN',
           block: hasDefender ? 'BLOCK' : 'OPP TURN',
+          pressure: hasDefender ? 'PRESSURE' : 'OPP TURN',
           callahan: 'CALLAHAN',
         };
 
     const label = labelMap[result];
     if (!label) return null;
 
-    // drop → toPlayer (the dropper); block/stall on opp → defender (our player); everything else → thrower
+    // drop → toPlayer (the dropper); defensive turnovers on opp → defender; everything else → thrower
     let responsibleName;
     if (result === 'drop') {
       responsibleName = getRefName(toPlayer, participants);
-    } else if ((result === 'block' || result === 'stall') && !isFocusPossession) {
+    } else if (
+      (result === 'block' || result === 'stall' || result === 'pressure') &&
+      !isFocusPossession
+    ) {
       responsibleName = getRefName(defender, participants);
     } else if (result === 'block') {
       // OPP D — no name shown
@@ -584,6 +589,7 @@ export function getTrackerInstructionText(params: {
   if (pointIsOver) return null;
   if (passModifier === 'callahan') return 'TAP PLAYER FOR CALLAHAN';
   if (passModifier === 'stall') return 'TAP PLAYER WHO STALLED';
+  if (passModifier === 'pressure') return 'TAP PLAYER WHO APPLIED PRESSURE';
   if (passModifier === 'fifty-fifty') return 'TAP PLAYER FOR 50/50';
   if (oppHasDisc) return 'TAP PLAYER FOR BLOCK';
   if (discHolderId === null) {
@@ -599,7 +605,7 @@ export function getTrackerInstructionColor(
   passModifier: PassModifier,
   palette: { success: string; warning: string; textMuted: string },
 ): string {
-  if (passModifier === 'callahan' || passModifier === 'stall') {
+  if (passModifier === 'callahan' || passModifier === 'stall' || passModifier === 'pressure') {
     return palette.success;
   }
   if (passModifier === 'fifty-fifty') {

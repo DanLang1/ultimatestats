@@ -98,6 +98,7 @@ function buildMetrics(
     metric('assists', 'Assists', (s) => s.assists, true, int),
     metric('hockeyAssists', 'Hockey Assists', (s) => s.hockeyAssists, true, int),
     metric('blocks', 'Blocks', (s) => s.blocks, true, int),
+    metric('pressures', 'Pressures', (s) => s.pressures, true, int),
   ]
     .filter(hasMetric)
     .filter((m) => m.raw > 0 || m.teamMax > 0);
@@ -115,7 +116,10 @@ function buildMetrics(
       '+/-',
       (s) => s.plusMinus,
       true,
-      (v) => (v > 0 ? `+${Math.round(v)}` : String(Math.round(v))),
+      (v) => {
+        const rounded = Math.round(v * 10) / 10;
+        return rounded > 0 ? `+${rounded}` : String(rounded);
+      },
     ),
   ].filter(hasMetric);
 

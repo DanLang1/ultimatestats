@@ -95,6 +95,13 @@ export const TrackerRareMenu = ({
     if (!pointIsOver && oppHasDisc) {
       return [
         {
+          testID: 'rare-menu-pressure',
+          label: 'Pressure',
+          icon: 'shield-outline',
+          tone: 'success',
+          onPress: closeAnd(() => setPassModifier('pressure')),
+        },
+        {
           testID: 'rare-menu-callahan',
           label: 'Callahan',
           icon: 'shield-alert-outline',

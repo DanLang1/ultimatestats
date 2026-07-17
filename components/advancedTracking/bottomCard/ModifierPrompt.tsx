@@ -20,6 +20,8 @@ export const ModifierPrompt = ({ modifier }: ModifierPromptProps) => {
     text = 'Tap player who got the Callahan';
   } else if (modifier === 'stall') {
     text = 'Tap player who got the stall';
+  } else if (modifier === 'pressure') {
+    text = 'Tap player who applied pressure';
   }
 
   const isFiftyFifty = modifier === 'fifty-fifty';

@@ -141,6 +141,53 @@ describe('advancedTrackingStore — edge cases', () => {
       expect(pointAfterPickup?.possessions[1].sideId).toBe(awaySideId);
     });
 
+    it('records pressure as a turnover and allows the other side to pick up', () => {
+      createGame();
+      useAdvancedTrackingStore.getState().recordPull({
+        lines: [{ sideId: homeSideId, participantIds: [august.participantId] }],
+        puller: untracked,
+        receiver: august,
+        result: 'inbound',
+      });
+      useAdvancedTrackingStore.getState().recordThrow({
+        thrower: august,
+        result: 'pressure',
+        defender: meves,
+      });
+
+      const point = getCurrentPoint(getCurrentGame());
+      const pressureAction = point?.possessions[0].actions.at(-1);
+      expect(pressureAction?.kind).toBe('throw');
+      if (pressureAction?.kind === 'throw') {
+        expect(pressureAction.result).toBe('pressure');
+        expect(pressureAction.defender).toEqual(meves);
+      }
+      expect(getCurrentGame()?.schemaVersion).toBe(2);
+
+      useAdvancedTrackingStore.getState().recordPickup({
+        sideId: awaySideId,
+        player: untracked,
+      });
+      expect(getCurrentPoint(getCurrentGame())?.possessions).toHaveLength(2);
+    });
+
+    it('rejects pressure without a tracked defender', () => {
+      createGame();
+      useAdvancedTrackingStore.getState().recordPull({
+        lines: [{ sideId: homeSideId, participantIds: [august.participantId] }],
+        puller: untracked,
+        receiver: august,
+        result: 'inbound',
+      });
+
+      expect(() =>
+        useAdvancedTrackingStore.getState().recordThrow({
+          thrower: august,
+          result: 'pressure',
+        }),
+      ).toThrow('Pressure requires a tracked defender.');
+    });
+
     it('records a drop with split attribution', () => {
       createGame();
       useAdvancedTrackingStore.getState().recordPull({

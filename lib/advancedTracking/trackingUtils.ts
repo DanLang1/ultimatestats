@@ -100,7 +100,13 @@ export function isPointEndingThrow(result: ThrowResult): boolean {
 }
 
 export function isTurnoverThrow(result: ThrowResult): boolean {
-  return result === 'drop' || result === 'throwaway' || result === 'stall' || result === 'block';
+  return (
+    result === 'drop' ||
+    result === 'throwaway' ||
+    result === 'stall' ||
+    result === 'block' ||
+    result === 'pressure'
+  );
 }
 
 export function didPullTurnOver(result: PullAction['result']): boolean {

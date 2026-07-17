@@ -650,6 +650,9 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
         recordThrow: (input) => {
           const game = getCurrentGame(get());
           assertValidParticipantRefs(game, [input.thrower, input.toPlayer, input.defender]);
+          if (input.result === 'pressure' && input.defender?.refType !== 'participant') {
+            throw new Error('Pressure requires a tracked defender.');
+          }
 
           const currentPossession = getCurrentPossession(game);
           if (currentPossession == null) {

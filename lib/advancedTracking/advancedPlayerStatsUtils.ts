@@ -1,5 +1,6 @@
 import type { AnalyticsGame, AnalyticsPoint, AttributionType } from './analyticsTypes';
 import { getPointStateForSide } from './buildAnalyticsGame';
+import { PRESSURE_PLUS_MINUS_VALUE } from './statConstants';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -11,7 +12,7 @@ export interface AdvancedPlayerStats {
   assists: number;
   hockeyAssists: number;
   callahans: number;
-  /** goals + assists + blocks + stalls - throwaways - drops - stallsConceded */
+  /** goals + assists + blocks + stalls + (0.5 × pressures) - throwaways - drops - stallsConceded */
   plusMinus: number;
 
   // Throwing
@@ -37,6 +38,7 @@ export interface AdvancedPlayerStats {
 
   // Defense
   blocks: number;
+  pressures: number;
 
   // Pulls
   pulls: number;
@@ -88,6 +90,7 @@ function createEmptyStats(participantId: string): AdvancedPlayerStats {
     drops: 0,
     totalTouches: 0,
     blocks: 0,
+    pressures: 0,
     pulls: 0,
     pullReceptions: 0,
     inboundPulls: 0,
@@ -204,6 +207,7 @@ export function computeAdvancedPlayerStats(
     stats.receptions = sum('receiving_touch');
     stats.drops = sum('drop');
     stats.blocks = sum('block');
+    stats.pressures = sum('pressure');
     stats.pulls = sum('pull');
     stats.pullReceptions = sum('pull_reception');
 
@@ -214,6 +218,7 @@ export function computeAdvancedPlayerStats(
       stats.goals +
       stats.assists +
       stats.blocks +
+      stats.pressures * PRESSURE_PLUS_MINUS_VALUE +
       stats.stalls -
       stats.throwaways -
       stats.drops -

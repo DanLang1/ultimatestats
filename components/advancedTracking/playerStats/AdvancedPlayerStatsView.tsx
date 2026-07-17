@@ -279,6 +279,7 @@ export default function AdvancedPlayerStatsView({
                 { label: 'Assists', value: stats.assists, positive: true },
                 { label: 'HA', value: stats.hockeyAssists, positive: true },
                 { label: 'Blocks', value: stats.blocks, positive: true },
+                { label: 'Pressures', value: stats.pressures, positive: true },
                 { label: 'T/A', value: stats.throwaways, positive: false },
                 { label: 'Drops', value: stats.drops, positive: false },
               ].map((s) => (

@@ -203,6 +203,7 @@ function teamStatsCSV(stats: AdvancedTeamStats, teamName: string): string {
     csvRow(['Defensive Points', stats.dPoints, '']),
     csvRow(['Total Turns', stats.totalTurnovers, '']),
     csvRow(['Total Blocks', stats.totalBlocks, '']),
+    csvRow(['Total Pressures', stats.totalPressures, '']),
     csvRow(['Turns per Point', formatDecimal(stats.turnoversPerPoint ?? 0), '']),
     csvRow(['Points per Turn', formatDecimal(stats.pointsPerTurnover ?? 0), '']),
     csvRow([
@@ -211,6 +212,7 @@ function teamStatsCSV(stats: AdvancedTeamStats, teamName: string): string {
       `${stats.totalGoals}/${stats.totalPossessions}`,
     ]),
     csvRow(['Blocks per D-Point', formatDecimal(stats.blocksPerDPoint), '']),
+    csvRow(['Pressures per D-Point', formatDecimal(stats.pressuresPerDPoint), '']),
     csvRow(['Our Possessions per Point', formatDecimal(stats.possessionsPerPoint ?? 0), '']),
     csvRow([
       'Multi-Possession Points',
@@ -286,7 +288,7 @@ function playerSummaryCSV(
       'Pull Receptions',
     );
   }
-  columns.push('Blocks', 'Receptions', 'Total Touches', 'Plus/Minus');
+  columns.push('Blocks', 'Pressures', 'Receptions', 'Total Touches', 'Plus/Minus');
 
   if (hasTimingData) {
     columns.push('Points Played', 'O-Points', 'D-Points', 'O-Eff', 'D-Eff');
@@ -333,6 +335,7 @@ function playerSummaryCSV(
         cells.push(p.pullReceptions);
       }
       cells.push(p.blocks);
+      cells.push(p.pressures);
       cells.push(p.receptions);
       cells.push(p.totalTouches);
       cells.push(p.plusMinus);

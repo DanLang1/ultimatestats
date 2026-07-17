@@ -3,11 +3,11 @@
 
 import type { GenderRatio } from '@/lib/genderRatioUtils';
 
-export type PassModifier = 'fifty-fifty' | 'callahan' | 'stall' | null;
+export type PassModifier = 'fifty-fifty' | 'callahan' | 'stall' | 'pressure' | null;
 
 // --- Core Game ---
 
-export const ADVANCED_TRACKING_SCHEMA_VERSION = 1;
+export const ADVANCED_TRACKING_SCHEMA_VERSION = 2;
 
 export type GameStatus = 'in_progress' | 'final' | 'terminated';
 
@@ -307,6 +307,7 @@ export type ThrowResult =
   | 'throwaway'
   | 'stall'
   | 'block'
+  | 'pressure'
   | 'callahan';
 
 export interface ThrowAction {
@@ -317,7 +318,7 @@ export interface ThrowAction {
   /**
    * Who caught or was in position to catch the throw. Present on `complete` and `goal`
    * (the receiver), and optionally on `drop`. Absent on `throwaway`, `block`,
-   * and `callahan` — coaches record what happened, not intent.
+   * `pressure`, and `callahan` — coaches record what happened, not intent.
    */
   toPlayer?: PlayerRef;
   /**

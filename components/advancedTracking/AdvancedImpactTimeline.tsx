@@ -46,6 +46,7 @@ const PART_TO_FULL: Record<string, string> = {
   HA: 'Hockey Assist',
   C: 'Callahan',
   B: 'Block',
+  P: 'Pressure',
   Stl: 'Stall',
   StlC: 'Stalled',
   T: 'Throwaway',
@@ -59,6 +60,7 @@ const PART_TO_ABBREV: Record<string, string> = {
   HA: 'HA',
   C: 'C',
   B: 'B',
+  P: 'P',
   Stl: 'Stl',
   StlC: 'Stld',
   T: 'T',
@@ -543,7 +545,7 @@ export default function AdvancedImpactTimeline({ data }: AdvancedImpactTimelineP
         <View style={styles.legendItem}>
           <View style={[styles.legendDot, { backgroundColor: palette.success }]} />
           <ThemedText style={[styles.legendText, { color: palette.textMuted }]}>
-            Goals/Assists/Blocks
+            Goals/Assists/Blocks/Pressures
           </ThemedText>
         </View>
         <View style={styles.legendItem}>

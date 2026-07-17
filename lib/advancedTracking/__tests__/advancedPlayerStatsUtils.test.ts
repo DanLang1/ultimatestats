@@ -401,6 +401,54 @@ describe('advancedPlayerStatsUtils', () => {
     });
   });
 
+  describe('pressure', () => {
+    const game: AdvancedTrackedGame = {
+      ...baseGame,
+      status: 'terminated',
+      initialReceivingSideId: RIVALS,
+      points: [
+        {
+          id: 'pt1',
+          lines: [{ sideId: ZOO, participantIds: ['p_august'] }],
+          possessions: [
+            {
+              id: 'pos1',
+              sideId: RIVALS,
+              actions: [
+                {
+                  id: 'pull1',
+                  kind: 'pull',
+                  sideId: ZOO,
+                  receivingSideId: RIVALS,
+                  puller: august,
+                  receiver: untracked,
+                  result: 'inbound',
+                },
+                {
+                  id: 'pressure1',
+                  kind: 'throw',
+                  sideId: RIVALS,
+                  thrower: untracked,
+                  defender: august,
+                  result: 'pressure',
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+
+    const stats = computeAdvancedPlayerStats(buildAnalyticsGame(game));
+
+    it('counts one pressure worth half a plus/minus point', () => {
+      const s = findStats(stats, 'p_august');
+      expect(s.pressures).toBe(1);
+      expect(s.blocks).toBe(0);
+      expect(s.plusMinus).toBe(0.5);
+    });
+  });
+
   describe('callahan', () => {
     const game: AdvancedTrackedGame = {
       ...baseGame,
