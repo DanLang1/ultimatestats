@@ -1,3 +1,6 @@
+import { Redirect, router, Stack } from 'expo-router';
+import React from 'react';
+
 import { TrackerLineScreen } from '@/components/advancedTracking/TrackerLineScreen';
 import { useLiveRosterParticipants } from '@/hooks/advancedTracking/useLiveRosterParticipants';
 import {
@@ -7,8 +10,6 @@ import {
 } from '@/lib/advancedTracking/trackingDisplayHelpers';
 import { getCurrentPoint, getCurrentPossession } from '@/lib/advancedTracking/trackingUtils';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
-import { Redirect, router, Stack } from 'expo-router';
-import React from 'react';
 
 export default function TrackerInjurySubScreen() {
   const {

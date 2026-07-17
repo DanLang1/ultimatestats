@@ -1,6 +1,7 @@
-import { useGameStore } from '@/store/basic/gameStore';
-import { formatTimerSeconds } from '@/lib/utils';
 import { useEffect } from 'react';
+
+import { formatTimerSeconds } from '@/lib/utils';
+import { useGameStore } from '@/store/basic/gameStore';
 
 const MIN_SECONDS = 0;
 const MAX_SECONDS = 5 * 60; // 5 minute max for timeout timer

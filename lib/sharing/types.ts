@@ -1,5 +1,5 @@
-import type { LinePreset, SavedGame, SavedTeam } from '@/lib/storage/types';
 import type { AdvancedTrackedGame } from '@/lib/advancedTracking/types';
+import type { LinePreset, SavedGame, SavedTeam } from '@/lib/storage/types';
 
 type SharedPayloadBase = {
   appVersion: string;

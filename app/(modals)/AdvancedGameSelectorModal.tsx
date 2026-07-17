@@ -1,19 +1,20 @@
-import { BottomSheet } from '@/components/ui/BottomSheet';
-import { ThemedText } from '@/components/ThemedText';
-import { useTheme } from '@/context/ThemeContext';
-import { useAdvancedGames } from '@/hooks/advancedTracking/useAdvancedGameQueries';
-import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import { computeAdvancedImpact } from '@/lib/advancedTracking/advancedImpactUtils';
-import {
-  getAdvancedGameLabel,
-  getAdvancedGameTimestamp,
-} from '@/lib/advancedTracking/advancedGameTeamUtils';
-import { buildAnalyticsGame } from '@/lib/advancedTracking/buildAnalyticsGame';
-import { Fonts } from '@/theme/theme';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router, useLocalSearchParams } from 'expo-router';
 import React from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+
+import { ThemedText } from '@/components/ThemedText';
+import { BottomSheet } from '@/components/ui/BottomSheet';
+import { useTheme } from '@/context/ThemeContext';
+import { useAdvancedGames } from '@/hooks/advancedTracking/useAdvancedGameQueries';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import {
+  getAdvancedGameLabel,
+  getAdvancedGameTimestamp,
+} from '@/lib/advancedTracking/advancedGameTeamUtils';
+import { computeAdvancedImpact } from '@/lib/advancedTracking/advancedImpactUtils';
+import { buildAnalyticsGame } from '@/lib/advancedTracking/buildAnalyticsGame';
+import { Fonts } from '@/theme/theme';
 
 export default function AdvancedGameSelectorModal() {
   const {

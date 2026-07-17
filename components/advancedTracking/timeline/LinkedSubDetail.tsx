@@ -1,11 +1,12 @@
+import React from 'react';
+import { StyleSheet, View } from 'react-native';
+
 import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import type { AdvancedTimelineSub } from '@/lib/advancedTracking/advancedTimelineUtils';
 import { hasItems } from '@/lib/utils';
 import { Fonts } from '@/theme/theme';
-import React from 'react';
-import { StyleSheet, View } from 'react-native';
 
 interface LinkedSubDetailProps {
   subs: AdvancedTimelineSub[];

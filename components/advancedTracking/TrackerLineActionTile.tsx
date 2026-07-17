@@ -1,10 +1,11 @@
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import React from 'react';
+import { Pressable, StyleSheet, View } from 'react-native';
+
 import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, useLayout } from '@/hooks/useLayout';
 import { Fonts } from '@/theme/theme';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import React from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
 
 const TILE_BORDER_RADIUS = 12;
 

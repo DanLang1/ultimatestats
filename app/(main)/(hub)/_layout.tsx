@@ -1,6 +1,7 @@
-import { useTheme } from '@/context/ThemeContext';
-import HubTabBar from '@/components/navigation/HubTabBar';
 import { Tabs } from 'expo-router';
+
+import HubTabBar from '@/components/navigation/HubTabBar';
+import { useTheme } from '@/context/ThemeContext';
 
 export default function HubLayout() {
   const { palette } = useTheme();

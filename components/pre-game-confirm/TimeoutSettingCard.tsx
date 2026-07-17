@@ -1,12 +1,13 @@
-import { EditableSettingCard } from '@/components/pre-game-confirm/EditableSettingCard';
-import { SegmentedControl } from '@/components/ui/SegmentedControl';
-import { Switch } from '@/components/ui/Switch';
-import { AlertModal } from '@/components/ui/AlertModal';
-import { useTheme } from '@/context/ThemeContext';
-import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import React, { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
+
+import { EditableSettingCard } from '@/components/pre-game-confirm/EditableSettingCard';
 import { ThemedText } from '@/components/ThemedText';
+import { AlertModal } from '@/components/ui/AlertModal';
+import { SegmentedControl } from '@/components/ui/SegmentedControl';
+import { Switch } from '@/components/ui/Switch';
+import { useTheme } from '@/context/ThemeContext';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { Fonts } from '@/theme/theme';
 
 interface TimeoutSettingCardProps {

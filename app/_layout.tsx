@@ -1,18 +1,19 @@
-import { AlertProvider } from '@/components/ui/AlertProvider';
-import { loadPersistedTheme, ThemeProvider, useTheme } from '@/context/ThemeContext';
-import { useOrientationLock } from '@/hooks/useOrientationLock';
-import { useStartupMigrations } from '@/hooks/useStartupMigrations';
-import { queryClient } from '@/lib/queryClient';
-import { useSettingsStore } from '@/store/settingsStore';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { requireOptionalNativeModule } from 'expo';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useState } from 'react';
-import 'react-native-reanimated';
-
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+
+import { AlertProvider } from '@/components/ui/AlertProvider';
+import { loadPersistedTheme, ThemeProvider, useTheme } from '@/context/ThemeContext';
+import { useOrientationLock } from '@/hooks/useOrientationLock';
+import { useStartupMigrations } from '@/hooks/useStartupMigrations';
+import 'react-native-reanimated';
+
+import { queryClient } from '@/lib/queryClient';
+import { useSettingsStore } from '@/store/settingsStore';
 
 if (__DEV__) {
   const DevMenuPreferences = requireOptionalNativeModule('DevMenuPreferences');

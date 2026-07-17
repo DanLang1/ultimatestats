@@ -1,10 +1,3 @@
-import { ThemedView } from '@/components/ThemedView';
-import { ScreenHeader } from '@/components/ui/ScreenHeader';
-import { useTheme } from '@/context/ThemeContext';
-import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import { MAX_TOURNAMENT_NAME_LENGTH } from '@/lib/constants';
-import { formatDateForDisplay, toISODate } from '@/lib/dateUtils';
-import { useTournamentStore } from '@/store/tournamentStore';
 import DateTimePicker, {
   DateTimePickerAndroid,
   DateTimePickerEvent,
@@ -20,7 +13,15 @@ import {
   TextInput,
   View,
 } from 'react-native';
+
 import { ThemedText } from '@/components/ThemedText';
+import { ThemedView } from '@/components/ThemedView';
+import { ScreenHeader } from '@/components/ui/ScreenHeader';
+import { useTheme } from '@/context/ThemeContext';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { MAX_TOURNAMENT_NAME_LENGTH } from '@/lib/constants';
+import { formatDateForDisplay, toISODate } from '@/lib/dateUtils';
+import { useTournamentStore } from '@/store/tournamentStore';
 import { Fonts } from '@/theme/theme';
 
 export default function CreateTournamentScreen() {

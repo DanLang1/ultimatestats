@@ -1,7 +1,8 @@
+import type { Href } from 'expo-router';
+
 import { isAdvancedGameOver } from '@/lib/advancedTracking/trackingUtils';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { useGameSessionStore } from '@/store/gameSessionStore';
-import type { Href } from 'expo-router';
 
 type ActiveGameKind = 'advanced' | 'basic' | 'none';
 

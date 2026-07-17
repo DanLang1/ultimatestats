@@ -1,11 +1,12 @@
+import React from 'react';
+import { Pressable, StyleSheet, View } from 'react-native';
+import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
+
 import ScoreDisplay from '@/components/ScoreDisplay';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { useHaptics } from '@/hooks/useHaptics';
 import { getSizeClassValue, SizeClass, useLayout } from '@/hooks/useLayout';
-import React from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
-import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 
 interface TutorialStatTeamScoreSectionProps {
   teamName: string;

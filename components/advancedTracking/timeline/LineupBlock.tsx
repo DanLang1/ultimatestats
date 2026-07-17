@@ -1,10 +1,11 @@
+import React from 'react';
+import { StyleSheet, View } from 'react-native';
+
 import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, useLayout, type SizeClass } from '@/hooks/useLayout';
 import { hasItems } from '@/lib/utils';
 import { Fonts } from '@/theme/theme';
-import React from 'react';
-import { StyleSheet, View } from 'react-native';
 
 interface LineupBlockProps {
   players: { participantId: string; name: string; isSubIn: boolean; isInjuredOut: boolean }[];

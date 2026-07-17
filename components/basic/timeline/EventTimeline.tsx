@@ -1,13 +1,14 @@
-import TimelinePointCard from '@/components/basic/timeline/TimelinePointCard';
-import { useTheme } from '@/context/ThemeContext';
-import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import { getAllPlayersByPoint } from '@/lib/lineUtils';
-import { Player, PointLineRecord } from '@/lib/storage/types';
-import { DisplayTurnover, PointEvents } from '@/lib/basic/timelineUtils';
-import { useSettingsStore } from '@/store/settingsStore';
 import React from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
+
+import TimelinePointCard from '@/components/basic/timeline/TimelinePointCard';
 import { ThemedText } from '@/components/ThemedText';
+import { useTheme } from '@/context/ThemeContext';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { DisplayTurnover, PointEvents } from '@/lib/basic/timelineUtils';
+import { getAllPlayersByPoint } from '@/lib/lineUtils';
+import { Player, PointLineRecord } from '@/lib/storage/types';
+import { useSettingsStore } from '@/store/settingsStore';
 import { Fonts } from '@/theme/theme';
 
 interface EventTimelineProps {

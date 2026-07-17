@@ -4,6 +4,7 @@ import TutorialAnimatedArrow from '@/components/tutorial/TutorialAnimatedArrow';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, useLayout } from '@/hooks/useLayout';
 import { Fonts } from '@/theme/theme';
+
 import type { TutorialAdvancedResult, TutorialAdvancedStep } from './useTutorialAdvancedGameState';
 
 interface TutorialAdvancedActionCardProps {

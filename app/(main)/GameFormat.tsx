@@ -1,8 +1,14 @@
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { Redirect, router, Stack } from 'expo-router';
+import React from 'react';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { getCapThresholdMinutes } from '@/lib/advancedTracking/capUtils';
 import {
   createFormatSections,
   formatAdvancedHalftime,
@@ -13,17 +19,12 @@ import {
   formatTimeouts,
   formatValue,
 } from '@/lib/gameFormatUtils';
-import { getCapThresholdMinutes } from '@/lib/advancedTracking/capUtils';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
-import { useGameSessionStore } from '@/store/gameSessionStore';
 import { useGameStore } from '@/store/basic/gameStore';
+import { useGameSessionStore } from '@/store/gameSessionStore';
 import { useNumberPickerStore } from '@/store/numberPickerStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { Fonts } from '@/theme/theme';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { Redirect, router, Stack } from 'expo-router';
-import React from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 export default function GameFormatScreen() {
   const { palette } = useTheme();

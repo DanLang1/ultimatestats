@@ -1,14 +1,15 @@
-import { useToastPulse } from '@/components/toast/hooks/useToastPulse';
-import { EventIconInfo } from '@/components/toast/hooks/useEventToast';
+import { useState } from 'react';
+import { StyleSheet, View } from 'react-native';
+import Animated, { SlideInUp, SlideOutUp } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import { ThemedText } from '@/components/ThemedText';
 import EventToastIcon from '@/components/toast/EventToastIcon';
+import { EventIconInfo } from '@/components/toast/hooks/useEventToast';
+import { useToastPulse } from '@/components/toast/hooks/useToastPulse';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { Fonts, Palette } from '@/theme/theme';
-import { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
-import { ThemedText } from '@/components/ThemedText';
-import Animated, { SlideInUp, SlideOutUp } from 'react-native-reanimated';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export type EventToastData = {
   visible: boolean;

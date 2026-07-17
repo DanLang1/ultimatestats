@@ -4,7 +4,10 @@
   "tabWidth": 2,
   "singleQuote": true,
   "bracketSameLine": true,
-  "sortImports": false,
+  "sortImports": {
+    "partitionByComment": true,
+    "sortSideEffects": false
+  },
   "sortTailwindcss": false,
   "sortPackageJson": false
 }

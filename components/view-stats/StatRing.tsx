@@ -1,12 +1,13 @@
-import { useAlert } from '@/components/ui/AlertProvider';
-import { useTheme } from '@/context/ThemeContext';
-import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
-import { ThemedText } from '@/components/ThemedText';
-import { Fonts } from '@/theme/theme';
 import Svg, { Circle } from 'react-native-svg';
+
+import { ThemedText } from '@/components/ThemedText';
+import { useAlert } from '@/components/ui/AlertProvider';
+import { useTheme } from '@/context/ThemeContext';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { Fonts } from '@/theme/theme';
 
 interface StatRingProps {
   percentage: number;

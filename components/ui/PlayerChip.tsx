@@ -1,12 +1,13 @@
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import React from 'react';
+import { Pressable, StyleSheet } from 'react-native';
+
+import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { getContrastingTextColor } from '@/lib/colorUtils';
 import { MatchingType, PlayerRole } from '@/lib/storage/types';
 import { useSettingsStore } from '@/store/settingsStore';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import React from 'react';
-import { Pressable, StyleSheet } from 'react-native';
-import { ThemedText } from '@/components/ThemedText';
 import { Fonts } from '@/theme/theme';
 
 interface PlayerChipProps {

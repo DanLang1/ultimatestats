@@ -1,16 +1,17 @@
+import { router, useLocalSearchParams } from 'expo-router';
+import { Pressable, StyleSheet, View } from 'react-native';
+
 import { ThemedText } from '@/components/ThemedText';
 import TutorialAdvancedActionCard from '@/components/tutorial/TutorialAdvancedActionCard';
 import TutorialAdvancedCompleteInline from '@/components/tutorial/TutorialAdvancedCompleteInline';
+import { TUTORIAL_ADVANCED_PARTICIPANTS } from '@/components/tutorial/tutorialAdvancedData';
 import TutorialAdvancedPlayerGrid from '@/components/tutorial/TutorialAdvancedPlayerGrid';
 import TutorialAdvancedRareMenu from '@/components/tutorial/TutorialAdvancedRareMenu';
 import useTutorialAdvancedGameState from '@/components/tutorial/useTutorialAdvancedGameState';
-import { TUTORIAL_ADVANCED_PARTICIPANTS } from '@/components/tutorial/tutorialAdvancedData';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, useLayout } from '@/hooks/useLayout';
 import { useTutorialStore } from '@/store/tutorialStore';
 import { Fonts } from '@/theme/theme';
-import { router, useLocalSearchParams } from 'expo-router';
-import { Pressable, StyleSheet, View } from 'react-native';
 
 export default function TutorialAdvancedTrackerRoute() {
   const { palette } = useTheme();

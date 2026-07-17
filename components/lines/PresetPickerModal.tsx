@@ -1,13 +1,14 @@
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import React from 'react';
+import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
 import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { RecentLine } from '@/lib/lineUtils';
 import { LinePreset, Player } from '@/lib/storage/types';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import React from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
-import { ThemedText } from '@/components/ThemedText';
 import { Fonts } from '@/theme/theme';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface PresetPickerModalProps {
   visible: boolean;

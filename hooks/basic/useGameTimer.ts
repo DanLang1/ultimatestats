@@ -1,6 +1,7 @@
+import { useEffect, useState } from 'react';
+
 import { useGameStore } from '@/store/basic/gameStore';
 import { useSettingsStore } from '@/store/settingsStore';
-import { useEffect, useState } from 'react';
 
 export function useGameTimer() {
   const { hardCapMins, softCapMins } = useSettingsStore();

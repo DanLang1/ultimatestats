@@ -1,9 +1,10 @@
+import { StyleSheet, View } from 'react-native';
+
 import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { AdvancedPassConnection } from '@/lib/advancedTracking/advancedChemistryUtils';
 import { Fonts } from '@/theme/theme';
-import { StyleSheet, View } from 'react-native';
 
 const MIN_VISIBLE_BAR_PERCENT = 8;
 

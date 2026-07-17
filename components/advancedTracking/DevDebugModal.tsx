@@ -1,13 +1,13 @@
-import { ThemedText } from '@/components/ThemedText';
-import { useTheme } from '@/context/ThemeContext';
-import { scaleBySizeClass, useLayout } from '@/hooks/useLayout';
-import { Fonts } from '@/theme/theme';
-
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import * as Clipboard from 'expo-clipboard';
 import React, { useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import { ThemedText } from '@/components/ThemedText';
+import { useTheme } from '@/context/ThemeContext';
+import { scaleBySizeClass, useLayout } from '@/hooks/useLayout';
+import { Fonts } from '@/theme/theme';
 
 interface DevDebugModalProps {
   visible: boolean;

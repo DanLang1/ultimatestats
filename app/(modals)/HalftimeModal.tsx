@@ -1,19 +1,20 @@
-import { useTheme } from '@/context/ThemeContext';
-import { useHalftimeTimer } from '@/hooks/basic/useHalftimeTimer';
-import { MODAL_MAX_WIDTH_LARGE } from '@/lib/constants';
-import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import { computePlayerStats } from '@/lib/basic/statsUtils';
-import { computeTeamStats } from '@/lib/basic/teamStatsUtils';
-import { useGameStore } from '@/store/basic/gameStore';
-import { useLinePresetsStore } from '@/store/linePresetsStore';
-import { useSettingsStore } from '@/store/settingsStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router } from 'expo-router';
 import React from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
-import { ThemedText } from '@/components/ThemedText';
-import { Fonts } from '@/theme/theme';
 import Animated, { FadeIn } from 'react-native-reanimated';
+
+import { ThemedText } from '@/components/ThemedText';
+import { useTheme } from '@/context/ThemeContext';
+import { useHalftimeTimer } from '@/hooks/basic/useHalftimeTimer';
+import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { computePlayerStats } from '@/lib/basic/statsUtils';
+import { computeTeamStats } from '@/lib/basic/teamStatsUtils';
+import { MODAL_MAX_WIDTH_LARGE } from '@/lib/constants';
+import { useGameStore } from '@/store/basic/gameStore';
+import { useLinePresetsStore } from '@/store/linePresetsStore';
+import { useSettingsStore } from '@/store/settingsStore';
+import { Fonts } from '@/theme/theme';
 
 export default function HalftimeModal() {
   const { palette } = useTheme();

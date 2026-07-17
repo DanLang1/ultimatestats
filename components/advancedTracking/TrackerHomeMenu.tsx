@@ -1,13 +1,14 @@
-import { ThemedText } from '@/components/ThemedText';
-import { BottomSheetActionRow } from '@/components/ui/BottomSheetActionRow';
-import { BottomSheet } from '@/components/ui/BottomSheet';
-import { useTheme } from '@/context/ThemeContext';
-import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import { Fonts } from '@/theme/theme';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router } from 'expo-router';
 import React from 'react';
 import { Modal, Pressable, StyleSheet, View } from 'react-native';
+
+import { ThemedText } from '@/components/ThemedText';
+import { BottomSheet } from '@/components/ui/BottomSheet';
+import { BottomSheetActionRow } from '@/components/ui/BottomSheetActionRow';
+import { useTheme } from '@/context/ThemeContext';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { Fonts } from '@/theme/theme';
 
 interface TrackerHomeMenuProps {
   visible: boolean;

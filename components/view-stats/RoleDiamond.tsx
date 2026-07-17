@@ -1,11 +1,12 @@
+import React from 'react';
+import { StyleSheet, View } from 'react-native';
+import Svg, { Circle, Polygon, Line as SvgLine } from 'react-native-svg';
+
+import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { RoleStats } from '@/lib/basic/statsUtils';
-import React from 'react';
-import { StyleSheet, View } from 'react-native';
-import { ThemedText } from '@/components/ThemedText';
 import { Fonts } from '@/theme/theme';
-import Svg, { Circle, Polygon, Line as SvgLine } from 'react-native-svg';
 
 interface RoleDiamondProps {
   roleStats: RoleStats;

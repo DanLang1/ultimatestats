@@ -1,7 +1,8 @@
-import { LinePreset } from '@/lib/storage/types';
 import React, { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useSharedValue } from 'react-native-reanimated';
+
+import { LinePreset } from '@/lib/storage/types';
 
 import { DraggablePresetItem } from './DraggablePresetItem';
 

@@ -1,10 +1,11 @@
+import React from 'react';
+import { ScrollView, StyleSheet, View } from 'react-native';
+
+import { ThemedText } from '@/components/ThemedText';
 import { PlayerChip } from '@/components/ui/PlayerChip';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { Player } from '@/lib/storage/types';
-import React from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
-import { ThemedText } from '@/components/ThemedText';
 
 interface StatEntryRosterProps {
   roster: Player[];

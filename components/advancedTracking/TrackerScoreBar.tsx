@@ -1,11 +1,12 @@
+import React, { useRef, useState } from 'react';
+import { ScrollView, StyleSheet, View } from 'react-native';
+
 import { ScoreBarActionRow } from '@/components/advancedTracking/scoreBar/ScoreBarActionRow';
 import { ScoreBarMainRow } from '@/components/advancedTracking/scoreBar/ScoreBarMainRow';
 import { ScoreBarPagination } from '@/components/advancedTracking/scoreBar/ScoreBarPagination';
 import { useScoreBarData } from '@/components/advancedTracking/scoreBar/useScoreBarData';
 import { useTheme } from '@/context/ThemeContext';
 import { useLayout } from '@/hooks/useLayout';
-import React, { useRef, useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
 
 interface TrackerScoreBarProps {
   pointTimerAdjustedTimestamp: number | null;

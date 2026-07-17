@@ -1,10 +1,11 @@
+import React from 'react';
+import { Pressable, StyleSheet, View } from 'react-native';
+
 import ScoreDisplay from '@/components/ScoreDisplay';
 import TeamText from '@/components/TeamText';
 import { ThemedView } from '@/components/ThemedView';
 import { useHaptics } from '@/hooks/useHaptics';
 import { getSizeClassValue, SizeClass, useLayout } from '@/hooks/useLayout';
-import React from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
 
 interface TeamScoreSectionProps {
   teamName: string;

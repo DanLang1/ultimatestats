@@ -1,10 +1,11 @@
+import React from 'react';
+import { StyleSheet, View } from 'react-native';
+
 import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, useLayout, type SizeClass } from '@/hooks/useLayout';
 import type { AdvancedTimelinePossession } from '@/lib/advancedTracking/advancedTimelineUtils';
 import { Fonts } from '@/theme/theme';
-import React from 'react';
-import { StyleSheet, View } from 'react-native';
 
 interface PossessionResultBadgeProps {
   possession: AdvancedTimelinePossession;

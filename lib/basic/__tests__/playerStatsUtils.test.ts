@@ -1,4 +1,5 @@
 import { GameEvent } from '@/lib/storage';
+
 import { getChemistryStats, getImpactStats } from '../statsUtils';
 
 describe('Player Stats Visualization Logic', () => {

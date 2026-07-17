@@ -1,4 +1,5 @@
 import { GameEvent } from '@/store/basic/gameStore.types';
+
 import { aggregateTimingStats, computeTimingStats, TimingStats } from '../teamStatsUtils';
 
 // Helper to create goal events with duration

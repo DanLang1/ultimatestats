@@ -1,3 +1,8 @@
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { router, Stack, useLocalSearchParams } from 'expo-router';
+import React from 'react';
+import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
+
 import AdvancedEventTimeline from '@/components/advancedTracking/timeline/AdvancedEventTimeline';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
@@ -7,10 +12,6 @@ import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { buildAdvancedTimeline } from '@/lib/advancedTracking/advancedTimelineUtils';
 import { hasItems } from '@/lib/utils';
 import { Fonts } from '@/theme/theme';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { router, Stack, useLocalSearchParams } from 'expo-router';
-import React from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 
 export default function AdvancedGameTimelineScreen() {
   const { gameId } = useLocalSearchParams<{ gameId?: string }>();

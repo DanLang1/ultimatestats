@@ -1,15 +1,16 @@
+import { MaterialIcons } from '@expo/vector-icons';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { router, Stack, useFocusEffect } from 'expo-router';
+import React from 'react';
+import { Linking, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+
+import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { useVersionCheck } from '@/hooks/useVersionCheck';
 import { CHANGELOG } from '@/lib/changelog';
-import { MaterialIcons } from '@expo/vector-icons';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { router, Stack, useFocusEffect } from 'expo-router';
-import React from 'react';
-import { Linking, Pressable, ScrollView, StyleSheet, View } from 'react-native';
-import { ThemedText } from '@/components/ThemedText';
 import { Fonts } from '@/theme/theme';
 
 export default function AboutScreen() {

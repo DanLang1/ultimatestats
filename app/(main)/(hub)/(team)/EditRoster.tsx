@@ -1,3 +1,8 @@
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { router, Stack } from 'expo-router';
+import React, { useState } from 'react';
+import { Modal, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+
 import { QuickEditPlayerList } from '@/components/roster/QuickEditPlayerList';
 import RosterBulkActions from '@/components/roster/RosterBulkActions';
 import { RosterControlsHeader } from '@/components/roster/RosterControlsHeader';
@@ -17,21 +22,17 @@ import {
   normalizePlayerNumber,
 } from '@/lib/advancedTracking/voiceNumberUtils';
 import { MAX_TEAM_NAME_LENGTH } from '@/lib/constants';
+import { sortByPlayerNumber } from '@/lib/lineUtils';
 import { hasPlayerWithName } from '@/lib/playerUtils';
 import { serializeTeam, uploadPayload } from '@/lib/sharing';
 import { SHARE_TEAM_UPLOAD_ERROR_MESSAGE } from '@/lib/sharing/shareActionUtils';
 import { SavedTeam } from '@/lib/storage';
 import { MatchingType, Player, PlayerRole } from '@/lib/storage/types';
-import { sortByPlayerNumber } from '@/lib/lineUtils';
 import { generateId } from '@/lib/utils';
 import { useGameStore } from '@/store/basic/gameStore';
 import { useLinePresetsStore } from '@/store/linePresetsStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { Fonts } from '@/theme/theme';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { router, Stack } from 'expo-router';
-import React, { useState } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 
 type RoleFilter = PlayerRole | 'unset' | null;
 

@@ -1,6 +1,7 @@
-import { darkPalette, lightPalette, Palette } from '@/theme/theme';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createContext, ReactNode, useContext, useState } from 'react';
+
+import { darkPalette, lightPalette, Palette } from '@/theme/theme';
 
 type ThemeMode = 'light' | 'dark';
 

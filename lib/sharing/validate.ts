@@ -5,6 +5,7 @@ import type {
   PossessionAction,
 } from '@/lib/advancedTracking/types';
 import type { LinePreset, SavedGame, SavedTeam } from '@/lib/storage/types';
+
 import type { SharedPayload } from './types';
 
 const MAX_PAYLOAD_EVENTS = 500;

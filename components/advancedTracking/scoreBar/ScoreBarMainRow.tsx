@@ -1,13 +1,14 @@
-import { ThemedText } from '@/components/ThemedText';
-import { PointTimerText } from '@/components/advancedTracking/scoreBar/PointTimerText';
-import { TeamScoreBlock } from '@/components/advancedTracking/scoreBar/TeamScoreBlock';
-import { useScoreBarData } from '@/components/advancedTracking/scoreBar/useScoreBarData';
-import { useTheme } from '@/context/ThemeContext';
-import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import { Fonts } from '@/theme/theme';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
+
+import { PointTimerText } from '@/components/advancedTracking/scoreBar/PointTimerText';
+import { TeamScoreBlock } from '@/components/advancedTracking/scoreBar/TeamScoreBlock';
+import { useScoreBarData } from '@/components/advancedTracking/scoreBar/useScoreBarData';
+import { ThemedText } from '@/components/ThemedText';
+import { useTheme } from '@/context/ThemeContext';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { Fonts } from '@/theme/theme';
 
 interface ScoreBarMainRowProps {
   width: number;

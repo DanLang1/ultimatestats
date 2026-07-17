@@ -1,3 +1,8 @@
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { router } from 'expo-router';
+import React from 'react';
+import { Pressable, StyleSheet, View } from 'react-native';
+
 import { ThemedView } from '@/components/ThemedView';
 import EventToast from '@/components/toast/EventToast';
 import TutorialAnimatedArrow from '@/components/tutorial/TutorialAnimatedArrow';
@@ -9,10 +14,6 @@ import { getSizeClassValue, scaleBySizeClass, useLayout } from '@/hooks/useLayou
 import { getContrastingTextColor } from '@/lib/colorUtils';
 import { useTutorialStore } from '@/store/tutorialStore';
 import { TutorialColors } from '@/theme/theme';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { router } from 'expo-router';
-import React from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
 
 const TEAM1_NAME = 'USA';
 const TEAM2_NAME = 'Canada';

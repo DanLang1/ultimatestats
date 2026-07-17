@@ -1,3 +1,14 @@
+import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import DateTimePicker, {
+  DateTimePickerAndroid,
+  DateTimePickerEvent,
+} from '@react-native-community/datetimepicker';
+import { File, Paths } from 'expo-file-system';
+import { router, Stack, useLocalSearchParams } from 'expo-router';
+import React, { useState } from 'react';
+import { Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { useAlert } from '@/components/ui/AlertProvider';
@@ -10,6 +21,7 @@ import { ShareConfirmModal } from '@/components/ui/ShareConfirmModal';
 import StatsContent from '@/components/view-stats/StatsContent';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { formatDate, generateSavedGameCSV } from '@/lib/basic/statsUtils';
 import { MIN_PLAYED_AT_YEAR } from '@/lib/constants';
 import { resolveTeamName } from '@/lib/playerUtils';
 import { getGameDisplayTimestamp } from '@/lib/savedGameUtils';
@@ -19,20 +31,9 @@ import {
   runPendingShareAction,
   SHARE_DATA_UPLOAD_ERROR_MESSAGE,
 } from '@/lib/sharing/shareActionUtils';
-import { formatDate, generateSavedGameCSV } from '@/lib/basic/statsUtils';
 import { useGameStore } from '@/store/basic/gameStore';
 import { useTournamentStore } from '@/store/tournamentStore';
 import { Fonts } from '@/theme/theme';
-import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import DateTimePicker, {
-  DateTimePickerAndroid,
-  DateTimePickerEvent,
-} from '@react-native-community/datetimepicker';
-import { File, Paths } from 'expo-file-system';
-import { router, Stack, useLocalSearchParams } from 'expo-router';
-import React, { useState } from 'react';
-import { Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 const MIN_PLAYED_AT_DATE = new Date(MIN_PLAYED_AT_YEAR, 0, 1);
 

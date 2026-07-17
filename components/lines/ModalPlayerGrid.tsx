@@ -1,13 +1,14 @@
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import React from 'react';
+import { ScrollView, StyleSheet, View } from 'react-native';
+
+import { ThemedText } from '@/components/ThemedText';
 import { PlayerChip } from '@/components/ui/PlayerChip';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { computePlayingTime, formatPlayingTime, sortByPlayerNumber } from '@/lib/lineUtils';
 import { Player, PointLineRecord } from '@/lib/storage/types';
 import type { LinePlayerSortOrder } from '@/store/settingsStore';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import React from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
-import { ThemedText } from '@/components/ThemedText';
 import { Fonts } from '@/theme/theme';
 
 function sortPlayers(

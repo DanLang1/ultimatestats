@@ -1,15 +1,16 @@
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import React, { useEffect, useState } from 'react';
+import { Pressable, StyleSheet, TextInput, View } from 'react-native';
+import Animated from 'react-native-reanimated';
+
+import { ThemedText } from '@/components/ThemedText';
 import {
   ATTENTION_RUN_DURATION_MS,
   useAttentionBorderRunner,
 } from '@/components/ui/hooks/useAttentionBorderRunner';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import React, { useEffect, useState } from 'react';
-import { Pressable, StyleSheet, TextInput, View } from 'react-native';
-import { ThemedText } from '@/components/ThemedText';
 import { Fonts } from '@/theme/theme';
-import Animated from 'react-native-reanimated';
 
 interface SegmentOption<T extends string = string> {
   value: T;

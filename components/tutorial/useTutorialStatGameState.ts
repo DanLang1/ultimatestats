@@ -1,5 +1,7 @@
-import { checkLineRatio, RatioCheckResult } from '@/lib/genderRatioUtils';
 import { useState } from 'react';
+
+import { checkLineRatio, RatioCheckResult } from '@/lib/genderRatioUtils';
+
 import {
   TUTORIAL_STAT_EXPECTED_RATIO,
   TUTORIAL_STAT_INITIAL_SCORE_TEAM1,

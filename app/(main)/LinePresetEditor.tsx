@@ -1,3 +1,6 @@
+import { router, useLocalSearchParams } from 'expo-router';
+import React, { useState } from 'react';
+
 import { PresetEditView } from '@/components/lines/PresetEditView';
 import { PresetListView } from '@/components/lines/PresetListView';
 import { useAlert } from '@/components/ui/AlertProvider';
@@ -7,8 +10,6 @@ import { LinePreset } from '@/lib/storage/types';
 import { useGameStore } from '@/store/basic/gameStore';
 import { useLinePresetsStore } from '@/store/linePresetsStore';
 import { useSettingsStore } from '@/store/settingsStore';
-import { router, useLocalSearchParams } from 'expo-router';
-import React, { useState } from 'react';
 
 export default function LinePresetEditor() {
   const { presetId } = useLocalSearchParams<{ presetId?: string }>();

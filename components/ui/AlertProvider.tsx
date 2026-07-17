@@ -1,9 +1,10 @@
-import { useTheme } from '@/context/ThemeContext';
-import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React, { createContext, useContext, useState } from 'react';
 import { Modal, Pressable, StyleSheet, TextInput, View } from 'react-native';
+
 import { ThemedText } from '@/components/ThemedText';
+import { useTheme } from '@/context/ThemeContext';
+import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { Fonts } from '@/theme/theme';
 
 interface AlertButton {

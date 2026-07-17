@@ -1,3 +1,7 @@
+import type { GameEvent } from '@/store/basic/gameStore.types';
+
+import { getScoreThroughPoint } from '../advancedTracking/trackingUtils';
+import type { AdvancedTrackedGame } from '../advancedTracking/types';
 import {
   createFormatSections,
   formatAdvancedHalftime,
@@ -9,9 +13,6 @@ import {
   formatValue,
   FormatRow,
 } from '../gameFormatUtils';
-import { getScoreThroughPoint } from '../advancedTracking/trackingUtils';
-import type { AdvancedTrackedGame } from '../advancedTracking/types';
-import type { GameEvent } from '@/store/basic/gameStore.types';
 
 jest.mock('../advancedTracking/trackingUtils', () => ({
   getScoreThroughPoint: jest.fn(),

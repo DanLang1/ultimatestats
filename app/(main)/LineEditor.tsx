@@ -1,8 +1,15 @@
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { router, useLocalSearchParams } from 'expo-router';
+import React, { useState } from 'react';
+import { Pressable, StyleSheet, View } from 'react-native';
+
 import { ModalPlayerGrid } from '@/components/lines/ModalPlayerGrid';
 import { PresetPickerModal } from '@/components/lines/PresetPickerModal';
+import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
 import { useIsGameActive } from '@/hooks/basic/useIsGameActive';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { computePointByPointEvents } from '@/lib/basic/timelineUtils';
 import {
   checkLineRatio,
   formatRatio,
@@ -10,16 +17,10 @@ import {
   getSequenceNumber,
 } from '@/lib/genderRatioUtils';
 import { getLoadLineButtonState } from '@/lib/lineEditorUtils';
-import { computePointByPointEvents } from '@/lib/basic/timelineUtils';
 import { getRecentLines, RecentLine } from '@/lib/lineUtils';
 import { useGameStore } from '@/store/basic/gameStore';
 import { useLinePresetsStore } from '@/store/linePresetsStore';
 import { useSettingsStore } from '@/store/settingsStore';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { router, useLocalSearchParams } from 'expo-router';
-import React, { useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
-import { ThemedText } from '@/components/ThemedText';
 import { Fonts } from '@/theme/theme';
 
 type PointOutcome = {

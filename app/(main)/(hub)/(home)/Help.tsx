@@ -1,11 +1,12 @@
+import { router, Stack } from 'expo-router';
+import React from 'react';
+import { ScrollView, StyleSheet } from 'react-native';
+
 import HelpContent from '@/components/HelpContent';
 import { ThemedView } from '@/components/ThemedView';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, useLayout } from '@/hooks/useLayout';
-import { router, Stack } from 'expo-router';
-import React from 'react';
-import { ScrollView, StyleSheet } from 'react-native';
 
 export default function HelpScreen() {
   const { palette } = useTheme();

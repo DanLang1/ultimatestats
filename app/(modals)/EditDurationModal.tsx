@@ -1,18 +1,19 @@
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { router, useLocalSearchParams } from 'expo-router';
+import { useState } from 'react';
+import { Pressable, StyleSheet, View } from 'react-native';
+
 import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
 import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import { MAX_POINT_DURATION_MINUTES, MODAL_MAX_WIDTH_PICKER } from '@/lib/constants';
 import {
   computePointByPointEvents,
   getEventTimeValidationError,
   getPointDurationValidationError,
 } from '@/lib/basic/timelineUtils';
+import { MAX_POINT_DURATION_MINUTES, MODAL_MAX_WIDTH_PICKER } from '@/lib/constants';
 import { useGameStore } from '@/store/basic/gameStore';
 import { Fonts } from '@/theme/theme';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { router, useLocalSearchParams } from 'expo-router';
-import { useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
 
 type ActiveField = 'minutes' | 'seconds';
 

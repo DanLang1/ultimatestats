@@ -1,10 +1,11 @@
-import { useTheme } from '@/context/ThemeContext';
-import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
-import { ThemedText } from '@/components/ThemedText';
-import { Fonts } from '@/theme/theme';
 import Svg, { Circle } from 'react-native-svg';
+
+import { ThemedText } from '@/components/ThemedText';
+import { useTheme } from '@/context/ThemeContext';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { Fonts } from '@/theme/theme';
 
 interface PlayingTimeGaugeProps {
   percentage: number;

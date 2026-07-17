@@ -1,5 +1,7 @@
 import { GameEvent, TurnoverType } from '@/store/basic/gameStore.types';
+
 import { UNKNOWN_PLAYER_ID } from '../../playerUtils';
+import { CURRENT_SCHEMA_VERSION, Player, PointLineRecord, SavedGame } from '../../storage/types';
 import { aggregatePlayingTimeStats } from '../playingTimeStatsUtils';
 import {
   PlayerStats as ComputedPlayerStats,
@@ -12,7 +14,6 @@ import {
   generateAggregateCSV,
   generateCurrentGameCSV,
 } from '../statsUtils';
-import { CURRENT_SCHEMA_VERSION, Player, PointLineRecord, SavedGame } from '../../storage/types';
 
 describe('statsUtils', () => {
   const goal = (

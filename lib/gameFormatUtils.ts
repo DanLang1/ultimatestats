@@ -1,13 +1,14 @@
-import type { AdvancedTrackedGame } from './advancedTracking/types';
+import type { GameEvent } from '@/store/basic/gameStore.types';
+
 import { getScoreThroughPoint } from './advancedTracking/trackingUtils';
+import type { AdvancedTrackedGame } from './advancedTracking/types';
+import { getActualHalftimeScore } from './basic/halftimeUtils';
 import {
   formatRatio,
   getExpectedRatio,
   getSequenceNumber,
   type GenderRatio,
 } from './genderRatioUtils';
-import { getActualHalftimeScore } from './basic/halftimeUtils';
-import type { GameEvent } from '@/store/basic/gameStore.types';
 
 export type FormatRow = {
   label: string;

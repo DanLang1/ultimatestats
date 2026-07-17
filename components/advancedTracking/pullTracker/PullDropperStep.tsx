@@ -1,3 +1,6 @@
+import React from 'react';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
@@ -5,8 +8,6 @@ import { useTheme } from '@/context/ThemeContext';
 import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { Participant } from '@/lib/advancedTracking/types';
 import { Fonts } from '@/theme/theme';
-import React from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 const DROP_LABEL_FONT_SIZE: Record<SizeClass, number> = { small: 11, medium: 14, large: 18 };
 const DROP_CHIP_FONT_SIZE: Record<SizeClass, number> = { small: 14, medium: 16, large: 18 };

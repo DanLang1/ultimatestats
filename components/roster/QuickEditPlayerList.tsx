@@ -1,10 +1,11 @@
+import React from 'react';
+import { StyleSheet, View } from 'react-native';
+
 import { QuickEditPlayerRow } from '@/components/roster/QuickEditPlayerRow';
+import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { MatchingType, Player, PlayerRole } from '@/lib/storage/types';
-import React from 'react';
-import { StyleSheet, View } from 'react-native';
-import { ThemedText } from '@/components/ThemedText';
 import { Fonts } from '@/theme/theme';
 
 interface QuickEditPlayerListProps {

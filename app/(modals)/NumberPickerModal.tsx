@@ -1,12 +1,13 @@
-import { useTheme } from '@/context/ThemeContext';
-import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import { MODAL_MAX_WIDTH_PICKER } from '@/lib/constants';
-import { useNumberPickerStore } from '@/store/numberPickerStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
+
 import { ThemedText } from '@/components/ThemedText';
+import { useTheme } from '@/context/ThemeContext';
+import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { MODAL_MAX_WIDTH_PICKER } from '@/lib/constants';
+import { useNumberPickerStore } from '@/store/numberPickerStore';
 import { Fonts } from '@/theme/theme';
 
 export default function NumberPickerModal() {

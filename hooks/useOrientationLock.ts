@@ -1,7 +1,8 @@
-import { OrientationMode } from '@/store/settingsStore';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import { useEffect } from 'react';
 import { Platform } from 'react-native';
+
+import { OrientationMode } from '@/store/settingsStore';
 
 export function useOrientationLock(mode: OrientationMode) {
   useEffect(() => {

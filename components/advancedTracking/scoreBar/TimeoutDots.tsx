@@ -1,7 +1,8 @@
-import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import { SideTimeoutState } from '@/lib/advancedTracking/trackingDisplayHelpers';
 import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
+
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { SideTimeoutState } from '@/lib/advancedTracking/trackingDisplayHelpers';
 
 interface TimeoutDotsProps {
   state: SideTimeoutState;

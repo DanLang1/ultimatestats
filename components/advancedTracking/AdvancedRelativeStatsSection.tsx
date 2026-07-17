@@ -1,3 +1,7 @@
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import React, { useState } from 'react';
+import { Pressable, StyleSheet, View } from 'react-native';
+
 import { ThemedText } from '@/components/ThemedText';
 import { useAlert } from '@/components/ui/AlertProvider';
 import { useTheme } from '@/context/ThemeContext';
@@ -5,9 +9,6 @@ import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { AdvancedPlayerStats } from '@/lib/advancedTracking/advancedPlayerStatsUtils';
 import { getRoundedDecimalDelta, getRoundedPercentagePointDelta } from '@/lib/relativeMetricUtils';
 import { Fonts } from '@/theme/theme';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import React, { useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
 
 type RelativeMode = 'avg' | 'max';
 

@@ -1,5 +1,5 @@
-import { checkGameOver } from './gameUtils';
 import { hasItems } from '../utils';
+import { checkGameOver } from './gameUtils';
 
 export type GameSessionStatus = 'fresh' | 'inProgress' | 'finished';
 

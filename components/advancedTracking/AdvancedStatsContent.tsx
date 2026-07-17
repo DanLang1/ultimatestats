@@ -1,5 +1,9 @@
-import { ThemedText } from '@/components/ThemedText';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { router } from 'expo-router';
+import { StyleSheet, View } from 'react-native';
+
 import OpeningPullSplit from '@/components/advancedTracking/OpeningPullSplit';
+import { ThemedText } from '@/components/ThemedText';
 import { ScoreBadge } from '@/components/ui/ScoreBadge';
 import StatRing from '@/components/view-stats/StatRing';
 import StatsGrid from '@/components/view-stats/StatsGrid';
@@ -16,9 +20,7 @@ import { computeAdvancedTeamStats } from '@/lib/advancedTracking/advancedTeamSta
 import { computeAdvancedTimeOfPossessionStats } from '@/lib/advancedTracking/advancedTimeOfPossessionUtils';
 import { AnalyticsGame } from '@/lib/advancedTracking/analyticsTypes';
 import { Fonts } from '@/theme/theme';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { router } from 'expo-router';
-import { StyleSheet, View } from 'react-native';
+
 import AdvancedStatsTable from './AdvancedStatsTable';
 
 const formatDecimal = (value: number) => {

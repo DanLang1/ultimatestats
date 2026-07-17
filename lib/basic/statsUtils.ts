@@ -1,8 +1,10 @@
 import { GameEvent, Player, PointLineRecord, SavedGame } from '@/lib/storage';
+
 import { csvRow } from '../csvUtils';
 import { formatTimestampForCSV, formatTimestampForDisplay } from '../dateUtils';
 import { getPlayerName, UNKNOWN_PLAYER_ID } from '../playerUtils';
 import { getGameDisplayTimestamp } from '../savedGameUtils';
+import { hasItems } from '../utils';
 import {
   aggregatePlayingTimeStats,
   computePlayingTimeStats,
@@ -22,7 +24,6 @@ import {
   TimingStats,
 } from './teamStatsUtils';
 import { computePointByPointEvents } from './timelineUtils';
-import { hasItems } from '../utils';
 
 export interface PlayerStats {
   id: string; // Player ID (for lookups) - may be UNKNOWN_PLAYER_ID or OTHER_TEAM

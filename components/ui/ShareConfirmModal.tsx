@@ -1,10 +1,12 @@
-import { useTheme } from '@/context/ThemeContext';
-import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import * as Clipboard from 'expo-clipboard';
 import React, { useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
+
 import { ThemedText } from '@/components/ThemedText';
+import { useTheme } from '@/context/ThemeContext';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { Fonts } from '@/theme/theme';
+
 import { AlertModal } from './AlertModal';
 
 interface ShareConfirmModalProps {

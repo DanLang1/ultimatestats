@@ -1,7 +1,8 @@
-import { GenderRatio } from '@/lib/genderRatioUtils';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
+
+import { GenderRatio } from '@/lib/genderRatioUtils';
 
 // Default colors from theme
 const DEFAULT_MMP_COLOR = '#60A5FA'; // Blue 400

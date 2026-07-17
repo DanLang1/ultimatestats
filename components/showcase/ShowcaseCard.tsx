@@ -1,3 +1,9 @@
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { useMutation } from '@tanstack/react-query';
+import { router } from 'expo-router';
+import React from 'react';
+import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
+
 import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
 import { useAdvancedGameSummaries } from '@/hooks/advancedTracking/useAdvancedGameQueries';
@@ -11,11 +17,6 @@ import { hasItems } from '@/lib/utils';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { useGameStore } from '@/store/basic/gameStore';
 import { Fonts } from '@/theme/theme';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { useMutation } from '@tanstack/react-query';
-import { router } from 'expo-router';
-import React from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 
 interface ShowcaseCardProps {
   game: ShowcaseGameMeta;

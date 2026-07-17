@@ -1,15 +1,16 @@
-import { ThemedText } from '@/components/ThemedText';
-import { useTheme } from '@/context/ThemeContext';
-import { getSizeClassValue, SizeClass, useLayout } from '@/hooks/useLayout';
-import { usePulseAnimation } from '@/hooks/usePulseAnimation';
-import { useReclampOnResize } from '@/hooks/useReclampOnResize';
-import { Fonts } from '@/theme/theme';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React, { useState } from 'react';
 import { Pressable, StyleSheet } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import { ThemedText } from '@/components/ThemedText';
+import { useTheme } from '@/context/ThemeContext';
+import { getSizeClassValue, SizeClass, useLayout } from '@/hooks/useLayout';
+import { usePulseAnimation } from '@/hooks/usePulseAnimation';
+import { useReclampOnResize } from '@/hooks/useReclampOnResize';
+import { Fonts } from '@/theme/theme';
 
 interface TutorialActionBarProps {
   showStartPoint: boolean;

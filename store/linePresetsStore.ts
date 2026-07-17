@@ -1,9 +1,10 @@
-import { LinePreset } from '@/lib/storage/types';
-import { generateId } from '@/lib/utils';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
+
+import { LinePreset } from '@/lib/storage/types';
+import { generateId } from '@/lib/utils';
 
 interface LinePresetsState {
   presets: LinePreset[];

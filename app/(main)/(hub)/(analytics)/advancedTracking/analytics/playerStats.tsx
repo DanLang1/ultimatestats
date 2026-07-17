@@ -1,7 +1,8 @@
+import { useLocalSearchParams } from 'expo-router';
+
 import AggregateAdvancedPlayerStats from '@/components/advancedTracking/playerStats/AggregateAdvancedPlayerStats';
 import MissingPlayerStatsGame from '@/components/advancedTracking/playerStats/MissingPlayerStatsGame';
 import SingleAdvancedPlayerStats from '@/components/advancedTracking/playerStats/SingleAdvancedPlayerStats';
-import { useLocalSearchParams } from 'expo-router';
 
 export default function AdvancedPlayerStatsScreen() {
   const {

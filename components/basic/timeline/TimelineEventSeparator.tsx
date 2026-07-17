@@ -1,10 +1,11 @@
-import { useTheme } from '@/context/ThemeContext';
-import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import { formatSplitDuration } from '@/lib/basic/timelineUtils';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
+
 import { ThemedText } from '@/components/ThemedText';
+import { useTheme } from '@/context/ThemeContext';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { formatSplitDuration } from '@/lib/basic/timelineUtils';
 import { Fonts } from '@/theme/theme';
 
 interface TimelineEventSeparatorProps {

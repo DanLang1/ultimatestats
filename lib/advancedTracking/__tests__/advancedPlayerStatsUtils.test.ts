@@ -2,8 +2,8 @@ import {
   computeAdvancedPlayerStats,
   computeAdvancedPlayerStatsForParticipant,
 } from '../advancedPlayerStatsUtils';
-import { buildAnalyticsGame } from '../buildAnalyticsGame';
 import type { AnalyticsGame, AnalyticsPoint, AttributionType, PointState } from '../analyticsTypes';
+import { buildAnalyticsGame } from '../buildAnalyticsGame';
 import type { AdvancedTrackedGame, PlayerRef } from '../types';
 
 // ── Shared fixtures ──────────────────────────────────────────────────────────

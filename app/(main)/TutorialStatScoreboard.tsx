@@ -1,11 +1,12 @@
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { router } from 'expo-router';
+import React from 'react';
+import { Pressable, StyleSheet, View } from 'react-native';
+
 import { ThemedView } from '@/components/ThemedView';
 import TutorialActionBar from '@/components/tutorial/TutorialActionBar';
 import TutorialLineEditor from '@/components/tutorial/TutorialLineEditor';
 import TutorialSettingsBar from '@/components/tutorial/TutorialSettingsBar';
-import TutorialStatEntry from '@/components/tutorial/TutorialStatEntry';
-import TutorialStatTeamScoreSection from '@/components/tutorial/TutorialStatTeamScoreSection';
-import TutorialTooltip from '@/components/tutorial/TutorialTooltip';
-import TutorialTurnoverEntry from '@/components/tutorial/TutorialTurnoverEntry';
 import {
   TUTORIAL_STAT_CURRENT_POINT,
   TUTORIAL_STAT_EXPECTED_RATIO,
@@ -18,16 +19,16 @@ import {
   TUTORIAL_STAT_TEAM2_BG,
   TUTORIAL_STAT_TEAM2_NAME,
 } from '@/components/tutorial/tutorialStatData';
+import TutorialStatEntry from '@/components/tutorial/TutorialStatEntry';
+import TutorialStatTeamScoreSection from '@/components/tutorial/TutorialStatTeamScoreSection';
+import TutorialTooltip from '@/components/tutorial/TutorialTooltip';
+import TutorialTurnoverEntry from '@/components/tutorial/TutorialTurnoverEntry';
 import useTutorialStatGameState from '@/components/tutorial/useTutorialStatGameState';
 import { useCountdown } from '@/hooks/useCountdown';
 import { getSizeClassValue, scaleBySizeClass, useLayout } from '@/hooks/useLayout';
 import { getContrastingTextColor } from '@/lib/colorUtils';
 import { formatRatio, getSequenceNumber } from '@/lib/genderRatioUtils';
 import { useTutorialStore } from '@/store/tutorialStore';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { router } from 'expo-router';
-import React from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
 
 export default function TutorialStatScoreboardRoute() {
   const layout = useLayout();

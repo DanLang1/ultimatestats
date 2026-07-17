@@ -1,5 +1,6 @@
-import { SIZE_CLASS_LARGE_THRESHOLD, SIZE_CLASS_MEDIUM_THRESHOLD } from '@/lib/constants';
 import { useWindowDimensions } from 'react-native';
+
+import { SIZE_CLASS_LARGE_THRESHOLD, SIZE_CLASS_MEDIUM_THRESHOLD } from '@/lib/constants';
 
 export type SizeClass = 'small' | 'medium' | 'large';
 

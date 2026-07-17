@@ -1,4 +1,5 @@
 import { GameEvent, GoalEvent } from '@/store/basic/gameStore.types';
+
 import { deriveTimeoutState } from '../timeoutUtils';
 
 // Helper to create goal events

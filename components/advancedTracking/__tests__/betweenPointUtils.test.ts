@@ -1,5 +1,6 @@
-import { getPointDetails } from '../betweenPointUtils';
 import type { PossessionAction } from '@/lib/advancedTracking/types';
+
+import { getPointDetails } from '../betweenPointUtils';
 
 const ZOO = 'zoo';
 const RIVALS = 'rivals';

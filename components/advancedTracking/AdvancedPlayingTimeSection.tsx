@@ -1,3 +1,6 @@
+import React from 'react';
+import { StyleSheet, View } from 'react-native';
+
 import { ThemedText } from '@/components/ThemedText';
 import StatRing from '@/components/view-stats/StatRing';
 import StatsGrid from '@/components/view-stats/StatsGrid';
@@ -5,8 +8,6 @@ import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { AdvancedPlayerStats } from '@/lib/advancedTracking/advancedPlayerStatsUtils';
 import { Fonts } from '@/theme/theme';
-import React from 'react';
-import { StyleSheet, View } from 'react-native';
 
 interface AdvancedPlayingTimeSectionProps {
   stats: AdvancedPlayerStats;

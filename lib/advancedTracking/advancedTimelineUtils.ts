@@ -1,4 +1,5 @@
 import type { GenderRatio } from '@/lib/genderRatioUtils';
+
 import type {
   AnalyticsAction,
   AnalyticsGame,

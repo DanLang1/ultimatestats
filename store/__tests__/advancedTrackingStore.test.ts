@@ -1,19 +1,20 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { buildAnalyticsGame } from '@/lib/advancedTracking/buildAnalyticsGame';
+import { getEffectiveLineParticipantIds } from '@/lib/advancedTracking/trackingDisplayHelpers';
 import {
   getCurrentPoint,
   getEffectiveGameTo,
   getGameScore,
   hasPointEnded,
 } from '@/lib/advancedTracking/trackingUtils';
-import { getEffectiveLineParticipantIds } from '@/lib/advancedTracking/trackingDisplayHelpers';
 import { AdvancedTrackedGame } from '@/lib/advancedTracking/types';
 import { DEFAULT_HALFTIME_BREAK_SECONDS } from '@/lib/constants';
 import { useSettingsStore } from '@/store/settingsStore';
+
+import { useSavedAdvancedGamesStore } from '../advancedTracking/savedGamesStore';
 import { useAdvancedTrackingStore } from '../advancedTracking/trackingStore';
 import type { CreateAdvancedGameInput } from '../advancedTracking/trackingStore.types';
-import { useSavedAdvancedGamesStore } from '../advancedTracking/savedGamesStore';
 
 jest.mock('@react-native-async-storage/async-storage', () => ({
   getItem: jest.fn(),

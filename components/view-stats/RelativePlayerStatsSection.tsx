@@ -1,3 +1,8 @@
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import React, { useState } from 'react';
+import { Pressable, StyleSheet, View } from 'react-native';
+
+import { ThemedText } from '@/components/ThemedText';
 import { useAlert } from '@/components/ui/AlertProvider';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
@@ -21,10 +26,6 @@ import {
   RelativePlayingTimeMetricKey,
 } from '@/lib/basic/statsUtils';
 import { GameEvent, Player, PointLineRecord, SavedGame } from '@/lib/storage';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import React, { useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
-import { ThemedText } from '@/components/ThemedText';
 import { Fonts } from '@/theme/theme';
 
 type RelativeEventRow = RelativePlayerMetric & { category: 'event' };

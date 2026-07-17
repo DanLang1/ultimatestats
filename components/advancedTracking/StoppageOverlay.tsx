@@ -1,3 +1,8 @@
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { router } from 'expo-router';
+import React, { useState } from 'react';
+import { Pressable, StyleSheet, View } from 'react-native';
+
 import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
 import { useTimestampTimer } from '@/hooks/advancedTracking/useTimer';
@@ -13,10 +18,6 @@ import type { AdvancedTrackedGame } from '@/lib/advancedTracking/types';
 import { formatTimerSeconds } from '@/lib/utils';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { Fonts } from '@/theme/theme';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { router } from 'expo-router';
-import React, { useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
 
 const TIMEOUT_DURATION_S = 70;
 const TIMEOUT_MIN_S = 0;

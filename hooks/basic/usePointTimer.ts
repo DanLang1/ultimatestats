@@ -1,5 +1,6 @@
-import { useGameStore } from '@/store/basic/gameStore';
 import { useEffect, useState } from 'react';
+
+import { useGameStore } from '@/store/basic/gameStore';
 
 /**
  * Hook to manage point timer elapsed time display.

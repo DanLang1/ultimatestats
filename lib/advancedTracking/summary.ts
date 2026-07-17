@@ -4,8 +4,8 @@ import {
   getAdvancedGameTimestamp,
   getAdvancedOpponentName,
 } from '@/lib/advancedTracking/advancedGameTeamUtils';
-import type { AdvancedTrackedGame, GameStatus } from '@/lib/advancedTracking/types';
 import { getGameScore } from '@/lib/advancedTracking/trackingUtils';
+import type { AdvancedTrackedGame, GameStatus } from '@/lib/advancedTracking/types';
 
 export interface AdvancedGameSummary {
   id: string;

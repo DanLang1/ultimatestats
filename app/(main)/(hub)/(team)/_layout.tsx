@@ -1,5 +1,6 @@
-import { useTheme } from '@/context/ThemeContext';
 import { Stack } from 'expo-router';
+
+import { useTheme } from '@/context/ThemeContext';
 
 export default function HubTeamLayout() {
   const { palette } = useTheme();

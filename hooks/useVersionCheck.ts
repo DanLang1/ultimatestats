@@ -1,6 +1,7 @@
-import { acknowledgeVersion, checkForNewVersion, getCurrentVersion } from '@/lib/versionUtils';
 import { useFocusEffect } from 'expo-router';
 import { useState } from 'react';
+
+import { acknowledgeVersion, checkForNewVersion, getCurrentVersion } from '@/lib/versionUtils';
 
 interface VersionCheckResult {
   hasNewVersion: boolean;

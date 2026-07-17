@@ -1,5 +1,6 @@
-import { useGameStore } from '@/store/basic/gameStore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+
+import { useGameStore } from '@/store/basic/gameStore';
 
 jest.mock('@react-native-async-storage/async-storage', () => ({
   getItem: jest.fn(),

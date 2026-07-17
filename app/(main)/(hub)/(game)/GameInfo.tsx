@@ -1,3 +1,8 @@
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { router, Stack } from 'expo-router';
+import React, { useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+
 import { HalfIndicator } from '@/components/basic/game-info/HalfIndicator';
 import HelpContent from '@/components/HelpContent';
 import { ThemedText } from '@/components/ThemedText';
@@ -10,16 +15,12 @@ import { useTheme } from '@/context/ThemeContext';
 import { useEndGame } from '@/hooks/basic/useEndGame';
 import { useGameTimer } from '@/hooks/basic/useGameTimer';
 import { useHalftimeEarly } from '@/hooks/basic/useHalftimeEarly';
-import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { usePointTimer } from '@/hooks/basic/usePointTimer';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { formatRatioFull, getExpectedRatio, getSequenceNumber } from '@/lib/genderRatioUtils';
 import { useGameStore } from '@/store/basic/gameStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { Fonts } from '@/theme/theme';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { router, Stack } from 'expo-router';
-import React, { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 export default function GameInfoScreen() {
   const { isLandscape, sizeClass } = useLayout();

@@ -1,8 +1,18 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Draft } from 'immer';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 
+import {
+  getAdjustedHalftimeTimerDuration,
+  getDefaultHalftimeTimerState,
+} from '@/lib/advancedTracking/halftimeTimerUtils';
+import {
+  getActiveGameClockPause,
+  getGameClockElapsedMs,
+  getPointAdjustedTimestamp,
+} from '@/lib/advancedTracking/trackingDisplayHelpers';
 import {
   assertTwoSides,
   assertValidInjurySubInput,
@@ -22,23 +32,14 @@ import {
   syncCapTransitions,
   syncDerivedHalftimeTransition,
 } from '@/lib/advancedTracking/trackingUtils';
-import { useSettingsStore } from '@/store/settingsStore';
-import {
-  getActiveGameClockPause,
-  getGameClockElapsedMs,
-  getPointAdjustedTimestamp,
-} from '@/lib/advancedTracking/trackingDisplayHelpers';
 import {
   ADVANCED_TRACKING_SCHEMA_VERSION,
   AdvancedTrackedGame,
 } from '@/lib/advancedTracking/types';
-import {
-  getAdjustedHalftimeTimerDuration,
-  getDefaultHalftimeTimerState,
-} from '@/lib/advancedTracking/halftimeTimerUtils';
-import { useSavedAdvancedGamesStore } from '@/store/advancedTracking/savedGamesStore';
 import { generateId } from '@/lib/utils';
-import { Draft } from 'immer';
+import { useSavedAdvancedGamesStore } from '@/store/advancedTracking/savedGamesStore';
+import { useSettingsStore } from '@/store/settingsStore';
+
 import {
   AdvancedTrackingState,
   AdvancedTrackingUndoEntry,

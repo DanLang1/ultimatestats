@@ -1,3 +1,5 @@
+import { StyleSheet, View } from 'react-native';
+
 import { TrackerPlayerChip } from '@/components/advancedTracking/TrackerPlayerChip';
 import type { TrackerPlayerGridHandlers } from '@/components/advancedTracking/TrackerPlayerGrid';
 import type { PassModifier } from '@/components/advancedTracking/types';
@@ -5,7 +7,6 @@ import TutorialAnimatedArrow from '@/components/tutorial/TutorialAnimatedArrow';
 import { useTheme } from '@/context/ThemeContext';
 import { getSizeClassValue, scaleBySizeClass, useLayout } from '@/hooks/useLayout';
 import type { Participant, PlayerRef } from '@/lib/advancedTracking/types';
-import { StyleSheet, View } from 'react-native';
 
 interface TutorialAdvancedPlayerGridProps {
   participants: Participant[];

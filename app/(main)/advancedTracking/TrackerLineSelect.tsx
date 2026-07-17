@@ -1,3 +1,6 @@
+import { Redirect, router } from 'expo-router';
+import React from 'react';
+
 import type { RecentLine as RecentLineType } from '@/components/advancedTracking/TrackerLineScreen';
 import { TrackerLineScreen } from '@/components/advancedTracking/TrackerLineScreen';
 import { useLiveRosterParticipants } from '@/hooks/advancedTracking/useLiveRosterParticipants';
@@ -13,8 +16,7 @@ import { GenderRatio, getExpectedRatio, getSequenceNumber } from '@/lib/genderRa
 import { hasItems } from '@/lib/utils';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { useSettingsStore } from '@/store/settingsStore';
-import { Redirect, router } from 'expo-router';
-import React from 'react';
+
 import { FOCUS_SIDE_ID } from './PreGameConfirm';
 
 export default function TrackerLineSelectScreen() {

@@ -1,15 +1,16 @@
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
-import { ScreenHeader } from '@/components/ui/ScreenHeader';
-import { useTheme } from '@/context/ThemeContext';
-import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import { Fonts, Palette } from '@/theme/theme';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { Image } from 'expo-image';
 import { router, Stack } from 'expo-router';
 import React from 'react';
 import { Linking, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import Animated, { FadeInRight } from 'react-native-reanimated';
+
+import { ThemedText } from '@/components/ThemedText';
+import { ThemedView } from '@/components/ThemedView';
+import { ScreenHeader } from '@/components/ui/ScreenHeader';
+import { useTheme } from '@/context/ThemeContext';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { Fonts, Palette } from '@/theme/theme';
 
 export default function PartnersScreen() {
   const { palette } = useTheme();

@@ -1,7 +1,8 @@
+import { StyleSheet, View } from 'react-native';
+
 import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import { StyleSheet, View } from 'react-native';
 import { Fonts } from '@/theme/theme';
 
 interface HalfIndicatorProps {

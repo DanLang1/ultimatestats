@@ -1,7 +1,11 @@
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { router } from 'expo-router';
+import React, { useState } from 'react';
+import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+
 import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import { getPlayerName } from '@/lib/playerUtils';
 import {
   aggregatePlayingTimeStats,
   computePlayingTimeStats,
@@ -9,14 +13,11 @@ import {
   PlayingTimeStats,
 } from '@/lib/basic/playingTimeStatsUtils';
 import { computePlayerStats, PlayerStats } from '@/lib/basic/statsUtils';
+import { getPlayerName } from '@/lib/playerUtils';
 import { Player, PointLineRecord, SavedGame } from '@/lib/storage';
 import { GameEvent } from '@/store/basic/gameStore.types';
 import { usePlayerStatsStore } from '@/store/playerStatsStore';
 import { Fonts } from '@/theme/theme';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { router } from 'expo-router';
-import React, { useState } from 'react';
-import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 
 type SortKey =
   | 'name'

@@ -1,13 +1,14 @@
-import { useTheme } from '@/context/ThemeContext';
-import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import { getContrastingTextColor, normalizeHexColor, TEAM_COLOR_PRESETS } from '@/lib/colorUtils';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React, { useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
-import { ThemedText } from '@/components/ThemedText';
-import { Fonts } from '@/theme/theme';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import ColorPicker, { HueSlider, Panel1, Preview } from 'reanimated-color-picker';
+
+import { ThemedText } from '@/components/ThemedText';
+import { useTheme } from '@/context/ThemeContext';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { getContrastingTextColor, normalizeHexColor, TEAM_COLOR_PRESETS } from '@/lib/colorUtils';
+import { Fonts } from '@/theme/theme';
 
 interface ColorPickerProps {
   label: string;

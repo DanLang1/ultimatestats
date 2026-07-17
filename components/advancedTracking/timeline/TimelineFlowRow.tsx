@@ -1,3 +1,6 @@
+import React from 'react';
+import { StyleSheet, View } from 'react-native';
+
 import AdvancedTimelineActionChip from '@/components/advancedTracking/timeline/AdvancedTimelineActionChip';
 import AdvancedTimelinePassChain from '@/components/advancedTracking/timeline/AdvancedTimelinePassChain';
 import LinkedSubDetail from '@/components/advancedTracking/timeline/LinkedSubDetail';
@@ -11,8 +14,6 @@ import {
   getHeaderNodeColorKey,
 } from '@/lib/advancedTracking/advancedTimelineUtils';
 import { Fonts, Palette } from '@/theme/theme';
-import React from 'react';
-import { StyleSheet, View } from 'react-native';
 
 const HEADER_NODE_CENTER_Y = 16;
 const ACTION_NODE_CENTER_Y = 18;

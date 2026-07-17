@@ -1,14 +1,16 @@
-import { ScoreBadge } from '@/components/ui/ScoreBadge';
-import { useTheme } from '@/context/ThemeContext';
-import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import { ensureContrast } from '@/lib/colorUtils';
-import { computePlayerStats } from '@/lib/basic/statsUtils';
-import { GameEvent, Player, PointLineRecord, SavedGame } from '@/lib/storage';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
+
 import { ThemedText } from '@/components/ThemedText';
+import { ScoreBadge } from '@/components/ui/ScoreBadge';
+import { useTheme } from '@/context/ThemeContext';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { computePlayerStats } from '@/lib/basic/statsUtils';
+import { ensureContrast } from '@/lib/colorUtils';
+import { GameEvent, Player, PointLineRecord, SavedGame } from '@/lib/storage';
 import { Fonts } from '@/theme/theme';
+
 import StatsTable from './StatsTable';
 import TeamStatsSection from './TeamStatsSection';
 

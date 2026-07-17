@@ -1,9 +1,10 @@
+import React from 'react';
+import { StyleSheet, View } from 'react-native';
+
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { BottomSheetActionRow } from '@/components/ui/BottomSheetActionRow';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import React from 'react';
-import { StyleSheet, View } from 'react-native';
 
 interface TeamActionsSheetProps {
   onDismiss: () => void;

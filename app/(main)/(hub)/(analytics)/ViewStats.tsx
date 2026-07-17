@@ -1,3 +1,10 @@
+import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { File, Paths } from 'expo-file-system';
+import { Redirect, router, Stack, useLocalSearchParams } from 'expo-router';
+import React from 'react';
+import { ScrollView, StyleSheet, View } from 'react-native';
+
 import AdvancedStatsContent from '@/components/advancedTracking/AdvancedStatsContent';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
@@ -14,18 +21,12 @@ import { useTheme } from '@/context/ThemeContext';
 import { useCompletedAdvancedGameSummaries } from '@/hooks/advancedTracking/useAdvancedGameQueries';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { buildAnalyticsGame, getFinalScores } from '@/lib/advancedTracking/buildAnalyticsGame';
-import { shareFileAndDelete } from '@/lib/shareFileAndDelete';
 import { formatDate, generateCurrentGameCSV } from '@/lib/basic/statsUtils';
+import { shareFileAndDelete } from '@/lib/shareFileAndDelete';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { useGameStore } from '@/store/basic/gameStore';
 import { useTutorialStore } from '@/store/tutorialStore';
 import { Fonts } from '@/theme/theme';
-import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { File, Paths } from 'expo-file-system';
-import { Redirect, router, Stack, useLocalSearchParams } from 'expo-router';
-import React from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
 
 type ViewMode = 'current' | 'saved' | 'aggregate';
 type ViewStatsOrigin = 'scoreboard';

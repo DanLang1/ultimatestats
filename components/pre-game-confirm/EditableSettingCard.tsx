@@ -1,10 +1,6 @@
-import { useTheme } from '@/context/ThemeContext';
-import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
-import { ThemedText } from '@/components/ThemedText';
-import { Fonts } from '@/theme/theme';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -12,6 +8,11 @@ import Animated, {
   withSpring,
   withTiming,
 } from 'react-native-reanimated';
+
+import { ThemedText } from '@/components/ThemedText';
+import { useTheme } from '@/context/ThemeContext';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { Fonts } from '@/theme/theme';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 

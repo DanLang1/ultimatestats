@@ -1,11 +1,12 @@
-import TimelineInteractiveRow from '@/components/basic/timeline/TimelineInteractiveRow';
-import { useTheme } from '@/context/ThemeContext';
-import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import { formatClockDuration } from '@/lib/basic/timelineUtils';
 import * as Haptics from 'expo-haptics';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
+
+import TimelineInteractiveRow from '@/components/basic/timeline/TimelineInteractiveRow';
 import { ThemedText } from '@/components/ThemedText';
+import { useTheme } from '@/context/ThemeContext';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { formatClockDuration } from '@/lib/basic/timelineUtils';
 import { Fonts } from '@/theme/theme';
 
 interface TimelineGoalSectionProps {

@@ -1,3 +1,6 @@
+import React from 'react';
+import { StyleSheet, View } from 'react-native';
+
 import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
@@ -10,11 +13,10 @@ import {
 } from '@/lib/basic/playingTimeStatsUtils';
 import { GameEvent, PointLineRecord, SavedGame } from '@/lib/storage';
 import { Fonts } from '@/theme/theme';
-import React from 'react';
-import { StyleSheet, View } from 'react-native';
-import PlayingTimePill from './PlayingTimePill';
+
 import PlayingTimeGauge from './playing-time/PlayingTimeGauge';
 import RoleBalanceBar from './playing-time/RoleBalanceBar';
+import PlayingTimePill from './PlayingTimePill';
 
 interface PlayingTimeSectionProps {
   playerId: string;

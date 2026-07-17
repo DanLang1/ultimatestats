@@ -1,3 +1,8 @@
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import React from 'react';
+import { Platform, Pressable, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
 import { DefenseActions } from '@/components/advancedTracking/bottomCard/DefenseActions';
 import { TrackerVoiceButton } from '@/components/advancedTracking/TrackerVoiceButton';
 import { TrackerVoiceFeedbackPill } from '@/components/advancedTracking/TrackerVoiceFeedbackPill';
@@ -14,10 +19,6 @@ import {
 } from '@/lib/advancedTracking/trackingUtils';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { Fonts } from '@/theme/theme';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import React from 'react';
-import { Platform, Pressable, StyleSheet, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const NEXT_POINT_BUTTON_HEIGHT = 62;
 const FOOTER_BOTTOM_PADDING = 48;

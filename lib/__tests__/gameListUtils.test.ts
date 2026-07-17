@@ -1,11 +1,11 @@
+import { isCompletedAdvancedGameSummary } from '../advancedTracking/summary';
+import type { AdvancedGameSummary } from '../advancedTracking/summary';
+import type { AdvancedTrackedGame } from '../advancedTracking/types';
 import {
   advancedGameSummaryToListItem,
   advancedGameToListItem,
   basicGameToListItem,
 } from '../gameListUtils';
-import { isCompletedAdvancedGameSummary } from '../advancedTracking/summary';
-import type { AdvancedGameSummary } from '../advancedTracking/summary';
-import type { AdvancedTrackedGame } from '../advancedTracking/types';
 import type { SavedGame, SavedTeam } from '../storage';
 
 // ── basicGameToListItem ────────────────────────────────────────────────────────

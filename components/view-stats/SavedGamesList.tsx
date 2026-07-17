@@ -1,17 +1,18 @@
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import React, { useState } from 'react';
+import { Pressable, StyleSheet, TextInput, View } from 'react-native';
+import Animated, { FadeOut, LinearTransition } from 'react-native-reanimated';
+
 import { ThemedText } from '@/components/ThemedText';
 import { ScoreBadge } from '@/components/ui/ScoreBadge';
 import { TournamentFilterModal } from '@/components/ui/TournamentFilterModal';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import { GameKind, GameListItem } from '@/lib/gameListUtils';
 import { formatDate } from '@/lib/basic/statsUtils';
+import { GameKind, GameListItem } from '@/lib/gameListUtils';
 import { Tournament } from '@/lib/storage/types';
 import { useTutorialStore } from '@/store/tutorialStore';
 import { Fonts } from '@/theme/theme';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import React, { useState } from 'react';
-import { Pressable, StyleSheet, TextInput, View } from 'react-native';
-import Animated, { FadeOut, LinearTransition } from 'react-native-reanimated';
 
 interface SavedGamesListProps {
   games: GameListItem[];

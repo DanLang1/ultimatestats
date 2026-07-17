@@ -1,9 +1,12 @@
-import { ThemedText } from '@/components/ThemedText';
-import { LastActionCardFrame } from '@/components/advancedTracking/bottomCard/LastActionCardFrame';
+import React, { ReactNode } from 'react';
+import { StyleSheet } from 'react-native';
+
 import { GoalHeader } from '@/components/advancedTracking/bottomCard/GoalHeader';
+import { LastActionCardFrame } from '@/components/advancedTracking/bottomCard/LastActionCardFrame';
 import { ModifierPrompt } from '@/components/advancedTracking/bottomCard/ModifierPrompt';
 import { PassChainHeader } from '@/components/advancedTracking/bottomCard/PassChainHeader';
 import { TurnoverHeader } from '@/components/advancedTracking/bottomCard/TurnoverHeader';
+import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import {
@@ -27,8 +30,6 @@ import {
 } from '@/lib/advancedTracking/types';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { Fonts, Palette } from '@/theme/theme';
-import React, { ReactNode } from 'react';
-import { StyleSheet } from 'react-native';
 
 const EXPANDED_TURNOVER_TEXT_LIMIT = 12;
 

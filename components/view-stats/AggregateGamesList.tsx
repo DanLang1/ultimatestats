@@ -1,16 +1,17 @@
-import { ScoreBadge } from '@/components/ui/ScoreBadge';
-import { useTheme } from '@/context/ThemeContext';
-import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import { resolveTeamName } from '@/lib/playerUtils';
-import { getGameDisplayTimestamp } from '@/lib/savedGameUtils';
-import { formatDate } from '@/lib/basic/statsUtils';
-import { SavedGame } from '@/lib/storage';
-import { Tournament } from '@/lib/storage/types';
-import { useGameStore } from '@/store/basic/gameStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+
 import { ThemedText } from '@/components/ThemedText';
+import { ScoreBadge } from '@/components/ui/ScoreBadge';
+import { useTheme } from '@/context/ThemeContext';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { formatDate } from '@/lib/basic/statsUtils';
+import { resolveTeamName } from '@/lib/playerUtils';
+import { getGameDisplayTimestamp } from '@/lib/savedGameUtils';
+import { SavedGame } from '@/lib/storage';
+import { Tournament } from '@/lib/storage/types';
+import { useGameStore } from '@/store/basic/gameStore';
 import { Fonts } from '@/theme/theme';
 
 interface AggregateGamesListProps {

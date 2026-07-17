@@ -1,3 +1,6 @@
+import React from 'react';
+import { StyleSheet, View } from 'react-native';
+
 import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
@@ -7,8 +10,6 @@ import type {
 } from '@/lib/advancedTracking/advancedTimelineUtils';
 import { formatClockDuration } from '@/lib/durationFormatUtils';
 import { Fonts } from '@/theme/theme';
-import React from 'react';
-import { StyleSheet, View } from 'react-native';
 
 interface AdvancedTimelineActionChipProps {
   action: AdvancedTimelineAction;

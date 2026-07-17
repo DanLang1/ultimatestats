@@ -1,3 +1,7 @@
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import React from 'react';
+import { Pressable, StyleSheet, View } from 'react-native';
+
 import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
 import { useTimestampTimer } from '@/hooks/advancedTracking/useTimer';
@@ -11,9 +15,6 @@ import { MIN_HALFTIME_BREAK_SECONDS } from '@/lib/constants';
 import { formatTimerSeconds } from '@/lib/utils';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { Fonts } from '@/theme/theme';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import React from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
 
 interface HalftimeBetweenPointDisplayProps {
   game: AdvancedTrackedGame;

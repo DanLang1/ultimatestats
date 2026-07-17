@@ -1,12 +1,14 @@
-import { ThemedText } from '@/components/ThemedText';
-import { useTheme } from '@/context/ThemeContext';
-import { scaleBySizeClass, useLayout } from '@/hooks/useLayout';
-import { Fonts } from '@/theme/theme';
 import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { useDerivedValue } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
+
+import { ThemedText } from '@/components/ThemedText';
+import { useTheme } from '@/context/ThemeContext';
+import { scaleBySizeClass, useLayout } from '@/hooks/useLayout';
+import { Fonts } from '@/theme/theme';
+
 import { PassModifier } from './types';
 
 const CHIP_BORDER_RADIUS = 12;

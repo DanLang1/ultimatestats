@@ -1,7 +1,8 @@
+import { router } from 'expo-router';
+
 import { useAlert } from '@/components/ui/AlertProvider';
 import { useGameSessionActions } from '@/hooks/useGameSessionActions';
 import { useGameStore } from '@/store/basic/gameStore';
-import { router } from 'expo-router';
 
 export function useEndGame() {
   const { showAlert } = useAlert();

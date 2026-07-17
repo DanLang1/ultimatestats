@@ -1,13 +1,14 @@
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import React from 'react';
+import { Pressable, StyleSheet, View } from 'react-native';
+import Animated from 'react-native-reanimated';
+
 import { ThemedText } from '@/components/ThemedText';
 import TutorialAnimatedArrow from '@/components/tutorial/TutorialAnimatedArrow';
 import { useTheme } from '@/context/ThemeContext';
 import { getSizeClassValue, useLayout } from '@/hooks/useLayout';
 import { usePulseAnimation } from '@/hooks/usePulseAnimation';
 import { Fonts } from '@/theme/theme';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import React from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
-import Animated from 'react-native-reanimated';
 
 interface TutorialSettingsBarProps {
   // Message-only mode (score step)

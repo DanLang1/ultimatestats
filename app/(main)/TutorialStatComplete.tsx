@@ -1,14 +1,15 @@
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { router } from 'expo-router';
+import React from 'react';
+import { Pressable, StyleSheet, View } from 'react-native';
+import Animated, { FadeInDown, FadeInRight } from 'react-native-reanimated';
+
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { useTheme } from '@/context/ThemeContext';
 import { getSizeClassValue, scaleBySizeClass, useLayout } from '@/hooks/useLayout';
 import { useTutorialStore } from '@/store/tutorialStore';
 import { Fonts } from '@/theme/theme';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { router } from 'expo-router';
-import React from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
-import Animated, { FadeInDown, FadeInRight } from 'react-native-reanimated';
 
 export default function TutorialStatCompleteRoute() {
   const { palette } = useTheme();

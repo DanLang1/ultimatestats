@@ -1,16 +1,17 @@
-import { useAlert } from '@/components/ui/AlertProvider';
-import { formatISODateForDisplay } from '@/lib/dateUtils';
-import { useTheme } from '@/context/ThemeContext';
-import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import { Tournament, TournamentKind } from '@/lib/storage/types';
-import { useTournamentStore } from '@/store/tournamentStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router } from 'expo-router';
 import React from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
-import { ThemedText } from '@/components/ThemedText';
-import { Fonts } from '@/theme/theme';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import { ThemedText } from '@/components/ThemedText';
+import { useAlert } from '@/components/ui/AlertProvider';
+import { useTheme } from '@/context/ThemeContext';
+import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { formatISODateForDisplay } from '@/lib/dateUtils';
+import { Tournament, TournamentKind } from '@/lib/storage/types';
+import { useTournamentStore } from '@/store/tournamentStore';
+import { Fonts } from '@/theme/theme';
 
 interface TournamentPickerModalProps {
   visible: boolean;

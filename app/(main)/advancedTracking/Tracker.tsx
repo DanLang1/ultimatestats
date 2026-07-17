@@ -1,5 +1,8 @@
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+import { Redirect, router, Stack, useFocusEffect } from 'expo-router';
+import React, { useState } from 'react';
+import { BackHandler, Pressable, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
 import { DevDebugModal } from '@/components/advancedTracking/DevDebugModal';
 import { LandscapeUnsupported } from '@/components/advancedTracking/LandscapeUnsupported';
 import { TrackerActionFooter } from '@/components/advancedTracking/TrackerActionFooter';
@@ -13,6 +16,8 @@ import {
   getTrackerSurfaceState,
   TrackerSurface,
 } from '@/components/advancedTracking/TrackerSurface';
+import { ThemedText } from '@/components/ThemedText';
+import { ThemedView } from '@/components/ThemedView';
 import { useTheme } from '@/context/ThemeContext';
 import { useLiveRosterParticipants } from '@/hooks/advancedTracking/useLiveRosterParticipants';
 import { useTrackerHandlers } from '@/hooks/advancedTracking/useTrackerHandlers';
@@ -36,13 +41,8 @@ import {
 } from '@/lib/advancedTracking/trackingUtils';
 import { PassModifier } from '@/lib/advancedTracking/types';
 import { buildVoiceParticipantContexts } from '@/lib/advancedTracking/voiceContext';
-
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { Fonts, Palette } from '@/theme/theme';
-import { Redirect, router, Stack, useFocusEffect } from 'expo-router';
-import React, { useState } from 'react';
-import { BackHandler, Pressable, StyleSheet, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function AdvancedTrackerScreen() {
   const { palette } = useTheme();

@@ -1,7 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useAdvancedTrackingStore } from '../../store/advancedTracking/trackingStore';
+
 import { getCurrentPoint, getGameScore } from '../../lib/advancedTracking/trackingUtils';
 import type { AdvancedTrackedGame } from '../../lib/advancedTracking/types';
+import { useAdvancedTrackingStore } from '../../store/advancedTracking/trackingStore';
 
 jest.mock('@react-native-async-storage/async-storage', () => ({
   getItem: jest.fn(),

@@ -1,7 +1,9 @@
-import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import { Participant, PlayerRef } from '@/lib/advancedTracking/types';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
+
+import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { Participant, PlayerRef } from '@/lib/advancedTracking/types';
+
 import { TrackerLineActionTile } from './TrackerLineActionTile';
 import { TrackerPlayerChip } from './TrackerPlayerChip';
 import { PassModifier } from './types';

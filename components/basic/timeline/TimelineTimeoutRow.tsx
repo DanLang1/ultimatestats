@@ -1,10 +1,11 @@
+import React from 'react';
+import { StyleSheet, View } from 'react-native';
+
 import TimelineInteractiveRow from '@/components/basic/timeline/TimelineInteractiveRow';
+import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { DisplayTimeout } from '@/lib/basic/timelineUtils';
-import React from 'react';
-import { StyleSheet, View } from 'react-native';
-import { ThemedText } from '@/components/ThemedText';
 import { Fonts } from '@/theme/theme';
 
 interface TimelineTimeoutRowProps {

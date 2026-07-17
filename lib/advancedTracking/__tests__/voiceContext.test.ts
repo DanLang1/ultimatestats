@@ -1,5 +1,5 @@
-import { buildVoiceParticipantContexts } from '@/lib/advancedTracking/voiceContext';
 import { Participant } from '@/lib/advancedTracking/types';
+import { buildVoiceParticipantContexts } from '@/lib/advancedTracking/voiceContext';
 
 describe('buildVoiceParticipantContexts', () => {
   it('maps participant fields to voice context', () => {

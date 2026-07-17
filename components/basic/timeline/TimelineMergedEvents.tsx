@@ -1,15 +1,16 @@
+import * as Haptics from 'expo-haptics';
+import React from 'react';
+
 import TimelineEventSeparator from '@/components/basic/timeline/TimelineEventSeparator';
 import TimelineTimeoutRow from '@/components/basic/timeline/TimelineTimeoutRow';
 import TimelineTurnoverRow from '@/components/basic/timeline/TimelineTurnoverRow';
-import { Player } from '@/lib/storage/types';
 import {
   computeRoundedSplitMs,
   DisplayTurnover,
   formatClockDuration,
   TimelineEvent,
 } from '@/lib/basic/timelineUtils';
-import * as Haptics from 'expo-haptics';
-import React from 'react';
+import { Player } from '@/lib/storage/types';
 
 interface TimelineMergedEventsProps {
   events: TimelineEvent[];

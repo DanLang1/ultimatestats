@@ -1,5 +1,6 @@
-import { GameEvent } from '@/store/basic/gameStore.types';
 import { PointLineRecord } from '@/lib/storage/types';
+import { GameEvent } from '@/store/basic/gameStore.types';
+
 import { hasPlayerParticipatedInCurrentGame } from '../playerUtils';
 
 describe('hasPlayerParticipatedInCurrentGame', () => {

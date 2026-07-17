@@ -1,4 +1,5 @@
 import { hasItems } from '@/lib/utils';
+
 import { getOtherSideId, hasPointEnded, isPossessionOver } from './trackingUtils';
 import {
   AdvancedTrackedGame,

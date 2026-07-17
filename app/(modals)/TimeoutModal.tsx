@@ -1,15 +1,16 @@
-import { useTheme } from '@/context/ThemeContext';
-import { MODAL_MAX_WIDTH_INFO } from '@/lib/constants';
-import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import { useTimeoutTimer } from '@/hooks/basic/useTimeoutTimer';
-import { useGameStore } from '@/store/basic/gameStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { Redirect, router } from 'expo-router';
 import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
-import { ThemedText } from '@/components/ThemedText';
-import { Fonts } from '@/theme/theme';
 import Animated, { FadeIn } from 'react-native-reanimated';
+
+import { ThemedText } from '@/components/ThemedText';
+import { useTheme } from '@/context/ThemeContext';
+import { useTimeoutTimer } from '@/hooks/basic/useTimeoutTimer';
+import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { MODAL_MAX_WIDTH_INFO } from '@/lib/constants';
+import { useGameStore } from '@/store/basic/gameStore';
+import { Fonts } from '@/theme/theme';
 
 export default function TimeoutModal() {
   const { palette } = useTheme();

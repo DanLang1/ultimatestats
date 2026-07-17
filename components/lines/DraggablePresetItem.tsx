@@ -1,11 +1,6 @@
-import { useTheme } from '@/context/ThemeContext';
-import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import { LinePreset } from '@/lib/storage/types';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
-import { ThemedText } from '@/components/ThemedText';
-import { Fonts } from '@/theme/theme';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   LinearTransition,
@@ -15,6 +10,12 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
+
+import { ThemedText } from '@/components/ThemedText';
+import { useTheme } from '@/context/ThemeContext';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { LinePreset } from '@/lib/storage/types';
+import { Fonts } from '@/theme/theme';
 
 const ITEM_HEIGHT = 48;
 const GAP = 8;

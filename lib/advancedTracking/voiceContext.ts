@@ -1,5 +1,5 @@
-import { VoiceParticipantContext } from '@/lib/advancedTracking/voiceCommandParser';
 import { Participant } from '@/lib/advancedTracking/types';
+import { VoiceParticipantContext } from '@/lib/advancedTracking/voiceCommandParser';
 
 /**
  * Builds voice-participant contexts from advanced game participants.

@@ -1,12 +1,13 @@
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { Stack } from 'expo-router';
+import React from 'react';
+import { StyleSheet, View } from 'react-native';
+
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { Fonts, Palette } from '@/theme/theme';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { Stack } from 'expo-router';
-import React from 'react';
-import { StyleSheet, View } from 'react-native';
 
 export function LandscapeUnsupported() {
   const { palette } = useTheme();

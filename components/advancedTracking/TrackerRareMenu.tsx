@@ -1,9 +1,13 @@
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import React from 'react';
+import { Modal, Pressable, StyleSheet, View } from 'react-native';
+
+import { ThemedText } from '@/components/ThemedText';
+import { BottomSheet } from '@/components/ui/BottomSheet';
 import {
   BottomSheetActionRow,
   BottomSheetActionRowTone,
 } from '@/components/ui/BottomSheetActionRow';
-import { ThemedText } from '@/components/ThemedText';
-import { BottomSheet } from '@/components/ui/BottomSheet';
 import { useTheme } from '@/context/ThemeContext';
 import { getSizeClassValue, SizeClass, useLayout } from '@/hooks/useLayout';
 import {
@@ -18,9 +22,6 @@ import {
 import { PassModifier } from '@/lib/advancedTracking/types';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { Fonts } from '@/theme/theme';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import React from 'react';
-import { Modal, Pressable, StyleSheet, View } from 'react-native';
 
 interface TrackerRareMenuProps {
   visible: boolean;

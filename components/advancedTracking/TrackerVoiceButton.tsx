@@ -1,12 +1,14 @@
-import { ThemedText } from '@/components/ThemedText';
-import { useTheme } from '@/context/ThemeContext';
-import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import { VoiceStatCommandsControls } from '@/hooks/advancedTracking/useVoiceStatCommands';
-import { Fonts, Palette } from '@/theme/theme';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React, { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
+
+import { ThemedText } from '@/components/ThemedText';
+import { useTheme } from '@/context/ThemeContext';
+import { VoiceStatCommandsControls } from '@/hooks/advancedTracking/useVoiceStatCommands';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { useTutorialStore } from '@/store/tutorialStore';
+import { Fonts, Palette } from '@/theme/theme';
+
 import { AdvancedVoiceHintModal } from './AdvancedVoiceHintModal';
 
 const VOICE_BUTTON_HEIGHT = 62;

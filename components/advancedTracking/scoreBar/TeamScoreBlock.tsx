@@ -1,11 +1,12 @@
-import { ThemedText } from '@/components/ThemedText';
+import React from 'react';
+import { StyleSheet, View } from 'react-native';
+
 import { TimeoutDots } from '@/components/advancedTracking/scoreBar/TimeoutDots';
+import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { SideTimeoutState } from '@/lib/advancedTracking/trackingDisplayHelpers';
 import { Fonts } from '@/theme/theme';
-import React from 'react';
-import { StyleSheet, View } from 'react-native';
 
 const TEAM_NAME_MIN_FONT_SCALE = 0.82;
 

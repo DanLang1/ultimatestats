@@ -1,14 +1,15 @@
-import { BottomSheet } from '@/components/ui/BottomSheet';
-import { useTheme } from '@/context/ThemeContext';
-import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import { getGameDisplayTimestamp } from '@/lib/savedGameUtils';
-import { getSelectablePlayerStatGames } from '@/lib/basic/statsUtils';
-import { usePlayerStatsStore } from '@/store/playerStatsStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router } from 'expo-router';
 import React from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+
 import { ThemedText } from '@/components/ThemedText';
+import { BottomSheet } from '@/components/ui/BottomSheet';
+import { useTheme } from '@/context/ThemeContext';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { getSelectablePlayerStatGames } from '@/lib/basic/statsUtils';
+import { getGameDisplayTimestamp } from '@/lib/savedGameUtils';
+import { usePlayerStatsStore } from '@/store/playerStatsStore';
 import { Fonts } from '@/theme/theme';
 
 export default function GameSelectorModal() {

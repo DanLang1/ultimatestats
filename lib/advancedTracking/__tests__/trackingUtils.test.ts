@@ -25,6 +25,7 @@ import {
   isTurnoverThrow,
   syncDerivedHalftimeTransition,
 } from '../trackingUtils';
+import type { InjurySubInput } from '../trackingUtils';
 import type {
   AdvancedTrackedGame,
   PointLine,
@@ -33,7 +34,6 @@ import type {
   ThrowAction,
   TrackedPoint,
 } from '../types';
-import type { InjurySubInput } from '../trackingUtils';
 
 // ── Fixtures ─────────────────────────────────────────────────────────────────
 

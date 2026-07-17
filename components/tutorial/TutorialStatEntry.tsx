@@ -1,14 +1,15 @@
-import { PlayerChip } from '@/components/ui/PlayerChip';
-import { ThemedText } from '@/components/ThemedText';
-import { useTheme } from '@/context/ThemeContext';
-import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import { Player } from '@/lib/storage/types';
-import { Fonts } from '@/theme/theme';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, { SlideInDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import { ThemedText } from '@/components/ThemedText';
+import { PlayerChip } from '@/components/ui/PlayerChip';
+import { useTheme } from '@/context/ThemeContext';
+import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { Player } from '@/lib/storage/types';
+import { Fonts } from '@/theme/theme';
 
 interface TutorialStatEntryProps {
   roster: Player[];

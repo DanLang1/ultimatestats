@@ -1,7 +1,9 @@
-import { PlayerRef } from '@/lib/advancedTracking/types';
 import React from 'react';
-import { PassModifier } from './types';
+
+import { PlayerRef } from '@/lib/advancedTracking/types';
+
 import { TrackerChipBase } from './TrackerChipBase';
+import { PassModifier } from './types';
 
 interface TrackerPlayerChipProps {
   label: string;

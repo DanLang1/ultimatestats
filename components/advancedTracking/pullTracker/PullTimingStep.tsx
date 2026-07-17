@@ -1,3 +1,6 @@
+import React, { useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { PlayerChip } from '@/components/ui/PlayerChip';
@@ -8,8 +11,6 @@ import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hoo
 import { formatHangtime } from '@/lib/advancedTracking/pullTrackingUtils';
 import { Participant } from '@/lib/advancedTracking/types';
 import { Fonts } from '@/theme/theme';
-import React, { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 const TIMER_CIRCLE_SIZE: Record<SizeClass, number> = { small: 260, medium: 360, large: 460 };
 const LANDSCAPE_TIMER_CIRCLE_SIZE: Record<SizeClass, number> = {

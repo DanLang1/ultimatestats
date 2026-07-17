@@ -1,3 +1,7 @@
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import React from 'react';
+import { Pressable, StyleSheet, View } from 'react-native';
+
 import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
 import { useTimestampTimer } from '@/hooks/advancedTracking/useTimer';
@@ -12,9 +16,6 @@ import {
 import { AdvancedTrackedGame } from '@/lib/advancedTracking/types';
 import { useSettingsStore } from '@/store/settingsStore';
 import { Fonts } from '@/theme/theme';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import React from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
 
 interface TrackerCapBarProps {
   onMenuPress: () => void;

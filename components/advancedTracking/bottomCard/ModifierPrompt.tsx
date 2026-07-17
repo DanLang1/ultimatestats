@@ -1,10 +1,11 @@
+import React from 'react';
+import { StyleSheet } from 'react-native';
+
 import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { PassModifier } from '@/lib/advancedTracking/types';
 import { Fonts } from '@/theme/theme';
-import React from 'react';
-import { StyleSheet } from 'react-native';
 
 interface ModifierPromptProps {
   modifier: NonNullable<PassModifier>;

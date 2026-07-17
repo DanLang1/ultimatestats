@@ -1,9 +1,10 @@
+import React from 'react';
+import { StyleSheet, View } from 'react-native';
+
 import OpeningPullSplitPanel from '@/components/advancedTracking/OpeningPullSplitPanel';
 import { useTheme } from '@/context/ThemeContext';
 import { useLayout } from '@/hooks/useLayout';
 import { AdvancedInitialPullWinStats } from '@/lib/advancedTracking/advancedAggregateStatsUtils';
-import React from 'react';
-import { StyleSheet, View } from 'react-native';
 
 interface OpeningPullSplitProps {
   stats: AdvancedInitialPullWinStats;

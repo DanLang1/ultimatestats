@@ -1,12 +1,13 @@
-import { useTheme } from '@/context/ThemeContext';
-import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import { getPlayerMatchingType, getPlayerName } from '@/lib/playerUtils';
-import { Player, PointLineRecord } from '@/lib/storage/types';
-import { buildTimelineLineupEntries } from '@/lib/basic/timelineUtils';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
+
 import { ThemedText } from '@/components/ThemedText';
+import { useTheme } from '@/context/ThemeContext';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { buildTimelineLineupEntries } from '@/lib/basic/timelineUtils';
+import { getPlayerMatchingType, getPlayerName } from '@/lib/playerUtils';
+import { Player, PointLineRecord } from '@/lib/storage/types';
 import { Fonts } from '@/theme/theme';
 
 interface TimelineLineupFooterProps {

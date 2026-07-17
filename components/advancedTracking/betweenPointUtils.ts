@@ -1,3 +1,5 @@
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+
 import { getGoalInfo } from '@/lib/advancedTracking/trackingDisplayHelpers';
 import { getCurrentPoint, getPointScoringSideId } from '@/lib/advancedTracking/trackingUtils';
 import type {
@@ -6,7 +8,6 @@ import type {
   PlayerRef,
   PossessionAction,
 } from '@/lib/advancedTracking/types';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
 export interface BetweenPointMetric {
   label: string;

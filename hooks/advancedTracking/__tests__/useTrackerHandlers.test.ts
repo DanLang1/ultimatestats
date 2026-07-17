@@ -1,5 +1,6 @@
-import { useTrackerHandlers } from '../useTrackerHandlers';
 import type { PlayerRef, PointPossession } from '@/lib/advancedTracking/types';
+
+import { useTrackerHandlers } from '../useTrackerHandlers';
 
 jest.mock('@/app/(main)/advancedTracking/PreGameConfirm', () => ({
   FOCUS_SIDE_ID: 'focus',

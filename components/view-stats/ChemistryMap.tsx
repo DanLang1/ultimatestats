@@ -1,11 +1,12 @@
+import React from 'react';
+import { StyleSheet, View } from 'react-native';
+import Svg, { Circle, G, Line, Text as SvgText } from 'react-native-svg';
+
+import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
 import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { ChemistryConnection } from '@/lib/basic/statsUtils';
-import React from 'react';
-import { StyleSheet, View } from 'react-native';
-import { ThemedText } from '@/components/ThemedText';
 import { Fonts } from '@/theme/theme';
-import Svg, { Circle, G, Line, Text as SvgText } from 'react-native-svg';
 
 interface ChemistryMapProps {
   playerName: string;

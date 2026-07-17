@@ -1,10 +1,11 @@
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import React, { useState } from 'react';
+import { LayoutChangeEvent, Pressable, StyleSheet, View } from 'react-native';
+
 import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { Fonts, Palette } from '@/theme/theme';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import React, { useState } from 'react';
-import { LayoutChangeEvent, Pressable, StyleSheet, View } from 'react-native';
 
 const COMPACT_ACTIONS_CARD_WIDTH = 360;
 

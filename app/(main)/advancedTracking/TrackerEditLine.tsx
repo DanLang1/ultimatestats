@@ -1,10 +1,11 @@
+import { Redirect, router, Stack } from 'expo-router';
+import React from 'react';
+
 import { TrackerLineScreen } from '@/components/advancedTracking/TrackerLineScreen';
 import { useLiveRosterParticipants } from '@/hooks/advancedTracking/useLiveRosterParticipants';
 import { getCurrentPoint } from '@/lib/advancedTracking/trackingUtils';
 import { getSequenceNumber } from '@/lib/genderRatioUtils';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
-import { Redirect, router, Stack } from 'expo-router';
-import React from 'react';
 
 export default function TrackerEditLineScreen() {
   const { currentGameId, currentGame: game, correctPointLine } = useAdvancedTrackingStore();

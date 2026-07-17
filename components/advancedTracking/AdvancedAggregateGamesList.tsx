@@ -1,3 +1,7 @@
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import React from 'react';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+
 import { ThemedText } from '@/components/ThemedText';
 import { ScoreBadge } from '@/components/ui/ScoreBadge';
 import { useTheme } from '@/context/ThemeContext';
@@ -7,9 +11,6 @@ import { formatTimestampForDisplay as formatDate } from '@/lib/dateUtils';
 import { Tournament } from '@/lib/storage/types';
 import { hasItems } from '@/lib/utils';
 import { Fonts } from '@/theme/theme';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import React from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 interface AdvancedAggregateGamesListProps {
   games: AdvancedGameSummary[];

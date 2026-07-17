@@ -1,3 +1,7 @@
+import { Redirect, router, useLocalSearchParams } from 'expo-router';
+import { useState } from 'react';
+import { Pressable, StyleSheet, View } from 'react-native';
+
 import { useTheme } from '@/context/ThemeContext';
 import {
   MaestroCapMode,
@@ -5,9 +9,6 @@ import {
   seedMaestroTeamPrerequisites,
   waitForMaestroStoresToHydrate,
 } from '@/lib/maestroUtils';
-import { Redirect, router, useLocalSearchParams } from 'expo-router';
-import { useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
 
 export default function MaestroSeedScreen() {
   const { palette } = useTheme();

@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase';
+
 import { generateShareId } from './shareId';
 import type { SharedPayload } from './types';
 import { validatePayload } from './validate';

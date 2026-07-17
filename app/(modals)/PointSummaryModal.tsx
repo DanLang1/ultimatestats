@@ -1,17 +1,18 @@
-import { useTheme } from '@/context/ThemeContext';
-import { MODAL_MAX_WIDTH_INFO } from '@/lib/constants';
-import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import { formatRatio, getExpectedRatio, getSequenceNumber } from '@/lib/genderRatioUtils';
-import { computePointByPointEvents, getTurnoverSummary } from '@/lib/basic/timelineUtils';
-import { useGameStore } from '@/store/basic/gameStore';
-import { useSettingsStore } from '@/store/settingsStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router } from 'expo-router';
 import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
-import { ThemedText } from '@/components/ThemedText';
-import { Fonts } from '@/theme/theme';
 import Animated, { FadeIn, SlideInUp } from 'react-native-reanimated';
+
+import { ThemedText } from '@/components/ThemedText';
+import { useTheme } from '@/context/ThemeContext';
+import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { computePointByPointEvents, getTurnoverSummary } from '@/lib/basic/timelineUtils';
+import { MODAL_MAX_WIDTH_INFO } from '@/lib/constants';
+import { formatRatio, getExpectedRatio, getSequenceNumber } from '@/lib/genderRatioUtils';
+import { useGameStore } from '@/store/basic/gameStore';
+import { useSettingsStore } from '@/store/settingsStore';
+import { Fonts } from '@/theme/theme';
 
 type PointOutcome = {
   label: string;

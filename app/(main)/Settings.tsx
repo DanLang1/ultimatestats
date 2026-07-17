@@ -1,3 +1,17 @@
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { router, Stack } from 'expo-router';
+import React, { useState } from 'react';
+import {
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  TextInput,
+  TextStyle,
+  View,
+  ViewStyle,
+} from 'react-native';
+
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { useAlert } from '@/components/ui/AlertProvider';
@@ -12,19 +26,6 @@ import { SavedTeam } from '@/lib/storage';
 import { useGameStore } from '@/store/basic/gameStore';
 import { OrientationMode, useSettingsStore } from '@/store/settingsStore';
 import { Fonts } from '@/theme/theme';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { router, Stack } from 'expo-router';
-import React, { useState } from 'react';
-import {
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  TextInput,
-  TextStyle,
-  View,
-  ViewStyle,
-} from 'react-native';
 
 export default function SettingsScreen() {
   const { currentTeam } = useGameStore();

@@ -1,13 +1,14 @@
-import { ThemedText } from '@/components/ThemedText';
-import FlashingIcon from '@/components/ui/FlashingIcon';
-import { useTheme } from '@/context/ThemeContext';
-import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import { Fonts } from '@/theme/theme';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router } from 'expo-router';
 import React from 'react';
 import { Linking, Pressable, StyleSheet, View } from 'react-native';
+
+import { ThemedText } from '@/components/ThemedText';
+import FlashingIcon from '@/components/ui/FlashingIcon';
+import { useTheme } from '@/context/ThemeContext';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { Fonts } from '@/theme/theme';
 
 interface HelpContentProps {
   showActionBarLegend?: boolean;

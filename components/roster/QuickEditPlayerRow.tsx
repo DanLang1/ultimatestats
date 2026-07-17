@@ -1,13 +1,14 @@
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import React, { useState } from 'react';
+import { Platform, Pressable, StyleSheet, Switch, TextInput, View } from 'react-native';
+
+import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
 import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { normalizePlayerNumber } from '@/lib/advancedTracking/voiceNumberUtils';
 import { MAX_PLAYER_NUMBER_LENGTH } from '@/lib/constants';
 import { MatchingType, Player, PlayerRole } from '@/lib/storage/types';
 import { useSettingsStore } from '@/store/settingsStore';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import React, { useState } from 'react';
-import { Platform, Pressable, StyleSheet, Switch, TextInput, View } from 'react-native';
-import { ThemedText } from '@/components/ThemedText';
 import { Fonts } from '@/theme/theme';
 
 interface QuickEditPlayerRowProps {

@@ -1,14 +1,15 @@
-import { PlayerChip } from '@/components/ui/PlayerChip';
-import { ThemedText } from '@/components/ThemedText';
-import { AnimatedThemedView } from '@/components/ThemedView';
-import { useTheme } from '@/context/ThemeContext';
-import { scaleBySizeClass, useLayout } from '@/hooks/useLayout';
-import { Player } from '@/lib/storage/types';
-import { Fonts } from '@/theme/theme';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, { FadeIn, SlideInDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import { ThemedText } from '@/components/ThemedText';
+import { AnimatedThemedView } from '@/components/ThemedView';
+import { PlayerChip } from '@/components/ui/PlayerChip';
+import { useTheme } from '@/context/ThemeContext';
+import { scaleBySizeClass, useLayout } from '@/hooks/useLayout';
+import { Player } from '@/lib/storage/types';
+import { Fonts } from '@/theme/theme';
 
 interface TutorialTurnoverEntryProps {
   teamName: string;

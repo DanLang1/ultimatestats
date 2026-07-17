@@ -1,12 +1,13 @@
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { router, Stack } from 'expo-router';
+import type { ErrorBoundaryProps } from 'expo-router';
+import { Pressable, StyleSheet, View } from 'react-native';
+
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, useLayout } from '@/hooks/useLayout';
 import { Fonts } from '@/theme/theme';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { router, Stack } from 'expo-router';
-import type { ErrorBoundaryProps } from 'expo-router';
-import { Pressable, StyleSheet, View } from 'react-native';
 
 export function ErrorBoundary({ error }: ErrorBoundaryProps) {
   const { palette } = useTheme();

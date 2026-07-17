@@ -1,3 +1,7 @@
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import React from 'react';
+import { StyleSheet, View } from 'react-native';
+
 import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
@@ -7,9 +11,6 @@ import {
 } from '@/lib/advancedTracking/advancedTimelineUtils';
 import type { BetweenPointTransition, GameTransition } from '@/lib/advancedTracking/types';
 import { Fonts } from '@/theme/theme';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import React from 'react';
-import { StyleSheet, View } from 'react-native';
 
 interface AdvancedTimelineTransitionDividerProps {
   transition: BetweenPointTransition | GameTransition;

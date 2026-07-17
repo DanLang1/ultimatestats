@@ -1,19 +1,20 @@
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { Redirect, router, useLocalSearchParams } from 'expo-router';
+import React, { useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, Switch, TextInput, View } from 'react-native';
+
+import { ThemedText } from '@/components/ThemedText';
 import { useAlert } from '@/components/ui/AlertProvider';
 import { useTheme } from '@/context/ThemeContext';
-import { MAX_PLAYER_NUMBER_LENGTH, MODAL_MAX_WIDTH_FORM } from '@/lib/constants';
 import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import {
   getPlayerNumberIdentity,
   normalizePlayerNumber,
 } from '@/lib/advancedTracking/voiceNumberUtils';
+import { MAX_PLAYER_NUMBER_LENGTH, MODAL_MAX_WIDTH_FORM } from '@/lib/constants';
 import { MatchingType, PlayerRole } from '@/lib/storage/types';
 import { useGameStore } from '@/store/basic/gameStore';
 import { useLinePresetsStore } from '@/store/linePresetsStore';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { Redirect, router, useLocalSearchParams } from 'expo-router';
-import React, { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Switch, TextInput, View } from 'react-native';
-import { ThemedText } from '@/components/ThemedText';
 import { Fonts } from '@/theme/theme';
 
 export default function EditPlayerModal() {

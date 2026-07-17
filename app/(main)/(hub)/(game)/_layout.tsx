@@ -1,6 +1,7 @@
-import { useTheme } from '@/context/ThemeContext';
-import { Stack } from 'expo-router';
 import { useKeepAwake } from 'expo-keep-awake';
+import { Stack } from 'expo-router';
+
+import { useTheme } from '@/context/ThemeContext';
 
 export default function HubGameLayout() {
   useKeepAwake('HubGameLayout', { suppressDeactivateWarnings: true });

@@ -1,6 +1,7 @@
-import { hasItems } from '@/lib/utils';
 import { getRecentLines, RecentLine } from '@/lib/lineUtils';
 import { PointLineRecord } from '@/lib/storage/types';
+import { hasItems } from '@/lib/utils';
+
 import { getCapThresholdMinutes, type CapTimingSettings } from './capUtils';
 import {
   AdvancedTrackedGame,

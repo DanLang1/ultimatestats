@@ -1,13 +1,14 @@
-import { ThemedText } from '@/components/ThemedText';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import React, { useState } from 'react';
+import { LayoutChangeEvent, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+
 import { PointPlusMinusInfoSheet } from '@/components/advancedTracking/PointPlusMinusInfoSheet';
+import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { AdvancedPlayerStats } from '@/lib/advancedTracking/advancedPlayerStatsUtils';
 import { formatEfficiency } from '@/lib/efficiencyFormatUtils';
 import { Fonts } from '@/theme/theme';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import React, { useState } from 'react';
-import { LayoutChangeEvent, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 type SortKey = keyof AdvancedPlayerStats | 'name';
 type StatGroupKey = 'core' | 'throwing' | 'touches' | 'pulls' | 'points';

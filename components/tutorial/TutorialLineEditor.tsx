@@ -1,3 +1,8 @@
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import React from 'react';
+import { Pressable, StyleSheet, View } from 'react-native';
+import Animated, { FadeIn } from 'react-native-reanimated';
+
 import { ModalPlayerGrid } from '@/components/lines/ModalPlayerGrid';
 import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
@@ -6,10 +11,7 @@ import { usePulseAnimation } from '@/hooks/usePulseAnimation';
 import { RatioCheckResult } from '@/lib/genderRatioUtils';
 import { Player } from '@/lib/storage/types';
 import { Fonts } from '@/theme/theme';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import React from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
-import Animated, { FadeIn } from 'react-native-reanimated';
+
 import { TutorialPreset } from './tutorialStatData';
 
 interface TutorialLineEditorProps {

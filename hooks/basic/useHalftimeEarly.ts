@@ -1,7 +1,8 @@
+import { router } from 'expo-router';
+
 import { useAlert } from '@/components/ui/AlertProvider';
 import { canTriggerHalftimeEarly } from '@/lib/basic/halftimeUtils';
 import { useGameStore } from '@/store/basic/gameStore';
-import { router } from 'expo-router';
 
 export function useHalftimeEarly() {
   const { showAlert } = useAlert();

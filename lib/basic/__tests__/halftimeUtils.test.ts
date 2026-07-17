@@ -1,5 +1,6 @@
-import { getActualHalftimeScore, hasReachedHalftime } from '../halftimeUtils';
 import { GameEvent } from '@/store/basic/gameStore.types';
+
+import { getActualHalftimeScore, hasReachedHalftime } from '../halftimeUtils';
 
 function goal(
   team: 'team1' | 'team2',

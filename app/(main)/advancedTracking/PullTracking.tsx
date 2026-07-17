@@ -1,3 +1,6 @@
+import { Redirect, router, useLocalSearchParams } from 'expo-router';
+import React, { useState } from 'react';
+
 import { PullDropperStep } from '@/components/advancedTracking/pullTracker/PullDropperStep';
 import { PullResultStep } from '@/components/advancedTracking/pullTracker/PullResultStep';
 import { PullTimingStep } from '@/components/advancedTracking/pullTracker/PullTimingStep';
@@ -8,8 +11,6 @@ import {
 import { PullResult } from '@/lib/advancedTracking/types';
 import { GenderRatio } from '@/lib/genderRatioUtils';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
-import { Redirect, router, useLocalSearchParams } from 'expo-router';
-import React, { useState } from 'react';
 
 type Step =
   | { name: 'timing' }

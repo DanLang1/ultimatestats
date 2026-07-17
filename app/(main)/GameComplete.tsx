@@ -1,3 +1,7 @@
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { Redirect, router, Stack } from 'expo-router';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
@@ -7,9 +11,6 @@ import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { checkGameOver, getWinner } from '@/lib/basic/gameUtils';
 import { useGameStore } from '@/store/basic/gameStore';
 import { Fonts } from '@/theme/theme';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { Redirect, router, Stack } from 'expo-router';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 export default function GameCompleteScreen() {
   const {

@@ -1,12 +1,13 @@
-import { ThemedText } from '@/components/ThemedText';
+import React from 'react';
+import { StyleSheet, View } from 'react-native';
+
 import { TimeoutButton } from '@/components/advancedTracking/scoreBar/TimeoutButton';
 import { useScoreBarData } from '@/components/advancedTracking/scoreBar/useScoreBarData';
+import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
 import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { useSettingsStore } from '@/store/settingsStore';
 import { Fonts } from '@/theme/theme';
-import React from 'react';
-import { StyleSheet, View } from 'react-native';
 
 interface ScoreBarActionRowProps {
   width: number;

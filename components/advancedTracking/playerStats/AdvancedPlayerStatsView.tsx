@@ -1,3 +1,8 @@
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { router, Stack } from 'expo-router';
+import React from 'react';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+
 import AdvancedChemistrySection from '@/components/advancedTracking/AdvancedChemistrySection';
 import AdvancedImpactTimeline from '@/components/advancedTracking/AdvancedImpactTimeline';
 import AdvancedPlayingTimeSection from '@/components/advancedTracking/AdvancedPlayingTimeSection';
@@ -9,13 +14,13 @@ import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import {
-  getAdvancedGameLabel,
-  getAdvancedGameTimestamp,
-} from '@/lib/advancedTracking/advancedGameTeamUtils';
-import {
   computeAdvancedChemistry,
   computeAdvancedPassConnections,
 } from '@/lib/advancedTracking/advancedChemistryUtils';
+import {
+  getAdvancedGameLabel,
+  getAdvancedGameTimestamp,
+} from '@/lib/advancedTracking/advancedGameTeamUtils';
 import { computeAdvancedImpact } from '@/lib/advancedTracking/advancedImpactUtils';
 import {
   computeAdvancedPlayerStats,
@@ -25,10 +30,6 @@ import { buildAnalyticsGame } from '@/lib/advancedTracking/buildAnalyticsGame';
 import type { AdvancedTrackedGame } from '@/lib/advancedTracking/types';
 import { hasItems } from '@/lib/utils';
 import { Fonts } from '@/theme/theme';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { router, Stack } from 'expo-router';
-import React from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 type AnalyticsGame = ReturnType<typeof buildAnalyticsGame>;
 

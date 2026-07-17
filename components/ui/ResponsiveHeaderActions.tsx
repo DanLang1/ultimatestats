@@ -1,16 +1,17 @@
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import React, { useRef, useState } from 'react';
+import { Modal, Platform, Pressable, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import { ThemedText } from '@/components/ThemedText';
+import { BottomSheet } from '@/components/ui/BottomSheet';
 import {
   BottomSheetActionRow,
   BottomSheetActionRowTone,
 } from '@/components/ui/BottomSheetActionRow';
-import { BottomSheet } from '@/components/ui/BottomSheet';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import React, { useRef, useState } from 'react';
-import { Modal, Platform, Pressable, StyleSheet, View } from 'react-native';
-import { ThemedText } from '@/components/ThemedText';
 import { Fonts } from '@/theme/theme';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export type ResponsiveHeaderAction = {
   key: string;

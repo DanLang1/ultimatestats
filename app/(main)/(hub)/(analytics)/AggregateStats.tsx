@@ -1,7 +1,13 @@
-import { ThemedView } from '@/components/ThemedView';
+import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
+import { File, Paths } from 'expo-file-system';
+import { router, Stack } from 'expo-router';
+import React, { useState } from 'react';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+
 import AdvancedAggregateGamesList from '@/components/advancedTracking/AdvancedAggregateGamesList';
 import AdvancedStatsContent from '@/components/advancedTracking/AdvancedStatsContent';
 import { ThemedText } from '@/components/ThemedText';
+import { ThemedView } from '@/components/ThemedView';
 import { useAlert } from '@/components/ui/AlertProvider';
 import {
   ResponsiveHeaderAction,
@@ -19,14 +25,15 @@ import {
   useAdvancedGames,
 } from '@/hooks/advancedTracking/useAdvancedGameQueries';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import { aggregateAnalyticsGames } from '@/lib/advancedTracking/aggregateAnalyticsGames';
 import {
   AdvancedInitialPullWinStats,
   computeInitialPullWinStats,
 } from '@/lib/advancedTracking/advancedAggregateStatsUtils';
 import { generateAggregateAdvancedCSV } from '@/lib/advancedTracking/advancedCSVUtils';
+import { aggregateAnalyticsGames } from '@/lib/advancedTracking/aggregateAnalyticsGames';
 import type { AnalyticsGame } from '@/lib/advancedTracking/analyticsTypes';
 import { buildAnalyticsGame } from '@/lib/advancedTracking/buildAnalyticsGame';
+import { generateAggregateCSV } from '@/lib/basic/statsUtils';
 import { MAX_SHARE_GAMES } from '@/lib/constants';
 import { resolveTeamName } from '@/lib/playerUtils';
 import { shareFileAndDelete } from '@/lib/shareFileAndDelete';
@@ -35,17 +42,11 @@ import {
   runPendingShareAction,
   SHARE_DATA_UPLOAD_ERROR_MESSAGE,
 } from '@/lib/sharing/shareActionUtils';
-import { generateAggregateCSV } from '@/lib/basic/statsUtils';
 import { GameEvent, Player, SavedGame } from '@/lib/storage';
 import { getTournamentIdsByGame } from '@/lib/tournamentUtils';
 import { useGameStore } from '@/store/basic/gameStore';
 import { useTournamentStore } from '@/store/tournamentStore';
 import { Fonts } from '@/theme/theme';
-import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
-import { File, Paths } from 'expo-file-system';
-import { router, Stack } from 'expo-router';
-import React, { useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 type AggregateMode = 'basic' | 'advanced';
 

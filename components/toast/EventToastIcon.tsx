@@ -1,7 +1,8 @@
-import { EventIconInfo } from '@/components/toast/hooks/useEventToast';
-import { scaleBySizeClass, useLayout } from '@/hooks/useLayout';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+
+import { EventIconInfo } from '@/components/toast/hooks/useEventToast';
+import { scaleBySizeClass, useLayout } from '@/hooks/useLayout';
 
 interface EventToastIconProps {
   icon: EventIconInfo;

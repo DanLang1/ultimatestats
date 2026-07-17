@@ -1,9 +1,10 @@
-import { useTheme } from '@/context/ThemeContext';
-import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React, { ReactNode } from 'react';
 import { Pressable, StyleProp, StyleSheet, TextStyle, View, ViewStyle } from 'react-native';
+
 import { ThemedText } from '@/components/ThemedText';
+import { useTheme } from '@/context/ThemeContext';
+import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { Fonts } from '@/theme/theme';
 
 const TITLE_FONT_SIZE: Record<SizeClass, number> = { small: 14, medium: 16, large: 20 };

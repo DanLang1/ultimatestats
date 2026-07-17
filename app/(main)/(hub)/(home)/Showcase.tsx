@@ -1,3 +1,10 @@
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { useQuery } from '@tanstack/react-query';
+import { router, Stack } from 'expo-router';
+import React from 'react';
+import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native';
+
+import ShowcaseCard from '@/components/showcase/ShowcaseCard';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
@@ -6,12 +13,6 @@ import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { fetchShowcaseList } from '@/lib/sharing';
 import { hasItems } from '@/lib/utils';
 import { Fonts } from '@/theme/theme';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { useQuery } from '@tanstack/react-query';
-import { router, Stack } from 'expo-router';
-import React from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native';
-import ShowcaseCard from '@/components/showcase/ShowcaseCard';
 
 export default function ShowcaseScreen() {
   const { palette } = useTheme();

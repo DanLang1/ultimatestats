@@ -1,8 +1,9 @@
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { useEffect, useRef, useState } from 'react';
+
 import { EventToastData } from '@/components/toast/EventToast';
 import { useCountdown } from '@/hooks/useCountdown';
 import { EVENT_RECORDED_TOAST_DURATION_MS } from '@/lib/constants';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { useEffect, useRef, useState } from 'react';
 
 type TutorialAction =
   | { type: 'score-team1' }

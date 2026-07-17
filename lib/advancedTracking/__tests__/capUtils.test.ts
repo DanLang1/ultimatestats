@@ -1,5 +1,5 @@
-import { computeCapState } from '../capUtils';
 import { CAP_WARNING_THRESHOLD_MS } from '../../constants';
+import { computeCapState } from '../capUtils';
 
 const MIN_MS = 60 * 1000;
 

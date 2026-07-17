@@ -1,9 +1,10 @@
+import { router } from 'expo-router';
+
 import { useAlert } from '@/components/ui/AlertProvider';
-import { useGameSessionActions } from '@/hooks/useGameSessionActions';
 import { useGameSessionStatus } from '@/hooks/basic/useGameSessionStatus';
 import { useStatsTutorialPending } from '@/hooks/basic/useStatsTutorialPending';
+import { useGameSessionActions } from '@/hooks/useGameSessionActions';
 import { useGameStore } from '@/store/basic/gameStore';
-import { router } from 'expo-router';
 
 interface UseNewGameOptions {
   onSuccess: () => void;

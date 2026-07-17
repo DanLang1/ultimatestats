@@ -1,10 +1,11 @@
+import React from 'react';
+import { Pressable, StyleSheet, View } from 'react-native';
+
 import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
 import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { canCallTimeout, SideTimeoutState } from '@/lib/advancedTracking/trackingDisplayHelpers';
 import { Fonts } from '@/theme/theme';
-import React from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
 
 interface TimeoutButtonProps {
   teamName: string;

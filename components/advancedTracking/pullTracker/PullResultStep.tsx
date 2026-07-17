@@ -1,3 +1,6 @@
+import React from 'react';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
@@ -10,8 +13,6 @@ import {
 } from '@/lib/advancedTracking/pullTrackingUtils';
 import { Participant, PullResult } from '@/lib/advancedTracking/types';
 import { Fonts } from '@/theme/theme';
-import React from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 const RESULT_MIN_H: Record<SizeClass, number> = { small: 56, medium: 64, large: 72 };
 const RESULT_FONT_SIZE: Record<SizeClass, number> = { small: 15, medium: 17, large: 20 };

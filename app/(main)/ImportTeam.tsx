@@ -1,3 +1,17 @@
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import * as Clipboard from 'expo-clipboard';
+import { router, Stack } from 'expo-router';
+import React, { useState } from 'react';
+import {
+  ActivityIndicator,
+  Modal,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  TextInput,
+  View,
+} from 'react-native';
+
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { useAlert } from '@/components/ui/AlertProvider';
@@ -15,19 +29,6 @@ import { buildImportedTeam } from '@/lib/import-team/transform';
 import { NAME_FORMAT_OPTIONS, NameFormatOption } from '@/lib/import-team/types';
 import { useGameStore } from '@/store/basic/gameStore';
 import { Fonts } from '@/theme/theme';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import * as Clipboard from 'expo-clipboard';
-import { router, Stack } from 'expo-router';
-import React, { useState } from 'react';
-import {
-  ActivityIndicator,
-  Modal,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  TextInput,
-  View,
-} from 'react-native';
 
 export default function ImportTeamScreen() {
   const { palette } = useTheme();

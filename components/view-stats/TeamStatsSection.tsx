@@ -1,15 +1,17 @@
+import React from 'react';
+import { StyleSheet, View } from 'react-native';
+
+import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import { GameEvent } from '@/lib/storage';
 import {
   computeTeamStats,
   computeTimingStats,
   computeTimeOfPossessionStats,
 } from '@/lib/basic/teamStatsUtils';
-import React from 'react';
-import { StyleSheet, View } from 'react-native';
-import { ThemedText } from '@/components/ThemedText';
+import { GameEvent } from '@/lib/storage';
 import { Fonts } from '@/theme/theme';
+
 import StatRing from './StatRing';
 import StatsGrid from './StatsGrid';
 import TimeOfPossessionSection from './TimeOfPossessionSection';

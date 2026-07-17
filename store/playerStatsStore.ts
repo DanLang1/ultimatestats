@@ -1,5 +1,6 @@
-import { GameEvent, Player, PointLineRecord, SavedGame } from '@/lib/storage';
 import { create } from 'zustand';
+
+import { GameEvent, Player, PointLineRecord, SavedGame } from '@/lib/storage';
 
 interface PlayerStatsStore {
   playerId: string | null; // Changed from player name to player ID

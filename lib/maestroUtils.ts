@@ -5,13 +5,13 @@ import {
   MAESTRO_SEED_PLAYERS,
   MAESTRO_SEED_TEAM_ID,
 } from '@/lib/maestroConstants';
+import type { SavedTeam } from '@/lib/storage/types';
 import { useSavedAdvancedGamesStore } from '@/store/advancedTracking/savedGamesStore';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { useGameStore } from '@/store/basic/gameStore';
 import { useGameSessionStore } from '@/store/gameSessionStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useTutorialStore } from '@/store/tutorialStore';
-import type { SavedTeam } from '@/lib/storage/types';
 
 const FOCUS_SIDE_ID = 'focus-side';
 const OPP_SIDE_ID = 'opp-side';

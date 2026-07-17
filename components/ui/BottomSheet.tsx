@@ -1,7 +1,8 @@
-import { useTheme } from '@/context/ThemeContext';
 import React from 'react';
 import { Pressable, StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import { useTheme } from '@/context/ThemeContext';
 
 interface BottomSheetProps {
   onDismiss: () => void;

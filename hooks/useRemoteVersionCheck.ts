@@ -1,5 +1,6 @@
-import { checkRemoteVersion, setLastDismissedRemoteVersion } from '@/lib/remoteVersionUtils';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+
+import { checkRemoteVersion, setLastDismissedRemoteVersion } from '@/lib/remoteVersionUtils';
 
 export function useRemoteVersionCheck() {
   const queryClient = useQueryClient();

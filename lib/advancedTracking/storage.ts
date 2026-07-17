@@ -1,7 +1,7 @@
 import * as SQLite from 'expo-sqlite';
 
-import type { AdvancedTrackedGame } from '@/lib/advancedTracking/types';
 import { AdvancedGameSummary, deriveAdvancedGameSummary } from '@/lib/advancedTracking/summary';
+import type { AdvancedTrackedGame } from '@/lib/advancedTracking/types';
 
 const DATABASE_NAME = 'ultimatestats_advanced_tracking.db';
 

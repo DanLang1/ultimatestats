@@ -1,11 +1,12 @@
+import React from 'react';
+import { StyleSheet, View } from 'react-native';
+import Svg, { Circle, Line as SvgLine, Polygon } from 'react-native-svg';
+
 import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { AdvancedPlayerStats } from '@/lib/advancedTracking/advancedPlayerStatsUtils';
 import { Fonts } from '@/theme/theme';
-import React from 'react';
-import { StyleSheet, View } from 'react-native';
-import Svg, { Circle, Line as SvgLine, Polygon } from 'react-native-svg';
 
 interface AdvancedProfileDiamondProps {
   stats: AdvancedPlayerStats;

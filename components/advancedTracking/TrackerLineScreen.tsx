@@ -1,22 +1,23 @@
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
-import { ModalPlayerGrid } from '@/components/lines/ModalPlayerGrid';
-import { PresetPickerModal } from '@/components/lines/PresetPickerModal';
-import { useTheme } from '@/context/ThemeContext';
-import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import { getLoadLineButtonState } from '@/lib/lineEditorUtils';
-import { Participant } from '@/lib/advancedTracking/types';
-import { checkLineRatio, formatRatio, GenderRatio } from '@/lib/genderRatioUtils';
-import { Player, PointLineRecord } from '@/lib/storage/types';
-import { useGameStore } from '@/store/basic/gameStore';
-import { useLinePresetsStore } from '@/store/linePresetsStore';
-import { useSettingsStore } from '@/store/settingsStore';
-import { Fonts } from '@/theme/theme';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
+
+import { ModalPlayerGrid } from '@/components/lines/ModalPlayerGrid';
+import { PresetPickerModal } from '@/components/lines/PresetPickerModal';
+import { ThemedText } from '@/components/ThemedText';
+import { ThemedView } from '@/components/ThemedView';
+import { useTheme } from '@/context/ThemeContext';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { Participant } from '@/lib/advancedTracking/types';
+import { checkLineRatio, formatRatio, GenderRatio } from '@/lib/genderRatioUtils';
+import { getLoadLineButtonState } from '@/lib/lineEditorUtils';
+import { Player, PointLineRecord } from '@/lib/storage/types';
 import { hasItems } from '@/lib/utils';
+import { useGameStore } from '@/store/basic/gameStore';
+import { useLinePresetsStore } from '@/store/linePresetsStore';
+import { useSettingsStore } from '@/store/settingsStore';
+import { Fonts } from '@/theme/theme';
 
 export interface RecentLine {
   pointNumber: number;

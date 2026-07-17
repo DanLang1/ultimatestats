@@ -1,15 +1,17 @@
+import React, { useState } from 'react';
+import { Keyboard, Pressable, StyleSheet, TextInput, View } from 'react-native';
+import Animated, { FadeIn, LinearTransition, SlideInDown } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import { ThemedText } from '@/components/ThemedText';
 import { AnimatedThemedView } from '@/components/ThemedView';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { getActiveRoster, getPlayerName, UNKNOWN_PLAYER_ID } from '@/lib/playerUtils';
 import { Player } from '@/lib/storage/types';
 import { useGameStore } from '@/store/basic/gameStore';
-import React, { useState } from 'react';
-import { Keyboard, Pressable, StyleSheet, TextInput, View } from 'react-native';
-import { ThemedText } from '@/components/ThemedText';
 import { Fonts } from '@/theme/theme';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Animated, { FadeIn, LinearTransition, SlideInDown } from 'react-native-reanimated';
+
 import { StatEntryHeader } from './StatEntryHeader';
 import { StatEntryRoster } from './StatEntryRoster';
 

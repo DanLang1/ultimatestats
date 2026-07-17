@@ -1,3 +1,10 @@
+import { MaterialIcons } from '@expo/vector-icons';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { router, Stack } from 'expo-router';
+import React from 'react';
+import { Linking, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+
 import { NewGameSheet } from '@/components/new-game/NewGameSheet';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
@@ -15,12 +22,6 @@ import { LAST_DISMISSED_REMOTE_VERSION_KEY } from '@/lib/remoteVersionUtils';
 import { LAST_SEEN_VERSION_KEY } from '@/lib/versionUtils';
 import { useTutorialStore } from '@/store/tutorialStore';
 import { Fonts } from '@/theme/theme';
-import { MaterialIcons } from '@expo/vector-icons';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { router, Stack } from 'expo-router';
-import React from 'react';
-import { Linking, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 interface MenuItem {
   icon: keyof typeof MaterialCommunityIcons.glyphMap;

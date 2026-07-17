@@ -1,14 +1,15 @@
 import { formatMinutesPlayed } from '@/lib/basic/playingTimeStatsUtils';
 import {
-  clamp01,
-  getRoundedDecimalDelta,
-  getRoundedPercentagePointDelta,
-} from '../relativeMetricUtils';
-import {
   RelativePlayerMetric,
   RelativePlayingTimeMetric,
   RelativePlayingTimeMetricKey,
 } from '@/lib/basic/statsUtils';
+
+import {
+  clamp01,
+  getRoundedDecimalDelta,
+  getRoundedPercentagePointDelta,
+} from '../relativeMetricUtils';
 
 export { clamp01, getRoundedDecimalDelta, getRoundedPercentagePointDelta };
 

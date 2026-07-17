@@ -1,7 +1,8 @@
+import type { StyleProp, TextStyle } from 'react-native';
+
 import { ThemedText } from '@/components/ThemedText';
 import { useTimestampTimer } from '@/hooks/advancedTracking/useTimer';
 import { formatPointTime } from '@/lib/advancedTracking/trackingDisplayHelpers';
-import type { StyleProp, TextStyle } from 'react-native';
 
 interface PointTimerTextProps {
   pointTimerAdjustedTimestamp: number | null;

@@ -1,7 +1,9 @@
-import { useTheme } from '@/context/ThemeContext';
-import { PlayerStats as PlayerStatsType } from '@/lib/basic/statsUtils';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
+
+import { useTheme } from '@/context/ThemeContext';
+import { PlayerStats as PlayerStatsType } from '@/lib/basic/statsUtils';
+
 import StatPill from './StatPill';
 
 interface PlayerStatsSummaryProps {

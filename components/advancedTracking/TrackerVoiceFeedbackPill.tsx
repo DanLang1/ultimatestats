@@ -1,12 +1,13 @@
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import React from 'react';
+import { StyleSheet, View } from 'react-native';
+
 import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
 import { VoiceStatCommandsControls } from '@/hooks/advancedTracking/useVoiceStatCommands';
+import { useAutoDismissFeedback } from '@/hooks/useAutoDismissFeedback';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { Fonts, Palette } from '@/theme/theme';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { useAutoDismissFeedback } from '@/hooks/useAutoDismissFeedback';
-import React from 'react';
-import { StyleSheet, View } from 'react-native';
 
 interface TrackerVoiceFeedbackPillProps {
   controls: VoiceStatCommandsControls;

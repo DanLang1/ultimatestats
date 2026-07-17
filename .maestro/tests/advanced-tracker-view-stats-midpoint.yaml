@@ -29,19 +29,14 @@ name: Advanced Tracker View Stats Mid-Point
 - takeScreenshot:
     path: .maestro/screenshots/advanced-tracker-view-stats-midpoint
 
-# Swipe down on left side to reveal player table rows
-- swipe:
-    start: 20%, 70%
-    end: 20%, 30%
-    duration: 500
-- swipe:
-    start: 20%, 70%
-    end: 20%, 30%
-    duration: 500
+# Center the player row so the persistent tab bar cannot cover the tap target
+- scrollUntilVisible:
+    element:
+      id: 'advanced-stats-row-joe'
+    direction: DOWN
+    centerElement: true
 
-# Verify player row is visible and tap for detail
-- assertVisible:
-    id: 'advanced-stats-row-joe'
+# Tap the player row for detail
 - tapOn:
     id: 'advanced-stats-row-joe'
     retryTapIfNoChange: true

@@ -1,3 +1,9 @@
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { router } from 'expo-router';
+import React from 'react';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+
+import { ThemedText } from '@/components/ThemedText';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import ChemistryMap from '@/components/view-stats/ChemistryMap';
 import ImpactTimeline from '@/components/view-stats/ImpactTimeline';
@@ -8,8 +14,6 @@ import RelativePlayerStatsSection from '@/components/view-stats/RelativePlayerSt
 import RoleDiamond from '@/components/view-stats/RoleDiamond';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import { getPlayerName } from '@/lib/playerUtils';
-import { getGameDisplayTimestamp } from '@/lib/savedGameUtils';
 import {
   computePlayerStats,
   getChemistryStats,
@@ -19,13 +23,10 @@ import {
   getSelectablePlayerStatGames,
   hasImpactTimelineData,
 } from '@/lib/basic/statsUtils';
+import { getPlayerName } from '@/lib/playerUtils';
+import { getGameDisplayTimestamp } from '@/lib/savedGameUtils';
 import { hasItems } from '@/lib/utils';
 import { usePlayerStatsStore } from '@/store/playerStatsStore';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { router } from 'expo-router';
-import React from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
-import { ThemedText } from '@/components/ThemedText';
 import { Fonts } from '@/theme/theme';
 
 export default function PlayerStats() {

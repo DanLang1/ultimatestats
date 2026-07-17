@@ -1,14 +1,15 @@
-import { NewGameSheet } from '@/components/new-game/NewGameSheet';
-import { useTheme } from '@/context/ThemeContext';
-import { useActiveGameSession } from '@/hooks/useActiveGameSession';
-import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import { useNewGameLauncher } from '@/hooks/useNewGameLauncher';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router, usePathname, useSegments, type Href } from 'expo-router';
 import type { BottomTabBarProps } from 'expo-router/js-tabs';
 import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
+
+import { NewGameSheet } from '@/components/new-game/NewGameSheet';
 import { ThemedText } from '@/components/ThemedText';
+import { useTheme } from '@/context/ThemeContext';
+import { useActiveGameSession } from '@/hooks/useActiveGameSession';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { useNewGameLauncher } from '@/hooks/useNewGameLauncher';
 import { Fonts } from '@/theme/theme';
 
 type HubTabRouteName = '(home)' | '(game)' | '(analytics)' | '(team)';

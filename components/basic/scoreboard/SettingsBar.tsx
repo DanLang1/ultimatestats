@@ -1,18 +1,18 @@
-import { useTheme } from '@/context/ThemeContext';
-import { getSizeClassValue, SizeClass, useLayout } from '@/hooks/useLayout';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { router } from 'expo-router';
+import React, { useState } from 'react';
+import { Linking, Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/ThemedText';
+import { AlertModal } from '@/components/ui/AlertModal';
+import FlashingIcon from '@/components/ui/FlashingIcon';
+import { useTheme } from '@/context/ThemeContext';
 import { useGameTimer } from '@/hooks/basic/useGameTimer';
+import { getSizeClassValue, SizeClass, useLayout } from '@/hooks/useLayout';
 import { formatRatio, getExpectedRatio, getSequenceNumber } from '@/lib/genderRatioUtils';
 import { useGameStore } from '@/store/basic/gameStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { Fonts } from '@/theme/theme';
-import { router } from 'expo-router';
-import React, { useState } from 'react';
-import { Linking, Pressable, StyleSheet, View } from 'react-native';
-import { AlertModal } from '@/components/ui/AlertModal';
-import FlashingIcon from '@/components/ui/FlashingIcon';
 
 interface SettingsBarProps {
   onUndo: () => void;

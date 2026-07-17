@@ -1,16 +1,17 @@
-import { ThemedView } from '@/components/ThemedView';
-import EventTimeline from '@/components/basic/timeline/EventTimeline';
-import { useTheme } from '@/context/ThemeContext';
-import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import { resolveTeamName } from '@/lib/playerUtils';
-import { computePointByPointEvents } from '@/lib/basic/timelineUtils';
-import { useGameStore } from '@/store/basic/gameStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import * as Haptics from 'expo-haptics';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import React, { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
+
+import EventTimeline from '@/components/basic/timeline/EventTimeline';
 import { ThemedText } from '@/components/ThemedText';
+import { ThemedView } from '@/components/ThemedView';
+import { useTheme } from '@/context/ThemeContext';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { computePointByPointEvents } from '@/lib/basic/timelineUtils';
+import { resolveTeamName } from '@/lib/playerUtils';
+import { useGameStore } from '@/store/basic/gameStore';
 import { Fonts } from '@/theme/theme';
 
 export default function GameTimelineScreen() {

@@ -1,6 +1,7 @@
-import { useTheme } from '@/context/ThemeContext';
 import { Stack } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+
+import { useTheme } from '@/context/ThemeContext';
 
 export default function MainLayout() {
   const { palette } = useTheme();

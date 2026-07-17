@@ -1,7 +1,12 @@
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { router, Stack } from 'expo-router';
+import React, { useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+
 import { EditableSettingCard } from '@/components/pre-game-confirm/EditableSettingCard';
 import { TimeoutSettingCard } from '@/components/pre-game-confirm/TimeoutSettingCard';
+import { ThemedText } from '@/components/ThemedText';
+import { ThemedView } from '@/components/ThemedView';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import { useTheme } from '@/context/ThemeContext';
@@ -16,10 +21,6 @@ import { useGameStore } from '@/store/basic/gameStore';
 import { useNumberPickerStore } from '@/store/numberPickerStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { Fonts } from '@/theme/theme';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { router, Stack } from 'expo-router';
-import React, { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 export const FOCUS_SIDE_ID = 'focus-side';
 export const OPP_SIDE_ID = 'opp-side';

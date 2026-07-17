@@ -4,6 +4,7 @@ import type { AdvancedTrackedGame } from '@/lib/advancedTracking/types';
 import { ADVANCED_TRACKING_SCHEMA_VERSION } from '@/lib/advancedTracking/types';
 import type { LinePreset, SavedGame, SavedTeam } from '@/lib/storage/types';
 import { CURRENT_SCHEMA_VERSION } from '@/lib/storage/types';
+
 import type { SharedPayload } from './types';
 
 export function serializeGame(game: SavedGame): SharedPayload {

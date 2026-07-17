@@ -1,3 +1,8 @@
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { router, Stack, useLocalSearchParams } from 'expo-router';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import Animated, { FadeIn } from 'react-native-reanimated';
+
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { ScoreBadge } from '@/components/ui/ScoreBadge';
@@ -16,10 +21,6 @@ import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore
 import { useGameStore } from '@/store/basic/gameStore';
 import { useLinePresetsStore } from '@/store/linePresetsStore';
 import { Fonts } from '@/theme/theme';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { router, Stack, useLocalSearchParams } from 'expo-router';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
-import Animated, { FadeIn } from 'react-native-reanimated';
 
 type GamePayload = Extract<SharedPayload, { type: 'game' }>;
 type AdvancedGamePayload = Extract<SharedPayload, { type: 'advanced-game' }>;

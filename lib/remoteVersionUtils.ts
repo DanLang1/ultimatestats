@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
+
 import { LATEST_VERSION_JSON_URL } from './constants';
 
 export const LAST_DISMISSED_REMOTE_VERSION_KEY = 'ultimatestats_last_dismissed_remote_version';

@@ -1,9 +1,9 @@
+import type { AdvancedGameSummary } from '@/lib/advancedTracking/summary';
+import { getGameScore } from '@/lib/advancedTracking/trackingUtils';
+import { AdvancedTrackedGame } from '@/lib/advancedTracking/types';
 import { resolveTeamName } from '@/lib/playerUtils';
 import { getGameDisplayTimestamp } from '@/lib/savedGameUtils';
 import { SavedGame, SavedTeam } from '@/lib/storage';
-import { AdvancedTrackedGame } from '@/lib/advancedTracking/types';
-import { getGameScore } from '@/lib/advancedTracking/trackingUtils';
-import type { AdvancedGameSummary } from '@/lib/advancedTracking/summary';
 
 export type GameKind = 'basic' | 'advanced';
 

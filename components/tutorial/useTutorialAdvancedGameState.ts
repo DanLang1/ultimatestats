@@ -1,6 +1,7 @@
+import { useState } from 'react';
+
 import type { TrackerPlayerGridHandlers } from '@/components/advancedTracking/TrackerPlayerGrid';
 import type { PlayerRef } from '@/lib/advancedTracking/types';
-import { useState } from 'react';
 
 export type TutorialAdvancedStep =
   | 'pass-to-blair'

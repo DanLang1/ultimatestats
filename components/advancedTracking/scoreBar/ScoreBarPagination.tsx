@@ -1,7 +1,8 @@
-import { useTheme } from '@/context/ThemeContext';
-import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
+
+import { useTheme } from '@/context/ThemeContext';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 
 interface ScoreBarPaginationProps {
   isExpanded: boolean;

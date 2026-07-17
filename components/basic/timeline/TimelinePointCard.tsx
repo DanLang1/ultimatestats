@@ -1,19 +1,20 @@
+import React from 'react';
+import { StyleSheet, View } from 'react-native';
+
 import TimelineEventSeparator from '@/components/basic/timeline/TimelineEventSeparator';
 import TimelineGoalSection from '@/components/basic/timeline/TimelineGoalSection';
 import TimelineLineupFooter from '@/components/basic/timeline/TimelineLineupFooter';
 import TimelineMergedEvents from '@/components/basic/timeline/TimelineMergedEvents';
 import TimelinePointHeader from '@/components/basic/timeline/TimelinePointHeader';
 import { useTheme } from '@/context/ThemeContext';
-import { getPlayerMatchingType, getPlayerName } from '@/lib/playerUtils';
-import { Player, PointLineRecord } from '@/lib/storage/types';
 import {
   buildPointCardTimelineData,
   DisplayTurnover,
   getMatchingTypeColor,
   PointEvents,
 } from '@/lib/basic/timelineUtils';
-import React from 'react';
-import { StyleSheet, View } from 'react-native';
+import { getPlayerMatchingType, getPlayerName } from '@/lib/playerUtils';
+import { Player, PointLineRecord } from '@/lib/storage/types';
 
 interface TimelinePointCardProps {
   point: PointEvents;

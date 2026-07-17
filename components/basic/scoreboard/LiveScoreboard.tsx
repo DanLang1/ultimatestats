@@ -1,3 +1,8 @@
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { router } from 'expo-router';
+import { Pressable, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
 import {
   ActionBarAction,
   ScoreboardActionBar,
@@ -7,20 +12,16 @@ import TeamScoreSection from '@/components/basic/scoreboard/TeamScoreSection';
 import { ThemedView } from '@/components/ThemedView';
 import EventToast from '@/components/toast/EventToast';
 import { useEventToast } from '@/components/toast/hooks/useEventToast';
+import { useTimeoutTimer } from '@/hooks/basic/useTimeoutTimer';
 import { finishActiveGameSession } from '@/hooks/useGameSessionActions';
 import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import { useTimeoutTimer } from '@/hooks/basic/useTimeoutTimer';
-import { getContrastingTextColor } from '@/lib/colorUtils';
 import { checkGameOver } from '@/lib/basic/gameUtils';
 import { shouldShowLinePrompt } from '@/lib/basic/linePromptUtils';
+import { getContrastingTextColor } from '@/lib/colorUtils';
 import { useGameStore } from '@/store/basic/gameStore';
 import { TurnoverType } from '@/store/basic/gameStore.types';
 import { useLinePresetsStore } from '@/store/linePresetsStore';
 import { useSettingsStore } from '@/store/settingsStore';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { router } from 'expo-router';
-import { Pressable, StyleSheet, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function LiveScoreboard() {
   const layout = useLayout();

@@ -1,6 +1,7 @@
+import { View } from 'react-native';
+
 import { ThemedText } from '@/components/ThemedText';
 import { getSizeClassValue, useLayout } from '@/hooks/useLayout';
-import { View } from 'react-native';
 
 interface TutorialTeamTextProps {
   teamName: string;

@@ -1,8 +1,9 @@
-import { useTheme } from '@/context/ThemeContext';
-import { useBounceAnimation } from '@/hooks/useBounceAnimation';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { StyleSheet, ViewStyle } from 'react-native';
 import Animated from 'react-native-reanimated';
+
+import { useTheme } from '@/context/ThemeContext';
+import { useBounceAnimation } from '@/hooks/useBounceAnimation';
 
 interface TutorialAnimatedArrowProps {
   direction?: 'up' | 'down' | 'left' | 'right';

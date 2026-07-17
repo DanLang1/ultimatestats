@@ -1,12 +1,14 @@
-import { useTheme } from '@/context/ThemeContext';
-import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import { LinePreset, Player, PointLineRecord } from '@/lib/storage/types';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React, { useRef } from 'react';
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
+
 import { ThemedText } from '@/components/ThemedText';
-import { Fonts } from '@/theme/theme';
+import { useTheme } from '@/context/ThemeContext';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { LinePreset, Player, PointLineRecord } from '@/lib/storage/types';
 import { useSettingsStore } from '@/store/settingsStore';
+import { Fonts } from '@/theme/theme';
+
 import { ModalPlayerGrid } from './ModalPlayerGrid';
 
 export interface PresetEditViewProps {

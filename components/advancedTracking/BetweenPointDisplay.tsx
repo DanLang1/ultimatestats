@@ -1,4 +1,9 @@
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import React from 'react';
+import { Pressable, StyleSheet, View } from 'react-native';
+
 import { ThemedText } from '@/components/ThemedText';
+import { PlayerChip } from '@/components/ui/PlayerChip';
 import { useTheme } from '@/context/ThemeContext';
 import { useTimestampTimer } from '@/hooks/advancedTracking/useTimer';
 import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
@@ -12,10 +17,7 @@ import { DEFAULT_TIMEOUT_SECONDS } from '@/lib/constants';
 import { formatTimerSeconds, hasItems } from '@/lib/utils';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { Fonts } from '@/theme/theme';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import React from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
-import { PlayerChip } from '@/components/ui/PlayerChip';
+
 import {
   getHockeyAssistName,
   getLastEventLabel,

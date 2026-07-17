@@ -1,3 +1,7 @@
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import React from 'react';
+import { StyleSheet, View } from 'react-native';
+
 import LineupBlock from '@/components/advancedTracking/timeline/LineupBlock';
 import TimelineFlowRow from '@/components/advancedTracking/timeline/TimelineFlowRow';
 import { ThemedText } from '@/components/ThemedText';
@@ -11,9 +15,6 @@ import type { AdvancedTimelinePoint } from '@/lib/advancedTracking/advancedTimel
 import { formatClockDuration } from '@/lib/durationFormatUtils';
 import { hasItems } from '@/lib/utils';
 import { Fonts } from '@/theme/theme';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import React from 'react';
-import { StyleSheet, View } from 'react-native';
 
 interface AdvancedTimelinePointCardProps {
   point: AdvancedTimelinePoint;

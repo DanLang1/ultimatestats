@@ -1,8 +1,3 @@
-import { ThemedText } from '@/components/ThemedText';
-import { useTheme } from '@/context/ThemeContext';
-import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import { AdvancedImpactPoint } from '@/lib/advancedTracking/advancedImpactUtils';
-import { Fonts } from '@/theme/theme';
 import React, { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import Svg, {
@@ -11,6 +6,12 @@ import Svg, {
   Path as SvgPath,
   Text as SvgText,
 } from 'react-native-svg';
+
+import { ThemedText } from '@/components/ThemedText';
+import { useTheme } from '@/context/ThemeContext';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { AdvancedImpactPoint } from '@/lib/advancedTracking/advancedImpactUtils';
+import { Fonts } from '@/theme/theme';
 
 const LABEL_GAP = 4;
 

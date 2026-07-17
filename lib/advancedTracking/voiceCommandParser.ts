@@ -1,5 +1,5 @@
-import { normalizeVoicePhrase } from '@/lib/advancedTracking/voicePhraseUtils';
 import { buildVoiceNumberPhrases } from '@/lib/advancedTracking/voiceNumberUtils';
+import { normalizeVoicePhrase } from '@/lib/advancedTracking/voicePhraseUtils';
 
 export interface VoiceParticipantContext {
   id: string;

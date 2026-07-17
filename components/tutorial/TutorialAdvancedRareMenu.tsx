@@ -1,10 +1,11 @@
+import { Modal, StyleSheet, View } from 'react-native';
+
 import { ThemedText } from '@/components/ThemedText';
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { BottomSheetActionRow } from '@/components/ui/BottomSheetActionRow';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, useLayout } from '@/hooks/useLayout';
 import { Fonts } from '@/theme/theme';
-import { Modal, StyleSheet, View } from 'react-native';
 
 interface TutorialAdvancedRareMenuProps {
   visible: boolean;

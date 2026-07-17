@@ -1,9 +1,10 @@
+import { Redirect } from 'expo-router';
+import { ActivityIndicator, StyleSheet } from 'react-native';
+
 import { ThemedView } from '@/components/ThemedView';
 import { useTheme } from '@/context/ThemeContext';
 import { useActiveGameSession } from '@/hooks/useActiveGameSession';
 import { useTutorialStore } from '@/store/tutorialStore';
-import { Redirect } from 'expo-router';
-import { ActivityIndicator, StyleSheet } from 'react-native';
 
 export default function IndexRoute() {
   const { palette } = useTheme();

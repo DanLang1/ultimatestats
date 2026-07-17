@@ -1,3 +1,8 @@
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { router, useLocalSearchParams } from 'expo-router';
+import React, { useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+
 import { ThemedText } from '@/components/ThemedText';
 import { useAlert } from '@/components/ui/AlertProvider';
 import { BottomSheet } from '@/components/ui/BottomSheet';
@@ -9,10 +14,6 @@ import { getPlayerName } from '@/lib/playerUtils';
 import { useGameStore } from '@/store/basic/gameStore';
 import { TurnoverType } from '@/store/basic/gameStore.types';
 import { Fonts } from '@/theme/theme';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { router, useLocalSearchParams } from 'expo-router';
-import React, { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 // Extended type to include opponent turnover and opponent block for editing
 type EditableTurnoverType = TurnoverType | 'opponentTurn' | 'opponentBlock';

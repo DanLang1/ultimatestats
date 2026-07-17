@@ -1,24 +1,24 @@
-import { EditableSettingCard } from '@/components/pre-game-confirm/EditableSettingCard';
-import { TimeoutSettingCard } from '@/components/pre-game-confirm/TimeoutSettingCard';
-import { ThemedView } from '@/components/ThemedView';
-import { SegmentedControl } from '@/components/ui/SegmentedControl';
-import { ScreenHeader } from '@/components/ui/ScreenHeader';
-
-import { useTheme } from '@/context/ThemeContext';
-import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import { getContrastingTextColor } from '@/lib/colorUtils';
-import { formatRatioFull, GenderRatio } from '@/lib/genderRatioUtils';
-import { shouldShowLinePrompt } from '@/lib/basic/linePromptUtils';
-import { useGameStore } from '@/store/basic/gameStore';
-import { useNumberPickerStore } from '@/store/numberPickerStore';
-import { useStatsTutorialPending } from '@/hooks/basic/useStatsTutorialPending';
-import { useSettingsStore } from '@/store/settingsStore';
-import { useTutorialStore } from '@/store/tutorialStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router, Stack } from 'expo-router';
 import React, { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+
+import { EditableSettingCard } from '@/components/pre-game-confirm/EditableSettingCard';
+import { TimeoutSettingCard } from '@/components/pre-game-confirm/TimeoutSettingCard';
 import { ThemedText } from '@/components/ThemedText';
+import { ThemedView } from '@/components/ThemedView';
+import { ScreenHeader } from '@/components/ui/ScreenHeader';
+import { SegmentedControl } from '@/components/ui/SegmentedControl';
+import { useTheme } from '@/context/ThemeContext';
+import { useStatsTutorialPending } from '@/hooks/basic/useStatsTutorialPending';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { shouldShowLinePrompt } from '@/lib/basic/linePromptUtils';
+import { getContrastingTextColor } from '@/lib/colorUtils';
+import { formatRatioFull, GenderRatio } from '@/lib/genderRatioUtils';
+import { useGameStore } from '@/store/basic/gameStore';
+import { useNumberPickerStore } from '@/store/numberPickerStore';
+import { useSettingsStore } from '@/store/settingsStore';
+import { useTutorialStore } from '@/store/tutorialStore';
 import { Fonts } from '@/theme/theme';
 
 export default function PreGameConfirm() {

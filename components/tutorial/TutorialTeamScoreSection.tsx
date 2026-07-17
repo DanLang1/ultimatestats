@@ -1,13 +1,14 @@
+import React from 'react';
+import { Pressable, StyleSheet, View } from 'react-native';
+import Animated from 'react-native-reanimated';
+
 import ScoreDisplay from '@/components/ScoreDisplay';
-import TutorialTeamText from '@/components/tutorial/TutorialTeamText';
 import { ThemedView } from '@/components/ThemedView';
+import TutorialTeamText from '@/components/tutorial/TutorialTeamText';
 import { useTheme } from '@/context/ThemeContext';
 import { useHaptics } from '@/hooks/useHaptics';
 import { getSizeClassValue, SizeClass, useLayout } from '@/hooks/useLayout';
 import { usePulseAnimation } from '@/hooks/usePulseAnimation';
-import React from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
-import Animated from 'react-native-reanimated';
 
 interface TutorialTeamScoreSectionProps {
   teamName: string;

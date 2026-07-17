@@ -1,11 +1,12 @@
+import React from 'react';
+import { StyleSheet, View } from 'react-native';
+import Svg, { Circle, G, Line, Text as SvgText } from 'react-native-svg';
+
 import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
 import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { AdvancedChemistryConnection } from '@/lib/advancedTracking/advancedChemistryUtils';
 import { Fonts } from '@/theme/theme';
-import React from 'react';
-import { StyleSheet, View } from 'react-native';
-import Svg, { Circle, G, Line, Text as SvgText } from 'react-native-svg';
 
 interface AdvancedChemistryMapProps {
   participantName: string;

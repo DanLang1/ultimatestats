@@ -1,10 +1,10 @@
+import { getOtherSideId } from '@/lib/advancedTracking/trackingUtils';
 import {
   AdvancedTrackedGame,
   Participant,
   PlayerRef,
   PullResult,
 } from '@/lib/advancedTracking/types';
-import { getOtherSideId } from '@/lib/advancedTracking/trackingUtils';
 import { GenderRatio } from '@/lib/genderRatioUtils';
 import { RecordPullInput } from '@/store/advancedTracking/trackingStore.types';
 

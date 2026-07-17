@@ -1,3 +1,6 @@
+import React, { useState } from 'react';
+import { StyleSheet, View } from 'react-native';
+
 import AdvancedChemistryMap from '@/components/advancedTracking/AdvancedChemistryMap';
 import AdvancedPassConnections from '@/components/advancedTracking/AdvancedPassConnections';
 import { SegmentedControl } from '@/components/ui/SegmentedControl';
@@ -9,8 +12,6 @@ import {
   getVisibleAdvancedChemistryMode,
 } from '@/lib/advancedTracking/advancedChemistryUtils';
 import { hasItems } from '@/lib/utils';
-import React, { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
 
 interface AdvancedChemistrySectionProps {
   participantName: string;

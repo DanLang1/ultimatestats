@@ -1,3 +1,6 @@
+import React, { Fragment } from 'react';
+import { ScrollView, StyleSheet, View } from 'react-native';
+
 import AdvancedTimelinePointCard from '@/components/advancedTracking/timeline/AdvancedTimelinePointCard';
 import AdvancedTimelineTransitionDivider from '@/components/advancedTracking/timeline/AdvancedTimelineTransitionDivider';
 import { ThemedText } from '@/components/ThemedText';
@@ -6,8 +9,6 @@ import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import type { AdvancedTimelinePoint } from '@/lib/advancedTracking/advancedTimelineUtils';
 import { hasItems } from '@/lib/utils';
 import { Fonts } from '@/theme/theme';
-import React, { Fragment } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
 
 interface AdvancedEventTimelineProps {
   points: AdvancedTimelinePoint[];

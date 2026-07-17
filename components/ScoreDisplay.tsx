@@ -1,7 +1,8 @@
+import { StyleSheet } from 'react-native';
+
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { getSizeClassValue, SizeClass, useLayout } from '@/hooks/useLayout';
-import { StyleSheet } from 'react-native';
 
 export interface ScoreDisplayProps {
   bgColor: string;

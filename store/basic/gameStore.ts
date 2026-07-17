@@ -1,18 +1,22 @@
-import { DEFAULT_HALFTIME_BREAK_SECONDS, DEFAULT_TIMEOUT_SECONDS } from '@/lib/constants';
-import { checkGameOver } from '@/lib/basic/gameUtils';
-import { canTriggerHalftimeEarly, hasReachedHalftime } from '@/lib/basic/halftimeUtils';
-import { hasPlayerParticipatedInCurrentGame, UNKNOWN_PLAYER_ID } from '@/lib/playerUtils';
-import { CURRENT_SCHEMA_VERSION, SavedGame, SavedTeam } from '@/lib/storage';
-import { migrateSavedGame, migrateSavedGames } from '@/lib/storage/migrations';
-import { getLatestLineForPoint } from '@/lib/lineUtils';
-import { deriveTimeoutState } from '@/lib/basic/timeoutUtils';
-import { generateId } from '@/lib/utils';
-import { palette } from '@/theme/theme';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { current } from 'immer';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
+
+import { checkGameOver } from '@/lib/basic/gameUtils';
+import { canTriggerHalftimeEarly, hasReachedHalftime } from '@/lib/basic/halftimeUtils';
+import { deriveTimeoutState } from '@/lib/basic/timeoutUtils';
+import { DEFAULT_HALFTIME_BREAK_SECONDS, DEFAULT_TIMEOUT_SECONDS } from '@/lib/constants';
+import { getLatestLineForPoint } from '@/lib/lineUtils';
+import { hasPlayerParticipatedInCurrentGame, UNKNOWN_PLAYER_ID } from '@/lib/playerUtils';
+import { CURRENT_SCHEMA_VERSION, SavedGame, SavedTeam } from '@/lib/storage';
+import { migrateSavedGame, migrateSavedGames } from '@/lib/storage/migrations';
+import { generateId } from '@/lib/utils';
+import { palette } from '@/theme/theme';
+
+import { useLinePresetsStore } from '../linePresetsStore';
+import { useSettingsStore } from '../settingsStore';
 import {
   EventToastSignal,
   GameState,
@@ -20,8 +24,6 @@ import {
   TurnoverType,
   UpdateRosterPlayerResult,
 } from './gameStore.types';
-import { useLinePresetsStore } from '../linePresetsStore';
-import { useSettingsStore } from '../settingsStore';
 
 function applyHalftimeTransition(state: GameState) {
   state.gameHalf = 2;

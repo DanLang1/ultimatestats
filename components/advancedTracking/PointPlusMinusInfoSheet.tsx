@@ -1,3 +1,6 @@
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { Modal, Pressable, StyleSheet, View } from 'react-native';
+
 import { ThemedText } from '@/components/ThemedText';
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { useTheme } from '@/context/ThemeContext';
@@ -9,8 +12,6 @@ import {
   POINT_PLUS_MINUS_OPP_HOLD_VALUE,
 } from '@/lib/advancedTracking/statConstants';
 import { Fonts } from '@/theme/theme';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { Modal, Pressable, StyleSheet, View } from 'react-native';
 
 interface PointPlusMinusInfoSheetProps {
   visible: boolean;
