@@ -213,8 +213,7 @@ type PlayerRef =
   | { refType: 'untracked' };
 
 type FieldLocation =
-  | { locationType: 'zone'; zoneId: string }
-  | { locationType: 'xy'; x: number; y: number };
+  { locationType: 'zone'; zoneId: string } | { locationType: 'xy'; x: number; y: number };
 
 type PossessionAction = PullAction | DiscPickupAction | ThrowAction | StoppageAction;
 

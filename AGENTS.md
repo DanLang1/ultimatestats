@@ -54,7 +54,7 @@ See `docs/README.md` for directory structure, key concepts, and the New Screen C
 
 ## Useful Commands
 
-- Quick verify (lint + typecheck): `npm run check`
-- Full verify (lint + typecheck + tests): `npm run check:all`
+- Quick verify (format + lint + typecheck): `npm run check`
+- Full verify (format + lint + typecheck + tests): `npm run check:all`
 - Tests: `npm test`
 - Single test target: `npm test -- gameUtils`
