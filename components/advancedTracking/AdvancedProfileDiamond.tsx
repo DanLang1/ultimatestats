@@ -22,19 +22,19 @@ export default function AdvancedProfileDiamond({ stats }: AdvancedProfileDiamond
 
   const rawGoals = stats.goals;
   const rawAssists = stats.assists + stats.hockeyAssists;
-  const rawBlocks = stats.blocks;
+  const rawDefense = stats.blocks + stats.pressures;
   const rawTurnovers = stats.throwaways + stats.drops;
 
-  const scaleMax = Math.max(rawGoals, rawAssists, rawBlocks, rawTurnovers, 1);
+  const scaleMax = Math.max(rawGoals, rawAssists, rawDefense, rawTurnovers, 1);
   const goals = rawGoals / scaleMax;
   const assists = rawAssists / scaleMax;
-  const blocks = rawBlocks / scaleMax;
+  const defense = rawDefense / scaleMax;
   const turnovers = rawTurnovers / scaleMax;
 
   const topY = center - goals * maxRadius;
   const rightX = center + assists * maxRadius;
   const bottomY = center + turnovers * maxRadius;
-  const leftX = center - blocks * maxRadius;
+  const leftX = center - defense * maxRadius;
 
   const points = `${center},${topY} ${rightX},${center} ${center},${bottomY} ${leftX},${center}`;
 
@@ -51,7 +51,7 @@ export default function AdvancedProfileDiamond({ stats }: AdvancedProfileDiamond
 
       <View style={styles.diamondWrapper}>
         <ThemedText style={[styles.sideLabel, styles.leftLabel, { color: palette.textMuted }]}>
-          BLOCKS{'\n'}({rawBlocks})
+          BLK+PRS{'\n'}({rawDefense})
         </ThemedText>
 
         <View style={styles.diamondArea}>

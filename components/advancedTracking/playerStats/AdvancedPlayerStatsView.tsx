@@ -41,6 +41,10 @@ type AdvancedPlayerStatsViewProps = {
   selectedImpactGameId?: string;
 };
 
+function getCountLabel(value: number, singular: string, plural: string): string {
+  return value === 1 ? singular : plural;
+}
+
 export default function AdvancedPlayerStatsView({
   analyticsGame,
   participantId,
@@ -275,13 +279,33 @@ export default function AdvancedPlayerStatsView({
 
             <View style={styles.pillsRow}>
               {[
-                { label: 'Goals', value: stats.goals, positive: true },
-                { label: 'Assists', value: stats.assists, positive: true },
+                {
+                  label: getCountLabel(stats.goals, 'Goal', 'Goals'),
+                  value: stats.goals,
+                  positive: true,
+                },
+                {
+                  label: getCountLabel(stats.assists, 'Assist', 'Assists'),
+                  value: stats.assists,
+                  positive: true,
+                },
                 { label: 'HA', value: stats.hockeyAssists, positive: true },
-                { label: 'Blocks', value: stats.blocks, positive: true },
-                { label: 'Pressures', value: stats.pressures, positive: true },
+                {
+                  label: getCountLabel(stats.blocks, 'Block', 'Blocks'),
+                  value: stats.blocks,
+                  positive: true,
+                },
+                {
+                  label: getCountLabel(stats.pressures, 'Pressure', 'Pressures'),
+                  value: stats.pressures,
+                  positive: true,
+                },
                 { label: 'T/A', value: stats.throwaways, positive: false },
-                { label: 'Drops', value: stats.drops, positive: false },
+                {
+                  label: getCountLabel(stats.drops, 'Drop', 'Drops'),
+                  value: stats.drops,
+                  positive: false,
+                },
               ].map((s) => (
                 <View
                   key={s.label}
