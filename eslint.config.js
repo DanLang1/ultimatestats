@@ -18,7 +18,7 @@ module.exports = defineConfig([
   expoConfig,
   eslintConfigPrettier,
   {
-    ignores: ['dist/*', 'expo-env.d.ts'],
+    ignores: ['.expo/**', 'dist/*', 'expo-env.d.ts'],
   },
   {
     plugins: {

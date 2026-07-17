@@ -1,5 +1,5 @@
 import type { AdvancedTrackedGame } from '../types';
-import { formatGame } from './formatGame';
+// import { formatGame } from './formatGame';
 
 // mostly visual tests to verify output
 // npx jest advancedTracking/scenarios --verbose --no-coverage
@@ -94,10 +94,11 @@ it('scenario: clean hold — Zoo receive, 3 passes, goal', () => {
     ],
   };
 
-  console.log('\n\n=== FORMATTED ===\n');
-  console.log(formatGame(game));
-  console.log('\n=== RAW JSON: Scenario 1 — Clean hold ===\n');
-  console.log(JSON.stringify(game));
+  void game;
+  // console.log('\n\n=== FORMATTED ===\n');
+  // console.log(formatGame(game));
+  // console.log('\n=== RAW JSON: Scenario 1 — Clean hold ===\n');
+  // console.log(JSON.stringify(game));
 });
 
 // ── Scenario 2: Dirty hold ───────────────────────────────────────────────────
@@ -215,10 +216,11 @@ it('scenario: dirty hold — Zoo receive, throwaway, block, Zoo scores', () => {
     ],
   };
 
-  console.log('\n\n=== FORMATTED ===\n');
-  console.log(formatGame(game));
-  console.log('\n=== RAW JSON: Scenario 2 — Dirty hold ===\n');
-  console.log(JSON.stringify(game));
+  void game;
+  // console.log('\n\n=== FORMATTED ===\n');
+  // console.log(formatGame(game));
+  // console.log('\n=== RAW JSON: Scenario 2 — Dirty hold ===\n');
+  // console.log(JSON.stringify(game));
 });
 
 // ── Scenario 3: Break ────────────────────────────────────────────────────────
@@ -316,10 +318,11 @@ it('scenario: break — Zoo pull, Rivals possess, Meves block, Zoo scores', () =
     ],
   };
 
-  console.log('\n\n=== FORMATTED ===\n');
-  console.log(formatGame(game));
-  console.log('\n=== RAW JSON: Scenario 3 — Break ===\n');
-  console.log(JSON.stringify(game));
+  void game;
+  // console.log('\n\n=== FORMATTED ===\n');
+  // console.log(formatGame(game));
+  // console.log('\n=== RAW JSON: Scenario 3 — Break ===\n');
+  // console.log(JSON.stringify(game));
 });
 
 // ── Scenario 4: Callahan ─────────────────────────────────────────────────────
@@ -391,10 +394,11 @@ it('scenario: callahan — Zoo D, Rivals in endzone, Max catches Callahan', () =
     ],
   };
 
-  console.log('\n\n=== FORMATTED ===\n');
-  console.log(formatGame(game));
-  console.log('\n=== RAW JSON: Scenario 4 — Callahan ===\n');
-  console.log(JSON.stringify(game));
+  void game;
+  // console.log('\n\n=== FORMATTED ===\n');
+  // console.log(formatGame(game));
+  // console.log('\n=== RAW JSON: Scenario 4 — Callahan ===\n');
+  // console.log(JSON.stringify(game));
 });
 // ── Scenario 5: Full game — every field ─────────────────────────────────────
 //
@@ -746,10 +750,11 @@ it('scenario: full game — both teams tracked, every field', () => {
     ],
   };
 
-  console.log('\n\n=== FORMATTED ===\n');
-  console.log(formatGame(game));
-  console.log('\n=== RAW JSON: Scenario 5 — Full game, both teams tracked ===\n');
-  console.log(JSON.stringify(game));
+  void game;
+  // console.log('\n\n=== FORMATTED ===\n');
+  // console.log(formatGame(game));
+  // console.log('\n=== RAW JSON: Scenario 5 — Full game, both teams tracked ===\n');
+  // console.log(JSON.stringify(game));
 });
 
 // ── Scenario 6: Block — disc hits ground, different player picks up ───────────
@@ -834,10 +839,11 @@ test('scenario: block — disc hits ground, different player picks up', () => {
     ],
   };
 
-  console.log('\n\n=== FORMATTED ===\n');
-  console.log(formatGame(game));
-  console.log('\n=== RAW JSON: Scenario 6 — Block, different player picks up ===\n');
-  console.log(JSON.stringify(game));
+  void game;
+  // console.log('\n\n=== FORMATTED ===\n');
+  // console.log(formatGame(game));
+  // console.log('\n=== RAW JSON: Scenario 6 — Block, different player picks up ===\n');
+  // console.log(JSON.stringify(game));
 });
 
 // ── Scenario 7: Clean-catch block — defender catches in air, throws immediately ────
@@ -916,10 +922,11 @@ test('scenario: block — defender gets block, picks up and becomes thrower', ()
     ],
   };
 
-  console.log('\n\n=== FORMATTED ===\n');
-  console.log(formatGame(game));
-  console.log('\n=== RAW JSON: Scenario 7 — Block, defender picks up and becomes thrower ===\n');
-  console.log(JSON.stringify(game));
+  void game;
+  // console.log('\n\n=== FORMATTED ===\n');
+  // console.log(formatGame(game));
+  // console.log('\n=== RAW JSON: Scenario 7 — Block, defender picks up and becomes thrower ===\n');
+  // console.log(JSON.stringify(game));
 });
 
 // ── Scenario 8: Injury sub — injured player OFF the disc, play resumes same possession ──
@@ -1003,10 +1010,11 @@ test('scenario: injury sub — player off disc, play resumes in same possession'
     ],
   };
 
-  console.log('\n\n=== FORMATTED ===\n');
-  console.log(formatGame(game));
-  console.log('\n=== RAW JSON: Scenario 8 — Injury sub, player off disc ===\n');
-  console.log(JSON.stringify(game));
+  void game;
+  // console.log('\n\n=== FORMATTED ===\n');
+  // console.log(formatGame(game));
+  // console.log('\n=== RAW JSON: Scenario 8 — Injury sub, player off disc ===\n');
+  // console.log(JSON.stringify(game));
 });
 
 // ── Scenario 9: Injury sub — injured player HAS the disc, new player takes possession ──
@@ -1102,10 +1110,11 @@ test('scenario: injury sub — player with disc injured, new player takes posses
     ],
   };
 
-  console.log('\n\n=== FORMATTED ===\n');
-  console.log(formatGame(game));
-  console.log('\n=== RAW JSON: Scenario 9 — Injury sub, player with disc ===\n');
-  console.log(JSON.stringify(game));
+  void game;
+  // console.log('\n\n=== FORMATTED ===\n');
+  // console.log(formatGame(game));
+  // console.log('\n=== RAW JSON: Scenario 9 — Injury sub, player with disc ===\n');
+  // console.log(JSON.stringify(game));
 });
 
 // ── Scenario 10: Stall ───────────────────────────────────────────────────────
@@ -1189,10 +1198,11 @@ test('scenario: stall — count hits 10, disc turns over at the spot', () => {
     ],
   };
 
-  console.log('\n\n=== FORMATTED ===\n');
-  console.log(formatGame(game));
-  console.log('\n=== RAW JSON: Scenario 10 — Stall ===\n');
-  console.log(JSON.stringify(game));
+  void game;
+  // console.log('\n\n=== FORMATTED ===\n');
+  // console.log(formatGame(game));
+  // console.log('\n=== RAW JSON: Scenario 10 — Stall ===\n');
+  // console.log(JSON.stringify(game));
 });
 
 // ── Scenario 11: OB pull ─────────────────────────────────────────────────────
@@ -1273,10 +1283,11 @@ test('scenario: ob pull — pull flies OB, receiving team spots and picks up', (
     ],
   };
 
-  console.log('\n\n=== FORMATTED ===\n');
-  console.log(formatGame(game));
-  console.log('\n=== RAW JSON: Scenario 11 — OB pull ===\n');
-  console.log(JSON.stringify(game));
+  void game;
+  // console.log('\n\n=== FORMATTED ===\n');
+  // console.log(formatGame(game));
+  // console.log('\n=== RAW JSON: Scenario 11 — OB pull ===\n');
+  // console.log(JSON.stringify(game));
 });
 
 // ── Scenario 12: Gender ratio — mixed game ───────────────────────────────────
@@ -1382,8 +1393,9 @@ test('scenario: gender ratio — mixed game, fmp then mmp point', () => {
     ],
   };
 
-  console.log('\n\n=== FORMATTED ===\n');
-  console.log(formatGame(game));
-  console.log('\n=== RAW JSON: Scenario 12 — Gender ratio, mixed game ===\n');
-  console.log(JSON.stringify(game));
+  void game;
+  // console.log('\n\n=== FORMATTED ===\n');
+  // console.log(formatGame(game));
+  // console.log('\n=== RAW JSON: Scenario 12 — Gender ratio, mixed game ===\n');
+  // console.log(JSON.stringify(game));
 });
