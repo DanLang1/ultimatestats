@@ -9,13 +9,6 @@ jest.mock('@react-native-async-storage/async-storage', () => ({
   removeItem: jest.fn(),
 }));
 
-jest.mock('react-native', () => ({
-  Platform: {
-    OS: 'ios',
-    select: <T>(options: { ios?: T; android?: T; default?: T }) => options.ios ?? options.default,
-  },
-}));
-
 const mockedAsyncStorage = AsyncStorage as jest.Mocked<typeof AsyncStorage>;
 
 describe('line rollback after goal reversal', () => {

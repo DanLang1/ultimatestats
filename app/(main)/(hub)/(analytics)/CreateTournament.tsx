@@ -1,6 +1,6 @@
 import DateTimePicker, {
   DateTimePickerAndroid,
-  DateTimePickerEvent,
+  DateTimePickerChangeEvent,
 } from '@react-native-community/datetimepicker';
 import { router, Stack } from 'expo-router';
 import React, { useState } from 'react';
@@ -40,8 +40,7 @@ export default function CreateTournamentScreen() {
   const isDuplicate = tournaments.some((t) => t.name.toLowerCase() === trimmedName.toLowerCase());
   const isSaveDisabled = !trimmedName || isDuplicate;
 
-  const handleStartDateChange = (_event: DateTimePickerEvent, selected?: Date) => {
-    if (!selected) return;
+  const handleStartDateChange = (_event: DateTimePickerChangeEvent, selected: Date) => {
     selected.setHours(0, 0, 0, 0);
     setStartDate(selected);
     if (selected > endDate) {
@@ -49,8 +48,7 @@ export default function CreateTournamentScreen() {
     }
   };
 
-  const handleEndDateChange = (_event: DateTimePickerEvent, selected?: Date) => {
-    if (!selected) return;
+  const handleEndDateChange = (_event: DateTimePickerChangeEvent, selected: Date) => {
     selected.setHours(0, 0, 0, 0);
     if (selected < startDate) return;
     setEndDate(selected);
@@ -60,8 +58,7 @@ export default function CreateTournamentScreen() {
     DateTimePickerAndroid.open({
       value: startDate,
       mode: 'date',
-      onChange: (e, date) => {
-        if (e.type !== 'set' || !date) return;
+      onValueChange: (_event, date) => {
         date.setHours(0, 0, 0, 0);
         setStartDate(date);
         if (date > endDate) {
@@ -76,8 +73,7 @@ export default function CreateTournamentScreen() {
       value: endDate,
       mode: 'date',
       minimumDate: startDate,
-      onChange: (e, date) => {
-        if (e.type !== 'set' || !date) return;
+      onValueChange: (_event, date) => {
         date.setHours(0, 0, 0, 0);
         setEndDate(date);
       },
@@ -141,7 +137,7 @@ export default function CreateTournamentScreen() {
                   value={startDate}
                   mode="date"
                   display="compact"
-                  onChange={handleStartDateChange}
+                  onValueChange={handleStartDateChange}
                   themeVariant={themeMode}
                   accentColor={palette.accent}
                 />
@@ -175,7 +171,7 @@ export default function CreateTournamentScreen() {
                   mode="date"
                   display="compact"
                   minimumDate={startDate}
-                  onChange={handleEndDateChange}
+                  onValueChange={handleEndDateChange}
                   themeVariant={themeMode}
                   accentColor={palette.accent}
                 />

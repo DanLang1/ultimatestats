@@ -25,13 +25,14 @@ npm run dev
 
 ## Common Commands
 
-| Command               | Description                                                         |
-| --------------------- | ------------------------------------------------------------------- |
-| `npm run dev`         | Start the Expo development server with the development app variant. |
-| `npm run check`       | Run linting and TypeScript checks.                                  |
-| `npm test`            | Run unit tests.                                                     |
-| `npm run check:all`   | Format the repository, then run checks and unit tests.              |
-| `npm run maestro:all` | Run the standard Maestro end-to-end test suite.                     |
+| Command               | Description                                                               |
+| --------------------- | ------------------------------------------------------------------------- |
+| `npm run dev`         | Start the Expo development server with the development app variant.       |
+| `npm run check`       | Run formatting checks, linting, and TypeScript checks.                    |
+| `npm test`            | Run Jest unit/domain and React Native Testing Library screen tests.       |
+| `npm run check:all`   | Run static checks and all Jest tests.                                     |
+| `npm run maestro`     | Run the core advanced-tracker Maestro end-to-end suite.                   |
+| `npm run maestro:all` | Run core and extended advanced-tracker Maestro tests on an installed app. |
 
 ## Documentation
 

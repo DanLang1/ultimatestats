@@ -40,13 +40,6 @@ jest.mock('@/lib/advancedTracking/storage', () => ({
   }),
 }));
 
-jest.mock('react-native', () => ({
-  Platform: {
-    OS: 'ios',
-    select: <T>(options: { ios?: T; android?: T; default?: T }) => options.ios ?? options.default,
-  },
-}));
-
 const mockedAsyncStorage = AsyncStorage as jest.Mocked<typeof AsyncStorage>;
 
 function resetStores() {

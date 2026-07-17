@@ -296,6 +296,8 @@ export default function DashboardScreen() {
                 <Pressable
                   key={index}
                   testID={item.testID}
+                  accessibilityRole="button"
+                  accessibilityLabel={item.label}
                   onPress={item.onPress}
                   disabled={item.disabled}
                   style={({ pressed }) => [

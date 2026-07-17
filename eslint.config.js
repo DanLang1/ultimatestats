@@ -1,10 +1,18 @@
 const { defineConfig } = require('eslint/config');
 const expoConfig = require('eslint-config-expo/flat');
 const eslintConfigPrettier = require('eslint-config-prettier/flat');
+const testingLibrary = require('eslint-plugin-testing-library');
 const tseslint = require('@typescript-eslint/eslint-plugin');
 const tsParser = require('@typescript-eslint/parser');
 
 const localPlugin = require('./scripts/eslint-rules/index.js');
+
+const testFiles = [
+  '**/__tests__/**/*.ts',
+  '**/__tests__/**/*.tsx',
+  '**/*.test.ts',
+  '**/*.test.tsx',
+];
 
 module.exports = defineConfig([
   expoConfig,
@@ -49,9 +57,16 @@ module.exports = defineConfig([
     },
   },
   {
-    files: ['**/__tests__/**/*.ts', '**/__tests__/**/*.tsx', '**/*.test.ts', '**/*.test.tsx'],
+    ...testingLibrary.configs['flat/react'],
+    files: testFiles,
+  },
+  {
+    files: testFiles,
     rules: {
       '@typescript-eslint/no-unsafe-type-assertion': 'off',
+      'testing-library/prefer-explicit-assert': 'error',
+      'testing-library/prefer-user-event': 'error',
+      'testing-library/prefer-user-event-setup': 'error',
     },
   },
 ]);

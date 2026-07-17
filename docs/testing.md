@@ -2,17 +2,51 @@
 
 > Guidelines for testing in this codebase.
 
+## Testing Strategy
+
+The repository uses three complementary test layers. Put behavior in the lowest layer that can
+prove it confidently, then add a higher-level test only when the integration itself is important.
+
+| Layer                                     | What it proves                                                                                                                                               | What it does not prove                                                                                                      | Typical location                                                  |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| Jest unit/domain tests                    | Pure calculations, state transitions, parsers, migrations, store actions, and edge cases with direct inputs and outputs                                      | Rendering, accessibility, native controls, or navigation between screens                                                    | `lib/**/__tests__/`, `store/**/__tests__/`, `hooks/**/__tests__/` |
+| React Native Testing Library screen tests | A real route renders with its real components, providers, hooks, and stores; important presses update visible UI/state and request the expected navigation   | A real device, native module implementation, actual Expo Router transition, gestures across screens, or platform layout     | `app/**/__tests__/`                                               |
+| Maestro end-to-end tests                  | An installed app accepts real device-level taps and text input while exercising native rendering, Expo Router navigation, modals, and multi-screen workflows | Exhaustive business-logic permutations; most tracker flows seed valid setup state rather than repeating the entire setup UI | `.maestro/tests/`                                                 |
+
+React Native Testing Library tests are **screen-level integration tests**, even though Jest runs
+them. They sit between small unit tests and full-device Maestro flows. The screen harness replaces
+only boundaries Jest cannot host: the native navigation container, native persistence APIs,
+speech recognition, and animation worklets. Therefore, asserting `router.push(...)` proves that a
+screen requested navigation; a Maestro flow proves that the installed app actually navigated and
+the destination works.
+
+For example, advanced tracking is covered at all three levels without repeating every scenario:
+
+1. Unit tests exhaustively verify tracking calculations and transitions.
+2. Screen tests verify each advanced route's primary state, guards, and important local actions.
+3. Maestro verifies selected point-tracking workflows across real menus, modals, and routes.
+
+When fixing a workflow bug, add a regression test at the layer that owns the defect. Add a Maestro
+regression as well when the bug depends on navigation, native controls, gestures, timing, or a
+multi-screen sequence.
+
 ## Running Tests
 
 ```bash
-# All tests
+# All Jest tests: unit/domain and React Native Testing Library screen tests
 npm test
 
-# Specific test file
+# Unit/domain tests only, by target
 npm test -- gameUtils
+
+# Screen integration tests only
+npm test -- app
 
 # Watch mode
 npm test -- --watch
+
+# Formatting, linting, type checking, and all Jest tests
+npm run check:all
 ```
 
 ## Maestro Simulator Checks
@@ -28,10 +62,26 @@ npm run ios
 npm run maestro:smoke
 ```
 
-Run the default single-simulator suite with `npm run maestro`; it uses the fast seeded tracker setup
-for most flows and keeps one UI setup smoke test for the real Dashboard → New Game → line/pull path.
-It excludes repetitive multi-point stress flows to keep feedback fast. Use `npm run maestro:all` to
-run all core and extended scenarios.
+The Maestro suite is intentionally concentrated on advanced tracking, where menus, modal
+transitions, and long action sequences benefit most from device-level coverage. Run the default
+single-simulator suite with `npm run maestro`; it uses the fast test-only seed route for most flows
+and keeps one UI setup smoke test for the real Dashboard → New Game → line/pull path. Seeding avoids
+retesting setup in every scenario but everything after the seed still runs through the installed
+app's real UI and navigation.
+
+The default suite excludes the `extended` multi-point scenarios to keep feedback fast. Use
+`npm run maestro:all` to include them all.
+
+```bash
+# Smallest installed-app smoke flow
+npm run maestro:smoke
+
+# Core advanced-tracker device flows; excludes the extended tag
+npm run maestro
+
+# Core and extended advanced-tracker device flows
+npm run maestro:all
+```
 
 The Maestro npm scripts disable Maestro CLI analytics for predictable agent runs.
 
@@ -40,7 +90,16 @@ flows.
 
 ## Test File Location
 
-Tests live in `lib/__tests__/` directory:
+Tests live in `__tests__/` directories near the code they cover. Route tests are colocated with the
+nearest route area under `app/`; shared screen-test infrastructure stays under `test/`:
+
+- `app/**/__tests__/` - user-facing route behavior
+- `lib/**/__tests__/`, `store/**/__tests__/`, etc. - domain and state behavior
+- `test/fixtures/` - valid domain state built with real Zustand stores and actions
+- `test/mocks/` - narrow native/runtime boundary adapters
+- `test/render.tsx` - the production-like provider wrapper
+
+Examples of domain tests include:
 
 - `gameUtils.test.ts` - Game end logic
 - `playerUtils.test.ts` - Player utilities
@@ -48,8 +107,6 @@ Tests live in `lib/__tests__/` directory:
 - `statsUtils.test.ts` - Stats calculations
 - `timelineUtils.test.ts` - Timeline formatting
 - `lib/storage/__tests__/migrations*.test.ts` - Saved-game schema migrations
-- `lib/storage/__tests__/asyncStorageAdapter.test.ts` - Saved-game load/write recovery behavior
-- `lib/storage/__tests__/devImport.test.ts` - Dev legacy JSON import parsing
 
 Legacy saved-game fixtures live in `lib/storage/__fixtures__/games/`, grouped by schema version
 (`v2/`, `v3/`, etc.). When adding a new migration, keep older fixtures unchanged and add new
@@ -60,6 +117,33 @@ Every saved-game schema bump requires a new migration file — even if the migra
 first migration up to `CURRENT_SCHEMA_VERSION` are covered consecutively.
 
 ## Writing Tests
+
+### Screen-test policy
+
+Screen tests use React Native Testing Library and follow this order of preference:
+
+1. Render the real route with the real providers, hooks, stores, actions, and child components.
+2. Put the real store into a small valid state or call a real action to reach that state.
+3. Seed React Query for deterministic server data without replacing the consuming hook.
+4. Replace only a runtime boundary that Jest cannot host, such as Expo Router's native navigation
+   container, SQLite, or speech recognition.
+
+Do not mock a hook or Zustand store merely because arranging its state takes more setup. A route
+test should normally exercise the hook and store behavior that the user-visible screen depends on.
+Boundary adapters must preserve the boundary's useful semantics; for example, the SQLite test
+adapter implements in-memory load/save/delete operations instead of returning hard-coded hook
+results.
+
+Use `screen` queries, prefer role/name and label queries, and use `userEvent.setup()` for user
+interaction. Await `renderScreen`, `userEvent` calls, `findBy*`, and `waitFor` work. Prefer visible
+behavior and state transitions over implementation assertions or snapshots.
+
+The test ESLint configuration applies the React Testing Library flat preset and additionally
+requires explicit assertions and `userEvent` usage.
+
+Do not use a screen test to simulate a long cross-route journey. Assert the screen's visible result,
+local state transition, and navigation request, then use Maestro when the route transition and
+destination must be proven together on a device.
 
 ### Pattern
 
@@ -80,16 +164,28 @@ describe('functionToTest', () => {
 
 ### What to Test
 
-1. **Utility functions** in `lib/` - pure functions with clear inputs/outputs
-2. **Game logic** - scoring, win conditions, possession
-3. **Stats calculations** - plus/minus, aggregations
-4. **Edge cases** - empty arrays, null values, boundary conditions
+1. **Unit/domain:** utility functions, game logic, statistics, migrations, store actions, and edge
+   cases.
+2. **Screen integration:** every user-facing route's primary content, route guards, accessibility,
+   and important local interactions.
+3. **Maestro E2E:** a focused set of high-value workflows where real navigation, native rendering,
+   or a sequence across screens is the behavior under test.
 
 ### What NOT to Test
 
-1. UI components - use manual verification
-2. Store actions directly - test through exported utilities
-3. Third-party library behavior
+1. Third-party library internals
+2. Styling implementation details
+3. Navigator layout files unless the shell itself owns meaningful behavior
+4. Test-only routes such as `app/__maestro_seed__.tsx`
+
+## Official references
+
+- [Expo unit testing](https://docs.expo.dev/develop/unit-testing/)
+- [Expo Router testing](https://docs.expo.dev/router/reference/testing/)
+- [React Native Testing Library queries](https://callstack.github.io/react-native-testing-library/docs/api/queries)
+- [React Native Testing Library user events](https://callstack.github.io/react-native-testing-library/docs/api/events/user-event)
+- [Testing Library guiding principles](https://testing-library.com/docs/guiding-principles/)
+- [Testing Library ESLint plugin](https://github.com/testing-library/eslint-plugin-testing-library)
 
 ## Manual Verification
 

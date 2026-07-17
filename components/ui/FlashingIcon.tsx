@@ -15,8 +15,6 @@ interface FlashingIconProps {
   isFlashing: boolean;
 }
 
-const AnimatedIcon = Animated.createAnimatedComponent(MaterialCommunityIcons);
-
 export default function FlashingIcon({ name, size, color, isFlashing }: FlashingIconProps) {
   const opacity = useSharedValue(1);
 
@@ -33,5 +31,9 @@ export default function FlashingIcon({ name, size, color, isFlashing }: Flashing
     opacity: opacity.value,
   }));
 
-  return <AnimatedIcon name={name} size={size} color={color} style={animatedStyle} />;
+  return (
+    <Animated.View style={animatedStyle}>
+      <MaterialCommunityIcons name={name} size={size} color={color} />
+    </Animated.View>
+  );
 }

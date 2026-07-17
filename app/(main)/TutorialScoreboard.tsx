@@ -114,7 +114,12 @@ export default function TutorialScoreboardRoute() {
         />
       </View>
 
-      <Pressable onPress={handleClose} hitSlop={homeHitSlop} style={styles.floatingHomeButton}>
+      <Pressable
+        accessibilityLabel="Exit tutorial"
+        accessibilityRole="button"
+        onPress={handleClose}
+        hitSlop={homeHitSlop}
+        style={styles.floatingHomeButton}>
         <MaterialCommunityIcons name="home" size={homeIconSize} color={team1TextColor} />
       </Pressable>
 

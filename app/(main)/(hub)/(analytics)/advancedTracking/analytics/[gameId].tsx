@@ -2,7 +2,7 @@ import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import DateTimePicker, {
   DateTimePickerAndroid,
-  DateTimePickerEvent,
+  DateTimePickerChangeEvent,
 } from '@react-native-community/datetimepicker';
 import { File, Paths } from 'expo-file-system';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
@@ -138,8 +138,7 @@ export default function AdvancedGameStatsScreen() {
     );
   };
 
-  const handleDateChange = (_event: DateTimePickerEvent, selectedValue?: Date) => {
-    if (!selectedValue) return;
+  const handleDateChange = (_event: DateTimePickerChangeEvent, selectedValue: Date) => {
     const now = new Date();
     if (selectedValue.getTime() > now.getTime()) return;
     handleUpdatePlayedAt(selectedValue.getTime());
@@ -152,14 +151,13 @@ export default function AdvancedGameStatsScreen() {
       mode: 'date',
       maximumDate: now,
       minimumDate: MIN_PLAYED_AT_DATE,
-      onChange: (event, date) => {
-        if (event.type !== 'set' || !date) return;
+      onValueChange: (_event, date) => {
         DateTimePickerAndroid.open({
           value: date,
           mode: 'time',
           is24Hour: false,
-          onChange: (timeEvent, finalDate) => {
-            if (timeEvent.type === 'set' && finalDate && finalDate.getTime() <= now.getTime()) {
+          onValueChange: (_timeEvent, finalDate) => {
+            if (finalDate.getTime() <= now.getTime()) {
               handleUpdatePlayedAt(finalDate.getTime());
             }
           },
@@ -350,7 +348,7 @@ export default function AdvancedGameStatsScreen() {
                 display="compact"
                 maximumDate={new Date()}
                 minimumDate={MIN_PLAYED_AT_DATE}
-                onChange={handleDateChange}
+                onValueChange={handleDateChange}
                 themeVariant={themeMode}
                 accentColor={palette.accent}
               />
