@@ -1,1 +1,6 @@
 export const PRESSURE_PLUS_MINUS_VALUE = 0.5;
+
+export const POINT_PLUS_MINUS_HOLD_VALUE = 0.5;
+export const POINT_PLUS_MINUS_BROKEN_VALUE = -1;
+export const POINT_PLUS_MINUS_BREAK_VALUE = 1;
+export const POINT_PLUS_MINUS_OPP_HOLD_VALUE = -0.5;

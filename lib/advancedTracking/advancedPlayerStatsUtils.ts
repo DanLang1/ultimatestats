@@ -1,6 +1,12 @@
 import type { AnalyticsGame, AnalyticsPoint, AttributionType } from './analyticsTypes';
 import { getPointStateForSide } from './buildAnalyticsGame';
-import { PRESSURE_PLUS_MINUS_VALUE } from './statConstants';
+import {
+  POINT_PLUS_MINUS_BREAK_VALUE,
+  POINT_PLUS_MINUS_BROKEN_VALUE,
+  POINT_PLUS_MINUS_HOLD_VALUE,
+  POINT_PLUS_MINUS_OPP_HOLD_VALUE,
+  PRESSURE_PLUS_MINUS_VALUE,
+} from './statConstants';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -60,6 +66,8 @@ export interface AdvancedPlayerStats {
   oPoints: number;
   /** Points where this participant's side pulled. */
   dPoints: number;
+  /** Weighted point outcomes: hold +0.5, broken -1, break +1, opponent hold -0.5. */
+  pointPlusMinus: number;
   /** holds / (holds + timesBroken) for points this participant played on O. Null if 0 O-points. */
   oEfficiency: number | null;
   /** breaks / (breaks + oppHolds) for points this participant played on D. Null if 0 D-points. */
@@ -103,6 +111,7 @@ function createEmptyStats(participantId: string): AdvancedPlayerStats {
     pointsPlayed: 0,
     oPoints: 0,
     dPoints: 0,
+    pointPlusMinus: 0,
     oEfficiency: null,
     dEfficiency: null,
     pointDurationMs: null,
@@ -287,6 +296,11 @@ export function computeAdvancedPlayerStats(
 
     const oTotal = oHolds + oTimesBroken;
     const dTotal = dBreaks + dOppHolds;
+    stats.pointPlusMinus =
+      oHolds * POINT_PLUS_MINUS_HOLD_VALUE +
+      oTimesBroken * POINT_PLUS_MINUS_BROKEN_VALUE +
+      dBreaks * POINT_PLUS_MINUS_BREAK_VALUE +
+      dOppHolds * POINT_PLUS_MINUS_OPP_HOLD_VALUE;
     stats.oEfficiency = oTotal > 0 ? oHolds / oTotal : null;
     stats.dEfficiency = dTotal > 0 ? dBreaks / dTotal : null;
 

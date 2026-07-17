@@ -1,4 +1,5 @@
 import { ThemedText } from '@/components/ThemedText';
+import { PointPlusMinusInfoSheet } from '@/components/advancedTracking/PointPlusMinusInfoSheet';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { AdvancedPlayerStats } from '@/lib/advancedTracking/advancedPlayerStatsUtils';
@@ -71,12 +72,12 @@ const STAT_GROUPS: StatGroup[] = [
     key: 'points',
     label: 'Points',
     columns: [
+      { key: 'pointPlusMinus', label: 'Pt +/-', width: 66 },
       { key: 'oEfficiency', label: 'O-Eff', width: 72 },
       { key: 'dEfficiency', label: 'D-Eff', width: 72 },
       { key: 'pointsPlayed', label: 'PP', width: 58 },
       { key: 'oPoints', label: 'O-Pts', width: 66 },
       { key: 'dPoints', label: 'D-Pts', width: 66 },
-      { key: 'plusMinus', label: '+/-', width: 58 },
     ],
   },
   {
@@ -126,6 +127,7 @@ const LEGEND_LABELS_BY_KEY: Partial<Record<SortKey, string>> = {
   pointsPlayed: 'Points Played',
   oPoints: 'O-Points',
   dPoints: 'D-Points',
+  pointPlusMinus: 'Point Plus/Minus',
 };
 
 function getCellValue(stats: AdvancedPlayerStats, key: SortKey): number | null {
@@ -149,6 +151,7 @@ function formatCell(stats: AdvancedPlayerStats, key: SortKey): string {
   if (key === 'dEfficiency') {
     return stats.dPoints > 0 ? formatEfficiency(stats.dEfficiency ?? 0) : '-';
   }
+  if (key === 'pointPlusMinus') return String(stats.pointPlusMinus);
   const v = getCellValue(stats, key);
   return v != null && v !== 0 ? String(v) : '-';
 }
@@ -183,6 +186,7 @@ export default function AdvancedStatsTable({
   });
   const [activeGroupKey, setActiveGroupKey] = useState<StatGroupKey>('core');
   const [showLegend, setShowLegend] = useState(false);
+  const [showPointPlusMinusInfo, setShowPointPlusMinusInfo] = useState(false);
   const [tableWidth, setTableWidth] = useState(0);
   const styles = createStyles(sizeClass);
 
@@ -190,9 +194,12 @@ export default function AdvancedStatsTable({
   const activeGroup = getStatGroup(activeGroupKey);
   const visibleStatColumns = activeGroup.columns;
   const visibleLegendItems = visibleStatColumns.map((column) => ({
+    key: column.key,
     abbr: column.label,
     label: LEGEND_LABELS_BY_KEY[column.key] ?? column.label,
   }));
+  const standardLegendItems = visibleLegendItems.filter((item) => item.key !== 'pointPlusMinus');
+  const pointPlusMinusLegendItem = visibleLegendItems.find((item) => item.key === 'pointPlusMinus');
   const visiblePlayerStats =
     activeGroupKey === 'pulls' ? playerStats.filter((stats) => stats.pulls > 0) : playerStats;
   const playerNames = visiblePlayerStats.map((stats) => getName(stats.participantId));
@@ -267,6 +274,7 @@ export default function AdvancedStatsTable({
 
   const getCellColor = (stats: AdvancedPlayerStats, key: SortKey): string => {
     if (key === 'plusMinus') return plusMinusColor(stats.plusMinus);
+    if (key === 'pointPlusMinus') return plusMinusColor(stats.pointPlusMinus);
     if (key === 'oEfficiency') return oEffColor(stats);
     if (key === 'dEfficiency') return dEffColor(stats);
     return palette.textInverse;
@@ -337,7 +345,7 @@ export default function AdvancedStatsTable({
             { backgroundColor: palette.overlay05, borderColor: palette.overlay10 },
           ]}>
           <View style={styles.legendGrid}>
-            {visibleLegendItems.map((item) => (
+            {standardLegendItems.map((item) => (
               <View key={`${activeGroupKey}-${item.abbr}`} style={styles.legendItem}>
                 <ThemedText style={[styles.legendAbbr, { color: palette.textInverse }]}>
                   {item.abbr}
@@ -348,6 +356,35 @@ export default function AdvancedStatsTable({
               </View>
             ))}
           </View>
+          {pointPlusMinusLegendItem && (
+            <Pressable
+              testID="point-plus-minus-info-button"
+              accessibilityRole="button"
+              accessibilityLabel="View Point Plus/Minus formula"
+              onPress={() => setShowPointPlusMinusInfo(true)}
+              style={[styles.pointPlusMinusLegendRow, { borderTopColor: palette.overlay10 }]}>
+              <View style={styles.pointPlusMinusHeader}>
+                <View style={styles.pointPlusMinusIdentity}>
+                  <ThemedText style={[styles.pointPlusMinusAbbr, { color: palette.textInverse }]}>
+                    {pointPlusMinusLegendItem.abbr}
+                  </ThemedText>
+                  <ThemedText style={[styles.pointPlusMinusLabel, { color: palette.textMuted }]}>
+                    {pointPlusMinusLegendItem.label}
+                  </ThemedText>
+                </View>
+                <View style={styles.pointPlusMinusLink}>
+                  <ThemedText style={[styles.pointPlusMinusLinkText, { color: palette.accent }]}>
+                    Details
+                  </ThemedText>
+                  <MaterialCommunityIcons
+                    name="chevron-right"
+                    size={scaleBySizeClass(16, sizeClass)}
+                    color={palette.accent}
+                  />
+                </View>
+              </View>
+            </Pressable>
+          )}
           {activeGroupKey === 'pulls' && (
             <View style={[styles.legendNoteRow, { borderTopColor: palette.overlay10 }]}>
               <MaterialCommunityIcons
@@ -473,17 +510,17 @@ export default function AdvancedStatsTable({
                 {visibleStatColumns.map((col) => {
                   const color = getCellColor(stats, col.key);
                   const text = formatCell(stats, col.key);
+                  const isPlusMinus = col.key === 'plusMinus' || col.key === 'pointPlusMinus';
+                  const value = getCellValue(stats, col.key);
                   return (
                     <ThemedText
                       key={String(col.key)}
                       style={[
                         styles.cell,
                         { width: getColumnWidth(col), color },
-                        col.key === 'plusMinus' && styles.plusMinusCell,
+                        isPlusMinus && styles.plusMinusCell,
                       ]}>
-                      {col.key === 'plusMinus' && stats.plusMinus > 0
-                        ? `+${stats.plusMinus}`
-                        : text}
+                      {isPlusMinus && value != null && value > 0 ? `+${value}` : text}
                     </ThemedText>
                   );
                 })}
@@ -492,6 +529,10 @@ export default function AdvancedStatsTable({
           </View>
         </ScrollView>
       </View>
+      <PointPlusMinusInfoSheet
+        visible={showPointPlusMinusInfo}
+        onDismiss={() => setShowPointPlusMinusInfo(false)}
+      />
     </View>
   );
 }
@@ -547,6 +588,41 @@ function createStyles(sizeClass: SizeClass) {
     },
     legendLabel: {
       fontSize: scaleBySizeClass(11, sizeClass),
+    },
+    pointPlusMinusLegendRow: {
+      borderTopWidth: 1,
+      marginTop: 10,
+      paddingTop: 10,
+      gap: 8,
+    },
+    pointPlusMinusHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: 12,
+    },
+    pointPlusMinusIdentity: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+    },
+    pointPlusMinusAbbr: {
+      minWidth: 36,
+      fontSize: scaleBySizeClass(11, sizeClass),
+      fontFamily: Fonts.bold,
+    },
+    pointPlusMinusLabel: {
+      flex: 1,
+      fontSize: scaleBySizeClass(11, sizeClass),
+    },
+    pointPlusMinusLink: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    pointPlusMinusLinkText: {
+      fontSize: scaleBySizeClass(10, sizeClass),
+      fontFamily: Fonts.bold,
     },
     legendNoteRow: {
       flexDirection: 'row',

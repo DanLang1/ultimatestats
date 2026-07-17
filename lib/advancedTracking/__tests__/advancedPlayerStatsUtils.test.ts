@@ -3,7 +3,7 @@ import {
   computeAdvancedPlayerStatsForParticipant,
 } from '../advancedPlayerStatsUtils';
 import { buildAnalyticsGame } from '../buildAnalyticsGame';
-import type { AttributionType } from '../analyticsTypes';
+import type { AnalyticsGame, AnalyticsPoint, AttributionType, PointState } from '../analyticsTypes';
 import type { AdvancedTrackedGame, PlayerRef } from '../types';
 
 // ── Shared fixtures ──────────────────────────────────────────────────────────
@@ -47,9 +47,137 @@ function findStats(stats: ReturnType<typeof computeAdvancedPlayerStats>, partici
   return s;
 }
 
+interface PointOutcomeFixture {
+  state: PointState;
+  receivingSideId: string;
+  scoringSideId: string | null;
+}
+
+interface PointPlusMinusCase extends PointOutcomeFixture {
+  name: string;
+  scoringSideId: string;
+  zooValue: number;
+  rivalValue: number;
+}
+
+function getFixtureCleanHold(state: PointState): boolean | null {
+  if (state === 'terminated' || state === 'in_progress') return null;
+  return state === 'hold' || state === 'opp_hold';
+}
+
+function createPointOutcomeAnalyticsGame(fixtures: PointOutcomeFixture[]): AnalyticsGame {
+  const points: AnalyticsPoint[] = fixtures.map((fixture, index) => {
+    return {
+      id: `pt${index + 1}`,
+      pointIndex: index + 1,
+      half: 1,
+      receivingSideId: fixture.receivingSideId,
+      pullingSideId: fixture.receivingSideId === ZOO ? RIVALS : ZOO,
+      scoringSideId: fixture.scoringSideId,
+      state: fixture.state,
+      linesBySide: {
+        [ZOO]: ['p_august'],
+        [RIVALS]: ['p_rival1'],
+      },
+      scoresBySide: { [ZOO]: 0, [RIVALS]: 0 },
+      durationMs: null,
+      isCleanHold: getFixtureCleanHold(fixture.state),
+    };
+  });
+
+  return {
+    gameType: 'scrimmage',
+    focusSideId: ZOO,
+    oppSideId: RIVALS,
+    initialReceivingSideId: ZOO,
+    sideLabels: { [ZOO]: 'Zoo', [RIVALS]: 'Rivals' },
+    participantNames: new Map([
+      ['p_august', 'August'],
+      ['p_rival1', 'Rival1'],
+    ]),
+    createdAt: 0,
+    points,
+    possessions: [],
+    actions: [],
+    attributions: [],
+  };
+}
+
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
 describe('advancedPlayerStatsUtils', () => {
+  describe('point plus/minus', () => {
+    const cases: PointPlusMinusCase[] = [
+      {
+        name: 'hold',
+        state: 'hold',
+        receivingSideId: ZOO,
+        scoringSideId: ZOO,
+        zooValue: 0.5,
+        rivalValue: -0.5,
+      },
+      {
+        name: 'broken',
+        state: 'broken',
+        receivingSideId: ZOO,
+        scoringSideId: RIVALS,
+        zooValue: -1,
+        rivalValue: 1,
+      },
+      {
+        name: 'break',
+        state: 'break',
+        receivingSideId: RIVALS,
+        scoringSideId: ZOO,
+        zooValue: 1,
+        rivalValue: -1,
+      },
+      {
+        name: 'opponent hold',
+        state: 'opp_hold',
+        receivingSideId: RIVALS,
+        scoringSideId: RIVALS,
+        zooValue: -0.5,
+        rivalValue: 0.5,
+      },
+    ];
+
+    it.each(cases)(
+      'weights $name correctly from either side perspective',
+      ({ state, receivingSideId, scoringSideId, zooValue, rivalValue }) => {
+        const game = createPointOutcomeAnalyticsGame([{ state, receivingSideId, scoringSideId }]);
+        const stats = computeAdvancedPlayerStats(game);
+
+        expect(findStats(stats, 'p_august').pointPlusMinus).toBe(zooValue);
+        expect(findStats(stats, 'p_rival1').pointPlusMinus).toBe(rivalValue);
+      },
+    );
+
+    it('accumulates outcomes and preserves half-point values', () => {
+      const game = createPointOutcomeAnalyticsGame([
+        { state: 'hold', receivingSideId: ZOO, scoringSideId: ZOO },
+        { state: 'hold', receivingSideId: ZOO, scoringSideId: ZOO },
+        { state: 'break', receivingSideId: RIVALS, scoringSideId: ZOO },
+        { state: 'opp_hold', receivingSideId: RIVALS, scoringSideId: RIVALS },
+      ]);
+      const stats = findStats(computeAdvancedPlayerStats(game), 'p_august');
+
+      expect(stats.pointPlusMinus).toBe(1.5);
+      expect(stats.plusMinus).toBe(0);
+    });
+
+    it('does not score terminated or in-progress points', () => {
+      const game = createPointOutcomeAnalyticsGame([
+        { state: 'terminated', receivingSideId: ZOO, scoringSideId: null },
+        { state: 'in_progress', receivingSideId: RIVALS, scoringSideId: null },
+      ]);
+      const stats = findStats(computeAdvancedPlayerStats(game), 'p_august');
+
+      expect(stats.pointsPlayed).toBe(2);
+      expect(stats.pointPlusMinus).toBe(0);
+    });
+  });
+
   describe('pull summary', () => {
     const game: AdvancedTrackedGame = {
       ...baseGame,
@@ -965,6 +1093,7 @@ describe('advancedPlayerStatsUtils', () => {
       const s = computeAdvancedPlayerStatsForParticipant(analytics, 'p_unknown');
       expect(s.goals).toBe(0);
       expect(s.pointsPlayed).toBe(0);
+      expect(s.pointPlusMinus).toBe(0);
     });
   });
 
@@ -1423,6 +1552,8 @@ describe('advancedPlayerStatsUtils', () => {
       expect(s.pointsPlayed).toBe(6);
       expect(s.oPoints).toBe(3); // pt1, pt3, pt6
       expect(s.dPoints).toBe(3); // pt2, pt4, pt5
+      // 2 holds (+1), 1 break (+1), 1 broken (-1), 2 opponent holds (-1)
+      expect(s.pointPlusMinus).toBe(0);
       expect(s.plusMinus).toBe(0);
     });
 
