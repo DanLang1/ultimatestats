@@ -209,10 +209,10 @@ export function useEventToast({
     }
 
     // The signal is an external store event; consume it synchronously so feedback is not lost.
-    /* eslint-disable react-hooks/set-state-in-effect */
+    /* eslint-disable react/react-compiler */
     setToast({ visible: true, message, tone, icon });
     setToastInstanceId((current) => current + 1);
-    /* eslint-enable react-hooks/set-state-in-effect */
+    /* eslint-enable react/react-compiler */
     clearEventToastSignal();
   }, [eventToastSignal, roster, team2Name, clearEventToastSignal]);
 

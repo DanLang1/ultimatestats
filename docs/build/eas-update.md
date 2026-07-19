@@ -9,10 +9,10 @@ This workflow pushes a JavaScript/asset update to the production Android app. Us
 
 ## Steps
 
-1. Run ESLint to ensure no linting errors:
+1. Run Oxlint to ensure no linting errors:
 
 ```bash
-npx eslint . --ext .ts,.tsx
+npm run lint
 ```
 
 2. Run the TypeScript check to ensure no type errors:

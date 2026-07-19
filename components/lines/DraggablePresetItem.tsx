@@ -63,7 +63,7 @@ export function DraggablePresetItem({
   // flash caused by the UI-thread offset jumping before the JS-thread store swap.
   const animatedOffset = useSharedValue(0);
 
-  /* eslint-disable react-hooks/immutability -- Reanimated gesture worklets require direct SharedValue writes on the UI runtime. */
+  /* eslint-disable react/react-compiler -- Reanimated gesture worklets require direct SharedValue writes on the UI runtime. */
   const panGesture = Gesture.Pan()
     .onStart(() => {
       draggingId.value = preset.id;
@@ -97,7 +97,7 @@ export function DraggablePresetItem({
       animatedOffset.value = 0;
       scheduleOnRN(onDragEnd);
     });
-  /* eslint-enable react-hooks/immutability */
+  /* eslint-enable react/react-compiler */
 
   const animatedStyle = useAnimatedStyle(() => {
     if (draggingId.value === preset.id) {

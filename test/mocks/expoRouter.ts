@@ -61,6 +61,6 @@ export function usePathname() {
 
 export function useFocusEffect(effect: EffectCallback, _dependencies?: DependencyList) {
   // A route is focused for the lifetime of these isolated screen tests.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react/exhaustive-deps
   useEffect(effect, []);
 }

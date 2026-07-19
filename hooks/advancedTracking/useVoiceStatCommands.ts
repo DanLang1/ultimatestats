@@ -94,12 +94,12 @@ export function useVoiceStatCommands(input: UseVoiceStatCommandsInput): VoiceSta
     ExpoSpeechRecognitionModule.abort();
 
     // Recognition was just aborted; keep UI state in lockstep with the external module.
-    /* eslint-disable react-hooks/set-state-in-effect */
+    /* eslint-disable react/react-compiler */
     setIsArmed(false);
     setStatus('idle');
     setMessage(null);
     setTranscript(null);
-    /* eslint-enable react-hooks/set-state-in-effect */
+    /* eslint-enable react/react-compiler */
   }, [input.enabled]);
 
   const beginRecognition = () => {

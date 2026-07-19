@@ -24,7 +24,7 @@ export function usePointTimer() {
     // If no point is active, reset elapsed time
     if (!isActive) {
       // Keep the visible timer aligned with point lifecycle changes.
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+      // eslint-disable-next-line react/react-compiler
       setElapsedSeconds(0);
       return;
     }

@@ -138,8 +138,8 @@ Use `screen` queries, prefer role/name and label queries, and use `userEvent.set
 interaction. Await `renderScreen`, `userEvent` calls, `findBy*`, and `waitFor` work. Prefer visible
 behavior and state transitions over implementation assertions or snapshots.
 
-The test ESLint configuration applies the React Testing Library flat preset and additionally
-requires explicit assertions and `userEvent` usage.
+Oxlint loads the Testing Library ESLint plugin for test files through JavaScript plugin
+compatibility and additionally requires explicit assertions and `userEvent` usage.
 
 Do not use a screen test to simulate a long cross-route journey. Assert the screen's visible result,
 local state transition, and navigation request, then use Maestro when the route transition and

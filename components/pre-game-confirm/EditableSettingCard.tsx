@@ -43,7 +43,7 @@ export function EditableSettingCard({
 
   const handlePress = () => {
     // Compress fast, then spring back with a slight overshoot (the "flip" bounce)
-    // eslint-disable-next-line react-hooks/immutability
+    // eslint-disable-next-line react/react-compiler
     scale.value = withSequence(
       withTiming(0.93, { duration: 70 }),
       withSpring(1, { damping: 5, stiffness: 180, mass: 0.7 }),
