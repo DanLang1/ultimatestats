@@ -64,7 +64,7 @@ export default function TimelineMergedEvents({
           const timeout = event.data;
           const canEditTime = !!onEditEventTime && !isCurrentPoint;
           const handlePress = () => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
             onEditEventTime?.(timeout.eventIndex, timeout.elapsedMs, 'timeout');
           };
 
@@ -91,11 +91,11 @@ export default function TimelineMergedEvents({
         const canEdit = !!onEditEvent && !isCurrentPoint;
         const canEditTime = !!onEditEventTime && !isCurrentPoint;
         const handleEditTime = () => {
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+          void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
           onEditEventTime?.(turnover.eventIndex, turnover.elapsedMs, 'turnover');
         };
         const handleLongPress = () => {
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+          void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
           onEditEvent?.(turnover.eventIndex, turnover);
         };
 

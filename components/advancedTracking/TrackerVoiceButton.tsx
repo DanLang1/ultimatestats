@@ -33,16 +33,16 @@ export const TrackerVoiceButton = ({ controls, disabled }: TrackerVoiceButtonPro
     useTutorialStore.getState().dismissAdvancedVoiceHint();
     setShowVoiceHint(false);
   };
-  const continueToVoice = () => {
+  const continueToVoice = async () => {
     dismissVoiceHint();
-    controls.toggleListening();
+    await controls.toggleListening();
   };
-  const handlePress = () => {
+  const handlePress = async () => {
     if (!hasSeenAdvancedVoiceHint) {
       setShowVoiceHint(true);
       return;
     }
-    controls.toggleListening();
+    await controls.toggleListening();
   };
 
   return (

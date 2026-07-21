@@ -138,10 +138,10 @@ export default function AdvancedGameStatsScreen() {
     );
   };
 
-  const handleDateChange = (_event: DateTimePickerChangeEvent, selectedValue: Date) => {
+  const handleDateChange = async (_event: DateTimePickerChangeEvent, selectedValue: Date) => {
     const now = new Date();
     if (selectedValue.getTime() > now.getTime()) return;
-    handleUpdatePlayedAt(selectedValue.getTime());
+    await handleUpdatePlayedAt(selectedValue.getTime());
   };
 
   const handleOpenAndroidDatePicker = () => {
@@ -156,9 +156,9 @@ export default function AdvancedGameStatsScreen() {
           value: date,
           mode: 'time',
           is24Hour: false,
-          onValueChange: (_timeEvent, finalDate) => {
+          onValueChange: async (_timeEvent, finalDate) => {
             if (finalDate.getTime() <= now.getTime()) {
-              handleUpdatePlayedAt(finalDate.getTime());
+              await handleUpdatePlayedAt(finalDate.getTime());
             }
           },
         });

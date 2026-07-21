@@ -40,7 +40,7 @@ export default function SavedGameStatsScreen() {
   const { sizeClass } = useLayout();
   const styles = createStyles();
   const { savedGames, savedTeams, deleteSavedGames } = useGameStore();
-  const { data: completedAdvancedSavedGameSummaries = [] } = useCompletedAdvancedGameSummaries();
+  const { data: completedAdvancedSavedGameSummaries } = useCompletedAdvancedGameSummaries();
   const { deleteSavedGame: deleteAdvancedSavedGame } = useAdvancedTrackingStore();
   const loadAdvancedGame = useSavedAdvancedGamesStore((state) => state.loadGame);
   const loadAdvancedGames = useSavedAdvancedGamesStore((state) => state.loadGames);

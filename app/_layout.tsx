@@ -2,12 +2,12 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { requireOptionalNativeModule } from 'expo';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useState } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { AlertProvider } from '@/components/ui/AlertProvider';
-import { loadPersistedTheme, ThemeProvider, useTheme } from '@/context/ThemeContext';
+import { ThemeProvider, useTheme } from '@/context/ThemeContext';
+import { useInitialTheme } from '@/hooks/useInitialTheme';
 import { useOrientationLock } from '@/hooks/useOrientationLock';
 import { useStartupMigrations } from '@/hooks/useStartupMigrations';
 import 'react-native-reanimated';
@@ -65,18 +65,10 @@ function RootLayoutInner() {
 }
 
 export default function RootLayout() {
-  const [initialTheme, setInitialTheme] = useState<'light' | 'dark'>('dark');
-  const [isLoaded, setIsLoaded] = useState(false);
-  // Load persisted theme on mount
-  if (!isLoaded) {
-    loadPersistedTheme().then((theme) => {
-      setInitialTheme(theme);
-      setIsLoaded(true);
-    });
-  }
+  const initialTheme = useInitialTheme();
 
   // Show nothing briefly while loading theme (prevents flash)
-  if (!isLoaded) {
+  if (initialTheme === null) {
     return null;
   }
 

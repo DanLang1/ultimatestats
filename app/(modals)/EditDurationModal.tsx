@@ -123,13 +123,13 @@ export default function EditDurationModal() {
     router.back();
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (validationError) return;
     const elapsedMs = totalMs > 0 ? totalMs : null;
     if (gameId === 'current') {
       updateEvent(eventIndex, { elapsedMs });
     } else {
-      updateSavedGameEvent(gameId, eventIndex, { elapsedMs });
+      await updateSavedGameEvent(gameId, eventIndex, { elapsedMs });
     }
     router.back();
   };

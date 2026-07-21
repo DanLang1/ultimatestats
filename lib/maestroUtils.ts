@@ -10,6 +10,7 @@ import { useSavedAdvancedGamesStore } from '@/store/advancedTracking/savedGamesS
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { useGameStore } from '@/store/basic/gameStore';
 import { useGameSessionStore } from '@/store/gameSessionStore';
+import { useLinePresetsStore } from '@/store/linePresetsStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useTutorialStore } from '@/store/tutorialStore';
 
@@ -45,6 +46,8 @@ export async function waitForMaestroStoresToHydrate() {
     waitForHydration(useAdvancedTrackingStore.persist),
     waitForHydration(useGameStore.persist),
     waitForHydration(useGameSessionStore.persist),
+    waitForHydration(useLinePresetsStore.persist),
+    waitForHydration(useSettingsStore.persist),
     waitForHydration(useTutorialStore.persist),
   ]);
 }
@@ -78,7 +81,38 @@ async function clearActiveAdvancedGame() {
   }
 }
 
+function resetMaestroSetupState() {
+  const settingsStore = useSettingsStore.getState();
+  settingsStore.resetMatchingTypeColors();
+  settingsStore.setGenderRatioEnabled(false);
+  settingsStore.setFirstPointRatio(null);
+  settingsStore.setLineCallingEnabled(false);
+  settingsStore.setNumPlayers(7);
+  settingsStore.setRosterViewMode('chips');
+  settingsStore.setOrientationMode('portrait');
+  settingsStore.setHardCapMins(90);
+  settingsStore.setSoftCapMins(20);
+  settingsStore.setAdvancedSoftCapAtMins(70);
+  settingsStore.setAdvancedHardCapEnabled(true);
+  settingsStore.setAdvancedSoftCapEnabled(true);
+  settingsStore.setStatEntryOrder('goal_first');
+  settingsStore.setLinePlayerSortOrder('alpha');
+
+  const gameStore = useGameStore.getState();
+  gameStore.setTeam2Name('Team 2');
+  gameStore.setAutoHalftimeEnabled(true);
+  gameStore.setFloaterEnabled(true);
+  gameStore.setGameTo(15);
+  gameStore.resetTimeouts(2);
+
+  const linePresetsStore = useLinePresetsStore.getState();
+  linePresetsStore.clearPresetsForTeam(MAESTRO_SEED_TEAM_ID);
+  linePresetsStore.setLineConfirmedForNextPoint(false);
+}
+
 export async function seedMaestroTeamPrerequisites(options: { clearActiveGame?: boolean } = {}) {
+  resetMaestroSetupState();
+
   if (options.clearActiveGame === true) {
     await clearActiveAdvancedGame();
     useGameStore.getState().resetGame();

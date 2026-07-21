@@ -150,6 +150,7 @@ export const TrackerLineScreen = ({
             </Pressable>
           )}
           <ThemedText
+            testID="line-select-title"
             style={[styles.headerTitle, { color: palette.textInverse }]}
             numberOfLines={1}>
             {headerTitle}

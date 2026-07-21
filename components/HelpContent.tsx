@@ -294,7 +294,9 @@ export default function HelpContent({ showActionBarLegend = true }: HelpContentP
       <Pressable
         style={[styles.tutorialButton, { backgroundColor: palette.overlay08 }]}
         onPress={() => {
-          Linking.openURL('https://u-stat.app/privacy/');
+          Linking.openURL('https://u-stat.app/privacy/').catch((error: unknown) => {
+            console.error('Failed to open privacy policy', error);
+          });
         }}>
         <MaterialCommunityIcons
           name="shield-lock-outline"

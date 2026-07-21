@@ -32,7 +32,7 @@ export default function AdvancedGameSelectorModal() {
 
   const gameIdsParamValue = aggregateGameIds;
   const gameIds = gameIdsParamValue.split(',').filter((id) => id.length > 0);
-  const { data: loadedGames = [] } = useAdvancedGames(gameIds);
+  const { data: loadedGames } = useAdvancedGames(gameIds);
 
   const selectableGames = loadedGames
     .filter((game) => {

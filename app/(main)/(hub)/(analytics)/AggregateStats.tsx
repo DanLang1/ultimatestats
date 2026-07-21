@@ -63,7 +63,7 @@ export default function AggregateStatsScreen() {
   const styles = createStyles(isLandscape, sizeClass);
   const { showAlert } = useAlert();
   const { savedGames, savedTeams } = useGameStore();
-  const { data: completedAdvancedSavedGameSummaries = [] } = useCompletedAdvancedGameSummaries();
+  const { data: completedAdvancedSavedGameSummaries } = useCompletedAdvancedGameSummaries();
   const { tournaments, gameLinks, addGamesToTournament } = useTournamentStore();
   const [aggregateMode, setAggregateMode] = useState<AggregateMode>('basic');
   const [selectedTeam, setSelectedTeam] = useState<string | null>(null);
@@ -115,7 +115,7 @@ export default function AggregateStatsScreen() {
 
   const selectedAdvancedGameIds = aggregateMode === 'advanced' ? [...selectedGameIds].sort() : [];
   const {
-    data: selectedAdvancedGames = [],
+    data: selectedAdvancedGames,
     isLoading: selectedAdvancedGamesLoading,
     isError: selectedAdvancedGamesError,
     isComplete: selectedAdvancedGamesComplete,

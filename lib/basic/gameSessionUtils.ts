@@ -15,8 +15,8 @@ type GameSessionState = {
   pointTimerPausedElapsed: number | null;
   possession: 'team1' | 'team2' | null;
   startingPossession: 'team1' | 'team2' | null;
-  pendingStatEntry: unknown | null;
-  pendingTurnoverEntry: unknown | null;
+  pendingStatEntry: { team: 'team1' | 'team2'; pointNumber: number } | null;
+  pendingTurnoverEntry: { receivingTeam: 'team1' | 'team2' } | null;
   pendingTimeoutModal: boolean;
   isHalftimeBreak: boolean;
   currentGameId: string | null;

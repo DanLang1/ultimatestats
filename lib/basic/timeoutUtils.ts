@@ -24,8 +24,8 @@ export function deriveTimeoutState(
   autoHalftimeEnabled: boolean,
   timeoutCount = 2,
 ): TimeoutState {
-  const team1Timeouts = new Array(timeoutCount).fill(true);
-  const team2Timeouts = new Array(timeoutCount).fill(true);
+  const team1Timeouts = Array.from({ length: timeoutCount }, () => true);
+  const team2Timeouts = Array.from({ length: timeoutCount }, () => true);
   let team1Floater = true;
   let team2Floater = true;
   let halfReached = false;

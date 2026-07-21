@@ -1,7 +1,8 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
-import Animated, {
+import {
+  createAnimatedComponent,
   useAnimatedStyle,
   useSharedValue,
   withSequence,
@@ -14,7 +15,7 @@ import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { Fonts } from '@/theme/theme';
 
-const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+const AnimatedPressable = createAnimatedComponent(Pressable);
 
 interface EditableSettingCardProps {
   icon: keyof typeof MaterialCommunityIcons.glyphMap;
@@ -43,10 +44,11 @@ export function EditableSettingCard({
 
   const handlePress = () => {
     // Compress fast, then spring back with a slight overshoot (the "flip" bounce)
-    // eslint-disable-next-line react/react-compiler
-    scale.value = withSequence(
-      withTiming(0.93, { duration: 70 }),
-      withSpring(1, { damping: 5, stiffness: 180, mass: 0.7 }),
+    scale.set(
+      withSequence(
+        withTiming(0.93, { duration: 70 }),
+        withSpring(1, { damping: 5, stiffness: 180, mass: 0.7 }),
+      ),
     );
     onPress?.();
   };

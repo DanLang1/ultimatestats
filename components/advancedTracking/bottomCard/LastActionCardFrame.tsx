@@ -80,7 +80,7 @@ export const LastActionCardFrame = ({
     primaryAction = (
       <Pressable
         testID="tracker-undo-button"
-        onPress={async () => await buttonMode.onUndo()}
+        onPress={buttonMode.onUndo}
         hitSlop={8}
         style={({ pressed }) => [
           useCompactActions ? styles.compactBtn : styles.actionBtn,

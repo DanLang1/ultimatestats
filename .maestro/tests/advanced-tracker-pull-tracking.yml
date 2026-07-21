@@ -53,7 +53,7 @@ name: Advanced Tracker Pull Tracking
 # === Point 3: WE pull → pull result screen appears ===
 # Now we pull because we scored last point
 - assertVisible:
-    text: 'D-Point.*[0-9]+-[0-9]+'
+    text: 'D-Point.*[0-9]+-[0-9]+.*'
 - tapOn:
     id: 'player-chip-Joe'
 - tapOn:

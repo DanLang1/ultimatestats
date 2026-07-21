@@ -53,7 +53,7 @@ export default function ViewStatsScreen() {
   } = useGameStore();
   const { currentGameId: advancedCurrentGameId, currentGame: currentAdvancedGame } =
     useAdvancedTrackingStore();
-  const { data: completedAdvancedSavedGameSummaries = [] } = useCompletedAdvancedGameSummaries();
+  const { data: completedAdvancedSavedGameSummaries } = useCompletedAdvancedGameSummaries();
   const advancedSavedGameCount = completedAdvancedSavedGameSummaries.length;
   const activeAdvancedGame =
     advancedCurrentGameId != null && currentAdvancedGame?.id === advancedCurrentGameId

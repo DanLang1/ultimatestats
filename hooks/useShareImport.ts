@@ -70,7 +70,7 @@ function deriveImportState(
 
 export function useShareImport(shareId: string | undefined) {
   const { savedGames, savedTeams } = useGameStore();
-  const { data: advancedGameSummaries = [] } = useAdvancedGameSummaries();
+  const { data: advancedGameSummaries } = useAdvancedGameSummaries();
   // Only set after a user action (import confirmed/cancelled) to override the derived state
   const [doneState, setDoneState] = useState<ShareImportState | null>(null);
 

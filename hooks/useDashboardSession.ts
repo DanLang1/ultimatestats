@@ -6,7 +6,7 @@ export function useDashboardSession() {
   const statTrackingEnabled = useGameStore((state) => state.statTrackingEnabled);
   const currentTeam = useGameStore((state) => state.currentTeam);
   const savedGames = useGameStore((state) => state.savedGames);
-  const { data: completedAdvancedSavedGameSummaries = [] } = useCompletedAdvancedGameSummaries();
+  const { data: completedAdvancedSavedGameSummaries } = useCompletedAdvancedGameSummaries();
   const advancedSavedGameCount = completedAdvancedSavedGameSummaries.length;
   const team1Score = useGameStore((state) => state.team1Score);
   const team2Score = useGameStore((state) => state.team2Score);

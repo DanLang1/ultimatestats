@@ -193,7 +193,7 @@ export default function GameTimelineScreen() {
           pointLines={gameData.pointLines}
           showLineups={showLineups}
           onEditEvent={(eventIndex, turnover) => {
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+            void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
             router.push({
               pathname: '/EditEventModal',
               params: {
@@ -208,7 +208,7 @@ export default function GameTimelineScreen() {
             });
           }}
           onEditGoal={(eventIndex, playerId, editField) => {
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+            void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
             router.push({
               pathname: '/EditEventModal',
               params: {
@@ -223,7 +223,7 @@ export default function GameTimelineScreen() {
           onEditPointDuration={
             canEditTiming
               ? (goalEventIndex, currentDurationMs) => {
-                  Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                  void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
                   router.push({
                     pathname: '/EditDurationModal',
                     params: {
@@ -240,7 +240,7 @@ export default function GameTimelineScreen() {
           onEditEventTime={
             canEditTiming
               ? (eventIndex, currentElapsedMs, eventType) => {
-                  Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                  void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
                   router.push({
                     pathname: '/EditDurationModal',
                     params: {

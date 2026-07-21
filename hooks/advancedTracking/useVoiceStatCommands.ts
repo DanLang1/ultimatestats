@@ -422,7 +422,17 @@ export function useVoiceStatCommands(input: UseVoiceStatCommandsInput): VoiceSta
       return;
     }
 
-    await startListening();
+    try {
+      await startListening();
+    } catch (error) {
+      console.error('Failed to start voice recognition', error);
+      recognitionCompletedRef.current = true;
+      shouldListenRef.current = false;
+      clearListeningWindowTimeout();
+      setIsArmed(false);
+      setStatus('error');
+      setMessage('Voice not available');
+    }
   };
 
   return {

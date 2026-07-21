@@ -74,27 +74,28 @@ export default function TutorialActionBar({
     return { x: clampedX, y: clampedY };
   };
 
+  // eslint-disable-next-line react/react-compiler -- Gesture.Pan is a factory; the literal call enables Reanimated auto-workletization.
   const panGesture = Gesture.Pan()
     .minDistance(5)
     .onStart(() => {
-      startX.value = translateX.value;
-      startY.value = translateY.value;
-      dragScale.value = withSpring(1.05, { damping: 30 });
-      dragOpacity.value = withSpring(0.8);
+      startX.set(translateX.value);
+      startY.set(translateY.value);
+      dragScale.set(withSpring(1.05, { damping: 30 }));
+      dragOpacity.set(withSpring(0.8));
     })
     .onUpdate((e) => {
       const newX = startX.value + e.translationX;
       const newY = startY.value + e.translationY;
       const clamped = clampPosition(newX, newY);
-      translateX.value = clamped.x;
-      translateY.value = clamped.y;
+      translateX.set(clamped.x);
+      translateY.set(clamped.y);
     })
     .onEnd(() => {
-      dragScale.value = withSpring(1, { damping: 30 });
-      dragOpacity.value = withSpring(1);
+      dragScale.set(withSpring(1, { damping: 30 }));
+      dragOpacity.set(withSpring(1));
       const finalClamped = clampPosition(translateX.value, translateY.value);
-      translateX.value = withSpring(finalClamped.x);
-      translateY.value = withSpring(finalClamped.y);
+      translateX.set(withSpring(finalClamped.x));
+      translateY.set(withSpring(finalClamped.y));
     });
 
   const animatedStyle = useAnimatedStyle(() => ({
@@ -114,8 +115,8 @@ export default function TutorialActionBar({
       <Animated.View
         onLayout={(e) => {
           const { width, height } = e.nativeEvent.layout;
-          boxWidth.value = width;
-          boxHeight.value = height;
+          boxWidth.set(width);
+          boxHeight.set(height);
           setMeasuredSize({ width, height });
         }}
         style={[

@@ -462,8 +462,8 @@ export const useGameStore = create<GameState>()(
 
         resetTimeouts: (count: number) =>
           set((state: GameState) => {
-            state.team1Timeouts = new Array(count).fill(true);
-            state.team2Timeouts = new Array(count).fill(true);
+            state.team1Timeouts = Array.from({ length: count }, () => true);
+            state.team2Timeouts = Array.from({ length: count }, () => true);
           }),
 
         resetGame: () => {

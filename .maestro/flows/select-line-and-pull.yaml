@@ -4,7 +4,7 @@ name: Select Line and Handle Pull (Deterministic)
 # After next point, we land on line selection screen.
 # Header now includes point type and score, e.g. "O-Point · 0-1".
 - assertVisible:
-    text: '.*-Point.*[0-9]+-[0-9]+'
+    id: 'line-select-title'
 
 # Select 7 players for the line
 - tapOn:

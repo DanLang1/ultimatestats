@@ -21,7 +21,9 @@ export default function AboutScreen() {
   const { currentVersion, acknowledge } = useVersionCheck();
 
   useFocusEffect(() => {
-    acknowledge();
+    acknowledge().catch((error: unknown) => {
+      console.error('Failed to acknowledge app version', error);
+    });
   });
 
   return (

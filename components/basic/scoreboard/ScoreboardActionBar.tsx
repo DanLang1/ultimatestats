@@ -131,28 +131,29 @@ export function ScoreboardActionBar({
     effectiveHeight: measuredSize.height,
   });
 
+  // eslint-disable-next-line react/react-compiler -- Gesture.Pan is a factory; the literal call enables Reanimated auto-workletization.
   const panGesture = Gesture.Pan()
     .minDistance(5)
     .onStart(() => {
-      startX.value = translateX.value;
-      startY.value = translateY.value;
-      isDragging.value = true;
+      startX.set(translateX.value);
+      startY.set(translateY.value);
+      isDragging.set(true);
     })
     .onUpdate((e) => {
       const newX = startX.value + e.translationX;
       const newY = startY.value + e.translationY;
       const clamped = clampPosition(newX, newY);
-      translateX.value = clamped.x;
-      translateY.value = clamped.y;
+      translateX.set(clamped.x);
+      translateY.set(clamped.y);
     })
     .onEnd(() => {
-      isDragging.value = false;
+      isDragging.set(false);
 
       // Perform final hard clamp
       const finalClamped = clampPosition(translateX.value, translateY.value);
 
-      translateX.value = withSpring(finalClamped.x);
-      translateY.value = withSpring(finalClamped.y);
+      translateX.set(withSpring(finalClamped.x));
+      translateY.set(withSpring(finalClamped.y));
 
       scheduleOnRN(setActionBarPosition, { x: finalClamped.x, y: finalClamped.y });
     });
@@ -313,8 +314,8 @@ export function ScoreboardActionBar({
       <Animated.View
         onLayout={(e) => {
           const { width, height } = e.nativeEvent.layout;
-          boxWidth.value = width;
-          boxHeight.value = height;
+          boxWidth.set(width);
+          boxHeight.set(height);
           setMeasuredSize({ width, height });
         }}
         style={[

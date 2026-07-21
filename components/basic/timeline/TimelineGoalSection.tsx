@@ -56,17 +56,17 @@ export default function TimelineGoalSection({
   const isCurrentPoint = currentPointNumber === pointNumber;
 
   const handleEditTime = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     onEditPointDuration?.(goalEventIndex, pointDurationMs);
   };
 
   const handleEditScorer = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
     onEditGoal?.(goalEventIndex, goalPlayerId, 'scorer');
   };
 
   const handleEditAssist = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
     onEditGoal?.(goalEventIndex, assistPlayerId, 'assist');
   };
 

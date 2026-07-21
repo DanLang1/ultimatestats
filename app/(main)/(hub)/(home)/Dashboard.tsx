@@ -69,6 +69,38 @@ export default function DashboardScreen() {
   const hasActiveBasicGame = activeSession.kind === 'basic';
   const hasLiveGame = activeSession.kind !== 'none';
 
+  const handleRemoteUpdatePress = async () => {
+    const updateUrl = Platform.OS === 'ios' ? APP_STORE_URL : PLAY_STORE_URL;
+    const [dismissResult, openResult] = await Promise.allSettled([
+      dismissRemoteUpdate(),
+      Linking.openURL(updateUrl),
+    ]);
+
+    if (dismissResult.status === 'rejected') {
+      console.error('Failed to dismiss app update', dismissResult.reason);
+    }
+    if (openResult.status === 'rejected') {
+      console.error('Failed to open app update', openResult.reason);
+    }
+  };
+
+  const handleResetVersionCheck = async () => {
+    try {
+      await AsyncStorage.removeItem(LAST_SEEN_VERSION_KEY);
+      console.log('Version check reset - reload app to see badge');
+    } catch (error) {
+      console.error('Failed to reset version check', error);
+    }
+  };
+
+  const handleResetRemoteVersionCheck = async () => {
+    try {
+      await AsyncStorage.removeItem(LAST_DISMISSED_REMOTE_VERSION_KEY);
+    } catch (error) {
+      console.error('Failed to reset remote version check', error);
+    }
+  };
+
   const sections: MenuSection[] = [
     {
       title: 'GAME SETUP',
@@ -254,10 +286,7 @@ export default function DashboardScreen() {
       <ScrollView contentContainerStyle={[styles.scrollContent]}>
         {hasRemoteUpdate && (
           <Pressable
-            onPress={() => {
-              dismissRemoteUpdate();
-              Linking.openURL(Platform.OS === 'ios' ? APP_STORE_URL : PLAY_STORE_URL);
-            }}
+            onPress={handleRemoteUpdatePress}
             style={({ pressed }) => [
               styles.updateBanner,
               { backgroundColor: palette.accentOverlay10, borderColor: palette.accentOverlay30 },
@@ -396,11 +425,7 @@ export default function DashboardScreen() {
             </Pressable>
 
             <Pressable
-              onPress={() => {
-                AsyncStorage.removeItem(LAST_SEEN_VERSION_KEY).then(() => {
-                  console.log('Version check reset - reload app to see badge');
-                });
-              }}
+              onPress={handleResetVersionCheck}
               style={({ pressed }) => [
                 styles.discordBanner,
                 { backgroundColor: palette.danger },
@@ -422,9 +447,7 @@ export default function DashboardScreen() {
             </Pressable>
 
             <Pressable
-              onPress={() => {
-                AsyncStorage.removeItem(LAST_DISMISSED_REMOTE_VERSION_KEY);
-              }}
+              onPress={handleResetRemoteVersionCheck}
               style={({ pressed }) => [
                 styles.discordBanner,
                 { backgroundColor: palette.danger },

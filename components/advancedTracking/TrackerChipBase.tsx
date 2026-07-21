@@ -51,6 +51,7 @@ export const TrackerChipBase = ({
   const oppHasDiscSV = useDerivedValue(() => oppHasDisc);
   const canDropOpeningPullSV = useDerivedValue(() => canDropOpeningPull);
 
+  // eslint-disable-next-line react/react-compiler -- Gesture.Pan is a factory; the literal call enables Reanimated auto-workletization.
   const panGesture = Gesture.Pan()
     .activeOffsetY([-12, 12])
     .failOffsetX([-8, 8])

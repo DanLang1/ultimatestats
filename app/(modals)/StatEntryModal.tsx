@@ -22,7 +22,7 @@ export default function StatEntryScreen() {
     isHalftimeBreak,
     currentLine,
   } = useGameStore();
-  const { lineCallingEnabled } = useSettingsStore();
+  const { lineCallingEnabled, statEntryOrder } = useSettingsStore();
   const { palette } = useTheme();
 
   const team1Name = currentTeam.name;
@@ -105,7 +105,7 @@ export default function StatEntryScreen() {
           onCancel={handleCancel}
           onComplete={handleComplete}
           onAddPlayer={handleAddPlayer}
-          entryOrder={useSettingsStore.getState().statEntryOrder}
+          entryOrder={statEntryOrder}
           showAddPlayer={!lineCallingEnabled || currentLine.length === 0}
         />
       </Pressable>

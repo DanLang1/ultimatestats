@@ -56,18 +56,18 @@ export const TrackerActionFooter = ({
   const oppHasDisc = !pointIsOver && activeSideId !== game.focusSideId;
   const styles = createStyles(sizeClass, insets.bottom);
 
-  const handleOppTurnover = async () => {
+  const handleOppTurnover = () => {
     if (!possession || isPossessionOver(possession)) {
-      await recordPickup({ sideId: oppSide.id, player: { refType: 'untracked' } });
+      recordPickup({ sideId: oppSide.id, player: { refType: 'untracked' } });
     }
-    await recordThrow({ thrower: { refType: 'untracked' }, result: 'throwaway' });
+    recordThrow({ thrower: { refType: 'untracked' }, result: 'throwaway' });
   };
 
-  const handleOppScored = async () => {
+  const handleOppScored = () => {
     if (!possession || isPossessionOver(possession)) {
-      await recordPickup({ sideId: oppSide.id, player: { refType: 'untracked' } });
+      recordPickup({ sideId: oppSide.id, player: { refType: 'untracked' } });
     }
-    await recordThrow({
+    recordThrow({
       thrower: { refType: 'untracked' },
       result: 'goal',
       timerElapsedMs: getPointElapsedMs(),

@@ -14,9 +14,13 @@ export function useVersionCheck(): VersionCheckResult {
   const currentVersion = getCurrentVersion();
 
   useFocusEffect(() => {
-    checkForNewVersion().then((result) => {
-      setHasNewVersion(result.hasUpdate);
-    });
+    checkForNewVersion()
+      .then((result) => {
+        setHasNewVersion(result.hasUpdate);
+      })
+      .catch((error: unknown) => {
+        console.error('Failed to check app version', error);
+      });
   });
 
   const acknowledge = async () => {

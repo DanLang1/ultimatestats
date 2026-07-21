@@ -58,13 +58,13 @@ export function useAttentionBorderRunner(enabled: boolean) {
     if (!enabled || size.width <= 0 || size.height <= 0) {
       cancelAnimation(progress);
       cancelAnimation(opacity);
-      opacity.value = 0;
+      opacity.set(0);
       return;
     }
 
-    progress.value = 0;
-    opacity.value = withTiming(0.82, { duration: 220 });
-    progress.value = withRepeat(withTiming(1, { duration: ATTENTION_RUN_DURATION_MS }), -1, false);
+    progress.set(0);
+    opacity.set(withTiming(0.82, { duration: 220 }));
+    progress.set(withRepeat(withTiming(1, { duration: ATTENTION_RUN_DURATION_MS }), -1, false));
   }, [enabled, size.width, size.height, progress, opacity]);
 
   const runnerStyle = useAnimatedStyle(() => {

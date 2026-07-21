@@ -25,7 +25,9 @@ export function ThemeProvider({ children, initialTheme = 'dark' }: ThemeProvider
 
   const setThemeMode = (mode: ThemeMode) => {
     setThemeModeState(mode);
-    AsyncStorage.setItem(THEME_STORAGE_KEY, mode);
+    AsyncStorage.setItem(THEME_STORAGE_KEY, mode).catch((error: unknown) => {
+      console.error('Failed to persist theme', error);
+    });
   };
 
   const palette = themeMode === 'light' ? lightPalette : darkPalette;

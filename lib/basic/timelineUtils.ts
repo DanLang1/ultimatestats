@@ -102,7 +102,8 @@ export function getPointTimingBounds(
   const targetIndex = entries.findIndex((entry) => entry.eventIndex === eventIndex);
   if (targetIndex === -1) return {};
 
-  const previousTimed = [...entries.slice(0, targetIndex)]
+  const previousTimed = entries
+    .slice(0, targetIndex)
     .reverse()
     .find((entry) => entry.elapsedMs !== undefined)?.elapsedMs;
   const nextTimed = entries

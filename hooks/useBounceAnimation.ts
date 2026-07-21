@@ -18,23 +18,27 @@ export function useBounceAnimation({ delta, isHorizontal }: BounceAnimationOptio
   const opacity = useSharedValue(1);
 
   useEffect(() => {
-    translate.value = withRepeat(
-      withSequence(
-        withTiming(delta, { duration: 520 }),
-        withTiming(0, { duration: 1 }),
-        withTiming(0, { duration: 280 }),
+    translate.set(
+      withRepeat(
+        withSequence(
+          withTiming(delta, { duration: 520 }),
+          withTiming(0, { duration: 1 }),
+          withTiming(0, { duration: 280 }),
+        ),
+        -1,
+        false,
       ),
-      -1,
-      false,
     );
-    opacity.value = withRepeat(
-      withSequence(
-        withTiming(0, { duration: 520 }),
-        withTiming(1, { duration: 1 }),
-        withTiming(1, { duration: 280 }),
+    opacity.set(
+      withRepeat(
+        withSequence(
+          withTiming(0, { duration: 520 }),
+          withTiming(1, { duration: 1 }),
+          withTiming(1, { duration: 280 }),
+        ),
+        -1,
+        false,
       ),
-      -1,
-      false,
     );
 
     return () => {

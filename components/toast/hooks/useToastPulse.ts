@@ -25,17 +25,14 @@ export function useToastPulse(
     if (!visible || instanceId === 0 || toastWidth <= 0 || toastHeight <= 0) {
       cancelAnimation(borderRunnerProgress);
       cancelAnimation(borderRunnerOpacity);
-      borderRunnerOpacity.value = 0;
+      borderRunnerOpacity.set(0);
       return;
     }
 
-    scale.value = withSequence(
-      withTiming(1.04, { duration: 120 }),
-      withTiming(1, { duration: 200 }),
-    );
-    borderRunnerProgress.value = 0;
-    borderRunnerOpacity.value = withTiming(1, { duration: 120 });
-    borderRunnerProgress.value = withRepeat(withTiming(1, { duration: 1700 }), -1, false);
+    scale.set(withSequence(withTiming(1.04, { duration: 120 }), withTiming(1, { duration: 200 })));
+    borderRunnerProgress.set(0);
+    borderRunnerOpacity.set(withTiming(1, { duration: 120 }));
+    borderRunnerProgress.set(withRepeat(withTiming(1, { duration: 1700 }), -1, false));
   }, [
     visible,
     instanceId,

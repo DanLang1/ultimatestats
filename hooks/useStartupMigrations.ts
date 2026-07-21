@@ -78,7 +78,9 @@ export function useStartupMigrations() {
     const unsubGame = useGameStore.persist.onFinishHydration(runReadyMigrations);
     const unsubTournament = useTournamentStore.persist.onFinishHydration(runReadyMigrations);
     const unsubMigrations = useStartupMigrationStore.persist.onFinishHydration(runReadyMigrations);
-    runReadyMigrations();
+    runReadyMigrations().catch((error: unknown) => {
+      console.error('Failed to schedule startup migrations', error);
+    });
 
     return () => {
       cancelledRef.current = true;

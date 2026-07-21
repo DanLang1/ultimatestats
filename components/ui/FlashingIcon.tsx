@@ -20,10 +20,10 @@ export default function FlashingIcon({ name, size, color, isFlashing }: Flashing
 
   useEffect(() => {
     if (isFlashing) {
-      opacity.value = withRepeat(withTiming(0.2, { duration: 800 }), -1, true);
+      opacity.set(withRepeat(withTiming(0.2, { duration: 800 }), -1, true));
     } else {
       cancelAnimation(opacity);
-      opacity.value = 1;
+      opacity.set(1);
     }
   }, [isFlashing, opacity]);
 

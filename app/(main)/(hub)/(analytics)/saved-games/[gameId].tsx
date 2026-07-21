@@ -116,11 +116,11 @@ export default function SavedGameStatsScreen() {
     });
   };
 
-  const handleDateChange = (_event: DateTimePickerChangeEvent, selectedValue: Date) => {
+  const handleDateChange = async (_event: DateTimePickerChangeEvent, selectedValue: Date) => {
     if (!selectedGame) return;
     const now = new Date();
     if (selectedValue.getTime() > now.getTime()) return;
-    updateSavedGamePlayedAt(selectedGame.id, selectedValue.getTime());
+    await updateSavedGamePlayedAt(selectedGame.id, selectedValue.getTime());
   };
 
   const handleDeleteGame = () => {
@@ -156,9 +156,9 @@ export default function SavedGameStatsScreen() {
           value: date,
           mode: 'time',
           is24Hour: false,
-          onValueChange: (_timeEvent, finalDate) => {
+          onValueChange: async (_timeEvent, finalDate) => {
             if (finalDate.getTime() <= now.getTime()) {
-              updateSavedGamePlayedAt(selectedGame.id, finalDate.getTime());
+              await updateSavedGamePlayedAt(selectedGame.id, finalDate.getTime());
             }
           },
         });
