@@ -9,6 +9,7 @@ import TutorialScoreboardRoute from '@/app/(main)/TutorialScoreboard';
 import TutorialStatCompleteRoute from '@/app/(main)/TutorialStatComplete';
 import TutorialStatIntroRoute from '@/app/(main)/TutorialStatIntro';
 import TutorialStatScoreboardRoute from '@/app/(main)/TutorialStatScoreboard';
+import { useGameStore } from '@/store/basic/gameStore';
 import { useGameSessionStore } from '@/store/gameSessionStore';
 import { useTutorialStore } from '@/store/tutorialStore';
 import { resetDashboardStores } from '@/test/fixtures/resetStores';
@@ -48,15 +49,29 @@ describe('tutorial routes', () => {
     expect(router.dismissTo).toHaveBeenCalledWith('/Dashboard');
   });
 
-  it('completes onboarding and configures a real basic game session', async () => {
+  it('completes onboarding and returns home without replacing the current game', async () => {
     const user = userEvent.setup();
+    useGameStore.setState({ team1Score: 3, currentGameStatus: 'inProgress' });
     await renderScreen(<TutorialCompleteRoute />);
 
     expect(screen.getByText('Basics Complete!')).toBeVisible();
 
-    await user.press(screen.getByText('Configure Game'));
+    await user.press(screen.getByText('Return Home'));
 
     expect(useTutorialStore.getState().hasSeenOnboarding).toBe(true);
+    expect(useGameStore.getState().team1Score).toBe(3);
+    expect(router.replace).toHaveBeenCalledWith('/Dashboard');
+  });
+
+  it('starts a new game from tutorial completion without confirming an existing game reset', async () => {
+    const user = userEvent.setup();
+    useGameStore.setState({ team1Score: 3, currentGameStatus: 'inProgress' });
+    await renderScreen(<TutorialCompleteRoute />);
+
+    await user.press(screen.getByText('Start New Game'));
+
+    expect(screen.queryByText('Start New Game?')).not.toBeOnTheScreen();
+    expect(useGameStore.getState().team1Score).toBe(0);
     expect(useGameSessionStore.getState().activeGameType).toBe('basic');
     expect(router.replace).toHaveBeenCalledWith('/PreGameConfirm');
   });

@@ -7,7 +7,6 @@ import Animated, { FadeInDown, FadeInRight } from 'react-native-reanimated';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { useTheme } from '@/context/ThemeContext';
-import { useNewGame } from '@/hooks/basic/useNewGame';
 import { useGameSessionActions } from '@/hooks/useGameSessionActions';
 import { getSizeClassValue, scaleBySizeClass, useLayout } from '@/hooks/useLayout';
 import { useTutorialStore } from '@/store/tutorialStore';
@@ -20,17 +19,15 @@ export default function TutorialCompleteRoute() {
   const styles = createStyles(sizeClass, useRowLayout);
   const { startBasicGameSession } = useGameSessionActions();
 
-  const { confirmNewGame } = useNewGame({
-    onSuccess: () => {
-      useTutorialStore.getState().completeTutorial();
-      router.dismissTo('/PreGameConfirm');
-    },
-  });
-
-  const handleStatTracking = () => {
+  const handleStartGame = () => {
     useTutorialStore.getState().completeTutorial();
     startBasicGameSession();
     router.replace('/PreGameConfirm');
+  };
+
+  const handleReturnHome = () => {
+    useTutorialStore.getState().completeTutorial();
+    router.replace('/Dashboard');
   };
 
   const iconSize = scaleBySizeClass(useRowLayout ? 24 : 28, sizeClass);
@@ -61,7 +58,7 @@ export default function TutorialCompleteRoute() {
             <View style={styles.optionsSection}>
               <Animated.View entering={FadeInRight.delay(400).springify()}>
                 <Pressable
-                  onPress={confirmNewGame}
+                  onPress={handleStartGame}
                   style={({ pressed }) => [
                     styles.optionRow,
                     {
@@ -86,7 +83,7 @@ export default function TutorialCompleteRoute() {
                       Start New Game
                     </ThemedText>
                     <ThemedText style={[styles.optionDescription, { color: palette.textMuted }]}>
-                      {`Just need a scoreboard and don't care about stat tracking? You're all set.`}
+                      Start fresh and choose your teams, tracking, and game settings.
                     </ThemedText>
                   </View>
                 </Pressable>
@@ -94,7 +91,7 @@ export default function TutorialCompleteRoute() {
 
               <Animated.View entering={FadeInRight.delay(550).springify()}>
                 <Pressable
-                  onPress={handleStatTracking}
+                  onPress={handleReturnHome}
                   style={({ pressed }) => [
                     styles.optionRow,
                     {
@@ -106,17 +103,17 @@ export default function TutorialCompleteRoute() {
                   <View
                     style={[styles.optionIconContainer, { backgroundColor: palette.overlay08 }]}>
                     <MaterialCommunityIcons
-                      name="chart-bar"
+                      name="home-outline"
                       size={iconSize * 1.1}
                       color={palette.textMuted}
                     />
                   </View>
                   <View style={styles.optionText}>
                     <ThemedText style={[styles.optionTitle, { color: palette.textInverse }]}>
-                      Configure Game
+                      Return Home
                     </ThemedText>
                     <ThemedText style={[styles.optionDescription, { color: palette.textMuted }]}>
-                      Set up stat tracking, caps, timeouts, and starting options.
+                      Head to the dashboard without starting a new game.
                     </ThemedText>
                   </View>
                 </Pressable>
