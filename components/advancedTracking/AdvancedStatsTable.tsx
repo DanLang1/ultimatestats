@@ -133,7 +133,7 @@ const LEGEND_LABELS_BY_KEY: Partial<Record<SortKey, string>> = {
 
 function getCellValue(stats: AdvancedPlayerStats, key: SortKey): number | null {
   if (key === 'name') return null;
-  const v = stats[key as keyof AdvancedPlayerStats];
+  const v = stats[key];
   return typeof v === 'number' ? v : null;
 }
 
@@ -475,7 +475,7 @@ export default function AdvancedStatsTable({
               ]}>
               {visibleStatColumns.map((col) => (
                 <Pressable
-                  key={String(col.key)}
+                  key={col.key}
                   style={[
                     styles.headerCell,
                     { width: getColumnWidth(col) },
@@ -515,7 +515,7 @@ export default function AdvancedStatsTable({
                   const value = getCellValue(stats, col.key);
                   return (
                     <ThemedText
-                      key={String(col.key)}
+                      key={col.key}
                       style={[
                         styles.cell,
                         { width: getColumnWidth(col), color },

@@ -140,6 +140,8 @@ export function TurnoverEntryInner({
       case 'fiftyfifty':
         return '50/50';
     }
+
+    throw new Error('Unsupported turnover type');
   };
 
   const getStepQuestion = () => {

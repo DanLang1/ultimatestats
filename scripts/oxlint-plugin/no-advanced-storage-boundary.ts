@@ -1,24 +1,26 @@
-const path = require('path');
+import path from 'node:path';
 
-function normalizePath(filename) {
+import { defineRule } from '@oxlint/plugins';
+
+function normalizePath(filename: string) {
   return filename.split(path.sep).join('/');
 }
 
-function isAdvancedStorageFile(filename) {
+function isAdvancedStorageFile(filename: string) {
   return filename.endsWith('/lib/advancedTracking/storage.ts');
 }
 
-function isSavedAdvancedGamesStoreFile(filename) {
+function isSavedAdvancedGamesStoreFile(filename: string) {
   return filename.endsWith('/store/advancedTracking/savedGamesStore.ts');
 }
 
-function isAdvancedLibOrStoreFile(filename) {
+function isAdvancedLibOrStoreFile(filename: string) {
   return (
     filename.includes('/lib/advancedTracking/') || filename.includes('/store/advancedTracking/')
   );
 }
 
-function isTestFile(filename) {
+function isTestFile(filename: string) {
   return (
     filename.includes('/__tests__/') ||
     filename.endsWith('.test.ts') ||
@@ -26,7 +28,7 @@ function isTestFile(filename) {
   );
 }
 
-function isAdvancedStorageImport(source) {
+function isAdvancedStorageImport(source: string) {
   return (
     source === '@/lib/advancedTracking/storage' ||
     source.endsWith('/lib/advancedTracking/storage') ||
@@ -35,14 +37,13 @@ function isAdvancedStorageImport(source) {
   );
 }
 
-module.exports = {
+export default defineRule({
   meta: {
     type: 'problem',
     docs: {
       description: 'enforce advanced tracking storage boundaries between SQLite and Zustand',
       recommended: true,
     },
-    fixable: null,
     schema: [],
     messages: {
       sqliteOnlyInStorage:
@@ -54,7 +55,7 @@ module.exports = {
     },
   },
   create(context) {
-    const filename = normalizePath(context.getFilename());
+    const filename = normalizePath(context.filename);
 
     return {
       ImportDeclaration(node) {
@@ -82,9 +83,8 @@ module.exports = {
           !isTestFile(filename)
         ) {
           context.report({ node, messageId: 'noReactQueryInDomain' });
-          return;
         }
       },
     };
   },
-};
+});

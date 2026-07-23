@@ -42,9 +42,9 @@ const baseGame: Omit<AdvancedTrackedGame, 'points'> = {
 };
 
 function findStats(stats: ReturnType<typeof computeAdvancedPlayerStats>, participantId: string) {
-  const s = stats.find((s) => s.participantId === participantId);
-  if (!s) throw new Error(`No stats found for ${participantId}`);
-  return s;
+  const playerStats = stats.find((candidate) => candidate.participantId === participantId);
+  if (!playerStats) throw new Error(`No stats found for ${participantId}`);
+  return playerStats;
 }
 
 interface PointOutcomeFixture {
@@ -779,7 +779,7 @@ describe('advancedPlayerStatsUtils', () => {
     });
 
     it('filters attributions by point-side when the game is a scrimmage', () => {
-      const game: AdvancedTrackedGame = {
+      const scrimmageGame: AdvancedTrackedGame = {
         ...baseGame,
         gameType: 'scrimmage',
         sides: [
@@ -856,7 +856,7 @@ describe('advancedPlayerStatsUtils', () => {
         ],
       };
 
-      const analytics = buildAnalyticsGame(game);
+      const analytics = buildAnalyticsGame(scrimmageGame);
 
       const zooStats = findStats(computeAdvancedPlayerStats(analytics, ZOO), 'p_august');
       expect(zooStats.assists).toBe(1);

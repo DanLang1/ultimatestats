@@ -106,9 +106,9 @@ export const TrackerLastActionCard = ({
   const discHolderRef = getSafeDiscHolderRef(possession, game.focusSideId, point);
 
   const lastOppPossession =
-    point?.possessions.filter((p) => p.sideId !== game.focusSideId).at(-1) ?? null;
+    point?.possessions.findLast((p) => p.sideId !== game.focusSideId) ?? null;
   const lastFocusPossession =
-    point?.possessions.filter((p) => p.sideId === game.focusSideId).at(-1) ?? null;
+    point?.possessions.findLast((p) => p.sideId === game.focusSideId) ?? null;
   const focusHasStarted =
     !!possession && possession.sideId === game.focusSideId && possession.actions.length > 0;
   const isOpeningDefensivePull =

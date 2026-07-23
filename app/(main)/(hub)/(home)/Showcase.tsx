@@ -84,7 +84,7 @@ export default function ShowcaseScreen() {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {hasItems(games) && (
           <ThemedText style={[styles.metaLine, { color: palette.textMuted }]}>
-            {games!.length} {games!.length === 1 ? 'game' : 'games'} available
+            {games.length} {games.length === 1 ? 'game' : 'games'} available
           </ThemedText>
         )}
         {renderBody()}

@@ -5,12 +5,12 @@ const path = require('node:path');
 const withFmtFix = (config) => {
   return withDangerousMod(config, [
     'ios',
-    async (config) => {
-      const podfilePath = path.join(config.modRequest.platformProjectRoot, 'Podfile');
-      if (!fs.existsSync(podfilePath)) return config;
+    async (dangerousModConfig) => {
+      const podfilePath = path.join(dangerousModConfig.modRequest.platformProjectRoot, 'Podfile');
+      if (!fs.existsSync(podfilePath)) return dangerousModConfig;
 
       let content = fs.readFileSync(podfilePath, 'utf-8');
-      if (content.includes('FMT_USE_CONSTEVAL')) return config;
+      if (content.includes('FMT_USE_CONSTEVAL')) return dangerousModConfig;
 
       const patchCode = `
     # Fix fmt 11.0.2 consteval compilation error with Xcode 26.4+
@@ -29,7 +29,7 @@ const withFmtFix = (config) => {
         `$1\n${patchCode}\n$2`,
       );
       fs.writeFileSync(podfilePath, content);
-      return config;
+      return dangerousModConfig;
     },
   ]);
 };

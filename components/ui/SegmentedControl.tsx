@@ -65,7 +65,7 @@ export function SegmentedControl<T extends string = string>({
   );
 
   useEffect(() => {
-    if (!attentionRunKey || disabled) return;
+    if (!attentionRunKey || disabled) return undefined;
 
     // Start the attention run immediately for this key; the timeout only ends the run.
     // eslint-disable-next-line react/react-compiler

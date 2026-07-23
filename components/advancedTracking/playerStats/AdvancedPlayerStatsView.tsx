@@ -32,6 +32,8 @@ import { hasItems } from '@/lib/utils';
 import { Fonts } from '@/theme/theme';
 
 type AnalyticsGame = ReturnType<typeof buildAnalyticsGame>;
+const EMPTY_ADVANCED_GAMES: AdvancedTrackedGame[] = [];
+const EMPTY_GAME_IDS: string[] = [];
 
 type AdvancedPlayerStatsViewProps = {
   analyticsGame: AnalyticsGame | null;
@@ -50,8 +52,8 @@ export default function AdvancedPlayerStatsView({
   analyticsGame,
   participantId,
   isLoading,
-  aggregateGames = [],
-  aggregateGameIds = [],
+  aggregateGames = EMPTY_ADVANCED_GAMES,
+  aggregateGameIds = EMPTY_GAME_IDS,
   selectedImpactGameId,
 }: AdvancedPlayerStatsViewProps) {
   const { palette } = useTheme();

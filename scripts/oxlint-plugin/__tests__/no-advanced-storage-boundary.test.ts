@@ -1,15 +1,7 @@
-const { RuleTester } = require('eslint');
-const rule = require('../no-advanced-storage-boundary');
+import rule from '../no-advanced-storage-boundary.ts';
+import { createRuleTester } from './rule-tester.ts';
 
-const tester = new RuleTester({
-  languageOptions: {
-    ecmaVersion: 2020,
-    sourceType: 'module',
-    parserOptions: { ecmaFeatures: { jsx: true } },
-  },
-});
-
-tester.run('no-advanced-storage-boundary', rule, {
+createRuleTester().run('no-advanced-storage-boundary', rule, {
   valid: [
     {
       filename: '/repo/lib/advancedTracking/storage.ts',
@@ -19,8 +11,15 @@ tester.run('no-advanced-storage-boundary', rule, {
       filename: '/repo/store/advancedTracking/savedGamesStore.ts',
       code: `import { loadAdvancedGame } from '@/lib/advancedTracking/storage';`,
     },
+    {
+      filename: '/repo/store/advancedTracking/__tests__/savedGamesStore.test.ts',
+      code: `import { loadAdvancedGame } from '@/lib/advancedTracking/storage';`,
+    },
+    {
+      filename: '/repo/store/advancedTracking/trackingStore.test.ts',
+      code: `import { useQueryClient } from '@tanstack/react-query';`,
+    },
   ],
-
   invalid: [
     {
       filename: '/repo/app/Import.tsx',

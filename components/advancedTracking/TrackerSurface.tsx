@@ -107,4 +107,6 @@ export const TrackerSurface = ({
         />
       );
   }
+
+  throw new Error('Unsupported tracker surface state');
 };

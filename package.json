@@ -9,14 +9,15 @@
     "android": "APP_VARIANT=development expo run:android",
     "ios": "APP_VARIANT=development expo run:ios",
     "web": "expo start --web",
-    "lint": "oxlint .",
+    "lint": "oxlint --config oxlint.config.mts .",
     "typecheck": "tsc --noEmit",
     "check": "npm run format:check && npm run lint && npm run typecheck",
     "check:all": "npm run check && npm test",
     "format": "oxfmt",
     "format:check": "oxfmt --check",
     "format:changed": "git diff --name-only -z --diff-filter=d HEAD | xargs -0 -r oxfmt --no-error-on-unmatched-pattern",
-    "test": "jest",
+    "test": "jest && npm run test:oxlint",
+    "test:oxlint": "node --test scripts/oxlint-plugin/__tests__/*.test.ts",
     "maestro": "MAESTRO_CLI_NO_ANALYTICS=1 maestro test --exclude-tags extended .maestro/tests/",
     "maestro:smoke": "MAESTRO_CLI_NO_ANALYTICS=1 maestro test .maestro/tests/advanced-tracker-smoke.yml",
     "maestro:all": "MAESTRO_CLI_NO_ANALYTICS=1 maestro test .maestro/tests/"
@@ -65,22 +66,22 @@
     "zustand": "^5.0.11"
   },
   "devDependencies": {
+    "@oxlint/plugins": "^1.75.0",
     "@testing-library/react-native": "^14.0.1",
     "@types/jest": "29.5.14",
     "@types/node": "^25.5.2",
     "@types/react": "~19.2.10",
-    "eslint": "^9.25.0",
     "eslint-plugin-expo": "^1.1.0",
     "eslint-plugin-testing-library": "^7.16.2",
     "jest": "~29.7.0",
     "jest-expo": "~57.0.1",
     "oxfmt": "^0.59.0",
-    "oxlint": "^1.74.0",
-    "oxlint-tsgolint": "^0.25.0",
+    "oxlint": "^1.75.0",
+    "oxlint-tsgolint": "^7.0.2001",
     "typescript": "~6.0.3"
   },
   "engines": {
-    "node": "^20.19.0 || >=22.12.0"
+    "node": ">=22.18.0"
   },
   "private": true
 }

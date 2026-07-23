@@ -181,11 +181,11 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
 
           assertTwoSides(input.sides);
 
-          const sideIds = input.sides.map((side) => side.id);
-          if (!sideIds.includes(input.focusSideId)) {
+          const sideIds = new Set(input.sides.map((side) => side.id));
+          if (!sideIds.has(input.focusSideId)) {
             throw new Error('focusSideId must match one of the advanced tracking sides.');
           }
-          if (!sideIds.includes(input.initialReceivingSideId)) {
+          if (!sideIds.has(input.initialReceivingSideId)) {
             throw new Error(
               'initialReceivingSideId must match one of the advanced tracking sides.',
             );

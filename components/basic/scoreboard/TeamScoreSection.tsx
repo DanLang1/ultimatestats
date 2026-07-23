@@ -24,6 +24,7 @@ interface TeamScoreSectionProps {
   hasPossession?: boolean;
 }
 
+const EMPTY_TIMEOUTS: { active: boolean; isFloater: boolean }[] = [];
 const TIMEOUT_HIT_SLOP = {
   top: 16,
   bottom: 16,
@@ -40,7 +41,7 @@ export default function TeamScoreSection({
   isCompactVertical = false,
   contentInsetTop = 0,
   contentInsetBottom = 0,
-  timeouts = [],
+  timeouts = EMPTY_TIMEOUTS,
   onTimeoutUse,
   hasPossession,
 }: TeamScoreSectionProps) {

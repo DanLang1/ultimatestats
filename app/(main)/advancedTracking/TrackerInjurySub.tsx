@@ -42,7 +42,7 @@ export default function TrackerInjurySubScreen() {
     const outIds = baselineIds.filter((id) => !nextIds.includes(id));
 
     if (isEdit) {
-      updateSub({ stoppageActionId: existingStoppage!.id, sideId, inIds, outIds });
+      updateSub({ stoppageActionId: existingStoppage.id, sideId, inIds, outIds });
     } else {
       const stoppageId = recordStoppage({ reason: 'injury', sideId });
       if (inIds.length > 0 || outIds.length > 0) {

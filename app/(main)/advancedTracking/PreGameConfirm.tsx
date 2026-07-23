@@ -15,7 +15,7 @@ import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { GameSide, Participant } from '@/lib/advancedTracking/types';
 import { getContrastingTextColor } from '@/lib/colorUtils';
 import { MAX_TEAM_NAME_LENGTH } from '@/lib/constants';
-import { formatRatioFull, GenderRatio } from '@/lib/genderRatioUtils';
+import { formatRatioFull } from '@/lib/genderRatioUtils';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { useGameStore } from '@/store/basic/gameStore';
 import { useNumberPickerStore } from '@/store/numberPickerStore';
@@ -361,7 +361,7 @@ export default function AdvancedPreGameConfirm() {
           ]}
           value={receivingTeam}
           onChange={(value) => {
-            setReceivingTeam(value as 'us' | 'them');
+            setReceivingTeam(value);
             setTeamOrbitRunKey((prev) => prev + 1);
           }}
           showRequired={receivingTeam === ''}
@@ -392,7 +392,7 @@ export default function AdvancedPreGameConfirm() {
             ]}
             value={firstPointRatio ?? ''}
             onChange={(value) => {
-              setFirstPointRatio(value as GenderRatio);
+              setFirstPointRatio(value);
               setRatioOrbitRunKey((prev) => prev + 1);
             }}
             showRequired={firstPointRatio === null}

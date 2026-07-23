@@ -26,6 +26,7 @@ interface TutorialTeamScoreSectionProps {
   timeoutLeadingIndicator?: React.ReactNode;
 }
 
+const EMPTY_TIMEOUTS: { active: boolean; isFloater: boolean }[] = [];
 const TIMEOUT_HIT_SLOP = {
   top: 16,
   bottom: 16,
@@ -42,7 +43,7 @@ export default function TutorialTeamScoreSection({
   isCompactVertical = false,
   contentInsetTop = 0,
   contentInsetBottom = 0,
-  timeouts = [],
+  timeouts = EMPTY_TIMEOUTS,
   onTimeoutUse,
   hasPossession,
   highlightTimeoutIndex,

@@ -435,7 +435,7 @@ describe('getPassChainEvents', () => {
     const p2 = { refType: 'participant' as const, participantId: 'p2' };
     const p3 = { refType: 'participant' as const, participantId: 'p3' };
     const p4 = { refType: 'participant' as const, participantId: 'p4' };
-    const participants = [
+    const displayParticipants = [
       { id: 'p1', name: 'P1' },
       { id: 'p2', name: 'P2' },
       { id: 'p3', name: 'P3' },
@@ -454,7 +454,7 @@ describe('getPassChainEvents', () => {
       { id: 'a3', kind: 'throw', sideId: HOME, thrower: p2, toPlayer: p3, result: 'complete' },
       { id: 'a4', kind: 'throw', sideId: HOME, thrower: p3, toPlayer: p4, result: 'complete' },
     ]);
-    const { events, truncated } = getPassChainEvents(pos, participants);
+    const { events, truncated } = getPassChainEvents(pos, displayParticipants);
     expect(truncated).toBe(true);
     expect(events.map((e) => e.name)).toEqual(['P2', 'P3', 'P4']);
   });

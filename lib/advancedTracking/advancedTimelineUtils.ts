@@ -195,6 +195,8 @@ function getThrowTone(
     case 'callahan':
       return scoringSideId === focusSideId ? 'success' : 'danger';
   }
+
+  throw new Error('Unsupported throw result');
 }
 
 function buildThrowLabel(
@@ -617,6 +619,8 @@ export function getPointStateLabel(state: PointState): string {
     case 'terminated':
       return 'Terminated';
   }
+
+  throw new Error('Unsupported point state');
 }
 
 export function getTransitionLabel(transition: BetweenPointTransition | GameTransition): string {
@@ -636,6 +640,8 @@ export function getTransitionLabel(transition: BetweenPointTransition | GameTran
     case 'hard_cap':
       return 'Hard Cap';
   }
+
+  throw new Error('Unsupported transition');
 }
 
 export type FlowItem =
@@ -762,4 +768,6 @@ export function getTransitionIcon(transition: BetweenPointTransition | GameTrans
     case 'administrative':
       return 'clipboard-text-outline';
   }
+
+  throw new Error('Unsupported transition');
 }

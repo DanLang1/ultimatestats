@@ -29,16 +29,18 @@ interface SavedGamesListProps {
 
 type SortField = 'date' | 'team' | 'score';
 type SortDirection = 'asc' | 'desc';
+const EMPTY_GAME_IDS = new Set<string>();
+const EMPTY_TOURNAMENTS: Tournament[] = [];
 
 export default function SavedGamesList({
   games,
   onSelectGame,
-  selectedGameIds = new Set(),
+  selectedGameIds = EMPTY_GAME_IDS,
   selectedGameKind = null,
   onToggleGameSelection,
   onEnterSelectionWithGame,
   onClearSelection,
-  tournaments = [],
+  tournaments = EMPTY_TOURNAMENTS,
   selectionMode = false,
 }: SavedGamesListProps) {
   const { palette } = useTheme();

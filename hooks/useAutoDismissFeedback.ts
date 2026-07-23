@@ -25,6 +25,8 @@ export function useAutoDismissFeedback(autoDismiss: boolean, feedbackText: strin
         }
       };
     }
+
+    return undefined;
   }, [autoDismiss, feedbackText]);
 
   return dismissed;

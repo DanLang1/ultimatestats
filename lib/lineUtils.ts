@@ -41,7 +41,7 @@ function getGroupKey(player: Player): GenderRoleGroup {
   if (!player.matchingType || !player.role) {
     return 'unassigned';
   }
-  return `${player.matchingType}-${player.role}` as GenderRoleGroup;
+  return `${player.matchingType}-${player.role}`;
 }
 
 /**

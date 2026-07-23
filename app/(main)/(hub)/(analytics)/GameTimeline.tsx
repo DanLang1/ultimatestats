@@ -199,8 +199,8 @@ export default function GameTimelineScreen() {
               params: {
                 eventIndex: String(eventIndex),
                 eventType: 'turnover',
-                playerId: String(turnover.playerId ?? 'null'),
-                player2Id: String(turnover.player2Id ?? 'null'),
+                playerId: turnover.playerId ?? 'null',
+                player2Id: turnover.player2Id ?? 'null',
                 subtype: turnover.type,
                 originalTeam: turnover.team,
                 gameId: params.gameId ?? 'current',
@@ -214,7 +214,7 @@ export default function GameTimelineScreen() {
               params: {
                 eventIndex: String(eventIndex),
                 eventType: 'goal',
-                playerId: String(playerId ?? 'null'),
+                playerId: playerId ?? 'null',
                 editField,
                 gameId: params.gameId ?? 'current',
               },

@@ -105,10 +105,10 @@ export default function PreGameConfirm() {
 
   const handleStart = () => {
     if (needPossession && selectedTeam) {
-      setPossession(selectedTeam as 'team1' | 'team2');
+      setPossession(selectedTeam);
     }
     if (needRatio && selectedRatio) {
-      setFirstPointRatio(selectedRatio as GenderRatio);
+      setFirstPointRatio(selectedRatio);
     }
 
     if (statsTutorialPending) {

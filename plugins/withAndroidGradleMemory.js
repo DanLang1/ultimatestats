@@ -7,16 +7,16 @@ const GRADLE_JVM_ARGS =
 const KOTLIN_DAEMON_JVM_OPTIONS = '-Xmx2g';
 
 function withAndroidGradleMemory(config) {
-  return withGradleProperties(config, (config) => {
+  return withGradleProperties(config, (gradleConfig) => {
     // Building React Native from source triggers dependency lint in release builds.
     // The default JVM/metaspace settings are too small for local production builds.
-    updateAndroidBuildProperty(config.modResults, 'org.gradle.jvmargs', GRADLE_JVM_ARGS);
+    updateAndroidBuildProperty(gradleConfig.modResults, 'org.gradle.jvmargs', GRADLE_JVM_ARGS);
     updateAndroidBuildProperty(
-      config.modResults,
+      gradleConfig.modResults,
       'kotlin.daemon.jvm.options',
       KOTLIN_DAEMON_JVM_OPTIONS,
     );
-    return config;
+    return gradleConfig;
   });
 }
 

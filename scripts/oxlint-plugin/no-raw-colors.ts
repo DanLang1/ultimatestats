@@ -1,3 +1,7 @@
+import { defineRule } from '@oxlint/plugins';
+
+import { getStaticPropertyName } from './get-static-property-name.ts';
+
 const COLOR_PROPS = new Set([
   'color',
   'backgroundColor',
@@ -16,11 +20,8 @@ const COLOR_PROPS = new Set([
   'textShadowColor',
 ]);
 
-// #rgb, #rrggbb, #rgba, #rrggbbaa
 const HEX_RE = /^#[0-9a-fA-F]{3,8}$/;
-// rgb(...), rgba(...), hsl(...), hsla(...)
 const COLOR_FN_RE = /^(rgb|rgba|hsl|hsla)\s*\(/i;
-// Common named CSS colors
 const NAMED_COLORS = new Set([
   'black',
   'white',
@@ -55,23 +56,25 @@ const NAMED_COLORS = new Set([
   'fuchsia',
 ]);
 
-function isRawColor(value) {
-  if (typeof value !== 'string') return false;
-  const v = value.trim();
-  if (v.toLowerCase() === 'transparent') return false;
-  return HEX_RE.test(v) || COLOR_FN_RE.test(v) || NAMED_COLORS.has(v.toLowerCase());
+function isRawColor(value: string) {
+  const normalizedValue = value.trim();
+  if (normalizedValue.toLowerCase() === 'transparent') return false;
+
+  return (
+    HEX_RE.test(normalizedValue) ||
+    COLOR_FN_RE.test(normalizedValue) ||
+    NAMED_COLORS.has(normalizedValue.toLowerCase())
+  );
 }
 
-module.exports = {
+export default defineRule({
   meta: {
     type: 'problem',
     docs: {
       description:
         'disallow raw color values in styles; use palette tokens from theme/theme.ts instead',
-      category: 'Best Practices',
       recommended: true,
     },
-    fixable: null,
     schema: [],
     messages: {
       noRawColor:
@@ -82,25 +85,20 @@ module.exports = {
   create(context) {
     return {
       Property(node) {
-        const keyName =
-          node.key.type === 'Identifier'
-            ? node.key.name
-            : node.key.type === 'Literal'
-              ? String(node.key.value)
-              : null;
+        if (node.computed) return;
+
+        const keyName = getStaticPropertyName(node.key);
 
         if (!keyName || !COLOR_PROPS.has(keyName)) return;
+        if (node.value.type !== 'Literal' || typeof node.value.value !== 'string') return;
+        if (!isRawColor(node.value.value)) return;
 
-        if (node.value.type === 'Literal' && typeof node.value.value === 'string') {
-          if (isRawColor(node.value.value)) {
-            context.report({
-              node: node.value,
-              messageId: 'noRawColor',
-              data: { value: node.value.value },
-            });
-          }
-        }
+        context.report({
+          node: node.value,
+          messageId: 'noRawColor',
+          data: { value: node.value.value },
+        });
       },
     };
   },
-};
+});

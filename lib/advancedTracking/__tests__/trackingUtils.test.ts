@@ -1169,11 +1169,9 @@ const _sid = (id: string, label: string) => ({ id, label, trackingMode: 'full-ro
 
 const _participant = (id: string, name: string) => ({ id, name });
 
-const _line = (sideId: string, participantIds: string[]): PointLine =>
-  ({ sideId, participantIds }) as PointLine;
+const _line = (sideId: string, participantIds: string[]): PointLine => ({ sideId, participantIds });
 
-const _point = (id: string, lines: PointLine[]): TrackedPoint =>
-  ({ id, lines, possessions: [] }) as TrackedPoint;
+const _point = (id: string, lines: PointLine[]): TrackedPoint => ({ id, lines, possessions: [] });
 
 const _makeGame = (overrides: Partial<AdvancedTrackedGame> = {}): AdvancedTrackedGame => ({
   id: 'rg1',

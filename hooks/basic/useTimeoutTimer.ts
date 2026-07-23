@@ -27,7 +27,7 @@ export function useTimeoutTimer() {
 
   // Drift-proof countdown using absolute timestamps
   useEffect(() => {
-    if (!isRunning || !endTime) return;
+    if (!isRunning || !endTime) return undefined;
 
     const interval = setInterval(() => {
       const now = Date.now();

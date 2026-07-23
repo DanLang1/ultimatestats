@@ -64,6 +64,8 @@ function compileAnalyticsAction(
     case 'stoppage':
       return { ...base, kind: 'stoppage' };
   }
+
+  throw new Error('Unsupported analytics action');
 }
 
 function otherSide(sideId: string, sideIds: [string, string]): string {

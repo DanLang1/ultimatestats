@@ -1,13 +1,15 @@
-module.exports = {
+import { defineRule } from '@oxlint/plugins';
+
+import { getStaticPropertyName } from './get-static-property-name.ts';
+
+export default defineRule({
   meta: {
     type: 'problem',
     docs: {
       description:
         'disallow fontWeight in styles; use fontFamily with Fonts.* from theme/theme.ts instead',
-      category: 'Best Practices',
       recommended: true,
     },
-    fixable: null,
     schema: [],
     messages: {
       noFontWeight:
@@ -17,12 +19,14 @@ module.exports = {
   },
   create(context) {
     return {
-      // Catches fontWeight in style objects: { fontWeight: '700' }
       Property(node) {
-        if (node.key && node.key.type === 'Identifier' && node.key.name === 'fontWeight') {
-          context.report({ node, messageId: 'noFontWeight' });
-        }
+        if (node.computed) return;
+
+        const propertyName = getStaticPropertyName(node.key);
+        if (propertyName !== 'fontWeight') return;
+
+        context.report({ node, messageId: 'noFontWeight' });
       },
     };
   },
-};
+});

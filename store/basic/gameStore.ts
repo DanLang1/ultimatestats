@@ -1115,14 +1115,14 @@ export const useGameStore = create<GameState>()(
             team1Color: state.team1BgColor,
             team2Color: state.team2BgColor,
           };
-          set((state: GameState) => {
-            const idx = state.savedGames.findIndex((g) => g.id === gameId);
+          set((draft: GameState) => {
+            const idx = draft.savedGames.findIndex((g) => g.id === gameId);
             if (idx >= 0) {
-              state.savedGames[idx] = game;
+              draft.savedGames[idx] = game;
             } else {
-              state.savedGames.push(game);
+              draft.savedGames.push(game);
             }
-            state.currentGameId = gameId; // Remember ID for subsequent saves
+            draft.currentGameId = gameId; // Remember ID for subsequent saves
           });
         },
 
@@ -1160,12 +1160,12 @@ export const useGameStore = create<GameState>()(
           const state = get();
           const team = teamOverride ?? state.currentTeam;
 
-          set((state: GameState) => {
-            const idx = state.savedTeams.findIndex((t) => t.id === team.id);
+          set((draft: GameState) => {
+            const idx = draft.savedTeams.findIndex((t) => t.id === team.id);
             if (idx >= 0) {
-              state.savedTeams[idx] = team;
+              draft.savedTeams[idx] = team;
             } else {
-              state.savedTeams.push(team);
+              draft.savedTeams.push(team);
             }
           });
         },

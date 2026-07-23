@@ -2,6 +2,7 @@ module.exports = {
   preset: 'jest-expo',
   roots: ['<rootDir>'],
   testMatch: ['**/*.test.[jt]s?(x)'],
+  testPathIgnorePatterns: ['<rootDir>/scripts/oxlint-plugin/'],
   setupFilesAfterEnv: ['<rootDir>/test/setup.ts'],
   clearMocks: true,
   transformIgnorePatterns: [

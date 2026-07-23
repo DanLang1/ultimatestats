@@ -24,6 +24,9 @@ export interface RecentLine {
   playerIds: string[];
 }
 
+const EMPTY_RECENT_LINES: RecentLine[] = [];
+const EMPTY_POINT_LINES: PointLineRecord[] = [];
+
 interface TrackerLineScreenProps {
   participants: Participant[];
   onConfirm: (participantIds: string[]) => void;
@@ -51,8 +54,8 @@ export const TrackerLineScreen = ({
   sequenceNumber,
   requireChanges,
   warningText,
-  recentLines = [],
-  pointLines = [],
+  recentLines = EMPTY_RECENT_LINES,
+  pointLines = EMPTY_POINT_LINES,
   currentPoint,
 }: TrackerLineScreenProps) => {
   const { palette } = useTheme();

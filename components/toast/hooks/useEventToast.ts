@@ -217,7 +217,7 @@ export function useEventToast({
   }, [eventToastSignal, roster, team2Name, clearEventToastSignal]);
 
   useEffect(() => {
-    if (!toast.visible) return;
+    if (!toast.visible) return undefined;
     const timeoutId = setTimeout(() => {
       setToast((current) => ({ ...current, visible: false }));
     }, EVENT_RECORDED_TOAST_DURATION_MS);

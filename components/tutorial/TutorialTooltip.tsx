@@ -83,6 +83,8 @@ function createStyles(
       case 'center':
         return { top: 0, bottom: 0, justifyContent: 'center' } as const;
     }
+
+    throw new Error('Unsupported tooltip position');
   })();
 
   return StyleSheet.create({

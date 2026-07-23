@@ -26,13 +26,13 @@ export function usePointTimer() {
       // Keep the visible timer aligned with point lifecycle changes.
       // eslint-disable-next-line react/react-compiler
       setElapsedSeconds(0);
-      return;
+      return undefined;
     }
 
     // If paused, show the frozen elapsed time
     if (isPaused) {
       setElapsedSeconds(Math.floor(pointTimerPausedElapsed / 1000));
-      return;
+      return undefined;
     }
 
     // Running: update elapsed time every 500ms

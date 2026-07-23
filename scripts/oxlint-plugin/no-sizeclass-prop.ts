@@ -1,4 +1,6 @@
-module.exports = {
+import { defineRule } from '@oxlint/plugins';
+
+export default defineRule({
   meta: {
     type: 'suggestion',
     docs: {
@@ -6,7 +8,6 @@ module.exports = {
         'disallow passing sizeClass as a JSX prop — components should call useLayout() themselves',
       recommended: true,
     },
-    fixable: null,
     schema: [],
     messages: {
       noSizeClassProp:
@@ -16,12 +17,10 @@ module.exports = {
   create(context) {
     return {
       JSXAttribute(node) {
-        const name = node.name.type === 'JSXIdentifier' ? node.name.name : node.name.name?.name; // JSXNamespacedName fallback
+        if (node.name.type !== 'JSXIdentifier' || node.name.name !== 'sizeClass') return;
 
-        if (name === 'sizeClass') {
-          context.report({ node, messageId: 'noSizeClassProp' });
-        }
+        context.report({ node, messageId: 'noSizeClassProp' });
       },
     };
   },
-};
+});

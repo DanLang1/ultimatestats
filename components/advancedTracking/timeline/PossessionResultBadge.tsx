@@ -34,6 +34,8 @@ export default function PossessionResultBadge({ possession }: PossessionResultBa
       case 'terminated':
         return { label: 'Terminated', color: palette.textMuted };
     }
+
+    throw new Error('Unsupported possession result');
   })();
 
   return (

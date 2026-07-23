@@ -43,7 +43,7 @@ export function useTimestampTimer({
         // eslint-disable-next-line react/react-compiler
         setValue(mode === 'countdown' ? durationSeconds : 0);
       }
-      return;
+      return undefined;
     }
 
     const update = () => {
@@ -77,7 +77,7 @@ export function useStopwatch(initialElapsedMs = 0) {
   useEffect(() => {
     if (!isRunning) {
       lastTickRef.current = null;
-      return;
+      return undefined;
     }
 
     lastTickRef.current = Date.now();

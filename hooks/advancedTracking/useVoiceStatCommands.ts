@@ -253,15 +253,15 @@ export function useVoiceStatCommands(input: UseVoiceStatCommandsInput): VoiceSta
         transcript: result.transcript,
       })),
     });
-    const transcript = getDisplayTranscript(event.results);
-    if (!transcript) {
+    const displayTranscript = getDisplayTranscript(event.results);
+    if (!displayTranscript) {
       if (!event.isFinal) return;
 
       logVoiceDebug('empty final result');
       return;
     }
 
-    setTranscript(transcript);
+    setTranscript(displayTranscript);
     const parseResult = parseBestVoiceStatCommand(event.results, input.activeParticipants);
     const resultConfidence = event.isFinal ? getAvailableConfidence(parseResult?.confidence) : null;
     logVoiceDebug('parse result', {

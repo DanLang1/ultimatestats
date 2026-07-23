@@ -78,7 +78,7 @@ function getColumnKey(player: Player): ColumnKey {
   if (!player.matchingType || !player.role) {
     return 'unassigned';
   }
-  return `${player.matchingType}-${player.role}` as ColumnKey;
+  return `${player.matchingType}-${player.role}`;
 }
 
 function getGenericColumnKey(player: Player): GenericColumnKey {

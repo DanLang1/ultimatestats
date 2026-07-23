@@ -40,7 +40,7 @@ export function useActiveGameSession(): ActiveGameSession {
   }
 
   if (activeAdvancedGameRoute != null) {
-    return { kind: 'advanced', route: activeAdvancedGameRoute as Href };
+    return { kind: 'advanced', route: activeAdvancedGameRoute };
   }
 
   return { kind: 'none', route: '/Dashboard' };

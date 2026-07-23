@@ -425,7 +425,7 @@ it('scenario: full game — both teams tracked, every field', () => {
   ];
 
   const ryan = { refType: 'participant' as const, participantId: 'p_ryan' };
-  const sam = { refType: 'participant' as const, participantId: 'p_sam' };
+  const fullGameSam = { refType: 'participant' as const, participantId: 'p_sam' };
   const taylor = { refType: 'participant' as const, participantId: 'p_taylor' };
 
   const game: AdvancedTrackedGame = {
@@ -544,7 +544,7 @@ it('scenario: full game — both teams tracked, every field', () => {
                 kind: 'throw',
                 sideId: RIVALS,
                 thrower: ryan,
-                toPlayer: sam,
+                toPlayer: fullGameSam,
                 result: 'complete',
               },
               { id: 'b3', kind: 'stoppage', reason: 'injury', sideId: RIVALS },
@@ -559,13 +559,13 @@ it('scenario: full game — both teams tracked, every field', () => {
                 id: 'b4',
                 kind: 'disc_pickup',
                 sideId: RIVALS,
-                player: sam,
+                player: fullGameSam,
               },
               {
                 id: 'b5',
                 kind: 'throw',
                 sideId: RIVALS,
-                thrower: sam,
+                thrower: fullGameSam,
                 toPlayer: taylor,
                 result: 'drop',
                 splitAttribution: true,
@@ -616,7 +616,7 @@ it('scenario: full game — both teams tracked, every field', () => {
                 kind: 'throw',
                 sideId: RIVALS,
                 thrower: taylor,
-                toPlayer: sam,
+                toPlayer: fullGameSam,
                 result: 'goal',
               },
             ],
@@ -647,7 +647,7 @@ it('scenario: full game — both teams tracked, every field', () => {
                 sideId: ZOO,
                 receivingSideId: RIVALS,
                 puller: joah,
-                receiver: sam,
+                receiver: fullGameSam,
                 result: 'inbound',
                 hangTimeMs: 2300,
               },
@@ -655,7 +655,7 @@ it('scenario: full game — both teams tracked, every field', () => {
                 id: 'c2',
                 kind: 'throw',
                 sideId: RIVALS,
-                thrower: sam,
+                thrower: fullGameSam,
                 toPlayer: ryan,
                 result: 'complete',
               },

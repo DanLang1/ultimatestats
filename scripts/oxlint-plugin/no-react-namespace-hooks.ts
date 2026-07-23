@@ -1,11 +1,12 @@
-module.exports = {
+import { defineRule } from '@oxlint/plugins';
+
+export default defineRule({
   meta: {
     type: 'suggestion',
     docs: {
       description: 'require named React hook imports instead of React.useHook()',
       recommended: true,
     },
-    fixable: null,
     schema: [],
     messages: {
       namedImport: 'Use named React hook imports (e.g. useState()) instead of React.useState().',
@@ -22,4 +23,4 @@ module.exports = {
       },
     };
   },
-};
+});

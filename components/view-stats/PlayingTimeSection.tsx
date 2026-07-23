@@ -107,7 +107,7 @@ export default function PlayingTimeSection({
   );
 
   const hasTiming = stats.minutesPlayed !== undefined && stats.minutesPlayed > 0;
-  const totalPlayingTimeLabel = hasTiming ? formatMinutesPlayed(stats.minutesPlayed!) : '—';
+  const totalPlayingTimeLabel = hasTiming ? formatMinutesPlayed(stats.minutesPlayed) : '—';
   const avgPerPointLabel = stats.avgPointDurationMs
     ? `${Math.round(stats.avgPointDurationMs / 1000)}s`
     : '—';
