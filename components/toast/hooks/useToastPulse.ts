@@ -43,17 +43,21 @@ export function useToastPulse(
     borderRunnerOpacity,
   ]);
 
-  const toastAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-  }));
+  const toastAnimatedStyle = useAnimatedStyle(() => {
+    'worklet';
+    return {
+      transform: [{ scale: scale.get() }],
+    };
+  });
 
   const borderRunnerAnimatedStyle = useAnimatedStyle(() => {
+    'worklet';
     if (toastWidth <= 0 || toastHeight <= 0) {
       return { opacity: 0 };
     }
 
     const perimeter = 2 * (toastWidth + toastHeight);
-    const distance = borderRunnerProgress.value * perimeter;
+    const distance = borderRunnerProgress.get() * perimeter;
     let x = 0;
     let y = 0;
     let rotation = 0;
@@ -77,7 +81,7 @@ export function useToastPulse(
     }
 
     return {
-      opacity: borderRunnerOpacity.value,
+      opacity: borderRunnerOpacity.get(),
       transform: [
         { translateX: x - BORDER_RUNNER_LENGTH / 2 },
         { translateY: y - BORDER_RUNNER_THICKNESS / 2 },
@@ -87,12 +91,13 @@ export function useToastPulse(
   });
 
   const borderRunnerOffsetAnimatedStyle = useAnimatedStyle(() => {
+    'worklet';
     if (toastWidth <= 0 || toastHeight <= 0) {
       return { opacity: 0 };
     }
 
     const perimeter = 2 * (toastWidth + toastHeight);
-    const distance = (borderRunnerProgress.value * perimeter + perimeter / 2) % perimeter;
+    const distance = (borderRunnerProgress.get() * perimeter + perimeter / 2) % perimeter;
     let x = 0;
     let y = 0;
     let rotation = 0;
@@ -116,7 +121,7 @@ export function useToastPulse(
     }
 
     return {
-      opacity: borderRunnerOpacity.value,
+      opacity: borderRunnerOpacity.get(),
       transform: [
         { translateX: x - BORDER_RUNNER_LENGTH / 2 },
         { translateY: y - BORDER_RUNNER_THICKNESS / 2 },

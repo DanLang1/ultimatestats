@@ -75,13 +75,13 @@ if (result.isGameOver) {
 
 ## Key Files
 
-| File                              | Purpose                                |
-| --------------------------------- | -------------------------------------- |
-| `lib/gameUtils.ts`                | `checkGameOver()` utility              |
-| `lib/__tests__/gameUtils.test.ts` | Unit tests for game logic              |
-| `store/gameStore.ts`              | `incrementScore()`, `possession` state |
-| `app/(main)/GameComplete.tsx`     | Game end UI                            |
-| `app/StatEntryModal.tsx`          | Stat entry + game end check            |
+| File                                               | Purpose                                |
+| -------------------------------------------------- | -------------------------------------- |
+| `lib/gameUtils.ts`                                 | `checkGameOver()` utility              |
+| `lib/__tests__/gameUtils.test.ts`                  | Unit tests for game logic              |
+| `store/gameStore.ts`                               | `incrementScore()`, `possession` state |
+| `app/(main)/GameComplete.tsx`                      | Game end UI                            |
+| `components/basic/stat-entry/StatEntryOverlay.tsx` | Stat entry + game end check            |
 
 ## Testing Game Logic
 

@@ -27,24 +27,23 @@ export function useReclampOnResize({
   const insets = useSafeAreaInsets();
   const wasLandscape = useRef(isLandscape);
 
-  /* eslint-disable react/react-compiler -- Reanimated SharedValue positions are external mutable animation state. */
   useEffect(() => {
     const leftBound = 8;
     const rightBound = screenWidth - insets.left - insets.right - effectiveWidth - 24;
     const topBound = insets.top + 40;
     const bottomBound = screenHeight - insets.top - insets.bottom - effectiveHeight - 48;
 
-    const clampedX = Math.max(leftBound, Math.min(translateX.value, rightBound));
+    const clampedX = Math.max(leftBound, Math.min(translateX.get(), rightBound));
 
     const didFlipToPortrait = wasLandscape.current && !isLandscape;
     wasLandscape.current = isLandscape;
 
     const clampedY = didFlipToPortrait
       ? bottomBound
-      : Math.max(topBound, Math.min(translateY.value, bottomBound));
+      : Math.max(topBound, Math.min(translateY.get(), bottomBound));
 
-    translateX.value = withSpring(clampedX);
-    translateY.value = withSpring(clampedY);
+    translateX.set(withSpring(clampedX));
+    translateY.set(withSpring(clampedY));
   }, [
     screenWidth,
     screenHeight,
@@ -55,5 +54,4 @@ export function useReclampOnResize({
     translateY,
     isLandscape,
   ]);
-  /* eslint-enable react/react-compiler */
 }

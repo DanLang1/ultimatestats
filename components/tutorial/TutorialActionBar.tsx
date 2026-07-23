@@ -63,8 +63,8 @@ export default function TutorialActionBar({
 
   const clampPosition = (x: number, y: number) => {
     'worklet';
-    const effectiveWidth = boxWidth.value;
-    const effectiveHeight = boxHeight.value;
+    const effectiveWidth = boxWidth.get();
+    const effectiveHeight = boxHeight.get();
     const leftBound = 8;
     const rightBound = screenWidth - insets.left - insets.right - effectiveWidth - 24;
     const topBound = insets.top + 40;
@@ -74,38 +74,44 @@ export default function TutorialActionBar({
     return { x: clampedX, y: clampedY };
   };
 
-  // eslint-disable-next-line react/react-compiler -- Gesture.Pan is a factory; the literal call enables Reanimated auto-workletization.
+  // oxlint-disable-next-line react/react-compiler -- Gesture.Pan is a factory; keep the literal call so Worklets can recognize the gesture chain.
   const panGesture = Gesture.Pan()
     .minDistance(5)
     .onStart(() => {
-      startX.set(translateX.value);
-      startY.set(translateY.value);
+      'worklet';
+      startX.set(translateX.get());
+      startY.set(translateY.get());
       dragScale.set(withSpring(1.05, { damping: 30 }));
       dragOpacity.set(withSpring(0.8));
     })
     .onUpdate((e) => {
-      const newX = startX.value + e.translationX;
-      const newY = startY.value + e.translationY;
+      'worklet';
+      const newX = startX.get() + e.translationX;
+      const newY = startY.get() + e.translationY;
       const clamped = clampPosition(newX, newY);
       translateX.set(clamped.x);
       translateY.set(clamped.y);
     })
     .onEnd(() => {
+      'worklet';
       dragScale.set(withSpring(1, { damping: 30 }));
       dragOpacity.set(withSpring(1));
-      const finalClamped = clampPosition(translateX.value, translateY.value);
+      const finalClamped = clampPosition(translateX.get(), translateY.get());
       translateX.set(withSpring(finalClamped.x));
       translateY.set(withSpring(finalClamped.y));
     });
 
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [
-      { translateX: translateX.value },
-      { translateY: translateY.value },
-      { scale: dragScale.value },
-    ],
-    opacity: dragOpacity.value,
-  }));
+  const animatedStyle = useAnimatedStyle(() => {
+    'worklet';
+    return {
+      transform: [
+        { translateX: translateX.get() },
+        { translateY: translateY.get() },
+        { scale: dragScale.get() },
+      ],
+      opacity: dragOpacity.get(),
+    };
+  });
 
   // Hide when our team has disc (they tap the score section to score)
   if (!showStartPoint && possession !== 'team2') return null;

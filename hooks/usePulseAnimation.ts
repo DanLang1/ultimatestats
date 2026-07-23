@@ -26,7 +26,10 @@ export function usePulseAnimation(active: boolean, duration = 800) {
     }
   }, [active, duration, pulse]);
 
-  const animatedStyle = useAnimatedStyle(() => ({ opacity: pulse.value }));
+  const animatedStyle = useAnimatedStyle(() => {
+    'worklet';
+    return { opacity: pulse.get() };
+  });
 
   return animatedStyle;
 }

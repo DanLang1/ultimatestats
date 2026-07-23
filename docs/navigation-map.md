@@ -66,8 +66,6 @@ Defined across:
 
 ### Transparent Modals
 
-- `/StatEntryModal` (`app/(modals)/StatEntryModal.tsx`)
-- `/TurnoverEntryModal` (`app/(modals)/TurnoverEntryModal.tsx`)
 - `/GameSelectorModal` (`app/(modals)/GameSelectorModal.tsx`)
 - `/TeamManagementModal` (`app/(modals)/TeamManagementModal.tsx`)
 - `/HalftimeModal` (`app/(modals)/HalftimeModal.tsx`)
@@ -84,8 +82,8 @@ Defined across:
 1. `/` (entry route) -> `/Scoreboard` for an active basic game, or `/Dashboard` when idle
 2. Pregame setup:
    `/PreGameConfirm` (full-screen) for game format, stat tracking, and starting options before a basic game starts
-3. Optional modal step:
-   `/StatEntryModal` or `/TurnoverEntryModal` or `/TimeoutModal`
+3. Optional entry step:
+   inline score/turnover attribution sheet or `/TimeoutModal`
 4. Line editor / summary step:
    `/LineEditor` or `/PointSummaryModal`
 5. End game:

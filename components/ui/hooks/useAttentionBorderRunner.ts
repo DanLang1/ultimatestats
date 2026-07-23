@@ -68,16 +68,17 @@ export function useAttentionBorderRunner(enabled: boolean) {
   }, [enabled, size.width, size.height, progress, opacity]);
 
   const runnerStyle = useAnimatedStyle(() => {
+    'worklet';
     if (size.width <= 0 || size.height <= 0) {
       return { opacity: 0 };
     }
 
     const perimeter = 2 * (size.width + size.height);
-    const distance = progress.value * perimeter;
+    const distance = progress.get() * perimeter;
     const runner = getRunnerPosition(distance, size.width, size.height);
 
     return {
-      opacity: opacity.value,
+      opacity: opacity.get(),
       transform: [
         { translateX: runner.x - RUNNER_LENGTH / 2 },
         { translateY: runner.y - RUNNER_THICKNESS / 2 },
@@ -87,16 +88,17 @@ export function useAttentionBorderRunner(enabled: boolean) {
   });
 
   const runnerOffsetStyle = useAnimatedStyle(() => {
+    'worklet';
     if (size.width <= 0 || size.height <= 0) {
       return { opacity: 0 };
     }
 
     const perimeter = 2 * (size.width + size.height);
-    const distance = (progress.value * perimeter + perimeter / 2) % perimeter;
+    const distance = (progress.get() * perimeter + perimeter / 2) % perimeter;
     const runner = getRunnerPosition(distance, size.width, size.height);
 
     return {
-      opacity: opacity.value,
+      opacity: opacity.get(),
       transform: [
         { translateX: runner.x - RUNNER_LENGTH / 2 },
         { translateY: runner.y - RUNNER_THICKNESS / 2 },

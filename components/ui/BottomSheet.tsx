@@ -6,6 +6,7 @@ import { useTheme } from '@/context/ThemeContext';
 
 interface BottomSheetProps {
   onDismiss: () => void;
+  testID?: string;
   /** Defaults to palette.overlayDark60. Override only for non-standard backdrops. */
   overlayColor?: string;
   sheetStyle?: StyleProp<ViewStyle>;
@@ -27,6 +28,7 @@ interface BottomSheetProps {
  */
 export function BottomSheet({
   onDismiss,
+  testID,
   overlayColor,
   sheetStyle,
   minBottomPadding = 12,
@@ -37,7 +39,7 @@ export function BottomSheet({
   const resolvedOverlayColor = overlayColor ?? palette.overlayDark60;
 
   return (
-    <View style={styles.container}>
+    <View testID={testID} style={styles.container}>
       <Pressable
         accessible={false}
         style={[StyleSheet.absoluteFill, { backgroundColor: resolvedOverlayColor }]}

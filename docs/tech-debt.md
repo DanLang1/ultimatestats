@@ -17,9 +17,6 @@ This document tracks intentionally deferred cleanup work discovered during the d
   `app/(modals)/EditEventModal.tsx:208`
   `app/(modals)/EditEventModal.tsx:236`
   `app/(modals)/EditEventModal.tsx:245`
-  `app/(modals)/StatEntryModal.tsx:69`
-  `app/(modals)/StatEntryModal.tsx:79`
-  `app/(modals)/StatEntryModal.tsx:86`
 
 ## P2 - `cancelPendingGoal` Does Not Re-derive Timeout State
 

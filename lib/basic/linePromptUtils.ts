@@ -3,7 +3,7 @@ import { useSettingsStore } from '@/store/settingsStore';
 
 /**
  * Checks if the LineEditor screen should be shown.
- * Call this after a point completes (from PointSummaryModal, StatEntryModal, etc.)
+ * Call this after a point completes (from PointSummaryModal, StatEntryOverlay, etc.)
  * to determine if we should navigate to LineEditor.
  *
  * Returns true if:

@@ -174,7 +174,7 @@ Turnover actions:
 - When `possession === 'team1'` (my team has disc): record opponent-pressure outcomes (`oppBlock`) and my-team turnovers (`drop`, `throwaway`, `fiftyfifty`).
 - When `possession === 'team2'` (opponent has disc): record `block` and `turn`.
 
-In `components/scoreboard/LiveScoreboard.tsx`, `onAction` first calls `triggerTurnover()`, then records the selected event via `addTurnoverEvent(...)` (or opens `TurnoverEntryModal` for player-attributed types).
+In `components/basic/scoreboard/LiveScoreboard.tsx`, `onAction` first calls `triggerTurnover()`, then records the selected event via `addTurnoverEvent(...)` or shows the inline turnover-entry sheet for player-attributed types.
 
 ### `TeamScoreSection.tsx` (Modified)
 

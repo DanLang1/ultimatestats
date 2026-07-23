@@ -1,5 +1,6 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
+import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -9,6 +10,11 @@ import {
 } from '@/components/basic/scoreboard/ScoreboardActionBar';
 import SettingsBar from '@/components/basic/scoreboard/SettingsBar';
 import TeamScoreSection from '@/components/basic/scoreboard/TeamScoreSection';
+import {
+  StatEntryDestination,
+  StatEntryOverlay,
+} from '@/components/basic/stat-entry/StatEntryOverlay';
+import { TurnoverEntryOverlay } from '@/components/basic/turnover-entry/TurnoverEntryOverlay';
 import { ThemedView } from '@/components/ThemedView';
 import EventToast from '@/components/toast/EventToast';
 import { useEventToast } from '@/components/toast/hooks/useEventToast';
@@ -67,6 +73,7 @@ export default function LiveScoreboard() {
     clearEventToastSignal,
   } = useGameStore();
   const { lineCallingEnabled } = useSettingsStore();
+  const [pendingTurnoverType, setPendingTurnoverType] = useState<TurnoverType | null>(null);
 
   const { handleContinue: endTimeout } = useTimeoutTimer();
   const floatingEditIconColor = getContrastingTextColor(
@@ -128,7 +135,6 @@ export default function LiveScoreboard() {
     if (!didIncrement) return;
 
     if (statTrackingEnabled && isTeam1) {
-      router.push('/StatEntryModal');
       return;
     }
 
@@ -182,7 +188,18 @@ export default function LiveScoreboard() {
       fiftyfifty: 'fiftyfifty',
     };
 
-    router.push({ pathname: '/TurnoverEntryModal', params: { type: typeMap[action.type] } });
+    setPendingTurnoverType(typeMap[action.type]);
+  };
+
+  const handleStatEntryFinish = (destination: StatEntryDestination) => {
+    if (destination === 'line-editor') {
+      router.push('/LineEditor');
+      return;
+    }
+
+    if (destination === 'point-summary') {
+      router.push('/PointSummaryModal');
+    }
   };
 
   const showStartButton =
@@ -271,6 +288,15 @@ export default function LiveScoreboard() {
       )}
 
       <EventToast toast={toast} toastInstanceId={toastInstanceId} />
+
+      <StatEntryOverlay onFinish={handleStatEntryFinish} />
+
+      {pendingTurnoverType && (
+        <TurnoverEntryOverlay
+          preselectedType={pendingTurnoverType}
+          onDismiss={() => setPendingTurnoverType(null)}
+        />
+      )}
     </ThemedView>
   );
 }

@@ -109,8 +109,8 @@ export function ScoreboardActionBar({
   // Clamp position within screen bounds
   const clampPosition = (x: number, y: number) => {
     'worklet';
-    const effectiveWidth = boxWidth.value;
-    const effectiveHeight = boxHeight.value;
+    const effectiveWidth = boxWidth.get();
+    const effectiveHeight = boxHeight.get();
 
     // Account for safe areas and margin for shadows
     const leftBound = 8;
@@ -131,26 +131,29 @@ export function ScoreboardActionBar({
     effectiveHeight: measuredSize.height,
   });
 
-  // eslint-disable-next-line react/react-compiler -- Gesture.Pan is a factory; the literal call enables Reanimated auto-workletization.
+  // oxlint-disable-next-line react/react-compiler -- Gesture.Pan is a factory; keep the literal call so Worklets can recognize the gesture chain.
   const panGesture = Gesture.Pan()
     .minDistance(5)
     .onStart(() => {
-      startX.set(translateX.value);
-      startY.set(translateY.value);
+      'worklet';
+      startX.set(translateX.get());
+      startY.set(translateY.get());
       isDragging.set(true);
     })
     .onUpdate((e) => {
-      const newX = startX.value + e.translationX;
-      const newY = startY.value + e.translationY;
+      'worklet';
+      const newX = startX.get() + e.translationX;
+      const newY = startY.get() + e.translationY;
       const clamped = clampPosition(newX, newY);
       translateX.set(clamped.x);
       translateY.set(clamped.y);
     })
     .onEnd(() => {
+      'worklet';
       isDragging.set(false);
 
       // Perform final hard clamp
-      const finalClamped = clampPosition(translateX.value, translateY.value);
+      const finalClamped = clampPosition(translateX.get(), translateY.get());
 
       translateX.set(withSpring(finalClamped.x));
       translateY.set(withSpring(finalClamped.y));
@@ -158,14 +161,17 @@ export function ScoreboardActionBar({
       scheduleOnRN(setActionBarPosition, { x: finalClamped.x, y: finalClamped.y });
     });
 
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [
-      { translateX: translateX.value },
-      { translateY: translateY.value },
-      { scale: withSpring(isDragging.value ? 1.05 : 1, { damping: 30 }) },
-    ],
-    opacity: withSpring(isDragging.value ? 0.8 : 1),
-  }));
+  const animatedStyle = useAnimatedStyle(() => {
+    'worklet';
+    return {
+      transform: [
+        { translateX: translateX.get() },
+        { translateY: translateY.get() },
+        { scale: withSpring(isDragging.get() ? 1.05 : 1, { damping: 30 }) },
+      ],
+      opacity: withSpring(isDragging.get() ? 0.8 : 1),
+    };
+  });
 
   // Show bar if there's possession OR if there's an active timeout
   if (!possession && !pendingTimeoutModal) return null;

@@ -47,10 +47,15 @@ export function useBounceAnimation({ delta, isHorizontal }: BounceAnimationOptio
     };
   }, [delta, translate, opacity]);
 
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: isHorizontal ? [{ translateX: translate.value }] : [{ translateY: translate.value }],
-    opacity: opacity.value,
-  }));
+  const animatedStyle = useAnimatedStyle(() => {
+    'worklet';
+    return {
+      transform: isHorizontal
+        ? [{ translateX: translate.get() }]
+        : [{ translateY: translate.get() }],
+      opacity: opacity.get(),
+    };
+  });
 
   return animatedStyle;
 }

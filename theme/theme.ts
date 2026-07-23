@@ -4,13 +4,9 @@
  */
 
 // =============================================================================
-// COLOR SCHEMES
+// COLOR SCHEME
 // =============================================================================
 
-/**
- * Option 1: "Midnight Electric" — Dark & Vibrant
- * Sleek dark theme with electric blue accents. Modern, sporty, easy on the eyes.
- */
 const midnightElectric = {
   // Core
   primary: '#0F172A', // Deep Navy - main dark color

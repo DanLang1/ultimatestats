@@ -63,46 +63,51 @@ export function DraggablePresetItem({
   // flash caused by the UI-thread offset jumping before the JS-thread store swap.
   const animatedOffset = useSharedValue(0);
 
-  /* eslint-disable react/react-compiler -- Reanimated gesture worklets require direct SharedValue writes on the UI runtime. */
+  // oxlint-disable-next-line react/react-compiler -- Gesture.Pan is a factory; keep the literal call so Worklets can recognize the gesture chain.
   const panGesture = Gesture.Pan()
     .onStart(() => {
-      draggingId.value = preset.id;
-      dragTranslateY.value = 0;
-      dragOriginIndex.value = index;
-      dragCurrentIndex.value = index;
-      animatedOffset.value = 0;
+      'worklet';
+      draggingId.set(preset.id);
+      dragTranslateY.set(0);
+      dragOriginIndex.set(index);
+      dragCurrentIndex.set(index);
+      animatedOffset.set(0);
       scheduleOnRN(onDragStart, preset.id);
     })
     .onUpdate((e) => {
-      dragTranslateY.value = e.translationY;
+      'worklet';
+      dragTranslateY.set(e.translationY);
 
-      const desiredIndex = dragOriginIndex.value + Math.round(e.translationY / ROW_HEIGHT);
+      const desiredIndex = dragOriginIndex.get() + Math.round(e.translationY / ROW_HEIGHT);
       const clamped = Math.max(0, Math.min(totalCount - 1, desiredIndex));
 
-      if (clamped !== dragCurrentIndex.value) {
-        const from = dragCurrentIndex.value;
+      if (clamped !== dragCurrentIndex.get()) {
+        const from = dragCurrentIndex.get();
         const to = from + (clamped > from ? 1 : -1);
-        dragCurrentIndex.value = to;
-        animatedOffset.value = withTiming((to - dragOriginIndex.value) * ROW_HEIGHT, {
-          duration: 100,
-        });
+        dragCurrentIndex.set(to);
+        animatedOffset.set(
+          withTiming((to - dragOriginIndex.get()) * ROW_HEIGHT, {
+            duration: 100,
+          }),
+        );
         scheduleOnRN(onSwap, from, to);
       }
     })
     .onEnd(() => {
-      draggingId.value = '';
-      dragTranslateY.value = 0;
-      dragOriginIndex.value = -1;
-      dragCurrentIndex.value = -1;
-      animatedOffset.value = 0;
+      'worklet';
+      draggingId.set('');
+      dragTranslateY.set(0);
+      dragOriginIndex.set(-1);
+      dragCurrentIndex.set(-1);
+      animatedOffset.set(0);
       scheduleOnRN(onDragEnd);
     });
-  /* eslint-enable react/react-compiler */
 
   const animatedStyle = useAnimatedStyle(() => {
-    if (draggingId.value === preset.id) {
+    'worklet';
+    if (draggingId.get() === preset.id) {
       return {
-        transform: [{ translateY: dragTranslateY.value - animatedOffset.value }, { scale: 1.02 }],
+        transform: [{ translateY: dragTranslateY.get() - animatedOffset.get() }, { scale: 1.02 }],
         zIndex: 100,
         opacity: 0.9,
       };

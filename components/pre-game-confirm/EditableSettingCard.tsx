@@ -38,9 +38,12 @@ export function EditableSettingCard({
   const styles = createStyles(sizeClass);
   const scale = useSharedValue(1);
 
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-  }));
+  const animatedStyle = useAnimatedStyle(() => {
+    'worklet';
+    return {
+      transform: [{ scale: scale.get() }],
+    };
+  });
 
   const handlePress = () => {
     // Compress fast, then spring back with a slight overshoot (the "flip" bounce)

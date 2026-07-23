@@ -10,10 +10,8 @@ import GameSelectorModal from '@/app/(modals)/GameSelectorModal';
 import HalftimeModal from '@/app/(modals)/HalftimeModal';
 import NumberPickerModal from '@/app/(modals)/NumberPickerModal';
 import PointSummaryModal from '@/app/(modals)/PointSummaryModal';
-import StatEntryModal from '@/app/(modals)/StatEntryModal';
 import TeamManagementModal from '@/app/(modals)/TeamManagementModal';
 import TimeoutModal from '@/app/(modals)/TimeoutModal';
-import TurnoverEntryModal from '@/app/(modals)/TurnoverEntryModal';
 import { useGameStore } from '@/store/basic/gameStore';
 import { useNumberPickerStore } from '@/store/numberPickerStore';
 import { usePlayerStatsStore } from '@/store/playerStatsStore';
@@ -214,32 +212,6 @@ describe('modal routes', () => {
     expect(screen.getByText('Point 1 Complete')).toBeVisible();
     expect(screen.getByText('CLEAN HOLD')).toBeVisible();
     expect(screen.getByText('START TIMER')).toBeVisible();
-  });
-
-  it('renders stat entry from the real pending-goal state and roster', async () => {
-    arrangeBasicGame({ statTrackingEnabled: true });
-    useGameStore.setState({ pendingStatEntry: { team: 'team1', pointNumber: 1 } });
-
-    await renderScreen(<StatEntryModal />);
-
-    expect(screen.getByText('Windchill')).toBeVisible();
-    expect(screen.getByText('Alex')).toBeVisible();
-    expect(screen.getByText('Cancel')).toBeVisible();
-  });
-
-  it('renders turnover entry from the real pending-turnover state', async () => {
-    arrangeBasicGame({ statTrackingEnabled: true });
-    useGameStore.setState({
-      possession: 'team1',
-      pendingTurnoverEntry: { receivingTeam: 'team2' },
-    });
-    setMockSearchParams({ type: 'drop' });
-
-    await renderScreen(<TurnoverEntryModal />);
-
-    expect(screen.getByText('Windchill')).toBeVisible();
-    expect(screen.getByText('Drop')).toBeVisible();
-    expect(screen.getByText('Who dropped it?')).toBeVisible();
   });
 
   it('renders team management from the real saved-team collection', async () => {

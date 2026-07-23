@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Keyboard, Pressable, StyleSheet, TextInput, View } from 'react-native';
 import Animated, { FadeIn, LinearTransition, SlideInDown } from 'react-native-reanimated';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/ThemedText';
 import { AnimatedThemedView } from '@/components/ThemedView';
@@ -46,18 +45,8 @@ export function StatEntryInner({
   const { palette, themeMode } = useTheme();
   const { events } = useGameStore();
   const { isLandscape, sizeClass } = useLayout();
-  const { bottom: bottomInset, left: leftInset, right: rightInset } = useSafeAreaInsets();
   const styles = createStyles(sizeClass);
   const compactRosterMaxHeight = isLandscape ? 220 : 400;
-  const sheetInsetStyle = {
-    paddingBottom: Math.max(10, bottomInset),
-    ...(isLandscape
-      ? {
-          marginLeft: Math.max(12, leftInset),
-          marginRight: Math.max(12, rightInset),
-        }
-      : {}),
-  };
 
   // Only show active players
   const activeRoster = getActiveRoster(roster);
@@ -255,11 +244,8 @@ export function StatEntryInner({
   // Compact vertical layout when not showing add player input
   if (!showAddPlayer) {
     return (
-      <AnimatedThemedView
-        entering={SlideInDown.duration(400)}
-        style={[styles.sheet, { shadowColor: palette.shadow }, sheetInsetStyle]}
-        onStartShouldSetResponder={() => true}>
-        <Pressable onPress={() => {}} style={styles.sheetContent}>
+      <AnimatedThemedView entering={SlideInDown.duration(400)} style={styles.sheet}>
+        <View style={styles.sheetContent}>
           <View style={styles.compactContainer}>
             <StatEntryHeader
               teamName={teamName}
@@ -275,7 +261,7 @@ export function StatEntryInner({
             />
             {renderFooter()}
           </View>
-        </Pressable>
+        </View>
       </AnimatedThemedView>
     );
   }
@@ -283,11 +269,8 @@ export function StatEntryInner({
   // Portrait: vertical stack layout
   if (!isLandscape) {
     return (
-      <AnimatedThemedView
-        entering={SlideInDown.duration(400)}
-        style={[styles.sheet, { shadowColor: palette.shadow }, sheetInsetStyle]}
-        onStartShouldSetResponder={() => true}>
-        <Pressable onPress={() => {}} style={styles.sheetContent}>
+      <AnimatedThemedView entering={SlideInDown.duration(400)} style={styles.sheet}>
+        <View style={styles.sheetContent}>
           <View style={styles.compactContainer}>
             <StatEntryHeader
               teamName={teamName}
@@ -336,18 +319,15 @@ export function StatEntryInner({
             />
             {renderFooter()}
           </View>
-        </Pressable>
+        </View>
       </AnimatedThemedView>
     );
   }
 
   // Landscape: side-by-side layout with add player input
   return (
-    <AnimatedThemedView
-      entering={SlideInDown.duration(400)}
-      style={[styles.sheet, { shadowColor: palette.shadow }, sheetInsetStyle]}
-      onStartShouldSetResponder={() => true}>
-      <Pressable onPress={() => {}} style={styles.sheetContent}>
+    <AnimatedThemedView entering={SlideInDown.duration(400)} style={styles.sheet}>
+      <View style={styles.sheetContent}>
         <View style={styles.sideBySideContainer}>
           {/* Left Column: Info, Add Player, Actions */}
           <View style={styles.leftColumn}>
@@ -403,7 +383,7 @@ export function StatEntryInner({
             />
           </View>
         </View>
-      </Pressable>
+      </View>
     </AnimatedThemedView>
   );
 }
@@ -413,10 +393,6 @@ function createStyles(sizeClass: SizeClass) {
     sheet: {
       borderTopLeftRadius: 24,
       borderTopRightRadius: 24,
-      shadowOffset: { width: 0, height: -4 },
-      shadowOpacity: 0.15,
-      shadowRadius: 12,
-      elevation: 10,
     },
     sheetContent: {
       padding: 16,

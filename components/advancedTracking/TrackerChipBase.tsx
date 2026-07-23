@@ -51,26 +51,26 @@ export const TrackerChipBase = ({
   const oppHasDiscSV = useDerivedValue(() => oppHasDisc);
   const canDropOpeningPullSV = useDerivedValue(() => canDropOpeningPull);
 
-  // eslint-disable-next-line react/react-compiler -- Gesture.Pan is a factory; the literal call enables Reanimated auto-workletization.
+  // oxlint-disable-next-line react/react-compiler -- Gesture.Pan is a factory; keep the literal call so Worklets can recognize the gesture chain.
   const panGesture = Gesture.Pan()
     .activeOffsetY([-12, 12])
     .failOffsetX([-8, 8])
     .onEnd((e) => {
       'worklet';
-      if (isHolderSV.value) {
+      if (isHolderSV.get()) {
         if (e.translationY > 0) scheduleOnRN(throwaway);
         else scheduleOnRN(goal);
         return;
       }
-      if (oppHasDiscSV.value && oppSwipeDown != null) {
+      if (oppHasDiscSV.get() && oppSwipeDown != null) {
         if (e.translationY > 0) scheduleOnRN(oppSwipeDown);
         return;
       }
-      if (canDropOpeningPullSV.value) {
+      if (canDropOpeningPullSV.get()) {
         if (e.translationY > 0) scheduleOnRN(pullDrop);
         return;
       }
-      if (!isTargetableSV.value) return;
+      if (!isTargetableSV.get()) return;
       if (e.translationY > 0) scheduleOnRN(drop);
       else scheduleOnRN(goal);
     });

@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Keyboard, Pressable, StyleSheet, TextInput, View } from 'react-native';
 import Animated, { FadeIn, LinearTransition, SlideInDown } from 'react-native-reanimated';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/ThemedText';
 import { AnimatedThemedView } from '@/components/ThemedView';
@@ -50,18 +49,8 @@ export function TurnoverEntryInner({
   const [fiftyFiftyFirstPlayerId, setFiftyFiftyFirstPlayerId] = useState<string | null>(null);
   const { palette, themeMode } = useTheme();
   const { isLandscape, sizeClass } = useLayout();
-  const { bottom: bottomInset, left: leftInset, right: rightInset } = useSafeAreaInsets();
   const styles = createStyles(sizeClass);
   const compactRosterMaxHeight = isLandscape ? 220 : 400;
-  const sheetInsetStyle = {
-    paddingBottom: Math.max(10, bottomInset),
-    ...(isLandscape
-      ? {
-          marginLeft: Math.max(12, leftInset),
-          marginRight: Math.max(12, rightInset),
-        }
-      : {}),
-  };
 
   // Only show active players
   const activeRoster = getActiveRoster(roster);
@@ -300,11 +289,8 @@ export function TurnoverEntryInner({
   // Compact layout for player step without add player input
   if (step === 'player' && !showAddPlayer) {
     return (
-      <AnimatedThemedView
-        entering={SlideInDown.duration(400)}
-        style={[styles.sheet, { shadowColor: palette.shadow }, sheetInsetStyle]}
-        onStartShouldSetResponder={() => true}>
-        <Pressable onPress={() => {}} style={styles.sheetContent}>
+      <AnimatedThemedView entering={SlideInDown.duration(400)} style={styles.sheet}>
+        <View style={styles.sheetContent}>
           <View style={styles.compactContainer}>
             {renderHeader()}
             <StatEntryRoster
@@ -315,7 +301,7 @@ export function TurnoverEntryInner({
             />
             {renderCancelButton()}
           </View>
-        </Pressable>
+        </View>
       </AnimatedThemedView>
     );
   }
@@ -323,11 +309,8 @@ export function TurnoverEntryInner({
   // Portrait: vertical stack layout
   if (!isLandscape) {
     return (
-      <AnimatedThemedView
-        entering={SlideInDown.duration(400)}
-        style={[styles.sheet, { shadowColor: palette.shadow }, sheetInsetStyle]}
-        onStartShouldSetResponder={() => true}>
-        <Pressable onPress={() => {}} style={styles.sheetContent}>
+      <AnimatedThemedView entering={SlideInDown.duration(400)} style={styles.sheet}>
+        <View style={styles.sheetContent}>
           <View style={styles.compactContainer}>
             {renderHeader()}
 
@@ -378,18 +361,15 @@ export function TurnoverEntryInner({
 
             {renderCancelButton()}
           </View>
-        </Pressable>
+        </View>
       </AnimatedThemedView>
     );
   }
 
   // Landscape: standard side-by-side layout
   return (
-    <AnimatedThemedView
-      entering={SlideInDown.duration(400)}
-      style={[styles.sheet, { shadowColor: palette.shadow }, sheetInsetStyle]}
-      onStartShouldSetResponder={() => true}>
-      <Pressable onPress={() => {}} style={styles.sheetContent}>
+    <AnimatedThemedView entering={SlideInDown.duration(400)} style={styles.sheet}>
+      <View style={styles.sheetContent}>
         <View style={styles.sideBySideContainer}>
           {/* Left Column: Info, Type Selection, Actions */}
           <View style={styles.leftColumn}>
@@ -446,7 +426,7 @@ export function TurnoverEntryInner({
             </Animated.View>
           )}
         </View>
-      </Pressable>
+      </View>
     </AnimatedThemedView>
   );
 }
@@ -456,11 +436,6 @@ function createStyles(sizeClass: SizeClass) {
     sheet: {
       borderTopLeftRadius: 24,
       borderTopRightRadius: 24,
-      paddingBottom: 10,
-      shadowOffset: { width: 0, height: -4 },
-      shadowOpacity: 0.15,
-      shadowRadius: 12,
-      elevation: 10,
     },
     sheetContent: {
       padding: 16,

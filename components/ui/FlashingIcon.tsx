@@ -27,9 +27,12 @@ export default function FlashingIcon({ name, size, color, isFlashing }: Flashing
     }
   }, [isFlashing, opacity]);
 
-  const animatedStyle = useAnimatedStyle(() => ({
-    opacity: opacity.value,
-  }));
+  const animatedStyle = useAnimatedStyle(() => {
+    'worklet';
+    return {
+      opacity: opacity.get(),
+    };
+  });
 
   return (
     <Animated.View style={animatedStyle}>
