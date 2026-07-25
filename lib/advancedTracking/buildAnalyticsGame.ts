@@ -701,6 +701,7 @@ export function buildAnalyticsGame(game: AdvancedTrackedGame): AnalyticsGame {
     focusSideId: game.focusSideId,
     oppSideId,
     initialReceivingSideId: game.initialReceivingSideId,
+    ...(game.flip != null ? { flip: game.flip } : {}),
     sideLabels: Object.fromEntries(game.sides.map((s) => [s.id, s.label])),
     participantNames: new Map(game.participants.map((p) => [p.id, p.name])),
     metadata: game.metadata,
@@ -717,13 +718,33 @@ export function buildAnalyticsGame(game: AdvancedTrackedGame): AnalyticsGame {
  * captures the score at the START of that point, so we add the last point's score.
  */
 export function getFinalScores(game: AnalyticsGame): Record<string, number> {
+  const scores: Record<string, number> = {
+    [game.focusSideId]: 0,
+    [game.oppSideId]: 0,
+  };
   const lastPoint = game.points[game.points.length - 1];
-  if (!lastPoint) return {};
-  const scores = { ...lastPoint.scoresBySide };
+  if (!lastPoint) return scores;
+
+  Object.assign(scores, lastPoint.scoresBySide);
   if (lastPoint.scoringSideId != null) {
     scores[lastPoint.scoringSideId] = (scores[lastPoint.scoringSideId] ?? 0) + 1;
   }
   return scores;
+}
+
+export type AnalyticsGameOutcome = 'win' | 'loss' | 'tie';
+
+export function getFocusGameOutcome(
+  scores: Readonly<Record<string, number>>,
+  focusSideId: string,
+  opponentSideId: string,
+): AnalyticsGameOutcome {
+  const focusScore = scores[focusSideId];
+  const opponentScore = scores[opponentSideId];
+
+  if (focusScore === opponentScore) return 'tie';
+  if (focusScore > opponentScore) return 'win';
+  return 'loss';
 }
 
 /**

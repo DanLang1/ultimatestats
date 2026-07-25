@@ -8,6 +8,7 @@ import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { useTheme } from '@/context/ThemeContext';
 import { useGameSessionActions } from '@/hooks/useGameSessionActions';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { getFocusGameOutcome } from '@/lib/advancedTracking/buildAnalyticsGame';
 import { getGameScore, isAdvancedGameOver } from '@/lib/advancedTracking/trackingUtils';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { Fonts } from '@/theme/theme';
@@ -44,11 +45,12 @@ export default function TrackerGameCompleteScreen() {
   const score = getGameScore(game);
   const focusSide = game.sides.find((s) => s.id === game.focusSideId)!;
   const oppSide = game.sides.find((s) => s.id !== game.focusSideId)!;
-  const focusScore = score[focusSide.id] ?? 0;
-  const oppScore = score[oppSide.id] ?? 0;
+  const focusScore = score[focusSide.id];
+  const oppScore = score[oppSide.id];
 
-  const isTie = focusScore === oppScore;
-  const focusWon = !isTie && focusScore > oppScore;
+  const outcome = getFocusGameOutcome(score, focusSide.id, oppSide.id);
+  const isTie = outcome === 'tie';
+  const focusWon = outcome === 'win';
   const winnerName = focusWon ? focusSide.label : oppSide.label;
   const loserName = focusWon ? oppSide.label : focusSide.label;
   const winnerScore = focusWon ? focusScore : oppScore;

@@ -117,8 +117,8 @@ export default function AdvancedGameStatsScreen() {
     analyticsGame.sideLabels[analyticsGame.oppSideId] ??
     'Opponent';
   const finalScores = getFinalScores(analyticsGame);
-  const myScore = finalScores[analyticsGame.focusSideId] ?? 0;
-  const opponentScore = finalScores[analyticsGame.oppSideId] ?? 0;
+  const myScore = finalScores[analyticsGame.focusSideId];
+  const opponentScore = finalScores[analyticsGame.oppSideId];
 
   const timestamp = analyticsGame.metadata?.date
     ? new Date(analyticsGame.metadata.date).getTime() || analyticsGame.createdAt

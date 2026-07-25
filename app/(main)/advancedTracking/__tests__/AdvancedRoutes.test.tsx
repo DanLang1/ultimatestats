@@ -44,7 +44,53 @@ describe('advanced tracking routes', () => {
     await user.press(screen.getByText('Set Line'));
 
     expect(useAdvancedTrackingStore.getState().currentGame?.sides[0].label).toBe('Windchill');
+    expect(useAdvancedTrackingStore.getState().currentGame?.flip).toBeUndefined();
     expect(router.push).toHaveBeenCalledWith('/advancedTracking/TrackerLineSelect');
+  });
+
+  it('records an optional flip result and choice through the pre-game route', async () => {
+    const user = userEvent.setup();
+    useGameStore.setState({ currentTeam: testTeam, team2Name: 'Rivals' });
+    await renderScreen(<AdvancedPreGameConfirm />);
+
+    await user.press(screen.getByText('Windchill'));
+    await user.press(screen.getByText('Won'));
+    await user.press(screen.getByText('Side'));
+    await user.press(screen.getByText('Set Line'));
+
+    expect(useAdvancedTrackingStore.getState().currentGame?.flip).toEqual({
+      result: 'won',
+      choice: 'side',
+    });
+  });
+
+  it('keeps the opening receiver consistent with an offense flip choice', async () => {
+    const user = userEvent.setup();
+    useGameStore.setState({ currentTeam: testTeam, team2Name: 'Rivals' });
+    await renderScreen(<AdvancedPreGameConfirm />);
+
+    await user.press(screen.getByText('Won'));
+    await user.press(screen.getByText('Offense'));
+    await user.press(screen.getByText('Set Line'));
+
+    const game = useAdvancedTrackingStore.getState().currentGame;
+    expect(game?.initialReceivingSideId).toBe('focus-side');
+    expect(game?.flip).toEqual({ result: 'won', choice: 'offense' });
+  });
+
+  it('preserves a flip win but clears a choice contradicted by the opening receiver', async () => {
+    const user = userEvent.setup();
+    useGameStore.setState({ currentTeam: testTeam, team2Name: 'Rivals' });
+    await renderScreen(<AdvancedPreGameConfirm />);
+
+    await user.press(screen.getByText('Won'));
+    await user.press(screen.getByText('Offense'));
+    await user.press(screen.getByText('Rivals'));
+    await user.press(screen.getByText('Set Line'));
+
+    const game = useAdvancedTrackingStore.getState().currentGame;
+    expect(game?.initialReceivingSideId).toBe('opp-side');
+    expect(game?.flip).toEqual({ result: 'won' });
   });
 
   it('renders line selection from the real current advanced game', async () => {

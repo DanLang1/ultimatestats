@@ -219,6 +219,22 @@ function validateAdvancedGame(data: unknown): asserts data is AdvancedTrackedGam
   if (!isString(data.focusSideId) || !isString(data.initialReceivingSideId)) {
     throw new Error('Invalid advanced game: missing side ids');
   }
+  if (data.flip !== undefined) {
+    if (!isRecord(data.flip) || (data.flip.result !== 'won' && data.flip.result !== 'lost')) {
+      throw new Error('Invalid advanced game: invalid flip result');
+    }
+    if (
+      data.flip.choice !== undefined &&
+      data.flip.choice !== 'offense' &&
+      data.flip.choice !== 'defense' &&
+      data.flip.choice !== 'side'
+    ) {
+      throw new Error('Invalid advanced game: invalid flip choice');
+    }
+    if (data.flip.result === 'lost' && data.flip.choice !== undefined) {
+      throw new Error('Invalid advanced game: lost flip cannot include a choice');
+    }
+  }
   if (!isRecord(data.settings) || !isString(data.settings.locationMode)) {
     throw new Error('Invalid advanced game: missing settings');
   }

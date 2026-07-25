@@ -2,6 +2,7 @@ import type {
   AdvancedTrackedGame,
   FieldLocation,
   GameClockPauseReason,
+  GameFlip,
   GameMetadata,
   GameSide,
   Participant,
@@ -19,6 +20,7 @@ export interface CreateAdvancedGameInput {
   gameType?: AdvancedTrackedGame['gameType'];
   focusSideId: string;
   initialReceivingSideId: string;
+  flip?: GameFlip;
   sides: GameSide[];
   participants: Participant[];
   format: {

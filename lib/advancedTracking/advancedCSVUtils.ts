@@ -131,8 +131,8 @@ export function generateAggregateAdvancedCSV(
       const date = formatTimestampForCSV(getGameTimestamp(game));
       const oppName = getOpponentName(game);
       const finalScores = getFinalScores(game);
-      const ourScore = finalScores[game.focusSideId] ?? 0;
-      const theirScore = finalScores[game.oppSideId] ?? 0;
+      const ourScore = finalScores[game.focusSideId];
+      const theirScore = finalScores[game.oppSideId];
       const result = getResultLabel(ourScore, theirScore);
       return csvRow([date, oppName, result, `${ourScore}-${theirScore}`, ourScore, theirScore]);
     })

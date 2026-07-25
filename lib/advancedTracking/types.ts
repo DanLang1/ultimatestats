@@ -13,6 +13,16 @@ export type GameStatus = 'in_progress' | 'final' | 'terminated';
 
 export type GameClockPauseReason = 'weather' | 'field' | 'admin' | 'manual';
 
+export type FlipResult = 'won' | 'lost';
+
+export type FlipChoice = 'offense' | 'defense' | 'side';
+
+export interface GameFlip {
+  result: FlipResult;
+  /** Only applies when `result` is `'won'`. Missing means the choice was not recorded. */
+  choice?: FlipChoice;
+}
+
 export interface GameClockPause {
   id: string;
   reason: GameClockPauseReason;
@@ -41,6 +51,8 @@ export interface AdvancedTrackedGame {
   focusSideId: string;
   metadata?: GameMetadata;
   settings: AdvancedTrackingSettings;
+  /** Optional pregame flip result and, when won, the focus side's choice. */
+  flip?: GameFlip;
 
   /**
    * Only set when `locationMode` is `'zone'` or `'xy'`. Records which endzone each side
@@ -52,7 +64,7 @@ export interface AdvancedTrackedGame {
   initialAttackingEndzoneBySide?: Record<string, Endzone>;
 
   /**
-   * Which side received the pull to start the game (coin flip result).
+   * Which side received the pull to start the game.
    * Per-point offense is derived: the side that did not score receives next,
    * with roles flipping after the `halftime` `GameTransition`.
    */

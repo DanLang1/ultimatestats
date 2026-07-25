@@ -275,9 +275,28 @@ describe('validatePayload', () => {
 
   describe('advanced game payload', () => {
     it('accepts a valid advanced game payload', () => {
-      const result = validatePayload(makeAdvancedGamePayload());
+      const data = makeAdvancedGameData({ flip: { result: 'won', choice: 'side' } });
+      const result = validatePayload(makeAdvancedGamePayload({ data }));
       expect(result.type).toBe('advanced-game');
       expect(result.schemaVersion).toBe(1);
+    });
+
+    it('rejects an invalid advanced game flip choice', () => {
+      const data = makeAdvancedGameData({
+        flip: { result: 'won', choice: 'endzone' },
+      } as never);
+
+      expect(() => validatePayload(makeAdvancedGamePayload({ data }))).toThrow('flip choice');
+    });
+
+    it('rejects a choice when the advanced game lost the flip', () => {
+      const data = makeAdvancedGameData({
+        flip: { result: 'lost', choice: 'offense' },
+      } as never);
+
+      expect(() => validatePayload(makeAdvancedGamePayload({ data }))).toThrow(
+        'lost flip cannot include a choice',
+      );
     });
 
     it('throws for missing advanced points', () => {

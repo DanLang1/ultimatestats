@@ -3,6 +3,7 @@ import {
   UNKNOWN_PARTICIPANT_ID,
   buildAnalyticsGame,
   getFinalScores,
+  getFocusGameOutcome,
   getPointStateForSide,
 } from '../buildAnalyticsGame';
 import type { AdvancedTrackedGame } from '../types';
@@ -61,6 +62,18 @@ function buildAnalyticsGameWithLog(game: AdvancedTrackedGame) {
   //console.log(JSON.stringify(analytics));
   return analytics;
 }
+
+describe('game metadata', () => {
+  it('preserves the optional flip result and choice for aggregate analytics', () => {
+    const analytics = buildAnalyticsGame({
+      ...baseGame,
+      flip: { result: 'won', choice: 'side' },
+      points: [],
+    });
+
+    expect(analytics.flip).toEqual({ result: 'won', choice: 'side' });
+  });
+});
 
 // ── Point states ─────────────────────────────────────────────────────────────
 
@@ -4318,15 +4331,20 @@ describe('getFinalScores', () => {
     ],
   });
 
-  it('returns empty object when there are no points', () => {
+  it('returns zero scores for both sides when there are no points', () => {
     const analytics = buildAnalyticsGame({ ...baseGame, points: [zooHoldPoint] });
     const empty: AnalyticsGame = { ...analytics, points: [] };
-    expect(getFinalScores(empty)).toEqual({});
+    const scores = getFinalScores(empty);
+    expect(scores).toEqual({ [ZOO]: 0, [RIVALS]: 0 });
+    expect(getFocusGameOutcome(scores, empty.focusSideId, empty.oppSideId)).toBe('tie');
   });
 
   it('returns correct score after a single Zoo hold', () => {
     const analytics = buildAnalyticsGame({ ...baseGame, points: [zooHoldPoint] });
-    expect(getFinalScores(analytics)).toEqual({ [ZOO]: 1, [RIVALS]: 0 });
+    const scores = getFinalScores(analytics);
+    expect(scores).toEqual({ [ZOO]: 1, [RIVALS]: 0 });
+    expect(getFocusGameOutcome(scores, ZOO, RIVALS)).toBe('win');
+    expect(getFocusGameOutcome(scores, RIVALS, ZOO)).toBe('loss');
   });
 
   it('accumulates scores across multiple points', () => {

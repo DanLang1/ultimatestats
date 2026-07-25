@@ -201,6 +201,7 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
             status: 'in_progress',
             focusSideId: input.focusSideId,
             initialReceivingSideId: input.initialReceivingSideId,
+            ...(input.flip != null ? { flip: input.flip } : {}),
             metadata: input.metadata,
             settings: {
               locationMode: 'none',

@@ -2,7 +2,7 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 
-import OpeningPullSplit from '@/components/advancedTracking/OpeningPullSplit';
+import OpeningSetupStats from '@/components/advancedTracking/OpeningSetupStats';
 import { ThemedText } from '@/components/ThemedText';
 import { ScoreBadge } from '@/components/ui/ScoreBadge';
 import StatRing from '@/components/view-stats/StatRing';
@@ -10,7 +10,10 @@ import StatsGrid from '@/components/view-stats/StatsGrid';
 import TimeOfPossessionSection from '@/components/view-stats/TimeOfPossessionSection';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import { AdvancedInitialPullWinStats } from '@/lib/advancedTracking/advancedAggregateStatsUtils';
+import {
+  AdvancedFlipStats,
+  AdvancedInitialPullWinStats,
+} from '@/lib/advancedTracking/advancedAggregateStatsUtils';
 import { computeAdvancedPlayerStats } from '@/lib/advancedTracking/advancedPlayerStatsUtils';
 import {
   computePullStats,
@@ -42,6 +45,7 @@ interface AdvancedStatsContentProps {
   aggregateInfo?: { gameCount: number };
   aggregateGameIds?: string[];
   initialPullWinStats?: AdvancedInitialPullWinStats;
+  flipStats?: AdvancedFlipStats;
 }
 
 export default function AdvancedStatsContent({
@@ -56,6 +60,7 @@ export default function AdvancedStatsContent({
   aggregateInfo,
   aggregateGameIds,
   initialPullWinStats,
+  flipStats,
 }: AdvancedStatsContentProps) {
   const { palette } = useTheme();
   const { isLandscape, sizeClass } = useLayout();
@@ -313,12 +318,12 @@ Formula: Goals ÷ Possessions`}
           </View>
         )}
 
-        {initialPullWinStats && (
+        {(flipStats || initialPullWinStats) && (
           <View style={styles.subsectionContainer}>
             <ThemedText style={[styles.subsectionTitle, { color: palette.textMuted }]}>
-              FLIP STATS
+              OPENING SETUP
             </ThemedText>
-            <OpeningPullSplit stats={initialPullWinStats} />
+            <OpeningSetupStats flipStats={flipStats} initialPullWinStats={initialPullWinStats} />
           </View>
         )}
 

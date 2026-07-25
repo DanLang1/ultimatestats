@@ -20,6 +20,7 @@ import StatsContent from '@/components/view-stats/StatsContent';
 import { useTheme } from '@/context/ThemeContext';
 import { useCompletedAdvancedGameSummaries } from '@/hooks/advancedTracking/useAdvancedGameQueries';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import type { AnalyticsGame } from '@/lib/advancedTracking/analyticsTypes';
 import { buildAnalyticsGame, getFinalScores } from '@/lib/advancedTracking/buildAnalyticsGame';
 import { formatDate, generateCurrentGameCSV } from '@/lib/basic/statsUtils';
 import { shareFileAndDelete } from '@/lib/shareFileAndDelete';
@@ -30,6 +31,16 @@ import { Fonts } from '@/theme/theme';
 
 type ViewMode = 'current' | 'saved' | 'aggregate';
 type ViewStatsOrigin = 'scoreboard';
+
+function getAdvancedScoreSummary(game: AnalyticsGame | null) {
+  if (game === null) return null;
+
+  const finalScores = getFinalScores(game);
+  return {
+    myScore: finalScores[game.focusSideId],
+    opponentScore: finalScores[game.oppSideId],
+  };
+}
 
 export default function ViewStatsScreen() {
   const { tab, gameId, from } = useLocalSearchParams<{
@@ -134,9 +145,7 @@ export default function ViewStatsScreen() {
     analyticsGame?.metadata?.opponentName ??
     analyticsGame?.sideLabels[analyticsGame.oppSideId] ??
     'Opponent';
-  const finalScores = analyticsGame ? getFinalScores(analyticsGame) : null;
-  const myScore = analyticsGame && finalScores ? finalScores[analyticsGame.focusSideId] : 0;
-  const opponentScore = analyticsGame && finalScores ? finalScores[analyticsGame.oppSideId] : 0;
+  const advancedScoreSummary = getAdvancedScoreSummary(analyticsGame);
 
   let headerTitle: string;
   if (hasActiveAdvancedGame) {
@@ -259,14 +268,14 @@ export default function ViewStatsScreen() {
         <ThemedText style={[styles.sectionLabel, { color: palette.textMuted }]}>
           Live Stats
         </ThemedText>
-        {hasActiveAdvancedGame && analyticsGame ? (
+        {hasActiveAdvancedGame && analyticsGame && advancedScoreSummary ? (
           <AdvancedStatsContent
             game={analyticsGame}
             gameId={activeAdvancedGame.id}
             myTeamName={myTeamName}
             opponentName={opponentName}
-            myScore={myScore}
-            opponentScore={opponentScore}
+            myScore={advancedScoreSummary.myScore}
+            opponentScore={advancedScoreSummary.opponentScore}
             focusSideId={analyticsGame.focusSideId}
             participantNames={analyticsGame.participantNames}
           />

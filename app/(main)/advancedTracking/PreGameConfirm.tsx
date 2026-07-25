@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { EditableSettingCard } from '@/components/pre-game-confirm/EditableSettingCard';
+import { FlipSelection } from '@/components/pre-game-confirm/FlipSelection';
 import { TimeoutSettingCard } from '@/components/pre-game-confirm/TimeoutSettingCard';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
@@ -12,7 +13,13 @@ import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import { useTheme } from '@/context/ThemeContext';
 import { useGameSessionActions } from '@/hooks/useGameSessionActions';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import { GameSide, Participant } from '@/lib/advancedTracking/types';
+import {
+  FlipChoice,
+  FlipResult,
+  GameFlip,
+  GameSide,
+  Participant,
+} from '@/lib/advancedTracking/types';
 import { getContrastingTextColor } from '@/lib/colorUtils';
 import { MAX_TEAM_NAME_LENGTH } from '@/lib/constants';
 import { formatRatioFull } from '@/lib/genderRatioUtils';
@@ -24,6 +31,12 @@ import { Fonts } from '@/theme/theme';
 
 export const FOCUS_SIDE_ID = 'focus-side';
 export const OPP_SIDE_ID = 'opp-side';
+
+function buildGameFlip(result: FlipResult | null, choice: FlipChoice | null): GameFlip | undefined {
+  if (result === null) return undefined;
+  if (result === 'lost' || choice === null) return { result };
+  return { result, choice };
+}
 
 export default function AdvancedPreGameConfirm() {
   const { palette } = useTheme();
@@ -79,6 +92,8 @@ export default function AdvancedPreGameConfirm() {
   const timeoutCount = team1Timeouts.length;
 
   const [receivingTeam, setReceivingTeam] = useState<'us' | 'them' | ''>('');
+  const [flipResult, setFlipResult] = useState<FlipResult | null>(null);
+  const [flipChoice, setFlipChoice] = useState<FlipChoice | null>(null);
   const [opponentNameDraft, setOpponentNameDraft] = useState(team2Name);
   const [isEditingOpponentName, setIsEditingOpponentName] = useState(false);
   const [teamOrbitRunKey, setTeamOrbitRunKey] = useState(0);
@@ -114,10 +129,12 @@ export default function AdvancedPreGameConfirm() {
     const initialReceivingSideId = receivingTeam === 'us' ? FOCUS_SIDE_ID : OPP_SIDE_ID;
 
     const floaterEnabledForGame = floaterEnabled && autoHalftimeEnabled;
+    const flip = buildGameFlip(flipResult, flipChoice);
 
     createGame({
       focusSideId: FOCUS_SIDE_ID,
       initialReceivingSideId,
+      flip,
       sides,
       participants,
       format: {
@@ -161,6 +178,30 @@ export default function AdvancedPreGameConfirm() {
     setAdvancedHardCapEnabled(nextEnabled);
     if (nextEnabled && advancedSoftCapAtMins > hardCapMins) {
       setAdvancedSoftCapAtMins(hardCapMins);
+    }
+  };
+
+  const handleReceivingTeamChange = (value: 'us' | 'them') => {
+    setReceivingTeam(value);
+    setTeamOrbitRunKey((prev) => prev + 1);
+
+    const contradictsOffenseChoice = flipChoice === 'offense' && value !== 'us';
+    const contradictsDefenseChoice = flipChoice === 'defense' && value !== 'them';
+    if (contradictsOffenseChoice || contradictsDefenseChoice) {
+      setFlipChoice(null);
+    }
+  };
+
+  const handleFlipChoiceChange = (choice: FlipChoice | null) => {
+    setFlipChoice(choice);
+    if (choice === 'offense') {
+      setReceivingTeam('us');
+      setTeamOrbitRunKey((prev) => prev + 1);
+      return;
+    }
+    if (choice === 'defense') {
+      setReceivingTeam('them');
+      setTeamOrbitRunKey((prev) => prev + 1);
     }
   };
 
@@ -333,6 +374,13 @@ export default function AdvancedPreGameConfirm() {
           </EditableSettingCard>
         </View>
 
+        <FlipSelection
+          result={flipResult}
+          choice={flipChoice}
+          onResultChange={setFlipResult}
+          onChoiceChange={handleFlipChoiceChange}
+        />
+
         <SegmentedControl
           label="WHO IS RECEIVING?"
           options={[
@@ -360,10 +408,7 @@ export default function AdvancedPreGameConfirm() {
             },
           ]}
           value={receivingTeam}
-          onChange={(value) => {
-            setReceivingTeam(value);
-            setTeamOrbitRunKey((prev) => prev + 1);
-          }}
+          onChange={handleReceivingTeamChange}
           showRequired={receivingTeam === ''}
           highlightBorder={receivingTeam === ''}
           highlightColor={palette.warning}

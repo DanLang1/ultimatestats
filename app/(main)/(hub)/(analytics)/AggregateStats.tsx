@@ -26,7 +26,9 @@ import {
 } from '@/hooks/advancedTracking/useAdvancedGameQueries';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import {
+  AdvancedFlipStats,
   AdvancedInitialPullWinStats,
+  computeFlipStats,
   computeInitialPullWinStats,
 } from '@/lib/advancedTracking/advancedAggregateStatsUtils';
 import { generateAggregateAdvancedCSV } from '@/lib/advancedTracking/advancedCSVUtils';
@@ -55,6 +57,12 @@ function getAdvancedAggregateErrorMessage(error: unknown): string {
     return 'These games cannot be combined because they use incompatible advanced team records.';
   }
   return 'Could not combine the selected advanced games.';
+}
+
+function getRecordedFlipStats(games: AnalyticsGame[]): AdvancedFlipStats | null {
+  const stats = computeFlipStats(games);
+  if (stats.recorded === 0) return null;
+  return stats;
 }
 
 export default function AggregateStatsScreen() {
@@ -133,6 +141,7 @@ export default function AggregateStatsScreen() {
   let advancedAnalyticsGames: AnalyticsGame[] = [];
   let aggregatedAdvancedGame: AnalyticsGame | null = null;
   let initialPullWinStats: AdvancedInitialPullWinStats | null = null;
+  let flipStats: AdvancedFlipStats | null = null;
   let advancedAggregateError: string | null = null;
 
   if (!advancedFullRecordsLoading && !advancedFullRecordsMissing && !selectedAdvancedGamesError) {
@@ -141,6 +150,7 @@ export default function AggregateStatsScreen() {
       if (advancedAnalyticsGames.length > 0) {
         aggregatedAdvancedGame = aggregateAnalyticsGames(advancedAnalyticsGames);
         initialPullWinStats = computeInitialPullWinStats(advancedAnalyticsGames);
+        flipStats = getRecordedFlipStats(advancedAnalyticsGames);
       }
     } catch (error) {
       advancedAggregateError = getAdvancedAggregateErrorMessage(error);
@@ -469,6 +479,7 @@ export default function AggregateStatsScreen() {
         aggregateInfo={{ gameCount: selectedAdvancedGames.length }}
         aggregateGameIds={selectedAdvancedGames.map((game) => game.id)}
         initialPullWinStats={initialPullWinStats ?? undefined}
+        flipStats={flipStats ?? undefined}
       />
     );
   } else if (showingAggregatedStats && aggregatedData) {
