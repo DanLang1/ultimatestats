@@ -57,26 +57,31 @@ export function computeAdvancedImpact(
       const drops = get('drop');
       const stalls = get('stall');
       const stallsConceded = get('stall_conceded');
+      const nonCallahanGoals = Math.max(0, goals - callahans);
+      const nonCallahanBlocks = Math.max(0, blocks - callahans);
 
       plusMinusDelta =
         goals +
         assists +
         blocks +
         pressures * PRESSURE_PLUS_MINUS_VALUE +
-        stalls +
-        callahans -
+        stalls -
         throwaways -
         drops -
         stallsConceded;
 
-      if (goals > 0 && assists > 0) parts.push('GA');
+      if (callahans > 0) parts.push('C');
+      if (nonCallahanGoals > 0 && assists > 0) parts.push('GA');
       else {
-        if (goals > 0) parts.push(goals > 1 ? `${goals}G` : 'G');
+        if (nonCallahanGoals > 0) {
+          parts.push(nonCallahanGoals > 1 ? `${nonCallahanGoals}G` : 'G');
+        }
         if (assists > 0) parts.push(assists > 1 ? `${assists}A` : 'A');
       }
       if (ha > 0) parts.push(ha > 1 ? `${ha}HA` : 'HA');
-      if (callahans > 0) parts.push('C');
-      if (blocks > 0) parts.push(blocks > 1 ? `${blocks}B` : 'B');
+      if (nonCallahanBlocks > 0) {
+        parts.push(nonCallahanBlocks > 1 ? `${nonCallahanBlocks}B` : 'B');
+      }
       if (pressures > 0) parts.push(pressures > 1 ? `${pressures}P` : 'P');
       if (stalls > 0) parts.push(stalls > 1 ? `${stalls}Stl` : 'Stl');
       if (stallsConceded > 0) parts.push(stallsConceded > 1 ? `${stallsConceded}StlC` : 'StlC');

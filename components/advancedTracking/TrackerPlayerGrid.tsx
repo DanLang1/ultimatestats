@@ -44,7 +44,7 @@ const GRID_VERTICAL_PADDING = 12;
 
 type TrackerGridItem = Participant | 'unknown' | 'line-action' | null;
 
-function appendIf<T extends TrackerGridItem>(condition: boolean, value: T): TrackerGridItem[] {
+function appendIf(condition: boolean, value: TrackerGridItem): TrackerGridItem[] {
   return condition ? [value] : [];
 }
 
@@ -88,8 +88,8 @@ export const TrackerPlayerGrid = ({
 
   const contentItems: TrackerGridItem[] = [
     ...activeParticipants,
-    ...(passModifier === null ? (['unknown'] as const) : []),
-    ...(canChangeLine ? (['line-action'] as const) : []),
+    ...appendIf(passModifier === null, 'unknown'),
+    ...appendIf(canChangeLine, 'line-action'),
   ];
   const placeholderCount = (columns - (contentItems.length % columns)) % columns;
   const items: TrackerGridItem[] = [...contentItems, ...Array<null>(placeholderCount).fill(null)];

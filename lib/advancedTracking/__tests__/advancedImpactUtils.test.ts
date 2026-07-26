@@ -558,6 +558,50 @@ describe('computeAdvancedImpact', () => {
     expect(impact[0].plusMinusDelta).toBeGreaterThanOrEqual(1); // block (+1) + assist (+1)
   });
 
+  it('shows a Callahan as one +2 impact event', () => {
+    const game: AdvancedTrackedGame = {
+      ...baseGame,
+      initialReceivingSideId: RIVALS,
+      points: [
+        {
+          id: 'pt1',
+          lines: [{ sideId: ZOO, participantIds: ['p_august', 'p_meves'] }],
+          possessions: [
+            {
+              id: 'pos1',
+              sideId: RIVALS,
+              actions: [
+                {
+                  id: 'pull1',
+                  kind: 'pull',
+                  sideId: ZOO,
+                  receivingSideId: RIVALS,
+                  puller: august,
+                  receiver: untracked,
+                  result: 'inbound',
+                },
+                {
+                  id: 'callahan1',
+                  kind: 'throw',
+                  sideId: RIVALS,
+                  thrower: untracked,
+                  result: 'callahan',
+                  defender: meves,
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+
+    const impact = computeAdvancedImpact(buildAnalyticsGame(game), 'p_meves', ZOO);
+
+    expect(impact[0].description).toBe('C');
+    expect(impact[0].plusMinusDelta).toBe(2);
+    expect(impact[0].cumulativePlusMinus).toBe(2);
+  });
+
   it('description and delta show a half-point pressure', () => {
     const game: AdvancedTrackedGame = {
       ...baseGame,
