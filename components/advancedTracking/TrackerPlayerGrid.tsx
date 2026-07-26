@@ -1,4 +1,3 @@
-import React from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
@@ -29,11 +28,25 @@ interface TrackerPlayerGridProps {
   availableHeight: number | null;
 }
 
-const PORTRAIT_MAX_CHIP_WIDTH = { small: 180, medium: 170, large: 190 } as const;
-const LANDSCAPE_MAX_CHIP_WIDTH = { small: 180, medium: 220, large: 260 } as const;
+const PORTRAIT_MAX_CHIP_WIDTH = {
+  small: 180,
+  medium: 170,
+  large: 190,
+} as const;
+const LANDSCAPE_MAX_CHIP_WIDTH = {
+  small: 180,
+  medium: 220,
+  large: 260,
+} as const;
 const PORTRAIT_COLUMNS = 3;
 const LANDSCAPE_COLUMNS = 5;
 const GRID_VERTICAL_PADDING = 12;
+
+type TrackerGridItem = Participant | 'unknown' | 'line-action' | null;
+
+function appendIf<T extends TrackerGridItem>(condition: boolean, value: T): TrackerGridItem[] {
+  return condition ? [value] : [];
+}
 
 function getChipModel(item: Participant | 'unknown'): {
   label: string;
@@ -42,7 +55,11 @@ function getChipModel(item: Participant | 'unknown'): {
   key: string;
 } {
   if (item === 'unknown') {
-    return { label: 'Unknown', playerRef: { refType: 'unknown' }, key: 'unknown' };
+    return {
+      label: 'Unknown',
+      playerRef: { refType: 'unknown' },
+      key: 'unknown',
+    };
   }
   return {
     label: item.name,
@@ -69,16 +86,13 @@ export const TrackerPlayerGrid = ({
   const horizontalPadding = scaleBySizeClass(20, sizeClass);
   const gap = scaleBySizeClass(isLandscape ? 10 : 12, sizeClass);
 
-  const items: (Participant | 'unknown' | 'line-action' | null)[] = [
+  const contentItems: TrackerGridItem[] = [
     ...activeParticipants,
-    'unknown',
+    ...(passModifier === null ? (['unknown'] as const) : []),
+    ...(canChangeLine ? (['line-action'] as const) : []),
   ];
-  if (canChangeLine) {
-    items.push('line-action');
-  }
-  while (items.length % columns !== 0) {
-    items.push(null);
-  }
+  const placeholderCount = (columns - (contentItems.length % columns)) % columns;
+  const items: TrackerGridItem[] = [...contentItems, ...Array<null>(placeholderCount).fill(null)];
 
   const rowCount = items.length / columns;
   const verticalPadding = scaleBySizeClass(GRID_VERTICAL_PADDING, sizeClass);
