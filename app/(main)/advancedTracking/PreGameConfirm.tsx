@@ -1,5 +1,5 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { router, Stack } from 'expo-router';
+import { router, Stack, useLocalSearchParams } from 'expo-router';
 import React, { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
@@ -39,6 +39,8 @@ function buildGameFlip(result: FlipResult | null, choice: FlipChoice | null): Ga
 }
 
 export default function AdvancedPreGameConfirm() {
+  const { gameType } = useLocalSearchParams<{ gameType?: 'scrimmage' }>();
+  const isScrimmage = gameType === 'scrimmage';
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
   const styles = createStyles(sizeClass);
@@ -99,7 +101,12 @@ export default function AdvancedPreGameConfirm() {
   const [teamOrbitRunKey, setTeamOrbitRunKey] = useState(0);
   const [ratioOrbitRunKey, setRatioOrbitRunKey] = useState(0);
 
-  const canContinue = receivingTeam !== '' && (!genderRatioEnabled || firstPointRatio !== null);
+  const activePlayerCount = currentTeam.roster.filter((player) => player.isActive).length;
+  const hasEnoughScrimmagePlayers = !isScrimmage || activePlayerCount >= 14;
+  const canContinue =
+    receivingTeam !== '' &&
+    hasEnoughScrimmagePlayers &&
+    (!genderRatioEnabled || firstPointRatio !== null);
   const selectedTeamOrbitColor = receivingTeam === 'them' ? t2Color : t1Color;
   const selectedRatioOrbitColor =
     firstPointRatio === 'more-men' ? palette.mmpColor : palette.fmpColor;
@@ -108,11 +115,16 @@ export default function AdvancedPreGameConfirm() {
     const sides: GameSide[] = [
       {
         id: FOCUS_SIDE_ID,
-        label: currentTeam.name,
+        label: isScrimmage ? 'Light' : currentTeam.name,
         sourceTeamId: currentTeam.id,
         trackingMode: 'full-roster',
       },
-      { id: OPP_SIDE_ID, label: team2Name, trackingMode: 'anonymous' },
+      {
+        id: OPP_SIDE_ID,
+        label: isScrimmage ? 'Dark' : team2Name,
+        sourceTeamId: isScrimmage ? currentTeam.id : undefined,
+        trackingMode: isScrimmage ? 'full-roster' : 'anonymous',
+      },
     ];
 
     const participants: Participant[] = currentTeam.roster
@@ -129,9 +141,10 @@ export default function AdvancedPreGameConfirm() {
     const initialReceivingSideId = receivingTeam === 'us' ? FOCUS_SIDE_ID : OPP_SIDE_ID;
 
     const floaterEnabledForGame = floaterEnabled && autoHalftimeEnabled;
-    const flip = buildGameFlip(flipResult, flipChoice);
+    const flip = isScrimmage ? undefined : buildGameFlip(flipResult, flipChoice);
 
     createGame({
+      gameType: isScrimmage ? 'scrimmage' : 'game',
       focusSideId: FOCUS_SIDE_ID,
       initialReceivingSideId,
       flip,
@@ -209,7 +222,7 @@ export default function AdvancedPreGameConfirm() {
     <ThemedView testID="advanced-tracker-pregame-screen" style={styles.container}>
       <Stack.Screen options={{ headerShown: false }} />
       <ScreenHeader
-        title="ADVANCED TRACKER"
+        title={isScrimmage ? 'SCRIMMAGE' : 'ADVANCED TRACKER'}
         onBack={() => {
           finishActiveGameSession();
           router.dismissTo('/Dashboard');
@@ -374,37 +387,43 @@ export default function AdvancedPreGameConfirm() {
           </EditableSettingCard>
         </View>
 
-        <FlipSelection
-          result={flipResult}
-          choice={flipChoice}
-          onResultChange={setFlipResult}
-          onChoiceChange={handleFlipChoiceChange}
-        />
+        {!isScrimmage && (
+          <FlipSelection
+            result={flipResult}
+            choice={flipChoice}
+            onResultChange={setFlipResult}
+            onChoiceChange={handleFlipChoiceChange}
+          />
+        )}
 
         <SegmentedControl
           label="WHO IS RECEIVING?"
           options={[
             {
               value: 'us',
-              label: currentTeam.name,
+              label: isScrimmage ? 'Light' : currentTeam.name,
+              testID: 'advanced-tracker-receiving-focus',
               activeColor: t1Color,
               activeTextColor: t1TextColor,
             },
             {
               value: 'them',
-              label: team2Name || 'Them',
+              label: isScrimmage ? 'Dark' : team2Name || 'Them',
+              testID: 'advanced-tracker-receiving-opponent',
               activeColor: t2Color,
               activeTextColor: t2TextColor,
-              actionIcon: 'pencil-outline',
-              onAction: () => {
-                setOpponentNameDraft(team2Name || 'Them');
-                setIsEditingOpponentName(true);
-              },
-              isEditing: isEditingOpponentName,
-              editValue: opponentNameDraft,
-              onEditValueChange: setOpponentNameDraft,
-              onEditComplete: handleOpponentNameCommit,
-              maxEditLength: MAX_TEAM_NAME_LENGTH,
+              actionIcon: !isScrimmage ? 'pencil-outline' : undefined,
+              onAction: !isScrimmage
+                ? () => {
+                    setOpponentNameDraft(team2Name || 'Them');
+                    setIsEditingOpponentName(true);
+                  }
+                : undefined,
+              isEditing: !isScrimmage && isEditingOpponentName,
+              editValue: !isScrimmage ? opponentNameDraft : undefined,
+              onEditValueChange: !isScrimmage ? setOpponentNameDraft : undefined,
+              onEditComplete: !isScrimmage ? handleOpponentNameCommit : undefined,
+              maxEditLength: !isScrimmage ? MAX_TEAM_NAME_LENGTH : undefined,
             },
           ]}
           value={receivingTeam}
@@ -417,6 +436,20 @@ export default function AdvancedPreGameConfirm() {
           attentionColor={selectedTeamOrbitColor}
           attentionRunKey={teamOrbitRunKey}
         />
+
+        {!hasEnoughScrimmagePlayers && (
+          <View style={[styles.lockInfo, { backgroundColor: palette.warningOverlay15 }]}>
+            <MaterialCommunityIcons
+              name="account-alert-outline"
+              size={scaleBySizeClass(16, sizeClass)}
+              color={palette.warning}
+            />
+            <ThemedText style={[styles.lockText, { color: palette.warning }]}>
+              Scrimmage mode requires at least 14 active players. This roster has{' '}
+              {activePlayerCount}.
+            </ThemedText>
+          </View>
+        )}
 
         {genderRatioEnabled && (
           <SegmentedControl
@@ -465,7 +498,7 @@ export default function AdvancedPreGameConfirm() {
               styles.continueButtonText,
               { color: canContinue ? palette.textOnAccent : palette.textMuted },
             ]}>
-            Set Line
+            {isScrimmage ? 'Set Lines' : 'Set Line'}
           </ThemedText>
           <MaterialCommunityIcons
             name="chevron-right"

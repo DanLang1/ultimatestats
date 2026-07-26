@@ -3,7 +3,9 @@ import React from 'react';
 
 import { TrackerLineScreen } from '@/components/advancedTracking/TrackerLineScreen';
 import { useLiveRosterParticipants } from '@/hooks/advancedTracking/useLiveRosterParticipants';
-import { getCurrentPoint } from '@/lib/advancedTracking/trackingUtils';
+import { getActiveSideId } from '@/lib/advancedTracking/trackingDisplayHelpers';
+import { areBothSidesFullyTracked } from '@/lib/advancedTracking/trackingModeUtils';
+import { getCurrentPoint, getCurrentPossession } from '@/lib/advancedTracking/trackingUtils';
 import { getSequenceNumber } from '@/lib/genderRatioUtils';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 
@@ -11,16 +13,25 @@ export default function TrackerEditLineScreen() {
   const { currentGameId, currentGame: game, correctPointLine } = useAdvancedTrackingStore();
   const participants = useLiveRosterParticipants(game?.participants ?? []);
   const point = game ? getCurrentPoint(game) : null;
+  const possession = game ? getCurrentPossession(game) : null;
 
   if (!currentGameId || !game || !point) {
     return <Redirect href="/Dashboard" />;
   }
 
-  const sideId = game.focusSideId;
+  const tracksBothSides = areBothSidesFullyTracked(game);
+  const sideId = tracksBothSides ? getActiveSideId(possession, game) : game.focusSideId;
+  const otherLineParticipantIds =
+    point.lines.find((line) => line.sideId !== sideId)?.participantIds ?? [];
+  const selectableParticipants = tracksBothSides
+    ? participants.filter((participant) => !otherLineParticipantIds.includes(participant.id))
+    : participants;
   const baseLine = point.lines.find((l) => l.sideId === sideId)?.participantIds ?? [];
   const sideSubs = point.subs?.filter((s) => s.sideId === sideId) ?? [];
   const pointNumber = game.points.findIndex((p) => p.id === point.id) + 1;
   const sequenceNumber = point.genderRatio != null ? getSequenceNumber(pointNumber) : undefined;
+  const sideLabel = game.sides.find((side) => side.id === sideId)?.label ?? '';
+  const editLineTitle = tracksBothSides ? `Edit ${sideLabel} Line` : 'Edit Line';
 
   let warningText: string | undefined;
   if (sideSubs.length > 0) {
@@ -47,9 +58,9 @@ export default function TrackerEditLineScreen() {
     <>
       <Stack.Screen options={{ headerShown: false }} />
       <TrackerLineScreen
-        participants={participants}
+        participants={selectableParticipants}
         initialSelectedIds={baseLine}
-        title="Edit Line"
+        title={editLineTitle}
         confirmLabel="SAVE LINE"
         expectedRatio={point.genderRatio}
         sequenceNumber={sequenceNumber}

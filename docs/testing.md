@@ -69,6 +69,24 @@ and keeps one UI setup smoke test for the real Dashboard → New Game → line/p
 retesting setup in every scenario but everything after the seed still runs through the installed
 app's real UI and navigation.
 
+Each seeded flow resets and recreates its own team/game state, so tests remain independent without
+restarting the app process between flows. The seed deep link also cold-launches the app when needed.
+Seeded tracker flows must pass an explicit `TRACKER_STATE`:
+
+- `awaitingPickup` only when the test is intentionally verifying pickup or dropped-pull UI.
+- `focusPossession` when the scenario begins with the tracked side holding the disc.
+- `opponentPossession` when the scenario begins with the other side holding the disc.
+
+Prefer seeding the scenario's precondition over navigating or tapping through setup that the test
+does not own. Keep conditional retries limited to interactions that are themselves under test;
+they should not be the default synchronization mechanism. Wait for a meaningful state-specific
+postcondition after every gesture.
+
+Seed setup flows use a two-phase route handshake: first wait for `maestro-setup-running` to appear,
+then wait for it to disappear before asserting the destination. Do not skip the disappearance
+check—a destination element from the previous screen can remain discoverable underneath the seed
+route during navigation and create a false-positive setup completion.
+
 The default suite excludes the `extended` multi-point scenarios to keep feedback fast. Use
 `npm run maestro:all` to include them all.
 
@@ -78,6 +96,9 @@ npm run maestro:smoke
 
 # Core advanced-tracker device flows; excludes the extended tag
 npm run maestro
+
+# Scrimmage setup, dual-side turnovers, and side-perspective stats
+npm run maestro:scrimmage
 
 # Core and extended advanced-tracker device flows
 npm run maestro:all

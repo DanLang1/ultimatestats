@@ -122,6 +122,10 @@ function aggregateAttribution(
 export function aggregateAnalyticsGames(games: AnalyticsGame[]): AnalyticsGame | null {
   if (games.length === 0) return null;
 
+  if (games.some((game) => game.gameType === 'scrimmage')) {
+    throw new Error('aggregateAnalyticsGames does not support scrimmage games.');
+  }
+
   const firstGame = games[0];
   const focusSideId = firstGame.focusSideId;
 

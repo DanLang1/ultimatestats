@@ -1,0 +1,8 @@
+appId: com.langdk.ultimatestats
+name: Advanced Tracker Scrimmage UI Setup
+---
+- runFlow:
+    file: ../flows/setup-scrimmage-ui.yaml
+
+- takeScreenshot:
+    path: .maestro/screenshots/advanced-tracker-scrimmage-ui-setup

@@ -1,73 +1,49 @@
-import { Redirect, router, useLocalSearchParams } from 'expo-router';
-import { useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Redirect, useLocalSearchParams } from 'expo-router';
+import { StyleSheet, View } from 'react-native';
 
+import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
-import {
-  MaestroCapMode,
-  seedAdvancedTrackerTestGame,
-  seedMaestroTeamPrerequisites,
-  waitForMaestroStoresToHydrate,
-} from '@/lib/maestroUtils';
+import { useMaestroSetup } from '@/hooks/useMaestroSetup';
 
 export default function MaestroSeedScreen() {
   const { palette } = useTheme();
-  const { capMode, mode } = useLocalSearchParams<{ capMode?: string; mode?: string }>();
-  const [isSeeding, setIsSeeding] = useState(false);
+  const { capMode, gameType, mode, trackerState } = useLocalSearchParams<{
+    capMode?: string;
+    gameType?: string;
+    mode?: string;
+    trackerState?: string;
+  }>();
+  const errorMessage = useMaestroSetup({ capMode, gameType, mode, trackerState });
 
   if (!__DEV__) {
     return <Redirect href="/" />;
   }
 
-  const handleContinue = async () => {
-    if (isSeeding) return;
-
-    setIsSeeding(true);
-    await waitForMaestroStoresToHydrate();
-    if (mode === 'team') {
-      await seedMaestroTeamPrerequisites({ clearActiveGame: true });
-      router.replace('/Dashboard');
-      return;
-    }
-
-    await seedAdvancedTrackerTestGame({ capMode: parseCapMode(capMode) });
-    router.replace('/advancedTracking/Tracker');
-  };
-
   return (
-    <Pressable
-      accessibilityLabel="Continue to test tracker"
-      onPress={() => {
-        void handleContinue();
-      }}
+    <View
+      accessibilityLabel={errorMessage ?? 'Preparing Maestro test state'}
       style={[styles.container, { backgroundColor: palette.chrome }]}
-      testID="maestro-setup-ready">
-      <View style={styles.content} />
-    </Pressable>
+      testID={errorMessage == null ? 'maestro-setup-running' : 'maestro-setup-error'}
+      accessible>
+      <ThemedText
+        style={[
+          styles.statusText,
+          { color: errorMessage == null ? palette.textMuted : palette.danger },
+        ]}>
+        {errorMessage ?? 'PREPARING MAESTRO TEST STATE'}
+      </ThemedText>
+    </View>
   );
-}
-
-function parseCapMode(capMode: string | undefined): MaestroCapMode {
-  if (
-    capMode === 'both' ||
-    capMode === 'hard' ||
-    capMode === 'soft' ||
-    capMode === 'none' ||
-    capMode === 'softActive'
-  ) {
-    return capMode;
-  }
-
-  return 'both';
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  content: {
-    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  statusText: {
+    paddingHorizontal: 24,
+    textAlign: 'center',
   },
 });

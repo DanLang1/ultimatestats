@@ -60,6 +60,12 @@ export function isCompletedAdvancedGameSummary(summary: AdvancedGameSummary): bo
   return summary.status === 'final' || summary.status === 'terminated';
 }
 
+export function isAdvancedGameAggregateEligible(
+  game: Pick<AdvancedTrackedGame, 'gameType'>,
+): boolean {
+  return game.gameType !== 'scrimmage';
+}
+
 export function compareAdvancedGameSummaries(
   a: AdvancedGameSummary,
   b: AdvancedGameSummary,

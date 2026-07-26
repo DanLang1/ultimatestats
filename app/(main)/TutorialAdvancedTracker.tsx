@@ -16,7 +16,10 @@ import { Fonts } from '@/theme/theme';
 export default function TutorialAdvancedTrackerRoute() {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
-  const { origin } = useLocalSearchParams<{ origin?: string }>();
+  const { origin, gameType } = useLocalSearchParams<{
+    origin?: string;
+    gameType?: 'scrimmage';
+  }>();
   const styles = createStyles(sizeClass);
 
   const finish = () => {
@@ -25,7 +28,14 @@ export default function TutorialAdvancedTrackerRoute() {
       router.replace('/advancedTracking/Tracker');
       return;
     }
-    router.replace(origin === 'help' ? '/Dashboard' : '/advancedTracking/PreGameConfirm');
+    if (origin === 'help') {
+      router.replace('/Dashboard');
+      return;
+    }
+    router.replace({
+      pathname: '/advancedTracking/PreGameConfirm',
+      params: gameType ? { gameType } : {},
+    });
   };
 
   const gameState = useTutorialAdvancedGameState();

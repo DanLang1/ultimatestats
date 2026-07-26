@@ -9,6 +9,7 @@ import TrackerEditLineScreen from '@/app/(main)/advancedTracking/TrackerEditLine
 import TrackerGameCompleteScreen from '@/app/(main)/advancedTracking/TrackerGameComplete';
 import TrackerInjurySubScreen from '@/app/(main)/advancedTracking/TrackerInjurySub';
 import TrackerLineSelectScreen from '@/app/(main)/advancedTracking/TrackerLineSelect';
+import type { AdvancedTrackedGame } from '@/lib/advancedTracking/types';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { useGameStore } from '@/store/basic/gameStore';
 import { arrangeAdvancedGame, recordOpeningPull, testTeam } from '@/test/fixtures/domain';
@@ -64,6 +65,17 @@ describe('advanced tracking routes', () => {
     });
   });
 
+  it('does not collect a flip result for a scrimmage', async () => {
+    setMockSearchParams({ gameType: 'scrimmage' });
+    useGameStore.setState({ currentTeam: testTeam, team2Name: 'Rivals' });
+
+    await renderScreen(<AdvancedPreGameConfirm />);
+
+    expect(screen.getByText('SCRIMMAGE')).toBeVisible();
+    expect(screen.queryByText('FLIP RESULT')).not.toBeOnTheScreen();
+    expect(screen.getByText('WHO IS RECEIVING?')).toBeVisible();
+  });
+
   it('keeps the opening receiver consistent with an offense flip choice', async () => {
     const user = userEvent.setup();
     useGameStore.setState({ currentTeam: testTeam, team2Name: 'Rivals' });
@@ -103,6 +115,45 @@ describe('advanced tracking routes', () => {
     expect(screen.getByText('Blair')).toBeVisible();
   });
 
+  it('selects both lines for a non-scrimmage game with two tracked sides', async () => {
+    const user = userEvent.setup();
+    const participants = Array.from({ length: 14 }, (_, index) => ({
+      id: `dual-player-${index + 1}`,
+      name: `Dual Player ${index + 1}`,
+    }));
+    const game: AdvancedTrackedGame = {
+      id: 'dual-tracked-game',
+      schemaVersion: 2,
+      createdAt: 0,
+      updatedAt: 0,
+      gameType: 'game',
+      status: 'in_progress',
+      focusSideId: 'home',
+      initialReceivingSideId: 'home',
+      settings: { locationMode: 'none' },
+      sides: [
+        { id: 'home', label: 'Home', trackingMode: 'full-roster' },
+        { id: 'away', label: 'Away', trackingMode: 'full-roster' },
+      ],
+      participants,
+      points: [],
+    };
+    useAdvancedTrackingStore.setState({
+      currentGameId: game.id,
+      currentGame: game,
+    });
+
+    await renderScreen(<TrackerLineSelectScreen />);
+
+    expect(screen.getByText('Home Line · 0-0')).toBeVisible();
+    for (const participant of participants.slice(0, 7)) {
+      await user.press(screen.getByText(participant.name));
+    }
+    await user.press(screen.getByTestId('line-select-confirm'));
+
+    expect(screen.getByText('Away Line · 0-0')).toBeVisible();
+  });
+
   it('records an opponent pull through the real pull-tracking flow', async () => {
     const user = userEvent.setup();
     arrangeAdvancedGame();
@@ -128,6 +179,82 @@ describe('advanced tracking routes', () => {
 
     expect(screen.getAllByText('Windchill')[0]).toBeVisible();
     expect(screen.getAllByText('Rivals')[0]).toBeVisible();
+  });
+
+  it('shows the dropper after a dual-tracked turnover', async () => {
+    const game: AdvancedTrackedGame = {
+      id: 'scrimmage-drop',
+      schemaVersion: 2,
+      createdAt: 0,
+      updatedAt: 0,
+      gameType: 'scrimmage',
+      status: 'in_progress',
+      focusSideId: 'light',
+      initialReceivingSideId: 'light',
+      settings: {
+        locationMode: 'none',
+        format: {
+          formatType: 'standard',
+          gameTo: 15,
+          halftimeAt: 8,
+          softCapEnabled: true,
+          hardCapEnabled: true,
+          timeoutsPerHalf: 2,
+          floaterEnabled: true,
+        },
+      },
+      sides: [
+        { id: 'light', label: 'Light', trackingMode: 'full-roster' },
+        { id: 'dark', label: 'Dark', trackingMode: 'full-roster' },
+      ],
+      participants: [
+        { id: 'connor', name: 'Connor' },
+        { id: 'charlotte', name: 'Charlotte' },
+        { id: 'nora', name: 'Nora' },
+      ],
+      points: [
+        {
+          id: 'point-1',
+          startedAt: 0,
+          lines: [
+            { sideId: 'light', participantIds: ['connor', 'charlotte'] },
+            { sideId: 'dark', participantIds: ['nora'] },
+          ],
+          possessions: [
+            {
+              id: 'possession-1',
+              sideId: 'light',
+              actions: [
+                {
+                  id: 'pickup-1',
+                  kind: 'disc_pickup',
+                  sideId: 'light',
+                  player: { refType: 'participant', participantId: 'connor' },
+                },
+                {
+                  id: 'drop-1',
+                  kind: 'throw',
+                  sideId: 'light',
+                  thrower: { refType: 'participant', participantId: 'connor' },
+                  toPlayer: { refType: 'participant', participantId: 'charlotte' },
+                  result: 'drop',
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+    useAdvancedTrackingStore.setState({
+      currentGameId: game.id,
+      currentGame: game,
+    });
+
+    await renderScreen(<TrackerScreen />);
+
+    expect(screen.getByText('Charlotte')).toBeVisible();
+    expect(screen.getByText('DROP')).toBeVisible();
+    expect(screen.queryByText('OPP TURN')).not.toBeOnTheScreen();
   });
 
   it('renders the line-correction route for the current real point', async () => {

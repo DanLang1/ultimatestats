@@ -9,6 +9,8 @@ import PlayerStatsScreen from '@/app/(main)/(hub)/(analytics)/PlayerStats';
 import SavedGameScreen from '@/app/(main)/(hub)/(analytics)/saved-games/[gameId]';
 import SavedGameStatsScreen from '@/app/(main)/(hub)/(analytics)/SavedGameStats';
 import ViewStatsScreen from '@/app/(main)/(hub)/(analytics)/ViewStats';
+import type { AdvancedTrackedGame } from '@/lib/advancedTracking/types';
+import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { useGameStore } from '@/store/basic/gameStore';
 import { usePlayerStatsStore } from '@/store/playerStatsStore';
 import { useTournamentStore } from '@/store/tournamentStore';
@@ -72,6 +74,80 @@ describe('basic analytics routes', () => {
     expect(screen.getByText('Live Stats')).toBeVisible();
     expect(screen.getByText('Windchill')).toBeVisible();
     expect(screen.getByText('Rivals')).toBeVisible();
+  });
+
+  it('switches live stats perspective when both sides are fully tracked', async () => {
+    const user = userEvent.setup();
+    const lightPlayer = { refType: 'participant' as const, participantId: 'light-player' };
+    const game: AdvancedTrackedGame = {
+      id: 'dual-tracked-game',
+      schemaVersion: 2,
+      createdAt: 0,
+      updatedAt: 0,
+      gameType: 'game',
+      status: 'in_progress',
+      focusSideId: 'light',
+      initialReceivingSideId: 'light',
+      settings: { locationMode: 'none' },
+      sides: [
+        { id: 'light', label: 'Light', trackingMode: 'full-roster' },
+        { id: 'dark', label: 'Dark', trackingMode: 'full-roster' },
+      ],
+      participants: [
+        { id: 'light-player', name: 'Light Player' },
+        { id: 'dark-player', name: 'Dark Player' },
+      ],
+      points: [
+        {
+          id: 'pt1',
+          lines: [
+            { sideId: 'light', participantIds: ['light-player'] },
+            { sideId: 'dark', participantIds: ['dark-player'] },
+          ],
+          possessions: [
+            {
+              id: 'pos1',
+              sideId: 'light',
+              actions: [
+                {
+                  id: 'pull1',
+                  kind: 'pull',
+                  sideId: 'dark',
+                  receivingSideId: 'light',
+                  puller: { refType: 'participant', participantId: 'dark-player' },
+                  result: 'inbound',
+                },
+                {
+                  id: 'goal1',
+                  kind: 'throw',
+                  sideId: 'light',
+                  thrower: lightPlayer,
+                  toPlayer: lightPlayer,
+                  result: 'goal',
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+    useAdvancedTrackingStore.setState({
+      currentGameId: game.id,
+      currentGame: game,
+    });
+
+    await renderScreen(<ViewStatsScreen />);
+
+    expect(screen.getByText('STATS FOR')).toBeVisible();
+    expect(screen.getByTestId('advanced-stats-team-name')).toHaveTextContent('Light');
+    expect(screen.getByTestId('advanced-stats-opponent-name')).toHaveTextContent('Dark');
+    expect(screen.getByTestId('advanced-stats-score-badge')).toHaveTextContent('1 - 0');
+
+    await user.press(screen.getAllByText('Dark')[0]);
+
+    expect(screen.getByTestId('advanced-stats-team-name')).toHaveTextContent('Dark');
+    expect(screen.getByTestId('advanced-stats-opponent-name')).toHaveTextContent('Light');
+    expect(screen.getByTestId('advanced-stats-score-badge')).toHaveTextContent('0 - 1');
   });
 
   it('renders the live game timeline from real events', async () => {

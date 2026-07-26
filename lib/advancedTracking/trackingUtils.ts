@@ -3,6 +3,7 @@ import { PointLineRecord } from '@/lib/storage/types';
 import { hasItems } from '@/lib/utils';
 
 import { getCapThresholdMinutes, type CapTimingSettings } from './capUtils';
+import { areBothSidesFullyTracked } from './trackingModeUtils';
 import {
   AdvancedTrackedGame,
   GameSide,
@@ -476,6 +477,25 @@ export function assertValidLines(game: AdvancedTrackedGame, lines: PointLine[]) 
       }
     }
   }
+
+  if (!areBothSidesFullyTracked(game)) return;
+
+  const lineSideIds = lines.map((line) => line.sideId);
+  const hasEverySideExactlyOnce =
+    lines.length === game.sides.length &&
+    game.sides.every((side) => lineSideIds.filter((sideId) => sideId === side.id).length === 1);
+  if (!hasEverySideExactlyOnce) {
+    throw new Error('Fully tracked sides require exactly one line for each side.');
+  }
+
+  if (lines.some((line) => line.participantIds.length !== 7)) {
+    throw new Error('Fully tracked sides require seven participants on each side.');
+  }
+
+  const selectedParticipantIds = lines.flatMap((line) => line.participantIds);
+  if (new Set(selectedParticipantIds).size !== selectedParticipantIds.length) {
+    throw new Error('A participant cannot play for both sides in the same point.');
+  }
 }
 
 export interface InjurySubInput {
@@ -523,15 +543,18 @@ export function assertValidInjurySubInput(
  *
  * Points are 1-indexed to match the convention in `getRecentLines`.
  */
-export function getAdvancedPointLineRecords(game: AdvancedTrackedGame): PointLineRecord[] {
+export function getAdvancedPointLineRecords(
+  game: AdvancedTrackedGame,
+  sideId = game.focusSideId,
+): PointLineRecord[] {
   const records: PointLineRecord[] = [];
   for (let i = 0; i < game.points.length; i++) {
     const point = game.points[i];
-    const focusLine = point.lines.find((l) => l.sideId === game.focusSideId);
-    if (focusLine && focusLine.participantIds.length > 0) {
+    const sideLine = point.lines.find((line) => line.sideId === sideId);
+    if (sideLine && sideLine.participantIds.length > 0) {
       records.push({
         pointNumber: i + 1,
-        playerIds: focusLine.participantIds,
+        playerIds: sideLine.participantIds,
         timestamp: 0,
       });
     }
@@ -544,7 +567,10 @@ export function getAdvancedPointLineRecords(game: AdvancedTrackedGame): PointLin
  * re-selection in the line picker. Delegates to {@link getRecentLines} after
  * converting {@link TrackedPoint} data to the shared {@link PointLineRecord} format.
  */
-export function getAdvancedRecentLines(game: AdvancedTrackedGame): RecentLine[] {
-  const records = getAdvancedPointLineRecords(game);
+export function getAdvancedRecentLines(
+  game: AdvancedTrackedGame,
+  sideId = game.focusSideId,
+): RecentLine[] {
+  const records = getAdvancedPointLineRecords(game, sideId);
   return getRecentLines(records, game.points.length + 1);
 }

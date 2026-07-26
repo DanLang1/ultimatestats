@@ -114,7 +114,8 @@ export const TrackerLineScreen = ({
       return;
     }
     setSelectedPresetId(preset.id);
-    setSelectedIds(preset.playerIds);
+    const availableParticipantIds = new Set(participants.map((participant) => participant.id));
+    setSelectedIds(preset.playerIds.filter((id) => availableParticipantIds.has(id)).slice(0, 7));
   };
 
   const handleSelectRecentLine = (recent: RecentLine) => {

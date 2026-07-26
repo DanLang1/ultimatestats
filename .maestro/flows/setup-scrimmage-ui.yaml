@@ -1,0 +1,102 @@
+appId: com.langdk.ultimatestats
+name: Setup Scrimmage Through UI
+---
+- openLink: ultimatestats:///__maestro_seed__?mode=scrimmageTeam
+
+- extendedWaitUntil:
+    visible:
+      id: 'maestro-setup-running'
+    timeout: 5000
+- extendedWaitUntil:
+    notVisible:
+      id: 'maestro-setup-running'
+    timeout: 15000
+- extendedWaitUntil:
+    visible:
+      text: 'DASHBOARD'
+    timeout: 15000
+- tapOn:
+    id: 'dashboard-new-game-button'
+- tapOn:
+    id: 'new-game-sheet-scrimmage'
+
+- assertVisible:
+    text: 'SCRIMMAGE'
+- assertVisible:
+    id: 'advanced-tracker-receiving-focus'
+- assertVisible:
+    id: 'advanced-tracker-receiving-opponent'
+- assertNotVisible:
+    text: 'FLIP RESULT'
+- assertVisible:
+    id: 'advanced-tracker-set-line-button'
+    enabled: false
+
+- tapOn:
+    id: 'advanced-tracker-receiving-focus'
+- tapOn:
+    id: 'advanced-tracker-set-line-button'
+    enabled: true
+
+- assertVisible:
+    text: 'Light Line · 0-0'
+- assertVisible:
+    id: 'line-select-confirm'
+    enabled: false
+- tapOn:
+    id: 'player-chip-Joe'
+- tapOn:
+    id: 'player-chip-Jon'
+- tapOn:
+    id: 'player-chip-Mike'
+- tapOn:
+    id: 'player-chip-Molly'
+- tapOn:
+    id: 'player-chip-Kelly'
+- tapOn:
+    id: 'player-chip-Rachel'
+- tapOn:
+    id: 'player-chip-Joel'
+- tapOn:
+    id: 'line-select-confirm'
+    enabled: true
+
+- assertVisible:
+    text: 'Dark Line · 0-0'
+- assertNotVisible:
+    id: 'player-chip-Joe'
+- tapOn:
+    id: 'player-chip-Anna'
+- tapOn:
+    id: 'player-chip-Ben'
+- tapOn:
+    id: 'player-chip-Cara'
+- tapOn:
+    id: 'player-chip-Drew'
+- tapOn:
+    id: 'player-chip-Emma'
+- tapOn:
+    id: 'player-chip-Finn'
+- tapOn:
+    id: 'player-chip-Grace'
+- tapOn:
+    id: 'line-select-confirm'
+    enabled: true
+
+- assertVisible:
+    text: 'DARK IS PULLING'
+- tapOn:
+    id: 'pull-skip-timing'
+- assertVisible:
+    id: 'pull-result-inbound'
+- tapOn:
+    id: 'pull-result-inbound'
+
+- extendedWaitUntil:
+    visible:
+      text: 'TAP WHO STARTS WITH DISC'
+    timeout: 5000
+- assertVisible:
+    id: 'tracker-chip-Joe'
+- assertNotVisible:
+    id: 'tracker-chip-Anna'

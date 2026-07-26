@@ -1,4 +1,5 @@
 import type { AnalyticsGame, AttributionType } from './analyticsTypes';
+import { getPointStateForSide } from './buildAnalyticsGame';
 import { PRESSURE_PLUS_MINUS_VALUE } from './statConstants';
 
 export interface AdvancedImpactPoint {
@@ -33,7 +34,11 @@ export function computeAdvancedImpact(
   const result: AdvancedImpactPoint[] = [];
 
   for (const point of game.points) {
-    const onField = (point.linesBySide[focusSideId] ?? []).includes(participantId);
+    const participantSideId = Object.entries(point.linesBySide).find(([, participantIds]) =>
+      participantIds.includes(participantId),
+    )?.[0];
+    const perspectiveSideId = participantSideId ?? focusSideId;
+    const onField = (point.linesBySide[perspectiveSideId] ?? []).includes(participantId);
     const typeMap = pointAttribs.get(point.id);
 
     let plusMinusDelta = 0;
@@ -82,11 +87,11 @@ export function computeAdvancedImpact(
     cumulativePlusMinus += plusMinusDelta;
 
     // Derive post-point score for focus side
-    const startScore = point.scoresBySide[focusSideId] ?? 0;
-    const focusScored = point.scoringSideId === focusSideId ? 1 : 0;
+    const startScore = point.scoresBySide[perspectiveSideId] ?? 0;
+    const focusScored = point.scoringSideId === perspectiveSideId ? 1 : 0;
     const focusScore = startScore + focusScored;
 
-    const oppSideId = Object.keys(point.scoresBySide).find((id) => id !== focusSideId);
+    const oppSideId = Object.keys(point.scoresBySide).find((id) => id !== perspectiveSideId);
     const oppStartScore = oppSideId ? (point.scoresBySide[oppSideId] ?? 0) : 0;
     const oppScored = oppSideId && point.scoringSideId === oppSideId ? 1 : 0;
     const oppScore = oppStartScore + oppScored;
@@ -94,7 +99,10 @@ export function computeAdvancedImpact(
     result.push({
       pointIndex: point.pointIndex,
       onField,
-      state: point.state ?? null,
+      state:
+        participantSideId != null
+          ? getPointStateForSide(point, participantSideId)
+          : (point.state ?? null),
       plusMinusDelta,
       cumulativePlusMinus,
       description: parts.join(', '),

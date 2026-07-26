@@ -35,6 +35,7 @@ import { generateAggregateAdvancedCSV } from '@/lib/advancedTracking/advancedCSV
 import { aggregateAnalyticsGames } from '@/lib/advancedTracking/aggregateAnalyticsGames';
 import type { AnalyticsGame } from '@/lib/advancedTracking/analyticsTypes';
 import { buildAnalyticsGame } from '@/lib/advancedTracking/buildAnalyticsGame';
+import { isAdvancedGameAggregateEligible } from '@/lib/advancedTracking/summary';
 import { generateAggregateCSV } from '@/lib/basic/statsUtils';
 import { MAX_SHARE_GAMES } from '@/lib/constants';
 import { resolveTeamName } from '@/lib/playerUtils';
@@ -72,6 +73,9 @@ export default function AggregateStatsScreen() {
   const { showAlert } = useAlert();
   const { savedGames, savedTeams } = useGameStore();
   const { data: completedAdvancedSavedGameSummaries } = useCompletedAdvancedGameSummaries();
+  const aggregateEligibleAdvancedGameSummaries = completedAdvancedSavedGameSummaries.filter(
+    isAdvancedGameAggregateEligible,
+  );
   const { tournaments, gameLinks, addGamesToTournament } = useTournamentStore();
   const [aggregateMode, setAggregateMode] = useState<AggregateMode>('basic');
   const [selectedTeam, setSelectedTeam] = useState<string | null>(null);
@@ -244,7 +248,7 @@ export default function AggregateStatsScreen() {
   const getAdvancedTournamentGameIds = (tournamentId: string) => {
     if (!selectedAdvancedTeamId) return [];
 
-    return completedAdvancedSavedGameSummaries
+    return aggregateEligibleAdvancedGameSummaries
       .filter((game) => {
         const teamId = game.focusSourceTeamId ?? game.focusSideId;
         return (
@@ -381,7 +385,7 @@ export default function AggregateStatsScreen() {
   const getHeaderTitle = () => {
     if (showingAggregatedStats) return 'COMBINED STATS';
     if (aggregateMode === 'advanced' && selectedAdvancedTeamId) {
-      const gameForSide = completedAdvancedSavedGameSummaries.find(
+      const gameForSide = aggregateEligibleAdvancedGameSummaries.find(
         (game) => (game.focusSourceTeamId ?? game.focusSideId) === selectedAdvancedTeamId,
       );
       const sideName = gameForSide ? gameForSide.myTeamName : 'Advanced Team';
@@ -474,7 +478,7 @@ export default function AggregateStatsScreen() {
         opponentName="Opponents"
         myScore={0}
         opponentScore={0}
-        focusSideId={aggregatedAdvancedGame.focusSideId}
+        perspectiveSideId={aggregatedAdvancedGame.focusSideId}
         participantNames={aggregatedAdvancedGame.participantNames}
         aggregateInfo={{ gameCount: selectedAdvancedGames.length }}
         aggregateGameIds={selectedAdvancedGames.map((game) => game.id)}
@@ -502,7 +506,7 @@ export default function AggregateStatsScreen() {
   } else if (aggregateMode === 'advanced') {
     mainContent = (
       <AdvancedAggregateGamesList
-        games={completedAdvancedSavedGameSummaries}
+        games={aggregateEligibleAdvancedGameSummaries}
         selectedTeamId={selectedAdvancedTeamId}
         selectedGameIds={selectedGameIds}
         onSelectTeam={handleSelectAdvancedTeam}

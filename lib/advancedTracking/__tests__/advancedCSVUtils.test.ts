@@ -86,4 +86,101 @@ describe('advancedCSVUtils', () => {
     expect(cells[columns.indexOf('Pressures')]).toBe('1');
     expect(cells[columns.indexOf('Plus/Minus')]).toBe('1.5');
   });
+
+  it('exports a scrimmage from the requested side perspective', () => {
+    const lightPlayer = { refType: 'participant' as const, participantId: 'light-player' };
+    const darkPlayer = { refType: 'participant' as const, participantId: 'dark-player' };
+    const game: AdvancedTrackedGame = {
+      id: 'scrimmage',
+      schemaVersion: 2,
+      createdAt: 0,
+      updatedAt: 0,
+      gameType: 'scrimmage',
+      status: 'final',
+      focusSideId: 'light',
+      initialReceivingSideId: 'light',
+      settings: { locationMode: 'none' },
+      sides: [
+        { id: 'light', label: 'Light', trackingMode: 'full-roster' },
+        { id: 'dark', label: 'Dark', trackingMode: 'full-roster' },
+      ],
+      participants: [
+        { id: 'light-player', name: 'Light Player' },
+        { id: 'dark-player', name: 'Dark Player' },
+      ],
+      points: [
+        {
+          id: 'pt1',
+          lines: [
+            { sideId: 'light', participantIds: ['light-player'] },
+            { sideId: 'dark', participantIds: ['dark-player'] },
+          ],
+          possessions: [
+            {
+              id: 'pos1',
+              sideId: 'light',
+              actions: [
+                {
+                  id: 'pull1',
+                  kind: 'pull',
+                  sideId: 'dark',
+                  receivingSideId: 'light',
+                  puller: darkPlayer,
+                  result: 'inbound',
+                },
+                {
+                  id: 'goal1',
+                  kind: 'throw',
+                  sideId: 'light',
+                  thrower: lightPlayer,
+                  toPlayer: lightPlayer,
+                  result: 'goal',
+                },
+              ],
+            },
+          ],
+        },
+        {
+          id: 'pt2',
+          lines: [
+            { sideId: 'light', participantIds: ['light-player'] },
+            { sideId: 'dark', participantIds: ['dark-player'] },
+          ],
+          possessions: [
+            {
+              id: 'pos2',
+              sideId: 'dark',
+              actions: [
+                {
+                  id: 'pull2',
+                  kind: 'pull',
+                  sideId: 'light',
+                  receivingSideId: 'dark',
+                  puller: lightPlayer,
+                  result: 'inbound',
+                },
+                {
+                  id: 'goal2',
+                  kind: 'throw',
+                  sideId: 'dark',
+                  thrower: darkPlayer,
+                  toPlayer: darkPlayer,
+                  result: 'goal',
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+
+    const csv = generateAdvancedGameCSV(buildAnalyticsGame(game), 'dark');
+    const playerSummary = csv.split('# Player Summary\n')[1].split('\n\n# Point-by-Point')[0];
+
+    expect(csv).toContain('# Game: Dark vs Light');
+    expect(playerSummary).toContain('Dark Player,');
+    expect(playerSummary).not.toContain('Light Player,');
+    expect(csv).toContain('1,0-0,1,Dark,Light,Opp Hold');
+    expect(csv).toContain('2,0-1,1,Light,Dark,Hold');
+  });
 });

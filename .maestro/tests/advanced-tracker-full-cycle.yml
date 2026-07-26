@@ -5,10 +5,10 @@ tags:
 ---
 - runFlow:
     file: ../flows/setup-game.yaml
+    env:
+      TRACKER_STATE: focusPossession
 
 # === POINT 1: Opponent goal ===
-- tapOn:
-    id: 'tracker-chip-Joe'
 - runFlow:
     file: ../flows/open-rare-menu.yaml
 - runFlow:

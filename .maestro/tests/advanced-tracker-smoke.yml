@@ -3,10 +3,8 @@ name: Advanced Tracker Smoke
 ---
 - runFlow:
     file: ../flows/setup-game.yaml
-
-# Start with disc on Joe
-- tapOn:
-    id: 'tracker-chip-Joe'
+    env:
+      TRACKER_STATE: focusPossession
 
 # Pass to Jon
 - tapOn:

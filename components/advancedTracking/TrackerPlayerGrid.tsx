@@ -2,6 +2,7 @@ import React from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { getTrackerChipWidth } from '@/lib/advancedTracking/trackerLayoutUtils';
 import { Participant, PlayerRef } from '@/lib/advancedTracking/types';
 
 import { TrackerLineActionTile } from './TrackerLineActionTile';
@@ -25,12 +26,14 @@ interface TrackerPlayerGridProps {
   handlers: TrackerPlayerGridHandlers;
   onLineChangePress: () => void;
   canChangeLine: boolean;
+  availableHeight: number | null;
 }
 
 const PORTRAIT_MAX_CHIP_WIDTH = { small: 180, medium: 170, large: 190 } as const;
 const LANDSCAPE_MAX_CHIP_WIDTH = { small: 180, medium: 220, large: 260 } as const;
 const PORTRAIT_COLUMNS = 3;
 const LANDSCAPE_COLUMNS = 5;
+const GRID_VERTICAL_PADDING = 12;
 
 function getChipModel(item: Participant | 'unknown'): {
   label: string;
@@ -58,12 +61,12 @@ export const TrackerPlayerGrid = ({
   handlers,
   onLineChangePress,
   canChangeLine,
+  availableHeight,
 }: TrackerPlayerGridProps) => {
   const { width, sizeClass, isLandscape } = useLayout();
 
   const columns = isLandscape ? LANDSCAPE_COLUMNS : PORTRAIT_COLUMNS;
   const horizontalPadding = scaleBySizeClass(20, sizeClass);
-  const hPadding = horizontalPadding * 2;
   const gap = scaleBySizeClass(isLandscape ? 10 : 12, sizeClass);
 
   const items: (Participant | 'unknown' | 'line-action' | null)[] = [
@@ -77,12 +80,23 @@ export const TrackerPlayerGrid = ({
     items.push(null);
   }
 
-  const availableChipWidth = Math.floor((width - hPadding - gap * (columns - 1)) / columns);
+  const rowCount = items.length / columns;
+  const verticalPadding = scaleBySizeClass(GRID_VERTICAL_PADDING, sizeClass);
   const maxChipWidths = isLandscape ? LANDSCAPE_MAX_CHIP_WIDTH : PORTRAIT_MAX_CHIP_WIDTH;
-  const chipWidth = Math.min(availableChipWidth, getSizeClassValue(maxChipWidths, sizeClass));
-  const gridWidth = chipWidth * columns + gap * (columns - 1) + hPadding;
+  const chipWidth = getTrackerChipWidth({
+    screenWidth: width,
+    horizontalPadding,
+    gap,
+    columns,
+    maxChipWidth: getSizeClassValue(maxChipWidths, sizeClass),
+    availableHeight,
+    rowCount,
+    verticalPadding,
+    sideLabelHeight: 0,
+  });
+  const gridWidth = chipWidth * columns + gap * (columns - 1) + horizontalPadding * 2;
 
-  const styles = createStyles(sizeClass, gap);
+  const styles = createStyles(sizeClass, gap, verticalPadding);
 
   return (
     <View style={[styles.gridContainer, { width: gridWidth }]}>
@@ -126,7 +140,7 @@ export const TrackerPlayerGrid = ({
   );
 };
 
-function createStyles(sizeClass: SizeClass, gap: number) {
+function createStyles(sizeClass: SizeClass, gap: number, verticalPadding: number) {
   return StyleSheet.create({
     gridContainer: {
       alignSelf: 'center',
@@ -135,7 +149,7 @@ function createStyles(sizeClass: SizeClass, gap: number) {
       justifyContent: 'center',
       alignContent: 'center',
       gap,
-      padding: scaleBySizeClass(12, sizeClass),
+      paddingVertical: verticalPadding,
       paddingHorizontal: scaleBySizeClass(20, sizeClass),
     },
   });

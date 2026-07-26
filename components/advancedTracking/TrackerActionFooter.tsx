@@ -11,6 +11,7 @@ import { useTheme } from '@/context/ThemeContext';
 import { VoiceStatCommandsControls } from '@/hooks/advancedTracking/useVoiceStatCommands';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { getActiveSideId } from '@/lib/advancedTracking/trackingDisplayHelpers';
+import { areBothSidesFullyTracked } from '@/lib/advancedTracking/trackingModeUtils';
 import {
   getCurrentPoint,
   getCurrentPossession,
@@ -24,7 +25,7 @@ const NEXT_POINT_BUTTON_HEIGHT = 62;
 const FOOTER_BOTTOM_PADDING = 48;
 const ANDROID_FOOTER_BOTTOM_PADDING = 20;
 const FOOTER_HORIZONTAL_PADDING = 12;
-const FOOTER_TOP_PADDING = 8;
+const FOOTER_TOP_PADDING = 12;
 
 interface TrackerActionFooterProps {
   getPointElapsedMs: () => number;
@@ -53,7 +54,8 @@ export const TrackerActionFooter = ({
   const possession = getCurrentPossession(game);
   const pointIsOver = hasPointEnded(point);
   const activeSideId = getActiveSideId(possession, game);
-  const oppHasDisc = !pointIsOver && activeSideId !== game.focusSideId;
+  const oppHasDisc =
+    !areBothSidesFullyTracked(game) && !pointIsOver && activeSideId !== game.focusSideId;
   const styles = createStyles(sizeClass, insets.bottom);
 
   const handleOppTurnover = () => {

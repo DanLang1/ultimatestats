@@ -3,11 +3,11 @@ name: Advanced Tracker Pull Tracking
 ---
 - runFlow:
     file: ../flows/setup-game.yaml
+    env:
+      TRACKER_STATE: focusPossession
 
 # === Point 1: THEY pull (auto inbound) ===
 # Start with disc, then give opponent a goal so we're back on offense for the test
-- tapOn:
-    id: 'tracker-chip-Joe'
 - runFlow:
     file: ../flows/open-rare-menu.yaml
 - runFlow:

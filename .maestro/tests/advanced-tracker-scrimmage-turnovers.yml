@@ -1,0 +1,54 @@
+appId: com.langdk.ultimatestats
+name: Advanced Tracker Scrimmage Turnovers
+---
+- runFlow:
+    file: ../flows/setup-scrimmage.yaml
+    env:
+      TRACKER_STATE: focusPossession
+
+# Light starts with the disc; a downward swipe on Jon records Jon's drop.
+- swipe:
+    from:
+      id: 'tracker-chip-Jon'
+    direction: DOWN
+    duration: 500
+
+- extendedWaitUntil:
+    visible:
+      text: 'DROP'
+    timeout: 5000
+- assertVisible:
+    text: 'JON'
+- assertVisible:
+    id: 'tracker-chip-Anna'
+- assertNotVisible:
+    id: 'tracker-chip-Joe'
+
+# Dark picks up, completes a pass, then the holder swipes down for a throwaway.
+- tapOn:
+    id: 'tracker-chip-Anna'
+- tapOn:
+    id: 'tracker-chip-Ben'
+- assertVisible:
+    text: 'ANNA'
+- assertVisible:
+    text: 'BEN'
+- swipe:
+    from:
+      id: 'tracker-chip-Ben'
+    direction: DOWN
+    duration: 500
+
+- extendedWaitUntil:
+    visible:
+      text: 'THROWAWAY'
+    timeout: 5000
+- assertVisible:
+    text: 'BEN'
+- assertVisible:
+    id: 'tracker-chip-Joe'
+- assertNotVisible:
+    id: 'tracker-chip-Anna'
+
+- takeScreenshot:
+    path: .maestro/screenshots/advanced-tracker-scrimmage-turnovers

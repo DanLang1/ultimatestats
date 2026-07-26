@@ -15,8 +15,10 @@ import {
   getLastTurnoverEvent,
   getPassChainEvents,
   getSafeDiscHolderRef,
+  getTrackerDisplaySideId,
   TurnoverEventInfo,
 } from '@/lib/advancedTracking/trackingDisplayHelpers';
+import { areBothSidesFullyTracked } from '@/lib/advancedTracking/trackingModeUtils';
 import {
   getCurrentPoint,
   getCurrentPossession,
@@ -47,6 +49,7 @@ interface TrackerLastActionCardState {
   isOpeningDefensivePull: boolean;
   point: TrackedPoint | null;
   focusSideId: string;
+  tracksBothSides: boolean;
   participants: Participant[];
   oppHasDisc: boolean;
   canUseRareMenu: boolean;
@@ -102,18 +105,24 @@ export const TrackerLastActionCard = ({
   const pointIsOver = hasPointEnded(point);
 
   const activeSideId = getActiveSideId(possession, game);
-  const oppHasDisc = !pointIsOver && activeSideId !== game.focusSideId;
-  const discHolderRef = getSafeDiscHolderRef(possession, game.focusSideId, point);
+  const tracksBothSides = areBothSidesFullyTracked(game);
+  const perspectiveSideId = getTrackerDisplaySideId(game, possession, point);
+  const oppHasDisc = !tracksBothSides && !pointIsOver && activeSideId !== game.focusSideId;
+  const discHolderRef = getSafeDiscHolderRef(possession, perspectiveSideId, point);
 
   const lastOppPossession =
-    point?.possessions.findLast((p) => p.sideId !== game.focusSideId) ?? null;
+    point?.possessions.findLast(
+      (previousPossession) => previousPossession.sideId !== perspectiveSideId,
+    ) ?? null;
   const lastFocusPossession =
-    point?.possessions.findLast((p) => p.sideId === game.focusSideId) ?? null;
+    point?.possessions.findLast(
+      (previousPossession) => previousPossession.sideId === perspectiveSideId,
+    ) ?? null;
   const focusHasStarted =
-    !!possession && possession.sideId === game.focusSideId && possession.actions.length > 0;
+    !!possession && possession.sideId === perspectiveSideId && possession.actions.length > 0;
   const isOpeningDefensivePull =
     game.points.length === 1 &&
-    possession?.sideId !== game.focusSideId &&
+    possession?.sideId !== perspectiveSideId &&
     possession?.actions.length === 1 &&
     possession.actions[0]?.kind === 'pull';
 
@@ -139,7 +148,8 @@ export const TrackerLastActionCard = ({
     pointIsOver,
     isOpeningDefensivePull,
     point,
-    focusSideId: game.focusSideId,
+    focusSideId: perspectiveSideId,
+    tracksBothSides,
     participants: game.participants,
     oppHasDisc,
     canUseRareMenu: !pointIsOver && (oppHasDisc || discHolderRef != null),
@@ -192,6 +202,7 @@ function getTrackerLastActionCardModel({
     isOpeningDefensivePull,
     point,
     focusSideId,
+    tracksBothSides,
     participants,
     oppHasDisc,
     canUseRareMenu,
@@ -263,7 +274,9 @@ function getTrackerLastActionCardModel({
   }
 
   const turnoverEvent = !focusHasStarted
-    ? getLastTurnoverEvent(lastOppPossession, false, participants)
+    ? getLastTurnoverEvent(lastOppPossession, false, participants, {
+        showSpecificResult: tracksBothSides,
+      })
     : null;
 
   if (turnoverEvent) {

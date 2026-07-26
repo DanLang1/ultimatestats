@@ -1,10 +1,11 @@
 import { Redirect, router } from 'expo-router';
-import React from 'react';
+import React, { useState } from 'react';
 
 import type { RecentLine as RecentLineType } from '@/components/advancedTracking/TrackerLineScreen';
 import { TrackerLineScreen } from '@/components/advancedTracking/TrackerLineScreen';
 import { useLiveRosterParticipants } from '@/hooks/advancedTracking/useLiveRosterParticipants';
 import { getEffectiveLineParticipantIds } from '@/lib/advancedTracking/trackingDisplayHelpers';
+import { areBothSidesFullyTracked } from '@/lib/advancedTracking/trackingModeUtils';
 import {
   getAdvancedPointLineRecords,
   getAdvancedRecentLines,
@@ -17,11 +18,10 @@ import { hasItems } from '@/lib/utils';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { useSettingsStore } from '@/store/settingsStore';
 
-import { FOCUS_SIDE_ID } from './PreGameConfirm';
-
 export default function TrackerLineSelectScreen() {
   const { currentGame: game, resetCurrentGame } = useAdvancedTrackingStore();
   const participants = useLiveRosterParticipants(game?.participants ?? []);
+  const [firstSideLineIds, setFirstSideLineIds] = useState<string[] | null>(null);
   const { genderRatioEnabled, firstPointRatio } = useSettingsStore();
   if (!game) return <Redirect href="/advancedTracking/Tracker" />;
 
@@ -34,19 +34,41 @@ export default function TrackerLineSelectScreen() {
   const nextSequenceNumber = nextRatio != null ? getSequenceNumber(nextPointNumber) : undefined;
 
   const isInitialLine = game.points.length === 0;
+  const isScrimmage = game.gameType === 'scrimmage';
+  const tracksBothSides = areBothSidesFullyTracked(game);
   const oppSide = game.sides.find((side) => side.id !== game.focusSideId);
   const focusScore = getSideScore(game, game.focusSideId);
   const oppScore = oppSide != null ? getSideScore(game, oppSide.id) : 0;
   const receivingSideId = getLineReceivingSideId(game, point);
-  const pointTypeLabel = receivingSideId === game.focusSideId ? 'O-Point' : 'D-Point';
-  const lineSelectTitle = `${pointTypeLabel} · ${focusScore}-${oppScore}`;
+  const isSelectingSecondSideLine = tracksBothSides && firstSideLineIds != null;
+  const selectedSideId = isSelectingSecondSideLine ? oppSide?.id : game.focusSideId;
+  const selectedSide = game.sides.find((side) => side.id === selectedSideId);
+  const pointTypeLabel = receivingSideId === selectedSideId ? 'O-Point' : 'D-Point';
+  const lineSelectTitle = tracksBothSides
+    ? `${selectedSide?.label ?? 'Side'} Line · ${focusScore}-${oppScore}`
+    : `${pointTypeLabel} · ${focusScore}-${oppScore}`;
 
-  const recentLines: RecentLineType[] = getAdvancedRecentLines(game);
-  const pointLines = getAdvancedPointLineRecords(game);
+  const recentLines: RecentLineType[] = getAdvancedRecentLines(game, selectedSideId);
+  const pointLines = getAdvancedPointLineRecords(game, selectedSideId);
+  const selectableParticipants = isSelectingSecondSideLine
+    ? participants.filter((participant) => !firstSideLineIds.includes(participant.id))
+    : participants;
   const handleBack = () => {
+    if (isSelectingSecondSideLine) {
+      setFirstSideLineIds(null);
+      return;
+    }
+
     if (isInitialLine) {
       resetCurrentGame();
-      router.dismissTo('/advancedTracking/PreGameConfirm');
+      if (isScrimmage) {
+        router.dismissTo({
+          pathname: '/advancedTracking/PreGameConfirm',
+          params: { gameType: 'scrimmage' },
+        });
+      } else {
+        router.dismissTo('/advancedTracking/PreGameConfirm');
+      }
       return;
     }
 
@@ -55,7 +77,8 @@ export default function TrackerLineSelectScreen() {
 
   return (
     <TrackerLineScreen
-      participants={participants}
+      key={selectedSideId}
+      participants={selectableParticipants}
       title={lineSelectTitle}
       expectedRatio={nextRatio}
       sequenceNumber={nextSequenceNumber}
@@ -64,13 +87,18 @@ export default function TrackerLineSelectScreen() {
       pointLines={pointLines}
       currentPoint={nextPointNumber}
       onConfirm={(ids) => {
+        if (tracksBothSides && !isSelectingSecondSideLine) {
+          setFirstSideLineIds([...ids]);
+          return;
+        }
+
         const isOurPull = receivingSideId !== game.focusSideId;
 
         let lineIds: string[];
         if (hasItems(ids)) {
           lineIds = [...ids];
         } else if (point) {
-          lineIds = getEffectiveLineParticipantIds(point, FOCUS_SIDE_ID);
+          lineIds = getEffectiveLineParticipantIds(point, selectedSideId ?? game.focusSideId);
         } else {
           lineIds = [];
         }
@@ -80,6 +108,14 @@ export default function TrackerLineSelectScreen() {
           params: {
             isOurPull: String(isOurPull),
             lineParticipantIds: JSON.stringify(lineIds),
+            ...(tracksBothSides &&
+              firstSideLineIds != null &&
+              oppSide != null && {
+                trackedLines: JSON.stringify([
+                  { sideId: game.focusSideId, participantIds: firstSideLineIds },
+                  { sideId: oppSide.id, participantIds: lineIds },
+                ]),
+              }),
             ...(nextRatio != null && { genderRatio: nextRatio }),
           },
         });

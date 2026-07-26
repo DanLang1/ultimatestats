@@ -6,6 +6,10 @@ import { computePullStats, getInboundPullCount, type PullStats } from './advance
 import { computeAdvancedTeamStats, type AdvancedTeamStats } from './advancedTeamStatsUtils';
 import { getPointStateLabel } from './advancedTimelineUtils';
 import { computeAdvancedTimingStats, type AdvancedTimingStats } from './advancedTimingStatsUtils';
+import {
+  getAnalyticsOpposingSideId,
+  getAnalyticsSidePerspective,
+} from './analyticsPerspectiveUtils';
 import type { AnalyticsGame } from './analyticsTypes';
 import { getFinalScores, getPointStateForSide, UNKNOWN_PARTICIPANT_ID } from './buildAnalyticsGame';
 
@@ -41,8 +45,7 @@ function resolveName(names: Map<string, string>, id: string | null): string {
 }
 
 function getOpponentName(game: AnalyticsGame): string {
-  if (game.metadata?.opponentName) return game.metadata.opponentName;
-  return game.sideLabels[game.oppSideId] ?? 'Opponent';
+  return getAnalyticsSidePerspective(game).opposingSideName;
 }
 
 function getGameTimestamp(game: AnalyticsGame): number {
@@ -59,34 +62,37 @@ function getResultLabel(ourScore: number, theirScore: number): string {
 /**
  * Generate CSV for a single advanced game.
  */
-export function generateAdvancedGameCSV(analyticsGame: AnalyticsGame): string {
+export function generateAdvancedGameCSV(
+  analyticsGame: AnalyticsGame,
+  perspectiveSideId = analyticsGame.focusSideId,
+): string {
   const names = analyticsGame.participantNames;
-  const focusSideId = analyticsGame.focusSideId;
-  const myTeamName = analyticsGame.sideLabels[focusSideId] ?? 'My Team';
-  const opponentName = getOpponentName(analyticsGame);
+  const perspective = getAnalyticsSidePerspective(analyticsGame, perspectiveSideId);
+  const myTeamName = perspective.sideName;
+  const opponentName = perspective.opposingSideName;
   const timestamp = getGameTimestamp(analyticsGame);
 
   let csv = `# Game: ${myTeamName} vs ${opponentName} - ${formatTimestampForCSV(timestamp)}\n`;
 
   csv += '\n# Team Stats\n';
-  csv += teamStatsCSV(computeAdvancedTeamStats(analyticsGame, focusSideId), myTeamName);
+  csv += teamStatsCSV(computeAdvancedTeamStats(analyticsGame, perspectiveSideId), myTeamName);
 
   const timingStats = computeAdvancedTimingStats(analyticsGame);
   if (timingStats.hasTimingData) {
     csv += timingStatsCSV(timingStats);
   }
 
-  const pullStats = computePullStats(analyticsGame, focusSideId);
+  const pullStats = computePullStats(analyticsGame, perspectiveSideId);
   if (pullStats.totalPulls > 0) {
     csv += pullStatsCSV(pullStats);
   }
 
   csv += '\n\n# Player Summary\n';
-  const focusPlayers = computeAdvancedPlayerStats(analyticsGame, focusSideId);
-  csv += playerSummaryCSV(focusPlayers, names, timingStats.hasTimingData);
+  const perspectivePlayers = computeAdvancedPlayerStats(analyticsGame, perspectiveSideId);
+  csv += playerSummaryCSV(perspectivePlayers, names, timingStats.hasTimingData);
 
   csv += '\n\n# Point-by-Point\n';
-  csv += pointByPointCSV(analyticsGame);
+  csv += pointByPointCSV(analyticsGame, perspectiveSideId);
 
   csv += '\n\n# Action Log\n';
   csv += actionLogCSV(analyticsGame, names);
@@ -355,7 +361,7 @@ function playerSummaryCSV(
   return header + '\n' + rows.join('\n');
 }
 
-function pointByPointCSV(game: AnalyticsGame): string {
+function pointByPointCSV(game: AnalyticsGame, perspectiveSideId = game.focusSideId): string {
   if (game.points.length === 0) {
     return (
       csvRow([
@@ -381,11 +387,12 @@ function pointByPointCSV(game: AnalyticsGame): string {
       'Duration',
     ]) + '\n';
 
+  const opponentSideId = getAnalyticsOpposingSideId(game, perspectiveSideId);
   for (const point of game.points) {
-    const scoreBefore = `${point.scoresBySide[game.focusSideId] ?? 0}-${point.scoresBySide[game.oppSideId] ?? 0}`;
+    const scoreBefore = `${point.scoresBySide[perspectiveSideId] ?? 0}-${point.scoresBySide[opponentSideId] ?? 0}`;
     const pullingName = game.sideLabels[point.pullingSideId] ?? point.pullingSideId;
     const receivingName = game.sideLabels[point.receivingSideId] ?? point.receivingSideId;
-    const state = getPointStateForSide(point, game.focusSideId);
+    const state = getPointStateForSide(point, perspectiveSideId);
     const stateLabel = getPointStateLabel(state);
     const duration = formatNullableDuration(point.durationMs);
 

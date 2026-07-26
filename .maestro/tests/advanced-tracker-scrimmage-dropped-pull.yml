@@ -1,0 +1,30 @@
+appId: com.langdk.ultimatestats
+name: Advanced Tracker Scrimmage Dropped Pull
+---
+- runFlow:
+    file: ../flows/setup-scrimmage.yaml
+    env:
+      TRACKER_STATE: awaitingPickup
+
+# Before a pickup, swiping down on a receiver amends the opening pull to a dropped pull.
+- assertVisible:
+    text: 'TAP WHO STARTS WITH DISC'
+- swipe:
+    from:
+      id: 'tracker-chip-Joe'
+    direction: DOWN
+    duration: 500
+
+- extendedWaitUntil:
+    visible:
+      text: 'DROPPED PULL'
+    timeout: 5000
+- assertVisible:
+    text: 'JOE'
+- assertVisible:
+    id: 'tracker-chip-Anna'
+- assertNotVisible:
+    id: 'tracker-chip-Joe'
+
+- takeScreenshot:
+    path: .maestro/screenshots/advanced-tracker-scrimmage-dropped-pull

@@ -3,6 +3,7 @@ import {
   AdvancedTrackedGame,
   Participant,
   PlayerRef,
+  PointLine,
   PullResult,
 } from '@/lib/advancedTracking/types';
 import { GenderRatio } from '@/lib/genderRatioUtils';
@@ -17,6 +18,12 @@ export const PULL_RESULTS: { value: PullResult; label: string }[] = [
 
 export function formatHangtime(ms: number): string {
   return `${(ms / 1000).toFixed(1)}s`;
+}
+
+export function getPullingSideTitle(isOurPull: boolean, sideLabel?: string): string {
+  if (sideLabel) return `${sideLabel.toUpperCase()} IS PULLING`;
+  if (isOurPull) return 'WE ARE PULLING';
+  return 'THEY ARE PULLING';
 }
 
 export function getFlowParticipants(
@@ -36,11 +43,14 @@ export function getPullerName(
   return participant?.name ?? null;
 }
 
-function getPullerRef(selectedPullerId: string | null | undefined, isOurPull: boolean): PlayerRef {
+function getPullerRef(
+  selectedPullerId: string | null | undefined,
+  isPullerTracked: boolean,
+): PlayerRef {
   if (selectedPullerId != null) {
     return { refType: 'participant', participantId: selectedPullerId };
   }
-  if (isOurPull) {
+  if (isPullerTracked) {
     return { refType: 'unknown' };
   }
   return { refType: 'untracked' };
@@ -50,6 +60,8 @@ export function buildRecordPullInput(params: {
   game: AdvancedTrackedGame;
   isOurPull: boolean;
   lineParticipantIds: string[];
+  lines?: PointLine[];
+  isPullerTracked?: boolean;
   selectedPullerId: string | null | undefined;
   hangTimeMs: number;
   result: PullResult;
@@ -60,6 +72,8 @@ export function buildRecordPullInput(params: {
     game,
     isOurPull,
     lineParticipantIds,
+    lines: providedLines,
+    isPullerTracked = isOurPull,
     selectedPullerId,
     hangTimeMs,
     result,
@@ -67,14 +81,14 @@ export function buildRecordPullInput(params: {
     genderRatio,
   } = params;
   const opponentSideId = getOtherSideId(game, game.focusSideId);
-  const lines = [
+  const lines = providedLines ?? [
     { sideId: game.focusSideId, participantIds: lineParticipantIds },
     { sideId: opponentSideId, participantIds: [] },
   ];
 
   const recordPullInput: RecordPullInput = {
     lines,
-    puller: getPullerRef(selectedPullerId, isOurPull),
+    puller: getPullerRef(selectedPullerId, isPullerTracked),
     result,
     genderRatio,
   };

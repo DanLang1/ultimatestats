@@ -14,6 +14,7 @@ import {
 } from '@/lib/advancedTracking/advancedGameTeamUtils';
 import { computeAdvancedImpact } from '@/lib/advancedTracking/advancedImpactUtils';
 import { buildAnalyticsGame } from '@/lib/advancedTracking/buildAnalyticsGame';
+import { isAdvancedGameAggregateEligible } from '@/lib/advancedTracking/summary';
 import { Fonts } from '@/theme/theme';
 
 export default function AdvancedGameSelectorModal() {
@@ -35,6 +36,7 @@ export default function AdvancedGameSelectorModal() {
   const { data: loadedGames } = useAdvancedGames(gameIds);
 
   const selectableGames = loadedGames
+    .filter(isAdvancedGameAggregateEligible)
     .filter((game) => {
       if (!participantId) return false;
       const analyticsGame = buildAnalyticsGame(game);

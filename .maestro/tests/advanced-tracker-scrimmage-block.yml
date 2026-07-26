@@ -1,0 +1,35 @@
+appId: com.langdk.ultimatestats
+name: Advanced Tracker Scrimmage Block
+---
+- runFlow:
+    file: ../flows/setup-scrimmage.yaml
+    env:
+      TRACKER_STATE: focusPossession
+- runFlow:
+    file: ../flows/open-rare-menu.yaml
+- assertVisible:
+    id: 'rare-menu-opp-d'
+- tapOn:
+    id: 'rare-menu-opp-d'
+    retryTapIfNoChange: true
+
+- assertVisible:
+    text: 'Tap player who got the block'
+- assertVisible:
+    id: 'tracker-chip-Anna'
+- tapOn:
+    id: 'tracker-chip-Anna'
+
+- extendedWaitUntil:
+    visible:
+      text: 'BLOCK'
+    timeout: 5000
+- assertVisible:
+    text: 'ANNA'
+- assertVisible:
+    id: 'tracker-chip-Anna'
+- assertNotVisible:
+    id: 'tracker-chip-Joe'
+
+- takeScreenshot:
+    path: .maestro/screenshots/advanced-tracker-scrimmage-block

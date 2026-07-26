@@ -3,11 +3,10 @@ name: Advanced Tracker Rare Actions
 ---
 - runFlow:
     file: ../flows/setup-game.yaml
+    env:
+      TRACKER_STATE: focusPossession
 
 # --- Stall (Offense) ---
-- tapOn:
-    id: 'tracker-chip-Joe'
-
 # Open rare menu, select Stall (Offense)
 - runFlow:
     file: ../flows/open-rare-menu.yaml

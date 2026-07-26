@@ -3,7 +3,7 @@
 
 import type { GenderRatio } from '@/lib/genderRatioUtils';
 
-export type PassModifier = 'fifty-fifty' | 'callahan' | 'stall' | 'pressure' | null;
+export type PassModifier = 'fifty-fifty' | 'callahan' | 'stall' | 'block' | 'pressure' | null;
 
 // --- Core Game ---
 

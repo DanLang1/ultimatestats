@@ -98,6 +98,7 @@ export default function HubTabBar({ state, descriptors, navigation }: BottomTabB
     closeNewGameSheet,
     startBasicGame,
     startAdvancedGame,
+    startScrimmage,
   } = useNewGameLauncher();
   const styles = createStyles(sizeClass);
   const iconSize = scaleBySizeClass(20, sizeClass);
@@ -207,6 +208,7 @@ export default function HubTabBar({ state, descriptors, navigation }: BottomTabB
         onClose={closeNewGameSheet}
         onStartBasic={startBasicGame}
         onStartAdvanced={startAdvancedGame}
+        onStartScrimmage={startScrimmage}
       />
       <View
         style={[

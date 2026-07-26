@@ -509,6 +509,27 @@ describe('isAdvancedGameOver', () => {
     ).toBe(true);
   });
 
+  it('uses the same game-over rules for a scrimmage', () => {
+    const winningPoint = makePoint([
+      makePossession(HOME, [
+        { id: 'goal', kind: 'throw', sideId: HOME, thrower: august, result: 'goal' },
+      ]),
+    ]);
+
+    expect(
+      isAdvancedGameOver({
+        ...baseGame,
+        gameType: 'scrimmage',
+        settings: { locationMode: 'none', format: { formatType: 'standard', gameTo: 1 } },
+        sides: [
+          { id: HOME, label: 'Light', trackingMode: 'full-roster' },
+          { id: AWAY, label: 'Dark', trackingMode: 'full-roster' },
+        ],
+        points: [winningPoint],
+      }),
+    ).toBe(true);
+  });
+
   it('returns true when hard cap has been reached and the score is not tied', () => {
     const point = makePoint([
       makePossession(HOME, [
@@ -1051,6 +1072,71 @@ describe('assertValidLines', () => {
     const lines = [{ sideId: HOME, participantIds: ['p_nobody'] }];
     expect(() => assertValidLines(baseGame, lines)).toThrow();
   });
+
+  const scrimmageParticipants = Array.from({ length: 14 }, (_, index) => ({
+    id: `scrim-${index + 1}`,
+    name: `Player ${index + 1}`,
+  }));
+  const scrimmageGame: AdvancedTrackedGame = {
+    ...baseGame,
+    gameType: 'scrimmage',
+    sides: [
+      { id: HOME, label: 'Light', trackingMode: 'full-roster' },
+      { id: AWAY, label: 'Dark', trackingMode: 'full-roster' },
+    ],
+    participants: scrimmageParticipants,
+  };
+  const lightIds = scrimmageParticipants.slice(0, 7).map((participant) => participant.id);
+  const darkIds = scrimmageParticipants.slice(7).map((participant) => participant.id);
+
+  it('accepts two unique seven-player scrimmage lines', () => {
+    const lines = [
+      { sideId: HOME, participantIds: lightIds },
+      { sideId: AWAY, participantIds: darkIds },
+    ];
+
+    expect(() => assertValidLines(scrimmageGame, lines)).not.toThrow();
+  });
+
+  it('applies both-side line validation to a non-scrimmage game with two tracked rosters', () => {
+    const dualTrackedGame: AdvancedTrackedGame = {
+      ...scrimmageGame,
+      gameType: 'game',
+    };
+    const lines = [
+      { sideId: HOME, participantIds: lightIds },
+      { sideId: AWAY, participantIds: darkIds },
+    ];
+
+    expect(() => assertValidLines(dualTrackedGame, lines)).not.toThrow();
+    expect(() => assertValidLines(dualTrackedGame, [lines[0]])).toThrow(
+      'exactly one line for each side',
+    );
+  });
+
+  it('rejects a scrimmage point without both sides', () => {
+    expect(() =>
+      assertValidLines(scrimmageGame, [{ sideId: HOME, participantIds: lightIds }]),
+    ).toThrow('exactly one line for each side');
+  });
+
+  it('rejects short-sided scrimmage lines', () => {
+    const lines = [
+      { sideId: HOME, participantIds: lightIds.slice(0, 6) },
+      { sideId: AWAY, participantIds: darkIds },
+    ];
+
+    expect(() => assertValidLines(scrimmageGame, lines)).toThrow('seven participants on each side');
+  });
+
+  it('rejects a participant selected for both scrimmage sides', () => {
+    const lines = [
+      { sideId: HOME, participantIds: lightIds },
+      { sideId: AWAY, participantIds: [...darkIds.slice(0, 6), lightIds[0]] },
+    ];
+
+    expect(() => assertValidLines(scrimmageGame, lines)).toThrow('cannot play for both sides');
+  });
 });
 
 // ── assertValidInjurySubInput ─────────────────────────────────────────────────
@@ -1265,5 +1351,19 @@ describe('getAdvancedRecentLines', () => {
     const result = getAdvancedRecentLines(game);
 
     expect(result).toEqual([{ pointNumber: 2, playerIds: ['p4', 'p5', 'p6'] }]);
+  });
+
+  it('returns recent lines for a requested non-focus side', () => {
+    const game = _makeGame({
+      points: [
+        _point('pt1', [_line('side-a', ['p1']), _line('side-b', ['p4', 'p5', 'p6'])]),
+        _point('pt2', [_line('side-a', ['p2']), _line('side-b', ['p5', 'p6', 'p7'])]),
+      ],
+    });
+
+    expect(getAdvancedRecentLines(game, 'side-b')).toEqual([
+      { pointNumber: 2, playerIds: ['p5', 'p6', 'p7'] },
+      { pointNumber: 1, playerIds: ['p4', 'p5', 'p6'] },
+    ]);
   });
 });

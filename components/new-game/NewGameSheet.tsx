@@ -15,6 +15,7 @@ interface NewGameSheetProps {
   onClose: () => void;
   onStartBasic: () => void;
   onStartAdvanced: () => void;
+  onStartScrimmage: () => void;
 }
 
 export function NewGameSheet({
@@ -23,6 +24,7 @@ export function NewGameSheet({
   onClose,
   onStartBasic,
   onStartAdvanced,
+  onStartScrimmage,
 }: NewGameSheetProps) {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
@@ -93,6 +95,14 @@ export function NewGameSheet({
             tone="success"
             trailingIcon="chevron-right"
             onPress={onStartAdvanced}
+          />
+
+          <BottomSheetActionRow
+            testID="new-game-sheet-scrimmage"
+            icon="account-group-outline"
+            label="Scrimmage"
+            trailingIcon="chevron-right"
+            onPress={onStartScrimmage}
           />
         </View>
       </BottomSheet>

@@ -76,7 +76,12 @@ export const TrackerChipBase = ({
     });
 
   let modifierColor: string | null = null;
-  if (passModifier === 'callahan' || passModifier === 'stall' || passModifier === 'pressure') {
+  if (
+    passModifier === 'callahan' ||
+    passModifier === 'stall' ||
+    passModifier === 'block' ||
+    passModifier === 'pressure'
+  ) {
     modifierColor = palette.success;
   } else if (passModifier === 'fifty-fifty') modifierColor = palette.danger;
 

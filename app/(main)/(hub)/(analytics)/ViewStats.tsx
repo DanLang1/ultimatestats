@@ -2,7 +2,7 @@ import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { File, Paths } from 'expo-file-system';
 import { Redirect, router, Stack, useLocalSearchParams } from 'expo-router';
-import React from 'react';
+import { useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 
 import AdvancedStatsContent from '@/components/advancedTracking/AdvancedStatsContent';
@@ -14,14 +14,20 @@ import {
   ResponsiveHeaderActions,
 } from '@/components/ui/ResponsiveHeaderActions';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
+import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import AnalyticsShortcutCard from '@/components/view-stats/AnalyticsShortcutCard';
 import ShowcaseHintBanner from '@/components/view-stats/ShowcaseHintBanner';
 import StatsContent from '@/components/view-stats/StatsContent';
 import { useTheme } from '@/context/ThemeContext';
 import { useCompletedAdvancedGameSummaries } from '@/hooks/advancedTracking/useAdvancedGameQueries';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import {
+  getAnalyticsSidePerspective,
+  resolveAnalyticsSideId,
+} from '@/lib/advancedTracking/analyticsPerspectiveUtils';
 import type { AnalyticsGame } from '@/lib/advancedTracking/analyticsTypes';
-import { buildAnalyticsGame, getFinalScores } from '@/lib/advancedTracking/buildAnalyticsGame';
+import { buildAnalyticsGame } from '@/lib/advancedTracking/buildAnalyticsGame';
+import { areBothSidesFullyTracked } from '@/lib/advancedTracking/trackingModeUtils';
 import { formatDate, generateCurrentGameCSV } from '@/lib/basic/statsUtils';
 import { shareFileAndDelete } from '@/lib/shareFileAndDelete';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
@@ -32,14 +38,14 @@ import { Fonts } from '@/theme/theme';
 type ViewMode = 'current' | 'saved' | 'aggregate';
 type ViewStatsOrigin = 'scoreboard';
 
-function getAdvancedScoreSummary(game: AnalyticsGame | null) {
+function getSelectedAdvancedSideId(
+  game: AnalyticsGame | null,
+  canSelectEitherSide: boolean,
+  selectedSideId: string | null,
+): string | null {
   if (game === null) return null;
-
-  const finalScores = getFinalScores(game);
-  return {
-    myScore: finalScores[game.focusSideId],
-    opponentScore: finalScores[game.oppSideId],
-  };
+  if (!canSelectEitherSide) return game.focusSideId;
+  return resolveAnalyticsSideId(game, selectedSideId);
 }
 
 export default function ViewStatsScreen() {
@@ -77,6 +83,7 @@ export default function ViewStatsScreen() {
   const styles = createStyles(isLandscape, sizeClass);
   const isCompletedGame = useGameStore((state) => state.currentGameStatus === 'finished');
   const showShowcaseHint = useTutorialStore((s) => !s.hasSeenShowcaseHint);
+  const [selectedSideId, setSelectedSideId] = useState<string | null>(null);
 
   const team1Name = currentTeam.name;
 
@@ -140,12 +147,17 @@ export default function ViewStatsScreen() {
   };
 
   const analyticsGame = activeAdvancedGame ? buildAnalyticsGame(activeAdvancedGame) : null;
-  const myTeamName = analyticsGame?.sideLabels[analyticsGame.focusSideId] ?? 'My Team';
-  const opponentName =
-    analyticsGame?.metadata?.opponentName ??
-    analyticsGame?.sideLabels[analyticsGame.oppSideId] ??
-    'Opponent';
-  const advancedScoreSummary = getAdvancedScoreSummary(analyticsGame);
+  const canSelectEitherSide =
+    activeAdvancedGame != null && areBothSidesFullyTracked(activeAdvancedGame);
+  const selectedAdvancedSideId = getSelectedAdvancedSideId(
+    analyticsGame,
+    canSelectEitherSide,
+    selectedSideId,
+  );
+  const advancedPerspective =
+    analyticsGame && selectedAdvancedSideId
+      ? getAnalyticsSidePerspective(analyticsGame, selectedAdvancedSideId)
+      : null;
 
   let headerTitle: string;
   if (hasActiveAdvancedGame) {
@@ -268,17 +280,32 @@ export default function ViewStatsScreen() {
         <ThemedText style={[styles.sectionLabel, { color: palette.textMuted }]}>
           Live Stats
         </ThemedText>
-        {hasActiveAdvancedGame && analyticsGame && advancedScoreSummary ? (
-          <AdvancedStatsContent
-            game={analyticsGame}
-            gameId={activeAdvancedGame.id}
-            myTeamName={myTeamName}
-            opponentName={opponentName}
-            myScore={advancedScoreSummary.myScore}
-            opponentScore={advancedScoreSummary.opponentScore}
-            focusSideId={analyticsGame.focusSideId}
-            participantNames={analyticsGame.participantNames}
-          />
+        {hasActiveAdvancedGame && analyticsGame && advancedPerspective ? (
+          <>
+            {canSelectEitherSide && selectedAdvancedSideId && (
+              <SegmentedControl
+                label="STATS FOR"
+                options={activeAdvancedGame.sides.map((side, index) => ({
+                  value: side.id,
+                  label: side.label,
+                  testID: `advanced-stats-side-${side.id}`,
+                  activeColor: index === 0 ? palette.accent : palette.success,
+                }))}
+                value={selectedAdvancedSideId}
+                onChange={setSelectedSideId}
+              />
+            )}
+            <AdvancedStatsContent
+              game={analyticsGame}
+              gameId={activeAdvancedGame.id}
+              myTeamName={advancedPerspective.sideName}
+              opponentName={advancedPerspective.opposingSideName}
+              myScore={advancedPerspective.score}
+              opponentScore={advancedPerspective.opposingScore}
+              perspectiveSideId={advancedPerspective.sideId}
+              participantNames={analyticsGame.participantNames}
+            />
+          </>
         ) : (
           <StatsContent
             team1Name={team1Name}

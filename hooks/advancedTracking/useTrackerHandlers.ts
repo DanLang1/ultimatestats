@@ -1,4 +1,3 @@
-import { FOCUS_SIDE_ID, OPP_SIDE_ID } from '@/app/(main)/advancedTracking/PreGameConfirm';
 import { TrackerPlayerGridHandlers } from '@/components/advancedTracking/TrackerPlayerGrid';
 import { isPossessionOver } from '@/lib/advancedTracking/trackingUtils';
 import { PassModifier, PlayerRef, PointPossession } from '@/lib/advancedTracking/types';
@@ -8,6 +7,10 @@ interface UseTrackerHandlersInput {
   oppHasDisc: boolean;
   possession: PointPossession | null;
   discHolderRef: PlayerRef | null;
+  activeSideId: string;
+  focusSideId: string;
+  opponentSideId: string;
+  tracksBothSides: boolean;
   getPointElapsedMs: () => number;
   passModifier: PassModifier;
   setPassModifier: (m: PassModifier) => void;
@@ -38,6 +41,10 @@ export function useTrackerHandlers(input: UseTrackerHandlersInput): TrackerPlaye
     oppHasDisc,
     possession,
     discHolderRef,
+    activeSideId,
+    focusSideId,
+    opponentSideId,
+    tracksBothSides,
     getPointElapsedMs,
     passModifier,
     setPassModifier,
@@ -50,9 +57,27 @@ export function useTrackerHandlers(input: UseTrackerHandlersInput): TrackerPlaye
   const onPlayerTap = (ref: PlayerRef) => {
     if (pointIsOver) return;
 
+    if (passModifier === 'block') {
+      if (!discHolderRef) return;
+      recordThrow({ thrower: discHolderRef, result: 'block', defender: ref });
+      setPassModifier(null);
+      return;
+    }
+
     if (passModifier === 'callahan') {
+      if (tracksBothSides) {
+        if (!discHolderRef) return;
+        recordThrow({
+          thrower: discHolderRef,
+          result: 'callahan',
+          defender: ref,
+          timerElapsedMs: getPointElapsedMs(),
+        });
+        setPassModifier(null);
+        return;
+      }
       if (!possession || isPossessionOver(possession)) {
-        recordPickup({ sideId: OPP_SIDE_ID, player: { refType: 'untracked' } });
+        recordPickup({ sideId: opponentSideId, player: { refType: 'untracked' } });
       }
       recordThrow({
         thrower: { refType: 'untracked' },
@@ -65,8 +90,14 @@ export function useTrackerHandlers(input: UseTrackerHandlersInput): TrackerPlaye
     }
 
     if (passModifier === 'stall') {
+      if (tracksBothSides) {
+        if (!discHolderRef) return;
+        recordThrow({ thrower: discHolderRef, result: 'stall', defender: ref });
+        setPassModifier(null);
+        return;
+      }
       if (!possession || isPossessionOver(possession)) {
-        recordPickup({ sideId: OPP_SIDE_ID, player: { refType: 'untracked' } });
+        recordPickup({ sideId: opponentSideId, player: { refType: 'untracked' } });
       }
       recordThrow({
         thrower: { refType: 'untracked' },
@@ -78,8 +109,18 @@ export function useTrackerHandlers(input: UseTrackerHandlersInput): TrackerPlaye
     }
 
     if (passModifier === 'pressure') {
+      if (tracksBothSides) {
+        if (!discHolderRef) return;
+        recordThrow({
+          thrower: discHolderRef,
+          result: 'pressure',
+          defender: ref,
+        });
+        setPassModifier(null);
+        return;
+      }
       if (!possession || isPossessionOver(possession)) {
-        recordPickup({ sideId: OPP_SIDE_ID, player: { refType: 'untracked' } });
+        recordPickup({ sideId: opponentSideId, player: { refType: 'untracked' } });
       }
       recordThrow({
         thrower: { refType: 'untracked' },
@@ -92,7 +133,7 @@ export function useTrackerHandlers(input: UseTrackerHandlersInput): TrackerPlaye
 
     if (oppHasDisc) {
       if (!possession || isPossessionOver(possession)) {
-        recordPickup({ sideId: OPP_SIDE_ID, player: { refType: 'untracked' } });
+        recordPickup({ sideId: opponentSideId, player: { refType: 'untracked' } });
       }
       recordThrow({
         thrower: { refType: 'untracked' },
@@ -104,7 +145,7 @@ export function useTrackerHandlers(input: UseTrackerHandlersInput): TrackerPlaye
     }
 
     if (!possession || isPossessionOver(possession) || discHolderRef === null) {
-      recordPickup({ sideId: FOCUS_SIDE_ID, player: ref });
+      recordPickup({ sideId: tracksBothSides ? activeSideId : focusSideId, player: ref });
       return;
     }
 

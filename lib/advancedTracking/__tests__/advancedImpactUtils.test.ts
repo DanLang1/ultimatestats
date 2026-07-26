@@ -37,6 +37,79 @@ const baseGame: Omit<AdvancedTrackedGame, 'points'> = {
 // ── Tests ──────────────────────────────────────────────────────���──────────────
 
 describe('computeAdvancedImpact', () => {
+  it('uses the participant side for each scrimmage point', () => {
+    const game: AdvancedTrackedGame = {
+      ...baseGame,
+      gameType: 'scrimmage',
+      sides: [
+        { id: ZOO, label: 'Light', trackingMode: 'full-roster' },
+        { id: RIVALS, label: 'Dark', trackingMode: 'full-roster' },
+      ],
+      points: [
+        {
+          id: 'pt1',
+          lines: [
+            { sideId: ZOO, participantIds: ['p_august'] },
+            { sideId: RIVALS, participantIds: ['p_joah'] },
+          ],
+          possessions: [
+            {
+              id: 'pos1',
+              sideId: ZOO,
+              actions: [
+                {
+                  id: 'pull1',
+                  kind: 'pull',
+                  sideId: RIVALS,
+                  receivingSideId: ZOO,
+                  puller: { refType: 'participant', participantId: 'p_joah' },
+                  result: 'inbound',
+                },
+                { id: 'goal1', kind: 'throw', sideId: ZOO, thrower: august, result: 'goal' },
+              ],
+            },
+          ],
+        },
+        {
+          id: 'pt2',
+          lines: [
+            { sideId: ZOO, participantIds: ['p_joah'] },
+            { sideId: RIVALS, participantIds: ['p_august'] },
+          ],
+          possessions: [
+            {
+              id: 'pos2',
+              sideId: RIVALS,
+              actions: [
+                {
+                  id: 'pull2',
+                  kind: 'pull',
+                  sideId: ZOO,
+                  receivingSideId: RIVALS,
+                  puller: { refType: 'participant', participantId: 'p_joah' },
+                  result: 'inbound',
+                },
+                {
+                  id: 'goal2',
+                  kind: 'throw',
+                  sideId: RIVALS,
+                  thrower: august,
+                  result: 'goal',
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+
+    const impact = computeAdvancedImpact(buildAnalyticsGame(game), 'p_august', ZOO);
+
+    expect(impact.map((point) => point.onField)).toEqual([true, true]);
+    expect(impact.map((point) => point.state)).toEqual(['hold', 'hold']);
+    expect(impact.map((point) => point.score)).toEqual(['1-0', '1-1']);
+  });
+
   it('marks onField false when the participant is not in the point line', () => {
     // Joah is not on the line for pt1
     const game: AdvancedTrackedGame = {

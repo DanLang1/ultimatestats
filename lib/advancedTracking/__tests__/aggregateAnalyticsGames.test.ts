@@ -2,6 +2,7 @@ import { computeAdvancedPlayerStats } from '../advancedPlayerStatsUtils';
 import { computeAdvancedTeamStats } from '../advancedTeamStatsUtils';
 import { aggregateAnalyticsGames } from '../aggregateAnalyticsGames';
 import { buildAnalyticsGame } from '../buildAnalyticsGame';
+import { isAdvancedGameAggregateEligible } from '../summary';
 import type { AdvancedTrackedGame } from '../types';
 
 const ZOO = 'zoo';
@@ -128,6 +129,17 @@ function makeBreakGame(id: string): AdvancedTrackedGame {
 }
 
 describe('aggregateAnalyticsGames', () => {
+  it('rejects scrimmage games', () => {
+    const scrimmageAnalytics = buildAnalyticsGame({
+      ...makeHoldGame('scrimmage'),
+      gameType: 'scrimmage',
+    });
+
+    expect(() => aggregateAnalyticsGames([scrimmageAnalytics])).toThrow(
+      'does not support scrimmage games',
+    );
+  });
+
   it('combines advanced games so existing stat utils can compute aggregate totals', () => {
     const holdAnalytics = buildAnalyticsGame(makeHoldGame('g1'));
     const breakAnalytics = buildAnalyticsGame(makeBreakGame('g2'));
@@ -169,5 +181,12 @@ describe('aggregateAnalyticsGames', () => {
     expect(() => aggregateAnalyticsGames([zooAnalytics, rivalsAnalytics])).toThrow(
       'same focus side',
     );
+  });
+});
+
+describe('isAdvancedGameAggregateEligible', () => {
+  it('excludes scrimmages while retaining regular advanced games', () => {
+    expect(isAdvancedGameAggregateEligible({ gameType: 'scrimmage' })).toBe(false);
+    expect(isAdvancedGameAggregateEligible({ gameType: 'game' })).toBe(true);
   });
 });

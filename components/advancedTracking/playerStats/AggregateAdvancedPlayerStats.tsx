@@ -2,6 +2,7 @@ import AdvancedPlayerStatsView from '@/components/advancedTracking/playerStats/A
 import { useAdvancedGames } from '@/hooks/advancedTracking/useAdvancedGameQueries';
 import { aggregateAnalyticsGames } from '@/lib/advancedTracking/aggregateAnalyticsGames';
 import { buildAnalyticsGame } from '@/lib/advancedTracking/buildAnalyticsGame';
+import { isAdvancedGameAggregateEligible } from '@/lib/advancedTracking/summary';
 
 type AggregateAdvancedPlayerStatsProps = {
   gameIds: string[];
@@ -15,16 +16,18 @@ export default function AggregateAdvancedPlayerStats({
   selectedImpactGameId,
 }: AggregateAdvancedPlayerStatsProps) {
   const { data: aggregateGames, isLoading, isError, isComplete } = useAdvancedGames(gameIds);
+  const eligibleGames = aggregateGames.filter(isAdvancedGameAggregateEligible);
   const analyticsGame =
-    isComplete && !isError ? aggregateAnalyticsGames(aggregateGames.map(buildAnalyticsGame)) : null;
+    isComplete && !isError ? aggregateAnalyticsGames(eligibleGames.map(buildAnalyticsGame)) : null;
+  const eligibleGameIds = eligibleGames.map((game) => game.id);
 
   return (
     <AdvancedPlayerStatsView
       analyticsGame={analyticsGame}
       participantId={participantId}
       isLoading={!isComplete && isLoading}
-      aggregateGames={isComplete ? aggregateGames : []}
-      aggregateGameIds={gameIds}
+      aggregateGames={isComplete ? eligibleGames : []}
+      aggregateGameIds={eligibleGameIds}
       selectedImpactGameId={selectedImpactGameId}
     />
   );

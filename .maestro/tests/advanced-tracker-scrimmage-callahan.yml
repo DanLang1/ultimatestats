@@ -1,0 +1,31 @@
+appId: com.langdk.ultimatestats
+name: Advanced Tracker Scrimmage Callahan
+---
+- runFlow:
+    file: ../flows/setup-scrimmage.yaml
+    env:
+      TRACKER_STATE: focusPossession
+- runFlow:
+    file: ../flows/open-rare-menu.yaml
+- assertVisible:
+    id: 'rare-menu-thrown-callahan'
+- tapOn:
+    id: 'rare-menu-thrown-callahan'
+    retryTapIfNoChange: true
+
+- assertVisible:
+    text: 'Tap player who got the Callahan'
+- assertVisible:
+    id: 'tracker-chip-Anna'
+- tapOn:
+    id: 'tracker-chip-Anna'
+
+- extendedWaitUntil:
+    visible:
+      text: 'Dark CALLAHAN'
+    timeout: 5000
+- assertVisible:
+    id: 'between-point-start-next'
+
+- takeScreenshot:
+    path: .maestro/screenshots/advanced-tracker-scrimmage-callahan

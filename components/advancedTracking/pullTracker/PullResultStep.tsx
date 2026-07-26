@@ -9,6 +9,7 @@ import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hoo
 import {
   formatHangtime,
   getPullerName,
+  getPullingSideTitle,
   PULL_RESULTS,
 } from '@/lib/advancedTracking/pullTrackingUtils';
 import { Participant, PullResult } from '@/lib/advancedTracking/types';
@@ -22,6 +23,9 @@ const LABEL_FONT_SIZE: Record<SizeClass, number> = { small: 11, medium: 14, larg
 
 interface PullResultStepProps {
   isOurPull: boolean;
+  sideLabel?: string;
+  isPullerTracked?: boolean;
+  canSelectDropper?: boolean;
   activeParticipants: Participant[];
   pullerId: string | null | undefined;
   hangTimeMs: number;
@@ -32,6 +36,9 @@ interface PullResultStepProps {
 
 export const PullResultStep = ({
   isOurPull,
+  sideLabel,
+  isPullerTracked = isOurPull,
+  canSelectDropper = !isOurPull,
   activeParticipants,
   pullerId,
   hangTimeMs,
@@ -44,10 +51,10 @@ export const PullResultStep = ({
   const styles = createStyles(sizeClass);
 
   const pullerName = getPullerName(activeParticipants, pullerId);
-  const showHangtimeBanner = hangTimeMs > 0 || (isOurPull && pullerName !== null);
+  const showHangtimeBanner = hangTimeMs > 0 || (isPullerTracked && pullerName !== null);
 
   const handleResultSelect = (result: PullResult) => {
-    if (result === 'dropped' && !isOurPull) {
+    if (result === 'dropped' && canSelectDropper) {
       onDropped();
       return;
     }
@@ -57,7 +64,7 @@ export const PullResultStep = ({
   return (
     <ThemedView style={styles.container}>
       <ScreenHeader
-        title={isOurPull ? 'WE ARE PULLING' : 'THEY ARE PULLING'}
+        title={getPullingSideTitle(isOurPull, sideLabel)}
         titleColor={palette.textInverse}
         onBack={onBack}
       />
@@ -79,7 +86,7 @@ export const PullResultStep = ({
                 </ThemedText>
               </View>
             )}
-            {isOurPull && pullerName !== null && (
+            {isPullerTracked && pullerName !== null && (
               <View style={styles.hangtimeBannerItem}>
                 <ThemedText style={[styles.hangtimeBannerLabel, { color: palette.textMuted }]}>
                   PULLER

@@ -18,12 +18,18 @@ import {
   ResponsiveHeaderActions,
 } from '@/components/ui/ResponsiveHeaderActions';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
+import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import { ShareConfirmModal } from '@/components/ui/ShareConfirmModal';
 import { useTheme } from '@/context/ThemeContext';
 import { useAdvancedGame } from '@/hooks/advancedTracking/useAdvancedGameQueries';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { generateAdvancedGameCSV } from '@/lib/advancedTracking/advancedCSVUtils';
-import { buildAnalyticsGame, getFinalScores } from '@/lib/advancedTracking/buildAnalyticsGame';
+import {
+  getAnalyticsSidePerspective,
+  resolveAnalyticsSideId,
+} from '@/lib/advancedTracking/analyticsPerspectiveUtils';
+import { buildAnalyticsGame } from '@/lib/advancedTracking/buildAnalyticsGame';
+import { areBothSidesFullyTracked } from '@/lib/advancedTracking/trackingModeUtils';
 import { MIN_PLAYED_AT_YEAR } from '@/lib/constants';
 import { formatTimestampForDisplay as formatDate } from '@/lib/dateUtils';
 import { shareFileAndDelete } from '@/lib/shareFileAndDelete';
@@ -57,6 +63,7 @@ export default function AdvancedGameStatsScreen() {
   const [pendingShareAction, setPendingShareAction] = useState<(() => Promise<string>) | null>(
     null,
   );
+  const [selectedSideId, setSelectedSideId] = useState<string | null>(null);
 
   const analyticsGame = rawGame ? buildAnalyticsGame(rawGame) : null;
   let emptyStateText = 'Game not found.';
@@ -111,14 +118,11 @@ export default function AdvancedGameStatsScreen() {
     );
   }
 
-  const myTeamName = analyticsGame.sideLabels[analyticsGame.focusSideId] ?? 'My Team';
-  const opponentName =
-    analyticsGame.metadata?.opponentName ??
-    analyticsGame.sideLabels[analyticsGame.oppSideId] ??
-    'Opponent';
-  const finalScores = getFinalScores(analyticsGame);
-  const myScore = finalScores[analyticsGame.focusSideId];
-  const opponentScore = finalScores[analyticsGame.oppSideId];
+  const canSelectEitherSide = areBothSidesFullyTracked(rawGame);
+  const perspectiveSideId = canSelectEitherSide
+    ? resolveAnalyticsSideId(analyticsGame, selectedSideId)
+    : analyticsGame.focusSideId;
+  const perspective = getAnalyticsSidePerspective(analyticsGame, perspectiveSideId);
 
   const timestamp = analyticsGame.metadata?.date
     ? new Date(analyticsGame.metadata.date).getTime() || analyticsGame.createdAt
@@ -168,9 +172,9 @@ export default function AdvancedGameStatsScreen() {
 
   const handleExportCSV = async () => {
     try {
-      const csv = generateAdvancedGameCSV(analyticsGame);
-      const safeName = myTeamName.replace(/[^a-zA-Z0-9]/g, '_');
-      const safeOpp = opponentName.replace(/[^a-zA-Z0-9]/g, '_');
+      const csv = generateAdvancedGameCSV(analyticsGame, perspective.sideId);
+      const safeName = perspective.sideName.replace(/[^a-zA-Z0-9]/g, '_');
+      const safeOpp = perspective.opposingSideName.replace(/[^a-zA-Z0-9]/g, '_');
       const filename = `${safeName}_vs_${safeOpp}_advanced`;
       const file = new File(Paths.cache, `${filename}.csv`);
       file.write(csv);
@@ -414,14 +418,28 @@ export default function AdvancedGameStatsScreen() {
           </Pressable>
         )}
 
+        {canSelectEitherSide && (
+          <SegmentedControl
+            label="STATS FOR"
+            options={rawGame.sides.map((side, index) => ({
+              value: side.id,
+              label: side.label,
+              testID: `advanced-stats-side-${side.id}`,
+              activeColor: index === 0 ? palette.accent : palette.success,
+            }))}
+            value={perspective.sideId}
+            onChange={setSelectedSideId}
+          />
+        )}
+
         <AdvancedStatsContent
           game={analyticsGame}
           gameId={gameId}
-          myTeamName={myTeamName}
-          opponentName={opponentName}
-          myScore={myScore}
-          opponentScore={opponentScore}
-          focusSideId={analyticsGame.focusSideId}
+          myTeamName={perspective.sideName}
+          opponentName={perspective.opposingSideName}
+          myScore={perspective.score}
+          opponentScore={perspective.opposingScore}
+          perspectiveSideId={perspective.sideId}
           participantNames={analyticsGame.participantNames}
         />
       </ScrollView>

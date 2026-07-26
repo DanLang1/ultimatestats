@@ -15,6 +15,7 @@ import { Fonts } from '@/theme/theme';
 interface SegmentOption<T extends string = string> {
   value: T;
   label: string;
+  testID?: string;
   activeColor?: string;
   activeTextColor?: string;
   actionIcon?: keyof typeof MaterialCommunityIcons.glyphMap;
@@ -183,6 +184,7 @@ export function SegmentedControl<T extends string = string>({
                     />
                   ) : (
                     <Pressable
+                      testID={option.testID}
                       style={[styles.button, disabled && styles.buttonDisabled]}
                       onPress={() => onChange(option.value)}
                       disabled={disabled}>

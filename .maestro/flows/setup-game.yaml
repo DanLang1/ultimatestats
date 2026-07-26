@@ -1,20 +1,16 @@
 appId: com.langdk.ultimatestats
 name: Seed Advanced Tracker Game
 ---
-- stopApp:
-    optional: false
-- launchApp
-- openLink: ultimatestats:///__maestro_seed__
-
+- openLink: ultimatestats:///__maestro_seed__?trackerState=${TRACKER_STATE}
 - extendedWaitUntil:
     visible:
-      id: 'maestro-setup-ready'
+      id: 'maestro-setup-running'
+    timeout: 5000
+- extendedWaitUntil:
+    notVisible:
+      id: 'maestro-setup-running'
     timeout: 15000
-- tapOn:
-    id: 'maestro-setup-ready'
 - extendedWaitUntil:
     visible:
       id: 'tracker-menu-button'
     timeout: 15000
-- assertVisible:
-    text: 'TAP WHO STARTS WITH DISC'

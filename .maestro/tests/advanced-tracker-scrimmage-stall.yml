@@ -1,0 +1,35 @@
+appId: com.langdk.ultimatestats
+name: Advanced Tracker Scrimmage Stall
+---
+- runFlow:
+    file: ../flows/setup-scrimmage.yaml
+    env:
+      TRACKER_STATE: focusPossession
+- runFlow:
+    file: ../flows/open-rare-menu.yaml
+- assertVisible:
+    id: 'rare-menu-stall-offense'
+- tapOn:
+    id: 'rare-menu-stall-offense'
+    retryTapIfNoChange: true
+
+- assertVisible:
+    text: 'Tap player who got the stall'
+- assertVisible:
+    id: 'tracker-chip-Anna'
+- tapOn:
+    id: 'tracker-chip-Anna'
+
+- extendedWaitUntil:
+    visible:
+      text: 'STALL'
+    timeout: 5000
+- assertVisible:
+    text: 'ANNA'
+- assertVisible:
+    id: 'tracker-chip-Anna'
+- assertNotVisible:
+    id: 'tracker-chip-Joe'
+
+- takeScreenshot:
+    path: .maestro/screenshots/advanced-tracker-scrimmage-stall

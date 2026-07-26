@@ -1,0 +1,24 @@
+appId: com.langdk.ultimatestats
+name: Seed Scrimmage Tracker Game
+---
+- openLink: ultimatestats:///__maestro_seed__?gameType=scrimmage&trackerState=${TRACKER_STATE}
+- extendedWaitUntil:
+    visible:
+      id: 'maestro-setup-running'
+    timeout: 5000
+- extendedWaitUntil:
+    notVisible:
+      id: 'maestro-setup-running'
+    timeout: 15000
+- extendedWaitUntil:
+    visible:
+      id: 'tracker-menu-button'
+    timeout: 15000
+- assertVisible:
+    text: 'LIGHT'
+- assertVisible:
+    text: 'DARK'
+- assertVisible:
+    id: 'tracker-chip-Joe'
+- assertNotVisible:
+    id: 'tracker-chip-Anna'

@@ -157,7 +157,7 @@ export function computeAdvancedPlayerStats(
   // Step 1: Bucket all attributions by participantId → type → summed weight
   const byParticipant = new Map<string, Map<AttributionType, number>>();
   for (const attr of game.attributions) {
-    if (sideId != null && game.gameType === 'scrimmage') {
+    if (sideId != null) {
       const point = pointById.get(attr.pointId);
       if (point == null) continue;
       const participantSide = findSideForParticipant(point, attr.participantId);

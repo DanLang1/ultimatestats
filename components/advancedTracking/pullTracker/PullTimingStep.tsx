@@ -8,7 +8,7 @@ import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { useTheme } from '@/context/ThemeContext';
 import { useStopwatch } from '@/hooks/advancedTracking/useTimer';
 import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import { formatHangtime } from '@/lib/advancedTracking/pullTrackingUtils';
+import { formatHangtime, getPullingSideTitle } from '@/lib/advancedTracking/pullTrackingUtils';
 import { Participant } from '@/lib/advancedTracking/types';
 import { Fonts } from '@/theme/theme';
 
@@ -33,6 +33,8 @@ const SKIP_FONT_SIZE: Record<SizeClass, number> = { small: 14, medium: 16, large
 
 interface PullTimingStepProps {
   isOurPull: boolean;
+  sideLabel?: string;
+  isPullerTracked?: boolean;
   activeParticipants: Participant[];
   onNext: (pullerId: string | null | undefined, hangTimeMs: number) => void;
   onBack: () => void;
@@ -40,6 +42,8 @@ interface PullTimingStepProps {
 
 export const PullTimingStep = ({
   isOurPull,
+  sideLabel,
+  isPullerTracked = isOurPull,
   activeParticipants,
   onNext,
   onBack,
@@ -85,7 +89,7 @@ export const PullTimingStep = ({
 
   const timingContent = (
     <>
-      {isOurPull && (
+      {isPullerTracked && (
         <View style={styles.section}>
           <ThemedText style={[styles.label, { color: palette.textMuted }]}>PULLER</ThemedText>
           <View style={styles.chipGrid}>
@@ -114,7 +118,7 @@ export const PullTimingStep = ({
       )}
 
       <View style={styles.timerSection}>
-        {isOurPull && (
+        {isPullerTracked && (
           <ThemedText style={[styles.label, { color: palette.textMuted }]}>HANGTIME</ThemedText>
         )}
         <Pressable
@@ -156,7 +160,7 @@ export const PullTimingStep = ({
   return (
     <ThemedView style={styles.container}>
       <ScreenHeader
-        title={isOurPull ? 'WE ARE PULLING' : 'THEY ARE PULLING'}
+        title={getPullingSideTitle(isOurPull, sideLabel)}
         titleColor={palette.textInverse}
         onBack={onBack}
       />

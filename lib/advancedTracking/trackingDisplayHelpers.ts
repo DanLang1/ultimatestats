@@ -1,5 +1,6 @@
 import { hasItems } from '@/lib/utils';
 
+import { areBothSidesFullyTracked } from './trackingModeUtils';
 import { getOtherSideId, hasPointEnded, isPossessionOver } from './trackingUtils';
 import {
   AdvancedTrackedGame,
@@ -100,6 +101,22 @@ export function getActiveSideId(
     return game.focusSideId;
   }
   return isPossessionOver(possession) ? getOtherSideId(game, possession.sideId) : possession.sideId;
+}
+
+/**
+ * Returns the side whose live tracker controls and last-action context should be displayed.
+ * In dual-side tracking, possession changes immediately after a turnover but remains with the
+ * scoring side after a goal so the completed-point card keeps the correct perspective.
+ */
+export function getTrackerDisplaySideId(
+  game: AdvancedTrackedGame,
+  possession: PointPossession | null,
+  point: TrackedPoint | null,
+): string {
+  const activeSideId = getActiveSideId(possession, game);
+  if (!areBothSidesFullyTracked(game)) return game.focusSideId;
+  if (hasPointEnded(point)) return possession?.sideId ?? activeSideId;
+  return activeSideId;
 }
 
 /** Returns the PlayerRef of the player currently holding the disc, if it's our possession. */
@@ -434,6 +451,7 @@ export function getLastTurnoverEvent(
   possession: PointPossession | null,
   isFocusPossession: boolean,
   participants: Participant[],
+  options: { showSpecificResult?: boolean } = {},
 ): TurnoverEventInfo | null {
   if (!possession) return null;
 
@@ -458,23 +476,35 @@ export function getLastTurnoverEvent(
 
     const hasDefender = defender != null && defender.refType !== 'untracked';
 
-    const labelMap: Partial<Record<typeof result, string>> = isFocusPossession
-      ? {
-          throwaway: 'THROWAWAY',
-          drop: splitAttribution ? '50/50' : 'DROP',
-          stall: 'STALLED',
-          block: 'OPP D',
-          pressure: 'OPP PRESSURE',
-          callahan: 'CALLAHAN',
-        }
-      : {
-          throwaway: 'OPP TURN',
-          drop: 'OPP TURN',
-          stall: hasDefender ? 'STALL' : 'OPP TURN',
-          block: hasDefender ? 'BLOCK' : 'OPP TURN',
-          pressure: hasDefender ? 'PRESSURE' : 'OPP TURN',
-          callahan: 'CALLAHAN',
-        };
+    let labelMap: Partial<Record<typeof result, string>>;
+    if (isFocusPossession) {
+      labelMap = {
+        throwaway: 'THROWAWAY',
+        drop: splitAttribution ? '50/50' : 'DROP',
+        stall: 'STALLED',
+        block: 'OPP D',
+        pressure: 'OPP PRESSURE',
+        callahan: 'CALLAHAN',
+      };
+    } else if (options.showSpecificResult) {
+      labelMap = {
+        throwaway: 'THROWAWAY',
+        drop: splitAttribution ? '50/50' : 'DROP',
+        stall: hasDefender ? 'STALL' : 'STALLED',
+        block: 'BLOCK',
+        pressure: 'PRESSURE',
+        callahan: 'CALLAHAN',
+      };
+    } else {
+      labelMap = {
+        throwaway: 'OPP TURN',
+        drop: 'OPP TURN',
+        stall: hasDefender ? 'STALL' : 'OPP TURN',
+        block: hasDefender ? 'BLOCK' : 'OPP TURN',
+        pressure: hasDefender ? 'PRESSURE' : 'OPP TURN',
+        callahan: 'CALLAHAN',
+      };
+    }
 
     const label = labelMap[result];
     if (!label) return null;
@@ -485,9 +515,12 @@ export function getLastTurnoverEvent(
       responsibleName = getRefName(toPlayer, participants);
     } else if (
       (result === 'block' || result === 'stall' || result === 'pressure') &&
-      !isFocusPossession
+      !isFocusPossession &&
+      hasDefender
     ) {
       responsibleName = getRefName(defender, participants);
+    } else if (result === 'stall' && !isFocusPossession && options.showSpecificResult) {
+      responsibleName = getRefName(thrower, participants);
     } else if (result === 'block') {
       // OPP D — no name shown
       responsibleName = null;
@@ -588,6 +621,7 @@ export function getTrackerInstructionText(params: {
   const { pointIsOver, passModifier, oppHasDisc, discHolderId, isAwaitingPullPickup } = params;
 
   if (pointIsOver) return null;
+  if (passModifier === 'block') return 'TAP PLAYER WHO GOT THE BLOCK';
   if (passModifier === 'callahan') return 'TAP PLAYER FOR CALLAHAN';
   if (passModifier === 'stall') return 'TAP PLAYER WHO STALLED';
   if (passModifier === 'pressure') return 'TAP PLAYER WHO APPLIED PRESSURE';
@@ -606,7 +640,12 @@ export function getTrackerInstructionColor(
   passModifier: PassModifier,
   palette: { success: string; warning: string; textMuted: string },
 ): string {
-  if (passModifier === 'callahan' || passModifier === 'stall' || passModifier === 'pressure') {
+  if (
+    passModifier === 'callahan' ||
+    passModifier === 'stall' ||
+    passModifier === 'block' ||
+    passModifier === 'pressure'
+  ) {
     return palette.success;
   }
   if (passModifier === 'fifty-fifty') {

@@ -1,6 +1,6 @@
 import { Redirect, router, Stack, useFocusEffect } from 'expo-router';
 import React, { useState } from 'react';
-import { BackHandler, Pressable, StyleSheet, View } from 'react-native';
+import { BackHandler, LayoutChangeEvent, Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { DevDebugModal } from '@/components/advancedTracking/DevDebugModal';
@@ -32,17 +32,21 @@ import {
   getSafeDiscHolderRef,
   isPullAwaitingPickup,
 } from '@/lib/advancedTracking/trackingDisplayHelpers';
+import { areBothSidesFullyTracked } from '@/lib/advancedTracking/trackingModeUtils';
 import {
   canStartSecondHalfEarly,
   getCurrentPoint,
   getCurrentPossession,
   hasPointEnded,
   isAdvancedGameOver,
+  getOtherSideId,
 } from '@/lib/advancedTracking/trackingUtils';
 import { PassModifier } from '@/lib/advancedTracking/types';
 import { buildVoiceParticipantContexts } from '@/lib/advancedTracking/voiceContext';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { Fonts, Palette } from '@/theme/theme';
+
+const TRACKING_SURFACE_TOP_PADDING = 4;
 
 export default function AdvancedTrackerScreen() {
   const { palette } = useTheme();
@@ -67,6 +71,7 @@ export default function AdvancedTrackerScreen() {
   const [showLineChangeMenu, setShowLineChangeMenu] = useState(false);
   const [showRareMenu, setShowRareMenu] = useState(false);
   const [passModifier, setPassModifier] = useState<PassModifier>(null);
+  const [trackingSurfaceHeight, setTrackingSurfaceHeight] = useState<number | null>(null);
 
   const point = game ? getCurrentPoint(game) : null;
   const possession = game ? getCurrentPossession(game) : null;
@@ -88,9 +93,15 @@ export default function AdvancedTrackerScreen() {
   const showStartSecondHalfEarly = canStartSecondHalfEarly(game ?? undefined, lastUndoEntry);
   const showInPointControls = !activeStoppage && !activeGameClockPause && !pointIsOver;
   const activeSideId = game ? getActiveSideId(possession, game) : '';
-  const oppHasDisc = game ? !pointIsOver && activeSideId !== game.focusSideId : false;
-  const canChangeLine = !pointIsOver;
-  const discHolderRef = getSafeDiscHolderRef(possession, game?.focusSideId ?? '', point);
+  const tracksBothSides = game != null && areBothSidesFullyTracked(game);
+  const oppHasDisc = game
+    ? !tracksBothSides && !pointIsOver && activeSideId !== game.focusSideId
+    : false;
+  const canChangeLine = !pointIsOver && passModifier == null;
+  const trackedPossessionSideId = tracksBothSides
+    ? (possession?.sideId ?? game?.focusSideId ?? '')
+    : (game?.focusSideId ?? '');
+  const discHolderRef = getSafeDiscHolderRef(possession, trackedPossessionSideId, point);
   const isAwaitingPullPickup = isPullAwaitingPickup({
     possession,
     pointIsOver,
@@ -103,7 +114,20 @@ export default function AdvancedTrackerScreen() {
     activeGameClockPause === null &&
     !oppHasDisc &&
     discHolderRef != null;
-  const activeIds = game && point ? getEffectiveLineParticipantIds(point, game.focusSideId) : [];
+  const displaySideId = (() => {
+    if (!game) return '';
+    if (!tracksBothSides) return game.focusSideId;
+    if (
+      passModifier === 'block' ||
+      passModifier === 'callahan' ||
+      passModifier === 'stall' ||
+      passModifier === 'pressure'
+    ) {
+      return getOtherSideId(game, activeSideId);
+    }
+    return activeSideId;
+  })();
+  const activeIds = game && point ? getEffectiveLineParticipantIds(point, displaySideId) : [];
   const activeParticipants = participants.filter((p) => activeIds.includes(p.id));
   const activeVoiceParticipants = buildVoiceParticipantContexts(activeParticipants);
 
@@ -112,6 +136,10 @@ export default function AdvancedTrackerScreen() {
     oppHasDisc,
     possession,
     discHolderRef,
+    activeSideId,
+    focusSideId: game?.focusSideId ?? '',
+    opponentSideId: game ? getOtherSideId(game, game.focusSideId) : '',
+    tracksBothSides,
     getPointElapsedMs,
     passModifier,
     setPassModifier,
@@ -178,6 +206,14 @@ export default function AdvancedTrackerScreen() {
       params: { mode: 'earlyEnd' },
     });
   };
+  const handleTrackingSurfaceLayout = (event: LayoutChangeEvent) => {
+    const topPadding = scaleBySizeClass(TRACKING_SURFACE_TOP_PADDING, sizeClass);
+    const nextHeight = Math.max(0, Math.floor(event.nativeEvent.layout.height - topPadding));
+    setTrackingSurfaceHeight((currentHeight) => {
+      if (currentHeight === nextHeight) return currentHeight;
+      return nextHeight;
+    });
+  };
   const handleAdvancedTutorial = () => {
     router.push({
       pathname: '/TutorialAdvancedTracker',
@@ -207,6 +243,7 @@ export default function AdvancedTrackerScreen() {
         onLineChangePress={() => setShowLineChangeMenu(true)}
         onStartNextPoint={handleStartNextPoint}
         canChangeLine={canChangeLine}
+        availableHeight={trackingSurfaceHeight}
       />
     );
   };
@@ -227,7 +264,9 @@ export default function AdvancedTrackerScreen() {
           onMorePress={() => setShowRareMenu(true)}
         />
       )}
-      <View style={styles.trackingSurface}>{renderTrackingSurface()}</View>
+      <View style={styles.trackingSurface} onLayout={handleTrackingSurfaceLayout}>
+        {renderTrackingSurface()}
+      </View>
       {showInPointControls && (
         <TrackerActionFooter
           getPointElapsedMs={getPointElapsedMs}
@@ -293,7 +332,7 @@ function createStyles(palette: Palette, sizeClass: SizeClass) {
     trackingSurface: {
       flex: 1,
       justifyContent: 'flex-start',
-      paddingTop: 4,
+      paddingTop: scaleBySizeClass(TRACKING_SURFACE_TOP_PADDING, sizeClass),
     },
     devButton: {
       position: 'absolute',

@@ -930,7 +930,12 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
           }
 
           assertValidSideIds(game, [input.sideId]);
-          assertValidLines(game, [{ sideId: input.sideId, participantIds: input.participantIds }]);
+          const correctedLines = point.lines.map((line) =>
+            line.sideId === input.sideId
+              ? { sideId: input.sideId, participantIds: input.participantIds }
+              : line,
+          );
+          assertValidLines(game, correctedLines);
 
           set((state) => {
             const liveGame = getCurrentGame(state);

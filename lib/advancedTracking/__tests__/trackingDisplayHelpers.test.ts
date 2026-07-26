@@ -16,6 +16,7 @@ import {
   getSafeDiscHolderRef,
   getSideTimeoutState,
   getSubForStoppage,
+  getTrackerDisplaySideId,
   getTrackerInstructionColor,
   getTrackerInstructionText,
   isPullAwaitingPickup,
@@ -228,6 +229,54 @@ describe('getActiveSideId', () => {
       },
     ]);
     expect(getActiveSideId(pos, baseGame)).toBe(AWAY);
+  });
+});
+
+describe('getTrackerDisplaySideId', () => {
+  const dualTrackedGame: AdvancedTrackedGame = {
+    ...baseGame,
+    gameType: 'scrimmage',
+    sides: baseGame.sides.map((side) => ({ ...side, trackingMode: 'full-roster' })),
+  };
+
+  it('switches to the receiving side after a dual-tracked turnover', () => {
+    const possession = makePossession(HOME, [
+      {
+        id: 'drop1',
+        kind: 'throw',
+        sideId: HOME,
+        thrower: august,
+        toPlayer: meves,
+        result: 'drop',
+      },
+    ]);
+    const point: TrackedPoint = {
+      id: 'point1',
+      lines: [],
+      possessions: [possession],
+    };
+
+    expect(getTrackerDisplaySideId(dualTrackedGame, possession, point)).toBe(AWAY);
+  });
+
+  it('retains the scoring side after a dual-tracked goal', () => {
+    const possession = makePossession(HOME, [
+      {
+        id: 'goal1',
+        kind: 'throw',
+        sideId: HOME,
+        thrower: august,
+        toPlayer: meves,
+        result: 'goal',
+      },
+    ]);
+    const point: TrackedPoint = {
+      id: 'point1',
+      lines: [],
+      possessions: [possession],
+    };
+
+    expect(getTrackerDisplaySideId(dualTrackedGame, possession, point)).toBe(HOME);
   });
 });
 
@@ -1341,6 +1390,48 @@ describe('getLastTurnoverEvent', () => {
       isFocusTurnover: false,
       isDropWithSplitAttribution: false,
       responsibleName: 'August',
+      throwerName: null,
+    });
+  });
+
+  it('shows the specific dropper for a fully tracked opposing side', () => {
+    const connor = { refType: 'participant' as const, participantId: 'connor' };
+    const charlotte = { refType: 'participant' as const, participantId: 'charlotte' };
+    const possession = makePossession(HOME, [
+      {
+        id: 'complete1',
+        kind: 'throw',
+        sideId: HOME,
+        thrower: august,
+        toPlayer: connor,
+        result: 'complete',
+      },
+      {
+        id: 'drop1',
+        kind: 'throw',
+        sideId: HOME,
+        thrower: connor,
+        toPlayer: charlotte,
+        result: 'drop',
+      },
+    ]);
+
+    expect(
+      getLastTurnoverEvent(
+        possession,
+        false,
+        [
+          ...participants,
+          { id: connor.participantId, name: 'Connor' },
+          { id: charlotte.participantId, name: 'Charlotte' },
+        ],
+        { showSpecificResult: true },
+      ),
+    ).toEqual({
+      label: 'DROP',
+      isFocusTurnover: false,
+      isDropWithSplitAttribution: false,
+      responsibleName: 'Charlotte',
       throwerName: null,
     });
   });

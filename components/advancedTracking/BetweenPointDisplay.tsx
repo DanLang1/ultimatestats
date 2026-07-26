@@ -11,6 +11,7 @@ import {
   getActiveBetweenPointTimeout,
   getGoalInfo,
 } from '@/lib/advancedTracking/trackingDisplayHelpers';
+import { areBothSidesFullyTracked } from '@/lib/advancedTracking/trackingModeUtils';
 import { getCurrentPoint, getPointScoringSideId } from '@/lib/advancedTracking/trackingUtils';
 import type { AdvancedTrackedGame, Participant, TrackedPoint } from '@/lib/advancedTracking/types';
 import { DEFAULT_TIMEOUT_SECONDS } from '@/lib/constants';
@@ -73,9 +74,12 @@ export const BetweenPointDisplay = ({
 
   const point = getCurrentPoint(game);
   const activeTimeout = getActiveBetweenPointTimeout(game);
-  const goalInfo = getGoalInfo(point, game.focusSideId, participants);
-  const focusSide = game.sides.find((side) => side.id === game.focusSideId);
-  const opponentSide = game.sides.find((side) => side.id !== game.focusSideId);
+  const scoringSideId = point ? getPointScoringSideId(game, point) : null;
+  const summarySideId =
+    areBothSidesFullyTracked(game) && scoringSideId != null ? scoringSideId : game.focusSideId;
+  const goalInfo = getGoalInfo(point, summarySideId, participants);
+  const focusSide = game.sides.find((side) => side.id === summarySideId);
+  const opponentSide = game.sides.find((side) => side.id !== summarySideId);
   const timeoutSide = activeTimeout
     ? game.sides.find((side) => side.id === activeTimeout.transition.sideId)
     : null;
@@ -96,10 +100,9 @@ export const BetweenPointDisplay = ({
     timerColor = palette.warning;
   }
 
-  const scoringSideId = point ? getPointScoringSideId(game, point) : null;
   const receivingSideId = point?.possessions[0]?.sideId ?? null;
   const outcomeLabel = getPointOutcomeLabel({
-    focusSideId: game.focusSideId,
+    focusSideId: summarySideId,
     scoringSideId,
     receivingSideId,
     possessionSideIds: point?.possessions.map((possession) => possession.sideId) ?? [],
@@ -111,15 +114,16 @@ export const BetweenPointDisplay = ({
   });
   const pointDetails = getPointDetails(
     point?.possessions.flatMap((possession) => possession.actions) ?? [],
-    game.focusSideId,
+    summarySideId,
   );
   const hockeyAssistName = getHockeyAssistName(point, participants);
   const pointContextStats = getPointContextStats({
     game,
     pointActions: point?.possessions.flatMap((possession) => possession.actions) ?? [],
     receivingSideId,
+    focusSideId: summarySideId,
   });
-  const lastPointPlayers = getLastPointPlayers(point, game.focusSideId, participants);
+  const lastPointPlayers = getLastPointPlayers(point, summarySideId, participants);
   const handleEndTimeout = () => {
     if (activeTimeout == null) return;
     endBetweenPointTimeout(activeTimeout.transition.id);

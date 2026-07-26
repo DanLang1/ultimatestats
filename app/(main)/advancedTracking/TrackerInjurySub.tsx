@@ -5,9 +5,11 @@ import { TrackerLineScreen } from '@/components/advancedTracking/TrackerLineScre
 import { useLiveRosterParticipants } from '@/hooks/advancedTracking/useLiveRosterParticipants';
 import {
   getActiveStoppage,
+  getActiveSideId,
   getEffectiveLineParticipantIds,
   getLineParticipantIdsBeforeSub,
 } from '@/lib/advancedTracking/trackingDisplayHelpers';
+import { areBothSidesFullyTracked } from '@/lib/advancedTracking/trackingModeUtils';
 import { getCurrentPoint, getCurrentPossession } from '@/lib/advancedTracking/trackingUtils';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 
@@ -29,7 +31,13 @@ export default function TrackerInjurySubScreen() {
     return <Redirect href="/Dashboard" />;
   }
 
-  const sideId = game.focusSideId;
+  const tracksBothSides = areBothSidesFullyTracked(game);
+  const sideId = tracksBothSides ? getActiveSideId(possession, game) : game.focusSideId;
+  const otherLineParticipantIds =
+    point.lines.find((line) => line.sideId !== sideId)?.participantIds ?? [];
+  const selectableParticipants = tracksBothSides
+    ? participants.filter((participant) => !otherLineParticipantIds.includes(participant.id))
+    : participants;
   const effectiveLine = getEffectiveLineParticipantIds(point, sideId);
   const lineBeforeEditedSub =
     isEdit && existingStoppage != null
@@ -56,7 +64,7 @@ export default function TrackerInjurySubScreen() {
     <>
       <Stack.Screen options={{ headerShown: false }} />
       <TrackerLineScreen
-        participants={participants}
+        participants={selectableParticipants}
         initialSelectedIds={effectiveLine}
         title="Injury Sub"
         confirmLabel="CONFIRM SUB"

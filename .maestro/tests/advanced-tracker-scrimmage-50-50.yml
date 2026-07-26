@@ -1,0 +1,35 @@
+appId: com.langdk.ultimatestats
+name: Advanced Tracker Scrimmage 50-50 Turnover
+---
+- runFlow:
+    file: ../flows/setup-scrimmage.yaml
+    env:
+      TRACKER_STATE: focusPossession
+- runFlow:
+    file: ../flows/open-rare-menu.yaml
+- assertVisible:
+    id: 'rare-menu-50-50'
+- tapOn:
+    id: 'rare-menu-50-50'
+    retryTapIfNoChange: true
+
+- assertVisible:
+    text: 'Tap other player at fault'
+- tapOn:
+    id: 'tracker-chip-Jon'
+
+- extendedWaitUntil:
+    visible:
+      text: '50/50'
+    timeout: 5000
+- assertVisible:
+    text: 'JOE'
+- assertVisible:
+    text: 'JON'
+- assertVisible:
+    id: 'tracker-chip-Anna'
+- assertNotVisible:
+    id: 'tracker-chip-Joe'
+
+- takeScreenshot:
+    path: .maestro/screenshots/advanced-tracker-scrimmage-50-50

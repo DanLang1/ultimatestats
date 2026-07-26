@@ -51,6 +51,7 @@ export default function DashboardScreen() {
     closeNewGameSheet,
     startBasicGame,
     startAdvancedGame,
+    startScrimmage,
   } = useNewGameLauncher();
   const activeSession = useActiveGameSession();
   const { hasNewVersion } = useVersionCheck();
@@ -275,6 +276,7 @@ export default function DashboardScreen() {
         onClose={closeNewGameSheet}
         onStartBasic={startBasicGame}
         onStartAdvanced={startAdvancedGame}
+        onStartScrimmage={startScrimmage}
       />
 
       <ScreenHeader

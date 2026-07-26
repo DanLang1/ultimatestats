@@ -14,6 +14,7 @@ import {
   getActiveSideId,
   getSafeDiscHolderRef,
 } from '@/lib/advancedTracking/trackingDisplayHelpers';
+import { areBothSidesFullyTracked } from '@/lib/advancedTracking/trackingModeUtils';
 import {
   getCurrentPoint,
   getCurrentPossession,
@@ -56,8 +57,12 @@ export const TrackerRareMenu = ({
   const possession = getCurrentPossession(game);
   const pointIsOver = hasPointEnded(point);
   const activeSideId = getActiveSideId(possession, game);
-  const oppHasDisc = !pointIsOver && activeSideId !== game.focusSideId;
-  const discHolderRef = getSafeDiscHolderRef(possession, game.focusSideId, point);
+  const tracksBothSides = areBothSidesFullyTracked(game);
+  const oppHasDisc = !tracksBothSides && !pointIsOver && activeSideId !== game.focusSideId;
+  const trackedPossessionSideId = tracksBothSides
+    ? (possession?.sideId ?? game.focusSideId)
+    : game.focusSideId;
+  const discHolderRef = getSafeDiscHolderRef(possession, trackedPossessionSideId, point);
 
   const handleOppBlock = () => {
     if (!discHolderRef || pointIsOver) return;
@@ -121,13 +126,25 @@ export const TrackerRareMenu = ({
 
     if (!pointIsOver) {
       return [
+        ...(tracksBothSides
+          ? [
+              {
+                testID: 'rare-menu-pressure',
+                label: 'Pressure',
+                icon: 'shield-outline' as const,
+                tone: 'success' as const,
+                disabled: !discHolderRef,
+                onPress: closeAnd(() => setPassModifier('pressure')),
+              },
+            ]
+          : []),
         {
           testID: 'rare-menu-opp-d',
-          label: 'Opponent Block',
+          label: tracksBothSides ? 'Block' : 'Opponent Block',
           icon: 'hand-front-left-outline',
           tone: 'danger',
           disabled: !discHolderRef,
-          onPress: closeAnd(handleOppBlock),
+          onPress: closeAnd(tracksBothSides ? () => setPassModifier('block') : handleOppBlock),
         },
         {
           testID: 'rare-menu-50-50',
@@ -139,11 +156,13 @@ export const TrackerRareMenu = ({
         },
         {
           testID: 'rare-menu-thrown-callahan',
-          label: 'Opponent Callahan',
+          label: tracksBothSides ? 'Callahan' : 'Opponent Callahan',
           icon: 'shield-alert-outline',
           tone: 'danger',
           disabled: !discHolderRef,
-          onPress: closeAnd(handleThrownCallahan),
+          onPress: closeAnd(
+            tracksBothSides ? () => setPassModifier('callahan') : handleThrownCallahan,
+          ),
         },
         {
           testID: 'rare-menu-stall-offense',
@@ -151,7 +170,7 @@ export const TrackerRareMenu = ({
           icon: 'timer-alert-outline',
           tone: 'danger',
           disabled: !discHolderRef,
-          onPress: closeAnd(handleStall),
+          onPress: closeAnd(tracksBothSides ? () => setPassModifier('stall') : handleStall),
         },
       ];
     }

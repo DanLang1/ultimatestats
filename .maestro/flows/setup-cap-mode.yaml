@@ -1,0 +1,16 @@
+appId: com.langdk.ultimatestats
+name: Seed Advanced Tracker Cap Mode
+---
+- openLink: ultimatestats:///__maestro_seed__?capMode=${CAP_MODE}
+- extendedWaitUntil:
+    visible:
+      id: 'maestro-setup-running'
+    timeout: 5000
+- extendedWaitUntil:
+    notVisible:
+      id: 'maestro-setup-running'
+    timeout: 15000
+- extendedWaitUntil:
+    visible:
+      id: 'tracker-menu-button'
+    timeout: 15000

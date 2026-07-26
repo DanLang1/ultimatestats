@@ -1,7 +1,7 @@
 // Analytics Layer Types
 // See docs/future-features/advanced-stat-tracking/analytics-layer.md
 
-import type { GameFlip, GameMetadata, PullResult, ThrowResult } from './types';
+import type { GameFlip, GameMetadata, GameSide, PullResult, ThrowResult } from './types';
 
 export type PointState =
   | 'hold' // focus side received and scored
@@ -163,6 +163,8 @@ export interface AnalyticsGame {
   flip?: GameFlip;
   /** Display label for each side, keyed by sideId. */
   sideLabels: Record<string, string>;
+  /** Player identity tracking capability for each side, keyed by sideId. */
+  sideTrackingModes?: Record<string, GameSide['trackingMode']>;
   /** Display name for each participant, keyed by participantId. */
   participantNames: Map<string, string>;
   metadata?: GameMetadata;

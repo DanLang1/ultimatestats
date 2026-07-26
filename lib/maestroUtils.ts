@@ -1,8 +1,10 @@
-import type { Participant } from '@/lib/advancedTracking/types';
+import { getDefaultHalftimeTimerState } from '@/lib/advancedTracking/halftimeTimerUtils';
+import type { Participant, PlayerRef } from '@/lib/advancedTracking/types';
 import {
   getMaestroSeedPlayerId,
   MAESTRO_SEED_GAME_ID,
   MAESTRO_SEED_PLAYERS,
+  MAESTRO_SCRIMMAGE_PLAYERS,
   MAESTRO_SEED_TEAM_ID,
 } from '@/lib/maestroConstants';
 import type { SavedTeam } from '@/lib/storage/types';
@@ -13,13 +15,16 @@ import { useGameSessionStore } from '@/store/gameSessionStore';
 import { useLinePresetsStore } from '@/store/linePresetsStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useTutorialStore } from '@/store/tutorialStore';
+import { palette } from '@/theme/theme';
 
 const FOCUS_SIDE_ID = 'focus-side';
 const OPP_SIDE_ID = 'opp-side';
 const MAESTRO_SEED_TEAM_NAME = 'Zoboomafoo';
 const MAESTRO_CAP_SOFT_ACTIVE_ELAPSED_MS = 75 * 60 * 1000;
 
-export type MaestroCapMode = 'both' | 'hard' | 'soft' | 'none' | 'softActive';
+export type MaestroCapMode = 'both' | 'hard' | 'soft' | 'none' | 'softActive' | 'bothActive';
+export type MaestroSeedGameType = 'game' | 'scrimmage';
+export type MaestroTrackerState = 'awaitingPickup' | 'focusPossession' | 'opponentPossession';
 
 type PersistHydrationApi = {
   hasHydrated: () => boolean;
@@ -52,11 +57,11 @@ export async function waitForMaestroStoresToHydrate() {
   ]);
 }
 
-export function buildSeedTeam(): SavedTeam {
+export function buildSeedTeam(playerNames: string[] = MAESTRO_SEED_PLAYERS): SavedTeam {
   return {
     id: MAESTRO_SEED_TEAM_ID,
     name: MAESTRO_SEED_TEAM_NAME,
-    roster: MAESTRO_SEED_PLAYERS.map((name) => ({
+    roster: playerNames.map((name) => ({
       id: getMaestroSeedPlayerId(name),
       name,
       isActive: true,
@@ -66,60 +71,102 @@ export function buildSeedTeam(): SavedTeam {
   };
 }
 
-export async function seedTestTeam() {
-  const { saveCurrentTeam, setCurrentTeam } = useGameStore.getState();
-  const team = buildSeedTeam();
-  setCurrentTeam(team);
-  await saveCurrentTeam(team);
+function seedTestTeamWithPlayers(playerNames?: string[]) {
+  const team = buildSeedTeam(playerNames);
+  useGameStore.setState((state) => {
+    state.currentTeam = team;
+    const savedTeamIndex = state.savedTeams.findIndex((savedTeam) => savedTeam.id === team.id);
+    if (savedTeamIndex === -1) {
+      state.savedTeams.push(team);
+      return;
+    }
+
+    state.savedTeams[savedTeamIndex] = team;
+  });
 }
 
-async function clearActiveAdvancedGame() {
+export function seedTestTeam() {
+  seedTestTeamWithPlayers();
+}
+
+async function clearAdvancedGames(additionalGameIds: string[] = []) {
   const activeAdvancedGameId = useAdvancedTrackingStore.getState().currentGameId;
-  useAdvancedTrackingStore.getState().resetCurrentGame();
+  useAdvancedTrackingStore.setState((state) => {
+    state.currentGame = null;
+    state.currentGameId = null;
+    state.undoStack = [];
+    state.isHalftimeBreakActive = false;
+    Object.assign(state, getDefaultHalftimeTimerState());
+  });
+
+  const gameIdsToDelete = new Set(additionalGameIds);
   if (activeAdvancedGameId != null) {
-    await useSavedAdvancedGamesStore.getState().deleteGame(activeAdvancedGameId);
+    gameIdsToDelete.add(activeAdvancedGameId);
+  }
+
+  for (const gameId of gameIdsToDelete) {
+    await useSavedAdvancedGamesStore.getState().deleteGame(gameId);
   }
 }
 
-function resetMaestroSetupState() {
-  const settingsStore = useSettingsStore.getState();
-  settingsStore.resetMatchingTypeColors();
-  settingsStore.setGenderRatioEnabled(false);
-  settingsStore.setFirstPointRatio(null);
-  settingsStore.setLineCallingEnabled(false);
-  settingsStore.setNumPlayers(7);
-  settingsStore.setRosterViewMode('chips');
-  settingsStore.setOrientationMode('portrait');
-  settingsStore.setHardCapMins(90);
-  settingsStore.setSoftCapMins(20);
-  settingsStore.setAdvancedSoftCapAtMins(70);
-  settingsStore.setAdvancedHardCapEnabled(true);
-  settingsStore.setAdvancedSoftCapEnabled(true);
-  settingsStore.setStatEntryOrder('goal_first');
-  settingsStore.setLinePlayerSortOrder('alpha');
+function resetMaestroSetupState(team: SavedTeam) {
+  useSettingsStore.setState({
+    mmpColor: palette.mmpColor,
+    fmpColor: palette.fmpColor,
+    genderRatioEnabled: false,
+    firstPointRatio: null,
+    lineCallingEnabled: false,
+    numPlayers: 7,
+    rosterViewMode: 'chips',
+    orientationMode: 'portrait',
+    hardCapMins: 90,
+    softCapMins: 20,
+    advancedSoftCapAtMins: 70,
+    advancedHardCapEnabled: true,
+    advancedSoftCapEnabled: true,
+    statEntryOrder: 'goal_first',
+    linePlayerSortOrder: 'alpha',
+  });
 
-  const gameStore = useGameStore.getState();
-  gameStore.setTeam2Name('Team 2');
-  gameStore.setAutoHalftimeEnabled(true);
-  gameStore.setFloaterEnabled(true);
-  gameStore.setGameTo(15);
-  gameStore.resetTimeouts(2);
+  useGameStore.setState((state) => {
+    state.currentTeam = team;
+    state.team2Name = 'Team 2';
+    state.autoHalftimeEnabled = true;
+    state.floaterEnabled = true;
+    state.gameTo = 15;
+    state.baseGameTo = 15;
+    state.team1Timeouts = [true, true];
+    state.team2Timeouts = [true, true];
 
-  const linePresetsStore = useLinePresetsStore.getState();
-  linePresetsStore.clearPresetsForTeam(MAESTRO_SEED_TEAM_ID);
-  linePresetsStore.setLineConfirmedForNextPoint(false);
+    const savedTeamIndex = state.savedTeams.findIndex((savedTeam) => savedTeam.id === team.id);
+    if (savedTeamIndex === -1) {
+      state.savedTeams.push(team);
+      return;
+    }
+
+    state.savedTeams[savedTeamIndex] = team;
+  });
+
+  useLinePresetsStore.setState((state) => {
+    state.presets = state.presets.filter((preset) => preset.teamId !== MAESTRO_SEED_TEAM_ID);
+    state.lineConfirmedForNextPoint = false;
+  });
 }
 
-export async function seedMaestroTeamPrerequisites(options: { clearActiveGame?: boolean } = {}) {
-  resetMaestroSetupState();
+export async function seedMaestroTeamPrerequisites(
+  options: { clearActiveGame?: boolean; gameType?: MaestroSeedGameType } = {},
+) {
+  const team = buildSeedTeam(
+    options.gameType === 'scrimmage' ? MAESTRO_SCRIMMAGE_PLAYERS : undefined,
+  );
+  resetMaestroSetupState(team);
 
   if (options.clearActiveGame === true) {
-    await clearActiveAdvancedGame();
+    await clearAdvancedGames();
     useGameStore.getState().resetGame();
     useGameSessionStore.getState().clearActiveGame();
   }
 
-  await seedTestTeam();
   useTutorialStore.getState().completeAdvancedTutorial();
 }
 
@@ -151,13 +198,7 @@ function getSeedCapFormat(capMode: MaestroCapMode) {
   };
 }
 
-function setSeedCapTiming() {
-  const settingsStore = useSettingsStore.getState();
-  settingsStore.setHardCapMins(90);
-  settingsStore.setAdvancedSoftCapAtMins(70);
-}
-
-function backdateCurrentPointStartForSoftCapActive() {
+function backdateCurrentPointStartForActiveCap() {
   const game = useAdvancedTrackingStore.getState().currentGame;
   const firstPoint = game?.points[0];
   if (game == null || firstPoint == null) {
@@ -183,20 +224,78 @@ function backdateCurrentPointStartForSoftCapActive() {
   });
 }
 
-export async function seedAdvancedTrackerTestGame(options: { capMode?: MaestroCapMode } = {}) {
+function getSeedReceivingSideId(trackerState: MaestroTrackerState) {
+  if (trackerState === 'opponentPossession') return OPP_SIDE_ID;
+  return FOCUS_SIDE_ID;
+}
+
+function getSeedPuller(gameType: MaestroSeedGameType, receivingSideId: string): PlayerRef {
+  if (receivingSideId === OPP_SIDE_ID) {
+    return {
+      refType: 'participant',
+      participantId: getMaestroSeedPlayerId(MAESTRO_SEED_PLAYERS[0]),
+    };
+  }
+
+  if (gameType === 'scrimmage') {
+    return {
+      refType: 'participant',
+      participantId: getMaestroSeedPlayerId(MAESTRO_SCRIMMAGE_PLAYERS[7]),
+    };
+  }
+
+  return { refType: 'untracked' };
+}
+
+function seedTrackerState(trackerState: MaestroTrackerState, gameType: MaestroSeedGameType) {
+  if (trackerState === 'awaitingPickup') return;
+
+  if (trackerState === 'focusPossession') {
+    useAdvancedTrackingStore.getState().recordPickup({
+      sideId: FOCUS_SIDE_ID,
+      player: {
+        refType: 'participant',
+        participantId: getMaestroSeedPlayerId(MAESTRO_SEED_PLAYERS[0]),
+      },
+    });
+    return;
+  }
+
+  const opponentPlayer: PlayerRef =
+    gameType === 'scrimmage'
+      ? {
+          refType: 'participant',
+          participantId: getMaestroSeedPlayerId(MAESTRO_SCRIMMAGE_PLAYERS[7]),
+        }
+      : { refType: 'untracked' };
+  useAdvancedTrackingStore.getState().recordPickup({
+    sideId: OPP_SIDE_ID,
+    player: opponentPlayer,
+  });
+}
+
+export async function seedAdvancedTrackerTestGame(
+  options: {
+    capMode?: MaestroCapMode;
+    gameType?: MaestroSeedGameType;
+    trackerState?: MaestroTrackerState;
+  } = {},
+) {
   const advancedStore = useAdvancedTrackingStore.getState();
   const gameStore = useGameStore.getState();
   const sessionStore = useGameSessionStore.getState();
   const savedAdvancedGamesStore = useSavedAdvancedGamesStore.getState();
   const capMode = options.capMode ?? 'both';
+  const gameType = options.gameType ?? 'game';
+  const trackerState = options.trackerState ?? 'awaitingPickup';
+  const isScrimmage = gameType === 'scrimmage';
+  const receivingSideId = getSeedReceivingSideId(trackerState);
 
-  await clearActiveAdvancedGame();
+  await clearAdvancedGames([MAESTRO_SEED_GAME_ID]);
   gameStore.resetGame();
   sessionStore.setActiveGameType('advanced');
-  await seedMaestroTeamPrerequisites();
-  setSeedCapTiming();
-  await savedAdvancedGamesStore.deleteGame(MAESTRO_SEED_GAME_ID);
-  const team = buildSeedTeam();
+  await seedMaestroTeamPrerequisites({ gameType });
+  const team = buildSeedTeam(isScrimmage ? MAESTRO_SCRIMMAGE_PLAYERS : undefined);
 
   const participants: Participant[] = team.roster.map((player) => ({
     id: player.id,
@@ -206,21 +305,41 @@ export async function seedAdvancedTrackerTestGame(options: { capMode?: MaestroCa
     role: player.role,
   }));
 
+  const focusLineIds = participants
+    .slice(0, MAESTRO_SEED_PLAYERS.length)
+    .map((participant) => participant.id);
+  const lines = [
+    {
+      sideId: FOCUS_SIDE_ID,
+      participantIds: focusLineIds,
+    },
+  ];
+  if (isScrimmage) {
+    lines.push({
+      sideId: OPP_SIDE_ID,
+      participantIds: participants
+        .slice(MAESTRO_SEED_PLAYERS.length)
+        .map((participant) => participant.id),
+    });
+  }
+
   advancedStore.createGame({
     id: MAESTRO_SEED_GAME_ID,
+    gameType,
     focusSideId: FOCUS_SIDE_ID,
-    initialReceivingSideId: FOCUS_SIDE_ID,
+    initialReceivingSideId: receivingSideId,
     sides: [
       {
         id: FOCUS_SIDE_ID,
-        label: team.name,
+        label: isScrimmage ? 'Light' : team.name,
         sourceTeamId: team.id,
         trackingMode: 'full-roster',
       },
       {
         id: OPP_SIDE_ID,
-        label: gameStore.team2Name,
-        trackingMode: 'anonymous',
+        label: isScrimmage ? 'Dark' : gameStore.team2Name,
+        sourceTeamId: isScrimmage ? team.id : undefined,
+        trackingMode: isScrimmage ? 'full-roster' : 'anonymous',
       },
     ],
     participants,
@@ -234,18 +353,15 @@ export async function seedAdvancedTrackerTestGame(options: { capMode?: MaestroCa
   });
 
   advancedStore.recordPull({
-    lines: [
-      {
-        sideId: FOCUS_SIDE_ID,
-        participantIds: participants.map((participant) => participant.id),
-      },
-    ],
-    puller: { refType: 'untracked' },
+    lines,
+    puller: getSeedPuller(gameType, receivingSideId),
     result: 'inbound',
   });
 
-  if (capMode === 'softActive') {
-    backdateCurrentPointStartForSoftCapActive();
+  seedTrackerState(trackerState, gameType);
+
+  if (capMode === 'softActive' || capMode === 'bothActive') {
+    backdateCurrentPointStartForActiveCap();
   }
 
   const seededGame = useAdvancedTrackingStore.getState().currentGame;

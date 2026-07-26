@@ -56,8 +56,8 @@ export const TrackerVoiceButton = ({ controls, disabled }: TrackerVoiceButtonPro
         style={({ pressed }) => [
           styles.button,
           {
-            backgroundColor: isActive ? palette.accentOverlay15 : palette.overlay05,
-            borderColor: isActive ? palette.accentOverlay30 : palette.overlay10,
+            backgroundColor: accentColor,
+            borderColor: accentColor,
             opacity: disabled ? 0.5 : 1,
           },
           pressed && styles.pressed,
@@ -67,10 +67,12 @@ export const TrackerVoiceButton = ({ controls, disabled }: TrackerVoiceButtonPro
             <MaterialCommunityIcons
               name={icon}
               size={scaleBySizeClass(22, sizeClass)}
-              color={accentColor}
+              color={palette.textOnAccent}
               style={styles.icon}
             />
-            <ThemedText numberOfLines={1} style={[styles.buttonText, { color: accentColor }]}>
+            <ThemedText
+              numberOfLines={1}
+              style={[styles.buttonText, { color: palette.textOnAccent }]}>
               {label}
             </ThemedText>
           </View>

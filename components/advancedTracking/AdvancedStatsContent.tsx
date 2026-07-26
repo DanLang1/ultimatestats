@@ -21,6 +21,7 @@ import {
 } from '@/lib/advancedTracking/advancedPullStatsUtils';
 import { computeAdvancedTeamStats } from '@/lib/advancedTracking/advancedTeamStatsUtils';
 import { computeAdvancedTimeOfPossessionStats } from '@/lib/advancedTracking/advancedTimeOfPossessionUtils';
+import { getAnalyticsOpposingSideId } from '@/lib/advancedTracking/analyticsPerspectiveUtils';
 import { AnalyticsGame } from '@/lib/advancedTracking/analyticsTypes';
 import { Fonts } from '@/theme/theme';
 
@@ -40,7 +41,7 @@ interface AdvancedStatsContentProps {
   opponentName: string;
   myScore: number;
   opponentScore: number;
-  focusSideId: string;
+  perspectiveSideId: string;
   participantNames: Map<string, string>;
   aggregateInfo?: { gameCount: number };
   aggregateGameIds?: string[];
@@ -55,7 +56,7 @@ export default function AdvancedStatsContent({
   opponentName,
   myScore,
   opponentScore,
-  focusSideId,
+  perspectiveSideId,
   participantNames,
   aggregateInfo,
   aggregateGameIds,
@@ -66,14 +67,15 @@ export default function AdvancedStatsContent({
   const { isLandscape, sizeClass } = useLayout();
   const styles = createStyles(isLandscape, sizeClass);
 
-  const playerStats = computeAdvancedPlayerStats(game, focusSideId);
-  const teamStats = computeAdvancedTeamStats(game, focusSideId);
-  const pullStats = computePullStats(game, focusSideId);
+  const playerStats = computeAdvancedPlayerStats(game, perspectiveSideId);
+  const teamStats = computeAdvancedTeamStats(game, perspectiveSideId);
+  const pullStats = computePullStats(game, perspectiveSideId);
   const inboundPullCount = getInboundPullCount(pullStats);
+  const opposingSideId = getAnalyticsOpposingSideId(game, perspectiveSideId);
   // don't show TOP stats for combined games
   const topStats = aggregateInfo
     ? null
-    : computeAdvancedTimeOfPossessionStats(game, focusSideId, game.oppSideId);
+    : computeAdvancedTimeOfPossessionStats(game, perspectiveSideId, opposingSideId);
 
   const possessionFlowStats: { label: string; value: string | number; sublabel?: string }[] = [];
 

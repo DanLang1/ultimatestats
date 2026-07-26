@@ -62,9 +62,7 @@ export default function AdvancedPlayerStatsView({
   const isAggregate = aggregateGameIds.length > 0;
   const participantName = analyticsGame?.participantNames.get(participantId ?? '') ?? null;
 
-  const allPlayerStats = analyticsGame
-    ? computeAdvancedPlayerStats(analyticsGame, analyticsGame.focusSideId)
-    : [];
+  const allPlayerStats = analyticsGame ? computeAdvancedPlayerStats(analyticsGame) : [];
 
   const stats =
     analyticsGame && participantId

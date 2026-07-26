@@ -3,10 +3,10 @@ name: Advanced Tracker Turnover Scenarios
 ---
 - runFlow:
     file: ../flows/setup-game.yaml
+    env:
+      TRACKER_STATE: focusPossession
 
 # --- 50/50 Turnover ---
-- tapOn:
-    id: 'tracker-chip-Joe'
 - tapOn:
     id: 'tracker-chip-Jon'
 

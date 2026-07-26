@@ -1,0 +1,59 @@
+appId: com.langdk.ultimatestats
+name: Advanced Tracker Scrimmage View Stats
+---
+- runFlow:
+    file: ../flows/setup-scrimmage.yaml
+    env:
+      TRACKER_STATE: focusPossession
+
+# Give both sides a recorded completion before opening live stats.
+- swipe:
+    from:
+      id: 'tracker-chip-Jon'
+    direction: DOWN
+    duration: 500
+- extendedWaitUntil:
+    visible:
+      id: 'tracker-chip-Anna'
+    timeout: 5000
+- tapOn:
+    id: 'tracker-chip-Anna'
+- tapOn:
+    id: 'tracker-chip-Ben'
+
+- tapOn:
+    id: 'tracker-menu-button'
+- tapOn:
+    id: 'tracker-menu-view-stats'
+
+- extendedWaitUntil:
+    visible:
+      id: 'advanced-stats-summary-card'
+    timeout: 5000
+- assertVisible:
+    id: 'advanced-stats-team-name'
+    text: 'Light'
+- assertVisible:
+    id: 'advanced-stats-side-focus-side'
+- assertVisible:
+    id: 'advanced-stats-side-opp-side'
+
+- tapOn:
+    id: 'advanced-stats-side-opp-side'
+- assertVisible:
+    id: 'advanced-stats-team-name'
+    text: 'Dark'
+- assertVisible:
+    id: 'advanced-stats-opponent-name'
+    text: 'Light'
+
+- scrollUntilVisible:
+    element:
+      id: 'advanced-stats-row-anna'
+    direction: DOWN
+    centerElement: true
+- assertVisible:
+    id: 'advanced-stats-row-anna'
+
+- takeScreenshot:
+    path: .maestro/screenshots/advanced-tracker-scrimmage-view-stats

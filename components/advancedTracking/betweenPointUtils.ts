@@ -49,15 +49,17 @@ export function getPointContextStats({
   game,
   pointActions,
   receivingSideId,
+  focusSideId,
 }: {
   game: AdvancedTrackedGame;
   pointActions: PossessionAction[];
   receivingSideId: string | null;
+  focusSideId: string;
 }): BetweenPointMetric[] {
-  const teamStats = getLiveTeamStats(game);
-  const isOPoint = receivingSideId === game.focusSideId;
+  const teamStats = getLiveTeamStats(game, focusSideId);
+  const isOPoint = receivingSideId === focusSideId;
   const pullAction = pointActions.find(
-    (action) => action.kind === 'pull' && action.sideId === game.focusSideId,
+    (action) => action.kind === 'pull' && action.sideId === focusSideId,
   );
   const pullHangTimeMs = pullAction?.kind === 'pull' ? pullAction.hangTimeMs : undefined;
 
@@ -199,7 +201,7 @@ function getPlayerRefName(ref: PlayerRef, participants: Participant[]) {
   return null;
 }
 
-function getLiveTeamStats(game: AdvancedTrackedGame) {
+function getLiveTeamStats(game: AdvancedTrackedGame, focusSideId: string) {
   let holds = 0;
   let breaks = 0;
   let cleanHolds = 0;
@@ -213,8 +215,8 @@ function getLiveTeamStats(game: AdvancedTrackedGame) {
       continue;
     }
 
-    const focusReceived = receivingSideId === game.focusSideId;
-    const focusScored = scoringSideId === game.focusSideId;
+    const focusReceived = receivingSideId === focusSideId;
+    const focusScored = scoringSideId === focusSideId;
     if (focusReceived) {
       oPoints++;
     } else {
