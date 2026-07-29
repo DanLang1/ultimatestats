@@ -1,11 +1,8 @@
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import React from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
-import { ThemedText } from '@/components/ThemedText';
+import { TeamActionsBarButton } from '@/components/roster/TeamActionsBarButton';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import { Fonts } from '@/theme/theme';
 
 interface TeamActionsBarProps {
   onRenameTeam: () => void;
@@ -23,29 +20,6 @@ interface TeamActionsBarProps {
   showShareTeam: boolean;
   showClearRoster: boolean;
   showImportTeam: boolean;
-}
-
-interface BarButtonProps {
-  icon: keyof typeof MaterialCommunityIcons.glyphMap;
-  label: string;
-  onPress: () => void;
-  variant?: 'default' | 'danger';
-}
-
-function BarButton({ icon, label, onPress, variant = 'default' }: BarButtonProps) {
-  const { sizeClass } = useLayout();
-  const { palette } = useTheme();
-  const styles = createStyles(sizeClass);
-  const color = variant === 'danger' ? palette.danger : palette.textInverse;
-
-  return (
-    <Pressable
-      style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
-      onPress={onPress}>
-      <MaterialCommunityIcons name={icon} size={scaleBySizeClass(20, sizeClass)} color={color} />
-      <ThemedText style={[styles.label, { color }]}>{label}</ThemedText>
-    </Pressable>
-  );
 }
 
 export function TeamActionsBar({
@@ -71,23 +45,27 @@ export function TeamActionsBar({
 
   return (
     <View style={[styles.bar, { borderBottomColor: palette.overlay10 }]}>
-      <BarButton
+      <TeamActionsBarButton
         icon={viewMode === 'chips' ? 'view-list' : 'view-module'}
         label={viewMode === 'chips' ? 'Cards' : 'Chips'}
         onPress={onToggleViewMode}
       />
-      <BarButton icon="pencil-outline" label="Rename" onPress={onRenameTeam} />
-      {showNewTeam && <BarButton icon="plus" label="New Team" onPress={onNewTeam} />}
-      {showSwitchTeam && <BarButton icon="swap-horizontal" label="Switch" onPress={onSwitchTeam} />}
+      <TeamActionsBarButton icon="pencil-outline" label="Rename" onPress={onRenameTeam} />
+      {showNewTeam && <TeamActionsBarButton icon="plus" label="New Team" onPress={onNewTeam} />}
+      {showSwitchTeam && (
+        <TeamActionsBarButton icon="swap-horizontal" label="Switch" onPress={onSwitchTeam} />
+      )}
       {showImportTeam && (
-        <BarButton icon="file-import-outline" label="Import" onPress={onImportTeam} />
+        <TeamActionsBarButton icon="file-import-outline" label="Import" onPress={onImportTeam} />
       )}
       {showEditPresets && (
-        <BarButton icon="playlist-edit" label="Edit Lines" onPress={onEditPresets} />
+        <TeamActionsBarButton icon="playlist-edit" label="Edit Lines" onPress={onEditPresets} />
       )}
-      {showShareTeam && <BarButton icon="share-variant" label="Share" onPress={onShareTeam} />}
+      {showShareTeam && (
+        <TeamActionsBarButton icon="share-variant" label="Share" onPress={onShareTeam} />
+      )}
       {showClearRoster && (
-        <BarButton
+        <TeamActionsBarButton
           icon="delete-sweep-outline"
           label="Clear"
           onPress={onClearRoster}
@@ -106,21 +84,6 @@ function createStyles(sizeClass: SizeClass) {
       borderBottomWidth: 1,
       paddingVertical: scaleBySizeClass(10, sizeClass),
       paddingHorizontal: scaleBySizeClass(8, sizeClass),
-    },
-    button: {
-      flex: 1,
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: scaleBySizeClass(5, sizeClass),
-      paddingVertical: scaleBySizeClass(8, sizeClass),
-      borderRadius: scaleBySizeClass(10, sizeClass),
-    },
-    label: {
-      fontSize: scaleBySizeClass(11, sizeClass),
-      fontFamily: Fonts.semiBold,
-    },
-    buttonPressed: {
-      opacity: 0.7,
     },
   });
 }

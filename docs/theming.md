@@ -36,7 +36,8 @@ Used for buttons with semantic meaning:
 Provides theme-aware background color (`modalBg`).
 
 ```tsx
-import { ThemedView, AnimatedThemedView } from '@/components/ThemedView';
+import { AnimatedThemedView } from '@/components/AnimatedThemedView';
+import { ThemedView } from '@/components/ThemedView';
 
 // Static view
 <ThemedView style={styles.container}>...</ThemedView>

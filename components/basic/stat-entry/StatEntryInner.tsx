@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { Keyboard, Pressable, StyleSheet, TextInput, View } from 'react-native';
 import Animated, { FadeIn, LinearTransition, SlideInDown } from 'react-native-reanimated';
 
+import { AnimatedThemedView } from '@/components/AnimatedThemedView';
 import { ThemedText } from '@/components/ThemedText';
-import { AnimatedThemedView } from '@/components/ThemedView';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { getActiveRoster, getPlayerName, UNKNOWN_PLAYER_ID } from '@/lib/playerUtils';

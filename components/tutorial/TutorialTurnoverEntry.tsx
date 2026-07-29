@@ -3,8 +3,8 @@ import { StyleSheet, View } from 'react-native';
 import Animated, { FadeIn, SlideInDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { AnimatedThemedView } from '@/components/AnimatedThemedView';
 import { ThemedText } from '@/components/ThemedText';
-import { AnimatedThemedView } from '@/components/ThemedView';
 import { PlayerChip } from '@/components/ui/PlayerChip';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, useLayout } from '@/hooks/useLayout';

@@ -1,3 +1,5 @@
+/* oxlint-disable react/no-multi-comp -- RootLayoutInner must consume providers established by RootLayout. */
+
 import { QueryClientProvider } from '@tanstack/react-query';
 import { requireOptionalNativeModule } from 'expo';
 import { Stack } from 'expo-router';

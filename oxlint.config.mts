@@ -3,15 +3,6 @@ import { defineConfig } from 'oxlint';
 
 const TYPESCRIPT_FILES = ['**/*.ts', '**/*.tsx'];
 const TEST_FILES = ['**/__tests__/**/*.{js,jsx,ts,tsx}', '**/*.test.{js,jsx,ts,tsx}'];
-const LEGACY_MULTI_COMPONENT_FILES = [
-  'app/_layout.tsx',
-  'app/(main)/advancedTracking/_layout.tsx',
-  'app/(main)/Import.tsx',
-  'app/(main)/Settings.tsx',
-  'components/ThemedView.tsx',
-  'components/roster/TeamActionsBar.tsx',
-  'components/ui/ShareConfirmModal.tsx',
-];
 const TOOLING_FILES = [
   'scripts/**/*.{js,jsx,ts,tsx}',
   'plugins/**/*.{js,jsx,ts,tsx}',
@@ -228,12 +219,6 @@ export default defineConfig({
             }),
           },
         ],
-      },
-    },
-    {
-      files: LEGACY_MULTI_COMPONENT_FILES,
-      rules: {
-        'react/no-multi-comp': 'off',
       },
     },
     {
