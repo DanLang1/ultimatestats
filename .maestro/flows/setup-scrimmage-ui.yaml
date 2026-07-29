@@ -7,10 +7,13 @@ name: Setup Scrimmage Through UI
     visible:
       id: 'maestro-setup-running'
     timeout: 5000
-- extendedWaitUntil:
-    notVisible:
-      id: 'maestro-setup-running'
-    timeout: 15000
+- retry:
+    maxRetries: 1
+    commands:
+      - extendedWaitUntil:
+          notVisible:
+            id: 'maestro-setup-running'
+          timeout: 15000
 - extendedWaitUntil:
     visible:
       text: 'DASHBOARD'

@@ -1,60 +1,27 @@
 # AGENTS.md
 
-## Orientation
+## Start Here
 
-See `docs/README.md` for directory structure, key concepts, and the New Screen Checklist.
+Read `docs/README.md` for the project map and New Screen Checklist. Follow its linked domain docs before changing unfamiliar behavior. If the intended behavior remains ambiguous, ask instead of guessing.
 
-## Base Guideline
+## Engineering
 
-- When in doubt, surface question to user, avoid making assumptions about code or behavior
+- Prefer derived state over `useEffect`; extract substantial effects into custom hooks.
+- Use semantic palette tokens instead of `themeMode` styling branches. Add theme-specific values to `theme/theme.ts`.
+- Put app-wide limits in `lib/constants.ts`.
+- Follow `docs/ui-patterns.md`, `docs/navigation-map.md`, and `docs/responsive-layout.md` for screens, modals, navigation, safe areas, and orientation.
+- Use `<Redirect href="..." />` for render-time navigation; never invoke router actions during render.
 
-## Engineering Rules (Project-Specific)
+## State and Persistence
 
-- Prefer derived state over `useEffect`.
-- If `useEffect` is necessary, prefer extracting behavior into a custom hook.
-- Do not use `useCallback` or `useMemo` (React Compiler workflow).
-- Prefer semantic palette tokens over `themeMode` branching for styling. If light/dark values differ, add or reuse a palette token instead of checking `themeMode` in components.
-- No raw colors — everything abstracted into `theme/theme.ts`.
-- Do not use nested ternaries; prefer explicit conditionals or helper functions when branching logic affects readability.
-- No magic numbers for app-wide limits; define constants in `lib/constants.ts`.
-- No sub-components in the same file; one component per file.
-- Use early returns where practical.
-- Prefer a function with early returns over `let` + conditional reassignment for derived values.
-- Prefer direct, explicit types over indexed-access types (for example, use `PointLineRecord[]` instead of `GameState['pointLines']`) unless the coupling is intentionally required.
-- Prefer `hasItems(...)` from `lib/utils.ts` for array presence checks instead of `!!arr?.length`.
-- Use `AlertProvider`; do not use native `Alert.alert`.
-- Do not use `runOnJs`; use `scheduleOnRn`.
-- Avoid unnecessary or noisy fallbacks. Sometimes throwing an error or returning early is better than silently passing 'invalid' or odd fallbacks through the code.
+- Await persistence before dismissing, navigating, resetting, or otherwise invalidating the state being saved.
+- Persist new Zustand stores with `persist` and `createJSONStorage(() => AsyncStorage)`; use `onRehydrateStorage` for record migrations when needed.
+- Store persisted records in one collection with a current-record ID pointer. Do not persist parallel `currentX` and `savedXs` copies that require explicit synchronization.
+- Add a schema version to persisted domain records that may need migration.
+- Use Immer for nested object or array updates; simple immutable Zustand partial updates do not require it.
 
-## Navigation/Modal Rules
+## Verify
 
-- Use `<Redirect href="..." />` for render-time conditional navigation; never call `router.navigate()` or `router.dismissTo()` during render (causes "cannot update a component while rendering" error).
-- Prefer `router.dismissTo('/')` over `router.back()` for modal exits (avoids "action not handled" errors).
-- Keep a single root `SafeAreaProvider`; avoid extra per-screen `SafeAreaView`.
-- Screen headers: keep `paddingTop: 8` so controls don't sit flush to the top edge in landscape.
-- Every navigator shell must set an explicit themed background on its scene container (`contentStyle` for stacks, `sceneStyle` for tabs/drawers) to avoid white flashes during transitions, especially in dark mode.
-- For modal dismissal patterns, see `docs/ui-patterns.md` and `docs/navigation-map.md`.
-- App supports both portrait and landscape via `useLayout()` + `createStyles()` (see `docs/responsive-layout.md`).
-- Do not use `useWindowDimensions` directly in screens/components; use `useLayout()` instead.
-- Do not use orientation-based conditional style arrays (`!isLandscape && ...`); encode orientation in `createStyles()`.
-
-## State & Data Integrity Rules
-
-- For new persisted structures, consider `schemaVersion`.
-- Use Immer for object state updates (already configured in store).
-- Await async persistence actions (e.g. `saveCurrentTeam()`, `saveCurrentGame()`) in UI handlers before dismissing modals, navigating, or resetting state — skipping this causes stale-write races.
-- New Zustand stores that need persistence must use the `persist` middleware with `createJSONStorage(() => AsyncStorage)` — this rehydrates automatically on startup and eliminates manual `loadX()` actions and `useEffect`/`useFocusEffect` fetch calls in screens. See `tournamentStore.ts` for the pattern. If per-record migrations are needed on rehydration, use `onRehydrateStorage` (see `gameStore.ts`).
-- Do not create separate `currentX` + `savedXs` state where both would be persisted and kept in sync via explicit `saveCurrentX()` calls — this is redundant with automatic persistence and creates two sources of truth. Instead, store all records in one persisted collection and use a `currentXId` pointer to identify the active record (see `advancedTrackingStore.ts`).
-
-## Game Logic Rules
-
-- Game-over detection lives in `lib/gameUtils.ts` — use `checkGameOver()` instead of duplicating logic. When changing game end logic, also update `lib/__tests__/gameUtils.test.ts`.
-- Halftime possession: the team that started with the disc (`startingPossession`) pulls at halftime.
-- Always consider soft cap and hard cap scenarios when modifying game scoring.
-
-## Useful Commands
-
-- Quick verify (format + lint + typecheck): `npm run check`
-- Full verify (format + lint + typecheck + tests): `npm run check:all`
-- Tests: `npm test`
-- Single test target: `npm test -- gameUtils`
+- Quick: `npm run check`
+- Full: `npm run check:all`
+- One test target: `npm test -- gameUtils`

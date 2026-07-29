@@ -3,6 +3,15 @@ import { defineConfig } from 'oxlint';
 
 const TYPESCRIPT_FILES = ['**/*.ts', '**/*.tsx'];
 const TEST_FILES = ['**/__tests__/**/*.{js,jsx,ts,tsx}', '**/*.test.{js,jsx,ts,tsx}'];
+const LEGACY_MULTI_COMPONENT_FILES = [
+  'app/_layout.tsx',
+  'app/(main)/advancedTracking/_layout.tsx',
+  'app/(main)/Import.tsx',
+  'app/(main)/Settings.tsx',
+  'components/ThemedView.tsx',
+  'components/roster/TeamActionsBar.tsx',
+  'components/ui/ShareConfirmModal.tsx',
+];
 const TOOLING_FILES = [
   'scripts/**/*.{js,jsx,ts,tsx}',
   'plugins/**/*.{js,jsx,ts,tsx}',
@@ -10,6 +19,30 @@ const TOOLING_FILES = [
   ...TEST_FILES,
   '*.config.{js,cjs,mjs,ts,cts,mts}',
   '**/*.config.{js,cjs,mjs,ts,cts,mts}',
+];
+
+const RESTRICTED_IMPORTS = [
+  {
+    name: 'react-native',
+    importNames: ['Alert', 'useWindowDimensions'],
+    message:
+      'Use AlertProvider for alerts and useLayout() for dimensions instead of importing this API directly.',
+  },
+  {
+    name: 'react-native-reanimated',
+    importNames: ['runOnJS'],
+    message: 'Use scheduleOnRN from react-native-worklets instead of runOnJS.',
+  },
+  {
+    name: 'react-native-safe-area-context',
+    importNames: ['SafeAreaProvider'],
+    message: 'Keep the single SafeAreaProvider in app/_layout.tsx.',
+  },
+  {
+    name: 'react-native-worklets',
+    importNames: ['runOnJS'],
+    message: 'Use scheduleOnRN instead of runOnJS.',
+  },
 ];
 
 export default defineConfig({
@@ -61,6 +94,8 @@ export default defineConfig({
     ],
     'no-await-in-loop': 'off',
     'no-extend-native': 'error',
+    'no-restricted-imports': ['error', { paths: RESTRICTED_IMPORTS }],
+    'no-useless-assignment': 'error',
     'no-unused-expressions': [
       'error',
       {
@@ -72,10 +107,12 @@ export default defineConfig({
       'error',
       {
         vars: 'all',
-        args: 'none',
+        args: 'all',
+        argsIgnorePattern: '^_',
         ignoreRestSiblings: true,
         caughtErrors: 'all',
         caughtErrorsIgnorePattern: '^_',
+        reportUsedIgnorePattern: true,
       },
     ],
     'no-var': 'error',
@@ -83,6 +120,7 @@ export default defineConfig({
     'react/exhaustive-deps': 'error',
     'react/jsx-no-constructed-context-values': 'off',
     'react/no-array-index-key': 'off',
+    'react/no-multi-comp': 'error',
     'react/no-unstable-nested-components': ['error', { allowAsProps: true }],
     'react/no-unknown-property': 'error',
     'react/react-compiler': 'error',
@@ -133,6 +171,7 @@ export default defineConfig({
         'typescript/no-empty-object-type': 'error',
         'typescript/no-explicit-any': 'error',
         'typescript/no-extra-non-null-assertion': 'error',
+        'typescript/no-floating-promises': 'error',
         'typescript/no-misused-new': 'error',
         'typescript/no-namespace': 'error',
         'typescript/no-non-null-asserted-optional-chain': 'error',
@@ -162,6 +201,39 @@ export default defineConfig({
         'local/no-restricted-hooks': 'error',
         'local/no-sizeclass-prop': 'error',
         'local/no-unscaled-sizes': 'error',
+      },
+    },
+    {
+      files: ['app/_layout.tsx'],
+      rules: {
+        'no-restricted-imports': [
+          'error',
+          {
+            paths: RESTRICTED_IMPORTS.filter(
+              ({ name }) => name !== 'react-native-safe-area-context',
+            ),
+          },
+        ],
+      },
+    },
+    {
+      files: ['hooks/useLayout.ts'],
+      rules: {
+        'no-restricted-imports': [
+          'error',
+          {
+            paths: RESTRICTED_IMPORTS.map((restriction) => {
+              if (restriction.name !== 'react-native') return restriction;
+              return { ...restriction, importNames: ['Alert'] };
+            }),
+          },
+        ],
+      },
+    },
+    {
+      files: LEGACY_MULTI_COMPONENT_FILES,
+      rules: {
+        'react/no-multi-comp': 'off',
       },
     },
     {

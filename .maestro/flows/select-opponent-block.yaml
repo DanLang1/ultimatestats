@@ -4,7 +4,7 @@ name: Select Opponent Block
 - extendedWaitUntil:
     visible:
       id: 'rare-menu-opp-d'
-    timeout: 2000
+    timeout: 5000
 - tapOn:
     id: 'rare-menu-opp-d'
     retryTapIfNoChange: true

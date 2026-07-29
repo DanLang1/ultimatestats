@@ -27,7 +27,7 @@ Reusable UI conventions for screens and modals.
   ```
 - Prefer `components/ui/ResponsiveHeaderActions.tsx` for composed right-slot actions so screens reuse one inline-vs-overflow implementation.
 - Use explicit back/dismiss action and avoid render-time imperative navigation.
-- Reference: `AGENTS.md`.
+- Reference: [navigation-map.md](navigation-map.md).
 
 Example:
 

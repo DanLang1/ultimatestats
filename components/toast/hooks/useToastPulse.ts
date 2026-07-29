@@ -58,9 +58,9 @@ export function useToastPulse(
 
     const perimeter = 2 * (toastWidth + toastHeight);
     const distance = borderRunnerProgress.get() * perimeter;
-    let x = 0;
-    let y = 0;
-    let rotation = 0;
+    let x: number;
+    let y: number;
+    let rotation: number;
 
     if (distance <= toastWidth) {
       x = distance;
@@ -98,9 +98,9 @@ export function useToastPulse(
 
     const perimeter = 2 * (toastWidth + toastHeight);
     const distance = (borderRunnerProgress.get() * perimeter + perimeter / 2) % perimeter;
-    let x = 0;
-    let y = 0;
-    let rotation = 0;
+    let x: number;
+    let y: number;
+    let rotation: number;
 
     if (distance <= toastWidth) {
       x = distance;

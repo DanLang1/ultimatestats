@@ -1,7 +1,17 @@
 appId: com.langdk.ultimatestats
-name: Seed Advanced Tracker Game
+name: Seed Advanced Tracker Game From Clean Process
 ---
+- stopApp
 - openLink: ultimatestats:///__maestro_seed__?trackerState=${TRACKER_STATE}
+- runFlow:
+    when:
+      visible: 'U-Stat (Dev)'
+    commands:
+      - tapOn: 'U-Stat (Dev)'
+      - extendedWaitUntil:
+          notVisible: 'DEVELOPMENT SERVERS'
+          timeout: 15000
+      - openLink: ultimatestats:///__maestro_seed__?trackerState=${TRACKER_STATE}
 - extendedWaitUntil:
     visible:
       id: 'maestro-setup-running'

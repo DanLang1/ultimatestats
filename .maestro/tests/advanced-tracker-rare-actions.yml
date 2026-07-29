@@ -2,7 +2,7 @@ appId: com.langdk.ultimatestats
 name: Advanced Tracker Rare Actions
 ---
 - runFlow:
-    file: ../flows/setup-game.yaml
+    file: ../flows/setup-game-clean.yaml
     env:
       TRACKER_STATE: focusPossession
 
@@ -34,6 +34,7 @@ name: Advanced Tracker Rare Actions
 # --- Callahan ---
 - tapOn:
     id: 'tracker-chip-Joe'
+    retryTapIfNoChange: true
 
 # Give disc to opponent via Opp D
 - runFlow:

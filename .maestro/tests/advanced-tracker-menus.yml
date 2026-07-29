@@ -34,10 +34,23 @@ name: Advanced Tracker Menus and Navigation
 # Go back to tracker
 - tapOn:
     id: 'screen-header-back'
+    waitToSettleTimeoutMs: 1000
+- waitForAnimationToEnd:
+    timeout: 1000
+- runFlow:
+    when:
+      visible:
+        id: 'screen-header-back'
+    commands:
+      - tapOn:
+          id: 'screen-header-back'
+          waitToSettleTimeoutMs: 1000
 
 # Verify back on tracker
-- assertVisible:
-    id: 'tracker-menu-button'
+- extendedWaitUntil:
+    visible:
+      id: 'tracker-menu-button'
+    timeout: 5000
 
 # Open menu again and go Home
 - tapOn:

@@ -78,7 +78,7 @@ Tracks which team has the disc, enabling turnover detection when user taps the n
 
 | Topic          | Documentation                                                                                                    |
 | -------------- | ---------------------------------------------------------------------------------------------------------------- |
-| Agent Guide    | [GEMINI.md](../GEMINI.md) / [AGENTS.md](../AGENTS.md)                                                            |
+| Agent Guide    | [AGENTS.md](../AGENTS.md)                                                                                        |
 | Responsive     | [responsive-layout.md](responsive-layout.md)                                                                     |
 | Builds         | [Development](build/development-build.md) / [Production](build/production-build.md) / [OTA](build/eas-update.md) |
 | Completed Docs | [completed/responsive-scaling-tracker.md](completed/responsive-scaling-tracker.md)                               |

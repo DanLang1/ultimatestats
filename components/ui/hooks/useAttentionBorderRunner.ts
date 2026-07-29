@@ -17,9 +17,9 @@ function getRunnerPosition(distance: number, width: number, height: number) {
 
   const perimeter = 2 * (width + height);
   const d = distance % perimeter;
-  let x = 0;
-  let y = 0;
-  let rotation = 0;
+  let x: number;
+  let y: number;
+  let rotation: number;
 
   if (d <= width) {
     x = d;

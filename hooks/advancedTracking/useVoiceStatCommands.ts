@@ -539,7 +539,7 @@ function getParseFailureReasonCode(
   return parseResult.result.reasonCode;
 }
 
-function logVoiceDebug(event: string, data?: Record<string, unknown>) {
+function logVoiceDebug(_event: string, _data?: Record<string, unknown>) {
   if (!__DEV__) return;
   // console.log('[voice]', event, data ?? '');
 }

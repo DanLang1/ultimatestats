@@ -268,9 +268,7 @@ function renderGroup(
           const rawPct = isFlat ? 0.5 : clamp01((metric.raw - metric.teamMin) / range);
           const avgPct = isFlat ? 0.5 : clamp01((metric.teamAvg - metric.teamMin) / range);
 
-          let barContent = null;
-
-          barContent = (
+          const barContent = (
             <>
               <View
                 style={[

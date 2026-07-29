@@ -2,7 +2,7 @@ appId: com.langdk.ultimatestats
 name: Advanced Tracker Turnover Scenarios
 ---
 - runFlow:
-    file: ../flows/setup-game.yaml
+    file: ../flows/setup-game-clean.yaml
     env:
       TRACKER_STATE: focusPossession
 

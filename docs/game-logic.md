@@ -56,7 +56,8 @@ if (result.isGameOver) {
 
 ### At Halftime
 
-- Possession returns to `startingPossession` (they receive)
+- Possession flips to the non-starting team (they receive)
+- The team represented by `startingPossession` pulls
 - The team that pulled first now receives at half
 - The actual halftime goal is persisted on the goal event (`triggeredHalftime`)
 - Legacy saved games are migrated by inferring that goal from `gameTo` once, then replay uses the stamped event rather than recalculating halftime every time
