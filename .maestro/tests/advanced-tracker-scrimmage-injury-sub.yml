@@ -1,0 +1,36 @@
+appId: com.langdk.ultimatestats
+name: Scrimmage Injury Sub Progression
+---
+- runFlow:
+    file: ../flows/setup-scrimmage.yaml
+    env:
+      TRACKER_STATE: focusPossession
+
+- tapOn:
+    id: 'tracker-line-action-tile'
+- waitForAnimationToEnd:
+    timeout: 500
+- tapOn:
+    id: 'line-change-injury-sub'
+
+- assertVisible:
+    text: 'Injury Sub · Light'
+
+# Skipping the unchanged active side advances directly to the other side.
+- tapOn:
+    id: 'line-select-confirm'
+- assertVisible:
+    text: 'Injury Sub · Dark'
+
+# Back preserves the progressive order before exiting to the tracker.
+- tapOn:
+    id: 'line-select-back'
+- assertVisible:
+    text: 'Injury Sub · Light'
+- tapOn:
+    id: 'line-select-back'
+- assertVisible:
+    id: 'tracker-menu-button'
+
+- takeScreenshot:
+    path: .maestro/screenshots/advanced-tracker-scrimmage-injury-sub

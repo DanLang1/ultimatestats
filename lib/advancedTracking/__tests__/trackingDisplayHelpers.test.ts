@@ -15,7 +15,7 @@ import {
   getPointAdjustedTimestamp,
   getSafeDiscHolderRef,
   getSideTimeoutState,
-  getSubForStoppage,
+  getSubsForStoppage,
   getTrackerDisplaySideId,
   getTrackerInstructionColor,
   getTrackerInstructionText,
@@ -795,7 +795,7 @@ describe('getEffectiveLineParticipantIds', () => {
   });
 });
 
-describe('getSubForStoppage', () => {
+describe('getSubsForStoppage', () => {
   const sub: PointSub = {
     id: 's1',
     sideId: HOME,
@@ -806,16 +806,23 @@ describe('getSubForStoppage', () => {
   };
   const point: TrackedPoint = { id: 'pt1', lines: [], subs: [sub], possessions: [] };
 
-  it('returns matching sub', () => {
-    expect(getSubForStoppage(point, 'stop1')).toBe(sub);
+  it('returns every side substitution linked to the stoppage', () => {
+    const awaySub: PointSub = {
+      ...sub,
+      id: 's2',
+      sideId: AWAY,
+    };
+    const pointWithBothSubs: TrackedPoint = {
+      ...point,
+      subs: [sub, awaySub],
+    };
+
+    expect(getSubsForStoppage(pointWithBothSubs, 'stop1')).toEqual([sub, awaySub]);
   });
 
-  it('returns null when no match', () => {
-    expect(getSubForStoppage(point, 'stop2')).toBeNull();
-  });
-
-  it('returns null for null point', () => {
-    expect(getSubForStoppage(null, 'stop1')).toBeNull();
+  it('returns an empty array when no substitution matches', () => {
+    expect(getSubsForStoppage(point, 'stop2')).toEqual([]);
+    expect(getSubsForStoppage(null, 'stop1')).toEqual([]);
   });
 });
 

@@ -1,7 +1,12 @@
 import { hasItems } from '@/lib/utils';
 
 import { areBothSidesFullyTracked } from './trackingModeUtils';
-import { getOtherSideId, hasPointEnded, isPossessionOver } from './trackingUtils';
+import {
+  getEffectiveLineParticipantIds as deriveEffectiveLineParticipantIds,
+  getOtherSideId,
+  hasPointEnded,
+  isPossessionOver,
+} from './trackingUtils';
 import {
   AdvancedTrackedGame,
   BetweenPointTransition,
@@ -167,9 +172,11 @@ function getPostInjuryPickupState(
     return { shouldPromptForPickup: true, pickupIndex: -1 };
   }
 
-  const sub = getSubForStoppage(point ?? null, injuryAction.id);
+  const subs = getSubsForStoppage(point ?? null, injuryAction.id);
   return {
-    shouldPromptForPickup: sub?.outIds.includes(holderBeforeInjury.participantId) ?? false,
+    shouldPromptForPickup: subs.some((sub) =>
+      sub.outIds.includes(holderBeforeInjury.participantId),
+    ),
     pickupIndex: -1,
   };
 }
@@ -546,22 +553,7 @@ export function getLastTurnoverEvent(
  * Calculates the current 'active' line for a side by applying all subs in sequence.
  */
 export function getEffectiveLineParticipantIds(point: TrackedPoint, sideId: string): string[] {
-  const baseLine = point.lines.find((l) => l.sideId === sideId)?.participantIds ?? [];
-  const sideSubs = point.subs?.filter((s) => s.sideId === sideId) ?? [];
-
-  if (sideSubs.length === 0) return baseLine;
-
-  const currentLine = new Set(baseLine);
-  for (const sub of sideSubs) {
-    for (const outId of sub.outIds) {
-      currentLine.delete(outId);
-    }
-    for (const inId of sub.inIds) {
-      currentLine.add(inId);
-    }
-  }
-
-  return Array.from(currentLine);
+  return deriveEffectiveLineParticipantIds(point, sideId);
 }
 
 /**
@@ -592,11 +584,11 @@ export function getLineParticipantIdsBeforeSub(
 }
 
 /**
- * Returns the PointSub associated with a specific stoppage action ID, if any.
+ * Returns every PointSub associated with a specific stoppage action ID.
  */
-export function getSubForStoppage(point: TrackedPoint | null, actionId: string): PointSub | null {
-  if (!point?.subs) return null;
-  return point.subs.find((s) => s.stoppageActionId === actionId) ?? null;
+export function getSubsForStoppage(point: TrackedPoint | null, actionId: string): PointSub[] {
+  if (!point?.subs) return [];
+  return point.subs.filter((sub) => sub.stoppageActionId === actionId);
 }
 
 /**

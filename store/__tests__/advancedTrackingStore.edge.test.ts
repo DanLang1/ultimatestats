@@ -280,21 +280,20 @@ describe('advancedTrackingStore — edge cases', () => {
     it('canceling an active stoppage also removes linked subs', () => {
       createGame();
       useAdvancedTrackingStore.getState().recordPull({
-        lines: [
-          { sideId: homeSideId, participantIds: [august.participantId, meves.participantId] },
-        ],
+        lines: [{ sideId: homeSideId, participantIds: [august.participantId] }],
         puller: untracked,
         receiver: august,
         result: 'inbound',
       });
-      const stoppageId = useAdvancedTrackingStore.getState().recordStoppage({
-        reason: 'injury',
-      });
-      useAdvancedTrackingStore.getState().recordSub({
-        stoppageActionId: stoppageId,
+      const stoppageId = useAdvancedTrackingStore.getState().recordInjurySubs({
         sideId: homeSideId,
-        inIds: [meves.participantId],
-        outIds: [august.participantId],
+        changes: [
+          {
+            sideId: homeSideId,
+            inIds: [meves.participantId],
+            outIds: [august.participantId],
+          },
+        ],
       });
 
       let game = getCurrentGame()!;

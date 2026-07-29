@@ -12,6 +12,7 @@ import {
   PlayerRef,
   PointLine,
   PointPossession,
+  PointSub,
   PullAction,
   ThrowResult,
   TrackedPoint,
@@ -476,6 +477,10 @@ export function assertValidLines(game: AdvancedTrackedGame, lines: PointLine[]) 
         );
       }
     }
+
+    if (new Set(line.participantIds).size !== line.participantIds.length) {
+      throw new Error(`A participant cannot appear more than once on side "${line.sideId}".`);
+    }
   }
 
   if (!areBothSidesFullyTracked(game)) return;
@@ -495,6 +500,162 @@ export function assertValidLines(game: AdvancedTrackedGame, lines: PointLine[]) 
   const selectedParticipantIds = lines.flatMap((line) => line.participantIds);
   if (new Set(selectedParticipantIds).size !== selectedParticipantIds.length) {
     throw new Error('A participant cannot play for both sides in the same point.');
+  }
+}
+
+function applySubToLine(currentLine: Set<string>, sub: PointSub) {
+  for (const participantId of sub.outIds) {
+    currentLine.delete(participantId);
+  }
+  for (const participantId of sub.inIds) {
+    currentLine.add(participantId);
+  }
+}
+
+export function haveSameParticipantIds(firstIds: string[], secondIds: string[]): boolean {
+  if (firstIds.length !== secondIds.length) return false;
+  const firstIdSet = new Set(firstIds);
+  return secondIds.every((participantId) => firstIdSet.has(participantId));
+}
+
+export function hasInjurySubChanges(change: Pick<PointSub, 'inIds' | 'outIds'>): boolean {
+  return change.inIds.length > 0 || change.outIds.length > 0;
+}
+
+export function getEffectiveLineParticipantIds(point: TrackedPoint, sideId: string): string[] {
+  const currentLine = new Set(
+    point.lines.find((line) => line.sideId === sideId)?.participantIds ?? [],
+  );
+  for (const sub of point.subs ?? []) {
+    if (sub.sideId === sideId) {
+      applySubToLine(currentLine, sub);
+    }
+  }
+  return [...currentLine];
+}
+
+export function getParticipantIdsUsedBySide(point: TrackedPoint, sideId: string): string[] {
+  const participantIds = new Set(
+    point.lines.find((line) => line.sideId === sideId)?.participantIds ?? [],
+  );
+  for (const sub of point.subs ?? []) {
+    if (sub.sideId !== sideId) continue;
+    for (const participantId of [...sub.inIds, ...sub.outIds]) {
+      participantIds.add(participantId);
+    }
+  }
+  return [...participantIds];
+}
+
+function assertUniqueSubParticipants(sub: PointSub) {
+  if (new Set(sub.inIds).size !== sub.inIds.length) {
+    throw new Error(`Injury sub for side "${sub.sideId}" contains duplicate incoming players.`);
+  }
+  if (new Set(sub.outIds).size !== sub.outIds.length) {
+    throw new Error(`Injury sub for side "${sub.sideId}" contains duplicate outgoing players.`);
+  }
+  if (sub.inIds.some((participantId) => sub.outIds.includes(participantId))) {
+    throw new Error('The same participant cannot be both incoming and outgoing in one sub.');
+  }
+}
+
+function assertFullyTrackedEffectiveLines(
+  game: AdvancedTrackedGame,
+  effectiveLines: Map<string, Set<string>>,
+) {
+  if (!areBothSidesFullyTracked(game)) return;
+
+  const allParticipantIds: string[] = [];
+  for (const side of game.sides) {
+    const line = effectiveLines.get(side.id);
+    // Product constraint: dual-side tracking does not currently support playing short-handed.
+    if (line == null || line.size !== 7) {
+      throw new Error('Fully tracked sides require seven active participants on each side.');
+    }
+    allParticipantIds.push(...line);
+  }
+  if (new Set(allParticipantIds).size !== allParticipantIds.length) {
+    throw new Error('A participant cannot be active for both sides during the same point.');
+  }
+}
+
+/**
+ * Validates starting lines plus every mid-point substitution in timeline order.
+ * Participants may return to the same side, but cannot change sides after a point starts.
+ */
+export function assertValidPointLineHistory(game: AdvancedTrackedGame, point: TrackedPoint) {
+  assertValidLines(game, point.lines);
+
+  const effectiveLines = new Map(
+    point.lines.map((line) => [line.sideId, new Set(line.participantIds)]),
+  );
+  const participantSideHistory = new Map<string, string>();
+  for (const line of point.lines) {
+    for (const participantId of line.participantIds) {
+      participantSideHistory.set(participantId, line.sideId);
+    }
+  }
+  assertFullyTrackedEffectiveLines(game, effectiveLines);
+
+  // point.subs is chronological; Map insertion order preserves stoppage order while grouping sides.
+  const subsByStoppage = new Map<string, PointSub[]>();
+  for (const sub of point.subs ?? []) {
+    const stoppageSubs = subsByStoppage.get(sub.stoppageActionId) ?? [];
+    if (stoppageSubs.some((item) => item.sideId === sub.sideId)) {
+      throw new Error(
+        `Only one injury sub per side may be recorded for stoppage "${sub.stoppageActionId}".`,
+      );
+    }
+    stoppageSubs.push(sub);
+    subsByStoppage.set(sub.stoppageActionId, stoppageSubs);
+  }
+
+  for (const stoppageSubs of subsByStoppage.values()) {
+    const nextLines = new Map(
+      [...effectiveLines].map(([sideId, participantIds]) => [sideId, new Set(participantIds)]),
+    );
+
+    for (const sub of stoppageSubs) {
+      assertValidInjurySubInput(game, point, {
+        stoppageActionId: sub.stoppageActionId,
+        sideId: sub.sideId,
+        inIds: sub.inIds,
+        outIds: sub.outIds,
+      });
+      assertUniqueSubParticipants(sub);
+
+      const currentLine = effectiveLines.get(sub.sideId) ?? new Set<string>();
+      for (const participantId of sub.outIds) {
+        if (!currentLine.has(participantId)) {
+          throw new Error(`Participant "${participantId}" is not active for side "${sub.sideId}".`);
+        }
+      }
+      for (const participantId of sub.inIds) {
+        if (currentLine.has(participantId)) {
+          throw new Error(
+            `Participant "${participantId}" is already active for side "${sub.sideId}".`,
+          );
+        }
+        const previousSideId = participantSideHistory.get(participantId);
+        if (previousSideId != null && previousSideId !== sub.sideId) {
+          throw new Error('A participant cannot change sides after a point has started.');
+        }
+      }
+
+      const nextLine = nextLines.get(sub.sideId) ?? new Set<string>();
+      applySubToLine(nextLine, sub);
+      nextLines.set(sub.sideId, nextLine);
+    }
+
+    assertFullyTrackedEffectiveLines(game, nextLines);
+    for (const sub of stoppageSubs) {
+      for (const participantId of sub.inIds) {
+        participantSideHistory.set(participantId, sub.sideId);
+      }
+    }
+    for (const [sideId, participantIds] of nextLines) {
+      effectiveLines.set(sideId, participantIds);
+    }
   }
 }
 

@@ -88,6 +88,44 @@ function createGame(gameTo = 15): string {
   });
 }
 
+function createDualTrackedScrimmage() {
+  const participants = Array.from({ length: 16 }, (_, index) => ({
+    id: `scrim-player-${index + 1}`,
+    name: `Scrim Player ${index + 1}`,
+  }));
+  const lightIds = participants.slice(0, 7).map((participant) => participant.id);
+  const darkIds = participants.slice(7, 14).map((participant) => participant.id);
+
+  useAdvancedTrackingStore.getState().createGame({
+    id: 'dual-tracked-scrimmage',
+    gameType: 'scrimmage',
+    focusSideId: homeSideId,
+    initialReceivingSideId: homeSideId,
+    sides: [
+      { id: homeSideId, label: 'Light', trackingMode: 'full-roster' },
+      { id: awaySideId, label: 'Dark', trackingMode: 'full-roster' },
+    ],
+    participants,
+    format: { gameTo: 15 },
+  });
+  useAdvancedTrackingStore.getState().recordPull({
+    lines: [
+      { sideId: homeSideId, participantIds: lightIds },
+      { sideId: awaySideId, participantIds: darkIds },
+    ],
+    puller: { refType: 'participant', participantId: darkIds[0] },
+    receiver: { refType: 'participant', participantId: lightIds[0] },
+    result: 'inbound',
+  });
+
+  return {
+    lightIds,
+    darkIds,
+    lightBenchId: participants[14].id,
+    darkBenchId: participants[15].id,
+  };
+}
+
 function getCurrentGame(): AdvancedTrackedGame | null {
   const { currentGameId, currentGame } = useAdvancedTrackingStore.getState();
   return currentGame?.id === currentGameId ? currentGame : null;
@@ -1212,15 +1250,15 @@ describe('advancedTrackingStore', () => {
       result: 'complete',
     });
 
-    const stoppageId = useAdvancedTrackingStore.getState().recordStoppage({
-      reason: 'injury',
+    const stoppageId = useAdvancedTrackingStore.getState().recordInjurySubs({
       sideId: homeSideId,
-    });
-    useAdvancedTrackingStore.getState().recordSub({
-      stoppageActionId: stoppageId,
-      sideId: homeSideId,
-      inIds: [],
-      outIds: [meves.participantId],
+      changes: [
+        {
+          sideId: homeSideId,
+          inIds: [],
+          outIds: [meves.participantId],
+        },
+      ],
     });
     useAdvancedTrackingStore.getState().resumeStoppage(stoppageId);
 
@@ -1234,7 +1272,7 @@ describe('advancedTrackingStore', () => {
     ]);
   });
 
-  it('recordSub attaches a PointSub to the current point', () => {
+  it('recordInjurySubs attaches a PointSub to the current point', () => {
     createGame();
 
     useAdvancedTrackingStore.getState().recordPull({
@@ -1244,13 +1282,16 @@ describe('advancedTrackingStore', () => {
       result: 'inbound',
     });
 
-    const stoppageId = useAdvancedTrackingStore.getState().recordStoppage({ reason: 'injury' });
     const undoCountBefore = useAdvancedTrackingStore.getState().undoStack.length;
-    useAdvancedTrackingStore.getState().recordSub({
-      stoppageActionId: stoppageId,
+    const stoppageId = useAdvancedTrackingStore.getState().recordInjurySubs({
       sideId: homeSideId,
-      inIds: [meves.participantId],
-      outIds: [august.participantId],
+      changes: [
+        {
+          sideId: homeSideId,
+          inIds: [meves.participantId],
+          outIds: [august.participantId],
+        },
+      ],
     });
 
     const point = getCurrentPoint(getCurrentGame());
@@ -1262,7 +1303,7 @@ describe('advancedTrackingStore', () => {
     expect(useAdvancedTrackingStore.getState().undoStack).toHaveLength(undoCountBefore);
   });
 
-  it('recordSub appends multiple injury subs in the same point', () => {
+  it('recordInjurySubs appends multiple injury subs in the same point', () => {
     createGame();
 
     useAdvancedTrackingStore.getState().recordPull({
@@ -1272,25 +1313,27 @@ describe('advancedTrackingStore', () => {
       result: 'inbound',
     });
 
-    const firstStoppageId = useAdvancedTrackingStore
-      .getState()
-      .recordStoppage({ reason: 'injury', sideId: homeSideId });
-    useAdvancedTrackingStore.getState().recordSub({
-      stoppageActionId: firstStoppageId,
+    const firstStoppageId = useAdvancedTrackingStore.getState().recordInjurySubs({
       sideId: homeSideId,
-      inIds: [meves.participantId],
-      outIds: [august.participantId],
+      changes: [
+        {
+          sideId: homeSideId,
+          inIds: [meves.participantId],
+          outIds: [august.participantId],
+        },
+      ],
     });
     useAdvancedTrackingStore.getState().resumeStoppage(firstStoppageId);
 
-    const secondStoppageId = useAdvancedTrackingStore
-      .getState()
-      .recordStoppage({ reason: 'injury', sideId: homeSideId });
-    useAdvancedTrackingStore.getState().recordSub({
-      stoppageActionId: secondStoppageId,
+    const secondStoppageId = useAdvancedTrackingStore.getState().recordInjurySubs({
       sideId: homeSideId,
-      inIds: [august.participantId],
-      outIds: [meves.participantId],
+      changes: [
+        {
+          sideId: homeSideId,
+          inIds: [august.participantId],
+          outIds: [meves.participantId],
+        },
+      ],
     });
 
     const point = getCurrentPoint(getCurrentGame());
@@ -1302,7 +1345,7 @@ describe('advancedTrackingStore', () => {
     expect(getEffectiveLineParticipantIds(point!, homeSideId)).toEqual([august.participantId]);
   });
 
-  it('recordSub rejects duplicate subs for one stoppage', () => {
+  it('recordInjurySubs rejects duplicate side changes for one stoppage', () => {
     createGame();
 
     useAdvancedTrackingStore.getState().recordPull({
@@ -1310,29 +1353,28 @@ describe('advancedTrackingStore', () => {
       puller: untracked,
       receiver: august,
       result: 'inbound',
-    });
-
-    const stoppageId = useAdvancedTrackingStore
-      .getState()
-      .recordStoppage({ reason: 'injury', sideId: homeSideId });
-    useAdvancedTrackingStore.getState().recordSub({
-      stoppageActionId: stoppageId,
-      sideId: homeSideId,
-      inIds: [meves.participantId],
-      outIds: [august.participantId],
     });
 
     expect(() =>
-      useAdvancedTrackingStore.getState().recordSub({
-        stoppageActionId: stoppageId,
+      useAdvancedTrackingStore.getState().recordInjurySubs({
         sideId: homeSideId,
-        inIds: [august.participantId],
-        outIds: [meves.participantId],
+        changes: [
+          {
+            sideId: homeSideId,
+            inIds: [meves.participantId],
+            outIds: [august.participantId],
+          },
+          {
+            sideId: homeSideId,
+            inIds: [meves.participantId],
+            outIds: [august.participantId],
+          },
+        ],
       }),
-    ).toThrow('Sub already recorded');
+    ).toThrow('Only one injury sub per side');
   });
 
-  it('updateSub changes only the sub linked to the active stoppage', () => {
+  it('updateInjurySubs changes only subs linked to the active stoppage', () => {
     createGame();
 
     useAdvancedTrackingStore.getState().recordPull({
@@ -1342,46 +1384,129 @@ describe('advancedTrackingStore', () => {
       result: 'inbound',
     });
 
-    const firstStoppageId = useAdvancedTrackingStore
-      .getState()
-      .recordStoppage({ reason: 'injury', sideId: homeSideId });
-    useAdvancedTrackingStore.getState().recordSub({
-      stoppageActionId: firstStoppageId,
+    const firstStoppageId = useAdvancedTrackingStore.getState().recordInjurySubs({
       sideId: homeSideId,
-      inIds: [meves.participantId],
-      outIds: [august.participantId],
+      changes: [
+        {
+          sideId: homeSideId,
+          inIds: [meves.participantId],
+          outIds: [august.participantId],
+        },
+      ],
     });
     useAdvancedTrackingStore.getState().resumeStoppage(firstStoppageId);
 
-    const secondStoppageId = useAdvancedTrackingStore
-      .getState()
-      .recordStoppage({ reason: 'injury', sideId: homeSideId });
-    useAdvancedTrackingStore.getState().recordSub({
-      stoppageActionId: secondStoppageId,
+    const secondStoppageId = useAdvancedTrackingStore.getState().recordInjurySubs({
       sideId: homeSideId,
-      inIds: [august.participantId],
-      outIds: [meves.participantId],
+      changes: [
+        {
+          sideId: homeSideId,
+          inIds: [august.participantId],
+          outIds: [meves.participantId],
+        },
+      ],
     });
 
-    useAdvancedTrackingStore.getState().updateSub({
+    useAdvancedTrackingStore.getState().updateInjurySubs({
       stoppageActionId: secondStoppageId,
-      sideId: homeSideId,
-      inIds: [],
-      outIds: [],
+      changes: [],
     });
 
     const point = getCurrentPoint(getCurrentGame());
-    expect(point?.subs).toHaveLength(2);
+    expect(point?.subs).toHaveLength(1);
     expect(point?.subs?.[0]).toMatchObject({
       stoppageActionId: firstStoppageId,
       inIds: [meves.participantId],
       outIds: [august.participantId],
     });
-    expect(point?.subs?.[1]).toMatchObject({
-      stoppageActionId: secondStoppageId,
-      inIds: [],
-      outIds: [],
+  });
+
+  it('rejects updating an injury substitution after the point has ended', () => {
+    createGame();
+
+    useAdvancedTrackingStore.getState().recordPull({
+      lines: homeLinesAugust,
+      puller: untracked,
+      receiver: august,
+      result: 'inbound',
     });
+
+    const stoppageId = useAdvancedTrackingStore.getState().recordInjurySubs({
+      sideId: homeSideId,
+      changes: [
+        {
+          sideId: homeSideId,
+          inIds: [meves.participantId],
+          outIds: [august.participantId],
+        },
+      ],
+    });
+    useAdvancedTrackingStore.getState().resumeStoppage(stoppageId);
+    useAdvancedTrackingStore.getState().recordPickup({ sideId: homeSideId, player: meves });
+    useAdvancedTrackingStore
+      .getState()
+      .recordThrow({ thrower: meves, toPlayer: august, result: 'goal' });
+
+    expect(() =>
+      useAdvancedTrackingStore.getState().updateInjurySubs({
+        stoppageActionId: stoppageId,
+        changes: [],
+      }),
+    ).toThrow('Cannot update an injury substitution after the point has ended.');
+  });
+
+  it('records valid substitutions for both tracked sides at one injury stoppage', () => {
+    const { lightIds, darkIds, lightBenchId, darkBenchId } = createDualTrackedScrimmage();
+
+    const stoppageId = useAdvancedTrackingStore.getState().recordInjurySubs({
+      changes: [
+        {
+          sideId: homeSideId,
+          inIds: [lightBenchId],
+          outIds: [lightIds[0]],
+        },
+        {
+          sideId: awaySideId,
+          inIds: [darkBenchId],
+          outIds: [darkIds[0]],
+        },
+      ],
+    });
+
+    const point = getCurrentPoint(getCurrentGame());
+    expect(point?.subs).toHaveLength(2);
+    expect(point?.subs?.every((sub) => sub.stoppageActionId === stoppageId)).toBe(true);
+    expect(getEffectiveLineParticipantIds(point!, homeSideId)).toContain(lightBenchId);
+    expect(getEffectiveLineParticipantIds(point!, awaySideId)).toContain(darkBenchId);
+  });
+
+  it('rejects moving a participant to the other side after a point starts', () => {
+    const { lightIds, darkIds, lightBenchId } = createDualTrackedScrimmage();
+
+    const firstStoppageId = useAdvancedTrackingStore.getState().recordInjurySubs({
+      sideId: homeSideId,
+      changes: [
+        {
+          sideId: homeSideId,
+          inIds: [lightBenchId],
+          outIds: [lightIds[0]],
+        },
+      ],
+    });
+    useAdvancedTrackingStore.getState().resumeStoppage(firstStoppageId);
+
+    expect(() =>
+      useAdvancedTrackingStore.getState().recordInjurySubs({
+        sideId: awaySideId,
+        changes: [
+          {
+            sideId: awaySideId,
+            inIds: [lightIds[0]],
+            outIds: [darkIds[0]],
+          },
+        ],
+      }),
+    ).toThrow('cannot change sides after a point has started');
   });
 
   it('cancelStoppage removes the active stoppage and linked sub', () => {
@@ -1394,12 +1519,15 @@ describe('advancedTrackingStore', () => {
       result: 'inbound',
     });
 
-    const stoppageId = useAdvancedTrackingStore.getState().recordStoppage({ reason: 'injury' });
-    useAdvancedTrackingStore.getState().recordSub({
-      stoppageActionId: stoppageId,
+    const stoppageId = useAdvancedTrackingStore.getState().recordInjurySubs({
       sideId: homeSideId,
-      inIds: [meves.participantId],
-      outIds: [august.participantId],
+      changes: [
+        {
+          sideId: homeSideId,
+          inIds: [meves.participantId],
+          outIds: [august.participantId],
+        },
+      ],
     });
 
     expect(getCurrentPoint(getCurrentGame())?.subs).toHaveLength(1);
@@ -1856,8 +1984,8 @@ describe('advancedTrackingStore', () => {
     });
   });
 
-  describe('correctPointLine', () => {
-    it('replaces the base line for the given side', () => {
+  describe('correctPointLines', () => {
+    it('replaces the selected base line for the point', () => {
       createGame();
       useAdvancedTrackingStore.getState().recordPull({
         lines: homeLinesAugust,
@@ -1867,9 +1995,8 @@ describe('advancedTrackingStore', () => {
       });
 
       const newIds = [meves.participantId];
-      useAdvancedTrackingStore.getState().correctPointLine({
-        sideId: homeSideId,
-        participantIds: newIds,
+      useAdvancedTrackingStore.getState().correctPointLines({
+        lines: [{ sideId: homeSideId, participantIds: newIds }],
       });
 
       const point = getCurrentPoint(getCurrentGame());
@@ -1877,69 +2004,104 @@ describe('advancedTrackingStore', () => {
       expect(homeLine?.participantIds).toEqual(newIds);
     });
 
-    it('clears subs for the corrected side', () => {
-      createGame();
-      useAdvancedTrackingStore.getState().recordPull({
-        lines: homeLinesAugust,
-        puller: untracked,
-        receiver: august,
-        result: 'inbound',
-      });
-
-      const stoppageId = useAdvancedTrackingStore.getState().recordStoppage({
-        reason: 'injury',
-        sideId: homeSideId,
-      });
-      useAdvancedTrackingStore.getState().recordSub({
-        stoppageActionId: stoppageId,
-        sideId: homeSideId,
-        inIds: [meves.participantId],
-        outIds: [august.participantId],
+    it('clears every injury sub when replacing the point lines', () => {
+      const { lightIds, darkIds, lightBenchId, darkBenchId } = createDualTrackedScrimmage();
+      useAdvancedTrackingStore.getState().recordInjurySubs({
+        changes: [
+          {
+            sideId: homeSideId,
+            inIds: [lightBenchId],
+            outIds: [lightIds[0]],
+          },
+          {
+            sideId: awaySideId,
+            inIds: [darkBenchId],
+            outIds: [darkIds[0]],
+          },
+        ],
       });
 
       const pointBefore = getCurrentPoint(getCurrentGame());
-      expect(pointBefore?.subs).toHaveLength(1);
+      expect(pointBefore?.subs).toHaveLength(2);
 
-      useAdvancedTrackingStore.getState().correctPointLine({
-        sideId: homeSideId,
-        participantIds: [meves.participantId],
+      useAdvancedTrackingStore.getState().correctPointLines({
+        lines: [
+          { sideId: homeSideId, participantIds: lightIds },
+          { sideId: awaySideId, participantIds: darkIds },
+        ],
       });
 
-      const pointAfter = getCurrentPoint(getCurrentGame());
-      expect(pointAfter?.subs).toBeUndefined();
-      expect(getEffectiveLineParticipantIds(pointAfter!, homeSideId)).toEqual([
-        meves.participantId,
-      ]);
+      expect(getCurrentPoint(getCurrentGame())?.subs).toBeUndefined();
     });
 
-    it('does not clear subs for other sides', () => {
-      createGame();
-      useAdvancedTrackingStore.getState().recordPull({
-        lines: homeLinesAugust,
-        puller: untracked,
-        receiver: august,
-        result: 'inbound',
+    it('preserves injury subs for an uncorrected side', () => {
+      const { lightIds, darkIds, lightBenchId, darkBenchId } = createDualTrackedScrimmage();
+      useAdvancedTrackingStore.getState().recordInjurySubs({
+        changes: [
+          {
+            sideId: homeSideId,
+            inIds: [lightBenchId],
+            outIds: [lightIds[0]],
+          },
+          {
+            sideId: awaySideId,
+            inIds: [darkBenchId],
+            outIds: [darkIds[0]],
+          },
+        ],
       });
 
-      const injuryId = useAdvancedTrackingStore.getState().recordStoppage({
-        reason: 'injury',
-        sideId: awaySideId,
-      });
-      useAdvancedTrackingStore.getState().recordSub({
-        stoppageActionId: injuryId,
-        sideId: awaySideId,
-        inIds: [],
-        outIds: [],
-      });
-
-      useAdvancedTrackingStore.getState().correctPointLine({
-        sideId: homeSideId,
-        participantIds: [meves.participantId],
+      useAdvancedTrackingStore.getState().correctPointLines({
+        lines: [{ sideId: homeSideId, participantIds: lightIds }],
       });
 
       const point = getCurrentPoint(getCurrentGame());
       expect(point?.subs).toHaveLength(1);
-      expect(point?.subs![0].sideId).toBe(awaySideId);
+      expect(point?.subs?.[0].sideId).toBe(awaySideId);
+    });
+
+    it('atomically corrects both tracked starting lines', () => {
+      const { lightIds, darkIds, lightBenchId, darkBenchId } = createDualTrackedScrimmage();
+
+      useAdvancedTrackingStore.getState().correctPointLines({
+        lines: [
+          {
+            sideId: homeSideId,
+            participantIds: [lightBenchId, ...lightIds.slice(1)],
+          },
+          {
+            sideId: awaySideId,
+            participantIds: [darkBenchId, ...darkIds.slice(1)],
+          },
+        ],
+      });
+
+      const point = getCurrentPoint(getCurrentGame());
+      expect(point?.lines.find((line) => line.sideId === homeSideId)?.participantIds).toContain(
+        lightBenchId,
+      );
+      expect(point?.lines.find((line) => line.sideId === awaySideId)?.participantIds).toContain(
+        darkBenchId,
+      );
+    });
+
+    it('rejects correcting a participant onto the opposing side', () => {
+      const { lightIds, darkIds } = createDualTrackedScrimmage();
+
+      expect(() =>
+        useAdvancedTrackingStore.getState().correctPointLines({
+          lines: [
+            {
+              sideId: homeSideId,
+              participantIds: [darkIds[0], ...lightIds.slice(1)],
+            },
+            {
+              sideId: awaySideId,
+              participantIds: [lightIds[0], ...darkIds.slice(1)],
+            },
+          ],
+        }),
+      ).toThrow('cannot change sides after a point has started');
     });
 
     it('throws if the point has ended', () => {
@@ -1960,9 +2122,8 @@ describe('advancedTrackingStore', () => {
       expect(hasPointEnded(point)).toBe(true);
 
       expect(() =>
-        useAdvancedTrackingStore.getState().correctPointLine({
-          sideId: homeSideId,
-          participantIds: [meves.participantId],
+        useAdvancedTrackingStore.getState().correctPointLines({
+          lines: [{ sideId: homeSideId, participantIds: [meves.participantId] }],
         }),
       ).toThrow('Cannot edit line after the point has ended.');
     });

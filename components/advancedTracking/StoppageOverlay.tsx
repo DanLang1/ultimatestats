@@ -11,11 +11,11 @@ import {
   formatPointTime,
   getActiveStoppage,
   getPointAdjustedTimestamp,
-  getSubForStoppage,
+  getSubsForStoppage,
 } from '@/lib/advancedTracking/trackingDisplayHelpers';
 import { getCurrentPoint, getCurrentPossession } from '@/lib/advancedTracking/trackingUtils';
 import type { AdvancedTrackedGame } from '@/lib/advancedTracking/types';
-import { formatTimerSeconds } from '@/lib/utils';
+import { formatTimerSeconds, hasItems } from '@/lib/utils';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { Fonts } from '@/theme/theme';
 
@@ -95,8 +95,9 @@ export const StoppageOverlay = ({ game }: StoppageOverlayProps) => {
     timerColor = palette.success;
   }
 
-  const injurySub =
-    activeStoppage.reason === 'injury' ? getSubForStoppage(point, activeStoppage.id) : null;
+  const injurySubs =
+    activeStoppage.reason === 'injury' ? getSubsForStoppage(point, activeStoppage.id) : [];
+  const isInjuryStoppage = activeStoppage.reason === 'injury';
 
   const handleResume = () => {
     resumeStoppage(activeStoppage.id);
@@ -189,37 +190,48 @@ export const StoppageOverlay = ({ game }: StoppageOverlayProps) => {
       </Pressable>
     );
   } else {
-    const subInNames = injurySub
-      ? injurySub.inIds
-          .map((id) => game.participants.find((p) => p.id === id)?.name)
-          .filter(Boolean)
-      : [];
-    const subOutNames = injurySub
-      ? injurySub.outIds
-          .map((id) => game.participants.find((p) => p.id === id)?.name)
-          .filter(Boolean)
-      : [];
-
     mainContent = (
       <View style={styles.centerBlock}>
         <ThemedText style={[styles.bannerLabel, { color: palette.warning }]}>INJURY</ThemedText>
         <ThemedText style={[styles.frozenTimer, { color: palette.textInverse }]}>
           {formatPointTime(frozenPointElapsedMs)}
         </ThemedText>
-        {injurySub && (
+        {hasItems(injurySubs) && (
           <View style={styles.subSummary}>
-            <View style={styles.subRow}>
-              <ThemedText style={[styles.subChipLabel, { color: palette.success }]}>IN</ThemedText>
-              <ThemedText style={[styles.subNames, { color: palette.success }]}>
-                {subInNames.join(', ')}
-              </ThemedText>
-            </View>
-            <View style={styles.subRow}>
-              <ThemedText style={[styles.subChipLabel, { color: palette.danger }]}>OUT</ThemedText>
-              <ThemedText style={[styles.subNames, { color: palette.danger }]}>
-                {subOutNames.join(', ')}
-              </ThemedText>
-            </View>
+            {injurySubs.map((sub) => {
+              const subInNames = sub.inIds
+                .map((id) => game.participants.find((participant) => participant.id === id)?.name)
+                .filter(Boolean);
+              const subOutNames = sub.outIds
+                .map((id) => game.participants.find((participant) => participant.id === id)?.name)
+                .filter(Boolean);
+              const subSideLabel =
+                game.sides.find((side) => side.id === sub.sideId)?.label ?? sub.sideId;
+
+              return (
+                <View key={sub.id} style={styles.subGroup}>
+                  <ThemedText style={[styles.subSideLabel, { color: palette.textMuted }]}>
+                    {subSideLabel.toUpperCase()}
+                  </ThemedText>
+                  <View style={styles.subRow}>
+                    <ThemedText style={[styles.subChipLabel, { color: palette.success }]}>
+                      IN
+                    </ThemedText>
+                    <ThemedText style={[styles.subNames, { color: palette.success }]}>
+                      {subInNames.join(', ')}
+                    </ThemedText>
+                  </View>
+                  <View style={styles.subRow}>
+                    <ThemedText style={[styles.subChipLabel, { color: palette.danger }]}>
+                      OUT
+                    </ThemedText>
+                    <ThemedText style={[styles.subNames, { color: palette.danger }]}>
+                      {subOutNames.join(', ')}
+                    </ThemedText>
+                  </View>
+                </View>
+              );
+            })}
           </View>
         )}
       </View>
@@ -232,7 +244,7 @@ export const StoppageOverlay = ({ game }: StoppageOverlayProps) => {
     <View style={styles.container}>
       <View style={styles.content}>
         {mainContent}
-        {injurySub ? (
+        {isInjuryStoppage ? (
           <View style={styles.buttonRow}>
             <Pressable
               testID="stoppage-resume"
@@ -378,8 +390,18 @@ function createStyles(sizeClass: SizeClass) {
     },
     subSummary: {
       marginTop: scaleBySizeClass(8, sizeClass),
+      gap: scaleBySizeClass(12, sizeClass),
+      alignItems: 'flex-start',
+    },
+    subGroup: {
       gap: scaleBySizeClass(4, sizeClass),
       alignItems: 'flex-start',
+    },
+    subSideLabel: {
+      fontFamily: Fonts.black,
+      fontSize: scaleBySizeClass(11, sizeClass),
+      letterSpacing: 1.5,
+      marginBottom: scaleBySizeClass(2, sizeClass),
     },
     subRow: {
       flexDirection: 'row',

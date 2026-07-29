@@ -9,6 +9,10 @@ import {
   getDefaultHalftimeTimerState,
 } from '@/lib/advancedTracking/halftimeTimerUtils';
 import {
+  replaceSubsForStoppage,
+  withAppendedStoppage,
+} from '@/lib/advancedTracking/injurySubUtils';
+import {
   getActiveGameClockPause,
   getGameClockElapsedMs,
   getPointAdjustedTimestamp,
@@ -18,13 +22,16 @@ import {
   assertValidInjurySubInput,
   assertValidLines,
   assertValidParticipantRefs,
+  assertValidPointLineHistory,
   assertValidSideIds,
   canStartSecondHalfEarly,
   getCurrentPoint,
   getCurrentPossession,
   getEffectiveGameTo,
   getGameScore,
+  hasInjurySubChanges,
   getOtherSideId,
+  getParticipantIdsUsedBySide,
   getReceivingSideForNextPoint,
   hasPointEnded,
   isAdvancedGameOver,
@@ -35,18 +42,19 @@ import {
 import {
   ADVANCED_TRACKING_SCHEMA_VERSION,
   AdvancedTrackedGame,
+  StoppageAction,
 } from '@/lib/advancedTracking/types';
-import { generateId } from '@/lib/utils';
+import { generateId, hasItems } from '@/lib/utils';
 import { useSavedAdvancedGamesStore } from '@/store/advancedTracking/savedGamesStore';
 import { useSettingsStore } from '@/store/settingsStore';
 
 import {
   AdvancedTrackingState,
   AdvancedTrackingUndoEntry,
-  CorrectPointLineInput,
+  CorrectPointLinesInput,
+  RecordInjurySubsInput,
   RecordStoppageInput,
-  RecordSubInput,
-  UpdateSubInput,
+  UpdateInjurySubsInput,
 } from './trackingStore.types';
 
 const ADVANCED_TRACKING_STORAGE_KEY = 'ultimatestats_advanced_tracking';
@@ -868,60 +876,76 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
           });
         },
 
-        recordSub: (input: RecordSubInput) => {
+        recordInjurySubs: (input: RecordInjurySubsInput) => {
           const game = getCurrentGame(get());
           const point = getCurrentPoint(game);
-          if (point == null) throw new Error('No active point.');
-
-          assertValidInjurySubInput(game, point, input);
-          if (point.subs?.some((sub) => sub.stoppageActionId === input.stoppageActionId)) {
-            throw new Error(`Sub already recorded for stoppage "${input.stoppageActionId}".`);
+          const possession = getCurrentPossession(game);
+          if (point == null || possession == null) {
+            throw new Error('Cannot record an injury substitution before a point has started.');
+          }
+          if (hasPointEnded(point)) {
+            throw new Error('Cannot record an injury substitution after the point has ended.');
+          }
+          if (input.sideId != null) {
+            assertValidSideIds(game, [input.sideId]);
+          }
+          if (!input.changes.some(hasInjurySubChanges)) {
+            throw new Error('An injury substitution must change at least one lineup.');
           }
 
-          const subId = generateId();
+          const actionId = generateId();
+          const now = Date.now();
+          const stoppage: StoppageAction = {
+            id: actionId,
+            kind: 'stoppage',
+            reason: 'injury',
+            sideId: input.sideId,
+            recordedAt: now,
+            pausedAt: now,
+          };
+          const candidatePoint = withAppendedStoppage(point, possession.id, stoppage);
+          candidatePoint.subs = replaceSubsForStoppage(candidatePoint, actionId, input.changes);
+          assertValidPointLineHistory(game, candidatePoint);
 
           set((state) => {
             const liveGame = getCurrentGame(state);
             const livePoint = getCurrentPoint(liveGame)!;
-            if (livePoint.subs == null) {
-              livePoint.subs = [];
-            }
-            livePoint.subs.push({
-              id: subId,
-              sideId: input.sideId,
-              type: 'injury',
-              inIds: input.inIds,
-              outIds: input.outIds,
-              stoppageActionId: input.stoppageActionId,
-            });
-            liveGame.updatedAt = Date.now();
+            const livePossession = getCurrentPossession(liveGame)!;
+            livePossession.actions.push(stoppage);
+            livePoint.subs = candidatePoint.subs;
+            liveGame.updatedAt = now;
           });
+
+          return actionId;
         },
 
-        updateSub: (input: UpdateSubInput) => {
+        updateInjurySubs: (input: UpdateInjurySubsInput) => {
           const game = getCurrentGame(get());
           const point = getCurrentPoint(game);
           if (point == null) throw new Error('No active point.');
+          if (hasPointEnded(point)) {
+            throw new Error('Cannot update an injury substitution after the point has ended.');
+          }
 
-          assertValidInjurySubInput(game, point, input);
+          const nextSubs = replaceSubsForStoppage(point, input.stoppageActionId, input.changes);
+          const candidatePoint = { ...point, subs: nextSubs };
+          for (const change of input.changes) {
+            assertValidInjurySubInput(game, candidatePoint, {
+              stoppageActionId: input.stoppageActionId,
+              ...change,
+            });
+          }
+          assertValidPointLineHistory(game, candidatePoint);
 
           set((state) => {
             const liveGame = getCurrentGame(state);
             const livePoint = getCurrentPoint(liveGame)!;
-            const sub = livePoint.subs?.find(
-              (item) => item.stoppageActionId === input.stoppageActionId,
-            );
-            if (sub == null) {
-              throw new Error(`Sub for stoppage "${input.stoppageActionId}" not found.`);
-            }
-            sub.sideId = input.sideId;
-            sub.inIds = input.inIds;
-            sub.outIds = input.outIds;
+            livePoint.subs = nextSubs;
             liveGame.updatedAt = Date.now();
           });
         },
 
-        correctPointLine: (input: CorrectPointLineInput) => {
+        correctPointLines: (input: CorrectPointLinesInput) => {
           const game = getCurrentGame(get());
           const point = getCurrentPoint(game);
           if (point == null) throw new Error('No active point.');
@@ -929,35 +953,44 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
             throw new Error('Cannot edit line after the point has ended.');
           }
 
-          assertValidSideIds(game, [input.sideId]);
-          const correctedLines = point.lines.map((line) =>
-            line.sideId === input.sideId
-              ? { sideId: input.sideId, participantIds: input.participantIds }
-              : line,
+          const correctedSideIds = new Set(input.lines.map((line) => line.sideId));
+          if (correctedSideIds.size !== input.lines.length) {
+            throw new Error('Each side may only have one corrected line.');
+          }
+          if (
+            input.lines.some((line) => !point.lines.some((item) => item.sideId === line.sideId))
+          ) {
+            throw new Error('A line correction can only replace an existing point lineup.');
+          }
+          for (const line of input.lines) {
+            const opposingParticipantIds = new Set(
+              game.sides
+                .filter((side) => side.id !== line.sideId)
+                .flatMap((side) => getParticipantIdsUsedBySide(point, side.id)),
+            );
+            if (
+              line.participantIds.some((participantId) => opposingParticipantIds.has(participantId))
+            ) {
+              throw new Error('A participant cannot change sides after a point has started.');
+            }
+          }
+          const correctionsBySide = new Map(input.lines.map((line) => [line.sideId, line]));
+          const correctedLines = point.lines.map(
+            (line) => correctionsBySide.get(line.sideId) ?? line,
           );
-          assertValidLines(game, correctedLines);
+          const remainingSubs = point.subs?.filter((sub) => !correctedSideIds.has(sub.sideId));
+          const candidatePoint = {
+            ...point,
+            lines: correctedLines,
+            subs: hasItems(remainingSubs) ? remainingSubs : undefined,
+          };
+          assertValidPointLineHistory(game, candidatePoint);
 
           set((state) => {
             const liveGame = getCurrentGame(state);
             const livePoint = getCurrentPoint(liveGame)!;
-
-            if (!livePoint.lines.some((l) => l.sideId === input.sideId)) {
-              throw new Error('Cannot edit a line that has not been set yet.');
-            }
-
-            livePoint.lines = livePoint.lines.filter((l) => l.sideId !== input.sideId);
-            livePoint.lines.push({
-              sideId: input.sideId,
-              participantIds: input.participantIds,
-            });
-
-            if (livePoint.subs != null) {
-              livePoint.subs = livePoint.subs.filter((sub) => sub.sideId !== input.sideId);
-              if (livePoint.subs.length === 0) {
-                livePoint.subs = undefined;
-              }
-            }
-
+            livePoint.lines = correctedLines;
+            livePoint.subs = candidatePoint.subs;
             liveGame.updatedAt = Date.now();
           });
         },

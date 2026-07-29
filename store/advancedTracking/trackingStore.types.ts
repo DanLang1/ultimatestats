@@ -5,6 +5,7 @@ import type {
   GameFlip,
   GameMetadata,
   GameSide,
+  InjurySubChange,
   Participant,
   PlayerRef,
   PointLine,
@@ -13,7 +14,7 @@ import type {
 } from '@/lib/advancedTracking/types';
 import type { GenderRatio } from '@/lib/genderRatioUtils';
 
-export type { PullResult, ThrowResult };
+export type { InjurySubChange, PullResult, ThrowResult };
 
 export interface CreateAdvancedGameInput {
   id?: string;
@@ -67,18 +68,18 @@ export interface RecordStoppageInput {
   isFloater?: boolean;
 }
 
-export interface RecordSubInput {
-  stoppageActionId: string;
-  sideId: string;
-  inIds: string[];
-  outIds: string[];
+export interface RecordInjurySubsInput {
+  sideId?: string;
+  changes: InjurySubChange[];
 }
 
-export type UpdateSubInput = RecordSubInput;
+export interface UpdateInjurySubsInput {
+  stoppageActionId: string;
+  changes: InjurySubChange[];
+}
 
-export interface CorrectPointLineInput {
-  sideId: string;
-  participantIds: string[];
+export interface CorrectPointLinesInput {
+  lines: PointLine[];
 }
 
 export interface RecordBetweenPointTimeoutInput {
@@ -153,9 +154,9 @@ export interface AdvancedTrackingState {
   recordStoppage: (input: RecordStoppageInput) => string;
   resumeStoppage: (actionId: string) => void;
   cancelStoppage: (actionId: string) => void;
-  recordSub: (input: RecordSubInput) => void;
-  updateSub: (input: UpdateSubInput) => void;
-  correctPointLine: (input: CorrectPointLineInput) => void;
+  recordInjurySubs: (input: RecordInjurySubsInput) => string;
+  updateInjurySubs: (input: UpdateInjurySubsInput) => void;
+  correctPointLines: (input: CorrectPointLinesInput) => void;
   undoLastOperation: () => boolean;
   importAdvancedGame: (game: AdvancedTrackedGame) => Promise<void>;
   deleteSavedGame: (gameId: string) => Promise<void>;

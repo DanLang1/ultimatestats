@@ -1,0 +1,38 @@
+appId: com.langdk.ultimatestats
+name: Scrimmage Line Correction Progression
+---
+- runFlow:
+    file: ../flows/setup-scrimmage.yaml
+    env:
+      TRACKER_STATE: focusPossession
+
+- tapOn:
+    id: 'tracker-line-action-tile'
+- waitForAnimationToEnd:
+    timeout: 500
+- tapOn:
+    id: 'line-change-correct-line'
+
+- assertVisible:
+    text: 'Edit Light Line'
+- assertNotVisible:
+    text: 'Correct Starting Lineup'
+
+# An unchanged active line advances directly to the other side.
+- tapOn:
+    id: 'line-select-confirm'
+- assertVisible:
+    text: 'Edit Dark Line'
+
+# Back preserves the progressive order before exiting to the tracker.
+- tapOn:
+    id: 'line-select-back'
+- assertVisible:
+    text: 'Edit Light Line'
+- tapOn:
+    id: 'line-select-back'
+- assertVisible:
+    id: 'tracker-menu-button'
+
+- takeScreenshot:
+    path: .maestro/screenshots/advanced-tracker-scrimmage-line-correction

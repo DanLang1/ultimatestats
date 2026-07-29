@@ -175,6 +175,12 @@ export interface PointSub {
   stoppageActionId: string;
 }
 
+export interface InjurySubChange {
+  sideId: string;
+  inIds: string[];
+  outIds: string[];
+}
+
 export interface TrackedPoint {
   id: string;
   lines: PointLine[];
