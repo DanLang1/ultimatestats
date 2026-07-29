@@ -2,7 +2,7 @@ appId: com.langdk.ultimatestats
 name: Advanced Tracker Scrimmage 50-50 Turnover
 ---
 - runFlow:
-    file: ../flows/setup-scrimmage.yaml
+    file: ../flows/setup-scrimmage-clean.yaml
     env:
       TRACKER_STATE: focusPossession
 - runFlow:

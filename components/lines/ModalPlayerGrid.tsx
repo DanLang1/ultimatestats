@@ -3,7 +3,7 @@ import React from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/ThemedText';
-import { PlayerChip } from '@/components/ui/PlayerChip';
+import { PlayerChip, PlayerChipRestriction } from '@/components/ui/PlayerChip';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { computePlayingTime, formatPlayingTime, sortByPlayerNumber } from '@/lib/lineUtils';
@@ -43,6 +43,7 @@ export interface ModalPlayerGridProps {
   gameActive?: boolean;
   /** Current point number — excludes in-progress point from playing time count */
   currentPoint?: number;
+  playerRestrictions?: ReadonlyMap<string, PlayerChipRestriction>;
 }
 
 type ColumnKey =
@@ -97,6 +98,7 @@ export function ModalPlayerGrid({
   useModalColors: useModalColorsProp = true,
   gameActive = false,
   currentPoint,
+  playerRestrictions,
 }: ModalPlayerGridProps) {
   const { palette } = useTheme();
   const { isLandscape, sizeClass } = useLayout();
@@ -130,6 +132,7 @@ export function ModalPlayerGrid({
       matchingType={player.matchingType}
       subtitle={gameActive ? formatPlayingTime(player.id, playingTime) : undefined}
       compact
+      restriction={playerRestrictions?.get(player.id)}
       useModalColors={useModalColorsProp}
       onPress={() => onTogglePlayer(player.id)}
     />

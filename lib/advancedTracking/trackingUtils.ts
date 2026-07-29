@@ -13,6 +13,7 @@ import {
   PointLine,
   PointPossession,
   PointSub,
+  PossessionAction,
   PullAction,
   ThrowResult,
   TrackedPoint,
@@ -520,6 +521,135 @@ export function haveSameParticipantIds(firstIds: string[], secondIds: string[]):
 
 export function hasInjurySubChanges(change: Pick<PointSub, 'inIds' | 'outIds'>): boolean {
   return change.inIds.length > 0 || change.outIds.length > 0;
+}
+
+function addParticipantRefId(participantIds: Set<string>, ref: PlayerRef | undefined) {
+  if (ref?.refType === 'participant') {
+    participantIds.add(ref.participantId);
+  }
+}
+
+function getActionParticipantIds(action: PossessionAction): string[] {
+  const participantIds = new Set<string>();
+  if (action.kind === 'pull') {
+    addParticipantRefId(participantIds, action.puller);
+    addParticipantRefId(participantIds, action.receiver);
+  } else if (action.kind === 'disc_pickup') {
+    addParticipantRefId(participantIds, action.player);
+  } else if (action.kind === 'throw') {
+    addParticipantRefId(participantIds, action.thrower);
+    addParticipantRefId(participantIds, action.toPlayer);
+    addParticipantRefId(participantIds, action.defender);
+  }
+  return [...participantIds];
+}
+
+/** Returns every known participant referenced by a recorded player action in the point. */
+export function getPointActionParticipantIds(point: TrackedPoint): string[] {
+  const participantIds = new Set<string>();
+
+  for (const possession of point.possessions) {
+    for (const action of possession.actions) {
+      for (const participantId of getActionParticipantIds(action)) {
+        participantIds.add(participantId);
+      }
+    }
+  }
+
+  return [...participantIds];
+}
+
+/**
+ * Keeps injury substitutions that still apply after a starting-line correction.
+ * Invalidated subs are discarded only for sides whose starting line was corrected.
+ */
+export function reconcilePointSubsAfterLineCorrection(
+  point: TrackedPoint,
+  correctedSideIds: Set<string>,
+): PointSub[] | undefined {
+  const effectiveLines = new Map(
+    point.lines.map((line) => [line.sideId, new Set(line.participantIds)]),
+  );
+  const retainedSubs: PointSub[] = [];
+
+  for (const sub of point.subs ?? []) {
+    const currentLine = effectiveLines.get(sub.sideId) ?? new Set<string>();
+    const canApply =
+      sub.outIds.every((participantId) => currentLine.has(participantId)) &&
+      sub.inIds.every((participantId) => !currentLine.has(participantId));
+
+    if (!canApply && correctedSideIds.has(sub.sideId)) {
+      continue;
+    }
+
+    retainedSubs.push(sub);
+    applySubToLine(currentLine, sub);
+    effectiveLines.set(sub.sideId, currentLine);
+  }
+
+  return hasItems(retainedSubs) ? retainedSubs : undefined;
+}
+
+function getActionParticipantSides(point: TrackedPoint): Map<string, Map<string, string>> {
+  const effectiveLines = new Map(
+    point.lines.map((line) => [line.sideId, new Set(line.participantIds)]),
+  );
+  const subsByStoppage = new Map<string, PointSub[]>();
+  for (const sub of point.subs ?? []) {
+    const stoppageSubs = subsByStoppage.get(sub.stoppageActionId) ?? [];
+    stoppageSubs.push(sub);
+    subsByStoppage.set(sub.stoppageActionId, stoppageSubs);
+  }
+
+  const actionParticipantSides = new Map<string, Map<string, string>>();
+  for (const possession of point.possessions) {
+    for (const action of possession.actions) {
+      const participantSides = new Map<string, string>();
+      for (const participantId of getActionParticipantIds(action)) {
+        const activeSide = [...effectiveLines].find(([, ids]) => ids.has(participantId))?.[0];
+        if (activeSide != null) {
+          participantSides.set(participantId, activeSide);
+        }
+      }
+      actionParticipantSides.set(action.id, participantSides);
+
+      if (action.kind === 'stoppage') {
+        for (const sub of subsByStoppage.get(action.id) ?? []) {
+          const currentLine = effectiveLines.get(sub.sideId) ?? new Set<string>();
+          applySubToLine(currentLine, sub);
+          effectiveLines.set(sub.sideId, currentLine);
+        }
+      }
+    }
+  }
+
+  return actionParticipantSides;
+}
+
+/**
+ * Ensures a correction does not orphan an action that was attributable under the original
+ * line/sub history.
+ */
+export function assertPointActionParticipantsPreserved(
+  game: AdvancedTrackedGame,
+  originalPoint: TrackedPoint,
+  candidatePoint: TrackedPoint,
+) {
+  const originalSides = getActionParticipantSides(originalPoint);
+  const candidateSides = getActionParticipantSides(candidatePoint);
+
+  for (const [actionId, participantSides] of originalSides) {
+    const candidateParticipantSides = candidateSides.get(actionId);
+    for (const [participantId, originalSideId] of participantSides) {
+      if (candidateParticipantSides?.get(participantId) === originalSideId) continue;
+      const participantName =
+        game.participants.find((participant) => participant.id === participantId)?.name ??
+        'This player';
+      throw new Error(
+        `${participantName} has recorded an action this point, so this correction cannot remove them from the active lineup at that time.`,
+      );
+    }
+  }
 }
 
 export function getEffectiveLineParticipantIds(point: TrackedPoint, sideId: string): string[] {

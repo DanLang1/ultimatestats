@@ -1,4 +1,8 @@
-import type { AdvancedTrackedGame } from '../advancedTracking/types';
+import {
+  THROW_RESULTS,
+  type AdvancedTrackedGame,
+  type ThrowResult,
+} from '../advancedTracking/types';
 import { validatePayload } from '../sharing/validate';
 
 function makeGamePayload(overrides: Record<string, unknown> = {}): unknown {
@@ -46,7 +50,14 @@ function makeGamesPayload(overrides: Record<string, unknown> = {}): unknown {
   };
 }
 
-function makeAdvancedGameData(overrides: Partial<AdvancedTrackedGame> = {}): AdvancedTrackedGame {
+function makeAdvancedGameData(
+  overrides: Partial<AdvancedTrackedGame> = {},
+  throwResult: ThrowResult = 'goal',
+): AdvancedTrackedGame {
+  const tracksReceiver =
+    throwResult === 'complete' || throwResult === 'goal' || throwResult === 'drop';
+  const tracksDefender = throwResult === 'block' || throwResult === 'pressure';
+
   return {
     id: 'advanced-game-1',
     schemaVersion: 1,
@@ -85,8 +96,13 @@ function makeAdvancedGameData(overrides: Partial<AdvancedTrackedGame> = {}): Adv
                 kind: 'throw',
                 sideId: 'home',
                 thrower: { refType: 'participant', participantId: 'p1' },
-                toPlayer: { refType: 'participant', participantId: 'p1' },
-                result: 'goal',
+                ...(tracksReceiver && {
+                  toPlayer: { refType: 'participant' as const, participantId: 'p1' },
+                }),
+                ...(tracksDefender && {
+                  defender: { refType: 'participant' as const, participantId: 'p1' },
+                }),
+                result: throwResult,
               },
             ],
           },
@@ -281,6 +297,13 @@ describe('validatePayload', () => {
       expect(result.schemaVersion).toBe(1);
     });
 
+    it.each(THROW_RESULTS)('accepts the declared %s throw result', (throwResult) => {
+      const data = makeAdvancedGameData({}, throwResult);
+      const result = validatePayload(makeAdvancedGamePayload({ data }));
+
+      expect(result.type).toBe('advanced-game');
+    });
+
     it('rejects an invalid advanced game flip choice', () => {
       const data = makeAdvancedGameData({
         flip: { result: 'won', choice: 'endzone' },
@@ -347,6 +370,13 @@ describe('validatePayload', () => {
   describe('advanced games (bulk) payload', () => {
     it('accepts a valid advanced games payload', () => {
       const result = validatePayload(makeAdvancedGamesPayload());
+      expect(result.type).toBe('advanced-games');
+    });
+
+    it.each(THROW_RESULTS)('accepts the declared %s throw result', (throwResult) => {
+      const data = [makeAdvancedGameData({}, throwResult)];
+      const result = validatePayload(makeAdvancedGamesPayload({ data }));
+
       expect(result.type).toBe('advanced-games');
     });
 

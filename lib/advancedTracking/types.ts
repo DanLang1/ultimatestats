@@ -318,15 +318,18 @@ export interface DiscPickupAction {
   recordedAt?: number;
 }
 
-export type ThrowResult =
-  | 'complete'
-  | 'goal'
-  | 'drop'
-  | 'throwaway'
-  | 'stall'
-  | 'block'
-  | 'pressure'
-  | 'callahan';
+export const THROW_RESULTS = [
+  'complete',
+  'goal',
+  'drop',
+  'throwaway',
+  'stall',
+  'block',
+  'pressure',
+  'callahan',
+] as const;
+
+export type ThrowResult = (typeof THROW_RESULTS)[number];
 
 export interface ThrowAction {
   id: string;

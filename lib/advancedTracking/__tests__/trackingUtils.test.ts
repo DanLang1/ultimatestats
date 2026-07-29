@@ -1,4 +1,5 @@
 import {
+  assertPointActionParticipantsPreserved,
   assertTwoSides,
   assertValidInjurySubInput,
   assertValidLines,
@@ -16,6 +17,7 @@ import {
   getLastAction,
   getLineReceivingSideId,
   getOtherSideId,
+  getPointActionParticipantIds,
   getPointScoringSideId,
   getReceivingSideForNextPoint,
   hasPointEnded,
@@ -23,6 +25,7 @@ import {
   isPointEndingThrow,
   isPossessionOver,
   isTurnoverThrow,
+  reconcilePointSubsAfterLineCorrection,
   syncDerivedHalftimeTransition,
 } from '../trackingUtils';
 import type { InjurySubInput } from '../trackingUtils';
@@ -80,6 +83,114 @@ function makePoint(possessions: PointPossession[]): TrackedPoint {
     possessions,
   };
 }
+
+describe('getPointActionParticipantIds', () => {
+  it('collects known pull, pickup, throw, receiver, and defender participants', () => {
+    const point = makePoint([
+      makePossession(HOME, [
+        {
+          id: 'pull-1',
+          kind: 'pull',
+          sideId: AWAY,
+          receivingSideId: HOME,
+          puller: meves,
+          receiver: august,
+          result: 'inbound',
+        },
+        {
+          id: 'pickup-1',
+          kind: 'disc_pickup',
+          sideId: HOME,
+          player: { refType: 'participant', participantId: 'p_pickup' },
+        },
+        {
+          id: 'throw-1',
+          kind: 'throw',
+          sideId: HOME,
+          thrower: august,
+          toPlayer: { refType: 'participant', participantId: 'p_receiver' },
+          defender: { refType: 'participant', participantId: 'p_defender' },
+          result: 'block',
+        },
+        {
+          id: 'stoppage-1',
+          kind: 'stoppage',
+          reason: 'injury',
+          sideId: HOME,
+        },
+      ]),
+    ]);
+
+    expect(new Set(getPointActionParticipantIds(point))).toEqual(
+      new Set([august.participantId, meves.participantId, 'p_pickup', 'p_receiver', 'p_defender']),
+    );
+  });
+});
+
+describe('line-correction injury reconciliation', () => {
+  const stoppage: StoppageAction = {
+    id: 'stoppage-1',
+    kind: 'stoppage',
+    reason: 'injury',
+  };
+  const pickup = {
+    id: 'pickup-1',
+    kind: 'disc_pickup' as const,
+    sideId: HOME,
+    player: meves,
+  };
+  const sub = {
+    id: 'sub-home',
+    type: 'injury' as const,
+    sideId: HOME,
+    inIds: [meves.participantId],
+    outIds: [august.participantId],
+    stoppageActionId: stoppage.id,
+  };
+
+  it('drops a sub invalidated by the corrected starting line', () => {
+    const point: TrackedPoint = {
+      ...makePoint([makePossession(HOME, [stoppage])]),
+      lines: [{ sideId: HOME, participantIds: [meves.participantId] }],
+      subs: [sub],
+    };
+
+    expect(reconcilePointSubsAfterLineCorrection(point, new Set([HOME]))).toBeUndefined();
+  });
+
+  it('allows an action participant to move from a sub onto the corrected starting line', () => {
+    const originalPoint: TrackedPoint = {
+      ...makePoint([makePossession(HOME, [stoppage, pickup])]),
+      subs: [sub],
+    };
+    const candidatePoint: TrackedPoint = {
+      ...originalPoint,
+      lines: [{ sideId: HOME, participantIds: [meves.participantId] }],
+      subs: undefined,
+    };
+
+    expect(() =>
+      assertPointActionParticipantsPreserved(baseGame, originalPoint, candidatePoint),
+    ).not.toThrow();
+  });
+
+  it('rejects orphaning an action participant when an invalidated sub is removed', () => {
+    const originalPoint: TrackedPoint = {
+      ...makePoint([makePossession(HOME, [stoppage, pickup])]),
+      subs: [sub],
+    };
+    const candidatePoint: TrackedPoint = {
+      ...originalPoint,
+      subs: undefined,
+    };
+
+    expect(() =>
+      assertPointActionParticipantsPreserved(baseGame, originalPoint, candidatePoint),
+    ).toThrow(
+      'Meves has recorded an action this point, so this correction cannot remove them from the active lineup at that time.',
+    );
+  });
+});
 
 function makeStoppageAction(overrides: Partial<StoppageAction> = {}): StoppageAction {
   return {

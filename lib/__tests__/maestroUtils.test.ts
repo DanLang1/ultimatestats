@@ -3,6 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getCurrentPossession } from '@/lib/advancedTracking/trackingUtils';
 import {
   getMaestroSeedPlayerId,
+  MAESTRO_SCRIMMAGE_BENCH_PLAYERS,
   MAESTRO_SCRIMMAGE_PLAYERS,
   MAESTRO_SEED_PLAYERS,
 } from '@/lib/maestroConstants';
@@ -65,4 +66,22 @@ describe('seedAdvancedTrackerTestGame tracker state presets', () => {
       });
     },
   );
+
+  it('keeps scrimmage bench players off both seeded starting lines', async () => {
+    await seedAdvancedTrackerTestGame({
+      gameType: 'scrimmage',
+      trackerState: 'focusPossession',
+    });
+
+    const game = useAdvancedTrackingStore.getState().currentGame;
+    expect(game?.points[0].lines).toHaveLength(2);
+    expect(game?.points[0].lines.every((line) => line.participantIds.length === 7)).toBe(true);
+
+    const startingParticipantIds = new Set(
+      game?.points[0].lines.flatMap((line) => line.participantIds),
+    );
+    for (const benchPlayer of MAESTRO_SCRIMMAGE_BENCH_PLAYERS) {
+      expect(startingParticipantIds.has(getMaestroSeedPlayerId(benchPlayer))).toBe(false);
+    }
+  });
 });

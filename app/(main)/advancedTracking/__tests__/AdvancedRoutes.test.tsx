@@ -386,7 +386,7 @@ describe('advanced tracking routes', () => {
     expect(screen.getByText('Edit Line')).toBeVisible();
     expect(screen.queryByText('Edit Rivals Line')).not.toBeOnTheScreen();
 
-    await user.press(screen.getByText(participants[0].name));
+    await user.press(screen.getByText(participants[1].name));
     await user.press(screen.getByText(participants[7].name));
     await user.press(screen.getByTestId('line-select-confirm'));
 
@@ -394,13 +394,63 @@ describe('advanced tracking routes', () => {
     expect(point?.lines).toEqual([
       {
         sideId: 'windchill',
-        participantIds: [...lineIds.slice(1), participants[7].id],
+        participantIds: [lineIds[0], ...lineIds.slice(2), participants[7].id],
       },
     ]);
     expect(router.back).toHaveBeenCalled();
   });
 
-  it('clears the focus side injury subs when correcting the single-side line', async () => {
+  it('locks a player with a recorded action and explains the lock when tapped', async () => {
+    const user = userEvent.setup();
+    const { participants, lineIds } = arrangeSingleSideTrackedPoint();
+
+    await renderScreen(<TrackerEditLineScreen />);
+
+    expect(screen.getByTestId(`player-chip-lock-${participants[0].name}`)).toBeVisible();
+    await user.press(screen.getByTestId(`player-chip-${participants[0].name}`));
+
+    expect(screen.getByText('Player locked')).toBeVisible();
+    expect(
+      screen.getByText(
+        `${participants[0].name} has recorded an action this point. Undo or edit that action before removing them from the lineup.`,
+      ),
+    ).toBeVisible();
+    expect(
+      useAdvancedTrackingStore.getState().currentGame?.points[0].lines[0].participantIds,
+    ).toContain(lineIds[0]);
+  });
+
+  it('allows correcting injury-only participants and removes the invalidated sub', async () => {
+    const user = userEvent.setup();
+    const { participants, lineIds } = arrangeSingleSideTrackedPoint();
+    useAdvancedTrackingStore.getState().recordInjurySubs({
+      sideId: 'windchill',
+      changes: [
+        {
+          sideId: 'windchill',
+          inIds: [participants[7].id],
+          outIds: [lineIds[1]],
+        },
+      ],
+    });
+
+    await renderScreen(<TrackerEditLineScreen />);
+
+    expect(screen.queryByTestId(`player-chip-lock-${participants[1].name}`)).not.toBeOnTheScreen();
+    expect(screen.queryByTestId(`player-chip-lock-${participants[7].name}`)).not.toBeOnTheScreen();
+
+    await user.press(screen.getByText(participants[1].name));
+    await user.press(screen.getByText(participants[8].name));
+    await user.press(screen.getByTestId('line-select-confirm'));
+
+    const point = useAdvancedTrackingStore.getState().currentGame?.points[0];
+    expect(point?.subs).toBeUndefined();
+    expect(point?.lines[0].participantIds).toContain(participants[8].id);
+    expect(point?.lines[0].participantIds).not.toContain(participants[1].id);
+    expect(router.back).toHaveBeenCalled();
+  });
+
+  it('preserves the focus side injury subs when correcting the single-side line', async () => {
     const user = userEvent.setup();
     const { participants, lineIds } = arrangeSingleSideTrackedPoint();
     useAdvancedTrackingStore.getState().recordInjurySubs({
@@ -420,7 +470,7 @@ describe('advanced tracking routes', () => {
     await user.press(screen.getByTestId('line-select-confirm'));
 
     const point = useAdvancedTrackingStore.getState().currentGame?.points[0];
-    expect(point?.subs).toBeUndefined();
+    expect(point?.subs).toHaveLength(1);
     expect(point?.lines[0].participantIds).toContain(participants[8].id);
     expect(point?.lines[0].participantIds).not.toContain(participants[1].id);
     expect(router.back).toHaveBeenCalled();
@@ -472,7 +522,7 @@ describe('advanced tracking routes', () => {
     const { participants } = arrangeDualTrackedPoint();
 
     await renderScreen(<TrackerEditLineScreen />);
-    await user.press(screen.getByText(participants[0].name));
+    await user.press(screen.getByText(participants[1].name));
     await user.press(screen.getByText(participants[14].name));
     await user.press(screen.getByTestId('line-select-confirm'));
 
@@ -481,7 +531,8 @@ describe('advanced tracking routes', () => {
 
     const point = useAdvancedTrackingStore.getState().currentGame?.points[0];
     expect(point?.lines.find((line) => line.sideId === 'light')?.participantIds).toEqual([
-      ...participants.slice(1, 7).map((participant) => participant.id),
+      participants[0].id,
+      ...participants.slice(2, 7).map((participant) => participant.id),
       participants[14].id,
     ]);
     expect(point?.lines.find((line) => line.sideId === 'dark')?.participantIds).toEqual(
@@ -495,13 +546,13 @@ describe('advanced tracking routes', () => {
     const { participants } = arrangeDualTrackedPoint();
 
     await renderScreen(<TrackerEditLineScreen />);
-    await user.press(screen.getByText(participants[0].name));
+    await user.press(screen.getByText(participants[1].name));
     await user.press(screen.getByText(participants[14].name));
     await user.press(screen.getByTestId('line-select-confirm'));
     await user.press(screen.getByTestId('line-correction-edit-other'));
 
     expect(screen.getByText('Edit Dark Line')).toBeVisible();
-    await user.press(screen.getByText(participants[7].name));
+    await user.press(screen.getByText(participants[8].name));
     await user.press(screen.getByText(participants[15].name));
     await user.press(screen.getByTestId('line-select-confirm'));
 
@@ -520,7 +571,7 @@ describe('advanced tracking routes', () => {
     const { participants } = arrangeDualTrackedPoint();
 
     await renderScreen(<TrackerEditLineScreen />);
-    await user.press(screen.getByText(participants[0].name));
+    await user.press(screen.getByText(participants[1].name));
     await user.press(screen.getByText(participants[14].name));
     await user.press(screen.getByTestId('line-select-confirm'));
     await user.press(screen.getByTestId('line-correction-edit-other'));
@@ -560,13 +611,13 @@ describe('advanced tracking routes', () => {
     const { participants } = arrangeDualTrackedPoint();
 
     await renderScreen(<TrackerEditLineScreen />);
-    await user.press(screen.getByText(participants[0].name));
+    await user.press(screen.getByText(participants[1].name));
     await user.press(screen.getByText(participants[14].name));
     await user.press(screen.getByTestId('line-select-confirm'));
     await user.press(screen.getByTestId('line-correction-edit-other'));
 
     expect(screen.getByText('Edit Dark Line')).toBeVisible();
-    expect(screen.queryByText(participants[0].name)).not.toBeOnTheScreen();
+    expect(screen.queryByText(participants[1].name)).not.toBeOnTheScreen();
   });
 
   it('preserves injury history for the uncorrected side when finishing early', async () => {
@@ -583,10 +634,17 @@ describe('advanced tracking routes', () => {
           stoppageActionId: 'earlier-injury',
         },
       ];
+      state.currentGame!.points[0].possessions[0].actions.push({
+        id: 'earlier-injury',
+        kind: 'stoppage',
+        reason: 'injury',
+        sideId: 'dark',
+        resumedAt: 200,
+      });
     });
 
     await renderScreen(<TrackerEditLineScreen />);
-    await user.press(screen.getByText(participants[0].name));
+    await user.press(screen.getByText(participants[1].name));
     await user.press(screen.getByText(participants[15].name));
     await user.press(screen.getByTestId('line-select-confirm'));
     await user.press(screen.getByTestId('line-correction-finish'));

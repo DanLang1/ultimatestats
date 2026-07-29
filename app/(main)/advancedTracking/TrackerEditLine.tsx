@@ -12,6 +12,7 @@ import {
   getCurrentPossession,
   getOtherSideId,
   getParticipantIdsUsedBySide,
+  getPointActionParticipantIds,
   haveSameParticipantIds,
 } from '@/lib/advancedTracking/trackingUtils';
 import { getSequenceNumber } from '@/lib/genderRatioUtils';
@@ -53,6 +54,10 @@ export default function TrackerEditLineScreen() {
   const sequenceNumber = point.genderRatio != null ? getSequenceNumber(pointNumber) : undefined;
   const editLineTitle = tracksBothSides ? `Edit ${sideLabel} Line` : 'Edit Line';
   const initialSelectedIds = draftLinesBySide[sideId] ?? baseLine;
+  const actionParticipantIds = new Set(getPointActionParticipantIds(point));
+  const lockedParticipantIds = baseLine.filter((participantId) =>
+    actionParticipantIds.has(participantId),
+  );
 
   const buildCorrectedLines = (linesBySide: Record<string, string[]>) =>
     selectedSideIds
@@ -117,6 +122,15 @@ export default function TrackerEditLineScreen() {
   };
 
   const confirmLabel = tracksBothSides && sideIndex === 0 ? 'CONTINUE' : 'SAVE LINE';
+  const handleLockedParticipantPress = (participantId: string) => {
+    const participantName =
+      game.participants.find((participant) => participant.id === participantId)?.name ??
+      'This player';
+    showAlert({
+      title: 'Player locked',
+      message: `${participantName} has recorded an action this point. Undo or edit that action before removing them from the lineup.`,
+    });
+  };
 
   return (
     <>
@@ -130,6 +144,10 @@ export default function TrackerEditLineScreen() {
         expectedRatio={point.genderRatio}
         sequenceNumber={sequenceNumber}
         requireChanges={!tracksBothSides}
+        participantLock={{
+          lockedIds: lockedParticipantIds,
+          onPress: handleLockedParticipantPress,
+        }}
         onBack={handleBack}
         onConfirm={handleConfirm}
       />
@@ -139,7 +157,10 @@ export default function TrackerEditLineScreen() {
         currentSideLabel={sideLabel}
         otherSideLabel={otherSideLabel}
         onClose={() => setShowContinuationMenu(false)}
-        onFinish={() => saveChanges(draftLinesBySide)}
+        onFinish={() => {
+          setShowContinuationMenu(false);
+          saveChanges(draftLinesBySide);
+        }}
         onEditOtherSide={() => {
           setShowContinuationMenu(false);
           setSideIndex(1);

@@ -318,7 +318,7 @@ export async function seedAdvancedTrackerTestGame(
     lines.push({
       sideId: OPP_SIDE_ID,
       participantIds: participants
-        .slice(MAESTRO_SEED_PLAYERS.length)
+        .slice(MAESTRO_SEED_PLAYERS.length, MAESTRO_SEED_PLAYERS.length * 2)
         .map((participant) => participant.id),
     });
   }

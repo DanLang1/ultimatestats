@@ -7,6 +7,7 @@ import { ModalPlayerGrid } from '@/components/lines/ModalPlayerGrid';
 import { PresetPickerModal } from '@/components/lines/PresetPickerModal';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import type { PlayerChipRestriction } from '@/components/ui/PlayerChip';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { Participant } from '@/lib/advancedTracking/types';
@@ -26,6 +27,23 @@ export interface RecentLine {
 
 const EMPTY_RECENT_LINES: RecentLine[] = [];
 const EMPTY_POINT_LINES: PointLineRecord[] = [];
+const EMPTY_PARTICIPANT_IDS: string[] = [];
+
+export interface LineParticipantLock {
+  lockedIds: string[];
+  onPress: (participantId: string) => void;
+}
+
+function withLockedParticipants(participantIds: string[], lockedIds: string[]): string[] {
+  const nextIds = new Set(lockedIds);
+
+  for (const participantId of participantIds) {
+    if (nextIds.size >= 7) break;
+    nextIds.add(participantId);
+  }
+
+  return [...nextIds].slice(0, 7);
+}
 
 interface TrackerLineScreenProps {
   participants: Participant[];
@@ -40,6 +58,7 @@ interface TrackerLineScreenProps {
   recentLines?: RecentLine[];
   pointLines?: PointLineRecord[];
   currentPoint?: number;
+  participantLock?: LineParticipantLock;
 }
 
 export const TrackerLineScreen = ({
@@ -55,6 +74,7 @@ export const TrackerLineScreen = ({
   recentLines = EMPTY_RECENT_LINES,
   pointLines = EMPTY_POINT_LINES,
   currentPoint,
+  participantLock,
 }: TrackerLineScreenProps) => {
   const { palette } = useTheme();
   const { sizeClass, isLandscape } = useLayout();
@@ -66,12 +86,19 @@ export const TrackerLineScreen = ({
   const presets = allPresets.filter((p) => p.teamId === currentTeamId);
   const quickPresets = presets.slice(0, 3);
 
-  const [selectedIds, setSelectedIds] = useState<string[]>(initialSelectedIds ?? []);
+  const lockedParticipantIds = participantLock?.lockedIds ?? EMPTY_PARTICIPANT_IDS;
+  const withLocked = (participantIds: string[]) =>
+    withLockedParticipants(participantIds, lockedParticipantIds);
+
+  const [selectedIds, setSelectedIds] = useState<string[]>(() =>
+    withLocked(initialSelectedIds ?? []),
+  );
   const [selectedPresetId, setSelectedPresetId] = useState<string | null>(null);
   const [selectedRecentPointNumber, setSelectedRecentPointNumber] = useState<number | null>(null);
   const [showLinePicker, setShowLinePicker] = useState(false);
 
   const initialIds = initialSelectedIds ?? [];
+  const lockedParticipantIdSet = new Set(lockedParticipantIds);
   const hasSubChanges = !requireChanges || selectedIds.some((id) => !initialIds.includes(id));
   const canConfirm = selectedIds.length === 7 && hasSubChanges;
 
@@ -98,6 +125,11 @@ export const TrackerLineScreen = ({
   }));
 
   const togglePlayer = (id: string) => {
+    const isSelected = selectedIds.includes(id);
+    if (isSelected && lockedParticipantIdSet.has(id)) {
+      participantLock?.onPress(id);
+      return;
+    }
     setSelectedIds((prev) => {
       if (prev.includes(id)) return prev.filter((x) => x !== id);
       if (prev.length >= 7) return prev;
@@ -108,24 +140,34 @@ export const TrackerLineScreen = ({
   const handleSelectPreset = (preset: { id: string; playerIds: string[] }) => {
     if (selectedPresetId === preset.id) {
       setSelectedPresetId(null);
-      setSelectedIds([]);
+      setSelectedIds(withLocked([]));
       return;
     }
     setSelectedPresetId(preset.id);
     const availableParticipantIds = new Set(participants.map((participant) => participant.id));
-    setSelectedIds(preset.playerIds.filter((id) => availableParticipantIds.has(id)).slice(0, 7));
+    const availablePresetIds = preset.playerIds.filter((id) => availableParticipantIds.has(id));
+    setSelectedIds(withLocked(availablePresetIds));
   };
 
   const handleSelectRecentLine = (recent: RecentLine) => {
     if (selectedRecentPointNumber === recent.pointNumber) {
       setSelectedRecentPointNumber(null);
-      setSelectedIds([]);
+      setSelectedIds(withLocked([]));
       return;
     }
     setSelectedRecentPointNumber(recent.pointNumber);
     setSelectedPresetId(null);
-    setSelectedIds(recent.playerIds);
+    setSelectedIds(withLocked(recent.playerIds));
   };
+
+  const playerRestrictions = new Map<string, PlayerChipRestriction>();
+  for (const participantId of lockedParticipantIds) {
+    if (!selectedIds.includes(participantId)) continue;
+    playerRestrictions.set(participantId, {
+      accessibilityHint: 'Cannot be removed from the starting lineup',
+      onPress: () => participantLock?.onPress(participantId),
+    });
+  }
 
   const { active: loadLineButtonActive, label: loadLineButtonLabel } = getLoadLineButtonState({
     presets,
@@ -271,7 +313,7 @@ export const TrackerLineScreen = ({
           {selectedIds.length > 0 && (
             <Pressable
               onPress={() => {
-                setSelectedIds([]);
+                setSelectedIds(withLocked([]));
                 setSelectedPresetId(null);
                 setSelectedRecentPointNumber(null);
               }}
@@ -322,6 +364,7 @@ export const TrackerLineScreen = ({
           useModalColors={false}
           gameActive={hasItems(pointLines)}
           currentPoint={currentPoint}
+          playerRestrictions={playerRestrictions}
         />
       </View>
     </ThemedView>

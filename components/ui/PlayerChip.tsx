@@ -10,6 +10,11 @@ import { MatchingType, PlayerRole } from '@/lib/storage/types';
 import { useSettingsStore } from '@/store/settingsStore';
 import { Fonts } from '@/theme/theme';
 
+export interface PlayerChipRestriction {
+  accessibilityHint: string;
+  onPress: () => void;
+}
+
 interface PlayerChipProps {
   name: string;
   number?: string;
@@ -21,6 +26,7 @@ interface PlayerChipProps {
   subtitle?: string;
   size?: 'default' | 'large';
   compact?: boolean;
+  restriction?: PlayerChipRestriction;
   /** Use modal-appropriate colors (modalText, modalTextMuted) */
   useModalColors?: boolean;
   onPress: () => void;
@@ -46,6 +52,7 @@ export function PlayerChip({
   subtitle,
   size = 'default',
   compact = false,
+  restriction,
   useModalColors = false,
   onPress,
 }: PlayerChipProps) {
@@ -104,6 +111,8 @@ export function PlayerChip({
     subtitleColor = useModalColors ? palette.modalTextMuted : palette.textMuted;
   }
 
+  const handlePress = disabled ? undefined : (restriction?.onPress ?? onPress);
+
   return (
     <Pressable
       style={({ pressed }) => [
@@ -117,7 +126,9 @@ export function PlayerChip({
         pressed && styles.chipPressed,
       ]}
       testID={`player-chip-${name}`}
-      onPress={disabled ? undefined : onPress}
+      accessibilityState={{ disabled, selected }}
+      accessibilityHint={restriction?.accessibilityHint}
+      onPress={handlePress}
       disabled={disabled}>
       {number && (
         <ThemedText
@@ -143,6 +154,15 @@ export function PlayerChip({
       {role && (
         <MaterialCommunityIcons
           name={ROLE_ICONS[role]}
+          size={getRoleIconSize({ compact, size, sizeClass })}
+          color={selected ? selectedTextColor : roleColor}
+          style={styles.roleIcon}
+        />
+      )}
+      {restriction && (
+        <MaterialCommunityIcons
+          testID={`player-chip-lock-${name}`}
+          name="lock"
           size={getRoleIconSize({ compact, size, sizeClass })}
           color={selected ? selectedTextColor : roleColor}
           style={styles.roleIcon}

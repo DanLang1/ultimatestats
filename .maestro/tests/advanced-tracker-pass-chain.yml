@@ -4,7 +4,7 @@ tags:
   - extended
 ---
 - runFlow:
-    file: ../flows/setup-game.yaml
+    file: ../flows/setup-game-clean.yaml
     env:
       TRACKER_STATE: focusPossession
 

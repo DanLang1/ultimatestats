@@ -1,0 +1,11 @@
+appId: com.langdk.ultimatestats
+name: Open Light Line Correction
+---
+- tapOn:
+    id: 'tracker-line-action-tile'
+- waitForAnimationToEnd:
+    timeout: 500
+- tapOn:
+    id: 'line-change-correct-line'
+- assertVisible:
+    text: 'Edit Light Line'

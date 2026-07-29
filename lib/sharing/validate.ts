@@ -1,8 +1,9 @@
-import type {
-  AdvancedTrackedGame,
-  FieldLocation,
-  PlayerRef,
-  PossessionAction,
+import {
+  THROW_RESULTS,
+  type AdvancedTrackedGame,
+  type FieldLocation,
+  type PlayerRef,
+  type PossessionAction,
 } from '@/lib/advancedTracking/types';
 import type { LinePreset, SavedGame, SavedTeam } from '@/lib/storage/types';
 
@@ -16,6 +17,7 @@ const MAX_ADVANCED_PARTICIPANTS = 100;
 const MAX_ROSTER_SIZE = 50;
 const MAX_STRING_LENGTH = 200;
 const MAX_BULK_GAMES = 10;
+const VALID_THROW_RESULTS = new Set<string>(THROW_RESULTS);
 
 function isRecord(val: unknown): val is Record<string, unknown> {
   return typeof val === 'object' && val !== null;
@@ -173,8 +175,7 @@ function validateAdvancedAction(action: unknown): asserts action is PossessionAc
     validateOptionalPlayerRef(action.defender);
     validateOptionalFieldLocation(action.origin);
     validateOptionalFieldLocation(action.target);
-    const validResults = ['complete', 'goal', 'drop', 'throwaway', 'stall', 'block', 'callahan'];
-    if (!validResults.includes(String(action.result))) {
+    if (!isString(action.result) || !VALID_THROW_RESULTS.has(action.result)) {
       throw new Error('Invalid advanced game: invalid throw result');
     }
     return;

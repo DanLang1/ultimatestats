@@ -18,6 +18,7 @@ import {
   getPointAdjustedTimestamp,
 } from '@/lib/advancedTracking/trackingDisplayHelpers';
 import {
+  assertPointActionParticipantsPreserved,
   assertTwoSides,
   assertValidInjurySubInput,
   assertValidLines,
@@ -32,10 +33,12 @@ import {
   hasInjurySubChanges,
   getOtherSideId,
   getParticipantIdsUsedBySide,
+  getPointActionParticipantIds,
   getReceivingSideForNextPoint,
   hasPointEnded,
   isAdvancedGameOver,
   isPossessionOver,
+  reconcilePointSubsAfterLineCorrection,
   syncCapTransitions,
   syncDerivedHalftimeTransition,
 } from '@/lib/advancedTracking/trackingUtils';
@@ -44,7 +47,7 @@ import {
   AdvancedTrackedGame,
   StoppageAction,
 } from '@/lib/advancedTracking/types';
-import { generateId, hasItems } from '@/lib/utils';
+import { generateId } from '@/lib/utils';
 import { useSavedAdvancedGamesStore } from '@/store/advancedTracking/savedGamesStore';
 import { useSettingsStore } from '@/store/settingsStore';
 
@@ -962,7 +965,23 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
           ) {
             throw new Error('A line correction can only replace an existing point lineup.');
           }
+          const actionParticipantIds = new Set(getPointActionParticipantIds(point));
           for (const line of input.lines) {
+            const currentLine = point.lines.find((item) => item.sideId === line.sideId)!;
+            const nextParticipantIds = new Set(line.participantIds);
+            const lockedRemovedId = currentLine.participantIds.find(
+              (participantId) =>
+                !nextParticipantIds.has(participantId) && actionParticipantIds.has(participantId),
+            );
+            if (lockedRemovedId != null) {
+              const participantName =
+                game.participants.find((participant) => participant.id === lockedRemovedId)?.name ??
+                'This player';
+              throw new Error(
+                `${participantName} has recorded an action this point and cannot be removed from the lineup.`,
+              );
+            }
+
             const opposingParticipantIds = new Set(
               game.sides
                 .filter((side) => side.id !== line.sideId)
@@ -978,13 +997,16 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
           const correctedLines = point.lines.map(
             (line) => correctionsBySide.get(line.sideId) ?? line,
           );
-          const remainingSubs = point.subs?.filter((sub) => !correctedSideIds.has(sub.sideId));
           const candidatePoint = {
             ...point,
             lines: correctedLines,
-            subs: hasItems(remainingSubs) ? remainingSubs : undefined,
+            subs: reconcilePointSubsAfterLineCorrection(
+              { ...point, lines: correctedLines },
+              correctedSideIds,
+            ),
           };
           assertValidPointLineHistory(game, candidatePoint);
+          assertPointActionParticipantsPreserved(game, point, candidatePoint);
 
           set((state) => {
             const liveGame = getCurrentGame(state);

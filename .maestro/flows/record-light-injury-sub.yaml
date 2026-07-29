@@ -1,0 +1,37 @@
+appId: com.langdk.ultimatestats
+name: Record Light Injury Sub
+---
+- tapOn:
+    id: 'tracker-line-action-tile'
+- waitForAnimationToEnd:
+    timeout: 500
+- tapOn:
+    id: 'line-change-injury-sub'
+
+- assertVisible:
+    text: 'Injury Sub · Light'
+- tapOn:
+    id: 'player-chip-Jon'
+    selected: true
+- tapOn:
+    id: 'player-chip-Heidi'
+    selected: false
+- tapOn:
+    id: 'line-select-confirm'
+    enabled: true
+
+- assertVisible:
+    text: 'Light lineup updated'
+- tapOn:
+    id: 'injury-sub-finish'
+
+- extendedWaitUntil:
+    visible:
+      id: 'stoppage-resume'
+    timeout: 5000
+- assertVisible:
+    text: 'INJURY'
+- assertVisible:
+    text: 'Heidi'
+- assertVisible:
+    text: 'Jon'

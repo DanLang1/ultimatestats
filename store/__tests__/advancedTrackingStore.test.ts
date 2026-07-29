@@ -89,7 +89,7 @@ function createGame(gameTo = 15): string {
 }
 
 function createDualTrackedScrimmage() {
-  const participants = Array.from({ length: 16 }, (_, index) => ({
+  const participants = Array.from({ length: 18 }, (_, index) => ({
     id: `scrim-player-${index + 1}`,
     name: `Scrim Player ${index + 1}`,
   }));
@@ -123,6 +123,8 @@ function createDualTrackedScrimmage() {
     darkIds,
     lightBenchId: participants[14].id,
     darkBenchId: participants[15].id,
+    lightCorrectionId: participants[16].id,
+    darkCorrectionId: participants[17].id,
   };
 }
 
@@ -1988,13 +1990,13 @@ describe('advancedTrackingStore', () => {
     it('replaces the selected base line for the point', () => {
       createGame();
       useAdvancedTrackingStore.getState().recordPull({
-        lines: homeLinesAugust,
+        lines: homeLines,
         puller: untracked,
         receiver: august,
         result: 'inbound',
       });
 
-      const newIds = [meves.participantId];
+      const newIds = [august.participantId];
       useAdvancedTrackingStore.getState().correctPointLines({
         lines: [{ sideId: homeSideId, participantIds: newIds }],
       });
@@ -2004,8 +2006,9 @@ describe('advancedTrackingStore', () => {
       expect(homeLine?.participantIds).toEqual(newIds);
     });
 
-    it('clears every injury sub when replacing the point lines', () => {
-      const { lightIds, darkIds, lightBenchId, darkBenchId } = createDualTrackedScrimmage();
+    it('preserves injury subs when correcting both point lines', () => {
+      const { lightIds, darkIds, lightBenchId, darkBenchId, lightCorrectionId, darkCorrectionId } =
+        createDualTrackedScrimmage();
       useAdvancedTrackingStore.getState().recordInjurySubs({
         changes: [
           {
@@ -2026,16 +2029,23 @@ describe('advancedTrackingStore', () => {
 
       useAdvancedTrackingStore.getState().correctPointLines({
         lines: [
-          { sideId: homeSideId, participantIds: lightIds },
-          { sideId: awaySideId, participantIds: darkIds },
+          {
+            sideId: homeSideId,
+            participantIds: [lightIds[0], lightCorrectionId, ...lightIds.slice(2)],
+          },
+          {
+            sideId: awaySideId,
+            participantIds: [darkIds[0], darkCorrectionId, ...darkIds.slice(2)],
+          },
         ],
       });
 
-      expect(getCurrentPoint(getCurrentGame())?.subs).toBeUndefined();
+      expect(getCurrentPoint(getCurrentGame())?.subs).toHaveLength(2);
     });
 
-    it('preserves injury subs for an uncorrected side', () => {
-      const { lightIds, darkIds, lightBenchId, darkBenchId } = createDualTrackedScrimmage();
+    it('preserves injury subs for corrected and uncorrected sides', () => {
+      const { lightIds, lightBenchId, darkIds, darkBenchId, lightCorrectionId } =
+        createDualTrackedScrimmage();
       useAdvancedTrackingStore.getState().recordInjurySubs({
         changes: [
           {
@@ -2052,36 +2062,42 @@ describe('advancedTrackingStore', () => {
       });
 
       useAdvancedTrackingStore.getState().correctPointLines({
-        lines: [{ sideId: homeSideId, participantIds: lightIds }],
+        lines: [
+          {
+            sideId: homeSideId,
+            participantIds: [lightIds[0], lightCorrectionId, ...lightIds.slice(2)],
+          },
+        ],
       });
 
       const point = getCurrentPoint(getCurrentGame());
-      expect(point?.subs).toHaveLength(1);
-      expect(point?.subs?.[0].sideId).toBe(awaySideId);
+      expect(point?.subs).toHaveLength(2);
+      expect(point?.subs?.map((sub) => sub.sideId)).toEqual([homeSideId, awaySideId]);
     });
 
     it('atomically corrects both tracked starting lines', () => {
-      const { lightIds, darkIds, lightBenchId, darkBenchId } = createDualTrackedScrimmage();
+      const { lightIds, darkIds, lightCorrectionId, darkCorrectionId } =
+        createDualTrackedScrimmage();
 
       useAdvancedTrackingStore.getState().correctPointLines({
         lines: [
           {
             sideId: homeSideId,
-            participantIds: [lightBenchId, ...lightIds.slice(1)],
+            participantIds: [lightIds[0], lightCorrectionId, ...lightIds.slice(2)],
           },
           {
             sideId: awaySideId,
-            participantIds: [darkBenchId, ...darkIds.slice(1)],
+            participantIds: [darkIds[0], darkCorrectionId, ...darkIds.slice(2)],
           },
         ],
       });
 
       const point = getCurrentPoint(getCurrentGame());
       expect(point?.lines.find((line) => line.sideId === homeSideId)?.participantIds).toContain(
-        lightBenchId,
+        lightCorrectionId,
       );
       expect(point?.lines.find((line) => line.sideId === awaySideId)?.participantIds).toContain(
-        darkBenchId,
+        darkCorrectionId,
       );
     });
 
@@ -2093,15 +2109,131 @@ describe('advancedTrackingStore', () => {
           lines: [
             {
               sideId: homeSideId,
-              participantIds: [darkIds[0], ...lightIds.slice(1)],
+              participantIds: [lightIds[0], darkIds[1], ...lightIds.slice(2)],
             },
             {
               sideId: awaySideId,
-              participantIds: [lightIds[0], ...darkIds.slice(1)],
+              participantIds: [darkIds[0], lightIds[1], ...darkIds.slice(2)],
             },
           ],
         }),
       ).toThrow('cannot change sides after a point has started');
+    });
+
+    it('rejects removing a participant who has recorded an action', () => {
+      const { lightIds, lightCorrectionId } = createDualTrackedScrimmage();
+
+      expect(() =>
+        useAdvancedTrackingStore.getState().correctPointLines({
+          lines: [
+            {
+              sideId: homeSideId,
+              participantIds: [lightCorrectionId, ...lightIds.slice(1)],
+            },
+          ],
+        }),
+      ).toThrow(
+        'Scrim Player 1 has recorded an action this point and cannot be removed from the lineup.',
+      );
+    });
+
+    it('removes an invalidated injury sub when its participants have no actions', () => {
+      const { lightIds, lightBenchId, lightCorrectionId } = createDualTrackedScrimmage();
+      useAdvancedTrackingStore.getState().recordInjurySubs({
+        changes: [
+          {
+            sideId: homeSideId,
+            inIds: [lightBenchId],
+            outIds: [lightIds[1]],
+          },
+        ],
+      });
+
+      useAdvancedTrackingStore.getState().correctPointLines({
+        lines: [
+          {
+            sideId: homeSideId,
+            participantIds: [lightIds[0], lightCorrectionId, ...lightIds.slice(2)],
+          },
+        ],
+      });
+
+      const point = getCurrentPoint(getCurrentGame());
+      expect(point?.subs).toBeUndefined();
+      expect(point?.lines.find((line) => line.sideId === homeSideId)?.participantIds).toContain(
+        lightCorrectionId,
+      );
+    });
+
+    it('removes an invalidated sub when its action player moves onto the starting line', () => {
+      const { lightIds, lightBenchId } = createDualTrackedScrimmage();
+      useAdvancedTrackingStore.getState().recordInjurySubs({
+        changes: [
+          {
+            sideId: homeSideId,
+            inIds: [lightBenchId],
+            outIds: [lightIds[1]],
+          },
+        ],
+      });
+
+      useAdvancedTrackingStore.setState((state) => {
+        state.currentGame!.points[0].possessions[0].actions.push({
+          id: 'bench-pickup',
+          kind: 'disc_pickup',
+          sideId: homeSideId,
+          player: { refType: 'participant', participantId: lightBenchId },
+        });
+      });
+
+      useAdvancedTrackingStore.getState().correctPointLines({
+        lines: [
+          {
+            sideId: homeSideId,
+            participantIds: [lightIds[0], lightBenchId, ...lightIds.slice(2)],
+          },
+        ],
+      });
+
+      const point = getCurrentPoint(getCurrentGame());
+      expect(point?.subs).toBeUndefined();
+      expect(point?.lines.find((line) => line.sideId === homeSideId)?.participantIds).toContain(
+        lightBenchId,
+      );
+    });
+
+    it('rejects removing a sub when that would orphan an action participant', () => {
+      const { lightIds, lightBenchId, lightCorrectionId } = createDualTrackedScrimmage();
+      useAdvancedTrackingStore.getState().recordInjurySubs({
+        changes: [
+          {
+            sideId: homeSideId,
+            inIds: [lightBenchId],
+            outIds: [lightIds[1]],
+          },
+        ],
+      });
+      useAdvancedTrackingStore.setState((state) => {
+        state.currentGame!.points[0].possessions[0].actions.push({
+          id: 'bench-pickup',
+          kind: 'disc_pickup',
+          sideId: homeSideId,
+          player: { refType: 'participant', participantId: lightBenchId },
+        });
+      });
+
+      expect(() =>
+        useAdvancedTrackingStore.getState().correctPointLines({
+          lines: [
+            {
+              sideId: homeSideId,
+              participantIds: [lightIds[0], lightCorrectionId, ...lightIds.slice(2)],
+            },
+          ],
+        }),
+      ).toThrow(
+        'Scrim Player 15 has recorded an action this point, so this correction cannot remove them from the active lineup at that time.',
+      );
     });
 
     it('throws if the point has ended', () => {

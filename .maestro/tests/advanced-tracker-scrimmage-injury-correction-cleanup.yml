@@ -1,0 +1,54 @@
+appId: com.langdk.ultimatestats
+name: Scrimmage Correction Removes Invalidated Injury Sub
+---
+- runFlow:
+    file: ../flows/setup-scrimmage-clean.yaml
+    env:
+      TRACKER_STATE: focusPossession
+- runFlow:
+    file: ../flows/record-light-injury-sub.yaml
+- tapOn:
+    id: 'stoppage-resume'
+- assertVisible:
+    id: 'tracker-menu-button'
+
+# Correcting Jon out of the original line invalidates the Jon -> Heidi injury sub.
+- runFlow:
+    file: ../flows/open-light-line-correction.yaml
+- assertNotVisible:
+    id: 'player-chip-lock-Jon'
+- tapOn:
+    id: 'player-chip-Jon'
+    selected: true
+- tapOn:
+    id: 'player-chip-Ivan'
+    selected: false
+- tapOn:
+    id: 'line-select-confirm'
+    enabled: true
+- tapOn:
+    id: 'line-correction-finish'
+- assertVisible:
+    id: 'tracker-menu-button'
+
+# A fresh injury screen exposes the effective lineup after reconciliation.
+- tapOn:
+    id: 'tracker-line-action-tile'
+- waitForAnimationToEnd:
+    timeout: 500
+- tapOn:
+    id: 'line-change-injury-sub'
+- assertVisible:
+    text: 'Injury Sub · Light'
+- assertVisible:
+    id: 'player-chip-Ivan'
+    selected: true
+- assertVisible:
+    id: 'player-chip-Heidi'
+    selected: false
+- assertVisible:
+    id: 'player-chip-Jon'
+    selected: false
+
+- takeScreenshot:
+    path: .maestro/screenshots/advanced-tracker-scrimmage-injury-correction-cleanup

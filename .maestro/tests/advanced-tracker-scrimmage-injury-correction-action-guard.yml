@@ -1,0 +1,47 @@
+appId: com.langdk.ultimatestats
+name: Scrimmage Correction Protects Sub-In Actions
+---
+- runFlow:
+    file: ../flows/setup-scrimmage-clean.yaml
+    env:
+      TRACKER_STATE: focusPossession
+- runFlow:
+    file: ../flows/record-light-injury-sub.yaml
+- tapOn:
+    id: 'stoppage-resume'
+- assertVisible:
+    id: 'tracker-chip-Heidi'
+
+# Heidi records a completion after entering for Jon.
+- tapOn:
+    id: 'tracker-chip-Heidi'
+- assertVisible:
+    text: 'JOE'
+
+# Dropping the injury sub would now orphan Heidi's completion, so saving is rejected.
+- runFlow:
+    file: ../flows/open-light-line-correction.yaml
+- tapOn:
+    id: 'player-chip-Jon'
+    selected: true
+- tapOn:
+    id: 'player-chip-Ivan'
+    selected: false
+- tapOn:
+    id: 'line-select-confirm'
+    enabled: true
+- tapOn:
+    id: 'line-correction-finish'
+
+- assertVisible:
+    text: 'Unable to correct lineup'
+- assertVisible:
+    text: 'Heidi has recorded an action this point, so this correction cannot remove them from the active lineup at that time.'
+
+- tapOn:
+    text: 'OK'
+- assertVisible:
+    text: 'Edit Light Line'
+
+- takeScreenshot:
+    path: .maestro/screenshots/advanced-tracker-scrimmage-injury-correction-action-guard
