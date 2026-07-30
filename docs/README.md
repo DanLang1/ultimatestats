@@ -52,7 +52,7 @@ user to `/Dashboard` or `/Scoreboard`.
 
 ### Stat Tracking
 
-When enabled, the app records:
+Basic tracking records a chronological `GameEvent[]` stream for:
 
 - Goals and assists
 - Turnovers (blocks, throwaways, drops, 50/50s)
@@ -60,44 +60,54 @@ When enabled, the app records:
 
 See: [stat-tracking.md](stat-tracking.md), [turnover-tracking.md](turnover-tracking.md)
 
+Advanced tracking uses a separate point-first model for pulls, pass chains, possession changes,
+stoppages, both-team tracking, and scrimmages. See
+[features/advanced-tracking/](features/advanced-tracking/README.md).
+
 ### Game Events
 
-All stats are stored as `GameEvent[]` in chronological order, enabling timeline reconstruction and CSV export.
+Basic stats are stored as `GameEvent[]` in chronological order, enabling timeline reconstruction
+and CSV export. Advanced actions are stored under ordered points and possessions; do not mix the
+two domain models.
 
 ### Possession
 
-Tracks which team has the disc, enabling turnover detection when user taps the non-possessing team.
+Both trackers persist possession explicitly enough for fast capture and derive analytics from their
+respective event models.
 
-### Teams & Rosters
+### Teams, Games, and Persistence
 
-- `currentTeam` - Active team with roster
-- `savedTeams` - Persisted team presets
-- `savedGames` - Completed game records
+- The basic store owns the active team, basic live game, saved basic games, and saved teams.
+- The advanced live store owns the loaded `currentGame` and recovery state.
+- The advanced saved-games store persists full advanced records and summaries through SQLite.
+- Advanced tracking currently reads shared team/roster data from the basic store; the intended
+  ownership cleanup is documented in
+  [shared-team-roster-store.md](future-features/shared-team-roster-store.md).
 
 ## Quick Links
 
-| Topic          | Documentation                                                                                                    |
-| -------------- | ---------------------------------------------------------------------------------------------------------------- |
-| Agent Guide    | [AGENTS.md](../AGENTS.md)                                                                                        |
-| Responsive     | [responsive-layout.md](responsive-layout.md)                                                                     |
-| Builds         | [Development](build/development-build.md) / [Production](build/production-build.md) / [OTA](build/eas-update.md) |
-| Completed Docs | [completed/responsive-scaling-tracker.md](completed/responsive-scaling-tracker.md)                               |
-| Modals         | [ui-patterns.md](ui-patterns.md) / [navigation-map.md](navigation-map.md)                                        |
-| Platforms      | [platform-support.md](platform-support.md)                                                                       |
-| iOS Follow-ups | [ios-followups.md](ios-followups.md)                                                                             |
-| Themes         | [theming.md](theming.md)                                                                                         |
-| UI Patterns    | [ui-patterns.md](ui-patterns.md)                                                                                 |
-| Stats          | [stat-tracking.md](stat-tracking.md)                                                                             |
-| Turnovers      | [turnover-tracking.md](turnover-tracking.md)                                                                     |
-| View Stats     | [view-stats.md](view-stats.md)                                                                                   |
-| Game Logic     | [game-logic.md](game-logic.md)                                                                                   |
-| Testing        | [testing.md](testing.md)                                                                                         |
-| Testing Map    | [testing-map.md](testing-map.md)                                                                                 |
-| State          | [state-ownership.md](state-ownership.md)                                                                         |
-| Navigation     | [navigation-map.md](navigation-map.md)                                                                           |
-| Events         | [event-model.md](event-model.md)                                                                                 |
-| Voice Input    | [advanced-tracking-voice.md](advanced-tracking-voice.md)                                                         |
-| Tech Debt      | [tech-debt.md](tech-debt.md)                                                                                     |
+| Topic       | Documentation                                                                                                                                                             |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Agent Guide | [AGENTS.md](../AGENTS.md)                                                                                                                                                 |
+| Responsive  | [responsive-layout.md](responsive-layout.md)                                                                                                                              |
+| Builds      | [Development](build/development-build.md) / [Production](build/production-build.md) / [OTA](build/eas-update.md)                                                          |
+| Modals      | [ui-patterns.md](ui-patterns.md) / [navigation-map.md](navigation-map.md)                                                                                                 |
+| Platforms   | [platform-support.md](platform-support.md)                                                                                                                                |
+| Themes      | [theming.md](theming.md)                                                                                                                                                  |
+| UI Patterns | [ui-patterns.md](ui-patterns.md)                                                                                                                                          |
+| Stats       | [stat-tracking.md](stat-tracking.md)                                                                                                                                      |
+| Turnovers   | [turnover-tracking.md](turnover-tracking.md)                                                                                                                              |
+| View Stats  | [view-stats.md](view-stats.md)                                                                                                                                            |
+| Game Logic  | [game-logic.md](game-logic.md)                                                                                                                                            |
+| Testing     | [testing.md](testing.md)                                                                                                                                                  |
+| Testing Map | [testing-map.md](testing-map.md)                                                                                                                                          |
+| State       | [state-ownership.md](state-ownership.md)                                                                                                                                  |
+| Navigation  | [navigation-map.md](navigation-map.md)                                                                                                                                    |
+| Events      | [event-model.md](event-model.md)                                                                                                                                          |
+| Advanced    | [Feature map](features/advanced-tracking/README.md) / [Data model](features/advanced-tracking/data-model.md) / [Analytics](features/advanced-tracking/analytics-layer.md) |
+| Sharing     | [features/sharing.md](features/sharing.md)                                                                                                                                |
+| Voice Input | [features/advanced-tracking/voice-input.md](features/advanced-tracking/voice-input.md)                                                                                    |
+| Tech Debt   | [tech-debt.md](tech-debt.md)                                                                                                                                              |
 
 ## New Screen Checklist
 

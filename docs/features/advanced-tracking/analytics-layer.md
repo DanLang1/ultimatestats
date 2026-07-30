@@ -1,6 +1,8 @@
 # Analytics Layer
 
-> **Status**: Brainstorm / Future Feature
+> Maintained reference for the implemented analytics layer. The exported types in
+> `lib/advancedTracking/analyticsTypes.ts` and compiler in
+> `lib/advancedTracking/buildAnalyticsGame.ts` are authoritative.
 
 ## Overview
 
@@ -39,9 +41,8 @@ Four flat arrays. Each is a different lens on the same game:
 - `actions` — primary interface for most stat derivation
 - `attributions` — pre-resolved stat attributions, makes weighted aggregation a one-liner
 
-`possessions` is included because possession-level summaries (O-efficiency, break rate, scores after
-turnovers) would otherwise get recomputed in multiple stat utils. If that proves unnecessary, it can
-be dropped without affecting `actions` or `attributions`.
+`possessions` prevents possession-level summaries such as conversion rate and scores after
+turnovers from being reconstructed independently by each stat utility.
 
 ---
 
@@ -51,15 +52,15 @@ be dropped without affecting `actions` or `attributions`.
 
 ```ts
 // Relative to focusSideId.
-// Every point must end with a score unless the game terminates mid-point.
-// 'terminated' only appears on the last point of a game with status: 'terminated'
-// (for example weather or a manual stop). Stats within that point are still valid.
+// Completed points end with a score. The last point may instead reflect the live
+// in-progress game or a game terminated mid-point.
 type PointState =
   | 'hold' // focus side received and scored
   | 'break' // focus side pulled and scored
   | 'broken' // focus side received, opponent scored
   | 'opp_hold' // focus side pulled, opponent scored
-  | 'terminated'; // game ended mid-point
+  | 'terminated' // game ended mid-point
+  | 'in_progress'; // live point has not ended
 
 type AnalyticsPoint = {
   id: string;
@@ -71,7 +72,7 @@ type AnalyticsPoint = {
   // without recompiling the game.
   receivingSideId: string;
   pullingSideId: string;
-  scoringSideId: string | null; // null only when the game ended mid-point
+  scoringSideId: string | null; // null for terminated or in-progress points
 
   // Convenience view from game.focusSideId's perspective.
   // For both-team tracking or scrimmages, use getPointStateForSide() instead.
@@ -111,7 +112,7 @@ type AnalyticsPossession = {
   possessionIndex: number; // 0-based within the point
 
   sideId: string;
-  result: 'scored' | 'turned_over' | 'terminated';
+  result: 'scored' | 'turned_over' | 'terminated' | 'in_progress';
   turnoverType?: 'drop' | 'throwaway' | 'stall' | 'block' | 'pressure' | 'callahan';
 };
 ```
@@ -168,11 +169,12 @@ type AttributionType =
   | 'assist'
   | 'hockey_assist'
   | 'completion' // successful throw — used for completion %
-  | 'throw_attempt' // any throw (complete, goal, throwaway, drop, stall)
+  | 'throw_attempt' // an actual released throw; a stall is excluded
   | 'receiving_touch' // caught a throw (complete or goal) — does NOT include pull receptions
   | 'throwaway'
   | 'drop'
   | 'stall'
+  | 'stall_conceded'
   | 'block'
   | 'pressure'
   | 'callahan'
@@ -198,7 +200,7 @@ These rules are applied once during `buildAnalyticsGame`. Stat utils never need 
 | `throw` result `goal`      | `goal` → receiver; `assist` → actor; `completion` + `throw_attempt` → actor; `receiving_touch` → receiver; `hockey_assist` → actor of previous `complete` throw in same possession (if exists) |
 | `throw` result `drop`      | `throw_attempt` → actor; `drop` → receiver (weight 0.5 if `splitAttribution`); `throwaway` → actor (weight 0.5 if `splitAttribution`)                                                          |
 | `throw` result `throwaway` | `throwaway` + `throw_attempt` → actor (always weight 1.0 — no receiver to share blame with, so `splitAttribution` is ignored)                                                                  |
-| `throw` result `stall`     | `stall` + `throw_attempt` → actor                                                                                                                                                              |
+| `throw` result `stall`     | `stall_conceded` → actor; `stall` → defender                                                                                                                                                   |
 | `throw` result `block`     | `throwaway` + `throw_attempt` → actor; `block` → defender                                                                                                                                      |
 | `throw` result `pressure`  | `throwaway` + `throw_attempt` → actor; `pressure` → defender                                                                                                                                   |
 | `throw` result `callahan`  | `throwaway` + `throw_attempt` → actor; `callahan` + `block` + `goal` → defender                                                                                                                |
@@ -228,7 +230,8 @@ These rules are applied once during `buildAnalyticsGame`. Stat utils never need 
 | Total touches     | sum of `completion` + `receiving_touch` + `disc_pickup` + `pull_reception` attributions       |
 | Throwaways        | `attributions` where `type === 'throwaway'`, sum `weight`                                     |
 | Drops             | `attributions` where `type === 'drop'`, sum `weight`                                          |
-| Stalls            | `attributions` where `type === 'stall'`, sum `weight`                                         |
+| Stalls made       | `attributions` where `type === 'stall'`, sum `weight`                                         |
+| Stalls conceded   | `attributions` where `type === 'stall_conceded'`, sum `weight`                                |
 | Blocks            | `attributions` where `type === 'block'`, sum `weight`                                         |
 | Pressures         | `attributions` where `type === 'pressure'`, sum `weight`                                      |
 | Callahans         | `attributions` where `type === 'callahan'`, sum `weight`                                      |
@@ -287,7 +290,7 @@ Use this instead of `point.state` when you need hold/break rates for a side othe
 `game.focusSideId` — for example, when displaying stats for both teams from a single
 `AnalyticsGame`, or when analyzing a scrimmage where neither side is the canonical focus.
 
-`terminated` is perspective-neutral and returns the same value for any `sideId`.
+`terminated` and `in_progress` are perspective-neutral and return the same value for any `sideId`.
 
 Perspective inversion pairs:
 
@@ -309,8 +312,8 @@ One pass over the raw game in order:
 
 The builder fails fast if raw data would produce misleading analytics, including:
 
-- unfinished points in non-terminated games
-- unfinished possessions except the final live possession of a terminated game
+- unfinished historical points
+- unfinished possessions except the final live possession of an in-progress or terminated game
 - side ids or participant ids that do not match the game definition
 - raw action side assignments that disagree with the enclosing possession
 
@@ -325,18 +328,17 @@ The builder does not mutate the raw game. It is a pure function.
 - Resolves `PlayerRef` values to participant IDs
 - Attaches point and possession context to every action
 - Emits pre-resolved stat attributions
-- Derives point-level states (hold/break/broken/opp_hold/terminated)
+- Derives point-level states (hold/break/broken/opp_hold/terminated/in-progress)
 
 **What the analytics layer does not do:**
 
-- Format stats for display (that is the stat utils layer)
-- Filter by date range, opponent, or tournament (stat utils layer)
+- Format stats for display
+- Choose screen-level date, opponent, tournament, or half selections
 - Persist anything (always generated in-memory on demand)
 - Know about the UI or how stats will be presented
 
 **What stat utils do:**
 
 - Accept an `AnalyticsGame` (or a subset of its arrays)
-- Return typed stat values for display
-- Handle formatting, rounding, and presentation labels
-- Support filtering (by player, by point type, by half, etc.)
+- Return typed, unformatted stat values
+- Apply domain filters explicitly requested by their function contract

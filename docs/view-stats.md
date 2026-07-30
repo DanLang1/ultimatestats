@@ -1,6 +1,7 @@
-# View Stats Feature
+# Basic View Stats
 
-> Documentation for the In-App Statistics Viewer
+> Maintained behavior reference for basic-game analytics. Advanced analytics use the compiled model
+> documented in [features/advanced-tracking/analytics-layer.md](features/advanced-tracking/analytics-layer.md).
 
 ## Overview
 

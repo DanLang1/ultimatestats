@@ -20,15 +20,21 @@ Defined across:
 - `/TutorialIntro` (`app/(main)/TutorialIntro.tsx`)
 - `/TutorialScoreboard` (`app/(main)/TutorialScoreboard.tsx`)
 - `/TutorialComplete` (`app/(main)/TutorialComplete.tsx`)
+- `/TutorialStatIntro` (`app/(main)/TutorialStatIntro.tsx`)
+- `/TutorialStatScoreboard` (`app/(main)/TutorialStatScoreboard.tsx`)
+- `/TutorialStatComplete` (`app/(main)/TutorialStatComplete.tsx`)
+- `/TutorialAdvancedTracker` (`app/(main)/TutorialAdvancedTracker.tsx`)
 - `/Scoreboard` (`app/(main)/(hub)/(game)/Scoreboard.tsx`)
 - `/Dashboard` (`app/(main)/(hub)/(home)/Dashboard.tsx`)
 - `/GameInfo` (`app/(main)/(hub)/(game)/GameInfo.tsx`)
+- `/GameFormat` (`app/(main)/GameFormat.tsx`)
 - `/Settings` (`app/(main)/Settings.tsx`)
 - `/EditRoster` (`app/(main)/(hub)/(team)/EditRoster.tsx`)
 - `/ImportTeam` (`app/(main)/ImportTeam.tsx`)
 - `/ViewStats` (`app/(main)/(hub)/(analytics)/ViewStats.tsx`)
 - `/PlayerStats` (`app/(main)/(hub)/(analytics)/PlayerStats.tsx`)
 - `/AggregateStats` (`app/(main)/(hub)/(analytics)/AggregateStats.tsx`)
+- `/CreateTournament` (`app/(main)/(hub)/(analytics)/CreateTournament.tsx`)
 - `/GameTimeline` (`app/(main)/(hub)/(analytics)/GameTimeline.tsx`)
 - `/LinePresetEditor` (`app/(main)/LinePresetEditor.tsx`)
 - `/SavedGameStats` (`app/(main)/(hub)/(analytics)/SavedGameStats.tsx`)
@@ -43,15 +49,24 @@ Defined across:
 - `/s/[kind]/[shareId]` (`app/s/[kind]/[shareId].tsx`) - deep-link redirect route for shared game/team/games links
 - `/Help` (`app/(main)/(hub)/(home)/Help.tsx`)
 - `/About` (`app/(main)/(hub)/(home)/About.tsx`)
+- `/Partners` (`app/(main)/(hub)/(home)/Partners.tsx`)
+- `/Showcase` (`app/(main)/(hub)/(home)/Showcase.tsx`)
+- `/advancedTracking/PreGameConfirm` (`app/(main)/advancedTracking/PreGameConfirm.tsx`)
+- `/advancedTracking/TrackerLineSelect` (`app/(main)/advancedTracking/TrackerLineSelect.tsx`)
+- `/advancedTracking/PullTracking` (`app/(main)/advancedTracking/PullTracking.tsx`)
+- `/advancedTracking/Tracker` (`app/(main)/advancedTracking/Tracker.tsx`)
+- `/advancedTracking/TrackerEditLine` (`app/(main)/advancedTracking/TrackerEditLine.tsx`)
+- `/advancedTracking/TrackerInjurySub` (`app/(main)/advancedTracking/TrackerInjurySub.tsx`)
+- `/advancedTracking/TrackerGameComplete` (`app/(main)/advancedTracking/TrackerGameComplete.tsx`)
 
 ### Hub Tab Navigation
 
 - Hub tabs are defined in `app/(main)/(hub)/_layout.tsx` and stay visible for all screens in hub tab stacks.
 - Navigator background rule: every route shell in this tree must set an explicit themed scene background (`contentStyle` for stacks, `sceneStyle` for tabs). Missing navigator-level backgrounds can surface as white flashes during back/tab transitions even when each screen component has its own background color.
 - Tab sections:
-  - Home: `/Dashboard`, `/Help`, `/About`
+  - Home: `/Dashboard`, `/Help`, `/About`, `/Partners`, `/Showcase`
   - Game: `/Scoreboard`, `/GameInfo`
-  - Stats: `/ViewStats`, `/PlayerStats`, `/SavedGameStats`, `/AggregateStats`, `/GameTimeline`, `/saved-games/[gameId]`, and `/advancedTracking/analytics/*`
+  - Stats: `/ViewStats`, `/PlayerStats`, `/SavedGameStats`, `/AggregateStats`, `/CreateTournament`, `/GameTimeline`, `/saved-games/[gameId]`, and `/advancedTracking/analytics/*`
   - Team: `/EditRoster`
 - Scoreboard is a real hub tab, but the tab bar is hidden while `/Scoreboard` is visible. Pressing the Game tab routes to `/Scoreboard` for fresh/in-progress sessions or starts a fresh game flow for completed sessions when the current session is finished.
 - Entry-route behavior: `/` is the root declarative entry route. It waits for `useTutorialStore` hydration, sends first-launch users to `/TutorialIntro`, redirects to the active game session route when one exists, and otherwise lands on `/Dashboard`.
@@ -67,6 +82,7 @@ Defined across:
 ### Transparent Modals
 
 - `/GameSelectorModal` (`app/(modals)/GameSelectorModal.tsx`)
+- `/AdvancedGameSelectorModal` (`app/(modals)/AdvancedGameSelectorModal.tsx`)
 - `/TeamManagementModal` (`app/(modals)/TeamManagementModal.tsx`)
 - `/HalftimeModal` (`app/(modals)/HalftimeModal.tsx`)
 - `/EditEventModal` (`app/(modals)/EditEventModal.tsx`)
@@ -89,6 +105,16 @@ Defined across:
 5. End game:
    save immediately, mark session finished, and present `/GameComplete`
    `/GameComplete` then `/Dashboard` or `/ViewStats` or `/Scoreboard` on undo/new game
+
+### Advanced Tracking Flow
+
+1. `/advancedTracking/PreGameConfirm` creates the advanced game and captures format/side setup.
+2. `/advancedTracking/TrackerLineSelect` assigns the opening line.
+3. `/advancedTracking/PullTracking` records the pull and enters `/advancedTracking/Tracker`.
+4. Tracker branches use `/advancedTracking/TrackerEditLine` and
+   `/advancedTracking/TrackerInjurySub` without leaving the advanced domain.
+5. A finished game is persisted before `/advancedTracking/TrackerGameComplete` is presented.
+6. Saved advanced analytics live under `/advancedTracking/analytics/*`.
 
 ### Route Gating Priorities
 

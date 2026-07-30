@@ -1,160 +1,106 @@
-# Stat Tracking System
+# Basic Stat Tracking
 
-> Design documentation for the goal/assist tracking feature.
+> Maintained behavior reference for the lightweight goal, assist, and turnover tracker. Advanced
+> pass-by-pass tracking is documented under [features/advanced-tracking/](features/advanced-tracking/README.md).
 
-## Overview
+## Model
 
-The stat tracking system allows recording who scored goals and threw assists during gameplay. It's designed to be unobtrusive and built progressively—no upfront roster setup required.
+Basic tracking appends `GameEvent` records to one chronological array. The canonical union and
+invariants are documented in [event-model.md](event-model.md) and defined in
+`store/basic/gameStore.types.ts`.
 
-## Data Model
+The event stream supports:
 
-```typescript
-// In store/gameStore.types.ts
+- goals and assists
+- blocks, throwaways, drops, and split 50/50 turnovers
+- timeouts
+- optional point numbers and event-relative timing
+- replay, editing, analytics, and CSV/PDF export
 
-export type TurnoverType = 'block' | 'throwaway' | 'drop' | 'fiftyfifty';
+Do not duplicate the event union in feature documentation. Update `event-model.md` and the exported
+types together.
 
-// gameId is optional - populated when game is saved (for future flat DB migration)
-export type GameEvent =
-  | {
-      type: 'goal';
-      team: 'team1' | 'team2';
-      goalPlayerId: string | null; // Player who scored
-      assistPlayerId: string | null; // Player who assisted (or 'OTHER_TEAM' for Callahans)
-      gameId?: string; // Links to SavedGame.id
-    }
-  | {
-      type: 'turnover';
-      team: 'team1' | 'team2'; // Team that committed the turnover
-      subtype: TurnoverType;
-      playerId: string | null;
-      player2Id?: string | null; // Second player for 50/50 turnovers
-      gameId?: string; // Links to SavedGame.id
-    };
-```
+## Ownership
 
-> See [Data Structure Decisions](data-structure-decisions.md) for architectural trade-offs regarding this flat structure vs. a nested point model.
+`useGameStore` owns the live basic game, event stream, active team, roster, possession, scores, and
+pending entry state.
 
-## State
+| State                               | Purpose                                               |
+| ----------------------------------- | ----------------------------------------------------- |
+| `statTrackingEnabled`               | Enables attribution and possession-aware controls     |
+| `events`                            | Chronological basic event log                         |
+| `pendingStatEntry`                  | Opens goal/assist attribution after a tracked goal    |
+| `pendingTurnoverEntry`              | Opens turnover attribution                            |
+| `possession` / `startingPossession` | Current disc side and halftime reference              |
+| `currentLine` / `pointLines`        | Optional player availability and playing-time history |
 
-| Property               | Type                            | Description                                    |
-| ---------------------- | ------------------------------- | ---------------------------------------------- |
-| `statTrackingEnabled`  | `boolean`                       | Whether stat tracking is enabled               |
-| `currentTeam`          | `SavedTeam`                     | Includes roster (built progressively)          |
-| `events`               | `GameEvent[]`                   | Unified chronological log of all game events   |
-| `pendingStatEntry`     | `{ team, pointNumber } \| null` | Triggers stat entry sheet                      |
-| `pendingTurnoverEntry` | `{ receivingTeam } \| null`     | Triggers turnover entry sheet                  |
-| `possession`           | `'team1' \| 'team2' \| null`    | Current team with the disc                     |
-| `startingPossession`   | `'team1' \| 'team2' \| null`    | Team that started with the disc (for halftime) |
+App-level preferences such as stat-entry order and line calling belong to `useSettingsStore`.
 
-## Flow
+## Goal Flow
 
-```mermaid
-sequenceDiagram
-    participant User
-    participant Score
-    participant Store
-    participant Sheet
+1. A valid score action updates the score, appends the goal event, and sets `pendingStatEntry`.
+2. `StatEntryOverlay` restricts the picker to the active line when one exists; otherwise it uses the
+   active roster.
+3. The user records player IDs or explicitly accepts unknown attribution.
+4. `addGoalEvent` fills the pending goal event and clears pending state.
+5. If the game ended, saving is awaited before the active session is cleared and the post-game flow
+   continues.
+6. Otherwise the flow may continue to halftime, line selection, or point summary.
 
-    User->>Score: Tap to increment
-    Score->>Store: incrementScore(isTeam1)
-    Store->>Store: Check if tracking enabled
-    alt Tracking enabled
-        Store->>Store: Set pendingStatEntry
-        Store-->>Sheet: Sheet becomes visible
-        Sheet->>User: "Who scored?" (or "Who threw assist?" if configured)
-        User->>Sheet: Select/add player
-        Sheet->>User: "Who threw assist?" (or "Who scored?" if configured)
-        User->>Sheet: Select/add player
-        Sheet->>Store: addGoalEvent()
-        Store->>Store: Clear pendingStatEntry
-    end
-```
+## Turnover Flow
 
-## Components
+The scoreboard action bar is possession-aware. Player-attributed actions open
+`TurnoverEntryOverlay`; immediate anonymous actions use the same store mutation path without the
+picker.
 
-### `StatEntrySheet.tsx`
+Cancelling a turnover picker clears pending UI state without adding an event or changing
+possession. See [turnover-tracking.md](turnover-tracking.md) for subtype and possession behavior.
 
-- Bottom sheet modal with side-by-side layout
-- Orchestrates the entry flow with side-by-side layout (info + roster)
-- Uses sub-components from `components/stat-entry/`
+## Cancel and Undo
 
-### `components/stat-entry/StatEntryHeader.tsx`
+Cancelling goal attribution reverses the pending score and goal event, restores possession, point
+number, line history, halftime state, and point-timer state, then clears `pendingStatEntry`.
 
-- Displays team name and current step label
-- Shows "GOAL" badge with player name during assist step
+`undoLastAction` removes the latest basic event and re-derives dependent state. Any change to goal,
+turnover, timeout, halftime, line, or timer semantics must cover both normal undo and pending-goal
+cancellation.
 
-### `components/stat-entry/StatEntryRoster.tsx`
-
-- Displays roster as a scrollable grid of `PlayerChip`s
-- Compact sizing (maxHeight: 280px)
-
-### `components/ui/PlayerChip.tsx`
-
-- Reusable chip for player selection
-- Selected/unselected states using palette colors
-
-## Pregame Setup
-
-In the pregame confirmation screen (`app/(main)/PreGameConfirm.tsx`):
-
-- **Stat Tracking**: Toggle card to enable/disable stat tracking for the game
-- **Point Timer**: Toggle card to record point durations when stat tracking is enabled
-- **Line Calling**: Toggle card to require selecting a line before each point when stat tracking is enabled
-
-## Related Screens
-
-- **Stat Entry Order**: Configure Goal -> Assist vs. Assist -> Goal in `app/(main)/Settings.tsx`
-- **Roster Management**: Edit or clear rosters from `app/(main)/(hub)/(team)/EditRoster.tsx`
-- **View Stats**: Access the [View Stats](view-stats.md) screen to see player breakdowns and export data
-- **Reset Stats Tutorial** (Dev Only): Available at the bottom of the Dashboard in dev builds to reset the tutorial acknowledgement flag.
-
-## Undo Behavior
-
-When an action is undone (via `undoLastAction`):
-
-1. The last `GameEvent` is removed from the `events` array.
-2. If it was a `goal`:
-   - Score for the respective team is reduced by 1.
-   - Possession is returned to the scoring team.
-   - `pendingStatEntry` is cleared.
-   - `currentPoint` is decremented.
-   - Point lines for future points are removed (`pointNumber > currentPoint`), but the current point's line is kept. See [Line Recording Logic](line-selection.md#undo-and-point-lines) for details.
-3. If it was a `turnover`:
-   - Possession is flipped back to the previous team.
-   - `pendingTurnoverEntry` is cleared.
+Selecting an unknown player is not cancellation; it preserves the event with null attribution.
 
 ## Reset Behavior
 
-On "New Game":
+`resetGame()` clears scores, events, pending entry state, possession, timers, point history, and
+live line state. It preserves the active team and roster, saved records, and app preferences.
+Clearing a roster is a separate explicit action.
 
-- `events` array cleared
-- `pendingStatEntry` and `pendingTurnoverEntry` cleared
-- `team1Roster` cleared
-- `possession` and `startingPossession` reset to null
-- `statTrackingEnabled` setting persists
+## Primary Components
 
-## Cancel Behavior
+| Area                | Source                                                     |
+| ------------------- | ---------------------------------------------------------- |
+| Live composition    | `components/basic/scoreboard/LiveScoreboard.tsx`           |
+| Goal/assist overlay | `components/basic/stat-entry/StatEntryOverlay.tsx`         |
+| Goal/assist content | `components/basic/stat-entry/StatEntryInner.tsx`           |
+| Turnover overlay    | `components/basic/turnover-entry/TurnoverEntryOverlay.tsx` |
+| Turnover content    | `components/basic/turnover-entry/TurnoverEntryInner.tsx`   |
+| Store               | `store/basic/gameStore.ts`                                 |
+| Types               | `store/basic/gameStore.types.ts`                           |
+| Analytics           | `lib/basic/`                                               |
 
-Users can cancel out of stat entry modals without recording any data:
+## Related Screens
 
-### StatEntrySheet (Goal/Assist Entry)
+- `/PreGameConfirm` configures basic game format and tracking options.
+- `/Settings` owns stat-entry order and persistent preferences.
+- `/EditRoster` manages the active team's roster.
+- `/ViewStats` and related analytics routes consume the event model.
+- `/GameTimeline` exposes event and timing corrections.
 
-When the user taps **Cancel** (or outside the modal):
+## Change Checklist
 
-1. The score increment is reverted (undoes the point).
-2. The pending goal event is removed from `events` array.
-3. Possession is restored to team1.
-4. Point timer is restored to its previous state.
-5. `pendingStatEntry` is cleared.
+When changing basic stat semantics:
 
-This differs from selecting **Unknown**, which still records the goal with null player IDs.
-
-### TurnoverEntrySheet (Turnover Entry)
-
-When the user taps **Cancel** (or outside the modal):
-
-1. `pendingTurnoverEntry` is cleared.
-2. No turnover event is recorded.
-3. Possession remains unchanged (no flip).
-
-Since turnovers don't increment the score, cancel simply dismisses without side effects.
+1. Follow existing `store/basic` and `lib/basic` patterns.
+2. Update every event producer, undo/cancel path, replay utility, and saved-game editor.
+3. Add a schema migration if persisted interpretation changes.
+4. Update focused Jest tests and screen coverage.
+5. Update [event-model.md](event-model.md), [turnover-tracking.md](turnover-tracking.md), and
+   [view-stats.md](view-stats.md) where their behavior changes.

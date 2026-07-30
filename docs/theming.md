@@ -1,8 +1,8 @@
-# Light Theme Implementation
+# Theming
 
 ## Overview
 
-Toggle between Light and Dark themes via Settings > Display.
+The app supports light and dark palettes selected from Settings > Display.
 
 ## Theme System
 

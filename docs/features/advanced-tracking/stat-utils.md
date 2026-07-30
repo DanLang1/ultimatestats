@@ -1,6 +1,7 @@
 # Stat Utils Layer
 
-> **Status**: Brainstorm / Future Feature
+> Maintained reference for the implemented advanced analytics utilities in
+> `lib/advancedTracking/`.
 
 ## Overview
 
@@ -20,7 +21,8 @@ Stat utils are pure functions. They do not persist anything, do not know about t
 
 ## UFA Stat Alignment
 
-Target coverage is aligned with [UFA game stats](https://www.watchufa.com/stats/game/2025-05-09-ATL-SD). The table below shows what we can derive from the current data model and what requires future field location support.
+The table below shows what the current data model can derive and what still requires field-location
+support.
 
 ### Derivable Now
 
@@ -87,7 +89,7 @@ These stats require `locationMode: 'zone'` or `'xy'` and origin/target on throw 
 
 ## Utility File Structure
 
-Four utility files, each focused on a stat domain:
+Core utility files are organized by stat domain:
 
 ### `advancedPlayerStatsUtils.ts`
 
@@ -112,6 +114,15 @@ Pull-specific stats. Returns `PullStats` with outcome breakdowns and average han
 Point duration stats. Returns `AdvancedTimingStats` with averages, extremes, and a `hasTimingData` flag for graceful fallback when timestamps are absent.
 
 Half-split timing stats are supported via the caller pre-filtering `game.points` on `point.half` (1 or 2) before passing the game to `computeAdvancedTimingStats`. This is the standard pattern — stat utils operate on a single `AnalyticsGame`, filtering is the caller's responsibility.
+
+### Additional Analytics Utilities
+
+- `advancedTimeOfPossessionUtils.ts` derives side possession time from action timing.
+- `advancedImpactUtils.ts` builds per-player point impact.
+- `advancedChemistryUtils.ts` derives scoring and passing connections.
+- `advancedAggregateStatsUtils.ts` derives opening-pull and flip summaries across games.
+- `aggregateAnalyticsGames.ts` combines compiled games for aggregate views.
+- `advancedCSVUtils.ts` serializes single-game and aggregate analytics.
 
 ## Design Principles
 

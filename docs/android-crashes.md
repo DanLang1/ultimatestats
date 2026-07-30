@@ -1,41 +1,38 @@
-# Android Navigation Crashes & "addViewAt" Errors
+# Android Navigation Crash Exception
 
-## The Issue
+> Narrowly scoped note for the confirmed `LineEditor` workaround. This is not the default
+> navigation or persistence pattern.
 
-On Android, React Native can crash with errors like `addViewAt: failed to insert view` or "The specified child already has a parent" if a heavy state update triggers a re-render of a component _while_ that component is undergoing a navigation transition (unmounting or animating out).
+## Confirmed Case
 
-This often happens when:
+`app/(main)/LineEditor.tsx` previously triggered an Android native `addViewAt` crash when confirming
+a line caused a route dismissal and a substantial live-store/render update in the same frame.
 
-1.  A user action (e.g., "Confirm") triggers a global store update.
-2.  The same action triggers a navigation event (`router.back()`, `router.dismiss()`).
-3.  The component subscribes to the store, so the update forces a re-render during the exit animation.
-4.  The ViewManager gets desynchronized, trying to move/add views that are being detached.
+The current workaround:
 
-## The Solution: `requestIdleCallback`
+1. Dismisses deterministically to `/Scoreboard`.
+2. Defers the line-state update with `requestIdleCallback`.
 
-To fix this, decouple the state update from the navigation event. The state update should be deferred until the Javascript thread is idle, which usually means after the navigation transition has started or completed.
+Keep that ordering unless the crash is re-tested and shown to be resolved on supported Android
+versions.
 
-Use `requestIdleCallback` to wrap the state update logic:
+## Do Not Generalize It
 
-```typescript
-const handleConfirm = () => {
-  // Navigation happens immediately
-  router.back();
+Normal actions must update and persist their state before navigation invalidates it. In particular,
+save/import/finalize flows must await persistence before dismissing, resetting, or clearing the
+source state.
 
-  // State update is deferred
-  requestIdleCallback(() => {
-    heavyStoreUpdate(); // e.g., setCurrentLine(...)
-  });
-};
-```
+Use deferred mutation only for a reproduced native view-transition crash where:
 
-**Note:** If `requestIdleCallback` is not available (older environments), `setTimeout(() => { ... }, 0)` is a viable alternative.
+- the state update does not need to finish before navigation,
+- the route destination is explicit,
+- delayed execution cannot save or mutate the wrong record, and
+- the workaround is documented beside the callsite.
 
-> [!CAUTION]
-> **Do NOT use `InteractionManager`**. It is deprecated in modern React Native and may be removed in future versions. Always prefer `requestIdleCallback` or `setTimeout`.
+Do not add arbitrary delays or replace deterministic modal exits with `router.back()`.
 
-## Prevention Checklist
+## If the Crash Returns
 
-- [ ] Check if your component subscribes to the data you are updating.
-- [ ] Check if you are navigating immediately after that update.
-- [ ] If yes, wrap the update in `requestIdleCallback`.
+Capture the route transition, affected Android/Expo/React Native versions, and the exact state
+mutation. Prefer removing this workaround once the underlying transition is proven safe; otherwise
+keep the exception local to the reproduced callsite.

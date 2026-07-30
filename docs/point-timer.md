@@ -1,6 +1,6 @@
 # Point Timer
 
-> Design documentation for the point timing and duration tracking feature.
+> Maintained behavior reference for basic-game point timing and duration tracking.
 
 ## Overview
 
@@ -18,7 +18,7 @@ The Point Timer feature allows users to record precise start times for each poin
 Timestamps are managed separately from the event log to ensure robust handling of undo/redo operations and game resets.
 
 ```typescript
-// in store/gameStore.types.ts
+// in store/basic/gameStore.types.ts
 
 export interface GameState {
   // ...
@@ -65,7 +65,8 @@ When a goal is undone (`undoLastAction`):
 
 ## Timeline Integration
 
-The `lib/timelineUtils.ts` module generates the `PointEvents` structure used by the timeline. It acts as the single source of truth for duration calculations:
+The `lib/basic/timelineUtils.ts` module generates the `PointEvents` structure used by the timeline.
+It acts as the single source of truth for duration calculations:
 
 1.  **Determine Start Time**: It looks for a finalized timestamp in `pointStartTimestamps`. If not found (e.g., in-progress point), it falls back to `currentPointStartTime`.
 2.  **Calculate Duration**: `goalTimestamp - startTimestamp`.

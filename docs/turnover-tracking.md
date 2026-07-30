@@ -1,6 +1,7 @@
 # Turnover Tracking System
 
-> Design documentation for the turnover event tracking feature (blocks, throwaways, drops).
+> Maintained behavior reference for basic-game turnover tracking (blocks, throwaways, drops, and
+> 50/50 attribution).
 
 ## Overview
 
@@ -24,7 +25,7 @@ This feature integrates with the existing stat tracking setting—turnover track
 ## Data Model
 
 ```typescript
-// In store/gameStore.types.ts
+// In store/basic/gameStore.types.ts
 
 export type TurnoverType = 'block' | 'throwaway' | 'drop' | 'fiftyfifty';
 

@@ -1,5 +1,8 @@
 # Line Selection System
 
+> Maintained behavior reference for basic-game line selection. Advanced line selection follows the
+> point-line model in [features/advanced-tracking/data-model.md](features/advanced-tracking/data-model.md).
+
 ## Replace vs. Append (Correction vs. Substitution)
 
 When a user edits a line mid-point, the system determines whether it's a **correction** (wrong preset picked) or a **real substitution** (injury/fatigue) by counting how many players changed:
@@ -22,7 +25,9 @@ Replacement/correction edits do not store substitution metadata. Legacy saved ga
 
 ## Playing Time Attribution
 
-Both `computePlayingTime()` (`lib/lineUtils.ts`) and `computePlayingTimeStats()` (`lib/playingTimeStatsUtils.ts`) use a `Set` to collect all players across every `PointLineRecord` for a given point. This means:
+Both `computePlayingTime()` (`lib/lineUtils.ts`) and
+`computePlayingTimeStats()` (`lib/basic/playingTimeStatsUtils.ts`) use a `Set` to collect all
+players across every `PointLineRecord` for a given point. This means:
 
 - A player subbed **out** mid-point still gets credit
 - A player subbed **in** mid-point also gets credit

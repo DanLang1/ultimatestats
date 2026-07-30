@@ -1,5 +1,5 @@
 // Advanced Stat Tracking Types
-// See docs/future-features/advanced-stat-tracking/data-model.md
+// See docs/features/advanced-tracking/data-model.md
 
 import type { GenderRatio } from '@/lib/genderRatioUtils';
 

@@ -1,5 +1,5 @@
 // Analytics Layer Types
-// See docs/future-features/advanced-stat-tracking/analytics-layer.md
+// See docs/features/advanced-tracking/analytics-layer.md
 
 import type {
   AdvancedGameType,

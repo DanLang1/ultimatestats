@@ -1,13 +1,13 @@
 # Game Logic
 
-> Documentation for game scoring, win conditions, and possession handling.
+> Documentation for basic-game scoring, win conditions, and possession handling.
 
 ## Game End Detection
 
-Use the centralized `checkGameOver` function from `lib/gameUtils.ts`:
+Use the centralized `checkGameOver` function from `lib/basic/gameUtils.ts`:
 
 ```typescript
-import { checkGameOver } from '@/lib/gameUtils';
+import { checkGameOver } from '@/lib/basic/gameUtils';
 
 const result = checkGameOver({
   team1Score,
@@ -78,15 +78,15 @@ if (result.isGameOver) {
 
 | File                                               | Purpose                                |
 | -------------------------------------------------- | -------------------------------------- |
-| `lib/gameUtils.ts`                                 | `checkGameOver()` utility              |
-| `lib/__tests__/gameUtils.test.ts`                  | Unit tests for game logic              |
-| `store/gameStore.ts`                               | `incrementScore()`, `possession` state |
+| `lib/basic/gameUtils.ts`                           | `checkGameOver()` utility              |
+| `lib/basic/__tests__/gameUtils.test.ts`            | Unit tests for game logic              |
+| `store/basic/gameStore.ts`                         | `incrementScore()`, `possession` state |
 | `app/(main)/GameComplete.tsx`                      | Game end UI                            |
 | `components/basic/stat-entry/StatEntryOverlay.tsx` | Stat entry + game end check            |
 
 ## Testing Game Logic
 
-Test file: `lib/__tests__/gameUtils.test.ts`
+Test file: `lib/basic/__tests__/gameUtils.test.ts`
 
 Run tests:
 

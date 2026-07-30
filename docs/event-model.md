@@ -1,8 +1,9 @@
 # Event Model
 
-Canonical event definitions and invariants for gameplay stats.
+Canonical event definitions and invariants for basic gameplay stats. Advanced tracking uses the
+separate model in [features/advanced-tracking/data-model.md](features/advanced-tracking/data-model.md).
 
-Source of truth: `store/gameStore.types.ts`.
+Source of truth: `store/basic/gameStore.types.ts`.
 
 ## Event Union
 
@@ -68,17 +69,19 @@ Source of truth: `store/gameStore.types.ts`.
 - Edit:
   `updateEvent`, `deleteEvent`, `updateSavedGameEvent`, `deleteSavedGameEvent`.
 - Read/derive:
-  `lib/statsUtils.ts`, `lib/teamStatsUtils.ts`, `lib/timelineUtils.ts`, `lib/playingTimeStatsUtils.ts`.
+  `lib/basic/statsUtils.ts`, `lib/basic/teamStatsUtils.ts`, `lib/basic/timelineUtils.ts`,
+  `lib/basic/playingTimeStatsUtils.ts`.
 
 ## Change Checklist
 
 If you change event fields or semantics:
 
-1. Update `store/gameStore.types.ts`.
-2. Update all producers in `store/gameStore.ts`.
-3. Update downstream calculators in `lib/*stats*` and `lib/timelineUtils.ts`.
+1. Update `store/basic/gameStore.types.ts`.
+2. Update all producers in `store/basic/gameStore.ts`.
+3. Update downstream calculators in `lib/basic/*stats*` and `lib/basic/timelineUtils.ts`.
 4. Update docs:
    `docs/stat-tracking.md`
    `docs/turnover-tracking.md`
    `docs/view-stats.md`
-5. Add/update tests in `lib/__tests__/`.
+5. Add/update tests in `lib/basic/__tests__/` and storage migration tests when persisted data
+   changes.
