@@ -14,6 +14,7 @@ interface BottomSheetActionRowProps {
   icon: keyof typeof MaterialCommunityIcons.glyphMap;
   label: string;
   description?: string;
+  badge?: string;
   trailingIcon?: keyof typeof MaterialCommunityIcons.glyphMap;
   tone?: BottomSheetActionRowTone;
   disabled?: boolean;
@@ -25,6 +26,7 @@ export function BottomSheetActionRow({
   icon,
   label,
   description,
+  badge,
   trailingIcon,
   tone = 'accent',
   disabled = false,
@@ -53,7 +55,14 @@ export function BottomSheetActionRow({
         />
       </View>
       <View style={styles.textBlock}>
-        <ThemedText style={[styles.label, { color: palette.textInverse }]}>{label}</ThemedText>
+        <View style={styles.labelRow}>
+          <ThemedText style={[styles.label, { color: palette.textInverse }]}>{label}</ThemedText>
+          {badge && (
+            <View style={[styles.badge, { backgroundColor: palette.accentOverlay15 }]}>
+              <ThemedText style={[styles.badgeText, { color: palette.accent }]}>{badge}</ThemedText>
+            </View>
+          )}
+        </View>
         {description && (
           <ThemedText style={[styles.description, { color: palette.textMuted }]}>
             {description}
@@ -114,6 +123,22 @@ function createStyles(sizeClass: SizeClass) {
     label: {
       fontSize: scaleBySizeClass(16, sizeClass),
       fontFamily: Fonts.semiBold,
+    },
+    labelRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    badge: {
+      paddingHorizontal: 6,
+      paddingVertical: 2,
+      borderRadius: 6,
+    },
+    badgeText: {
+      fontSize: scaleBySizeClass(9, sizeClass),
+      fontFamily: Fonts.bold,
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
     },
     description: {
       fontSize: scaleBySizeClass(12, sizeClass),

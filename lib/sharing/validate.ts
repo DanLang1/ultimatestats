@@ -1,10 +1,12 @@
 import {
+  ADVANCED_TRACKING_SCHEMA_VERSION,
   THROW_RESULTS,
   type AdvancedTrackedGame,
   type FieldLocation,
   type PlayerRef,
   type PossessionAction,
 } from '@/lib/advancedTracking/types';
+import { CURRENT_SCHEMA_VERSION } from '@/lib/storage/types';
 import type { LinePreset, SavedGame, SavedTeam } from '@/lib/storage/types';
 
 import type { SharedPayload } from './types';
@@ -208,6 +210,11 @@ function validateAdvancedGame(data: unknown): asserts data is AdvancedTrackedGam
   if (!isNumber(data.schemaVersion)) {
     throw new Error('Invalid advanced game: missing schemaVersion');
   }
+  if (data.schemaVersion > ADVANCED_TRACKING_SCHEMA_VERSION) {
+    throw new Error(
+      `Invalid advanced game: schema version ${data.schemaVersion} is newer than supported version ${ADVANCED_TRACKING_SCHEMA_VERSION}`,
+    );
+  }
   if (!isNumber(data.createdAt) || !isNumber(data.updatedAt)) {
     throw new Error('Invalid advanced game: missing timestamps');
   }
@@ -392,6 +399,16 @@ export function validatePayload(raw: unknown): SharedPayload {
     raw.type !== 'games'
   ) {
     throw new Error('Invalid payload: unknown type');
+  }
+
+  const currentSchemaVersion =
+    raw.type === 'advanced-game' || raw.type === 'advanced-games'
+      ? ADVANCED_TRACKING_SCHEMA_VERSION
+      : CURRENT_SCHEMA_VERSION;
+  if (schemaVersion > currentSchemaVersion) {
+    throw new Error(
+      `Invalid payload: schema version ${schemaVersion} is newer than supported version ${currentSchemaVersion}`,
+    );
   }
 
   if (raw.type === 'games') {

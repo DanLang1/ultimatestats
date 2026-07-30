@@ -1,9 +1,11 @@
 import {
+  ADVANCED_TRACKING_SCHEMA_VERSION,
   THROW_RESULTS,
   type AdvancedTrackedGame,
   type ThrowResult,
 } from '../advancedTracking/types';
 import { validatePayload } from '../sharing/validate';
+import { CURRENT_SCHEMA_VERSION } from '../storage/types';
 
 function makeGamePayload(overrides: Record<string, unknown> = {}): unknown {
   return {
@@ -156,6 +158,84 @@ describe('validatePayload', () => {
 
     it('throws for non-numeric schemaVersion', () => {
       expect(() => validatePayload({ type: 'game', schemaVersion: 'v1' })).toThrow('schemaVersion');
+    });
+  });
+
+  describe('schema version guard', () => {
+    it('accepts payloads at the current schema version', () => {
+      expect(() =>
+        validatePayload(makeGamePayload({ schemaVersion: CURRENT_SCHEMA_VERSION })),
+      ).not.toThrow();
+      expect(() =>
+        validatePayload(
+          makeAdvancedGamePayload({ schemaVersion: ADVANCED_TRACKING_SCHEMA_VERSION }),
+        ),
+      ).not.toThrow();
+    });
+
+    it('throws for a basic payload newer than the supported schema version', () => {
+      expect(() =>
+        validatePayload(makeGamePayload({ schemaVersion: CURRENT_SCHEMA_VERSION + 1 })),
+      ).toThrow('newer than supported version');
+    });
+
+    it('throws for an advanced payload newer than the supported schema version', () => {
+      expect(() =>
+        validatePayload(
+          makeAdvancedGamePayload({ schemaVersion: ADVANCED_TRACKING_SCHEMA_VERSION + 1 }),
+        ),
+      ).toThrow('newer than supported version');
+      expect(() =>
+        validatePayload(
+          makeAdvancedGamesPayload({ schemaVersion: ADVANCED_TRACKING_SCHEMA_VERSION + 1 }),
+        ),
+      ).toThrow('newer than supported version');
+    });
+
+    it('throws when an advanced game record is newer than its supported envelope', () => {
+      expect(() =>
+        validatePayload(
+          makeAdvancedGamePayload({
+            schemaVersion: ADVANCED_TRACKING_SCHEMA_VERSION,
+            data: makeAdvancedGameData({
+              schemaVersion: ADVANCED_TRACKING_SCHEMA_VERSION + 1,
+            }),
+          }),
+        ),
+      ).toThrow('newer than supported version');
+    });
+
+    it('checks every advanced game record in a bulk payload', () => {
+      expect(() =>
+        validatePayload(
+          makeAdvancedGamesPayload({
+            schemaVersion: ADVANCED_TRACKING_SCHEMA_VERSION,
+            data: [
+              makeAdvancedGameData({
+                id: 'supported-game',
+                schemaVersion: ADVANCED_TRACKING_SCHEMA_VERSION,
+              }),
+              makeAdvancedGameData({
+                id: 'future-game',
+                schemaVersion: ADVANCED_TRACKING_SCHEMA_VERSION + 1,
+              }),
+            ],
+          }),
+        ),
+      ).toThrow('newer than supported version');
+    });
+
+    it('compares against the advanced schema version, not the basic one', () => {
+      // Basic and advanced payloads version independently — an advanced payload
+      // above its own current version must be rejected even when it would pass
+      // the basic game's higher version ceiling.
+      const betweenVersions =
+        ADVANCED_TRACKING_SCHEMA_VERSION < CURRENT_SCHEMA_VERSION
+          ? CURRENT_SCHEMA_VERSION
+          : ADVANCED_TRACKING_SCHEMA_VERSION + 1;
+      expect(() =>
+        validatePayload(makeAdvancedGamePayload({ schemaVersion: betweenVersions })),
+      ).toThrow('newer than supported version');
     });
   });
 

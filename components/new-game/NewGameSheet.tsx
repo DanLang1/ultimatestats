@@ -101,6 +101,7 @@ export function NewGameSheet({
             testID="new-game-sheet-scrimmage"
             icon="account-group-outline"
             label="Scrimmage"
+            badge="Beta"
             trailingIcon="chevron-right"
             onPress={onStartScrimmage}
           />
