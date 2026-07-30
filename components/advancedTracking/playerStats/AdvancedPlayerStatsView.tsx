@@ -24,8 +24,9 @@ import {
 import { computeAdvancedImpact } from '@/lib/advancedTracking/advancedImpactUtils';
 import {
   computeAdvancedPlayerStats,
-  computeAdvancedPlayerStatsForParticipant,
+  getAdvancedPlayerStatsForParticipant,
 } from '@/lib/advancedTracking/advancedPlayerStatsUtils';
+import { resolveAnalyticsSideId } from '@/lib/advancedTracking/analyticsPerspectiveUtils';
 import { buildAnalyticsGame } from '@/lib/advancedTracking/buildAnalyticsGame';
 import type { AdvancedTrackedGame } from '@/lib/advancedTracking/types';
 import { hasItems } from '@/lib/utils';
@@ -38,6 +39,7 @@ const EMPTY_GAME_IDS: string[] = [];
 type AdvancedPlayerStatsViewProps = {
   analyticsGame: AnalyticsGame | null;
   participantId: string | undefined;
+  requestedSideId: string | undefined;
   isLoading: boolean;
   aggregateGames?: AdvancedTrackedGame[];
   aggregateGameIds?: string[];
@@ -51,6 +53,7 @@ function getCountLabel(value: number, singular: string, plural: string): string 
 export default function AdvancedPlayerStatsView({
   analyticsGame,
   participantId,
+  requestedSideId,
   isLoading,
   aggregateGames = EMPTY_ADVANCED_GAMES,
   aggregateGameIds = EMPTY_GAME_IDS,
@@ -61,45 +64,65 @@ export default function AdvancedPlayerStatsView({
   const styles = createStyles(isLandscape, sizeClass);
   const isAggregate = aggregateGameIds.length > 0;
   const participantName = analyticsGame?.participantNames.get(participantId ?? '') ?? null;
+  const perspectiveSideId = analyticsGame
+    ? resolveAnalyticsSideId(analyticsGame, requestedSideId ?? null)
+    : null;
+  const perspectiveSideName =
+    analyticsGame && perspectiveSideId ? analyticsGame.sideLabels[perspectiveSideId] : null;
 
-  const allPlayerStats = analyticsGame ? computeAdvancedPlayerStats(analyticsGame) : [];
+  const allPlayerStats =
+    analyticsGame && perspectiveSideId
+      ? computeAdvancedPlayerStats(analyticsGame, perspectiveSideId)
+      : [];
 
   const stats =
-    analyticsGame && participantId
-      ? computeAdvancedPlayerStatsForParticipant(analyticsGame, participantId)
+    analyticsGame && participantId && perspectiveSideId
+      ? getAdvancedPlayerStatsForParticipant(allPlayerStats, participantId)
       : null;
 
   const chemistry =
-    analyticsGame && participantId
-      ? computeAdvancedChemistry(analyticsGame, participantId, analyticsGame.participantNames)
+    analyticsGame && participantId && perspectiveSideId
+      ? computeAdvancedChemistry(
+          analyticsGame,
+          participantId,
+          analyticsGame.participantNames,
+          perspectiveSideId,
+        )
       : [];
 
   const hasChemistry = hasItems(chemistry);
   const passConnections =
-    analyticsGame && participantId
-      ? computeAdvancedPassConnections(analyticsGame, participantId, analyticsGame.participantNames)
+    analyticsGame && participantId && perspectiveSideId
+      ? computeAdvancedPassConnections(
+          analyticsGame,
+          participantId,
+          analyticsGame.participantNames,
+          perspectiveSideId,
+        )
       : [];
   const hasPassConnections = hasItems(passConnections);
 
   const impactData =
-    analyticsGame && participantId
-      ? computeAdvancedImpact(analyticsGame, participantId, analyticsGame.focusSideId)
+    analyticsGame && participantId && perspectiveSideId
+      ? computeAdvancedImpact(analyticsGame, participantId, perspectiveSideId, perspectiveSideId)
       : [];
 
-  const aggregateImpactSections = participantId
-    ? aggregateGames
-        .map((game) => {
-          const gameAnalytics = buildAnalyticsGame(game);
-          return {
-            gameId: game.id,
-            label: getAdvancedGameLabel(game),
-            impact: computeAdvancedImpact(gameAnalytics, participantId, gameAnalytics.focusSideId),
-          };
-        })
-        .filter((section) =>
-          section.impact.some((point) => point.onField || point.description.length > 0),
-        )
-    : [];
+  const aggregateImpactSections =
+    participantId && perspectiveSideId
+      ? aggregateGames
+          .map((game) => {
+            const gameAnalytics = buildAnalyticsGame(game);
+            const gameSideId = resolveAnalyticsSideId(gameAnalytics, perspectiveSideId);
+            return {
+              gameId: game.id,
+              label: getAdvancedGameLabel(game),
+              impact: computeAdvancedImpact(gameAnalytics, participantId, gameSideId, gameSideId),
+            };
+          })
+          .filter((section) =>
+            section.impact.some((point) => point.onField || point.description.length > 0),
+          )
+      : [];
   const sortedAggregateImpactSections = [...aggregateImpactSections].sort((a, b) => {
     const aGame = aggregateGames.find((game) => game.id === a.gameId);
     const bGame = aggregateGames.find((game) => game.id === b.gameId);
@@ -132,6 +155,7 @@ export default function AdvancedPlayerStatsView({
                 pathname: '/AdvancedGameSelectorModal',
                 params: {
                   participantId,
+                  sideId: perspectiveSideId,
                   aggregateGameIds: aggregateGameIds.join(','),
                   selectedImpactGameId: selectedImpactSection.gameId,
                 },
@@ -268,6 +292,11 @@ export default function AdvancedPlayerStatsView({
                 </View>
               )}
             </View>
+            {perspectiveSideName && (
+              <ThemedText style={[styles.sideContext, { color: palette.textMuted }]}>
+                {perspectiveSideName} stats
+              </ThemedText>
+            )}
 
             <ThemedText style={[styles.plusMinus, { color: plusMinusColor }]}>
               {plusMinusDisplay}
@@ -423,6 +452,11 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
       fontFamily: Fonts.extraBold,
       letterSpacing: 0.5,
       textAlign: 'center',
+    },
+    sideContext: {
+      fontSize: scaleBySizeClass(11, sizeClass),
+      fontFamily: Fonts.semiBold,
+      letterSpacing: 0.4,
     },
     badge: {
       paddingHorizontal: 8,

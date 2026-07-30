@@ -44,11 +44,16 @@ describe('advanced analytics routes', () => {
   it('renders advanced player stats from a real cached game and participant', async () => {
     arrangeAdvancedGame();
     const game = cacheCurrentAdvancedGame();
-    setMockSearchParams({ gameId: game.id, participantId: 'player-alex' });
+    setMockSearchParams({
+      gameId: game.id,
+      participantId: 'player-alex',
+      sideId: 'windchill',
+    });
 
     await renderScreen(<AdvancedPlayerStatsScreen />);
 
     expect(screen.getByText('PLAYER STATS')).toBeVisible();
     expect(screen.getByText('Alex')).toBeVisible();
+    expect(screen.getByText('Windchill stats')).toBeVisible();
   });
 });

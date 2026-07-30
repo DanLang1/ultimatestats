@@ -108,6 +108,18 @@ describe('computeAdvancedImpact', () => {
     expect(impact.map((point) => point.onField)).toEqual([true, true]);
     expect(impact.map((point) => point.state)).toEqual(['hold', 'hold']);
     expect(impact.map((point) => point.score)).toEqual(['1-0', '1-1']);
+
+    const lightImpact = computeAdvancedImpact(buildAnalyticsGame(game), 'p_august', ZOO, ZOO);
+    expect(lightImpact.map((point) => point.onField)).toEqual([true, false]);
+    expect(lightImpact.map((point) => point.plusMinusDelta)).toEqual([1, 0]);
+    expect(lightImpact.map((point) => point.cumulativePlusMinus)).toEqual([1, 1]);
+    expect(lightImpact.map((point) => point.description)).toEqual(['A', '']);
+
+    const darkImpact = computeAdvancedImpact(buildAnalyticsGame(game), 'p_august', RIVALS, RIVALS);
+    expect(darkImpact.map((point) => point.onField)).toEqual([false, true]);
+    expect(darkImpact.map((point) => point.plusMinusDelta)).toEqual([0, 1]);
+    expect(darkImpact.map((point) => point.cumulativePlusMinus)).toEqual([0, 1]);
+    expect(darkImpact.map((point) => point.description)).toEqual(['', 'A']);
   });
 
   it('marks onField false when the participant is not in the point line', () => {

@@ -40,11 +40,17 @@ export function computeAdvancedChemistry(
   game: AnalyticsGame,
   participantId: string,
   participantNames: Map<string, string>,
+  sideId?: string,
 ): AdvancedChemistryConnection[] {
+  const pointById = new Map(game.points.map((point) => [point.id, point]));
   const byAction = new Map<string, { goalId: string | null; assistId: string | null }>();
 
   for (const attr of game.attributions) {
     if (attr.type !== 'goal' && attr.type !== 'assist') continue;
+    if (sideId != null) {
+      const point = pointById.get(attr.pointId);
+      if (!point?.linesBySide[sideId]?.includes(attr.participantId)) continue;
+    }
     const entry = byAction.get(attr.actionId) ?? { goalId: null, assistId: null };
     if (attr.type === 'goal') {
       entry.goalId = attr.participantId;
@@ -93,11 +99,13 @@ export function computeAdvancedPassConnections(
   game: AnalyticsGame,
   participantId: string,
   participantNames: Map<string, string>,
+  sideId?: string,
 ): AdvancedPassConnection[] {
   const connections = new Map<string, { caughtFrom: number; threwTo: number }>();
 
   for (const action of game.actions) {
     if (action.kind !== 'throw') continue;
+    if (sideId != null && action.sideId !== sideId) continue;
     if (action.result !== 'complete' && action.result !== 'goal') continue;
     if (!action.actorId || !action.receiverId) continue;
     if (!participantNames.has(action.actorId) || !participantNames.has(action.receiverId)) continue;

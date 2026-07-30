@@ -13,6 +13,7 @@ import {
   getAdvancedGameTimestamp,
 } from '@/lib/advancedTracking/advancedGameTeamUtils';
 import { computeAdvancedImpact } from '@/lib/advancedTracking/advancedImpactUtils';
+import { resolveAnalyticsSideId } from '@/lib/advancedTracking/analyticsPerspectiveUtils';
 import { buildAnalyticsGame } from '@/lib/advancedTracking/buildAnalyticsGame';
 import { isAdvancedGameAggregateEligible } from '@/lib/advancedTracking/summary';
 import { Fonts } from '@/theme/theme';
@@ -20,10 +21,12 @@ import { Fonts } from '@/theme/theme';
 export default function AdvancedGameSelectorModal() {
   const {
     participantId,
+    sideId,
     aggregateGameIds = '',
     selectedImpactGameId,
   } = useLocalSearchParams<{
     participantId?: string;
+    sideId?: string;
     aggregateGameIds?: string;
     selectedImpactGameId?: string;
   }>();
@@ -40,7 +43,8 @@ export default function AdvancedGameSelectorModal() {
     .filter((game) => {
       if (!participantId) return false;
       const analyticsGame = buildAnalyticsGame(game);
-      const impact = computeAdvancedImpact(analyticsGame, participantId, analyticsGame.focusSideId);
+      const gameSideId = resolveAnalyticsSideId(analyticsGame, sideId ?? null);
+      const impact = computeAdvancedImpact(analyticsGame, participantId, gameSideId, gameSideId);
       return impact.some((point) => point.onField || point.description.length > 0);
     })
     .sort((a, b) => getAdvancedGameTimestamp(b) - getAdvancedGameTimestamp(a));
@@ -55,6 +59,7 @@ export default function AdvancedGameSelectorModal() {
       params: {
         gameId: 'aggregate',
         participantId,
+        sideId,
         aggregateGameIds,
         selectedImpactGameId: gameId,
       },

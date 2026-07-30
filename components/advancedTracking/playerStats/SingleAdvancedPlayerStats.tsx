@@ -5,11 +5,13 @@ import { buildAnalyticsGame } from '@/lib/advancedTracking/buildAnalyticsGame';
 type SingleAdvancedPlayerStatsProps = {
   gameId: string;
   participantId: string | undefined;
+  sideId: string | undefined;
 };
 
 export default function SingleAdvancedPlayerStats({
   gameId,
   participantId,
+  sideId,
 }: SingleAdvancedPlayerStatsProps) {
   const { data: rawGame, isLoading } = useAdvancedGame(gameId);
   const analyticsGame = rawGame ? buildAnalyticsGame(rawGame) : null;
@@ -18,6 +20,7 @@ export default function SingleAdvancedPlayerStats({
     <AdvancedPlayerStatsView
       analyticsGame={analyticsGame}
       participantId={participantId}
+      requestedSideId={sideId}
       isLoading={isLoading}
     />
   );

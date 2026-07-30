@@ -16,11 +16,19 @@ export function computeAdvancedImpact(
   game: AnalyticsGame,
   participantId: string,
   focusSideId: string,
+  participantSideId?: string,
 ): AdvancedImpactPoint[] {
+  const pointById = new Map(game.points.map((point) => [point.id, point]));
   // Build per-point attribution map: pointId → type → count
   const pointAttribs = new Map<string, Map<AttributionType, number>>();
   for (const attr of game.attributions) {
     if (attr.participantId !== participantId) continue;
+    if (
+      participantSideId != null &&
+      !pointById.get(attr.pointId)?.linesBySide[participantSideId]?.includes(participantId)
+    ) {
+      continue;
+    }
     let typeMap = pointAttribs.get(attr.pointId);
     if (!typeMap) {
       typeMap = new Map();
@@ -34,11 +42,13 @@ export function computeAdvancedImpact(
   const result: AdvancedImpactPoint[] = [];
 
   for (const point of game.points) {
-    const participantSideId = Object.entries(point.linesBySide).find(([, participantIds]) =>
+    const pointParticipantSideId = Object.entries(point.linesBySide).find(([, participantIds]) =>
       participantIds.includes(participantId),
     )?.[0];
-    const perspectiveSideId = participantSideId ?? focusSideId;
-    const onField = (point.linesBySide[perspectiveSideId] ?? []).includes(participantId);
+    const perspectiveSideId = participantSideId ?? pointParticipantSideId ?? focusSideId;
+    const onField =
+      pointParticipantSideId != null &&
+      (participantSideId == null || pointParticipantSideId === participantSideId);
     const typeMap = pointAttribs.get(point.id);
 
     let plusMinusDelta = 0;
@@ -105,8 +115,8 @@ export function computeAdvancedImpact(
       pointIndex: point.pointIndex,
       onField,
       state:
-        participantSideId != null
-          ? getPointStateForSide(point, participantSideId)
+        onField && pointParticipantSideId != null
+          ? getPointStateForSide(point, pointParticipantSideId)
           : (point.state ?? null),
       plusMinusDelta,
       cumulativePlusMinus,

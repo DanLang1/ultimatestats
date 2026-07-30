@@ -1,6 +1,6 @@
 import {
   computeAdvancedPlayerStats,
-  computeAdvancedPlayerStatsForParticipant,
+  getAdvancedPlayerStatsForParticipant,
 } from '../advancedPlayerStatsUtils';
 import type { AnalyticsGame, AnalyticsPoint, AttributionType, PointState } from '../analyticsTypes';
 import { buildAnalyticsGame } from '../buildAnalyticsGame';
@@ -858,13 +858,15 @@ describe('advancedPlayerStatsUtils', () => {
 
       const analytics = buildAnalyticsGame(scrimmageGame);
 
-      const zooStats = findStats(computeAdvancedPlayerStats(analytics, ZOO), 'p_august');
+      const zooPlayerStats = computeAdvancedPlayerStats(analytics, ZOO);
+      const zooStats = findStats(zooPlayerStats, 'p_august');
       expect(zooStats.assists).toBe(1);
       expect(zooStats.goals).toBe(0);
       expect(zooStats.oPoints).toBe(1);
       expect(zooStats.dPoints).toBe(0);
 
-      const rivalsStats = findStats(computeAdvancedPlayerStats(analytics, RIVALS), 'p_august');
+      const rivalsPlayerStats = computeAdvancedPlayerStats(analytics, RIVALS);
+      const rivalsStats = findStats(rivalsPlayerStats, 'p_august');
       expect(rivalsStats.assists).toBe(1);
       expect(rivalsStats.goals).toBe(0);
       expect(rivalsStats.oPoints).toBe(1);
@@ -873,6 +875,14 @@ describe('advancedPlayerStatsUtils', () => {
       const overallStats = findStats(computeAdvancedPlayerStats(analytics), 'p_august');
       expect(overallStats.assists).toBe(2);
       expect(overallStats.pointsPlayed).toBe(2);
+
+      const zooDetailStats = getAdvancedPlayerStatsForParticipant(zooPlayerStats, 'p_august');
+      expect(zooDetailStats.assists).toBe(zooStats.assists);
+      expect(zooDetailStats.pointsPlayed).toBe(zooStats.pointsPlayed);
+
+      const rivalsDetailStats = getAdvancedPlayerStatsForParticipant(rivalsPlayerStats, 'p_august');
+      expect(rivalsDetailStats.assists).toBe(rivalsStats.assists);
+      expect(rivalsDetailStats.pointsPlayed).toBe(rivalsStats.pointsPlayed);
     });
   });
 
@@ -1010,8 +1020,8 @@ describe('advancedPlayerStatsUtils', () => {
     });
   });
 
-  describe('computeAdvancedPlayerStatsForParticipant', () => {
-    it('returns stats for a specific participant', () => {
+  describe('getAdvancedPlayerStatsForParticipant', () => {
+    it('returns the existing result from a precomputed collection', () => {
       const game: AdvancedTrackedGame = {
         ...baseGame,
         points: [
@@ -1048,52 +1058,21 @@ describe('advancedPlayerStatsUtils', () => {
       };
 
       const analytics = buildAnalyticsGame(game);
-      const s = computeAdvancedPlayerStatsForParticipant(analytics, 'p_meves');
-      expect(s.goals).toBe(1);
-      expect(s.assists).toBe(0);
+      const allPlayerStats = computeAdvancedPlayerStats(analytics);
+      const expected = allPlayerStats.find((stats) => stats.participantId === 'p_meves');
+
+      expect(getAdvancedPlayerStatsForParticipant(allPlayerStats, 'p_meves')).toBe(expected);
+      expect(expected?.goals).toBe(1);
+      expect(expected?.assists).toBe(0);
     });
 
-    it('returns empty stats for unknown participant', () => {
-      const game: AdvancedTrackedGame = {
-        ...baseGame,
-        points: [
-          {
-            id: 'pt1',
-            lines: [{ sideId: ZOO, participantIds: ['p_august'] }],
-            possessions: [
-              {
-                id: 'pos1',
-                sideId: ZOO,
-                actions: [
-                  {
-                    id: 'a1',
-                    kind: 'pull',
-                    sideId: RIVALS,
-                    receivingSideId: ZOO,
-                    puller: untracked,
-                    receiver: august,
-                    result: 'inbound',
-                  },
-                  {
-                    id: 'a2',
-                    kind: 'throw',
-                    sideId: ZOO,
-                    thrower: august,
-                    toPlayer: meves,
-                    result: 'goal',
-                  },
-                ],
-              },
-            ],
-          },
-        ],
-      };
+    it('preserves the empty-stat fallback for a missing participant', () => {
+      const stats = getAdvancedPlayerStatsForParticipant([], 'p_unknown');
 
-      const analytics = buildAnalyticsGame(game);
-      const s = computeAdvancedPlayerStatsForParticipant(analytics, 'p_unknown');
-      expect(s.goals).toBe(0);
-      expect(s.pointsPlayed).toBe(0);
-      expect(s.pointPlusMinus).toBe(0);
+      expect(stats.participantId).toBe('p_unknown');
+      expect(stats.goals).toBe(0);
+      expect(stats.pointsPlayed).toBe(0);
+      expect(stats.pointPlusMinus).toBe(0);
     });
   });
 

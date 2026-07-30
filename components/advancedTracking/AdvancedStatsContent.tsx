@@ -363,12 +363,13 @@ Formula: Goals ÷ Possessions`}
                       gameId: 'aggregate',
                       participantId,
                       aggregateGameIds: aggregateGameIds.join(','),
+                      sideId: perspectiveSideId,
                     },
                   })
               : (participantId) =>
                   router.push({
                     pathname: '/advancedTracking/analytics/playerStats',
-                    params: { gameId, participantId },
+                    params: { gameId, participantId, sideId: perspectiveSideId },
                   })
           }
         />

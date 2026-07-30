@@ -7,12 +7,14 @@ import { isAdvancedGameAggregateEligible } from '@/lib/advancedTracking/summary'
 type AggregateAdvancedPlayerStatsProps = {
   gameIds: string[];
   participantId: string | undefined;
+  sideId: string | undefined;
   selectedImpactGameId: string | undefined;
 };
 
 export default function AggregateAdvancedPlayerStats({
   gameIds,
   participantId,
+  sideId,
   selectedImpactGameId,
 }: AggregateAdvancedPlayerStatsProps) {
   const { data: aggregateGames, isLoading, isError, isComplete } = useAdvancedGames(gameIds);
@@ -25,6 +27,7 @@ export default function AggregateAdvancedPlayerStats({
     <AdvancedPlayerStatsView
       analyticsGame={analyticsGame}
       participantId={participantId}
+      requestedSideId={sideId}
       isLoading={!isComplete && isLoading}
       aggregateGames={isComplete ? eligibleGames : []}
       aggregateGameIds={eligibleGameIds}

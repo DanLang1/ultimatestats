@@ -8,11 +8,13 @@ export default function AdvancedPlayerStatsScreen() {
   const {
     gameId,
     participantId,
+    sideId,
     aggregateGameIds: aggregateGameIdsParam,
     selectedImpactGameId,
   } = useLocalSearchParams<{
     gameId?: string;
     participantId?: string;
+    sideId?: string;
     aggregateGameIds?: string;
     selectedImpactGameId?: string;
   }>();
@@ -23,6 +25,7 @@ export default function AdvancedPlayerStatsScreen() {
       <AggregateAdvancedPlayerStats
         gameIds={aggregateGameIds}
         participantId={participantId}
+        sideId={sideId}
         selectedImpactGameId={selectedImpactGameId}
       />
     );
@@ -32,5 +35,7 @@ export default function AdvancedPlayerStatsScreen() {
     return <MissingPlayerStatsGame />;
   }
 
-  return <SingleAdvancedPlayerStats gameId={gameId} participantId={participantId} />;
+  return (
+    <SingleAdvancedPlayerStats gameId={gameId} participantId={participantId} sideId={sideId} />
+  );
 }

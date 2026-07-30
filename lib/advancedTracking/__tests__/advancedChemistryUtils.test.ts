@@ -612,3 +612,121 @@ describe('computeAdvancedPassConnections', () => {
     expect(connections[1].totalPasses).toBe(1);
   });
 });
+
+describe('side-filtered connections', () => {
+  const switchingSidesGame: AdvancedTrackedGame = {
+    ...baseGame,
+    gameType: 'scrimmage',
+    sides: [
+      { id: ZOO, label: 'Light', trackingMode: 'full-roster' },
+      { id: RIVALS, label: 'Dark', trackingMode: 'full-roster' },
+    ],
+    points: [
+      {
+        id: 'pt_light',
+        lines: [
+          { sideId: ZOO, participantIds: ['p_august', 'p_meves'] },
+          { sideId: RIVALS, participantIds: ['p_joah'] },
+        ],
+        possessions: [
+          {
+            id: 'pos_light',
+            sideId: ZOO,
+            actions: [
+              {
+                id: 'pull_light',
+                kind: 'pull',
+                sideId: RIVALS,
+                receivingSideId: ZOO,
+                puller: joah,
+                receiver: august,
+                result: 'inbound',
+              },
+              {
+                id: 'goal_light',
+                kind: 'throw',
+                sideId: ZOO,
+                thrower: august,
+                toPlayer: meves,
+                result: 'goal',
+              },
+            ],
+          },
+        ],
+      },
+      {
+        id: 'pt_dark',
+        lines: [
+          { sideId: ZOO, participantIds: ['p_joah'] },
+          { sideId: RIVALS, participantIds: ['p_august', 'p_meves'] },
+        ],
+        possessions: [
+          {
+            id: 'pos_dark',
+            sideId: RIVALS,
+            actions: [
+              {
+                id: 'pull_dark',
+                kind: 'pull',
+                sideId: ZOO,
+                receivingSideId: RIVALS,
+                puller: joah,
+                receiver: august,
+                result: 'inbound',
+              },
+              {
+                id: 'goal_dark',
+                kind: 'throw',
+                sideId: RIVALS,
+                thrower: august,
+                toPlayer: meves,
+                result: 'goal',
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  };
+
+  it('limits scoring chemistry to the selected side', () => {
+    const analytics = buildAnalyticsGame(switchingSidesGame);
+    const overall = computeAdvancedChemistry(analytics, 'p_august', analytics.participantNames);
+    const light = computeAdvancedChemistry(analytics, 'p_august', analytics.participantNames, ZOO);
+    const dark = computeAdvancedChemistry(
+      analytics,
+      'p_august',
+      analytics.participantNames,
+      RIVALS,
+    );
+
+    expect(overall[0].assistsTo).toBe(2);
+    expect(light[0].assistsTo).toBe(1);
+    expect(dark[0].assistsTo).toBe(1);
+  });
+
+  it('limits completed-pass connections to the selected side', () => {
+    const analytics = buildAnalyticsGame(switchingSidesGame);
+    const overall = computeAdvancedPassConnections(
+      analytics,
+      'p_august',
+      analytics.participantNames,
+    );
+    const light = computeAdvancedPassConnections(
+      analytics,
+      'p_august',
+      analytics.participantNames,
+      ZOO,
+    );
+    const dark = computeAdvancedPassConnections(
+      analytics,
+      'p_august',
+      analytics.participantNames,
+      RIVALS,
+    );
+
+    expect(overall[0].threwTo).toBe(2);
+    expect(light[0].threwTo).toBe(1);
+    expect(dark[0].threwTo).toBe(1);
+  });
+});

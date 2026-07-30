@@ -317,13 +317,15 @@ export function computeAdvancedPlayerStats(
 }
 
 /**
- * Convenience wrapper for a single participant's stats.
+ * Select a single participant's stats from a previously computed collection.
  * Returns empty stats if the participant is not found.
  */
-export function computeAdvancedPlayerStatsForParticipant(
-  game: AnalyticsGame,
+export function getAdvancedPlayerStatsForParticipant(
+  allPlayerStats: AdvancedPlayerStats[],
   participantId: string,
 ): AdvancedPlayerStats {
-  const all = computeAdvancedPlayerStats(game);
-  return all.find((s) => s.participantId === participantId) ?? createEmptyStats(participantId);
+  return (
+    allPlayerStats.find((stats) => stats.participantId === participantId) ??
+    createEmptyStats(participantId)
+  );
 }
