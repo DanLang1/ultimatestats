@@ -677,6 +677,69 @@ export function getParticipantIdsUsedBySide(point: TrackedPoint, sideId: string)
   return [...participantIds];
 }
 
+/**
+ * Derives each participant's current scrimmage group from the most recent side
+ * they played for. Participants who have not played remain unassigned.
+ *
+ * Starting lines and injury substitutions both count as participation. Point
+ * lineups remain the historical source of truth, so crossing over on a later
+ * point changes only the participant's default group going forward.
+ */
+export function getScrimmageParticipantSideAssignments(
+  game: AdvancedTrackedGame,
+): Map<string, string> {
+  const assignments = new Map<string, string>();
+  if (game.gameType !== 'scrimmage') return assignments;
+
+  for (const point of game.points) {
+    for (const side of game.sides) {
+      for (const participantId of getParticipantIdsUsedBySide(point, side.id)) {
+        assignments.set(participantId, side.id);
+      }
+    }
+  }
+
+  return assignments;
+}
+
+/**
+ * Splits participants who are already eligible for the current flow into the
+ * side's default view and labeled opposite-side options. Callers must first
+ * exclude participants who are unavailable because of the other drafted line
+ * or their participation on the other side of the current point.
+ */
+export function getScrimmageLineSelectionGroups(
+  game: AdvancedTrackedGame,
+  sideId: string | undefined,
+  eligibleParticipants: Participant[],
+): {
+  defaultParticipants: Participant[];
+  otherSideLabels: Map<string, string>;
+} {
+  if (game.gameType !== 'scrimmage' || sideId == null) {
+    return {
+      defaultParticipants: eligibleParticipants,
+      otherSideLabels: new Map(),
+    };
+  }
+
+  const sideAssignments = getScrimmageParticipantSideAssignments(game);
+  const defaultParticipants = eligibleParticipants.filter((participant) => {
+    const assignedSideId = sideAssignments.get(participant.id);
+    return assignedSideId == null || assignedSideId === sideId;
+  });
+  const otherSideLabels = new Map(
+    eligibleParticipants.flatMap((participant) => {
+      const assignedSideId = sideAssignments.get(participant.id);
+      if (assignedSideId == null || assignedSideId === sideId) return [];
+      const assignedSide = game.sides.find((side) => side.id === assignedSideId);
+      return [[participant.id, assignedSide?.label ?? 'Other side'] as const];
+    }),
+  );
+
+  return { defaultParticipants, otherSideLabels };
+}
+
 function assertUniqueSubParticipants(sub: PointSub) {
   if (new Set(sub.inIds).size !== sub.inIds.length) {
     throw new Error(`Injury sub for side "${sub.sideId}" contains duplicate incoming players.`);

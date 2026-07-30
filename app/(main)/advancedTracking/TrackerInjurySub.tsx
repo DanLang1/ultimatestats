@@ -19,6 +19,7 @@ import {
   haveSameParticipantIds,
   getOtherSideId,
   getParticipantIdsUsedBySide,
+  getScrimmageLineSelectionGroups,
 } from '@/lib/advancedTracking/trackingUtils';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import type { InjurySubChange } from '@/store/advancedTracking/trackingStore.types';
@@ -45,6 +46,7 @@ export default function TrackerInjurySubScreen() {
   }
 
   const tracksBothSides = areBothSidesFullyTracked(game);
+  const isScrimmage = game.gameType === 'scrimmage';
   const firstSideId = tracksBothSides ? getActiveSideId(possession, game) : game.focusSideId;
   const selectedSideIds = tracksBothSides
     ? [firstSideId, getOtherSideId(game, firstSideId)]
@@ -61,9 +63,14 @@ export default function TrackerInjurySubScreen() {
     ...otherSideParticipantIds,
     ...(otherSide == null ? [] : (draftLinesBySide[otherSide.id] ?? [])),
   ]);
-  const selectableParticipants = tracksBothSides
+  const eligibleParticipants = tracksBothSides
     ? participants.filter((participant) => !unavailableParticipantIds.has(participant.id))
     : participants;
+  const { defaultParticipants, otherSideLabels } = getScrimmageLineSelectionGroups(
+    game,
+    sideId,
+    eligibleParticipants,
+  );
 
   const getBaselineIds = (candidateSideId: string) => {
     if (!isEdit || existingStoppage == null) {
@@ -142,7 +149,10 @@ export default function TrackerInjurySubScreen() {
       <Stack.Screen options={{ headerShown: false }} />
       <TrackerLineScreen
         key={sideId}
-        participants={selectableParticipants}
+        participants={defaultParticipants}
+        allParticipants={isScrimmage ? eligibleParticipants : undefined}
+        rosterParticipants={participants}
+        playerStatusLabels={otherSideLabels}
         initialSelectedIds={effectiveLine}
         title={tracksBothSides ? `Injury Sub · ${sideLabel}` : 'Injury Sub'}
         confirmLabel={confirmLabel}

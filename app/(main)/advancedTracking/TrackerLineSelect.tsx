@@ -11,6 +11,7 @@ import {
   getAdvancedRecentLines,
   getCurrentPoint,
   getLineReceivingSideId,
+  getScrimmageLineSelectionGroups,
   getSideScore,
 } from '@/lib/advancedTracking/trackingUtils';
 import { GenderRatio, getExpectedRatio, getSequenceNumber } from '@/lib/genderRatioUtils';
@@ -50,9 +51,14 @@ export default function TrackerLineSelectScreen() {
 
   const recentLines: RecentLineType[] = getAdvancedRecentLines(game, selectedSideId);
   const pointLines = getAdvancedPointLineRecords(game, selectedSideId);
-  const selectableParticipants = isSelectingSecondSideLine
+  const eligibleParticipants = isSelectingSecondSideLine
     ? participants.filter((participant) => !firstSideLineIds.includes(participant.id))
     : participants;
+  const { defaultParticipants, otherSideLabels } = getScrimmageLineSelectionGroups(
+    game,
+    selectedSideId,
+    eligibleParticipants,
+  );
   const handleBack = () => {
     if (isSelectingSecondSideLine) {
       setFirstSideLineIds(null);
@@ -78,7 +84,10 @@ export default function TrackerLineSelectScreen() {
   return (
     <TrackerLineScreen
       key={selectedSideId}
-      participants={selectableParticipants}
+      participants={defaultParticipants}
+      allParticipants={isScrimmage ? eligibleParticipants : undefined}
+      rosterParticipants={participants}
+      playerStatusLabels={otherSideLabels}
       title={lineSelectTitle}
       expectedRatio={nextRatio}
       sequenceNumber={nextSequenceNumber}

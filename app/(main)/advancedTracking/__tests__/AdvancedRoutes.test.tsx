@@ -74,6 +74,34 @@ function arrangeDualTrackedPoint() {
   return { participants };
 }
 
+function arrangeDualTrackedPointWithPreviouslyDarkBenchPlayer() {
+  const { participants } = arrangeDualTrackedPoint();
+  useAdvancedTrackingStore.setState((state) => {
+    const game = state.currentGame!;
+    const currentPoint = game.points[0];
+    game.points.unshift({
+      id: 'previous-point',
+      lines: [
+        {
+          sideId: 'light',
+          participantIds: participants.slice(0, 7).map((participant) => participant.id),
+        },
+        {
+          sideId: 'dark',
+          participantIds: participants.slice(7, 14).map((participant) => participant.id),
+        },
+      ],
+      possessions: [],
+    });
+    currentPoint.lines.find((line) => line.sideId === 'dark')!.participantIds = [
+      ...participants.slice(8, 14).map((participant) => participant.id),
+      participants[14].id,
+    ];
+  });
+
+  return { participants };
+}
+
 function arrangeSingleSideTrackedPoint() {
   const participants = Array.from({ length: 9 }, (_, index) => ({
     id: `single-player-${index + 1}`,
@@ -262,6 +290,23 @@ describe('advanced tracking routes', () => {
     await user.press(screen.getByTestId('line-select-confirm'));
 
     expect(screen.getByText('Away Line · 0-0')).toBeVisible();
+  });
+
+  it('defaults scrimmage line selection to the side group plus unassigned players', async () => {
+    const user = userEvent.setup();
+    const { participants } = arrangeDualTrackedPoint();
+
+    await renderScreen(<TrackerLineSelectScreen />);
+
+    expect(screen.getByText('Light Line · 0-0')).toBeVisible();
+    expect(screen.getByText(participants[0].name)).toBeVisible();
+    expect(screen.getByText(participants[14].name)).toBeVisible();
+    expect(screen.queryByText(participants[7].name)).not.toBeOnTheScreen();
+
+    await user.press(screen.getByTestId('line-select-show-all-players'));
+
+    expect(screen.getByText(participants[7].name)).toBeVisible();
+    expect(screen.getAllByText(/^Dark ·/).length).toBeGreaterThan(0);
   });
 
   it('records an opponent pull through the real pull-tracking flow', async () => {
@@ -485,6 +530,19 @@ describe('advanced tracking routes', () => {
     expect(screen.getByText(participants[0].name)).toBeVisible();
     expect(screen.queryByText(participants[7].name)).not.toBeOnTheScreen();
     expect(screen.queryByText('Correct Starting Lineup')).not.toBeOnTheScreen();
+  });
+
+  it('can show legally available opposite-group players during a scrimmage correction', async () => {
+    const user = userEvent.setup();
+    const { participants } = arrangeDualTrackedPointWithPreviouslyDarkBenchPlayer();
+
+    await renderScreen(<TrackerEditLineScreen />);
+
+    expect(screen.queryByText(participants[7].name)).not.toBeOnTheScreen();
+    await user.press(screen.getByTestId('line-select-show-all-players'));
+
+    expect(screen.getByText(participants[7].name)).toBeVisible();
+    expect(screen.queryByText(participants[8].name)).not.toBeOnTheScreen();
   });
 
   it('starts a line correction on the next active side after a turnover', async () => {
@@ -748,6 +806,19 @@ describe('advanced tracking routes', () => {
     expect(screen.getByText('Injury Sub · Light')).toBeVisible();
     expect(screen.getByText(participants[0].name)).toBeVisible();
     expect(screen.queryByText(participants[7].name)).not.toBeOnTheScreen();
+  });
+
+  it('can show legally available opposite-group players during a scrimmage injury sub', async () => {
+    const user = userEvent.setup();
+    const { participants } = arrangeDualTrackedPointWithPreviouslyDarkBenchPlayer();
+
+    await renderScreen(<TrackerInjurySubScreen />);
+
+    expect(screen.queryByText(participants[7].name)).not.toBeOnTheScreen();
+    await user.press(screen.getByTestId('line-select-show-all-players'));
+
+    expect(screen.getByText(participants[7].name)).toBeVisible();
+    expect(screen.queryByText(participants[8].name)).not.toBeOnTheScreen();
   });
 
   it('starts on the next active side after a turnover', async () => {

@@ -47,6 +47,12 @@ function withLockedParticipants(participantIds: string[], lockedIds: string[]): 
 
 interface TrackerLineScreenProps {
   participants: Participant[];
+  /** Expanded eligible participant set exposed by the optional "All players" filter. */
+  allParticipants?: Participant[];
+  /** Full roster used to resolve history names and matching-type metadata. */
+  rosterParticipants?: Participant[];
+  /** Optional status shown beneath player names, such as their other scrimmage side. */
+  playerStatusLabels?: ReadonlyMap<string, string>;
   onConfirm: (participantIds: string[]) => void;
   initialSelectedIds?: string[];
   title: string;
@@ -63,6 +69,9 @@ interface TrackerLineScreenProps {
 
 export const TrackerLineScreen = ({
   participants,
+  allParticipants,
+  rosterParticipants,
+  playerStatusLabels,
   onConfirm,
   initialSelectedIds,
   title,
@@ -96,8 +105,21 @@ export const TrackerLineScreen = ({
   const [selectedPresetId, setSelectedPresetId] = useState<string | null>(null);
   const [selectedRecentPointNumber, setSelectedRecentPointNumber] = useState<number | null>(null);
   const [showLinePicker, setShowLinePicker] = useState(false);
+  const [showAllPlayers, setShowAllPlayers] = useState(false);
 
   const initialIds = initialSelectedIds ?? [];
+  const eligibleParticipants = allParticipants ?? participants;
+  const participantRoster = rosterParticipants ?? eligibleParticipants;
+  const defaultParticipantIds = new Set(participants.map((participant) => participant.id));
+  const visibleParticipants = showAllPlayers
+    ? eligibleParticipants
+    : eligibleParticipants.filter(
+        (participant) =>
+          defaultParticipantIds.has(participant.id) || selectedIds.includes(participant.id),
+      );
+  const canShowAllPlayers = eligibleParticipants.some(
+    (participant) => !defaultParticipantIds.has(participant.id),
+  );
   const lockedParticipantIdSet = new Set(lockedParticipantIds);
   const hasSubChanges = !requireChanges || selectedIds.some((id) => !initialIds.includes(id));
   const canConfirm = selectedIds.length === 7 && hasSubChanges;
@@ -106,7 +128,7 @@ export const TrackerLineScreen = ({
     expectedRatio != null && canConfirm
       ? checkLineRatio(
           selectedIds,
-          participants.map((p) => ({ id: p.id, matchingType: p.matchingType ?? null })),
+          participantRoster.map((p) => ({ id: p.id, matchingType: p.matchingType ?? null })),
           expectedRatio,
         )
       : null;
@@ -115,7 +137,7 @@ export const TrackerLineScreen = ({
     expectedRatio != null ? formatRatio(expectedRatio, sequenceNumber ?? 1) : null;
   const headerTitle = `${title}${expectedRatioLabel ? ` · ${expectedRatioLabel}` : ''}`;
 
-  const players: Player[] = participants.map((p) => ({
+  const players: Player[] = visibleParticipants.map((p) => ({
     id: p.id,
     name: p.name,
     number: p.number,
@@ -144,8 +166,13 @@ export const TrackerLineScreen = ({
       return;
     }
     setSelectedPresetId(preset.id);
-    const availableParticipantIds = new Set(participants.map((participant) => participant.id));
+    const availableParticipantIds = new Set(
+      eligibleParticipants.map((participant) => participant.id),
+    );
     const availablePresetIds = preset.playerIds.filter((id) => availableParticipantIds.has(id));
+    if (availablePresetIds.some((id) => !defaultParticipantIds.has(id))) {
+      setShowAllPlayers(true);
+    }
     setSelectedIds(withLocked(availablePresetIds));
   };
 
@@ -157,7 +184,14 @@ export const TrackerLineScreen = ({
     }
     setSelectedRecentPointNumber(recent.pointNumber);
     setSelectedPresetId(null);
-    setSelectedIds(withLocked(recent.playerIds));
+    const availableParticipantIds = new Set(
+      eligibleParticipants.map((participant) => participant.id),
+    );
+    const availableRecentIds = recent.playerIds.filter((id) => availableParticipantIds.has(id));
+    if (availableRecentIds.some((id) => !defaultParticipantIds.has(id))) {
+      setShowAllPlayers(true);
+    }
+    setSelectedIds(withLocked(availableRecentIds));
   };
 
   const playerRestrictions = new Map<string, PlayerChipRestriction>();
@@ -260,6 +294,34 @@ export const TrackerLineScreen = ({
         )}
 
         <View style={styles.presetsRow}>
+          {canShowAllPlayers && (
+            <Pressable
+              testID="line-select-show-all-players"
+              accessibilityRole="switch"
+              accessibilityState={{ checked: showAllPlayers }}
+              onPress={() => setShowAllPlayers((current) => !current)}
+              style={({ pressed }) => [
+                styles.showAllBtn,
+                {
+                  backgroundColor: showAllPlayers ? palette.accent : palette.overlay08,
+                  borderColor: showAllPlayers ? palette.accent : palette.overlay15,
+                },
+                pressed && { opacity: 0.8 },
+              ]}>
+              <MaterialCommunityIcons
+                name="account-multiple-outline"
+                size={scaleBySizeClass(13, sizeClass)}
+                color={showAllPlayers ? palette.textOnAccent : palette.textMuted}
+              />
+              <ThemedText
+                style={[
+                  styles.showAllBtnText,
+                  { color: showAllPlayers ? palette.textOnAccent : palette.textMuted },
+                ]}>
+                All players
+              </ThemedText>
+            </Pressable>
+          )}
           {quickPresets.map((preset) => (
             <Pressable
               key={preset.id}
@@ -287,6 +349,7 @@ export const TrackerLineScreen = ({
             </Pressable>
           ))}
           <Pressable
+            testID="line-select-load-line"
             onPress={() => setShowLinePicker(true)}
             style={({ pressed }) => [
               styles.loadLineBtn,
@@ -350,7 +413,14 @@ export const TrackerLineScreen = ({
             handleSelectRecentLine(recent);
             setShowLinePicker(false);
           }}
-          roster={players}
+          roster={participantRoster.map((participant) => ({
+            id: participant.id,
+            name: participant.name,
+            number: participant.number,
+            matchingType: participant.matchingType ?? null,
+            role: participant.role ?? null,
+            isActive: true,
+          }))}
         />
       </View>
 
@@ -365,6 +435,7 @@ export const TrackerLineScreen = ({
           gameActive={hasItems(pointLines)}
           currentPoint={currentPoint}
           playerRestrictions={playerRestrictions}
+          playerStatusLabels={playerStatusLabels}
         />
       </View>
     </ThemedView>
@@ -442,6 +513,19 @@ function createStyles(sizeClass: SizeClass) {
       borderRadius: 8,
       borderWidth: 1,
       maxWidth: 120,
+    },
+    showAllBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 5,
+      paddingVertical: 5,
+      paddingHorizontal: 10,
+      borderRadius: 8,
+      borderWidth: 1,
+    },
+    showAllBtnText: {
+      fontSize: scaleBySizeClass(12, sizeClass),
+      fontFamily: Fonts.semiBold,
     },
     quickPresetBtnText: {
       fontSize: scaleBySizeClass(12, sizeClass),

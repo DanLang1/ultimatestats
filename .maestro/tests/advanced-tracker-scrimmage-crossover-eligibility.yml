@@ -1,0 +1,53 @@
+appId: com.langdk.ultimatestats
+name: Scrimmage Crossover Eligibility
+---
+- runFlow:
+    file: ../flows/start-scrimmage-crossover-point.yaml
+
+# Ben is assigned Dark but benched, so Light can reveal him for an injury sub.
+# Cara is active for Dark this point and must remain unavailable.
+- tapOn:
+    id: 'tracker-line-action-tile'
+- waitForAnimationToEnd:
+    timeout: 500
+- tapOn:
+    id: 'line-change-injury-sub'
+- assertVisible:
+    text: 'Injury Sub · Light'
+- assertNotVisible:
+    id: 'player-chip-Ben'
+- assertVisible:
+    id: 'line-select-show-all-players'
+- tapOn:
+    id: 'line-select-show-all-players'
+- assertVisible:
+    id: 'player-chip-Ben'
+- assertNotVisible:
+    id: 'player-chip-Cara'
+- tapOn:
+    id: 'line-select-back'
+- assertVisible:
+    id: 'tracker-menu-button'
+
+# The same eligibility boundary applies while correcting the current line.
+- tapOn:
+    id: 'tracker-line-action-tile'
+- waitForAnimationToEnd:
+    timeout: 500
+- tapOn:
+    id: 'line-change-correct-line'
+- assertVisible:
+    text: 'Edit Light Line'
+- assertNotVisible:
+    id: 'player-chip-Ben'
+- assertVisible:
+    id: 'line-select-show-all-players'
+- tapOn:
+    id: 'line-select-show-all-players'
+- assertVisible:
+    id: 'player-chip-Ben'
+- assertNotVisible:
+    id: 'player-chip-Cara'
+
+- takeScreenshot:
+    path: .maestro/screenshots/advanced-tracker-scrimmage-crossover-eligibility

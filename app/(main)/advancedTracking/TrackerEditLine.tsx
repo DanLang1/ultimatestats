@@ -13,6 +13,7 @@ import {
   getOtherSideId,
   getParticipantIdsUsedBySide,
   getPointActionParticipantIds,
+  getScrimmageLineSelectionGroups,
   haveSameParticipantIds,
 } from '@/lib/advancedTracking/trackingUtils';
 import { getSequenceNumber } from '@/lib/genderRatioUtils';
@@ -33,6 +34,7 @@ export default function TrackerEditLineScreen() {
   }
 
   const tracksBothSides = areBothSidesFullyTracked(game);
+  const isScrimmage = game.gameType === 'scrimmage';
   const firstSideId = tracksBothSides ? getActiveSideId(possession, game) : game.focusSideId;
   const selectedSideIds = tracksBothSides
     ? [firstSideId, getOtherSideId(game, firstSideId)]
@@ -46,9 +48,14 @@ export default function TrackerEditLineScreen() {
     ...(otherSide == null ? [] : getParticipantIdsUsedBySide(point, otherSide.id)),
     ...(otherSide == null ? [] : (draftLinesBySide[otherSide.id] ?? [])),
   ]);
-  const selectableParticipants = tracksBothSides
+  const eligibleParticipants = tracksBothSides
     ? participants.filter((participant) => !unavailableParticipantIds.has(participant.id))
     : participants;
+  const { defaultParticipants, otherSideLabels } = getScrimmageLineSelectionGroups(
+    game,
+    sideId,
+    eligibleParticipants,
+  );
   const baseLine = point.lines.find((l) => l.sideId === sideId)?.participantIds ?? [];
   const pointNumber = game.points.findIndex((p) => p.id === point.id) + 1;
   const sequenceNumber = point.genderRatio != null ? getSequenceNumber(pointNumber) : undefined;
@@ -137,7 +144,10 @@ export default function TrackerEditLineScreen() {
       <Stack.Screen options={{ headerShown: false }} />
       <TrackerLineScreen
         key={sideId}
-        participants={selectableParticipants}
+        participants={defaultParticipants}
+        allParticipants={isScrimmage ? eligibleParticipants : undefined}
+        rosterParticipants={participants}
+        playerStatusLabels={otherSideLabels}
         initialSelectedIds={initialSelectedIds}
         title={editLineTitle}
         confirmLabel={confirmLabel}

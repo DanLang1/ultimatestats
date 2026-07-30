@@ -20,6 +20,7 @@ import {
   getPointActionParticipantIds,
   getPointScoringSideId,
   getReceivingSideForNextPoint,
+  getScrimmageParticipantSideAssignments,
   hasPointEnded,
   isAdvancedGameOver,
   isPointEndingThrow,
@@ -1392,6 +1393,49 @@ const _makeGame = (overrides: Partial<AdvancedTrackedGame> = {}): AdvancedTracke
   points: [],
   settings: { locationMode: 'none' },
   ...overrides,
+});
+
+describe('getScrimmageParticipantSideAssignments', () => {
+  it('assigns players to the most recent side they played for', () => {
+    const game = _makeGame({
+      gameType: 'scrimmage',
+      points: [
+        _point('pt1', [_line('side-a', ['p1']), _line('side-b', ['p2'])]),
+        _point('pt2', [_line('side-a', ['p3']), _line('side-b', ['p1'])]),
+      ],
+    });
+
+    expect([...getScrimmageParticipantSideAssignments(game)]).toEqual([
+      ['p1', 'side-b'],
+      ['p2', 'side-b'],
+      ['p3', 'side-a'],
+    ]);
+  });
+
+  it('counts an injury sub as the incoming player joining that side', () => {
+    const point = _point('pt1', [_line('side-a', ['p1']), _line('side-b', ['p2'])]);
+    point.subs = [
+      {
+        id: 'sub-1',
+        sideId: 'side-a',
+        type: 'injury',
+        inIds: ['p4'],
+        outIds: ['p1'],
+        stoppageActionId: 'stoppage-1',
+      },
+    ];
+    const game = _makeGame({ gameType: 'scrimmage', points: [point] });
+
+    expect(getScrimmageParticipantSideAssignments(game).get('p4')).toBe('side-a');
+  });
+
+  it('leaves every player unassigned for a regular game', () => {
+    const game = _makeGame({
+      points: [_point('pt1', [_line('side-a', ['p1'])])],
+    });
+
+    expect(getScrimmageParticipantSideAssignments(game).size).toBe(0);
+  });
 });
 
 describe('getAdvancedRecentLines', () => {

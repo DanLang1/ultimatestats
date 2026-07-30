@@ -1,0 +1,55 @@
+appId: com.langdk.ultimatestats
+name: Scrimmage Crossover Assignment and History
+---
+- runFlow:
+    file: ../flows/start-scrimmage-crossover-point.yaml
+
+# End point two with Joe's Dark Callahan.
+- runFlow:
+    file: ../flows/open-rare-menu.yaml
+- tapOn:
+    id: 'rare-menu-thrown-callahan'
+    retryTapIfNoChange: true
+- assertVisible:
+    text: 'Tap player who got the Callahan'
+- tapOn:
+    id: 'tracker-chip-Joe'
+- extendedWaitUntil:
+    visible:
+      id: 'between-point-start-next'
+    timeout: 5000
+- tapOn:
+    id: 'between-point-start-next'
+
+# The crossover assignments persist into the next Light selection.
+- assertVisible:
+    text: 'Light Line · 0-2'
+- assertVisible:
+    id: 'player-chip-Anna'
+- assertVisible:
+    id: 'player-chip-Heidi'
+- assertNotVisible:
+    id: 'player-chip-Joe'
+
+# Point 1's historical Light line contains Joe, who is now assigned Dark.
+# Loading it must enable the expanded roster so Joe stays visible after deselection.
+- tapOn:
+    id: 'line-select-load-line'
+# React Native Modal content is visible but absent from the iOS XCTest hierarchy.
+# Tap the center of the second recent-line row (Pt 1) using the fixed simulator viewport.
+- tapOn:
+    point: '50%,93%'
+- assertVisible:
+    id: 'player-chip-Joe'
+    selected: true
+- tapOn:
+    id: 'player-chip-Joe'
+    selected: true
+- assertVisible:
+    id: 'player-chip-Joe'
+    selected: false
+- assertVisible:
+    id: 'line-select-show-all-players'
+
+- takeScreenshot:
+    path: .maestro/screenshots/advanced-tracker-scrimmage-crossover-history

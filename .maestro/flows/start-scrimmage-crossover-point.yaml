@@ -1,0 +1,90 @@
+appId: com.langdk.ultimatestats
+name: Start Scrimmage Point With Crossovers
+---
+- runFlow:
+    file: setup-scrimmage.yaml
+    env:
+      TRACKER_STATE: focusPossession
+
+# End the seeded point with a Dark Callahan.
+- runFlow:
+    file: open-rare-menu.yaml
+- tapOn:
+    id: 'rare-menu-thrown-callahan'
+    retryTapIfNoChange: true
+- assertVisible:
+    text: 'Tap player who got the Callahan'
+- tapOn:
+    id: 'tracker-chip-Anna'
+- extendedWaitUntil:
+    visible:
+      id: 'between-point-start-next'
+    timeout: 5000
+- tapOn:
+    id: 'between-point-start-next'
+
+# Light takes Anna from Dark, adds unassigned Heidi, and benches Joe + Joel.
+- assertVisible:
+    text: 'Light Line · 0-1'
+- tapOn:
+    id: 'line-select-show-all-players'
+- tapOn:
+    id: 'player-chip-Anna'
+- tapOn:
+    id: 'player-chip-Jon'
+- tapOn:
+    id: 'player-chip-Mike'
+- tapOn:
+    id: 'player-chip-Molly'
+- tapOn:
+    id: 'player-chip-Kelly'
+- tapOn:
+    id: 'player-chip-Rachel'
+- tapOn:
+    id: 'player-chip-Heidi'
+- tapOn:
+    id: 'line-select-confirm'
+    enabled: true
+
+# Dark takes Joe from Light, adds unassigned Ivan, and benches Ben.
+- assertVisible:
+    text: 'Dark Line · 0-1'
+- tapOn:
+    id: 'line-select-show-all-players'
+- tapOn:
+    id: 'player-chip-Joe'
+- tapOn:
+    id: 'player-chip-Cara'
+- tapOn:
+    id: 'player-chip-Drew'
+- tapOn:
+    id: 'player-chip-Emma'
+- tapOn:
+    id: 'player-chip-Finn'
+- tapOn:
+    id: 'player-chip-Grace'
+- tapOn:
+    id: 'player-chip-Ivan'
+- tapOn:
+    id: 'line-select-confirm'
+    enabled: true
+
+- assertVisible:
+    text: 'DARK IS PULLING'
+- tapOn:
+    id: 'pull-skip-timing'
+- tapOn:
+    id: 'pull-result-inbound'
+
+- extendedWaitUntil:
+    visible:
+      text: 'TAP WHO STARTS WITH DISC'
+    timeout: 5000
+- assertVisible:
+    id: 'tracker-chip-Anna'
+- assertNotVisible:
+    id: 'tracker-chip-Joe'
+- tapOn:
+    id: 'tracker-chip-Anna'
+- assertVisible:
+    id: 'tracker-menu-button'

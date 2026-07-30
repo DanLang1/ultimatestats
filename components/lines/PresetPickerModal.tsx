@@ -158,6 +158,7 @@ export function PresetPickerModal({
                     return (
                       <Pressable
                         key={`recent-${recent.pointNumber}`}
+                        testID={`line-select-recent-${recent.pointNumber}`}
                         onPress={() => onSelectRecentLine(recent)}
                         style={({ pressed }) => [
                           styles.recentListItem,

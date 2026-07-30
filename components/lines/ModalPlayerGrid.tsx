@@ -44,6 +44,7 @@ export interface ModalPlayerGridProps {
   /** Current point number — excludes in-progress point from playing time count */
   currentPoint?: number;
   playerRestrictions?: ReadonlyMap<string, PlayerChipRestriction>;
+  playerStatusLabels?: ReadonlyMap<string, string>;
 }
 
 type ColumnKey =
@@ -99,6 +100,7 @@ export function ModalPlayerGrid({
   gameActive = false,
   currentPoint,
   playerRestrictions,
+  playerStatusLabels,
 }: ModalPlayerGridProps) {
   const { palette } = useTheme();
   const { isLandscape, sizeClass } = useLayout();
@@ -123,20 +125,29 @@ export function ModalPlayerGrid({
     columns.get(key)!.push(player);
   }
 
-  const renderPlayerChip = (player: Player) => (
-    <PlayerChip
-      key={player.id}
-      name={player.name}
-      number={player.number}
-      selected={selectedSet.has(player.id)}
-      matchingType={player.matchingType}
-      subtitle={gameActive ? formatPlayingTime(player.id, playingTime) : undefined}
-      compact
-      restriction={playerRestrictions?.get(player.id)}
-      useModalColors={useModalColorsProp}
-      onPress={() => onTogglePlayer(player.id)}
-    />
-  );
+  const renderPlayerChip = (player: Player) => {
+    const subtitle = [
+      playerStatusLabels?.get(player.id),
+      gameActive ? formatPlayingTime(player.id, playingTime) : undefined,
+    ]
+      .filter((value): value is string => value != null)
+      .join(' · ');
+
+    return (
+      <PlayerChip
+        key={player.id}
+        name={player.name}
+        number={player.number}
+        selected={selectedSet.has(player.id)}
+        matchingType={player.matchingType}
+        subtitle={subtitle || undefined}
+        compact
+        restriction={playerRestrictions?.get(player.id)}
+        useModalColors={useModalColorsProp}
+        onPress={() => onTogglePlayer(player.id)}
+      />
+    );
+  };
 
   // Check which matching types exist in the roster
   const hasMmpPlayers = roster.some((p) => p.matchingType === 'mmp');
