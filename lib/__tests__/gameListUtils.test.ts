@@ -141,6 +141,8 @@ describe('advancedGameToListItem', () => {
     const item = advancedGameToListItem(baseAdvancedGame);
     expect(item.kind).toBe('advanced');
     expect(item.id).toBe('adv1');
+    if (item.kind !== 'advanced') throw new Error('expected advanced kind');
+    expect(item.gameType).toBe('game');
   });
 
   it('derives myTeamName from focusSide label', () => {
@@ -227,6 +229,7 @@ describe('advancedGameSummaryToListItem', () => {
 
     expect(item).toEqual({
       kind: 'advanced',
+      gameType: 'game',
       id: 'summary1',
       timestamp: 1500,
       myTeamName: 'Zoo',
@@ -235,6 +238,17 @@ describe('advancedGameSummaryToListItem', () => {
       opponentScore: 10,
       pointsTracked: 22,
     });
+  });
+
+  it('preserves the scrimmage game type for saved-game presentation', () => {
+    const item = advancedGameSummaryToListItem({
+      ...advancedSummary,
+      gameType: 'scrimmage',
+    });
+
+    expect(item.kind).toBe('advanced');
+    if (item.kind !== 'advanced') throw new Error('expected advanced kind');
+    expect(item.gameType).toBe('scrimmage');
   });
 
   it('identifies only finished advanced summaries as completed saved games', () => {

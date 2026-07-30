@@ -1,7 +1,7 @@
 import * as SQLite from 'expo-sqlite';
 
 import { AdvancedGameSummary, deriveAdvancedGameSummary } from '@/lib/advancedTracking/summary';
-import type { AdvancedTrackedGame } from '@/lib/advancedTracking/types';
+import type { AdvancedGameType, AdvancedTrackedGame } from '@/lib/advancedTracking/types';
 
 const DATABASE_NAME = 'ultimatestats_advanced_tracking.db';
 
@@ -17,7 +17,7 @@ type SummaryRow = {
   played_at: number | null;
   sort_timestamp: number;
   status: AdvancedGameSummary['status'];
-  game_type: AdvancedGameSummary['gameType'];
+  game_type: AdvancedGameType;
   focus_side_id: string;
   focus_source_team_id: string | null;
   my_team_name: string;

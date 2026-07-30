@@ -1,4 +1,5 @@
 import type {
+  AdvancedGameType,
   AdvancedTrackedGame,
   FieldLocation,
   GameClockPauseReason,
@@ -18,7 +19,7 @@ export type { InjurySubChange, PullResult, ThrowResult };
 
 export interface CreateAdvancedGameInput {
   id?: string;
-  gameType?: AdvancedTrackedGame['gameType'];
+  gameType?: AdvancedGameType;
   focusSideId: string;
   initialReceivingSideId: string;
   flip?: GameFlip;

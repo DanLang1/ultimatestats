@@ -251,6 +251,8 @@ export default function SavedGamesList({
       <View style={styles.savedGamesList}>
         {filteredAndSortedGames.map((game) => {
           const isAdvanced = game.kind === 'advanced';
+          const advancedBadgeLabel =
+            isAdvanced && game.gameType === 'scrimmage' ? 'Scrimmage' : 'Advanced';
           const isSelectable = selectedGameKind == null || selectedGameKind === game.kind;
           const isSelected = selectedGameIds.has(game.id);
           const isSelectionDisabled = selectionMode && !isSelectable;
@@ -345,7 +347,7 @@ export default function SavedGamesList({
                             },
                           ]}>
                           <ThemedText style={[styles.advancedBadgeText, { color: palette.accent }]}>
-                            Advanced
+                            {advancedBadgeLabel}
                           </ThemedText>
                         </View>
                       )}

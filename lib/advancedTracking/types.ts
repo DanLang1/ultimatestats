@@ -9,6 +9,8 @@ export type PassModifier = 'fifty-fifty' | 'callahan' | 'stall' | 'block' | 'pre
 
 export const ADVANCED_TRACKING_SCHEMA_VERSION = 2;
 
+export type AdvancedGameType = 'game' | 'scrimmage';
+
 export type GameStatus = 'in_progress' | 'final' | 'terminated';
 
 export type GameClockPauseReason = 'weather' | 'field' | 'admin' | 'manual';
@@ -38,7 +40,7 @@ export interface AdvancedTrackedGame {
   updatedAt: number;
   importedAt?: number;
 
-  gameType: 'game' | 'scrimmage' | 'practice' | 'other';
+  gameType: AdvancedGameType;
   status: GameStatus;
   /** Only set when `status` is `'terminated'`. */
   endReason?: 'time_limit' | 'weather' | 'conceded' | 'manual';

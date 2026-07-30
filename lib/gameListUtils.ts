@@ -1,6 +1,6 @@
 import type { AdvancedGameSummary } from '@/lib/advancedTracking/summary';
 import { getGameScore } from '@/lib/advancedTracking/trackingUtils';
-import { AdvancedTrackedGame } from '@/lib/advancedTracking/types';
+import type { AdvancedGameType, AdvancedTrackedGame } from '@/lib/advancedTracking/types';
 import { resolveTeamName } from '@/lib/playerUtils';
 import { getGameDisplayTimestamp } from '@/lib/savedGameUtils';
 import { SavedGame, SavedTeam } from '@/lib/storage';
@@ -22,6 +22,7 @@ export type GameListItem =
     }
   | {
       kind: 'advanced';
+      gameType: AdvancedGameType;
       id: string;
       timestamp: number;
       myTeamName: string;
@@ -66,6 +67,7 @@ export function advancedGameToListItem(game: AdvancedTrackedGame): GameListItem 
 
   return {
     kind: 'advanced',
+    gameType: game.gameType,
     id: game.id,
     timestamp,
     myTeamName,
@@ -80,6 +82,7 @@ export function advancedGameToListItem(game: AdvancedTrackedGame): GameListItem 
 export function advancedGameSummaryToListItem(summary: AdvancedGameSummary): GameListItem {
   return {
     kind: 'advanced',
+    gameType: summary.gameType,
     id: summary.id,
     timestamp: summary.sortTimestamp,
     myTeamName: summary.myTeamName,

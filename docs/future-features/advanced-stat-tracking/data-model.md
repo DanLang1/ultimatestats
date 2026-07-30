@@ -72,7 +72,7 @@ interface AdvancedTrackedGame {
   createdAt: number;
   updatedAt: number;
 
-  gameType: 'game' | 'scrimmage' | 'practice' | 'other';
+  gameType: 'game' | 'scrimmage';
   status: 'in_progress' | 'final' | 'terminated';
   // Only set when status is 'terminated'. Score limit is not an end reason — that is just status: 'final'.
   endReason?: 'time_limit' | 'weather' | 'conceded' | 'manual';

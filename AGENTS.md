@@ -7,6 +7,10 @@ Read `docs/README.md` for the project map and New Screen Checklist. Follow its l
 ## Engineering
 
 - Prefer derived state over `useEffect`; extract substantial effects into custom hooks.
+- Prefer exported, named types for reusable domain concepts, especially across storage, analytics,
+  state, and UI boundaries. Avoid indexed-access types such as `Model['field']` as a substitute for
+  a named domain type; indexed access remains appropriate for one-off structural derivations that
+  should stay tightly coupled to their source type.
 - Use semantic palette tokens instead of `themeMode` styling branches. Add theme-specific values to `theme/theme.ts`.
 - Put app-wide limits in `lib/constants.ts`.
 - Follow `docs/ui-patterns.md`, `docs/navigation-map.md`, and `docs/responsive-layout.md` for screens, modals, navigation, safe areas, and orientation.

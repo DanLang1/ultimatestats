@@ -5,7 +5,11 @@ import {
   getAdvancedOpponentName,
 } from '@/lib/advancedTracking/advancedGameTeamUtils';
 import { getGameScore } from '@/lib/advancedTracking/trackingUtils';
-import type { AdvancedTrackedGame, GameStatus } from '@/lib/advancedTracking/types';
+import type {
+  AdvancedGameType,
+  AdvancedTrackedGame,
+  GameStatus,
+} from '@/lib/advancedTracking/types';
 
 export interface AdvancedGameSummary {
   id: string;
@@ -16,7 +20,7 @@ export interface AdvancedGameSummary {
   playedAt: number | null;
   sortTimestamp: number;
   status: GameStatus;
-  gameType: AdvancedTrackedGame['gameType'];
+  gameType: AdvancedGameType;
   focusSideId: string;
   focusSourceTeamId: string | null;
   myTeamName: string;

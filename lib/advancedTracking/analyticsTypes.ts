@@ -1,7 +1,14 @@
 // Analytics Layer Types
 // See docs/future-features/advanced-stat-tracking/analytics-layer.md
 
-import type { GameFlip, GameMetadata, GameSide, PullResult, ThrowResult } from './types';
+import type {
+  AdvancedGameType,
+  GameFlip,
+  GameMetadata,
+  GameSide,
+  PullResult,
+  ThrowResult,
+} from './types';
 
 export type PointState =
   | 'hold' // focus side received and scored
@@ -152,7 +159,7 @@ export interface AnalyticsAttribution {
 }
 
 export interface AnalyticsGame {
-  gameType: 'game' | 'scrimmage' | 'practice' | 'other';
+  gameType: AdvancedGameType;
   /** The side the coach is tracking for — defines the analytics perspective. */
   focusSideId: string;
   /** The opposing side (non-focus). */

@@ -1,5 +1,5 @@
 import { getDefaultHalftimeTimerState } from '@/lib/advancedTracking/halftimeTimerUtils';
-import type { Participant, PlayerRef } from '@/lib/advancedTracking/types';
+import type { AdvancedGameType, Participant, PlayerRef } from '@/lib/advancedTracking/types';
 import {
   getMaestroSeedPlayerId,
   MAESTRO_SEED_GAME_ID,
@@ -23,7 +23,7 @@ const MAESTRO_SEED_TEAM_NAME = 'Zoboomafoo';
 const MAESTRO_CAP_SOFT_ACTIVE_ELAPSED_MS = 75 * 60 * 1000;
 
 export type MaestroCapMode = 'both' | 'hard' | 'soft' | 'none' | 'softActive' | 'bothActive';
-export type MaestroSeedGameType = 'game' | 'scrimmage';
+export type MaestroSeedGameType = AdvancedGameType;
 export type MaestroTrackerState = 'awaitingPickup' | 'focusPossession' | 'opponentPossession';
 
 type PersistHydrationApi = {
