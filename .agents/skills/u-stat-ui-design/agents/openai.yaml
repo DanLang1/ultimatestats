@@ -1,0 +1,4 @@
+interface:
+  display_name: 'U-Stat UI Design'
+  short_description: 'Build UI from current U-Stat conventions'
+  default_prompt: 'Use $u-stat-ui-design to implement this U-Stat interface using current project patterns.'

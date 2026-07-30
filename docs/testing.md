@@ -106,7 +106,7 @@ npm run maestro:all
 
 The Maestro npm scripts disable Maestro CLI analytics for predictable agent runs.
 
-Use `.agent/skills/maestro-advanced-tracker/SKILL.md` before adding or extending advanced tracker
+Use `.agents/skills/maestro-advanced-tracker/SKILL.md` before adding or extending advanced tracker
 flows.
 
 ## Test File Location

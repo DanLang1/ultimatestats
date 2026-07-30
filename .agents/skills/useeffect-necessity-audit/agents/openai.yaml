@@ -1,0 +1,4 @@
+interface:
+  display_name: 'useEffect Audit'
+  short_description: 'Audit effects against React conventions'
+  default_prompt: "Use $useeffect-necessity-audit to classify this repository's effects and recommend safe refactors."

@@ -1,0 +1,4 @@
+interface:
+  display_name: 'Maestro Advanced Tracker'
+  short_description: 'Verify advanced tracking on a simulator'
+  default_prompt: 'Use $maestro-advanced-tracker to verify this advanced-tracker behavior on a simulator.'
