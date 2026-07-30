@@ -24,8 +24,6 @@ tags:
 # Open tracker menu and navigate to View Stats
 - tapOn:
     id: 'tracker-menu-button'
-- waitForAnimationToEnd:
-    timeout: 500
 - tapOn:
     id: 'tracker-menu-view-stats'
 

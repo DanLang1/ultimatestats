@@ -1,5 +1,8 @@
 appId: com.langdk.ultimatestats
 name: Advanced Tracker Scrimmage UI Setup
+tags:
+  - scrimmage
+  - ui-setup
 ---
 - runFlow:
     file: ../flows/setup-scrimmage-ui.yaml

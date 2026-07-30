@@ -1,5 +1,7 @@
 appId: com.langdk.ultimatestats
 name: Scrimmage Injury Sub Progression
+tags:
+  - scrimmage
 ---
 - runFlow:
     file: ../flows/setup-scrimmage.yaml
@@ -8,8 +10,8 @@ name: Scrimmage Injury Sub Progression
 
 - tapOn:
     id: 'tracker-line-action-tile'
-- waitForAnimationToEnd:
-    timeout: 500
+- assertVisible:
+    id: 'line-change-injury-sub'
 - tapOn:
     id: 'line-change-injury-sub'
 

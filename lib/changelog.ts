@@ -6,6 +6,16 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.2.0',
+    date: 'July 30, 2026',
+    changes: [
+      'Team Scrimmage mode (beta). Allows two-sided tracking for intra-team games',
+      'Added pressure stat for defense (not a block, but defensive pressure causes a turn, +0.5 for plus minus)',
+      'Added point +- stat (rough +- for point outcomes you played)',
+      'Added optional flip stats (how often you win, if you choose O/D/Side)',
+    ],
+  },
+  {
     version: '2.1.0',
     date: 'July 8, 2026',
     changes: [

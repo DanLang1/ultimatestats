@@ -51,3 +51,4 @@ app-example
 
 # Maestro generated screenshots
 .maestro/screenshots/
+.maestro/test-output/

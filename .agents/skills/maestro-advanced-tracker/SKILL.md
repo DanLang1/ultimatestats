@@ -10,7 +10,7 @@ then inspect neighboring flows for the current setup and selector conventions.
 
 ## Project setup
 
-- Development app ID: `com.langdk.ultimatestats.dev`
+- Development app ID used by the checked-in iOS Maestro flows: `com.langdk.ultimatestats`
 - Checked-in native iOS bundle ID: `com.langdk.ultimatestats`
 - Tests: `.maestro/tests/`
 - Shared flows: `.maestro/flows/`
@@ -40,9 +40,12 @@ environment's working Java configuration.
    - `flows/setup-game.yaml`
    - `flows/select-line-and-pull.yaml`
    - `flows/record-opponent-goal.yaml`
+   - Start reusable seed flows with `launchApp` before `openLink` so the custom deep link is delivered
+     to a foreground app. Keep explicit stopped-app behavior in dedicated `*-clean` flows.
 2. Prefer stable kebab-case `testID` selectors for actions and screen roots.
 3. Use visible-text assertions for user-facing output that the test owns.
-4. Keep one deterministic path per test. Do not use `optional: true` or either/or assertions.
+4. Keep one deterministic path per test. Do not use `optional: true` to hide required behavior;
+   use it only for genuinely optional UI, and use conditional `runFlow` blocks for larger branches.
 5. Wait for meaningful state transitions; do not use blind delays as synchronization.
 6. Keep scenarios focused and use shared flows for repeated setup.
 7. Take one final screenshot per committed test. Use extra screenshots temporarily for diagnosis.
@@ -63,4 +66,5 @@ environment's working Java configuration.
 - Run the edited test directly with `maestro test <path>` while iterating.
 - Run the closest npm suite before finishing.
 - Confirm the final screenshot and failure artifacts rather than relying only on exit status.
+- Use `npm run maestro:ci` when a structured JUnit report and workspace-local artifacts are needed.
 - Keep application changes and flow assertions synchronized.

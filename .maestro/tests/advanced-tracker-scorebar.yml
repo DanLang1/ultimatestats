@@ -22,8 +22,6 @@ name: Advanced Tracker Score Bar
 # Expand score bar to reveal timeout buttons
 - tapOn:
     id: 'timeout-dots-focus'
-- waitForAnimationToEnd:
-    timeout: 500
 
 # Verify timeout buttons
 - assertVisible:

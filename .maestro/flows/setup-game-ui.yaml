@@ -1,6 +1,7 @@
 appId: com.langdk.ultimatestats
 name: Setup Advanced Tracker Game Through UI
 ---
+- launchApp
 - openLink: ultimatestats:///__maestro_seed__?mode=team
 
 - extendedWaitUntil:
@@ -54,8 +55,8 @@ name: Setup Advanced Tracker Game Through UI
     id: 'line-select-confirm'
 - assertVisible:
     text: 'THEY ARE PULLING'
-- waitForAnimationToEnd:
-    timeout: 500
+- assertVisible:
+    id: 'pull-skip-timing'
 - tapOn:
     id: 'pull-skip-timing'
 - extendedWaitUntil:

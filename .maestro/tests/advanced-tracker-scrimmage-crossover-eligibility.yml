@@ -1,5 +1,7 @@
 appId: com.langdk.ultimatestats
 name: Scrimmage Crossover Eligibility
+tags:
+  - scrimmage
 ---
 - runFlow:
     file: ../flows/start-scrimmage-crossover-point.yaml
@@ -8,8 +10,8 @@ name: Scrimmage Crossover Eligibility
 # Cara is active for Dark this point and must remain unavailable.
 - tapOn:
     id: 'tracker-line-action-tile'
-- waitForAnimationToEnd:
-    timeout: 500
+- assertVisible:
+    id: 'line-change-injury-sub'
 - tapOn:
     id: 'line-change-injury-sub'
 - assertVisible:
@@ -32,8 +34,8 @@ name: Scrimmage Crossover Eligibility
 # The same eligibility boundary applies while correcting the current line.
 - tapOn:
     id: 'tracker-line-action-tile'
-- waitForAnimationToEnd:
-    timeout: 500
+- assertVisible:
+    id: 'line-change-correct-line'
 - tapOn:
     id: 'line-change-correct-line'
 - assertVisible:

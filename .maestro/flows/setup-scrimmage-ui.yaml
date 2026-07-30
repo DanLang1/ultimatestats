@@ -1,6 +1,7 @@
 appId: com.langdk.ultimatestats
 name: Setup Scrimmage Through UI
 ---
+- launchApp
 - openLink: ultimatestats:///__maestro_seed__?mode=scrimmageTeam
 
 - extendedWaitUntil:

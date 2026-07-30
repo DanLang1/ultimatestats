@@ -1,5 +1,7 @@
 appId: com.langdk.ultimatestats
 name: Advanced Tracker Smoke
+tags:
+  - smoke
 ---
 - runFlow:
     file: ../flows/setup-game.yaml
@@ -33,8 +35,6 @@ name: Advanced Tracker Smoke
     id: 'defense-opp-goal'
 - assertVisible:
     id: 'defense-opp-turn'
-- waitForAnimationToEnd:
-    timeout: 500
 
 # Record opponent goal and verify point end
 - runFlow:

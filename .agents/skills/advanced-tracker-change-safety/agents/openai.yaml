@@ -1,0 +1,4 @@
+interface:
+  display_name: 'Advanced Tracker Change Safety'
+  short_description: 'Protect advanced tracker data integrity'
+  default_prompt: 'Use $advanced-tracker-change-safety to safely plan and implement this advanced-tracker change.'

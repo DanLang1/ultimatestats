@@ -5,8 +5,6 @@ name: Record Opponent Goal
     visible:
       id: 'defense-opp-goal'
     timeout: 2000
-- waitForAnimationToEnd:
-    timeout: 500
 - tapOn:
     id: 'defense-opp-goal'
     retryTapIfNoChange: true

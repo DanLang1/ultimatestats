@@ -2,11 +2,15 @@
 
 ## Start Here
 
+When in doubt, surface questions to user, avoid making assumptions about code or behavior.
+
 Read `docs/README.md` for the project map and New Screen Checklist. Follow its linked domain docs before changing unfamiliar behavior. If the intended behavior remains ambiguous, ask instead of guessing.
 
 ## Engineering
 
 - Prefer derived state over `useEffect`; extract substantial effects into custom hooks.
+- Trust the data we own. Avoid noisy or unnecessary fallbacks or excessive null checks on data we know can never be null
+- Sometimes throwing an error or returning early is better than silently passing 'invalid' or odd fallbacks through the code
 - Prefer exported, named types for reusable domain concepts, especially across storage, analytics,
   state, and UI boundaries. Avoid indexed-access types such as `Model['field']` as a substitute for
   a named domain type; indexed access remains appropriate for one-off structural derivations that

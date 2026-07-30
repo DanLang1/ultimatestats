@@ -1,5 +1,7 @@
 appId: com.langdk.ultimatestats
 name: Advanced Tracker Scrimmage 50-50 Turnover
+tags:
+  - scrimmage
 ---
 - runFlow:
     file: ../flows/setup-scrimmage-clean.yaml

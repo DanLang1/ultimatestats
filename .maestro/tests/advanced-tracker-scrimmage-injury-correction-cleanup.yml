@@ -1,5 +1,7 @@
 appId: com.langdk.ultimatestats
 name: Scrimmage Correction Removes Invalidated Injury Sub
+tags:
+  - scrimmage
 ---
 - runFlow:
     file: ../flows/setup-scrimmage-clean.yaml
@@ -34,8 +36,8 @@ name: Scrimmage Correction Removes Invalidated Injury Sub
 # A fresh injury screen exposes the effective lineup after reconciliation.
 - tapOn:
     id: 'tracker-line-action-tile'
-- waitForAnimationToEnd:
-    timeout: 500
+- assertVisible:
+    id: 'line-change-injury-sub'
 - tapOn:
     id: 'line-change-injury-sub'
 - assertVisible:

@@ -39,9 +39,6 @@ name: Select Line and Handle Pull (Deterministic)
       - tapOn:
           id: 'pull-result-inbound'
 
-# Wait for tracker screen
-- waitForAnimationToEnd:
-    timeout: 2000
 # Verify on tracker (card text varies: TAP WHO STARTS WITH DISC when we have disc,
 # DEFENSE or turnover header when opponent has disc after our pull)
 - assertVisible:

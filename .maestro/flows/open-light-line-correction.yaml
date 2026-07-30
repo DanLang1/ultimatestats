@@ -3,8 +3,8 @@ name: Open Light Line Correction
 ---
 - tapOn:
     id: 'tracker-line-action-tile'
-- waitForAnimationToEnd:
-    timeout: 500
+- assertVisible:
+    id: 'line-change-correct-line'
 - tapOn:
     id: 'line-change-correct-line'
 - assertVisible:

@@ -9,8 +9,8 @@ name: Advanced Tracker Stoppages
 # --- Injury Substitution ---
 - tapOn:
     id: 'tracker-line-action-tile'
-- waitForAnimationToEnd:
-    timeout: 500
+- assertVisible:
+    id: 'line-change-injury-sub'
 - tapOn:
     id: 'line-change-injury-sub'
 - assertVisible:

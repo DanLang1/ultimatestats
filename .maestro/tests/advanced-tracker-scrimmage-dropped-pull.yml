@@ -1,5 +1,7 @@
 appId: com.langdk.ultimatestats
 name: Advanced Tracker Scrimmage Dropped Pull
+tags:
+  - scrimmage
 ---
 - runFlow:
     file: ../flows/setup-scrimmage.yaml

@@ -22,8 +22,6 @@ name: Advanced Tracker Turnover Scenarios
 # Verify modifier prompt
 - assertVisible:
     text: 'Tap other player at fault'
-- waitForAnimationToEnd:
-    timeout: 500
 
 # Tap Mike for 50/50 attribution
 - tapOn:
@@ -32,14 +30,10 @@ name: Advanced Tracker Turnover Scenarios
 # Verify turnover label (50/50 appears in turnover header)
 - assertVisible:
     text: '50/50'
-- waitForAnimationToEnd:
-    timeout: 500
 
 # Tap Joe to pick up disc
 - tapOn:
     id: 'tracker-chip-Joe'
-- waitForAnimationToEnd:
-    timeout: 500
 
 # --- Opponent Block ---
 # Pass to Jon

@@ -91,9 +91,7 @@ name: Advanced Tracker Pull Tracking
 - tapOn:
     id: 'pull-result-ob'
 
-# Wait for tracker (opponent has disc after our OB pull)
-- waitForAnimationToEnd:
-    timeout: 2000
+# Verify tracker (opponent has disc after our OB pull)
 - assertVisible:
     id: 'tracker-menu-button'
 

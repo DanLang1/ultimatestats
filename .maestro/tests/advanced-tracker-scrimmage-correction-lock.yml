@@ -1,5 +1,7 @@
 appId: com.langdk.ultimatestats
 name: Scrimmage Correction Locks Action Players
+tags:
+  - scrimmage
 ---
 - runFlow:
     file: ../flows/setup-scrimmage-clean.yaml

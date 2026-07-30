@@ -1,5 +1,7 @@
 appId: com.langdk.ultimatestats
 name: Scrimmage Correction Preserves Unaffected Injury Sub
+tags:
+  - scrimmage
 ---
 - runFlow:
     file: ../flows/setup-scrimmage-clean.yaml
@@ -31,8 +33,8 @@ name: Scrimmage Correction Preserves Unaffected Injury Sub
 
 - tapOn:
     id: 'tracker-line-action-tile'
-- waitForAnimationToEnd:
-    timeout: 500
+- assertVisible:
+    id: 'line-change-injury-sub'
 - tapOn:
     id: 'line-change-injury-sub'
 - assertVisible:

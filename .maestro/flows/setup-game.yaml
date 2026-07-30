@@ -1,6 +1,7 @@
 appId: com.langdk.ultimatestats
 name: Seed Advanced Tracker Game
 ---
+- launchApp
 - openLink: ultimatestats:///__maestro_seed__?trackerState=${TRACKER_STATE}
 - extendedWaitUntil:
     visible:

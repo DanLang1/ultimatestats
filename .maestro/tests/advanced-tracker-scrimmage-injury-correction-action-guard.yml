@@ -1,5 +1,7 @@
 appId: com.langdk.ultimatestats
 name: Scrimmage Correction Protects Sub-In Actions
+tags:
+  - scrimmage
 ---
 - runFlow:
     file: ../flows/setup-scrimmage-clean.yaml

@@ -1,5 +1,7 @@
 appId: com.langdk.ultimatestats
 name: Scrimmage Crossover Assignment and History
+tags:
+  - scrimmage
 ---
 - runFlow:
     file: ../flows/start-scrimmage-crossover-point.yaml

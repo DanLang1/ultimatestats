@@ -66,11 +66,12 @@ The Maestro suite is intentionally concentrated on advanced tracking, where menu
 transitions, and long action sequences benefit most from device-level coverage. Run the default
 single-simulator suite with `npm run maestro`; it uses the fast test-only seed route for most flows
 and keeps one UI setup smoke test for the real Dashboard → New Game → line/pull path. Seeding avoids
-retesting setup in every scenario but everything after the seed still runs through the installed
+retesting setup in every scenario, but everything after the seed still runs through the installed
 app's real UI and navigation.
 
 Each seeded flow resets and recreates its own team/game state, so tests remain independent without
-restarting the app process between flows. The seed deep link also cold-launches the app when needed.
+clearing the app's persisted data between flows. Reusable seed flows restart the app with
+`launchApp` before opening the seed deep link; the seed route then performs the domain setup.
 Seeded tracker flows must pass an explicit `TRACKER_STATE`:
 
 - `awaitingPickup` only when the test is intentionally verifying pickup or dropped-pull UI.
@@ -82,10 +83,12 @@ does not own. Keep conditional retries limited to interactions that are themselv
 they should not be the default synchronization mechanism. Wait for a meaningful state-specific
 postcondition after every gesture.
 
-Seed setup flows use a two-phase route handshake: first wait for `maestro-setup-running` to appear,
-then wait for it to disappear before asserting the destination. Do not skip the disappearance
-check—a destination element from the previous screen can remain discoverable underneath the seed
-route during navigation and create a false-positive setup completion.
+Seed setup flows launch the app before opening the custom seed deep link, then use a two-phase route
+handshake: first wait for `maestro-setup-running` to appear, then wait for it to disappear before
+asserting the destination. `launchApp` restarts the app without clearing persisted state, while the
+`*-clean` flows intentionally exercise the stopped-app path. Do not skip the disappearance check—a
+destination element from the previous screen can remain discoverable underneath the seed route during
+navigation and create a false-positive setup completion.
 
 The default suite excludes the `extended` multi-point scenarios to keep feedback fast. Use
 `npm run maestro:all` to include them all.
@@ -102,6 +105,9 @@ npm run maestro:scrimmage
 
 # Core and extended advanced-tracker device flows
 npm run maestro:all
+
+# CI-friendly JUnit report and local artifacts
+npm run maestro:ci
 ```
 
 The Maestro npm scripts disable Maestro CLI analytics for predictable agent runs.

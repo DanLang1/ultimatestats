@@ -1,6 +1,7 @@
 appId: com.langdk.ultimatestats
 name: Seed Scrimmage Tracker Game
 ---
+- launchApp
 - openLink: ultimatestats:///__maestro_seed__?gameType=scrimmage&trackerState=${TRACKER_STATE}
 - extendedWaitUntil:
     visible:

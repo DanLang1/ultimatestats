@@ -15,12 +15,8 @@ name: Advanced Tracker Rare Actions
     retryTapIfNoChange: true
 
 # Stall-offense records a turnover, opponent gets disc
-- waitForAnimationToEnd:
-    timeout: 1500
 - assertVisible:
     id: 'defense-opp-goal'
-- waitForAnimationToEnd:
-    timeout: 500
 
 # Record opponent goal to end point
 - runFlow:

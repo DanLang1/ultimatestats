@@ -1,3 +1,5 @@
+testOutputDir: test-output
+
 platform:
   ios:
     snapshotKeyHonorModalViews: true

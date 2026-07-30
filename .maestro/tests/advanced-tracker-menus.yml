@@ -9,8 +9,6 @@ name: Advanced Tracker Menus and Navigation
 # Open tracker menu
 - tapOn:
     id: 'tracker-menu-button'
-- waitForAnimationToEnd:
-    timeout: 500
 
 # Verify menu options
 - assertVisible:
@@ -35,8 +33,6 @@ name: Advanced Tracker Menus and Navigation
 - tapOn:
     id: 'screen-header-back'
     waitToSettleTimeoutMs: 1000
-- waitForAnimationToEnd:
-    timeout: 1000
 - runFlow:
     when:
       visible:
@@ -55,8 +51,6 @@ name: Advanced Tracker Menus and Navigation
 # Open menu again and go Home
 - tapOn:
     id: 'tracker-menu-button'
-- waitForAnimationToEnd:
-    timeout: 500
 - tapOn:
     id: 'tracker-menu-home'
 

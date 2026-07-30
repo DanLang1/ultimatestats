@@ -1,7 +1,7 @@
 appId: com.langdk.ultimatestats
 name: Seed Advanced Tracker Game From Clean Process
 ---
-- stopApp
+- launchApp
 - openLink: ultimatestats:///__maestro_seed__?trackerState=${TRACKER_STATE}
 - runFlow:
     when:

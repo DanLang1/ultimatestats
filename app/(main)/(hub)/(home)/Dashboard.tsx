@@ -243,7 +243,6 @@ export default function DashboardScreen() {
           onPress: () => {
             router.push('/Partners');
           },
-          showBadge: true,
         },
       ],
     },
