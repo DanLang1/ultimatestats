@@ -1,4 +1,10 @@
-const APP_VARIANT = process.env.APP_VARIANT;
+const APP_VARIANTS = ['development', 'preview', 'production'];
+const APP_VARIANT = process.env.APP_VARIANT ?? 'development';
+
+if (!APP_VARIANTS.includes(APP_VARIANT)) {
+  throw new Error(`Invalid APP_VARIANT: ${APP_VARIANT}`);
+}
+
 const IS_DEV = APP_VARIANT === 'development';
 const IS_PREVIEW = APP_VARIANT === 'preview';
 
@@ -128,6 +134,7 @@ export default {
         },
       },
     ],
+
     [
       'expo-dev-client',
       {
@@ -174,12 +181,21 @@ export default {
       },
     ],
     './plugins/withAndroidGradleMemory',
+    [
+      '@sentry/react-native/expo',
+      {
+        url: 'https://sentry.io/',
+        project: 'react-native',
+        organization: 'u-stat',
+      },
+    ],
   ],
   experiments: {
     typedRoutes: true,
     reactCompiler: true,
   },
   extra: {
+    appVariant: APP_VARIANT,
     router: {},
     eas: {
       projectId: '517bb299-1b17-42ee-8700-02d701cd4b98',

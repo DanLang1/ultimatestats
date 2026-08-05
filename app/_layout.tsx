@@ -1,5 +1,6 @@
 /* oxlint-disable react/no-multi-comp -- RootLayoutInner must consume providers established by RootLayout. */
 
+import * as Sentry from '@sentry/react-native';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { requireOptionalNativeModule } from 'expo';
 import { Stack } from 'expo-router';
@@ -9,13 +10,15 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { AlertProvider } from '@/components/ui/AlertProvider';
 import { ThemeProvider, useTheme } from '@/context/ThemeContext';
-import { useInitialTheme } from '@/hooks/useInitialTheme';
 import { useOrientationLock } from '@/hooks/useOrientationLock';
-import { useStartupMigrations } from '@/hooks/useStartupMigrations';
 import 'react-native-reanimated';
 
+import { useStartupMigrations } from '@/hooks/useStartupMigrations';
 import { queryClient } from '@/lib/queryClient';
+import { initializeSentry } from '@/lib/sentry';
 import { useSettingsStore } from '@/store/settingsStore';
+
+initializeSentry();
 
 if (__DEV__) {
   const DevMenuPreferences = requireOptionalNativeModule('DevMenuPreferences');
@@ -66,18 +69,11 @@ function RootLayoutInner() {
   );
 }
 
-export default function RootLayout() {
-  const initialTheme = useInitialTheme();
-
-  // Show nothing briefly while loading theme (prevents flash)
-  if (initialTheme === null) {
-    return null;
-  }
-
+export default Sentry.wrap(function RootLayout() {
   return (
     <QueryClientProvider client={queryClient}>
       <SafeAreaProvider>
-        <ThemeProvider initialTheme={initialTheme}>
+        <ThemeProvider>
           <AlertProvider>
             <RootLayoutInner />
           </AlertProvider>
@@ -85,4 +81,4 @@ export default function RootLayout() {
       </SafeAreaProvider>
     </QueryClientProvider>
   );
-}
+});

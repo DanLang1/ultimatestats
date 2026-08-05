@@ -12,9 +12,10 @@ Info for creating a new **Development Build** (or "dev client"). You only need t
    ```
 
 2. **Verify `app.config.js`**:
-   The `development` profile uses `APP_VARIANT=development`. This should automatically change your app name to "U-Stat (Dev)" and use a separate bundle identifier.
+   The `development` profile uses `APP_VARIANT=development`. This should automatically change your app name to "U-Stat (Dev)", use a separate bundle identifier, and report Sentry events under the `development` environment.
 
-3. **Verify `checks`**:
+3. **Verify checks**:
+
    ```bash
    npm run check:all
    ```
@@ -36,6 +37,16 @@ eas build --platform ios --profile development --local
 ```
 
 Wait for the build to finish. It will generate an `.apk` file in your root project directory (e.g., `build-12345.apk`).
+
+### Source maps
+
+The Sentry Expo integration uploads source maps automatically during an EAS Build when
+`SENTRY_AUTH_TOKEN` is available. Development JavaScript served by Metro is normally readable
+without an uploaded source map, but cloud development builds should still have the token configured
+so errors from their embedded bundles can be symbolicated.
+
+See Expo's [Sentry guide](https://docs.expo.dev/guides/using-sentry/) for the current EAS Build
+behavior.
 
 ## 3. Upload to Expo (Internal Distribution)
 

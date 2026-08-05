@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { createContext, ReactNode, useContext, useState } from 'react';
+import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 
 import { darkPalette, lightPalette, Palette } from '@/theme/theme';
 
@@ -22,6 +22,20 @@ interface ThemeProviderProps {
 
 export function ThemeProvider({ children, initialTheme = 'dark' }: ThemeProviderProps) {
   const [themeMode, setThemeModeState] = useState<ThemeMode>(initialTheme);
+
+  useEffect(() => {
+    let isActive = true;
+
+    void loadPersistedTheme().then((persistedTheme) => {
+      if (isActive) {
+        setThemeModeState(persistedTheme);
+      }
+    });
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
 
   const setThemeMode = (mode: ThemeMode) => {
     setThemeModeState(mode);

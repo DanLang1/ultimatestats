@@ -90,7 +90,7 @@ respective event models.
 | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Agent Guide | [AGENTS.md](../AGENTS.md)                                                                                                                                                 |
 | Responsive  | [responsive-layout.md](responsive-layout.md)                                                                                                                              |
-| Builds      | [Development](build/development-build.md) / [Production](build/production-build.md) / [OTA](build/eas-update.md)                                                          |
+| Builds      | [Development](build/development-build.md) / [Preview](build/preview-build.md) / [Production](build/production-build.md) / [OTA](build/eas-update.md)                      |
 | Modals      | [ui-patterns.md](ui-patterns.md) / [navigation-map.md](navigation-map.md)                                                                                                 |
 | Platforms   | [platform-support.md](platform-support.md)                                                                                                                                |
 | Themes      | [theming.md](theming.md)                                                                                                                                                  |

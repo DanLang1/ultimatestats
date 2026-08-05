@@ -1,8 +1,8 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { captureException } from '@sentry/react-native';
 import { router, Stack } from 'expo-router';
-import React from 'react';
 import { Linking, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { NewGameSheet } from '@/components/new-game/NewGameSheet';
@@ -290,7 +290,10 @@ export default function DashboardScreen() {
             onPress={handleRemoteUpdatePress}
             style={({ pressed }) => [
               styles.updateBanner,
-              { backgroundColor: palette.accentOverlay10, borderColor: palette.accentOverlay30 },
+              {
+                backgroundColor: palette.accentOverlay10,
+                borderColor: palette.accentOverlay30,
+              },
               pressed && styles.menuItemPressed,
             ]}>
             <MaterialCommunityIcons
@@ -349,7 +352,9 @@ export default function DashboardScreen() {
                       <ThemedText
                         style={[
                           styles.menuItemLabel,
-                          { color: item.disabled ? palette.textMuted : palette.textInverse },
+                          {
+                            color: item.disabled ? palette.textMuted : palette.textInverse,
+                          },
                         ]}>
                         {item.label}
                       </ThemedText>
@@ -403,6 +408,29 @@ export default function DashboardScreen() {
         {/* Dev tools - only visible in development */}
         {__DEV__ && (
           <>
+            <Pressable
+              onPress={() => {
+                captureException(new Error('U-Stat Sentry test error'));
+              }}
+              style={({ pressed }) => [
+                styles.discordBanner,
+                { backgroundColor: palette.danger },
+                pressed && styles.menuItemPressed,
+              ]}>
+              <MaterialCommunityIcons
+                name="bug-outline"
+                size={metrics.bannerIconSize}
+                color={palette.textOnAccent}
+              />
+              <View style={styles.discordText}>
+                <ThemedText style={[styles.discordTitle, { color: palette.textOnAccent }]}>
+                  Send Test Sentry Error
+                </ThemedText>
+                <ThemedText style={[styles.discordSubtitle, { color: palette.textOnAccentMuted }]}>
+                  DEV ONLY - Sends a test exception to Sentry
+                </ThemedText>
+              </View>
+            </Pressable>
             <Pressable
               onPress={seedTestTeam}
               style={({ pressed }) => [
