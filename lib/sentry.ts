@@ -1,5 +1,5 @@
-import * as Sentry from "@sentry/react-native";
-import Constants from "expo-constants";
+import * as Sentry from '@sentry/react-native';
+import Constants from 'expo-constants';
 
 export function initializeSentry() {
   const environment = Constants.expoConfig?.extra?.appVariant;

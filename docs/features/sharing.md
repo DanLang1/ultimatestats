@@ -78,7 +78,7 @@ When these limits change, update validation tests and this document together.
 
 ## Platform Setup
 
-Universal-link and App Link declarations live in `app.config.js`. The website fallback and Supabase
-deployment are operational dependencies outside this repository's React Native implementation.
-Before changing a payload kind or URL shape, update the app route, platform declarations, fallback
-site, validation, and tests as one coordinated change.
+Universal-link and App Link declarations live in `app.config.js`. Supabase deployment is an
+operational dependency outside this repository's React Native implementation. Before changing a
+payload kind or URL shape, update the app route, platform declarations, validation, and tests as
+one coordinated change.
