@@ -1,8 +1,8 @@
-appId: com.langdk.ultimatestats
+appId: com.langdk.ultimatestats.dev
 name: Seed Advanced Tracker Cap Mode
 ---
 - launchApp
-- openLink: ultimatestats:///__maestro_seed__?capMode=${CAP_MODE}
+- openLink: ultimatestats-dev:///__maestro_seed__?capMode=${CAP_MODE}
 - extendedWaitUntil:
     visible:
       id: 'maestro-setup-running'

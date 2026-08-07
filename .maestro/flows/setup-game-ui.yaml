@@ -1,8 +1,8 @@
-appId: com.langdk.ultimatestats
+appId: com.langdk.ultimatestats.dev
 name: Setup Advanced Tracker Game Through UI
 ---
 - launchApp
-- openLink: ultimatestats:///__maestro_seed__?mode=team
+- openLink: ultimatestats-dev:///__maestro_seed__?mode=team
 
 - extendedWaitUntil:
     visible:

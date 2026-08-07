@@ -1,8 +1,8 @@
-appId: com.langdk.ultimatestats
+appId: com.langdk.ultimatestats.dev
 name: Setup Scrimmage Through UI
 ---
 - launchApp
-- openLink: ultimatestats:///__maestro_seed__?mode=scrimmageTeam
+- openLink: ultimatestats-dev:///__maestro_seed__?mode=scrimmageTeam
 
 - extendedWaitUntil:
     visible:

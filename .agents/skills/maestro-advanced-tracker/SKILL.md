@@ -10,8 +10,9 @@ then inspect neighboring flows for the current setup and selector conventions.
 
 ## Project setup
 
-- Development app ID used by the checked-in iOS Maestro flows: `com.langdk.ultimatestats`
-- Checked-in native iOS bundle ID: `com.langdk.ultimatestats`
+- Development app ID used by the checked-in iOS Maestro flows: `com.langdk.ultimatestats.dev`
+- Checked-in native iOS bundle ID: `com.langdk.ultimatestats.dev`
+- Development seed deep links use the `ultimatestats-dev` URI scheme.
 - Tests: `.maestro/tests/`
 - Shared flows: `.maestro/flows/`
 - Screenshots: `.maestro/screenshots/`

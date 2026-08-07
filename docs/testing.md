@@ -51,8 +51,9 @@ npm run check:all
 
 ## Maestro Simulator Checks
 
-Maestro flows live in `.maestro/` and target the installed iOS simulator build
-(`com.langdk.ultimatestats` from the checked-in native project). Install Maestro with Homebrew, then
+Maestro flows live in `.maestro/` and target the installed iOS simulator development build
+(`com.langdk.ultimatestats.dev` from the checked-in native project, using the `ultimatestats-dev`
+URI scheme). Install Maestro with Homebrew, then
 build the app and run the advanced tracker smoke check:
 
 ```bash

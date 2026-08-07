@@ -6,6 +6,11 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.2.1',
+    date: 'Aug 6, 2026',
+    changes: ['Adding Sentry to debug rare ios startup issues'],
+  },
+  {
     version: '2.2.0',
     date: 'July 30, 2026',
     changes: [

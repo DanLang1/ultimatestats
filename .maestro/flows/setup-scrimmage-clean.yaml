@@ -1,8 +1,8 @@
-appId: com.langdk.ultimatestats
+appId: com.langdk.ultimatestats.dev
 name: Seed Scrimmage Tracker Game From Clean Process
 ---
 - launchApp
-- openLink: ultimatestats:///__maestro_seed__?gameType=scrimmage&trackerState=${TRACKER_STATE}
+- openLink: ultimatestats-dev:///__maestro_seed__?gameType=scrimmage&trackerState=${TRACKER_STATE}
 - runFlow:
     when:
       visible: 'U-Stat (Dev)'
@@ -11,7 +11,7 @@ name: Seed Scrimmage Tracker Game From Clean Process
       - extendedWaitUntil:
           notVisible: 'DEVELOPMENT SERVERS'
           timeout: 15000
-      - openLink: ultimatestats:///__maestro_seed__?gameType=scrimmage&trackerState=${TRACKER_STATE}
+      - openLink: ultimatestats-dev:///__maestro_seed__?gameType=scrimmage&trackerState=${TRACKER_STATE}
 - extendedWaitUntil:
     visible:
       id: 'maestro-setup-running'
