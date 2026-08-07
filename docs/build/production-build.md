@@ -36,7 +36,15 @@
 
 ## Build
 
-6. **Run EAS build:**
+6. **Run the EAS build:**
+
+iOS:
+
+```bash
+eas build --platform ios --profile production --local
+```
+
+Android:
 
 ```bash
 eas build --platform android --profile production --local
@@ -59,13 +67,44 @@ behavior.
 
 ## Post-Build
 
-8. **Submit to Play Store:**
+8. **Submit the build:**
 
-   ```bash
-   eas submit --platform android --path <path>
-   ```
+iOS:
 
-   Or manually upload the APK/AAB from the EAS dashboard.
+```bash
+eas submit --platform ios \
+  --profile production \
+  --path <path-to-ipa>
+```
+
+A standalone `eas submit` does not inherit `build.production.env`, so `app.config.js` defaults an
+unset `APP_VARIANT` to `production`. Development and preview commands must continue setting their
+variant explicitly. The IPA itself is not changed during submission.
+
+To prevent EAS from creating or selecting an App Store Connect record from a mistakenly resolved app
+variant, configure the production app explicitly in `eas.json`:
+
+```json
+{
+  "submit": {
+    "production": {
+      "ios": {
+        "ascAppId": "6760956387"
+      }
+    }
+  }
+}
+```
+
+Android:
+
+```bash
+eas submit --platform android \
+  --profile production \
+  --path <path-to-aab>
+```
+
+Or manually upload the IPA/AAB from the EAS dashboard.
 
 9. **Tag the release:**
 

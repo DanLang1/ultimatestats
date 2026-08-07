@@ -49,6 +49,8 @@ app-example
 # jest
 /coverage
 
+.zed
+
 # Maestro generated screenshots
 .maestro/screenshots/
 .maestro/test-output/

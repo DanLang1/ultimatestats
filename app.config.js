@@ -1,5 +1,5 @@
 const APP_VARIANTS = ['development', 'preview', 'production'];
-const APP_VARIANT = process.env.APP_VARIANT ?? 'development';
+const APP_VARIANT = process.env.APP_VARIANT ?? 'production';
 
 if (!APP_VARIANTS.includes(APP_VARIANT)) {
   throw new Error(`Invalid APP_VARIANT: ${APP_VARIANT}`);
