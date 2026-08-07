@@ -22,7 +22,12 @@ export default function TutorialAdvancedRareMenu({
   const { sizeClass } = useLayout();
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+    <Modal
+      visible={visible}
+      transparent
+      animationType="fade"
+      supportedOrientations={['portrait', 'landscape']}
+      onRequestClose={onClose}>
       <BottomSheet
         onDismiss={onClose}
         sheetStyle={{ backgroundColor: palette.primary, borderColor: palette.overlay20 }}>

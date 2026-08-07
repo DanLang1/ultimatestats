@@ -38,7 +38,12 @@ export function TournamentFilterModal({
   };
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+    <Modal
+      visible={visible}
+      transparent
+      animationType="slide"
+      supportedOrientations={['portrait', 'landscape']}
+      onRequestClose={onClose}>
       <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
         <Pressable
           style={[styles.overlay, { backgroundColor: palette.overlayDark40 }]}

@@ -32,7 +32,12 @@ export function TrackerLineChangeMenu({
   };
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+    <Modal
+      visible={visible}
+      transparent
+      animationType="fade"
+      supportedOrientations={['portrait', 'landscape']}
+      onRequestClose={onClose}>
       <BottomSheet
         onDismiss={onClose}
         overlayColor={palette.overlayDark88}

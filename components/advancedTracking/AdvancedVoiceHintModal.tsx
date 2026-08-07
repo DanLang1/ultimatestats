@@ -23,7 +23,12 @@ export function AdvancedVoiceHintModal({
   const styles = createStyles(sizeClass);
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onDismiss}>
+    <Modal
+      visible={visible}
+      transparent
+      animationType="fade"
+      supportedOrientations={['portrait', 'landscape']}
+      onRequestClose={onDismiss}>
       <BottomSheet
         onDismiss={onDismiss}
         sheetStyle={{ backgroundColor: palette.primary, borderColor: palette.overlay20 }}>

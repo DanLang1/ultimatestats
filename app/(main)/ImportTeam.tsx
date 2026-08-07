@@ -254,7 +254,11 @@ export default function ImportTeamScreen() {
         </Pressable>
       </ScrollView>
 
-      <Modal visible={isFetching} transparent animationType="fade">
+      <Modal
+        visible={isFetching}
+        transparent
+        animationType="fade"
+        supportedOrientations={['portrait', 'landscape']}>
         <View style={[styles.loadingOverlay, { backgroundColor: palette.overlayDark60 }]}>
           <View
             style={[

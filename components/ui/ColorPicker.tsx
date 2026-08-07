@@ -100,7 +100,11 @@ export function TeamColorPicker({ label, value, onChange }: ColorPickerProps) {
       </Pressable>
 
       {/* Advanced Picker Modal */}
-      <Modal visible={showAdvanced} transparent animationType="fade">
+      <Modal
+        visible={showAdvanced}
+        transparent
+        animationType="fade"
+        supportedOrientations={['portrait', 'landscape']}>
         <GestureHandlerRootView style={{ flex: 1 }}>
           <View style={[styles.modalBackdrop, { backgroundColor: palette.overlayDark60 }]}>
             <View

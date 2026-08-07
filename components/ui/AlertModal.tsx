@@ -25,7 +25,11 @@ export function AlertModal({ visible, title, onClose, children }: AlertModalProp
   const styles = createStyles(sizeClass);
 
   return (
-    <Modal visible={visible} transparent animationType="fade">
+    <Modal
+      visible={visible}
+      transparent
+      animationType="fade"
+      supportedOrientations={['portrait', 'landscape']}>
       <View style={[styles.overlay, { backgroundColor: palette.overlayDark70 }]}>
         <View
           style={[

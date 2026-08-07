@@ -114,6 +114,7 @@ export function ResponsiveHeaderActions({
           visible={isMenuVisible}
           transparent
           animationType="fade"
+          supportedOrientations={['portrait', 'landscape']}
           onDismiss={handleMenuDismiss}
           onRequestClose={() => setIsMenuVisible(false)}>
           <BottomSheet
@@ -161,6 +162,7 @@ export function ResponsiveHeaderActions({
           visible={isMenuVisible}
           transparent
           animationType="fade"
+          supportedOrientations={['portrait', 'landscape']}
           onDismiss={handleMenuDismiss}
           onRequestClose={() => setIsMenuVisible(false)}>
           <View style={StyleSheet.absoluteFill}>

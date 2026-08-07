@@ -32,7 +32,12 @@ export function NewGameSheet({
   const hasActiveGame = activeGameKind !== 'none';
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+    <Modal
+      visible={visible}
+      transparent
+      animationType="fade"
+      supportedOrientations={['portrait', 'landscape']}
+      onRequestClose={onClose}>
       <BottomSheet
         onDismiss={onClose}
         sheetStyle={[styles.sheet, { backgroundColor: palette.primary }]}

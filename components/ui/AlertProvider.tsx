@@ -74,7 +74,12 @@ export function AlertProvider({ children }: { children: React.ReactNode }) {
   return (
     <AlertContext.Provider value={{ showAlert }}>
       {children}
-      <Modal visible={visible} transparent animationType="fade" onRequestClose={handleDismiss}>
+      <Modal
+        visible={visible}
+        transparent
+        animationType="fade"
+        supportedOrientations={['portrait', 'landscape']}
+        onRequestClose={handleDismiss}>
         <View style={[styles.overlay, { backgroundColor: palette.overlayDark70 }]}>
           <View
             style={[

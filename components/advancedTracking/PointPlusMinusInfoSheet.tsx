@@ -49,7 +49,12 @@ export function PointPlusMinusInfoSheet({ visible, onDismiss }: PointPlusMinusIn
   const formula = `(Holds × ${POINT_PLUS_MINUS_HOLD_VALUE}) + (Broken × ${POINT_PLUS_MINUS_BROKEN_VALUE}) + (Breaks × ${POINT_PLUS_MINUS_BREAK_VALUE}) + (Opponent holds × ${POINT_PLUS_MINUS_OPP_HOLD_VALUE})`;
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onDismiss}>
+    <Modal
+      visible={visible}
+      transparent
+      animationType="fade"
+      supportedOrientations={['portrait', 'landscape']}
+      onRequestClose={onDismiss}>
       <BottomSheet
         onDismiss={onDismiss}
         sheetStyle={[styles.sheet, { backgroundColor: palette.modalBg }]}>
