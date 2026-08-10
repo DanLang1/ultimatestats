@@ -1,0 +1,46 @@
+appId: com.langdk.ultimatestats.dev
+name: Advanced Tracker Opponent Name Keyboard
+tags:
+  - ui-setup
+---
+- launchApp
+- openLink: ultimatestats-dev:///__maestro_seed__?mode=team
+
+- extendedWaitUntil:
+    visible:
+      id: 'maestro-setup-running'
+    timeout: 5000
+- retry:
+    maxRetries: 1
+    commands:
+      - extendedWaitUntil:
+          notVisible:
+            id: 'maestro-setup-running'
+          timeout: 15000
+- extendedWaitUntil:
+    visible:
+      text: 'DASHBOARD'
+    timeout: 15000
+- tapOn:
+    id: 'dashboard-new-game-button'
+- tapOn:
+    id: 'new-game-sheet-advanced'
+- assertVisible:
+    text: 'ADVANCED TRACKER'
+
+- scrollUntilVisible:
+    element:
+      id: 'advanced-tracker-opponent-name-edit'
+    direction: DOWN
+- tapOn:
+    id: 'advanced-tracker-opponent-name-edit'
+- assertVisible:
+    id: 'advanced-tracker-opponent-name-input'
+- eraseText
+- inputText: 'ChicagoUnion'
+- assertVisible:
+    id: 'advanced-tracker-opponent-name-input'
+    text: 'ChicagoUnion'
+
+- takeScreenshot:
+    path: .maestro/screenshots/advanced-tracker-opponent-name-keyboard

@@ -1,6 +1,6 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React, { useEffect, useState } from 'react';
-import { Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { type FocusEvent, Pressable, StyleSheet, TextInput, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
 import { ThemedText } from '@/components/ThemedText';
@@ -19,11 +19,14 @@ interface SegmentOption<T extends string = string> {
   activeColor?: string;
   activeTextColor?: string;
   actionIcon?: keyof typeof MaterialCommunityIcons.glyphMap;
+  actionTestID?: string;
   onAction?: () => void;
   isEditing?: boolean;
   editValue?: string;
+  editTestID?: string;
   onEditValueChange?: (value: string) => void;
   onEditComplete?: () => void;
+  onEditFocus?: (event: FocusEvent) => void;
   maxEditLength?: number;
 }
 
@@ -166,9 +169,11 @@ export function SegmentedControl<T extends string = string>({
                   {option.isEditing ? (
                     <TextInput
                       autoFocus
+                      testID={option.editTestID}
                       value={option.editValue}
                       onChangeText={option.onEditValueChange}
                       onBlur={option.onEditComplete}
+                      onFocus={option.onEditFocus}
                       onSubmitEditing={option.onEditComplete}
                       returnKeyType="done"
                       maxLength={option.maxEditLength}
@@ -201,6 +206,7 @@ export function SegmentedControl<T extends string = string>({
                   )}
                   {option.actionIcon && option.onAction && !option.isEditing && (
                     <Pressable
+                      testID={option.actionTestID}
                       hitSlop={8}
                       onPress={option.onAction}
                       style={({ pressed }) => [
