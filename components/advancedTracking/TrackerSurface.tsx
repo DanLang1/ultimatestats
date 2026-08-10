@@ -56,6 +56,7 @@ interface TrackerSurfaceProps {
   canDropOpeningPull: boolean;
   passModifier: PassModifier;
   handlers: TrackerPlayerGridHandlers;
+  onPrepareNextLine: () => void;
   onStartNextPoint: () => void;
   onLineChangePress: () => void;
   canChangeLine: boolean;
@@ -71,6 +72,7 @@ export const TrackerSurface = ({
   canDropOpeningPull,
   passModifier,
   handlers,
+  onPrepareNextLine,
   onStartNextPoint,
   isHalftimeBreakActive,
   onLineChangePress,
@@ -85,7 +87,11 @@ export const TrackerSurface = ({
     case 'between-points':
       if (isHalftimeBreakActive) {
         return (
-          <HalftimeBetweenPointDisplay game={state.game} onStartNextPoint={onStartNextPoint} />
+          <HalftimeBetweenPointDisplay
+            game={state.game}
+            onPrepareNextLine={onPrepareNextLine}
+            onStartNextPoint={onStartNextPoint}
+          />
         );
       }
       return (

@@ -18,6 +18,7 @@ import { Fonts } from '@/theme/theme';
 
 interface HalftimeBetweenPointDisplayProps {
   game: AdvancedTrackedGame;
+  onPrepareNextLine: () => void;
   onStartNextPoint: () => void;
 }
 
@@ -27,6 +28,7 @@ const ACTION_ROW_MAX_WIDTH: Record<SizeClass, number> = { small: 340, medium: 56
 
 export const HalftimeBetweenPointDisplay = ({
   game,
+  onPrepareNextLine,
   onStartNextPoint,
 }: HalftimeBetweenPointDisplayProps) => {
   const { palette } = useTheme();
@@ -139,7 +141,10 @@ export const HalftimeBetweenPointDisplay = ({
               />
             </Pressable>
 
-            <Pressable onPress={handleToggleTimer} style={styles.timerDisplay}>
+            <Pressable
+              testID="halftime-between-point-timer-toggle"
+              onPress={handleToggleTimer}
+              style={styles.timerDisplay}>
               <ThemedText style={[styles.timerValue, { color: timerColor }]}>
                 {formatTimerSeconds(timeLeft)}
               </ThemedText>
@@ -231,6 +236,18 @@ export const HalftimeBetweenPointDisplay = ({
               size={scaleBySizeClass(22, sizeClass)}
               color={palette.textInverse}
             />
+          </Pressable>
+          <Pressable
+            testID="halftime-between-point-set-line"
+            style={({ pressed }) => [
+              styles.prepareLineButton,
+              { borderColor: palette.overlay20, backgroundColor: palette.overlay05 },
+              pressed && { opacity: 0.7 },
+            ]}
+            onPress={onPrepareNextLine}>
+            <ThemedText style={[styles.prepareLineButtonText, { color: palette.textInverse }]}>
+              SET LINE
+            </ThemedText>
           </Pressable>
           <Pressable
             testID="halftime-between-point-start-next"
@@ -426,6 +443,19 @@ function createStyles(sizeClass: SizeClass, isLandscape: boolean) {
       height: scaleBySizeClass(54, densitySizeClass),
       justifyContent: 'center',
       width: scaleBySizeClass(58, densitySizeClass),
+    },
+    prepareLineButton: {
+      alignItems: 'center',
+      borderRadius: scaleBySizeClass(8, densitySizeClass),
+      borderWidth: 1,
+      height: scaleBySizeClass(54, densitySizeClass),
+      justifyContent: 'center',
+      width: scaleBySizeClass(88, densitySizeClass),
+    },
+    prepareLineButtonText: {
+      fontFamily: Fonts.black,
+      fontSize: scaleBySizeClass(12, densitySizeClass),
+      letterSpacing: 1,
     },
     actionButton: {
       alignItems: 'center',

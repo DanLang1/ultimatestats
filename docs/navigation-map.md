@@ -111,10 +111,13 @@ Defined across:
 1. `/advancedTracking/PreGameConfirm` creates the advanced game and captures format/side setup.
 2. `/advancedTracking/TrackerLineSelect` assigns the opening line.
 3. `/advancedTracking/PullTracking` records the pull and enters `/advancedTracking/Tracker`.
-4. Tracker branches use `/advancedTracking/TrackerEditLine` and
+4. During halftime, `SET LINE` opens `/advancedTracking/TrackerLineSelect` in preparation mode and
+   returns to the active timer after saving. `START SECOND HALF` keeps the normal line-selection and
+   pull-tracking path, preloaded with that pending line when available.
+5. Tracker branches use `/advancedTracking/TrackerEditLine` and
    `/advancedTracking/TrackerInjurySub` without leaving the advanced domain.
-5. A finished game is persisted before `/advancedTracking/TrackerGameComplete` is presented.
-6. Saved advanced analytics live under `/advancedTracking/analytics/*`.
+6. A finished game is persisted before `/advancedTracking/TrackerGameComplete` is presented.
+7. Saved advanced analytics live under `/advancedTracking/analytics/*`.
 
 ### Route Gating Priorities
 

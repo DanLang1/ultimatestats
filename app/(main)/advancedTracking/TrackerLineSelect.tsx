@@ -1,4 +1,4 @@
-import { Redirect, router } from 'expo-router';
+import { Redirect, router, useLocalSearchParams } from 'expo-router';
 import React, { useState } from 'react';
 
 import type { RecentLine as RecentLineType } from '@/components/advancedTracking/TrackerLineScreen';
@@ -20,8 +20,10 @@ import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore
 import { useSettingsStore } from '@/store/settingsStore';
 
 export default function TrackerLineSelectScreen() {
+  const { mode } = useLocalSearchParams<{ mode?: string }>();
   const {
     currentGame: game,
+    isHalftimeBreakActive,
     pendingNextPointLineSelection,
     resetCurrentGame,
     savePendingNextPointLineSelection,
@@ -40,6 +42,7 @@ export default function TrackerLineSelectScreen() {
   const nextSequenceNumber = nextRatio != null ? getSequenceNumber(nextPointNumber) : undefined;
 
   const isInitialLine = game.points.length === 0;
+  const isPreparingDuringHalftime = mode === 'prepare' && isHalftimeBreakActive;
   const isScrimmage = game.gameType === 'scrimmage';
   const tracksBothSides = areBothSidesFullyTracked(game);
   const oppSide = game.sides.find((side) => side.id !== game.focusSideId);
@@ -74,6 +77,10 @@ export default function TrackerLineSelectScreen() {
         (participantId) => eligibleParticipantIds.has(participantId),
       )
     : [];
+  let confirmLabel: string | undefined;
+  if (isPreparingDuringHalftime) {
+    confirmLabel = tracksBothSides && !isSelectingSecondSideLine ? 'CONTINUE' : 'SAVE LINE';
+  }
   const handleBack = () => {
     if (isSelectingSecondSideLine) {
       setFirstSideLineIds(null);
@@ -111,10 +118,16 @@ export default function TrackerLineSelectScreen() {
       pointLines={pointLines}
       currentPoint={nextPointNumber}
       initialSelectedIds={initialSelectedIds}
+      confirmLabel={confirmLabel}
       onSelectionChange={(ids) => savePendingNextPointLineSelection(resolvedSelectedSideId, ids)}
       onConfirm={(ids) => {
         if (tracksBothSides && !isSelectingSecondSideLine) {
           setFirstSideLineIds([...ids]);
+          return;
+        }
+
+        if (isPreparingDuringHalftime) {
+          router.dismissTo('/advancedTracking/Tracker');
           return;
         }
 

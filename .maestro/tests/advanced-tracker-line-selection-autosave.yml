@@ -1,5 +1,5 @@
 appId: com.langdk.ultimatestats.dev
-name: Advanced Tracker Line Selection Autosave During Halftime
+name: Advanced Tracker Line Preparation During Halftime
 ---
 - runFlow:
     file: ../flows/setup-game.yaml
@@ -21,10 +21,14 @@ name: Advanced Tracker Line Selection Autosave During Halftime
     id: 'tracker-menu-start-second-half-early'
 - assertVisible:
     text: 'HALFTIME'
-
-# Partially prepare the second-half line, then back out to halftime.
 - tapOn:
-    id: 'halftime-between-point-start-next'
+    id: 'halftime-between-point-timer-toggle'
+- assertVisible:
+    text: '.*PAUSE.*'
+
+# Partially prepare the second-half line without starting the second half.
+- tapOn:
+    id: 'halftime-between-point-set-line'
 - assertVisible:
     id: 'line-select-title'
 - tapOn:
@@ -39,14 +43,60 @@ name: Advanced Tracker Line Selection Autosave During Halftime
     id: 'line-select-back'
 - assertVisible:
     text: 'HALFTIME'
+- assertVisible:
+    text: '.*PAUSE.*'
 
-# Reopening line selection restores the pending players.
+# Reopening line preparation restores the pending players.
 - tapOn:
-    id: 'halftime-between-point-start-next'
+    id: 'halftime-between-point-set-line'
 - assertVisible:
     id: 'line-select-title'
 - assertVisible:
     text: '3/7'
+
+# Complete and save the line; halftime remains active.
+- tapOn:
+    id: 'player-chip-Joel'
+- tapOn:
+    id: 'player-chip-Molly'
+- tapOn:
+    id: 'player-chip-Kelly'
+- tapOn:
+    id: 'player-chip-Rachel'
+- assertVisible:
+    text: 'SAVE LINE'
+- tapOn:
+    id: 'line-select-confirm'
+- assertVisible:
+    text: 'HALFTIME'
+- assertVisible:
+    text: '.*PAUSE.*'
+- assertVisible:
+    id: 'halftime-between-point-start-next'
+
+# The unchanged start action loads the prepared line and continues to pull setup.
+- tapOn:
+    id: 'halftime-between-point-start-next'
+- assertVisible:
+    id: 'line-select-title'
+- tapOn:
+    id: 'line-select-confirm'
+- assertVisible:
+    id: 'pull-skip-timing'
+
+# Reaching pull setup still has not ended halftime; back out and verify the timer surface.
+- tapOn:
+    id: 'screen-header-back'
+- assertVisible:
+    id: 'line-select-title'
+- tapOn:
+    id: 'line-select-back'
+- assertVisible:
+    text: 'HALFTIME'
+- assertVisible:
+    text: '.*PAUSE.*'
+- assertVisible:
+    id: 'halftime-between-point-set-line'
 
 - takeScreenshot:
     path: .maestro/screenshots/advanced-tracker-line-selection-autosave

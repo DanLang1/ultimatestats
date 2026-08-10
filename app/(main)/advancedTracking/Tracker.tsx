@@ -188,6 +188,13 @@ export default function AdvancedTrackerScreen() {
     setPassModifier(null);
     router.push('/advancedTracking/TrackerLineSelect');
   };
+  const handlePrepareNextLine = () => {
+    setPassModifier(null);
+    router.push({
+      pathname: '/advancedTracking/TrackerLineSelect',
+      params: { mode: 'prepare' },
+    });
+  };
   const handleEditLine = () => {
     setPassModifier(null);
     router.push('/advancedTracking/TrackerEditLine');
@@ -241,6 +248,7 @@ export default function AdvancedTrackerScreen() {
         passModifier={passModifier}
         handlers={handlers}
         onLineChangePress={() => setShowLineChangeMenu(true)}
+        onPrepareNextLine={handlePrepareNextLine}
         onStartNextPoint={handleStartNextPoint}
         canChangeLine={canChangeLine}
         availableHeight={trackingSurfaceHeight}

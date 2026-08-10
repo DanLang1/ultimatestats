@@ -30,6 +30,8 @@ stored as parallel counters.
   live tracker actions.
 - The live-store persist snapshot keeps the active-game pointer, timer/session state, and pending
   next-point line selection needed for recovery.
+- During halftime, line preparation can update that pending selection without ending the break or
+  creating the second-half point; the normal start flow still advances through pull tracking.
 - `useSavedAdvancedGamesStore` owns saved-game summaries and an in-memory record cache.
 - `lib/advancedTracking/storage.ts` persists full advanced games and summaries in SQLite.
 - Actions that finalize, import, or otherwise save a game await SQLite persistence before clearing

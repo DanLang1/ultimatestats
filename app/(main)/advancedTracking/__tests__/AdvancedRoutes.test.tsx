@@ -307,6 +307,57 @@ describe('advanced tracking routes', () => {
     expect(screen.getByText('2/7')).toBeVisible();
   });
 
+  it('saves a complete line during halftime without starting the second half', async () => {
+    const user = userEvent.setup();
+    const participants = arrangeCompletedPointForNextLineSelection();
+    expect(useAdvancedTrackingStore.getState().triggerHalftimeEarly()).toBe(true);
+    useAdvancedTrackingStore.getState().startHalftimeTimer();
+    const halftimeTimerStartedAt = useAdvancedTrackingStore.getState().halftimeTimerStartedAt;
+    setMockSearchParams({ mode: 'prepare' });
+
+    await renderScreen(<TrackerLineSelectScreen />);
+
+    for (const participant of participants.slice(0, 7)) {
+      await user.press(screen.getByText(participant.name));
+    }
+    expect(screen.getByText('SAVE LINE')).toBeVisible();
+    await user.press(screen.getByTestId('line-select-confirm'));
+
+    expect(router.dismissTo).toHaveBeenCalledWith('/advancedTracking/Tracker');
+    expect(router.push).not.toHaveBeenCalled();
+    expect(useAdvancedTrackingStore.getState().isHalftimeBreakActive).toBe(true);
+    expect(useAdvancedTrackingStore.getState().halftimeTimerStartedAt).toBe(halftimeTimerStartedAt);
+    expect(useAdvancedTrackingStore.getState().currentGame?.points).toHaveLength(1);
+    expect(
+      useAdvancedTrackingStore.getState().pendingNextPointLineSelection?.participantIdsBySide.home,
+    ).toEqual(participants.slice(0, 7).map((participant) => participant.id));
+  });
+
+  it('loads a prepared halftime line into the normal second-half setup', async () => {
+    const user = userEvent.setup();
+    const participants = arrangeCompletedPointForNextLineSelection();
+    expect(useAdvancedTrackingStore.getState().triggerHalftimeEarly()).toBe(true);
+    const preparedLineIds = participants.slice(0, 7).map((participant) => participant.id);
+    useAdvancedTrackingStore.getState().savePendingNextPointLineSelection('home', preparedLineIds);
+
+    await renderScreen(<TrackerLineSelectScreen />);
+
+    expect(screen.getByTestId('line-select-confirm')).toBeEnabled();
+    for (const participant of participants.slice(0, 7)) {
+      expect(screen.getByTestId(`player-chip-${participant.name}`)).toHaveProp(
+        'accessibilityState',
+        expect.objectContaining({ selected: true }),
+      );
+    }
+    await user.press(screen.getByTestId('line-select-confirm'));
+
+    expect(router.push).toHaveBeenCalledWith({
+      pathname: '/advancedTracking/PullTracking',
+      params: expect.objectContaining({ lineParticipantIds: JSON.stringify(preparedLineIds) }),
+    });
+    expect(useAdvancedTrackingStore.getState().isHalftimeBreakActive).toBe(true);
+  });
+
   it('restores each line while switching sides in a game with two tracked sides', async () => {
     const user = userEvent.setup();
     const participants = Array.from({ length: 14 }, (_, index) => ({
@@ -400,6 +451,28 @@ describe('advanced tracking routes', () => {
 
     expect(screen.getAllByText('Windchill')[0]).toBeVisible();
     expect(screen.getAllByText('Rivals')[0]).toBeVisible();
+  });
+
+  it('offers separate prepare-line and start-second-half actions during halftime', async () => {
+    const user = userEvent.setup();
+    arrangeCompletedPointForNextLineSelection();
+    expect(useAdvancedTrackingStore.getState().triggerHalftimeEarly()).toBe(true);
+
+    await renderScreen(<TrackerScreen />);
+
+    expect(screen.getByText('SET LINE')).toBeVisible();
+    expect(screen.getByText('START SECOND HALF')).toBeVisible();
+
+    await user.press(screen.getByTestId('halftime-between-point-set-line'));
+    expect(router.push).toHaveBeenLastCalledWith({
+      pathname: '/advancedTracking/TrackerLineSelect',
+      params: { mode: 'prepare' },
+    });
+    expect(useAdvancedTrackingStore.getState().isHalftimeBreakActive).toBe(true);
+
+    await user.press(screen.getByTestId('halftime-between-point-start-next'));
+    expect(router.push).toHaveBeenLastCalledWith('/advancedTracking/TrackerLineSelect');
+    expect(useAdvancedTrackingStore.getState().isHalftimeBreakActive).toBe(true);
   });
 
   it('shows the dropper after a dual-tracked turnover', async () => {

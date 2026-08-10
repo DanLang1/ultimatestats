@@ -72,7 +72,9 @@ A `TrackedPoint` contains:
 Player choices made while preparing the next line remain recoverable live-session state until the
 pull starts the point. They are not appended to `points` or treated as official lineup history
 before that pull. The pending selection is scoped to the active game and most recently completed
-point, and is discarded when that context changes.
+point, and is discarded when that context changes. Preparing and saving this selection during an
+active halftime break does not end halftime; the break ends only after the next pull creates the
+second-half point.
 
 A `PointPossession` contains a stable ID, the side with possession, and ordered actions. Possession
 boundaries are explicit so team efficiency and turnover conversion do not have to reconstruct them
