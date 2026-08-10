@@ -80,6 +80,26 @@ function resetHalftimeTimerState(state: Draft<AdvancedTrackingState>) {
   Object.assign(state, getDefaultHalftimeTimerState());
 }
 
+function clearPendingNextPointLineSelection(state: Draft<AdvancedTrackingState>) {
+  state.pendingNextPointLineSelection = null;
+}
+
+function reconcilePendingNextPointLineSelection(state: Draft<AdvancedTrackingState>) {
+  const selection = state.pendingNextPointLineSelection;
+  const game = state.currentGame;
+  if (selection == null || game == null) return;
+
+  const currentPoint = getCurrentPoint(game);
+  const afterPointId = currentPoint?.id ?? null;
+  if (
+    selection.gameId !== game.id ||
+    (currentPoint != null && !hasPointEnded(currentPoint)) ||
+    selection.afterPointId !== afterPointId
+  ) {
+    clearPendingNextPointLineSelection(state);
+  }
+}
+
 function setHalftimeBreakActive(state: Draft<AdvancedTrackingState>, isActive: boolean) {
   if (isActive) {
     if (!state.isHalftimeBreakActive) {
@@ -133,6 +153,7 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
         currentGameId: null,
         currentGame: null,
         undoStack: [],
+        pendingNextPointLineSelection: null,
         isHalftimeBreakActive: false,
         ...getDefaultHalftimeTimerState(),
 
@@ -143,6 +164,7 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
           set((state) => {
             if (state.currentGameId !== currentGameId) return;
             state.currentGame = game;
+            reconcilePendingNextPointLineSelection(state);
           });
           return game;
         },
@@ -184,6 +206,54 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
         resetHalftimeTimer: () => {
           set((state) => {
             resetHalftimeTimerState(state);
+          });
+        },
+
+        savePendingNextPointLineSelection: (sideId, participantIds) => {
+          const game = getCurrentGame(get());
+          const currentPoint = getCurrentPoint(game);
+          if (currentPoint != null && !hasPointEnded(currentPoint)) {
+            throw new Error('Cannot prepare the next line while the current point is in progress.');
+          }
+
+          assertValidSideIds(game, [sideId]);
+          const validParticipantIds = new Set(
+            game.participants.map((participant) => participant.id),
+          );
+          for (const participantId of participantIds) {
+            if (!validParticipantIds.has(participantId)) {
+              throw new Error(
+                `Unknown participantId "${participantId}" while preparing the next line.`,
+              );
+            }
+          }
+          if (new Set(participantIds).size !== participantIds.length) {
+            throw new Error(`A participant cannot appear more than once on side "${sideId}".`);
+          }
+
+          set((state) => {
+            const liveGame = getCurrentGame(state);
+            const afterPointId = getCurrentPoint(liveGame)?.id ?? null;
+            const selection = state.pendingNextPointLineSelection;
+            if (
+              selection == null ||
+              selection.gameId !== liveGame.id ||
+              selection.afterPointId !== afterPointId
+            ) {
+              state.pendingNextPointLineSelection = {
+                gameId: liveGame.id,
+                afterPointId,
+                participantIdsBySide: {},
+              };
+            }
+
+            state.pendingNextPointLineSelection!.participantIdsBySide[sideId] = [...participantIds];
+          });
+        },
+
+        clearPendingNextPointLineSelection: () => {
+          set((state) => {
+            clearPendingNextPointLineSelection(state);
           });
         },
 
@@ -238,6 +308,7 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
             state.currentGame = game;
             state.currentGameId = gameId;
             state.undoStack = [];
+            clearPendingNextPointLineSelection(state);
             setHalftimeBreakActive(state, false);
           });
 
@@ -250,6 +321,7 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
             state.currentGame = null;
             state.currentGameId = null;
             state.undoStack = [];
+            clearPendingNextPointLineSelection(state);
             setHalftimeBreakActive(state, false);
           });
           if (gameId != null) {
@@ -279,6 +351,7 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
           set((state) => {
             state.currentGameId = null;
             state.undoStack = [];
+            clearPendingNextPointLineSelection(state);
             setHalftimeBreakActive(state, false);
           });
         },
@@ -290,6 +363,7 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
             liveGame.status = 'terminated';
             liveGame.endReason = endReason;
             liveGame.updatedAt = now;
+            clearPendingNextPointLineSelection(state);
           });
         },
 
@@ -307,6 +381,7 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
           set((state) => {
             state.currentGameId = null;
             state.undoStack = [];
+            clearPendingNextPointLineSelection(state);
             setHalftimeBreakActive(state, false);
           });
         },
@@ -564,6 +639,7 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
               possessionId,
               actionId,
             });
+            clearPendingNextPointLineSelection(state);
             liveGame.updatedAt = now;
           });
 
@@ -1110,6 +1186,7 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
 
             state.undoStack.pop();
             setHalftimeBreakActive(state, syncDerivedHalftimeTransition(liveGame));
+            reconcilePendingNextPointLineSelection(state);
             liveGame.updatedAt = Date.now();
           });
 
@@ -1121,6 +1198,7 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
           set((state) => {
             if (state.currentGameId === game.id) {
               state.currentGame = game;
+              reconcilePendingNextPointLineSelection(state);
             }
           });
         },
@@ -1132,6 +1210,7 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
               state.currentGameId = null;
               state.currentGame = null;
               state.undoStack = [];
+              clearPendingNextPointLineSelection(state);
               setHalftimeBreakActive(state, false);
             }
           });
@@ -1148,6 +1227,7 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
         partialize: (state) => ({
           currentGameId: state.currentGameId,
           undoStack: state.undoStack,
+          pendingNextPointLineSelection: state.pendingNextPointLineSelection,
           isHalftimeBreakActive: state.isHalftimeBreakActive,
           halftimeTimerStartedAt: state.halftimeTimerStartedAt,
           halftimeTimerDurationSeconds: state.halftimeTimerDurationSeconds,

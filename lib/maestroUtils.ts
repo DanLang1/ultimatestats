@@ -95,6 +95,7 @@ async function clearAdvancedGames(additionalGameIds: string[] = []) {
     state.currentGame = null;
     state.currentGameId = null;
     state.undoStack = [];
+    state.pendingNextPointLineSelection = null;
     state.isHalftimeBreakActive = false;
     Object.assign(state, getDefaultHalftimeTimerState());
   });

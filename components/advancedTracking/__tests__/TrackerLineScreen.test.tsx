@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { screen, userEvent } from '@testing-library/react-native';
+import { useState } from 'react';
 
 import { TrackerLineScreen } from '@/components/advancedTracking/TrackerLineScreen';
 import type { Participant } from '@/lib/advancedTracking/types';
@@ -13,7 +14,24 @@ const makeParticipant = (id: string, name: string): Participant => ({
   name,
 });
 
-describe('TrackerLineScreen scrimmage filtering', () => {
+function ReactiveInitialSelectionHarness({ participants }: { participants: Participant[] }) {
+  const [selectedIds, setSelectedIds] = useState(
+    participants.slice(0, 7).map((participant) => participant.id),
+  );
+
+  return (
+    <TrackerLineScreen
+      participants={participants}
+      initialSelectedIds={selectedIds}
+      title="Reactive Selection"
+      requireChanges
+      onSelectionChange={setSelectedIds}
+      onConfirm={() => {}}
+    />
+  );
+}
+
+describe('TrackerLineScreen', () => {
   beforeEach(async () => {
     resetAllStores();
     await AsyncStorage.clear();
@@ -145,5 +163,20 @@ describe('TrackerLineScreen scrimmage filtering', () => {
     });
     await user.press(screen.getByText(crossover.name));
     expect(screen.getByText(crossover.name)).toBeVisible();
+  });
+
+  it('compares required changes against the selection from mount', async () => {
+    const user = userEvent.setup();
+    const participants = Array.from({ length: 8 }, (_, index) =>
+      makeParticipant(`reactive-${index + 1}`, `Reactive ${index + 1}`),
+    );
+
+    await renderScreen(<ReactiveInitialSelectionHarness participants={participants} />);
+
+    expect(screen.getByTestId('line-select-confirm')).toBeDisabled();
+    await user.press(screen.getByText(participants[0].name));
+    await user.press(screen.getByText(participants[7].name));
+
+    expect(screen.getByTestId('line-select-confirm')).toBeEnabled();
   });
 });

@@ -20,7 +20,12 @@ import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore
 import { useSettingsStore } from '@/store/settingsStore';
 
 export default function TrackerLineSelectScreen() {
-  const { currentGame: game, resetCurrentGame } = useAdvancedTrackingStore();
+  const {
+    currentGame: game,
+    pendingNextPointLineSelection,
+    resetCurrentGame,
+    savePendingNextPointLineSelection,
+  } = useAdvancedTrackingStore();
   const participants = useLiveRosterParticipants(game?.participants ?? []);
   const [firstSideLineIds, setFirstSideLineIds] = useState<string[] | null>(null);
   const { genderRatioEnabled, firstPointRatio } = useSettingsStore();
@@ -43,6 +48,7 @@ export default function TrackerLineSelectScreen() {
   const receivingSideId = getLineReceivingSideId(game, point);
   const isSelectingSecondSideLine = tracksBothSides && firstSideLineIds != null;
   const selectedSideId = isSelectingSecondSideLine ? oppSide?.id : game.focusSideId;
+  const resolvedSelectedSideId = selectedSideId ?? game.focusSideId;
   const selectedSide = game.sides.find((side) => side.id === selectedSideId);
   const pointTypeLabel = receivingSideId === selectedSideId ? 'O-Point' : 'D-Point';
   const lineSelectTitle = tracksBothSides
@@ -59,6 +65,15 @@ export default function TrackerLineSelectScreen() {
     selectedSideId,
     eligibleParticipants,
   );
+  const pendingSelectionMatchesNextPoint =
+    pendingNextPointLineSelection?.gameId === game.id &&
+    pendingNextPointLineSelection.afterPointId === (point?.id ?? null);
+  const eligibleParticipantIds = new Set(eligibleParticipants.map((participant) => participant.id));
+  const initialSelectedIds = pendingSelectionMatchesNextPoint
+    ? (pendingNextPointLineSelection.participantIdsBySide[resolvedSelectedSideId] ?? []).filter(
+        (participantId) => eligibleParticipantIds.has(participantId),
+      )
+    : [];
   const handleBack = () => {
     if (isSelectingSecondSideLine) {
       setFirstSideLineIds(null);
@@ -95,6 +110,8 @@ export default function TrackerLineSelectScreen() {
       recentLines={recentLines}
       pointLines={pointLines}
       currentPoint={nextPointNumber}
+      initialSelectedIds={initialSelectedIds}
+      onSelectionChange={(ids) => savePendingNextPointLineSelection(resolvedSelectedSideId, ids)}
       onConfirm={(ids) => {
         if (tracksBothSides && !isSelectingSecondSideLine) {
           setFirstSideLineIds([...ids]);

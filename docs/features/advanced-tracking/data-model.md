@@ -69,6 +69,11 @@ A `TrackedPoint` contains:
 - optional gender ratio
 - point-timing and undo-revival timestamps
 
+Player choices made while preparing the next line remain recoverable live-session state until the
+pull starts the point. They are not appended to `points` or treated as official lineup history
+before that pull. The pending selection is scoped to the active game and most recently completed
+point, and is discarded when that context changes.
+
 A `PointPossession` contains a stable ID, the side with possession, and ordered actions. Possession
 boundaries are explicit so team efficiency and turnover conversion do not have to reconstruct them
 from a game-wide event stream.

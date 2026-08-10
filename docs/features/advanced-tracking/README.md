@@ -28,8 +28,8 @@ stored as parallel counters.
 
 - `useAdvancedTrackingStore` owns the active `currentGame`, its `currentGameId`, undo state, and
   live tracker actions.
-- The live-store persist snapshot keeps the active-game pointer and timer/session state needed for
-  recovery.
+- The live-store persist snapshot keeps the active-game pointer, timer/session state, and pending
+  next-point line selection needed for recovery.
 - `useSavedAdvancedGamesStore` owns saved-game summaries and an in-memory record cache.
 - `lib/advancedTracking/storage.ts` persists full advanced games and summaries in SQLite.
 - Actions that finalize, import, or otherwise save a game await SQLite persistence before clearing

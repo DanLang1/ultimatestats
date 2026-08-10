@@ -155,6 +155,38 @@ function arrangeSingleSideTrackedPoint() {
   return { participants, lineIds };
 }
 
+function arrangeCompletedPointForNextLineSelection() {
+  const participants = Array.from({ length: 8 }, (_, index) => ({
+    id: `next-line-player-${index + 1}`,
+    name: `Next Line Player ${index + 1}`,
+  }));
+  const lineIds = participants.slice(0, 7).map((participant) => participant.id);
+  useAdvancedTrackingStore.getState().createGame({
+    id: 'next-line-game',
+    focusSideId: 'home',
+    initialReceivingSideId: 'home',
+    sides: [
+      { id: 'home', label: 'Home', trackingMode: 'full-roster' },
+      { id: 'away', label: 'Away', trackingMode: 'anonymous' },
+    ],
+    participants,
+    format: { gameTo: 15 },
+  });
+  useAdvancedTrackingStore.getState().recordPull({
+    lines: [{ sideId: 'home', participantIds: lineIds }],
+    puller: { refType: 'untracked' },
+    receiver: { refType: 'participant', participantId: participants[0].id },
+    result: 'inbound',
+  });
+  useAdvancedTrackingStore.getState().recordThrow({
+    thrower: { refType: 'participant', participantId: participants[0].id },
+    toPlayer: { refType: 'participant', participantId: participants[1].id },
+    result: 'goal',
+  });
+
+  return participants;
+}
+
 describe('advanced tracking routes', () => {
   beforeEach(async () => {
     resetAllStores();
@@ -253,7 +285,29 @@ describe('advanced tracking routes', () => {
     expect(screen.getByText('Blair')).toBeVisible();
   });
 
-  it('selects both lines for a non-scrimmage game with two tracked sides', async () => {
+  it('restores a partial next-line selection after backing out', async () => {
+    const user = userEvent.setup();
+    const participants = arrangeCompletedPointForNextLineSelection();
+    const view = await renderScreen(<TrackerLineSelectScreen />);
+
+    await user.press(screen.getByText(participants[0].name));
+    await user.press(screen.getByText(participants[1].name));
+
+    expect(screen.getByText('2/7')).toBeVisible();
+    expect(
+      useAdvancedTrackingStore.getState().pendingNextPointLineSelection?.participantIdsBySide.home,
+    ).toEqual([participants[0].id, participants[1].id]);
+
+    await user.press(screen.getByTestId('line-select-back'));
+    expect(router.dismissTo).toHaveBeenCalledWith('/advancedTracking/Tracker');
+    await view.unmount();
+
+    await renderScreen(<TrackerLineSelectScreen />);
+
+    expect(screen.getByText('2/7')).toBeVisible();
+  });
+
+  it('restores each line while switching sides in a game with two tracked sides', async () => {
     const user = userEvent.setup();
     const participants = Array.from({ length: 14 }, (_, index) => ({
       id: `dual-player-${index + 1}`,
@@ -290,6 +344,18 @@ describe('advanced tracking routes', () => {
     await user.press(screen.getByTestId('line-select-confirm'));
 
     expect(screen.getByText('Away Line · 0-0')).toBeVisible();
+    await user.press(screen.getByText(participants[7].name));
+    await user.press(screen.getByText(participants[8].name));
+    expect(screen.getByText('2/7')).toBeVisible();
+
+    await user.press(screen.getByTestId('line-select-back'));
+
+    expect(screen.getByText('Home Line · 0-0')).toBeVisible();
+    expect(screen.getByTestId('line-select-confirm')).toBeEnabled();
+    await user.press(screen.getByTestId('line-select-confirm'));
+
+    expect(screen.getByText('Away Line · 0-0')).toBeVisible();
+    expect(screen.getByText('2/7')).toBeVisible();
   });
 
   it('defaults scrimmage line selection to the side group plus unassigned players', async () => {

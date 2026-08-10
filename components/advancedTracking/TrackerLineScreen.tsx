@@ -54,6 +54,7 @@ interface TrackerLineScreenProps {
   /** Optional status shown beneath player names, such as their other scrimmage side. */
   playerStatusLabels?: ReadonlyMap<string, string>;
   onConfirm: (participantIds: string[]) => void;
+  onSelectionChange?: (participantIds: string[]) => void;
   initialSelectedIds?: string[];
   title: string;
   onBack?: () => void;
@@ -73,6 +74,7 @@ export const TrackerLineScreen = ({
   rosterParticipants,
   playerStatusLabels,
   onConfirm,
+  onSelectionChange,
   initialSelectedIds,
   title,
   onBack,
@@ -99,15 +101,18 @@ export const TrackerLineScreen = ({
   const withLocked = (participantIds: string[]) =>
     withLockedParticipants(participantIds, lockedParticipantIds);
 
-  const [selectedIds, setSelectedIds] = useState<string[]>(() =>
-    withLocked(initialSelectedIds ?? []),
-  );
+  const [initialSelectionIds] = useState(() => [...(initialSelectedIds ?? [])]);
+  const [selectedIds, setSelectedIds] = useState<string[]>(() => withLocked(initialSelectionIds));
   const [selectedPresetId, setSelectedPresetId] = useState<string | null>(null);
   const [selectedRecentPointNumber, setSelectedRecentPointNumber] = useState<number | null>(null);
   const [showLinePicker, setShowLinePicker] = useState(false);
   const [showAllPlayers, setShowAllPlayers] = useState(false);
 
-  const initialIds = initialSelectedIds ?? [];
+  const updateSelection = (participantIds: string[]) => {
+    setSelectedIds(participantIds);
+    onSelectionChange?.(participantIds);
+  };
+
   const eligibleParticipants = allParticipants ?? participants;
   const participantRoster = rosterParticipants ?? eligibleParticipants;
   const defaultParticipantIds = new Set(participants.map((participant) => participant.id));
@@ -121,7 +126,8 @@ export const TrackerLineScreen = ({
     (participant) => !defaultParticipantIds.has(participant.id),
   );
   const lockedParticipantIdSet = new Set(lockedParticipantIds);
-  const hasSubChanges = !requireChanges || selectedIds.some((id) => !initialIds.includes(id));
+  const hasSubChanges =
+    !requireChanges || selectedIds.some((id) => !initialSelectionIds.includes(id));
   const canConfirm = selectedIds.length === 7 && hasSubChanges;
 
   const ratioCheck =
@@ -152,17 +158,18 @@ export const TrackerLineScreen = ({
       participantLock?.onPress(id);
       return;
     }
-    setSelectedIds((prev) => {
-      if (prev.includes(id)) return prev.filter((x) => x !== id);
-      if (prev.length >= 7) return prev;
-      return [...prev, id];
-    });
+    if (isSelected) {
+      updateSelection(selectedIds.filter((participantId) => participantId !== id));
+      return;
+    }
+    if (selectedIds.length >= 7) return;
+    updateSelection([...selectedIds, id]);
   };
 
   const handleSelectPreset = (preset: { id: string; playerIds: string[] }) => {
     if (selectedPresetId === preset.id) {
       setSelectedPresetId(null);
-      setSelectedIds(withLocked([]));
+      updateSelection(withLocked([]));
       return;
     }
     setSelectedPresetId(preset.id);
@@ -173,13 +180,13 @@ export const TrackerLineScreen = ({
     if (availablePresetIds.some((id) => !defaultParticipantIds.has(id))) {
       setShowAllPlayers(true);
     }
-    setSelectedIds(withLocked(availablePresetIds));
+    updateSelection(withLocked(availablePresetIds));
   };
 
   const handleSelectRecentLine = (recent: RecentLine) => {
     if (selectedRecentPointNumber === recent.pointNumber) {
       setSelectedRecentPointNumber(null);
-      setSelectedIds(withLocked([]));
+      updateSelection(withLocked([]));
       return;
     }
     setSelectedRecentPointNumber(recent.pointNumber);
@@ -191,7 +198,7 @@ export const TrackerLineScreen = ({
     if (availableRecentIds.some((id) => !defaultParticipantIds.has(id))) {
       setShowAllPlayers(true);
     }
-    setSelectedIds(withLocked(availableRecentIds));
+    updateSelection(withLocked(availableRecentIds));
   };
 
   const playerRestrictions = new Map<string, PlayerChipRestriction>();
@@ -376,7 +383,7 @@ export const TrackerLineScreen = ({
           {selectedIds.length > 0 && (
             <Pressable
               onPress={() => {
-                setSelectedIds(withLocked([]));
+                updateSelection(withLocked([]));
                 setSelectedPresetId(null);
                 setSelectedRecentPointNumber(null);
               }}

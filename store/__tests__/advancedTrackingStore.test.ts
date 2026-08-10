@@ -65,6 +65,7 @@ function resetStore() {
     currentGameId: null,
     currentGame: null,
     undoStack: [],
+    pendingNextPointLineSelection: null,
     isHalftimeBreakActive: false,
     halftimeTimerStartedAt: null,
     halftimeTimerDurationSeconds: DEFAULT_HALFTIME_BREAK_SECONDS,
@@ -262,6 +263,151 @@ describe('advancedTrackingStore', () => {
     expect(persistedPayload.state.halftimeTimerDurationSeconds).toBe(
       DEFAULT_HALFTIME_BREAK_SECONDS,
     );
+  });
+
+  it('persists a partial next-point line without adding it to game history', () => {
+    createGame();
+    useAdvancedTrackingStore.getState().recordPull({
+      lines: homeLinesAugust,
+      puller: untracked,
+      receiver: august,
+      result: 'inbound',
+    });
+    useAdvancedTrackingStore
+      .getState()
+      .recordThrow({ thrower: august, result: 'goal', toPlayer: meves });
+
+    const afterPointId = getCurrentGame()?.points[0].id;
+    useAdvancedTrackingStore
+      .getState()
+      .savePendingNextPointLineSelection(homeSideId, [august.participantId]);
+
+    expect(useAdvancedTrackingStore.getState().pendingNextPointLineSelection).toEqual({
+      gameId: getCurrentGame()?.id,
+      afterPointId,
+      participantIdsBySide: { [homeSideId]: [august.participantId] },
+    });
+    expect(getCurrentGame()?.points).toHaveLength(1);
+
+    const advancedTrackingWrites = mockedAsyncStorage.setItem.mock.calls.filter(
+      ([key]) => key === 'ultimatestats_advanced_tracking',
+    );
+    const persistedPayload = JSON.parse(advancedTrackingWrites.at(-1)![1]);
+    expect(persistedPayload.state.pendingNextPointLineSelection).toEqual(
+      useAdvancedTrackingStore.getState().pendingNextPointLineSelection,
+    );
+  });
+
+  it('keeps the pending next-point line when halftime starts', () => {
+    createGame();
+    useAdvancedTrackingStore.getState().recordPull({
+      lines: homeLinesAugust,
+      puller: untracked,
+      receiver: august,
+      result: 'inbound',
+    });
+    useAdvancedTrackingStore
+      .getState()
+      .recordThrow({ thrower: august, result: 'goal', toPlayer: meves });
+    useAdvancedTrackingStore
+      .getState()
+      .savePendingNextPointLineSelection(homeSideId, [august.participantId]);
+
+    const pendingSelection = useAdvancedTrackingStore.getState().pendingNextPointLineSelection;
+
+    expect(useAdvancedTrackingStore.getState().triggerHalftimeEarly()).toBe(true);
+    expect(useAdvancedTrackingStore.getState().pendingNextPointLineSelection).toEqual(
+      pendingSelection,
+    );
+  });
+
+  it('keeps the pending next-point line when its completed game reloads', async () => {
+    createGame();
+    useAdvancedTrackingStore.getState().recordPull({
+      lines: homeLinesAugust,
+      puller: untracked,
+      receiver: august,
+      result: 'inbound',
+    });
+    useAdvancedTrackingStore
+      .getState()
+      .recordThrow({ thrower: august, result: 'goal', toPlayer: meves });
+    useAdvancedTrackingStore
+      .getState()
+      .savePendingNextPointLineSelection(homeSideId, [august.participantId]);
+
+    const game = getCurrentGame()!;
+    const pendingSelection = useAdvancedTrackingStore.getState().pendingNextPointLineSelection;
+    useAdvancedTrackingStore.setState({ currentGame: null });
+    const loadGameSpy = jest
+      .spyOn(useSavedAdvancedGamesStore.getState(), 'loadGame')
+      .mockResolvedValue(game);
+
+    await useAdvancedTrackingStore.getState().loadCurrentGame();
+
+    expect(useAdvancedTrackingStore.getState().pendingNextPointLineSelection).toEqual(
+      pendingSelection,
+    );
+    loadGameSpy.mockRestore();
+  });
+
+  it('keeps pending next-point selections separate for each tracked side', () => {
+    const { lightIds, darkIds } = createDualTrackedScrimmage();
+    useAdvancedTrackingStore.getState().recordThrow({
+      thrower: { refType: 'participant', participantId: lightIds[0] },
+      result: 'goal',
+      toPlayer: { refType: 'participant', participantId: lightIds[1] },
+    });
+
+    useAdvancedTrackingStore
+      .getState()
+      .savePendingNextPointLineSelection(homeSideId, lightIds.slice(0, 3));
+    useAdvancedTrackingStore
+      .getState()
+      .savePendingNextPointLineSelection(awaySideId, darkIds.slice(0, 2));
+
+    expect(
+      useAdvancedTrackingStore.getState().pendingNextPointLineSelection?.participantIdsBySide,
+    ).toEqual({
+      [homeSideId]: lightIds.slice(0, 3),
+      [awaySideId]: darkIds.slice(0, 2),
+    });
+  });
+
+  it('clears the pending next-point line when the pull creates that point', () => {
+    createGame();
+    useAdvancedTrackingStore
+      .getState()
+      .savePendingNextPointLineSelection(homeSideId, [august.participantId]);
+
+    useAdvancedTrackingStore.getState().recordPull({
+      lines: homeLinesAugust,
+      puller: untracked,
+      receiver: august,
+      result: 'inbound',
+    });
+
+    expect(useAdvancedTrackingStore.getState().pendingNextPointLineSelection).toBeNull();
+  });
+
+  it('clears the pending next-point line when undo reopens the completed point', () => {
+    createGame();
+    useAdvancedTrackingStore.getState().recordPull({
+      lines: homeLinesAugust,
+      puller: untracked,
+      receiver: august,
+      result: 'inbound',
+    });
+    useAdvancedTrackingStore
+      .getState()
+      .recordThrow({ thrower: august, result: 'goal', toPlayer: meves });
+    useAdvancedTrackingStore
+      .getState()
+      .savePendingNextPointLineSelection(homeSideId, [august.participantId]);
+
+    useAdvancedTrackingStore.getState().undoLastOperation();
+
+    expect(useAdvancedTrackingStore.getState().pendingNextPointLineSelection).toBeNull();
   });
 
   it('derives halftimeAt as ceil(gameTo / 2)', () => {

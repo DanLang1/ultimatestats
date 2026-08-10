@@ -1,0 +1,52 @@
+appId: com.langdk.ultimatestats.dev
+name: Advanced Tracker Line Selection Autosave During Halftime
+---
+- runFlow:
+    file: ../flows/setup-game.yaml
+    env:
+      TRACKER_STATE: focusPossession
+
+# End the opening point and enter halftime through the real game-management flow.
+- runFlow:
+    file: ../flows/open-rare-menu.yaml
+- runFlow:
+    file: ../flows/select-opponent-block.yaml
+- runFlow:
+    file: ../flows/record-opponent-goal.yaml
+- tapOn:
+    id: 'tracker-menu-button'
+- assertVisible:
+    id: 'tracker-menu-start-second-half-early'
+- tapOn:
+    id: 'tracker-menu-start-second-half-early'
+- assertVisible:
+    text: 'HALFTIME'
+
+# Partially prepare the second-half line, then back out to halftime.
+- tapOn:
+    id: 'halftime-between-point-start-next'
+- assertVisible:
+    id: 'line-select-title'
+- tapOn:
+    id: 'player-chip-Joe'
+- tapOn:
+    id: 'player-chip-Jon'
+- tapOn:
+    id: 'player-chip-Mike'
+- assertVisible:
+    text: '3/7'
+- tapOn:
+    id: 'line-select-back'
+- assertVisible:
+    text: 'HALFTIME'
+
+# Reopening line selection restores the pending players.
+- tapOn:
+    id: 'halftime-between-point-start-next'
+- assertVisible:
+    id: 'line-select-title'
+- assertVisible:
+    text: '3/7'
+
+- takeScreenshot:
+    path: .maestro/screenshots/advanced-tracker-line-selection-autosave

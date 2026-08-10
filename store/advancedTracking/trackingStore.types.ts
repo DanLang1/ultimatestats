@@ -83,6 +83,16 @@ export interface CorrectPointLinesInput {
   lines: PointLine[];
 }
 
+/**
+ * Recoverable UI state for the point that has not started yet. It remains separate from the
+ * canonical game record until `recordPull` creates that point.
+ */
+export interface PendingNextPointLineSelection {
+  gameId: string;
+  afterPointId: string | null;
+  participantIdsBySide: Record<string, string[]>;
+}
+
 export interface RecordBetweenPointTimeoutInput {
   sideId: string;
   /** True when this consumes the one-per-game floater. */
@@ -126,6 +136,7 @@ export interface AdvancedTrackingState {
   currentGameId: string | null;
   currentGame: AdvancedTrackedGame | null;
   undoStack: AdvancedTrackingUndoEntry[];
+  pendingNextPointLineSelection: PendingNextPointLineSelection | null;
   isHalftimeBreakActive: boolean;
   halftimeTimerStartedAt: number | null;
   halftimeTimerDurationSeconds: number;
@@ -136,6 +147,8 @@ export interface AdvancedTrackingState {
   pauseHalftimeTimer: (timeLeftSeconds: number) => void;
   adjustHalftimeTimer: (timeLeftSeconds: number, deltaMinutes: number) => void;
   resetHalftimeTimer: () => void;
+  savePendingNextPointLineSelection: (sideId: string, participantIds: string[]) => void;
+  clearPendingNextPointLineSelection: () => void;
   resetCurrentGame: () => void;
   finalizeGame: () => Promise<void>;
   terminateGame: (endReason: NonNullable<AdvancedTrackedGame['endReason']>) => void;
