@@ -1,15 +1,8 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
-import React, { useRef, useState } from 'react';
-import {
-  type FocusEvent,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  View,
-} from 'react-native';
+import { useState } from 'react';
+import { Pressable, StyleSheet, View } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 
 import { EditableSettingCard } from '@/components/pre-game-confirm/EditableSettingCard';
 import { FlipSelection } from '@/components/pre-game-confirm/FlipSelection';
@@ -108,7 +101,6 @@ export default function AdvancedPreGameConfirm() {
   const [isEditingOpponentName, setIsEditingOpponentName] = useState(false);
   const [teamOrbitRunKey, setTeamOrbitRunKey] = useState(0);
   const [ratioOrbitRunKey, setRatioOrbitRunKey] = useState(0);
-  const scrollViewRef = useRef<ScrollView>(null);
 
   const activePlayerCount = currentTeam.roster.filter((player) => player.isActive).length;
   const hasEnoughScrimmagePlayers = !isScrimmage || activePlayerCount >= 14;
@@ -195,10 +187,6 @@ export default function AdvancedPreGameConfirm() {
     setIsEditingOpponentName(false);
   };
 
-  const handleOpponentNameFocus = (event: FocusEvent) => {
-    scrollViewRef.current?.scrollResponderScrollNativeHandleToKeyboard(event.target, 16, true);
-  };
-
   const handleHardCapToggle = () => {
     const nextEnabled = !advancedHardCapEnabled;
     setAdvancedHardCapEnabled(nextEnabled);
@@ -260,276 +248,272 @@ export default function AdvancedPreGameConfirm() {
         }
       />
 
-      <KeyboardAvoidingView
-        style={styles.keyboardAvoid}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-        <ScrollView
-          ref={scrollViewRef}
-          contentContainerStyle={styles.scrollContent}
-          keyboardShouldPersistTaps="handled">
-          <View style={[styles.lockInfo, { backgroundColor: palette.dangerOverlay15 }]}>
-            <MaterialCommunityIcons
-              name="lock-outline"
-              size={scaleBySizeClass(16, sizeClass)}
-              color={palette.danger}
-            />
-            <ThemedText style={[styles.lockText, { color: palette.danger }]}>
-              Settings lock once the game starts
-            </ThemedText>
-          </View>
-
-          <ThemedText style={[styles.sectionTitle, { color: palette.textMuted }]}>
-            GAME SETTINGS
+      <KeyboardAwareScrollView
+        bottomOffset={16}
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled">
+        <View style={[styles.lockInfo, { backgroundColor: palette.dangerOverlay15 }]}>
+          <MaterialCommunityIcons
+            name="lock-outline"
+            size={scaleBySizeClass(16, sizeClass)}
+            color={palette.danger}
+          />
+          <ThemedText style={[styles.lockText, { color: palette.danger }]}>
+            Settings lock once the game starts
           </ThemedText>
-          <View style={styles.settingsGrid}>
+        </View>
+
+        <ThemedText style={[styles.sectionTitle, { color: palette.textMuted }]}>
+          GAME SETTINGS
+        </ThemedText>
+        <View style={styles.settingsGrid}>
+          <EditableSettingCard
+            icon="trophy-outline"
+            label="Game To"
+            onPress={() =>
+              openNumberPicker({
+                value: gameTo,
+                min: 1,
+                max: 99,
+                label: 'Game To',
+                quickOptions: [13, 15],
+                onChange: setGameTo,
+              })
+            }>
+            <ThemedText style={[styles.settingValue, { color: palette.textInverse }]}>
+              {gameTo}
+            </ThemedText>
+          </EditableSettingCard>
+
+          <EditableSettingCard
+            icon="clock-outline"
+            label="Hard Cap"
+            isActive={advancedHardCapEnabled}
+            onPress={handleHardCapToggle}>
+            <ThemedText style={[styles.settingValue, { color: palette.textInverse }]}>
+              {advancedHardCapEnabled ? 'ON' : 'OFF'}
+            </ThemedText>
+          </EditableSettingCard>
+
+          {advancedHardCapEnabled && (
             <EditableSettingCard
-              icon="trophy-outline"
-              label="Game To"
+              icon="timer-outline"
+              label="Hard Cap Time"
               onPress={() =>
                 openNumberPicker({
-                  value: gameTo,
+                  value: hardCapMins,
                   min: 1,
-                  max: 99,
-                  label: 'Game To',
-                  quickOptions: [13, 15],
-                  onChange: setGameTo,
+                  max: 180,
+                  label: 'Hard Cap',
+                  suffix: 'min',
+                  quickOptions: [90, 105, 110, 120],
+                  onChange: (val) => {
+                    setHardCapMins(val);
+                    setTimerTimeLeft(val * 60);
+                    if (softCapMins > val) setSoftCapMins(val);
+                    if (advancedSoftCapAtMins > val) setAdvancedSoftCapAtMins(val);
+                  },
                 })
               }>
               <ThemedText style={[styles.settingValue, { color: palette.textInverse }]}>
-                {gameTo}
+                {hardCapMins} min
               </ThemedText>
             </EditableSettingCard>
-
-            <EditableSettingCard
-              icon="clock-outline"
-              label="Hard Cap"
-              isActive={advancedHardCapEnabled}
-              onPress={handleHardCapToggle}>
-              <ThemedText style={[styles.settingValue, { color: palette.textInverse }]}>
-                {advancedHardCapEnabled ? 'ON' : 'OFF'}
-              </ThemedText>
-            </EditableSettingCard>
-
-            {advancedHardCapEnabled && (
-              <EditableSettingCard
-                icon="timer-outline"
-                label="Hard Cap Time"
-                onPress={() =>
-                  openNumberPicker({
-                    value: hardCapMins,
-                    min: 1,
-                    max: 180,
-                    label: 'Hard Cap',
-                    suffix: 'min',
-                    quickOptions: [90, 105, 110, 120],
-                    onChange: (val) => {
-                      setHardCapMins(val);
-                      setTimerTimeLeft(val * 60);
-                      if (softCapMins > val) setSoftCapMins(val);
-                      if (advancedSoftCapAtMins > val) setAdvancedSoftCapAtMins(val);
-                    },
-                  })
-                }>
-                <ThemedText style={[styles.settingValue, { color: palette.textInverse }]}>
-                  {hardCapMins} min
-                </ThemedText>
-              </EditableSettingCard>
-            )}
-
-            <EditableSettingCard
-              icon="clock-alert-outline"
-              label="Soft Cap"
-              isActive={advancedSoftCapEnabled}
-              onPress={() => setAdvancedSoftCapEnabled(!advancedSoftCapEnabled)}>
-              <ThemedText style={[styles.settingValue, { color: palette.textInverse }]}>
-                {advancedSoftCapEnabled ? 'ON' : 'OFF'}
-              </ThemedText>
-            </EditableSettingCard>
-
-            {advancedSoftCapEnabled && (
-              <EditableSettingCard
-                icon="timer-sand"
-                label="Soft Cap Time"
-                onPress={() =>
-                  openNumberPicker({
-                    value: advancedSoftCapAtMins,
-                    min: 0,
-                    max: advancedHardCapEnabled ? hardCapMins : 180,
-                    label: 'Soft Cap',
-                    suffix: 'min',
-                    onChange: setAdvancedSoftCapAtMins,
-                  })
-                }>
-                <ThemedText style={[styles.settingValue, { color: palette.textInverse }]}>
-                  {advancedSoftCapAtMins} min
-                </ThemedText>
-              </EditableSettingCard>
-            )}
-
-            <EditableSettingCard
-              icon="swap-vertical"
-              label="Halftime"
-              isActive={autoHalftimeEnabled}
-              onPress={() => {
-                setAutoHalftimeEnabled(!autoHalftimeEnabled);
-                if (autoHalftimeEnabled) setFloaterEnabled(false);
-              }}>
-              <ThemedText
-                style={[
-                  styles.settingValue,
-                  { color: autoHalftimeEnabled ? palette.accent : palette.textMuted },
-                ]}>
-                {autoHalftimeEnabled ? 'ON' : 'OFF'}
-              </ThemedText>
-            </EditableSettingCard>
-
-            <TimeoutSettingCard
-              timeoutCount={timeoutCount}
-              autoHalftimeEnabled={autoHalftimeEnabled}
-              floaterEnabled={floaterEnabled}
-              onResetTimeouts={resetTimeouts}
-              onSetFloaterEnabled={setFloaterEnabled}
-            />
-
-            <EditableSettingCard
-              icon="gender-male-female"
-              label="Gender Ratio"
-              isActive={genderRatioEnabled}
-              onPress={() => setGenderRatioEnabled(!genderRatioEnabled)}>
-              <ThemedText
-                style={[
-                  styles.settingValue,
-                  { color: genderRatioEnabled ? palette.accent : palette.textMuted },
-                ]}>
-                {genderRatioEnabled ? 'ON' : 'OFF'}
-              </ThemedText>
-            </EditableSettingCard>
-          </View>
-
-          {!isScrimmage && (
-            <FlipSelection
-              result={flipResult}
-              choice={flipChoice}
-              onResultChange={setFlipResult}
-              onChoiceChange={handleFlipChoiceChange}
-            />
           )}
 
-          <SegmentedControl
-            label="WHO IS RECEIVING?"
-            options={[
-              {
-                value: 'us',
-                label: isScrimmage ? 'Light' : currentTeam.name,
-                testID: 'advanced-tracker-receiving-focus',
-                activeColor: t1Color,
-                activeTextColor: t1TextColor,
-              },
-              {
-                value: 'them',
-                label: isScrimmage ? 'Dark' : team2Name || 'Them',
-                testID: 'advanced-tracker-receiving-opponent',
-                activeColor: t2Color,
-                activeTextColor: t2TextColor,
-                actionIcon: !isScrimmage ? 'pencil-outline' : undefined,
-                actionTestID: !isScrimmage ? 'advanced-tracker-opponent-name-edit' : undefined,
-                onAction: !isScrimmage
-                  ? () => {
-                      setOpponentNameDraft(team2Name || 'Them');
-                      setIsEditingOpponentName(true);
-                    }
-                  : undefined,
-                isEditing: !isScrimmage && isEditingOpponentName,
-                editValue: !isScrimmage ? opponentNameDraft : undefined,
-                editTestID: !isScrimmage ? 'advanced-tracker-opponent-name-input' : undefined,
-                onEditValueChange: !isScrimmage ? setOpponentNameDraft : undefined,
-                onEditComplete: !isScrimmage ? handleOpponentNameCommit : undefined,
-                onEditFocus: !isScrimmage ? handleOpponentNameFocus : undefined,
-                maxEditLength: !isScrimmage ? MAX_TEAM_NAME_LENGTH : undefined,
-              },
-            ]}
-            value={receivingTeam}
-            onChange={handleReceivingTeamChange}
-            showRequired={receivingTeam === ''}
-            highlightBorder={receivingTeam === ''}
-            highlightColor={palette.warning}
-            highlightLeftColor={receivingTeam === '' ? t1Color : undefined}
-            highlightRightColor={receivingTeam === '' ? t2Color : undefined}
-            attentionColor={selectedTeamOrbitColor}
-            attentionRunKey={teamOrbitRunKey}
+          <EditableSettingCard
+            icon="clock-alert-outline"
+            label="Soft Cap"
+            isActive={advancedSoftCapEnabled}
+            onPress={() => setAdvancedSoftCapEnabled(!advancedSoftCapEnabled)}>
+            <ThemedText style={[styles.settingValue, { color: palette.textInverse }]}>
+              {advancedSoftCapEnabled ? 'ON' : 'OFF'}
+            </ThemedText>
+          </EditableSettingCard>
+
+          {advancedSoftCapEnabled && (
+            <EditableSettingCard
+              icon="timer-sand"
+              label="Soft Cap Time"
+              onPress={() =>
+                openNumberPicker({
+                  value: advancedSoftCapAtMins,
+                  min: 0,
+                  max: advancedHardCapEnabled ? hardCapMins : 180,
+                  label: 'Soft Cap',
+                  suffix: 'min',
+                  onChange: setAdvancedSoftCapAtMins,
+                })
+              }>
+              <ThemedText style={[styles.settingValue, { color: palette.textInverse }]}>
+                {advancedSoftCapAtMins} min
+              </ThemedText>
+            </EditableSettingCard>
+          )}
+
+          <EditableSettingCard
+            icon="swap-vertical"
+            label="Halftime"
+            isActive={autoHalftimeEnabled}
+            onPress={() => {
+              setAutoHalftimeEnabled(!autoHalftimeEnabled);
+              if (autoHalftimeEnabled) setFloaterEnabled(false);
+            }}>
+            <ThemedText
+              style={[
+                styles.settingValue,
+                { color: autoHalftimeEnabled ? palette.accent : palette.textMuted },
+              ]}>
+              {autoHalftimeEnabled ? 'ON' : 'OFF'}
+            </ThemedText>
+          </EditableSettingCard>
+
+          <TimeoutSettingCard
+            timeoutCount={timeoutCount}
+            autoHalftimeEnabled={autoHalftimeEnabled}
+            floaterEnabled={floaterEnabled}
+            onResetTimeouts={resetTimeouts}
+            onSetFloaterEnabled={setFloaterEnabled}
           />
 
-          {!hasEnoughScrimmagePlayers && (
-            <View style={[styles.lockInfo, { backgroundColor: palette.warningOverlay15 }]}>
-              <MaterialCommunityIcons
-                name="account-alert-outline"
-                size={scaleBySizeClass(16, sizeClass)}
-                color={palette.warning}
-              />
-              <ThemedText style={[styles.lockText, { color: palette.warning }]}>
-                Scrimmage mode requires at least 14 active players. This roster has{' '}
-                {activePlayerCount}.
-              </ThemedText>
-            </View>
-          )}
-
-          {genderRatioEnabled && (
-            <SegmentedControl
-              label="STARTING GENDER RATIO"
-              options={[
-                {
-                  value: 'more-women',
-                  label: formatRatioFull('more-women'),
-                  activeColor: palette.fmpColor,
-                  activeTextColor: fmpTextColor,
-                },
-                {
-                  value: 'more-men',
-                  label: formatRatioFull('more-men'),
-                  activeColor: palette.mmpColor,
-                  activeTextColor: mmpTextColor,
-                },
-              ]}
-              value={firstPointRatio ?? ''}
-              onChange={(value) => {
-                setFirstPointRatio(value);
-                setRatioOrbitRunKey((prev) => prev + 1);
-              }}
-              showRequired={firstPointRatio === null}
-              highlightBorder={firstPointRatio === null}
-              highlightColor={palette.warning}
-              highlightLeftColor={firstPointRatio === null ? palette.fmpColor : undefined}
-              highlightRightColor={firstPointRatio === null ? palette.mmpColor : undefined}
-              attentionColor={selectedRatioOrbitColor}
-              attentionRunKey={ratioOrbitRunKey}
-            />
-          )}
-
-          <Pressable
-            onPress={handleSetLine}
-            disabled={!canContinue}
-            testID="advanced-tracker-set-line-button"
-            style={({ pressed }) => [
-              styles.continueButton,
-              { backgroundColor: canContinue ? palette.accent : palette.overlay10 },
-              pressed && canContinue && { opacity: 0.85, transform: [{ scale: 0.98 }] },
-            ]}>
+          <EditableSettingCard
+            icon="gender-male-female"
+            label="Gender Ratio"
+            isActive={genderRatioEnabled}
+            onPress={() => setGenderRatioEnabled(!genderRatioEnabled)}>
             <ThemedText
-              testID="advanced-tracker-set-line-text"
               style={[
-                styles.continueButtonText,
-                { color: canContinue ? palette.textOnAccent : palette.textMuted },
+                styles.settingValue,
+                { color: genderRatioEnabled ? palette.accent : palette.textMuted },
               ]}>
-              {isScrimmage ? 'Set Lines' : 'Set Line'}
+              {genderRatioEnabled ? 'ON' : 'OFF'}
             </ThemedText>
+          </EditableSettingCard>
+        </View>
+
+        {!isScrimmage && (
+          <FlipSelection
+            result={flipResult}
+            choice={flipChoice}
+            onResultChange={setFlipResult}
+            onChoiceChange={handleFlipChoiceChange}
+          />
+        )}
+
+        <SegmentedControl
+          label="WHO IS RECEIVING?"
+          options={[
+            {
+              value: 'us',
+              label: isScrimmage ? 'Light' : currentTeam.name,
+              testID: 'advanced-tracker-receiving-focus',
+              activeColor: t1Color,
+              activeTextColor: t1TextColor,
+            },
+            {
+              value: 'them',
+              label: isScrimmage ? 'Dark' : team2Name || 'Them',
+              testID: 'advanced-tracker-receiving-opponent',
+              activeColor: t2Color,
+              activeTextColor: t2TextColor,
+              actionIcon: !isScrimmage ? 'pencil-outline' : undefined,
+              actionTestID: !isScrimmage ? 'advanced-tracker-opponent-name-edit' : undefined,
+              onAction: !isScrimmage
+                ? () => {
+                    setOpponentNameDraft(team2Name || 'Them');
+                    setIsEditingOpponentName(true);
+                  }
+                : undefined,
+              isEditing: !isScrimmage && isEditingOpponentName,
+              editValue: !isScrimmage ? opponentNameDraft : undefined,
+              editTestID: !isScrimmage ? 'advanced-tracker-opponent-name-input' : undefined,
+              onEditValueChange: !isScrimmage ? setOpponentNameDraft : undefined,
+              onEditComplete: !isScrimmage ? handleOpponentNameCommit : undefined,
+              maxEditLength: !isScrimmage ? MAX_TEAM_NAME_LENGTH : undefined,
+            },
+          ]}
+          value={receivingTeam}
+          onChange={handleReceivingTeamChange}
+          showRequired={receivingTeam === ''}
+          highlightBorder={receivingTeam === ''}
+          highlightColor={palette.warning}
+          highlightLeftColor={receivingTeam === '' ? t1Color : undefined}
+          highlightRightColor={receivingTeam === '' ? t2Color : undefined}
+          attentionColor={selectedTeamOrbitColor}
+          attentionRunKey={teamOrbitRunKey}
+        />
+
+        {!hasEnoughScrimmagePlayers && (
+          <View style={[styles.lockInfo, { backgroundColor: palette.warningOverlay15 }]}>
             <MaterialCommunityIcons
-              name="chevron-right"
-              size={scaleBySizeClass(22, sizeClass)}
-              color={canContinue ? palette.textOnAccent : palette.textMuted}
+              name="account-alert-outline"
+              size={scaleBySizeClass(16, sizeClass)}
+              color={palette.warning}
             />
-          </Pressable>
-        </ScrollView>
-      </KeyboardAvoidingView>
+            <ThemedText style={[styles.lockText, { color: palette.warning }]}>
+              Scrimmage mode requires at least 14 active players. This roster has{' '}
+              {activePlayerCount}.
+            </ThemedText>
+          </View>
+        )}
+
+        {genderRatioEnabled && (
+          <SegmentedControl
+            label="STARTING GENDER RATIO"
+            options={[
+              {
+                value: 'more-women',
+                label: formatRatioFull('more-women'),
+                activeColor: palette.fmpColor,
+                activeTextColor: fmpTextColor,
+              },
+              {
+                value: 'more-men',
+                label: formatRatioFull('more-men'),
+                activeColor: palette.mmpColor,
+                activeTextColor: mmpTextColor,
+              },
+            ]}
+            value={firstPointRatio ?? ''}
+            onChange={(value) => {
+              setFirstPointRatio(value);
+              setRatioOrbitRunKey((prev) => prev + 1);
+            }}
+            showRequired={firstPointRatio === null}
+            highlightBorder={firstPointRatio === null}
+            highlightColor={palette.warning}
+            highlightLeftColor={firstPointRatio === null ? palette.fmpColor : undefined}
+            highlightRightColor={firstPointRatio === null ? palette.mmpColor : undefined}
+            attentionColor={selectedRatioOrbitColor}
+            attentionRunKey={ratioOrbitRunKey}
+          />
+        )}
+
+        <Pressable
+          onPress={handleSetLine}
+          disabled={!canContinue}
+          testID="advanced-tracker-set-line-button"
+          style={({ pressed }) => [
+            styles.continueButton,
+            { backgroundColor: canContinue ? palette.accent : palette.overlay10 },
+            pressed && canContinue && { opacity: 0.85, transform: [{ scale: 0.98 }] },
+          ]}>
+          <ThemedText
+            testID="advanced-tracker-set-line-text"
+            style={[
+              styles.continueButtonText,
+              { color: canContinue ? palette.textOnAccent : palette.textMuted },
+            ]}>
+            {isScrimmage ? 'Set Lines' : 'Set Line'}
+          </ThemedText>
+          <MaterialCommunityIcons
+            name="chevron-right"
+            size={scaleBySizeClass(22, sizeClass)}
+            color={canContinue ? palette.textOnAccent : palette.textMuted}
+          />
+        </Pressable>
+      </KeyboardAwareScrollView>
     </ThemedView>
   );
 }
@@ -539,7 +523,7 @@ function createStyles(sizeClass: SizeClass) {
     container: {
       flex: 1,
     },
-    keyboardAvoid: {
+    scrollView: {
       flex: 1,
     },
     scrollContent: {

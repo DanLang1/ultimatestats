@@ -6,6 +6,7 @@ import { requireOptionalNativeModule } from 'expo';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { AlertProvider } from '@/components/ui/AlertProvider';
@@ -72,13 +73,15 @@ function RootLayoutInner() {
 export default Sentry.wrap(function RootLayout() {
   return (
     <QueryClientProvider client={queryClient}>
-      <SafeAreaProvider>
-        <ThemeProvider>
-          <AlertProvider>
-            <RootLayoutInner />
-          </AlertProvider>
-        </ThemeProvider>
-      </SafeAreaProvider>
+      <KeyboardProvider preload={false}>
+        <SafeAreaProvider>
+          <ThemeProvider>
+            <AlertProvider>
+              <RootLayoutInner />
+            </AlertProvider>
+          </ThemeProvider>
+        </SafeAreaProvider>
+      </KeyboardProvider>
     </QueryClientProvider>
   );
 });

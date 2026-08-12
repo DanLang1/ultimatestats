@@ -204,6 +204,26 @@ describe('advanced tracking routes', () => {
     expect(screen.queryByText('Windchill')).not.toBeOnTheScreen();
   });
 
+  it('adds a private game note from the tracker menu', async () => {
+    const user = userEvent.setup();
+    arrangeAdvancedGame();
+    recordOpeningPull();
+    await renderScreen(<TrackerScreen />);
+
+    await user.press(screen.getByTestId('tracker-menu-button'));
+    await user.press(screen.getByTestId('tracker-menu-game-note'));
+    await user.type(
+      screen.getByTestId('advanced-game-note-input'),
+      'Wind picked up after halftime.',
+    );
+    await user.press(screen.getByTestId('advanced-game-note-save'));
+
+    expect(useAdvancedTrackingStore.getState().currentGame?.metadata?.notes).toBe(
+      'Wind picked up after halftime.',
+    );
+    expect(screen.queryByTestId('advanced-game-note-editor')).not.toBeOnTheScreen();
+  });
+
   it('creates an advanced game through the real pre-game route', async () => {
     const user = userEvent.setup();
     useGameStore.setState({ currentTeam: testTeam, team2Name: 'Rivals' });

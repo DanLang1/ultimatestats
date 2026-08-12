@@ -1,5 +1,6 @@
 import Constants from 'expo-constants';
 
+import { withoutAdvancedGameNote } from '@/lib/advancedTracking/gameNoteUtils';
 import type { AdvancedTrackedGame } from '@/lib/advancedTracking/types';
 import { ADVANCED_TRACKING_SCHEMA_VERSION } from '@/lib/advancedTracking/types';
 import type { LinePreset, SavedGame, SavedTeam } from '@/lib/storage/types';
@@ -23,7 +24,7 @@ export function serializeAdvancedGame(game: AdvancedTrackedGame): SharedPayload 
     appVersion: Constants.expoConfig?.version ?? '1.0.0',
     schemaVersion: ADVANCED_TRACKING_SCHEMA_VERSION,
     sharedAt: Date.now(),
-    data: game,
+    data: withoutAdvancedGameNote(game),
   };
 }
 
@@ -33,7 +34,7 @@ export function serializeAdvancedGames(games: AdvancedTrackedGame[]): SharedPayl
     appVersion: Constants.expoConfig?.version ?? '1.0.0',
     schemaVersion: ADVANCED_TRACKING_SCHEMA_VERSION,
     sharedAt: Date.now(),
-    data: games,
+    data: games.map(withoutAdvancedGameNote),
   };
 }
 

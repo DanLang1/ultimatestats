@@ -52,6 +52,16 @@ For transparent modal routes:
    `contentStyle: { backgroundColor: 'transparent' }`
 4. Use `router.dismissTo(...)` for deterministic exits.
 
+For screens and bottom sheets with text input, use `KeyboardAvoidingView` from
+`react-native-keyboard-controller` with `automaticOffset`; the root `KeyboardProvider` is configured
+in `app/_layout.tsx`. Use `behavior="height"` when lower content must remain reachable above the
+keyboard. Use `behavior="padding"` for top-aligned inputs when the content should stay visually
+anchored while its scrollable area gains keyboard space, as in `CreateTournament.tsx`.
+
+For a long or dynamically changing form, use `KeyboardAwareScrollView` from the same package so the
+scroll position follows the focused input throughout the keyboard animation. Add a small
+`bottomOffset` to keep the input visually separated from the keyboard.
+
 ## Safe Area Pattern
 
 - Keep one root `SafeAreaProvider` only (`app/_layout.tsx`).

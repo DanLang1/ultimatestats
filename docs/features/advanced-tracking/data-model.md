@@ -36,6 +36,10 @@ counters.
 `settings.locationMode` is `none`, `zone`, or `xy`. Standard format settings may include the game
 target, halftime score, cap toggles, timeout count, and floater availability.
 
+`metadata.notes` stores an optional private game note of up to 1,000 characters. It persists with
+the local advanced-game record and can be edited during tracking or from the saved-game analytics
+screen. Notes are intentionally omitted from sharing payloads and CSV exports.
+
 `status: 'terminated'` is distinct from a normal final game and may include an `endReason`.
 
 ## Sides and Participants

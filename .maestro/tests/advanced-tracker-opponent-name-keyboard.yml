@@ -28,6 +28,10 @@ tags:
 - assertVisible:
     text: 'ADVANCED TRACKER'
 
+# Reproduce the taller form where flip choices push the opponent field toward the keyboard
+- tapOn: 'Won'
+- assertVisible: 'CHOSE'
+
 - scrollUntilVisible:
     element:
       id: 'advanced-tracker-opponent-name-edit'

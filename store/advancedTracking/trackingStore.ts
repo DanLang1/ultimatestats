@@ -4,6 +4,7 @@ import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 
+import { withAdvancedGameNote } from '@/lib/advancedTracking/gameNoteUtils';
 import {
   getAdjustedHalftimeTimerDuration,
   getDefaultHalftimeTimerState,
@@ -283,7 +284,7 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
             focusSideId: input.focusSideId,
             initialReceivingSideId: input.initialReceivingSideId,
             ...(input.flip != null ? { flip: input.flip } : {}),
-            metadata: input.metadata,
+            metadata: withAdvancedGameNote(input.metadata, input.metadata?.notes),
             settings: {
               locationMode: 'none',
               format: {
@@ -389,7 +390,7 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
         updateGameMetadata: (metadata) => {
           set((state) => {
             const liveGame = getCurrentGame(state);
-            liveGame.metadata = metadata;
+            liveGame.metadata = withAdvancedGameNote(metadata, metadata.notes);
             liveGame.updatedAt = Date.now();
           });
         },

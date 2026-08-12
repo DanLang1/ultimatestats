@@ -377,6 +377,18 @@ describe('validatePayload', () => {
       expect(result.schemaVersion).toBe(1);
     });
 
+    it('drops private notes from incoming advanced game payloads', () => {
+      const data = makeAdvancedGameData({
+        metadata: { opponentName: 'Rivals', notes: 'Sender private note' },
+      });
+
+      const result = validatePayload(makeAdvancedGamePayload({ data }));
+
+      expect(result.type).toBe('advanced-game');
+      if (result.type !== 'advanced-game') throw new Error('Expected an advanced-game payload.');
+      expect(result.data.metadata).toEqual({ opponentName: 'Rivals' });
+    });
+
     it.each(THROW_RESULTS)('accepts the declared %s throw result', (throwResult) => {
       const data = makeAdvancedGameData({}, throwResult);
       const result = validatePayload(makeAdvancedGamePayload({ data }));
@@ -451,6 +463,16 @@ describe('validatePayload', () => {
     it('accepts a valid advanced games payload', () => {
       const result = validatePayload(makeAdvancedGamesPayload());
       expect(result.type).toBe('advanced-games');
+    });
+
+    it('drops private notes from incoming bulk advanced game payloads', () => {
+      const data = [makeAdvancedGameData({ metadata: { notes: 'Sender private note' } })];
+
+      const result = validatePayload(makeAdvancedGamesPayload({ data }));
+
+      expect(result.type).toBe('advanced-games');
+      if (result.type !== 'advanced-games') throw new Error('Expected advanced-games payload.');
+      expect(result.data[0].metadata).toBeUndefined();
     });
 
     it.each(THROW_RESULTS)('accepts the declared %s throw result', (throwResult) => {

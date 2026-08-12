@@ -15,6 +15,25 @@ name: Advanced Tracker Menus and Navigation
     id: 'tracker-menu-view-stats'
 - assertVisible:
     id: 'tracker-menu-home'
+- assertVisible:
+    id: 'tracker-menu-game-note'
+
+# Add a private game note
+- tapOn:
+    id: 'tracker-menu-game-note'
+- assertVisible: 'Game Note'
+- tapOn:
+    id: 'advanced-game-note-input'
+- inputText: 'Wind picked up after halftime.'
+- tapOn:
+    id: 'advanced-game-note-save'
+- assertVisible:
+    id: 'tracker-menu-button'
+
+# Verify the menu marks the note as added
+- tapOn:
+    id: 'tracker-menu-button'
+- assertVisible: '.*ADDED.*'
 
 # Navigate to View Stats
 - tapOn:

@@ -1,3 +1,4 @@
+import { withoutAdvancedGameNote } from '@/lib/advancedTracking/gameNoteUtils';
 import {
   ADVANCED_TRACKING_SCHEMA_VERSION,
   THROW_RESULTS,
@@ -369,15 +370,16 @@ function validateAdvancedGamesPayload(
   if (payload.data.length > MAX_BULK_GAMES) {
     throw new Error(`Invalid payload: too many games (max ${MAX_BULK_GAMES})`);
   }
-  for (const item of payload.data) {
+  const games = payload.data.map((item) => {
     validateAdvancedGame(item);
-  }
+    return withoutAdvancedGameNote(item);
+  });
   return {
     type: 'advanced-games',
     appVersion: sanitizeString(payload.appVersion),
     schemaVersion,
     sharedAt: isNumber(payload.sharedAt) ? payload.sharedAt : Date.now(),
-    data: payload.data,
+    data: games,
   };
 }
 
@@ -439,7 +441,7 @@ export function validatePayload(raw: unknown): SharedPayload {
 
   if (raw.type === 'advanced-game') {
     validateAdvancedGame(raw.data);
-    return { ...base, type: 'advanced-game', data: raw.data };
+    return { ...base, type: 'advanced-game', data: withoutAdvancedGameNote(raw.data) };
   }
 
   validateTeam(raw.data);

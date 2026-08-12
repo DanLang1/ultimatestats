@@ -9,7 +9,7 @@ import {
   hasPointEnded,
 } from '@/lib/advancedTracking/trackingUtils';
 import { AdvancedTrackedGame } from '@/lib/advancedTracking/types';
-import { DEFAULT_HALFTIME_BREAK_SECONDS } from '@/lib/constants';
+import { DEFAULT_HALFTIME_BREAK_SECONDS, MAX_ADVANCED_GAME_NOTE_LENGTH } from '@/lib/constants';
 import { useSettingsStore } from '@/store/settingsStore';
 
 import { useSavedAdvancedGamesStore } from '../advancedTracking/savedGamesStore';
@@ -626,6 +626,39 @@ describe('advancedTrackingStore', () => {
     const game = getCurrentGame() as AdvancedTrackedGame;
     expect(game.metadata?.title).toBe('Updated Title');
     expect(game.metadata?.location).toBe('Field A');
+  });
+
+  it('keeps metadata absent when creating a game without metadata', () => {
+    useAdvancedTrackingStore.getState().createGame({
+      focusSideId: homeSideId,
+      initialReceivingSideId: homeSideId,
+      sides: [
+        { id: homeSideId, label: 'Home', trackingMode: 'full-roster' },
+        { id: awaySideId, label: 'Away', trackingMode: 'anonymous' },
+      ],
+      participants: [],
+      format: { gameTo: 15 },
+    });
+
+    expect(getCurrentGame()?.metadata).toBeUndefined();
+  });
+
+  it('normalizes private notes when updating active-game metadata', () => {
+    createGame();
+    const oversizedNote = `  ${'n'.repeat(MAX_ADVANCED_GAME_NOTE_LENGTH + 20)}  `;
+
+    useAdvancedTrackingStore
+      .getState()
+      .updateGameMetadata({ title: 'Showcase Game', notes: oversizedNote });
+
+    expect(getCurrentGame()?.metadata?.notes).toHaveLength(MAX_ADVANCED_GAME_NOTE_LENGTH);
+
+    useAdvancedTrackingStore
+      .getState()
+      .updateGameMetadata({ title: 'Showcase Game', notes: '   ' });
+
+    expect(getCurrentGame()?.metadata).toEqual({ title: 'Showcase Game' });
+    expect(getCurrentGame()?.metadata).not.toHaveProperty('notes');
   });
 
   it('derives halftime automatically when a side reaches halftimeAt', () => {

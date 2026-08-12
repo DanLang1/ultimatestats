@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { BackHandler, LayoutChangeEvent, Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { AdvancedGameNoteModal } from '@/components/advancedTracking/AdvancedGameNoteModal';
 import { DevDebugModal } from '@/components/advancedTracking/DevDebugModal';
 import { LandscapeUnsupported } from '@/components/advancedTracking/LandscapeUnsupported';
 import { TrackerActionFooter } from '@/components/advancedTracking/TrackerActionFooter';
@@ -65,9 +66,11 @@ export default function AdvancedTrackerScreen() {
   );
   const startGameClockPause = useAdvancedTrackingStore((state) => state.startGameClockPause);
   const triggerHalftimeEarly = useAdvancedTrackingStore((state) => state.triggerHalftimeEarly);
+  const updateGameMetadata = useAdvancedTrackingStore((state) => state.updateGameMetadata);
   const participants = useLiveRosterParticipants(game?.participants ?? []);
   const [showDevModal, setShowDevModal] = useState(false);
   const [showHomeMenu, setShowHomeMenu] = useState(false);
+  const [showGameNote, setShowGameNote] = useState(false);
   const [showLineChangeMenu, setShowLineChangeMenu] = useState(false);
   const [showRareMenu, setShowRareMenu] = useState(false);
   const [passModifier, setPassModifier] = useState<PassModifier>(null);
@@ -206,6 +209,9 @@ export default function AdvancedTrackerScreen() {
   const handleGamePause = () => {
     startGameClockPause('manual');
   };
+  const handleSaveGameNote = (note: string) => {
+    updateGameMetadata({ ...game.metadata, notes: note });
+  };
 
   const handleEndGameEarly = () => {
     router.push({
@@ -299,11 +305,21 @@ export default function AdvancedTrackerScreen() {
           gameStartedAt !== null && activeStoppage === null && activeGameClockPause === null
         }
         canStartSecondHalfEarly={showStartSecondHalfEarly}
+        hasGameNote={Boolean(game.metadata?.notes)}
         onGameClockPause={handleGamePause}
+        onGameNote={() => setShowGameNote(true)}
         onStartSecondHalfEarly={triggerHalftimeEarly}
         onEndGameEarly={handleEndGameEarly}
         onAdvancedTutorial={handleAdvancedTutorial}
       />
+
+      {showGameNote && (
+        <AdvancedGameNoteModal
+          initialNote={game.metadata?.notes}
+          onClose={() => setShowGameNote(false)}
+          onSave={handleSaveGameNote}
+        />
+      )}
 
       {!activeStoppage && !activeGameClockPause && canChangeLine && (
         <TrackerLineChangeMenu

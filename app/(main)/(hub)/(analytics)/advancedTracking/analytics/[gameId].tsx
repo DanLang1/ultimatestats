@@ -9,6 +9,8 @@ import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { ActivityIndicator, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
+import { AdvancedGameNoteCard } from '@/components/advancedTracking/AdvancedGameNoteCard';
+import { AdvancedGameNoteModal } from '@/components/advancedTracking/AdvancedGameNoteModal';
 import AdvancedStatsContent from '@/components/advancedTracking/AdvancedStatsContent';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
@@ -29,6 +31,7 @@ import {
   resolveAnalyticsSideId,
 } from '@/lib/advancedTracking/analyticsPerspectiveUtils';
 import { buildAnalyticsGame } from '@/lib/advancedTracking/buildAnalyticsGame';
+import { withAdvancedGameNote } from '@/lib/advancedTracking/gameNoteUtils';
 import { areBothSidesFullyTracked } from '@/lib/advancedTracking/trackingModeUtils';
 import { MIN_PLAYED_AT_YEAR } from '@/lib/constants';
 import { formatTimestampForDisplay as formatDate } from '@/lib/dateUtils';
@@ -64,6 +67,7 @@ export default function AdvancedGameStatsScreen() {
     null,
   );
   const [selectedSideId, setSelectedSideId] = useState<string | null>(null);
+  const [showGameNote, setShowGameNote] = useState(false);
 
   const analyticsGame = rawGame ? buildAnalyticsGame(rawGame) : null;
   let emptyStateText = 'Game not found.';
@@ -137,6 +141,16 @@ export default function AdvancedGameStatsScreen() {
           ...rawGame.metadata,
           date: new Date(playedAt).toISOString(),
         },
+      },
+      { touchUpdatedAt: true },
+    );
+  };
+
+  const handleSaveGameNote = async (note: string) => {
+    await saveAdvancedGame(
+      {
+        ...rawGame,
+        metadata: withAdvancedGameNote(rawGame.metadata, note),
       },
       { touchUpdatedAt: true },
     );
@@ -432,6 +446,11 @@ export default function AdvancedGameStatsScreen() {
           />
         )}
 
+        <AdvancedGameNoteCard
+          note={rawGame.metadata?.notes}
+          onPress={() => setShowGameNote(true)}
+        />
+
         <AdvancedStatsContent
           game={analyticsGame}
           gameId={gameId}
@@ -451,6 +470,13 @@ export default function AdvancedGameStatsScreen() {
         onCancel={handleCancelShare}
         onCloseReady={handleCancelShare}
       />
+      {showGameNote && (
+        <AdvancedGameNoteModal
+          initialNote={rawGame.metadata?.notes}
+          onClose={() => setShowGameNote(false)}
+          onSave={handleSaveGameNote}
+        />
+      )}
     </ThemedView>
   );
 }

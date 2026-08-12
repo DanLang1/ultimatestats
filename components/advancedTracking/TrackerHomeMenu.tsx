@@ -1,6 +1,5 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router } from 'expo-router';
-import React from 'react';
 import { Modal, Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/ThemedText';
@@ -16,6 +15,8 @@ interface TrackerHomeMenuProps {
   canPauseGameClock: boolean;
   canStartSecondHalfEarly: boolean;
   onGameClockPause: () => void;
+  hasGameNote: boolean;
+  onGameNote: () => void;
   onStartSecondHalfEarly: () => void;
   onEndGameEarly: () => void;
   onAdvancedTutorial: () => void;
@@ -27,6 +28,8 @@ export const TrackerHomeMenu = ({
   canPauseGameClock,
   canStartSecondHalfEarly,
   onGameClockPause,
+  hasGameNote,
+  onGameNote,
   onStartSecondHalfEarly,
   onEndGameEarly,
   onAdvancedTutorial,
@@ -53,6 +56,11 @@ export const TrackerHomeMenu = ({
   const handleGameClockPause = () => {
     onClose();
     onGameClockPause();
+  };
+
+  const handleGameNote = () => {
+    onClose();
+    onGameNote();
   };
 
   const handleStartSecondHalfEarly = () => {
@@ -126,6 +134,13 @@ export const TrackerHomeMenu = ({
             <ThemedText style={[styles.sectionTitle, { color: palette.textMuted }]}>
               GAME MANAGEMENT
             </ThemedText>
+            <BottomSheetActionRow
+              testID="tracker-menu-game-note"
+              icon="note-edit-outline"
+              label="Game Notes"
+              badge={hasGameNote ? 'Added' : undefined}
+              onPress={handleGameNote}
+            />
             <BottomSheetActionRow
               testID="tracker-menu-game-pause"
               disabled={!canPauseGameClock}

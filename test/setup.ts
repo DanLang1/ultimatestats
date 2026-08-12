@@ -13,6 +13,9 @@ jest.mock('expo-router', () => jest.requireActual('@/test/mocks/expoRouter'));
 jest.mock('expo-speech-recognition', () =>
   jest.requireActual('@/test/mocks/expoSpeechRecognition'),
 );
+jest.mock('react-native-keyboard-controller', () =>
+  jest.requireActual('react-native-keyboard-controller/jest'),
+);
 jest.mock('react-native-worklets', () => jest.requireActual('react-native-worklets/src/mock'));
 
 setUpTests();
