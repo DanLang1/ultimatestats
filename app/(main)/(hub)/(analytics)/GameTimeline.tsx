@@ -1,7 +1,7 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import * as Haptics from 'expo-haptics';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import EventTimeline from '@/components/basic/timeline/EventTimeline';
@@ -9,6 +9,7 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { canEditBasicPointLine } from '@/lib/basic/pointLineEditUtils';
 import { computePointByPointEvents } from '@/lib/basic/timelineUtils';
 import { resolveTeamName } from '@/lib/playerUtils';
 import { useGameStore } from '@/store/basic/gameStore';
@@ -34,6 +35,7 @@ export default function GameTimelineScreen() {
     pointStartTimestamps,
     currentPointStartTime,
     currentPoint,
+    currentGameId,
     pointTimerEnabled,
     pointLines: currentPointLines,
   } = useGameStore();
@@ -99,6 +101,14 @@ export default function GameTimelineScreen() {
   const canToggleSplits = gameData.timingEnabled;
   const canEditTiming = gameData.timingEnabled;
   const hasLineupData = (gameData.pointLines?.length ?? 0) > 0;
+  const canEditLineup = (pointNumber: number) =>
+    canEditBasicPointLine({
+      pointNumber,
+      pointLines: gameData.pointLines,
+      currentPoint,
+      displayedGameId: params.gameId ?? null,
+      currentGameId,
+    });
 
   return (
     <ThemedView style={[styles.container, { backgroundColor: palette.primary }]}>
@@ -192,6 +202,7 @@ export default function GameTimelineScreen() {
           showSplitSeparators={showSplitSeparators}
           pointLines={gameData.pointLines}
           showLineups={showLineups}
+          canEditLineup={canEditLineup}
           onEditEvent={(eventIndex, turnover) => {
             void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
             router.push({
@@ -216,6 +227,15 @@ export default function GameTimelineScreen() {
                 eventType: 'goal',
                 playerId: playerId ?? 'null',
                 editField,
+                gameId: params.gameId ?? 'current',
+              },
+            });
+          }}
+          onEditLineup={(pointNumber) => {
+            router.push({
+              pathname: '/EditPointLineModal',
+              params: {
+                pointNumber: String(pointNumber),
                 gameId: params.gameId ?? 'current',
               },
             });

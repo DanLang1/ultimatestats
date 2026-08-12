@@ -139,6 +139,36 @@ export function getLatestLineForPoint(
   return latestLineRecord ? [...latestLineRecord.playerIds] : [];
 }
 
+/**
+ * Replace every lineup record for a point with one corrected snapshot while preserving point order.
+ */
+export function replacePointLineRecords(
+  pointLines: PointLineRecord[],
+  pointNumber: number,
+  playerIds: string[],
+  timestamp = Date.now(),
+): PointLineRecord[] {
+  const firstRecordIndex = pointLines.findIndex((record) => record.pointNumber === pointNumber);
+  const recordsWithoutPoint = pointLines.filter((record) => record.pointNumber !== pointNumber);
+  const insertionIndex =
+    firstRecordIndex >= 0
+      ? firstRecordIndex
+      : recordsWithoutPoint.findIndex((record) => record.pointNumber > pointNumber);
+  const correctedRecord: PointLineRecord = {
+    pointNumber,
+    playerIds: [...playerIds],
+    timestamp,
+    isSubstitution: false,
+  };
+
+  recordsWithoutPoint.splice(
+    insertionIndex >= 0 ? insertionIndex : recordsWithoutPoint.length,
+    0,
+    correctedRecord,
+  );
+  return recordsWithoutPoint;
+}
+
 export interface RecentLine {
   pointNumber: number;
   playerIds: string[];

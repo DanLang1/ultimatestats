@@ -217,6 +217,12 @@ export interface GameState {
     isSubstitution?: boolean,
     subType?: 'injury' | 'replacement',
   ) => void;
+  replacePointLine: (pointNumber: number, playerIds: string[]) => boolean;
+  replaceSavedGamePointLine: (
+    gameId: string,
+    pointNumber: number,
+    playerIds: string[],
+  ) => Promise<boolean>;
 
   // Saved Games & Teams
   savedGames: SavedGame[];

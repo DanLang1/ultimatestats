@@ -40,6 +40,7 @@ interface TimelinePointCardProps {
     currentElapsedMs: number | undefined,
     eventType: 'turnover' | 'timeout',
   ) => void;
+  onEditLineup?: () => void;
 }
 
 export default function TimelinePointCard({
@@ -58,6 +59,7 @@ export default function TimelinePointCard({
   onEditGoal,
   onEditPointDuration,
   onEditEventTime,
+  onEditLineup,
 }: TimelinePointCardProps) {
   const { palette } = useTheme();
 
@@ -157,6 +159,8 @@ export default function TimelinePointCard({
           roster={roster}
           mmpColor={mmpColor}
           fmpColor={fmpColor}
+          pointNumber={point.pointNumber}
+          onEdit={onEditLineup}
         />
       )}
     </View>

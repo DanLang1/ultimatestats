@@ -92,7 +92,7 @@ Clearing a roster is a separate explicit action.
 - `/Settings` owns stat-entry order and persistent preferences.
 - `/EditRoster` manages the active team's roster.
 - `/ViewStats` and related analytics routes consume the event model.
-- `/GameTimeline` exposes event and timing corrections.
+- `/GameTimeline` exposes event, timing, and completed-point lineup corrections.
 
 ## Change Checklist
 

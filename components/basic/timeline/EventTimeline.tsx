@@ -34,6 +34,8 @@ interface EventTimelineProps {
     currentElapsedMs: number | undefined,
     eventType: 'turnover' | 'timeout',
   ) => void;
+  onEditLineup?: (pointNumber: number) => void;
+  canEditLineup?: (pointNumber: number) => boolean;
 }
 
 export default function EventTimeline({
@@ -51,6 +53,8 @@ export default function EventTimeline({
   onEditGoal,
   onEditPointDuration,
   onEditEventTime,
+  onEditLineup,
+  canEditLineup,
 }: EventTimelineProps) {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
@@ -119,6 +123,11 @@ export default function EventTimeline({
               onEditGoal={onEditGoal}
               onEditPointDuration={onEditPointDuration}
               onEditEventTime={onEditEventTime}
+              onEditLineup={
+                onEditLineup && canEditLineup?.(point.pointNumber)
+                  ? () => onEditLineup(point.pointNumber)
+                  : undefined
+              }
             />
           );
         })}

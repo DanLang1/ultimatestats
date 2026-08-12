@@ -6,6 +6,7 @@ import AdvancedGameSelectorModal from '@/app/(modals)/AdvancedGameSelectorModal'
 import EditDurationModal from '@/app/(modals)/EditDurationModal';
 import EditEventModal from '@/app/(modals)/EditEventModal';
 import EditPlayerModal from '@/app/(modals)/EditPlayerModal';
+import EditPointLineModal from '@/app/(modals)/EditPointLineModal';
 import GameSelectorModal from '@/app/(modals)/GameSelectorModal';
 import HalftimeModal from '@/app/(modals)/HalftimeModal';
 import NumberPickerModal from '@/app/(modals)/NumberPickerModal';
@@ -124,6 +125,110 @@ describe('modal routes', () => {
     expect(screen.getByText('Edit Event')).toBeVisible();
     expect(screen.getByText('Throwaway')).toBeVisible();
     expect(screen.getByText('Alex')).toBeVisible();
+  });
+
+  it('replaces a completed live point line', async () => {
+    const user = userEvent.setup();
+    const roster = [
+      ...testTeam.roster,
+      {
+        id: 'player-cara',
+        name: 'Cara',
+        number: '18',
+        isActive: false,
+        matchingType: 'fmp' as const,
+        role: 'hybrid' as const,
+      },
+    ];
+    arrangeBasicGame({ statTrackingEnabled: true });
+    useGameStore.setState({
+      currentTeam: { ...testTeam, roster },
+      currentPoint: 2,
+      pointLines: [
+        {
+          pointNumber: 1,
+          playerIds: ['player-alex', 'player-blair'],
+          timestamp: 1,
+        },
+      ],
+    });
+    setMockSearchParams({ pointNumber: '1', gameId: 'current' });
+
+    await renderScreen(<EditPointLineModal />);
+
+    expect(screen.getByText('Edit Point 1 Line')).toBeVisible();
+    expect(screen.getByText('2 / 2 selected')).toBeVisible();
+    expect(screen.getByTestId('player-chip-Cara')).toBeVisible();
+
+    await user.press(screen.getByTestId('player-chip-Blair'));
+    await user.press(screen.getByTestId('player-chip-Cara'));
+    await user.press(screen.getByText('Save Line'));
+
+    expect(useGameStore.getState().pointLines[0]?.playerIds).toEqual([
+      'player-alex',
+      'player-cara',
+    ]);
+    expect(router.dismissTo).toHaveBeenCalledWith('/GameTimeline');
+  });
+
+  it('replaces a saved point line using the saved roster snapshot', async () => {
+    const user = userEvent.setup();
+    const game = createSavedBasicGame();
+    const savedRoster = [
+      ...game.team1.roster,
+      {
+        id: 'player-cara',
+        name: 'Cara',
+        number: '18',
+        isActive: false,
+        matchingType: 'fmp' as const,
+        role: 'hybrid' as const,
+      },
+    ];
+    const savedGame = {
+      ...game,
+      team1: { ...game.team1, roster: savedRoster },
+      pointLines: [
+        {
+          pointNumber: 1,
+          playerIds: ['player-alex', 'player-blair'],
+          timestamp: 1,
+        },
+      ],
+    };
+    useGameStore.setState({ savedGames: [savedGame] });
+    setMockSearchParams({ pointNumber: '1', gameId: savedGame.id });
+
+    await renderScreen(<EditPointLineModal />);
+
+    expect(screen.getByTestId('player-chip-Cara')).toBeVisible();
+
+    await user.press(screen.getByTestId('player-chip-Blair'));
+    await user.press(screen.getByTestId('player-chip-Cara'));
+    await user.press(screen.getByText('Save Line'));
+
+    expect(useGameStore.getState().savedGames[0].pointLines?.[0]?.playerIds).toEqual([
+      'player-alex',
+      'player-cara',
+    ]);
+    expect(router.dismissTo).toHaveBeenCalledWith({
+      pathname: '/GameTimeline',
+      params: { gameId: savedGame.id },
+    });
+  });
+
+  it('redirects an invalid point-line edit instead of leaving an empty modal route', async () => {
+    arrangeBasicGame({ statTrackingEnabled: true });
+    useGameStore.setState({ currentPoint: 2, pointLines: [] });
+    setMockSearchParams({ pointNumber: '1', gameId: 'current' });
+
+    await renderScreen(<EditPointLineModal />);
+
+    expect(screen.queryByTestId('edit-point-line-modal')).not.toBeOnTheScreen();
+    expect(router.replace).toHaveBeenCalledWith('/GameTimeline', {
+      relativeToDirectory: undefined,
+      withAnchor: undefined,
+    });
   });
 
   it('renders player editing from the real roster store', async () => {

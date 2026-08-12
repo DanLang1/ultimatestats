@@ -8,9 +8,15 @@ import { checkGameOver } from '@/lib/basic/gameUtils';
 import { canTriggerHalftimeEarly, hasReachedHalftime } from '@/lib/basic/halftimeUtils';
 import { deriveTimeoutState } from '@/lib/basic/timeoutUtils';
 import { DEFAULT_HALFTIME_BREAK_SECONDS, DEFAULT_TIMEOUT_SECONDS } from '@/lib/constants';
-import { getLatestLineForPoint } from '@/lib/lineUtils';
+import { getLatestLineForPoint, replacePointLineRecords } from '@/lib/lineUtils';
 import { hasPlayerParticipatedInCurrentGame, UNKNOWN_PLAYER_ID } from '@/lib/playerUtils';
-import { CURRENT_SCHEMA_VERSION, SavedGame, SavedTeam } from '@/lib/storage';
+import {
+  CURRENT_SCHEMA_VERSION,
+  Player,
+  PointLineRecord,
+  SavedGame,
+  SavedTeam,
+} from '@/lib/storage';
 import { migrateSavedGame, migrateSavedGames } from '@/lib/storage/migrations';
 import { generateId } from '@/lib/utils';
 import { palette } from '@/theme/theme';
@@ -37,6 +43,20 @@ function applyHalftimeTransition(state: GameState) {
   if (state.statTrackingEnabled) {
     state.possession = state.startingPossession === 'team1' ? 'team2' : 'team1';
   }
+}
+
+function canReplacePointLine(
+  pointLines: PointLineRecord[],
+  pointNumber: number,
+  playerIds: string[],
+  roster: Player[],
+): boolean {
+  const existingLine = getLatestLineForPoint(pointLines, pointNumber);
+  if (existingLine.length === 0 || playerIds.length !== existingLine.length) return false;
+  if (new Set(playerIds).size !== playerIds.length) return false;
+
+  const rosterPlayerIds = new Set(roster.map((player) => player.id));
+  return playerIds.every((playerId) => rosterPlayerIds.has(playerId));
 }
 
 export const useGameStore = create<GameState>()(
@@ -841,16 +861,12 @@ export const useGameStore = create<GameState>()(
             const lastRecord = state.pointLines.findLast((r) => r.pointNumber === pointNumber);
 
             if (isSubstitution && subType === 'replacement') {
-              // Replace: clear the point's lineup history and write the corrected line only.
-              state.pointLines = state.pointLines.filter((r) => r.pointNumber !== pointNumber);
-              state.pointLines.push({
+              state.pointLines = replacePointLineRecords(
+                state.pointLines,
                 pointNumber,
-                playerIds: [...state.currentLine],
+                state.currentLine,
                 timestamp,
-                isSubstitution: false,
-                subbedInPlayerIds: undefined,
-                subbedOutPlayerIds: undefined,
-              });
+              );
               return;
             }
             // Injury sub: skip if lineup is identical to the last record for this point
@@ -883,6 +899,82 @@ export const useGameStore = create<GameState>()(
               subbedOutPlayerIds,
             });
           }),
+
+        replacePointLine: (pointNumber: number, playerIds: string[]) => {
+          let didReplace = false;
+          set((state: GameState) => {
+            if (pointNumber >= state.currentPoint) return;
+            if (
+              !canReplacePointLine(
+                state.pointLines,
+                pointNumber,
+                playerIds,
+                state.currentTeam.roster,
+              )
+            ) {
+              return;
+            }
+
+            state.pointLines = replacePointLineRecords(state.pointLines, pointNumber, playerIds);
+            const savedGame = state.currentGameId
+              ? state.savedGames.find((game) => game.id === state.currentGameId)
+              : undefined;
+            if (
+              savedGame?.pointLines &&
+              canReplacePointLine(
+                savedGame.pointLines,
+                pointNumber,
+                playerIds,
+                savedGame.team1.roster,
+              )
+            ) {
+              savedGame.pointLines = replacePointLineRecords(
+                savedGame.pointLines,
+                pointNumber,
+                playerIds,
+              );
+            }
+            didReplace = true;
+          });
+          return didReplace;
+        },
+
+        replaceSavedGamePointLine: async (
+          gameId: string,
+          pointNumber: number,
+          playerIds: string[],
+        ): Promise<boolean> => {
+          let didReplace = false;
+          set((state: GameState) => {
+            const game = state.savedGames.find((savedGame) => savedGame.id === gameId);
+            if (!game) return;
+
+            const pointLines = game.pointLines ?? [];
+            if (!canReplacePointLine(pointLines, pointNumber, playerIds, game.team1.roster)) return;
+
+            const isCurrentGame = state.currentGameId === gameId;
+            if (isCurrentGame) {
+              if (pointNumber >= state.currentPoint) return;
+              if (
+                !canReplacePointLine(
+                  state.pointLines,
+                  pointNumber,
+                  playerIds,
+                  state.currentTeam.roster,
+                )
+              ) {
+                return;
+              }
+            }
+
+            game.pointLines = replacePointLineRecords(pointLines, pointNumber, playerIds);
+            if (isCurrentGame) {
+              state.pointLines = replacePointLineRecords(state.pointLines, pointNumber, playerIds);
+            }
+            didReplace = true;
+          });
+          return didReplace;
+        },
 
         // Event Editing Actions
         updateEvent: (

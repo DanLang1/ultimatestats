@@ -86,6 +86,7 @@ Defined across:
 - `/TeamManagementModal` (`app/(modals)/TeamManagementModal.tsx`)
 - `/HalftimeModal` (`app/(modals)/HalftimeModal.tsx`)
 - `/EditEventModal` (`app/(modals)/EditEventModal.tsx`)
+- `/EditPointLineModal` (`app/(modals)/EditPointLineModal.tsx`)
 - `/PointSummaryModal` (`app/(modals)/PointSummaryModal.tsx`)
 - `/NumberPickerModal` (`app/(modals)/NumberPickerModal.tsx`)
 - `/EditPlayerModal` (`app/(modals)/EditPlayerModal.tsx`)
@@ -145,8 +146,9 @@ Defined across:
 3. `/PlayerStats`
 4. Optional game selection:
    `/GameSelectorModal`
-5. Timeline edit path:
-   `/GameTimeline` -> `/EditEventModal`
+5. Timeline edit paths:
+   `/GameTimeline` -> `/EditEventModal` for player/event corrections
+   `/GameTimeline` -> `/EditPointLineModal` for completed-point lineup corrections
 
 ## Modal Exit Contract
 

@@ -21,6 +21,28 @@ Injury substitutions store explicit metadata on the appended `PointLineRecord`:
 
 Replacement/correction edits do not store substitution metadata. Legacy saved games without this metadata fall back to showing the union of all players who appeared during the point.
 
+## Timeline Corrections
+
+The basic game timeline exposes an edit action for completed points that already contain line data.
+The editor uses the roster snapshot associated with the displayed game and requires the corrected
+line to contain the same number of players as the point's latest line record. This avoids applying
+the current app-wide player-count preference to older or imported games.
+
+Saving a timeline correction replaces every `PointLineRecord` for that point with one corrected
+snapshot. If the point included an injury substitution, the editor warns that its SUB/INJ history
+will be removed. Playing-time analytics and exports update from the corrected `pointLines` data.
+
+The in-progress point is not editable from the timeline; use `/LineEditor` so `currentLine` and live
+gameplay state remain synchronized. This also applies when the timeline is displaying the saved
+record for that same current game. The timeline hides the edit action, and the modal repeats the
+eligibility check so stale or direct routes redirect safely.
+
+When a saved record is also the current basic game, a correction made through that saved record is
+validated against both roster snapshots and applied to both the live and saved `pointLines`. This
+keeps a correction made after undoing a finished game from being overwritten when the resumed game
+is saved again. A live correction is mirrored to its saved snapshot only when the saved roster can
+represent every selected player.
+
 ---
 
 ## Playing Time Attribution

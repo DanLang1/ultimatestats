@@ -1,6 +1,6 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
@@ -16,6 +16,8 @@ interface TimelineLineupFooterProps {
   roster: Player[];
   mmpColor: string;
   fmpColor: string;
+  pointNumber: number;
+  onEdit?: () => void;
 }
 
 export default function TimelineLineupFooter({
@@ -24,6 +26,8 @@ export default function TimelineLineupFooter({
   roster,
   mmpColor,
   fmpColor,
+  pointNumber,
+  onEdit,
 }: TimelineLineupFooterProps) {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
@@ -104,6 +108,29 @@ export default function TimelineLineupFooter({
           );
         })}
       </View>
+      {onEdit && (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`Edit point ${pointNumber} line`}
+          testID={`edit-point-line-${pointNumber}`}
+          hitSlop={8}
+          onPress={onEdit}
+          style={({ pressed }) => [
+            styles.editButton,
+            {
+              backgroundColor: palette.accentOverlay10,
+              borderColor: palette.accent,
+            },
+            pressed && styles.editButtonPressed,
+          ]}>
+          <MaterialCommunityIcons
+            name="pencil-outline"
+            size={scaleBySizeClass(14, sizeClass)}
+            color={palette.accent}
+          />
+          <ThemedText style={[styles.editButtonText, { color: palette.accent }]}>EDIT</ThemedText>
+        </Pressable>
+      )}
     </View>
   );
 }
@@ -153,6 +180,25 @@ function createStyles(sizeClass: SizeClass) {
       fontSize: scaleBySizeClass(9, sizeClass),
       fontFamily: Fonts.bold,
       letterSpacing: 0.4,
+    },
+    editButton: {
+      minHeight: 36,
+      flexDirection: 'row',
+      alignItems: 'center',
+      alignSelf: 'center',
+      gap: 4,
+      borderWidth: 1,
+      borderRadius: 999,
+      paddingHorizontal: 10,
+      paddingVertical: 6,
+    },
+    editButtonPressed: {
+      opacity: 0.7,
+    },
+    editButtonText: {
+      fontSize: scaleBySizeClass(9, sizeClass),
+      fontFamily: Fonts.bold,
+      letterSpacing: 0.5,
     },
   });
 }

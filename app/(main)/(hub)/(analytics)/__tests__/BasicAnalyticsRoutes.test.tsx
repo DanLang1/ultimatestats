@@ -151,9 +151,18 @@ describe('basic analytics routes', () => {
   });
 
   it('renders the live game timeline from real events', async () => {
+    const user = userEvent.setup();
     arrangeBasicGame({ statTrackingEnabled: true });
     useGameStore.setState({
       team1Score: 1,
+      currentPoint: 2,
+      pointLines: [
+        {
+          pointNumber: 1,
+          playerIds: ['player-alex', 'player-blair'],
+          timestamp: 1,
+        },
+      ],
       events: [
         {
           type: 'goal',
@@ -169,6 +178,37 @@ describe('basic analytics routes', () => {
 
     expect(screen.getByText('GAME TIMELINE')).toBeVisible();
     expect(screen.getByText('Windchill vs Rivals')).toBeVisible();
+
+    await user.press(screen.getByLabelText('Edit point 1 line'));
+
+    expect(router.push).toHaveBeenCalledWith({
+      pathname: '/EditPointLineModal',
+      params: { pointNumber: '1', gameId: 'current' },
+    });
+  });
+
+  it('hides saved-timeline line editing for the matching live in-progress point', async () => {
+    const game = {
+      ...createSavedBasicGame(),
+      pointLines: [
+        {
+          pointNumber: 1,
+          playerIds: ['player-alex', 'player-blair'],
+          timestamp: 1,
+        },
+      ],
+    };
+    useGameStore.setState({
+      savedGames: [game],
+      currentGameId: game.id,
+      currentPoint: 1,
+    });
+    setMockSearchParams({ gameId: game.id });
+
+    await renderScreen(<GameTimelineScreen />);
+
+    expect(screen.getByText('GAME TIMELINE')).toBeVisible();
+    expect(screen.queryByLabelText('Edit point 1 line')).not.toBeOnTheScreen();
   });
 
   it('renders player analytics from the real player-stats store', async () => {
