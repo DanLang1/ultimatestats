@@ -15,8 +15,9 @@ not run Maestro or launch a simulator.
 
 ## Automated Test Targets
 
-Logic and route tests live in `__tests__/` directories near the code they cover. Shared route-test
-fixtures, native-boundary adapters, and provider wrappers live in `test/`.
+Logic tests live in `__tests__/` directories near the code they cover. Expo Router route tests live
+in `test/routes/` because the `app/` directory is reserved for route and layout files. Shared
+route-test fixtures, native-boundary adapters, and provider wrappers also live in `test/`.
 
 | Change Area                           | Primary Tests                                                                                                                                                                                                                               |
 | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -30,17 +31,17 @@ fixtures, native-boundary adapters, and provider wrappers live in `test/`.
 
 ## User-facing route coverage
 
-| Route group        | Covered routes                                                                                                                                                                                               | Colocated test target                                                                               |
-| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------- |
-| Entry and recovery | `/`, `+not-found`, `/s/[kind]/[shareId]`                                                                                                                                                                     | `app/__tests__/EntryRoutes.test.tsx`, `app/s/[kind]/__tests__/ShareLinkRedirect.test.tsx`           |
-| Home               | `Dashboard`, `About`, `Help`, `Partners`, `Showcase`                                                                                                                                                         | `app/(main)/(hub)/(home)/__tests__/`                                                                |
-| Basic game         | `PreGameConfirm`, `Scoreboard`, `GameInfo`, `GameFormat`, `GameComplete`, `Settings`, `EditRoster`, `LineEditor`, `LinePresetEditor`                                                                         | `app/(main)/__tests__/`, `app/(main)/(hub)/(game)/__tests__/`, `app/(main)/(hub)/(team)/__tests__/` |
-| Basic analytics    | `ViewStats`, `PlayerStats`, `GameTimeline`, `SavedGameStats`, `AggregateStats`, `CreateTournament`, `/saved-games/[gameId]`                                                                                  | `app/(main)/(hub)/(analytics)/__tests__/BasicAnalyticsRoutes.test.tsx`                              |
-| Tutorials          | `TutorialIntro`, `TutorialScoreboard`, `TutorialComplete`, `TutorialStatIntro`, `TutorialStatScoreboard`, `TutorialStatComplete`, `TutorialAdvancedTracker`                                                  | `app/(main)/__tests__/TutorialRoutes.test.tsx`                                                      |
-| Advanced game      | `advancedTracking/PreGameConfirm`, `TrackerLineSelect`, `PullTracking`, `Tracker`, `TrackerEditLine`, `TrackerInjurySub`, `TrackerGameComplete`                                                              | `app/(main)/advancedTracking/__tests__/AdvancedRoutes.test.tsx`                                     |
-| Advanced analytics | `advancedTracking/analytics/[gameId]`, `advancedTracking/analytics/playerStats`, `advancedTracking/analytics/timeline/[gameId]`                                                                              | `app/(main)/(hub)/(analytics)/advancedTracking/__tests__/AdvancedAnalyticsRoutes.test.tsx`          |
-| Import             | `Import`, `ImportTeam`                                                                                                                                                                                       | `app/(main)/__tests__/ImportRoutes.test.tsx`                                                        |
-| Modal routes       | `AdvancedGameSelectorModal`, `EditDurationModal`, `EditEventModal`, `EditPlayerModal`, `GameSelectorModal`, `HalftimeModal`, `NumberPickerModal`, `PointSummaryModal`, `TeamManagementModal`, `TimeoutModal` | `app/(modals)/__tests__/ModalRoutes.test.tsx`                                                       |
+| Route group        | Covered routes                                                                                                                                                                                               | Test target                                                                                                      |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------- |
+| Entry and recovery | `/`, `+not-found`, `/s/[kind]/[shareId]`                                                                                                                                                                     | `test/routes/EntryRoutes.test.tsx`, `test/routes/ShareLinkRedirect.test.tsx`                                     |
+| Home               | `Dashboard`, `About`, `Help`, `Partners`, `Showcase`                                                                                                                                                         | `test/routes/Dashboard.test.tsx`, `test/routes/InfoRoutes.test.tsx`                                              |
+| Basic game         | `PreGameConfirm`, `Scoreboard`, `GameInfo`, `GameFormat`, `GameComplete`, `Settings`, `EditRoster`, `LineEditor`, `LinePresetEditor`                                                                         | `test/routes/BasicGameRoutes.test.tsx`, `test/routes/LiveGameRoutes.test.tsx`, `test/routes/EditRoster.test.tsx` |
+| Basic analytics    | `ViewStats`, `PlayerStats`, `GameTimeline`, `SavedGameStats`, `AggregateStats`, `CreateTournament`, `/saved-games/[gameId]`                                                                                  | `test/routes/BasicAnalyticsRoutes.test.tsx`                                                                      |
+| Tutorials          | `TutorialIntro`, `TutorialScoreboard`, `TutorialComplete`, `TutorialStatIntro`, `TutorialStatScoreboard`, `TutorialStatComplete`, `TutorialAdvancedTracker`                                                  | `test/routes/TutorialRoutes.test.tsx`                                                                            |
+| Advanced game      | `advancedTracking/PreGameConfirm`, `TrackerLineSelect`, `PullTracking`, `Tracker`, `TrackerEditLine`, `TrackerInjurySub`, `TrackerGameComplete`                                                              | `test/routes/AdvancedRoutes.test.tsx`                                                                            |
+| Advanced analytics | `advancedTracking/analytics/[gameId]`, `advancedTracking/analytics/playerStats`, `advancedTracking/analytics/timeline/[gameId]`                                                                              | `test/routes/AdvancedAnalyticsRoutes.test.tsx`                                                                   |
+| Import             | `Import`, `ImportTeam`                                                                                                                                                                                       | `test/routes/ImportRoutes.test.tsx`                                                                              |
+| Modal routes       | `AdvancedGameSelectorModal`, `EditDurationModal`, `EditEventModal`, `EditPlayerModal`, `GameSelectorModal`, `HalftimeModal`, `NumberPickerModal`, `PointSummaryModal`, `TeamManagementModal`, `TimeoutModal` | `test/routes/ModalRoutes.test.tsx`                                                                               |
 
 Navigator `_layout.tsx` files are shells rather than independent screens. `app/__maestro_seed__.tsx`
 is an automated-test-only endpoint. Those files are intentionally excluded from the user-facing
@@ -96,7 +97,7 @@ cross-screen and native-device behavior carry the most risk.
 npm test
 
 # Screen integration suites only
-npm test -- app
+npm run test:routes
 
 # Focused target examples
 npm test -- gameUtils

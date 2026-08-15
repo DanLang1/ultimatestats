@@ -39,6 +39,7 @@ Platform support details are documented in [platform-support.md](platform-suppor
 │   ├── basic/         # Basic-mode gameplay hooks
 │   └── advancedTracking/ # Advanced-mode tracker hooks
 ├── context/           # React contexts (Theme, Alert)
+├── test/              # Route tests, test harnesses, fixtures, and native-boundary mocks
 └── docs/              # Documentation (you are here)
 ```
 

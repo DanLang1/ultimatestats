@@ -10,7 +10,7 @@ prove it confidently, then add a higher-level test only when the integration its
 | Layer                                     | What it proves                                                                                                                                               | What it does not prove                                                                                                      | Typical location                                                  |
 | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
 | Jest unit/domain tests                    | Pure calculations, state transitions, parsers, migrations, store actions, and edge cases with direct inputs and outputs                                      | Rendering, accessibility, native controls, or navigation between screens                                                    | `lib/**/__tests__/`, `store/**/__tests__/`, `hooks/**/__tests__/` |
-| React Native Testing Library screen tests | A real route renders with its real components, providers, hooks, and stores; important presses update visible UI/state and request the expected navigation   | A real device, native module implementation, actual Expo Router transition, gestures across screens, or platform layout     | `app/**/__tests__/`                                               |
+| React Native Testing Library screen tests | A real route renders with its real components, providers, hooks, and stores; important presses update visible UI/state and request the expected navigation   | A real device, native module implementation, actual Expo Router transition, gestures across screens, or platform layout     | `test/routes/`                                                    |
 | Maestro end-to-end tests                  | An installed app accepts real device-level taps and text input while exercising native rendering, Expo Router navigation, modals, and multi-screen workflows | Exhaustive business-logic permutations; most tracker flows seed valid setup state rather than repeating the entire setup UI | `.maestro/tests/`                                                 |
 
 React Native Testing Library tests are **screen-level integration tests**, even though Jest runs
@@ -40,7 +40,7 @@ npm test
 npm test -- gameUtils
 
 # Screen integration tests only
-npm test -- app
+npm run test:routes
 
 # Watch mode
 npm test -- --watch
@@ -118,10 +118,11 @@ flows.
 
 ## Test File Location
 
-Tests live in `__tests__/` directories near the code they cover. Route tests are colocated with the
-nearest route area under `app/`; shared screen-test infrastructure stays under `test/`:
+Tests live in `__tests__/` directories near the code they cover, except for Expo Router route tests.
+Expo Router reserves `app/` for route and layout files, so route tests live under `test/routes/`;
+shared screen-test infrastructure stays under `test/`:
 
-- `app/**/__tests__/` - user-facing route behavior
+- `test/routes/` - user-facing route behavior
 - `lib/**/__tests__/`, `store/**/__tests__/`, etc. - domain and state behavior
 - `test/fixtures/` - valid domain state built with real Zustand stores and actions
 - `test/mocks/` - narrow native/runtime boundary adapters

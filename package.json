@@ -17,6 +17,7 @@
     "format:check": "oxfmt --check",
     "format:changed": "git diff --name-only -z --diff-filter=d HEAD | xargs -0 -r oxfmt --no-error-on-unmatched-pattern",
     "test": "jest && npm run test:oxlint",
+    "test:routes": "jest test/routes",
     "test:oxlint": "node --test scripts/oxlint-plugin/__tests__/*.test.ts",
     "maestro": "MAESTRO_CLI_NO_ANALYTICS=1 maestro test --exclude-tags extended .maestro/tests/",
     "maestro:scrimmage": "MAESTRO_CLI_NO_ANALYTICS=1 maestro test --include-tags scrimmage .maestro/tests/",
