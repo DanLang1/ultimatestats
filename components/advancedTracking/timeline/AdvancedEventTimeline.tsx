@@ -1,4 +1,4 @@
-import React, { Fragment } from 'react';
+import { Fragment } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 
 import AdvancedTimelinePointCard from '@/components/advancedTracking/timeline/AdvancedTimelinePointCard';
@@ -6,6 +6,7 @@ import AdvancedTimelineTransitionDivider from '@/components/advancedTracking/tim
 import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import type { AdvancedActionLocator } from '@/lib/advancedTracking/advancedActionCorrectionUtils';
 import type { AdvancedTimelinePoint } from '@/lib/advancedTracking/advancedTimelineUtils';
 import { hasItems } from '@/lib/utils';
 import { Fonts } from '@/theme/theme';
@@ -15,6 +16,8 @@ interface AdvancedEventTimelineProps {
   focusSideId: string;
   oppSideId: string;
   sideLabels: Record<string, string>;
+  editableGoalActionIds?: ReadonlySet<string>;
+  onEditGoalScorer?: (locator: AdvancedActionLocator) => void;
 }
 
 export default function AdvancedEventTimeline({
@@ -22,6 +25,8 @@ export default function AdvancedEventTimeline({
   focusSideId,
   oppSideId,
   sideLabels,
+  editableGoalActionIds,
+  onEditGoalScorer,
 }: AdvancedEventTimelineProps) {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
@@ -34,6 +39,9 @@ export default function AdvancedEventTimeline({
   const oppScore = finalScores[oppSideId] ?? 0;
 
   const hasInProgress = lastPoint?.state === 'in_progress';
+
+  const isGoalScorerEditingEnabled =
+    onEditGoalScorer != null && editableGoalActionIds != null && editableGoalActionIds.size > 0;
 
   return (
     <View style={styles.container}>
@@ -51,6 +59,11 @@ export default function AdvancedEventTimeline({
 
       {/* Timeline */}
       <ScrollView contentContainerStyle={styles.listContent} showsVerticalScrollIndicator={false}>
+        {isGoalScorerEditingEnabled && (
+          <ThemedText style={[styles.editHint, { color: palette.textMuted }]}>
+            Long press a goal to edit who scored
+          </ThemedText>
+        )}
         {points.map((point) => (
           <Fragment key={point.pointId}>
             <AdvancedTimelinePointCard
@@ -58,6 +71,8 @@ export default function AdvancedEventTimeline({
               focusSideId={focusSideId}
               oppSideId={oppSideId}
               sideLabels={sideLabels}
+              editableGoalActionIds={editableGoalActionIds}
+              onEditGoalScorer={onEditGoalScorer}
             />
             {hasItems(point.transitionsAfter) &&
               point.transitionsAfter.map((transition) => (
@@ -116,6 +131,11 @@ function createStyles(sizeClass: SizeClass) {
       paddingHorizontal: 16,
       paddingBottom: 24,
       gap: 12,
+    },
+    editHint: {
+      marginBottom: -4,
+      fontSize: scaleBySizeClass(11, sizeClass),
+      fontStyle: 'italic',
     },
   });
 }

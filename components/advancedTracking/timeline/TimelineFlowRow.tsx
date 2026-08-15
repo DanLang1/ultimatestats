@@ -1,3 +1,4 @@
+import * as Haptics from 'expo-haptics';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 
@@ -8,6 +9,7 @@ import PossessionResultBadge from '@/components/advancedTracking/timeline/Posses
 import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import type { AdvancedActionLocator } from '@/lib/advancedTracking/advancedActionCorrectionUtils';
 import type { FlowItem, AdvancedTimelineSub } from '@/lib/advancedTracking/advancedTimelineUtils';
 import {
   getActionNodeColorKey,
@@ -31,6 +33,9 @@ interface TimelineFlowRowProps {
   focusSideId: string;
   oppSideId: string;
   subs: AdvancedTimelineSub[];
+  pointId: string;
+  editableGoalActionIds?: ReadonlySet<string>;
+  onEditGoalScorer?: (locator: AdvancedActionLocator) => void;
 }
 
 interface TimelineFlowRenderContext {
@@ -38,6 +43,9 @@ interface TimelineFlowRenderContext {
   focusSideId: string;
   oppSideId: string;
   subs: AdvancedTimelineSub[];
+  pointId: string;
+  editableGoalActionIds?: ReadonlySet<string>;
+  onEditGoalScorer?: (locator: AdvancedActionLocator) => void;
   palette: Palette;
   styles: ReturnType<typeof createStyles>;
 }
@@ -77,7 +85,8 @@ function renderNodeElement(item: FlowItem, context: TimelineFlowRenderContext): 
 }
 
 function renderRowContent(item: FlowItem, context: TimelineFlowRenderContext): React.ReactNode {
-  const { sideLabels, subs, palette, styles } = context;
+  const { sideLabels, subs, pointId, editableGoalActionIds, onEditGoalScorer, palette, styles } =
+    context;
 
   if (item.type === 'header') {
     return (
@@ -94,9 +103,31 @@ function renderRowContent(item: FlowItem, context: TimelineFlowRenderContext): R
     return <AdvancedTimelinePassChain actions={item.chainActions} showElapsed />;
   }
 
+  const canEditGoalScorer =
+    item.action.kind === 'throw' &&
+    (item.action.throwResult === 'goal' || item.action.throwResult === 'callahan') &&
+    editableGoalActionIds?.has(item.action.id) === true &&
+    onEditGoalScorer != null;
+  const locator: AdvancedActionLocator = {
+    pointId,
+    possessionId: item.possession.possessionId,
+    actionId: item.action.id,
+  };
+
   return (
     <View style={styles.actionWrapper}>
-      <AdvancedTimelineActionChip action={item.action} showElapsed />
+      <AdvancedTimelineActionChip
+        action={item.action}
+        showElapsed
+        onLongPress={
+          canEditGoalScorer
+            ? () => {
+                void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+                onEditGoalScorer(locator);
+              }
+            : undefined
+        }
+      />
       {item.action.kind === 'stoppage' && item.action.reason === 'injury' && (
         <LinkedSubDetail subs={subs} stoppageActionId={item.action.id} />
       )}
@@ -112,6 +143,9 @@ export default function TimelineFlowRow({
   focusSideId,
   oppSideId,
   subs,
+  pointId,
+  editableGoalActionIds,
+  onEditGoalScorer,
 }: TimelineFlowRowProps) {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
@@ -122,6 +156,9 @@ export default function TimelineFlowRow({
     focusSideId,
     oppSideId,
     subs,
+    pointId,
+    editableGoalActionIds,
+    onEditGoalScorer,
     palette,
     styles,
   };

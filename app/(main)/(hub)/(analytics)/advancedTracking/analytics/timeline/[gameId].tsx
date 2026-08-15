@@ -1,16 +1,22 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
-import React from 'react';
+import { useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 
+import { AdvancedGoalScorerModal } from '@/components/advancedTracking/AdvancedGoalScorerModal';
 import AdvancedEventTimeline from '@/components/advancedTracking/timeline/AdvancedEventTimeline';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { useTheme } from '@/context/ThemeContext';
 import { useAdvancedGame } from '@/hooks/advancedTracking/useAdvancedGameQueries';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import {
+  type AdvancedActionLocator,
+  getCorrectableAdvancedGoalContexts,
+} from '@/lib/advancedTracking/advancedActionCorrectionUtils';
 import { buildAdvancedTimeline } from '@/lib/advancedTracking/advancedTimelineUtils';
 import { hasItems } from '@/lib/utils';
+import { useSavedAdvancedGamesStore } from '@/store/advancedTracking/savedGamesStore';
 import { Fonts } from '@/theme/theme';
 
 export default function AdvancedGameTimelineScreen() {
@@ -19,6 +25,8 @@ export default function AdvancedGameTimelineScreen() {
   const { sizeClass } = useLayout();
   const styles = createStyles(sizeClass);
   const { data: rawGame, isLoading } = useAdvancedGame(gameId!);
+  const correctGoalScorer = useSavedAdvancedGamesStore((state) => state.correctGoalScorer);
+  const [editingGoal, setEditingGoal] = useState<AdvancedActionLocator | null>(null);
 
   if (isLoading || !rawGame) {
     return (
@@ -59,6 +67,20 @@ export default function AdvancedGameTimelineScreen() {
   }
 
   const timelinePoints = buildAdvancedTimeline(rawGame);
+  const correctableGoalContexts =
+    rawGame.status === 'in_progress' ? [] : getCorrectableAdvancedGoalContexts(rawGame);
+  const editableGoalActionIds = new Set(
+    correctableGoalContexts.map((context) => context.action.id),
+  );
+  const editingGoalContext =
+    editingGoal == null
+      ? null
+      : correctableGoalContexts.find(
+          (context) =>
+            context.point.id === editingGoal.pointId &&
+            context.possession.id === editingGoal.possessionId &&
+            context.action.id === editingGoal.actionId,
+        );
 
   const focusSideId = rawGame.focusSideId;
   const oppSideId = rawGame.sides.find((s) => s.id !== focusSideId)?.id ?? '';
@@ -99,6 +121,8 @@ export default function AdvancedGameTimelineScreen() {
           focusSideId={focusSideId}
           oppSideId={oppSideId}
           sideLabels={sideLabels}
+          editableGoalActionIds={editableGoalActionIds}
+          onEditGoalScorer={rawGame.status === 'in_progress' ? undefined : setEditingGoal}
         />
       ) : (
         <View style={styles.emptyState}>
@@ -111,6 +135,16 @@ export default function AdvancedGameTimelineScreen() {
             No points to display
           </ThemedText>
         </View>
+      )}
+
+      {editingGoal != null && editingGoalContext != null && (
+        <AdvancedGoalScorerModal
+          context={editingGoalContext}
+          onClose={() => setEditingGoal(null)}
+          onSave={async (participantId) => {
+            await correctGoalScorer(rawGame.id, { ...editingGoal, participantId });
+          }}
+        />
       )}
     </ThemedView>
   );

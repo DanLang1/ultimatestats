@@ -138,6 +138,17 @@ Timing fields are optional. Derivations must distinguish missing timing data fro
 Point, possession, action, transition, and participant IDs are stable editing boundaries. Normal
 corrections update payload fields without moving historical actions between possessions or points.
 
+Saved-game timelines currently support correcting the scorer on the action that ended a completed
+point. A replacement scorer must have been active for the scoring side at that exact action after
+applying any earlier injury substitutions; the thrower cannot also be selected as the receiver on a
+normal goal. The correction preserves the point, possession, action ID, result, side, ordering, and
+timing. Callahan corrections update the existing scoring attribution field without changing which
+side scored.
+
+Thrower/assister corrections are intentionally deferred because they must also preserve disc-holder
+continuity with the preceding pickup or completion. Structural result changes, action deletion, and
+moving actions between possessions are not part of scorer correction.
+
 The live store keeps a temporary undo stack for recent tracker operations; the undo stack is not
 part of the persisted game schema. Persisted data remains the corrected source of truth.
 

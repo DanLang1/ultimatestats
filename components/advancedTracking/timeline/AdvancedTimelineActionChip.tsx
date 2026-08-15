@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
@@ -14,6 +14,7 @@ import { Fonts } from '@/theme/theme';
 interface AdvancedTimelineActionChipProps {
   action: AdvancedTimelineAction;
   showElapsed?: boolean;
+  onLongPress?: () => void;
 }
 
 function getToneColors(tone: ActionTone, palette: Record<string, string>) {
@@ -55,13 +56,14 @@ function getToneColors(tone: ActionTone, palette: Record<string, string>) {
 export default function AdvancedTimelineActionChip({
   action,
   showElapsed = false,
+  onLongPress,
 }: AdvancedTimelineActionChipProps) {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
   const styles = createStyles(sizeClass);
   const { backgroundColor, textColor, borderColor } = getToneColors(action.tone, palette);
 
-  return (
+  const chip = (
     <View style={[styles.chip, { backgroundColor, borderColor }]}>
       <ThemedText style={[styles.primaryLabel, { color: textColor }]} numberOfLines={1}>
         {action.primaryLabel}
@@ -77,6 +79,20 @@ export default function AdvancedTimelineActionChip({
         </ThemedText>
       )}
     </View>
+  );
+
+  if (onLongPress == null) return chip;
+
+  return (
+    <Pressable
+      testID={`advanced-timeline-action-${action.id}`}
+      accessibilityRole="button"
+      accessibilityLabel={`Edit ${action.primaryLabel}`}
+      accessibilityHint="Long press to change the scorer"
+      onLongPress={onLongPress}
+      delayLongPress={400}>
+      {chip}
+    </Pressable>
   );
 }
 

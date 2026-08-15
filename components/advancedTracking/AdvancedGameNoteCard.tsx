@@ -1,5 +1,4 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/ThemedText';
@@ -41,7 +40,7 @@ export function AdvancedGameNoteCard({ note, onPress }: AdvancedGameNoteCardProp
         numberOfLines={hasNote ? 6 : undefined}
         ellipsizeMode="tail"
         style={[styles.note, { color: hasNote ? palette.textInverse : palette.textMuted }]}>
-        {hasNote ? note : 'Add a private note about this game.'}
+        {hasNote ? note : 'Add a note about this game.'}
       </ThemedText>
       {hasNote ? (
         <View style={styles.viewAction}>

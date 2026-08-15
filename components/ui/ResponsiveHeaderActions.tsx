@@ -77,6 +77,7 @@ export function ResponsiveHeaderActions({
           {visibleActions.map((action) => (
             <Pressable
               key={action.key}
+              testID={`header-action-${action.key}`}
               onPress={action.onPress}
               style={({ pressed }) => [
                 styles.iconButton,
@@ -92,6 +93,7 @@ export function ResponsiveHeaderActions({
       ) : (
         <View style={styles.headerRightPortrait}>
           <Pressable
+            testID="header-actions-menu"
             onPress={() => setIsMenuVisible(true)}
             style={({ pressed }) => [
               styles.iconButton,

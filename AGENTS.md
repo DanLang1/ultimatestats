@@ -9,6 +9,8 @@ Read `docs/README.md` for the project map and New Screen Checklist. Follow its l
 ## Engineering
 
 - Prefer derived state over `useEffect`; extract substantial effects into custom hooks.
+- Prefer named derived variables over multi-clause inline conditions (JSX guards, ternaries);
+  use a function only when the logic is parameterized or reused across sites.
 - Trust the data we own. Avoid noisy or unnecessary fallbacks or excessive null checks on data we know can never be null
 - Sometimes throwing an error or returning early is better than silently passing 'invalid' or odd fallbacks through the code
 - Prefer exported, named types for reusable domain concepts, especially across storage, analytics,

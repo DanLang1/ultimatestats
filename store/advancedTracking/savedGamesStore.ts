@@ -2,6 +2,10 @@ import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 
 import {
+  correctAdvancedGoalScorer,
+  type CorrectAdvancedGoalScorerInput,
+} from '@/lib/advancedTracking/advancedActionCorrectionUtils';
+import {
   deleteAdvancedGameRecord,
   loadAdvancedGame,
   loadAdvancedGameSummaries,
@@ -22,6 +26,10 @@ type SavedAdvancedGamesState = {
     game: AdvancedTrackedGame,
     options?: SaveAdvancedGameOptions,
   ) => Promise<AdvancedGameSummary>;
+  correctGoalScorer: (
+    gameId: string,
+    input: CorrectAdvancedGoalScorerInput,
+  ) => Promise<AdvancedTrackedGame>;
   deleteGame: (gameId: string) => Promise<void>;
 };
 
@@ -115,6 +123,17 @@ export const useSavedAdvancedGamesStore = create<SavedAdvancedGamesState>()(
         state.gamesById[gameToSave.id] = gameToSave;
       });
       return summary;
+    },
+
+    correctGoalScorer: async (gameId, input) => {
+      const game = await get().loadGame(gameId);
+      if (game == null) {
+        throw new Error(`Advanced game "${gameId}" was not found.`);
+      }
+
+      const correctedGame = correctAdvancedGoalScorer(game, input);
+      await get().saveGame(correctedGame);
+      return correctedGame;
     },
 
     deleteGame: async (gameId) => {

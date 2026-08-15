@@ -4,11 +4,59 @@ import { screen, userEvent, waitFor } from '@testing-library/react-native';
 import AdvancedGameScreen from '@/app/(main)/(hub)/(analytics)/advancedTracking/analytics/[gameId]';
 import AdvancedPlayerStatsScreen from '@/app/(main)/(hub)/(analytics)/advancedTracking/analytics/playerStats';
 import AdvancedGameTimelineScreen from '@/app/(main)/(hub)/(analytics)/advancedTracking/analytics/timeline/[gameId]';
+import { loadAdvancedGame } from '@/lib/advancedTracking/storage';
+import type { AdvancedTrackedGame } from '@/lib/advancedTracking/types';
 import { useSavedAdvancedGamesStore } from '@/store/advancedTracking/savedGamesStore';
 import { arrangeAdvancedGame, cacheCurrentAdvancedGame } from '@/test/fixtures/domain';
 import { resetAllStores } from '@/test/fixtures/resetStores';
 import { resetMockRouter, setMockSearchParams } from '@/test/mocks/expoRouter';
 import { renderScreen } from '@/test/render';
+
+function makeEditableTimelineGame(): AdvancedTrackedGame {
+  return {
+    id: 'advanced-timeline-edit-game',
+    schemaVersion: 2,
+    createdAt: 1,
+    updatedAt: 1,
+    gameType: 'game',
+    status: 'final',
+    focusSideId: 'windchill',
+    initialReceivingSideId: 'windchill',
+    settings: { locationMode: 'none' },
+    metadata: { title: 'Windchill vs Rivals' },
+    sides: [
+      { id: 'windchill', label: 'Windchill', trackingMode: 'full-roster' },
+      { id: 'rivals', label: 'Rivals', trackingMode: 'anonymous' },
+    ],
+    participants: [
+      { id: 'alex', name: 'Alex' },
+      { id: 'blair', name: 'Blair' },
+      { id: 'casey', name: 'Casey' },
+    ],
+    points: [
+      {
+        id: 'point-1',
+        lines: [{ sideId: 'windchill', participantIds: ['alex', 'blair', 'casey'] }],
+        possessions: [
+          {
+            id: 'possession-1',
+            sideId: 'windchill',
+            actions: [
+              {
+                id: 'goal-1',
+                kind: 'throw',
+                sideId: 'windchill',
+                thrower: { refType: 'participant', participantId: 'alex' },
+                toPlayer: { refType: 'participant', participantId: 'blair' },
+                result: 'goal',
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  };
+}
 
 describe('advanced analytics routes', () => {
   beforeEach(async () => {
@@ -59,6 +107,58 @@ describe('advanced analytics routes', () => {
     expect(screen.getByText('GAME TIMELINE')).toBeVisible();
     expect(screen.getByText('Windchill vs Rivals')).toBeVisible();
     expect(screen.getByText('No points to display')).toBeVisible();
+  });
+
+  it('corrects and persists a goal scorer from the saved advanced timeline', async () => {
+    const user = userEvent.setup();
+    const game = makeEditableTimelineGame();
+    useSavedAdvancedGamesStore.setState({
+      gamesById: { [game.id]: game },
+      summariesLoaded: true,
+    });
+    setMockSearchParams({ gameId: game.id });
+
+    await renderScreen(<AdvancedGameTimelineScreen />);
+    await user.longPress(screen.getByTestId('advanced-timeline-action-goal-1'));
+
+    expect(screen.getByText('Edit Scorer')).toBeVisible();
+    expect(screen.queryByTestId('player-chip-Alex')).not.toBeOnTheScreen();
+    await user.press(screen.getByTestId('player-chip-Casey'));
+    await user.press(screen.getByTestId('advanced-goal-scorer-save'));
+
+    await waitFor(() => {
+      expect(screen.getByText('Alex + Casey · Goal')).toBeVisible();
+    });
+    const persistedGame = await loadAdvancedGame(game.id);
+    expect(persistedGame?.points[0].possessions[0].actions[0]).toMatchObject({
+      kind: 'throw',
+      toPlayer: { refType: 'participant', participantId: 'casey' },
+    });
+  });
+
+  it('renders a stored timeline when its scorer correction history is invalid', async () => {
+    const game = makeEditableTimelineGame();
+    game.points[0].subs = [
+      {
+        id: 'invalid-sub',
+        sideId: 'windchill',
+        type: 'injury',
+        inIds: ['casey'],
+        outIds: ['blair'],
+        stoppageActionId: 'missing-stoppage',
+      },
+    ];
+    useSavedAdvancedGamesStore.setState({
+      gamesById: { [game.id]: game },
+      summariesLoaded: true,
+    });
+    setMockSearchParams({ gameId: game.id });
+
+    await renderScreen(<AdvancedGameTimelineScreen />);
+
+    expect(screen.getByText('GAME TIMELINE')).toBeVisible();
+    expect(screen.getByText('Alex + Blair · Goal')).toBeVisible();
+    expect(screen.queryByTestId('advanced-timeline-action-goal-1')).not.toBeOnTheScreen();
   });
 
   it('renders advanced player stats from a real cached game and participant', async () => {

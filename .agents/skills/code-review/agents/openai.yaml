@@ -1,0 +1,4 @@
+interface:
+  display_name: 'Code Review'
+  short_description: 'Review U-Stat code against repo contracts'
+  default_prompt: 'Use $code-review to review this change against U-Stat conventions and data-integrity contracts.'

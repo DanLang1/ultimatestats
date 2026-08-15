@@ -7,6 +7,7 @@ import TimelineFlowRow from '@/components/advancedTracking/timeline/TimelineFlow
 import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import type { AdvancedActionLocator } from '@/lib/advancedTracking/advancedActionCorrectionUtils';
 import {
   createPointFlowItems,
   getPointStateLabel,
@@ -21,6 +22,8 @@ interface AdvancedTimelinePointCardProps {
   focusSideId: string;
   oppSideId: string;
   sideLabels: Record<string, string>;
+  editableGoalActionIds?: ReadonlySet<string>;
+  onEditGoalScorer?: (locator: AdvancedActionLocator) => void;
 }
 
 export default function AdvancedTimelinePointCard({
@@ -28,6 +31,8 @@ export default function AdvancedTimelinePointCard({
   focusSideId,
   oppSideId,
   sideLabels,
+  editableGoalActionIds,
+  onEditGoalScorer,
 }: AdvancedTimelinePointCardProps) {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
@@ -108,6 +113,9 @@ export default function AdvancedTimelinePointCard({
             focusSideId={focusSideId}
             oppSideId={oppSideId}
             subs={point.subs}
+            pointId={point.pointId}
+            editableGoalActionIds={editableGoalActionIds}
+            onEditGoalScorer={onEditGoalScorer}
           />
         ))}
       </View>
