@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { buildAnalyticsGame } from '@/lib/advancedTracking/buildAnalyticsGame';
+import { upsertAdvancedGame } from '@/lib/advancedTracking/storage';
 import { getEffectiveLineParticipantIds } from '@/lib/advancedTracking/trackingDisplayHelpers';
 import {
   getCurrentPoint,
@@ -626,6 +627,56 @@ describe('advancedTrackingStore', () => {
     const game = getCurrentGame() as AdvancedTrackedGame;
     expect(game.metadata?.title).toBe('Updated Title');
     expect(game.metadata?.location).toBe('Field A');
+  });
+
+  it('corrects a current-game scorer without changing score undo behavior', async () => {
+    createGame();
+    const casey = { refType: 'participant' as const, participantId: 'p-casey' };
+    const initialGame = getCurrentGame()!;
+    useAdvancedTrackingStore.setState({
+      currentGame: {
+        ...initialGame,
+        participants: [...initialGame.participants, { id: casey.participantId, name: 'Casey' }],
+      },
+    });
+    useAdvancedTrackingStore.getState().recordPull({
+      lines: [
+        {
+          sideId: homeSideId,
+          participantIds: [...homeLines[0].participantIds, casey.participantId],
+        },
+      ],
+      puller: untracked,
+      receiver: august,
+      result: 'inbound',
+    });
+    useAdvancedTrackingStore
+      .getState()
+      .recordThrow({ thrower: august, result: 'goal', toPlayer: meves });
+
+    const gameBeforeCorrection = getCurrentGame()!;
+    const point = gameBeforeCorrection.points[0];
+    const possession = point.possessions[0];
+    const action = possession.actions.at(-1)!;
+    const undoStackBeforeCorrection = [...useAdvancedTrackingStore.getState().undoStack];
+    jest.clearAllMocks();
+
+    await useAdvancedTrackingStore.getState().correctCurrentGoalScorer({
+      pointId: point.id,
+      possessionId: possession.id,
+      actionId: action.id,
+      participantId: casey.participantId,
+    });
+
+    expect(getCurrentGame()?.points[0].possessions[0].actions.at(-1)).toMatchObject({
+      kind: 'throw',
+      toPlayer: casey,
+    });
+    expect(useAdvancedTrackingStore.getState().undoStack).toEqual(undoStackBeforeCorrection);
+    expect(upsertAdvancedGame).toHaveBeenCalledTimes(1);
+
+    expect(useAdvancedTrackingStore.getState().undoLastOperation()).toBe(true);
+    expect(getCurrentGame()?.points[0].possessions[0].actions.at(-1)?.kind).toBe('pull');
   });
 
   it('keeps metadata absent when creating a game without metadata', () => {

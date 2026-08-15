@@ -17,6 +17,7 @@ import {
 import { buildAdvancedTimeline } from '@/lib/advancedTracking/advancedTimelineUtils';
 import { hasItems } from '@/lib/utils';
 import { useSavedAdvancedGamesStore } from '@/store/advancedTracking/savedGamesStore';
+import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { Fonts } from '@/theme/theme';
 
 export default function AdvancedGameTimelineScreen() {
@@ -26,6 +27,11 @@ export default function AdvancedGameTimelineScreen() {
   const styles = createStyles(sizeClass);
   const { data: rawGame, isLoading } = useAdvancedGame(gameId!);
   const correctGoalScorer = useSavedAdvancedGamesStore((state) => state.correctGoalScorer);
+  const currentGameId = useAdvancedTrackingStore((state) => state.currentGameId);
+  const loadedCurrentGameId = useAdvancedTrackingStore((state) => state.currentGame?.id ?? null);
+  const correctCurrentGoalScorer = useAdvancedTrackingStore(
+    (state) => state.correctCurrentGoalScorer,
+  );
   const [editingGoal, setEditingGoal] = useState<AdvancedActionLocator | null>(null);
 
   if (isLoading || !rawGame) {
@@ -67,8 +73,14 @@ export default function AdvancedGameTimelineScreen() {
   }
 
   const timelinePoints = buildAdvancedTimeline(rawGame);
+  const isCurrentInProgressGame =
+    rawGame.status === 'in_progress' &&
+    currentGameId === rawGame.id &&
+    loadedCurrentGameId === rawGame.id;
   const correctableGoalContexts =
-    rawGame.status === 'in_progress' ? [] : getCorrectableAdvancedGoalContexts(rawGame);
+    rawGame.status === 'in_progress' && !isCurrentInProgressGame
+      ? []
+      : getCorrectableAdvancedGoalContexts(rawGame);
   const editableGoalActionIds = new Set(
     correctableGoalContexts.map((context) => context.action.id),
   );
@@ -118,11 +130,12 @@ export default function AdvancedGameTimelineScreen() {
       {hasItems(timelinePoints) ? (
         <AdvancedEventTimeline
           points={timelinePoints}
+          gameStatus={rawGame.status}
           focusSideId={focusSideId}
           oppSideId={oppSideId}
           sideLabels={sideLabels}
           editableGoalActionIds={editableGoalActionIds}
-          onEditGoalScorer={rawGame.status === 'in_progress' ? undefined : setEditingGoal}
+          onEditGoalScorer={setEditingGoal}
         />
       ) : (
         <View style={styles.emptyState}>
@@ -142,7 +155,12 @@ export default function AdvancedGameTimelineScreen() {
           context={editingGoalContext}
           onClose={() => setEditingGoal(null)}
           onSave={async (participantId) => {
-            await correctGoalScorer(rawGame.id, { ...editingGoal, participantId });
+            const input = { ...editingGoal, participantId };
+            if (isCurrentInProgressGame) {
+              await correctCurrentGoalScorer(input);
+              return;
+            }
+            await correctGoalScorer(rawGame.id, input);
           }}
         />
       )}

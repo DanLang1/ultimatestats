@@ -7,6 +7,7 @@ import AdvancedGameTimelineScreen from '@/app/(main)/(hub)/(analytics)/advancedT
 import { loadAdvancedGame } from '@/lib/advancedTracking/storage';
 import type { AdvancedTrackedGame } from '@/lib/advancedTracking/types';
 import { useSavedAdvancedGamesStore } from '@/store/advancedTracking/savedGamesStore';
+import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { arrangeAdvancedGame, cacheCurrentAdvancedGame } from '@/test/fixtures/domain';
 import { resetAllStores } from '@/test/fixtures/resetStores';
 import { resetMockRouter, setMockSearchParams } from '@/test/mocks/expoRouter';
@@ -131,6 +132,33 @@ describe('advanced analytics routes', () => {
     });
     const persistedGame = await loadAdvancedGame(game.id);
     expect(persistedGame?.points[0].possessions[0].actions[0]).toMatchObject({
+      kind: 'throw',
+      toPlayer: { refType: 'participant', participantId: 'casey' },
+    });
+  });
+
+  it('corrects a scorer from an in-progress current-game timeline', async () => {
+    const user = userEvent.setup();
+    const game = { ...makeEditableTimelineGame(), status: 'in_progress' as const };
+    useAdvancedTrackingStore.setState({ currentGameId: game.id, currentGame: game });
+    useSavedAdvancedGamesStore.setState({
+      gamesById: { [game.id]: game },
+      summariesLoaded: true,
+    });
+    setMockSearchParams({ gameId: game.id });
+
+    await renderScreen(<AdvancedGameTimelineScreen />);
+    expect(screen.getByText('In Progress')).toBeVisible();
+    await user.longPress(screen.getByTestId('advanced-timeline-action-goal-1'));
+    await user.press(screen.getByTestId('player-chip-Casey'));
+    await user.press(screen.getByTestId('advanced-goal-scorer-save'));
+
+    await waitFor(() => {
+      expect(screen.getByText('Alex + Casey · Goal')).toBeVisible();
+    });
+    expect(
+      useAdvancedTrackingStore.getState().currentGame?.points[0].possessions[0].actions[0],
+    ).toMatchObject({
       kind: 'throw',
       toPlayer: { refType: 'participant', participantId: 'casey' },
     });

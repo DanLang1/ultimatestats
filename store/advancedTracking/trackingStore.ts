@@ -4,6 +4,10 @@ import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 
+import {
+  correctAdvancedGoalScorer,
+  type CorrectAdvancedGoalScorerInput,
+} from '@/lib/advancedTracking/advancedActionCorrectionUtils';
 import { withAdvancedGameNote } from '@/lib/advancedTracking/gameNoteUtils';
 import {
   getAdjustedHalftimeTimerDuration,
@@ -393,6 +397,21 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
             liveGame.metadata = withAdvancedGameNote(metadata, metadata.notes);
             liveGame.updatedAt = Date.now();
           });
+        },
+
+        correctCurrentGoalScorer: async (input: CorrectAdvancedGoalScorerInput) => {
+          set((state) => {
+            const liveGame = getCurrentGame(state);
+            if (liveGame.status !== 'in_progress') {
+              throw new Error('Only an in-progress game can be corrected through the live store.');
+            }
+            state.currentGame = correctAdvancedGoalScorer(liveGame, input);
+          });
+
+          const gameToPersist = get().currentGame;
+          if (gameToPersist != null) {
+            await persistLiveGame(gameToPersist);
+          }
         },
 
         startGameClockPause: (reason) => {
@@ -1238,17 +1257,27 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
   ),
 );
 
-let lastPersistedGameStamp: string | null = null;
+let lastPersistedLiveGame: AdvancedTrackedGame | null = null;
+let lastLiveGamePersistPromise: Promise<void> | null = null;
+
+function persistLiveGame(game: AdvancedTrackedGame): Promise<void> {
+  if (game === lastPersistedLiveGame) {
+    return lastLiveGamePersistPromise ?? Promise.resolve();
+  }
+
+  lastPersistedLiveGame = game;
+  const persistPromise = useSavedAdvancedGamesStore
+    .getState()
+    .saveGame(game)
+    .then(() => undefined);
+  lastLiveGamePersistPromise = persistPromise;
+  return persistPromise;
+}
 
 useAdvancedTrackingStore.subscribe((state) => {
   const game = state.currentGame;
   if (game == null) {
     return;
   }
-  const nextStamp = `${game.id}:${game.updatedAt}`;
-  if (nextStamp === lastPersistedGameStamp) {
-    return;
-  }
-  lastPersistedGameStamp = nextStamp;
-  void useSavedAdvancedGamesStore.getState().saveGame(game);
+  void persistLiveGame(game);
 });

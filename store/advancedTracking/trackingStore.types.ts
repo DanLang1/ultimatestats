@@ -1,3 +1,4 @@
+import type { CorrectAdvancedGoalScorerInput } from '@/lib/advancedTracking/advancedActionCorrectionUtils';
 import type {
   AdvancedGameType,
   AdvancedTrackedGame,
@@ -154,6 +155,7 @@ export interface AdvancedTrackingState {
   terminateGame: (endReason: NonNullable<AdvancedTrackedGame['endReason']>) => void;
   finishTerminatedGame: () => Promise<void>;
   updateGameMetadata: (metadata: GameMetadata) => void;
+  correctCurrentGoalScorer: (input: CorrectAdvancedGoalScorerInput) => Promise<void>;
   recordGameTransition: (transitionType: 'soft_cap' | 'hard_cap') => void;
   triggerHalftimeEarly: () => boolean;
   startGameClockPause: (reason: GameClockPauseReason) => string;

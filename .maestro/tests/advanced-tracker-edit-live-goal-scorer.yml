@@ -1,0 +1,53 @@
+appId: com.langdk.ultimatestats.dev
+name: Advanced Tracker Edit Live Goal Scorer
+tags:
+  - extended
+---
+- runFlow:
+    file: ../flows/setup-game-clean.yaml
+    env:
+      TRACKER_STATE: focusPossession
+
+# Joe starts with the disc. Record a goal to Jon, then open the active game's timeline.
+- swipe:
+    from:
+      id: 'tracker-chip-Jon'
+    direction: UP
+    duration: 500
+- extendedWaitUntil:
+    visible:
+      id: 'between-point-start-next'
+    timeout: 5000
+- tapOn:
+    id: 'tracker-menu-button'
+- tapOn:
+    id: 'tracker-menu-view-stats'
+- extendedWaitUntil:
+    visible:
+      id: 'advanced-stats-summary-card'
+    timeout: 5000
+- tapOn:
+    id: 'header-action-timeline'
+- extendedWaitUntil:
+    visible:
+      text: 'GAME TIMELINE'
+    timeout: 5000
+- assertVisible: 'IN PROGRESS'
+- assertVisible: 'Edit Joe \+ Jon · Goal'
+
+# Correct the live game's scorer to Mike and verify the rebuilt timeline.
+- longPressOn:
+    id: 'advanced-timeline-action-.*'
+- assertVisible: 'Edit Scorer'
+- assertNotVisible:
+    id: 'player-chip-Joe'
+- tapOn:
+    id: 'player-chip-Mike'
+- tapOn:
+    id: 'advanced-goal-scorer-save'
+- extendedWaitUntil:
+    visible: 'Edit Joe \+ Mike · Goal'
+    timeout: 5000
+
+- takeScreenshot:
+    path: .maestro/screenshots/advanced-tracker-edit-live-goal-scorer

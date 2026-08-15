@@ -8,11 +8,13 @@ import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import type { AdvancedActionLocator } from '@/lib/advancedTracking/advancedActionCorrectionUtils';
 import type { AdvancedTimelinePoint } from '@/lib/advancedTracking/advancedTimelineUtils';
+import type { GameStatus } from '@/lib/advancedTracking/types';
 import { hasItems } from '@/lib/utils';
 import { Fonts } from '@/theme/theme';
 
 interface AdvancedEventTimelineProps {
   points: AdvancedTimelinePoint[];
+  gameStatus: GameStatus;
   focusSideId: string;
   oppSideId: string;
   sideLabels: Record<string, string>;
@@ -22,6 +24,7 @@ interface AdvancedEventTimelineProps {
 
 export default function AdvancedEventTimeline({
   points,
+  gameStatus,
   focusSideId,
   oppSideId,
   sideLabels,
@@ -38,8 +41,6 @@ export default function AdvancedEventTimeline({
   const focusScore = finalScores[focusSideId] ?? 0;
   const oppScore = finalScores[oppSideId] ?? 0;
 
-  const hasInProgress = lastPoint?.state === 'in_progress';
-
   const isGoalScorerEditingEnabled =
     onEditGoalScorer != null && editableGoalActionIds != null && editableGoalActionIds.size > 0;
 
@@ -53,7 +54,7 @@ export default function AdvancedEventTimeline({
         <ThemedText style={[styles.headerDivider, { color: palette.textMuted }]}>–</ThemedText>
         <ThemedText style={[styles.headerScore, { color: palette.danger }]}>{oppScore}</ThemedText>
         <ThemedText style={[styles.headerLabel, { color: palette.textSecondary }]}>
-          {hasInProgress ? 'In Progress' : 'Final'}
+          {gameStatus === 'in_progress' ? 'In Progress' : 'Final'}
         </ThemedText>
       </View>
 
