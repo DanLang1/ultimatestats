@@ -3,6 +3,9 @@
 Canonical event definitions and invariants for basic gameplay stats. Advanced tracking uses the
 separate model in [features/advanced-tracking/data-model.md](features/advanced-tracking/data-model.md).
 
+Basic tracking follows one tracked team against an opponent. It does not use Advanced tracking's
+game-specific side model.
+
 Source of truth: `store/basic/gameStore.types.ts`.
 
 ## Event Union
@@ -21,7 +24,7 @@ Source of truth: `store/basic/gameStore.types.ts`.
   `gameId?`
   `triggeredHalftime?`
 - Meaning:
-  A point was scored by `team`.
+  `team` scored a goal, ending a point.
 - Notes:
   `goalPlayerId` / `assistPlayerId` can be `null` initially, then filled by stat entry/edit flows.
   `triggeredHalftime` is the canonical halftime marker used by replayed timelines and stats.
@@ -39,7 +42,8 @@ Source of truth: `store/basic/gameStore.types.ts`.
   `pointNumber?`
   `gameId?`
 - Meaning:
-  `team` committed a turnover of `subtype`.
+  `team` is the Basic turnover attribution team for `subtype`: a block credits the defending team;
+  a drop, throwaway, or 50/50 credits the team that lost possession.
 
 ## TimeoutEvent
 

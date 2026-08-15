@@ -8,7 +8,9 @@
 The turnover tracking system records turnovers (blocks, throwaways, drops, 50/50) during gameplay using a possession-aware approach.
 Turnovers are recorded from the floating `ScoreboardActionBar` action buttons
 
-For `50/50` turnovers, the event stores both thrower and receiver attribution. If one player causes both halves of the mistake, the same player can be recorded in both roles.
+For `50/50` turnovers by the tracked team, the event stores both thrower and receiver attribution.
+It records the judgment that both players were partially at fault; if one player caused both halves
+of the mistake, that player can be recorded in both roles.
 
 This feature integrates with the existing stat tracking setting—turnover tracking is enabled when stat tracking is on.
 
@@ -55,6 +57,9 @@ export type GameEvent =
 | `possession`           | `'team1' \| 'team2' \| null` | Which team currently has the disc   |
 | `events`               | `GameEvent[]`                | Unified chronological log of events |
 | `pendingTurnoverEntry` | `{ receivingTeam } \| null`  | Triggers turnover entry sheet       |
+
+For a `TurnoverEvent`, `team` is the Basic turnover attribution team. A block credits the
+defending team; a drop, throwaway, or 50/50 credits the team that lost possession.
 
 ## Flow
 

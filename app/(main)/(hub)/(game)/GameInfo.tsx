@@ -107,7 +107,7 @@ export default function GameInfoScreen() {
       <Stack.Screen options={{ headerShown: false }} />
 
       <ScreenHeader
-        title="MATCH STATUS"
+        title="GAME STATUS"
         onBack={() => router.back()}
         titleColor={palette.textMuted}
         backButtonBackgroundColor={palette.overlay10}

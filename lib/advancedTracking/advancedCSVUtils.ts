@@ -253,10 +253,10 @@ function pullStatsCSV(stats: PullStats): string {
     [
       csvRow(['Stat', 'Value']),
       csvRow(['Total Pulls', stats.totalPulls]),
-      csvRow(['Inbound', getInboundPullCount(stats)]),
-      csvRow(['Out of Bounds', stats.outcomes.ob ?? 0]),
-      csvRow(['Dropped', stats.outcomes.dropped ?? 0]),
-      csvRow(['Roller', stats.outcomes.roller ?? 0]),
+      csvRow(['Inbound Pulls', getInboundPullCount(stats)]),
+      csvRow(['OB Pulls', stats.outcomes.ob ?? 0]),
+      csvRow(['Dropped Pulls', stats.outcomes.dropped ?? 0]),
+      csvRow(['Roller Pulls', stats.outcomes.roller ?? 0]),
       csvRow([
         'Avg Hang Time',
         stats.avgHangTimeMs != null ? `${(stats.avgHangTimeMs / 1000).toFixed(1)}s` : '-',
@@ -286,7 +286,7 @@ function playerSummaryCSV(
     columns.push(
       'Pulls',
       'Inbound Pulls',
-      'Out of Bounds Pulls',
+      'OB Pulls',
       'Dropped Pulls',
       'Roller Pulls',
       'Avg Pull Hang Time',

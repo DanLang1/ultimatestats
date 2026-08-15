@@ -29,7 +29,7 @@ counters.
 - `gameType`: regular game or scrimmage
 - lifecycle `status`: in progress, final, or terminated
 - `focusSideId`, which defines the default tracker and analytics perspective
-- the opening receiver and optional flip result
+- the side receiving the opening pull and optional flip result
 - optional metadata, format settings, clock pauses, and initial endzone orientation
 - exactly two sides, game-level participants, point history, and game transitions
 
@@ -44,14 +44,17 @@ screen. Notes are intentionally omitted from sharing payloads and CSV exports.
 
 ## Sides and Participants
 
-`GameSide` is generic rather than team-one/team-two specific:
+`GameSide` is a game-specific competing group rather than a generic team-one/team-two label. A
+side can link to a saved team through `sourceTeamId`, but the two concepts are intentionally
+different in scrimmages:
 
 - `trackingMode: 'full-roster'` captures player identity.
 - `trackingMode: 'anonymous'` intentionally leaves player identity untracked.
 - `sourceTeamId` links a side back to a saved app team when applicable.
 
-Participants live once at game scope. A point's `PointLine` assigns participant IDs to sides for
-that point, allowing the same participant to appear on different scrimmage sides across the game.
+Participants are game-scoped player records and live once at game scope. A point's `PointLine`
+assigns participant IDs to sides for that point, allowing the same participant to appear on
+different scrimmage sides across the game.
 
 `PlayerRef` preserves three different meanings:
 
@@ -66,12 +69,15 @@ Do not collapse `unknown` and `untracked`; analytics and UI use that distinction
 A `TrackedPoint` contains:
 
 - stable point ID
-- initial lines by side
+- starting lines by side
 - optional injury-sub history
 - ordered possessions
 - optional between-point transitions after the point
 - optional gender ratio
 - point-timing and undo-revival timestamps
+
+`PointLine` records each side's starting line. Applying injury substitutions through a particular
+action derives that action's active line.
 
 Player choices made while preparing the next line remain recoverable live-session state until the
 pull starts the point. They are not appended to `points` or treated as official lineup history
@@ -80,9 +86,9 @@ point, and is discarded when that context changes. Preparing and saving this sel
 active halftime break does not end halftime; the break ends only after the next pull creates the
 second-half point.
 
-A `PointPossession` contains a stable ID, the side with possession, and ordered actions. Possession
-boundaries are explicit so team efficiency and turnover conversion do not have to reconstruct them
-from a game-wide event stream.
+A `PointPossession` is a possession record: it contains a stable ID, the side with the disc, and
+ordered actions. Possession boundaries are explicit so team efficiency and turnover conversion do
+not have to reconstruct them from a game-wide event stream.
 
 The scoring side, score progression, next receiving side, and completed-point state are derived
 from action order. They are not parallel persisted counters.
@@ -94,7 +100,7 @@ from action order. They are not parallel persisted counters.
 | Kind          | Purpose                                                                    |
 | ------------- | -------------------------------------------------------------------------- |
 | `pull`        | Puller, receiver when known, pull result, hang time, and optional location |
-| `disc_pickup` | Player establishing possession after a grounded or dead disc               |
+| `disc_pickup` | Pickup by a player establishing possession after a grounded or dead disc   |
 | `throw`       | Completion, goal, or turnover result and its player attribution            |
 | `stoppage`    | In-point timeout, injury, or manual pause                                  |
 
@@ -103,9 +109,11 @@ Throw results are `complete`, `goal`, `drop`, `throwaway`, `stall`, `block`, `pr
 
 Important semantics:
 
-- `toPlayer` is required by behavior for completions and goals, optional for drops, and absent when
-  no receiver should be recorded.
+- `toPlayer` is required by behavior for completions and normal goals (the goal scorer), optional
+  for drops, and absent when no receiver should be recorded.
 - `defender` identifies the tracked defender for blocks, pressures, and Callahans when known.
+- A Callahan is an offensive throw intercepted by the defense in the end zone it is defending,
+  immediately scoring a goal. The tracked defender is the Callahan scorer; it has no assister.
 - `splitAttribution` records the exceptional 50/50 judgment. Normal blame is derived from the throw
   result.
 - `recordedAt` is optional so imported or legacy data without action timing remains valid.
@@ -115,7 +123,8 @@ Important semantics:
 
 Use the existing boundary that matches when the event occurs:
 
-- `StoppageAction`: during a possession
+- `StoppageAction`: an interruption during a possession; it does not itself end the possession or
+  point
 - `TrackedPoint.transitionsAfter`: after a point, for team-controlled events such as timeouts
 - `AdvancedTrackedGame.gameTransitions`: format-driven halftime, soft-cap, and hard-cap changes
 - `AdvancedTrackedGame.gameClockPauses`: whole-game weather, field, administrative, or manual pauses

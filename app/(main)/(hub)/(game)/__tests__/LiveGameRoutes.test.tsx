@@ -35,7 +35,7 @@ describe('live basic-game routes', () => {
     arrangeBasicGame();
     await renderScreen(<GameInfoScreen />);
 
-    expect(screen.getByText('MATCH STATUS')).toBeVisible();
+    expect(screen.getByText('GAME STATUS')).toBeVisible();
     expect(screen.getByText('GAME ACTIONS')).toBeVisible();
 
     await user.press(screen.getByText('END GAME'));

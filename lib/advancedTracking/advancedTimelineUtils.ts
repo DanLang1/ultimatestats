@@ -300,13 +300,13 @@ function buildPullDisplayAction(
 
   if (pullResult === 'dropped') {
     tone = 'danger';
-    secondaryLabel = 'Dropped';
+    secondaryLabel = 'Dropped Pull';
   } else if (pullResult === 'ob') {
     tone = 'warning';
-    secondaryLabel = hangLabel != null ? `OB · ${hangLabel}` : 'OB';
+    secondaryLabel = hangLabel != null ? `OB Pull · ${hangLabel}` : 'OB Pull';
   } else if (pullResult === 'roller') {
     tone = 'muted';
-    secondaryLabel = hangLabel != null ? `Roller · ${hangLabel}` : 'Roller';
+    secondaryLabel = hangLabel != null ? `Roller Pull · ${hangLabel}` : 'Roller Pull';
   } else {
     tone = 'muted';
     secondaryLabel = hangLabel;

@@ -28,7 +28,7 @@ export type GoalEvent = {
 
 export type TurnoverEvent = {
   type: 'turnover';
-  team: 'team1' | 'team2'; // Team that committed the turnover
+  team: 'team1' | 'team2'; // Team receiving the turnover attribution (blocker or team that lost possession)
   subtype: TurnoverType;
   playerId: string | null;
   player2Id?: string | null; // Second player ID for 50/50 turnovers

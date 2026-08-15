@@ -52,7 +52,7 @@ turnovers from being reconstructed independently by each stat utility.
 
 ```ts
 // Relative to focusSideId.
-// Completed points end with a score. The last point may instead reflect the live
+// Completed points end with a goal. The last point may instead reflect the live
 // in-progress game or a game terminated mid-point.
 type PointState =
   | 'hold' // focus side received and scored
@@ -203,8 +203,8 @@ These rules are applied once during `buildAnalyticsGame`. Stat utils never need 
 | `throw` result `stall`     | `stall_conceded` → actor; `stall` → defender                                                                                                                                                   |
 | `throw` result `block`     | `throwaway` + `throw_attempt` → actor; `block` → defender                                                                                                                                      |
 | `throw` result `pressure`  | `throwaway` + `throw_attempt` → actor; `pressure` → defender                                                                                                                                   |
-| `throw` result `callahan`  | `throwaway` + `throw_attempt` → actor; `callahan` + `block` + `goal` → defender                                                                                                                |
-| `pull` result `inbound`    | `pull` → actor; `pull_reception` → receiver                                                                                                                                                    |
+| `throw` result `callahan`  | `throwaway` + `throw_attempt` → actor; `callahan` + `block` + `goal` → defender (the Callahan scorer; no assister)                                                                             |
+| `pull` result `inbound`    | `pull` → actor; `pull_reception` → receiver (an inbound pull)                                                                                                                                  |
 | `pull` result `dropped`    | `pull` → actor; `drop` → receiver (puller is opposing team — no throwaway credit)                                                                                                              |
 | `pull` result `ob`         | `pull` → actor                                                                                                                                                                                 |
 | `disc_pickup`              | `disc_pickup` → actor                                                                                                                                                                          |
@@ -245,27 +245,27 @@ These rules are applied once during `buildAnalyticsGame`. Stat utils never need 
 > `point.state` reflects `game.focusSideId`. For dual-perspective queries (both-team tracking,
 > scrimmages) use `getPointStateForSide(point, sideId)` to derive state for any side.
 
-| Stat                         | Derivation                                                                              |
-| ---------------------------- | --------------------------------------------------------------------------------------- |
-| Holds                        | `points` where `state === 'hold'`, count                                                |
-| Breaks                       | `points` where `state === 'break'`, count                                               |
-| Times broken                 | `points` where `state === 'broken'`, count                                              |
-| O-efficiency                 | holds / (holds + times broken)                                                          |
-| D-efficiency                 | breaks / (breaks + opp holds)                                                           |
-| Clean holds                  | `points` where `state === 'hold'` and `isCleanHold === true`                            |
-| Dirty holds                  | `points` where `state === 'hold'` and `isCleanHold === false`                           |
-| Possessions per point        | `possessions` grouped by `pointId`, average count                                       |
-| Turnovers per point          | `possessions` where `result === 'turned_over'`, grouped by `pointId`, average count     |
-| Scores after turnovers       | `possessions` where `possessionIndex > 0` and `result === 'scored'`                     |
-| O-line conversion            | `possessions` where side is focus and `possessionIndex === 0` and `result === 'scored'` |
-| Longest scoring run          | max consecutive `points` where focus side scored                                        |
-| Longest drought              | max consecutive `points` where focus side did not score                                 |
-| Score at start of each point | `point.scoresBySide[sideId]`                                                            |
-| Break rate when trailing     | `points` where focus is trailing per `scoresBySide` and `state === 'break'`             |
-| Largest comeback             | max deficit in `scoresBySide` across points that focus side eventually won              |
-| Avg point duration           | average of `durationMs` across scored points (exclude nulls)                            |
-| Longest point                | max `durationMs`                                                                        |
-| Shortest point               | min `durationMs` (exclude nulls)                                                        |
+| Stat                         | Derivation                                                                          |
+| ---------------------------- | ----------------------------------------------------------------------------------- |
+| Holds                        | `points` where `state === 'hold'`, count                                            |
+| Breaks                       | `points` where `state === 'break'`, count                                           |
+| Times broken                 | `points` where `state === 'broken'`, count                                          |
+| O-efficiency                 | holds / (holds + times broken)                                                      |
+| D-efficiency                 | breaks / (breaks + opp holds)                                                       |
+| Clean holds                  | `points` where `state === 'hold'` and `isCleanHold === true`                        |
+| Dirty holds                  | `points` where `state === 'hold'` and `isCleanHold === false`                       |
+| Possessions per point        | `possessions` grouped by `pointId`, average count                                   |
+| Turnovers per point          | `possessions` where `result === 'turned_over'`, grouped by `pointId`, average count |
+| Goals after turnovers        | `possessions` where `possessionIndex > 0` and `result === 'scored'`                 |
+| O-line conversion            | holds / offensive points (points where the side received the opening pull)          |
+| Longest scoring run          | max consecutive `points` where focus side scored                                    |
+| Longest drought              | max consecutive `points` where focus side did not score                             |
+| Score at start of each point | `point.scoresBySide[sideId]`                                                        |
+| Break rate when trailing     | `points` where focus is trailing per `scoresBySide` and `state === 'break'`         |
+| Largest comeback             | max deficit in `scoresBySide` across points that focus side eventually won          |
+| Avg point duration           | average of `durationMs` across completed points (exclude nulls)                     |
+| Longest point                | max `durationMs`                                                                    |
+| Shortest point               | min `durationMs` (exclude nulls)                                                    |
 
 ### Pull stats
 
