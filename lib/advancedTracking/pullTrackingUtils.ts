@@ -1,13 +1,12 @@
-import { getOtherSideId } from '@/lib/advancedTracking/trackingUtils';
-import {
+import type {
   AdvancedTrackedGame,
   Participant,
   PlayerRef,
   PointLine,
   PullResult,
 } from '@/lib/advancedTracking/types';
-import { GenderRatio } from '@/lib/genderRatioUtils';
-import { RecordPullInput } from '@/store/advancedTracking/trackingStore.types';
+import type { GenderRatio } from '@/lib/genderRatioUtils';
+import type { RecordPullInput } from '@/store/advancedTracking/trackingStore.types';
 
 export const PULL_RESULTS: { value: PullResult; label: string }[] = [
   { value: 'inbound', label: 'INBOUND PULL' },
@@ -57,34 +56,16 @@ function getPullerRef(
 }
 
 export function buildRecordPullInput(params: {
-  game: AdvancedTrackedGame;
-  isOurPull: boolean;
-  lineParticipantIds: string[];
-  lines?: PointLine[];
-  isPullerTracked?: boolean;
+  lines: PointLine[];
+  isPullerTracked: boolean;
   selectedPullerId: string | null | undefined;
   hangTimeMs: number;
   result: PullResult;
   receiverId?: string | null;
   genderRatio?: GenderRatio;
 }): RecordPullInput {
-  const {
-    game,
-    isOurPull,
-    lineParticipantIds,
-    lines: providedLines,
-    isPullerTracked = isOurPull,
-    selectedPullerId,
-    hangTimeMs,
-    result,
-    receiverId,
-    genderRatio,
-  } = params;
-  const opponentSideId = getOtherSideId(game, game.focusSideId);
-  const lines = providedLines ?? [
-    { sideId: game.focusSideId, participantIds: lineParticipantIds },
-    { sideId: opponentSideId, participantIds: [] },
-  ];
+  const { lines, isPullerTracked, selectedPullerId, hangTimeMs, result, receiverId, genderRatio } =
+    params;
 
   const recordPullInput: RecordPullInput = {
     lines,

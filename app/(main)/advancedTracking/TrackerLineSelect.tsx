@@ -4,7 +4,6 @@ import React, { useState } from 'react';
 import type { RecentLine as RecentLineType } from '@/components/advancedTracking/TrackerLineScreen';
 import { TrackerLineScreen } from '@/components/advancedTracking/TrackerLineScreen';
 import { useLiveRosterParticipants } from '@/hooks/advancedTracking/useLiveRosterParticipants';
-import { getEffectiveLineParticipantIds } from '@/lib/advancedTracking/trackingDisplayHelpers';
 import { areBothSidesFullyTracked } from '@/lib/advancedTracking/trackingModeUtils';
 import {
   getAdvancedPointLineRecords,
@@ -15,7 +14,7 @@ import {
   getSideScore,
 } from '@/lib/advancedTracking/trackingUtils';
 import { GenderRatio, getExpectedRatio, getSequenceNumber } from '@/lib/genderRatioUtils';
-import { hasItems } from '@/lib/utils';
+import { getCurrentPendingNextPointLineSelection } from '@/store/advancedTracking/pendingLineSelection';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { useSettingsStore } from '@/store/settingsStore';
 
@@ -68,12 +67,13 @@ export default function TrackerLineSelectScreen() {
     selectedSideId,
     eligibleParticipants,
   );
-  const pendingSelectionMatchesNextPoint =
-    pendingNextPointLineSelection?.gameId === game.id &&
-    pendingNextPointLineSelection.afterPointId === (point?.id ?? null);
+  const currentPendingSelection = getCurrentPendingNextPointLineSelection(
+    game,
+    pendingNextPointLineSelection,
+  );
   const eligibleParticipantIds = new Set(eligibleParticipants.map((participant) => participant.id));
-  const initialSelectedIds = pendingSelectionMatchesNextPoint
-    ? (pendingNextPointLineSelection.participantIdsBySide[resolvedSelectedSideId] ?? []).filter(
+  const initialSelectedIds = currentPendingSelection
+    ? (currentPendingSelection.participantIdsBySide[resolvedSelectedSideId] ?? []).filter(
         (participantId) => eligibleParticipantIds.has(participantId),
       )
     : [];
@@ -131,33 +131,7 @@ export default function TrackerLineSelectScreen() {
           return;
         }
 
-        const isOurPull = receivingSideId !== game.focusSideId;
-
-        let lineIds: string[];
-        if (hasItems(ids)) {
-          lineIds = [...ids];
-        } else if (point) {
-          lineIds = getEffectiveLineParticipantIds(point, selectedSideId ?? game.focusSideId);
-        } else {
-          lineIds = [];
-        }
-
-        router.push({
-          pathname: '/advancedTracking/PullTracking',
-          params: {
-            isOurPull: String(isOurPull),
-            lineParticipantIds: JSON.stringify(lineIds),
-            ...(tracksBothSides &&
-              firstSideLineIds != null &&
-              oppSide != null && {
-                trackedLines: JSON.stringify([
-                  { sideId: game.focusSideId, participantIds: firstSideLineIds },
-                  { sideId: oppSide.id, participantIds: lineIds },
-                ]),
-              }),
-            ...(nextRatio != null && { genderRatio: nextRatio }),
-          },
-        });
+        router.push('/advancedTracking/PullTracking');
       }}
     />
   );

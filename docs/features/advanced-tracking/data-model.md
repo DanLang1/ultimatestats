@@ -86,6 +86,13 @@ point, and is discarded when that context changes. Preparing and saving this sel
 active halftime break does not end halftime; the break ends only after the next pull creates the
 second-half point.
 
+The pending selection stores lineup drafts only (with game and completed-point context for stale
+state reconciliation). PullTracking derives the next receiving side, pulling side, and gender ratio
+from the current game and settings. A pull can start only from a ready selection: every
+`full-roster` side has exactly seven known, unique participants, no participant appears on both
+sides, and an `anonymous` side has an empty line. Missing, stale, partial, or invalid selections
+return to line preparation; undoing a pull does not restore the consumed selection.
+
 A `PointPossession` is a possession record: it contains a stable ID, the side with the disc, and
 ordered actions. Possession boundaries are explicit so team efficiency and turnover conversion do
 not have to reconstruct them from a game-wide event stream.

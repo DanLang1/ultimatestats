@@ -34,7 +34,12 @@ does not change the persisted game schema.
 - `useAdvancedTrackingStore` owns the active `currentGame`, its `currentGameId`, undo state, and
   live tracker actions.
 - The live-store persist snapshot keeps the active-game pointer, timer/session state, and pending
-  next-point line selection needed for recovery.
+  next-point line selection needed for recovery. The pending selection owns only the lineups (plus
+  its game/after-point context); PullTracking derives receiving/pulling side and gender ratio from
+  the current game and settings.
+- Partial line drafts remain recoverable while preparing a point. PullTracking accepts only a
+  current, ready draft: every full-roster side has exactly seven unique participants, anonymous
+  sides are empty, and no participant is unknown or selected on both sides.
 - During halftime, line preparation can update that pending selection without ending the break or
   creating the second-half point; the normal start flow still advances through pull tracking.
 - `useSavedAdvancedGamesStore` owns saved-game summaries and an in-memory record cache.

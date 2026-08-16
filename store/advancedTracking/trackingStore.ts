@@ -57,6 +57,7 @@ import { generateId } from '@/lib/utils';
 import { useSavedAdvancedGamesStore } from '@/store/advancedTracking/savedGamesStore';
 import { useSettingsStore } from '@/store/settingsStore';
 
+import { getCurrentPendingNextPointLineSelection } from './pendingLineSelection';
 import {
   AdvancedTrackingState,
   AdvancedTrackingUndoEntry,
@@ -93,14 +94,10 @@ function clearPendingNextPointLineSelection(state: Draft<AdvancedTrackingState>)
 function reconcilePendingNextPointLineSelection(state: Draft<AdvancedTrackingState>) {
   const selection = state.pendingNextPointLineSelection;
   const game = state.currentGame;
-  if (selection == null || game == null) return;
-
-  const currentPoint = getCurrentPoint(game);
-  const afterPointId = currentPoint?.id ?? null;
   if (
-    selection.gameId !== game.id ||
-    (currentPoint != null && !hasPointEnded(currentPoint)) ||
-    selection.afterPointId !== afterPointId
+    selection != null &&
+    game != null &&
+    getCurrentPendingNextPointLineSelection(game, selection) == null
   ) {
     clearPendingNextPointLineSelection(state);
   }

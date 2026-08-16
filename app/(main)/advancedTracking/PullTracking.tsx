@@ -1,4 +1,4 @@
-import { Redirect, router, useLocalSearchParams } from 'expo-router';
+import { Redirect, router } from 'expo-router';
 import React, { useState } from 'react';
 
 import { PullDropperStep } from '@/components/advancedTracking/pullTracker/PullDropperStep';
@@ -9,10 +9,12 @@ import {
   getFlowParticipants,
 } from '@/lib/advancedTracking/pullTrackingUtils';
 import { areBothSidesFullyTracked } from '@/lib/advancedTracking/trackingModeUtils';
-import { getOtherSideId } from '@/lib/advancedTracking/trackingUtils';
-import { PointLine, PullResult } from '@/lib/advancedTracking/types';
-import { GenderRatio } from '@/lib/genderRatioUtils';
+import { getOtherSideId, getReceivingSideForNextPoint } from '@/lib/advancedTracking/trackingUtils';
+import { PullResult } from '@/lib/advancedTracking/types';
+import { getExpectedRatio } from '@/lib/genderRatioUtils';
+import { resolvePendingNextPointLines } from '@/store/advancedTracking/pendingLineSelection';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
+import { useSettingsStore } from '@/store/settingsStore';
 
 type Step =
   | { name: 'timing' }
@@ -21,27 +23,13 @@ type Step =
 
 export default function PullTrackingScreen() {
   const {
-    isOurPull: isOurPullParam,
-    lineParticipantIds: idsParam,
-    trackedLines: trackedLinesParam,
-    genderRatio: genderRatioParam,
-  } = useLocalSearchParams<{
-    isOurPull: string;
-    lineParticipantIds: string;
-    trackedLines?: string;
-    genderRatio: GenderRatio;
-  }>();
-
-  const isOurPull = isOurPullParam === 'true';
-  const lineParticipantIds: string[] = idsParam ? JSON.parse(idsParam) : [];
-  const genderRatio = genderRatioParam;
-
-  const {
     currentGame: game,
     clearHalftimeBreak,
     isHalftimeBreakActive,
+    pendingNextPointLineSelection,
     recordPull,
   } = useAdvancedTrackingStore();
+  const { genderRatioEnabled, firstPointRatio } = useSettingsStore();
 
   const [step, setStep] = useState<Step>({ name: 'timing' });
 
@@ -49,19 +37,27 @@ export default function PullTrackingScreen() {
     return <Redirect href="/advancedTracking/Tracker" />;
   }
 
-  const trackedLines: PointLine[] | undefined = trackedLinesParam
-    ? JSON.parse(trackedLinesParam)
-    : undefined;
-  const tracksBothSides = areBothSidesFullyTracked(game) && trackedLines != null;
-  const opponentSideId = getOtherSideId(game, game.focusSideId);
-  const pullingSideId = isOurPull ? game.focusSideId : opponentSideId;
-  const receivingSideId = getOtherSideId(game, pullingSideId);
-  const pullingLineIds = tracksBothSides
-    ? (trackedLines.find((line) => line.sideId === pullingSideId)?.participantIds ?? [])
-    : lineParticipantIds;
-  const receivingLineIds = tracksBothSides
-    ? (trackedLines.find((line) => line.sideId === receivingSideId)?.participantIds ?? [])
-    : lineParticipantIds;
+  const lines = resolvePendingNextPointLines(game, pendingNextPointLineSelection);
+  if (lines == null) {
+    return <Redirect href="/advancedTracking/TrackerLineSelect" />;
+  }
+
+  const receivingSideId = getReceivingSideForNextPoint(game);
+  const pullingSideId = getOtherSideId(game, receivingSideId);
+  const isOurPull = pullingSideId === game.focusSideId;
+  const tracksBothSides = areBothSidesFullyTracked(game);
+  const pullingLine = lines.find((line) => line.sideId === pullingSideId);
+  const receivingLine = lines.find((line) => line.sideId === receivingSideId);
+  if (pullingLine == null || receivingLine == null) {
+    throw new Error(`Resolved lines are incomplete for advanced tracking game "${game.id}".`);
+  }
+  const pullingLineIds = pullingLine.participantIds;
+  const receivingLineIds = receivingLine.participantIds;
+  const nextPointNumber = game.points.length + 1;
+  const genderRatio =
+    genderRatioEnabled && firstPointRatio != null
+      ? getExpectedRatio(nextPointNumber, firstPointRatio)
+      : undefined;
   const activeParticipants = getFlowParticipants(game, pullingLineIds);
   const receivingParticipants = getFlowParticipants(game, receivingLineIds);
   const pullingSideLabel = tracksBothSides
@@ -76,10 +72,7 @@ export default function PullTrackingScreen() {
   ) => {
     recordPull(
       buildRecordPullInput({
-        game,
-        isOurPull,
-        lineParticipantIds,
-        lines: trackedLines,
+        lines,
         isPullerTracked: tracksBothSides || isOurPull,
         selectedPullerId: pullerId,
         hangTimeMs,

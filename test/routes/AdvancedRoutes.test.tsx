@@ -12,6 +12,7 @@ import TrackerLineSelectScreen from '@/app/(main)/advancedTracking/TrackerLineSe
 import type { AdvancedTrackedGame } from '@/lib/advancedTracking/types';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { useGameStore } from '@/store/basic/gameStore';
+import { useSettingsStore } from '@/store/settingsStore';
 import { arrangeAdvancedGame, recordOpeningPull, testTeam } from '@/test/fixtures/domain';
 import { resetAllStores } from '@/test/fixtures/resetStores';
 import { resetMockRouter, setMockSearchParams } from '@/test/mocks/expoRouter';
@@ -374,10 +375,7 @@ describe('advanced tracking routes', () => {
     }
     await user.press(screen.getByTestId('line-select-confirm'));
 
-    expect(router.push).toHaveBeenCalledWith({
-      pathname: '/advancedTracking/PullTracking',
-      params: expect.objectContaining({ lineParticipantIds: JSON.stringify(preparedLineIds) }),
-    });
+    expect(router.push).toHaveBeenCalledWith('/advancedTracking/PullTracking');
     expect(useAdvancedTrackingStore.getState().isHalftimeBreakActive).toBe(true);
   });
 
@@ -451,19 +449,94 @@ describe('advanced tracking routes', () => {
 
   it('records an opponent pull through the real pull-tracking flow', async () => {
     const user = userEvent.setup();
-    arrangeAdvancedGame();
-    setMockSearchParams({
-      isOurPull: 'false',
-      lineParticipantIds: JSON.stringify(['player-alex', 'player-blair']),
+    const participants = Array.from({ length: 7 }, (_, index) => ({
+      id: `opponent-pull-player-${index + 1}`,
+      name: `Opponent Pull Player ${index + 1}`,
+    }));
+    useAdvancedTrackingStore.getState().createGame({
+      id: 'opponent-pull-game',
+      focusSideId: 'windchill',
+      initialReceivingSideId: 'windchill',
+      sides: [
+        { id: 'windchill', label: 'Windchill', trackingMode: 'full-roster' },
+        { id: 'rivals', label: 'Rivals', trackingMode: 'anonymous' },
+      ],
+      participants,
+      format: { gameTo: 15 },
     });
+    useAdvancedTrackingStore.getState().savePendingNextPointLineSelection(
+      'windchill',
+      participants.map((participant) => participant.id),
+    );
+    useSettingsStore.setState({ genderRatioEnabled: true, firstPointRatio: 'more-women' });
     await renderScreen(<PullTrackingScreen />);
 
     expect(screen.getByText('THEY ARE PULLING')).toBeVisible();
 
     await user.press(screen.getByText('Skip timing'));
 
-    expect(useAdvancedTrackingStore.getState().currentGame?.points).toHaveLength(1);
+    const state = useAdvancedTrackingStore.getState();
+    expect(state.currentGame?.points).toHaveLength(1);
+    expect(state.currentGame?.points[0].lines).toEqual([
+      { sideId: 'windchill', participantIds: participants.map((participant) => participant.id) },
+      { sideId: 'rivals', participantIds: [] },
+    ]);
+    expect(state.currentGame?.points[0].genderRatio).toBe('more-women');
+    expect(state.pendingNextPointLineSelection).toBeNull();
     expect(router.dismissTo).toHaveBeenCalledWith('/advancedTracking/Tracker');
+  });
+
+  it('redirects pull tracking to line selection when the pending line is incomplete', async () => {
+    arrangeAdvancedGame();
+    useAdvancedTrackingStore
+      .getState()
+      .savePendingNextPointLineSelection('windchill', ['player-alex']);
+
+    await renderScreen(<PullTrackingScreen />);
+
+    expect(router.replace).toHaveBeenCalledWith('/advancedTracking/TrackerLineSelect', {
+      relativeToDirectory: undefined,
+      withAnchor: undefined,
+    });
+    expect(screen.queryByTestId('pull-skip-timing')).not.toBeOnTheScreen();
+  });
+
+  it('records canonical lines for both tracked sides without route params', async () => {
+    const user = userEvent.setup();
+    const participants = Array.from({ length: 14 }, (_, index) => ({
+      id: `dual-pull-player-${index + 1}`,
+      name: `Dual Pull Player ${index + 1}`,
+    }));
+    const lightIds = participants.slice(0, 7).map((participant) => participant.id);
+    const darkIds = participants.slice(7).map((participant) => participant.id);
+    useAdvancedTrackingStore.getState().createGame({
+      id: 'dual-pull-game',
+      gameType: 'scrimmage',
+      focusSideId: 'light',
+      initialReceivingSideId: 'light',
+      sides: [
+        { id: 'light', label: 'Light', trackingMode: 'full-roster' },
+        { id: 'dark', label: 'Dark', trackingMode: 'full-roster' },
+      ],
+      participants,
+      format: { gameTo: 15 },
+    });
+    useAdvancedTrackingStore.getState().savePendingNextPointLineSelection('light', lightIds);
+    useAdvancedTrackingStore.getState().savePendingNextPointLineSelection('dark', darkIds);
+
+    await renderScreen(<PullTrackingScreen />);
+
+    expect(screen.getByText('DARK IS PULLING')).toBeVisible();
+    expect(screen.getByText(participants[7].name)).toBeVisible();
+    await user.press(screen.getByTestId('pull-skip-timing'));
+    await user.press(screen.getByTestId('pull-result-inbound'));
+
+    const state = useAdvancedTrackingStore.getState();
+    expect(state.currentGame?.points[0].lines).toEqual([
+      { sideId: 'light', participantIds: lightIds },
+      { sideId: 'dark', participantIds: darkIds },
+    ]);
+    expect(state.pendingNextPointLineSelection).toBeNull();
   });
 
   it('renders the live Tracker with its real tracking hooks and game state', async () => {
