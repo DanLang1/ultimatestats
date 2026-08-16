@@ -123,7 +123,7 @@ describe('advanced analytics routes', () => {
     await user.longPress(screen.getByTestId('advanced-timeline-action-goal-1'));
 
     expect(screen.getByText('Edit Scorer')).toBeVisible();
-    expect(screen.queryByTestId('player-chip-Alex')).not.toBeOnTheScreen();
+    expect(screen.getByTestId('player-chip-Alex')).toBeVisible();
     await user.press(screen.getByTestId('player-chip-Casey'));
     await user.press(screen.getByTestId('advanced-goal-scorer-save'));
 

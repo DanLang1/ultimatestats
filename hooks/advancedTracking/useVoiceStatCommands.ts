@@ -9,8 +9,10 @@ import {
 import { useEffect, useRef, useState } from 'react';
 import { Platform } from 'react-native';
 
+import { CaptureIntent, CaptureIntentResult } from '@/lib/advancedTracking/captureIntentUtils';
 import { isPossessionOver } from '@/lib/advancedTracking/trackingUtils';
 import { PlayerRef, PointPossession } from '@/lib/advancedTracking/types';
+import { planVoicePassIntent } from '@/lib/advancedTracking/voiceCaptureIntentUtils';
 import {
   buildVoiceContextualStrings,
   parseVoiceStatCommand,
@@ -37,7 +39,7 @@ interface UseVoiceStatCommandsInput {
   oppHasDisc: boolean;
   possession: PointPossession | null;
   discHolderRef: PlayerRef | null;
-  recordThrow: (input: { thrower: PlayerRef; result: 'complete'; toPlayer?: PlayerRef }) => void;
+  recordCaptureIntent: (intent: CaptureIntent) => CaptureIntentResult;
 }
 
 export interface VoiceStatCommandsControls {
@@ -596,16 +598,27 @@ function recordVoicePass(
     return { ok: false, message: 'Tap who has the disc first' };
   }
 
-  if (command.toParticipantId === throwerParticipantId) {
+  const voicePlan = planVoicePassIntent(throwerParticipantId, command.toParticipantId);
+  if (!voicePlan.ok) {
     return { ok: false, message: 'Receiver already has disc' };
   }
 
-  input.recordThrow({
-    thrower: participantRef(throwerParticipantId),
-    result: 'complete',
-    toPlayer: participantRef(command.toParticipantId),
-  });
+  const result = input.recordCaptureIntent(voicePlan.intent);
+  if (!result.ok) return { ok: false, message: getCaptureRejectionMessage(result.reason) };
   return { ok: true, message: 'Pass recorded' };
+}
+
+function getCaptureRejectionMessage(
+  reason: Exclude<CaptureIntentResult, { ok: true }>['reason'],
+): string {
+  if (reason === 'point-over') return 'Point is over';
+  if (
+    reason === 'point-not-started' ||
+    reason === 'holder-required' ||
+    reason === 'possession-over'
+  )
+    return 'Tap who has the disc first';
+  return 'Pass could not be recorded';
 }
 
 function resolveVoiceThrowerParticipantId(input: UseVoiceStatCommandsInput): string | null {
@@ -615,10 +628,6 @@ function resolveVoiceThrowerParticipantId(input: UseVoiceStatCommandsInput): str
 
 function isCurrentDiscHolder(participantId: string, discHolderRef: PlayerRef | null): boolean {
   return discHolderRef?.refType === 'participant' && discHolderRef.participantId === participantId;
-}
-
-function participantRef(participantId: string): PlayerRef {
-  return { refType: 'participant', participantId };
 }
 
 function getSpeechErrorMessage(event: ExpoSpeechRecognitionErrorEvent): string {

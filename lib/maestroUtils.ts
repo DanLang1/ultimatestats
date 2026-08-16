@@ -252,8 +252,8 @@ function seedTrackerState(trackerState: MaestroTrackerState, gameType: MaestroSe
   if (trackerState === 'awaitingPickup') return;
 
   if (trackerState === 'focusPossession') {
-    useAdvancedTrackingStore.getState().recordPickup({
-      sideId: FOCUS_SIDE_ID,
+    useAdvancedTrackingStore.getState().recordCaptureIntent({
+      kind: 'pickup',
       player: {
         refType: 'participant',
         participantId: getMaestroSeedPlayerId(MAESTRO_SEED_PLAYERS[0]),
@@ -269,10 +269,9 @@ function seedTrackerState(trackerState: MaestroTrackerState, gameType: MaestroSe
           participantId: getMaestroSeedPlayerId(MAESTRO_SCRIMMAGE_PLAYERS[7]),
         }
       : { refType: 'untracked' };
-  useAdvancedTrackingStore.getState().recordPickup({
-    sideId: OPP_SIDE_ID,
-    player: opponentPlayer,
-  });
+  useAdvancedTrackingStore
+    .getState()
+    .recordCaptureIntent({ kind: 'pickup', player: opponentPlayer });
 }
 
 export async function seedAdvancedTrackerTestGame(

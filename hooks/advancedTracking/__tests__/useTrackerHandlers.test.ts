@@ -1,133 +1,58 @@
 import { useTrackerHandlers } from '@/hooks/advancedTracking/useTrackerHandlers';
-import type { PassModifier, PlayerRef, PointPossession } from '@/lib/advancedTracking/types';
+import type { PassModifier, PlayerRef } from '@/lib/advancedTracking/types';
 
 const holder: PlayerRef = { refType: 'participant', participantId: 'light-holder' };
 const defender: PlayerRef = { refType: 'participant', participantId: 'dark-defender' };
 
-function makeHandlersInput(passModifier: PassModifier, possession: PointPossession | null) {
+function makeInput(passModifier: PassModifier, hasHolder = true) {
   return {
     pointIsOver: false,
     oppHasDisc: false,
-    possession,
-    discHolderRef: possession ? holder : null,
-    activeSideId: possession?.sideId ?? 'dark',
-    focusSideId: 'light',
-    opponentSideId: 'dark',
-    tracksBothSides: true,
-    getPointElapsedMs: () => 2500,
+    discHolderRef: hasHolder ? holder : null,
     passModifier,
     setPassModifier: jest.fn(),
-    recordThrow: jest.fn(),
-    recordPickup: jest.fn(),
-    amendLastThrowAsGoal: jest.fn(),
+    recordCaptureIntent: jest.fn(),
     amendOpeningPullAsDropped: jest.fn(),
   };
 }
 
-describe('useTrackerHandlers scrimmage behavior', () => {
-  it('attributes a selected block to the defending player', () => {
-    const input = makeHandlersInput('block', {
-      id: 'possession',
-      sideId: 'light',
-      actions: [],
-    });
-    const handlers = useTrackerHandlers(input);
-
-    handlers.onPlayerTap(defender);
-
-    expect(input.recordThrow).toHaveBeenCalledWith({
-      thrower: holder,
-      result: 'block',
-      defender,
-    });
+describe('useTrackerHandlers', () => {
+  it.each([
+    ['block', { kind: 'block', defender }],
+    ['callahan', { kind: 'callahan', scorer: defender }],
+    ['pressure', { kind: 'pressure', defender }],
+    ['stall', { kind: 'stall', defender }],
+  ] as const)('maps %s to its semantic capture intent', (passModifier, expected) => {
+    const input = makeInput(passModifier);
+    useTrackerHandlers(input).onPlayerTap(defender);
+    expect(input.recordCaptureIntent).toHaveBeenCalledWith(expected);
     expect(input.setPassModifier).toHaveBeenCalledWith(null);
   });
 
-  it('starts the next scrimmage possession for the active side', () => {
-    const input = makeHandlersInput(null, null);
-    const handlers = useTrackerHandlers(input);
-
-    handlers.onPlayerTap(defender);
-
-    expect(input.recordPickup).toHaveBeenCalledWith({ sideId: 'dark', player: defender });
+  it('maps an awaiting holder tap to pickup', () => {
+    const input = makeInput(null, false);
+    useTrackerHandlers(input).onPlayerTap(defender);
+    expect(input.recordCaptureIntent).toHaveBeenCalledWith({ kind: 'pickup', player: defender });
   });
 
-  it('attributes a scrimmage Callahan to the selected defender', () => {
-    const input = makeHandlersInput('callahan', {
-      id: 'possession',
-      sideId: 'light',
-      actions: [],
-    });
+  it('maps a regular player tap to pass and a goal tap directly to goal', () => {
+    const input = makeInput(null);
     const handlers = useTrackerHandlers(input);
-
     handlers.onPlayerTap(defender);
-
-    expect(input.recordThrow).toHaveBeenCalledWith({
-      thrower: holder,
-      result: 'callahan',
-      defender,
-      timerElapsedMs: 2500,
+    handlers.onGoal(defender);
+    expect(input.recordCaptureIntent).toHaveBeenNthCalledWith(1, {
+      kind: 'pass',
+      receiver: defender,
+    });
+    expect(input.recordCaptureIntent).toHaveBeenNthCalledWith(2, {
+      kind: 'goal',
+      scorer: defender,
     });
   });
 
-  it('attributes scrimmage pressure to the selected defender', () => {
-    const input = makeHandlersInput('pressure', {
-      id: 'possession',
-      sideId: 'light',
-      actions: [],
-    });
-    const handlers = useTrackerHandlers(input);
-
-    handlers.onPlayerTap(defender);
-
-    expect(input.recordThrow).toHaveBeenCalledWith({
-      thrower: holder,
-      result: 'pressure',
-      defender,
-    });
-    expect(input.setPassModifier).toHaveBeenCalledWith(null);
-  });
-});
-
-describe('useTrackerHandlers standard game behavior', () => {
-  it('records pressure for the selected defender and clears the modifier', () => {
-    const pressureDefender: PlayerRef = {
-      refType: 'participant',
-      participantId: 'defender',
-    };
-    const possession: PointPossession = {
-      id: 'opp-possession',
-      sideId: 'dark',
-      actions: [],
-    };
-    const recordThrow = jest.fn();
-    const setPassModifier = jest.fn();
-
-    const handlers = useTrackerHandlers({
-      pointIsOver: false,
-      oppHasDisc: true,
-      possession,
-      discHolderRef: null,
-      activeSideId: 'dark',
-      focusSideId: 'light',
-      opponentSideId: 'dark',
-      tracksBothSides: false,
-      getPointElapsedMs: () => 0,
-      passModifier: 'pressure',
-      setPassModifier,
-      recordThrow,
-      recordPickup: jest.fn(),
-      amendLastThrowAsGoal: jest.fn(),
-      amendOpeningPullAsDropped: jest.fn(),
-    });
-
-    handlers.onPlayerTap(pressureDefender);
-
-    expect(recordThrow).toHaveBeenCalledWith({
-      thrower: { refType: 'untracked' },
-      result: 'pressure',
-      defender: pressureDefender,
-    });
-    expect(setPassModifier).toHaveBeenCalledWith(null);
+  it('maps an anonymous opponent pressure without adapter-side pickup sequencing', () => {
+    const input = { ...makeInput('pressure', false), oppHasDisc: true };
+    useTrackerHandlers(input).onPlayerTap(defender);
+    expect(input.recordCaptureIntent).toHaveBeenCalledWith({ kind: 'pressure', defender });
   });
 });

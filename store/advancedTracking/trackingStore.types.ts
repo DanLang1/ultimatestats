@@ -1,4 +1,5 @@
 import type { CorrectAdvancedGoalScorerInput } from '@/lib/advancedTracking/advancedActionCorrectionUtils';
+import type { CaptureIntent, CaptureIntentResult } from '@/lib/advancedTracking/captureIntentUtils';
 import type {
   AdvancedGameType,
   AdvancedTrackedGame,
@@ -12,11 +13,10 @@ import type {
   PlayerRef,
   PointLine,
   PullResult,
-  ThrowResult,
 } from '@/lib/advancedTracking/types';
 import type { GenderRatio } from '@/lib/genderRatioUtils';
 
-export type { InjurySubChange, PullResult, ThrowResult };
+export type { InjurySubChange, PullResult };
 
 export interface CreateAdvancedGameInput {
   id?: string;
@@ -46,21 +46,6 @@ export interface RecordPullInput {
   origin?: FieldLocation;
   landing?: FieldLocation;
   genderRatio?: GenderRatio;
-}
-
-export interface RecordPickupInput {
-  sideId: string;
-  player: PlayerRef;
-}
-
-export interface RecordThrowInput {
-  thrower: PlayerRef;
-  result: ThrowResult;
-  toPlayer?: PlayerRef;
-  defender?: PlayerRef;
-  splitAttribution?: boolean;
-  /** Visual timer elapsed ms at throw time — used as elapsedMsAtEnd for goal/callahan. */
-  timerElapsedMs?: number;
 }
 
 export interface RecordStoppageInput {
@@ -118,13 +103,6 @@ export type AdvancedTrackingUndoEntry =
       transitionId: string;
     }
   | {
-      kind: 'amend_throw_result';
-      pointId: string;
-      possessionId: string;
-      actionId: string;
-      previousResult: ThrowResult;
-    }
-  | {
       kind: 'amend_pull_result';
       pointId: string;
       possessionId: string;
@@ -164,9 +142,7 @@ export interface AdvancedTrackingState {
   endBetweenPointTimeout: (transitionId: string) => void;
   recordPull: (input: RecordPullInput) => string;
   amendOpeningPullAsDropped: (receiver: PlayerRef) => void;
-  recordPickup: (input: RecordPickupInput) => string;
-  recordThrow: (input: RecordThrowInput) => string;
-  amendLastThrowAsGoal: (timerElapsedMs?: number) => void;
+  recordCaptureIntent: (intent: CaptureIntent) => CaptureIntentResult;
   recordStoppage: (input: RecordStoppageInput) => string;
   resumeStoppage: (actionId: string) => void;
   cancelStoppage: (actionId: string) => void;

@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { getCurrentPoint, getGameScore } from '../../lib/advancedTracking/trackingUtils';
 import type { AdvancedTrackedGame } from '../../lib/advancedTracking/types';
-import { useAdvancedTrackingStore } from '../../store/advancedTracking/trackingStore';
+import { useAdvancedTrackingStore } from './captureTestStore';
 
 jest.mock('@react-native-async-storage/async-storage', () => ({
   getItem: jest.fn(),
@@ -103,8 +103,9 @@ describe('advancedTrackingStore — edge cases', () => {
         useAdvancedTrackingStore.getState().recordThrow({
           thrower: august,
           result: 'complete',
+          toPlayer: meves,
         }),
-      ).toThrow('Cannot record a throw after the possession has already ended.');
+      ).toThrow('Capture rejected: holder-required');
     });
 
     it('records a block and allows the other side to pick up', () => {
@@ -326,7 +327,7 @@ describe('advancedTrackingStore — edge cases', () => {
       ).toThrow(`Expected pickup for side "${awaySideId}".`);
     });
 
-    it('allows pickup for the same side after a non-turnover throw (complete)', () => {
+    it('rejects a second pickup while the same side already has a holder', () => {
       createGame();
       useAdvancedTrackingStore.getState().recordPull({
         lines: [
@@ -342,15 +343,9 @@ describe('advancedTrackingStore — edge cases', () => {
         result: 'complete',
       });
 
-      // Home completed the pass, so Home still has possession
-      useAdvancedTrackingStore.getState().recordPickup({
-        sideId: homeSideId,
-        player: meves,
-      });
-
-      const point = getCurrentPoint(getCurrentGame());
-      expect(point?.possessions).toHaveLength(1); // same possession
-      expect(point?.possessions[0].actions.at(-1)?.kind).toBe('disc_pickup');
+      expect(() =>
+        useAdvancedTrackingStore.getState().recordPickup({ sideId: homeSideId, player: meves }),
+      ).toThrow('Capture rejected: holder-required');
     });
   });
 
@@ -481,56 +476,6 @@ describe('advancedTrackingStore — edge cases', () => {
       expect(game.points).toHaveLength(2);
       expect(game.points[0].possessions[0].sideId).toBe(homeSideId);
       expect(game.points[1].possessions[0].sideId).toBe(awaySideId);
-    });
-  });
-
-  describe('amendLastThrowAsGoal', () => {
-    it('amends a complete throw to goal and ends the point', () => {
-      createGame();
-      useAdvancedTrackingStore.getState().recordPull({
-        lines: [{ sideId: homeSideId, participantIds: [august.participantId] }],
-        puller: untracked,
-        receiver: august,
-        result: 'inbound',
-      });
-      useAdvancedTrackingStore.getState().recordThrow({
-        thrower: august,
-        toPlayer: meves,
-        result: 'complete',
-      });
-
-      let game = getCurrentGame()!;
-      expect(getCurrentPoint(game)?.possessions[0].actions.at(-1)?.kind).toBe('throw');
-
-      useAdvancedTrackingStore.getState().amendLastThrowAsGoal();
-
-      game = getCurrentGame()!;
-      const lastAction = getCurrentPoint(game)?.possessions[0].actions.at(-1);
-      expect(lastAction?.kind).toBe('throw');
-      if (lastAction?.kind === 'throw') {
-        expect(lastAction.result).toBe('goal');
-      }
-      expect(getGameScore(game)[homeSideId]).toBe(1);
-    });
-
-    it('does nothing if last throw is not complete', () => {
-      createGame();
-      useAdvancedTrackingStore.getState().recordPull({
-        lines: [{ sideId: homeSideId, participantIds: [august.participantId] }],
-        puller: untracked,
-        receiver: august,
-        result: 'inbound',
-      });
-      useAdvancedTrackingStore.getState().recordThrow({
-        thrower: august,
-        result: 'throwaway',
-      });
-
-      const before = getCurrentGame()!;
-      useAdvancedTrackingStore.getState().amendLastThrowAsGoal();
-      const after = getCurrentGame()!;
-
-      expect(after).toEqual(before);
     });
   });
 

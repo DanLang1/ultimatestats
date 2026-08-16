@@ -107,11 +107,12 @@ describe('advanced action corrections', () => {
     ]);
   });
 
-  it('offers active scoring-side players except the thrower', () => {
+  it('offers every active scoring-side player, including the thrower for self-goal correction', () => {
     const context = getAdvancedGoalScorerCorrectionContext(makeGoalGame(), goalLocator);
 
     expect(context.currentScorerParticipantId).toBe('scorer');
     expect(context.eligibleParticipants.map((participant) => participant.id)).toEqual([
+      'thrower',
       'scorer',
       'replacement',
     ]);
@@ -188,7 +189,6 @@ describe('advanced action corrections', () => {
   it.each([
     ['a player who had already subbed out', 'subbed-out'],
     ['a player who was never active', 'bench'],
-    ['the thrower on the same goal', 'thrower'],
   ])('rejects %s', (_description, participantId) => {
     expect(() =>
       correctAdvancedGoalScorer(makeGoalGame(), {
@@ -196,6 +196,17 @@ describe('advanced action corrections', () => {
         participantId,
       }),
     ).toThrow('not active for the scoring side');
+  });
+
+  it('allows correcting a goal to the thrower for a self-goal', () => {
+    const corrected = correctAdvancedGoalScorer(makeGoalGame(), {
+      ...goalLocator,
+      participantId: 'thrower',
+    });
+    expect(corrected.points[0].possessions[0].actions[1]).toMatchObject({
+      kind: 'throw',
+      toPlayer: participantRef('thrower'),
+    });
   });
 
   it('corrects a single-team Callahan scorer through its scoring attribution field', () => {

@@ -16,7 +16,6 @@ import {
   getCurrentPoint,
   getCurrentPossession,
   hasPointEnded,
-  isPossessionOver,
 } from '@/lib/advancedTracking/trackingUtils';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { Fonts } from '@/theme/theme';
@@ -28,13 +27,11 @@ const FOOTER_HORIZONTAL_PADDING = 12;
 const FOOTER_TOP_PADDING = 12;
 
 interface TrackerActionFooterProps {
-  getPointElapsedMs: () => number;
   onStartNextPoint: () => void;
   voiceControls?: VoiceStatCommandsControls;
 }
 
 export const TrackerActionFooter = ({
-  getPointElapsedMs,
   onStartNextPoint,
   voiceControls,
 }: TrackerActionFooterProps) => {
@@ -43,12 +40,8 @@ export const TrackerActionFooter = ({
   const insets = useSafeAreaInsets();
 
   const game = useAdvancedTrackingStore((state) => state.currentGame);
-  const recordPickup = useAdvancedTrackingStore((state) => state.recordPickup);
-  const recordThrow = useAdvancedTrackingStore((state) => state.recordThrow);
+  const recordCaptureIntent = useAdvancedTrackingStore((state) => state.recordCaptureIntent);
   if (!game) return null;
-
-  const oppSide = game.sides.find((s) => s.id !== game.focusSideId);
-  if (!oppSide) return null;
 
   const point = getCurrentPoint(game);
   const possession = getCurrentPossession(game);
@@ -59,21 +52,11 @@ export const TrackerActionFooter = ({
   const styles = createStyles(sizeClass, insets.bottom);
 
   const handleOppTurnover = () => {
-    if (!possession || isPossessionOver(possession)) {
-      recordPickup({ sideId: oppSide.id, player: { refType: 'untracked' } });
-    }
-    recordThrow({ thrower: { refType: 'untracked' }, result: 'throwaway' });
+    recordCaptureIntent({ kind: 'anonymous-opponent-turnover' });
   };
 
   const handleOppScored = () => {
-    if (!possession || isPossessionOver(possession)) {
-      recordPickup({ sideId: oppSide.id, player: { refType: 'untracked' } });
-    }
-    recordThrow({
-      thrower: { refType: 'untracked' },
-      result: 'goal',
-      timerElapsedMs: getPointElapsedMs(),
-    });
+    recordCaptureIntent({ kind: 'anonymous-opponent-goal' });
   };
 
   let content: React.ReactNode = null;

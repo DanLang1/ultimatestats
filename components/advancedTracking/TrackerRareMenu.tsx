@@ -27,7 +27,6 @@ import { Fonts } from '@/theme/theme';
 interface TrackerRareMenuProps {
   visible: boolean;
   onClose: () => void;
-  getPointElapsedMs: () => number;
   setPassModifier: (m: PassModifier) => void;
 }
 
@@ -40,17 +39,12 @@ type RareAction = {
   onPress: () => void;
 };
 
-export const TrackerRareMenu = ({
-  visible,
-  onClose,
-  getPointElapsedMs,
-  setPassModifier,
-}: TrackerRareMenuProps) => {
+export const TrackerRareMenu = ({ visible, onClose, setPassModifier }: TrackerRareMenuProps) => {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
   const styles = createStyles(sizeClass);
 
-  const { currentGame: game, recordThrow } = useAdvancedTrackingStore();
+  const { currentGame: game, recordCaptureIntent } = useAdvancedTrackingStore();
   if (!game) return null;
 
   const point = getCurrentPoint(game);
@@ -66,29 +60,18 @@ export const TrackerRareMenu = ({
 
   const handleOppBlock = () => {
     if (!discHolderRef || pointIsOver) return;
-    recordThrow({
-      thrower: discHolderRef,
-      result: 'block',
-    });
+    recordCaptureIntent({ kind: 'block' });
   };
 
   const handleStall = () => {
     if (!discHolderRef || pointIsOver) return;
-    recordThrow({
-      thrower: discHolderRef,
-      result: 'stall',
-    });
+    recordCaptureIntent({ kind: 'stall' });
     setPassModifier(null);
   };
 
   const handleThrownCallahan = () => {
     if (!discHolderRef || pointIsOver) return;
-    recordThrow({
-      thrower: discHolderRef,
-      result: 'callahan',
-      defender: { refType: 'untracked' },
-      timerElapsedMs: getPointElapsedMs(),
-    });
+    recordCaptureIntent({ kind: 'callahan', scorer: { refType: 'untracked' } });
     setPassModifier(null);
   };
 

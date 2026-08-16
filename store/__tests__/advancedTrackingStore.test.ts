@@ -14,8 +14,11 @@ import { DEFAULT_HALFTIME_BREAK_SECONDS, MAX_ADVANCED_GAME_NOTE_LENGTH } from '@
 import { useSettingsStore } from '@/store/settingsStore';
 
 import { useSavedAdvancedGamesStore } from '../advancedTracking/savedGamesStore';
-import { useAdvancedTrackingStore } from '../advancedTracking/trackingStore';
-import type { CreateAdvancedGameInput } from '../advancedTracking/trackingStore.types';
+import type {
+  AdvancedTrackingState,
+  CreateAdvancedGameInput,
+} from '../advancedTracking/trackingStore.types';
+import { useAdvancedTrackingStore } from './captureTestStore';
 
 jest.mock('@react-native-async-storage/async-storage', () => ({
   getItem: jest.fn(),
@@ -444,6 +447,77 @@ describe('advancedTrackingStore', () => {
     expect(game.points[0].possessions[0].actions[0].kind).toBe('pull');
   });
 
+  it('records an anonymous opponent outcome in one update and returns the outcome action id', () => {
+    createGame();
+    useAdvancedTrackingStore.getState().recordPull({
+      lines: homeLines,
+      puller: untracked,
+      receiver: august,
+      result: 'inbound',
+    });
+    useAdvancedTrackingStore.getState().recordCaptureIntent({ kind: 'pickup', player: august });
+    useAdvancedTrackingStore.getState().recordCaptureIntent({ kind: 'throwaway' });
+
+    const listener = jest.fn();
+    const unsubscribe = useAdvancedTrackingStore.subscribe(listener);
+    const result = useAdvancedTrackingStore
+      .getState()
+      .recordCaptureIntent({ kind: 'anonymous-opponent-goal' });
+    unsubscribe();
+
+    expect(result.ok).toBe(true);
+    const opponentActions = getCurrentPoint(getCurrentGame())?.possessions[1].actions ?? [];
+    expect(opponentActions.map((action) => action.kind)).toEqual(['disc_pickup', 'throw']);
+    expect(result).toEqual({ ok: true, actionId: opponentActions[1].id });
+    expect(result).not.toEqual({ ok: true, actionId: opponentActions[0].id });
+    expect(listener).toHaveBeenCalledTimes(1);
+
+    expect(useAdvancedTrackingStore.getState().undoLastOperation()).toBe(true);
+    expect(getCurrentPoint(getCurrentGame())?.possessions[1].actions).toEqual([
+      expect.objectContaining({ kind: 'disc_pickup', player: untracked }),
+    ]);
+  });
+
+  it('records and undoes a direct self-goal with the existing goal and assist attribution', () => {
+    createGame();
+    useAdvancedTrackingStore.getState().recordPull({
+      lines: homeLines,
+      puller: untracked,
+      receiver: august,
+      result: 'inbound',
+    });
+    useAdvancedTrackingStore.getState().recordCaptureIntent({ kind: 'pickup', player: august });
+
+    const result = useAdvancedTrackingStore
+      .getState()
+      .recordCaptureIntent({ kind: 'goal', scorer: august });
+    expect(result.ok).toBe(true);
+
+    const game = getCurrentGame()!;
+    const goalAction = getCurrentPoint(game)?.possessions[0].actions.at(-1);
+    expect(goalAction).toMatchObject({
+      kind: 'throw',
+      result: 'goal',
+      thrower: august,
+      toPlayer: august,
+    });
+    const selfGoalAttributions = buildAnalyticsGame(game).attributions.filter(
+      (attribution) =>
+        attribution.participantId === august.participantId &&
+        (attribution.type === 'goal' || attribution.type === 'assist'),
+    );
+    expect(selfGoalAttributions.map((attribution) => attribution.type).sort()).toEqual([
+      'assist',
+      'goal',
+    ]);
+
+    expect(useAdvancedTrackingStore.getState().undoLastOperation()).toBe(true);
+    const revivedPoint = getCurrentPoint(getCurrentGame());
+    expect(revivedPoint?.possessions[0].actions.at(-1)).toMatchObject({ kind: 'disc_pickup' });
+    expect(revivedPoint?.revivedAt).toBeDefined();
+    expect(getGameScore(getCurrentGame()!)).toEqual({ [homeSideId]: 0, [awaySideId]: 0 });
+  });
+
   it('records a simple hold and builds analytics from the game', () => {
     createGame();
 
@@ -565,7 +639,7 @@ describe('advancedTrackingStore', () => {
     // Undo point 1's goal → point 1 back in progress
     useAdvancedTrackingStore.getState().undoLastOperation();
     const point = getCurrentPoint(getCurrentGame());
-    expect(point?.possessions[0].actions.at(-1)?.kind).toBe('pull');
+    expect(point?.possessions[0].actions.at(-1)?.kind).toBe('disc_pickup');
   });
 
   it('resetCurrentGame removes the in-progress game from savedGames', () => {
@@ -676,7 +750,7 @@ describe('advancedTrackingStore', () => {
     expect(upsertAdvancedGame).toHaveBeenCalledTimes(1);
 
     expect(useAdvancedTrackingStore.getState().undoLastOperation()).toBe(true);
-    expect(getCurrentGame()?.points[0].possessions[0].actions.at(-1)?.kind).toBe('pull');
+    expect(getCurrentGame()?.points[0].possessions[0].actions.at(-1)?.kind).toBe('disc_pickup');
   });
 
   it('keeps metadata absent when creating a game without metadata', () => {
@@ -971,7 +1045,7 @@ describe('advancedTrackingStore', () => {
     game = getCurrentGame() as AdvancedTrackedGame;
     expect(game.gameTransitions).toBeUndefined();
     expect(game.points).toHaveLength(15);
-    expect(game.points[14].possessions[0].actions.at(-1)?.kind).toBe('pull');
+    expect(game.points[14].possessions[0].actions.at(-1)?.kind).toBe('disc_pickup');
 
     useAdvancedTrackingStore.getState().recordThrow({
       thrower: august,
@@ -1064,7 +1138,14 @@ describe('advancedTrackingStore', () => {
       };
 
       scoreHomePoint(); // 1-0
-      scoreHomePoint(); // 2-0
+      useAdvancedTrackingStore.getState().recordPull({
+        lines: homeLinesAugust,
+        puller: august,
+        result: 'inbound',
+      });
+      useAdvancedTrackingStore.getState().recordCaptureIntent({
+        kind: 'anonymous-opponent-goal',
+      });
 
       const game = getCurrentGame() as AdvancedTrackedGame;
       const analytics = buildAnalyticsGame(game);
@@ -1260,7 +1341,7 @@ describe('advancedTrackingStore', () => {
     expect(getCurrentGame()?.gameTransitions?.some((t) => t.transitionType === 'soft_cap')).toBe(
       true,
     );
-    expect(getCurrentGame()?.points[0].possessions[0].actions.at(-1)?.kind).toBe('pull');
+    expect(getCurrentGame()?.points[0].possessions[0].actions.at(-1)?.kind).toBe('disc_pickup');
   });
 
   it('recordPull throws if a point is already in progress', () => {
@@ -1314,7 +1395,7 @@ describe('advancedTrackingStore', () => {
 
     expect(() =>
       useAdvancedTrackingStore.getState().recordThrow({ thrower: meves, result: 'complete' }),
-    ).toThrow('Cannot record a throw after the point has ended.');
+    ).toThrow('Capture rejected: point-over');
   });
 
   it('recordThrow throws if the possession has already ended via turnover', () => {
@@ -1330,7 +1411,7 @@ describe('advancedTrackingStore', () => {
 
     expect(() =>
       useAdvancedTrackingStore.getState().recordThrow({ thrower: august, result: 'complete' }),
-    ).toThrow('Cannot record a throw after the possession has already ended.');
+    ).toThrow('Capture rejected: holder-required');
   });
 
   it('recordStoppage adds a stoppage action to the current possession', () => {
@@ -1500,6 +1581,7 @@ describe('advancedTrackingStore', () => {
     expect(point?.subs).toHaveLength(1);
     expect(point?.possessions[0].actions.map((action) => action.kind)).toEqual([
       'pull',
+      'disc_pickup',
       'stoppage',
     ]);
   });
@@ -2036,7 +2118,12 @@ describe('advancedTrackingStore', () => {
         receiver: august,
         result: 'inbound',
       });
-      recordGoalAtElapsedMinutes(75);
+      useAdvancedTrackingStore.getState().recordCaptureIntent({
+        kind: 'anonymous-opponent-turnover',
+      });
+      useAdvancedTrackingStore.getState().recordCaptureIntent({ kind: 'pickup', player: august });
+      jest.setSystemTime(75 * 60_000);
+      useAdvancedTrackingStore.getState().recordCaptureIntent({ kind: 'goal', scorer: meves });
 
       const softCaps = getCurrentGameTransitions().filter((t) => t.transitionType === 'soft_cap');
       expect(softCaps).toHaveLength(1);
@@ -2054,67 +2141,6 @@ describe('advancedTrackingStore', () => {
       expect(getCurrentGameTransitions()[0]).toMatchObject({
         transitionType: 'soft_cap',
       });
-    });
-
-    it('amendLastThrowAsGoal records cap when amendment time crosses threshold', () => {
-      setupGameAndPull();
-      jest.setSystemTime(60 * 60_000);
-      useAdvancedTrackingStore.getState().recordThrow({
-        thrower: august,
-        result: 'complete',
-        toPlayer: meves,
-      });
-      jest.setSystemTime(70 * 60_000);
-      useAdvancedTrackingStore.getState().amendLastThrowAsGoal();
-
-      const transitions = getCurrentGameTransitions();
-      expect(transitions).toHaveLength(1);
-      expect(transitions[0]).toMatchObject({
-        transitionType: 'soft_cap',
-        afterPointId: getCurrentGame()!.points[0].id,
-      });
-    });
-
-    it('undoing an amendLastThrowAsGoal removes the throw action entirely', () => {
-      // Simulates the full tracker flow: coach taps Joe (pickup), taps
-      // Mike (throw), then swipes-up Mike for goal.  Undo should remove
-      // the throw action so possession reverts to Joe, not Mike.
-      createGame();
-      useAdvancedTrackingStore.getState().recordPull({
-        lines: homeLinesAugust,
-        puller: untracked,
-        receiver: august,
-        result: 'inbound',
-      });
-      // Joe picks up
-      useAdvancedTrackingStore.getState().recordPickup({
-        sideId: homeSideId,
-        player: august,
-      });
-      // Joe throws to Mike (complete)
-      useAdvancedTrackingStore.getState().recordThrow({
-        thrower: august,
-        result: 'complete',
-        toPlayer: meves,
-      });
-      // Coach marks the completion as a goal
-      useAdvancedTrackingStore.getState().amendLastThrowAsGoal();
-
-      const game = getCurrentGame()!;
-      const point = getCurrentPoint(game)!;
-      expect(point.possessions).toHaveLength(1);
-      const lastAction = point.possessions[0].actions.at(-1);
-      expect(lastAction).toMatchObject({ kind: 'throw', result: 'goal' });
-
-      const didUndo = useAdvancedTrackingStore.getState().undoLastOperation();
-      expect(didUndo).toBe(true);
-
-      // After undo, the throw action should be gone, leaving Joe with
-      // the disc from his pickup.
-      const undonePoint = getCurrentPoint(getCurrentGame())!;
-      expect(undonePoint.possessions[0].actions).toHaveLength(2); // pull + pickup
-      expect(undonePoint.possessions[0].actions[0].kind).toBe('pull');
-      expect(undonePoint.possessions[0].actions[1].kind).toBe('disc_pickup');
     });
 
     it('recomputes effectiveGameTo dynamically when the scoring point after soft_cap is undone', () => {
@@ -2407,7 +2433,7 @@ describe('advancedTrackingStore', () => {
         ],
       });
 
-      useAdvancedTrackingStore.setState((state) => {
+      useAdvancedTrackingStore.setState((state: AdvancedTrackingState) => {
         state.currentGame!.points[0].possessions[0].actions.push({
           id: 'bench-pickup',
           kind: 'disc_pickup',
@@ -2443,7 +2469,7 @@ describe('advancedTrackingStore', () => {
           },
         ],
       });
-      useAdvancedTrackingStore.setState((state) => {
+      useAdvancedTrackingStore.setState((state: AdvancedTrackingState) => {
         state.currentGame!.points[0].possessions[0].actions.push({
           id: 'bench-pickup',
           kind: 'disc_pickup',

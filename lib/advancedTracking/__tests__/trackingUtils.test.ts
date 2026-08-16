@@ -782,14 +782,6 @@ describe('didLastOperationEndCurrentPoint', () => {
     expect(didLastOperationEndCurrentPoint(game, { kind: 'action', pointId: 'pt1' })).toBe(true);
   });
 
-  it('returns true for an amended goal on the current point', () => {
-    const game = makeGame([{ ...endedPoint, id: 'pt1' }]);
-
-    expect(
-      didLastOperationEndCurrentPoint(game, { kind: 'amend_throw_result', pointId: 'pt1' }),
-    ).toBe(true);
-  });
-
   it('returns false for between-point operations', () => {
     const game = makeGame([{ ...endedPoint, id: 'pt1' }]);
 

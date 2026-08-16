@@ -157,13 +157,9 @@ function buildGoalScorerCorrectionContext(
   const activeParticipantIds = new Set(
     getActiveParticipantIdsAtAction(point, action.id, scoringSideId),
   );
-  const throwerParticipantId =
-    action.result === 'goal' && action.thrower.refType === 'participant'
-      ? action.thrower.participantId
-      : null;
-  const eligibleParticipants = game.participants.filter(
-    (participant) =>
-      activeParticipantIds.has(participant.id) && participant.id !== throwerParticipantId,
+  // Touch capture permits a self-goal; correction must offer that same on-field participant.
+  const eligibleParticipants = game.participants.filter((participant) =>
+    activeParticipantIds.has(participant.id),
   );
   const scorerRef = getScorerRef(action);
 

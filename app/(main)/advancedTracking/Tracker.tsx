@@ -58,9 +58,7 @@ export default function AdvancedTrackerScreen() {
   const game = useAdvancedTrackingStore((state) => state.currentGame);
   const undoStack = useAdvancedTrackingStore((state) => state.undoStack);
   const isHalftimeBreakActive = useAdvancedTrackingStore((state) => state.isHalftimeBreakActive);
-  const recordThrow = useAdvancedTrackingStore((state) => state.recordThrow);
-  const recordPickup = useAdvancedTrackingStore((state) => state.recordPickup);
-  const amendLastThrowAsGoal = useAdvancedTrackingStore((state) => state.amendLastThrowAsGoal);
+  const recordCaptureIntent = useAdvancedTrackingStore((state) => state.recordCaptureIntent);
   const amendOpeningPullAsDropped = useAdvancedTrackingStore(
     (state) => state.amendOpeningPullAsDropped,
   );
@@ -82,12 +80,6 @@ export default function AdvancedTrackerScreen() {
   const activeGameClockPause = game ? getActiveGameClockPause(game) : null;
   const pointTimerAdjustedTimestamp = point ? getPointAdjustedTimestamp(point, game) : null;
   const pointTimerPausedAt = activeGameClockPause?.pausedAt ?? activeStoppage?.pausedAt ?? null;
-  const getPointElapsedMs = () => {
-    if (pointTimerAdjustedTimestamp == null) return 0;
-    // Event-time callback, not render output; use the exact current time for stat timestamps.
-    // eslint-disable-next-line react/react-compiler
-    return Math.max(0, (pointTimerPausedAt ?? Date.now()) - pointTimerAdjustedTimestamp);
-  };
 
   const gameStartedAt = game?.points[0]?.startedAt ?? null;
 
@@ -137,18 +129,10 @@ export default function AdvancedTrackerScreen() {
   const handlers = useTrackerHandlers({
     pointIsOver,
     oppHasDisc,
-    possession,
     discHolderRef,
-    activeSideId,
-    focusSideId: game?.focusSideId ?? '',
-    opponentSideId: game ? getOtherSideId(game, game.focusSideId) : '',
-    tracksBothSides,
-    getPointElapsedMs,
     passModifier,
     setPassModifier,
-    recordThrow,
-    recordPickup,
-    amendLastThrowAsGoal,
+    recordCaptureIntent,
     amendOpeningPullAsDropped,
   });
 
@@ -159,7 +143,7 @@ export default function AdvancedTrackerScreen() {
     oppHasDisc,
     possession,
     discHolderRef,
-    recordThrow,
+    recordCaptureIntent,
   });
 
   useFocusEffect(() => {
@@ -283,7 +267,6 @@ export default function AdvancedTrackerScreen() {
       </View>
       {showInPointControls && (
         <TrackerActionFooter
-          getPointElapsedMs={getPointElapsedMs}
           onStartNextPoint={handleStartNextPoint}
           voiceControls={canUseVoice ? voiceControls : undefined}
         />
@@ -293,7 +276,6 @@ export default function AdvancedTrackerScreen() {
         <TrackerRareMenu
           visible={showRareMenu}
           onClose={() => setShowRareMenu(false)}
-          getPointElapsedMs={getPointElapsedMs}
           setPassModifier={setPassModifier}
         />
       )}

@@ -178,10 +178,13 @@ function arrangeCompletedPointForNextLineSelection() {
     receiver: { refType: 'participant', participantId: participants[0].id },
     result: 'inbound',
   });
-  useAdvancedTrackingStore.getState().recordThrow({
-    thrower: { refType: 'participant', participantId: participants[0].id },
-    toPlayer: { refType: 'participant', participantId: participants[1].id },
-    result: 'goal',
+  useAdvancedTrackingStore.getState().recordCaptureIntent({
+    kind: 'pickup',
+    player: { refType: 'participant', participantId: participants[0].id },
+  });
+  useAdvancedTrackingStore.getState().recordCaptureIntent({
+    kind: 'goal',
+    scorer: { refType: 'participant', participantId: participants[1].id },
   });
 
   return participants;

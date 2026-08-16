@@ -24,6 +24,11 @@ The persisted model is optimized for capture, editing, and replay. Derived goals
 completions, efficiencies, and visualizations are computed through the analytics layer rather than
 stored as parallel counters.
 
+Live capture enters the store through the semantic `recordCaptureIntent` command. Tracker touch,
+footer, rare-action, and voice adapters describe coach intent; the store resolves the current
+holder/side, timestamps, undo, caps, and canonical pickup/throw actions atomically. This boundary
+does not change the persisted game schema.
+
 ## State and Persistence
 
 - `useAdvancedTrackingStore` owns the active `currentGame`, its `currentGameId`, undo state, and

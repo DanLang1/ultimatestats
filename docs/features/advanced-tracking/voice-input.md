@@ -74,3 +74,9 @@ Best-effort matching should accept a result only when:
 - The command grammar is otherwise valid.
 
 If confidence is low or ambiguous, reject and show what was heard.
+
+## Voice Capture
+
+Voice currently records passes only. It uses the same semantic capture command as touch capture,
+but intentionally rejects a pass to the current holder with “Receiver already has disc.” Touch
+capture continues to allow self-passes and self-goals.

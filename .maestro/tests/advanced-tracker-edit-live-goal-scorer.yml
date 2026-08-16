@@ -35,18 +35,18 @@ tags:
 - assertVisible: 'IN PROGRESS'
 - assertVisible: 'Edit Joe \+ Jon · Goal'
 
-# Correct the live game's scorer to Mike and verify the rebuilt timeline.
+# Correct the live game's scorer back to the thrower (Joe) for a self-goal.
 - longPressOn:
     id: 'advanced-timeline-action-.*'
 - assertVisible: 'Edit Scorer'
-- assertNotVisible:
+- assertVisible:
     id: 'player-chip-Joe'
 - tapOn:
-    id: 'player-chip-Mike'
+    id: 'player-chip-Joe'
 - tapOn:
     id: 'advanced-goal-scorer-save'
 - extendedWaitUntil:
-    visible: 'Edit Joe \+ Mike · Goal'
+    visible: 'Edit Joe \+ Joe · Goal'
     timeout: 5000
 
 - takeScreenshot:

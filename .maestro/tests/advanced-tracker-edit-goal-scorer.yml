@@ -45,10 +45,11 @@ tags:
 - assertVisible: 'Edit Joe \+ Jon · Goal'
 
 # Correct the scorer to Mike and verify the rebuilt timeline.
+# The thrower (Joe) is now offered for self-goal correction.
 - longPressOn:
     id: 'advanced-timeline-action-.*'
 - assertVisible: 'Edit Scorer'
-- assertNotVisible:
+- assertVisible:
     id: 'player-chip-Joe'
 - tapOn:
     id: 'player-chip-Mike'

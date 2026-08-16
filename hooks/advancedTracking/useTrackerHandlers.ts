@@ -1,206 +1,75 @@
 import { TrackerPlayerGridHandlers } from '@/components/advancedTracking/TrackerPlayerGrid';
-import { isPossessionOver } from '@/lib/advancedTracking/trackingUtils';
-import { PassModifier, PlayerRef, PointPossession } from '@/lib/advancedTracking/types';
+import { CaptureIntent, CaptureIntentResult } from '@/lib/advancedTracking/captureIntentUtils';
+import { PassModifier, PlayerRef } from '@/lib/advancedTracking/types';
 
 interface UseTrackerHandlersInput {
   pointIsOver: boolean;
   oppHasDisc: boolean;
-  possession: PointPossession | null;
   discHolderRef: PlayerRef | null;
-  activeSideId: string;
-  focusSideId: string;
-  opponentSideId: string;
-  tracksBothSides: boolean;
-  getPointElapsedMs: () => number;
   passModifier: PassModifier;
-  setPassModifier: (m: PassModifier) => void;
-  recordThrow: (input: {
-    thrower: PlayerRef;
-    result:
-      | 'complete'
-      | 'drop'
-      | 'block'
-      | 'pressure'
-      | 'stall'
-      | 'throwaway'
-      | 'callahan'
-      | 'goal';
-    toPlayer?: PlayerRef;
-    defender?: PlayerRef;
-    splitAttribution?: boolean;
-    timerElapsedMs?: number;
-  }) => void;
-  recordPickup: (input: { sideId: string; player: PlayerRef }) => void;
-  amendLastThrowAsGoal: (timerElapsedMs?: number) => void;
+  setPassModifier: (modifier: PassModifier) => void;
+  recordCaptureIntent: (intent: CaptureIntent) => CaptureIntentResult;
   amendOpeningPullAsDropped: (receiver: PlayerRef) => void;
 }
 
+/** Maps tracker gestures to semantic captures; the store resolves the live possession and holder. */
 export function useTrackerHandlers(input: UseTrackerHandlersInput): TrackerPlayerGridHandlers {
   const {
     pointIsOver,
     oppHasDisc,
-    possession,
     discHolderRef,
-    activeSideId,
-    focusSideId,
-    opponentSideId,
-    tracksBothSides,
-    getPointElapsedMs,
     passModifier,
     setPassModifier,
-    recordThrow,
-    recordPickup,
-    amendLastThrowAsGoal,
+    recordCaptureIntent,
     amendOpeningPullAsDropped,
   } = input;
 
   const onPlayerTap = (ref: PlayerRef) => {
     if (pointIsOver) return;
-
     if (passModifier === 'block') {
       if (!discHolderRef) return;
-      recordThrow({ thrower: discHolderRef, result: 'block', defender: ref });
-      setPassModifier(null);
+      recordCaptureIntent({ kind: 'block', defender: ref });
+    } else if (passModifier === 'callahan') {
+      if (!discHolderRef && !oppHasDisc) return;
+      recordCaptureIntent({ kind: 'callahan', scorer: ref });
+    } else if (passModifier === 'stall') {
+      if (!discHolderRef && !oppHasDisc) return;
+      recordCaptureIntent({ kind: 'stall', defender: ref });
+    } else if (passModifier === 'pressure') {
+      if (!discHolderRef && !oppHasDisc) return;
+      recordCaptureIntent({ kind: 'pressure', defender: ref });
+    } else if (oppHasDisc) recordCaptureIntent({ kind: 'block', defender: ref });
+    else if (discHolderRef == null) {
+      recordCaptureIntent({ kind: 'pickup', player: ref });
+      return;
+    } else if (passModifier === 'fifty-fifty') {
+      recordCaptureIntent({ kind: 'fifty-fifty', receiver: ref });
+    } else {
+      recordCaptureIntent({ kind: 'pass', receiver: ref });
       return;
     }
-
-    if (passModifier === 'callahan') {
-      if (tracksBothSides) {
-        if (!discHolderRef) return;
-        recordThrow({
-          thrower: discHolderRef,
-          result: 'callahan',
-          defender: ref,
-          timerElapsedMs: getPointElapsedMs(),
-        });
-        setPassModifier(null);
-        return;
-      }
-      if (!possession || isPossessionOver(possession)) {
-        recordPickup({ sideId: opponentSideId, player: { refType: 'untracked' } });
-      }
-      recordThrow({
-        thrower: { refType: 'untracked' },
-        result: 'callahan',
-        toPlayer: ref,
-        timerElapsedMs: getPointElapsedMs(),
-      });
-      setPassModifier(null);
-      return;
-    }
-
-    if (passModifier === 'stall') {
-      if (tracksBothSides) {
-        if (!discHolderRef) return;
-        recordThrow({ thrower: discHolderRef, result: 'stall', defender: ref });
-        setPassModifier(null);
-        return;
-      }
-      if (!possession || isPossessionOver(possession)) {
-        recordPickup({ sideId: opponentSideId, player: { refType: 'untracked' } });
-      }
-      recordThrow({
-        thrower: { refType: 'untracked' },
-        result: 'stall',
-        defender: ref,
-      });
-      setPassModifier(null);
-      return;
-    }
-
-    if (passModifier === 'pressure') {
-      if (tracksBothSides) {
-        if (!discHolderRef) return;
-        recordThrow({
-          thrower: discHolderRef,
-          result: 'pressure',
-          defender: ref,
-        });
-        setPassModifier(null);
-        return;
-      }
-      if (!possession || isPossessionOver(possession)) {
-        recordPickup({ sideId: opponentSideId, player: { refType: 'untracked' } });
-      }
-      recordThrow({
-        thrower: { refType: 'untracked' },
-        result: 'pressure',
-        defender: ref,
-      });
-      setPassModifier(null);
-      return;
-    }
-
-    if (oppHasDisc) {
-      if (!possession || isPossessionOver(possession)) {
-        recordPickup({ sideId: opponentSideId, player: { refType: 'untracked' } });
-      }
-      recordThrow({
-        thrower: { refType: 'untracked' },
-        result: 'block',
-        defender: ref,
-      });
-      setPassModifier(null);
-      return;
-    }
-
-    if (!possession || isPossessionOver(possession) || discHolderRef === null) {
-      recordPickup({ sideId: tracksBothSides ? activeSideId : focusSideId, player: ref });
-      return;
-    }
-
-    if (passModifier === 'fifty-fifty') {
-      recordThrow({
-        thrower: discHolderRef,
-        toPlayer: ref,
-        result: 'drop',
-        splitAttribution: true,
-      });
-      setPassModifier(null);
-      return;
-    }
-
-    recordThrow({
-      thrower: discHolderRef,
-      toPlayer: ref,
-      result: 'complete',
-    });
-  };
-
-  const onDrop = (ref: PlayerRef) => {
-    if (!discHolderRef || pointIsOver) return;
-    recordThrow({
-      thrower: discHolderRef,
-      toPlayer: ref,
-      result: 'drop',
-    });
     setPassModifier(null);
   };
 
-  const onPullDrop = (ref: PlayerRef) => {
-    if (pointIsOver || discHolderRef !== null || oppHasDisc) return;
-    amendOpeningPullAsDropped(ref);
-    setPassModifier(null);
+  return {
+    onPlayerTap,
+    onDrop: (receiver) => {
+      if (discHolderRef == null || pointIsOver) return;
+      recordCaptureIntent({ kind: 'drop', receiver });
+      setPassModifier(null);
+    },
+    onPullDrop: (receiver) => {
+      if (pointIsOver || discHolderRef != null || oppHasDisc) return;
+      amendOpeningPullAsDropped(receiver);
+      setPassModifier(null);
+    },
+    onGoal: (scorer) => {
+      if (discHolderRef != null && !pointIsOver) recordCaptureIntent({ kind: 'goal', scorer });
+    },
+    onThrowaway: () => {
+      if (discHolderRef == null || pointIsOver) return;
+      recordCaptureIntent({ kind: 'throwaway' });
+      setPassModifier(null);
+    },
   };
-
-  const onGoal = (ref: PlayerRef) => {
-    if (!discHolderRef || pointIsOver) return;
-    recordThrow({
-      thrower: discHolderRef,
-      toPlayer: ref,
-      result: 'complete',
-    });
-    amendLastThrowAsGoal(getPointElapsedMs());
-  };
-
-  const onThrowaway = () => {
-    if (!discHolderRef || pointIsOver) return;
-    recordThrow({
-      thrower: discHolderRef,
-      result: 'throwaway',
-    });
-    setPassModifier(null);
-  };
-
-  return { onPlayerTap, onDrop, onPullDrop, onGoal, onThrowaway };
 }

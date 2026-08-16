@@ -95,6 +95,12 @@ from action order. They are not parallel persisted counters.
 
 ## Actions
 
+Capture adapters do not write raw actions. They submit a typed semantic capture intent to the live
+store, which plans any required anonymous-opponent pickup and appends canonical actions in one
+transaction. A direct goal is persisted as a `throw` with `result: 'goal'`; it is not a completed
+throw amended later. Touch capture permits self-passes and self-goals, so a goal thrower may also
+be its receiver and is eligible during scorer correction.
+
 `PossessionAction` is the union of:
 
 | Kind          | Purpose                                                                    |
@@ -149,11 +155,11 @@ corrections update payload fields without moving historical actions between poss
 
 Saved-game timelines and the active game's timeline support correcting the scorer on the action that
 ended any completed point. A replacement scorer must have been active for the scoring side at that
-exact action after applying any earlier injury substitutions; the thrower cannot also be selected as
-the receiver on a normal goal. The correction preserves the point, possession, action ID, result,
-side, ordering, and timing. Callahan corrections update the existing scoring attribution field
-without changing which side scored. A live scorer correction does not create an undo entry, so Undo
-continues to remove the recorded scoring action itself.
+exact action after applying any earlier injury substitutions. The thrower remains eligible so a
+self-goal can be corrected away and restored. The correction preserves the point, possession,
+action ID, result, side, ordering, and timing. Callahan corrections update the existing scoring
+attribution field without changing which side scored. A live scorer correction does not create an
+undo entry, so Undo continues to remove the recorded scoring action itself.
 
 Thrower/assister corrections are intentionally deferred because they must also preserve disc-holder
 continuity with the preceding pickup or completion. Structural result changes, action deletion, and

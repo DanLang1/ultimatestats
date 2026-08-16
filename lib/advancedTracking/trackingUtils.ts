@@ -273,7 +273,7 @@ export function didLastOperationEndCurrentPoint(
   const currentPoint = getCurrentPoint(game);
   return (
     currentPoint != null &&
-    (lastUndoEntry?.kind === 'action' || lastUndoEntry?.kind === 'amend_throw_result') &&
+    lastUndoEntry?.kind === 'action' &&
     lastUndoEntry.pointId === currentPoint.id
   );
 }
