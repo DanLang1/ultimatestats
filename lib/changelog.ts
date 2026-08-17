@@ -6,6 +6,11 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.2.2',
+    date: 'Aug 17, 2026',
+    changes: ['Fixing reduce motion animations for iOS'],
+  },
+  {
     version: '2.2.1',
     date: 'Aug 6, 2026',
     changes: ['Adding Sentry to debug rare ios startup issues'],

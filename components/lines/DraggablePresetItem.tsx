@@ -4,6 +4,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   LinearTransition,
+  ReduceMotion,
   SharedValue,
   useAnimatedStyle,
   useSharedValue,
@@ -88,6 +89,7 @@ export function DraggablePresetItem({
         animatedOffset.set(
           withTiming((to - dragOriginIndex.get()) * ROW_HEIGHT, {
             duration: 100,
+            reduceMotion: ReduceMotion.Never,
           }),
         );
         scheduleOnRN(onSwap, from, to);
@@ -121,7 +123,9 @@ export function DraggablePresetItem({
 
   return (
     <Animated.View
-      layout={isDraggingProp ? undefined : LinearTransition.duration(150)}
+      layout={
+        isDraggingProp ? undefined : LinearTransition.duration(150).reduceMotion(ReduceMotion.Never)
+      }
       style={[styles.item, { backgroundColor: palette.overlay08 }, animatedStyle]}>
       <GestureDetector gesture={panGesture}>
         <View style={styles.dragHandle}>

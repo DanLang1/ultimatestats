@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import {
+  ReduceMotion,
   useAnimatedStyle,
   useSharedValue,
   withRepeat,
@@ -7,7 +8,11 @@ import {
   withTiming,
 } from 'react-native-reanimated';
 
-export function usePulseAnimation(active: boolean, duration = 800) {
+export function usePulseAnimation(
+  active: boolean,
+  duration = 800,
+  reduceMotion: ReduceMotion = ReduceMotion.System,
+) {
   const pulse = useSharedValue(0);
 
   useEffect(() => {
@@ -16,15 +21,16 @@ export function usePulseAnimation(active: boolean, duration = 800) {
       // regardless of what value the inactive reset left behind.
       pulse.set(
         withSequence(
+          reduceMotion,
           withTiming(0, { duration: 0 }),
           withRepeat(withTiming(1, { duration }), -1, true),
         ),
       );
     } else {
       // Fade to fully visible so mounted views don't get stuck at a partial opacity.
-      pulse.set(withTiming(1, { duration: 200 }));
+      pulse.set(withTiming(1, { duration: 200, reduceMotion }));
     }
-  }, [active, duration, pulse]);
+  }, [active, duration, pulse, reduceMotion]);
 
   const animatedStyle = useAnimatedStyle(() => {
     'worklet';

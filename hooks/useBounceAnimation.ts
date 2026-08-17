@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import {
+  ReduceMotion,
   cancelAnimation,
   useAnimatedStyle,
   useSharedValue,
@@ -11,9 +12,14 @@ import {
 interface BounceAnimationOptions {
   delta: number;
   isHorizontal: boolean;
+  reduceMotion?: ReduceMotion;
 }
 
-export function useBounceAnimation({ delta, isHorizontal }: BounceAnimationOptions) {
+export function useBounceAnimation({
+  delta,
+  isHorizontal,
+  reduceMotion = ReduceMotion.System,
+}: BounceAnimationOptions) {
   const translate = useSharedValue(0);
   const opacity = useSharedValue(1);
 
@@ -21,23 +27,29 @@ export function useBounceAnimation({ delta, isHorizontal }: BounceAnimationOptio
     translate.set(
       withRepeat(
         withSequence(
+          reduceMotion,
           withTiming(delta, { duration: 520 }),
           withTiming(0, { duration: 1 }),
           withTiming(0, { duration: 280 }),
         ),
         -1,
         false,
+        undefined,
+        reduceMotion,
       ),
     );
     opacity.set(
       withRepeat(
         withSequence(
+          reduceMotion,
           withTiming(0, { duration: 520 }),
           withTiming(1, { duration: 1 }),
           withTiming(1, { duration: 280 }),
         ),
         -1,
         false,
+        undefined,
+        reduceMotion,
       ),
     );
 
@@ -45,7 +57,7 @@ export function useBounceAnimation({ delta, isHorizontal }: BounceAnimationOptio
       cancelAnimation(translate);
       cancelAnimation(opacity);
     };
-  }, [delta, translate, opacity]);
+  }, [delta, opacity, reduceMotion, translate]);
 
   const animatedStyle = useAnimatedStyle(() => {
     'worklet';
