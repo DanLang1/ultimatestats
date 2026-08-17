@@ -1,6 +1,10 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import { getCurrentPoint, getGameScore } from '../../lib/advancedTracking/trackingUtils';
+import {
+  getActiveAdvancedGame,
+  getCurrentPoint,
+  getGameScore,
+} from '../../lib/advancedTracking/trackingUtils';
 import type { AdvancedTrackedGame } from '../../lib/advancedTracking/types';
 import { useAdvancedTrackingStore } from './captureTestStore';
 
@@ -68,8 +72,7 @@ function createGame(gameTo = 15): string {
 }
 
 function getCurrentGame(): AdvancedTrackedGame | null {
-  const { currentGameId, currentGame } = useAdvancedTrackingStore.getState();
-  return currentGame?.id === currentGameId ? currentGame : null;
+  return getActiveAdvancedGame(useAdvancedTrackingStore.getState());
 }
 
 describe('advancedTrackingStore — edge cases', () => {

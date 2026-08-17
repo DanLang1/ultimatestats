@@ -24,7 +24,26 @@ export interface AdvancedHalftimeEarlyUndoEntry {
   pointId: string;
 }
 
+export interface AdvancedGameLookupState {
+  currentGameId: string | null;
+  currentGame: AdvancedTrackedGame | null;
+}
+
 // --- Traversal ---
+
+export function getActiveAdvancedGame(state: AdvancedGameLookupState): AdvancedTrackedGame | null {
+  const game = state.currentGame;
+  if (game == null || state.currentGameId == null || game.id !== state.currentGameId) {
+    return null;
+  }
+
+  return game;
+}
+
+export function getLiveInProgressGame(state: AdvancedGameLookupState): AdvancedTrackedGame | null {
+  const game = getActiveAdvancedGame(state);
+  return game?.status === 'in_progress' ? game : null;
+}
 
 export function getCurrentPoint(game: AdvancedTrackedGame | null): TrackedPoint | null {
   if (game == null || !hasItems(game.points)) {

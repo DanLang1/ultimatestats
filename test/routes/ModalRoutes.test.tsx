@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { screen, userEvent } from '@testing-library/react-native';
+import { fireEvent, screen, userEvent } from '@testing-library/react-native';
 import { router } from 'expo-router';
 
 import AdvancedGameSelectorModal from '@/app/(modals)/AdvancedGameSelectorModal';
@@ -21,6 +21,7 @@ import {
   arrangeBasicGame,
   cacheCurrentAdvancedGame,
   createSavedBasicGame,
+  recordOpeningPull,
   testTeam,
 } from '@/test/fixtures/domain';
 import { resetAllStores } from '@/test/fixtures/resetStores';
@@ -241,6 +242,57 @@ describe('modal routes', () => {
     expect(screen.getByDisplayValue('Alex')).toBeVisible();
     expect(screen.getByDisplayValue('7')).toBeVisible();
     expect(screen.getByText('Save')).toBeVisible();
+  });
+
+  it('shows an inline error when advanced-game participation blocks deactivation', async () => {
+    const user = userEvent.setup();
+    useGameStore.setState({ currentTeam: testTeam });
+    arrangeAdvancedGame();
+    setMockSearchParams({ playerId: 'player-alex' });
+
+    await renderScreen(<EditPlayerModal />);
+
+    recordOpeningPull();
+    void fireEvent(screen.getByTestId('edit-player-active-toggle'), 'valueChange', false);
+    await user.press(screen.getByTestId('edit-player-save'));
+
+    expect(screen.getByTestId('edit-player-save-error')).toHaveTextContent(
+      /cannot be set inactive until the game is over/,
+    );
+    expect(screen.queryByTestId('edit-player-active-toggle')).not.toBeOnTheScreen();
+    expect(useGameStore.getState().currentTeam.roster[0].isActive).toBe(true);
+    expect(router.dismissTo).not.toHaveBeenCalled();
+  });
+
+  it('hides deletion for a player who participated in the advanced game', async () => {
+    useGameStore.setState({ currentTeam: testTeam });
+    arrangeAdvancedGame();
+    recordOpeningPull();
+    setMockSearchParams({ playerId: 'player-alex' });
+
+    await renderScreen(<EditPlayerModal />);
+
+    expect(screen.queryByTestId('edit-player-active-toggle')).not.toBeOnTheScreen();
+    expect(screen.queryByTestId('edit-player-delete')).not.toBeOnTheScreen();
+  });
+
+  it('blocks deletion if advanced-game participation starts after the modal renders', async () => {
+    const user = userEvent.setup();
+    useGameStore.setState({ currentTeam: testTeam });
+    arrangeAdvancedGame();
+    setMockSearchParams({ playerId: 'player-alex' });
+
+    await renderScreen(<EditPlayerModal />);
+
+    await user.press(screen.getByTestId('edit-player-delete'));
+    recordOpeningPull();
+    await user.press(screen.getByText('Delete'));
+
+    expect(screen.getByTestId('edit-player-save-error')).toHaveTextContent(
+      /cannot be deleted until the game is over/,
+    );
+    expect(screen.getByText('EDIT PLAYER')).toBeVisible();
+    expect(useGameStore.getState().currentTeam.roster).toHaveLength(testTeam.roster.length);
   });
 
   it('renders the basic player game selector from real player-stat data', async () => {

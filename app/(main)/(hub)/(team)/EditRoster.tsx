@@ -450,7 +450,8 @@ export default function EditRosterScreen() {
                     { backgroundColor: palette.overlay10 },
                     pressed && styles.buttonPressed,
                   ]}
-                  onPress={() => setShowActionsSheet(true)}>
+                  onPress={() => setShowActionsSheet(true)}
+                  testID="roster-actions-button">
                   <MaterialCommunityIcons
                     name="dots-horizontal"
                     size={scaleBySizeClass(22, sizeClass)}
@@ -513,6 +514,7 @@ export default function EditRosterScreen() {
                   returnKeyType="done"
                   autoCapitalize="words"
                   maxLength={20}
+                  testID="roster-add-player-input"
                 />
                 {isDuplicateName && (
                   <ThemedText
@@ -528,7 +530,8 @@ export default function EditRosterScreen() {
                   { backgroundColor: palette.accent },
                   pressed && styles.buttonPressed,
                 ]}
-                onPress={handleAddPlayer}>
+                onPress={handleAddPlayer}
+                testID="roster-add-player-button">
                 <MaterialCommunityIcons
                   name="plus"
                   size={metrics.addIconSize}

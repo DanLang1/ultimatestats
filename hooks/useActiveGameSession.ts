@@ -1,6 +1,6 @@
 import type { Href } from 'expo-router';
 
-import { isAdvancedGameOver } from '@/lib/advancedTracking/trackingUtils';
+import { getLiveInProgressGame, isAdvancedGameOver } from '@/lib/advancedTracking/trackingUtils';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { useGameSessionStore } from '@/store/gameSessionStore';
 
@@ -14,11 +14,8 @@ type ActiveGameSession = {
 export function useActiveGameSession(): ActiveGameSession {
   const activeGameType = useGameSessionStore((state) => state.activeGameType);
   const activeAdvancedGameRoute = useAdvancedTrackingStore((state) => {
-    const activeAdvancedGame =
-      state.currentGame?.id === state.currentGameId ? state.currentGame : null;
-    if (activeAdvancedGame?.status !== 'in_progress') {
-      return null;
-    }
+    const activeAdvancedGame = getLiveInProgressGame(state);
+    if (activeAdvancedGame == null) return null;
 
     if (isAdvancedGameOver(activeAdvancedGame)) {
       return '/advancedTracking/TrackerGameComplete';

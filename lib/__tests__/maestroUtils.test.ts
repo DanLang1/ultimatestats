@@ -6,9 +6,11 @@ import {
   MAESTRO_SCRIMMAGE_BENCH_PLAYERS,
   MAESTRO_SCRIMMAGE_PLAYERS,
   MAESTRO_SEED_PLAYERS,
+  MAESTRO_SEED_TEAM_ID,
 } from '@/lib/maestroConstants';
 import { MaestroTrackerState, seedAdvancedTrackerTestGame } from '@/lib/maestroUtils';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
+import { useGameStore } from '@/store/basic/gameStore';
 
 describe('seedAdvancedTrackerTestGame tracker state presets', () => {
   beforeEach(async () => {
@@ -83,5 +85,16 @@ describe('seedAdvancedTrackerTestGame tracker state presets', () => {
     for (const benchPlayer of MAESTRO_SCRIMMAGE_BENCH_PLAYERS) {
       expect(startingParticipantIds.has(getMaestroSeedPlayerId(benchPlayer))).toBe(false);
     }
+  });
+
+  it('seeds the current team used by roster-backed advanced games', async () => {
+    await seedAdvancedTrackerTestGame();
+
+    const currentTeam = useGameStore.getState().currentTeam;
+    const game = useAdvancedTrackingStore.getState().currentGame;
+
+    expect(currentTeam.id).toBe(MAESTRO_SEED_TEAM_ID);
+    expect(game?.sides[0].sourceTeamId).toBe(currentTeam.id);
+    expect(currentTeam.roster.map((player) => player.name)).toEqual(MAESTRO_SEED_PLAYERS);
   });
 });

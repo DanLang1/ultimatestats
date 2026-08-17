@@ -18,6 +18,7 @@ import {
   replaceSubsForStoppage,
   withAppendedStoppage,
 } from '@/lib/advancedTracking/injurySubUtils';
+import { deriveRosterParticipantSyncPlan } from '@/lib/advancedTracking/participantSync';
 import {
   getActiveGameClockPause,
   getGameClockElapsedMs,
@@ -32,6 +33,7 @@ import {
   assertValidPointLineHistory,
   assertValidSideIds,
   canStartSecondHalfEarly,
+  getActiveAdvancedGame,
   getCurrentPoint,
   getCurrentPossession,
   getEffectiveGameTo,
@@ -40,6 +42,7 @@ import {
   getOtherSideId,
   getParticipantIdsUsedBySide,
   getPointActionParticipantIds,
+  getLiveInProgressGame,
   getReceivingSideForNextPoint,
   hasPointEnded,
   isAdvancedGameOver,
@@ -48,6 +51,7 @@ import {
   syncCapTransitions,
   syncDerivedHalftimeTransition,
 } from '@/lib/advancedTracking/trackingUtils';
+import type { AdvancedGameLookupState } from '@/lib/advancedTracking/trackingUtils';
 import {
   ADVANCED_TRACKING_SCHEMA_VERSION,
   AdvancedTrackedGame,
@@ -55,6 +59,7 @@ import {
 } from '@/lib/advancedTracking/types';
 import { generateId } from '@/lib/utils';
 import { useSavedAdvancedGamesStore } from '@/store/advancedTracking/savedGamesStore';
+import { useGameStore, registerActiveAdvancedGameGetter } from '@/store/basic/gameStore';
 import { useSettingsStore } from '@/store/settingsStore';
 
 import { getCurrentPendingNextPointLineSelection } from './pendingLineSelection';
@@ -69,14 +74,13 @@ import {
 
 const ADVANCED_TRACKING_STORAGE_KEY = 'ultimatestats_advanced_tracking';
 
-type GameLookupState = { currentGameId: string | null; currentGame: AdvancedTrackedGame | null };
-
-function getCurrentGame(state: GameLookupState): AdvancedTrackedGame {
+function getCurrentGame(state: AdvancedGameLookupState): AdvancedTrackedGame {
   if (state.currentGameId == null) throw new Error('No active game.');
-  if (state.currentGame == null || state.currentGame.id !== state.currentGameId) {
+  const game = getActiveAdvancedGame(state);
+  if (game == null) {
     throw new Error(`currentGameId "${state.currentGameId}" not loaded.`);
   }
-  return state.currentGame;
+  return game;
 }
 
 function pushUndoEntry(state: Draft<AdvancedTrackingState>, entry: AdvancedTrackingUndoEntry) {
@@ -1166,4 +1170,41 @@ useAdvancedTrackingStore.subscribe((state) => {
     return;
   }
   void persistLiveGame(game);
+});
+
+registerActiveAdvancedGameGetter(() => getLiveInProgressGame(useAdvancedTrackingStore.getState()));
+
+useGameStore.subscribe((gameState) => {
+  const game = getLiveInProgressGame(useAdvancedTrackingStore.getState());
+  if (game == null) return;
+
+  const plan = deriveRosterParticipantSyncPlan(game, gameState.currentTeam);
+  if (plan == null) return;
+
+  useAdvancedTrackingStore.setState((state) => {
+    const liveGame = getCurrentGame(state);
+
+    if (plan.participantsToAdd.length > 0) {
+      liveGame.participants.push(...plan.participantsToAdd);
+      liveGame.updatedAt = Date.now();
+    }
+
+    if (plan.unavailableParticipantIds.size > 0) {
+      const selection = getCurrentPendingNextPointLineSelection(
+        liveGame,
+        state.pendingNextPointLineSelection,
+      );
+      if (selection != null) {
+        for (const sideId of Object.keys(selection.participantIdsBySide)) {
+          const draftedIds = selection.participantIdsBySide[sideId];
+          const availableIds = draftedIds.filter(
+            (participantId) => !plan.unavailableParticipantIds.has(participantId),
+          );
+          if (availableIds.length !== draftedIds.length) {
+            selection.participantIdsBySide[sideId] = availableIds;
+          }
+        }
+      }
+    }
+  });
 });

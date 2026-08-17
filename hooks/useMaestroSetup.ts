@@ -14,13 +14,14 @@ interface MaestroSetupParams {
   capMode?: string;
   gameType?: string;
   mode?: string;
+  rosterView?: string;
   trackerState?: string;
 }
 
 const MAESTRO_SETUP_HANDSHAKE_MS = 250;
 
 export function useMaestroSetup(params: MaestroSetupParams) {
-  const { capMode, gameType, mode, trackerState } = params;
+  const { capMode, gameType, mode, rosterView, trackerState } = params;
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
@@ -31,7 +32,13 @@ export function useMaestroSetup(params: MaestroSetupParams) {
     const runSetup = async () => {
       try {
         await waitForMaestroStoresToHydrate();
-        const destination = await seedMaestroState({ capMode, gameType, mode, trackerState });
+        const destination = await seedMaestroState({
+          capMode,
+          gameType,
+          mode,
+          rosterView,
+          trackerState,
+        });
         if (isCancelled) return;
         router.replace(destination);
       } catch (error) {
@@ -48,7 +55,7 @@ export function useMaestroSetup(params: MaestroSetupParams) {
       isCancelled = true;
       clearTimeout(setupTimer);
     };
-  }, [capMode, gameType, mode, trackerState]);
+  }, [capMode, gameType, mode, rosterView, trackerState]);
 
   return errorMessage;
 }
@@ -69,6 +76,7 @@ async function seedMaestroState(
   await seedAdvancedTrackerTestGame({
     capMode: parseCapMode(params.capMode),
     gameType: parseGameType(params.gameType),
+    rosterView: parseRosterView(params.rosterView),
     trackerState: parseTrackerState(params.trackerState),
   });
   return '/advancedTracking/Tracker';
@@ -92,6 +100,10 @@ function parseCapMode(capMode: string | undefined): MaestroCapMode {
 function parseGameType(gameType: string | undefined): MaestroSeedGameType {
   if (gameType === 'scrimmage') return 'scrimmage';
   return 'game';
+}
+
+function parseRosterView(rosterView: string | undefined): 'chips' | 'cards' {
+  return rosterView === 'cards' ? 'cards' : 'chips';
 }
 
 function parseTrackerState(trackerState: string | undefined): MaestroTrackerState {

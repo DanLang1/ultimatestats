@@ -90,6 +90,7 @@ export function QuickEditPlayerRow({
             onValueChange={onSetActive}
             trackColor={{ false: palette.overlay20, true: palette.accent }}
             thumbColor={player.isActive ? palette.textOnAccent : palette.textMuted}
+            testID={`quick-edit-active-${player.id}`}
           />
           <Pressable
             style={({ pressed }) => [

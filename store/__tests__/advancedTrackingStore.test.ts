@@ -4,6 +4,7 @@ import { buildAnalyticsGame } from '@/lib/advancedTracking/buildAnalyticsGame';
 import { upsertAdvancedGame } from '@/lib/advancedTracking/storage';
 import { getEffectiveLineParticipantIds } from '@/lib/advancedTracking/trackingDisplayHelpers';
 import {
+  getActiveAdvancedGame,
   getCurrentPoint,
   getEffectiveGameTo,
   getGameScore,
@@ -134,8 +135,7 @@ function createDualTrackedScrimmage() {
 }
 
 function getCurrentGame(): AdvancedTrackedGame | null {
-  const { currentGameId, currentGame } = useAdvancedTrackingStore.getState();
-  return currentGame?.id === currentGameId ? currentGame : null;
+  return getActiveAdvancedGame(useAdvancedTrackingStore.getState());
 }
 
 describe('advancedTrackingStore', () => {

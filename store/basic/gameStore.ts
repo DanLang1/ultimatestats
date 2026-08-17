@@ -4,6 +4,8 @@ import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 
+import { hasPlayerRecordedAdvancedActions } from '@/lib/advancedTracking/participantSync';
+import type { AdvancedTrackedGame } from '@/lib/advancedTracking/types';
 import { checkGameOver } from '@/lib/basic/gameUtils';
 import { canTriggerHalftimeEarly, hasReachedHalftime } from '@/lib/basic/halftimeUtils';
 import { deriveTimeoutState } from '@/lib/basic/timeoutUtils';
@@ -57,6 +59,34 @@ function canReplacePointLine(
 
   const rosterPlayerIds = new Set(roster.map((player) => player.id));
   return playerIds.every((playerId) => rosterPlayerIds.has(playerId));
+}
+
+type ActiveAdvancedGameGetter = () => AdvancedTrackedGame | null;
+type GameParticipationState = Pick<GameState, 'events' | 'pointLines'>;
+
+let getActiveAdvancedGame: ActiveAdvancedGameGetter | null = null;
+
+export function registerActiveAdvancedGameGetter(getter: ActiveAdvancedGameGetter) {
+  getActiveAdvancedGame = getter;
+}
+
+function hasRecordedAdvancedActions(playerId: string): boolean {
+  const advancedGame = getActiveAdvancedGame?.();
+  return advancedGame != null && hasPlayerRecordedAdvancedActions(advancedGame, playerId);
+}
+
+export function hasPlayerRecordedActionsInActiveAdvancedGame(playerId: string): boolean {
+  return hasRecordedAdvancedActions(playerId);
+}
+
+function hasPlayerParticipatedInGameState(
+  playerId: string,
+  state: GameParticipationState,
+): boolean {
+  return (
+    hasPlayerParticipatedInCurrentGame(playerId, state.events, state.pointLines) ||
+    hasRecordedAdvancedActions(playerId)
+  );
 }
 
 export const useGameStore = create<GameState>()(
@@ -642,7 +672,7 @@ export const useGameStore = create<GameState>()(
             if (
               updates.isActive === false &&
               player.isActive !== false &&
-              hasPlayerParticipatedInCurrentGame(playerId, state.events, state.pointLines)
+              hasPlayerParticipatedInGameState(playerId, state)
             ) {
               updateResult = 'blocked-current-game-participation';
               return;

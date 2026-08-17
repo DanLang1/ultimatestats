@@ -56,6 +56,25 @@ Participants are game-scoped player records and live once at game scope. A point
 assigns participant IDs to sides for that point, allowing the same participant to appear on
 different scrimmage sides across the game.
 
+While a game is `in_progress` and a side links to the current team through `sourceTeamId`,
+roster changes sync one way into the game record and derived availability:
+
+- Adding a roster player (including reactivating a player who was inactive at game start)
+  appends a matching participant with `sourcePlayerId` bound to the roster player. No schema
+  change is involved; the append persists with the live game like any other mutation.
+- Deactivating a roster player is blocked (`blocked-current-game-participation` from
+  `updateRosterPlayer`) once the player has any recorded action in the live game. The block
+  consults the live game through a registered getter because the basic store cannot import
+  the advanced store.
+- Deleting a roster player is likewise blocked while the player has any recorded action in the
+  live game. Deletion remains available after the game ends; historical advanced participant
+  records are not removed.
+- A deactivated zero-action participant is not removed from the record. Availability is
+  derived: the tracker's live participant hook filters participants whose roster player is
+  inactive, and the pending next-point line selection is pruned so a draft can never start a
+  point with them. Participants without a matching roster player (deleted players, imported
+  participants) remain available.
+
 `PlayerRef` preserves three different meanings:
 
 - `participant`: a known tracked player

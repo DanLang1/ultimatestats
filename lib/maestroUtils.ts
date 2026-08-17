@@ -73,6 +73,10 @@ export function buildSeedTeam(playerNames: string[] = MAESTRO_SEED_PLAYERS): Sav
 
 function seedTestTeamWithPlayers(playerNames?: string[]) {
   const team = buildSeedTeam(playerNames);
+  setSeedTeam(team);
+}
+
+function setSeedTeam(team: SavedTeam) {
   useGameStore.setState((state) => {
     state.currentTeam = team;
     const savedTeamIndex = state.savedTeams.findIndex((savedTeam) => savedTeam.id === team.id);
@@ -161,6 +165,7 @@ export async function seedMaestroTeamPrerequisites(
     options.gameType === 'scrimmage' ? MAESTRO_SCRIMMAGE_PLAYERS : undefined,
   );
   resetMaestroSetupState(team);
+  setSeedTeam(team);
 
   if (options.clearActiveGame === true) {
     await clearAdvancedGames();
@@ -278,6 +283,7 @@ export async function seedAdvancedTrackerTestGame(
   options: {
     capMode?: MaestroCapMode;
     gameType?: MaestroSeedGameType;
+    rosterView?: 'chips' | 'cards';
     trackerState?: MaestroTrackerState;
   } = {},
 ) {
@@ -295,6 +301,9 @@ export async function seedAdvancedTrackerTestGame(
   gameStore.resetGame();
   sessionStore.setActiveGameType('advanced');
   await seedMaestroTeamPrerequisites({ gameType });
+  if (options.rosterView != null) {
+    useSettingsStore.setState({ rosterViewMode: options.rosterView });
+  }
   const team = buildSeedTeam(isScrimmage ? MAESTRO_SCRIMMAGE_PLAYERS : undefined);
 
   const participants: Participant[] = team.roster.map((player) => ({

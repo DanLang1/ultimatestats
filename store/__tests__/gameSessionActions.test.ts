@@ -65,7 +65,20 @@ describe('game session actions', () => {
   it('starts a basic session and clears advanced draft state', () => {
     useAdvancedTrackingStore.setState({
       currentGameId: 'advanced-game',
-      currentGame: { id: 'advanced-game', status: 'in_progress', points: [] } as never,
+      currentGame: {
+        id: 'advanced-game',
+        schemaVersion: 2,
+        createdAt: 0,
+        updatedAt: 0,
+        gameType: 'game',
+        status: 'in_progress',
+        focusSideId: 'home',
+        initialReceivingSideId: 'home',
+        settings: { locationMode: 'none' },
+        sides: [{ id: 'home', label: 'Home', trackingMode: 'full-roster' }],
+        participants: [],
+        points: [],
+      },
     });
     useGameStore.setState({ team1Score: 4, currentGameStatus: 'inProgress' });
 

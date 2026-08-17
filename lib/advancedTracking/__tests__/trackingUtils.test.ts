@@ -9,6 +9,7 @@ import {
   cloneGame,
   didPullTurnOver,
   didLastOperationEndCurrentPoint,
+  getActiveAdvancedGame,
   getAdvancedRecentLines,
   getCurrentPoint,
   getCurrentPossession,
@@ -16,6 +17,7 @@ import {
   getGameScore,
   getLastAction,
   getLineReceivingSideId,
+  getLiveInProgressGame,
   getOtherSideId,
   getPointActionParticipantIds,
   getPointScoringSideId,
@@ -84,6 +86,31 @@ function makePoint(possessions: PointPossession[]): TrackedPoint {
     possessions,
   };
 }
+
+describe('advanced game lookup', () => {
+  it('returns the game only when the active ID matches', () => {
+    expect(getActiveAdvancedGame({ currentGameId: baseGame.id, currentGame: baseGame })).toBe(
+      baseGame,
+    );
+    expect(getActiveAdvancedGame({ currentGameId: null, currentGame: baseGame })).toBeNull();
+    expect(
+      getActiveAdvancedGame({ currentGameId: 'stale-game', currentGame: baseGame }),
+    ).toBeNull();
+    expect(getActiveAdvancedGame({ currentGameId: baseGame.id, currentGame: null })).toBeNull();
+  });
+
+  it('returns only an active in-progress game for live tracking', () => {
+    expect(getLiveInProgressGame({ currentGameId: baseGame.id, currentGame: baseGame })).toBe(
+      baseGame,
+    );
+    expect(
+      getLiveInProgressGame({
+        currentGameId: baseGame.id,
+        currentGame: { ...baseGame, status: 'final' },
+      }),
+    ).toBeNull();
+  });
+});
 
 describe('getPointActionParticipantIds', () => {
   it('collects known pull, pickup, throw, receiver, and defender participants', () => {

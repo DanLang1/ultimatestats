@@ -1,0 +1,115 @@
+appId: com.langdk.ultimatestats.dev
+name: Advanced Tracker Mid-Game Roster Sync
+---
+# Seed a live single-team game where Joe has recorded a pickup action,
+# and use roster cards view so the inline active switches are addressable.
+# Follows the setup-game.yaml handshake pattern; the rosterView param keeps
+# the flow off RN Modal UI that Maestro cannot address.
+- launchApp
+- openLink: 'ultimatestats-dev:///__maestro_seed__?trackerState=focusPossession&rosterView=cards'
+- extendedWaitUntil:
+    visible:
+      id: 'maestro-setup-running'
+    timeout: 5000
+- extendedWaitUntil:
+    notVisible:
+      id: 'maestro-setup-running'
+    timeout: 15000
+- extendedWaitUntil:
+    visible:
+      id: 'tracker-menu-button'
+    timeout: 15000
+
+# Leave the tracker for the roster screen
+- tapOn:
+    id: 'tracker-menu-button'
+- extendedWaitUntil:
+    visible:
+      id: 'tracker-menu-home'
+    timeout: 10000
+- tapOn:
+    id: 'tracker-menu-home'
+- extendedWaitUntil:
+    visible:
+      id: 'hub-tab-team'
+    timeout: 10000
+- tapOn:
+    id: 'hub-tab-team'
+- extendedWaitUntil:
+    visible:
+      id: 'roster-add-player-input'
+    timeout: 10000
+
+# A brand-new player added mid-game syncs into the live game
+- tapOn:
+    id: 'roster-add-player-input'
+- inputText: 'Taylor'
+- tapOn:
+    id: 'roster-add-player-button'
+- hideKeyboard
+
+# Joe has a recorded action this game: deactivation is blocked.
+# The alert can cover the switch before the tap acknowledges, so only tap
+# while the alert is absent; retries cover a race where the tap errors out
+# after the alert is already up.
+- retry:
+    maxRetries: 2
+    commands:
+      - runFlow:
+          when:
+            notVisible: 'Player Already Participated'
+          commands:
+            - tapOn:
+                id: 'quick-edit-active-maestro-seed-player-joe'
+- extendedWaitUntil:
+    visible:
+      text: 'Player Already Participated'
+    timeout: 5000
+- tapOn:
+    text: 'OK'
+
+# Molly has no recorded actions: deactivation succeeds
+- scrollUntilVisible:
+    element:
+      id: 'quick-edit-active-maestro-seed-player-molly'
+    direction: DOWN
+    timeout: 10000
+- tapOn:
+    id: 'quick-edit-active-maestro-seed-player-molly'
+- extendedWaitUntil:
+    visible:
+      text: 'Inactive'
+    timeout: 5000
+
+# Return to the live tracker
+- tapOn:
+    id: 'hub-tab-home'
+- extendedWaitUntil:
+    visible:
+      id: 'dashboard-resume-game-button'
+    timeout: 10000
+- tapOn:
+    id: 'dashboard-resume-game-button'
+- extendedWaitUntil:
+    visible:
+      id: 'tracker-menu-button'
+    timeout: 15000
+
+# The injury-sub pool shows the mid-game addition and hides the deactivated player
+- tapOn:
+    id: 'tracker-line-action-tile'
+- extendedWaitUntil:
+    visible:
+      id: 'line-change-injury-sub'
+    timeout: 10000
+- tapOn:
+    id: 'line-change-injury-sub'
+- extendedWaitUntil:
+    visible:
+      id: 'player-chip-Taylor'
+    timeout: 10000
+- assertNotVisible:
+    id: 'player-chip-Molly'
+
+- takeScreenshot:
+    path: .maestro/screenshots/advanced-tracker-midgame-roster-sync

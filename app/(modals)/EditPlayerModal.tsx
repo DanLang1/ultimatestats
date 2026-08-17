@@ -4,7 +4,6 @@ import React, { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Switch, TextInput, View } from 'react-native';
 
 import { ThemedText } from '@/components/ThemedText';
-import { useAlert } from '@/components/ui/AlertProvider';
 import { useTheme } from '@/context/ThemeContext';
 import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import {
@@ -13,14 +12,16 @@ import {
 } from '@/lib/advancedTracking/voiceNumberUtils';
 import { MAX_PLAYER_NUMBER_LENGTH, MODAL_MAX_WIDTH_FORM } from '@/lib/constants';
 import { MatchingType, PlayerRole } from '@/lib/storage/types';
-import { useGameStore } from '@/store/basic/gameStore';
+import {
+  hasPlayerRecordedActionsInActiveAdvancedGame,
+  useGameStore,
+} from '@/store/basic/gameStore';
 import { useLinePresetsStore } from '@/store/linePresetsStore';
 import { Fonts } from '@/theme/theme';
 
 export default function EditPlayerModal() {
   const { playerId } = useLocalSearchParams<{ playerId: string }>();
   const { palette } = useTheme();
-  const { showAlert } = useAlert();
   const { sizeClass } = useLayout();
   const styles = createStyles(sizeClass);
   const { currentTeam, setCurrentTeam, saveCurrentTeam, events, savedGames, updateRosterPlayer } =
@@ -40,6 +41,7 @@ export default function EditPlayerModal() {
   );
   const [role, setRole] = useState<PlayerRole | null>(player?.role ?? null);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   // Declaratively redirect if player not found (after delete or invalid ID)
   if (!player) {
@@ -71,14 +73,14 @@ export default function EditPlayerModal() {
       role,
     });
     if (updateResult === 'blocked-current-game-participation') {
-      showAlert({
-        title: 'Player Already Participated',
-        message:
-          'Players who already appeared in the current game cannot be set inactive until the game is over.',
-      });
+      setIsActive(true);
+      setSaveError(
+        'Players who already appeared in the current game cannot be set inactive until the game is over.',
+      );
       return;
     }
     if (updateResult !== 'updated') return;
+    setSaveError(null);
 
     const latestTeam = useGameStore.getState().currentTeam;
     if (!latestTeam) return;
@@ -103,8 +105,11 @@ export default function EditPlayerModal() {
   };
 
   const handleDelete = async () => {
-    // Can't delete if player has stats (check is at component level for UI)
-    if (hasCurrentGameStats) {
+    if (hasCurrentGameStats || hasPlayerRecordedActionsInActiveAdvancedGame(playerId)) {
+      setSaveError(
+        'Players who already appeared in the current game cannot be deleted until the game is over.',
+      );
+      setConfirmingDelete(false);
       return;
     }
 
@@ -126,6 +131,7 @@ export default function EditPlayerModal() {
     }
     return false;
   });
+  const hasAdvancedGameParticipation = hasPlayerRecordedActionsInActiveAdvancedGame(playerId);
 
   const hasStatsInSavedGames = savedGames.some((game) =>
     game.events.some((e) => {
@@ -240,17 +246,31 @@ export default function EditPlayerModal() {
               )}
 
               {/* Active Toggle */}
-              <View style={styles.toggleRow}>
-                <ThemedText style={[styles.toggleLabel, { color: palette.modalText }]}>
-                  Active roster
+              {!hasAdvancedGameParticipation && (
+                <View style={styles.toggleRow}>
+                  <ThemedText style={[styles.toggleLabel, { color: palette.modalText }]}>
+                    Active roster
+                  </ThemedText>
+                  <Switch
+                    value={isActive}
+                    onValueChange={(nextIsActive) => {
+                      setIsActive(nextIsActive);
+                      setSaveError(null);
+                    }}
+                    trackColor={{ false: palette.overlay20, true: palette.accent }}
+                    thumbColor={isActive ? palette.textOnAccent : palette.modalTextMuted}
+                    testID="edit-player-active-toggle"
+                  />
+                </View>
+              )}
+              {saveError && (
+                <ThemedText
+                  accessibilityRole="alert"
+                  testID="edit-player-save-error"
+                  style={[styles.errorText, { color: palette.danger }]}>
+                  {saveError}
                 </ThemedText>
-                <Switch
-                  value={isActive}
-                  onValueChange={setIsActive}
-                  trackColor={{ false: palette.overlay20, true: palette.accent }}
-                  thumbColor={isActive ? palette.textOnAccent : palette.modalTextMuted}
-                />
-              </View>
+              )}
 
               {/* Matching Type */}
               <View style={styles.toggleRow}>
@@ -392,10 +412,11 @@ export default function EditPlayerModal() {
 
               {/* Buttons */}
               <View style={styles.buttonRow}>
-                {!hasCurrentGameStats && (
+                {!hasCurrentGameStats && !hasAdvancedGameParticipation && (
                   <Pressable
                     style={[styles.deleteButton, { backgroundColor: palette.dangerOverlay15 }]}
-                    onPress={() => setConfirmingDelete(true)}>
+                    onPress={() => setConfirmingDelete(true)}
+                    testID="edit-player-delete">
                     <MaterialCommunityIcons
                       name="delete-outline"
                       size={scaleBySizeClass(20, sizeClass)}
@@ -424,7 +445,8 @@ export default function EditPlayerModal() {
                       },
                     ]}
                     onPress={handleSave}
-                    disabled={nameExists || numberExists}>
+                    disabled={nameExists || numberExists}
+                    testID="edit-player-save">
                     <ThemedText
                       style={[
                         styles.buttonText,

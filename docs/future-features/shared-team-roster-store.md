@@ -13,6 +13,8 @@ Current known imports:
 - `app/(main)/advancedTracking/PreGameConfirm.tsx`
 - `components/advancedTracking/TrackerLineScreen.tsx`
 - `hooks/advancedTracking/useLiveRosterParticipants.ts`
+- `store/advancedTracking/trackingStore.ts` (roster-to-participant sync subscription and
+  the `registerActiveAdvancedGameGetter` deactivation-guard seam in the basic store)
 
 Those files use `useGameStore` for shared concepts like the active team roster,
 not for basic scoring or basic game state. That means the dependency is practical
@@ -70,8 +72,12 @@ Keep these in `store/basic`:
   opponent/game setup model?
 - Should `savedTeams` remain AsyncStorage/Zustand-backed, or move toward the same
   future SQLite direction as saved games?
-- Should roster editing be allowed while either mode has an active game, or
-  should participation locks become mode-specific?
+- Mid-game roster changes now flow one way into a live advanced game (see
+  [advanced-tracking data model](../features/advanced-tracking/data-model.md)):
+  additions/reactivations append participants, while deactivation and deletion are blocked after
+  recorded actions. When this store is extracted, that sync subscription and the
+  `registerActiveAdvancedGameGetter` guard seam move with it and can become a
+  direct store-to-store call.
 
 ## Related Docs
 
