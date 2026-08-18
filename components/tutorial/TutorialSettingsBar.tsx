@@ -1,7 +1,7 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
-import Animated from 'react-native-reanimated';
+import Animated, { ReduceMotion } from 'react-native-reanimated';
 
 import { ThemedText } from '@/components/ThemedText';
 import TutorialAnimatedArrow from '@/components/tutorial/TutorialAnimatedArrow';
@@ -53,9 +53,9 @@ export default function TutorialSettingsBar({
   const styles = createStyles(isLandscape, sizeClass);
   const iconSize = getSizeClassValue({ small: 24, medium: 26, large: 28 }, sizeClass);
 
-  const undoPulseStyle = usePulseAnimation(highlightUndo);
-  const playPulseStyle = usePulseAnimation(highlightPlay);
-  const chevronPulseStyle = usePulseAnimation(highlightMessage);
+  const undoPulseStyle = usePulseAnimation(highlightUndo, 800, ReduceMotion.Never);
+  const playPulseStyle = usePulseAnimation(highlightPlay, 800, ReduceMotion.Never);
+  const chevronPulseStyle = usePulseAnimation(highlightMessage, 800, ReduceMotion.Never);
 
   const barBg = palette.glassBg;
   const barContentColor = palette.textInverse;

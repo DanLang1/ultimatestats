@@ -1,6 +1,6 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { StyleSheet, ViewStyle } from 'react-native';
-import Animated from 'react-native-reanimated';
+import Animated, { ReduceMotion } from 'react-native-reanimated';
 
 import { useTheme } from '@/context/ThemeContext';
 import { useBounceAnimation } from '@/hooks/useBounceAnimation';
@@ -32,7 +32,11 @@ export default function TutorialAnimatedArrow({
   const delta = direction === 'down' || direction === 'right' ? 14 : -14;
   const iconName = ICON_NAMES[direction];
 
-  const animatedStyle = useBounceAnimation({ delta, isHorizontal });
+  const animatedStyle = useBounceAnimation({
+    delta,
+    isHorizontal,
+    reduceMotion: ReduceMotion.Never,
+  });
 
   const trailingStyle = isHorizontal
     ? [styles.trailingChevron, { marginLeft: -(size * 0.45) }]

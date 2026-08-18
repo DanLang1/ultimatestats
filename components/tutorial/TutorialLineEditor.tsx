@@ -1,7 +1,7 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
-import Animated, { FadeIn } from 'react-native-reanimated';
+import Animated, { FadeIn, ReduceMotion } from 'react-native-reanimated';
 
 import { ModalPlayerGrid } from '@/components/lines/ModalPlayerGrid';
 import { ThemedText } from '@/components/ThemedText';
@@ -46,7 +46,7 @@ export default function TutorialLineEditor({
   const { palette } = useTheme();
   const { isLandscape, sizeClass } = useLayout();
   const styles = createStyles(sizeClass, isLandscape);
-  const presetPulseStyle = usePulseAnimation(highlightPreset);
+  const presetPulseStyle = usePulseAnimation(highlightPreset, 800, ReduceMotion.Never);
 
   const canConfirm = currentLine.length === numPlayers && (!ratioCheck || ratioCheck.isCorrect);
   const hasClearMajority = ratioCheck && ratioCheck.fmpCount !== ratioCheck.mmpCount;

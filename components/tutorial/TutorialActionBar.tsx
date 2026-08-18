@@ -2,7 +2,12 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React, { useState } from 'react';
 import { Pressable, StyleSheet } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
+import Animated, {
+  ReduceMotion,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+} from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/ThemedText';
@@ -35,8 +40,16 @@ export default function TutorialActionBar({
   const dragIconSize = iconSize - 6;
   const insets = useSafeAreaInsets();
 
-  const highlightStartPulse = usePulseAnimation(highlightButton === 'start');
-  const highlightBlockPulse = usePulseAnimation(highlightButton === 'block');
+  const highlightStartPulse = usePulseAnimation(
+    highlightButton === 'start',
+    800,
+    ReduceMotion.Never,
+  );
+  const highlightBlockPulse = usePulseAnimation(
+    highlightButton === 'block',
+    800,
+    ReduceMotion.Never,
+  );
 
   // Drag state — start centered near bottom
   const translateX = useSharedValue((screenWidth - metrics.estimatedWidth) / 2);

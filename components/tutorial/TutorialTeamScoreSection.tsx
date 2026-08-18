@@ -1,6 +1,6 @@
 import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
-import Animated from 'react-native-reanimated';
+import Animated, { ReduceMotion } from 'react-native-reanimated';
 
 import ScoreDisplay from '@/components/ScoreDisplay';
 import { ThemedView } from '@/components/ThemedView';
@@ -54,7 +54,11 @@ export default function TutorialTeamScoreSection({
   const { palette } = useTheme();
   const styles = createStyles(sizeClass, isCompactVertical);
 
-  const pulseStyle = usePulseAnimation(highlightTimeoutIndex !== undefined);
+  const pulseStyle = usePulseAnimation(
+    highlightTimeoutIndex !== undefined,
+    800,
+    ReduceMotion.Never,
+  );
 
   const handleTap = () => {
     if (hasPossession === undefined) {
