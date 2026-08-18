@@ -3,6 +3,53 @@ import { buildAnalyticsGame } from '../buildAnalyticsGame';
 import type { AdvancedTrackedGame } from '../types';
 
 describe('advancedCSVUtils', () => {
+  it('exports a throwaway classification in the action log', () => {
+    const player = { refType: 'participant' as const, participantId: 'alex' };
+    const game: AdvancedTrackedGame = {
+      id: 'classified-throwaway',
+      schemaVersion: 3,
+      createdAt: 0,
+      updatedAt: 0,
+      gameType: 'game',
+      status: 'terminated',
+      focusSideId: 'home',
+      initialReceivingSideId: 'home',
+      settings: { locationMode: 'none' },
+      sides: [
+        { id: 'home', label: 'Home', trackingMode: 'full-roster' },
+        { id: 'away', label: 'Away', trackingMode: 'anonymous' },
+      ],
+      participants: [{ id: 'alex', name: 'Alex' }],
+      points: [
+        {
+          id: 'point-1',
+          lines: [{ sideId: 'home', participantIds: ['alex'] }],
+          possessions: [
+            {
+              id: 'possession-1',
+              sideId: 'home',
+              actions: [
+                {
+                  id: 'throw-1',
+                  kind: 'throw',
+                  sideId: 'home',
+                  thrower: player,
+                  result: 'throwaway',
+                  details: { type: 'backfield_reset' },
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+
+    const csv = generateAdvancedGameCSV(buildAnalyticsGame(game));
+
+    expect(csv).toContain('Point,Action,Player,Result,Throw Type,Receiver,Defender');
+    expect(csv).toContain('1,Throw,Alex,throwaway,Backfield Reset,,');
+  });
+
   it('exports pressure team totals, player counts, and fractional plus/minus', () => {
     const august = { refType: 'participant' as const, participantId: 'august' };
     const meves = { refType: 'participant' as const, participantId: 'meves' };

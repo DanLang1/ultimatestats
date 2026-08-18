@@ -7,7 +7,7 @@ export type PassModifier = 'fifty-fifty' | 'callahan' | 'stall' | 'block' | 'pre
 
 // --- Core Game ---
 
-export const ADVANCED_TRACKING_SCHEMA_VERSION = 2;
+export const ADVANCED_TRACKING_SCHEMA_VERSION = 3;
 
 export type AdvancedGameType = 'game' | 'scrimmage';
 
@@ -333,6 +333,14 @@ export const THROW_RESULTS = [
 
 export type ThrowResult = (typeof THROW_RESULTS)[number];
 
+export const THROW_TYPES = ['huck', 'backfield_reset'] as const;
+
+export type ThrowType = (typeof THROW_TYPES)[number];
+
+export interface ThrowDetails {
+  type: ThrowType;
+}
+
 export interface ThrowAction {
   id: string;
   kind: 'throw';
@@ -352,6 +360,8 @@ export interface ThrowAction {
   defender?: PlayerRef;
   /** True when blame is shared 50/50 between thrower and toPlayer (e.g. a floaty huck both could have done better on). Single attribution is derived from result + thrower/toPlayer. */
   splitAttribution?: boolean;
+  /** Optional manual classification. The first version is recorded only for throwaways. */
+  details?: ThrowDetails;
   origin?: FieldLocation;
   target?: FieldLocation;
   /** Absolute timestamp (ms epoch) when this action was logged. */

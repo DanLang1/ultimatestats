@@ -13,6 +13,7 @@ import type {
   PlayerRef,
   PointLine,
   PullResult,
+  ThrowType,
 } from '@/lib/advancedTracking/types';
 import type { GenderRatio } from '@/lib/genderRatioUtils';
 
@@ -46,6 +47,13 @@ export interface RecordPullInput {
   origin?: FieldLocation;
   landing?: FieldLocation;
   genderRatio?: GenderRatio;
+}
+
+export interface UpdateThrowTypeInput {
+  pointId: string;
+  possessionId: string;
+  actionId: string;
+  type?: ThrowType;
 }
 
 export interface RecordStoppageInput {
@@ -143,6 +151,7 @@ export interface AdvancedTrackingState {
   recordPull: (input: RecordPullInput) => string;
   amendOpeningPullAsDropped: (receiver: PlayerRef) => void;
   recordCaptureIntent: (intent: CaptureIntent) => CaptureIntentResult;
+  updateThrowType: (input: UpdateThrowTypeInput) => void;
   recordStoppage: (input: RecordStoppageInput) => string;
   resumeStoppage: (actionId: string) => void;
   cancelStoppage: (actionId: string) => void;

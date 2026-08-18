@@ -75,20 +75,25 @@ support.
 An O-point is a side's receiving point, and a D-point is its pulling point. Neither label denotes
 a permanent player role or a specific lineup.
 
+Manually classified throwaways are also available on throw analytics actions as
+`details.type: 'huck' | 'backfield_reset'`. No aggregate stat is currently derived from them.
+Because successful throws are not classified, these values cannot produce huck attempts or huck
+completion percentage.
+
 ### Requires Field Location Data (Future)
 
 These stats require `locationMode: 'zone'` or `'xy'` and origin/target on throw and pull actions:
 
-| Stat                        | Requirement                                          |
-| --------------------------- | ---------------------------------------------------- |
-| Receiving Yards             | `xy` coordinates on throw target                     |
-| Throwing Yards              | `xy` coordinates on throw origin + target            |
-| Total Yards                 | Sum of receiving + throwing                          |
-| Hucks / Huck %              | Distance derivation from `xy` (typically > 30 yards) |
-| Red Zone Conversion %       | Zone or `xy` proximity to endzone                    |
-| Heat Maps                   | `xy` coordinates on catches                          |
-| Throw Distance Distribution | `xy` coordinates on throws                           |
-| Field Progression           | `xy` per action within a point                       |
+| Stat                          | Requirement                                          |
+| ----------------------------- | ---------------------------------------------------- |
+| Receiving Yards               | `xy` coordinates on throw target                     |
+| Throwing Yards                | `xy` coordinates on throw origin + target            |
+| Total Yards                   | Sum of receiving + throwing                          |
+| Distance-based Hucks / Huck % | Distance derivation from `xy` (typically > 30 yards) |
+| Red Zone Conversion %         | Zone or `xy` proximity to endzone                    |
+| Heat Maps                     | `xy` coordinates on catches                          |
+| Throw Distance Distribution   | `xy` coordinates on throws                           |
+| Field Progression             | `xy` per action within a point                       |
 
 ## Utility File Structure
 

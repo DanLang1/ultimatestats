@@ -5,6 +5,7 @@ import {
   correctAdvancedGoalScorer,
   type CorrectAdvancedGoalScorerInput,
 } from '@/lib/advancedTracking/advancedActionCorrectionUtils';
+import { migrateAdvancedTrackedGame } from '@/lib/advancedTracking/migrations';
 import {
   deleteAdvancedGameRecord,
   loadAdvancedGame,
@@ -114,7 +115,10 @@ export const useSavedAdvancedGamesStore = create<SavedAdvancedGamesState>()(
     },
 
     saveGame: async (game, options) => {
-      const gameToSave = options?.touchUpdatedAt ? { ...game, updatedAt: Date.now() } : game;
+      const migratedGame = migrateAdvancedTrackedGame(game);
+      const gameToSave = options?.touchUpdatedAt
+        ? { ...migratedGame, updatedAt: Date.now() }
+        : migratedGame;
       const summary = await upsertAdvancedGame(gameToSave);
       set((state) => {
         if (state.summariesLoaded) {

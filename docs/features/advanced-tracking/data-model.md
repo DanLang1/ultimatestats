@@ -1,7 +1,7 @@
 # Advanced Tracking Data Model
 
 > Maintained guide to the implemented persisted model. `lib/advancedTracking/types.ts` is the
-> authoritative definition. The current schema is `ADVANCED_TRACKING_SCHEMA_VERSION = 2`.
+> authoritative definition. The current schema is `ADVANCED_TRACKING_SCHEMA_VERSION = 3`.
 
 ## Shape
 
@@ -148,6 +148,11 @@ Important semantics:
   immediately scoring a goal. The tracked defender is the Callahan scorer; it has no assister.
 - `splitAttribution` records the exceptional 50/50 judgment. Normal blame is derived from the throw
   result.
+- Throwaways may have optional `details.type`: `huck` or `backfield_reset`. The manual type is
+  action metadata; it does not change the result, attribution, or possession outcome.
+- The live throw-type prompt is available only when the throwaway's side is fully tracked. An
+  anonymous opponent throwaway has no live capture or supported classification analytics; fully
+  tracked sides in a scrimmage are eligible.
 - `recordedAt` is optional so imported or legacy data without action timing remains valid.
 - Field locations use a discriminated `zone` or `xy` value and remain optional per action.
 
@@ -194,6 +199,9 @@ moving actions between possessions are not part of scorer correction.
 The live store keeps a temporary undo stack for recent tracker operations; the undo stack is not
 part of the persisted game schema. Persisted data remains the corrected source of truth.
 
+Updating a throwaway's optional details does not create another undo entry. Undoing that turnover
+removes the whole `ThrowAction`, including its details, in one operation.
+
 Structural edits must preserve:
 
 - valid side IDs
@@ -222,7 +230,8 @@ tracking store owns only the loaded active game and recovery/session state.
 When changing the persisted model:
 
 1. Update the exported types and schema version.
-2. Add and test migration behavior in `lib/advancedTracking/storage.ts`.
+2. Add and test migration behavior through `lib/advancedTracking/migrations.ts` and the storage
+   boundary.
 3. Update sharing validation and serialization.
 4. Update analytics compilation and downstream stat utilities.
 5. Update seeded tests, Maestro fixtures, and this document.

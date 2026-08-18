@@ -59,6 +59,12 @@ function getResultLabel(ourScore: number, theirScore: number): string {
   return 'Draw';
 }
 
+function getThrowTypeLabel(type: 'huck' | 'backfield_reset' | undefined): string {
+  if (type === 'huck') return 'Huck';
+  if (type === 'backfield_reset') return 'Backfield Reset';
+  return '';
+}
+
 /**
  * Generate CSV for a single advanced game.
  */
@@ -415,11 +421,13 @@ function actionLogCSV(game: AnalyticsGame, names: Map<string, string>): string {
   const relevant = game.actions.filter((a) => a.kind !== 'stoppage');
   if (relevant.length === 0) {
     return (
-      csvRow(['Point', 'Action', 'Player', 'Result', 'Receiver', 'Defender']) + '\n(no actions)'
+      csvRow(['Point', 'Action', 'Player', 'Result', 'Throw Type', 'Receiver', 'Defender']) +
+      '\n(no actions)'
     );
   }
 
-  let csv = csvRow(['Point', 'Action', 'Player', 'Result', 'Receiver', 'Defender']) + '\n';
+  let csv =
+    csvRow(['Point', 'Action', 'Player', 'Result', 'Throw Type', 'Receiver', 'Defender']) + '\n';
 
   for (const action of relevant) {
     const pointNum = action.pointIndex + 1;
@@ -429,6 +437,7 @@ function actionLogCSV(game: AnalyticsGame, names: Map<string, string>): string {
 
     let actionType: string;
     let result: string;
+    let throwType = '';
     if (action.kind === 'pull') {
       actionType = 'Pull';
       result = action.result;
@@ -438,9 +447,12 @@ function actionLogCSV(game: AnalyticsGame, names: Map<string, string>): string {
     } else {
       actionType = 'Throw';
       result = action.result;
+      throwType = getThrowTypeLabel(action.details?.type);
     }
 
-    csv += csvRow([pointNum, actionType, actorName, result, receiverName, defenderName]) + '\n';
+    csv +=
+      csvRow([pointNum, actionType, actorName, result, throwType, receiverName, defenderName]) +
+      '\n';
   }
 
   return csv.trimEnd();

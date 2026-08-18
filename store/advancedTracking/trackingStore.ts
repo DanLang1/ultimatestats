@@ -24,6 +24,7 @@ import {
   getGameClockElapsedMs,
   getPointAdjustedTimestamp,
 } from '@/lib/advancedTracking/trackingDisplayHelpers';
+import type { AdvancedGameLookupState } from '@/lib/advancedTracking/trackingUtils';
 import {
   assertPointActionParticipantsPreserved,
   assertTwoSides,
@@ -38,12 +39,12 @@ import {
   getCurrentPossession,
   getEffectiveGameTo,
   getGameScore,
-  hasInjurySubChanges,
+  getLiveInProgressGame,
   getOtherSideId,
   getParticipantIdsUsedBySide,
   getPointActionParticipantIds,
-  getLiveInProgressGame,
   getReceivingSideForNextPoint,
+  hasInjurySubChanges,
   hasPointEnded,
   isAdvancedGameOver,
   isPossessionOver,
@@ -51,7 +52,6 @@ import {
   syncCapTransitions,
   syncDerivedHalftimeTransition,
 } from '@/lib/advancedTracking/trackingUtils';
-import type { AdvancedGameLookupState } from '@/lib/advancedTracking/trackingUtils';
 import {
   ADVANCED_TRACKING_SCHEMA_VERSION,
   AdvancedTrackedGame,
@@ -59,7 +59,7 @@ import {
 } from '@/lib/advancedTracking/types';
 import { generateId } from '@/lib/utils';
 import { useSavedAdvancedGamesStore } from '@/store/advancedTracking/savedGamesStore';
-import { useGameStore, registerActiveAdvancedGameGetter } from '@/store/basic/gameStore';
+import { registerActiveAdvancedGameGetter, useGameStore } from '@/store/basic/gameStore';
 import { useSettingsStore } from '@/store/settingsStore';
 
 import { getCurrentPendingNextPointLineSelection } from './pendingLineSelection';
@@ -70,6 +70,7 @@ import {
   RecordInjurySubsInput,
   RecordStoppageInput,
   UpdateInjurySubsInput,
+  UpdateThrowTypeInput,
 } from './trackingStore.types';
 
 const ADVANCED_TRACKING_STORAGE_KEY = 'ultimatestats_advanced_tracking';
@@ -802,6 +803,32 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
           });
 
           return { ok: true, actionId: visibleActionId };
+        },
+
+        updateThrowType: (input: UpdateThrowTypeInput) => {
+          set((state) => {
+            const liveGame = getCurrentGame(state);
+            const livePoint = liveGame.points.find((candidate) => candidate.id === input.pointId);
+            const livePossession = livePoint?.possessions.find(
+              (candidate) => candidate.id === input.possessionId,
+            );
+            const liveAction = livePossession?.actions.find(
+              (candidate) => candidate.id === input.actionId,
+            );
+            if (liveAction?.kind !== 'throw') {
+              throw new Error(`Cannot update missing throw action "${input.actionId}".`);
+            }
+            if (liveAction.result !== 'throwaway') {
+              throw new Error('Throw details can currently be added only to throwaways.');
+            }
+
+            if (input.type == null) {
+              delete liveAction.details;
+            } else {
+              liveAction.details = { ...liveAction.details, type: input.type };
+            }
+            liveGame.updatedAt = Date.now();
+          });
         },
 
         recordStoppage: (input: RecordStoppageInput) => {

@@ -20,6 +20,7 @@ import type {
   PossessionAction,
   PullResult,
   ThrowResult,
+  ThrowType,
   TrackedPoint,
 } from './types';
 
@@ -88,6 +89,7 @@ export interface ThrowDisplayAction extends AdvancedTimelineActionBase {
   receiverName: string | null;
   defenderName: string | null;
   splitAttribution: boolean;
+  throwType?: ThrowType;
 }
 
 export interface StoppageDisplayAction extends AdvancedTimelineActionBase {
@@ -353,6 +355,7 @@ function buildThrowDisplayAction(
   const receiverName = resolveName(participantNames, action.receiverId);
   const defenderName = resolveName(participantNames, action.defenderId);
   const tone = getThrowTone(throwResult, scoringSideId, action.sideId, focusSideId);
+  const secondaryLabel = getThrowTypeLabel(action.details?.type);
   const { primaryLabel } = buildThrowLabel(
     throwResult,
     throwerName,
@@ -371,10 +374,17 @@ function buildThrowDisplayAction(
     receiverName,
     defenderName,
     splitAttribution: action.splitAttribution,
+    throwType: action.details?.type,
     primaryLabel,
-    secondaryLabel: null,
+    secondaryLabel,
     tone,
   };
+}
+
+function getThrowTypeLabel(type: ThrowType | undefined): string | null {
+  if (type === 'huck') return 'Huck';
+  if (type === 'backfield_reset') return 'Backfield Reset';
+  return null;
 }
 
 function getStoppageDisplay(reason: string, isFloater?: boolean) {

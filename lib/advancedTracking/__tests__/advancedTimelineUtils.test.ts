@@ -31,6 +31,8 @@ const august = { refType: 'participant' as const, participantId: 'p_august' };
 const meves = { refType: 'participant' as const, participantId: 'p_meves' };
 const joah = { refType: 'participant' as const, participantId: 'p_joah' };
 const maxRef = { refType: 'participant' as const, participantId: 'p_max' };
+const rival = { id: 'p_rival', name: 'Rival' };
+const rivalRef = { refType: 'participant' as const, participantId: 'p_rival' };
 const untracked = { refType: 'untracked' as const };
 const unknown = { refType: 'unknown' as const };
 
@@ -132,10 +134,19 @@ describe('buildAdvancedTimeline', () => {
     const game: AdvancedTrackedGame = {
       ...baseGame,
       initialReceivingSideId: RIVALS,
+      gameType: 'scrimmage',
+      sides: [
+        { id: ZOO, label: 'Zoo', trackingMode: 'full-roster' },
+        { id: RIVALS, label: 'Rivals', trackingMode: 'full-roster' },
+      ],
+      participants: [...participants, rival],
       points: [
         {
           id: 'pt1',
-          lines: [{ sideId: ZOO, participantIds: ['p_august', 'p_meves', 'p_joah', 'p_max'] }],
+          lines: [
+            { sideId: ZOO, participantIds: ['p_august', 'p_meves', 'p_joah', 'p_max'] },
+            { sideId: RIVALS, participantIds: ['p_rival'] },
+          ],
           possessions: [
             {
               id: 'pos1a',
@@ -147,15 +158,16 @@ describe('buildAdvancedTimeline', () => {
                   sideId: ZOO,
                   receivingSideId: RIVALS,
                   puller: august,
-                  receiver: untracked,
+                  receiver: rivalRef,
                   result: 'inbound',
                 },
                 {
                   id: 'a2',
                   kind: 'throw',
                   sideId: RIVALS,
-                  thrower: untracked,
+                  thrower: rivalRef,
                   result: 'throwaway',
+                  details: { type: 'huck' },
                 },
               ],
             },
@@ -181,7 +193,7 @@ describe('buildAdvancedTimeline', () => {
                   id: 'a4',
                   kind: 'throw',
                   sideId: RIVALS,
-                  thrower: untracked,
+                  thrower: rivalRef,
                   result: 'block',
                   defender: maxRef,
                 },
@@ -214,7 +226,10 @@ describe('buildAdvancedTimeline', () => {
     // Throwaway
     const throwawayAction = point.possessions[0].actions[1];
     expect(throwawayAction.kind).toBe('throw');
+    if (throwawayAction.kind !== 'throw') throw new Error('Expected throw display action.');
     expect(throwawayAction.primaryLabel).toContain('Throwaway');
+    expect(throwawayAction.secondaryLabel).toBe('Huck');
+    expect(throwawayAction.throwType).toBe('huck');
     expect(throwawayAction.tone).toBe('danger');
 
     // Drop

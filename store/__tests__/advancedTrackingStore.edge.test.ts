@@ -5,7 +5,10 @@ import {
   getCurrentPoint,
   getGameScore,
 } from '../../lib/advancedTracking/trackingUtils';
-import type { AdvancedTrackedGame } from '../../lib/advancedTracking/types';
+import {
+  ADVANCED_TRACKING_SCHEMA_VERSION,
+  type AdvancedTrackedGame,
+} from '../../lib/advancedTracking/types';
 import { useAdvancedTrackingStore } from './captureTestStore';
 
 jest.mock('@react-native-async-storage/async-storage', () => ({
@@ -160,7 +163,7 @@ describe('advancedTrackingStore — edge cases', () => {
         expect(pressureAction.result).toBe('pressure');
         expect(pressureAction.defender).toEqual(meves);
       }
-      expect(getCurrentGame()?.schemaVersion).toBe(2);
+      expect(getCurrentGame()?.schemaVersion).toBe(ADVANCED_TRACKING_SCHEMA_VERSION);
 
       useAdvancedTrackingStore.getState().recordPickup({
         sideId: awaySideId,

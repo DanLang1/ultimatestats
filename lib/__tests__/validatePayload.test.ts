@@ -137,6 +137,13 @@ function makeAdvancedGamesPayload(overrides: Record<string, unknown> = {}): unkn
   };
 }
 
+function setThrowDetails(game: AdvancedTrackedGame, details: unknown): AdvancedTrackedGame {
+  const action = game.points[0].possessions[0].actions.at(-1);
+  if (action?.kind !== 'throw') throw new Error('Expected throw fixture.');
+  Object.assign(action, { details });
+  return game;
+}
+
 describe('validatePayload', () => {
   describe('top-level validation', () => {
     it('throws for null', () => {
@@ -394,6 +401,34 @@ describe('validatePayload', () => {
       const result = validatePayload(makeAdvancedGamePayload({ data }));
 
       expect(result.type).toBe('advanced-game');
+    });
+
+    it('accepts and migrates classified throwaways', () => {
+      const data = setThrowDetails(makeAdvancedGameData({}, 'throwaway'), { type: 'huck' });
+      const result = validatePayload(makeAdvancedGamePayload({ data }));
+
+      expect(result.type).toBe('advanced-game');
+      if (result.type !== 'advanced-game') throw new Error('Expected advanced-game payload.');
+      expect(result.data.schemaVersion).toBe(ADVANCED_TRACKING_SCHEMA_VERSION);
+      expect(result.data.points[0].possessions[0].actions.at(-1)).toMatchObject({
+        details: { type: 'huck' },
+      });
+    });
+
+    it('rejects an unknown throw type', () => {
+      const data = setThrowDetails(makeAdvancedGameData({}, 'throwaway'), { type: 'hammer' });
+
+      expect(() => validatePayload(makeAdvancedGamePayload({ data }))).toThrow(
+        'invalid throw details',
+      );
+    });
+
+    it('rejects throw details on a non-throwaway', () => {
+      const data = setThrowDetails(makeAdvancedGameData({}, 'goal'), { type: 'huck' });
+
+      expect(() => validatePayload(makeAdvancedGamePayload({ data }))).toThrow(
+        'require a throwaway',
+      );
     });
 
     it('rejects an invalid advanced game flip choice', () => {

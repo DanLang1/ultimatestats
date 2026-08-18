@@ -61,6 +61,7 @@ function compileAnalyticsAction(
         kind: 'throw',
         result: action.result,
         splitAttribution: action.splitAttribution ?? false,
+        ...(action.details != null ? { details: { ...action.details } } : {}),
       };
     case 'stoppage':
       return { ...base, kind: 'stoppage' };

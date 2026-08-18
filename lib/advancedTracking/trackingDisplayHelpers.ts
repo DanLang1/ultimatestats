@@ -17,6 +17,7 @@ import {
   PointPossession,
   PointSub,
   StoppageAction,
+  ThrowAction,
   TrackedPoint,
 } from './types';
 
@@ -95,6 +96,30 @@ export interface TurnoverEventInfo {
    * as "Alice + Bob → 50/50" rather than just the receiver.
    */
   throwerName: string | null;
+}
+
+export interface ThrowDetailsTarget {
+  pointId: string;
+  possessionId: string;
+  actionId: string;
+  details?: ThrowAction['details'];
+}
+
+export function getLatestThrowawayDetailsTarget(
+  point: TrackedPoint | null,
+  possession: PointPossession | null,
+): ThrowDetailsTarget | null {
+  if (point == null || possession == null) return null;
+  if (point.possessions.at(-1)?.id !== possession.id) return null;
+  const action = possession.actions.findLast((candidate) => candidate.kind !== 'stoppage');
+  if (action?.kind !== 'throw' || action.result !== 'throwaway') return null;
+
+  return {
+    pointId: point.id,
+    possessionId: possession.id,
+    actionId: action.id,
+    details: action.details,
+  };
 }
 
 /** Returns the side ID that currently has (or will next pick up) the disc. */

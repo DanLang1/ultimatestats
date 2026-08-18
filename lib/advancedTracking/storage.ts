@@ -1,5 +1,6 @@
 import * as SQLite from 'expo-sqlite';
 
+import { migrateAdvancedTrackedGame } from '@/lib/advancedTracking/migrations';
 import { AdvancedGameSummary, deriveAdvancedGameSummary } from '@/lib/advancedTracking/summary';
 import type { AdvancedGameType, AdvancedTrackedGame } from '@/lib/advancedTracking/types';
 
@@ -136,7 +137,7 @@ export async function loadAdvancedGame(gameId: string): Promise<AdvancedTrackedG
   if (!isAdvancedTrackedGame(parsed)) {
     throw new Error(`Stored advanced game "${gameId}" is invalid.`);
   }
-  return parsed;
+  return migrateAdvancedTrackedGame(parsed);
 }
 
 export async function upsertAdvancedGame(game: AdvancedTrackedGame): Promise<AdvancedGameSummary> {

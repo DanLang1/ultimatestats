@@ -208,6 +208,40 @@ describe('advanced tracking routes', () => {
     expect(screen.queryByText('Windchill')).not.toBeOnTheScreen();
   });
 
+  it('classifies a throwaway inline and undo removes the classified turnover', async () => {
+    const user = userEvent.setup();
+    arrangeAdvancedGame();
+    recordOpeningPull();
+    const pickupResult = useAdvancedTrackingStore.getState().recordCaptureIntent({
+      kind: 'pickup',
+      player: { refType: 'participant', participantId: testTeam.roster[0].id },
+    });
+    expect(pickupResult.ok).toBe(true);
+    const result = useAdvancedTrackingStore.getState().recordCaptureIntent({ kind: 'throwaway' });
+    expect(result.ok).toBe(true);
+
+    await renderScreen(<TrackerScreen />);
+
+    await user.press(screen.getByTestId('throw-type-huck'));
+    expect(
+      useAdvancedTrackingStore.getState().currentGame?.points[0].possessions[0].actions.at(-1),
+    ).toMatchObject({ details: { type: 'huck' } });
+
+    await user.press(screen.getByTestId('throw-type-backfield-reset'));
+    expect(
+      useAdvancedTrackingStore.getState().currentGame?.points[0].possessions[0].actions.at(-1),
+    ).toMatchObject({ details: { type: 'backfield_reset' } });
+
+    await user.press(screen.getByTestId('tracker-undo-button'));
+    expect(
+      useAdvancedTrackingStore.getState().currentGame?.points[0].possessions[0].actions,
+    ).toHaveLength(2);
+    expect(
+      useAdvancedTrackingStore.getState().currentGame?.points[0].possessions[0].actions.at(-1),
+    ).toMatchObject({ kind: 'disc_pickup' });
+    expect(screen.queryByTestId('throw-type-huck')).not.toBeOnTheScreen();
+  });
+
   it('adds a private game note from the tracker menu', async () => {
     const user = userEvent.setup();
     arrangeAdvancedGame();

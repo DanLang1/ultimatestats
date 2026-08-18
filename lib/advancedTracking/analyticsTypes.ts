@@ -7,6 +7,7 @@ import type {
   GameMetadata,
   GameSide,
   PullResult,
+  ThrowDetails,
   ThrowResult,
 } from './types';
 
@@ -137,6 +138,7 @@ export interface ThrowAnalyticsAction extends AnalyticsActionBase {
   kind: 'throw';
   result: ThrowResult;
   splitAttribution: boolean;
+  details?: ThrowDetails;
 }
 
 export interface StoppageAnalyticsAction extends AnalyticsActionBase {

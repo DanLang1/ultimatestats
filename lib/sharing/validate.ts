@@ -1,7 +1,9 @@
 import { withoutAdvancedGameNote } from '@/lib/advancedTracking/gameNoteUtils';
+import { migrateAdvancedTrackedGame } from '@/lib/advancedTracking/migrations';
 import {
   ADVANCED_TRACKING_SCHEMA_VERSION,
   THROW_RESULTS,
+  THROW_TYPES,
   type AdvancedTrackedGame,
   type FieldLocation,
   type PlayerRef,
@@ -21,6 +23,7 @@ const MAX_ROSTER_SIZE = 50;
 const MAX_STRING_LENGTH = 200;
 const MAX_BULK_GAMES = 10;
 const VALID_THROW_RESULTS = new Set<string>(THROW_RESULTS);
+const VALID_THROW_TYPES = new Set<string>(THROW_TYPES);
 
 function isRecord(val: unknown): val is Record<string, unknown> {
   return typeof val === 'object' && val !== null;
@@ -133,6 +136,16 @@ function validateOptionalFieldLocation(location: unknown) {
   }
 }
 
+function validateOptionalThrowDetails(details: unknown, result: unknown) {
+  if (details === undefined) return;
+  if (!isRecord(details) || !isString(details.type) || !VALID_THROW_TYPES.has(details.type)) {
+    throw new Error('Invalid advanced game: invalid throw details');
+  }
+  if (result !== 'throwaway') {
+    throw new Error('Invalid advanced game: throw details require a throwaway');
+  }
+}
+
 function validateAdvancedAction(action: unknown): asserts action is PossessionAction {
   if (!isRecord(action)) {
     throw new Error('Invalid advanced game: invalid action');
@@ -181,6 +194,7 @@ function validateAdvancedAction(action: unknown): asserts action is PossessionAc
     if (!isString(action.result) || !VALID_THROW_RESULTS.has(action.result)) {
       throw new Error('Invalid advanced game: invalid throw result');
     }
+    validateOptionalThrowDetails(action.details, action.result);
     return;
   }
 
@@ -372,7 +386,7 @@ function validateAdvancedGamesPayload(
   }
   const games = payload.data.map((item) => {
     validateAdvancedGame(item);
-    return withoutAdvancedGameNote(item);
+    return withoutAdvancedGameNote(migrateAdvancedTrackedGame(item));
   });
   return {
     type: 'advanced-games',
@@ -441,7 +455,11 @@ export function validatePayload(raw: unknown): SharedPayload {
 
   if (raw.type === 'advanced-game') {
     validateAdvancedGame(raw.data);
-    return { ...base, type: 'advanced-game', data: withoutAdvancedGameNote(raw.data) };
+    return {
+      ...base,
+      type: 'advanced-game',
+      data: withoutAdvancedGameNote(migrateAdvancedTrackedGame(raw.data)),
+    };
   }
 
   validateTeam(raw.data);

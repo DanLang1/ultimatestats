@@ -565,6 +565,87 @@ describe('advancedTrackingStore', () => {
     expect(point?.possessions[1].actions[0].kind).toBe('disc_pickup');
   });
 
+  it('attaches throw details to a throwaway and undoes them with the turnover', () => {
+    createGame();
+
+    useAdvancedTrackingStore.getState().recordPull({
+      lines: homeLinesAugust,
+      puller: untracked,
+      receiver: august,
+      result: 'inbound',
+    });
+    const actionId = useAdvancedTrackingStore
+      .getState()
+      .recordThrow({ thrower: august, result: 'throwaway' });
+    const point = getCurrentPoint(getCurrentGame())!;
+    const possession = point.possessions[0];
+    const undoCountBeforeClassification = useAdvancedTrackingStore.getState().undoStack.length;
+
+    useAdvancedTrackingStore.getState().updateThrowType({
+      pointId: point.id,
+      possessionId: possession.id,
+      actionId,
+      type: 'huck',
+    });
+
+    const classifiedAction = getCurrentPoint(getCurrentGame())?.possessions[0].actions.at(-1);
+    expect(classifiedAction).toMatchObject({
+      id: actionId,
+      kind: 'throw',
+      result: 'throwaway',
+      details: { type: 'huck' },
+    });
+    expect(useAdvancedTrackingStore.getState().undoStack).toHaveLength(
+      undoCountBeforeClassification,
+    );
+
+    useAdvancedTrackingStore.getState().updateThrowType({
+      pointId: point.id,
+      possessionId: possession.id,
+      actionId,
+      type: undefined,
+    });
+    expect(getCurrentPoint(getCurrentGame())?.possessions[0].actions.at(-1)).toMatchObject({
+      id: actionId,
+      kind: 'throw',
+      result: 'throwaway',
+    });
+    expect(getCurrentPoint(getCurrentGame())?.possessions[0].actions.at(-1)).not.toHaveProperty(
+      'details',
+    );
+
+    expect(useAdvancedTrackingStore.getState().undoLastOperation()).toBe(true);
+    expect(getCurrentPoint(getCurrentGame())?.possessions[0].actions).toHaveLength(2);
+    expect(getCurrentPoint(getCurrentGame())?.possessions[0].actions.at(-1)?.kind).toBe(
+      'disc_pickup',
+    );
+  });
+
+  it('rejects throw details on a completed throw', () => {
+    createGame();
+    useAdvancedTrackingStore.getState().recordPull({
+      lines: homeLines,
+      puller: untracked,
+      receiver: august,
+      result: 'inbound',
+    });
+    const actionId = useAdvancedTrackingStore.getState().recordThrow({
+      thrower: august,
+      toPlayer: meves,
+      result: 'complete',
+    });
+    const point = getCurrentPoint(getCurrentGame())!;
+
+    expect(() =>
+      useAdvancedTrackingStore.getState().updateThrowType({
+        pointId: point.id,
+        possessionId: point.possessions[0].id,
+        actionId,
+        type: 'backfield_reset',
+      }),
+    ).toThrow('only to throwaways');
+  });
+
   it('undoes the last action and removes an empty turnover possession', () => {
     createGame();
 

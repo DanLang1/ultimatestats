@@ -139,6 +139,7 @@ type AnalyticsAction = {
 
   result?: string; // raw result value from PullAction or ThrowAction
   hangTimeMs?: number; // pull hang time in ms for pull actions
+  details?: ThrowDetails; // optional manual throw metadata on throw actions
 
   // Within-possession backward link — derived during buildAnalyticsGame by
   // walking the possession's actions array in order. Not stored in the raw model.
@@ -152,6 +153,10 @@ type AnalyticsAction = {
   elapsedMs: number | null;
 };
 ```
+
+Phase 1 throw details contain `type: 'huck' | 'backfield_reset'` and are valid only on raw
+throwaways. The compiler copies the object for timelines and exports but emits no additional
+attributions, so existing throwaway and plus/minus math is unchanged.
 
 ### `AnalyticsAttribution`
 

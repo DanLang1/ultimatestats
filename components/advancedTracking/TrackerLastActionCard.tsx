@@ -5,6 +5,7 @@ import { GoalHeader } from '@/components/advancedTracking/bottomCard/GoalHeader'
 import { LastActionCardFrame } from '@/components/advancedTracking/bottomCard/LastActionCardFrame';
 import { ModifierPrompt } from '@/components/advancedTracking/bottomCard/ModifierPrompt';
 import { PassChainHeader } from '@/components/advancedTracking/bottomCard/PassChainHeader';
+import { ThrowTypePrompt } from '@/components/advancedTracking/bottomCard/ThrowTypePrompt';
 import { TurnoverHeader } from '@/components/advancedTracking/bottomCard/TurnoverHeader';
 import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
@@ -13,9 +14,11 @@ import {
   getActiveSideId,
   getGoalInfo,
   getLastTurnoverEvent,
+  getLatestThrowawayDetailsTarget,
   getPassChainEvents,
   getSafeDiscHolderRef,
   getTrackerDisplaySideId,
+  ThrowDetailsTarget,
   TurnoverEventInfo,
 } from '@/lib/advancedTracking/trackingDisplayHelpers';
 import { areBothSidesFullyTracked } from '@/lib/advancedTracking/trackingModeUtils';
@@ -28,6 +31,7 @@ import {
   Participant,
   PassModifier,
   PointPossession,
+  ThrowType,
   TrackedPoint,
 } from '@/lib/advancedTracking/types';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
@@ -57,6 +61,8 @@ interface TrackerLastActionCardState {
   lastOppPossession: PointPossession | null;
   focusHasStarted: boolean;
   possession: PointPossession | null;
+  lastFocusThrowawayTarget: ThrowDetailsTarget | null;
+  lastOppThrowawayTarget: ThrowDetailsTarget | null;
 }
 
 type TrackerLastActionCardModel =
@@ -97,7 +103,7 @@ export const TrackerLastActionCard = ({
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
 
-  const { currentGame: game, undoLastOperation } = useAdvancedTrackingStore();
+  const { currentGame: game, undoLastOperation, updateThrowType } = useAdvancedTrackingStore();
   if (!game) return null;
 
   const point = getCurrentPoint(game);
@@ -125,6 +131,11 @@ export const TrackerLastActionCard = ({
     possession?.sideId !== perspectiveSideId &&
     possession?.actions.length === 1 &&
     possession.actions[0]?.kind === 'pull';
+  const getTrackedThrowawayTarget = (candidate: PointPossession | null) => {
+    const side = game.sides.find((gameSide) => gameSide.id === candidate?.sideId);
+    if (side?.trackingMode !== 'full-roster') return null;
+    return getLatestThrowawayDetailsTarget(point, candidate);
+  };
 
   const eyebrow = (color: string) => (
     <ThemedText
@@ -157,6 +168,8 @@ export const TrackerLastActionCard = ({
     lastOppPossession,
     focusHasStarted,
     possession,
+    lastFocusThrowawayTarget: getTrackedThrowawayTarget(lastFocusPossession),
+    lastOppThrowawayTarget: getTrackedThrowawayTarget(lastOppPossession),
   };
   const model = getTrackerLastActionCardModel({
     state: lastActionCardState,
@@ -165,6 +178,13 @@ export const TrackerLastActionCard = ({
       onCancelModifier,
       onMorePress,
       onUndo: undoLastOperation,
+      onSelectThrowType: (target, type) =>
+        updateThrowType({
+          pointId: target.pointId,
+          possessionId: target.possessionId,
+          actionId: target.actionId,
+          type,
+        }),
       frameLabel,
       eyebrow,
     },
@@ -185,6 +205,7 @@ interface TrackerLastActionCardModelUi {
   onCancelModifier: () => void;
   onMorePress: () => void;
   onUndo: () => void;
+  onSelectThrowType: (target: ThrowDetailsTarget, type: ThrowType | undefined) => void;
   frameLabel: (text: string) => ReactNode;
   eyebrow: (color: string) => ReactNode;
 }
@@ -210,8 +231,11 @@ function getTrackerLastActionCardModel({
     lastOppPossession,
     focusHasStarted,
     possession,
+    lastFocusThrowawayTarget,
+    lastOppThrowawayTarget,
   } = state;
-  const { palette, onCancelModifier, onMorePress, onUndo, frameLabel, eyebrow } = ui;
+  const { palette, onCancelModifier, onMorePress, onUndo, onSelectThrowType, frameLabel, eyebrow } =
+    ui;
   const undoRareButtonMode: BottomCardButtonMode = canUseRareMenu
     ? { kind: 'undo-more', onUndo, onMore: onMorePress }
     : { kind: 'undo-only', onUndo };
@@ -254,11 +278,19 @@ function getTrackerLastActionCardModel({
         kind: 'turnover',
         accentColor,
         buttonMode: undoRareButtonMode,
-        preferCompactActions: shouldPreferCompactForTurnover(turnoverEvent),
+        preferCompactActions:
+          shouldPreferCompactForTurnover(turnoverEvent) || lastFocusThrowawayTarget != null,
         content: (
           <>
             {eyebrow(accentColor)}
             <TurnoverHeader event={turnoverEvent} />
+            {lastFocusThrowawayTarget && (
+              <ThrowTypePrompt
+                accentColor={accentColor}
+                value={lastFocusThrowawayTarget.details?.type}
+                onChange={(type) => onSelectThrowType(lastFocusThrowawayTarget, type)}
+              />
+            )}
           </>
         ),
       };
@@ -285,11 +317,19 @@ function getTrackerLastActionCardModel({
       kind: 'turnover',
       accentColor,
       buttonMode: undoRareButtonMode,
-      preferCompactActions: shouldPreferCompactForTurnover(turnoverEvent),
+      preferCompactActions:
+        shouldPreferCompactForTurnover(turnoverEvent) || lastOppThrowawayTarget != null,
       content: (
         <>
           {eyebrow(accentColor)}
           <TurnoverHeader event={turnoverEvent} />
+          {lastOppThrowawayTarget && (
+            <ThrowTypePrompt
+              accentColor={accentColor}
+              value={lastOppThrowawayTarget.details?.type}
+              onChange={(type) => onSelectThrowType(lastOppThrowawayTarget, type)}
+            />
+          )}
         </>
       ),
     };

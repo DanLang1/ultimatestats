@@ -68,6 +68,12 @@ without a concrete requirement and migration plan.
 - [stat-utils.md](stat-utils.md) — pure analytics utilities and derivation conventions.
 - [voice-input.md](voice-input.md) — current voice-input behavior and future UX boundaries.
 
+## Roadmap and Follow-up Design
+
+- [Advanced throw classification](../../future-features/advanced-throw-classification.md) —
+  implemented throwaway types plus future all-throw classification and the boundary with location
+  tracking.
+
 ## Primary Source Folders
 
 | Area                 | Location                                    |

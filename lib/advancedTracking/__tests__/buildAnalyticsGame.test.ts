@@ -758,17 +758,28 @@ describe('turnover attributions', () => {
                   toPlayer: meves,
                   result: 'complete',
                 },
-                { id: 'a3', kind: 'throw', sideId: ZOO, thrower: meves, result: 'throwaway' },
+                {
+                  id: 'a3',
+                  kind: 'throw',
+                  sideId: ZOO,
+                  thrower: meves,
+                  result: 'throwaway',
+                  details: { type: 'backfield_reset' },
+                },
               ],
             },
           ],
         },
       ],
     };
-    const { attributions } = buildAnalyticsGameWithLog(game);
+    const analyticsGame = buildAnalyticsGameWithLog(game);
+    const { attributions } = analyticsGame;
 
     expect(sumAttributions(attributions, 'p_meves', 'throwaway')).toBe(1);
     expect(sumAttributions(attributions, 'p_august', 'throwaway')).toBe(0);
+    expect(analyticsGame.actions.find((action) => action.id === 'a3')).toMatchObject({
+      details: { type: 'backfield_reset' },
+    });
   });
 
   it('block — throwaway to thrower, block to defender', () => {

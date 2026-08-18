@@ -48,6 +48,12 @@ tags:
 - assertVisible:
     text: 'BEN'
 - assertVisible:
+    id: 'throw-type-huck'
+- assertVisible:
+    id: 'throw-type-backfield-reset'
+- tapOn:
+    id: 'throw-type-huck'
+- assertVisible:
     id: 'tracker-chip-Joe'
 - assertNotVisible:
     id: 'tracker-chip-Anna'
