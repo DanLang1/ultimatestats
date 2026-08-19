@@ -1,13 +1,22 @@
 appId: com.langdk.ultimatestats.dev
 name: Select Opponent Block
 ---
-- extendedWaitUntil:
-    visible:
-      id: 'rare-menu-opp-d'
-    timeout: 5000
-- tapOn:
-    id: 'rare-menu-opp-d'
-    retryTapIfNoChange: true
+- runFlow:
+    when:
+      notVisible:
+        id: 'rare-menu-opp-d'
+    commands:
+      # React Native Modal content can be absent from the iOS hierarchy while visible.
+      # The checked-in iOS simulator viewport keeps Opponent Block at this stable row.
+      - tapOn:
+          point: '50%,76%'
+- runFlow:
+    when:
+      visible:
+        id: 'rare-menu-opp-d'
+    commands:
+      - tapOn:
+          id: 'rare-menu-opp-d'
 - extendedWaitUntil:
     visible:
       id: 'defense-opp-goal'

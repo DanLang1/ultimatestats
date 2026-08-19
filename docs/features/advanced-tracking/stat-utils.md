@@ -75,10 +75,11 @@ support.
 An O-point is a side's receiving point, and a D-point is its pulling point. Neither label denotes
 a permanent player role or a specific lineup.
 
-Manually classified throwaways are also available on throw analytics actions as
-`details.type: 'huck' | 'backfield_reset'`. No aggregate stat is currently derived from them.
-Because successful throws are not classified, these values cannot produce huck attempts or huck
-completion percentage.
+Manually classified throws are available on throw analytics actions as
+`details.type: 'huck' | 'backfield_reset'`. Throw-type summaries derive huck attempts,
+completions, completion percentage, turnover outcomes, and receiver event counts from those
+actions. Backfield reset is turnover-only and has no completion rate. Missing classifications are
+expected because tagging is optional, so these summaries may not represent every throw.
 
 ### Requires Field Location Data (Future)
 

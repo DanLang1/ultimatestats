@@ -8,6 +8,9 @@ import {
   type FieldLocation,
   type PlayerRef,
   type PossessionAction,
+  type ThrowResult,
+  type ThrowType,
+  getEligibleThrowTypes,
 } from '@/lib/advancedTracking/types';
 import { CURRENT_SCHEMA_VERSION } from '@/lib/storage/types';
 import type { LinePreset, SavedGame, SavedTeam } from '@/lib/storage/types';
@@ -31,6 +34,14 @@ function isRecord(val: unknown): val is Record<string, unknown> {
 
 function isString(val: unknown): val is string {
   return typeof val === 'string';
+}
+
+function isThrowResult(val: unknown): val is ThrowResult {
+  return isString(val) && VALID_THROW_RESULTS.has(val);
+}
+
+function isThrowType(val: unknown): val is ThrowType {
+  return isString(val) && VALID_THROW_TYPES.has(val);
 }
 
 function isNumber(val: unknown): val is number {
@@ -138,15 +149,25 @@ function validateOptionalFieldLocation(location: unknown) {
 
 function validateOptionalThrowDetails(details: unknown, result: unknown) {
   if (details === undefined) return;
-  if (!isRecord(details) || !isString(details.type) || !VALID_THROW_TYPES.has(details.type)) {
+  if (!isRecord(details) || !isThrowType(details.type)) {
     throw new Error('Invalid advanced game: invalid throw details');
   }
-  if (result !== 'throwaway') {
-    throw new Error('Invalid advanced game: throw details require a throwaway');
+  if (!isThrowResult(result)) {
+    throw new Error('Invalid advanced game: throw details require an eligible throw result');
+  }
+  const eligibleTypes = getEligibleThrowTypes(result);
+  if (!eligibleTypes.includes(details.type)) {
+    if (details.type === 'backfield_reset') {
+      throw new Error('Invalid advanced game: backfield reset details require a turnover result');
+    }
+    throw new Error('Invalid advanced game: throw details require an eligible throw result');
   }
 }
 
-function validateAdvancedAction(action: unknown): asserts action is PossessionAction {
+function validateAdvancedAction(
+  action: unknown,
+  fullRosterSideIds: Set<string>,
+): asserts action is PossessionAction {
   if (!isRecord(action)) {
     throw new Error('Invalid advanced game: invalid action');
   }
@@ -193,6 +214,9 @@ function validateAdvancedAction(action: unknown): asserts action is PossessionAc
     validateOptionalFieldLocation(action.target);
     if (!isString(action.result) || !VALID_THROW_RESULTS.has(action.result)) {
       throw new Error('Invalid advanced game: invalid throw result');
+    }
+    if (action.details !== undefined && !fullRosterSideIds.has(action.sideId)) {
+      throw new Error('Invalid advanced game: throw details require a fully tracked side');
     }
     validateOptionalThrowDetails(action.details, action.result);
     return;
@@ -264,12 +288,16 @@ function validateAdvancedGame(data: unknown): asserts data is AdvancedTrackedGam
   if (!Array.isArray(data.sides) || data.sides.length !== 2) {
     throw new Error('Invalid advanced game: expected two sides');
   }
+  const fullRosterSideIds = new Set<string>();
   for (const side of data.sides) {
     if (!isRecord(side) || !isString(side.id) || !isString(side.label)) {
       throw new Error('Invalid advanced game: invalid side');
     }
     if (side.trackingMode !== 'full-roster' && side.trackingMode !== 'anonymous') {
       throw new Error('Invalid advanced game: invalid tracking mode');
+    }
+    if (side.trackingMode === 'full-roster') {
+      fullRosterSideIds.add(side.id);
     }
   }
   if (!Array.isArray(data.participants)) {
@@ -314,7 +342,7 @@ function validateAdvancedGame(data: unknown): asserts data is AdvancedTrackedGam
       }
       actionCount += possession.actions.length;
       for (const action of possession.actions) {
-        validateAdvancedAction(action);
+        validateAdvancedAction(action, fullRosterSideIds);
       }
     }
   }

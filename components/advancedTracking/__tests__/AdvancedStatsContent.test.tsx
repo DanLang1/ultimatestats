@@ -95,4 +95,41 @@ describe('AdvancedStatsContent', () => {
       },
     });
   });
+
+  it('shows classified team stats and exposes the player Types group on demand', async () => {
+    const classifiedGame = JSON.parse(JSON.stringify(game)) as AdvancedTrackedGame;
+    const goalAction = classifiedGame.points[0].possessions[0].actions.at(-1);
+    if (goalAction?.kind !== 'throw') throw new Error('Expected goal throw fixture.');
+    goalAction.details = { type: 'huck' };
+    const analyticsGame = buildAnalyticsGame(classifiedGame);
+
+    await renderScreen(
+      <AdvancedStatsContent
+        game={analyticsGame}
+        gameId={classifiedGame.id}
+        myTeamName="Light"
+        opponentName="Dark"
+        myScore={1}
+        opponentScore={0}
+        perspectiveSideId={LIGHT}
+        participantNames={analyticsGame.participantNames}
+      />,
+    );
+
+    expect(screen.getByTestId('advanced-throw-types-card')).toBeTruthy();
+    expect(screen.getByText('HUCKS')).toBeTruthy();
+    expect(screen.queryByText('Huck Att')).toBeNull();
+
+    await userEvent.press(screen.getByText('Types'));
+
+    expect(screen.getByTestId('advanced-stats-column-huck-attempts')).toBeTruthy();
+    expect(screen.getByTestId('advanced-stats-column-huck-completions')).toBeTruthy();
+    expect(screen.getByTestId('advanced-stats-column-huck-completion-pct')).toBeTruthy();
+    expect(screen.getByTestId('advanced-stats-column-reset-turnovers')).toBeTruthy();
+    expect(screen.getByTestId('advanced-stats-column-hucks-caught')).toBeTruthy();
+    expect(screen.queryByTestId('advanced-stats-column-huck-incompletions')).toBeNull();
+    expect(screen.queryByTestId('advanced-stats-column-hucks-dropped')).toBeNull();
+    expect(screen.queryByTestId('advanced-stats-column-resets-dropped')).toBeNull();
+    expect(screen.getByText('BF Turn').props.numberOfLines).toBe(1);
+  });
 });

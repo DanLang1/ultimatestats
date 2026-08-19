@@ -71,8 +71,7 @@ without a concrete requirement and migration plan.
 ## Roadmap and Follow-up Design
 
 - [Advanced throw classification](../../future-features/advanced-throw-classification.md) —
-  implemented throwaway types plus future all-throw classification and the boundary with location
-  tracking.
+  optional manual huck/reset tags, derived analytics, and the boundary with location tracking.
 
 ## Primary Source Folders
 

@@ -56,6 +56,7 @@ import {
   ADVANCED_TRACKING_SCHEMA_VERSION,
   AdvancedTrackedGame,
   StoppageAction,
+  getEligibleThrowTypes,
 } from '@/lib/advancedTracking/types';
 import { generateId } from '@/lib/utils';
 import { useSavedAdvancedGamesStore } from '@/store/advancedTracking/savedGamesStore';
@@ -818,12 +819,18 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
             if (liveAction?.kind !== 'throw') {
               throw new Error(`Cannot update missing throw action "${input.actionId}".`);
             }
-            if (liveAction.result !== 'throwaway') {
-              throw new Error('Throw details can currently be added only to throwaways.');
+            const actionSide = liveGame.sides.find((side) => side.id === liveAction.sideId);
+            if (actionSide?.trackingMode !== 'full-roster') {
+              throw new Error('Throw details can only be added for fully tracked sides.');
             }
 
             if (input.type == null) {
               delete liveAction.details;
+            } else if (!getEligibleThrowTypes(liveAction.result).includes(input.type)) {
+              if (input.type === 'backfield_reset') {
+                throw new Error('Backfield reset details require a turnover result.');
+              }
+              throw new Error(`Throw type "${input.type}" is not eligible for this result.`);
             } else {
               liveAction.details = { ...liveAction.details, type: input.type };
             }

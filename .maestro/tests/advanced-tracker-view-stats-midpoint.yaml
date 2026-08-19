@@ -12,6 +12,14 @@ name: Advanced Tracker View Stats Mid-Point
 - tapOn:
     id: 'tracker-chip-Jon'
 
+# Classify the completed pass as a huck. Successful throws must not offer reset classification.
+- assertVisible:
+    id: 'throw-type-huck'
+- assertNotVisible:
+    id: 'throw-type-backfield-reset'
+- tapOn:
+    id: 'throw-type-huck'
+
 # Open tracker menu and navigate to View Stats mid-point
 - tapOn:
     id: 'tracker-menu-button'
@@ -23,6 +31,24 @@ name: Advanced Tracker View Stats Mid-Point
     id: 'advanced-stats-summary-card'
 - assertVisible:
     id: 'advanced-stats-score-badge'
+
+# Verify the team classification card and player comparison group.
+- scrollUntilVisible:
+    element:
+      id: 'advanced-throw-types-card'
+    direction: DOWN
+    centerElement: true
+- assertVisible:
+    text: 'HUCKS'
+- scrollUntilVisible:
+    element:
+      id: 'advanced-stats-group-types'
+    direction: DOWN
+    centerElement: true
+- tapOn:
+    id: 'advanced-stats-group-types'
+- assertVisible:
+    id: 'advanced-stats-column-huck-attempts'
 
 - takeScreenshot:
     path: .maestro/screenshots/advanced-tracker-view-stats-midpoint
@@ -42,6 +68,13 @@ name: Advanced Tracker View Stats Mid-Point
 # Verify Player Stats screen
 - assertVisible:
     id: 'advanced-player-stats-screen'
+- scrollUntilVisible:
+    element:
+      id: 'advanced-player-throw-types-card'
+    direction: DOWN
+    centerElement: true
+- assertVisible:
+    text: '100% · 1/1'
 
 - takeScreenshot:
     path: .maestro/screenshots/advanced-tracker-player-stats-midpoint

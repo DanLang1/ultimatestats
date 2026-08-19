@@ -1,3 +1,7 @@
+import {
+  computeAdvancedPlayerThrowTypeStats,
+  type AdvancedPlayerThrowTypeStats,
+} from './advancedThrowTypeStatsUtils';
 import type { AnalyticsGame, AnalyticsPoint, AttributionType } from './analyticsTypes';
 import { getPointStateForSide } from './buildAnalyticsGame';
 import {
@@ -60,6 +64,24 @@ export interface AdvancedPlayerStats {
   /** Shortest timed inbound/dropped pull. Null if no pulls have timing data. */
   minPullHangTimeMs: number | null;
 
+  // Classified throw types
+  huckAttempts: number;
+  huckCompletions: number;
+  huckCompletionPct: number | null;
+  huckIncompletions: number;
+  huckThrowaways: number;
+  huckDrops: number;
+  huckBlocks: number;
+  huckPressures: number;
+  resetThrowaways: number;
+  resetDrops: number;
+  resetBlocks: number;
+  resetPressures: number;
+  resetTurnovers: number;
+  hucksCaught: number;
+  hucksDropped: number;
+  resetsDropped: number;
+
   // Playing time
   pointsPlayed: number;
   /** Points where this participant's side received. */
@@ -108,6 +130,22 @@ function createEmptyStats(participantId: string): AdvancedPlayerStats {
     avgPullHangTimeMs: null,
     maxPullHangTimeMs: null,
     minPullHangTimeMs: null,
+    huckAttempts: 0,
+    huckCompletions: 0,
+    huckCompletionPct: null,
+    huckIncompletions: 0,
+    huckThrowaways: 0,
+    huckDrops: 0,
+    huckBlocks: 0,
+    huckPressures: 0,
+    resetThrowaways: 0,
+    resetDrops: 0,
+    resetBlocks: 0,
+    resetPressures: 0,
+    resetTurnovers: 0,
+    hucksCaught: 0,
+    hucksDropped: 0,
+    resetsDropped: 0,
     pointsPlayed: 0,
     oPoints: 0,
     dPoints: 0,
@@ -153,6 +191,7 @@ export function computeAdvancedPlayerStats(
   sideId?: string,
 ): AdvancedPlayerStats[] {
   const pointById = buildPointById(game.points);
+  const throwTypeByPlayer = computeAdvancedPlayerThrowTypeStats(game, sideId);
 
   // Step 1: Bucket all attributions by participantId → type → summed weight
   const byParticipant = new Map<string, Map<AttributionType, number>>();
@@ -189,6 +228,9 @@ export function computeAdvancedPlayerStats(
       allParticipantIds.add(id);
     }
   }
+  for (const id of throwTypeByPlayer.keys()) {
+    allParticipantIds.add(id);
+  }
 
   // Step 3: Build stats for each participant
   const totalGameDurationMs = game.points.reduce(
@@ -219,6 +261,27 @@ export function computeAdvancedPlayerStats(
     stats.pressures = sum('pressure');
     stats.pulls = sum('pull');
     stats.pullReceptions = sum('pull_reception');
+
+    const throwTypes: AdvancedPlayerThrowTypeStats | undefined =
+      throwTypeByPlayer.get(participantId);
+    if (throwTypes) {
+      stats.huckAttempts = throwTypes.huckAttempts;
+      stats.huckCompletions = throwTypes.huckCompletions;
+      stats.huckCompletionPct = throwTypes.huckCompletionPct;
+      stats.huckIncompletions = throwTypes.huckIncompletions;
+      stats.huckThrowaways = throwTypes.huckThrowaways;
+      stats.huckDrops = throwTypes.huckDrops;
+      stats.huckBlocks = throwTypes.huckBlocks;
+      stats.huckPressures = throwTypes.huckPressures;
+      stats.resetThrowaways = throwTypes.resetThrowaways;
+      stats.resetDrops = throwTypes.resetDrops;
+      stats.resetBlocks = throwTypes.resetBlocks;
+      stats.resetPressures = throwTypes.resetPressures;
+      stats.resetTurnovers = throwTypes.resetTurnovers;
+      stats.hucksCaught = throwTypes.hucksCaught;
+      stats.hucksDropped = throwTypes.hucksDropped;
+      stats.resetsDropped = throwTypes.resetsDropped;
+    }
 
     // Derived calculations
     stats.completionPct = stats.throwAttempts > 0 ? stats.completions / stats.throwAttempts : null;

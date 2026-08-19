@@ -14,7 +14,7 @@ import {
   getActiveSideId,
   getGoalInfo,
   getLastTurnoverEvent,
-  getLatestThrowawayDetailsTarget,
+  getLatestThrowDetailsTarget,
   getPassChainEvents,
   getSafeDiscHolderRef,
   getTrackerDisplaySideId,
@@ -28,6 +28,7 @@ import {
   hasPointEnded,
 } from '@/lib/advancedTracking/trackingUtils';
 import {
+  getEligibleThrowTypes,
   Participant,
   PassModifier,
   PointPossession,
@@ -61,8 +62,9 @@ interface TrackerLastActionCardState {
   lastOppPossession: PointPossession | null;
   focusHasStarted: boolean;
   possession: PointPossession | null;
-  lastFocusThrowawayTarget: ThrowDetailsTarget | null;
-  lastOppThrowawayTarget: ThrowDetailsTarget | null;
+  lastFocusThrowTarget: ThrowDetailsTarget | null;
+  lastOppThrowTarget: ThrowDetailsTarget | null;
+  lastGoalThrowTarget: ThrowDetailsTarget | null;
 }
 
 type TrackerLastActionCardModel =
@@ -131,10 +133,10 @@ export const TrackerLastActionCard = ({
     possession?.sideId !== perspectiveSideId &&
     possession?.actions.length === 1 &&
     possession.actions[0]?.kind === 'pull';
-  const getTrackedThrowawayTarget = (candidate: PointPossession | null) => {
+  const getTrackedThrowTarget = (candidate: PointPossession | null) => {
     const side = game.sides.find((gameSide) => gameSide.id === candidate?.sideId);
     if (side?.trackingMode !== 'full-roster') return null;
-    return getLatestThrowawayDetailsTarget(point, candidate);
+    return getLatestThrowDetailsTarget(point, candidate);
   };
 
   const eyebrow = (color: string) => (
@@ -168,8 +170,9 @@ export const TrackerLastActionCard = ({
     lastOppPossession,
     focusHasStarted,
     possession,
-    lastFocusThrowawayTarget: getTrackedThrowawayTarget(lastFocusPossession),
-    lastOppThrowawayTarget: getTrackedThrowawayTarget(lastOppPossession),
+    lastFocusThrowTarget: getTrackedThrowTarget(lastFocusPossession),
+    lastOppThrowTarget: getTrackedThrowTarget(lastOppPossession),
+    lastGoalThrowTarget: getTrackedThrowTarget(point?.possessions.at(-1) ?? null),
   };
   const model = getTrackerLastActionCardModel({
     state: lastActionCardState,
@@ -231,8 +234,9 @@ function getTrackerLastActionCardModel({
     lastOppPossession,
     focusHasStarted,
     possession,
-    lastFocusThrowawayTarget,
-    lastOppThrowawayTarget,
+    lastFocusThrowTarget,
+    lastOppThrowTarget,
+    lastGoalThrowTarget,
   } = state;
   const { palette, onCancelModifier, onMorePress, onUndo, onSelectThrowType, frameLabel, eyebrow } =
     ui;
@@ -265,7 +269,19 @@ function getTrackerLastActionCardModel({
       kind: 'goal',
       accentColor: goalInfo?.isFocusGoal ? palette.accent : palette.danger,
       buttonMode: { kind: 'undo-only', onUndo },
-      content: goalInfo ? <GoalHeader goalInfo={goalInfo} /> : null,
+      content: goalInfo ? (
+        <>
+          <GoalHeader goalInfo={goalInfo} />
+          {lastGoalThrowTarget && (
+            <ThrowTypePrompt
+              accentColor={goalInfo.isFocusGoal ? palette.accent : palette.danger}
+              availableTypes={getEligibleThrowTypes(lastGoalThrowTarget.result)}
+              value={lastGoalThrowTarget.details?.type}
+              onChange={(type) => onSelectThrowType(lastGoalThrowTarget, type)}
+            />
+          )}
+        </>
+      ) : null,
     };
   }
 
@@ -279,16 +295,17 @@ function getTrackerLastActionCardModel({
         accentColor,
         buttonMode: undoRareButtonMode,
         preferCompactActions:
-          shouldPreferCompactForTurnover(turnoverEvent) || lastFocusThrowawayTarget != null,
+          shouldPreferCompactForTurnover(turnoverEvent) || lastFocusThrowTarget != null,
         content: (
           <>
             {eyebrow(accentColor)}
             <TurnoverHeader event={turnoverEvent} />
-            {lastFocusThrowawayTarget && (
+            {lastFocusThrowTarget && (
               <ThrowTypePrompt
                 accentColor={accentColor}
-                value={lastFocusThrowawayTarget.details?.type}
-                onChange={(type) => onSelectThrowType(lastFocusThrowawayTarget, type)}
+                availableTypes={getEligibleThrowTypes(lastFocusThrowTarget.result)}
+                value={lastFocusThrowTarget.details?.type}
+                onChange={(type) => onSelectThrowType(lastFocusThrowTarget, type)}
               />
             )}
           </>
@@ -318,16 +335,17 @@ function getTrackerLastActionCardModel({
       accentColor,
       buttonMode: undoRareButtonMode,
       preferCompactActions:
-        shouldPreferCompactForTurnover(turnoverEvent) || lastOppThrowawayTarget != null,
+        shouldPreferCompactForTurnover(turnoverEvent) || lastOppThrowTarget != null,
       content: (
         <>
           {eyebrow(accentColor)}
           <TurnoverHeader event={turnoverEvent} />
-          {lastOppThrowawayTarget && (
+          {lastOppThrowTarget && (
             <ThrowTypePrompt
               accentColor={accentColor}
-              value={lastOppThrowawayTarget.details?.type}
-              onChange={(type) => onSelectThrowType(lastOppThrowawayTarget, type)}
+              availableTypes={getEligibleThrowTypes(lastOppThrowTarget.result)}
+              value={lastOppThrowTarget.details?.type}
+              onChange={(type) => onSelectThrowType(lastOppThrowTarget, type)}
             />
           )}
         </>
@@ -337,11 +355,24 @@ function getTrackerLastActionCardModel({
 
   const passChainEvents = getPassChainEvents(possession, participants, undefined, point);
   if (passChainEvents.events.length > 0) {
+    const passThrowTypeTarget = lastFocusThrowTarget ?? lastOppThrowTarget;
     return {
       kind: 'turnover',
       accentColor: palette.accent,
       buttonMode: undoRareButtonMode,
-      content: <PassChainHeader events={passChainEvents.events} />,
+      content: (
+        <>
+          <PassChainHeader events={passChainEvents.events} />
+          {passThrowTypeTarget && (
+            <ThrowTypePrompt
+              accentColor={palette.accent}
+              availableTypes={getEligibleThrowTypes(passThrowTypeTarget.result)}
+              value={passThrowTypeTarget.details?.type}
+              onChange={(type) => onSelectThrowType(passThrowTypeTarget, type)}
+            />
+          )}
+        </>
+      ),
     };
   }
 

@@ -1,11 +1,11 @@
 # Advanced Throw Classification
 
-> **Status:** Phase 1 implemented; broader classification and location-based throws remain future
-> work.
+> **Status:** Manual throw classification and derived throw-type analytics implemented; measured
+> location-based huck metrics remain future work.
 
 ## Implemented Phase 1
 
-Tracked-side throwaways may carry one optional manual classification:
+Tracked-side eligible throws may carry one optional manual classification:
 
 ```ts
 export type ThrowType = 'huck' | 'backfield_reset';
@@ -21,12 +21,13 @@ export interface ThrowAction {
 ```
 
 The detail belongs to the canonical `ThrowAction`; it is not a separate event or attribution.
-Missing details mean that the throwaway was not classified. Phase 1 deliberately does not infer a
-type and does not offer live capture or supported analytics for anonymous-opponent actions. Fully
-tracked scrimmage sides are eligible for the same prompt as either side of a regular game.
+Missing details mean that the throw was not classified. The prompt is offered only for full-roster
+sides; anonymous-opponent actions are intentionally unsupported. Fully tracked scrimmage sides
+are eligible for the same prompt as either side of a regular game.
 
-After an eligible throwaway, the last-action card briefly offers `Huck` and `Backfield Reset`. The
-choices are optional and non-blocking. The prompt is derived from the latest canonical action, so
+After an eligible throw, the last-action card briefly offers the valid choices: `Huck` after any
+eligible throw and `Backfield Reset` only after a turnover. The choices are optional and
+non-blocking. The prompt is derived from the latest canonical action, so
 it disappears naturally when tracking advances rather than relying on a timer or effect. Tapping a
 selected choice clears it, and tapping the other choice changes it.
 
@@ -56,7 +57,9 @@ Throw details are:
 - shown as a secondary label in the saved timeline;
 - exported in the action log's `Throw Type` column.
 
-Existing completion, throwaway, plus/minus, and possession calculations remain unchanged.
+Existing completion, turnover, plus/minus, and possession calculations remain unchanged. Team and
+player throw-type cards, table columns, aggregate stats, and summary CSV fields derive from the
+canonical action list; the action log retains detailed outcomes.
 
 ## Location-Tracking Boundary
 
@@ -85,10 +88,8 @@ the same `details` object and establish which values are valid for each result.
 Likely follow-up work:
 
 1. Validate `huck` and `backfield_reset` usage across real games.
-2. Decide whether successful throws and other turnover outcomes should expose the same selector.
-3. Add a historical detail editor if coaches need post-game correction.
-4. Add breakdown utilities and analytics UI only after the vocabulary is stable.
-5. Design zone/XY capture separately, preserving manual and measured facts.
+2. Add a historical detail editor if coaches need post-game correction.
+3. Design zone/XY capture separately, preserving manual and measured facts.
 
 ## Implementation Map
 

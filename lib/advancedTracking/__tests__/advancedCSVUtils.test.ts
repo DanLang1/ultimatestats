@@ -30,6 +30,15 @@ describe('advancedCSVUtils', () => {
               sideId: 'home',
               actions: [
                 {
+                  id: 'throw-0',
+                  kind: 'throw',
+                  sideId: 'home',
+                  thrower: player,
+                  toPlayer: player,
+                  result: 'complete',
+                  details: { type: 'huck' },
+                },
+                {
                   id: 'throw-1',
                   kind: 'throw',
                   sideId: 'home',
@@ -47,7 +56,11 @@ describe('advancedCSVUtils', () => {
     const csv = generateAdvancedGameCSV(buildAnalyticsGame(game));
 
     expect(csv).toContain('Point,Action,Player,Result,Throw Type,Receiver,Defender');
+    expect(csv).toContain('1,Throw,Alex,complete,Huck,Alex,');
     expect(csv).toContain('1,Throw,Alex,throwaway,Backfield Reset,,');
+    expect(csv).toContain('Huck Attempts,1');
+    expect(csv).toContain('Huck Completion %,100.0%');
+    expect(csv).toContain('Backfield Reset Turnovers,1');
   });
 
   it('exports pressure team totals, player counts, and fractional plus/minus', () => {
@@ -120,6 +133,8 @@ describe('advancedCSVUtils', () => {
     };
 
     const csv = generateAdvancedGameCSV(buildAnalyticsGame(game));
+    expect(csv).not.toContain('Huck Attempts');
+    expect(csv).not.toContain('Backfield Reset Turnovers');
     expect(csv).toContain('Total Pressures,1');
     expect(csv).toContain('Pressures per D-Point,1');
     expect(csv).toContain('Blocks,Pressures,Receptions');

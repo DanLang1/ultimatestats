@@ -1,9 +1,10 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router } from 'expo-router';
-import { StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import OpeningSetupStats from '@/components/advancedTracking/OpeningSetupStats';
 import { ThemedText } from '@/components/ThemedText';
+import { useAlert } from '@/components/ui/AlertProvider';
 import { ScoreBadge } from '@/components/ui/ScoreBadge';
 import StatRing from '@/components/view-stats/StatRing';
 import StatsGrid from '@/components/view-stats/StatsGrid';
@@ -64,6 +65,7 @@ export default function AdvancedStatsContent({
   flipStats,
 }: AdvancedStatsContentProps) {
   const { palette } = useTheme();
+  const { showAlert } = useAlert();
   const { isLandscape, sizeClass } = useLayout();
   const styles = createStyles(isLandscape, sizeClass);
 
@@ -76,6 +78,22 @@ export default function AdvancedStatsContent({
   const topStats = aggregateInfo
     ? null
     : computeAdvancedTimeOfPossessionStats(game, perspectiveSideId, opposingSideId);
+  const { throwTypes } = teamStats;
+  const huckCompletionPct = throwTypes.huckAttempts > 0 ? throwTypes.huckCompletionPct : null;
+
+  const huckTurnoverStats = [
+    { label: 'Throwaways', value: throwTypes.huckThrowaways },
+    { label: 'Drops', value: throwTypes.huckDrops },
+    { label: 'Blocked', value: throwTypes.huckBlocks },
+    { label: 'Pressured', value: throwTypes.huckPressures },
+  ].filter(({ value }) => value > 0);
+
+  const resetTurnoverStats = [
+    { label: 'Throwaways', value: throwTypes.resetThrowaways },
+    { label: 'Drops', value: throwTypes.resetDrops },
+    { label: 'Blocked', value: throwTypes.resetBlocks },
+    { label: 'Pressured', value: throwTypes.resetPressures },
+  ].filter(({ value }) => value > 0);
 
   const possessionFlowStats: { label: string; value: string | number; sublabel?: string }[] = [];
 
@@ -294,6 +312,74 @@ Formula: Goals ÷ Possessions`}
           <StatsGrid stats={efficiencyStats} columns={isLandscape ? 4 : 2} />
         </View>
 
+        {throwTypes.huckAttempts + throwTypes.resetTurnovers > 0 && (
+          <View testID="advanced-throw-types-card" style={styles.subsectionContainer}>
+            <View style={styles.throwTypesTitleRow}>
+              <ThemedText
+                style={[
+                  styles.teamStatsSectionTitle,
+                  styles.throwTypesTitle,
+                  { color: palette.textMuted },
+                ]}>
+                THROW TYPES
+              </ThemedText>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="About throw classifications"
+                hitSlop={8}
+                onPress={() =>
+                  showAlert({
+                    title: 'Throw Classifications',
+                    message:
+                      'Classifications are optional, so this data may not be fully accurate.',
+                  })
+                }>
+                <MaterialCommunityIcons
+                  name="information-outline"
+                  size={scaleBySizeClass(15, sizeClass)}
+                  color={palette.textMuted}
+                />
+              </Pressable>
+            </View>
+            {throwTypes.huckAttempts > 0 && (
+              <View style={styles.subsectionContainer}>
+                <ThemedText style={[styles.subsectionTitle, { color: palette.textMuted }]}>
+                  HUCKS
+                </ThemedText>
+                <StatsGrid
+                  stats={[
+                    {
+                      label: 'Completion',
+                      value:
+                        huckCompletionPct == null ? '-' : `${Math.round(huckCompletionPct * 100)}%`,
+                      sublabel: `${throwTypes.huckCompletions}/${throwTypes.huckAttempts}`,
+                    },
+                    { label: 'Attempts', value: throwTypes.huckAttempts },
+                    { label: 'Completions', value: throwTypes.huckCompletions },
+                    { label: 'Turnovers', value: throwTypes.huckTurnovers },
+                    ...huckTurnoverStats,
+                  ]}
+                  columns={isLandscape ? 4 : 2}
+                />
+              </View>
+            )}
+            {throwTypes.resetTurnovers > 0 && (
+              <View style={styles.subsectionContainer}>
+                <ThemedText style={[styles.subsectionTitle, { color: palette.textMuted }]}>
+                  BACKFIELD RESETS
+                </ThemedText>
+                <StatsGrid
+                  stats={[
+                    { label: 'Turnovers', value: throwTypes.resetTurnovers },
+                    ...resetTurnoverStats,
+                  ]}
+                  columns={isLandscape ? 4 : 2}
+                />
+              </View>
+            )}
+          </View>
+        )}
+
         {pullStats.totalPulls > 0 && (
           <View style={styles.subsectionContainer}>
             <ThemedText style={[styles.subsectionTitle, { color: palette.textMuted }]}>
@@ -475,6 +561,14 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
       letterSpacing: 1,
       marginBottom: 16,
       textTransform: 'uppercase',
+    },
+    throwTypesTitleRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+    },
+    throwTypesTitle: {
+      marginBottom: 0,
     },
     ringRow: {
       flexDirection: 'row',

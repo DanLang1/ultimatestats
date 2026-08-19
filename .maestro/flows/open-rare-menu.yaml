@@ -7,7 +7,3 @@ name: Open Rare Actions Menu
     timeout: 5000
 - tapOn:
     id: 'tracker-more-button'
-    retryTapIfNoChange: true
-- extendedWaitUntil:
-    visible: 'RARE ACTIONS'
-    timeout: 5000

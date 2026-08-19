@@ -423,11 +423,24 @@ describe('validatePayload', () => {
       );
     });
 
-    it('rejects throw details on a non-throwaway', () => {
-      const data = setThrowDetails(makeAdvancedGameData({}, 'goal'), { type: 'huck' });
+    it('rejects backfield reset details on a completion', () => {
+      const data = setThrowDetails(makeAdvancedGameData({}, 'goal'), { type: 'backfield_reset' });
 
       expect(() => validatePayload(makeAdvancedGamePayload({ data }))).toThrow(
-        'require a throwaway',
+        'backfield reset details require a turnover result',
+      );
+    });
+
+    it('rejects throw details on an anonymous side', () => {
+      const data = setThrowDetails(makeAdvancedGameData({}, 'throwaway'), { type: 'huck' });
+      const possession = data.points[0].possessions[0];
+      const action = possession.actions.at(-1);
+      if (action?.kind !== 'throw') throw new Error('Expected throw fixture.');
+      possession.sideId = 'away';
+      action.sideId = 'away';
+
+      expect(() => validatePayload(makeAdvancedGamePayload({ data }))).toThrow(
+        'throw details require a fully tracked side',
       );
     });
 

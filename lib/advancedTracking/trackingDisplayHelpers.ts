@@ -18,6 +18,8 @@ import {
   PointSub,
   StoppageAction,
   ThrowAction,
+  ThrowResult,
+  getEligibleThrowTypes,
   TrackedPoint,
 } from './types';
 
@@ -102,22 +104,24 @@ export interface ThrowDetailsTarget {
   pointId: string;
   possessionId: string;
   actionId: string;
+  result: ThrowResult;
   details?: ThrowAction['details'];
 }
 
-export function getLatestThrowawayDetailsTarget(
+export function getLatestThrowDetailsTarget(
   point: TrackedPoint | null,
   possession: PointPossession | null,
 ): ThrowDetailsTarget | null {
   if (point == null || possession == null) return null;
   if (point.possessions.at(-1)?.id !== possession.id) return null;
   const action = possession.actions.findLast((candidate) => candidate.kind !== 'stoppage');
-  if (action?.kind !== 'throw' || action.result !== 'throwaway') return null;
+  if (action?.kind !== 'throw' || getEligibleThrowTypes(action.result).length === 0) return null;
 
   return {
     pointId: point.id,
     possessionId: possession.id,
     actionId: action.id,
+    result: action.result,
     details: action.details,
   };
 }

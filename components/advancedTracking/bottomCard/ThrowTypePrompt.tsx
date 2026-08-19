@@ -19,10 +19,16 @@ const OPTIONS: { type: ThrowType; label: string; testID: string }[] = [
 interface ThrowTypePromptProps {
   accentColor: string;
   value?: ThrowType;
+  availableTypes: readonly ThrowType[];
   onChange: (value: ThrowType | undefined) => void;
 }
 
-export function ThrowTypePrompt({ accentColor, value, onChange }: ThrowTypePromptProps) {
+export function ThrowTypePrompt({
+  accentColor,
+  value,
+  availableTypes,
+  onChange,
+}: ThrowTypePromptProps) {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
   const styles = createStyles(sizeClass);
@@ -30,7 +36,7 @@ export function ThrowTypePrompt({ accentColor, value, onChange }: ThrowTypePromp
   return (
     <View style={styles.container}>
       <View style={styles.options}>
-        {OPTIONS.map((option) => {
+        {OPTIONS.filter((option) => availableTypes.includes(option.type)).map((option) => {
           const isSelected = value === option.type;
           return (
             <Pressable

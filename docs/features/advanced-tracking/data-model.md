@@ -148,11 +148,13 @@ Important semantics:
   immediately scoring a goal. The tracked defender is the Callahan scorer; it has no assister.
 - `splitAttribution` records the exceptional 50/50 judgment. Normal blame is derived from the throw
   result.
-- Throwaways may have optional `details.type`: `huck` or `backfield_reset`. The manual type is
-  action metadata; it does not change the result, attribution, or possession outcome.
-- The live throw-type prompt is available only when the throwaway's side is fully tracked. An
-  anonymous opponent throwaway has no live capture or supported classification analytics; fully
-  tracked sides in a scrimmage are eligible.
+- Eligible throws may have optional `details.type`: `huck` or `backfield_reset`. Huck is valid on
+  complete, goal, drop, throwaway, block, and pressure results; backfield reset is valid only on
+  drop, throwaway, block, and pressure results. The manual type is action metadata; it does not
+  change the result, attribution, or possession outcome.
+- The live throw-type prompt is available only when the throw's side is fully tracked. Anonymous
+  sides have no live classification capture or supported player analytics; fully tracked scrimmage
+  sides are eligible.
 - `recordedAt` is optional so imported or legacy data without action timing remains valid.
 - Field locations use a discriminated `zone` or `xy` value and remain optional per action.
 

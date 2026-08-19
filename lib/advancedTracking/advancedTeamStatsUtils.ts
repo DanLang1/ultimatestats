@@ -1,3 +1,7 @@
+import {
+  computeAdvancedThrowTypeStats,
+  type AdvancedThrowTypeStats,
+} from './advancedThrowTypeStatsUtils';
 import type { AnalyticsGame } from './analyticsTypes';
 import { getPointStateForSide } from './buildAnalyticsGame';
 
@@ -65,11 +69,14 @@ export interface AdvancedTeamStats {
   multiPossessionPointPct: number | null;
   longestScoringRun: number;
   longestDrought: number;
+  /** Optional manual throw classifications derived from canonical actions. */
+  throwTypes: AdvancedThrowTypeStats;
 }
 
 // ── Main ──────────────────────────────────────────────────────────────────────
 
 export function computeAdvancedTeamStats(game: AnalyticsGame, sideId: string): AdvancedTeamStats {
+  const throwTypes = computeAdvancedThrowTypeStats(game, sideId);
   let holds = 0;
   let breaks = 0;
   let timesBroken = 0;
@@ -267,5 +274,6 @@ export function computeAdvancedTeamStats(game: AnalyticsGame, sideId: string): A
       completedPointCount > 0 ? multiPossessionPoints / completedPointCount : null,
     longestScoringRun,
     longestDrought,
+    throwTypes,
   };
 }

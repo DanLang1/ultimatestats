@@ -204,4 +204,26 @@ describe('advanced analytics routes', () => {
     expect(screen.getByText('Alex')).toBeVisible();
     expect(screen.getByText('Windchill stats')).toBeVisible();
   });
+
+  it('renders classified throw details on the advanced player page', async () => {
+    const game = makeEditableTimelineGame();
+    const goalAction = game.points[0].possessions[0].actions[0];
+    if (goalAction.kind !== 'throw') throw new Error('Expected goal throw fixture.');
+    goalAction.details = { type: 'huck' };
+    useSavedAdvancedGamesStore.setState({
+      gamesById: { [game.id]: game },
+      summariesLoaded: true,
+    });
+    setMockSearchParams({
+      gameId: game.id,
+      participantId: 'alex',
+      sideId: 'windchill',
+    });
+
+    await renderScreen(<AdvancedPlayerStatsScreen />);
+
+    expect(screen.getByTestId('advanced-player-throw-types-card')).toBeVisible();
+    expect(screen.getByText('THROWING · HUCKS')).toBeVisible();
+    expect(screen.getByText('100% · 1/1')).toBeVisible();
+  });
 });

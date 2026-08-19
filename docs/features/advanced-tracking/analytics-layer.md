@@ -154,9 +154,10 @@ type AnalyticsAction = {
 };
 ```
 
-Phase 1 throw details contain `type: 'huck' | 'backfield_reset'` and are valid only on raw
-throwaways. The compiler copies the object for timelines and exports but emits no additional
-attributions, so existing throwaway and plus/minus math is unchanged.
+Throw details contain `type: 'huck' | 'backfield_reset'` and are valid on eligible raw throw
+results. The compiler copies the object for timelines and exports but emits no additional
+attributions, so existing turnover and plus/minus math is unchanged. Throw-type summaries derive
+directly from compiled actions and are not persisted counters.
 
 ### `AnalyticsAttribution`
 

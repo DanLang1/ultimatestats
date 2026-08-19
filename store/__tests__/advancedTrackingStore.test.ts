@@ -621,7 +621,7 @@ describe('advancedTrackingStore', () => {
     );
   });
 
-  it('rejects throw details on a completed throw', () => {
+  it('rejects backfield reset details on a completed throw', () => {
     createGame();
     useAdvancedTrackingStore.getState().recordPull({
       lines: homeLines,
@@ -643,7 +643,62 @@ describe('advancedTrackingStore', () => {
         actionId,
         type: 'backfield_reset',
       }),
-    ).toThrow('only to throwaways');
+    ).toThrow('Backfield reset details require a turnover result');
+  });
+
+  it('attaches huck details to a completed throw', () => {
+    createGame();
+    useAdvancedTrackingStore.getState().recordPull({
+      lines: homeLines,
+      puller: untracked,
+      receiver: august,
+      result: 'inbound',
+    });
+    const actionId = useAdvancedTrackingStore.getState().recordThrow({
+      thrower: august,
+      toPlayer: meves,
+      result: 'complete',
+    });
+    const point = getCurrentPoint(getCurrentGame())!;
+
+    useAdvancedTrackingStore.getState().updateThrowType({
+      pointId: point.id,
+      possessionId: point.possessions[0].id,
+      actionId,
+      type: 'huck',
+    });
+
+    expect(getCurrentPoint(getCurrentGame())?.possessions[0].actions.at(-1)).toMatchObject({
+      id: actionId,
+      result: 'complete',
+      details: { type: 'huck' },
+    });
+  });
+
+  it('rejects throw details for an anonymous side', () => {
+    createGame();
+    useAdvancedTrackingStore.getState().recordPull({
+      lines: homeLinesAugust,
+      puller: untracked,
+      receiver: august,
+      result: 'inbound',
+    });
+    useAdvancedTrackingStore.getState().recordThrow({ thrower: august, result: 'throwaway' });
+    useAdvancedTrackingStore.getState().recordPickup({ sideId: awaySideId, player: untracked });
+    const actionId = useAdvancedTrackingStore
+      .getState()
+      .recordThrow({ thrower: untracked, result: 'throwaway' });
+    const point = getCurrentPoint(getCurrentGame())!;
+    const possession = point.possessions.at(-1)!;
+
+    expect(() =>
+      useAdvancedTrackingStore.getState().updateThrowType({
+        pointId: point.id,
+        possessionId: possession.id,
+        actionId,
+        type: 'huck',
+      }),
+    ).toThrow('fully tracked sides');
   });
 
   it('undoes the last action and removes an empty turnover possession', () => {

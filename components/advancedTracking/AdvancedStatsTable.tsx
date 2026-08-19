@@ -7,11 +7,13 @@ import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { AdvancedPlayerStats } from '@/lib/advancedTracking/advancedPlayerStatsUtils';
+import { hasAnyThrowTypeStat } from '@/lib/advancedTracking/advancedThrowTypeStatsUtils';
+import { UNKNOWN_PARTICIPANT_ID } from '@/lib/advancedTracking/buildAnalyticsGame';
 import { formatEfficiency } from '@/lib/efficiencyFormatUtils';
 import { Fonts } from '@/theme/theme';
 
 type SortKey = keyof AdvancedPlayerStats | 'name';
-type StatGroupKey = 'core' | 'throwing' | 'touches' | 'pulls' | 'points';
+type StatGroupKey = 'core' | 'throwing' | 'types' | 'touches' | 'pulls' | 'points';
 
 interface AdvancedStatsTableProps {
   playerStats: AdvancedPlayerStats[];
@@ -54,6 +56,17 @@ const STAT_GROUPS: StatGroup[] = [
       { key: 'assists', label: 'Ast', width: 58 },
       { key: 'hockeyAssists', label: 'HA', width: 58 },
       { key: 'throwaways', label: 'T/A', width: 58 },
+    ],
+  },
+  {
+    key: 'types',
+    label: 'Types',
+    columns: [
+      { key: 'huckAttempts', label: 'Huck Att', width: 84 },
+      { key: 'huckCompletions', label: 'Huck Cmp', width: 88 },
+      { key: 'huckCompletionPct', label: 'Huck %', width: 74 },
+      { key: 'resetTurnovers', label: 'BF Turn', width: 78 },
+      { key: 'hucksCaught', label: 'Hucks Caught', width: 112 },
     ],
   },
   {
@@ -123,6 +136,11 @@ const LEGEND_LABELS_BY_KEY: Partial<Record<SortKey, string>> = {
   avgPullHangTimeMs: 'Average Pull Hangtime',
   maxPullHangTimeMs: 'Longest Pull Hangtime',
   minPullHangTimeMs: 'Shortest Pull Hangtime',
+  huckAttempts: 'Huck Attempts',
+  huckCompletions: 'Huck Completions',
+  huckCompletionPct: 'Huck Completion %',
+  resetTurnovers: 'Backfield Turnovers',
+  hucksCaught: 'Hucks Caught',
   oEfficiency: 'Offensive Efficiency',
   dEfficiency: 'Defensive Efficiency',
   pointsPlayed: 'Points Played',
@@ -143,8 +161,9 @@ function formatCell(stats: AdvancedPlayerStats, key: SortKey): string {
     const hangTimeMs = stats[key];
     return hangTimeMs != null ? `${(hangTimeMs / 1000).toFixed(1)}s` : '-';
   }
-  if (key === 'completionPct') {
-    return stats.completionPct != null ? `${Math.round(stats.completionPct * 100)}%` : '-';
+  if (key === 'completionPct' || key === 'huckCompletionPct') {
+    const pct = key === 'completionPct' ? stats.completionPct : stats.huckCompletionPct;
+    return pct != null ? `${Math.round(pct * 100)}%` : '-';
   }
   if (key === 'oEfficiency') {
     return stats.oPoints > 0 ? formatEfficiency(stats.oEfficiency ?? 0) : '-';
@@ -174,6 +193,11 @@ function getNameColumnWidth(names: string[]): number {
   return Math.min(NAME_COLUMN_MAX_WIDTH, Math.max(NAME_COLUMN_MIN_WIDTH, desiredWidth));
 }
 
+function getStatColumnTestID(key: SortKey): string {
+  const kebabKey = key.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`);
+  return `advanced-stats-column-${kebabKey}`;
+}
+
 export default function AdvancedStatsTable({
   playerStats,
   participantNames,
@@ -181,6 +205,7 @@ export default function AdvancedStatsTable({
 }: AdvancedStatsTableProps) {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
+  const hasThrowTypeStats = playerStats.some(hasAnyThrowTypeStat);
   const [sortConfig, setSortConfig] = useState<{ key: SortKey; direction: 'asc' | 'desc' }>({
     key: 'plusMinus',
     direction: 'desc',
@@ -191,7 +216,8 @@ export default function AdvancedStatsTable({
   const [tableWidth, setTableWidth] = useState(0);
   const styles = createStyles(sizeClass);
 
-  const getName = (id: string) => participantNames.get(id) ?? id;
+  const getName = (id: string) =>
+    id === UNKNOWN_PARTICIPANT_ID ? 'Unknown' : (participantNames.get(id) ?? id);
   const activeGroup = getStatGroup(activeGroupKey);
   const visibleStatColumns = activeGroup.columns;
   const visibleLegendItems = visibleStatColumns.map((column) => ({
@@ -201,8 +227,12 @@ export default function AdvancedStatsTable({
   }));
   const standardLegendItems = visibleLegendItems.filter((item) => item.key !== 'pointPlusMinus');
   const pointPlusMinusLegendItem = visibleLegendItems.find((item) => item.key === 'pointPlusMinus');
-  const visiblePlayerStats =
-    activeGroupKey === 'pulls' ? playerStats.filter((stats) => stats.pulls > 0) : playerStats;
+  let visiblePlayerStats = playerStats;
+  if (activeGroupKey === 'pulls') {
+    visiblePlayerStats = playerStats.filter((stats) => stats.pulls > 0);
+  } else if (activeGroupKey === 'types') {
+    visiblePlayerStats = playerStats.filter(hasAnyThrowTypeStat);
+  }
   const playerNames = visiblePlayerStats.map((stats) => getName(stats.participantId));
   const nameColumnWidth = getNameColumnWidth(playerNames);
 
@@ -318,11 +348,12 @@ export default function AdvancedStatsTable({
           styles.groupControl,
           { backgroundColor: palette.overlay05, borderColor: palette.overlay10 },
         ]}>
-        {STAT_GROUPS.map((group) => {
+        {STAT_GROUPS.filter((group) => group.key !== 'types' || hasThrowTypeStats).map((group) => {
           const isActive = activeGroupKey === group.key;
           return (
             <Pressable
               key={group.key}
+              testID={`advanced-stats-group-${group.key}`}
               onPress={() => handleGroupPress(group.key)}
               style={[styles.groupButton, isActive && { backgroundColor: palette.accent }]}>
               <ThemedText
@@ -438,7 +469,7 @@ export default function AdvancedStatsTable({
               key={stats.participantId}
               testID={`advanced-stats-row-${getName(stats.participantId).toLowerCase()}`}
               onPress={() => onPlayerPress?.(stats.participantId)}
-              disabled={!onPlayerPress}
+              disabled={!onPlayerPress || stats.participantId === UNKNOWN_PARTICIPANT_ID}
               style={[
                 styles.tableRow,
                 { borderBottomColor: palette.overlay10 },
@@ -451,7 +482,10 @@ export default function AdvancedStatsTable({
                   styles.nameCell,
                   {
                     width: nameColumnWidth,
-                    color: onPlayerPress ? palette.accent : palette.textInverse,
+                    color:
+                      onPlayerPress && stats.participantId !== UNKNOWN_PARTICIPANT_ID
+                        ? palette.accent
+                        : palette.textInverse,
                   },
                 ]}
                 numberOfLines={1}>
@@ -476,6 +510,7 @@ export default function AdvancedStatsTable({
               {visibleStatColumns.map((col) => (
                 <Pressable
                   key={col.key}
+                  testID={getStatColumnTestID(col.key)}
                   style={[
                     styles.headerCell,
                     { width: getColumnWidth(col) },
@@ -489,7 +524,8 @@ export default function AdvancedStatsTable({
                         {
                           color: sortConfig.key === col.key ? palette.accent : palette.textMuted,
                         },
-                      ]}>
+                      ]}
+                      numberOfLines={1}>
                       {col.label}
                     </ThemedText>
                     {renderSortIcon(col.key)}
@@ -501,7 +537,7 @@ export default function AdvancedStatsTable({
               <Pressable
                 key={stats.participantId}
                 onPress={() => onPlayerPress?.(stats.participantId)}
-                disabled={!onPlayerPress}
+                disabled={!onPlayerPress || stats.participantId === UNKNOWN_PARTICIPANT_ID}
                 style={[
                   styles.tableRow,
                   { borderBottomColor: palette.overlay10 },
@@ -578,7 +614,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     legendItem: {
       flexDirection: 'row',
-      alignItems: 'center',
+      alignItems: 'flex-start',
       width: '45%',
       gap: 6,
     },
@@ -586,8 +622,10 @@ function createStyles(sizeClass: SizeClass) {
       fontSize: scaleBySizeClass(11, sizeClass),
       fontFamily: Fonts.bold,
       minWidth: 36,
+      flexShrink: 0,
     },
     legendLabel: {
+      flex: 1,
       fontSize: scaleBySizeClass(11, sizeClass),
     },
     pointPlusMinusLegendRow: {
@@ -713,7 +751,7 @@ function createStyles(sizeClass: SizeClass) {
       fontSize: scaleBySizeClass(13, sizeClass),
       textAlign: 'center',
       fontFamily: Fonts.semiBold,
-      paddingHorizontal: 4,
+      paddingHorizontal: 6,
     },
     nameCell: {
       textAlign: 'left',

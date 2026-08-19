@@ -9,6 +9,7 @@ import AdvancedPlayingTimeSection from '@/components/advancedTracking/AdvancedPl
 import AdvancedPointPresenceStrip from '@/components/advancedTracking/AdvancedPointPresenceStrip';
 import AdvancedProfileDiamond from '@/components/advancedTracking/AdvancedProfileDiamond';
 import AdvancedRelativeStatsSection from '@/components/advancedTracking/AdvancedRelativeStatsSection';
+import AdvancedPlayerThrowTypesCard from '@/components/advancedTracking/playerStats/AdvancedPlayerThrowTypesCard';
 import { ThemedText } from '@/components/ThemedText';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { useTheme } from '@/context/ThemeContext';
@@ -368,6 +369,7 @@ export default function AdvancedPlayerStatsView({
         </View>
 
         <View style={styles.grid}>
+          <AdvancedPlayerThrowTypesCard stats={stats} />
           {impactContent}
 
           <AdvancedRelativeStatsSection

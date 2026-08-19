@@ -189,6 +189,28 @@ export function generateAggregateAdvancedCSV(
 // ── Section builders ───────────────────────────────────────────────────────────
 
 function teamStatsCSV(stats: AdvancedTeamStats, teamName: string): string {
+  const huckRows =
+    stats.throwTypes.huckAttempts > 0
+      ? [
+          csvRow(['Huck Attempts', stats.throwTypes.huckAttempts, '']),
+          csvRow([
+            'Huck Completions',
+            stats.throwTypes.huckCompletions,
+            `${stats.throwTypes.huckCompletions}/${stats.throwTypes.huckAttempts}`,
+          ]),
+          csvRow([
+            'Huck Completion %',
+            formatNullablePercent(stats.throwTypes.huckCompletionPct),
+            '',
+          ]),
+          csvRow(['Huck Turnovers', stats.throwTypes.huckTurnovers, '']),
+        ]
+      : [];
+  const resetRows =
+    stats.throwTypes.resetTurnovers > 0
+      ? [csvRow(['Backfield Reset Turnovers', stats.throwTypes.resetTurnovers, ''])]
+      : [];
+
   return [
     csvRow(['Stat', 'Value', 'Detail']),
     csvRow(['Holds', stats.holds, `${stats.holds}/${stats.oPoints} O-points`]),
@@ -217,6 +239,8 @@ function teamStatsCSV(stats: AdvancedTeamStats, teamName: string): string {
     csvRow(['Total Turns', stats.totalTurnovers, '']),
     csvRow(['Total Blocks', stats.totalBlocks, '']),
     csvRow(['Total Pressures', stats.totalPressures, '']),
+    ...huckRows,
+    ...resetRows,
     csvRow(['Turns per Point', formatDecimal(stats.turnoversPerPoint ?? 0), '']),
     csvRow(['Points per Turn', formatDecimal(stats.pointsPerTurnover ?? 0), '']),
     csvRow([
@@ -283,10 +307,20 @@ function playerSummaryCSV(
   const hasCallahans = players.some((p) => p.callahans > 0);
   const hasStalls = players.some((p) => p.stalls > 0 || p.stallsConceded > 0);
   const hasPulls = players.some((p) => p.pulls > 0 || p.pullReceptions > 0);
+  const hasHuckThrowing = players.some((p) => p.huckAttempts > 0);
+  const hasResetThrowing = players.some((p) => p.resetTurnovers > 0);
+  const hasHuckReceiving = players.some((p) => p.hucksCaught + p.hucksDropped > 0);
+  const hasResetReceiving = players.some((p) => p.resetsDropped > 0);
 
   const columns = ['Player', 'Goals', 'Assists', 'Hockey Assists'];
   if (hasCallahans) columns.push('Callahans');
   columns.push('Completions', 'Throw Attempts', 'Completion %', 'Throwaways', 'Drops');
+  if (hasHuckThrowing) {
+    columns.push('Huck Attempts', 'Huck Completions', 'Huck Completion %', 'Huck Incompletions');
+  }
+  if (hasResetThrowing) columns.push('Reset Turnovers');
+  if (hasHuckReceiving) columns.push('Hucks Caught', 'Hucks Dropped');
+  if (hasResetReceiving) columns.push('Resets Dropped');
   if (hasStalls) columns.push('Stalls', 'Stalls Conceded');
   if (hasPulls) {
     columns.push(
@@ -326,6 +360,18 @@ function playerSummaryCSV(
       cells.push(p.completionPct != null ? formatPercent(p.completionPct) : '-');
       cells.push(p.throwaways);
       cells.push(p.drops);
+      if (hasHuckThrowing) {
+        cells.push(p.huckAttempts);
+        cells.push(p.huckCompletions);
+        cells.push(p.huckCompletionPct != null ? formatPercent(p.huckCompletionPct) : '-');
+        cells.push(p.huckIncompletions);
+      }
+      if (hasResetThrowing) cells.push(p.resetTurnovers);
+      if (hasHuckReceiving) {
+        cells.push(p.hucksCaught);
+        cells.push(p.hucksDropped);
+      }
+      if (hasResetReceiving) cells.push(p.resetsDropped);
       if (hasStalls) {
         cells.push(p.stalls);
         cells.push(p.stallsConceded);

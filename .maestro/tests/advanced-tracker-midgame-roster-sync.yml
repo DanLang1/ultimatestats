@@ -78,7 +78,8 @@ name: Advanced Tracker Mid-Game Roster Sync
     id: 'quick-edit-active-maestro-seed-player-molly'
 - extendedWaitUntil:
     visible:
-      text: 'Inactive'
+      id: 'quick-edit-active-maestro-seed-player-molly'
+      checked: false
     timeout: 5000
 
 # Return to the live tracker

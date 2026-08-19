@@ -337,6 +337,15 @@ export const THROW_TYPES = ['huck', 'backfield_reset'] as const;
 
 export type ThrowType = (typeof THROW_TYPES)[number];
 
+/** Returns the manual classifications supported by a throw result. */
+export function getEligibleThrowTypes(result: ThrowResult): readonly ThrowType[] {
+  if (result === 'complete' || result === 'goal') return ['huck'];
+  if (result === 'drop' || result === 'throwaway' || result === 'block' || result === 'pressure') {
+    return ['huck', 'backfield_reset'];
+  }
+  return [];
+}
+
 export interface ThrowDetails {
   type: ThrowType;
 }
@@ -360,7 +369,7 @@ export interface ThrowAction {
   defender?: PlayerRef;
   /** True when blame is shared 50/50 between thrower and toPlayer (e.g. a floaty huck both could have done better on). Single attribution is derived from result + thrower/toPlayer. */
   splitAttribution?: boolean;
-  /** Optional manual classification. The first version is recorded only for throwaways. */
+  /** Optional manual classification for eligible throw results. */
   details?: ThrowDetails;
   origin?: FieldLocation;
   target?: FieldLocation;
