@@ -2,6 +2,7 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { Redirect, router, Stack, useLocalSearchParams } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
+import { GameCompleteLastActionCard } from '@/components/advancedTracking/GameCompleteLastActionCard';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
@@ -69,12 +70,6 @@ export default function TrackerGameCompleteScreen() {
     heroIcon = 'handshake-outline';
   }
   const heroIconColor = isEarlyEndFlow || isTie ? palette.textMuted : palette.warning;
-  let undoActionTitle = 'Undo Winning Point';
-  if (isEarlyEndFlow) {
-    undoActionTitle = 'Undo End Game';
-  } else if (isTie) {
-    undoActionTitle = 'Undo Last Point';
-  }
   const finishActionText = isEarlyEndFlow
     ? 'Save the game and review stats'
     : 'Save the result and review stats';
@@ -182,6 +177,8 @@ export default function TrackerGameCompleteScreen() {
           </View>
         </View>
 
+        {!isEarlyEndFlow && <GameCompleteLastActionCard game={game} />}
+
         <View style={styles.section}>
           <ThemedText style={[styles.sectionTitle, { color: palette.textMuted }]}>
             WHAT NEXT
@@ -196,7 +193,7 @@ export default function TrackerGameCompleteScreen() {
             onPress={handleUndo}>
             <View style={styles.actionCopy}>
               <ThemedText style={[styles.secondaryActionTitle, { color: palette.textInverse }]}>
-                {undoActionTitle}
+                {isEarlyEndFlow ? 'Undo End Game' : 'Undo Last Action'}
               </ThemedText>
               <ThemedText style={[styles.secondaryActionText, { color: palette.textMuted }]}>
                 Return to the tracker and continue the game

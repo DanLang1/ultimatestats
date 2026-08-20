@@ -282,6 +282,7 @@ function seedTrackerState(trackerState: MaestroTrackerState, gameType: MaestroSe
 export async function seedAdvancedTrackerTestGame(
   options: {
     capMode?: MaestroCapMode;
+    gameTo?: number;
     gameType?: MaestroSeedGameType;
     rosterView?: 'chips' | 'cards';
     trackerState?: MaestroTrackerState;
@@ -292,6 +293,7 @@ export async function seedAdvancedTrackerTestGame(
   const sessionStore = useGameSessionStore.getState();
   const savedAdvancedGamesStore = useSavedAdvancedGamesStore.getState();
   const capMode = options.capMode ?? 'both';
+  const gameTo = options.gameTo ?? 15;
   const gameType = options.gameType ?? 'game';
   const trackerState = options.trackerState ?? 'awaitingPickup';
   const isScrimmage = gameType === 'scrimmage';
@@ -353,7 +355,7 @@ export async function seedAdvancedTrackerTestGame(
     ],
     participants,
     format: {
-      gameTo: 15,
+      gameTo,
       halftimeEnabled: true,
       ...getSeedCapFormat(capMode),
       timeoutsPerHalf: 2,

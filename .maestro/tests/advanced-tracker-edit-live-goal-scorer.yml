@@ -18,6 +18,16 @@ tags:
     visible:
       id: 'between-point-start-next'
     timeout: 5000
+- assertVisible:
+    id: 'throw-type-huck'
+- assertVisible:
+    id: 'tracker-undo-button'
+- assertNotVisible:
+    id: 'tracker-more-button'
+- assertNotVisible:
+    id: 'between-point-undo'
+- tapOn:
+    id: 'throw-type-huck'
 - tapOn:
     id: 'tracker-menu-button'
 - tapOn:

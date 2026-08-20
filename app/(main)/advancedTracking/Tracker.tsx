@@ -25,6 +25,7 @@ import { useTrackerHandlers } from '@/hooks/advancedTracking/useTrackerHandlers'
 import { useVoiceStatCommands } from '@/hooks/advancedTracking/useVoiceStatCommands';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import {
+  getActiveBetweenPointTimeout,
   getActiveGameClockPause,
   getActiveSideId,
   getActiveStoppage,
@@ -80,6 +81,7 @@ export default function AdvancedTrackerScreen() {
   const activeGameClockPause = game ? getActiveGameClockPause(game) : null;
   const pointTimerAdjustedTimestamp = point ? getPointAdjustedTimestamp(point, game) : null;
   const pointTimerPausedAt = activeGameClockPause?.pausedAt ?? activeStoppage?.pausedAt ?? null;
+  const activeBetweenPointTimeout = game ? getActiveBetweenPointTimeout(game) : null;
 
   const gameStartedAt = game?.points[0]?.startedAt ?? null;
 
@@ -87,6 +89,8 @@ export default function AdvancedTrackerScreen() {
   const lastUndoEntry = undoStack.at(-1);
   const showStartSecondHalfEarly = canStartSecondHalfEarly(game ?? undefined, lastUndoEntry);
   const showInPointControls = !activeStoppage && !activeGameClockPause && !pointIsOver;
+  const showPostPointLastActionCard = pointIsOver && activeBetweenPointTimeout == null;
+  const showLastActionCard = showInPointControls || showPostPointLastActionCard;
   const activeSideId = game ? getActiveSideId(possession, game) : '';
   const tracksBothSides = game != null && areBothSidesFullyTracked(game);
   const oppHasDisc = game
@@ -255,7 +259,7 @@ export default function AdvancedTrackerScreen() {
         pointTimerAdjustedTimestamp={pointTimerAdjustedTimestamp}
         pointTimerPausedAt={pointTimerPausedAt}
       />
-      {showInPointControls && (
+      {showLastActionCard && (
         <TrackerLastActionCard
           passModifier={passModifier}
           onCancelModifier={() => setPassModifier(null)}

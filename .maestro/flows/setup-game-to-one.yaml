@@ -1,0 +1,20 @@
+appId: com.langdk.ultimatestats.dev
+name: Seed Advanced Tracker Game To One
+---
+- launchApp
+- openLink: ultimatestats-dev:///__maestro_seed__?capMode=none&gameTo=1&trackerState=focusPossession
+- extendedWaitUntil:
+    visible:
+      id: 'maestro-setup-running'
+    timeout: 5000
+- retry:
+    maxRetries: 1
+    commands:
+      - extendedWaitUntil:
+          notVisible:
+            id: 'maestro-setup-running'
+          timeout: 15000
+- extendedWaitUntil:
+    visible:
+      id: 'tracker-menu-button'
+    timeout: 15000

@@ -40,11 +40,11 @@ import { Fonts, Palette } from '@/theme/theme';
 
 const EXPANDED_TURNOVER_TEXT_LIMIT = 12;
 
-interface TrackerLastActionCardProps {
+type TrackerLastActionCardProps = {
   passModifier: PassModifier;
   onCancelModifier: () => void;
   onMorePress: () => void;
-}
+};
 
 type BottomCardButtonMode = React.ComponentProps<typeof LastActionCardFrame>['buttonMode'];
 
@@ -65,6 +65,7 @@ interface TrackerLastActionCardState {
   lastFocusThrowTarget: ThrowDetailsTarget | null;
   lastOppThrowTarget: ThrowDetailsTarget | null;
   lastGoalThrowTarget: ThrowDetailsTarget | null;
+  canUndoPointEndingAction: boolean;
 }
 
 type TrackerLastActionCardModel =
@@ -105,7 +106,12 @@ export const TrackerLastActionCard = ({
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
 
-  const { currentGame: game, undoLastOperation, updateThrowType } = useAdvancedTrackingStore();
+  const {
+    currentGame: game,
+    undoLastOperation: onUndo,
+    undoStack,
+    updateThrowType,
+  } = useAdvancedTrackingStore();
   if (!game) return null;
 
   const point = getCurrentPoint(game);
@@ -138,6 +144,16 @@ export const TrackerLastActionCard = ({
     if (side?.trackingMode !== 'full-roster') return null;
     return getLatestThrowDetailsTarget(point, candidate);
   };
+  const lastPossession = point?.possessions.at(-1) ?? null;
+  const pointEndingAction = lastPossession?.actions.findLast(
+    (candidate) => candidate.kind !== 'stoppage',
+  );
+  const lastUndoEntry = undoStack.at(-1);
+  const canUndoPointEndingAction =
+    lastUndoEntry?.kind === 'action' &&
+    lastUndoEntry.pointId === point?.id &&
+    lastUndoEntry.possessionId === lastPossession?.id &&
+    lastUndoEntry.actionId === pointEndingAction?.id;
 
   const eyebrow = (color: string) => (
     <ThemedText
@@ -173,6 +189,7 @@ export const TrackerLastActionCard = ({
     lastFocusThrowTarget: getTrackedThrowTarget(lastFocusPossession),
     lastOppThrowTarget: getTrackedThrowTarget(lastOppPossession),
     lastGoalThrowTarget: getTrackedThrowTarget(point?.possessions.at(-1) ?? null),
+    canUndoPointEndingAction,
   };
   const model = getTrackerLastActionCardModel({
     state: lastActionCardState,
@@ -180,7 +197,7 @@ export const TrackerLastActionCard = ({
       palette,
       onCancelModifier,
       onMorePress,
-      onUndo: undoLastOperation,
+      onUndo,
       onSelectThrowType: (target, type) =>
         updateThrowType({
           pointId: target.pointId,
@@ -237,6 +254,7 @@ function getTrackerLastActionCardModel({
     lastFocusThrowTarget,
     lastOppThrowTarget,
     lastGoalThrowTarget,
+    canUndoPointEndingAction,
   } = state;
   const { palette, onCancelModifier, onMorePress, onUndo, onSelectThrowType, frameLabel, eyebrow } =
     ui;
@@ -268,7 +286,7 @@ function getTrackerLastActionCardModel({
     return {
       kind: 'goal',
       accentColor: goalInfo?.isFocusGoal ? palette.accent : palette.danger,
-      buttonMode: { kind: 'undo-only', onUndo },
+      buttonMode: canUndoPointEndingAction ? { kind: 'undo-only', onUndo } : { kind: 'none' },
       content: goalInfo ? (
         <>
           <GoalHeader goalInfo={goalInfo} />

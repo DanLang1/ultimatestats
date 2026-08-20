@@ -21,6 +21,10 @@ name: Advanced Tracker Line Preparation During Halftime
     id: 'tracker-menu-start-second-half-early'
 - assertVisible:
     text: 'HALFTIME'
+- assertVisible:
+    text: 'OPP GOAL'
+- assertNotVisible:
+    id: 'tracker-more-button'
 - tapOn:
     id: 'halftime-between-point-timer-toggle'
 - assertVisible:

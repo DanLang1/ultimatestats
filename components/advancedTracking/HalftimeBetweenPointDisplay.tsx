@@ -1,6 +1,5 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import React from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
@@ -9,7 +8,6 @@ import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hoo
 import { computeAdvancedPlayerStats } from '@/lib/advancedTracking/advancedPlayerStatsUtils';
 import { computeAdvancedTeamStats } from '@/lib/advancedTracking/advancedTeamStatsUtils';
 import { buildAnalyticsGame } from '@/lib/advancedTracking/buildAnalyticsGame';
-import { getSideScore } from '@/lib/advancedTracking/trackingUtils';
 import type { AdvancedTrackedGame } from '@/lib/advancedTracking/types';
 import { MIN_HALFTIME_BREAK_SECONDS } from '@/lib/constants';
 import { formatTimerSeconds } from '@/lib/utils';
@@ -41,7 +39,10 @@ export const HalftimeBetweenPointDisplay = ({
     pauseHalftimeTimer,
     startHalftimeTimer,
     undoLastOperation,
+    undoStack,
   } = useAdvancedTrackingStore();
+  const lastUndoEntry = undoStack.at(-1);
+  const showStandaloneUndo = lastUndoEntry != null && lastUndoEntry.kind !== 'action';
 
   const timeLeft = useTimestampTimer({
     timestamp: halftimeTimerStartedAt,
@@ -54,10 +55,6 @@ export const HalftimeBetweenPointDisplay = ({
   const timerIsRunning = halftimeTimerStartedAt !== null;
   const isOvertime = timeLeft < 0;
 
-  const focusSide = game.sides.find((side) => side.id === game.focusSideId);
-  const oppSide = game.sides.find((side) => side.id !== game.focusSideId);
-  const focusScore = getSideScore(game, game.focusSideId);
-  const oppScore = oppSide ? getSideScore(game, oppSide.id) : 0;
   const analyticsGame = buildAnalyticsGame(game);
   const teamStats = computeAdvancedTeamStats(analyticsGame, game.focusSideId);
   const playerStats = computeAdvancedPlayerStats(analyticsGame, game.focusSideId);
@@ -96,34 +93,14 @@ export const HalftimeBetweenPointDisplay = ({
 
   return (
     <View style={styles.container}>
-      <View style={styles.content}>
+      <ScrollView
+        style={styles.contentScroll}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+        bounces={false}>
         <View style={styles.timerBlock}>
           <View style={styles.iconRow}>
             <ThemedText style={[styles.label, { color: palette.accent }]}>HALFTIME</ThemedText>
-          </View>
-
-          <View style={styles.scoreRow}>
-            <View style={styles.scoreGroup}>
-              <ThemedText
-                style={[styles.teamLabel, { color: palette.textMuted }]}
-                numberOfLines={1}>
-                {focusSide?.label ?? 'Us'}
-              </ThemedText>
-              <ThemedText style={[styles.score, { color: palette.textInverse }]}>
-                {focusScore}
-              </ThemedText>
-            </View>
-            <ThemedText style={[styles.scoreDivider, { color: palette.textMuted }]}>-</ThemedText>
-            <View style={styles.scoreGroup}>
-              <ThemedText
-                style={[styles.teamLabel, { color: palette.textMuted }]}
-                numberOfLines={1}>
-                {oppSide?.label ?? 'Opponent'}
-              </ThemedText>
-              <ThemedText style={[styles.score, { color: palette.textInverse }]}>
-                {oppScore}
-              </ThemedText>
-            </View>
           </View>
 
           <View style={[styles.timerRow, { backgroundColor: palette.overlay05 }]}>
@@ -219,24 +196,26 @@ export const HalftimeBetweenPointDisplay = ({
             </View>
           </View>
         </View>
-      </View>
+      </ScrollView>
 
       <View style={styles.bottomActions}>
         <View style={styles.buttonRow}>
-          <Pressable
-            testID="halftime-between-point-undo"
-            style={({ pressed }) => [
-              styles.iconButton,
-              { borderColor: palette.overlay20, backgroundColor: palette.overlay05 },
-              pressed && { opacity: 0.7 },
-            ]}
-            onPress={undoLastOperation}>
-            <MaterialCommunityIcons
-              name="undo"
-              size={scaleBySizeClass(22, sizeClass)}
-              color={palette.textInverse}
-            />
-          </Pressable>
+          {showStandaloneUndo && (
+            <Pressable
+              testID="halftime-between-point-undo"
+              style={({ pressed }) => [
+                styles.iconButton,
+                { borderColor: palette.overlay20, backgroundColor: palette.overlay05 },
+                pressed && { opacity: 0.7 },
+              ]}
+              onPress={undoLastOperation}>
+              <MaterialCommunityIcons
+                name="undo"
+                size={scaleBySizeClass(22, sizeClass)}
+                color={palette.textInverse}
+              />
+            </Pressable>
+          )}
           <Pressable
             testID="halftime-between-point-set-line"
             style={({ pressed }) => [
@@ -272,9 +251,14 @@ function createStyles(sizeClass: SizeClass, isLandscape: boolean) {
 
   return StyleSheet.create({
     container: { flex: 1, justifyContent: 'space-between' },
+    contentScroll: {
+      flex: 1,
+      width: '100%',
+    },
     content: {
       alignItems: 'center',
-      flex: 1,
+      flexGrow: 1,
+      paddingBottom: scaleBySizeClass(16, densitySizeClass),
       paddingHorizontal: scaleBySizeClass(24, densitySizeClass),
       paddingTop: scaleBySizeClass(isLandscape ? 4 : 24, densitySizeClass),
       width: '100%',
@@ -295,34 +279,6 @@ function createStyles(sizeClass: SizeClass, isLandscape: boolean) {
       fontFamily: Fonts.black,
       fontSize: scaleBySizeClass(20, densitySizeClass),
       letterSpacing: 3,
-    },
-    scoreRow: {
-      alignItems: 'center',
-      flexDirection: 'row',
-      gap: scaleBySizeClass(14, densitySizeClass),
-      justifyContent: 'center',
-      width: '100%',
-    },
-    scoreGroup: {
-      alignItems: 'center',
-      flex: 1,
-      gap: scaleBySizeClass(2, densitySizeClass),
-      maxWidth: scaleBySizeClass(150, densitySizeClass),
-    },
-    teamLabel: {
-      fontFamily: Fonts.extraBold,
-      fontSize: scaleBySizeClass(11, densitySizeClass),
-      letterSpacing: 1,
-      textTransform: 'uppercase',
-    },
-    score: {
-      fontFamily: Fonts.black,
-      fontSize: scaleBySizeClass(46, densitySizeClass),
-      fontVariant: ['tabular-nums'],
-    },
-    scoreDivider: {
-      fontFamily: Fonts.black,
-      fontSize: scaleBySizeClass(32, densitySizeClass),
     },
     timerRow: {
       alignItems: 'center',

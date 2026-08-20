@@ -10,6 +10,7 @@ import TrackerGameCompleteScreen from '@/app/(main)/advancedTracking/TrackerGame
 import TrackerInjurySubScreen from '@/app/(main)/advancedTracking/TrackerInjurySub';
 import TrackerLineSelectScreen from '@/app/(main)/advancedTracking/TrackerLineSelect';
 import type { AdvancedTrackedGame } from '@/lib/advancedTracking/types';
+import { useSavedAdvancedGamesStore } from '@/store/advancedTracking/savedGamesStore';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { useGameStore } from '@/store/basic/gameStore';
 import { useSettingsStore } from '@/store/settingsStore';
@@ -103,6 +104,43 @@ function arrangeDualTrackedPointWithPreviouslyDarkBenchPlayer() {
   return { participants };
 }
 
+function arrangeDualTrackedOpponentWinningGame() {
+  const { participants } = arrangeDualTrackedPoint();
+  useAdvancedTrackingStore.setState((state) => {
+    state.currentGame!.settings.format = {
+      ...state.currentGame!.settings.format!,
+      gameTo: 1,
+    };
+  });
+
+  const pickup = useAdvancedTrackingStore.getState().recordCaptureIntent({
+    kind: 'pickup',
+    player: { refType: 'participant', participantId: participants[0].id },
+  });
+  if (!pickup.ok) throw new Error(`Unable to arrange tracked pickup: ${pickup.reason}`);
+
+  const turnover = useAdvancedTrackingStore.getState().recordCaptureIntent({ kind: 'throwaway' });
+  if (!turnover.ok) throw new Error(`Unable to arrange tracked turnover: ${turnover.reason}`);
+
+  const opponentPickup = useAdvancedTrackingStore.getState().recordCaptureIntent({
+    kind: 'pickup',
+    player: { refType: 'participant', participantId: participants[7].id },
+  });
+  if (!opponentPickup.ok) {
+    throw new Error(`Unable to arrange opponent pickup: ${opponentPickup.reason}`);
+  }
+
+  const result = useAdvancedTrackingStore.getState().recordCaptureIntent({
+    kind: 'goal',
+    scorer: { refType: 'participant', participantId: participants[8].id },
+  });
+  if (!result.ok) {
+    throw new Error(`Unable to arrange tracked opponent goal: ${result.reason}`);
+  }
+
+  return { participants };
+}
+
 function arrangeSingleSideTrackedPoint() {
   const participants = Array.from({ length: 9 }, (_, index) => ({
     id: `single-player-${index + 1}`,
@@ -191,6 +229,75 @@ function arrangeCompletedPointForNextLineSelection() {
   return participants;
 }
 
+function arrangeWinningAdvancedGame() {
+  arrangeAdvancedGame();
+  useAdvancedTrackingStore.setState((state) => {
+    state.currentGame!.settings.format = {
+      ...state.currentGame!.settings.format!,
+      gameTo: 1,
+    };
+  });
+  recordOpeningPull();
+  useAdvancedTrackingStore.getState().recordCaptureIntent({
+    kind: 'pickup',
+    player: { refType: 'participant', participantId: testTeam.roster[0].id },
+  });
+  const result = useAdvancedTrackingStore.getState().recordCaptureIntent({
+    kind: 'goal',
+    scorer: { refType: 'participant', participantId: testTeam.roster[1].id },
+  });
+  if (!result.ok) {
+    throw new Error(`Unable to arrange winning goal: ${result.reason}`);
+  }
+}
+
+function arrangeNaturalHalftimeAfterGoal() {
+  arrangeAdvancedGame();
+  useAdvancedTrackingStore.setState((state) => {
+    state.currentGame!.settings.format = {
+      ...state.currentGame!.settings.format!,
+      halftimeAt: 1,
+    };
+  });
+  recordOpeningPull();
+  useAdvancedTrackingStore.getState().recordCaptureIntent({
+    kind: 'pickup',
+    player: { refType: 'participant', participantId: testTeam.roster[0].id },
+  });
+  const result = useAdvancedTrackingStore.getState().recordCaptureIntent({
+    kind: 'goal',
+    scorer: { refType: 'participant', participantId: testTeam.roster[1].id },
+  });
+  if (!result.ok) {
+    throw new Error(`Unable to arrange natural halftime goal: ${result.reason}`);
+  }
+}
+
+function arrangeOpponentWinningAdvancedGame() {
+  arrangeAdvancedGame();
+  useAdvancedTrackingStore.setState((state) => {
+    state.currentGame!.settings.format = {
+      ...state.currentGame!.settings.format!,
+      gameTo: 1,
+    };
+  });
+  recordOpeningPull();
+  useAdvancedTrackingStore.getState().recordCaptureIntent({
+    kind: 'pickup',
+    player: { refType: 'participant', participantId: testTeam.roster[0].id },
+  });
+  const turnover = useAdvancedTrackingStore.getState().recordCaptureIntent({ kind: 'throwaway' });
+  if (!turnover.ok) {
+    throw new Error(`Unable to arrange turnover before opponent goal: ${turnover.reason}`);
+  }
+  const result = useAdvancedTrackingStore
+    .getState()
+    .recordCaptureIntent({ kind: 'anonymous-opponent-goal' });
+  if (!result.ok) {
+    throw new Error(`Unable to arrange opponent winning goal: ${result.reason}`);
+  }
+}
+
 describe('advanced tracking routes', () => {
   beforeEach(async () => {
     resetAllStores();
@@ -236,6 +343,40 @@ describe('advanced tracking routes', () => {
     expect(
       useAdvancedTrackingStore.getState().currentGame?.points[0].possessions[0].actions,
     ).toHaveLength(2);
+    expect(
+      useAdvancedTrackingStore.getState().currentGame?.points[0].possessions[0].actions.at(-1),
+    ).toMatchObject({ kind: 'disc_pickup' });
+    expect(screen.queryByTestId('throw-type-huck')).not.toBeOnTheScreen();
+  });
+
+  it('keeps the last-action card available to classify and undo a goal', async () => {
+    const user = userEvent.setup();
+    arrangeAdvancedGame();
+    recordOpeningPull();
+    useAdvancedTrackingStore.getState().recordCaptureIntent({
+      kind: 'pickup',
+      player: { refType: 'participant', participantId: testTeam.roster[0].id },
+    });
+    const result = useAdvancedTrackingStore.getState().recordCaptureIntent({
+      kind: 'goal',
+      scorer: { refType: 'participant', participantId: testTeam.roster[1].id },
+    });
+    expect(result.ok).toBe(true);
+
+    await renderScreen(<TrackerScreen />);
+
+    expect(screen.getByTestId('throw-type-huck')).toBeOnTheScreen();
+    expect(screen.getByTestId('tracker-undo-button')).toBeOnTheScreen();
+    expect(screen.queryByTestId('tracker-more-button')).not.toBeOnTheScreen();
+    expect(screen.queryByTestId('between-point-undo')).not.toBeOnTheScreen();
+    expect(screen.getByTestId('between-point-start-next')).toBeOnTheScreen();
+    await user.press(screen.getByTestId('throw-type-huck'));
+
+    expect(
+      useAdvancedTrackingStore.getState().currentGame?.points[0].possessions[0].actions.at(-1),
+    ).toMatchObject({ kind: 'throw', result: 'goal', details: { type: 'huck' } });
+
+    await user.press(screen.getByTestId('tracker-undo-button'));
     expect(
       useAdvancedTrackingStore.getState().currentGame?.points[0].possessions[0].actions.at(-1),
     ).toMatchObject({ kind: 'disc_pickup' });
@@ -590,8 +731,18 @@ describe('advanced tracking routes', () => {
 
     await renderScreen(<TrackerScreen />);
 
+    expect(screen.getByTestId('throw-type-huck')).toBeOnTheScreen();
+    expect(screen.queryByTestId('tracker-undo-button')).not.toBeOnTheScreen();
+    expect(screen.getByTestId('halftime-between-point-undo')).toBeOnTheScreen();
+    expect(screen.getAllByText('Home')).toHaveLength(2);
+    expect(screen.getAllByText('Away')).toHaveLength(2);
     expect(screen.getByText('SET LINE')).toBeVisible();
     expect(screen.getByText('START SECOND HALF')).toBeVisible();
+
+    await user.press(screen.getByTestId('throw-type-huck'));
+    expect(
+      useAdvancedTrackingStore.getState().currentGame?.points[0].possessions[0].actions.at(-1),
+    ).toMatchObject({ kind: 'throw', result: 'goal', details: { type: 'huck' } });
 
     await user.press(screen.getByTestId('halftime-between-point-set-line'));
     expect(router.push).toHaveBeenLastCalledWith({
@@ -603,6 +754,15 @@ describe('advanced tracking routes', () => {
     await user.press(screen.getByTestId('halftime-between-point-start-next'));
     expect(router.push).toHaveBeenLastCalledWith('/advancedTracking/TrackerLineSelect');
     expect(useAdvancedTrackingStore.getState().isHalftimeBreakActive).toBe(true);
+  });
+
+  it('does not duplicate undo after a goal naturally triggers halftime', async () => {
+    arrangeNaturalHalftimeAfterGoal();
+
+    await renderScreen(<TrackerScreen />);
+
+    expect(screen.getByTestId('tracker-undo-button')).toBeOnTheScreen();
+    expect(screen.queryByTestId('halftime-between-point-undo')).not.toBeOnTheScreen();
   });
 
   it('shows the dropper after a dual-tracked turnover', async () => {
@@ -1268,6 +1428,80 @@ describe('advanced tracking routes', () => {
     expect(screen.getByText(participants[15].name)).toBeVisible();
   });
 
+  it('classifies and undoes the winning throw from Game Complete', async () => {
+    const user = userEvent.setup();
+    arrangeWinningAdvancedGame();
+
+    await renderScreen(<TrackerGameCompleteScreen />);
+
+    expect(screen.getByText('GAME COMPLETE')).toBeVisible();
+    expect(screen.getByTestId('game-complete-last-goal-card')).toBeVisible();
+    expect(screen.queryByText('FINAL ACTION')).not.toBeOnTheScreen();
+    expect(screen.queryByText('OUR GOAL')).not.toBeOnTheScreen();
+    expect(screen.queryByText('OPTIONAL THROW CLASSIFICATION')).not.toBeOnTheScreen();
+    expect(screen.getByTestId('throw-type-huck')).toBeOnTheScreen();
+    expect(screen.getByTestId('game-complete-undo')).toBeOnTheScreen();
+    expect(screen.getByText('Return to the tracker and continue the game')).toBeVisible();
+    expect(screen.queryByTestId('tracker-more-button')).not.toBeOnTheScreen();
+    expect(screen.getByText('WHAT NEXT')).toBeVisible();
+
+    await user.press(screen.getByTestId('throw-type-huck'));
+    expect(
+      useAdvancedTrackingStore.getState().currentGame?.points[0].possessions[0].actions.at(-1),
+    ).toMatchObject({ kind: 'throw', result: 'goal', details: { type: 'huck' } });
+
+    await user.press(screen.getByTestId('game-complete-undo'));
+    expect(
+      useAdvancedTrackingStore.getState().currentGame?.points[0].possessions[0].actions.at(-1),
+    ).toMatchObject({ kind: 'disc_pickup' });
+    expect(router.replace).toHaveBeenCalledWith('/advancedTracking/Tracker');
+  });
+
+  it('persists the winning throw classification when Game Complete is finished', async () => {
+    const user = userEvent.setup();
+    arrangeWinningAdvancedGame();
+
+    await renderScreen(<TrackerGameCompleteScreen />);
+
+    await user.press(screen.getByTestId('throw-type-huck'));
+    await user.press(screen.getByTestId('game-complete-finish'));
+
+    const savedGame = await useSavedAdvancedGamesStore.getState().loadGame('advanced-game-1');
+    expect(savedGame?.status).toBe('final');
+    expect(savedGame?.points[0].possessions[0].actions.at(-1)).toMatchObject({
+      kind: 'throw',
+      result: 'goal',
+      details: { type: 'huck' },
+    });
+  });
+
+  it('shows only undo for an opponent goal on Game Complete', async () => {
+    arrangeOpponentWinningAdvancedGame();
+
+    await renderScreen(<TrackerGameCompleteScreen />);
+
+    expect(screen.queryByTestId('throw-type-huck')).not.toBeOnTheScreen();
+    expect(screen.queryByTestId('game-complete-last-goal-card')).not.toBeOnTheScreen();
+    expect(screen.getByTestId('game-complete-undo')).toBeVisible();
+    expect(screen.getByText('Undo Last Action')).toBeVisible();
+  });
+
+  it('classifies a fully tracked opponent winning throw on Game Complete', async () => {
+    const user = userEvent.setup();
+    const { participants } = arrangeDualTrackedOpponentWinningGame();
+
+    await renderScreen(<TrackerGameCompleteScreen />);
+
+    expect(screen.getByTestId('game-complete-last-goal-card')).toBeVisible();
+    expect(screen.getByText(`${participants[8].name} · GOAL`)).toBeVisible();
+    expect(screen.getByTestId('throw-type-huck')).toBeOnTheScreen();
+
+    await user.press(screen.getByTestId('throw-type-huck'));
+    expect(
+      useAdvancedTrackingStore.getState().currentGame?.points[0].possessions.at(-1)?.actions.at(-1),
+    ).toMatchObject({ kind: 'throw', result: 'goal', details: { type: 'huck' } });
+  });
+
   it('renders the manual early-end route without faking game-over hooks', async () => {
     arrangeAdvancedGame();
     setMockSearchParams({ mode: 'earlyEnd' });
@@ -1276,6 +1510,8 @@ describe('advanced tracking routes', () => {
 
     expect(screen.getByText('END GAME')).toBeVisible();
     expect(screen.getByText('Final Score')).toBeVisible();
+    expect(screen.getByTestId('game-complete-undo')).toBeVisible();
+    expect(screen.queryByTestId('tracker-undo-button')).not.toBeOnTheScreen();
     expect(screen.getByText('Done')).toBeVisible();
   });
 });

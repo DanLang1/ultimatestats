@@ -87,6 +87,12 @@ describe('seedAdvancedTrackerTestGame tracker state presets', () => {
     }
   });
 
+  it('seeds a configured game target', async () => {
+    await seedAdvancedTrackerTestGame({ gameTo: 1 });
+
+    expect(useAdvancedTrackingStore.getState().currentGame?.settings.format?.gameTo).toBe(1);
+  });
+
   it('seeds the current team used by roster-backed advanced games', async () => {
     await seedAdvancedTrackerTestGame();
 

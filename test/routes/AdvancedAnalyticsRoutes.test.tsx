@@ -223,7 +223,8 @@ describe('advanced analytics routes', () => {
     await renderScreen(<AdvancedPlayerStatsScreen />);
 
     expect(screen.getByTestId('advanced-player-throw-types-card')).toBeVisible();
-    expect(screen.getByText('THROWING · HUCKS')).toBeVisible();
-    expect(screen.getByText('100% · 1/1')).toBeVisible();
+    expect(screen.getByText('HUCK THROWING')).toBeVisible();
+    expect(screen.getByText('Completion rate')).toBeVisible();
+    expect(screen.getByText('1 of 1')).toBeVisible();
   });
 });

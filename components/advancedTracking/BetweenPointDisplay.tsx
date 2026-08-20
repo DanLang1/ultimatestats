@@ -1,6 +1,5 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import React from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/ThemedText';
 import { PlayerChip } from '@/components/ui/PlayerChip';
@@ -70,7 +69,7 @@ export const BetweenPointDisplay = ({
   const { isLandscape, sizeClass } = useLayout();
 
   const styles = createStyles(sizeClass, isLandscape);
-  const { endBetweenPointTimeout, undoLastOperation } = useAdvancedTrackingStore();
+  const { endBetweenPointTimeout, undoLastOperation, undoStack } = useAdvancedTrackingStore();
 
   const point = getCurrentPoint(game);
   const activeTimeout = getActiveBetweenPointTimeout(game);
@@ -124,6 +123,8 @@ export const BetweenPointDisplay = ({
     focusSideId: summarySideId,
   });
   const lastPointPlayers = getLastPointPlayers(point, summarySideId, participants);
+  const lastUndoEntry = undoStack.at(-1);
+  const showStandaloneUndo = lastUndoEntry != null && lastUndoEntry.kind !== 'action';
   const handleEndTimeout = () => {
     if (activeTimeout == null) return;
     endBetweenPointTimeout(activeTimeout.transition.id);
@@ -206,7 +207,11 @@ export const BetweenPointDisplay = ({
 
   return (
     <View style={styles.container}>
-      <View style={styles.summaryContent}>
+      <ScrollView
+        style={styles.summaryScroll}
+        contentContainerStyle={styles.summaryContent}
+        showsVerticalScrollIndicator={false}
+        bounces={false}>
         <View style={styles.summaryBand}>
           <View style={styles.summaryHeaderColumn}>
             <View style={styles.scoredRow}>
@@ -312,27 +317,29 @@ export const BetweenPointDisplay = ({
             </>
           )}
         </View>
-      </View>
+      </ScrollView>
 
       <View style={styles.bottomActions}>
         <View style={styles.buttonRow}>
-          <Pressable
-            testID="between-point-undo"
-            style={({ pressed }) => [
-              styles.iconBtn,
-              {
-                borderColor: palette.overlay20,
-                backgroundColor: palette.overlay05,
-              },
-              pressed && { opacity: 0.7 },
-            ]}
-            onPress={undoLastOperation}>
-            <MaterialCommunityIcons
-              name="undo"
-              size={scaleBySizeClass(22, sizeClass)}
-              color={palette.textInverse}
-            />
-          </Pressable>
+          {showStandaloneUndo && (
+            <Pressable
+              testID="between-point-undo"
+              style={({ pressed }) => [
+                styles.iconBtn,
+                {
+                  borderColor: palette.overlay20,
+                  backgroundColor: palette.overlay05,
+                },
+                pressed && { opacity: 0.7 },
+              ]}
+              onPress={undoLastOperation}>
+              <MaterialCommunityIcons
+                name="undo"
+                size={scaleBySizeClass(22, sizeClass)}
+                color={palette.textInverse}
+              />
+            </Pressable>
+          )}
           <Pressable
             testID="between-point-start-next"
             style={({ pressed }) => [
@@ -360,12 +367,16 @@ function createStyles(sizeClass: SizeClass, isLandscape: boolean) {
 
   return StyleSheet.create({
     container: { flex: 1, justifyContent: 'space-between' },
+    summaryScroll: {
+      flex: 1,
+      width: '100%',
+    },
     summaryContent: {
       alignItems: 'center',
       paddingTop: scaleBySizeClass(SUMMARY_TOP_PADDING, densitySizeClass),
+      paddingBottom: scaleBySizeClass(16, densitySizeClass),
       paddingHorizontal: scaleBySizeClass(24, densitySizeClass),
       width: '100%',
-      flexShrink: 1,
     },
     summaryBand: {
       width: '100%',

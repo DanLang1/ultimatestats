@@ -16,6 +16,7 @@ Review against repository contracts first, taste second.
 
 ## Check against the repository contracts
 
+- Don't run the checks like tests, formatting, etc just for the sake of it. At this point we can assume it's in a clean state. If needed, run tests to verify concerns or output as needed, but the base check run should already be good by this point.
 - Derive render and selector state instead of mirroring it through `useEffect`. Extract substantial
   effects into focused hooks.
 - Prefer exported, named types for reusable domain concepts across storage, analytics, state, and

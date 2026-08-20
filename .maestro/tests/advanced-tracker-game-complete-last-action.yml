@@ -1,0 +1,56 @@
+appId: com.langdk.ultimatestats.dev
+name: Advanced Tracker Game Complete Last Action
+---
+- runFlow:
+    file: ../flows/setup-game-to-one.yaml
+
+# The first goal ends the game.
+- swipe:
+    from:
+      id: 'tracker-chip-Jon'
+    direction: UP
+    duration: 500
+- extendedWaitUntil:
+    visible:
+      id: 'game-complete-finish'
+    timeout: 5000
+
+# Game Complete summarizes the final goal with a compact huck tag and undo.
+- assertVisible:
+    text: 'GAME COMPLETE'
+- assertVisible:
+    id: 'throw-type-huck'
+- assertVisible:
+    id: 'game-complete-last-goal-card'
+- assertVisible:
+    id: 'game-complete-undo'
+- assertNotVisible:
+    id: 'tracker-more-button'
+- tapOn:
+    id: 'throw-type-huck'
+
+# Undo removes the winning goal and restores the live tracker.
+- tapOn:
+    id: 'game-complete-undo'
+- extendedWaitUntil:
+    visible:
+      id: 'tracker-menu-button'
+    timeout: 5000
+- assertNotVisible:
+    text: 'GAME COMPLETE'
+
+# Record the winning goal again so the final artifact captures the agreed Game Complete layout.
+- swipe:
+    from:
+      id: 'tracker-chip-Jon'
+    direction: UP
+    duration: 500
+- extendedWaitUntil:
+    visible:
+      id: 'game-complete-finish'
+    timeout: 5000
+- assertVisible:
+    id: 'game-complete-undo'
+
+- takeScreenshot:
+    path: .maestro/screenshots/advanced-tracker-game-complete-last-action

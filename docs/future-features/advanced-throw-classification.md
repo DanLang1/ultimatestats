@@ -25,11 +25,17 @@ Missing details mean that the throw was not classified. The prompt is offered on
 sides; anonymous-opponent actions are intentionally unsupported. Fully tracked scrimmage sides
 are eligible for the same prompt as either side of a regular game.
 
-After an eligible throw, the last-action card briefly offers the valid choices: `Huck` after any
-eligible throw and `Backfield Reset` only after a turnover. The choices are optional and
-non-blocking. The prompt is derived from the latest canonical action, so
-it disappears naturally when tracking advances rather than relying on a timer or effect. Tapping a
-selected choice clears it, and tapping the other choice changes it.
+After an eligible throw, the last-action card offers the valid choices: `Huck` after any eligible
+throw and `Backfield Reset` only after a turnover. The card remains visible after a goal on the
+regular between-point summary, at halftime, and on Game Complete before the result is finalized. It
+keeps the `Huck` choice available for that point-ending throw and retains Undo while the goal is
+still the latest undoable operation. On Game Complete, the existing full-width Undo action remains
+available while the summary card offers classification for either side in a fully tracked scrimmage;
+anonymous-opponent goals remain undo-only. Early-end flows keep their dedicated Undo End Game action
+and do not show the card. More actions stay hidden after the point ends. The choices are optional and
+non-blocking. The prompt is derived from the latest canonical action, so it disappears naturally
+when tracking advances rather than relying on a timer or effect. Tapping a selected choice clears
+it, and tapping the other choice changes it.
 
 ## Undo and Editing
 
@@ -93,13 +99,13 @@ Likely follow-up work:
 
 ## Implementation Map
 
-| Concern                     | Source                                                  |
-| --------------------------- | ------------------------------------------------------- |
-| Persisted types and schema  | `lib/advancedTracking/types.ts`                         |
-| Migration                   | `lib/advancedTracking/migrations.ts`                    |
-| Stable-ID mutation and Undo | `store/advancedTracking/trackingStore.ts`               |
-| Live selector               | `components/advancedTracking/TrackerLastActionCard.tsx` |
-| Analytics compilation       | `lib/advancedTracking/buildAnalyticsGame.ts`            |
-| Timeline                    | `lib/advancedTracking/advancedTimelineUtils.ts`         |
-| CSV                         | `lib/advancedTracking/advancedCSVUtils.ts`              |
-| Sharing                     | `lib/sharing/validate.ts`, `lib/sharing/serialize.ts`   |
+| Concern                     | Source                                                                                                                |
+| --------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| Persisted types and schema  | `lib/advancedTracking/types.ts`                                                                                       |
+| Migration                   | `lib/advancedTracking/migrations.ts`                                                                                  |
+| Stable-ID mutation and Undo | `store/advancedTracking/trackingStore.ts`                                                                             |
+| Live selector               | `components/advancedTracking/TrackerLastActionCard.tsx`, `components/advancedTracking/GameCompleteLastActionCard.tsx` |
+| Analytics compilation       | `lib/advancedTracking/buildAnalyticsGame.ts`                                                                          |
+| Timeline                    | `lib/advancedTracking/advancedTimelineUtils.ts`                                                                       |
+| CSV                         | `lib/advancedTracking/advancedCSVUtils.ts`                                                                            |
+| Sharing                     | `lib/sharing/validate.ts`, `lib/sharing/serialize.ts`                                                                 |

@@ -12,6 +12,7 @@ import {
 
 interface MaestroSetupParams {
   capMode?: string;
+  gameTo?: string;
   gameType?: string;
   mode?: string;
   rosterView?: string;
@@ -21,7 +22,7 @@ interface MaestroSetupParams {
 const MAESTRO_SETUP_HANDSHAKE_MS = 250;
 
 export function useMaestroSetup(params: MaestroSetupParams) {
-  const { capMode, gameType, mode, rosterView, trackerState } = params;
+  const { capMode, gameTo, gameType, mode, rosterView, trackerState } = params;
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
@@ -34,6 +35,7 @@ export function useMaestroSetup(params: MaestroSetupParams) {
         await waitForMaestroStoresToHydrate();
         const destination = await seedMaestroState({
           capMode,
+          gameTo,
           gameType,
           mode,
           rosterView,
@@ -55,7 +57,7 @@ export function useMaestroSetup(params: MaestroSetupParams) {
       isCancelled = true;
       clearTimeout(setupTimer);
     };
-  }, [capMode, gameType, mode, rosterView, trackerState]);
+  }, [capMode, gameTo, gameType, mode, rosterView, trackerState]);
 
   return errorMessage;
 }
@@ -75,11 +77,17 @@ async function seedMaestroState(
 
   await seedAdvancedTrackerTestGame({
     capMode: parseCapMode(params.capMode),
+    gameTo: parseGameTo(params.gameTo),
     gameType: parseGameType(params.gameType),
     rosterView: parseRosterView(params.rosterView),
     trackerState: parseTrackerState(params.trackerState),
   });
   return '/advancedTracking/Tracker';
+}
+
+function parseGameTo(gameTo: string | undefined): number {
+  const parsedGameTo = Number(gameTo);
+  return Number.isInteger(parsedGameTo) && parsedGameTo > 0 ? parsedGameTo : 15;
 }
 
 function parseCapMode(capMode: string | undefined): MaestroCapMode {
