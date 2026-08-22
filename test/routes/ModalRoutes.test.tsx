@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { fireEvent, screen, userEvent } from '@testing-library/react-native';
+import { screen, userEvent } from '@testing-library/react-native';
 import { router } from 'expo-router';
 
 import AdvancedGameSelectorModal from '@/app/(modals)/AdvancedGameSelectorModal';
@@ -253,7 +253,7 @@ describe('modal routes', () => {
     await renderScreen(<EditPlayerModal />);
 
     recordOpeningPull();
-    void fireEvent(screen.getByTestId('edit-player-active-toggle'), 'valueChange', false);
+    await user.press(screen.getByTestId('edit-player-active-toggle'));
     await user.press(screen.getByTestId('edit-player-save'));
 
     expect(screen.getByTestId('edit-player-save-error')).toHaveTextContent(

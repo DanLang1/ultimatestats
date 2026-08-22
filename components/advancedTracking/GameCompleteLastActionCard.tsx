@@ -1,5 +1,7 @@
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { StyleSheet, View } from 'react-native';
 
+import { getPointOutcomeLabel } from '@/components/advancedTracking/betweenPointUtils';
 import { ThrowTypePrompt } from '@/components/advancedTracking/bottomCard/ThrowTypePrompt';
 import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
@@ -9,6 +11,7 @@ import {
   getLatestThrowDetailsTarget,
 } from '@/lib/advancedTracking/trackingDisplayHelpers';
 import { areBothSidesFullyTracked } from '@/lib/advancedTracking/trackingModeUtils';
+import { getPointScoringSideId } from '@/lib/advancedTracking/trackingUtils';
 import {
   getEligibleThrowTypes,
   type AdvancedTrackedGame,
@@ -28,13 +31,14 @@ export function GameCompleteLastActionCard({ game }: GameCompleteLastActionCardP
   const { updateThrowType } = useAdvancedTrackingStore();
 
   const point = game.points.at(-1) ?? null;
-  const lastPossession = point?.possessions.at(-1) ?? null;
   const goalInfo = getGoalInfo(point, game.focusSideId, game.participants);
   const shouldShowGoalCard =
     goalInfo != null && (goalInfo.isFocusGoal || areBothSidesFullyTracked(game));
-  const throwTarget = shouldShowGoalCard
-    ? getLatestThrowDetailsTarget(point, lastPossession)
-    : null;
+
+  if (!shouldShowGoalCard || goalInfo == null || point == null) return null;
+
+  const lastPossession = point.possessions[point.possessions.length - 1];
+  const throwTarget = getLatestThrowDetailsTarget(point, lastPossession);
   const throwPrompt =
     throwTarget == null
       ? null
@@ -43,13 +47,16 @@ export function GameCompleteLastActionCard({ game }: GameCompleteLastActionCardP
           availableTypes: getEligibleThrowTypes(throwTarget.result),
         };
 
-  if (!shouldShowGoalCard) return null;
+  const scoringSideId = getPointScoringSideId(game, point);
+  const pointOutcome = getPointOutcomeLabel({
+    focusSideId: game.focusSideId,
+    scoringSideId,
+    receivingSideId: point.possessions[0].sideId,
+    possessionSideIds: point.possessions.map((possession) => possession.sideId),
+  });
 
-  const goalParticipants = [goalInfo?.assisterName, goalInfo?.scorerName].filter(
-    (name): name is string => name != null,
-  );
-  const goalLabel = goalInfo?.isCallahan ? 'CALLAHAN' : 'GOAL';
-  const goalSummary = goalParticipants.length > 0 ? `${goalParticipants.join(' + ')} · ` : '';
+  const goalLabel = goalInfo.isCallahan ? 'CALLAHAN' : 'GOAL';
+  const accentColor = goalInfo.isFocusGoal ? palette.accent : palette.danger;
 
   const handleThrowTypeChange = (type: ThrowType | undefined) => {
     if (throwTarget == null) return;
@@ -64,21 +71,58 @@ export function GameCompleteLastActionCard({ game }: GameCompleteLastActionCardP
   return (
     <View
       testID="game-complete-last-goal-card"
-      style={[styles.card, { backgroundColor: palette.overlay02, borderColor: palette.overlay10 }]}>
-      <View style={styles.summaryCopy}>
-        <ThemedText numberOfLines={2} style={[styles.goalSummary, { color: palette.textInverse }]}>
-          {goalSummary}
-          {goalLabel}
-        </ThemedText>
-        {throwPrompt != null && (
+      style={[styles.card, { backgroundColor: palette.overlay05, borderColor: palette.overlay10 }]}>
+      <View style={styles.infoColumn}>
+        <View style={styles.nameRow}>
+          {goalInfo.assisterName != null && goalInfo.scorerName != null && (
+            <>
+              <ThemedText
+                numberOfLines={1}
+                style={[styles.nameText, { color: palette.textInverse }]}>
+                {goalInfo.assisterName}
+              </ThemedText>
+              <MaterialCommunityIcons
+                name="arrow-right"
+                size={scaleBySizeClass(16, sizeClass)}
+                color={palette.textMuted}
+              />
+            </>
+          )}
+
+          {goalInfo.scorerName != null && (
+            <ThemedText numberOfLines={1} style={[styles.nameText, { color: palette.textInverse }]}>
+              {goalInfo.scorerName}
+            </ThemedText>
+          )}
+        </View>
+
+        <View style={styles.metaRow}>
+          <ThemedText style={[styles.metaText, { color: palette.textMuted }]}>
+            {pointOutcome.toUpperCase()}
+          </ThemedText>
+          <ThemedText style={[styles.bullet, { color: palette.textMuted }]}>·</ThemedText>
+          {goalInfo.assisterName != null && (
+            <>
+              <ThemedText style={[styles.metaText, { color: palette.textMuted }]}>
+                ASSIST
+              </ThemedText>
+              <ThemedText style={[styles.bullet, { color: palette.textMuted }]}>+</ThemedText>
+            </>
+          )}
+          <ThemedText style={[styles.metaText, { color: accentColor }]}>{goalLabel}</ThemedText>
+        </View>
+      </View>
+
+      {throwPrompt != null && (
+        <View style={styles.tagColumn}>
           <ThrowTypePrompt
-            accentColor={palette.accent}
+            accentColor={accentColor}
             availableTypes={throwPrompt.availableTypes}
             value={throwPrompt.target.details?.type}
             onChange={handleThrowTypeChange}
           />
-        )}
-      </View>
+        </View>
+      )}
     </View>
   );
 }
@@ -86,17 +130,51 @@ export function GameCompleteLastActionCard({ game }: GameCompleteLastActionCardP
 function createStyles(sizeClass: SizeClass) {
   return StyleSheet.create({
     card: {
-      borderRadius: 18,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      borderRadius: 20,
       borderWidth: 1,
-      padding: scaleBySizeClass(14, sizeClass),
+      paddingHorizontal: scaleBySizeClass(18, sizeClass),
+      paddingVertical: scaleBySizeClass(16, sizeClass),
+      gap: scaleBySizeClass(12, sizeClass),
     },
-    summaryCopy: {
-      alignSelf: 'stretch',
+    infoColumn: {
+      flex: 1,
+      minWidth: 0,
+      gap: scaleBySizeClass(4, sizeClass),
+      justifyContent: 'center',
     },
-    goalSummary: {
-      fontSize: scaleBySizeClass(16, sizeClass),
-      fontFamily: Fonts.extraBold,
+    nameRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: scaleBySizeClass(8, sizeClass),
+      flexWrap: 'wrap',
+    },
+    nameText: {
+      fontSize: scaleBySizeClass(17, sizeClass),
+      fontFamily: Fonts.black,
       textTransform: 'uppercase',
+    },
+    metaRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: scaleBySizeClass(5, sizeClass),
+      flexWrap: 'wrap',
+    },
+    metaText: {
+      fontSize: scaleBySizeClass(11, sizeClass),
+      fontFamily: Fonts.bold,
+      letterSpacing: 0.8,
+    },
+    bullet: {
+      fontSize: scaleBySizeClass(11, sizeClass),
+      fontFamily: Fonts.black,
+    },
+    tagColumn: {
+      flexShrink: 0,
+      alignItems: 'center',
+      justifyContent: 'center',
     },
   });
 }

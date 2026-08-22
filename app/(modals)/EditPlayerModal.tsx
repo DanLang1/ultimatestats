@@ -62,6 +62,11 @@ export default function EditPlayerModal() {
     router.dismissTo('/EditRoster');
   };
 
+  const handleActiveChange = (nextIsActive: boolean) => {
+    setIsActive(nextIsActive);
+    setSaveError(null);
+  };
+
   const handleSave = async () => {
     const trimmedName = name.trim();
     if (!trimmedName || nameExists || numberExists) return;
@@ -251,16 +256,19 @@ export default function EditPlayerModal() {
                   <ThemedText style={[styles.toggleLabel, { color: palette.modalText }]}>
                     Active roster
                   </ThemedText>
-                  <Switch
-                    value={isActive}
-                    onValueChange={(nextIsActive) => {
-                      setIsActive(nextIsActive);
-                      setSaveError(null);
-                    }}
-                    trackColor={{ false: palette.overlay20, true: palette.accent }}
-                    thumbColor={isActive ? palette.textOnAccent : palette.modalTextMuted}
-                    testID="edit-player-active-toggle"
-                  />
+                  <Pressable
+                    accessibilityRole="switch"
+                    accessibilityState={{ checked: isActive }}
+                    onPress={() => handleActiveChange(!isActive)}
+                    testID="edit-player-active-toggle">
+                    <Switch
+                      accessible={false}
+                      pointerEvents="none"
+                      value={isActive}
+                      trackColor={{ false: palette.overlay20, true: palette.accent }}
+                      thumbColor={isActive ? palette.textOnAccent : palette.modalTextMuted}
+                    />
+                  </Pressable>
                 </View>
               )}
               {saveError && (
