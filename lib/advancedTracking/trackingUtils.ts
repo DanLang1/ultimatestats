@@ -1,8 +1,10 @@
+import { ULTIMATE_LINE_SIZE } from '@/lib/constants';
 import { getRecentLines, RecentLine } from '@/lib/lineUtils';
 import { PointLineRecord } from '@/lib/storage/types';
 import { hasItems } from '@/lib/utils';
 
 import { getCapThresholdMinutes, type CapTimingSettings } from './capUtils';
+import { getParticipantName } from './participantUtils';
 import { areBothSidesFullyTracked } from './trackingModeUtils';
 import {
   AdvancedTrackedGame,
@@ -513,7 +515,7 @@ export function assertValidLines(game: AdvancedTrackedGame, lines: PointLine[]) 
     throw new Error('Fully tracked sides require exactly one line for each side.');
   }
 
-  if (lines.some((line) => line.participantIds.length !== 7)) {
+  if (lines.some((line) => line.participantIds.length !== ULTIMATE_LINE_SIZE)) {
     throw new Error('Fully tracked sides require seven participants on each side.');
   }
 
@@ -578,37 +580,6 @@ export function getPointActionParticipantIds(point: TrackedPoint): string[] {
   return [...participantIds];
 }
 
-/**
- * Keeps injury substitutions that still apply after a starting-line correction.
- * Invalidated subs are discarded only for sides whose starting line was corrected.
- */
-export function reconcilePointSubsAfterLineCorrection(
-  point: TrackedPoint,
-  correctedSideIds: Set<string>,
-): PointSub[] | undefined {
-  const effectiveLines = new Map(
-    point.lines.map((line) => [line.sideId, new Set(line.participantIds)]),
-  );
-  const retainedSubs: PointSub[] = [];
-
-  for (const sub of point.subs ?? []) {
-    const currentLine = effectiveLines.get(sub.sideId) ?? new Set<string>();
-    const canApply =
-      sub.outIds.every((participantId) => currentLine.has(participantId)) &&
-      sub.inIds.every((participantId) => !currentLine.has(participantId));
-
-    if (!canApply && correctedSideIds.has(sub.sideId)) {
-      continue;
-    }
-
-    retainedSubs.push(sub);
-    applySubToLine(currentLine, sub);
-    effectiveLines.set(sub.sideId, currentLine);
-  }
-
-  return hasItems(retainedSubs) ? retainedSubs : undefined;
-}
-
 function getActionParticipantSides(point: TrackedPoint): Map<string, Map<string, string>> {
   const effectiveLines = new Map(
     point.lines.map((line) => [line.sideId, new Set(line.participantIds)]),
@@ -661,9 +632,7 @@ export function assertPointActionParticipantsPreserved(
     const candidateParticipantSides = candidateSides.get(actionId);
     for (const [participantId, originalSideId] of participantSides) {
       if (candidateParticipantSides?.get(participantId) === originalSideId) continue;
-      const participantName =
-        game.participants.find((participant) => participant.id === participantId)?.name ??
-        'This player';
+      const participantName = getParticipantName(game, participantId);
       throw new Error(
         `${participantName} has recorded an action this point, so this correction cannot remove them from the active lineup at that time.`,
       );
@@ -781,7 +750,7 @@ function assertFullyTrackedEffectiveLines(
   for (const side of game.sides) {
     const line = effectiveLines.get(side.id);
     // Product constraint: dual-side tracking does not currently support playing short-handed.
-    if (line == null || line.size !== 7) {
+    if (line == null || line.size !== ULTIMATE_LINE_SIZE) {
       throw new Error('Fully tracked sides require seven active participants on each side.');
     }
     allParticipantIds.push(...line);

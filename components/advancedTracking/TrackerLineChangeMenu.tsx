@@ -1,5 +1,4 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import React from 'react';
 import { Modal, Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/ThemedText';
@@ -67,8 +66,8 @@ export function TrackerLineChangeMenu({
           <BottomSheetActionRow
             testID="line-change-correct-line"
             icon="playlist-edit"
-            label="Correct lineup"
-            description="Fix who started this point. Replaces point credit."
+            label="Correct current lineup"
+            description="Fix who is on the field now."
             onPress={closeAnd(onCorrectLine)}
           />
 

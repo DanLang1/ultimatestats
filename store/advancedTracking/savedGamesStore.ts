@@ -6,8 +6,9 @@ import {
   type CorrectAdvancedGoalScorerInput,
 } from '@/lib/advancedTracking/advancedActionCorrectionUtils';
 import {
-  correctAdvancedPointLines,
-  type CorrectAdvancedPointLinesInput,
+  canCorrectAdvancedPointFromTimeline,
+  correctAdvancedPointActiveLines,
+  type CorrectAdvancedPointActiveLinesInput,
 } from '@/lib/advancedTracking/advancedPointLineCorrectionUtils';
 import { migrateAdvancedTrackedGame } from '@/lib/advancedTracking/migrations';
 import {
@@ -18,7 +19,6 @@ import {
 } from '@/lib/advancedTracking/storage';
 import type { AdvancedGameSummary } from '@/lib/advancedTracking/summary';
 import { compareAdvancedGameSummaries } from '@/lib/advancedTracking/summary';
-import { hasPointEnded } from '@/lib/advancedTracking/trackingUtils';
 import type { AdvancedTrackedGame } from '@/lib/advancedTracking/types';
 
 type SavedAdvancedGamesState = {
@@ -36,9 +36,9 @@ type SavedAdvancedGamesState = {
     gameId: string,
     input: CorrectAdvancedGoalScorerInput,
   ) => Promise<AdvancedTrackedGame>;
-  correctPointLines: (
+  correctPointActiveLines: (
     gameId: string,
-    input: CorrectAdvancedPointLinesInput,
+    input: CorrectAdvancedPointActiveLinesInput,
   ) => Promise<AdvancedTrackedGame>;
   deleteGame: (gameId: string) => Promise<void>;
 };
@@ -149,7 +149,7 @@ export const useSavedAdvancedGamesStore = create<SavedAdvancedGamesState>()(
       return correctedGame;
     },
 
-    correctPointLines: async (gameId, input) => {
+    correctPointActiveLines: async (gameId, input) => {
       const game = await get().loadGame(gameId);
       if (game == null) {
         throw new Error(`Advanced game "${gameId}" was not found.`);
@@ -158,11 +158,11 @@ export const useSavedAdvancedGamesStore = create<SavedAdvancedGamesState>()(
       if (point == null) {
         throw new Error(`Point "${input.pointId}" was not found in advanced game "${game.id}".`);
       }
-      if (!hasPointEnded(point)) {
-        throw new Error('Only a completed point can be corrected from the timeline.');
+      if (!canCorrectAdvancedPointFromTimeline(game, point)) {
+        throw new Error('This point does not have a final lineup correction boundary.');
       }
 
-      const correctedGame = correctAdvancedPointLines(game, input);
+      const correctedGame = correctAdvancedPointActiveLines(game, input);
       await get().saveGame(correctedGame);
       return correctedGame;
     },

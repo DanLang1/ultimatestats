@@ -9,6 +9,7 @@ import TrackerEditLineScreen from '@/app/(main)/advancedTracking/TrackerEditLine
 import TrackerGameCompleteScreen from '@/app/(main)/advancedTracking/TrackerGameComplete';
 import TrackerInjurySubScreen from '@/app/(main)/advancedTracking/TrackerInjurySub';
 import TrackerLineSelectScreen from '@/app/(main)/advancedTracking/TrackerLineSelect';
+import { getEffectiveLineParticipantIds } from '@/lib/advancedTracking/trackingUtils';
 import type { AdvancedTrackedGame } from '@/lib/advancedTracking/types';
 import { useSavedAdvancedGamesStore } from '@/store/advancedTracking/savedGamesStore';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
@@ -847,18 +848,18 @@ describe('advanced tracking routes', () => {
 
     await renderScreen(<TrackerEditLineScreen />);
 
-    expect(screen.getByText('Edit Line')).toBeVisible();
+    expect(screen.getByText('Correct Current Lineup')).toBeVisible();
     expect(screen.getByText('Alex')).toBeVisible();
   });
 
-  it('corrects the starting line through the single-side route', async () => {
+  it('corrects the current active line through the single-side route', async () => {
     const user = userEvent.setup();
     const { participants, lineIds } = arrangeSingleSideTrackedPoint();
 
     await renderScreen(<TrackerEditLineScreen />);
 
-    expect(screen.getByText('Edit Line')).toBeVisible();
-    expect(screen.queryByText('Edit Rivals Line')).not.toBeOnTheScreen();
+    expect(screen.getByText('Correct Current Lineup')).toBeVisible();
+    expect(screen.queryByText('Correct Current · Rivals')).not.toBeOnTheScreen();
 
     await user.press(screen.getByText(participants[1].name));
     await user.press(screen.getByText(participants[7].name));
@@ -886,7 +887,7 @@ describe('advanced tracking routes', () => {
     expect(screen.getByText('Player locked')).toBeVisible();
     expect(
       screen.getByText(
-        `${participants[0].name} has recorded an action this point. Undo or edit that action before removing them from the lineup.`,
+        `${participants[0].name} recorded an action this point and cannot be removed or moved.`,
       ),
     ).toBeVisible();
     expect(
@@ -894,10 +895,10 @@ describe('advanced tracking routes', () => {
     ).toContain(lineIds[0]);
   });
 
-  it('allows correcting injury-only participants and removes the invalidated sub', async () => {
+  it('locks the players whose status is preserved by an injury substitution', async () => {
     const user = userEvent.setup();
     const { participants, lineIds } = arrangeSingleSideTrackedPoint();
-    useAdvancedTrackingStore.getState().recordInjurySubs({
+    const stoppageId = useAdvancedTrackingStore.getState().recordInjurySubs({
       sideId: 'windchill',
       changes: [
         {
@@ -907,27 +908,30 @@ describe('advanced tracking routes', () => {
         },
       ],
     });
+    useAdvancedTrackingStore.getState().resumeStoppage(stoppageId);
 
     await renderScreen(<TrackerEditLineScreen />);
 
-    expect(screen.queryByTestId(`player-chip-lock-${participants[1].name}`)).not.toBeOnTheScreen();
-    expect(screen.queryByTestId(`player-chip-lock-${participants[7].name}`)).not.toBeOnTheScreen();
+    expect(screen.getByTestId(`player-chip-lock-${participants[1].name}`)).toBeVisible();
+    expect(screen.getByTestId(`player-chip-lock-${participants[7].name}`)).toBeVisible();
+    expect(screen.getByTestId(`player-chip-${participants[7].name}`)).toHaveProp(
+      'accessibilityState',
+      expect.objectContaining({ selected: true }),
+    );
 
-    await user.press(screen.getByText(participants[1].name));
-    await user.press(screen.getByText(participants[8].name));
-    await user.press(screen.getByTestId('line-select-confirm'));
-
-    const point = useAdvancedTrackingStore.getState().currentGame?.points[0];
-    expect(point?.subs).toBeUndefined();
-    expect(point?.lines[0].participantIds).toContain(participants[8].id);
-    expect(point?.lines[0].participantIds).not.toContain(participants[1].id);
-    expect(router.back).toHaveBeenCalled();
+    await user.press(screen.getByText(participants[7].name));
+    expect(
+      screen.getByText(
+        `${participants[7].name}'s status is preserved by a recorded injury substitution.`,
+      ),
+    ).toBeVisible();
+    expect(useAdvancedTrackingStore.getState().currentGame?.points[0].subs).toHaveLength(1);
   });
 
   it('preserves the focus side injury subs when correcting the single-side line', async () => {
     const user = userEvent.setup();
     const { participants, lineIds } = arrangeSingleSideTrackedPoint();
-    useAdvancedTrackingStore.getState().recordInjurySubs({
+    const stoppageId = useAdvancedTrackingStore.getState().recordInjurySubs({
       sideId: 'windchill',
       changes: [
         {
@@ -937,6 +941,7 @@ describe('advanced tracking routes', () => {
         },
       ],
     });
+    useAdvancedTrackingStore.getState().resumeStoppage(stoppageId);
 
     await renderScreen(<TrackerEditLineScreen />);
     await user.press(screen.getByText(participants[1].name));
@@ -955,13 +960,27 @@ describe('advanced tracking routes', () => {
 
     await renderScreen(<TrackerEditLineScreen />);
 
-    expect(screen.getByText('Edit Light Line')).toBeVisible();
+    expect(screen.getByText('Correct Current · Light')).toBeVisible();
     expect(screen.getByText(participants[0].name)).toBeVisible();
     expect(screen.queryByText(participants[7].name)).not.toBeOnTheScreen();
     expect(screen.queryByText('Correct Starting Lineup')).not.toBeOnTheScreen();
   });
 
-  it('can show legally available opposite-group players during a scrimmage correction', async () => {
+  it('progresses through both active lines in a regular game with two tracked rosters', async () => {
+    const user = userEvent.setup();
+    arrangeDualTrackedPoint();
+    useAdvancedTrackingStore.setState((state) => {
+      state.currentGame!.gameType = 'game';
+    });
+
+    await renderScreen(<TrackerEditLineScreen />);
+
+    expect(screen.getByText('Correct Current · Light')).toBeVisible();
+    await user.press(screen.getByTestId('line-select-confirm'));
+    expect(screen.getByText('Correct Current · Dark')).toBeVisible();
+  });
+
+  it('can show actionless active opposite-side players for an atomic scrimmage correction', async () => {
     const user = userEvent.setup();
     const { participants } = arrangeDualTrackedPointWithPreviouslyDarkBenchPlayer();
 
@@ -971,7 +990,7 @@ describe('advanced tracking routes', () => {
     await user.press(screen.getByTestId('line-select-show-all-players'));
 
     expect(screen.getByText(participants[7].name)).toBeVisible();
-    expect(screen.queryByText(participants[8].name)).not.toBeOnTheScreen();
+    expect(screen.getByText(participants[8].name)).toBeVisible();
   });
 
   it('starts a line correction on the next active side after a turnover', async () => {
@@ -989,7 +1008,7 @@ describe('advanced tracking routes', () => {
 
     await renderScreen(<TrackerEditLineScreen />);
 
-    expect(screen.getByText('Edit Dark Line')).toBeVisible();
+    expect(screen.getByText('Correct Current · Dark')).toBeVisible();
     expect(screen.getByText(participants[7].name)).toBeVisible();
     expect(screen.queryByText(participants[0].name)).not.toBeOnTheScreen();
   });
@@ -1001,7 +1020,7 @@ describe('advanced tracking routes', () => {
     await renderScreen(<TrackerEditLineScreen />);
     await user.press(screen.getByTestId('line-select-confirm'));
 
-    expect(screen.getByText('Edit Dark Line')).toBeVisible();
+    expect(screen.getByText('Correct Current · Dark')).toBeVisible();
   });
 
   it('finishes after correcting only the active scrimmage line', async () => {
@@ -1038,7 +1057,7 @@ describe('advanced tracking routes', () => {
     await user.press(screen.getByTestId('line-select-confirm'));
     await user.press(screen.getByTestId('line-correction-edit-other'));
 
-    expect(screen.getByText('Edit Dark Line')).toBeVisible();
+    expect(screen.getByText('Correct Current · Dark')).toBeVisible();
     await user.press(screen.getByText(participants[8].name));
     await user.press(screen.getByText(participants[15].name));
     await user.press(screen.getByTestId('line-select-confirm'));
@@ -1064,12 +1083,12 @@ describe('advanced tracking routes', () => {
     await user.press(screen.getByTestId('line-correction-edit-other'));
     await user.press(screen.getByTestId('line-select-back'));
 
-    expect(screen.getByText('Edit Light Line')).toBeVisible();
+    expect(screen.getByText('Correct Current · Light')).toBeVisible();
     await user.press(screen.getByTestId('line-select-confirm'));
     expect(screen.getByText('Light lineup updated')).toBeVisible();
   });
 
-  it('preserves injury history when a dual-side correction makes no changes', async () => {
+  it('preserves injury history when backing out without changes', async () => {
     const user = userEvent.setup();
     const { participants } = arrangeDualTrackedPoint();
     useAdvancedTrackingStore.setState((state) => {
@@ -1087,13 +1106,14 @@ describe('advanced tracking routes', () => {
 
     await renderScreen(<TrackerEditLineScreen />);
     await user.press(screen.getByTestId('line-select-confirm'));
-    await user.press(screen.getByTestId('line-select-confirm'));
+    await user.press(screen.getByTestId('line-select-back'));
+    await user.press(screen.getByTestId('line-select-back'));
 
     expect(useAdvancedTrackingStore.getState().currentGame?.points[0].subs).toHaveLength(1);
     expect(router.back).toHaveBeenCalled();
   });
 
-  it('does not offer a removed Light player while correcting the Dark line', async () => {
+  it('offers a removed actionless Light player for an atomic Dark-side swap', async () => {
     const user = userEvent.setup();
     const { participants } = arrangeDualTrackedPoint();
 
@@ -1103,8 +1123,63 @@ describe('advanced tracking routes', () => {
     await user.press(screen.getByTestId('line-select-confirm'));
     await user.press(screen.getByTestId('line-correction-edit-other'));
 
-    expect(screen.getByText('Edit Dark Line')).toBeVisible();
+    expect(screen.getByText('Correct Current · Dark')).toBeVisible();
     expect(screen.queryByText(participants[1].name)).not.toBeOnTheScreen();
+    await user.press(screen.getByTestId('line-select-show-all-players'));
+    expect(screen.getByText(participants[1].name)).toBeVisible();
+  });
+
+  it('restores the other active line when a drafted crossover is undone', async () => {
+    const user = userEvent.setup();
+    const { participants } = arrangeDualTrackedPoint();
+
+    await renderScreen(<TrackerEditLineScreen />);
+    await user.press(screen.getByText(participants[1].name));
+    await user.press(screen.getByTestId('line-select-show-all-players'));
+    await user.press(screen.getByText(participants[8].name));
+    await user.press(screen.getByTestId('line-select-confirm'));
+
+    expect(screen.getByText('Correct Current · Dark')).toBeVisible();
+    expect(screen.getByText('6/7')).toBeVisible();
+    await user.press(screen.getByTestId('line-select-back'));
+    await user.press(screen.getByText(participants[8].name));
+    await user.press(screen.getByText(participants[14].name));
+    await user.press(screen.getByTestId('line-select-confirm'));
+    await user.press(screen.getByTestId('line-correction-edit-other'));
+
+    expect(screen.getByText('Correct Current · Dark')).toBeVisible();
+    expect(screen.queryByText('6/7')).not.toBeOnTheScreen();
+    expect(screen.getByTestId('line-select-confirm')).toBeEnabled();
+  });
+
+  it('saves an atomic crossover through the other-side editor', async () => {
+    const user = userEvent.setup();
+    const { participants } = arrangeDualTrackedPoint();
+
+    await renderScreen(<TrackerEditLineScreen />);
+    await user.press(screen.getByText(participants[1].name));
+    await user.press(screen.getByTestId('line-select-show-all-players'));
+    await user.press(screen.getByText(participants[8].name));
+    await user.press(screen.getByTestId('line-select-confirm'));
+
+    // Dark dropped to six when its active player crossed over, so the editor advances directly.
+    expect(screen.getByText('Correct Current · Dark')).toBeVisible();
+    await user.press(screen.getByTestId('line-select-show-all-players'));
+    await user.press(screen.getByText(participants[1].name));
+    await user.press(screen.getByTestId('line-select-confirm'));
+
+    const point = useAdvancedTrackingStore.getState().currentGame?.points[0];
+    expect(getEffectiveLineParticipantIds(point!, 'light')).toEqual([
+      participants[0].id,
+      ...participants.slice(2, 7).map((participant) => participant.id),
+      participants[8].id,
+    ]);
+    expect(getEffectiveLineParticipantIds(point!, 'dark')).toEqual([
+      participants[7].id,
+      ...participants.slice(9, 14).map((participant) => participant.id),
+      participants[1].id,
+    ]);
+    expect(router.back).toHaveBeenCalled();
   });
 
   it('preserves injury history for the uncorrected side when finishing early', async () => {

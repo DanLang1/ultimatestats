@@ -1,5 +1,5 @@
 import type { CorrectAdvancedGoalScorerInput } from '@/lib/advancedTracking/advancedActionCorrectionUtils';
-import type { CorrectAdvancedPointLinesInput } from '@/lib/advancedTracking/advancedPointLineCorrectionUtils';
+import type { CorrectAdvancedPointActiveLinesInput } from '@/lib/advancedTracking/advancedPointLineCorrectionUtils';
 import type { CaptureIntent, CaptureIntentResult } from '@/lib/advancedTracking/captureIntentUtils';
 import type {
   AdvancedGameType,
@@ -74,10 +74,6 @@ export interface UpdateInjurySubsInput {
   changes: InjurySubChange[];
 }
 
-export interface CorrectPointLinesInput {
-  lines: PointLine[];
-}
-
 /**
  * Recoverable UI state for the point that has not started yet. It remains separate from the
  * canonical game record until `recordPull` creates that point.
@@ -143,7 +139,9 @@ export interface AdvancedTrackingState {
   finishTerminatedGame: () => Promise<void>;
   updateGameMetadata: (metadata: GameMetadata) => void;
   correctCurrentGoalScorer: (input: CorrectAdvancedGoalScorerInput) => Promise<void>;
-  correctCurrentPointLines: (input: CorrectAdvancedPointLinesInput) => Promise<void>;
+  correctCurrentGamePointActiveLines: (
+    input: CorrectAdvancedPointActiveLinesInput,
+  ) => Promise<void>;
   recordGameTransition: (transitionType: 'soft_cap' | 'hard_cap') => void;
   triggerHalftimeEarly: () => boolean;
   startGameClockPause: (reason: GameClockPauseReason) => string;
@@ -159,7 +157,6 @@ export interface AdvancedTrackingState {
   cancelStoppage: (actionId: string) => void;
   recordInjurySubs: (input: RecordInjurySubsInput) => string;
   updateInjurySubs: (input: UpdateInjurySubsInput) => void;
-  correctPointLines: (input: CorrectPointLinesInput) => void;
   undoLastOperation: () => boolean;
   importAdvancedGame: (game: AdvancedTrackedGame) => Promise<void>;
   deleteSavedGame: (gameId: string) => Promise<void>;

@@ -51,6 +51,9 @@ keep it separate.
 - Target iOS and Android. Web support is deferred.
 - Use `ThemedText`, `ThemedView`, `useTheme()`, semantic palette tokens, and `Fonts`.
 - Add missing theme values to `theme/theme.ts`; do not branch styles on `themeMode`.
+- Follow the outlined-secondary-action convention in `docs/ui-patterns.md`: default to a
+  transparent background, reserving tinted fills for meaningful selected, toggled, or active
+  state.
 - Use `useLayout()`, size-class helpers, and the responsive style-factory conventions from
   `docs/responsive-layout.md`.
 - Keep substantial style definitions in `StyleSheet.create`, normally through a `createStyles`

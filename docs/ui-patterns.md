@@ -74,6 +74,13 @@ scroll position follows the focused input throughout the keyboard animation. Add
 - Use tokens from `theme/theme.ts` and theme palette via `useTheme()`.
 - For modal content, prefer `modalBg`, `modalText`, and `modalTextMuted`.
 
+## Outlined Secondary Actions
+
+- Use a transparent background by default for outlined secondary actions. Let the semantic border,
+  icon, and label colors carry the affordance.
+- Add a tinted fill only when it communicates meaningful state, such as selected, toggled, or
+  active—not as default decoration for an outlined button.
+
 ## Required Field Attention Pattern
 
 - Default pattern for required segmented inputs:

@@ -4,6 +4,7 @@ import {
   hasPointEnded,
 } from '@/lib/advancedTracking/trackingUtils';
 import type { AdvancedTrackedGame, PointLine } from '@/lib/advancedTracking/types';
+import { ULTIMATE_LINE_SIZE } from '@/lib/constants';
 
 import type { PendingNextPointLineSelection } from './trackingStore.types';
 
@@ -50,7 +51,9 @@ export function resolvePendingNextPointLines(
   const lines = game.sides.map((side) => {
     const sideParticipantIds = currentSelection.participantIdsBySide[side.id] ?? [];
     if (side.trackingMode === 'anonymous' && sideParticipantIds.length !== 0) return null;
-    if (side.trackingMode === 'full-roster' && sideParticipantIds.length !== 7) return null;
+    if (side.trackingMode === 'full-roster' && sideParticipantIds.length !== ULTIMATE_LINE_SIZE) {
+      return null;
+    }
     return { sideId: side.id, participantIds: [...sideParticipantIds] };
   });
 

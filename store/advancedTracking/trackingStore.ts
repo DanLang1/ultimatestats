@@ -8,10 +8,7 @@ import {
   correctAdvancedGoalScorer,
   type CorrectAdvancedGoalScorerInput,
 } from '@/lib/advancedTracking/advancedActionCorrectionUtils';
-import {
-  correctAdvancedPointLines,
-  type CorrectAdvancedPointLinesInput,
-} from '@/lib/advancedTracking/advancedPointLineCorrectionUtils';
+import { correctAdvancedPointActiveLines } from '@/lib/advancedTracking/advancedPointLineCorrectionUtils';
 import { planCaptureIntent } from '@/lib/advancedTracking/captureIntentUtils';
 import { withAdvancedGameNote } from '@/lib/advancedTracking/gameNoteUtils';
 import {
@@ -24,6 +21,7 @@ import {
 } from '@/lib/advancedTracking/injurySubUtils';
 import { deriveRosterParticipantSyncPlan } from '@/lib/advancedTracking/participantSync';
 import {
+  getActiveStoppage,
   getActiveGameClockPause,
   getGameClockElapsedMs,
   getPointAdjustedTimestamp,
@@ -67,7 +65,6 @@ import { getCurrentPendingNextPointLineSelection } from './pendingLineSelection'
 import {
   AdvancedTrackingState,
   AdvancedTrackingUndoEntry,
-  CorrectPointLinesInput,
   RecordInjurySubsInput,
   RecordStoppageInput,
   UpdateInjurySubsInput,
@@ -418,7 +415,7 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
           }
         },
 
-        correctCurrentPointLines: async (input: CorrectAdvancedPointLinesInput) => {
+        correctCurrentGamePointActiveLines: (input) => {
           const game = getCurrentGame(get());
           if (game.status !== 'in_progress') {
             throw new Error('Only an in-progress game can be corrected through the live store.');
@@ -429,19 +426,21 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
               `Point "${input.pointId}" was not found in advanced game "${game.id}".`,
             );
           }
-          if (!hasPointEnded(point)) {
-            throw new Error('Only a completed point can be corrected from the timeline.');
+          const currentPoint = getCurrentPoint(game);
+          const isUnfinishedPoint = !hasPointEnded(point);
+          const isCurrentUnfinishedPoint = isUnfinishedPoint && currentPoint?.id === point.id;
+          if (isUnfinishedPoint && !isCurrentUnfinishedPoint) {
+            throw new Error('Only the current or a completed point can have its lineup corrected.');
+          }
+          if (isCurrentUnfinishedPoint && getActiveStoppage(getCurrentPossession(game)) != null) {
+            throw new Error('Finish or cancel the active stoppage before correcting the lineup.');
           }
 
-          const correctedGame = correctAdvancedPointLines(game, input);
+          const correctedGame = correctAdvancedPointActiveLines(game, input);
           set((state) => {
             state.currentGame = correctedGame;
           });
-
-          const gameToPersist = get().currentGame;
-          if (gameToPersist != null) {
-            await persistLiveGame(gameToPersist);
-          }
+          return persistLiveGame(correctedGame);
         },
 
         startGameClockPause: (reason) => {
@@ -1013,24 +1012,6 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
             const livePoint = getCurrentPoint(liveGame)!;
             livePoint.subs = nextSubs;
             liveGame.updatedAt = Date.now();
-          });
-        },
-
-        correctPointLines: (input: CorrectPointLinesInput) => {
-          const game = getCurrentGame(get());
-          const point = getCurrentPoint(game);
-          if (point == null) throw new Error('No active point.');
-          if (hasPointEnded(point)) {
-            throw new Error('Cannot edit line after the point has ended.');
-          }
-
-          const correctedGame = correctAdvancedPointLines(game, {
-            pointId: point.id,
-            lines: input.lines,
-          });
-
-          set((state) => {
-            state.currentGame = correctedGame;
           });
         },
 

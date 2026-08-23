@@ -8,4 +8,4 @@ name: Open Light Line Correction
 - tapOn:
     id: 'line-change-correct-line'
 - assertVisible:
-    text: 'Edit Light Line'
+    text: 'Correct Current · Light'

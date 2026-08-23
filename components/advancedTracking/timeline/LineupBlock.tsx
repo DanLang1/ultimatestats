@@ -4,11 +4,12 @@ import { StyleSheet, View } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, useLayout, type SizeClass } from '@/hooks/useLayout';
+import type { AdvancedTimelineLinePlayer } from '@/lib/advancedTracking/advancedTimelineUtils';
 import { hasItems } from '@/lib/utils';
 import { Fonts } from '@/theme/theme';
 
 interface LineupBlockProps {
-  players: { participantId: string; name: string; isSubIn: boolean; isInjuredOut: boolean }[];
+  players: AdvancedTimelineLinePlayer[];
 }
 
 export default function LineupBlock({ players }: LineupBlockProps) {
@@ -16,6 +17,7 @@ export default function LineupBlock({ players }: LineupBlockProps) {
   const { sizeClass } = useLayout();
   const styles = createStyles(sizeClass);
   if (!hasItems(players)) return null;
+  const showFinalStateBadges = players.some((player) => !player.isActiveAtEnd);
 
   return (
     <View style={styles.lineupBlock}>
@@ -33,17 +35,14 @@ export default function LineupBlock({ players }: LineupBlockProps) {
             <ThemedText style={[styles.lineupChipText, { color: palette.textInverse }]}>
               {p.name}
             </ThemedText>
-            {p.isSubIn && (
-              <View style={[styles.lineupBadge, { backgroundColor: palette.warning }]}>
+            {showFinalStateBadges && (
+              <View
+                style={[
+                  styles.lineupBadge,
+                  { backgroundColor: p.isActiveAtEnd ? palette.success : palette.danger },
+                ]}>
                 <ThemedText style={[styles.lineupBadgeText, { color: palette.textOnAccent }]}>
-                  IN
-                </ThemedText>
-              </View>
-            )}
-            {p.isInjuredOut && (
-              <View style={[styles.lineupBadge, { backgroundColor: palette.danger }]}>
-                <ThemedText style={[styles.lineupBadgeText, { color: palette.textOnAccent }]}>
-                  OUT
+                  {p.isActiveAtEnd ? 'IN' : 'OUT'}
                 </ThemedText>
               </View>
             )}

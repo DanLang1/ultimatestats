@@ -28,7 +28,6 @@ import {
   isPointEndingThrow,
   isPossessionOver,
   isTurnoverThrow,
-  reconcilePointSubsAfterLineCorrection,
   syncDerivedHalftimeTransition,
 } from '../trackingUtils';
 import type { InjurySubInput } from '../trackingUtils';
@@ -155,7 +154,7 @@ describe('getPointActionParticipantIds', () => {
   });
 });
 
-describe('line-correction injury reconciliation', () => {
+describe('line-correction action preservation', () => {
   const stoppage: StoppageAction = {
     id: 'stoppage-1',
     kind: 'stoppage',
@@ -175,16 +174,6 @@ describe('line-correction injury reconciliation', () => {
     outIds: [august.participantId],
     stoppageActionId: stoppage.id,
   };
-
-  it('drops a sub invalidated by the corrected starting line', () => {
-    const point: TrackedPoint = {
-      ...makePoint([makePossession(HOME, [stoppage])]),
-      lines: [{ sideId: HOME, participantIds: [meves.participantId] }],
-      subs: [sub],
-    };
-
-    expect(reconcilePointSubsAfterLineCorrection(point, new Set([HOME]))).toBeUndefined();
-  });
 
   it('allows an action participant to move from a sub onto the corrected starting line', () => {
     const originalPoint: TrackedPoint = {

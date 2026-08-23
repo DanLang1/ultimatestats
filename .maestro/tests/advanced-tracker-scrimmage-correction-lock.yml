@@ -10,7 +10,7 @@ tags:
 - runFlow:
     file: ../flows/open-light-line-correction.yaml
 
-# Joe recorded the seeded pickup and cannot be removed from the starting line.
+# Joe recorded the seeded pickup and cannot be removed from the active line.
 - assertVisible:
     id: 'player-chip-lock-Joe'
 - tapOn:
@@ -20,13 +20,13 @@ tags:
 - assertVisible:
     text: 'Player locked'
 - assertVisible:
-    text: 'Joe has recorded an action this point. Undo or edit that action before removing them from the lineup.'
+    text: 'Joe recorded an action this point and cannot be removed or moved.'
 - assertVisible:
     text: 'OK'
 - tapOn:
     text: 'OK'
 - assertVisible:
-    text: 'Edit Light Line'
+    text: 'Correct Current · Light'
 
 - takeScreenshot:
     path: .maestro/screenshots/advanced-tracker-scrimmage-correction-lock

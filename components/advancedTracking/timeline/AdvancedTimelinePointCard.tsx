@@ -136,7 +136,7 @@ export default function AdvancedTimelinePointCard({
               onPress={onEditLineups}
               style={({ pressed }) => [
                 styles.editButton,
-                { backgroundColor: palette.accentOverlay10, borderColor: palette.accent },
+                { backgroundColor: 'transparent', borderColor: palette.accent },
                 pressed && styles.editButtonPressed,
               ]}>
               <MaterialCommunityIcons

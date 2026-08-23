@@ -16,7 +16,7 @@ tags:
     id: 'line-change-correct-line'
 
 - assertVisible:
-    text: 'Edit Light Line'
+    text: 'Correct Current · Light'
 - assertNotVisible:
     text: 'Correct Starting Lineup'
 
@@ -24,13 +24,13 @@ tags:
 - tapOn:
     id: 'line-select-confirm'
 - assertVisible:
-    text: 'Edit Dark Line'
+    text: 'Correct Current · Dark'
 
 # Back preserves the progressive order before exiting to the tracker.
 - tapOn:
     id: 'line-select-back'
 - assertVisible:
-    text: 'Edit Light Line'
+    text: 'Correct Current · Light'
 - tapOn:
     id: 'line-select-back'
 - assertVisible:

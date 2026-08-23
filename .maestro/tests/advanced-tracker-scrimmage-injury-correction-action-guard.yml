@@ -1,5 +1,5 @@
 appId: com.langdk.ultimatestats.dev
-name: Scrimmage Correction Protects Sub-In Actions
+name: Scrimmage Correction Preserves Injury Sub
 tags:
   - scrimmage
 ---
@@ -14,36 +14,25 @@ tags:
 - assertVisible:
     id: 'tracker-chip-Heidi'
 
-# Heidi records a completion after entering for Jon.
-- tapOn:
-    id: 'tracker-chip-Heidi'
-- assertVisible:
-    text: 'JOE'
-
-# Dropping the injury sub would now orphan Heidi's completion, so saving is rejected.
+# The correction starts from the active line and locks both statuses recorded by the injury sub.
 - runFlow:
     file: ../flows/open-light-line-correction.yaml
+- assertVisible:
+    id: 'player-chip-lock-Heidi'
+- assertVisible:
+    id: 'player-chip-lock-Jon'
 - tapOn:
     id: 'player-chip-Jon'
-    selected: true
-- tapOn:
-    id: 'player-chip-Ivan'
-    selected: false
-- tapOn:
-    id: 'line-select-confirm'
-    enabled: true
-- tapOn:
-    id: 'line-correction-finish'
 
 - assertVisible:
-    text: 'Unable to correct lineup'
+    text: 'Player locked'
 - assertVisible:
-    text: 'Heidi has recorded an action this point, so this correction cannot remove them from the active lineup at that time.'
+    text: "Jon's status is preserved by a recorded injury substitution."
 
 - tapOn:
     text: 'OK'
 - assertVisible:
-    text: 'Edit Light Line'
+    text: 'Correct Current · Light'
 
 - takeScreenshot:
     path: .maestro/screenshots/advanced-tracker-scrimmage-injury-correction-action-guard

@@ -1,11 +1,13 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { screen, userEvent, waitFor } from '@testing-library/react-native';
+import { router } from 'expo-router';
 
 import AdvancedGameScreen from '@/app/(main)/(hub)/(analytics)/advancedTracking/analytics/[gameId]';
 import AdvancedPlayerStatsScreen from '@/app/(main)/(hub)/(analytics)/advancedTracking/analytics/playerStats';
 import AdvancedGameTimelineScreen from '@/app/(main)/(hub)/(analytics)/advancedTracking/analytics/timeline/[gameId]';
 import TimelineEditLineScreen from '@/app/(main)/advancedTracking/TimelineEditLine';
 import { loadAdvancedGame } from '@/lib/advancedTracking/storage';
+import { getEffectiveLineParticipantIds } from '@/lib/advancedTracking/trackingUtils';
 import type { AdvancedTrackedGame } from '@/lib/advancedTracking/types';
 import { useSavedAdvancedGamesStore } from '@/store/advancedTracking/savedGamesStore';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
@@ -186,11 +188,14 @@ describe('advanced analytics routes', () => {
 
     await renderScreen(<AdvancedGameTimelineScreen />);
 
-    expect(screen.getByTestId('advanced-edit-point-line-1')).toBeVisible();
+    expect(screen.getByTestId('advanced-edit-point-line-1')).toHaveStyle({
+      backgroundColor: 'transparent',
+    });
     await user.press(screen.getByTestId('advanced-edit-point-line-1'));
 
     setMockSearchParams({ gameId: game.id, pointId: 'point-1' });
     await renderScreen(<TimelineEditLineScreen />);
+    expect(screen.getByText('Correct Final Lineup')).toBeVisible();
 
     await user.press(screen.getByTestId('player-chip-Casey'));
     await user.press(screen.getByTestId('player-chip-Hana'));
@@ -238,6 +243,106 @@ describe('advanced analytics routes', () => {
         useAdvancedTrackingStore.getState().currentGame?.points[0].lines[0].participantIds,
       ).toEqual(['alex', 'blair', 'dana', 'eli', 'finn', 'gia', 'hana']);
     });
+  });
+
+  it('initializes from the final active line and preserves recorded injuries', async () => {
+    const user = userEvent.setup();
+    const game = makeEditableTimelineGame();
+    game.participants.push({ id: 'irene', name: 'Irene' });
+    game.points[0].subs = [
+      {
+        id: 'injury-sub-1',
+        sideId: 'windchill',
+        type: 'injury',
+        inIds: ['hana'],
+        outIds: ['casey'],
+        stoppageActionId: 'injury-1',
+      },
+    ];
+    game.points[0].possessions[0].actions.unshift({
+      id: 'injury-1',
+      kind: 'stoppage',
+      reason: 'injury',
+      sideId: 'windchill',
+      resumedAt: 2,
+    });
+    useSavedAdvancedGamesStore.setState({
+      gamesById: { [game.id]: game },
+      summariesLoaded: true,
+    });
+    setMockSearchParams({ gameId: game.id, pointId: 'point-1' });
+
+    await renderScreen(<TimelineEditLineScreen />);
+
+    expect(screen.getByTestId('player-chip-Hana')).toHaveProp(
+      'accessibilityState',
+      expect.objectContaining({ selected: true }),
+    );
+    expect(screen.getByTestId('player-chip-Casey')).toHaveProp(
+      'accessibilityState',
+      expect.objectContaining({ selected: false }),
+    );
+    expect(screen.getByTestId('player-chip-lock-Hana')).toBeVisible();
+    expect(screen.getByTestId('player-chip-lock-Casey')).toBeVisible();
+
+    await user.press(screen.getByTestId('player-chip-Dana'));
+    await user.press(screen.getByTestId('player-chip-Irene'));
+    await user.press(screen.getByTestId('line-select-confirm'));
+
+    await waitFor(() => {
+      const correctedPoint = useSavedAdvancedGamesStore.getState().gamesById[game.id].points[0];
+      expect(getEffectiveLineParticipantIds(correctedPoint, 'windchill')).toContain('irene');
+    });
+    const correctedPoint = useSavedAdvancedGamesStore.getState().gamesById[game.id].points[0];
+    expect(correctedPoint.subs).toEqual(game.points[0].subs);
+    expect(getEffectiveLineParticipantIds(correctedPoint, 'windchill')).toContain('hana');
+  });
+
+  it('allows correcting the final active line of a terminated unfinished point', async () => {
+    const game = makeEditableTimelineGame();
+    game.status = 'terminated';
+    game.endReason = 'manual';
+    const lastAction = game.points[0].possessions[0].actions[0];
+    if (lastAction.kind !== 'throw') throw new Error('Expected a throw fixture.');
+    lastAction.result = 'complete';
+    useSavedAdvancedGamesStore.setState({
+      gamesById: { [game.id]: game },
+      summariesLoaded: true,
+    });
+    setMockSearchParams({ gameId: game.id });
+
+    await renderScreen(<AdvancedGameTimelineScreen />);
+
+    expect(screen.getByTestId('advanced-edit-point-line-1')).toBeVisible();
+    setMockSearchParams({ gameId: game.id, pointId: 'point-1' });
+    await renderScreen(<TimelineEditLineScreen />);
+    expect(screen.getByText('Correct Final Lineup')).toBeVisible();
+  });
+
+  it('does not open the saved-boundary editor while a terminated game remains current', async () => {
+    const game = makeEditableTimelineGame();
+    game.status = 'terminated';
+    game.endReason = 'manual';
+    const lastAction = game.points[0].possessions[0].actions[0];
+    if (lastAction.kind !== 'throw') throw new Error('Expected a throw fixture.');
+    lastAction.result = 'complete';
+    useAdvancedTrackingStore.setState({ currentGameId: game.id, currentGame: game });
+    useSavedAdvancedGamesStore.setState({
+      gamesById: { [game.id]: game },
+      summariesLoaded: true,
+    });
+    setMockSearchParams({ gameId: game.id, pointId: 'point-1' });
+
+    await renderScreen(<TimelineEditLineScreen />);
+
+    expect(screen.queryByText('Correct Final Lineup')).not.toBeOnTheScreen();
+    expect(router.replace).toHaveBeenCalledWith(
+      {
+        pathname: '/advancedTracking/analytics/timeline/[gameId]',
+        params: { gameId: game.id },
+      },
+      { relativeToDirectory: undefined, withAnchor: undefined },
+    );
   });
 
   it('renders a stored timeline when its scorer correction history is invalid', async () => {

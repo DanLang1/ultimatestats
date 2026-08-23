@@ -1,5 +1,15 @@
-import { Participant } from '@/lib/advancedTracking/types';
-import { Player } from '@/lib/storage/types';
+import type { AdvancedTrackedGame, Participant } from '@/lib/advancedTracking/types';
+import type { Player } from '@/lib/storage/types';
+
+export function getParticipantName(game: AdvancedTrackedGame, participantId: string): string {
+  const participant = game.participants.find((candidate) => candidate.id === participantId);
+  if (participant == null) {
+    throw new Error(
+      `Unknown participantId "${participantId}" for advanced tracking game "${game.id}".`,
+    );
+  }
+  return participant.name;
+}
 
 export function mergeRosterMetadataIntoParticipants(
   participants: Participant[],

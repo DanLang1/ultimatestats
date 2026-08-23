@@ -31,7 +31,7 @@ tags:
 - assertVisible:
     id: 'tracker-menu-button'
 
-# The same eligibility boundary applies while correcting the current line.
+# Correction can also expose an actionless active opposite-side player for an atomic side swap.
 - tapOn:
     id: 'tracker-line-action-tile'
 - assertVisible:
@@ -39,7 +39,7 @@ tags:
 - tapOn:
     id: 'line-change-correct-line'
 - assertVisible:
-    text: 'Edit Light Line'
+    text: 'Correct Current · Light'
 - assertNotVisible:
     id: 'player-chip-Ben'
 - assertVisible:
@@ -48,7 +48,7 @@ tags:
     id: 'line-select-show-all-players'
 - assertVisible:
     id: 'player-chip-Ben'
-- assertNotVisible:
+- assertVisible:
     id: 'player-chip-Cara'
 
 - takeScreenshot:

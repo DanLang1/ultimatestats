@@ -14,9 +14,9 @@ import {
   type AdvancedActionLocator,
   getCorrectableAdvancedGoalContexts,
 } from '@/lib/advancedTracking/advancedActionCorrectionUtils';
+import { canCorrectAdvancedPointFromTimeline } from '@/lib/advancedTracking/advancedPointLineCorrectionUtils';
 import { buildAdvancedTimeline } from '@/lib/advancedTracking/advancedTimelineUtils';
 import { supportsTimelineLineCorrection } from '@/lib/advancedTracking/trackingModeUtils';
-import { hasPointEnded } from '@/lib/advancedTracking/trackingUtils';
 import { hasItems } from '@/lib/utils';
 import { useSavedAdvancedGamesStore } from '@/store/advancedTracking/savedGamesStore';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
@@ -88,7 +88,9 @@ export default function AdvancedGameTimelineScreen() {
   );
   const editableLinePointIds = new Set(
     supportsTimelineLineCorrection(rawGame)
-      ? rawGame.points.filter((point) => hasPointEnded(point)).map((point) => point.id)
+      ? rawGame.points
+          .filter((point) => canCorrectAdvancedPointFromTimeline(rawGame, point))
+          .map((point) => point.id)
       : [],
   );
   const editingGoalContext =

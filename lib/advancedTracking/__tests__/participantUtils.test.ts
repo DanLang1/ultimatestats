@@ -1,4 +1,40 @@
-import { mergeRosterMetadataIntoParticipants } from '@/lib/advancedTracking/participantUtils';
+import {
+  getParticipantName,
+  mergeRosterMetadataIntoParticipants,
+} from '@/lib/advancedTracking/participantUtils';
+import type { AdvancedTrackedGame } from '@/lib/advancedTracking/types';
+
+function makeGame(): AdvancedTrackedGame {
+  return {
+    id: 'participant-utils-game',
+    schemaVersion: 3,
+    createdAt: 1,
+    updatedAt: 1,
+    gameType: 'game',
+    status: 'in_progress',
+    focusSideId: 'home',
+    initialReceivingSideId: 'home',
+    settings: { locationMode: 'none' },
+    sides: [
+      { id: 'home', label: 'Home', trackingMode: 'full-roster' },
+      { id: 'away', label: 'Away', trackingMode: 'anonymous' },
+    ],
+    participants: [{ id: 'alex', name: 'Alex' }],
+    points: [],
+  };
+}
+
+describe('getParticipantName', () => {
+  it('returns the name owned by the advanced game participant', () => {
+    expect(getParticipantName(makeGame(), 'alex')).toBe('Alex');
+  });
+
+  it('throws when the participant ID is not owned by the advanced game', () => {
+    expect(() => getParticipantName(makeGame(), 'missing')).toThrow(
+      'Unknown participantId "missing" for advanced tracking game "participant-utils-game".',
+    );
+  });
+});
 
 describe('mergeRosterMetadataIntoParticipants', () => {
   it('merges saved roster metadata into participant snapshots', () => {

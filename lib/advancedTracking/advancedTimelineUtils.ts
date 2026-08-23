@@ -12,6 +12,7 @@ import type {
   ThrowAnalyticsAction,
 } from './analyticsTypes';
 import { buildAnalyticsGame, UNKNOWN_PARTICIPANT_ID } from './buildAnalyticsGame';
+import { getEffectiveLineParticipantIds } from './trackingUtils';
 import type {
   AdvancedTrackedGame,
   BetweenPointTransition,
@@ -48,8 +49,7 @@ export interface AdvancedTimelinePoint {
 export interface AdvancedTimelineLinePlayer {
   participantId: string;
   name: string;
-  isSubIn: boolean;
-  isInjuredOut: boolean;
+  isActiveAtEnd: boolean;
 }
 
 export interface AdvancedTimelinePossession {
@@ -127,32 +127,18 @@ function resolveName(
 
 function buildLinesBySide(
   analyticsPoint: AnalyticsPoint,
-  rawSubs: PointSub[],
+  rawPoint: TrackedPoint,
   participantNames: Map<string, string>,
 ): Record<string, AdvancedTimelineLinePlayer[]> {
-  const subbedInBySide = new Map<string, Set<string>>();
-  const subbedOutBySide = new Map<string, Set<string>>();
-  for (const s of rawSubs) {
-    const inSet = subbedInBySide.get(s.sideId) ?? new Set<string>();
-    for (const id of s.inIds) inSet.add(id);
-    subbedInBySide.set(s.sideId, inSet);
-
-    const outSet = subbedOutBySide.get(s.sideId) ?? new Set<string>();
-    for (const id of s.outIds) outSet.add(id);
-    subbedOutBySide.set(s.sideId, outSet);
-  }
-
   const result: Record<string, AdvancedTimelineLinePlayer[]> = {};
 
   for (const [sideId, participantIds] of Object.entries(analyticsPoint.linesBySide)) {
-    const subbedIn = subbedInBySide.get(sideId);
-    const subbedOut = subbedOutBySide.get(sideId);
+    const activeParticipantIds = new Set(getEffectiveLineParticipantIds(rawPoint, sideId));
 
     result[sideId] = participantIds.map((pid) => ({
       participantId: pid,
       name: resolveName(participantNames, pid) ?? pid,
-      isSubIn: subbedIn?.has(pid) ?? false,
-      isInjuredOut: subbedOut?.has(pid) ?? false,
+      isActiveAtEnd: activeParticipantIds.has(pid),
     }));
   }
 
@@ -604,7 +590,7 @@ function buildTimelinePoint(
     state: point.state,
     durationMs: point.durationMs,
     genderRatio: rawPoint.genderRatio,
-    linesBySide: buildLinesBySide(point, rawPoint.subs ?? [], ctx.analytics.participantNames),
+    linesBySide: buildLinesBySide(point, rawPoint, ctx.analytics.participantNames),
     possessions: buildTimelinePossessions(point, ctx),
     subs: buildSubs(rawPoint.subs ?? [], ctx.analytics.participantNames),
     transitionsAfter: rawPoint.transitionsAfter ?? [],

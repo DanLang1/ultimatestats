@@ -179,4 +179,51 @@ describe('TrackerLineScreen', () => {
 
     expect(screen.getByTestId('line-select-confirm')).toBeEnabled();
   });
+
+  it('merges a preset with locked and current active players while skipping restrictions', async () => {
+    const user = userEvent.setup();
+    const participants = Array.from({ length: 9 }, (_, index) =>
+      makeParticipant(`merge-${index + 1}`, `Merge ${index + 1}`),
+    );
+    useLinePresetsStore.setState({
+      presets: [
+        {
+          id: 'restricted-preset',
+          name: 'Restricted Preset',
+          playerIds: [participants[7].id, participants[8].id],
+          teamId: useGameStore.getState().currentTeam.id,
+        },
+      ],
+    });
+
+    await renderScreen(
+      <TrackerLineScreen
+        participants={participants}
+        initialSelectedIds={participants.slice(0, 7).map((participant) => participant.id)}
+        title="Correct Current Lineup"
+        participantRestrictions={{
+          lockedIds: [participants[0].id],
+          restrictedIds: [participants[8].id],
+          onPress: () => {},
+        }}
+        onConfirm={() => {}}
+      />,
+    );
+
+    await user.press(screen.getByText('Restricted Preset'));
+
+    expect(screen.getByTestId(`player-chip-${participants[0].name}`)).toHaveProp(
+      'accessibilityState',
+      expect.objectContaining({ selected: true }),
+    );
+    expect(screen.getByTestId(`player-chip-${participants[7].name}`)).toHaveProp(
+      'accessibilityState',
+      expect.objectContaining({ selected: true }),
+    );
+    expect(screen.getByTestId(`player-chip-${participants[8].name}`)).toHaveProp(
+      'accessibilityState',
+      expect.objectContaining({ selected: false }),
+    );
+    expect(screen.getByTestId('line-select-confirm')).toBeEnabled();
+  });
 });

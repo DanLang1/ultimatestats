@@ -194,13 +194,19 @@ action ID, result, side, ordering, and timing. Callahan corrections update the e
 attribution field without changing which side scored. A live scorer correction does not create an
 undo entry, so Undo continues to remove the recorded scoring action itself.
 
-Advanced timelines also support correcting the starting line for a completed point in single-team
-games and scrimmages. The correction uses the same line validation as live line correction: fully
-tracked lines require seven unique game participants, participants who recorded any action remain
-protected on their historical side, and scrimmage sides are corrected atomically when both are
-edited. Existing injury-sub records are reconciled by the same correction rules; injury actions
-and other recorded actions are not rewritten. Line corrections persist immediately and do not add
-an undo entry.
+The live tracker and advanced timeline correct the active line at their respective boundaries, not
+the point's starting line directly. The live boundary is the current line after the latest action;
+the timeline boundary is the final line before a goal or Callahan, or the final line of the last
+unfinished point when a game is terminated. Both surfaces derive that line from raw point lines and
+ordered injury substitutions and use one domain correction operation.
+
+The selected active line is canonical intent. The correction reverse-replays every trusted injury
+substitution to derive the corrected starting line stored on the point. Injury substitutions remain
+unchanged, and every participant referenced by an action or injury event remains protected in the
+history required by that event. Actionless, injury-unconstrained participants may be replaced or,
+when both sides are fully tracked, moved atomically between sides. Fully tracked lines require seven
+unique game participants in normal UI flows. Corrections reject invalid existing history, persist
+immediately, and do not add an undo entry.
 
 Thrower/assister corrections are intentionally deferred because they must also preserve disc-holder
 continuity with the preceding pickup or completion. Structural result changes, action deletion, and
@@ -220,8 +226,9 @@ Structural edits must preserve:
 - participant attribution for already-recorded actions
 - possession and point ordering
 
-Use the assertions and reconciliation helpers in `lib/advancedTracking/trackingUtils.ts` rather than
-introducing a second validation pattern.
+Use the assertions in `lib/advancedTracking/trackingUtils.ts` and the shared correction operation in
+`lib/advancedTracking/advancedPointLineCorrectionUtils.ts` rather than introducing a second
+validation pattern.
 
 ## Tracking Modes
 

@@ -1,0 +1,60 @@
+appId: com.langdk.ultimatestats.dev
+name: Scrimmage Atomic Crossover Correction Save
+tags:
+  - scrimmage
+---
+- runFlow:
+    file: ../flows/start-scrimmage-crossover-point.yaml
+
+# Light trades Jon for Dark's actionless active player Cara.
+- runFlow:
+    file: ../flows/open-light-line-correction.yaml
+- tapOn:
+    id: 'line-select-show-all-players'
+- tapOn:
+    id: 'player-chip-Jon'
+    selected: true
+- tapOn:
+    id: 'player-chip-Cara'
+    selected: false
+- tapOn:
+    id: 'line-select-confirm'
+    enabled: true
+
+# Dark drops to six when Cara crosses over, so the editor advances directly to Dark.
+- assertVisible:
+    text: 'Correct Current · Dark'
+- tapOn:
+    id: 'line-select-show-all-players'
+- tapOn:
+    id: 'player-chip-Jon'
+    selected: false
+- tapOn:
+    id: 'line-select-confirm'
+    enabled: true
+- extendedWaitUntil:
+    visible:
+      id: 'tracker-menu-button'
+    timeout: 5000
+
+# Reopening the editor proves both swapped lines were saved.
+- runFlow:
+    file: ../flows/open-light-line-correction.yaml
+- tapOn:
+    id: 'line-select-show-all-players'
+- assertVisible:
+    id: 'player-chip-Cara'
+    selected: true
+- tapOn:
+    id: 'line-select-confirm'
+    enabled: true
+- assertVisible:
+    text: 'Correct Current · Dark'
+- tapOn:
+    id: 'line-select-show-all-players'
+- assertVisible:
+    id: 'player-chip-Jon'
+    selected: true
+
+- takeScreenshot:
+    path: .maestro/screenshots/advanced-tracker-scrimmage-crossover-save

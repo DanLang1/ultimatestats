@@ -74,7 +74,11 @@ name: Advanced Tracker View Stats Mid-Point
     direction: DOWN
     centerElement: true
 - assertVisible:
-    text: '100% · 1/1'
+    text: 'HUCK THROWING'
+- assertVisible:
+    text: '100%'
+- assertVisible:
+    text: '1 of 1'
 
 - takeScreenshot:
     path: .maestro/screenshots/advanced-tracker-player-stats-midpoint

@@ -1,16 +1,33 @@
+import { getParticipantName } from './participantUtils';
+import { getFullyTrackedSideIds } from './trackingModeUtils';
 import {
   assertPointActionParticipantsPreserved,
   assertValidPointLineHistory,
+  getEffectiveLineParticipantIds,
   getParticipantIdsUsedBySide,
   getPointActionParticipantIds,
-  reconcilePointSubsAfterLineCorrection,
+  hasPointEnded,
 } from './trackingUtils';
-import type { AdvancedTrackedGame, PointLine, TrackedPoint } from './types';
+import type { AdvancedTrackedGame, PointLine, PointSub, TrackedPoint } from './types';
 
-export interface CorrectAdvancedPointLinesInput {
+export interface CorrectAdvancedPointActiveLinesInput {
   pointId: string;
-  lines: PointLine[];
+  /** Desired active line at the correction boundary for every fully tracked side. */
+  activeLines: PointLine[];
 }
+
+export type AdvancedLineCorrectionDraft = Record<string, string[]>;
+
+export interface ReconcileAdvancedLineCorrectionDraftInput {
+  activeLinesBySide: AdvancedLineCorrectionDraft;
+  draftLinesBySide: AdvancedLineCorrectionDraft;
+  selectedSideId: string;
+  selectedParticipantIds: string[];
+}
+
+export type AdvancedLineCorrectionRestriction =
+  | { reason: 'recorded-action' | 'recorded-injury' }
+  | { reason: 'opposing-history'; sideId: string };
 
 function getPoint(game: AdvancedTrackedGame, pointId: string): TrackedPoint {
   const point = game.points.find((candidate) => candidate.id === pointId);
@@ -20,60 +37,153 @@ function getPoint(game: AdvancedTrackedGame, pointId: string): TrackedPoint {
   return point;
 }
 
-/**
- * Applies the existing active-game line-correction rules to any identified point.
- * Callers own eligibility (for example, live tracking only permits the current point before it
- * ends, while the timeline permits completed points).
- */
-export function correctAdvancedPointLines(
+function assertValidActiveLines(
   game: AdvancedTrackedGame,
-  input: CorrectAdvancedPointLinesInput,
-): AdvancedTrackedGame {
-  const point = getPoint(game, input.pointId);
-  const correctedSideIds = new Set(input.lines.map((line) => line.sideId));
-  if (correctedSideIds.size !== input.lines.length) {
-    throw new Error('Each side may only have one corrected line.');
-  }
-  if (input.lines.some((line) => !point.lines.some((item) => item.sideId === line.sideId))) {
-    throw new Error('A line correction can only replace an existing point lineup.');
+  point: TrackedPoint,
+  activeLines: PointLine[],
+) {
+  const fullyTrackedSideIds = getFullyTrackedSideIds(game);
+  const activeLineSideIds = activeLines.map((line) => line.sideId);
+  const hasEveryFullyTrackedSideExactlyOnce =
+    activeLines.length === fullyTrackedSideIds.length &&
+    fullyTrackedSideIds.every(
+      (sideId) => activeLineSideIds.filter((candidate) => candidate === sideId).length === 1,
+    );
+  if (!hasEveryFullyTrackedSideExactlyOnce) {
+    throw new Error('Line correction requires one active lineup for every fully tracked side.');
   }
 
-  const actionParticipantIds = new Set(getPointActionParticipantIds(point));
-  for (const line of input.lines) {
-    const currentLine = point.lines.find((item) => item.sideId === line.sideId)!;
-    const nextParticipantIds = new Set(line.participantIds);
-    const lockedRemovedId = currentLine.participantIds.find(
-      (participantId) =>
-        !nextParticipantIds.has(participantId) && actionParticipantIds.has(participantId),
+  const participantIds = new Set(game.participants.map((participant) => participant.id));
+  for (const line of activeLines) {
+    const currentActiveParticipantCount = getEffectiveLineParticipantIds(point, line.sideId).length;
+    if (line.participantIds.length !== currentActiveParticipantCount) {
+      throw new Error('A lineup correction must preserve the number of active participants.');
+    }
+    if (new Set(line.participantIds).size !== line.participantIds.length) {
+      throw new Error(`A participant cannot appear more than once on side "${line.sideId}".`);
+    }
+    const unknownParticipantId = line.participantIds.find(
+      (participantId) => !participantIds.has(participantId),
     );
-    if (lockedRemovedId != null) {
-      const participantName =
-        game.participants.find((participant) => participant.id === lockedRemovedId)?.name ??
-        'This player';
+    if (unknownParticipantId != null) {
       throw new Error(
-        `${participantName} has recorded an action this point and cannot be removed from the lineup.`,
+        `Unknown participantId "${unknownParticipantId}" for advanced tracking game "${game.id}".`,
       );
     }
+  }
 
-    const opposingParticipantIds = new Set(
-      game.sides
-        .filter((side) => side.id !== line.sideId)
-        .flatMap((side) => getParticipantIdsUsedBySide(point, side.id)),
+  const selectedParticipantIds = activeLines.flatMap((line) => line.participantIds);
+  if (new Set(selectedParticipantIds).size !== selectedParticipantIds.length) {
+    throw new Error('A participant cannot be active for both sides at the correction boundary.');
+  }
+}
+
+export function reconcileAdvancedLineCorrectionDraft({
+  activeLinesBySide,
+  draftLinesBySide,
+  selectedSideId,
+  selectedParticipantIds,
+}: ReconcileAdvancedLineCorrectionDraftInput): AdvancedLineCorrectionDraft {
+  const nextLinesBySide = {
+    ...draftLinesBySide,
+    [selectedSideId]: selectedParticipantIds,
+  };
+  const selectedParticipantIdSet = new Set(selectedParticipantIds);
+
+  for (const [sideId, activeParticipantIds] of Object.entries(activeLinesBySide)) {
+    if (sideId === selectedSideId) continue;
+    const currentParticipantIds = nextLinesBySide[sideId] ?? activeParticipantIds;
+    const restoredParticipantIds = [...currentParticipantIds];
+    for (const activeParticipantId of activeParticipantIds) {
+      if (restoredParticipantIds.length >= activeParticipantIds.length) break;
+      if (
+        !selectedParticipantIdSet.has(activeParticipantId) &&
+        !restoredParticipantIds.includes(activeParticipantId)
+      ) {
+        restoredParticipantIds.push(activeParticipantId);
+      }
+    }
+    const participantIdsWithoutCrossovers = restoredParticipantIds.filter(
+      (participantId) => !selectedParticipantIdSet.has(participantId),
     );
-    if (line.participantIds.some((participantId) => opposingParticipantIds.has(participantId))) {
-      throw new Error('A participant cannot change sides after a point has started.');
+    if (participantIdsWithoutCrossovers.length !== currentParticipantIds.length) {
+      nextLinesBySide[sideId] = participantIdsWithoutCrossovers;
     }
   }
 
-  const correctionsBySide = new Map(input.lines.map((line) => [line.sideId, line]));
-  const correctedLines = point.lines.map((line) => correctionsBySide.get(line.sideId) ?? line);
+  return nextLinesBySide;
+}
+
+function reverseInjurySub(
+  game: AdvancedTrackedGame,
+  activeParticipantIds: string[],
+  sub: PointSub,
+): string[] {
+  const activeParticipantIdSet = new Set(activeParticipantIds);
+  const missingIncomingId = sub.inIds.find(
+    (participantId) => !activeParticipantIdSet.has(participantId),
+  );
+  if (missingIncomingId != null) {
+    throw new Error(
+      `${getParticipantName(game, missingIncomingId)} entered through a recorded injury substitution and must remain active.`,
+    );
+  }
+
+  const restoredOutgoingId = sub.outIds.find((participantId) =>
+    activeParticipantIdSet.has(participantId),
+  );
+  if (restoredOutgoingId != null) {
+    throw new Error(
+      `${getParticipantName(game, restoredOutgoingId)} left through a recorded injury substitution and cannot be active at this boundary.`,
+    );
+  }
+
+  const incomingIdSet = new Set(sub.inIds);
+  const firstIncomingIndex = activeParticipantIds.findIndex((participantId) =>
+    incomingIdSet.has(participantId),
+  );
+  const previousParticipantIds = activeParticipantIds.filter(
+    (participantId) => !incomingIdSet.has(participantId),
+  );
+  previousParticipantIds.splice(firstIncomingIndex, 0, ...sub.outIds);
+  return previousParticipantIds;
+}
+
+function deriveStartingLineFromActiveLine(
+  game: AdvancedTrackedGame,
+  point: TrackedPoint,
+  activeLine: PointLine,
+): PointLine {
+  const sideSubs = (point.subs ?? []).filter((sub) => sub.sideId === activeLine.sideId);
+  let participantIds = [...activeLine.participantIds];
+  for (let index = sideSubs.length - 1; index >= 0; index--) {
+    participantIds = reverseInjurySub(game, participantIds, sideSubs[index]);
+  }
+  return { sideId: activeLine.sideId, participantIds };
+}
+
+/**
+ * Replaces clerically incorrect lineup membership while preserving trusted action and injury
+ * history. The requested active line is reverse-replayed through every injury substitution to
+ * derive the point's corrected canonical starting line.
+ */
+export function correctAdvancedPointActiveLines(
+  game: AdvancedTrackedGame,
+  input: CorrectAdvancedPointActiveLinesInput,
+): AdvancedTrackedGame {
+  const point = getPoint(game, input.pointId);
+  assertValidPointLineHistory(game, point);
+  assertValidActiveLines(game, point, input.activeLines);
+
+  const correctedStartingLinesBySide = new Map(
+    input.activeLines.map((activeLine) => [
+      activeLine.sideId,
+      deriveStartingLineFromActiveLine(game, point, activeLine),
+    ]),
+  );
   const correctedPoint: TrackedPoint = {
     ...point,
-    lines: correctedLines,
-    subs: reconcilePointSubsAfterLineCorrection(
-      { ...point, lines: correctedLines },
-      correctedSideIds,
-    ),
+    lines: point.lines.map((line) => correctedStartingLinesBySide.get(line.sideId) ?? line),
   };
 
   assertValidPointLineHistory(game, correctedPoint);
@@ -86,4 +196,77 @@ export function correctAdvancedPointLines(
       candidate.id === correctedPoint.id ? correctedPoint : candidate,
     ),
   };
+}
+
+/** Returns player restrictions for editing one side's active line at the point boundary. */
+export function getAdvancedLineCorrectionRestrictions(
+  game: AdvancedTrackedGame,
+  point: TrackedPoint,
+  sideId: string,
+): Map<string, AdvancedLineCorrectionRestriction> {
+  const restrictions = new Map<string, AdvancedLineCorrectionRestriction>();
+  const actionParticipantIds = new Set(getPointActionParticipantIds(point));
+  const activeParticipantIdsBySide = new Map(
+    game.sides.map((side) => [side.id, new Set(getEffectiveLineParticipantIds(point, side.id))]),
+  );
+  const usedParticipantIdsBySide = new Map(
+    game.sides.map((side) => [side.id, new Set(getParticipantIdsUsedBySide(point, side.id))]),
+  );
+  const injuryParticipantIdsBySide = new Map(
+    game.sides.map((side) => [
+      side.id,
+      new Set(
+        (point.subs ?? [])
+          .filter((sub) => sub.sideId === side.id)
+          .flatMap((sub) => [...sub.inIds, ...sub.outIds]),
+      ),
+    ]),
+  );
+  const activeForSide = activeParticipantIdsBySide.get(sideId) ?? new Set<string>();
+  const usedBySide = usedParticipantIdsBySide.get(sideId) ?? new Set<string>();
+  const injuryParticipantsForSide = injuryParticipantIdsBySide.get(sideId) ?? new Set<string>();
+
+  for (const participant of game.participants) {
+    if (actionParticipantIds.has(participant.id)) {
+      restrictions.set(participant.id, { reason: 'recorded-action' });
+      continue;
+    }
+    if (activeForSide.has(participant.id)) {
+      if (injuryParticipantsForSide.has(participant.id)) {
+        restrictions.set(participant.id, { reason: 'recorded-injury' });
+      }
+      continue;
+    }
+    if (usedBySide.has(participant.id)) {
+      restrictions.set(participant.id, { reason: 'recorded-injury' });
+      continue;
+    }
+
+    const opposingSide = game.sides.find(
+      (side) =>
+        side.id !== sideId && (usedParticipantIdsBySide.get(side.id)?.has(participant.id) ?? false),
+    );
+    if (opposingSide == null) continue;
+
+    const isMovableOpposingActivePlayer =
+      (activeParticipantIdsBySide.get(opposingSide.id)?.has(participant.id) ?? false) &&
+      !(injuryParticipantIdsBySide.get(opposingSide.id)?.has(participant.id) ?? false);
+    if (!isMovableOpposingActivePlayer) {
+      restrictions.set(participant.id, {
+        reason: 'opposing-history',
+        sideId: opposingSide.id,
+      });
+    }
+  }
+
+  return restrictions;
+}
+
+/** A terminated game's last point has a stable final boundary even when it did not end in a goal. */
+export function canCorrectAdvancedPointFromTimeline(
+  game: AdvancedTrackedGame,
+  point: TrackedPoint,
+): boolean {
+  if (hasPointEnded(point)) return true;
+  return game.status === 'terminated' && game.points.at(-1)?.id === point.id;
 }

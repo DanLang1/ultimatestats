@@ -731,8 +731,74 @@ describe('buildAdvancedTimeline', () => {
     expect(linePlayers).toBeDefined();
     const maxPlayer = linePlayers.find((p) => p.participantId === 'p_max');
     const joahPlayer = linePlayers.find((p) => p.participantId === 'p_joah');
-    expect(maxPlayer?.isSubIn).toBe(true);
-    expect(joahPlayer?.isInjuredOut).toBe(true);
+    expect(maxPlayer?.isActiveAtEnd).toBe(true);
+    expect(joahPlayer?.isActiveAtEnd).toBe(false);
+  });
+
+  it('shows final active state after a player exits and later returns', () => {
+    const game: AdvancedTrackedGame = {
+      ...baseGame,
+      points: [
+        {
+          id: 'pt1',
+          lines: [{ sideId: ZOO, participantIds: ['p_august', 'p_meves', 'p_joah'] }],
+          subs: [
+            {
+              id: 'sub1',
+              sideId: ZOO,
+              type: 'injury',
+              inIds: ['p_max'],
+              outIds: ['p_joah'],
+              stoppageActionId: 'stop1',
+            },
+            {
+              id: 'sub2',
+              sideId: ZOO,
+              type: 'injury',
+              inIds: ['p_joah'],
+              outIds: ['p_max'],
+              stoppageActionId: 'stop2',
+            },
+          ],
+          possessions: [
+            {
+              id: 'pos1',
+              sideId: ZOO,
+              actions: [
+                {
+                  id: 'pull1',
+                  kind: 'pull',
+                  sideId: RIVALS,
+                  receivingSideId: ZOO,
+                  puller: untracked,
+                  receiver: august,
+                  result: 'inbound',
+                },
+                { id: 'stop1', kind: 'stoppage', reason: 'injury' },
+                { id: 'stop2', kind: 'stoppage', reason: 'injury' },
+                {
+                  id: 'goal1',
+                  kind: 'throw',
+                  sideId: ZOO,
+                  thrower: august,
+                  toPlayer: meves,
+                  result: 'goal',
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+
+    const linePlayers = buildAdvancedTimeline(game)[0].linesBySide[ZOO];
+
+    expect(linePlayers.find((player) => player.participantId === 'p_joah')?.isActiveAtEnd).toBe(
+      true,
+    );
+    expect(linePlayers.find((player) => player.participantId === 'p_max')?.isActiveAtEnd).toBe(
+      false,
+    );
   });
 
   it('outputs individual throw actions for UI pass chain grouping', () => {

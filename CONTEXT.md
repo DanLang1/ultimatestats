@@ -53,6 +53,10 @@ _Avoid_: Active line, when in-point substitutions have occurred.
 The players currently on a side after applying in-point substitutions.
 _Avoid_: Starting line, when substitutions have changed who is on the field.
 
+**Lineup correction**:
+A clerical replacement of the active line at a chosen game boundary. It changes which players were
+meant to be active without rewriting trusted gameplay or injury events.
+
 **Next line**:
 The players selected for a side before the next point begins. It is not part of that point until the
 pull is recorded.

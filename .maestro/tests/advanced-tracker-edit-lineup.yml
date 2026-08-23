@@ -4,7 +4,7 @@ tags:
   - extended
 ---
 - runFlow:
-    file: ../flows/setup-game-clean.yaml
+    file: ../flows/setup-scrimmage-clean.yaml
     env:
       TRACKER_STATE: focusPossession
 
@@ -43,12 +43,30 @@ tags:
     id: 'advanced-edit-point-line-1'
 - extendedWaitUntil:
     visible:
-      text: 'Edit Line'
+      text: 'Correct Final · Light'
     timeout: 5000
+
+# Swap a benched player into the final Light lineup and save both sides.
+# Joe (seeded pickup) and Jon (swipe goal) recorded actions and stay locked.
 - tapOn:
-    id: 'line-select-back'
+    id: 'player-chip-Mike'
+    selected: true
+- tapOn:
+    id: 'player-chip-Heidi'
+    selected: false
+- tapOn:
+    id: 'line-select-confirm'
+    enabled: true
+- tapOn:
+    id: 'line-correction-finish'
+
+# The timeline lineup block reflects the corrected final lineup.
+- extendedWaitUntil:
+    visible:
+      text: 'GAME TIMELINE'
+    timeout: 5000
 - assertVisible:
-    text: 'GAME TIMELINE'
+    text: 'Heidi'
 
 - takeScreenshot:
     path: .maestro/screenshots/advanced-tracker-edit-lineup

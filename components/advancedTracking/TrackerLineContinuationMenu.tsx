@@ -47,7 +47,7 @@ function getContinuationMenuCopy(
       finishDescription: `Save the ${currentSideLabel} lineup correction and return to the ${destinationLabel}.`,
       editOtherTestID: 'line-correction-edit-other',
       editOtherLabel: `Edit ${otherSideLabel} line`,
-      editOtherDescription: `Correct the ${otherSideLabel} starting lineup before saving.`,
+      editOtherDescription: `Correct the ${otherSideLabel} active lineup before saving.`,
     };
   }
 

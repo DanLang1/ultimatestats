@@ -159,6 +159,13 @@ results. The compiler copies the object for timelines and exports but emits no a
 attributions, so existing turnover and plus/minus math is unchanged. Throw-type summaries derive
 directly from compiled actions and are not persisted counters.
 
+Timeline lineup displays use the analytics participation union for who appeared during the point,
+then derive each player's final `IN` or `OUT` state from the raw point line plus ordered injury
+substitutions. Points without substitutions show plain lineup chips; when the participation union
+contains a player who finished out, the footer labels every participant's final state. Lineup
+correction also operates on that raw history; the analytics representation is never the mutation
+source.
+
 ### `AnalyticsAttribution`
 
 ```ts

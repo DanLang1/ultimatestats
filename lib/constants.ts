@@ -40,6 +40,9 @@ export const MAX_TOURNAMENT_NAME_LENGTH = 30;
 /** Maximum character length for a private advanced-game note. */
 export const MAX_ADVANCED_GAME_NOTE_LENGTH = 1000;
 
+/** Standard number of active players per side in Ultimate. */
+export const ULTIMATE_LINE_SIZE = 7;
+
 export const LATEST_VERSION_JSON_URL = 'https://u-stat.app/latest-version.json';
 export const APP_STORE_URL = 'https://apps.apple.com/us/app/u-stat/id6760956387';
 export const PLAY_STORE_URL =
