@@ -53,7 +53,7 @@ interface TrackerLineScreenProps {
   rosterParticipants?: Participant[];
   /** Optional status shown beneath player names, such as their other scrimmage side. */
   playerStatusLabels?: ReadonlyMap<string, string>;
-  onConfirm: (participantIds: string[]) => void;
+  onConfirm: (participantIds: string[]) => void | Promise<void>;
   onSelectionChange?: (participantIds: string[]) => void;
   initialSelectedIds?: string[];
   title: string;
@@ -107,6 +107,7 @@ export const TrackerLineScreen = ({
   const [selectedRecentPointNumber, setSelectedRecentPointNumber] = useState<number | null>(null);
   const [showLinePicker, setShowLinePicker] = useState(false);
   const [showAllPlayers, setShowAllPlayers] = useState(false);
+  const [isConfirming, setIsConfirming] = useState(false);
 
   const updateSelection = (participantIds: string[]) => {
     setSelectedIds(participantIds);
@@ -129,6 +130,17 @@ export const TrackerLineScreen = ({
   const hasSubChanges =
     !requireChanges || selectedIds.some((id) => !initialSelectionIds.includes(id));
   const canConfirm = selectedIds.length === 7 && hasSubChanges;
+
+  const handleConfirm = async () => {
+    if (!canConfirm || isConfirming) return;
+
+    setIsConfirming(true);
+    try {
+      await onConfirm(selectedIds);
+    } finally {
+      setIsConfirming(false);
+    }
+  };
 
   const ratioCheck =
     expectedRatio != null && canConfirm
@@ -258,8 +270,8 @@ export const TrackerLineScreen = ({
 
           <Pressable
             testID="line-select-confirm"
-            onPress={() => onConfirm(selectedIds)}
-            disabled={!canConfirm}
+            onPress={handleConfirm}
+            disabled={!canConfirm || isConfirming}
             style={({ pressed }) => [
               styles.confirmBtn,
               { backgroundColor: canConfirm ? palette.success : palette.overlay10 },
@@ -272,15 +284,20 @@ export const TrackerLineScreen = ({
             )}
             {canConfirm && confirmLabel && (
               <ThemedText style={[styles.countText, { color: palette.textOnAccent }]}>
-                {confirmLabel}
+                {isConfirming ? 'SAVING…' : confirmLabel}
               </ThemedText>
             )}
-            {canConfirm && !confirmLabel && (
+            {canConfirm && !confirmLabel && !isConfirming && (
               <MaterialCommunityIcons
                 name="check"
                 size={scaleBySizeClass(18, sizeClass)}
                 color={palette.textOnAccent}
               />
+            )}
+            {canConfirm && !confirmLabel && isConfirming && (
+              <ThemedText style={[styles.countText, { color: palette.textOnAccent }]}>
+                SAVING…
+              </ThemedText>
             )}
           </Pressable>
         </View>

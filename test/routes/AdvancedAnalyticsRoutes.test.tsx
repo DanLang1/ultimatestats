@@ -4,6 +4,7 @@ import { screen, userEvent, waitFor } from '@testing-library/react-native';
 import AdvancedGameScreen from '@/app/(main)/(hub)/(analytics)/advancedTracking/analytics/[gameId]';
 import AdvancedPlayerStatsScreen from '@/app/(main)/(hub)/(analytics)/advancedTracking/analytics/playerStats';
 import AdvancedGameTimelineScreen from '@/app/(main)/(hub)/(analytics)/advancedTracking/analytics/timeline/[gameId]';
+import TimelineEditLineScreen from '@/app/(main)/advancedTracking/TimelineEditLine';
 import { loadAdvancedGame } from '@/lib/advancedTracking/storage';
 import type { AdvancedTrackedGame } from '@/lib/advancedTracking/types';
 import { useSavedAdvancedGamesStore } from '@/store/advancedTracking/savedGamesStore';
@@ -33,11 +34,21 @@ function makeEditableTimelineGame(): AdvancedTrackedGame {
       { id: 'alex', name: 'Alex' },
       { id: 'blair', name: 'Blair' },
       { id: 'casey', name: 'Casey' },
+      { id: 'dana', name: 'Dana' },
+      { id: 'eli', name: 'Eli' },
+      { id: 'finn', name: 'Finn' },
+      { id: 'gia', name: 'Gia' },
+      { id: 'hana', name: 'Hana' },
     ],
     points: [
       {
         id: 'point-1',
-        lines: [{ sideId: 'windchill', participantIds: ['alex', 'blair', 'casey'] }],
+        lines: [
+          {
+            sideId: 'windchill',
+            participantIds: ['alex', 'blair', 'casey', 'dana', 'eli', 'finn', 'gia'],
+          },
+        ],
         possessions: [
           {
             id: 'possession-1',
@@ -161,6 +172,71 @@ describe('advanced analytics routes', () => {
     ).toMatchObject({
       kind: 'throw',
       toPlayer: { refType: 'participant', participantId: 'casey' },
+    });
+  });
+
+  it('opens and persists a completed-point lineup correction from the advanced timeline', async () => {
+    const user = userEvent.setup();
+    const game = makeEditableTimelineGame();
+    useSavedAdvancedGamesStore.setState({
+      gamesById: { [game.id]: game },
+      summariesLoaded: true,
+    });
+    setMockSearchParams({ gameId: game.id });
+
+    await renderScreen(<AdvancedGameTimelineScreen />);
+
+    expect(screen.getByTestId('advanced-edit-point-line-1')).toBeVisible();
+    await user.press(screen.getByTestId('advanced-edit-point-line-1'));
+
+    setMockSearchParams({ gameId: game.id, pointId: 'point-1' });
+    await renderScreen(<TimelineEditLineScreen />);
+
+    await user.press(screen.getByTestId('player-chip-Casey'));
+    await user.press(screen.getByTestId('player-chip-Hana'));
+    await user.press(screen.getByTestId('line-select-confirm'));
+
+    await waitFor(() => {
+      expect(
+        useSavedAdvancedGamesStore.getState().gamesById[game.id].points[0].lines[0].participantIds,
+      ).toEqual(['alex', 'blair', 'dana', 'eli', 'finn', 'gia', 'hana']);
+    });
+
+    const persistedGame = await loadAdvancedGame(game.id);
+    expect(persistedGame?.points[0].lines[0].participantIds).toEqual([
+      'alex',
+      'blair',
+      'dana',
+      'eli',
+      'finn',
+      'gia',
+      'hana',
+    ]);
+  });
+
+  it('persists a completed-point lineup correction from the active-game timeline', async () => {
+    const user = userEvent.setup();
+    const game = { ...makeEditableTimelineGame(), status: 'in_progress' as const };
+    useAdvancedTrackingStore.setState({ currentGameId: game.id, currentGame: game });
+    useSavedAdvancedGamesStore.setState({
+      gamesById: { [game.id]: game },
+      summariesLoaded: true,
+    });
+    setMockSearchParams({ gameId: game.id });
+
+    await renderScreen(<AdvancedGameTimelineScreen />);
+    await user.press(screen.getByTestId('advanced-edit-point-line-1'));
+
+    setMockSearchParams({ gameId: game.id, pointId: 'point-1' });
+    await renderScreen(<TimelineEditLineScreen />);
+    await user.press(screen.getByTestId('player-chip-Casey'));
+    await user.press(screen.getByTestId('player-chip-Hana'));
+    await user.press(screen.getByTestId('line-select-confirm'));
+
+    await waitFor(() => {
+      expect(
+        useAdvancedTrackingStore.getState().currentGame?.points[0].lines[0].participantIds,
+      ).toEqual(['alex', 'blair', 'dana', 'eli', 'finn', 'gia', 'hana']);
     });
   });
 

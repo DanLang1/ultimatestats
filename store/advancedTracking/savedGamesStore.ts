@@ -5,6 +5,10 @@ import {
   correctAdvancedGoalScorer,
   type CorrectAdvancedGoalScorerInput,
 } from '@/lib/advancedTracking/advancedActionCorrectionUtils';
+import {
+  correctAdvancedPointLines,
+  type CorrectAdvancedPointLinesInput,
+} from '@/lib/advancedTracking/advancedPointLineCorrectionUtils';
 import { migrateAdvancedTrackedGame } from '@/lib/advancedTracking/migrations';
 import {
   deleteAdvancedGameRecord,
@@ -14,6 +18,7 @@ import {
 } from '@/lib/advancedTracking/storage';
 import type { AdvancedGameSummary } from '@/lib/advancedTracking/summary';
 import { compareAdvancedGameSummaries } from '@/lib/advancedTracking/summary';
+import { hasPointEnded } from '@/lib/advancedTracking/trackingUtils';
 import type { AdvancedTrackedGame } from '@/lib/advancedTracking/types';
 
 type SavedAdvancedGamesState = {
@@ -30,6 +35,10 @@ type SavedAdvancedGamesState = {
   correctGoalScorer: (
     gameId: string,
     input: CorrectAdvancedGoalScorerInput,
+  ) => Promise<AdvancedTrackedGame>;
+  correctPointLines: (
+    gameId: string,
+    input: CorrectAdvancedPointLinesInput,
   ) => Promise<AdvancedTrackedGame>;
   deleteGame: (gameId: string) => Promise<void>;
 };
@@ -136,6 +145,24 @@ export const useSavedAdvancedGamesStore = create<SavedAdvancedGamesState>()(
       }
 
       const correctedGame = correctAdvancedGoalScorer(game, input);
+      await get().saveGame(correctedGame);
+      return correctedGame;
+    },
+
+    correctPointLines: async (gameId, input) => {
+      const game = await get().loadGame(gameId);
+      if (game == null) {
+        throw new Error(`Advanced game "${gameId}" was not found.`);
+      }
+      const point = game.points.find((candidate) => candidate.id === input.pointId);
+      if (point == null) {
+        throw new Error(`Point "${input.pointId}" was not found in advanced game "${game.id}".`);
+      }
+      if (!hasPointEnded(point)) {
+        throw new Error('Only a completed point can be corrected from the timeline.');
+      }
+
+      const correctedGame = correctAdvancedPointLines(game, input);
       await get().saveGame(correctedGame);
       return correctedGame;
     },

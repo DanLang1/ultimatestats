@@ -8,6 +8,10 @@ import {
   correctAdvancedGoalScorer,
   type CorrectAdvancedGoalScorerInput,
 } from '@/lib/advancedTracking/advancedActionCorrectionUtils';
+import {
+  correctAdvancedPointLines,
+  type CorrectAdvancedPointLinesInput,
+} from '@/lib/advancedTracking/advancedPointLineCorrectionUtils';
 import { planCaptureIntent } from '@/lib/advancedTracking/captureIntentUtils';
 import { withAdvancedGameNote } from '@/lib/advancedTracking/gameNoteUtils';
 import {
@@ -26,7 +30,6 @@ import {
 } from '@/lib/advancedTracking/trackingDisplayHelpers';
 import type { AdvancedGameLookupState } from '@/lib/advancedTracking/trackingUtils';
 import {
-  assertPointActionParticipantsPreserved,
   assertTwoSides,
   assertValidInjurySubInput,
   assertValidLines,
@@ -41,14 +44,11 @@ import {
   getGameScore,
   getLiveInProgressGame,
   getOtherSideId,
-  getParticipantIdsUsedBySide,
-  getPointActionParticipantIds,
   getReceivingSideForNextPoint,
   hasInjurySubChanges,
   hasPointEnded,
   isAdvancedGameOver,
   isPossessionOver,
-  reconcilePointSubsAfterLineCorrection,
   syncCapTransitions,
   syncDerivedHalftimeTransition,
 } from '@/lib/advancedTracking/trackingUtils';
@@ -410,6 +410,32 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
               throw new Error('Only an in-progress game can be corrected through the live store.');
             }
             state.currentGame = correctAdvancedGoalScorer(liveGame, input);
+          });
+
+          const gameToPersist = get().currentGame;
+          if (gameToPersist != null) {
+            await persistLiveGame(gameToPersist);
+          }
+        },
+
+        correctCurrentPointLines: async (input: CorrectAdvancedPointLinesInput) => {
+          const game = getCurrentGame(get());
+          if (game.status !== 'in_progress') {
+            throw new Error('Only an in-progress game can be corrected through the live store.');
+          }
+          const point = game.points.find((candidate) => candidate.id === input.pointId);
+          if (point == null) {
+            throw new Error(
+              `Point "${input.pointId}" was not found in advanced game "${game.id}".`,
+            );
+          }
+          if (!hasPointEnded(point)) {
+            throw new Error('Only a completed point can be corrected from the timeline.');
+          }
+
+          const correctedGame = correctAdvancedPointLines(game, input);
+          set((state) => {
+            state.currentGame = correctedGame;
           });
 
           const gameToPersist = get().currentGame;
@@ -998,64 +1024,13 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
             throw new Error('Cannot edit line after the point has ended.');
           }
 
-          const correctedSideIds = new Set(input.lines.map((line) => line.sideId));
-          if (correctedSideIds.size !== input.lines.length) {
-            throw new Error('Each side may only have one corrected line.');
-          }
-          if (
-            input.lines.some((line) => !point.lines.some((item) => item.sideId === line.sideId))
-          ) {
-            throw new Error('A line correction can only replace an existing point lineup.');
-          }
-          const actionParticipantIds = new Set(getPointActionParticipantIds(point));
-          for (const line of input.lines) {
-            const currentLine = point.lines.find((item) => item.sideId === line.sideId)!;
-            const nextParticipantIds = new Set(line.participantIds);
-            const lockedRemovedId = currentLine.participantIds.find(
-              (participantId) =>
-                !nextParticipantIds.has(participantId) && actionParticipantIds.has(participantId),
-            );
-            if (lockedRemovedId != null) {
-              const participantName =
-                game.participants.find((participant) => participant.id === lockedRemovedId)?.name ??
-                'This player';
-              throw new Error(
-                `${participantName} has recorded an action this point and cannot be removed from the lineup.`,
-              );
-            }
-
-            const opposingParticipantIds = new Set(
-              game.sides
-                .filter((side) => side.id !== line.sideId)
-                .flatMap((side) => getParticipantIdsUsedBySide(point, side.id)),
-            );
-            if (
-              line.participantIds.some((participantId) => opposingParticipantIds.has(participantId))
-            ) {
-              throw new Error('A participant cannot change sides after a point has started.');
-            }
-          }
-          const correctionsBySide = new Map(input.lines.map((line) => [line.sideId, line]));
-          const correctedLines = point.lines.map(
-            (line) => correctionsBySide.get(line.sideId) ?? line,
-          );
-          const candidatePoint = {
-            ...point,
-            lines: correctedLines,
-            subs: reconcilePointSubsAfterLineCorrection(
-              { ...point, lines: correctedLines },
-              correctedSideIds,
-            ),
-          };
-          assertValidPointLineHistory(game, candidatePoint);
-          assertPointActionParticipantsPreserved(game, point, candidatePoint);
+          const correctedGame = correctAdvancedPointLines(game, {
+            pointId: point.id,
+            lines: input.lines,
+          });
 
           set((state) => {
-            const liveGame = getCurrentGame(state);
-            const livePoint = getCurrentPoint(liveGame)!;
-            livePoint.lines = correctedLines;
-            livePoint.subs = candidatePoint.subs;
-            liveGame.updatedAt = Date.now();
+            state.currentGame = correctedGame;
           });
         },
 

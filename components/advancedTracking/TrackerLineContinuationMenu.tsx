@@ -13,6 +13,7 @@ export type TrackerLineContinuationKind = 'injury-sub' | 'line-correction';
 interface TrackerLineContinuationMenuProps {
   visible: boolean;
   kind: TrackerLineContinuationKind;
+  destinationLabel?: string;
   currentSideLabel: string;
   otherSideLabel: string;
   onClose: () => void;
@@ -35,6 +36,7 @@ function getContinuationMenuCopy(
   kind: TrackerLineContinuationKind,
   currentSideLabel: string,
   otherSideLabel: string,
+  destinationLabel: string,
 ): ContinuationMenuCopy {
   if (kind === 'line-correction') {
     return {
@@ -42,7 +44,7 @@ function getContinuationMenuCopy(
       title: `${currentSideLabel} lineup updated`,
       finishTestID: 'line-correction-finish',
       finishLabel: 'Finish correction',
-      finishDescription: `Save the ${currentSideLabel} lineup correction and return to the tracker.`,
+      finishDescription: `Save the ${currentSideLabel} lineup correction and return to the ${destinationLabel}.`,
       editOtherTestID: 'line-correction-edit-other',
       editOtherLabel: `Edit ${otherSideLabel} line`,
       editOtherDescription: `Correct the ${otherSideLabel} starting lineup before saving.`,
@@ -64,6 +66,7 @@ function getContinuationMenuCopy(
 export function TrackerLineContinuationMenu({
   visible,
   kind,
+  destinationLabel = 'tracker',
   currentSideLabel,
   otherSideLabel,
   onClose,
@@ -73,7 +76,7 @@ export function TrackerLineContinuationMenu({
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
   const styles = createStyles(sizeClass);
-  const copy = getContinuationMenuCopy(kind, currentSideLabel, otherSideLabel);
+  const copy = getContinuationMenuCopy(kind, currentSideLabel, otherSideLabel, destinationLabel);
 
   return (
     <Modal

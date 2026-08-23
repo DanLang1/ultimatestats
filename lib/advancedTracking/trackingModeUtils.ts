@@ -12,6 +12,15 @@ export function areBothSidesFullyTracked(game: Pick<AdvancedTrackedGame, 'sides'
   return game.sides.length === 2 && game.sides.every((side) => side.trackingMode === 'full-roster');
 }
 
+export function supportsTimelineLineCorrection(
+  game: Pick<AdvancedTrackedGame, 'gameType' | 'sides'>,
+): boolean {
+  return (
+    game.gameType === 'scrimmage' ||
+    game.sides.filter((side) => side.trackingMode === 'full-roster').length === 1
+  );
+}
+
 export function areBothAnalyticsSidesFullyTracked(
   game: Pick<AnalyticsGame, 'focusSideId' | 'oppSideId' | 'sideTrackingModes'>,
 ): boolean {

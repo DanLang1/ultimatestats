@@ -20,6 +20,8 @@ interface AdvancedEventTimelineProps {
   sideLabels: Record<string, string>;
   editableGoalActionIds?: ReadonlySet<string>;
   onEditGoalScorer?: (locator: AdvancedActionLocator) => void;
+  editableLinePointIds?: ReadonlySet<string>;
+  onEditLineups?: (point: AdvancedTimelinePoint) => void;
 }
 
 export default function AdvancedEventTimeline({
@@ -30,6 +32,8 @@ export default function AdvancedEventTimeline({
   sideLabels,
   editableGoalActionIds,
   onEditGoalScorer,
+  editableLinePointIds,
+  onEditLineups,
 }: AdvancedEventTimelineProps) {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
@@ -74,6 +78,11 @@ export default function AdvancedEventTimeline({
               sideLabels={sideLabels}
               editableGoalActionIds={editableGoalActionIds}
               onEditGoalScorer={onEditGoalScorer}
+              onEditLineups={
+                editableLinePointIds?.has(point.pointId) && onEditLineups != null
+                  ? () => onEditLineups(point)
+                  : undefined
+              }
             />
             {hasItems(point.transitionsAfter) &&
               point.transitionsAfter.map((transition) => (

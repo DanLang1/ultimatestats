@@ -56,6 +56,7 @@ Defined across:
 - `/advancedTracking/PullTracking` (`app/(main)/advancedTracking/PullTracking.tsx`)
 - `/advancedTracking/Tracker` (`app/(main)/advancedTracking/Tracker.tsx`)
 - `/advancedTracking/TrackerEditLine` (`app/(main)/advancedTracking/TrackerEditLine.tsx`)
+- `/advancedTracking/TimelineEditLine` (`app/(main)/advancedTracking/TimelineEditLine.tsx`)
 - `/advancedTracking/TrackerInjurySub` (`app/(main)/advancedTracking/TrackerInjurySub.tsx`)
 - `/advancedTracking/TrackerGameComplete` (`app/(main)/advancedTracking/TrackerGameComplete.tsx`)
 

@@ -194,6 +194,14 @@ action ID, result, side, ordering, and timing. Callahan corrections update the e
 attribution field without changing which side scored. A live scorer correction does not create an
 undo entry, so Undo continues to remove the recorded scoring action itself.
 
+Advanced timelines also support correcting the starting line for a completed point in single-team
+games and scrimmages. The correction uses the same line validation as live line correction: fully
+tracked lines require seven unique game participants, participants who recorded any action remain
+protected on their historical side, and scrimmage sides are corrected atomically when both are
+edited. Existing injury-sub records are reconciled by the same correction rules; injury actions
+and other recorded actions are not rewritten. Line corrections persist immediately and do not add
+an undo entry.
+
 Thrower/assister corrections are intentionally deferred because they must also preserve disc-holder
 continuity with the preceding pickup or completion. Structural result changes, action deletion, and
 moving actions between possessions are not part of scorer correction.

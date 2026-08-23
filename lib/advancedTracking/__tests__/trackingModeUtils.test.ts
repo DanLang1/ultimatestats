@@ -3,6 +3,7 @@ import {
   areBothAnalyticsSidesFullyTracked,
   areBothSidesFullyTracked,
   isSideFullyTracked,
+  supportsTimelineLineCorrection,
 } from '../trackingModeUtils';
 import type { AdvancedTrackedGame } from '../types';
 
@@ -41,5 +42,16 @@ describe('trackingModeUtils', () => {
     expect(areBothSidesFullyTracked(singleSideGame)).toBe(false);
     expect(isSideFullyTracked(singleSideGame, 'away')).toBe(false);
     expect(areBothAnalyticsSidesFullyTracked(buildAnalyticsGame(singleSideGame))).toBe(false);
+  });
+
+  it('supports timeline line correction for scrimmages or exactly one full-roster side', () => {
+    expect(supportsTimelineLineCorrection(game)).toBe(false);
+    expect(
+      supportsTimelineLineCorrection({
+        ...game,
+        sides: [game.sides[0], { ...game.sides[1], trackingMode: 'anonymous' }],
+      }),
+    ).toBe(true);
+    expect(supportsTimelineLineCorrection({ ...game, gameType: 'scrimmage' })).toBe(true);
   });
 });

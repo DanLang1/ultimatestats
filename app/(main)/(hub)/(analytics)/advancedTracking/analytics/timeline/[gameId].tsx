@@ -15,6 +15,8 @@ import {
   getCorrectableAdvancedGoalContexts,
 } from '@/lib/advancedTracking/advancedActionCorrectionUtils';
 import { buildAdvancedTimeline } from '@/lib/advancedTracking/advancedTimelineUtils';
+import { supportsTimelineLineCorrection } from '@/lib/advancedTracking/trackingModeUtils';
+import { hasPointEnded } from '@/lib/advancedTracking/trackingUtils';
 import { hasItems } from '@/lib/utils';
 import { useSavedAdvancedGamesStore } from '@/store/advancedTracking/savedGamesStore';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
@@ -84,6 +86,11 @@ export default function AdvancedGameTimelineScreen() {
   const editableGoalActionIds = new Set(
     correctableGoalContexts.map((context) => context.action.id),
   );
+  const editableLinePointIds = new Set(
+    supportsTimelineLineCorrection(rawGame)
+      ? rawGame.points.filter((point) => hasPointEnded(point)).map((point) => point.id)
+      : [],
+  );
   const editingGoalContext =
     editingGoal == null
       ? null
@@ -136,6 +143,13 @@ export default function AdvancedGameTimelineScreen() {
           sideLabels={sideLabels}
           editableGoalActionIds={editableGoalActionIds}
           onEditGoalScorer={setEditingGoal}
+          editableLinePointIds={editableLinePointIds}
+          onEditLineups={(point) => {
+            router.push({
+              pathname: '/advancedTracking/TimelineEditLine',
+              params: { gameId: rawGame.id, pointId: point.pointId },
+            });
+          }}
         />
       ) : (
         <View style={styles.emptyState}>

@@ -1,4 +1,5 @@
 import type { CorrectAdvancedGoalScorerInput } from '@/lib/advancedTracking/advancedActionCorrectionUtils';
+import type { CorrectAdvancedPointLinesInput } from '@/lib/advancedTracking/advancedPointLineCorrectionUtils';
 import type { CaptureIntent, CaptureIntentResult } from '@/lib/advancedTracking/captureIntentUtils';
 import type {
   AdvancedGameType,
@@ -142,6 +143,7 @@ export interface AdvancedTrackingState {
   finishTerminatedGame: () => Promise<void>;
   updateGameMetadata: (metadata: GameMetadata) => void;
   correctCurrentGoalScorer: (input: CorrectAdvancedGoalScorerInput) => Promise<void>;
+  correctCurrentPointLines: (input: CorrectAdvancedPointLinesInput) => Promise<void>;
   recordGameTransition: (transitionType: 'soft_cap' | 'hard_cap') => void;
   triggerHalftimeEarly: () => boolean;
   startGameClockPause: (reason: GameClockPauseReason) => string;

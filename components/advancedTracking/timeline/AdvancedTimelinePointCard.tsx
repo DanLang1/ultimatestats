@@ -1,6 +1,5 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import React from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import LineupBlock from '@/components/advancedTracking/timeline/LineupBlock';
 import TimelineFlowRow from '@/components/advancedTracking/timeline/TimelineFlowRow';
@@ -8,11 +7,11 @@ import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import type { AdvancedActionLocator } from '@/lib/advancedTracking/advancedActionCorrectionUtils';
+import type { AdvancedTimelinePoint } from '@/lib/advancedTracking/advancedTimelineUtils';
 import {
   createPointFlowItems,
   getPointStateLabel,
 } from '@/lib/advancedTracking/advancedTimelineUtils';
-import type { AdvancedTimelinePoint } from '@/lib/advancedTracking/advancedTimelineUtils';
 import { formatClockDuration } from '@/lib/durationFormatUtils';
 import { hasItems } from '@/lib/utils';
 import { Fonts } from '@/theme/theme';
@@ -24,6 +23,7 @@ interface AdvancedTimelinePointCardProps {
   sideLabels: Record<string, string>;
   editableGoalActionIds?: ReadonlySet<string>;
   onEditGoalScorer?: (locator: AdvancedActionLocator) => void;
+  onEditLineups?: () => void;
 }
 
 export default function AdvancedTimelinePointCard({
@@ -33,6 +33,7 @@ export default function AdvancedTimelinePointCard({
   sideLabels,
   editableGoalActionIds,
   onEditGoalScorer,
+  onEditLineups,
 }: AdvancedTimelinePointCardProps) {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
@@ -58,6 +59,8 @@ export default function AdvancedTimelinePointCard({
   }
 
   const stateLabel = getPointStateLabel(point.state);
+  const hasFocusLine = hasItems(point.linesBySide[focusSideId]);
+  const hasOpposingLine = hasItems(point.linesBySide[oppSideId]);
 
   return (
     <View style={[styles.card, { backgroundColor: palette.overlay08 }]}>
@@ -121,12 +124,33 @@ export default function AdvancedTimelinePointCard({
       </View>
 
       {/* Lineup footer */}
-      <View style={[styles.lineupSection, { borderTopColor: palette.overlay10 }]}>
-        <LineupBlock players={point.linesBySide[focusSideId] ?? []} />
-        {hasItems(point.linesBySide[oppSideId]) ? (
-          <LineupBlock players={point.linesBySide[oppSideId] ?? []} />
-        ) : null}
-      </View>
+      {(hasFocusLine || hasOpposingLine) && (
+        <View style={[styles.lineupSection, { borderTopColor: palette.overlay10 }]}>
+          <LineupBlock players={point.linesBySide[focusSideId] ?? []} />
+          {hasOpposingLine ? <LineupBlock players={point.linesBySide[oppSideId] ?? []} /> : null}
+          {onEditLineups && (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={`Edit point ${point.pointNumber} ${hasOpposingLine ? 'lineups' : 'line'}`}
+              testID={`advanced-edit-point-line-${point.pointNumber}`}
+              onPress={onEditLineups}
+              style={({ pressed }) => [
+                styles.editButton,
+                { backgroundColor: palette.accentOverlay10, borderColor: palette.accent },
+                pressed && styles.editButtonPressed,
+              ]}>
+              <MaterialCommunityIcons
+                name="pencil-outline"
+                size={scaleBySizeClass(14, sizeClass)}
+                color={palette.accent}
+              />
+              <ThemedText style={[styles.editButtonText, { color: palette.accent }]}>
+                {hasOpposingLine ? 'EDIT LINES' : 'EDIT LINE'}
+              </ThemedText>
+            </Pressable>
+          )}
+        </View>
+      )}
     </View>
   );
 }
@@ -206,6 +230,25 @@ function createStyles(sizeClass: SizeClass) {
       padding: 12,
       gap: 10,
       borderTopWidth: 1,
+    },
+    editButton: {
+      minHeight: 36,
+      flexDirection: 'row',
+      alignItems: 'center',
+      alignSelf: 'flex-start',
+      gap: 4,
+      borderWidth: 1,
+      borderRadius: 999,
+      paddingHorizontal: 10,
+      paddingVertical: 6,
+    },
+    editButtonPressed: {
+      opacity: 0.7,
+    },
+    editButtonText: {
+      fontSize: scaleBySizeClass(9, sizeClass),
+      fontFamily: Fonts.bold,
+      letterSpacing: 0.5,
     },
   });
 }
