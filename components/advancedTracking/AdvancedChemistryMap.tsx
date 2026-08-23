@@ -3,9 +3,11 @@ import { StyleSheet, View } from 'react-native';
 import Svg, { Circle, G, Line, Text as SvgText } from 'react-native-svg';
 
 import { ThemedText } from '@/components/ThemedText';
+import ChemistryConnectionsDisclosure from '@/components/view-stats/ChemistryConnectionsDisclosure';
 import { useTheme } from '@/context/ThemeContext';
 import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { AdvancedChemistryConnection } from '@/lib/advancedTracking/advancedChemistryUtils';
+import { CHEMISTRY_MAP_VISIBLE_CONNECTIONS } from '@/lib/constants';
 import { Fonts } from '@/theme/theme';
 
 interface AdvancedChemistryMapProps {
@@ -39,12 +41,20 @@ export default function AdvancedChemistryMap({
   const feeders = connections
     .filter((c) => c.goalsFrom > 0)
     .sort((a, b) => b.goalsFrom - a.goalsFrom)
-    .slice(0, 4);
+    .slice(0, CHEMISTRY_MAP_VISIBLE_CONNECTIONS);
 
   const targets = connections
     .filter((c) => c.assistsTo > 0)
     .sort((a, b) => b.assistsTo - a.assistsTo)
-    .slice(0, 4);
+    .slice(0, CHEMISTRY_MAP_VISIBLE_CONNECTIONS);
+
+  const connectionDetails = connections.map((connection) => ({
+    id: connection.participantId,
+    name: connection.participantName,
+    goalsFrom: connection.goalsFrom,
+    assistsTo: connection.assistsTo,
+    totalConnections: connection.totalConnections,
+  }));
 
   if (feeders.length === 0 && targets.length === 0) {
     return null;
@@ -252,6 +262,8 @@ export default function AdvancedChemistryMap({
           </ThemedText>
         </View>
       </View>
+
+      <ChemistryConnectionsDisclosure connections={connectionDetails} />
     </View>
   );
 }
