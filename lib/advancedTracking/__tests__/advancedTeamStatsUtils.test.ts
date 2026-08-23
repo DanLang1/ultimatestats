@@ -1,6 +1,7 @@
 import { computeAdvancedTeamStats } from '../advancedTeamStatsUtils';
+import { aggregateAnalyticsGames } from '../aggregateAnalyticsGames';
 import { buildAnalyticsGame } from '../buildAnalyticsGame';
-import type { AdvancedTrackedGame } from '../types';
+import type { AdvancedTrackedGame, PossessionAction, TrackedPoint } from '../types';
 
 // ── Shared fixtures ──────────────────────────────────────────────────────────
 
@@ -126,6 +127,52 @@ function makeHoldPoint(
   }
 }
 
+function makeAlternatingPoint(
+  id: string,
+  receivingSide: typeof ZOO | typeof RIVALS,
+  scoringSide: typeof ZOO | typeof RIVALS,
+  turnoversBeforeScore: number,
+): TrackedPoint {
+  const pullingSide = receivingSide === ZOO ? RIVALS : ZOO;
+  const possessions: TrackedPoint['possessions'] = [];
+
+  for (let possessionIndex = 0; possessionIndex <= turnoversBeforeScore; possessionIndex++) {
+    const sideId = possessionIndex % 2 === 0 ? receivingSide : pullingSide;
+    const isScore = possessionIndex === turnoversBeforeScore;
+    if (isScore && sideId !== scoringSide) {
+      throw new Error('Fixture turnover count does not end with the requested scoring side.');
+    }
+
+    const actions: PossessionAction[] = [];
+    if (possessionIndex === 0) {
+      actions.push({
+        id: `${id}_pull`,
+        kind: 'pull',
+        sideId: pullingSide,
+        receivingSideId: receivingSide,
+        puller: pullingSide === ZOO ? august : untracked,
+        receiver: receivingSide === ZOO ? august : untracked,
+        result: 'inbound',
+      });
+    }
+    actions.push({
+      id: `${id}_throw_${possessionIndex}`,
+      kind: 'throw',
+      sideId,
+      thrower: sideId === ZOO ? august : untracked,
+      ...(isScore ? { toPlayer: sideId === ZOO ? meves : untracked } : {}),
+      result: isScore ? 'goal' : 'throwaway',
+    });
+    possessions.push({ id: `${id}_pos_${possessionIndex}`, sideId, actions });
+  }
+
+  return {
+    id,
+    lines: [{ sideId: ZOO, participantIds: ['p_august', 'p_meves'] }],
+    possessions,
+  };
+}
+
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
 describe('advancedTeamStatsUtils', () => {
@@ -189,6 +236,9 @@ describe('advancedTeamStatsUtils', () => {
 
       expect(stats.cleanHolds).toBe(1);
       expect(stats.dirtyHolds).toBe(0);
+      expect(stats.scoredOPossessions).toBe(1);
+      expect(stats.totalPossessionsOnO).toBe(1);
+      expect(stats.oPossessionConversionPct).toBe(1);
     });
   });
 
@@ -232,29 +282,64 @@ describe('advancedTeamStatsUtils', () => {
   });
 
   describe('conversion rates', () => {
-    it('computes O-line and D-line conversion %', () => {
-      // initialReceiving=ZOO → pt1: Zoo receives, Zoo scores (hold).
-      // Zoo scored pt1 → Rivals receive pt2 (D-point for Zoo).
-      // Rivals score pt2 → Zoo receives pt3 (O-point).
-      // Pt3: Zoo receives, Rivals score (broken).
-      // Zoo now has 2 O-points (pt1=hold, pt3=broken) and 1 D-point (pt2).
+    it('counts each O-possession after two turnovers before a hold', () => {
       const game: AdvancedTrackedGame = {
         ...baseGame,
-        initialReceivingSideId: ZOO,
-        points: [
-          makeHoldPoint('pt1', ZOO, ZOO), // hold (O-point)
-          makeHoldPoint('pt2', RIVALS, RIVALS), // opp_hold (D-point)
-          makeHoldPoint('pt3', RIVALS, ZOO), // broken (O-point)
-        ],
+        points: [makeAlternatingPoint('pt1', ZOO, ZOO, 4)],
       };
 
-      const analytics = buildAnalyticsGame(game);
-      const stats = computeAdvancedTeamStats(analytics, ZOO);
+      const stats = computeAdvancedTeamStats(buildAnalyticsGame(game), ZOO);
 
-      // oLineConversion = holds / oPoints = 1/2 = 0.5
-      expect(stats.oLineConversionPct).toBeCloseTo(0.5);
-      // dLineConversion = breaks / dPoints = 0/1 = 0
-      expect(stats.dLineConversionPct).toBeCloseTo(0);
+      expect(stats.holds).toBe(1);
+      expect(stats.scoredOPossessions).toBe(1);
+      expect(stats.totalPossessionsOnO).toBe(3);
+      expect(stats.oPossessionConversionPct).toBeCloseTo(1 / 3);
+    });
+
+    it('separates D-possession conversion from break efficiency', () => {
+      const game: AdvancedTrackedGame = {
+        ...baseGame,
+        initialReceivingSideId: RIVALS,
+        points: [makeAlternatingPoint('pt1', RIVALS, ZOO, 9)],
+      };
+
+      const stats = computeAdvancedTeamStats(buildAnalyticsGame(game), ZOO);
+
+      expect(stats.scoredDPossessions).toBe(1);
+      expect(stats.totalPossessionsOnD).toBe(5);
+      expect(stats.dPossessionConversionPct).toBeCloseTo(1 / 5);
+      expect(stats.breakEfficiencyPct).toBe(1);
+      expect(stats.dPointsWithTurnover).toBe(1);
+    });
+
+    it('preserves genuine zero percent when D chances do not convert', () => {
+      const game: AdvancedTrackedGame = {
+        ...baseGame,
+        initialReceivingSideId: RIVALS,
+        points: [makeAlternatingPoint('pt1', RIVALS, RIVALS, 2)],
+      };
+
+      const stats = computeAdvancedTeamStats(buildAnalyticsGame(game), ZOO);
+
+      expect(stats.scoredDPossessions).toBe(0);
+      expect(stats.totalPossessionsOnD).toBe(1);
+      expect(stats.dPossessionConversionPct).toBe(0);
+      expect(stats.breakEfficiencyPct).toBe(0);
+    });
+
+    it('returns null when there are no relevant possessions', () => {
+      const game: AdvancedTrackedGame = {
+        ...baseGame,
+        initialReceivingSideId: RIVALS,
+        points: [makeAlternatingPoint('pt1', RIVALS, RIVALS, 0)],
+      };
+
+      const stats = computeAdvancedTeamStats(buildAnalyticsGame(game), ZOO);
+
+      expect(stats.oPossessionConversionPct).toBeNull();
+      expect(stats.dPossessionConversionPct).toBeNull();
+      expect(stats.possessionConversionPct).toBeNull();
+      expect(stats.totalPossessions).toBe(0);
     });
 
     it('computes break efficiency from D-point break chances', () => {
@@ -273,7 +358,6 @@ describe('advancedTeamStatsUtils', () => {
       expect(stats.dPoints).toBe(2);
       expect(stats.breaks).toBe(1);
       expect(stats.dPointsWithTurnover).toBe(1);
-      expect(stats.dLineConversionPct).toBeCloseTo(0.5);
       expect(stats.breakEfficiencyPct).toBeCloseTo(1);
     });
 
@@ -321,7 +405,140 @@ describe('advancedTeamStatsUtils', () => {
       expect(stats.dPointsWithTurnover).toBe(1);
       expect(stats.breakEfficiencyPct).toBeCloseTo(1);
       expect(stats.totalPossessions).toBe(1);
+      expect(stats.scoredDPossessions).toBe(1);
+      expect(stats.totalPossessionsOnD).toBe(1);
+      expect(stats.dPossessionConversionPct).toBe(1);
       expect(stats.possessionConversionPct).toBeCloseTo(1);
+    });
+
+    it('classifies a Callahan after a turnover on our own O-point as an O-possession', () => {
+      const game: AdvancedTrackedGame = {
+        ...baseGame,
+        points: [
+          {
+            id: 'pt1',
+            lines: [{ sideId: ZOO, participantIds: ['p_august'] }],
+            possessions: [
+              {
+                id: 'pt1_pos1',
+                sideId: ZOO,
+                actions: [
+                  {
+                    id: 'pt1_a1',
+                    kind: 'pull',
+                    sideId: RIVALS,
+                    receivingSideId: ZOO,
+                    puller: untracked,
+                    receiver: august,
+                    result: 'inbound',
+                  },
+                  {
+                    id: 'pt1_a2',
+                    kind: 'throw',
+                    sideId: ZOO,
+                    thrower: august,
+                    result: 'throwaway',
+                  },
+                ],
+              },
+              {
+                id: 'pt1_pos2',
+                sideId: RIVALS,
+                actions: [
+                  {
+                    id: 'pt1_b1',
+                    kind: 'disc_pickup',
+                    sideId: RIVALS,
+                    player: untracked,
+                  },
+                  {
+                    id: 'pt1_b2',
+                    kind: 'throw',
+                    sideId: RIVALS,
+                    thrower: untracked,
+                    defender: august,
+                    result: 'callahan',
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      };
+
+      const analytics = buildAnalyticsGame(game);
+      const stats = computeAdvancedTeamStats(analytics, ZOO);
+
+      // Zoo receives (O-point), turns over, then scores a Callahan as defense.
+      // Point resolves as a hold; the synthetic Callahan possession counts as an O-possession.
+      expect(stats.holds).toBe(1);
+      expect(stats.totalPossessions).toBe(2);
+      expect(stats.scoredOPossessions).toBe(1);
+      expect(stats.totalPossessionsOnO).toBe(2);
+      expect(stats.oPossessionConversionPct).toBeCloseTo(0.5);
+      expect(stats.possessionConversionPct).toBeCloseTo(0.5);
+      expect(stats.scoredDPossessions).toBe(0);
+      expect(stats.totalPossessionsOnD).toBe(0);
+      expect(stats.dPossessionConversionPct).toBeNull();
+    });
+
+    it.each(['in_progress', 'terminated'] as const)(
+      'includes the current %s possession in conversion denominators',
+      (status) => {
+        const point = makeAlternatingPoint('pt1', ZOO, ZOO, 2);
+        const lastAction = point.possessions.at(-1)?.actions.at(-1);
+        if (lastAction?.kind !== 'throw') throw new Error('Expected final throw fixture.');
+        lastAction.result = 'complete';
+
+        const game: AdvancedTrackedGame = {
+          ...baseGame,
+          status,
+          points: [point],
+        };
+        const stats = computeAdvancedTeamStats(buildAnalyticsGame(game), ZOO);
+
+        expect(stats.totalPossessions).toBe(2);
+        expect(stats.oEfficiency).toBeNull();
+        expect(stats.totalPossessionsOnO).toBe(2);
+        expect(stats.scoredOPossessions).toBe(0);
+        expect(stats.oPossessionConversionPct).toBe(0);
+        expect(stats.possessionConversionPct).toBe(0);
+      },
+    );
+
+    it('computes conversion from either side perspective', () => {
+      const game: AdvancedTrackedGame = {
+        ...baseGame,
+        points: [makeAlternatingPoint('pt1', ZOO, ZOO, 4)],
+      };
+
+      const stats = computeAdvancedTeamStats(buildAnalyticsGame(game), RIVALS);
+
+      expect(stats.scoredDPossessions).toBe(0);
+      expect(stats.totalPossessionsOnD).toBe(2);
+      expect(stats.dPossessionConversionPct).toBe(0);
+    });
+
+    it('pools raw aggregate possession totals instead of averaging game percentages', () => {
+      const cleanHold = buildAnalyticsGame({
+        ...baseGame,
+        id: 'clean-hold',
+        points: [makeAlternatingPoint('pt1', ZOO, ZOO, 0)],
+      });
+      const threeChanceHold = buildAnalyticsGame({
+        ...baseGame,
+        id: 'three-chance-hold',
+        points: [makeAlternatingPoint('pt1', ZOO, ZOO, 4)],
+      });
+      const aggregate = aggregateAnalyticsGames([cleanHold, threeChanceHold]);
+      if (aggregate == null) throw new Error('Expected an aggregate analytics game.');
+
+      const stats = computeAdvancedTeamStats(aggregate, ZOO);
+
+      expect(stats.scoredOPossessions).toBe(2);
+      expect(stats.totalPossessionsOnO).toBe(4);
+      expect(stats.oPossessionConversionPct).toBe(0.5);
+      expect(stats.possessionConversionPct).toBe(0.5);
     });
 
     it('excludes terminated points from O/D conversion denominators', () => {
@@ -369,8 +586,6 @@ describe('advancedTeamStatsUtils', () => {
       expect(stats.holds).toBe(1);
       expect(stats.oPoints).toBe(1);
       expect(stats.dPoints).toBe(0);
-      expect(stats.oLineConversionPct).toBeCloseTo(1);
-      expect(stats.dLineConversionPct).toBeNull();
     });
   });
 

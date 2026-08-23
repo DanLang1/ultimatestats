@@ -117,6 +117,12 @@ type AnalyticsPossession = {
 };
 ```
 
+Possession conversion denominators include every possession owned by the side, including the
+current `in_progress` or `terminated` possession. A possession's `result` is `scored`,
+`turned_over`, `in_progress`, or `terminated`; only `scored` counts as a successful conversion.
+Every turnover result qualifies, including dropped pulls and opponent-caused blocks, pressures,
+stalls, drops, and throwaways.
+
 ### `AnalyticsAction`
 
 ```ts
@@ -263,14 +269,17 @@ These rules are applied once during `buildAnalyticsGame`. Stat utils never need 
 | Holds                        | `points` where `state === 'hold'`, count                                            |
 | Breaks                       | `points` where `state === 'break'`, count                                           |
 | Times broken                 | `points` where `state === 'broken'`, count                                          |
-| O-efficiency                 | holds / (holds + times broken)                                                      |
-| D-efficiency                 | breaks / (breaks + opp holds)                                                       |
+| Hold rate                    | holds / completed O-points (holds + times broken)                                   |
+| O-possession conversion      | scoring possessions on O-points / all possessions owned by side on O-points         |
+| Break efficiency             | breaks / completed D-points where side gained at least one possession               |
+| D-possession conversion      | scoring possessions on D-points / all possessions owned by side on D-points         |
+| D-efficiency                 | breaks / completed D-points (breaks + opp holds)                                    |
+| Overall conversion           | all scoring possessions / all possessions owned by side                             |
 | Clean holds                  | `points` where `state === 'hold'` and `isCleanHold === true`                        |
 | Dirty holds                  | `points` where `state === 'hold'` and `isCleanHold === false`                       |
 | Possessions per point        | `possessions` grouped by `pointId`, average count                                   |
 | Turnovers per point          | `possessions` where `result === 'turned_over'`, grouped by `pointId`, average count |
 | Goals after turnovers        | `possessions` where `possessionIndex > 0` and `result === 'scored'`                 |
-| O-line conversion            | holds / offensive points (points where the side received the opening pull)          |
 | Longest scoring run          | max consecutive `points` where focus side scored                                    |
 | Longest drought              | max consecutive `points` where focus side did not score                             |
 | Score at start of each point | `point.scoresBySide[sideId]`                                                        |
@@ -331,6 +340,11 @@ The builder fails fast if raw data would produce misleading analytics, including
 - raw action side assignments that disagree with the enclosing possession
 
 The builder does not mutate the raw game. It is a pure function.
+
+Callahans remain represented by the thrower's raw `turned_over` possession. Team conversion
+utilities add one synthetic D-possession and one successful conversion for the scoring
+defense so the immediate defensive score has a 1/1 possession conversion result without changing
+the persisted model.
 
 ---
 

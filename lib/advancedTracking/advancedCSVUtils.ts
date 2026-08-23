@@ -213,14 +213,37 @@ function teamStatsCSV(stats: AdvancedTeamStats, teamName: string): string {
 
   return [
     csvRow(['Stat', 'Value', 'Detail']),
-    csvRow(['Holds', stats.holds, `${stats.holds}/${stats.oPoints} O-points`]),
+    csvRow([
+      'Holds',
+      stats.holds,
+      `${stats.holds}/${stats.holds + stats.timesBroken} completed O-points`,
+    ]),
     csvRow(['Times Broken', stats.timesBroken, '']),
     csvRow([
-      'O-Efficiency',
+      'Hold Rate',
       formatNullablePercent(stats.oEfficiency),
       `${stats.holds}/${stats.holds + stats.timesBroken}`,
     ]),
-    csvRow(['Breaks', stats.breaks, `${stats.breaks}/${stats.dPoints} D-points`]),
+    csvRow([
+      'O-Possession Conversion',
+      formatNullablePercent(stats.oPossessionConversionPct),
+      `${stats.scoredOPossessions}/${stats.totalPossessionsOnO}`,
+    ]),
+    csvRow([
+      'Breaks',
+      stats.breaks,
+      `${stats.breaks}/${stats.breaks + stats.oppHolds} completed D-points`,
+    ]),
+    csvRow([
+      'Break Efficiency',
+      formatNullablePercent(stats.breakEfficiencyPct),
+      `${stats.breaks}/${stats.dPointsWithTurnover}`,
+    ]),
+    csvRow([
+      'D-Possession Conversion',
+      formatNullablePercent(stats.dPossessionConversionPct),
+      `${stats.scoredDPossessions}/${stats.totalPossessionsOnD}`,
+    ]),
     csvRow([
       'D-Efficiency',
       formatNullablePercent(stats.dEfficiency),
@@ -244,7 +267,7 @@ function teamStatsCSV(stats: AdvancedTeamStats, teamName: string): string {
     csvRow(['Turns per Point', formatDecimal(stats.turnoversPerPoint ?? 0), '']),
     csvRow(['Points per Turn', formatDecimal(stats.pointsPerTurnover ?? 0), '']),
     csvRow([
-      'Possession Conversion',
+      'Overall Conversion',
       formatNullablePercent(stats.possessionConversionPct),
       `${stats.totalGoals}/${stats.totalPossessions}`,
     ]),

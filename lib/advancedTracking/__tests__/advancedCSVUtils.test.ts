@@ -137,6 +137,13 @@ describe('advancedCSVUtils', () => {
     expect(csv).not.toContain('Backfield Reset Turnovers');
     expect(csv).toContain('Total Pressures,1');
     expect(csv).toContain('Pressures per D-Point,1');
+    expect(csv).toContain('Hold Rate,-,0/0');
+    expect(csv).toContain('O-Possession Conversion,-,0/0');
+    expect(csv).toContain('Break Efficiency,100.0%,1/1');
+    expect(csv).toContain('D-Possession Conversion,100.0%,1/1');
+    expect(csv).toContain('D-Efficiency,100.0%,1/1');
+    expect(csv).toContain('Overall Conversion,100.0%,1/1');
+    expect(csv).not.toContain('\nPossession Conversion,');
     expect(csv).toContain('Blocks,Pressures,Receptions');
 
     const header = csv.split('\n').find((line) => line.startsWith('Player,Goals'));

@@ -34,6 +34,8 @@ const formatDecimal = (value: number) => {
 };
 
 const formatPercent = (value: number) => `${Math.round(value * 100)}%`;
+const formatNullablePercent = (value: number | null) =>
+  value == null ? '—' : formatPercent(value);
 
 interface AdvancedStatsContentProps {
   game: AnalyticsGame;
@@ -124,6 +126,19 @@ export default function AdvancedStatsContent({
   }
 
   const efficiencyStats: { label: string; value: string | number; sublabel?: string }[] = [];
+
+  efficiencyStats.push(
+    {
+      label: 'D-Efficiency',
+      value: formatNullablePercent(teamStats.dEfficiency),
+      sublabel: `${teamStats.breaks}/${teamStats.breaks + teamStats.oppHolds}`,
+    },
+    {
+      label: 'Overall Conversion',
+      value: formatNullablePercent(teamStats.possessionConversionPct),
+      sublabel: `${teamStats.totalGoals}/${teamStats.totalPossessions}`,
+    },
+  );
 
   if (teamStats.completionPct != null) {
     efficiencyStats.push({
@@ -231,46 +246,60 @@ export default function AdvancedStatsContent({
         <View style={styles.ringRow}>
           <View style={styles.ringWrapper}>
             <StatRing
-              percentage={(teamStats.oLineConversionPct ?? 0) * 100}
+              testID="advanced-stat-ring-hold"
+              percentage={teamStats.oEfficiency == null ? null : teamStats.oEfficiency * 100}
               label="Hold"
-              sublabel={`${teamStats.holds}/${teamStats.oPoints}`}
+              sublabel={`${teamStats.holds}/${teamStats.holds + teamStats.timesBroken}`}
               info={`How often you score when starting on offense.
 
-Formula: Holds ÷ O-Points`}
+Formula: Holds ÷ completed O-points`}
               infoLabel="Hold Rate"
             />
           </View>
           <View style={styles.ringWrapper}>
             <StatRing
-              percentage={(teamStats.breakEfficiencyPct ?? 0) * 100}
+              testID="advanced-stat-ring-o-conv"
+              percentage={
+                teamStats.oPossessionConversionPct == null
+                  ? null
+                  : teamStats.oPossessionConversionPct * 100
+              }
+              label="O Conv"
+              sublabel={`${teamStats.scoredOPossessions}/${teamStats.totalPossessionsOnO}`}
+              info={`How often you score on a possession during an O-point.
+
+Formula: Scoring possessions on O-points ÷ possessions on O-points`}
+              infoLabel="O-Possession Conversion"
+            />
+          </View>
+          <View style={styles.ringWrapper}>
+            <StatRing
+              testID="advanced-stat-ring-break-eff"
+              percentage={
+                teamStats.breakEfficiencyPct == null ? null : teamStats.breakEfficiencyPct * 100
+              }
               label="Break Eff"
               sublabel={`${teamStats.breaks}/${teamStats.dPointsWithTurnover}`}
-              info={`When you force a turnover on D, how often do you convert?
+              info={`When you gain at least one chance on a completed D-point, how often do you break?
 
-Formula: Breaks ÷ D-Points with Turnover`}
+Formula: Breaks ÷ completed D-points with at least one possession`}
               infoLabel="Break Efficiency"
             />
           </View>
           <View style={styles.ringWrapper}>
             <StatRing
-              percentage={(teamStats.dLineConversionPct ?? 0) * 100}
-              label="D-Eff"
-              sublabel={`${teamStats.breaks}/${teamStats.dPoints}`}
-              info={`How often you score when starting on defense.
+              testID="advanced-stat-ring-d-conv"
+              percentage={
+                teamStats.dPossessionConversionPct == null
+                  ? null
+                  : teamStats.dPossessionConversionPct * 100
+              }
+              label="D Conv"
+              sublabel={`${teamStats.scoredDPossessions}/${teamStats.totalPossessionsOnD}`}
+              info={`How often you score on a possession during a D-point.
 
-Formula: Breaks ÷ D-Points`}
-              infoLabel="Defensive Efficiency"
-            />
-          </View>
-          <View style={styles.ringWrapper}>
-            <StatRing
-              percentage={(teamStats.possessionConversionPct ?? 0) * 100}
-              label="Conversion"
-              sublabel={`${teamStats.totalGoals}/${teamStats.totalPossessions}`}
-              info={`How often you score when you have the disc.
-
-Formula: Goals ÷ Possessions`}
-              infoLabel="Conversion Rate"
+Formula: Scoring possessions on D-points ÷ possessions on D-points`}
+              infoLabel="D-Possession Conversion"
             />
           </View>
         </View>
@@ -306,15 +335,35 @@ Formula: Goals ÷ Possessions`}
         </View>
 
         <View style={styles.subsectionContainer}>
-          <ThemedText style={[styles.subsectionTitle, { color: palette.textMuted }]}>
-            EFFICIENCY
-          </ThemedText>
+          <View style={styles.sectionTitleRow}>
+            <ThemedText
+              style={[styles.subsectionTitle, styles.sectionTitle, { color: palette.textMuted }]}>
+              EFFICIENCY
+            </ThemedText>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="About efficiency stats"
+              hitSlop={8}
+              onPress={() =>
+                showAlert({
+                  title: 'Efficiency Stats',
+                  message:
+                    'D-Efficiency: breaks ÷ all completed D-points.\n\nOverall Conversion: scoring possessions ÷ all possessions.',
+                })
+              }>
+              <MaterialCommunityIcons
+                name="information-outline"
+                size={scaleBySizeClass(15, sizeClass)}
+                color={palette.textMuted}
+              />
+            </Pressable>
+          </View>
           <StatsGrid stats={efficiencyStats} columns={isLandscape ? 4 : 2} />
         </View>
 
         {throwTypes.huckAttempts + throwTypes.resetTurnovers > 0 && (
           <View testID="advanced-throw-types-card" style={styles.subsectionContainer}>
-            <View style={styles.throwTypesTitleRow}>
+            <View style={styles.sectionTitleRow}>
               <ThemedText
                 style={[
                   styles.teamStatsSectionTitle,
@@ -562,10 +611,14 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
       marginBottom: 16,
       textTransform: 'uppercase',
     },
-    throwTypesTitleRow: {
+    sectionTitleRow: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 6,
+      marginBottom: 8,
+    },
+    sectionTitle: {
+      marginBottom: 0,
     },
     throwTypesTitle: {
       marginBottom: 0,

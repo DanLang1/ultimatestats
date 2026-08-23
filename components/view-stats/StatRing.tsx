@@ -10,25 +10,33 @@ import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { Fonts } from '@/theme/theme';
 
 interface StatRingProps {
-  percentage: number;
+  percentage: number | null;
   label: string;
   sublabel: string;
   info: string;
   infoLabel: string;
+  testID?: string;
 }
 
 /** Full circle donut gauge component using react-native-svg. */
-export default function StatRing({ percentage, label, sublabel, info, infoLabel }: StatRingProps) {
+export default function StatRing({
+  percentage,
+  label,
+  sublabel,
+  info,
+  infoLabel,
+  testID,
+}: StatRingProps) {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
   const styles = createStyles(sizeClass);
   const { showAlert } = useAlert();
 
   // Clamp percentage between 0-100
-  const clampedPercent = Math.max(0, Math.min(100, percentage));
+  const clampedPercent = Math.max(0, Math.min(100, percentage ?? 0));
 
   // Format percentage display — rounded to avoid cramped decimals in rings
-  const displayValue = `${Math.round(percentage)}%`;
+  const displayValue = percentage == null ? '—' : `${Math.round(percentage)}%`;
 
   const size = scaleBySizeClass(90, sizeClass);
   const strokeWidth = scaleBySizeClass(14, sizeClass);
@@ -44,7 +52,7 @@ export default function StatRing({ percentage, label, sublabel, info, infoLabel 
   };
 
   return (
-    <View style={styles.container}>
+    <View testID={testID} style={styles.container}>
       <View style={{ height: size, width: size }}>
         <Svg width={size} height={size}>
           <Circle
@@ -72,7 +80,9 @@ export default function StatRing({ percentage, label, sublabel, info, infoLabel 
         </Svg>
         {/* Centered percentage overlay */}
         <View style={styles.valueContainer}>
-          <ThemedText style={[styles.percentage, { color: palette.textInverse }]}>
+          <ThemedText
+            testID={testID ? `${testID}-value` : undefined}
+            style={[styles.percentage, { color: palette.textInverse }]}>
             {displayValue}
           </ThemedText>
         </View>
@@ -81,7 +91,11 @@ export default function StatRing({ percentage, label, sublabel, info, infoLabel 
       <View style={styles.labelRow}>
         <ThemedText style={[styles.label, { color: palette.textInverse }]}>{label}</ThemedText>
         {info && (
-          <Pressable onPress={handleInfoPress} hitSlop={8}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`About ${infoLabel}`}
+            onPress={handleInfoPress}
+            hitSlop={8}>
             <MaterialCommunityIcons
               name="help-circle-outline"
               size={scaleBySizeClass(14, sizeClass)}
@@ -91,7 +105,11 @@ export default function StatRing({ percentage, label, sublabel, info, infoLabel 
         )}
       </View>
       {sublabel && (
-        <ThemedText style={[styles.sublabel, { color: palette.textMuted }]}>{sublabel}</ThemedText>
+        <ThemedText
+          testID={testID ? `${testID}-ratio` : undefined}
+          style={[styles.sublabel, { color: palette.textMuted }]}>
+          {sublabel}
+        </ThemedText>
       )}
     </View>
   );

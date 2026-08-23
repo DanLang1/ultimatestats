@@ -3202,7 +3202,7 @@ describe('possession turnoverType', () => {
                   kind: 'throw',
                   sideId: ZOO,
                   thrower: august,
-                  result: 'block',
+                  result: 'pressure',
                   defender: joah,
                 },
               ],
@@ -3231,7 +3231,7 @@ describe('possession turnoverType', () => {
     expect(possessions[2]).toMatchObject({ result: 'turned_over', turnoverType: 'drop' });
     expect(possessions[4]).toMatchObject({ result: 'turned_over', turnoverType: 'stall' });
     expect(possessions[6]).toMatchObject({ result: 'turned_over', turnoverType: 'block' });
-    expect(possessions[8]).toMatchObject({ result: 'turned_over', turnoverType: 'block' });
+    expect(possessions[8]).toMatchObject({ result: 'turned_over', turnoverType: 'pressure' });
   });
 
   it('callahan — possession result is turned_over with turnoverType callahan', () => {

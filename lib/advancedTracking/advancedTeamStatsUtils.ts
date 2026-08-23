@@ -21,10 +21,6 @@ export interface AdvancedTeamStats {
   dirtyHolds: number;
   oPoints: number;
   dPoints: number;
-  /** holds / oPoints. Null if 0 O-points. */
-  oLineConversionPct: number | null;
-  /** breaks / dPoints. Null if 0 D-points. */
-  dLineConversionPct: number | null;
   /** breaks / dPointsWithTurnover. Null if no D-point break chances. */
   breakEfficiencyPct: number | null;
   /** Average number of possessions by this side per point. Null if 0 points. */
@@ -46,11 +42,23 @@ export interface AdvancedTeamStats {
   /** Completed passes by this side, including goal throws. */
   totalCompletedPasses: number;
   pointsPerTurnover: number;
-  /** Goals by this side divided by possessions by this side. Null if 0 possessions. */
+  /** Scoring possessions by this side divided by all possessions. Null if none. */
   possessionConversionPct: number | null;
+  /** Scored possessions owned by this side on O-points, including synthetic Callahan possessions. */
+  scoredOPossessions: number;
+  /** All possessions owned by this side on O-points, including the current possession. */
+  totalPossessionsOnO: number;
+  /** scoredOPossessions / totalPossessionsOnO. Null if no O-point possessions. */
+  oPossessionConversionPct: number | null;
+  /** Scored possessions owned by this side on D-points, including synthetic Callahan possessions. */
+  scoredDPossessions: number;
+  /** All possessions owned by this side on D-points, including the current possession. */
+  totalPossessionsOnD: number;
+  /** scoredDPossessions / totalPossessionsOnD. Null if no D-point possessions. */
+  dPossessionConversionPct: number | null;
   /** Goals scored by this side. */
   totalGoals: number;
-  /** Possessions by this side. */
+  /** All possessions by this side, including a current unresolved possession. */
   totalPossessions: number;
   blocksPerDPoint: number;
   pressuresPerDPoint: number;
@@ -154,6 +162,8 @@ export function computeAdvancedTeamStats(game: AnalyticsGame, sideId: string): A
   let scoresAfterTurnovers = 0;
   let totalThrowAttempts = 0;
   let totalCompletedPasses = 0;
+  let scoredOPossessions = 0;
+  let scoredDPossessions = 0;
 
   // Build O/D lookup for each point
   const isOPointById = new Map<string, boolean>();
@@ -168,6 +178,13 @@ export function computeAdvancedTeamStats(game: AnalyticsGame, sideId: string): A
   for (const poss of game.possessions) {
     if (poss.sideId === sideId) {
       possessionsByPoint.set(poss.pointId, (possessionsByPoint.get(poss.pointId) ?? 0) + 1);
+      if (poss.result === 'scored') {
+        if (isOPointById.get(poss.pointId)) {
+          scoredOPossessions++;
+        } else {
+          scoredDPossessions++;
+        }
+      }
       if (poss.result === 'turned_over') {
         turnoversByPoint.set(poss.pointId, (turnoversByPoint.get(poss.pointId) ?? 0) + 1);
       }
@@ -186,6 +203,11 @@ export function computeAdvancedTeamStats(game: AnalyticsGame, sideId: string): A
         // immediately. For team conversion stats, credit the scoring defense with one derived
         // possession so a Callahan goal is not counted as a goal with zero possessions.
         possessionsByPoint.set(poss.pointId, (possessionsByPoint.get(poss.pointId) ?? 0) + 1);
+        if (isOPointById.get(poss.pointId)) {
+          scoredOPossessions++;
+        } else {
+          scoredDPossessions++;
+        }
       }
     }
   }
@@ -214,7 +236,7 @@ export function computeAdvancedTeamStats(game: AnalyticsGame, sideId: string): A
 
   const oTotal = holds + timesBroken;
   const dTotal = breaks + oppHolds;
-  const totalGoals = holds + breaks;
+  const totalGoals = scoredOPossessions + scoredDPossessions;
   let multiPossessionPoints = 0;
   let dPointsWithTurnover = 0;
   for (const point of game.points) {
@@ -243,8 +265,6 @@ export function computeAdvancedTeamStats(game: AnalyticsGame, sideId: string): A
     dirtyHolds,
     oPoints,
     dPoints,
-    oLineConversionPct: oPoints > 0 ? holds / oPoints : null,
-    dLineConversionPct: dPoints > 0 ? breaks / dPoints : null,
     breakEfficiencyPct: dPointsWithTurnover > 0 ? breaks / dPointsWithTurnover : null,
     possessionsPerPoint: pointCount > 0 ? totalPossessionsInGame / pointCount : null,
     possessionsPerOPoint: oPoints > 0 ? totalPossessionsOnO / oPoints : null,
@@ -259,6 +279,14 @@ export function computeAdvancedTeamStats(game: AnalyticsGame, sideId: string): A
     pointsPerTurnover: totalTurnoversInGame > 0 ? totalGoals / totalTurnoversInGame : totalGoals,
     possessionConversionPct:
       totalPossessionsInGame > 0 ? totalGoals / totalPossessionsInGame : null,
+    scoredOPossessions,
+    totalPossessionsOnO,
+    oPossessionConversionPct:
+      totalPossessionsOnO > 0 ? scoredOPossessions / totalPossessionsOnO : null,
+    scoredDPossessions,
+    totalPossessionsOnD,
+    dPossessionConversionPct:
+      totalPossessionsOnD > 0 ? scoredDPossessions / totalPossessionsOnD : null,
     totalGoals,
     totalPossessions: totalPossessionsInGame,
     blocksPerDPoint: dPoints > 0 ? totalBlocks / dPoints : 0,

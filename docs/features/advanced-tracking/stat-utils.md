@@ -53,17 +53,18 @@ support.
 | Holds                    | `points` where `state === 'hold'` (or via `getPointStateForSide`)                             | Count                                                                  |
 | Breaks                   | `points` where `state === 'break'`                                                            | Count                                                                  |
 | Times Broken             | `points` where `state === 'broken'`                                                           | Count                                                                  |
-| O-Efficiency             | holds / (holds + timesBroken)                                                                 | Null if 0 O-points. Available at both team and player level.           |
-| D-Efficiency             | breaks / (breaks + oppHolds)                                                                  | Null if 0 D-points. Available at both team and player level.           |
-| O-Line Conversion %      | holds / oPoints                                                                               | UFA metric                                                             |
-| D-Line Conversion %      | breaks / dPoints                                                                              | UFA metric                                                             |
+| Hold Rate                | holds / completed O-points                                                                    | Null if 0 completed O-points                                           |
+| O-Possession Conversion  | scoring O-point possessions / all O-point possessions owned by side                           | Null if 0 O-point possessions                                          |
+| D-Efficiency             | breaks / completed D-points                                                                   | Null if 0 completed D-points. Available at both team and player level. |
+| D-Possession Conversion  | scoring D-point possessions / all D-point possessions owned by side                           | Null if 0 D-point possessions                                          |
+| Overall Conversion       | all scoring possessions / all possessions owned by side                                       | Null if 0 possessions                                                  |
 | Clean Holds              | `points` where `state === 'hold'` and `isCleanHold === true`                                  | Count                                                                  |
 | Dirty Holds              | `points` where `state === 'hold'` and `isCleanHold === false`                                 | Count                                                                  |
 | Break Chances            | Completed D-points where side gained at least one possession                                  | Count                                                                  |
 | Possessions Per Point    | `possessions` grouped by `pointId`, average count                                             | Team-level; also split as per-O-point and per-D-point                  |
 | Turnovers Per Point      | `possessions` where `result === 'turned_over'`, average per point                             | Team-level                                                             |
 | Goals After Turnovers    | Our `possessions` where `possessionIndex > 0` and `result === 'scored'`                       | Count                                                                  |
-| Possession Conversion    | Goals scored by side divided by possessions by side                                           | Percent                                                                |
+| Break Efficiency         | breaks / completed D-points where side gained at least one possession                         | Null if the side had no D chances                                      |
 | Multi-Possession Points  | Completed points where side had two or more possessions                                       | Count / percent                                                        |
 | Longest Scoring Run      | Max consecutive points where side scored                                                      | Team-level                                                             |
 | Longest Drought          | Max consecutive points where side did not score                                               | Team-level                                                             |
@@ -113,6 +114,12 @@ When `AnalyticsGame.gameType === 'scrimmage'`, side-filtered player stats are po
 Team/possession-level stats. Returns `AdvancedTeamStats` for a given `sideId`.
 
 Uses `getPointStateForSide` so the same function works for both-team tracking and scrimmages without needing separate logic.
+
+Possession conversion denominators include every possession owned by the side, including the
+current `in_progress` or `terminated` possession. The returned `totalPossessionsOnO` and
+`totalPossessionsOnD` fields expose the raw denominators; aggregate analytics pool those totals
+through the combined possession arrays rather than averaging game percentages. A Callahan adds one
+synthetic D-possession and one scored D-possession for the scoring side.
 
 ### `advancedPullStatsUtils.ts`
 
