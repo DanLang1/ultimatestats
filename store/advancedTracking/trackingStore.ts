@@ -10,7 +10,7 @@ import {
 } from '@/lib/advancedTracking/advancedActionCorrectionUtils';
 import { correctAdvancedPointActiveLines } from '@/lib/advancedTracking/advancedPointLineCorrectionUtils';
 import { planCaptureIntent } from '@/lib/advancedTracking/captureIntentUtils';
-import { withAdvancedGameNote } from '@/lib/advancedTracking/gameNoteUtils';
+import { withAdvancedGameNote, withAdvancedPointNote } from '@/lib/advancedTracking/gameNoteUtils';
 import {
   getAdjustedHalftimeTimerDuration,
   getDefaultHalftimeTimerState,
@@ -67,6 +67,7 @@ import {
   AdvancedTrackingUndoEntry,
   RecordInjurySubsInput,
   RecordStoppageInput,
+  UpdatePointNoteInput,
   UpdateInjurySubsInput,
   UpdateThrowTypeInput,
 } from './trackingStore.types';
@@ -392,12 +393,28 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
           });
         },
 
-        updateGameMetadata: (metadata) => {
+        updateGameMetadata: async (metadata) => {
           set((state) => {
             const liveGame = getCurrentGame(state);
             liveGame.metadata = withAdvancedGameNote(metadata, metadata.notes);
             liveGame.updatedAt = Date.now();
           });
+          const gameToPersist = get().currentGame;
+          if (gameToPersist != null) await persistLiveGame(gameToPersist);
+        },
+
+        updatePointNote: async ({ pointId, note }: UpdatePointNoteInput) => {
+          set((state) => {
+            const liveGame = getCurrentGame(state);
+            const pointIndex = liveGame.points.findIndex((candidate) => candidate.id === pointId);
+            const point = pointIndex >= 0 ? liveGame.points[pointIndex] : undefined;
+            if (point == null) throw new Error(`Point "${pointId}" was not found.`);
+            const updatedPoint = withAdvancedPointNote(point, note);
+            liveGame.points[pointIndex] = updatedPoint;
+            liveGame.updatedAt = Date.now();
+          });
+          const gameToPersist = get().currentGame;
+          if (gameToPersist != null) await persistLiveGame(gameToPersist);
         },
 
         correctCurrentGoalScorer: async (input: CorrectAdvancedGoalScorerInput) => {

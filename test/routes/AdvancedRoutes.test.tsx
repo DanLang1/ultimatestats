@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { screen, userEvent } from '@testing-library/react-native';
+import { screen, userEvent, waitFor } from '@testing-library/react-native';
 import { router } from 'expo-router';
 
 import AdvancedPreGameConfirm from '@/app/(main)/advancedTracking/PreGameConfirm';
@@ -402,6 +402,38 @@ describe('advanced tracking routes', () => {
       'Wind picked up after halftime.',
     );
     expect(screen.queryByTestId('advanced-game-note-editor')).not.toBeOnTheScreen();
+  });
+
+  it('adds a private note from the completed-point surface', async () => {
+    const user = userEvent.setup();
+    arrangeAdvancedGame();
+    recordOpeningPull();
+    useAdvancedTrackingStore.getState().recordCaptureIntent({
+      kind: 'pickup',
+      player: { refType: 'participant', participantId: testTeam.roster[0].id },
+    });
+    useAdvancedTrackingStore.getState().recordCaptureIntent({
+      kind: 'goal',
+      scorer: { refType: 'participant', participantId: testTeam.roster[1].id },
+    });
+    await renderScreen(<TrackerScreen />);
+
+    await user.press(screen.getByTestId('between-point-note'));
+
+    expect(screen.getByText('Point Note')).toBeVisible();
+    await user.type(
+      screen.getByTestId('advanced-point-note-input'),
+      'Attack the open side sooner.',
+    );
+    await user.press(screen.getByTestId('advanced-point-note-save'));
+
+    await waitFor(() => {
+      expect(useAdvancedTrackingStore.getState().currentGame?.points[0].note).toBe(
+        'Attack the open side sooner.',
+      );
+    });
+    expect(screen.queryByTestId('advanced-point-note-editor')).not.toBeOnTheScreen();
+    expect(screen.getByLabelText('Edit point note')).toBeVisible();
   });
 
   it('creates an advanced game through the real pre-game route', async () => {

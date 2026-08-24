@@ -1,0 +1,62 @@
+appId: com.langdk.ultimatestats.dev
+name: Advanced Tracker Point Notes
+tags:
+  - extended
+---
+- runFlow:
+    file: ../flows/setup-game-clean.yaml
+    env:
+      TRACKER_STATE: focusPossession
+
+# Complete a point, then capture its private note directly from the between-point surface.
+- swipe:
+    from:
+      id: 'tracker-chip-Jon'
+    direction: UP
+    duration: 500
+- extendedWaitUntil:
+    visible:
+      id: 'between-point-note'
+    timeout: 5000
+- tapOn:
+    id: 'between-point-note'
+- assertVisible: 'Point Note'
+- tapOn:
+    id: 'advanced-point-note-input'
+- inputText: 'Reset spacing improved.'
+- tapOn:
+    id: 'advanced-point-note-save'
+- extendedWaitUntil:
+    visible:
+      id: 'between-point-note'
+    timeout: 5000
+
+# Review and edit the same note from the active game's timeline.
+- tapOn:
+    id: 'tracker-menu-button'
+- tapOn:
+    id: 'tracker-menu-view-stats'
+- extendedWaitUntil:
+    visible:
+      id: 'advanced-stats-summary-card'
+    timeout: 5000
+- tapOn:
+    id: 'header-action-timeline'
+- extendedWaitUntil:
+    visible: '.*Reset spacing improved.*'
+    timeout: 5000
+- tapOn:
+    id: 'advanced-point-note-1'
+- assertVisible: 'Point Note'
+- tapOn:
+    id: 'advanced-point-note-input'
+- eraseText
+- inputText: 'Review reset spacing.'
+- tapOn:
+    id: 'advanced-point-note-save'
+- extendedWaitUntil:
+    visible: '.*Review reset spacing.*'
+    timeout: 5000
+
+- takeScreenshot:
+    path: .maestro/screenshots/advanced-tracker-point-notes

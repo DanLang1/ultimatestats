@@ -61,6 +61,7 @@ interface TrackerSurfaceProps {
   onLineChangePress: () => void;
   canChangeLine: boolean;
   availableHeight: number | null;
+  onPointNote: () => void;
 }
 
 export const TrackerSurface = ({
@@ -78,6 +79,7 @@ export const TrackerSurface = ({
   onLineChangePress,
   canChangeLine,
   availableHeight,
+  onPointNote,
 }: TrackerSurfaceProps) => {
   switch (state.kind) {
     case 'game-clock-pause':
@@ -91,6 +93,7 @@ export const TrackerSurface = ({
             game={state.game}
             onPrepareNextLine={onPrepareNextLine}
             onStartNextPoint={onStartNextPoint}
+            onPointNote={onPointNote}
           />
         );
       }
@@ -99,6 +102,7 @@ export const TrackerSurface = ({
           game={state.game}
           participants={participants}
           onStartNextPoint={onStartNextPoint}
+          onPointNote={onPointNote}
         />
       );
     case 'live-point':

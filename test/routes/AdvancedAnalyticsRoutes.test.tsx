@@ -150,6 +150,41 @@ describe('advanced analytics routes', () => {
     });
   });
 
+  it('adds, previews, edits, and removes a private point note from the saved timeline', async () => {
+    const user = userEvent.setup();
+    const game = makeEditableTimelineGame();
+    useSavedAdvancedGamesStore.setState({
+      gamesById: { [game.id]: game },
+      summariesLoaded: true,
+    });
+    setMockSearchParams({ gameId: game.id });
+
+    await renderScreen(<AdvancedGameTimelineScreen />);
+    await user.press(screen.getByTestId('advanced-point-note-1'));
+
+    expect(screen.getByText('Point Note')).toBeVisible();
+    await user.type(screen.getByTestId('advanced-point-note-input'), 'Keep the reset flatter.');
+    await user.press(screen.getByTestId('advanced-point-note-save'));
+
+    await waitFor(() => {
+      expect(screen.getByText('Keep the reset flatter.')).toBeVisible();
+      expect(useSavedAdvancedGamesStore.getState().gamesById[game.id].points[0].note).toBe(
+        'Keep the reset flatter.',
+      );
+    });
+
+    await user.press(screen.getByTestId('advanced-point-note-1'));
+    await user.clear(screen.getByTestId('advanced-point-note-input'));
+    await user.press(screen.getByTestId('advanced-point-note-save'));
+
+    await waitFor(() => {
+      expect(useSavedAdvancedGamesStore.getState().gamesById[game.id].points[0]).not.toHaveProperty(
+        'note',
+      );
+      expect(screen.getByText('Add note')).toBeVisible();
+    });
+  });
+
   it('corrects a scorer from an in-progress current-game timeline', async () => {
     const user = userEvent.setup();
     const game = { ...makeEditableTimelineGame(), status: 'in_progress' as const };
@@ -174,6 +209,57 @@ describe('advanced analytics routes', () => {
     ).toMatchObject({
       kind: 'throw',
       toPlayer: { refType: 'participant', participantId: 'casey' },
+    });
+  });
+
+  it('edits a point note through the in-progress current-game timeline', async () => {
+    const user = userEvent.setup();
+    const game = { ...makeEditableTimelineGame(), status: 'in_progress' as const };
+    useAdvancedTrackingStore.setState({ currentGameId: game.id, currentGame: game });
+    useSavedAdvancedGamesStore.setState({
+      gamesById: { [game.id]: game },
+      summariesLoaded: true,
+    });
+    setMockSearchParams({ gameId: game.id });
+
+    await renderScreen(<AdvancedGameTimelineScreen />);
+    await user.press(screen.getByTestId('advanced-point-note-1'));
+    await user.type(screen.getByTestId('advanced-point-note-input'), 'Live timeline note.');
+    await user.press(screen.getByTestId('advanced-point-note-save'));
+
+    await waitFor(() => {
+      expect(useAdvancedTrackingStore.getState().currentGame?.points[0].note).toBe(
+        'Live timeline note.',
+      );
+      expect(screen.getByText('Live timeline note.')).toBeVisible();
+    });
+  });
+
+  it('uses the live game as the source for an in-progress timeline note', async () => {
+    const user = userEvent.setup();
+    const currentGame = { ...makeEditableTimelineGame(), status: 'in_progress' as const };
+    currentGame.points[0].note = 'Live timeline note.';
+    const savedGame: AdvancedTrackedGame = {
+      ...currentGame,
+      points: currentGame.points.map(({ note: _note, ...point }) => point),
+    };
+    useAdvancedTrackingStore.setState({ currentGameId: currentGame.id, currentGame });
+    useSavedAdvancedGamesStore.setState({
+      gamesById: { [savedGame.id]: savedGame },
+      summariesLoaded: true,
+    });
+    setMockSearchParams({ gameId: currentGame.id });
+
+    await renderScreen(<AdvancedGameTimelineScreen />);
+    await user.press(screen.getByTestId('advanced-point-note-1'));
+
+    expect(screen.getByDisplayValue('Live timeline note.')).toBeVisible();
+    await user.press(screen.getByTestId('advanced-point-note-save'));
+
+    await waitFor(() => {
+      expect(useAdvancedTrackingStore.getState().currentGame?.points[0].note).toBe(
+        'Live timeline note.',
+      );
     });
   });
 

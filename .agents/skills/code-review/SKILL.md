@@ -57,6 +57,9 @@ recommending a replacement.
 
 - Confirm the behavior-preservation contract: inputs, outputs, error behavior, side-effect ordering,
   persistence and navigation boundaries, and platform-specific behavior.
+- After the behavior review, perform a focused simplification pass over new derived state: search for
+  existing domain helpers, preserve the source API's native `undefined`/`null` semantics, and remove
+  redundant null normalization or defensive fallbacks on data the code owns.
 - Cross-check every claim against the code and its tests. Do not flag a violation on the basis of a
   guess or a generic preference.
 - For any change in `advancedTracking` surfaces, review with `$advanced-tracker-change-safety` and

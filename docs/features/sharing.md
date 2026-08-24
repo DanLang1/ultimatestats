@@ -7,8 +7,9 @@
 Sharing creates a point-in-time copy. Imported data is independent from the sender's copy; this is
 not account sync or collaborative editing.
 
-Private advanced-game notes are local-only metadata. Single-game and bulk serializers omit them,
-and validation strips notes from any incoming payload before import.
+Private advanced-game and point notes are local-only data. Single-game and bulk serializers omit
+both `metadata.notes` and `points[].note`, and validation strips them from any incoming payload
+before import.
 
 Supported payload types:
 

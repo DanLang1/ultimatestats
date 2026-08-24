@@ -44,6 +44,7 @@ export interface AdvancedTimelinePoint {
   subs: AdvancedTimelineSub[];
   transitionsAfter: BetweenPointTransition[];
   gameTransitionsAfter: GameTransition[];
+  note?: string;
 }
 
 export interface AdvancedTimelineLinePlayer {
@@ -595,6 +596,7 @@ function buildTimelinePoint(
     subs: buildSubs(rawPoint.subs ?? [], ctx.analytics.participantNames),
     transitionsAfter: rawPoint.transitionsAfter ?? [],
     gameTransitionsAfter,
+    ...(rawPoint.note != null ? { note: rawPoint.note } : {}),
   };
 }
 

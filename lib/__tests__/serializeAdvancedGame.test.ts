@@ -18,7 +18,7 @@ function makeAdvancedGame(id: string, metadata?: AdvancedTrackedGame['metadata']
       { id: 'away', label: 'Away', trackingMode: 'anonymous' },
     ],
     participants: [],
-    points: [],
+    points: [{ id: 'point-1', lines: [], possessions: [], note: 'private point note' }],
   } satisfies AdvancedTrackedGame;
 }
 
@@ -34,6 +34,7 @@ describe('advanced game sharing serialization', () => {
     expect(payload.type).toBe('advanced-game');
     if (payload.type !== 'advanced-game') throw new Error('Expected an advanced-game payload.');
     expect(payload.data.metadata).toEqual({ title: 'Final' });
+    expect(payload.data.points[0]).not.toHaveProperty('note');
     expect(game.metadata?.notes).toBe('Private coaching observations');
   });
 

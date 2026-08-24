@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 
 import { AdvancedGoalScorerModal } from '@/components/advancedTracking/AdvancedGoalScorerModal';
+import { AdvancedPointNoteModal } from '@/components/advancedTracking/AdvancedPointNoteModal';
 import AdvancedEventTimeline from '@/components/advancedTracking/timeline/AdvancedEventTimeline';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
@@ -17,6 +18,7 @@ import {
 import { canCorrectAdvancedPointFromTimeline } from '@/lib/advancedTracking/advancedPointLineCorrectionUtils';
 import { buildAdvancedTimeline } from '@/lib/advancedTracking/advancedTimelineUtils';
 import { supportsTimelineLineCorrection } from '@/lib/advancedTracking/trackingModeUtils';
+import { getLiveInProgressGame } from '@/lib/advancedTracking/trackingUtils';
 import { hasItems } from '@/lib/utils';
 import { useSavedAdvancedGamesStore } from '@/store/advancedTracking/savedGamesStore';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
@@ -29,12 +31,17 @@ export default function AdvancedGameTimelineScreen() {
   const styles = createStyles(sizeClass);
   const { data: rawGame, isLoading } = useAdvancedGame(gameId!);
   const correctGoalScorer = useSavedAdvancedGamesStore((state) => state.correctGoalScorer);
-  const currentGameId = useAdvancedTrackingStore((state) => state.currentGameId);
-  const loadedCurrentGameId = useAdvancedTrackingStore((state) => state.currentGame?.id ?? null);
+  const liveGame = useAdvancedTrackingStore((state) => {
+    const game = getLiveInProgressGame(state);
+    return game?.id === gameId ? game : null;
+  });
   const correctCurrentGoalScorer = useAdvancedTrackingStore(
     (state) => state.correctCurrentGoalScorer,
   );
+  const updateCurrentPointNote = useAdvancedTrackingStore((state) => state.updatePointNote);
+  const updateSavedPointNote = useSavedAdvancedGamesStore((state) => state.updatePointNote);
   const [editingGoal, setEditingGoal] = useState<AdvancedActionLocator | null>(null);
+  const [editingPointNoteId, setEditingPointNoteId] = useState<string | null>(null);
 
   if (isLoading || !rawGame) {
     return (
@@ -74,40 +81,41 @@ export default function AdvancedGameTimelineScreen() {
     );
   }
 
-  const timelinePoints = buildAdvancedTimeline(rawGame);
-  const isCurrentInProgressGame =
-    rawGame.status === 'in_progress' &&
-    currentGameId === rawGame.id &&
-    loadedCurrentGameId === rawGame.id;
+  const game = liveGame ?? rawGame;
+  const isCurrentInProgressGame = liveGame != null;
+  const timelinePoints = buildAdvancedTimeline(game);
   const correctableGoalContexts =
-    rawGame.status === 'in_progress' && !isCurrentInProgressGame
+    game.status === 'in_progress' && !isCurrentInProgressGame
       ? []
-      : getCorrectableAdvancedGoalContexts(rawGame);
+      : getCorrectableAdvancedGoalContexts(game);
   const editableGoalActionIds = new Set(
     correctableGoalContexts.map((context) => context.action.id),
   );
   const editableLinePointIds = new Set(
-    supportsTimelineLineCorrection(rawGame)
-      ? rawGame.points
-          .filter((point) => canCorrectAdvancedPointFromTimeline(rawGame, point))
+    supportsTimelineLineCorrection(game)
+      ? game.points
+          .filter((point) => canCorrectAdvancedPointFromTimeline(game, point))
           .map((point) => point.id)
       : [],
   );
-  const editingGoalContext =
-    editingGoal == null
-      ? null
-      : correctableGoalContexts.find(
-          (context) =>
-            context.point.id === editingGoal.pointId &&
-            context.possession.id === editingGoal.possessionId &&
-            context.action.id === editingGoal.actionId,
-        );
+  const editingGoalContext = correctableGoalContexts.find(
+    (context) =>
+      context.point.id === editingGoal?.pointId &&
+      context.possession.id === editingGoal?.possessionId &&
+      context.action.id === editingGoal?.actionId,
+  );
+  const editingPointNote = game.points.find((point) => point.id === editingPointNoteId);
+  const editingTimelinePoint = timelinePoints.find(
+    (point) => point.pointId === editingPointNote?.id,
+  );
 
-  const focusSideId = rawGame.focusSideId;
-  const oppSideId = rawGame.sides.find((s) => s.id !== focusSideId)?.id ?? '';
-  const sideLabels = Object.fromEntries(rawGame.sides.map((s) => [s.id, s.label]));
+  const focusSideId = game.focusSideId;
+  const oppSideId = game.sides.find((s) => s.id !== focusSideId)?.id ?? '';
+  const sideLabels = Object.fromEntries(game.sides.map((s) => [s.id, s.label]));
   const focusSideLabel = sideLabels[focusSideId] ?? 'My Team';
   const oppSideLabel = sideLabels[oppSideId] ?? 'Opponent';
+  const editingPointNoteContext =
+    editingTimelinePoint?.state === 'terminated' ? 'Game ended during point' : undefined;
 
   return (
     <ThemedView style={[styles.container, { backgroundColor: palette.primary }]}>
@@ -132,14 +140,14 @@ export default function AdvancedGameTimelineScreen() {
 
       <View style={styles.gameInfo}>
         <ThemedText style={[styles.teamNames, { color: palette.textInverse }]}>
-          {focusSideLabel} vs {rawGame.metadata?.opponentName ?? oppSideLabel}
+          {focusSideLabel} vs {game.metadata?.opponentName ?? oppSideLabel}
         </ThemedText>
       </View>
 
       {hasItems(timelinePoints) ? (
         <AdvancedEventTimeline
           points={timelinePoints}
-          gameStatus={rawGame.status}
+          gameStatus={game.status}
           focusSideId={focusSideId}
           oppSideId={oppSideId}
           sideLabels={sideLabels}
@@ -149,9 +157,10 @@ export default function AdvancedGameTimelineScreen() {
           onEditLineups={(point) => {
             router.push({
               pathname: '/advancedTracking/TimelineEditLine',
-              params: { gameId: rawGame.id, pointId: point.pointId },
+              params: { gameId: game.id, pointId: point.pointId },
             });
           }}
+          onEditPointNote={(point) => setEditingPointNoteId(point.pointId)}
         />
       ) : (
         <View style={styles.emptyState}>
@@ -176,7 +185,21 @@ export default function AdvancedGameTimelineScreen() {
               await correctCurrentGoalScorer(input);
               return;
             }
-            await correctGoalScorer(rawGame.id, input);
+            await correctGoalScorer(game.id, input);
+          }}
+        />
+      )}
+      {editingPointNote != null && (
+        <AdvancedPointNoteModal
+          initialNote={editingPointNote.note}
+          context={editingPointNoteContext}
+          onClose={() => setEditingPointNoteId(null)}
+          onSave={async (note) => {
+            if (isCurrentInProgressGame) {
+              await updateCurrentPointNote({ pointId: editingPointNote.id, note });
+            } else {
+              await updateSavedPointNote(game.id, editingPointNote.id, note);
+            }
           }}
         />
       )}

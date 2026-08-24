@@ -14,10 +14,13 @@ import { formatTimerSeconds } from '@/lib/utils';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { Fonts } from '@/theme/theme';
 
+import { PointNoteButton } from './PointNoteButton';
+
 interface HalftimeBetweenPointDisplayProps {
   game: AdvancedTrackedGame;
   onPrepareNextLine: () => void;
   onStartNextPoint: () => void;
+  onPointNote: () => void;
 }
 
 const TIMER_MAX_WIDTH: Record<SizeClass, number> = { small: 340, medium: 560, large: 760 };
@@ -28,6 +31,7 @@ export const HalftimeBetweenPointDisplay = ({
   game,
   onPrepareNextLine,
   onStartNextPoint,
+  onPointNote,
 }: HalftimeBetweenPointDisplayProps) => {
   const { palette } = useTheme();
   const { isLandscape, sizeClass } = useLayout();
@@ -216,6 +220,12 @@ export const HalftimeBetweenPointDisplay = ({
               />
             </Pressable>
           )}
+          <PointNoteButton
+            hasNote={Boolean(game.points.at(-1)?.note)}
+            onPress={onPointNote}
+            buttonStyle={styles.iconButton}
+            testID="halftime-between-point-note"
+          />
           <Pressable
             testID="halftime-between-point-set-line"
             style={({ pressed }) => [

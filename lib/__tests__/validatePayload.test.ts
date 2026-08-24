@@ -388,12 +388,14 @@ describe('validatePayload', () => {
       const data = makeAdvancedGameData({
         metadata: { opponentName: 'Rivals', notes: 'Sender private note' },
       });
+      data.points[0].note = 'Point-level private note';
 
       const result = validatePayload(makeAdvancedGamePayload({ data }));
 
       expect(result.type).toBe('advanced-game');
       if (result.type !== 'advanced-game') throw new Error('Expected an advanced-game payload.');
       expect(result.data.metadata).toEqual({ opponentName: 'Rivals' });
+      expect(result.data.points[0]).not.toHaveProperty('note');
     });
 
     it.each(THROW_RESULTS)('accepts the declared %s throw result', (throwResult) => {

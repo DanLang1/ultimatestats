@@ -24,6 +24,7 @@ interface AdvancedTimelinePointCardProps {
   editableGoalActionIds?: ReadonlySet<string>;
   onEditGoalScorer?: (locator: AdvancedActionLocator) => void;
   onEditLineups?: () => void;
+  onEditPointNote?: () => void;
 }
 
 export default function AdvancedTimelinePointCard({
@@ -34,6 +35,7 @@ export default function AdvancedTimelinePointCard({
   editableGoalActionIds,
   onEditGoalScorer,
   onEditLineups,
+  onEditPointNote,
 }: AdvancedTimelinePointCardProps) {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
@@ -122,6 +124,44 @@ export default function AdvancedTimelinePointCard({
           />
         ))}
       </View>
+
+      {onEditPointNote && (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={
+            point.note
+              ? `Edit note for point ${point.pointNumber}: ${point.note}`
+              : `Add note for point ${point.pointNumber}`
+          }
+          testID={`advanced-point-note-${point.pointNumber}`}
+          onPress={onEditPointNote}
+          style={({ pressed }) => [
+            styles.noteRow,
+            { borderTopColor: palette.overlay10 },
+            pressed && styles.editButtonPressed,
+          ]}>
+          <MaterialCommunityIcons
+            name={point.note ? 'note-edit-outline' : 'note-plus-outline'}
+            size={scaleBySizeClass(16, sizeClass)}
+            color={point.note ? palette.accent : palette.textMuted}
+          />
+          <ThemedText
+            numberOfLines={2}
+            style={[
+              styles.noteText,
+              { color: point.note ? palette.textInverse : palette.textMuted },
+            ]}>
+            {point.note ?? 'Add note'}
+          </ThemedText>
+          {point.note && (
+            <MaterialCommunityIcons
+              name="pencil-outline"
+              size={scaleBySizeClass(14, sizeClass)}
+              color={palette.accent}
+            />
+          )}
+        </Pressable>
+      )}
 
       {/* Lineup footer */}
       {(hasFocusLine || hasOpposingLine) && (
@@ -225,6 +265,20 @@ function createStyles(sizeClass: SizeClass) {
     body: {
       padding: 12,
       paddingLeft: 10,
+    },
+    noteRow: {
+      minHeight: 40,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      borderTopWidth: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    noteText: {
+      flex: 1,
+      fontSize: scaleBySizeClass(12, sizeClass),
+      lineHeight: scaleBySizeClass(16, sizeClass),
     },
     lineupSection: {
       padding: 12,

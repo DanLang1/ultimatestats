@@ -88,6 +88,9 @@ Do not collapse `unknown` and `untracked`; analytics and UI use that distinction
 A `TrackedPoint` contains:
 
 - stable point ID
+- optional private `note` of up to 1,000 characters; point notes persist locally, are editable from
+  live/saved point timelines and between-point surfaces, and are omitted from sharing payloads and
+  CSV exports
 - starting lines by side
 - optional injury-sub history
 - ordered possessions
@@ -246,7 +249,8 @@ tracking store owns only the loaded active game and recovery/session state.
 
 When changing the persisted model:
 
-1. Update the exported types and schema version.
+1. Update the exported types and schema version. Schema 3 introduces optional throw details and
+   private notes without backfilling older records; absent notes mean that no note was captured.
 2. Add and test migration behavior through `lib/advancedTracking/migrations.ts` and the storage
    boundary.
 3. Update sharing validation and serialization.

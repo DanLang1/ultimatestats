@@ -828,9 +828,9 @@ describe('advancedTrackingStore', () => {
     expect(currentGame!.status).toBe('terminated');
   });
 
-  it('updateGameMetadata replaces the metadata on the active game', () => {
+  it('updateGameMetadata replaces the metadata on the active game', async () => {
     createGame();
-    useAdvancedTrackingStore
+    await useAdvancedTrackingStore
       .getState()
       .updateGameMetadata({ title: 'Updated Title', location: 'Field A' });
 
@@ -904,22 +904,53 @@ describe('advancedTrackingStore', () => {
     expect(getCurrentGame()?.metadata).toBeUndefined();
   });
 
-  it('normalizes private notes when updating active-game metadata', () => {
+  it('normalizes private notes when updating active-game metadata', async () => {
     createGame();
     const oversizedNote = `  ${'n'.repeat(MAX_ADVANCED_GAME_NOTE_LENGTH + 20)}  `;
 
-    useAdvancedTrackingStore
+    await useAdvancedTrackingStore
       .getState()
       .updateGameMetadata({ title: 'Showcase Game', notes: oversizedNote });
 
     expect(getCurrentGame()?.metadata?.notes).toHaveLength(MAX_ADVANCED_GAME_NOTE_LENGTH);
 
-    useAdvancedTrackingStore
+    await useAdvancedTrackingStore
       .getState()
       .updateGameMetadata({ title: 'Showcase Game', notes: '   ' });
 
     expect(getCurrentGame()?.metadata).toEqual({ title: 'Showcase Game' });
     expect(getCurrentGame()?.metadata).not.toHaveProperty('notes');
+  });
+
+  it('persists a private point note through goal undo and removes it on blank save', async () => {
+    createGame();
+    useAdvancedTrackingStore.getState().recordPull({
+      lines: homeLinesAugust,
+      puller: untracked,
+      receiver: august,
+      result: 'inbound',
+    });
+    useAdvancedTrackingStore
+      .getState()
+      .recordThrow({ thrower: august, result: 'goal', toPlayer: meves });
+
+    const pointId = getCurrentGame()!.points[0].id;
+    jest.clearAllMocks();
+
+    await useAdvancedTrackingStore
+      .getState()
+      .updatePointNote({ pointId, note: '  Review the reset spacing.  ' });
+
+    expect(getCurrentGame()?.points[0].note).toBe('Review the reset spacing.');
+    expect(upsertAdvancedGame).toHaveBeenCalledTimes(1);
+
+    expect(useAdvancedTrackingStore.getState().undoLastOperation()).toBe(true);
+    expect(getCurrentGame()?.points[0].note).toBe('Review the reset spacing.');
+    expect(hasPointEnded(getCurrentGame()?.points[0] ?? null)).toBe(false);
+
+    await useAdvancedTrackingStore.getState().updatePointNote({ pointId, note: '   ' });
+
+    expect(getCurrentGame()?.points[0]).not.toHaveProperty('note');
   });
 
   it('derives halftime automatically when a side reaches halftimeAt', () => {

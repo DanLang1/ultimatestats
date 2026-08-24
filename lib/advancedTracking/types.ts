@@ -185,6 +185,8 @@ export interface InjurySubChange {
 
 export interface TrackedPoint {
   id: string;
+  /** Optional private coaching note, omitted from sharing and CSV exports. */
+  note?: string;
   lines: PointLine[];
   /** Mid-point substitutions. Between-point subs are implicit in the next point's lines. */
   subs?: PointSub[];

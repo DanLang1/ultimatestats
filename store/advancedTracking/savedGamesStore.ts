@@ -10,6 +10,7 @@ import {
   correctAdvancedPointActiveLines,
   type CorrectAdvancedPointActiveLinesInput,
 } from '@/lib/advancedTracking/advancedPointLineCorrectionUtils';
+import { withAdvancedPointNote } from '@/lib/advancedTracking/gameNoteUtils';
 import { migrateAdvancedTrackedGame } from '@/lib/advancedTracking/migrations';
 import {
   deleteAdvancedGameRecord,
@@ -40,6 +41,7 @@ type SavedAdvancedGamesState = {
     gameId: string,
     input: CorrectAdvancedPointActiveLinesInput,
   ) => Promise<AdvancedTrackedGame>;
+  updatePointNote: (gameId: string, pointId: string, note: string) => Promise<AdvancedTrackedGame>;
   deleteGame: (gameId: string) => Promise<void>;
 };
 
@@ -165,6 +167,22 @@ export const useSavedAdvancedGamesStore = create<SavedAdvancedGamesState>()(
       const correctedGame = correctAdvancedPointActiveLines(game, input);
       await get().saveGame(correctedGame);
       return correctedGame;
+    },
+
+    updatePointNote: async (gameId, pointId, note) => {
+      const game = await get().loadGame(gameId);
+      if (game == null) throw new Error(`Advanced game "${gameId}" was not found.`);
+      const point = game.points.find((candidate) => candidate.id === pointId);
+      if (point == null) throw new Error(`Point "${pointId}" was not found.`);
+      const updatedGame: AdvancedTrackedGame = {
+        ...game,
+        points: game.points.map((candidate) =>
+          candidate.id === pointId ? withAdvancedPointNote(candidate, note) : candidate,
+        ),
+        updatedAt: Date.now(),
+      };
+      await get().saveGame(updatedGame);
+      return updatedGame;
     },
 
     deleteGame: async (gameId) => {

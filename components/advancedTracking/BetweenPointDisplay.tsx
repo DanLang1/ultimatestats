@@ -25,11 +25,13 @@ import {
   getPointDetails,
   getPointOutcomeLabel,
 } from './betweenPointUtils';
+import { PointNoteButton } from './PointNoteButton';
 
 interface BetweenPointDisplayProps {
   game: AdvancedTrackedGame;
   participants: Participant[];
   onStartNextPoint: () => void;
+  onPointNote: () => void;
 }
 
 const SUMMARY_MAX_WIDTH: Record<SizeClass, number> = { small: 360, medium: 640, large: 920 };
@@ -64,6 +66,7 @@ export const BetweenPointDisplay = ({
   game,
   participants,
   onStartNextPoint,
+  onPointNote,
 }: BetweenPointDisplayProps) => {
   const { palette } = useTheme();
   const { isLandscape, sizeClass } = useLayout();
@@ -183,6 +186,12 @@ export const BetweenPointDisplay = ({
                 NEXT POINT
               </ThemedText>
             </Pressable>
+            <PointNoteButton
+              hasNote={Boolean(point?.note)}
+              onPress={onPointNote}
+              buttonStyle={styles.iconBtn}
+              testID="between-point-note"
+            />
             <Pressable
               testID="between-point-end-timeout"
               style={({ pressed }) => [
@@ -340,6 +349,12 @@ export const BetweenPointDisplay = ({
               />
             </Pressable>
           )}
+          <PointNoteButton
+            hasNote={Boolean(point?.note)}
+            onPress={onPointNote}
+            buttonStyle={styles.iconBtn}
+            testID="between-point-note"
+          />
           <Pressable
             testID="between-point-start-next"
             style={({ pressed }) => [

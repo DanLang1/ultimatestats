@@ -25,13 +25,14 @@ function makeGame(schemaVersion: number): AdvancedTrackedGame {
 }
 
 describe('migrateAdvancedTrackedGame', () => {
-  it('stamps older records without inventing throw details', () => {
+  it('stamps older records without inventing optional schema-3 fields', () => {
     const legacy = makeGame(2);
 
     const migrated = migrateAdvancedTrackedGame(legacy);
 
     expect(migrated.schemaVersion).toBe(ADVANCED_TRACKING_SCHEMA_VERSION);
     expect(migrated.points).toEqual([]);
+    expect(migrated.metadata?.notes).toBeUndefined();
     expect(legacy.schemaVersion).toBe(2);
   });
 

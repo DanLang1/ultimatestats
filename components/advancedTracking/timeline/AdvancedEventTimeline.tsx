@@ -22,6 +22,7 @@ interface AdvancedEventTimelineProps {
   onEditGoalScorer?: (locator: AdvancedActionLocator) => void;
   editableLinePointIds?: ReadonlySet<string>;
   onEditLineups?: (point: AdvancedTimelinePoint) => void;
+  onEditPointNote?: (point: AdvancedTimelinePoint) => void;
 }
 
 export default function AdvancedEventTimeline({
@@ -34,6 +35,7 @@ export default function AdvancedEventTimeline({
   onEditGoalScorer,
   editableLinePointIds,
   onEditLineups,
+  onEditPointNote,
 }: AdvancedEventTimelineProps) {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
@@ -83,6 +85,7 @@ export default function AdvancedEventTimeline({
                   ? () => onEditLineups(point)
                   : undefined
               }
+              onEditPointNote={onEditPointNote ? () => onEditPointNote(point) : undefined}
             />
             {hasItems(point.transitionsAfter) &&
               point.transitionsAfter.map((transition) => (

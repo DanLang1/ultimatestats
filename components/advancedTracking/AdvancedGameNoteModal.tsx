@@ -12,12 +12,18 @@ import { Fonts } from '@/theme/theme';
 
 interface AdvancedGameNoteModalProps {
   initialNote?: string;
+  title?: string;
+  context?: string;
+  testIDPrefix?: string;
   onClose: () => void;
   onSave: (note: string) => void | Promise<void>;
 }
 
 export function AdvancedGameNoteModal({
   initialNote = '',
+  title = 'Game Note',
+  context,
+  testIDPrefix = 'advanced-game-note',
   onClose,
   onSave,
 }: AdvancedGameNoteModalProps) {
@@ -58,7 +64,7 @@ export function AdvancedGameNoteModal({
       onRequestClose={handleClose}>
       <KeyboardAvoidingView automaticOffset style={styles.keyboardAvoidingView} behavior="height">
         <BottomSheet
-          testID="advanced-game-note-editor"
+          testID={`${testIDPrefix}-editor`}
           onDismiss={handleClose}
           sheetStyle={[styles.sheet, { backgroundColor: palette.primary }]}
           overlayColor={palette.overlayDark88}>
@@ -68,15 +74,22 @@ export function AdvancedGameNoteModal({
             <View style={styles.header}>
               <View style={styles.headerText}>
                 <ThemedText style={[styles.title, { color: palette.textInverse }]}>
-                  Game Note
+                  {title}
                 </ThemedText>
+                {context != null && (
+                  <ThemedText
+                    style={[styles.context, { color: palette.textSecondary }]}
+                    numberOfLines={2}>
+                    {context}
+                  </ThemedText>
+                )}
                 <ThemedText style={[styles.privacyText, { color: palette.textMuted }]}>
                   Private to this device · not shared
                 </ThemedText>
               </View>
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel="Close game note editor"
+                accessibilityLabel={`Close ${title.toLowerCase()} editor`}
                 onPress={handleClose}
                 hitSlop={12}
                 disabled={isSaving}>
@@ -89,8 +102,8 @@ export function AdvancedGameNoteModal({
             </View>
 
             <TextInput
-              testID="advanced-game-note-input"
-              accessibilityLabel="Game note"
+              testID={`${testIDPrefix}-input`}
+              accessibilityLabel={title}
               style={[
                 styles.input,
                 {
@@ -126,7 +139,7 @@ export function AdvancedGameNoteModal({
 
             <View style={styles.actions}>
               <Pressable
-                testID="advanced-game-note-cancel"
+                testID={`${testIDPrefix}-cancel`}
                 accessibilityRole="button"
                 onPress={handleClose}
                 disabled={isSaving}
@@ -140,7 +153,7 @@ export function AdvancedGameNoteModal({
                 </ThemedText>
               </Pressable>
               <Pressable
-                testID="advanced-game-note-save"
+                testID={`${testIDPrefix}-save`}
                 accessibilityRole="button"
                 onPress={handleSave}
                 disabled={isSaving}
@@ -204,6 +217,10 @@ function createStyles(sizeClass: SizeClass) {
     privacyText: {
       fontSize: scaleBySizeClass(12, sizeClass),
       fontFamily: Fonts.regular,
+    },
+    context: {
+      fontSize: scaleBySizeClass(14, sizeClass),
+      fontFamily: Fonts.semiBold,
     },
     input: {
       minHeight: scaleBySizeClass(180, sizeClass),

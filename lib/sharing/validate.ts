@@ -1,4 +1,4 @@
-import { withoutAdvancedGameNote } from '@/lib/advancedTracking/gameNoteUtils';
+import { withoutAdvancedPrivateNotes } from '@/lib/advancedTracking/gameNoteUtils';
 import { migrateAdvancedTrackedGame } from '@/lib/advancedTracking/migrations';
 import {
   ADVANCED_TRACKING_SCHEMA_VERSION,
@@ -414,7 +414,7 @@ function validateAdvancedGamesPayload(
   }
   const games = payload.data.map((item) => {
     validateAdvancedGame(item);
-    return withoutAdvancedGameNote(migrateAdvancedTrackedGame(item));
+    return withoutAdvancedPrivateNotes(migrateAdvancedTrackedGame(item));
   });
   return {
     type: 'advanced-games',
@@ -486,7 +486,7 @@ export function validatePayload(raw: unknown): SharedPayload {
     return {
       ...base,
       type: 'advanced-game',
-      data: withoutAdvancedGameNote(migrateAdvancedTrackedGame(raw.data)),
+      data: withoutAdvancedPrivateNotes(migrateAdvancedTrackedGame(raw.data)),
     };
   }
 

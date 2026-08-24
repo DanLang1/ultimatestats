@@ -4,6 +4,7 @@ import { BackHandler, LayoutChangeEvent, Pressable, StyleSheet, View } from 'rea
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AdvancedGameNoteModal } from '@/components/advancedTracking/AdvancedGameNoteModal';
+import { AdvancedPointNoteModal } from '@/components/advancedTracking/AdvancedPointNoteModal';
 import { DevDebugModal } from '@/components/advancedTracking/DevDebugModal';
 import { LandscapeUnsupported } from '@/components/advancedTracking/LandscapeUnsupported';
 import { TrackerActionFooter } from '@/components/advancedTracking/TrackerActionFooter';
@@ -66,10 +67,12 @@ export default function AdvancedTrackerScreen() {
   const startGameClockPause = useAdvancedTrackingStore((state) => state.startGameClockPause);
   const triggerHalftimeEarly = useAdvancedTrackingStore((state) => state.triggerHalftimeEarly);
   const updateGameMetadata = useAdvancedTrackingStore((state) => state.updateGameMetadata);
+  const updatePointNote = useAdvancedTrackingStore((state) => state.updatePointNote);
   const participants = useLiveRosterParticipants(game?.participants ?? []);
   const [showDevModal, setShowDevModal] = useState(false);
   const [showHomeMenu, setShowHomeMenu] = useState(false);
   const [showGameNote, setShowGameNote] = useState(false);
+  const [showPointNote, setShowPointNote] = useState(false);
   const [showLineChangeMenu, setShowLineChangeMenu] = useState(false);
   const [showRareMenu, setShowRareMenu] = useState(false);
   const [passModifier, setPassModifier] = useState<PassModifier>(null);
@@ -171,7 +174,8 @@ export default function AdvancedTrackerScreen() {
     return <LandscapeUnsupported />;
   }
 
-  if (!game.sides.find((s) => s.id !== game.focusSideId)) {
+  const opponentSide = game.sides.find((side) => side.id !== game.focusSideId);
+  if (!opponentSide) {
     throw new Error(`Game ${game.id} is missing the opponent side.`);
   }
 
@@ -197,10 +201,9 @@ export default function AdvancedTrackerScreen() {
   const handleGamePause = () => {
     startGameClockPause('manual');
   };
-  const handleSaveGameNote = (note: string) => {
-    updateGameMetadata({ ...game.metadata, notes: note });
+  const handleSaveGameNote = async (note: string) => {
+    await updateGameMetadata({ ...game.metadata, notes: note });
   };
-
   const handleEndGameEarly = () => {
     router.push({
       pathname: '/advancedTracking/TrackerGameComplete',
@@ -246,6 +249,7 @@ export default function AdvancedTrackerScreen() {
         onStartNextPoint={handleStartNextPoint}
         canChangeLine={canChangeLine}
         availableHeight={trackingSurfaceHeight}
+        onPointNote={() => setShowPointNote(true)}
       />
     );
   };
@@ -304,6 +308,13 @@ export default function AdvancedTrackerScreen() {
           initialNote={game.metadata?.notes}
           onClose={() => setShowGameNote(false)}
           onSave={handleSaveGameNote}
+        />
+      )}
+      {showPointNote && point != null && (
+        <AdvancedPointNoteModal
+          initialNote={point.note}
+          onClose={() => setShowPointNote(false)}
+          onSave={(note) => updatePointNote({ pointId: point.id, note })}
         />
       )}
 

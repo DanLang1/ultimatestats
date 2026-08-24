@@ -90,6 +90,11 @@ export interface RecordBetweenPointTimeoutInput {
   isFloater?: boolean;
 }
 
+export interface UpdatePointNoteInput {
+  pointId: string;
+  note: string;
+}
+
 export type AdvancedTrackingUndoEntry =
   | {
       kind: 'action';
@@ -137,7 +142,8 @@ export interface AdvancedTrackingState {
   finalizeGame: () => Promise<void>;
   terminateGame: (endReason: NonNullable<AdvancedTrackedGame['endReason']>) => void;
   finishTerminatedGame: () => Promise<void>;
-  updateGameMetadata: (metadata: GameMetadata) => void;
+  updateGameMetadata: (metadata: GameMetadata) => Promise<void>;
+  updatePointNote: (input: UpdatePointNoteInput) => Promise<void>;
   correctCurrentGoalScorer: (input: CorrectAdvancedGoalScorerInput) => Promise<void>;
   correctCurrentGamePointActiveLines: (
     input: CorrectAdvancedPointActiveLinesInput,
