@@ -157,14 +157,7 @@ export function AdvancedTouchCorrectionModal({
           <View style={[styles.handle, { backgroundColor: palette.overlay20 }]} />
 
           <View style={styles.header}>
-            <View style={styles.headerText}>
-              <ThemedText style={[styles.title, { color: palette.modalText }]}>
-                Edit Touch
-              </ThemedText>
-              <ThemedText style={[styles.description, { color: palette.modalTextMuted }]}>
-                Change who made this touch without changing the recorded result.
-              </ThemedText>
-            </View>
+            <ThemedText style={[styles.title, { color: palette.modalText }]}>Edit Touch</ThemedText>
             <Pressable
               accessibilityRole="button"
               accessibilityLabel="Close touch editor"
@@ -200,9 +193,9 @@ export function AdvancedTouchCorrectionModal({
               </ThemedText>
             ) : (
               <AdvancedTouchCorrectionParticipantPicker
-                currentName={currentName ?? 'Unknown'}
+                originalName={currentName ?? 'Unknown'}
                 participants={sortedParticipants}
-                currentParticipantId={currentParticipantId}
+                originalParticipantId={currentParticipantId}
                 selectedParticipantId={selectedParticipantId}
                 isSaving={isSaving}
                 onSelectParticipant={handleParticipantSelect}
@@ -282,17 +275,10 @@ function createStyles(sizeClass: SizeClass) {
       justifyContent: 'space-between',
       gap: 16,
     },
-    headerText: {
-      flex: 1,
-      gap: 5,
-    },
     title: {
+      flex: 1,
       fontSize: scaleBySizeClass(20, sizeClass),
       fontFamily: Fonts.bold,
-    },
-    description: {
-      fontSize: scaleBySizeClass(12, sizeClass),
-      lineHeight: scaleBySizeClass(17, sizeClass),
     },
     scroll: {
       maxHeight: scaleBySizeClass(480, sizeClass),

@@ -2,6 +2,7 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useState } from 'react';
 import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
+import { AdvancedTurnoverCorrectionField } from '@/components/advancedTracking/corrections/AdvancedTurnoverCorrectionField';
 import { AdvancedTurnoverRolePicker } from '@/components/advancedTracking/corrections/AdvancedTurnoverRolePicker';
 import { ThemedText } from '@/components/ThemedText';
 import { BottomSheet } from '@/components/ui/BottomSheet';
@@ -34,6 +35,8 @@ const RESULT_LABELS: Record<AdvancedTurnoverEditorResult, string> = {
 };
 
 const THROW_TYPE_OPTIONS = [undefined, ...THROW_TYPES] as const;
+
+type ActiveField = 'result' | 'thrower' | 'role' | 'classification' | null;
 
 function getResultLabel(
   result: AdvancedTurnoverEditorResult,
@@ -105,6 +108,7 @@ export function AdvancedTurnoverCorrectionModal({
   const [selectedThrowType, setSelectedThrowType] = useState<ThrowType | undefined>(
     context.currentThrowType,
   );
+  const [activeField, setActiveField] = useState<ActiveField>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState(false);
 
@@ -140,6 +144,14 @@ export function AdvancedTurnoverCorrectionModal({
     context.thrower.eligibleParticipants,
     selectedThrowerId,
   );
+  const selectedReceiverName = getParticipantName(
+    context.receiver.eligibleParticipants,
+    selectedReceiverId,
+  );
+  const selectedDefenderName = getParticipantName(
+    context.defender.eligibleParticipants,
+    selectedDefenderId,
+  );
   const currentThrowerName = getParticipantName(
     context.thrower.eligibleParticipants,
     context.thrower.currentParticipantId,
@@ -148,6 +160,21 @@ export function AdvancedTurnoverCorrectionModal({
     context.holderTouch != null &&
     selectedThrowerId != null &&
     selectedThrowerId !== context.thrower.currentParticipantId;
+  const isThrowerReadOnly =
+    !context.thrower.isFullRoster && context.thrower.currentRef?.refType !== 'participant';
+  const hasReceiverRole = selectedResult === 'drop' || selectedResult === 'fifty-fifty';
+  const hasDefenderRole =
+    selectedResult === 'block' || selectedResult === 'pressure' || selectedResult === 'stall';
+  const roleLabel = hasReceiverRole ? 'Receiver' : 'Defender';
+  const selectedRoleName = hasReceiverRole ? selectedReceiverName : selectedDefenderName;
+  const isRoleReadOnly = hasReceiverRole
+    ? !context.receiver.isFullRoster
+    : !context.defender.isFullRoster;
+
+  const toggleField = (field: Exclude<ActiveField, null>) => {
+    setActiveField((current) => (current === field ? null : field));
+    setSaveError(false);
+  };
 
   const handleClose = () => {
     if (!isSaving) onClose();
@@ -202,14 +229,9 @@ export function AdvancedTurnoverCorrectionModal({
         <View style={styles.content}>
           <View style={[styles.handle, { backgroundColor: palette.overlay20 }]} />
           <View style={styles.header}>
-            <View style={styles.headerText}>
-              <ThemedText style={[styles.title, { color: palette.modalText }]}>
-                Edit Turnover
-              </ThemedText>
-              <ThemedText style={[styles.description, { color: palette.modalTextMuted }]}>
-                Correct attribution or the recorded turnover without changing possession.
-              </ThemedText>
-            </View>
+            <ThemedText style={[styles.title, { color: palette.modalText }]}>
+              Edit Turnover
+            </ThemedText>
             <Pressable
               accessibilityRole="button"
               accessibilityLabel="Close turnover editor"
@@ -228,10 +250,13 @@ export function AdvancedTurnoverCorrectionModal({
             style={styles.scroll}
             contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator={false}>
-            <View style={styles.section}>
-              <ThemedText style={[styles.sectionLabel, { color: palette.modalTextMuted }]}>
-                RESULT
-              </ThemedText>
+            <AdvancedTurnoverCorrectionField
+              testID="advanced-turnover-field-result"
+              label="Result"
+              value={getResultLabel(selectedResult, isFocusSideTurnover)}
+              expanded={activeField === 'result'}
+              disabled={isSaving}
+              onPress={() => toggleField('result')}>
               <View style={styles.resultGrid}>
                 {visibleResults.map((result) => {
                   const selected = selectedResult === result;
@@ -243,6 +268,7 @@ export function AdvancedTurnoverCorrectionModal({
                       accessibilityState={{ selected }}
                       onPress={() => {
                         setSelectedResult(result);
+                        setActiveField(null);
                         setSaveError(false);
                       }}
                       disabled={isSaving}
@@ -265,70 +291,70 @@ export function AdvancedTurnoverCorrectionModal({
                   );
                 })}
               </View>
-            </View>
+            </AdvancedTurnoverCorrectionField>
 
-            <AdvancedTurnoverRolePicker
-              label="THROWER / HOLDER"
-              currentName={currentThrowerName}
-              currentParticipantId={context.thrower.currentParticipantId}
-              selectedParticipantId={selectedThrowerId}
-              participants={context.thrower.eligibleParticipants}
-              isReadOnly={
-                !context.thrower.isFullRoster &&
-                context.thrower.currentRef?.refType !== 'participant'
-              }
-              isSaving={isSaving}
-              onSelect={(participantId) => {
-                setSelectedThrowerId(participantId);
-                setSaveError(false);
-              }}
-            />
-
-            {(selectedResult === 'drop' || selectedResult === 'fifty-fifty') && (
+            <AdvancedTurnoverCorrectionField
+              testID="advanced-turnover-field-thrower"
+              label="Thrower"
+              value={isThrowerReadOnly ? 'Untracked' : selectedThrowerName}
+              expanded={activeField === 'thrower'}
+              disabled={isSaving || isThrowerReadOnly}
+              onPress={() => toggleField('thrower')}>
               <AdvancedTurnoverRolePicker
-                label="RECEIVER / DROP ATTRIBUTION"
-                currentName={getParticipantName(
-                  context.receiver.eligibleParticipants,
-                  context.receiver.currentParticipantId,
-                )}
-                currentParticipantId={context.receiver.currentParticipantId}
-                selectedParticipantId={selectedReceiverId}
-                participants={context.receiver.eligibleParticipants}
-                isReadOnly={!context.receiver.isFullRoster}
+                originalParticipantId={context.thrower.currentParticipantId}
+                selectedParticipantId={selectedThrowerId}
+                participants={context.thrower.eligibleParticipants}
                 isSaving={isSaving}
                 onSelect={(participantId) => {
-                  setSelectedReceiverId(participantId);
+                  setSelectedThrowerId(participantId);
+                  setActiveField(null);
                   setSaveError(false);
                 }}
               />
-            )}
+            </AdvancedTurnoverCorrectionField>
 
-            {(selectedResult === 'block' ||
-              selectedResult === 'pressure' ||
-              selectedResult === 'stall') && (
-              <AdvancedTurnoverRolePicker
-                label="DEFENDER"
-                currentName={getParticipantName(
-                  context.defender.eligibleParticipants,
-                  context.defender.currentParticipantId,
-                )}
-                currentParticipantId={context.defender.currentParticipantId}
-                selectedParticipantId={selectedDefenderId}
-                participants={context.defender.eligibleParticipants}
-                isReadOnly={!context.defender.isFullRoster}
-                isSaving={isSaving}
-                onSelect={(participantId) => {
-                  setSelectedDefenderId(participantId);
-                  setSaveError(false);
-                }}
-              />
+            {(hasReceiverRole || hasDefenderRole) && (
+              <AdvancedTurnoverCorrectionField
+                testID="advanced-turnover-field-role"
+                label={roleLabel}
+                value={isRoleReadOnly ? 'Untracked' : selectedRoleName}
+                expanded={activeField === 'role'}
+                disabled={isSaving || isRoleReadOnly}
+                onPress={() => toggleField('role')}>
+                <AdvancedTurnoverRolePicker
+                  originalParticipantId={
+                    hasReceiverRole
+                      ? context.receiver.currentParticipantId
+                      : context.defender.currentParticipantId
+                  }
+                  selectedParticipantId={hasReceiverRole ? selectedReceiverId : selectedDefenderId}
+                  participants={
+                    hasReceiverRole
+                      ? context.receiver.eligibleParticipants
+                      : context.defender.eligibleParticipants
+                  }
+                  isSaving={isSaving}
+                  onSelect={(participantId) => {
+                    if (hasReceiverRole) {
+                      setSelectedReceiverId(participantId);
+                    } else {
+                      setSelectedDefenderId(participantId);
+                    }
+                    setActiveField(null);
+                    setSaveError(false);
+                  }}
+                />
+              </AdvancedTurnoverCorrectionField>
             )}
 
             {context.canClassify && (
-              <View style={styles.section}>
-                <ThemedText style={[styles.sectionLabel, { color: palette.modalTextMuted }]}>
-                  THROW CLASSIFICATION
-                </ThemedText>
+              <AdvancedTurnoverCorrectionField
+                testID="advanced-turnover-field-classification"
+                label="Classification"
+                value={getThrowTypeLabel(effectiveThrowType)}
+                expanded={activeField === 'classification'}
+                disabled={isSaving}
+                onPress={() => toggleField('classification')}>
                 <View style={styles.resultGrid}>
                   {THROW_TYPE_OPTIONS.map((type) => {
                     const isEligible = type == null || selectedThrowTypes.includes(type);
@@ -343,6 +369,7 @@ export function AdvancedTurnoverCorrectionModal({
                         accessibilityState={{ selected }}
                         onPress={() => {
                           setSelectedThrowType(type);
+                          setActiveField(null);
                           setSaveError(false);
                         }}
                         disabled={isSaving}
@@ -365,13 +392,14 @@ export function AdvancedTurnoverCorrectionModal({
                     );
                   })}
                 </View>
-                {selectedResult === 'stall' && selectedThrowType != null && (
-                  <ThemedText style={[styles.warningText, { color: palette.warning }]}>
-                    {selectedThrowType === 'huck' ? 'Huck' : 'Backfield Reset'} will be removed
-                    because stalls are not throws.
-                  </ThemedText>
-                )}
-              </View>
+              </AdvancedTurnoverCorrectionField>
+            )}
+
+            {selectedResult === 'stall' && selectedThrowType != null && (
+              <ThemedText style={[styles.warningText, { color: palette.warning }]}>
+                {selectedThrowType === 'huck' ? 'Huck' : 'Backfield Reset'} will be removed because
+                stalls are not throws.
+              </ThemedText>
             )}
 
             {hasLinkedHolderPreview && (
@@ -447,20 +475,9 @@ function createStyles(sizeClass: SizeClass) {
       justifyContent: 'space-between',
       gap: 16,
     },
-    headerText: { flex: 1, gap: 5 },
-    title: { fontSize: scaleBySizeClass(20, sizeClass), fontFamily: Fonts.bold },
-    description: {
-      fontSize: scaleBySizeClass(12, sizeClass),
-      lineHeight: scaleBySizeClass(17, sizeClass),
-    },
+    title: { flex: 1, fontSize: scaleBySizeClass(20, sizeClass), fontFamily: Fonts.bold },
     scroll: { maxHeight: scaleBySizeClass(560, sizeClass) },
-    scrollContent: { gap: 16, paddingBottom: 4 },
-    section: { gap: 10 },
-    sectionLabel: {
-      fontSize: scaleBySizeClass(10, sizeClass),
-      fontFamily: Fonts.bold,
-      letterSpacing: 0.8,
-    },
+    scrollContent: { gap: 10, paddingBottom: 4 },
     resultGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
     resultButton: {
       minHeight: 44,

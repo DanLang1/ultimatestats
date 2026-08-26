@@ -8,18 +8,18 @@ import type { Participant } from '@/lib/advancedTracking/types';
 import { Fonts } from '@/theme/theme';
 
 interface AdvancedTouchCorrectionParticipantPickerProps {
-  currentName: string;
+  originalName: string;
   participants: Participant[];
-  currentParticipantId: string | null;
+  originalParticipantId: string | null;
   selectedParticipantId: string | null;
   isSaving: boolean;
   onSelectParticipant: (participantId: string) => void;
 }
 
 export function AdvancedTouchCorrectionParticipantPicker({
-  currentName,
+  originalName,
   participants,
-  currentParticipantId,
+  originalParticipantId,
   selectedParticipantId,
   isSaving,
   onSelectParticipant,
@@ -30,14 +30,9 @@ export function AdvancedTouchCorrectionParticipantPicker({
 
   return (
     <View style={styles.section}>
-      <View style={styles.currentRow}>
-        <ThemedText style={[styles.sectionLabel, { color: palette.modalTextMuted }]}>
-          REPLACE PARTICIPANT
-        </ThemedText>
-        <ThemedText style={[styles.currentLabel, { color: palette.accent }]}>
-          CURRENT: {currentName}
-        </ThemedText>
-      </View>
+      <ThemedText style={[styles.originalLabel, { color: palette.accent }]}>
+        ORIGINAL: {originalName}
+      </ThemedText>
       <View style={styles.playerGrid}>
         {participants.map((participant) => (
           <View key={participant.id} style={styles.playerChipWrapper}>
@@ -46,7 +41,7 @@ export function AdvancedTouchCorrectionParticipantPicker({
               number={participant.number}
               matchingType={participant.matchingType}
               role={participant.role}
-              subtitle={participant.id === currentParticipantId ? 'CURRENT' : undefined}
+              subtitle={participant.id === originalParticipantId ? 'ORIGINAL' : undefined}
               selected={selectedParticipantId === participant.id}
               disabled={isSaving}
               useModalColors
@@ -64,15 +59,7 @@ function createStyles(sizeClass: SizeClass) {
     section: {
       gap: 10,
     },
-    currentRow: {
-      gap: 4,
-    },
-    sectionLabel: {
-      fontSize: scaleBySizeClass(10, sizeClass),
-      fontFamily: Fonts.bold,
-      letterSpacing: 0.8,
-    },
-    currentLabel: {
+    originalLabel: {
       fontSize: scaleBySizeClass(11, sizeClass),
       fontFamily: Fonts.bold,
     },

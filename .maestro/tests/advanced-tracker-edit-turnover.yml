@@ -44,6 +44,8 @@ tags:
 - tapOn: 'Edit Joe · Throwaway'
 - assertVisible: 'Edit Turnover'
 - tapOn:
+    id: 'advanced-turnover-field-classification'
+- tapOn:
     id: 'advanced-turnover-type-huck'
 - tapOn:
     id: 'advanced-turnover-save'

@@ -143,6 +143,10 @@ describe('advanced analytics routes', () => {
     await user.press(screen.getByTestId('advanced-timeline-action-goal-1'));
 
     expect(screen.getByText('Edit Touch')).toBeVisible();
+    expect(
+      screen.queryByText('Change who made this touch without changing the recorded result.'),
+    ).not.toBeOnTheScreen();
+    expect(screen.queryByText('Change the recorded player.')).not.toBeOnTheScreen();
     expect(screen.getByTestId('player-chip-Alex')).toBeVisible();
     await user.press(screen.getByTestId('player-chip-Casey'));
     await user.press(screen.getByTestId('advanced-touch-save'));
@@ -206,6 +210,9 @@ describe('advanced analytics routes', () => {
     await user.press(middleTouch);
     expect(middleTouch).toHaveTextContent(/Blair/);
     expect(middleTouch.props.accessibilityLabel).toContain('Blair');
+    expect(screen.getByText('ORIGINAL: Blair')).toBeVisible();
+    expect(screen.queryByText('REPLACE PARTICIPANT')).not.toBeOnTheScreen();
+    expect(screen.getByTestId('player-chip-Blair')).toHaveTextContent(/ORIGINAL/);
     await user.press(screen.getByTestId('player-chip-Dana'));
     expect(middleTouch).toHaveTextContent(/Dana/);
     expect(middleTouch.props.accessibilityLabel).toContain('will change to Dana');
@@ -280,6 +287,15 @@ describe('advanced analytics routes', () => {
     await user.press(screen.getByTestId('advanced-timeline-action-turnover-1'));
 
     expect(screen.getByText('Edit Turnover')).toBeVisible();
+    expect(screen.getByTestId('advanced-turnover-field-result')).toBeVisible();
+    expect(screen.getByTestId('advanced-turnover-field-thrower')).toBeVisible();
+    expect(screen.getByTestId('advanced-turnover-field-classification')).toBeVisible();
+    expect(screen.queryByTestId('advanced-turnover-field-role')).not.toBeOnTheScreen();
+    expect(screen.queryByTestId('advanced-turnover-result-drop')).not.toBeOnTheScreen();
+
+    const resultField = screen.getByTestId('advanced-turnover-field-result');
+    await user.press(resultField);
+    expect(resultField).toHaveStyle({ backgroundColor: 'transparent' });
     expect(screen.getByTestId('advanced-turnover-result-drop')).toBeVisible();
     expect(screen.getByTestId('advanced-turnover-result-fifty-fifty')).toBeVisible();
     expect(screen.getByTestId('advanced-turnover-result-block')).toBeVisible();
@@ -287,11 +303,14 @@ describe('advanced analytics routes', () => {
     expect(screen.getByTestId('advanced-turnover-result-stall')).toBeVisible();
     expect(screen.queryByTestId('advanced-turnover-result-pressure')).not.toBeOnTheScreen();
 
+    await user.press(screen.getByTestId('advanced-turnover-result-drop'));
+    expect(screen.getByTestId('advanced-turnover-field-role')).toBeVisible();
+    await user.press(screen.getByTestId('advanced-turnover-field-thrower'));
+    expect(screen.getByTestId('player-chip-Blair')).toHaveTextContent(/ORIGINAL/);
     await user.press(screen.getByTestId('player-chip-Dana'));
     expect(screen.getByText('LINKED CHANGE')).toBeVisible();
-    await user.press(screen.getByTestId('advanced-turnover-result-drop'));
-    const caseyChips = screen.getAllByTestId('player-chip-Casey');
-    await user.press(caseyChips[caseyChips.length - 1]);
+    await user.press(screen.getByTestId('advanced-turnover-field-role'));
+    await user.press(screen.getByTestId('player-chip-Casey'));
     await user.press(screen.getByTestId('advanced-turnover-save'));
 
     await waitFor(() => {
@@ -358,10 +377,13 @@ describe('advanced analytics routes', () => {
 
     await renderScreen(<AdvancedGameTimelineScreen />);
     await user.press(screen.getByTestId('advanced-timeline-action-turnover-1'));
+    await user.press(screen.getByTestId('advanced-turnover-field-result'));
     expect(screen.getByText('Opp Block')).toBeVisible();
     expect(screen.getByText('Opp Pressure')).toBeVisible();
     await user.press(screen.getByTestId('advanced-turnover-result-block'));
+    await user.press(screen.getByTestId('advanced-turnover-field-role'));
     await user.press(screen.getByTestId('player-chip-Rival 3'));
+    await user.press(screen.getByTestId('advanced-turnover-field-result'));
     await user.press(screen.getByTestId('advanced-turnover-result-throwaway'));
 
     expect(screen.getByTestId('advanced-turnover-save')).toBeDisabled();
