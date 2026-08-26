@@ -5,6 +5,7 @@ import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 
 import { AdvancedPointNoteModal } from '@/components/advancedTracking/AdvancedPointNoteModal';
 import { AdvancedTouchCorrectionModal } from '@/components/advancedTracking/AdvancedTouchCorrectionModal';
+import { AdvancedTurnoverCorrectionModal } from '@/components/advancedTracking/AdvancedTurnoverCorrectionModal';
 import AdvancedEventTimeline from '@/components/advancedTracking/timeline/AdvancedEventTimeline';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
@@ -15,6 +16,8 @@ import { canCorrectAdvancedPointFromTimeline } from '@/lib/advancedTracking/adva
 import {
   findTouchEditingTarget,
   getEditableTouchActionIds,
+  findTurnoverEditingTarget,
+  getEditableTurnoverActionIds,
 } from '@/lib/advancedTracking/advancedTimelineTouchCorrectionUtils';
 import { buildAdvancedTimeline } from '@/lib/advancedTracking/advancedTimelineUtils';
 import {
@@ -22,6 +25,10 @@ import {
   type AdvancedTouchCorrectionSegment,
   getCorrectableAdvancedTouchContexts,
 } from '@/lib/advancedTracking/advancedTouchCorrectionUtils';
+import {
+  getCorrectableAdvancedTurnoverContexts,
+  type AdvancedTurnoverCorrectionContext,
+} from '@/lib/advancedTracking/advancedTurnoverCorrectionUtils';
 import { supportsTimelineLineCorrection } from '@/lib/advancedTracking/trackingModeUtils';
 import { getLiveInProgressGame } from '@/lib/advancedTracking/trackingUtils';
 import { hasItems } from '@/lib/utils';
@@ -36,17 +43,22 @@ export default function AdvancedGameTimelineScreen() {
   const styles = createStyles(sizeClass);
   const { data: rawGame, isLoading } = useAdvancedGame(gameId!);
   const correctTouch = useSavedAdvancedGamesStore((state) => state.correctTouch);
+  const correctTurnover = useSavedAdvancedGamesStore((state) => state.correctTurnover);
   const liveGame = useAdvancedTrackingStore((state) => {
     const game = getLiveInProgressGame(state);
     return game?.id === gameId ? game : null;
   });
   const correctCurrentTouch = useAdvancedTrackingStore((state) => state.correctCurrentTouch);
+  const correctCurrentTurnover = useAdvancedTrackingStore((state) => state.correctCurrentTurnover);
   const updateCurrentPointNote = useAdvancedTrackingStore((state) => state.updatePointNote);
   const updateSavedPointNote = useSavedAdvancedGamesStore((state) => state.updatePointNote);
   const [editingTouch, setEditingTouch] = useState<{
     context: AdvancedTouchCorrectionSegment | AdvancedStandaloneCorrectionContext;
     initialTouchId?: string;
   } | null>(null);
+  const [editingTurnover, setEditingTurnover] = useState<AdvancedTurnoverCorrectionContext | null>(
+    null,
+  );
   const [editingPointNoteId, setEditingPointNoteId] = useState<string | null>(null);
 
   if (isLoading || !rawGame) {
@@ -95,6 +107,11 @@ export default function AdvancedGameTimelineScreen() {
       ? []
       : getCorrectableAdvancedTouchContexts(game);
   const editableTouchActionIds = getEditableTouchActionIds(correctableTouchContexts);
+  const correctableTurnoverContexts =
+    game.status === 'in_progress' && !isCurrentInProgressGame
+      ? []
+      : getCorrectableAdvancedTurnoverContexts(game);
+  const editableTurnoverActionIds = getEditableTurnoverActionIds(correctableTurnoverContexts);
   const editableLinePointIds = new Set(
     supportsTimelineLineCorrection(game)
       ? game.points
@@ -150,12 +167,20 @@ export default function AdvancedGameTimelineScreen() {
           oppSideId={oppSideId}
           sideLabels={sideLabels}
           editableTouchActionIds={editableTouchActionIds}
+          editableTurnoverActionIds={editableTurnoverActionIds}
           onEditTouch={(request) => {
             const target = findTouchEditingTarget(correctableTouchContexts, request);
             if (target == null) {
               throw new Error(`Could not resolve editable timeline action "${request.actionId}".`);
             }
             setEditingTouch(target);
+          }}
+          onEditTurnover={(request) => {
+            const target = findTurnoverEditingTarget(correctableTurnoverContexts, request);
+            if (target == null) {
+              throw new Error(`Could not resolve editable turnover action "${request.actionId}".`);
+            }
+            setEditingTurnover(target.context);
           }}
           editableLinePointIds={editableLinePointIds}
           onEditLineups={(point) => {
@@ -191,6 +216,20 @@ export default function AdvancedGameTimelineScreen() {
               return;
             }
             await correctTouch(game.id, input);
+          }}
+        />
+      )}
+      {editingTurnover != null && (
+        <AdvancedTurnoverCorrectionModal
+          context={editingTurnover}
+          focusSideId={focusSideId}
+          onClose={() => setEditingTurnover(null)}
+          onSave={async (input) => {
+            if (isCurrentInProgressGame) {
+              await correctCurrentTurnover(input);
+              return;
+            }
+            await correctTurnover(game.id, input);
           }}
         />
       )}

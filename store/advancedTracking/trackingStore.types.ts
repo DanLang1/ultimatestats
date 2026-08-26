@@ -1,5 +1,6 @@
 import type { CorrectAdvancedPointActiveLinesInput } from '@/lib/advancedTracking/advancedPointLineCorrectionUtils';
 import type { CorrectAdvancedTouchInput } from '@/lib/advancedTracking/advancedTouchCorrectionUtils';
+import type { CorrectAdvancedTurnoverInput } from '@/lib/advancedTracking/advancedTurnoverCorrectionUtils';
 import type { CaptureIntent, CaptureIntentResult } from '@/lib/advancedTracking/captureIntentUtils';
 import type {
   AdvancedGameType,
@@ -145,6 +146,7 @@ export interface AdvancedTrackingState {
   updateGameMetadata: (metadata: GameMetadata) => Promise<void>;
   updatePointNote: (input: UpdatePointNoteInput) => Promise<void>;
   correctCurrentTouch: (input: CorrectAdvancedTouchInput) => Promise<void>;
+  correctCurrentTurnover: (input: CorrectAdvancedTurnoverInput) => Promise<void>;
   correctCurrentGamePointActiveLines: (
     input: CorrectAdvancedPointActiveLinesInput,
   ) => Promise<void>;

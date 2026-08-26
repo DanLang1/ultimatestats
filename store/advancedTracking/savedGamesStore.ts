@@ -10,6 +10,10 @@ import {
   correctAdvancedTouch,
   type CorrectAdvancedTouchInput,
 } from '@/lib/advancedTracking/advancedTouchCorrectionUtils';
+import {
+  correctAdvancedTurnover,
+  type CorrectAdvancedTurnoverInput,
+} from '@/lib/advancedTracking/advancedTurnoverCorrectionUtils';
 import { withAdvancedPointNote } from '@/lib/advancedTracking/gameNoteUtils';
 import { migrateAdvancedTrackedGame } from '@/lib/advancedTracking/migrations';
 import {
@@ -34,6 +38,10 @@ type SavedAdvancedGamesState = {
     options?: SaveAdvancedGameOptions,
   ) => Promise<AdvancedGameSummary>;
   correctTouch: (gameId: string, input: CorrectAdvancedTouchInput) => Promise<AdvancedTrackedGame>;
+  correctTurnover: (
+    gameId: string,
+    input: CorrectAdvancedTurnoverInput,
+  ) => Promise<AdvancedTrackedGame>;
   correctPointActiveLines: (
     gameId: string,
     input: CorrectAdvancedPointActiveLinesInput,
@@ -144,6 +152,17 @@ export const useSavedAdvancedGamesStore = create<SavedAdvancedGamesState>()(
       }
 
       const correctedGame = correctAdvancedTouch(game, input);
+      await get().saveGame(correctedGame);
+      return correctedGame;
+    },
+
+    correctTurnover: async (gameId, input) => {
+      const game = await get().loadGame(gameId);
+      if (game == null) {
+        throw new Error(`Advanced game "${gameId}" was not found.`);
+      }
+
+      const correctedGame = correctAdvancedTurnover(game, input);
       await get().saveGame(correctedGame);
       return correctedGame;
     },

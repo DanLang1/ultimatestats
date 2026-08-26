@@ -3,6 +3,7 @@ import type {
   AdvancedStandaloneCorrectionContext,
   AdvancedTouchCorrectionSegment,
 } from './advancedTouchCorrectionUtils';
+import type { AdvancedTurnoverCorrectionContext } from './advancedTurnoverCorrectionUtils';
 
 export interface AdvancedTimelineTouchEditRequest {
   pointId: string;
@@ -11,9 +12,38 @@ export interface AdvancedTimelineTouchEditRequest {
   preselectTouch: boolean;
 }
 
+export interface AdvancedTimelineTurnoverEditRequest {
+  pointId: string;
+  possessionId: string;
+  actionId: string;
+}
+
 export interface AdvancedTimelineTouchEditingTarget {
   context: AdvancedTouchCorrectionSegment | AdvancedStandaloneCorrectionContext;
   initialTouchId?: string;
+}
+
+export interface AdvancedTimelineTurnoverEditingTarget {
+  context: AdvancedTurnoverCorrectionContext;
+}
+
+export function getEditableTurnoverActionIds(
+  contexts: AdvancedTurnoverCorrectionContext[],
+): ReadonlySet<string> {
+  return new Set(contexts.map((context) => context.action.id));
+}
+
+export function findTurnoverEditingTarget(
+  contexts: AdvancedTurnoverCorrectionContext[],
+  request: AdvancedTimelineTurnoverEditRequest,
+): AdvancedTimelineTurnoverEditingTarget | null {
+  const context = contexts.find(
+    (candidate) =>
+      candidate.point.id === request.pointId &&
+      candidate.possession.id === request.possessionId &&
+      candidate.action.id === request.actionId,
+  );
+  return context == null ? null : { context };
 }
 
 export function getEditableTouchActionIds(

@@ -241,8 +241,7 @@ describe('buildAdvancedTimeline', () => {
     // Block
     const blockAction = point.possessions[2].actions[0];
     expect(blockAction.kind).toBe('throw');
-    expect(blockAction.primaryLabel).toContain('Max');
-    expect(blockAction.primaryLabel).toContain('D');
+    expect(blockAction.primaryLabel).toBe('Max · Block');
     expect(blockAction.secondaryLabel).toBeNull();
     expect(blockAction.tone).toBe('success');
 
@@ -251,6 +250,53 @@ describe('buildAdvancedTimeline', () => {
     expect(goalAction.kind).toBe('throw');
     expect(goalAction.primaryLabel).toContain('Goal');
     expect(goalAction.tone).toBe('success');
+  });
+
+  it('labels a focus-side turnover caused by a block as an opponent block', () => {
+    const game: AdvancedTrackedGame = {
+      ...baseGame,
+      points: [
+        {
+          id: 'pt1',
+          lines: [{ sideId: ZOO, participantIds: ['p_august', 'p_meves'] }],
+          possessions: [
+            {
+              id: 'pos1',
+              sideId: ZOO,
+              actions: [
+                { id: 'pickup1', kind: 'disc_pickup', sideId: ZOO, player: august },
+                {
+                  id: 'block1',
+                  kind: 'throw',
+                  sideId: ZOO,
+                  thrower: august,
+                  defender: untracked,
+                  result: 'block',
+                },
+              ],
+            },
+            {
+              id: 'pos2',
+              sideId: RIVALS,
+              actions: [
+                {
+                  id: 'goal1',
+                  kind: 'throw',
+                  sideId: RIVALS,
+                  thrower: untracked,
+                  toPlayer: untracked,
+                  result: 'goal',
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+
+    const blockAction = buildAdvancedTimeline(game)[0].possessions[0].actions[0];
+    expect(blockAction.primaryLabel).toBe('Opp Block');
+    expect(blockAction.tone).toBe('danger');
   });
 
   it('shows pressure with the defender and a positive tone', () => {

@@ -230,6 +230,143 @@ describe('advanced analytics routes', () => {
     });
   });
 
+  it('opens the turnover editor and converts a throwaway while preserving holder continuity', async () => {
+    const user = userEvent.setup();
+    const game = makeEditableTimelineGame();
+    game.points[0].possessions[0].actions = [
+      {
+        id: 'pickup-1',
+        kind: 'disc_pickup',
+        sideId: 'windchill',
+        player: { refType: 'participant', participantId: 'alex' },
+      },
+      {
+        id: 'pass-1',
+        kind: 'throw',
+        sideId: 'windchill',
+        thrower: { refType: 'participant', participantId: 'alex' },
+        toPlayer: { refType: 'participant', participantId: 'blair' },
+        result: 'complete',
+      },
+      {
+        id: 'turnover-1',
+        kind: 'throw',
+        sideId: 'windchill',
+        thrower: { refType: 'participant', participantId: 'blair' },
+        result: 'throwaway',
+      },
+    ];
+    game.points[0].possessions.push({
+      id: 'possession-2',
+      sideId: 'rivals',
+      actions: [
+        {
+          id: 'goal-2',
+          kind: 'throw',
+          sideId: 'rivals',
+          thrower: { refType: 'untracked' },
+          toPlayer: { refType: 'untracked' },
+          result: 'goal',
+        },
+      ],
+    });
+    useSavedAdvancedGamesStore.setState({
+      gamesById: { [game.id]: game },
+      summariesLoaded: true,
+    });
+    setMockSearchParams({ gameId: game.id });
+
+    await renderScreen(<AdvancedGameTimelineScreen />);
+    await user.press(screen.getByTestId('advanced-timeline-action-turnover-1'));
+
+    expect(screen.getByText('Edit Turnover')).toBeVisible();
+    expect(screen.getByTestId('advanced-turnover-result-drop')).toBeVisible();
+    expect(screen.getByTestId('advanced-turnover-result-fifty-fifty')).toBeVisible();
+    expect(screen.getByTestId('advanced-turnover-result-block')).toBeVisible();
+    expect(screen.getByText('Opp Block')).toBeVisible();
+    expect(screen.getByTestId('advanced-turnover-result-stall')).toBeVisible();
+    expect(screen.queryByTestId('advanced-turnover-result-pressure')).not.toBeOnTheScreen();
+
+    await user.press(screen.getByTestId('player-chip-Dana'));
+    expect(screen.getByText('LINKED CHANGE')).toBeVisible();
+    await user.press(screen.getByTestId('advanced-turnover-result-drop'));
+    const caseyChips = screen.getAllByTestId('player-chip-Casey');
+    await user.press(caseyChips[caseyChips.length - 1]);
+    await user.press(screen.getByTestId('advanced-turnover-save'));
+
+    await waitFor(() => {
+      const actions =
+        useSavedAdvancedGamesStore.getState().gamesById[game.id].points[0].possessions[0].actions;
+      expect(actions[1]).toMatchObject({
+        toPlayer: { refType: 'participant', participantId: 'dana' },
+      });
+      expect(actions[2]).toMatchObject({
+        result: 'drop',
+        thrower: { refType: 'participant', participantId: 'dana' },
+        toPlayer: { refType: 'participant', participantId: 'casey' },
+      });
+    });
+  });
+
+  it('does not save a no-op after round-tripping an irrelevant defender draft', async () => {
+    const user = userEvent.setup();
+    const game = makeEditableTimelineGame();
+    const rivals = Array.from({ length: 7 }, (_, index) => ({
+      id: `rivals-${index + 1}`,
+      name: `Rival ${index + 1}`,
+    }));
+    game.participants.push(...rivals);
+    game.sides[1].trackingMode = 'full-roster';
+    game.points[0].lines.push({
+      sideId: 'rivals',
+      participantIds: rivals.map((participant) => participant.id),
+    });
+    game.points[0].possessions[0].actions = [
+      {
+        id: 'pickup-1',
+        kind: 'disc_pickup',
+        sideId: 'windchill',
+        player: { refType: 'participant', participantId: 'alex' },
+      },
+      {
+        id: 'turnover-1',
+        kind: 'throw',
+        sideId: 'windchill',
+        thrower: { refType: 'participant', participantId: 'alex' },
+        result: 'throwaway',
+      },
+    ];
+    game.points[0].possessions.push({
+      id: 'possession-2',
+      sideId: 'rivals',
+      actions: [
+        {
+          id: 'goal-2',
+          kind: 'throw',
+          sideId: 'rivals',
+          thrower: { refType: 'participant', participantId: 'rivals-1' },
+          toPlayer: { refType: 'participant', participantId: 'rivals-2' },
+          result: 'goal',
+        },
+      ],
+    });
+    useSavedAdvancedGamesStore.setState({
+      gamesById: { [game.id]: game },
+      summariesLoaded: true,
+    });
+    setMockSearchParams({ gameId: game.id });
+
+    await renderScreen(<AdvancedGameTimelineScreen />);
+    await user.press(screen.getByTestId('advanced-timeline-action-turnover-1'));
+    expect(screen.getByText('Opp Block')).toBeVisible();
+    expect(screen.getByText('Opp Pressure')).toBeVisible();
+    await user.press(screen.getByTestId('advanced-turnover-result-block'));
+    await user.press(screen.getByTestId('player-chip-Rival 3'));
+    await user.press(screen.getByTestId('advanced-turnover-result-throwaway'));
+
+    expect(screen.getByTestId('advanced-turnover-save')).toBeDisabled();
+  });
+
   it('adds, previews, edits, and removes a private point note from the saved timeline', async () => {
     const user = userEvent.setup();
     const game = makeEditableTimelineGame();

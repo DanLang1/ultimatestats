@@ -199,14 +199,27 @@ is still editable as a one-touch segment.
 
 Pull receivers and Callahan scorers are standalone correction contexts. Pullers, ordinary block or
 pressure defenders, stall attribution, action results, action order, and possession structure are
-not editable. Anonymous `untracked` identities remain read-only; an existing `unknown` identity on
-a fully tracked side can be replaced with a known participant.
+not editable through touch correction. Completed-point timeline turnover actions have a separate
+atomic correction boundary for `drop`, 50/50 drop (`drop` plus `splitAttribution`), `throwaway`,
+`block`, `pressure`, and `stall`. That editor can correct the holder/thrower, the applicable
+receiver or defender, the turnover result within that family, and eligible huck/reset details.
+The target must be the possession's final non-stoppage turnover action, its side must match the
+possession side, and the point must contain the following possession for the opposing side. This
+canonical boundary keeps invalid imported action chains out of the editor and correction operation.
+Changing the holder also updates the preceding pickup or completion receiver so holder continuity
+remains valid. It never changes a goal/completion, Callahan, pull drop, possession boundary, action
+order, or point structure. A stall removes incompatible throw details. Anonymous `untracked`
+identities remain read-only; an existing `unknown` identity on a fully tracked side can be replaced
+with a known participant.
 
 Replacement participants come from the game snapshot and must be active at every action field the
 correction mutates after applying earlier injury substitutions. Imported or legacy chains with
-invalid receiver-to-next-thrower continuity remain readable but are not editable. Corrections
-preserve point, possession, action IDs, results, sides, ordering, timing, locations, throw details,
-and other metadata. They update `updatedAt`, persist immediately, and do not create an undo entry.
+invalid receiver-to-next-thrower continuity remain readable but are not editable. Touch identity
+corrections preserve point, possession, action IDs, results, sides, ordering, timing, locations,
+throw details, and other metadata. Turnover corrections preserve IDs, sides, ordering, timing,
+locations, and unrelated metadata, but may change results and throw details within the supported
+turnover family as described above. Corrections update `updatedAt`, persist immediately, and do not
+create an undo entry.
 
 The live tracker and advanced timeline correct the active line at their respective boundaries, not
 the point's starting line directly. The live boundary is the current line after the latest action;
@@ -272,12 +285,13 @@ Do not reinterpret an existing field in place when old persisted records would b
 
 ## Related Sources
 
-| Concern                        | Source                                       |
-| ------------------------------ | -------------------------------------------- |
-| Persisted types                | `lib/advancedTracking/types.ts`              |
-| Live mutations and undo        | `store/advancedTracking/trackingStore.ts`    |
-| Validation and invariants      | `lib/advancedTracking/trackingUtils.ts`      |
-| SQLite persistence             | `lib/advancedTracking/storage.ts`            |
-| Saved-game cache and summaries | `store/advancedTracking/savedGamesStore.ts`  |
-| Analytics compilation          | `lib/advancedTracking/buildAnalyticsGame.ts` |
-| Sharing validation             | `lib/sharing/validate.ts`                    |
+| Concern                        | Source                                                    |
+| ------------------------------ | --------------------------------------------------------- |
+| Persisted types                | `lib/advancedTracking/types.ts`                           |
+| Live mutations and undo        | `store/advancedTracking/trackingStore.ts`                 |
+| Validation and invariants      | `lib/advancedTracking/trackingUtils.ts`                   |
+| Timeline turnover correction   | `lib/advancedTracking/advancedTurnoverCorrectionUtils.ts` |
+| SQLite persistence             | `lib/advancedTracking/storage.ts`                         |
+| Saved-game cache and summaries | `store/advancedTracking/savedGamesStore.ts`               |
+| Analytics compilation          | `lib/advancedTracking/buildAnalyticsGame.ts`              |
+| Sharing validation             | `lib/sharing/validate.ts`                                 |

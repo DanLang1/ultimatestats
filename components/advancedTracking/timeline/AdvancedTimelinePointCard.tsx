@@ -6,7 +6,10 @@ import TimelineFlowRow from '@/components/advancedTracking/timeline/TimelineFlow
 import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import type { AdvancedTimelineTouchEditRequest } from '@/lib/advancedTracking/advancedTimelineTouchCorrectionUtils';
+import type {
+  AdvancedTimelineTouchEditRequest,
+  AdvancedTimelineTurnoverEditRequest,
+} from '@/lib/advancedTracking/advancedTimelineTouchCorrectionUtils';
 import type { AdvancedTimelinePoint } from '@/lib/advancedTracking/advancedTimelineUtils';
 import {
   createPointFlowItems,
@@ -23,6 +26,8 @@ interface AdvancedTimelinePointCardProps {
   sideLabels: Record<string, string>;
   editableTouchActionIds?: ReadonlySet<string>;
   onEditTouch?: (request: AdvancedTimelineTouchEditRequest) => void;
+  editableTurnoverActionIds?: ReadonlySet<string>;
+  onEditTurnover?: (request: AdvancedTimelineTurnoverEditRequest) => void;
   onEditLineups?: () => void;
   onEditPointNote?: () => void;
 }
@@ -34,6 +39,8 @@ export default function AdvancedTimelinePointCard({
   sideLabels,
   editableTouchActionIds,
   onEditTouch,
+  editableTurnoverActionIds,
+  onEditTurnover,
   onEditLineups,
   onEditPointNote,
 }: AdvancedTimelinePointCardProps) {
@@ -121,6 +128,8 @@ export default function AdvancedTimelinePointCard({
             pointId={point.pointId}
             editableTouchActionIds={editableTouchActionIds}
             onEditTouch={onEditTouch}
+            editableTurnoverActionIds={editableTurnoverActionIds}
+            onEditTurnover={onEditTurnover}
           />
         ))}
       </View>

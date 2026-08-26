@@ -16,6 +16,7 @@ interface AdvancedTimelineActionChipProps {
   action: AdvancedTimelineAction;
   showElapsed?: boolean;
   onPress?: () => void;
+  editHint?: string;
 }
 
 function getToneColors(tone: ActionTone, palette: Record<string, string>) {
@@ -58,6 +59,7 @@ export default function AdvancedTimelineActionChip({
   action,
   showElapsed = false,
   onPress,
+  editHint,
 }: AdvancedTimelineActionChipProps) {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
@@ -92,12 +94,16 @@ export default function AdvancedTimelineActionChip({
 
   if (onPress == null) return chip;
 
+  const editAccessibilityLabel = action.secondaryLabel
+    ? `Edit ${action.primaryLabel}, ${action.secondaryLabel}`
+    : `Edit ${action.primaryLabel}`;
+
   return (
     <Pressable
       testID={`advanced-timeline-action-${action.id}`}
       accessibilityRole="button"
-      accessibilityLabel={`Edit ${action.primaryLabel}`}
-      accessibilityHint="Opens participant correction"
+      accessibilityLabel={editAccessibilityLabel}
+      accessibilityHint={editHint ?? 'Opens participant correction'}
       onPress={onPress}>
       {chip}
     </Pressable>

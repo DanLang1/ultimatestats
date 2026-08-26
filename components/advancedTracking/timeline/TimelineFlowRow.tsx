@@ -8,7 +8,10 @@ import PossessionResultBadge from '@/components/advancedTracking/timeline/Posses
 import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import type { AdvancedTimelineTouchEditRequest } from '@/lib/advancedTracking/advancedTimelineTouchCorrectionUtils';
+import type {
+  AdvancedTimelineTouchEditRequest,
+  AdvancedTimelineTurnoverEditRequest,
+} from '@/lib/advancedTracking/advancedTimelineTouchCorrectionUtils';
 import type { FlowItem, AdvancedTimelineSub } from '@/lib/advancedTracking/advancedTimelineUtils';
 import {
   getActionNodeColorKey,
@@ -35,6 +38,8 @@ interface TimelineFlowRowProps {
   pointId: string;
   editableTouchActionIds?: ReadonlySet<string>;
   onEditTouch?: (request: AdvancedTimelineTouchEditRequest) => void;
+  editableTurnoverActionIds?: ReadonlySet<string>;
+  onEditTurnover?: (request: AdvancedTimelineTurnoverEditRequest) => void;
 }
 
 interface TimelineFlowRenderContext {
@@ -45,6 +50,8 @@ interface TimelineFlowRenderContext {
   pointId: string;
   editableTouchActionIds?: ReadonlySet<string>;
   onEditTouch?: (request: AdvancedTimelineTouchEditRequest) => void;
+  editableTurnoverActionIds?: ReadonlySet<string>;
+  onEditTurnover?: (request: AdvancedTimelineTurnoverEditRequest) => void;
   palette: Palette;
   styles: ReturnType<typeof createStyles>;
 }
@@ -84,8 +91,17 @@ function renderNodeElement(item: FlowItem, context: TimelineFlowRenderContext): 
 }
 
 function renderRowContent(item: FlowItem, context: TimelineFlowRenderContext): React.ReactNode {
-  const { sideLabels, subs, pointId, editableTouchActionIds, onEditTouch, palette, styles } =
-    context;
+  const {
+    sideLabels,
+    subs,
+    pointId,
+    editableTouchActionIds,
+    onEditTouch,
+    editableTurnoverActionIds,
+    onEditTurnover,
+    palette,
+    styles,
+  } = context;
 
   if (item.type === 'header') {
     return (
@@ -122,7 +138,14 @@ function renderRowContent(item: FlowItem, context: TimelineFlowRenderContext): R
     );
   }
 
-  const canEditTouch = editableTouchActionIds?.has(item.action.id) === true && onEditTouch != null;
+  const isEditableTurnover =
+    item.action.kind === 'throw' &&
+    editableTurnoverActionIds?.has(item.action.id) === true &&
+    onEditTurnover != null;
+  const canEditTouch =
+    !isEditableTurnover &&
+    editableTouchActionIds?.has(item.action.id) === true &&
+    onEditTouch != null;
   const preselectTouch =
     item.action.kind === 'disc_pickup' ||
     (item.action.kind === 'throw' &&
@@ -136,23 +159,51 @@ function renderRowContent(item: FlowItem, context: TimelineFlowRenderContext): R
       <AdvancedTimelineActionChip
         action={item.action}
         showElapsed
-        onPress={
-          canEditTouch
-            ? () =>
-                onEditTouch({
-                  pointId,
-                  possessionId: item.possession.possessionId,
-                  actionId: item.action.id,
-                  preselectTouch,
-                })
-            : undefined
-        }
+        editHint={isEditableTurnover ? 'Opens turnover editor' : undefined}
+        onPress={getActionEditHandler({
+          isEditableTurnover,
+          canEditTouch,
+          pointId,
+          possessionId: item.possession.possessionId,
+          actionId: item.action.id,
+          preselectTouch,
+          onEditTurnover,
+          onEditTouch,
+        })}
       />
       {item.action.kind === 'stoppage' && item.action.reason === 'injury' && (
         <LinkedSubDetail subs={subs} stoppageActionId={item.action.id} />
       )}
     </View>
   );
+}
+
+function getActionEditHandler({
+  isEditableTurnover,
+  canEditTouch,
+  pointId,
+  possessionId,
+  actionId,
+  preselectTouch,
+  onEditTurnover,
+  onEditTouch,
+}: {
+  isEditableTurnover: boolean;
+  canEditTouch: boolean;
+  pointId: string;
+  possessionId: string;
+  actionId: string;
+  preselectTouch: boolean;
+  onEditTurnover?: (request: AdvancedTimelineTurnoverEditRequest) => void;
+  onEditTouch?: (request: AdvancedTimelineTouchEditRequest) => void;
+}) {
+  if (isEditableTurnover && onEditTurnover != null) {
+    return () => onEditTurnover({ pointId, possessionId, actionId });
+  }
+  if (canEditTouch && onEditTouch != null) {
+    return () => onEditTouch({ pointId, possessionId, actionId, preselectTouch });
+  }
+  return undefined;
 }
 
 export default function TimelineFlowRow({
@@ -166,6 +217,8 @@ export default function TimelineFlowRow({
   pointId,
   editableTouchActionIds,
   onEditTouch,
+  editableTurnoverActionIds,
+  onEditTurnover,
 }: TimelineFlowRowProps) {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
@@ -179,6 +232,8 @@ export default function TimelineFlowRow({
     pointId,
     editableTouchActionIds,
     onEditTouch,
+    editableTurnoverActionIds,
+    onEditTurnover,
     palette,
     styles,
   };

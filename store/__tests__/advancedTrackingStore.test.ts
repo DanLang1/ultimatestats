@@ -889,6 +889,69 @@ describe('advancedTrackingStore', () => {
     expect(getCurrentGame()?.points[0].possessions[0].actions.at(-1)?.kind).toBe('disc_pickup');
   });
 
+  it('corrects a completed turnover atomically without adding an undo entry', async () => {
+    createGame();
+    const casey = { refType: 'participant' as const, participantId: 'p-casey' };
+    const initialGame = getCurrentGame()!;
+    useAdvancedTrackingStore.setState({
+      currentGame: {
+        ...initialGame,
+        participants: [...initialGame.participants, { id: casey.participantId, name: 'Casey' }],
+      },
+    });
+    useAdvancedTrackingStore.getState().recordPull({
+      lines: [
+        {
+          sideId: homeSideId,
+          participantIds: [august.participantId, meves.participantId, casey.participantId],
+        },
+      ],
+      puller: untracked,
+      receiver: august,
+      result: 'inbound',
+    });
+    useAdvancedTrackingStore.getState().recordThrow({
+      thrower: august,
+      result: 'complete',
+      toPlayer: meves,
+    });
+    useAdvancedTrackingStore.getState().recordThrow({ thrower: meves, result: 'throwaway' });
+    useAdvancedTrackingStore.getState().recordCaptureIntent({ kind: 'anonymous-opponent-goal' });
+
+    const gameBeforeCorrection = getCurrentGame()!;
+    const point = gameBeforeCorrection.points[0];
+    const possession = point.possessions[0];
+    const turnover = possession.actions.at(-1)!;
+    if (turnover.kind !== 'throw') throw new Error('Expected a turnover throw.');
+    const undoStackBeforeCorrection = [...useAdvancedTrackingStore.getState().undoStack];
+    jest.clearAllMocks();
+
+    await useAdvancedTrackingStore.getState().correctCurrentTurnover({
+      pointId: point.id,
+      possessionId: possession.id,
+      actionId: turnover.id,
+      result: 'drop',
+      throwerParticipantId: casey.participantId,
+      receiverParticipantId: casey.participantId,
+    });
+
+    const correctedActions = getCurrentGame()?.points[0].possessions[0].actions;
+    const correctedCompletion = correctedActions?.find(
+      (action) => action.kind === 'throw' && action.result === 'complete',
+    );
+    const correctedTurnover = correctedActions?.find((action) => action.id === turnover.id);
+    expect(correctedCompletion).toMatchObject({
+      toPlayer: casey,
+    });
+    expect(correctedTurnover).toMatchObject({
+      result: 'drop',
+      thrower: casey,
+      toPlayer: casey,
+    });
+    expect(useAdvancedTrackingStore.getState().undoStack).toEqual(undoStackBeforeCorrection);
+    expect(upsertAdvancedGame).toHaveBeenCalledTimes(1);
+  });
+
   it('keeps metadata absent when creating a game without metadata', () => {
     useAdvancedTrackingStore.getState().createGame({
       focusSideId: homeSideId,

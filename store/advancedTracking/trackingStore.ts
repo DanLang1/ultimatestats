@@ -9,6 +9,10 @@ import {
   correctAdvancedTouch,
   type CorrectAdvancedTouchInput,
 } from '@/lib/advancedTracking/advancedTouchCorrectionUtils';
+import {
+  correctAdvancedTurnover,
+  type CorrectAdvancedTurnoverInput,
+} from '@/lib/advancedTracking/advancedTurnoverCorrectionUtils';
 import { planCaptureIntent } from '@/lib/advancedTracking/captureIntentUtils';
 import { withAdvancedGameNote, withAdvancedPointNote } from '@/lib/advancedTracking/gameNoteUtils';
 import {
@@ -424,6 +428,21 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
               throw new Error('Only an in-progress game can be corrected through the live store.');
             }
             state.currentGame = correctAdvancedTouch(liveGame, input);
+          });
+
+          const gameToPersist = get().currentGame;
+          if (gameToPersist != null) {
+            await persistLiveGame(gameToPersist);
+          }
+        },
+
+        correctCurrentTurnover: async (input: CorrectAdvancedTurnoverInput) => {
+          set((state) => {
+            const liveGame = getCurrentGame(state);
+            if (liveGame.status !== 'in_progress') {
+              throw new Error('Only an in-progress game can be corrected through the live store.');
+            }
+            state.currentGame = correctAdvancedTurnover(liveGame, input);
           });
 
           const gameToPersist = get().currentGame;

@@ -242,9 +242,9 @@ function buildThrowLabel(
 
     case 'block':
       if (actionSideId === focusSideId) {
-        return { primaryLabel: 'OPP D' };
+        return { primaryLabel: 'Opp Block' };
       }
-      return { primaryLabel: defenderName ? `${defenderName} · D` : 'D' };
+      return { primaryLabel: defenderName ? `${defenderName} · Block` : 'Block' };
 
     case 'pressure':
       if (actionSideId === focusSideId) {

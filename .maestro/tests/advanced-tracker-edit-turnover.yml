@@ -1,0 +1,55 @@
+appId: com.langdk.ultimatestats.dev
+name: Advanced Tracker Edit Turnover
+tags:
+  - extended
+---
+- runFlow:
+    file: ../flows/setup-game-clean.yaml
+    env:
+      TRACKER_STATE: focusPossession
+
+# Record a throwaway, let the anonymous opponent score, and finish the game.
+- swipe:
+    from:
+      id: 'tracker-chip-Joe'
+    direction: DOWN
+    duration: 500
+- runFlow:
+    file: ../flows/record-opponent-goal.yaml
+- tapOn:
+    id: 'tracker-menu-button'
+- tapOn:
+    id: 'tracker-menu-end-game'
+- extendedWaitUntil:
+    visible:
+      id: 'game-complete-finish'
+    timeout: 5000
+- tapOn:
+    id: 'game-complete-finish'
+
+# Open the completed-point timeline and edit the turnover classification.
+- extendedWaitUntil:
+    visible:
+      id: 'advanced-stats-summary-card'
+    timeout: 10000
+- tapOn:
+    id: 'header-actions-menu'
+- tapOn:
+    id: 'header-menu-timeline'
+- extendedWaitUntil:
+    visible:
+      text: 'GAME TIMELINE'
+    timeout: 5000
+- assertVisible: 'Edit Joe · Throwaway'
+- tapOn: 'Edit Joe · Throwaway'
+- assertVisible: 'Edit Turnover'
+- tapOn:
+    id: 'advanced-turnover-type-huck'
+- tapOn:
+    id: 'advanced-turnover-save'
+- extendedWaitUntil:
+    visible: 'Edit Joe · Throwaway, Huck'
+    timeout: 5000
+
+- takeScreenshot:
+    path: .maestro/screenshots/advanced-tracker-edit-turnover

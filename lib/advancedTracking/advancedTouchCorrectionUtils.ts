@@ -187,6 +187,16 @@ function getParticipantsForActionIds(
   return game.participants.filter((participant) => eligibleIds.has(participant.id));
 }
 
+/** Returns participants active for every action touched by a correction. */
+export function getAdvancedEligibleParticipantsForActions(
+  game: AdvancedTrackedGame,
+  point: TrackedPoint,
+  sideId: string,
+  actionIds: string[],
+): Participant[] {
+  return getParticipantsForActionIds(game, point, sideId, actionIds);
+}
+
 function occurrence(
   game: AdvancedTrackedGame,
   point: TrackedPoint,
@@ -229,6 +239,7 @@ function buildSegmentsForPossession(
   game: AdvancedTrackedGame,
   point: TrackedPoint,
   possession: PointPossession,
+  includeTurnoverSegments = false,
 ): AdvancedTouchCorrectionSegment[] {
   const actions = nonStoppageActions(possession);
   const segments: AdvancedTouchCorrectionSegment[] = [];
@@ -239,6 +250,7 @@ function buildSegmentsForPossession(
     if (current != null && !invalid && isSupportedTerminal) {
       current.terminalActionId = terminalActionId;
       if (
+        includeTurnoverSegments ||
         current.touches.some((touch) =>
           hasAlternativeParticipant(
             touch.currentRef,
@@ -326,7 +338,15 @@ function buildSegmentsForPossession(
       );
       finish(action.id, true);
     } else {
-      finish(action.id);
+      finish(
+        action.id,
+        includeTurnoverSegments &&
+          action.kind === 'throw' &&
+          (action.result === 'throwaway' ||
+            action.result === 'stall' ||
+            action.result === 'block' ||
+            action.result === 'pressure'),
+      );
     }
   }
 
@@ -365,6 +385,58 @@ export function getCorrectableAdvancedTouchSegments(
   return getCompletedPoints(game).flatMap((point) =>
     point.possessions.flatMap((possession) => buildSegmentsForPossession(game, point, possession)),
   );
+}
+
+/** Finds the holder occurrence whose outgoing throw is a turnover action. */
+export function getAdvancedTouchOccurrenceForOutgoingThrow(
+  game: AdvancedTrackedGame,
+  point: TrackedPoint,
+  possession: PointPossession,
+  actionId: string,
+): AdvancedTouchOccurrence | null {
+  const segment = buildSegmentsForPossession(game, point, possession, true).find((candidate) =>
+    candidate.touches.some((touch) => touch.outgoingActionId === actionId),
+  );
+  return segment?.touches.find((touch) => touch.outgoingActionId === actionId) ?? null;
+}
+
+/** Verifies the receiver-to-next-thrower continuity through a located throw. */
+export function hasValidAdvancedTouchContinuityThroughThrow(
+  possession: PointPossession,
+  targetThrow: ThrowAction,
+): boolean {
+  let expectedThrower: PlayerRef | undefined;
+  let hasBrokenContinuity = false;
+
+  for (const action of nonStoppageActions(possession)) {
+    if (action.id === targetThrow.id) {
+      const targetMatchesExpectedThrower =
+        expectedThrower == null || isSameRef(expectedThrower, targetThrow.thrower);
+      return !hasBrokenContinuity && targetMatchesExpectedThrower;
+    }
+
+    if (action.kind === 'disc_pickup') {
+      expectedThrower = action.player;
+      hasBrokenContinuity = false;
+      continue;
+    }
+    if (action.kind !== 'throw') continue;
+    if (expectedThrower == null) continue;
+
+    if (!isSameRef(expectedThrower, action.thrower)) {
+      hasBrokenContinuity = true;
+      continue;
+    }
+
+    if (action.result === 'complete' && action.toPlayer != null) {
+      expectedThrower = action.toPlayer;
+    } else {
+      expectedThrower = undefined;
+      hasBrokenContinuity = false;
+    }
+  }
+
+  throw new Error(`Throw "${targetThrow.id}" was not found while validating touch continuity.`);
 }
 
 function buildPullContext(

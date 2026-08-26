@@ -6,7 +6,10 @@ import AdvancedTimelineTransitionDivider from '@/components/advancedTracking/tim
 import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import type { AdvancedTimelineTouchEditRequest } from '@/lib/advancedTracking/advancedTimelineTouchCorrectionUtils';
+import type {
+  AdvancedTimelineTouchEditRequest,
+  AdvancedTimelineTurnoverEditRequest,
+} from '@/lib/advancedTracking/advancedTimelineTouchCorrectionUtils';
 import type { AdvancedTimelinePoint } from '@/lib/advancedTracking/advancedTimelineUtils';
 import type { GameStatus } from '@/lib/advancedTracking/types';
 import { hasItems } from '@/lib/utils';
@@ -20,6 +23,8 @@ interface AdvancedEventTimelineProps {
   sideLabels: Record<string, string>;
   editableTouchActionIds?: ReadonlySet<string>;
   onEditTouch?: (request: AdvancedTimelineTouchEditRequest) => void;
+  editableTurnoverActionIds?: ReadonlySet<string>;
+  onEditTurnover?: (request: AdvancedTimelineTurnoverEditRequest) => void;
   editableLinePointIds?: ReadonlySet<string>;
   onEditLineups?: (point: AdvancedTimelinePoint) => void;
   onEditPointNote?: (point: AdvancedTimelinePoint) => void;
@@ -33,6 +38,8 @@ export default function AdvancedEventTimeline({
   sideLabels,
   editableTouchActionIds,
   onEditTouch,
+  editableTurnoverActionIds,
+  onEditTurnover,
   editableLinePointIds,
   onEditLineups,
   onEditPointNote,
@@ -72,6 +79,8 @@ export default function AdvancedEventTimeline({
               sideLabels={sideLabels}
               editableTouchActionIds={editableTouchActionIds}
               onEditTouch={onEditTouch}
+              editableTurnoverActionIds={editableTurnoverActionIds}
+              onEditTurnover={onEditTurnover}
               onEditLineups={
                 editableLinePointIds?.has(point.pointId) && onEditLineups != null
                   ? () => onEditLineups(point)
