@@ -1,5 +1,5 @@
-import type { CorrectAdvancedGoalScorerInput } from '@/lib/advancedTracking/advancedActionCorrectionUtils';
 import type { CorrectAdvancedPointActiveLinesInput } from '@/lib/advancedTracking/advancedPointLineCorrectionUtils';
+import type { CorrectAdvancedTouchInput } from '@/lib/advancedTracking/advancedTouchCorrectionUtils';
 import type { CaptureIntent, CaptureIntentResult } from '@/lib/advancedTracking/captureIntentUtils';
 import type {
   AdvancedGameType,
@@ -144,7 +144,7 @@ export interface AdvancedTrackingState {
   finishTerminatedGame: () => Promise<void>;
   updateGameMetadata: (metadata: GameMetadata) => Promise<void>;
   updatePointNote: (input: UpdatePointNoteInput) => Promise<void>;
-  correctCurrentGoalScorer: (input: CorrectAdvancedGoalScorerInput) => Promise<void>;
+  correctCurrentTouch: (input: CorrectAdvancedTouchInput) => Promise<void>;
   correctCurrentGamePointActiveLines: (
     input: CorrectAdvancedPointActiveLinesInput,
   ) => Promise<void>;

@@ -3,20 +3,25 @@ import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 
-import { AdvancedGoalScorerModal } from '@/components/advancedTracking/AdvancedGoalScorerModal';
 import { AdvancedPointNoteModal } from '@/components/advancedTracking/AdvancedPointNoteModal';
+import { AdvancedTouchCorrectionModal } from '@/components/advancedTracking/AdvancedTouchCorrectionModal';
 import AdvancedEventTimeline from '@/components/advancedTracking/timeline/AdvancedEventTimeline';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { useTheme } from '@/context/ThemeContext';
 import { useAdvancedGame } from '@/hooks/advancedTracking/useAdvancedGameQueries';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import {
-  type AdvancedActionLocator,
-  getCorrectableAdvancedGoalContexts,
-} from '@/lib/advancedTracking/advancedActionCorrectionUtils';
 import { canCorrectAdvancedPointFromTimeline } from '@/lib/advancedTracking/advancedPointLineCorrectionUtils';
+import {
+  findTouchEditingTarget,
+  getEditableTouchActionIds,
+} from '@/lib/advancedTracking/advancedTimelineTouchCorrectionUtils';
 import { buildAdvancedTimeline } from '@/lib/advancedTracking/advancedTimelineUtils';
+import {
+  type AdvancedStandaloneCorrectionContext,
+  type AdvancedTouchCorrectionSegment,
+  getCorrectableAdvancedTouchContexts,
+} from '@/lib/advancedTracking/advancedTouchCorrectionUtils';
 import { supportsTimelineLineCorrection } from '@/lib/advancedTracking/trackingModeUtils';
 import { getLiveInProgressGame } from '@/lib/advancedTracking/trackingUtils';
 import { hasItems } from '@/lib/utils';
@@ -30,17 +35,18 @@ export default function AdvancedGameTimelineScreen() {
   const { sizeClass } = useLayout();
   const styles = createStyles(sizeClass);
   const { data: rawGame, isLoading } = useAdvancedGame(gameId!);
-  const correctGoalScorer = useSavedAdvancedGamesStore((state) => state.correctGoalScorer);
+  const correctTouch = useSavedAdvancedGamesStore((state) => state.correctTouch);
   const liveGame = useAdvancedTrackingStore((state) => {
     const game = getLiveInProgressGame(state);
     return game?.id === gameId ? game : null;
   });
-  const correctCurrentGoalScorer = useAdvancedTrackingStore(
-    (state) => state.correctCurrentGoalScorer,
-  );
+  const correctCurrentTouch = useAdvancedTrackingStore((state) => state.correctCurrentTouch);
   const updateCurrentPointNote = useAdvancedTrackingStore((state) => state.updatePointNote);
   const updateSavedPointNote = useSavedAdvancedGamesStore((state) => state.updatePointNote);
-  const [editingGoal, setEditingGoal] = useState<AdvancedActionLocator | null>(null);
+  const [editingTouch, setEditingTouch] = useState<{
+    context: AdvancedTouchCorrectionSegment | AdvancedStandaloneCorrectionContext;
+    initialTouchId?: string;
+  } | null>(null);
   const [editingPointNoteId, setEditingPointNoteId] = useState<string | null>(null);
 
   if (isLoading || !rawGame) {
@@ -84,25 +90,17 @@ export default function AdvancedGameTimelineScreen() {
   const game = liveGame ?? rawGame;
   const isCurrentInProgressGame = liveGame != null;
   const timelinePoints = buildAdvancedTimeline(game);
-  const correctableGoalContexts =
+  const correctableTouchContexts =
     game.status === 'in_progress' && !isCurrentInProgressGame
       ? []
-      : getCorrectableAdvancedGoalContexts(game);
-  const editableGoalActionIds = new Set(
-    correctableGoalContexts.map((context) => context.action.id),
-  );
+      : getCorrectableAdvancedTouchContexts(game);
+  const editableTouchActionIds = getEditableTouchActionIds(correctableTouchContexts);
   const editableLinePointIds = new Set(
     supportsTimelineLineCorrection(game)
       ? game.points
           .filter((point) => canCorrectAdvancedPointFromTimeline(game, point))
           .map((point) => point.id)
       : [],
-  );
-  const editingGoalContext = correctableGoalContexts.find(
-    (context) =>
-      context.point.id === editingGoal?.pointId &&
-      context.possession.id === editingGoal?.possessionId &&
-      context.action.id === editingGoal?.actionId,
   );
   const editingPointNote = game.points.find((point) => point.id === editingPointNoteId);
   const editingTimelinePoint = timelinePoints.find(
@@ -151,8 +149,14 @@ export default function AdvancedGameTimelineScreen() {
           focusSideId={focusSideId}
           oppSideId={oppSideId}
           sideLabels={sideLabels}
-          editableGoalActionIds={editableGoalActionIds}
-          onEditGoalScorer={setEditingGoal}
+          editableTouchActionIds={editableTouchActionIds}
+          onEditTouch={(request) => {
+            const target = findTouchEditingTarget(correctableTouchContexts, request);
+            if (target == null) {
+              throw new Error(`Could not resolve editable timeline action "${request.actionId}".`);
+            }
+            setEditingTouch(target);
+          }}
           editableLinePointIds={editableLinePointIds}
           onEditLineups={(point) => {
             router.push({
@@ -175,17 +179,18 @@ export default function AdvancedGameTimelineScreen() {
         </View>
       )}
 
-      {editingGoal != null && editingGoalContext != null && (
-        <AdvancedGoalScorerModal
-          context={editingGoalContext}
-          onClose={() => setEditingGoal(null)}
-          onSave={async (participantId) => {
-            const input = { ...editingGoal, participantId };
+      {editingTouch != null && (
+        <AdvancedTouchCorrectionModal
+          context={editingTouch.context}
+          initialTouchId={editingTouch.initialTouchId}
+          onClose={() => setEditingTouch(null)}
+          onSave={async (locator, participantId) => {
+            const input = { ...locator, participantId };
             if (isCurrentInProgressGame) {
-              await correctCurrentGoalScorer(input);
+              await correctCurrentTouch(input);
               return;
             }
-            await correctGoalScorer(game.id, input);
+            await correctTouch(game.id, input);
           }}
         />
       )}

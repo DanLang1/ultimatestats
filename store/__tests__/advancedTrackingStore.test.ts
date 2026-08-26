@@ -839,7 +839,7 @@ describe('advancedTrackingStore', () => {
     expect(game.metadata?.location).toBe('Field A');
   });
 
-  it('corrects a current-game scorer without changing score undo behavior', async () => {
+  it('corrects a completed current-game touch without changing score undo behavior', async () => {
     createGame();
     const casey = { refType: 'participant' as const, participantId: 'p-casey' };
     const initialGame = getCurrentGame()!;
@@ -871,10 +871,10 @@ describe('advancedTrackingStore', () => {
     const undoStackBeforeCorrection = [...useAdvancedTrackingStore.getState().undoStack];
     jest.clearAllMocks();
 
-    await useAdvancedTrackingStore.getState().correctCurrentGoalScorer({
+    await useAdvancedTrackingStore.getState().correctCurrentTouch({
       pointId: point.id,
       possessionId: possession.id,
-      actionId: action.id,
+      touchId: `terminal-receiver:${action.id}`,
       participantId: casey.participantId,
     });
 

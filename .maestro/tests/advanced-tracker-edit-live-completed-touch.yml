@@ -1,5 +1,6 @@
 appId: com.langdk.ultimatestats.dev
-name: Advanced Tracker Edit Live Goal Scorer
+# Verifies correction through the loaded live-game timeline.
+name: Advanced Tracker Edit Live Completed Touch
 tags:
   - extended
 ---
@@ -45,19 +46,18 @@ tags:
 - assertVisible: 'IN PROGRESS'
 - assertVisible: 'Edit Joe \+ Jon · Goal'
 
-# Correct the live game's scorer back to the thrower (Joe) for a self-goal.
-- longPressOn:
-    id: 'advanced-timeline-action-.*'
-- assertVisible: 'Edit Scorer'
+# Correct the live game's terminal touch back to the thrower (Joe) for a self-goal.
+- tapOn: 'Edit Joe \+ Jon · Goal'
+- assertVisible: 'Edit Touch'
 - assertVisible:
     id: 'player-chip-Joe'
 - tapOn:
     id: 'player-chip-Joe'
 - tapOn:
-    id: 'advanced-goal-scorer-save'
+    id: 'advanced-touch-save'
 - extendedWaitUntil:
     visible: 'Edit Joe \+ Joe · Goal'
     timeout: 5000
 
 - takeScreenshot:
-    path: .maestro/screenshots/advanced-tracker-edit-live-goal-scorer
+    path: .maestro/screenshots/advanced-tracker-edit-live-completed-touch

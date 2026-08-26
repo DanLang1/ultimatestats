@@ -6,7 +6,7 @@ import AdvancedTimelineTransitionDivider from '@/components/advancedTracking/tim
 import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import type { AdvancedActionLocator } from '@/lib/advancedTracking/advancedActionCorrectionUtils';
+import type { AdvancedTimelineTouchEditRequest } from '@/lib/advancedTracking/advancedTimelineTouchCorrectionUtils';
 import type { AdvancedTimelinePoint } from '@/lib/advancedTracking/advancedTimelineUtils';
 import type { GameStatus } from '@/lib/advancedTracking/types';
 import { hasItems } from '@/lib/utils';
@@ -18,8 +18,8 @@ interface AdvancedEventTimelineProps {
   focusSideId: string;
   oppSideId: string;
   sideLabels: Record<string, string>;
-  editableGoalActionIds?: ReadonlySet<string>;
-  onEditGoalScorer?: (locator: AdvancedActionLocator) => void;
+  editableTouchActionIds?: ReadonlySet<string>;
+  onEditTouch?: (request: AdvancedTimelineTouchEditRequest) => void;
   editableLinePointIds?: ReadonlySet<string>;
   onEditLineups?: (point: AdvancedTimelinePoint) => void;
   onEditPointNote?: (point: AdvancedTimelinePoint) => void;
@@ -31,8 +31,8 @@ export default function AdvancedEventTimeline({
   focusSideId,
   oppSideId,
   sideLabels,
-  editableGoalActionIds,
-  onEditGoalScorer,
+  editableTouchActionIds,
+  onEditTouch,
   editableLinePointIds,
   onEditLineups,
   onEditPointNote,
@@ -46,9 +46,6 @@ export default function AdvancedEventTimeline({
 
   const focusScore = finalScores[focusSideId] ?? 0;
   const oppScore = finalScores[oppSideId] ?? 0;
-
-  const isGoalScorerEditingEnabled =
-    onEditGoalScorer != null && editableGoalActionIds != null && editableGoalActionIds.size > 0;
 
   return (
     <View style={styles.container}>
@@ -66,11 +63,6 @@ export default function AdvancedEventTimeline({
 
       {/* Timeline */}
       <ScrollView contentContainerStyle={styles.listContent} showsVerticalScrollIndicator={false}>
-        {isGoalScorerEditingEnabled && (
-          <ThemedText style={[styles.editHint, { color: palette.textMuted }]}>
-            Long press a goal to edit who scored
-          </ThemedText>
-        )}
         {points.map((point) => (
           <Fragment key={point.pointId}>
             <AdvancedTimelinePointCard
@@ -78,8 +70,8 @@ export default function AdvancedEventTimeline({
               focusSideId={focusSideId}
               oppSideId={oppSideId}
               sideLabels={sideLabels}
-              editableGoalActionIds={editableGoalActionIds}
-              onEditGoalScorer={onEditGoalScorer}
+              editableTouchActionIds={editableTouchActionIds}
+              onEditTouch={onEditTouch}
               onEditLineups={
                 editableLinePointIds?.has(point.pointId) && onEditLineups != null
                   ? () => onEditLineups(point)
@@ -144,11 +136,6 @@ function createStyles(sizeClass: SizeClass) {
       paddingHorizontal: 16,
       paddingBottom: 24,
       gap: 12,
-    },
-    editHint: {
-      marginBottom: -4,
-      fontSize: scaleBySizeClass(11, sizeClass),
-      fontStyle: 'italic',
     },
   });
 }

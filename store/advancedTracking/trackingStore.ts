@@ -4,11 +4,11 @@ import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 
-import {
-  correctAdvancedGoalScorer,
-  type CorrectAdvancedGoalScorerInput,
-} from '@/lib/advancedTracking/advancedActionCorrectionUtils';
 import { correctAdvancedPointActiveLines } from '@/lib/advancedTracking/advancedPointLineCorrectionUtils';
+import {
+  correctAdvancedTouch,
+  type CorrectAdvancedTouchInput,
+} from '@/lib/advancedTracking/advancedTouchCorrectionUtils';
 import { planCaptureIntent } from '@/lib/advancedTracking/captureIntentUtils';
 import { withAdvancedGameNote, withAdvancedPointNote } from '@/lib/advancedTracking/gameNoteUtils';
 import {
@@ -417,13 +417,13 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
           if (gameToPersist != null) await persistLiveGame(gameToPersist);
         },
 
-        correctCurrentGoalScorer: async (input: CorrectAdvancedGoalScorerInput) => {
+        correctCurrentTouch: async (input: CorrectAdvancedTouchInput) => {
           set((state) => {
             const liveGame = getCurrentGame(state);
             if (liveGame.status !== 'in_progress') {
               throw new Error('Only an in-progress game can be corrected through the live store.');
             }
-            state.currentGame = correctAdvancedGoalScorer(liveGame, input);
+            state.currentGame = correctAdvancedTouch(liveGame, input);
           });
 
           const gameToPersist = get().currentGame;

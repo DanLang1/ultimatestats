@@ -1,5 +1,5 @@
 appId: com.langdk.ultimatestats.dev
-name: Advanced Tracker Edit Goal Scorer
+name: Advanced Tracker Edit Completed Touch
 tags:
   - extended
 ---
@@ -44,20 +44,19 @@ tags:
     timeout: 5000
 - assertVisible: 'Edit Joe \+ Jon · Goal'
 
-# Correct the scorer to Mike and verify the rebuilt timeline.
+# Correct the terminal touch to Mike and verify the rebuilt timeline.
 # The thrower (Joe) is now offered for self-goal correction.
-- longPressOn:
-    id: 'advanced-timeline-action-.*'
-- assertVisible: 'Edit Scorer'
+- tapOn: 'Edit Joe \+ Jon · Goal'
+- assertVisible: 'Edit Touch'
 - assertVisible:
     id: 'player-chip-Joe'
 - tapOn:
     id: 'player-chip-Mike'
 - tapOn:
-    id: 'advanced-goal-scorer-save'
+    id: 'advanced-touch-save'
 - extendedWaitUntil:
     visible: 'Edit Joe \+ Mike · Goal'
     timeout: 5000
 
 - takeScreenshot:
-    path: .maestro/screenshots/advanced-tracker-edit-goal-scorer
+    path: .maestro/screenshots/advanced-tracker-edit-completed-touch

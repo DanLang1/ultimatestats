@@ -1,3 +1,4 @@
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
@@ -14,7 +15,7 @@ import { Fonts } from '@/theme/theme';
 interface AdvancedTimelineActionChipProps {
   action: AdvancedTimelineAction;
   showElapsed?: boolean;
-  onLongPress?: () => void;
+  onPress?: () => void;
 }
 
 function getToneColors(tone: ActionTone, palette: Record<string, string>) {
@@ -56,7 +57,7 @@ function getToneColors(tone: ActionTone, palette: Record<string, string>) {
 export default function AdvancedTimelineActionChip({
   action,
   showElapsed = false,
-  onLongPress,
+  onPress,
 }: AdvancedTimelineActionChipProps) {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
@@ -78,19 +79,26 @@ export default function AdvancedTimelineActionChip({
           {formatClockDuration(action.elapsedMs)}
         </ThemedText>
       )}
+      {onPress != null && (
+        <MaterialCommunityIcons
+          name="pencil-outline"
+          size={scaleBySizeClass(15, sizeClass)}
+          color={palette.accent}
+          style={styles.editIcon}
+        />
+      )}
     </View>
   );
 
-  if (onLongPress == null) return chip;
+  if (onPress == null) return chip;
 
   return (
     <Pressable
       testID={`advanced-timeline-action-${action.id}`}
       accessibilityRole="button"
       accessibilityLabel={`Edit ${action.primaryLabel}`}
-      accessibilityHint="Long press to change the scorer"
-      onLongPress={onLongPress}
-      delayLongPress={400}>
+      accessibilityHint="Opens participant correction"
+      onPress={onPress}>
       {chip}
     </Pressable>
   );
@@ -99,6 +107,7 @@ export default function AdvancedTimelineActionChip({
 function createStyles(sizeClass: SizeClass) {
   return StyleSheet.create({
     chip: {
+      minHeight: 48,
       flexDirection: 'row',
       alignItems: 'center',
       gap: 6,
@@ -121,6 +130,9 @@ function createStyles(sizeClass: SizeClass) {
       fontFamily: Fonts.semiBold,
       marginLeft: 4,
       opacity: 0.7,
+    },
+    editIcon: {
+      marginLeft: 'auto',
     },
   });
 }

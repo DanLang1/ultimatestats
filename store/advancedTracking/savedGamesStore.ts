@@ -2,14 +2,14 @@ import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 
 import {
-  correctAdvancedGoalScorer,
-  type CorrectAdvancedGoalScorerInput,
-} from '@/lib/advancedTracking/advancedActionCorrectionUtils';
-import {
   canCorrectAdvancedPointFromTimeline,
   correctAdvancedPointActiveLines,
   type CorrectAdvancedPointActiveLinesInput,
 } from '@/lib/advancedTracking/advancedPointLineCorrectionUtils';
+import {
+  correctAdvancedTouch,
+  type CorrectAdvancedTouchInput,
+} from '@/lib/advancedTracking/advancedTouchCorrectionUtils';
 import { withAdvancedPointNote } from '@/lib/advancedTracking/gameNoteUtils';
 import { migrateAdvancedTrackedGame } from '@/lib/advancedTracking/migrations';
 import {
@@ -33,10 +33,7 @@ type SavedAdvancedGamesState = {
     game: AdvancedTrackedGame,
     options?: SaveAdvancedGameOptions,
   ) => Promise<AdvancedGameSummary>;
-  correctGoalScorer: (
-    gameId: string,
-    input: CorrectAdvancedGoalScorerInput,
-  ) => Promise<AdvancedTrackedGame>;
+  correctTouch: (gameId: string, input: CorrectAdvancedTouchInput) => Promise<AdvancedTrackedGame>;
   correctPointActiveLines: (
     gameId: string,
     input: CorrectAdvancedPointActiveLinesInput,
@@ -140,13 +137,13 @@ export const useSavedAdvancedGamesStore = create<SavedAdvancedGamesState>()(
       return summary;
     },
 
-    correctGoalScorer: async (gameId, input) => {
+    correctTouch: async (gameId, input) => {
       const game = await get().loadGame(gameId);
       if (game == null) {
         throw new Error(`Advanced game "${gameId}" was not found.`);
       }
 
-      const correctedGame = correctAdvancedGoalScorer(game, input);
+      const correctedGame = correctAdvancedTouch(game, input);
       await get().saveGame(correctedGame);
       return correctedGame;
     },

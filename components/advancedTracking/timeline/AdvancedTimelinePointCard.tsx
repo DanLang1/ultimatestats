@@ -6,7 +6,7 @@ import TimelineFlowRow from '@/components/advancedTracking/timeline/TimelineFlow
 import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import type { AdvancedActionLocator } from '@/lib/advancedTracking/advancedActionCorrectionUtils';
+import type { AdvancedTimelineTouchEditRequest } from '@/lib/advancedTracking/advancedTimelineTouchCorrectionUtils';
 import type { AdvancedTimelinePoint } from '@/lib/advancedTracking/advancedTimelineUtils';
 import {
   createPointFlowItems,
@@ -21,8 +21,8 @@ interface AdvancedTimelinePointCardProps {
   focusSideId: string;
   oppSideId: string;
   sideLabels: Record<string, string>;
-  editableGoalActionIds?: ReadonlySet<string>;
-  onEditGoalScorer?: (locator: AdvancedActionLocator) => void;
+  editableTouchActionIds?: ReadonlySet<string>;
+  onEditTouch?: (request: AdvancedTimelineTouchEditRequest) => void;
   onEditLineups?: () => void;
   onEditPointNote?: () => void;
 }
@@ -32,8 +32,8 @@ export default function AdvancedTimelinePointCard({
   focusSideId,
   oppSideId,
   sideLabels,
-  editableGoalActionIds,
-  onEditGoalScorer,
+  editableTouchActionIds,
+  onEditTouch,
   onEditLineups,
   onEditPointNote,
 }: AdvancedTimelinePointCardProps) {
@@ -119,8 +119,8 @@ export default function AdvancedTimelinePointCard({
             oppSideId={oppSideId}
             subs={point.subs}
             pointId={point.pointId}
-            editableGoalActionIds={editableGoalActionIds}
-            onEditGoalScorer={onEditGoalScorer}
+            editableTouchActionIds={editableTouchActionIds}
+            onEditTouch={onEditTouch}
           />
         ))}
       </View>

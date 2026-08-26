@@ -1,4 +1,4 @@
-import type { AdvancedTrackedGame, Participant } from '@/lib/advancedTracking/types';
+import type { AdvancedTrackedGame, Participant, PlayerRef } from '@/lib/advancedTracking/types';
 import type { Player } from '@/lib/storage/types';
 
 export function getParticipantName(game: AdvancedTrackedGame, participantId: string): string {
@@ -9,6 +9,20 @@ export function getParticipantName(game: AdvancedTrackedGame, participantId: str
     );
   }
   return participant.name;
+}
+
+export function getParticipantDisplayLabel(participant: Participant): string {
+  return participant.number ? `${participant.name} #${participant.number}` : participant.name;
+}
+
+export function getParticipantNameFromRef(
+  ref: PlayerRef | undefined,
+  participants: Participant[],
+): string {
+  if (ref?.refType !== 'participant') return 'Unknown';
+  return (
+    participants.find((participant) => participant.id === ref.participantId)?.name ?? 'Unknown'
+  );
 }
 
 export function mergeRosterMetadataIntoParticipants(

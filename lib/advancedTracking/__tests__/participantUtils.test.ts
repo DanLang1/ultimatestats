@@ -1,8 +1,10 @@
 import {
+  getParticipantDisplayLabel,
   getParticipantName,
+  getParticipantNameFromRef,
   mergeRosterMetadataIntoParticipants,
 } from '@/lib/advancedTracking/participantUtils';
-import type { AdvancedTrackedGame } from '@/lib/advancedTracking/types';
+import type { AdvancedTrackedGame, Participant } from '@/lib/advancedTracking/types';
 
 function makeGame(): AdvancedTrackedGame {
   return {
@@ -33,6 +35,27 @@ describe('getParticipantName', () => {
     expect(() => getParticipantName(makeGame(), 'missing')).toThrow(
       'Unknown participantId "missing" for advanced tracking game "participant-utils-game".',
     );
+  });
+});
+
+describe('participant display helpers', () => {
+  const participants: Participant[] = [
+    { id: 'alex', name: 'Alex', number: '7' },
+    { id: 'sam', name: 'Sam' },
+  ];
+
+  it('formats a participant with or without a number', () => {
+    expect(getParticipantDisplayLabel(participants[0])).toBe('Alex #7');
+    expect(getParticipantDisplayLabel(participants[1])).toBe('Sam');
+  });
+
+  it('resolves participant refs and uses Unknown for non-participant refs', () => {
+    expect(
+      getParticipantNameFromRef({ refType: 'participant', participantId: 'alex' }, participants),
+    ).toBe('Alex');
+    expect(getParticipantNameFromRef({ refType: 'unknown' }, participants)).toBe('Unknown');
+    expect(getParticipantNameFromRef({ refType: 'untracked' }, participants)).toBe('Unknown');
+    expect(getParticipantNameFromRef(undefined, participants)).toBe('Unknown');
   });
 });
 

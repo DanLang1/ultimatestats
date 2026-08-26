@@ -127,8 +127,8 @@ from action order. They are not parallel persisted counters.
 Capture adapters do not write raw actions. They submit a typed semantic capture intent to the live
 store, which plans any required anonymous-opponent pickup and appends canonical actions in one
 transaction. A direct goal is persisted as a `throw` with `result: 'goal'`; it is not a completed
-throw amended later. Touch capture permits self-passes and self-goals, so a goal thrower may also
-be its receiver and is eligible during scorer correction.
+throw amended later. Touch capture permits self-passes and self-goals, so the same participant can
+own multiple distinct occurrences in a correction chain.
 
 `PossessionAction` is the union of:
 
@@ -189,13 +189,24 @@ Timing fields are optional. Derivations must distinguish missing timing data fro
 Point, possession, action, transition, and participant IDs are stable editing boundaries. Normal
 corrections update payload fields without moving historical actions between possessions or points.
 
-Saved-game timelines and the active game's timeline support correcting the scorer on the action that
-ended any completed point. A replacement scorer must have been active for the scoring side at that
-exact action after applying any earlier injury substitutions. The thrower remains eligible so a
-self-goal can be corrected away and restored. The correction preserves the point, possession,
-action ID, result, side, ordering, and timing. Callahan corrections update the existing scoring
-attribution field without changing which side scored. A live scorer correction does not create an
-undo entry, so Undo continues to remove the recorded scoring action itself.
+Saved final or terminated games and the loaded active game's timeline support participant identity
+correction on completed points. The editable unit is a touch occurrence in a continuous segment:
+a pickup establishes the first holder, completions add receiver occurrences, and a goal, drop, or
+50/50 drop can add a terminal receiver. Replacing an interior occurrence updates both its incoming
+receiver and the next throw's thrower atomically. Repeated identities and self-passes remain
+separate occurrences. When a supported terminal throw has no preceding pickup chain, its receiver
+is still editable as a one-touch segment.
+
+Pull receivers and Callahan scorers are standalone correction contexts. Pullers, ordinary block or
+pressure defenders, stall attribution, action results, action order, and possession structure are
+not editable. Anonymous `untracked` identities remain read-only; an existing `unknown` identity on
+a fully tracked side can be replaced with a known participant.
+
+Replacement participants come from the game snapshot and must be active at every action field the
+correction mutates after applying earlier injury substitutions. Imported or legacy chains with
+invalid receiver-to-next-thrower continuity remain readable but are not editable. Corrections
+preserve point, possession, action IDs, results, sides, ordering, timing, locations, throw details,
+and other metadata. They update `updatedAt`, persist immediately, and do not create an undo entry.
 
 The live tracker and advanced timeline correct the active line at their respective boundaries, not
 the point's starting line directly. The live boundary is the current line after the latest action;
@@ -211,9 +222,8 @@ when both sides are fully tracked, moved atomically between sides. Fully tracked
 unique game participants in normal UI flows. Corrections reject invalid existing history, persist
 immediately, and do not add an undo entry.
 
-Thrower/assister corrections are intentionally deferred because they must also preserve disc-holder
-continuity with the preceding pickup or completion. Structural result changes, action deletion, and
-moving actions between possessions are not part of scorer correction.
+Structural result changes, action deletion, action reordering, and moving actions between
+possessions are intentionally outside touch correction.
 
 The live store keeps a temporary undo stack for recent tracker operations; the undo stack is not
 part of the persisted game schema. Persisted data remains the corrected source of truth.
@@ -229,8 +239,9 @@ Structural edits must preserve:
 - participant attribution for already-recorded actions
 - possession and point ordering
 
-Use the assertions in `lib/advancedTracking/trackingUtils.ts` and the shared correction operation in
-`lib/advancedTracking/advancedPointLineCorrectionUtils.ts` rather than introducing a second
+Use the assertions in `lib/advancedTracking/trackingUtils.ts` and the shared operations in
+`lib/advancedTracking/advancedTouchCorrectionUtils.ts` and
+`lib/advancedTracking/advancedPointLineCorrectionUtils.ts` rather than introducing another
 validation pattern.
 
 ## Tracking Modes

@@ -57,6 +57,12 @@ function makeEditableTimelineGame(): AdvancedTrackedGame {
             sideId: 'windchill',
             actions: [
               {
+                id: 'pickup-1',
+                kind: 'disc_pickup',
+                sideId: 'windchill',
+                player: { refType: 'participant', participantId: 'alex' },
+              },
+              {
                 id: 'goal-1',
                 kind: 'throw',
                 sideId: 'windchill',
@@ -123,9 +129,10 @@ describe('advanced analytics routes', () => {
     expect(screen.getByText('No points to display')).toBeVisible();
   });
 
-  it('corrects and persists a goal scorer from the saved advanced timeline', async () => {
+  it('corrects and persists a pickup-less terminal touch from the saved timeline', async () => {
     const user = userEvent.setup();
     const game = makeEditableTimelineGame();
+    game.points[0].possessions[0].actions = [game.points[0].possessions[0].actions.at(-1)!];
     useSavedAdvancedGamesStore.setState({
       gamesById: { [game.id]: game },
       summariesLoaded: true,
@@ -133,12 +140,12 @@ describe('advanced analytics routes', () => {
     setMockSearchParams({ gameId: game.id });
 
     await renderScreen(<AdvancedGameTimelineScreen />);
-    await user.longPress(screen.getByTestId('advanced-timeline-action-goal-1'));
+    await user.press(screen.getByTestId('advanced-timeline-action-goal-1'));
 
-    expect(screen.getByText('Edit Scorer')).toBeVisible();
+    expect(screen.getByText('Edit Touch')).toBeVisible();
     expect(screen.getByTestId('player-chip-Alex')).toBeVisible();
     await user.press(screen.getByTestId('player-chip-Casey'));
-    await user.press(screen.getByTestId('advanced-goal-scorer-save'));
+    await user.press(screen.getByTestId('advanced-touch-save'));
 
     await waitFor(() => {
       expect(screen.getByText('Alex + Casey · Goal')).toBeVisible();
@@ -147,6 +154,79 @@ describe('advanced analytics routes', () => {
     expect(persistedGame?.points[0].possessions[0].actions[0]).toMatchObject({
       kind: 'throw',
       toPlayer: { refType: 'participant', participantId: 'casey' },
+    });
+  });
+
+  it('corrects one middle touch across its incoming and outgoing throws', async () => {
+    const user = userEvent.setup();
+    const game = makeEditableTimelineGame();
+    game.points[0].possessions[0].actions = [
+      game.points[0].possessions[0].actions[0],
+      {
+        id: 'pass-1',
+        kind: 'throw',
+        sideId: 'windchill',
+        thrower: { refType: 'participant', participantId: 'alex' },
+        toPlayer: { refType: 'participant', participantId: 'blair' },
+        result: 'complete',
+      },
+      {
+        id: 'pass-2',
+        kind: 'throw',
+        sideId: 'windchill',
+        thrower: { refType: 'participant', participantId: 'blair' },
+        toPlayer: { refType: 'participant', participantId: 'casey' },
+        result: 'complete',
+      },
+      {
+        id: 'goal-1',
+        kind: 'throw',
+        sideId: 'windchill',
+        thrower: { refType: 'participant', participantId: 'casey' },
+        toPlayer: { refType: 'participant', participantId: 'eli' },
+        result: 'goal',
+      },
+    ];
+    useSavedAdvancedGamesStore.setState({
+      gamesById: { [game.id]: game },
+      summariesLoaded: true,
+    });
+    setMockSearchParams({ gameId: game.id });
+
+    await renderScreen(<AdvancedGameTimelineScreen />);
+    const chainText = screen.getByText('Alex -> Blair -> Casey');
+    expect(chainText).toHaveProp('numberOfLines', 2);
+    await user.press(screen.getByTestId('advanced-timeline-chain-pass-1'));
+    expect(chainText.props.numberOfLines).toBeUndefined();
+    await user.press(screen.getByTestId('advanced-timeline-action-pass-1'));
+
+    expect(screen.getByText('Select the touch you want to correct.')).toBeVisible();
+    const middleTouch = screen.getByTestId('advanced-touch-pass-receiver:pass-1');
+    expect(screen.queryByText('PREVIEW')).toBeNull();
+    await user.press(middleTouch);
+    expect(middleTouch).toHaveTextContent(/Blair/);
+    expect(middleTouch.props.accessibilityLabel).toContain('Blair');
+    await user.press(screen.getByTestId('player-chip-Dana'));
+    expect(middleTouch).toHaveTextContent(/Dana/);
+    expect(middleTouch.props.accessibilityLabel).toContain('will change to Dana');
+    await user.press(screen.getByTestId('player-chip-Blair'));
+    expect(middleTouch).toHaveTextContent(/Blair/);
+    expect(middleTouch.props.accessibilityLabel).toContain('unchanged');
+    expect(screen.getByTestId('advanced-touch-save')).toBeDisabled();
+    await user.press(screen.getByTestId('player-chip-Dana'));
+    await user.press(screen.getByTestId('advanced-touch-save'));
+
+    await waitFor(() => {
+      const actions =
+        useSavedAdvancedGamesStore.getState().gamesById[game.id].points[0].possessions[0].actions;
+      expect(actions[1]).toMatchObject({
+        kind: 'throw',
+        toPlayer: { refType: 'participant', participantId: 'dana' },
+      });
+      expect(actions[2]).toMatchObject({
+        kind: 'throw',
+        thrower: { refType: 'participant', participantId: 'dana' },
+      });
     });
   });
 
@@ -185,7 +265,7 @@ describe('advanced analytics routes', () => {
     });
   });
 
-  it('corrects a scorer from an in-progress current-game timeline', async () => {
+  it('corrects a completed touch from an in-progress current-game timeline', async () => {
     const user = userEvent.setup();
     const game = { ...makeEditableTimelineGame(), status: 'in_progress' as const };
     useAdvancedTrackingStore.setState({ currentGameId: game.id, currentGame: game });
@@ -197,15 +277,15 @@ describe('advanced analytics routes', () => {
 
     await renderScreen(<AdvancedGameTimelineScreen />);
     expect(screen.getByText('In Progress')).toBeVisible();
-    await user.longPress(screen.getByTestId('advanced-timeline-action-goal-1'));
+    await user.press(screen.getByTestId('advanced-timeline-action-goal-1'));
     await user.press(screen.getByTestId('player-chip-Casey'));
-    await user.press(screen.getByTestId('advanced-goal-scorer-save'));
+    await user.press(screen.getByTestId('advanced-touch-save'));
 
     await waitFor(() => {
       expect(screen.getByText('Alex + Casey · Goal')).toBeVisible();
     });
     expect(
-      useAdvancedTrackingStore.getState().currentGame?.points[0].possessions[0].actions[0],
+      useAdvancedTrackingStore.getState().currentGame?.points[0].possessions[0].actions[1],
     ).toMatchObject({
       kind: 'throw',
       toPlayer: { refType: 'participant', participantId: 'casey' },
@@ -388,7 +468,7 @@ describe('advanced analytics routes', () => {
     const game = makeEditableTimelineGame();
     game.status = 'terminated';
     game.endReason = 'manual';
-    const lastAction = game.points[0].possessions[0].actions[0];
+    const lastAction = game.points[0].possessions[0].actions.at(-1)!;
     if (lastAction.kind !== 'throw') throw new Error('Expected a throw fixture.');
     lastAction.result = 'complete';
     useSavedAdvancedGamesStore.setState({
@@ -409,7 +489,7 @@ describe('advanced analytics routes', () => {
     const game = makeEditableTimelineGame();
     game.status = 'terminated';
     game.endReason = 'manual';
-    const lastAction = game.points[0].possessions[0].actions[0];
+    const lastAction = game.points[0].possessions[0].actions.at(-1)!;
     if (lastAction.kind !== 'throw') throw new Error('Expected a throw fixture.');
     lastAction.result = 'complete';
     useAdvancedTrackingStore.setState({ currentGameId: game.id, currentGame: game });
@@ -431,7 +511,7 @@ describe('advanced analytics routes', () => {
     );
   });
 
-  it('renders a stored timeline when its scorer correction history is invalid', async () => {
+  it('renders a stored timeline when its touch correction history is invalid', async () => {
     const game = makeEditableTimelineGame();
     game.points[0].subs = [
       {
@@ -474,7 +554,7 @@ describe('advanced analytics routes', () => {
 
   it('renders classified throw details on the advanced player page', async () => {
     const game = makeEditableTimelineGame();
-    const goalAction = game.points[0].possessions[0].actions[0];
+    const goalAction = game.points[0].possessions[0].actions.at(-1)!;
     if (goalAction.kind !== 'throw') throw new Error('Expected goal throw fixture.');
     goalAction.details = { type: 'huck' };
     useSavedAdvancedGamesStore.setState({

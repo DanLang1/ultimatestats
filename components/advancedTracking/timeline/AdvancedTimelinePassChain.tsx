@@ -1,3 +1,4 @@
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React, { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
@@ -12,11 +13,13 @@ import { Fonts } from '@/theme/theme';
 interface AdvancedTimelinePassChainProps {
   actions: ThrowDisplayAction[];
   showElapsed?: boolean;
+  onEdit?: () => void;
 }
 
 export default function AdvancedTimelinePassChain({
   actions,
   showElapsed = false,
+  onEdit,
 }: AdvancedTimelinePassChainProps) {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
@@ -34,7 +37,11 @@ export default function AdvancedTimelinePassChain({
   const fullText = lastReceiver ? `${chainText} -> ${lastReceiver}` : chainText;
 
   return (
-    <Pressable onPress={() => setIsTextExpanded((prev) => !prev)}>
+    <Pressable
+      testID={`advanced-timeline-chain-${actions[0].id}`}
+      accessibilityRole="button"
+      accessibilityLabel={isTextExpanded ? 'Collapse pass chain' : 'Show full pass chain'}
+      onPress={() => setIsTextExpanded((prev) => !prev)}>
       <View
         style={[
           styles.container,
@@ -55,6 +62,25 @@ export default function AdvancedTimelinePassChain({
             {formatClockDuration(firstElapsed)} – {formatClockDuration(lastElapsed)}
           </ThemedText>
         )}
+        {onEdit != null && (
+          <Pressable
+            testID={`advanced-timeline-action-${actions[0].id}`}
+            accessibilityRole="button"
+            accessibilityLabel="Edit pass chain participants"
+            accessibilityHint="Opens participant correction"
+            hitSlop={4}
+            onPress={(event) => {
+              event.stopPropagation();
+              onEdit();
+            }}
+            style={({ pressed }) => [styles.editButton, pressed && styles.editButtonPressed]}>
+            <MaterialCommunityIcons
+              name="pencil-outline"
+              size={scaleBySizeClass(17, sizeClass)}
+              color={palette.accent}
+            />
+          </Pressable>
+        )}
       </View>
     </Pressable>
   );
@@ -63,6 +89,7 @@ export default function AdvancedTimelinePassChain({
 function createStyles(sizeClass: SizeClass) {
   return StyleSheet.create({
     container: {
+      minHeight: 48,
       flexDirection: 'row',
       alignItems: 'center',
       gap: 8,
@@ -89,6 +116,16 @@ function createStyles(sizeClass: SizeClass) {
     elapsedLabel: {
       fontSize: scaleBySizeClass(10, sizeClass),
       fontFamily: Fonts.semiBold,
+      opacity: 0.7,
+    },
+    editButton: {
+      width: 44,
+      height: 44,
+      marginLeft: 'auto',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    editButtonPressed: {
       opacity: 0.7,
     },
   });

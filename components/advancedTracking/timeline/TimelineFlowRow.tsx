@@ -1,4 +1,3 @@
-import * as Haptics from 'expo-haptics';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 
@@ -9,7 +8,7 @@ import PossessionResultBadge from '@/components/advancedTracking/timeline/Posses
 import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import type { AdvancedActionLocator } from '@/lib/advancedTracking/advancedActionCorrectionUtils';
+import type { AdvancedTimelineTouchEditRequest } from '@/lib/advancedTracking/advancedTimelineTouchCorrectionUtils';
 import type { FlowItem, AdvancedTimelineSub } from '@/lib/advancedTracking/advancedTimelineUtils';
 import {
   getActionNodeColorKey,
@@ -34,8 +33,8 @@ interface TimelineFlowRowProps {
   oppSideId: string;
   subs: AdvancedTimelineSub[];
   pointId: string;
-  editableGoalActionIds?: ReadonlySet<string>;
-  onEditGoalScorer?: (locator: AdvancedActionLocator) => void;
+  editableTouchActionIds?: ReadonlySet<string>;
+  onEditTouch?: (request: AdvancedTimelineTouchEditRequest) => void;
 }
 
 interface TimelineFlowRenderContext {
@@ -44,8 +43,8 @@ interface TimelineFlowRenderContext {
   oppSideId: string;
   subs: AdvancedTimelineSub[];
   pointId: string;
-  editableGoalActionIds?: ReadonlySet<string>;
-  onEditGoalScorer?: (locator: AdvancedActionLocator) => void;
+  editableTouchActionIds?: ReadonlySet<string>;
+  onEditTouch?: (request: AdvancedTimelineTouchEditRequest) => void;
   palette: Palette;
   styles: ReturnType<typeof createStyles>;
 }
@@ -85,7 +84,7 @@ function renderNodeElement(item: FlowItem, context: TimelineFlowRenderContext): 
 }
 
 function renderRowContent(item: FlowItem, context: TimelineFlowRenderContext): React.ReactNode {
-  const { sideLabels, subs, pointId, editableGoalActionIds, onEditGoalScorer, palette, styles } =
+  const { sideLabels, subs, pointId, editableTouchActionIds, onEditTouch, palette, styles } =
     context;
 
   if (item.type === 'header') {
@@ -100,31 +99,52 @@ function renderRowContent(item: FlowItem, context: TimelineFlowRenderContext): R
   }
 
   if (item.type === 'action_chain') {
-    return <AdvancedTimelinePassChain actions={item.chainActions} showElapsed />;
+    const firstAction = item.chainActions[0];
+    const isEditable =
+      onEditTouch != null &&
+      item.chainActions.some((action) => editableTouchActionIds?.has(action.id) === true);
+    return (
+      <AdvancedTimelinePassChain
+        actions={item.chainActions}
+        showElapsed
+        onEdit={
+          isEditable
+            ? () =>
+                onEditTouch({
+                  pointId,
+                  possessionId: item.possession.possessionId,
+                  actionId: firstAction.id,
+                  preselectTouch: false,
+                })
+            : undefined
+        }
+      />
+    );
   }
 
-  const canEditGoalScorer =
-    item.action.kind === 'throw' &&
-    (item.action.throwResult === 'goal' || item.action.throwResult === 'callahan') &&
-    editableGoalActionIds?.has(item.action.id) === true &&
-    onEditGoalScorer != null;
-  const locator: AdvancedActionLocator = {
-    pointId,
-    possessionId: item.possession.possessionId,
-    actionId: item.action.id,
-  };
+  const canEditTouch = editableTouchActionIds?.has(item.action.id) === true && onEditTouch != null;
+  const preselectTouch =
+    item.action.kind === 'disc_pickup' ||
+    (item.action.kind === 'throw' &&
+      (item.action.throwResult === 'goal' ||
+        item.action.throwResult === 'drop' ||
+        item.action.throwResult === 'callahan')) ||
+    item.action.kind === 'pull';
 
   return (
     <View style={styles.actionWrapper}>
       <AdvancedTimelineActionChip
         action={item.action}
         showElapsed
-        onLongPress={
-          canEditGoalScorer
-            ? () => {
-                void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-                onEditGoalScorer(locator);
-              }
+        onPress={
+          canEditTouch
+            ? () =>
+                onEditTouch({
+                  pointId,
+                  possessionId: item.possession.possessionId,
+                  actionId: item.action.id,
+                  preselectTouch,
+                })
             : undefined
         }
       />
@@ -144,8 +164,8 @@ export default function TimelineFlowRow({
   oppSideId,
   subs,
   pointId,
-  editableGoalActionIds,
-  onEditGoalScorer,
+  editableTouchActionIds,
+  onEditTouch,
 }: TimelineFlowRowProps) {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
@@ -157,8 +177,8 @@ export default function TimelineFlowRow({
     oppSideId,
     subs,
     pointId,
-    editableGoalActionIds,
-    onEditGoalScorer,
+    editableTouchActionIds,
+    onEditTouch,
     palette,
     styles,
   };
