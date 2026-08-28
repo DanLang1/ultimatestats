@@ -246,7 +246,7 @@ export default function AdvancedGameStatsScreen() {
     {
       key: 'share',
       label: 'Share',
-      visible: rawGame.status === 'final',
+      visible: rawGame.status === 'final' || rawGame.status === 'terminated',
       onPress: handleShareGame,
       advancedMenuIcon: 'share-variant',
       inlineIcon: (

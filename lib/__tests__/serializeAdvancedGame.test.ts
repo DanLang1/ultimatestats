@@ -1,5 +1,6 @@
 import type { AdvancedTrackedGame } from '@/lib/advancedTracking/types';
 import { serializeAdvancedGame, serializeAdvancedGames } from '@/lib/sharing/serialize';
+import { validatePayload } from '@/lib/sharing/validate';
 
 function makeAdvancedGame(id: string, metadata?: AdvancedTrackedGame['metadata']) {
   return {
@@ -23,6 +24,20 @@ function makeAdvancedGame(id: string, metadata?: AdvancedTrackedGame['metadata']
 }
 
 describe('advanced game sharing serialization', () => {
+  it('round-trips a terminated game through sharing validation', () => {
+    const game: AdvancedTrackedGame = {
+      ...makeAdvancedGame('game-1'),
+      status: 'terminated',
+      endReason: 'manual',
+    };
+
+    const payload = validatePayload(serializeAdvancedGame(game));
+
+    expect(payload.type).toBe('advanced-game');
+    if (payload.type !== 'advanced-game') throw new Error('Expected an advanced-game payload.');
+    expect(payload.data).toMatchObject({ status: 'terminated', endReason: 'manual' });
+  });
+
   it('omits a private note from a single-game payload without mutating the game', () => {
     const game = makeAdvancedGame('game-1', {
       title: 'Final',

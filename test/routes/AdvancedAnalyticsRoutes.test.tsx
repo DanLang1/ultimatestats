@@ -98,6 +98,21 @@ describe('advanced analytics routes', () => {
     expect(screen.getByText('Rivals')).toBeVisible();
   });
 
+  it('shows the share action for a terminated advanced game', async () => {
+    const game = makeEditableTimelineGame();
+    game.status = 'terminated';
+    game.endReason = 'manual';
+    useSavedAdvancedGamesStore.setState({
+      gamesById: { [game.id]: game },
+      summariesLoaded: true,
+    });
+    setMockSearchParams({ gameId: game.id });
+
+    await renderScreen(<AdvancedGameScreen />);
+
+    expect(screen.getByTestId('header-action-share')).toBeVisible();
+  });
+
   it('edits and persists a private note from a saved advanced game', async () => {
     const user = userEvent.setup();
     arrangeAdvancedGame();
