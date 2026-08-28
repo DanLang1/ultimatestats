@@ -16,8 +16,9 @@ import {
   PlayerRef,
   PointPossession,
   PointSub,
+  PossessionAction,
   StoppageAction,
-  ThrowAction,
+  ThrowDetails,
   ThrowResult,
   getEligibleThrowTypes,
   TrackedPoint,
@@ -105,7 +106,7 @@ export interface ThrowDetailsTarget {
   possessionId: string;
   actionId: string;
   result: ThrowResult;
-  details?: ThrowAction['details'];
+  details?: ThrowDetails;
 }
 
 export function getLatestThrowDetailsTarget(
@@ -164,7 +165,7 @@ export function getDiscHolderRef(
   return getDiscHolderRefFromActions(possession.actions);
 }
 
-function getDiscHolderRefFromActions(actions: PointPossession['actions']): PlayerRef | null {
+function getDiscHolderRefFromActions(actions: PossessionAction[]): PlayerRef | null {
   for (let i = actions.length - 1; i >= 0; i--) {
     const action = actions[i];
     if (action.kind === 'disc_pickup') {
@@ -247,7 +248,7 @@ export interface PassChainEvent {
 function getPassChainActions(
   possession: PointPossession,
   point?: TrackedPoint | null,
-): PointPossession['actions'] {
+): PossessionAction[] {
   const postInjuryPickupState = getPostInjuryPickupState(possession, point);
   if (postInjuryPickupState === null) {
     return possession.actions;
@@ -512,57 +513,25 @@ export function getLastTurnoverEvent(
 
     const hasDefender = defender != null && defender.refType !== 'untracked';
 
-    let labelMap: Partial<Record<typeof result, string>>;
-    if (isFocusPossession) {
-      labelMap = {
-        throwaway: 'THROWAWAY',
-        drop: splitAttribution ? '50/50' : 'DROP',
-        stall: 'STALLED',
-        block: 'OPP D',
-        pressure: 'OPP PRESSURE',
-        callahan: 'CALLAHAN',
-      };
-    } else if (options.showSpecificResult) {
-      labelMap = {
-        throwaway: 'THROWAWAY',
-        drop: splitAttribution ? '50/50' : 'DROP',
-        stall: hasDefender ? 'STALL' : 'STALLED',
-        block: 'BLOCK',
-        pressure: 'PRESSURE',
-        callahan: 'CALLAHAN',
-      };
-    } else {
-      labelMap = {
-        throwaway: 'OPP TURN',
-        drop: 'OPP TURN',
-        stall: hasDefender ? 'STALL' : 'OPP TURN',
-        block: hasDefender ? 'BLOCK' : 'OPP TURN',
-        pressure: hasDefender ? 'PRESSURE' : 'OPP TURN',
-        callahan: 'CALLAHAN',
-      };
-    }
-
-    const label = labelMap[result];
+    const label = getLastTurnoverLabel(
+      result,
+      isFocusPossession,
+      options.showSpecificResult === true,
+      splitAttribution === true,
+      hasDefender,
+    );
     if (!label) return null;
 
-    // drop → toPlayer (the dropper); defensive turnovers on opp → defender; everything else → thrower
-    let responsibleName;
-    if (result === 'drop') {
-      responsibleName = getRefName(toPlayer, participants);
-    } else if (
-      (result === 'block' || result === 'stall' || result === 'pressure') &&
-      !isFocusPossession &&
-      hasDefender
-    ) {
-      responsibleName = getRefName(defender, participants);
-    } else if (result === 'stall' && !isFocusPossession && options.showSpecificResult) {
-      responsibleName = getRefName(thrower, participants);
-    } else if (result === 'block') {
-      // OPP D — no name shown
-      responsibleName = null;
-    } else {
-      responsibleName = getRefName(thrower, participants);
-    }
+    const responsibleName = getTurnoverResponsibleName({
+      result,
+      isFocusPossession,
+      showSpecificResult: options.showSpecificResult === true,
+      hasDefender,
+      toPlayer,
+      defender,
+      thrower,
+      participants,
+    });
 
     const isFiftyFifty = result === 'drop' && (splitAttribution ?? false);
 
@@ -576,6 +545,78 @@ export function getLastTurnoverEvent(
   }
 
   return null;
+}
+
+function getLastTurnoverLabel(
+  result: ThrowResult,
+  isFocusPossession: boolean,
+  showSpecificResult: boolean,
+  isSplitAttribution: boolean,
+  hasDefender: boolean,
+): string | undefined {
+  if (isFocusPossession) {
+    if (result === 'drop') return isSplitAttribution ? '50/50' : 'DROP';
+    return (
+      {
+        throwaway: 'THROWAWAY',
+        stall: 'STALLED',
+        block: 'OPP D',
+        pressure: 'OPP PRESSURE',
+        callahan: 'CALLAHAN',
+      } as Partial<Record<ThrowResult, string>>
+    )[result];
+  }
+  if (showSpecificResult) {
+    if (result === 'drop') return isSplitAttribution ? '50/50' : 'DROP';
+    if (result === 'stall') return hasDefender ? 'STALL' : 'STALLED';
+    return (
+      {
+        throwaway: 'THROWAWAY',
+        block: 'BLOCK',
+        pressure: 'PRESSURE',
+        callahan: 'CALLAHAN',
+      } as Partial<Record<ThrowResult, string>>
+    )[result];
+  }
+  if (result === 'callahan') return 'CALLAHAN';
+  if (result === 'stall') return hasDefender ? 'STALL' : 'OPP TURN';
+  if (result === 'block') return hasDefender ? 'BLOCK' : 'OPP TURN';
+  if (result === 'pressure') return hasDefender ? 'PRESSURE' : 'OPP TURN';
+  return 'OPP TURN';
+}
+
+function getTurnoverResponsibleName({
+  result,
+  isFocusPossession,
+  showSpecificResult,
+  hasDefender,
+  toPlayer,
+  defender,
+  thrower,
+  participants,
+}: {
+  result: ThrowResult;
+  isFocusPossession: boolean;
+  showSpecificResult: boolean;
+  hasDefender: boolean;
+  toPlayer: PlayerRef | undefined;
+  defender: PlayerRef | undefined;
+  thrower: PlayerRef | undefined;
+  participants: Participant[];
+}): string | null {
+  if (result === 'drop') return getRefName(toPlayer, participants);
+  if (
+    (result === 'block' || result === 'stall' || result === 'pressure') &&
+    !isFocusPossession &&
+    hasDefender
+  ) {
+    return getRefName(defender, participants);
+  }
+  if (result === 'stall' && !isFocusPossession && showSpecificResult) {
+    return getRefName(thrower, participants);
+  }
+  if (result === 'block') return null;
+  return getRefName(thrower, participants);
 }
 
 /**

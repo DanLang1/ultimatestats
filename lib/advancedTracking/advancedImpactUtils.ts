@@ -1,4 +1,4 @@
-import type { AnalyticsGame, AttributionType } from './analyticsTypes';
+import type { AnalyticsGame, AnalyticsPoint, AttributionType } from './analyticsTypes';
 import { getPointStateForSide } from './buildAnalyticsGame';
 import { PRESSURE_PLUS_MINUS_VALUE } from './statConstants';
 
@@ -18,98 +18,20 @@ export function computeAdvancedImpact(
   focusSideId: string,
   participantSideId?: string,
 ): AdvancedImpactPoint[] {
-  const pointById = new Map(game.points.map((point) => [point.id, point]));
-  // Build per-point attribution map: pointId → type → count
-  const pointAttribs = new Map<string, Map<AttributionType, number>>();
-  for (const attr of game.attributions) {
-    if (attr.participantId !== participantId) continue;
-    if (
-      participantSideId != null &&
-      !pointById.get(attr.pointId)?.linesBySide[participantSideId]?.includes(participantId)
-    ) {
-      continue;
-    }
-    let typeMap = pointAttribs.get(attr.pointId);
-    if (!typeMap) {
-      typeMap = new Map();
-      pointAttribs.set(attr.pointId, typeMap);
-    }
-    typeMap.set(attr.type, (typeMap.get(attr.type) ?? 0) + attr.weight);
-  }
-
-  // Track focus side score separately since scoresBySide is start-of-point
+  const pointAttribs = buildParticipantAttributions(game, participantId, participantSideId);
   let cumulativePlusMinus = 0;
   const result: AdvancedImpactPoint[] = [];
 
   for (const point of game.points) {
-    const pointParticipantSideId = Object.entries(point.linesBySide).find(([, participantIds]) =>
-      participantIds.includes(participantId),
-    )?.[0];
+    const pointParticipantSideId = findParticipantSide(point, participantId);
     const perspectiveSideId = participantSideId ?? pointParticipantSideId ?? focusSideId;
-    const onField =
-      pointParticipantSideId != null &&
-      (participantSideId == null || pointParticipantSideId === participantSideId);
-    const typeMap = pointAttribs.get(point.id);
-
-    let plusMinusDelta = 0;
-    const parts: string[] = [];
-
-    if (onField && typeMap) {
-      const get = (t: AttributionType) => typeMap.get(t) ?? 0;
-
-      const goals = get('goal');
-      const assists = get('assist');
-      const ha = get('hockey_assist');
-      const blocks = get('block');
-      const pressures = get('pressure');
-      const callahans = get('callahan');
-      const throwaways = get('throwaway');
-      const drops = get('drop');
-      const stalls = get('stall');
-      const stallsConceded = get('stall_conceded');
-      const nonCallahanGoals = Math.max(0, goals - callahans);
-      const nonCallahanBlocks = Math.max(0, blocks - callahans);
-
-      plusMinusDelta =
-        goals +
-        assists +
-        blocks +
-        pressures * PRESSURE_PLUS_MINUS_VALUE +
-        stalls -
-        throwaways -
-        drops -
-        stallsConceded;
-
-      if (callahans > 0) parts.push('C');
-      if (nonCallahanGoals > 0 && assists > 0) parts.push('GA');
-      else {
-        if (nonCallahanGoals > 0) {
-          parts.push(nonCallahanGoals > 1 ? `${nonCallahanGoals}G` : 'G');
-        }
-        if (assists > 0) parts.push(assists > 1 ? `${assists}A` : 'A');
-      }
-      if (ha > 0) parts.push(ha > 1 ? `${ha}HA` : 'HA');
-      if (nonCallahanBlocks > 0) {
-        parts.push(nonCallahanBlocks > 1 ? `${nonCallahanBlocks}B` : 'B');
-      }
-      if (pressures > 0) parts.push(pressures > 1 ? `${pressures}P` : 'P');
-      if (stalls > 0) parts.push(stalls > 1 ? `${stalls}Stl` : 'Stl');
-      if (stallsConceded > 0) parts.push(stallsConceded > 1 ? `${stallsConceded}StlC` : 'StlC');
-      if (throwaways > 0) parts.push(throwaways > 1 ? `${throwaways}T` : 'T');
-      if (drops > 0) parts.push(drops > 1 ? `${drops}D` : 'D');
-    }
+    const onField = isParticipantOnField(pointParticipantSideId, participantSideId);
+    const { plusMinusDelta, description } = onField
+      ? getImpactSummary(pointAttribs.get(point.id))
+      : { plusMinusDelta: 0, description: '' };
 
     cumulativePlusMinus += plusMinusDelta;
-
-    // Derive post-point score for focus side
-    const startScore = point.scoresBySide[perspectiveSideId] ?? 0;
-    const focusScored = point.scoringSideId === perspectiveSideId ? 1 : 0;
-    const focusScore = startScore + focusScored;
-
-    const oppSideId = Object.keys(point.scoresBySide).find((id) => id !== perspectiveSideId);
-    const oppStartScore = oppSideId ? (point.scoresBySide[oppSideId] ?? 0) : 0;
-    const oppScored = oppSideId && point.scoringSideId === oppSideId ? 1 : 0;
-    const oppScore = oppStartScore + oppScored;
+    const score = getImpactScore(point, perspectiveSideId);
 
     result.push({
       pointIndex: point.pointIndex,
@@ -120,10 +42,110 @@ export function computeAdvancedImpact(
           : (point.state ?? null),
       plusMinusDelta,
       cumulativePlusMinus,
-      description: parts.join(', '),
-      score: `${focusScore}-${oppScore}`,
+      description,
+      score,
     });
   }
 
   return result;
+}
+
+function buildParticipantAttributions(
+  game: AnalyticsGame,
+  participantId: string,
+  participantSideId?: string,
+): Map<string, Map<AttributionType, number>> {
+  const pointById = new Map(game.points.map((point) => [point.id, point]));
+  const pointAttribs = new Map<string, Map<AttributionType, number>>();
+  for (const attr of game.attributions) {
+    if (attr.participantId !== participantId) continue;
+    if (
+      participantSideId != null &&
+      !pointById.get(attr.pointId)?.linesBySide[participantSideId]?.includes(participantId)
+    ) {
+      continue;
+    }
+    const typeMap = pointAttribs.get(attr.pointId) ?? new Map<AttributionType, number>();
+    typeMap.set(attr.type, (typeMap.get(attr.type) ?? 0) + attr.weight);
+    pointAttribs.set(attr.pointId, typeMap);
+  }
+  return pointAttribs;
+}
+
+function findParticipantSide(point: AnalyticsPoint, participantId: string): string | undefined {
+  return Object.entries(point.linesBySide).find(([, participantIds]) =>
+    participantIds.includes(participantId),
+  )?.[0];
+}
+
+function isParticipantOnField(
+  participantSideId: string | undefined,
+  requestedSideId: string | undefined,
+): boolean {
+  return (
+    participantSideId != null && (requestedSideId == null || participantSideId === requestedSideId)
+  );
+}
+
+function getImpactSummary(typeMap?: Map<AttributionType, number>): {
+  plusMinusDelta: number;
+  description: string;
+} {
+  if (!typeMap) return { plusMinusDelta: 0, description: '' };
+  const get = (type: AttributionType) => typeMap.get(type) ?? 0;
+  const goals = get('goal');
+  const assists = get('assist');
+  const hockeyAssists = get('hockey_assist');
+  const blocks = get('block');
+  const pressures = get('pressure');
+  const callahans = get('callahan');
+  const throwaways = get('throwaway');
+  const drops = get('drop');
+  const stalls = get('stall');
+  const stallsConceded = get('stall_conceded');
+  const nonCallahanGoals = Math.max(0, goals - callahans);
+  const nonCallahanBlocks = Math.max(0, blocks - callahans);
+  const parts: string[] = [];
+
+  if (callahans > 0) parts.push('C');
+  if (nonCallahanGoals > 0 && assists > 0) parts.push('GA');
+  else {
+    addCountLabel(parts, nonCallahanGoals, 'G');
+    addCountLabel(parts, assists, 'A');
+  }
+  addCountLabel(parts, hockeyAssists, 'HA');
+  addCountLabel(parts, nonCallahanBlocks, 'B');
+  addCountLabel(parts, pressures, 'P');
+  addCountLabel(parts, stalls, 'Stl');
+  addCountLabel(parts, stallsConceded, 'StlC');
+  addCountLabel(parts, throwaways, 'T');
+  addCountLabel(parts, drops, 'D');
+
+  return {
+    plusMinusDelta:
+      goals +
+      assists +
+      blocks +
+      pressures * PRESSURE_PLUS_MINUS_VALUE +
+      stalls -
+      throwaways -
+      drops -
+      stallsConceded,
+    description: parts.join(', '),
+  };
+}
+
+function addCountLabel(parts: string[], count: number, suffix: string): void {
+  if (count <= 0) return;
+  parts.push(count > 1 ? `${count}${suffix}` : suffix);
+}
+
+function getImpactScore(point: AnalyticsPoint, perspectiveSideId: string): string {
+  const startScore = point.scoresBySide[perspectiveSideId] ?? 0;
+  const ownScore = startScore + (point.scoringSideId === perspectiveSideId ? 1 : 0);
+  const opposingSideId = Object.keys(point.scoresBySide).find((id) => id !== perspectiveSideId);
+  const opposingStartScore = opposingSideId ? (point.scoresBySide[opposingSideId] ?? 0) : 0;
+  const opposingScore =
+    opposingStartScore + (opposingSideId && point.scoringSideId === opposingSideId ? 1 : 0);
+  return `${ownScore}-${opposingScore}`;
 }

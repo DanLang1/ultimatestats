@@ -24,6 +24,17 @@ const ANDROID_ON_DEVICE_RECOGNITION_SERVICE_PACKAGE = 'com.google.android.as';
 const MAX_SPEECH_ALTERNATIVES = 5;
 const VOICE_LISTENING_WINDOW_MS = 10000;
 
+type ListeningWindowTimeoutRef = {
+  current: ReturnType<typeof setTimeout> | null;
+};
+
+function clearListeningWindowTimeout(timeoutRef: ListeningWindowTimeoutRef): void {
+  if (timeoutRef.current == null) return;
+
+  clearTimeout(timeoutRef.current);
+  timeoutRef.current = null;
+}
+
 type VoiceCommandStatus = 'idle' | 'listening' | 'recording' | 'unsupported' | 'error';
 
 type VoiceFeedback =
@@ -65,15 +76,8 @@ export function useVoiceStatCommands(input: UseVoiceStatCommandsInput): VoiceSta
 
   const contextualStrings = buildVoiceContextualStrings(input.activeParticipants);
 
-  const clearListeningWindowTimeout = () => {
-    if (listeningWindowTimeoutRef.current == null) return;
-
-    clearTimeout(listeningWindowTimeoutRef.current);
-    listeningWindowTimeoutRef.current = null;
-  };
-
   const startListeningWindowTimer = (onTimeout: () => void) => {
-    clearListeningWindowTimeout();
+    clearListeningWindowTimeout(listeningWindowTimeoutRef);
     listeningWindowTimeoutRef.current = setTimeout(onTimeout, VOICE_LISTENING_WINDOW_MS);
   };
 
@@ -81,7 +85,7 @@ export function useVoiceStatCommands(input: UseVoiceStatCommandsInput): VoiceSta
     logVoiceEnvironment();
 
     return () => {
-      clearListeningWindowTimeout();
+      clearListeningWindowTimeout(listeningWindowTimeoutRef);
       shouldListenRef.current = false;
       ExpoSpeechRecognitionModule.abort();
     };
@@ -91,17 +95,17 @@ export function useVoiceStatCommands(input: UseVoiceStatCommandsInput): VoiceSta
     if (input.enabled) return;
 
     shouldListenRef.current = false;
-    clearListeningWindowTimeout();
+    clearListeningWindowTimeout(listeningWindowTimeoutRef);
     recognitionCompletedRef.current = true;
     ExpoSpeechRecognitionModule.abort();
 
     // Recognition was just aborted; keep UI state in lockstep with the external module.
-    /* eslint-disable react/react-compiler */
+    /* eslint-disable react/set-state-in-effect */
     setIsArmed(false);
     setStatus('idle');
     setMessage(null);
     setTranscript(null);
-    /* eslint-enable react/react-compiler */
+    /* eslint-enable react/set-state-in-effect */
   }, [input.enabled]);
 
   const beginRecognition = () => {
@@ -179,7 +183,7 @@ export function useVoiceStatCommands(input: UseVoiceStatCommandsInput): VoiceSta
   useSpeechRecognitionEvent('end', () => {
     logVoiceDebug('end', { recognitionCompleted: recognitionCompletedRef.current });
     shouldListenRef.current = false;
-    clearListeningWindowTimeout();
+    clearListeningWindowTimeout(listeningWindowTimeoutRef);
     setIsArmed(false);
     if (recognitionCompletedRef.current) return;
 
@@ -201,7 +205,7 @@ export function useVoiceStatCommands(input: UseVoiceStatCommandsInput): VoiceSta
     logVoiceDebug('nomatch');
     recognitionCompletedRef.current = true;
     shouldListenRef.current = false;
-    clearListeningWindowTimeout();
+    clearListeningWindowTimeout(listeningWindowTimeoutRef);
     setIsArmed(false);
     setStatus('unsupported');
     setMessage('No clear command');
@@ -229,7 +233,7 @@ export function useVoiceStatCommands(input: UseVoiceStatCommandsInput): VoiceSta
 
     recognitionCompletedRef.current = true;
     shouldListenRef.current = false;
-    clearListeningWindowTimeout();
+    clearListeningWindowTimeout(listeningWindowTimeoutRef);
     setIsArmed(false);
 
     if (transcript != null && transcript.trim()) {
@@ -292,7 +296,7 @@ export function useVoiceStatCommands(input: UseVoiceStatCommandsInput): VoiceSta
       setMessage('No command heard');
       shouldListenRef.current = false;
       setIsArmed(false);
-      clearListeningWindowTimeout();
+      clearListeningWindowTimeout(listeningWindowTimeoutRef);
       ExpoSpeechRecognitionModule.abort();
       return;
     }
@@ -307,7 +311,7 @@ export function useVoiceStatCommands(input: UseVoiceStatCommandsInput): VoiceSta
       setMessage(`Heard: ${parseResult.transcript}`);
       shouldListenRef.current = false;
       setIsArmed(false);
-      clearListeningWindowTimeout();
+      clearListeningWindowTimeout(listeningWindowTimeoutRef);
       ExpoSpeechRecognitionModule.abort();
       return;
     }
@@ -318,7 +322,7 @@ export function useVoiceStatCommands(input: UseVoiceStatCommandsInput): VoiceSta
       setMessage('Tap who has the disc first');
       shouldListenRef.current = false;
       setIsArmed(false);
-      clearListeningWindowTimeout();
+      clearListeningWindowTimeout(listeningWindowTimeoutRef);
       ExpoSpeechRecognitionModule.abort();
       return;
     }
@@ -333,7 +337,7 @@ export function useVoiceStatCommands(input: UseVoiceStatCommandsInput): VoiceSta
     const commandResult = recordVoicePass(parseResult.result.command, throwerParticipantId, input);
     shouldListenRef.current = false;
     setIsArmed(false);
-    clearListeningWindowTimeout();
+    clearListeningWindowTimeout(listeningWindowTimeoutRef);
     ExpoSpeechRecognitionModule.abort();
     if (commandResult.ok) {
       recordedCommandKeyRef.current = commandKey;
@@ -373,7 +377,7 @@ export function useVoiceStatCommands(input: UseVoiceStatCommandsInput): VoiceSta
     if (!ExpoSpeechRecognitionModule.isRecognitionAvailable()) {
       logVoiceDebug('recognition unavailable');
       shouldListenRef.current = false;
-      clearListeningWindowTimeout();
+      clearListeningWindowTimeout(listeningWindowTimeoutRef);
       setIsArmed(false);
       setStatus('error');
       setMessage('Voice not available');
@@ -389,7 +393,7 @@ export function useVoiceStatCommands(input: UseVoiceStatCommandsInput): VoiceSta
     });
     if (!permissions.granted) {
       shouldListenRef.current = false;
-      clearListeningWindowTimeout();
+      clearListeningWindowTimeout(listeningWindowTimeoutRef);
       setIsArmed(false);
       setStatus('error');
       setMessage('Microphone permission needed');
@@ -409,7 +413,7 @@ export function useVoiceStatCommands(input: UseVoiceStatCommandsInput): VoiceSta
 
   const stopListening = () => {
     shouldListenRef.current = false;
-    clearListeningWindowTimeout();
+    clearListeningWindowTimeout(listeningWindowTimeoutRef);
     setIsArmed(false);
     setStatus('idle');
     setMessage(null);
@@ -430,7 +434,7 @@ export function useVoiceStatCommands(input: UseVoiceStatCommandsInput): VoiceSta
       console.error('Failed to start voice recognition', error);
       recognitionCompletedRef.current = true;
       shouldListenRef.current = false;
-      clearListeningWindowTimeout();
+      clearListeningWindowTimeout(listeningWindowTimeoutRef);
       setIsArmed(false);
       setStatus('error');
       setMessage('Voice not available');

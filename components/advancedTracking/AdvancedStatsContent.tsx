@@ -21,6 +21,8 @@ import {
   getInboundPullCount,
 } from '@/lib/advancedTracking/advancedPullStatsUtils';
 import { computeAdvancedTeamStats } from '@/lib/advancedTracking/advancedTeamStatsUtils';
+import type { AdvancedTeamStats } from '@/lib/advancedTracking/advancedTeamStatsUtils';
+import type { AdvancedThrowTypeStats } from '@/lib/advancedTracking/advancedThrowTypeStatsUtils';
 import { computeAdvancedTimeOfPossessionStats } from '@/lib/advancedTracking/advancedTimeOfPossessionUtils';
 import { getAnalyticsOpposingSideId } from '@/lib/advancedTracking/analyticsPerspectiveUtils';
 import { AnalyticsGame } from '@/lib/advancedTracking/analyticsTypes';
@@ -81,80 +83,10 @@ export default function AdvancedStatsContent({
     ? null
     : computeAdvancedTimeOfPossessionStats(game, perspectiveSideId, opposingSideId);
   const { throwTypes } = teamStats;
-  const huckCompletionPct = throwTypes.huckAttempts > 0 ? throwTypes.huckCompletionPct : null;
-
-  const huckTurnoverStats = [
-    { label: 'Throwaways', value: throwTypes.huckThrowaways },
-    { label: 'Drops', value: throwTypes.huckDrops },
-    { label: 'Blocked', value: throwTypes.huckBlocks },
-    { label: 'Pressured', value: throwTypes.huckPressures },
-  ].filter(({ value }) => value > 0);
-
-  const resetTurnoverStats = [
-    { label: 'Throwaways', value: throwTypes.resetThrowaways },
-    { label: 'Drops', value: throwTypes.resetDrops },
-    { label: 'Blocked', value: throwTypes.resetBlocks },
-    { label: 'Pressured', value: throwTypes.resetPressures },
-  ].filter(({ value }) => value > 0);
-
-  const possessionFlowStats: { label: string; value: string | number; sublabel?: string }[] = [];
-
-  if (teamStats.possessionsPerPoint != null) {
-    possessionFlowStats.push({
-      label: 'Avg Poss/Pt',
-      value: teamStats.possessionsPerPoint.toFixed(1),
-    });
-  }
-  if (teamStats.multiPossessionPointPct != null) {
-    possessionFlowStats.push({
-      label: 'Multi-Turn Pts',
-      value: formatPercent(teamStats.multiPossessionPointPct),
-      sublabel: `${teamStats.multiPossessionPoints}/${teamStats.completedPoints}`,
-    });
-  }
-  if (teamStats.completedPassesPerPoint != null) {
-    possessionFlowStats.push({
-      label: 'Passes/Point',
-      value: formatDecimal(teamStats.completedPassesPerPoint),
-    });
-  }
-  if (teamStats.completedPassesPerPossession != null) {
-    possessionFlowStats.push({
-      label: 'Passes/Poss',
-      value: formatDecimal(teamStats.completedPassesPerPossession),
-    });
-  }
-
-  const efficiencyStats: { label: string; value: string | number; sublabel?: string }[] = [];
-
-  efficiencyStats.push(
-    {
-      label: 'D-Efficiency',
-      value: formatNullablePercent(teamStats.dEfficiency),
-      sublabel: `${teamStats.breaks}/${teamStats.breaks + teamStats.oppHolds}`,
-    },
-    {
-      label: 'Overall Conversion',
-      value: formatNullablePercent(teamStats.possessionConversionPct),
-      sublabel: `${teamStats.totalGoals}/${teamStats.totalPossessions}`,
-    },
-  );
-
-  if (teamStats.completionPct != null) {
-    efficiencyStats.push({
-      label: 'Completion',
-      value: formatPercent(teamStats.completionPct),
-      sublabel: `${teamStats.totalCompletedPasses}/${teamStats.totalThrowAttempts}`,
-    });
-  }
-  efficiencyStats.push(
-    { label: 'Passes', value: teamStats.totalCompletedPasses },
-    { label: 'Blk/D-Pt', value: formatDecimal(teamStats.blocksPerDPoint) },
-    { label: 'Prs/D-Pt', value: formatDecimal(teamStats.pressuresPerDPoint) },
-    { label: 'Turn(s)', value: teamStats.totalTurnovers },
-    { label: 'Block(s)', value: teamStats.totalBlocks },
-    { label: 'Pressure(s)', value: teamStats.totalPressures },
-  );
+  const { huckCompletionPct, huckTurnoverStats, resetTurnoverStats } =
+    buildThrowTypeStats(throwTypes);
+  const possessionFlowStats = buildPossessionFlowStats(teamStats);
+  const efficiencyStats = buildEfficiencyStats(teamStats);
 
   const sorted = [...playerStats].sort((a, b) => b.plusMinus - a.plusMinus);
   const topPerformers = sorted.filter((p) => p.plusMinus > 0).slice(0, 3);
@@ -511,6 +443,93 @@ Formula: Scoring possessions on D-points ÷ possessions on D-points`}
       )}
     </>
   );
+}
+
+interface StatsDisplayItem {
+  label: string;
+  value: string | number;
+  sublabel?: string;
+}
+
+function buildThrowTypeStats(throwTypes: AdvancedThrowTypeStats): {
+  huckCompletionPct: number | null;
+  huckTurnoverStats: StatsDisplayItem[];
+  resetTurnoverStats: StatsDisplayItem[];
+} {
+  return {
+    huckCompletionPct: throwTypes.huckAttempts > 0 ? throwTypes.huckCompletionPct : null,
+    huckTurnoverStats: buildTurnoverStats([
+      ['Throwaways', throwTypes.huckThrowaways],
+      ['Drops', throwTypes.huckDrops],
+      ['Blocked', throwTypes.huckBlocks],
+      ['Pressured', throwTypes.huckPressures],
+    ]),
+    resetTurnoverStats: buildTurnoverStats([
+      ['Throwaways', throwTypes.resetThrowaways],
+      ['Drops', throwTypes.resetDrops],
+      ['Blocked', throwTypes.resetBlocks],
+      ['Pressured', throwTypes.resetPressures],
+    ]),
+  };
+}
+
+function buildTurnoverStats(entries: [string, number][]): StatsDisplayItem[] {
+  return entries.filter(([, value]) => value > 0).map(([label, value]) => ({ label, value }));
+}
+
+function buildPossessionFlowStats(teamStats: AdvancedTeamStats): StatsDisplayItem[] {
+  const stats: StatsDisplayItem[] = [];
+  if (teamStats.possessionsPerPoint != null) {
+    stats.push({ label: 'Avg Poss/Pt', value: teamStats.possessionsPerPoint.toFixed(1) });
+  }
+  if (teamStats.multiPossessionPointPct != null) {
+    stats.push({
+      label: 'Multi-Turn Pts',
+      value: formatPercent(teamStats.multiPossessionPointPct),
+      sublabel: `${teamStats.multiPossessionPoints}/${teamStats.completedPoints}`,
+    });
+  }
+  if (teamStats.completedPassesPerPoint != null) {
+    stats.push({ label: 'Passes/Point', value: formatDecimal(teamStats.completedPassesPerPoint) });
+  }
+  if (teamStats.completedPassesPerPossession != null) {
+    stats.push({
+      label: 'Passes/Poss',
+      value: formatDecimal(teamStats.completedPassesPerPossession),
+    });
+  }
+  return stats;
+}
+
+function buildEfficiencyStats(teamStats: AdvancedTeamStats): StatsDisplayItem[] {
+  const stats: StatsDisplayItem[] = [
+    {
+      label: 'D-Efficiency',
+      value: formatNullablePercent(teamStats.dEfficiency),
+      sublabel: `${teamStats.breaks}/${teamStats.breaks + teamStats.oppHolds}`,
+    },
+    {
+      label: 'Overall Conversion',
+      value: formatNullablePercent(teamStats.possessionConversionPct),
+      sublabel: `${teamStats.totalGoals}/${teamStats.totalPossessions}`,
+    },
+  ];
+  if (teamStats.completionPct != null) {
+    stats.push({
+      label: 'Completion',
+      value: formatPercent(teamStats.completionPct),
+      sublabel: `${teamStats.totalCompletedPasses}/${teamStats.totalThrowAttempts}`,
+    });
+  }
+  stats.push(
+    { label: 'Passes', value: teamStats.totalCompletedPasses },
+    { label: 'Blk/D-Pt', value: formatDecimal(teamStats.blocksPerDPoint) },
+    { label: 'Prs/D-Pt', value: formatDecimal(teamStats.pressuresPerDPoint) },
+    { label: 'Turn(s)', value: teamStats.totalTurnovers },
+    { label: 'Block(s)', value: teamStats.totalBlocks },
+    { label: 'Pressure(s)', value: teamStats.totalPressures },
+  );
+  return stats;
 }
 
 function createStyles(isLandscape: boolean, sizeClass: SizeClass) {

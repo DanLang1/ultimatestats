@@ -61,55 +61,39 @@ export function PlayerChip({
   const { mmpColor, fmpColor } = useSettingsStore();
   const styles = createStyles(sizeClass);
 
-  let activeColor: string;
-  if (matchingType === 'fmp') {
-    activeColor = fmpColor;
-  } else if (matchingType === 'mmp') {
-    activeColor = mmpColor;
-  } else {
-    activeColor = palette.accent;
-  }
-
-  let roleColor: string;
-  if (matchingType === 'fmp') {
-    roleColor = fmpColor;
-  } else if (matchingType === 'mmp') {
-    roleColor = mmpColor;
-  } else {
-    roleColor = palette.textMuted;
-  }
+  const activeColor = getMatchingColor(matchingType, fmpColor, mmpColor, palette.accent);
+  const roleColor = getMatchingColor(matchingType, fmpColor, mmpColor, palette.textMuted);
 
   // Text colors - use luminance-based contrast when selected, modal variants when useModalColors is true
   const selectedTextColor = getContrastingTextColor(activeColor);
 
-  let borderColor: string;
-  if (selected) {
-    borderColor = activeColor;
-  } else if (matchingType === 'mmp') {
-    borderColor = mmpColor;
-  } else if (matchingType === 'fmp') {
-    borderColor = fmpColor;
-  } else if (useModalColors) {
-    borderColor = palette.overlay15;
-  } else {
-    borderColor = palette.border;
-  }
-
-  let textColor: string;
-  if (selected) {
-    textColor = selectedTextColor;
-  } else if (isActive) {
-    textColor = useModalColors ? palette.modalText : palette.textInverse;
-  } else {
-    textColor = useModalColors ? palette.modalTextMuted : palette.textMuted;
-  }
-
-  let subtitleColor: string;
-  if (selected) {
-    subtitleColor = selectedTextColor;
-  } else {
-    subtitleColor = useModalColors ? palette.modalTextMuted : palette.textMuted;
-  }
+  const borderColor = getBorderColor({
+    selected,
+    matchingType,
+    useModalColors,
+    activeColor,
+    fmpColor,
+    mmpColor,
+    modalBorderColor: palette.overlay15,
+    borderColor: palette.border,
+  });
+  const textColor = getTextColor({
+    selected,
+    isActive,
+    useModalColors,
+    selectedTextColor,
+    activeTextColor: palette.textInverse,
+    inactiveTextColor: palette.textMuted,
+    modalTextColor: palette.modalText,
+    modalMutedTextColor: palette.modalTextMuted,
+  });
+  const subtitleColor = getSubtitleColor(
+    selected,
+    useModalColors,
+    selectedTextColor,
+    palette.modalTextMuted,
+    palette.textMuted,
+  );
 
   const handlePress = disabled ? undefined : (restriction?.onPress ?? onPress);
 
@@ -170,6 +154,78 @@ export function PlayerChip({
       )}
     </Pressable>
   );
+}
+
+function getMatchingColor(
+  matchingType: MatchingType | null | undefined,
+  fmpColor: string,
+  mmpColor: string,
+  fallbackColor: string,
+): string {
+  if (matchingType === 'fmp') return fmpColor;
+  if (matchingType === 'mmp') return mmpColor;
+  return fallbackColor;
+}
+
+function getBorderColor({
+  selected,
+  matchingType,
+  useModalColors,
+  activeColor,
+  fmpColor,
+  mmpColor,
+  modalBorderColor,
+  borderColor,
+}: {
+  selected: boolean;
+  matchingType: MatchingType | null | undefined;
+  useModalColors: boolean;
+  activeColor: string;
+  fmpColor: string;
+  mmpColor: string;
+  modalBorderColor: string;
+  borderColor: string;
+}): string {
+  if (selected) return activeColor;
+  if (matchingType === 'mmp') return mmpColor;
+  if (matchingType === 'fmp') return fmpColor;
+  if (useModalColors) return modalBorderColor;
+  return borderColor;
+}
+
+function getTextColor({
+  selected,
+  isActive,
+  useModalColors,
+  selectedTextColor,
+  activeTextColor,
+  inactiveTextColor,
+  modalTextColor,
+  modalMutedTextColor,
+}: {
+  selected: boolean;
+  isActive: boolean;
+  useModalColors: boolean;
+  selectedTextColor: string;
+  activeTextColor: string;
+  inactiveTextColor: string;
+  modalTextColor: string;
+  modalMutedTextColor: string;
+}): string {
+  if (selected) return selectedTextColor;
+  if (isActive) return useModalColors ? modalTextColor : activeTextColor;
+  return useModalColors ? modalMutedTextColor : inactiveTextColor;
+}
+
+function getSubtitleColor(
+  selected: boolean,
+  useModalColors: boolean,
+  selectedTextColor: string,
+  modalMutedTextColor: string,
+  textMutedColor: string,
+): string {
+  if (selected) return selectedTextColor;
+  return useModalColors ? modalMutedTextColor : textMutedColor;
 }
 
 interface PlayerChipStyleOptions {

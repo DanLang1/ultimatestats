@@ -31,10 +31,15 @@ import { MatchingType, Player, PlayerRole } from '@/lib/storage/types';
 import { generateId } from '@/lib/utils';
 import { useGameStore } from '@/store/basic/gameStore';
 import { useLinePresetsStore } from '@/store/linePresetsStore';
-import { useSettingsStore } from '@/store/settingsStore';
+import { LinePlayerSortOrder, useSettingsStore } from '@/store/settingsStore';
 import { Fonts } from '@/theme/theme';
 
 type RoleFilter = PlayerRole | 'unset' | null;
+
+interface PlayerGroup {
+  label: string;
+  players: Player[];
+}
 
 export default function EditRosterScreen() {
   const { sizeClass } = useLayout();
@@ -86,28 +91,14 @@ export default function EditRosterScreen() {
   const hasRoster = roster.length > 0;
 
   // Sorted roster: active first
-  const sortedRoster = linePlayerSortOrder === 'number' ? sortByPlayerNumber(roster) : [...roster];
-  const displayRoster = sortedRoster.sort((a, b) => {
-    if (a.isActive !== b.isActive) {
-      return a.isActive ? -1 : 1;
-    }
-    if (linePlayerSortOrder === 'number') {
-      return 0;
-    }
-    return a.name.localeCompare(b.name);
-  });
-  let filteredRoster: Player[];
-  if (roleFilter === null) {
-    filteredRoster = displayRoster;
-  } else if (roleFilter === 'unset') {
-    filteredRoster = displayRoster.filter((player) => player.role === null);
-  } else {
-    filteredRoster = displayRoster.filter((player) => player.role === roleFilter);
-  }
-  const visibleRoster =
-    selectionMode && bulkVisiblePlayerIds
-      ? displayRoster.filter((player) => bulkVisiblePlayerIds.has(player.id))
-      : filteredRoster;
+  const displayRoster = sortPlayersForRosterDisplay(roster, linePlayerSortOrder);
+  const filteredRoster = filterPlayersByRole(displayRoster, roleFilter);
+  const visibleRoster = getVisibleRoster(
+    displayRoster,
+    filteredRoster,
+    selectionMode,
+    bulkVisiblePlayerIds,
+  );
 
   // Derived: check if edited team name already exists
   const teamNameExists =
@@ -284,7 +275,7 @@ export default function EditRosterScreen() {
     return true;
   };
 
-  const handleSetPlayerRole = async (playerId: string, role: Player['role']) => {
+  const handleSetPlayerRole = async (playerId: string, role: PlayerRole | null) => {
     const updateResult = updateRosterPlayer(playerId, { role });
     if (updateResult !== 'updated') return;
     await saveCurrentTeam();
@@ -329,24 +320,9 @@ export default function EditRosterScreen() {
   const useChipView = selectionMode || rosterViewMode === 'chips';
 
   // Group players by matching type for chip grid
-  const groupedPlayers = useChipView
-    ? (() => {
-        const groups: { label: string; players: Player[] }[] = [];
-        const fmp = visibleRoster.filter((p) => p.isActive && p.matchingType === 'fmp');
-        const mmp = visibleRoster.filter((p) => p.isActive && p.matchingType === 'mmp');
-        const unset = visibleRoster.filter((p) => p.isActive && p.matchingType === null);
-        const inactive = visibleRoster.filter((p) => !p.isActive);
-        if (fmp.length > 0) groups.push({ label: 'FMP', players: fmp });
-        if (mmp.length > 0) groups.push({ label: 'MMP', players: mmp });
-        if (unset.length > 0) groups.push({ label: 'Unset', players: unset });
-        if (inactive.length > 0) groups.push({ label: 'Inactive', players: inactive });
-        return groups;
-      })()
-    : [];
+  const groupedPlayers = useChipView ? groupPlayersByMatchingType(visibleRoster) : [];
 
-  const allActiveSelected =
-    visibleRoster.filter((p) => p.isActive).length > 0 &&
-    visibleRoster.filter((p) => p.isActive).every((p) => selectedPlayerIds.has(p.id));
+  const allActiveSelected = areAllActivePlayersSelected(visibleRoster, selectedPlayerIds);
   const hasActivePlayers = visibleRoster.some((player) => player.isActive);
 
   let playerListContent: React.ReactNode;
@@ -740,6 +716,53 @@ export default function EditRosterScreen() {
         />
       </Modal>
     </View>
+  );
+}
+
+function filterPlayersByRole(roster: Player[], roleFilter: RoleFilter): Player[] {
+  if (roleFilter === null) return roster;
+  if (roleFilter === 'unset') return roster.filter((player) => player.role === null);
+  return roster.filter((player) => player.role === roleFilter);
+}
+
+function groupPlayersByMatchingType(players: Player[]): PlayerGroup[] {
+  const activePlayers = players.filter((player) => player.isActive);
+  const groups: PlayerGroup[] = [];
+  const fmp = activePlayers.filter((player) => player.matchingType === 'fmp');
+  const mmp = activePlayers.filter((player) => player.matchingType === 'mmp');
+  const unset = activePlayers.filter((player) => player.matchingType === null);
+  const inactive = players.filter((player) => !player.isActive);
+
+  if (fmp.length > 0) groups.push({ label: 'FMP', players: fmp });
+  if (mmp.length > 0) groups.push({ label: 'MMP', players: mmp });
+  if (unset.length > 0) groups.push({ label: 'Unset', players: unset });
+  if (inactive.length > 0) groups.push({ label: 'Inactive', players: inactive });
+  return groups;
+}
+
+function sortPlayersForRosterDisplay(players: Player[], sortOrder: LinePlayerSortOrder): Player[] {
+  const sortedPlayers = sortOrder === 'number' ? sortByPlayerNumber(players) : [...players];
+  return sortedPlayers.sort((a, b) => {
+    if (a.isActive !== b.isActive) return a.isActive ? -1 : 1;
+    if (sortOrder === 'number') return 0;
+    return a.name.localeCompare(b.name);
+  });
+}
+
+function getVisibleRoster(
+  displayRoster: Player[],
+  filteredRoster: Player[],
+  selectionMode: boolean,
+  bulkVisiblePlayerIds: Set<string> | null,
+): Player[] {
+  if (!selectionMode || bulkVisiblePlayerIds == null) return filteredRoster;
+  return displayRoster.filter((player) => bulkVisiblePlayerIds.has(player.id));
+}
+
+function areAllActivePlayersSelected(players: Player[], selectedPlayerIds: Set<string>): boolean {
+  const activePlayers = players.filter((player) => player.isActive);
+  return (
+    activePlayers.length > 0 && activePlayers.every((player) => selectedPlayerIds.has(player.id))
   );
 }
 

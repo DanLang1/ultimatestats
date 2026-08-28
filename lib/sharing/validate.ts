@@ -285,20 +285,26 @@ function validateAdvancedGame(data: unknown): asserts data is AdvancedTrackedGam
   if (!isRecord(data.settings) || !isString(data.settings.locationMode)) {
     throw new Error('Invalid advanced game: missing settings');
   }
+  const { possessionCount, actionCount } = validateAdvancedGameStructure(data);
+
+  if (possessionCount > MAX_ADVANCED_POSSESSIONS) {
+    throw new Error('Invalid advanced game: too many possessions');
+  }
+  if (actionCount > MAX_ADVANCED_ACTIONS) {
+    throw new Error('Invalid advanced game: too many actions');
+  }
+}
+
+function validateAdvancedGameStructure(data: Record<string, unknown>): {
+  possessionCount: number;
+  actionCount: number;
+} {
   if (!Array.isArray(data.sides) || data.sides.length !== 2) {
     throw new Error('Invalid advanced game: expected two sides');
   }
   const fullRosterSideIds = new Set<string>();
   for (const side of data.sides) {
-    if (!isRecord(side) || !isString(side.id) || !isString(side.label)) {
-      throw new Error('Invalid advanced game: invalid side');
-    }
-    if (side.trackingMode !== 'full-roster' && side.trackingMode !== 'anonymous') {
-      throw new Error('Invalid advanced game: invalid tracking mode');
-    }
-    if (side.trackingMode === 'full-roster') {
-      fullRosterSideIds.add(side.id);
-    }
+    validateAdvancedSide(side, fullRosterSideIds);
   }
   if (!Array.isArray(data.participants)) {
     throw new Error('Invalid advanced game: missing participants');
@@ -321,38 +327,52 @@ function validateAdvancedGame(data: unknown): asserts data is AdvancedTrackedGam
   let possessionCount = 0;
   let actionCount = 0;
   for (const point of data.points) {
-    if (!isRecord(point) || !isString(point.id) || !Array.isArray(point.lines)) {
-      throw new Error('Invalid advanced game: invalid point');
-    }
-    for (const line of point.lines) {
-      if (!isRecord(line) || !isString(line.sideId) || !Array.isArray(line.participantIds)) {
-        throw new Error('Invalid advanced game: invalid point line');
-      }
-    }
-    if (!Array.isArray(point.possessions)) {
-      throw new Error('Invalid advanced game: missing possessions');
-    }
-    possessionCount += point.possessions.length;
-    for (const possession of point.possessions) {
-      if (!isRecord(possession) || !isString(possession.id) || !isString(possession.sideId)) {
-        throw new Error('Invalid advanced game: invalid possession');
-      }
-      if (!Array.isArray(possession.actions)) {
-        throw new Error('Invalid advanced game: missing actions');
-      }
-      actionCount += possession.actions.length;
-      for (const action of possession.actions) {
-        validateAdvancedAction(action, fullRosterSideIds);
-      }
-    }
+    const counts = validateAdvancedPoint(point, fullRosterSideIds);
+    possessionCount += counts.possessionCount;
+    actionCount += counts.actionCount;
   }
+  return { possessionCount, actionCount };
+}
 
-  if (possessionCount > MAX_ADVANCED_POSSESSIONS) {
-    throw new Error('Invalid advanced game: too many possessions');
+function validateAdvancedSide(side: unknown, fullRosterSideIds: Set<string>): void {
+  if (!isRecord(side) || !isString(side.id) || !isString(side.label)) {
+    throw new Error('Invalid advanced game: invalid side');
   }
-  if (actionCount > MAX_ADVANCED_ACTIONS) {
-    throw new Error('Invalid advanced game: too many actions');
+  if (side.trackingMode !== 'full-roster' && side.trackingMode !== 'anonymous') {
+    throw new Error('Invalid advanced game: invalid tracking mode');
   }
+  if (side.trackingMode === 'full-roster') fullRosterSideIds.add(side.id);
+}
+
+function validateAdvancedPoint(
+  point: unknown,
+  fullRosterSideIds: Set<string>,
+): { possessionCount: number; actionCount: number } {
+  if (!isRecord(point) || !isString(point.id) || !Array.isArray(point.lines)) {
+    throw new Error('Invalid advanced game: invalid point');
+  }
+  for (const line of point.lines) {
+    if (!isRecord(line) || !isString(line.sideId) || !Array.isArray(line.participantIds)) {
+      throw new Error('Invalid advanced game: invalid point line');
+    }
+  }
+  if (!Array.isArray(point.possessions)) {
+    throw new Error('Invalid advanced game: missing possessions');
+  }
+  let actionCount = 0;
+  for (const possession of point.possessions) {
+    if (!isRecord(possession) || !isString(possession.id) || !isString(possession.sideId)) {
+      throw new Error('Invalid advanced game: invalid possession');
+    }
+    if (!Array.isArray(possession.actions)) {
+      throw new Error('Invalid advanced game: missing actions');
+    }
+    actionCount += possession.actions.length;
+    for (const action of possession.actions) {
+      validateAdvancedAction(action, fullRosterSideIds);
+    }
+  }
+  return { possessionCount: point.possessions.length, actionCount };
 }
 
 const MAX_PRESETS = 20;

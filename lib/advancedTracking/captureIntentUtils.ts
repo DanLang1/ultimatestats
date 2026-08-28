@@ -7,7 +7,7 @@ import {
   hasPointEnded,
   isPossessionOver,
 } from './trackingUtils';
-import type { AdvancedTrackedGame, PlayerRef, ThrowResult } from './types';
+import type { AdvancedTrackedGame, PlayerRef, PointPossession, ThrowResult } from './types';
 
 /** A coach-facing description of an advanced-tracker capture, independent of stored actions. */
 export type CaptureIntent =
@@ -88,26 +88,13 @@ export function planCaptureIntent(
   }
 
   if (intent.kind === 'anonymous-opponent-goal' || intent.kind === 'anonymous-opponent-turnover') {
-    if (bothSidesTracked) return { ok: false, reason: 'holder-required' };
-    const pickup = needsOpponentPickup
-      ? { sideId: opponentSideId, player: { refType: 'untracked' as const } }
-      : undefined;
-    if (
-      !pickup &&
-      (possession == null || possession.sideId !== opponentSideId || isPossessionOver(possession))
-    ) {
-      return { ok: false, reason: 'possession-over' };
-    }
-    return {
-      ok: true,
-      plan: {
-        pickup,
-        throw: {
-          thrower: { refType: 'untracked' },
-          result: intent.kind === 'anonymous-opponent-goal' ? 'goal' : 'throwaway',
-        },
-      },
-    };
+    return planAnonymousOpponentIntent(
+      intent,
+      bothSidesTracked,
+      needsOpponentPickup,
+      opponentSideId,
+      possession,
+    );
   }
 
   // In single-team mode opponent outcomes synthesize only the anonymous possession scaffold.
@@ -130,6 +117,50 @@ export function planCaptureIntent(
     return { ok: false, reason: 'holder-required' };
   }
 
+  return buildThrowPlan(intent, thrower, pickup, isAnonymousOpponentPossession);
+}
+
+function planAnonymousOpponentIntent(
+  intent: Extract<
+    CaptureIntent,
+    { kind: 'anonymous-opponent-goal' | 'anonymous-opponent-turnover' }
+  >,
+  bothSidesTracked: boolean,
+  needsOpponentPickup: boolean,
+  opponentSideId: string,
+  possession: PointPossession | null,
+): CapturePlanResult {
+  if (bothSidesTracked) return { ok: false, reason: 'holder-required' };
+  const pickup = needsOpponentPickup
+    ? { sideId: opponentSideId, player: { refType: 'untracked' as const } }
+    : undefined;
+  if (
+    !pickup &&
+    (possession == null || possession.sideId !== opponentSideId || isPossessionOver(possession))
+  ) {
+    return { ok: false, reason: 'possession-over' };
+  }
+  return {
+    ok: true,
+    plan: {
+      pickup,
+      throw: {
+        thrower: { refType: 'untracked' },
+        result: intent.kind === 'anonymous-opponent-goal' ? 'goal' : 'throwaway',
+      },
+    },
+  };
+}
+
+function buildThrowPlan(
+  intent: Exclude<
+    CaptureIntent,
+    { kind: 'pickup' | 'anonymous-opponent-goal' | 'anonymous-opponent-turnover' }
+  >,
+  thrower: PlayerRef,
+  pickup: PlannedCapture['pickup'],
+  isAnonymousOpponentPossession: boolean,
+): CapturePlanResult {
   switch (intent.kind) {
     case 'pass':
       return {

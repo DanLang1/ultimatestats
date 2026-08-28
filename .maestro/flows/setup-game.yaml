@@ -3,10 +3,13 @@ name: Seed Advanced Tracker Game
 ---
 - launchApp
 - openLink: ultimatestats-dev:///__maestro_seed__?trackerState=${TRACKER_STATE}
-- extendedWaitUntil:
-    visible:
-      id: 'maestro-setup-running'
-    timeout: 5000
+- retry:
+    maxRetries: 1
+    commands:
+      - extendedWaitUntil:
+          visible:
+            id: 'maestro-setup-running'
+          timeout: 5000
 - retry:
     maxRetries: 1
     commands:

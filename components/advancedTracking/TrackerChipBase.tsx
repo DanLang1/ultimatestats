@@ -51,7 +51,7 @@ export const TrackerChipBase = ({
   const oppHasDiscSV = useDerivedValue(() => oppHasDisc);
   const canDropOpeningPullSV = useDerivedValue(() => canDropOpeningPull);
 
-  // oxlint-disable-next-line react/react-compiler -- Gesture.Pan is a factory; keep the literal call so Worklets can recognize the gesture chain.
+  // oxlint-disable-next-line react/capitalized-calls -- Gesture.Pan is a factory; keep the literal call so Worklets can recognize the gesture chain.
   const panGesture = Gesture.Pan()
     .activeOffsetY([-12, 12])
     .failOffsetX([-8, 8])

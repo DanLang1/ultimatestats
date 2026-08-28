@@ -64,7 +64,7 @@ export function DraggablePresetItem({
   // flash caused by the UI-thread offset jumping before the JS-thread store swap.
   const animatedOffset = useSharedValue(0);
 
-  // oxlint-disable-next-line react/react-compiler -- Gesture.Pan is a factory; keep the literal call so Worklets can recognize the gesture chain.
+  // oxlint-disable-next-line react/capitalized-calls -- Gesture.Pan is a factory; keep the literal call so Worklets can recognize the gesture chain.
   const panGesture = Gesture.Pan()
     .onStart(() => {
       'worklet';

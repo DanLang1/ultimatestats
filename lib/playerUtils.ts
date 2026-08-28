@@ -1,6 +1,6 @@
 import { GameEvent } from '@/store/basic/gameStore.types';
 
-import { MatchingType, Player, PointLineRecord, SavedTeam } from './storage/types';
+import { MatchingType, Player, PointLineRecord, SavedGame, SavedTeam } from './storage/types';
 
 /** Special ID for recording plays when the player is unknown */
 export const UNKNOWN_PLAYER_ID = 'UNKNOWN_PLAYER';
@@ -81,6 +81,25 @@ export function hasPlayerParticipatedInCurrentGame(
 
     return false;
   });
+}
+
+export function hasPlayerRecordedStats(playerId: string, events: GameEvent[]): boolean {
+  return events.some((event) => {
+    if (event.type === 'goal') {
+      return event.goalPlayerId === playerId || event.assistPlayerId === playerId;
+    }
+    if (event.type === 'turnover') {
+      return event.playerId === playerId || event.player2Id === playerId;
+    }
+    return false;
+  });
+}
+
+export function hasPlayerRecordedStatsInSavedGames(
+  playerId: string,
+  savedGames: SavedGame[],
+): boolean {
+  return savedGames.some((game) => hasPlayerRecordedStats(playerId, game.events));
 }
 
 /**

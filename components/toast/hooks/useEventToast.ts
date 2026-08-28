@@ -209,10 +209,10 @@ export function useEventToast({
     }
 
     // The signal is an external store event; consume it synchronously so feedback is not lost.
-    /* eslint-disable react/react-compiler */
+    /* eslint-disable react/set-state-in-effect */
     setToast({ visible: true, message, tone, icon });
     setToastInstanceId((current) => current + 1);
-    /* eslint-enable react/react-compiler */
+    /* eslint-enable react/set-state-in-effect */
     clearEventToastSignal();
   }, [eventToastSignal, roster, team2Name, clearEventToastSignal]);
 
@@ -223,6 +223,7 @@ export function useEventToast({
     }, EVENT_RECORDED_TOAST_DURATION_MS);
 
     return () => clearTimeout(timeoutId);
+    // eslint-disable-next-line react/exhaustive-effect-dependencies -- toastInstanceId intentionally restarts the dismissal timer for consecutive toast events.
   }, [toast.visible, toastInstanceId]);
 
   return { toast, toastInstanceId, dismissToast };

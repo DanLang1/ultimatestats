@@ -1,7 +1,11 @@
 import { PointLineRecord } from '@/lib/storage/types';
 import { GameEvent } from '@/store/basic/gameStore.types';
 
-import { hasPlayerParticipatedInCurrentGame } from '../playerUtils';
+import {
+  hasPlayerParticipatedInCurrentGame,
+  hasPlayerRecordedStats,
+  hasPlayerRecordedStatsInSavedGames,
+} from '../playerUtils';
 
 describe('hasPlayerParticipatedInCurrentGame', () => {
   it('returns true when the player appears in point lines', () => {
@@ -52,5 +56,31 @@ describe('hasPlayerParticipatedInCurrentGame', () => {
     ];
 
     expect(hasPlayerParticipatedInCurrentGame('a', events, [])).toBe(false);
+  });
+});
+
+describe('recorded player stats', () => {
+  it('detects player stats in current and saved games', () => {
+    const events: GameEvent[] = [
+      { type: 'goal', team: 'team1', goalPlayerId: '1', assistPlayerId: null },
+    ];
+    expect(hasPlayerRecordedStats('1', events)).toBe(true);
+    expect(hasPlayerRecordedStats('2', events)).toBe(false);
+    expect(
+      hasPlayerRecordedStatsInSavedGames('1', [
+        {
+          id: 'game',
+          schemaVersion: 6,
+          createdAt: 0,
+          team1: { id: 'team', name: 'Team', roster: [] },
+          team2Name: 'Opp',
+          team1Score: 1,
+          team2Score: 0,
+          events,
+          gameTo: 1,
+          startingPossession: 'team1',
+        },
+      ]),
+    ).toBe(true);
   });
 });

@@ -131,7 +131,7 @@ export function ScoreboardActionBar({
     effectiveHeight: measuredSize.height,
   });
 
-  // oxlint-disable-next-line react/react-compiler -- Gesture.Pan is a factory; keep the literal call so Worklets can recognize the gesture chain.
+  // oxlint-disable-next-line react/capitalized-calls -- Gesture.Pan is a factory; keep the literal call so Worklets can recognize the gesture chain.
   const panGesture = Gesture.Pan()
     .minDistance(5)
     .onStart(() => {

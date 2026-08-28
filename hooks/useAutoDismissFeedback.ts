@@ -13,7 +13,7 @@ export function useAutoDismissFeedback(autoDismiss: boolean, feedbackText: strin
     }
 
     // Reset immediately when the feedback text changes so the new message is visible.
-    // eslint-disable-next-line react/react-compiler
+    // eslint-disable-next-line react/set-state-in-effect
     setDismissed(false);
 
     if (autoDismiss) {
@@ -27,6 +27,7 @@ export function useAutoDismissFeedback(autoDismiss: boolean, feedbackText: strin
     }
 
     return undefined;
+    // eslint-disable-next-line react/exhaustive-effect-dependencies -- feedbackText intentionally restarts dismissal when new feedback arrives.
   }, [autoDismiss, feedbackText]);
 
   return dismissed;

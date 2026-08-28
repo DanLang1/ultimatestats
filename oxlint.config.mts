@@ -69,6 +69,7 @@ export default defineConfig({
   },
   ignorePatterns: ['android/app/build', '.expo/**', 'dist/*', 'expo-env.d.ts'],
   rules: {
+    complexity: ['error', { max: 70 }],
     eqeqeq: ['error', 'smart'],
     'import/export': 'error',
     'import/first': 'error',
@@ -114,7 +115,6 @@ export default defineConfig({
     'react/no-multi-comp': 'error',
     'react/no-unstable-nested-components': ['error', { allowAsProps: true }],
     'react/no-unknown-property': 'error',
-    'react/react-compiler': 'error',
     'react/react-in-jsx-scope': 'off',
     'react/rules-of-hooks': 'error',
     'react/style-prop-object': 'off',

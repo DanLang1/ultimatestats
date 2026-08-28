@@ -9,18 +9,21 @@ import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { getCapThresholdMinutes } from '@/lib/advancedTracking/capUtils';
+import type { AdvancedTrackedGame } from '@/lib/advancedTracking/types';
 import {
   createFormatSections,
   formatAdvancedHalftime,
   formatBasicHalftime,
   formatBasicReceiver,
-  formatGenderRatio,
   FormatRow,
+  formatGenderRatio,
   formatTimeouts,
   formatValue,
 } from '@/lib/gameFormatUtils';
+import type { GenderRatio } from '@/lib/genderRatioUtils';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { useGameStore } from '@/store/basic/gameStore';
+import type { GameEvent } from '@/store/basic/gameStore.types';
 import { useGameSessionStore } from '@/store/gameSessionStore';
 import { useNumberPickerStore } from '@/store/numberPickerStore';
 import { useSettingsStore } from '@/store/settingsStore';
@@ -71,124 +74,56 @@ export default function GameFormatScreen() {
 
   const softCapTime = hardCapMins - softCapMins;
   const team1Name = currentTeam.name;
-  const format = advancedGame?.settings.format;
-  const focusSide = advancedGame?.sides.find((side) => side.id === advancedGame.focusSideId);
-  const opponentSide = advancedGame?.sides.find((side) => side.id !== advancedGame.focusSideId);
-  const initialReceivingSide = advancedGame?.sides.find(
-    (side) => side.id === advancedGame.initialReceivingSideId,
-  );
-  let title: string;
-  let rows: FormatRow[];
-  if (activeGameType === 'advanced' && advancedGame) {
-    const capThresholds = getCapThresholdMinutes(advancedGame, {
-      softCapAtMinutes: advancedSoftCapAtMins,
-      hardCapAtMinutes: hardCapMins,
-    });
-    title = 'Advanced Tracker';
-    rows = [
-      { label: 'My Team', value: focusSide?.label ?? team1Name },
-      {
-        label: 'Opponent',
-        value: opponentSide?.label ?? team2Name,
-      },
-      { label: 'Game To', value: formatValue(format?.gameTo) },
-      {
-        label: 'Hard Cap',
-        value:
-          capThresholds.hardCapAtMinutes == null ? 'Off' : `${capThresholds.hardCapAtMinutes} min`,
-      },
-      {
-        label: 'Soft Cap',
-        value:
-          capThresholds.softCapAtMinutes == null ? 'Off' : `${capThresholds.softCapAtMinutes} min`,
-      },
-      {
-        label: 'Halftime',
-        value: formatAdvancedHalftime(advancedGame),
-      },
-      {
-        label: 'Timeouts',
-        value: formatTimeouts(
-          format?.timeoutsPerHalf,
-          format?.floaterEnabled,
-          format?.halftimeAt != null,
-        ),
-      },
-      {
-        label: 'Initial Receiver',
-        value: initialReceivingSide?.label ?? 'Not set',
-      },
-      {
-        label: 'Gender Ratio',
-        value: formatGenderRatio(
-          genderRatioEnabled,
-          firstPointRatio,
-          Math.max(advancedGame.points.length, 1),
-        ),
-      },
-    ];
-  } else {
-    title = 'Basic Scoreboard';
-    const maxScore = Math.max(team1Score, team2Score);
-    const canEditBasicGameTo = gameHalf === 1 && !isSoftCap && !softCapPending;
-    let gameToMin = 1;
-    if (canEditBasicGameTo) {
-      gameToMin = autoHalftimeEnabled ? 2 * maxScore + 1 : maxScore + 1;
-    }
-    const gameToHelperText = autoHalftimeEnabled
-      ? 'Adjustable during first half'
-      : 'Adjustable until soft cap';
-    const gameToValidationText = autoHalftimeEnabled
-      ? `Must be at least ${gameToMin} to keep halftime reachable`
-      : `Must be at least ${gameToMin}`;
-    const openGameToPicker = () => {
-      if (!canEditBasicGameTo) return;
-      openPicker({
-        value: gameTo,
-        min: gameToMin,
-        max: 99,
-        label: 'Game To',
-        helperText: gameToValidationText,
-        onChange: setGameToInGame,
+  const isAdvancedGame = activeGameType === 'advanced' && advancedGame !== null;
+  const title = isAdvancedGame ? 'Advanced Tracker' : 'Basic Scoreboard';
+  const canEditBasicGameTo = gameHalf === 1 && !isSoftCap && !softCapPending;
+  const rows = isAdvancedGame
+    ? buildAdvancedFormatRows({
+        game: advancedGame,
+        team1Name,
+        team2Name,
+        advancedSoftCapAtMins,
+        hardCapMins,
+        genderRatioEnabled,
+        firstPointRatio,
+      })
+    : buildBasicFormatRows({
+        team1Name,
+        team2Name,
+        gameTo,
+        team1Timeouts,
+        autoHalftimeEnabled,
+        floaterEnabled,
+        canEditGameTo: canEditBasicGameTo,
+        hardCapMins,
+        softCapTime,
+        statTrackingEnabled,
+        pointTimerEnabled,
+        currentPoint,
+        startingPossession,
+        baseGameTo,
+        events,
+        lineCallingEnabled,
+        genderRatioEnabled,
+        firstPointRatio,
+        onEditGameTo: () => {
+          if (!canEditBasicGameTo) return;
+          const maxScore = Math.max(team1Score, team2Score);
+          const gameToMin = autoHalftimeEnabled ? 2 * maxScore + 1 : maxScore + 1;
+          const helperText = autoHalftimeEnabled
+            ? `Must be at least ${gameToMin} to keep halftime reachable`
+            : `Must be at least ${gameToMin}`;
+          openPicker({
+            value: gameTo,
+            min: gameToMin,
+            max: 99,
+            label: 'Game To',
+            helperText,
+            onChange: setGameToInGame,
+          });
+          router.push('/NumberPickerModal');
+        },
       });
-      router.push('/NumberPickerModal');
-    };
-    rows = [
-      { label: 'My Team', value: team1Name },
-      { label: 'Opponent', value: team2Name },
-      {
-        label: 'Game To',
-        value: formatValue(gameTo),
-        helperText: gameToHelperText,
-        onPress: openGameToPicker,
-        disabled: !canEditBasicGameTo,
-      },
-      { label: 'Hard Cap', value: `${hardCapMins} min` },
-      { label: 'Soft Cap', value: `${softCapTime} min` },
-      {
-        label: 'Halftime',
-        value: formatBasicHalftime(events, autoHalftimeEnabled, baseGameTo),
-      },
-      {
-        label: 'Timeouts',
-        value: formatTimeouts(team1Timeouts.length, floaterEnabled, autoHalftimeEnabled),
-      },
-      {
-        label: 'Initial Receiver',
-        value: formatBasicReceiver(startingPossession, team1Name, team2Name),
-      },
-      { label: 'Stat Tracking', value: statTrackingEnabled ? 'On' : 'Off' },
-      { label: 'Point Timer', value: pointTimerEnabled ? 'On' : 'Off' },
-      {
-        label: 'Line Calling',
-        value: lineCallingEnabled ? 'On' : 'Off',
-      },
-      {
-        label: 'Gender Ratio',
-        value: formatGenderRatio(genderRatioEnabled, firstPointRatio, currentPoint),
-      },
-    ];
-  }
   const sections = createFormatSections(rows);
 
   return (
@@ -292,6 +227,147 @@ export default function GameFormatScreen() {
       </ScrollView>
     </ThemedView>
   );
+}
+
+interface AdvancedFormatRowsInput {
+  game: AdvancedTrackedGame;
+  team1Name: string;
+  team2Name: string;
+  advancedSoftCapAtMins: number;
+  hardCapMins: number;
+  genderRatioEnabled: boolean;
+  firstPointRatio: GenderRatio | null;
+}
+
+function buildAdvancedFormatRows({
+  game,
+  team1Name,
+  team2Name,
+  advancedSoftCapAtMins,
+  hardCapMins,
+  genderRatioEnabled,
+  firstPointRatio,
+}: AdvancedFormatRowsInput): FormatRow[] {
+  const format = game.settings.format;
+  const focusSide = game.sides.find((side) => side.id === game.focusSideId);
+  const opponentSide = game.sides.find((side) => side.id !== game.focusSideId);
+  const initialReceivingSide = game.sides.find((side) => side.id === game.initialReceivingSideId);
+  const capThresholds = getCapThresholdMinutes(game, {
+    softCapAtMinutes: advancedSoftCapAtMins,
+    hardCapAtMinutes: hardCapMins,
+  });
+
+  return [
+    { label: 'My Team', value: focusSide?.label ?? team1Name },
+    { label: 'Opponent', value: opponentSide?.label ?? team2Name },
+    { label: 'Game To', value: formatValue(format?.gameTo) },
+    {
+      label: 'Hard Cap',
+      value:
+        capThresholds.hardCapAtMinutes == null ? 'Off' : `${capThresholds.hardCapAtMinutes} min`,
+    },
+    {
+      label: 'Soft Cap',
+      value:
+        capThresholds.softCapAtMinutes == null ? 'Off' : `${capThresholds.softCapAtMinutes} min`,
+    },
+    { label: 'Halftime', value: formatAdvancedHalftime(game) },
+    {
+      label: 'Timeouts',
+      value: formatTimeouts(
+        format?.timeoutsPerHalf,
+        format?.floaterEnabled,
+        format?.halftimeAt != null,
+      ),
+    },
+    { label: 'Initial Receiver', value: initialReceivingSide?.label ?? 'Not set' },
+    {
+      label: 'Gender Ratio',
+      value: formatGenderRatio(
+        genderRatioEnabled,
+        firstPointRatio,
+        Math.max(game.points.length, 1),
+      ),
+    },
+  ];
+}
+
+interface BasicFormatRowsInput {
+  team1Name: string;
+  team2Name: string;
+  gameTo: number;
+  team1Timeouts: boolean[];
+  autoHalftimeEnabled: boolean;
+  floaterEnabled: boolean;
+  canEditGameTo: boolean;
+  hardCapMins: number;
+  softCapTime: number;
+  statTrackingEnabled: boolean;
+  pointTimerEnabled: boolean;
+  currentPoint: number;
+  startingPossession: 'team1' | 'team2' | null;
+  baseGameTo: number;
+  events: GameEvent[];
+  lineCallingEnabled: boolean;
+  genderRatioEnabled: boolean;
+  firstPointRatio: GenderRatio | null;
+  onEditGameTo: () => void;
+}
+
+function buildBasicFormatRows({
+  team1Name,
+  team2Name,
+  gameTo,
+  team1Timeouts,
+  autoHalftimeEnabled,
+  floaterEnabled,
+  canEditGameTo,
+  hardCapMins,
+  softCapTime,
+  statTrackingEnabled,
+  pointTimerEnabled,
+  currentPoint,
+  startingPossession,
+  baseGameTo,
+  events,
+  lineCallingEnabled,
+  genderRatioEnabled,
+  firstPointRatio,
+  onEditGameTo,
+}: BasicFormatRowsInput): FormatRow[] {
+  const gameToHelperText = autoHalftimeEnabled
+    ? 'Adjustable during first half'
+    : 'Adjustable until soft cap';
+
+  return [
+    { label: 'My Team', value: team1Name },
+    { label: 'Opponent', value: team2Name },
+    {
+      label: 'Game To',
+      value: formatValue(gameTo),
+      helperText: gameToHelperText,
+      onPress: onEditGameTo,
+      disabled: !canEditGameTo,
+    },
+    { label: 'Hard Cap', value: `${hardCapMins} min` },
+    { label: 'Soft Cap', value: `${softCapTime} min` },
+    { label: 'Halftime', value: formatBasicHalftime(events, autoHalftimeEnabled, baseGameTo) },
+    {
+      label: 'Timeouts',
+      value: formatTimeouts(team1Timeouts.length, floaterEnabled, autoHalftimeEnabled),
+    },
+    {
+      label: 'Initial Receiver',
+      value: formatBasicReceiver(startingPossession, team1Name, team2Name),
+    },
+    { label: 'Stat Tracking', value: statTrackingEnabled ? 'On' : 'Off' },
+    { label: 'Point Timer', value: pointTimerEnabled ? 'On' : 'Off' },
+    { label: 'Line Calling', value: lineCallingEnabled ? 'On' : 'Off' },
+    {
+      label: 'Gender Ratio',
+      value: formatGenderRatio(genderRatioEnabled, firstPointRatio, currentPoint),
+    },
+  ];
 }
 
 function createStyles(isLandscape: boolean, sizeClass: SizeClass) {

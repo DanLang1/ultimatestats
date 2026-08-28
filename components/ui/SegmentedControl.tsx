@@ -72,7 +72,7 @@ export function SegmentedControl<T extends string = string>({
     if (!attentionRunKey || disabled) return undefined;
 
     // Start the attention run immediately for this key; the timeout only ends the run.
-    // eslint-disable-next-line react/react-compiler
+    // eslint-disable-next-line react/set-state-in-effect
     setIsAttentionActive(true);
     const timerId = setTimeout(() => {
       setIsAttentionActive(false);

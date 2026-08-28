@@ -7,8 +7,9 @@ import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { DisplayTurnover } from '@/lib/basic/timelineUtils';
 import { getPlayerMatchingType, getPlayerName } from '@/lib/playerUtils';
-import { Player } from '@/lib/storage/types';
-import { Fonts } from '@/theme/theme';
+import { MatchingType, Player } from '@/lib/storage/types';
+import { TurnoverType } from '@/store/basic/gameStore.types';
+import { Fonts, Palette } from '@/theme/theme';
 
 interface TimelineTurnoverRowProps {
   turnover: DisplayTurnover;
@@ -43,59 +44,14 @@ export default function TimelineTurnoverRow({
   const turnoverMatchingType = getPlayerMatchingType(roster, turnover.playerId);
   const turnover2MatchingType = getPlayerMatchingType(roster, turnover.player2Id ?? null);
 
-  let label: string;
-  if (turnover.type === 'block') {
-    label = 'Block';
-  } else if (turnover.type === 'drop') {
-    label = 'Drop';
-  } else if (turnover.type === 'fiftyfifty') {
-    label = '50/50';
-  } else {
-    label = 'Throwaway';
-  }
-
-  const bgColor = turnover.type === 'block' ? palette.success + '20' : palette.danger + '20';
-
-  let eventBgColor: string;
-  if (isOpponent) {
-    eventBgColor = turnover.type === 'block' ? palette.danger + '20' : palette.success + '20';
-  } else {
-    eventBgColor = bgColor;
-  }
-
-  let longPressBorderColor: string;
-  if (isOpponent) {
-    longPressBorderColor = turnover.type === 'block' ? palette.danger : palette.success;
-  } else {
-    longPressBorderColor = turnover.type === 'block' ? palette.success : palette.danger;
-  }
-
-  let displayLabel: string;
-  if (isOpponent) {
-    displayLabel = turnover.type === 'block' ? 'OPP BLOCK' : 'OPP TURN';
-  } else {
-    displayLabel = label.toUpperCase();
-  }
-
-  let playerColor: string;
-  if (turnoverMatchingType === 'mmp') {
-    playerColor = mmpColor;
-  } else if (turnoverMatchingType === 'fmp') {
-    playerColor = fmpColor;
-  } else {
-    playerColor = palette.textInverse;
-  }
-
-  let player2Color: string;
-  if (isOpponent) {
-    player2Color = palette.textMuted;
-  } else if (turnover2MatchingType === 'mmp') {
-    player2Color = mmpColor;
-  } else if (turnover2MatchingType === 'fmp') {
-    player2Color = fmpColor;
-  } else {
-    player2Color = palette.textInverse;
-  }
+  const label = getTurnoverLabel(turnover.type);
+  const eventBgColor = getEventBackgroundColor(turnover.type, isOpponent, palette);
+  const longPressBorderColor = getLongPressBorderColor(turnover.type, isOpponent, palette);
+  const displayLabel = getDisplayLabel(turnover.type, isOpponent, label);
+  const playerColor = getPlayerColor(turnoverMatchingType, mmpColor, fmpColor, palette.textInverse);
+  const player2Color = isOpponent
+    ? palette.textMuted
+    : getPlayerColor(turnover2MatchingType, mmpColor, fmpColor, palette.textInverse);
 
   return (
     <TimelineInteractiveRow
@@ -174,6 +130,49 @@ export default function TimelineTurnoverRow({
       </View>
     </TimelineInteractiveRow>
   );
+}
+
+function getTurnoverLabel(type: TurnoverType): string {
+  if (type === 'block') return 'Block';
+  if (type === 'drop') return 'Drop';
+  if (type === 'fiftyfifty') return '50/50';
+  return 'Throwaway';
+}
+
+function getDisplayLabel(type: TurnoverType, isOpponent: boolean, label: string): string {
+  if (!isOpponent) return label.toUpperCase();
+  if (type === 'block') return 'OPP BLOCK';
+  return 'OPP TURN';
+}
+
+function getEventBackgroundColor(
+  type: TurnoverType,
+  isOpponent: boolean,
+  palette: Palette,
+): string {
+  const ownColor = type === 'block' ? palette.success : palette.danger;
+  const opponentColor = type === 'block' ? palette.danger : palette.success;
+  return `${isOpponent ? opponentColor : ownColor}20`;
+}
+
+function getLongPressBorderColor(
+  type: TurnoverType,
+  isOpponent: boolean,
+  palette: Palette,
+): string {
+  if (isOpponent) return type === 'block' ? palette.danger : palette.success;
+  return type === 'block' ? palette.success : palette.danger;
+}
+
+function getPlayerColor(
+  matchingType: MatchingType | null,
+  mmpColor: string,
+  fmpColor: string,
+  fallbackColor: string,
+): string {
+  if (matchingType === 'mmp') return mmpColor;
+  if (matchingType === 'fmp') return fmpColor;
+  return fallbackColor;
 }
 
 function createStyles(sizeClass: SizeClass) {

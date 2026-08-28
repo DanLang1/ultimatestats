@@ -11,6 +11,7 @@ import {
   normalizePlayerNumber,
 } from '@/lib/advancedTracking/voiceNumberUtils';
 import { MAX_PLAYER_NUMBER_LENGTH, MODAL_MAX_WIDTH_FORM } from '@/lib/constants';
+import { hasPlayerRecordedStats, hasPlayerRecordedStatsInSavedGames } from '@/lib/playerUtils';
 import { MatchingType, PlayerRole } from '@/lib/storage/types';
 import {
   hasPlayerRecordedActionsInActiveAdvancedGame,
@@ -127,28 +128,10 @@ export default function EditPlayerModal() {
   };
 
   // Check for stats
-  const hasCurrentGameStats = events.some((e) => {
-    if (e.type === 'goal') {
-      return e.goalPlayerId === playerId || e.assistPlayerId === playerId;
-    }
-    if (e.type === 'turnover') {
-      return e.playerId === playerId || e.player2Id === playerId;
-    }
-    return false;
-  });
+  const hasCurrentGameStats = hasPlayerRecordedStats(playerId, events);
   const hasAdvancedGameParticipation = hasPlayerRecordedActionsInActiveAdvancedGame(playerId);
 
-  const hasStatsInSavedGames = savedGames.some((game) =>
-    game.events.some((e) => {
-      if (e.type === 'goal') {
-        return e.goalPlayerId === playerId || e.assistPlayerId === playerId;
-      }
-      if (e.type === 'turnover') {
-        return e.playerId === playerId || e.player2Id === playerId;
-      }
-      return false;
-    }),
-  );
+  const hasStatsInSavedGames = hasPlayerRecordedStatsInSavedGames(playerId, savedGames);
   return (
     <View style={StyleSheet.absoluteFill}>
       <Pressable
