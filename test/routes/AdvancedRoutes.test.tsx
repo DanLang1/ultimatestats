@@ -770,7 +770,7 @@ describe('advanced tracking routes', () => {
     expect(screen.getAllByText('Home')).toHaveLength(2);
     expect(screen.getAllByText('Away')).toHaveLength(2);
     expect(screen.getByText('SET LINE')).toBeVisible();
-    expect(screen.getByText('START SECOND HALF')).toBeVisible();
+    expect(screen.getByText('START 2ND HALF')).toBeVisible();
 
     await user.press(screen.getByTestId('throw-type-huck'));
     expect(
@@ -787,6 +787,23 @@ describe('advanced tracking routes', () => {
     await user.press(screen.getByTestId('halftime-between-point-start-next'));
     expect(router.push).toHaveBeenLastCalledWith('/advancedTracking/TrackerLineSelect');
     expect(useAdvancedTrackingStore.getState().isHalftimeBreakActive).toBe(true);
+  });
+
+  it('shows a partial prepared line on the halftime surface', async () => {
+    const participants = arrangeCompletedPointForNextLineSelection();
+    expect(useAdvancedTrackingStore.getState().triggerHalftimeEarly()).toBe(true);
+    useAdvancedTrackingStore.getState().savePendingNextPointLineSelection(
+      'home',
+      participants.slice(0, 2).map((participant) => participant.id),
+    );
+
+    await renderScreen(<TrackerScreen />);
+
+    expect(screen.getByText('(2/7)')).toBeVisible();
+    expect(screen.getByText('EDIT LINE')).toBeVisible();
+    for (const participant of participants.slice(0, 2)) {
+      expect(screen.getByTestId(`player-chip-${participant.name}`)).toBeVisible();
+    }
   });
 
   it('does not duplicate undo after a goal naturally triggers halftime', async () => {

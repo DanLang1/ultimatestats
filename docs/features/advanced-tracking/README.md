@@ -72,6 +72,8 @@ without a concrete requirement and migration plan.
 
 - [Advanced throw classification](../../future-features/advanced-throw-classification.md) —
   optional manual huck/reset tags, derived analytics, and the boundary with location tracking.
+- [Advanced red-zone possession tracking](../../future-features/advanced-red-zone-tracking.md) —
+  planned live possession tagging with conversion and pause-adjusted timing analytics.
 
 ## Primary Source Folders
 
