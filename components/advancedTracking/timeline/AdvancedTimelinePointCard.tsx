@@ -236,7 +236,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     scoreText: {
       fontSize: scaleBySizeClass(16, sizeClass),
-      fontFamily: Fonts.semiBold,
+      fontFamily: Fonts.bold,
     },
     halfBadge: {
       paddingHorizontal: 6,
@@ -262,9 +262,9 @@ function createStyles(sizeClass: SizeClass) {
       fontFamily: Fonts.semiBold,
     },
     stateChip: {
-      paddingHorizontal: 10,
-      paddingVertical: 4,
-      borderRadius: 6,
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+      borderRadius: 4,
     },
     stateChipText: {
       fontSize: scaleBySizeClass(10, sizeClass),
@@ -272,12 +272,13 @@ function createStyles(sizeClass: SizeClass) {
       letterSpacing: 0.5,
     },
     body: {
-      padding: 12,
-      paddingLeft: 10,
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+      paddingLeft: 8,
     },
     noteRow: {
-      minHeight: 40,
-      paddingHorizontal: 12,
+      minHeight: 38,
+      paddingHorizontal: 14,
       paddingVertical: 8,
       borderTopWidth: 1,
       flexDirection: 'row',
@@ -290,12 +291,13 @@ function createStyles(sizeClass: SizeClass) {
       lineHeight: scaleBySizeClass(16, sizeClass),
     },
     lineupSection: {
-      padding: 12,
+      paddingHorizontal: 14,
+      paddingVertical: 12,
       gap: 10,
       borderTopWidth: 1,
     },
     editButton: {
-      minHeight: 36,
+      minHeight: 32,
       flexDirection: 'row',
       alignItems: 'center',
       alignSelf: 'flex-start',
@@ -303,7 +305,7 @@ function createStyles(sizeClass: SizeClass) {
       borderWidth: 1,
       borderRadius: 999,
       paddingHorizontal: 10,
-      paddingVertical: 6,
+      paddingVertical: 5,
     },
     editButtonPressed: {
       opacity: 0.7,

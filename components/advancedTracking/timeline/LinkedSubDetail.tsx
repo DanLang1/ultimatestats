@@ -23,14 +23,18 @@ export default function LinkedSubDetail({ subs, stoppageActionId }: LinkedSubDet
   return (
     <View style={styles.subDetail}>
       {hasItems(sub.inNames) && (
-        <ThemedText style={[styles.subText, { color: palette.textSecondary }]}>
-          In: {sub.inNames.join(', ')}
-        </ThemedText>
+        <View style={[styles.subBadge, { backgroundColor: palette.successOverlay10 }]}>
+          <ThemedText style={[styles.subText, { color: palette.success }]}>
+            In: {sub.inNames.join(', ')}
+          </ThemedText>
+        </View>
       )}
       {hasItems(sub.outNames) && (
-        <ThemedText style={[styles.subText, { color: palette.danger }]}>
-          Out: {sub.outNames.join(', ')}
-        </ThemedText>
+        <View style={[styles.subBadge, { backgroundColor: palette.dangerOverlay10 }]}>
+          <ThemedText style={[styles.subText, { color: palette.danger }]}>
+            Out: {sub.outNames.join(', ')}
+          </ThemedText>
+        </View>
       )}
     </View>
   );
@@ -39,11 +43,19 @@ export default function LinkedSubDetail({ subs, stoppageActionId }: LinkedSubDet
 function createStyles(sizeClass: SizeClass) {
   return StyleSheet.create({
     subDetail: {
-      paddingLeft: 10,
-      gap: 2,
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 6,
+      marginTop: 2,
+      paddingLeft: 4,
+    },
+    subBadge: {
+      paddingHorizontal: 6,
+      paddingVertical: 2,
+      borderRadius: 4,
     },
     subText: {
-      fontSize: scaleBySizeClass(11, sizeClass),
+      fontSize: scaleBySizeClass(10, sizeClass),
       fontFamily: Fonts.semiBold,
     },
   });

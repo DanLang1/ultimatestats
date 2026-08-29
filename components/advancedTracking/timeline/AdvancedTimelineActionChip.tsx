@@ -19,39 +19,19 @@ interface AdvancedTimelineActionChipProps {
   editHint?: string;
 }
 
-function getToneColors(tone: ActionTone, palette: Record<string, string>) {
+function getToneColor(tone: ActionTone, palette: Record<string, string>) {
   switch (tone) {
     case 'success':
-      return {
-        backgroundColor: palette.successOverlay10,
-        textColor: palette.success,
-        borderColor: palette.successOverlay15,
-      };
+      return palette.success;
     case 'danger':
-      return {
-        backgroundColor: palette.dangerOverlay10,
-        textColor: palette.danger,
-        borderColor: palette.dangerOverlay15,
-      };
+      return palette.danger;
     case 'warning':
-      return {
-        backgroundColor: palette.warningOverlay10,
-        textColor: palette.warning,
-        borderColor: palette.warningOverlay15,
-      };
+      return palette.warning;
     case 'accent':
-      return {
-        backgroundColor: palette.accentOverlay10,
-        textColor: palette.accent,
-        borderColor: palette.accentOverlay30,
-      };
+      return palette.accent;
     case 'muted':
     default:
-      return {
-        backgroundColor: palette.overlay05,
-        textColor: palette.textInverse,
-        borderColor: palette.overlay10,
-      };
+      return palette.textInverse;
   }
 }
 
@@ -64,35 +44,44 @@ export default function AdvancedTimelineActionChip({
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
   const styles = createStyles(sizeClass);
-  const { backgroundColor, textColor, borderColor } = getToneColors(action.tone, palette);
+  const textColor = getToneColor(action.tone, palette);
 
-  const chip = (
-    <View style={[styles.chip, { backgroundColor, borderColor }]}>
-      <ThemedText style={[styles.primaryLabel, { color: textColor }]} numberOfLines={1}>
-        {action.primaryLabel}
-      </ThemedText>
-      {action.secondaryLabel && (
-        <ThemedText style={[styles.secondaryLabel, { color: palette.textMuted }]} numberOfLines={1}>
-          {action.secondaryLabel}
-        </ThemedText>
-      )}
+  const content = (
+    <View style={styles.actionRow}>
       {showElapsed && action.elapsedMs != null && (
-        <ThemedText style={[styles.elapsedLabel, { color: palette.textMuted }]}>
+        <ThemedText style={[styles.elapsedText, { color: palette.textMuted }]}>
           {formatClockDuration(action.elapsedMs)}
         </ThemedText>
       )}
+      <View style={styles.labelsContainer}>
+        <ThemedText style={[styles.primaryLabel, { color: textColor }]} numberOfLines={2}>
+          {action.primaryLabel}
+        </ThemedText>
+        {action.secondaryLabel && (
+          <View style={[styles.secondaryBadge, { backgroundColor: palette.overlay08 }]}>
+            <ThemedText
+              style={[styles.secondaryLabel, { color: palette.textMuted }]}
+              numberOfLines={1}>
+              {action.secondaryLabel}
+            </ThemedText>
+          </View>
+        )}
+      </View>
       {onPress != null && (
-        <MaterialCommunityIcons
-          name="pencil-outline"
-          size={scaleBySizeClass(15, sizeClass)}
-          color={palette.accent}
-          style={styles.editIcon}
-        />
+        <View style={styles.editIconWrapper}>
+          <MaterialCommunityIcons
+            name="pencil-outline"
+            size={scaleBySizeClass(14, sizeClass)}
+            color={palette.accent}
+          />
+        </View>
       )}
     </View>
   );
 
-  if (onPress == null) return chip;
+  if (onPress == null) {
+    return <View style={styles.container}>{content}</View>;
+  }
 
   const editAccessibilityLabel = action.secondaryLabel
     ? `Edit ${action.primaryLabel}, ${action.secondaryLabel}`
@@ -104,41 +93,58 @@ export default function AdvancedTimelineActionChip({
       accessibilityRole="button"
       accessibilityLabel={editAccessibilityLabel}
       accessibilityHint={editHint ?? 'Opens participant correction'}
-      onPress={onPress}>
-      {chip}
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.container,
+        pressed && { backgroundColor: palette.overlay05 },
+      ]}>
+      {content}
     </Pressable>
   );
 }
 
 function createStyles(sizeClass: SizeClass) {
   return StyleSheet.create({
-    chip: {
-      minHeight: 48,
+    container: {
+      minHeight: 34,
+      justifyContent: 'center',
+      paddingVertical: 3,
+      paddingHorizontal: 4,
+    },
+    actionRow: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 6,
-      paddingHorizontal: 10,
-      paddingVertical: 6,
-      borderRadius: 8,
-      borderWidth: 1,
-      flexWrap: 'wrap',
+      gap: 8,
     },
-    primaryLabel: {
-      fontSize: scaleBySizeClass(12, sizeClass),
-      fontFamily: Fonts.semiBold,
-    },
-    secondaryLabel: {
+    elapsedText: {
       fontSize: scaleBySizeClass(11, sizeClass),
       fontFamily: Fonts.semiBold,
+      minWidth: scaleBySizeClass(30, sizeClass),
     },
-    elapsedLabel: {
+    labelsContainer: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      flexWrap: 'wrap',
+      gap: 6,
+    },
+    primaryLabel: {
+      fontSize: scaleBySizeClass(13, sizeClass),
+      fontFamily: Fonts.semiBold,
+    },
+    secondaryBadge: {
+      paddingHorizontal: 6,
+      paddingVertical: 1.5,
+      borderRadius: 4,
+    },
+    secondaryLabel: {
       fontSize: scaleBySizeClass(10, sizeClass),
       fontFamily: Fonts.semiBold,
-      marginLeft: 4,
-      opacity: 0.7,
     },
-    editIcon: {
-      marginLeft: 'auto',
+    editIconWrapper: {
+      padding: 4,
+      justifyContent: 'center',
+      alignItems: 'center',
     },
   });
 }

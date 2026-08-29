@@ -20,12 +20,12 @@ import {
 import { Fonts, Palette } from '@/theme/theme';
 
 const HEADER_NODE_CENTER_Y = 16;
-const ACTION_NODE_CENTER_Y = 18;
-const TRACK_COLUMN_WIDTH = 28;
+const ACTION_NODE_CENTER_Y = 17;
+const TRACK_COLUMN_WIDTH = 24;
 const TRACK_LINE_WIDTH = 2;
-const NODE_WRAPPER_SIZE = 20;
-const AVATAR_NODE_SIZE = 20;
-const DOT_NODE_SIZE = 8;
+const NODE_WRAPPER_SIZE = 18;
+const AVATAR_NODE_SIZE = 18;
+const DOT_NODE_SIZE = 7;
 
 interface TimelineFlowRowProps {
   item: FlowItem;
@@ -240,9 +240,10 @@ export default function TimelineFlowRow({
   const nodeCenterY = item.type === 'header' ? HEADER_NODE_CENTER_Y : ACTION_NODE_CENTER_Y;
   const nodeElement = renderNodeElement(item, context);
   const rowContent = renderRowContent(item, context);
+  const isHeader = item.type === 'header';
 
   return (
-    <View style={styles.rowContainer}>
+    <View style={[styles.rowContainer, isHeader && !isFirst && styles.headerRowSpacing]}>
       <View style={styles.trackColumn}>
         {!isFirst && (
           <View
@@ -274,8 +275,11 @@ function createStyles(sizeClass: SizeClass) {
   return StyleSheet.create({
     rowContainer: {
       flexDirection: 'row',
-      gap: 12,
-      minHeight: 36,
+      gap: 10,
+      minHeight: 30,
+    },
+    headerRowSpacing: {
+      marginTop: 8,
     },
     trackColumn: {
       width: TRACK_COLUMN_WIDTH,
@@ -302,7 +306,7 @@ function createStyles(sizeClass: SizeClass) {
       alignItems: 'center',
     },
     avatarText: {
-      fontSize: scaleBySizeClass(10, sizeClass),
+      fontSize: scaleBySizeClass(9, sizeClass),
       fontFamily: Fonts.bold,
     },
     dotNode: {
@@ -313,20 +317,22 @@ function createStyles(sizeClass: SizeClass) {
     contentColumn: {
       flex: 1,
       justifyContent: 'center',
-      paddingVertical: 4,
+      paddingVertical: 2,
     },
     possessionHeader: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
       minHeight: 24,
+      paddingVertical: 2,
     },
     possessionSide: {
       fontSize: scaleBySizeClass(13, sizeClass),
-      fontFamily: Fonts.semiBold,
+      fontFamily: Fonts.bold,
+      letterSpacing: 0.2,
     },
     actionWrapper: {
-      gap: 4,
+      gap: 2,
     },
   });
 }
