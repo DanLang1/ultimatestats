@@ -1,138 +1,79 @@
-import { computePullStats, getInboundPullCount } from '../advancedPullStatsUtils';
-import { buildAnalyticsGame } from '../buildAnalyticsGame';
-import type { AdvancedTrackedGame } from '../types';
+import {
+  defineAdvancedGameTestContext,
+  type AdvancedGameScenarioBuilder,
+} from '@/test/fixtures/advancedGameBuilder';
 
-// ── Shared fixtures ──────────────────────────────────────────────────────────
+import { computePullStats, getInboundPullCount } from '../advancedPullStatsUtils';
+import type { PlayerRef, PullResult } from '../types';
 
 const ZOO = 'Zoo';
 const RIVALS = 'rivals';
 
-const august = { refType: 'participant' as const, participantId: 'p_august' };
-const meves = { refType: 'participant' as const, participantId: 'p_meves' };
-const untracked = { refType: 'untracked' as const };
-
-const baseGame: Omit<AdvancedTrackedGame, 'points'> = {
-  id: 'g1',
-  schemaVersion: 1,
+const pullFixtures = defineAdvancedGameTestContext({
+  id: 'pull-stats-game',
   createdAt: 0,
   updatedAt: 0,
-  gameType: 'game',
-  status: 'in_progress',
   focusSideId: ZOO,
-  initialReceivingSideId: ZOO,
-  settings: { locationMode: 'none' },
+  initialReceivingSideId: RIVALS,
   sides: [
     { id: ZOO, label: 'Zoo', trackingMode: 'full-roster' },
     { id: RIVALS, label: 'Rivals', trackingMode: 'anonymous' },
   ],
-  participants: [
-    { id: 'p_august', name: 'August' },
-    { id: 'p_meves', name: 'Meves' },
-  ],
-};
+  players: {
+    august: { id: 'p_august', name: 'August' },
+    meves: { id: 'p_meves', name: 'Meves' },
+  },
+  defaultLines: [{ sideId: ZOO, participantIds: ['p_august', 'p_meves'] }],
+});
 
-// ── Tests ─────────────────────────────────────────────────────────────────────
+const { august, meves } = pullFixtures.players;
+
+interface AddPullPointOptions {
+  puller: PlayerRef;
+  receiver: PlayerRef;
+  scorer?: PlayerRef;
+  result?: PullResult;
+  hangTimeMs?: number;
+  finish?: boolean;
+}
+
+function addPullPoint(
+  scenario: AdvancedGameScenarioBuilder,
+  { puller, receiver, scorer, result = 'inbound', hangTimeMs, finish = true }: AddPullPointOptions,
+) {
+  scenario.startPoint({
+    puller,
+    receiver: result === 'inbound' ? receiver : undefined,
+    pullResult: result,
+    hangTimeMs,
+  });
+  if (result !== 'inbound') scenario.pickup(receiver);
+  if (finish) scenario.goal(scorer);
+  return scenario;
+}
 
 describe('advancedPullStatsUtils', () => {
   describe('outcome grouping', () => {
     it('groups pull outcomes correctly', () => {
-      const game: AdvancedTrackedGame = {
-        ...baseGame,
-        initialReceivingSideId: RIVALS,
-        points: [
-          {
-            id: 'pt1',
-            lines: [{ sideId: ZOO, participantIds: ['p_august'] }],
-            possessions: [
-              {
-                id: 'pos1',
-                sideId: RIVALS,
-                actions: [
-                  {
-                    id: 'a1',
-                    kind: 'pull',
-                    sideId: ZOO,
-                    receivingSideId: RIVALS,
-                    puller: august,
-                    receiver: untracked,
-                    result: 'inbound',
-                    hangTimeMs: 3000,
-                  },
-                  {
-                    id: 'a2',
-                    kind: 'throw',
-                    sideId: RIVALS,
-                    thrower: untracked,
-                    toPlayer: untracked,
-                    result: 'goal',
-                  },
-                ],
-              },
-            ],
-          },
-          {
-            id: 'pt2',
-            lines: [{ sideId: ZOO, participantIds: ['p_august'] }],
-            possessions: [
-              {
-                id: 'pos2',
-                sideId: RIVALS,
-                actions: [
-                  {
-                    id: 'b1',
-                    kind: 'pull',
-                    sideId: ZOO,
-                    receivingSideId: RIVALS,
-                    puller: august,
-                    result: 'roller',
-                    hangTimeMs: 9000,
-                  },
-                  { id: 'b2', kind: 'disc_pickup', sideId: RIVALS, player: untracked },
-                  {
-                    id: 'b3',
-                    kind: 'throw',
-                    sideId: RIVALS,
-                    thrower: untracked,
-                    toPlayer: untracked,
-                    result: 'goal',
-                  },
-                ],
-              },
-            ],
-          },
-          {
-            id: 'pt3',
-            lines: [{ sideId: ZOO, participantIds: ['p_august'] }],
-            possessions: [
-              {
-                id: 'pos3',
-                sideId: ZOO,
-                actions: [
-                  {
-                    id: 'c1',
-                    kind: 'pull',
-                    sideId: RIVALS,
-                    receivingSideId: ZOO,
-                    puller: untracked,
-                    result: 'ob',
-                  },
-                  { id: 'c2', kind: 'disc_pickup', sideId: ZOO, player: august },
-                  {
-                    id: 'c3',
-                    kind: 'throw',
-                    sideId: ZOO,
-                    thrower: august,
-                    toPlayer: meves,
-                    result: 'goal',
-                  },
-                ],
-              },
-            ],
-          },
-        ],
-      };
+      const scenario = pullFixtures.scenario();
+      addPullPoint(scenario, {
+        puller: august,
+        receiver: pullFixtures.untracked,
+        hangTimeMs: 3000,
+      });
+      addPullPoint(scenario, {
+        puller: pullFixtures.untracked,
+        receiver: august,
+        scorer: meves,
+        result: 'roller',
+        hangTimeMs: 9000,
+      });
+      const analytics = addPullPoint(scenario, {
+        puller: august,
+        receiver: pullFixtures.untracked,
+        result: 'ob',
+      }).buildAnalytics();
 
-      const analytics = buildAnalyticsGame(game);
       const stats = computePullStats(analytics);
 
       expect(stats.totalPulls).toBe(3);
@@ -143,263 +84,56 @@ describe('advancedPullStatsUtils', () => {
 
   describe('hang time', () => {
     it('averages hang time across pulls that have it', () => {
-      const game: AdvancedTrackedGame = {
-        ...baseGame,
-        initialReceivingSideId: RIVALS,
-        points: [
-          {
-            id: 'pt1',
-            lines: [{ sideId: ZOO, participantIds: ['p_august'] }],
-            possessions: [
-              {
-                id: 'pos1',
-                sideId: RIVALS,
-                actions: [
-                  {
-                    id: 'a1',
-                    kind: 'pull',
-                    sideId: ZOO,
-                    receivingSideId: RIVALS,
-                    puller: august,
-                    receiver: untracked,
-                    result: 'inbound',
-                    hangTimeMs: 3000,
-                  },
-                  {
-                    id: 'a2',
-                    kind: 'throw',
-                    sideId: RIVALS,
-                    thrower: untracked,
-                    toPlayer: untracked,
-                    result: 'goal',
-                  },
-                ],
-              },
-            ],
-          },
-          {
-            id: 'pt2',
-            lines: [{ sideId: ZOO, participantIds: ['p_august'] }],
-            possessions: [
-              {
-                id: 'pos2',
-                sideId: RIVALS,
-                actions: [
-                  {
-                    id: 'b1',
-                    kind: 'pull',
-                    sideId: ZOO,
-                    receivingSideId: RIVALS,
-                    puller: august,
-                    receiver: untracked,
-                    result: 'inbound',
-                    hangTimeMs: 5000,
-                  },
-                  { id: 'b2', kind: 'disc_pickup', sideId: RIVALS, player: untracked },
-                  {
-                    id: 'b3',
-                    kind: 'throw',
-                    sideId: RIVALS,
-                    thrower: untracked,
-                    toPlayer: untracked,
-                    result: 'goal',
-                  },
-                ],
-              },
-            ],
-          },
-        ],
-      };
+      const scenario = pullFixtures.scenario();
+      addPullPoint(scenario, {
+        puller: august,
+        receiver: pullFixtures.untracked,
+        hangTimeMs: 3000,
+      });
+      const analytics = addPullPoint(scenario, {
+        puller: pullFixtures.untracked,
+        receiver: august,
+        scorer: meves,
+        hangTimeMs: 5000,
+      }).buildAnalytics();
 
-      const analytics = buildAnalyticsGame(game);
-      const stats = computePullStats(analytics);
-
-      expect(stats.avgHangTimeMs).toBeCloseTo(4000); // (3000 + 5000) / 2
+      expect(computePullStats(analytics).avgHangTimeMs).toBeCloseTo(4000);
     });
 
-    it('excludes out-of-bounds pulls from average hang time', () => {
-      const game: AdvancedTrackedGame = {
-        ...baseGame,
-        initialReceivingSideId: RIVALS,
-        points: [
-          {
-            id: 'pt1',
-            lines: [{ sideId: ZOO, participantIds: ['p_august'] }],
-            possessions: [
-              {
-                id: 'pos1',
-                sideId: RIVALS,
-                actions: [
-                  {
-                    id: 'a1',
-                    kind: 'pull',
-                    sideId: ZOO,
-                    receivingSideId: RIVALS,
-                    puller: august,
-                    receiver: untracked,
-                    result: 'inbound',
-                    hangTimeMs: 3000,
-                  },
-                  {
-                    id: 'a2',
-                    kind: 'throw',
-                    sideId: RIVALS,
-                    thrower: untracked,
-                    toPlayer: untracked,
-                    result: 'goal',
-                  },
-                ],
-              },
-            ],
-          },
-          {
-            id: 'pt2',
-            lines: [{ sideId: ZOO, participantIds: ['p_august'] }],
-            possessions: [
-              {
-                id: 'pos2',
-                sideId: RIVALS,
-                actions: [
-                  {
-                    id: 'b1',
-                    kind: 'pull',
-                    sideId: ZOO,
-                    receivingSideId: RIVALS,
-                    puller: august,
-                    result: 'ob',
-                    hangTimeMs: 9000,
-                  },
-                  { id: 'b2', kind: 'disc_pickup', sideId: RIVALS, player: untracked },
-                  {
-                    id: 'b3',
-                    kind: 'throw',
-                    sideId: RIVALS,
-                    thrower: untracked,
-                    toPlayer: untracked,
-                    result: 'goal',
-                  },
-                ],
-              },
-            ],
-          },
-        ],
-      };
+    it.each([
+      ['out-of-bounds', 'ob' as const],
+      ['roller', 'roller' as const],
+    ])('excludes %s pulls from average hang time', (_label, excludedResult) => {
+      const scenario = pullFixtures.scenario();
+      addPullPoint(scenario, {
+        puller: august,
+        receiver: pullFixtures.untracked,
+        hangTimeMs: 3000,
+      });
+      const analytics = addPullPoint(scenario, {
+        puller: pullFixtures.untracked,
+        receiver: august,
+        scorer: meves,
+        result: excludedResult,
+        hangTimeMs: 9000,
+      }).buildAnalytics();
 
-      const analytics = buildAnalyticsGame(game);
       const stats = computePullStats(analytics);
 
       expect(stats.totalPulls).toBe(2);
-      expect(stats.outcomes).toEqual({ inbound: 1, ob: 1 });
-      expect(stats.avgHangTimeMs).toBeCloseTo(3000);
-    });
-
-    it('excludes roller pulls from average hang time', () => {
-      const game: AdvancedTrackedGame = {
-        ...baseGame,
-        initialReceivingSideId: RIVALS,
-        points: [
-          {
-            id: 'pt1',
-            lines: [{ sideId: ZOO, participantIds: ['p_august'] }],
-            possessions: [
-              {
-                id: 'pos1',
-                sideId: RIVALS,
-                actions: [
-                  {
-                    id: 'a1',
-                    kind: 'pull',
-                    sideId: ZOO,
-                    receivingSideId: RIVALS,
-                    puller: august,
-                    receiver: untracked,
-                    result: 'inbound',
-                    hangTimeMs: 3000,
-                  },
-                  {
-                    id: 'a2',
-                    kind: 'throw',
-                    sideId: RIVALS,
-                    thrower: untracked,
-                    toPlayer: untracked,
-                    result: 'goal',
-                  },
-                ],
-              },
-            ],
-          },
-          {
-            id: 'pt2',
-            lines: [{ sideId: ZOO, participantIds: ['p_august'] }],
-            possessions: [
-              {
-                id: 'pos2',
-                sideId: RIVALS,
-                actions: [
-                  {
-                    id: 'b1',
-                    kind: 'pull',
-                    sideId: ZOO,
-                    receivingSideId: RIVALS,
-                    puller: august,
-                    result: 'roller',
-                    hangTimeMs: 9000,
-                  },
-                  { id: 'b2', kind: 'disc_pickup', sideId: RIVALS, player: untracked },
-                  {
-                    id: 'b3',
-                    kind: 'throw',
-                    sideId: RIVALS,
-                    thrower: untracked,
-                    toPlayer: untracked,
-                    result: 'goal',
-                  },
-                ],
-              },
-            ],
-          },
-        ],
-      };
-
-      const analytics = buildAnalyticsGame(game);
-      const stats = computePullStats(analytics);
-
-      expect(stats.totalPulls).toBe(2);
-      expect(stats.outcomes).toEqual({ inbound: 1, roller: 1 });
+      expect(stats.outcomes).toEqual({ inbound: 1, [excludedResult]: 1 });
       expect(stats.avgHangTimeMs).toBeCloseTo(3000);
     });
 
     it('returns null when only out-of-bounds pulls have hang time', () => {
-      const game: AdvancedTrackedGame = {
-        ...baseGame,
-        initialReceivingSideId: RIVALS,
-        points: [
-          {
-            id: 'pt1',
-            lines: [{ sideId: ZOO, participantIds: ['p_august'] }],
-            possessions: [
-              {
-                id: 'pos1',
-                sideId: RIVALS,
-                actions: [
-                  {
-                    id: 'a1',
-                    kind: 'pull',
-                    sideId: ZOO,
-                    receivingSideId: RIVALS,
-                    puller: august,
-                    result: 'ob',
-                    hangTimeMs: 9000,
-                  },
-                  { id: 'a2', kind: 'disc_pickup', sideId: RIVALS, player: untracked },
-                ],
-              },
-            ],
-          },
-        ],
-      };
+      const analytics = addPullPoint(pullFixtures.scenario(), {
+        puller: august,
+        receiver: pullFixtures.untracked,
+        result: 'ob',
+        hangTimeMs: 9000,
+        finish: false,
+      }).buildAnalytics();
 
-      const analytics = buildAnalyticsGame(game);
       const stats = computePullStats(analytics);
 
       expect(stats.totalPulls).toBe(1);
@@ -408,126 +142,34 @@ describe('advancedPullStatsUtils', () => {
     });
 
     it('returns null when no pulls have hang time', () => {
-      const game: AdvancedTrackedGame = {
-        ...baseGame,
-        initialReceivingSideId: RIVALS,
-        points: [
-          {
-            id: 'pt1',
-            lines: [{ sideId: ZOO, participantIds: ['p_august'] }],
-            possessions: [
-              {
-                id: 'pos1',
-                sideId: RIVALS,
-                actions: [
-                  {
-                    id: 'a1',
-                    kind: 'pull',
-                    sideId: ZOO,
-                    receivingSideId: RIVALS,
-                    puller: august,
-                    receiver: untracked,
-                    result: 'inbound',
-                    // no hangTimeMs
-                  },
-                  {
-                    id: 'a2',
-                    kind: 'throw',
-                    sideId: RIVALS,
-                    thrower: untracked,
-                    toPlayer: untracked,
-                    result: 'goal',
-                  },
-                ],
-              },
-            ],
-          },
-        ],
-      };
+      const analytics = addPullPoint(pullFixtures.scenario(), {
+        puller: august,
+        receiver: pullFixtures.untracked,
+      }).buildAnalytics();
 
-      const analytics = buildAnalyticsGame(game);
-      const stats = computePullStats(analytics);
-
-      expect(stats.avgHangTimeMs).toBeNull();
+      expect(computePullStats(analytics).avgHangTimeMs).toBeNull();
     });
   });
 
   describe('side filter', () => {
     it('only counts pulls by the specified side', () => {
-      const game: AdvancedTrackedGame = {
-        ...baseGame,
-        initialReceivingSideId: RIVALS,
-        points: [
-          {
-            id: 'pt1',
-            lines: [{ sideId: ZOO, participantIds: ['p_august'] }],
-            possessions: [
-              {
-                id: 'pos1',
-                sideId: RIVALS,
-                actions: [
-                  {
-                    id: 'a1',
-                    kind: 'pull',
-                    sideId: ZOO,
-                    receivingSideId: RIVALS,
-                    puller: august,
-                    receiver: untracked,
-                    result: 'inbound',
-                    hangTimeMs: 3000,
-                  },
-                  {
-                    id: 'a2',
-                    kind: 'throw',
-                    sideId: RIVALS,
-                    thrower: untracked,
-                    toPlayer: untracked,
-                    result: 'goal',
-                  },
-                ],
-              },
-            ],
-          },
-          {
-            id: 'pt2',
-            lines: [{ sideId: ZOO, participantIds: ['p_august'] }],
-            possessions: [
-              {
-                id: 'pos2',
-                sideId: ZOO,
-                actions: [
-                  {
-                    id: 'b1',
-                    kind: 'pull',
-                    sideId: RIVALS,
-                    receivingSideId: ZOO,
-                    puller: untracked,
-                    receiver: august,
-                    result: 'inbound',
-                    hangTimeMs: 2000,
-                  },
-                  {
-                    id: 'b2',
-                    kind: 'throw',
-                    sideId: ZOO,
-                    thrower: august,
-                    toPlayer: meves,
-                    result: 'goal',
-                  },
-                ],
-              },
-            ],
-          },
-        ],
-      };
-
-      const analytics = buildAnalyticsGame(game);
-
+      const scenario = pullFixtures.scenario();
+      addPullPoint(scenario, {
+        puller: august,
+        receiver: pullFixtures.untracked,
+        hangTimeMs: 3000,
+      });
+      const analytics = addPullPoint(scenario, {
+        puller: pullFixtures.untracked,
+        receiver: august,
+        scorer: meves,
+        hangTimeMs: 2000,
+      }).buildAnalytics();
       const zooStats = computePullStats(analytics, ZOO);
+      const rivalsStats = computePullStats(analytics, RIVALS);
+
       expect(zooStats.totalPulls).toBe(1);
       expect(zooStats.avgHangTimeMs).toBeCloseTo(3000);
-
-      const rivalsStats = computePullStats(analytics, RIVALS);
       expect(rivalsStats.totalPulls).toBe(1);
       expect(rivalsStats.avgHangTimeMs).toBeCloseTo(2000);
     });

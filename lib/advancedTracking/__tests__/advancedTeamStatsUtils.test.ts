@@ -1,40 +1,37 @@
+import { defineAdvancedGameTestContext } from '@/test/fixtures/advancedGameBuilder';
+
 import { computeAdvancedTeamStats } from '../advancedTeamStatsUtils';
 import { aggregateAnalyticsGames } from '../aggregateAnalyticsGames';
 import { buildAnalyticsGame } from '../buildAnalyticsGame';
-import type { AdvancedTrackedGame, PossessionAction, TrackedPoint } from '../types';
+import type { AdvancedTrackedGame, TrackedPoint } from '../types';
 
 // ── Shared fixtures ──────────────────────────────────────────────────────────
 
 const ZOO = 'Zoo';
 const RIVALS = 'rivals';
 
-const participants = [
-  { id: 'p_august', name: 'August' },
-  { id: 'p_meves', name: 'Meves' },
-  { id: 'p_joah', name: 'Joah' },
-  { id: 'p_max', name: 'Max' },
-];
-
-const august = { refType: 'participant' as const, participantId: 'p_august' };
-const meves = { refType: 'participant' as const, participantId: 'p_meves' };
-const untracked = { refType: 'untracked' as const };
-
-const baseGame: Omit<AdvancedTrackedGame, 'points'> = {
+const teamFixtures = defineAdvancedGameTestContext({
   id: 'g1',
-  schemaVersion: 1,
   createdAt: 0,
   updatedAt: 0,
-  gameType: 'game',
-  status: 'in_progress',
   focusSideId: ZOO,
   initialReceivingSideId: ZOO,
-  settings: { locationMode: 'none' },
   sides: [
     { id: ZOO, label: 'Zoo', trackingMode: 'full-roster' },
     { id: RIVALS, label: 'Rivals', trackingMode: 'anonymous' },
   ],
-  participants,
-};
+  players: {
+    august: { id: 'p_august', name: 'August' },
+    meves: { id: 'p_meves', name: 'Meves' },
+    joah: { id: 'p_joah', name: 'Joah' },
+    max: { id: 'p_max', name: 'Max' },
+  },
+  defaultLines: [{ sideId: ZOO, participantIds: ['p_august', 'p_meves'] }],
+});
+
+const { august, meves } = teamFixtures.players;
+const untracked = teamFixtures.untracked;
+const baseGame = teamFixtures.fixture();
 
 // Helper to build a simple point where a given side scores
 function makeHoldPoint(
@@ -42,89 +39,33 @@ function makeHoldPoint(
   scoringSide: typeof ZOO | typeof RIVALS,
   receivingSide: typeof ZOO | typeof RIVALS,
 ) {
-  const pullingSide = receivingSide === ZOO ? RIVALS : ZOO;
+  const receivingPlayer = receivingSide === ZOO ? august : untracked;
+  const scoringPlayer = scoringSide === ZOO ? meves : untracked;
+  const scenario = teamFixtures.scenario({
+    id,
+    initialReceivingSideId: receivingSide,
+  });
+
   if (scoringSide === receivingSide) {
-    // Hold: receiving side scores on first possession
-    return {
-      id,
-      lines: [{ sideId: ZOO, participantIds: ['p_august'] }],
-      possessions: [
-        {
-          id: `${id}_pos1`,
-          sideId: receivingSide,
-          actions: [
-            {
-              id: `${id}_a1`,
-              kind: 'pull' as const,
-              sideId: pullingSide,
-              receivingSideId: receivingSide,
-              puller: receivingSide === ZOO ? untracked : august,
-              receiver: receivingSide === ZOO ? august : untracked,
-              result: 'inbound' as const,
-            },
-            {
-              id: `${id}_a2`,
-              kind: 'throw' as const,
-              sideId: receivingSide,
-              thrower: receivingSide === ZOO ? august : untracked,
-              toPlayer: receivingSide === ZOO ? meves : untracked,
-              result: 'goal' as const,
-            },
-          ],
-        },
-      ],
-    };
-  } else {
-    // Break: pulling side scores after a turnover
-    return {
-      id,
-      lines: [{ sideId: ZOO, participantIds: ['p_august'] }],
-      possessions: [
-        {
-          id: `${id}_pos1`,
-          sideId: receivingSide,
-          actions: [
-            {
-              id: `${id}_a1`,
-              kind: 'pull' as const,
-              sideId: pullingSide,
-              receivingSideId: receivingSide,
-              puller: pullingSide === ZOO ? august : untracked,
-              receiver: receivingSide === ZOO ? august : untracked,
-              result: 'inbound' as const,
-            },
-            {
-              id: `${id}_a2`,
-              kind: 'throw' as const,
-              sideId: receivingSide,
-              thrower: receivingSide === ZOO ? august : untracked,
-              result: 'throwaway' as const,
-            },
-          ],
-        },
-        {
-          id: `${id}_pos2`,
-          sideId: scoringSide,
-          actions: [
-            {
-              id: `${id}_a3`,
-              kind: 'disc_pickup' as const,
-              sideId: scoringSide,
-              player: scoringSide === ZOO ? august : untracked,
-            },
-            {
-              id: `${id}_a4`,
-              kind: 'throw' as const,
-              sideId: scoringSide,
-              thrower: scoringSide === ZOO ? august : untracked,
-              toPlayer: scoringSide === ZOO ? meves : untracked,
-              result: 'goal' as const,
-            },
-          ],
-        },
-      ],
-    };
+    return scenario
+      .hold({
+        puller: receivingSide === ZOO ? untracked : august,
+        receiver: receivingPlayer,
+        scorer: scoringPlayer,
+      })
+      .buildPoint();
   }
+
+  const pickupPlayer = scoringSide === ZOO ? august : untracked;
+  return scenario
+    .breakAfterTurnover({
+      puller: receivingSide === ZOO ? untracked : august,
+      receiver: receivingPlayer,
+      turnoverResult: 'throwaway',
+      pickupPlayer,
+      scorer: scoringPlayer,
+    })
+    .buildPoint();
 }
 
 function makeAlternatingPoint(
@@ -134,7 +75,16 @@ function makeAlternatingPoint(
   turnoversBeforeScore: number,
 ): TrackedPoint {
   const pullingSide = receivingSide === ZOO ? RIVALS : ZOO;
-  const possessions: TrackedPoint['possessions'] = [];
+  const receivingPlayer = receivingSide === ZOO ? august : untracked;
+  const scenario = teamFixtures
+    .scenario({
+      id,
+      initialReceivingSideId: receivingSide,
+    })
+    .startPoint({
+      puller: pullingSide === ZOO ? august : untracked,
+      receiver: receivingPlayer,
+    });
 
   for (let possessionIndex = 0; possessionIndex <= turnoversBeforeScore; possessionIndex++) {
     const sideId = possessionIndex % 2 === 0 ? receivingSide : pullingSide;
@@ -143,34 +93,15 @@ function makeAlternatingPoint(
       throw new Error('Fixture turnover count does not end with the requested scoring side.');
     }
 
-    const actions: PossessionAction[] = [];
-    if (possessionIndex === 0) {
-      actions.push({
-        id: `${id}_pull`,
-        kind: 'pull',
-        sideId: pullingSide,
-        receivingSideId: receivingSide,
-        puller: pullingSide === ZOO ? august : untracked,
-        receiver: receivingSide === ZOO ? august : untracked,
-        result: 'inbound',
-      });
+    const player = sideId === ZOO ? august : untracked;
+    if (possessionIndex > 0) {
+      scenario.startPossession(sideId, { holder: player });
     }
-    actions.push({
-      id: `${id}_throw_${possessionIndex}`,
-      kind: 'throw',
-      sideId,
-      thrower: sideId === ZOO ? august : untracked,
-      ...(isScore ? { toPlayer: sideId === ZOO ? meves : untracked } : {}),
-      result: isScore ? 'goal' : 'throwaway',
-    });
-    possessions.push({ id: `${id}_pos_${possessionIndex}`, sideId, actions });
+    if (isScore) scenario.goal(sideId === ZOO ? meves : untracked);
+    else scenario.turnover('throwaway');
   }
 
-  return {
-    id,
-    lines: [{ sideId: ZOO, participantIds: ['p_august', 'p_meves'] }],
-    possessions,
-  };
+  return scenario.buildPoint();
 }
 
 // ── Tests ─────────────────────────────────────────────────────────────────────

@@ -145,6 +145,30 @@ Every saved-game schema bump requires a new migration file — even if the migra
 (only stamps the new `schemaVersion`). The migration engine asserts that all versions from the
 first migration up to `CURRENT_SCHEMA_VERSION` are covered consecutively.
 
+### Advanced-game scenarios
+
+Use `test/fixtures/advancedGameBuilder.ts` for canonical advanced-game records instead of creating
+another local base-game factory. `createAdvancedGameFixture()` supplies current-schema defaults;
+`createAdvancedGameScenario()` builds deterministic point, possession, and action chains and
+validates them against line-history and analytics contracts.
+
+Prefer fluent actions all the way through the scenario; replacing only a top-level base game still
+leaves the most error-prone duplication in nested pulls, possessions, and throws. Use `buildPoint()`
+when a test needs to compose several independently described point outcomes into one game.
+Use `buildAnalytics()` when raw game inspection is unnecessary. Suites that share sides, players,
+and lines should define one `defineAdvancedGameTestContext()` and obtain fixtures, scenarios, and
+player refs from it. Prefer the named `hold()` and `breakAfterTurnover()` outcomes when their
+intermediate actions are not the subject of the assertion.
+
+Reusable domain scenarios live in `test/fixtures/advancedGameScenarios.ts`. Keep a one-off fixture
+local when its exact raw structure is the assertion target. Use `buildUnsafe()` only when malformed
+or legacy input is intentional, and state that condition in the test. Store-transition tests should
+continue to exercise the production store action that owns the behavior rather than asking the
+fixture builder to perform it.
+
+Follow `.agents/skills/advanced-game-test-scenarios/SKILL.md` when adding or refactoring advanced
+game setup across unit, component, route, or store tests.
+
 ## Writing Tests
 
 ### Screen-test policy

@@ -1,131 +1,61 @@
+import { defineAdvancedGameTestContext } from '@/test/fixtures/advancedGameBuilder';
+
 import { computeAdvancedPlayerStats } from '../advancedPlayerStatsUtils';
 import { computeAdvancedTeamStats } from '../advancedTeamStatsUtils';
 import { aggregateAnalyticsGames } from '../aggregateAnalyticsGames';
 import { buildAnalyticsGame } from '../buildAnalyticsGame';
 import { isAdvancedGameAggregateEligible } from '../summary';
-import type { AdvancedTrackedGame } from '../types';
 
 const ZOO = 'zoo';
 const RIVALS = 'rivals';
 
-const august = { refType: 'participant' as const, participantId: 'p_august' };
-const meves = { refType: 'participant' as const, participantId: 'p_meves' };
-const untracked = { refType: 'untracked' as const };
-
-const baseGame: Omit<AdvancedTrackedGame, 'id' | 'points'> = {
-  schemaVersion: 1,
+const aggregateFixtures = defineAdvancedGameTestContext({
+  id: 'aggregate-base-game',
   createdAt: 1000,
   updatedAt: 1000,
-  gameType: 'game',
   status: 'final',
   focusSideId: ZOO,
   initialReceivingSideId: ZOO,
-  settings: { locationMode: 'none' },
   sides: [
     { id: ZOO, label: 'Zoo', trackingMode: 'full-roster' },
     { id: RIVALS, label: 'Rivals', trackingMode: 'anonymous' },
   ],
-  participants: [
-    { id: 'p_august', name: 'August' },
-    { id: 'p_meves', name: 'Meves' },
-  ],
-};
+  players: {
+    august: { id: 'p_august', name: 'August' },
+    meves: { id: 'p_meves', name: 'Meves' },
+  },
+  defaultLines: [{ sideId: ZOO, participantIds: ['p_august', 'p_meves'] }],
+});
 
-function makeHoldGame(id: string): AdvancedTrackedGame {
-  return {
-    ...baseGame,
-    id,
-    points: [
-      {
-        id: 'pt1',
-        lines: [{ sideId: ZOO, participantIds: ['p_august', 'p_meves'] }],
-        possessions: [
-          {
-            id: 'pos1',
-            sideId: ZOO,
-            actions: [
-              {
-                id: 'a1',
-                kind: 'pull' as const,
-                sideId: RIVALS,
-                receivingSideId: ZOO,
-                puller: untracked,
-                receiver: august,
-                result: 'inbound' as const,
-              },
-              {
-                id: 'a2',
-                kind: 'throw' as const,
-                sideId: ZOO,
-                thrower: august,
-                toPlayer: meves,
-                result: 'goal' as const,
-              },
-            ],
-          },
-        ],
-      },
-    ],
-  };
+const { august, meves } = aggregateFixtures.players;
+
+function makeHoldGame(id: string) {
+  return aggregateFixtures
+    .scenario({ id })
+    .hold({
+      id: 'pt1',
+      possessionId: 'pos1',
+      puller: aggregateFixtures.untracked,
+      receiver: august,
+      scorer: meves,
+    })
+    .build();
 }
 
-function makeBreakGame(id: string): AdvancedTrackedGame {
-  return {
-    ...baseGame,
-    id,
-    initialReceivingSideId: RIVALS,
-    points: [
-      {
-        id: 'pt1',
-        lines: [{ sideId: ZOO, participantIds: ['p_august', 'p_meves'] }],
-        possessions: [
-          {
-            id: 'pos1',
-            sideId: RIVALS,
-            actions: [
-              {
-                id: 'a1',
-                kind: 'pull' as const,
-                sideId: ZOO,
-                receivingSideId: RIVALS,
-                puller: august,
-                receiver: untracked,
-                result: 'inbound' as const,
-              },
-              {
-                id: 'a2',
-                kind: 'throw' as const,
-                sideId: RIVALS,
-                thrower: untracked,
-                defender: meves,
-                result: 'block' as const,
-              },
-            ],
-          },
-          {
-            id: 'pos2',
-            sideId: ZOO,
-            actions: [
-              {
-                id: 'a3',
-                kind: 'disc_pickup' as const,
-                sideId: ZOO,
-                player: meves,
-              },
-              {
-                id: 'a4',
-                kind: 'throw' as const,
-                sideId: ZOO,
-                thrower: meves,
-                toPlayer: august,
-                result: 'goal' as const,
-              },
-            ],
-          },
-        ],
-      },
-    ],
-  };
+function makeBreakGame(id: string) {
+  return aggregateFixtures
+    .scenario({ id, initialReceivingSideId: RIVALS })
+    .breakAfterTurnover({
+      id: 'pt1',
+      possessionId: 'pos1',
+      puller: august,
+      receiver: aggregateFixtures.untracked,
+      turnoverResult: 'block',
+      defender: meves,
+      pickupPlayer: meves,
+      scorer: august,
+    })
+    .build();
 }
 
 describe('aggregateAnalyticsGames', () => {

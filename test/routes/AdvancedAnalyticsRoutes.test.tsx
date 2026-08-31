@@ -11,22 +11,20 @@ import { getEffectiveLineParticipantIds } from '@/lib/advancedTracking/trackingU
 import type { AdvancedTrackedGame } from '@/lib/advancedTracking/types';
 import { useSavedAdvancedGamesStore } from '@/store/advancedTracking/savedGamesStore';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
+import { createAdvancedGameScenario } from '@/test/fixtures/advancedGameBuilder';
 import { arrangeAdvancedGame, cacheCurrentAdvancedGame } from '@/test/fixtures/domain';
 import { resetAllStores } from '@/test/fixtures/resetStores';
 import { resetMockRouter, setMockSearchParams } from '@/test/mocks/expoRouter';
 import { renderScreen } from '@/test/render';
 
 function makeEditableTimelineGame(): AdvancedTrackedGame {
-  return {
+  return createAdvancedGameScenario({
     id: 'advanced-timeline-edit-game',
-    schemaVersion: 2,
     createdAt: 1,
     updatedAt: 1,
-    gameType: 'game',
     status: 'final',
     focusSideId: 'windchill',
     initialReceivingSideId: 'windchill',
-    settings: { locationMode: 'none' },
     metadata: { title: 'Windchill vs Rivals' },
     sides: [
       { id: 'windchill', label: 'Windchill', trackingMode: 'full-roster' },
@@ -42,40 +40,39 @@ function makeEditableTimelineGame(): AdvancedTrackedGame {
       { id: 'gia', name: 'Gia' },
       { id: 'hana', name: 'Hana' },
     ],
-    points: [
-      {
-        id: 'point-1',
-        lines: [
-          {
-            sideId: 'windchill',
-            participantIds: ['alex', 'blair', 'casey', 'dana', 'eli', 'finn', 'gia'],
-          },
-        ],
-        possessions: [
-          {
-            id: 'possession-1',
-            sideId: 'windchill',
-            actions: [
-              {
-                id: 'pickup-1',
-                kind: 'disc_pickup',
-                sideId: 'windchill',
-                player: { refType: 'participant', participantId: 'alex' },
-              },
-              {
-                id: 'goal-1',
-                kind: 'throw',
-                sideId: 'windchill',
-                thrower: { refType: 'participant', participantId: 'alex' },
-                toPlayer: { refType: 'participant', participantId: 'blair' },
-                result: 'goal',
-              },
-            ],
-          },
-        ],
-      },
-    ],
-  };
+  })
+    .addPoint({
+      id: 'point-1',
+      lines: [
+        {
+          sideId: 'windchill',
+          participantIds: ['alex', 'blair', 'casey', 'dana', 'eli', 'finn', 'gia'],
+        },
+      ],
+      possessions: [
+        {
+          id: 'possession-1',
+          sideId: 'windchill',
+          actions: [
+            {
+              id: 'pickup-1',
+              kind: 'disc_pickup',
+              sideId: 'windchill',
+              player: { refType: 'participant', participantId: 'alex' },
+            },
+            {
+              id: 'goal-1',
+              kind: 'throw',
+              sideId: 'windchill',
+              thrower: { refType: 'participant', participantId: 'alex' },
+              toPlayer: { refType: 'participant', participantId: 'blair' },
+              result: 'goal',
+            },
+          ],
+        },
+      ],
+    })
+    .build();
 }
 
 describe('advanced analytics routes', () => {

@@ -1,43 +1,40 @@
+import { defineAdvancedGameTestContext } from '@/test/fixtures/advancedGameBuilder';
+
 import {
   computeAdvancedChemistry,
   computeAdvancedPassConnections,
   getVisibleAdvancedChemistryMode,
 } from '../advancedChemistryUtils';
 import { buildAnalyticsGame } from '../buildAnalyticsGame';
-import type { AdvancedTrackedGame } from '../types';
+import type { AdvancedTrackedGame, PlayerRef } from '../types';
 
 // ── Shared fixtures ──────────────────────────────────────────────────────────
 
 const ZOO = 'zoo';
 const RIVALS = 'rivals';
 
-const participants = [
-  { id: 'p_august', name: 'August' },
-  { id: 'p_meves', name: 'Meves' },
-  { id: 'p_joah', name: 'Joah' },
-];
-
-const august = { refType: 'participant' as const, participantId: 'p_august' };
-const meves = { refType: 'participant' as const, participantId: 'p_meves' };
-const joah = { refType: 'participant' as const, participantId: 'p_joah' };
-const untracked = { refType: 'untracked' as const };
-
-const baseGame: Omit<AdvancedTrackedGame, 'points'> = {
+const chemistryFixtures = defineAdvancedGameTestContext({
   id: 'g1',
-  schemaVersion: 1,
   createdAt: 0,
   updatedAt: 0,
-  gameType: 'game',
   status: 'final',
   focusSideId: ZOO,
   initialReceivingSideId: ZOO,
-  settings: { locationMode: 'none' },
   sides: [
     { id: ZOO, label: 'Zoo', trackingMode: 'full-roster' },
     { id: RIVALS, label: 'Rivals', trackingMode: 'anonymous' },
   ],
-  participants,
-};
+  players: {
+    august: { id: 'p_august', name: 'August' },
+    meves: { id: 'p_meves', name: 'Meves' },
+    joah: { id: 'p_joah', name: 'Joah' },
+  },
+  defaultLines: [{ sideId: ZOO, participantIds: ['p_august', 'p_meves', 'p_joah'] }],
+});
+
+const { august, meves, joah } = chemistryFixtures.players;
+const untracked = chemistryFixtures.untracked;
+const baseGame = chemistryFixtures.fixture();
 
 describe('getVisibleAdvancedChemistryMode', () => {
   it('keeps scoring when scoring chemistry is available', () => {
@@ -64,32 +61,14 @@ describe('getVisibleAdvancedChemistryMode', () => {
   });
 });
 
-// Build a point where Zoo receives and scores via throw sequence
-function makeScoredPoint(
-  id: string,
-  actions: AdvancedTrackedGame['points'][number]['possessions'][number]['actions'],
-) {
-  return {
-    id,
-    lines: [{ sideId: ZOO, participantIds: ['p_august', 'p_meves', 'p_joah'] }],
-    possessions: [
-      {
-        id: `pos_${id}`,
-        sideId: ZOO,
-        actions: [
-          {
-            id: `pull_${id}`,
-            kind: 'pull' as const,
-            sideId: RIVALS,
-            receivingSideId: ZOO,
-            puller: untracked,
-            result: 'inbound' as const,
-          },
-          ...actions,
-        ],
-      },
-    ],
-  };
+function chemistryScenario(id: string, initialReceivingSideId = ZOO) {
+  return chemistryFixtures
+    .scenario({ id, initialReceivingSideId })
+    .startPoint({ puller: untracked });
+}
+
+function makeScoredPoint(id: string, thrower: PlayerRef, scorer: PlayerRef) {
+  return chemistryScenario(id).goal(scorer, { thrower }).buildPoint();
 }
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
@@ -98,40 +77,14 @@ describe('computeAdvancedChemistry', () => {
   it('returns empty array when the participant has no connections', () => {
     // August scored unassisted (no assist attribution on the goal action)
     // Use a Callahan so no assist is recorded
-    const game: AdvancedTrackedGame = {
-      ...baseGame,
-      points: [
-        {
-          id: 'pt1',
-          lines: [{ sideId: ZOO, participantIds: ['p_august'] }],
-          possessions: [
-            {
-              id: 'pos1',
-              sideId: RIVALS,
-              actions: [
-                {
-                  id: 'pull1',
-                  kind: 'pull' as const,
-                  sideId: ZOO,
-                  receivingSideId: RIVALS,
-                  puller: august,
-                  result: 'inbound' as const,
-                },
-                {
-                  id: 'throw1',
-                  kind: 'throw' as const,
-                  sideId: RIVALS,
-                  thrower: untracked,
-                  result: 'callahan' as const,
-                  defender: august,
-                },
-              ],
-            },
-          ],
-        },
-      ],
-    };
-    const analytics = buildAnalyticsGame(game);
+    const analytics = chemistryFixtures
+      .scenario({ initialReceivingSideId: RIVALS })
+      .startPoint({
+        lines: [{ sideId: ZOO, participantIds: ['p_august'] }],
+        puller: august,
+      })
+      .callahan(august, { thrower: untracked })
+      .buildAnalytics();
     // August got a callahan (goal + block), but there's no assist — no connections
     expect(computeAdvancedChemistry(analytics, 'p_august', analytics.participantNames)).toEqual([]);
   });
@@ -139,22 +92,9 @@ describe('computeAdvancedChemistry', () => {
   it('records goalsFrom when the participant scored and another player assisted', () => {
     // Meves→August (goal): August gets goal, Meves gets assist
     // From August's perspective: goalsFrom Meves = 1
-    const game: AdvancedTrackedGame = {
-      ...baseGame,
-      points: [
-        makeScoredPoint('pt1', [
-          {
-            id: 'a1',
-            kind: 'throw' as const,
-            sideId: ZOO,
-            thrower: meves,
-            toPlayer: august,
-            result: 'goal' as const,
-          },
-        ]),
-      ],
-    };
-    const analytics = buildAnalyticsGame(game);
+    const analytics = chemistryFixtures.analyticsFromPoints([
+      makeScoredPoint('pt1', meves, august),
+    ]);
     const connections = computeAdvancedChemistry(analytics, 'p_august', analytics.participantNames);
 
     expect(connections).toHaveLength(1);
@@ -167,22 +107,9 @@ describe('computeAdvancedChemistry', () => {
   it('records assistsTo when the participant assisted and another player scored', () => {
     // August→Meves (goal): Meves scores, August assists
     // From August's perspective: assistsTo Meves = 1
-    const game: AdvancedTrackedGame = {
-      ...baseGame,
-      points: [
-        makeScoredPoint('pt1', [
-          {
-            id: 'a1',
-            kind: 'throw' as const,
-            sideId: ZOO,
-            thrower: august,
-            toPlayer: meves,
-            result: 'goal' as const,
-          },
-        ]),
-      ],
-    };
-    const analytics = buildAnalyticsGame(game);
+    const analytics = chemistryFixtures.analyticsFromPoints([
+      makeScoredPoint('pt1', august, meves),
+    ]);
     const connections = computeAdvancedChemistry(analytics, 'p_august', analytics.participantNames);
 
     expect(connections).toHaveLength(1);
@@ -194,50 +121,10 @@ describe('computeAdvancedChemistry', () => {
   it('accumulates both directions on the same connection', () => {
     // pt1: August scores off Meves assist (goalsFrom Meves +1)
     // pt2: August assists Meves goal (assistsTo Meves +1)
-    const game: AdvancedTrackedGame = {
-      ...baseGame,
-      points: [
-        makeScoredPoint('pt1', [
-          {
-            id: 'a1',
-            kind: 'throw' as const,
-            sideId: ZOO,
-            thrower: meves,
-            toPlayer: august,
-            result: 'goal' as const,
-          },
-        ]),
-        {
-          id: 'pt2',
-          lines: [{ sideId: ZOO, participantIds: ['p_august', 'p_meves'] }],
-          possessions: [
-            {
-              id: 'pos2',
-              sideId: ZOO,
-              actions: [
-                {
-                  id: 'pull2',
-                  kind: 'pull' as const,
-                  sideId: RIVALS,
-                  receivingSideId: ZOO,
-                  puller: untracked,
-                  result: 'inbound' as const,
-                },
-                {
-                  id: 'a2',
-                  kind: 'throw' as const,
-                  sideId: ZOO,
-                  thrower: august,
-                  toPlayer: meves,
-                  result: 'goal' as const,
-                },
-              ],
-            },
-          ],
-        },
-      ],
-    };
-    const analytics = buildAnalyticsGame(game);
+    const analytics = chemistryFixtures.analyticsFromPoints([
+      makeScoredPoint('pt1', meves, august),
+      makeScoredPoint('pt2', august, meves),
+    ]);
     const connections = computeAdvancedChemistry(analytics, 'p_august', analytics.participantNames);
 
     expect(connections).toHaveLength(1);
@@ -249,50 +136,10 @@ describe('computeAdvancedChemistry', () => {
 
   it('returns connections for multiple distinct partners', () => {
     // August assists Meves (pt1) and assists Joah (pt2)
-    const game: AdvancedTrackedGame = {
-      ...baseGame,
-      points: [
-        makeScoredPoint('pt1', [
-          {
-            id: 'a1',
-            kind: 'throw' as const,
-            sideId: ZOO,
-            thrower: august,
-            toPlayer: meves,
-            result: 'goal' as const,
-          },
-        ]),
-        {
-          id: 'pt2',
-          lines: [{ sideId: ZOO, participantIds: ['p_august', 'p_joah'] }],
-          possessions: [
-            {
-              id: 'pos2',
-              sideId: ZOO,
-              actions: [
-                {
-                  id: 'pull2',
-                  kind: 'pull' as const,
-                  sideId: RIVALS,
-                  receivingSideId: ZOO,
-                  puller: untracked,
-                  result: 'inbound' as const,
-                },
-                {
-                  id: 'a2',
-                  kind: 'throw' as const,
-                  sideId: ZOO,
-                  thrower: august,
-                  toPlayer: joah,
-                  result: 'goal' as const,
-                },
-              ],
-            },
-          ],
-        },
-      ],
-    };
-    const analytics = buildAnalyticsGame(game);
+    const analytics = chemistryFixtures.analyticsFromPoints([
+      makeScoredPoint('pt1', august, meves),
+      makeScoredPoint('pt2', august, joah),
+    ]);
     const connections = computeAdvancedChemistry(analytics, 'p_august', analytics.participantNames);
 
     expect(connections).toHaveLength(2);
@@ -304,78 +151,11 @@ describe('computeAdvancedChemistry', () => {
 
   it('sorts by totalConnections descending', () => {
     // August→Meves goal (x2), August→Joah goal (x1) — Meves should come first
-    const game: AdvancedTrackedGame = {
-      ...baseGame,
-      points: [
-        makeScoredPoint('pt1', [
-          {
-            id: 'a1',
-            kind: 'throw' as const,
-            sideId: ZOO,
-            thrower: august,
-            toPlayer: meves,
-            result: 'goal' as const,
-          },
-        ]),
-        {
-          id: 'pt2',
-          lines: [{ sideId: ZOO, participantIds: ['p_august', 'p_meves'] }],
-          possessions: [
-            {
-              id: 'pos2',
-              sideId: ZOO,
-              actions: [
-                {
-                  id: 'pull2',
-                  kind: 'pull' as const,
-                  sideId: RIVALS,
-                  receivingSideId: ZOO,
-                  puller: untracked,
-                  result: 'inbound' as const,
-                },
-                {
-                  id: 'a2',
-                  kind: 'throw' as const,
-                  sideId: ZOO,
-                  thrower: august,
-                  toPlayer: meves,
-                  result: 'goal' as const,
-                },
-              ],
-            },
-          ],
-        },
-        {
-          id: 'pt3',
-          lines: [{ sideId: ZOO, participantIds: ['p_august', 'p_joah'] }],
-          possessions: [
-            {
-              id: 'pos3',
-              sideId: ZOO,
-              actions: [
-                {
-                  id: 'pull3',
-                  kind: 'pull' as const,
-                  sideId: RIVALS,
-                  receivingSideId: ZOO,
-                  puller: untracked,
-                  result: 'inbound' as const,
-                },
-                {
-                  id: 'a3',
-                  kind: 'throw' as const,
-                  sideId: ZOO,
-                  thrower: august,
-                  toPlayer: joah,
-                  result: 'goal' as const,
-                },
-              ],
-            },
-          ],
-        },
-      ],
-    };
-    const analytics = buildAnalyticsGame(game);
+    const analytics = chemistryFixtures.analyticsFromPoints([
+      makeScoredPoint('pt1', august, meves),
+      makeScoredPoint('pt2', august, meves),
+      makeScoredPoint('pt3', august, joah),
+    ]);
     const connections = computeAdvancedChemistry(analytics, 'p_august', analytics.participantNames);
 
     expect(connections[0].participantId).toBe('p_meves');
@@ -387,23 +167,9 @@ describe('computeAdvancedChemistry', () => {
   it('does not count a connection to oneself', () => {
     // If somehow the same player appears as both thrower and receiver (shouldn't happen in real games)
     // this tests the `assistId !== participantId` guard
-    const game: AdvancedTrackedGame = {
-      ...baseGame,
-      points: [
-        makeScoredPoint('pt1', [
-          // Meves scores, August assists
-          {
-            id: 'a1',
-            kind: 'throw' as const,
-            sideId: ZOO,
-            thrower: august,
-            toPlayer: meves,
-            result: 'goal' as const,
-          },
-        ]),
-      ],
-    };
-    const analytics = buildAnalyticsGame(game);
+    const analytics = chemistryFixtures.analyticsFromPoints([
+      makeScoredPoint('pt1', august, meves),
+    ]);
     // From Meves's perspective: only connection is to August (assister)
     const connections = computeAdvancedChemistry(analytics, 'p_meves', analytics.participantNames);
     expect(connections.every((c) => c.participantId !== 'p_meves')).toBe(true);
@@ -412,38 +178,13 @@ describe('computeAdvancedChemistry', () => {
 
 describe('computeAdvancedPassConnections', () => {
   it('counts completed pass connections in both directions', () => {
-    const game: AdvancedTrackedGame = {
-      ...baseGame,
-      points: [
-        makeScoredPoint('pt1', [
-          {
-            id: 'a1',
-            kind: 'throw' as const,
-            sideId: ZOO,
-            thrower: meves,
-            toPlayer: august,
-            result: 'complete' as const,
-          },
-          {
-            id: 'a2',
-            kind: 'throw' as const,
-            sideId: ZOO,
-            thrower: august,
-            toPlayer: joah,
-            result: 'complete' as const,
-          },
-          {
-            id: 'a3',
-            kind: 'throw' as const,
-            sideId: ZOO,
-            thrower: august,
-            toPlayer: meves,
-            result: 'goal' as const,
-          },
-        ]),
-      ],
-    };
-    const analytics = buildAnalyticsGame(game);
+    const analytics = chemistryFixtures.analyticsFromPoints([
+      chemistryScenario('pt1')
+        .complete(august, { thrower: meves })
+        .complete(joah, { thrower: august })
+        .goal(meves, { thrower: august })
+        .buildPoint(),
+    ]);
     const connections = computeAdvancedPassConnections(
       analytics,
       'p_august',
@@ -560,46 +301,14 @@ describe('computeAdvancedPassConnections', () => {
   });
 
   it('sorts by total completed passes descending', () => {
-    const game: AdvancedTrackedGame = {
-      ...baseGame,
-      points: [
-        makeScoredPoint('pt1', [
-          {
-            id: 'a1',
-            kind: 'throw' as const,
-            sideId: ZOO,
-            thrower: august,
-            toPlayer: joah,
-            result: 'complete' as const,
-          },
-          {
-            id: 'a2',
-            kind: 'throw' as const,
-            sideId: ZOO,
-            thrower: august,
-            toPlayer: meves,
-            result: 'complete' as const,
-          },
-          {
-            id: 'a3',
-            kind: 'throw' as const,
-            sideId: ZOO,
-            thrower: meves,
-            toPlayer: august,
-            result: 'complete' as const,
-          },
-          {
-            id: 'a4',
-            kind: 'throw' as const,
-            sideId: ZOO,
-            thrower: august,
-            toPlayer: meves,
-            result: 'goal' as const,
-          },
-        ]),
-      ],
-    };
-    const analytics = buildAnalyticsGame(game);
+    const analytics = chemistryFixtures.analyticsFromPoints([
+      chemistryScenario('pt1')
+        .complete(joah, { thrower: august })
+        .complete(meves, { thrower: august })
+        .complete(august, { thrower: meves })
+        .goal(meves, { thrower: august })
+        .buildPoint(),
+    ]);
     const connections = computeAdvancedPassConnections(
       analytics,
       'p_august',

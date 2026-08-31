@@ -1,3 +1,5 @@
+import { defineAdvancedGameTestContext } from '@/test/fixtures/advancedGameBuilder';
+
 import {
   computeAdvancedPlayerStats,
   getAdvancedPlayerStatsForParticipant,
@@ -11,35 +13,28 @@ import type { AdvancedTrackedGame, PlayerRef } from '../types';
 const ZOO = 'Zoo';
 const RIVALS = 'rivals';
 
-const participants = [
-  { id: 'p_august', name: 'August' },
-  { id: 'p_meves', name: 'Meves' },
-  { id: 'p_joah', name: 'Joah' },
-  { id: 'p_max', name: 'Max' },
-];
-
-const august: PlayerRef = { refType: 'participant', participantId: 'p_august' };
-const meves: PlayerRef = { refType: 'participant', participantId: 'p_meves' };
-const joah: PlayerRef = { refType: 'participant', participantId: 'p_joah' };
-const max: PlayerRef = { refType: 'participant', participantId: 'p_max' };
-const untracked: PlayerRef = { refType: 'untracked' };
-
-const baseGame: Omit<AdvancedTrackedGame, 'points'> = {
+const playerFixtures = defineAdvancedGameTestContext({
   id: 'g1',
-  schemaVersion: 1,
   createdAt: 0,
   updatedAt: 0,
-  gameType: 'game',
-  status: 'in_progress',
   focusSideId: ZOO,
   initialReceivingSideId: ZOO,
-  settings: { locationMode: 'none' },
   sides: [
     { id: ZOO, label: 'Zoo', trackingMode: 'full-roster' },
     { id: RIVALS, label: 'Rivals', trackingMode: 'anonymous' },
   ],
-  participants,
-};
+  players: {
+    august: { id: 'p_august', name: 'August' },
+    meves: { id: 'p_meves', name: 'Meves' },
+    joah: { id: 'p_joah', name: 'Joah' },
+    max: { id: 'p_max', name: 'Max' },
+  },
+});
+
+const { august, meves, joah, max } = playerFixtures.players;
+const participants = playerFixtures.participants;
+const untracked = playerFixtures.untracked;
+const baseGame = playerFixtures.fixture();
 
 function findStats(stats: ReturnType<typeof computeAdvancedPlayerStats>, participantId: string) {
   const playerStats = stats.find((candidate) => candidate.participantId === participantId);

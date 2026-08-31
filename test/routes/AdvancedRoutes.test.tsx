@@ -15,6 +15,7 @@ import { useSavedAdvancedGamesStore } from '@/store/advancedTracking/savedGamesS
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { useGameStore } from '@/store/basic/gameStore';
 import { useSettingsStore } from '@/store/settingsStore';
+import { createAdvancedGameScenario, participantRef } from '@/test/fixtures/advancedGameBuilder';
 import { arrangeAdvancedGame, recordOpeningPull, testTeam } from '@/test/fixtures/domain';
 import { resetAllStores } from '@/test/fixtures/resetStores';
 import { resetMockRouter, setMockSearchParams } from '@/test/mocks/expoRouter';
@@ -27,48 +28,31 @@ function arrangeDualTrackedPoint() {
   }));
   const lightIds = participants.slice(0, 7).map((participant) => participant.id);
   const darkIds = participants.slice(7, 14).map((participant) => participant.id);
-  const game: AdvancedTrackedGame = {
+  const game = createAdvancedGameScenario({
     id: 'dual-tracked-point',
-    schemaVersion: 2,
     createdAt: 0,
     updatedAt: 0,
     gameType: 'scrimmage',
-    status: 'in_progress',
     focusSideId: 'light',
     initialReceivingSideId: 'light',
-    settings: { locationMode: 'none' },
     sides: [
       { id: 'light', label: 'Light', trackingMode: 'full-roster' },
       { id: 'dark', label: 'Dark', trackingMode: 'full-roster' },
     ],
     participants,
-    points: [
-      {
-        id: 'point-1',
-        lines: [
-          { sideId: 'light', participantIds: lightIds },
-          { sideId: 'dark', participantIds: darkIds },
-        ],
-        possessions: [
-          {
-            id: 'possession-1',
-            sideId: 'light',
-            actions: [
-              {
-                id: 'pull-1',
-                kind: 'pull',
-                sideId: 'dark',
-                receivingSideId: 'light',
-                puller: { refType: 'participant', participantId: darkIds[0] },
-                receiver: { refType: 'participant', participantId: lightIds[0] },
-                result: 'inbound',
-              },
-            ],
-          },
-        ],
-      },
+    defaultLines: [
+      { sideId: 'light', participantIds: lightIds },
+      { sideId: 'dark', participantIds: darkIds },
     ],
-  };
+  })
+    .startPoint({
+      id: 'point-1',
+      possessionId: 'possession-1',
+      pullId: 'pull-1',
+      puller: participantRef(darkIds[0]),
+      receiver: participantRef(lightIds[0]),
+    })
+    .build();
   useAdvancedTrackingStore.setState({
     currentGameId: game.id,
     currentGame: game,
@@ -148,45 +132,27 @@ function arrangeSingleSideTrackedPoint() {
     name: `Single Player ${index + 1}`,
   }));
   const lineIds = participants.slice(0, 7).map((participant) => participant.id);
-  const game: AdvancedTrackedGame = {
+  const game = createAdvancedGameScenario({
     id: 'single-side-point',
-    schemaVersion: 2,
     createdAt: 0,
     updatedAt: 0,
-    gameType: 'game',
-    status: 'in_progress',
     focusSideId: 'windchill',
     initialReceivingSideId: 'windchill',
-    settings: { locationMode: 'none' },
     sides: [
       { id: 'windchill', label: 'Windchill', trackingMode: 'full-roster' },
       { id: 'rivals', label: 'Rivals', trackingMode: 'anonymous' },
     ],
     participants,
-    points: [
-      {
-        id: 'point-1',
-        lines: [{ sideId: 'windchill', participantIds: lineIds }],
-        possessions: [
-          {
-            id: 'possession-1',
-            sideId: 'windchill',
-            actions: [
-              {
-                id: 'pull-1',
-                kind: 'pull',
-                sideId: 'rivals',
-                receivingSideId: 'windchill',
-                puller: { refType: 'untracked' },
-                receiver: { refType: 'participant', participantId: lineIds[0] },
-                result: 'inbound',
-              },
-            ],
-          },
-        ],
-      },
-    ],
-  };
+    defaultLines: [{ sideId: 'windchill', participantIds: lineIds }],
+  })
+    .startPoint({
+      id: 'point-1',
+      possessionId: 'possession-1',
+      pullId: 'pull-1',
+      puller: { refType: 'untracked' },
+      receiver: participantRef(lineIds[0]),
+    })
+    .build();
   useAdvancedTrackingStore.setState({
     currentGameId: game.id,
     currentGame: game,

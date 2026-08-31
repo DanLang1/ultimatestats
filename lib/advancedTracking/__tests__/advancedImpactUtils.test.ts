@@ -1,3 +1,5 @@
+import { defineAdvancedGameTestContext } from '@/test/fixtures/advancedGameBuilder';
+
 import { computeAdvancedImpact } from '../advancedImpactUtils';
 import { buildAnalyticsGame } from '../buildAnalyticsGame';
 import type { AdvancedTrackedGame } from '../types';
@@ -7,32 +9,27 @@ import type { AdvancedTrackedGame } from '../types';
 const ZOO = 'zoo';
 const RIVALS = 'rivals';
 
-const participants = [
-  { id: 'p_august', name: 'August' },
-  { id: 'p_meves', name: 'Meves' },
-  { id: 'p_joah', name: 'Joah' },
-];
-
-const august = { refType: 'participant' as const, participantId: 'p_august' };
-const meves = { refType: 'participant' as const, participantId: 'p_meves' };
-const untracked = { refType: 'untracked' as const };
-
-const baseGame: Omit<AdvancedTrackedGame, 'points'> = {
+const impactFixtures = defineAdvancedGameTestContext({
   id: 'g1',
-  schemaVersion: 1,
   createdAt: 0,
   updatedAt: 0,
-  gameType: 'game',
   status: 'final',
   focusSideId: ZOO,
   initialReceivingSideId: ZOO,
-  settings: { locationMode: 'none' },
   sides: [
     { id: ZOO, label: 'Zoo', trackingMode: 'full-roster' },
     { id: RIVALS, label: 'Rivals', trackingMode: 'anonymous' },
   ],
-  participants,
-};
+  players: {
+    august: { id: 'p_august', name: 'August' },
+    meves: { id: 'p_meves', name: 'Meves' },
+    joah: { id: 'p_joah', name: 'Joah' },
+  },
+});
+
+const { august, meves } = impactFixtures.players;
+const untracked = impactFixtures.untracked;
+const baseGame = impactFixtures.fixture();
 
 // ── Tests ──────────────────────────────────────────────────────���──────────────
 

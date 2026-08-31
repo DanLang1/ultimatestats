@@ -1,3 +1,5 @@
+import { createAdvancedGameFixture } from '@/test/fixtures/advancedGameBuilder';
+
 import type { AnalyticsAttribution, AnalyticsGame, AttributionType } from '../analyticsTypes';
 import {
   UNKNOWN_PARTICIPANT_ID,
@@ -28,22 +30,18 @@ const max = { refType: 'participant' as const, participantId: 'p_max' };
 const sam = { refType: 'participant' as const, participantId: 'p_sam' };
 const untracked = { refType: 'untracked' as const };
 
-const baseGame: Omit<AdvancedTrackedGame, 'points'> = {
+const baseGame = createAdvancedGameFixture({
   id: 'g1',
-  schemaVersion: 1,
   createdAt: 0,
   updatedAt: 0,
-  gameType: 'game',
-  status: 'in_progress',
   focusSideId: ZOO,
   initialReceivingSideId: ZOO,
-  settings: { locationMode: 'none' },
   sides: [
     { id: ZOO, label: 'Zoo', trackingMode: 'full-roster' },
     { id: RIVALS, label: 'Rivals', trackingMode: 'anonymous' },
   ],
   participants,
-};
+});
 
 // Helper: sum attribution weights for a player + type
 function sumAttributions(

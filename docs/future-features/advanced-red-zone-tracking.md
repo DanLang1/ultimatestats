@@ -156,13 +156,12 @@ Add regression coverage at each owning layer:
 
 ## Implementation Map
 
-| Concern                    | Primary source                                                       |
-| -------------------------- | -------------------------------------------------------------------- |
-| Persisted model and schema | `lib/advancedTracking/types.ts`, `migrations.ts`                      |
-| Live mutation and Undo     | `store/advancedTracking/trackingStore.ts`                             |
-| Capture control            | `components/advancedTracking/TrackerLastActionCard.tsx`               |
-| Analytics compilation      | `lib/advancedTracking/buildAnalyticsGame.ts`, `analyticsTypes.ts`     |
-| Team and aggregate stats   | `lib/advancedTracking/advancedTeamStatsUtils.ts`                      |
-| Sharing                    | `lib/sharing/validate.ts`, `serialize.ts`                             |
-| Device verification        | `.maestro/tests/advanced-tracker-*.yml`                               |
-
+| Concern                    | Primary source                                                    |
+| -------------------------- | ----------------------------------------------------------------- |
+| Persisted model and schema | `lib/advancedTracking/types.ts`, `migrations.ts`                  |
+| Live mutation and Undo     | `store/advancedTracking/trackingStore.ts`                         |
+| Capture control            | `components/advancedTracking/TrackerLastActionCard.tsx`           |
+| Analytics compilation      | `lib/advancedTracking/buildAnalyticsGame.ts`, `analyticsTypes.ts` |
+| Team and aggregate stats   | `lib/advancedTracking/advancedTeamStatsUtils.ts`                  |
+| Sharing                    | `lib/sharing/validate.ts`, `serialize.ts`                         |
+| Device verification        | `.maestro/tests/advanced-tracker-*.yml`                           |

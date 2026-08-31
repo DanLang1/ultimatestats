@@ -1,3 +1,5 @@
+import { createAdvancedGameFixture } from '@/test/fixtures/advancedGameBuilder';
+
 import { computeAdvancedImpact } from '../advancedImpactUtils';
 import { computeAdvancedPlayerStats } from '../advancedPlayerStatsUtils';
 import { computePullStats } from '../advancedPullStatsUtils';
@@ -24,22 +26,18 @@ const joah = { refType: 'participant' as const, participantId: 'p_joah' };
 const max = { refType: 'participant' as const, participantId: 'p_max' };
 const untracked = { refType: 'untracked' as const };
 
-const baseGame: Omit<AdvancedTrackedGame, 'points'> = {
+const baseGame = createAdvancedGameFixture({
   id: 'g1',
-  schemaVersion: 1,
   createdAt: 0,
   updatedAt: 0,
-  gameType: 'game',
-  status: 'in_progress',
   focusSideId: ZOO,
   initialReceivingSideId: ZOO,
-  settings: { locationMode: 'none' },
   sides: [
     { id: ZOO, label: 'Zoo', trackingMode: 'full-roster' },
     { id: RIVALS, label: 'Rivals', trackingMode: 'anonymous' },
   ],
   participants,
-};
+});
 
 function findStats(stats: ReturnType<typeof computeAdvancedPlayerStats>, participantId: string) {
   const playerStats = stats.find((candidate) => candidate.participantId === participantId);

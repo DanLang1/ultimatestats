@@ -1,3 +1,5 @@
+import { createAdvancedGameFixture } from '@/test/fixtures/advancedGameBuilder';
+
 import {
   appendActionFlowItems,
   buildAdvancedTimeline,
@@ -36,22 +38,19 @@ const rivalRef = { refType: 'participant' as const, participantId: 'p_rival' };
 const untracked = { refType: 'untracked' as const };
 const unknown = { refType: 'unknown' as const };
 
-const baseGame: Omit<AdvancedTrackedGame, 'points'> = {
+const baseGame = createAdvancedGameFixture({
   id: 'g1',
-  schemaVersion: 1,
   createdAt: 0,
   updatedAt: 0,
-  gameType: 'game',
   status: 'final',
   focusSideId: ZOO,
   initialReceivingSideId: ZOO,
-  settings: { locationMode: 'none' },
   sides: [
     { id: ZOO, label: 'Zoo', trackingMode: 'full-roster' },
     { id: RIVALS, label: 'Rivals', trackingMode: 'anonymous' },
   ],
   participants,
-};
+});
 
 // ── Test cases ──────────────────────────────────────────────────────────────
 
