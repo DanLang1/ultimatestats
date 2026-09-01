@@ -1,6 +1,6 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import React, { ReactNode } from 'react';
-import { Pressable, StyleProp, StyleSheet, TextStyle, View, ViewStyle } from 'react-native';
+import { ReactNode } from 'react';
+import { Pressable, StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
 
 import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
@@ -14,15 +14,11 @@ type ScreenHeaderProps = {
   onBack?: () => void;
   rightSlot?: ReactNode;
   containerStyle?: StyleProp<ViewStyle>;
-  titleStyle?: StyleProp<TextStyle>;
   titleColor?: string;
   backButtonBackgroundColor?: string;
-  backIconColor?: string;
   backHitSlop?: number;
   centerTitleInLandscape?: boolean;
   titleOverlayPaddingPortrait?: number;
-  titleOverlayPaddingLandscape?: number;
-  titleNumberOfLines?: number;
 };
 
 export function ScreenHeader({
@@ -30,15 +26,11 @@ export function ScreenHeader({
   onBack,
   rightSlot,
   containerStyle,
-  titleStyle,
   titleColor,
   backButtonBackgroundColor,
-  backIconColor,
   backHitSlop = 12,
   centerTitleInLandscape = false,
   titleOverlayPaddingPortrait = 88,
-  titleOverlayPaddingLandscape = 88,
-  titleNumberOfLines = 1,
 }: ScreenHeaderProps) {
   const { isLandscape, sizeClass } = useLayout();
   const { palette } = useTheme();
@@ -47,7 +39,6 @@ export function ScreenHeader({
   const useTitleOverlay = !isLandscape || centerTitleInLandscape;
   const effectiveBackHitSlop = scaleBySizeClass(backHitSlop, sizeClass);
   const titlePaddingPortrait = scaleBySizeClass(titleOverlayPaddingPortrait, sizeClass);
-  const titlePaddingLandscape = scaleBySizeClass(titleOverlayPaddingLandscape, sizeClass);
 
   return (
     <View style={[styles.header, containerStyle]}>
@@ -65,7 +56,7 @@ export function ScreenHeader({
           <MaterialCommunityIcons
             name="arrow-left"
             size={metrics.backIconSize}
-            color={backIconColor ?? palette.textInverse}
+            color={palette.textInverse}
           />
         ) : (
           <View style={styles.headerSpacer} />
@@ -78,23 +69,18 @@ export function ScreenHeader({
           style={[
             styles.titleOverlay,
             {
-              paddingHorizontal: isLandscape ? titlePaddingLandscape : titlePaddingPortrait,
+              paddingHorizontal: titlePaddingPortrait,
             },
           ]}>
           <ThemedText
-            style={[
-              styles.title,
-              styles.titleCentered,
-              { color: titleColor ?? palette.textMuted },
-              titleStyle,
-            ]}
-            numberOfLines={titleNumberOfLines}
+            style={[styles.title, styles.titleCentered, { color: titleColor ?? palette.textMuted }]}
+            numberOfLines={1}
             ellipsizeMode="tail">
             {title}
           </ThemedText>
         </View>
       ) : (
-        <ThemedText style={[styles.title, { color: titleColor ?? palette.textMuted }, titleStyle]}>
+        <ThemedText style={[styles.title, { color: titleColor ?? palette.textMuted }]}>
           {title}
         </ThemedText>
       )}

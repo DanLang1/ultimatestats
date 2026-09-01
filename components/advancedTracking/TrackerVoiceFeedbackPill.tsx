@@ -1,5 +1,4 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import React from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/ThemedText';
@@ -11,16 +10,12 @@ import { Fonts, Palette } from '@/theme/theme';
 
 interface TrackerVoiceFeedbackPillProps {
   controls: VoiceStatCommandsControls;
-  compact?: boolean;
 }
 
-export const TrackerVoiceFeedbackPill = ({
-  controls,
-  compact = false,
-}: TrackerVoiceFeedbackPillProps) => {
+export const TrackerVoiceFeedbackPill = ({ controls }: TrackerVoiceFeedbackPillProps) => {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
-  const styles = createStyles(sizeClass, compact);
+  const styles = createStyles(sizeClass);
 
   const autoDismiss =
     controls.feedback.kind === 'recorded' ||
@@ -46,7 +41,7 @@ export const TrackerVoiceFeedbackPill = ({
       ]}>
       <MaterialCommunityIcons
         name={icon}
-        size={scaleBySizeClass(compact ? 14 : 16, sizeClass)}
+        size={scaleBySizeClass(16, sizeClass)}
         color={color}
         style={styles.icon}
       />
@@ -76,14 +71,14 @@ function getFeedbackIcon(
   return 'message-text';
 }
 
-function createStyles(sizeClass: SizeClass, compact: boolean) {
+function createStyles(sizeClass: SizeClass) {
   return StyleSheet.create({
     pill: {
-      minHeight: scaleBySizeClass(compact ? 34 : 40, sizeClass),
-      borderRadius: scaleBySizeClass(compact ? 17 : 20, sizeClass),
+      minHeight: scaleBySizeClass(40, sizeClass),
+      borderRadius: scaleBySizeClass(20, sizeClass),
       borderCurve: 'continuous',
       borderWidth: 1,
-      paddingHorizontal: scaleBySizeClass(compact ? 10 : 14, sizeClass),
+      paddingHorizontal: scaleBySizeClass(14, sizeClass),
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
@@ -98,7 +93,7 @@ function createStyles(sizeClass: SizeClass, compact: boolean) {
     text: {
       flexShrink: 1,
       fontFamily: Fonts.black,
-      fontSize: scaleBySizeClass(compact ? 10 : 12, sizeClass),
+      fontSize: scaleBySizeClass(12, sizeClass),
       letterSpacing: 0.4,
       textTransform: 'uppercase',
       textAlign: 'center',

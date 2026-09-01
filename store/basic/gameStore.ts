@@ -89,6 +89,43 @@ function hasPlayerParticipatedInGameState(
   );
 }
 
+function resetGameState(state: GameState, hardCapMinutes: number) {
+  state.team1Score = 0;
+  state.team2Score = 0;
+  state.team1Timeouts.fill(true);
+  state.team2Timeouts.fill(true);
+  state.team1Floater = true;
+  state.team2Floater = true;
+  state.gameHalf = 1;
+  state.isSoftCap = false;
+  state.softCapPending = false;
+  state.gameTo = state.baseGameTo;
+  state.events = [];
+  state.pendingStatEntry = null;
+  state.possession = null;
+  state.startingPossession = null;
+  state.pendingTurnoverEntry = null;
+  state.eventToastSignal = null;
+  state.currentPoint = 1;
+  state.timerIsActive = false;
+  state.timerEndTime = null;
+  state.timerTimeLeft = hardCapMinutes * 60;
+  state.currentGameStatus = 'fresh';
+  state.isPostGameFlowPending = false;
+  state.currentGameId = null;
+  state.isHalftimeBreak = false;
+  state.halftimeEndTime = null;
+  state.halftimeTimeLeft = DEFAULT_HALFTIME_BREAK_SECONDS;
+  state.pendingTimeoutModal = false;
+  state.timeoutEndTime = null;
+  state.timeoutTimeLeft = DEFAULT_TIMEOUT_SECONDS;
+  state.currentPointStartTime = null;
+  state.pointStartTimestamps = {};
+  state.pointTimerPausedElapsed = null;
+  state.currentLine = [];
+  state.pointLines = [];
+}
+
 export const useGameStore = create<GameState>()(
   immer(
     persist(
@@ -519,46 +556,9 @@ export const useGameStore = create<GameState>()(
         resetGame: () => {
           const hardCapMinutes = useSettingsStore.getState().hardCapMins;
           set((state: GameState) => {
-            state.team1Score = 0;
-            state.team2Score = 0;
-            state.team1Timeouts.fill(true);
-            state.team2Timeouts.fill(true);
-            state.team1Floater = true;
-            state.team2Floater = true;
-            state.gameHalf = 1;
-            state.isSoftCap = false;
-            state.softCapPending = false;
-            state.gameTo = state.baseGameTo;
-            state.events = [];
-            state.pendingStatEntry = null;
-            state.possession = null;
-            state.startingPossession = null;
-            state.pendingTurnoverEntry = null;
-            state.eventToastSignal = null;
-            state.currentPoint = 1;
-            state.timerIsActive = false;
-            state.timerEndTime = null;
-            state.timerTimeLeft = hardCapMinutes * 60;
-            state.currentGameStatus = 'fresh';
-            state.isPostGameFlowPending = false;
-            state.currentGameId = null;
-            state.isHalftimeBreak = false;
-            state.halftimeEndTime = null;
-            state.halftimeTimeLeft = DEFAULT_HALFTIME_BREAK_SECONDS;
-            state.pendingTimeoutModal = false;
-            state.timeoutEndTime = null;
-            state.timeoutTimeLeft = DEFAULT_TIMEOUT_SECONDS;
-            state.currentPointStartTime = null;
-            state.pointStartTimestamps = {};
-            state.pointTimerPausedElapsed = null;
-
-            // Reset line calling state
-            state.currentLine = [];
-            state.pointLines = [];
-
-            // Reset game-specific settings in settingsStore
-            useSettingsStore.getState().setFirstPointRatio(null);
+            resetGameState(state, hardCapMinutes);
           });
+          useSettingsStore.getState().setFirstPointRatio(null);
         },
         setSoftCapPending: (pending: boolean) =>
           set((state: GameState) => {
@@ -975,7 +975,10 @@ export const useGameStore = create<GameState>()(
           playerIds: string[],
         ): Promise<boolean> => {
           let didReplace = false;
-          set((state: GameState) => {
+          // Zustand Persist returns the AsyncStorage write promise from set() at runtime,
+          // although set is typed as void. Await persisted updates before callers navigate
+          // or clear related state. Covered by basicGameStorePersistence.test.ts.
+          await set((state: GameState) => {
             const game = state.savedGames.find((savedGame) => savedGame.id === gameId);
             if (!game) return;
 
@@ -1141,7 +1144,7 @@ export const useGameStore = create<GameState>()(
           updatedEvents[eventIndex] = updatedEvent;
           const updatedGame: SavedGame = { ...game, events: updatedEvents };
 
-          set((state: GameState) => {
+          await set((state: GameState) => {
             const idx = state.savedGames.findIndex((g) => g.id === gameId);
             if (idx !== -1) {
               state.savedGames[idx] = updatedGame;
@@ -1164,7 +1167,7 @@ export const useGameStore = create<GameState>()(
           updatedEvents.splice(eventIndex, 1);
           const updatedGame: SavedGame = { ...game, events: updatedEvents };
 
-          set((state: GameState) => {
+          await set((state: GameState) => {
             const idx = state.savedGames.findIndex((g) => g.id === gameId);
             if (idx !== -1) {
               state.savedGames[idx] = updatedGame;
@@ -1179,7 +1182,7 @@ export const useGameStore = create<GameState>()(
 
           const updatedGame: SavedGame = { ...game, playedAt };
 
-          set((state: GameState) => {
+          await set((state: GameState) => {
             const idx = state.savedGames.findIndex((g) => g.id === gameId);
             if (idx !== -1) {
               state.savedGames[idx] = updatedGame;
@@ -1193,21 +1196,11 @@ export const useGameStore = create<GameState>()(
 
           const updatedGame: SavedGame = { ...game, tournamentId };
 
-          set((state: GameState) => {
+          await set((state: GameState) => {
             const idx = state.savedGames.findIndex((g) => g.id === gameId);
             if (idx !== -1) {
               state.savedGames[idx] = updatedGame;
             }
-          });
-        },
-
-        clearTournamentFromGames: async (tournamentId: string) => {
-          set((state: GameState) => {
-            state.savedGames.forEach((g) => {
-              if (g.tournamentId === tournamentId) {
-                g.tournamentId = undefined;
-              }
-            });
           });
         },
 
@@ -1237,7 +1230,7 @@ export const useGameStore = create<GameState>()(
             team1Color: state.team1BgColor,
             team2Color: state.team2BgColor,
           };
-          set((draft: GameState) => {
+          await set((draft: GameState) => {
             const idx = draft.savedGames.findIndex((g) => g.id === gameId);
             if (idx >= 0) {
               draft.savedGames[idx] = game;
@@ -1251,14 +1244,17 @@ export const useGameStore = create<GameState>()(
         deleteSavedGame: async (id: string) => {
           const shouldClearCurrentFinishedGame =
             get().currentGameStatus === 'finished' && get().currentGameId === id;
+          const hardCapMinutes = useSettingsStore.getState().hardCapMins;
 
-          if (shouldClearCurrentFinishedGame) {
-            get().resetGame();
-          }
-
-          set((state: GameState) => {
+          await set((state: GameState) => {
             state.savedGames = state.savedGames.filter((g) => g.id !== id);
+            if (shouldClearCurrentFinishedGame) {
+              resetGameState(state, hardCapMinutes);
+            }
           });
+          if (shouldClearCurrentFinishedGame) {
+            useSettingsStore.getState().setFirstPointRatio(null);
+          }
         },
 
         deleteSavedGames: async (ids: string[]) => {
@@ -1268,21 +1264,24 @@ export const useGameStore = create<GameState>()(
             get().currentGameStatus === 'finished' &&
             currentGameId !== null &&
             idSet.has(currentGameId);
+          const hardCapMinutes = useSettingsStore.getState().hardCapMins;
 
-          if (shouldClearCurrentFinishedGame) {
-            get().resetGame();
-          }
-
-          set((state: GameState) => {
+          await set((state: GameState) => {
             state.savedGames = state.savedGames.filter((g) => !idSet.has(g.id));
+            if (shouldClearCurrentFinishedGame) {
+              resetGameState(state, hardCapMinutes);
+            }
           });
+          if (shouldClearCurrentFinishedGame) {
+            useSettingsStore.getState().setFirstPointRatio(null);
+          }
         },
 
         saveCurrentTeam: async (teamOverride?: SavedTeam) => {
           const state = get();
           const team = teamOverride ?? state.currentTeam;
 
-          set((draft: GameState) => {
+          await set((draft: GameState) => {
             const idx = draft.savedTeams.findIndex((t) => t.id === team.id);
             if (idx >= 0) {
               draft.savedTeams[idx] = team;
@@ -1294,7 +1293,7 @@ export const useGameStore = create<GameState>()(
 
         importGame: async (game: SavedGame) => {
           const migrated = migrateSavedGame(game);
-          set((state: GameState) => {
+          await set((state: GameState) => {
             const idx = state.savedGames.findIndex((g) => g.id === migrated.id);
             if (idx >= 0) {
               state.savedGames[idx] = migrated;
@@ -1305,7 +1304,7 @@ export const useGameStore = create<GameState>()(
         },
 
         importTeam: async (team: SavedTeam) => {
-          set((state: GameState) => {
+          await set((state: GameState) => {
             const idx = state.savedTeams.findIndex((t) => t.id === team.id);
             if (idx >= 0) {
               state.savedTeams[idx] = team;
@@ -1324,7 +1323,7 @@ export const useGameStore = create<GameState>()(
         },
 
         deleteTeam: async (id: string) => {
-          set((state: GameState) => {
+          await set((state: GameState) => {
             state.savedTeams = state.savedTeams.filter((t) => t.id !== id);
           });
         },

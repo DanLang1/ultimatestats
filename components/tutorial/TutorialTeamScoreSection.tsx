@@ -21,7 +21,6 @@ interface TutorialTeamScoreSectionProps {
   contentInsetBottom?: number;
   timeouts?: { active: boolean; isFloater: boolean }[];
   onTimeoutUse?: (index: number) => void;
-  hasPossession?: boolean;
   highlightTimeoutIndex?: number;
   timeoutLeadingIndicator?: React.ReactNode;
 }
@@ -45,7 +44,6 @@ export default function TutorialTeamScoreSection({
   contentInsetBottom = 0,
   timeouts = EMPTY_TIMEOUTS,
   onTimeoutUse,
-  hasPossession,
   highlightTimeoutIndex,
   timeoutLeadingIndicator,
 }: TutorialTeamScoreSectionProps) {
@@ -61,16 +59,8 @@ export default function TutorialTeamScoreSection({
   );
 
   const handleTap = () => {
-    if (hasPossession === undefined) {
-      triggerScoreHaptic();
-      onIncrement();
-      return;
-    }
-
-    if (hasPossession) {
-      triggerScoreHaptic();
-      onIncrement();
-    }
+    triggerScoreHaptic();
+    onIncrement();
   };
 
   return (

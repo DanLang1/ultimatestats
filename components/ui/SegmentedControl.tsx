@@ -35,7 +35,6 @@ interface SegmentedControlProps<T extends string = string> {
   value: string;
   onChange: (value: T) => void;
   label?: string;
-  disabled?: boolean;
   attentionColor?: string;
   showRequired?: boolean;
   highlightBorder?: boolean;
@@ -50,7 +49,6 @@ export function SegmentedControl<T extends string = string>({
   value,
   onChange,
   label,
-  disabled,
   attentionColor,
   showRequired = false,
   highlightBorder = false,
@@ -62,14 +60,12 @@ export function SegmentedControl<T extends string = string>({
   const { sizeClass } = useLayout();
   const { palette, themeMode } = useTheme();
   const styles = createStyles(sizeClass);
-  const metrics = createMetrics(sizeClass);
   const [isAttentionActive, setIsAttentionActive] = useState(false);
-  const { onLayout, runnerStyle, runnerOffsetStyle, enabled } = useAttentionBorderRunner(
-    isAttentionActive && !disabled,
-  );
+  const { onLayout, runnerStyle, runnerOffsetStyle, enabled } =
+    useAttentionBorderRunner(isAttentionActive);
 
   useEffect(() => {
-    if (!attentionRunKey || disabled) return undefined;
+    if (!attentionRunKey) return undefined;
 
     // Start the attention run immediately for this key; the timeout only ends the run.
     // eslint-disable-next-line react/set-state-in-effect
@@ -81,7 +77,7 @@ export function SegmentedControl<T extends string = string>({
     return () => {
       clearTimeout(timerId);
     };
-  }, [attentionRunKey, disabled]);
+  }, [attentionRunKey]);
 
   const hasSideHighlights = highlightBorder && (!!highlightLeftColor || !!highlightRightColor);
   let borderColor: string;
@@ -99,16 +95,7 @@ export function SegmentedControl<T extends string = string>({
     <View>
       {label && (
         <View style={styles.labelRow}>
-          <ThemedText style={[styles.label, { color: palette.textMuted }]}>
-            {disabled && (
-              <MaterialCommunityIcons
-                name="lock"
-                size={metrics.labelLockSize}
-                color={palette.textMuted}
-              />
-            )}{' '}
-            {label}
-          </ThemedText>
+          <ThemedText style={[styles.label, { color: palette.textMuted }]}>{label}</ThemedText>
           {showRequired && (
             <View
               style={[
@@ -190,9 +177,8 @@ export function SegmentedControl<T extends string = string>({
                   ) : (
                     <Pressable
                       testID={option.testID}
-                      style={[styles.button, disabled && styles.buttonDisabled]}
-                      onPress={() => onChange(option.value)}
-                      disabled={disabled}>
+                      style={styles.button}
+                      onPress={() => onChange(option.value)}>
                       <ThemedText
                         style={[
                           styles.buttonText,
@@ -362,9 +348,6 @@ function createStyles(sizeClass: SizeClass) {
       justifyContent: 'center',
       paddingHorizontal: scaleBySizeClass(8, sizeClass),
     },
-    buttonDisabled: {
-      opacity: 0.5,
-    },
     buttonText: {
       fontSize: scaleBySizeClass(18, sizeClass),
       fontFamily: Fonts.semiBold,
@@ -387,10 +370,4 @@ function createStyles(sizeClass: SizeClass) {
       textAlign: 'center',
     },
   });
-}
-
-function createMetrics(sizeClass: SizeClass) {
-  return {
-    labelLockSize: scaleBySizeClass(10, sizeClass),
-  };
 }

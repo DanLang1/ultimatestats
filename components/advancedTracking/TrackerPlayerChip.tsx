@@ -1,5 +1,3 @@
-import React from 'react';
-
 import { PlayerRef } from '@/lib/advancedTracking/types';
 
 import { TrackerChipBase } from './TrackerChipBase';

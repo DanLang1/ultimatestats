@@ -208,7 +208,6 @@ export interface GameState {
   deleteSavedGameEvent: (gameId: string, eventIndex: number) => Promise<boolean>;
   updateSavedGamePlayedAt: (gameId: string, playedAt: number) => Promise<void>;
   updateSavedGameTournament: (gameId: string, tournamentId: string | undefined) => Promise<void>;
-  clearTournamentFromGames: (tournamentId: string) => Promise<void>;
 
   // Line Calling Actions
   setCurrentLine: (playerIds: string[]) => void;

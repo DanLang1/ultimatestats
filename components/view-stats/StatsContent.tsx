@@ -301,19 +301,6 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
       minWidth: 44,
       textAlign: 'right',
     },
-    headerExportButton: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 6,
-      paddingVertical: 4,
-      paddingHorizontal: 8,
-      borderRadius: 8,
-      borderWidth: 1,
-    },
-    headerExportText: {
-      fontSize: scaleBySizeClass(12, sizeClass),
-      fontFamily: Fonts.semiBold,
-    },
     emptyState: {
       padding: 40,
       alignItems: 'center',

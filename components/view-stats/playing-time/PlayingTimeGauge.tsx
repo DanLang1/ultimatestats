@@ -1,4 +1,3 @@
-import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 
@@ -11,7 +10,6 @@ interface PlayingTimeGaugeProps {
   percentage: number;
   centerLabel: string;
   centerSubLabel: string;
-  bottomLabel?: string;
   color: string;
 }
 
@@ -19,7 +17,6 @@ export default function PlayingTimeGauge({
   percentage,
   centerLabel,
   centerSubLabel,
-  bottomLabel,
   color,
 }: PlayingTimeGaugeProps) {
   const { sizeClass } = useLayout();
@@ -84,11 +81,6 @@ export default function PlayingTimeGauge({
           </ThemedText>
         </View>
       </View>
-      {bottomLabel && (
-        <ThemedText style={[styles.bottomLabel, { color: palette.textMuted }]}>
-          {bottomLabel}
-        </ThemedText>
-      )}
     </View>
   );
 }
@@ -125,10 +117,6 @@ function createStyles(sizeClass: SizeClass) {
       fontFamily: Fonts.semiBold,
       textTransform: 'uppercase',
       letterSpacing: 0.5,
-    },
-    bottomLabel: {
-      fontSize: scaleBySizeClass(11, sizeClass),
-      fontFamily: Fonts.semiBold,
     },
   });
 }

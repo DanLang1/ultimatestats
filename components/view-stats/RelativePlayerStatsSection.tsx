@@ -1,5 +1,5 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/ThemedText';
@@ -382,11 +382,6 @@ function createStyles(sizeClass: SizeClass) {
     legendSlot: {
       minHeight: scaleBySizeClass(24, sizeClass),
       justifyContent: 'center',
-    },
-    subtitle: {
-      fontSize: scaleBySizeClass(11, sizeClass),
-      fontFamily: Fonts.semiBold,
-      marginTop: 2,
     },
     toggle: {
       flexDirection: 'row',

@@ -1,5 +1,3 @@
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import React from 'react';
 import { Platform, Switch as RNSwitch, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/ThemedText';
@@ -11,52 +9,32 @@ interface SwitchProps {
   label: string;
   value: boolean;
   onValueChange: (value: boolean) => void;
-  disabled?: boolean;
-  locked?: boolean;
 }
 
-export function Switch({ label, value, onValueChange, disabled, locked }: SwitchProps) {
+export function Switch({ label, value, onValueChange }: SwitchProps) {
   const { sizeClass } = useLayout();
   const { palette } = useTheme();
   const styles = createStyles(sizeClass);
-  const lockIconSize = getSizeClassValue({ small: 10, medium: 11, large: 12 }, sizeClass);
   const switchScale =
     Platform.OS === 'ios'
       ? getSizeClassValue({ small: 0.8, medium: 0.9, large: 1.0 }, sizeClass)
       : getSizeClassValue({ small: 1, medium: 1.12, large: 1.2 }, sizeClass);
 
-  let thumbColor: string;
-  if (value && !disabled) {
-    thumbColor = palette.textOnAccent;
-  } else {
-    thumbColor = palette.textMuted;
-  }
+  const thumbColor = value ? palette.textOnAccent : palette.textMuted;
 
   return (
-    <View style={[styles.container, disabled && styles.disabled]}>
-      <ThemedText style={[styles.label, { color: palette.textMuted }]}>
-        {locked && (
-          <MaterialCommunityIcons
-            name="lock"
-            size={lockIconSize}
-            color={palette.textMuted}
-            style={styles.lockIcon}
-          />
-        )}
-        {locked ? ' ' : ''}
-        {label}
-      </ThemedText>
+    <View style={styles.container}>
+      <ThemedText style={[styles.label, { color: palette.textMuted }]}>{label}</ThemedText>
       <View style={styles.switchWrapper}>
         <RNSwitch
           style={{ transform: [{ scale: switchScale }] }}
           trackColor={{
             false: palette.overlay20,
-            true: disabled ? palette.textMuted : palette.accent,
+            true: palette.accent,
           }}
           thumbColor={thumbColor}
           onValueChange={onValueChange}
           value={value}
-          disabled={disabled}
         />
       </View>
     </View>
@@ -79,14 +57,8 @@ function createStyles(sizeClass: SizeClass) {
       letterSpacing: getSizeClassValue({ small: 1, medium: 1.05, large: 1.1 }, sizeClass),
       textTransform: 'uppercase',
     },
-    lockIcon: {
-      marginRight: getSizeClassValue({ small: 4, medium: 5, large: 6 }, sizeClass),
-    },
     switchWrapper: {
       // No extra wrapper styling needed for horizontal layout
-    },
-    disabled: {
-      opacity: 0.5,
     },
   });
 }

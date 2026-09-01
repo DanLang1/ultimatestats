@@ -1,4 +1,3 @@
-import React from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/ThemedText';
@@ -10,8 +9,6 @@ interface PlayingTimePillProps {
   label: string;
   value: string | number;
   color?: string;
-  backgroundColor?: string;
-  borderColor?: string;
   align?: 'center' | 'left';
   compact?: boolean;
 }
@@ -20,8 +17,6 @@ export default function PlayingTimePill({
   label,
   value,
   color,
-  backgroundColor,
-  borderColor,
   align = 'center',
   compact = false,
 }: PlayingTimePillProps) {
@@ -35,8 +30,8 @@ export default function PlayingTimePill({
         compact && styles.statPillCompact,
         align === 'left' && styles.statPillLeft,
         {
-          backgroundColor: backgroundColor ?? palette.overlay05,
-          borderColor: borderColor ?? palette.overlay10,
+          backgroundColor: palette.overlay05,
+          borderColor: palette.overlay10,
         },
       ]}>
       <ThemedText style={[styles.statValue, { color: color ?? palette.textInverse }]}>

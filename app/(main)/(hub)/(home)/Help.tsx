@@ -1,5 +1,4 @@
 import { router, Stack } from 'expo-router';
-import React from 'react';
 import { ScrollView, StyleSheet } from 'react-native';
 
 import HelpContent from '@/components/HelpContent';

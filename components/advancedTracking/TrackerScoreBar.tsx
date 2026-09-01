@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { ScoreBarActionRow } from '@/components/advancedTracking/scoreBar/ScoreBarActionRow';

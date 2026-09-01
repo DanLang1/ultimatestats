@@ -114,7 +114,6 @@ Actions that currently mutate `savedGames` would become SQLite-backed:
 - `deleteSavedGameEvent(...)`: load the full record, update, upsert.
 - `updateSavedGamePlayedAt(...)`: load the full record, update, upsert.
 - `updateSavedGameTournament(...)`: load the full record, update, upsert.
-- `clearTournamentFromGames(...)`: update matching records and summaries.
 - `importGame(...)`: migrate, upsert, update summary state.
 
 Because several of these actions are already async, the call sites should be able

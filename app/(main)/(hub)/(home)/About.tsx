@@ -1,7 +1,6 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router, Stack, useFocusEffect } from 'expo-router';
-import React from 'react';
 import { Linking, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/ThemedText';
@@ -161,10 +160,6 @@ function createStyles(sizeClass: SizeClass) {
     },
     appVersion: {
       fontSize: scaleBySizeClass(14, sizeClass),
-    },
-    appDescription: {
-      fontSize: scaleBySizeClass(14, sizeClass),
-      lineHeight: scaleBySizeClass(20, sizeClass),
     },
     section: {
       gap: scaleBySizeClass(12, sizeClass),

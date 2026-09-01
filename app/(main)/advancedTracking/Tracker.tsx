@@ -1,5 +1,5 @@
 import { Redirect, router, Stack, useFocusEffect } from 'expo-router';
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { BackHandler, LayoutChangeEvent, Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 

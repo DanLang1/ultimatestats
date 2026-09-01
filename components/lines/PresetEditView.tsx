@@ -1,11 +1,11 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import React, { useRef } from 'react';
+import { useRef } from 'react';
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 
 import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import { LinePreset, Player, PointLineRecord } from '@/lib/storage/types';
+import { Player, PointLineRecord } from '@/lib/storage/types';
 import { useSettingsStore } from '@/store/settingsStore';
 import { Fonts } from '@/theme/theme';
 
@@ -14,11 +14,9 @@ import { ModalPlayerGrid } from './ModalPlayerGrid';
 export interface PresetEditViewProps {
   roster: Player[];
   pointLines: PointLineRecord[];
-  editingPreset: LinePreset | null;
   presetName: string;
   selectedIds: string[];
   gameActive: boolean;
-  numPlayers: number;
   currentPoint?: number;
   onPresetNameChange: (name: string) => void;
   onTogglePlayer: (playerId: string) => void;
@@ -167,13 +165,6 @@ function createStyles(sizeClass: SizeClass) {
       alignItems: 'center',
       gap: 6,
     },
-    actionBtn: {
-      height: 36,
-      width: 36,
-      borderRadius: 10,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
     saveBtn: {
       flexDirection: 'row',
       height: 36,
@@ -185,18 +176,6 @@ function createStyles(sizeClass: SizeClass) {
     },
     saveBtnText: {
       fontSize: scaleBySizeClass(14, sizeClass),
-      fontFamily: Fonts.bold,
-    },
-    sizeWarningChip: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 3,
-      paddingVertical: 3,
-      paddingHorizontal: 6,
-      borderRadius: 8,
-    },
-    sizeWarningText: {
-      fontSize: scaleBySizeClass(9, sizeClass),
       fontFamily: Fonts.bold,
     },
     playersSection: {

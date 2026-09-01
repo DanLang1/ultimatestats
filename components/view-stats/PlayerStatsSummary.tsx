@@ -1,4 +1,3 @@
-import React from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { useTheme } from '@/context/ThemeContext';
@@ -37,21 +36,18 @@ export default function PlayerStatsSummary({
       <StatPill
         value={stats.goals}
         label={pluralize(stats.goals, 'Goal', 'Goals')}
-        type="positive"
         bgColor={positiveBg}
         textColor={positiveText}
       />
       <StatPill
         value={stats.assists}
         label={pluralize(stats.assists, 'Assist', 'Assists')}
-        type="positive"
         bgColor={positiveBg}
         textColor={positiveText}
       />
       <StatPill
         value={stats.blocks}
         label={pluralize(stats.blocks, 'Block', 'Blocks')}
-        type="positive"
         bgColor={positiveBg}
         textColor={positiveText}
       />
@@ -59,21 +55,18 @@ export default function PlayerStatsSummary({
       <StatPill
         value={stats.throwaways}
         label={pluralize(stats.throwaways, 'Throwaway', 'Throwaways')}
-        type="negative"
         bgColor={negativeBg}
         textColor={negativeText}
       />
       <StatPill
         value={stats.drops}
         label={pluralize(stats.drops, 'Drop', 'Drops')}
-        type="negative"
         bgColor={negativeBg}
         textColor={negativeText}
       />
       <StatPill
         value={stats.throwaways + stats.drops}
         label={pluralize(stats.throwaways + stats.drops, 'Total Turn', 'Total Turns')}
-        type="negative"
         bgColor={negativeBg}
         textColor={negativeText}
       />

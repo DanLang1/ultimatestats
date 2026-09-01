@@ -1,7 +1,6 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { Image } from 'expo-image';
 import { router, Stack } from 'expo-router';
-import React from 'react';
 import { Linking, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import Animated, { FadeInRight } from 'react-native-reanimated';
 
@@ -196,73 +195,6 @@ function createStyles(sizeClass: SizeClass, palette: Palette) {
     buttonPressed: {
       opacity: 0.8,
       transform: [{ scale: 0.98 }],
-    },
-    card2: {
-      backgroundColor: palette.dhBlack,
-      borderRadius: scaleBySizeClass(16, sizeClass),
-      padding: scaleBySizeClass(20, sizeClass),
-      alignItems: 'flex-start',
-      gap: scaleBySizeClass(16, sizeClass),
-      borderWidth: 1,
-      borderColor: palette.dhYellow,
-      boxShadow: `0 8px 32px ${palette.dhYellowOverlay20}`,
-      alignSelf: 'center',
-      width: '100%',
-      maxWidth: scaleBySizeClass(400, sizeClass),
-    },
-    topRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      width: '100%',
-      gap: scaleBySizeClass(12, sizeClass),
-      marginBottom: -scaleBySizeClass(28, sizeClass),
-    },
-    logoLeft: {
-      width: scaleBySizeClass(94, sizeClass),
-      height: scaleBySizeClass(94, sizeClass),
-      opacity: 1,
-    },
-    badgeContainerRight: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: scaleBySizeClass(6, sizeClass),
-      flexShrink: 1,
-    },
-    badgeTextContainer: {
-      flexDirection: 'column',
-    },
-    badgeTextRow1: {
-      fontSize: scaleBySizeClass(11, sizeClass),
-      fontFamily: Fonts.bold,
-      color: palette.dhYellow,
-      letterSpacing: scaleBySizeClass(0.5, sizeClass, { rounding: 'none' }),
-      lineHeight: scaleBySizeClass(14, sizeClass),
-    },
-    badgeTextRow2: {
-      fontSize: scaleBySizeClass(11, sizeClass),
-      fontFamily: Fonts.bold,
-      color: palette.dhYellow,
-      letterSpacing: scaleBySizeClass(0.5, sizeClass, { rounding: 'none' }),
-      lineHeight: scaleBySizeClass(14, sizeClass),
-    },
-    titleLeft: {
-      fontSize: scaleBySizeClass(24, sizeClass),
-      fontFamily: Fonts.black,
-      color: palette.textOnAccent,
-      textAlign: 'left',
-      textTransform: 'uppercase',
-      letterSpacing: scaleBySizeClass(1, sizeClass, { rounding: 'none' }),
-    },
-    dividerLeft: {
-      width: scaleBySizeClass(32, sizeClass),
-      height: scaleBySizeClass(1.5, sizeClass),
-      backgroundColor: palette.dhYellow,
-    },
-    descriptionLeft: {
-      fontSize: scaleBySizeClass(14, sizeClass),
-      color: palette.textOnAccentMuted,
-      textAlign: 'left',
-      lineHeight: scaleBySizeClass(20, sizeClass),
     },
   });
 }

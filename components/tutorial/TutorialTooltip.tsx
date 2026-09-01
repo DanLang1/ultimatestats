@@ -1,6 +1,4 @@
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import React from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 
 import { ThemedText } from '@/components/ThemedText';
@@ -13,7 +11,6 @@ interface TutorialTooltipProps {
   message?: string;
   stepIndex: number;
   position: 'top' | 'bottom' | 'center';
-  onPress?: () => void;
 }
 
 export default function TutorialTooltip({
@@ -21,7 +18,6 @@ export default function TutorialTooltip({
   message,
   stepIndex,
   position,
-  onPress,
 }: TutorialTooltipProps) {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
@@ -33,8 +29,7 @@ export default function TutorialTooltip({
       entering={FadeIn.duration(200)}
       style={styles.wrapper}
       pointerEvents="box-none">
-      <Pressable
-        onPress={onPress}
+      <View
         style={[
           styles.container,
           {
@@ -54,18 +49,7 @@ export default function TutorialTooltip({
             {message}
           </ThemedText>
         ) : null}
-
-        {onPress ? (
-          <View style={styles.gotItRow}>
-            <ThemedText style={[styles.gotItText, { color: palette.accent }]}>Got it</ThemedText>
-            <MaterialCommunityIcons
-              name="chevron-right"
-              size={scaleBySizeClass(16, sizeClass)}
-              color={palette.accent}
-            />
-          </View>
-        ) : null}
-      </Pressable>
+      </View>
     </Animated.View>
   );
 }
@@ -118,15 +102,6 @@ function createStyles(
     message: {
       fontSize: scaleBySizeClass(13, sizeClass),
       lineHeight: scaleBySizeClass(18, sizeClass),
-    },
-    gotItRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      marginTop: scaleBySizeClass(6, sizeClass),
-    },
-    gotItText: {
-      fontSize: scaleBySizeClass(13, sizeClass),
-      fontFamily: Fonts.semiBold,
     },
   });
 }

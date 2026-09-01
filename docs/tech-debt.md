@@ -49,15 +49,6 @@ This document tracks intentionally deferred cleanup work discovered during the d
   `store/basic/gameStore.ts`
   `store/basic/gameStore.types.ts`
 
-## P3 - gameStore Async Action Signatures
-
-- Several store actions (`saveCurrentGame`, `deleteSavedGame`, `deleteSavedGames`, `saveCurrentTeam`, `importGame`, `importTeam`, `deleteTeam`, `updateSavedGame*`, `clearTournamentFromGames`) are typed as `Promise<void>` in `gameStore.types.ts` but no longer contain any async work — they just call Zustand `set()`.
-- These were made async when they called `storage.*` methods. Now that Zustand persist owns all writes, the `async` keyword and `Promise` return types are misleading.
-- Fix: remove `async` and update the type signatures in `gameStore.types.ts`. Callers that `await` them will continue to work but will no longer need to.
-- References:
-  `store/basic/gameStore.ts`
-  `store/basic/gameStore.types.ts`
-
 ## P3 - Expo Router Naming
 
 - Standardize route filenames to lowercase kebab-case for long-term consistency (for example `GameInfo.tsx` -> `game-info.tsx`) with a planned migration that preserves existing links during rollout.
@@ -74,7 +65,6 @@ This document tracks intentionally deferred cleanup work discovered during the d
 - Extract shared hooks/components to eliminate duplication.
 - References:
   `hooks/basic/useTimeoutTimer.ts` + `hooks/basic/useHalftimeTimer.ts` — nearly identical drift-proof countdown logic
-  `app/(main)/GameComplete.tsx` + `app/(main)/advancedTracking/TrackerGameComplete.tsx` — similar post-game summary screens
   `app/(main)/PreGameConfirm.tsx` + `app/(main)/advancedTracking/PreGameConfirm.tsx` — identical card layouts
   `components/view-stats/ImpactTimeline.tsx` + `components/advancedTracking/AdvancedImpactTimeline.tsx` — duplicated impact chart layout, score label fitting, axis labels, step-path, and scale-mode logic; keep basic/advanced event formatting separate
   `components/lines/ModalPlayerGrid.tsx` + `lib/lineUtils.ts` — `ColumnKey` / `MIXED_COLUMN_LABELS` duplicates `GenderRoleGroup` / `GROUP_LABELS`

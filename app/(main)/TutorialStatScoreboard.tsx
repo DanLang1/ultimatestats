@@ -1,6 +1,5 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedView } from '@/components/ThemedView';

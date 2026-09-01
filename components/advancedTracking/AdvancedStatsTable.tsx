@@ -1,5 +1,5 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { LayoutChangeEvent, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { PointPlusMinusInfoSheet } from '@/components/advancedTracking/PointPlusMinusInfoSheet';

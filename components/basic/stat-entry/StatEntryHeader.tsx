@@ -1,4 +1,3 @@
-import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 
@@ -56,9 +55,6 @@ function createStyles(sizeClass: SizeClass) {
       width: '100%',
       marginBottom: 8,
       gap: 8,
-    },
-    leftGroup: {
-      flex: 1,
     },
     teamName: {
       fontSize: scaleBySizeClass(12, sizeClass),

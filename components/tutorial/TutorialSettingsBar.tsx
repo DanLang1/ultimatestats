@@ -1,5 +1,4 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, { ReduceMotion } from 'react-native-reanimated';
 
@@ -8,12 +7,12 @@ import TutorialAnimatedArrow from '@/components/tutorial/TutorialAnimatedArrow';
 import { useTheme } from '@/context/ThemeContext';
 import { getSizeClassValue, useLayout } from '@/hooks/useLayout';
 import { usePulseAnimation } from '@/hooks/usePulseAnimation';
+import { formatTimerSeconds } from '@/lib/utils';
 import { Fonts } from '@/theme/theme';
 
 interface TutorialSettingsBarProps {
   // Message-only mode (score step)
   message?: string;
-  onMessagePress?: () => void;
 
   // Play / timer
   showPlay?: boolean;
@@ -29,14 +28,10 @@ interface TutorialSettingsBarProps {
   onUndo?: () => void;
   canUndo?: boolean;
   highlightUndo?: boolean;
-
-  // Message tap hint
-  highlightMessage?: boolean;
 }
 
 export default function TutorialSettingsBar({
   message,
-  onMessagePress,
   showPlay = false,
   isPlaying = false,
   onPlay,
@@ -46,7 +41,6 @@ export default function TutorialSettingsBar({
   onUndo,
   canUndo = false,
   highlightUndo = false,
-  highlightMessage = false,
 }: TutorialSettingsBarProps) {
   const { palette } = useTheme();
   const { isLandscape, sizeClass } = useLayout();
@@ -55,34 +49,20 @@ export default function TutorialSettingsBar({
 
   const undoPulseStyle = usePulseAnimation(highlightUndo, 800, ReduceMotion.Never);
   const playPulseStyle = usePulseAnimation(highlightPlay, 800, ReduceMotion.Never);
-  const chevronPulseStyle = usePulseAnimation(highlightMessage, 800, ReduceMotion.Never);
 
   const barBg = palette.glassBg;
   const barContentColor = palette.textInverse;
 
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
-
   if (message) {
-    const MessageContainer = onMessagePress ? Pressable : View;
     return (
-      <MessageContainer
-        onPress={onMessagePress}
+      <View
         style={[
           styles.container,
           styles.containerMessage,
           { backgroundColor: barBg, shadowColor: palette.shadow },
         ]}>
         <ThemedText style={[styles.messageText, { color: barContentColor }]}>{message}</ThemedText>
-        {onMessagePress ? (
-          <Animated.View style={chevronPulseStyle}>
-            <MaterialCommunityIcons name="chevron-right" size={iconSize} color={barContentColor} />
-          </Animated.View>
-        ) : null}
-      </MessageContainer>
+      </View>
     );
   }
 
@@ -115,7 +95,7 @@ export default function TutorialSettingsBar({
       {timeLeft !== undefined && (
         <View style={styles.timerContainer}>
           <ThemedText style={[styles.timerText, { color: barContentColor }]}>
-            {formatTime(timeLeft)}
+            {formatTimerSeconds(timeLeft)}
           </ThemedText>
         </View>
       )}

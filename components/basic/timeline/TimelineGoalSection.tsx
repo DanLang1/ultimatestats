@@ -1,5 +1,4 @@
 import * as Haptics from 'expo-haptics';
-import React from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import TimelineInteractiveRow from '@/components/basic/timeline/TimelineInteractiveRow';

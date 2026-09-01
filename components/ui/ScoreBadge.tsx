@@ -1,56 +1,43 @@
-import React from 'react';
 import { StyleSheet, View, ViewStyle } from 'react-native';
 
 import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
-import { scaleBySizeClass, SizeClass } from '@/hooks/useLayout';
 import { Fonts } from '@/theme/theme';
 
 interface ScoreBadgeProps {
   score1: number;
   score2: number;
   size?: 'small' | 'medium' | 'large';
-  sizeClass?: SizeClass;
   style?: ViewStyle;
   testID?: string;
 }
 
-export function ScoreBadge({
-  score1,
-  score2,
-  size = 'medium',
-  sizeClass = 'small',
-  style,
-  testID,
-}: ScoreBadgeProps) {
+export function ScoreBadge({ score1, score2, size = 'medium', style, testID }: ScoreBadgeProps) {
   const { palette } = useTheme();
 
   const isWin = score1 > score2;
   const isLoss = score1 < score2;
 
-  const getColors = () => {
-    if (isWin) {
-      return {
-        bg: palette.successOverlay15,
-        border: palette.success,
-        text: palette.success,
-      };
-    }
-    if (isLoss) {
-      return {
-        bg: palette.dangerOverlay15,
-        border: palette.danger,
-        text: palette.danger,
-      };
-    }
-    return {
+  let colors;
+  if (isWin) {
+    colors = {
+      bg: palette.successOverlay15,
+      border: palette.success,
+      text: palette.success,
+    };
+  } else if (isLoss) {
+    colors = {
+      bg: palette.dangerOverlay15,
+      border: palette.danger,
+      text: palette.danger,
+    };
+  } else {
+    colors = {
       bg: palette.warningOverlay15,
       border: palette.warning,
       text: palette.warning,
     };
-  };
-
-  const colors = getColors();
+  }
 
   const sizeStyles = styles[size];
   const textSize = textSizes[size];
@@ -71,7 +58,7 @@ export function ScoreBadge({
         style={[
           styles.text,
           {
-            fontSize: scaleBySizeClass(textSize, sizeClass),
+            fontSize: textSize,
             color: colors.text,
           },
         ]}>

@@ -1,4 +1,3 @@
-import React from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/ThemedText';
@@ -8,7 +7,6 @@ import { Fonts } from '@/theme/theme';
 interface StatPillProps {
   value: number;
   label: string;
-  type: 'positive' | 'negative';
   bgColor: string;
   textColor: string;
 }

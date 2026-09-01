@@ -1,5 +1,5 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import React, { useState } from 'react';
+import { useState } from 'react';
 
 import { PresetEditView } from '@/components/lines/PresetEditView';
 import { PresetListView } from '@/components/lines/PresetListView';
@@ -9,14 +9,12 @@ import { MAX_LINE_SIZE } from '@/lib/lineUtils';
 import { LinePreset } from '@/lib/storage/types';
 import { useGameStore } from '@/store/basic/gameStore';
 import { useLinePresetsStore } from '@/store/linePresetsStore';
-import { useSettingsStore } from '@/store/settingsStore';
 
 export default function LinePresetEditor() {
   const { presetId } = useLocalSearchParams<{ presetId?: string }>();
   const { showAlert } = useAlert();
 
   const { currentTeam, pointLines, currentPoint } = useGameStore();
-  const { numPlayers } = useSettingsStore();
   const gameActive = useIsGameActive();
   const { presets, addPreset, updatePreset, deletePreset, reorderPresets } = useLinePresetsStore();
 
@@ -157,12 +155,10 @@ export default function LinePresetEditor() {
     <PresetEditView
       roster={activePlayers}
       pointLines={pointLines}
-      editingPreset={editingPreset}
       presetName={presetName}
       selectedIds={selectedIds}
       gameActive={gameActive}
       currentPoint={currentPoint}
-      numPlayers={numPlayers}
       onPresetNameChange={setPresetName}
       onTogglePlayer={handleTogglePlayer}
       onSave={handleSave}

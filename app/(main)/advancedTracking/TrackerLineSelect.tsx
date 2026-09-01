@@ -1,5 +1,5 @@
 import { Redirect, router, useLocalSearchParams } from 'expo-router';
-import React, { useState } from 'react';
+import { useState } from 'react';
 
 import type { RecentLine as RecentLineType } from '@/components/advancedTracking/TrackerLineScreen';
 import { TrackerLineScreen } from '@/components/advancedTracking/TrackerLineScreen';

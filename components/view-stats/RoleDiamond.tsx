@@ -1,4 +1,3 @@
-import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import Svg, { Circle, Polygon, Line as SvgLine } from 'react-native-svg';
 

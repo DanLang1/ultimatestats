@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { EditableSettingCard } from '@/components/pre-game-confirm/EditableSettingCard';

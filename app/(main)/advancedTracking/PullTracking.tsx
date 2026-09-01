@@ -1,5 +1,5 @@
 import { Redirect, router } from 'expo-router';
-import React, { useState } from 'react';
+import { useState } from 'react';
 
 import { PullDropperStep } from '@/components/advancedTracking/pullTracker/PullDropperStep';
 import { PullResultStep } from '@/components/advancedTracking/pullTracker/PullResultStep';

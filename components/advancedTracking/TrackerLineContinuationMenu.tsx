@@ -1,4 +1,3 @@
-import React from 'react';
 import { Modal, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/ThemedText';

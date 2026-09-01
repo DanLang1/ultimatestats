@@ -1,7 +1,6 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router, usePathname, useSegments, type Href } from 'expo-router';
 import type { BottomTabBarProps } from 'expo-router/js-tabs';
-import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { NewGameSheet } from '@/components/new-game/NewGameSheet';

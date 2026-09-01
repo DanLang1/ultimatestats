@@ -1,6 +1,5 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router } from 'expo-router';
-import React from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/ThemedText';
@@ -374,17 +373,6 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     },
     header: {
       borderBottomWidth: 1,
-    },
-    avatar: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    avatarText: {
-      fontSize: scaleBySizeClass(16, sizeClass),
-      fontFamily: Fonts.bold,
     },
     playerName: {
       fontSize: scaleBySizeClass(20, sizeClass),

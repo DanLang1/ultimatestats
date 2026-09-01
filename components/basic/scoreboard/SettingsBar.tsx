@@ -10,6 +10,7 @@ import { useTheme } from '@/context/ThemeContext';
 import { useGameTimer } from '@/hooks/basic/useGameTimer';
 import { getSizeClassValue, SizeClass, useLayout } from '@/hooks/useLayout';
 import { formatRatio, getExpectedRatio, getSequenceNumber } from '@/lib/genderRatioUtils';
+import { formatTimerSeconds } from '@/lib/utils';
 import { useGameStore } from '@/store/basic/gameStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { Fonts } from '@/theme/theme';
@@ -35,12 +36,6 @@ export default function SettingsBar({ onUndo }: SettingsBarProps) {
   // Match the floating action bar's glassmorphic background
   const barBg = palette.glassBg;
   const barContentColor = palette.textInverse;
-
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
 
   let capIcon: React.ReactNode;
   if (timeLeft === 0) {
@@ -72,7 +67,7 @@ export default function SettingsBar({ onUndo }: SettingsBarProps) {
       {/* Timer Text */}
       <View style={styles.timerContainer}>
         <ThemedText style={[styles.timerText, { color: barContentColor }]}>
-          {formatTime(timeLeft)}
+          {formatTimerSeconds(timeLeft)}
         </ThemedText>
         {capIcon}
       </View>
