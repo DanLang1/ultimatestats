@@ -183,9 +183,9 @@ function getThrowTone(
       return actionSideId === focusSideId ? 'danger' : 'success';
     case 'callahan':
       return scoringSideId === focusSideId ? 'success' : 'danger';
+    default:
+      throw new Error('Unsupported throw result');
   }
-
-  throw new Error('Unsupported throw result');
 }
 
 function buildThrowLabel(
@@ -616,9 +616,9 @@ export function getPointStateLabel(state: PointState): string {
       return 'In Progress';
     case 'terminated':
       return 'Terminated';
+    default:
+      throw new Error('Unsupported point state');
   }
-
-  throw new Error('Unsupported point state');
 }
 
 export function getTransitionLabel(transition: BetweenPointTransition | GameTransition): string {
@@ -637,9 +637,9 @@ export function getTransitionLabel(transition: BetweenPointTransition | GameTran
       return 'Soft Cap';
     case 'hard_cap':
       return 'Hard Cap';
+    default:
+      throw new Error('Unsupported transition');
   }
-
-  throw new Error('Unsupported transition');
 }
 
 export type FlowItem =
@@ -765,7 +765,7 @@ export function getTransitionIcon(transition: BetweenPointTransition | GameTrans
       return 'timer-pause-outline';
     case 'administrative':
       return 'clipboard-text-outline';
+    default:
+      throw new Error('Unsupported transition');
   }
-
-  throw new Error('Unsupported transition');
 }

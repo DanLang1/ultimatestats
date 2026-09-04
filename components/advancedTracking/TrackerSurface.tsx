@@ -119,7 +119,7 @@ export const TrackerSurface = ({
           availableHeight={availableHeight}
         />
       );
+    default:
+      throw new Error('Unsupported tracker surface state');
   }
-
-  throw new Error('Unsupported tracker surface state');
 };

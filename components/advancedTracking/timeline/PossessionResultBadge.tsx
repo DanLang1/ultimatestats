@@ -29,9 +29,9 @@ export default function PossessionResultBadge({ possession }: PossessionResultBa
         return { label: 'In Progress', color: palette.accent, bg: palette.accentOverlay10 };
       case 'terminated':
         return { label: 'Terminated', color: palette.textMuted, bg: palette.overlay08 };
+      default:
+        throw new Error('Unsupported possession result');
     }
-
-    throw new Error('Unsupported possession result');
   })();
 
   return (

@@ -50,9 +50,9 @@ function formatAction(
     }
     case 'stoppage':
       return `STOP    ${action.reason}${action.sideId ? ` (${s(action.sideId)})` : ''}`;
+    default:
+      throw new Error('Unsupported action');
   }
-
-  throw new Error('Unsupported action');
 }
 
 function formatPossession(
