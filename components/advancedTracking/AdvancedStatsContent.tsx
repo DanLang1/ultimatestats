@@ -89,6 +89,8 @@ export default function AdvancedStatsContent({
   const efficiencyStats = buildEfficiencyStats(teamStats);
   const hasRedZoneEntries = teamStats.redZoneEntries > 0;
   const redZoneStats = buildRedZoneStats(teamStats);
+  const hasOpponentRedZoneEntries = teamStats.opponentRedZoneEntries > 0;
+  const redZoneDefenseStats = buildRedZoneDefenseStats(teamStats);
 
   const sorted = [...playerStats].sort((a, b) => b.plusMinus - a.plusMinus);
   const topPerformers = sorted.filter((p) => p.plusMinus > 0).slice(0, 3);
@@ -300,10 +302,22 @@ Formula: Scoring possessions on D-points ÷ possessions on D-points`}
             <View style={styles.sectionTitleRow}>
               <ThemedText
                 style={[styles.subsectionTitle, styles.sectionTitle, { color: palette.textMuted }]}>
-                RED ZONE
+                RED ZONE OFFENSE
               </ThemedText>
             </View>
             <StatsGrid stats={redZoneStats} columns={isLandscape ? 4 : 2} />
+          </View>
+        )}
+
+        {hasOpponentRedZoneEntries && (
+          <View testID="advanced-red-zone-defense-card" style={styles.subsectionContainer}>
+            <View style={styles.sectionTitleRow}>
+              <ThemedText
+                style={[styles.subsectionTitle, styles.sectionTitle, { color: palette.textMuted }]}>
+                RED ZONE DEFENSE
+              </ThemedText>
+            </View>
+            <StatsGrid stats={redZoneDefenseStats} columns={isLandscape ? 4 : 2} />
           </View>
         )}
 
@@ -485,6 +499,30 @@ function buildRedZoneStats(teamStats: AdvancedTeamStats): StatsDisplayItem[] {
     {
       label: 'Avg Time to Turn',
       value: turnoverDurationMs == null ? '—' : `${Math.round(turnoverDurationMs / 1000)}s`,
+    },
+  ];
+}
+
+function buildRedZoneDefenseStats(teamStats: AdvancedTeamStats): StatsDisplayItem[] {
+  const opponentGoalDurationMs = teamStats.averageRedZoneTimeToOpponentGoalMs;
+  const opponentTurnoverDurationMs = teamStats.averageRedZoneTimeToOpponentTurnoverMs;
+  return [
+    {
+      label: 'Stop Rate',
+      value: formatNullablePercent(teamStats.redZoneStopPct),
+      sublabel: `${teamStats.redZoneStops}/${teamStats.resolvedOpponentRedZonePossessions}`,
+    },
+    { label: 'Red Zone Stops', value: teamStats.redZoneStops },
+    {
+      label: 'Avg Time to Opp Goal',
+      value: opponentGoalDurationMs == null ? '—' : `${Math.round(opponentGoalDurationMs / 1000)}s`,
+    },
+    {
+      label: 'Avg Time to Opp Turn',
+      value:
+        opponentTurnoverDurationMs == null
+          ? '—'
+          : `${Math.round(opponentTurnoverDurationMs / 1000)}s`,
     },
   ];
 }

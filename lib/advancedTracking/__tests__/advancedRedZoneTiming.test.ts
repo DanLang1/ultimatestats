@@ -37,4 +37,23 @@ describe('red zone outcome timing splits', () => {
     expect(stats.averageRedZoneTimeToScoreMs).toBeNull();
     expect(stats.averageRedZoneTimeToTurnoverMs).toBeNull();
   });
+
+  it('derives defense from every non-selected side, including remapped aggregate opponents', () => {
+    const first = buildAnalyticsGame(dirtyHoldScenario());
+    first.possessions[1].enteredRedZone = true;
+    first.possessions[1].redZoneOutcomeDurationMs = 6_000;
+    const second = buildAnalyticsGame(dirtyHoldScenario());
+    second.possessions[1].enteredRedZone = true;
+    second.possessions[1].redZoneOutcomeDurationMs = 10_000;
+    const aggregate = aggregateAnalyticsGames([first, second]);
+    if (aggregate == null) throw new Error('Expected aggregate fixture');
+
+    const stats = computeAdvancedTeamStats(aggregate, aggregate.focusSideId);
+    expect(stats.opponentRedZoneEntries).toBe(2);
+    expect(stats.resolvedOpponentRedZonePossessions).toBe(2);
+    expect(stats.redZoneStops).toBe(2);
+    expect(stats.redZoneStopPct).toBe(1);
+    expect(stats.averageRedZoneTimeToOpponentGoalMs).toBeNull();
+    expect(stats.averageRedZoneTimeToOpponentTurnoverMs).toBe(8_000);
+  });
 });

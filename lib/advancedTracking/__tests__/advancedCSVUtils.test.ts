@@ -12,8 +12,10 @@ describe('advancedCSVUtils', () => {
     point.startedAt = 1_000;
     point.possessions[0].redZone = { enteredAt: 2_000 };
     point.possessions[0].actions.at(-1)!.recordedAt = 8_000;
-    point.possessions[2].redZone = { enteredAt: 10_000 };
-    point.possessions[2].actions.at(-1)!.recordedAt = 22_000;
+    point.possessions[1].redZone = { enteredAt: 10_000 };
+    point.possessions[1].actions.at(-1)!.recordedAt = 16_000;
+    point.possessions[2].redZone = { enteredAt: 18_000 };
+    point.possessions[2].actions.at(-1)!.recordedAt = 30_000;
     const analytics = buildAnalyticsGame(game);
     const single = generateAdvancedGameCSV(analytics);
     expect(single).toContain('Red Zone Conversion,50.0%,1/2');
@@ -21,6 +23,10 @@ describe('advancedCSVUtils', () => {
     expect(single).toContain('Red Zone Turnovers,1,');
     expect(single).toContain('Red Zone Avg Time to Score,0:12,');
     expect(single).toContain('Red Zone Avg Time to Turnover,0:06,');
+    expect(single).toContain('Red Zone Stop Rate,100.0%,1/1');
+    expect(single).toContain('Red Zone Stops,1,');
+    expect(single).toContain('Red Zone Avg Time to Opp Goal,,');
+    expect(single).toContain('Red Zone Avg Time to Opp Turn,0:06,');
 
     const aggregate = aggregateAnalyticsGames([analytics, analytics]);
     if (aggregate == null) throw new Error('Expected aggregate fixture');
@@ -31,6 +37,8 @@ describe('advancedCSVUtils', () => {
     expect(combined.match(/Red Zone Conversion,50.0%,1\/2/g)).toHaveLength(2);
     expect(combined.match(/Red Zone Avg Time to Score,0:12,/g)).toHaveLength(3);
     expect(combined.match(/Red Zone Avg Time to Turnover,0:06,/g)).toHaveLength(3);
+    expect(combined).toContain('Red Zone Stop Rate,100.0%,2/2');
+    expect(combined.match(/Red Zone Stop Rate,100.0%,1\/1/g)).toHaveLength(2);
   });
 
   it('omits red zone rows without entries and preserves unavailable timing', () => {

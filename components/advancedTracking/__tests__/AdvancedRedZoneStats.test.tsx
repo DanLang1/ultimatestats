@@ -30,6 +30,23 @@ function redZoneGame(result: 'goal' | 'throwaway' | 'in_progress' | 'terminated'
   return buildAnalyticsGame(game);
 }
 
+function opponentRedZoneGame(result: 'goal' | 'throwaway') {
+  const scenario = createAdvancedGameScenario({
+    id: `opponent-${result}`,
+    initialReceivingSideId: ADVANCED_TEST_OPPONENT_SIDE_ID,
+  }).startPoint({
+    puller: participantRef('alex'),
+    receiver: UNTRACKED_PLAYER,
+    startedAt: 1_000,
+    recordedAt: 1_000,
+  });
+  if (result === 'goal') scenario.goal(UNTRACKED_PLAYER, { recordedAt: 15_000 });
+  else scenario.turnover('throwaway', { recordedAt: 9_000 });
+  const game = scenario.build();
+  game.points[0].possessions[0].redZone = { enteredAt: 3_000 };
+  return buildAnalyticsGame(game);
+}
+
 function renderStats(
   game: AnalyticsGame,
   sideId = ADVANCED_TEST_FOCUS_SIDE_ID,
@@ -68,10 +85,29 @@ describe('Red Zone team stats display', () => {
   it('does not show the other side’s entries', async () => {
     await renderStats(redZoneGame('goal'), ADVANCED_TEST_OPPONENT_SIDE_ID);
     expect(screen.queryByTestId('advanced-red-zone-card')).toBeNull();
+    expect(screen.getByTestId('advanced-red-zone-defense-card')).toBeTruthy();
+  });
+
+  it('shows defensive results from opponent marked possessions', async () => {
+    const aggregate = aggregateAnalyticsGames([
+      opponentRedZoneGame('goal'),
+      opponentRedZoneGame('throwaway'),
+    ]);
+    if (aggregate == null) throw new Error('Expected defensive aggregate fixture');
+    await renderStats(aggregate, ADVANCED_TEST_FOCUS_SIDE_ID, 2);
+    const section = within(screen.getByTestId('advanced-red-zone-defense-card'));
+    expect(within(section.getByText('Stop Rate').parent!).getByText('50%')).toBeTruthy();
+    expect(within(section.getByText('Stop Rate').parent!).getByText('1/2')).toBeTruthy();
+    expect(section.getByText('Red Zone Stops')).toBeTruthy();
+    expect(section.getByText('Avg Time to Opp Goal')).toBeTruthy();
+    expect(section.getByText('12s')).toBeTruthy();
+    expect(section.getByText('Avg Time to Opp Turn')).toBeTruthy();
+    expect(section.getByText('6s')).toBeTruthy();
   });
 
   it('shows conversion, opportunities, turnovers, outcome timing, and help', async () => {
     await renderStats(redZoneGame('goal'));
+    expect(screen.getByText('RED ZONE OFFENSE')).toBeTruthy();
     expectRedZoneStat('Conversion', '100%', '1/1');
     expect(screen.queryByText('Opportunities')).toBeNull();
     expectRedZoneStat('Red Zone Turns', '0');

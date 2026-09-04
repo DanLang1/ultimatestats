@@ -76,6 +76,18 @@ export interface AdvancedTeamStats {
   averageRedZoneTimeToScoreMs: number | null;
   /** Average active-play time from red-zone entry to a turnover; turned-over possessions only. */
   averageRedZoneTimeToTurnoverMs: number | null;
+  /** Opponent possessions manually marked as entering the red zone. */
+  opponentRedZoneEntries: number;
+  /** Opponent marked possessions ending in a goal or turnover. */
+  resolvedOpponentRedZonePossessions: number;
+  /** Opponent marked possessions ending in a turnover. */
+  redZoneStops: number;
+  /** redZoneStops / resolvedOpponentRedZonePossessions. Null if none resolved. */
+  redZoneStopPct: number | null;
+  /** Average active-play time from opponent red-zone entry to an opponent goal. */
+  averageRedZoneTimeToOpponentGoalMs: number | null;
+  /** Average active-play time from opponent red-zone entry to an opponent turnover. */
+  averageRedZoneTimeToOpponentTurnoverMs: number | null;
   blocksPerDPoint: number;
   pressuresPerDPoint: number;
   totalTurnovers: number;
@@ -95,6 +107,56 @@ export interface AdvancedTeamStats {
   longestDrought: number;
   /** Optional manual throw classifications derived from canonical actions. */
   throwTypes: AdvancedThrowTypeStats;
+}
+
+interface AdvancedRedZoneDefenseStats {
+  opponentRedZoneEntries: number;
+  resolvedOpponentRedZonePossessions: number;
+  redZoneStops: number;
+  redZoneStopPct: number | null;
+  averageRedZoneTimeToOpponentGoalMs: number | null;
+  averageRedZoneTimeToOpponentTurnoverMs: number | null;
+}
+
+function averageDuration(durations: number[]): number | null {
+  return durations.length > 0
+    ? durations.reduce((total, duration) => total + duration, 0) / durations.length
+    : null;
+}
+
+function computeAdvancedRedZoneDefenseStats(
+  game: AnalyticsGame,
+  sideId: string,
+): AdvancedRedZoneDefenseStats {
+  const enteredPossessions = game.possessions.filter(
+    (possession) => possession.sideId !== sideId && possession.enteredRedZone,
+  );
+  const resolvedPossessions = enteredPossessions.filter(
+    (possession) => possession.result === 'scored' || possession.result === 'turned_over',
+  );
+  const stoppedPossessions = resolvedPossessions.filter(
+    (possession) => possession.result === 'turned_over',
+  );
+  const goalTimings = resolvedPossessions.flatMap((possession) =>
+    possession.result === 'scored' && possession.redZoneOutcomeDurationMs != null
+      ? [possession.redZoneOutcomeDurationMs]
+      : [],
+  );
+  const turnoverTimings = stoppedPossessions.flatMap((possession) =>
+    possession.redZoneOutcomeDurationMs == null ? [] : [possession.redZoneOutcomeDurationMs],
+  );
+
+  return {
+    opponentRedZoneEntries: enteredPossessions.length,
+    resolvedOpponentRedZonePossessions: resolvedPossessions.length,
+    redZoneStops: stoppedPossessions.length,
+    redZoneStopPct:
+      resolvedPossessions.length > 0
+        ? stoppedPossessions.length / resolvedPossessions.length
+        : null,
+    averageRedZoneTimeToOpponentGoalMs: averageDuration(goalTimings),
+    averageRedZoneTimeToOpponentTurnoverMs: averageDuration(turnoverTimings),
+  };
 }
 
 interface AdvancedRedZoneStats {
@@ -137,27 +199,15 @@ function computeAdvancedRedZoneStats(game: AnalyticsGame, sideId: string): Advan
   );
 
   return {
-    averageRedZoneTimeToScoreMs:
-      scoreTimings.length > 0
-        ? scoreTimings.reduce((total, duration) => total + duration, 0) / scoreTimings.length
-        : null,
-    averageRedZoneTimeToTurnoverMs:
-      turnoverTimings.length > 0
-        ? turnoverTimings.reduce((total, duration) => total + duration, 0) / turnoverTimings.length
-        : null,
     redZoneEntries: enteredPossessions.length,
     resolvedRedZonePossessions: resolvedPossessions.length,
     scoredRedZonePossessions: scoredPossessions.length,
     redZoneConversionPct:
       resolvedPossessions.length > 0 ? scoredPossessions.length / resolvedPossessions.length : null,
-    averageTimeToRedZoneMs:
-      entryTimings.length > 0
-        ? entryTimings.reduce((total, duration) => total + duration, 0) / entryTimings.length
-        : null,
-    averageRedZoneOutcomeDurationMs:
-      outcomeTimings.length > 0
-        ? outcomeTimings.reduce((total, duration) => total + duration, 0) / outcomeTimings.length
-        : null,
+    averageTimeToRedZoneMs: averageDuration(entryTimings),
+    averageRedZoneOutcomeDurationMs: averageDuration(outcomeTimings),
+    averageRedZoneTimeToScoreMs: averageDuration(scoreTimings),
+    averageRedZoneTimeToTurnoverMs: averageDuration(turnoverTimings),
   };
 }
 
@@ -166,6 +216,7 @@ function computeAdvancedRedZoneStats(game: AnalyticsGame, sideId: string): Advan
 export function computeAdvancedTeamStats(game: AnalyticsGame, sideId: string): AdvancedTeamStats {
   const throwTypes = computeAdvancedThrowTypeStats(game, sideId);
   const redZoneStats = computeAdvancedRedZoneStats(game, sideId);
+  const redZoneDefenseStats = computeAdvancedRedZoneDefenseStats(game, sideId);
   let holds = 0;
   let breaks = 0;
   let timesBroken = 0;
@@ -370,6 +421,7 @@ export function computeAdvancedTeamStats(game: AnalyticsGame, sideId: string): A
     totalGoals,
     totalPossessions: totalPossessionsInGame,
     ...redZoneStats,
+    ...redZoneDefenseStats,
     blocksPerDPoint: dPoints > 0 ? totalBlocks / dPoints : 0,
     pressuresPerDPoint: dPoints > 0 ? totalPressures / dPoints : 0,
     totalTurnovers: totalTurnoversInGame,

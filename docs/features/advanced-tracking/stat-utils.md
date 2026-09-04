@@ -61,6 +61,9 @@ support.
 | Red Zone Conversion      | scoring marked possessions / resolved marked possessions                                      | Null if no marked possession has resolved                              |
 | Time to Red Zone         | active-play time from point start to Red Zone entry                                           | Average excludes missing timing                                        |
 | Red Zone Outcome Time    | active-play time from Red Zone entry to goal or turnover                                      | Resolved marked possessions only                                       |
+| Red Zone Stop Rate       | opponent marked possessions ending in a turnover / resolved opponent marked possessions       | Team defense; null if none resolved                                    |
+| Red Zone Stops           | opponent marked possessions ending in a turnover                                              | Works with anonymous opponents                                         |
+| Time to Opp Goal/Turn    | active-play time from opponent Red Zone entry to its matching outcome                         | Separate averages; valid timing samples only                           |
 | Clean Holds              | `points` where `state === 'hold'` and `isCleanHold === true`                                  | Count                                                                  |
 | Dirty Holds              | `points` where `state === 'hold'` and `isCleanHold === false`                                 | Count                                                                  |
 | Break Chances            | Completed D-points where side gained at least one possession                                  | Count                                                                  |
@@ -135,7 +138,11 @@ entries. It shows conversion and its resolved ratio, Red Zone Turnovers
 (`resolvedRedZonePossessions - scoredRedZonePossessions`), Avg Time to Score, and Avg Time to
 Turnover in rounded seconds. The two timing averages include only marked possessions with the
 matching outcome and valid pause-adjusted timing; zero-duration samples count. Aggregate averages
-pool the matching duration samples. CSV exports include the same metrics, with duration in m:ss. Null conversion/timing displays as an em dash; point-start-to-entry timing is
+pool the matching duration samples. CSV exports include the same metrics, with duration in m:ss. A defensive Red Zone section appears
+when any opposing side has entries. It shows Stop Rate, Red Zone Stops, Avg Time to Opp Goal, and
+Avg Time to Opp Turn. In a scrimmage, the opposing possessions follow the selected Light/Dark side;
+in aggregates, every remapped opponent side is pooled. These team metrics also work when the
+opponent roster is anonymous. Null conversion/timing displays as an em dash; point-start-to-entry timing is
 not displayed. The help text explains manual tagging and resolved-only conversion.
 
 ### `advancedPullStatsUtils.ts`

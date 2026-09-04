@@ -31,7 +31,8 @@ manual tag.
 - Conversion and outcome time display an em dash when no qualifying samples exist. There is no
   empty-state section. Single-game and aggregate CSV exports include the same four stats only
   when entries exist, with conversion ratios and outcome duration in m:ss. O/D splits,
-  and defensive-stop labels remain follow-ups.
+  remain follow-ups. Team analytics and CSV also show defensive Stop Rate, Red Zone Stops, Avg
+  Time to Opp Goal, and Avg Time to Opp Turn when the opposing side has marked possessions.
 
 ## Persisted Model
 
@@ -129,6 +130,12 @@ averageTimeToRedZoneMs: number | null;
 averageRedZoneOutcomeDurationMs: number | null;
 averageRedZoneTimeToScoreMs: number | null;
 averageRedZoneTimeToTurnoverMs: number | null;
+opponentRedZoneEntries: number;
+resolvedOpponentRedZonePossessions: number;
+redZoneStops: number;
+redZoneStopPct: number | null;
+averageRedZoneTimeToOpponentGoalMs: number | null;
+averageRedZoneTimeToOpponentTurnoverMs: number | null;
 ```
 
 Derivation rules:
