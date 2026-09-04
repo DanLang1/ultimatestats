@@ -77,10 +77,10 @@ function resetStore() {
   });
 }
 
-function createGame(gameTo = 15): string {
+function createGame(gameTo = 15, initialReceivingSideId = homeSideId): string {
   return useAdvancedTrackingStore.getState().createGame({
     focusSideId: homeSideId,
-    initialReceivingSideId: homeSideId,
+    initialReceivingSideId,
     sides: [
       { id: homeSideId, label: 'Home', trackingMode: 'full-roster' },
       { id: awaySideId, label: 'Away', trackingMode: 'anonymous' },
@@ -721,6 +721,163 @@ describe('advancedTrackingStore', () => {
     expect(point?.possessions[0].actions.at(-1)?.kind).toBe('throw');
   });
 
+  it('requires a holder before marking Red Zone for a fully tracked side', () => {
+    createGame();
+    useAdvancedTrackingStore.getState().recordPull({
+      lines: homeLinesAugust,
+      puller: untracked,
+      receiver: august,
+      result: 'inbound',
+    });
+
+    expect(() => useAdvancedTrackingStore.getState().setCurrentPossessionRedZone(true)).toThrow(
+      'current holder',
+    );
+  });
+
+  it('clears Red Zone when undoing the pickup that established a tracked holder', () => {
+    createGame();
+    useAdvancedTrackingStore.getState().recordPull({
+      lines: homeLinesAugust,
+      puller: untracked,
+      result: 'ob',
+    });
+    useAdvancedTrackingStore.getState().recordPickup({ sideId: homeSideId, player: august });
+    useAdvancedTrackingStore.getState().setCurrentPossessionRedZone(true);
+
+    expect(useAdvancedTrackingStore.getState().undoLastOperation()).toBe(true);
+
+    const possession = getCurrentPoint(getCurrentGame())?.possessions[0];
+    expect(possession?.actions).toEqual([expect.objectContaining({ kind: 'pull', result: 'ob' })]);
+    expect(possession?.redZone).toBeUndefined();
+  });
+
+  it('requires clearing Red Zone before amending an inbound pull as dropped', () => {
+    createGame(15, awaySideId);
+    useAdvancedTrackingStore.getState().recordPull({
+      lines: homeLinesAugust,
+      puller: august,
+      receiver: untracked,
+      result: 'inbound',
+    });
+    useAdvancedTrackingStore.getState().setCurrentPossessionRedZone(true);
+
+    expect(() => useAdvancedTrackingStore.getState().amendOpeningPullAsDropped(untracked)).toThrow(
+      'Clear Red Zone first',
+    );
+
+    const possession = getCurrentPoint(getCurrentGame())?.possessions[0];
+    expect(possession?.redZone).toEqual({ enteredAt: expect.any(Number) });
+    expect(possession?.actions[0]).toMatchObject({ kind: 'pull', result: 'inbound' });
+  });
+
+  it('removes a Red Zone-only anonymous scaffold when the tag is cleared', () => {
+    createGame();
+    useAdvancedTrackingStore.getState().recordPull({
+      lines: homeLinesAugust,
+      puller: untracked,
+      receiver: august,
+      result: 'inbound',
+    });
+    useAdvancedTrackingStore.getState().recordPickup({ sideId: homeSideId, player: august });
+    useAdvancedTrackingStore.getState().recordThrow({ thrower: august, result: 'throwaway' });
+    useAdvancedTrackingStore.getState().setCurrentPossessionRedZone(true);
+
+    const markedPoint = getCurrentPoint(getCurrentGame());
+    expect(markedPoint?.possessions).toHaveLength(2);
+    expect(markedPoint?.possessions[1].redZone).toEqual({
+      enteredAt: expect.any(Number),
+      anonymousScaffold: true,
+    });
+
+    useAdvancedTrackingStore.getState().setCurrentPossessionRedZone(false);
+
+    const point = getCurrentPoint(getCurrentGame());
+    expect(point?.possessions).toHaveLength(1);
+    expect(point?.possessions[0].actions.at(-1)).toMatchObject({
+      kind: 'throw',
+      result: 'throwaway',
+    });
+  });
+
+  it('retains an undoable anonymous pickup when Red Zone is selected in the same millisecond', () => {
+    const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(1_234);
+    createGame();
+    useAdvancedTrackingStore.getState().recordPull({
+      lines: homeLinesAugust,
+      puller: untracked,
+      receiver: august,
+      result: 'inbound',
+    });
+    useAdvancedTrackingStore.getState().recordPickup({ sideId: homeSideId, player: august });
+    useAdvancedTrackingStore.getState().recordThrow({ thrower: august, result: 'throwaway' });
+    useAdvancedTrackingStore.getState().recordPickup({ sideId: awaySideId, player: untracked });
+    useAdvancedTrackingStore.getState().setCurrentPossessionRedZone(true);
+
+    expect(getCurrentPoint(getCurrentGame())?.possessions[1].redZone).toEqual({ enteredAt: 1_234 });
+
+    useAdvancedTrackingStore.getState().setCurrentPossessionRedZone(false);
+    nowSpy.mockRestore();
+
+    const point = getCurrentPoint(getCurrentGame());
+    expect(point?.possessions).toHaveLength(2);
+    expect(point?.possessions[1]).toMatchObject({
+      actions: [{ kind: 'disc_pickup', player: untracked, recordedAt: 1_234 }],
+    });
+    expect(point?.possessions[1].redZone).toBeUndefined();
+  });
+
+  it('removes a dependent anonymous Red Zone possession when undoing a dropped-pull amendment', () => {
+    createGame();
+    useAdvancedTrackingStore.getState().recordPull({
+      lines: homeLinesAugust,
+      puller: untracked,
+      receiver: august,
+      result: 'inbound',
+    });
+    useAdvancedTrackingStore.getState().amendOpeningPullAsDropped(august);
+    useAdvancedTrackingStore.getState().setCurrentPossessionRedZone(true);
+
+    expect(getCurrentPoint(getCurrentGame())?.possessions).toHaveLength(2);
+
+    expect(useAdvancedTrackingStore.getState().undoLastOperation()).toBe(true);
+
+    const point = getCurrentPoint(getCurrentGame());
+    expect(point?.possessions).toHaveLength(1);
+    expect(point?.possessions[0].actions[0]).toMatchObject({ kind: 'pull', result: 'inbound' });
+  });
+
+  it('removes injury substitutions linked to a pruned anonymous Red Zone possession', () => {
+    createGame();
+    useAdvancedTrackingStore.getState().recordPull({
+      lines: homeLinesAugust,
+      puller: untracked,
+      receiver: august,
+      result: 'inbound',
+    });
+    useAdvancedTrackingStore.getState().recordPickup({ sideId: homeSideId, player: august });
+    useAdvancedTrackingStore.getState().recordThrow({ thrower: august, result: 'throwaway' });
+    useAdvancedTrackingStore.getState().setCurrentPossessionRedZone(true);
+    const stoppageId = useAdvancedTrackingStore.getState().recordInjurySubs({
+      sideId: homeSideId,
+      changes: [
+        {
+          sideId: homeSideId,
+          inIds: [meves.participantId],
+          outIds: [august.participantId],
+        },
+      ],
+    });
+    useAdvancedTrackingStore.getState().resumeStoppage(stoppageId);
+
+    expect(useAdvancedTrackingStore.getState().undoLastOperation()).toBe(true);
+
+    const point = getCurrentPoint(getCurrentGame());
+    expect(point?.possessions).toHaveLength(1);
+    expect(point?.subs).toBeUndefined();
+    expect(getEffectiveLineParticipantIds(point!, homeSideId)).toEqual([august.participantId]);
+  });
+
   it('undoing the pull removes the entire point', () => {
     createGame();
 
@@ -739,7 +896,7 @@ describe('advancedTrackingStore', () => {
     expect(getCurrentGame()?.points).toHaveLength(0);
   });
 
-  it('undoing across a point boundary reaches the previous point with its original lines', () => {
+  it('undoing across a point boundary preserves the previous point lines and Red Zone', () => {
     createGame();
 
     const point1Lines = [{ sideId: homeSideId, participantIds: [august.participantId] }];
@@ -752,6 +909,8 @@ describe('advancedTrackingStore', () => {
       receiver: august,
       result: 'inbound',
     });
+    useAdvancedTrackingStore.getState().recordPickup({ sideId: homeSideId, player: august });
+    useAdvancedTrackingStore.getState().setCurrentPossessionRedZone(true);
     useAdvancedTrackingStore
       .getState()
       .recordThrow({ thrower: august, result: 'goal', toPlayer: meves });
@@ -776,6 +935,43 @@ describe('advancedTrackingStore', () => {
     useAdvancedTrackingStore.getState().undoLastOperation();
     const point = getCurrentPoint(getCurrentGame());
     expect(point?.possessions[0].actions.at(-1)?.kind).toBe('disc_pickup');
+    expect(point?.possessions[0].redZone).toEqual({ enteredAt: expect.any(Number) });
+  });
+
+  it('keeps Red Zone timing accurate after a goal is undone and scored again', () => {
+    const nowSpy = jest.spyOn(Date, 'now');
+    createGame();
+    nowSpy.mockReturnValue(1_000);
+    useAdvancedTrackingStore.getState().recordPull({
+      lines: homeLines,
+      puller: untracked,
+      receiver: august,
+      result: 'inbound',
+    });
+    nowSpy.mockReturnValue(2_000);
+    useAdvancedTrackingStore.getState().recordPickup({ sideId: homeSideId, player: august });
+    nowSpy.mockReturnValue(11_000);
+    useAdvancedTrackingStore
+      .getState()
+      .recordThrow({ thrower: august, result: 'goal', toPlayer: meves });
+    nowSpy.mockReturnValue(21_000);
+    useAdvancedTrackingStore.getState().undoLastOperation();
+    nowSpy.mockReturnValue(26_000);
+    useAdvancedTrackingStore.getState().setCurrentPossessionRedZone(true);
+    nowSpy.mockReturnValue(31_000);
+    useAdvancedTrackingStore
+      .getState()
+      .recordThrow({ thrower: august, result: 'goal', toPlayer: meves });
+    nowSpy.mockRestore();
+
+    const game = getCurrentGame()!;
+    const point = getCurrentPoint(game)!;
+    expect(point.revivalPauses).toEqual([{ pausedAt: 11_000, resumedAt: 21_000 }]);
+    expect(point.revivedAt).toBeUndefined();
+    expect(buildAnalyticsGame(game).possessions[0]).toMatchObject({
+      redZoneEntryElapsedMs: 15_000,
+      redZoneOutcomeDurationMs: 5_000,
+    });
   });
 
   it('resetCurrentGame removes the in-progress game from savedGames', () => {

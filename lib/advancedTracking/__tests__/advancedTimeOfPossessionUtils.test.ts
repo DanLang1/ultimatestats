@@ -48,6 +48,9 @@ function makePossession(
     pointIndex: 0,
     possessionIndex,
     sideId,
+    enteredRedZone: false,
+    redZoneEntryElapsedMs: null,
+    redZoneOutcomeDurationMs: null,
     result: possessionIndex === 0 ? 'turned_over' : 'scored',
   };
 }

@@ -7,7 +7,7 @@ export type PassModifier = 'fifty-fifty' | 'callahan' | 'stall' | 'block' | 'pre
 
 // --- Core Game ---
 
-export const ADVANCED_TRACKING_SCHEMA_VERSION = 3;
+export const ADVANCED_TRACKING_SCHEMA_VERSION = 4;
 
 export type AdvancedGameType = 'game' | 'scrimmage';
 
@@ -183,6 +183,13 @@ export interface InjurySubChange {
   outIds: string[];
 }
 
+export interface PointRevivalPause {
+  /** Absolute timestamp when the scoring action originally ended the point. */
+  pausedAt: number;
+  /** Absolute timestamp when undo resumed tracking for the point. */
+  resumedAt: number;
+}
+
 export interface TrackedPoint {
   id: string;
   /** Optional private coaching note, omitted from sharing and CSV exports. */
@@ -216,14 +223,25 @@ export interface TrackedPoint {
    * Combined with elapsedMsAtEnd: adjustedTimestamp = revivedAt - elapsedMsAtEnd.
    */
   revivedAt?: number;
+  /** Completed dead-time intervals caused by undoing a scoring action. */
+  revivalPauses?: PointRevivalPause[];
 }
 
 // --- Possessions ---
+
+export interface RedZoneData {
+  /** Absolute timestamp (ms epoch) when Red Zone was selected during live play. */
+  enteredAt: number;
+  /** True when selecting Red Zone created the anonymous possession and pickup scaffold. */
+  anonymousScaffold?: true;
+}
 
 export interface PointPossession {
   id: string;
   /** Which side holds the disc during this possession. */
   sideId: string;
+  /** Live coach observation that this possession entered the attacking red zone. */
+  redZone?: RedZoneData;
   actions: PossessionAction[];
 }
 

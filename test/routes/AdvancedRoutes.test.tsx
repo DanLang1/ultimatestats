@@ -282,6 +282,84 @@ describe('advanced tracking routes', () => {
     expect(screen.queryByText('Windchill')).not.toBeOnTheScreen();
   });
 
+  it('toggles Red Zone on the active possession without changing action undo history', async () => {
+    const user = userEvent.setup();
+    arrangeAdvancedGame();
+    recordOpeningPull();
+    useAdvancedTrackingStore.getState().recordCaptureIntent({
+      kind: 'pickup',
+      player: { refType: 'participant', participantId: testTeam.roster[0].id },
+    });
+    const undoCount = useAdvancedTrackingStore.getState().undoStack.length;
+
+    await renderScreen(<TrackerScreen />);
+
+    const redZoneButton = screen.getByTestId('tracker-red-zone-button');
+    expect(redZoneButton.props.accessibilityState).toEqual({ selected: false });
+
+    await user.press(redZoneButton);
+
+    expect(screen.getByTestId('tracker-red-zone-button').props.accessibilityState).toEqual({
+      selected: true,
+    });
+    expect(
+      useAdvancedTrackingStore.getState().currentGame?.points[0].possessions[0].redZone?.enteredAt,
+    ).toEqual(expect.any(Number));
+    expect(useAdvancedTrackingStore.getState().undoStack).toHaveLength(undoCount);
+    const firstEnteredAt =
+      useAdvancedTrackingStore.getState().currentGame?.points[0].possessions[0].redZone?.enteredAt;
+
+    useAdvancedTrackingStore.getState().setCurrentPossessionRedZone(true);
+
+    expect(
+      useAdvancedTrackingStore.getState().currentGame?.points[0].possessions[0].redZone?.enteredAt,
+    ).toBe(firstEnteredAt);
+
+    await user.press(redZoneButton);
+
+    expect(screen.getByTestId('tracker-red-zone-button').props.accessibilityState).toEqual({
+      selected: false,
+    });
+    expect(
+      useAdvancedTrackingStore.getState().currentGame?.points[0].possessions[0].redZone,
+    ).toBeUndefined();
+    expect(useAdvancedTrackingStore.getState().undoStack).toHaveLength(undoCount);
+  });
+
+  it('creates and removes a dependent anonymous Red Zone possession around turnover undo', async () => {
+    const user = userEvent.setup();
+    arrangeAdvancedGame();
+    recordOpeningPull();
+    useAdvancedTrackingStore.getState().recordCaptureIntent({
+      kind: 'pickup',
+      player: { refType: 'participant', participantId: testTeam.roster[0].id },
+    });
+    useAdvancedTrackingStore.getState().recordCaptureIntent({ kind: 'throwaway' });
+
+    await renderScreen(<TrackerScreen />);
+    await user.press(screen.getByTestId('tracker-red-zone-button'));
+
+    const pointAfterRedZone = useAdvancedTrackingStore.getState().currentGame?.points[0];
+    expect(pointAfterRedZone?.possessions).toHaveLength(2);
+    expect(pointAfterRedZone?.possessions[1]).toMatchObject({
+      sideId: 'rivals',
+      redZone: { enteredAt: expect.any(Number) },
+      actions: [
+        {
+          kind: 'disc_pickup',
+          sideId: 'rivals',
+          player: { refType: 'untracked' },
+        },
+      ],
+    });
+
+    await user.press(screen.getByTestId('tracker-undo-button'));
+
+    const pointAfterUndo = useAdvancedTrackingStore.getState().currentGame?.points[0];
+    expect(pointAfterUndo?.possessions).toHaveLength(1);
+    expect(pointAfterUndo?.possessions[0].actions.at(-1)).toMatchObject({ kind: 'disc_pickup' });
+  });
+
   it('classifies a throwaway inline and undo removes the classified turnover', async () => {
     const user = userEvent.setup();
     arrangeAdvancedGame();
@@ -334,6 +412,7 @@ describe('advanced tracking routes', () => {
 
     expect(screen.getByTestId('throw-type-huck')).toBeOnTheScreen();
     expect(screen.getByTestId('tracker-undo-button')).toBeOnTheScreen();
+    expect(screen.queryByTestId('tracker-red-zone-button')).not.toBeOnTheScreen();
     expect(screen.queryByTestId('tracker-more-button')).not.toBeOnTheScreen();
     expect(screen.queryByTestId('between-point-undo')).not.toBeOnTheScreen();
     expect(screen.getByTestId('between-point-start-next')).toBeOnTheScreen();

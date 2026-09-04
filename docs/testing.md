@@ -94,6 +94,12 @@ navigation and create a false-positive setup completion.
 The default suite excludes the `extended` multi-point scenarios to keep feedback fast. Use
 `npm run maestro:all` to include them all.
 
+The seed route accepts `bench=true` for single-team injury-substitution scenarios; the extra roster
+players remain off the starting line. Red Zone regression flows cover toggle/turnover undo, pickup
+and dropped-pull undo, goal revival/re-scoring, and cleanup of injury substitutions attached to a
+removed anonymous possession. They read the existing DEV JSON view to assert underlying records;
+exact pause-adjusted analytics durations remain covered by deterministic Jest tests.
+
 ```bash
 # Smallest installed-app smoke flow
 npm run maestro:smoke

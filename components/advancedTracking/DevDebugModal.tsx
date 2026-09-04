@@ -63,7 +63,11 @@ export const DevDebugModal = ({ visible, onClose, data }: DevDebugModalProps) =>
                 Selectable JSON for the current advanced game
               </ThemedText>
             </View>
-            <Pressable onPress={onClose} hitSlop={16} style={styles.iconButton}>
+            <Pressable
+              testID="tracker-debug-close"
+              onPress={onClose}
+              hitSlop={16}
+              style={styles.iconButton}>
               <MaterialCommunityIcons
                 name="close"
                 size={scaleBySizeClass(22, sizeClass)}
@@ -100,7 +104,10 @@ export const DevDebugModal = ({ visible, onClose, data }: DevDebugModalProps) =>
           <ScrollView
             style={[styles.scrollBox, { backgroundColor: palette.overlay05 }]}
             contentContainerStyle={styles.scrollContent}>
-            <ThemedText style={[styles.codeText, { color: palette.textInverse }]} selectable>
+            <ThemedText
+              testID="tracker-debug-json"
+              style={[styles.codeText, { color: palette.textInverse }]}
+              selectable>
               {debugText}
             </ThemedText>
           </ScrollView>

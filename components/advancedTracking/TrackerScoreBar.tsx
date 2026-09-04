@@ -11,11 +11,13 @@ import { useLayout } from '@/hooks/useLayout';
 interface TrackerScoreBarProps {
   pointTimerAdjustedTimestamp: number | null;
   pointTimerPausedAt: number | null;
+  hideRedZoneControl: boolean;
 }
 
 export const TrackerScoreBar = ({
   pointTimerAdjustedTimestamp,
   pointTimerPausedAt,
+  hideRedZoneControl,
 }: TrackerScoreBarProps) => {
   const { palette } = useTheme();
   const { width } = useLayout();
@@ -37,9 +39,14 @@ export const TrackerScoreBar = ({
   return (
     <View style={styles.scoreBarContainer}>
       <View
+        testID="tracker-scorecard"
         style={[
           styles.scoreboardCard,
-          { backgroundColor: palette.primary, borderColor: palette.border, overflow: 'hidden' },
+          {
+            backgroundColor: palette.primary,
+            borderColor: data.redZoneSelected ? palette.danger : palette.border,
+            borderWidth: data.redZoneSelected ? 2 : 1,
+          },
         ]}>
         <ScrollView
           ref={scrollViewRef}
@@ -59,6 +66,7 @@ export const TrackerScoreBar = ({
             onToggleExpanded={toggleExpanded}
             pointTimerAdjustedTimestamp={pointTimerAdjustedTimestamp}
             pointTimerPausedAt={pointTimerPausedAt}
+            hideRedZoneControl={hideRedZoneControl}
           />
 
           <ScoreBarActionRow width={cardWidth} />
@@ -81,7 +89,6 @@ function createStyles() {
       gap: 0,
     },
     scoreboardCard: {
-      borderWidth: 1,
       borderRadius: 22,
       borderCurve: 'continuous',
       overflow: 'hidden',

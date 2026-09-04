@@ -14,7 +14,7 @@ export function migrateAdvancedTrackedGame(game: AdvancedTrackedGame): AdvancedT
     return game;
   }
 
-  // Throw details and private game/point notes are optional in schema 3, so older records only
-  // need their version stamped. Missing notes intentionally remain absent.
+  // Throw details, private notes, Red Zone data, and point revival pauses are optional, so older
+  // records only need their version stamped. Missing optional fields intentionally remain absent.
   return { ...game, schemaVersion: ADVANCED_TRACKING_SCHEMA_VERSION };
 }

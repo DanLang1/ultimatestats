@@ -4,6 +4,7 @@ import {
   getMaestroSeedPlayerId,
   MAESTRO_SEED_GAME_ID,
   MAESTRO_SEED_PLAYERS,
+  MAESTRO_SCRIMMAGE_BENCH_PLAYERS,
   MAESTRO_SCRIMMAGE_PLAYERS,
   MAESTRO_SEED_TEAM_ID,
 } from '@/lib/maestroConstants';
@@ -281,6 +282,7 @@ function seedTrackerState(trackerState: MaestroTrackerState, gameType: MaestroSe
 
 export async function seedAdvancedTrackerTestGame(
   options: {
+    includeBench?: boolean;
     capMode?: MaestroCapMode;
     gameTo?: number;
     gameType?: MaestroSeedGameType;
@@ -306,7 +308,14 @@ export async function seedAdvancedTrackerTestGame(
   if (options.rosterView != null) {
     useSettingsStore.setState({ rosterViewMode: options.rosterView });
   }
-  const team = buildSeedTeam(isScrimmage ? MAESTRO_SCRIMMAGE_PLAYERS : undefined);
+  let playerNames = MAESTRO_SEED_PLAYERS;
+  if (isScrimmage) {
+    playerNames = MAESTRO_SCRIMMAGE_PLAYERS;
+  } else if (options.includeBench) {
+    playerNames = [...MAESTRO_SEED_PLAYERS, ...MAESTRO_SCRIMMAGE_BENCH_PLAYERS];
+  }
+  const team = buildSeedTeam(playerNames);
+  setSeedTeam(team);
 
   const participants: Participant[] = team.roster.map((player) => ({
     id: player.id,

@@ -313,6 +313,65 @@ function getCompletedGameClockPauseMsBefore(
   }, 0);
 }
 
+function getCompletedStoppagePauseMsBefore(point: TrackedPoint, timestamp: number): number {
+  return point.possessions
+    .flatMap((possession) => possession.actions)
+    .reduce((total, action) => {
+      if (
+        action.kind !== 'stoppage' ||
+        action.pausedAt == null ||
+        action.resumedAt == null ||
+        action.pausedAt >= timestamp
+      ) {
+        return total;
+      }
+
+      return total + Math.max(0, Math.min(timestamp, action.resumedAt) - action.pausedAt);
+    }, 0);
+}
+
+function getCompletedRevivalPauseMsBefore(point: TrackedPoint, timestamp: number): number {
+  return (point.revivalPauses ?? []).reduce((total, pause) => {
+    if (pause.pausedAt >= timestamp) return total;
+    return total + Math.max(0, Math.min(timestamp, pause.resumedAt) - pause.pausedAt);
+  }, 0);
+}
+
+function getActivePlayElapsedMsAt(
+  game: AdvancedTrackedGame,
+  point: TrackedPoint,
+  timestamp: number,
+): number | null {
+  if (point.startedAt == null) return null;
+  if (
+    point.revivalPauses == null &&
+    point.revivedAt != null &&
+    point.elapsedMsAtEnd != null &&
+    timestamp >= point.revivedAt
+  ) {
+    const stoppagePauseMsAfterRevival =
+      getCompletedStoppagePauseMsBefore(point, timestamp) -
+      getCompletedStoppagePauseMsBefore(point, point.revivedAt);
+    const gameClockPauseMsAfterRevival =
+      getCompletedGameClockPauseMsBefore(game, point, timestamp) -
+      getCompletedGameClockPauseMsBefore(game, point, point.revivedAt);
+    return (
+      point.elapsedMsAtEnd +
+      timestamp -
+      point.revivedAt -
+      stoppagePauseMsAfterRevival -
+      gameClockPauseMsAfterRevival
+    );
+  }
+  return (
+    timestamp -
+    point.startedAt -
+    getCompletedStoppagePauseMsBefore(point, timestamp) -
+    getCompletedGameClockPauseMsBefore(game, point, timestamp) -
+    getCompletedRevivalPauseMsBefore(point, timestamp)
+  );
+}
+
 /** Derives which side scored from the last action of the last possession. */
 function deriveScoringSideId(point: TrackedPoint, ctx: GameBuildContext): string | null {
   const lastPoss = getLastPossession(ctx.gameId, point.id, point.possessions);
@@ -460,12 +519,37 @@ function compilePossessionWithActions(
     }
   }
 
+  const redZoneEntryElapsedMs =
+    poss.redZone == null ? null : getActivePlayElapsedMsAt(ctx.game, point, poss.redZone.enteredAt);
+  const hasResolvedOutcome = possResult === 'scored' || possResult === 'turned_over';
+  const redZoneOutcomeElapsedMs =
+    redZoneEntryElapsedMs != null && hasResolvedOutcome && possLastAction.recordedAt != null
+      ? getActivePlayElapsedMsAt(ctx.game, point, possLastAction.recordedAt)
+      : null;
+
+  if (
+    redZoneEntryElapsedMs != null &&
+    redZoneOutcomeElapsedMs != null &&
+    redZoneOutcomeElapsedMs < redZoneEntryElapsedMs
+  ) {
+    throw new Error(
+      `buildAnalyticsGame requires red-zone entry for possession "${poss.id}" in point "${pointId}" to occur before its outcome`,
+    );
+  }
+  const redZoneOutcomeDurationMs =
+    redZoneEntryElapsedMs != null && redZoneOutcomeElapsedMs != null
+      ? redZoneOutcomeElapsedMs - redZoneEntryElapsedMs
+      : null;
+
   const possession: AnalyticsPossession = {
     id: poss.id,
     pointId,
     pointIndex,
     possessionIndex: possIndex,
     sideId: poss.sideId,
+    enteredRedZone: poss.redZone != null,
+    redZoneEntryElapsedMs,
+    redZoneOutcomeDurationMs,
     result: possResult,
     turnoverType,
   };

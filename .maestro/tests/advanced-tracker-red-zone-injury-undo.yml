@@ -1,0 +1,56 @@
+appId: com.langdk.ultimatestats.dev
+name: Red Zone Anonymous Injury Cleanup on Undo
+---
+- launchApp
+- openLink: ultimatestats-dev:///__maestro_seed__?trackerState=focusPossession&bench=true
+- extendedWaitUntil:
+    visible:
+      id: 'maestro-setup-running'
+    timeout: 5000
+- extendedWaitUntil:
+    notVisible:
+      id: 'maestro-setup-running'
+    timeout: 15000
+- assertVisible:
+    id: 'tracker-chip-Jon'
+- runFlow: ../flows/open-rare-menu.yaml
+- runFlow: ../flows/select-opponent-block.yaml
+- tapOn:
+    id: 'tracker-red-zone-button'
+- tapOn:
+    id: 'tracker-line-action-tile'
+- tapOn:
+    id: 'line-change-injury-sub'
+- assertVisible:
+    text: 'Injury Sub'
+- tapOn:
+    id: 'player-chip-Jon'
+    selected: true
+- tapOn:
+    id: 'player-chip-Heidi'
+    selected: false
+- tapOn:
+    id: 'line-select-confirm'
+    enabled: true
+- assertVisible:
+    id: 'stoppage-resume'
+- tapOn:
+    id: 'stoppage-resume'
+- runFlow: ../flows/read-tracker-debug-game.yaml
+- assertTrue: ${output.game.points[0].possessions.length === 2}
+- assertTrue: ${output.game.points[0].possessions[1].redZone.anonymousScaffold === true}
+- assertTrue: ${output.game.points[0].subs.length === 1}
+- evalScript: ${output.removedStoppageId = output.game.points[0].subs[0].stoppageActionId}
+- assertTrue: ${output.game.points[0].possessions[1].actions.some(a => a.id === output.removedStoppageId)}
+- tapOn:
+    id: 'tracker-undo-button'
+- assertVisible:
+    id: 'tracker-chip-Jon'
+- assertNotVisible:
+    id: 'tracker-chip-Heidi'
+- runFlow: ../flows/read-tracker-debug-game.yaml
+- assertTrue: ${output.game.points[0].possessions.length === 1}
+- assertTrue: ${output.game.points[0].subs === undefined}
+- assertTrue: ${!output.game.points[0].possessions[0].actions.some(a => a.id === output.removedStoppageId)}
+- takeScreenshot:
+    path: .maestro/screenshots/advanced-tracker-red-zone-injury-undo

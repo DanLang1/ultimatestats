@@ -1,6 +1,8 @@
 import {
+  getActiveSideId,
   getActiveStoppage,
   getActiveGameClockPause,
+  getSafeDiscHolderRef,
   getSideTimeoutState,
 } from '@/lib/advancedTracking/trackingDisplayHelpers';
 import {
@@ -9,6 +11,7 @@ import {
   getEffectiveGameTo,
   getSideScore,
   hasPointEnded,
+  isPossessionOver,
 } from '@/lib/advancedTracking/trackingUtils';
 import { formatRatio, getExpectedRatio, getSequenceNumber } from '@/lib/genderRatioUtils';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
@@ -20,6 +23,9 @@ export function useScoreBarData() {
     (state) => state.recordBetweenPointTimeout,
   );
   const recordStoppage = useAdvancedTrackingStore((state) => state.recordStoppage);
+  const setCurrentPossessionRedZone = useAdvancedTrackingStore(
+    (state) => state.setCurrentPossessionRedZone,
+  );
   const genderRatioEnabled = useSettingsStore((state) => state.genderRatioEnabled);
   const firstPointRatio = useSettingsStore((state) => state.firstPointRatio);
 
@@ -47,6 +53,16 @@ export function useScoreBarData() {
   const stoppageActive = activeStoppage !== null || activeGameClockPause !== null;
   const isPointTimerPaused = stoppageActive;
   const showPointTimer = point?.startedAt != null && !hasPointEnded(point);
+  const activeSideId = getActiveSideId(possession, game);
+  const activeSide = game.sides.find((side) => side.id === activeSideId);
+  const activePossession = isPossessionOver(possession) ? null : possession;
+  const activeHolderRef = getSafeDiscHolderRef(possession, activeSideId, point);
+  const canToggleRedZone =
+    !pointIsOver &&
+    !stoppageActive &&
+    activeSide != null &&
+    (activeSide.trackingMode === 'anonymous' || activeHolderRef != null);
+  const redZoneSelected = activePossession?.redZone != null;
 
   const currentPointNumber = game.points.length;
   const ratioLabel =
@@ -73,6 +89,11 @@ export function useScoreBarData() {
     recordStoppage({ reason: 'manual_pause' });
   };
 
+  const handleRedZoneToggle = () => {
+    if (!canToggleRedZone) return;
+    setCurrentPossessionRedZone(!redZoneSelected);
+  };
+
   return {
     game,
     focusSideId,
@@ -85,6 +106,10 @@ export function useScoreBarData() {
     focusTimeouts,
     oppTimeouts,
     pointIsOver,
+    activeSideId,
+    activeSideName: activeSide?.label ?? '',
+    canToggleRedZone,
+    redZoneSelected,
     isPointTimerPaused,
     showPointTimer,
     currentPointNumber,
@@ -92,5 +117,6 @@ export function useScoreBarData() {
     stoppageActive,
     handleTimeout,
     handlePause,
+    handleRedZoneToggle,
   };
 }

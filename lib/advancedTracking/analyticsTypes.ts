@@ -94,6 +94,11 @@ export interface AnalyticsPossession {
   pointIndex: number;
   possessionIndex: number;
   sideId: string;
+  enteredRedZone: boolean;
+  /** Active-play time from point start to red-zone entry. */
+  redZoneEntryElapsedMs: number | null;
+  /** Active-play time from red-zone entry to the possession's goal or turnover. */
+  redZoneOutcomeDurationMs: number | null;
   result: AnalyticsPossessionResult;
   turnoverType?: AnalyticsTurnoverType;
 }

@@ -417,6 +417,77 @@ describe('validatePayload', () => {
       });
     });
 
+    it('accepts and migrates possession red-zone data', () => {
+      const data = makeAdvancedGameData();
+      data.points[0].possessions[0].redZone = { enteredAt: 1_234 };
+
+      const result = validatePayload(makeAdvancedGamePayload({ data }));
+
+      expect(result.type).toBe('advanced-game');
+      if (result.type !== 'advanced-game') throw new Error('Expected advanced-game payload.');
+      expect(result.data.schemaVersion).toBe(ADVANCED_TRACKING_SCHEMA_VERSION);
+      expect(result.data.points[0].possessions[0].redZone).toEqual({ enteredAt: 1_234 });
+    });
+
+    it('rejects malformed possession red-zone data', () => {
+      const data = makeAdvancedGameData();
+      Object.assign(data.points[0].possessions[0], { redZone: { enteredAt: 'during-play' } });
+
+      expect(() => validatePayload(makeAdvancedGamePayload({ data }))).toThrow(
+        'invalid red-zone data',
+      );
+    });
+
+    it('rejects anonymous scaffold metadata on a full-roster possession', () => {
+      const data = makeAdvancedGameData();
+      data.points[0].possessions[0].redZone = {
+        enteredAt: 1_234,
+        anonymousScaffold: true,
+      };
+
+      expect(() => validatePayload(makeAdvancedGamePayload({ data }))).toThrow(
+        'invalid red-zone data',
+      );
+    });
+
+    it('rejects false anonymous scaffold metadata', () => {
+      const data = makeAdvancedGameData();
+      Object.assign(data.points[0].possessions[0], {
+        redZone: { enteredAt: 1_234, anonymousScaffold: false },
+      });
+
+      expect(() => validatePayload(makeAdvancedGamePayload({ data }))).toThrow(
+        'invalid red-zone data',
+      );
+    });
+
+    it('rejects a point revival pause that ends before it starts', () => {
+      const data = makeAdvancedGameData();
+      data.points[0].revivalPauses = [{ pausedAt: 2_000, resumedAt: 1_000 }];
+
+      expect(() => validatePayload(makeAdvancedGamePayload({ data }))).toThrow(
+        'invalid point revival pause',
+      );
+    });
+
+    it.each([
+      { label: 'non-finite', enteredAt: Number.POSITIVE_INFINITY },
+      { label: 'before point start', enteredAt: 999 },
+      { label: 'after possession outcome', enteredAt: 2_001 },
+    ])('rejects a $label Red Zone timestamp', ({ enteredAt }) => {
+      const data = makeAdvancedGameData();
+      const point = data.points[0];
+      point.startedAt = 1_000;
+      const outcome = point.possessions[0].actions.at(-1);
+      if (outcome == null) throw new Error('Expected an outcome action.');
+      outcome.recordedAt = 2_000;
+      point.possessions[0].redZone = { enteredAt };
+
+      expect(() => validatePayload(makeAdvancedGamePayload({ data }))).toThrow(
+        'invalid red-zone data',
+      );
+    });
+
     it('rejects an unknown throw type', () => {
       const data = setThrowDetails(makeAdvancedGameData({}, 'throwaway'), { type: 'hammer' });
 

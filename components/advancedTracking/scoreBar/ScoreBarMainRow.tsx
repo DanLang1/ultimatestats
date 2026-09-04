@@ -2,6 +2,7 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { PointTimerText } from '@/components/advancedTracking/scoreBar/PointTimerText';
+import { RedZoneButton } from '@/components/advancedTracking/scoreBar/RedZoneButton';
 import { TeamScoreBlock } from '@/components/advancedTracking/scoreBar/TeamScoreBlock';
 import { useScoreBarData } from '@/components/advancedTracking/scoreBar/useScoreBarData';
 import { ThemedText } from '@/components/ThemedText';
@@ -14,6 +15,7 @@ interface ScoreBarMainRowProps {
   onToggleExpanded: () => void;
   pointTimerAdjustedTimestamp: number | null;
   pointTimerPausedAt: number | null;
+  hideRedZoneControl: boolean;
 }
 
 export const ScoreBarMainRow = ({
@@ -21,6 +23,7 @@ export const ScoreBarMainRow = ({
   onToggleExpanded,
   pointTimerAdjustedTimestamp,
   pointTimerPausedAt,
+  hideRedZoneControl,
 }: ScoreBarMainRowProps) => {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
@@ -41,7 +44,12 @@ export const ScoreBarMainRow = ({
     isPointTimerPaused,
     pointIsOver,
     handlePause,
+    activeSideName,
+    canToggleRedZone,
+    redZoneSelected,
+    handleRedZoneToggle,
   } = data;
+  const showRedZoneControl = canToggleRedZone && !hideRedZoneControl;
 
   return (
     <View style={[styles.container, { width }]}>
@@ -77,6 +85,13 @@ export const ScoreBarMainRow = ({
         {isPointTimerPaused && (
           <ThemedText style={[styles.pausedText, { color: palette.warning }]}>paused</ThemedText>
         )}
+        {showRedZoneControl && (
+          <RedZoneButton
+            activeSideName={activeSideName}
+            selected={redZoneSelected}
+            onPress={handleRedZoneToggle}
+          />
+        )}
       </View>
 
       <TeamScoreBlock
@@ -106,6 +121,7 @@ function createStyles(sizeClass: SizeClass) {
       width: scaleBySizeClass(106, sizeClass),
       alignItems: 'center',
       justifyContent: 'center',
+      gap: scaleBySizeClass(8, sizeClass),
       paddingHorizontal: 2,
     },
     centerTimerRow: {

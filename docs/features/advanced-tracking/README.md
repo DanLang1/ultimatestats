@@ -24,10 +24,11 @@ The persisted model is optimized for capture, editing, and replay. Derived goals
 completions, efficiencies, and visualizations are computed through the analytics layer rather than
 stored as parallel counters.
 
-Live capture enters the store through the semantic `recordCaptureIntent` command. Tracker touch,
-footer, rare-action, and voice adapters describe coach intent; the store resolves the current
-holder/side, timestamps, undo, caps, and canonical pickup/throw actions atomically. This boundary
-does not change the persisted game schema.
+Disc-action capture enters the store through the semantic `recordCaptureIntent` command. Tracker
+touch, footer, rare-action, and voice adapters describe coach intent; the store resolves the
+current holder/side, timestamps, undo, caps, and canonical pickup/throw actions atomically.
+Possession metadata such as Red Zone enters through a dedicated store mutation that resolves the
+same canonical possession boundary without creating a parallel counter.
 
 ## State and Persistence
 
@@ -73,7 +74,7 @@ without a concrete requirement and migration plan.
 - [Advanced throw classification](../../future-features/advanced-throw-classification.md) —
   optional manual huck/reset tags, derived analytics, and the boundary with location tracking.
 - [Advanced red-zone possession tracking](../../future-features/advanced-red-zone-tracking.md) —
-  planned live possession tagging with conversion and pause-adjusted timing analytics.
+  implemented live possession tagging with conversion and pause-adjusted timing analytics.
 
 ## Primary Source Folders
 

@@ -1,0 +1,41 @@
+appId: com.langdk.ultimatestats.dev
+name: Advanced Tracker Red Zone
+---
+- runFlow:
+    file: ../flows/setup-game-clean.yaml
+    env:
+      TRACKER_STATE: focusPossession
+
+- assertVisible:
+    id: 'tracker-red-zone-button'
+- tapOn:
+    id: 'tracker-red-zone-button'
+- assertVisible:
+    id: 'tracker-red-zone-button'
+    selected: true
+
+# Turn the disc over to the anonymous opponent. Red Zone now targets a fresh possession.
+- runFlow:
+    file: ../flows/open-rare-menu.yaml
+- runFlow:
+    file: ../flows/select-opponent-block.yaml
+- assertVisible:
+    id: 'tracker-red-zone-button'
+    selected: false
+- tapOn:
+    id: 'tracker-red-zone-button'
+- assertVisible:
+    id: 'tracker-red-zone-button'
+    selected: true
+
+# Undo removes the opponent scaffold together with the turnover that caused it.
+- tapOn:
+    id: 'tracker-undo-button'
+- assertVisible:
+    id: 'tracker-red-zone-button'
+    selected: true
+- assertVisible:
+    id: 'tracker-chip-Jon'
+
+- takeScreenshot:
+    path: .maestro/screenshots/advanced-tracker-red-zone

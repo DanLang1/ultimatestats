@@ -1,4 +1,7 @@
-import { createAdvancedGameFixture } from '@/test/fixtures/advancedGameBuilder';
+import {
+  createAdvancedGameFixture,
+  createAdvancedGameScenario,
+} from '@/test/fixtures/advancedGameBuilder';
 
 import type { AnalyticsAttribution, AnalyticsGame, AttributionType } from '../analyticsTypes';
 import {
@@ -70,6 +73,81 @@ describe('game metadata', () => {
     });
 
     expect(analytics.flip).toEqual({ result: 'won', choice: 'side' });
+  });
+});
+
+describe('red-zone possession timing', () => {
+  it('compiles pause-adjusted entry and outcome intervals', () => {
+    const game = createAdvancedGameScenario({
+      ...baseGame,
+      status: 'final',
+      gameClockPauses: [{ id: 'game-pause', reason: 'weather', pausedAt: 3_500, resumedAt: 4_000 }],
+      defaultLines: [{ sideId: ZOO, participantIds: ['p_august', 'p_meves'] }],
+    })
+      .startPoint({
+        id: 'pt1',
+        puller: untracked,
+        receiver: august,
+        startedAt: 1_000,
+        recordedAt: 1_000,
+      })
+      .stoppage('timeout', {
+        id: 'timeout',
+        sideId: ZOO,
+        recordedAt: 2_000,
+        pausedAt: 2_000,
+        resumedAt: 3_000,
+      })
+      .goal(meves, { id: 'goal', recordedAt: 7_000 })
+      .build();
+    game.points[0].possessions[0].redZone = { enteredAt: 5_000 };
+
+    const analytics = buildAnalyticsGame(game);
+
+    expect(analytics.possessions[0]).toMatchObject({
+      enteredRedZone: true,
+      redZoneEntryElapsedMs: 2_500,
+      redZoneOutcomeDurationMs: 2_000,
+    });
+  });
+
+  it('excludes dead time before and pauses after an undone goal revival', () => {
+    const game = createAdvancedGameScenario({
+      ...baseGame,
+      status: 'final',
+      gameClockPauses: [
+        { id: 'game-pause', reason: 'weather', pausedAt: 23_000, resumedAt: 24_000 },
+      ],
+      defaultLines: [{ sideId: ZOO, participantIds: ['p_august', 'p_meves'] }],
+    })
+      .startPoint({
+        id: 'pt1',
+        puller: untracked,
+        receiver: august,
+        startedAt: 1_000,
+        recordedAt: 1_000,
+      })
+      .stoppage('timeout', {
+        id: 'timeout',
+        sideId: ZOO,
+        recordedAt: 20_500,
+        pausedAt: 20_500,
+        resumedAt: 21_500,
+      })
+      .goal(meves, { id: 'goal', recordedAt: 26_000 })
+      .build();
+    const point = game.points[0];
+    point.elapsedMsAtEnd = 4_000;
+    point.revivedAt = 20_000;
+    point.revivalPauses = [{ pausedAt: 5_000, resumedAt: 20_000 }];
+    point.possessions[0].redZone = { enteredAt: 22_000 };
+
+    const analytics = buildAnalyticsGame(game);
+
+    expect(analytics.possessions[0]).toMatchObject({
+      redZoneEntryElapsedMs: 5_000,
+      redZoneOutcomeDurationMs: 3_000,
+    });
   });
 });
 

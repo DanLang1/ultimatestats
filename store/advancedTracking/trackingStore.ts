@@ -27,8 +27,10 @@ import { deriveRosterParticipantSyncPlan } from '@/lib/advancedTracking/particip
 import {
   getActiveStoppage,
   getActiveGameClockPause,
+  getActiveSideId,
   getGameClockElapsedMs,
   getPointAdjustedTimestamp,
+  getSafeDiscHolderRef,
 } from '@/lib/advancedTracking/trackingDisplayHelpers';
 import type { AdvancedGameLookupState } from '@/lib/advancedTracking/trackingUtils';
 import {
@@ -39,6 +41,7 @@ import {
   assertValidPointLineHistory,
   assertValidSideIds,
   canStartSecondHalfEarly,
+  didPullTurnOver,
   getActiveAdvancedGame,
   getCurrentPoint,
   getCurrentPossession,
@@ -51,13 +54,17 @@ import {
   hasPointEnded,
   isAdvancedGameOver,
   isPossessionOver,
+  isTurnoverThrow,
   syncCapTransitions,
   syncDerivedHalftimeTransition,
 } from '@/lib/advancedTracking/trackingUtils';
 import {
   ADVANCED_TRACKING_SCHEMA_VERSION,
   AdvancedTrackedGame,
+  PointPossession,
+  PossessionAction,
   StoppageAction,
+  TrackedPoint,
   getEligibleThrowTypes,
 } from '@/lib/advancedTracking/types';
 import { generateId } from '@/lib/utils';
@@ -154,6 +161,47 @@ function removeActionById(
     } else {
       game.points = game.points.filter((candidate) => candidate.id !== pointId);
     }
+    return;
+  }
+
+  const possessionSide = game.sides.find((side) => side.id === possession.sideId);
+  if (
+    possession.redZone != null &&
+    possessionSide?.trackingMode === 'full-roster' &&
+    getSafeDiscHolderRef(possession, possession.sideId, point) == null
+  ) {
+    delete possession.redZone;
+  }
+}
+
+function isRedZoneOnlyAnonymousScaffold(possession: PointPossession): boolean {
+  return possession.redZone?.anonymousScaffold === true && possession.actions.length === 1;
+}
+
+function removePossessionsAfterTurnover(
+  point: TrackedPoint | undefined,
+  possession: PointPossession | undefined,
+  action: PossessionAction | undefined,
+): void {
+  const isTurnover =
+    (action?.kind === 'throw' && isTurnoverThrow(action.result)) ||
+    (action?.kind === 'pull' && didPullTurnOver(action.result));
+  if (point == null || possession == null || !isTurnover) return;
+
+  const possessionIndex = point.possessions.findIndex(
+    (candidate) => candidate.id === possession.id,
+  );
+  const removedPossessions = point.possessions.splice(possessionIndex + 1);
+  const removedStoppageIds = new Set(
+    removedPossessions.flatMap((removedPossession) =>
+      removedPossession.actions.flatMap((removedAction) =>
+        removedAction.kind === 'stoppage' ? [removedAction.id] : [],
+      ),
+    ),
+  );
+  if (point.subs != null && removedStoppageIds.size > 0) {
+    point.subs = point.subs.filter((sub) => !removedStoppageIds.has(sub.stoppageActionId));
+    if (point.subs.length === 0) point.subs = undefined;
   }
 }
 
@@ -741,6 +789,11 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
           if (currentPoint == null || currentPossession == null || openingAction?.kind !== 'pull') {
             throw new Error('Cannot mark a dropped pull before a pull has been recorded.');
           }
+          if (currentPossession.redZone != null) {
+            throw new Error(
+              'Cannot mark a dropped pull after Red Zone has been recorded. Clear Red Zone first.',
+            );
+          }
           if (currentPossession.actions.length !== 1 || hasPointEnded(currentPoint)) {
             throw new Error('Cannot mark a dropped pull after the point has advanced.');
           }
@@ -865,6 +918,79 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
           });
 
           return { ok: true, actionId: visibleActionId };
+        },
+
+        setCurrentPossessionRedZone: (isRedZone) => {
+          const game = getCurrentGame(get());
+          const point = getCurrentPoint(game);
+          if (point == null) {
+            throw new Error('Cannot update Red Zone before a point has started.');
+          }
+          if (hasPointEnded(point)) {
+            throw new Error('Cannot update Red Zone after the point has ended.');
+          }
+          if (getActiveStoppage(getCurrentPossession(game)) != null) {
+            throw new Error('Cannot update Red Zone during an active stoppage.');
+          }
+          if (getActiveGameClockPause(game) != null) {
+            throw new Error('Cannot update Red Zone during a game-clock pause.');
+          }
+
+          const currentPossession = getCurrentPossession(game);
+          const activeSideId = getActiveSideId(currentPossession, game);
+          const activeSide = game.sides.find((side) => side.id === activeSideId);
+          if (activeSide == null) {
+            throw new Error(`Cannot resolve active Red Zone side "${activeSideId}".`);
+          }
+          const activePossession = isPossessionOver(currentPossession) ? null : currentPossession;
+
+          if (!isRedZone && activePossession == null) return;
+          if (
+            activeSide.trackingMode === 'full-roster' &&
+            getSafeDiscHolderRef(currentPossession, activeSideId, point) == null
+          ) {
+            throw new Error('Cannot enter Red Zone before the current holder is captured.');
+          }
+          if ((activePossession?.redZone != null) === isRedZone) return;
+
+          const now = Date.now();
+          set((state) => {
+            const liveGame = getCurrentGame(state);
+            const livePoint = getCurrentPoint(liveGame)!;
+            const liveCurrentPossession = getCurrentPossession(liveGame);
+            const liveActiveSideId = getActiveSideId(liveCurrentPossession, liveGame);
+            const liveActivePossession = isPossessionOver(liveCurrentPossession)
+              ? null
+              : liveCurrentPossession;
+
+            if (liveActivePossession == null) {
+              const possessionId = generateId();
+              livePoint.possessions.push({
+                id: possessionId,
+                sideId: liveActiveSideId,
+                redZone: { enteredAt: now, anonymousScaffold: true },
+                actions: [
+                  {
+                    id: generateId(),
+                    kind: 'disc_pickup',
+                    sideId: liveActiveSideId,
+                    player: { refType: 'untracked' },
+                    recordedAt: now,
+                  },
+                ],
+              });
+            } else if (isRedZone) {
+              liveActivePossession.redZone = { enteredAt: now };
+            } else if (isRedZoneOnlyAnonymousScaffold(liveActivePossession)) {
+              const scaffoldIndex = livePoint.possessions.findIndex(
+                (possession) => possession.id === liveActivePossession.id,
+              );
+              livePoint.possessions.splice(scaffoldIndex, 1);
+            } else {
+              delete liveActivePossession.redZone;
+            }
+            liveGame.updatedAt = now;
+          });
         },
 
         updateThrowType: (input: UpdateThrowTypeInput) => {
@@ -1072,12 +1198,21 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
               const undoAction = undoPossession?.actions.find(
                 (a) => a.id === lastUndoEntry.actionId,
               );
+              removePossessionsAfterTurnover(undoPoint, undoPossession, undoAction);
               if (
                 undoAction?.kind === 'throw' &&
                 (undoAction.result === 'goal' || undoAction.result === 'callahan') &&
                 undoPoint != null
               ) {
-                undoPoint.revivedAt = Date.now();
+                const revivedAt = Date.now();
+                if (undoAction.recordedAt != null) {
+                  if (undoPoint.revivalPauses == null) undoPoint.revivalPauses = [];
+                  undoPoint.revivalPauses.push({
+                    pausedAt: undoAction.recordedAt,
+                    resumedAt: revivedAt,
+                  });
+                }
+                undoPoint.revivedAt = revivedAt;
               }
               removeActionById(
                 liveGame,
@@ -1115,6 +1250,7 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
                 (candidate) => candidate.id === lastUndoEntry.actionId,
               );
               if (action?.kind === 'pull') {
+                removePossessionsAfterTurnover(point, possession, action);
                 action.result = lastUndoEntry.previousResult;
                 action.receiver = lastUndoEntry.previousReceiver;
               }

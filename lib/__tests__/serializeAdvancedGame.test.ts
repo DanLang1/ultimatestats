@@ -1,9 +1,17 @@
-import type { AdvancedTrackedGame } from '@/lib/advancedTracking/types';
+import type { GameMetadata } from '@/lib/advancedTracking/types';
 import { serializeAdvancedGame, serializeAdvancedGames } from '@/lib/sharing/serialize';
 import { validatePayload } from '@/lib/sharing/validate';
+import {
+  ADVANCED_TEST_OPPONENT_SIDE_ID,
+  ADVANCED_TEST_TIMESTAMP,
+  createAdvancedGameFixture,
+  createAdvancedGameScenario,
+  participantRef,
+  UNTRACKED_PLAYER,
+} from '@/test/fixtures/advancedGameBuilder';
 
-function makeAdvancedGame(id: string, metadata?: AdvancedTrackedGame['metadata']) {
-  return {
+function makeAdvancedGame(id: string, metadata?: GameMetadata) {
+  return createAdvancedGameFixture({
     id,
     schemaVersion: 2,
     createdAt: 1,
@@ -20,22 +28,61 @@ function makeAdvancedGame(id: string, metadata?: AdvancedTrackedGame['metadata']
     ],
     participants: [],
     points: [{ id: 'point-1', lines: [], possessions: [], note: 'private point note' }],
-  } satisfies AdvancedTrackedGame;
+  });
 }
 
 describe('advanced game sharing serialization', () => {
   it('round-trips a terminated game through sharing validation', () => {
-    const game: AdvancedTrackedGame = {
+    const game = {
       ...makeAdvancedGame('game-1'),
       status: 'terminated',
       endReason: 'manual',
-    };
+    } as const;
 
     const payload = validatePayload(serializeAdvancedGame(game));
 
     expect(payload.type).toBe('advanced-game');
     if (payload.type !== 'advanced-game') throw new Error('Expected an advanced-game payload.');
     expect(payload.data).toMatchObject({ status: 'terminated', endReason: 'manual' });
+  });
+
+  it('round-trips anonymous Red Zone scaffold metadata', () => {
+    const redZoneEnteredAt = ADVANCED_TEST_TIMESTAMP + 1_000;
+    const game = createAdvancedGameScenario({
+      id: 'game-red-zone',
+      status: 'final',
+    })
+      .startPoint({
+        puller: UNTRACKED_PLAYER,
+        receiver: participantRef('alex'),
+        startedAt: ADVANCED_TEST_TIMESTAMP,
+        recordedAt: ADVANCED_TEST_TIMESTAMP,
+      })
+      .turnover('throwaway', { recordedAt: ADVANCED_TEST_TIMESTAMP + 500 })
+      .startPossession(ADVANCED_TEST_OPPONENT_SIDE_ID)
+      .pickup(UNTRACKED_PLAYER, { recordedAt: redZoneEnteredAt })
+      .goal(undefined, { recordedAt: ADVANCED_TEST_TIMESTAMP + 2_000 })
+      .build();
+    game.points[0].possessions[1].redZone = {
+      enteredAt: redZoneEnteredAt,
+      anonymousScaffold: true,
+    };
+    game.points[0].revivalPauses = [
+      {
+        pausedAt: ADVANCED_TEST_TIMESTAMP + 250,
+        resumedAt: ADVANCED_TEST_TIMESTAMP + 500,
+      },
+    ];
+
+    const payload = validatePayload(serializeAdvancedGame(game));
+
+    expect(payload.type).toBe('advanced-game');
+    if (payload.type !== 'advanced-game') throw new Error('Expected an advanced-game payload.');
+    expect(payload.data.points[0].possessions[1].redZone).toEqual({
+      enteredAt: redZoneEnteredAt,
+      anonymousScaffold: true,
+    });
+    expect(payload.data.points[0].revivalPauses).toEqual(game.points[0].revivalPauses);
   });
 
   it('omits a private note from a single-game payload without mutating the game', () => {

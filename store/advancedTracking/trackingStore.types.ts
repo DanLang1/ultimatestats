@@ -159,6 +159,7 @@ export interface AdvancedTrackingState {
   recordPull: (input: RecordPullInput) => string;
   amendOpeningPullAsDropped: (receiver: PlayerRef) => void;
   recordCaptureIntent: (intent: CaptureIntent) => CaptureIntentResult;
+  setCurrentPossessionRedZone: (isRedZone: boolean) => void;
   updateThrowType: (input: UpdateThrowTypeInput) => void;
   recordStoppage: (input: RecordStoppageInput) => string;
   resumeStoppage: (actionId: string) => void;

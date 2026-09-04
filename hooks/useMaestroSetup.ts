@@ -11,6 +11,7 @@ import {
 } from '@/lib/maestroUtils';
 
 interface MaestroSetupParams {
+  bench?: string;
   capMode?: string;
   gameTo?: string;
   gameType?: string;
@@ -22,7 +23,7 @@ interface MaestroSetupParams {
 const MAESTRO_SETUP_HANDSHAKE_MS = 250;
 
 export function useMaestroSetup(params: MaestroSetupParams) {
-  const { capMode, gameTo, gameType, mode, rosterView, trackerState } = params;
+  const { bench, capMode, gameTo, gameType, mode, rosterView, trackerState } = params;
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
@@ -34,6 +35,7 @@ export function useMaestroSetup(params: MaestroSetupParams) {
       try {
         await waitForMaestroStoresToHydrate();
         const destination = await seedMaestroState({
+          bench,
           capMode,
           gameTo,
           gameType,
@@ -57,7 +59,7 @@ export function useMaestroSetup(params: MaestroSetupParams) {
       isCancelled = true;
       clearTimeout(setupTimer);
     };
-  }, [capMode, gameTo, gameType, mode, rosterView, trackerState]);
+  }, [bench, capMode, gameTo, gameType, mode, rosterView, trackerState]);
 
   return errorMessage;
 }
@@ -76,6 +78,7 @@ async function seedMaestroState(
   }
 
   await seedAdvancedTrackerTestGame({
+    includeBench: params.bench === 'true',
     capMode: parseCapMode(params.capMode),
     gameTo: parseGameTo(params.gameTo),
     gameType: parseGameType(params.gameType),

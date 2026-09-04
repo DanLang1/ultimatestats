@@ -87,6 +87,23 @@ describe('seedAdvancedTrackerTestGame tracker state presets', () => {
     }
   });
 
+  it('seeds a single-team bench without adding bench players to the starting line', async () => {
+    await seedAdvancedTrackerTestGame({ includeBench: true, trackerState: 'focusPossession' });
+
+    const game = useAdvancedTrackingStore.getState().currentGame;
+    const currentTeam = useGameStore.getState().currentTeam;
+    expect(currentTeam.roster.map((player) => player.name)).toEqual([
+      ...MAESTRO_SEED_PLAYERS,
+      ...MAESTRO_SCRIMMAGE_BENCH_PLAYERS,
+    ]);
+    expect(game?.points[0].lines[0].participantIds).toEqual(
+      MAESTRO_SEED_PLAYERS.map(getMaestroSeedPlayerId),
+    );
+    expect(game?.participants.map((participant) => participant.id)).toEqual(
+      currentTeam.roster.map((player) => player.id),
+    );
+  });
+
   it('seeds a configured game target', async () => {
     await seedAdvancedTrackerTestGame({ gameTo: 1 });
 

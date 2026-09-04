@@ -262,6 +262,7 @@ export default function AdvancedTrackerScreen() {
       <TrackerScoreBar
         pointTimerAdjustedTimestamp={pointTimerAdjustedTimestamp}
         pointTimerPausedAt={pointTimerPausedAt}
+        hideRedZoneControl={passModifier != null}
       />
       {showLastActionCard && (
         <TrackerLastActionCard
@@ -330,6 +331,7 @@ export default function AdvancedTrackerScreen() {
       {__DEV__ && (
         <>
           <Pressable
+            testID="tracker-debug-button"
             onPress={() => setShowDevModal(true)}
             style={[styles.devButton, { bottom: insets.bottom + (pointIsOver ? 120 : 30) }]}>
             <ThemedText style={styles.devButtonText}>DEV</ThemedText>

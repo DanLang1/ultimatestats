@@ -112,6 +112,9 @@ type AnalyticsPossession = {
   possessionIndex: number; // 0-based within the point
 
   sideId: string;
+  enteredRedZone: boolean;
+  redZoneEntryElapsedMs: number | null;
+  redZoneOutcomeDurationMs: number | null;
   result: 'scored' | 'turned_over' | 'terminated' | 'in_progress';
   turnoverType?: 'drop' | 'throwaway' | 'stall' | 'block' | 'pressure' | 'callahan';
 };
@@ -122,6 +125,14 @@ current `in_progress` or `terminated` possession. A possession's `result` is `sc
 `turned_over`, `in_progress`, or `terminated`; only `scored` counts as a successful conversion.
 Every turnover result qualifies, including dropped pulls and opponent-caused blocks, pressures,
 stalls, drops, and throwaways.
+
+`redZoneEntryElapsedMs` measures active play from point start to the coach's Red Zone mark.
+`redZoneOutcomeDurationMs` measures active play from that mark to a goal or turnover. Both subtract
+completed stoppages and game-clock pauses that overlap their interval. Active and terminated
+possessions can contribute entry timing, but only scored or turned-over possessions have resolved
+outcome timing. When a scoring action was undone, both timings resume from the point's preserved
+`elapsedMsAtEnd` at `revivedAt`; completed `revivalPauses` keep that dead time excluded after the
+point is scored again.
 
 ### `AnalyticsAction`
 
@@ -327,11 +338,13 @@ Perspective inversion pairs:
 One pass over the raw game in order:
 
 1. Derive per-point context: `receivingSideId`, `scoringSideId`, `state`, `half`, `linesBySide`, `scoresBySide`, `durationMs`, `isCleanHold`
-2. For each action: resolve `PlayerRef` → participant ID, attach point/possession indexes,
+2. Compile Red Zone presence, entry timing, and resolved outcome timing for each possession while
+   excluding stoppages and game-clock pauses
+3. For each action: resolve `PlayerRef` → participant ID, attach point/possession indexes,
    carry action-specific fields like `hangTimeMs`, link `previousActionId` within the
    possession, compute `elapsedMs`
-3. Emit attributions per action using the attribution assignment rules above
-4. Return all four arrays
+4. Emit attributions per action using the attribution assignment rules above
+5. Return all four arrays
 
 The builder fails fast if raw data would produce misleading analytics, including:
 
@@ -339,6 +352,7 @@ The builder fails fast if raw data would produce misleading analytics, including
 - unfinished possessions except the final live possession of an in-progress or terminated game
 - side ids or participant ids that do not match the game definition
 - raw action side assignments that disagree with the enclosing possession
+- Red Zone entries that occur after their possession outcome
 
 The builder does not mutate the raw game. It is a pure function.
 

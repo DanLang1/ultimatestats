@@ -1,0 +1,14 @@
+appId: com.langdk.ultimatestats.dev
+name: Read Current Tracker Game
+---
+- tapOn:
+    id: 'tracker-debug-button'
+- assertVisible:
+    id: 'tracker-debug-json'
+- copyTextFrom:
+    id: 'tracker-debug-json'
+- evalScript: ${output.game = JSON.parse(maestro.copiedText)}
+- tapOn:
+    id: 'tracker-debug-close'
+- assertNotVisible:
+    id: 'tracker-debug-json'

@@ -1,0 +1,54 @@
+appId: com.langdk.ultimatestats.dev
+name: Red Zone Goal Undo and Re-score
+---
+- runFlow:
+    file: ../flows/setup-game.yaml
+    env:
+      TRACKER_STATE: focusPossession
+- tapOn:
+    id: 'tracker-red-zone-button'
+- swipe:
+    from:
+      id: 'tracker-chip-Jon'
+    direction: UP
+    duration: 500
+- assertVisible:
+    id: 'between-point-start-next'
+- runFlow: ../flows/read-tracker-debug-game.yaml
+- evalScript: ${output.firstGoalAt = output.game.points[0].possessions[0].actions.slice(-1)[0].recordedAt}
+- evalScript: ${output.firstEntryAt = output.game.points[0].possessions[0].redZone.enteredAt}
+- tapOn:
+    id: 'tracker-undo-button'
+- assertVisible:
+    id: 'tracker-red-zone-button'
+    selected: true
+- runFlow: ../flows/read-tracker-debug-game.yaml
+- assertTrue: ${output.game.points[0].revivalPauses.length === 1}
+- assertTrue: ${output.game.points[0].revivalPauses[0].pausedAt === output.firstGoalAt}
+- assertTrue: ${output.game.points[0].revivalPauses[0].resumedAt > output.firstGoalAt}
+- assertTrue: ${output.game.points[0].possessions[0].redZone.enteredAt === output.firstEntryAt}
+# Re-enter Red Zone after revival, then finish the point again.
+- tapOn:
+    id: 'tracker-red-zone-button'
+- assertVisible:
+    id: 'tracker-red-zone-button'
+    selected: false
+- tapOn:
+    id: 'tracker-red-zone-button'
+- assertVisible:
+    id: 'tracker-red-zone-button'
+    selected: true
+- swipe:
+    from:
+      id: 'tracker-chip-Jon'
+    direction: UP
+    duration: 500
+- assertVisible:
+    id: 'between-point-start-next'
+- runFlow: ../flows/read-tracker-debug-game.yaml
+- assertTrue: ${output.game.points[0].revivedAt === undefined}
+- assertTrue: ${output.game.points[0].revivalPauses.length === 1}
+- assertTrue: ${output.game.points[0].revivalPauses[0].pausedAt === output.firstGoalAt}
+- assertTrue: ${output.game.points[0].possessions[0].redZone.enteredAt > output.game.points[0].revivalPauses[0].resumedAt}
+- takeScreenshot:
+    path: .maestro/screenshots/advanced-tracker-red-zone-revival

@@ -58,6 +58,9 @@ support.
 | D-Efficiency             | breaks / completed D-points                                                                   | Null if 0 completed D-points. Available at both team and player level. |
 | D-Possession Conversion  | scoring D-point possessions / all D-point possessions owned by side                           | Null if 0 D-point possessions                                          |
 | Overall Conversion       | all scoring possessions / all possessions owned by side                                       | Null if 0 possessions                                                  |
+| Red Zone Conversion      | scoring marked possessions / resolved marked possessions                                      | Null if no marked possession has resolved                              |
+| Time to Red Zone         | active-play time from point start to Red Zone entry                                           | Average excludes missing timing                                        |
+| Red Zone Outcome Time    | active-play time from Red Zone entry to goal or turnover                                      | Resolved marked possessions only                                       |
 | Clean Holds              | `points` where `state === 'hold'` and `isCleanHold === true`                                  | Count                                                                  |
 | Dirty Holds              | `points` where `state === 'hold'` and `isCleanHold === false`                                 | Count                                                                  |
 | Break Chances            | Completed D-points where side gained at least one possession                                  | Count                                                                  |
@@ -92,7 +95,7 @@ These stats require `locationMode: 'zone'` or `'xy'` and origin/target on throw 
 | Throwing Yards                | `xy` coordinates on throw origin + target            |
 | Total Yards                   | Sum of receiving + throwing                          |
 | Distance-based Hucks / Huck % | Distance derivation from `xy` (typically > 30 yards) |
-| Red Zone Conversion %         | Zone or `xy` proximity to endzone                    |
+| Measured Red Zone Conversion  | Zone or `xy` proximity to endzone                    |
 | Heat Maps                     | `xy` coordinates on catches                          |
 | Throw Distance Distribution   | `xy` coordinates on throws                           |
 | Field Progression             | `xy` per action within a point                       |
@@ -120,6 +123,12 @@ current `in_progress` or `terminated` possession. The returned `totalPossessions
 `totalPossessionsOnD` fields expose the raw denominators; aggregate analytics pool those totals
 through the combined possession arrays rather than averaging game percentages. A Callahan adds one
 synthetic D-possession and one scored D-possession for the scoring side.
+
+Red Zone stats use the possession's coach-captured marker. Conversion includes only marked
+possessions resolved by a goal or turnover; active and terminated possessions are excluded from
+that denominator. Time-to-entry can include a still-active marked possession, while outcome time
+requires a resolved possession. Aggregate analytics pool the underlying entry, resolution, score,
+and timing samples instead of averaging per-game percentages or averages.
 
 ### `advancedPullStatsUtils.ts`
 

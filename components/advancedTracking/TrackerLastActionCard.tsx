@@ -123,7 +123,6 @@ export const TrackerLastActionCard = ({
   const perspectiveSideId = getTrackerDisplaySideId(game, possession, point);
   const oppHasDisc = !tracksBothSides && !pointIsOver && activeSideId !== game.focusSideId;
   const discHolderRef = getSafeDiscHolderRef(possession, perspectiveSideId, point);
-
   const lastOppPossession =
     point?.possessions.findLast(
       (previousPossession) => previousPossession.sideId !== perspectiveSideId,

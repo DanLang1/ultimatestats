@@ -1,31 +1,21 @@
 import { migrateAdvancedTrackedGame } from '@/lib/advancedTracking/migrations';
-import {
-  ADVANCED_TRACKING_SCHEMA_VERSION,
-  type AdvancedTrackedGame,
-} from '@/lib/advancedTracking/types';
+import { ADVANCED_TRACKING_SCHEMA_VERSION } from '@/lib/advancedTracking/types';
+import { createAdvancedGameFixture } from '@/test/fixtures/advancedGameBuilder';
 
-function makeGame(schemaVersion: number): AdvancedTrackedGame {
-  return {
+function makeGame(schemaVersion: number) {
+  return createAdvancedGameFixture({
     id: 'advanced-game',
     schemaVersion,
     createdAt: 1,
     updatedAt: 2,
-    gameType: 'game',
     status: 'final',
-    focusSideId: 'home',
-    initialReceivingSideId: 'home',
-    settings: { locationMode: 'none' },
-    sides: [
-      { id: 'home', label: 'Home', trackingMode: 'full-roster' },
-      { id: 'away', label: 'Away', trackingMode: 'anonymous' },
-    ],
     participants: [],
     points: [],
-  };
+  });
 }
 
 describe('migrateAdvancedTrackedGame', () => {
-  it('stamps older records without inventing optional schema-3 fields', () => {
+  it('stamps older records without inventing optional fields', () => {
     const legacy = makeGame(2);
 
     const migrated = migrateAdvancedTrackedGame(legacy);

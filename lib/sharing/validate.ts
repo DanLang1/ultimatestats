@@ -48,6 +48,10 @@ function isNumber(val: unknown): val is number {
   return typeof val === 'number' && !isNaN(val);
 }
 
+function isFiniteNumber(val: unknown): val is number {
+  return typeof val === 'number' && Number.isFinite(val);
+}
+
 function sanitizeString(val: unknown): string {
   if (!isString(val)) return '';
   return val.slice(0, MAX_STRING_LENGTH);
@@ -359,6 +363,20 @@ function validateAdvancedPoint(
   if (!Array.isArray(point.possessions)) {
     throw new Error('Invalid advanced game: missing possessions');
   }
+  if (point.revivalPauses !== undefined) {
+    if (
+      !Array.isArray(point.revivalPauses) ||
+      point.revivalPauses.some(
+        (pause) =>
+          !isRecord(pause) ||
+          !isFiniteNumber(pause.pausedAt) ||
+          !isFiniteNumber(pause.resumedAt) ||
+          pause.resumedAt < pause.pausedAt,
+      )
+    ) {
+      throw new Error('Invalid advanced game: invalid point revival pause');
+    }
+  }
   let actionCount = 0;
   for (const possession of point.possessions) {
     if (!isRecord(possession) || !isString(possession.id) || !isString(possession.sideId)) {
@@ -370,6 +388,43 @@ function validateAdvancedPoint(
     actionCount += possession.actions.length;
     for (const action of possession.actions) {
       validateAdvancedAction(action, fullRosterSideIds);
+    }
+    if (possession.redZone !== undefined) {
+      if (
+        !isRecord(possession.redZone) ||
+        !isFiniteNumber(possession.redZone.enteredAt) ||
+        (possession.redZone.anonymousScaffold !== undefined &&
+          possession.redZone.anonymousScaffold !== true)
+      ) {
+        throw new Error('Invalid advanced game: invalid red-zone data');
+      }
+      if (possession.redZone.anonymousScaffold === true) {
+        const [scaffoldAction] = possession.actions;
+        if (
+          fullRosterSideIds.has(possession.sideId) ||
+          !isRecord(scaffoldAction) ||
+          scaffoldAction.kind !== 'disc_pickup' ||
+          !isRecord(scaffoldAction.player) ||
+          scaffoldAction.player.refType !== 'untracked'
+        ) {
+          throw new Error('Invalid advanced game: invalid red-zone data');
+        }
+      }
+      const enteredAt = possession.redZone.enteredAt;
+      if (isFiniteNumber(point.startedAt) && enteredAt < point.startedAt) {
+        throw new Error('Invalid advanced game: invalid red-zone data');
+      }
+      const outcomeAction = possession.actions.findLast(
+        (action) => isRecord(action) && action.kind !== 'stoppage',
+      );
+      const outcomeRecordedAt = isRecord(outcomeAction) ? outcomeAction.recordedAt : undefined;
+      const outcomeIsResolved =
+        isRecord(outcomeAction) &&
+        ((outcomeAction.kind === 'throw' && outcomeAction.result !== 'complete') ||
+          (outcomeAction.kind === 'pull' && outcomeAction.result === 'dropped'));
+      if (outcomeIsResolved && isFiniteNumber(outcomeRecordedAt) && enteredAt > outcomeRecordedAt) {
+        throw new Error('Invalid advanced game: invalid red-zone data');
+      }
     }
   }
   return { possessionCount: point.possessions.length, actionCount };

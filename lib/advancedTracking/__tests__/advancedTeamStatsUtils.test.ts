@@ -213,6 +213,56 @@ describe('advancedTeamStatsUtils', () => {
   });
 
   describe('conversion rates', () => {
+    it('derives resolved red-zone conversion and pools it across games', () => {
+      const point = makeAlternatingPoint('pt1', ZOO, ZOO, 2);
+      point.possessions[0].redZone = { enteredAt: 1_000 };
+      point.possessions[2].redZone = { enteredAt: 2_000 };
+      const game: AdvancedTrackedGame = { ...baseGame, points: [point] };
+
+      const analytics = buildAnalyticsGame(game);
+      const stats = computeAdvancedTeamStats(analytics, ZOO);
+      const aggregate = aggregateAnalyticsGames([analytics, analytics]);
+      if (aggregate == null) throw new Error('Expected red-zone aggregate fixture.');
+      const aggregateStats = computeAdvancedTeamStats(aggregate, ZOO);
+
+      expect(stats.redZoneEntries).toBe(2);
+      expect(stats.resolvedRedZonePossessions).toBe(2);
+      expect(stats.scoredRedZonePossessions).toBe(1);
+      expect(stats.redZoneConversionPct).toBe(0.5);
+      expect(stats.averageTimeToRedZoneMs).toBeNull();
+      expect(stats.averageRedZoneOutcomeDurationMs).toBeNull();
+      expect(aggregateStats.redZoneEntries).toBe(4);
+      expect(aggregateStats.resolvedRedZonePossessions).toBe(4);
+      expect(aggregateStats.scoredRedZonePossessions).toBe(2);
+      expect(aggregateStats.redZoneConversionPct).toBe(0.5);
+    });
+
+    it.each(['in_progress', 'terminated'] as const)(
+      'excludes an unresolved red-zone possession from %s conversion while retaining entry timing',
+      (status) => {
+        const game = teamFixtures
+          .scenario({ id: `red-zone-${status}`, status })
+          .startPoint({
+            id: 'pt1',
+            puller: untracked,
+            receiver: august,
+            startedAt: 1_000,
+            recordedAt: 1_000,
+          })
+          .build();
+        game.points[0].possessions[0].redZone = { enteredAt: 2_500 };
+
+        const stats = computeAdvancedTeamStats(buildAnalyticsGame(game), ZOO);
+
+        expect(stats.redZoneEntries).toBe(1);
+        expect(stats.resolvedRedZonePossessions).toBe(0);
+        expect(stats.scoredRedZonePossessions).toBe(0);
+        expect(stats.redZoneConversionPct).toBeNull();
+        expect(stats.averageTimeToRedZoneMs).toBe(1_500);
+        expect(stats.averageRedZoneOutcomeDurationMs).toBeNull();
+      },
+    );
+
     it('counts each O-possession after two turnovers before a hold', () => {
       const game: AdvancedTrackedGame = {
         ...baseGame,
@@ -304,6 +354,7 @@ describe('advancedTeamStatsUtils', () => {
               {
                 id: 'pt1_pos1',
                 sideId: RIVALS,
+                redZone: { enteredAt: 1 },
                 actions: [
                   {
                     id: 'pt1_a1',
@@ -331,6 +382,7 @@ describe('advancedTeamStatsUtils', () => {
 
       const analytics = buildAnalyticsGame(game);
       const stats = computeAdvancedTeamStats(analytics, ZOO);
+      const rivalStats = computeAdvancedTeamStats(analytics, RIVALS);
 
       expect(stats.breaks).toBe(1);
       expect(stats.dPointsWithTurnover).toBe(1);
@@ -340,6 +392,11 @@ describe('advancedTeamStatsUtils', () => {
       expect(stats.totalPossessionsOnD).toBe(1);
       expect(stats.dPossessionConversionPct).toBe(1);
       expect(stats.possessionConversionPct).toBeCloseTo(1);
+      expect(stats.redZoneEntries).toBe(0);
+      expect(rivalStats.redZoneEntries).toBe(1);
+      expect(rivalStats.resolvedRedZonePossessions).toBe(1);
+      expect(rivalStats.scoredRedZonePossessions).toBe(0);
+      expect(rivalStats.redZoneConversionPct).toBe(0);
     });
 
     it('classifies a Callahan after a turnover on our own O-point as an O-possession', () => {

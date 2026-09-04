@@ -1,7 +1,7 @@
 # Advanced Tracking Data Model
 
 > Maintained guide to the implemented persisted model. `lib/advancedTracking/types.ts` is the
-> authoritative definition. The current schema is `ADVANCED_TRACKING_SCHEMA_VERSION = 3`.
+> authoritative definition. The current schema is `ADVANCED_TRACKING_SCHEMA_VERSION = 4`.
 
 ## Shape
 
@@ -115,9 +115,23 @@ from the current game and settings. A pull can start only from a ready selection
 sides, and an `anonymous` side has an empty line. Missing, stale, partial, or invalid selections
 return to line preparation; undoing a pull does not restore the consumed selection.
 
-A `PointPossession` is a possession record: it contains a stable ID, the side with the disc, and
-ordered actions. Possession boundaries are explicit so team efficiency and turnover conversion do
-not have to reconstruct them from a game-wide event stream.
+A `PointPossession` is a possession record: it contains a stable ID, the side with the disc,
+ordered actions, and optional `redZone` metadata. `redZone.enteredAt` records when a coach manually
+marked that possession as entering a coach-defined red zone; it is not inferred from field
+location. Possession boundaries are explicit so team efficiency, turnover conversion, and Red
+Zone outcomes do not have to reconstruct them from a game-wide event stream.
+
+Red Zone is captured only against the active possession. A full-roster side needs a current holder
+before it can be marked. If an anonymous side logically has possession but has not yet materialized
+its lazy possession, marking Red Zone atomically creates that possession with an untracked pickup
+scaffold and sets `redZone.anonymousScaffold` to identify its provenance. Ordinary anonymous
+pickups and full-roster possessions omit that flag. Clearing Red Zone before another action removes
+the flagged scaffold so the toggle does not change possession analytics by itself. An inbound
+opening pull cannot be amended to a dropped pull while its possession is marked Red Zone; clear the
+mark before making that correction. Undo preserves Red Zone metadata when its possession still has
+a valid holder, including when a goal is undone across a point boundary. If undo removes the action
+that established a full-roster holder, the now-invalid Red Zone marker is cleared with that
+structural correction.
 
 The scoring side, score progression, next receiving side, and completed-point state are derived
 from action order. They are not parallel persisted counters.
@@ -181,6 +195,8 @@ early second-half start. Cap transitions are timer-driven rule changes.
 - Stoppage `pausedAt` and `resumedAt` values exclude paused intervals.
 - `elapsedMsAtEnd` and `revivedAt` allow an undone scoring action to resume the timer without losing
   prior elapsed time.
+- `revivalPauses` preserves each completed goal-to-undo dead-time interval so historical timestamps,
+  including Red Zone entry and outcome timing, remain accurate after the point is scored again.
 
 Timing fields are optional. Derivations must distinguish missing timing data from zero duration.
 
@@ -273,8 +289,9 @@ tracking store owns only the loaded active game and recovery/session state.
 
 When changing the persisted model:
 
-1. Update the exported types and schema version. Schema 3 introduces optional throw details and
-   private notes without backfilling older records; absent notes mean that no note was captured.
+1. Update the exported types and schema version. Schema 4 introduces optional possession-level Red
+   Zone data and point revival-pause history without backfilling older records. Schema 3 introduced
+   optional throw details and private notes; absent optional data means that it was not captured.
 2. Add and test migration behavior through `lib/advancedTracking/migrations.ts` and the storage
    boundary.
 3. Update sharing validation and serialization.

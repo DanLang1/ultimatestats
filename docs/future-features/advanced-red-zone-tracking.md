@@ -1,6 +1,6 @@
 # Advanced Red-Zone Possession Tracking
 
-> **Status:** Planned future feature. No implementation exists yet.
+> **Status:** Initial backend-focused version implemented.
 
 ## Goal
 
@@ -14,7 +14,7 @@ manual tag.
 
 ## Product Decisions
 
-- Red Zone is a live selected/unselected toggle in the tracker last-action card.
+- Red Zone is a live selected/unselected toggle beneath the tracker scorecard's point timer.
 - Either generic game side can be marked, including either side of a scrimmage.
 - A possession can contain at most one red-zone entry. Leaving and re-entering before a turnover
   does not create another opportunity.
@@ -36,6 +36,8 @@ Add one optional named concept to `PointPossession`:
 export interface RedZoneData {
   /** Absolute timestamp (ms epoch) when the coach selected Red Zone during live play. */
   enteredAt: number;
+  /** True when selecting Red Zone created the anonymous possession and pickup scaffold. */
+  anonymousScaffold?: true;
 }
 
 export interface PointPossession {
@@ -49,12 +51,14 @@ export interface PointPossession {
 The presence of `redZone` means the possession entered the red zone, so a separate boolean would
 be redundant. Selecting an already-selected possession is idempotent and preserves the original
 `enteredAt`. Clearing the toggle removes `redZone`; selecting it again records a new timestamp.
+`anonymousScaffold` records explicit cleanup provenance for the lazy anonymous possession created
+by the toggle. It is absent from ordinary anonymous pickups and every full-roster possession.
 
 Keep this on the possession rather than introducing a `red_zone_entry` action. The feature needs
 one fact per possession, and a new action kind would unnecessarily complicate action ordering,
 holder derivation, correction chains, timelines, and attribution.
 
-Implementation should advance the advanced-game schema from version 3 to version 4. Older records
+The implementation advances the advanced-game schema from version 3 to version 4. Older records
 need only be stamped to the current version; no red-zone data can be inferred. Full records remain
 JSON blobs in SQLite, so the database table layout does not change. Sharing validation must accept
 a valid timestamp and preserve the field through import and export.
@@ -78,6 +82,14 @@ remains the latest undoable operation:
   naturally; and
 - undoing the turnover that caused an automatically created anonymous possession must also remove
   that dependent scaffold atomically, even though the toggle itself was not an undo operation.
+
+Clearing Red Zone also removes an otherwise untouched anonymous scaffold identified by
+`anonymousScaffold`, so selecting and then clearing the tag cannot change possession analytics.
+Completed goal-to-undo dead time is retained in the point's `revivalPauses`, keeping Red Zone entry
+and outcome timing accurate if the revived point is scored again.
+
+An inbound opening pull cannot be amended to a dropped pull while that possession is marked Red
+Zone. Clear the mark first so the correction cannot place the possession outcome before its entry.
 
 Do not allow capture before a point starts, after the point ends, during an unresolved stoppage, or
 for a full-roster side whose new holder has not been identified.
@@ -130,12 +142,13 @@ Derivation rules:
 
 ## UI Boundary
 
-The first control can be visually simple but must follow the existing last-action-card conventions:
+The first control is compact and centered beneath the scorecard's point timer:
 
 - use a stable test ID and button accessibility state;
 - use an outlined unselected state and a semantic selected/toggled treatment;
 - show the selected state directly from the canonical possession rather than mirrored local state;
-- preserve the existing Undo and More controls; and
+- use a semantic red dot, red selected treatment, and a red scorecard outline while selected;
+- leave the last-action card's Undo and More controls uncluttered; and
 - work in supported portrait and landscape layouts without expanding into a tracker redesign.
 
 ## Verification
@@ -160,7 +173,7 @@ Add regression coverage at each owning layer:
 | -------------------------- | ----------------------------------------------------------------- |
 | Persisted model and schema | `lib/advancedTracking/types.ts`, `migrations.ts`                  |
 | Live mutation and Undo     | `store/advancedTracking/trackingStore.ts`                         |
-| Capture control            | `components/advancedTracking/TrackerLastActionCard.tsx`           |
+| Capture control            | `components/advancedTracking/scoreBar/RedZoneButton.tsx`          |
 | Analytics compilation      | `lib/advancedTracking/buildAnalyticsGame.ts`, `analyticsTypes.ts` |
 | Team and aggregate stats   | `lib/advancedTracking/advancedTeamStatsUtils.ts`                  |
 | Sharing                    | `lib/sharing/validate.ts`, `serialize.ts`                         |

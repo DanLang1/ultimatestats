@@ -60,6 +60,18 @@ export interface AdvancedTeamStats {
   totalGoals: number;
   /** All possessions by this side, including a current unresolved possession. */
   totalPossessions: number;
+  /** All possessions by this side that were manually marked as entering the red zone. */
+  redZoneEntries: number;
+  /** Marked possessions that ended in either a score or turnover. */
+  resolvedRedZonePossessions: number;
+  /** Marked possessions that ended in a score. */
+  scoredRedZonePossessions: number;
+  /** scoredRedZonePossessions / resolvedRedZonePossessions. Null if none resolved. */
+  redZoneConversionPct: number | null;
+  /** Average active-play time from point start to red-zone entry. */
+  averageTimeToRedZoneMs: number | null;
+  /** Average active-play time from red-zone entry to a resolved possession outcome. */
+  averageRedZoneOutcomeDurationMs: number | null;
   blocksPerDPoint: number;
   pressuresPerDPoint: number;
   totalTurnovers: number;
@@ -81,10 +93,54 @@ export interface AdvancedTeamStats {
   throwTypes: AdvancedThrowTypeStats;
 }
 
+interface AdvancedRedZoneStats {
+  redZoneEntries: number;
+  resolvedRedZonePossessions: number;
+  scoredRedZonePossessions: number;
+  redZoneConversionPct: number | null;
+  averageTimeToRedZoneMs: number | null;
+  averageRedZoneOutcomeDurationMs: number | null;
+}
+
+function computeAdvancedRedZoneStats(game: AnalyticsGame, sideId: string): AdvancedRedZoneStats {
+  const enteredPossessions = game.possessions.filter(
+    (possession) => possession.sideId === sideId && possession.enteredRedZone,
+  );
+  const resolvedPossessions = enteredPossessions.filter(
+    (possession) => possession.result === 'scored' || possession.result === 'turned_over',
+  );
+  const scoredPossessions = resolvedPossessions.filter(
+    (possession) => possession.result === 'scored',
+  );
+  const entryTimings = enteredPossessions.flatMap((possession) =>
+    possession.redZoneEntryElapsedMs == null ? [] : [possession.redZoneEntryElapsedMs],
+  );
+  const outcomeTimings = resolvedPossessions.flatMap((possession) =>
+    possession.redZoneOutcomeDurationMs == null ? [] : [possession.redZoneOutcomeDurationMs],
+  );
+
+  return {
+    redZoneEntries: enteredPossessions.length,
+    resolvedRedZonePossessions: resolvedPossessions.length,
+    scoredRedZonePossessions: scoredPossessions.length,
+    redZoneConversionPct:
+      resolvedPossessions.length > 0 ? scoredPossessions.length / resolvedPossessions.length : null,
+    averageTimeToRedZoneMs:
+      entryTimings.length > 0
+        ? entryTimings.reduce((total, duration) => total + duration, 0) / entryTimings.length
+        : null,
+    averageRedZoneOutcomeDurationMs:
+      outcomeTimings.length > 0
+        ? outcomeTimings.reduce((total, duration) => total + duration, 0) / outcomeTimings.length
+        : null,
+  };
+}
+
 // ── Main ──────────────────────────────────────────────────────────────────────
 
 export function computeAdvancedTeamStats(game: AnalyticsGame, sideId: string): AdvancedTeamStats {
   const throwTypes = computeAdvancedThrowTypeStats(game, sideId);
+  const redZoneStats = computeAdvancedRedZoneStats(game, sideId);
   let holds = 0;
   let breaks = 0;
   let timesBroken = 0;
@@ -164,7 +220,6 @@ export function computeAdvancedTeamStats(game: AnalyticsGame, sideId: string): A
   let totalCompletedPasses = 0;
   let scoredOPossessions = 0;
   let scoredDPossessions = 0;
-
   // Build O/D lookup for each point
   const isOPointById = new Map<string, boolean>();
   for (const point of game.points) {
@@ -289,6 +344,7 @@ export function computeAdvancedTeamStats(game: AnalyticsGame, sideId: string): A
       totalPossessionsOnD > 0 ? scoredDPossessions / totalPossessionsOnD : null,
     totalGoals,
     totalPossessions: totalPossessionsInGame,
+    ...redZoneStats,
     blocksPerDPoint: dPoints > 0 ? totalBlocks / dPoints : 0,
     pressuresPerDPoint: dPoints > 0 ? totalPressures / dPoints : 0,
     totalTurnovers: totalTurnoversInGame,

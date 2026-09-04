@@ -7,15 +7,18 @@ import { useMaestroSetup } from '@/hooks/useMaestroSetup';
 
 export default function MaestroSeedScreen() {
   const { palette } = useTheme();
-  const { capMode, gameTo, gameType, mode, rosterView, trackerState } = useLocalSearchParams<{
-    capMode?: string;
-    gameTo?: string;
-    gameType?: string;
-    mode?: string;
-    rosterView?: string;
-    trackerState?: string;
-  }>();
+  const { bench, capMode, gameTo, gameType, mode, rosterView, trackerState } =
+    useLocalSearchParams<{
+      bench?: string;
+      capMode?: string;
+      gameTo?: string;
+      gameType?: string;
+      mode?: string;
+      rosterView?: string;
+      trackerState?: string;
+    }>();
   const errorMessage = useMaestroSetup({
+    bench,
     capMode,
     gameTo,
     gameType,

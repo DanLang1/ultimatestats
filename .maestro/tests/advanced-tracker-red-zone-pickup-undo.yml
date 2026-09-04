@@ -1,0 +1,48 @@
+appId: com.langdk.ultimatestats.dev
+name: Red Zone Pickup and Dropped Pull Undo
+---
+- runFlow:
+    file: ../flows/setup-game.yaml
+    env:
+      TRACKER_STATE: awaitingPickup
+- assertNotVisible:
+    id: 'tracker-red-zone-button'
+- tapOn:
+    id: 'tracker-chip-Joe'
+- tapOn:
+    id: 'tracker-red-zone-button'
+- assertVisible:
+    id: 'tracker-red-zone-button'
+    selected: true
+- tapOn:
+    id: 'tracker-undo-button'
+- assertVisible:
+    text: 'TAP WHO STARTS WITH DISC'
+- assertNotVisible:
+    id: 'tracker-red-zone-button'
+- runFlow: ../flows/read-tracker-debug-game.yaml
+- assertTrue: ${output.game.points[0].possessions[0].redZone === undefined}
+# Amend the opening pull as dropped, then create the anonymous Red Zone scaffold.
+- swipe:
+    from:
+      id: 'tracker-chip-Joe'
+    direction: DOWN
+    duration: 500
+- assertVisible:
+    id: 'defense-opp-goal'
+- tapOn:
+    id: 'tracker-red-zone-button'
+- runFlow: ../flows/read-tracker-debug-game.yaml
+- assertTrue: ${output.game.points[0].possessions.length === 2}
+- assertTrue: ${output.game.points[0].possessions[1].redZone.anonymousScaffold === true}
+- tapOn:
+    id: 'tracker-undo-button'
+- assertVisible:
+    text: 'TAP WHO STARTS WITH DISC'
+- assertNotVisible:
+    id: 'tracker-red-zone-button'
+- runFlow: ../flows/read-tracker-debug-game.yaml
+- assertTrue: ${output.game.points[0].possessions.length === 1}
+- assertTrue: ${output.game.points[0].possessions[0].actions[0].result === 'inbound'}
+- takeScreenshot:
+    path: .maestro/screenshots/advanced-tracker-red-zone-pickup-undo
