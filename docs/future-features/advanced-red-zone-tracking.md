@@ -1,6 +1,6 @@
 # Advanced Red-Zone Possession Tracking
 
-> **Status:** Initial backend-focused version implemented.
+> **Status:** Live capture, backend analytics, and team analytics display implemented.
 
 ## Goal
 
@@ -25,8 +25,13 @@ manual tag.
 - If an anonymous side logically has possession but its lazy possession scaffold does not yet
   exist, selecting Red Zone creates that side's canonical possession and untracked pickup
   scaffold atomically.
-- The first version exposes backend analytics only. It does not add an analytics-screen metric,
-  CSV output, O/D split, defensive-stop label, or outcome-specific timing split.
+- Single-game and aggregate team analytics show a Red Zone section only when the selected side
+  has at least one marked possession. It displays conversion with its resolved ratio, Red Zone
+  Turnovers, Avg Time to Score, and Avg Time to Turnover (rounded seconds).
+- Conversion and outcome time display an em dash when no qualifying samples exist. There is no
+  empty-state section. Single-game and aggregate CSV exports include the same four stats only
+  when entries exist, with conversion ratios and outcome duration in m:ss. O/D splits,
+  and defensive-stop labels remain follow-ups.
 
 ## Persisted Model
 
@@ -122,6 +127,8 @@ scoredRedZonePossessions: number;
 redZoneConversionPct: number | null;
 averageTimeToRedZoneMs: number | null;
 averageRedZoneOutcomeDurationMs: number | null;
+averageRedZoneTimeToScoreMs: number | null;
+averageRedZoneTimeToTurnoverMs: number | null;
 ```
 
 Derivation rules:
@@ -134,6 +141,9 @@ Derivation rules:
 - Average time to entry includes marked possessions with valid entry timing, including a currently
   active possession.
 - Average entry-to-outcome duration includes only resolved marked possessions with valid timing.
+- Time to Score includes only scored marked possessions; Time to Turnover includes only turned-over
+  marked possessions. Each average excludes missing timing and returns null without samples.
+  Both use the compiled pause-adjusted entry-to-outcome duration. Zero-duration samples count.
 - A marked offensive possession ending in a Callahan is a failed opportunity for that offense. The
   synthetic defensive Callahan possession used by existing conversion analytics is not a red-zone
   entry because no coach marked it.

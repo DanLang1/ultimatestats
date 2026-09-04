@@ -72,6 +72,10 @@ export interface AdvancedTeamStats {
   averageTimeToRedZoneMs: number | null;
   /** Average active-play time from red-zone entry to a resolved possession outcome. */
   averageRedZoneOutcomeDurationMs: number | null;
+  /** Average active-play time from red-zone entry to a goal; scored possessions only. */
+  averageRedZoneTimeToScoreMs: number | null;
+  /** Average active-play time from red-zone entry to a turnover; turned-over possessions only. */
+  averageRedZoneTimeToTurnoverMs: number | null;
   blocksPerDPoint: number;
   pressuresPerDPoint: number;
   totalTurnovers: number;
@@ -100,6 +104,10 @@ interface AdvancedRedZoneStats {
   redZoneConversionPct: number | null;
   averageTimeToRedZoneMs: number | null;
   averageRedZoneOutcomeDurationMs: number | null;
+  /** Average active-play time from red-zone entry to a goal; scored possessions only. */
+  averageRedZoneTimeToScoreMs: number | null;
+  /** Average active-play time from red-zone entry to a turnover; turned-over possessions only. */
+  averageRedZoneTimeToTurnoverMs: number | null;
 }
 
 function computeAdvancedRedZoneStats(game: AnalyticsGame, sideId: string): AdvancedRedZoneStats {
@@ -119,7 +127,24 @@ function computeAdvancedRedZoneStats(game: AnalyticsGame, sideId: string): Advan
     possession.redZoneOutcomeDurationMs == null ? [] : [possession.redZoneOutcomeDurationMs],
   );
 
+  const scoreTimings = scoredPossessions.flatMap((possession) =>
+    possession.redZoneOutcomeDurationMs == null ? [] : [possession.redZoneOutcomeDurationMs],
+  );
+  const turnoverTimings = resolvedPossessions.flatMap((possession) =>
+    possession.result === 'turned_over' && possession.redZoneOutcomeDurationMs != null
+      ? [possession.redZoneOutcomeDurationMs]
+      : [],
+  );
+
   return {
+    averageRedZoneTimeToScoreMs:
+      scoreTimings.length > 0
+        ? scoreTimings.reduce((total, duration) => total + duration, 0) / scoreTimings.length
+        : null,
+    averageRedZoneTimeToTurnoverMs:
+      turnoverTimings.length > 0
+        ? turnoverTimings.reduce((total, duration) => total + duration, 0) / turnoverTimings.length
+        : null,
     redZoneEntries: enteredPossessions.length,
     resolvedRedZonePossessions: resolvedPossessions.length,
     scoredRedZonePossessions: scoredPossessions.length,

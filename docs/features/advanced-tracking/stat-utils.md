@@ -130,6 +130,14 @@ that denominator. Time-to-entry can include a still-active marked possession, wh
 requires a resolved possession. Aggregate analytics pool the underlying entry, resolution, score,
 and timing samples instead of averaging per-game percentages or averages.
 
+The shared single-game and aggregate team UI displays Red Zone only when the selected side has
+entries. It shows conversion and its resolved ratio, Red Zone Turnovers
+(`resolvedRedZonePossessions - scoredRedZonePossessions`), Avg Time to Score, and Avg Time to
+Turnover in rounded seconds. The two timing averages include only marked possessions with the
+matching outcome and valid pause-adjusted timing; zero-duration samples count. Aggregate averages
+pool the matching duration samples. CSV exports include the same metrics, with duration in m:ss. Null conversion/timing displays as an em dash; point-start-to-entry timing is
+not displayed. The help text explains manual tagging and resolved-only conversion.
+
 ### `advancedPullStatsUtils.ts`
 
 Pull-specific stats. Returns `PullStats` with outcome breakdowns and average hang time.

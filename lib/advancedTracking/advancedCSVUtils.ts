@@ -189,6 +189,31 @@ export function generateAggregateAdvancedCSV(
 // ── Section builders ───────────────────────────────────────────────────────────
 
 function teamStatsCSV(stats: AdvancedTeamStats, teamName: string): string {
+  const redZoneRows =
+    stats.redZoneEntries > 0
+      ? [
+          csvRow([
+            'Red Zone Conversion',
+            formatNullablePercent(stats.redZoneConversionPct),
+            `${stats.scoredRedZonePossessions}/${stats.resolvedRedZonePossessions}`,
+          ]),
+          csvRow([
+            'Red Zone Turnovers',
+            stats.resolvedRedZonePossessions - stats.scoredRedZonePossessions,
+            'Marked possessions ending in a turnover',
+          ]),
+          csvRow([
+            'Red Zone Avg Time to Score',
+            formatNullableDuration(stats.averageRedZoneTimeToScoreMs),
+            'Active play from entry to goal (m:ss)',
+          ]),
+          csvRow([
+            'Red Zone Avg Time to Turnover',
+            formatNullableDuration(stats.averageRedZoneTimeToTurnoverMs),
+            'Active play from entry to turnover (m:ss)',
+          ]),
+        ]
+      : [];
   const huckRows =
     stats.throwTypes.huckAttempts > 0
       ? [
@@ -264,6 +289,7 @@ function teamStatsCSV(stats: AdvancedTeamStats, teamName: string): string {
     csvRow(['Total Pressures', stats.totalPressures, '']),
     ...huckRows,
     ...resetRows,
+    ...redZoneRows,
     csvRow(['Turns per Point', formatDecimal(stats.turnoversPerPoint ?? 0), '']),
     csvRow(['Points per Turn', formatDecimal(stats.pointsPerTurnover ?? 0), '']),
     csvRow([

@@ -20,8 +20,8 @@ import {
   computePullStats,
   getInboundPullCount,
 } from '@/lib/advancedTracking/advancedPullStatsUtils';
-import { computeAdvancedTeamStats } from '@/lib/advancedTracking/advancedTeamStatsUtils';
 import type { AdvancedTeamStats } from '@/lib/advancedTracking/advancedTeamStatsUtils';
+import { computeAdvancedTeamStats } from '@/lib/advancedTracking/advancedTeamStatsUtils';
 import type { AdvancedThrowTypeStats } from '@/lib/advancedTracking/advancedThrowTypeStatsUtils';
 import { computeAdvancedTimeOfPossessionStats } from '@/lib/advancedTracking/advancedTimeOfPossessionUtils';
 import { getAnalyticsOpposingSideId } from '@/lib/advancedTracking/analyticsPerspectiveUtils';
@@ -87,6 +87,8 @@ export default function AdvancedStatsContent({
     buildThrowTypeStats(throwTypes);
   const possessionFlowStats = buildPossessionFlowStats(teamStats);
   const efficiencyStats = buildEfficiencyStats(teamStats);
+  const hasRedZoneEntries = teamStats.redZoneEntries > 0;
+  const redZoneStats = buildRedZoneStats(teamStats);
 
   const sorted = [...playerStats].sort((a, b) => b.plusMinus - a.plusMinus);
   const topPerformers = sorted.filter((p) => p.plusMinus > 0).slice(0, 3);
@@ -293,6 +295,18 @@ Formula: Scoring possessions on D-points ÷ possessions on D-points`}
           <StatsGrid stats={efficiencyStats} columns={isLandscape ? 4 : 2} />
         </View>
 
+        {hasRedZoneEntries && (
+          <View testID="advanced-red-zone-card" style={styles.subsectionContainer}>
+            <View style={styles.sectionTitleRow}>
+              <ThemedText
+                style={[styles.subsectionTitle, styles.sectionTitle, { color: palette.textMuted }]}>
+                RED ZONE
+              </ThemedText>
+            </View>
+            <StatsGrid stats={redZoneStats} columns={isLandscape ? 4 : 2} />
+          </View>
+        )}
+
         {throwTypes.huckAttempts + throwTypes.resetTurnovers > 0 && (
           <View testID="advanced-throw-types-card" style={styles.subsectionContainer}>
             <View style={styles.sectionTitleRow}>
@@ -449,6 +463,30 @@ interface StatsDisplayItem {
   label: string;
   value: string | number;
   sublabel?: string;
+}
+
+function buildRedZoneStats(teamStats: AdvancedTeamStats): StatsDisplayItem[] {
+  const scoreDurationMs = teamStats.averageRedZoneTimeToScoreMs;
+  const turnoverDurationMs = teamStats.averageRedZoneTimeToTurnoverMs;
+  return [
+    {
+      label: 'Conversion',
+      value: formatNullablePercent(teamStats.redZoneConversionPct),
+      sublabel: `${teamStats.scoredRedZonePossessions}/${teamStats.resolvedRedZonePossessions}`,
+    },
+    {
+      label: 'Red Zone Turns',
+      value: teamStats.resolvedRedZonePossessions - teamStats.scoredRedZonePossessions,
+    },
+    {
+      label: 'Avg Time to Score',
+      value: scoreDurationMs == null ? '—' : `${Math.round(scoreDurationMs / 1000)}s`,
+    },
+    {
+      label: 'Avg Time to Turn',
+      value: turnoverDurationMs == null ? '—' : `${Math.round(turnoverDurationMs / 1000)}s`,
+    },
+  ];
 }
 
 function buildThrowTypeStats(throwTypes: AdvancedThrowTypeStats): {

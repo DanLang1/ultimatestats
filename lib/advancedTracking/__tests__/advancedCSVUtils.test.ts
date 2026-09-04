@@ -1,8 +1,48 @@
-import { generateAdvancedGameCSV } from '../advancedCSVUtils';
+import { dirtyHoldScenario } from '@/test/fixtures/advancedGameScenarios';
+
+import { generateAdvancedGameCSV, generateAggregateAdvancedCSV } from '../advancedCSVUtils';
+import { aggregateAnalyticsGames } from '../aggregateAnalyticsGames';
 import { buildAnalyticsGame } from '../buildAnalyticsGame';
 import type { AdvancedTrackedGame } from '../types';
 
 describe('advancedCSVUtils', () => {
+  it('exports marked outcomes in single-game, combined, and individual aggregate stats', () => {
+    const game = dirtyHoldScenario();
+    const point = game.points[0];
+    point.startedAt = 1_000;
+    point.possessions[0].redZone = { enteredAt: 2_000 };
+    point.possessions[0].actions.at(-1)!.recordedAt = 8_000;
+    point.possessions[2].redZone = { enteredAt: 10_000 };
+    point.possessions[2].actions.at(-1)!.recordedAt = 22_000;
+    const analytics = buildAnalyticsGame(game);
+    const single = generateAdvancedGameCSV(analytics);
+    expect(single).toContain('Red Zone Conversion,50.0%,1/2');
+    expect(single).not.toContain('Red Zone Opportunities');
+    expect(single).toContain('Red Zone Turnovers,1,');
+    expect(single).toContain('Red Zone Avg Time to Score,0:12,');
+    expect(single).toContain('Red Zone Avg Time to Turnover,0:06,');
+
+    const aggregate = aggregateAnalyticsGames([analytics, analytics]);
+    if (aggregate == null) throw new Error('Expected aggregate fixture');
+    const combined = generateAggregateAdvancedCSV([analytics, analytics], aggregate, 'Zoo');
+    expect(combined).toContain('Red Zone Conversion,50.0%,2/4');
+    expect(combined).not.toContain('Red Zone Opportunities');
+    expect(combined).toContain('Red Zone Turnovers,2,');
+    expect(combined.match(/Red Zone Conversion,50.0%,1\/2/g)).toHaveLength(2);
+    expect(combined.match(/Red Zone Avg Time to Score,0:12,/g)).toHaveLength(3);
+    expect(combined.match(/Red Zone Avg Time to Turnover,0:06,/g)).toHaveLength(3);
+  });
+
+  it('omits red zone rows without entries and preserves unavailable timing', () => {
+    const game = dirtyHoldScenario();
+    expect(generateAdvancedGameCSV(buildAnalyticsGame(game))).not.toContain('Red Zone');
+    game.points[0].possessions[0].redZone = { enteredAt: 2_000 };
+    const csv = generateAdvancedGameCSV(buildAnalyticsGame(game));
+    expect(csv).toContain('Red Zone Conversion,0.0%,0/1');
+    expect(csv).toContain('Red Zone Avg Time to Score,,');
+    expect(csv).toContain('Red Zone Avg Time to Turnover,,');
+  });
+
   it('exports a throwaway classification in the action log', () => {
     const player = { refType: 'participant' as const, participantId: 'alex' };
     const game: AdvancedTrackedGame = {
