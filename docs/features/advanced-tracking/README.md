@@ -88,5 +88,6 @@ without a concrete requirement and migration plan.
 | Saved records        | `store/advancedTracking/savedGamesStore.ts` |
 | Device workflows     | `.maestro/tests/advanced-tracker-*.yml`     |
 
-When behavior and prose disagree, the exported types and tested implementation are authoritative;
-update these documents in the same change.
+Exported types and tests describe current implemented behavior; these maintained documents describe
+the intended domain contracts. If they disagree, reconcile the inconsistency and update the
+outdated source in the same change.

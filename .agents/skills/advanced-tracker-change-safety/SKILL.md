@@ -15,8 +15,10 @@ point/possession/action model canonical and derive analytics from it.
    - persisted model, edits, sides, or actions: `data-model.md`;
    - derived stats, summaries, timelines, or display: `analytics-layer.md` and `stat-utils.md`;
    - voice behavior: `voice-input.md`.
-3. Inspect the target's closest tests and maintained siblings. Treat exported types and tested
-   implementation as authoritative if prose disagrees.
+3. Inspect the target's closest tests and maintained siblings. Exported types and tests describe
+   current implemented behavior; `AGENTS.md` and maintained domain docs describe intended
+   contracts. If they disagree, flag the inconsistency and reconcile it instead of silently
+   choosing one source.
 
 ## Map the change surface
 

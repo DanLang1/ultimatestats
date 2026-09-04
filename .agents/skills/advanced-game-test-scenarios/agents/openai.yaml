@@ -1,0 +1,4 @@
+interface:
+  display_name: 'Advanced Game Test Scenarios'
+  short_description: 'Build canonical advanced-game fixtures'
+  default_prompt: 'Use $advanced-game-test-scenarios to arrange this advanced-game test with the canonical fixture builder.'

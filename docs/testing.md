@@ -172,9 +172,6 @@ or legacy input is intentional, and state that condition in the test. Store-tran
 continue to exercise the production store action that owns the behavior rather than asking the
 fixture builder to perform it.
 
-Follow `.agents/skills/advanced-game-test-scenarios/SKILL.md` when adding or refactoring advanced
-game setup across unit, component, route, or store tests.
-
 ## Writing Tests
 
 ### Screen-test policy

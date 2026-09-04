@@ -57,3 +57,4 @@ name: Advanced Tracker Cap Modes
       CAP_MODE: none
 - assertNotVisible:
     id: 'tracker-cap-bar'
+- takeScreenshot: advanced-tracker-cap-modes

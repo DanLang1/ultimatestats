@@ -25,8 +25,14 @@ Read `docs/README.md` for the project map and New Screen Checklist. Follow its l
 ## State and Persistence
 
 - Await persistence before dismissing, navigating, resetting, or otherwise invalidating the state being saved.
-- Persist new Zustand stores with `persist` and `createJSONStorage(() => AsyncStorage)`; use `onRehydrateStorage` for record migrations when needed.
-- Store persisted records in one collection with a current-record ID pointer. Do not persist parallel `currentX` and `savedXs` copies that require explicit synchronization.
+- Persist Zustand state that must survive an app restart with `persist` and
+  `createJSONStorage(() => AsyncStorage)` when AsyncStorage is the established boundary; use
+  `onRehydrateStorage` for record migrations when needed. Keep transient stores unpersisted, and
+  follow an existing domain-specific boundary such as SQLite instead of wrapping it in Zustand
+  persistence.
+- For AsyncStorage-backed record collections, store records in one collection with a current-record
+  ID pointer. Do not persist parallel `currentX` and `savedXs` copies that require explicit
+  synchronization.
 - Add a schema version to persisted domain records that may need migration.
 - Use Immer for nested object or array updates; simple immutable Zustand partial updates do not require it.
 
@@ -34,4 +40,4 @@ Read `docs/README.md` for the project map and New Screen Checklist. Follow its l
 
 - Quick: `npm run check`
 - Full: `npm run check:all`
-- One test target: `npm test -- gameUtils`
+- One test target, for example: `npm test -- gameUtils`

@@ -17,7 +17,8 @@ Audit effects against React synchronization semantics and U-Stat conventions.
    bash <skill-dir>/scripts/list_useeffect_sites.sh <repo-root>
    ```
 
-3. Open every reported callsite and its surrounding hook/component.
+3. Discard matches that are only source-code strings or documentation examples, then open every real
+   callsite and its surrounding hook/component. Count audited callsites, not raw text matches.
 4. Classify each effect:
    - `keep`: synchronizes with an external system and has the required cleanup or lifecycle behavior;
    - `refactor`: derives render state, handles a direct user event, or mirrors React/store state;
