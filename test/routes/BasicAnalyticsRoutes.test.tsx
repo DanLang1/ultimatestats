@@ -230,7 +230,9 @@ describe('basic analytics routes', () => {
 
     expect(screen.getByText('PLAYER STATS')).toBeVisible();
     expect(screen.getByText('Alex')).toBeVisible();
-    expect(screen.getByText('+1 Net Impact')).toBeVisible();
+    expect(screen.getAllByText('+1').length).toBeGreaterThan(0);
+    expect(screen.getByText('Net impact')).toBeVisible();
+    expect(screen.getByText('PROFILE')).toBeVisible();
   });
 
   it('renders a dynamic saved-game route from a real saved record', async () => {

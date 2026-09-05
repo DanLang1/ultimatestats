@@ -1,11 +1,13 @@
 import { StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/ThemedText';
-import StatRing from '@/components/view-stats/StatRing';
+import PlayingTimeGauge from '@/components/view-stats/playing-time/PlayingTimeGauge';
+import RoleBalanceBar from '@/components/view-stats/playing-time/RoleBalanceBar';
 import StatsGrid from '@/components/view-stats/StatsGrid';
+import StatsSectionCard from '@/components/view-stats/StatsSectionCard';
 import { useTheme } from '@/context/ThemeContext';
-import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import { AdvancedPlayerStats } from '@/lib/advancedTracking/advancedPlayerStatsUtils';
+import { scaleBySizeClass, type SizeClass, useLayout } from '@/hooks/useLayout';
+import type { AdvancedPlayerStats } from '@/lib/advancedTracking/advancedPlayerStatsUtils';
 import { Fonts } from '@/theme/theme';
 
 interface AdvancedPlayingTimeSectionProps {
@@ -14,138 +16,91 @@ interface AdvancedPlayingTimeSectionProps {
 
 export default function AdvancedPlayingTimeSection({ stats }: AdvancedPlayingTimeSectionProps) {
   const { palette } = useTheme();
-  const { isLandscape, sizeClass } = useLayout();
-  const styles = createStyles(isLandscape, sizeClass);
-
-  const oEffPct = (stats.oEfficiency ?? 0) * 100;
-  const dEffPct = (stats.dEfficiency ?? 0) * 100;
-
-  const gridStats = [
-    { label: 'Points Played', value: stats.pointsPlayed },
-    { label: 'O-Points', value: stats.oPoints },
-    { label: 'D-Points', value: stats.dPoints },
-    ...(stats.playingTimePct != null
-      ? [{ label: 'Playing Time', value: `${Math.round(stats.playingTimePct * 100)}%` }]
-      : []),
-    ...(stats.pointDurationMs != null
-      ? [{ label: 'Min Played', value: (stats.pointDurationMs / 60000).toFixed(1) }]
-      : []),
-  ];
-
-  const gridColumns = isLandscape ? Math.min(gridStats.length, 5) : Math.min(gridStats.length, 3);
+  const { sizeClass } = useLayout();
+  const styles = createStyles(sizeClass);
+  const participationLabel =
+    stats.playingTimePct == null
+      ? 'Point timing unavailable'
+      : `${Math.round(stats.playingTimePct * 100)}% of recorded point time`;
+  const timeSeconds =
+    stats.pointDurationMs == null ? null : Math.round(stats.pointDurationMs / 1000);
+  const timeLabel =
+    timeSeconds == null
+      ? '—'
+      : `${Math.floor(timeSeconds / 60)}:${String(timeSeconds % 60).padStart(2, '0')}`;
+  const perPointStats = [
+    { label: 'Goals', count: stats.goals },
+    { label: 'Assists', count: stats.assists },
+    { label: 'Blocks', count: stats.blocks },
+    { label: 'Turnovers', count: stats.throwaways + stats.drops + stats.stallsConceded },
+    { label: 'Throwaways', count: stats.throwaways },
+    { label: 'Drops', count: stats.drops },
+  ].map(({ label, count }) => ({
+    label,
+    value: stats.pointsPlayed > 0 ? (count / stats.pointsPlayed).toFixed(2) : '—',
+  }));
 
   return (
-    <View
-      style={[
-        styles.container,
-        { backgroundColor: palette.overlay02, borderColor: palette.overlay05 },
-      ]}>
-      <ThemedText style={[styles.title, { color: palette.textMuted }]}>PLAYING TIME</ThemedText>
-
-      <View style={styles.ringRow}>
-        <View style={styles.ringWrapper}>
-          <StatRing
-            percentage={stats.oPoints > 0 ? oEffPct : 0}
-            label="O-Eff"
-            sublabel={stats.oPoints > 0 ? `${stats.oPoints} O-pts` : 'No O-pts'}
-            info={`How often your O-line scored when you were on the field.
-
-Formula: Holds ÷ O-Points`}
-            infoLabel="O Efficiency"
+    <StatsSectionCard title="Playing time">
+      <View style={styles.content}>
+        <View style={styles.overviewRow}>
+          <PlayingTimeGauge
+            percentage={(stats.playingTimePct ?? 0) * 100}
+            centerLabel={String(stats.pointsPlayed)}
+            centerSubLabel="Points"
+            color={palette.accent}
+          />
+          <ThemedText style={[styles.participation, { color: palette.textMuted }]}>
+            {participationLabel}
+          </ThemedText>
+        </View>
+        <StatsGrid
+          variant="summary"
+          columns={2}
+          stats={[
+            { label: 'Recorded point time', value: timeLabel, sublabel: 'min:sec' },
+            {
+              label: 'O/D point split',
+              value: `${stats.oPoints} / ${stats.dPoints}`,
+              sublabel:
+                stats.pointsPlayed > 0
+                  ? `${Math.round((stats.oPoints / stats.pointsPlayed) * 100)}% O · ${Math.round((stats.dPoints / stats.pointsPlayed) * 100)}% D`
+                  : 'No points played',
+            },
+          ]}
+        />
+        <View style={styles.section}>
+          <ThemedText style={[styles.sectionTitle, { color: palette.textMuted }]}>
+            O/D performance
+          </ThemedText>
+          <RoleBalanceBar
+            oPoints={stats.oPoints}
+            dPoints={stats.dPoints}
+            oEfficiency={stats.oEfficiency}
+            dEfficiency={stats.dEfficiency}
           />
         </View>
-        <View style={styles.ringWrapper}>
-          <StatRing
-            percentage={stats.dPoints > 0 ? dEffPct : 0}
-            label="D-Eff"
-            sublabel={stats.dPoints > 0 ? `${stats.dPoints} D-pts` : 'No D-pts'}
-            info={`How often your D-line converted when you were on the field.
-
-Formula: Breaks ÷ D-Points`}
-            infoLabel="D Efficiency"
-          />
+        <View style={styles.section}>
+          <ThemedText style={[styles.sectionTitle, { color: palette.textMuted }]}>
+            Per point
+          </ThemedText>
+          <StatsGrid variant="summary" columns={3} stats={perPointStats} />
         </View>
       </View>
-
-      <StatsGrid stats={gridStats} columns={gridColumns} />
-
-      {stats.oPoints > 0 && stats.dPoints > 0 && (
-        <View style={styles.balanceRow}>
-          <ThemedText style={[styles.balanceLabel, { color: palette.textMuted }]}>
-            O/D SPLIT
-          </ThemedText>
-          <View style={[styles.balanceTrack, { backgroundColor: palette.overlay10 }]}>
-            <View
-              style={[
-                styles.balanceFillO,
-                {
-                  width: `${(stats.oPoints / stats.pointsPlayed) * 100}%`,
-                  backgroundColor: palette.accent,
-                },
-              ]}
-            />
-          </View>
-          <View style={styles.balanceLegend}>
-            <ThemedText style={[styles.balanceStat, { color: palette.accent }]}>
-              {Math.round((stats.oPoints / stats.pointsPlayed) * 100)}% O
-            </ThemedText>
-            <ThemedText style={[styles.balanceStat, { color: palette.success }]}>
-              {Math.round((stats.dPoints / stats.pointsPlayed) * 100)}% D
-            </ThemedText>
-          </View>
-        </View>
-      )}
-    </View>
+    </StatsSectionCard>
   );
 }
 
-function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
+function createStyles(sizeClass: SizeClass) {
   return StyleSheet.create({
-    container: {
-      borderRadius: 16,
-      borderWidth: 1,
-      padding: 16,
-      gap: 16,
+    content: { gap: 16 },
+    overviewRow: { flexDirection: 'row', alignItems: 'center', gap: 16 },
+    participation: {
+      flex: 1,
+      fontSize: scaleBySizeClass(13, sizeClass),
+      fontFamily: Fonts.semiBold,
     },
-    title: {
-      fontSize: scaleBySizeClass(12, sizeClass),
-      fontFamily: Fonts.bold,
-      letterSpacing: 1,
-      textTransform: 'uppercase',
-      textAlign: 'center',
-    },
-    ringRow: {
-      flexDirection: 'row',
-      justifyContent: isLandscape ? 'space-around' : 'center',
-      gap: 32,
-    },
-    ringWrapper: {
-      alignItems: 'center',
-    },
-    balanceRow: {
-      gap: 6,
-    },
-    balanceLabel: {
-      fontSize: scaleBySizeClass(9, sizeClass),
-      fontFamily: Fonts.bold,
-      letterSpacing: 0.5,
-    },
-    balanceTrack: {
-      height: scaleBySizeClass(10, sizeClass),
-      borderRadius: 999,
-      overflow: 'hidden',
-    },
-    balanceFillO: {
-      height: '100%',
-      borderRadius: 999,
-    },
-    balanceLegend: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-    },
-    balanceStat: {
-      fontSize: scaleBySizeClass(11, sizeClass),
-      fontFamily: Fonts.bold,
-    },
+    section: { gap: 8 },
+    sectionTitle: { fontSize: scaleBySizeClass(15, sizeClass), fontFamily: Fonts.semiBold },
   });
 }

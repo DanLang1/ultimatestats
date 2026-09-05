@@ -369,7 +369,6 @@ export default function AdvancedImpactTimeline({ data }: AdvancedImpactTimelineP
   return (
     <View style={styles.container}>
       <View style={styles.titleRow}>
-        <ThemedText style={[styles.title, { color: palette.textMuted }]}>GAME IMPACT</ThemedText>
         <View style={[styles.scaleToggle, { backgroundColor: palette.overlay08 }]}>
           {(['event', 'game'] as const).map((mode) => {
             const isActive = scaleMode === mode;
@@ -618,12 +617,6 @@ function createStyles(
       justifyContent: 'center',
       gap: scaleBySizeClass(10, sizeClass),
       marginBottom: 8,
-    },
-    title: {
-      fontSize: scaleBySizeClass(12, sizeClass),
-      fontFamily: Fonts.bold,
-      letterSpacing: 1,
-      textTransform: 'uppercase',
     },
     scaleToggle: {
       flexDirection: 'row',

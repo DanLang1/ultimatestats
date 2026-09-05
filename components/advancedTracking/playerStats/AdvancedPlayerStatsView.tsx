@@ -12,6 +12,8 @@ import AdvancedRelativeStatsSection from '@/components/advancedTracking/Advanced
 import AdvancedPlayerThrowTypesCard from '@/components/advancedTracking/playerStats/AdvancedPlayerThrowTypesCard';
 import { ThemedText } from '@/components/ThemedText';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
+import PlayerSummaryCard from '@/components/view-stats/PlayerSummaryCard';
+import StatsSectionCard from '@/components/view-stats/StatsSectionCard';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import {
@@ -42,6 +44,7 @@ type AdvancedPlayerStatsViewProps = {
   participantId: string | undefined;
   requestedSideId: string | undefined;
   isLoading: boolean;
+  gameLabel?: string;
   aggregateGames?: AdvancedTrackedGame[];
   aggregateGameIds?: string[];
   selectedImpactGameId?: string;
@@ -52,13 +55,14 @@ export default function AdvancedPlayerStatsView({
   participantId,
   requestedSideId,
   isLoading,
+  gameLabel,
   aggregateGames = EMPTY_ADVANCED_GAMES,
   aggregateGameIds = EMPTY_GAME_IDS,
   selectedImpactGameId,
 }: AdvancedPlayerStatsViewProps) {
   const { palette } = useTheme();
-  const { isLandscape, sizeClass } = useLayout();
-  const styles = createStyles(isLandscape, sizeClass);
+  const { sizeClass } = useLayout();
+  const styles = createStyles(sizeClass);
   const isAggregate = aggregateGameIds.length > 0;
   const participantName = analyticsGame?.participantNames.get(participantId ?? '') ?? null;
   const perspectiveSideId = analyticsGame
@@ -136,60 +140,59 @@ export default function AdvancedPlayerStatsView({
   let impactContent: React.ReactNode = null;
   if (isAggregate && selectedImpactSection) {
     impactContent = (
-      <View
-        style={[
-          styles.card,
-          { backgroundColor: palette.overlay02, borderColor: palette.overlay05 },
-        ]}>
-        <View style={styles.gameContextHeader}>
-          <ThemedText style={[styles.gameContextLabel, { color: palette.textMuted }]}>
-            GAME IMPACT
-          </ThemedText>
-          <Pressable
-            disabled={!hasMultipleImpactSections}
-            onPress={() =>
-              router.push({
-                pathname: '/AdvancedGameSelectorModal',
-                params: {
-                  participantId,
-                  sideId: perspectiveSideId,
-                  aggregateGameIds: aggregateGameIds.join(','),
-                  selectedImpactGameId: selectedImpactSection.gameId,
-                },
-              })
-            }
-            style={[styles.gameContextPill, { backgroundColor: palette.overlay05 }]}>
-            <MaterialCommunityIcons
-              name="calendar"
-              size={scaleBySizeClass(16, sizeClass)}
-              color={palette.textMuted}
-            />
-            <ThemedText style={[styles.gameContextText, { color: palette.textInverse }]}>
-              {selectedImpactSection.label}
+      <StatsSectionCard title="Game impact">
+        <View style={styles.chartContent}>
+          <View style={styles.gameContextHeader}>
+            <ThemedText style={[styles.gameContextLabel, { color: palette.textMuted }]}>
+              Game shown in this chart
             </ThemedText>
-            {hasMultipleImpactSections && (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Choose game for impact chart"
+              accessibilityState={{ disabled: !hasMultipleImpactSections }}
+              disabled={!hasMultipleImpactSections}
+              onPress={() =>
+                router.push({
+                  pathname: '/AdvancedGameSelectorModal',
+                  params: {
+                    participantId,
+                    sideId: perspectiveSideId,
+                    aggregateGameIds: aggregateGameIds.join(','),
+                    selectedImpactGameId: selectedImpactSection.gameId,
+                  },
+                })
+              }
+              style={[styles.gameContextPill, { backgroundColor: palette.overlay05 }]}>
               <MaterialCommunityIcons
-                name="chevron-down"
-                size={scaleBySizeClass(18, sizeClass)}
+                name="calendar"
+                size={scaleBySizeClass(16, sizeClass)}
                 color={palette.textMuted}
               />
-            )}
-          </Pressable>
+              <ThemedText style={[styles.gameContextText, { color: palette.textInverse }]}>
+                {selectedImpactSection.label}
+              </ThemedText>
+              {hasMultipleImpactSections && (
+                <MaterialCommunityIcons
+                  name="chevron-down"
+                  size={scaleBySizeClass(18, sizeClass)}
+                  color={palette.textMuted}
+                />
+              )}
+            </Pressable>
+          </View>
+          <AdvancedImpactTimeline data={selectedImpactSection.impact} />
+          <AdvancedPointPresenceStrip impactPoints={selectedImpactSection.impact} />
         </View>
-        <AdvancedImpactTimeline data={selectedImpactSection.impact} />
-        <AdvancedPointPresenceStrip impactPoints={selectedImpactSection.impact} />
-      </View>
+      </StatsSectionCard>
     );
   } else if (hasImpact) {
     impactContent = (
-      <View
-        style={[
-          styles.card,
-          { backgroundColor: palette.overlay02, borderColor: palette.overlay05 },
-        ]}>
-        <AdvancedImpactTimeline data={impactData} />
-        <AdvancedPointPresenceStrip impactPoints={impactData} />
-      </View>
+      <StatsSectionCard title="Game impact">
+        <View style={styles.chartContent}>
+          <AdvancedImpactTimeline data={impactData} />
+          <AdvancedPointPresenceStrip impactPoints={impactData} />
+        </View>
+      </StatsSectionCard>
     );
   }
 
@@ -230,17 +233,6 @@ export default function AdvancedPlayerStatsView({
     );
   }
 
-  let plusMinusColor: string;
-  if (stats.plusMinus > 0) {
-    plusMinusColor = palette.success;
-  } else if (stats.plusMinus < 0) {
-    plusMinusColor = palette.danger;
-  } else {
-    plusMinusColor = palette.textMuted;
-  }
-
-  const plusMinusDisplay = stats.plusMinus > 0 ? `+${stats.plusMinus}` : String(stats.plusMinus);
-
   return (
     <View
       testID="advanced-player-stats-screen"
@@ -256,113 +248,45 @@ export default function AdvancedPlayerStatsView({
       />
 
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
-        <View style={styles.topCardsRow}>
-          <View
-            style={[
-              styles.profileCard,
-              { backgroundColor: palette.overlay02, borderColor: palette.overlay05 },
-            ]}>
-            <AdvancedProfileDiamond stats={stats} />
-          </View>
-
-          <View
-            style={[
-              styles.summaryCard,
-              { backgroundColor: palette.overlay02, borderColor: palette.overlay05 },
-            ]}>
-            <View style={styles.nameRow}>
-              <ThemedText style={[styles.playerName, { color: palette.textInverse }]}>
-                {participantName}
-              </ThemedText>
-              {stats.callahans > 0 && (
-                <View
-                  style={[
-                    styles.badge,
-                    {
-                      backgroundColor: palette.successOverlay15,
-                      borderColor: palette.success,
-                    },
-                  ]}>
-                  <ThemedText style={[styles.badgeText, { color: palette.success }]}>
-                    {stats.callahans > 1 ? `${stats.callahans} ` : ''}CALLAHAN
-                  </ThemedText>
-                </View>
-              )}
-            </View>
-            {perspectiveSideName && (
-              <ThemedText style={[styles.sideContext, { color: palette.textMuted }]}>
-                {perspectiveSideName} stats
-              </ThemedText>
-            )}
-
-            <ThemedText style={[styles.plusMinus, { color: plusMinusColor }]}>
-              {plusMinusDisplay}
-            </ThemedText>
-            <ThemedText style={[styles.plusMinusLabel, { color: palette.textMuted }]}>
-              Net Impact
-            </ThemedText>
-
-            <View style={[styles.divider, { backgroundColor: palette.overlay10 }]} />
-
-            <View style={styles.pillsRow}>
-              {[
-                {
-                  label: pluralize(stats.goals, 'Goal', 'Goals'),
-                  value: stats.goals,
-                  positive: true,
-                },
-                {
-                  label: pluralize(stats.assists, 'Assist', 'Assists'),
-                  value: stats.assists,
-                  positive: true,
-                },
-                { label: 'HA', value: stats.hockeyAssists, positive: true },
-                {
-                  label: pluralize(stats.blocks, 'Block', 'Blocks'),
-                  value: stats.blocks,
-                  positive: true,
-                },
-                {
-                  label: pluralize(stats.pressures, 'Pressure', 'Pressures'),
-                  value: stats.pressures,
-                  positive: true,
-                },
-                { label: 'T/A', value: stats.throwaways, positive: false },
-                {
-                  label: pluralize(stats.drops, 'Drop', 'Drops'),
-                  value: stats.drops,
-                  positive: false,
-                },
-              ].map((s) => (
-                <View
-                  key={s.label}
-                  style={[
-                    styles.pill,
-                    {
-                      backgroundColor: s.positive
-                        ? palette.successOverlay15
-                        : palette.dangerOverlay15,
-                    },
-                  ]}>
-                  <ThemedText
-                    style={[
-                      styles.pillValue,
-                      { color: s.positive ? palette.success : palette.danger },
-                    ]}>
-                    {s.value}
-                  </ThemedText>
-                  <ThemedText
-                    style={[
-                      styles.pillLabel,
-                      { color: s.positive ? palette.success : palette.danger },
-                    ]}>
-                    {s.label}
-                  </ThemedText>
-                </View>
-              ))}
-            </View>
-          </View>
-        </View>
+        <PlayerSummaryCard
+          name={participantName}
+          scope={[
+            perspectiveSideName,
+            isAggregate ? `${aggregateGameIds.length} combined games` : gameLabel || 'Single game',
+          ]
+            .filter(Boolean)
+            .join(' · ')}
+          plusMinus={stats.plusMinus}
+          badges={
+            stats.callahans > 0
+              ? [`${stats.callahans} Callahan${stats.callahans === 1 ? '' : 's'}`]
+              : []
+          }
+          stats={[
+            { label: pluralize(stats.goals, 'Goal', 'Goals'), value: stats.goals },
+            { label: pluralize(stats.assists, 'Assist', 'Assists'), value: stats.assists },
+            {
+              label: pluralize(stats.hockeyAssists, 'Hockey assist', 'Hockey assists'),
+              value: stats.hockeyAssists,
+            },
+            { label: pluralize(stats.blocks, 'Block', 'Blocks'), value: stats.blocks },
+            { label: pluralize(stats.pressures, 'Pressure', 'Pressures'), value: stats.pressures },
+            {
+              label: pluralize(stats.stalls, 'Stall forced', 'Stalls forced'),
+              value: stats.stalls,
+            },
+            {
+              label: pluralize(stats.throwaways, 'Throwaway', 'Throwaways'),
+              value: stats.throwaways,
+            },
+            { label: pluralize(stats.drops, 'Drop', 'Drops'), value: stats.drops },
+            {
+              label: pluralize(stats.stallsConceded, 'Stall conceded', 'Stalls conceded'),
+              value: stats.stallsConceded,
+            },
+          ]}
+          profile={<AdvancedProfileDiamond stats={stats} />}
+        />
 
         <View style={styles.grid}>
           <AdvancedPlayerThrowTypesCard stats={stats} />
@@ -375,17 +299,15 @@ export default function AdvancedPlayerStatsView({
           />
 
           {(hasChemistry || hasPassConnections) && (
-            <View
-              style={[
-                styles.card,
-                { backgroundColor: palette.overlay02, borderColor: palette.overlay05 },
-              ]}>
-              <AdvancedChemistrySection
-                participantName={participantName}
-                chemistry={chemistry}
-                passConnections={passConnections}
-              />
-            </View>
+            <StatsSectionCard title="Chemistry">
+              <View style={styles.chartContent}>
+                <AdvancedChemistrySection
+                  participantName={participantName}
+                  chemistry={chemistry}
+                  passConnections={passConnections}
+                />
+              </View>
+            </StatsSectionCard>
           )}
 
           <AdvancedPlayingTimeSection stats={stats} />
@@ -395,7 +317,7 @@ export default function AdvancedPlayerStatsView({
   );
 }
 
-function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
+function createStyles(sizeClass: SizeClass) {
   return StyleSheet.create({
     container: { flex: 1 },
     header: { borderBottomWidth: 1 },
@@ -423,96 +345,11 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
       fontSize: scaleBySizeClass(14, sizeClass),
       fontFamily: Fonts.bold,
     },
-    topCardsRow: {
-      flexDirection: isLandscape ? 'row' : 'column-reverse',
-      alignItems: isLandscape ? undefined : 'stretch',
-      gap: 12,
-      marginBottom: 16,
-    },
-    profileCard: { borderRadius: 16, borderWidth: 1, overflow: 'hidden' },
-    summaryCard: {
-      flex: 1,
-      borderRadius: 16,
-      borderWidth: 1,
-      padding: 16,
-      alignItems: 'center',
-      gap: 4,
-    },
-    nameRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      flexWrap: 'wrap',
-      justifyContent: 'center',
-      gap: 8,
-    },
-    playerName: {
-      fontSize: scaleBySizeClass(20, sizeClass),
-      fontFamily: Fonts.extraBold,
-      letterSpacing: 0.5,
-      textAlign: 'center',
-    },
-    sideContext: {
-      fontSize: scaleBySizeClass(11, sizeClass),
-      fontFamily: Fonts.semiBold,
-      letterSpacing: 0.4,
-    },
-    badge: {
-      paddingHorizontal: 8,
-      paddingVertical: 3,
-      borderRadius: 8,
-      borderWidth: 1,
-    },
-    badgeText: {
-      fontSize: scaleBySizeClass(10, sizeClass),
-      fontFamily: Fonts.bold,
-      textTransform: 'uppercase',
-      letterSpacing: 0.5,
-    },
-    plusMinus: {
-      fontSize: scaleBySizeClass(32, sizeClass),
-      fontFamily: Fonts.extraBold,
-      marginTop: 8,
-    },
-    plusMinusLabel: {
-      fontSize: scaleBySizeClass(11, sizeClass),
-      fontFamily: Fonts.semiBold,
-    },
-    divider: { height: 1, alignSelf: 'stretch', marginVertical: 12 },
-    pillsRow: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      justifyContent: 'center',
-      gap: 6,
-    },
-    pill: {
-      paddingHorizontal: 10,
-      paddingVertical: 6,
-      borderRadius: 10,
-      alignItems: 'center',
-      minWidth: scaleBySizeClass(44, sizeClass),
-    },
-    pillValue: {
-      fontSize: scaleBySizeClass(16, sizeClass),
-      fontFamily: Fonts.bold,
-    },
-    pillLabel: {
-      fontSize: scaleBySizeClass(9, sizeClass),
-      fontFamily: Fonts.semiBold,
-      textTransform: 'uppercase',
-      letterSpacing: 0.3,
-      marginTop: 1,
-    },
-    grid: { gap: 16 },
-    card: {
-      borderRadius: 16,
-      borderWidth: 1,
-      overflow: 'hidden',
-      paddingVertical: 12,
-      minHeight: 250,
-    },
+    grid: { gap: 0 },
+    chartContent: { marginHorizontal: -16 },
     gameContextHeader: { paddingHorizontal: 16, marginBottom: 12, gap: 6 },
     gameContextLabel: {
-      fontSize: scaleBySizeClass(10, sizeClass),
+      fontSize: scaleBySizeClass(13, sizeClass),
       fontFamily: Fonts.semiBold,
       letterSpacing: 0.5,
     },

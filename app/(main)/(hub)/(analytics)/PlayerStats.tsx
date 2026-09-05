@@ -6,13 +6,14 @@ import { ThemedText } from '@/components/ThemedText';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import ChemistryMap from '@/components/view-stats/ChemistryMap';
 import ImpactTimeline from '@/components/view-stats/ImpactTimeline';
-import PlayerStatsSummary from '@/components/view-stats/PlayerStatsSummary';
+import PlayerSummaryCard from '@/components/view-stats/PlayerSummaryCard';
 import PointPresenceStrip from '@/components/view-stats/playing-time/PointPresenceStrip';
 import PlayingTimeSection from '@/components/view-stats/PlayingTimeSection';
 import RelativePlayerStatsSection from '@/components/view-stats/RelativePlayerStatsSection';
 import RoleDiamond from '@/components/view-stats/RoleDiamond';
+import StatsSectionCard from '@/components/view-stats/StatsSectionCard';
 import { useTheme } from '@/context/ThemeContext';
-import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { scaleBySizeClass, useLayout } from '@/hooks/useLayout';
 import {
   computePlayerStats,
   getChemistryStats,
@@ -24,7 +25,7 @@ import {
 } from '@/lib/basic/statsUtils';
 import { getPlayerName } from '@/lib/playerUtils';
 import { getGameDisplayTimestamp } from '@/lib/savedGameUtils';
-import { hasItems } from '@/lib/utils';
+import { hasItems, pluralize } from '@/lib/utils';
 import { usePlayerStatsStore } from '@/store/playerStatsStore';
 import { Fonts } from '@/theme/theme';
 
@@ -42,8 +43,8 @@ export default function PlayerStats() {
     autoHalftimeEnabled,
   } = usePlayerStatsStore();
   const { palette } = useTheme();
-  const { isLandscape, sizeClass } = useLayout();
-  const styles = createStyles(isLandscape, sizeClass);
+  const { sizeClass } = useLayout();
+  const styles = createStyles();
 
   // Derive player name for display
   const playerName = getPlayerName(roster, playerId) ?? playerId ?? '';
@@ -135,85 +136,56 @@ export default function PlayerStats() {
       />
 
       <ScrollView style={styles.scrollView} contentContainerStyle={[styles.scrollContent]}>
-        {/* Top Row: Profile Diamond + Player Summary Cards */}
-        <View style={styles.topCardsRow}>
-          {/* Profile Diamond Card */}
-          <View
-            style={[
-              styles.profileCard,
-              { backgroundColor: palette.overlay02, borderColor: palette.overlay05 },
-            ]}>
-            <RoleDiamond roleStats={stats.role} />
-          </View>
-
-          {/* Player Summary Card */}
-          <View
-            style={[
-              styles.summaryCard,
-              { backgroundColor: palette.overlay02, borderColor: palette.overlay05 },
-            ]}>
-            {/* Player Name + Label */}
-            <View
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                gap: 8,
-                justifyContent: 'center',
-              }}>
-              <ThemedText style={[styles.playerName, { color: palette.textInverse }]}>
-                {playerName}
-              </ThemedText>
-              <View
-                style={{
-                  flexDirection: 'row',
-                  gap: 6,
-                  flexWrap: 'wrap',
-                  justifyContent: 'center',
-                }}>
-                {stats.roleLabel && (
-                  <View style={[styles.labelBadge, { backgroundColor: palette.accent }]}>
-                    <ThemedText style={[styles.labelText, { color: palette.textOnAccent }]}>
-                      {stats.roleLabel}
-                    </ThemedText>
-                  </View>
-                )}
-                {stats.summary && stats.summary.callahans > 0 && (
-                  <View
-                    style={[
-                      styles.labelBadge,
-                      {
-                        backgroundColor: palette.successOverlay15,
-                        borderColor: palette.success,
-                        borderWidth: 1,
-                      },
-                    ]}>
-                    <ThemedText style={[styles.labelText, { color: palette.success }]}>
-                      {stats.summary.callahans > 1 ? `${stats.summary.callahans} ` : ''}
-                      CALLAHAN
-                    </ThemedText>
-                  </View>
-                )}
-              </View>
-            </View>
-            {/* Net Impact */}
-            <ThemedText
-              style={[styles.playerDetail, { color: palette.textMuted, textAlign: 'center' }]}>
-              {stats.summary?.plusMinus !== undefined && stats.summary.plusMinus > 0 ? '+' : ''}
-              {stats.summary?.plusMinus ?? 0} Net Impact
-            </ThemedText>
-            {/* Divider */}
-            <View
-              style={{
-                height: 1,
-                backgroundColor: palette.overlay10,
-                marginVertical: 12,
-                alignSelf: 'stretch',
-              }}
-            />
-            {/* Stats Summary */}
-            {stats.summary && <PlayerStatsSummary stats={stats.summary} variant="vertical" />}
-          </View>
-        </View>
+        <PlayerSummaryCard
+          name={playerName}
+          scope={
+            games && games.length > 1
+              ? `${games.length} combined games`
+              : gameLabel || 'Single game'
+          }
+          plusMinus={stats.summary?.plusMinus ?? 0}
+          badges={[
+            ...(stats.roleLabel ? [stats.roleLabel] : []),
+            ...(stats.summary && stats.summary.callahans > 0
+              ? [`${stats.summary.callahans} Callahan${stats.summary.callahans === 1 ? '' : 's'}`]
+              : []),
+          ]}
+          stats={
+            stats.summary
+              ? [
+                  {
+                    label: pluralize(stats.summary.goals, 'Goal', 'Goals'),
+                    value: stats.summary.goals,
+                  },
+                  {
+                    label: pluralize(stats.summary.assists, 'Assist', 'Assists'),
+                    value: stats.summary.assists,
+                  },
+                  {
+                    label: pluralize(stats.summary.blocks, 'Block', 'Blocks'),
+                    value: stats.summary.blocks,
+                  },
+                  {
+                    label: pluralize(
+                      stats.summary.throwaways + stats.summary.drops,
+                      'Turnover',
+                      'Turnovers',
+                    ),
+                    value: stats.summary.throwaways + stats.summary.drops,
+                  },
+                  {
+                    label: pluralize(stats.summary.throwaways, 'Throwaway', 'Throwaways'),
+                    value: stats.summary.throwaways,
+                  },
+                  {
+                    label: pluralize(stats.summary.drops, 'Drop', 'Drops'),
+                    value: stats.summary.drops,
+                  },
+                ]
+              : []
+          }
+          profile={<RoleDiamond roleStats={stats.role} />}
+        />
 
         <View style={styles.grid}>
           <RelativePlayerStatsSection
@@ -230,118 +202,115 @@ export default function PlayerStats() {
 
           {/* Full-width Impact Timeline - show if impact data or playing time data exists */}
           {(hasImpactTimelineData(stats.impact) || hasItems(stripPointLines)) && (
-            <View
-              style={[
-                styles.card,
-                { backgroundColor: palette.overlay02, borderColor: palette.overlay05 },
-                !hasImpactTimelineData(stats.impact) && { minHeight: 0 },
-              ]}>
-              {/* Game context / selector */}
-              {(displayGame || hasMultipleSelectableGames) && (
-                <View style={{ marginBottom: 12, paddingHorizontal: 16 }}>
-                  <ThemedText
-                    style={{
-                      color: palette.textMuted,
-                      fontSize: scaleBySizeClass(10, sizeClass),
-                      fontFamily: Fonts.semiBold,
-                      marginBottom: 6,
-                      letterSpacing: 0.5,
-                    }}>
-                    CURRENT GAME
-                  </ThemedText>
-
-                  {hasMultipleSelectableGames ? (
-                    <Pressable
-                      onPress={() => router.push('/GameSelectorModal')}
+            <StatsSectionCard title="Game impact">
+              <View style={styles.chartContent}>
+                {/* Game context / selector */}
+                {(displayGame || hasMultipleSelectableGames) && (
+                  <View style={{ marginBottom: 12, paddingHorizontal: 16 }}>
+                    <ThemedText
                       style={{
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        backgroundColor: palette.overlay05,
-                        paddingHorizontal: 12,
-                        paddingVertical: 10,
-                        borderRadius: 8,
-                        alignSelf: 'flex-start',
-                        gap: 6,
+                        color: palette.textMuted,
+                        fontSize: scaleBySizeClass(13, sizeClass),
+                        fontFamily: Fonts.semiBold,
+                        marginBottom: 6,
+                        letterSpacing: 0.5,
                       }}>
-                      <MaterialCommunityIcons
-                        name="calendar"
-                        size={scaleBySizeClass(16, sizeClass)}
-                        color={palette.textMuted}
-                      />
-                      <ThemedText
-                        style={{
-                          color: palette.textInverse,
-                          fontFamily: Fonts.semiBold,
-                          fontSize: scaleBySizeClass(14, sizeClass),
-                        }}>
-                        {gameLabel}
-                      </ThemedText>
-                      <MaterialCommunityIcons
-                        name="chevron-down"
-                        size={scaleBySizeClass(18, sizeClass)}
-                        color={palette.textMuted}
-                      />
-                    </Pressable>
-                  ) : (
-                    <View
-                      style={{
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        backgroundColor: palette.overlay05,
-                        paddingHorizontal: 12,
-                        paddingVertical: 10,
-                        borderRadius: 8,
-                        alignSelf: 'flex-start',
-                        gap: 6,
-                      }}>
-                      <MaterialCommunityIcons
-                        name="calendar"
-                        size={scaleBySizeClass(16, sizeClass)}
-                        color={palette.textMuted}
-                      />
-                      <ThemedText
-                        style={{
-                          color: palette.textInverse,
-                          fontFamily: Fonts.semiBold,
-                          fontSize: scaleBySizeClass(14, sizeClass),
-                        }}>
-                        {gameLabel}
-                      </ThemedText>
-                    </View>
-                  )}
-                </View>
-              )}
+                      Game shown in this chart
+                    </ThemedText>
 
-              {/* Impact timeline — only when selected game has recorded events */}
-              {hasImpactTimelineData(stats.impact) && <ImpactTimeline data={stats.impact} />}
+                    {hasMultipleSelectableGames ? (
+                      <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel="Choose game for impact chart"
+                        onPress={() => router.push('/GameSelectorModal')}
+                        style={{
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          backgroundColor: palette.overlay05,
+                          paddingHorizontal: 12,
+                          paddingVertical: 10,
+                          borderRadius: 8,
+                          alignSelf: 'flex-start',
+                          gap: 6,
+                        }}>
+                        <MaterialCommunityIcons
+                          name="calendar"
+                          size={scaleBySizeClass(16, sizeClass)}
+                          color={palette.textMuted}
+                        />
+                        <ThemedText
+                          style={{
+                            color: palette.textInverse,
+                            fontFamily: Fonts.semiBold,
+                            fontSize: scaleBySizeClass(14, sizeClass),
+                          }}>
+                          {gameLabel}
+                        </ThemedText>
+                        <MaterialCommunityIcons
+                          name="chevron-down"
+                          size={scaleBySizeClass(18, sizeClass)}
+                          color={palette.textMuted}
+                        />
+                      </Pressable>
+                    ) : (
+                      <View
+                        style={{
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          backgroundColor: palette.overlay05,
+                          paddingHorizontal: 12,
+                          paddingVertical: 10,
+                          borderRadius: 8,
+                          alignSelf: 'flex-start',
+                          gap: 6,
+                        }}>
+                        <MaterialCommunityIcons
+                          name="calendar"
+                          size={scaleBySizeClass(16, sizeClass)}
+                          color={palette.textMuted}
+                        />
+                        <ThemedText
+                          style={{
+                            color: palette.textInverse,
+                            fontFamily: Fonts.semiBold,
+                            fontSize: scaleBySizeClass(14, sizeClass),
+                          }}>
+                          {gameLabel}
+                        </ThemedText>
+                      </View>
+                    )}
+                  </View>
+                )}
 
-              {/* Point presence strip */}
-              {hasItems(stripPointLines) && (
-                <View style={{ paddingHorizontal: 16, paddingBottom: 4 }}>
-                  <PointPresenceStrip
-                    playerId={playerId}
-                    events={stripEvents}
-                    pointLines={stripPointLines}
-                    startingPossession={
-                      displayGame?.startingPossession ?? startingPossession ?? null
-                    }
-                    gameTo={displayGame?.gameTo ?? gameTo ?? 15}
-                    autoHalftimeEnabled={displayGame?.autoHalftimeEnabled ?? autoHalftimeEnabled}
-                  />
-                </View>
-              )}
-            </View>
+                {/* Impact timeline — only when selected game has recorded events */}
+                {hasImpactTimelineData(stats.impact) && <ImpactTimeline data={stats.impact} />}
+
+                {/* Point presence strip */}
+                {hasItems(stripPointLines) && (
+                  <View style={{ paddingHorizontal: 16, paddingBottom: 4 }}>
+                    <PointPresenceStrip
+                      playerId={playerId}
+                      events={stripEvents}
+                      pointLines={stripPointLines}
+                      startingPossession={
+                        displayGame?.startingPossession ?? startingPossession ?? null
+                      }
+                      gameTo={displayGame?.gameTo ?? gameTo ?? 15}
+                      autoHalftimeEnabled={displayGame?.autoHalftimeEnabled ?? autoHalftimeEnabled}
+                    />
+                  </View>
+                )}
+              </View>
+            </StatsSectionCard>
           )}
 
           {/* Full-width Chemistry Map - only show if connections exist */}
           {stats.chemistry.some((c) => c.goalsFrom > 0 || c.assistsTo > 0) && (
-            <View
-              style={[
-                styles.card,
-                { backgroundColor: palette.overlay02, borderColor: palette.overlay05 },
-              ]}>
-              <ChemistryMap playerName={playerName} connections={stats.chemistry} />
-            </View>
+            <StatsSectionCard title="Scoring chemistry">
+              <View style={styles.chartContent}>
+                <ChemistryMap playerName={playerName} connections={stats.chemistry} />
+              </View>
+            </StatsSectionCard>
           )}
 
           {/* Playing Time Section */}
@@ -366,7 +335,7 @@ export default function PlayerStats() {
   );
 }
 
-function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
+function createStyles() {
   return StyleSheet.create({
     container: {
       flex: 1,
@@ -374,62 +343,13 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     header: {
       borderBottomWidth: 1,
     },
-    playerName: {
-      fontSize: scaleBySizeClass(20, sizeClass),
-      fontFamily: Fonts.extraBold,
-      letterSpacing: 0.5,
-    },
-    playerDetail: {
-      fontSize: scaleBySizeClass(16, sizeClass),
-      fontFamily: Fonts.semiBold,
-      marginTop: 4,
-    },
     scrollView: {
       flex: 1,
     },
     scrollContent: {
       padding: 16,
     },
-    grid: {
-      gap: 16,
-    },
-    topCardsRow: {
-      flexDirection: isLandscape ? 'row' : 'column-reverse',
-      alignItems: isLandscape ? undefined : 'stretch',
-      gap: 12,
-      marginBottom: 16,
-    },
-    profileCard: {
-      borderRadius: 16,
-      borderWidth: 1,
-      overflow: 'hidden',
-    },
-    summaryCard: {
-      flex: 1,
-      borderRadius: 16,
-      borderWidth: 1,
-      padding: 16,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    card: {
-      borderRadius: 16,
-      borderWidth: 1,
-      overflow: 'hidden',
-      paddingVertical: 12,
-      // Ensure sufficient height for charts (prevent cut-off)
-      minHeight: 250,
-    },
-    labelBadge: {
-      paddingHorizontal: 8,
-      paddingVertical: 3,
-      borderRadius: 8,
-    },
-    labelText: {
-      fontSize: scaleBySizeClass(10, sizeClass),
-      fontFamily: Fonts.bold,
-      textTransform: 'uppercase',
-      letterSpacing: 0.5,
-    },
+    grid: { gap: 0 },
+    chartContent: { marginHorizontal: -16 },
   });
 }

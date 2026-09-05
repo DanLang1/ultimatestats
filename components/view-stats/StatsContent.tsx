@@ -96,7 +96,7 @@ export default function StatsContent({
       <View
         style={[
           styles.summaryCard,
-          { backgroundColor: palette.overlay05, borderColor: palette.overlay10 },
+          { backgroundColor: palette.statsCardBg, borderColor: palette.overlay10 },
         ]}>
         {showOpponentName ? (
           <View style={styles.matchupRow}>

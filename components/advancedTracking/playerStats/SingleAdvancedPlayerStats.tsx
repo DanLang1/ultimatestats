@@ -1,5 +1,6 @@
 import AdvancedPlayerStatsView from '@/components/advancedTracking/playerStats/AdvancedPlayerStatsView';
 import { useAdvancedGame } from '@/hooks/advancedTracking/useAdvancedGameQueries';
+import { getAdvancedGameLabel } from '@/lib/advancedTracking/advancedGameTeamUtils';
 import { buildAnalyticsGame } from '@/lib/advancedTracking/buildAnalyticsGame';
 
 type SingleAdvancedPlayerStatsProps = {
@@ -22,6 +23,7 @@ export default function SingleAdvancedPlayerStats({
       participantId={participantId}
       requestedSideId={sideId}
       isLoading={isLoading}
+      gameLabel={rawGame ? getAdvancedGameLabel(rawGame) : undefined}
     />
   );
 }

@@ -108,7 +108,7 @@ export default function AdvancedProfileDiamond({ stats }: AdvancedProfileDiamond
 function createStyles(sizeClass: SizeClass, size: number) {
   return StyleSheet.create({
     container: {
-      padding: 16,
+      paddingVertical: 8,
       alignItems: 'center',
     },
     title: {

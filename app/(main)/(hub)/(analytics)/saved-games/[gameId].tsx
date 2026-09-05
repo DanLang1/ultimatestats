@@ -287,7 +287,7 @@ export default function SavedGameStatsScreen() {
             <View
               style={[
                 styles.dateCard,
-                { backgroundColor: palette.overlay05, borderColor: palette.overlay10 },
+                { backgroundColor: palette.statsCardBg, borderColor: palette.overlay10 },
               ]}>
               <View style={styles.dateCardContent}>
                 <ThemedText style={[styles.dateLabel, { color: palette.textMuted }]}>
@@ -314,7 +314,7 @@ export default function SavedGameStatsScreen() {
             <Pressable
               style={({ pressed }) => [
                 styles.dateCard,
-                { backgroundColor: palette.overlay05, borderColor: palette.overlay10 },
+                { backgroundColor: palette.statsCardBg, borderColor: palette.overlay10 },
                 pressed && styles.dateCardPressed,
               ]}
               onPress={handleOpenAndroidDatePicker}>

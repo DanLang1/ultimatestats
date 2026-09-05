@@ -720,7 +720,7 @@ describe('advanced analytics routes', () => {
 
     expect(screen.getByText('PLAYER STATS')).toBeVisible();
     expect(screen.getByText('Alex')).toBeVisible();
-    expect(screen.getByText('Windchill stats')).toBeVisible();
+    expect(screen.getByText(/^Windchill · .* vs Rivals$/)).toBeVisible();
   });
 
   it('renders classified throw details on the advanced player page', async () => {
@@ -744,5 +744,8 @@ describe('advanced analytics routes', () => {
     expect(screen.getByText('HUCK THROWING')).toBeVisible();
     expect(screen.getByText('Completion rate')).toBeVisible();
     expect(screen.getByText('1 of 1')).toBeVisible();
+    expect(screen.queryByText('EFFICIENCY')).toBeNull();
+    await userEvent.setup().press(screen.getByRole('button', { name: 'More team comparisons' }));
+    expect(screen.getByText('EFFICIENCY')).toBeVisible();
   });
 });

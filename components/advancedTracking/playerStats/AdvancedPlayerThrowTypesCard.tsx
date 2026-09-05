@@ -1,9 +1,8 @@
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/ThemedText';
-import { useAlert } from '@/components/ui/AlertProvider';
+import StatsSectionCard from '@/components/view-stats/StatsSectionCard';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import type { AdvancedPlayerStats } from '@/lib/advancedTracking/advancedPlayerStatsUtils';
@@ -18,20 +17,12 @@ type OutcomeItem = { key: string; text: string; isDanger?: boolean };
 
 export default function AdvancedPlayerThrowTypesCard({ stats }: AdvancedPlayerThrowTypesCardProps) {
   const { palette } = useTheme();
-  const { showAlert } = useAlert();
   const { sizeClass } = useLayout();
   const styles = createStyles(sizeClass);
 
   if (!hasAnyThrowTypeStat(stats)) return null;
 
   const huckTargetTotal = stats.hucksCaught + stats.hucksDropped;
-
-  const handleInfoPress = () => {
-    showAlert({
-      title: 'Throw Classifications',
-      message: 'Classifications are optional, so this data may not be fully accurate.',
-    });
-  };
 
   const renderOutcomes = (items: OutcomeItem[]) => {
     if (items.length === 0) return null;
@@ -263,86 +254,51 @@ export default function AdvancedPlayerThrowTypesCard({ stats }: AdvancedPlayerTh
   };
 
   return (
-    <View
+    <StatsSectionCard
+      title="Throw classifications"
       testID="advanced-player-throw-types-card"
-      style={[styles.card, { backgroundColor: palette.overlay02, borderColor: palette.overlay05 }]}>
-      {/* Header */}
-      <View style={styles.header}>
-        <ThemedText style={[styles.title, { color: palette.textMuted }]}>
-          THROW CLASSIFICATIONS
-        </ThemedText>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="About throw classifications"
-          style={styles.infoButton}
-          onPress={handleInfoPress}>
-          <MaterialCommunityIcons
-            name="information-outline"
-            size={scaleBySizeClass(18, sizeClass)}
-            color={palette.textMuted}
-          />
-        </Pressable>
-      </View>
+      info={{
+        accessibilityLabel: 'About throw classifications',
+        title: 'Throw Classifications',
+        message: 'Classifications are optional, so this data may not be fully accurate.',
+      }}>
+      <View style={styles.content}>
+        {/* Section 1: Huck Throwing */}
+        {renderHuckThrowing()}
 
-      {/* Section 1: Huck Throwing */}
-      {renderHuckThrowing()}
+        {/* Divider between Huck Throwing and Huck Receiving */}
+        {hasHuckThrowing && hasHuckReceiving && (
+          <View style={[styles.divider, { backgroundColor: palette.overlay10 }]} />
+        )}
 
-      {/* Divider between Huck Throwing and Huck Receiving */}
-      {hasHuckThrowing && hasHuckReceiving && (
-        <View style={[styles.divider, { backgroundColor: palette.overlay10 }]} />
-      )}
+        {/* Section 2: Huck Receiving */}
+        {renderHuckReceiving()}
 
-      {/* Section 2: Huck Receiving */}
-      {renderHuckReceiving()}
+        {/* Divider before Reset Turnovers if previous sections exist */}
+        {(hasHuckThrowing || hasHuckReceiving) && hasResetTurnovers && (
+          <View style={[styles.divider, { backgroundColor: palette.overlay10 }]} />
+        )}
 
-      {/* Divider before Reset Turnovers if previous sections exist */}
-      {(hasHuckThrowing || hasHuckReceiving) && hasResetTurnovers && (
-        <View style={[styles.divider, { backgroundColor: palette.overlay10 }]} />
-      )}
+        {/* Section 3: Reset Turnovers */}
+        {hasResetTurnovers && (
+          <View style={styles.section}>
+            <View style={styles.resetHeaderRow}>
+              <ThemedText style={[styles.sectionTitle, { color: palette.textMuted }]}>
+                RESET TURNOVERS
+              </ThemedText>
 
-      {/* Section 3: Reset Turnovers */}
-      {hasResetTurnovers && (
-        <View style={styles.section}>
-          <View style={styles.resetHeaderRow}>
-            <ThemedText style={[styles.sectionTitle, { color: palette.textMuted }]}>
-              RESET TURNOVERS
-            </ThemedText>
-
-            {renderOutcomes(resetOutcomeItems)}
+              {renderOutcomes(resetOutcomeItems)}
+            </View>
           </View>
-        </View>
-      )}
-    </View>
+        )}
+      </View>
+    </StatsSectionCard>
   );
 }
 
 function createStyles(sizeClass: SizeClass) {
   return StyleSheet.create({
-    card: {
-      borderRadius: 16,
-      borderWidth: 1,
-      overflow: 'hidden',
-      paddingVertical: 18,
-      paddingHorizontal: 18,
-      gap: 16,
-    },
-    header: {
-      flexDirection: 'row',
-      alignItems: 'flex-start',
-      justifyContent: 'space-between',
-    },
-    title: {
-      fontSize: scaleBySizeClass(12, sizeClass),
-      fontFamily: Fonts.bold,
-      letterSpacing: 0.8,
-      textTransform: 'uppercase',
-    },
-    infoButton: {
-      alignItems: 'center',
-      height: scaleBySizeClass(44, sizeClass),
-      justifyContent: 'center',
-      width: scaleBySizeClass(44, sizeClass),
-    },
+    content: { gap: 16 },
     section: {
       gap: 4,
     },
@@ -354,7 +310,7 @@ function createStyles(sizeClass: SizeClass) {
       gap: 8,
     },
     sectionTitle: {
-      fontSize: scaleBySizeClass(11, sizeClass),
+      fontSize: scaleBySizeClass(13, sizeClass),
       fontFamily: Fonts.bold,
       letterSpacing: 0.8,
       textTransform: 'uppercase',
@@ -377,7 +333,7 @@ function createStyles(sizeClass: SizeClass) {
       fontFamily: Fonts.extraBold,
     },
     rateSublabel: {
-      fontSize: scaleBySizeClass(11, sizeClass),
+      fontSize: scaleBySizeClass(13, sizeClass),
       fontFamily: Fonts.semiBold,
       marginTop: 2,
       marginBottom: 6,
@@ -387,7 +343,7 @@ function createStyles(sizeClass: SizeClass) {
       fontFamily: Fonts.extraBold,
     },
     fractionSublabel: {
-      fontSize: scaleBySizeClass(11, sizeClass),
+      fontSize: scaleBySizeClass(13, sizeClass),
       fontFamily: Fonts.semiBold,
       marginTop: 2,
       marginBottom: 6,

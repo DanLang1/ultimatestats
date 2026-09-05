@@ -68,6 +68,18 @@ Common columns include:
 - When line tracking data exists, the Relative card adds a **Playing Time (Relative)** subsection (usage, efficiency, and playing-time metrics).
 - In aggregate mode with mixed line-tracking availability, the playing-time relative subsection notes how many selected games had line data (e.g. `3/5 games`) and computes comparisons from the line-tracked subset.
 
+Player detail uses shared analytics section cards and an unboxed summary grid, with the game scope
+shown under the player name. The profile diamond sits beside Net impact in the summary hero row.
+Relative to Team keeps production and impact visible; More team comparisons reveals
+mistakes and playing-time comparisons. The game selector is labeled as applying to the impact
+chart only. Scoring chemistry labels distinguish goals caught from assists thrown to teammates.
+Playing Time remains after Chemistry.
+
+Player Playing Time uses the shared analytics card, a participation ring showing the percentage of
+team points played, and unboxed summary metrics. O/D performance retains point counts, holds/breaks,
+and their rates, with explicit empty-line labels. Per-point metrics use a three-column grid with
+full turnover and throwaway labels.
+
 ### 3. Game Timeline
 
 - Linear view of every point and event.

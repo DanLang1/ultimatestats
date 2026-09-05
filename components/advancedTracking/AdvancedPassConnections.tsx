@@ -30,10 +30,6 @@ export default function AdvancedPassConnections({ connections }: AdvancedPassCon
 
   return (
     <View style={styles.container}>
-      <ThemedText style={[styles.title, { color: palette.textMuted }]}>
-        PASSING CHEMISTRY
-      </ThemedText>
-
       <View style={styles.summaryDisplay}>
         <ThemedText style={[styles.summaryValue, { color: palette.accent }]}>
           {totalPasses}
@@ -128,13 +124,6 @@ function createStyles(sizeClass: SizeClass) {
     container: {
       padding: 16,
       gap: 12,
-    },
-    title: {
-      fontSize: scaleBySizeClass(13, sizeClass),
-      fontFamily: Fonts.extraBold,
-      letterSpacing: 1.5,
-      textAlign: 'center',
-      textTransform: 'uppercase',
     },
     summaryDisplay: {
       alignItems: 'center',

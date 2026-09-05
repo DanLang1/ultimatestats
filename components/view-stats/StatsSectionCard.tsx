@@ -47,6 +47,7 @@ export default function StatsSectionCard({ title, testID, info, children }: Stat
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={info.accessibilityLabel}
+            style={styles.infoButton}
             hitSlop={8}
             onPress={() => showAlert({ title: info.title, message: info.message })}>
             <MaterialCommunityIcons
@@ -103,6 +104,12 @@ function createStyles(sizeClass: SizeClass, palette: Palette) {
       justifyContent: 'space-between',
       gap: 12,
       marginBottom: 12,
+    },
+    infoButton: {
+      height: scaleBySizeClass(44, sizeClass),
+      width: scaleBySizeClass(44, sizeClass),
+      alignItems: 'center',
+      justifyContent: 'center',
     },
     headerTitle: {
       flex: 1,

@@ -115,6 +115,19 @@ Core approach: single pass over `game.attributions`, bucketing by `participantId
 
 When `AnalyticsGame.gameType === 'scrimmage'`, side-filtered player stats are point-scoped: a participant's attributions only count toward a side filter for points where that participant was on that side.
 
+Player detail uses shared analytics section cards and an unboxed summary grid. The header names
+the selected side and single game or aggregate scope; the impact selector applies only to its
+chart. Player profile sits beside Net impact in the summary hero row. Relative to Team keeps production and impact
+visible, with mistakes, throwing, and efficiency available through More team comparisons. Scoring
+chemistry labels distinguish goals caught from assists thrown to teammates; passing remains a
+separate mode. Playing Time remains the last section.
+
+Player Playing Time uses the shared analytics card and an unboxed per-point grid. Its participation
+ring represents the share of recorded point duration, not the share of team points or individual
+stint time. O/D performance shows participation counts alongside completed-point hold/break rates;
+unavailable rates display an em dash. Per-point turnovers include throwaways, drops, and stalls
+conceded, and rates display an em dash when no points were played.
+
 ### `advancedTeamStatsUtils.ts`
 
 Team/possession-level stats. Returns `AdvancedTeamStats` for a given `sideId`.

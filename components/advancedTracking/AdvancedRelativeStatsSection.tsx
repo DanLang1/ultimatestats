@@ -1,9 +1,9 @@
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/ThemedText';
-import { useAlert } from '@/components/ui/AlertProvider';
+import StatsDetailsDisclosure from '@/components/view-stats/StatsDetailsDisclosure';
+import StatsSectionCard from '@/components/view-stats/StatsSectionCard';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { AdvancedPlayerStats } from '@/lib/advancedTracking/advancedPlayerStatsUtils';
@@ -217,7 +217,6 @@ export default function AdvancedRelativeStatsSection({
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
   const styles = createStyles(sizeClass);
-  const { showAlert } = useAlert();
   const [mode, setMode] = useState<RelativeMode>('avg');
 
   const groups = buildMetrics(participantId, allPlayerStats);
@@ -225,226 +224,211 @@ export default function AdvancedRelativeStatsSection({
 
   if (Object.keys(groups).length === 0) return null;
 
-  const handleInfoPress = () => {
-    showAlert({
-      title: 'Relative to Team',
-      message: 'Players who played at least one point are included in averages.',
-    });
-  };
+  const primaryGroups = Object.entries(groups).filter(
+    ([name]) => name === 'PRODUCTION' || name === 'IMPACT',
+  );
+  const secondaryGroups = Object.entries(groups).filter(
+    ([name]) => name !== 'PRODUCTION' && name !== 'IMPACT',
+  );
+  const renderGroups = (entries: [string, Metric[]][]) =>
+    entries.map(([groupName, metrics]) => (
+      <View key={groupName} style={styles.group}>
+        <ThemedText style={[styles.groupTitle, { color: palette.textMuted }]}>
+          {groupName}
+        </ThemedText>
+        <View style={styles.groupRows}>
+          {metrics.map((metric) => {
+            const diff = isPercentageMetric(metric)
+              ? getRoundedPercentagePointDelta(metric.raw, metric.teamAvg)
+              : getRoundedDecimalDelta(metric.raw, metric.teamAvg);
+            const isGood = diff > 0 ? metric.higherIsBetter : !metric.higherIsBetter && diff < 0;
 
-  return (
-    <View
-      style={[
-        styles.container,
-        { backgroundColor: palette.overlay02, borderColor: palette.overlay05 },
-      ]}>
-      <View style={styles.headerStack}>
-        <View style={styles.titleRow}>
-          <ThemedText style={[styles.title, { color: palette.textMuted }]}>
-            RELATIVE TO TEAM
-          </ThemedText>
-          <Pressable onPress={handleInfoPress} hitSlop={8}>
-            <MaterialCommunityIcons
-              name="help-circle-outline"
-              size={scaleBySizeClass(14, sizeClass)}
-              color={palette.textMuted}
-            />
-          </Pressable>
-        </View>
+            let barColor: string;
+            if (diff > 0 && metric.higherIsBetter) {
+              barColor = palette.success;
+            } else if (diff < 0 && !metric.higherIsBetter) {
+              barColor = palette.success;
+            } else if (diff < 0 && metric.higherIsBetter) {
+              barColor = palette.danger;
+            } else if (diff > 0 && !metric.higherIsBetter) {
+              barColor = palette.danger;
+            } else {
+              barColor = palette.accent;
+            }
 
-        <View style={styles.headerControlsRow}>
-          <View
-            style={[
-              styles.toggle,
-              { backgroundColor: palette.overlay05, borderColor: palette.overlay10 },
-            ]}>
-            <Pressable
-              onPress={() => setMode('avg')}
-              style={[
-                styles.toggleButton,
-                mode === 'avg' && {
-                  backgroundColor: palette.accentOverlay15,
-                  borderColor: palette.accentOverlay30,
-                },
-              ]}>
-              <ThemedText
-                style={[
-                  styles.toggleText,
-                  { color: mode === 'avg' ? palette.accent : palette.textMuted },
-                ]}>
-                Team Avg
-              </ThemedText>
-            </Pressable>
-            <Pressable
-              onPress={() => setMode('max')}
-              style={[
-                styles.toggleButton,
-                mode === 'max' && {
-                  backgroundColor: palette.accentOverlay15,
-                  borderColor: palette.accentOverlay30,
-                },
-              ]}>
-              <ThemedText
-                style={[
-                  styles.toggleText,
-                  { color: mode === 'max' ? palette.accent : palette.textMuted },
-                ]}>
-                Team Best
-              </ThemedText>
-            </Pressable>
-          </View>
+            let relativeColor: string;
+            if (isGood) {
+              relativeColor = palette.success;
+            } else if (!isGood && diff !== 0) {
+              relativeColor = palette.danger;
+            } else {
+              relativeColor = palette.textInverse;
+            }
 
-          <View style={styles.legendSlot}>
-            {mode === 'avg' && (
-              <View style={styles.legendItem}>
-                <View style={[styles.legendMarker, { backgroundColor: palette.textInverse }]} />
-                <ThemedText style={[styles.legendText, { color: palette.textMuted }]}>
-                  = Team Avg
-                </ThemedText>
-              </View>
-            )}
-          </View>
-        </View>
-      </View>
+            const range = metric.teamMax - metric.teamMin;
+            const isFlat = range <= 0;
+            const rawPct = isFlat ? 0.5 : clamp01((metric.raw - metric.teamMin) / range);
+            const avgPct = isFlat ? 0.5 : clamp01((metric.teamAvg - metric.teamMin) / range);
 
-      {Object.entries(groups).map(([groupName, metrics]) => (
-        <View key={groupName} style={styles.group}>
-          <ThemedText style={[styles.groupTitle, { color: palette.textMuted }]}>
-            {groupName}
-          </ThemedText>
-          <View style={styles.groupRows}>
-            {metrics.map((metric) => {
-              const diff = isPercentageMetric(metric)
-                ? getRoundedPercentagePointDelta(metric.raw, metric.teamAvg)
-                : getRoundedDecimalDelta(metric.raw, metric.teamAvg);
-              const isGood = diff > 0 ? metric.higherIsBetter : !metric.higherIsBetter && diff < 0;
+            const relativeLabel =
+              mode === 'avg'
+                ? (() => {
+                    const sign = diff > 0 ? '+' : '';
+                    if (isPercentageMetric(metric)) {
+                      return `${sign}${diff}pp`;
+                    }
+                    if (metric.key === 'minutesPlayed') {
+                      return `${sign}${diff.toFixed(1)} min`;
+                    }
+                    return `${sign}${diff.toFixed(1)}`;
+                  })()
+                : `${metric.formatValue(metric.raw)} / ${metric.formatValue(metric.teamMax)}`;
 
-              let barColor: string;
-              if (diff > 0 && metric.higherIsBetter) {
-                barColor = palette.success;
-              } else if (diff < 0 && !metric.higherIsBetter) {
-                barColor = palette.success;
-              } else if (diff < 0 && metric.higherIsBetter) {
-                barColor = palette.danger;
-              } else if (diff > 0 && !metric.higherIsBetter) {
-                barColor = palette.danger;
-              } else {
-                barColor = palette.accent;
-              }
+            const contextLabel =
+              mode === 'avg'
+                ? `Team avg: ${formatTeamAverage(metric)}`
+                : `Team best: ${metric.formatValue(metric.teamMax)}`;
 
-              let relativeColor: string;
-              if (isGood) {
-                relativeColor = palette.success;
-              } else if (!isGood && diff !== 0) {
-                relativeColor = palette.danger;
-              } else {
-                relativeColor = palette.textInverse;
-              }
+            return (
+              <View key={metric.key} style={styles.row}>
+                <View style={styles.rowTop}>
+                  <ThemedText style={[styles.metricLabel, { color: palette.textInverse }]}>
+                    {metric.label}
+                  </ThemedText>
+                  <ThemedText style={[styles.relativeText, { color: relativeColor }]}>
+                    {relativeLabel}
+                  </ThemedText>
+                </View>
 
-              const range = metric.teamMax - metric.teamMin;
-              const isFlat = range <= 0;
-              const rawPct = isFlat ? 0.5 : clamp01((metric.raw - metric.teamMin) / range);
-              const avgPct = isFlat ? 0.5 : clamp01((metric.teamAvg - metric.teamMin) / range);
-
-              const relativeLabel =
-                mode === 'avg'
-                  ? (() => {
-                      const sign = diff > 0 ? '+' : '';
-                      if (isPercentageMetric(metric)) {
-                        return `${sign}${diff}pp`;
-                      }
-                      if (metric.key === 'minutesPlayed') {
-                        return `${sign}${diff.toFixed(1)} min`;
-                      }
-                      return `${sign}${diff.toFixed(1)}`;
-                    })()
-                  : `${metric.formatValue(metric.raw)} / ${metric.formatValue(metric.teamMax)}`;
-
-              const contextLabel =
-                mode === 'avg'
-                  ? `Team avg: ${formatTeamAverage(metric)}`
-                  : `Team best: ${metric.formatValue(metric.teamMax)}`;
-
-              return (
-                <View key={metric.key} style={[styles.row, { borderColor: palette.overlay05 }]}>
-                  <View style={styles.rowTop}>
-                    <ThemedText style={[styles.metricLabel, { color: palette.textInverse }]}>
-                      {metric.label}
-                    </ThemedText>
-                    <ThemedText style={[styles.relativeText, { color: relativeColor }]}>
-                      {relativeLabel}
-                    </ThemedText>
-                  </View>
-
-                  <View style={[styles.barTrack, { backgroundColor: palette.overlay10 }]}>
+                <View style={[styles.barTrack, { backgroundColor: palette.overlay10 }]}>
+                  <View
+                    style={[
+                      styles.barFill,
+                      {
+                        position: 'absolute',
+                        width: `${rawPct * 100}%`,
+                        left: 0,
+                        backgroundColor: barColor,
+                      },
+                    ]}
+                  />
+                  {mode === 'avg' && (
                     <View
                       style={[
-                        styles.barFill,
+                        styles.marker,
                         {
-                          position: 'absolute',
-                          width: `${rawPct * 100}%`,
-                          left: 0,
-                          backgroundColor: barColor,
+                          left: `${avgPct * 100}%`,
+                          backgroundColor: palette.textInverse,
+                          marginLeft: avgPct > 0.5 ? -scaleBySizeClass(2, sizeClass) : 0,
                         },
                       ]}
                     />
-                    {mode === 'avg' && (
-                      <View
-                        style={[
-                          styles.marker,
-                          {
-                            left: `${avgPct * 100}%`,
-                            backgroundColor: palette.textInverse,
-                            marginLeft: avgPct > 0.5 ? -scaleBySizeClass(2, sizeClass) : 0,
-                          },
-                        ]}
-                      />
-                    )}
-                  </View>
-
-                  <View style={styles.rowMeta}>
-                    <ThemedText style={[styles.contextText, { color: palette.textMuted }]}>
-                      {`${subjectLabel}: ${metric.formatValue(metric.raw)}`}
-                    </ThemedText>
-                    <ThemedText style={[styles.contextText, { color: palette.textMuted }]}>
-                      {contextLabel}
-                    </ThemedText>
-                  </View>
+                  )}
                 </View>
-              );
-            })}
+
+                <View style={styles.rowMeta}>
+                  <ThemedText style={[styles.contextText, { color: palette.textMuted }]}>
+                    {`${subjectLabel}: ${metric.formatValue(metric.raw)}`}
+                  </ThemedText>
+                  <ThemedText style={[styles.contextText, { color: palette.textMuted }]}>
+                    {contextLabel}
+                  </ThemedText>
+                </View>
+              </View>
+            );
+          })}
+        </View>
+      </View>
+    ));
+
+  return (
+    <StatsSectionCard
+      title="Relative to team"
+      info={{
+        accessibilityLabel: 'About team comparisons',
+        title: 'Relative to team',
+        message: 'Players who played at least one point are included in averages.',
+      }}>
+      <View style={styles.content}>
+        <View style={styles.headerStack}>
+          <View style={styles.headerControlsRow}>
+            <View
+              style={[
+                styles.toggle,
+                { backgroundColor: palette.overlay05, borderColor: palette.overlay10 },
+              ]}>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityState={{ selected: mode === 'avg' }}
+                onPress={() => setMode('avg')}
+                style={[
+                  styles.toggleButton,
+                  mode === 'avg' && {
+                    backgroundColor: palette.accentOverlay15,
+                    borderColor: palette.accentOverlay30,
+                  },
+                ]}>
+                <ThemedText
+                  style={[
+                    styles.toggleText,
+                    { color: mode === 'avg' ? palette.accent : palette.textMuted },
+                  ]}>
+                  Team Avg
+                </ThemedText>
+              </Pressable>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityState={{ selected: mode === 'max' }}
+                onPress={() => setMode('max')}
+                style={[
+                  styles.toggleButton,
+                  mode === 'max' && {
+                    backgroundColor: palette.accentOverlay15,
+                    borderColor: palette.accentOverlay30,
+                  },
+                ]}>
+                <ThemedText
+                  style={[
+                    styles.toggleText,
+                    { color: mode === 'max' ? palette.accent : palette.textMuted },
+                  ]}>
+                  Team Best
+                </ThemedText>
+              </Pressable>
+            </View>
+
+            <View style={styles.legendSlot}>
+              {mode === 'avg' && (
+                <View style={styles.legendItem}>
+                  <View style={[styles.legendMarker, { backgroundColor: palette.textInverse }]} />
+                  <ThemedText style={[styles.legendText, { color: palette.textMuted }]}>
+                    = Team Avg
+                  </ThemedText>
+                </View>
+              )}
+            </View>
           </View>
         </View>
-      ))}
-    </View>
+
+        {renderGroups(primaryGroups)}
+        {secondaryGroups.length > 0 && (
+          <StatsDetailsDisclosure label="More team comparisons">
+            {renderGroups(secondaryGroups)}
+          </StatsDetailsDisclosure>
+        )}
+      </View>
+    </StatsSectionCard>
   );
 }
 
 function createStyles(sizeClass: SizeClass) {
   return StyleSheet.create({
-    container: {
-      borderRadius: 16,
-      borderWidth: 1,
-      padding: 16,
-      gap: 14,
-    },
+    content: { gap: 16 },
     headerStack: {
       gap: scaleBySizeClass(8, sizeClass),
     },
-    titleRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: 6,
-    },
-    title: {
-      fontSize: scaleBySizeClass(12, sizeClass),
-      fontFamily: Fonts.bold,
-      letterSpacing: 1,
-      textTransform: 'uppercase',
-      textAlign: 'center',
-    },
     headerControlsRow: {
+      flexWrap: 'wrap',
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
@@ -458,13 +442,15 @@ function createStyles(sizeClass: SizeClass) {
       gap: 2,
     },
     toggleButton: {
+      minHeight: 44,
+      justifyContent: 'center',
       borderRadius: 8,
       borderWidth: 0,
       paddingHorizontal: 10,
       paddingVertical: 7,
     },
     toggleText: {
-      fontSize: scaleBySizeClass(11, sizeClass),
+      fontSize: scaleBySizeClass(13, sizeClass),
       fontFamily: Fonts.bold,
     },
     legendSlot: {
@@ -482,14 +468,14 @@ function createStyles(sizeClass: SizeClass) {
       borderRadius: scaleBySizeClass(2, sizeClass),
     },
     legendText: {
-      fontSize: scaleBySizeClass(11, sizeClass),
+      fontSize: scaleBySizeClass(13, sizeClass),
       fontFamily: Fonts.semiBold,
     },
     group: {
       gap: 8,
     },
     groupTitle: {
-      fontSize: scaleBySizeClass(10, sizeClass),
+      fontSize: scaleBySizeClass(15, sizeClass),
       fontFamily: Fonts.bold,
       letterSpacing: 1,
     },
@@ -497,9 +483,7 @@ function createStyles(sizeClass: SizeClass) {
       gap: 8,
     },
     row: {
-      borderWidth: 1,
-      borderRadius: 12,
-      padding: 10,
+      paddingVertical: 10,
       gap: 8,
     },
     rowTop: {
@@ -542,7 +526,7 @@ function createStyles(sizeClass: SizeClass) {
       flexWrap: 'wrap',
     },
     contextText: {
-      fontSize: scaleBySizeClass(11, sizeClass),
+      fontSize: scaleBySizeClass(13, sizeClass),
       fontFamily: Fonts.semiBold,
     },
   });

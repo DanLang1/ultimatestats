@@ -8,8 +8,10 @@ import { Fonts } from '@/theme/theme';
 interface RoleBalanceBarProps {
   oPoints: number;
   dPoints: number;
-  oLineHolds: number;
-  dLineBreaks: number;
+  oLineHolds?: number;
+  dLineBreaks?: number;
+  oEfficiency: number | null;
+  dEfficiency: number | null;
 }
 
 export default function RoleBalanceBar({
@@ -17,6 +19,8 @@ export default function RoleBalanceBar({
   dPoints,
   oLineHolds,
   dLineBreaks,
+  oEfficiency,
+  dEfficiency,
 }: RoleBalanceBarProps) {
   const { sizeClass } = useLayout();
   const { palette } = useTheme();
@@ -34,17 +38,13 @@ export default function RoleBalanceBar({
     );
   }
 
-  const oHoldPercent = oPoints > 0 ? (oLineHolds / oPoints) * 100 : 0;
-  const dBreakPercent = dPoints > 0 ? (dLineBreaks / dPoints) * 100 : 0;
+  const oHoldPercent = oEfficiency == null ? null : oEfficiency * 100;
+  const dBreakPercent = dEfficiency == null ? null : dEfficiency * 100;
 
   return (
     <View style={styles.container}>
       {/* O-LINE card */}
-      <View
-        style={[
-          styles.roleCard,
-          { backgroundColor: palette.overlay05, borderColor: palette.accent },
-        ]}>
+      <View style={styles.roleCard}>
         <ThemedText style={[styles.roleLabel, { color: palette.accent }]}>O-Line</ThemedText>
         <View style={styles.countRow}>
           <ThemedText style={[styles.pointCount, { color: palette.textInverse }]}>
@@ -55,7 +55,7 @@ export default function RoleBalanceBar({
           </ThemedText>
         </View>
         <View style={[styles.barTrack, { backgroundColor: palette.overlay10 }]}>
-          {oPoints > 0 && (
+          {oHoldPercent != null && (
             <View
               style={[
                 styles.barFill,
@@ -66,17 +66,23 @@ export default function RoleBalanceBar({
         </View>
         <View style={styles.effRow}>
           <ThemedText style={[styles.effPercent, { color: palette.textInverse }]}>
-            {oPoints > 0 ? `${oHoldPercent.toFixed(0)}%` : '—'}
+            {oHoldPercent != null ? `${oHoldPercent.toFixed(0)}%` : '—'}
           </ThemedText>
           <ThemedText style={[styles.effSub, { color: palette.textMuted }]}>
-            {oLineHolds} {oLineHolds === 1 ? 'hold' : 'holds'}
+            {oLineHolds == null
+              ? 'Hold rate'
+              : `${oLineHolds} ${oLineHolds === 1 ? 'hold' : 'holds'}`}
           </ThemedText>
         </View>
+        {oPoints === 0 && (
+          <ThemedText style={[styles.effSub, { color: palette.textMuted }]}>
+            No O-line points
+          </ThemedText>
+        )}
       </View>
 
       {/* D-LINE card */}
-      <View
-        style={[styles.roleCard, { backgroundColor: palette.overlay05, borderColor: dLineColor }]}>
+      <View style={styles.roleCard}>
         <ThemedText style={[styles.roleLabel, { color: dLineColor }]}>D-Line</ThemedText>
         <View style={styles.countRow}>
           <ThemedText style={[styles.pointCount, { color: palette.textInverse }]}>
@@ -87,7 +93,7 @@ export default function RoleBalanceBar({
           </ThemedText>
         </View>
         <View style={[styles.barTrack, { backgroundColor: palette.overlay10 }]}>
-          {dPoints > 0 && (
+          {dBreakPercent != null && (
             <View
               style={[styles.barFill, { width: `${dBreakPercent}%`, backgroundColor: dLineColor }]}
             />
@@ -95,12 +101,19 @@ export default function RoleBalanceBar({
         </View>
         <View style={styles.effRow}>
           <ThemedText style={[styles.effPercent, { color: palette.textInverse }]}>
-            {dPoints > 0 ? `${dBreakPercent.toFixed(0)}%` : '—'}
+            {dBreakPercent != null ? `${dBreakPercent.toFixed(0)}%` : '—'}
           </ThemedText>
           <ThemedText style={[styles.effSub, { color: palette.textMuted }]}>
-            {dLineBreaks} {dLineBreaks === 1 ? 'break' : 'breaks'}
+            {dLineBreaks == null
+              ? 'Break rate'
+              : `${dLineBreaks} ${dLineBreaks === 1 ? 'break' : 'breaks'}`}
           </ThemedText>
         </View>
+        {dPoints === 0 && (
+          <ThemedText style={[styles.effSub, { color: palette.textMuted }]}>
+            No D-line points
+          </ThemedText>
+        )}
       </View>
     </View>
   );
@@ -122,19 +135,17 @@ function createStyles(sizeClass: SizeClass) {
       flexDirection: 'row',
       flexWrap: 'wrap',
       gap: 10,
-      ...(sizeClass !== 'small' && { justifyContent: 'center' as const }),
     },
     roleCard: {
       flex: 1,
       minWidth: scaleBySizeClass(130, sizeClass),
-      maxWidth: 320,
       borderRadius: 14,
-      borderWidth: 1,
-      padding: scaleBySizeClass(12, sizeClass),
+
+      paddingVertical: scaleBySizeClass(8, sizeClass),
       gap: scaleBySizeClass(7, sizeClass),
     },
     roleLabel: {
-      fontSize: scaleBySizeClass(9, sizeClass),
+      fontSize: scaleBySizeClass(13, sizeClass),
       fontFamily: Fonts.bold,
       letterSpacing: 0.8,
       textTransform: 'uppercase',
@@ -165,6 +176,7 @@ function createStyles(sizeClass: SizeClass) {
     effRow: {
       flexDirection: 'row',
       alignItems: 'baseline',
+      flexWrap: 'wrap',
       gap: 4,
     },
     effPercent: {
@@ -172,7 +184,7 @@ function createStyles(sizeClass: SizeClass) {
       fontFamily: Fonts.bold,
     },
     effSub: {
-      fontSize: scaleBySizeClass(10, sizeClass),
+      fontSize: scaleBySizeClass(13, sizeClass),
     },
   });
 }

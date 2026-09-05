@@ -83,7 +83,7 @@ describe('AdvancedPlayerThrowTypesCard', () => {
     await renderScreen(<AdvancedPlayerThrowTypesCard stats={stats} />);
 
     expect(screen.getByTestId('advanced-player-throw-types-card')).toBeTruthy();
-    expect(screen.getByText('THROW CLASSIFICATIONS')).toBeTruthy();
+    expect(screen.getByText('Throw classifications')).toBeTruthy();
     expect(screen.getByText('HUCK THROWING')).toBeTruthy();
     expect(screen.getByText('75%')).toBeTruthy();
     expect(screen.getByText('Completion rate')).toBeTruthy();

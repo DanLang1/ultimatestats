@@ -1,9 +1,9 @@
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/ThemedText';
-import { useAlert } from '@/components/ui/AlertProvider';
+import StatsDetailsDisclosure from '@/components/view-stats/StatsDetailsDisclosure';
+import StatsSectionCard from '@/components/view-stats/StatsSectionCard';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import {
@@ -69,16 +69,8 @@ export default function RelativePlayerStatsSection({
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
   const styles = createStyles(sizeClass);
-  const { showAlert } = useAlert();
   const [mode, setMode] = useState<RelativeMode>('avg');
   const hasLineTracking = (pointLines?.length ?? 0) > 0;
-
-  const handleInfoPress = () => {
-    const lineNote = hasLineTracking
-      ? 'Players who played at least one point are included in averages.'
-      : 'Average across players with at least one +- event.';
-    showAlert({ title: 'Relative to Team', message: lineNote });
-  };
 
   const eventMetrics = computeRelativePlayerStats(
     playerId,
@@ -126,97 +118,122 @@ export default function RelativePlayerStatsSection({
   const subjectLabel = allPlayerStats.find((stats) => stats.id === playerId)?.name ?? 'Player';
 
   return (
-    <View
-      style={[
-        styles.container,
-        { backgroundColor: palette.overlay02, borderColor: palette.overlay05 },
-      ]}>
-      <View style={styles.headerStack}>
-        <View style={styles.titleRow}>
-          <ThemedText style={[styles.title, { color: palette.textMuted }]}>
-            RELATIVE TO TEAM
-          </ThemedText>
-          <Pressable onPress={handleInfoPress} hitSlop={8}>
-            <MaterialCommunityIcons
-              name="help-circle-outline"
-              size={scaleBySizeClass(14, sizeClass)}
-              color={palette.textMuted}
-            />
-          </Pressable>
-        </View>
-
-        <View style={styles.headerControlsRow}>
-          <View
-            style={[
-              styles.toggle,
-              { backgroundColor: palette.overlay05, borderColor: palette.overlay10 },
-            ]}>
-            <Pressable
-              onPress={() => setMode('avg')}
+    <StatsSectionCard
+      title="Relative to team"
+      info={{
+        accessibilityLabel: 'About team comparisons',
+        title: 'Relative to team',
+        message: hasLineTracking
+          ? 'Players who played at least one point are included in averages.'
+          : 'Average across players with at least one +/- event.',
+      }}>
+      <View style={styles.content}>
+        <View style={styles.headerStack}>
+          <View style={styles.headerControlsRow}>
+            <View
               style={[
-                styles.toggleButton,
-                mode === 'avg' && {
-                  backgroundColor: palette.accentOverlay15,
-                  borderColor: palette.accentOverlay30,
-                },
+                styles.toggle,
+                { backgroundColor: palette.overlay05, borderColor: palette.overlay10 },
               ]}>
-              <ThemedText
+              <Pressable
+                accessibilityRole="button"
+                accessibilityState={{ selected: mode === 'avg' }}
+                onPress={() => setMode('avg')}
                 style={[
-                  styles.toggleText,
-                  { color: mode === 'avg' ? palette.accent : palette.textMuted },
+                  styles.toggleButton,
+                  mode === 'avg' && {
+                    backgroundColor: palette.accentOverlay15,
+                    borderColor: palette.accentOverlay30,
+                  },
                 ]}>
-                Team Avg
-              </ThemedText>
-            </Pressable>
-            <Pressable
-              onPress={() => setMode('max')}
-              style={[
-                styles.toggleButton,
-                mode === 'max' && {
-                  backgroundColor: palette.accentOverlay15,
-                  borderColor: palette.accentOverlay30,
-                },
-              ]}>
-              <ThemedText
-                style={[
-                  styles.toggleText,
-                  { color: mode === 'max' ? palette.accent : palette.textMuted },
-                ]}>
-                Team Best
-              </ThemedText>
-            </Pressable>
-          </View>
-
-          <View style={styles.legendSlot}>
-            {mode === 'avg' && (
-              <View style={styles.legendItem}>
-                <View style={[styles.legendMarker, { backgroundColor: palette.textInverse }]} />
-                <ThemedText style={[styles.legendText, { color: palette.textMuted }]}>
-                  = Team Avg
+                <ThemedText
+                  style={[
+                    styles.toggleText,
+                    { color: mode === 'avg' ? palette.accent : palette.textMuted },
+                  ]}>
+                  Team Avg
                 </ThemedText>
-              </View>
-            )}
+              </Pressable>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityState={{ selected: mode === 'max' }}
+                onPress={() => setMode('max')}
+                style={[
+                  styles.toggleButton,
+                  mode === 'max' && {
+                    backgroundColor: palette.accentOverlay15,
+                    borderColor: palette.accentOverlay30,
+                  },
+                ]}>
+                <ThemedText
+                  style={[
+                    styles.toggleText,
+                    { color: mode === 'max' ? palette.accent : palette.textMuted },
+                  ]}>
+                  Team Best
+                </ThemedText>
+              </Pressable>
+            </View>
+
+            <View style={styles.legendSlot}>
+              {mode === 'avg' && (
+                <View style={styles.legendItem}>
+                  <View style={[styles.legendMarker, { backgroundColor: palette.textInverse }]} />
+                  <ThemedText style={[styles.legendText, { color: palette.textMuted }]}>
+                    = Team Avg
+                  </ThemedText>
+                </View>
+              )}
+            </View>
           </View>
         </View>
+
+        {renderGroup(
+          'PRODUCTION',
+          productionMetrics,
+          mode,
+          styles,
+          palette,
+          sizeClass,
+          subjectLabel,
+        )}
+        {renderGroup('IMPACT', impactMetrics, mode, styles, palette, sizeClass, subjectLabel)}
+
+        {(mistakeMetrics.length > 0 || ptMetrics.length > 0) && (
+          <StatsDetailsDisclosure label="More team comparisons">
+            {renderGroup(
+              'MISTAKES',
+              mistakeMetrics,
+              mode,
+              styles,
+              palette,
+              sizeClass,
+              subjectLabel,
+            )}
+            {ptMetrics.length > 0 && (
+              <>
+                <View style={[styles.sectionDivider, { backgroundColor: palette.overlay10 }]} />
+                {showPartialCoverageNote && (
+                  <ThemedText style={[styles.sampleNote, { color: palette.textMuted }]}>
+                    Playing-time comparisons are based on line data in {trackedGameCount}/
+                    {totalGameCount} selected games.
+                  </ThemedText>
+                )}
+                {renderGroup(
+                  'PLAYING TIME',
+                  ptMetrics,
+                  mode,
+                  styles,
+                  palette,
+                  sizeClass,
+                  subjectLabel,
+                )}
+              </>
+            )}
+          </StatsDetailsDisclosure>
+        )}
       </View>
-
-      {renderGroup('PRODUCTION', productionMetrics, mode, styles, palette, sizeClass, subjectLabel)}
-      {renderGroup('MISTAKES', mistakeMetrics, mode, styles, palette, sizeClass, subjectLabel)}
-      {renderGroup('IMPACT', impactMetrics, mode, styles, palette, sizeClass, subjectLabel)}
-
-      {ptMetrics.length > 0 && (
-        <>
-          <View style={[styles.sectionDivider, { backgroundColor: palette.overlay10 }]} />
-          {showPartialCoverageNote && (
-            <ThemedText style={[styles.sampleNote, { color: palette.textMuted }]}>
-              Playing-time comparisons are based on line data in {trackedGameCount}/{totalGameCount}{' '}
-              selected games.
-            </ThemedText>
-          )}
-          {renderGroup('PLAYING TIME', ptMetrics, mode, styles, palette, sizeClass, subjectLabel)}
-        </>
-      )}
-    </View>
+    </StatsSectionCard>
   );
 }
 
@@ -298,9 +315,7 @@ function renderGroup(
           );
 
           return (
-            <View
-              key={`${metric.category}-${metric.key}`}
-              style={[styles.row, { borderColor: palette.overlay05 }]}>
+            <View key={`${metric.category}-${metric.key}`} style={styles.row}>
               <View style={styles.rowTop}>
                 <ThemedText style={[styles.metricLabel, { color: palette.textInverse }]}>
                   {metric.label}
@@ -350,29 +365,12 @@ function renderGroup(
 
 function createStyles(sizeClass: SizeClass) {
   return StyleSheet.create({
-    container: {
-      borderRadius: 16,
-      borderWidth: 1,
-      padding: 16,
-      gap: 14,
-    },
+    content: { gap: 16 },
     headerStack: {
       gap: scaleBySizeClass(8, sizeClass),
     },
-    titleRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: 6,
-    },
-    title: {
-      fontSize: scaleBySizeClass(12, sizeClass),
-      fontFamily: Fonts.bold,
-      letterSpacing: 1,
-      textTransform: 'uppercase',
-      textAlign: 'center',
-    },
     headerControlsRow: {
+      flexWrap: 'wrap',
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
@@ -391,17 +389,19 @@ function createStyles(sizeClass: SizeClass) {
       gap: 2,
     },
     toggleButton: {
+      minHeight: 44,
+      justifyContent: 'center',
       borderRadius: 8,
       borderWidth: 0,
       paddingHorizontal: 10,
       paddingVertical: 7,
     },
     toggleText: {
-      fontSize: scaleBySizeClass(11, sizeClass),
+      fontSize: scaleBySizeClass(13, sizeClass),
       fontFamily: Fonts.bold,
     },
     sampleNote: {
-      fontSize: scaleBySizeClass(10, sizeClass),
+      fontSize: scaleBySizeClass(15, sizeClass),
       fontFamily: Fonts.semiBold,
       lineHeight: scaleBySizeClass(14, sizeClass),
     },
@@ -420,7 +420,7 @@ function createStyles(sizeClass: SizeClass) {
       flexWrap: 'wrap',
     },
     groupTitle: {
-      fontSize: scaleBySizeClass(10, sizeClass),
+      fontSize: scaleBySizeClass(15, sizeClass),
       fontFamily: Fonts.bold,
       letterSpacing: 1,
     },
@@ -428,9 +428,7 @@ function createStyles(sizeClass: SizeClass) {
       gap: 8,
     },
     row: {
-      borderWidth: 1,
-      borderRadius: 12,
-      padding: 10,
+      paddingVertical: 10,
       gap: 8,
     },
     rowTop: {
@@ -456,11 +454,11 @@ function createStyles(sizeClass: SizeClass) {
       fontFamily: Fonts.extraBold,
     },
     contextText: {
-      fontSize: scaleBySizeClass(11, sizeClass),
+      fontSize: scaleBySizeClass(13, sizeClass),
       fontFamily: Fonts.semiBold,
     },
     detailText: {
-      fontSize: scaleBySizeClass(11, sizeClass),
+      fontSize: scaleBySizeClass(13, sizeClass),
       fontFamily: Fonts.semiBold,
     },
     barTrack: {
@@ -491,7 +489,7 @@ function createStyles(sizeClass: SizeClass) {
       borderRadius: scaleBySizeClass(2, sizeClass),
     },
     legendText: {
-      fontSize: scaleBySizeClass(11, sizeClass),
+      fontSize: scaleBySizeClass(13, sizeClass),
       fontFamily: Fonts.semiBold,
     },
   });

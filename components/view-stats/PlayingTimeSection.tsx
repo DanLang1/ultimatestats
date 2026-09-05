@@ -15,7 +15,8 @@ import { Fonts } from '@/theme/theme';
 
 import PlayingTimeGauge from './playing-time/PlayingTimeGauge';
 import RoleBalanceBar from './playing-time/RoleBalanceBar';
-import PlayingTimePill from './PlayingTimePill';
+import StatsGrid from './StatsGrid';
+import StatsSectionCard from './StatsSectionCard';
 
 interface PlayingTimeSectionProps {
   playerId: string;
@@ -79,14 +80,6 @@ export default function PlayingTimeSection({
   }
 
   const rates = computeRates(stats);
-  let scoreRateColor: string;
-  if (rates.pointWinRate >= 60) {
-    scoreRateColor = palette.success;
-  } else if (rates.pointWinRate <= 40) {
-    scoreRateColor = palette.danger;
-  } else {
-    scoreRateColor = palette.textInverse;
-  }
 
   const {
     goalsPerPoint,
@@ -112,111 +105,84 @@ export default function PlayingTimeSection({
     : '—';
 
   return (
-    <View
-      style={[
-        styles.container,
-        { backgroundColor: palette.overlay02, borderColor: palette.overlay05 },
-      ]}>
-      <ThemedText style={[styles.sectionTitle, { color: palette.textMuted }]}>
-        PLAYING TIME
-      </ThemedText>
+    <StatsSectionCard title="Playing time">
+      <View style={styles.content}>
+        <View style={styles.overviewRow}>
+          <PlayingTimeGauge
+            percentage={stats.playingTimePercent ?? 0}
+            centerLabel={stats.pointsPlayed.toString()}
+            centerSubLabel="Points"
+            color={palette.accent}
+          />
 
-      <View style={styles.overviewRow}>
-        <PlayingTimeGauge
-          percentage={stats.playingTimePercent ?? 0}
-          centerLabel={stats.pointsPlayed.toString()}
-          centerSubLabel="Points"
-          color={palette.accent}
-        />
-
-        <View style={styles.heroDetails}>
-          <ThemedText style={[styles.heroSubtext, { color: palette.textMuted }]}>
-            Played {stats.playingTimePercent?.toFixed(0) ?? '0'}% of team points
-          </ThemedText>
-
-          <View style={styles.heroMetricsRow}>
-            <PlayingTimePill
-              label="Total PT (min)"
-              value={totalPlayingTimeLabel}
-              align="left"
-              compact
-            />
-            <PlayingTimePill label="Avg / pt" value={avgPerPointLabel} align="left" compact />
-            <PlayingTimePill
-              label="Score Rate"
-              value={`${rates.pointWinRate.toFixed(0)}%`}
-              color={scoreRateColor}
-              align="left"
-              compact
-            />
+          <View style={styles.heroDetails}>
+            <ThemedText style={[styles.heroSubtext, { color: palette.textMuted }]}>
+              Played {stats.playingTimePercent?.toFixed(0) ?? '0'}% of team points
+            </ThemedText>
           </View>
         </View>
-      </View>
 
-      <View style={styles.roleSection}>
-        <ThemedText style={[styles.sectionLabel, { color: palette.textMuted }]}>
-          LINE BALANCE
-        </ThemedText>
-        <RoleBalanceBar
-          oPoints={stats.oPoints}
-          dPoints={stats.dPoints}
-          oLineHolds={stats.oLineHolds}
-          dLineBreaks={stats.dLineBreaks}
+        <StatsGrid
+          variant="summary"
+          columns={3}
+          stats={[
+            { label: 'Time played', value: totalPlayingTimeLabel, sublabel: 'min:sec' },
+            { label: 'Avg point duration', value: avgPerPointLabel },
+            { label: 'Points won while playing', value: `${rates.pointWinRate.toFixed(0)}%` },
+          ]}
         />
-      </View>
 
-      <View style={styles.perPointSection}>
-        <ThemedText style={[styles.sectionLabel, { color: palette.textMuted }]}>
-          PER POINT
-        </ThemedText>
-        <View style={styles.pillGrid}>
-          <PlayingTimePill label="Goals" value={goalsPerPoint.toFixed(2)} />
-          <PlayingTimePill label="Assists" value={assistsPerPoint.toFixed(2)} />
-          <PlayingTimePill label="Blocks" value={blocksPerPoint.toFixed(2)} />
-          <PlayingTimePill label="TO" value={turnoversPerPoint.toFixed(2)} />
-          <PlayingTimePill label="TA" value={throwawaysPerPoint.toFixed(2)} />
-          <PlayingTimePill label="Drops" value={dropsPerPoint.toFixed(2)} />
+        <View style={styles.roleSection}>
+          <ThemedText style={[styles.sectionLabel, { color: palette.textMuted }]}>
+            O/D performance
+          </ThemedText>
+          <RoleBalanceBar
+            oEfficiency={stats.oPoints > 0 ? stats.oLineHolds / stats.oPoints : null}
+            dEfficiency={stats.dPoints > 0 ? stats.dLineBreaks / stats.dPoints : null}
+            oPoints={stats.oPoints}
+            dPoints={stats.dPoints}
+            oLineHolds={stats.oLineHolds}
+            dLineBreaks={stats.dLineBreaks}
+          />
+        </View>
+
+        <View style={styles.perPointSection}>
+          <ThemedText style={[styles.sectionLabel, { color: palette.textMuted }]}>
+            Per point
+          </ThemedText>
+          <StatsGrid
+            variant="summary"
+            columns={3}
+            stats={[
+              { label: 'Goals', value: goalsPerPoint.toFixed(2) },
+              { label: 'Assists', value: assistsPerPoint.toFixed(2) },
+              { label: 'Blocks', value: blocksPerPoint.toFixed(2) },
+              { label: 'Turnovers', value: turnoversPerPoint.toFixed(2) },
+              { label: 'Throwaways', value: throwawaysPerPoint.toFixed(2) },
+              { label: 'Drops', value: dropsPerPoint.toFixed(2) },
+            ]}
+          />
         </View>
       </View>
-    </View>
+    </StatsSectionCard>
   );
 }
 
 function createStyles(sizeClass: SizeClass) {
   return StyleSheet.create({
-    container: {
-      borderRadius: 16,
-      borderWidth: 1,
-      padding: 16,
-      marginTop: 16,
-      gap: 14,
-    },
-    sectionTitle: {
-      fontSize: scaleBySizeClass(12, sizeClass),
-      fontFamily: Fonts.bold,
-      letterSpacing: 1,
-      textTransform: 'uppercase',
-      alignSelf: 'center',
-    },
+    content: { gap: 16 },
     overviewRow: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 16,
-      ...(sizeClass !== 'small' && { alignSelf: 'center' as const }),
     },
     heroDetails: {
-      ...(sizeClass === 'small' && { flex: 1 }),
+      flex: 1,
       gap: 6,
     },
     heroSubtext: {
-      fontSize: scaleBySizeClass(11, sizeClass),
+      fontSize: scaleBySizeClass(13, sizeClass),
       fontFamily: Fonts.semiBold,
-    },
-    heroMetricsRow: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      gap: 8,
-      marginTop: 2,
     },
     roleSection: {
       gap: 8,
@@ -225,16 +191,9 @@ function createStyles(sizeClass: SizeClass) {
       gap: 8,
     },
     sectionLabel: {
-      fontSize: scaleBySizeClass(9, sizeClass),
+      fontSize: scaleBySizeClass(15, sizeClass),
       fontFamily: Fonts.semiBold,
       letterSpacing: 0.5,
-      ...(sizeClass !== 'small' && { alignSelf: 'center' as const }),
-    },
-    pillGrid: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      gap: 8,
-      ...(sizeClass !== 'small' && { justifyContent: 'center' as const }),
     },
   });
 }

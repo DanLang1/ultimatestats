@@ -79,8 +79,6 @@ export default function ChemistryMap({ playerName, connections }: ChemistryMapPr
 
   return (
     <View style={styles.container}>
-      <ThemedText style={[styles.title, { color: palette.textMuted }]}>CHEMISTRY</ThemedText>
-
       {/* Summary Stat (Matches ImpactTimeline style) */}
       <View style={styles.summaryDisplay}>
         <ThemedText style={[styles.summaryValue, { color: palette.accent }]}>
@@ -263,13 +261,13 @@ export default function ChemistryMap({ playerName, connections }: ChemistryMapPr
         <View style={styles.legendItem}>
           <View style={[styles.legendDot, { backgroundColor: palette.accent }]} />
           <ThemedText style={[styles.legendText, { color: palette.textMuted }]}>
-            Caught from them
+            Goals caught from
           </ThemedText>
         </View>
         <View style={styles.legendItem}>
           <View style={[styles.legendDot, { backgroundColor: palette.success }]} />
           <ThemedText style={[styles.legendText, { color: palette.textMuted }]}>
-            Threw to them
+            Assists thrown to
           </ThemedText>
         </View>
       </View>
@@ -284,13 +282,6 @@ function createStyles(sizeClass: SizeClass) {
     container: {
       padding: 16,
       alignItems: 'center',
-    },
-    title: {
-      fontSize: scaleBySizeClass(13, sizeClass),
-      fontFamily: Fonts.extraBold,
-      letterSpacing: 1.5,
-      marginBottom: 8,
-      textTransform: 'uppercase',
     },
     summaryDisplay: {
       alignItems: 'center',
@@ -323,6 +314,8 @@ function createStyles(sizeClass: SizeClass) {
     },
     legend: {
       flexDirection: 'row',
+      flexWrap: 'wrap',
+      justifyContent: 'center',
       gap: 16,
       marginTop: 12,
     },
@@ -337,7 +330,7 @@ function createStyles(sizeClass: SizeClass) {
       borderRadius: 4,
     },
     legendText: {
-      fontSize: scaleBySizeClass(10, sizeClass),
+      fontSize: scaleBySizeClass(13, sizeClass),
       fontFamily: Fonts.semiBold,
     },
   });
