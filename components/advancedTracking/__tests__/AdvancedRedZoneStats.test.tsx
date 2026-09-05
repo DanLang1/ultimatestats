@@ -100,7 +100,7 @@ describe('Red Zone team stats display', () => {
     const section = within(screen.getByTestId('advanced-red-zone-defense-card'));
     expect(within(section.getByText('Stop Rate').parent!).getByText('50%')).toBeTruthy();
     expect(within(section.getByText('Stop Rate').parent!).getByText('1/2')).toBeTruthy();
-    expect(section.getByText('Red Zone Stops')).toBeTruthy();
+    expect(section.getByText('Red Zone Stop')).toBeTruthy();
     expect(section.getByText('Avg Time to Opp Goal')).toBeTruthy();
     expect(section.getByText('12s')).toBeTruthy();
     expect(section.getByText('Avg Time to Opp Turn')).toBeTruthy();
@@ -153,7 +153,7 @@ describe('Red Zone team stats display', () => {
     await renderStats(aggregate, ADVANCED_TEST_FOCUS_SIDE_ID, 3);
     expectRedZoneStat('Conversion', '50%', '1/2');
     expect(screen.queryByText('Opportunities')).toBeNull();
-    expectRedZoneStat('Red Zone Turns', '1');
+    expectRedZoneStat('Red Zone Turn', '1');
     expectRedZoneStat('Avg Time to Score', '12s');
     expectRedZoneStat('Avg Time to Turn', '6s');
   });

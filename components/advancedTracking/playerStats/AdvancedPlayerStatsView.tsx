@@ -30,7 +30,7 @@ import {
 import { resolveAnalyticsSideId } from '@/lib/advancedTracking/analyticsPerspectiveUtils';
 import { buildAnalyticsGame } from '@/lib/advancedTracking/buildAnalyticsGame';
 import type { AdvancedTrackedGame } from '@/lib/advancedTracking/types';
-import { hasItems } from '@/lib/utils';
+import { hasItems, pluralize } from '@/lib/utils';
 import { Fonts } from '@/theme/theme';
 
 type AnalyticsGame = ReturnType<typeof buildAnalyticsGame>;
@@ -46,10 +46,6 @@ type AdvancedPlayerStatsViewProps = {
   aggregateGameIds?: string[];
   selectedImpactGameId?: string;
 };
-
-function getCountLabel(value: number, singular: string, plural: string): string {
-  return value === 1 ? singular : plural;
-}
 
 export default function AdvancedPlayerStatsView({
   analyticsGame,
@@ -311,29 +307,29 @@ export default function AdvancedPlayerStatsView({
             <View style={styles.pillsRow}>
               {[
                 {
-                  label: getCountLabel(stats.goals, 'Goal', 'Goals'),
+                  label: pluralize(stats.goals, 'Goal', 'Goals'),
                   value: stats.goals,
                   positive: true,
                 },
                 {
-                  label: getCountLabel(stats.assists, 'Assist', 'Assists'),
+                  label: pluralize(stats.assists, 'Assist', 'Assists'),
                   value: stats.assists,
                   positive: true,
                 },
                 { label: 'HA', value: stats.hockeyAssists, positive: true },
                 {
-                  label: getCountLabel(stats.blocks, 'Block', 'Blocks'),
+                  label: pluralize(stats.blocks, 'Block', 'Blocks'),
                   value: stats.blocks,
                   positive: true,
                 },
                 {
-                  label: getCountLabel(stats.pressures, 'Pressure', 'Pressures'),
+                  label: pluralize(stats.pressures, 'Pressure', 'Pressures'),
                   value: stats.pressures,
                   positive: true,
                 },
                 { label: 'T/A', value: stats.throwaways, positive: false },
                 {
-                  label: getCountLabel(stats.drops, 'Drop', 'Drops'),
+                  label: pluralize(stats.drops, 'Drop', 'Drops'),
                   value: stats.drops,
                   positive: false,
                 },

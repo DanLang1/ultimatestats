@@ -2,6 +2,7 @@ import { StyleSheet, View } from 'react-native';
 
 import { useTheme } from '@/context/ThemeContext';
 import { PlayerStats as PlayerStatsType } from '@/lib/basic/statsUtils';
+import { pluralize } from '@/lib/utils';
 
 import StatPill from './StatPill';
 
@@ -9,10 +10,6 @@ interface PlayerStatsSummaryProps {
   stats: PlayerStatsType;
   variant?: 'horizontal' | 'vertical';
 }
-
-// Helper for singular/plural labels
-const pluralize = (count: number, singular: string, plural: string) =>
-  count === 1 ? singular : plural;
 
 export default function PlayerStatsSummary({
   stats,

@@ -8,6 +8,11 @@ export function hasItems<T>(arr: readonly T[] | null | undefined): arr is readon
   return Array.isArray(arr) && arr.length > 0;
 }
 
+/** Singular when count is exactly 1, plural otherwise. */
+export function pluralize(count: number, singular: string, plural: string): string {
+  return count === 1 ? singular : plural;
+}
+
 /** Format seconds as M:SS, with a leading minus for negative (overtime) values. */
 export function formatTimerSeconds(seconds: number): string {
   const abs = Math.abs(seconds);
