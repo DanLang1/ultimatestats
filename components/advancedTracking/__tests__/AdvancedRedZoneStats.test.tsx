@@ -78,6 +78,7 @@ function expectRedZoneStat(label: string, value: string, ratio?: string) {
 describe('Red Zone team stats display', () => {
   it('hides the section when the selected side has no entries', async () => {
     await renderStats(redZoneGame('goal', false));
+    expect(screen.queryByTestId('advanced-red-zone-summary-card')).toBeNull();
     expect(screen.queryByTestId('advanced-red-zone-card')).toBeNull();
     expect(screen.queryByLabelText('About red zone stats')).toBeNull();
   });
@@ -85,6 +86,7 @@ describe('Red Zone team stats display', () => {
   it('does not show the other side’s entries', async () => {
     await renderStats(redZoneGame('goal'), ADVANCED_TEST_OPPONENT_SIDE_ID);
     expect(screen.queryByTestId('advanced-red-zone-card')).toBeNull();
+    expect(screen.getByTestId('advanced-red-zone-summary-card')).toBeTruthy();
     expect(screen.getByTestId('advanced-red-zone-defense-card')).toBeTruthy();
   });
 
@@ -105,9 +107,23 @@ describe('Red Zone team stats display', () => {
     expect(section.getByText('6s')).toBeTruthy();
   });
 
+  it('groups offensive and defensive results in one red zone card', async () => {
+    const aggregate = aggregateAnalyticsGames([
+      redZoneGame('goal'),
+      opponentRedZoneGame('throwaway'),
+    ]);
+    if (aggregate == null) throw new Error('Expected combined red zone fixture');
+    await renderStats(aggregate, ADVANCED_TEST_FOCUS_SIDE_ID, 2);
+
+    const summaryCard = within(screen.getByTestId('advanced-red-zone-summary-card'));
+    expect(summaryCard.getByTestId('advanced-red-zone-card')).toBeTruthy();
+    expect(summaryCard.getByTestId('advanced-red-zone-defense-card')).toBeTruthy();
+  });
+
   it('shows conversion, opportunities, turnovers, outcome timing, and help', async () => {
     await renderStats(redZoneGame('goal'));
-    expect(screen.getByText('RED ZONE OFFENSE')).toBeTruthy();
+    expect(screen.getByText('RED ZONE')).toBeTruthy();
+    expect(screen.getByText('OFFENSE')).toBeTruthy();
     expectRedZoneStat('Conversion', '100%', '1/1');
     expect(screen.queryByText('Opportunities')).toBeNull();
     expectRedZoneStat('Red Zone Turns', '0');

@@ -1,15 +1,16 @@
-import { StyleSheet, View } from 'react-native';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { useState } from 'react';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/ThemedText';
+import StatsGrid, { type StatItem } from '@/components/view-stats/StatsGrid';
 import { useTheme } from '@/context/ThemeContext';
-import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { scaleBySizeClass, type SizeClass, useLayout } from '@/hooks/useLayout';
 import type {
-  AdvancedFlipChoiceBucket,
   AdvancedFlipStats,
-  AdvancedInitialPullWinBucket,
   AdvancedInitialPullWinStats,
 } from '@/lib/advancedTracking/advancedAggregateStatsUtils';
-import { Fonts } from '@/theme/theme';
+import { Fonts, type Palette } from '@/theme/theme';
 
 interface OpeningSetupStatsProps {
   flipStats?: AdvancedFlipStats;
@@ -21,218 +22,184 @@ function formatWinRate(winPercentage: number | null): string {
   return `${Math.round(winPercentage * 100)}%`;
 }
 
-function formatRecord(bucket: AdvancedInitialPullWinBucket | AdvancedFlipChoiceBucket): string {
-  const ties = 'ties' in bucket ? bucket.ties : 0;
-  if (ties > 0) return `${bucket.wins}-${bucket.losses}-${ties}`;
-  return `${bucket.wins}-${bucket.losses}`;
-}
-
-function formatGameCount(games: number): string {
-  return `${games} ${games === 1 ? 'game' : 'games'}`;
+function formatRecord(wins: number, losses: number): string {
+  return `${wins}-${losses} record`;
 }
 
 export default function OpeningSetupStats({
   flipStats,
   initialPullWinStats,
 }: OpeningSetupStatsProps) {
+  const [detailsExpanded, setDetailsExpanded] = useState(false);
   const { palette } = useTheme();
-  const { isLandscape, sizeClass } = useLayout();
-  const styles = createStyles(isLandscape, sizeClass);
+  const { sizeClass } = useLayout();
+  const styles = createStyles(palette, sizeClass);
+  const choices = flipStats
+    ? Object.entries(flipStats.byChoice).filter(([, bucket]) => bucket.games > 0)
+    : [];
 
-  const startingRows = [
-    {
-      key: 'offense',
+  const startingStats: StatItem[] = [];
+  const receivingFirst = initialPullWinStats?.receivingFirst;
+  const pullingFirst = initialPullWinStats?.pullingFirst;
+
+  if (receivingFirst && receivingFirst.games > 0) {
+    startingStats.push({
       label: 'Started on Offense',
-      choiceLabel: 'We chose offense',
-      accentColor: palette.success,
-      bucket: initialPullWinStats?.receivingFirst,
-      choiceBucket: flipStats?.byChoice.offense,
-    },
-    {
-      key: 'defense',
-      label: 'Started on Defense',
-      choiceLabel: 'We chose defense',
-      accentColor: palette.accent,
-      bucket: initialPullWinStats?.pullingFirst,
-      choiceBucket: flipStats?.byChoice.defense,
-    },
-  ].filter((row) => row.bucket != null && row.bucket.games > 0);
+      value: formatWinRate(receivingFirst.winPercentage),
+      sublabel: formatRecord(receivingFirst.wins, receivingFirst.losses),
+    });
+  }
 
-  const sideChoice = flipStats?.byChoice.side;
+  if (pullingFirst && pullingFirst.games > 0) {
+    startingStats.push({
+      label: 'Started on Defense',
+      value: formatWinRate(pullingFirst.winPercentage),
+      sublabel: formatRecord(pullingFirst.wins, pullingFirst.losses),
+    });
+  }
+
+  if (!flipStats && startingStats.length === 0) return null;
 
   return (
-    <View
-      style={[styles.card, { backgroundColor: palette.overlay05, borderColor: palette.overlay10 }]}>
+    <View testID="advanced-opening-results-card" style={styles.card}>
       {flipStats && (
-        <View style={styles.flipRow}>
-          <View>
-            <ThemedText style={[styles.rowLabel, { color: palette.textInverse }]}>
-              Flips Won
-            </ThemedText>
-            <ThemedText style={[styles.rowDetail, { color: palette.textMuted }]}>
-              {flipStats.wins} of {flipStats.recorded} recorded
+        <View style={styles.flipHeader}>
+          <View style={styles.flipLabel}>
+            <ThemedText style={styles.title}>Flips Won</ThemedText>
+            <ThemedText style={styles.detail}>
+              {`${flipStats.wins} of ${flipStats.recorded} recorded`}
             </ThemedText>
           </View>
-          <ThemedText style={[styles.flipRate, { color: palette.textInverse }]}>
-            {formatWinRate(flipStats.winPercentage)}
-          </ThemedText>
+          <ThemedText style={styles.flipValue}>{formatWinRate(flipStats.winPercentage)}</ThemedText>
         </View>
       )}
 
-      {flipStats && startingRows.length > 0 && (
-        <View style={[styles.divider, { backgroundColor: palette.overlay10 }]} />
+      {startingStats.length > 0 && (
+        <View style={styles.startingResults}>
+          <ThemedText style={styles.caption}>Game win rate by start</ThemedText>
+          <StatsGrid stats={startingStats} columns={startingStats.length} variant="summary" />
+        </View>
       )}
-
-      {startingRows.length > 0 && (
-        <View style={styles.startingRows}>
-          {startingRows.map((row) => {
-            const bucket = row.bucket;
-            if (bucket == null) return null;
-
-            const choiceBucket = row.choiceBucket;
-            const hasChoice = choiceBucket != null && choiceBucket.games > 0;
-
+      {choices.length > 0 && (
+        <Pressable
+          testID="advanced-opening-details-toggle"
+          accessibilityRole="button"
+          accessibilityLabel="Flip details"
+          accessibilityState={{ expanded: detailsExpanded }}
+          onPress={() => setDetailsExpanded((expanded) => !expanded)}
+          style={({ pressed }) => [styles.detailsToggle, pressed && styles.detailsPressed]}>
+          <ThemedText style={styles.detailsLabel}>
+            {detailsExpanded ? 'Hide details' : 'Details'}
+          </ThemedText>
+          <MaterialCommunityIcons
+            name={detailsExpanded ? 'chevron-up' : 'chevron-down'}
+            size={scaleBySizeClass(22, sizeClass)}
+            color={palette.accent}
+          />
+        </Pressable>
+      )}
+      {detailsExpanded && (
+        <View style={styles.choices}>
+          <ThemedText style={styles.caption}>After winning the flip</ThemedText>
+          {choices.map(([choice, bucket]) => {
+            const record = `${bucket.wins}W · ${bucket.losses}L`;
+            const tieLabel =
+              bucket.ties > 0 ? ` · ${bucket.ties} ${bucket.ties === 1 ? 'tie' : 'ties'}` : '';
+            const winRate =
+              bucket.winPercentage === null ? '—' : `${formatWinRate(bucket.winPercentage)} wins`;
             return (
-              <View key={row.key} style={styles.startingRow}>
-                <View style={styles.startingHeader}>
-                  <ThemedText style={[styles.rowLabel, { color: palette.textInverse }]}>
-                    {row.label}
-                  </ThemedText>
-                  <ThemedText style={[styles.gameCount, { color: palette.textMuted }]}>
-                    {formatGameCount(bucket.games)}
-                  </ThemedText>
+              <View key={choice} style={styles.choiceRow}>
+                <View style={styles.choiceLabel}>
+                  <ThemedText style={styles.choiceTitle}>{`We chose ${choice}`}</ThemedText>
+                  <ThemedText style={styles.detail}>{record + tieLabel}</ThemedText>
                 </View>
-
-                <View style={styles.outcomeRow}>
-                  <ThemedText style={[styles.outcomeRate, { color: row.accentColor }]}>
-                    {formatWinRate(bucket.winPercentage)}
-                  </ThemedText>
-                  <ThemedText style={[styles.outcomeDetail, { color: palette.textSecondary }]}>
-                    {formatRecord(bucket)} record
-                  </ThemedText>
-                </View>
-
-                {hasChoice && (
-                  <View style={[styles.choiceRow, { backgroundColor: palette.overlay08 }]}>
-                    <ThemedText style={[styles.choiceLabel, { color: palette.textMuted }]}>
-                      {row.choiceLabel}
-                    </ThemedText>
-                    <ThemedText style={[styles.choiceDetail, { color: palette.textInverse }]}>
-                      {formatRecord(choiceBucket)} · {formatWinRate(choiceBucket.winPercentage)}
-                    </ThemedText>
-                  </View>
-                )}
+                <ThemedText style={styles.choiceRate}>{winRate}</ThemedText>
               </View>
             );
           })}
         </View>
       )}
-
-      {sideChoice && sideChoice.games > 0 && (
-        <>
-          <View style={[styles.divider, { backgroundColor: palette.overlay10 }]} />
-          <View style={styles.sideChoiceRow}>
-            <ThemedText style={[styles.choiceLabel, { color: palette.textMuted }]}>
-              We chose side
-            </ThemedText>
-            <ThemedText style={[styles.choiceDetail, { color: palette.textInverse }]}>
-              {formatRecord(sideChoice)} · {formatWinRate(sideChoice.winPercentage)}
-            </ThemedText>
-          </View>
-        </>
-      )}
     </View>
   );
 }
 
-function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
+function createStyles(palette: Palette, sizeClass: SizeClass) {
   return StyleSheet.create({
     card: {
-      borderRadius: 12,
+      borderRadius: 16,
       borderWidth: 1,
-      padding: 16,
-      gap: 12,
+      borderColor: palette.overlay10,
+      backgroundColor: palette.statsCardBg,
+      padding: 20,
+      marginBottom: 16,
+      shadowColor: palette.shadow,
+      shadowOffset: { width: 0, height: 3 },
+      shadowOpacity: 0.07,
+      shadowRadius: 8,
+      elevation: 2,
     },
-    flipRow: {
+    flipHeader: {
       flexDirection: 'row',
       alignItems: 'center',
-      justifyContent: 'space-between',
-      gap: 16,
-    },
-    flipRate: {
-      fontSize: scaleBySizeClass(26, sizeClass),
-      fontFamily: Fonts.extraBold,
-      lineHeight: scaleBySizeClass(30, sizeClass),
-    },
-    divider: {
-      height: 1,
-    },
-    startingRows: {
-      flexDirection: isLandscape ? 'row' : 'column',
       gap: 12,
+      backgroundColor: palette.statsHeaderBg,
+      marginHorizontal: -20,
+      marginTop: -20,
+      padding: 20,
+      borderTopLeftRadius: 15,
+      borderTopRightRadius: 15,
     },
-    startingRow: {
-      flex: 1,
-      gap: 8,
+    flipLabel: { flex: 1 },
+    title: {
+      fontFamily: Fonts.bold,
+      fontSize: scaleBySizeClass(18, sizeClass),
+      color: palette.textInverse,
     },
-    startingHeader: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      gap: 8,
+    flipValue: {
+      fontFamily: Fonts.bold,
+      fontSize: scaleBySizeClass(28, sizeClass),
+      color: palette.textInverse,
+      fontVariant: ['tabular-nums'],
     },
-    rowLabel: {
+    detail: { fontSize: scaleBySizeClass(13, sizeClass), color: palette.textMuted },
+    caption: {
+      fontFamily: Fonts.semiBold,
       fontSize: scaleBySizeClass(14, sizeClass),
-      fontFamily: Fonts.bold,
+      color: palette.textMuted,
+      marginBottom: 8,
     },
-    rowDetail: {
-      fontSize: scaleBySizeClass(10, sizeClass),
-      marginTop: 2,
-    },
-    gameCount: {
-      fontSize: scaleBySizeClass(10, sizeClass),
-      fontFamily: Fonts.semiBold,
-      textTransform: 'uppercase',
-    },
-    outcomeRow: {
-      flexDirection: 'row',
-      alignItems: 'baseline',
-      gap: 10,
-    },
-    outcomeRate: {
-      fontSize: scaleBySizeClass(22, sizeClass),
-      fontFamily: Fonts.extraBold,
-      lineHeight: scaleBySizeClass(26, sizeClass),
-    },
-    outcomeDetail: {
-      fontSize: scaleBySizeClass(12, sizeClass),
-      fontFamily: Fonts.semiBold,
-    },
-    choiceRow: {
+    detailsToggle: {
+      minHeight: 44,
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
-      gap: 8,
-      borderRadius: 8,
-      paddingHorizontal: 10,
-      paddingVertical: 7,
+      marginTop: 8,
     },
-    sideChoiceRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      gap: 8,
-    },
-    choiceLabel: {
-      fontSize: scaleBySizeClass(10, sizeClass),
+    detailsPressed: { opacity: 0.6 },
+    detailsLabel: {
       fontFamily: Fonts.semiBold,
-      textTransform: 'uppercase',
-      letterSpacing: scaleBySizeClass(0.4, sizeClass, { rounding: 'none' }),
+      fontSize: scaleBySizeClass(14, sizeClass),
+      color: palette.accent,
     },
-    choiceDetail: {
-      fontSize: scaleBySizeClass(11, sizeClass),
-      fontFamily: Fonts.bold,
-      textAlign: 'right',
+    choices: {
+      marginTop: 16,
+      paddingTop: 14,
+    },
+    choiceRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10 },
+    choiceLabel: { flex: 1 },
+    choiceTitle: {
+      fontFamily: Fonts.semiBold,
+      fontSize: scaleBySizeClass(14, sizeClass),
+      color: palette.textInverse,
+    },
+    choiceRate: {
+      fontFamily: Fonts.semiBold,
+      fontSize: scaleBySizeClass(14, sizeClass),
+      color: palette.textInverse,
+    },
+    startingResults: {
+      marginTop: 16,
+      paddingTop: 14,
     },
   });
 }

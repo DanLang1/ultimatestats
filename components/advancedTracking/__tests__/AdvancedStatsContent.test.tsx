@@ -223,6 +223,32 @@ describe('AdvancedStatsContent', () => {
     expectStatCard('Overall Conversion', '—', '0/0');
   });
 
+  it('shows time of possession within the possession and game flow card', async () => {
+    const timedGame = JSON.parse(JSON.stringify(game)) as AdvancedTrackedGame;
+    const point = timedGame.points[0];
+    point.startedAt = 1_000;
+    point.possessions[0].actions.forEach((action, index) => {
+      action.recordedAt = 1_000 + index * 10_000;
+    });
+    const analyticsGame = buildAnalyticsGame(timedGame);
+
+    await renderScreen(
+      <AdvancedStatsContent
+        game={analyticsGame}
+        gameId={timedGame.id}
+        myTeamName="Light"
+        opponentName="Dark"
+        myScore={1}
+        opponentScore={0}
+        perspectiveSideId={LIGHT}
+        participantNames={analyticsGame.participantNames}
+      />,
+    );
+
+    const possessionCard = within(screen.getByTestId('advanced-possession-flow-card'));
+    expect(possessionCard.getByTestId('time-of-possession-title')).toBeTruthy();
+  });
+
   it('shows classified team stats and exposes the player Types group on demand', async () => {
     const classifiedGame = JSON.parse(JSON.stringify(game)) as AdvancedTrackedGame;
     const goalAction = classifiedGame.points[0].possessions[0].actions.at(-1);

@@ -24,13 +24,14 @@ Build polished mobile UI that feels native to the existing U-Stat product.
 Treat `AGENTS.md` and domain docs as contracts. Treat existing code as evidence of convention, not
 as permission to copy every historical detail.
 
-## Prefer convention over novelty
+## Extend the design language with purpose
 
 - Reuse the existing component, hook, layout, navigation, and styling patterns when they satisfy the
   requirement.
 - Extend an existing primitive before creating a parallel component family.
-- Keep the app's established typography, semantic palette, density, shapes, and interaction
-  language unless the user explicitly requests a redesign.
+- Keep the app's font family, semantic palette, and interaction language. Improve sizing,
+  spacing, contrast, and composition when the current presentation is hard to read or feels flat;
+  existing density is not a requirement to preserve.
 - Avoid introducing a new abstraction merely because it is fashionable or personally preferable.
 - Keep a feature change focused; do not silently turn it into a design-system migration.
 
@@ -80,6 +81,45 @@ keep it separate.
 - Optimize tracker surfaces for fast, repeatable use under game conditions. Optimize analytics
   surfaces for scanability and comparison.
 - Check empty, loading, error, disabled, pressed, and long-content states.
+
+## Readable hierarchy and card depth
+
+The advanced stats refresh is a preferred starting point for analytics and other information-heavy
+surfaces. Apply these principles to the content; do not force every screen into the same card layout.
+
+- **Make labels readable, not merely the numbers.** Prefer larger, semibold labels and meaningful
+  section titles over tiny uppercase captions. In the current analytics summary, base sizes are
+  26 for values, 13 for labels/supporting text, and 15 for section headings, scaled through
+  `scaleBySizeClass`. These are starting points, not universal sizes. Allow wrapping rather than
+  shrinking important text to fit.
+- **Group with surfaces and alignment.** Use one outer card for a coherent topic, a visibly distinct
+  header band when a section needs an anchor, and consistent alignment between labels and values.
+  Left-aligned metrics work well for scanning a dense summary; centered rings remain useful for
+  visual comparisons. Avoid making every metric its own inset card.
+- **Use restrained depth that is actually visible.** A subtle outer border, rounded container,
+  contrasting header surface, and soft shadow can establish a card's shape without competing with
+  its data. Use `statsCardBg` and `statsHeaderBg` for analytics surfaces and semantic palette tokens
+  for borders and shadows. Check the result against the surrounding screen in both themes.
+- **Do not use faint internal grids as the default cure for floating numbers.** Repeated hairline
+  dividers and small decorative accent ticks add marks without necessarily clarifying hierarchy.
+  Prefer spacing, readable typography, and surface contrast; add a separator only when it makes a
+  specific boundary easier to understand. Subtle outer borders and internal grid lines serve
+  different purposes.
+- **Keep the useful summary visible; disclose secondary detail on demand.** For example, the flip
+  card shows flips won and game results by starting possession up front, with choice breakdowns
+  behind a collapsed Details expander. Preserve meaningful data rather than removing it to reduce
+  clutter. Use a labeled chevron control with at least a 44-point-high tap target, expanded
+  accessibility state, and pressed feedback. Hide the expander when there is no detail to reveal.
+  Keep information required for a live tracking decision immediately accessible.
+- **Separate surface styles from text styles.** Put a header row's background, padding, and rounded
+  corners on its containing `View`; keep the inner title's style typographic. Reusing a rounded
+  surface style on unpadded `Text` clipped the first letter of Efficiency and Throw Types on both
+  platforms. Do not carry container geometry into an inner label through style overrides.
+
+Implementation examples: `components/advancedTracking/AdvancedStatsContent.tsx` for section bands,
+`components/view-stats/StatsGrid.tsx` (`summary`) for larger unboxed metrics, and
+`components/advancedTracking/OpeningSetupStats.tsx` for progressive disclosure. Extend these only
+when the new consumer needs it; do not add unused variants for hypothetical layouts.
 
 ## Verify
 

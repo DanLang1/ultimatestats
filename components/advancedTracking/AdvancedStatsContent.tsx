@@ -26,7 +26,7 @@ import type { AdvancedThrowTypeStats } from '@/lib/advancedTracking/advancedThro
 import { computeAdvancedTimeOfPossessionStats } from '@/lib/advancedTracking/advancedTimeOfPossessionUtils';
 import { getAnalyticsOpposingSideId } from '@/lib/advancedTracking/analyticsPerspectiveUtils';
 import { AnalyticsGame } from '@/lib/advancedTracking/analyticsTypes';
-import { Fonts } from '@/theme/theme';
+import { Fonts, type Palette } from '@/theme/theme';
 
 import AdvancedStatsTable from './AdvancedStatsTable';
 
@@ -71,7 +71,7 @@ export default function AdvancedStatsContent({
   const { palette } = useTheme();
   const { showAlert } = useAlert();
   const { isLandscape, sizeClass } = useLayout();
-  const styles = createStyles(isLandscape, sizeClass);
+  const styles = createStyles(isLandscape, sizeClass, palette);
 
   const playerStats = computeAdvancedPlayerStats(game, perspectiveSideId);
   const teamStats = computeAdvancedTeamStats(game, perspectiveSideId);
@@ -121,7 +121,7 @@ export default function AdvancedStatsContent({
         testID="advanced-stats-summary-card"
         style={[
           styles.summaryCard,
-          { backgroundColor: palette.overlay05, borderColor: palette.overlay10 },
+          { backgroundColor: palette.statsCardBg, borderColor: palette.overlay10 },
         ]}>
         <View style={styles.matchupRow}>
           <View style={styles.teamBlock}>
@@ -169,13 +169,13 @@ export default function AdvancedStatsContent({
         )}
       </View>
 
-      {/* Team Stats Section */}
+      {/* Team Performance Card */}
       <View
         style={[
-          styles.teamStatsCard,
-          { backgroundColor: palette.overlay05, borderColor: palette.overlay10 },
+          styles.sectionCard,
+          { backgroundColor: palette.statsCardBg, borderColor: palette.overlay10 },
         ]}>
-        <ThemedText style={[styles.teamStatsSectionTitle, { color: palette.textMuted }]}>
+        <ThemedText style={[styles.teamStatsSectionTitle, { color: palette.textInverse }]}>
           TEAM PERFORMANCE
         </ThemedText>
 
@@ -248,11 +248,24 @@ Formula: Scoring possessions on D-points ÷ possessions on D-points`}
             { label: 'Times Broken', value: teamStats.timesBroken },
           ]}
           columns={isLandscape ? 4 : 2}
+          variant="summary"
         />
+      </View>
 
-        <View style={styles.subsectionContainer}>
+      {/* Possession & Game Flow Card */}
+      <View
+        testID="advanced-possession-flow-card"
+        style={[
+          styles.sectionCard,
+          { backgroundColor: palette.statsCardBg, borderColor: palette.overlay10 },
+        ]}>
+        <ThemedText style={[styles.teamStatsSectionTitle, { color: palette.textInverse }]}>
+          POSSESSION & GAME FLOW
+        </ThemedText>
+
+        <View style={styles.subsectionContainerFirst}>
           <ThemedText style={[styles.subsectionTitle, { color: palette.textMuted }]}>
-            GAME FLOW
+            MOMENTUM
           </ThemedText>
           <StatsGrid
             stats={[
@@ -260,169 +273,16 @@ Formula: Scoring possessions on D-points ÷ possessions on D-points`}
               { label: 'Drought', value: teamStats.longestDrought, sublabel: 'Longest' },
             ]}
             columns={2}
+            variant="summary"
           />
         </View>
 
         <View style={styles.subsectionContainer}>
           <ThemedText style={[styles.subsectionTitle, { color: palette.textMuted }]}>
-            OUR POSSESSION FLOW
+            POSSESSION FLOW
           </ThemedText>
-          <StatsGrid stats={possessionFlowStats} columns={2} />
+          <StatsGrid stats={possessionFlowStats} columns={2} variant="summary" />
         </View>
-
-        <View style={styles.subsectionContainer}>
-          <View style={styles.sectionTitleRow}>
-            <ThemedText
-              style={[styles.subsectionTitle, styles.sectionTitle, { color: palette.textMuted }]}>
-              EFFICIENCY
-            </ThemedText>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="About efficiency stats"
-              hitSlop={8}
-              onPress={() =>
-                showAlert({
-                  title: 'Efficiency Stats',
-                  message:
-                    'D-Efficiency: breaks ÷ all completed D-points.\n\nOverall Conversion: scoring possessions ÷ all possessions.',
-                })
-              }>
-              <MaterialCommunityIcons
-                name="information-outline"
-                size={scaleBySizeClass(15, sizeClass)}
-                color={palette.textMuted}
-              />
-            </Pressable>
-          </View>
-          <StatsGrid stats={efficiencyStats} columns={isLandscape ? 4 : 2} />
-        </View>
-
-        {hasRedZoneEntries && (
-          <View testID="advanced-red-zone-card" style={styles.subsectionContainer}>
-            <View style={styles.sectionTitleRow}>
-              <ThemedText
-                style={[styles.subsectionTitle, styles.sectionTitle, { color: palette.textMuted }]}>
-                RED ZONE OFFENSE
-              </ThemedText>
-            </View>
-            <StatsGrid stats={redZoneStats} columns={isLandscape ? 4 : 2} />
-          </View>
-        )}
-
-        {hasOpponentRedZoneEntries && (
-          <View testID="advanced-red-zone-defense-card" style={styles.subsectionContainer}>
-            <View style={styles.sectionTitleRow}>
-              <ThemedText
-                style={[styles.subsectionTitle, styles.sectionTitle, { color: palette.textMuted }]}>
-                RED ZONE DEFENSE
-              </ThemedText>
-            </View>
-            <StatsGrid stats={redZoneDefenseStats} columns={isLandscape ? 4 : 2} />
-          </View>
-        )}
-
-        {throwTypes.huckAttempts + throwTypes.resetTurnovers > 0 && (
-          <View testID="advanced-throw-types-card" style={styles.subsectionContainer}>
-            <View style={styles.sectionTitleRow}>
-              <ThemedText
-                style={[
-                  styles.teamStatsSectionTitle,
-                  styles.throwTypesTitle,
-                  { color: palette.textMuted },
-                ]}>
-                THROW TYPES
-              </ThemedText>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="About throw classifications"
-                hitSlop={8}
-                onPress={() =>
-                  showAlert({
-                    title: 'Throw Classifications',
-                    message:
-                      'Classifications are optional, so this data may not be fully accurate.',
-                  })
-                }>
-                <MaterialCommunityIcons
-                  name="information-outline"
-                  size={scaleBySizeClass(15, sizeClass)}
-                  color={palette.textMuted}
-                />
-              </Pressable>
-            </View>
-            {throwTypes.huckAttempts > 0 && (
-              <View style={styles.subsectionContainer}>
-                <ThemedText style={[styles.subsectionTitle, { color: palette.textMuted }]}>
-                  HUCKS
-                </ThemedText>
-                <StatsGrid
-                  stats={[
-                    {
-                      label: 'Completion',
-                      value:
-                        huckCompletionPct == null ? '-' : `${Math.round(huckCompletionPct * 100)}%`,
-                      sublabel: `${throwTypes.huckCompletions}/${throwTypes.huckAttempts}`,
-                    },
-                    { label: 'Attempts', value: throwTypes.huckAttempts },
-                    { label: 'Completions', value: throwTypes.huckCompletions },
-                    { label: 'Turnovers', value: throwTypes.huckTurnovers },
-                    ...huckTurnoverStats,
-                  ]}
-                  columns={isLandscape ? 4 : 2}
-                />
-              </View>
-            )}
-            {throwTypes.resetTurnovers > 0 && (
-              <View style={styles.subsectionContainer}>
-                <ThemedText style={[styles.subsectionTitle, { color: palette.textMuted }]}>
-                  BACKFIELD RESETS
-                </ThemedText>
-                <StatsGrid
-                  stats={[
-                    { label: 'Turnovers', value: throwTypes.resetTurnovers },
-                    ...resetTurnoverStats,
-                  ]}
-                  columns={isLandscape ? 4 : 2}
-                />
-              </View>
-            )}
-          </View>
-        )}
-
-        {pullStats.totalPulls > 0 && (
-          <View style={styles.subsectionContainer}>
-            <ThemedText style={[styles.subsectionTitle, { color: palette.textMuted }]}>
-              PULLING
-            </ThemedText>
-            <StatsGrid
-              stats={[
-                {
-                  label: 'Inbound',
-                  value: `${Math.round((inboundPullCount / pullStats.totalPulls) * 100)}%`,
-                  sublabel: `${inboundPullCount}/${pullStats.totalPulls}`,
-                },
-                ...(pullStats.avgHangTimeMs != null
-                  ? [
-                      {
-                        label: 'Avg Hang',
-                        value: `${(pullStats.avgHangTimeMs / 1000).toFixed(1)}s`,
-                      },
-                    ]
-                  : []),
-              ]}
-              columns={pullStats.avgHangTimeMs != null ? 2 : 1}
-            />
-          </View>
-        )}
-
-        {(flipStats || initialPullWinStats) && (
-          <View style={styles.subsectionContainer}>
-            <ThemedText style={[styles.subsectionTitle, { color: palette.textMuted }]}>
-              OPENING SETUP
-            </ThemedText>
-            <OpeningSetupStats flipStats={flipStats} initialPullWinStats={initialPullWinStats} />
-          </View>
-        )}
 
         {topStats && (
           <TimeOfPossessionSection
@@ -432,6 +292,184 @@ Formula: Scoring possessions on D-points ÷ possessions on D-points`}
           />
         )}
       </View>
+
+      {/* Efficiency Card */}
+      <View
+        style={[
+          styles.sectionCard,
+          { backgroundColor: palette.statsCardBg, borderColor: palette.overlay10 },
+        ]}>
+        <View style={styles.sectionTitleRow}>
+          <ThemedText style={[styles.sectionTitle, { color: palette.textInverse }]}>
+            EFFICIENCY
+          </ThemedText>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="About efficiency stats"
+            hitSlop={8}
+            onPress={() =>
+              showAlert({
+                title: 'Efficiency Stats',
+                message:
+                  'D-Efficiency: breaks ÷ all completed D-points.\n\nOverall Conversion: scoring possessions ÷ all possessions.',
+              })
+            }>
+            <MaterialCommunityIcons
+              name="information-outline"
+              size={scaleBySizeClass(15, sizeClass)}
+              color={palette.textMuted}
+            />
+          </Pressable>
+        </View>
+        <StatsGrid stats={efficiencyStats} columns={isLandscape ? 4 : 2} variant="summary" />
+      </View>
+
+      {/* Red Zone Card */}
+      {(hasRedZoneEntries || hasOpponentRedZoneEntries) && (
+        <View
+          testID="advanced-red-zone-summary-card"
+          style={[
+            styles.sectionCard,
+            { backgroundColor: palette.statsCardBg, borderColor: palette.overlay10 },
+          ]}>
+          <ThemedText style={[styles.teamStatsSectionTitle, { color: palette.textInverse }]}>
+            RED ZONE
+          </ThemedText>
+
+          {hasRedZoneEntries && (
+            <View testID="advanced-red-zone-card" style={styles.subsectionContainerFirst}>
+              <ThemedText style={[styles.subsectionTitle, { color: palette.textMuted }]}>
+                OFFENSE
+              </ThemedText>
+              <StatsGrid stats={redZoneStats} columns={isLandscape ? 4 : 2} variant="summary" />
+            </View>
+          )}
+
+          {hasOpponentRedZoneEntries && (
+            <View
+              testID="advanced-red-zone-defense-card"
+              style={
+                hasRedZoneEntries ? styles.subsectionContainer : styles.subsectionContainerFirst
+              }>
+              <ThemedText style={[styles.subsectionTitle, { color: palette.textMuted }]}>
+                DEFENSE
+              </ThemedText>
+              <StatsGrid
+                stats={redZoneDefenseStats}
+                columns={isLandscape ? 4 : 2}
+                variant="summary"
+              />
+            </View>
+          )}
+        </View>
+      )}
+
+      {/* Throw Types Card */}
+      {throwTypes.huckAttempts + throwTypes.resetTurnovers > 0 && (
+        <View
+          testID="advanced-throw-types-card"
+          style={[
+            styles.sectionCard,
+            { backgroundColor: palette.statsCardBg, borderColor: palette.overlay10 },
+          ]}>
+          <View style={styles.sectionTitleRow}>
+            <ThemedText style={[styles.sectionTitle, { color: palette.textInverse }]}>
+              THROW TYPES
+            </ThemedText>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="About throw classifications"
+              hitSlop={8}
+              onPress={() =>
+                showAlert({
+                  title: 'Throw Classifications',
+                  message: 'Classifications are optional, so this data may not be fully accurate.',
+                })
+              }>
+              <MaterialCommunityIcons
+                name="information-outline"
+                size={scaleBySizeClass(15, sizeClass)}
+                color={palette.textMuted}
+              />
+            </Pressable>
+          </View>
+          {throwTypes.huckAttempts > 0 && (
+            <View style={styles.subsectionContainerFirst}>
+              <ThemedText style={[styles.subsectionTitle, { color: palette.textMuted }]}>
+                HUCKS
+              </ThemedText>
+              <StatsGrid
+                stats={[
+                  {
+                    label: 'Completion',
+                    value:
+                      huckCompletionPct == null ? '-' : `${Math.round(huckCompletionPct * 100)}%`,
+                    sublabel: `${throwTypes.huckCompletions}/${throwTypes.huckAttempts}`,
+                  },
+                  { label: 'Attempts', value: throwTypes.huckAttempts },
+                  { label: 'Completions', value: throwTypes.huckCompletions },
+                  { label: 'Turnovers', value: throwTypes.huckTurnovers },
+                  ...huckTurnoverStats,
+                ]}
+                columns={isLandscape ? 4 : 2}
+                variant="summary"
+              />
+            </View>
+          )}
+          {throwTypes.resetTurnovers > 0 && (
+            <View style={styles.subsectionContainer}>
+              <ThemedText style={[styles.subsectionTitle, { color: palette.textMuted }]}>
+                BACKFIELD RESETS
+              </ThemedText>
+              <StatsGrid
+                stats={[
+                  { label: 'Turnovers', value: throwTypes.resetTurnovers },
+                  ...resetTurnoverStats,
+                ]}
+                columns={isLandscape ? 4 : 2}
+                variant="summary"
+              />
+            </View>
+          )}
+        </View>
+      )}
+
+      {/* Pulling Card */}
+      {pullStats.totalPulls > 0 && (
+        <View
+          style={[
+            styles.sectionCard,
+            { backgroundColor: palette.statsCardBg, borderColor: palette.overlay10 },
+          ]}>
+          <ThemedText style={[styles.teamStatsSectionTitle, { color: palette.textInverse }]}>
+            PULLING
+          </ThemedText>
+          <StatsGrid
+            stats={[
+              {
+                label: 'Inbound',
+                value: `${Math.round((inboundPullCount / pullStats.totalPulls) * 100)}%`,
+                sublabel: `${inboundPullCount}/${pullStats.totalPulls}`,
+              },
+              ...(pullStats.avgHangTimeMs != null
+                ? [
+                    {
+                      label: 'Avg Hang',
+                      value: `${(pullStats.avgHangTimeMs / 1000).toFixed(1)}s`,
+                    },
+                  ]
+                : []),
+            ]}
+            columns={pullStats.avgHangTimeMs != null ? 2 : 1}
+            variant="summary"
+          />
+        </View>
+      )}
+
+      {/* Opening Results Card */}
+      {(flipStats || initialPullWinStats) && (
+        <OpeningSetupStats flipStats={flipStats} initialPullWinStats={initialPullWinStats} />
+      )}
 
       {/* Player Stats Table */}
       {playerStats.length === 0 ? (
@@ -608,12 +646,12 @@ function buildEfficiencyStats(teamStats: AdvancedTeamStats): StatsDisplayItem[] 
   return stats;
 }
 
-function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
+function createStyles(isLandscape: boolean, sizeClass: SizeClass, palette: Palette) {
   return StyleSheet.create({
     summaryCard: {
       borderRadius: 16,
       padding: 20,
-      marginBottom: 24,
+      marginBottom: 16,
       borderWidth: 1,
     },
     matchupRow: {
@@ -693,30 +731,47 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
       minWidth: 44,
       textAlign: 'right',
     },
-    teamStatsCard: {
+    sectionCard: {
+      shadowColor: palette.shadow,
+      shadowOffset: { width: 0, height: 3 },
+      shadowOpacity: 0.07,
+      shadowRadius: 8,
+      elevation: 2,
       borderRadius: 16,
       padding: 16,
       borderWidth: 1,
-      marginBottom: 24,
+      marginBottom: 16,
     },
     teamStatsSectionTitle: {
-      fontSize: scaleBySizeClass(10, sizeClass),
+      backgroundColor: palette.statsHeaderBg,
+      marginHorizontal: -16,
+      marginTop: -16,
+      paddingHorizontal: 20,
+      paddingVertical: 16,
+      borderTopLeftRadius: 15,
+      borderTopRightRadius: 15,
+      fontSize: scaleBySizeClass(15, sizeClass),
       fontFamily: Fonts.bold,
-      letterSpacing: 1,
-      marginBottom: 16,
-      textTransform: 'uppercase',
+      marginBottom: 12,
     },
     sectionTitleRow: {
+      backgroundColor: palette.statsHeaderBg,
+      marginHorizontal: -16,
+      marginTop: -16,
+      paddingHorizontal: 20,
+      paddingVertical: 16,
+      borderTopLeftRadius: 15,
+      borderTopRightRadius: 15,
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 6,
-      marginBottom: 8,
+      justifyContent: 'space-between',
+      gap: 12,
+      marginBottom: 12,
     },
     sectionTitle: {
-      marginBottom: 0,
-    },
-    throwTypesTitle: {
-      marginBottom: 0,
+      flex: 1,
+      fontSize: scaleBySizeClass(15, sizeClass),
+      fontFamily: Fonts.bold,
     },
     ringRow: {
       flexDirection: 'row',
@@ -730,10 +785,14 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
       alignItems: 'center',
     },
     subsectionContainer: {
-      marginTop: 8,
+      marginTop: 14,
+      paddingTop: 14,
+    },
+    subsectionContainerFirst: {
+      marginTop: 0,
     },
     subsectionTitle: {
-      fontSize: scaleBySizeClass(9, sizeClass),
+      fontSize: scaleBySizeClass(13, sizeClass),
       fontFamily: Fonts.bold,
       letterSpacing: 0.5,
       marginBottom: 8,

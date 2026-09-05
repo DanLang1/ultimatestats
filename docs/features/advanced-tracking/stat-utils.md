@@ -161,6 +161,10 @@ Half-split timing stats are supported via the caller pre-filtering `game.points`
 - `advancedImpactUtils.ts` builds per-player point impact.
 - `advancedChemistryUtils.ts` derives scoring and passing connections.
 - `advancedAggregateStatsUtils.ts` derives opening-pull and flip summaries across games.
+  The opening-results card keeps flip and starting results visible and places recorded choices
+  after winning the flip in a collapsed-by-default Details section, with explicit win/loss
+  records and labeled ties. Choice win rates exclude ties; starting-possession results remain a
+  separate game-win-rate comparison.
 - `aggregateAnalyticsGames.ts` combines compiled games for aggregate views.
 - `advancedCSVUtils.ts` serializes single-game and aggregate analytics.
 

@@ -30,7 +30,7 @@ interface TimeOfPossessionSectionProps {
 }
 
 /**
- * Displays the Time of Possession subsection within the Team Performance card.
+ * Displays the Time of Possession subsection within a team analytics card.
  * Returns null if no qualifying timed points exist.
  */
 export default function TimeOfPossessionSection({
@@ -60,7 +60,9 @@ export default function TimeOfPossessionSection({
     <View style={styles.container}>
       {/* Header row: title · points count */}
       <View style={styles.header}>
-        <ThemedText style={[styles.title, { color: palette.textMuted }]}>
+        <ThemedText
+          testID="time-of-possession-title"
+          style={[styles.title, { color: palette.textMuted }]}>
           TIME OF POSSESSION
           <ThemedText style={styles.pointsNote}>
             {' · '}

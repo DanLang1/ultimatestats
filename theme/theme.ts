@@ -42,6 +42,8 @@ const midnightElectric = {
   trackerActionCardBorder: 'rgba(255,255,255,0.15)', // tracker action card border on dark screens
   timelineLineupChipBg: 'rgba(255,255,255,0.1)', // subdued lineup chip surface on dark cards
   timelineLineupChipBorder: 'rgba(255,255,255,0.2)', // lineup chip border on dark cards
+  statsCardBg: '#182338',
+  statsHeaderBg: '#2B3C55',
   shadow: '#000000', // Shadow color (use with opacity)
 
   // Overlay/Glass effects - white (for dark backgrounds)
@@ -173,6 +175,8 @@ export const lightPalette = {
   trackerActionCardBorder: '#E2E8F0', // tracker action card border on light screens
   timelineLineupChipBg: '#FFFFFF', // lineup chip surface on light cards
   timelineLineupChipBorder: '#CBD5E1', // lineup chip border on light cards
+  statsCardBg: '#F1F5F9',
+  statsHeaderBg: '#DCE5F0',
   shadow: '#000000', // Shadow color (use with opacity)
 
   // Overlay/Glass effects - black (for light backgrounds)
