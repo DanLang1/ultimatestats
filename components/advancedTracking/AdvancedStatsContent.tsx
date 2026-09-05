@@ -6,13 +6,13 @@ import AdvancedEfficiencyCard from '@/components/advancedTracking/AdvancedEffici
 import AdvancedPossessionFlowCard from '@/components/advancedTracking/AdvancedPossessionFlowCard';
 import AdvancedPullingCard from '@/components/advancedTracking/AdvancedPullingCard';
 import AdvancedRedZoneCard from '@/components/advancedTracking/AdvancedRedZoneCard';
-import AdvancedSectionCard from '@/components/advancedTracking/AdvancedSectionCard';
 import AdvancedThrowTypesCard from '@/components/advancedTracking/AdvancedThrowTypesCard';
 import OpeningSetupStats from '@/components/advancedTracking/OpeningSetupStats';
 import { ThemedText } from '@/components/ThemedText';
 import { ScoreBadge } from '@/components/ui/ScoreBadge';
 import StatRing from '@/components/view-stats/StatRing';
 import StatsGrid from '@/components/view-stats/StatsGrid';
+import StatsSectionCard from '@/components/view-stats/StatsSectionCard';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import {
@@ -149,7 +149,7 @@ export default function AdvancedStatsContent({
       </View>
 
       {/* Team Performance Card */}
-      <AdvancedSectionCard title="TEAM PERFORMANCE">
+      <StatsSectionCard title="TEAM PERFORMANCE">
         <View style={styles.ringRow}>
           <View style={styles.ringWrapper}>
             <StatRing
@@ -230,7 +230,7 @@ Formula: Scoring possessions on D-points ÷ possessions on D-points`}
           columns={isLandscape ? 4 : 2}
           variant="summary"
         />
-      </AdvancedSectionCard>
+      </StatsSectionCard>
 
       {/* Possession & Game Flow Card */}
       <AdvancedPossessionFlowCard

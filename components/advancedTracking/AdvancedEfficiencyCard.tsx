@@ -1,13 +1,8 @@
-import AdvancedSectionCard from '@/components/advancedTracking/AdvancedSectionCard';
 import StatsGrid, { type StatItem } from '@/components/view-stats/StatsGrid';
+import StatsSectionCard from '@/components/view-stats/StatsSectionCard';
 import { useLayout } from '@/hooks/useLayout';
-import {
-  formatDecimal,
-  formatNullablePercent,
-  formatPercent,
-} from '@/lib/advancedTracking/advancedStatFormatUtils';
 import type { AdvancedTeamStats } from '@/lib/advancedTracking/advancedTeamStatsUtils';
-import { pluralize } from '@/lib/utils';
+import { formatDecimal, formatNullablePercent, formatPercent, pluralize } from '@/lib/utils';
 
 interface AdvancedEfficiencyCardProps {
   teamStats: AdvancedTeamStats;
@@ -57,7 +52,7 @@ export default function AdvancedEfficiencyCard({ teamStats }: AdvancedEfficiency
   const { isLandscape } = useLayout();
 
   return (
-    <AdvancedSectionCard
+    <StatsSectionCard
       title="EFFICIENCY"
       info={{
         accessibilityLabel: 'About efficiency stats',
@@ -70,6 +65,6 @@ export default function AdvancedEfficiencyCard({ teamStats }: AdvancedEfficiency
         columns={isLandscape ? 4 : 2}
         variant="summary"
       />
-    </AdvancedSectionCard>
+    </StatsSectionCard>
   );
 }

@@ -1,5 +1,5 @@
-import AdvancedSectionCard from '@/components/advancedTracking/AdvancedSectionCard';
 import StatsGrid from '@/components/view-stats/StatsGrid';
+import StatsSectionCard from '@/components/view-stats/StatsSectionCard';
 import { getInboundPullCount, type PullStats } from '@/lib/advancedTracking/advancedPullStatsUtils';
 
 interface AdvancedPullingCardProps {
@@ -12,7 +12,7 @@ export default function AdvancedPullingCard({ pullStats }: AdvancedPullingCardPr
   const inboundPullCount = getInboundPullCount(pullStats);
 
   return (
-    <AdvancedSectionCard title="PULLING">
+    <StatsSectionCard title="PULLING">
       <StatsGrid
         stats={[
           {
@@ -32,6 +32,6 @@ export default function AdvancedPullingCard({ pullStats }: AdvancedPullingCardPr
         columns={pullStats.avgHangTimeMs != null ? 2 : 1}
         variant="summary"
       />
-    </AdvancedSectionCard>
+    </StatsSectionCard>
   );
 }

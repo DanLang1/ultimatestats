@@ -1,8 +1,8 @@
 import { StyleSheet, View } from 'react-native';
 
-import AdvancedSectionCard from '@/components/advancedTracking/AdvancedSectionCard';
 import { ThemedText } from '@/components/ThemedText';
 import StatsGrid, { type StatItem } from '@/components/view-stats/StatsGrid';
+import StatsSectionCard from '@/components/view-stats/StatsSectionCard';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, type SizeClass, useLayout } from '@/hooks/useLayout';
 import type { AdvancedThrowTypeStats } from '@/lib/advancedTracking/advancedThrowTypeStatsUtils';
@@ -52,7 +52,7 @@ export default function AdvancedThrowTypesCard({ throwTypes }: AdvancedThrowType
     buildThrowTypeStats(throwTypes);
 
   return (
-    <AdvancedSectionCard
+    <StatsSectionCard
       title="THROW TYPES"
       testID="advanced-throw-types-card"
       info={{
@@ -103,7 +103,7 @@ export default function AdvancedThrowTypesCard({ throwTypes }: AdvancedThrowType
           />
         </View>
       )}
-    </AdvancedSectionCard>
+    </StatsSectionCard>
   );
 }
 

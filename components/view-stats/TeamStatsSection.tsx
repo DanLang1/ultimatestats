@@ -9,10 +9,12 @@ import {
   computeTimeOfPossessionStats,
 } from '@/lib/basic/teamStatsUtils';
 import { GameEvent } from '@/lib/storage';
+import { formatDecimal, pluralize } from '@/lib/utils';
 import { Fonts } from '@/theme/theme';
 
 import StatRing from './StatRing';
 import StatsGrid from './StatsGrid';
+import StatsSectionCard from './StatsSectionCard';
 import TimeOfPossessionSection from './TimeOfPossessionSection';
 
 // Format milliseconds to "Xm Ys" or just "Xs" for short durations
@@ -70,12 +72,6 @@ export default function TeamStatsSection({
     return null;
   }
 
-  // Format values for display
-  const formatDecimal = (value: number) => {
-    if (Number.isInteger(value)) return value.toString();
-    return value.toFixed(1);
-  };
-
   // Primary stats for ring gauges
   const primaryStats = [
     {
@@ -120,10 +116,13 @@ Possessions = O-Points + Opponent Turnovers`,
 
   // Secondary stats grid
   const secondaryStats = [
-    { label: 'Clean Holds', value: stats.cleanHolds },
-    { label: 'Dirty Holds', value: stats.dirtyHolds },
-    { label: 'Breaks', value: stats.breaks },
-    { label: 'Times Broken ', value: stats.timesBroken },
+    { label: pluralize(stats.cleanHolds, 'Clean Hold', 'Clean Holds'), value: stats.cleanHolds },
+    { label: pluralize(stats.dirtyHolds, 'Dirty Hold', 'Dirty Holds'), value: stats.dirtyHolds },
+    { label: pluralize(stats.breaks, 'Break', 'Breaks'), value: stats.breaks },
+    {
+      label: pluralize(stats.timesBroken, 'Time Broken', 'Times Broken'),
+      value: stats.timesBroken,
+    },
   ];
 
   // Game flow stats
@@ -136,21 +135,15 @@ Possessions = O-Points + Opponent Turnovers`,
   // Efficiency stats
   const efficiencyStats = [
     { label: 'Blk/D-Pt', value: formatDecimal(stats.blocksPerDPoint) },
-    { label: 'Turn(s)', value: stats.totalTurnovers },
-    { label: 'Block(s)', value: stats.totalBlocks },
+    {
+      label: pluralize(stats.totalTurnovers, 'Turnover', 'Turnovers'),
+      value: stats.totalTurnovers,
+    },
+    { label: pluralize(stats.totalBlocks, 'Block', 'Blocks'), value: stats.totalBlocks },
   ];
 
   return (
-    <View
-      style={[
-        styles.container,
-        { backgroundColor: palette.overlay05, borderColor: palette.overlay10 },
-      ]}>
-      {/* Section Header */}
-      <ThemedText style={[styles.sectionTitle, { color: palette.textMuted }]}>
-        TEAM PERFORMANCE
-      </ThemedText>
-
+    <StatsSectionCard title="TEAM PERFORMANCE" testID="basic-team-stats-card">
       {/* Ring Gauges */}
       <View style={styles.ringRow}>
         {primaryStats.map((stat, index) => (
@@ -167,27 +160,27 @@ Possessions = O-Points + Opponent Turnovers`,
       </View>
 
       {/* Primary Stats Grid */}
-      <StatsGrid stats={secondaryStats} columns={isLandscape ? 4 : 2} />
+      <StatsGrid stats={secondaryStats} columns={isLandscape ? 4 : 2} variant="summary" />
 
       {/* Game Flow Section */}
-      <View style={styles.subsectionContainer}>
+      <View style={styles.subsection}>
         <ThemedText style={[styles.subsectionTitle, { color: palette.textMuted }]}>
           GAME FLOW
         </ThemedText>
-        <StatsGrid stats={gameFlowStats} columns={3} />
+        <StatsGrid stats={gameFlowStats} columns={3} variant="summary" />
       </View>
 
       {/* Efficiency Section */}
-      <View style={styles.subsectionContainer}>
+      <View style={styles.subsection}>
         <ThemedText style={[styles.subsectionTitle, { color: palette.textMuted }]}>
           EFFICIENCY
         </ThemedText>
-        <StatsGrid stats={efficiencyStats} columns={isLandscape ? 4 : 2} />
+        <StatsGrid stats={efficiencyStats} columns={isLandscape ? 4 : 2} variant="summary" />
       </View>
 
       {/* Timing Section - only show if timing data exists */}
       {timingStats.hasTimingData && (
-        <View style={styles.subsectionContainer}>
+        <View style={styles.subsection}>
           <ThemedText style={[styles.subsectionTitle, { color: palette.textMuted }]}>
             POINT LENGTH
           </ThemedText>
@@ -200,6 +193,7 @@ Possessions = O-Points + Opponent Turnovers`,
               { label: 'Shortest', value: formatDuration(timingStats.shortestPointDurationMs) },
             ]}
             columns={isLandscape ? 5 : 3}
+            variant="summary"
           />
         </View>
       )}
@@ -211,25 +205,12 @@ Possessions = O-Points + Opponent Turnovers`,
         team1Color={team1Color}
         team2Color={team2Color}
       />
-    </View>
+    </StatsSectionCard>
   );
 }
 
 function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
   return StyleSheet.create({
-    container: {
-      borderRadius: 16,
-      padding: 16,
-      marginBottom: 24,
-      borderWidth: 1,
-    },
-    sectionTitle: {
-      fontSize: scaleBySizeClass(10, sizeClass),
-      fontFamily: Fonts.bold,
-      letterSpacing: 1,
-      marginBottom: 16,
-      textTransform: 'uppercase',
-    },
     ringRow: {
       flexDirection: 'row',
       justifyContent: isLandscape ? 'space-around' : 'center',
@@ -241,11 +222,12 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
       width: isLandscape ? undefined : '50%',
       alignItems: 'center',
     },
-    subsectionContainer: {
-      marginTop: 8,
+    subsection: {
+      marginTop: 14,
+      paddingTop: 14,
     },
     subsectionTitle: {
-      fontSize: scaleBySizeClass(9, sizeClass),
+      fontSize: scaleBySizeClass(13, sizeClass),
       fontFamily: Fonts.bold,
       letterSpacing: 0.5,
       marginBottom: 8,

@@ -1,13 +1,12 @@
 import { StyleSheet, View } from 'react-native';
 
-import AdvancedSectionCard from '@/components/advancedTracking/AdvancedSectionCard';
 import { ThemedText } from '@/components/ThemedText';
 import StatsGrid, { type StatItem } from '@/components/view-stats/StatsGrid';
+import StatsSectionCard from '@/components/view-stats/StatsSectionCard';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, type SizeClass, useLayout } from '@/hooks/useLayout';
-import { formatNullablePercent } from '@/lib/advancedTracking/advancedStatFormatUtils';
 import type { AdvancedTeamStats } from '@/lib/advancedTracking/advancedTeamStatsUtils';
-import { pluralize } from '@/lib/utils';
+import { formatNullablePercent, pluralize } from '@/lib/utils';
 import { Fonts } from '@/theme/theme';
 
 interface AdvancedRedZoneCardProps {
@@ -76,7 +75,7 @@ export default function AdvancedRedZoneCard({ teamStats }: AdvancedRedZoneCardPr
   if (!hasRedZoneEntries && !hasOpponentRedZoneEntries) return null;
 
   return (
-    <AdvancedSectionCard title="RED ZONE" testID="advanced-red-zone-summary-card">
+    <StatsSectionCard title="RED ZONE" testID="advanced-red-zone-summary-card">
       {hasRedZoneEntries && (
         <View testID="advanced-red-zone-card" style={styles.subsectionFirst}>
           <ThemedText style={[styles.subsectionTitle, { color: palette.textMuted }]}>
@@ -104,7 +103,7 @@ export default function AdvancedRedZoneCard({ teamStats }: AdvancedRedZoneCardPr
           />
         </View>
       )}
-    </AdvancedSectionCard>
+    </StatsSectionCard>
   );
 }
 

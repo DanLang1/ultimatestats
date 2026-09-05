@@ -13,6 +13,22 @@ export function pluralize(count: number, singular: string, plural: string): stri
   return count === 1 ? singular : plural;
 }
 
+/** Compact decimal: integers as-is, others with one decimal place. */
+export function formatDecimal(value: number): string {
+  if (Number.isInteger(value)) return value.toString();
+  return value.toFixed(1);
+}
+
+/** Ratio as a rounded percent string, e.g. 0.67 -> "67%". */
+export function formatPercent(value: number): string {
+  return `${Math.round(value * 100)}%`;
+}
+
+/** Percent string, or an em dash when there is no sample. */
+export function formatNullablePercent(value: number | null): string {
+  return value == null ? '—' : formatPercent(value);
+}
+
 /** Format seconds as M:SS, with a leading minus for negative (overtime) values. */
 export function formatTimerSeconds(seconds: number): string {
   const abs = Math.abs(seconds);

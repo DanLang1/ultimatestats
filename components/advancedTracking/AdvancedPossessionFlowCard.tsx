@@ -1,14 +1,14 @@
 import { StyleSheet, View } from 'react-native';
 
-import AdvancedSectionCard from '@/components/advancedTracking/AdvancedSectionCard';
 import { ThemedText } from '@/components/ThemedText';
 import StatsGrid, { type StatItem } from '@/components/view-stats/StatsGrid';
+import StatsSectionCard from '@/components/view-stats/StatsSectionCard';
 import TimeOfPossessionSection from '@/components/view-stats/TimeOfPossessionSection';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, type SizeClass, useLayout } from '@/hooks/useLayout';
-import { formatDecimal, formatPercent } from '@/lib/advancedTracking/advancedStatFormatUtils';
 import type { AdvancedTeamStats } from '@/lib/advancedTracking/advancedTeamStatsUtils';
 import type { TimeOfPossessionStats } from '@/lib/timeOfPossessionTypes';
+import { formatDecimal, formatPercent } from '@/lib/utils';
 import { Fonts } from '@/theme/theme';
 
 interface AdvancedPossessionFlowCardProps {
@@ -53,7 +53,7 @@ export default function AdvancedPossessionFlowCard({
   const styles = createStyles(sizeClass);
 
   return (
-    <AdvancedSectionCard title="POSSESSION & GAME FLOW" testID="advanced-possession-flow-card">
+    <StatsSectionCard title="POSSESSION & GAME FLOW" testID="advanced-possession-flow-card">
       <View style={styles.subsectionFirst}>
         <ThemedText style={[styles.subsectionTitle, { color: palette.textMuted }]}>
           MOMENTUM
@@ -78,7 +78,7 @@ export default function AdvancedPossessionFlowCard({
       {topStats && (
         <TimeOfPossessionSection topStats={topStats} team1Name={team1Name} team2Name={team2Name} />
       )}
-    </AdvancedSectionCard>
+    </StatsSectionCard>
   );
 }
 

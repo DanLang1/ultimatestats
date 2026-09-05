@@ -14,7 +14,7 @@ export interface SectionCardInfo {
   message: string;
 }
 
-interface AdvancedSectionCardProps {
+interface StatsSectionCardProps {
   title: string;
   testID?: string;
   info?: SectionCardInfo;
@@ -22,15 +22,11 @@ interface AdvancedSectionCardProps {
 }
 
 /**
- * Shared card shell for advanced analytics sections: header with the card
- * background bleeding to the edges, plus an optional info button.
+ * Shared card shell for team analytics sections in both basic and advanced
+ * stats views: header with the card background bleeding to the edges, plus an
+ * optional info button.
  */
-export default function AdvancedSectionCard({
-  title,
-  testID,
-  info,
-  children,
-}: AdvancedSectionCardProps) {
+export default function StatsSectionCard({ title, testID, info, children }: StatsSectionCardProps) {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
   const { showAlert } = useAlert();
