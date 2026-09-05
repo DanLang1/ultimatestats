@@ -60,9 +60,11 @@ export function PresetPickerModal({
       onRequestClose={onClose}>
       <SafeAreaView style={styles.modalSafeArea} edges={['top', 'left', 'right']}>
         <Pressable
+          accessible={false}
           style={[styles.modalOverlay, { backgroundColor: palette.overlayDark40 }]}
           onPress={onClose}>
           <Pressable
+            accessible={false}
             style={[
               styles.bottomSheet,
               { backgroundColor: palette.modalBg, paddingBottom: Math.max(insets.bottom, 16) },
@@ -105,6 +107,9 @@ export function PresetPickerModal({
                   {presets.map((preset) => (
                     <Pressable
                       key={preset.id}
+                      testID={`line-select-preset-${preset.id}`}
+                      accessibilityRole="button"
+                      accessibilityState={{ selected: selectedPresetId === preset.id }}
                       onPress={() => onSelectPreset(preset)}
                       style={({ pressed }) => [
                         styles.presetListItem,
@@ -115,17 +120,22 @@ export function PresetPickerModal({
                         },
                         pressed && { opacity: 0.8 },
                       ]}>
-                      <ThemedText
-                        style={[
-                          styles.presetListItemText,
-                          {
-                            color:
-                              selectedPresetId === preset.id ? palette.accent : palette.modalText,
-                          },
-                        ]}
-                        numberOfLines={1}>
-                        {preset.name}
-                      </ThemedText>
+                      <View style={styles.presetDescription}>
+                        <ThemedText
+                          style={[
+                            styles.presetListItemText,
+                            {
+                              color:
+                                selectedPresetId === preset.id ? palette.accent : palette.modalText,
+                            },
+                          ]}
+                          numberOfLines={1}>
+                          {preset.name}
+                        </ThemedText>
+                        <ThemedText style={[styles.presetCount, { color: palette.modalTextMuted }]}>
+                          {preset.playerIds.length} players
+                        </ThemedText>
+                      </View>
                       {selectedPresetId === preset.id && (
                         <MaterialCommunityIcons
                           name="check"
@@ -317,6 +327,8 @@ function createStyles(sizeClass: SizeClass, isLandscape: boolean) {
       borderRadius: 10,
       borderWidth: 1,
     },
+    presetDescription: { flex: 1, gap: 4 },
+    presetCount: { fontSize: scaleBySizeClass(12, sizeClass) },
     presetListItemText: {
       fontSize: scaleBySizeClass(15, sizeClass),
       fontFamily: Fonts.semiBold,

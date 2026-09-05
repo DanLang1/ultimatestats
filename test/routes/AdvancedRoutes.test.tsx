@@ -1320,11 +1320,15 @@ describe('advanced tracking routes', () => {
     expect(screen.getByText('Blair')).toBeVisible();
   });
 
-  it('records an injury sub through the single-side route', async () => {
+  it('resumes the updated live lineup after confirming an injury sub with gender ratio enabled', async () => {
     const user = userEvent.setup();
     const { participants, lineIds } = arrangeSingleSideTrackedPoint();
 
-    await renderScreen(<TrackerInjurySubScreen />);
+    useAdvancedTrackingStore.setState((state) => {
+      state.currentGame!.settings.format = { formatType: 'standard', gameTo: 15 };
+    });
+    useSettingsStore.setState({ genderRatioEnabled: true, firstPointRatio: 'more-women' });
+    const view = await renderScreen(<TrackerInjurySubScreen />);
 
     expect(screen.getByText('Injury Sub')).toBeVisible();
     expect(screen.queryByText('Injury Sub · Windchill')).not.toBeOnTheScreen();
@@ -1345,6 +1349,17 @@ describe('advanced tracking routes', () => {
       }),
     ]);
     expect(router.back).toHaveBeenCalled();
+    await view.unmount();
+    await renderScreen(<TrackerScreen />);
+    expect(screen.getByTestId('stoppage-resume')).toBeVisible();
+    await user.press(screen.getByTestId('stoppage-resume'));
+    expect(screen.queryByTestId('stoppage-resume')).not.toBeOnTheScreen();
+    expect(screen.getByTestId(`tracker-chip-${participants[7].name}`)).toBeVisible();
+    expect(screen.queryByTestId(`tracker-chip-${participants[0].name}`)).not.toBeOnTheScreen();
+    const resumed = useAdvancedTrackingStore
+      .getState()
+      .currentGame?.points[0].possessions[0].actions.find((action) => action.id === stoppage?.id);
+    expect(resumed).toEqual(expect.objectContaining({ resumedAt: expect.any(Number) }));
   });
 
   it('keeps the single-side injury sub confirm disabled until the line changes', async () => {

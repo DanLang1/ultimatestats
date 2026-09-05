@@ -271,7 +271,11 @@ export default function AdvancedTrackerScreen() {
           onMorePress={() => setShowRareMenu(true)}
         />
       )}
-      <View style={styles.trackingSurface} onLayout={handleTrackingSurfaceLayout}>
+      <View
+        collapsable={false}
+        collapsableChildren={false}
+        style={styles.trackingSurface}
+        onLayout={handleTrackingSurfaceLayout}>
         {renderTrackingSurface()}
       </View>
       {showInPointControls && (

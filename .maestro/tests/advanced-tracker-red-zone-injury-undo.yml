@@ -36,6 +36,13 @@ name: Red Zone Anonymous Injury Cleanup on Undo
     id: 'stoppage-resume'
 - tapOn:
     id: 'stoppage-resume'
+# Resume must mount the updated live grid after removing the injury summary.
+- assertNotVisible:
+    id: 'stoppage-resume'
+- assertVisible:
+    id: 'tracker-chip-Heidi'
+- assertNotVisible:
+    id: 'tracker-chip-Jon'
 - runFlow: ../flows/read-tracker-debug-game.yaml
 - assertTrue: ${output.game.points[0].possessions.length === 2}
 - assertTrue: ${output.game.points[0].possessions[1].redZone.anonymousScaffold === true}

@@ -1312,7 +1312,7 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
 let lastPersistedLiveGame: AdvancedTrackedGame | null = null;
 let lastLiveGamePersistPromise: Promise<void> | null = null;
 
-function persistLiveGame(game: AdvancedTrackedGame): Promise<void> {
+export function persistLiveGame(game: AdvancedTrackedGame): Promise<void> {
   if (game === lastPersistedLiveGame) {
     return lastLiveGamePersistPromise ?? Promise.resolve();
   }
@@ -1324,6 +1324,14 @@ function persistLiveGame(game: AdvancedTrackedGame): Promise<void> {
     .then(() => undefined);
   lastLiveGamePersistPromise = persistPromise;
   return persistPromise;
+}
+
+export function persistCurrentLiveGame(): Promise<void> {
+  const game = useAdvancedTrackingStore.getState().currentGame;
+  if (game == null) {
+    return Promise.resolve();
+  }
+  return persistLiveGame(game);
 }
 
 useAdvancedTrackingStore.subscribe((state) => {

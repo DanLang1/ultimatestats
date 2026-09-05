@@ -1,5 +1,5 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/ThemedText';
 import { PlayerChip, PlayerChipRestriction } from '@/components/ui/PlayerChip';
@@ -9,6 +9,8 @@ import { computePlayingTime, formatPlayingTime, sortByPlayerNumber } from '@/lib
 import { Player, PointLineRecord } from '@/lib/storage/types';
 import type { LinePlayerSortOrder } from '@/store/settingsStore';
 import { Fonts } from '@/theme/theme';
+
+const EMPTY_UNAVAILABLE_NAMES: string[] = [];
 
 function sortPlayers(
   players: Player[],
@@ -32,6 +34,13 @@ export type SortDirection = LinePlayerSortOrder;
 
 export interface ModalPlayerGridProps {
   roster: Player[];
+  focusIds?: ReadonlySet<string>;
+  focusLabel?: string;
+  balanced?: boolean;
+  showMatchingType?: boolean;
+  unavailableNames?: string[];
+  showOtherPlayers?: boolean;
+  onToggleOtherPlayers?: () => void;
   pointLines: PointLineRecord[];
   selectedIds: string[];
   onTogglePlayer: (playerId: string) => void;
@@ -75,6 +84,8 @@ const GENERIC_COLUMN_LABELS: Record<GenericColumnKey, string> = {
   unassigned: 'Unassigned',
 };
 
+const BALANCED_SECTION_KEYS: GenericColumnKey[] = ['handler', 'cutter', 'hybrid', 'unassigned'];
+
 function getColumnKey(player: Player): ColumnKey {
   if (!player.matchingType || !player.role) {
     return 'unassigned';
@@ -89,8 +100,39 @@ function getGenericColumnKey(player: Player): GenericColumnKey {
   return player.role;
 }
 
+function getMatchingTypeLabel(player: Player): string | undefined {
+  if (player.matchingType === 'mmp') return 'MMP';
+  if (player.matchingType === 'fmp') return 'FMP';
+  return undefined;
+}
+
+function groupPlayersByRole(players: Player[]): [GenericColumnKey, Player[]][] {
+  const playersByRole = new Map<GenericColumnKey, Player[]>();
+  for (const player of players) {
+    const key = getGenericColumnKey(player);
+    const sectionPlayers = playersByRole.get(key);
+    if (sectionPlayers) {
+      sectionPlayers.push(player);
+    } else {
+      playersByRole.set(key, [player]);
+    }
+  }
+
+  return BALANCED_SECTION_KEYS.flatMap((role) => {
+    const sectionPlayers = playersByRole.get(role);
+    return sectionPlayers == null ? [] : [[role, sectionPlayers] as const];
+  });
+}
+
 export function ModalPlayerGrid({
   roster,
+  focusIds,
+  focusLabel = 'Roster',
+  balanced = false,
+  showMatchingType = false,
+  unavailableNames = EMPTY_UNAVAILABLE_NAMES,
+  showOtherPlayers = false,
+  onToggleOtherPlayers,
   pointLines,
   selectedIds,
   onTogglePlayer,
@@ -114,19 +156,10 @@ export function ModalPlayerGrid({
 
   const sortedRoster = sortPlayers(roster, playingTime, sortDirection);
 
-  // Group players by column
-  const columns = new Map<ColumnKey, Player[]>();
-  for (const player of sortedRoster) {
-    const key = getColumnKey(player);
-    if (!columns.has(key)) {
-      columns.set(key, []);
-    }
-    columns.get(key)!.push(player);
-  }
-
   const renderPlayerChip = (player: Player) => {
     const subtitle = [
       playerStatusLabels?.get(player.id),
+      balanced && showMatchingType ? getMatchingTypeLabel(player) : undefined,
       gameActive ? formatPlayingTime(player.id, playingTime) : undefined,
     ]
       .filter((value): value is string => value != null)
@@ -140,7 +173,8 @@ export function ModalPlayerGrid({
         selected={selectedSet.has(player.id)}
         matchingType={player.matchingType}
         subtitle={subtitle || undefined}
-        compact
+        compact={!balanced}
+        selectionCard={balanced}
         restriction={playerRestrictions?.get(player.id)}
         useModalColors={useModalColorsProp}
         onPress={() => onTogglePlayer(player.id)}
@@ -148,20 +182,122 @@ export function ModalPlayerGrid({
     );
   };
 
-  // Check which matching types exist in the roster
-  const hasMmpPlayers = roster.some((p) => p.matchingType === 'mmp');
-  const hasFmpPlayers = roster.some((p) => p.matchingType === 'fmp');
-  const isMixedTeam = hasMmpPlayers && hasFmpPlayers;
+  const renderTwoColumnChips = (players: Player[]) => {
+    const midpoint = Math.ceil(players.length / 2);
+    return (
+      <View style={styles.splitColumnsRow}>
+        <View style={styles.splitColumn}>{players.slice(0, midpoint).map(renderPlayerChip)}</View>
+        <View style={styles.splitColumn}>{players.slice(midpoint).map(renderPlayerChip)}</View>
+      </View>
+    );
+  };
 
-  // For single-gender teams, group by role only
+  if (roster.length === 0) {
+    return (
+      <View style={styles.emptyState}>
+        <MaterialCommunityIcons
+          name="account-group-outline"
+          size={scaleBySizeClass(40, sizeClass)}
+          color={emptyTextColor}
+        />
+        <ThemedText style={[styles.emptyText, { color: emptyTextColor }]}>
+          No active players
+        </ThemedText>
+        <ThemedText style={[styles.emptyHint, { color: emptyTextColor }]}>
+          Add players in Edit Roster
+        </ThemedText>
+      </View>
+    );
+  }
+
+  if (balanced) {
+    const focusedPlayers = sortedRoster.filter((player) => !focusIds || focusIds.has(player.id));
+    const otherPlayers = sortedRoster.filter((player) => focusIds && !focusIds.has(player.id));
+    const otherSelectedCount = otherPlayers.filter((player) => selectedSet.has(player.id)).length;
+    const focusedSelectedCount = focusedPlayers.filter((player) =>
+      selectedSet.has(player.id),
+    ).length;
+    const otherLabel = `Other players · ${otherPlayers.length}${otherSelectedCount > 0 ? ` · ${otherSelectedCount} selected` : ''}`;
+    const renderRoleGroups = (players: Player[], groupKey: string) =>
+      groupPlayersByRole(players).map(([role, sectionPlayers]) => (
+        <View key={`${groupKey}-${role}`} collapsable={false} style={styles.balancedSection}>
+          <ThemedText style={[styles.balancedSectionLabel, { color: labelColor }]}>
+            {GENERIC_COLUMN_LABELS[role]}
+          </ThemedText>
+          {renderTwoColumnChips(sectionPlayers)}
+        </View>
+      ));
+
+    return (
+      <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
+        <View style={styles.sectionHeading}>
+          <ThemedText style={[styles.focusLabel, { color: labelColor }]}>{focusLabel}</ThemedText>
+          <ThemedText style={[styles.focusCount, { color: labelColor }]}>
+            {focusedSelectedCount} of {focusedPlayers.length} selected
+          </ThemedText>
+        </View>
+        <View key="focused" collapsable={false} style={styles.balancedSections}>
+          {renderRoleGroups(focusedPlayers, 'focused')}
+        </View>
+        {otherPlayers.length > 0 && (
+          <Pressable
+            testID="line-select-show-all-players"
+            accessibilityLabel={otherLabel}
+            accessibilityRole="button"
+            accessibilityState={{ expanded: showOtherPlayers }}
+            onPress={onToggleOtherPlayers}
+            style={({ pressed }) => [
+              styles.otherPlayers,
+              { borderColor: palette.border },
+              pressed && { opacity: 0.7 },
+            ]}>
+            <ThemedText style={[styles.focusLabel, { color: labelColor }]}>{otherLabel}</ThemedText>
+            <MaterialCommunityIcons
+              name={showOtherPlayers ? 'chevron-up' : 'chevron-down'}
+              size={scaleBySizeClass(20, sizeClass)}
+              color={labelColor}
+            />
+          </Pressable>
+        )}
+        {showOtherPlayers && (
+          <View key="other" collapsable={false} style={styles.balancedSections}>
+            {renderRoleGroups(otherPlayers, 'other')}
+          </View>
+        )}
+        {unavailableNames.length > 0 && (
+          <ThemedText style={[styles.unavailableText, { color: labelColor }]}>
+            Unavailable for this line: {unavailableNames.join(', ')}
+          </ThemedText>
+        )}
+      </ScrollView>
+    );
+  }
+
+  const columns = new Map<ColumnKey, Player[]>();
+  for (const player of sortedRoster) {
+    const key = getColumnKey(player);
+    const columnPlayers = columns.get(key);
+    if (columnPlayers) {
+      columnPlayers.push(player);
+    } else {
+      columns.set(key, [player]);
+    }
+  }
+
+  const isMixedTeam =
+    roster.some((player) => player.matchingType === 'mmp') &&
+    roster.some((player) => player.matchingType === 'fmp');
+
   const genericColumns = new Map<GenericColumnKey, Player[]>();
   if (!isMixedTeam) {
     for (const player of sortedRoster) {
       const key = getGenericColumnKey(player);
-      if (!genericColumns.has(key)) {
-        genericColumns.set(key, []);
+      const columnPlayers = genericColumns.get(key);
+      if (columnPlayers) {
+        columnPlayers.push(player);
+      } else {
+        genericColumns.set(key, [player]);
       }
-      genericColumns.get(key)!.push(player);
     }
   }
 
@@ -191,42 +327,13 @@ export function ModalPlayerGrid({
     );
   };
 
-  // Render a single category split into two columns for compactness
-  const renderSplitColumn = (players: Player[], label: string) => {
-    const midpoint = Math.ceil(players.length / 2);
-    const leftPlayers = players.slice(0, midpoint);
-    const rightPlayers = players.slice(midpoint);
+  const renderSplitColumn = (players: Player[], label: string) => (
+    <View style={styles.splitColumnWrapper}>
+      <ThemedText style={[styles.columnLabel, { color: labelColor }]}>{label}</ThemedText>
+      {renderTwoColumnChips(players)}
+    </View>
+  );
 
-    return (
-      <View style={styles.splitColumnWrapper}>
-        <ThemedText style={[styles.columnLabel, { color: labelColor }]}>{label}</ThemedText>
-        <View style={styles.splitColumnsRow}>
-          <View style={styles.splitColumn}>{leftPlayers.map(renderPlayerChip)}</View>
-          <View style={styles.splitColumn}>{rightPlayers.map(renderPlayerChip)}</View>
-        </View>
-      </View>
-    );
-  };
-
-  if (roster.length === 0) {
-    return (
-      <View style={styles.emptyState}>
-        <MaterialCommunityIcons
-          name="account-group-outline"
-          size={scaleBySizeClass(40, sizeClass)}
-          color={emptyTextColor}
-        />
-        <ThemedText style={[styles.emptyText, { color: emptyTextColor }]}>
-          No active players
-        </ThemedText>
-        <ThemedText style={[styles.emptyHint, { color: emptyTextColor }]}>
-          Add players in Edit Roster
-        </ThemedText>
-      </View>
-    );
-  }
-
-  // Single-gender team: show generic columns (only those with players)
   if (!isMixedTeam) {
     const activeKeys: GenericColumnKey[] = ['handler', 'cutter', 'hybrid', 'unassigned'];
     const activeGenericColumns = activeKeys.filter((k) => (genericColumns.get(k)?.length ?? 0) > 0);
@@ -305,6 +412,37 @@ export function ModalPlayerGrid({
 
 function createStyles(sizeClass: SizeClass) {
   return StyleSheet.create({
+    unavailableText: { fontSize: scaleBySizeClass(13, sizeClass), marginTop: 12 },
+    balancedSections: { gap: 16 },
+    balancedSection: { gap: 7 },
+    balancedSectionLabel: {
+      fontSize: scaleBySizeClass(13, sizeClass),
+      fontFamily: Fonts.semiBold,
+    },
+    sectionHeading: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      justifyContent: 'space-between',
+      gap: 6,
+      marginBottom: 12,
+    },
+    focusLabel: {
+      fontSize: scaleBySizeClass(14, sizeClass),
+      fontFamily: Fonts.semiBold,
+      flexShrink: 1,
+    },
+    focusCount: { fontSize: scaleBySizeClass(12, sizeClass) },
+    otherPlayers: {
+      minHeight: 44,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: 8,
+      borderWidth: 1,
+      borderRadius: 10,
+      padding: 10,
+      marginVertical: 14,
+    },
     container: {
       flex: 1,
       overflow: 'hidden',

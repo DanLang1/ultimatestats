@@ -15,13 +15,16 @@ import { areBothSidesFullyTracked } from '@/lib/advancedTracking/trackingModeUti
 import {
   getCurrentPoint,
   getCurrentPossession,
-  hasInjurySubChanges,
-  haveSameParticipantIds,
   getOtherSideId,
   getParticipantIdsUsedBySide,
   getScrimmageLineSelectionGroups,
+  hasInjurySubChanges,
+  haveSameParticipantIds,
 } from '@/lib/advancedTracking/trackingUtils';
-import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
+import {
+  persistCurrentLiveGame,
+  useAdvancedTrackingStore,
+} from '@/store/advancedTracking/trackingStore';
 import type { InjurySubChange } from '@/store/advancedTracking/trackingStore.types';
 
 export default function TrackerInjurySubScreen() {
@@ -90,7 +93,7 @@ export default function TrackerInjurySubScreen() {
       };
     });
 
-  const saveChanges = (linesBySide: Record<string, string[]>) => {
+  const saveChanges = async (linesBySide: Record<string, string[]>) => {
     const changes = buildChanges(linesBySide);
     const changedSides = changes.filter(hasInjurySubChanges);
 
@@ -103,6 +106,7 @@ export default function TrackerInjurySubScreen() {
           changes,
         });
       }
+      await persistCurrentLiveGame();
       router.back();
     } catch (error) {
       showAlert({
@@ -112,7 +116,7 @@ export default function TrackerInjurySubScreen() {
     }
   };
 
-  const handleConfirm = (nextIds: string[]) => {
+  const handleConfirm = async (nextIds: string[]) => {
     const nextDraftLines = { ...draftLinesBySide, [sideId]: nextIds };
     setDraftLinesBySide(nextDraftLines);
 
@@ -127,7 +131,7 @@ export default function TrackerInjurySubScreen() {
       return;
     }
 
-    saveChanges(nextDraftLines);
+    await saveChanges(nextDraftLines);
   };
 
   const handleBack = () => {
@@ -166,7 +170,10 @@ export default function TrackerInjurySubScreen() {
         currentSideLabel={sideLabel}
         otherSideLabel={otherSideLabel}
         onClose={() => setShowContinuationMenu(false)}
-        onFinish={() => saveChanges(draftLinesBySide)}
+        onFinish={() => {
+          setShowContinuationMenu(false);
+          void saveChanges(draftLinesBySide);
+        }}
         onEditOtherSide={() => {
           setShowContinuationMenu(false);
           setSideIndex(1);

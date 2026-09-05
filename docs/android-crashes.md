@@ -36,3 +36,19 @@ Do not add arbitrary delays or replace deterministic modal exits with `router.ba
 Capture the route transition, affected Android/Expo/React Native versions, and the exact state
 mutation. Prefer removing this workaround once the underlying transition is proven safe; otherwise
 keep the exception local to the reproduced callsite.
+
+## Advanced Injury Surface Swap
+
+A reported Android Fabric `addViewAt` / child-already-has-parent crash occurs when Resume replaces
+an injury in/out summary with the live player grid, and also on Confirm Sub before Resume.
+
+`Tracker.tsx` keeps the tracking surface on a non-collapsible native parent so Fabric does not
+flatten that swap. A `key={surfaceState.kind}` remount was tried and removed: Confirm writes the
+injury stoppage while Tracker is still mounted, so that key also remounted live-point → stoppage in
+the same turn as `TrackerInjurySub` dismissed.
+
+`TrackerInjurySub.tsx` matches the Line Correction pattern by awaiting persistence
+(`await persistCurrentLiveGame()`) before invoking `router.back()`. This separates the live-game
+stoppage store update and Tracker surface swap from the route dismissal into separate turns/commits,
+preventing concurrent native layout mutations on Android Fabric. Jest cannot reproduce native
+Fabric mounting failures; re-test Confirm and Resume on Android after layout changes.

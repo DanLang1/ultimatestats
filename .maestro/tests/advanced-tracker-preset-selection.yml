@@ -1,0 +1,80 @@
+appId: com.langdk.ultimatestats.dev
+name: Advanced Tracker Oversized Preset Selection
+---
+- launchApp
+- openLink: ultimatestats-dev:///__maestro_seed__?trackerState=focusPossession&bench=true
+- extendedWaitUntil:
+    visible:
+      id: 'maestro-setup-running'
+    timeout: 5000
+- extendedWaitUntil:
+    notVisible:
+      id: 'maestro-setup-running'
+    timeout: 15000
+- assertVisible:
+    id: 'tracker-menu-button'
+- runFlow:
+    file: ../flows/open-rare-menu.yaml
+- runFlow:
+    file: ../flows/select-opponent-block.yaml
+- runFlow:
+    file: ../flows/record-opponent-goal.yaml
+- tapOn:
+    id: 'tracker-menu-button'
+- tapOn:
+    id: 'tracker-menu-start-second-half-early'
+- tapOn:
+    id: 'halftime-between-point-set-line'
+- tapOn:
+    id: 'line-select-load-line'
+- tapOn:
+    id: 'line-select-preset-maestro-full-squad'
+- assertVisible: '9/7'
+- assertVisible: 'Deselect 2 to continue'
+- assertVisible:
+    id: 'line-select-confirm'
+    enabled: false
+# Oversized drafts survive leaving and re-entering preparation.
+- tapOn:
+    id: 'line-select-back'
+- tapOn:
+    id: 'halftime-between-point-set-line'
+- assertVisible: '9/7'
+- tapOn:
+    id: 'player-chip-Heidi'
+- tapOn:
+    id: 'player-chip-Ivan'
+- assertVisible: '7/7'
+- assertVisible:
+    id: 'line-select-confirm'
+    enabled: true
+# A smaller preset focuses its members and exposes the bench on demand.
+- tapOn:
+    id: 'line-select-load-line'
+- tapOn:
+    id: 'line-select-preset-maestro-starting-line'
+- assertNotVisible:
+    id: 'player-chip-Heidi'
+- tapOn:
+    id: 'line-select-show-all-players'
+- tapOn:
+    id: 'player-chip-Heidi'
+- assertVisible: '8/7'
+- tapOn:
+    id: 'line-select-show-all-players'
+- assertVisible: 'Other players · 2 · 1 selected'
+- tapOn:
+    id: 'line-select-show-all-players'
+- tapOn:
+    id: 'player-chip-Heidi'
+- tapOn:
+    id: 'player-chip-Joe'
+- assertVisible:
+    id: 'player-chip-Joe'
+- tapOn:
+    id: 'player-chip-Joe'
+- tapOn:
+    id: 'line-select-show-all-players'
+- assertVisible: '7/7'
+- takeScreenshot:
+    path: .maestro/screenshots/advanced-tracker-preset-selection

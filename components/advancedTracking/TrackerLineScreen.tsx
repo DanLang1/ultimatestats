@@ -8,13 +8,13 @@ import { PresetPickerModal } from '@/components/lines/PresetPickerModal';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import type { PlayerChipRestriction } from '@/components/ui/PlayerChip';
+import { ResponsiveHeaderActions } from '@/components/ui/ResponsiveHeaderActions';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { Participant } from '@/lib/advancedTracking/types';
 import { ULTIMATE_LINE_SIZE } from '@/lib/constants';
 import { checkLineRatio, formatRatio, GenderRatio } from '@/lib/genderRatioUtils';
-import { getLoadLineButtonState } from '@/lib/lineEditorUtils';
-import { Player, PointLineRecord } from '@/lib/storage/types';
+import { LinePreset, Player, PointLineRecord } from '@/lib/storage/types';
 import { hasItems } from '@/lib/utils';
 import { useGameStore } from '@/store/basic/gameStore';
 import { useLinePresetsStore } from '@/store/linePresetsStore';
@@ -58,7 +58,7 @@ function buildRestrictedLineSelection(
 
 interface TrackerLineScreenProps {
   participants: Participant[];
-  /** Expanded eligible participant set exposed by the optional "All players" filter. */
+  /** Expanded eligible participant set exposed by the "Other players" section. */
   allParticipants?: Participant[];
   /** Full roster used to resolve history names and matching-type metadata. */
   rosterParticipants?: Participant[];
@@ -100,24 +100,25 @@ export const TrackerLineScreen = ({
 }: TrackerLineScreenProps) => {
   const { palette } = useTheme();
   const { sizeClass, isLandscape } = useLayout();
-  const styles = createStyles(sizeClass);
+  const styles = createStyles(sizeClass, isLandscape);
 
   const currentTeamId = useGameStore((s) => s.currentTeam.id);
   const allPresets = useLinePresetsStore((s) => s.presets);
   const linePlayerSortOrder = useSettingsStore((s) => s.linePlayerSortOrder);
   const presets = allPresets.filter((p) => p.teamId === currentTeamId);
-  const quickPresets = presets.slice(0, 3);
 
   const lockedParticipantIds = participantRestrictions?.lockedIds ?? EMPTY_PARTICIPANT_IDS;
   const restrictedParticipantIds = participantRestrictions?.restrictedIds ?? EMPTY_PARTICIPANT_IDS;
   const restrictedParticipantIdSet = new Set(restrictedParticipantIds);
   const withRestrictions = (participantIds: string[], fallbackIds: string[] = []) =>
-    buildRestrictedLineSelection(
-      participantIds,
-      lockedParticipantIds,
-      restrictedParticipantIdSet,
-      fallbackIds,
-    );
+    participantRestrictions == null
+      ? [...new Set(participantIds)]
+      : buildRestrictedLineSelection(
+          participantIds,
+          lockedParticipantIds,
+          restrictedParticipantIdSet,
+          fallbackIds,
+        );
 
   const [initialSelectionIds] = useState(() => [...(initialSelectedIds ?? [])]);
   const [selectedIds, setSelectedIds] = useState<string[]>(() =>
@@ -130,6 +131,7 @@ export const TrackerLineScreen = ({
   const [isConfirming, setIsConfirming] = useState(false);
 
   const updateSelection = (participantIds: string[]) => {
+    if (isConfirming) return;
     setSelectedIds(participantIds);
     onSelectionChange?.(participantIds);
   };
@@ -137,14 +139,17 @@ export const TrackerLineScreen = ({
   const eligibleParticipants = allParticipants ?? participants;
   const participantRoster = rosterParticipants ?? eligibleParticipants;
   const defaultParticipantIds = new Set(participants.map((participant) => participant.id));
-  const visibleParticipants = showAllPlayers
-    ? eligibleParticipants
-    : eligibleParticipants.filter(
-        (participant) =>
-          defaultParticipantIds.has(participant.id) || selectedIds.includes(participant.id),
-      );
-  const canShowAllPlayers = eligibleParticipants.some(
-    (participant) => !defaultParticipantIds.has(participant.id),
+  const selectedPreset = presets.find((preset) => preset.id === selectedPresetId);
+  const focusedParticipantIds = selectedPreset
+    ? new Set([...selectedPreset.playerIds, ...lockedParticipantIds])
+    : new Set([...defaultParticipantIds, ...initialSelectionIds]);
+  const focusLabel = selectedPreset ? `${selectedPreset.name} players` : 'Roster';
+  const eligibleParticipantIds = new Set(eligibleParticipants.map((participant) => participant.id));
+  const unavailablePresetIds =
+    selectedPreset?.playerIds.filter((id) => !eligibleParticipantIds.has(id)) ?? [];
+  const unavailablePresetNames = unavailablePresetIds.map(
+    (id) =>
+      participantRoster.find((participant) => participant.id === id)?.name ?? 'Removed player',
   );
   const lockedParticipantIdSet = new Set(lockedParticipantIds);
   const hasSubChanges =
@@ -175,7 +180,7 @@ export const TrackerLineScreen = ({
     expectedRatio != null ? formatRatio(expectedRatio, sequenceNumber ?? 1) : null;
   const headerTitle = `${title}${expectedRatioLabel ? ` · ${expectedRatioLabel}` : ''}`;
 
-  const players: Player[] = visibleParticipants.map((p) => ({
+  const players: Player[] = eligibleParticipants.map((p) => ({
     id: p.id,
     name: p.name,
     number: p.number,
@@ -198,33 +203,19 @@ export const TrackerLineScreen = ({
       updateSelection(selectedIds.filter((participantId) => participantId !== id));
       return;
     }
-    if (selectedIds.length >= ULTIMATE_LINE_SIZE) return;
+    if (participantRestrictions && selectedIds.length >= ULTIMATE_LINE_SIZE) return;
     updateSelection([...selectedIds, id]);
   };
 
-  const handleSelectPreset = (preset: { id: string; playerIds: string[] }) => {
-    if (selectedPresetId === preset.id) {
-      setSelectedPresetId(null);
-      updateSelection(withRestrictions([]));
-      return;
-    }
+  const handleSelectPreset = (preset: LinePreset) => {
     setSelectedPresetId(preset.id);
-    const availableParticipantIds = new Set(
-      eligibleParticipants.map((participant) => participant.id),
-    );
-    const availablePresetIds = preset.playerIds.filter((id) => availableParticipantIds.has(id));
-    if (availablePresetIds.some((id) => !defaultParticipantIds.has(id))) {
-      setShowAllPlayers(true);
-    }
+    setSelectedRecentPointNumber(null);
+    setShowAllPlayers(false);
+    const availablePresetIds = preset.playerIds.filter((id) => eligibleParticipantIds.has(id));
     updateSelection(withRestrictions(availablePresetIds, initialSelectionIds));
   };
 
   const handleSelectRecentLine = (recent: RecentLine) => {
-    if (selectedRecentPointNumber === recent.pointNumber) {
-      setSelectedRecentPointNumber(null);
-      updateSelection(withRestrictions([]));
-      return;
-    }
     setSelectedRecentPointNumber(recent.pointNumber);
     setSelectedPresetId(null);
     const availableParticipantIds = new Set(
@@ -245,23 +236,80 @@ export const TrackerLineScreen = ({
     });
   }
 
-  const { active: loadLineButtonActive, label: loadLineButtonLabel } = getLoadLineButtonState({
-    presets,
-    quickPresetIds: quickPresets.map((p) => p.id),
-    selectedPresetId,
-    selectedRecentPointNumber,
-  });
+  const sourceLabel =
+    selectedPreset?.name ??
+    (selectedRecentPointNumber != null ? `Pt ${selectedRecentPointNumber}` : 'Choose line');
+  const selectionDifference = selectedIds.length - ULTIMATE_LINE_SIZE;
+  const needsLineChanges = requireChanges && !hasSubChanges;
+  let selectionHint = 'Ready for this point';
+  if (selectionDifference > 0) selectionHint = `Deselect ${selectionDifference} to continue`;
+  else if (selectionDifference < 0) selectionHint = `Choose ${-selectionDifference} more`;
+  else if (needsLineChanges) selectionHint = 'Choose a replacement player';
+  const clearSelection = () => updateSelection(withRestrictions([]));
+  const browseRoster = () => {
+    setSelectedPresetId(null);
+    setSelectedRecentPointNumber(null);
+    setShowAllPlayers(true);
+  };
+  const headerActions = [
+    {
+      key: 'clear-line',
+      label: 'Clear selection',
+      onPress: clearSelection,
+      disabled: isConfirming || selectedIds.length === lockedParticipantIds.length,
+      inlineIcon: (
+        <MaterialCommunityIcons
+          name="eraser"
+          size={scaleBySizeClass(20, sizeClass)}
+          color={palette.textMuted}
+        />
+      ),
+      advancedMenuIcon: 'eraser' as const,
+    },
+    {
+      key: 'reload-line',
+      label: 'Reload preset',
+      onPress: () => {
+        if (selectedPreset) handleSelectPreset(selectedPreset);
+      },
+      disabled: isConfirming || !selectedPreset,
+      inlineIcon: (
+        <MaterialCommunityIcons
+          name="reload"
+          size={scaleBySizeClass(20, sizeClass)}
+          color={palette.textMuted}
+        />
+      ),
+      advancedMenuIcon: 'reload' as const,
+    },
+    {
+      key: 'browse-roster',
+      label: 'Show full roster',
+      onPress: browseRoster,
+      disabled: isConfirming,
+      inlineIcon: (
+        <MaterialCommunityIcons
+          name="account-group-outline"
+          size={scaleBySizeClass(20, sizeClass)}
+          color={palette.textMuted}
+        />
+      ),
+      advancedMenuIcon: 'account-group-outline' as const,
+    },
+  ];
 
   return (
-    <ThemedView style={{ flex: 1 }}>
+    <ThemedView style={styles.container}>
       <View style={[styles.header, { borderBottomColor: palette.border }]}>
         <View style={styles.headerTop}>
           {onBack && (
             <Pressable
               testID="line-select-back"
+              accessibilityRole="button"
+              accessibilityLabel="Back"
+              disabled={isConfirming}
               onPress={onBack}
-              style={styles.backBtn}
-              hitSlop={8}>
+              style={styles.backBtn}>
               <MaterialCommunityIcons
                 name="arrow-left"
                 size={scaleBySizeClass(22, sizeClass)}
@@ -271,207 +319,44 @@ export const TrackerLineScreen = ({
           )}
           <ThemedText
             testID="line-select-title"
-            style={[styles.headerTitle, { color: palette.textInverse }]}
-            numberOfLines={1}>
+            style={[styles.headerTitle, { color: palette.textInverse }]}>
             {headerTitle}
           </ThemedText>
-
-          {isLandscape && ratioMismatch && (
-            <View style={styles.ratioInline}>
-              <View style={[styles.infoChip, { backgroundColor: palette.warning + '20' }]}>
-                <MaterialCommunityIcons
-                  name="alert"
-                  size={scaleBySizeClass(14, sizeClass)}
-                  color={palette.warning}
-                />
-                <ThemedText style={[styles.infoChipText, { color: palette.warning }]}>
-                  Expecting {expectedRatio === 'more-women' ? 'F' : 'M'} majority
-                </ThemedText>
-              </View>
-            </View>
-          )}
-
-          <Pressable
-            testID="line-select-confirm"
-            onPress={handleConfirm}
-            disabled={!canConfirm || isConfirming}
-            style={({ pressed }) => [
-              styles.confirmBtn,
-              { backgroundColor: canConfirm ? palette.success : palette.overlay10 },
-              pressed && canConfirm && { opacity: 0.8 },
-            ]}>
-            {!canConfirm && (
-              <ThemedText style={[styles.countText, { color: palette.textMuted }]}>
-                {selectedIds.length}/{ULTIMATE_LINE_SIZE}
-              </ThemedText>
-            )}
-            {canConfirm && confirmLabel && (
-              <ThemedText style={[styles.countText, { color: palette.textOnAccent }]}>
-                {isConfirming ? 'SAVING…' : confirmLabel}
-              </ThemedText>
-            )}
-            {canConfirm && !confirmLabel && !isConfirming && (
-              <MaterialCommunityIcons
-                name="check"
-                size={scaleBySizeClass(18, sizeClass)}
-                color={palette.textOnAccent}
-              />
-            )}
-            {canConfirm && !confirmLabel && isConfirming && (
-              <ThemedText style={[styles.countText, { color: palette.textOnAccent }]}>
-                SAVING…
-              </ThemedText>
-            )}
-          </Pressable>
         </View>
-
-        {!isLandscape && ratioMismatch && (
-          <View style={styles.infoRow}>
-            <View style={[styles.infoChip, { backgroundColor: palette.warning + '20' }]}>
-              <MaterialCommunityIcons
-                name="alert"
-                size={scaleBySizeClass(14, sizeClass)}
-                color={palette.warning}
-              />
-              <ThemedText style={[styles.infoChipText, { color: palette.warning }]}>
-                Expecting {expectedRatio === 'more-women' ? 'F' : 'M'} majority
-              </ThemedText>
-            </View>
-          </View>
-        )}
-
         <View style={styles.presetsRow}>
-          {canShowAllPlayers && (
-            <Pressable
-              testID="line-select-show-all-players"
-              accessibilityRole="switch"
-              accessibilityState={{ checked: showAllPlayers }}
-              onPress={() => setShowAllPlayers((current) => !current)}
-              style={({ pressed }) => [
-                styles.showAllBtn,
-                {
-                  backgroundColor: showAllPlayers ? palette.accent : palette.overlay08,
-                  borderColor: showAllPlayers ? palette.accent : palette.overlay15,
-                },
-                pressed && { opacity: 0.8 },
-              ]}>
-              <MaterialCommunityIcons
-                name="account-multiple-outline"
-                size={scaleBySizeClass(13, sizeClass)}
-                color={showAllPlayers ? palette.textOnAccent : palette.textMuted}
-              />
-              <ThemedText
-                style={[
-                  styles.showAllBtnText,
-                  { color: showAllPlayers ? palette.textOnAccent : palette.textMuted },
-                ]}>
-                All players
-              </ThemedText>
-            </Pressable>
-          )}
-          {quickPresets.map((preset) => (
-            <Pressable
-              key={preset.id}
-              onPress={() => handleSelectPreset(preset)}
-              style={({ pressed }) => [
-                styles.quickPresetBtn,
-                {
-                  backgroundColor:
-                    selectedPresetId === preset.id ? palette.accent : palette.overlay08,
-                  borderColor: selectedPresetId === preset.id ? palette.accent : palette.overlay15,
-                },
-                pressed && { opacity: 0.8 },
-              ]}>
-              <ThemedText
-                style={[
-                  styles.quickPresetBtnText,
-                  {
-                    color:
-                      selectedPresetId === preset.id ? palette.textOnAccent : palette.textInverse,
-                  },
-                ]}
-                numberOfLines={1}>
-                {preset.name}
-              </ThemedText>
-            </Pressable>
-          ))}
           <Pressable
             testID="line-select-load-line"
+            accessibilityRole="button"
+            accessibilityLabel={`Choose line, ${sourceLabel}`}
+            disabled={isConfirming}
             onPress={() => setShowLinePicker(true)}
             style={({ pressed }) => [
               styles.loadLineBtn,
-              {
-                backgroundColor: loadLineButtonActive ? palette.accent : palette.overlay08,
-                borderColor: loadLineButtonActive ? palette.accent : palette.overlay15,
-              },
-              pressed && { opacity: 0.8 },
+              { borderColor: palette.border },
+              pressed && { opacity: 0.7 },
             ]}>
             <MaterialCommunityIcons
               name="layers-outline"
-              size={scaleBySizeClass(13, sizeClass)}
-              color={loadLineButtonActive ? palette.textOnAccent : palette.textMuted}
+              size={scaleBySizeClass(18, sizeClass)}
+              color={palette.textMuted}
             />
-            <ThemedText
-              style={[
-                styles.loadLineBtnText,
-                { color: loadLineButtonActive ? palette.textOnAccent : palette.textMuted },
-              ]}
-              numberOfLines={1}>
-              {loadLineButtonLabel}
+            <ThemedText style={[styles.loadLineText, { color: palette.textInverse }]}>
+              {sourceLabel}
             </ThemedText>
+            <MaterialCommunityIcons
+              name="chevron-down"
+              size={scaleBySizeClass(20, sizeClass)}
+              color={palette.textMuted}
+            />
           </Pressable>
-          {selectedIds.length > 0 && (
-            <Pressable
-              onPress={() => {
-                updateSelection(withRestrictions([]));
-                setSelectedPresetId(null);
-                setSelectedRecentPointNumber(null);
-              }}
-              style={({ pressed }) => [
-                styles.clearBtn,
-                { borderColor: palette.overlay15 },
-                pressed && { opacity: 0.7 },
-              ]}>
-              <MaterialCommunityIcons
-                name="eraser"
-                size={scaleBySizeClass(14, sizeClass)}
-                color={palette.textMuted}
-              />
-            </Pressable>
-          )}
+          <ResponsiveHeaderActions
+            actions={headerActions}
+            menuVariant="advanced"
+            menuTitle="LINE ACTIONS"
+          />
         </View>
-
-        <PresetPickerModal
-          visible={showLinePicker}
-          onClose={() => setShowLinePicker(false)}
-          presets={presets}
-          selectedPresetId={selectedPresetId}
-          onSelectPreset={(preset) => {
-            handleSelectPreset(preset);
-            setShowLinePicker(false);
-          }}
-          onEditPresets={() => {
-            setShowLinePicker(false);
-            router.push('/LinePresetEditor');
-          }}
-          recentLines={recentLines}
-          selectedRecentPointNumber={selectedRecentPointNumber}
-          onSelectRecentLine={(recent) => {
-            handleSelectRecentLine(recent);
-            setShowLinePicker(false);
-          }}
-          roster={participantRoster.map((participant) => ({
-            id: participant.id,
-            name: participant.name,
-            number: participant.number,
-            matchingType: participant.matchingType ?? null,
-            role: participant.role ?? null,
-            isActive: true,
-          }))}
-        />
       </View>
-
-      <View style={styles.gridContainer}>
+      <View style={styles.gridContainer} pointerEvents={isConfirming ? 'none' : 'auto'}>
         <ModalPlayerGrid
           roster={players}
           pointLines={pointLines}
@@ -483,126 +368,137 @@ export const TrackerLineScreen = ({
           currentPoint={currentPoint}
           playerRestrictions={playerRestrictions}
           playerStatusLabels={playerStatusLabels}
+          balanced
+          showMatchingType={expectedRatio != null}
+          unavailableNames={unavailablePresetNames}
+          focusIds={focusedParticipantIds}
+          focusLabel={focusLabel}
+          showOtherPlayers={showAllPlayers}
+          onToggleOtherPlayers={() => setShowAllPlayers((value) => !value)}
         />
       </View>
+      <View style={[styles.footer, { borderTopColor: palette.border }]}>
+        <View style={styles.selectionStatus} accessibilityLiveRegion="polite">
+          <ThemedText
+            style={[
+              styles.countText,
+              { color: selectionDifference > 0 ? palette.warning : palette.textInverse },
+            ]}>
+            {selectedIds.length}/{ULTIMATE_LINE_SIZE}
+          </ThemedText>
+          <ThemedText style={[styles.hint, { color: palette.textMuted }]}>
+            {selectionHint}
+          </ThemedText>
+          {ratioMismatch && (
+            <ThemedText style={[styles.hint, { color: palette.warning }]}>
+              Expecting {expectedRatio === 'more-women' ? 'F' : 'M'} majority
+            </ThemedText>
+          )}
+        </View>
+        <Pressable
+          testID="line-select-confirm"
+          accessibilityRole="button"
+          onPress={handleConfirm}
+          disabled={!canConfirm || isConfirming}
+          style={({ pressed }) => [
+            styles.confirmBtn,
+            { backgroundColor: canConfirm ? palette.success : palette.overlay10 },
+            pressed && { opacity: 0.8 },
+          ]}>
+          <ThemedText
+            style={[
+              styles.confirmText,
+              { color: canConfirm ? palette.textOnAccent : palette.textMuted },
+            ]}>
+            {isConfirming ? 'SAVING…' : (confirmLabel ?? 'Confirm line')}
+          </ThemedText>
+        </Pressable>
+      </View>
+      <PresetPickerModal
+        visible={showLinePicker}
+        onClose={() => setShowLinePicker(false)}
+        presets={presets}
+        selectedPresetId={selectedPresetId}
+        onSelectPreset={(preset) => {
+          handleSelectPreset(preset);
+          setShowLinePicker(false);
+        }}
+        onEditPresets={() => {
+          setShowLinePicker(false);
+          router.push('/LinePresetEditor');
+        }}
+        recentLines={recentLines}
+        selectedRecentPointNumber={selectedRecentPointNumber}
+        onSelectRecentLine={(recent) => {
+          handleSelectRecentLine(recent);
+          setShowLinePicker(false);
+        }}
+        roster={participantRoster.map((participant) => ({
+          id: participant.id,
+          name: participant.name,
+          number: participant.number,
+          matchingType: participant.matchingType ?? null,
+          role: participant.role ?? null,
+          isActive: true,
+        }))}
+      />
     </ThemedView>
   );
 };
 
-function createStyles(sizeClass: SizeClass) {
+function createStyles(sizeClass: SizeClass, isLandscape: boolean) {
   return StyleSheet.create({
-    header: {
-      paddingHorizontal: 16,
-      paddingVertical: 12,
-      borderBottomWidth: 1,
-    },
-    headerTop: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      gap: 12,
-    },
-    backBtn: {
-      marginRight: 4,
-    },
+    container: { flex: 1 },
+    header: { paddingHorizontal: 16, paddingVertical: 10, borderBottomWidth: 1, gap: 8 },
+    headerTop: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+    backBtn: { minHeight: 44, minWidth: 44, justifyContent: 'center', alignItems: 'center' },
     headerTitle: {
       flex: 1,
       fontSize: scaleBySizeClass(20, sizeClass),
       fontFamily: Fonts.extraBold,
     },
+    presetsRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+    loadLineBtn: {
+      flex: 1,
+      minHeight: 44,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      padding: 10,
+      borderWidth: 1,
+      borderRadius: 10,
+    },
+    loadLineText: {
+      flex: 1,
+      fontSize: scaleBySizeClass(15, sizeClass),
+      fontFamily: Fonts.semiBold,
+    },
+    gridContainer: { flex: 1, paddingHorizontal: 16, paddingTop: 12 },
+    footer: {
+      flexDirection: isLandscape ? 'row' : 'column',
+      alignItems: isLandscape ? 'center' : 'stretch',
+      paddingHorizontal: 16,
+      paddingVertical: 10,
+      borderTopWidth: 1,
+      gap: 10,
+    },
+    selectionStatus: {
+      flex: isLandscape ? 1 : undefined,
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      alignItems: 'center',
+      gap: 8,
+    },
+    countText: { fontSize: scaleBySizeClass(16, sizeClass), fontFamily: Fonts.bold },
+    hint: { fontSize: scaleBySizeClass(13, sizeClass), flexShrink: 1 },
     confirmBtn: {
-      height: 36,
-      paddingHorizontal: 12,
+      minHeight: 44,
+      paddingHorizontal: 16,
+      paddingVertical: 10,
       borderRadius: 12,
-      minWidth: 44,
       alignItems: 'center',
       justifyContent: 'center',
     },
-    countText: {
-      fontSize: scaleBySizeClass(11, sizeClass),
-      fontFamily: Fonts.bold,
-    },
-    presetsRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      flexWrap: 'wrap',
-      marginTop: 10,
-      gap: 6,
-    },
-    infoRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      flexWrap: 'wrap',
-      gap: 8,
-      marginTop: 8,
-    },
-    infoChip: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 4,
-      paddingHorizontal: 10,
-      paddingVertical: 4,
-      borderRadius: 12,
-    },
-    infoChipText: {
-      fontSize: scaleBySizeClass(11, sizeClass),
-      fontFamily: Fonts.bold,
-      letterSpacing: 0.3,
-    },
-    ratioInline: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 8,
-    },
-    quickPresetBtn: {
-      paddingVertical: 5,
-      paddingHorizontal: 10,
-      borderRadius: 8,
-      borderWidth: 1,
-      maxWidth: 120,
-    },
-    showAllBtn: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 5,
-      paddingVertical: 5,
-      paddingHorizontal: 10,
-      borderRadius: 8,
-      borderWidth: 1,
-    },
-    showAllBtnText: {
-      fontSize: scaleBySizeClass(12, sizeClass),
-      fontFamily: Fonts.semiBold,
-    },
-    quickPresetBtnText: {
-      fontSize: scaleBySizeClass(12, sizeClass),
-      fontFamily: Fonts.semiBold,
-    },
-    loadLineBtn: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 5,
-      paddingVertical: 5,
-      paddingHorizontal: 10,
-      borderRadius: 8,
-      borderWidth: 1,
-      maxWidth: 160,
-    },
-    loadLineBtnText: {
-      fontSize: scaleBySizeClass(12, sizeClass),
-      fontFamily: Fonts.semiBold,
-      flexShrink: 1,
-    },
-    clearBtn: {
-      paddingVertical: 5,
-      paddingHorizontal: 10,
-      borderRadius: 8,
-      borderWidth: 1,
-    },
-    gridContainer: {
-      flex: 1,
-      paddingHorizontal: 12,
-      paddingTop: 8,
-    },
+    confirmText: { fontSize: scaleBySizeClass(15, sizeClass), fontFamily: Fonts.bold },
   });
 }

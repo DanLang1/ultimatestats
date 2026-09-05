@@ -317,6 +317,23 @@ export async function seedAdvancedTrackerTestGame(
   const team = buildSeedTeam(playerNames);
   setSeedTeam(team);
 
+  if (options.includeBench && !isScrimmage) {
+    useLinePresetsStore.getState().importPresetsForTeam(team.id, [
+      {
+        id: 'maestro-full-squad',
+        name: 'Full squad',
+        teamId: team.id,
+        playerIds: team.roster.map((player) => player.id),
+      },
+      {
+        id: 'maestro-starting-line',
+        name: 'Starting line',
+        teamId: team.id,
+        playerIds: MAESTRO_SEED_PLAYERS.map(getMaestroSeedPlayerId),
+      },
+    ]);
+  }
+
   const participants: Participant[] = team.roster.map((player) => ({
     id: player.id,
     name: player.name,

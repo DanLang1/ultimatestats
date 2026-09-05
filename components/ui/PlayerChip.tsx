@@ -1,6 +1,6 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
-import { Pressable, StyleSheet } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
@@ -26,6 +26,7 @@ interface PlayerChipProps {
   subtitle?: string;
   size?: 'default' | 'large';
   compact?: boolean;
+  selectionCard?: boolean;
   restriction?: PlayerChipRestriction;
   /** Use modal-appropriate colors (modalText, modalTextMuted) */
   useModalColors?: boolean;
@@ -52,6 +53,7 @@ export function PlayerChip({
   subtitle,
   size = 'default',
   compact = false,
+  selectionCard = false,
   restriction,
   useModalColors = false,
   onPress,
@@ -97,23 +99,9 @@ export function PlayerChip({
 
   const handlePress = disabled ? undefined : (restriction?.onPress ?? onPress);
 
-  return (
-    <Pressable
-      style={({ pressed }) => [
-        getChipStyle({ compact, size, styles }),
-        {
-          backgroundColor: selected ? activeColor : palette.overlay12,
-          borderColor,
-        },
-        !isActive && styles.chipInactive,
-        disabled && styles.chipDisabled,
-        pressed && styles.chipPressed,
-      ]}
-      testID={`player-chip-${name}`}
-      accessibilityState={{ disabled, selected }}
-      accessibilityHint={restriction?.accessibilityHint}
-      onPress={handlePress}
-      disabled={disabled}>
+  const unselectedBackground = selectionCard ? 'transparent' : palette.overlay12;
+  const chipContent = (
+    <>
       {number && (
         <ThemedText
           style={[
@@ -125,16 +113,57 @@ export function PlayerChip({
         </ThemedText>
       )}
       <ThemedText
-        style={[getChipTextStyle({ compact, size, styles }), { color: textColor }]}
-        numberOfLines={1}>
+        style={[
+          getChipTextStyle({ compact, size, styles }),
+          selectionCard && styles.selectionName,
+          { color: textColor },
+        ]}
+        numberOfLines={selectionCard ? 2 : 1}>
         {name}
       </ThemedText>
       {subtitle && (
         <ThemedText
-          style={[getSubtitleTextStyle({ compact, size, styles }), { color: subtitleColor }]}>
+          style={[
+            getSubtitleTextStyle({ compact, size, styles }),
+            selectionCard && styles.selectionSubtitle,
+            { color: subtitleColor },
+          ]}>
           {subtitle}
         </ThemedText>
       )}
+    </>
+  );
+
+  return (
+    <Pressable
+      style={({ pressed }) => [
+        getChipStyle({ compact, size, styles }),
+        selectionCard && styles.selectionCard,
+        {
+          backgroundColor: selected ? activeColor : unselectedBackground,
+          borderColor,
+        },
+        !isActive && styles.chipInactive,
+        disabled && styles.chipDisabled,
+        pressed && styles.chipPressed,
+      ]}
+      testID={`player-chip-${name}`}
+      accessibilityRole="button"
+      accessibilityLabel={[number ? `#${number}` : undefined, name, subtitle]
+        .filter(Boolean)
+        .join(', ')}
+      accessibilityState={{ disabled, selected }}
+      accessibilityHint={restriction?.accessibilityHint}
+      onPress={handlePress}
+      disabled={disabled}>
+      {selectionCard && (
+        <MaterialCommunityIcons
+          name={selected ? 'check-circle' : 'circle-outline'}
+          size={scaleBySizeClass(18, sizeClass)}
+          color={textColor}
+        />
+      )}
+      {selectionCard ? <View style={styles.selectionContent}>{chipContent}</View> : chipContent}
       {role && (
         <MaterialCommunityIcons
           name={ROLE_ICONS[role]}
@@ -294,6 +323,16 @@ function getRoleIconSize({
 
 function createStyles(sizeClass: SizeClass) {
   return StyleSheet.create({
+    selectionName: { fontSize: scaleBySizeClass(15, sizeClass) },
+    selectionSubtitle: { fontSize: scaleBySizeClass(12, sizeClass), marginTop: 3 },
+    selectionCard: {
+      minHeight: 60,
+      borderRadius: 12,
+      justifyContent: 'flex-start',
+      gap: 8,
+      padding: 10,
+    },
+    selectionContent: { flex: 1, minWidth: 0 },
     chip: {
       flexDirection: 'row',
       alignItems: 'center',
