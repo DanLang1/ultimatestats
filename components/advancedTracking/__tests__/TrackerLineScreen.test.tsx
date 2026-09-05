@@ -360,4 +360,70 @@ describe('TrackerLineScreen', () => {
     expect(screen.getByText('Hybrid')).toBeVisible();
     expect(screen.getByText(handler.name)).toBeVisible();
   });
+
+  it('splits mixed-roster role sections into MMP and FMP subgroups', async () => {
+    const user = userEvent.setup();
+    const mmpHandler = {
+      ...makeParticipant('mmp-handler', 'Andy'),
+      role: 'handler' as const,
+      matchingType: 'mmp' as const,
+    };
+    const fmpHandler = {
+      ...makeParticipant('fmp-handler', 'Beth'),
+      role: 'handler' as const,
+      matchingType: 'fmp' as const,
+    };
+    const mmpCutter = {
+      ...makeParticipant('mmp-cutter', 'Carl'),
+      role: 'cutter' as const,
+      matchingType: 'mmp' as const,
+    };
+
+    await renderScreen(
+      <TrackerLineScreen
+        participants={[mmpHandler, fmpHandler, mmpCutter]}
+        title="Set line"
+        onConfirm={() => {}}
+      />,
+    );
+
+    expect(screen.getByText('Handler')).toBeVisible();
+    expect(screen.getByText('MMP')).toBeVisible();
+    expect(screen.getByText('FMP')).toBeVisible();
+    expect(screen.getByText('Andy')).toBeVisible();
+    expect(screen.getByText('Beth')).toBeVisible();
+
+    await user.press(screen.getByText('Andy'));
+    expect(screen.getByTestId('player-chip-Andy')).toHaveProp(
+      'accessibilityState',
+      expect.objectContaining({ selected: true }),
+    );
+    expect(screen.getByText('Handler')).toBeVisible();
+    expect(screen.getByText('FMP')).toBeVisible();
+  });
+
+  it('renders single-gender role sections without matching-type subgroups', async () => {
+    const mmpHandler = {
+      ...makeParticipant('mmp-handler', 'Andy'),
+      role: 'handler' as const,
+      matchingType: 'mmp' as const,
+    };
+    const mmpCutter = {
+      ...makeParticipant('mmp-cutter', 'Carl'),
+      role: 'cutter' as const,
+      matchingType: 'mmp' as const,
+    };
+
+    await renderScreen(
+      <TrackerLineScreen
+        participants={[mmpHandler, mmpCutter]}
+        title="Set line"
+        onConfirm={() => {}}
+      />,
+    );
+
+    expect(screen.getByText('Handler')).toBeVisible();
+    expect(screen.queryByText('MMP')).not.toBeOnTheScreen();
+    expect(screen.queryByText('FMP')).not.toBeOnTheScreen();
+  });
 });

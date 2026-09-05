@@ -368,7 +368,6 @@ export const TrackerLineScreen = ({
           currentPoint={currentPoint}
           playerRestrictions={playerRestrictions}
           playerStatusLabels={playerStatusLabels}
-          balanced
           showMatchingType={expectedRatio != null}
           unavailableNames={unavailablePresetNames}
           focusIds={focusedParticipantIds}

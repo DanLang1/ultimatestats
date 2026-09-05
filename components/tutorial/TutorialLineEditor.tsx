@@ -194,6 +194,7 @@ export default function TutorialLineEditor({
             selectedIds={currentLine}
             onTogglePlayer={onTogglePlayer}
             useModalColors={false}
+            showMatchingType
           />
         )}
       </View>

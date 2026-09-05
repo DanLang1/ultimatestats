@@ -552,6 +552,7 @@ export default function LineEditor() {
             sortDirection={linePlayerSortOrder}
             gameActive={gameActive}
             currentPoint={currentPoint}
+            showMatchingType={expectedRatio != null}
           />
         )}
       </View>

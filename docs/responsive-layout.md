@@ -172,8 +172,6 @@ const styles = StyleSheet.create({
 const columnStyle = isLandscape ? styles.columnLandscape : styles.columnPortrait;
 ```
 
-No `key` or remount needed. See `ModalPlayerGrid.tsx` for a working example.
-
 #### Common mistake
 
 Do NOT reach for key-based remount when you see a rotation layout bug. Check which flex properties differ between orientations first. If more than one differs, simplify the styles instead — reduce the differences to a single property.
