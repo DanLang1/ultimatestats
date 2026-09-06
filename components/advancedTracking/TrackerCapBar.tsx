@@ -18,10 +18,11 @@ import { Fonts } from '@/theme/theme';
 
 interface TrackerCapBarProps {
   onMenuPress: () => void;
+  onHelpPress?: () => void;
   game: AdvancedTrackedGame;
 }
 
-export const TrackerCapBar = ({ onMenuPress, game }: TrackerCapBarProps) => {
+export const TrackerCapBar = ({ onMenuPress, onHelpPress, game }: TrackerCapBarProps) => {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
   const activeGameClockPause = getActiveGameClockPause(game);
@@ -86,6 +87,21 @@ export const TrackerCapBar = ({ onMenuPress, game }: TrackerCapBarProps) => {
           </View>
         </View>
       )}
+      {onHelpPress && (
+        <Pressable
+          testID="tracker-help-button"
+          accessibilityRole="button"
+          accessibilityLabel="Open tracker help"
+          onPress={onHelpPress}
+          hitSlop={12}
+          style={({ pressed }) => [styles.helpButton, pressed && { opacity: 0.7 }]}>
+          <MaterialCommunityIcons
+            name="help-circle-outline"
+            size={scaleBySizeClass(24, sizeClass)}
+            color={palette.textInverse}
+          />
+        </Pressable>
+      )}
     </View>
   );
 };
@@ -110,6 +126,13 @@ function createStyles(sizeClass: SizeClass) {
     },
     center: {
       flex: 1,
+    },
+    helpButton: {
+      marginLeft: 'auto',
+      minWidth: 30,
+      minHeight: 30,
+      alignItems: 'center',
+      justifyContent: 'center',
     },
     labelRow: {
       flexDirection: 'row',

@@ -30,6 +30,16 @@ current holder/side, timestamps, undo, caps, and canonical pickup/throw actions 
 Possession metadata such as Red Zone enters through a dedicated store mutation that resolves the
 same canonical possession boundary without creating a parallel counter.
 
+## In-game Help
+
+The tracker's top bar keeps a labeled Help button visible. `TrackerHelpSheet` provides a
+“What happened?” reference that always leads with goal, throwaway, and drop gestures, followed
+by passes, More, and Undo. Single-team defense adds opponent goal/turnover buttons and player
+block capture below the gesture guide; possession never hides the core instructions. Pickup,
+dropped-pull, selected-action, paused-play, and between-point hints use the current tracker
+state. Help only opens local UI: it does not record actions or change clocks. Users can return
+directly to tracking or open the existing practice tutorial.
+
 ## State and Persistence
 
 - `useAdvancedTrackingStore` owns the active `currentGame`, its `currentGameId`, undo state, and

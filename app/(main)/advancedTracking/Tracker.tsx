@@ -9,6 +9,7 @@ import { DevDebugModal } from '@/components/advancedTracking/DevDebugModal';
 import { LandscapeUnsupported } from '@/components/advancedTracking/LandscapeUnsupported';
 import { TrackerActionFooter } from '@/components/advancedTracking/TrackerActionFooter';
 import { TrackerCapBar } from '@/components/advancedTracking/TrackerCapBar';
+import { TrackerHelpSheet } from '@/components/advancedTracking/TrackerHelpSheet';
 import { TrackerHomeMenu } from '@/components/advancedTracking/TrackerHomeMenu';
 import { TrackerLastActionCard } from '@/components/advancedTracking/TrackerLastActionCard';
 import { TrackerLineChangeMenu } from '@/components/advancedTracking/TrackerLineChangeMenu';
@@ -71,6 +72,7 @@ export default function AdvancedTrackerScreen() {
   const participants = useLiveRosterParticipants(game?.participants ?? []);
   const [showDevModal, setShowDevModal] = useState(false);
   const [showHomeMenu, setShowHomeMenu] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
   const [showGameNote, setShowGameNote] = useState(false);
   const [showPointNote, setShowPointNote] = useState(false);
   const [showLineChangeMenu, setShowLineChangeMenu] = useState(false);
@@ -258,7 +260,11 @@ export default function AdvancedTrackerScreen() {
     <ThemedView style={styles.container}>
       <Stack.Screen options={{ headerShown: false, gestureEnabled: false }} />
 
-      <TrackerCapBar onMenuPress={() => setShowHomeMenu(true)} game={game} />
+      <TrackerCapBar
+        onMenuPress={() => setShowHomeMenu(true)}
+        onHelpPress={() => setShowHelp(true)}
+        game={game}
+      />
       <TrackerScoreBar
         pointTimerAdjustedTimestamp={pointTimerAdjustedTimestamp}
         pointTimerPausedAt={pointTimerPausedAt}
@@ -292,6 +298,15 @@ export default function AdvancedTrackerScreen() {
           setPassModifier={setPassModifier}
         />
       )}
+
+      <TrackerHelpSheet
+        visible={showHelp}
+        onClose={() => setShowHelp(false)}
+        onTutorial={() => {
+          setShowHelp(false);
+          handleAdvancedTutorial();
+        }}
+      />
 
       <TrackerHomeMenu
         visible={showHomeMenu}
