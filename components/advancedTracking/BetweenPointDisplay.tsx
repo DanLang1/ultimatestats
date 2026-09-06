@@ -20,7 +20,6 @@ import { Fonts } from '@/theme/theme';
 
 import {
   getHockeyAssistName,
-  getLastEventLabel,
   getPointContextStats,
   getPointDetails,
   getPointOutcomeLabel,
@@ -39,7 +38,6 @@ const TIMEOUT_MAX_WIDTH: Record<SizeClass, number> = { small: 340, medium: 560, 
 const ACTION_ROW_MAX_WIDTH: Record<SizeClass, number> = { small: 340, medium: 560, large: 760 };
 const METRIC_CARD_WIDTH: Record<SizeClass, number> = { small: 156, medium: 260, large: 360 };
 const METRIC_CARD_HEIGHT: Record<SizeClass, number> = { small: 54, medium: 72, large: 88 };
-const SCORED_FONT_SIZE: Record<SizeClass, number> = { small: 32, medium: 46, large: 62 };
 const OUTCOME_FONT_SIZE: Record<SizeClass, number> = { small: 18, medium: 25, large: 34 };
 const METRIC_VALUE_FONT_SIZE: Record<SizeClass, number> = { small: 18, medium: 26, large: 34 };
 const METRIC_LABEL_FONT_SIZE: Record<SizeClass, number> = { small: 10, medium: 13, large: 16 };
@@ -79,9 +77,9 @@ export const BetweenPointDisplay = ({
   const scoringSideId = point ? getPointScoringSideId(game, point) : null;
   const summarySideId =
     areBothSidesFullyTracked(game) && scoringSideId != null ? scoringSideId : game.focusSideId;
-  const goalInfo = getGoalInfo(point, summarySideId, participants);
   const focusSide = game.sides.find((side) => side.id === summarySideId);
   const opponentSide = game.sides.find((side) => side.id !== summarySideId);
+  const goalInfo = getGoalInfo(point, summarySideId, participants);
   const timeoutSide = activeTimeout
     ? game.sides.find((side) => side.id === activeTimeout.transition.sideId)
     : null;
@@ -105,14 +103,11 @@ export const BetweenPointDisplay = ({
   const receivingSideId = point?.possessions[0]?.sideId ?? null;
   const outcomeLabel = getPointOutcomeLabel({
     focusSideId: summarySideId,
+    focusSideLabel: focusSide?.label ?? 'Us',
+    opponentSideLabel: opponentSide?.label ?? 'Opponent',
     scoringSideId,
     receivingSideId,
     possessionSideIds: point?.possessions.map((possession) => possession.sideId) ?? [],
-  });
-  const lastEventLabel = getLastEventLabel({
-    goalInfo,
-    focusSideLabel: focusSide?.label ?? 'Us',
-    opponentSideLabel: opponentSide?.label ?? 'Opponent',
   });
   const pointDetails = getPointDetails(
     point?.possessions.flatMap((possession) => possession.actions) ?? [],
@@ -223,11 +218,6 @@ export const BetweenPointDisplay = ({
         bounces={false}>
         <View style={styles.summaryBand}>
           <View style={styles.summaryHeaderColumn}>
-            <View style={styles.scoredRow}>
-              <ThemedText style={[styles.scoredText, { color: palette.accent }]}>
-                {lastEventLabel}
-              </ThemedText>
-            </View>
             <ThemedText style={[styles.outcomeText, { color: palette.textMuted }]}>
               {outcomeLabel}
             </ThemedText>
@@ -401,21 +391,6 @@ function createStyles(sizeClass: SizeClass, isLandscape: boolean) {
     summaryHeaderColumn: {
       alignItems: 'center',
       gap: scaleBySizeClass(8, densitySizeClass),
-    },
-    scoredRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: scaleBySizeClass(8, densitySizeClass),
-      width: '100%',
-    },
-    scoredText: {
-      fontFamily: Fonts.black,
-      fontSize: getSizeClassValue(SCORED_FONT_SIZE, densitySizeClass),
-      letterSpacing: 0.5,
-      textTransform: 'uppercase',
-      textAlign: 'center',
-      flexShrink: 1,
     },
     outcomeText: {
       fontFamily: Fonts.black,

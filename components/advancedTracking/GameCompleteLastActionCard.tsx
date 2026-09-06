@@ -50,6 +50,8 @@ export function GameCompleteLastActionCard({ game }: GameCompleteLastActionCardP
   const scoringSideId = getPointScoringSideId(game, point);
   const pointOutcome = getPointOutcomeLabel({
     focusSideId: game.focusSideId,
+    focusSideLabel: game.sides.find((side) => side.id === game.focusSideId)?.label ?? 'Us',
+    opponentSideLabel: game.sides.find((side) => side.id !== game.focusSideId)?.label ?? 'Opponent',
     scoringSideId,
     receivingSideId: point.possessions[0].sideId,
     possessionSideIds: point.possessions.map((possession) => possession.sideId),

@@ -1,6 +1,5 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
-import { getGoalInfo } from '@/lib/advancedTracking/trackingDisplayHelpers';
 import { getCurrentPoint, getPointScoringSideId } from '@/lib/advancedTracking/trackingUtils';
 import type {
   AdvancedTrackedGame,
@@ -139,11 +138,15 @@ export function getHockeyAssistName(
 
 export function getPointOutcomeLabel({
   focusSideId,
+  focusSideLabel,
+  opponentSideLabel,
   scoringSideId,
   receivingSideId,
   possessionSideIds,
 }: {
   focusSideId: string;
+  focusSideLabel: string;
+  opponentSideLabel: string;
   scoringSideId: string | null;
   receivingSideId: string | null;
   possessionSideIds: string[];
@@ -157,38 +160,17 @@ export function getPointOutcomeLabel({
   if (focusReceived && focusScored) {
     const uniquePossessionSides = new Set(possessionSideIds);
     if (uniquePossessionSides.size === 1) {
-      return 'Clean Hold';
+      return `${focusSideLabel} Clean Hold`;
     }
-    return 'Dirty Hold';
+    return `${focusSideLabel} Dirty Hold`;
   }
   if (!focusReceived && focusScored) {
-    return 'Break';
+    return `${focusSideLabel} Break`;
   }
   if (focusReceived && !focusScored) {
-    return 'Broken';
+    return `${opponentSideLabel} Break`;
   }
-  return 'Opp Hold';
-}
-
-export function getLastEventLabel({
-  goalInfo,
-  focusSideLabel,
-  opponentSideLabel,
-}: {
-  goalInfo: ReturnType<typeof getGoalInfo>;
-  focusSideLabel: string;
-  opponentSideLabel: string;
-}) {
-  if (goalInfo?.isFocusGoal === true) {
-    if (goalInfo.isCallahan) {
-      return `${focusSideLabel} CALLAHAN`;
-    }
-    return `${focusSideLabel} GOAL`;
-  }
-  if (goalInfo?.isCallahan === true) {
-    return `${opponentSideLabel} CALLAHAN`;
-  }
-  return `${opponentSideLabel} GOAL`;
+  return `${opponentSideLabel} Hold`;
 }
 
 function getPlayerRefName(ref: PlayerRef, participants: Participant[]) {
