@@ -17,17 +17,28 @@ function sortPlayers(
   playingTime: Map<string, number>,
   direction: SortDirection,
 ): Player[] {
-  if (direction === 'number') {
-    return sortByPlayerNumber(players);
-  }
-  return [...players].sort((a, b) => {
-    if (direction === 'points') {
-      const aPoints = playingTime.get(a.id) ?? 0;
-      const bPoints = playingTime.get(b.id) ?? 0;
-      if (aPoints !== bPoints) return bPoints - aPoints;
-    }
-    return a.name.localeCompare(b.name);
-  });
+  const sorted =
+    direction === 'number'
+      ? sortByPlayerNumber(players)
+      : [...players].sort((a, b) => {
+          if (direction === 'points') {
+            const aPoints = playingTime.get(a.id) ?? 0;
+            const bPoints = playingTime.get(b.id) ?? 0;
+            if (aPoints !== bPoints) return bPoints - aPoints;
+          }
+          return a.name.localeCompare(b.name);
+        });
+
+  const matchingTypeOrder = (player: Player) => {
+    if (player.matchingType === 'fmp') return 0;
+    if (player.matchingType === 'mmp') return 1;
+    return 2;
+  };
+
+  return sorted
+    .map((player, index) => ({ player, index }))
+    .sort((a, b) => matchingTypeOrder(a.player) - matchingTypeOrder(b.player) || a.index - b.index)
+    .map(({ player }) => player);
 }
 
 export type SortDirection = LinePlayerSortOrder;
@@ -35,8 +46,6 @@ export type SortDirection = LinePlayerSortOrder;
 export interface ModalPlayerGridProps {
   roster: Player[];
   focusIds?: ReadonlySet<string>;
-  focusLabel?: string;
-  showMatchingType?: boolean;
   unavailableNames?: string[];
   showOtherPlayers?: boolean;
   onToggleOtherPlayers?: () => void;
@@ -66,16 +75,6 @@ const GENERIC_COLUMN_LABELS: Record<GenericColumnKey, string> = {
 
 const SECTION_KEYS: GenericColumnKey[] = ['handler', 'cutter', 'hybrid', 'unassigned'];
 
-type MatchingSubgroupKey = 'mmp' | 'fmp' | 'unspecified';
-
-const SUBGROUP_LABELS: Record<MatchingSubgroupKey, string> = {
-  mmp: 'MMP',
-  fmp: 'FMP',
-  unspecified: 'Unspecified',
-};
-
-const SUBGROUP_KEYS: MatchingSubgroupKey[] = ['mmp', 'fmp', 'unspecified'];
-
 function getGenericColumnKey(player: Player): GenericColumnKey {
   if (!player.role) {
     return 'unassigned';
@@ -83,35 +82,6 @@ function getGenericColumnKey(player: Player): GenericColumnKey {
   return player.role;
 }
 
-function getMatchingTypeLabel(player: Player): string | undefined {
-  if (player.matchingType === 'mmp') return 'MMP';
-  if (player.matchingType === 'fmp') return 'FMP';
-  return undefined;
-}
-
-function getSubgroupKey(player: Player): MatchingSubgroupKey {
-  if (player.matchingType === 'mmp') return 'mmp';
-  if (player.matchingType === 'fmp') return 'fmp';
-  return 'unspecified';
-}
-
-function groupByMatchingType(players: Player[]): [MatchingSubgroupKey, Player[]][] {
-  const playersBySubgroup = new Map<MatchingSubgroupKey, Player[]>();
-  for (const player of players) {
-    const key = getSubgroupKey(player);
-    const subgroupPlayers = playersBySubgroup.get(key);
-    if (subgroupPlayers) {
-      subgroupPlayers.push(player);
-    } else {
-      playersBySubgroup.set(key, [player]);
-    }
-  }
-
-  return SUBGROUP_KEYS.flatMap((key) => {
-    const subgroupPlayers = playersBySubgroup.get(key);
-    return subgroupPlayers == null ? [] : [[key, subgroupPlayers] as const];
-  });
-}
 function groupPlayersByRole(players: Player[]): [GenericColumnKey, Player[]][] {
   const playersByRole = new Map<GenericColumnKey, Player[]>();
   for (const player of players) {
@@ -133,8 +103,6 @@ function groupPlayersByRole(players: Player[]): [GenericColumnKey, Player[]][] {
 export function ModalPlayerGrid({
   roster,
   focusIds,
-  focusLabel = 'Roster',
-  showMatchingType = false,
   unavailableNames = EMPTY_UNAVAILABLE_NAMES,
   showOtherPlayers = false,
   onToggleOtherPlayers,
@@ -160,14 +128,9 @@ export function ModalPlayerGrid({
   const selectedSet = new Set(selectedIds);
 
   const sortedRoster = sortPlayers(roster, playingTime, sortDirection);
-  const isMixedRoster =
-    roster.some((player) => player.matchingType === 'mmp') &&
-    roster.some((player) => player.matchingType === 'fmp');
-
   const renderPlayerChip = (player: Player) => {
     const subtitle = [
       playerStatusLabels?.get(player.id),
-      showMatchingType ? getMatchingTypeLabel(player) : undefined,
       gameActive ? formatPlayingTime(player.id, playingTime) : undefined,
     ]
       .filter((value): value is string => value != null)
@@ -199,27 +162,6 @@ export function ModalPlayerGrid({
     );
   };
 
-  const renderSectionChips = (sectionPlayers: Player[]) => {
-    if (!isMixedRoster) {
-      return renderTwoColumnChips(sectionPlayers);
-    }
-    const subgroups = groupByMatchingType(sectionPlayers);
-    if (subgroups.length <= 1) {
-      return renderTwoColumnChips(sectionPlayers);
-    }
-    return (
-      <View style={styles.subgroups}>
-        {subgroups.map(([subgroupKey, subgroupPlayers]) => (
-          <View key={subgroupKey} style={styles.subgroup}>
-            <ThemedText style={[styles.subgroupLabel, { color: labelColor }]}>
-              {SUBGROUP_LABELS[subgroupKey]}
-            </ThemedText>
-            {renderTwoColumnChips(subgroupPlayers)}
-          </View>
-        ))}
-      </View>
-    );
-  };
   if (roster.length === 0) {
     return (
       <View style={styles.emptyState}>
@@ -241,7 +183,6 @@ export function ModalPlayerGrid({
   const focusedPlayers = sortedRoster.filter((player) => !focusIds || focusIds.has(player.id));
   const otherPlayers = sortedRoster.filter((player) => focusIds && !focusIds.has(player.id));
   const otherSelectedCount = otherPlayers.filter((player) => selectedSet.has(player.id)).length;
-  const focusedSelectedCount = focusedPlayers.filter((player) => selectedSet.has(player.id)).length;
   const otherLabel = `Other players · ${otherPlayers.length}${otherSelectedCount > 0 ? ` · ${otherSelectedCount} selected` : ''}`;
   const renderRoleGroups = (players: Player[], groupKey: string) =>
     groupPlayersByRole(players).map(([role, sectionPlayers]) => (
@@ -249,18 +190,12 @@ export function ModalPlayerGrid({
         <ThemedText style={[styles.sectionLabel, { color: labelColor }]}>
           {GENERIC_COLUMN_LABELS[role]}
         </ThemedText>
-        {renderSectionChips(sectionPlayers)}
+        {renderTwoColumnChips(sectionPlayers)}
       </View>
     ));
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
-      <View style={styles.sectionHeading}>
-        <ThemedText style={[styles.focusLabel, { color: labelColor }]}>{focusLabel}</ThemedText>
-        <ThemedText style={[styles.focusCount, { color: labelColor }]}>
-          {focusedSelectedCount} of {focusedPlayers.length} selected
-        </ThemedText>
-      </View>
       <View key="focused" collapsable={false} style={styles.sections}>
         {renderRoleGroups(focusedPlayers, 'focused')}
       </View>
@@ -300,34 +235,21 @@ export function ModalPlayerGrid({
 
 function createStyles(sizeClass: SizeClass) {
   return StyleSheet.create({
-    unavailableText: { fontSize: scaleBySizeClass(13, sizeClass), marginTop: 12 },
+    unavailableText: {
+      fontSize: scaleBySizeClass(13, sizeClass),
+      marginTop: 12,
+    },
     sections: { gap: 16 },
     section: { gap: 7 },
     sectionLabel: {
       fontSize: scaleBySizeClass(13, sizeClass),
       fontFamily: Fonts.semiBold,
     },
-    subgroups: { gap: 10 },
-    subgroup: { gap: 5 },
-    subgroupLabel: {
-      fontSize: scaleBySizeClass(11, sizeClass),
-      fontFamily: Fonts.semiBold,
-      letterSpacing: 0.5,
-      textTransform: 'uppercase',
-    },
-    sectionHeading: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      justifyContent: 'space-between',
-      gap: 6,
-      marginBottom: 12,
-    },
     focusLabel: {
       fontSize: scaleBySizeClass(14, sizeClass),
       fontFamily: Fonts.semiBold,
       flexShrink: 1,
     },
-    focusCount: { fontSize: scaleBySizeClass(12, sizeClass) },
     otherPlayers: {
       minHeight: 44,
       flexDirection: 'row',

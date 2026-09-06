@@ -182,13 +182,10 @@ export default function LineEditor() {
     (recent) => recent.pointNumber === selectedRecentPointNumber,
   );
   let focusIds: ReadonlySet<string> | undefined;
-  let focusLabel = 'Roster';
   if (selectedPreset != null) {
     focusIds = new Set(selectedPreset.playerIds);
-    focusLabel = `${selectedPreset.name} players`;
   } else if (selectedRecentLine != null) {
     focusIds = new Set(selectedRecentLine.playerIds);
-    focusLabel = `Pt ${selectedRecentLine.pointNumber} players`;
   }
   const sourceLabel =
     selectedPreset?.name ??
@@ -251,7 +248,9 @@ export default function LineEditor() {
               <ThemedText
                 style={[
                   styles.headerOutcome,
-                  { color: pointOutcome.isPositive ? palette.success : palette.danger },
+                  {
+                    color: pointOutcome.isPositive ? palette.success : palette.danger,
+                  },
                 ]}>
                 {' · '}
                 {pointOutcome.label}
@@ -291,7 +290,9 @@ export default function LineEditor() {
             disabled={!canConfirm}
             style={({ pressed }) => [
               styles.confirmBtn,
-              { backgroundColor: canConfirm ? palette.success : palette.overlay10 },
+              {
+                backgroundColor: canConfirm ? palette.success : palette.overlay10,
+              },
               pressed && canConfirm && { opacity: 0.8 },
             ]}
             hitSlop={scaleBySizeClass(8, sizeClass)}>
@@ -413,7 +414,9 @@ export default function LineEditor() {
                 <ThemedText
                   style={[
                     styles.subTypeChipText,
-                    { color: subType === 'injury' ? palette.textOnAccent : palette.textInverse },
+                    {
+                      color: subType === 'injury' ? palette.textOnAccent : palette.textInverse,
+                    },
                   ]}>
                   Injury Sub
                 </ThemedText>
@@ -452,7 +455,9 @@ export default function LineEditor() {
                 <ThemedText
                   style={[
                     styles.subTypeInfoText,
-                    { color: showSubTypeHint ? palette.textOnAccent : palette.textMuted },
+                    {
+                      color: showSubTypeHint ? palette.textOnAccent : palette.textMuted,
+                    },
                   ]}>
                   ?
                 </ThemedText>
@@ -523,9 +528,7 @@ export default function LineEditor() {
             sortDirection={linePlayerSortOrder}
             gameActive={gameActive}
             currentPoint={currentPoint}
-            showMatchingType={expectedRatio != null}
             focusIds={focusIds}
-            focusLabel={focusLabel}
             showOtherPlayers={showAllPlayers}
             onToggleOtherPlayers={() => setShowAllPlayers((value) => !value)}
           />

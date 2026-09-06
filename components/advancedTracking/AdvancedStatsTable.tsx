@@ -129,7 +129,7 @@ const LEGEND_LABELS_BY_KEY: Partial<Record<SortKey, string>> = {
   totalTouches: 'Total Touches',
   receptions: 'Receptions',
   pulls: 'Pulls',
-  inboundPulls: 'Inbound Pulls',
+  inboundPulls: 'Inbounds Pulls',
   outOfBoundsPulls: 'OB Pulls',
   droppedPulls: 'Dropped Pulls',
   rollerPulls: 'Roller Pulls',

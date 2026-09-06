@@ -100,9 +100,12 @@ export function PlayerChip({
   const handlePress = disabled ? undefined : (restriction?.onPress ?? onPress);
 
   const unselectedBackground = selectionCard ? 'transparent' : palette.overlay12;
+  const displaySubtitle = selectionCard
+    ? [number ? `#${number}` : undefined, subtitle].filter(Boolean).join(' · ')
+    : subtitle;
   const chipContent = (
     <>
-      {number && (
+      {!selectionCard && number && (
         <ThemedText
           style={[
             getNumberTextStyle({ compact, size, styles }),
@@ -118,17 +121,17 @@ export function PlayerChip({
           selectionCard && styles.selectionName,
           { color: textColor },
         ]}
-        numberOfLines={selectionCard ? 2 : 1}>
+        numberOfLines={1}>
         {name}
       </ThemedText>
-      {subtitle && (
+      {displaySubtitle && (
         <ThemedText
           style={[
             getSubtitleTextStyle({ compact, size, styles }),
             selectionCard && styles.selectionSubtitle,
             { color: subtitleColor },
           ]}>
-          {subtitle}
+          {displaySubtitle}
         </ThemedText>
       )}
     </>
@@ -149,7 +152,13 @@ export function PlayerChip({
       ]}
       testID={`player-chip-${name}`}
       accessibilityRole="button"
-      accessibilityLabel={[number ? `#${number}` : undefined, name, subtitle]
+      accessibilityLabel={[
+        number ? `#${number}` : undefined,
+        name,
+        subtitle,
+        selectionCard && matchingType === 'fmp' ? 'FMP' : undefined,
+        selectionCard && matchingType === 'mmp' ? 'MMP' : undefined,
+      ]
         .filter(Boolean)
         .join(', ')}
       accessibilityState={{ disabled, selected }}
@@ -323,14 +332,17 @@ function getRoleIconSize({
 
 function createStyles(sizeClass: SizeClass) {
   return StyleSheet.create({
-    selectionName: { fontSize: scaleBySizeClass(15, sizeClass) },
-    selectionSubtitle: { fontSize: scaleBySizeClass(12, sizeClass), marginTop: 3 },
+    selectionName: { fontSize: scaleBySizeClass(15, sizeClass), flexShrink: 1 },
+    selectionSubtitle: {
+      fontSize: scaleBySizeClass(12, sizeClass),
+      marginTop: 3,
+    },
     selectionCard: {
-      minHeight: 60,
+      minHeight: 48,
       borderRadius: 12,
       justifyContent: 'flex-start',
       gap: 8,
-      padding: 10,
+      padding: 8,
     },
     selectionContent: { flex: 1, minWidth: 0 },
     chip: {

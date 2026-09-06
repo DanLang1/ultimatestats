@@ -9,7 +9,7 @@ import type { GenderRatio } from '@/lib/genderRatioUtils';
 import type { RecordPullInput } from '@/store/advancedTracking/trackingStore.types';
 
 export const PULL_RESULTS: { value: PullResult; label: string }[] = [
-  { value: 'inbound', label: 'INBOUND PULL' },
+  { value: 'inbound', label: 'INBOUNDS PULL' },
   { value: 'ob', label: 'OB PULL' },
   { value: 'roller', label: 'ROLLER PULL' },
   { value: 'dropped', label: 'DROPPED PULL' },

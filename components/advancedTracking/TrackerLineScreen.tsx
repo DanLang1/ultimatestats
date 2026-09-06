@@ -99,8 +99,8 @@ export const TrackerLineScreen = ({
   participantRestrictions,
 }: TrackerLineScreenProps) => {
   const { palette } = useTheme();
-  const { sizeClass, isLandscape } = useLayout();
-  const styles = createStyles(sizeClass, isLandscape);
+  const { sizeClass } = useLayout();
+  const styles = createStyles(sizeClass);
 
   const currentTeamId = useGameStore((s) => s.currentTeam.id);
   const allPresets = useLinePresetsStore((s) => s.presets);
@@ -143,7 +143,6 @@ export const TrackerLineScreen = ({
   const focusedParticipantIds = selectedPreset
     ? new Set([...selectedPreset.playerIds, ...lockedParticipantIds])
     : new Set([...defaultParticipantIds, ...initialSelectionIds]);
-  const focusLabel = selectedPreset ? `${selectedPreset.name} players` : 'Roster';
   const eligibleParticipantIds = new Set(eligibleParticipants.map((participant) => participant.id));
   const unavailablePresetIds =
     selectedPreset?.playerIds.filter((id) => !eligibleParticipantIds.has(id)) ?? [];
@@ -171,7 +170,10 @@ export const TrackerLineScreen = ({
     expectedRatio != null && canConfirm
       ? checkLineRatio(
           selectedIds,
-          participantRoster.map((p) => ({ id: p.id, matchingType: p.matchingType ?? null })),
+          participantRoster.map((p) => ({
+            id: p.id,
+            matchingType: p.matchingType ?? null,
+          })),
           expectedRatio,
         )
       : null;
@@ -371,26 +373,28 @@ export const TrackerLineScreen = ({
           currentPoint={currentPoint}
           playerRestrictions={playerRestrictions}
           playerStatusLabels={playerStatusLabels}
-          showMatchingType={expectedRatio != null}
           unavailableNames={unavailablePresetNames}
           focusIds={focusedParticipantIds}
-          focusLabel={focusLabel}
           showOtherPlayers={showAllPlayers}
           onToggleOtherPlayers={() => setShowAllPlayers((value) => !value)}
         />
       </View>
       <View style={[styles.footer, { borderTopColor: palette.border }]}>
         <View style={styles.selectionStatus} accessibilityLiveRegion="polite">
-          <ThemedText
-            style={[
-              styles.countText,
-              { color: selectionDifference > 0 ? palette.warning : palette.textInverse },
-            ]}>
-            {selectedIds.length}/{ULTIMATE_LINE_SIZE}
-          </ThemedText>
-          <ThemedText style={[styles.hint, { color: palette.textMuted }]}>
-            {selectionHint}
-          </ThemedText>
+          <View style={styles.selectionSummary}>
+            <ThemedText
+              style={[
+                styles.countText,
+                {
+                  color: selectionDifference > 0 ? palette.warning : palette.textInverse,
+                },
+              ]}>
+              {selectedIds.length}/{ULTIMATE_LINE_SIZE}
+            </ThemedText>
+            <ThemedText style={[styles.hint, { color: palette.textMuted }]}>
+              {selectionHint}
+            </ThemedText>
+          </View>
           {ratioMismatch && (
             <ThemedText style={[styles.hint, { color: palette.warning }]}>
               Expecting {expectedRatio === 'more-women' ? 'F' : 'M'} majority
@@ -404,7 +408,9 @@ export const TrackerLineScreen = ({
           disabled={!canConfirm || isConfirming}
           style={({ pressed }) => [
             styles.confirmBtn,
-            { backgroundColor: canConfirm ? palette.success : palette.overlay10 },
+            {
+              backgroundColor: canConfirm ? palette.success : palette.overlay10,
+            },
             pressed && { opacity: 0.8 },
           ]}>
           <ThemedText
@@ -448,12 +454,22 @@ export const TrackerLineScreen = ({
   );
 };
 
-function createStyles(sizeClass: SizeClass, isLandscape: boolean) {
+function createStyles(sizeClass: SizeClass) {
   return StyleSheet.create({
     container: { flex: 1 },
-    header: { paddingHorizontal: 16, paddingVertical: 10, borderBottomWidth: 1, gap: 8 },
+    header: {
+      paddingHorizontal: 16,
+      paddingVertical: 10,
+      borderBottomWidth: 1,
+      gap: 8,
+    },
     headerTop: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-    backBtn: { minHeight: 44, minWidth: 44, justifyContent: 'center', alignItems: 'center' },
+    backBtn: {
+      minHeight: 44,
+      minWidth: 44,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
     headerTitle: {
       flex: 1,
       fontSize: scaleBySizeClass(20, sizeClass),
@@ -477,30 +493,42 @@ function createStyles(sizeClass: SizeClass, isLandscape: boolean) {
     },
     gridContainer: { flex: 1, paddingHorizontal: 16, paddingTop: 12 },
     footer: {
-      flexDirection: isLandscape ? 'row' : 'column',
-      alignItems: isLandscape ? 'center' : 'stretch',
+      flexDirection: 'row',
+      alignItems: 'center',
       paddingHorizontal: 16,
       paddingVertical: 10,
       borderTopWidth: 1,
       gap: 10,
     },
     selectionStatus: {
-      flex: isLandscape ? 1 : undefined,
+      flex: 1,
+      minWidth: 0,
+      gap: 4,
+    },
+    selectionSummary: {
       flexDirection: 'row',
       flexWrap: 'wrap',
       alignItems: 'center',
       gap: 8,
     },
-    countText: { fontSize: scaleBySizeClass(16, sizeClass), fontFamily: Fonts.bold },
+    countText: {
+      fontSize: scaleBySizeClass(16, sizeClass),
+      fontFamily: Fonts.bold,
+    },
     hint: { fontSize: scaleBySizeClass(13, sizeClass), flexShrink: 1 },
     confirmBtn: {
       minHeight: 44,
+      flexShrink: 1,
       paddingHorizontal: 16,
       paddingVertical: 10,
       borderRadius: 12,
       alignItems: 'center',
       justifyContent: 'center',
     },
-    confirmText: { fontSize: scaleBySizeClass(15, sizeClass), fontFamily: Fonts.bold },
+    confirmText: {
+      fontSize: scaleBySizeClass(15, sizeClass),
+      fontFamily: Fonts.bold,
+      textAlign: 'center',
+    },
   });
 }

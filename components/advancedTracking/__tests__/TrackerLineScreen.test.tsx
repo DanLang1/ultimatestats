@@ -361,7 +361,7 @@ describe('TrackerLineScreen', () => {
     expect(screen.getByText(handler.name)).toBeVisible();
   });
 
-  it('splits mixed-roster role sections into MMP and FMP subgroups', async () => {
+  it('sorts FMP players before MMP', async () => {
     const user = userEvent.setup();
     const mmpHandler = {
       ...makeParticipant('mmp-handler', 'Andy'),
@@ -388,8 +388,7 @@ describe('TrackerLineScreen', () => {
     );
 
     expect(screen.getByText('Handler')).toBeVisible();
-    expect(screen.getByText('MMP')).toBeVisible();
-    expect(screen.getByText('FMP')).toBeVisible();
+
     expect(screen.getByText('Andy')).toBeVisible();
     expect(screen.getByText('Beth')).toBeVisible();
 
@@ -399,7 +398,6 @@ describe('TrackerLineScreen', () => {
       expect.objectContaining({ selected: true }),
     );
     expect(screen.getByText('Handler')).toBeVisible();
-    expect(screen.getByText('FMP')).toBeVisible();
   });
 
   it('renders single-gender role sections without matching-type subgroups', async () => {

@@ -88,7 +88,9 @@ export default function TutorialLineEditor({
             disabled={!canConfirm}
             style={({ pressed }) => [
               styles.confirmBtn,
-              { backgroundColor: canConfirm ? palette.success : palette.overlay10 },
+              {
+                backgroundColor: canConfirm ? palette.success : palette.overlay10,
+              },
               pressed && canConfirm && { opacity: 0.8 },
             ]}>
             {canConfirm ? (
@@ -162,7 +164,9 @@ export default function TutorialLineEditor({
                   <ThemedText
                     style={[
                       styles.quickPresetBtnText,
-                      { color: isSelected ? palette.textOnAccent : palette.textInverse },
+                      {
+                        color: isSelected ? palette.textOnAccent : palette.textInverse,
+                      },
                     ]}
                     numberOfLines={1}>
                     {preset.name}
@@ -194,7 +198,6 @@ export default function TutorialLineEditor({
             selectedIds={currentLine}
             onTogglePlayer={onTogglePlayer}
             useModalColors={false}
-            showMatchingType
           />
         )}
       </View>

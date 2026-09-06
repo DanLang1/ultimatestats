@@ -115,14 +115,12 @@ describe('basic game routes', () => {
 
     await renderScreen(<LineEditorScreen />);
 
-    expect(screen.getByText('Roster')).toBeVisible();
     expect(screen.getByText('Alex')).toBeVisible();
     expect(screen.getByText('Blair')).toBeVisible();
 
     await user.press(screen.getByTestId('line-select-load-line'));
     await user.press(screen.getByText('Alex Only'));
 
-    expect(screen.getByText('Alex Only players')).toBeVisible();
     expect(screen.getByText('Alex')).toBeVisible();
     expect(screen.queryByText('Blair')).not.toBeOnTheScreen();
 
