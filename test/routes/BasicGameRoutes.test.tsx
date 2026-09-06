@@ -10,6 +10,7 @@ import PreGameConfirm from '@/app/(main)/PreGameConfirm';
 import SettingsScreen from '@/app/(main)/Settings';
 import { useGameStore } from '@/store/basic/gameStore';
 import { useGameSessionStore } from '@/store/gameSessionStore';
+import { useLinePresetsStore } from '@/store/linePresetsStore';
 import { arrangeBasicGame, testTeam } from '@/test/fixtures/domain';
 import { resetAllStores } from '@/test/fixtures/resetStores';
 import { resetMockRouter } from '@/test/mocks/expoRouter';
@@ -96,6 +97,37 @@ describe('basic game routes', () => {
     await user.press(screen.getByText('Skip for Now'));
 
     expect(router.dismissTo).toHaveBeenCalledWith('/Scoreboard');
+  });
+
+  it('focuses preset members in the basic line editor and collapses the rest', async () => {
+    const user = userEvent.setup();
+    arrangeBasicGame();
+    useLinePresetsStore.setState({
+      presets: [
+        {
+          id: 'preset-alex',
+          name: 'Alex Only',
+          teamId: testTeam.id,
+          playerIds: ['player-alex'],
+        },
+      ],
+    });
+
+    await renderScreen(<LineEditorScreen />);
+
+    expect(screen.getByText('Roster')).toBeVisible();
+    expect(screen.getByText('Alex')).toBeVisible();
+    expect(screen.getByText('Blair')).toBeVisible();
+
+    await user.press(screen.getByTestId('line-select-load-line'));
+    await user.press(screen.getByText('Alex Only'));
+
+    expect(screen.getByText('Alex Only players')).toBeVisible();
+    expect(screen.getByText('Alex')).toBeVisible();
+    expect(screen.queryByText('Blair')).not.toBeOnTheScreen();
+
+    await user.press(screen.getByTestId('line-select-show-all-players'));
+    expect(screen.getByText('Blair')).toBeVisible();
   });
 
   it('renders the empty line-preset route from the real preset store', async () => {

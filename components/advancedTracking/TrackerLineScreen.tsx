@@ -356,7 +356,10 @@ export const TrackerLineScreen = ({
           />
         </View>
       </View>
-      <View style={styles.gridContainer} pointerEvents={isConfirming ? 'none' : 'auto'}>
+      <View
+        collapsable={false}
+        style={styles.gridContainer}
+        pointerEvents={isConfirming ? 'none' : 'auto'}>
         <ModalPlayerGrid
           roster={players}
           pointLines={pointLines}

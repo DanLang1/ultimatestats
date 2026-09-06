@@ -16,7 +16,6 @@ import {
   getExpectedRatio,
   getSequenceNumber,
 } from '@/lib/genderRatioUtils';
-import { getLoadLineButtonState } from '@/lib/lineEditorUtils';
 import { getRecentLines, RecentLine } from '@/lib/lineUtils';
 import { useGameStore } from '@/store/basic/gameStore';
 import { useLinePresetsStore } from '@/store/linePresetsStore';
@@ -80,7 +79,6 @@ export default function LineEditor() {
     (state) => state.setLineConfirmedForNextPoint,
   );
   const presets = allPresets.filter((p) => p.teamId === currentTeam.id);
-  const quickPresets = presets.slice(0, 3);
   const recentLines: RecentLine[] = getRecentLines(pointLines, currentPoint);
 
   // Local selection state
@@ -88,6 +86,7 @@ export default function LineEditor() {
   const [selectedPresetId, setSelectedPresetId] = useState<string | null>(null);
   const [selectedRecentPointNumber, setSelectedRecentPointNumber] = useState<number | null>(null);
   const [showLinePicker, setShowLinePicker] = useState(false);
+  const [showAllPlayers, setShowAllPlayers] = useState(false);
   const [subType, setSubType] = useState<'injury' | 'replacement'>('injury');
   const [showSubTypeHint, setShowSubTypeHint] = useState(false);
 
@@ -119,8 +118,6 @@ export default function LineEditor() {
   const hasExistingLine = pointLines.some((record) => record.pointNumber === currentPoint);
 
   const handleTogglePlayer = (playerId: string) => {
-    setSelectedPresetId(null);
-    setSelectedRecentPointNumber(null);
     // No sortKey change - manual selection doesn't trigger re-sort
     setSelectedIds((prev) => {
       if (prev.includes(playerId)) {
@@ -134,31 +131,21 @@ export default function LineEditor() {
   };
 
   const handleSelectPreset = (preset: { id: string; playerIds: string[] }) => {
-    if (selectedPresetId === preset.id) {
-      setSelectedPresetId(null);
-      setSelectedIds([]);
-      return;
-    }
     setSelectedPresetId(preset.id);
     setSelectedRecentPointNumber(null);
+    setShowAllPlayers(false);
     setSelectedIds(preset.playerIds);
   };
 
   const handleSelectRecentLine = (recent: RecentLine) => {
-    if (selectedRecentPointNumber === recent.pointNumber) {
-      setSelectedRecentPointNumber(null);
-      setSelectedIds([]);
-      return;
-    }
     setSelectedRecentPointNumber(recent.pointNumber);
     setSelectedPresetId(null);
+    setShowAllPlayers(false);
     setSelectedIds(recent.playerIds);
   };
 
   const handleClearSelection = () => {
     setSelectedIds([]);
-    setSelectedPresetId(null);
-    setSelectedRecentPointNumber(null);
   };
 
   const handleDone = () => {
@@ -188,12 +175,24 @@ export default function LineEditor() {
   };
 
   const canConfirm = selectedIds.length === numPlayers;
-  const { active: loadLineButtonActive, label: loadLineButtonLabel } = getLoadLineButtonState({
-    presets,
-    quickPresetIds: quickPresets.map((preset) => preset.id),
-    selectedPresetId,
-    selectedRecentPointNumber,
-  });
+
+  // Focus the grid on the selected line source; everyone else collapses behind a toggle.
+  const selectedPreset = presets.find((preset) => preset.id === selectedPresetId);
+  const selectedRecentLine = recentLines.find(
+    (recent) => recent.pointNumber === selectedRecentPointNumber,
+  );
+  let focusIds: ReadonlySet<string> | undefined;
+  let focusLabel = 'Roster';
+  if (selectedPreset != null) {
+    focusIds = new Set(selectedPreset.playerIds);
+    focusLabel = `${selectedPreset.name} players`;
+  } else if (selectedRecentLine != null) {
+    focusIds = new Set(selectedRecentLine.playerIds);
+    focusLabel = `Pt ${selectedRecentLine.pointNumber} players`;
+  }
+  const sourceLabel =
+    selectedPreset?.name ??
+    (selectedRecentPointNumber != null ? `Pt ${selectedRecentPointNumber}` : 'Choose line');
 
   // Check gender ratio if enabled
   const expectedRatio =
@@ -335,63 +334,35 @@ export default function LineEditor() {
 
         {/* Load Line + Clear Row */}
         <View style={styles.presetsRow}>
-          {quickPresets.map((preset) => {
-            const isSelected = selectedPresetId === preset.id;
-
-            return (
-              <Pressable
-                key={preset.id}
-                onPress={() => handleSelectPreset(preset)}
-                style={({ pressed }) => [
-                  styles.quickPresetBtn,
-                  {
-                    backgroundColor: isSelected ? palette.accent : palette.overlay08,
-                    borderColor: isSelected ? palette.accent : palette.overlay15,
-                  },
-                  pressed && { opacity: 0.8 },
-                ]}>
-                <ThemedText
-                  style={[
-                    styles.quickPresetBtnText,
-                    { color: isSelected ? palette.textOnAccent : palette.textInverse },
-                  ]}
-                  numberOfLines={1}>
-                  {preset.name}
-                </ThemedText>
-              </Pressable>
-            );
-          })}
           <Pressable
+            testID="line-select-load-line"
+            accessibilityRole="button"
+            accessibilityLabel={`Choose line, ${sourceLabel}`}
             onPress={() => setShowLinePicker(true)}
             style={({ pressed }) => [
               styles.loadLineBtn,
-              {
-                backgroundColor: loadLineButtonActive ? palette.accent : palette.overlay08,
-                borderColor: loadLineButtonActive ? palette.accent : palette.overlay15,
-              },
-              pressed && { opacity: 0.8 },
+              { borderColor: palette.border },
+              pressed && { opacity: 0.7 },
             ]}>
             <MaterialCommunityIcons
               name="layers-outline"
-              size={scaleBySizeClass(13, sizeClass)}
-              color={loadLineButtonActive ? palette.textOnAccent : palette.textMuted}
+              size={scaleBySizeClass(18, sizeClass)}
+              color={palette.textMuted}
             />
-            <ThemedText
-              style={[
-                styles.loadLineBtnText,
-                {
-                  color: loadLineButtonActive ? palette.textOnAccent : palette.textMuted,
-                },
-              ]}
-              numberOfLines={1}>
-              {loadLineButtonLabel}
+            <ThemedText style={[styles.loadLineText, { color: palette.textInverse }]}>
+              {sourceLabel}
             </ThemedText>
+            <MaterialCommunityIcons
+              name="chevron-down"
+              size={scaleBySizeClass(20, sizeClass)}
+              color={palette.textMuted}
+            />
           </Pressable>
           {selectedIds.length > 0 && (
             <Pressable
               onPress={handleClearSelection}
               style={({ pressed }) => [
-                styles.sortBtn,
+                styles.clearBtn,
                 { borderColor: palette.overlay15 },
                 pressed && { opacity: 0.7 },
               ]}>
@@ -553,6 +524,10 @@ export default function LineEditor() {
             gameActive={gameActive}
             currentPoint={currentPoint}
             showMatchingType={expectedRatio != null}
+            focusIds={focusIds}
+            focusLabel={focusLabel}
+            showOtherPlayers={showAllPlayers}
+            onToggleOtherPlayers={() => setShowAllPlayers((value) => !value)}
           />
         )}
       </View>
@@ -641,20 +616,29 @@ function createStyles(sizeClass: SizeClass) {
     presetsRow: {
       flexDirection: 'row',
       alignItems: 'center',
-      flexWrap: 'wrap',
       marginTop: 10,
-      gap: 6,
+      gap: 8,
     },
-    quickPresetBtn: {
+    loadLineBtn: {
+      flex: 1,
+      minHeight: 44,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      padding: 10,
+      borderWidth: 1,
+      borderRadius: 10,
+    },
+    loadLineText: {
+      flex: 1,
+      fontSize: scaleBySizeClass(15, sizeClass),
+      fontFamily: Fonts.semiBold,
+    },
+    clearBtn: {
       paddingVertical: 5,
       paddingHorizontal: 10,
       borderRadius: 8,
       borderWidth: 1,
-      maxWidth: 120,
-    },
-    quickPresetBtnText: {
-      fontSize: scaleBySizeClass(12, sizeClass),
-      fontFamily: Fonts.semiBold,
     },
     subTypeSection: {
       marginTop: 10,
@@ -691,27 +675,6 @@ function createStyles(sizeClass: SizeClass) {
     subTypeHint: {
       fontSize: scaleBySizeClass(11, sizeClass),
       fontStyle: 'italic',
-    },
-    loadLineBtn: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 5,
-      paddingVertical: 5,
-      paddingHorizontal: 10,
-      borderRadius: 8,
-      borderWidth: 1,
-      maxWidth: 160,
-    },
-    loadLineBtnText: {
-      fontSize: scaleBySizeClass(12, sizeClass),
-      fontFamily: Fonts.semiBold,
-      flexShrink: 1,
-    },
-    sortBtn: {
-      paddingVertical: 5,
-      paddingHorizontal: 10,
-      borderRadius: 8,
-      borderWidth: 1,
     },
     nextPointLabel: {
       fontSize: scaleBySizeClass(12, sizeClass),
