@@ -1,17 +1,15 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedView } from '@/components/ThemedView';
 import TutorialActionBar from '@/components/tutorial/TutorialActionBar';
-import TutorialLineEditor from '@/components/tutorial/TutorialLineEditor';
+import { parseTutorialOrigin } from '@/components/tutorial/tutorialNavigation';
 import TutorialSettingsBar from '@/components/tutorial/TutorialSettingsBar';
 import {
   TUTORIAL_STAT_CURRENT_POINT,
   TUTORIAL_STAT_EXPECTED_RATIO,
   TUTORIAL_STAT_GAME_TIMER,
-  TUTORIAL_STAT_NUM_PLAYERS,
-  TUTORIAL_STAT_PRESETS,
   TUTORIAL_STAT_ROSTER,
   TUTORIAL_STAT_TEAM1_BG,
   TUTORIAL_STAT_TEAM1_NAME,
@@ -20,7 +18,6 @@ import {
 } from '@/components/tutorial/tutorialStatData';
 import TutorialStatEntry from '@/components/tutorial/TutorialStatEntry';
 import TutorialStatTeamScoreSection from '@/components/tutorial/TutorialStatTeamScoreSection';
-import TutorialTooltip from '@/components/tutorial/TutorialTooltip';
 import TutorialTurnoverEntry from '@/components/tutorial/TutorialTurnoverEntry';
 import useTutorialStatGameState from '@/components/tutorial/useTutorialStatGameState';
 import { useCountdown } from '@/hooks/useCountdown';
@@ -30,6 +27,8 @@ import { formatRatio, getSequenceNumber } from '@/lib/genderRatioUtils';
 import { useTutorialStore } from '@/store/tutorialStore';
 
 export default function TutorialStatScoreboardRoute() {
+  const { origin: rawOrigin } = useLocalSearchParams<{ origin?: string }>();
+  const origin = parseTutorialOrigin(rawOrigin);
   const layout = useLayout();
   const styles = createStyles(layout.isLandscape, layout.sizeClass);
   const homeIconSize = scaleBySizeClass(30, layout.sizeClass);
@@ -41,25 +40,19 @@ export default function TutorialStatScoreboardRoute() {
     : scaleBySizeClass(isCompactVertical ? 14 : 20, layout.sizeClass);
 
   const gameState = useTutorialStatGameState(() => {
-    router.replace('/TutorialStatComplete');
+    router.replace({ pathname: '/TutorialStatComplete', params: { origin } });
   });
 
   const {
     step,
     phase,
-    currentStep,
     team1Score,
     team2Score,
     possession,
     currentLine,
-    selectedPresetId,
-    ratioCheck,
     pointTimerRunning,
     hasPointStarted,
     goalScorerId,
-    handleSelectPreset,
-    handleTogglePlayer,
-    handleConfirmLine,
     handleStartPoint,
     handleBlock,
     handleSelectBlocker,
@@ -70,7 +63,7 @@ export default function TutorialStatScoreboardRoute() {
 
   const handleClose = () => {
     useTutorialStore.getState().closeStatsTutorial();
-    router.dismissTo('/Dashboard');
+    router.replace('/Dashboard');
   };
 
   const team1TextColor = getContrastingTextColor(TUTORIAL_STAT_TEAM1_BG);
@@ -79,14 +72,10 @@ export default function TutorialStatScoreboardRoute() {
   // Game timer (countdown from 90 min, running when point timer is running)
   const gameTimeLeft = useCountdown(TUTORIAL_STAT_GAME_TIMER, pointTimerRunning);
 
-  // Ratio labels: current point for settings bar, next point for line editor
+  // Ratio label for the current point.
   const currentRatioLabel = formatRatio(
     TUTORIAL_STAT_EXPECTED_RATIO,
     getSequenceNumber(TUTORIAL_STAT_CURRENT_POINT),
-  );
-  const nextPointRatioLabel = formatRatio(
-    TUTORIAL_STAT_EXPECTED_RATIO,
-    getSequenceNumber(TUTORIAL_STAT_CURRENT_POINT + 1),
   );
 
   // Show START POINT on action bar before timer starts
@@ -110,36 +99,6 @@ export default function TutorialStatScoreboardRoute() {
 
   return (
     <ThemedView style={styles.container}>
-      {/* Line Editor Overlay */}
-      {phase === 'line-editor' && (
-        <>
-          <TutorialLineEditor
-            roster={TUTORIAL_STAT_ROSTER}
-            presets={TUTORIAL_STAT_PRESETS}
-            currentLine={currentLine}
-            numPlayers={TUTORIAL_STAT_NUM_PLAYERS}
-            expectedRatioLabel={nextPointRatioLabel}
-            pointNumber={TUTORIAL_STAT_CURRENT_POINT + 1}
-            ratioCheck={ratioCheck}
-            selectedPresetId={selectedPresetId}
-            highlightPreset={step?.expectedAction === 'select-preset'}
-            onSelectPreset={handleSelectPreset}
-            onTogglePlayer={handleTogglePlayer}
-            onConfirm={handleConfirmLine}
-          />
-          {step && (
-            <View style={styles.lineEditorTooltipContainer}>
-              <TutorialTooltip
-                title={step.title}
-                message={step.message}
-                stepIndex={currentStep}
-                position="bottom"
-              />
-            </View>
-          )}
-        </>
-      )}
-
       {/* Team 1 (Top) */}
       <TutorialStatTeamScoreSection
         teamName={TUTORIAL_STAT_TEAM1_NAME}
@@ -248,15 +207,6 @@ function createStyles(isLandscape: boolean, sizeClass: 'small' | 'medium' | 'lar
       left: 12,
       padding: 12,
       zIndex: 200,
-    },
-
-    lineEditorTooltipContainer: {
-      position: 'absolute',
-      left: 0,
-      right: 0,
-      bottom: 0,
-      pointerEvents: 'box-none',
-      zIndex: 500,
     },
   });
 }

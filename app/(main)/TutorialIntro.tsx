@@ -11,20 +11,19 @@ import { Fonts } from '@/theme/theme';
 
 const FEATURES = [
   {
-    icon: 'account-group' as const,
-    title: 'Gender Ratio Tracking',
-    description: 'Supports Ratio Rule A (ABBA) gender ratio tracking',
+    icon: 'gesture-swipe-vertical' as const,
+    title: 'Simple Tracking',
+    description: 'Tap/swipe to record passes and actions',
   },
   {
-    icon: 'timer-outline' as const,
-    title: 'Game Timing',
-    description: 'Soft/hard cap and point timer tracking',
+    icon: 'chart-line' as const,
+    title: 'Detailed Stats',
+    description: 'Team efficiency, player impact, possession, and more',
   },
   {
-    icon: 'chart-bar' as const,
-    title: 'Detailed Player Stats',
-    description:
-      'More than simple +- stats. Playing time, efficiency, time of possession, and more',
+    icon: 'share-variant' as const,
+    title: 'Simple Sharing',
+    description: 'No account needed, share games and teams with a link',
   },
 ] as const;
 
@@ -49,7 +48,12 @@ export default function TutorialIntroRoute() {
           {useRowLayout && (
             <Animated.View entering={FadeInUp.delay(600).springify()} style={styles.footer}>
               <Pressable
-                onPress={() => router.replace('/TutorialScoreboard')}
+                onPress={() =>
+                  router.replace({
+                    pathname: '/TutorialAdvancedLineSelect',
+                    params: { origin: 'onboarding' },
+                  })
+                }
                 style={({ pressed }) => [
                   styles.ctaButton,
                   { backgroundColor: pressed ? palette.accentOverlay30 : palette.accent },
@@ -96,7 +100,12 @@ export default function TutorialIntroRoute() {
             {!useRowLayout && (
               <Animated.View entering={FadeInUp.delay(900).springify()} style={styles.footer}>
                 <Pressable
-                  onPress={() => router.replace('/TutorialScoreboard')}
+                  onPress={() =>
+                    router.replace({
+                      pathname: '/TutorialAdvancedLineSelect',
+                      params: { origin: 'onboarding' },
+                    })
+                  }
                   style={({ pressed }) => [
                     styles.ctaButton,
                     { backgroundColor: pressed ? palette.accentOverlay30 : palette.accent },

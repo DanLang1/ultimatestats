@@ -6,7 +6,11 @@ import TutorialAdvancedActionCard from '@/components/tutorial/TutorialAdvancedAc
 import TutorialAdvancedCompleteInline from '@/components/tutorial/TutorialAdvancedCompleteInline';
 import { TUTORIAL_ADVANCED_PARTICIPANTS } from '@/components/tutorial/tutorialAdvancedData';
 import TutorialAdvancedPlayerGrid from '@/components/tutorial/TutorialAdvancedPlayerGrid';
-import TutorialAdvancedRareMenu from '@/components/tutorial/TutorialAdvancedRareMenu';
+import TutorialAdvancedRareActionsSheet from '@/components/tutorial/TutorialAdvancedRareActionsSheet';
+import {
+  getTutorialExitRoute,
+  parseTutorialOrigin,
+} from '@/components/tutorial/tutorialNavigation';
 import useTutorialAdvancedGameState from '@/components/tutorial/useTutorialAdvancedGameState';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, useLayout } from '@/hooks/useLayout';
@@ -16,43 +20,38 @@ import { Fonts } from '@/theme/theme';
 export default function TutorialAdvancedTrackerRoute() {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
-  const { origin, gameType } = useLocalSearchParams<{
+  const { origin: rawOrigin } = useLocalSearchParams<{
     origin?: string;
-    gameType?: 'scrimmage';
   }>();
+  const origin = parseTutorialOrigin(rawOrigin);
   const styles = createStyles(sizeClass);
 
   const finish = () => {
+    if (origin === 'onboarding') {
+      useTutorialStore.getState().completeAdvancedOnboarding();
+      router.replace('/Dashboard');
+      return;
+    }
     useTutorialStore.getState().completeAdvancedTutorial();
     if (origin === 'tracker') {
       router.replace('/advancedTracking/Tracker');
       return;
     }
-    if (origin === 'help') {
-      router.replace('/Dashboard');
-      return;
-    }
-    router.replace({
-      pathname: '/advancedTracking/PreGameConfirm',
-      params: gameType ? { gameType } : {},
-    });
+    if (origin === 'help') router.replace('/Dashboard');
   };
 
   const gameState = useTutorialAdvancedGameState();
   const showBetweenPoint = gameState.result === 'goal';
   const cue = (() => {
     if (gameState.result != null) return { playerId: null, direction: null };
-    if (gameState.step === 'pass-to-blair') {
-      return { playerId: 'blair', direction: 'right' as const };
+    if (gameState.step === 'pass-to-mark') {
+      return { playerId: 'line-mark', direction: 'right' as const };
     }
-    if (gameState.step === 'drop-by-carl') {
-      return { playerId: 'carl', direction: 'down' as const };
-    }
-    if (gameState.step === 'stall-by-carl') {
-      return { playerId: 'carl', direction: 'right' as const };
+    if (gameState.step === 'drop-by-jules') {
+      return { playerId: 'line-jules', direction: 'down' as const };
     }
     if (
-      gameState.step === 'throwaway-by-carl' &&
+      gameState.step === 'throwaway-by-mark' &&
       gameState.discHolderRef?.refType === 'participant'
     ) {
       return {
@@ -60,11 +59,14 @@ export default function TutorialAdvancedTrackerRoute() {
         direction: 'down' as const,
       };
     }
-    if (gameState.step === 'goal-to-carl') {
-      return { playerId: 'carl', direction: 'up' as const };
+    if (gameState.step === 'goal-to-kelly') {
+      return { playerId: 'line-kelly', direction: 'up' as const };
     }
-    if (gameState.step === 'block-by-blair') {
-      return { playerId: 'blair', direction: 'right' as const };
+    if (gameState.step === 'block-by-rachel') {
+      return { playerId: 'line-rachel', direction: 'right' as const };
+    }
+    if (gameState.step === 'pressure-by-harper' && gameState.pressureArmed) {
+      return { playerId: 'line-harper', direction: 'right' as const };
     }
     return { playerId: null, direction: null };
   })();
@@ -74,11 +76,7 @@ export default function TutorialAdvancedTrackerRoute() {
           (participant) => participant.id === gameState.discHolderRef?.participantId,
         )?.name ?? null)
       : null;
-  const passModifier = gameState.step === 'stall-by-carl' ? 'stall' : null;
-
-  const skip = () => {
-    finish();
-  };
+  const exit = () => router.replace(getTutorialExitRoute(origin));
 
   return (
     <View style={[styles.container, { backgroundColor: palette.primary }]}>
@@ -86,34 +84,41 @@ export default function TutorialAdvancedTrackerRoute() {
         <ThemedText style={[styles.step, { color: palette.accent }]}>
           STEP {gameState.stepIndex + 1} OF {gameState.stepCount}
         </ThemedText>
-        <Pressable onPress={skip} style={styles.skip}>
-          <ThemedText style={[styles.skipText, { color: palette.textMuted }]}>SKIP</ThemedText>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Exit tutorial"
+          onPress={exit}
+          style={styles.skip}>
+          <ThemedText style={[styles.skipText, { color: palette.textMuted }]}>EXIT</ThemedText>
         </Pressable>
       </View>
 
       <TutorialAdvancedActionCard
-        step={gameState.step}
         result={gameState.lastResult}
-        awaitingConfirmation={gameState.result != null}
         holderName={holderName}
         oppHasDisc={gameState.oppHasDisc}
-        onMore={gameState.openRareMenu}
+        pressureArmed={gameState.pressureArmed}
+        isPressureStep={gameState.step === 'pressure-by-harper'}
+        onOpenPressureMenu={gameState.openPressureMenu}
+      />
+
+      <TutorialAdvancedRareActionsSheet
+        visible={gameState.pressureMenuOpen}
+        onClose={gameState.closePressureMenu}
+        onPressure={gameState.selectPressure}
       />
 
       {showBetweenPoint ? (
-        <TutorialAdvancedCompleteInline
-          buttonLabel={origin === 'help' || origin === 'tracker' ? 'DONE' : 'SET UP GAME'}
-          onFinish={finish}
-        />
+        <TutorialAdvancedCompleteInline buttonLabel="DONE" onFinish={finish} />
       ) : (
         <View style={styles.surface}>
-          {gameState.result == null && !gameState.rareMenuVisible && (
+          {gameState.result == null && (
             <View style={styles.directions}>
               <ThemedText style={[styles.title, { color: palette.textInverse }]}>
                 {gameState.title}
               </ThemedText>
               <ThemedText style={[styles.message, { color: palette.textMuted }]}>
-                {gameState.message}
+                {gameState.correctionMessage ?? gameState.message}
               </ThemedText>
             </View>
           )}
@@ -125,17 +130,11 @@ export default function TutorialAdvancedTrackerRoute() {
               handlers={gameState.handlers}
               cuePlayerId={cue.playerId}
               cueDirection={cue.direction}
-              passModifier={passModifier}
+              passModifier={gameState.pressureArmed ? 'pressure' : null}
             />
           </View>
         </View>
       )}
-
-      <TutorialAdvancedRareMenu
-        visible={gameState.rareMenuVisible}
-        onClose={gameState.closeRareMenu}
-        onSelectStall={gameState.selectStall}
-      />
     </View>
   );
 }

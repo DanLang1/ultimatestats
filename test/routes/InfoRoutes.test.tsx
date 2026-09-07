@@ -35,16 +35,22 @@ describe('home information routes', () => {
     expect(screen.getByText('ACTION BAR LEGEND')).toBeVisible();
     expect(screen.getByText('CAP STATUS LEGEND')).toBeVisible();
 
-    await user.press(screen.getByText('View Tutorial'));
-    await user.press(screen.getByText('Advanced Guide'));
-    await user.press(screen.getByText('Stats Guide'));
+    await user.press(screen.getByText('Advanced Tutorial'));
+    await user.press(screen.getByText('Basic Scoreboard Guide'));
+    await user.press(screen.getByText('Basic Stats Guide'));
 
-    expect(router.push).toHaveBeenCalledWith('/TutorialIntro');
     expect(router.push).toHaveBeenCalledWith({
-      pathname: '/TutorialAdvancedTracker',
+      pathname: '/TutorialAdvancedLineSelect',
       params: { origin: 'help' },
     });
-    expect(router.replace).toHaveBeenCalledWith('/TutorialStatIntro');
+    expect(router.push).toHaveBeenCalledWith({
+      pathname: '/TutorialScoreboard',
+      params: { origin: 'help' },
+    });
+    expect(router.push).toHaveBeenCalledWith({
+      pathname: '/TutorialStatIntro',
+      params: { origin: 'help' },
+    });
   });
 
   it('renders partner details and opens the partner website', async () => {

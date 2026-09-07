@@ -1,16 +1,19 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, { FadeInDown, FadeInRight } from 'react-native-reanimated';
 
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import { parseTutorialOrigin } from '@/components/tutorial/tutorialNavigation';
 import { useTheme } from '@/context/ThemeContext';
 import { getSizeClassValue, scaleBySizeClass, useLayout } from '@/hooks/useLayout';
 import { useTutorialStore } from '@/store/tutorialStore';
 import { Fonts } from '@/theme/theme';
 
 export default function TutorialStatCompleteRoute() {
+  const { origin: rawOrigin } = useLocalSearchParams<{ origin?: string }>();
+  const origin = parseTutorialOrigin(rawOrigin);
   const { palette } = useTheme();
   const { sizeClass, isLandscape } = useLayout();
   const useRowLayout = isLandscape && sizeClass !== 'large';
@@ -18,6 +21,10 @@ export default function TutorialStatCompleteRoute() {
 
   const handleStartGame = () => {
     useTutorialStore.getState().closeStatsTutorial();
+    if (origin === 'help') {
+      router.replace('/Dashboard');
+      return;
+    }
     router.replace('/PreGameConfirm');
   };
 
@@ -71,10 +78,12 @@ export default function TutorialStatCompleteRoute() {
                   </View>
                   <View style={styles.optionText}>
                     <ThemedText style={[styles.optionTitle, { color: palette.textInverse }]}>
-                      Start a Game
+                      {origin === 'help' ? 'Return Home' : 'Start a Game'}
                     </ThemedText>
                     <ThemedText style={[styles.optionDescription, { color: palette.textMuted }]}>
-                      Configure your game settings and start tracking stats.
+                      {origin === 'help'
+                        ? 'Head to the dashboard.'
+                        : 'Configure your game settings and start tracking stats.'}
                     </ThemedText>
                   </View>
                 </Pressable>

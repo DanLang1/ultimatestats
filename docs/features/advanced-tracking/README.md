@@ -38,7 +38,14 @@ by passes, More, and Undo. Single-team defense adds opponent goal/turnover butto
 block capture below the gesture guide; possession never hides the core instructions. Pickup,
 dropped-pull, selected-action, paused-play, and between-point hints use the current tracker
 state. Help only opens local UI: it does not record actions or change clocks. Users can return
-directly to tracking or open the existing practice tutorial.
+directly to tracking or open practice for the five core gestures: pass, drop, throwaway, block, and
+goal. Tracker-launched practice returns to the tracker and does not run onboarding line selection or
+roster setup.
+
+Fresh-install onboarding introduces advanced line selection before gesture practice. That screen is
+a tutorial-owned implementation with local fixture state. It may reuse neutral visual primitives,
+but it does not use advanced-store state or add tutorial conditionals to production line-selection
+components. Production and tutorial structure are kept aligned by a visible-contract test.
 
 ## State and Persistence
 

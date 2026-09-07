@@ -37,7 +37,7 @@ route-test fixtures, native-boundary adapters, and provider wrappers also live i
 | Home               | `Dashboard`, `About`, `Help`, `Partners`, `Showcase`                                                                                                                                                         | `test/routes/Dashboard.test.tsx`, `test/routes/InfoRoutes.test.tsx`                                              |
 | Basic game         | `PreGameConfirm`, `Scoreboard`, `GameInfo`, `GameFormat`, `GameComplete`, `Settings`, `EditRoster`, `LineEditor`, `LinePresetEditor`                                                                         | `test/routes/BasicGameRoutes.test.tsx`, `test/routes/LiveGameRoutes.test.tsx`, `test/routes/EditRoster.test.tsx` |
 | Basic analytics    | `ViewStats`, `PlayerStats`, `GameTimeline`, `SavedGameStats`, `AggregateStats`, `CreateTournament`, `/saved-games/[gameId]`                                                                                  | `test/routes/BasicAnalyticsRoutes.test.tsx`                                                                      |
-| Tutorials          | `TutorialIntro`, `TutorialScoreboard`, `TutorialComplete`, `TutorialStatIntro`, `TutorialStatScoreboard`, `TutorialStatComplete`, `TutorialAdvancedTracker`                                                  | `test/routes/TutorialRoutes.test.tsx`                                                                            |
+| Tutorials          | `TutorialIntro`, `TutorialAdvancedLineSelect`, `TutorialAdvancedTracker`, `TutorialScoreboard`, `TutorialComplete`, `TutorialStatIntro`, `TutorialStatScoreboard`, `TutorialStatComplete`                    | `test/routes/TutorialRoutes.test.tsx`, `components/tutorial/__tests__/TutorialAdvancedLineSelection.test.tsx`    |
 | Advanced game      | `advancedTracking/PreGameConfirm`, `TrackerLineSelect`, `PullTracking`, `Tracker`, `TrackerEditLine`, `TrackerInjurySub`, `TrackerGameComplete`                                                              | `test/routes/AdvancedRoutes.test.tsx`                                                                            |
 | Advanced analytics | `advancedTracking/analytics/[gameId]`, `advancedTracking/analytics/playerStats`, `advancedTracking/analytics/timeline/[gameId]`                                                                              | `test/routes/AdvancedAnalyticsRoutes.test.tsx`                                                                   |
 | Import             | `Import`, `ImportTeam`                                                                                                                                                                                       | `test/routes/ImportRoutes.test.tsx`                                                                              |
@@ -61,7 +61,9 @@ full Dashboard → New Game → setup → line/pull entry path.
 
 Maestro coverage is intentionally narrower than route-test coverage. The screen suite gives every
 important route a fast deterministic check; Maestro protects the advanced-tracking journeys where
-cross-screen and native-device behavior carry the most risk.
+cross-screen and native-device behavior carry the most risk. The extended
+`advanced-first-onboarding.yml` flow resets the persisted tutorial state and covers Welcome through
+the return to Dashboard, including line-ratio correction and core gestures.
 
 ## Manual Smoke Checklist
 

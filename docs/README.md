@@ -47,9 +47,12 @@ Platform support details are documented in [platform-support.md](platform-suppor
 
 ### Onboarding
 
-First launch is gated by `useTutorialStore` hydration and routes through `/TutorialIntro`,
-`/TutorialScoreboard`, and `/TutorialComplete` before the normal `/` entry route starts sending the
-user to `/Dashboard` or `/Scoreboard`.
+First launch is gated by `useTutorialStore` hydration and follows the advanced-first path:
+`/TutorialIntro` → `/TutorialAdvancedLineSelect` → `/TutorialAdvancedTracker` → `/Dashboard`.
+The tutorial line and gesture screens use pre-seeded participants and own all presentation and
+interaction state. They intentionally avoid tutorial props or branches in production tracker and
+team screens. Onboarding completion is recorded before returning users to Dashboard; only fresh
+installs enter the tutorial automatically.
 
 ### Stat Tracking
 

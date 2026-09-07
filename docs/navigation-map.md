@@ -18,10 +18,11 @@ Defined across:
 
 - `/` (`app/index.tsx`)
 - `/TutorialIntro` (`app/(main)/TutorialIntro.tsx`)
+- `/TutorialAdvancedLineSelect` (`app/(main)/TutorialAdvancedLineSelect.tsx`)
 - `/TutorialScoreboard` (`app/(main)/TutorialScoreboard.tsx`)
 - `/TutorialComplete` (`app/(main)/TutorialComplete.tsx`)
-- `/TutorialStatIntro` (`app/(main)/TutorialStatIntro.tsx`)
 - `/TutorialStatScoreboard` (`app/(main)/TutorialStatScoreboard.tsx`)
+- `/TutorialStatIntro` (`app/(main)/TutorialStatIntro.tsx`)
 - `/TutorialStatComplete` (`app/(main)/TutorialStatComplete.tsx`)
 - `/TutorialAdvancedTracker` (`app/(main)/TutorialAdvancedTracker.tsx`)
 - `/Scoreboard` (`app/(main)/(hub)/(game)/Scoreboard.tsx`)
@@ -76,9 +77,22 @@ Defined across:
 
 1. `/` waits for `useTutorialStore` hydration.
 2. If onboarding is incomplete, `/` -> `/TutorialIntro`
-3. `/TutorialIntro` -> `/TutorialScoreboard`
-4. `/TutorialScoreboard` -> `/TutorialComplete`
-5. `/TutorialComplete` -> `/PreGameConfirm` for new-game setup
+3. `/TutorialIntro` -> `/TutorialAdvancedLineSelect` for a tutorial-owned line-selection exercise.
+4. `/TutorialAdvancedLineSelect` -> `/TutorialAdvancedTracker` for pass, throwaway, block, drop,
+   pressure, and goal gestures.
+5. Completing those gestures marks onboarding and the advanced tutorial complete, then opens the
+   normal `/Dashboard` screen. Users can build or import their roster and start Advanced through
+   the existing production flows when they are ready; the tutorial does not establish a session.
+
+There is no skip action during first-launch instruction. Exiting line selection or gesture practice
+returns to `/Dashboard` without marking onboarding complete, so the next cold entry starts again at
+`/TutorialIntro`. Existing users are never automatically routed into a tutorial. New Game always
+opens the requested basic, advanced, or scrimmage setup directly.
+
+Help launches the Advanced Tutorial, Basic Scoreboard Guide, and Basic Stats Guide with a typed
+`help` origin and returns each guide to `/Dashboard`. Advanced tracker practice uses the `tracker`
+origin, runs the six gesture steps, and returns to the live tracker. Voluntary advanced completion may
+set `hasSeenAdvancedTutorial` but never changes `hasSeenOnboarding`.
 
 ### Transparent Modals
 

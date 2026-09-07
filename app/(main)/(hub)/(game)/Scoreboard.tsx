@@ -45,7 +45,7 @@ export default function BasicScoreboard() {
   }
 
   if (statsTutorialPending) {
-    return <Redirect href="/TutorialStatIntro" />;
+    return <Redirect href={{ pathname: '/TutorialStatIntro', params: { origin: 'onboarding' } }} />;
   }
 
   if (!isGameOver && (needPossession || needRatio)) {

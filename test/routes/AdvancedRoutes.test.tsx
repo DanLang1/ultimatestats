@@ -1622,7 +1622,7 @@ describe('advanced tracking routes', () => {
     expect(screen.getByTestId('game-complete-last-goal-card')).toBeVisible();
     expect(screen.getByText('ASSIST')).toBeVisible();
     expect(screen.getByText('GOAL')).toBeVisible();
-    expect(screen.getByText('CLEAN HOLD')).toBeVisible();
+    expect(screen.getByText('WINDCHILL CLEAN HOLD')).toBeVisible();
     expect(screen.queryByText('FINAL ACTION')).not.toBeOnTheScreen();
     expect(screen.queryByText('OUR GOAL')).not.toBeOnTheScreen();
     expect(screen.queryByText('OPTIONAL THROW CLASSIFICATION')).not.toBeOnTheScreen();
@@ -1682,7 +1682,7 @@ describe('advanced tracking routes', () => {
     expect(screen.getByTestId('game-complete-last-goal-card')).toBeVisible();
     expect(screen.getByText(participants[8].name)).toBeVisible();
     expect(screen.getByText('GOAL')).toBeVisible();
-    expect(screen.getByText('BROKEN')).toBeVisible();
+    expect(screen.getByText('DARK BREAK')).toBeVisible();
     expect(screen.getByTestId('throw-type-huck')).toBeOnTheScreen();
 
     await user.press(screen.getByTestId('throw-type-huck'));

@@ -1,20 +1,14 @@
 import { useState } from 'react';
 
-import { checkLineRatio, RatioCheckResult } from '@/lib/genderRatioUtils';
-
 import {
-  TUTORIAL_STAT_EXPECTED_RATIO,
   TUTORIAL_STAT_INITIAL_SCORE_TEAM1,
   TUTORIAL_STAT_INITIAL_SCORE_TEAM2,
-  TUTORIAL_STAT_NUM_PLAYERS,
-  TUTORIAL_STAT_PRESETS,
-  TUTORIAL_STAT_ROSTER,
   TUTORIAL_STAT_TEAM1_NAME,
 } from './tutorialStatData';
 
 // ── Step Definitions ─────────────────────────────────────────────────
 
-export type TutorialStatPhase = 'scoreboard' | 'turnover-entry' | 'stat-entry' | 'line-editor';
+export type TutorialStatPhase = 'scoreboard' | 'turnover-entry' | 'stat-entry';
 
 type ExpectedAction =
   | 'start-point'
@@ -22,10 +16,7 @@ type ExpectedAction =
   | 'select-blocker'
   | 'score-goal'
   | 'select-scorer'
-  | 'select-assist'
-  | 'select-preset'
-  | 'fix-ratio'
-  | 'confirm-line';
+  | 'select-assist';
 
 export type TooltipTarget =
   | 'action-bar'
@@ -33,7 +24,6 @@ export type TooltipTarget =
   | 'team2'
   | 'turnover-entry'
   | 'stat-entry'
-  | 'line-editor'
   | 'center';
 
 export interface TutorialStatStepDef {
@@ -44,7 +34,7 @@ export interface TutorialStatStepDef {
   phase: TutorialStatPhase;
 }
 
-// Flow: scoreboard first (familiar), then stat entry, then line editor (new concept after scoring)
+// Flow: scoreboard first, then turnover and player stat attribution.
 const TUTORIAL_STAT_STEPS: TutorialStatStepDef[] = [
   // ── Scoreboard phase (start here — familiar ground) ──
   {
@@ -91,28 +81,6 @@ const TUTORIAL_STAT_STEPS: TutorialStatStepDef[] = [
     tooltipTarget: 'stat-entry',
     phase: 'stat-entry',
   },
-  // ── Line editor phase (after scoring, goes directly here — line tracking is on) ──
-  {
-    title: 'Set Your Line',
-    message: 'Tap the D-Line preset to set a line for the next point.',
-    expectedAction: 'select-preset',
-    tooltipTarget: 'line-editor',
-    phase: 'line-editor',
-  },
-  {
-    title: 'Wrong Ratio',
-    message: 'This is an FMP point, unselect a MMP and add a FMP to match the ratio',
-    expectedAction: 'fix-ratio',
-    tooltipTarget: 'line-editor',
-    phase: 'line-editor',
-  },
-  {
-    title: 'Correct Ratio',
-    message: 'The ratio is now correct, tap the green confirm check to set the line.',
-    expectedAction: 'confirm-line',
-    tooltipTarget: 'line-editor',
-    phase: 'line-editor',
-  },
 ];
 
 // ── Hook ─────────────────────────────────────────────────────────────
@@ -131,11 +99,8 @@ export default function useTutorialStatGameState(onComplete?: () => void) {
   // Possession: opponent starts with disc
   const [possession, setPossession] = useState<'team1' | 'team2'>('team2');
 
-  // Line — starts with D-Line preset already set
-  const [currentLine, setCurrentLine] = useState<string[]>(INITIAL_LINE);
-  const [selectedPresetId, setSelectedPresetId] = useState<string | null>(null);
-  const [ratioCheck, setRatioCheck] = useState<RatioCheckResult | null>(null);
-
+  // The tutorial uses a fixed line for player attribution.
+  const [currentLine] = useState<string[]>(INITIAL_LINE);
   const [pointTimerRunning, setPointTimerRunning] = useState(false);
   const [hasPointStarted, setHasPointStarted] = useState(false);
 
@@ -155,18 +120,6 @@ export default function useTutorialStatGameState(onComplete?: () => void) {
     } else {
       onComplete?.();
     }
-  };
-
-  // Recalc ratio for the NEXT point (point 7 after scoring, which uses the next expected ratio)
-  const recalcRatio = (line: string[]) => {
-    if (line.length === 0) {
-      setRatioCheck(null);
-      return null;
-    }
-    // After scoring point 6, the line editor is for point 7 — still use the expected ratio
-    const result = checkLineRatio(line, TUTORIAL_STAT_ROSTER, TUTORIAL_STAT_EXPECTED_RATIO);
-    setRatioCheck(result);
-    return result;
   };
 
   // ── Handlers ─────────────────────────────────────────────────────
@@ -216,58 +169,6 @@ export default function useTutorialStatGameState(onComplete?: () => void) {
 
   const handleSelectAssist = () => {
     if (step?.expectedAction === 'select-assist') {
-      // Clear line for the line editor phase (next step)
-      setCurrentLine([]);
-      setSelectedPresetId(null);
-      setRatioCheck(null);
-      advanceStep();
-    }
-  };
-
-  const handleSelectPreset = (presetId: string) => {
-    const preset = TUTORIAL_STAT_PRESETS.find((p) => p.id === presetId);
-    if (!preset) return;
-
-    setSelectedPresetId(presetId);
-    setCurrentLine(preset.playerIds);
-    recalcRatio(preset.playerIds);
-
-    if (step?.expectedAction === 'select-preset') {
-      // The single preset always has the wrong ratio, so advance to fix-ratio
-      advanceStep();
-    }
-  };
-
-  const handleTogglePlayer = (playerId: string) => {
-    setSelectedPresetId(null);
-
-    let newLine: string[];
-    if (currentLine.includes(playerId)) {
-      newLine = currentLine.filter((id) => id !== playerId);
-    } else if (currentLine.length >= TUTORIAL_STAT_NUM_PLAYERS) {
-      return;
-    } else {
-      newLine = [...currentLine, playerId];
-    }
-
-    setCurrentLine(newLine);
-    const result = recalcRatio(newLine);
-
-    // If we're on the fix-ratio step and the ratio is now correct with full line
-    if (
-      step?.expectedAction === 'fix-ratio' &&
-      result?.isCorrect &&
-      newLine.length === TUTORIAL_STAT_NUM_PLAYERS
-    ) {
-      advanceStep();
-    }
-  };
-
-  const handleConfirmLine = () => {
-    if (currentLine.length !== TUTORIAL_STAT_NUM_PLAYERS) return;
-    if (ratioCheck && !ratioCheck.isCorrect) return;
-
-    if (step?.expectedAction === 'confirm-line') {
       advanceStep();
     }
   };
@@ -281,8 +182,6 @@ export default function useTutorialStatGameState(onComplete?: () => void) {
     team2Score,
     possession,
     currentLine,
-    selectedPresetId,
-    ratioCheck,
     pointTimerRunning,
     hasPointStarted,
     goalScorerId,
@@ -294,8 +193,5 @@ export default function useTutorialStatGameState(onComplete?: () => void) {
     handleScoreGoal,
     handleSelectScorer,
     handleSelectAssist,
-    handleSelectPreset,
-    handleTogglePlayer,
-    handleConfirmLine,
   };
 }

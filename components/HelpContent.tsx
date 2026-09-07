@@ -212,7 +212,7 @@ export default function HelpContent({ showActionBarLegend = true }: HelpContentP
       <Pressable
         style={[styles.tutorialButton, { backgroundColor: palette.overlay08 }]}
         onPress={() => {
-          router.push('/TutorialIntro');
+          router.push({ pathname: '/TutorialAdvancedLineSelect', params: { origin: 'help' } });
         }}>
         <MaterialCommunityIcons
           name="school-outline"
@@ -221,10 +221,10 @@ export default function HelpContent({ showActionBarLegend = true }: HelpContentP
         />
         <View style={styles.tutorialButtonContent}>
           <ThemedText style={[styles.tutorialButtonTitle, { color: palette.textInverse }]}>
-            View Tutorial
+            Advanced Tutorial
           </ThemedText>
           <ThemedText style={[styles.tutorialButtonSubtitle, { color: palette.textMuted }]}>
-            Learn how to use U-Stat
+            Practice line selection and advanced gestures
           </ThemedText>
         </View>
         <MaterialCommunityIcons
@@ -239,19 +239,19 @@ export default function HelpContent({ showActionBarLegend = true }: HelpContentP
       <Pressable
         style={[styles.tutorialButton, { backgroundColor: palette.overlay08 }]}
         onPress={() => {
-          router.push({ pathname: '/TutorialAdvancedTracker', params: { origin: 'help' } });
+          router.push({ pathname: '/TutorialScoreboard', params: { origin: 'help' } });
         }}>
         <MaterialCommunityIcons
-          name="gesture-swipe-vertical"
+          name="scoreboard-outline"
           size={metrics.buttonIconSize}
           color={palette.accent}
         />
         <View style={styles.tutorialButtonContent}>
           <ThemedText style={[styles.tutorialButtonTitle, { color: palette.textInverse }]}>
-            Advanced Guide
+            Basic Scoreboard Guide
           </ThemedText>
           <ThemedText style={[styles.tutorialButtonSubtitle, { color: palette.textMuted }]}>
-            Advanced tracking gestures
+            Learn scoring, timers, and undo
           </ThemedText>
         </View>
         <MaterialCommunityIcons
@@ -266,7 +266,7 @@ export default function HelpContent({ showActionBarLegend = true }: HelpContentP
       <Pressable
         style={[styles.tutorialButton, { backgroundColor: palette.overlay08 }]}
         onPress={() => {
-          router.replace('/TutorialStatIntro');
+          router.push({ pathname: '/TutorialStatIntro', params: { origin: 'help' } });
         }}>
         <MaterialCommunityIcons
           name="chart-line"
@@ -275,7 +275,7 @@ export default function HelpContent({ showActionBarLegend = true }: HelpContentP
         />
         <View style={styles.tutorialButtonContent}>
           <ThemedText style={[styles.tutorialButtonTitle, { color: palette.textInverse }]}>
-            Stats Guide
+            Basic Stats Guide
           </ThemedText>
           <ThemedText style={[styles.tutorialButtonSubtitle, { color: palette.textMuted }]}>
             How to track player statistics

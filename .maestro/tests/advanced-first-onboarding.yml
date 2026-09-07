@@ -1,0 +1,79 @@
+appId: com.langdk.ultimatestats.dev
+name: Advanced First Onboarding
+tags:
+  - extended
+---
+- launchApp
+- openLink: ultimatestats-dev:///__maestro_seed__?mode=onboarding
+
+- retry:
+    maxRetries: 1
+    commands:
+      - extendedWaitUntil:
+          visible:
+            id: 'maestro-setup-running'
+          timeout: 5000
+- retry:
+    maxRetries: 1
+    commands:
+      - extendedWaitUntil:
+          notVisible:
+            id: 'maestro-setup-running'
+          timeout: 15000
+- extendedWaitUntil:
+    visible: 'Ultimate Frisbee Scoreboard / Stat Tracker'
+    timeout: 15000
+- tapOn: 'Continue'
+
+- assertVisible:
+    id: 'tutorial-line-select-screen'
+- tapOn:
+    id: 'line-select-load-line'
+- takeScreenshot:
+    path: .maestro/screenshots/advanced-first-onboarding-line-picker
+- tapOn:
+    id: 'line-select-preset-tutorial-d-line'
+- assertVisible:
+    id: 'line-select-confirm'
+- tapOn:
+    id: 'line-select-confirm'
+
+- assertVisible: 'STEP 1 OF 6'
+- tapOn:
+    id: 'tracker-chip-Mark'
+- assertVisible: 'STEP 2 OF 6'
+- swipe:
+    from:
+      id: 'tracker-chip-Mark'
+    direction: DOWN
+    duration: 500
+- assertVisible: 'STEP 3 OF 6'
+- tapOn:
+    id: 'tracker-chip-Rachel'
+- assertVisible: 'STEP 4 OF 6'
+- swipe:
+    from:
+      id: 'tracker-chip-Jules'
+    direction: DOWN
+    duration: 500
+- assertVisible: 'STEP 5 OF 6'
+- tapOn:
+    id: 'tracker-more-button'
+- tapOn:
+    id: 'tutorial-pressure-action'
+- tapOn:
+    id: 'tracker-chip-Harper'
+- assertVisible: 'STEP 6 OF 6'
+- swipe:
+    from:
+      id: 'tracker-chip-Kelly'
+    direction: UP
+    duration: 500
+
+- assertVisible: 'Advanced Tutorial Complete'
+- tapOn: 'DONE'
+- extendedWaitUntil:
+    visible: 'New Game'
+    timeout: 10000
+- takeScreenshot:
+    path: .maestro/screenshots/advanced-first-onboarding

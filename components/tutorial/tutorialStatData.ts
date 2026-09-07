@@ -13,7 +13,6 @@ export const TUTORIAL_STAT_INITIAL_SCORE_TEAM1 = 3;
 export const TUTORIAL_STAT_INITIAL_SCORE_TEAM2 = 2;
 export const TUTORIAL_STAT_CURRENT_POINT = 6;
 export const TUTORIAL_STAT_EXPECTED_RATIO: GenderRatio = 'more-women'; // FMP point
-export const TUTORIAL_STAT_NUM_PLAYERS = 7;
 export const TUTORIAL_STAT_GAME_TIMER = 90 * 60; // 90 minutes
 
 // ── Roster ───────────────────────────────────────────────────────────
@@ -36,22 +35,4 @@ export const TUTORIAL_STAT_ROSTER: Player[] = [
   { id: 'm5', name: 'Kocher', isActive: true, matchingType: 'mmp', role: 'cutter' },
   { id: 'm6', name: 'Hayes', isActive: true, matchingType: 'mmp', role: 'cutter' },
   { id: 'm7', name: 'Lindsley', isActive: true, matchingType: 'mmp', role: 'hybrid' },
-];
-
-// ── Line Presets ─────────────────────────────────────────────────────
-// D-Line: 3 FMP + 4 MMP → WRONG for FMP point (triggers ratio warning)
-// Only one preset so the user always picks the incorrect one, learning the ratio fix flow.
-
-export interface TutorialPreset {
-  id: string;
-  name: string;
-  playerIds: string[];
-}
-
-export const TUTORIAL_STAT_PRESETS: TutorialPreset[] = [
-  {
-    id: 'preset-d',
-    name: 'D-Line',
-    playerIds: ['f5', 'f6', 'f7', 'm5', 'm6', 'm7', 'm4'],
-  },
 ];

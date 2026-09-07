@@ -1,19 +1,20 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, { FadeInDown, FadeInRight, FadeInUp } from 'react-native-reanimated';
 
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import { parseTutorialOrigin } from '@/components/tutorial/tutorialNavigation';
 import { useTheme } from '@/context/ThemeContext';
 import { getSizeClassValue, scaleBySizeClass, useLayout } from '@/hooks/useLayout';
 import { Fonts } from '@/theme/theme';
 
 const FEATURES = [
   {
-    icon: 'account-group' as const,
-    title: 'Line Selection',
-    description: 'Choose which players are on the field before each point starts',
+    icon: 'scoreboard-outline' as const,
+    title: 'Basic Scoreboard',
+    description: 'Track goals, blocks, and turnovers without recording every pass',
   },
   {
     icon: 'target' as const,
@@ -28,6 +29,8 @@ const FEATURES = [
 ] as const;
 
 export default function TutorialStatIntroRoute() {
+  const { origin: rawOrigin } = useLocalSearchParams<{ origin?: string }>();
+  const origin = parseTutorialOrigin(rawOrigin);
   const { palette } = useTheme();
   const { sizeClass, isLandscape } = useLayout();
   const useRowLayout = isLandscape && sizeClass !== 'large';
@@ -35,7 +38,7 @@ export default function TutorialStatIntroRoute() {
   const iconSize = scaleBySizeClass(28, sizeClass);
 
   const handleStart = () => {
-    router.replace('/TutorialStatScoreboard');
+    router.replace({ pathname: '/TutorialStatScoreboard', params: { origin } });
   };
 
   return (
@@ -44,16 +47,15 @@ export default function TutorialStatIntroRoute() {
         <View style={styles.leftColumn}>
           <Animated.View entering={FadeInDown.delay(200).springify()} style={styles.heroSection}>
             <ThemedText style={[styles.title, { color: palette.textInverse }]}>
-              Stat Tracking
-            </ThemedText>
-            <ThemedText style={[styles.tagline, { color: palette.textMuted }]}>
-              Learn to track stats during a live game.
+              Basic Tracking
             </ThemedText>
           </Animated.View>
 
           {useRowLayout && (
             <Animated.View entering={FadeInUp.delay(600).springify()} style={styles.footer}>
               <Pressable
+                testID="stats-tutorial-start"
+                accessibilityRole="button"
                 onPress={handleStart}
                 style={({ pressed }) => [
                   styles.ctaButton,
@@ -101,6 +103,8 @@ export default function TutorialStatIntroRoute() {
             {!useRowLayout && (
               <Animated.View entering={FadeInUp.delay(900).springify()} style={styles.footer}>
                 <Pressable
+                  testID="stats-tutorial-start"
+                  accessibilityRole="button"
                   onPress={handleStart}
                   style={({ pressed }) => [
                     styles.ctaButton,
@@ -173,29 +177,15 @@ function createStyles(sizeClass: 'small' | 'medium' | 'large', useRowLayout: boo
     },
     title: {
       fontSize: getSizeClassValue(
-        {
-          small: useRowLayout ? 32 : 44,
-          medium: useRowLayout ? 38 : 52,
-          large: 60,
-        },
+        { small: useRowLayout ? 32 : 44, medium: useRowLayout ? 38 : 52, large: 60 },
         sizeClass,
       ),
       fontFamily: Fonts.black,
       letterSpacing: -1,
     },
-    tagline: {
-      fontSize: getSizeClassValue({ small: 16, medium: 19, large: 22 }, sizeClass),
-      fontFamily: Fonts.regular,
-      textAlign: useRowLayout ? 'left' : 'center',
-      lineHeight: getSizeClassValue({ small: 22, medium: 26, large: 30 }, sizeClass),
-    },
     featuresSection: {
       gap: getSizeClassValue(
-        {
-          small: useRowLayout ? 16 : 32,
-          medium: useRowLayout ? 24 : 40,
-          large: 48,
-        },
+        { small: useRowLayout ? 16 : 32, medium: useRowLayout ? 24 : 40, large: 48 },
         sizeClass,
       ),
       paddingTop: 0,
@@ -213,10 +203,7 @@ function createStyles(sizeClass: 'small' | 'medium' | 'large', useRowLayout: boo
       justifyContent: 'center',
       marginTop: scaleBySizeClass(2, sizeClass),
     },
-    featureText: {
-      flex: 1,
-      gap: isTablet ? 6 : 4,
-    },
+    featureText: { flex: 1, gap: isTablet ? 6 : 4 },
     featureTitle: {
       fontSize: getSizeClassValue({ small: 18, medium: 20, large: 22 }, sizeClass),
       fontFamily: Fonts.bold,

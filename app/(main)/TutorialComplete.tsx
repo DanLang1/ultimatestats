@@ -1,10 +1,11 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, { FadeInDown, FadeInRight } from 'react-native-reanimated';
 
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import { parseTutorialOrigin } from '@/components/tutorial/tutorialNavigation';
 import { useTheme } from '@/context/ThemeContext';
 import { useGameSessionActions } from '@/hooks/useGameSessionActions';
 import { getSizeClassValue, scaleBySizeClass, useLayout } from '@/hooks/useLayout';
@@ -12,6 +13,8 @@ import { useTutorialStore } from '@/store/tutorialStore';
 import { Fonts } from '@/theme/theme';
 
 export default function TutorialCompleteRoute() {
+  const { origin: rawOrigin } = useLocalSearchParams<{ origin?: string }>();
+  const origin = parseTutorialOrigin(rawOrigin);
   const { palette } = useTheme();
   const { sizeClass, isLandscape } = useLayout();
   const useRowLayout = isLandscape && sizeClass !== 'large';
@@ -19,13 +22,17 @@ export default function TutorialCompleteRoute() {
   const { startBasicGameSession } = useGameSessionActions();
 
   const handleStartGame = () => {
-    useTutorialStore.getState().completeTutorial();
+    if (origin === 'onboarding') {
+      useTutorialStore.getState().completeTutorial();
+    }
     startBasicGameSession();
     router.replace('/PreGameConfirm');
   };
 
   const handleReturnHome = () => {
-    useTutorialStore.getState().completeTutorial();
+    if (origin === 'onboarding') {
+      useTutorialStore.getState().completeTutorial();
+    }
     router.replace('/Dashboard');
   };
 
@@ -55,38 +62,40 @@ export default function TutorialCompleteRoute() {
         <View style={styles.rightColumnWrapper}>
           <View style={styles.rightColumn}>
             <View style={styles.optionsSection}>
-              <Animated.View entering={FadeInRight.delay(400).springify()}>
-                <Pressable
-                  onPress={handleStartGame}
-                  style={({ pressed }) => [
-                    styles.optionRow,
-                    {
-                      borderColor: palette.overlay15,
-                      backgroundColor: pressed ? palette.overlay08 : palette.overlay05,
-                    },
-                    pressed && { transform: [{ scale: 0.98 }] },
-                  ]}>
-                  <View
-                    style={[
-                      styles.optionIconContainer,
-                      { backgroundColor: palette.accentOverlay15 },
+              {origin !== 'help' && (
+                <Animated.View entering={FadeInRight.delay(400).springify()}>
+                  <Pressable
+                    onPress={handleStartGame}
+                    style={({ pressed }) => [
+                      styles.optionRow,
+                      {
+                        borderColor: palette.overlay15,
+                        backgroundColor: pressed ? palette.overlay08 : palette.overlay05,
+                      },
+                      pressed && { transform: [{ scale: 0.98 }] },
                     ]}>
-                    <MaterialCommunityIcons
-                      name="scoreboard-outline"
-                      size={iconSize * 1.1}
-                      color={palette.accent}
-                    />
-                  </View>
-                  <View style={styles.optionText}>
-                    <ThemedText style={[styles.optionTitle, { color: palette.textInverse }]}>
-                      Start New Game
-                    </ThemedText>
-                    <ThemedText style={[styles.optionDescription, { color: palette.textMuted }]}>
-                      Start fresh and choose your teams, tracking, and game settings.
-                    </ThemedText>
-                  </View>
-                </Pressable>
-              </Animated.View>
+                    <View
+                      style={[
+                        styles.optionIconContainer,
+                        { backgroundColor: palette.accentOverlay15 },
+                      ]}>
+                      <MaterialCommunityIcons
+                        name="scoreboard-outline"
+                        size={iconSize * 1.1}
+                        color={palette.accent}
+                      />
+                    </View>
+                    <View style={styles.optionText}>
+                      <ThemedText style={[styles.optionTitle, { color: palette.textInverse }]}>
+                        Start New Game
+                      </ThemedText>
+                      <ThemedText style={[styles.optionDescription, { color: palette.textMuted }]}>
+                        Start fresh and choose your teams, tracking, and game settings.
+                      </ThemedText>
+                    </View>
+                  </Pressable>
+                </Animated.View>
+              )}
 
               <Animated.View entering={FadeInRight.delay(550).springify()}>
                 <Pressable

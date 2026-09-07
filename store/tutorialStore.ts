@@ -17,6 +17,7 @@ interface TutorialState {
 
   // Actions
   completeTutorial: () => void;
+  completeAdvancedOnboarding: () => void;
   queueStatsTutorialForNextGameStart: () => void;
   closeStatsTutorial: () => void;
   resetStatsTutorial: () => void;
@@ -41,6 +42,13 @@ export const useTutorialStore = create<TutorialState>()(
 
       completeTutorial: () => set({ hasSeenOnboarding: true }),
 
+      completeAdvancedOnboarding: () => {
+        set({
+          hasSeenOnboarding: true,
+          hasSeenAdvancedTutorial: true,
+        });
+      },
+
       queueStatsTutorialForNextGameStart: () =>
         set({
           shouldShowStatsTutorialOnNextGameStart: true,
@@ -58,7 +66,9 @@ export const useTutorialStore = create<TutorialState>()(
           shouldShowStatsTutorialOnNextGameStart: false,
         }),
 
-      completeAdvancedTutorial: () => set({ hasSeenAdvancedTutorial: true }),
+      completeAdvancedTutorial: () => {
+        set({ hasSeenAdvancedTutorial: true });
+      },
 
       dismissAdvancedVoiceHint: () => set({ hasSeenAdvancedVoiceHint: true }),
 

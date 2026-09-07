@@ -4,22 +4,21 @@ import type { TrackerPlayerGridHandlers } from '@/components/advancedTracking/Tr
 import type { PlayerRef } from '@/lib/advancedTracking/types';
 
 export type TutorialAdvancedStep =
-  | 'pass-to-blair'
-  | 'drop-by-carl'
-  | 'open-rare'
-  | 'stall-by-carl'
-  | 'throwaway-by-carl'
-  | 'block-by-blair'
-  | 'goal-to-carl';
+  | 'pass-to-mark'
+  | 'throwaway-by-mark'
+  | 'block-by-rachel'
+  | 'drop-by-jules'
+  | 'pressure-by-harper'
+  | 'goal-to-kelly';
 
 export type TutorialAdvancedAction =
   | { kind: 'tap'; playerId: string }
   | { kind: 'drop'; playerId: string }
   | { kind: 'throwaway' }
-  | { kind: 'open-rare' }
+  | { kind: 'pressure'; playerId: string }
   | { kind: 'goal'; playerId: string };
 
-export type TutorialAdvancedResult = 'drop' | 'stall' | 'throwaway' | 'block' | 'goal';
+export type TutorialAdvancedResult = 'drop' | 'throwaway' | 'block' | 'pressure' | 'goal';
 
 interface TutorialStepDefinition {
   step: TutorialAdvancedStep;
@@ -33,64 +32,56 @@ interface TutorialStepDefinition {
 
 export const TUTORIAL_ADVANCED_STEPS: TutorialStepDefinition[] = [
   {
-    step: 'pass-to-blair',
-    title: 'Start the Point',
-    message: 'Alex has the disc. Tap Blair to record a completed pass.',
-    holderId: 'alex',
+    step: 'pass-to-mark',
+    title: 'Record a Pass',
+    message: 'Kelly has the disc. Tap Mark to record a completed pass.',
+    holderId: 'line-kelly',
     oppHasDisc: false,
-    expectedAction: { kind: 'tap', playerId: 'blair' },
+    expectedAction: { kind: 'tap', playerId: 'line-mark' },
   },
   {
-    step: 'drop-by-carl',
-    title: 'Carl drops it',
-    message: 'Swipe down to record Carls drop',
-    holderId: 'blair',
-    oppHasDisc: false,
-    expectedAction: { kind: 'drop', playerId: 'carl' },
-    result: 'drop',
-  },
-  {
-    step: 'open-rare',
-    title: 'Carl gets it back',
-    message: 'Carl forces a stall. Tap MORE for uncommon actions.',
-    holderId: null,
-    oppHasDisc: true,
-    expectedAction: { kind: 'open-rare' },
-  },
-  {
-    step: 'stall-by-carl',
-    title: 'Carl gets it back',
-    message: 'Tap Carl to credit him with a stall',
-    holderId: null,
-    oppHasDisc: true,
-    expectedAction: { kind: 'tap', playerId: 'carl' },
-    result: 'stall',
-  },
-  {
-    step: 'throwaway-by-carl',
-    title: 'Carl throws it away',
-    message: 'Swipe down on Carl to record a throwaway',
-    holderId: 'carl',
+    step: 'throwaway-by-mark',
+    title: 'Mark throws it away',
+    message: 'Swipe down on Mark to record a throwaway.',
+    holderId: 'line-mark',
     oppHasDisc: false,
     expectedAction: { kind: 'throwaway' },
     result: 'throwaway',
   },
   {
-    step: 'block-by-blair',
-    title: 'Blair gets a block',
-    message: 'Tap Blair to record the block.',
+    step: 'block-by-rachel',
+    title: 'Rachel gets a block',
+    message: 'Tap Rachel to record the block.',
     holderId: null,
     oppHasDisc: true,
-    expectedAction: { kind: 'tap', playerId: 'blair' },
+    expectedAction: { kind: 'tap', playerId: 'line-rachel' },
     result: 'block',
   },
   {
-    step: 'goal-to-carl',
-    title: 'Carl scores',
-    message: 'Swipe up on Carl to record the goal.',
-    holderId: 'blair',
+    step: 'drop-by-jules',
+    title: 'Jules drops it',
+    message: 'Swipe down on Jules to record a drop.',
+    holderId: 'line-rachel',
     oppHasDisc: false,
-    expectedAction: { kind: 'goal', playerId: 'carl' },
+    expectedAction: { kind: 'drop', playerId: 'line-jules' },
+    result: 'drop',
+  },
+  {
+    step: 'pressure-by-harper',
+    title: 'Harper pressure D',
+    message: 'Tap More, choose Pressure, then tap Harper.',
+    holderId: null,
+    oppHasDisc: true,
+    expectedAction: { kind: 'pressure', playerId: 'line-harper' },
+    result: 'pressure',
+  },
+  {
+    step: 'goal-to-kelly',
+    title: 'Kelly scores',
+    message: 'Swipe up on Kelly to record the goal.',
+    holderId: 'line-harper',
+    oppHasDisc: false,
+    expectedAction: { kind: 'goal', playerId: 'line-kelly' },
     result: 'goal',
   },
 ];
@@ -114,9 +105,11 @@ function getPlayerId(ref: PlayerRef): string | null {
 
 export default function useTutorialAdvancedGameState() {
   const [stepIndex, setStepIndex] = useState(0);
-  const [rareMenuVisible, setRareMenuVisible] = useState(false);
   const [result, setResult] = useState<TutorialAdvancedResult | null>(null);
   const [lastResult, setLastResult] = useState<TutorialAdvancedResult | null>(null);
+  const [correctionMessage, setCorrectionMessage] = useState<string | null>(null);
+  const [pressureMenuOpen, setPressureMenuOpen] = useState(false);
+  const [pressureArmed, setPressureArmed] = useState(false);
   const definition = TUTORIAL_ADVANCED_STEPS[stepIndex];
   const discHolderRef: PlayerRef | null =
     result === 'goal' || definition.holderId == null
@@ -126,12 +119,21 @@ export default function useTutorialAdvancedGameState() {
   const advanceImmediately = () => setStepIndex((current) => current + 1);
 
   const applyAction = (action: TutorialAdvancedAction) => {
-    if (result != null || !isExpectedTutorialAdvancedAction(stepIndex, action)) return;
-
-    if (action.kind === 'open-rare') {
-      setRareMenuVisible(true);
+    if (result != null) return;
+    if (definition.step === 'pressure-by-harper' && action.kind === 'tap') {
+      if (!pressureArmed) {
+        setCorrectionMessage('Tap More, choose Pressure, then tap Harper.');
+        return;
+      }
+      action = { kind: 'pressure', playerId: action.playerId };
+    }
+    if (!isExpectedTutorialAdvancedAction(stepIndex, action)) {
+      setCorrectionMessage(`Try this step again: ${definition.message}`);
       return;
     }
+    setCorrectionMessage(null);
+    setPressureMenuOpen(false);
+    setPressureArmed(false);
     if (definition.result === 'goal') {
       setResult(definition.result);
       setLastResult(definition.result);
@@ -141,6 +143,21 @@ export default function useTutorialAdvancedGameState() {
       setLastResult(definition.result);
     }
     advanceImmediately();
+  };
+
+  const openPressureMenu = () => {
+    if (definition.step !== 'pressure-by-harper' || result != null) return;
+    setPressureMenuOpen(true);
+    setCorrectionMessage(null);
+  };
+
+  const closePressureMenu = () => setPressureMenuOpen(false);
+
+  const selectPressure = () => {
+    if (definition.step !== 'pressure-by-harper' || result != null) return;
+    setPressureMenuOpen(false);
+    setPressureArmed(true);
+    setCorrectionMessage(null);
   };
 
   const handlers: TrackerPlayerGridHandlers = {
@@ -168,15 +185,14 @@ export default function useTutorialAdvancedGameState() {
     message: definition.message,
     result,
     lastResult,
+    correctionMessage,
+    pressureArmed,
+    pressureMenuOpen,
+    openPressureMenu,
+    selectPressure,
+    closePressureMenu,
     discHolderRef,
     oppHasDisc: definition.oppHasDisc,
     handlers,
-    rareMenuVisible,
-    openRareMenu: () => applyAction({ kind: 'open-rare' }),
-    closeRareMenu: () => setRareMenuVisible(false),
-    selectStall: () => {
-      setRareMenuVisible(false);
-      advanceImmediately();
-    },
   };
 }

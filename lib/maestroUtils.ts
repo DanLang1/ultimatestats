@@ -177,6 +177,34 @@ export async function seedMaestroTeamPrerequisites(
   useTutorialStore.getState().completeAdvancedTutorial();
 }
 
+export async function seedMaestroOnboardingPrerequisites() {
+  const team: SavedTeam = {
+    id: MAESTRO_SEED_TEAM_ID,
+    name: 'Team 1',
+    roster: [],
+  };
+
+  await clearAdvancedGames();
+  resetMaestroSetupState(team);
+  useGameStore.getState().resetGame();
+  useGameStore.setState((state) => {
+    state.currentTeam = team;
+    state.savedTeams = [];
+  });
+  useGameSessionStore.getState().clearActiveGame();
+  useLinePresetsStore.setState({ presets: [], lineConfirmedForNextPoint: false });
+  useTutorialStore.setState({
+    hasSeenOnboarding: false,
+    hasSeenStatsTutorial: false,
+    hasSeenAdvancedTutorial: false,
+    hasSeenAdvancedVoiceHint: false,
+    shouldShowStatsTutorialOnNextGameStart: false,
+    hasSeenShowcaseHint: false,
+    hasSeenLongPressSelectHint: false,
+    hasHydrated: true,
+  });
+}
+
 function getSeedCapFormat(capMode: MaestroCapMode) {
   if (capMode === 'hard') {
     return {

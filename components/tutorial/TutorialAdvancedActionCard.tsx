@@ -5,35 +5,30 @@ import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, useLayout } from '@/hooks/useLayout';
 import { Fonts } from '@/theme/theme';
 
-import type { TutorialAdvancedResult, TutorialAdvancedStep } from './useTutorialAdvancedGameState';
+import type { TutorialAdvancedResult } from './useTutorialAdvancedGameState';
 
 interface TutorialAdvancedActionCardProps {
-  step: TutorialAdvancedStep;
   result: TutorialAdvancedResult | null;
-  awaitingConfirmation: boolean;
   holderName: string | null;
   oppHasDisc: boolean;
-  onMore: () => void;
+  pressureArmed: boolean;
+  isPressureStep: boolean;
+  onOpenPressureMenu: () => void;
 }
 
 const RESULT_LABELS: Record<TutorialAdvancedResult, string> = {
-  drop: 'Carl · Drop',
-  stall: 'Carl · Stall',
-  throwaway: 'Carl · Throwaway',
-  block: 'Blair · Block',
-  goal: 'Blair + Carl · Goal',
+  drop: 'Jules · Drop',
+  throwaway: 'Mark · Throwaway',
+  block: 'Rachel · Block',
+  pressure: 'Harper · Pressure',
+  goal: 'Mark + Kelly · Goal',
 };
-
-function getButtonMode({ step, onMore }: Pick<TutorialAdvancedActionCardProps, 'step' | 'onMore'>) {
-  if (step === 'open-rare') return { kind: 'more-only' as const, onMore };
-  return { kind: 'none' as const };
-}
 
 function getAccentColor(
   result: TutorialAdvancedResult | null,
   colors: { success: string; danger: string; neutral: string },
 ) {
-  if (result === 'goal' || result === 'block' || result === 'stall') return colors.success;
+  if (result === 'goal' || result === 'block' || result === 'pressure') return colors.success;
   if (result) return colors.danger;
   return colors.neutral;
 }
@@ -49,24 +44,32 @@ function getCardText({
   return 'Point in progress';
 }
 
-export default function TutorialAdvancedActionCard(props: TutorialAdvancedActionCardProps) {
-  const { step, result, holderName, oppHasDisc } = props;
+export default function TutorialAdvancedActionCard({
+  result,
+  holderName,
+  oppHasDisc,
+  pressureArmed,
+  isPressureStep,
+  onOpenPressureMenu,
+}: TutorialAdvancedActionCardProps) {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
-  const buttonMode = getButtonMode(props);
   const accentColor = getAccentColor(result, palette);
   const cardText = getCardText({ result, holderName, oppHasDisc });
+  const showPressureActions = isPressureStep && !pressureArmed;
 
   return (
     <LastActionCardFrame
       accentColor={accentColor}
-      buttonMode={buttonMode}
+      buttonMode={
+        showPressureActions ? { kind: 'more-only', onMore: onOpenPressureMenu } : { kind: 'none' }
+      }
       moreAdornment={
-        step === 'open-rare' && !props.awaitingConfirmation ? (
+        showPressureActions ? (
           <TutorialAnimatedArrow
             direction="right"
             color={palette.accent}
-            size={scaleBySizeClass(22, sizeClass)}
+            size={scaleBySizeClass(24, sizeClass)}
             style={{
               position: 'absolute',
               right: '100%',
@@ -74,7 +77,7 @@ export default function TutorialAdvancedActionCard(props: TutorialAdvancedAction
               marginRight: scaleBySizeClass(8, sizeClass),
             }}
           />
-        ) : undefined
+        ) : null
       }>
       <ThemedText
         style={{

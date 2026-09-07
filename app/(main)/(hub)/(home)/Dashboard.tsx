@@ -523,6 +523,33 @@ export default function DashboardScreen() {
 
             <Pressable
               onPress={() => {
+                useTutorialStore.setState({
+                  hasSeenOnboarding: false,
+                  hasSeenAdvancedTutorial: false,
+                });
+              }}
+              style={({ pressed }) => [
+                styles.discordBanner,
+                { backgroundColor: palette.danger, marginTop: 12 },
+                pressed && styles.menuItemPressed,
+              ]}>
+              <MaterialCommunityIcons
+                name="restart"
+                size={metrics.bannerIconSize}
+                color={palette.textOnAccent}
+              />
+              <View style={styles.discordText}>
+                <ThemedText style={[styles.discordTitle, { color: palette.textOnAccent }]}>
+                  Reset Intro Tutorials
+                </ThemedText>
+                <ThemedText style={[styles.discordSubtitle, { color: palette.textOnAccentMuted }]}>
+                  DEV ONLY - Reload app to start from the first tutorial
+                </ThemedText>
+              </View>
+            </Pressable>
+
+            <Pressable
+              onPress={() => {
                 useTutorialStore.setState({ hasSeenShowcaseHint: false });
               }}
               style={({ pressed }) => [

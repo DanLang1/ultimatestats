@@ -1,10 +1,11 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedView } from '@/components/ThemedView';
 import EventToast from '@/components/toast/EventToast';
 import TutorialAnimatedArrow from '@/components/tutorial/TutorialAnimatedArrow';
+import { parseTutorialOrigin } from '@/components/tutorial/tutorialNavigation';
 import TutorialSettingsBar from '@/components/tutorial/TutorialSettingsBar';
 import TutorialTeamScoreSection from '@/components/tutorial/TutorialTeamScoreSection';
 import TutorialTooltip from '@/components/tutorial/TutorialTooltip';
@@ -19,6 +20,8 @@ const TEAM2_NAME = 'Canada';
 const ARROW_SIZE = 24;
 
 export default function TutorialScoreboardRoute() {
+  const { origin: rawOrigin } = useLocalSearchParams<{ origin?: string }>();
+  const origin = parseTutorialOrigin(rawOrigin);
   const layout = useLayout();
   const styles = createStyles(layout.isLandscape, layout.sizeClass);
   const homeIconSize = scaleBySizeClass(30, layout.sizeClass);
@@ -47,12 +50,17 @@ export default function TutorialScoreboardRoute() {
     handleUndo,
     handlePlay,
   } = useTutorialGameState(() => {
-    router.replace('/TutorialComplete');
+    router.replace({
+      pathname: '/TutorialComplete',
+      params: { origin },
+    });
   });
 
   const handleClose = () => {
-    useTutorialStore.getState().completeTutorial();
-    router.dismissTo('/Dashboard');
+    if (origin === 'onboarding') {
+      useTutorialStore.getState().completeTutorial();
+    }
+    router.replace('/Dashboard');
   };
 
   const team1TextColor = getContrastingTextColor(TutorialColors.team1Bg);

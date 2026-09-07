@@ -5,6 +5,7 @@ import { router } from 'expo-router';
 import DashboardScreen from '@/app/(main)/(hub)/(home)/Dashboard';
 import { useGameStore } from '@/store/basic/gameStore';
 import { useGameSessionStore } from '@/store/gameSessionStore';
+import { useTutorialStore } from '@/store/tutorialStore';
 import { resetDashboardStores } from '@/test/fixtures/resetStores';
 import { resetMockRouter } from '@/test/mocks/expoRouter';
 import { createTestQueryClient, renderScreen } from '@/test/render';
@@ -55,6 +56,21 @@ describe('<DashboardScreen />', () => {
     expect(useGameSessionStore.getState().activeGameType).toBe('basic');
     expect(useGameStore.getState().currentGameStatus).toBe('fresh');
     expect(router.replace).toHaveBeenCalledWith('/PreGameConfirm');
+  });
+
+  it('starts advanced setup directly for an existing user with no advanced tutorial flag', async () => {
+    const user = userEvent.setup();
+    useTutorialStore.setState({ hasSeenOnboarding: true, hasSeenAdvancedTutorial: false });
+    await renderScreen(<DashboardScreen />, { queryClient: arrangeDashboard() });
+
+    await user.press(screen.getByText('New Game'));
+    await user.press(screen.getByText('Advanced Tracker'));
+
+    expect(useGameSessionStore.getState().activeGameType).toBe('advanced');
+    expect(router.replace).toHaveBeenCalledWith({
+      pathname: '/advancedTracking/PreGameConfirm',
+      params: {},
+    });
   });
 
   it('derives and resumes an active basic session', async () => {

@@ -6,6 +6,7 @@ import {
   MaestroSeedGameType,
   MaestroTrackerState,
   seedAdvancedTrackerTestGame,
+  seedMaestroOnboardingPrerequisites,
   seedMaestroTeamPrerequisites,
   waitForMaestroStoresToHydrate,
 } from '@/lib/maestroUtils';
@@ -66,7 +67,12 @@ export function useMaestroSetup(params: MaestroSetupParams) {
 
 async function seedMaestroState(
   params: MaestroSetupParams,
-): Promise<'/Dashboard' | '/advancedTracking/Tracker'> {
+): Promise<'/' | '/Dashboard' | '/advancedTracking/Tracker'> {
+  if (params.mode === 'onboarding') {
+    await seedMaestroOnboardingPrerequisites();
+    return '/';
+  }
+
   if (params.mode === 'team') {
     await seedMaestroTeamPrerequisites({ clearActiveGame: true });
     return '/Dashboard';

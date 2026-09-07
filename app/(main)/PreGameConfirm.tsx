@@ -112,7 +112,10 @@ export default function PreGameConfirm() {
     }
 
     if (statsTutorialPending) {
-      router.replace('/TutorialStatIntro');
+      router.replace({
+        pathname: '/TutorialStatIntro',
+        params: { origin: 'onboarding' },
+      });
       return;
     }
 
