@@ -1,0 +1,103 @@
+appId: com.langdk.ultimatestats.dev
+name: Pregame Team Switch
+---
+- launchApp
+- openLink: ultimatestats-dev:///__maestro_seed__?mode=team
+
+- extendedWaitUntil:
+    visible:
+      id: 'maestro-setup-running'
+    timeout: 5000
+- retry:
+    maxRetries: 1
+    commands:
+      - extendedWaitUntil:
+          notVisible:
+            id: 'maestro-setup-running'
+          timeout: 15000
+- extendedWaitUntil:
+    visible:
+      text: 'DASHBOARD'
+    timeout: 15000
+
+# Create a second team so the pregame team-switch entry point appears.
+- tapOn: 'Manage Team'
+- extendedWaitUntil:
+    visible: 'ZOBOOMAFOO'
+    timeout: 10000
+- tapOn:
+    id: 'roster-actions-button'
+- tapOn:
+    id: 'team-actions-new'
+- extendedWaitUntil:
+    visible: 'New Team'
+    timeout: 5000
+- inputText: 'SwitchTest'
+- tapOn: 'Create'
+- extendedWaitUntil:
+    notVisible: 'New Team'
+    timeout: 5000
+- extendedWaitUntil:
+    visible: 'SWITCHTEST'
+    timeout: 5000
+
+# Back to Dashboard, then into the advanced pregame as the new (empty) team.
+- tapOn:
+    id: 'screen-header-back'
+- extendedWaitUntil:
+    visible:
+      text: 'DASHBOARD'
+    timeout: 15000
+- tapOn:
+    id: 'dashboard-new-game-button'
+- tapOn:
+    id: 'new-game-sheet-advanced'
+- extendedWaitUntil:
+    visible: 'ADVANCED TRACKER'
+    timeout: 10000
+- assertVisible: 'SwitchTest'
+
+# Switch back to the seeded team from pregame. This exercises the pregame
+# TeamManagementModal path: line reset, async loadTeam, dismissTo pregame.
+# NOTE: the sheet row exposes its testID but its text is concatenated with an
+# icon glyph in accessibility, so select by id, not by text.
+- tapOn:
+    id: 'pregame-change-team'
+- extendedWaitUntil:
+    visible:
+      id: 'team-select-maestro-seed-team'
+    timeout: 10000
+- tapOn:
+    id: 'team-select-maestro-seed-team'
+- extendedWaitUntil:
+    visible: 'ADVANCED TRACKER'
+    timeout: 10000
+- assertVisible: 'Zoboomafoo'
+
+# Clean up: the seed preserves extra saved teams across runs, so delete the
+# created team to leave the simulator in seed state (keeps this re-runnable
+# and avoids leaking a second team into other suites).
+- tapOn:
+    id: 'screen-header-back'
+- extendedWaitUntil:
+    visible:
+      text: 'DASHBOARD'
+    timeout: 15000
+- tapOn: 'Manage Team'
+- extendedWaitUntil:
+    visible: 'ZOBOOMAFOO'
+    timeout: 10000
+- tapOn:
+    id: 'roster-actions-button'
+- tapOn:
+    id: 'team-actions-switch'
+- extendedWaitUntil:
+    visible: '.*SwitchTest.*'
+    timeout: 10000
+- tapOn: 'Delete SwitchTest'
+- tapOn:
+    id: 'team-delete-confirm'
+- assertNotVisible: '.*SwitchTest.*'
+
+- takeScreenshot:
+    path: .maestro/screenshots/pregame-team-switch

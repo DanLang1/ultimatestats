@@ -1,8 +1,10 @@
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router } from 'expo-router';
+import { useState } from 'react';
 import { Linking, Pressable, StyleSheet, View } from 'react-native';
 
+import { TrackerHelpSheet } from '@/components/advancedTracking/TrackerHelpSheet';
 import { ThemedText } from '@/components/ThemedText';
 import FlashingIcon from '@/components/ui/FlashingIcon';
 import { useTheme } from '@/context/ThemeContext';
@@ -11,13 +13,18 @@ import { Fonts } from '@/theme/theme';
 
 interface HelpContentProps {
   showActionBarLegend?: boolean;
+  showCapStatusLegend?: boolean;
 }
 
-export default function HelpContent({ showActionBarLegend = true }: HelpContentProps) {
+export default function HelpContent({
+  showActionBarLegend = true,
+  showCapStatusLegend = true,
+}: HelpContentProps) {
   const { sizeClass } = useLayout();
   const { palette } = useTheme();
   const styles = createStyles(sizeClass);
   const metrics = createMetrics(sizeClass);
+  const [showAdvancedGuide, setShowAdvancedGuide] = useState(false);
 
   return (
     <>
@@ -147,68 +154,99 @@ export default function HelpContent({ showActionBarLegend = true }: HelpContentP
       )}
 
       {/* Cap Status Legend */}
-      <ThemedText style={[styles.sectionTitle, { color: palette.textMuted }]}>
-        CAP STATUS LEGEND
-      </ThemedText>
-      <View style={[styles.legendContainer, { backgroundColor: palette.overlay08 }]}>
-        <View style={styles.legendItem}>
-          <View style={styles.legendIconContainer}>
-            <FlashingIcon
-              name="hat-fedora"
-              size={metrics.legendIconSize}
-              color={palette.textMuted}
-              isFlashing
-            />
+      {showCapStatusLegend && (
+        <>
+          <ThemedText style={[styles.sectionTitle, { color: palette.textMuted }]}>
+            CAP STATUS LEGEND
+          </ThemedText>
+          <View style={[styles.legendContainer, { backgroundColor: palette.overlay08 }]}>
+            <View style={styles.legendItem}>
+              <View style={styles.legendIconContainer}>
+                <FlashingIcon
+                  name="hat-fedora"
+                  size={metrics.legendIconSize}
+                  color={palette.textMuted}
+                  isFlashing
+                />
+              </View>
+              <View style={styles.legendTextContainer}>
+                <ThemedText style={[styles.legendLabel, { color: palette.textInverse }]}>
+                  Softcap Pending
+                </ThemedText>
+                <ThemedText style={[styles.legendDescription, { color: palette.textMuted }]}>
+                  Softcap has not activated yet but will after the next score
+                </ThemedText>
+              </View>
+            </View>
+            <View style={styles.legendItem}>
+              <View style={styles.legendIconContainer}>
+                <MaterialCommunityIcons
+                  name="hat-fedora"
+                  size={metrics.legendIconSize}
+                  color={palette.textInverse}
+                />
+              </View>
+              <View style={styles.legendTextContainer}>
+                <ThemedText style={[styles.legendLabel, { color: palette.textInverse }]}>
+                  Softcap Active
+                </ThemedText>
+                <ThemedText style={[styles.legendDescription, { color: palette.textMuted }]}>
+                  Softcap is in effect - game is to current score + 1
+                </ThemedText>
+              </View>
+            </View>
+            <View style={styles.legendItem}>
+              <View style={styles.legendIconContainer}>
+                <MaterialCommunityIcons
+                  name="hard-hat"
+                  size={metrics.legendIconSize}
+                  color={palette.textInverse}
+                />
+              </View>
+              <View style={styles.legendTextContainer}>
+                <ThemedText style={[styles.legendLabel, { color: palette.textInverse }]}>
+                  Hardcap
+                </ThemedText>
+                <ThemedText style={[styles.legendDescription, { color: palette.textMuted }]}>
+                  Timer reached zero - game ends after next score unless tied
+                </ThemedText>
+              </View>
+            </View>
           </View>
-          <View style={styles.legendTextContainer}>
-            <ThemedText style={[styles.legendLabel, { color: palette.textInverse }]}>
-              Softcap Pending
-            </ThemedText>
-            <ThemedText style={[styles.legendDescription, { color: palette.textMuted }]}>
-              Softcap has not activated yet but will after the next score
-            </ThemedText>
-          </View>
-        </View>
-        <View style={styles.legendItem}>
-          <View style={styles.legendIconContainer}>
-            <MaterialCommunityIcons
-              name="hat-fedora"
-              size={metrics.legendIconSize}
-              color={palette.textInverse}
-            />
-          </View>
-          <View style={styles.legendTextContainer}>
-            <ThemedText style={[styles.legendLabel, { color: palette.textInverse }]}>
-              Softcap Active
-            </ThemedText>
-            <ThemedText style={[styles.legendDescription, { color: palette.textMuted }]}>
-              Softcap is in effect - game is to current score + 1
-            </ThemedText>
-          </View>
-        </View>
-        <View style={styles.legendItem}>
-          <View style={styles.legendIconContainer}>
-            <MaterialCommunityIcons
-              name="hard-hat"
-              size={metrics.legendIconSize}
-              color={palette.textInverse}
-            />
-          </View>
-          <View style={styles.legendTextContainer}>
-            <ThemedText style={[styles.legendLabel, { color: palette.textInverse }]}>
-              Hardcap
-            </ThemedText>
-            <ThemedText style={[styles.legendDescription, { color: palette.textMuted }]}>
-              Timer reached zero - game ends after next score unless tied
-            </ThemedText>
-          </View>
-        </View>
-      </View>
 
-      <View style={[styles.divider, { backgroundColor: palette.overlay10 }]} />
+          <View style={[styles.divider, { backgroundColor: palette.overlay10 }]} />
+        </>
+      )}
 
       {/* Help Section */}
       <ThemedText style={[styles.sectionTitle, { color: palette.textMuted }]}>HELP</ThemedText>
+      <Pressable
+        style={[styles.tutorialButton, { backgroundColor: palette.overlay08 }]}
+        onPress={() => {
+          setShowAdvancedGuide(true);
+        }}>
+        <MaterialCommunityIcons
+          name="gesture-swipe-vertical"
+          size={metrics.buttonIconSize}
+          color={palette.accent}
+        />
+        <View style={styles.tutorialButtonContent}>
+          <ThemedText style={[styles.tutorialButtonTitle, { color: palette.textInverse }]}>
+            Advanced Tracker Guide
+          </ThemedText>
+          <ThemedText style={[styles.tutorialButtonSubtitle, { color: palette.textMuted }]}>
+            Gestures and quick reference
+          </ThemedText>
+        </View>
+        <MaterialCommunityIcons
+          name="chevron-right"
+          size={metrics.buttonIconSize}
+          color={palette.textMuted}
+        />
+      </Pressable>
+
+      <View style={styles.buttonSpacer} />
+
       <Pressable
         style={[styles.tutorialButton, { backgroundColor: palette.overlay08 }]}
         onPress={() => {
@@ -316,6 +354,15 @@ export default function HelpContent({ showActionBarLegend = true }: HelpContentP
           color={palette.textMuted}
         />
       </Pressable>
+
+      <TrackerHelpSheet
+        visible={showAdvancedGuide}
+        onClose={() => setShowAdvancedGuide(false)}
+        onTutorial={() => {
+          setShowAdvancedGuide(false);
+          router.push({ pathname: '/TutorialAdvancedLineSelect', params: { origin: 'help' } });
+        }}
+      />
     </>
   );
 }

@@ -28,11 +28,7 @@ tags:
 - assertVisible:
     id: 'tutorial-line-select-screen'
 - tapOn:
-    id: 'line-select-load-line'
-- takeScreenshot:
-    path: .maestro/screenshots/advanced-first-onboarding-line-picker
-- tapOn:
-    id: 'line-select-preset-tutorial-d-line'
+    id: 'line-select-quick-preset-tutorial-d-line'
 - assertVisible:
     id: 'line-select-confirm'
 - tapOn:

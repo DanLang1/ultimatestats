@@ -96,10 +96,10 @@ Sources: [RecognizerIntent biasing strings](https://developer.android.com/refere
 An embedded engine could offer more control and a shared approach across platforms, with costs in
 native integration, model distribution, storage, memory, battery use, and device testing.
 
-| Candidate | Relevant capability | Limitation to investigate |
-| --- | --- | --- |
-| Vosk | Vocabulary adaptation and phonetic dictionaries mapping words to sounds | Genuinely new words may require rebuilding model assets; restricting grammar alone does not teach missing pronunciations. |
-| sherpa-onnx | Hotword biasing and configurable keyword spotting | Capability depends on the model; configuring a keyword does not guarantee recognition of an unusual pronunciation. |
+| Candidate   | Relevant capability                                                     | Limitation to investigate                                                                                                 |
+| ----------- | ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| Vosk        | Vocabulary adaptation and phonetic dictionaries mapping words to sounds | Genuinely new words may require rebuilding model assets; restricting grammar alone does not teach missing pronunciations. |
+| sherpa-onnx | Hotword biasing and configurable keyword spotting                       | Capability depends on the model; configuring a keyword does not guarantee recognition of an unusual pronunciation.        |
 
 The active-line task resembles “which of these names was spoken, or none?” Keyword spotting is
 therefore worth benchmarking against general transcription. This is a hypothesis, not a claim

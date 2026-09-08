@@ -24,7 +24,7 @@ export default function HelpScreen() {
       />
 
       <ScrollView contentContainerStyle={[styles.scrollContent]}>
-        <HelpContent showActionBarLegend={true} />
+        <HelpContent showActionBarLegend={false} showCapStatusLegend={false} />
       </ScrollView>
     </ThemedView>
   );

@@ -536,7 +536,7 @@ export default function GameInfoScreen() {
         <View style={[styles.divider, { backgroundColor: palette.overlay10 }]} />
 
         {/* Use shared HelpContent component */}
-        <HelpContent showActionBarLegend={statTrackingEnabled} />
+        <HelpContent showActionBarLegend={statTrackingEnabled} showCapStatusLegend={true} />
       </ScrollView>
 
       {/* Gender Ratio Info Modal */}

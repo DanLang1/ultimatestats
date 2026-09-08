@@ -1,0 +1,53 @@
+appId: com.langdk.ultimatestats.dev
+name: Basic Pregame Opponent Name Edit
+---
+- launchApp
+- openLink: ultimatestats-dev:///__maestro_seed__?mode=team
+
+- extendedWaitUntil:
+    visible:
+      id: 'maestro-setup-running'
+    timeout: 5000
+- retry:
+    maxRetries: 1
+    commands:
+      - extendedWaitUntil:
+          notVisible:
+            id: 'maestro-setup-running'
+          timeout: 15000
+- extendedWaitUntil:
+    visible:
+      text: 'DASHBOARD'
+    timeout: 15000
+- tapOn:
+    id: 'dashboard-new-game-button'
+- tapOn:
+    id: 'new-game-sheet-basic'
+- assertVisible:
+    text: 'BASIC SCOREBOARD'
+
+# Edit the opponent name inline, mirroring the advanced-tracker keyboard test.
+- scrollUntilVisible:
+    element:
+      id: 'basic-opponent-name-edit'
+    direction: DOWN
+- tapOn:
+    id: 'basic-opponent-name-edit'
+- assertVisible:
+    id: 'basic-opponent-name-input'
+- eraseText
+- inputText: 'ChicagoUnion'
+- assertVisible:
+    id: 'basic-opponent-name-input'
+    text: 'ChicagoUnion'
+
+# Submitting via the keyboard Done key commits the draft through
+# useOpponentNameDraft (onSubmitEditing). Edit mode exits and the segment
+# label shows the committed name.
+- tapOn: 'Done'
+- assertNotVisible:
+    id: 'basic-opponent-name-input'
+- assertVisible: 'ChicagoUnion'
+
+- takeScreenshot:
+    path: .maestro/screenshots/basic-pregame-opponent-name

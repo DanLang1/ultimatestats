@@ -6,12 +6,20 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.4.0',
+    date: 'Sep 7, 2026',
+    changes: [
+      'Added redzone toggle to advanced tracker',
+      'UI Updates for line tracking and stats',
+      'Updated tutorials',
+    ],
+  },
+  {
     version: '2.3.0',
     date: 'Aug 29, 2026',
     changes: [
       'Added notes to points and games',
       'Added throw classifications for advanced tracker (Huck/Backfield Turn)',
-      'Added notes to points and games',
       'Added option to set line during halftime',
       'Added historic line editing from timeline for advanced/basic games',
       'Added event editing for advanced games from timeline',

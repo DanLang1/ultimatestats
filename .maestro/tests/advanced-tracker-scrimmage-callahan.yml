@@ -24,7 +24,7 @@ tags:
 
 - extendedWaitUntil:
     visible:
-      text: 'Dark CALLAHAN'
+      text: 'Dark Break'
     timeout: 5000
 - assertVisible:
     id: 'between-point-start-next'

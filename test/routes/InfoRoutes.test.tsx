@@ -32,8 +32,14 @@ describe('home information routes', () => {
     const user = userEvent.setup();
     await renderScreen(<HelpScreen />);
 
-    expect(screen.getByText('ACTION BAR LEGEND')).toBeVisible();
-    expect(screen.getByText('CAP STATUS LEGEND')).toBeVisible();
+    expect(screen.queryByText('ACTION BAR LEGEND')).toBeNull();
+    expect(screen.queryByText('CAP STATUS LEGEND')).toBeNull();
+    expect(screen.getByText('Advanced Tracker Guide')).toBeVisible();
+
+    await user.press(screen.getByText('Advanced Tracker Guide'));
+    expect(screen.getByText('What happened?')).toBeVisible();
+
+    await user.press(screen.getByTestId('tracker-help-close'));
 
     await user.press(screen.getByText('Advanced Tutorial'));
     await user.press(screen.getByText('Basic Scoreboard Guide'));
