@@ -1,7 +1,7 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { ModalPlayerGrid } from '@/components/lines/ModalPlayerGrid';
 import { PresetPickerModal } from '@/components/lines/PresetPickerModal';
@@ -201,6 +201,13 @@ export const TrackerLineScreen = ({
       participantRestrictions?.onPress(id);
       return;
     }
+    if (selectedPreset != null) {
+      if (!selectedPreset.playerIds.includes(id)) {
+        setShowAllPlayers(true);
+      }
+    } else if (selectedRecentPointNumber != null) {
+      setSelectedRecentPointNumber(null);
+    }
     if (isSelected) {
       updateSelection(selectedIds.filter((participantId) => participantId !== id));
       return;
@@ -238,6 +245,8 @@ export const TrackerLineScreen = ({
     });
   }
 
+  const hasQuickPresets = presets.length > 0;
+
   const sourceLabel =
     selectedPreset?.name ??
     (selectedRecentPointNumber != null ? `Pt ${selectedRecentPointNumber}` : 'Choose line');
@@ -247,7 +256,12 @@ export const TrackerLineScreen = ({
   if (selectionDifference > 0) selectionHint = `Deselect ${selectionDifference} to continue`;
   else if (selectionDifference < 0) selectionHint = `Choose ${-selectionDifference} more`;
   else if (needsLineChanges) selectionHint = 'Choose a replacement player';
-  const clearSelection = () => updateSelection(withRestrictions([]));
+  const clearSelection = () => {
+    setSelectedPresetId(null);
+    setSelectedRecentPointNumber(null);
+    setShowAllPlayers(true);
+    updateSelection(withRestrictions([]));
+  };
   const browseRoster = () => {
     setSelectedPresetId(null);
     setSelectedRecentPointNumber(null);
@@ -324,8 +338,54 @@ export const TrackerLineScreen = ({
             style={[styles.headerTitle, { color: palette.textInverse }]}>
             {headerTitle}
           </ThemedText>
+          <ResponsiveHeaderActions
+            actions={headerActions}
+            menuVariant="advanced"
+            menuTitle="LINE ACTIONS"
+          />
         </View>
         <View style={styles.presetsRow}>
+          {hasQuickPresets && (
+            <ScrollView
+              horizontal
+              style={styles.presetScroll}
+              contentContainerStyle={styles.presetScrollContent}
+              showsHorizontalScrollIndicator>
+              {presets.map((preset) => {
+                const isSelected = preset.id === selectedPresetId;
+                return (
+                  <Pressable
+                    key={preset.id}
+                    testID={`line-select-quick-preset-${preset.id}`}
+                    accessibilityRole="button"
+                    accessibilityLabel={`${preset.name}, ${preset.playerIds.length} player${preset.playerIds.length === 1 ? '' : 's'}`}
+                    accessibilityState={{ selected: isSelected }}
+                    disabled={isConfirming}
+                    onPress={() => handleSelectPreset(preset)}
+                    style={({ pressed }) => [
+                      styles.quickPresetBtn,
+                      {
+                        borderColor: isSelected ? palette.accent : palette.border,
+                        backgroundColor: isSelected ? palette.accentOverlay15 : 'transparent',
+                      },
+                      pressed && { opacity: 0.7 },
+                    ]}>
+                    <ThemedText
+                      numberOfLines={1}
+                      style={[
+                        styles.quickPresetText,
+                        { color: isSelected ? palette.accent : palette.textInverse },
+                      ]}>
+                      {preset.name}
+                    </ThemedText>
+                    <ThemedText style={[styles.quickPresetCount, { color: palette.textMuted }]}>
+                      · {preset.playerIds.length}
+                    </ThemedText>
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
+          )}
           <Pressable
             testID="line-select-load-line"
             accessibilityRole="button"
@@ -333,29 +393,27 @@ export const TrackerLineScreen = ({
             disabled={isConfirming}
             onPress={() => setShowLinePicker(true)}
             style={({ pressed }) => [
-              styles.loadLineBtn,
+              styles.linePickerBtn,
+              !hasQuickPresets && styles.loadLineBtn,
               { borderColor: palette.border },
               pressed && { opacity: 0.7 },
             ]}>
             <MaterialCommunityIcons
               name="layers-outline"
-              size={scaleBySizeClass(18, sizeClass)}
-              color={palette.textMuted}
-            />
-            <ThemedText style={[styles.loadLineText, { color: palette.textInverse }]}>
-              {sourceLabel}
-            </ThemedText>
-            <MaterialCommunityIcons
-              name="chevron-down"
               size={scaleBySizeClass(20, sizeClass)}
               color={palette.textMuted}
             />
+            {!hasQuickPresets && (
+              <ThemedText
+                style={[
+                  styles.linePickerText,
+                  styles.loadLineText,
+                  { color: palette.textInverse },
+                ]}>
+                {sourceLabel}
+              </ThemedText>
+            )}
           </Pressable>
-          <ResponsiveHeaderActions
-            actions={headerActions}
-            menuVariant="advanced"
-            menuTitle="LINE ACTIONS"
-          />
         </View>
       </View>
       <View
@@ -476,8 +534,31 @@ function createStyles(sizeClass: SizeClass) {
       fontFamily: Fonts.extraBold,
     },
     presetsRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-    loadLineBtn: {
-      flex: 1,
+    presetScroll: { flex: 1, minWidth: 0 },
+    presetScrollContent: { alignItems: 'center', gap: 8, paddingVertical: 4 },
+    quickPresetBtn: {
+      maxWidth: scaleBySizeClass(200, sizeClass),
+      minWidth: 0,
+      minHeight: 44,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 4,
+      paddingHorizontal: 10,
+      paddingVertical: 10,
+      borderWidth: 1,
+      borderRadius: 22,
+    },
+    quickPresetText: {
+      flexShrink: 1,
+      fontSize: scaleBySizeClass(14, sizeClass),
+      fontFamily: Fonts.semiBold,
+    },
+    quickPresetCount: { fontSize: scaleBySizeClass(12, sizeClass) },
+    loadLineBtn: { flex: 1 },
+    linePickerBtn: {
+      minWidth: 44,
+      justifyContent: 'center',
       minHeight: 44,
       flexDirection: 'row',
       alignItems: 'center',
@@ -486,8 +567,8 @@ function createStyles(sizeClass: SizeClass) {
       borderWidth: 1,
       borderRadius: 10,
     },
-    loadLineText: {
-      flex: 1,
+    loadLineText: { flex: 1 },
+    linePickerText: {
       fontSize: scaleBySizeClass(15, sizeClass),
       fontFamily: Fonts.semiBold,
     },

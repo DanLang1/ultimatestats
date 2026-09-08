@@ -47,6 +47,13 @@ a tutorial-owned implementation with local fixture state. It may reuse neutral v
 but it does not use advanced-store state or add tutorial conditionals to production line-selection
 components. Production and tutorial structure are kept aligned by a visible-contract test.
 
+Line selection exposes the team presets as compact one-tap shortcuts in a single horizontally scrolling row. The fixed picker button opens the full
+preset and recent-line picker. A selected preset remains highlighted as the active source while
+the line is adjusted before confirming; adding players from `Other players` expands that section
+without reordering the preset lineup. Choosing another preset or clearing the line exits the
+current preset. Recent-line selections are temporary history sources and are cleared when manually
+adjusted.
+
 ## State and Persistence
 
 - `useAdvancedTrackingStore` owns the active `currentGame`, its `currentGameId`, undo state, and

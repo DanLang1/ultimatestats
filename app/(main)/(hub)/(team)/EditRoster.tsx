@@ -1,7 +1,7 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router, Stack } from 'expo-router';
-import React, { useState } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import React, { useRef, useState } from 'react';
+import { Modal, Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 
 import { QuickEditPlayerList } from '@/components/roster/QuickEditPlayerList';
 import RosterBulkActions from '@/components/roster/RosterBulkActions';
@@ -41,6 +41,32 @@ interface PlayerGroup {
   players: Player[];
 }
 
+// Deliberately covers the scrimmage minimum: ULTIMATE_LINE_SIZE * 2 players split evenly by type.
+const SAMPLE_TEAM_PLAYERS: Pick<Player, 'name' | 'number' | 'matchingType' | 'role'>[] = [
+  { name: 'Kelly', number: '7', matchingType: 'fmp', role: 'handler' },
+  { name: 'Rachel', number: '12', matchingType: 'fmp', role: 'cutter' },
+  { name: 'Jules', number: '34', matchingType: 'fmp', role: 'hybrid' },
+  { name: 'Harper', number: '18', matchingType: 'fmp', role: 'handler' },
+  { name: 'Erin', number: '22', matchingType: 'fmp', role: 'cutter' },
+  { name: 'Taylor', number: '31', matchingType: 'fmp', role: 'hybrid' },
+  { name: 'Morgan', number: '44', matchingType: 'fmp', role: 'cutter' },
+  { name: 'Mark', number: '5', matchingType: 'mmp', role: 'hybrid' },
+  { name: 'Jerry', number: '41', matchingType: 'mmp', role: 'cutter' },
+  { name: 'Frank', number: '9', matchingType: 'mmp', role: 'handler' },
+  { name: 'Joe', number: '15', matchingType: 'mmp', role: 'cutter' },
+  { name: 'Bryan', number: '27', matchingType: 'mmp', role: 'handler' },
+  { name: 'Alex', number: '36', matchingType: 'mmp', role: 'hybrid' },
+  { name: 'Sam', number: '52', matchingType: 'mmp', role: 'cutter' },
+];
+
+function buildSampleTeam(teamId: string, teamName: string): SavedTeam {
+  return {
+    id: teamId,
+    name: teamName,
+    roster: SAMPLE_TEAM_PLAYERS.map((player) => ({ ...player, id: generateId(), isActive: true })),
+  };
+}
+
 export default function EditRosterScreen() {
   const { sizeClass } = useLayout();
   const styles = createStyles(sizeClass);
@@ -66,6 +92,23 @@ export default function EditRosterScreen() {
 
   const [showShareConfirm, setShowShareConfirm] = useState(false);
   const [showActionsSheet, setShowActionsSheet] = useState(false);
+  const pendingSheetAction = useRef<(() => void) | null>(null);
+
+  const handleActionsSheetDismissed = () => {
+    const action = pendingSheetAction.current;
+    pendingSheetAction.current = null;
+    action?.();
+  };
+
+  const handleSelectSheetAction = (action: () => void) => {
+    setShowActionsSheet(false);
+    // iOS must finish dismissing its native presenter before another modal opens.
+    if (Platform.OS === 'ios') {
+      pendingSheetAction.current = action;
+    } else {
+      action();
+    }
+  };
   const [newPlayerName, setNewPlayerName] = useState('');
   const [renameModalVisible, setRenameModalVisible] = useState(false);
   const [editTeamName, setEditTeamName] = useState('');
@@ -205,8 +248,18 @@ export default function EditRosterScreen() {
   };
 
   const handleImportTeam = () => {
+    if (gameActive) return;
     resetSelectionState();
     router.push('/ImportTeam');
+  };
+
+  const handleLoadSampleTeam = async () => {
+    if (gameActive) return;
+    resetSelectionState();
+    const sampleTeam = buildSampleTeam(currentTeam.id, currentTeam.name);
+    useLinePresetsStore.getState().clearPresetsForTeam(currentTeam.id);
+    setCurrentTeam(sampleTeam);
+    await saveCurrentTeam(sampleTeam);
   };
 
   const handleConfirmShare = async () => {
@@ -334,12 +387,71 @@ export default function EditRosterScreen() {
           size={metrics.emptyStateIconLarge}
           color={palette.textMuted}
         />
-        <ThemedText style={[styles.emptyStateText, { color: palette.textMuted }]}>
+        <ThemedText style={[styles.emptyStateText, { color: palette.textInverse }]}>
           No players yet
         </ThemedText>
         <ThemedText style={[styles.emptyStateHint, { color: palette.textMuted }]}>
-          Add players using the input above
+          Add players above, or pick a shortcut
         </ThemedText>
+        <View style={styles.quickStartSection}>
+          <ThemedText style={[styles.quickStartTitle, { color: palette.textInverse }]}>
+            Other ways to start
+          </ThemedText>
+          {!gameActive && (
+            <Pressable
+              testID="empty-roster-import-usau"
+              accessibilityRole="button"
+              accessibilityLabel="Import from USAU link"
+              onPress={handleImportTeam}
+              style={({ pressed }) => [styles.quickStartRow, pressed && styles.rowPressed]}>
+              <MaterialCommunityIcons
+                name="file-import-outline"
+                size={scaleBySizeClass(20, sizeClass)}
+                color={palette.accent}
+              />
+              <View style={styles.quickStartRowText}>
+                <ThemedText style={[styles.quickStartRowTitle, { color: palette.textInverse }]}>
+                  Import from USAU link
+                </ThemedText>
+                <ThemedText style={[styles.quickStartRowHint, { color: palette.textMuted }]}>
+                  Paste a roster link to load players
+                </ThemedText>
+              </View>
+              <MaterialCommunityIcons
+                name="chevron-right"
+                size={scaleBySizeClass(20, sizeClass)}
+                color={palette.textMuted}
+              />
+            </Pressable>
+          )}
+          {!gameActive && (
+            <Pressable
+              testID="empty-roster-load-test-team"
+              accessibilityRole="button"
+              accessibilityLabel="Try with sample players"
+              onPress={handleLoadSampleTeam}
+              style={({ pressed }) => [styles.quickStartRow, pressed && styles.rowPressed]}>
+              <MaterialCommunityIcons
+                name="flask-outline"
+                size={scaleBySizeClass(20, sizeClass)}
+                color={palette.textMuted}
+              />
+              <View style={styles.quickStartRowText}>
+                <ThemedText style={[styles.quickStartRowTitle, { color: palette.textInverse }]}>
+                  Try with sample players
+                </ThemedText>
+                <ThemedText style={[styles.quickStartRowHint, { color: palette.textMuted }]}>
+                  Load sample players to explore the app
+                </ThemedText>
+              </View>
+              <MaterialCommunityIcons
+                name="chevron-right"
+                size={scaleBySizeClass(20, sizeClass)}
+                color={palette.textMuted}
+              />
+            </Pressable>
+          )}
+        </View>
       </View>
     );
   } else if (visibleRoster.length === 0) {
@@ -683,11 +795,15 @@ export default function EditRosterScreen() {
       />
 
       <Modal
+        testID="team-actions-modal"
         visible={showActionsSheet}
+        onDismiss={handleActionsSheetDismissed}
+        onRequestClose={() => setShowActionsSheet(false)}
         transparent
         animationType="fade"
         supportedOrientations={['portrait', 'landscape']}>
         <TeamActionsSheet
+          onSelectAction={handleSelectSheetAction}
           onDismiss={() => setShowActionsSheet(false)}
           onRenameTeam={() => {
             setEditTeamName(currentTeam.name);
@@ -839,6 +955,39 @@ function createStyles(sizeClass: SizeClass) {
     emptyStateHint: {
       fontSize: scaleBySizeClass(14, sizeClass),
       marginTop: scaleBySizeClass(4, sizeClass),
+    },
+    quickStartSection: {
+      width: '100%',
+      marginTop: scaleBySizeClass(28, sizeClass),
+      gap: scaleBySizeClass(4, sizeClass),
+    },
+    quickStartTitle: {
+      fontSize: scaleBySizeClass(15, sizeClass),
+      fontFamily: Fonts.semiBold,
+      paddingHorizontal: scaleBySizeClass(2, sizeClass),
+      marginBottom: scaleBySizeClass(4, sizeClass),
+    },
+    quickStartRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: scaleBySizeClass(12, sizeClass),
+      minHeight: scaleBySizeClass(56, sizeClass),
+      paddingVertical: scaleBySizeClass(10, sizeClass),
+      paddingHorizontal: scaleBySizeClass(2, sizeClass),
+    },
+    rowPressed: {
+      opacity: 0.6,
+    },
+    quickStartRowText: {
+      flex: 1,
+      gap: 2,
+    },
+    quickStartRowTitle: {
+      fontSize: scaleBySizeClass(15, sizeClass),
+      fontFamily: Fonts.semiBold,
+    },
+    quickStartRowHint: {
+      fontSize: scaleBySizeClass(13, sizeClass),
     },
     chipGroup: {
       marginBottom: scaleBySizeClass(16, sizeClass),

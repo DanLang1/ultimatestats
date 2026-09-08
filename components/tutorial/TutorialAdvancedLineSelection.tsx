@@ -1,11 +1,10 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import Animated, { FadeIn, ReduceMotion } from 'react-native-reanimated';
 
 import { ModalPlayerGrid } from '@/components/lines/ModalPlayerGrid';
 import { ThemedText } from '@/components/ThemedText';
-import TutorialAdvancedLinePicker from '@/components/tutorial/TutorialAdvancedLinePicker';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { usePulseAnimation } from '@/hooks/usePulseAnimation';
@@ -28,7 +27,7 @@ interface TutorialAdvancedLineSelectionProps {
 const STEP_CONTENT: Record<TutorialAdvancedLineStep, { title: string; message: string }> = {
   'load-preset': {
     title: 'Load a Line',
-    message: 'Tap Choose line, then select the D-Line preset.',
+    message: 'Tap the D-Line preset.',
   },
   confirm: {
     title: 'Confirm the Line',
@@ -46,28 +45,36 @@ export default function TutorialAdvancedLineSelection({
   const [step, setStep] = useState<TutorialAdvancedLineStep>('load-preset');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [selectedPreset, setSelectedPreset] = useState(false);
-  const [showPicker, setShowPicker] = useState(false);
+  const [showAllPlayers, setShowAllPlayers] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
   const loadPulse = usePulseAnimation(step === 'load-preset', 800, ReduceMotion.Never);
   const confirmPulse = usePulseAnimation(step === 'confirm', 800, ReduceMotion.Never);
 
   const selectedPresetIds = new Set(TUTORIAL_ADVANCED_LINE_PRESET.playerIds);
-  const canConfirm = selectedPreset;
+  const canConfirm = selectedIds.length === ULTIMATE_LINE_SIZE;
   const focusedIds = selectedPreset ? selectedPresetIds : undefined;
   const content = STEP_CONTENT[step];
 
-  const togglePlayer = (_playerId: string) => {
+  const togglePlayer = (playerId: string) => {
     if (!selectedPreset) {
       setFeedback('Start by loading the D-Line preset.');
       return;
     }
-    setFeedback('This tutorial uses the D-Line preset. Tap Confirm line to continue.');
+    if (!selectedPresetIds.has(playerId)) {
+      setShowAllPlayers(true);
+    }
+    setSelectedIds((currentIds) =>
+      currentIds.includes(playerId)
+        ? currentIds.filter((id) => id !== playerId)
+        : [...currentIds, playerId],
+    );
+    setFeedback(null);
   };
 
   const loadPreset = () => {
     setSelectedPreset(true);
     setSelectedIds([...TUTORIAL_ADVANCED_LINE_PRESET.playerIds]);
-    setShowPicker(false);
+    setShowAllPlayers(false);
     setStep('confirm');
     setFeedback(null);
   };
@@ -101,32 +108,39 @@ export default function TutorialAdvancedLineSelection({
           </ThemedText>
         </View>
         <View style={styles.presetsRow}>
-          <Animated.View style={[styles.loadLineWrap, loadPulse]}>
-            <Pressable
-              testID="line-select-load-line"
-              accessibilityRole="button"
-              accessibilityLabel={`Choose line, ${selectedPreset ? TUTORIAL_ADVANCED_LINE_PRESET.name : 'Choose line'}`}
-              onPress={() => setShowPicker(true)}
-              style={({ pressed }) => [
-                styles.loadLineButton,
-                { borderColor: palette.border },
-                pressed && styles.pressed,
-              ]}>
-              <MaterialCommunityIcons
-                name="layers-outline"
-                size={scaleBySizeClass(18, sizeClass)}
-                color={palette.textMuted}
-              />
-              <ThemedText style={[styles.loadLineText, { color: palette.textInverse }]}>
-                {selectedPreset ? TUTORIAL_ADVANCED_LINE_PRESET.name : 'Choose line'}
-              </ThemedText>
-              <MaterialCommunityIcons
-                name="chevron-down"
-                size={scaleBySizeClass(20, sizeClass)}
-                color={palette.textMuted}
-              />
-            </Pressable>
-          </Animated.View>
+          <ScrollView
+            horizontal
+            style={styles.presetScroll}
+            contentContainerStyle={styles.presetScrollContent}
+            showsHorizontalScrollIndicator>
+            <Animated.View style={loadPulse}>
+              <Pressable
+                testID="line-select-quick-preset-tutorial-d-line"
+                accessibilityRole="button"
+                accessibilityLabel={`D-Line, ${TUTORIAL_ADVANCED_LINE_PRESET.playerIds.length} player${TUTORIAL_ADVANCED_LINE_PRESET.playerIds.length === 1 ? '' : 's'}`}
+                accessibilityState={{ selected: selectedPreset }}
+                onPress={loadPreset}
+                style={({ pressed }) => [
+                  styles.quickPresetBtn,
+                  {
+                    borderColor: selectedPreset ? palette.accent : palette.border,
+                    backgroundColor: selectedPreset ? palette.accentOverlay15 : 'transparent',
+                  },
+                  pressed && styles.pressed,
+                ]}>
+                <ThemedText
+                  style={[
+                    styles.quickPresetText,
+                    { color: selectedPreset ? palette.accent : palette.textInverse },
+                  ]}>
+                  D-Line
+                </ThemedText>
+                <ThemedText style={[styles.quickPresetCount, { color: palette.textMuted }]}>
+                  · 7
+                </ThemedText>
+              </Pressable>
+            </Animated.View>
+          </ScrollView>
         </View>
       </View>
 
@@ -156,7 +170,8 @@ export default function TutorialAdvancedLineSelection({
           selectedIds={selectedIds}
           onTogglePlayer={togglePlayer}
           useModalColors={false}
-          onToggleOtherPlayers={() => {}}
+          showOtherPlayers={showAllPlayers}
+          onToggleOtherPlayers={() => setShowAllPlayers((value) => !value)}
         />
       </View>
 
@@ -198,15 +213,6 @@ export default function TutorialAdvancedLineSelection({
           </Pressable>
         </Animated.View>
       </View>
-
-      <TutorialAdvancedLinePicker
-        visible={showPicker}
-        preset={TUTORIAL_ADVANCED_LINE_PRESET}
-        roster={TUTORIAL_ADVANCED_LINE_PLAYERS}
-        selected={selectedPreset}
-        onClose={() => setShowPicker(false)}
-        onSelect={loadPreset}
-      />
     </View>
   );
 }
@@ -223,8 +229,30 @@ function createStyles(sizeClass: SizeClass) {
       fontFamily: Fonts.extraBold,
     },
     presetsRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-    loadLineWrap: { flex: 1 },
-    loadLineButton: {
+    presetScroll: { flex: 1, minWidth: 0 },
+    presetScrollContent: { alignItems: 'center', gap: 8, paddingVertical: 4 },
+    quickPresetBtn: {
+      maxWidth: scaleBySizeClass(200, sizeClass),
+      minWidth: 0,
+      minHeight: 44,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 4,
+      paddingHorizontal: 10,
+      paddingVertical: 10,
+      borderWidth: 1,
+      borderRadius: 22,
+    },
+    quickPresetText: {
+      flexShrink: 1,
+      fontSize: scaleBySizeClass(14, sizeClass),
+      fontFamily: Fonts.semiBold,
+    },
+    quickPresetCount: { fontSize: scaleBySizeClass(12, sizeClass) },
+    linePickerBtn: {
+      minWidth: 44,
+      justifyContent: 'center',
       minHeight: 44,
       flexDirection: 'row',
       alignItems: 'center',
@@ -232,11 +260,6 @@ function createStyles(sizeClass: SizeClass) {
       padding: 10,
       borderWidth: 1,
       borderRadius: 10,
-    },
-    loadLineText: {
-      flex: 1,
-      fontSize: scaleBySizeClass(15, sizeClass),
-      fontFamily: Fonts.semiBold,
     },
     instructions: {
       marginHorizontal: 16,

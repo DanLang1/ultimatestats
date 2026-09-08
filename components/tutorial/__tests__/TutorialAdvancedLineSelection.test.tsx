@@ -43,11 +43,10 @@ describe('tutorial and production line-selection parity', () => {
     const user = userEvent.setup();
     await renderScreen(<TutorialAdvancedLineSelection onBack={() => {}} onComplete={() => {}} />);
 
-    await user.press(screen.getByTestId('line-select-load-line'));
-    await user.press(screen.getByText('D-Line'));
+    await user.press(await screen.findByTestId('line-select-quick-preset-tutorial-d-line'));
 
     expect(screen.getByTestId('line-select-title')).toBeOnTheScreen();
-    expect(screen.getByTestId('line-select-load-line')).toBeOnTheScreen();
+    expect(screen.queryByTestId('line-select-load-line')).not.toBeOnTheScreen();
     expect(screen.getByTestId('player-chip-Kelly')).toBeOnTheScreen();
     expect(screen.getByText('7/7')).toBeOnTheScreen();
     expect(screen.getByTestId('line-select-confirm')).toBeOnTheScreen();
@@ -61,5 +60,21 @@ describe('tutorial and production line-selection parity', () => {
 
     expect(screen.getByText('Start by loading the D-Line preset.')).toBeOnTheScreen();
     expect(screen.getByText('0/7')).toBeOnTheScreen();
+  });
+
+  it('keeps the preset selected while adding an other player', async () => {
+    const user = userEvent.setup();
+    await renderScreen(<TutorialAdvancedLineSelection onBack={() => {}} onComplete={() => {}} />);
+
+    await user.press(await screen.findByTestId('line-select-quick-preset-tutorial-d-line'));
+    await user.press(screen.getByTestId('line-select-show-all-players'));
+    await user.press(screen.getByTestId('player-chip-Frank'));
+
+    expect(screen.getByTestId('line-select-quick-preset-tutorial-d-line')).toHaveProp(
+      'accessibilityState',
+      expect.objectContaining({ selected: true }),
+    );
+    expect(screen.getByText('8/7')).toBeOnTheScreen();
+    expect(screen.getByText('Frank')).toBeOnTheScreen();
   });
 });

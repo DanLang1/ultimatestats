@@ -22,7 +22,7 @@ import {
   Participant,
 } from '@/lib/advancedTracking/types';
 import { getContrastingTextColor } from '@/lib/colorUtils';
-import { MAX_TEAM_NAME_LENGTH } from '@/lib/constants';
+import { MAX_TEAM_NAME_LENGTH, ULTIMATE_LINE_SIZE } from '@/lib/constants';
 import { formatRatioFull } from '@/lib/genderRatioUtils';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { useGameStore } from '@/store/basic/gameStore';
@@ -102,12 +102,11 @@ export default function AdvancedPreGameConfirm() {
   const [teamOrbitRunKey, setTeamOrbitRunKey] = useState(0);
   const [ratioOrbitRunKey, setRatioOrbitRunKey] = useState(0);
 
+  const minimumActivePlayerCount = isScrimmage ? ULTIMATE_LINE_SIZE * 2 : ULTIMATE_LINE_SIZE;
   const activePlayerCount = currentTeam.roster.filter((player) => player.isActive).length;
-  const hasEnoughScrimmagePlayers = !isScrimmage || activePlayerCount >= 14;
+  const hasEnoughPlayers = activePlayerCount >= minimumActivePlayerCount;
   const canContinue =
-    receivingTeam !== '' &&
-    hasEnoughScrimmagePlayers &&
-    (!genderRatioEnabled || firstPointRatio !== null);
+    receivingTeam !== '' && hasEnoughPlayers && (!genderRatioEnabled || firstPointRatio !== null);
   const selectedTeamOrbitColor = receivingTeam === 'them' ? t2Color : t1Color;
   const selectedRatioOrbitColor =
     firstPointRatio === 'more-men' ? palette.mmpColor : palette.fmpColor;
@@ -444,17 +443,28 @@ export default function AdvancedPreGameConfirm() {
           attentionRunKey={teamOrbitRunKey}
         />
 
-        {!hasEnoughScrimmagePlayers && (
+        {!hasEnoughPlayers && (
           <View style={[styles.lockInfo, { backgroundColor: palette.warningOverlay15 }]}>
             <MaterialCommunityIcons
               name="account-alert-outline"
               size={scaleBySizeClass(16, sizeClass)}
               color={palette.warning}
             />
-            <ThemedText style={[styles.lockText, { color: palette.warning }]}>
-              Scrimmage mode requires at least 14 active players. This roster has{' '}
-              {activePlayerCount}.
-            </ThemedText>
+            <View style={styles.rosterWarningContent}>
+              <ThemedText style={[styles.lockText, { color: palette.warning }]}>
+                Advanced tracking requires at least {minimumActivePlayerCount} active players. This
+                roster has {activePlayerCount}.
+              </ThemedText>
+              <Pressable
+                testID="advanced-tracker-edit-roster"
+                accessibilityRole="button"
+                onPress={() => router.push('/EditRoster')}
+                style={({ pressed }) => [pressed && styles.editRosterPressed]}>
+                <ThemedText style={[styles.editRosterText, { color: palette.warning }]}>
+                  Edit Roster
+                </ThemedText>
+              </Pressable>
+            </View>
           </View>
         )}
 
@@ -557,6 +567,18 @@ function createStyles(sizeClass: SizeClass) {
     lockText: {
       fontSize: scaleBySizeClass(13, sizeClass),
       fontFamily: Fonts.semiBold,
+    },
+    rosterWarningContent: {
+      flex: 1,
+      gap: 4,
+    },
+    editRosterText: {
+      fontSize: scaleBySizeClass(13, sizeClass),
+      fontFamily: Fonts.bold,
+      textDecorationLine: 'underline',
+    },
+    editRosterPressed: {
+      opacity: 0.7,
     },
     headerIconButton: {
       padding: 8,

@@ -7,6 +7,7 @@ import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 
 interface TeamActionsSheetProps {
   onDismiss: () => void;
+  onSelectAction: (action: () => void) => void;
   onRenameTeam: () => void;
   onNewTeam: () => void;
   onSwitchTeam: () => void;
@@ -26,6 +27,7 @@ interface TeamActionsSheetProps {
 
 export function TeamActionsSheet({
   onDismiss,
+  onSelectAction,
   onRenameTeam,
   onNewTeam,
   onSwitchTeam,
@@ -47,8 +49,7 @@ export function TeamActionsSheet({
   const styles = createStyles(sizeClass);
 
   const wrap = (fn: () => void) => () => {
-    onDismiss();
-    fn();
+    onSelectAction(fn);
   };
 
   return (

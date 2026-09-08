@@ -1,10 +1,9 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { router, useLocalSearchParams } from 'expo-router';
+import { router } from 'expo-router';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedView } from '@/components/ThemedView';
 import TutorialActionBar from '@/components/tutorial/TutorialActionBar';
-import { parseTutorialOrigin } from '@/components/tutorial/tutorialNavigation';
 import TutorialSettingsBar from '@/components/tutorial/TutorialSettingsBar';
 import {
   TUTORIAL_STAT_CURRENT_POINT,
@@ -27,8 +26,6 @@ import { formatRatio, getSequenceNumber } from '@/lib/genderRatioUtils';
 import { useTutorialStore } from '@/store/tutorialStore';
 
 export default function TutorialStatScoreboardRoute() {
-  const { origin: rawOrigin } = useLocalSearchParams<{ origin?: string }>();
-  const origin = parseTutorialOrigin(rawOrigin);
   const layout = useLayout();
   const styles = createStyles(layout.isLandscape, layout.sizeClass);
   const homeIconSize = scaleBySizeClass(30, layout.sizeClass);
@@ -40,7 +37,7 @@ export default function TutorialStatScoreboardRoute() {
     : scaleBySizeClass(isCompactVertical ? 14 : 20, layout.sizeClass);
 
   const gameState = useTutorialStatGameState(() => {
-    router.replace({ pathname: '/TutorialStatComplete', params: { origin } });
+    router.replace('/TutorialStatComplete');
   });
 
   const {

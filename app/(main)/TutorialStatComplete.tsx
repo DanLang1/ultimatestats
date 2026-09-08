@@ -1,31 +1,24 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { router, useLocalSearchParams } from 'expo-router';
+import { router } from 'expo-router';
 import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, { FadeInDown, FadeInRight } from 'react-native-reanimated';
 
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import { parseTutorialOrigin } from '@/components/tutorial/tutorialNavigation';
 import { useTheme } from '@/context/ThemeContext';
 import { getSizeClassValue, scaleBySizeClass, useLayout } from '@/hooks/useLayout';
 import { useTutorialStore } from '@/store/tutorialStore';
 import { Fonts } from '@/theme/theme';
 
 export default function TutorialStatCompleteRoute() {
-  const { origin: rawOrigin } = useLocalSearchParams<{ origin?: string }>();
-  const origin = parseTutorialOrigin(rawOrigin);
   const { palette } = useTheme();
   const { sizeClass, isLandscape } = useLayout();
   const useRowLayout = isLandscape && sizeClass !== 'large';
   const styles = createStyles(sizeClass, useRowLayout);
 
-  const handleStartGame = () => {
+  const handleReturnHome = () => {
     useTutorialStore.getState().closeStatsTutorial();
-    if (origin === 'help') {
-      router.replace('/Dashboard');
-      return;
-    }
-    router.replace('/PreGameConfirm');
+    router.replace('/Dashboard');
   };
 
   const iconSize = scaleBySizeClass(useRowLayout ? 24 : 28, sizeClass);
@@ -45,9 +38,6 @@ export default function TutorialStatCompleteRoute() {
             <ThemedText style={[styles.title, { color: palette.textInverse }]}>
               Stats Tutorial Complete!
             </ThemedText>
-            <ThemedText style={[styles.subtitle, { color: palette.textMuted }]}>
-              {`You're all set. Configure your game settings and get started.`}
-            </ThemedText>
           </Animated.View>
         </View>
 
@@ -56,7 +46,7 @@ export default function TutorialStatCompleteRoute() {
             <View style={styles.optionsSection}>
               <Animated.View entering={FadeInRight.delay(400).springify()}>
                 <Pressable
-                  onPress={handleStartGame}
+                  onPress={handleReturnHome}
                   style={({ pressed }) => [
                     styles.optionRow,
                     {
@@ -78,12 +68,10 @@ export default function TutorialStatCompleteRoute() {
                   </View>
                   <View style={styles.optionText}>
                     <ThemedText style={[styles.optionTitle, { color: palette.textInverse }]}>
-                      {origin === 'help' ? 'Return Home' : 'Start a Game'}
+                      Return Home
                     </ThemedText>
                     <ThemedText style={[styles.optionDescription, { color: palette.textMuted }]}>
-                      {origin === 'help'
-                        ? 'Head to the dashboard.'
-                        : 'Configure your game settings and start tracking stats.'}
+                      Head to the dashboard.
                     </ThemedText>
                   </View>
                 </Pressable>
@@ -159,11 +147,6 @@ function createStyles(sizeClass: 'small' | 'medium' | 'large', useRowLayout: boo
       fontFamily: Fonts.bold,
       letterSpacing: -0.5,
       textAlign: useRowLayout ? 'left' : 'center',
-    },
-    subtitle: {
-      fontSize: getSizeClassValue({ small: 15, medium: 17, large: 19 }, sizeClass),
-      textAlign: useRowLayout ? 'left' : 'center',
-      lineHeight: getSizeClassValue({ small: 22, medium: 26, large: 30 }, sizeClass),
     },
     optionsSection: {
       gap: getSizeClassValue(

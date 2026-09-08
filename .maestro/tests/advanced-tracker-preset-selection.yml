@@ -26,9 +26,7 @@ name: Advanced Tracker Oversized Preset Selection
 - tapOn:
     id: 'halftime-between-point-set-line'
 - tapOn:
-    id: 'line-select-load-line'
-- tapOn:
-    id: 'line-select-preset-maestro-full-squad'
+    id: 'line-select-quick-preset-maestro-full-squad'
 - assertVisible: '9/7'
 - assertVisible: 'Deselect 2 to continue'
 - assertVisible:

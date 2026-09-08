@@ -1,11 +1,10 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { router, useLocalSearchParams } from 'expo-router';
+import { router } from 'expo-router';
 import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, { FadeInDown, FadeInRight, FadeInUp } from 'react-native-reanimated';
 
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import { parseTutorialOrigin } from '@/components/tutorial/tutorialNavigation';
 import { useTheme } from '@/context/ThemeContext';
 import { getSizeClassValue, scaleBySizeClass, useLayout } from '@/hooks/useLayout';
 import { Fonts } from '@/theme/theme';
@@ -29,8 +28,6 @@ const FEATURES = [
 ] as const;
 
 export default function TutorialStatIntroRoute() {
-  const { origin: rawOrigin } = useLocalSearchParams<{ origin?: string }>();
-  const origin = parseTutorialOrigin(rawOrigin);
   const { palette } = useTheme();
   const { sizeClass, isLandscape } = useLayout();
   const useRowLayout = isLandscape && sizeClass !== 'large';
@@ -38,7 +35,7 @@ export default function TutorialStatIntroRoute() {
   const iconSize = scaleBySizeClass(28, sizeClass);
 
   const handleStart = () => {
-    router.replace({ pathname: '/TutorialStatScoreboard', params: { origin } });
+    router.replace('/TutorialStatScoreboard');
   };
 
   return (

@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { screen, userEvent } from '@testing-library/react-native';
+import { screen, userEvent, waitFor } from '@testing-library/react-native';
 import { router } from 'expo-router';
 
 import AdvancedGameSelectorModal from '@/app/(modals)/AdvancedGameSelectorModal';
@@ -378,5 +378,52 @@ describe('modal routes', () => {
 
     expect(screen.getByText('Switch Team')).toBeVisible();
     expect(screen.getByText('No other teams saved yet')).toBeVisible();
+  });
+
+  it('loads a selected team before dismissing the management modal', async () => {
+    const user = userEvent.setup();
+    const otherTeam = { id: 'team-zoboomafoo', name: 'Zoboomafoo', roster: [] };
+    useGameStore.setState({ currentTeam: testTeam, savedTeams: [testTeam, otherTeam] });
+
+    await renderScreen(<TeamManagementModal />);
+    await user.press(screen.getByText('Zoboomafoo'));
+
+    expect(useGameStore.getState().currentTeam.id).toBe(otherTeam.id);
+    expect(router.dismissTo).toHaveBeenCalledWith('/EditRoster');
+  });
+
+  it('cancels deletion inside the switcher without changing teams', async () => {
+    const user = userEvent.setup();
+    const otherTeam = { id: 'other-team', name: 'Other Team', roster: [] };
+    useGameStore.setState({ currentTeam: testTeam, savedTeams: [testTeam, otherTeam] });
+
+    await renderScreen(<TeamManagementModal />);
+    await user.press(screen.getByTestId('team-delete-other-team'));
+    expect(screen.queryByText('Switch Team')).toBeNull();
+    await user.press(screen.getByTestId('team-delete-cancel'));
+
+    expect(screen.getByText('Switch Team')).toBeVisible();
+    expect(useGameStore.getState().savedTeams).toContainEqual(otherTeam);
+    expect(useGameStore.getState().currentTeam.id).toBe(testTeam.id);
+    expect(router.dismissTo).not.toHaveBeenCalled();
+  });
+
+  it('opens team deletion confirmation without switching teams', async () => {
+    const user = userEvent.setup();
+    const otherTeam = { id: 'team-zoboomafoo', name: 'Zoboomafoo', roster: [] };
+    useGameStore.setState({ currentTeam: testTeam, savedTeams: [testTeam, otherTeam] });
+
+    await renderScreen(<TeamManagementModal />);
+    await user.press(screen.getByTestId('team-delete-team-zoboomafoo'));
+
+    expect(screen.getByText('Delete Team')).toBeVisible();
+    expect(useGameStore.getState().currentTeam.id).toBe(testTeam.id);
+    expect(router.dismissTo).not.toHaveBeenCalled();
+
+    await user.press(screen.getByText('Delete', { exact: true }));
+
+    await waitFor(() => {
+      expect(useGameStore.getState().savedTeams).not.toContainEqual(otherTeam);
+    });
   });
 });

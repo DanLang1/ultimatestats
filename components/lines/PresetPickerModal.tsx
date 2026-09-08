@@ -1,8 +1,8 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/ThemedText';
+import { BottomSheet } from '@/components/ui/BottomSheet';
 import { useTheme } from '@/context/ThemeContext';
 import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { RecentLine } from '@/lib/lineUtils';
@@ -46,7 +46,6 @@ export function PresetPickerModal({
   const { palette } = useTheme();
   const { sizeClass, isLandscape } = useLayout();
   const styles = createStyles(sizeClass, isLandscape);
-  const insets = useSafeAreaInsets();
   const editIconSize = scaleBySizeClass(14, sizeClass);
   const checkIconSize = scaleBySizeClass(16, sizeClass);
   const hasBothSections = recentLines.length > 0 && presets.length > 0;
@@ -55,185 +54,173 @@ export function PresetPickerModal({
     <Modal
       visible={visible}
       transparent
-      animationType="slide"
+      animationType="fade"
       supportedOrientations={['portrait', 'landscape']}
       onRequestClose={onClose}>
-      <SafeAreaView style={styles.modalSafeArea} edges={['top', 'left', 'right']}>
-        <Pressable
-          accessible={false}
-          style={[styles.modalOverlay, { backgroundColor: palette.overlayDark40 }]}
-          onPress={onClose}>
+      <BottomSheet
+        onDismiss={onClose}
+        sheetStyle={[styles.bottomSheet, { backgroundColor: palette.modalBg }]}
+        minBottomPadding={16}>
+        <View style={styles.sheetHandle}>
+          <View style={[styles.handleBar, { backgroundColor: palette.overlay15 }]} />
+        </View>
+        <View style={styles.sheetHeader}>
+          <ThemedText style={[styles.sheetTitle, { color: palette.modalText }]}>
+            Load Line
+          </ThemedText>
           <Pressable
-            accessible={false}
-            style={[
-              styles.bottomSheet,
-              { backgroundColor: palette.modalBg, paddingBottom: Math.max(insets.bottom, 16) },
-            ]}
-            onPress={(e) => e.stopPropagation()}>
-            <View style={styles.sheetHandle}>
-              <View style={[styles.handleBar, { backgroundColor: palette.overlay15 }]} />
-            </View>
-            <View style={styles.sheetHeader}>
-              <ThemedText style={[styles.sheetTitle, { color: palette.modalText }]}>
-                Load Line
-              </ThemedText>
-              <Pressable
-                onPress={onEditPresets}
-                style={({ pressed }) => [styles.editPresetsHeaderBtn, pressed && { opacity: 0.7 }]}>
-                <MaterialCommunityIcons
-                  name="pencil"
-                  size={editIconSize}
-                  color={palette.modalTextMuted}
-                />
-                <ThemedText
-                  style={[styles.editPresetsHeaderText, { color: palette.modalTextMuted }]}>
-                  Edit Presets
-                </ThemedText>
-              </Pressable>
-            </View>
+            onPress={onEditPresets}
+            style={({ pressed }) => [styles.editPresetsHeaderBtn, pressed && { opacity: 0.7 }]}>
+            <MaterialCommunityIcons
+              name="pencil"
+              size={editIconSize}
+              color={palette.modalTextMuted}
+            />
+            <ThemedText style={[styles.editPresetsHeaderText, { color: palette.modalTextMuted }]}>
+              Edit Presets
+            </ThemedText>
+          </Pressable>
+        </View>
 
-            <ScrollView
-              style={styles.presetList}
-              contentContainerStyle={styles.presetListContent}
-              showsVerticalScrollIndicator={false}>
-              {/* Presets Section */}
+        <ScrollView
+          style={styles.presetList}
+          contentContainerStyle={styles.presetListContent}
+          showsVerticalScrollIndicator={false}>
+          {/* Presets Section */}
+          {hasBothSections && (
+            <ThemedText style={[styles.sectionHeader, { color: palette.modalTextMuted }]}>
+              Presets
+            </ThemedText>
+          )}
+          {presets.length > 0 ? (
+            <View style={styles.presetRows}>
+              {presets.map((preset) => (
+                <Pressable
+                  key={preset.id}
+                  testID={`line-select-preset-${preset.id}`}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: selectedPresetId === preset.id }}
+                  onPress={() => onSelectPreset(preset)}
+                  style={({ pressed }) => [
+                    styles.presetListItem,
+                    {
+                      backgroundColor:
+                        selectedPresetId === preset.id ? palette.accent + '20' : 'transparent',
+                      borderColor: palette.overlay15,
+                    },
+                    pressed && { opacity: 0.8 },
+                  ]}>
+                  <View style={styles.presetDescription}>
+                    <View style={styles.presetHeading}>
+                      <ThemedText
+                        style={[
+                          styles.presetListItemText,
+                          {
+                            color:
+                              selectedPresetId === preset.id ? palette.accent : palette.modalText,
+                          },
+                        ]}
+                        numberOfLines={1}>
+                        {preset.name}
+                      </ThemedText>
+                      <ThemedText style={[styles.presetCount, { color: palette.modalTextMuted }]}>
+                        {preset.playerIds.length} players
+                      </ThemedText>
+                    </View>
+                    <ThemedText
+                      style={[styles.presetPlayerNames, { color: palette.modalTextMuted }]}
+                      numberOfLines={2}>
+                      {getFirstNames(preset.playerIds, roster)}
+                    </ThemedText>
+                  </View>
+                  {selectedPresetId === preset.id && (
+                    <MaterialCommunityIcons
+                      name="check"
+                      size={checkIconSize}
+                      color={palette.accent}
+                    />
+                  )}
+                </Pressable>
+              ))}
+            </View>
+          ) : (
+            recentLines.length === 0 && (
+              <ThemedText style={[styles.emptyText, { color: palette.modalTextMuted }]}>
+                No presets yet. Tap Edit Presets to add some.
+              </ThemedText>
+            )
+          )}
+
+          {/* Divider between sections */}
+          {hasBothSections && (
+            <View style={[styles.sectionDivider, { backgroundColor: palette.overlay15 }]} />
+          )}
+
+          {/* Recent Lines Section */}
+          {recentLines.length > 0 && (
+            <>
               {hasBothSections && (
                 <ThemedText style={[styles.sectionHeader, { color: palette.modalTextMuted }]}>
-                  Presets
+                  Recent
                 </ThemedText>
               )}
-              {presets.length > 0 ? (
-                <View style={styles.presetGrid}>
-                  {presets.map((preset) => (
-                    <Pressable
-                      key={preset.id}
-                      testID={`line-select-preset-${preset.id}`}
-                      accessibilityRole="button"
-                      accessibilityState={{ selected: selectedPresetId === preset.id }}
-                      onPress={() => onSelectPreset(preset)}
-                      style={({ pressed }) => [
-                        styles.presetListItem,
-                        {
-                          backgroundColor:
-                            selectedPresetId === preset.id ? palette.accent + '20' : 'transparent',
-                          borderColor: palette.overlay15,
-                        },
-                        pressed && { opacity: 0.8 },
-                      ]}>
-                      <View style={styles.presetDescription}>
-                        <ThemedText
-                          style={[
-                            styles.presetListItemText,
-                            {
-                              color:
-                                selectedPresetId === preset.id ? palette.accent : palette.modalText,
-                            },
-                          ]}
-                          numberOfLines={1}>
-                          {preset.name}
-                        </ThemedText>
-                        <ThemedText style={[styles.presetCount, { color: palette.modalTextMuted }]}>
-                          {preset.playerIds.length} players
-                        </ThemedText>
-                      </View>
-                      {selectedPresetId === preset.id && (
-                        <MaterialCommunityIcons
-                          name="check"
-                          size={checkIconSize}
-                          color={palette.accent}
-                        />
-                      )}
-                    </Pressable>
-                  ))}
-                </View>
-              ) : (
-                recentLines.length === 0 && (
-                  <ThemedText style={[styles.emptyText, { color: palette.modalTextMuted }]}>
-                    No presets yet. Tap Edit Presets to add some.
-                  </ThemedText>
-                )
-              )}
-
-              {/* Divider between sections */}
-              {hasBothSections && (
-                <View style={[styles.sectionDivider, { backgroundColor: palette.overlay15 }]} />
-              )}
-
-              {/* Recent Lines Section */}
-              {recentLines.length > 0 && (
-                <>
-                  {hasBothSections && (
-                    <ThemedText style={[styles.sectionHeader, { color: palette.modalTextMuted }]}>
-                      Recent
-                    </ThemedText>
-                  )}
-                  {recentLines.map((recent) => {
-                    const isSelected = selectedRecentPointNumber === recent.pointNumber;
-                    return (
-                      <Pressable
-                        key={`recent-${recent.pointNumber}`}
-                        testID={`line-select-recent-${recent.pointNumber}`}
-                        onPress={() => onSelectRecentLine(recent)}
-                        style={({ pressed }) => [
-                          styles.recentListItem,
-                          {
-                            backgroundColor: isSelected ? palette.accent + '20' : 'transparent',
-                            borderColor: palette.overlay15,
-                          },
-                          pressed && { opacity: 0.8 },
+              {recentLines.map((recent) => {
+                const isSelected = selectedRecentPointNumber === recent.pointNumber;
+                return (
+                  <Pressable
+                    key={`recent-${recent.pointNumber}`}
+                    testID={`line-select-recent-${recent.pointNumber}`}
+                    onPress={() => onSelectRecentLine(recent)}
+                    style={({ pressed }) => [
+                      styles.recentListItem,
+                      {
+                        backgroundColor: isSelected ? palette.accent + '20' : 'transparent',
+                        borderColor: palette.overlay15,
+                      },
+                      pressed && { opacity: 0.8 },
+                    ]}>
+                    <View style={styles.recentItemLeft}>
+                      <MaterialCommunityIcons
+                        name="history"
+                        size={scaleBySizeClass(14, sizeClass)}
+                        color={isSelected ? palette.accent : palette.modalTextMuted}
+                      />
+                      <ThemedText
+                        style={[
+                          styles.recentPointLabel,
+                          { color: isSelected ? palette.accent : palette.modalText },
                         ]}>
-                        <View style={styles.recentItemLeft}>
-                          <MaterialCommunityIcons
-                            name="history"
-                            size={scaleBySizeClass(14, sizeClass)}
-                            color={isSelected ? palette.accent : palette.modalTextMuted}
-                          />
-                          <ThemedText
-                            style={[
-                              styles.recentPointLabel,
-                              { color: isSelected ? palette.accent : palette.modalText },
-                            ]}>
-                            Pt {recent.pointNumber}
-                          </ThemedText>
-                          <ThemedText
-                            style={[styles.recentPlayerNames, { color: palette.modalTextMuted }]}
-                            numberOfLines={1}>
-                            {getFirstNames(recent.playerIds, roster)}
-                          </ThemedText>
-                        </View>
-                        {isSelected && (
-                          <MaterialCommunityIcons
-                            name="check"
-                            size={checkIconSize}
-                            color={palette.accent}
-                          />
-                        )}
-                      </Pressable>
-                    );
-                  })}
-                </>
-              )}
-            </ScrollView>
-          </Pressable>
-        </Pressable>
-      </SafeAreaView>
+                        Pt {recent.pointNumber}
+                      </ThemedText>
+                      <ThemedText
+                        style={[styles.recentPlayerNames, { color: palette.modalTextMuted }]}
+                        numberOfLines={1}>
+                        {getFirstNames(recent.playerIds, roster)}
+                      </ThemedText>
+                    </View>
+                    {isSelected && (
+                      <MaterialCommunityIcons
+                        name="check"
+                        size={checkIconSize}
+                        color={palette.accent}
+                      />
+                    )}
+                  </Pressable>
+                );
+              })}
+            </>
+          )}
+        </ScrollView>
+      </BottomSheet>
     </Modal>
   );
 }
 
 function createStyles(sizeClass: SizeClass, isLandscape: boolean) {
   return StyleSheet.create({
-    modalSafeArea: {
-      flex: 1,
-    },
-    modalOverlay: {
-      flex: 1,
-      justifyContent: 'flex-end',
-    },
     bottomSheet: {
       borderTopLeftRadius: 16,
       borderTopRightRadius: 16,
-      paddingHorizontal: 16,
       maxHeight: isLandscape ? '90%' : '75%',
       width: getSizeClassValue({ small: '100%', medium: '75%', large: '60%' }, sizeClass),
       alignSelf: 'center',
@@ -249,8 +236,11 @@ function createStyles(sizeClass: SizeClass, isLandscape: boolean) {
     },
     sheetHeader: {
       flexDirection: 'row',
+      flexWrap: 'wrap',
       alignItems: 'center',
       justifyContent: 'space-between',
+      paddingHorizontal: 16,
+      gap: 8,
       marginBottom: 12,
     },
     sheetTitle: {
@@ -258,6 +248,7 @@ function createStyles(sizeClass: SizeClass, isLandscape: boolean) {
       fontFamily: Fonts.bold,
     },
     editPresetsHeaderBtn: {
+      minHeight: 44,
       flexDirection: 'row',
       alignItems: 'center',
       gap: 4,
@@ -273,6 +264,7 @@ function createStyles(sizeClass: SizeClass, isLandscape: boolean) {
     },
     presetListContent: {
       gap: 6,
+      paddingHorizontal: 16,
       paddingBottom: 8,
     },
     sectionHeader: {
@@ -312,14 +304,12 @@ function createStyles(sizeClass: SizeClass, isLandscape: boolean) {
       fontSize: scaleBySizeClass(13, sizeClass),
       flex: 1,
     },
-    presetGrid: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
+    presetRows: {
       gap: 8,
     },
     presetListItem: {
-      width: '48.5%',
       flexDirection: 'row',
+      gap: 8,
       alignItems: 'center',
       justifyContent: 'space-between',
       paddingVertical: 12,
@@ -327,12 +317,14 @@ function createStyles(sizeClass: SizeClass, isLandscape: boolean) {
       borderRadius: 10,
       borderWidth: 1,
     },
-    presetDescription: { flex: 1, gap: 4 },
-    presetCount: { fontSize: scaleBySizeClass(12, sizeClass) },
+    presetDescription: { flex: 1, minWidth: 0, gap: 4 },
+    presetHeading: { flexDirection: 'row', alignItems: 'baseline', gap: 10 },
+    presetCount: { fontSize: scaleBySizeClass(12, sizeClass), flexShrink: 0 },
+    presetPlayerNames: { fontSize: scaleBySizeClass(13, sizeClass) },
     presetListItemText: {
+      flexShrink: 1,
       fontSize: scaleBySizeClass(15, sizeClass),
       fontFamily: Fonts.semiBold,
-      flex: 1,
     },
     emptyText: {
       fontSize: scaleBySizeClass(14, sizeClass),

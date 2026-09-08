@@ -49,8 +49,7 @@ describe('tutorial routes', () => {
     expect(screen.getByText('Load a Line')).toBeVisible();
     expect(screen.getByText('0/7')).toBeVisible();
 
-    await user.press(screen.getByTestId('line-select-load-line'));
-    await user.press(screen.getByText('D-Line'));
+    await user.press(await screen.findByTestId('line-select-quick-preset-tutorial-d-line'));
 
     expect(screen.getByText('Confirm the Line')).toBeVisible();
     await user.press(screen.getByTestId('line-select-confirm'));
@@ -109,20 +108,6 @@ describe('tutorial routes', () => {
     expect(router.replace).toHaveBeenCalledWith('/Dashboard');
   });
 
-  it('starts a new game from tutorial completion without confirming an existing game reset', async () => {
-    const user = userEvent.setup();
-    setMockSearchParams({ origin: 'onboarding' });
-    useGameStore.setState({ team1Score: 3, currentGameStatus: 'inProgress' });
-    await renderScreen(<TutorialCompleteRoute />);
-
-    await user.press(screen.getByText('Start New Game'));
-
-    expect(screen.queryByText('Start New Game?')).not.toBeOnTheScreen();
-    expect(useGameStore.getState().team1Score).toBe(0);
-    expect(useGameSessionStore.getState().activeGameType).toBe('basic');
-    expect(router.replace).toHaveBeenCalledWith('/PreGameConfirm');
-  });
-
   it('returns a help-launched basic guide without changing onboarding completion', async () => {
     const user = userEvent.setup();
     setMockSearchParams({ origin: 'help' });
@@ -157,13 +142,10 @@ describe('tutorial routes', () => {
 
     await user.press(screen.getByText('Start Tutorial'));
 
-    expect(router.replace).toHaveBeenCalledWith({
-      pathname: '/TutorialStatScoreboard',
-      params: { origin: 'onboarding' },
-    });
+    expect(router.replace).toHaveBeenCalledWith('/TutorialStatScoreboard');
   });
 
-  it('closes the completed stat tutorial and continues to game setup', async () => {
+  it('closes the completed stat tutorial and returns to the dashboard', async () => {
     const user = userEvent.setup();
     setMockSearchParams({ origin: 'onboarding' });
     useTutorialStore.setState({ shouldShowStatsTutorialOnNextGameStart: true });
@@ -171,11 +153,11 @@ describe('tutorial routes', () => {
 
     expect(screen.getByText('Stats Tutorial Complete!')).toBeVisible();
 
-    await user.press(screen.getByText('Start a Game'));
+    await user.press(screen.getByText('Return Home'));
 
     expect(useTutorialStore.getState().hasSeenStatsTutorial).toBe(true);
     expect(useTutorialStore.getState().shouldShowStatsTutorialOnNextGameStart).toBe(false);
-    expect(router.replace).toHaveBeenCalledWith('/PreGameConfirm');
+    expect(router.replace).toHaveBeenCalledWith('/Dashboard');
   });
 
   it('exits the advanced tutorial to its source without completing it', async () => {

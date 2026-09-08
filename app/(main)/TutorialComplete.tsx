@@ -7,7 +7,6 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { parseTutorialOrigin } from '@/components/tutorial/tutorialNavigation';
 import { useTheme } from '@/context/ThemeContext';
-import { useGameSessionActions } from '@/hooks/useGameSessionActions';
 import { getSizeClassValue, scaleBySizeClass, useLayout } from '@/hooks/useLayout';
 import { useTutorialStore } from '@/store/tutorialStore';
 import { Fonts } from '@/theme/theme';
@@ -19,15 +18,6 @@ export default function TutorialCompleteRoute() {
   const { sizeClass, isLandscape } = useLayout();
   const useRowLayout = isLandscape && sizeClass !== 'large';
   const styles = createStyles(sizeClass, useRowLayout);
-  const { startBasicGameSession } = useGameSessionActions();
-
-  const handleStartGame = () => {
-    if (origin === 'onboarding') {
-      useTutorialStore.getState().completeTutorial();
-    }
-    startBasicGameSession();
-    router.replace('/PreGameConfirm');
-  };
 
   const handleReturnHome = () => {
     if (origin === 'onboarding') {
@@ -53,51 +43,13 @@ export default function TutorialCompleteRoute() {
             <ThemedText style={[styles.title, { color: palette.textInverse }]}>
               Basics Complete!
             </ThemedText>
-            <ThemedText style={[styles.subtitle, { color: palette.textMuted }]}>
-              Start a new game right away, or learn more about the app.
-            </ThemedText>
           </Animated.View>
         </View>
 
         <View style={styles.rightColumnWrapper}>
           <View style={styles.rightColumn}>
             <View style={styles.optionsSection}>
-              {origin !== 'help' && (
-                <Animated.View entering={FadeInRight.delay(400).springify()}>
-                  <Pressable
-                    onPress={handleStartGame}
-                    style={({ pressed }) => [
-                      styles.optionRow,
-                      {
-                        borderColor: palette.overlay15,
-                        backgroundColor: pressed ? palette.overlay08 : palette.overlay05,
-                      },
-                      pressed && { transform: [{ scale: 0.98 }] },
-                    ]}>
-                    <View
-                      style={[
-                        styles.optionIconContainer,
-                        { backgroundColor: palette.accentOverlay15 },
-                      ]}>
-                      <MaterialCommunityIcons
-                        name="scoreboard-outline"
-                        size={iconSize * 1.1}
-                        color={palette.accent}
-                      />
-                    </View>
-                    <View style={styles.optionText}>
-                      <ThemedText style={[styles.optionTitle, { color: palette.textInverse }]}>
-                        Start New Game
-                      </ThemedText>
-                      <ThemedText style={[styles.optionDescription, { color: palette.textMuted }]}>
-                        Start fresh and choose your teams, tracking, and game settings.
-                      </ThemedText>
-                    </View>
-                  </Pressable>
-                </Animated.View>
-              )}
-
-              <Animated.View entering={FadeInRight.delay(550).springify()}>
+              <Animated.View entering={FadeInRight.delay(400).springify()}>
                 <Pressable
                   onPress={handleReturnHome}
                   style={({ pressed }) => [
@@ -121,7 +73,7 @@ export default function TutorialCompleteRoute() {
                       Return Home
                     </ThemedText>
                     <ThemedText style={[styles.optionDescription, { color: palette.textMuted }]}>
-                      Head to the dashboard without starting a new game.
+                      Head to the dashboard.
                     </ThemedText>
                   </View>
                 </Pressable>
@@ -197,11 +149,6 @@ function createStyles(sizeClass: 'small' | 'medium' | 'large', useRowLayout: boo
       fontFamily: Fonts.bold,
       letterSpacing: -0.5,
       textAlign: useRowLayout ? 'left' : 'center',
-    },
-    subtitle: {
-      fontSize: getSizeClassValue({ small: 15, medium: 17, large: 19 }, sizeClass),
-      textAlign: useRowLayout ? 'left' : 'center',
-      lineHeight: getSizeClassValue({ small: 22, medium: 26, large: 30 }, sizeClass),
     },
     optionsSection: {
       gap: getSizeClassValue(

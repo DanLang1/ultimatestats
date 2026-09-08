@@ -37,6 +37,29 @@ describe('TrackerLineScreen', () => {
     await AsyncStorage.clear();
   });
 
+  it('exposes every preset directly and keeps the full picker available', async () => {
+    const user = userEvent.setup();
+    const participant = makeParticipant('overflow-player', 'Overflow Player');
+    const presets = Array.from({ length: 8 }, (_, index) => ({
+      id: `overflow-${index}`,
+      name: `Line ${index + 1}`,
+      playerIds: [participant.id],
+      teamId: useGameStore.getState().currentTeam.id,
+    }));
+    useLinePresetsStore.setState({ presets });
+    await renderScreen(
+      <TrackerLineScreen participants={[participant]} title="Set line" onConfirm={() => {}} />,
+    );
+    expect(screen.getByTestId('line-select-quick-preset-overflow-5')).toBeVisible();
+    await user.press(screen.getByTestId('line-select-quick-preset-overflow-7'));
+    expect(screen.getByText('1/7')).toBeVisible();
+    await user.press(screen.getByTestId('line-select-load-line'));
+    expect(screen.getByTestId('line-select-preset-overflow-0')).toBeVisible();
+    await user.press(screen.getByTestId('line-select-preset-overflow-7'));
+    expect(screen.getByText('1/7')).toBeVisible();
+    expect(screen.queryByText('Load Line')).not.toBeOnTheScreen();
+  });
+
   it('shows the expanded roster on demand and labels an opposite-side player', async () => {
     const user = userEvent.setup();
     const lightPlayer = makeParticipant('light-player', 'Light Player');
@@ -157,11 +180,58 @@ describe('TrackerLineScreen', () => {
     );
 
     await user.press(screen.getByTestId('line-select-load-line'));
-    await user.press(screen.getByText('Crossover Preset'));
+    await user.press(screen.getByTestId('line-select-preset-crossover-preset'));
 
     expect(screen.queryByTestId('line-select-show-all-players')).not.toBeOnTheScreen();
     await user.press(screen.getByText(crossover.name));
     expect(screen.getByText(crossover.name)).toBeVisible();
+    expect(screen.getByTestId('line-select-quick-preset-crossover-preset')).toHaveProp(
+      'accessibilityState',
+      expect.objectContaining({ selected: true }),
+    );
+  });
+
+  it('keeps a preset selected while adding an other player', async () => {
+    const user = userEvent.setup();
+    const presetPlayers = Array.from({ length: 7 }, (_, index) =>
+      makeParticipant(`preset-line-${index + 1}`, `Preset Line ${index + 1}`),
+    );
+    const otherPlayer = makeParticipant('preset-other', 'Preset Other');
+    useLinePresetsStore.setState({
+      presets: [
+        {
+          id: 'preset-with-other-player',
+          name: 'Preset With Other Player',
+          playerIds: presetPlayers.map((participant) => participant.id),
+          teamId: useGameStore.getState().currentTeam.id,
+        },
+      ],
+    });
+
+    await renderScreen(
+      <TrackerLineScreen
+        participants={presetPlayers}
+        allParticipants={[...presetPlayers, otherPlayer]}
+        rosterParticipants={[...presetPlayers, otherPlayer]}
+        title="Set line"
+        onConfirm={() => {}}
+      />,
+    );
+
+    const presetButton = screen.getByTestId('line-select-quick-preset-preset-with-other-player');
+    await user.press(presetButton);
+    await user.press(screen.getByTestId('line-select-show-all-players'));
+    await user.press(screen.getByText(otherPlayer.name));
+
+    expect(presetButton).toHaveProp(
+      'accessibilityState',
+      expect.objectContaining({ selected: true }),
+    );
+    expect(screen.getByTestId('line-select-load-line')).toHaveProp(
+      'accessibilityLabel',
+      'Choose line, Preset With Other Player',
+    );
+    expect(screen.getByText(otherPlayer.name)).toBeVisible();
   });
 
   it('compares required changes against the selection from mount', async () => {
@@ -210,7 +280,7 @@ describe('TrackerLineScreen', () => {
     );
 
     await user.press(screen.getByTestId('line-select-load-line'));
-    await user.press(screen.getByText('Restricted Preset'));
+    await user.press(screen.getByTestId('line-select-preset-restricted-preset'));
 
     expect(screen.getByTestId(`player-chip-${participants[0].name}`)).toHaveProp(
       'accessibilityState',
@@ -226,7 +296,7 @@ describe('TrackerLineScreen', () => {
     );
     expect(screen.getByTestId('line-select-confirm')).toBeEnabled();
   });
-  it('loads all preset players, keeps deselected members visible, and confirms only seven', async () => {
+  it('clears the preset source when the menu clears the line', async () => {
     const user = userEvent.setup();
     const participants = Array.from({ length: 10 }, (_, index) =>
       makeParticipant(`p-${index}`, `Player ${index}`),
@@ -246,31 +316,34 @@ describe('TrackerLineScreen', () => {
     await renderScreen(
       <TrackerLineScreen participants={participants} title="Set line" onConfirm={onConfirm} />,
     );
-    await user.press(screen.getByTestId('line-select-load-line'));
-    await user.press(screen.getByText('Large preset'));
+    const quickPreset = screen.getByTestId('line-select-quick-preset-large');
+    await user.press(quickPreset);
+    expect(quickPreset).toHaveProp(
+      'accessibilityState',
+      expect.objectContaining({ selected: true }),
+    );
+    expect(screen.queryByText('Load Line')).not.toBeOnTheScreen();
     expect(screen.getByText('9/7')).toBeVisible();
     await user.press(screen.getByTestId('header-action-clear-line'));
     expect(screen.getByText('0/7')).toBeVisible();
     expect(screen.getByText('Player 8')).toBeVisible();
-    expect(screen.queryByText('Player 9')).not.toBeOnTheScreen();
-    await user.press(screen.getByTestId('header-action-reload-line'));
-    expect(screen.getByText('9/7')).toBeVisible();
-    expect(screen.getByText('Deselect 2 to continue')).toBeVisible();
-    expect(screen.getByTestId('line-select-confirm')).toBeDisabled();
-    expect(screen.queryByText('Player 9')).not.toBeOnTheScreen();
-    await user.press(screen.getByText('Player 8'));
-    expect(screen.getByText('Player 8')).toBeVisible();
-    await user.press(screen.getByText('Player 7'));
+    expect(screen.getByText('Player 9')).toBeVisible();
+    expect(screen.getByTestId('header-action-reload-line')).toBeDisabled();
+    await user.press(screen.getByText('Player 0'));
+    await user.press(screen.getByText('Player 1'));
+    await user.press(screen.getByText('Player 2'));
+    await user.press(screen.getByText('Player 3'));
+    await user.press(screen.getByText('Player 4'));
+    await user.press(screen.getByText('Player 5'));
+    await user.press(screen.getByText('Player 6'));
+    expect(quickPreset).toHaveProp(
+      'accessibilityState',
+      expect.objectContaining({ selected: false }),
+    );
     expect(screen.getByTestId('line-select-confirm')).toBeEnabled();
     await user.press(screen.getByTestId('line-select-confirm'));
     expect(onConfirm).toHaveBeenCalledWith(playerIds.slice(0, 7));
     expect(useLinePresetsStore.getState().presets[0].playerIds).toEqual(playerIds);
-    await user.press(screen.getByTestId('line-select-show-all-players'));
-    await user.press(screen.getByText('Player 9'));
-    await user.press(screen.getByTestId('line-select-show-all-players'));
-    expect(screen.getByText('Other players · 1 · 1 selected')).toBeVisible();
-    expect(screen.getByText('8/7')).toBeVisible();
-    expect(screen.getByTestId('line-select-confirm')).toBeDisabled();
   });
 
   it('restores an oversized draft without dropping players', async () => {
@@ -318,7 +391,7 @@ describe('TrackerLineScreen', () => {
       />,
     );
     await user.press(screen.getByTestId('line-select-load-line'));
-    await user.press(screen.getByText('Short preset'));
+    await user.press(screen.getByTestId('line-select-preset-short'));
     expect(screen.getByText('1/7')).toBeVisible();
     expect(screen.getByText('Unavailable for this line: Absent player')).toBeVisible();
   });
@@ -348,7 +421,7 @@ describe('TrackerLineScreen', () => {
     );
 
     await user.press(screen.getByTestId('line-select-load-line'));
-    await user.press(screen.getByText('Mixed Role Preset'));
+    await user.press(screen.getByTestId('line-select-preset-mixed-role-preset'));
     expect(screen.getByText('Handler')).toBeVisible();
     expect(screen.getByText('Cutter')).toBeVisible();
     expect(screen.getByText('Hybrid')).toBeVisible();

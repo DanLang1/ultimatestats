@@ -21,6 +21,17 @@ import { resetAllStores } from '@/test/fixtures/resetStores';
 import { resetMockRouter, setMockSearchParams } from '@/test/mocks/expoRouter';
 import { renderScreen } from '@/test/render';
 
+const advancedTestTeam = {
+  ...testTeam,
+  roster: Array.from({ length: 7 }, (_, index) => ({
+    ...testTeam.roster[index % testTeam.roster.length],
+    id: `advanced-player-${index + 1}`,
+    name: `Advanced Player ${index + 1}`,
+    number: String(index + 1),
+    matchingType: index < 4 ? ('fmp' as const) : ('mmp' as const),
+  })),
+};
+
 function arrangeDualTrackedPoint() {
   const participants = Array.from({ length: 16 }, (_, index) => ({
     id: `scrim-player-${index + 1}`,
@@ -481,9 +492,23 @@ describe('advanced tracking routes', () => {
     expect(screen.getByLabelText('Edit point note')).toBeVisible();
   });
 
-  it('creates an advanced game through the real pre-game route', async () => {
+  it('offers roster editing when advanced tracking has too few active players', async () => {
     const user = userEvent.setup();
     useGameStore.setState({ currentTeam: testTeam, team2Name: 'Rivals' });
+    await renderScreen(<AdvancedPreGameConfirm />);
+
+    expect(
+      screen.getByText('Advanced tracking requires at least 7 active players. This roster has 2.'),
+    ).toBeVisible();
+
+    await user.press(screen.getByTestId('advanced-tracker-edit-roster'));
+
+    expect(router.push).toHaveBeenCalledWith('/EditRoster');
+  });
+
+  it('creates an advanced game through the real pre-game route', async () => {
+    const user = userEvent.setup();
+    useGameStore.setState({ currentTeam: advancedTestTeam, team2Name: 'Rivals' });
     await renderScreen(<AdvancedPreGameConfirm />);
 
     expect(screen.getByText('ADVANCED TRACKER')).toBeVisible();
@@ -498,7 +523,7 @@ describe('advanced tracking routes', () => {
 
   it('records an optional flip result and choice through the pre-game route', async () => {
     const user = userEvent.setup();
-    useGameStore.setState({ currentTeam: testTeam, team2Name: 'Rivals' });
+    useGameStore.setState({ currentTeam: advancedTestTeam, team2Name: 'Rivals' });
     await renderScreen(<AdvancedPreGameConfirm />);
 
     await user.press(screen.getByText('Windchill'));
@@ -525,7 +550,7 @@ describe('advanced tracking routes', () => {
 
   it('keeps the opening receiver consistent with an offense flip choice', async () => {
     const user = userEvent.setup();
-    useGameStore.setState({ currentTeam: testTeam, team2Name: 'Rivals' });
+    useGameStore.setState({ currentTeam: advancedTestTeam, team2Name: 'Rivals' });
     await renderScreen(<AdvancedPreGameConfirm />);
 
     await user.press(screen.getByText('Won'));
@@ -539,7 +564,7 @@ describe('advanced tracking routes', () => {
 
   it('preserves a flip win but clears a choice contradicted by the opening receiver', async () => {
     const user = userEvent.setup();
-    useGameStore.setState({ currentTeam: testTeam, team2Name: 'Rivals' });
+    useGameStore.setState({ currentTeam: advancedTestTeam, team2Name: 'Rivals' });
     await renderScreen(<AdvancedPreGameConfirm />);
 
     await user.press(screen.getByText('Won'));
