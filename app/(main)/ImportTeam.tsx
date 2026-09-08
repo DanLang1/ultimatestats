@@ -138,7 +138,7 @@ export default function ImportTeamScreen() {
           ],
         });
       } else {
-        loadTeam(importedTeam.id);
+        await loadTeam(importedTeam.id);
         router.replace({
           pathname: '/EditRoster',
           params: { teamName: importedTeam.name },

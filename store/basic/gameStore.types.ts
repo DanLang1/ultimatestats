@@ -231,7 +231,7 @@ export interface GameState {
   deleteSavedGames: (ids: string[]) => Promise<void>;
   saveCurrentTeam: (teamOverride?: SavedTeam) => Promise<void>;
   deleteTeam: (id: string) => Promise<void>;
-  loadTeam: (teamId: string) => void;
+  loadTeam: (teamId: string) => Promise<void>;
   importGame: (game: SavedGame) => Promise<void>;
   importTeam: (team: SavedTeam) => Promise<void>;
 }

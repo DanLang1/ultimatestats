@@ -197,12 +197,6 @@ export function SegmentedControl<T extends string = string>({
                       onPress={option.onAction}
                       style={({ pressed }) => [
                         styles.actionButton,
-                        {
-                          borderLeftColor: isActive
-                            ? (option.activeTextColor ?? palette.textOnAccent)
-                            : palette.overlay20,
-                          backgroundColor: isActive ? palette.overlay10 : palette.overlay05,
-                        },
                         pressed && styles.actionButtonPressed,
                       ]}>
                       <MaterialCommunityIcons
@@ -357,7 +351,6 @@ function createStyles(sizeClass: SizeClass) {
       justifyContent: 'center',
       alignSelf: 'stretch',
       paddingHorizontal: scaleBySizeClass(10, sizeClass),
-      borderLeftWidth: 1,
     },
     actionButtonPressed: {
       opacity: 0.65,

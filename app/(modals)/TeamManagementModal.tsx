@@ -1,5 +1,5 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
@@ -10,9 +10,17 @@ import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { SavedTeam } from '@/lib/storage';
 import { useGameStore } from '@/store/basic/gameStore';
+import { useLinePresetsStore } from '@/store/linePresetsStore';
 import { Fonts } from '@/theme/theme';
 
 export default function TeamManagementModal() {
+  const { pregame, gameType } = useLocalSearchParams<{
+    pregame?: 'basic' | 'advanced';
+    gameType?: 'scrimmage';
+  }>();
+  const isPregame = pregame === 'basic' || pregame === 'advanced';
+  const [isSwitching, setIsSwitching] = useState(false);
+  const [switchError, setSwitchError] = useState<string | null>(null);
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
   const styles = createStyles(sizeClass);
@@ -25,15 +33,31 @@ export default function TeamManagementModal() {
   const otherTeams = savedTeams.filter((t) => t.id !== currentTeam.id);
 
   const handleDismiss = () => {
-    router.dismissTo('/EditRoster');
+    if (isSwitching) return;
+    if (pregame === 'basic') router.dismissTo('/PreGameConfirm');
+    else if (pregame === 'advanced' && gameType === 'scrimmage') {
+      router.dismissTo({ pathname: '/advancedTracking/PreGameConfirm', params: { gameType } });
+    } else if (pregame === 'advanced') router.dismissTo('/advancedTracking/PreGameConfirm');
+    else router.dismissTo('/EditRoster');
   };
 
   const handleLoadTeam = async (teamId: string) => {
-    if (hasRoster) {
-      await saveCurrentTeam();
+    if (isSwitching) return;
+    setIsSwitching(true);
+    setSwitchError(null);
+    try {
+      if (hasRoster) await saveCurrentTeam();
+      if (isPregame) {
+        useGameStore.getState().setCurrentLine([]);
+        useLinePresetsStore.getState().setLineConfirmedForNextPoint(false);
+      }
+      await loadTeam(teamId);
+      handleDismiss();
+    } catch {
+      setSwitchError('Could not switch teams. Please try again.');
+    } finally {
+      setIsSwitching(false);
     }
-    loadTeam(teamId);
-    handleDismiss();
   };
 
   const handleCancelDelete = () => {
@@ -112,10 +136,18 @@ export default function TeamManagementModal() {
 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         <View style={styles.options}>
+          {switchError && (
+            <ThemedText accessibilityRole="alert" style={{ color: palette.danger }}>
+              {switchError}
+            </ThemedText>
+          )}
           {otherTeams.map((team) => (
             <View key={team.id} style={[styles.option, { backgroundColor: palette.overlay05 }]}>
               <Pressable
                 style={({ pressed }) => [styles.optionMain, pressed && styles.optionPressed]}
+                testID={`team-select-${team.id}`}
+                accessibilityRole="button"
+                disabled={isSwitching}
                 onPress={() => handleLoadTeam(team.id)}>
                 <MaterialCommunityIcons
                   name="account-group-outline"
@@ -126,19 +158,21 @@ export default function TeamManagementModal() {
                   {team.name}
                 </ThemedText>
               </Pressable>
-              <Pressable
-                testID={`team-delete-${team.id}`}
-                accessibilityRole="button"
-                accessibilityLabel={`Delete ${team.name}`}
-                style={styles.deleteButton}
-                onPress={() => setTeamToDelete(team)}
-                hitSlop={8}>
-                <MaterialCommunityIcons
-                  name="trash-can-outline"
-                  size={scaleBySizeClass(18, sizeClass)}
-                  color={palette.danger}
-                />
-              </Pressable>
+              {!isPregame && (
+                <Pressable
+                  testID={`team-delete-${team.id}`}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Delete ${team.name}`}
+                  style={styles.deleteButton}
+                  onPress={() => setTeamToDelete(team)}
+                  hitSlop={8}>
+                  <MaterialCommunityIcons
+                    name="trash-can-outline"
+                    size={scaleBySizeClass(18, sizeClass)}
+                    color={palette.danger}
+                  />
+                </Pressable>
+              )}
             </View>
           ))}
 

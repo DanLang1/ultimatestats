@@ -30,6 +30,18 @@ current holder/side, timestamps, undo, caps, and canonical pickup/throw actions 
 Possession metadata such as Red Zone enters through a dedicated store mutation that resolves the
 same canonical possession boundary without creating a parallel counter.
 
+## Pregame Team Controls
+
+Basic and advanced pregame expose an inline opponent-name pencil in the team/receiving control.
+Continuing commits the trimmed input even while focused; empty edits restore the previous opponent.
+Basic keeps the team controls visible when stat tracking is off, without requiring a receiving side.
+A small swap action beside our side appears only when another saved team is available.
+Team naming and USAU import live in the Team tab; Settings contains app and display preferences.
+
+Advanced creates sides and participants from the selected roster when Set Line is pressed.
+Scrimmage keeps Light/Dark labels fixed and offers only the roster swap action.
+Returning from line selection and continuing creates a fresh game from the current setup.
+
 ## In-game Help
 
 The tracker's top bar keeps a labeled Help button visible. `TrackerHelpSheet` provides a

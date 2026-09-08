@@ -513,7 +513,7 @@ describe('advanced tracking routes', () => {
 
     expect(screen.getByText('ADVANCED TRACKER')).toBeVisible();
 
-    await user.press(screen.getByText('Windchill'));
+    await user.press(screen.getByTestId('advanced-tracker-receiving-focus'));
     await user.press(screen.getByText('Set Line'));
 
     expect(useAdvancedTrackingStore.getState().currentGame?.sides[0].label).toBe('Windchill');
@@ -521,12 +521,25 @@ describe('advanced tracking routes', () => {
     expect(router.push).toHaveBeenCalledWith('/advancedTracking/TrackerLineSelect');
   });
 
+  it('uses the focused opponent draft when creating a game', async () => {
+    const user = userEvent.setup();
+    useGameStore.setState({ currentTeam: advancedTestTeam, team2Name: '' });
+    await renderScreen(<AdvancedPreGameConfirm />);
+    await user.press(screen.getByTestId('advanced-tracker-receiving-focus'));
+    await user.press(screen.getByTestId('advanced-tracker-opponent-name-edit'));
+    await user.type(screen.getByTestId('advanced-tracker-opponent-name-input'), '  New Rivals  ', {
+      skipBlur: true,
+    });
+    await user.press(screen.getByText('Set Line'));
+    expect(useAdvancedTrackingStore.getState().currentGame?.sides[1].label).toBe('New Rivals');
+  });
+
   it('records an optional flip result and choice through the pre-game route', async () => {
     const user = userEvent.setup();
     useGameStore.setState({ currentTeam: advancedTestTeam, team2Name: 'Rivals' });
     await renderScreen(<AdvancedPreGameConfirm />);
 
-    await user.press(screen.getByText('Windchill'));
+    await user.press(screen.getByTestId('advanced-tracker-receiving-focus'));
     await user.press(screen.getByText('Won'));
     await user.press(screen.getByText('Side'));
     await user.press(screen.getByText('Set Line'));
@@ -544,6 +557,9 @@ describe('advanced tracking routes', () => {
     await renderScreen(<AdvancedPreGameConfirm />);
 
     expect(screen.getByText('SCRIMMAGE')).toBeVisible();
+    expect(screen.queryByTestId('advanced-tracker-opponent-name-edit')).not.toBeOnTheScreen();
+    expect(screen.getByText('Light')).toBeVisible();
+    expect(screen.getByText('Dark')).toBeVisible();
     expect(screen.queryByText('FLIP RESULT')).not.toBeOnTheScreen();
     expect(screen.getByText('WHO IS RECEIVING?')).toBeVisible();
   });

@@ -14,6 +14,7 @@ import PointSummaryModal from '@/app/(modals)/PointSummaryModal';
 import TeamManagementModal from '@/app/(modals)/TeamManagementModal';
 import TimeoutModal from '@/app/(modals)/TimeoutModal';
 import { useGameStore } from '@/store/basic/gameStore';
+import { useLinePresetsStore } from '@/store/linePresetsStore';
 import { useNumberPickerStore } from '@/store/numberPickerStore';
 import { usePlayerStatsStore } from '@/store/playerStatsStore';
 import {
@@ -390,6 +391,44 @@ describe('modal routes', () => {
 
     expect(useGameStore.getState().currentTeam.id).toBe(otherTeam.id);
     expect(router.dismissTo).toHaveBeenCalledWith('/EditRoster');
+  });
+
+  it.each(['basic', 'advanced'] as const)(
+    'switches the %s pregame roster and clears the old line',
+    async (mode) => {
+      const user = userEvent.setup();
+      const otherTeam = { ...testTeam, id: 'other-team', name: 'Other Team' };
+      setMockSearchParams({ pregame: mode });
+      useGameStore.setState({
+        currentTeam: testTeam,
+        savedTeams: [otherTeam],
+        currentLine: ['old-player'],
+      });
+      useLinePresetsStore.setState({ lineConfirmedForNextPoint: true });
+      await renderScreen(<TeamManagementModal />);
+      expect(screen.queryByTestId('team-delete-other-team')).not.toBeOnTheScreen();
+      await user.press(screen.getByTestId('team-select-other-team'));
+      expect(useGameStore.getState().currentTeam).toEqual(otherTeam);
+      expect(useGameStore.getState().savedTeams).toContainEqual(testTeam);
+      expect(useGameStore.getState().currentLine).toEqual([]);
+      expect(useLinePresetsStore.getState().lineConfirmedForNextPoint).toBe(false);
+      expect(router.dismissTo).toHaveBeenCalledWith(
+        mode === 'basic' ? '/PreGameConfirm' : '/advancedTracking/PreGameConfirm',
+      );
+    },
+  );
+
+  it('preserves scrimmage setup when dismissing the pregame team picker', async () => {
+    const user = userEvent.setup();
+    setMockSearchParams({ pregame: 'advanced', gameType: 'scrimmage' });
+    const otherTeam = { ...testTeam, id: 'other-team', name: 'Other Team' };
+    useGameStore.setState({ currentTeam: testTeam, savedTeams: [otherTeam] });
+    await renderScreen(<TeamManagementModal />);
+    await user.press(screen.getByTestId('team-select-other-team'));
+    expect(router.dismissTo).toHaveBeenCalledWith({
+      pathname: '/advancedTracking/PreGameConfirm',
+      params: { gameType: 'scrimmage' },
+    });
   });
 
   it('cancels deletion inside the switcher without changing teams', async () => {

@@ -14,6 +14,7 @@ import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import { useTheme } from '@/context/ThemeContext';
 import { useGameSessionActions } from '@/hooks/useGameSessionActions';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { useOpponentNameDraft } from '@/hooks/useOpponentNameDraft';
 import {
   FlipChoice,
   FlipResult,
@@ -49,8 +50,8 @@ export default function AdvancedPreGameConfirm() {
 
   const {
     currentTeam,
+    savedTeams,
     team2Name,
-    setTeam2Name,
     gameTo,
     setGameTo,
     setTimerTimeLeft,
@@ -97,8 +98,15 @@ export default function AdvancedPreGameConfirm() {
   const [receivingTeam, setReceivingTeam] = useState<'us' | 'them' | ''>('');
   const [flipResult, setFlipResult] = useState<FlipResult | null>(null);
   const [flipChoice, setFlipChoice] = useState<FlipChoice | null>(null);
-  const [opponentNameDraft, setOpponentNameDraft] = useState(team2Name);
-  const [isEditingOpponentName, setIsEditingOpponentName] = useState(false);
+  const {
+    opponentNameDraft,
+    setOpponentNameDraft,
+    commitOpponentName,
+    isEditingOpponentName,
+    startEditingOpponentName,
+  } = useOpponentNameDraft();
+  const canSwitchTeam =
+    savedTeams.length > 1 && savedTeams.some((team) => team.id !== currentTeam.id);
   const [teamOrbitRunKey, setTeamOrbitRunKey] = useState(0);
   const [ratioOrbitRunKey, setRatioOrbitRunKey] = useState(0);
 
@@ -112,6 +120,7 @@ export default function AdvancedPreGameConfirm() {
     firstPointRatio === 'more-men' ? palette.mmpColor : palette.fmpColor;
 
   const handleSetLine = () => {
+    const opponentName = isScrimmage ? team2Name : commitOpponentName();
     const sides: GameSide[] = [
       {
         id: FOCUS_SIDE_ID,
@@ -121,7 +130,7 @@ export default function AdvancedPreGameConfirm() {
       },
       {
         id: OPP_SIDE_ID,
-        label: isScrimmage ? 'Dark' : team2Name,
+        label: isScrimmage ? 'Dark' : opponentName,
         sourceTeamId: isScrimmage ? currentTeam.id : undefined,
         trackingMode: isScrimmage ? 'full-roster' : 'anonymous',
       },
@@ -174,16 +183,6 @@ export default function AdvancedPreGameConfirm() {
   }) => {
     openPicker(config);
     router.push('/NumberPickerModal');
-  };
-
-  const handleOpponentNameCommit = () => {
-    const newName = opponentNameDraft.trim();
-    if (newName) {
-      setTeam2Name(newName);
-    } else {
-      setOpponentNameDraft(team2Name);
-    }
-    setIsEditingOpponentName(false);
   };
 
   const handleHardCapToggle = () => {
@@ -407,6 +406,18 @@ export default function AdvancedPreGameConfirm() {
               value: 'us',
               label: isScrimmage ? 'Light' : currentTeam.name,
               testID: 'advanced-tracker-receiving-focus',
+              actionIcon: canSwitchTeam ? 'swap-horizontal' : undefined,
+              actionTestID: 'pregame-change-team',
+              onAction: canSwitchTeam
+                ? () =>
+                    router.push({
+                      pathname: '/TeamManagementModal',
+                      params: {
+                        pregame: 'advanced',
+                        ...(isScrimmage ? { gameType: 'scrimmage' } : {}),
+                      },
+                    })
+                : undefined,
               activeColor: t1Color,
               activeTextColor: t1TextColor,
             },
@@ -414,22 +425,17 @@ export default function AdvancedPreGameConfirm() {
               value: 'them',
               label: isScrimmage ? 'Dark' : team2Name || 'Them',
               testID: 'advanced-tracker-receiving-opponent',
+              actionIcon: !isScrimmage ? 'pencil-outline' : undefined,
+              actionTestID: 'advanced-tracker-opponent-name-edit',
+              onAction: !isScrimmage ? startEditingOpponentName : undefined,
+              isEditing: !isScrimmage && isEditingOpponentName,
+              editValue: opponentNameDraft,
+              editTestID: 'advanced-tracker-opponent-name-input',
+              onEditValueChange: setOpponentNameDraft,
+              onEditComplete: commitOpponentName,
+              maxEditLength: MAX_TEAM_NAME_LENGTH,
               activeColor: t2Color,
               activeTextColor: t2TextColor,
-              actionIcon: !isScrimmage ? 'pencil-outline' : undefined,
-              actionTestID: !isScrimmage ? 'advanced-tracker-opponent-name-edit' : undefined,
-              onAction: !isScrimmage
-                ? () => {
-                    setOpponentNameDraft(team2Name || 'Them');
-                    setIsEditingOpponentName(true);
-                  }
-                : undefined,
-              isEditing: !isScrimmage && isEditingOpponentName,
-              editValue: !isScrimmage ? opponentNameDraft : undefined,
-              editTestID: !isScrimmage ? 'advanced-tracker-opponent-name-input' : undefined,
-              onEditValueChange: !isScrimmage ? setOpponentNameDraft : undefined,
-              onEditComplete: !isScrimmage ? handleOpponentNameCommit : undefined,
-              maxEditLength: !isScrimmage ? MAX_TEAM_NAME_LENGTH : undefined,
             },
           ]}
           value={receivingTeam}

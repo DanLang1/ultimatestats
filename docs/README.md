@@ -112,6 +112,7 @@ respective event models.
 | Advanced     | [Feature map](features/advanced-tracking/README.md) / [Data model](features/advanced-tracking/data-model.md) / [Analytics](features/advanced-tracking/analytics-layer.md) |
 | Sharing      | [features/sharing.md](features/sharing.md)                                                                                                                                |
 | Voice Input  | [features/advanced-tracking/voice-input.md](features/advanced-tracking/voice-input.md)                                                                                    |
+| Voice Names  | [Voice name personalization exploration](future-features/voice-name-personalization.md)                                                                                  |
 | Throw Class  | [Advanced throw classification roadmap](future-features/advanced-throw-classification.md)                                                                                 |
 | Tech Debt    | [tech-debt.md](tech-debt.md)                                                                                                                                              |
 

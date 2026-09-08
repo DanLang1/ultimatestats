@@ -11,6 +11,7 @@ import SettingsScreen from '@/app/(main)/Settings';
 import { useGameStore } from '@/store/basic/gameStore';
 import { useGameSessionStore } from '@/store/gameSessionStore';
 import { useLinePresetsStore } from '@/store/linePresetsStore';
+import { useSettingsStore } from '@/store/settingsStore';
 import { arrangeBasicGame, testTeam } from '@/test/fixtures/domain';
 import { resetAllStores } from '@/test/fixtures/resetStores';
 import { resetMockRouter } from '@/test/mocks/expoRouter';
@@ -73,17 +74,43 @@ describe('basic game routes', () => {
     expect(router.replace).toHaveBeenCalledWith('/Dashboard');
   });
 
-  it('renders Settings from real stores and routes to team import', async () => {
-    const user = userEvent.setup();
-    useGameStore.setState({ currentTeam: testTeam, team2Name: 'Rivals' });
+  it('keeps app preferences in Settings and team management out', async () => {
     await renderScreen(<SettingsScreen />);
-
     expect(screen.getByText('SETTINGS')).toBeVisible();
-    expect(screen.getByDisplayValue('Windchill')).toBeVisible();
+    expect(screen.getByText('STAT PREFERENCES')).toBeVisible();
+    expect(screen.queryByText('Import from USA Ultimate')).not.toBeOnTheScreen();
+    expect(screen.queryByText('My Team')).not.toBeOnTheScreen();
+  });
 
-    await user.press(screen.getByText('Import from USA Ultimate'));
+  it('allows a starting ratio with stat tracking off', async () => {
+    const user = userEvent.setup();
+    arrangeBasicGame({ status: 'fresh' });
+    useGameStore.setState({ statTrackingEnabled: false });
+    useSettingsStore.setState({ genderRatioEnabled: true, firstPointRatio: null });
+    await renderScreen(<PreGameConfirm />);
 
-    expect(router.push).toHaveBeenCalledWith('/ImportTeam');
+    expect(screen.getByText('Start Game')).toBeDisabled();
+    await user.press(screen.getByText('FMP Majority'));
+    expect(screen.getByText('Start Game')).toBeEnabled();
+    await user.press(screen.getByText('Start Game'));
+
+    expect(useSettingsStore.getState().firstPointRatio).toBe('more-women');
+    expect(router.dismissTo).toHaveBeenCalledWith('/Scoreboard');
+  });
+
+  it('commits the opponent when starting a scoreboard-only game with the input focused', async () => {
+    const user = userEvent.setup();
+    arrangeBasicGame({ status: 'fresh' });
+    useGameStore.setState({ statTrackingEnabled: false, team2Name: '' });
+    await renderScreen(<PreGameConfirm />);
+    expect(screen.queryByText('WHO IS RECEIVING?')).not.toBeOnTheScreen();
+    await user.press(screen.getByTestId('basic-opponent-name-edit'));
+    await user.type(screen.getByTestId('basic-opponent-name-input'), '  New Rivals  ', {
+      skipBlur: true,
+    });
+    await user.press(screen.getByText('Start Game'));
+    expect(useGameStore.getState().team2Name).toBe('New Rivals');
+    expect(router.dismissTo).toHaveBeenCalledWith('/Scoreboard');
   });
 
   it('handles the empty-line route without replacing its real store hooks', async () => {

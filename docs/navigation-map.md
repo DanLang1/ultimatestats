@@ -173,6 +173,8 @@ Examples:
 
 - `/EditPlayerModal` -> `router.dismissTo('/EditRoster')`
 - `/GameSelectorModal` -> `router.dismissTo('/PlayerStats')`
-- `/TeamManagementModal` -> `router.dismissTo('/EditRoster')`
+- `/TeamManagementModal` -> `router.dismissTo('/EditRoster')` by default. With `pregame=basic` or
+  `pregame=advanced`, returns to that mode's pregame route and hides team deletion. Selecting a
+  team awaits persistence and clears the basic line and its confirmation.
 
 Keep this contract in sync with modal callsites and `docs/ui-patterns.md`.

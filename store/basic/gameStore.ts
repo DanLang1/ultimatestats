@@ -1328,10 +1328,10 @@ export const useGameStore = create<GameState>()(
           });
         },
 
-        loadTeam: (teamId: string) => {
+        loadTeam: async (teamId: string) => {
           const team = get().savedTeams.find((t) => t.id === teamId);
           if (!team) return;
-          set((state: GameState) => {
+          await set((state: GameState) => {
             // Deep copy to avoid mutating savedTeams
             state.currentTeam = {
               id: team.id,

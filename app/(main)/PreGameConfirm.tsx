@@ -1,7 +1,8 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router, Stack } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 
 import { EditableSettingCard } from '@/components/pre-game-confirm/EditableSettingCard';
 import { TimeoutSettingCard } from '@/components/pre-game-confirm/TimeoutSettingCard';
@@ -12,8 +13,10 @@ import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import { useTheme } from '@/context/ThemeContext';
 import { useStatsTutorialPending } from '@/hooks/basic/useStatsTutorialPending';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { useOpponentNameDraft } from '@/hooks/useOpponentNameDraft';
 import { shouldShowLinePrompt } from '@/lib/basic/linePromptUtils';
 import { getContrastingTextColor } from '@/lib/colorUtils';
+import { MAX_TEAM_NAME_LENGTH } from '@/lib/constants';
 import { formatRatioFull, GenderRatio } from '@/lib/genderRatioUtils';
 import { useGameStore } from '@/store/basic/gameStore';
 import { useNumberPickerStore } from '@/store/numberPickerStore';
@@ -30,6 +33,7 @@ export default function PreGameConfirm() {
     possession,
     statTrackingEnabled,
     currentTeam,
+    savedTeams,
     team2Name,
     setPossession,
     gameTo,
@@ -68,6 +72,13 @@ export default function PreGameConfirm() {
   const openPicker = useNumberPickerStore((s) => s.open);
 
   const team1Name = currentTeam.name;
+  const {
+    opponentNameDraft,
+    setOpponentNameDraft,
+    commitOpponentName,
+    isEditingOpponentName,
+    startEditingOpponentName,
+  } = useOpponentNameDraft();
 
   // Determine what's needed
   const needPossession = statTrackingEnabled && possession === null;
@@ -75,6 +86,8 @@ export default function PreGameConfirm() {
 
   const [selectedTeam, setSelectedTeam] = useState<'team1' | 'team2' | ''>(possession ?? '');
   const [selectedRatio, setSelectedRatio] = useState<GenderRatio | ''>(firstPointRatio ?? '');
+  const canSwitchTeam =
+    savedTeams.length > 1 && savedTeams.some((team) => team.id !== currentTeam.id);
   const [teamOrbitRunKey, setTeamOrbitRunKey] = useState(0);
   const [ratioOrbitRunKey, setRatioOrbitRunKey] = useState(0);
 
@@ -104,6 +117,7 @@ export default function PreGameConfirm() {
   const buttonIcon = showSetLine ? 'clipboard-check-outline' : 'play';
 
   const handleStart = () => {
+    commitOpponentName();
     if (needPossession && selectedTeam) {
       setPossession(selectedTeam);
     }
@@ -174,7 +188,10 @@ export default function PreGameConfirm() {
         }
       />
 
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <KeyboardAwareScrollView
+        bottomOffset={16}
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={styles.scrollContent}>
         {/* Lock Warning */}
         <View style={[styles.lockInfo, { backgroundColor: palette.dangerOverlay15 }]}>
           <MaterialCommunityIcons
@@ -387,39 +404,56 @@ export default function PreGameConfirm() {
             </ThemedText>
 
             {/* Receiving Team Selection */}
-            {statTrackingEnabled && (
-              <View style={styles.choiceGroup}>
-                <SegmentedControl
-                  label="WHO IS RECEIVING?"
-                  options={[
-                    {
-                      value: 'team1',
-                      label: team1Name,
-                      activeColor: t1Color,
-                      activeTextColor: t1TextColor,
-                    },
-                    {
-                      value: 'team2',
-                      label: team2Name,
-                      activeColor: t2Color,
-                      activeTextColor: t2TextColor,
-                    },
-                  ]}
-                  value={selectedTeam}
-                  onChange={(val) => {
-                    setSelectedTeam(val);
-                    setTeamOrbitRunKey((prev) => prev + 1);
-                  }}
-                  showRequired={needPossession && selectedTeam === ''}
-                  highlightBorder={needPossession && selectedTeam === ''}
-                  highlightColor={palette.warning}
-                  highlightLeftColor={needPossession && selectedTeam === '' ? t1Color : undefined}
-                  highlightRightColor={needPossession && selectedTeam === '' ? t2Color : undefined}
-                  attentionColor={selectedTeamOrbitColor}
-                  attentionRunKey={teamOrbitRunKey}
-                />
-              </View>
-            )}
+            <View style={styles.choiceGroup}>
+              <SegmentedControl
+                label={statTrackingEnabled ? 'WHO IS RECEIVING?' : 'TEAMS'}
+                options={[
+                  {
+                    value: 'team1',
+                    label: team1Name,
+                    actionIcon: canSwitchTeam ? 'swap-horizontal' : undefined,
+                    actionTestID: 'pregame-change-team',
+                    onAction: canSwitchTeam
+                      ? () =>
+                          router.push({
+                            pathname: '/TeamManagementModal',
+                            params: { pregame: 'basic' },
+                          })
+                      : undefined,
+                    activeColor: t1Color,
+                    activeTextColor: t1TextColor,
+                  },
+                  {
+                    value: 'team2',
+                    label: team2Name,
+                    actionIcon: 'pencil-outline',
+                    actionTestID: 'basic-opponent-name-edit',
+                    onAction: startEditingOpponentName,
+                    isEditing: isEditingOpponentName,
+                    editValue: opponentNameDraft,
+                    editTestID: 'basic-opponent-name-input',
+                    onEditValueChange: setOpponentNameDraft,
+                    onEditComplete: commitOpponentName,
+                    maxEditLength: MAX_TEAM_NAME_LENGTH,
+                    activeColor: t2Color,
+                    activeTextColor: t2TextColor,
+                  },
+                ]}
+                value={statTrackingEnabled ? selectedTeam : ''}
+                onChange={(val) => {
+                  if (!statTrackingEnabled) return;
+                  setSelectedTeam(val);
+                  setTeamOrbitRunKey((prev) => prev + 1);
+                }}
+                showRequired={needPossession && selectedTeam === ''}
+                highlightBorder={needPossession && selectedTeam === ''}
+                highlightColor={palette.warning}
+                highlightLeftColor={needPossession && selectedTeam === '' ? t1Color : undefined}
+                highlightRightColor={needPossession && selectedTeam === '' ? t2Color : undefined}
+                attentionColor={selectedTeamOrbitColor}
+                attentionRunKey={teamOrbitRunKey}
+              />
+            </View>
 
             {/* Gender Ratio Selection */}
             {genderRatioEnabled && (
@@ -484,7 +518,7 @@ export default function PreGameConfirm() {
             </Pressable>
           </View>
         </View>
-      </ScrollView>
+      </KeyboardAwareScrollView>
     </ThemedView>
   );
 }

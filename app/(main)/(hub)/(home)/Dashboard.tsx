@@ -126,7 +126,7 @@ export default function DashboardScreen() {
         {
           icon: 'cog-outline' as const,
           label: 'App Settings',
-          description: 'Teams, colors, display, player preferences',
+          description: 'Colors, display, player preferences',
           onPress: () => router.push('/Settings'),
         },
       ],

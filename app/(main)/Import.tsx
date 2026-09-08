@@ -107,7 +107,7 @@ export default function ImportScreen() {
       useLinePresetsStore.getState().importPresetsForTeam(payload.data.id, payload.presets);
     }
     if (!gameActive) {
-      loadTeam(payload.data.id);
+      await loadTeam(payload.data.id);
     }
   };
 

@@ -42,6 +42,9 @@ tracking screen.
 
 ## Future Voice UX: Numbers vs Names
 
+For platform customization, spoken aliases, and a proposed on-device “Teach voice name” flow,
+see [Voice Name Personalization](../../future-features/voice-name-personalization.md).
+
 Jersey numbers are the primary/recommended voice path because they are more reliable than short or
 uncommon player names. A coach can say `number twelve`, and the parser maps that phrase to the
 active player with that number.
