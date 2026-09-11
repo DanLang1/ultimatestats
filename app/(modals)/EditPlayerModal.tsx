@@ -239,19 +239,13 @@ export default function EditPlayerModal() {
                   <ThemedText style={[styles.toggleLabel, { color: palette.modalText }]}>
                     Active roster
                   </ThemedText>
-                  <Pressable
-                    accessibilityRole="switch"
-                    accessibilityState={{ checked: isActive }}
-                    onPress={() => handleActiveChange(!isActive)}
-                    testID="edit-player-active-toggle">
-                    <Switch
-                      accessible={false}
-                      pointerEvents="none"
-                      value={isActive}
-                      trackColor={{ false: palette.overlay20, true: palette.accent }}
-                      thumbColor={isActive ? palette.textOnAccent : palette.modalTextMuted}
-                    />
-                  </Pressable>
+                  <Switch
+                    value={isActive}
+                    onValueChange={handleActiveChange}
+                    trackColor={{ false: palette.overlay20, true: palette.accent }}
+                    thumbColor={isActive ? palette.textOnAccent : palette.modalTextMuted}
+                    testID="edit-player-active-toggle"
+                  />
                 </View>
               )}
               {saveError && (

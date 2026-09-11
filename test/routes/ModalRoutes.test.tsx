@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { screen, userEvent, waitFor } from '@testing-library/react-native';
+import { fireEvent, screen, userEvent, waitFor } from '@testing-library/react-native';
 import { router } from 'expo-router';
 
 import AdvancedGameSelectorModal from '@/app/(modals)/AdvancedGameSelectorModal';
@@ -245,6 +245,47 @@ describe('modal routes', () => {
     expect(screen.getByText('Save')).toBeVisible();
   });
 
+  it('deactivates a player from the edit-player modal', async () => {
+    const user = userEvent.setup();
+    useGameStore.setState({ currentTeam: testTeam });
+    setMockSearchParams({ playerId: 'player-alex' });
+
+    await renderScreen(<EditPlayerModal />);
+
+    void fireEvent(screen.getByTestId('edit-player-active-toggle'), 'valueChange', false);
+    await user.press(screen.getByTestId('edit-player-save'));
+
+    expect(
+      useGameStore.getState().currentTeam.roster.find((player) => player.id === 'player-alex')
+        ?.isActive,
+    ).toBe(false);
+    expect(router.dismissTo).toHaveBeenCalledWith('/EditRoster');
+  });
+
+  it('reactivates a player from the edit-player modal', async () => {
+    const user = userEvent.setup();
+    useGameStore.setState({
+      currentTeam: {
+        ...testTeam,
+        roster: testTeam.roster.map((player) =>
+          player.id === 'player-alex' ? { ...player, isActive: false } : player,
+        ),
+      },
+    });
+    setMockSearchParams({ playerId: 'player-alex' });
+
+    await renderScreen(<EditPlayerModal />);
+
+    void fireEvent(screen.getByTestId('edit-player-active-toggle'), 'valueChange', true);
+    await user.press(screen.getByTestId('edit-player-save'));
+
+    expect(
+      useGameStore.getState().currentTeam.roster.find((player) => player.id === 'player-alex')
+        ?.isActive,
+    ).toBe(true);
+    expect(router.dismissTo).toHaveBeenCalledWith('/EditRoster');
+  });
+
   it('shows an inline error when advanced-game participation blocks deactivation', async () => {
     const user = userEvent.setup();
     useGameStore.setState({ currentTeam: testTeam });
@@ -254,7 +295,7 @@ describe('modal routes', () => {
     await renderScreen(<EditPlayerModal />);
 
     recordOpeningPull();
-    await user.press(screen.getByTestId('edit-player-active-toggle'));
+    void fireEvent(screen.getByTestId('edit-player-active-toggle'), 'valueChange', false);
     await user.press(screen.getByTestId('edit-player-save'));
 
     expect(screen.getByTestId('edit-player-save-error')).toHaveTextContent(
