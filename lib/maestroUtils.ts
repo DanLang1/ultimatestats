@@ -177,6 +177,33 @@ export async function seedMaestroTeamPrerequisites(
   useTutorialStore.getState().completeAdvancedTutorial();
 }
 
+export async function seedMaestroBasicCancelPendingGoalScenario() {
+  await seedMaestroTeamPrerequisites({ clearActiveGame: true });
+  useGameSessionStore.getState().setActiveGameType('basic');
+  useGameStore.setState((state) => {
+    state.team1Score = 0;
+    state.team2Score = 0;
+    state.team1Timeouts = [false, true];
+    state.team2Timeouts = [true, true];
+    state.team1Floater = true;
+    state.team2Floater = true;
+    state.gameHalf = 1;
+    state.gameTo = 2;
+    state.baseGameTo = 2;
+    state.events = [{ type: 'timeout', team: 'team1', index: 0, isFloater: false, pointNumber: 1 }];
+    state.pendingStatEntry = null;
+    state.possession = 'team1';
+    state.startingPossession = 'team1';
+    state.currentPoint = 1;
+    state.currentGameStatus = 'inProgress';
+    state.isHalftimeBreak = false;
+    state.pendingTimeoutModal = false;
+    state.statTrackingEnabled = true;
+    state.currentPointStartTime = null;
+    state.pointTimerPausedElapsed = null;
+  });
+}
+
 export async function seedMaestroOnboardingPrerequisites() {
   const team: SavedTeam = {
     id: MAESTRO_SEED_TEAM_ID,

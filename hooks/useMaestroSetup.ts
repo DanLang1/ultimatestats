@@ -6,6 +6,7 @@ import {
   MaestroSeedGameType,
   MaestroTrackerState,
   seedAdvancedTrackerTestGame,
+  seedMaestroBasicCancelPendingGoalScenario,
   seedMaestroOnboardingPrerequisites,
   seedMaestroTeamPrerequisites,
   waitForMaestroStoresToHydrate,
@@ -67,7 +68,7 @@ export function useMaestroSetup(params: MaestroSetupParams) {
 
 async function seedMaestroState(
   params: MaestroSetupParams,
-): Promise<'/' | '/Dashboard' | '/advancedTracking/Tracker'> {
+): Promise<'/' | '/Dashboard' | '/Scoreboard' | '/advancedTracking/Tracker'> {
   if (params.mode === 'onboarding') {
     await seedMaestroOnboardingPrerequisites();
     return '/';
@@ -81,6 +82,11 @@ async function seedMaestroState(
   if (params.mode === 'scrimmageTeam') {
     await seedMaestroTeamPrerequisites({ clearActiveGame: true, gameType: 'scrimmage' });
     return '/Dashboard';
+  }
+
+  if (params.mode === 'basicCancelPendingGoal') {
+    await seedMaestroBasicCancelPendingGoalScenario();
+    return '/Scoreboard';
   }
 
   await seedAdvancedTrackerTestGame({

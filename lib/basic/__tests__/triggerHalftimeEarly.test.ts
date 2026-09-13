@@ -19,6 +19,7 @@ describe('triggerHalftimeEarly', () => {
 
     const state = useGameStore.getState();
     state.resetGame();
+    state.setGameTo(15);
     state.setAutoHalftimeEnabled(true);
     state.setStatTrackingEnabled(false);
   });
@@ -43,6 +44,26 @@ describe('triggerHalftimeEarly', () => {
     expect(updatedState.team2Timeouts).toEqual([true, true]);
     expect(updatedState.possession).toBe('team2');
     expect(lastEvent).toMatchObject({ type: 'goal', triggeredHalftime: true });
+  });
+
+  it('restores pre-halftime timeout state when canceling a halftime goal entry', () => {
+    const state = useGameStore.getState();
+
+    state.setGameTo(2);
+    state.setStatTrackingEnabled(true);
+    state.setPossession('team1');
+    state.toggleTimeout(true, 0);
+    state.incrementScore(true);
+
+    expect(useGameStore.getState().team1Timeouts).toEqual([true, true]);
+
+    state.cancelPendingGoal();
+    const updatedState = useGameStore.getState();
+
+    expect(updatedState.team1Timeouts).toEqual([false, true]);
+    expect(updatedState.team2Timeouts).toEqual([true, true]);
+    expect(updatedState.gameHalf).toBe(1);
+    expect(updatedState.isHalftimeBreak).toBe(false);
   });
 
   it('does nothing when auto halftime is disabled', () => {

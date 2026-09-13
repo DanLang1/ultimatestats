@@ -1,0 +1,54 @@
+appId: com.langdk.ultimatestats.dev
+name: Basic Cancel Pending Goal Preserves Used Timeout
+---
+# This exercises the documented regression scenario:
+# use a timeout, score the halftime point, cancel the pending stat entry, and
+# verify that the timeout cannot be used again.
+- launchApp
+- runFlow:
+    when:
+      visible: 'U-Stat (Dev)'
+    commands:
+      - tapOn: 'Continue'
+      - extendedWaitUntil:
+          notVisible: 'DEVELOPMENT SERVERS'
+          timeout: 15000
+- openLink: ultimatestats-dev:///__maestro_seed__?mode=basicCancelPendingGoal
+
+- runFlow:
+    when:
+      visible: 'maestro-setup-running'
+    commands:
+      - retry:
+          maxRetries: 1
+          commands:
+            - extendedWaitUntil:
+                notVisible:
+                  id: 'maestro-setup-running'
+                timeout: 15000
+- extendedWaitUntil:
+    visible:
+      text: 'Score for Zoboomafoo'
+    timeout: 10000
+
+# The seed starts a live basic game at 0-0, game to 2, with team 1's first
+# regular timeout already consumed and stat tracking enabled.
+# Score the halftime point and cancel the pending stat entry.
+- tapOn:
+    text: 'Score for Zoboomafoo'
+- extendedWaitUntil:
+    visible:
+      text: 'Who scored?'
+    timeout: 5000
+- tapOn: 'Cancel'
+- assertNotVisible: 'Who scored?'
+- assertVisible: 'Score for Zoboomafoo'
+- takeScreenshot:
+    path: .maestro/screenshots/basic-cancel-pending-goal-timeout-before-retry
+
+# The used timeout must remain unavailable after the halftime goal is canceled.
+# If cancelPendingGoal fails to re-derive timeout state, this opens TIMEOUT.
+- tapOn: 'Use timeout 1 for Zoboomafoo'
+- assertNotVisible: 'TIMEOUT'
+- takeScreenshot:
+    path: .maestro/screenshots/basic-cancel-pending-goal-timeout

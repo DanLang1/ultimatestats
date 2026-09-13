@@ -87,6 +87,8 @@ export default function TeamScoreSection({
           {timeouts.map((timeout, index) => (
             <Pressable
               key={index}
+              accessibilityLabel={`Use timeout ${index + 1} for ${teamName}`}
+              accessibilityRole="button"
               hitSlop={TIMEOUT_HIT_SLOP}
               onPress={() => onTimeoutUse?.(index)}
               style={[

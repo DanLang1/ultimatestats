@@ -771,6 +771,19 @@ export const useGameStore = create<GameState>()(
 
             // Clear pending entry
             state.pendingStatEntry = null;
+
+            // Re-derive timeout state from remaining events. The canceled goal may have
+            // triggered halftime, which temporarily reset the cached timeout state.
+            const derived = deriveTimeoutState(
+              state.events,
+              state.baseGameTo,
+              state.autoHalftimeEnabled,
+              state.team1Timeouts.length,
+            );
+            state.team1Timeouts = derived.team1Timeouts;
+            state.team2Timeouts = derived.team2Timeouts;
+            state.team1Floater = derived.team1Floater;
+            state.team2Floater = derived.team2Floater;
           }),
 
         clearRoster: () =>

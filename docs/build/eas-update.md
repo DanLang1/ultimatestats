@@ -1,48 +1,45 @@
-# Deploy OTA Update to Production
+# Deploy an OTA Update to Production
 
-This workflow pushes a JavaScript/asset update to the production Android app. Use this for bug fixes and UI changes that don't require native code changes.
+Use EAS Update for JavaScript, asset, and UI changes that do not require native code changes.
+Committing first is recommended for traceability, but EAS Update bundles the current working tree.
 
-## Prerequisites
+## Commands
 
-- All changes committed to git
-- The Expo project's `production` environment defines `APP_VARIANT=production` with Plain text
-  visibility
-- The Expo project's `production` environment defines `SENTRY_AUTH_TOKEN` with Sensitive
-  visibility
-
-## Steps
-
-1. Run the full checks:
+1. Verify the changes:
 
 ```bash
 npm run check:all
 ```
 
-2. Push the update to production:
+2. Publish iOS, then upload its source maps:
+
+```bash
+eas update --channel production --environment production --platform ios --message "<describe your changes>"
+eas env:exec production 'npx sentry-expo-upload-sourcemaps dist'
+```
+
+3. Publish Android, then upload its source maps:
 
 ```bash
 eas update --channel production --environment production --platform android --message "<describe your changes>"
+eas env:exec production 'npx sentry-expo-upload-sourcemaps dist'
 ```
 
-Replace `<describe your changes>` with a brief description (like a git commit message).
-
-3. Upload the generated source maps to Sentry:
+4. Confirm the updates appear on the production branch:
 
 ```bash
-eas env:exec --environment production 'npx sentry-expo-upload-sourcemaps dist'
+eas update:list --branch production
 ```
-
-Unlike a native EAS Build, `eas update` does not automatically upload source maps. Treat a failed
-upload as a failed deployment so production stack traces remain symbolicated.
-
-4. Verify the update and source-map upload succeeded using the EAS output and Sentry release.
 
 ## Notes
 
-- **When users get the update**: Users get updates on app launch. Typically takes 2 app restarts (first downloads, second applies).
-- **OTA vs Native Build**: OTA updates only work for JS/asset changes. If you add native dependencies or change `app.config.js` native settings, you need a full `eas build` instead.
-- **Channels**: Use `--channel production` for prod, `--channel development` for dev builds.
-- **Environment**: Always pair the channel with its matching `--environment` value so
-  `APP_VARIANT` and Sentry metadata are resolved correctly.
-- **Source maps**: See Expo's [Sentry guide](https://docs.expo.dev/guides/using-sentry/) for the
-  current EAS Update upload workflow.
+- Publish iOS and Android separately. `--platform all` also attempts a web export, which currently
+  fails because this native-only project does not configure `expo-sqlite` for web.
+- Upload source maps immediately after each platform update because the next export replaces
+  `dist`.
+- `eas update` uses `--environment production`; `eas env:exec` uses the positional form
+  `eas env:exec production '<command>'`.
+- EAS Update does not automatically upload Sentry source maps. Treat a failed source-map upload as
+  a failed deployment.
+- Users generally receive an update across two launches: one to download and another to apply it.
+- Native dependency or native `app.config.js` changes require a new `eas build`, not an OTA update.

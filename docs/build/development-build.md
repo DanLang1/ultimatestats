@@ -12,7 +12,7 @@ Info for creating a new **Development Build** (or "dev client"). You only need t
    ```
 
 2. **Verify `app.config.js`**:
-   The `development` profile uses `APP_VARIANT=development`. This should automatically change your app name to "U-Stat (Dev)", use a separate bundle identifier, and report Sentry events under the `development` environment.
+   The `development` profile uses `APP_VARIANT=development`. This should automatically change your app name to "U-Stat (Dev)" and use a separate bundle identifier. Sentry is disabled in development builds so local testing does not send events.
 
 3. **Verify checks**:
 
