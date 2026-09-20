@@ -25,9 +25,9 @@ import {
 } from '@/lib/advancedTracking/injurySubUtils';
 import { deriveRosterParticipantSyncPlan } from '@/lib/advancedTracking/participantSync';
 import {
-  getActiveStoppage,
   getActiveGameClockPause,
   getActiveSideId,
+  getActiveStoppage,
   getGameClockElapsedMs,
   getPointAdjustedTimestamp,
   getSafeDiscHolderRef,
@@ -67,7 +67,7 @@ import {
   TrackedPoint,
   getEligibleThrowTypes,
 } from '@/lib/advancedTracking/types';
-import { generateId } from '@/lib/utils';
+import { generateId, isRecord } from '@/lib/utils';
 import { useSavedAdvancedGamesStore } from '@/store/advancedTracking/savedGamesStore';
 import { registerActiveAdvancedGameGetter, useGameStore } from '@/store/basic/gameStore';
 import { useSettingsStore } from '@/store/settingsStore';
@@ -78,12 +78,25 @@ import {
   AdvancedTrackingUndoEntry,
   RecordInjurySubsInput,
   RecordStoppageInput,
-  UpdatePointNoteInput,
   UpdateInjurySubsInput,
+  UpdatePointNoteInput,
   UpdateThrowTypeInput,
 } from './trackingStore.types';
 
 const ADVANCED_TRACKING_STORAGE_KEY = 'ultimatestats_advanced_tracking';
+const ADVANCED_TRACKING_STORAGE_VERSION = 1;
+
+/**
+ * When the storage version is bumped, add handling for
+ * the previously-current version here.
+ */
+function migrateAdvancedTrackingRecoveryState(persistedState: unknown, version: number): unknown {
+  if (version !== 0) {
+    throw new Error(`Unsupported advanced-tracking recovery version "${version}".`);
+  }
+
+  return persistedState;
+}
 
 function getCurrentGame(state: AdvancedGameLookupState): AdvancedTrackedGame {
   if (state.currentGameId == null) throw new Error('No active game.');
@@ -223,6 +236,7 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
           set((state) => {
             if (state.currentGameId !== currentGameId) return;
             state.currentGame = game;
+            state.undoStack = [];
             reconcilePendingNextPointLineSelection(state);
           });
           return game;
@@ -1270,6 +1284,7 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
           set((state) => {
             if (state.currentGameId === game.id) {
               state.currentGame = game;
+              state.undoStack = [];
               reconcilePendingNextPointLineSelection(state);
             }
           });
@@ -1291,14 +1306,21 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
       {
         name: ADVANCED_TRACKING_STORAGE_KEY,
         storage: createJSONStorage(() => AsyncStorage),
+        version: ADVANCED_TRACKING_STORAGE_VERSION,
+        migrate: migrateAdvancedTrackingRecoveryState,
+        merge: (persistedState, currentState) => ({
+          ...currentState,
+          ...(isRecord(persistedState) ? persistedState : {}),
+          // Drop the legacy pre-v1 undoStack so a stale stack can never be restored against a newer game.
+          undoStack: [],
+        }),
         onRehydrateStorage: () => (state) => {
           if (state?.currentGameId != null) {
             void state.loadCurrentGame();
           }
         },
-        partialize: (state) => ({
+        partialize: (state): unknown => ({
           currentGameId: state.currentGameId,
-          undoStack: state.undoStack,
           pendingNextPointLineSelection: state.pendingNextPointLineSelection,
           isHalftimeBreakActive: state.isHalftimeBreakActive,
           halftimeTimerStartedAt: state.halftimeTimerStartedAt,

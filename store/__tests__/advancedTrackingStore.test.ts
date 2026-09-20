@@ -214,7 +214,7 @@ describe('advancedTrackingStore', () => {
     loadGameSpy.mockRestore();
   });
 
-  it('persists undo history for an active advanced game session', () => {
+  it('keeps undo history in memory without persisting it', () => {
     createGame();
 
     useAdvancedTrackingStore.getState().recordPull({
@@ -224,7 +224,7 @@ describe('advancedTrackingStore', () => {
       result: 'inbound',
     });
 
-    const undoStack = useAdvancedTrackingStore.getState().undoStack;
+    expect(useAdvancedTrackingStore.getState().undoStack).toHaveLength(1);
     const advancedTrackingWrites = mockedAsyncStorage.setItem.mock.calls.filter(
       ([key]) => key === 'ultimatestats_advanced_tracking',
     );
@@ -232,8 +232,87 @@ describe('advancedTrackingStore', () => {
     expect(lastWrite).toBeDefined();
 
     const persistedPayload = JSON.parse(lastWrite![1]);
-    expect(persistedPayload.state.undoStack).toEqual(undoStack);
-    expect(persistedPayload.state.undoStack).toHaveLength(1);
+    expect(persistedPayload.version).toBe(1);
+    expect(persistedPayload.state).not.toHaveProperty('undoStack');
+    expect(Object.keys(persistedPayload.state).sort()).toEqual([
+      'currentGameId',
+      'halftimeTimerDurationSeconds',
+      'halftimeTimerStartedAt',
+      'isHalftimeBreakActive',
+      'pendingNextPointLineSelection',
+    ]);
+  });
+
+  it('discards a version-zero persisted undo stack while preserving active-game recovery', async () => {
+    createGame();
+    useAdvancedTrackingStore.getState().recordPull({
+      lines: homeLinesAugust,
+      puller: untracked,
+      receiver: august,
+      result: 'inbound',
+    });
+    const game = structuredClone(getCurrentGame()!);
+    const legacyUndoStack = structuredClone(useAdvancedTrackingStore.getState().undoStack);
+
+    resetStore();
+    jest.clearAllMocks();
+    mockedAsyncStorage.getItem.mockResolvedValueOnce(
+      JSON.stringify({
+        version: 0,
+        state: {
+          currentGameId: game.id,
+          undoStack: legacyUndoStack,
+          pendingNextPointLineSelection: null,
+          isHalftimeBreakActive: false,
+          halftimeTimerStartedAt: null,
+          halftimeTimerDurationSeconds: DEFAULT_HALFTIME_BREAK_SECONDS,
+        },
+      }),
+    );
+    mockedAsyncStorage.setItem.mockResolvedValue(undefined);
+    const loadGameSpy = jest
+      .spyOn(useSavedAdvancedGamesStore.getState(), 'loadGame')
+      .mockResolvedValue(game);
+
+    await useAdvancedTrackingStore.persist.rehydrate();
+    await Promise.resolve();
+
+    expect(useAdvancedTrackingStore.getState()).toMatchObject({
+      currentGameId: game.id,
+      undoStack: [],
+    });
+    expect(loadGameSpy).toHaveBeenCalledWith(game.id);
+    const migratedWrite = mockedAsyncStorage.setItem.mock.calls.at(-1);
+    expect(migratedWrite).toBeDefined();
+    const migratedPayload = JSON.parse(migratedWrite![1]);
+    expect(migratedPayload.version).toBe(1);
+    expect(migratedPayload.state).not.toHaveProperty('undoStack');
+    loadGameSpy.mockRestore();
+  });
+
+  it('rejects an unsupported persisted recovery version instead of misreading it', async () => {
+    resetStore();
+    jest.clearAllMocks();
+    const loadGameSpy = jest.spyOn(useSavedAdvancedGamesStore.getState(), 'loadGame');
+    mockedAsyncStorage.getItem.mockResolvedValueOnce(
+      JSON.stringify({
+        version: 2,
+        state: {
+          currentGameId: 'future-game',
+          pendingNextPointLineSelection: null,
+          isHalftimeBreakActive: false,
+          halftimeTimerStartedAt: null,
+          halftimeTimerDurationSeconds: DEFAULT_HALFTIME_BREAK_SECONDS,
+        },
+      }),
+    );
+
+    await useAdvancedTrackingStore.persist.rehydrate();
+    await Promise.resolve();
+
+    expect(useAdvancedTrackingStore.getState().currentGameId).toBeNull();
+    expect(loadGameSpy).not.toHaveBeenCalled();
+    loadGameSpy.mockRestore();
   });
 
   it('persists active halftime timer state', () => {
@@ -342,6 +421,7 @@ describe('advancedTrackingStore', () => {
 
     const game = getCurrentGame()!;
     const pendingSelection = useAdvancedTrackingStore.getState().pendingNextPointLineSelection;
+    expect(useAdvancedTrackingStore.getState().undoStack.length).toBeGreaterThan(0);
     useAdvancedTrackingStore.setState({ currentGame: null });
     const loadGameSpy = jest
       .spyOn(useSavedAdvancedGamesStore.getState(), 'loadGame')
@@ -352,7 +432,26 @@ describe('advancedTrackingStore', () => {
     expect(useAdvancedTrackingStore.getState().pendingNextPointLineSelection).toEqual(
       pendingSelection,
     );
+    expect(useAdvancedTrackingStore.getState().undoStack).toEqual([]);
     loadGameSpy.mockRestore();
+  });
+
+  it('clears in-memory undo history when an import replaces the active game', async () => {
+    createGame();
+    useAdvancedTrackingStore.getState().recordPull({
+      lines: homeLinesAugust,
+      puller: untracked,
+      receiver: august,
+      result: 'inbound',
+    });
+    const replacementGame = structuredClone(getCurrentGame()!);
+    replacementGame.updatedAt += 1;
+
+    expect(useAdvancedTrackingStore.getState().undoStack.length).toBeGreaterThan(0);
+
+    await useAdvancedTrackingStore.getState().importAdvancedGame(replacementGame);
+
+    expect(useAdvancedTrackingStore.getState().undoStack).toEqual([]);
   });
 
   it('keeps pending next-point selections separate for each tracked side', () => {

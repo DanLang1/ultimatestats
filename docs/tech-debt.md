@@ -15,15 +15,6 @@ This document tracks intentionally deferred cleanup work discovered during the d
   `app/(modals)/EditEventModal.tsx`
   `app/(modals)/AdvancedGameSelectorModal.tsx`
 
-## P2 - `cancelPendingGoal` Does Not Re-derive Timeout State
-
-- `undoLastAction` calls `deriveTimeoutState()` after every undo, correctly replaying events to reconstruct timeout availability. `cancelPendingGoal` does not.
-- Impact: if team1 used a timeout in the first half, then scored the halftime goal (which resets timeouts via `fill(true)`), then canceled the stat entry — the used timeout is silently restored and available again.
-- Fix: call `deriveTimeoutState` at the end of `cancelPendingGoal`, same as `undoLastAction`.
-- References:
-  `store/basic/gameStore.ts` (`cancelPendingGoal` and `undoLastAction`)
-  `lib/basic/timeoutUtils.ts` (`deriveTimeoutState`)
-
 ## P2 - BottomSheet Modal Wrapper
 
 - Several bottom-sheet callers manually wrap `BottomSheet` in a transparent React Native `Modal`. `BottomSheet` owns the overlay and sheet layout, but the caller-owned `Modal` is still needed today for native modal presentation and z-order.
@@ -35,6 +26,18 @@ This document tracks intentionally deferred cleanup work discovered during the d
   `components/advancedTracking/TrackerRareMenu.tsx`
   `components/advancedTracking/TrackerLineChangeMenu.tsx`
   `components/new-game/NewGameSheet.tsx`
+
+## P2 - Derive Advanced Halftime Recovery State
+
+- Advanced halftime activity and timer fields are persisted in AsyncStorage separately from the
+  canonical SQLite game. A process interruption can therefore restore UI recovery state that no
+  longer matches the loaded game.
+- Recompute `isHalftimeBreakActive` from the canonical game in `loadCurrentGame` and
+  `importAdvancedGame`, then define how timer progress should be retained or reset when the
+  persisted timer context does not match that derived break.
+- References:
+  `store/advancedTracking/trackingStore.ts`
+  `lib/advancedTracking/trackingUtils.ts` - `syncDerivedHalftimeTransition`
 
 ## P3 - Store Architecture Refactor
 

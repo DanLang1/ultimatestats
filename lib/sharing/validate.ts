@@ -14,6 +14,7 @@ import {
 } from '@/lib/advancedTracking/types';
 import { CURRENT_SCHEMA_VERSION } from '@/lib/storage/types';
 import type { LinePreset, SavedGame, SavedTeam } from '@/lib/storage/types';
+import { isRecord } from '@/lib/utils';
 
 import type { SharedPayload } from './types';
 
@@ -27,10 +28,6 @@ const MAX_STRING_LENGTH = 200;
 const MAX_BULK_GAMES = 10;
 const VALID_THROW_RESULTS = new Set<string>(THROW_RESULTS);
 const VALID_THROW_TYPES = new Set<string>(THROW_TYPES);
-
-function isRecord(val: unknown): val is Record<string, unknown> {
-  return typeof val === 'object' && val !== null;
-}
 
 function isString(val: unknown): val is string {
   return typeof val === 'string';

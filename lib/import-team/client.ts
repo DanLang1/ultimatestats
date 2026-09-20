@@ -5,6 +5,7 @@ import {
   ImportApiSuccessPayload,
   NameFormatOption,
 } from '@/lib/import-team/types';
+import { isRecord } from '@/lib/utils';
 
 type ImportTeamApiResponse = {
   requestUrl: string;
@@ -12,10 +13,6 @@ type ImportTeamApiResponse = {
   ok: boolean;
   payload: ImportApiPayload;
 };
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
-}
 
 function isImportApiErrorPayload(payload: ImportApiPayload): payload is ImportApiErrorPayload {
   return isRecord(payload) && ('message' in payload || 'detail' in payload);

@@ -214,6 +214,12 @@ Timing fields are optional. Derivations must distinguish missing timing data fro
 Point, possession, action, transition, and participant IDs are stable editing boundaries. Normal
 corrections update payload fields without moving historical actions between possessions or points.
 
+Live undo is strictly scoped to the current process session and the current (last) point. Undo
+history is not persisted because the canonical game record is stored independently in SQLite and
+the two snapshots cannot be committed atomically. Loading or importing a complete game clears the
+in-memory undo stack. After an app restart, undo becomes available again when the next live action
+is recorded.
+
 Saved final or terminated games and the loaded active game's timeline support participant identity
 correction on completed points. The editable unit is a touch occurrence in a continuous segment:
 a pickup establishes the first holder, completions add receiver occurrences, and a goal, drop, or

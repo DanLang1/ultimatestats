@@ -1,3 +1,4 @@
+import { recordAdvancedGameDiagnostic } from './advancedGameDiagnostics';
 import type {
   AnalyticsAction,
   AnalyticsActionBase,
@@ -664,7 +665,7 @@ function compilePossessionWithActions(
 
 // ── Main entry point ──────────────────────────────────────────────────────────
 
-export function buildAnalyticsGame(game: AdvancedTrackedGame): AnalyticsGame {
+function buildAnalyticsGameInternal(game: AdvancedTrackedGame): AnalyticsGame {
   const ctx = buildGameContext(game);
 
   const halftimeAfterPointId = game.gameTransitions?.find(
@@ -798,6 +799,15 @@ export function buildAnalyticsGame(game: AdvancedTrackedGame): AnalyticsGame {
     actions,
     attributions,
   };
+}
+
+export function buildAnalyticsGame(game: AdvancedTrackedGame): AnalyticsGame {
+  try {
+    return buildAnalyticsGameInternal(game);
+  } catch (error) {
+    recordAdvancedGameDiagnostic(game, error);
+    throw error;
+  }
 }
 
 /**
