@@ -239,7 +239,7 @@ describe('modal routes', () => {
 
     await renderScreen(<EditPlayerModal />);
 
-    expect(screen.getByText('EDIT PLAYER')).toBeVisible();
+    expect(screen.getByText('Edit Player')).toBeVisible();
     expect(screen.getByDisplayValue('Alex')).toBeVisible();
     expect(screen.getByDisplayValue('7')).toBeVisible();
     expect(screen.getByText('Save')).toBeVisible();
@@ -333,7 +333,7 @@ describe('modal routes', () => {
     expect(screen.getByTestId('edit-player-save-error')).toHaveTextContent(
       /cannot be deleted until the game is over/,
     );
-    expect(screen.getByText('EDIT PLAYER')).toBeVisible();
+    expect(screen.getByText('Edit Player')).toBeVisible();
     expect(useGameStore.getState().currentTeam.roster).toHaveLength(testTeam.roster.length);
   });
 

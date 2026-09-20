@@ -2,8 +2,10 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { Redirect, router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Switch, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 
 import { ThemedText } from '@/components/ThemedText';
+import { BottomSheet } from '@/components/ui/BottomSheet';
 import { useTheme } from '@/context/ThemeContext';
 import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import {
@@ -18,6 +20,7 @@ import {
   useGameStore,
 } from '@/store/basic/gameStore';
 import { useLinePresetsStore } from '@/store/linePresetsStore';
+import { useSettingsStore } from '@/store/settingsStore';
 import { Fonts } from '@/theme/theme';
 
 export default function EditPlayerModal() {
@@ -27,6 +30,7 @@ export default function EditPlayerModal() {
   const styles = createStyles(sizeClass);
   const { currentTeam, setCurrentTeam, saveCurrentTeam, events, savedGames, updateRosterPlayer } =
     useGameStore();
+  const { mmpColor, fmpColor } = useSettingsStore();
 
   const { removePlayerFromPresets } = useLinePresetsStore();
 
@@ -58,6 +62,8 @@ export default function EditPlayerModal() {
   const numberExists =
     numberIdentity !== null &&
     roster.some((p) => p.id !== player.id && getPlayerNumberIdentity(p.number) === numberIdentity);
+
+  const saveDisabled = nameExists || numberExists || !name.trim();
 
   const handleDismiss = () => {
     router.dismissTo('/EditRoster');
@@ -130,115 +136,145 @@ export default function EditPlayerModal() {
   // Check for stats
   const hasCurrentGameStats = hasPlayerRecordedStats(playerId, events);
   const hasAdvancedGameParticipation = hasPlayerRecordedActionsInActiveAdvancedGame(playerId);
-
   const hasStatsInSavedGames = hasPlayerRecordedStatsInSavedGames(playerId, savedGames);
+
   return (
-    <View style={StyleSheet.absoluteFill}>
-      <Pressable
-        style={[styles.overlay, { backgroundColor: palette.overlayDark40 }]}
-        onPress={handleDismiss}>
-        <Pressable
-          style={[
-            styles.sheet,
-            { backgroundColor: palette.modalBg, borderColor: palette.overlay15 },
-          ]}
-          onPress={(e) => e.stopPropagation()}>
-          {confirmingDelete ? (
-            // Delete confirmation view
-            <View style={styles.confirmContainer}>
-              <MaterialCommunityIcons
-                name="alert-circle-outline"
-                size={scaleBySizeClass(48, sizeClass)}
-                color={palette.danger}
-              />
-              <ThemedText style={[styles.confirmTitle, { color: palette.modalText }]}>
-                Delete {player.name}?
-              </ThemedText>
-              <ThemedText style={[styles.confirmMessage, { color: palette.modalTextMuted }]}>
-                {hasStatsInSavedGames
-                  ? 'This player has stats in saved games. This action cannot be undone.'
-                  : 'This action cannot be undone.'}
-              </ThemedText>
-              <View style={styles.confirmButtons}>
-                <Pressable
-                  style={[
-                    styles.confirmButton,
-                    { backgroundColor: palette.overlay10, borderColor: palette.overlay20 },
-                    styles.confirmCancelButton,
-                  ]}
-                  onPress={() => setConfirmingDelete(false)}>
-                  <ThemedText style={[styles.confirmButtonText, { color: palette.modalText }]}>
-                    Cancel
-                  </ThemedText>
-                </Pressable>
-                <Pressable
-                  style={[styles.confirmButton, { backgroundColor: palette.danger }]}
-                  onPress={handleDelete}>
-                  <ThemedText style={[styles.confirmButtonText, { color: palette.textOnAccent }]}>
-                    Delete
-                  </ThemedText>
-                </Pressable>
-              </View>
+    <KeyboardAvoidingView automaticOffset style={styles.keyboardAvoidingView} behavior="height">
+      <BottomSheet
+        onDismiss={handleDismiss}
+        sheetStyle={[styles.sheet, { backgroundColor: palette.modalBg }]}
+        minBottomPadding={16}>
+        <View style={[styles.handle, { backgroundColor: palette.overlay20 }]} />
+        {confirmingDelete ? (
+          // In-sheet delete confirmation view
+          <View style={styles.confirmContainer}>
+            <MaterialCommunityIcons
+              name="alert-circle-outline"
+              size={scaleBySizeClass(44, sizeClass)}
+              color={palette.danger}
+            />
+            <ThemedText style={[styles.confirmTitle, { color: palette.modalText }]}>
+              Delete {player.name}?
+            </ThemedText>
+            <ThemedText style={[styles.confirmMessage, { color: palette.modalTextMuted }]}>
+              {hasStatsInSavedGames
+                ? 'This player has stats in saved games. This action cannot be undone.'
+                : 'This action cannot be undone.'}
+            </ThemedText>
+            <View style={styles.confirmButtons}>
+              <Pressable
+                style={[
+                  styles.confirmButton,
+                  { backgroundColor: palette.overlay10, borderColor: palette.overlay20 },
+                  styles.confirmCancelButton,
+                ]}
+                onPress={() => setConfirmingDelete(false)}>
+                <ThemedText style={[styles.confirmButtonText, { color: palette.modalText }]}>
+                  Cancel
+                </ThemedText>
+              </Pressable>
+              <Pressable
+                style={[styles.confirmButton, { backgroundColor: palette.danger }]}
+                onPress={handleDelete}>
+                <ThemedText style={[styles.confirmButtonText, { color: palette.textOnAccent }]}>
+                  Delete
+                </ThemedText>
+              </Pressable>
             </View>
-          ) : (
-            // Normal edit view
+          </View>
+        ) : (
+          // Normal edit view
+          <>
+            <View style={styles.headerRow}>
+              <ThemedText style={[styles.headerTitle, { color: palette.modalText }]}>
+                Edit Player
+              </ThemedText>
+              <Pressable
+                onPress={handleDismiss}
+                hitSlop={12}
+                accessibilityLabel="Close"
+                accessibilityRole="button">
+                <MaterialCommunityIcons
+                  name="close"
+                  size={scaleBySizeClass(22, sizeClass)}
+                  color={palette.textMuted}
+                />
+              </Pressable>
+            </View>
+
             <ScrollView
               style={styles.scrollArea}
               contentContainerStyle={styles.scrollContent}
               keyboardShouldPersistTaps="handled">
-              <ThemedText style={[styles.title, { color: palette.modalTextMuted }]}>
-                EDIT PLAYER
-              </ThemedText>
+              {/* Name and Number inputs row */}
+              <View style={styles.inputsRow}>
+                <View style={styles.nameField}>
+                  <ThemedText style={[styles.fieldLabel, { color: palette.modalTextMuted }]}>
+                    PLAYER NAME
+                  </ThemedText>
+                  <TextInput
+                    style={[
+                      styles.input,
+                      {
+                        borderColor: nameExists ? palette.danger : palette.overlay20,
+                        color: palette.modalText,
+                        backgroundColor: palette.overlay05,
+                      },
+                    ]}
+                    placeholder="Player name..."
+                    placeholderTextColor={palette.modalTextMuted}
+                    value={name}
+                    onChangeText={setName}
+                    maxLength={20}
+                    autoCapitalize="words"
+                  />
+                  {nameExists && (
+                    <ThemedText style={[styles.errorText, { color: palette.danger }]}>
+                      A player with this name already exists
+                    </ThemedText>
+                  )}
+                </View>
 
-              <TextInput
-                style={[
-                  styles.input,
-                  {
-                    borderColor: nameExists ? palette.danger : palette.overlay20,
-                    color: palette.modalText,
-                    backgroundColor: palette.overlay05,
-                  },
-                ]}
-                placeholder="Player name..."
-                placeholderTextColor={palette.modalTextMuted}
-                value={name}
-                onChangeText={setName}
-                maxLength={20}
-              />
-              {nameExists && (
-                <ThemedText style={[styles.errorText, { color: palette.danger }]}>
-                  A player with this name already exists
-                </ThemedText>
-              )}
-
-              <TextInput
-                style={[
-                  styles.input,
-                  {
-                    borderColor: numberExists ? palette.danger : palette.overlay20,
-                    color: palette.modalText,
-                    backgroundColor: palette.overlay05,
-                  },
-                ]}
-                placeholder="Jersey number..."
-                placeholderTextColor={palette.modalTextMuted}
-                value={number}
-                onChangeText={handleNumberChange}
-                keyboardType="number-pad"
-                maxLength={MAX_PLAYER_NUMBER_LENGTH}
-              />
-              {numberExists && (
-                <ThemedText style={[styles.errorText, { color: palette.danger }]}>
-                  Another player already has this number
-                </ThemedText>
-              )}
+                <View style={styles.numberField}>
+                  <ThemedText style={[styles.fieldLabel, { color: palette.modalTextMuted }]}>
+                    NUMBER
+                  </ThemedText>
+                  <TextInput
+                    style={[
+                      styles.input,
+                      styles.numberInput,
+                      {
+                        borderColor: numberExists ? palette.danger : palette.overlay20,
+                        color: palette.modalText,
+                        backgroundColor: palette.overlay05,
+                      },
+                    ]}
+                    placeholder="#"
+                    placeholderTextColor={palette.modalTextMuted}
+                    value={number}
+                    onChangeText={handleNumberChange}
+                    keyboardType="number-pad"
+                    maxLength={MAX_PLAYER_NUMBER_LENGTH}
+                  />
+                  {numberExists && (
+                    <ThemedText style={[styles.errorText, { color: palette.danger }]}>
+                      Already in use
+                    </ThemedText>
+                  )}
+                </View>
+              </View>
 
               {/* Active Toggle */}
               {!hasAdvancedGameParticipation && (
-                <View style={styles.toggleRow}>
-                  <ThemedText style={[styles.toggleLabel, { color: palette.modalText }]}>
-                    Active roster
-                  </ThemedText>
+                <View style={[styles.sectionRow, styles.activeRow]}>
+                  <View style={styles.activeTextContainer}>
+                    <ThemedText style={[styles.sectionLabel, { color: palette.modalText }]}>
+                      Active roster
+                    </ThemedText>
+                    <ThemedText style={[styles.activeSubtext, { color: palette.modalTextMuted }]}>
+                      Available for games and line presets
+                    </ThemedText>
+                  </View>
                   <Switch
                     value={isActive}
                     onValueChange={handleActiveChange}
@@ -248,6 +284,7 @@ export default function EditPlayerModal() {
                   />
                 </View>
               )}
+
               {saveError && (
                 <ThemedText
                   accessibilityRole="alert"
@@ -257,9 +294,9 @@ export default function EditPlayerModal() {
                 </ThemedText>
               )}
 
-              {/* Matching Type */}
-              <View style={styles.toggleRow}>
-                <ThemedText style={[styles.toggleLabel, { color: palette.modalText }]}>
+              {/* Matching Preference */}
+              <View style={styles.sectionRow}>
+                <ThemedText style={[styles.sectionLabel, { color: palette.modalText }]}>
                   Matching preference
                 </ThemedText>
                 <View style={styles.pillRow}>
@@ -268,8 +305,8 @@ export default function EditPlayerModal() {
                       styles.pill,
                       { borderColor: palette.overlay20 },
                       matchingType === 'fmp' && {
-                        backgroundColor: palette.accent,
-                        borderColor: palette.accent,
+                        backgroundColor: fmpColor,
+                        borderColor: fmpColor,
                       },
                     ]}
                     onPress={() => setMatchingType(matchingType === 'fmp' ? null : 'fmp')}>
@@ -289,8 +326,8 @@ export default function EditPlayerModal() {
                       styles.pill,
                       { borderColor: palette.overlay20 },
                       matchingType === 'mmp' && {
-                        backgroundColor: palette.accent,
-                        borderColor: palette.accent,
+                        backgroundColor: mmpColor,
+                        borderColor: mmpColor,
                       },
                     ]}
                     onPress={() => setMatchingType(matchingType === 'mmp' ? null : 'mmp')}>
@@ -309,8 +346,8 @@ export default function EditPlayerModal() {
               </View>
 
               {/* Role */}
-              <View style={styles.toggleRow}>
-                <ThemedText style={[styles.toggleLabel, { color: palette.modalText }]}>
+              <View style={styles.sectionRow}>
+                <ThemedText style={[styles.sectionLabel, { color: palette.modalText }]}>
                   Role
                 </ThemedText>
                 <View style={styles.pillRow}>
@@ -327,7 +364,7 @@ export default function EditPlayerModal() {
                     onPress={() => setRole(role === 'handler' ? null : 'handler')}>
                     <MaterialCommunityIcons
                       name="bullseye-arrow"
-                      size={scaleBySizeClass(12, sizeClass)}
+                      size={scaleBySizeClass(14, sizeClass)}
                       color={role === 'handler' ? palette.textOnAccent : palette.modalTextMuted}
                     />
                     <ThemedText
@@ -353,7 +390,7 @@ export default function EditPlayerModal() {
                     onPress={() => setRole(role === 'hybrid' ? null : 'hybrid')}>
                     <MaterialCommunityIcons
                       name="star-three-points"
-                      size={scaleBySizeClass(12, sizeClass)}
+                      size={scaleBySizeClass(14, sizeClass)}
                       color={role === 'hybrid' ? palette.textOnAccent : palette.modalTextMuted}
                     />
                     <ThemedText
@@ -379,7 +416,7 @@ export default function EditPlayerModal() {
                     onPress={() => setRole(role === 'cutter' ? null : 'cutter')}>
                     <MaterialCommunityIcons
                       name="shoe-print"
-                      size={scaleBySizeClass(12, sizeClass)}
+                      size={scaleBySizeClass(14, sizeClass)}
                       color={role === 'cutter' ? palette.textOnAccent : palette.modalTextMuted}
                     />
                     <ThemedText
@@ -401,6 +438,7 @@ export default function EditPlayerModal() {
                   <Pressable
                     style={[styles.deleteButton, { backgroundColor: palette.dangerOverlay15 }]}
                     onPress={() => setConfirmingDelete(true)}
+                    accessibilityLabel="Delete player"
                     testID="edit-player-delete">
                     <MaterialCommunityIcons
                       name="delete-outline"
@@ -414,7 +452,7 @@ export default function EditPlayerModal() {
                     style={[
                       styles.button,
                       styles.cancelButton,
-                      { backgroundColor: palette.overlay10, borderColor: palette.overlay20 },
+                      { backgroundColor: 'transparent', borderColor: palette.overlay20 },
                     ]}
                     onPress={handleDismiss}>
                     <ThemedText style={[styles.buttonText, { color: palette.modalText }]}>
@@ -425,21 +463,17 @@ export default function EditPlayerModal() {
                     style={[
                       styles.button,
                       {
-                        backgroundColor:
-                          nameExists || numberExists ? palette.overlay20 : palette.accent,
+                        backgroundColor: saveDisabled ? palette.overlay20 : palette.accent,
                       },
                     ]}
                     onPress={handleSave}
-                    disabled={nameExists || numberExists}
+                    disabled={saveDisabled}
                     testID="edit-player-save">
                     <ThemedText
                       style={[
                         styles.buttonText,
                         {
-                          color:
-                            nameExists || numberExists
-                              ? palette.modalTextMuted
-                              : palette.textOnAccent,
+                          color: saveDisabled ? palette.modalTextMuted : palette.textOnAccent,
                         },
                       ]}>
                       Save
@@ -448,64 +482,106 @@ export default function EditPlayerModal() {
                 </View>
               </View>
             </ScrollView>
-          )}
-        </Pressable>
-      </Pressable>
-    </View>
+          </>
+        )}
+      </BottomSheet>
+    </KeyboardAvoidingView>
   );
 }
 
 function createStyles(sizeClass: SizeClass) {
+  const isTablet = sizeClass !== 'small';
+
   return StyleSheet.create({
-    overlay: {
+    keyboardAvoidingView: {
       flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-      padding: 24,
     },
     sheet: {
       width: '100%',
-      maxWidth: getSizeClassValue(MODAL_MAX_WIDTH_FORM, sizeClass),
       maxHeight: '92%',
-      borderRadius: 16,
-      padding: 20,
-      borderWidth: 1,
+      paddingTop: 10,
+      ...(isTablet && {
+        maxWidth: getSizeClassValue(MODAL_MAX_WIDTH_FORM, sizeClass),
+        alignSelf: 'center',
+      }),
+    },
+    handle: {
+      width: scaleBySizeClass(36, sizeClass),
+      height: 4,
+      borderRadius: 2,
+      alignSelf: 'center',
+      marginBottom: 14,
+    },
+    headerRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 20,
+      marginBottom: 16,
+    },
+    headerTitle: {
+      fontSize: scaleBySizeClass(18, sizeClass),
+      fontFamily: Fonts.bold,
     },
     scrollArea: {
       width: '100%',
     },
     scrollContent: {
-      paddingBottom: 2,
+      paddingHorizontal: 20,
+      paddingBottom: 8,
     },
-    title: {
-      fontSize: scaleBySizeClass(12, sizeClass),
-      fontFamily: Fonts.bold,
-      letterSpacing: 1,
-      marginBottom: 16,
-      textAlign: 'center',
+    inputsRow: {
+      flexDirection: 'row',
+      gap: 12,
+      marginBottom: 4,
+    },
+    nameField: {
+      flex: 1,
+    },
+    numberField: {
+      width: scaleBySizeClass(88, sizeClass),
+    },
+    fieldLabel: {
+      fontSize: scaleBySizeClass(11, sizeClass),
+      fontFamily: Fonts.semiBold,
+      letterSpacing: 0.5,
+      marginBottom: 6,
     },
     input: {
       borderWidth: 1,
       borderRadius: 10,
-      paddingHorizontal: 14,
-      paddingVertical: 12,
+      paddingHorizontal: 12,
+      paddingVertical: 10,
       fontSize: scaleBySizeClass(16, sizeClass),
-      marginBottom: 8,
+    },
+    numberInput: {
+      textAlign: 'center',
     },
     errorText: {
       fontSize: scaleBySizeClass(12, sizeClass),
-      marginLeft: 4,
-      marginBottom: 8,
+      marginTop: 4,
+      marginLeft: 2,
     },
-    toggleRow: {
+    sectionRow: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
-      marginTop: 12,
+      marginTop: 14,
     },
-    toggleLabel: {
-      fontSize: scaleBySizeClass(15, sizeClass),
+    activeRow: {
+      paddingVertical: 2,
+    },
+    activeTextContainer: {
+      flex: 1,
+      marginRight: 12,
+    },
+    sectionLabel: {
+      fontSize: scaleBySizeClass(14, sizeClass),
       fontFamily: Fonts.semiBold,
+    },
+    activeSubtext: {
+      fontSize: scaleBySizeClass(12, sizeClass),
+      marginTop: 2,
     },
     pillRow: {
       flexDirection: 'row',
@@ -516,13 +592,14 @@ function createStyles(sizeClass: SizeClass) {
       paddingHorizontal: 12,
       borderRadius: 16,
       borderWidth: 1,
-      minWidth: 50,
+      minWidth: 48,
       alignItems: 'center',
+      justifyContent: 'center',
     },
     pillWithIcon: {
       flexDirection: 'row',
-      gap: 3,
-      paddingHorizontal: 8,
+      gap: 4,
+      paddingHorizontal: 10,
       minWidth: 0,
     },
     pillText: {
@@ -538,6 +615,8 @@ function createStyles(sizeClass: SizeClass) {
     deleteButton: {
       padding: 12,
       borderRadius: 10,
+      alignItems: 'center',
+      justifyContent: 'center',
     },
     actionButtons: {
       flex: 1,
@@ -561,18 +640,20 @@ function createStyles(sizeClass: SizeClass) {
     // Confirmation styles
     confirmContainer: {
       alignItems: 'center',
-      paddingVertical: 8,
+      paddingVertical: 12,
+      paddingHorizontal: 20,
     },
     confirmTitle: {
       fontSize: scaleBySizeClass(18, sizeClass),
-      fontFamily: Fonts.semiBold,
+      fontFamily: Fonts.bold,
       marginTop: 12,
       marginBottom: 8,
+      textAlign: 'center',
     },
     confirmMessage: {
       fontSize: scaleBySizeClass(14, sizeClass),
       textAlign: 'center',
-      marginBottom: 20,
+      marginBottom: 24,
       lineHeight: scaleBySizeClass(20, sizeClass),
     },
     confirmButtons: {
@@ -585,6 +666,7 @@ function createStyles(sizeClass: SizeClass) {
       paddingVertical: 12,
       borderRadius: 10,
       alignItems: 'center',
+      justifyContent: 'center',
     },
     confirmCancelButton: {
       borderWidth: 1,
