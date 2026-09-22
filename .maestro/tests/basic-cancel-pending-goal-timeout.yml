@@ -5,15 +5,16 @@ name: Basic Cancel Pending Goal Preserves Used Timeout
 # use a timeout, score the halftime point, cancel the pending stat entry, and
 # verify that the timeout cannot be used again.
 - launchApp
+- openLink: ultimatestats-dev:///__maestro_seed__?mode=basicCancelPendingGoal
 - runFlow:
     when:
       visible: 'U-Stat (Dev)'
     commands:
-      - tapOn: 'Continue'
+      - tapOn: 'U-Stat (Dev)'
       - extendedWaitUntil:
           notVisible: 'DEVELOPMENT SERVERS'
           timeout: 15000
-- openLink: ultimatestats-dev:///__maestro_seed__?mode=basicCancelPendingGoal
+      - openLink: ultimatestats-dev:///__maestro_seed__?mode=basicCancelPendingGoal
 
 - runFlow:
     when:

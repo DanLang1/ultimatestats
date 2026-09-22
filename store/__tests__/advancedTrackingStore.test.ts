@@ -236,9 +236,6 @@ describe('advancedTrackingStore', () => {
     expect(persistedPayload.state).not.toHaveProperty('undoStack');
     expect(Object.keys(persistedPayload.state).sort()).toEqual([
       'currentGameId',
-      'halftimeTimerDurationSeconds',
-      'halftimeTimerStartedAt',
-      'isHalftimeBreakActive',
       'pendingNextPointLineSelection',
     ]);
   });
@@ -341,11 +338,198 @@ describe('advancedTrackingStore', () => {
     expect(lastWrite).toBeDefined();
 
     const persistedPayload = JSON.parse(lastWrite![1]);
-    expect(persistedPayload.state.isHalftimeBreakActive).toBe(true);
+    expect(persistedPayload.state).not.toHaveProperty('isHalftimeBreakActive');
     expect(persistedPayload.state.halftimeTimerStartedAt).toBe(halftimeTimerStartedAt);
     expect(persistedPayload.state.halftimeTimerDurationSeconds).toBe(
       DEFAULT_HALFTIME_BREAK_SECONDS,
     );
+  });
+
+  it('rederives halftime break to false on loadCurrentGame when canonical game is past halftime', async () => {
+    createGame();
+    useAdvancedTrackingStore.getState().recordPull({
+      lines: homeLinesAugust,
+      puller: untracked,
+      receiver: august,
+      result: 'inbound',
+    });
+    useAdvancedTrackingStore
+      .getState()
+      .recordThrow({ thrower: august, result: 'goal', toPlayer: meves });
+
+    expect(useAdvancedTrackingStore.getState().triggerHalftimeEarly()).toBe(true);
+    useAdvancedTrackingStore.getState().startHalftimeTimer();
+    useAdvancedTrackingStore.getState().recordPull({
+      lines: homeLinesAugust,
+      puller: august,
+      receiver: untracked,
+      result: 'inbound',
+    });
+
+    const gamePastHalftime = structuredClone(getCurrentGame()!);
+    resetStore();
+    jest.clearAllMocks();
+
+    mockedAsyncStorage.getItem.mockResolvedValueOnce(
+      JSON.stringify({
+        version: 1,
+        state: {
+          currentGameId: gamePastHalftime.id,
+          pendingNextPointLineSelection: null,
+          isHalftimeBreakActive: true,
+          halftimeTimerStartedAt: Date.now(),
+          halftimeTimerDurationSeconds: DEFAULT_HALFTIME_BREAK_SECONDS,
+        },
+      }),
+    );
+    const loadGameSpy = jest
+      .spyOn(useSavedAdvancedGamesStore.getState(), 'loadGame')
+      .mockResolvedValue(gamePastHalftime);
+
+    await useAdvancedTrackingStore.persist.rehydrate();
+    await Promise.resolve();
+
+    expect(useAdvancedTrackingStore.getState().isHalftimeBreakActive).toBe(false);
+    expect(useAdvancedTrackingStore.getState().halftimeTimerStartedAt).toBeNull();
+    loadGameSpy.mockRestore();
+  });
+
+  it('rederives halftime break to true on loadCurrentGame when canonical game is at halftime', async () => {
+    createGame();
+    useAdvancedTrackingStore.getState().recordPull({
+      lines: homeLinesAugust,
+      puller: untracked,
+      receiver: august,
+      result: 'inbound',
+    });
+    useAdvancedTrackingStore
+      .getState()
+      .recordThrow({ thrower: august, result: 'goal', toPlayer: meves });
+    expect(useAdvancedTrackingStore.getState().triggerHalftimeEarly()).toBe(true);
+
+    const gameAtHalftime = structuredClone(getCurrentGame()!);
+    resetStore();
+    jest.clearAllMocks();
+
+    mockedAsyncStorage.getItem.mockResolvedValueOnce(
+      JSON.stringify({
+        version: 1,
+        state: {
+          currentGameId: gameAtHalftime.id,
+          pendingNextPointLineSelection: null,
+          isHalftimeBreakActive: false,
+          halftimeTimerStartedAt: null,
+          halftimeTimerDurationSeconds: DEFAULT_HALFTIME_BREAK_SECONDS,
+        },
+      }),
+    );
+    const loadGameSpy = jest
+      .spyOn(useSavedAdvancedGamesStore.getState(), 'loadGame')
+      .mockResolvedValue(gameAtHalftime);
+
+    await useAdvancedTrackingStore.persist.rehydrate();
+    await Promise.resolve();
+
+    expect(useAdvancedTrackingStore.getState().isHalftimeBreakActive).toBe(true);
+    loadGameSpy.mockRestore();
+  });
+
+  it('preserves active timer progress on loadCurrentGame when canonical game is at halftime', async () => {
+    createGame();
+    useAdvancedTrackingStore.getState().recordPull({
+      lines: homeLinesAugust,
+      puller: untracked,
+      receiver: august,
+      result: 'inbound',
+    });
+    useAdvancedTrackingStore
+      .getState()
+      .recordThrow({ thrower: august, result: 'goal', toPlayer: meves });
+    expect(useAdvancedTrackingStore.getState().triggerHalftimeEarly()).toBe(true);
+
+    const gameAtHalftime = structuredClone(getCurrentGame()!);
+    resetStore();
+    jest.clearAllMocks();
+
+    const startedAt = Date.now() - 5000;
+    mockedAsyncStorage.getItem.mockResolvedValueOnce(
+      JSON.stringify({
+        version: 1,
+        state: {
+          currentGameId: gameAtHalftime.id,
+          pendingNextPointLineSelection: null,
+          halftimeTimerStartedAt: startedAt,
+          halftimeTimerDurationSeconds: 420,
+        },
+      }),
+    );
+    const loadGameSpy = jest
+      .spyOn(useSavedAdvancedGamesStore.getState(), 'loadGame')
+      .mockResolvedValue(gameAtHalftime);
+
+    await useAdvancedTrackingStore.persist.rehydrate();
+    await Promise.resolve();
+
+    expect(useAdvancedTrackingStore.getState().isHalftimeBreakActive).toBe(true);
+    expect(useAdvancedTrackingStore.getState().halftimeTimerStartedAt).toBe(startedAt);
+    expect(useAdvancedTrackingStore.getState().halftimeTimerDurationSeconds).toBe(420);
+    loadGameSpy.mockRestore();
+  });
+
+  it('synchronizes halftime break state when importAdvancedGame updates current game', async () => {
+    createGame();
+    useAdvancedTrackingStore.getState().recordPull({
+      lines: homeLinesAugust,
+      puller: untracked,
+      receiver: august,
+      result: 'inbound',
+    });
+    useAdvancedTrackingStore
+      .getState()
+      .recordThrow({ thrower: august, result: 'goal', toPlayer: meves });
+    expect(useAdvancedTrackingStore.getState().triggerHalftimeEarly()).toBe(true);
+
+    const halftimeGame = structuredClone(getCurrentGame()!);
+    useAdvancedTrackingStore.getState().clearHalftimeBreak();
+    expect(useAdvancedTrackingStore.getState().isHalftimeBreakActive).toBe(false);
+
+    await useAdvancedTrackingStore.getState().importAdvancedGame(halftimeGame);
+
+    expect(useAdvancedTrackingStore.getState().isHalftimeBreakActive).toBe(true);
+  });
+
+  it('rederives halftime from a frozen canonical game without mutating it', async () => {
+    createGame();
+    useAdvancedTrackingStore.getState().recordPull({
+      lines: homeLinesAugust,
+      puller: untracked,
+      receiver: august,
+      result: 'inbound',
+    });
+    useAdvancedTrackingStore
+      .getState()
+      .recordThrow({ thrower: august, result: 'goal', toPlayer: meves });
+    expect(useAdvancedTrackingStore.getState().triggerHalftimeEarly()).toBe(true);
+
+    const halftimeGame = structuredClone(getCurrentGame()!);
+    const originalTransitions = halftimeGame.gameTransitions;
+    Object.freeze(halftimeGame);
+    useAdvancedTrackingStore.setState({ currentGame: null, isHalftimeBreakActive: false });
+    jest.clearAllMocks();
+
+    const loadGameSpy = jest
+      .spyOn(useSavedAdvancedGamesStore.getState(), 'loadGame')
+      .mockResolvedValue(halftimeGame);
+
+    const loadedGame = await useAdvancedTrackingStore.getState().loadCurrentGame();
+
+    expect(loadedGame?.id).toBe(halftimeGame.id);
+    expect(useAdvancedTrackingStore.getState().isHalftimeBreakActive).toBe(true);
+    const liveTransitions = useAdvancedTrackingStore.getState().currentGame?.gameTransitions;
+    expect(liveTransitions).not.toBe(originalTransitions);
+    expect(liveTransitions).toEqual(originalTransitions);
+    expect(halftimeGame.gameTransitions).toBe(originalTransitions);
+    loadGameSpy.mockRestore();
   });
 
   it('persists a partial next-point line without adding it to game history', () => {

@@ -27,18 +27,6 @@ This document tracks intentionally deferred cleanup work discovered during the d
   `components/advancedTracking/TrackerLineChangeMenu.tsx`
   `components/new-game/NewGameSheet.tsx`
 
-## P2 - Derive Advanced Halftime Recovery State
-
-- Advanced halftime activity and timer fields are persisted in AsyncStorage separately from the
-  canonical SQLite game. A process interruption can therefore restore UI recovery state that no
-  longer matches the loaded game.
-- Recompute `isHalftimeBreakActive` from the canonical game in `loadCurrentGame` and
-  `importAdvancedGame`, then define how timer progress should be retained or reset when the
-  persisted timer context does not match that derived break.
-- References:
-  `store/advancedTracking/trackingStore.ts`
-  `lib/advancedTracking/trackingUtils.ts` - `syncDerivedHalftimeTransition`
-
 ## P3 - Store Architecture Refactor
 
 - `gameStore` is a god store spanning six concerns: live game state, timers, roster, game catalog, UI signals, and game config.

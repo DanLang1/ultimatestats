@@ -320,7 +320,13 @@ export function canStartSecondHalfEarly(
   );
 }
 
-export function syncDerivedHalftimeTransition(game: AdvancedTrackedGame): boolean {
+export interface DerivedHalftimeTransition {
+  isActive: boolean;
+  gameTransitions: GameTransition[] | undefined;
+}
+
+/** Pure derivation of the halftime transition; safe to call on frozen or read-only games. */
+export function deriveHalftimeTransition(game: AdvancedTrackedGame): DerivedHalftimeTransition {
   const halftimeAt = game.settings.format?.halftimeAt;
   const existingTransitions = game.gameTransitions ?? [];
   const existingHalftime = existingTransitions.find(
@@ -369,15 +375,21 @@ export function syncDerivedHalftimeTransition(game: AdvancedTrackedGame): boolea
     });
   }
 
-  game.gameTransitions = hasItems(nextTransitions) ? nextTransitions : undefined;
-
   const currentPoint = getCurrentPoint(game);
-  return (
-    currentPoint != null &&
-    hasPointEnded(currentPoint) &&
-    halftimeAfterPointId != null &&
-    halftimeAfterPointId === currentPoint.id
-  );
+  return {
+    isActive:
+      currentPoint != null &&
+      hasPointEnded(currentPoint) &&
+      halftimeAfterPointId != null &&
+      halftimeAfterPointId === currentPoint.id,
+    gameTransitions: hasItems(nextTransitions) ? nextTransitions : undefined,
+  };
+}
+
+export function syncDerivedHalftimeTransition(game: AdvancedTrackedGame): boolean {
+  const derived = deriveHalftimeTransition(game);
+  game.gameTransitions = derived.gameTransitions;
+  return derived.isActive;
 }
 
 /**

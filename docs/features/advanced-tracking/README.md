@@ -74,6 +74,9 @@ adjusted.
   next-point line selection needed for recovery. The pending selection owns only the lineups (plus
   its game/after-point context); PullTracking derives receiving/pulling side and gender ratio from
   the current game and settings.
+- Whether the halftime break is active is rederived from the canonical SQLite game when that game
+  is loaded or replaced. AsyncStorage retains countdown progress only while that derived break is
+  active; it does not persist a second halftime-activity flag.
 - Partial line drafts remain recoverable while preparing a point. PullTracking accepts only a
   current, ready draft: every full-roster side has exactly seven unique participants, anonymous
   sides are empty, and no participant is unknown or selected on both sides.

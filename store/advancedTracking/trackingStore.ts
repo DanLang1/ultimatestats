@@ -41,6 +41,7 @@ import {
   assertValidPointLineHistory,
   assertValidSideIds,
   canStartSecondHalfEarly,
+  deriveHalftimeTransition,
   didPullTurnOver,
   getActiveAdvancedGame,
   getCurrentPoint,
@@ -144,6 +145,22 @@ function setHalftimeBreakActive(state: Draft<AdvancedTrackingState>, isActive: b
   resetHalftimeTimerState(state);
 }
 
+function reconcileDerivedHalftimeBreak(state: Draft<AdvancedTrackingState>) {
+  const game = state.currentGame;
+  if (game == null) {
+    state.isHalftimeBreakActive = false;
+    resetHalftimeTimerState(state);
+    return;
+  }
+
+  const { isActive, gameTransitions } = deriveHalftimeTransition(game);
+  state.currentGame = { ...game, gameTransitions };
+  state.isHalftimeBreakActive = isActive;
+  if (!isActive) {
+    resetHalftimeTimerState(state);
+  }
+}
+
 function removeActionById(
   game: AdvancedTrackedGame,
   pointId: string,
@@ -238,6 +255,7 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
             state.currentGame = game;
             state.undoStack = [];
             reconcilePendingNextPointLineSelection(state);
+            reconcileDerivedHalftimeBreak(state);
           });
           return game;
         },
@@ -1286,6 +1304,7 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
               state.currentGame = game;
               state.undoStack = [];
               reconcilePendingNextPointLineSelection(state);
+              reconcileDerivedHalftimeBreak(state);
             }
           });
         },
@@ -1322,9 +1341,12 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
         partialize: (state): unknown => ({
           currentGameId: state.currentGameId,
           pendingNextPointLineSelection: state.pendingNextPointLineSelection,
-          isHalftimeBreakActive: state.isHalftimeBreakActive,
-          halftimeTimerStartedAt: state.halftimeTimerStartedAt,
-          halftimeTimerDurationSeconds: state.halftimeTimerDurationSeconds,
+          ...(state.isHalftimeBreakActive
+            ? {
+                halftimeTimerStartedAt: state.halftimeTimerStartedAt,
+                halftimeTimerDurationSeconds: state.halftimeTimerDurationSeconds,
+              }
+            : {}),
         }),
       },
     ),
