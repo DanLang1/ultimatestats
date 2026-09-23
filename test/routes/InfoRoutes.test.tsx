@@ -38,6 +38,7 @@ describe('home information routes', () => {
 
     await user.press(screen.getByText('Advanced Tracker Guide'));
     expect(screen.getByText('What happened?')).toBeVisible();
+    expect(screen.queryByTestId('tracker-help-return')).toBeNull();
 
     await user.press(screen.getByTestId('tracker-help-close'));
 

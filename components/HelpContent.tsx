@@ -355,7 +355,11 @@ export default function HelpContent({
         />
       </Pressable>
 
-      <TrackerHelpSheet visible={showAdvancedGuide} onClose={() => setShowAdvancedGuide(false)} />
+      <TrackerHelpSheet
+        visible={showAdvancedGuide}
+        onClose={() => setShowAdvancedGuide(false)}
+        showReturnToTracking={false}
+      />
     </>
   );
 }

@@ -10,6 +10,7 @@ import { Fonts } from '@/theme/theme';
 interface TrackerHelpSheetProps {
   visible: boolean;
   onClose: () => void;
+  showReturnToTracking?: boolean;
 }
 
 interface HelpRow {
@@ -46,7 +47,11 @@ const helpRows: HelpRow[] = [
   },
 ];
 
-export function TrackerHelpSheet({ visible, onClose }: TrackerHelpSheetProps) {
+export function TrackerHelpSheet({
+  visible,
+  onClose,
+  showReturnToTracking = true,
+}: TrackerHelpSheetProps) {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
   const styles = createStyles(sizeClass);
@@ -119,19 +124,21 @@ export function TrackerHelpSheet({ visible, onClose }: TrackerHelpSheetProps) {
             </View>
           </View>
         </ScrollView>
-        <Pressable
-          accessibilityRole="button"
-          testID="tracker-help-return"
-          onPress={onClose}
-          style={({ pressed }) => [
-            styles.returnButton,
-            { backgroundColor: palette.accent },
-            pressed && { opacity: 0.7 },
-          ]}>
-          <ThemedText style={[styles.event, { color: palette.textOnAccent }]}>
-            Back to tracking
-          </ThemedText>
-        </Pressable>
+        {showReturnToTracking && (
+          <Pressable
+            accessibilityRole="button"
+            testID="tracker-help-return"
+            onPress={onClose}
+            style={({ pressed }) => [
+              styles.returnButton,
+              { backgroundColor: palette.accent },
+              pressed && { opacity: 0.7 },
+            ]}>
+            <ThemedText style={[styles.event, { color: palette.textOnAccent }]}>
+              Back to tracking
+            </ThemedText>
+          </Pressable>
+        )}
       </BottomSheet>
     </Modal>
   );
