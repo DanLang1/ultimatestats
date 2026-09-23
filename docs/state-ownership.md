@@ -29,14 +29,16 @@ advanced game state or advanced saved records here. See the proposed ownership c
 Source: `store/advancedTracking/trackingStore.ts`.
 
 Owns the loaded `currentGame`, `currentGameId`, live tracker mutations, recent undo operations,
-halftime timer state, and recovery pointer. It does not own the saved-game catalog.
+halftime timer state, and recovery pointer. The game and undo stack are persisted as one atomic
+SQLite snapshot for restart recovery. It does not own the saved-game catalog.
 
 ### Advanced Saved Games: `useSavedAdvancedGamesStore`
 
 Source: `store/advancedTracking/savedGamesStore.ts`.
 
-Owns saved-game summaries and the in-memory `gamesById` cache. Full records and summaries persist
-through `lib/advancedTracking/storage.ts` in SQLite.
+Owns saved-game summaries and the in-memory `gamesById` cache. Full records, summaries, and local
+active-game undo metadata persist through `lib/advancedTracking/storage.ts` in SQLite. Active-game
+recovery bypasses the cache so it cannot combine a cached game with history from another row state.
 
 ### Active Mode: `useGameSessionStore`
 

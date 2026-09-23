@@ -440,6 +440,17 @@ describe('advanced tracking routes', () => {
     expect(screen.queryByTestId('throw-type-huck')).not.toBeOnTheScreen();
   });
 
+  it('hides the in-point undo control when the undo stack is empty', async () => {
+    arrangeAdvancedGame();
+    recordOpeningPull();
+    useAdvancedTrackingStore.setState({ undoStack: [] });
+
+    await renderScreen(<TrackerScreen />);
+
+    expect(screen.getByTestId('tracker-menu-button')).toBeVisible();
+    expect(screen.queryByTestId('tracker-undo-button')).not.toBeOnTheScreen();
+  });
+
   it('adds a private game note from the tracker menu', async () => {
     const user = userEvent.setup();
     arrangeAdvancedGame();
@@ -1743,5 +1754,16 @@ describe('advanced tracking routes', () => {
     expect(screen.getByTestId('game-complete-undo')).toBeVisible();
     expect(screen.queryByTestId('tracker-undo-button')).not.toBeOnTheScreen();
     expect(screen.getByText('Done')).toBeVisible();
+  });
+
+  it('hides Undo Last Action when a restored game-over state has no undoable action', async () => {
+    arrangeWinningAdvancedGame();
+    useAdvancedTrackingStore.setState({ undoStack: [] });
+
+    await renderScreen(<TrackerGameCompleteScreen />);
+
+    expect(screen.getByText('GAME COMPLETE')).toBeVisible();
+    expect(screen.getByTestId('game-complete-finish')).toBeVisible();
+    expect(screen.queryByTestId('game-complete-undo')).not.toBeOnTheScreen();
   });
 });

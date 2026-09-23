@@ -16,11 +16,14 @@ import {
 } from '@/lib/advancedTracking/advancedTurnoverCorrectionUtils';
 import { withAdvancedPointNote } from '@/lib/advancedTracking/gameNoteUtils';
 import { migrateAdvancedTrackedGame } from '@/lib/advancedTracking/migrations';
+import type { AdvancedGameHistorySnapshot } from '@/lib/advancedTracking/persistenceTypes';
 import {
   deleteAdvancedGameRecord,
   loadAdvancedGame,
+  loadAdvancedGameHistorySnapshot,
   loadAdvancedGameSummaries,
   upsertAdvancedGame,
+  upsertAdvancedLiveSnapshot,
 } from '@/lib/advancedTracking/storage';
 import type { AdvancedGameSummary } from '@/lib/advancedTracking/summary';
 import { compareAdvancedGameSummaries } from '@/lib/advancedTracking/summary';
@@ -32,11 +35,13 @@ type SavedAdvancedGamesState = {
   gamesById: Record<string, AdvancedTrackedGame>;
   loadSummaries: () => Promise<AdvancedGameSummary[]>;
   loadGame: (gameId: string) => Promise<AdvancedTrackedGame | null>;
+  loadActiveGameSnapshot: (gameId: string) => Promise<AdvancedGameHistorySnapshot | null>;
   loadGames: (gameIds: string[]) => Promise<AdvancedTrackedGame[]>;
   saveGame: (
     game: AdvancedTrackedGame,
     options?: SaveAdvancedGameOptions,
   ) => Promise<AdvancedGameSummary>;
+  saveLiveSnapshot: (snapshot: AdvancedGameHistorySnapshot) => Promise<AdvancedGameSummary>;
   correctTouch: (gameId: string, input: CorrectAdvancedTouchInput) => Promise<AdvancedTrackedGame>;
   correctTurnover: (
     gameId: string,
@@ -120,6 +125,17 @@ export const useSavedAdvancedGamesStore = create<SavedAdvancedGamesState>()(
       return loadPromise;
     },
 
+    loadActiveGameSnapshot: async (gameId) => {
+      const cachedGameAtStart = get().gamesById[gameId];
+      const snapshot = await loadAdvancedGameHistorySnapshot(gameId);
+      if (snapshot != null && get().gamesById[gameId] === cachedGameAtStart) {
+        set((state) => {
+          state.gamesById[gameId] = snapshot.game;
+        });
+      }
+      return snapshot;
+    },
+
     loadGames: async (gameIds) => {
       const uniqueIds = [...new Set(gameIds)];
       await Promise.all(uniqueIds.map((gameId) => get().loadGame(gameId)));
@@ -141,6 +157,19 @@ export const useSavedAdvancedGamesStore = create<SavedAdvancedGamesState>()(
           state.summaries = upsertSummary(state.summaries, summary);
         }
         state.gamesById[gameToSave.id] = gameToSave;
+      });
+      return summary;
+    },
+
+    saveLiveSnapshot: async (snapshot) => {
+      const game = migrateAdvancedTrackedGame(snapshot.game);
+      const migratedSnapshot = { game, undoStack: snapshot.undoStack };
+      const summary = await upsertAdvancedLiveSnapshot(migratedSnapshot);
+      set((state) => {
+        if (state.summariesLoaded) {
+          state.summaries = upsertSummary(state.summaries, summary);
+        }
+        state.gamesById[game.id] = game;
       });
       return summary;
     },

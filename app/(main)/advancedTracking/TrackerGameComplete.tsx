@@ -19,6 +19,7 @@ export default function TrackerGameCompleteScreen() {
     finalizeGame,
     finishTerminatedGame,
     undoLastOperation,
+    undoStack,
     terminateGame,
   } = useAdvancedTrackingStore();
   const { finishActiveGameSession, restoreAdvancedGameSession } = useGameSessionActions();
@@ -30,6 +31,7 @@ export default function TrackerGameCompleteScreen() {
   const isTerminated = game.status === 'terminated';
   const gameIsOver = isAdvancedGameOver(game);
   const isEarlyEndFlow = isEarlyEndPending || isTerminated;
+  const showUndoLastAction = isEarlyEndFlow || undoStack.length > 0;
 
   if (!isEarlyEndPending && !isTerminated && !gameIsOver) {
     return <Redirect href="/advancedTracking/Tracker" />;
@@ -118,12 +120,16 @@ export default function TrackerGameCompleteScreen() {
           onPress: handleFinish,
           testID: 'game-complete-finish',
         }}
-        secondaryAction={{
-          title: isEarlyEndFlow ? 'Undo End Game' : 'Undo Last Action',
-          text: 'Return to the tracker and continue the game',
-          onPress: handleUndo,
-          testID: 'game-complete-undo',
-        }}>
+        secondaryAction={
+          showUndoLastAction
+            ? {
+                title: isEarlyEndFlow ? 'Undo End Game' : 'Undo Last Action',
+                text: 'Return to the tracker and continue the game',
+                onPress: handleUndo,
+                testID: 'game-complete-undo',
+              }
+            : undefined
+        }>
         {!isEarlyEndFlow ? <GameCompleteLastActionCard game={game} /> : null}
       </GameCompleteContent>
     </>

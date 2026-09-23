@@ -1,0 +1,39 @@
+appId: com.langdk.ultimatestats.dev
+name: Advanced Tracker Restart Restores Undo
+tags:
+  - extended
+---
+- runFlow:
+    file: ../flows/setup-game-clean.yaml
+    env:
+      TRACKER_STATE: focusPossession
+
+# Record one action after the seed's explicit saved-game write cleared setup history.
+- tapOn:
+    id: 'tracker-chip-Jon'
+- assertVisible:
+    id: 'tracker-undo-button'
+- assertVisible:
+    text: '→'
+
+# Restart the process, resume through Dashboard, and verify the SQLite pair restores undo.
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: 'dashboard-resume-game-button'
+    timeout: 15000
+- tapOn:
+    id: 'dashboard-resume-game-button'
+- extendedWaitUntil:
+    visible:
+      id: 'tracker-menu-button'
+    timeout: 15000
+- assertVisible:
+    id: 'tracker-undo-button'
+- tapOn:
+    id: 'tracker-undo-button'
+- assertNotVisible:
+    text: '→'
+
+- takeScreenshot:
+    path: .maestro/screenshots/advanced-tracker-restart-undo

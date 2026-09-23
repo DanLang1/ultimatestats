@@ -2,6 +2,7 @@ import type { CorrectAdvancedPointActiveLinesInput } from '@/lib/advancedTrackin
 import type { CorrectAdvancedTouchInput } from '@/lib/advancedTracking/advancedTouchCorrectionUtils';
 import type { CorrectAdvancedTurnoverInput } from '@/lib/advancedTracking/advancedTurnoverCorrectionUtils';
 import type { CaptureIntent, CaptureIntentResult } from '@/lib/advancedTracking/captureIntentUtils';
+import type { AdvancedTrackingUndoEntry } from '@/lib/advancedTracking/persistenceTypes';
 import type {
   AdvancedGameType,
   AdvancedTrackedGame,
@@ -96,31 +97,7 @@ export interface UpdatePointNoteInput {
   note: string;
 }
 
-export type AdvancedTrackingUndoEntry =
-  | {
-      kind: 'action';
-      pointId: string;
-      possessionId: string;
-      actionId: string;
-    }
-  | {
-      kind: 'between_point_timeout';
-      pointId: string;
-      transitionId: string;
-    }
-  | {
-      kind: 'halftime_early';
-      pointId: string;
-      transitionId: string;
-    }
-  | {
-      kind: 'amend_pull_result';
-      pointId: string;
-      possessionId: string;
-      actionId: string;
-      previousResult: PullResult;
-      previousReceiver?: PlayerRef;
-    };
+export type { AdvancedTrackingUndoEntry } from '@/lib/advancedTracking/persistenceTypes';
 
 export interface AdvancedTrackingState {
   currentGameId: string | null;

@@ -214,11 +214,20 @@ Timing fields are optional. Derivations must distinguish missing timing data fro
 Point, possession, action, transition, and participant IDs are stable editing boundaries. Normal
 corrections update payload fields without moving historical actions between possessions or points.
 
-Live undo is strictly scoped to the current process session and the current (last) point. Undo
-history is not persisted because the canonical game record is stored independently in SQLite and
-the two snapshots cannot be committed atomically. Loading or importing a complete game clears the
-in-memory undo stack. After an app restart, undo becomes available again when the next live action
-is recorded.
+Live undo remains scoped to the active game, with recent tracker operations undone in reverse
+order, and it survives an app restart. Each live save captures the canonical game and undo stack
+from one Zustand snapshot, then writes the game, summary, and independently versioned undo payload
+in one queued SQLite transaction. Active-game recovery reads the game and undo payload from that
+same record instead of combining cached game data with a separate history load. Missing, malformed,
+or unsupported undo metadata means empty history without making an otherwise readable game
+unavailable.
+
+Undo metadata is local recovery state, not part of `AdvancedTrackedGame`. It is excluded from
+analytics, summaries, imports, exports, and sharing. Importing or writing an ordinary saved game
+clears any metadata already attached to that record. Finishing a final or terminated game awaits
+the saved-game write that clears undo metadata before clearing the active-session pointer. The
+production version-0 AsyncStorage upgrade discards its legacy embedded undo stack once while
+preserving the active-game pointer; subsequent actions use the SQLite snapshot boundary.
 
 Saved final or terminated games and the loaded active game's timeline support participant identity
 correction on completed points. The editable unit is a touch occurrence in a continuous segment:
@@ -269,8 +278,10 @@ immediately, and do not add an undo entry.
 Structural result changes, action deletion, action reordering, and moving actions between
 possessions are intentionally outside touch correction.
 
-The live store keeps a temporary undo stack for recent tracker operations; the undo stack is not
-part of the persisted game schema. Persisted data remains the corrected source of truth.
+The live store owns the undo stack for recent tracker operations. SQLite persists it as a separate,
+independently versioned local payload alongside the game row; it remains outside the
+`AdvancedTrackedGame` schema, analytics, summaries, and sharing formats. The corrected game remains
+the canonical gameplay record.
 
 Updating a throwaway's optional details does not create another undo entry. Undoing that turnover
 removes the whole `ThrowAction`, including its details, in one operation.
@@ -299,8 +310,9 @@ side-perspective helpers rather than creating parallel schemas.
 
 ## Persistence and Migration
 
-Full games are stored as JSON records in SQLite, with separate query-friendly summaries. The live
-tracking store owns only the loaded active game and recovery/session state.
+Full games are stored as JSON records in SQLite, with separate query-friendly summaries and a
+nullable, independently versioned local undo payload. The live tracking store owns only the loaded
+active game and recovery/session state.
 
 When changing the persisted model:
 

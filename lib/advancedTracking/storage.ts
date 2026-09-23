@@ -1,6 +1,11 @@
 import * as SQLite from 'expo-sqlite';
 
 import { migrateAdvancedTrackedGame } from '@/lib/advancedTracking/migrations';
+import {
+  createPersistedAdvancedUndoPayload,
+  parsePersistedAdvancedUndoPayload,
+  type AdvancedGameHistorySnapshot,
+} from '@/lib/advancedTracking/persistenceTypes';
 import { AdvancedGameSummary, deriveAdvancedGameSummary } from '@/lib/advancedTracking/summary';
 import type { AdvancedGameType, AdvancedTrackedGame } from '@/lib/advancedTracking/types';
 
@@ -28,8 +33,16 @@ type SummaryRow = {
   points_tracked: number;
 };
 
-type RecordRow = {
+type GameRecordRow = {
   data_json: string;
+};
+
+type GameHistoryRecordRow = GameRecordRow & {
+  undo_json: string | null;
+};
+
+type TableInfoRow = {
+  name: string;
 };
 
 function isAdvancedTrackedGame(value: unknown): value is AdvancedTrackedGame {
@@ -92,9 +105,17 @@ async function migrateAdvancedTrackingDb(db: SQLite.SQLiteDatabase) {
       id TEXT PRIMARY KEY NOT NULL,
       schema_version INTEGER NOT NULL,
       updated_at INTEGER NOT NULL,
-      data_json TEXT NOT NULL
+      data_json TEXT NOT NULL,
+      undo_json TEXT
     );
   `);
+
+  const recordColumns = await db.getAllAsync<TableInfoRow>(
+    'PRAGMA table_info(advanced_game_records)',
+  );
+  if (!recordColumns.some((column) => column.name === 'undo_json')) {
+    await db.runAsync('ALTER TABLE advanced_game_records ADD COLUMN undo_json TEXT');
+  }
 }
 
 function rowToSummary(row: SummaryRow): AdvancedGameSummary {
@@ -128,7 +149,7 @@ export async function loadAdvancedGameSummaries(): Promise<AdvancedGameSummary[]
 
 export async function loadAdvancedGame(gameId: string): Promise<AdvancedTrackedGame | null> {
   const db = await getDb();
-  const row = await db.getFirstAsync<RecordRow>(
+  const row = await db.getFirstAsync<GameRecordRow>(
     'SELECT data_json FROM advanced_game_records WHERE id = ?',
     gameId,
   );
@@ -140,10 +161,45 @@ export async function loadAdvancedGame(gameId: string): Promise<AdvancedTrackedG
   return migrateAdvancedTrackedGame(parsed);
 }
 
+export async function loadAdvancedGameHistorySnapshot(
+  gameId: string,
+): Promise<AdvancedGameHistorySnapshot | null> {
+  const db = await getDb();
+  const row = await db.getFirstAsync<GameHistoryRecordRow>(
+    'SELECT data_json, undo_json FROM advanced_game_records WHERE id = ?',
+    gameId,
+  );
+  if (row == null) return null;
+  const parsed: unknown = JSON.parse(row.data_json);
+  if (!isAdvancedTrackedGame(parsed)) {
+    throw new Error(`Stored advanced game "${gameId}" is invalid.`);
+  }
+  return {
+    game: migrateAdvancedTrackedGame(parsed),
+    undoStack: parsePersistedAdvancedUndoPayload(row.undo_json),
+  };
+}
+
 export async function upsertAdvancedGame(game: AdvancedTrackedGame): Promise<AdvancedGameSummary> {
+  return upsertAdvancedGameRecord(game, null);
+}
+
+export async function upsertAdvancedLiveSnapshot(
+  snapshot: AdvancedGameHistorySnapshot,
+): Promise<AdvancedGameSummary> {
+  const undoJson = JSON.stringify(createPersistedAdvancedUndoPayload(snapshot.undoStack));
+  return upsertAdvancedGameRecord(snapshot.game, undoJson);
+}
+
+function upsertAdvancedGameRecord(
+  game: AdvancedTrackedGame,
+  undoJson: string | null,
+): Promise<AdvancedGameSummary> {
+  const summary = deriveAdvancedGameSummary(game);
+  const gameJson = JSON.stringify(game);
+
   return enqueueWrite(async () => {
     const db = await getDb();
-    const summary = deriveAdvancedGameSummary(game);
     await db.withTransactionAsync(async () => {
       await db.runAsync(
         `INSERT OR REPLACE INTO advanced_game_summaries (
@@ -186,12 +242,14 @@ export async function upsertAdvancedGame(game: AdvancedTrackedGame): Promise<Adv
         id,
         schema_version,
         updated_at,
-        data_json
-      ) VALUES (?, ?, ?, ?)`,
+        data_json,
+        undo_json
+      ) VALUES (?, ?, ?, ?, ?)`,
         game.id,
         game.schemaVersion,
         game.updatedAt,
-        JSON.stringify(game),
+        gameJson,
+        undoJson,
       );
     });
     return summary;

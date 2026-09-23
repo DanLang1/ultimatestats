@@ -83,9 +83,13 @@ adjusted.
 - During halftime, line preparation can update that pending selection without ending the break or
   creating the second-half point; the normal start flow still advances through pull tracking.
 - `useSavedAdvancedGamesStore` owns saved-game summaries and an in-memory record cache.
-- `lib/advancedTracking/storage.ts` persists full advanced games and summaries in SQLite.
+- `lib/advancedTracking/storage.ts` persists full advanced games, summaries, and local undo
+  metadata in SQLite. Live game/history pairs are captured before queueing and committed in one
+  transaction; active recovery reads the pair from one row without using the saved-game cache.
 - Actions that finalize, import, or otherwise save a game await SQLite persistence before clearing
   or navigating away from the state being saved.
+- Finish clears local undo metadata before clearing the active pointer. Imports and non-live
+  saved-game writes also clear it, so undo remains a local active-session capability.
 
 Do not move advanced records into the basic store or introduce a second persisted representation
 without a concrete requirement and migration plan.

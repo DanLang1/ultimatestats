@@ -1,3 +1,4 @@
+import type { AdvancedGameHistorySnapshot } from '@/lib/advancedTracking/persistenceTypes';
 import {
   compareAdvancedGameSummaries,
   deriveAdvancedGameSummary,
@@ -5,25 +6,40 @@ import {
 } from '@/lib/advancedTracking/summary';
 import type { AdvancedTrackedGame } from '@/lib/advancedTracking/types';
 
-const games = new Map<string, AdvancedTrackedGame>();
+const snapshots = new Map<string, AdvancedGameHistorySnapshot>();
 
 export function resetAdvancedTrackingStorage() {
-  games.clear();
+  snapshots.clear();
 }
 
 export async function loadAdvancedGameSummaries(): Promise<AdvancedGameSummary[]> {
-  return [...games.values()].map(deriveAdvancedGameSummary).sort(compareAdvancedGameSummaries);
+  return [...snapshots.values()]
+    .map(({ game }) => deriveAdvancedGameSummary(game))
+    .sort(compareAdvancedGameSummaries);
 }
 
 export async function loadAdvancedGame(gameId: string): Promise<AdvancedTrackedGame | null> {
-  return games.get(gameId) ?? null;
+  return snapshots.get(gameId)?.game ?? null;
+}
+
+export async function loadAdvancedGameHistorySnapshot(
+  gameId: string,
+): Promise<AdvancedGameHistorySnapshot | null> {
+  return snapshots.get(gameId) ?? null;
 }
 
 export async function upsertAdvancedGame(game: AdvancedTrackedGame): Promise<AdvancedGameSummary> {
-  games.set(game.id, game);
+  snapshots.set(game.id, { game, undoStack: [] });
   return deriveAdvancedGameSummary(game);
 }
 
+export async function upsertAdvancedLiveSnapshot(
+  snapshot: AdvancedGameHistorySnapshot,
+): Promise<AdvancedGameSummary> {
+  snapshots.set(snapshot.game.id, snapshot);
+  return deriveAdvancedGameSummary(snapshot.game);
+}
+
 export async function deleteAdvancedGameRecord(gameId: string): Promise<void> {
-  games.delete(gameId);
+  snapshots.delete(gameId);
 }

@@ -28,7 +28,7 @@ interface GameCompleteContentProps {
   rightTeamLabel: string;
   rightScore: number;
   primaryAction: GameCompleteAction;
-  secondaryAction: GameCompleteAction;
+  secondaryAction?: GameCompleteAction;
   secondaryActionFirst?: boolean;
   primaryCopyFills?: boolean;
   children?: ReactNode;
@@ -76,7 +76,7 @@ export function GameCompleteContent({
     </Pressable>
   );
 
-  const secondaryButton = (
+  const secondaryButton = secondaryAction ? (
     <Pressable
       testID={secondaryAction.testID}
       style={[
@@ -98,7 +98,7 @@ export function GameCompleteContent({
         color={palette.textMuted}
       />
     </Pressable>
-  );
+  ) : null;
 
   return (
     <ThemedView style={[styles.screen, { backgroundColor: palette.primary }]}>

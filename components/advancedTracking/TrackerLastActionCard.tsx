@@ -65,6 +65,7 @@ interface TrackerLastActionCardState {
   lastFocusThrowTarget: ThrowDetailsTarget | null;
   lastOppThrowTarget: ThrowDetailsTarget | null;
   lastGoalThrowTarget: ThrowDetailsTarget | null;
+  canUndo: boolean;
   canUndoPointEndingAction: boolean;
 }
 
@@ -188,6 +189,7 @@ export const TrackerLastActionCard = ({
     lastFocusThrowTarget: getTrackedThrowTarget(lastFocusPossession),
     lastOppThrowTarget: getTrackedThrowTarget(lastOppPossession),
     lastGoalThrowTarget: getTrackedThrowTarget(point?.possessions.at(-1) ?? null),
+    canUndo: undoStack.length > 0,
     canUndoPointEndingAction,
   };
   const model = getTrackerLastActionCardModel({
@@ -253,13 +255,12 @@ function getTrackerLastActionCardModel({
     lastFocusThrowTarget,
     lastOppThrowTarget,
     lastGoalThrowTarget,
+    canUndo,
     canUndoPointEndingAction,
   } = state;
   const { palette, onCancelModifier, onMorePress, onUndo, onSelectThrowType, frameLabel, eyebrow } =
     ui;
-  const undoRareButtonMode: BottomCardButtonMode = canUseRareMenu
-    ? { kind: 'undo-more', onUndo, onMore: onMorePress }
-    : { kind: 'undo-only', onUndo };
+  const undoRareButtonMode = getUndoRareButtonMode(canUseRareMenu, canUndo, onUndo, onMorePress);
   const defensiveButtonMode: BottomCardButtonMode = isOpeningDefensivePull
     ? { kind: 'more-only', onMore: onMorePress }
     : undoRareButtonMode;
@@ -400,6 +401,18 @@ function getTrackerLastActionCardModel({
     preferCompactActions: true,
     content: frameLabel('TAP WHO STARTS WITH DISC'),
   };
+}
+
+function getUndoRareButtonMode(
+  canUseRareMenu: boolean,
+  canUndo: boolean,
+  onUndo: () => void,
+  onMore: () => void,
+): BottomCardButtonMode {
+  if (!canUseRareMenu) {
+    return canUndo ? { kind: 'undo-only', onUndo } : { kind: 'none' };
+  }
+  return canUndo ? { kind: 'undo-more', onUndo, onMore } : { kind: 'more-only', onMore };
 }
 
 function shouldPreferCompactForTurnover(event: TurnoverEventInfo) {

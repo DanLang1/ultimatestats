@@ -83,8 +83,9 @@ SET LINE / SAVE LINE on Android after changes to these native hierarchy boundari
 
 Saving a halftime line (`TrackerLineSelect.tsx` in `prepare` mode) dismisses back to Tracker.
 Pending line edits update the underlying Tracker while the selection route is mounted. The pending
-selection does not change `currentGame`, so `persistLiveGame` dedupes by reference and does not
-start a new SQLite write; awaiting it may only await an already-resolved promise.
+selection changes neither the current game nor undo stack, so live snapshot persistence dedupes by
+both references and does not start a new SQLite write; awaiting it may only await an
+already-resolved promise.
 
 A persistence await was tried and was insufficient; an additional animation-frame wait was then
 tried as a timing workaround. The current code has removed those halftime waits and dismisses

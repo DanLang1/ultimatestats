@@ -24,6 +24,7 @@ import {
   withAppendedStoppage,
 } from '@/lib/advancedTracking/injurySubUtils';
 import { deriveRosterParticipantSyncPlan } from '@/lib/advancedTracking/participantSync';
+import type { AdvancedGameHistorySnapshot } from '@/lib/advancedTracking/persistenceTypes';
 import {
   getActiveGameClockPause,
   getActiveSideId,
@@ -249,15 +250,21 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
         loadCurrentGame: async () => {
           const currentGameId = get().currentGameId;
           if (currentGameId == null) return null;
-          const game = await useSavedAdvancedGamesStore.getState().loadGame(currentGameId);
+          const currentGameAtStart = get().currentGame;
+          const snapshot = await useSavedAdvancedGamesStore
+            .getState()
+            .loadActiveGameSnapshot(currentGameId);
+          if (get().currentGameId !== currentGameId || get().currentGame !== currentGameAtStart) {
+            return snapshot?.game ?? null;
+          }
           set((state) => {
             if (state.currentGameId !== currentGameId) return;
-            state.currentGame = game;
-            state.undoStack = [];
+            state.currentGame = snapshot?.game ?? null;
+            state.undoStack = snapshot?.undoStack ?? [];
             reconcilePendingNextPointLineSelection(state);
             reconcileDerivedHalftimeBreak(state);
           });
-          return game;
+          return snapshot?.game ?? null;
         },
 
         clearHalftimeBreak: () => {
@@ -434,6 +441,7 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
             const liveGame = getCurrentGame(state);
             liveGame.status = 'final';
             liveGame.updatedAt = now;
+            state.undoStack = [];
           });
           const gameToPersist = get().currentGame;
           if (gameToPersist != null) {
@@ -464,6 +472,7 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
             if (liveGame.status !== 'terminated') {
               throw new Error('Cannot finish a game that has not been terminated.');
             }
+            state.undoStack = [];
           });
           const gameToPersist = get().currentGame;
           if (gameToPersist != null) {
@@ -483,8 +492,7 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
             liveGame.metadata = withAdvancedGameNote(metadata, metadata.notes);
             liveGame.updatedAt = Date.now();
           });
-          const gameToPersist = get().currentGame;
-          if (gameToPersist != null) await persistLiveGame(gameToPersist);
+          await persistCurrentLiveGame();
         },
 
         updatePointNote: async ({ pointId, note }: UpdatePointNoteInput) => {
@@ -497,8 +505,7 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
             liveGame.points[pointIndex] = updatedPoint;
             liveGame.updatedAt = Date.now();
           });
-          const gameToPersist = get().currentGame;
-          if (gameToPersist != null) await persistLiveGame(gameToPersist);
+          await persistCurrentLiveGame();
         },
 
         correctCurrentTouch: async (input: CorrectAdvancedTouchInput) => {
@@ -510,10 +517,7 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
             state.currentGame = correctAdvancedTouch(liveGame, input);
           });
 
-          const gameToPersist = get().currentGame;
-          if (gameToPersist != null) {
-            await persistLiveGame(gameToPersist);
-          }
+          await persistCurrentLiveGame();
         },
 
         correctCurrentTurnover: async (input: CorrectAdvancedTurnoverInput) => {
@@ -525,10 +529,7 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
             state.currentGame = correctAdvancedTurnover(liveGame, input);
           });
 
-          const gameToPersist = get().currentGame;
-          if (gameToPersist != null) {
-            await persistLiveGame(gameToPersist);
-          }
+          await persistCurrentLiveGame();
         },
 
         correctCurrentGamePointActiveLines: (input) => {
@@ -556,7 +557,7 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
           set((state) => {
             state.currentGame = correctedGame;
           });
-          return persistLiveGame(correctedGame);
+          return persistCurrentLiveGame();
         },
 
         startGameClockPause: (reason) => {
@@ -1354,36 +1355,38 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
 );
 
 let lastPersistedLiveGame: AdvancedTrackedGame | null = null;
+let lastPersistedUndoStack: AdvancedTrackingUndoEntry[] | null = null;
 let lastLiveGamePersistPromise: Promise<void> | null = null;
 
-export function persistLiveGame(game: AdvancedTrackedGame): Promise<void> {
-  if (game === lastPersistedLiveGame) {
+export function persistLiveSnapshot(snapshot: AdvancedGameHistorySnapshot): Promise<void> {
+  if (snapshot.game === lastPersistedLiveGame && snapshot.undoStack === lastPersistedUndoStack) {
     return lastLiveGamePersistPromise ?? Promise.resolve();
   }
 
-  lastPersistedLiveGame = game;
+  lastPersistedLiveGame = snapshot.game;
+  lastPersistedUndoStack = snapshot.undoStack;
   const persistPromise = useSavedAdvancedGamesStore
     .getState()
-    .saveGame(game)
+    .saveLiveSnapshot(snapshot)
     .then(() => undefined);
   lastLiveGamePersistPromise = persistPromise;
   return persistPromise;
 }
 
 export function persistCurrentLiveGame(): Promise<void> {
-  const game = useAdvancedTrackingStore.getState().currentGame;
+  const { currentGame: game, undoStack } = useAdvancedTrackingStore.getState();
   if (game == null) {
     return Promise.resolve();
   }
-  return persistLiveGame(game);
+  return persistLiveSnapshot({ game, undoStack });
 }
 
 useAdvancedTrackingStore.subscribe((state) => {
   const game = state.currentGame;
-  if (game == null) {
+  if (game == null || state.currentGameId !== game.id) {
     return;
   }
-  void persistLiveGame(game);
+  void persistLiveSnapshot({ game, undoStack: state.undoStack });
 });
 
 registerActiveAdvancedGameGetter(() => getLiveInProgressGame(useAdvancedTrackingStore.getState()));
