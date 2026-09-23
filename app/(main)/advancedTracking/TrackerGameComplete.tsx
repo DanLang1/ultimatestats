@@ -1,8 +1,10 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { Redirect, router, Stack, useLocalSearchParams } from 'expo-router';
+import { useRef, useState } from 'react';
 
 import { GameCompleteLastActionCard } from '@/components/advancedTracking/GameCompleteLastActionCard';
 import { GameCompleteContent } from '@/components/game-complete/GameCompleteContent';
+import { useAlert } from '@/components/ui/AlertProvider';
 import { useTheme } from '@/context/ThemeContext';
 import { useGameSessionActions } from '@/hooks/useGameSessionActions';
 import { getFocusGameOutcome } from '@/lib/advancedTracking/buildAnalyticsGame';
@@ -11,6 +13,9 @@ import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore
 
 export default function TrackerGameCompleteScreen() {
   const { palette } = useTheme();
+  const { showAlert } = useAlert();
+  const [isSaving, setIsSaving] = useState(false);
+  const finishPending = useRef(false);
   const { mode } = useLocalSearchParams<{ mode?: string }>();
   const isEarlyEndPending = mode === 'earlyEnd';
 
@@ -20,7 +25,6 @@ export default function TrackerGameCompleteScreen() {
     finishTerminatedGame,
     undoLastOperation,
     undoStack,
-    terminateGame,
   } = useAdvancedTrackingStore();
   const { finishActiveGameSession, restoreAdvancedGameSession } = useGameSessionActions();
 
@@ -32,6 +36,7 @@ export default function TrackerGameCompleteScreen() {
   const gameIsOver = isAdvancedGameOver(game);
   const isEarlyEndFlow = isEarlyEndPending || isTerminated;
   const showUndoLastAction = isEarlyEndFlow || undoStack.length > 0;
+  const showLastActionCard = !isEarlyEndFlow && !isSaving;
 
   if (!isEarlyEndPending && !isTerminated && !gameIsOver) {
     return <Redirect href="/advancedTracking/Tracker" />;
@@ -73,14 +78,26 @@ export default function TrackerGameCompleteScreen() {
   }
 
   const handleFinish = async () => {
+    if (finishPending.current) return;
+    finishPending.current = true;
+    setIsSaving(true);
     const finishedGameId = game.id;
-    if (isEarlyEndPending) {
-      terminateGame('manual');
-      await finishTerminatedGame();
-    } else if (isTerminated) {
-      await finishTerminatedGame();
-    } else {
-      await finalizeGame();
+    try {
+      if (isEarlyEndPending) {
+        await finishTerminatedGame('manual');
+      } else if (isTerminated) {
+        await finishTerminatedGame();
+      } else {
+        await finalizeGame();
+      }
+    } catch {
+      finishPending.current = false;
+      setIsSaving(false);
+      showAlert({
+        title: 'Unable to save game',
+        message: 'Your game and undo history are still available. Tap Done to try again.',
+      });
+      return;
     }
     finishActiveGameSession();
     router.replace({
@@ -90,6 +107,7 @@ export default function TrackerGameCompleteScreen() {
   };
 
   const handleUndo = () => {
+    if (finishPending.current) return;
     if (!isEarlyEndFlow) {
       undoLastOperation();
     }
@@ -113,7 +131,8 @@ export default function TrackerGameCompleteScreen() {
         rightScore={isTie ? opponentScore : loserScore}
         secondaryActionFirst
         primaryAction={{
-          title: 'Done',
+          title: isSaving ? 'Saving…' : 'Done',
+          disabled: isSaving,
           text: isEarlyEndFlow
             ? 'Save the game and review stats'
             : 'Save the result and review stats',
@@ -126,11 +145,12 @@ export default function TrackerGameCompleteScreen() {
                 title: isEarlyEndFlow ? 'Undo End Game' : 'Undo Last Action',
                 text: 'Return to the tracker and continue the game',
                 onPress: handleUndo,
+                disabled: isSaving,
                 testID: 'game-complete-undo',
               }
             : undefined
         }>
-        {!isEarlyEndFlow ? <GameCompleteLastActionCard game={game} /> : null}
+        {showLastActionCard ? <GameCompleteLastActionCard game={game} /> : null}
       </GameCompleteContent>
     </>
   );

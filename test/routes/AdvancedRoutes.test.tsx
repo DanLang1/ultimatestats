@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { screen, userEvent, waitFor } from '@testing-library/react-native';
+import { act, screen, userEvent, waitFor } from '@testing-library/react-native';
 import { router } from 'expo-router';
 
 import AdvancedPreGameConfirm from '@/app/(main)/advancedTracking/PreGameConfirm';
@@ -9,6 +9,7 @@ import TrackerEditLineScreen from '@/app/(main)/advancedTracking/TrackerEditLine
 import TrackerGameCompleteScreen from '@/app/(main)/advancedTracking/TrackerGameComplete';
 import TrackerInjurySubScreen from '@/app/(main)/advancedTracking/TrackerInjurySub';
 import TrackerLineSelectScreen from '@/app/(main)/advancedTracking/TrackerLineSelect';
+import * as advancedStorage from '@/lib/advancedTracking/storage';
 import { getEffectiveLineParticipantIds } from '@/lib/advancedTracking/trackingUtils';
 import type { AdvancedTrackedGame } from '@/lib/advancedTracking/types';
 import { useSavedAdvancedGamesStore } from '@/store/advancedTracking/savedGamesStore';
@@ -1712,6 +1713,73 @@ describe('advanced tracking routes', () => {
       result: 'goal',
       details: { type: 'huck' },
     });
+  });
+
+  it.each(['winning', 'early'] as const)(
+    'keeps the %s game undoable after Finish fails',
+    async (mode) => {
+      const user = userEvent.setup();
+      if (mode === 'early') {
+        arrangeAdvancedGame();
+        recordOpeningPull();
+        setMockSearchParams({ mode: 'earlyEnd' });
+      } else {
+        arrangeWinningAdvancedGame();
+      }
+      const before = useAdvancedTrackingStore.getState();
+      const saveSpy = jest
+        .spyOn(advancedStorage, 'upsertAdvancedGame')
+        .mockRejectedValueOnce(new Error('disk full'));
+      await renderScreen(<TrackerGameCompleteScreen />);
+      await user.press(screen.getByTestId('game-complete-finish'));
+      expect(await screen.findByText('Unable to save game')).toBeVisible();
+      expect(router.replace).not.toHaveBeenCalled();
+      expect(useAdvancedTrackingStore.getState().currentGame).toBe(before.currentGame);
+      expect(useAdvancedTrackingStore.getState().undoStack).toBe(before.undoStack);
+      await user.press(screen.getByText('OK'));
+      expect(screen.getByTestId('game-complete-undo')).toBeEnabled();
+      await user.press(screen.getByTestId('game-complete-finish'));
+      expect(router.replace).toHaveBeenCalledWith({
+        pathname: '/advancedTracking/analytics/[gameId]',
+        params: { gameId: before.currentGameId, from: 'gameComplete' },
+      });
+      expect(useAdvancedTrackingStore.getState().currentGame?.status).toBe(
+        mode === 'early' ? 'terminated' : 'final',
+      );
+      saveSpy.mockRestore();
+    },
+  );
+
+  it('blocks duplicate Finish, undo, and classification while the final save is pending', async () => {
+    const user = userEvent.setup();
+    arrangeWinningAdvancedGame();
+    const game = useAdvancedTrackingStore.getState().currentGame!;
+    const originalSave = advancedStorage.upsertAdvancedGame;
+    let resolveSave!: () => void;
+    const saveSpy = jest.spyOn(advancedStorage, 'upsertAdvancedGame').mockImplementationOnce(
+      (snapshot) =>
+        new Promise((resolve) => {
+          resolveSave = () => {
+            void originalSave(snapshot).then(resolve);
+          };
+        }),
+    );
+    await renderScreen(<TrackerGameCompleteScreen />);
+    await user.press(screen.getByTestId('game-complete-finish'));
+    expect(screen.getByText('Saving…')).toBeVisible();
+    expect(screen.getByTestId('game-complete-finish')).toBeDisabled();
+    expect(screen.getByTestId('game-complete-undo')).toBeDisabled();
+    expect(screen.queryByTestId('throw-type-huck')).not.toBeOnTheScreen();
+    await user.press(screen.getByTestId('game-complete-finish'));
+    await user.press(screen.getByTestId('game-complete-undo'));
+    expect(saveSpy).toHaveBeenCalledTimes(1);
+    expect(useAdvancedTrackingStore.getState().currentGame).toBe(game);
+    expect(router.replace).not.toHaveBeenCalled();
+    await act(async () => {
+      resolveSave();
+    });
+    expect(useAdvancedTrackingStore.getState().currentGameId).toBeNull();
+    saveSpy.mockRestore();
   });
 
   it('shows only undo for an opponent goal on Game Complete', async () => {

@@ -4,6 +4,7 @@ import type { CorrectAdvancedTurnoverInput } from '@/lib/advancedTracking/advanc
 import type { CaptureIntent, CaptureIntentResult } from '@/lib/advancedTracking/captureIntentUtils';
 import type { AdvancedTrackingUndoEntry } from '@/lib/advancedTracking/persistenceTypes';
 import type {
+  AdvancedGameEndReason,
   AdvancedGameType,
   AdvancedTrackedGame,
   FieldLocation,
@@ -118,8 +119,7 @@ export interface AdvancedTrackingState {
   clearPendingNextPointLineSelection: () => void;
   resetCurrentGame: () => void;
   finalizeGame: () => Promise<void>;
-  terminateGame: (endReason: NonNullable<AdvancedTrackedGame['endReason']>) => void;
-  finishTerminatedGame: () => Promise<void>;
+  finishTerminatedGame: (endReason?: AdvancedGameEndReason) => Promise<void>;
   updateGameMetadata: (metadata: GameMetadata) => Promise<void>;
   updatePointNote: (input: UpdatePointNoteInput) => Promise<void>;
   correctCurrentTouch: (input: CorrectAdvancedTouchInput) => Promise<void>;

@@ -1444,17 +1444,6 @@ describe('advancedTrackingStore', () => {
     );
   });
 
-  it('terminateGame sets status to terminated with endReason', () => {
-    const gameId = createGame();
-    useAdvancedTrackingStore.getState().terminateGame('weather');
-    const { currentGameId, currentGame } = useAdvancedTrackingStore.getState();
-
-    expect(currentGameId).toBe(gameId);
-    expect(currentGame!.id).toBe(gameId);
-    expect(currentGame!.status).toBe('terminated');
-    expect(currentGame!.endReason).toBe('weather');
-  });
-
   it('finishTerminatedGame clears the current game pointer without deleting the saved game', async () => {
     const gameId = createGame();
     useAdvancedTrackingStore.getState().recordPull({
@@ -1464,7 +1453,11 @@ describe('advancedTrackingStore', () => {
       result: 'inbound',
     });
     expect(useAdvancedTrackingStore.getState().undoStack.length).toBeGreaterThan(0);
-    useAdvancedTrackingStore.getState().terminateGame('manual');
+    useAdvancedTrackingStore.setState((state) => {
+      state.currentGame!.status = 'terminated';
+      state.currentGame!.endReason = 'manual';
+      state.currentGame!.updatedAt = Date.now();
+    });
     await useAdvancedTrackingStore.getState().finishTerminatedGame();
     const { currentGameId, currentGame } = useAdvancedTrackingStore.getState();
 
@@ -1475,56 +1468,88 @@ describe('advancedTrackingStore', () => {
     expect(upsertAdvancedGame).toHaveBeenCalledTimes(1);
   });
 
-  it('waits for the empty-history Finish save before clearing the active pointer', async () => {
-    createGame(1);
-    useAdvancedTrackingStore.getState().recordPull({
-      lines: homeLinesAugust,
-      puller: untracked,
-      receiver: august,
-      result: 'inbound',
+  describe.each(['final', 'terminated', 'manual'] as const)('%s Finish persistence', (mode) => {
+    function arrangeFinish() {
+      createGame(mode === 'final' ? 1 : 15);
+      useAdvancedTrackingStore.getState().recordPull({
+        lines: homeLinesAugust,
+        puller: untracked,
+        receiver: august,
+        result: 'inbound',
+      });
+      useAdvancedTrackingStore.getState().recordThrow({
+        thrower: august,
+        result: 'goal',
+        toPlayer: meves,
+      });
+      if (mode === 'terminated') {
+        useAdvancedTrackingStore.setState((state) => {
+          state.currentGame!.status = 'terminated';
+          state.currentGame!.endReason = 'weather';
+          state.currentGame!.updatedAt = Date.now();
+        });
+      }
+      return () =>
+        mode === 'final'
+          ? useAdvancedTrackingStore.getState().finalizeGame()
+          : useAdvancedTrackingStore
+              .getState()
+              .finishTerminatedGame(mode === 'manual' ? 'manual' : undefined);
+    }
+
+    it('preserves live state until the empty-history save succeeds', async () => {
+      const finish = arrangeFinish();
+      const before = useAdvancedTrackingStore.getState();
+      let resolveSave!: (summary: ReturnType<typeof deriveAdvancedGameSummary>) => void;
+      jest.mocked(upsertAdvancedGame).mockReturnValueOnce(
+        new Promise((resolve) => {
+          resolveSave = resolve;
+        }),
+      );
+      jest.mocked(upsertAdvancedLiveSnapshot).mockClear();
+
+      const finishing = finish();
+      expect(useAdvancedTrackingStore.getState().currentGame).toBe(before.currentGame);
+      expect(useAdvancedTrackingStore.getState().undoStack).toBe(before.undoStack);
+      expect(useAdvancedTrackingStore.getState().currentGameId).toBe(before.currentGameId);
+      expect(upsertAdvancedLiveSnapshot).not.toHaveBeenCalled();
+      const savedGame = jest.mocked(upsertAdvancedGame).mock.calls.at(-1)![0];
+      expect(savedGame.status).toBe(mode === 'final' ? 'final' : 'terminated');
+      if (mode !== 'final')
+        expect(savedGame.endReason).toBe(mode === 'manual' ? 'manual' : 'weather');
+
+      resolveSave(deriveAdvancedGameSummary(savedGame));
+      await finishing;
+      expect(useAdvancedTrackingStore.getState().currentGameId).toBeNull();
+      expect(useAdvancedTrackingStore.getState().undoStack).toEqual([]);
+      expect(useAdvancedTrackingStore.getState().currentGame).toBe(savedGame);
+      expect(upsertAdvancedLiveSnapshot).not.toHaveBeenCalled();
     });
-    useAdvancedTrackingStore
-      .getState()
-      .recordThrow({ thrower: august, result: 'goal', toPlayer: meves });
-    let resolveSave: (summary: ReturnType<typeof deriveAdvancedGameSummary>) => void = () =>
-      undefined;
-    const savePromise = new Promise<ReturnType<typeof deriveAdvancedGameSummary>>((resolve) => {
-      resolveSave = resolve;
+
+    it('preserves history on failure and allows a successful retry', async () => {
+      const finish = arrangeFinish();
+      const before = useAdvancedTrackingStore.getState();
+      jest.mocked(upsertAdvancedGame).mockRejectedValueOnce(new Error('save failed'));
+      jest.mocked(upsertAdvancedLiveSnapshot).mockClear();
+
+      await expect(finish()).rejects.toThrow('save failed');
+      expect(useAdvancedTrackingStore.getState().currentGame).toBe(before.currentGame);
+      expect(useAdvancedTrackingStore.getState().currentGameId).toBe(before.currentGameId);
+      expect(useAdvancedTrackingStore.getState().undoStack).toBe(before.undoStack);
+      expect(upsertAdvancedLiveSnapshot).not.toHaveBeenCalled();
+
+      await finish();
+      expect(useAdvancedTrackingStore.getState().currentGameId).toBeNull();
+      expect(useAdvancedTrackingStore.getState().undoStack).toEqual([]);
     });
-    jest.mocked(upsertAdvancedGame).mockReturnValueOnce(savePromise);
 
-    const finishing = useAdvancedTrackingStore.getState().finalizeGame();
-    await Promise.resolve();
-
-    const finalGame = useAdvancedTrackingStore.getState().currentGame!;
-    expect(useAdvancedTrackingStore.getState().currentGameId).toBe(finalGame.id);
-    expect(useAdvancedTrackingStore.getState().undoStack).toEqual([]);
-    expect(upsertAdvancedGame).toHaveBeenCalledWith(finalGame);
-    expect(upsertAdvancedGame).toHaveBeenCalledTimes(1);
-
-    resolveSave(deriveAdvancedGameSummary(finalGame));
-    await finishing;
-    expect(useAdvancedTrackingStore.getState().currentGameId).toBeNull();
-  });
-
-  it('keeps the active pointer when the Finish save fails', async () => {
-    createGame(1);
-    useAdvancedTrackingStore.getState().recordPull({
-      lines: homeLinesAugust,
-      puller: untracked,
-      receiver: august,
-      result: 'inbound',
+    it('can still undo the last goal after a failed save', async () => {
+      const finish = arrangeFinish();
+      jest.mocked(upsertAdvancedGame).mockRejectedValueOnce(new Error('save failed'));
+      await expect(finish()).rejects.toThrow('save failed');
+      expect(useAdvancedTrackingStore.getState().undoLastOperation()).toBe(true);
+      expect(getGameScore(getCurrentGame()!)[homeSideId]).toBe(0);
     });
-    useAdvancedTrackingStore
-      .getState()
-      .recordThrow({ thrower: august, result: 'goal', toPlayer: meves });
-    const gameId = getCurrentGame()!.id;
-    jest.mocked(upsertAdvancedGame).mockRejectedValueOnce(new Error('save failed'));
-
-    await expect(useAdvancedTrackingStore.getState().finalizeGame()).rejects.toThrow('save failed');
-
-    expect(useAdvancedTrackingStore.getState().currentGameId).toBe(gameId);
-    expect(useAdvancedTrackingStore.getState().undoStack).toEqual([]);
   });
 
   it('updateGameMetadata replaces the metadata on the active game', async () => {

@@ -39,7 +39,7 @@ name: Advanced Tracker Game Complete Last Action
 - assertNotVisible:
     text: 'GAME COMPLETE'
 
-# Record the winning goal again so the final artifact captures the agreed Game Complete layout.
+# Record the winning goal again, then save it and open analytics.
 - swipe:
     from:
       id: 'tracker-chip-Jon'
@@ -51,6 +51,15 @@ name: Advanced Tracker Game Complete Last Action
     timeout: 5000
 - assertVisible:
     id: 'game-complete-undo'
+
+- tapOn:
+    id: 'game-complete-finish'
+- extendedWaitUntil:
+    visible:
+      id: 'advanced-stats-summary-card'
+    timeout: 5000
+- assertNotVisible:
+    id: 'game-complete-finish'
 
 - takeScreenshot:
     path: .maestro/screenshots/advanced-tracker-game-complete-last-action

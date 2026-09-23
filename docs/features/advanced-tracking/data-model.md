@@ -225,7 +225,10 @@ unavailable.
 Undo metadata is local recovery state, not part of `AdvancedTrackedGame`. It is excluded from
 analytics, summaries, imports, exports, and sharing. Importing or writing an ordinary saved game
 clears any metadata already attached to that record. Finishing a final or terminated game awaits
-the saved-game write that clears undo metadata before clearing the active-session pointer. The
+the saved-game write that clears undo metadata before clearing the active-session pointer or
+in-memory undo history. Finish stages the final/terminated record without changing the live game;
+a failed save preserves the game and history for retry or undo. Game Complete blocks Done, Undo,
+and throw classification while that save is pending, and shows an alert on failure. The
 production version-0 AsyncStorage upgrade discards its legacy embedded undo stack once while
 preserving the active-game pointer; subsequent actions use the SQLite snapshot boundary.
 

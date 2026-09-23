@@ -14,6 +14,7 @@ type GameCompleteAction = {
   text: string;
   onPress: () => void | Promise<void>;
   testID?: string;
+  disabled?: boolean;
 };
 
 interface GameCompleteContentProps {
@@ -58,6 +59,8 @@ export function GameCompleteContent({
   const primaryButton = (
     <Pressable
       testID={primaryAction.testID}
+      disabled={primaryAction.disabled}
+      accessibilityState={{ disabled: primaryAction.disabled }}
       style={[styles.primaryAction, { backgroundColor: palette.success }]}
       onPress={primaryAction.onPress}>
       <View style={primaryCopyFills ? styles.actionCopy : undefined}>
@@ -79,6 +82,8 @@ export function GameCompleteContent({
   const secondaryButton = secondaryAction ? (
     <Pressable
       testID={secondaryAction.testID}
+      disabled={secondaryAction.disabled}
+      accessibilityState={{ disabled: secondaryAction.disabled }}
       style={[
         styles.secondaryAction,
         { backgroundColor: 'transparent', borderColor: palette.overlay15 },

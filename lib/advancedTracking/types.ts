@@ -11,6 +11,8 @@ export const ADVANCED_TRACKING_SCHEMA_VERSION = 4;
 
 export type AdvancedGameType = 'game' | 'scrimmage';
 
+export type AdvancedGameEndReason = 'time_limit' | 'weather' | 'conceded' | 'manual';
+
 export type GameStatus = 'in_progress' | 'final' | 'terminated';
 
 export type GameClockPauseReason = 'weather' | 'field' | 'admin' | 'manual';
@@ -43,7 +45,7 @@ export interface AdvancedTrackedGame {
   gameType: AdvancedGameType;
   status: GameStatus;
   /** Only set when `status` is `'terminated'`. */
-  endReason?: 'time_limit' | 'weather' | 'conceded' | 'manual';
+  endReason?: AdvancedGameEndReason;
 
   /**
    * The side the coach is tracking for. Used as the default perspective for stats and UI.

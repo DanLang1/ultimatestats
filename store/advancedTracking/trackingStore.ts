@@ -434,20 +434,13 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
             const score = getGameScore(game);
             const effectiveGameTo = getEffectiveGameTo(game);
             throw new Error(
-              `Cannot finalize game before it is over. Score is ${score[game.sides[0].id]}-${score[game.sides[1].id]} with target ${effectiveGameTo}. Use terminateGame(...) to end early.`,
+              `Cannot finalize game before it is over. Score is ${score[game.sides[0].id]}-${score[game.sides[1].id]} with target ${effectiveGameTo}. Use finishTerminatedGame(...) to end early.`,
             );
           }
+          const gameToPersist: AdvancedTrackedGame = { ...game, status: 'final', updatedAt: now };
+          await useSavedAdvancedGamesStore.getState().saveGame(gameToPersist);
           set((state) => {
-            const liveGame = getCurrentGame(state);
-            liveGame.status = 'final';
-            liveGame.updatedAt = now;
-            state.undoStack = [];
-          });
-          const gameToPersist = get().currentGame;
-          if (gameToPersist != null) {
-            await useSavedAdvancedGamesStore.getState().saveGame(gameToPersist);
-          }
-          set((state) => {
+            state.currentGame = gameToPersist;
             state.currentGameId = null;
             state.undoStack = [];
             clearPendingNextPointLineSelection(state);
@@ -455,30 +448,18 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
           });
         },
 
-        terminateGame: (endReason) => {
-          const now = Date.now();
-          set((state) => {
-            const liveGame = getCurrentGame(state);
-            liveGame.status = 'terminated';
-            liveGame.endReason = endReason;
-            liveGame.updatedAt = now;
-            clearPendingNextPointLineSelection(state);
-          });
-        },
-
-        finishTerminatedGame: async () => {
-          set((state) => {
-            const liveGame = getCurrentGame(state);
-            if (liveGame.status !== 'terminated') {
-              throw new Error('Cannot finish a game that has not been terminated.');
-            }
-            state.undoStack = [];
-          });
-          const gameToPersist = get().currentGame;
-          if (gameToPersist != null) {
-            await useSavedAdvancedGamesStore.getState().saveGame(gameToPersist);
+        finishTerminatedGame: async (endReason) => {
+          const game = getCurrentGame(get());
+          if (game.status !== 'terminated' && endReason == null) {
+            throw new Error('Cannot finish a game that has not been terminated.');
           }
+          const gameToPersist: AdvancedTrackedGame =
+            endReason == null
+              ? game
+              : { ...game, status: 'terminated', endReason, updatedAt: Date.now() };
+          await useSavedAdvancedGamesStore.getState().saveGame(gameToPersist);
           set((state) => {
+            state.currentGame = gameToPersist;
             state.currentGameId = null;
             state.undoStack = [];
             clearPendingNextPointLineSelection(state);
