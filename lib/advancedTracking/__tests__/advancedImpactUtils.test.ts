@@ -710,12 +710,49 @@ describe('computeAdvancedImpact', () => {
     const augustImpact = computeAdvancedImpact(analytics, 'p_august', ZOO);
     expect(augustImpact[0].onField).toBe(true);
     expect(augustImpact[0].plusMinusDelta).toBeCloseTo(-0.5);
-    expect(augustImpact[0].description).toBe('T');
+    expect(augustImpact[0].description).toBe('FfT');
 
     const mevesImpact = computeAdvancedImpact(analytics, 'p_meves', ZOO);
     expect(mevesImpact[0].onField).toBe(true);
     expect(mevesImpact[0].plusMinusDelta).toBeCloseTo(-0.5);
-    expect(mevesImpact[0].description).toBe('D');
+    expect(mevesImpact[0].description).toBe('FfD');
+  });
+
+  it('keeps split and full turnovers distinct when they occur in the same point', () => {
+    const analytics = impactFixtures
+      .scenario()
+      .startPoint({ puller: untracked, receiver: august })
+      .turnover('drop', { toPlayer: meves, splitAttribution: true })
+      .startPossession(RIVALS)
+      .pickup(untracked)
+      .turnover('throwaway')
+      .startPossession(ZOO)
+      .pickup(august)
+      .turnover('throwaway')
+      .startPossession(RIVALS)
+      .pickup(untracked)
+      .goal()
+      .buildAnalytics();
+
+    const augustImpact = computeAdvancedImpact(analytics, 'p_august', ZOO);
+    expect(augustImpact[0].plusMinusDelta).toBe(-1.5);
+    expect(augustImpact[0].description).toBe('T, FfT');
+    expect(computeAdvancedImpact(analytics, 'p_meves', ZOO)[0].description).toBe('FfD');
+  });
+
+  it('describes a self 50/50 as one fault worth -1', () => {
+    const analytics = impactFixtures
+      .scenario()
+      .startPoint({ puller: untracked, receiver: august })
+      .turnover('drop', { toPlayer: august, splitAttribution: true })
+      .startPossession(RIVALS)
+      .pickup(untracked)
+      .goal()
+      .buildAnalytics();
+
+    const impact = computeAdvancedImpact(analytics, 'p_august', ZOO);
+    expect(impact[0].plusMinusDelta).toBe(-1);
+    expect(impact[0].description).toBe('FfS');
   });
 
   it('returns one entry per point', () => {

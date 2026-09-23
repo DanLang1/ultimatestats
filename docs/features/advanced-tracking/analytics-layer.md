@@ -197,6 +197,7 @@ type AnalyticsAttribution = {
   type: AttributionType;
   participantId: string;
   weight: number; // 1.0 standard, 0.5 for split attribution
+  splitAttribution?: true; // each half of a 50/50 drop fault
   actionId: string;
   pointId: string;
 };
@@ -236,7 +237,7 @@ These rules are applied once during `buildAnalyticsGame`. Stat utils never need 
 | -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `throw` result `complete`  | `completion` + `throw_attempt` → actor; `receiving_touch` → receiver                                                                                                                           |
 | `throw` result `goal`      | `goal` → receiver; `assist` → actor; `completion` + `throw_attempt` → actor; `receiving_touch` → receiver; `hockey_assist` → actor of previous `complete` throw in same possession (if exists) |
-| `throw` result `drop`      | `throw_attempt` → actor; `drop` → receiver (weight 0.5 if `splitAttribution`); `throwaway` → actor (weight 0.5 if `splitAttribution`)                                                          |
+| `throw` result `drop`      | `throw_attempt` → actor; `drop` → receiver (weight 0.5 and `splitAttribution: true` when split); `throwaway` → actor (weight 0.5 and `splitAttribution: true` when split)                      |
 | `throw` result `throwaway` | `throwaway` + `throw_attempt` → actor (always weight 1.0 — no receiver to share blame with, so `splitAttribution` is ignored)                                                                  |
 | `throw` result `stall`     | `stall_conceded` → actor; `stall` → defender                                                                                                                                                   |
 | `throw` result `block`     | `throwaway` + `throw_attempt` → actor; `block` → defender                                                                                                                                      |

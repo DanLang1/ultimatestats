@@ -1036,8 +1036,11 @@ describe('turnover attributions', () => {
 
     expect(throwaway?.weight).toBe(0.5);
     expect(drop?.weight).toBe(0.5);
+    expect(throwaway?.splitAttribution).toBe(true);
+    expect(drop?.splitAttribution).toBe(true);
     // throw_attempt is always full weight, even on a split
     expect(throwAttempt?.weight).toBe(1);
+    expect(throwAttempt?.splitAttribution).toBeUndefined();
   });
 
   it('splitAttribution on a throwaway is ignored — thrower gets full weight 1.0 (no receiver to share blame with)', () => {
@@ -1081,6 +1084,9 @@ describe('turnover attributions', () => {
 
     // throwaway always full weight — no counterpart exists
     expect(sumAttributions(attributions, 'p_august', 'throwaway')).toBe(1);
+    expect(
+      attributions.find((attr) => attr.type === 'throwaway')?.splitAttribution,
+    ).toBeUndefined();
   });
 
   it('stall — stall_conceded to the thrower, stall to the defender', () => {

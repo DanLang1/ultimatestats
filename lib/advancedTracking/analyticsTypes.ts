@@ -161,6 +161,8 @@ export interface AnalyticsAttribution {
   participantId: string;
   /** 1.0 standard, 0.5 for split attribution. */
   weight: number;
+  /** Present on each half of a 50/50 drop fault. */
+  splitAttribution?: true;
   actionId: string;
   pointId: string;
 }

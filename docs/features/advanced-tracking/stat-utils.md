@@ -171,7 +171,10 @@ Half-split timing stats are supported via the caller pre-filtering `game.points`
 ### Additional Analytics Utilities
 
 - `advancedTimeOfPossessionUtils.ts` derives side possession time from action timing.
-- `advancedImpactUtils.ts` builds per-player point impact.
+- `advancedImpactUtils.ts` builds per-player point impact. Its point descriptions distinguish
+  50/50 throw, drop, and self faults from full throwaways and drops while retaining their weighted
+  plus/minus values. It recognizes splits from attribution flags and pairs a self fault by
+  attribution action ID. The impact event log expands those descriptions for the player.
 - `advancedChemistryUtils.ts` derives scoring and passing connections.
 - `advancedAggregateStatsUtils.ts` derives opening-pull and flip summaries across games.
   The opening-results card keeps flip and starting results visible and places recorded choices

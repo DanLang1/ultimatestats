@@ -52,6 +52,9 @@ const PART_TO_FULL: Record<string, string> = {
   StlC: 'Stalled',
   T: 'Throwaway',
   D: 'Drop',
+  FfT: '50/50 Throw',
+  FfD: '50/50 Drop',
+  FfS: '50/50 Self',
 };
 
 const PART_TO_ABBREV: Record<string, string> = {
@@ -66,6 +69,9 @@ const PART_TO_ABBREV: Record<string, string> = {
   StlC: 'Stld',
   T: 'T',
   D: 'D',
+  FfT: 'T',
+  FfD: 'D',
+  FfS: 'FF',
 };
 
 function parsePart(part: string): { count: number; code: string } {

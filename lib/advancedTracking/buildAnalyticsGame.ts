@@ -145,9 +145,17 @@ function addAttribution(
   actionId: string,
   pointId: string,
   weight = 1,
+  splitAttribution?: true,
 ) {
   if (participantId === null) return;
-  attributions.push({ type, participantId, weight, actionId, pointId });
+  attributions.push({
+    type,
+    participantId,
+    weight,
+    actionId,
+    pointId,
+    ...(splitAttribution && { splitAttribution }),
+  });
 }
 
 function emitAttributions(
@@ -158,8 +166,8 @@ function emitAttributions(
   attributions: AnalyticsAttribution[],
 ) {
   const { actorId, receiverId, defenderId } = resolved;
-  const add = (type: AttributionType, id: string | null, weight = 1) =>
-    addAttribution(attributions, type, id, action.id, pointId, weight);
+  const add = (type: AttributionType, id: string | null, weight = 1, splitAttribution?: true) =>
+    addAttribution(attributions, type, id, action.id, pointId, weight, splitAttribution);
 
   if (action.kind === 'pull') {
     add('pull', actorId);
@@ -197,8 +205,8 @@ function emitAttributions(
       case 'drop':
         add('throw_attempt', actorId);
         if (split) {
-          add('throwaway', actorId, 0.5);
-          add('drop', receiverId, 0.5);
+          add('throwaway', actorId, 0.5, true);
+          add('drop', receiverId, 0.5, true);
         } else {
           add('drop', receiverId);
         }

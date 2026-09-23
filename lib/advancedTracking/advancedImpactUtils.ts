@@ -12,6 +12,11 @@ export interface AdvancedImpactPoint {
   score: string;
 }
 
+interface PointImpactAttributions {
+  totals: Map<AttributionType, number>;
+  splitByActionId: Map<string, Set<'throwaway' | 'drop'>>;
+}
+
 export function computeAdvancedImpact(
   game: AnalyticsGame,
   participantId: string,
@@ -54,9 +59,9 @@ function buildParticipantAttributions(
   game: AnalyticsGame,
   participantId: string,
   participantSideId?: string,
-): Map<string, Map<AttributionType, number>> {
+): Map<string, PointImpactAttributions> {
   const pointById = new Map(game.points.map((point) => [point.id, point]));
-  const pointAttribs = new Map<string, Map<AttributionType, number>>();
+  const pointAttribs = new Map<string, PointImpactAttributions>();
   for (const attr of game.attributions) {
     if (attr.participantId !== participantId) continue;
     if (
@@ -65,9 +70,19 @@ function buildParticipantAttributions(
     ) {
       continue;
     }
-    const typeMap = pointAttribs.get(attr.pointId) ?? new Map<AttributionType, number>();
-    typeMap.set(attr.type, (typeMap.get(attr.type) ?? 0) + attr.weight);
-    pointAttribs.set(attr.pointId, typeMap);
+    const summary = pointAttribs.get(attr.pointId) ?? {
+      totals: new Map<AttributionType, number>(),
+      splitByActionId: new Map<string, Set<'throwaway' | 'drop'>>(),
+    };
+    summary.totals.set(attr.type, (summary.totals.get(attr.type) ?? 0) + attr.weight);
+
+    if (attr.splitAttribution && (attr.type === 'throwaway' || attr.type === 'drop')) {
+      const splitTypes =
+        summary.splitByActionId.get(attr.actionId) ?? new Set<'throwaway' | 'drop'>();
+      splitTypes.add(attr.type);
+      summary.splitByActionId.set(attr.actionId, splitTypes);
+    }
+    pointAttribs.set(attr.pointId, summary);
   }
   return pointAttribs;
 }
@@ -87,12 +102,12 @@ function isParticipantOnField(
   );
 }
 
-function getImpactSummary(typeMap?: Map<AttributionType, number>): {
+function getImpactSummary(summary?: PointImpactAttributions): {
   plusMinusDelta: number;
   description: string;
 } {
-  if (!typeMap) return { plusMinusDelta: 0, description: '' };
-  const get = (type: AttributionType) => typeMap.get(type) ?? 0;
+  if (!summary) return { plusMinusDelta: 0, description: '' };
+  const get = (type: AttributionType) => summary.totals.get(type) ?? 0;
   const goals = get('goal');
   const assists = get('assist');
   const hockeyAssists = get('hockey_assist');
@@ -105,6 +120,14 @@ function getImpactSummary(typeMap?: Map<AttributionType, number>): {
   const stallsConceded = get('stall_conceded');
   const nonCallahanGoals = Math.max(0, goals - callahans);
   const nonCallahanBlocks = Math.max(0, blocks - callahans);
+  let splitThrowaways = 0;
+  let splitDrops = 0;
+  let splitSelf = 0;
+  for (const splitTypes of summary.splitByActionId.values()) {
+    if (splitTypes.has('throwaway') && splitTypes.has('drop')) splitSelf++;
+    else if (splitTypes.has('throwaway')) splitThrowaways++;
+    else if (splitTypes.has('drop')) splitDrops++;
+  }
   const parts: string[] = [];
 
   if (callahans > 0) parts.push('C');
@@ -118,8 +141,11 @@ function getImpactSummary(typeMap?: Map<AttributionType, number>): {
   addCountLabel(parts, pressures, 'P');
   addCountLabel(parts, stalls, 'Stl');
   addCountLabel(parts, stallsConceded, 'StlC');
-  addCountLabel(parts, throwaways, 'T');
-  addCountLabel(parts, drops, 'D');
+  addCountLabel(parts, throwaways - (splitThrowaways + splitSelf) * 0.5, 'T');
+  addCountLabel(parts, drops - (splitDrops + splitSelf) * 0.5, 'D');
+  addCountLabel(parts, splitThrowaways, 'FfT');
+  addCountLabel(parts, splitDrops, 'FfD');
+  addCountLabel(parts, splitSelf, 'FfS');
 
   return {
     plusMinusDelta:
