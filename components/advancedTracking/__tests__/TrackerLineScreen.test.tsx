@@ -193,7 +193,7 @@ describe('TrackerLineScreen', () => {
 
   it('keeps a preset selected while adding an other player', async () => {
     const user = userEvent.setup();
-    const presetPlayers = Array.from({ length: 7 }, (_, index) =>
+    const presetPlayers = Array.from({ length: 6 }, (_, index) =>
       makeParticipant(`preset-line-${index + 1}`, `Preset Line ${index + 1}`),
     );
     const otherPlayer = makeParticipant('preset-other', 'Preset Other');
@@ -231,7 +231,62 @@ describe('TrackerLineScreen', () => {
       'accessibilityLabel',
       'Choose line, Preset With Other Player',
     );
-    expect(screen.getByText(otherPlayer.name)).toBeVisible();
+    expect(screen.getByText('7/7')).toBeVisible();
+    expect(screen.getByTestId(`player-chip-${otherPlayer.name}`)).toHaveProp(
+      'accessibilityState',
+      expect.objectContaining({ selected: true }),
+    );
+  });
+
+  it('does not add an eighth player when tapping at seven selected', async () => {
+    const user = userEvent.setup();
+    const participants = Array.from({ length: 9 }, (_, index) =>
+      makeParticipant(`cap-${index}`, `Cap ${index}`),
+    );
+
+    await renderScreen(
+      <TrackerLineScreen participants={participants} title="Set line" onConfirm={() => {}} />,
+    );
+
+    for (let index = 0; index < 7; index += 1) {
+      await user.press(screen.getByText(participants[index].name));
+    }
+    expect(screen.getByText('7/7')).toBeVisible();
+    expect(screen.getByTestId('line-select-confirm')).toBeEnabled();
+
+    await user.press(screen.getByText(participants[7].name));
+
+    expect(screen.getByText('7/7')).toBeVisible();
+    expect(screen.getByTestId(`player-chip-${participants[7].name}`)).toHaveProp(
+      'accessibilityState',
+      expect.objectContaining({ selected: false }),
+    );
+  });
+
+  it('keeps a loaded recent line selected when an eighth-player tap is ignored', async () => {
+    const user = userEvent.setup();
+    const participants = Array.from({ length: 8 }, (_, index) =>
+      makeParticipant(`recent-cap-${index}`, `Recent Cap ${index}`),
+    );
+
+    await renderScreen(
+      <TrackerLineScreen
+        participants={participants}
+        recentLines={[{ pointNumber: 3, playerIds: participants.slice(0, 7).map((p) => p.id) }]}
+        title="Set line"
+        onConfirm={() => {}}
+      />,
+    );
+
+    await user.press(screen.getByTestId('line-select-load-line'));
+    await user.press(screen.getByTestId('line-select-recent-3'));
+    await user.press(screen.getByText(participants[7].name));
+
+    expect(screen.getByText('7/7')).toBeVisible();
+    expect(screen.getByTestId('line-select-load-line')).toHaveProp(
+      'accessibilityLabel',
+      'Choose line, Pt 3',
+    );
   });
 
   it('compares required changes against the selection from mount', async () => {

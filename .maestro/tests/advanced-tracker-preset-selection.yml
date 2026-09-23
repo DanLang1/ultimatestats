@@ -55,24 +55,18 @@ name: Advanced Tracker Oversized Preset Selection
     id: 'player-chip-Heidi'
 - tapOn:
     id: 'line-select-show-all-players'
+# At seven players an extra tap is ignored instead of adding an eighth player.
 - tapOn:
     id: 'player-chip-Heidi'
-- assertVisible: '8/7'
-- tapOn:
-    id: 'line-select-show-all-players'
-- assertVisible: 'Other players · 2 · 1 selected'
-- tapOn:
-    id: 'line-select-show-all-players'
-- tapOn:
-    id: 'player-chip-Heidi'
-- tapOn:
-    id: 'player-chip-Joe'
-- assertVisible:
-    id: 'player-chip-Joe'
-- tapOn:
-    id: 'player-chip-Joe'
-- tapOn:
-    id: 'line-select-show-all-players'
 - assertVisible: '7/7'
+- assertVisible: 'Other players · 2'
+# Deselect a preset member to make room, then swap in the bench player.
+- tapOn:
+    id: 'player-chip-Joel'
+- assertVisible: '6/7'
+- tapOn:
+    id: 'player-chip-Heidi'
+- assertVisible: '7/7'
+- assertVisible: 'Other players · 2 · 1 selected'
 - takeScreenshot:
     path: .maestro/screenshots/advanced-tracker-preset-selection

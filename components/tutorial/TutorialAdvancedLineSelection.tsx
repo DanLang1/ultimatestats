@@ -63,11 +63,15 @@ export default function TutorialAdvancedLineSelection({
     if (!selectedPresetIds.has(playerId)) {
       setShowAllPlayers(true);
     }
-    setSelectedIds((currentIds) =>
-      currentIds.includes(playerId)
-        ? currentIds.filter((id) => id !== playerId)
-        : [...currentIds, playerId],
-    );
+    setSelectedIds((currentIds) => {
+      if (currentIds.includes(playerId)) {
+        return currentIds.filter((id) => id !== playerId);
+      }
+      if (currentIds.length >= ULTIMATE_LINE_SIZE) {
+        return currentIds;
+      }
+      return [...currentIds, playerId];
+    });
     setFeedback(null);
   };
 

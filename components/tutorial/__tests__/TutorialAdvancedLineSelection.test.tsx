@@ -62,7 +62,7 @@ describe('tutorial and production line-selection parity', () => {
     expect(screen.getByText('0/7')).toBeOnTheScreen();
   });
 
-  it('keeps the preset selected while adding an other player', async () => {
+  it('keeps the preset selected without exceeding seven players', async () => {
     const user = userEvent.setup();
     await renderScreen(<TutorialAdvancedLineSelection onBack={() => {}} onComplete={() => {}} />);
 
@@ -74,7 +74,10 @@ describe('tutorial and production line-selection parity', () => {
       'accessibilityState',
       expect.objectContaining({ selected: true }),
     );
-    expect(screen.getByText('8/7')).toBeOnTheScreen();
-    expect(screen.getByText('Frank')).toBeOnTheScreen();
+    expect(screen.getByText('7/7')).toBeOnTheScreen();
+    expect(screen.getByTestId('player-chip-Frank')).toHaveProp(
+      'accessibilityState',
+      expect.objectContaining({ selected: false }),
+    );
   });
 });

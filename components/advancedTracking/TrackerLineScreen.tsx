@@ -201,6 +201,7 @@ export const TrackerLineScreen = ({
       participantRestrictions?.onPress(id);
       return;
     }
+    if (!isSelected && selectedIds.length >= ULTIMATE_LINE_SIZE) return;
     if (selectedPreset != null) {
       if (!selectedPreset.playerIds.includes(id)) {
         setShowAllPlayers(true);
@@ -212,7 +213,6 @@ export const TrackerLineScreen = ({
       updateSelection(selectedIds.filter((participantId) => participantId !== id));
       return;
     }
-    if (participantRestrictions && selectedIds.length >= ULTIMATE_LINE_SIZE) return;
     updateSelection([...selectedIds, id]);
   };
 

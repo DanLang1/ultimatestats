@@ -109,13 +109,15 @@ active halftime break does not end halftime; the break ends only after the next 
 second-half point.
 
 Normal line preparation loads every eligible member of a preset, even when the draft exceeds
-seven players, and does not fill short presets from the previous lineup. Both partial and oversized
-drafts remain recoverable; confirmation still requires exactly seven. Preset membership is a
-selection aid, not point history: deselecting a member never edits the saved preset. The selector
-keeps preset members visible and exposes other eligible players in a collapsible section with a
-selected count. Both groups separate handlers, cutters, hybrids, and unassigned players into compact
-position sections; deselecting a player does not remove them or their section. Active-line corrections
-retain their locked/restricted-player merge rules.
+seven players, and does not fill short presets from the previous lineup. Manual taps stop at seven,
+so a draft can only exceed seven by loading an oversized preset, recent line, or restored draft; the
+footer warns how many players to deselect. Both partial and oversized drafts remain recoverable, and
+confirmation still requires exactly seven. Preset membership is a selection aid, not point history:
+deselecting a member never edits the saved preset. The selector keeps preset members visible and
+exposes other eligible players in a collapsible section with a selected count. Both groups separate
+handlers, cutters, hybrids, and unassigned players into compact position sections; deselecting a
+player does not remove them or their section. Active-line corrections retain their
+locked/restricted-player merge rules.
 
 The pending selection stores lineup drafts only (with game and completed-point context for stale
 state reconciliation). PullTracking derives the next receiving side, pulling side, and gender ratio
