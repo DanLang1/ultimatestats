@@ -355,14 +355,7 @@ export default function HelpContent({
         />
       </Pressable>
 
-      <TrackerHelpSheet
-        visible={showAdvancedGuide}
-        onClose={() => setShowAdvancedGuide(false)}
-        onTutorial={() => {
-          setShowAdvancedGuide(false);
-          router.push({ pathname: '/TutorialAdvancedLineSelect', params: { origin: 'help' } });
-        }}
-      />
+      <TrackerHelpSheet visible={showAdvancedGuide} onClose={() => setShowAdvancedGuide(false)} />
     </>
   );
 }

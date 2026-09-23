@@ -10,7 +10,6 @@ import { Fonts } from '@/theme/theme';
 interface TrackerHelpSheetProps {
   visible: boolean;
   onClose: () => void;
-  onTutorial: () => void;
 }
 
 interface HelpRow {
@@ -47,7 +46,7 @@ const helpRows: HelpRow[] = [
   },
 ];
 
-export function TrackerHelpSheet({ visible, onClose, onTutorial }: TrackerHelpSheetProps) {
+export function TrackerHelpSheet({ visible, onClose }: TrackerHelpSheetProps) {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
   const styles = createStyles(sizeClass);
@@ -103,24 +102,22 @@ export function TrackerHelpSheet({ visible, onClose, onTutorial }: TrackerHelpSh
               </View>
             ))}
           </View>
-          <Pressable
-            accessibilityRole="button"
-            testID="tracker-help-tutorial"
-            onPress={onTutorial}
-            style={({ pressed }) => [
-              styles.tutorialButton,
-              { borderColor: palette.overlay20 },
-              pressed && { opacity: 0.7 },
-            ]}>
-            <MaterialCommunityIcons
-              name="gesture-swipe-vertical"
-              size={scaleBySizeClass(22, sizeClass)}
-              color={palette.modalText}
-            />
-            <ThemedText style={[styles.event, { color: palette.modalText }]}>
-              Practice in the tutorial
+
+          <View style={styles.referenceSection}>
+            <ThemedText style={[styles.sectionLabel, { color: palette.modalTextMuted }]}>
+              RED ZONE
             </ThemedText>
-          </Pressable>
+            <View style={styles.row}>
+              <View style={[styles.rowIcon, styles.redZoneDotContainer]}>
+                <View style={[styles.redZoneDot, { backgroundColor: palette.danger }]} />
+              </View>
+              <View style={styles.rowText}>
+                <ThemedText style={[styles.body, { color: palette.modalTextMuted }]}>
+                  Tap RZ when either team is in their endzone set.
+                </ThemedText>
+              </View>
+            </View>
+          </View>
         </ScrollView>
         <Pressable
           accessibilityRole="button"
@@ -158,6 +155,18 @@ function createStyles(sizeClass: SizeClass) {
     hint: { padding: 14, borderRadius: 12, gap: 4 },
     sectionLabel: { fontSize: scaleBySizeClass(14, sizeClass), fontFamily: Fonts.semiBold },
     section: { gap: 20 },
+    referenceSection: { gap: 14 },
+    redZoneDotContainer: {
+      width: scaleBySizeClass(26, sizeClass),
+      height: scaleBySizeClass(22, sizeClass),
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    redZoneDot: {
+      width: scaleBySizeClass(12, sizeClass),
+      height: scaleBySizeClass(12, sizeClass),
+      borderRadius: scaleBySizeClass(6, sizeClass),
+    },
     row: { flexDirection: 'row', gap: 14 },
     rowIcon: { marginTop: 2 },
     rowText: { flex: 1, gap: 4 },
@@ -165,16 +174,6 @@ function createStyles(sizeClass: SizeClass) {
     body: {
       fontSize: scaleBySizeClass(15, sizeClass),
       lineHeight: scaleBySizeClass(22, sizeClass),
-    },
-    tutorialButton: {
-      minHeight: 48,
-      padding: 12,
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: 8,
-      borderWidth: 1,
-      borderRadius: 12,
     },
     returnButton: {
       minHeight: 48,

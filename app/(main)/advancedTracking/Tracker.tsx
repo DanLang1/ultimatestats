@@ -299,14 +299,7 @@ export default function AdvancedTrackerScreen() {
         />
       )}
 
-      <TrackerHelpSheet
-        visible={showHelp}
-        onClose={() => setShowHelp(false)}
-        onTutorial={() => {
-          setShowHelp(false);
-          handleAdvancedTutorial();
-        }}
-      />
+      <TrackerHelpSheet visible={showHelp} onClose={() => setShowHelp(false)} />
 
       <TrackerHomeMenu
         visible={showHomeMenu}
