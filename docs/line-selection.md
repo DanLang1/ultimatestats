@@ -5,14 +5,15 @@
 
 ## Replace vs. Append (Correction vs. Substitution)
 
-When a user edits a line mid-point, the system determines whether it's a **correction** (wrong preset picked) or a **real substitution** (injury/fatigue) by counting how many players changed:
+When a user edits an existing point's line mid-point, the editor lets them choose how the change is
+recorded rather than inferring it from how many players changed:
 
-| Players Changed | Behavior                    | Rationale                                      |
-| --------------- | --------------------------- | ---------------------------------------------- |
-| 1–2 players     | **Append** as substitution  | Small swap — likely a real sub                 |
-| 3+ players      | **Replace** existing record | Most of the line changed — likely wrong preset |
+| Sub-type         | Behavior                                                                                             |
+| ---------------- | ---------------------------------------------------------------------------------------------------- |
+| **Injury Sub**   | Appends a substitution record; skipped when the lineup is identical to the last record for the point |
+| **Replace Line** | Removes all existing `pointLines` records for that point and writes one corrected snapshot           |
 
-When replacing, all existing `pointLines` records for that point are removed and a single corrected snapshot is written with `isSubstitution: false`. This ensures earlier mistaken lines don't count toward playing time.
+This ensures earlier mistaken lines don't count toward playing time when a line is replaced.
 
 Injury substitutions store explicit metadata on the appended `PointLineRecord`:
 

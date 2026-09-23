@@ -111,9 +111,9 @@ export interface AnalyticsActionBase {
   possessionIndex: number;
   actionIndex: number;
   sideId: string;
-  /** Resolved from PlayerRef — null if unknown or untracked. */
+  /** Resolved from PlayerRef. `unknown` resolves to UNKNOWN_PARTICIPANT_ID; `untracked` is null. */
   actorId: string | null;
-  /** toPlayer on throws, receiver on pull. Null if unknown or untracked. */
+  /** toPlayer on throws, receiver on pull. `unknown` resolves to UNKNOWN_PARTICIPANT_ID; `untracked` is null. */
   receiverId: string | null;
   defenderId: string | null;
   /**

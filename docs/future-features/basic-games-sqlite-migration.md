@@ -96,12 +96,12 @@ Likely state after migration:
 
 - keep live scoreboard/gameplay fields in `useGameStore`
 - keep `currentGameId` in `useGameStore`
-- keep `savedGameSummaries` in memory for list counts and saved-game browsing
+- keep `summaries` in memory for list counts and saved-game browsing
 - load full saved games from SQLite on demand
 - keep `savedTeams` in `useGameStore` unless/until teams are migrated separately
 
-This mirrors advanced tracking's split between `currentGame`, `currentGameId`,
-`savedGameSummaries`, and SQLite-backed record loading.
+This mirrors advanced tracking's split between `currentGame`, `currentGameId`, `summaries` (with a
+`gamesById` cache), and SQLite-backed record loading.
 
 ### 4. Update Store Actions
 

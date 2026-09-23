@@ -35,23 +35,22 @@ Scrollable table of player stats. Exact columns vary depending on whether line-t
 
 Common columns include:
 
-| Column | Description                                        |
-| ------ | -------------------------------------------------- |
-| Player | Player name                                        |
-| Pts    | Points played (when line tracking data exists)     |
-| O-Eff  | O-line efficiency (when line tracking data exists) |
-| D-Eff  | D-line efficiency (when line tracking data exists) |
-| G      | Goals scored (+1)                                  |
-| A      | Assists thrown (+1)                                |
-| Blk    | Blocks made (+1)                                   |
-| Calh   | Callahans made (+1, only appears if > 0)           |
-| TO     | Throwaways committed (-1)                          |
-| D      | Drops committed (-1)                               |
-| +/-    | Plus/Minus (G + A + Blk - TO - D), color-coded     |
+| Column  | Description                                        |
+| ------- | -------------------------------------------------- |
+| Player  | Player name                                        |
+| +/-     | Plus/Minus (G + A + Blk - TO - D), color-coded     |
+| Goals   | Goals scored (+1)                                  |
+| Assists | Assists thrown (+1)                                |
+| Blocks  | Blocks made (+1)                                   |
+| T/A     | Throwaways committed (-1)                          |
+| Drops   | Drops committed (-1)                               |
+| O-Eff   | O-line efficiency (when line tracking data exists) |
+| D-Eff   | D-line efficiency (when line tracking data exists) |
+| PP      | Points played (when line tracking data exists)     |
 
 - sorted by Plus/Minus descending, then by name.
 - Non-integer values (from 50/50 turnovers) are displayed with single decimal (e.g. 0.5).
-- Pts, O-Eff, D-Eff columns are hidden for games without line tracking data.
+- O-Eff, D-Eff, and PP columns are hidden for games without line tracking data.
 - **Interactive Rows**: Tap any player row to view a detailed breakdown of their individual stats.
 - In aggregate player view, the **Game Impact** selector includes games where that player has either impact events or recorded point-line presence (played points).
 - In player detail, **Game Impact** event chips and score markers use the point-start score so all impact events from the same point share one label; if the point is still in progress, they show the current live score.
@@ -106,7 +105,6 @@ full turnover and throwaway labels.
 
 The **Saved Games** screen displays a history of games recorded on this device.
 
-- If the entire saved-games storage blob becomes unreadable, the screen shows a simple corruption warning instead of silently treating the library as empty.
 - Saved-game date labels use the custom played time when one has been set; otherwise they fall back to the original recorded timestamp.
 
 ### 1. Searching & Filtering
@@ -153,45 +151,64 @@ The **Aggregate Stats** screen allows you to combine stats from multiple games f
 
 ## CSV Export
 
-The exported file (`[Game Date]_[Teams].csv`) contains several sections:
+The exported file is named `[Team A]_vs_[Team B]_[Date].csv`, where non-alphanumeric characters are
+replaced with underscores and the current (unsaved) game uses `current` in place of a date.
 
-### Section 1: Summary
+### Sections and order
 
-General game information including teams, scores, and date.
+Single-game exports (current and saved) contain these sections in order:
 
-### Section 2: Play-by-Play (Events)
+1. `# Game: [Team A] vs [Team B] - [Date]` title line (saved-game exports only)
+2. `# Play-by-Play`
+3. `# Turnovers`
+4. `# Player Summary`
+5. `# Team Stats`, followed by `# Timing Stats` and `# Time of Possession` when that data exists
+
+### Play-by-Play (Events)
 
 Unified chronological log of all point results and timing:
 
 ```csv
-Point,Score Before,Pulling Team,Goal Team,Goal,Assist,Duration
+# Play-by-Play
+Point Number,Curr Score,Pulling Team,Goal Team,Goal,Assist,Duration
 1,0-0,Team 2,Team 1,Alice,Bob,1:15
 2,1-0,Team 1,Team 2,,,0:45
 3,1-1,Team 2,Team 1,Charlie,,2:10
 ```
 
-### Section 3: Player Stats Summary
+### Turnovers
+
+One row per recorded turnover:
+
+```csv
+# Turnovers
+Team,Type,Player,Player2,Timestamp
+Team 1,throwaway,Alex,,1:02
+```
+
+### Player Summary
 
 Aggregated statistics for your team:
 
 ```csv
 # Player Summary
-Player,Goals,Assists,Blocks,Throwaways,Drops,Callahans,Plus/Minus,Points Played,O-Points,D-Points,O-Line Holds,D-Line Breaks,Minutes Played,O-Eff,D-Eff
-Alice,3,2,1,0,0,1,6,10,6,4,4,1,15:42,70%,33%
-Bob,2,1,0,1,0,0,2,8,5,3,3,1,12:18,63%,25%
+Player,Goals,Assists,Blocks,Throwaways,Drops,Plus/Minus,Points Played,O-Points,D-Points,O-Line Holds,D-Line Breaks,Minutes Played,O-Eff,D-Eff
+Alice,3,2,1,0,0,6,10,6,4,4,1,15:42,70%,33%
+Bob,2,1,0,1,0,2,8,5,3,3,1,12:18,63%,25%
 ```
 
+- The `Callahans` column is inserted before `Plus/Minus` only when at least one player has a Callahan.
 - If line tracking data exists, CSV adds `Points Played`, `O-Points`, `D-Points`, `O-Line Holds`, `D-Line Breaks`, `Minutes Played`, `O-Eff`, and `D-Eff` columns.
 - Players who appeared in lines but recorded no event stats are still included in Player Summary.
 - If line tracking data is not available, those columns are omitted.
 
-### Section 4: Team Stats
+### Team Stats
 
 Team performance metrics including hold%, break efficiency, conversion rate, etc.
 
-### Section 5: Timing Stats (Conditional)
+### Timing Stats (Conditional)
 
-If the game was played with the point timer enabled, timing statistics are included:
+If the game was played with the point timer enabled, timing statistics are appended:
 
 ```csv
 # Timing Stats
@@ -205,15 +222,15 @@ Shortest Point,0:32,
 
 > **Note**: This section only appears if timing data was recorded during the game.
 
-### Section 6: Time of Possession (Conditional)
+### Time of Possession (Conditional)
 
-If every event in at least one point has a recorded timestamp, a time-of-possession summary is included:
+If every event in at least one point has a recorded timestamp, a time-of-possession summary is appended:
 
 ```csv
 # Time of Possession
 Stat,Value,Detail
-Team 1,1:05,55.2%
-Team 2,0:53,44.8%
+Team 1 Possession,1:05,55.2%
+Team 2 Possession,0:53,44.8%
 Points (timed),12,
 ```
 

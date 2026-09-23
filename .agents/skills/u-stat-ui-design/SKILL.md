@@ -49,7 +49,7 @@ keep it separate.
 
 ## Implementation conventions
 
-- Target iOS and Android. Web support is deferred.
+- Target iOS and Android only; there is no web target.
 - Use `ThemedText`, `ThemedView`, `useTheme()`, semantic palette tokens, and `Fonts`.
 - Add missing theme values to `theme/theme.ts`; do not branch styles on `themeMode`.
 - Follow the outlined-secondary-action convention in `docs/ui-patterns.md`: default to a

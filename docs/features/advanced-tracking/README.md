@@ -45,14 +45,12 @@ Returning from line selection and continuing creates a fresh game from the curre
 ## In-game Help
 
 The tracker's top bar keeps a labeled Help button visible. `TrackerHelpSheet` provides a
-“What happened?” reference that always leads with goal, throwaway, and drop gestures, followed
-by passes, More, and Undo. Single-team defense adds opponent goal/turnover buttons and player
-block capture below the gesture guide; possession never hides the core instructions. Pickup,
-dropped-pull, selected-action, paused-play, and between-point hints use the current tracker
-state. Help only opens local UI: it does not record actions or change clocks. Users can return
-directly to tracking or open practice for the five core gestures: pass, drop, throwaway, block, and
-goal. Tracker-launched practice returns to the tracker and does not run onboarding line selection or
-roster setup.
+“What happened?” reference with a fixed list of core gestures — scored (swipe up), throwaway
+(swipe down), drop (swipe down), and block (tap) — plus a “Something else happened” row that points
+at More for actions like stall and Callahan. Help only opens local UI: it does not record actions or
+change clocks. Users can return directly to tracking or open practice. Tracker-launched practice
+covers six gestures — pass, throwaway, block, drop, pressure, and goal — returns to the tracker, and
+does not run onboarding line selection or roster setup.
 
 Fresh-install onboarding introduces advanced line selection before gesture practice. That screen is
 a tutorial-owned implementation with local fixture state. It may reuse neutral visual primitives,
@@ -129,7 +127,7 @@ without a concrete requirement and migration plan.
 | Domain and analytics | `lib/advancedTracking/`                     |
 | Live state           | `store/advancedTracking/trackingStore.ts`   |
 | Saved records        | `store/advancedTracking/savedGamesStore.ts` |
-| Device workflows     | `.maestro/tests/advanced-tracker-*.yml`     |
+| Device workflows     | `.maestro/tests/advanced-tracker-*`         |
 
 Exported types and tests describe current implemented behavior; these maintained documents describe
 the intended domain contracts. If they disagree, reconcile the inconsistency and update the

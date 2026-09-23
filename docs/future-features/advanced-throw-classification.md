@@ -25,8 +25,9 @@ Missing details mean that the throw was not classified. The prompt is offered on
 sides; anonymous-opponent actions are intentionally unsupported. Fully tracked scrimmage sides
 are eligible for the same prompt as either side of a regular game.
 
-After an eligible throw, the last-action card offers the valid choices: `Huck` after any eligible
-throw and `Backfield Reset` only after a turnover. The card remains visible after a goal on the
+After an eligible throw, the last-action card offers the valid choices: `Huck` on complete, goal,
+drop, throwaway, block, and pressure results, and `Backfield Reset` only on drop, throwaway, block,
+and pressure results (not `stall` or Callahan). The card remains visible after a goal on the
 regular between-point summary, at halftime, and on Game Complete before the result is finalized. It
 keeps the `Huck` choice available for that point-ending throw and retains Undo while the goal is
 still the latest undoable operation. On Game Complete, the existing full-width Undo action remains
@@ -52,9 +53,10 @@ same stable-ID mutation.
 
 ## Persistence and Data Boundaries
 
-Phase 1 uses advanced schema version 3. Older records migrate by retaining every existing action
-unchanged and stamping the current version; no classification is inferred. SQLite needs no table
-change because the full game is stored as JSON.
+Throw classification was introduced in advanced schema version 3 (the current schema is version 4,
+which added Red Zone). Older records migrate by retaining every existing action unchanged and
+stamping the current version; no classification is inferred. SQLite needs no table change because
+the full game is stored as JSON.
 
 Throw details are:
 

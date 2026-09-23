@@ -9,7 +9,8 @@ Orientation behavior is controlled centrally:
 - `app.config.js` is set to `orientation: 'default'`.
 - App-level locking (Settings -> App -> Orientation) is applied from `app/_layout.tsx` via `useOrientationLock()`.
 - No per-screen lock/unlock calls.
-- In settings may not apply to large screens because of Android 16 update
+- On large Android devices, orientation locks may be ignored by the OS and can cause letterboxing;
+  Settings shows a warning for non-`system` modes.
 
 ## Required Hook
 
@@ -36,9 +37,7 @@ Breakpoint constants are defined in `lib/constants.ts` (`SIZE_CLASS_MEDIUM_THRES
 
 **Note:** Because this uses `smallestDimension`, a 1280x800 tablet becomes `large` (smallest=800 >= 790). This is intentional for this project's current breakpoint tuning.
 
-Use `sizeClass` to scale text, spacing, and component sizing for larger screens. Import the `SizeClass` type when accepting it as a prop, and `LayoutInfo` when passing the full layout object to `createStyles`.
-
-Components that accept `sizeClass` should make it optional with a `'small'` default. This keeps them usable outside size-class-aware screens without forcing every caller to thread layout through, but be mindful that a missing prop silently degrades to phone sizing.
+Use `sizeClass` to scale text, spacing, and component sizing for larger screens. Components get `sizeClass` by calling `useLayout()` themselves; pass the full `LayoutInfo` to `createStyles` when a component needs it.
 
 For Android-specific large-screen behavior, use `Platform.OS === 'android' && sizeClass !== 'small'` inline at the call site — `isAndroidLargeScreen` has been removed from the hook.
 
@@ -94,7 +93,7 @@ These screens use vertical `ScrollView` or centered card layouts with `maxWidth`
 
 Screens with multi-column layouts, flex-direction switches, or orientation-dependent spacing use `useLayout()` and bake orientation into `createStyles()`. This is the standard approach for most screens.
 
-**Examples:** `Settings.tsx`, `EditRoster.tsx`, `GameInfo.tsx`, `PlayerStats.tsx`, `ViewStats.tsx`, `index.tsx` (Scoreboard), `NumberPickerModal.tsx`, `TimeoutModal.tsx`, `PreGameConfirm.tsx`
+**Examples:** `Settings.tsx`, `EditRoster.tsx`, `GameInfo.tsx`, `PlayerStats.tsx`, `ViewStats.tsx`, `Scoreboard.tsx`, `NumberPickerModal.tsx`, `TimeoutModal.tsx`, `PreGameConfirm.tsx`
 
 ### 3. Inline `isLandscape` for conditional rendering
 
@@ -187,7 +186,7 @@ When a modal supports portrait, ensure:
 
 ## Tablet / Size Class Support
 
-`useLayout()` returns a `sizeClass` field that components can use to scale sizing for larger screens. The scoreboard (`index.tsx`, `TeamScoreSection`, `ScoreDisplay`, `TeamText`) is the first set of components adapted for tablet sizing.
+`useLayout()` returns a `sizeClass` field that components can use to scale sizing for larger screens. The scoreboard (`Scoreboard.tsx`, `TeamScoreSection`, `ScoreDisplay`, `TeamText`) is the first set of components adapted for tablet sizing.
 
 ### Pattern: shared size-class helpers (preferred)
 
@@ -216,28 +215,6 @@ function createMetrics(sizeClass: SizeClass) {
 ```
 
 Use explicit mappings when precision matters (for example: hit slop, minimum touch targets, and hard size caps). Use scaling when a value should follow the global size-class ratio.
-
-### Pattern: passing `sizeClass` to child components
-
-```tsx
-import { scaleBySizeClass, SizeClass } from '@/hooks/useLayout';
-
-interface MyComponentProps {
-  sizeClass?: SizeClass;
-}
-
-export default function MyComponent({ sizeClass = 'small' }: MyComponentProps) {
-  const styles = createStyles(sizeClass);
-  // ...
-}
-
-function createStyles(sizeClass: SizeClass) {
-  const fontSize = scaleBySizeClass(16, sizeClass);
-  return StyleSheet.create({
-    text: { fontSize },
-  });
-}
-```
 
 ### Pattern: passing full layout to `createStyles`
 

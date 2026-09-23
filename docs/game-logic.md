@@ -7,19 +7,17 @@
 Use the centralized `checkGameOver` function from `lib/basic/gameUtils.ts`:
 
 ```typescript
-import { checkGameOver } from '@/lib/basic/gameUtils';
+import { checkGameOver, getWinner } from '@/lib/basic/gameUtils';
 
-const result = checkGameOver({
+const isGameOver = checkGameOver({
   team1Score,
   team2Score,
   gameTo,
-  softCapPending,
-  timerActive,
-  gameLength,
+  timerTimeLeft,
 });
 
-if (result.isGameOver) {
-  // Handle game end - result.winner contains winner
+if (isGameOver) {
+  const winner = getWinner(team1Score, team2Score);
 }
 ```
 
@@ -36,7 +34,7 @@ if (result.isGameOver) {
 
 ### Hard Cap (Timer Expires)
 
-- `timerActive: false` + `gameLength > 0` indicates hard cap
+- `timerTimeLeft === 0` indicates hard cap
 - Highest score wins immediately (no cap target required)
 - Ties: game continues until a team leads
 
@@ -91,7 +89,7 @@ Test file: `lib/basic/__tests__/gameUtils.test.ts`
 Run tests:
 
 ```bash
-npm test -- gameUtils
+npx jest gameUtils
 ```
 
 Test cases to cover:

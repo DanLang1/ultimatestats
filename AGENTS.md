@@ -40,4 +40,4 @@ Read `docs/README.md` for the project map and New Screen Checklist. Follow its l
 
 - Quick: `npm run check`
 - Full: `npm run check:all`
-- One test target, for example: `npm test -- gameUtils`
+- One test target, for example: `npx jest gameUtils`

@@ -37,23 +37,26 @@ multi-screen sequence.
 npm test
 
 # Unit/domain tests only, by target
-npm test -- gameUtils
+npx jest gameUtils
 
 # Screen integration tests only
 npm run test:routes
 
 # Watch mode
-npm test -- --watch
+npx jest --watch
 
 # Formatting, linting, type checking, and all Jest tests
 npm run check:all
 ```
 
+`npm test` runs Jest and the oxlint plugin tests together, so `npm test -- <pattern>` does not forward
+the pattern to Jest. Use `npx jest <pattern>` (or `npm run test:routes`) for a focused run.
+
 ## Maestro Simulator Checks
 
 Maestro flows live in `.maestro/` and target the installed iOS simulator development build
-(`com.langdk.ultimatestats.dev` from the checked-in native project, using the `ultimatestats-dev`
-URI scheme). Install Maestro with Homebrew, then
+(dev app id `com.langdk.ultimatestats.dev` and URI scheme `ultimatestats-dev`, both defined in
+`app.config.js` for the `development` variant). Install Maestro with Homebrew, then
 build the app and run the advanced tracker smoke check:
 
 ```bash
@@ -132,7 +135,8 @@ shared screen-test infrastructure stays under `test/`:
 
 - `test/routes/` - user-facing route behavior
 - `lib/**/__tests__/`, `store/**/__tests__/`, etc. - domain and state behavior
-- `test/fixtures/` - valid domain state built with real Zustand stores and actions
+- `test/fixtures/` - valid domain state and the canonical advanced-game builders (shared helpers use
+  real Zustand stores and actions; the advanced-game builder is intentionally store-free)
 - `test/mocks/` - narrow native/runtime boundary adapters
 - `test/render.tsx` - the production-like provider wrapper
 
@@ -247,12 +251,7 @@ describe('functionToTest', () => {
 
 ## Manual Verification
 
-Some features require manual testing:
-
-### Browser Testing
-
-- Use the browser subagent for UI interactions
-- Record flows for reference
+Some features require manual testing.
 
 ### Build Verification
 
@@ -278,11 +277,11 @@ When testing stat tracking:
 
 When testing saved-game migrations:
 
-1. In a dev build, open Dashboard and use `Import Legacy Game JSON`.
-2. Paste a raw saved-game object/array or a persisted `state.savedGames` blob.
-3. Confirm the games appear in Saved Games and that halftime/timeline behavior matches the migrated schema.
-4. To test malformed legacy data, use `Append Raw Entries`, then `Run loadGames() Now` (or open Saved Games) and confirm only the bad entries are quarantined.
-5. To test whole-blob corruption from the Dashboard, tap `Test Corrupt Blob Alert`. It writes invalid JSON to `ultimatestats_games` and opens Saved Games, which should show the corruption warning instead of silently pretending the library is empty.
+1. Add or update a versioned fixture under `lib/storage/__fixtures__/games/` and a case in
+   `lib/storage/__tests__/migrations.test.ts`; keep older fixtures unchanged and add new versioned
+   fixtures/snapshots rather than rewriting the old data.
+2. In a dev build, confirm migrated games render in Saved Games with correct halftime and timeline
+   behavior.
 
 When testing game end:
 

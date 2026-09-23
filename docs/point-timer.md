@@ -68,7 +68,7 @@ When a goal is undone (`undoLastAction`):
 The `lib/basic/timelineUtils.ts` module generates the `PointEvents` structure used by the timeline.
 It acts as the single source of truth for duration calculations:
 
-1.  **Determine Start Time**: It looks for a finalized timestamp in `pointStartTimestamps`. If not found (e.g., in-progress point), it falls back to `currentPointStartTime`.
+1.  **Determine Start Time**: It prefers the working `currentPointStartTime`, and otherwise falls back to the finalized timestamp in `pointStartTimestamps`.
 2.  **Calculate Duration**: `goalTimestamp - startTimestamp`.
 3.  **Calculate Relative Times**: `eventTimestamp - startTimestamp`.
 

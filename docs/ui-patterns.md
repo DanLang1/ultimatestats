@@ -18,13 +18,9 @@ Reusable UI conventions for screens and modals.
   `paddingBottom: 10-12`
 - Prefer the shared header component for main screens: `components/ui/ScreenHeader.tsx`.
 - In portrait, keep the title visually centered using an absolute, non-interactive title layer:
-  `...StyleSheet.absoluteFillObject`, `justifyContent: 'center'`, `alignItems: 'center'`, `pointerEvents="none"`.
+  `...StyleSheet.absoluteFill`, `justifyContent: 'center'`, `alignItems: 'center'`, `pointerEvents="none"`.
 - Keep interactive controls in left/right slots and cap right-side actions in portrait (use overflow when needed) to avoid title drift.
-- **Tablet portrait rule**: use `showInlineHeaderActions = isLandscape || sizeClass !== 'small'` to decide between inline icons vs. overflow `...` menu. Tablets (`medium`/`large`) always get inline icons; phones (`small`) get the overflow menu in portrait.
-  ```tsx
-  const { isLandscape, sizeClass } = useLayout();
-  const showInlineHeaderActions = isLandscape || sizeClass !== 'small';
-  ```
+- **Tablet portrait rule**: `ResponsiveHeaderActions` decides between inline icons and the overflow `...` menu with `isLandscape || sizeClass !== 'small' || visibleActions.length <= 2`. Tablets (`medium`/`large`) always get inline icons; phones (`small`) get inline icons when there are two or fewer actions and the overflow menu otherwise.
 - Prefer `components/ui/ResponsiveHeaderActions.tsx` for composed right-slot actions so screens reuse one inline-vs-overflow implementation.
 - Use explicit back/dismiss action and avoid render-time imperative navigation.
 - Reference: [navigation-map.md](navigation-map.md).
@@ -100,8 +96,8 @@ scroll position follows the focused input throughout the keyboard animation. Add
 - Use when a temporary motion cue is preferred over static required affordances.
 - Primary implementation:
   - Hook: `components/ui/hooks/useAttentionBorderRunner.ts`
-  - Rendering integration: `components/ui/SegmentedControl.tsx` via
-    `attentionEnabled`, `attentionColor`, and `attentionSecondaryColor`.
+  - Rendering integration: `components/ui/SegmentedControl.tsx` via `attentionColor` and
+    `attentionRunKey`.
 - Recommendation: use sparingly and only for short onboarding moments to avoid persistent visual noise.
 
 ## Component Placement

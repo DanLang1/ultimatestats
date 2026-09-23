@@ -25,9 +25,9 @@ manual tag.
 - If an anonymous side logically has possession but its lazy possession scaffold does not yet
   exist, selecting Red Zone creates that side's canonical possession and untracked pickup
   scaffold atomically.
-- Single-game and aggregate team analytics show a Red Zone section only when the selected side
-  has at least one marked possession. It displays conversion with its resolved ratio, Red Zone
-  Turnovers, Avg Time to Score, and Avg Time to Turnover (rounded seconds).
+- Single-game and aggregate team analytics show a Red Zone section when the selected side or an
+  opposing side has at least one marked possession. The offensive block displays conversion with its
+  resolved ratio, Red Zone Turnovers, Avg Time to Score, and Avg Time to Turnover (rounded seconds).
 - Conversion and outcome time display an em dash when no qualifying samples exist. There is no
   empty-state section. Single-game and aggregate CSV exports include the same four stats only
   when entries exist, with conversion ratios and outcome duration in m:ss. O/D splits,
@@ -116,8 +116,9 @@ export interface AnalyticsPossession {
 ```
 
 Use the existing point/action timing conventions. Exclude completed in-point stoppages and
-game-clock pauses from both intervals. Return `null` when required timestamps are missing or when
-the possession has no resolved outcome.
+game-clock pauses from both intervals. Entry timing is available for any marked possession with valid
+timestamps, including a currently active one. Outcome duration returns `null` when required
+timestamps are missing or when the possession has no resolved outcome.
 
 Extend side-level team stats with:
 
@@ -194,4 +195,4 @@ Add regression coverage at each owning layer:
 | Analytics compilation      | `lib/advancedTracking/buildAnalyticsGame.ts`, `analyticsTypes.ts` |
 | Team and aggregate stats   | `lib/advancedTracking/advancedTeamStatsUtils.ts`                  |
 | Sharing                    | `lib/sharing/validate.ts`, `serialize.ts`                         |
-| Device verification        | `.maestro/tests/advanced-tracker-*.yml`                           |
+| Device verification        | `.maestro/tests/advanced-tracker-*`                               |

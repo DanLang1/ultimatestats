@@ -136,6 +136,11 @@ point is scored again.
 
 ### `AnalyticsAction`
 
+`AnalyticsAction` is a discriminated union on `kind`
+(`PullAnalyticsAction | ThrowAnalyticsAction | DiscPickupAnalyticsAction | StoppageAnalyticsAction`).
+The fields below are the shared base; `result`/`hangTimeMs` exist only on the pull variant and
+`result`/`splitAttribution`/`details` only on the throw variant.
+
 ```ts
 type AnalyticsAction = {
   id: string;
@@ -149,7 +154,8 @@ type AnalyticsAction = {
 
   sideId: string;
 
-  // Resolved from PlayerRef — null if unknown or untracked
+  // Resolved from PlayerRef. `unknown` resolves to the sentinel
+  // UNKNOWN_PARTICIPANT_ID ('UNKNOWN_PARTICIPANT'); `untracked` is null (intentionally anonymous).
   actorId: string | null; // thrower, puller, or picker-upper
   receiverId: string | null; // toPlayer on throws, receiver on pull
   defenderId: string | null;
@@ -216,7 +222,8 @@ type AttributionType =
 // NOTE: receiving_touch and pull_reception are intentionally distinct.
 // receiving_touch covers disc-movement touches within an offensive possession (catching completions/goals).
 // pull_reception covers receiving the opening pull to start a possession.
-// For a "total touches" metric, sum both: completion + receiving_touch + disc_pickup + pull_reception.
+// For a "total touches" metric, sum: receiving_touch + disc_pickup + pull_reception
+// (completions are already accounted for by the receiver's receiving_touch).
 ```
 
 ---
@@ -238,6 +245,7 @@ These rules are applied once during `buildAnalyticsGame`. Stat utils never need 
 | `pull` result `inbound`    | `pull` → actor; `pull_reception` → receiver (an inbound pull)                                                                                                                                  |
 | `pull` result `dropped`    | `pull` → actor; `drop` → receiver (puller is opposing team — no throwaway credit)                                                                                                              |
 | `pull` result `ob`         | `pull` → actor                                                                                                                                                                                 |
+| `pull` result `roller`     | `pull` → actor (no reception or drop)                                                                                                                                                          |
 | `disc_pickup`              | `disc_pickup` → actor                                                                                                                                                                          |
 
 `hockey_assist` is the only credit that requires looking at a previous action. `previousActionId` on
@@ -258,7 +266,7 @@ These rules are applied once during `buildAnalyticsGame`. Stat utils never need 
 | Completion %      | completions / throw attempts                                                                  |
 | Throw attempts    | `attributions` where `type === 'throw_attempt'`, sum `weight`                                 |
 | Receiving touches | `attributions` where `type === 'receiving_touch'`, sum `weight`                               |
-| Total touches     | sum of `completion` + `receiving_touch` + `disc_pickup` + `pull_reception` attributions       |
+| Total touches     | sum of `receiving_touch` + `disc_pickup` + `pull_reception` attributions                      |
 | Throwaways        | `attributions` where `type === 'throwaway'`, sum `weight`                                     |
 | Drops             | `attributions` where `type === 'drop'`, sum `weight`                                          |
 | Stalls made       | `attributions` where `type === 'stall'`, sum `weight`                                         |
@@ -303,10 +311,10 @@ These rules are applied once during `buildAnalyticsGame`. Stat utils never need 
 
 ### Pull stats
 
-| Stat           | Derivation                                                                  |
-| -------------- | --------------------------------------------------------------------------- |
-| Pull outcomes  | `actions` where `kind === 'pull'`, group by `result`                        |
-| Pull hang time | `actions` where `kind === 'pull'`, average `hangTimeMs` (exclude undefined) |
+| Stat           | Derivation                                                                                      |
+| -------------- | ----------------------------------------------------------------------------------------------- |
+| Pull outcomes  | `actions` where `kind === 'pull'`, group by `result`                                            |
+| Pull hang time | `actions` where `kind === 'pull'`, average `hangTimeMs` (exclude undefined, `ob`, and `roller`) |
 
 ---
 

@@ -33,8 +33,7 @@ eas update:list --branch production
 
 ## Notes
 
-- Publish iOS and Android separately. `--platform all` also attempts a web export, which currently
-  fails because this native-only project does not configure `expo-sqlite` for web.
+- Publish iOS and Android separately. This is a native-only project; do not use `--platform all`.
 - Upload source maps immediately after each platform update because the next export replaces
   `dist`.
 - `eas update` uses `--environment production`; `eas env:exec` uses the positional form

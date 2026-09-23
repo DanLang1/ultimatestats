@@ -31,14 +31,14 @@ Platform support details are documented in [platform-support.md](platform-suppor
 │   ├── basic/         # Basic-mode game logic, stats, timeline, and tests
 │   ├── advancedTracking/ # Advanced-mode domain logic, analytics, and tests
 │   ├── constants.ts   # App-wide constants (name limits, etc.)
-│   ├── storage/       # AsyncStorage helpers
+│   ├── storage/       # Saved-game schema types and migrations
 │   └── *.ts           # Shared helpers and infrastructure
 ├── theme/             # Theming system
 │   └── theme.ts       # Color palettes, dark/light mode
 ├── hooks/             # Custom React hooks
 │   ├── basic/         # Basic-mode gameplay hooks
 │   └── advancedTracking/ # Advanced-mode tracker hooks
-├── context/           # React contexts (Theme, Alert)
+├── context/           # React contexts (Theme)
 ├── test/              # Route tests, test harnesses, fixtures, and native-boundary mocks
 └── docs/              # Documentation (you are here)
 ```

@@ -31,23 +31,18 @@ This feature integrates with the existing stat tracking setting—turnover track
 
 export type TurnoverType = 'block' | 'throwaway' | 'drop' | 'fiftyfifty';
 
+// The full union also includes GoalEvent and TimeoutEvent; see docs/event-model.md.
 // gameId is optional - populated when game is saved (for future flat DB migration)
-export type GameEvent =
-  | {
-      type: 'goal';
-      team: 'team1' | 'team2';
-      goalPlayerId: string | null;
-      assistPlayerId: string | null;
-      gameId?: string; // Links to SavedGame.id
-    }
-  | {
-      type: 'turnover';
-      team: 'team1' | 'team2';
-      subtype: TurnoverType;
-      playerId: string | null;
-      player2Id?: string | null;
-      gameId?: string; // Links to SavedGame.id
-    };
+export type TurnoverEvent = {
+  type: 'turnover';
+  team: 'team1' | 'team2';
+  subtype: TurnoverType;
+  playerId: string | null;
+  player2Id?: string | null;
+  elapsedMs?: number;
+  pointNumber?: number;
+  gameId?: string; // Links to SavedGame.id
+};
 ```
 
 ## State
@@ -147,8 +142,8 @@ sequenceDiagram
     User->>TeamSection: Taps Team 1
     TeamSection->>Store: incrementScore(true)
     Store->>Store: gameHalf = 2
-    Store->>Store: possession = 'team1' (they receive at halftime)
-    Note over Store: Team 2 now pulls (they received first)
+    Store->>Store: possession = 'team2' (the non-starting team receives)
+    Note over Store: Team 1 now pulls (they received first)
 ```
 
 ## Tap Behavior
@@ -190,7 +185,7 @@ In `components/basic/scoreboard/LiveScoreboard.tsx`, `onAction` first calls `tri
 
 **Visual:**
 
-- Small circular indicator (●) appears next to timeouts when team has possession
+- A disc indicator (🥏) appears beside the team name when that team has possession
 - Animates in/out with fade transition
 
 **Tap behavior:**

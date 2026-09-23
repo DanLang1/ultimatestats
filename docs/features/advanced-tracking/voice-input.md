@@ -65,18 +65,17 @@ teams with stable numbers and weaker for pickup/practice contexts.
 
 Recommended order:
 
-1. Exact match against active player names and jersey number phrases.
-2. Best-effort name matching for common name variants, partial names, spoken-letter clues, and loose
-   phonetic matches, scoped to the active seven.
-3. Reject low-confidence matches or near-ties and show what was heard.
+1. Exact match against active player names, name parts, and jersey-number phrases.
+2. Best-effort matching scoped to the active seven, using spelling edit distance
+   (Damerau-Levenshtein). The allowed distance scales with phrase length (0 for very short
+   phrases, up to 2 for longer ones).
+3. Reject when no candidate is within the allowed distance, or when the two closest distinct players
+   tie at the same distance, and show what was heard.
 
-Best-effort matching should accept a result only when:
+Matching is text-only: there is no recognition-confidence threshold and no pronunciation or
+spoken-letter model. A near-tie that is not exactly equal is accepted for the closest candidate.
 
-- The top match is above a high threshold.
-- The top match is clearly better than the second-best match.
-- The command grammar is otherwise valid.
-
-If confidence is low or ambiguous, reject and show what was heard.
+If nothing matches or the result is ambiguous, reject and show what was heard.
 
 ## Voice Capture
 

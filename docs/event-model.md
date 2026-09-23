@@ -23,11 +23,13 @@ Source of truth: `store/basic/gameStore.types.ts`.
   `pointNumber?`
   `gameId?`
   `triggeredHalftime?`
+  `triggeredSoftcap?`
 - Meaning:
   `team` scored a goal, ending a point.
 - Notes:
   `goalPlayerId` / `assistPlayerId` can be `null` initially, then filled by stat entry/edit flows.
   `triggeredHalftime` is the canonical halftime marker used by replayed timelines and stats.
+  `triggeredSoftcap` marks the goal that activated the soft cap.
   Legacy saved games are migrated by inferring the halftime goal from `gameTo` once on load/import, then persisting that marker.
 
 ## TurnoverEvent

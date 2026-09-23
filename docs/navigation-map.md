@@ -101,11 +101,18 @@ set `hasSeenAdvancedTutorial` but never changes `hasSeenOnboarding`.
 - `/TeamManagementModal` (`app/(modals)/TeamManagementModal.tsx`)
 - `/HalftimeModal` (`app/(modals)/HalftimeModal.tsx`)
 - `/EditEventModal` (`app/(modals)/EditEventModal.tsx`)
+- `/EditDurationModal` (`app/(modals)/EditDurationModal.tsx`)
 - `/EditPointLineModal` (`app/(modals)/EditPointLineModal.tsx`)
 - `/PointSummaryModal` (`app/(modals)/PointSummaryModal.tsx`)
 - `/NumberPickerModal` (`app/(modals)/NumberPickerModal.tsx`)
 - `/EditPlayerModal` (`app/(modals)/EditPlayerModal.tsx`)
 - `/TimeoutModal` (`app/(modals)/TimeoutModal.tsx`)
+
+### Non-Screen Routes
+
+- `+not-found` (`app/+not-found.tsx`) — fallback for unmatched paths.
+- `__maestro_seed__` (`app/__maestro_seed__.tsx`) — automated-test-only seed endpoint; not part of the
+  user-facing flow.
 
 ## Core Flows
 

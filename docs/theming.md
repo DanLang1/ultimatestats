@@ -2,7 +2,7 @@
 
 ## Overview
 
-The app supports light and dark palettes selected from Settings > Display.
+The app supports light and dark palettes selected from Settings > App.
 
 ## Theme System
 
@@ -13,20 +13,20 @@ The app supports light and dark palettes selected from Settings > Display.
 
 ### Key Colors
 
-| Key           | Dark Mode       | Light Mode      |
-| ------------- | --------------- | --------------- |
-| `primary`     | Navy `#0F172A`  | White `#FFFFFF` |
-| `modalBg`     | Navy `#0F172A`  | White `#FFFFFF` |
-| `modalText`   | White `#FFFFFF` | Navy `#0F172A`  |
-| `textPrimary` | White           | Light           |
-| `textMuted`   | Slate 400       | Slate 500       |
+| Key           | Dark Mode           | Light Mode         |
+| ------------- | ------------------- | ------------------ |
+| `primary`     | Navy `#0F172A`      | White `#FFFFFF`    |
+| `modalBg`     | Navy `#0F172A`      | White `#FFFFFF`    |
+| `modalText`   | White `#FFFFFF`     | Navy `#0F172A`     |
+| `textPrimary` | Slate 900 `#0F172A` | Slate 50 `#F8FAFC` |
+| `textMuted`   | Slate 400           | Slate 500          |
 
 ### Overlay Colors
 
 Used for buttons with semantic meaning:
 
-- `successOverlay15` - Green-tinted (25% opacity) for positive actions
-- `dangerOverlay15` - Red-tinted (25% opacity) for negative actions
+- `successOverlay15` - Green-tinted for positive actions (25% opacity in dark mode, 15% in light mode)
+- `dangerOverlay15` - Red-tinted for negative actions (25% opacity in dark mode, 15% in light mode)
 - `accentOverlay15` - Blue-tinted for accent elements
 
 ## Components
@@ -93,4 +93,4 @@ import { Fonts } from '@/theme/theme';
 
 ## SettingsBar
 
-Always uses dark background (`palette.surface`) for high contrast in both themes.
+Uses `palette.glassBg`: a translucent navy bar in dark mode and a translucent white bar in light mode.

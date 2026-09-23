@@ -44,7 +44,7 @@ support.
 | Pressures                | `attributions` where `type === 'pressure'`                                                    | Defensive pressure directly forces a turnover without a block or stall |
 | Pulls                    | `attributions` where `type === 'pull'`                                                        | Per-player pull count                                                  |
 | Pull Receptions          | `attributions` where `type === 'pull_reception'`                                              | Caught pulls                                                           |
-| Total Touches            | `completion + receiving_touch + disc_pickup + pull_reception`                                 | Combines all touch types                                               |
+| Total Touches            | `receiving_touch + disc_pickup + pull_reception`                                              | Combines all touch types                                               |
 | Points Played            | `points` where participant in `linesBySide`                                                   | Count                                                                  |
 | O-Points Played          | Points where participant's side === `receivingSideId`                                         | Receiving points; subset of PP                                         |
 | D-Points Played          | Points where participant's side === `pullingSideId`                                           | Pulling points; subset of PP                                           |
@@ -75,7 +75,7 @@ support.
 | Longest Scoring Run      | Max consecutive points where side scored                                                      | Team-level                                                             |
 | Longest Drought          | Max consecutive points where side did not score                                               | Team-level                                                             |
 | Pull Outcomes            | `actions` where `kind === 'pull'`, group by `result`                                          | Team-level                                                             |
-| Pull Hang Time           | `actions` where `kind === 'pull'`, average `hangTimeMs`                                       | Team-level                                                             |
+| Pull Hang Time           | `actions` where `kind === 'pull'`, average `hangTimeMs` (exclude `ob`/`roller`)               | Team-level                                                             |
 | Avg Point Duration       | Average of `durationMs` across completed points                                               | Exclude nulls                                                          |
 | Longest / Shortest Point | Max / min `durationMs`                                                                        | Exclude nulls                                                          |
 

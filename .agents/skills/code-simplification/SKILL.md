@@ -40,8 +40,7 @@ Do not modify tests merely to make a behavior-changing simplification pass.
 - Keep domain calculations in `lib/`, reusable interaction logic in hooks/components, and route files
   focused on route composition.
 - Use semantic theme tokens and existing responsive helpers.
-- Use Immer for nested Zustand mutations and simple immutable partial updates where Immer is
-  unnecessary.
+- Use Immer for nested Zustand mutations; simple immutable partial updates do not need it.
 - Reuse established components and utilities before creating parallel abstractions.
 
 ## New-pattern gate
