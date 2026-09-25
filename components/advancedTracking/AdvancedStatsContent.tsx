@@ -19,11 +19,7 @@ import {
   AdvancedFlipStats,
   AdvancedInitialPullWinStats,
 } from '@/lib/advancedTracking/advancedAggregateStatsUtils';
-import { computeAdvancedPlayerStats } from '@/lib/advancedTracking/advancedPlayerStatsUtils';
-import { computePullStats } from '@/lib/advancedTracking/advancedPullStatsUtils';
-import { computeAdvancedTeamStats } from '@/lib/advancedTracking/advancedTeamStatsUtils';
-import { computeAdvancedTimeOfPossessionStats } from '@/lib/advancedTracking/advancedTimeOfPossessionUtils';
-import { getAnalyticsOpposingSideId } from '@/lib/advancedTracking/analyticsPerspectiveUtils';
+import { computeAdvancedGameStats } from '@/lib/advancedTracking/advancedGameStats';
 import { AnalyticsGame } from '@/lib/advancedTracking/analyticsTypes';
 import { pluralize } from '@/lib/utils';
 import { Fonts } from '@/theme/theme';
@@ -63,14 +59,12 @@ export default function AdvancedStatsContent({
   const { isLandscape, sizeClass } = useLayout();
   const styles = createStyles(isLandscape, sizeClass);
 
-  const playerStats = computeAdvancedPlayerStats(game, perspectiveSideId);
-  const teamStats = computeAdvancedTeamStats(game, perspectiveSideId);
-  const pullStats = computePullStats(game, perspectiveSideId);
-  const opposingSideId = getAnalyticsOpposingSideId(game, perspectiveSideId);
+  const { playerStats, teamStats, pullStats, timeOfPossessionStats } = computeAdvancedGameStats(
+    game,
+    perspectiveSideId,
+  );
   // don't show TOP stats for combined games
-  const topStats = aggregateInfo
-    ? null
-    : computeAdvancedTimeOfPossessionStats(game, perspectiveSideId, opposingSideId);
+  const topStats = aggregateInfo ? null : timeOfPossessionStats;
   const sorted = [...playerStats].sort((a, b) => b.plusMinus - a.plusMinus);
   const topPerformers = sorted.filter((p) => p.plusMinus > 0).slice(0, 3);
   const summaryCenter = aggregateInfo ? (

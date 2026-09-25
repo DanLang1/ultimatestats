@@ -157,3 +157,8 @@ _Avoid_: Opponent, for the other side of a scrimmage.
 **Stoppage**:
 An interruption within a point, such as a timeout, injury, or manual pause. A stoppage does not
 itself end possession or the point.
+
+**Advanced game stats**:
+The statistics derived for one side of a single advanced-tracked game. They are a view of the
+recorded game, not stored counters.
+_Avoid_: Stats bundle, stats payload.

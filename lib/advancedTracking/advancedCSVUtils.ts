@@ -1,11 +1,12 @@
 import { csvRow, type CSVCell } from '@/lib/csvUtils';
 import { formatTimestampForCSV } from '@/lib/dateUtils';
 
-import { computeAdvancedPlayerStats, type AdvancedPlayerStats } from './advancedPlayerStatsUtils';
-import { computePullStats, getInboundPullCount, type PullStats } from './advancedPullStatsUtils';
-import { computeAdvancedTeamStats, type AdvancedTeamStats } from './advancedTeamStatsUtils';
+import { computeAdvancedGameStats } from './advancedGameStats';
+import type { AdvancedPlayerStats } from './advancedPlayerStatsUtils';
+import { getInboundPullCount, type PullStats } from './advancedPullStatsUtils';
+import type { AdvancedTeamStats } from './advancedTeamStatsUtils';
 import { getPointStateLabel } from './advancedTimelineUtils';
-import { computeAdvancedTimingStats, type AdvancedTimingStats } from './advancedTimingStatsUtils';
+import type { AdvancedTimingStats } from './advancedTimingStatsUtils';
 import {
   getAnalyticsOpposingSideId,
   getAnalyticsSidePerspective,
@@ -73,7 +74,10 @@ export function generateAdvancedGameCSV(
   perspectiveSideId = analyticsGame.focusSideId,
 ): string {
   const names = analyticsGame.participantNames;
-  const perspective = getAnalyticsSidePerspective(analyticsGame, perspectiveSideId);
+  const { perspective, teamStats, timingStats, pullStats, playerStats } = computeAdvancedGameStats(
+    analyticsGame,
+    perspectiveSideId,
+  );
   const myTeamName = perspective.sideName;
   const opponentName = perspective.opposingSideName;
   const timestamp = getGameTimestamp(analyticsGame);
@@ -81,21 +85,18 @@ export function generateAdvancedGameCSV(
   let csv = `# Game: ${myTeamName} vs ${opponentName} - ${formatTimestampForCSV(timestamp)}\n`;
 
   csv += '\n# Team Stats\n';
-  csv += teamStatsCSV(computeAdvancedTeamStats(analyticsGame, perspectiveSideId), myTeamName);
+  csv += teamStatsCSV(teamStats, myTeamName);
 
-  const timingStats = computeAdvancedTimingStats(analyticsGame);
   if (timingStats.hasTimingData) {
     csv += timingStatsCSV(timingStats);
   }
 
-  const pullStats = computePullStats(analyticsGame, perspectiveSideId);
   if (pullStats.totalPulls > 0) {
     csv += pullStatsCSV(pullStats);
   }
 
   csv += '\n\n# Player Summary\n';
-  const perspectivePlayers = computeAdvancedPlayerStats(analyticsGame, perspectiveSideId);
-  csv += playerSummaryCSV(perspectivePlayers, names, timingStats.hasTimingData);
+  csv += playerSummaryCSV(playerStats, names, timingStats.hasTimingData);
 
   csv += '\n\n# Point-by-Point\n';
   csv += pointByPointCSV(analyticsGame, perspectiveSideId);
@@ -119,22 +120,25 @@ export function generateAggregateAdvancedCSV(
 
   let csv = `# Aggregated Stats: ${teamName} (${games.length} games)\n`;
 
-  csv += '\n# Combined Team Stats\n';
-  csv += teamStatsCSV(computeAdvancedTeamStats(aggregatedGame, focusSideId), teamName);
+  const combinedStats = computeAdvancedGameStats(aggregatedGame, focusSideId);
 
-  const timingStats = computeAdvancedTimingStats(aggregatedGame);
-  if (timingStats.hasTimingData) {
-    csv += timingStatsCSV(timingStats);
+  csv += '\n# Combined Team Stats\n';
+  csv += teamStatsCSV(combinedStats.teamStats, teamName);
+
+  if (combinedStats.timingStats.hasTimingData) {
+    csv += timingStatsCSV(combinedStats.timingStats);
   }
 
-  const pullStats = computePullStats(aggregatedGame, focusSideId);
-  if (pullStats.totalPulls > 0) {
-    csv += pullStatsCSV(pullStats);
+  if (combinedStats.pullStats.totalPulls > 0) {
+    csv += pullStatsCSV(combinedStats.pullStats);
   }
 
   csv += '\n\n# Combined Player Summary\n';
-  const focusPlayers = computeAdvancedPlayerStats(aggregatedGame, focusSideId);
-  csv += playerSummaryCSV(focusPlayers, names, timingStats.hasTimingData);
+  csv += playerSummaryCSV(
+    combinedStats.playerStats,
+    names,
+    combinedStats.timingStats.hasTimingData,
+  );
 
   csv += '\n\n# Game Log\n';
   csv += csvRow(['Date', 'Opponent', 'Result', 'Score', 'Our Score', 'Their Score']) + '\n';
@@ -156,25 +160,27 @@ export function generateAggregateAdvancedCSV(
     const timestamp = getGameTimestamp(game);
     const gameFocusSideId = game.focusSideId;
     const gameTeamName = game.sideLabels[gameFocusSideId] ?? teamName;
+    const gameStats = computeAdvancedGameStats(game, gameFocusSideId);
 
     csv += `\n\n## Game: vs ${oppName} - ${formatTimestampForCSV(timestamp)}`;
 
     csv += '\n\n### Team Stats\n';
-    csv += teamStatsCSV(computeAdvancedTeamStats(game, gameFocusSideId), gameTeamName);
+    csv += teamStatsCSV(gameStats.teamStats, gameTeamName);
 
-    const gameTiming = computeAdvancedTimingStats(game);
-    if (gameTiming.hasTimingData) {
-      csv += timingStatsCSV(gameTiming);
+    if (gameStats.timingStats.hasTimingData) {
+      csv += timingStatsCSV(gameStats.timingStats);
     }
 
-    const gamePulls = computePullStats(game, gameFocusSideId);
-    if (gamePulls.totalPulls > 0) {
-      csv += pullStatsCSV(gamePulls);
+    if (gameStats.pullStats.totalPulls > 0) {
+      csv += pullStatsCSV(gameStats.pullStats);
     }
 
     csv += '\n\n### Player Summary\n';
-    const gameFocusPlayers = computeAdvancedPlayerStats(game, gameFocusSideId);
-    csv += playerSummaryCSV(gameFocusPlayers, game.participantNames, gameTiming.hasTimingData);
+    csv += playerSummaryCSV(
+      gameStats.playerStats,
+      game.participantNames,
+      gameStats.timingStats.hasTimingData,
+    );
 
     csv += '\n\n### Point-by-Point\n';
     csv += pointByPointCSV(game);

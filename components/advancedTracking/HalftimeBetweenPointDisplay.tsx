@@ -4,15 +4,12 @@ import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 import { PlayerChip } from '@/components/ui/PlayerChip';
 import { useTheme } from '@/context/ThemeContext';
-import { useTimestampTimer } from '@/hooks/advancedTracking/useTimer';
 import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import { computeAdvancedPlayerStats } from '@/lib/advancedTracking/advancedPlayerStatsUtils';
-import { computeAdvancedTeamStats } from '@/lib/advancedTracking/advancedTeamStatsUtils';
+import { computeAdvancedGameStats } from '@/lib/advancedTracking/advancedGameStats';
 import { buildAnalyticsGame } from '@/lib/advancedTracking/buildAnalyticsGame';
 import { areBothSidesFullyTracked } from '@/lib/advancedTracking/trackingModeUtils';
 import type { AdvancedTrackedGame, Participant } from '@/lib/advancedTracking/types';
-import { MIN_HALFTIME_BREAK_SECONDS, ULTIMATE_LINE_SIZE } from '@/lib/constants';
-import { formatTimerSeconds } from '@/lib/utils';
+import { ULTIMATE_LINE_SIZE } from '@/lib/constants';
 import {
   getCurrentPendingNextPointLineSelection,
   resolvePendingNextPointLines,
@@ -20,6 +17,7 @@ import {
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { Fonts } from '@/theme/theme';
 
+import { HalftimeTimer } from './HalftimeTimer';
 import { PointNoteButton } from './PointNoteButton';
 
 interface HalftimeBetweenPointDisplayProps {
@@ -42,33 +40,13 @@ export const HalftimeBetweenPointDisplay = ({
   const { palette } = useTheme();
   const { isLandscape, sizeClass } = useLayout();
   const styles = createStyles(sizeClass, isLandscape);
-  const {
-    adjustHalftimeTimer,
-    halftimeTimerDurationSeconds,
-    halftimeTimerStartedAt,
-    pauseHalftimeTimer,
-    pendingNextPointLineSelection,
-    startHalftimeTimer,
-    undoLastOperation,
-    undoStack,
-  } = useAdvancedTrackingStore();
+  const { pendingNextPointLineSelection, undoLastOperation, undoStack } =
+    useAdvancedTrackingStore();
   const lastUndoEntry = undoStack.at(-1);
   const showStandaloneUndo = lastUndoEntry != null && lastUndoEntry.kind !== 'action';
 
-  const timeLeft = useTimestampTimer({
-    timestamp: halftimeTimerStartedAt,
-    mode: 'countdown',
-    durationSeconds: halftimeTimerDurationSeconds,
-    intervalMs: 1000,
-    enabled: halftimeTimerStartedAt !== null,
-    allowNegative: true,
-  });
-  const timerIsRunning = halftimeTimerStartedAt !== null;
-  const isOvertime = timeLeft < 0;
-
   const analyticsGame = buildAnalyticsGame(game);
-  const teamStats = computeAdvancedTeamStats(analyticsGame, game.focusSideId);
-  const playerStats = computeAdvancedPlayerStats(analyticsGame, game.focusSideId);
+  const { teamStats, playerStats } = computeAdvancedGameStats(analyticsGame, game.focusSideId);
   const topPerformers = [...playerStats]
     .sort((a, b) => b.plusMinus - a.plusMinus)
     .slice(0, 3)
@@ -102,26 +80,8 @@ export const HalftimeBetweenPointDisplay = ({
     .map((id) => game.participants.find((p) => p.id === id))
     .filter((p): p is Participant => p != null);
 
-  let timerColor = palette.textInverse;
-  if (isOvertime) {
-    timerColor = palette.danger;
-  } else if (timeLeft === 0) {
-    timerColor = palette.success;
-  }
-
   const handleStartSecondHalf = () => {
     onStartNextPoint();
-  };
-  const handleToggleTimer = () => {
-    if (halftimeTimerStartedAt === null) {
-      startHalftimeTimer();
-      return;
-    }
-
-    pauseHalftimeTimer(timeLeft);
-  };
-  const handleAdjustTimer = (deltaMinutes: number) => {
-    adjustHalftimeTimer(timeLeft, deltaMinutes);
   };
 
   return (
@@ -132,45 +92,7 @@ export const HalftimeBetweenPointDisplay = ({
         showsVerticalScrollIndicator={false}
         bounces={false}>
         <View style={styles.timerBlock}>
-          <View style={styles.iconRow}>
-            <ThemedText style={[styles.label, { color: palette.accent }]}>HALFTIME</ThemedText>
-          </View>
-
-          <View style={[styles.timerRow, { backgroundColor: palette.overlay05 }]}>
-            <Pressable
-              onPress={() => handleAdjustTimer(-1)}
-              disabled={timeLeft <= MIN_HALFTIME_BREAK_SECONDS}
-              style={styles.timerButton}
-              hitSlop={8}>
-              <MaterialCommunityIcons
-                name="minus"
-                size={scaleBySizeClass(18, sizeClass)}
-                color={
-                  timeLeft <= MIN_HALFTIME_BREAK_SECONDS ? palette.textMuted : palette.textInverse
-                }
-              />
-            </Pressable>
-
-            <Pressable
-              testID="halftime-between-point-timer-toggle"
-              onPress={handleToggleTimer}
-              style={styles.timerDisplay}>
-              <ThemedText style={[styles.timerValue, { color: timerColor }]}>
-                {formatTimerSeconds(timeLeft)}
-              </ThemedText>
-              <ThemedText style={[styles.timerState, { color: palette.textMuted }]}>
-                {timerIsRunning ? 'PAUSE' : 'START'}
-              </ThemedText>
-            </Pressable>
-
-            <Pressable onPress={() => handleAdjustTimer(1)} style={styles.timerButton} hitSlop={8}>
-              <MaterialCommunityIcons
-                name="plus"
-                size={scaleBySizeClass(18, sizeClass)}
-                color={palette.textInverse}
-              />
-            </Pressable>
-          </View>
+          <HalftimeTimer />
 
           <View style={styles.statsSection}>
             <View style={styles.statCardRow}>
@@ -364,28 +286,6 @@ function createStyles(sizeClass: SizeClass, isLandscape: boolean) {
       maxWidth: getSizeClassValue(TIMER_MAX_WIDTH, sizeClass),
       width: '100%',
     },
-    iconRow: {
-      alignItems: 'center',
-      flexDirection: 'row',
-      gap: scaleBySizeClass(8, densitySizeClass),
-      justifyContent: 'center',
-    },
-    label: {
-      fontFamily: Fonts.black,
-      fontSize: scaleBySizeClass(20, densitySizeClass),
-      letterSpacing: 3,
-    },
-    timerRow: {
-      alignItems: 'center',
-      borderRadius: scaleBySizeClass(8, densitySizeClass),
-      borderCurve: 'continuous',
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      maxWidth: scaleBySizeClass(320, densitySizeClass),
-      minHeight: scaleBySizeClass(86, densitySizeClass),
-      paddingHorizontal: scaleBySizeClass(8, densitySizeClass),
-      width: '100%',
-    },
     statsSection: {
       gap: scaleBySizeClass(10, densitySizeClass),
       maxWidth: getSizeClassValue(STATS_MAX_WIDTH, sizeClass),
@@ -452,29 +352,6 @@ function createStyles(sizeClass: SizeClass, isLandscape: boolean) {
       fontSize: scaleBySizeClass(18, densitySizeClass),
       fontVariant: ['tabular-nums'],
       letterSpacing: 0,
-    },
-    timerButton: {
-      alignItems: 'center',
-      height: scaleBySizeClass(48, densitySizeClass),
-      justifyContent: 'center',
-      width: scaleBySizeClass(48, densitySizeClass),
-    },
-    timerDisplay: {
-      alignItems: 'center',
-      flex: 1,
-      gap: scaleBySizeClass(2, densitySizeClass),
-      justifyContent: 'center',
-    },
-    timerValue: {
-      fontFamily: Fonts.black,
-      fontSize: scaleBySizeClass(42, densitySizeClass),
-      fontVariant: ['tabular-nums'],
-      letterSpacing: 0,
-    },
-    timerState: {
-      fontFamily: Fonts.black,
-      fontSize: scaleBySizeClass(10, densitySizeClass),
-      letterSpacing: 1.5,
     },
     lineSection: {
       gap: scaleBySizeClass(8, densitySizeClass),

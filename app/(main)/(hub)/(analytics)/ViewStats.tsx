@@ -25,7 +25,6 @@ import {
   getAnalyticsSidePerspective,
   resolveAnalyticsSideId,
 } from '@/lib/advancedTracking/analyticsPerspectiveUtils';
-import type { AnalyticsGame } from '@/lib/advancedTracking/analyticsTypes';
 import { buildAnalyticsGame } from '@/lib/advancedTracking/buildAnalyticsGame';
 import { areBothSidesFullyTracked } from '@/lib/advancedTracking/trackingModeUtils';
 import { formatDate, generateCurrentGameCSV } from '@/lib/basic/statsUtils';
@@ -37,16 +36,6 @@ import { Fonts } from '@/theme/theme';
 
 type ViewMode = 'current' | 'saved' | 'aggregate';
 type ViewStatsOrigin = 'scoreboard';
-
-function getSelectedAdvancedSideId(
-  game: AnalyticsGame | null,
-  canSelectEitherSide: boolean,
-  selectedSideId: string | null,
-): string | null {
-  if (game === null) return null;
-  if (!canSelectEitherSide) return game.focusSideId;
-  return resolveAnalyticsSideId(game, selectedSideId);
-}
 
 export default function ViewStatsScreen() {
   const { tab, gameId, from } = useLocalSearchParams<{
@@ -149,11 +138,10 @@ export default function ViewStatsScreen() {
   const analyticsGame = activeAdvancedGame ? buildAnalyticsGame(activeAdvancedGame) : null;
   const canSelectEitherSide =
     activeAdvancedGame != null && areBothSidesFullyTracked(activeAdvancedGame);
-  const selectedAdvancedSideId = getSelectedAdvancedSideId(
-    analyticsGame,
-    canSelectEitherSide,
-    selectedSideId,
-  );
+  const requestedAdvancedSideId = canSelectEitherSide ? selectedSideId : null;
+  const selectedAdvancedSideId = analyticsGame
+    ? resolveAnalyticsSideId(analyticsGame, requestedAdvancedSideId)
+    : null;
   const advancedPerspective =
     analyticsGame && selectedAdvancedSideId
       ? getAnalyticsSidePerspective(analyticsGame, selectedAdvancedSideId)
