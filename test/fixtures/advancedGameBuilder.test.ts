@@ -92,6 +92,19 @@ describe('AdvancedGameScenarioBuilder', () => {
     expect(analytics.possessions).toHaveLength(2);
   });
 
+  it('builds a dirty hold where the receiving side recovers and scores', () => {
+    const analytics = createAdvancedGameScenario({ id: 'dirty-hold-contract' })
+      .dirtyHold()
+      .buildAnalytics();
+
+    expect(analytics.points[0]).toMatchObject({ state: 'hold', isCleanHold: false });
+    expect(analytics.possessions.map((possession) => possession.sideId)).toEqual([
+      ADVANCED_TEST_FOCUS_SIDE_ID,
+      ADVANCED_TEST_OPPONENT_SIDE_ID,
+      ADVANCED_TEST_FOCUS_SIDE_ID,
+    ]);
+  });
+
   it('derives players and game composition from a reusable test context', () => {
     const context = defineAdvancedGameTestContext({
       id: 'context-contract',

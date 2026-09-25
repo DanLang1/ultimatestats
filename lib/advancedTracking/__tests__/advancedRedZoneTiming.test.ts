@@ -1,11 +1,15 @@
-import { dirtyHoldScenario } from '@/test/fixtures/advancedGameScenarios';
+import { createAdvancedGameScenario } from '@/test/fixtures/advancedGameBuilder';
 
 import { computeAdvancedTeamStats } from '../advancedTeamStatsUtils';
 import { aggregateAnalyticsGames } from '../aggregateAnalyticsGames';
 import { buildAnalyticsGame } from '../buildAnalyticsGame';
 
+function dirtyHoldGame() {
+  return createAdvancedGameScenario({ id: 'scenario-dirty-hold' }).dirtyHold().build();
+}
+
 function markedGame() {
-  const game = dirtyHoldScenario();
+  const game = dirtyHoldGame();
   game.points[0].possessions[0].redZone = { enteredAt: 1_000 };
   game.points[0].possessions[2].redZone = { enteredAt: 2_000 };
   return buildAnalyticsGame(game);
@@ -39,10 +43,10 @@ describe('red zone outcome timing splits', () => {
   });
 
   it('derives defense from every non-selected side, including remapped aggregate opponents', () => {
-    const first = buildAnalyticsGame(dirtyHoldScenario());
+    const first = buildAnalyticsGame(dirtyHoldGame());
     first.possessions[1].enteredRedZone = true;
     first.possessions[1].redZoneOutcomeDurationMs = 6_000;
-    const second = buildAnalyticsGame(dirtyHoldScenario());
+    const second = buildAnalyticsGame(dirtyHoldGame());
     second.possessions[1].enteredRedZone = true;
     second.possessions[1].redZoneOutcomeDurationMs = 10_000;
     const aggregate = aggregateAnalyticsGames([first, second]);

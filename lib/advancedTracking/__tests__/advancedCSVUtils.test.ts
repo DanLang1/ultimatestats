@@ -1,13 +1,17 @@
-import { dirtyHoldScenario } from '@/test/fixtures/advancedGameScenarios';
+import { createAdvancedGameScenario } from '@/test/fixtures/advancedGameBuilder';
 
 import { generateAdvancedGameCSV, generateAggregateAdvancedCSV } from '../advancedCSVUtils';
 import { aggregateAnalyticsGames } from '../aggregateAnalyticsGames';
 import { buildAnalyticsGame } from '../buildAnalyticsGame';
 import type { AdvancedTrackedGame } from '../types';
 
+function dirtyHoldGame() {
+  return createAdvancedGameScenario({ id: 'scenario-dirty-hold' }).dirtyHold().build();
+}
+
 describe('advancedCSVUtils', () => {
   it('exports marked outcomes in single-game, combined, and individual aggregate stats', () => {
-    const game = dirtyHoldScenario();
+    const game = dirtyHoldGame();
     const point = game.points[0];
     point.startedAt = 1_000;
     point.possessions[0].redZone = { enteredAt: 2_000 };
@@ -42,7 +46,7 @@ describe('advancedCSVUtils', () => {
   });
 
   it('omits red zone rows without entries and preserves unavailable timing', () => {
-    const game = dirtyHoldScenario();
+    const game = dirtyHoldGame();
     expect(generateAdvancedGameCSV(buildAnalyticsGame(game))).not.toContain('Red Zone');
     game.points[0].possessions[0].redZone = { enteredAt: 2_000 };
     const csv = generateAdvancedGameCSV(buildAnalyticsGame(game));

@@ -9,9 +9,9 @@ Use the shared fixture kit to keep advanced-game tests deterministic and explici
 possession, and action semantics. Read the **Advanced-game scenarios** section of
 `docs/testing.md`, then inspect these files before adding another local factory:
 
-- `test/fixtures/advancedGameBuilder.ts` — canonical defaults, fluent scenario builder, validation,
-  participant refs, and the explicit unsafe escape hatch.
-- `test/fixtures/advancedGameScenarios.ts` — named scenarios that serve as reused domain contracts.
+- `test/fixtures/advancedGameBuilder.ts` — canonical defaults, fluent scenario builder with named
+  outcomes (`hold()`, `breakAfterTurnover()`, `dirtyHold()`), validation, participant refs, and the
+  explicit unsafe escape hatch.
 
 ## Choose the arrangement boundary
 
@@ -46,10 +46,9 @@ possession, and action semantics. Read the **Advanced-game scenarios** section o
 
 ## Reuse policy
 
-Keep one-off assertion-specific data in its test. Add a named recipe to
-`advancedGameScenarios.ts` only when it is reused or represents a scenario contract worth
-preserving. Extend the builder when a domain action pattern recurs; do not add broad recursive
-`Partial<AdvancedTrackedGame>` merging that can silently create inconsistent history.
+Keep one-off assertion-specific data in its test. Add a named outcome to the builder only when a
+domain action pattern recurs or represents a scenario contract worth preserving; do not add broad
+recursive `Partial<AdvancedTrackedGame>` merging that can silently create inconsistent history.
 
 When moving an existing raw scenario to the builder, preserve its intended behavior and add a
 meaningful assertion. If builder validation exposes an old impossible state, correct the fixture to

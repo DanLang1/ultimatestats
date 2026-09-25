@@ -20,6 +20,11 @@ speech recognition, and animation worklets. Therefore, asserting `router.push(..
 screen requested navigation; a Maestro flow proves that the installed app actually navigated and
 the destination works.
 
+Component tests under `components/**/__tests__/` also use this library, but they are not a second
+screen layer. The route tests own each screen's integration, so a component test earns its place
+only when it covers a branch, guard, or failure the route tests cannot reach. See the
+layer-ownership rule in `.agents/skills/test-audit/SKILL.md`.
+
 For example, advanced tracking is covered at all three levels without repeating every scenario:
 
 1. Unit tests exhaustively verify tracking calculations and transitions.
@@ -54,7 +59,8 @@ the pattern to Jest. Use `npx jest <pattern>` (or `npm run test:routes`) for a f
 
 ## Maestro Simulator Checks
 
-Maestro flows live in `.maestro/` and target the installed iOS simulator development build
+Maestro flows live in `.maestro/`: scenario flows in `.maestro/tests/` and reusable setup and
+reader sub-flows in `.maestro/flows/`. They target the installed iOS simulator development build
 (dev app id `com.langdk.ultimatestats.dev` and URI scheme `ultimatestats-dev`, both defined in
 `app.config.js` for the `development` variant). Install Maestro with Homebrew, then
 build the app and run the advanced tracker smoke check:
@@ -134,7 +140,8 @@ Expo Router reserves `app/` for route and layout files, so route tests live unde
 shared screen-test infrastructure stays under `test/`:
 
 - `test/routes/` - user-facing route behavior
-- `lib/**/__tests__/`, `store/**/__tests__/`, etc. - domain and state behavior
+- `lib/**/__tests__/`, `store/**/__tests__/`, `hooks/**/__tests__/`, etc. - domain and state behavior
+- `components/**/__tests__/` - co-located component behavior that a route test cannot reach
 - `test/fixtures/` - valid domain state and the canonical advanced-game builders (shared helpers use
   real Zustand stores and actions; the advanced-game builder is intentionally store-free)
 - `test/mocks/` - narrow native/runtime boundary adapters
@@ -151,7 +158,7 @@ Examples of domain tests include:
 
 Legacy saved-game fixtures live in `lib/storage/__fixtures__/games/`, grouped by schema version
 (`v2/`, `v3/`, etc.). When adding a new migration, keep older fixtures unchanged and add new
-versioned fixtures/snapshots rather than rewriting the old data.
+versioned fixtures rather than rewriting the old data.
 
 Every saved-game schema bump requires a new migration file — even if the migration is a no-op
 (only stamps the new `schemaVersion`). The migration engine asserts that all versions from the
@@ -169,11 +176,11 @@ leaves the most error-prone duplication in nested pulls, possessions, and throws
 when a test needs to compose several independently described point outcomes into one game.
 Use `buildAnalytics()` when raw game inspection is unnecessary. Suites that share sides, players,
 and lines should define one `defineAdvancedGameTestContext()` and obtain fixtures, scenarios, and
-player refs from it. Prefer the named `hold()` and `breakAfterTurnover()` outcomes when their
+player refs from it. Prefer the named `hold()`, `breakAfterTurnover()`, and `dirtyHold()` outcomes when their
 intermediate actions are not the subject of the assertion.
 
-Reusable domain scenarios live in `test/fixtures/advancedGameScenarios.ts`. Keep a one-off fixture
-local when its exact raw structure is the assertion target. Use `buildUnsafe()` only when malformed
+Keep a one-off fixture local when its exact raw structure is the assertion target; the named
+outcomes above cover the common shapes. Use `buildUnsafe()` only when malformed
 or legacy input is intentional, and state that condition in the test. Store-transition tests should
 continue to exercise the production store action that owns the behavior rather than asking the
 fixture builder to perform it.
@@ -282,7 +289,7 @@ When testing saved-game migrations:
 
 1. Add or update a versioned fixture under `lib/storage/__fixtures__/games/` and a case in
    `lib/storage/__tests__/migrations.test.ts`; keep older fixtures unchanged and add new versioned
-   fixtures/snapshots rather than rewriting the old data.
+   fixtures rather than rewriting the old data.
 2. In a dev build, confirm migrated games render in Saved Games with correct halftime and timeline
    behavior.
 

@@ -183,6 +183,15 @@ export interface BreakAfterTurnoverOptions extends StartPointOptions {
   scorer?: PlayerRef;
 }
 
+export interface DirtyHoldOptions extends Partial<StartPointOptions> {
+  passes?: PlayerRef[];
+  turnoverResult?: Exclude<ThrowResult, 'complete' | 'goal' | 'callahan'>;
+  defender?: PlayerRef;
+  recoveryPickup?: PlayerRef;
+  recoveryPasses?: PlayerRef[];
+  scorer?: PlayerRef;
+}
+
 /**
  * Builds valid, deterministic advanced-game records without touching Zustand or persistence.
  * Store behavior tests should still arrange preconditions through the production store actions.
@@ -282,6 +291,42 @@ export class AdvancedGameScenarioBuilder {
     }
     for (const receiver of passes) this.complete(receiver);
     return this.goal(scorer);
+  }
+
+  /**
+   * A hold where the receiving side turns the disc over, regains it, and still scores.
+   * Defaults puller, receiver, passes, defender, recovery, and scorer to the first players on the
+   * default line so a structurally valid dirty hold can be built without naming players.
+   */
+  dirtyHold({
+    passes,
+    turnoverResult = 'throwaway',
+    defender,
+    recoveryPickup,
+    recoveryPasses,
+    scorer,
+    receiver,
+    puller = UNTRACKED_PLAYER,
+    ...point
+  }: DirtyHoldOptions = {}): this {
+    const receiverRef = receiver ?? this.defaultLinePlayer(0, 'receiver');
+    const defenderRef = defender ?? this.defaultLinePlayer(2, 'block defender');
+    const recoveryPickupRef = recoveryPickup ?? defenderRef;
+    const scorerRef = scorer ?? this.defaultLinePlayer(3, 'scorer');
+
+    this.startPoint({ ...point, puller, receiver: receiverRef });
+    for (const pass of passes ?? [this.defaultLinePlayer(1, 'first pass')]) this.complete(pass);
+    this.turnover(turnoverResult);
+
+    const opponentSideId = this.otherSideId(this.currentPossession().sideId);
+    this.startPossession(opponentSideId)
+      .pickup(UNTRACKED_PLAYER)
+      .turnover('block', { defender: defenderRef });
+
+    const scoringSideId = this.otherSideId(opponentSideId);
+    this.startPossession(scoringSideId).pickup(recoveryPickupRef);
+    for (const pass of recoveryPasses ?? [receiverRef]) this.complete(pass);
+    return this.goal(scorerRef);
   }
 
   startPossession(sideId: string, options: StartPossessionOptions = {}): this {
@@ -504,6 +549,16 @@ export class AdvancedGameScenarioBuilder {
       throw new Error(`Unknown advanced-game side "${sideId}".`);
     }
     return side.id;
+  }
+
+  private defaultLinePlayer(index: number, role: string): PlayerRef {
+    const participantId = this.defaultLines[0]?.participantIds[index];
+    if (participantId == null) {
+      throw new Error(
+        `dirtyHold needs a default line with at least ${index + 1} players for its ${role}.`,
+      );
+    }
+    return participantRef(participantId);
   }
 
   private nextId(kind: string): string {
