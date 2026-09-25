@@ -163,12 +163,6 @@ describe('advancedGameToListItem', () => {
     expect(item.opponentName).toBe('Rivals');
   });
 
-  it('uses oppSide label when metadata.opponentName is absent', () => {
-    const item = advancedGameToListItem(baseAdvancedGame);
-    // baseAdvancedGame has no metadata → falls back to oppSide.label ('Rivals')
-    expect(item.opponentName).toBe('Rivals');
-  });
-
   it('derives scores by counting goals in points', () => {
     const item = advancedGameToListItem(baseAdvancedGame);
     expect(item.myScore).toBe(1);

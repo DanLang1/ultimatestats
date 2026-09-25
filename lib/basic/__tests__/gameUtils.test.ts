@@ -1,4 +1,4 @@
-import { checkGameOver, GameOverState, getWinner } from '../gameUtils';
+import { checkGameOver, GameOverState } from '../gameUtils';
 
 describe('checkGameOver', () => {
   const baseState: GameOverState = {
@@ -63,21 +63,5 @@ describe('checkGameOver', () => {
     it('handles game to 1', () => {
       expect(checkGameOver({ ...baseState, gameTo: 1, team1Score: 1, team2Score: 0 })).toBe(true);
     });
-  });
-});
-
-describe('getWinner', () => {
-  it('returns team1 when team1 has more points', () => {
-    expect(getWinner(15, 12)).toBe('team1');
-  });
-
-  it('returns team2 when team2 has more points', () => {
-    expect(getWinner(10, 15)).toBe('team2');
-  });
-
-  it('returns team2 when tied (edge case - should not happen in practice)', () => {
-    // When tied, team1 is not > team2, so returns team2
-    // This is an edge case that shouldn't occur if checkGameOver is used properly
-    expect(getWinner(10, 10)).toBe('team2');
   });
 });

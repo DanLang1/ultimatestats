@@ -77,24 +77,13 @@ describe('basic game store persistence', () => {
     await expect(useGameStore.getState().saveCurrentGame()).rejects.toThrow('storage unavailable');
   });
 
-  it('persists single deletion and finished-game reset in one update', async () => {
+  it.each([
+    ['single', (gameId: string) => useGameStore.getState().deleteSavedGame(gameId)],
+    ['bulk', (gameId: string) => useGameStore.getState().deleteSavedGames([gameId])],
+  ])('persists %s deletion and finished-game reset in one update', async (_label, deleteGame) => {
     const gameId = await seedFinishedSavedGame();
 
-    await useGameStore.getState().deleteSavedGame(gameId);
-
-    expect(getBasicStorageWrites()).toHaveLength(1);
-    expect(getPersistedBasicState().state).toMatchObject({
-      currentGameId: null,
-      currentGameStatus: 'fresh',
-      savedGames: [],
-      team1Score: 0,
-    });
-  });
-
-  it('persists bulk deletion and finished-game reset in one update', async () => {
-    const gameId = await seedFinishedSavedGame();
-
-    await useGameStore.getState().deleteSavedGames([gameId]);
+    await deleteGame(gameId);
 
     expect(getBasicStorageWrites()).toHaveLength(1);
     expect(getPersistedBasicState().state).toMatchObject({

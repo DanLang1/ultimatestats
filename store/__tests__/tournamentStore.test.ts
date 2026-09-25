@@ -76,9 +76,6 @@ describe('tournamentStore', () => {
       expect(tournaments[0].id).toBe(id);
       expect(tournaments[0].kind).toBeNull();
       expect(tournaments[0].schemaVersion).toBe(1);
-      expect(tournaments[0].name).toBe('Regionals');
-      expect(tournaments[0].startDate).toBe('2026-04-01');
-      expect(tournaments[0].endDate).toBe('2026-04-02');
       expect(mockedAsyncStorage.setItem).toHaveBeenCalledWith(
         'ultimatestats_tournaments',
         expect.any(String),

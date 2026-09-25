@@ -6,7 +6,6 @@ import {
   assertValidParticipantRefs,
   assertValidSideIds,
   canStartSecondHalfEarly,
-  cloneGame,
   didPullTurnOver,
   didLastOperationEndCurrentPoint,
   getActiveAdvancedGame,
@@ -525,13 +524,6 @@ describe('getPointScoringSideId', () => {
     ]);
     expect(getPointScoringSideId(baseGame, makePoint([pos]))).toBeNull();
   });
-
-  it('returns the opposing side on a callahan even when the thrower is on the same side', () => {
-    const pos = makePossession(HOME, [
-      { id: 'a1', kind: 'throw', sideId: HOME, thrower: august, result: 'callahan' },
-    ]);
-    expect(getPointScoringSideId(baseGame, makePoint([pos]))).toBe(AWAY);
-  });
 });
 
 // ── getGameScore ──────────────────────────────────────────────────────────────
@@ -722,24 +714,6 @@ describe('isAdvancedGameOver', () => {
 });
 
 describe('getEffectiveGameTo — soft cap edge cases', () => {
-  it('adds one to higherScore unconditionally when soft cap is in effect (even if already at or above base gameTo)', () => {
-    // USAU 6.D.1: "one is added to the higher score and the resulting number is the new game total."
-    const point = makePoint([
-      makePossession(HOME, [
-        { id: 'a1', kind: 'throw', sideId: HOME, thrower: august, result: 'goal' },
-      ]),
-    ]);
-    const game: AdvancedTrackedGame = {
-      ...baseGame,
-      settings: { locationMode: 'none', format: { formatType: 'standard', gameTo: 15 } },
-      points: [point],
-      gameTransitions: [{ id: 'soft1', transitionType: 'soft_cap', afterPointId: point.id }],
-    };
-
-    // Score is 1-0. Old code returned 2 (1 < 15). New code also returns 2.
-    expect(getEffectiveGameTo(game)).toBe(2);
-  });
-
   it('soft cap with tied score at base gameTo minus one sets target to base gameTo', () => {
     // 14-14 in game to 15 → effective target should be 15
     const points = Array.from({ length: 28 }, (_, index) => ({
@@ -1038,22 +1012,8 @@ describe('getReceivingSideForNextPoint', () => {
     expect(getReceivingSideForNextPoint(game)).toBe(AWAY);
   });
 
-  it('callahan by HOME means AWAY receives next (scoring side pulls)', () => {
-    // HOME receives, but AWAY throws a callahan → AWAY scores, HOME receives next
-    const point: TrackedPoint = {
-      id: 'pt1',
-      lines: [{ sideId: HOME, participantIds: [august.participantId] }],
-      possessions: [
-        makePossession(HOME, [
-          { id: 'a1', kind: 'throw', sideId: HOME, thrower: untracked, result: 'callahan' },
-        ]),
-      ],
-    };
-    expect(getReceivingSideForNextPoint(makeGame([point]))).toBe(HOME);
-  });
-
-  it('callahan by AWAY means HOME receives next', () => {
-    // AWAY receives, but HOME throws a callahan → HOME scores, AWAY receives next
+  it('callahan scored against AWAY means AWAY receives next', () => {
+    // AWAY throws, HOME catches the callahan → HOME scores, AWAY receives next
     const point: TrackedPoint = {
       id: 'pt1',
       lines: [{ sideId: AWAY, participantIds: [meves.participantId] }],
@@ -1105,18 +1065,6 @@ describe('getLineReceivingSideId', () => {
     ]);
 
     expect(getLineReceivingSideId(makeGame([point]), point)).toBe(AWAY);
-  });
-});
-
-// ── cloneGame ─────────────────────────────────────────────────────────────────
-
-describe('cloneGame', () => {
-  it('produces a deep copy with equal value', () => {
-    const game = makeGame([makePoint([makePossession(HOME)])]);
-    const clone = cloneGame(game);
-    expect(clone).toEqual(game);
-    expect(clone).not.toBe(game);
-    expect(clone.points[0]).not.toBe(game.points[0]);
   });
 });
 

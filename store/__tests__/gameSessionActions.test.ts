@@ -1,12 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import {
-  finishActiveGameSession,
-  restoreAdvancedGameSession,
-  restoreBasicGameSession,
-  startAdvancedGameSession,
-  startBasicGameSession,
-} from '@/hooks/useGameSessionActions';
+import { startAdvancedGameSession, startBasicGameSession } from '@/hooks/useGameSessionActions';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { useGameStore } from '@/store/basic/gameStore';
 import { useGameSessionStore } from '@/store/gameSessionStore';
@@ -80,7 +74,10 @@ describe('game session actions', () => {
     resetStores();
   });
 
-  it('starts a basic session and clears advanced draft state', () => {
+  it.each([
+    ['basic', startBasicGameSession],
+    ['advanced', startAdvancedGameSession],
+  ])('starts a %s session and resets the other game state', (expectedType, startSession) => {
     useAdvancedTrackingStore.setState({
       currentGameId: 'advanced-game',
       currentGame: {
@@ -100,33 +97,12 @@ describe('game session actions', () => {
     });
     useGameStore.setState({ team1Score: 4, currentGameStatus: 'inProgress' });
 
-    startBasicGameSession();
+    startSession();
 
-    expect(useGameSessionStore.getState().activeGameType).toBe('basic');
+    expect(useGameSessionStore.getState().activeGameType).toBe(expectedType);
     expect(useAdvancedTrackingStore.getState().currentGameId).toBeNull();
     expect(useAdvancedTrackingStore.getState().currentGame).toBeNull();
     expect(useGameStore.getState().team1Score).toBe(0);
     expect(useGameStore.getState().currentGameStatus).toBe('fresh');
-  });
-
-  it('starts an advanced session and clears basic game state', () => {
-    useGameStore.setState({ team1Score: 3, currentGameStatus: 'inProgress' });
-
-    startAdvancedGameSession();
-
-    expect(useGameSessionStore.getState().activeGameType).toBe('advanced');
-    expect(useGameStore.getState().team1Score).toBe(0);
-    expect(useGameStore.getState().currentGameStatus).toBe('fresh');
-  });
-
-  it('clears and restores active session type for game complete undo flows', () => {
-    restoreBasicGameSession();
-    expect(useGameSessionStore.getState().activeGameType).toBe('basic');
-
-    finishActiveGameSession();
-    expect(useGameSessionStore.getState().activeGameType).toBeNull();
-
-    restoreAdvancedGameSession();
-    expect(useGameSessionStore.getState().activeGameType).toBe('advanced');
   });
 });

@@ -11,10 +11,7 @@ possession, and action semantics. Read the **Advanced-game scenarios** section o
 
 - `test/fixtures/advancedGameBuilder.ts` — canonical defaults, fluent scenario builder, validation,
   participant refs, and the explicit unsafe escape hatch.
-- `test/fixtures/advancedGameScenarios.ts` — maintained named scenarios that are reused or serve as
-  domain contracts.
-- `test/fixtures/advancedGameScenarios.test.ts` — compact canonicality check for the maintained
-  scenario catalog.
+- `test/fixtures/advancedGameScenarios.ts` — named scenarios that serve as reused domain contracts.
 
 ## Choose the arrangement boundary
 

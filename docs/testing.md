@@ -240,6 +240,9 @@ describe('functionToTest', () => {
 3. Navigator layout files unless the shell itself owns meaningful behavior
 4. Test-only routes such as `app/__maestro_seed__.tsx`
 
+For the full junk-pattern checklist, the layer-ownership rule, and the periodic test-audit
+workflow, see `.agents/skills/test-audit/SKILL.md`.
+
 ## Official references
 
 - [Expo unit testing](https://docs.expo.dev/develop/unit-testing/)

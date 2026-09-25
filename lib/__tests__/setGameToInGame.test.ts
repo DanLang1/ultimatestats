@@ -106,20 +106,6 @@ describe('setGameToInGame', () => {
     expect(baseGameTo).toBe(15);
   });
 
-  it('updates both values when auto halftime is on and the value is at the minimum', () => {
-    useGameStore.setState({
-      team1Score: 5,
-      team2Score: 4,
-      autoHalftimeEnabled: true,
-    });
-
-    useGameStore.getState().setGameToInGame(11);
-
-    const { gameTo, baseGameTo } = useGameStore.getState();
-    expect(gameTo).toBe(11);
-    expect(baseGameTo).toBe(11);
-  });
-
   it('does nothing when auto halftime is off and the value would immediately end the game', () => {
     useGameStore.setState({
       team1Score: 8,

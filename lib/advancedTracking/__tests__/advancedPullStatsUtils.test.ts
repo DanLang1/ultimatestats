@@ -100,10 +100,7 @@ describe('advancedPullStatsUtils', () => {
       expect(computePullStats(analytics).avgHangTimeMs).toBeCloseTo(4000);
     });
 
-    it.each([
-      ['out-of-bounds', 'ob' as const],
-      ['roller', 'roller' as const],
-    ])('excludes %s pulls from average hang time', (_label, excludedResult) => {
+    it('excludes roller pulls from average hang time', () => {
       const scenario = pullFixtures.scenario();
       addPullPoint(scenario, {
         puller: august,
@@ -114,14 +111,14 @@ describe('advancedPullStatsUtils', () => {
         puller: pullFixtures.untracked,
         receiver: august,
         scorer: meves,
-        result: excludedResult,
+        result: 'roller',
         hangTimeMs: 9000,
       }).buildAnalytics();
 
       const stats = computePullStats(analytics);
 
       expect(stats.totalPulls).toBe(2);
-      expect(stats.outcomes).toEqual({ inbound: 1, [excludedResult]: 1 });
+      expect(stats.outcomes).toEqual({ inbound: 1, roller: 1 });
       expect(stats.avgHangTimeMs).toBeCloseTo(3000);
     });
 

@@ -67,18 +67,18 @@ When these limits change, update validation tests and this document together.
 
 ## Key Files
 
-| Area                 | Source                                                                              |
-| -------------------- | ----------------------------------------------------------------------------------- |
-| Payload union        | `lib/sharing/types.ts`                                                              |
-| Serialization        | `lib/sharing/serialize.ts`                                                          |
-| Validation           | `lib/sharing/validate.ts`                                                           |
-| Upload and fetch     | `lib/sharing/share.ts`                                                              |
-| Import state         | `hooks/useShareImport.ts`                                                           |
-| Import UI            | `app/(main)/Import.tsx`                                                             |
-| Deep-link redirect   | `app/s/[kind]/[shareId].tsx`                                                        |
-| Basic persistence    | `store/basic/gameStore.ts`                                                          |
-| Advanced persistence | `store/advancedTracking/savedGamesStore.ts`                                         |
-| Payload tests        | `lib/__tests__/validatePayload.test.ts`, `lib/__tests__/sharingPayloadSize.test.ts` |
+| Area                 | Source                                      |
+| -------------------- | ------------------------------------------- |
+| Payload union        | `lib/sharing/types.ts`                      |
+| Serialization        | `lib/sharing/serialize.ts`                  |
+| Validation           | `lib/sharing/validate.ts`                   |
+| Upload and fetch     | `lib/sharing/share.ts`                      |
+| Import state         | `hooks/useShareImport.ts`                   |
+| Import UI            | `app/(main)/Import.tsx`                     |
+| Deep-link redirect   | `app/s/[kind]/[shareId].tsx`                |
+| Basic persistence    | `store/basic/gameStore.ts`                  |
+| Advanced persistence | `store/advancedTracking/savedGamesStore.ts` |
+| Payload tests        | `lib/__tests__/validatePayload.test.ts`     |
 
 ## Platform Setup
 

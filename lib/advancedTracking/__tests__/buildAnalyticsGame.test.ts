@@ -30,7 +30,6 @@ const august = { refType: 'participant' as const, participantId: 'p_august' };
 const meves = { refType: 'participant' as const, participantId: 'p_meves' };
 const joah = { refType: 'participant' as const, participantId: 'p_joah' };
 const max = { refType: 'participant' as const, participantId: 'p_max' };
-const sam = { refType: 'participant' as const, participantId: 'p_sam' };
 const untracked = { refType: 'untracked' as const };
 
 const baseGame = createAdvancedGameFixture({
@@ -55,13 +54,6 @@ function sumAttributions(
   return attributions
     .filter((c) => c.participantId === participantId && c.type === type)
     .reduce((acc, c) => acc + c.weight, 0);
-}
-
-function buildAnalyticsGameWithLog(game: AdvancedTrackedGame) {
-  const analytics = buildAnalyticsGame(game);
-  //console.log('\n=== RAW ANALYTICS JSON ===\n');
-  //console.log(JSON.stringify(analytics));
-  return analytics;
 }
 
 describe('game metadata', () => {
@@ -190,7 +182,7 @@ describe('point states', () => {
         },
       ],
     };
-    const { points } = buildAnalyticsGameWithLog(game);
+    const { points } = buildAnalyticsGame(game);
     expect(points[0].state).toBe('hold');
     expect(points[0].receivingSideId).toBe(ZOO);
   });
@@ -245,7 +237,7 @@ describe('point states', () => {
         },
       ],
     };
-    const { points } = buildAnalyticsGameWithLog(game);
+    const { points } = buildAnalyticsGame(game);
     expect(points[0].state).toBe('break');
   });
 
@@ -293,7 +285,7 @@ describe('point states', () => {
         },
       ],
     };
-    const { points } = buildAnalyticsGameWithLog(game);
+    const { points } = buildAnalyticsGame(game);
     expect(points[0].state).toBe('broken');
   });
 
@@ -334,7 +326,7 @@ describe('point states', () => {
         },
       ],
     };
-    const { points, attributions } = buildAnalyticsGameWithLog(game);
+    const { points, attributions } = buildAnalyticsGame(game);
     expect(points[0].state).toBe('terminated');
     // Stats within the terminated point are still valid
     expect(sumAttributions(attributions, 'p_august', 'completion')).toBe(1);
@@ -406,7 +398,7 @@ describe('point states', () => {
         },
       ],
     };
-    const { points } = buildAnalyticsGameWithLog(game);
+    const { points } = buildAnalyticsGame(game);
     expect(points[0].receivingSideId).toBe(ZOO);
     expect(points[1].receivingSideId).toBe(RIVALS); // Zoo scored, Rivals receive next
     expect(points[0].state).toBe('hold');
@@ -503,7 +495,7 @@ describe('point states', () => {
         },
       ],
     };
-    const { points } = buildAnalyticsGameWithLog(game);
+    const { points } = buildAnalyticsGame(game);
     expect(points[0].receivingSideId).toBe(ZOO); // pt1: Zoo receives (initial)
     expect(points[0].state).toBe('broken'); // Zoo received, Rivals scored
     expect(points[0].half).toBe(1);
@@ -549,7 +541,7 @@ describe('point states', () => {
         },
       ],
     };
-    const { points, possessions, attributions } = buildAnalyticsGameWithLog(game);
+    const { points, possessions, attributions } = buildAnalyticsGame(game);
     expect(points[0].state).toBe('in_progress');
     expect(possessions[0].result).toBe('in_progress');
     // Actions from the current possession are still compiled
@@ -625,7 +617,7 @@ describe('point states', () => {
         },
       ],
     };
-    const { points } = buildAnalyticsGameWithLog(game);
+    const { points } = buildAnalyticsGame(game);
     expect(points[0].state).toBe('break'); // Zoo D-line scored
     expect(points[1].receivingSideId).toBe(RIVALS); // Zoo scored → Rivals receive next
   });
@@ -686,7 +678,7 @@ describe('goal and assist attributions', () => {
         },
       ],
     };
-    const { attributions } = buildAnalyticsGameWithLog(game);
+    const { attributions } = buildAnalyticsGame(game);
 
     expect(sumAttributions(attributions, 'p_max', 'goal')).toBe(1); // Max scores
     expect(sumAttributions(attributions, 'p_joah', 'assist')).toBe(1); // Joah assists
@@ -737,7 +729,7 @@ describe('goal and assist attributions', () => {
         },
       ],
     };
-    const { attributions } = buildAnalyticsGameWithLog(game);
+    const { attributions } = buildAnalyticsGame(game);
 
     expect(sumAttributions(attributions, 'p_meves', 'assist')).toBe(1); // Meves threw the goal
     expect(sumAttributions(attributions, 'p_max', 'goal')).toBe(1);
@@ -848,7 +840,7 @@ describe('turnover attributions', () => {
         },
       ],
     };
-    const analyticsGame = buildAnalyticsGameWithLog(game);
+    const analyticsGame = buildAnalyticsGame(game);
     const { attributions } = analyticsGame;
 
     expect(sumAttributions(attributions, 'p_meves', 'throwaway')).toBe(1);
@@ -895,7 +887,7 @@ describe('turnover attributions', () => {
         },
       ],
     };
-    const { attributions } = buildAnalyticsGameWithLog(game);
+    const { attributions } = buildAnalyticsGame(game);
 
     expect(sumAttributions(attributions, 'p_joah', 'block')).toBe(1);
     // untracked Rivals thrower — no credit emitted for throwaway
@@ -938,7 +930,7 @@ describe('turnover attributions', () => {
         },
       ],
     };
-    const { attributions } = buildAnalyticsGameWithLog(game);
+    const { attributions } = buildAnalyticsGame(game);
 
     expect(sumAttributions(attributions, 'p_meves', 'drop')).toBe(1);
     expect(sumAttributions(attributions, 'p_august', 'throwaway')).toBe(0); // clean drop — thrower not charged
@@ -981,7 +973,7 @@ describe('turnover attributions', () => {
         },
       ],
     };
-    const { attributions } = buildAnalyticsGameWithLog(game);
+    const { attributions } = buildAnalyticsGame(game);
 
     expect(sumAttributions(attributions, 'p_august', 'throwaway')).toBe(0.5);
     expect(sumAttributions(attributions, 'p_meves', 'drop')).toBe(0.5);
@@ -1024,7 +1016,7 @@ describe('turnover attributions', () => {
         },
       ],
     };
-    const { attributions } = buildAnalyticsGameWithLog(game);
+    const { attributions } = buildAnalyticsGame(game);
 
     const throwaway = attributions.find(
       (a) => a.participantId === 'p_august' && a.type === 'throwaway',
@@ -1126,7 +1118,7 @@ describe('turnover attributions', () => {
         },
       ],
     };
-    const { attributions } = buildAnalyticsGameWithLog(game);
+    const { attributions } = buildAnalyticsGame(game);
 
     expect(sumAttributions(attributions, 'p_meves', 'stall_conceded')).toBe(1);
     expect(sumAttributions(attributions, 'p_meves', 'stall')).toBe(0);
@@ -1169,7 +1161,7 @@ describe('turnover attributions', () => {
         },
       ],
     };
-    const { attributions } = buildAnalyticsGameWithLog(game);
+    const { attributions } = buildAnalyticsGame(game);
 
     expect(sumAttributions(attributions, 'p_max', 'callahan')).toBe(1);
     expect(sumAttributions(attributions, 'p_max', 'block')).toBe(1);
@@ -1229,7 +1221,7 @@ describe('turnover attributions', () => {
         },
       ],
     };
-    const { attributions } = buildAnalyticsGameWithLog(game);
+    const { attributions } = buildAnalyticsGame(game);
 
     expect(sumAttributions(attributions, 'p_joah', 'block')).toBe(1);
     expect(sumAttributions(attributions, 'p_joah', 'assist')).toBe(1);
@@ -1268,7 +1260,7 @@ describe('turnover attributions', () => {
         },
       ],
     };
-    const { attributions } = buildAnalyticsGameWithLog(game);
+    const { attributions } = buildAnalyticsGame(game);
 
     expect(sumAttributions(attributions, 'p_august', 'drop')).toBe(1);
     expect(attributions.filter((c) => c.type === 'throwaway')).toHaveLength(0);
@@ -1278,7 +1270,7 @@ describe('turnover attributions', () => {
 // ── Credits: pull reception ──────────────────────────────────────────────────
 
 describe('pull attributions', () => {
-  it('pull inbound — pull to puller, pull_reception to receiver', () => {
+  it('pull inbound to an untracked receiver — pull to puller, no pull_reception', () => {
     const game: AdvancedTrackedGame = {
       ...baseGame,
       status: 'terminated',
@@ -1307,7 +1299,7 @@ describe('pull attributions', () => {
         },
       ],
     };
-    const { attributions } = buildAnalyticsGameWithLog(game);
+    const { attributions } = buildAnalyticsGame(game);
 
     expect(sumAttributions(attributions, 'p_august', 'pull')).toBe(1);
     // untracked receiver — no pull_reception credit
@@ -1344,7 +1336,7 @@ describe('pull attributions', () => {
         },
       ],
     };
-    const { actions } = buildAnalyticsGameWithLog(game);
+    const { actions } = buildAnalyticsGame(game);
     const pullAction = actions.find((a) => a.kind === 'pull');
     expect(pullAction?.sideId).toBe(ZOO); // pulling side, not the possession's sideId (RIVALS)
   });
@@ -1386,7 +1378,7 @@ describe('pull attributions', () => {
         },
       ],
     };
-    const { actions } = buildAnalyticsGameWithLog(game);
+    const { actions } = buildAnalyticsGame(game);
     const pullAction = actions.find((a) => a.kind === 'pull');
     const throwAction = actions.find((a) => a.kind === 'throw');
 
@@ -1448,7 +1440,7 @@ describe('disc_pickup attribution', () => {
         },
       ],
     };
-    const { attributions } = buildAnalyticsGameWithLog(game);
+    const { attributions } = buildAnalyticsGame(game);
 
     expect(sumAttributions(attributions, 'p_meves', 'disc_pickup')).toBe(1);
     // august picked up the pull, not the ground disc
@@ -1494,7 +1486,7 @@ describe('unknown vs untracked PlayerRef attribution', () => {
         },
       ],
     };
-    const { attributions } = buildAnalyticsGameWithLog(game);
+    const { attributions } = buildAnalyticsGame(game);
 
     expect(sumAttributions(attributions, UNKNOWN_PARTICIPANT_ID, 'goal')).toBe(1);
     expect(sumAttributions(attributions, UNKNOWN_PARTICIPANT_ID, 'receiving_touch')).toBe(1);
@@ -1536,7 +1528,7 @@ describe('unknown vs untracked PlayerRef attribution', () => {
         },
       ],
     };
-    const { attributions } = buildAnalyticsGameWithLog(game);
+    const { attributions } = buildAnalyticsGame(game);
 
     expect(sumAttributions(attributions, UNKNOWN_PARTICIPANT_ID, 'goal')).toBe(0);
     expect(attributions.filter((a) => a.type === 'receiving_touch')).toHaveLength(0);
@@ -1579,7 +1571,7 @@ describe('unknown vs untracked PlayerRef attribution', () => {
         },
       ],
     };
-    const { attributions } = buildAnalyticsGameWithLog(game);
+    const { attributions } = buildAnalyticsGame(game);
 
     expect(sumAttributions(attributions, UNKNOWN_PARTICIPANT_ID, 'drop')).toBe(1);
     expect(sumAttributions(attributions, 'p_august', 'throw_attempt')).toBe(1);
@@ -1628,7 +1620,7 @@ describe('unknown vs untracked PlayerRef attribution', () => {
         },
       ],
     };
-    const { attributions } = buildAnalyticsGameWithLog(game);
+    const { attributions } = buildAnalyticsGame(game);
 
     expect(sumAttributions(attributions, UNKNOWN_PARTICIPANT_ID, 'hockey_assist')).toBe(1);
     expect(sumAttributions(attributions, 'p_august', 'assist')).toBe(1);
@@ -1653,7 +1645,7 @@ describe('unknown vs untracked PlayerRef attribution', () => {
         },
       ],
     };
-    const { attributions } = buildAnalyticsGameWithLog(game);
+    const { attributions } = buildAnalyticsGame(game);
 
     expect(sumAttributions(attributions, UNKNOWN_PARTICIPANT_ID, 'disc_pickup')).toBe(1);
   });
@@ -1685,7 +1677,7 @@ describe('unknown vs untracked PlayerRef attribution', () => {
         },
       ],
     };
-    const { attributions } = buildAnalyticsGameWithLog(game);
+    const { attributions } = buildAnalyticsGame(game);
 
     expect(sumAttributions(attributions, UNKNOWN_PARTICIPANT_ID, 'stall')).toBe(1);
   });
@@ -1717,7 +1709,7 @@ describe('unknown vs untracked PlayerRef attribution', () => {
         },
       ],
     };
-    const { attributions } = buildAnalyticsGameWithLog(game);
+    const { attributions } = buildAnalyticsGame(game);
 
     expect(sumAttributions(attributions, UNKNOWN_PARTICIPANT_ID, 'block')).toBe(1);
   });
@@ -1748,7 +1740,7 @@ describe('unknown vs untracked PlayerRef attribution', () => {
         },
       ],
     };
-    const { attributions } = buildAnalyticsGameWithLog(game);
+    const { attributions } = buildAnalyticsGame(game);
 
     expect(sumAttributions(attributions, UNKNOWN_PARTICIPANT_ID, 'goal')).toBe(1);
     expect(sumAttributions(attributions, UNKNOWN_PARTICIPANT_ID, 'callahan')).toBe(1);
@@ -1781,7 +1773,7 @@ describe('unknown vs untracked PlayerRef attribution', () => {
         },
       ],
     };
-    const { attributions } = buildAnalyticsGameWithLog(game);
+    const { attributions } = buildAnalyticsGame(game);
 
     expect(sumAttributions(attributions, 'p_max', 'goal')).toBe(1);
     expect(sumAttributions(attributions, 'p_max', 'callahan')).toBe(1);
@@ -1814,7 +1806,7 @@ describe('unknown vs untracked PlayerRef attribution', () => {
         },
       ],
     };
-    const { attributions } = buildAnalyticsGameWithLog(game);
+    const { attributions } = buildAnalyticsGame(game);
 
     expect(sumAttributions(attributions, UNKNOWN_PARTICIPANT_ID, 'goal')).toBe(1);
     expect(sumAttributions(attributions, UNKNOWN_PARTICIPANT_ID, 'callahan')).toBe(1);
@@ -2116,7 +2108,7 @@ describe('point timer', () => {
         },
       ],
     };
-    const { actions } = buildAnalyticsGameWithLog(game);
+    const { actions } = buildAnalyticsGame(game);
     expect(actions.every((a) => a.elapsedMs === null)).toBe(true);
   });
 
@@ -2168,7 +2160,7 @@ describe('point timer', () => {
         },
       ],
     };
-    const { actions } = buildAnalyticsGameWithLog(game);
+    const { actions } = buildAnalyticsGame(game);
     expect(actions[0].elapsedMs).toBe(2000);
     expect(actions[1].elapsedMs).toBe(10000);
     expect(actions[2].elapsedMs).toBe(90000); // 1.5 min point
@@ -2234,7 +2226,7 @@ describe('point timer', () => {
         },
       ],
     };
-    const { actions } = buildAnalyticsGameWithLog(game);
+    const { actions } = buildAnalyticsGame(game);
     expect(actions[0].elapsedMs).toBe(2000);
     expect(actions[1].elapsedMs).toBe(15000);
     expect(actions[2].elapsedMs).toBe(20000); // stoppage itself: before pause subtraction
@@ -2315,228 +2307,12 @@ describe('point timer', () => {
         },
       ],
     };
-    const { actions } = buildAnalyticsGameWithLog(game);
+    const { actions } = buildAnalyticsGame(game);
     expect(actions[0].elapsedMs).toBe(2000); // before any pause
     expect(actions[1].elapsedMs).toBe(15000); // stoppage1 fires at real 15s, no prior pauses
     expect(actions[2].elapsedMs).toBe(20000); // real 40s - pause1(20s) = 20s game clock
     expect(actions[3].elapsedMs).toBe(25000); // stoppage2 fires at real 45s - pause1(20s) = 25s game clock
     expect(actions[4].elapsedMs).toBe(40000); // real 90s - pause1(20s) - pause2(30s) = 40s game clock
-  });
-});
-
-// ── Stat derivation examples ─────────────────────────────────────────────────
-
-describe('stat derivation', () => {
-  // Multi-point game: pt1 Zoo hold, pt2 Zoo break.
-  //
-  // pt1: Rivals pull → August receives, August → Meves (complete), Meves → Joah (goal).
-  //   August: pull_reception, throw_attempt, completion, hockey_assist
-  //   Meves:  receiving_touch, throw_attempt, completion, assist
-  //   Joah:   goal, receiving_touch
-  //
-  // pt2 (break): Zoo pulls (August) → Rivals catch → Joah blocks → Joah picks up →
-  //   Joah → Meves (complete) → Meves → Sam (drop) → Rivals → August throwaway →
-  //   Rivals → Meves picks up → Meves → Sam (goal).
-  //   August: pull, disc_pickup, throw_attempt, throwaway  → +/- contribution: -1
-  //   Joah:   block, disc_pickup, throw_attempt, completion → +/- contribution: +1
-  //   Meves:  receiving_touch, throw_attempt×2, completion×2, assist, disc_pickup → +/- contribution: +1
-  //   Sam:    drop, goal, receiving_touch → +/- contribution: 0
-  //
-  // Final +/-: goals + assists + blocks - throwaways - drops
-  //   August:  0+0+0-1-0 = -1
-  //   Meves:   0+2+0-0-0 = +2  (assist in pt1, assist in pt2)
-  //   Joah:    1+0+1-0-0 = +2  (goal in pt1, block in pt2)
-  //   Sam:     1+0+0-0-1 =  0  (goal in pt2, drop in pt2)
-  const multiPointGame: AdvancedTrackedGame = {
-    ...baseGame,
-    initialReceivingSideId: ZOO,
-    points: [
-      {
-        // pt1: Zoo hold
-        id: 'pt1',
-        lines: [{ sideId: ZOO, participantIds: ['p_august', 'p_meves', 'p_joah', 'p_max'] }],
-        possessions: [
-          {
-            id: 'pos1',
-            sideId: ZOO,
-            actions: [
-              {
-                id: 'a1',
-                kind: 'pull',
-                sideId: RIVALS,
-                receivingSideId: ZOO,
-                puller: untracked,
-                receiver: august,
-                result: 'inbound',
-              },
-              {
-                id: 'a2',
-                kind: 'throw',
-                sideId: ZOO,
-                thrower: august,
-                toPlayer: meves,
-                result: 'complete',
-              },
-              {
-                id: 'a3',
-                kind: 'throw',
-                sideId: ZOO,
-                thrower: meves,
-                toPlayer: joah,
-                result: 'goal',
-              },
-            ],
-          },
-        ],
-      },
-      {
-        // pt2: Zoo break — Zoo scored pt1 → Rivals receive pt2
-        id: 'pt2',
-        lines: [{ sideId: ZOO, participantIds: ['p_august', 'p_meves', 'p_joah', 'p_sam'] }],
-        possessions: [
-          {
-            // Rivals first possession: Joah blocks Rivals throw
-            id: 'pos2a',
-            sideId: RIVALS,
-            actions: [
-              {
-                id: 'b1',
-                kind: 'pull',
-                sideId: ZOO,
-                receivingSideId: RIVALS,
-                puller: august,
-                receiver: untracked,
-                result: 'inbound',
-              },
-              {
-                id: 'b2',
-                kind: 'throw',
-                sideId: RIVALS,
-                thrower: untracked,
-                result: 'block',
-                defender: joah,
-              },
-            ],
-          },
-          {
-            // Zoo possession: Joah picks up, complete to Meves, Meves → Sam (drop)
-            id: 'pos2b',
-            sideId: ZOO,
-            actions: [
-              { id: 'b3', kind: 'disc_pickup', sideId: ZOO, player: joah },
-              {
-                id: 'b4',
-                kind: 'throw',
-                sideId: ZOO,
-                thrower: joah,
-                toPlayer: meves,
-                result: 'complete',
-              },
-              {
-                id: 'b5',
-                kind: 'throw',
-                sideId: ZOO,
-                thrower: meves,
-                toPlayer: sam,
-                result: 'drop',
-              },
-            ],
-          },
-          {
-            // Rivals possession after drop
-            id: 'pos2c',
-            sideId: RIVALS,
-            actions: [
-              { id: 'c1', kind: 'disc_pickup', sideId: RIVALS, player: untracked },
-              { id: 'c2', kind: 'throw', sideId: RIVALS, thrower: untracked, result: 'throwaway' },
-            ],
-          },
-          {
-            // Zoo possession: August throwaway
-            id: 'pos2d',
-            sideId: ZOO,
-            actions: [
-              { id: 'd1', kind: 'disc_pickup', sideId: ZOO, player: august },
-              { id: 'd2', kind: 'throw', sideId: ZOO, thrower: august, result: 'throwaway' },
-            ],
-          },
-          {
-            // Rivals possession after throwaway
-            id: 'pos2e',
-            sideId: RIVALS,
-            actions: [
-              { id: 'e1', kind: 'disc_pickup', sideId: RIVALS, player: untracked },
-              { id: 'e2', kind: 'throw', sideId: RIVALS, thrower: untracked, result: 'throwaway' },
-            ],
-          },
-          {
-            // Zoo scores: Meves → Sam (goal)
-            id: 'pos2f',
-            sideId: ZOO,
-            actions: [
-              { id: 'f1', kind: 'disc_pickup', sideId: ZOO, player: meves },
-              {
-                id: 'f2',
-                kind: 'throw',
-                sideId: ZOO,
-                thrower: meves,
-                toPlayer: sam,
-                result: 'goal',
-              },
-            ],
-          },
-        ],
-      },
-    ],
-  };
-
-  it('team holds and breaks', () => {
-    const { points } = buildAnalyticsGameWithLog(multiPointGame);
-    const holds = points.filter((p) => p.state === 'hold').length;
-    const breaks = points.filter((p) => p.state === 'break').length;
-    expect(holds).toBe(1);
-    expect(breaks).toBe(1);
-  });
-
-  it('completion percentage', () => {
-    const { attributions } = buildAnalyticsGameWithLog(multiPointGame);
-    // August: 1 completion (a2: complete), 2 throw_attempts (a2 + d2: throwaway)
-    const augustCompletions = sumAttributions(attributions, 'p_august', 'completion');
-    const augustAttempts = sumAttributions(attributions, 'p_august', 'throw_attempt');
-    expect(augustCompletions).toBe(1);
-    expect(augustAttempts).toBe(2);
-    expect(augustCompletions / augustAttempts).toBe(0.5);
-  });
-
-  it('points played derived from linesBySide', () => {
-    const { points } = buildAnalyticsGameWithLog(multiPointGame);
-    const mevesPointsPlayed = points.filter((p) =>
-      Object.values(p.linesBySide).some((ids) => ids.includes('p_meves')),
-    ).length;
-    const samPointsPlayed = points.filter((p) =>
-      Object.values(p.linesBySide).some((ids) => ids.includes('p_sam')),
-    ).length;
-    expect(mevesPointsPlayed).toBe(2); // Meves played both points
-    expect(samPointsPlayed).toBe(1); // Sam only played pt2
-  });
-
-  it('plus/minus — goals + assists + blocks - throwaways - drops', () => {
-    const { attributions } = buildAnalyticsGameWithLog(multiPointGame);
-
-    function plusMinus(participantId: string): number {
-      return (
-        sumAttributions(attributions, participantId, 'goal') +
-        sumAttributions(attributions, participantId, 'assist') +
-        sumAttributions(attributions, participantId, 'block') -
-        sumAttributions(attributions, participantId, 'throwaway') -
-        sumAttributions(attributions, participantId, 'drop')
-      );
-    }
-
-    expect(plusMinus('p_august')).toBe(-1); // 1 throwaway
-    expect(plusMinus('p_meves')).toBe(2); // 2 assists (pt1 + pt2), no negatives
-    expect(plusMinus('p_joah')).toBe(2); // 1 goal (pt1) + 1 block (pt2)
-    expect(plusMinus('p_sam')).toBe(0); // 1 goal, 1 drop — net zero
   });
 });
 
@@ -2578,7 +2354,7 @@ describe('point durationMs', () => {
         },
       ],
     };
-    const { points } = buildAnalyticsGameWithLog(game);
+    const { points } = buildAnalyticsGame(game);
     expect(points[0].durationMs).toBeNull();
   });
 
@@ -2621,7 +2397,7 @@ describe('point durationMs', () => {
         },
       ],
     };
-    const { points } = buildAnalyticsGameWithLog(game);
+    const { points } = buildAnalyticsGame(game);
     expect(points[0].durationMs).toBe(90000);
   });
 
@@ -2673,7 +2449,7 @@ describe('point durationMs', () => {
         },
       ],
     };
-    const { points } = buildAnalyticsGameWithLog(game);
+    const { points } = buildAnalyticsGame(game);
     expect(points[0].durationMs).toBe(30000); // 60s - 30s pause = 30s
   });
 });
@@ -2717,7 +2493,7 @@ describe('isCleanHold', () => {
         },
       ],
     };
-    const { points } = buildAnalyticsGameWithLog(game);
+    const { points } = buildAnalyticsGame(game);
     expect(points[0].isCleanHold).toBe(true);
     expect(points[0].state).toBe('hold');
   });
@@ -2780,7 +2556,7 @@ describe('isCleanHold', () => {
         },
       ],
     };
-    const { points } = buildAnalyticsGameWithLog(game);
+    const { points } = buildAnalyticsGame(game);
     expect(points[0].isCleanHold).toBe(false);
     expect(points[0].state).toBe('hold');
   });
@@ -2835,7 +2611,7 @@ describe('isCleanHold', () => {
         },
       ],
     };
-    const { points } = buildAnalyticsGameWithLog(game);
+    const { points } = buildAnalyticsGame(game);
     expect(points[0].isCleanHold).toBe(false); // two distinct sides possessed
     expect(points[0].state).toBe('break');
   });
@@ -2869,7 +2645,7 @@ describe('isCleanHold', () => {
         },
       ],
     };
-    const { points } = buildAnalyticsGameWithLog(game);
+    const { points } = buildAnalyticsGame(game);
     expect(points[0].isCleanHold).toBeNull();
     expect(points[0].state).toBe('terminated');
   });
@@ -2925,63 +2701,10 @@ describe('injury subs', () => {
         },
       ],
     };
-    const { points } = buildAnalyticsGameWithLog(game);
+    const { points } = buildAnalyticsGame(game);
     const line = points[0].linesBySide[ZOO];
     expect(line).toContain('p_august'); // subbed out — was in starting line
     expect(line).toContain('p_sam'); // subbed in — gets credit for having played
-  });
-
-  it('sub-in player counts toward points played', () => {
-    const game: AdvancedTrackedGame = {
-      ...baseGame,
-      points: [
-        {
-          id: 'pt1',
-          lines: [{ sideId: ZOO, participantIds: ['p_august', 'p_meves', 'p_joah', 'p_max'] }],
-          subs: [
-            {
-              id: 'sub1',
-              sideId: ZOO,
-              type: 'injury',
-              inIds: ['p_sam'],
-              outIds: ['p_august'],
-              stoppageActionId: 'a2',
-            },
-          ],
-          possessions: [
-            {
-              id: 'pos1',
-              sideId: ZOO,
-              actions: [
-                {
-                  id: 'a1',
-                  kind: 'pull',
-                  sideId: RIVALS,
-                  receivingSideId: ZOO,
-                  puller: untracked,
-                  receiver: august,
-                  result: 'inbound',
-                },
-                { id: 'a2', kind: 'stoppage', reason: 'injury', sideId: ZOO },
-                {
-                  id: 'a3',
-                  kind: 'throw',
-                  sideId: ZOO,
-                  thrower: meves,
-                  toPlayer: joah,
-                  result: 'goal',
-                },
-              ],
-            },
-          ],
-        },
-      ],
-    };
-    const { points } = buildAnalyticsGameWithLog(game);
-    const played = (id: string) =>
-      points.filter((p) => Object.values(p.linesBySide).some((ids) => ids.includes(id))).length;
-    expect(played('p_august')).toBe(1); // subbed out
-    expect(played('p_sam')).toBe(1); // subbed in
   });
 
   it('injury sub is additive — sub-out and sub-in both get point credit', () => {
@@ -3089,7 +2812,7 @@ describe('possession turnoverType', () => {
         },
       ],
     };
-    const { possessions } = buildAnalyticsGameWithLog(game);
+    const { possessions } = buildAnalyticsGame(game);
     expect(possessions[0].result).toBe('scored');
     expect(possessions[0].turnoverType).toBeUndefined();
   });
@@ -3308,7 +3031,7 @@ describe('possession turnoverType', () => {
         },
       ],
     };
-    const { possessions } = buildAnalyticsGameWithLog(game);
+    const { possessions } = buildAnalyticsGame(game);
     expect(possessions[0]).toMatchObject({ result: 'turned_over', turnoverType: 'throwaway' });
     expect(possessions[2]).toMatchObject({ result: 'turned_over', turnoverType: 'drop' });
     expect(possessions[4]).toMatchObject({ result: 'turned_over', turnoverType: 'stall' });
@@ -3352,7 +3075,7 @@ describe('possession turnoverType', () => {
         },
       ],
     };
-    const { possessions } = buildAnalyticsGameWithLog(game);
+    const { possessions } = buildAnalyticsGame(game);
     expect(possessions[0].result).toBe('turned_over');
     expect(possessions[0].turnoverType).toBe('callahan');
   });
@@ -3405,7 +3128,7 @@ describe('possession turnoverType', () => {
         },
       ],
     };
-    const { possessions } = buildAnalyticsGameWithLog(game);
+    const { possessions } = buildAnalyticsGame(game);
     expect(possessions[0].result).toBe('turned_over');
     expect(possessions[0].turnoverType).toBe('drop');
     expect(possessions[1].result).toBe('scored');
@@ -3415,7 +3138,7 @@ describe('possession turnoverType', () => {
 // ── genderRatio ───────────────────────────────────────────────────────────────
 
 describe('genderRatio', () => {
-  it('genderRatio is passed through from TrackedPoint to AnalyticsPoint', () => {
+  it('passes through genderRatio when set and leaves it undefined when absent', () => {
     const game: AdvancedTrackedGame = {
       ...baseGame,
       initialReceivingSideId: ZOO,
@@ -3452,7 +3175,6 @@ describe('genderRatio', () => {
         },
         {
           id: 'pt2',
-          genderRatio: 'more-men',
           lines: [{ sideId: ZOO, participantIds: ['p_august', 'p_meves'] }],
           possessions: [
             {
@@ -3482,48 +3204,9 @@ describe('genderRatio', () => {
         },
       ],
     };
-    const { points } = buildAnalyticsGameWithLog(game);
+    const { points } = buildAnalyticsGame(game);
     expect(points[0].genderRatio).toBe('more-women');
-    expect(points[1].genderRatio).toBe('more-men');
-  });
-
-  it('genderRatio is undefined when not set on the point', () => {
-    const game: AdvancedTrackedGame = {
-      ...baseGame,
-      points: [
-        {
-          id: 'pt1',
-          lines: [{ sideId: ZOO, participantIds: ['p_august', 'p_meves'] }],
-          possessions: [
-            {
-              id: 'pos1',
-              sideId: ZOO,
-              actions: [
-                {
-                  id: 'a1',
-                  kind: 'pull',
-                  sideId: RIVALS,
-                  receivingSideId: ZOO,
-                  puller: untracked,
-                  receiver: august,
-                  result: 'inbound',
-                },
-                {
-                  id: 'a2',
-                  kind: 'throw',
-                  sideId: ZOO,
-                  thrower: august,
-                  toPlayer: meves,
-                  result: 'goal',
-                },
-              ],
-            },
-          ],
-        },
-      ],
-    };
-    const { points } = buildAnalyticsGameWithLog(game);
-    expect(points[0].genderRatio).toBeUndefined();
+    expect(points[1].genderRatio).toBeUndefined();
   });
 });
 
@@ -3781,18 +3464,6 @@ describe('getPointStateForSide', () => {
       isCleanHold: null,
     };
   }
-
-  it('returns the same state as point.state when called with focusSideId', () => {
-    const hold = makeTerminalPoint(ZOO, ZOO);
-    const brk = makeTerminalPoint(RIVALS, ZOO);
-    const broken = makeTerminalPoint(ZOO, RIVALS);
-    const opp = makeTerminalPoint(RIVALS, RIVALS);
-
-    expect(getPointStateForSide(hold, ZOO)).toBe('hold');
-    expect(getPointStateForSide(brk, ZOO)).toBe('break');
-    expect(getPointStateForSide(broken, ZOO)).toBe('broken');
-    expect(getPointStateForSide(opp, ZOO)).toBe('opp_hold');
-  });
 
   it('returns the mirror state when called with the other sideId', () => {
     // Perspective inversion:
@@ -4144,101 +3815,6 @@ describe('scrimmage', () => {
     ],
   };
 
-  it('compiles correctly when the same participant appears on different sides across points', () => {
-    // pt1: August on White side. pt2: August switches to Dark (intra-team rotation).
-    const game: AdvancedTrackedGame = {
-      ...scrimmageBase,
-      points: [
-        {
-          id: 'pt1',
-          lines: [
-            { sideId: WHITE, participantIds: ['p_august', 'p_meves'] },
-            { sideId: DARK, participantIds: ['p_joah', 'p_max'] },
-          ],
-          possessions: [
-            {
-              id: 'pos1',
-              sideId: WHITE,
-              actions: [
-                {
-                  id: 'a1',
-                  kind: 'pull',
-                  sideId: DARK,
-                  receivingSideId: WHITE,
-                  puller: joah,
-                  receiver: august,
-                  result: 'inbound',
-                },
-                {
-                  id: 'a2',
-                  kind: 'throw',
-                  sideId: WHITE,
-                  thrower: august,
-                  toPlayer: meves,
-                  result: 'goal',
-                },
-              ],
-            },
-          ],
-        },
-        // pt2: White scored → Dark receives. August now on Dark.
-        {
-          id: 'pt2',
-          lines: [
-            { sideId: WHITE, participantIds: ['p_meves', 'p_sam'] },
-            { sideId: DARK, participantIds: ['p_august', 'p_joah'] },
-          ],
-          possessions: [
-            {
-              id: 'pos2',
-              sideId: DARK,
-              actions: [
-                {
-                  id: 'b1',
-                  kind: 'pull',
-                  sideId: WHITE,
-                  receivingSideId: DARK,
-                  puller: meves,
-                  receiver: august,
-                  result: 'inbound',
-                },
-                {
-                  id: 'b2',
-                  kind: 'throw',
-                  sideId: DARK,
-                  thrower: august,
-                  toPlayer: joah,
-                  result: 'goal',
-                },
-              ],
-            },
-          ],
-        },
-      ],
-    };
-
-    const { points, attributions } = buildAnalyticsGame(game);
-
-    // pt1: linesBySide reflects White/Dark split for that point
-    expect(points[0].linesBySide[WHITE]).toContain('p_august');
-    expect(points[0].linesBySide[DARK]).toContain('p_joah');
-
-    // pt2: August is on Dark — linesBySide reflects the switched assignment
-    expect(points[1].linesBySide[DARK]).toContain('p_august');
-    expect(points[1].linesBySide[WHITE]).not.toContain('p_august');
-
-    // August gets assist in both points regardless of which side he's on
-    expect(sumAttributions(attributions, 'p_august', 'assist')).toBe(2);
-
-    // pt1: White hold / Dark opp_hold
-    expect(getPointStateForSide(points[0], WHITE)).toBe('hold');
-    expect(getPointStateForSide(points[0], DARK)).toBe('opp_hold');
-
-    // pt2: Dark receives, Dark scores = opp_hold for White / hold for Dark
-    expect(getPointStateForSide(points[1], WHITE)).toBe('opp_hold');
-    expect(getPointStateForSide(points[1], DARK)).toBe('hold');
-  });
-
   it('point.state reflects focusSideId — consistent with getPointStateForSide for that side', () => {
     const game: AdvancedTrackedGame = {
       ...scrimmageBase,
@@ -4325,18 +3901,8 @@ describe('AnalyticsGame metadata fields', () => {
     points: [zooHoldPoint],
   };
 
-  it('exposes focusSideId matching the raw game', () => {
-    expect(buildAnalyticsGame(gameWithMeta).focusSideId).toBe(ZOO);
-  });
-
   it('exposes oppSideId as the non-focus side', () => {
     expect(buildAnalyticsGame(gameWithMeta).oppSideId).toBe(RIVALS);
-  });
-
-  it('exposes sideLabels keyed by sideId', () => {
-    const { sideLabels } = buildAnalyticsGame(gameWithMeta);
-    expect(sideLabels[ZOO]).toBe('Zoo');
-    expect(sideLabels[RIVALS]).toBe('Rivals');
   });
 
   it('exposes participantNames as a Map with correct entries', () => {
@@ -4346,20 +3912,18 @@ describe('AnalyticsGame metadata fields', () => {
     expect(participantNames.size).toBe(participants.length);
   });
 
-  it('passes through metadata', () => {
-    const { metadata } = buildAnalyticsGame(gameWithMeta);
-    expect(metadata?.opponentName).toBe('Rivals FC');
-    expect(metadata?.location).toBe('Field A');
-    expect(metadata?.date).toBe('2024-07-04');
-  });
+  it('passes through game identity and metadata fields', () => {
+    const analytics = buildAnalyticsGame(gameWithMeta);
+    expect(analytics.focusSideId).toBe(ZOO);
+    expect(analytics.sideLabels[ZOO]).toBe('Zoo');
+    expect(analytics.sideLabels[RIVALS]).toBe('Rivals');
+    expect(analytics.metadata?.opponentName).toBe('Rivals FC');
+    expect(analytics.metadata?.location).toBe('Field A');
+    expect(analytics.metadata?.date).toBe('2024-07-04');
+    expect(analytics.createdAt).toBe(9001);
 
-  it('passes through createdAt', () => {
-    expect(buildAnalyticsGame(gameWithMeta).createdAt).toBe(9001);
-  });
-
-  it('metadata is undefined when not set on the raw game', () => {
-    const game: AdvancedTrackedGame = { ...baseGame, points: [zooHoldPoint] };
-    expect(buildAnalyticsGame(game).metadata).toBeUndefined();
+    const gameWithoutMetadata: AdvancedTrackedGame = { ...baseGame, points: [zooHoldPoint] };
+    expect(buildAnalyticsGame(gameWithoutMetadata).metadata).toBeUndefined();
   });
 });
 

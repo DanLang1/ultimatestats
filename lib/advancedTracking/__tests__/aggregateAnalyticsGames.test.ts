@@ -4,7 +4,6 @@ import { computeAdvancedPlayerStats } from '../advancedPlayerStatsUtils';
 import { computeAdvancedTeamStats } from '../advancedTeamStatsUtils';
 import { aggregateAnalyticsGames } from '../aggregateAnalyticsGames';
 import { buildAnalyticsGame } from '../buildAnalyticsGame';
-import { isAdvancedGameAggregateEligible } from '../summary';
 
 const ZOO = 'zoo';
 const RIVALS = 'rivals';
@@ -111,12 +110,5 @@ describe('aggregateAnalyticsGames', () => {
     expect(() => aggregateAnalyticsGames([zooAnalytics, rivalsAnalytics])).toThrow(
       'same focus side',
     );
-  });
-});
-
-describe('isAdvancedGameAggregateEligible', () => {
-  it('excludes scrimmages while retaining regular advanced games', () => {
-    expect(isAdvancedGameAggregateEligible({ gameType: 'scrimmage' })).toBe(false);
-    expect(isAdvancedGameAggregateEligible({ gameType: 'game' })).toBe(true);
   });
 });

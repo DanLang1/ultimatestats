@@ -28,7 +28,6 @@ const game: AdvancedTrackedGame = {
 
 describe('trackingModeUtils', () => {
   it('derives both-side tracking from side capabilities rather than game type', () => {
-    expect(game.gameType).toBe('game');
     expect(areBothSidesFullyTracked(game)).toBe(true);
     expect(getFullyTrackedSideIds(game)).toEqual(['home', 'away']);
     expect(isSideFullyTracked(game, 'home')).toBe(true);

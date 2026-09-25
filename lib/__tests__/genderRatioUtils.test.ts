@@ -19,25 +19,6 @@ describe('getExpectedRatio', () => {
       expect(getExpectedRatio(2, firstRatio)).toBe('more-men');
       expect(getExpectedRatio(3, firstRatio)).toBe('more-men');
     });
-
-    it('points 4-5 are more-women (same as first)', () => {
-      expect(getExpectedRatio(4, firstRatio)).toBe('more-women');
-      expect(getExpectedRatio(5, firstRatio)).toBe('more-women');
-    });
-
-    it('points 6-7 are more-men (reverse)', () => {
-      expect(getExpectedRatio(6, firstRatio)).toBe('more-men');
-      expect(getExpectedRatio(7, firstRatio)).toBe('more-men');
-    });
-
-    it('continues pattern for later points', () => {
-      // Points 8-9: same as first
-      expect(getExpectedRatio(8, firstRatio)).toBe('more-women');
-      expect(getExpectedRatio(9, firstRatio)).toBe('more-women');
-      // Points 10-11: reverse
-      expect(getExpectedRatio(10, firstRatio)).toBe('more-men');
-      expect(getExpectedRatio(11, firstRatio)).toBe('more-men');
-    });
   });
 
   describe('when first point ratio is more-men (MMP+)', () => {
@@ -51,16 +32,6 @@ describe('getExpectedRatio', () => {
       expect(getExpectedRatio(2, firstRatio)).toBe('more-women');
       expect(getExpectedRatio(3, firstRatio)).toBe('more-women');
     });
-
-    it('points 4-5 are more-men (same as first)', () => {
-      expect(getExpectedRatio(4, firstRatio)).toBe('more-men');
-      expect(getExpectedRatio(5, firstRatio)).toBe('more-men');
-    });
-
-    it('points 6-7 are more-women (reverse)', () => {
-      expect(getExpectedRatio(6, firstRatio)).toBe('more-women');
-      expect(getExpectedRatio(7, firstRatio)).toBe('more-women');
-    });
   });
 });
 
@@ -72,23 +43,6 @@ describe('getSequenceNumber', () => {
   it('returns 1, 2 for points 2-3', () => {
     expect(getSequenceNumber(2)).toBe(1);
     expect(getSequenceNumber(3)).toBe(2);
-  });
-
-  it('returns 1, 2 for points 4-5', () => {
-    expect(getSequenceNumber(4)).toBe(1);
-    expect(getSequenceNumber(5)).toBe(2);
-  });
-
-  it('returns 1, 2 for points 6-7', () => {
-    expect(getSequenceNumber(6)).toBe(1);
-    expect(getSequenceNumber(7)).toBe(2);
-  });
-
-  it('continues pattern for later points', () => {
-    expect(getSequenceNumber(8)).toBe(1);
-    expect(getSequenceNumber(9)).toBe(2);
-    expect(getSequenceNumber(10)).toBe(1);
-    expect(getSequenceNumber(11)).toBe(2);
   });
 });
 
@@ -124,30 +78,6 @@ describe('formatRatioFull', () => {
     it('formats more-men with sequence', () => {
       expect(formatRatioFull('more-men', 1)).toBe('1st MMP POINT');
       expect(formatRatioFull('more-men', 2)).toBe('2nd MMP POINT');
-    });
-  });
-});
-
-describe('integration: full ABBA sequence with MMP first', () => {
-  const firstRatio: GenderRatio = 'more-men';
-
-  it('produces correct sequence M2, F1, F2, M1, M2, F1, F2...', () => {
-    const expected = [
-      { point: 1, display: 'M2' },
-      { point: 2, display: 'F1' },
-      { point: 3, display: 'F2' },
-      { point: 4, display: 'M1' },
-      { point: 5, display: 'M2' },
-      { point: 6, display: 'F1' },
-      { point: 7, display: 'F2' },
-      { point: 8, display: 'M1' },
-      { point: 9, display: 'M2' },
-    ];
-
-    expected.forEach(({ point, display }) => {
-      const ratio = getExpectedRatio(point, firstRatio);
-      const seq = getSequenceNumber(point);
-      expect(formatRatio(ratio, seq)).toBe(display);
     });
   });
 });

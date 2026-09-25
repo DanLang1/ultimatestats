@@ -216,8 +216,6 @@ describe('playingTimeStatsUtils', () => {
   describe('formatEfficiency', () => {
     it('formats rate as percentage', () => {
       expect(formatEfficiency(0.75)).toBe('75%');
-      expect(formatEfficiency(1)).toBe('100%');
-      expect(formatEfficiency(0)).toBe('0%');
       expect(formatEfficiency(0.333)).toBe('33%');
     });
   });

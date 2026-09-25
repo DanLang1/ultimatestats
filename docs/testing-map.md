@@ -26,8 +26,8 @@ route-test fixtures, native-boundary adapters, and provider wrappers also live i
 | Gender ratio / line expectations      | `lib/__tests__/genderRatioUtils.test.ts`, `lib/__tests__/lineUtils.test.ts`                                                                                                                                                                 |
 | Event timeline / point reconstruction | `lib/basic/__tests__/timelineUtils.test.ts`                                                                                                                                                                                                 |
 | Player/team stats calculations        | `lib/basic/__tests__/statsUtils.test.ts`, `lib/basic/__tests__/teamStatsUtils.test.ts`, `lib/basic/__tests__/playerStatsUtils.test.ts`, `lib/basic/__tests__/playingTimeStatsUtils.test.ts`, `lib/basic/__tests__/timingStatsUtils.test.ts` |
-| Import/share payload behavior         | `lib/__tests__/importTeamTransform.test.ts`, `lib/__tests__/sharingPayloadSize.test.ts`                                                                                                                                                     |
-| Saved-game schema migrations          | `lib/storage/__tests__/migrations.test.ts`, `lib/storage/__tests__/migrations.snapshot.test.ts`                                                                                                                                             |
+| Import/share payload behavior         | `lib/__tests__/importTeamTransform.test.ts`                                                                                                                                                                                                 |
+| Saved-game schema migrations          | `lib/storage/__tests__/migrations.test.ts`                                                                                                                                                                                                  |
 
 ## User-facing route coverage
 

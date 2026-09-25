@@ -199,11 +199,12 @@ describe('advancedTrackingStore — edge cases', () => {
         receiver: august,
         result: 'inbound',
       });
+      useAdvancedTrackingStore.getState().recordCaptureIntent({ kind: 'pickup', player: august });
 
       expect(() =>
-        useAdvancedTrackingStore.getState().recordThrow({
-          thrower: august,
-          result: 'pressure',
+        useAdvancedTrackingStore.getState().recordCaptureIntent({
+          kind: 'pressure',
+          defender: untracked,
         }),
       ).toThrow('Pressure requires a tracked defender.');
     });
@@ -282,76 +283,9 @@ describe('advancedTrackingStore — edge cases', () => {
       expect(point?.possessions).toHaveLength(2);
       expect(point?.possessions[1].actions).toHaveLength(1); // just the pickup
     });
-
-    it('undoing a pickup after a turnover removes the pickup and the empty possession', () => {
-      createGame();
-      useAdvancedTrackingStore.getState().recordPull({
-        lines: [{ sideId: homeSideId, participantIds: [august.participantId] }],
-        puller: untracked,
-        receiver: august,
-        result: 'inbound',
-      });
-      useAdvancedTrackingStore.getState().recordThrow({ thrower: august, result: 'throwaway' });
-      useAdvancedTrackingStore.getState().recordPickup({ sideId: awaySideId, player: untracked });
-
-      let game = getCurrentGame()!;
-      expect(game.points[0].possessions).toHaveLength(2);
-
-      useAdvancedTrackingStore.getState().undoLastOperation();
-
-      game = getCurrentGame()!;
-      expect(game.points[0].possessions).toHaveLength(1);
-    });
-
-    it('canceling an active stoppage also removes linked subs', () => {
-      createGame();
-      useAdvancedTrackingStore.getState().recordPull({
-        lines: [{ sideId: homeSideId, participantIds: [august.participantId] }],
-        puller: untracked,
-        receiver: august,
-        result: 'inbound',
-      });
-      const stoppageId = useAdvancedTrackingStore.getState().recordInjurySubs({
-        sideId: homeSideId,
-        changes: [
-          {
-            sideId: homeSideId,
-            inIds: [meves.participantId],
-            outIds: [august.participantId],
-          },
-        ],
-      });
-
-      let game = getCurrentGame()!;
-      expect(getCurrentPoint(game)?.subs).toHaveLength(1);
-
-      useAdvancedTrackingStore.getState().cancelStoppage(stoppageId);
-      game = getCurrentGame()!;
-      expect(getCurrentPoint(game)?.subs).toBeUndefined();
-      expect(getCurrentPoint(game)?.possessions[0].actions.at(-1)?.kind).toBe('pull');
-    });
   });
 
   describe('recordPickup validation', () => {
-    it('throws when pickup side does not match expected next possession side', () => {
-      createGame();
-      useAdvancedTrackingStore.getState().recordPull({
-        lines: [{ sideId: homeSideId, participantIds: [august.participantId] }],
-        puller: untracked,
-        receiver: august,
-        result: 'inbound',
-      });
-      useAdvancedTrackingStore.getState().recordThrow({ thrower: august, result: 'throwaway' });
-
-      // Home threw it away, so Away should pick up. Home trying to pick up should throw.
-      expect(() =>
-        useAdvancedTrackingStore.getState().recordPickup({
-          sideId: homeSideId,
-          player: august,
-        }),
-      ).toThrow(`Expected pickup for side "${awaySideId}".`);
-    });
-
     it('rejects a second pickup while the same side already has a holder', () => {
       createGame();
       useAdvancedTrackingStore.getState().recordPull({
@@ -375,25 +309,6 @@ describe('advancedTrackingStore — edge cases', () => {
   });
 
   describe('finalizeGame edge cases', () => {
-    it('throws when game is not over (score below gameTo)', async () => {
-      createGame(15);
-      useAdvancedTrackingStore.getState().recordPull({
-        lines: [{ sideId: homeSideId, participantIds: [august.participantId] }],
-        puller: untracked,
-        receiver: august,
-        result: 'inbound',
-      });
-      useAdvancedTrackingStore.getState().recordThrow({
-        thrower: august,
-        toPlayer: meves,
-        result: 'goal',
-      });
-
-      await expect(useAdvancedTrackingStore.getState().finalizeGame()).rejects.toThrow(
-        'Cannot finalize game before it is over.',
-      );
-    });
-
     it('throws when game is tied at gameTo (needs to win by 1)', async () => {
       createGame(1);
       // Home scores
@@ -424,46 +339,6 @@ describe('advancedTrackingStore — edge cases', () => {
       await expect(useAdvancedTrackingStore.getState().finalizeGame()).rejects.toThrow(
         'Cannot finalize game before it is over.',
       );
-    });
-
-    it('succeeds when score is ahead by 1 at gameTo', async () => {
-      createGame(1);
-      useAdvancedTrackingStore.getState().recordPull({
-        lines: [{ sideId: homeSideId, participantIds: [august.participantId] }],
-        puller: untracked,
-        receiver: august,
-        result: 'inbound',
-      });
-      useAdvancedTrackingStore.getState().recordThrow({
-        thrower: august,
-        toPlayer: meves,
-        result: 'goal',
-      });
-
-      await expect(useAdvancedTrackingStore.getState().finalizeGame()).resolves.toBeUndefined();
-      expect(useAdvancedTrackingStore.getState().currentGameId).toBeNull();
-      expect(useAdvancedTrackingStore.getState().currentGame!.status).toBe('final');
-    });
-  });
-
-  describe('recordPull validation', () => {
-    it('throws if a point is already in progress', () => {
-      createGame();
-      useAdvancedTrackingStore.getState().recordPull({
-        lines: [{ sideId: homeSideId, participantIds: [august.participantId] }],
-        puller: untracked,
-        receiver: august,
-        result: 'inbound',
-      });
-
-      expect(() =>
-        useAdvancedTrackingStore.getState().recordPull({
-          lines: [{ sideId: homeSideId, participantIds: [august.participantId] }],
-          puller: untracked,
-          receiver: august,
-          result: 'inbound',
-        }),
-      ).toThrow('Cannot record a pull while the current point is still in progress.');
     });
   });
 

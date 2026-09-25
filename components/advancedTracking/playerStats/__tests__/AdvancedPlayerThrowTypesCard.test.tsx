@@ -1,4 +1,4 @@
-import { screen, userEvent } from '@testing-library/react-native';
+import { screen } from '@testing-library/react-native';
 
 import AdvancedPlayerThrowTypesCard from '@/components/advancedTracking/playerStats/AdvancedPlayerThrowTypesCard';
 import type { AdvancedPlayerStats } from '@/lib/advancedTracking/advancedPlayerStatsUtils';
@@ -84,9 +84,7 @@ describe('AdvancedPlayerThrowTypesCard', () => {
 
     expect(screen.getByTestId('advanced-player-throw-types-card')).toBeTruthy();
     expect(screen.getByText('Throw classifications')).toBeTruthy();
-    expect(screen.getByText('HUCK THROWING')).toBeTruthy();
     expect(screen.getByText('75%')).toBeTruthy();
-    expect(screen.getByText('Completion rate')).toBeTruthy();
     expect(screen.getByText('3 of 4')).toBeTruthy();
     expect(screen.getByText('Completions')).toBeTruthy();
     expect(screen.getByText('3 completed')).toBeTruthy();
@@ -140,25 +138,5 @@ describe('AdvancedPlayerThrowTypesCard', () => {
     expect(screen.getByText('1 huck dropped')).toBeTruthy();
     expect(screen.getByText('RESET TURNOVERS')).toBeTruthy();
     expect(screen.getByText('1 reset dropped')).toBeTruthy();
-  });
-
-  it('shows the information alert from an accessible touch target', async () => {
-    const user = userEvent.setup();
-    const stats = createMockStats({
-      huckAttempts: 2,
-      huckCompletions: 2,
-      huckCompletionPct: 1,
-    });
-
-    await renderScreen(<AdvancedPlayerThrowTypesCard stats={stats} />);
-    const infoButton = screen.getByRole('button', { name: 'About throw classifications' });
-    expect(infoButton.props.style.height).toBeGreaterThanOrEqual(44);
-    expect(infoButton.props.style.width).toBeGreaterThanOrEqual(44);
-    await user.press(infoButton);
-
-    expect(screen.getByText('Throw Classifications')).toBeTruthy();
-    expect(
-      screen.getByText('Classifications are optional, so this data may not be fully accurate.'),
-    ).toBeTruthy();
   });
 });

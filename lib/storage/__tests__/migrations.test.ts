@@ -1,7 +1,23 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+
 import { GoalEvent } from '@/store/basic/gameStore.types';
 
 import { migrateSavedGame, migrateSavedGames } from '../migrations';
 import { CURRENT_SCHEMA_VERSION, SavedGame } from '../types';
+
+const FIXTURE_ROOT = join(__dirname, '..', '__fixtures__', 'games');
+
+const FIXTURE_PATHS = [
+  'v2/halftime-by-math.json',
+  'v2/softcap-final-target.json',
+  'v3/already-stamped-halftime.json',
+] as const;
+
+function loadSavedGameFixture(relativePath: (typeof FIXTURE_PATHS)[number]): SavedGame {
+  const raw = readFileSync(join(FIXTURE_ROOT, relativePath), 'utf8');
+  return JSON.parse(raw) as SavedGame;
+}
 
 const goal = (team: 'team1' | 'team2'): GoalEvent => ({
   type: 'goal',
@@ -151,5 +167,12 @@ describe('storage migrations', () => {
     expect(migrated.schemaVersion).toBe(CURRENT_SCHEMA_VERSION);
     expect(migrated).not.toHaveProperty('gameLength');
     expect(migrated).not.toHaveProperty('hardCapMins');
+  });
+
+  it.each(FIXTURE_PATHS)('is idempotent for %s', (relativePath) => {
+    const fixture = loadSavedGameFixture(relativePath);
+    const migrated = migrateSavedGame(fixture);
+
+    expect(migrateSavedGame(migrated)).toEqual(migrated);
   });
 });

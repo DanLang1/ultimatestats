@@ -4,10 +4,6 @@ export function getAdvancedFocusSide(game: AdvancedTrackedGame) {
   return game.sides.find((side) => side.id === game.focusSideId) ?? null;
 }
 
-export function getAdvancedFocusTeamId(game: AdvancedTrackedGame) {
-  return getAdvancedFocusSide(game)?.sourceTeamId ?? game.focusSideId;
-}
-
 export function getAdvancedFocusTeamName(game: AdvancedTrackedGame) {
   return getAdvancedFocusSide(game)?.label ?? 'My Team';
 }

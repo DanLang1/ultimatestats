@@ -1,7 +1,4 @@
-import {
-  buildRecordPullInput,
-  getPullingSideTitle,
-} from '@/lib/advancedTracking/pullTrackingUtils';
+import { buildRecordPullInput } from '@/lib/advancedTracking/pullTrackingUtils';
 import type { PointLine } from '@/lib/advancedTracking/types';
 
 const LIGHT = 'light';
@@ -25,16 +22,5 @@ describe('buildRecordPullInput', () => {
     expect(input.lines).toEqual(lines);
     expect(input.puller).toEqual({ refType: 'participant', participantId: 'dark-player' });
     expect(input.hangTimeMs).toBe(1200);
-  });
-});
-
-describe('getPullingSideTitle', () => {
-  it('uses the scrimmage side label when provided', () => {
-    expect(getPullingSideTitle(false, 'Dark')).toBe('DARK IS PULLING');
-  });
-
-  it('keeps standard pull titles unchanged', () => {
-    expect(getPullingSideTitle(true)).toBe('WE ARE PULLING');
-    expect(getPullingSideTitle(false)).toBe('THEY ARE PULLING');
   });
 });

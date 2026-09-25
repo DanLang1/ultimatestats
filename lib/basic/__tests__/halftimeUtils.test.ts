@@ -40,9 +40,6 @@ describe('getActualHalftimeScore', () => {
     const events: GameEvent[] = [goal('team1'), goal('team2')];
 
     expect(getActualHalftimeScore(events, 8)).toBeNull();
-  });
-
-  it('returns null for empty events', () => {
     expect(getActualHalftimeScore([], 8)).toBeNull();
   });
 

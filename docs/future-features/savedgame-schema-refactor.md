@@ -59,13 +59,12 @@ The current basic schema is version 6 and already has a migration pipeline under
 `lib/storage/migrations/`. A future implementation must:
 
 1. Increment `CURRENT_SCHEMA_VERSION` from whatever version is current at implementation time.
-2. Add the next sequential migration and snapshot fixtures.
+2. Add the next sequential migration and versioned fixtures.
 3. Preserve legacy nullability and defaults rather than assuming all older records are complete.
 4. Migrate shared/imported payloads before consumers read the new shape.
 5. Update sharing validation, basic store construction, analytics, timeline editing, CSV/PDF
    exports, and route tests.
-6. Keep the migration idempotent and covered by `migrations.test.ts` and
-   `migrations.snapshot.test.ts`.
+6. Keep the migration idempotent and covered by `migrations.test.ts`.
 
 Primary consumers currently live in:
 

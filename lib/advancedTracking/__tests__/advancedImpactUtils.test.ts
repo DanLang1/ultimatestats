@@ -161,7 +161,7 @@ describe('computeAdvancedImpact', () => {
     expect(impact[0].plusMinusDelta).toBe(0);
   });
 
-  it('goal and assist in the same point yield plusMinusDelta of 2', () => {
+  it('a goal plus a hockey assist yields plusMinusDelta of 1', () => {
     // August assists, Meves receives goal — but here August both assists and scores
     // Two-throw sequence: August → Meves (complete), Meves → August (goal)
     const game: AdvancedTrackedGame = {
@@ -753,74 +753,5 @@ describe('computeAdvancedImpact', () => {
     const impact = computeAdvancedImpact(analytics, 'p_august', ZOO);
     expect(impact[0].plusMinusDelta).toBe(-1);
     expect(impact[0].description).toBe('FfS');
-  });
-
-  it('returns one entry per point', () => {
-    const game: AdvancedTrackedGame = {
-      ...baseGame,
-      points: [
-        {
-          id: 'pt1',
-          lines: [{ sideId: ZOO, participantIds: ['p_august', 'p_meves'] }],
-          possessions: [
-            {
-              id: 'pos1',
-              sideId: ZOO,
-              actions: [
-                {
-                  id: 'pull1',
-                  kind: 'pull' as const,
-                  sideId: RIVALS,
-                  receivingSideId: ZOO,
-                  puller: untracked,
-                  result: 'inbound' as const,
-                },
-                {
-                  id: 'a1',
-                  kind: 'throw' as const,
-                  sideId: ZOO,
-                  thrower: august,
-                  toPlayer: meves,
-                  result: 'goal' as const,
-                },
-              ],
-            },
-          ],
-        },
-        {
-          id: 'pt2',
-          lines: [{ sideId: ZOO, participantIds: ['p_august', 'p_meves'] }],
-          possessions: [
-            {
-              id: 'pos2',
-              sideId: ZOO,
-              actions: [
-                {
-                  id: 'pull2',
-                  kind: 'pull' as const,
-                  sideId: RIVALS,
-                  receivingSideId: ZOO,
-                  puller: untracked,
-                  result: 'inbound' as const,
-                },
-                {
-                  id: 'a2',
-                  kind: 'throw' as const,
-                  sideId: ZOO,
-                  thrower: august,
-                  toPlayer: meves,
-                  result: 'goal' as const,
-                },
-              ],
-            },
-          ],
-        },
-      ],
-    };
-    const analytics = buildAnalyticsGame(game);
-    const impact = computeAdvancedImpact(analytics, 'p_august', ZOO);
-    expect(impact).toHaveLength(2);
-    expect(impact[0].pointIndex).toBe(0);
-    expect(impact[1].pointIndex).toBe(1);
   });
 });

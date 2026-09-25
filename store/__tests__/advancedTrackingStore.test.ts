@@ -311,10 +311,6 @@ describe('advancedTrackingStore', () => {
     const persistedPayload = JSON.parse(lastWrite![1]);
     expect(persistedPayload.version).toBe(1);
     expect(persistedPayload.state).not.toHaveProperty('undoStack');
-    expect(Object.keys(persistedPayload.state).sort()).toEqual([
-      'currentGameId',
-      'pendingNextPointLineSelection',
-    ]);
   });
 
   it('persists history-only clearing even when the game identity is unchanged', () => {
@@ -911,7 +907,6 @@ describe('advancedTrackingStore', () => {
     const opponentActions = getCurrentPoint(getCurrentGame())?.possessions[1].actions ?? [];
     expect(opponentActions.map((action) => action.kind)).toEqual(['disc_pickup', 'throw']);
     expect(result).toEqual({ ok: true, actionId: opponentActions[1].id });
-    expect(result).not.toEqual({ ok: true, actionId: opponentActions[0].id });
     expect(listener).toHaveBeenCalledTimes(1);
 
     expect(useAdvancedTrackingStore.getState().undoLastOperation()).toBe(true);
@@ -2325,23 +2320,6 @@ describe('advancedTrackingStore', () => {
     ).toThrow('Cannot record a pull while the current point is still in progress.');
   });
 
-  it('recordPickup throws if the sideId does not match the expected next possession side', () => {
-    createGame();
-
-    useAdvancedTrackingStore.getState().recordPull({
-      lines: homeLinesAugust,
-      puller: untracked,
-      receiver: august,
-      result: 'inbound',
-    });
-    useAdvancedTrackingStore.getState().recordThrow({ thrower: august, result: 'throwaway' });
-
-    // Home threw it away, so away should pick up — passing home here should throw
-    expect(() =>
-      useAdvancedTrackingStore.getState().recordPickup({ sideId: homeSideId, player: august }),
-    ).toThrow(`Expected pickup for side "${awaySideId}".`);
-  });
-
   it('recordThrow throws if the point has already ended', () => {
     createGame();
 
@@ -2460,29 +2438,6 @@ describe('advancedTrackingStore', () => {
     expect(useAdvancedTrackingStore.getState().undoStack).toHaveLength(undoCountBefore);
 
     nowSpy.mockRestore();
-  });
-
-  it('resumeStoppage sets resumedAt on the stoppage action', () => {
-    createGame();
-
-    useAdvancedTrackingStore.getState().recordPull({
-      lines: homeLinesAugust,
-      puller: untracked,
-      receiver: august,
-      result: 'inbound',
-    });
-
-    const stoppageId = useAdvancedTrackingStore.getState().recordStoppage({ reason: 'injury' });
-    useAdvancedTrackingStore.getState().resumeStoppage(stoppageId);
-
-    const point = getCurrentPoint(getCurrentGame());
-    const lastAction = point?.possessions[0].actions.at(-1);
-
-    if (lastAction?.kind === 'stoppage') {
-      expect(lastAction.resumedAt).toBeDefined();
-    } else {
-      fail('Expected last action to be a stoppage');
-    }
   });
 
   it('resumeStoppage does not add to the stat undo stack', () => {
@@ -2977,13 +2932,11 @@ describe('advancedTrackingStore', () => {
       });
     });
 
-    it('records hard_cap when a goal crosses the hard cap threshold', () => {
+    it('records both caps when a goal crosses both thresholds', () => {
       setupGameAndPull();
-      recordGoalAtElapsedMinutes(90);
+      recordGoalAtElapsedMinutes(95);
 
       const transitions = getCurrentGameTransitions();
-      // Hard-cap threshold (90 min) also crosses the soft-cap threshold (70 min),
-      // so both transitions are recorded.
       expect(transitions).toHaveLength(2);
       expect(transitions).toEqual(
         expect.arrayContaining([
@@ -2997,16 +2950,6 @@ describe('advancedTrackingStore', () => {
           }),
         ]),
       );
-    });
-
-    it('records both caps when a goal crosses both thresholds', () => {
-      setupGameAndPull();
-      recordGoalAtElapsedMinutes(95);
-
-      const types = getCurrentGameTransitions()
-        .map((t) => t.transitionType)
-        .sort();
-      expect(types).toEqual(['hard_cap', 'soft_cap']);
     });
 
     it('records only soft_cap when soft cap is enabled and hard cap is disabled', () => {

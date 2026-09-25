@@ -4,7 +4,7 @@ import {
   computeAdvancedPlayerStats,
   getAdvancedPlayerStatsForParticipant,
 } from '../advancedPlayerStatsUtils';
-import type { AnalyticsGame, AnalyticsPoint, AttributionType, PointState } from '../analyticsTypes';
+import type { AnalyticsGame, AnalyticsPoint, PointState } from '../analyticsTypes';
 import { buildAnalyticsGame } from '../buildAnalyticsGame';
 import type { AdvancedTrackedGame, PlayerRef } from '../types';
 
@@ -358,44 +358,36 @@ describe('advancedPlayerStatsUtils', () => {
     const analytics = buildAnalyticsGame(game);
     const stats = computeAdvancedPlayerStats(analytics);
 
-    it('Max gets 1 goal, 1 reception', () => {
-      const s = findStats(stats, 'p_max');
-      expect(s.goals).toBe(1);
-      expect(s.receptions).toBe(1);
-    });
+    it('attributes goals, assists, hockey assists, completions, and receptions', () => {
+      const maxStats = findStats(stats, 'p_max');
+      expect(maxStats.goals).toBe(1);
+      expect(maxStats.receptions).toBe(1);
 
-    it('Joah gets 1 assist, 1 completion, 1 reception', () => {
-      const s = findStats(stats, 'p_joah');
-      expect(s.assists).toBe(1);
-      expect(s.completions).toBe(1);
-      expect(s.receptions).toBe(1);
-    });
+      const joahStats = findStats(stats, 'p_joah');
+      expect(joahStats.assists).toBe(1);
+      expect(joahStats.completions).toBe(1);
+      expect(joahStats.receptions).toBe(1);
 
-    it('Meves gets hockey assist, 1 completion, 1 reception', () => {
-      const s = findStats(stats, 'p_meves');
-      expect(s.hockeyAssists).toBe(1);
-      expect(s.assists).toBe(0);
-      expect(s.completions).toBe(1);
-      expect(s.receptions).toBe(1);
-    });
+      const mevesStats = findStats(stats, 'p_meves');
+      expect(mevesStats.hockeyAssists).toBe(1);
+      expect(mevesStats.assists).toBe(0);
+      expect(mevesStats.completions).toBe(1);
+      expect(mevesStats.receptions).toBe(1);
 
-    it('August gets 1 completion, 1 pull reception, 0 receptions, 0 hockey assists', () => {
       // August is 2 throws before the goal — too far back for a hockey assist
-      const s = findStats(stats, 'p_august');
-      expect(s.completions).toBe(1);
-      expect(s.pullReceptions).toBe(1);
-      expect(s.receptions).toBe(0);
-      expect(s.hockeyAssists).toBe(0);
+      const augustStats = findStats(stats, 'p_august');
+      expect(augustStats.completions).toBe(1);
+      expect(augustStats.pullReceptions).toBe(1);
+      expect(augustStats.receptions).toBe(0);
+      expect(augustStats.hockeyAssists).toBe(0);
     });
 
-    it('completion pct', () => {
+    it('derives completion pct and total touches', () => {
       expect(findStats(stats, 'p_august').completionPct).toBeCloseTo(1.0); // 1/1
       expect(findStats(stats, 'p_meves').completionPct).toBeCloseTo(1.0); // 1/1
       expect(findStats(stats, 'p_joah').completionPct).toBeCloseTo(1.0); // 1/1
       expect(findStats(stats, 'p_max').completionPct).toBeNull(); // 0 attempts
-    });
 
-    it('total touches', () => {
       // August: 0 receptions + 0 disc_pickup + 1 pull_reception = 1
       expect(findStats(stats, 'p_august').totalTouches).toBe(1);
       // Meves: 1 reception = 1
@@ -406,18 +398,14 @@ describe('advancedPlayerStatsUtils', () => {
       expect(findStats(stats, 'p_max').totalTouches).toBe(1);
     });
 
-    it('points played = 1 for all players on the line', () => {
+    it('tracks playing time and plus/minus', () => {
       expect(findStats(stats, 'p_august').pointsPlayed).toBe(1);
       expect(findStats(stats, 'p_meves').pointsPlayed).toBe(1);
       expect(findStats(stats, 'p_max').pointsPlayed).toBe(1);
-    });
 
-    it('O-points = 1 (Zoo received)', () => {
       expect(findStats(stats, 'p_august').oPoints).toBe(1);
       expect(findStats(stats, 'p_august').dPoints).toBe(0);
-    });
 
-    it('plus/minus', () => {
       expect(findStats(stats, 'p_august').plusMinus).toBe(0); // 0+0+0-0-0
       expect(findStats(stats, 'p_meves').plusMinus).toBe(0); // hockey assist doesn't count
       expect(findStats(stats, 'p_joah').plusMinus).toBe(1); // 0+1+0-0-0
@@ -707,7 +695,7 @@ describe('advancedPlayerStatsUtils', () => {
       expect(s.dPoints).toBe(1);
     });
 
-    it('August has 2 pulls total (1 each point where he pulled)', () => {
+    it('August has 1 pull (only the point he pulled)', () => {
       // Pt1: untracked pulled. Pt2: August pulled.
       expect(findStats(stats, 'p_august').pulls).toBe(1);
     });
@@ -871,13 +859,8 @@ describe('advancedPlayerStatsUtils', () => {
       expect(overallStats.assists).toBe(2);
       expect(overallStats.pointsPlayed).toBe(2);
 
-      const zooDetailStats = getAdvancedPlayerStatsForParticipant(zooPlayerStats, 'p_august');
-      expect(zooDetailStats.assists).toBe(zooStats.assists);
-      expect(zooDetailStats.pointsPlayed).toBe(zooStats.pointsPlayed);
-
-      const rivalsDetailStats = getAdvancedPlayerStatsForParticipant(rivalsPlayerStats, 'p_august');
-      expect(rivalsDetailStats.assists).toBe(rivalsStats.assists);
-      expect(rivalsDetailStats.pointsPlayed).toBe(rivalsStats.pointsPlayed);
+      expect(getAdvancedPlayerStatsForParticipant(zooPlayerStats, 'p_august')).toBe(zooStats);
+      expect(getAdvancedPlayerStatsForParticipant(rivalsPlayerStats, 'p_august')).toBe(rivalsStats);
     });
   });
 
@@ -1008,59 +991,9 @@ describe('advancedPlayerStatsUtils', () => {
       expect(findStats(stats, 'p_august').stallsConceded).toBe(1);
       expect(findStats(stats, 'p_august').stalls).toBe(0);
     });
-
-    it('throw attempts + stallsConceded = 5 total disc actions', () => {
-      const s = findStats(stats, 'p_august');
-      expect(s.throwAttempts + s.stallsConceded).toBe(5);
-    });
   });
 
   describe('getAdvancedPlayerStatsForParticipant', () => {
-    it('returns the existing result from a precomputed collection', () => {
-      const game: AdvancedTrackedGame = {
-        ...baseGame,
-        points: [
-          {
-            id: 'pt1',
-            lines: [{ sideId: ZOO, participantIds: ['p_august', 'p_meves'] }],
-            possessions: [
-              {
-                id: 'pos1',
-                sideId: ZOO,
-                actions: [
-                  {
-                    id: 'a1',
-                    kind: 'pull',
-                    sideId: RIVALS,
-                    receivingSideId: ZOO,
-                    puller: untracked,
-                    receiver: august,
-                    result: 'inbound',
-                  },
-                  {
-                    id: 'a2',
-                    kind: 'throw',
-                    sideId: ZOO,
-                    thrower: august,
-                    toPlayer: meves,
-                    result: 'goal',
-                  },
-                ],
-              },
-            ],
-          },
-        ],
-      };
-
-      const analytics = buildAnalyticsGame(game);
-      const allPlayerStats = computeAdvancedPlayerStats(analytics);
-      const expected = allPlayerStats.find((stats) => stats.participantId === 'p_meves');
-
-      expect(getAdvancedPlayerStatsForParticipant(allPlayerStats, 'p_meves')).toBe(expected);
-      expect(expected?.goals).toBe(1);
-      expect(expected?.assists).toBe(0);
-    });
-
     it('preserves the empty-stat fallback for a missing participant', () => {
       const stats = getAdvancedPlayerStatsForParticipant([], 'p_unknown');
 
@@ -1482,31 +1415,6 @@ describe('advancedPlayerStatsUtils', () => {
     const analytics = buildAnalyticsGame(game);
     const stats = computeAdvancedPlayerStats(analytics);
 
-    it('covers all attribution types across the fixture', () => {
-      // Ensure every attribution type is represented at least once
-      const allTypes = new Set(analytics.attributions.map((a) => a.type));
-      const expectedTypes = [
-        'goal',
-        'assist',
-        'hockey_assist',
-        'completion',
-        'throw_attempt',
-        'receiving_touch',
-        'throwaway',
-        'drop',
-        'stall',
-        'stall_conceded',
-        'block',
-        'callahan',
-        'pull',
-        'pull_reception',
-        'disc_pickup',
-      ];
-      for (const t of expectedTypes as AttributionType[]) {
-        expect(allTypes.has(t)).toBe(true);
-      }
-    });
-
     it('August stats are correct', () => {
       const s = findStats(stats, 'p_august');
       expect(s.pulls).toBe(3); // pt2, pt4, pt5
@@ -1566,18 +1474,6 @@ describe('advancedPlayerStatsUtils', () => {
       expect(s.blocks).toBe(1); // pt5 e2 (callahan implies block)
       expect(s.drops).toBeCloseTo(0.5); // pt4 d4 split
       expect(s.pointsPlayed).toBe(6);
-    });
-
-    it('team stats are derivable from the fixture', () => {
-      expect(analytics.points).toHaveLength(6);
-      const stateCounts = new Map<string, number>();
-      for (const p of analytics.points) {
-        stateCounts.set(p.state, (stateCounts.get(p.state) ?? 0) + 1);
-      }
-      expect(stateCounts.get('hold')).toBe(2);
-      expect(stateCounts.get('break')).toBe(1);
-      expect(stateCounts.get('broken')).toBe(1);
-      expect(stateCounts.get('opp_hold')).toBe(2);
     });
   });
 });

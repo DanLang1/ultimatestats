@@ -39,8 +39,9 @@ describe('getGameSessionStatus', () => {
     expect(
       getGameSessionStatus({
         ...baseState,
-        team1Score: 15,
-        team2Score: 13,
+        // Non-game-over score so this only passes through the explicit status.
+        team1Score: 7,
+        team2Score: 6,
         currentGameStatus: 'finished',
       }),
     ).toBe('finished');

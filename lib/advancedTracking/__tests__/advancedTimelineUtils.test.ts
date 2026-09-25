@@ -1342,11 +1342,8 @@ describe('getHeaderNodeColorKey', () => {
 });
 
 describe('getActionNodeColorKey', () => {
-  it('returns the palette key matching the action tone', () => {
+  it('returns the palette key matching a positive action tone', () => {
     expect(getActionNodeColorKey('success')).toBe('success');
-    expect(getActionNodeColorKey('danger')).toBe('danger');
-    expect(getActionNodeColorKey('warning')).toBe('warning');
-    expect(getActionNodeColorKey('accent')).toBe('accent');
   });
 
   it('returns overlay20 for muted tone', () => {

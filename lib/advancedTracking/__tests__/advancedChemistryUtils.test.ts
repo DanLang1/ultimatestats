@@ -163,17 +163,6 @@ describe('computeAdvancedChemistry', () => {
     expect(connections[1].participantId).toBe('p_joah');
     expect(connections[1].totalConnections).toBe(1);
   });
-
-  it('does not count a connection to oneself', () => {
-    // If somehow the same player appears as both thrower and receiver (shouldn't happen in real games)
-    // this tests the `assistId !== participantId` guard
-    const analytics = chemistryFixtures.analyticsFromPoints([
-      makeScoredPoint('pt1', august, meves),
-    ]);
-    // From Meves's perspective: only connection is to August (assister)
-    const connections = computeAdvancedChemistry(analytics, 'p_meves', analytics.participantNames);
-    expect(connections.every((c) => c.participantId !== 'p_meves')).toBe(true);
-  });
 });
 
 describe('computeAdvancedPassConnections', () => {

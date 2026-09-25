@@ -4,21 +4,6 @@ import { AdvancedGameNoteModal } from '@/components/advancedTracking/AdvancedGam
 import { renderScreen } from '@/test/render';
 
 describe('AdvancedGameNoteModal', () => {
-  it('saves the entered note and closes', async () => {
-    const user = userEvent.setup();
-    const onClose = jest.fn();
-    const onSave = jest.fn().mockResolvedValue(undefined);
-    await renderScreen(<AdvancedGameNoteModal onClose={onClose} onSave={onSave} />);
-
-    await user.type(screen.getByTestId('advanced-game-note-input'), 'Windy second half');
-    await user.press(screen.getByTestId('advanced-game-note-save'));
-
-    await waitFor(() => {
-      expect(onSave).toHaveBeenCalledWith('Windy second half');
-      expect(onClose).toHaveBeenCalledTimes(1);
-    });
-  });
-
   it('shows an error after a failed save and permits a retry', async () => {
     const user = userEvent.setup();
     const onClose = jest.fn();

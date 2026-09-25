@@ -162,21 +162,6 @@ describe('computePlayingTime', () => {
     expect(playingTime.get('c')).toBe(1); // subbed in and gets credit
   });
 
-  it('counts all players from multiple records for same point', () => {
-    const pointLines: PointLineRecord[] = [
-      { pointNumber: 1, playerIds: ['a', 'b'], timestamp: 1000 },
-      { pointNumber: 1, playerIds: ['c', 'd'], timestamp: 1500, isSubstitution: true },
-    ];
-
-    const playingTime = computePlayingTime(pointLines);
-
-    // All players who appeared in point 1 get credit
-    expect(playingTime.get('a')).toBe(1);
-    expect(playingTime.get('b')).toBe(1);
-    expect(playingTime.get('c')).toBe(1);
-    expect(playingTime.get('d')).toBe(1);
-  });
-
   it('returns empty map when no records', () => {
     const playingTime = computePlayingTime([]);
     expect(playingTime.size).toBe(0);

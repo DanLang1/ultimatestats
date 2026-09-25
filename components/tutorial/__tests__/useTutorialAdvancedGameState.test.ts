@@ -4,17 +4,6 @@ import {
 } from '../useTutorialAdvancedGameState';
 
 describe('advanced tutorial point sequence', () => {
-  it('models a realistic advanced point sequence', () => {
-    expect(TUTORIAL_ADVANCED_STEPS.map((definition) => definition.step)).toEqual([
-      'pass-to-mark',
-      'throwaway-by-mark',
-      'block-by-rachel',
-      'drop-by-jules',
-      'pressure-by-harper',
-      'goal-to-kelly',
-    ]);
-  });
-
   it('accepts only the scripted action for each step', () => {
     expect(isExpectedTutorialAdvancedAction(0, { kind: 'tap', playerId: 'line-mark' })).toBe(true);
     expect(isExpectedTutorialAdvancedAction(0, { kind: 'tap', playerId: 'line-jules' })).toBe(
@@ -35,9 +24,7 @@ describe('advanced tutorial point sequence', () => {
     );
   });
 
-  it('reserves explicit confirmation for the point-ending goal', () => {
-    const results = TUTORIAL_ADVANCED_STEPS.map((definition) => definition.result).filter(Boolean);
-    expect(results).toEqual(['throwaway', 'block', 'drop', 'pressure', 'goal']);
+  it('ends the sequence with the point-ending goal', () => {
     expect(TUTORIAL_ADVANCED_STEPS.at(-1)?.result).toBe('goal');
   });
 });

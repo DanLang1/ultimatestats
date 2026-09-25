@@ -2,7 +2,6 @@ import {
   getAdvancedGameLabel,
   getAdvancedGameTimestamp,
   getAdvancedOpponentName,
-  getAdvancedFocusTeamId,
   getAdvancedFocusTeamName,
 } from '../advancedGameTeamUtils';
 import type { AdvancedTrackedGame } from '../types';
@@ -31,21 +30,6 @@ const baseGame: AdvancedTrackedGame = {
 };
 
 describe('advancedGameTeamUtils', () => {
-  it('uses sourceTeamId as the stable aggregate grouping key', () => {
-    expect(getAdvancedFocusTeamId(baseGame)).toBe('team-wildfire');
-  });
-
-  it('falls back to focusSideId for legacy games without sourceTeamId', () => {
-    const legacyGame: AdvancedTrackedGame = {
-      ...baseGame,
-      sides: baseGame.sides.map((side) =>
-        side.id === 'focus-side' ? { ...side, sourceTeamId: undefined } : side,
-      ),
-    };
-
-    expect(getAdvancedFocusTeamId(legacyGame)).toBe('focus-side');
-  });
-
   it('uses the focus side label for display', () => {
     expect(getAdvancedFocusTeamName(baseGame)).toBe('Wildfire');
   });

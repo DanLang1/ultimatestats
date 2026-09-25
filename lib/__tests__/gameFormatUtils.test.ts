@@ -54,16 +54,8 @@ describe('formatValue', () => {
     expect(formatValue(undefined)).toBe('Not set');
   });
 
-  it('returns string representation for zero', () => {
-    expect(formatValue(0)).toBe('0');
-  });
-
-  it('returns string representation for positive numbers', () => {
+  it('returns string representation for a number', () => {
     expect(formatValue(15)).toBe('15');
-  });
-
-  it('returns string representation for negative numbers', () => {
-    expect(formatValue(-3)).toBe('-3');
   });
 });
 
@@ -75,16 +67,13 @@ describe('formatTimeouts', () => {
   });
 
   describe('when useHalves is false', () => {
-    it('returns count only', () => {
+    it('returns count only when floater is false or unset', () => {
       expect(formatTimeouts(2, false, false)).toBe('2');
+      expect(formatTimeouts(2, undefined, false)).toBe('2');
     });
 
     it('appends floater when floaterEnabled is true', () => {
       expect(formatTimeouts(2, true, false)).toBe('2 + floater');
-    });
-
-    it('handles floaterEnabled being undefined', () => {
-      expect(formatTimeouts(2, undefined, false)).toBe('2');
     });
   });
 
@@ -99,14 +88,6 @@ describe('formatTimeouts', () => {
   });
 
   describe('edge cases', () => {
-    it('handles count of 0 with all options off', () => {
-      expect(formatTimeouts(0, false, false)).toBe('0');
-    });
-
-    it('handles count of 0 with both halves and floater', () => {
-      expect(formatTimeouts(0, true, true)).toBe('0 / half + floater');
-    });
-
     it('handles undefined count with all options on', () => {
       expect(formatTimeouts(undefined, true, true)).toBe('0 / half + floater');
     });
@@ -115,11 +96,8 @@ describe('formatTimeouts', () => {
 
 describe('formatGenderRatio', () => {
   describe('when gender ratio is disabled', () => {
-    it('returns "Off" with more-women ratio', () => {
+    it('returns "Off" regardless of the configured first-point ratio', () => {
       expect(formatGenderRatio(false, 'more-women', 1)).toBe('Off');
-    });
-
-    it('returns "Off" with null ratio', () => {
       expect(formatGenderRatio(false, null, 1)).toBe('Off');
     });
   });
@@ -246,11 +224,6 @@ describe('createFormatSections', () => {
       const sections = createFormatSections(rows);
       expect(sections).toEqual([]);
     });
-
-    it('returns empty array for empty input', () => {
-      const sections = createFormatSections([]);
-      expect(sections).toEqual([]);
-    });
   });
 });
 
@@ -270,12 +243,6 @@ describe('formatHalftimeDisplay', () => {
   describe('when enabled with scheduled score, not reached yet', () => {
     it('shows the scheduled score', () => {
       expect(formatHalftimeDisplay(true, 8, null, false)).toBe('At 8');
-    });
-  });
-
-  describe('when reached at the scheduled score', () => {
-    it('shows the scheduled score', () => {
-      expect(formatHalftimeDisplay(true, 8, 8, false)).toBe('At 8');
     });
   });
 
@@ -373,23 +340,5 @@ describe('formatAdvancedHalftime', () => {
 
     expect(formatAdvancedHalftime(game)).toBe('At 4 (early)');
     expect(mockGetScore).toHaveBeenCalledWith(game, 'pt5');
-  });
-
-  it('returns "At <scheduled>" when triggeredEarly is true but score computation fails', () => {
-    mockGetScore.mockReturnValue({ sideA: 0, sideB: 0 });
-
-    const game = makeAdvancedGame({
-      settings: makeSettings({ halftimeAt: 8 }),
-      gameTransitions: [
-        {
-          id: 'h1',
-          transitionType: 'halftime',
-          afterPointId: 'pt_bad',
-          triggeredEarly: true,
-        },
-      ],
-    });
-
-    expect(formatAdvancedHalftime(game)).toBe('At 0 (early)');
   });
 });

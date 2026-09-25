@@ -92,45 +92,37 @@ describe('mergeRosterMetadataIntoParticipants', () => {
     });
   });
 
-  it('falls back to participant.id when sourcePlayerId is null', () => {
-    const merged = mergeRosterMetadataIntoParticipants(
+  it('falls back to participant.id when sourcePlayerId is null or undefined', () => {
+    const nullSource = mergeRosterMetadataIntoParticipants(
       [{ id: 'p1', name: 'Alice', sourcePlayerId: null }],
       [{ id: 'p1', name: 'Alice Updated', isActive: true, matchingType: 'fmp', role: 'cutter' }],
     );
-
-    expect(merged[0]).toMatchObject({ name: 'Alice Updated' });
-  });
-
-  it('falls back to participant.id when sourcePlayerId is undefined', () => {
-    const merged = mergeRosterMetadataIntoParticipants(
+    const undefinedSource = mergeRosterMetadataIntoParticipants(
       [{ id: 'p2', name: 'Bob' }],
       [{ id: 'p2', name: 'Bob Updated', isActive: true, matchingType: 'mmp', role: null }],
     );
 
-    expect(merged[0]).toMatchObject({ name: 'Bob Updated' });
+    expect(nullSource[0]).toMatchObject({ name: 'Alice Updated' });
+    expect(undefinedSource[0]).toMatchObject({ name: 'Bob Updated' });
   });
 
-  it('preserves participant data when sourcePlayerId matches nothing in roster', () => {
-    const merged = mergeRosterMetadataIntoParticipants(
+  it('preserves participant data when no roster player matches', () => {
+    const sourceMiss = mergeRosterMetadataIntoParticipants(
       [{ id: 'nomatch', name: 'Ghost', number: '99', matchingType: 'fmp', role: 'cutter' }],
       [],
     );
+    const idMiss = mergeRosterMetadataIntoParticipants(
+      [{ id: 'orphan', name: 'Orphan', matchingType: null, role: null }],
+      [{ id: 'other', name: 'Other', isActive: true, matchingType: 'mmp', role: 'handler' }],
+    );
 
-    expect(merged[0]).toMatchObject({
+    expect(sourceMiss[0]).toMatchObject({
       name: 'Ghost',
       number: '99',
       matchingType: 'fmp',
       role: 'cutter',
     });
-  });
-
-  it('preserves participant data when participant.id does not match any roster player', () => {
-    const merged = mergeRosterMetadataIntoParticipants(
-      [{ id: 'orphan', name: 'Orphan', matchingType: null, role: null }],
-      [{ id: 'other', name: 'Other', isActive: true, matchingType: 'mmp', role: 'handler' }],
-    );
-
-    expect(merged[0]).toMatchObject({
+    expect(idMiss[0]).toMatchObject({
       name: 'Orphan',
       matchingType: null,
       role: null,

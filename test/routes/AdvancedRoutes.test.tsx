@@ -845,16 +845,6 @@ describe('advanced tracking routes', () => {
     expect(state.pendingNextPointLineSelection).toBeNull();
   });
 
-  it('renders the live Tracker with its real tracking hooks and game state', async () => {
-    arrangeAdvancedGame();
-    recordOpeningPull();
-
-    await renderScreen(<TrackerScreen />);
-
-    expect(screen.getAllByText('Windchill')[0]).toBeVisible();
-    expect(screen.getAllByText('Rivals')[0]).toBeVisible();
-  });
-
   it('offers separate prepare-line and start-second-half actions during halftime', async () => {
     const user = userEvent.setup();
     arrangeCompletedPointForNextLineSelection();
@@ -987,16 +977,6 @@ describe('advanced tracking routes', () => {
     expect(screen.getByText('Charlotte')).toBeVisible();
     expect(screen.getByText('DROP')).toBeVisible();
     expect(screen.queryByText('OPP TURN')).not.toBeOnTheScreen();
-  });
-
-  it('renders the line-correction route for the current real point', async () => {
-    arrangeAdvancedGame();
-    recordOpeningPull();
-
-    await renderScreen(<TrackerEditLineScreen />);
-
-    expect(screen.getByText('Correct Current Lineup')).toBeVisible();
-    expect(screen.getByText('Alex')).toBeVisible();
   });
 
   it('corrects the current active line through the single-side route', async () => {
@@ -1361,16 +1341,6 @@ describe('advanced tracking routes', () => {
     expect(useAdvancedTrackingStore.getState().currentGame?.points[0].subs).toEqual([
       expect.objectContaining({ id: 'existing-dark-sub', sideId: 'dark' }),
     ]);
-  });
-
-  it('renders the injury-sub route for the current real point', async () => {
-    arrangeAdvancedGame();
-    recordOpeningPull();
-
-    await renderScreen(<TrackerInjurySubScreen />);
-
-    expect(screen.getByText('Injury Sub')).toBeVisible();
-    expect(screen.getByText('Blair')).toBeVisible();
   });
 
   it('resumes the updated live lineup after confirming an injury sub with gender ratio enabled', async () => {

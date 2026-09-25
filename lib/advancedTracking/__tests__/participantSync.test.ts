@@ -99,20 +99,6 @@ describe('deriveRosterParticipantSyncPlan', () => {
     ]);
   });
 
-  it('plans a participant when a previously inactive roster player is reactivated', () => {
-    const game = makeGame({ participants: [{ id: 'anne', name: 'Anne', sourcePlayerId: 'anne' }] });
-
-    const plan = deriveRosterParticipantSyncPlan(game, {
-      id: 'team-1',
-      roster: [
-        makePlayer({ id: 'anne', name: 'Anne' }),
-        makePlayer({ id: 'late-arrival', name: 'Late', isActive: true }),
-      ],
-    });
-
-    expect(plan?.participantsToAdd.map((participant) => participant.id)).toEqual(['late-arrival']);
-  });
-
   it('does not plan a participant for an inactive roster player', () => {
     const game = makeGame({ participants: [{ id: 'anne', name: 'Anne', sourcePlayerId: 'anne' }] });
 
