@@ -6,42 +6,9 @@
 
 A mobile app for tracking Ultimate Frisbee game scores and player statistics, built with React Native + Expo.
 
-Platform support details are documented in [platform-support.md](platform-support.md).
-
-## Directory Structure
-
-```
-├── app/               # Expo Router screens
-│   ├── (main)/(hub)/  # Main tabs for dashboard, game, team, and analytics
-│   ├── (main)/advancedTracking/ # Advanced tracker routes
-│   ├── (modals)/      # Modal routes
-│   └── _layout.tsx    # Navigation configuration
-├── components/        # Reusable components
-│   ├── advancedTracking/ # Advanced-mode tracker and analytics UI
-│   ├── basic/         # Basic-mode scoreboard, timeline, and entry UI
-│   ├── ui/            # Generic UI (buttons, chips, etc.)
-│   ├── view-stats/    # Stats display components
-│   ├── tutorial/      # Routed onboarding and tutorial components
-│   └── *.tsx          # Shared visual primitives
-├── store/             # Zustand stores with Immer
-│   ├── basic/         # Basic-mode game state
-│   ├── advancedTracking/ # Advanced-mode tracking and saved game state
-│   └── *.ts           # Shared app stores
-├── lib/               # Utilities and helpers
-│   ├── basic/         # Basic-mode game logic, stats, timeline, and tests
-│   ├── advancedTracking/ # Advanced-mode domain logic, analytics, and tests
-│   ├── constants.ts   # App-wide constants (name limits, etc.)
-│   ├── storage/       # Saved-game schema types and migrations
-│   └── *.ts           # Shared helpers and infrastructure
-├── theme/             # Theming system
-│   └── theme.ts       # Color palettes, dark/light mode
-├── hooks/             # Custom React hooks
-│   ├── basic/         # Basic-mode gameplay hooks
-│   └── advancedTracking/ # Advanced-mode tracker hooks
-├── context/           # React contexts (Theme)
-├── test/              # Route tests, test harnesses, fixtures, and native-boundary mocks
-└── docs/              # Documentation (you are here)
-```
+The source tree follows a basic/advanced split mirroring the two tracking domains: `app/` holds Expo
+Router screens, and `components/`, `hooks/`, `lib/`, and `store/` each contain a `basic/` and
+`advancedTracking/` namespace alongside shared files.
 
 ## Key Concepts
 
@@ -88,33 +55,36 @@ respective event models.
   ownership cleanup is documented in
   [shared-team-roster-store.md](future-features/shared-team-roster-store.md).
 
-## Quick Links
+## Where to Look First
 
-| Topic        | Documentation                                                                                                                                                             |
-| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Agent Guide  | [AGENTS.md](../AGENTS.md)                                                                                                                                                 |
-| Responsive   | [responsive-layout.md](responsive-layout.md)                                                                                                                              |
-| Builds       | [Development](build/development-build.md) / [Preview](build/preview-build.md) / [Production](build/production-build.md) / [OTA](build/eas-update.md)                      |
-| Modals       | [ui-patterns.md](ui-patterns.md) / [navigation-map.md](navigation-map.md)                                                                                                 |
-| Platforms    | [platform-support.md](platform-support.md)                                                                                                                                |
-| Themes       | [theming.md](theming.md)                                                                                                                                                  |
-| UI Patterns  | [ui-patterns.md](ui-patterns.md)                                                                                                                                          |
-| Stats        | [stat-tracking.md](stat-tracking.md)                                                                                                                                      |
-| Turnovers    | [turnover-tracking.md](turnover-tracking.md)                                                                                                                              |
-| View Stats   | [view-stats.md](view-stats.md)                                                                                                                                            |
-| Game Logic   | [game-logic.md](game-logic.md)                                                                                                                                            |
-| Testing      | [testing.md](testing.md)                                                                                                                                                  |
-| Testing Map  | [testing-map.md](testing-map.md)                                                                                                                                          |
-| State        | [state-ownership.md](state-ownership.md)                                                                                                                                  |
-| Navigation   | [navigation-map.md](navigation-map.md)                                                                                                                                    |
-| Events       | [event-model.md](event-model.md)                                                                                                                                          |
-| Domain terms | [CONTEXT.md](../CONTEXT.md)                                                                                                                                               |
-| Advanced     | [Feature map](features/advanced-tracking/README.md) / [Data model](features/advanced-tracking/data-model.md) / [Analytics](features/advanced-tracking/analytics-layer.md) |
-| Sharing      | [features/sharing.md](features/sharing.md)                                                                                                                                |
-| Voice Input  | [features/advanced-tracking/voice-input.md](features/advanced-tracking/voice-input.md)                                                                                    |
-| Voice Names  | [Voice name personalization exploration](future-features/voice-name-personalization.md)                                                                                   |
-| Throw Class  | [Advanced throw classification roadmap](future-features/advanced-throw-classification.md)                                                                                 |
-| Tech Debt    | [tech-debt.md](tech-debt.md)                                                                                                                                              |
+These docs answer "which and why" questions that reading the source cannot. Route inventories,
+file lists, and directory trees are intentionally omitted — resolve those with the filesystem.
+
+| Topic                      | Documentation                                                                                                   |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| Agent guide                | [AGENTS.md](../AGENTS.md)                                                                                       |
+| Domain terms               | [CONTEXT.md](../CONTEXT.md)                                                                                     |
+| State ownership            | [state-ownership.md](state-ownership.md) — which store owns what, and the rules for adding state                |
+| Which test owns a change   | [testing-map.md](testing-map.md)                                                                                |
+| Testing patterns           | [testing.md](testing.md)                                                                                        |
+| Navigation contracts       | [navigation-map.md](navigation-map.md) — core flows, route gating, and the modal exit contract                  |
+| UI conventions             | [ui-patterns.md](ui-patterns.md)                                                                                |
+| Responsive/orientation     | [responsive-layout.md](responsive-layout.md)                                                                    |
+| Theming                    | [theming.md](theming.md)                                                                                        |
+| Basic game logic           | [game-logic.md](game-logic.md)                                                                                  |
+| Basic event model          | [event-model.md](event-model.md)                                                                                |
+| Basic stats/turnovers      | [stat-tracking.md](stat-tracking.md) / [turnover-tracking.md](turnover-tracking.md)                             |
+| Basic analytics            | [view-stats.md](view-stats.md)                                                                                  |
+| Line selection             | [line-selection.md](line-selection.md)                                                                          |
+| Advanced architecture      | [features/advanced-tracking/README.md](features/advanced-tracking/README.md)                                    |
+| Advanced data model        | [features/advanced-tracking/data-model.md](features/advanced-tracking/data-model.md)                            |
+| Advanced analytics layer   | [features/advanced-tracking/analytics-layer.md](features/advanced-tracking/analytics-layer.md)                  |
+| Advanced stat utilities    | [features/advanced-tracking/stat-utils.md](features/advanced-tracking/stat-utils.md)                            |
+| Advanced voice input       | [features/advanced-tracking/voice-input.md](features/advanced-tracking/voice-input.md)                          |
+| Sharing                    | [features/sharing.md](features/sharing.md)                                                                      |
+| Android native crashes     | [android-crashes.md](android-crashes.md) — reproduced Fabric crash workarounds and when not to generalize them  |
+| Builds                     | [Development](build/development-build.md) / [Preview](build/preview-build.md) / [Production](build/production-build.md) / [OTA](build/eas-update.md) |
+| Tech debt / future work    | [tech-debt.md](tech-debt.md) and [future-features/](future-features/)                                           |
 
 ## New Screen Checklist
 

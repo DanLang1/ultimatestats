@@ -1,12 +1,14 @@
 # Navigation Map
 
-Reference map for screen and modal routing in Expo Router.
+Flow and contract reference for screen and modal routing in Expo Router. The actual route list
+lives in `app/`; this doc records the flows, gating rules, and exit contracts that the filesystem
+does not express.
 
 Before adding or restructuring a route, confirm layout behavior with [responsive-layout.md](responsive-layout.md) so the new screen works in both portrait and landscape.
 
-## Route Inventory
+## Route Sources
 
-Defined across:
+Layout behavior is defined across:
 
 - `app/_layout.tsx` (providers + group stack)
 - `app/(main)/_layout.tsx` (main stack)
@@ -14,62 +16,12 @@ Defined across:
 - `app/(main)/(hub)/(home|game|analytics|team)/_layout.tsx` (per-tab nested stacks)
 - `app/(modals)/_layout.tsx` (transparent modal defaults)
 
-### Primary Screens
-
-- `/` (`app/index.tsx`)
-- `/TutorialIntro` (`app/(main)/TutorialIntro.tsx`)
-- `/TutorialAdvancedLineSelect` (`app/(main)/TutorialAdvancedLineSelect.tsx`)
-- `/TutorialScoreboard` (`app/(main)/TutorialScoreboard.tsx`)
-- `/TutorialComplete` (`app/(main)/TutorialComplete.tsx`)
-- `/TutorialStatScoreboard` (`app/(main)/TutorialStatScoreboard.tsx`)
-- `/TutorialStatIntro` (`app/(main)/TutorialStatIntro.tsx`)
-- `/TutorialStatComplete` (`app/(main)/TutorialStatComplete.tsx`)
-- `/TutorialAdvancedTracker` (`app/(main)/TutorialAdvancedTracker.tsx`)
-- `/Scoreboard` (`app/(main)/(hub)/(game)/Scoreboard.tsx`)
-- `/Dashboard` (`app/(main)/(hub)/(home)/Dashboard.tsx`)
-- `/GameInfo` (`app/(main)/(hub)/(game)/GameInfo.tsx`)
-- `/GameFormat` (`app/(main)/GameFormat.tsx`)
-- `/Settings` (`app/(main)/Settings.tsx`)
-- `/EditRoster` (`app/(main)/(hub)/(team)/EditRoster.tsx`)
-- `/ImportTeam` (`app/(main)/ImportTeam.tsx`)
-- `/ViewStats` (`app/(main)/(hub)/(analytics)/ViewStats.tsx`)
-- `/PlayerStats` (`app/(main)/(hub)/(analytics)/PlayerStats.tsx`)
-- `/AggregateStats` (`app/(main)/(hub)/(analytics)/AggregateStats.tsx`)
-- `/CreateTournament` (`app/(main)/(hub)/(analytics)/CreateTournament.tsx`)
-- `/GameTimeline` (`app/(main)/(hub)/(analytics)/GameTimeline.tsx`)
-- `/LinePresetEditor` (`app/(main)/LinePresetEditor.tsx`)
-- `/SavedGameStats` (`app/(main)/(hub)/(analytics)/SavedGameStats.tsx`)
-- `/saved-games/[gameId]` (`app/(main)/(hub)/(analytics)/saved-games/[gameId].tsx`)
-- `/advancedTracking/analytics/[gameId]` (`app/(main)/(hub)/(analytics)/advancedTracking/analytics/[gameId].tsx`)
-- `/advancedTracking/analytics/playerStats` (`app/(main)/(hub)/(analytics)/advancedTracking/analytics/playerStats.tsx`)
-- `/advancedTracking/analytics/timeline/[gameId]` (`app/(main)/(hub)/(analytics)/advancedTracking/analytics/timeline/[gameId].tsx`)
-- `/LineEditor` (`app/(main)/LineEditor.tsx`)
-- `/PreGameConfirm` (`app/(main)/PreGameConfirm.tsx`)
-- `/GameComplete` (`app/(main)/GameComplete.tsx`)
-- `/Import` (`app/(main)/Import.tsx`)
-- `/s/[kind]/[shareId]` (`app/s/[kind]/[shareId].tsx`) - deep-link redirect route for shared game/team/games links
-- `/Help` (`app/(main)/(hub)/(home)/Help.tsx`)
-- `/About` (`app/(main)/(hub)/(home)/About.tsx`)
-- `/Partners` (`app/(main)/(hub)/(home)/Partners.tsx`)
-- `/Showcase` (`app/(main)/(hub)/(home)/Showcase.tsx`)
-- `/advancedTracking/PreGameConfirm` (`app/(main)/advancedTracking/PreGameConfirm.tsx`)
-- `/advancedTracking/TrackerLineSelect` (`app/(main)/advancedTracking/TrackerLineSelect.tsx`)
-- `/advancedTracking/PullTracking` (`app/(main)/advancedTracking/PullTracking.tsx`)
-- `/advancedTracking/Tracker` (`app/(main)/advancedTracking/Tracker.tsx`)
-- `/advancedTracking/TrackerEditLine` (`app/(main)/advancedTracking/TrackerEditLine.tsx`)
-- `/advancedTracking/TimelineEditLine` (`app/(main)/advancedTracking/TimelineEditLine.tsx`)
-- `/advancedTracking/TrackerInjurySub` (`app/(main)/advancedTracking/TrackerInjurySub.tsx`)
-- `/advancedTracking/TrackerGameComplete` (`app/(main)/advancedTracking/TrackerGameComplete.tsx`)
-
 ### Hub Tab Navigation
 
-- Hub tabs are defined in `app/(main)/(hub)/_layout.tsx` and stay visible for all screens in hub tab stacks.
+- Hub tabs stay visible for all screens in hub tab stacks.
 - Navigator background rule: every route shell in this tree must set an explicit themed scene background (`contentStyle` for stacks, `sceneStyle` for tabs). Missing navigator-level backgrounds can surface as white flashes during back/tab transitions even when each screen component has its own background color.
-- Tab sections:
-  - Home: `/Dashboard`, `/Help`, `/About`, `/Partners`, `/Showcase`
-  - Game: `/Scoreboard`, `/GameInfo`
-  - Stats: `/ViewStats`, `/PlayerStats`, `/SavedGameStats`, `/AggregateStats`, `/CreateTournament`, `/GameTimeline`, `/saved-games/[gameId]`, and `/advancedTracking/analytics/*`
-  - Team: `/EditRoster`
+- Tab sections are Home, Game, Stats, and Team; each tab's screens are the route files in its
+  `(home)`, `(game)`, `(analytics)`, and `(team)` stack directories.
 - Scoreboard is a real hub tab, but the tab bar is hidden while `/Scoreboard` is visible. Pressing the Game tab routes to `/Scoreboard` for fresh/in-progress sessions or starts a fresh game flow for completed sessions when the current session is finished.
 - Entry-route behavior: `/` is the root declarative entry route. It waits for `useTutorialStore` hydration, sends first-launch users to `/TutorialIntro`, redirects to the active game session route when one exists, and otherwise lands on `/Dashboard`.
 
@@ -96,23 +48,13 @@ set `hasSeenAdvancedTutorial` but never changes `hasSeenOnboarding`.
 
 ### Transparent Modals
 
-- `/GameSelectorModal` (`app/(modals)/GameSelectorModal.tsx`)
-- `/AdvancedGameSelectorModal` (`app/(modals)/AdvancedGameSelectorModal.tsx`)
-- `/TeamManagementModal` (`app/(modals)/TeamManagementModal.tsx`)
-- `/HalftimeModal` (`app/(modals)/HalftimeModal.tsx`)
-- `/EditEventModal` (`app/(modals)/EditEventModal.tsx`)
-- `/EditDurationModal` (`app/(modals)/EditDurationModal.tsx`)
-- `/EditPointLineModal` (`app/(modals)/EditPointLineModal.tsx`)
-- `/PointSummaryModal` (`app/(modals)/PointSummaryModal.tsx`)
-- `/NumberPickerModal` (`app/(modals)/NumberPickerModal.tsx`)
-- `/EditPlayerModal` (`app/(modals)/EditPlayerModal.tsx`)
-- `/TimeoutModal` (`app/(modals)/TimeoutModal.tsx`)
+Modal route files live in `app/(modals)/`. Their exit contract is defined in
+[Modal Exit Contract](#modal-exit-contract) below.
 
 ### Non-Screen Routes
 
-- `+not-found` (`app/+not-found.tsx`) — fallback for unmatched paths.
-- `__maestro_seed__` (`app/__maestro_seed__.tsx`) — automated-test-only seed endpoint; not part of the
-  user-facing flow.
+- `+not-found` — fallback for unmatched paths.
+- `__maestro_seed__` — automated-test-only seed endpoint; not part of the user-facing flow.
 
 ## Core Flows
 

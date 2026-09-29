@@ -15,7 +15,6 @@ Build polished mobile UI that feels native to the existing U-Stat product.
    - `docs/navigation-map.md`
    - `docs/responsive-layout.md`
    - `docs/theming.md`
-   - `docs/platform-support.md`
 3. Inspect the target file and nearby components before designing the change.
 4. For newer implementation examples, consult
    [references/current-patterns.md](references/current-patterns.md) and the relevant
