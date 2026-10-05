@@ -112,6 +112,8 @@ without a concrete requirement and migration plan.
 
 ## Roadmap and Follow-up Design
 
+- [Advanced location tracking](../../future-features/advanced-location-tracking.md) — exploratory
+  field-first capture with approximate coordinates and a temporary bottom player pad.
 - [Advanced throw classification](../../future-features/advanced-throw-classification.md) —
   optional manual huck/reset tags, derived analytics, and the boundary with location tracking.
 - [Advanced red-zone possession tracking](../../future-features/advanced-red-zone-tracking.md) —
