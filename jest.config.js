@@ -5,6 +5,20 @@ module.exports = {
   testPathIgnorePatterns: ['<rootDir>/scripts/oxlint-plugin/'],
   setupFilesAfterEnv: ['<rootDir>/test/setup.ts'],
   clearMocks: true,
+  coverageProvider: 'v8',
+  collectCoverageFrom: [
+    'app/**/*.{ts,tsx}',
+    'components/**/*.{ts,tsx}',
+    'context/**/*.{ts,tsx}',
+    'hooks/**/*.{ts,tsx}',
+    'lib/**/*.{ts,tsx}',
+    'plugins/**/*.{ts,tsx}',
+    'store/**/*.{ts,tsx}',
+    'theme/**/*.{ts,tsx}',
+    '!**/*.d.ts',
+    '!**/__tests__/**',
+    '!**/__mocks__/**',
+  ],
   transformIgnorePatterns: [
     '/node_modules/(?!(.pnpm|react-native|@react-native|@react-native-community|expo|@expo|@expo-google-fonts|react-navigation|@react-navigation|@sentry|native-base|standard-navigation|immer))',
     // Avoid Reanimated's "Reentrant plugin detected" failure in multi-platform tests.

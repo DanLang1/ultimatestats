@@ -145,16 +145,16 @@ outOfBounds?: true;
 Remove unused pull/throw `origin` fields. Keep one canonical observation per captured event.
 For throws, `location` is the observed endpoint, never an intended receiver location:
 
-| Action/result                       | Stored spatial value                                            |
-| ----------------------------------- | --------------------------------------------------------------- |
-| Completion or goal                  | `location`: catch location                                        |
-| Drop, throwaway, block, or pressure | `location`: observed failure location                             |
-| Callahan                            | `location`: interception/scoring location                         |
-| Stall                               | No `location`; there is no throw endpoint                         |
-| Pickup                              | `location`: independently observed possession-start spot        |
-| In-bounds / roller pull             | `location`: catch/pickup establishing possession                 |
-| Dropped pull                        | `location`: observed drop spot                                  |
-| OB pull                             | `location`: approximate boundary spot                           |
+| Action/result                       | Stored spatial value                                     |
+| ----------------------------------- | -------------------------------------------------------- |
+| Completion or goal                  | `location`: catch location                               |
+| Drop, throwaway, block, or pressure | `location`: observed failure location                    |
+| Callahan                            | `location`: interception/scoring location                |
+| Stall                               | No `location`; there is no throw endpoint                |
+| Pickup                              | `location`: independently observed possession-start spot |
+| In-bounds / roller pull             | `location`: catch/pickup establishing possession         |
+| Dropped pull                        | `location`: observed drop spot                           |
+| OB pull                             | `location`: approximate boundary spot                    |
 
 An OB throw has `outOfBounds: true`; ordinary throws omit the property instead of storing `false`.
 An OB pull uses its existing `result: 'ob'` without a second OB flag. Missing coordinates are
