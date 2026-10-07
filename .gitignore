@@ -54,3 +54,6 @@ app-example
 # Maestro generated screenshots
 .maestro/screenshots/
 .maestro/test-output/
+
+# Pre-release check logs
+/.pre-release-logs/

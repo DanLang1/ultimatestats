@@ -60,31 +60,31 @@ respective event models.
 These docs answer "which and why" questions that reading the source cannot. Route inventories,
 file lists, and directory trees are intentionally omitted — resolve those with the filesystem.
 
-| Topic                      | Documentation                                                                                                   |
-| -------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| Agent guide                | [AGENTS.md](../AGENTS.md)                                                                                       |
-| Domain terms               | [CONTEXT.md](../CONTEXT.md)                                                                                     |
-| State ownership            | [state-ownership.md](state-ownership.md) — which store owns what, and the rules for adding state                |
-| Which test owns a change   | [testing-map.md](testing-map.md)                                                                                |
-| Testing patterns           | [testing.md](testing.md)                                                                                        |
-| Navigation contracts       | [navigation-map.md](navigation-map.md) — core flows, route gating, and the modal exit contract                  |
-| UI conventions             | [ui-patterns.md](ui-patterns.md)                                                                                |
-| Responsive/orientation     | [responsive-layout.md](responsive-layout.md)                                                                    |
-| Theming                    | [theming.md](theming.md)                                                                                        |
-| Basic game logic           | [game-logic.md](game-logic.md)                                                                                  |
-| Basic event model          | [event-model.md](event-model.md)                                                                                |
-| Basic stats/turnovers      | [stat-tracking.md](stat-tracking.md) / [turnover-tracking.md](turnover-tracking.md)                             |
-| Basic analytics            | [view-stats.md](view-stats.md)                                                                                  |
-| Line selection             | [line-selection.md](line-selection.md)                                                                          |
-| Advanced architecture      | [features/advanced-tracking/README.md](features/advanced-tracking/README.md)                                    |
-| Advanced data model        | [features/advanced-tracking/data-model.md](features/advanced-tracking/data-model.md)                            |
-| Advanced analytics layer   | [features/advanced-tracking/analytics-layer.md](features/advanced-tracking/analytics-layer.md)                  |
-| Advanced stat utilities    | [features/advanced-tracking/stat-utils.md](features/advanced-tracking/stat-utils.md)                            |
-| Advanced voice input       | [features/advanced-tracking/voice-input.md](features/advanced-tracking/voice-input.md)                          |
-| Sharing                    | [features/sharing.md](features/sharing.md)                                                                      |
-| Android native crashes     | [android-crashes.md](android-crashes.md) — reproduced Fabric crash workarounds and when not to generalize them  |
-| Builds                     | [Development](build/development-build.md) / [Preview](build/preview-build.md) / [Production](build/production-build.md) / [OTA](build/eas-update.md) |
-| Tech debt / future work    | [tech-debt.md](tech-debt.md) and [future-features/](future-features/)                                           |
+| Topic                    | Documentation                                                                                                                                        |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Agent guide              | [AGENTS.md](../AGENTS.md)                                                                                                                            |
+| Domain terms             | [CONTEXT.md](../CONTEXT.md)                                                                                                                          |
+| State ownership          | [state-ownership.md](state-ownership.md) — which store owns what, and the rules for adding state                                                     |
+| Which test owns a change | [testing-map.md](testing-map.md)                                                                                                                     |
+| Testing patterns         | [testing.md](testing.md)                                                                                                                             |
+| Navigation contracts     | [navigation-map.md](navigation-map.md) — core flows, route gating, and the modal exit contract                                                       |
+| UI conventions           | [ui-patterns.md](ui-patterns.md)                                                                                                                     |
+| Responsive/orientation   | [responsive-layout.md](responsive-layout.md)                                                                                                         |
+| Theming                  | [theming.md](theming.md)                                                                                                                             |
+| Basic game logic         | [game-logic.md](game-logic.md)                                                                                                                       |
+| Basic event model        | [event-model.md](event-model.md)                                                                                                                     |
+| Basic stats/turnovers    | [stat-tracking.md](stat-tracking.md) / [turnover-tracking.md](turnover-tracking.md)                                                                  |
+| Basic analytics          | [view-stats.md](view-stats.md)                                                                                                                       |
+| Line selection           | [line-selection.md](line-selection.md)                                                                                                               |
+| Advanced architecture    | [features/advanced-tracking/README.md](features/advanced-tracking/README.md)                                                                         |
+| Advanced data model      | [features/advanced-tracking/data-model.md](features/advanced-tracking/data-model.md)                                                                 |
+| Advanced analytics layer | [features/advanced-tracking/analytics-layer.md](features/advanced-tracking/analytics-layer.md)                                                       |
+| Advanced stat utilities  | [features/advanced-tracking/stat-utils.md](features/advanced-tracking/stat-utils.md)                                                                 |
+| Advanced voice input     | [features/advanced-tracking/voice-input.md](features/advanced-tracking/voice-input.md)                                                               |
+| Sharing                  | [features/sharing.md](features/sharing.md)                                                                                                           |
+| Android native crashes   | [android-crashes.md](android-crashes.md) — reproduced Fabric crash workarounds and when not to generalize them                                       |
+| Builds                   | [Development](build/development-build.md) / [Preview](build/preview-build.md) / [Production](build/production-build.md) / [OTA](build/eas-update.md) |
+| Tech debt / future work  | [tech-debt.md](tech-debt.md) and [future-features/](future-features/)                                                                                |
 
 ## New Screen Checklist
 

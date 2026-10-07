@@ -20,6 +20,8 @@
     "test:coverage": "jest --coverage",
     "test:routes": "jest test/routes",
     "test:oxlint": "node --test scripts/oxlint-plugin/__tests__/*.test.ts",
+    "pre-release": "bash scripts/pre-release.sh",
+    "pre-release:fast": "bash scripts/pre-release.sh --skip-maestro",
     "maestro": "MAESTRO_CLI_NO_ANALYTICS=1 maestro test --exclude-tags extended .maestro/tests/",
     "maestro:scrimmage": "MAESTRO_CLI_NO_ANALYTICS=1 maestro test --include-tags scrimmage .maestro/tests/",
     "maestro:smoke": "MAESTRO_CLI_NO_ANALYTICS=1 maestro test --include-tags smoke .maestro/tests/",

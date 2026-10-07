@@ -958,7 +958,13 @@ export const useGameStore = create<GameState>()(
               return;
             }
 
-            state.pointLines = replacePointLineRecords(state.pointLines, pointNumber, playerIds);
+            const timestamp = Date.now();
+            state.pointLines = replacePointLineRecords(
+              state.pointLines,
+              pointNumber,
+              playerIds,
+              timestamp,
+            );
             const savedGame = state.currentGameId
               ? state.savedGames.find((game) => game.id === state.currentGameId)
               : undefined;
@@ -975,6 +981,7 @@ export const useGameStore = create<GameState>()(
                 savedGame.pointLines,
                 pointNumber,
                 playerIds,
+                timestamp,
               );
             }
             didReplace = true;
@@ -1013,9 +1020,20 @@ export const useGameStore = create<GameState>()(
               }
             }
 
-            game.pointLines = replacePointLineRecords(pointLines, pointNumber, playerIds);
+            const timestamp = Date.now();
+            game.pointLines = replacePointLineRecords(
+              pointLines,
+              pointNumber,
+              playerIds,
+              timestamp,
+            );
             if (isCurrentGame) {
-              state.pointLines = replacePointLineRecords(state.pointLines, pointNumber, playerIds);
+              state.pointLines = replacePointLineRecords(
+                state.pointLines,
+                pointNumber,
+                playerIds,
+                timestamp,
+              );
             }
             didReplace = true;
           });
