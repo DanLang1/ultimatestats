@@ -1177,9 +1177,7 @@ export const useGameStore = create<GameState>()(
 
           await set((state: GameState) => {
             const idx = state.savedGames.findIndex((g) => g.id === gameId);
-            if (idx !== -1) {
-              state.savedGames[idx] = updatedGame;
-            }
+            state.savedGames[idx] = updatedGame;
           });
         },
 
@@ -1200,9 +1198,7 @@ export const useGameStore = create<GameState>()(
 
           await set((state: GameState) => {
             const idx = state.savedGames.findIndex((g) => g.id === gameId);
-            if (idx !== -1) {
-              state.savedGames[idx] = updatedGame;
-            }
+            state.savedGames[idx] = updatedGame;
           });
           return true;
         },
@@ -1215,9 +1211,7 @@ export const useGameStore = create<GameState>()(
 
           await set((state: GameState) => {
             const idx = state.savedGames.findIndex((g) => g.id === gameId);
-            if (idx !== -1) {
-              state.savedGames[idx] = updatedGame;
-            }
+            state.savedGames[idx] = updatedGame;
           });
         },
 
@@ -1229,9 +1223,7 @@ export const useGameStore = create<GameState>()(
 
           await set((state: GameState) => {
             const idx = state.savedGames.findIndex((g) => g.id === gameId);
-            if (idx !== -1) {
-              state.savedGames[idx] = updatedGame;
-            }
+            state.savedGames[idx] = updatedGame;
           });
         },
 

@@ -8,10 +8,11 @@ import LineEditorScreen from '@/app/(main)/LineEditor';
 import LinePresetEditor from '@/app/(main)/LinePresetEditor';
 import PreGameConfirm from '@/app/(main)/PreGameConfirm';
 import SettingsScreen from '@/app/(main)/Settings';
+import NumberPickerModal from '@/app/(modals)/NumberPickerModal';
 import { useGameStore } from '@/store/basic/gameStore';
 import { useGameSessionStore } from '@/store/gameSessionStore';
-import { useLinePresetsStore } from '@/store/linePresetsStore';
 import { useSettingsStore } from '@/store/settingsStore';
+import { useTutorialStore } from '@/store/tutorialStore';
 import { arrangeBasicGame, testTeam } from '@/test/fixtures/domain';
 import { resetAllStores } from '@/test/fixtures/resetStores';
 import { resetMockRouter } from '@/test/mocks/expoRouter';
@@ -126,35 +127,6 @@ describe('basic game routes', () => {
     expect(router.dismissTo).toHaveBeenCalledWith('/Scoreboard');
   });
 
-  it('focuses preset members in the basic line editor and collapses the rest', async () => {
-    const user = userEvent.setup();
-    arrangeBasicGame();
-    useLinePresetsStore.setState({
-      presets: [
-        {
-          id: 'preset-alex',
-          name: 'Alex Only',
-          teamId: testTeam.id,
-          playerIds: ['player-alex'],
-        },
-      ],
-    });
-
-    await renderScreen(<LineEditorScreen />);
-
-    expect(screen.getByText('Alex')).toBeVisible();
-    expect(screen.getByText('Blair')).toBeVisible();
-
-    await user.press(screen.getByTestId('line-select-load-line'));
-    await user.press(screen.getByText('Alex Only'));
-
-    expect(screen.getByText('Alex')).toBeVisible();
-    expect(screen.queryByText('Blair')).not.toBeOnTheScreen();
-
-    await user.press(screen.getByTestId('line-select-show-all-players'));
-    expect(screen.getByText('Blair')).toBeVisible();
-  });
-
   it('renders the empty line-preset route from the real preset store', async () => {
     useGameStore.setState({ currentTeam: testTeam });
 
@@ -162,5 +134,98 @@ describe('basic game routes', () => {
 
     expect(screen.getByText('Line Presets')).toBeVisible();
     expect(screen.getByText('No presets yet')).toBeVisible();
+  });
+});
+
+describe('pre-game settings', () => {
+  beforeEach(async () => {
+    resetAllStores();
+    resetMockRouter();
+    await AsyncStorage.clear();
+    arrangeBasicGame({ status: 'fresh', statTrackingEnabled: true });
+  });
+
+  it.each([
+    ['Game To', '11', { gameTo: 11 }, {}],
+    ['Hard Cap', '90', { timerTimeLeft: 5400 }, { hardCapMins: 90, softCapMins: 15 }],
+    ['Soft Cap', '80', {}, { softCapMins: 30 }],
+  ] as const)(
+    'saves %s through its real number-picker route',
+    async (label, value, gameState, settingsState) => {
+      useSettingsStore.setState({ hardCapMins: 110, softCapMins: 15 });
+      const user = userEvent.setup();
+      const view = await renderScreen(<PreGameConfirm />);
+      await user.press(screen.getByText(label));
+      expect(router.push).toHaveBeenCalledWith('/NumberPickerModal');
+      await view.rerender(<NumberPickerModal />);
+      await user.press(screen.getByText('C'));
+      for (const digit of value) await user.press(screen.getAllByText(digit).at(-1)!);
+      await user.press(screen.getByText('Save'));
+      if (Object.keys(gameState).length) expect(useGameStore.getState()).toMatchObject(gameState);
+      if (Object.keys(settingsState).length)
+        expect(useSettingsStore.getState()).toMatchObject(settingsState);
+      expect(router.back).toHaveBeenCalled();
+    },
+  );
+
+  it('clamps the soft-cap offset when reducing the hard cap below it', async () => {
+    useSettingsStore.setState({ hardCapMins: 110, softCapMins: 100 });
+    const user = userEvent.setup();
+    const view = await renderScreen(<PreGameConfirm />);
+    await user.press(screen.getByText('Hard Cap'));
+    await view.rerender(<NumberPickerModal />);
+    await user.press(screen.getByText('90'));
+    await user.press(screen.getByText('Save'));
+    expect(useSettingsStore.getState()).toMatchObject({ hardCapMins: 90, softCapMins: 90 });
+    expect(useGameStore.getState().timerTimeLeft).toBe(5400);
+  });
+
+  it('turns off dependent features when stat tracking and halftime are disabled', async () => {
+    useGameStore.setState({
+      pointTimerEnabled: true,
+      autoHalftimeEnabled: true,
+      floaterEnabled: true,
+    });
+    useSettingsStore.setState({ lineCallingEnabled: true });
+    const user = userEvent.setup();
+    await renderScreen(<PreGameConfirm />);
+    await user.press(screen.getByText('Halftime'));
+    expect(useGameStore.getState()).toMatchObject({
+      autoHalftimeEnabled: false,
+      floaterEnabled: false,
+    });
+    await user.press(screen.getByText('Stat Tracking'));
+    expect(screen.queryByText('Line Calling')).not.toBeOnTheScreen();
+    expect(screen.queryByText('Point Timer')).not.toBeOnTheScreen();
+    expect(useSettingsStore.getState().lineCallingEnabled).toBe(false);
+    expect(useGameStore.getState().pointTimerEnabled).toBe(false);
+  });
+
+  it('queues the stats tutorial for a first-time user who enables stat tracking', async () => {
+    useGameStore.setState({ statTrackingEnabled: false, possession: null });
+    const user = userEvent.setup();
+    await renderScreen(<PreGameConfirm />);
+    await user.press(screen.getByText('Stat Tracking'));
+    expect(screen.getByText('Start Game')).toBeDisabled();
+    await user.press(screen.getByText('Rivals'));
+    await user.press(screen.getByText('Start Game'));
+    expect(useGameStore.getState().possession).toBe('team2');
+    expect(useTutorialStore.getState().shouldShowStatsTutorialOnNextGameStart).toBe(true);
+    expect(router.replace).toHaveBeenCalledWith({
+      pathname: '/TutorialStatIntro',
+      params: { origin: 'onboarding' },
+    });
+  });
+
+  it('routes a ready lineup to line calling when the user enables it', async () => {
+    useTutorialStore.setState({ hasSeenStatsTutorial: true });
+    const user = userEvent.setup();
+    await renderScreen(<PreGameConfirm />);
+    await user.press(screen.getByText('Point Timer'));
+    await user.press(screen.getByText('Line Calling'));
+    expect(useGameStore.getState().pointTimerEnabled).toBe(true);
+    await user.press(screen.getByText('Set Line'));
+    expect(useSettingsStore.getState().lineCallingEnabled).toBe(true);
+    expect(router.replace).toHaveBeenCalledWith('/LineEditor');
   });
 });

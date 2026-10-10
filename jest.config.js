@@ -18,6 +18,14 @@ module.exports = {
     '!**/*.d.ts',
     '!**/__tests__/**',
     '!**/__mocks__/**',
+    // These modules contain only types and emit no executable behavior.
+    '!components/advancedTracking/types.ts',
+    '!lib/timeOfPossessionTypes.ts',
+    '!lib/advancedTracking/analyticsTypes.ts',
+    '!lib/sharing/types.ts',
+    '!lib/sharing/showcaseTypes.ts',
+    '!store/basic/gameStore.types.ts',
+    '!store/advancedTracking/trackingStore.types.ts',
   ],
   transformIgnorePatterns: [
     '/node_modules/(?!(.pnpm|react-native|@react-native|@react-native-community|expo|@expo|@expo-google-fonts|react-navigation|@react-navigation|@sentry|native-base|standard-navigation|immer))',

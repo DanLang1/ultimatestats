@@ -94,3 +94,79 @@ describe('importTeam transform', () => {
     expect(importedTeam.roster.map((player) => player.name)).toEqual(['Alex']);
   });
 });
+
+it.each([undefined, []])('imports an empty roster when players are %s', (players) => {
+  expect(buildImportedTeam({ players }, [], 'Fallback').roster).toEqual([]);
+});
+
+it.each([
+  [{}, '  Fallback  ', 'Fallback'],
+  [{ team: { teamname: '   ' } }, '   ', 'Imported Team'],
+])('resolves missing team names %#', (payload, fallback, expected) => {
+  expect(buildImportedTeam(payload, [], fallback).name).toBe(expected);
+});
+
+it('skips pre-existing player and team suffixes when resolving collisions', () => {
+  const imported = buildImportedTeam(
+    {
+      team: { teamname: 'Noise' },
+      players: [{ name: 'Alex (2)' }, { name: 'Alex' }, { name: 'Alex' }],
+    },
+    [
+      { id: '1', name: ' noise ', roster: [] },
+      { id: '2', name: 'NOISE (2)', roster: [] },
+    ],
+    'Fallback',
+  );
+  expect(imported.name).toBe('Noise (3)');
+  expect(imported.roster.map(({ name }) => name)).toEqual(['Alex (2)', 'Alex', 'Alex (3)']);
+});
+
+it.each([
+  ['Boys', 'mmp'],
+  ['Women', 'fmp'],
+  ['Girls', 'fmp'],
+  ['Open', null],
+  [undefined, null],
+])('uses division %s for matching regardless of pronouns', (division, matchingType) => {
+  const imported = buildImportedTeam(
+    {
+      team: { division },
+      players: [
+        { name: 'Alex', pronouns: 's' },
+        { name: 'Blair', pronouns: 'h' },
+      ],
+    },
+    [],
+    'Fallback',
+  );
+  expect(imported.roster.map((player) => player.matchingType)).toEqual([
+    matchingType,
+    matchingType,
+  ]);
+});
+
+it('normalizes mixed division pronouns and leaves unknown roles unassigned', () => {
+  const imported = buildImportedTeam(
+    {
+      team: { division: ' Mixed ' },
+      players: [
+        { name: '', position: 'Handler' },
+        { name: 'Alex', pronouns: ' H ', position: 'Captain' },
+        { name: 'Blair', pronouns: 's' },
+        { name: 'Casey', pronouns: 'they' },
+        { name: 'Drew' },
+      ],
+    },
+    [],
+    'Fallback',
+  );
+  expect(
+    imported.roster.map(({ name, matchingType, role }) => ({ name, matchingType, role })),
+  ).toEqual([
+    { name: 'Alex', matchingType: 'mmp', role: null },
+    { name: 'Blair', matchingType: 'fmp', role: null },
+    { name: 'Casey', matchingType: null, role: null },
+    { name: 'Drew', matchingType: null, role: null },
+  ]);
+});

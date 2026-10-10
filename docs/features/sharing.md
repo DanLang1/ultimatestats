@@ -47,7 +47,9 @@ will be created or replaced, and performs the appropriate basic or advanced pers
 - Basic games and teams are written through `useGameStore`.
 - Advanced games are written through `useSavedAdvancedGamesStore`, which persists them to SQLite.
 - Team line presets are imported through `useLinePresetsStore`.
-- Persistence must finish before navigation or another action invalidates the importing state.
+- Persistence must finish before success is displayed, navigation, or another action invalidates the
+  importing state. The preview actions are replaced by an importing indicator during saves; a failed
+  save shows an error instead of completion. Team imports also await line-preset persistence.
 
 ## Validation and Limits
 

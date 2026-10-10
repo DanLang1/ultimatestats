@@ -13,18 +13,15 @@ import {
 } from '@/test/fixtures/advancedGameBuilder';
 import { renderScreen } from '@/test/render';
 
-function holdScenarioBuilder(timed: boolean) {
-  const timing = timed ? { startedAt: 1_000, recordedAt: 1_000 } : {};
-  const actionTiming = timed ? { recordedAt: 5_000 } : {};
-  const endTiming = timed ? { recordedAt: 15_000 } : {};
-  return createAdvancedGameScenario({ id: timed ? 'timed-hold' : 'untimed-hold' })
-    .startPoint({ puller: UNTRACKED_PLAYER, receiver: participantRef('alex'), ...timing })
-    .complete(participantRef('blair'), actionTiming)
-    .goal(participantRef('blair'), endTiming);
+function holdScenarioBuilder() {
+  return createAdvancedGameScenario({ id: 'untimed-hold' })
+    .startPoint({ puller: UNTRACKED_PLAYER, receiver: participantRef('alex') })
+    .complete(participantRef('blair'))
+    .goal(participantRef('blair'));
 }
 
-async function renderCard(timed: boolean) {
-  const game = buildAnalyticsGame(holdScenarioBuilder(timed).build());
+async function renderCard() {
+  const game = buildAnalyticsGame(holdScenarioBuilder().build());
   const teamStats = computeAdvancedTeamStats(game, ADVANCED_TEST_FOCUS_SIDE_ID);
   const opposingSideId = getAnalyticsOpposingSideId(game, ADVANCED_TEST_FOCUS_SIDE_ID);
   const topStats = computeAdvancedTimeOfPossessionStats(
@@ -53,7 +50,7 @@ function expectFlowStat(label: string, value: string, ratio?: string) {
 
 describe('AdvancedPossessionFlowCard', () => {
   it('shows momentum and possession flow stats for a single-possession hold', async () => {
-    await renderCard(false);
+    await renderCard();
 
     const card = within(screen.getByTestId('advanced-possession-flow-card'));
     expect(card.getByText('POSSESSION & GAME FLOW')).toBeTruthy();
@@ -65,15 +62,8 @@ describe('AdvancedPossessionFlowCard', () => {
     expectFlowStat('Multi-Turn Pts', '0%', '0/1');
   });
 
-  it('shows time of possession when timing data exists', async () => {
-    await renderCard(true);
-
-    const card = within(screen.getByTestId('advanced-possession-flow-card'));
-    expect(card.getByTestId('time-of-possession-title')).toBeTruthy();
-  });
-
   it('omits time of possession without timing data', async () => {
-    await renderCard(false);
+    await renderCard();
 
     expect(screen.queryByTestId('time-of-possession-title')).toBeNull();
   });

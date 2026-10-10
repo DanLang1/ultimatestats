@@ -148,13 +148,10 @@ function validateOptionalFieldLocation(location: unknown) {
   }
 }
 
-function validateOptionalThrowDetails(details: unknown, result: unknown) {
+function validateOptionalThrowDetails(details: unknown, result: ThrowResult) {
   if (details === undefined) return;
   if (!isRecord(details) || !isThrowType(details.type)) {
     throw new Error('Invalid advanced game: invalid throw details');
-  }
-  if (!isThrowResult(result)) {
-    throw new Error('Invalid advanced game: throw details require an eligible throw result');
   }
   const eligibleTypes = getEligibleThrowTypes(result);
   if (!eligibleTypes.includes(details.type)) {
@@ -213,7 +210,7 @@ function validateAdvancedAction(
     validateOptionalPlayerRef(action.defender);
     validateOptionalFieldLocation(action.origin);
     validateOptionalFieldLocation(action.target);
-    if (!isString(action.result) || !VALID_THROW_RESULTS.has(action.result)) {
+    if (!isThrowResult(action.result)) {
       throw new Error('Invalid advanced game: invalid throw result');
     }
     if (action.details !== undefined && !fullRosterSideIds.has(action.sideId)) {

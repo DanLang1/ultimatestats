@@ -68,6 +68,8 @@ export const HalftimeTimer = () => {
       <View style={[styles.timerRow, { backgroundColor: palette.overlay05 }]}>
         <Pressable
           onPress={() => handleAdjustTimer(-1)}
+          accessibilityRole="button"
+          accessibilityLabel="Decrease halftime by one minute"
           disabled={timeLeft <= MIN_HALFTIME_BREAK_SECONDS}
           style={styles.timerButton}
           hitSlop={8}>
@@ -90,7 +92,12 @@ export const HalftimeTimer = () => {
           </ThemedText>
         </Pressable>
 
-        <Pressable onPress={() => handleAdjustTimer(1)} style={styles.timerButton} hitSlop={8}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Increase halftime by one minute"
+          onPress={() => handleAdjustTimer(1)}
+          style={styles.timerButton}
+          hitSlop={8}>
           <MaterialCommunityIcons
             name="plus"
             size={scaleBySizeClass(18, sizeClass)}

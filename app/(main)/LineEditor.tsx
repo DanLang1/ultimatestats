@@ -9,6 +9,7 @@ import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
 import { useIsGameActive } from '@/hooks/basic/useIsGameActive';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { getPointOutcome } from '@/lib/basic/pointOutcomeUtils';
 import { computePointByPointEvents } from '@/lib/basic/timelineUtils';
 import {
   checkLineRatio,
@@ -21,33 +22,6 @@ import { useGameStore } from '@/store/basic/gameStore';
 import { useLinePresetsStore } from '@/store/linePresetsStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { Fonts } from '@/theme/theme';
-
-type PointOutcome = {
-  label: string;
-  isPositive: boolean;
-};
-
-function getPointOutcome(
-  scoringTeam: 'team1' | 'team2',
-  offensiveTeam: 'team1' | 'team2',
-  turnoverCount: number,
-): PointOutcome {
-  const weScored = scoringTeam === 'team1';
-  const weStartedOnOffense = offensiveTeam === 'team1';
-
-  if (weStartedOnOffense) {
-    if (weScored) {
-      return turnoverCount === 0
-        ? { label: 'CLEAN HOLD', isPositive: true }
-        : { label: 'DIRTY HOLD', isPositive: true };
-    }
-    return { label: 'BROKEN', isPositive: false };
-  }
-  if (weScored) {
-    return { label: 'BREAK', isPositive: true };
-  }
-  return { label: 'OPP HOLD', isPositive: false };
-}
 
 export default function LineEditor() {
   const { palette } = useTheme();
@@ -228,6 +202,8 @@ export default function LineEditor() {
         <View style={styles.headerTop}>
           <Pressable
             onPress={handleSkip}
+            accessibilityRole="button"
+            accessibilityLabel="Skip line selection"
             style={({ pressed }) => [
               styles.skipBtn,
               { borderColor: palette.overlay15 },
@@ -287,6 +263,8 @@ export default function LineEditor() {
           )}
           <Pressable
             onPress={handleDone}
+            accessibilityRole="button"
+            accessibilityLabel="Confirm line"
             disabled={!canConfirm}
             style={({ pressed }) => [
               styles.confirmBtn,
@@ -508,6 +486,8 @@ export default function LineEditor() {
               </Pressable>
               <Pressable
                 onPress={handleSkip}
+                accessibilityRole="button"
+                accessibilityLabel="Skip line selection"
                 style={({ pressed }) => [
                   styles.emptyStateBtn,
                   { backgroundColor: palette.overlay10 },

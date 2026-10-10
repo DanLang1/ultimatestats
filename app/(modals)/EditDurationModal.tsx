@@ -241,6 +241,8 @@ export default function EditDurationModal() {
                   ))}
                   <Pressable
                     onPress={handleBackspace}
+                    accessibilityRole="button"
+                    accessibilityLabel="Delete last digit"
                     style={({ pressed }) => [
                       styles.numpadButton,
                       { backgroundColor: palette.overlay20 },
@@ -328,6 +330,8 @@ export default function EditDurationModal() {
                   </Pressable>
                   <Pressable
                     onPress={handleBackspace}
+                    accessibilityRole="button"
+                    accessibilityLabel="Delete last digit"
                     style={({ pressed }) => [
                       styles.numpadButtonPortrait,
                       { backgroundColor: palette.overlay20 },

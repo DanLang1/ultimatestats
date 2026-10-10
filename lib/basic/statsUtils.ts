@@ -741,7 +741,7 @@ export function getRoleStats(
     assists: myStats.assists / maxAssists,
     blocks: myStats.blocks / maxBlocks,
     plusMinus: (myStats.plusMinus - minPlusMinus) / plusMinusRange,
-    turnovers: maxTurns === 0 ? 0 : myTurns / maxTurns,
+    turnovers: myTurns / maxTurns,
     throwaways: myStats.throwaways / maxThrowaways,
     drops: myStats.drops / maxDrops,
     rawGoals: myStats.goals,

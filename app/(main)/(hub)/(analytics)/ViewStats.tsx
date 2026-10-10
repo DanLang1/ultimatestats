@@ -1,6 +1,5 @@
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { File, Paths } from 'expo-file-system';
 import { Redirect, router, Stack, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
@@ -28,7 +27,7 @@ import {
 import { buildAnalyticsGame } from '@/lib/advancedTracking/buildAnalyticsGame';
 import { areBothSidesFullyTracked } from '@/lib/advancedTracking/trackingModeUtils';
 import { formatDate, generateCurrentGameCSV } from '@/lib/basic/statsUtils';
-import { shareFileAndDelete } from '@/lib/shareFileAndDelete';
+import { shareCsvExport } from '@/lib/shareCsvExport';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { useGameStore } from '@/store/basic/gameStore';
 import { useTutorialStore } from '@/store/tutorialStore';
@@ -83,38 +82,23 @@ export default function ViewStatsScreen() {
     return `${sanitize(t1Name)}_vs_${sanitize(t2Name)}_${dateStr}`;
   };
 
-  const handleExportCSV = async () => {
-    try {
-      const csv = generateCurrentGameCSV(
-        events,
-        team1Name,
-        team2Name,
-        startingPossession,
-        gameTo,
-        autoHalftimeEnabled,
-        currentTeam.roster,
-        pointLines,
-      );
-      const filename = generateGameFilename(team1Name, team2Name);
-
-      const file = new File(Paths.cache, `${filename}.csv`);
-      file.write(csv);
-
-      if (await shareFileAndDelete(file)) {
-        return;
-      } else {
-        showAlert({
-          title: 'Sharing not available',
-          message: 'Sharing is not available on this device.',
-        });
-      }
-    } catch {
-      showAlert({
-        title: 'Export failed',
-        message: 'Could not export stats to CSV.',
-      });
-    }
-  };
+  const handleExportCSV = () =>
+    shareCsvExport(
+      () => ({
+        csv: generateCurrentGameCSV(
+          events,
+          team1Name,
+          team2Name,
+          startingPossession,
+          gameTo,
+          autoHalftimeEnabled,
+          currentTeam.roster,
+          pointLines,
+        ),
+        filename: generateGameFilename(team1Name, team2Name),
+      }),
+      showAlert,
+    );
   const handleOpenTimeline = () => {
     if (activeAdvancedGame) {
       router.push({

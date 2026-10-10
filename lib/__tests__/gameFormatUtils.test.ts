@@ -136,94 +136,48 @@ describe('formatBasicReceiver', () => {
 });
 
 describe('createFormatSections', () => {
-  const mockRow = (label: string): FormatRow => ({ label, value: 'test' });
+  const row = (label: string): FormatRow => ({ label, value: 'test' });
 
-  describe('TEAMS section', () => {
-    it('puts My Team, Opponent, and Initial Receiver into TEAMS', () => {
-      const rows = [mockRow('My Team'), mockRow('Opponent'), mockRow('Initial Receiver')];
-      const sections = createFormatSections(rows);
-      const teamsSection = sections.find((s) => s.title === 'TEAMS');
-      expect(teamsSection).toBeDefined();
-      expect(teamsSection!.rows).toHaveLength(3);
-    });
+  it('groups recognized rows in section order while preserving row order and metadata', () => {
+    const opponent: FormatRow = {
+      label: 'Opponent',
+      value: 'Eagles',
+      helperText: 'Edit opponent',
+      onPress: jest.fn(),
+      disabled: true,
+    };
+    const teams = [opponent, row('Initial Receiver'), row('My Team')];
+    const rules = ['Game To', 'Hard Cap', 'Soft Cap', 'Halftime', 'Timeouts', 'Gender Ratio'].map(
+      row,
+    );
+    const features = ['Stat Tracking', 'Point Timer', 'Line Calling'].map(row);
 
-    it('includes only matching labels', () => {
-      const rows = [mockRow('My Team'), mockRow('Game To')];
-      const sections = createFormatSections(rows);
-      const teamsSection = sections.find((s) => s.title === 'TEAMS');
-      expect(teamsSection!.rows).toHaveLength(1);
-      expect(teamsSection!.rows[0].label).toBe('My Team');
-    });
+    expect(
+      createFormatSections([
+        features[0],
+        rules[0],
+        ...teams,
+        ...rules.slice(1),
+        ...features.slice(1),
+        row('Unknown Label'),
+      ]),
+    ).toEqual([
+      { title: 'TEAMS', rows: teams },
+      { title: 'GAME RULES', rows: rules },
+      { title: 'FEATURES', rows: features },
+    ]);
   });
 
-  describe('GAME RULES section', () => {
-    it('puts all game rule labels into GAME RULES', () => {
-      const labels = ['Game To', 'Hard Cap', 'Soft Cap', 'Halftime', 'Timeouts', 'Gender Ratio'];
-      const rows = labels.map(mockRow);
-      const sections = createFormatSections(rows);
-      const rulesSection = sections.find((s) => s.title === 'GAME RULES');
-      expect(rulesSection).toBeDefined();
-      expect(rulesSection!.rows).toHaveLength(6);
-    });
+  it.each([
+    ['My Team', 'TEAMS'],
+    ['Game To', 'GAME RULES'],
+    ['Stat Tracking', 'FEATURES'],
+  ])('omits empty sections when only %s is present', (label, title) => {
+    expect(createFormatSections([row(label)])).toEqual([{ title, rows: [row(label)] }]);
   });
 
-  describe('FEATURES section', () => {
-    it('puts feature labels into FEATURES', () => {
-      const rows = [mockRow('Stat Tracking'), mockRow('Point Timer'), mockRow('Line Calling')];
-      const sections = createFormatSections(rows);
-      const featuresSection = sections.find((s) => s.title === 'FEATURES');
-      expect(featuresSection).toBeDefined();
-      expect(featuresSection!.rows).toHaveLength(3);
-    });
-  });
-
-  describe('empty sections are removed', () => {
-    it('omits FEATURES section when no feature rows exist', () => {
-      const rows = [mockRow('My Team')];
-      const sections = createFormatSections(rows);
-      expect(sections).toHaveLength(1);
-      expect(sections[0].title).toBe('TEAMS');
-    });
-
-    it('omits GAME RULES section when no rule rows exist', () => {
-      const rows = [mockRow('Stat Tracking')];
-      const sections = createFormatSections(rows);
-      expect(sections).toHaveLength(1);
-      expect(sections[0].title).toBe('FEATURES');
-    });
-  });
-
-  describe('integration', () => {
-    it('returns sections in TEAMS → GAME RULES → FEATURES order', () => {
-      const rows = [
-        mockRow('My Team'),
-        mockRow('Game To'),
-        mockRow('Stat Tracking'),
-        mockRow('Opponent'),
-        mockRow('Hard Cap'),
-        mockRow('Point Timer'),
-      ];
-      const sections = createFormatSections(rows);
-      expect(sections).toHaveLength(3);
-      expect(sections[0].title).toBe('TEAMS');
-      expect(sections[1].title).toBe('GAME RULES');
-      expect(sections[2].title).toBe('FEATURES');
-    });
-
-    it('preserves row order within each section', () => {
-      const rows = [mockRow('My Team'), mockRow('Opponent'), mockRow('Initial Receiver')];
-      const sections = createFormatSections(rows);
-      const teamsSection = sections.find((s) => s.title === 'TEAMS')!;
-      expect(teamsSection.rows[0].label).toBe('My Team');
-      expect(teamsSection.rows[1].label).toBe('Opponent');
-      expect(teamsSection.rows[2].label).toBe('Initial Receiver');
-    });
-
-    it('returns empty array when no rows match any section', () => {
-      const rows = [mockRow('Unknown Label')];
-      const sections = createFormatSections(rows);
-      expect(sections).toEqual([]);
-    });
+  it('omits unrecognized rows without creating empty sections', () => {
+    expect(createFormatSections([row('Unknown Label')])).toEqual([]);
   });
 });
 

@@ -1,16 +1,6 @@
 import { defineAdvancedGameTestContext } from '@/test/fixtures/advancedGameBuilder';
 
 import { computeAdvancedGameStats } from '../advancedGameStats';
-import { computeAdvancedPlayerStats } from '../advancedPlayerStatsUtils';
-import { computePullStats } from '../advancedPullStatsUtils';
-import { computeAdvancedTeamStats } from '../advancedTeamStatsUtils';
-import { computeAdvancedTimeOfPossessionStats } from '../advancedTimeOfPossessionUtils';
-import { computeAdvancedTimingStats } from '../advancedTimingStatsUtils';
-import {
-  getAnalyticsOpposingSideId,
-  getAnalyticsSidePerspective,
-} from '../analyticsPerspectiveUtils';
-
 const LIGHT = 'light';
 const DARK = 'dark';
 
@@ -58,38 +48,54 @@ const { ana, ben, hal, ivy } = statsFixtures.players;
 function buildAnalytics() {
   return statsFixtures
     .scenario()
-    .hold({ puller: hal, receiver: ana, scorer: ben, startedAt: 1000, recordedAt: 1000 })
-    .startPoint({ puller: ana, receiver: hal, startedAt: 40000, recordedAt: 40000 })
+    .startPoint({ puller: hal, receiver: ana, startedAt: 1000, recordedAt: 1000, hangTimeMs: 1000 })
+    .goal(ben, { recordedAt: 11000 })
+    .startPoint({
+      puller: ana,
+      receiver: hal,
+      startedAt: 40000,
+      recordedAt: 40000,
+      hangTimeMs: 2000,
+    })
     .goal(ivy, { recordedAt: 70000 })
+    .startPoint({
+      puller: hal,
+      receiver: ana,
+      startedAt: 80000,
+      recordedAt: 80000,
+      hangTimeMs: 3000,
+    })
+    .goal(ben, { recordedAt: 90000 })
     .buildAnalytics();
 }
 
 describe('computeAdvancedGameStats', () => {
-  it('returns each slice identical to its standalone utility, for either side', () => {
+  it('routes every slice to the requested side', () => {
+    // Light scores twice in 20 seconds; Dark scores once in 30 seconds.
+    // Dark pulls twice; Light pulls once. Each slice's math is owned by its own unit test.
     const analytics = buildAnalytics();
+    const light = computeAdvancedGameStats(analytics, LIGHT);
+    const dark = computeAdvancedGameStats(analytics, DARK);
 
-    for (const sideId of [LIGHT, DARK]) {
-      const stats = computeAdvancedGameStats(analytics, sideId);
-      const opposingSideId = getAnalyticsOpposingSideId(analytics, sideId);
+    expect(light.perspective).toMatchObject({ sideName: 'Light' });
+    expect(light.opposingSideId).toBe(DARK);
+    expect(dark.perspective).toMatchObject({ sideName: 'Dark' });
+    expect(dark.opposingSideId).toBe(LIGHT);
 
-      expect(stats.opposingSideId).toBe(opposingSideId);
-      expect(stats.perspective).toEqual(getAnalyticsSidePerspective(analytics, sideId));
-      expect(stats.playerStats).toEqual(computeAdvancedPlayerStats(analytics, sideId));
-      expect(stats.teamStats).toEqual(computeAdvancedTeamStats(analytics, sideId));
-      expect(stats.pullStats).toEqual(computePullStats(analytics, sideId));
-      expect(stats.timingStats).toEqual(computeAdvancedTimingStats(analytics));
-      expect(stats.timeOfPossessionStats).toEqual(
-        computeAdvancedTimeOfPossessionStats(analytics, sideId, opposingSideId),
-      );
-    }
-  });
+    expect(light.playerStats.find((player) => player.participantId === 'p_ben')).toMatchObject({
+      goals: 2,
+    });
+    expect(light.playerStats.some((player) => player.participantId === 'p_ivy')).toBe(false);
+    expect(dark.playerStats.find((player) => player.participantId === 'p_ivy')).toMatchObject({
+      goals: 1,
+    });
+    expect(dark.playerStats.some((player) => player.participantId === 'p_ben')).toBe(false);
 
-  it('resolves the perspective and opposing side per requested side', () => {
-    const analytics = buildAnalytics();
-
-    expect(computeAdvancedGameStats(analytics, LIGHT).perspective.sideName).toBe('Light');
-    expect(computeAdvancedGameStats(analytics, LIGHT).opposingSideId).toBe(DARK);
-    expect(computeAdvancedGameStats(analytics, DARK).perspective.sideName).toBe('Dark');
-    expect(computeAdvancedGameStats(analytics, DARK).opposingSideId).toBe(LIGHT);
+    expect(light.teamStats.holds).toBe(2);
+    expect(dark.teamStats.holds).toBe(1);
+    expect(light.pullStats.totalPulls).toBe(1);
+    expect(dark.pullStats.totalPulls).toBe(2);
+    expect(light.timeOfPossessionStats.team1TotalPossessionMs).toBe(20000);
+    expect(dark.timeOfPossessionStats.team1TotalPossessionMs).toBe(30000);
   });
 });

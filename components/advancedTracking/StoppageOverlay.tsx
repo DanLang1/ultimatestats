@@ -122,6 +122,8 @@ export const StoppageOverlay = ({ game }: StoppageOverlayProps) => {
         <View style={styles.timerAdjustRow}>
           <Pressable
             onPress={() => adjustTimeout(-10)}
+            accessibilityRole="button"
+            accessibilityLabel="Decrease timeout by 10 seconds"
             disabled={!canDecrement}
             style={styles.timerAdjustBtn}
             hitSlop={8}>
@@ -136,6 +138,8 @@ export const StoppageOverlay = ({ game }: StoppageOverlayProps) => {
           </ThemedText>
           <Pressable
             onPress={() => adjustTimeout(10)}
+            accessibilityRole="button"
+            accessibilityLabel="Increase timeout by 10 seconds"
             disabled={!canIncrement}
             style={styles.timerAdjustBtn}
             hitSlop={8}>

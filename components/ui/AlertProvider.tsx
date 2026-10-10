@@ -14,7 +14,7 @@ interface AlertButton {
   icon?: React.ReactNode;
 }
 
-interface AlertOptions {
+export interface AlertOptions {
   title: string;
   message?: string;
   buttons?: AlertButton[];

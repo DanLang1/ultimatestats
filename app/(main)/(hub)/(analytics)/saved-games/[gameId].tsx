@@ -4,7 +4,6 @@ import DateTimePicker, {
   DateTimePickerAndroid,
   DateTimePickerChangeEvent,
 } from '@react-native-community/datetimepicker';
-import { File, Paths } from 'expo-file-system';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
@@ -25,7 +24,7 @@ import { formatDate, generateSavedGameCSV } from '@/lib/basic/statsUtils';
 import { MIN_PLAYED_AT_YEAR } from '@/lib/constants';
 import { resolveTeamName } from '@/lib/playerUtils';
 import { getGameDisplayTimestamp } from '@/lib/savedGameUtils';
-import { shareFileAndDelete } from '@/lib/shareFileAndDelete';
+import { shareCsvExport } from '@/lib/shareCsvExport';
 import { serializeGame, uploadPayload } from '@/lib/sharing';
 import {
   runPendingShareAction,
@@ -67,25 +66,7 @@ export default function SavedGameStatsScreen() {
     );
     const filename = `${sanitize(gameTeamName)}_vs_${sanitize(selectedGame.team2Name)}_${dateText}`;
 
-    try {
-      const csv = generateSavedGameCSV(selectedGame);
-      const file = new File(Paths.cache, `${filename}.csv`);
-      file.write(csv);
-
-      if (await shareFileAndDelete(file)) {
-        return;
-      }
-
-      showAlert({
-        title: 'Sharing not available',
-        message: 'Sharing is not available on this device.',
-      });
-    } catch {
-      showAlert({
-        title: 'Export failed',
-        message: 'Could not export stats to CSV.',
-      });
-    }
+    await shareCsvExport(() => ({ csv: generateSavedGameCSV(selectedGame), filename }), showAlert);
   };
 
   const handleShareGame = () => {

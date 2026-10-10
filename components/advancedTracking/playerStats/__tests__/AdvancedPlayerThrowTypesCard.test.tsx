@@ -70,10 +70,10 @@ describe('AdvancedPlayerThrowTypesCard', () => {
 
   it('renders huck rate, completions count, and inline outcome details when huck attempts exist', async () => {
     const stats = createMockStats({
-      huckAttempts: 4,
+      huckAttempts: 7,
       huckCompletions: 3,
-      huckCompletionPct: 0.75,
-      huckIncompletions: 1,
+      huckCompletionPct: 3 / 7,
+      huckIncompletions: 4,
       huckThrowaways: 1,
       huckBlocks: 1,
       huckDrops: 1,
@@ -84,8 +84,8 @@ describe('AdvancedPlayerThrowTypesCard', () => {
 
     expect(screen.getByTestId('advanced-player-throw-types-card')).toBeTruthy();
     expect(screen.getByText('Throw classifications')).toBeTruthy();
-    expect(screen.getByText('75%')).toBeTruthy();
-    expect(screen.getByText('3 of 4')).toBeTruthy();
+    expect(screen.getByText('43%')).toBeTruthy();
+    expect(screen.getByText('3 of 7')).toBeTruthy();
     expect(screen.getByText('Completions')).toBeTruthy();
     expect(screen.getByText('3 completed')).toBeTruthy();
     expect(screen.getByText('1 throwaway')).toBeTruthy();

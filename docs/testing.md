@@ -203,6 +203,9 @@ Boundary adapters must preserve the boundary's useful semantics; for example, th
 adapter implements in-memory load/save/delete operations instead of returning hard-coded hook
 results.
 
+The network is blocked by default: `test/setup.ts` fails any test that calls `fetch` without
+stubbing it via `jest.spyOn(global, 'fetch')` (see `jsonResponse` in `test/fetch.ts`).
+
 Use `screen` queries, prefer role/name and label queries, and use `userEvent.setup()` for user
 interaction. Await `renderScreen`, `userEvent` calls, `findBy*`, and `waitFor` work. Prefer visible
 behavior and state transitions over implementation assertions or snapshots.

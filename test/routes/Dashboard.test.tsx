@@ -1,11 +1,16 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { screen, userEvent } from '@testing-library/react-native';
 import { router } from 'expo-router';
+import { Linking, Platform } from 'react-native';
 
 import DashboardScreen from '@/app/(main)/(hub)/(home)/Dashboard';
+import { APP_STORE_URL, PLAY_STORE_URL } from '@/lib/constants';
+import { LAST_DISMISSED_REMOTE_VERSION_KEY } from '@/lib/remoteVersionUtils';
+import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { useGameStore } from '@/store/basic/gameStore';
 import { useGameSessionStore } from '@/store/gameSessionStore';
 import { useTutorialStore } from '@/store/tutorialStore';
+import { arrangeAdvancedGame, createSavedBasicGame, testTeam } from '@/test/fixtures/domain';
 import { resetDashboardStores } from '@/test/fixtures/resetStores';
 import { resetMockRouter } from '@/test/mocks/expoRouter';
 import { createTestQueryClient, renderScreen } from '@/test/render';
@@ -101,3 +106,79 @@ describe('<DashboardScreen />', () => {
     expect(router.push).toHaveBeenCalledWith('/Settings');
   });
 });
+
+afterEach(() => {
+  jest.restoreAllMocks();
+});
+
+it('opens data, roster, and help destinations when saved games and a roster exist', async () => {
+  const queryClient = arrangeDashboard();
+  useGameStore.setState({ currentTeam: testTeam, savedGames: [createSavedBasicGame()] });
+  const user = userEvent.setup();
+  await renderScreen(<DashboardScreen />, { queryClient });
+  const destinations = [
+    ['Saved Games', '/SavedGameStats'],
+    ['Aggregate Stats', '/AggregateStats'],
+    ['Team Line Presets', '/LinePresetEditor'],
+    ['Showcase (Beta)', '/Showcase'],
+    ['Partners', '/Partners'],
+    ['Help', '/Help'],
+    ['About', '/About'],
+  ] as const;
+  for (const [label, route] of destinations) {
+    await user.press(screen.getByRole('button', { name: label }));
+    expect(router.push).toHaveBeenLastCalledWith(route);
+  }
+  await user.press(screen.getByRole('button', { name: 'Manage Team' }));
+  expect(router.push).toHaveBeenLastCalledWith({
+    pathname: '/EditRoster',
+    params: { teamName: testTeam.name },
+  });
+});
+
+it('resumes advanced line setup and starts a scrimmage after warning about the active game', async () => {
+  const queryClient = arrangeDashboard();
+  arrangeAdvancedGame();
+  const user = userEvent.setup();
+  await renderScreen(<DashboardScreen />, { queryClient });
+  expect(screen.queryByText('Game Timeline')).not.toBeOnTheScreen();
+  await user.press(screen.getByText('Resume Game'));
+  expect(router.navigate).toHaveBeenCalledWith('/advancedTracking/TrackerLineSelect');
+  await user.press(screen.getByText('New Game'));
+  expect(screen.getByText('This will clear the current in-progress game')).toBeVisible();
+  await user.press(screen.getByText('Scrimmage'));
+  expect(useAdvancedTrackingStore.getState().currentGame).toBeNull();
+  expect(router.replace).toHaveBeenCalledWith({
+    pathname: '/advancedTracking/PreGameConfirm',
+    params: { gameType: 'scrimmage' },
+  });
+});
+
+it('offers review actions for a completed game after its active session is cleared', async () => {
+  const queryClient = arrangeDashboard();
+  useGameStore.setState({ currentGameStatus: 'finished', team1Score: 15, team2Score: 12 });
+  const user = userEvent.setup();
+  await renderScreen(<DashboardScreen />, { queryClient });
+  expect(screen.getByText('LAST COMPLETED GAME')).toBeVisible();
+  expect(screen.queryByText('Resume Game')).not.toBeOnTheScreen();
+  await user.press(screen.getByText('View Stats'));
+  expect(router.push).toHaveBeenLastCalledWith('/ViewStats');
+  await user.press(screen.getByText('Game Timeline'));
+  expect(router.push).toHaveBeenLastCalledWith('/GameTimeline');
+});
+
+it.each(['ios', 'android'] as const)(
+  'opens the %s app store and acknowledges the remote update',
+  async (platform) => {
+    jest.replaceProperty(Platform, 'OS', platform);
+    const openUrl = jest.spyOn(Linking, 'openURL').mockResolvedValue(undefined);
+    const queryClient = arrangeDashboard();
+    queryClient.setQueryData(['remoteVersion'], { hasUpdate: true, latestVersion: '2.0.0' });
+    const user = userEvent.setup();
+    await renderScreen(<DashboardScreen />, { queryClient });
+    await user.press(screen.getByText('New Version Available'));
+    expect(openUrl).toHaveBeenCalledWith(platform === 'ios' ? APP_STORE_URL : PLAY_STORE_URL);
+    expect(await AsyncStorage.getItem(LAST_DISMISSED_REMOTE_VERSION_KEY)).toBe('2.0.0');
+    expect(screen.queryByText('New Version Available')).not.toBeOnTheScreen();
+  },
+);

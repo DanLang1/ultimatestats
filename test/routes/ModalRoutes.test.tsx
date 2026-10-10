@@ -3,20 +3,18 @@ import { fireEvent, screen, userEvent, waitFor } from '@testing-library/react-na
 import { router } from 'expo-router';
 
 import AdvancedGameSelectorModal from '@/app/(modals)/AdvancedGameSelectorModal';
-import EditDurationModal from '@/app/(modals)/EditDurationModal';
 import EditEventModal from '@/app/(modals)/EditEventModal';
 import EditPlayerModal from '@/app/(modals)/EditPlayerModal';
 import EditPointLineModal from '@/app/(modals)/EditPointLineModal';
 import GameSelectorModal from '@/app/(modals)/GameSelectorModal';
 import HalftimeModal from '@/app/(modals)/HalftimeModal';
-import NumberPickerModal from '@/app/(modals)/NumberPickerModal';
 import PointSummaryModal from '@/app/(modals)/PointSummaryModal';
 import TeamManagementModal from '@/app/(modals)/TeamManagementModal';
 import TimeoutModal from '@/app/(modals)/TimeoutModal';
 import { useGameStore } from '@/store/basic/gameStore';
 import { useLinePresetsStore } from '@/store/linePresetsStore';
-import { useNumberPickerStore } from '@/store/numberPickerStore';
 import { usePlayerStatsStore } from '@/store/playerStatsStore';
+import { useSettingsStore } from '@/store/settingsStore';
 import {
   arrangeAdvancedGame,
   arrangeBasicGame,
@@ -47,56 +45,6 @@ describe('modal routes', () => {
       withAnchor: undefined,
     });
     expect(screen.queryByText('EDIT PLAYER')).not.toBeOnTheScreen();
-  });
-
-  it('saves a value through the real number-picker store callback', async () => {
-    const user = userEvent.setup();
-    const onChange = jest.fn();
-    useNumberPickerStore.getState().open({
-      value: 5,
-      min: 1,
-      max: 30,
-      label: 'Game To',
-      quickOptions: [15],
-      onChange,
-    });
-    await renderScreen(<NumberPickerModal />);
-
-    expect(screen.getByText('Game To')).toBeVisible();
-
-    await user.press(screen.getByText('15'));
-    await user.press(screen.getByText('Save'));
-
-    expect(onChange).toHaveBeenCalledWith(15);
-    expect(useNumberPickerStore.getState().isActive).toBe(false);
-  });
-
-  it('renders duration editing for a real current-game event', async () => {
-    arrangeBasicGame({ statTrackingEnabled: true });
-    useGameStore.setState({
-      events: [
-        {
-          type: 'goal',
-          team: 'team1',
-          goalPlayerId: 'player-alex',
-          assistPlayerId: 'player-blair',
-          pointNumber: 1,
-          elapsedMs: 30_000,
-        },
-      ],
-    });
-    setMockSearchParams({
-      eventIndex: '0',
-      gameId: 'current',
-      currentDurationMs: '30000',
-      editorType: 'event',
-    });
-
-    await renderScreen(<EditDurationModal />);
-
-    expect(screen.getByText('Edit Event Time')).toBeVisible();
-    expect(screen.getByText('sec')).toBeVisible();
-    expect(screen.getByText('Save')).toBeVisible();
   });
 
   it('renders event editing from a real turnover event and roster', async () => {
@@ -233,7 +181,8 @@ describe('modal routes', () => {
     });
   });
 
-  it('renders player editing from the real roster store', async () => {
+  it('deactivates a player from the edit-player modal', async () => {
+    const user = userEvent.setup();
     useGameStore.setState({ currentTeam: testTeam });
     setMockSearchParams({ playerId: 'player-alex' });
 
@@ -242,16 +191,6 @@ describe('modal routes', () => {
     expect(screen.getByText('Edit Player')).toBeVisible();
     expect(screen.getByDisplayValue('Alex')).toBeVisible();
     expect(screen.getByDisplayValue('7')).toBeVisible();
-    expect(screen.getByText('Save')).toBeVisible();
-  });
-
-  it('deactivates a player from the edit-player modal', async () => {
-    const user = userEvent.setup();
-    useGameStore.setState({ currentTeam: testTeam });
-    setMockSearchParams({ playerId: 'player-alex' });
-
-    await renderScreen(<EditPlayerModal />);
-
     void fireEvent(screen.getByTestId('edit-player-active-toggle'), 'valueChange', false);
     await user.press(screen.getByTestId('edit-player-save'));
 
@@ -505,5 +444,191 @@ describe('modal routes', () => {
     await waitFor(() => {
       expect(useGameStore.getState().savedTeams).not.toContainEqual(otherTeam);
     });
+  });
+});
+
+describe('event correction controls', () => {
+  beforeEach(() => {
+    resetAllStores();
+    resetMockRouter();
+    arrangeBasicGame({ statTrackingEnabled: true });
+  });
+
+  it.each([
+    ['team1', 'throwaway', ['Throwaway', 'Drop', '50/50', 'OPP BLOCK'], ['Block', 'OPP TURN']],
+    ['team1', 'block', ['Block', 'OPP TURN'], ['Throwaway', 'Drop', '50/50', 'OPP BLOCK']],
+    ['team2', 'throwaway', ['Block', 'OPP TURN'], ['Throwaway', 'Drop', '50/50', 'OPP BLOCK']],
+    ['team2', 'block', ['Throwaway', 'Drop', '50/50', 'OPP BLOCK'], ['Block', 'OPP TURN']],
+  ] as const)(
+    'limits corrections for %s %s to the same possession change',
+    async (team, subtype, available, forbidden) => {
+      useGameStore.setState({
+        events: [{ type: 'turnover', team, subtype, playerId: null, pointNumber: 1 }],
+      });
+      setMockSearchParams({
+        eventIndex: '0',
+        eventType: 'turnover',
+        subtype,
+        originalTeam: team,
+        gameId: 'current',
+      });
+      await renderScreen(<EditEventModal />);
+      for (const label of available) expect(screen.getByText(label)).toBeVisible();
+      for (const label of forbidden) expect(screen.queryByText(label)).not.toBeOnTheScreen();
+      if (team === 'team2')
+        expect(screen.queryByRole('button', { name: 'Alex' })).not.toBeOnTheScreen();
+    },
+  );
+
+  it('restricts a saved correction to the point line while retaining the original attributed player', async () => {
+    const game = createSavedBasicGame();
+    game.team1 = {
+      ...testTeam,
+      roster: [
+        ...testTeam.roster,
+        { id: 'casey', name: 'Casey', isActive: true, matchingType: null, role: null },
+      ],
+    };
+    game.events = [
+      {
+        type: 'turnover',
+        team: 'team1',
+        subtype: 'drop',
+        playerId: 'player-blair',
+        pointNumber: 1,
+      },
+    ];
+    game.pointLines = [{ pointNumber: 1, playerIds: ['player-alex'], timestamp: 1 }];
+    useGameStore.setState({ savedGames: [game] });
+    setMockSearchParams({
+      eventIndex: '0',
+      eventType: 'turnover',
+      subtype: 'drop',
+      originalTeam: 'team1',
+      playerId: 'player-blair',
+      gameId: game.id,
+    });
+    await renderScreen(<EditEventModal />);
+    expect(screen.getByRole('button', { name: 'Alex' })).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Blair', selected: true })).toBeVisible();
+    expect(screen.queryByRole('button', { name: 'Casey' })).not.toBeOnTheScreen();
+  });
+
+  it.each(['Alex', 'Unknown'])(
+    'reviews the thrower %s before selecting a 50/50 receiver',
+    async (thrower) => {
+      useGameStore.setState({
+        events: [
+          { type: 'turnover', team: 'team1', subtype: 'throwaway', playerId: null, pointNumber: 1 },
+        ],
+      });
+      setMockSearchParams({
+        eventIndex: '0',
+        eventType: 'turnover',
+        subtype: 'throwaway',
+        gameId: 'current',
+      });
+      const user = userEvent.setup();
+      await renderScreen(<EditEventModal />);
+      await user.press(screen.getByText('50/50'));
+      expect(screen.getByText('STEP 1: THROWER (Who threw it?)')).toBeVisible();
+      await user.press(screen.getByRole('button', { name: thrower }));
+      expect(screen.getByText('STEP 2: RECEIVER (Who dropped it?)')).toBeVisible();
+      await user.press(screen.getByRole('button', { name: 'Blair' }));
+      expect(screen.getByText('RECEIVER')).toBeVisible();
+      expect(screen.getByRole('button', { name: 'Blair', selected: true })).toBeVisible();
+      await user.press(screen.getByRole('button', { name: 'Unknown' }));
+      expect(screen.queryByText('RECEIVER')).not.toBeOnTheScreen();
+    },
+  );
+});
+
+describe('continuing game breaks', () => {
+  beforeEach(() => {
+    resetAllStores();
+    resetMockRouter();
+    arrangeBasicGame({ statTrackingEnabled: true });
+  });
+
+  it.each([
+    [true, false, '/LineEditor'],
+    [true, true, '/Scoreboard'],
+    [false, false, '/Scoreboard'],
+  ] as const)(
+    'continues halftime with line calling %s and confirmation %s',
+    async (lineCallingEnabled, lineConfirmedForNextPoint, destination) => {
+      useSettingsStore.setState({ lineCallingEnabled });
+      useLinePresetsStore.setState({ lineConfirmedForNextPoint });
+      useGameStore.setState({
+        isHalftimeBreak: true,
+        halftimeEndTime: null,
+        startingPossession: 'team2',
+      });
+      const user = userEvent.setup();
+      await renderScreen(<HalftimeModal />);
+      expect(screen.getByText('YOU RECEIVE')).toBeVisible();
+      if (lineCallingEnabled) {
+        await user.press(screen.getByText('SET LINE'));
+        expect(router.push).toHaveBeenCalledWith('/LineEditor');
+      }
+      await user.press(screen.getByText('CONTINUE'));
+      expect(useGameStore.getState().isHalftimeBreak).toBe(false);
+      if (destination === '/LineEditor') expect(router.replace).toHaveBeenCalledWith(destination);
+      else expect(router.dismissTo).toHaveBeenCalledWith(destination);
+    },
+  );
+
+  it('shows halftime impact and continues with the next line from the stats layout', async () => {
+    useSettingsStore.setState({ lineCallingEnabled: true });
+    useGameStore.setState({
+      isHalftimeBreak: true,
+      halftimeEndTime: null,
+      events: [
+        {
+          type: 'goal',
+          team: 'team1',
+          goalPlayerId: 'player-alex',
+          assistPlayerId: null,
+          pointNumber: 1,
+        },
+        {
+          type: 'turnover',
+          team: 'team1',
+          subtype: 'drop',
+          playerId: 'player-blair',
+          pointNumber: 2,
+        },
+      ],
+    });
+    const user = userEvent.setup();
+    await renderScreen(<HalftimeModal />);
+    expect(screen.getByText('HOLD')).toBeVisible();
+    expect(screen.getByText('Alex')).toBeVisible();
+    expect(screen.getByText('+1')).toBeVisible();
+    expect(screen.getByText('-1')).toBeVisible();
+    await user.press(screen.getByText('SET LINE'));
+    expect(router.push).toHaveBeenCalledWith('/LineEditor');
+    await user.press(screen.getByText('CONTINUE'));
+    expect(useGameStore.getState().isHalftimeBreak).toBe(false);
+    expect(router.replace).toHaveBeenCalledWith('/LineEditor');
+  });
+
+  it('ends an opponent timeout and resumes the paused point timer', async () => {
+    useGameStore.setState({
+      pendingTimeoutModal: true,
+      timeoutEndTime: null,
+      pointTimerEnabled: true,
+      currentPointStartTime: Date.now() - 20000,
+      pointTimerPausedElapsed: 12000,
+      events: [{ type: 'timeout', team: 'team2', index: 0, isFloater: false }],
+    });
+    await renderScreen(<TimeoutModal />);
+    expect(screen.getByText('Team 2')).toBeVisible();
+    await userEvent.setup().press(screen.getByText('END TIMEOUT'));
+    expect(useGameStore.getState()).toMatchObject({
+      pendingTimeoutModal: false,
+      pointTimerPausedElapsed: null,
+    });
+    expect(router.dismissTo).toHaveBeenCalledWith('/Scoreboard');
   });
 });

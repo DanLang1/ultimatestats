@@ -6,13 +6,21 @@ import { SafeAreaFrameContext, SafeAreaInsetsContext } from 'react-native-safe-a
 import { AlertProvider } from '@/components/ui/AlertProvider';
 import { ThemeProvider } from '@/context/ThemeContext';
 
+const queryClients: QueryClient[] = [];
+afterEach(() => {
+  queryClients.splice(0).forEach((client) => client.clear());
+});
+
+/** Creates a client that is cleared automatically after the test. */
 export function createTestQueryClient() {
-  return new QueryClient({
+  const client = new QueryClient({
     defaultOptions: {
       queries: { gcTime: Infinity, retry: false, staleTime: Infinity },
-      mutations: { retry: false },
+      mutations: { gcTime: Infinity, retry: false },
     },
   });
+  queryClients.push(client);
+  return client;
 }
 
 function TestProviders({

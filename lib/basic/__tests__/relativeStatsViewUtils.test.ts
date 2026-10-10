@@ -229,4 +229,86 @@ describe('relativeStatsViewUtils', () => {
       expect(getRoundedDecimalDelta(0.3, 0.1 + 0.2)).toBe(0);
     });
   });
+  it('compares lower-is-better stats against the team best and preserves signed deltas', () => {
+    const best = makeEventMetric({
+      key: 'throwaways',
+      higherIsBetter: false,
+      raw: 0,
+      teamMin: 0,
+      teamAvg: 1,
+      deltaFromAvg: -1,
+    });
+    const worse = makeEventMetric({ ...best, raw: 2, deltaFromAvg: 1 });
+    expect(getRelativeLabel(best, 'max')).toBe('at team best');
+    expect(getRelativeLabel(worse, 'max')).toBe('+2 vs best');
+    expect(getRelativeLabel(worse, 'avg')).toBe('+1 vs avg');
+    expect(getMetricTone(worse)).toBe('bad');
+    expect(getContextLabel(worse, 'max')).toBe('Team best 0');
+  });
+
+  it('handles zero-team baselines and tied event performance without division labels', () => {
+    expect(getRelativeLabel(makeEventMetric({ deltaFromAvg: 0, ratioToAvg: 1 }), 'avg')).toBe(
+      'even with avg',
+    );
+    expect(
+      getRelativeLabel(
+        makeEventMetric({ raw: 1, teamAvg: 0, deltaFromAvg: 1, ratioToAvg: null }),
+        'avg',
+      ),
+    ).toBe('team avg 0');
+    expect(getRelativeLabel(makeEventMetric({ raw: 0, teamMax: 0, pctOfMax: null }), 'max')).toBe(
+      'team best 0',
+    );
+    expect(
+      getRelativeLabel(
+        makeEventMetric({ key: 'plusMinus', raw: -2, teamMax: -1, pctOfMax: null }),
+        'max',
+      ),
+    ).toBe('team best -1');
+    expect(getRelativeLabel(makeEventMetric({ pctOfMax: 0.5 }), 'max')).toBe('50% of best');
+    expect(getContextLabel(makeEventMetric(), 'max')).toBe('Team best 3');
+    expect(formatRawValue(makeEventMetric({ raw: 1.25 }))).toBe('1.3');
+    expect(formatRawValue(makeEventMetric({ key: 'plusMinus', raw: 0 }))).toBe('0');
+  });
+
+  it('formats count and duration playing-time comparisons with their units', () => {
+    const duration = makePlayingTimeMetric({
+      key: 'minutesPlayed',
+      format: 'duration',
+      raw: 1.5,
+      teamAvg: 2,
+      teamMax: 3,
+      deltaFromAvg: -0.5,
+      pctOfMax: null,
+    });
+    expect(getRelativeLabel(duration, 'avg')).toBe('-0:30 vs avg');
+    expect(getRelativeLabel(duration, 'max')).toBe('team high 3:00');
+    expect(getContextLabel(duration, 'avg')).toBe('Team avg 2:00');
+    expect(getContextLabel(duration, 'max')).toBe('Team high 3:00');
+    expect(formatRawValue(duration)).toBe('1:30');
+    expect(getRelativeLabel({ ...duration, deltaFromAvg: 0.01 }, 'avg')).toBe('even with avg');
+    const points = makePlayingTimeMetric({
+      key: 'pointsPlayed',
+      format: 'count',
+      raw: 3,
+      teamAvg: 2,
+      deltaFromAvg: 1,
+      ratioToAvg: 1.5,
+      pctOfMax: null,
+    });
+    expect(getRelativeLabel(points, 'avg')).toBe('1.5x avg');
+    expect(getRelativeLabel({ ...points, teamAvg: 0, ratioToAvg: null }, 'avg')).toBe('team avg 0');
+    expect(getRelativeLabel(points, 'max')).toBe('team high 3');
+    expect(getRelativeLabel(makePlayingTimeMetric(), 'max')).toBe('67% of best');
+    expect(
+      getRelativeLabel(makePlayingTimeMetric({ raw: 0, teamMax: 0, pctOfMax: null }), 'max'),
+    ).toBe('team best 0%');
+  });
+
+  it.each([undefined, '1', '1/unknown'])(
+    'omits sample warnings when the denominator is unavailable: %s',
+    (detail) => {
+      expect(getSampleWarningLabel(makePlayingTimeMetric({ detail }))).toBeNull();
+    },
+  );
 });

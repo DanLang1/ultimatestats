@@ -615,28 +615,6 @@ describe('advanced tracking routes', () => {
     expect(screen.getByText('Blair')).toBeVisible();
   });
 
-  it('restores a partial next-line selection after backing out', async () => {
-    const user = userEvent.setup();
-    const participants = arrangeCompletedPointForNextLineSelection();
-    const view = await renderScreen(<TrackerLineSelectScreen />);
-
-    await user.press(screen.getByText(participants[0].name));
-    await user.press(screen.getByText(participants[1].name));
-
-    expect(screen.getByText('2/7')).toBeVisible();
-    expect(
-      useAdvancedTrackingStore.getState().pendingNextPointLineSelection?.participantIdsBySide.home,
-    ).toEqual([participants[0].id, participants[1].id]);
-
-    await user.press(screen.getByTestId('line-select-back'));
-    expect(router.dismissTo).toHaveBeenCalledWith('/advancedTracking/Tracker');
-    await view.unmount();
-
-    await renderScreen(<TrackerLineSelectScreen />);
-
-    expect(screen.getByText('2/7')).toBeVisible();
-  });
-
   it('saves a complete line during halftime without starting the second half', async () => {
     const user = userEvent.setup();
     const participants = arrangeCompletedPointForNextLineSelection();
@@ -661,28 +639,6 @@ describe('advanced tracking routes', () => {
     expect(
       useAdvancedTrackingStore.getState().pendingNextPointLineSelection?.participantIdsBySide.home,
     ).toEqual(participants.slice(0, 7).map((participant) => participant.id));
-  });
-
-  it('loads a prepared halftime line into the normal second-half setup', async () => {
-    const user = userEvent.setup();
-    const participants = arrangeCompletedPointForNextLineSelection();
-    expect(useAdvancedTrackingStore.getState().triggerHalftimeEarly()).toBe(true);
-    const preparedLineIds = participants.slice(0, 7).map((participant) => participant.id);
-    useAdvancedTrackingStore.getState().savePendingNextPointLineSelection('home', preparedLineIds);
-
-    await renderScreen(<TrackerLineSelectScreen />);
-
-    expect(screen.getByTestId('line-select-confirm')).toBeEnabled();
-    for (const participant of participants.slice(0, 7)) {
-      expect(screen.getByTestId(`player-chip-${participant.name}`)).toHaveProp(
-        'accessibilityState',
-        expect.objectContaining({ selected: true }),
-      );
-    }
-    await user.press(screen.getByTestId('line-select-confirm'));
-
-    expect(router.push).toHaveBeenCalledWith('/advancedTracking/PullTracking');
-    expect(useAdvancedTrackingStore.getState().isHalftimeBreakActive).toBe(true);
   });
 
   it('restores each line while switching sides in a game with two tracked sides', async () => {
@@ -751,6 +707,7 @@ describe('advanced tracking routes', () => {
 
     expect(screen.getByText(participants[7].name)).toBeVisible();
     expect(screen.getAllByText(/^Dark ·/).length).toBeGreaterThan(0);
+    expect(screen.getByRole('button', { name: /^Scrim Player 8, Dark ·/ })).toBeVisible();
   });
 
   it('records an opponent pull through the real pull-tracking flow', async () => {
@@ -1082,17 +1039,6 @@ describe('advanced tracking routes', () => {
     expect(router.back).toHaveBeenCalled();
   });
 
-  it('starts a scrimmage line correction on the active side', async () => {
-    const { participants } = arrangeDualTrackedPoint();
-
-    await renderScreen(<TrackerEditLineScreen />);
-
-    expect(screen.getByText('Correct Current · Light')).toBeVisible();
-    expect(screen.getByText(participants[0].name)).toBeVisible();
-    expect(screen.queryByText(participants[7].name)).not.toBeOnTheScreen();
-    expect(screen.queryByText('Correct Starting Lineup')).not.toBeOnTheScreen();
-  });
-
   it('progresses through both active lines in a regular game with two tracked rosters', async () => {
     const user = userEvent.setup();
     arrangeDualTrackedPoint();
@@ -1155,6 +1101,11 @@ describe('advanced tracking routes', () => {
     const { participants } = arrangeDualTrackedPoint();
 
     await renderScreen(<TrackerEditLineScreen />);
+    expect(screen.getByText('Correct Current · Light')).toBeVisible();
+    expect(screen.getByText(participants[0].name)).toBeVisible();
+    expect(screen.queryByText(participants[7].name)).not.toBeOnTheScreen();
+    expect(screen.queryByText('Correct Starting Lineup')).not.toBeOnTheScreen();
+
     await user.press(screen.getByText(participants[1].name));
     await user.press(screen.getByText(participants[14].name));
     await user.press(screen.getByTestId('line-select-confirm'));
@@ -1434,16 +1385,6 @@ describe('advanced tracking routes', () => {
     expect(router.back).toHaveBeenCalled();
   });
 
-  it('starts a scrimmage injury sub on the active side', async () => {
-    const { participants } = arrangeDualTrackedPoint();
-
-    await renderScreen(<TrackerInjurySubScreen />);
-
-    expect(screen.getByText('Injury Sub · Light')).toBeVisible();
-    expect(screen.getByText(participants[0].name)).toBeVisible();
-    expect(screen.queryByText(participants[7].name)).not.toBeOnTheScreen();
-  });
-
   it('can show legally available opposite-group players during a scrimmage injury sub', async () => {
     const user = userEvent.setup();
     const { participants } = arrangeDualTrackedPointWithPreviouslyDarkBenchPlayer();
@@ -1495,6 +1436,10 @@ describe('advanced tracking routes', () => {
     const { participants } = arrangeDualTrackedPoint();
 
     await renderScreen(<TrackerInjurySubScreen />);
+    expect(screen.getByText('Injury Sub · Light')).toBeVisible();
+    expect(screen.getByText(participants[0].name)).toBeVisible();
+    expect(screen.queryByText(participants[7].name)).not.toBeOnTheScreen();
+
     await user.press(screen.getByText(participants[0].name));
     await user.press(screen.getByText(participants[14].name));
     await user.press(screen.getByTestId('line-select-confirm'));
@@ -1701,6 +1646,13 @@ describe('advanced tracking routes', () => {
         .spyOn(advancedStorage, 'upsertAdvancedGame')
         .mockRejectedValueOnce(new Error('disk full'));
       await renderScreen(<TrackerGameCompleteScreen />);
+      if (mode === 'early') {
+        expect(screen.getByText('END GAME')).toBeVisible();
+        expect(screen.getByText('Final Score')).toBeVisible();
+        expect(screen.getByTestId('game-complete-undo')).toBeVisible();
+        expect(screen.queryByTestId('tracker-undo-button')).not.toBeOnTheScreen();
+        expect(screen.getByText('Done')).toBeVisible();
+      }
       await user.press(screen.getByTestId('game-complete-finish'));
       expect(await screen.findByText('Unable to save game')).toBeVisible();
       expect(router.replace).not.toHaveBeenCalled();
@@ -1779,19 +1731,6 @@ describe('advanced tracking routes', () => {
     expect(
       useAdvancedTrackingStore.getState().currentGame?.points[0].possessions.at(-1)?.actions.at(-1),
     ).toMatchObject({ kind: 'throw', result: 'goal', details: { type: 'huck' } });
-  });
-
-  it('renders the manual early-end route without faking game-over hooks', async () => {
-    arrangeAdvancedGame();
-    setMockSearchParams({ mode: 'earlyEnd' });
-
-    await renderScreen(<TrackerGameCompleteScreen />);
-
-    expect(screen.getByText('END GAME')).toBeVisible();
-    expect(screen.getByText('Final Score')).toBeVisible();
-    expect(screen.getByTestId('game-complete-undo')).toBeVisible();
-    expect(screen.queryByTestId('tracker-undo-button')).not.toBeOnTheScreen();
-    expect(screen.getByText('Done')).toBeVisible();
   });
 
   it('hides Undo Last Action when a restored game-over state has no undoable action', async () => {

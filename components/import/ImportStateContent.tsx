@@ -15,6 +15,7 @@ type TeamPayload = Extract<SharedPayload, { type: 'team' }>;
 
 interface ImportStateContentProps {
   isPending: boolean;
+  isImporting: boolean;
   importState: ShareImportState | null;
   savedTeams: SavedTeam[];
   onDismiss: () => void;
@@ -31,6 +32,7 @@ interface ImportStateContentProps {
 
 export function ImportStateContent({
   isPending,
+  isImporting,
   importState,
   savedTeams,
   onDismiss,
@@ -44,6 +46,7 @@ export function ImportStateContent({
   onViewTeam,
   onViewGames,
 }: ImportStateContentProps) {
+  if (isImporting) return <ImportStatusContent status="saving" />;
   if (isPending) return <ImportStatusContent status="loading" />;
   if (!importState) return null;
 

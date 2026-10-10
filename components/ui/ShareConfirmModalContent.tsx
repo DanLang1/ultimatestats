@@ -35,9 +35,7 @@ export function ShareConfirmModalContent({
     setInlineError(null);
     try {
       const url = await onConfirm();
-      if (url.trim().length > 0) {
-        setShareUrl(url);
-      }
+      setShareUrl(url);
       setDidCopy(false);
     } catch (error) {
       console.error('[ShareConfirmModal] share link creation failed', error);

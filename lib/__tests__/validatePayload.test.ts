@@ -596,13 +596,6 @@ describe('validatePayload', () => {
       expect(result.data[0].metadata).toBeUndefined();
     });
 
-    it.each(THROW_RESULTS)('accepts the declared %s throw result', (throwResult) => {
-      const data = [makeAdvancedGameData({}, throwResult)];
-      const result = validatePayload(makeAdvancedGamesPayload({ data }));
-
-      expect(result.type).toBe('advanced-games');
-    });
-
     it('throws for empty advanced games array', () => {
       expect(() => validatePayload(makeAdvancedGamesPayload({ data: [] }))).toThrow('no games');
     });
@@ -661,5 +654,233 @@ describe('validatePayload', () => {
       const result = validatePayload(makeGamePayload({ appVersion: 123 }));
       expect(result.appVersion).toBe('');
     });
+  });
+});
+
+describe('shared advanced record boundary validation', () => {
+  it.each([
+    ['id', '', 'missing data id'],
+    ['schemaVersion', undefined, 'missing schemaVersion'],
+    ['createdAt', undefined, 'missing timestamps'],
+    ['updatedAt', NaN, 'missing timestamps'],
+    ['importedAt', 'yesterday', 'invalid importedAt'],
+    ['status', 'unknown', 'invalid status'],
+    ['focusSideId', null, 'missing side ids'],
+    ['flip', { result: 'draw' }, 'invalid flip result'],
+    ['settings', null, 'missing settings'],
+    ['sides', [], 'expected two sides'],
+    ['sides', [null, { id: 'away', label: 'Away', trackingMode: 'anonymous' }], 'invalid side'],
+    [
+      'sides',
+      [
+        { id: 'home', label: 'Home', trackingMode: 'partial' },
+        { id: 'away', label: 'Away', trackingMode: 'anonymous' },
+      ],
+      'invalid tracking mode',
+    ],
+    ['participants', null, 'missing participants'],
+    ['participants', [null], 'invalid participant'],
+    [
+      'participants',
+      Array.from({ length: 101 }, (_, i) => ({ id: `p${i}`, name: 'Player' })),
+      'too many participants',
+    ],
+    [
+      'points',
+      Array.from({ length: 101 }, () => ({ id: 'point', lines: [], possessions: [] })),
+      'too many points',
+    ],
+    ['points', [null], 'invalid point'],
+    ['points', [{ id: 'point', lines: [null], possessions: [] }], 'invalid point line'],
+    ['points', [{ id: 'point', lines: [], possessions: null }], 'missing possessions'],
+    ['points', [{ id: 'point', lines: [], possessions: [null] }], 'invalid possession'],
+    [
+      'points',
+      [{ id: 'point', lines: [], possessions: [{ id: 'pos', sideId: 'home', actions: null }] }],
+      'missing actions',
+    ],
+    [
+      'points',
+      [
+        {
+          id: 'point',
+          lines: [],
+          possessions: Array.from({ length: 1001 }, (_, i) => ({
+            id: `pos${i}`,
+            sideId: 'home',
+            actions: [],
+          })),
+        },
+      ],
+      'too many possessions',
+    ],
+  ])('rejects malformed %s with %s', (field, value, message) => {
+    const data = { ...makeAdvancedGameData(), [field]: value };
+    expect(() => validatePayload(makeAdvancedGamePayload({ data }))).toThrow(message);
+  });
+
+  it.each([
+    [null, 'invalid action'],
+    [{ id: '', kind: 'stoppage', reason: 'injury' }, 'missing action id'],
+    [{ id: 'pull', kind: 'pull', sideId: null }, 'invalid pull side'],
+    [{ id: 'pickup', kind: 'disc_pickup', sideId: null }, 'invalid pickup side'],
+    [{ id: 'throw', kind: 'throw', sideId: null }, 'invalid throw side'],
+    [{ id: 'throw', kind: 'throw', sideId: 'home', thrower: null }, 'invalid player reference'],
+    [
+      {
+        id: 'throw',
+        kind: 'throw',
+        sideId: 'home',
+        thrower: { refType: 'participant', participantId: '' },
+      },
+      'missing participantId',
+    ],
+    [
+      { id: 'throw', kind: 'throw', sideId: 'home', thrower: { refType: 'other' } },
+      'invalid player reference type',
+    ],
+    [
+      {
+        id: 'throw',
+        kind: 'throw',
+        sideId: 'home',
+        thrower: { refType: 'untracked' },
+        result: 'bad',
+      },
+      'invalid throw result',
+    ],
+    [
+      {
+        id: 'pull',
+        kind: 'pull',
+        sideId: 'away',
+        receivingSideId: 'home',
+        puller: { refType: 'untracked' },
+        result: 'bad',
+      },
+      'invalid pull result',
+    ],
+    [{ id: 'stop', kind: 'stoppage', reason: 'bad' }, 'invalid stoppage reason'],
+    [{ id: 'stop', kind: 'stoppage', reason: 'timeout', sideId: 1 }, 'invalid stoppage side'],
+  ])('rejects malformed action %#', (action, message) => {
+    const data = makeAdvancedGameData();
+    Object.assign(data.points[0].possessions[0], { actions: [action] });
+    expect(() => validatePayload(makeAdvancedGamePayload({ data }))).toThrow(message);
+  });
+
+  it.each(['timeout', 'injury', 'manual_pause'])('preserves a valid %s stoppage', (reason) => {
+    const data = makeAdvancedGameData();
+    Object.assign(data.points[0].possessions[0], {
+      actions: [{ id: 'pause', kind: 'stoppage', reason, sideId: 'home' }],
+    });
+    const result = validatePayload(makeAdvancedGamePayload({ data }));
+    if (result.type !== 'advanced-game') throw new Error('Expected advanced game');
+    expect(result.data.points[0].possessions[0].actions).toEqual([
+      { id: 'pause', kind: 'stoppage', reason, sideId: 'home' },
+    ]);
+  });
+
+  it.each(['ob', 'dropped', 'roller'])('preserves a valid %s pull', (result) => {
+    const data = makeAdvancedGameData();
+    const pull = {
+      id: 'pull',
+      kind: 'pull',
+      sideId: 'away',
+      receivingSideId: 'home',
+      puller: { refType: 'untracked' },
+      result,
+    };
+    Object.assign(data.points[0].possessions[0], { actions: [pull] });
+    const validated = validatePayload(makeAdvancedGamePayload({ data }));
+    if (validated.type !== 'advanced-game') throw new Error('Expected advanced game');
+    expect(validated.data.points[0].possessions[0].actions).toEqual([pull]);
+  });
+
+  it('rejects huck classification on a stall', () => {
+    const data = setThrowDetails(makeAdvancedGameData({}, 'stall'), { type: 'huck' });
+    expect(() => validatePayload(makeAdvancedGamePayload({ data }))).toThrow(
+      'throw details require an eligible throw result',
+    );
+  });
+
+  it('rejects missing advanced data', () => {
+    expect(() => validatePayload(makeAdvancedGamePayload({ data: null }))).toThrow('missing data');
+  });
+
+  it('rejects malformed bulk records and non-object presets', () => {
+    expect(() => validatePayload(makeAdvancedGamesPayload({ data: {} }))).toThrow(
+      'advanced games data must be an array',
+    );
+    expect(() =>
+      validatePayload(makeTeamPayload({ data: { id: '', name: 'Team', roster: [] } })),
+    ).toThrow('missing data id');
+    expect(() => validatePayload(makeTeamPayload({ data: null }))).toThrow('missing data');
+    expect(() => validatePayload(makeGamePayload({ presets: [null] }))).toThrow('not an object');
+  });
+});
+
+describe('shared field locations', () => {
+  it.each([
+    [null, 'invalid field location'],
+    [{ locationType: 'zone' }, 'missing zoneId'],
+    [{ locationType: 'xy', x: 'left', y: 0.5 }, 'invalid xy location'],
+    [{ locationType: 'polar', x: 0, y: 0 }, 'invalid field location type'],
+  ])('rejects a malformed pickup location %#', (location, message) => {
+    const data = makeAdvancedGameData();
+    Object.assign(data.points[0].possessions[0], {
+      actions: [
+        {
+          id: 'pickup',
+          kind: 'disc_pickup',
+          sideId: 'home',
+          player: { refType: 'unknown' },
+          location,
+        },
+      ],
+    });
+    expect(() => validatePayload(makeAdvancedGamePayload({ data }))).toThrow(message);
+  });
+
+  it('preserves valid pull, pickup and throw locations through migration', () => {
+    const data = makeAdvancedGameData();
+    const xy = { locationType: 'xy', x: 0.25, y: 0.75 };
+    const zone = { locationType: 'zone', zoneId: 'endzone' };
+    Object.assign(data.points[0].possessions[0], {
+      actions: [
+        {
+          id: 'pull',
+          kind: 'pull',
+          sideId: 'away',
+          receivingSideId: 'home',
+          puller: { refType: 'untracked' },
+          result: 'inbound',
+          origin: xy,
+          landing: zone,
+        },
+        {
+          id: 'pickup',
+          kind: 'disc_pickup',
+          sideId: 'home',
+          player: { refType: 'unknown' },
+          location: zone,
+        },
+        {
+          id: 'throw',
+          kind: 'throw',
+          sideId: 'home',
+          thrower: { refType: 'unknown' },
+          result: 'throwaway',
+          origin: zone,
+          target: xy,
+        },
+      ],
+    });
+    const result = validatePayload(makeAdvancedGamePayload({ data }));
+    if (result.type !== 'advanced-game') throw new Error('Expected advanced game');
+    expect(result.data.points[0].possessions[0].actions).toMatchObject([
+      { origin: xy, landing: zone },
+      { location: zone },
+      { origin: zone, target: xy },
+    ]);
   });
 });

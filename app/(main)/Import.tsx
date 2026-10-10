@@ -1,3 +1,4 @@
+import { useMutation } from '@tanstack/react-query';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 
@@ -28,6 +29,15 @@ export default function ImportScreen() {
   const { importAdvancedGame } = useAdvancedTrackingStore();
   const { isPending, importState, setImportState } = useShareImport(shareId);
   const gameActive = useIsGameActive();
+  const importMutation = useMutation({
+    mutationFn: (save: () => Promise<void>) => save(),
+    onError: () => {
+      setImportState({
+        status: 'error',
+        message: 'Could not save imported data. Please reopen the link and try again.',
+      });
+    },
+  });
 
   const handleDone = () => {
     router.dismissTo('/');
@@ -70,8 +80,8 @@ export default function ImportScreen() {
   };
 
   const handleImportGame = async (payload: GamePayload) => {
-    setImportState({ status: 'done', type: 'game', gameId: payload.data.id });
     await importGame({ ...payload.data, importedAt: Date.now() });
+    setImportState({ status: 'done', type: 'game', gameId: payload.data.id });
   };
 
   const handleImportAdvancedGame = async (payload: AdvancedGamePayload) => {
@@ -89,10 +99,10 @@ export default function ImportScreen() {
   };
 
   const handleImportGames = async (games: SavedGame[]) => {
-    setImportState({ status: 'done', type: 'games', count: games.length });
     for (const game of games) {
       await importGame({ ...game, importedAt: Date.now() });
     }
+    setImportState({ status: 'done', type: 'games', count: games.length });
   };
 
   const handleGoToGames = () => {
@@ -101,14 +111,14 @@ export default function ImportScreen() {
   };
 
   const handleImportTeam = async (payload: TeamPayload) => {
-    setImportState({ status: 'done', type: 'team' });
     await importTeam(payload.data);
     if (payload.presets?.length) {
-      useLinePresetsStore.getState().importPresetsForTeam(payload.data.id, payload.presets);
+      await useLinePresetsStore.getState().importPresetsForTeam(payload.data.id, payload.presets);
     }
     if (!gameActive) {
       await loadTeam(payload.data.id);
     }
+    setImportState({ status: 'done', type: 'team' });
   };
 
   return (
@@ -119,14 +129,19 @@ export default function ImportScreen() {
           style={[styles.card, { backgroundColor: palette.modalBg, shadowColor: palette.shadow }]}>
           <ImportStateContent
             isPending={isPending}
+            isImporting={importMutation.isPending}
             importState={importState}
             savedTeams={savedTeams}
             onDismiss={handleDone}
-            onImportGame={(payload) => void handleImportGame(payload)}
-            onImportGames={(games) => void handleImportGames(games)}
-            onImportAdvancedGame={(payload) => void handleImportAdvancedGame(payload)}
-            onImportAdvancedGames={(games) => void handleImportAdvancedGames(games)}
-            onImportTeam={(payload) => void handleImportTeam(payload)}
+            onImportGame={(payload) => importMutation.mutate(() => handleImportGame(payload))}
+            onImportGames={(games) => importMutation.mutate(() => handleImportGames(games))}
+            onImportAdvancedGame={(payload) =>
+              importMutation.mutate(() => handleImportAdvancedGame(payload))
+            }
+            onImportAdvancedGames={(games) =>
+              importMutation.mutate(() => handleImportAdvancedGames(games))
+            }
+            onImportTeam={(payload) => importMutation.mutate(() => handleImportTeam(payload))}
             onViewGame={handleGoToGame}
             onViewAdvancedGame={handleGoToAdvancedGame}
             onViewTeam={handleGoToTeam}

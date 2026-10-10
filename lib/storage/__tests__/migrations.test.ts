@@ -8,13 +8,13 @@ import { CURRENT_SCHEMA_VERSION, SavedGame } from '../types';
 
 const FIXTURE_ROOT = join(__dirname, '..', '__fixtures__', 'games');
 
-const FIXTURE_PATHS = [
-  'v2/halftime-by-math.json',
-  'v2/softcap-final-target.json',
-  'v3/already-stamped-halftime.json',
+const FIXTURE_CASES = [
+  ['v2/halftime-by-math.json', 9],
+  ['v2/softcap-final-target.json', 3],
+  ['v3/already-stamped-halftime.json', 1],
 ] as const;
 
-function loadSavedGameFixture(relativePath: (typeof FIXTURE_PATHS)[number]): SavedGame {
+function loadSavedGameFixture(relativePath: (typeof FIXTURE_CASES)[number][0]): SavedGame {
   const raw = readFileSync(join(FIXTURE_ROOT, relativePath), 'utf8');
   return JSON.parse(raw) as SavedGame;
 }
@@ -169,10 +169,32 @@ describe('storage migrations', () => {
     expect(migrated).not.toHaveProperty('hardCapMins');
   });
 
-  it.each(FIXTURE_PATHS)('is idempotent for %s', (relativePath) => {
-    const fixture = loadSavedGameFixture(relativePath);
-    const migrated = migrateSavedGame(fixture);
+  it.each(FIXTURE_CASES)(
+    'preserves historical data and remains idempotent for %s',
+    (relativePath, halftimeEventIndex) => {
+      const fixture = loadSavedGameFixture(relativePath);
+      const migrated = migrateSavedGame(fixture);
 
-    expect(migrateSavedGame(migrated)).toEqual(migrated);
-  });
+      expect(migrated).toMatchObject({
+        id: fixture.id,
+        createdAt: fixture.createdAt,
+        team1: fixture.team1,
+        team2Name: fixture.team2Name,
+        team1Score: fixture.team1Score,
+        team2Score: fixture.team2Score,
+        gameTo: fixture.gameTo,
+        startingPossession: fixture.startingPossession,
+        schemaVersion: CURRENT_SCHEMA_VERSION,
+        autoHalftimeEnabled: true,
+      });
+      expect(migrated.events).toEqual(
+        fixture.events.map((event, index) =>
+          index === halftimeEventIndex ? { ...event, triggeredHalftime: true } : event,
+        ),
+      );
+      expect(migrated).not.toHaveProperty('hardCapMins');
+      expect(migrated).not.toHaveProperty('gameLength');
+      expect(migrateSavedGame(migrated)).toEqual(migrated);
+    },
+  );
 });

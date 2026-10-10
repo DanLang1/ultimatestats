@@ -13,6 +13,10 @@ import {
   getSelectablePlayerStatGames,
   generateAggregateCSV,
   generateCurrentGameCSV,
+  generateSavedGameCSV,
+  getPlayerRoleLabel,
+  getRoleStats,
+  type RoleStats,
 } from '../statsUtils';
 
 describe('statsUtils', () => {
@@ -794,6 +798,130 @@ describe('statsUtils', () => {
 
       expect(csv).toContain('# Aggregated Stats: My Team (0 games)');
       expect(csv).not.toMatch(/NaN|Infinity/);
+    });
+  });
+  describe('player role classification', () => {
+    const quietStats: RoleStats = {
+      goals: 0.1,
+      assists: 0.1,
+      blocks: 0.1,
+      plusMinus: 0.5,
+      turnovers: 0,
+      throwaways: 0,
+      drops: 0,
+      rawGoals: 1,
+      rawAssists: 1,
+      rawBlocks: 1,
+      rawTurnovers: 0,
+      rawDrops: 0,
+      rawThrowaways: 0,
+      totalEvents: 3,
+    };
+
+    it.each([
+      [{ plusMinus: 0.75 }, true, 'MVP'],
+      [{ assists: 0.5, throwaways: 0.5, blocks: 0.8 }, false, 'Shooter'],
+      [{ blocks: 0.6 }, false, 'Lockdown'],
+      [{ goals: 0.7, assists: 0.1, drops: 0.1 }, false, 'Front Cone'],
+      [{ assists: 0.6, throwaways: 0.1 }, false, 'Reliable'],
+      [{ goals: 0.5, assists: 0.5, throwaways: 0.3 }, false, 'Hybrid'],
+      [{ plusMinus: 0.75 }, false, 'Glue Guy'],
+      [{ drops: 1, rawDrops: 3, rawTurnovers: 3, totalEvents: 6 }, false, 'Butter Fingers'],
+      [{ throwaways: 1, rawThrowaways: 3, rawTurnovers: 3, totalEvents: 6 }, false, 'Green Light'],
+      [{}, false, null],
+      [{ plusMinus: 0.5 }, true, null],
+      [{ rawGoals: 1, rawAssists: 0, rawBlocks: 0, totalEvents: 1 }, true, null],
+    ] as const)('classifies %j with MVP=%s as %s', (overrides, isMVP, expected) => {
+      expect(getPlayerRoleLabel({ ...quietStats, ...overrides }, isMVP)).toBe(expected);
+    });
+
+    it('returns neutral radar stats for a player with no recorded contribution', () => {
+      expect(getRoleStats('absent', [goal('team1', 'Alice', 'Bob')], 'team1')).toEqual({
+        goals: 0,
+        assists: 0,
+        blocks: 0,
+        plusMinus: 0.5,
+        turnovers: 0,
+        throwaways: 0,
+        drops: 0,
+        rawGoals: 0,
+        rawAssists: 0,
+        rawBlocks: 0,
+        rawTurnovers: 0,
+        rawDrops: 0,
+        rawThrowaways: 0,
+        totalEvents: 0,
+      });
+    });
+  });
+
+  describe('saved-game CSV export', () => {
+    it('exports the played date, roster names, shared turnovers, Callahan credit and point timing', () => {
+      const game = makeSavedGame({
+        id: 'csv-saved',
+        createdAt: new Date(2026, 0, 2).getTime(),
+        startingPossession: 'team1',
+        team1Score: 1,
+        team2Score: 0,
+        roster: [{ ...makePlayer('Alice'), name: 'Alice, Ace' }, makePlayer('Bob')],
+        events: [
+          {
+            type: 'turnover',
+            team: 'team1',
+            subtype: 'fiftyfifty',
+            playerId: 'Alice',
+            player2Id: 'Bob',
+            elapsedMs: 5000,
+          },
+          {
+            type: 'turnover',
+            team: 'team1',
+            subtype: 'block',
+            playerId: 'Alice',
+            elapsedMs: 10000,
+          },
+          {
+            type: 'goal',
+            team: 'team1',
+            goalPlayerId: 'Alice',
+            assistPlayerId: 'OTHER_TEAM',
+            elapsedMs: 15000,
+          },
+        ],
+        pointLines: [{ pointNumber: 1, playerIds: ['Alice', 'Bob'], timestamp: 1 }],
+      });
+      const csv = generateSavedGameCSV({
+        ...game,
+        playedAt: new Date(2026, 1, 3).getTime(),
+        autoHalftimeEnabled: false,
+      });
+      expect(csv).toContain('# Game: My Team vs Opponent - 3 Feb 2026');
+      expect(csv).toContain('My Team,fiftyfifty,"Alice, Ace",Bob,0:05');
+      expect(csv).toContain('My Team,block,"Alice, Ace",,0:10');
+      expect(csv).toContain('Other Team,0:15');
+      expect(csv).toContain('Drops,Callahans,Plus/Minus,Points Played');
+      expect(csv).toContain('# Timing Stats');
+      expect(csv).toContain('# Time of Possession');
+    });
+
+    it('exports a legacy untimed saved game using its creation date without playing-time columns', () => {
+      const game = makeSavedGame({
+        id: 'legacy-csv',
+        createdAt: new Date(2026, 0, 2).getTime(),
+        startingPossession: 'team2',
+        team1Score: 0,
+        team2Score: 1,
+        events: [
+          { type: 'turnover', team: 'team2', subtype: 'drop', playerId: null },
+          { type: 'goal', team: 'team2', goalPlayerId: null, assistPlayerId: null },
+        ],
+      });
+      const csv = generateSavedGameCSV(game);
+      expect(csv).toContain('# Game: My Team vs Opponent - 2 Jan 2026');
+      expect(csv).toContain('Opponent,drop,,,');
+      expect(csv).not.toContain('Points Played');
+      expect(csv).not.toContain('# Timing Stats');
+      expect(csv).not.toContain('Callahans');
     });
   });
 });

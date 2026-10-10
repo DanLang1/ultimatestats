@@ -8,7 +8,7 @@ import { useLayout } from '@/hooks/useLayout';
 import { createImportContentMetrics, createImportContentStyles } from './importContentStyles';
 
 type ImportStatusContentProps =
-  | { status: 'loading' }
+  | { status: 'loading' | 'saving' }
   | { status: 'error'; message: string; onDismiss: () => void };
 
 export function ImportStatusContent(props: ImportStatusContentProps) {
@@ -17,12 +17,12 @@ export function ImportStatusContent(props: ImportStatusContentProps) {
   const styles = createImportContentStyles(sizeClass);
   const metrics = createImportContentMetrics(sizeClass);
 
-  if (props.status === 'loading') {
+  if (props.status !== 'error') {
     return (
       <View style={styles.content}>
         <ActivityIndicator size="large" color={palette.accent} />
         <ThemedText style={[styles.title, { color: palette.modalText }]}>
-          Loading shared data...
+          {props.status === 'saving' ? 'Importing...' : 'Loading shared data...'}
         </ThemedText>
       </View>
     );

@@ -313,6 +313,8 @@ export default function EditEventModal() {
             <>
               <Pressable
                 onPress={handleDelete}
+                accessibilityRole="button"
+                accessibilityLabel="Delete event"
                 hitSlop={12}
                 style={[styles.headerButton, { backgroundColor: palette.dangerOverlay15 }]}>
                 <MaterialCommunityIcons
@@ -323,6 +325,8 @@ export default function EditEventModal() {
               </Pressable>
               <Pressable
                 onPress={handleSave}
+                accessibilityRole="button"
+                accessibilityLabel="Save event changes"
                 hitSlop={12}
                 style={[styles.headerButton, { backgroundColor: palette.accentOverlay30 }]}>
                 <MaterialCommunityIcons
@@ -336,6 +340,8 @@ export default function EditEventModal() {
           {isGoal && (
             <Pressable
               onPress={handleSave}
+              accessibilityRole="button"
+              accessibilityLabel="Save event changes"
               hitSlop={12}
               style={[styles.headerButton, { backgroundColor: palette.accentOverlay30 }]}>
               <MaterialCommunityIcons
@@ -345,7 +351,11 @@ export default function EditEventModal() {
               />
             </Pressable>
           )}
-          <Pressable onPress={handleDismiss} hitSlop={12}>
+          <Pressable
+            onPress={handleDismiss}
+            accessibilityRole="button"
+            accessibilityLabel="Close event editor"
+            hitSlop={12}>
             <MaterialCommunityIcons
               name="close"
               size={scaleBySizeClass(24, sizeClass)}
@@ -455,6 +465,8 @@ export default function EditEventModal() {
               <Pressable
                 hitSlop={12}
                 onPress={() => setFiftyFiftyStep(1)}
+                accessibilityRole="button"
+                accessibilityLabel="Change thrower"
                 style={styles.throwerBadgeEdit}>
                 <MaterialCommunityIcons
                   name="pencil"

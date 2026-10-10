@@ -82,7 +82,8 @@ Modal route files live in `app/(modals)/`. Their exit contract is defined in
 5. Tracker branches use `/advancedTracking/TrackerEditLine` and
    `/advancedTracking/TrackerInjurySub` without leaving the advanced domain.
 6. A finished game is persisted before `/advancedTracking/TrackerGameComplete` is presented.
-7. Saved advanced analytics live under `/advancedTracking/analytics/*`.
+7. Saved advanced analytics live under `/advancedTracking/analytics/*`. A missing game ID or an
+   unavailable record shows the recovery screen with a link to saved games.
 
 ### Route Gating Priorities
 

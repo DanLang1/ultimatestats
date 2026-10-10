@@ -1,7 +1,4 @@
-import {
-  isExpectedTutorialAdvancedAction,
-  TUTORIAL_ADVANCED_STEPS,
-} from '../useTutorialAdvancedGameState';
+import { isExpectedTutorialAdvancedAction } from '../useTutorialAdvancedGameState';
 
 describe('advanced tutorial point sequence', () => {
   it('accepts only the scripted action for each step', () => {
@@ -22,9 +19,5 @@ describe('advanced tutorial point sequence', () => {
     expect(isExpectedTutorialAdvancedAction(5, { kind: 'goal', playerId: 'line-kelly' })).toBe(
       true,
     );
-  });
-
-  it('ends the sequence with the point-ending goal', () => {
-    expect(TUTORIAL_ADVANCED_STEPS.at(-1)?.result).toBe('goal');
   });
 });

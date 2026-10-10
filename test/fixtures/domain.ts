@@ -4,6 +4,12 @@ import { useSavedAdvancedGamesStore } from '@/store/advancedTracking/savedGamesS
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { useGameStore } from '@/store/basic/gameStore';
 import { useGameSessionStore } from '@/store/gameSessionStore';
+import {
+  ADVANCED_TEST_SIDES,
+  createAdvancedGameScenario,
+  participantRef,
+  UNTRACKED_PLAYER,
+} from '@/test/fixtures/advancedGameBuilder';
 
 export const testPlayers: Player[] = [
   {
@@ -109,4 +115,53 @@ export function recordOpeningPull() {
     receiver: { refType: 'participant', participantId: 'player-alex' },
     result: 'inbound',
   });
+}
+
+/** Active advanced game with a point started and picked up by Alex, ready for between-point flows. */
+export function arrangeAdvancedPickupGame({ startedAt }: { startedAt?: number } = {}) {
+  const game = createAdvancedGameScenario({
+    settings: {
+      locationMode: 'none',
+      format: { formatType: 'standard', gameTo: 15, halftimeAt: 8 },
+    },
+  })
+    .startPoint({
+      puller: UNTRACKED_PLAYER,
+      receiver: participantRef('alex'),
+      startedAt,
+    })
+    .pickup(participantRef('alex'))
+    .build();
+  useAdvancedTrackingStore.setState({ currentGame: game, currentGameId: game.id });
+  useGameSessionStore.getState().setActiveGameType('advanced');
+  return game;
+}
+
+/** Final one-point advanced game for the Windchill (or another) focus side. */
+export function createFinalAdvancedGame({
+  id,
+  opponentName,
+  focusLabel,
+  sourceTeamId,
+}: {
+  id: string;
+  opponentName: string;
+  focusLabel: string;
+  sourceTeamId?: string;
+}) {
+  const sides = ADVANCED_TEST_SIDES.map((side, index) =>
+    index === 0 ? { ...side, label: focusLabel, sourceTeamId } : side,
+  );
+  return createAdvancedGameScenario({
+    id,
+    status: 'final',
+    sides,
+    metadata: { opponentName },
+  })
+    .hold({
+      puller: UNTRACKED_PLAYER,
+      receiver: participantRef('alex'),
+      scorer: participantRef('blair'),
+    })
+    .build();
 }

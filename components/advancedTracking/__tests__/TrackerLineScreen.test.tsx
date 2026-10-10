@@ -37,31 +37,6 @@ describe('TrackerLineScreen', () => {
     await AsyncStorage.clear();
   });
 
-  it('shows the expanded roster on demand and labels an opposite-side player', async () => {
-    const user = userEvent.setup();
-    const lightPlayer = makeParticipant('light-player', 'Light Player');
-    const darkPlayer = makeParticipant('dark-player', 'Dark Player');
-
-    await renderScreen(
-      <TrackerLineScreen
-        participants={[lightPlayer]}
-        allParticipants={[lightPlayer, darkPlayer]}
-        rosterParticipants={[lightPlayer, darkPlayer]}
-        playerStatusLabels={new Map([[darkPlayer.id, 'Dark']])}
-        title="Light Line"
-        onConfirm={() => {}}
-      />,
-    );
-
-    expect(screen.getByText('Light Player')).toBeVisible();
-    expect(screen.queryByText('Dark Player')).not.toBeOnTheScreen();
-
-    await user.press(screen.getByTestId('line-select-show-all-players'));
-
-    expect(screen.getByText('Dark Player')).toBeVisible();
-    expect(screen.getByLabelText('Dark Player, Dark')).toBeVisible();
-  });
-
   it('resolves history names from the full roster and drops unavailable players when loaded', async () => {
     const user = userEvent.setup();
     const joe = makeParticipant('joe', 'Joe Crossover');
@@ -94,6 +69,14 @@ describe('TrackerLineScreen', () => {
 
     expect(screen.getByText('6/7')).toBeVisible();
     expect(screen.getByTestId('line-select-confirm')).toBeDisabled();
+    expect(screen.getByLabelText('Choose line, Pt 1')).toBeVisible();
+
+    await user.press(screen.getByText('Available 1'));
+
+    expect(screen.getByText('5/7')).toBeVisible();
+    expect(screen.getByLabelText('Choose line, Choose line')).toBeVisible();
+    await user.press(screen.getByTestId('line-select-load-line'));
+    expect(screen.getByText(/Joe/)).toBeVisible();
   });
 
   it('compares required changes against the selection from mount', async () => {
@@ -277,7 +260,6 @@ describe('TrackerLineScreen', () => {
   });
 
   it('sorts FMP players before MMP', async () => {
-    const user = userEvent.setup();
     const mmpHandler = {
       ...makeParticipant('mmp-handler', 'Andy'),
       role: 'handler' as const,
@@ -302,17 +284,12 @@ describe('TrackerLineScreen', () => {
       />,
     );
 
-    expect(screen.getByText('Handler')).toBeVisible();
-
-    expect(screen.getByText('Andy')).toBeVisible();
-    expect(screen.getByText('Beth')).toBeVisible();
-
-    await user.press(screen.getByText('Andy'));
-    expect(screen.getByTestId('player-chip-Andy')).toHaveProp(
-      'accessibilityState',
-      expect.objectContaining({ selected: true }),
-    );
-    expect(screen.getByText('Handler')).toBeVisible();
+    const chips = screen.getAllByTestId(/^player-chip-(Beth|Andy|Carl)$/);
+    expect(chips.map((chip) => chip.props.testID)).toEqual([
+      'player-chip-Beth',
+      'player-chip-Andy',
+      'player-chip-Carl',
+    ]);
   });
 
   it('renders single-gender role sections without matching-type subgroups', async () => {

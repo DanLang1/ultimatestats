@@ -17,6 +17,7 @@ import { useGameTimer } from '@/hooks/basic/useGameTimer';
 import { useHalftimeEarly } from '@/hooks/basic/useHalftimeEarly';
 import { usePointTimer } from '@/hooks/basic/usePointTimer';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { getCapStatusMessage } from '@/lib/basic/capStatusUtils';
 import { formatRatioFull, getExpectedRatio, getSequenceNumber } from '@/lib/genderRatioUtils';
 import { useGameStore } from '@/store/basic/gameStore';
 import { useSettingsStore } from '@/store/settingsStore';
@@ -51,6 +52,15 @@ export default function GameInfoScreen() {
 
   const { timeLeft } = useGameTimer();
   const isHardcap = timeLeft === 0;
+  const capStatus = getCapStatusMessage({
+    isHardcap,
+    isSoftCap,
+    softCapPending,
+    team1Score,
+    team2Score,
+    team1Name,
+    team2Name,
+  });
 
   const { palette } = useTheme();
   const { showAlert } = useAlert();
@@ -114,6 +124,8 @@ export default function GameInfoScreen() {
         rightSlot={
           <Pressable
             onPress={() => router.push('/GameFormat')}
+            accessibilityRole="button"
+            accessibilityLabel="Edit game format"
             style={({ pressed }) => [
               styles.headerIconButton,
               { backgroundColor: palette.overlay10 },
@@ -161,7 +173,7 @@ export default function GameInfoScreen() {
                       HARDCAP
                     </ThemedText>
                   </View>
-                  {team1Score === team2Score ? (
+                  {capStatus.kind === 'universe-point' && (
                     <View style={styles.capStatusBadge}>
                       <MaterialCommunityIcons
                         name="sword-cross"
@@ -173,28 +185,16 @@ export default function GameInfoScreen() {
                         Universe Point
                       </ThemedText>
                     </View>
-                  ) : (
+                  )}
+                  {capStatus.kind === 'hardcap-lead' && (
                     <>
-                      {(() => {
-                        const leadingTeam = team1Score > team2Score ? team1Name : team2Name;
-                        const trailingTeam = team1Score > team2Score ? team2Name : team1Name;
-                        const scoreDiff = Math.abs(team1Score - team2Score);
-                        const canTie = scoreDiff === 1;
-                        return (
-                          <>
-                            <ThemedText
-                              style={[styles.hardcapWinnerText, { color: palette.textInverse }]}>
-                              {leadingTeam}
-                            </ThemedText>
-                            <ThemedText
-                              style={[styles.capStatusText, { color: palette.textMuted }]}>
-                              {canTie
-                                ? `wins unless ${trailingTeam} scores`
-                                : 'wins after this point'}
-                            </ThemedText>
-                          </>
-                        );
-                      })()}
+                      <ThemedText
+                        style={[styles.hardcapWinnerText, { color: palette.textInverse }]}>
+                        {capStatus.leadingTeam}
+                      </ThemedText>
+                      <ThemedText style={[styles.capStatusText, { color: palette.textMuted }]}>
+                        {capStatus.message}
+                      </ThemedText>
                     </>
                   )}
                 </>
@@ -207,7 +207,7 @@ export default function GameInfoScreen() {
                     {gameTo}
                   </ThemedText>
                   <HalfIndicator gameHalf={gameHalf} />
-                  {isSoftCap && (
+                  {capStatus.kind === 'softcap-active' && (
                     <View style={styles.capStatusBadge}>
                       <MaterialCommunityIcons
                         name="hat-fedora"
@@ -215,11 +215,11 @@ export default function GameInfoScreen() {
                         color={palette.textInverse}
                       />
                       <ThemedText style={[styles.capStatusText, { color: palette.textInverse }]}>
-                        Softcap Active
+                        {capStatus.message}
                       </ThemedText>
                     </View>
                   )}
-                  {softCapPending && !isSoftCap && (
+                  {capStatus.kind === 'softcap-pending' && (
                     <View style={styles.capStatusBadge}>
                       <FlashingIcon
                         name="hat-fedora"
@@ -228,7 +228,7 @@ export default function GameInfoScreen() {
                         isFlashing
                       />
                       <ThemedText style={[styles.capStatusText, { color: palette.textInverse }]}>
-                        Softcap Pending
+                        {capStatus.message}
                       </ThemedText>
                     </View>
                   )}
@@ -244,7 +244,11 @@ export default function GameInfoScreen() {
                     POINT LENGTH
                   </ThemedText>
                   <View style={styles.pointTimerRow}>
-                    <Pressable onPress={togglePause} hitSlop={8}>
+                    <Pressable
+                      onPress={togglePause}
+                      accessibilityRole="button"
+                      accessibilityLabel={isPaused ? 'Resume point timer' : 'Pause point timer'}
+                      hitSlop={8}>
                       <MaterialCommunityIcons
                         name={isPaused ? 'play' : 'pause'}
                         size={pointTimerControlIconSize}
@@ -259,7 +263,11 @@ export default function GameInfoScreen() {
                       {formatElapsed(elapsedSeconds)}
                     </ThemedText>
                     {isPaused && (
-                      <Pressable onPress={confirmRestartPointTimer} hitSlop={8}>
+                      <Pressable
+                        onPress={confirmRestartPointTimer}
+                        accessibilityRole="button"
+                        accessibilityLabel="Restart point timer"
+                        hitSlop={8}>
                         <MaterialCommunityIcons
                           name="restart"
                           size={pointTimerRestartIconSize}
@@ -339,7 +347,7 @@ export default function GameInfoScreen() {
                       HARDCAP
                     </ThemedText>
                   </View>
-                  {team1Score === team2Score ? (
+                  {capStatus.kind === 'universe-point' && (
                     <View style={styles.capStatusBadge}>
                       <MaterialCommunityIcons
                         name="sword-cross"
@@ -351,28 +359,16 @@ export default function GameInfoScreen() {
                         Universe Point
                       </ThemedText>
                     </View>
-                  ) : (
+                  )}
+                  {capStatus.kind === 'hardcap-lead' && (
                     <>
-                      {(() => {
-                        const leadingTeam = team1Score > team2Score ? team1Name : team2Name;
-                        const trailingTeam = team1Score > team2Score ? team2Name : team1Name;
-                        const scoreDiff = Math.abs(team1Score - team2Score);
-                        const canTie = scoreDiff === 1;
-                        return (
-                          <>
-                            <ThemedText
-                              style={[styles.hardcapWinnerText, { color: palette.textInverse }]}>
-                              {leadingTeam}
-                            </ThemedText>
-                            <ThemedText
-                              style={[styles.capStatusText, { color: palette.textMuted }]}>
-                              {canTie
-                                ? `wins unless ${trailingTeam} scores`
-                                : 'wins after this point'}
-                            </ThemedText>
-                          </>
-                        );
-                      })()}
+                      <ThemedText
+                        style={[styles.hardcapWinnerText, { color: palette.textInverse }]}>
+                        {capStatus.leadingTeam}
+                      </ThemedText>
+                      <ThemedText style={[styles.capStatusText, { color: palette.textMuted }]}>
+                        {capStatus.message}
+                      </ThemedText>
                     </>
                   )}
                 </>
@@ -385,7 +381,7 @@ export default function GameInfoScreen() {
                     {gameTo}
                   </ThemedText>
                   <HalfIndicator gameHalf={gameHalf} />
-                  {isSoftCap && (
+                  {capStatus.kind === 'softcap-active' && (
                     <View style={styles.capStatusBadge}>
                       <MaterialCommunityIcons
                         name="hat-fedora"
@@ -393,11 +389,11 @@ export default function GameInfoScreen() {
                         color={palette.textInverse}
                       />
                       <ThemedText style={[styles.capStatusText, { color: palette.textInverse }]}>
-                        Softcap Active
+                        {capStatus.message}
                       </ThemedText>
                     </View>
                   )}
-                  {softCapPending && !isSoftCap && (
+                  {capStatus.kind === 'softcap-pending' && (
                     <View style={styles.capStatusBadge}>
                       <FlashingIcon
                         name="hat-fedora"
@@ -406,7 +402,7 @@ export default function GameInfoScreen() {
                         isFlashing
                       />
                       <ThemedText style={[styles.capStatusText, { color: palette.textInverse }]}>
-                        Softcap Pending
+                        {capStatus.message}
                       </ThemedText>
                     </View>
                   )}
@@ -422,7 +418,11 @@ export default function GameInfoScreen() {
                     POINT LENGTH
                   </ThemedText>
                   <View style={styles.pointTimerRow}>
-                    <Pressable onPress={togglePause} hitSlop={8}>
+                    <Pressable
+                      onPress={togglePause}
+                      accessibilityRole="button"
+                      accessibilityLabel={isPaused ? 'Resume point timer' : 'Pause point timer'}
+                      hitSlop={8}>
                       <MaterialCommunityIcons
                         name={isPaused ? 'play' : 'pause'}
                         size={pointTimerControlIconSize}
@@ -437,7 +437,11 @@ export default function GameInfoScreen() {
                       {formatElapsed(elapsedSeconds)}
                     </ThemedText>
                     {isPaused && (
-                      <Pressable onPress={confirmRestartPointTimer} hitSlop={8}>
+                      <Pressable
+                        onPress={confirmRestartPointTimer}
+                        accessibilityRole="button"
+                        accessibilityLabel="Restart point timer"
+                        hitSlop={8}>
                         <MaterialCommunityIcons
                           name="restart"
                           size={pointTimerRestartIconSize}

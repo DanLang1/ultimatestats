@@ -373,7 +373,7 @@ export async function seedAdvancedTrackerTestGame(
   setSeedTeam(team);
 
   if (options.includeBench && !isScrimmage) {
-    useLinePresetsStore.getState().importPresetsForTeam(team.id, [
+    await useLinePresetsStore.getState().importPresetsForTeam(team.id, [
       {
         id: 'maestro-full-squad',
         name: 'Full squad',

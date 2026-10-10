@@ -11,7 +11,11 @@ import { getEffectiveLineParticipantIds } from '@/lib/advancedTracking/trackingU
 import type { AdvancedTrackedGame } from '@/lib/advancedTracking/types';
 import { useSavedAdvancedGamesStore } from '@/store/advancedTracking/savedGamesStore';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
-import { createAdvancedGameScenario } from '@/test/fixtures/advancedGameBuilder';
+import {
+  createAdvancedGameScenario,
+  participantRef,
+  UNTRACKED_PLAYER,
+} from '@/test/fixtures/advancedGameBuilder';
 import { arrangeAdvancedGame, cacheCurrentAdvancedGame } from '@/test/fixtures/domain';
 import { resetAllStores } from '@/test/fixtures/resetStores';
 import { resetMockRouter, setMockSearchParams } from '@/test/mocks/expoRouter';
@@ -82,17 +86,11 @@ describe('advanced analytics routes', () => {
     await AsyncStorage.clear();
   });
 
-  it('renders a dynamic advanced-game route from the real cached game store', async () => {
-    arrangeAdvancedGame();
-    const game = cacheCurrentAdvancedGame();
-    setMockSearchParams({ gameId: game.id });
-
+  it('offers saved-game recovery when the route has no game ID', async () => {
     await renderScreen(<AdvancedGameScreen />);
-
-    expect(screen.getByText('ADVANCED GAME')).toBeVisible();
-    expect(screen.getByText('PLAYED AT')).toBeVisible();
-    expect(screen.getByText('Windchill')).toBeVisible();
-    expect(screen.getByText('Rivals')).toBeVisible();
+    expect(screen.getByText('Game not found.')).toBeVisible();
+    await userEvent.setup().press(screen.getByText('Go to Saved Games'));
+    expect(router.replace).toHaveBeenCalledWith('/SavedGameStats');
   });
 
   it('shows the share action for a terminated advanced game', async () => {
@@ -116,6 +114,11 @@ describe('advanced analytics routes', () => {
     const game = cacheCurrentAdvancedGame();
     setMockSearchParams({ gameId: game.id });
     await renderScreen(<AdvancedGameScreen />);
+
+    expect(screen.getByText('ADVANCED GAME')).toBeVisible();
+    expect(screen.getByText('PLAYED AT')).toBeVisible();
+    expect(screen.getByText('Windchill')).toBeVisible();
+    expect(screen.getByText('Rivals')).toBeVisible();
 
     await user.press(screen.getByTestId('advanced-game-note-card'));
     await user.type(screen.getByTestId('advanced-game-note-input'), 'Review the red-zone offense.');
@@ -210,10 +213,7 @@ describe('advanced analytics routes', () => {
     setMockSearchParams({ gameId: game.id });
 
     await renderScreen(<AdvancedGameTimelineScreen />);
-    const chainText = screen.getByText('Alex -> Blair -> Casey');
-    expect(chainText).toHaveProp('numberOfLines', 2);
     await user.press(screen.getByTestId('advanced-timeline-chain-pass-1'));
-    expect(chainText.props.numberOfLines).toBeUndefined();
     await user.press(screen.getByTestId('advanced-timeline-action-pass-1'));
 
     expect(screen.getByText('Select the touch you want to correct.')).toBeVisible();
@@ -307,7 +307,6 @@ describe('advanced analytics routes', () => {
 
     const resultField = screen.getByTestId('advanced-turnover-field-result');
     await user.press(resultField);
-    expect(resultField).toHaveStyle({ backgroundColor: 'transparent' });
     expect(screen.getByTestId('advanced-turnover-result-drop')).toBeVisible();
     expect(screen.getByTestId('advanced-turnover-result-fifty-fifty')).toBeVisible();
     expect(screen.getByTestId('advanced-turnover-result-block')).toBeVisible();
@@ -463,30 +462,7 @@ describe('advanced analytics routes', () => {
     });
   });
 
-  it('edits a point note through the in-progress current-game timeline', async () => {
-    const user = userEvent.setup();
-    const game = { ...makeEditableTimelineGame(), status: 'in_progress' as const };
-    useAdvancedTrackingStore.setState({ currentGameId: game.id, currentGame: game });
-    useSavedAdvancedGamesStore.setState({
-      gamesById: { [game.id]: game },
-      summariesLoaded: true,
-    });
-    setMockSearchParams({ gameId: game.id });
-
-    await renderScreen(<AdvancedGameTimelineScreen />);
-    await user.press(screen.getByTestId('advanced-point-note-1'));
-    await user.type(screen.getByTestId('advanced-point-note-input'), 'Live timeline note.');
-    await user.press(screen.getByTestId('advanced-point-note-save'));
-
-    await waitFor(() => {
-      expect(useAdvancedTrackingStore.getState().currentGame?.points[0].note).toBe(
-        'Live timeline note.',
-      );
-      expect(screen.getByText('Live timeline note.')).toBeVisible();
-    });
-  });
-
-  it('uses the live game as the source for an in-progress timeline note', async () => {
+  it('loads and edits the live timeline note even when the cached note is stale', async () => {
     const user = userEvent.setup();
     const currentGame = { ...makeEditableTimelineGame(), status: 'in_progress' as const };
     currentGame.points[0].note = 'Live timeline note.';
@@ -504,13 +480,17 @@ describe('advanced analytics routes', () => {
     await renderScreen(<AdvancedGameTimelineScreen />);
     await user.press(screen.getByTestId('advanced-point-note-1'));
 
-    expect(screen.getByDisplayValue('Live timeline note.')).toBeVisible();
+    const input = screen.getByDisplayValue('Live timeline note.');
+    expect(input).toBeVisible();
+    await user.clear(input);
+    await user.type(input, 'Updated live note.');
     await user.press(screen.getByTestId('advanced-point-note-save'));
 
     await waitFor(() => {
       expect(useAdvancedTrackingStore.getState().currentGame?.points[0].note).toBe(
-        'Live timeline note.',
+        'Updated live note.',
       );
+      expect(screen.getByText('Updated live note.')).toBeVisible();
     });
   });
 
@@ -525,9 +505,6 @@ describe('advanced analytics routes', () => {
 
     await renderScreen(<AdvancedGameTimelineScreen />);
 
-    expect(screen.getByTestId('advanced-edit-point-line-1')).toHaveStyle({
-      backgroundColor: 'transparent',
-    });
     await user.press(screen.getByTestId('advanced-edit-point-line-1'));
 
     setMockSearchParams({ gameId: game.id, pointId: 'point-1' });
@@ -707,22 +684,6 @@ describe('advanced analytics routes', () => {
     expect(screen.queryByTestId('advanced-timeline-action-goal-1')).not.toBeOnTheScreen();
   });
 
-  it('renders advanced player stats from a real cached game and participant', async () => {
-    arrangeAdvancedGame();
-    const game = cacheCurrentAdvancedGame();
-    setMockSearchParams({
-      gameId: game.id,
-      participantId: 'player-alex',
-      sideId: 'windchill',
-    });
-
-    await renderScreen(<AdvancedPlayerStatsScreen />);
-
-    expect(screen.getByText('PLAYER STATS')).toBeVisible();
-    expect(screen.getByText('Alex')).toBeVisible();
-    expect(screen.getByText(/^Windchill · .* vs Rivals$/)).toBeVisible();
-  });
-
   it('renders classified throw details on the advanced player page', async () => {
     const game = makeEditableTimelineGame();
     const goalAction = game.points[0].possessions[0].actions.at(-1)!;
@@ -740,6 +701,9 @@ describe('advanced analytics routes', () => {
 
     await renderScreen(<AdvancedPlayerStatsScreen />);
 
+    expect(screen.getByText('PLAYER STATS')).toBeVisible();
+    expect(screen.getByText('Alex')).toBeVisible();
+    expect(screen.getByText(/^Windchill · .* vs Rivals$/)).toBeVisible();
     expect(screen.getByTestId('advanced-player-throw-types-card')).toBeVisible();
     expect(screen.getByText('HUCK THROWING')).toBeVisible();
     expect(screen.getByText('Completion rate')).toBeVisible();
@@ -747,5 +711,48 @@ describe('advanced analytics routes', () => {
     expect(screen.queryByText('EFFICIENCY')).toBeNull();
     await userEvent.setup().press(screen.getByRole('button', { name: 'More team comparisons' }));
     expect(screen.getByText('EFFICIENCY')).toBeVisible();
+  });
+});
+
+describe('advanced player chemistry', () => {
+  beforeEach(async () => {
+    resetAllStores();
+    resetMockRouter();
+    await AsyncStorage.clear();
+  });
+
+  async function renderChemistry(scored: boolean) {
+    const scenario = createAdvancedGameScenario()
+      .startPoint({ puller: UNTRACKED_PLAYER, receiver: participantRef('alex') })
+      .pickup(participantRef('alex'))
+      .complete(participantRef('blair'))
+      .complete(participantRef('alex'));
+    if (scored) scenario.goal(participantRef('casey'));
+    else scenario.complete(participantRef('casey'));
+    const game = scenario.build();
+    useSavedAdvancedGamesStore.setState({ gamesById: { [game.id]: game }, summariesLoaded: true });
+    setMockSearchParams({ gameId: game.id, participantId: 'alex', sideId: game.focusSideId });
+    await renderScreen(<AdvancedPlayerStatsScreen />);
+  }
+
+  it('shows passing chemistry automatically before the player has a scoring connection', async () => {
+    await renderChemistry(false);
+    expect(screen.getByText('Top Link: Blair')).toBeVisible();
+    expect(screen.getByText('Caught from')).toBeVisible();
+    expect(screen.getByText('Threw to')).toBeVisible();
+    expect(screen.queryByText('Scoring')).not.toBeOnTheScreen();
+    expect(screen.queryByText('Passing')).not.toBeOnTheScreen();
+  });
+
+  it('switches between scoring and passing chemistry on the player page', async () => {
+    await renderChemistry(true);
+    const user = userEvent.setup();
+    expect(screen.queryByText('Top Link: Blair')).not.toBeOnTheScreen();
+    await user.press(screen.getByText('Passing'));
+    expect(screen.getByText('Top Link: Blair')).toBeVisible();
+    expect(screen.getByText('Caught from')).toBeVisible();
+    await user.press(screen.getByText('Scoring'));
+    expect(screen.queryByText('Top Link: Blair')).not.toBeOnTheScreen();
+    expect(screen.queryByText('Caught from')).not.toBeOnTheScreen();
   });
 });

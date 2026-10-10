@@ -1,5 +1,4 @@
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
-import { File, Paths } from 'expo-file-system';
 import { router, Stack } from 'expo-router';
 import React, { useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
@@ -39,7 +38,7 @@ import { isAdvancedGameAggregateEligible } from '@/lib/advancedTracking/summary'
 import { generateAggregateCSV } from '@/lib/basic/statsUtils';
 import { MAX_SHARE_GAMES } from '@/lib/constants';
 import { resolveTeamName } from '@/lib/playerUtils';
-import { shareFileAndDelete } from '@/lib/shareFileAndDelete';
+import { shareCsvExport } from '@/lib/shareCsvExport';
 import { serializeGames, uploadPayload } from '@/lib/sharing';
 import {
   runPendingShareAction,
@@ -306,59 +305,33 @@ export default function AggregateStatsScreen() {
     if (aggregateMode === 'advanced') {
       if (!aggregatedAdvancedGame || selectedAdvancedGames.length === 0) return;
 
-      try {
-        const csv = generateAggregateAdvancedCSV(
-          advancedAnalyticsGames,
-          aggregatedAdvancedGame,
-          advancedTeamName,
-        );
-        const filename = `${advancedTeamName.replace(/[^a-zA-Z0-9]/g, '_')}_${selectedAdvancedGames.length}_games_advanced`;
-        const file = new File(Paths.cache, `${filename}.csv`);
-        file.write(csv);
-
-        if (await shareFileAndDelete(file)) {
-          return;
-        }
-
-        showAlert({
-          title: 'Sharing not available',
-          message: 'Sharing is not available on this device.',
-        });
-      } catch {
-        showAlert({
-          title: 'Export failed',
-          message: 'Could not export stats to CSV.',
-        });
-      }
+      await shareCsvExport(
+        () => ({
+          csv: generateAggregateAdvancedCSV(
+            advancedAnalyticsGames,
+            aggregatedAdvancedGame,
+            advancedTeamName,
+          ),
+          filename: `${advancedTeamName.replace(/[^a-zA-Z0-9]/g, '_')}_${selectedAdvancedGames.length}_games_advanced`,
+        }),
+        showAlert,
+      );
       return;
     }
 
     if (!aggregatedData) return;
 
-    try {
-      const csv = generateAggregateCSV(
-        aggregatedData.games,
-        aggregatedData.teamName,
-        aggregatedData.roster,
-      );
-      const filename = `${aggregatedData.teamName.replace(/[^a-zA-Z0-9]/g, '_')}_${aggregatedData.gameCount}_games`;
-      const file = new File(Paths.cache, `${filename}.csv`);
-      file.write(csv);
-
-      if (await shareFileAndDelete(file)) {
-        return;
-      }
-
-      showAlert({
-        title: 'Sharing not available',
-        message: 'Sharing is not available on this device.',
-      });
-    } catch {
-      showAlert({
-        title: 'Export failed',
-        message: 'Could not export stats to CSV.',
-      });
-    }
+    await shareCsvExport(
+      () => ({
+        csv: generateAggregateCSV(
+          aggregatedData.games,
+          aggregatedData.teamName,
+          aggregatedData.roster,
+        ),
+        filename: `${aggregatedData.teamName.replace(/[^a-zA-Z0-9]/g, '_')}_${aggregatedData.gameCount}_games`,
+      }),
+      showAlert,
+    );
   };
 
   const handleScreenBack = () => {

@@ -132,10 +132,7 @@ export function buildImportedTeam(
   const importedDivision = extractImportedDivision(payload);
   const divisionDefaultMatchingType = getDivisionDefaultMatchingType(importedDivision);
   const apiTeamName = extractImportedTeamName(payload);
-  const teamName = resolveUniqueTeamName(
-    apiTeamName ?? fallbackTeamName ?? DEFAULT_IMPORTED_TEAM_NAME,
-    savedTeams,
-  );
+  const teamName = resolveUniqueTeamName(apiTeamName ?? fallbackTeamName, savedTeams);
 
   return {
     id: generateId(),
