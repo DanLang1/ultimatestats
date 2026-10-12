@@ -1,6 +1,7 @@
 import { File, Paths } from 'expo-file-system';
 
 import type { AlertOptions } from '@/components/ui/AlertProvider';
+import { reportError } from '@/lib/sentry';
 import { shareFileAndDelete } from '@/lib/shareFileAndDelete';
 
 export interface CsvExport {
@@ -30,7 +31,8 @@ export async function shareCsvExport(
       title: 'Sharing not available',
       message: 'Sharing is not available on this device.',
     });
-  } catch {
+  } catch (error) {
+    reportError('csv-export', error);
     showAlert({
       title: 'Export failed',
       message: 'Could not export stats to CSV.',

@@ -11,3 +11,18 @@ export function initializeSentry() {
     enabled: !isDevelopment,
   });
 }
+
+/**
+ * Reports an error the app handled itself (caught, shown to the user, or recovered from).
+ * Uncaught errors, unhandled rejections, and route error boundaries are reported automatically.
+ * `area` becomes a searchable Sentry tag; keep it short and stable, e.g. 'startup-migrations'.
+ */
+export function reportError(area: string, error: unknown, extra?: Record<string, unknown>): void {
+  console.error(`[${area}]`, error);
+  Sentry.captureException(error, { tags: { area }, extra });
+}
+
+/** Reports a persisted Zustand store's `onRehydrateStorage` failure; no-op when hydration succeeded. */
+export function reportHydrationError(store: string, error: unknown): void {
+  if (error) reportError('store-hydration', error, { store });
+}

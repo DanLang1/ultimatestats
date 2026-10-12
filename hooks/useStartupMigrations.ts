@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 
+import { reportError } from '@/lib/sentry';
 import { useGameStore } from '@/store/basic/gameStore';
 import { useStartupMigrationStore } from '@/store/startupMigrationStore';
 import { useTournamentStore } from '@/store/tournamentStore';
@@ -55,7 +56,7 @@ export async function runReadyStartupMigrations(
       }
     })
     .catch((error: unknown) => {
-      console.error('Startup migration failed', error);
+      reportError('startup-migrations', error);
     })
     .finally(() => {
       startupMigrationPromise = null;
@@ -79,7 +80,7 @@ export function useStartupMigrations() {
     const unsubTournament = useTournamentStore.persist.onFinishHydration(runReadyMigrations);
     const unsubMigrations = useStartupMigrationStore.persist.onFinishHydration(runReadyMigrations);
     runReadyMigrations().catch((error: unknown) => {
-      console.error('Failed to schedule startup migrations', error);
+      reportError('startup-migrations-schedule', error);
     });
 
     return () => {

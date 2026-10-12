@@ -17,6 +17,7 @@ import {
 } from '@/lib/advancedTracking/advancedTouchCorrectionUtils';
 import { getParticipantNameFromRef } from '@/lib/advancedTracking/participantUtils';
 import type { Participant } from '@/lib/advancedTracking/types';
+import { reportError } from '@/lib/sentry';
 import { Fonts } from '@/theme/theme';
 
 type AdvancedTouchEditorContext =
@@ -125,7 +126,8 @@ export function AdvancedTouchCorrectionModal({
     try {
       await onSave(locator, selectedParticipantId);
       onClose();
-    } catch {
+    } catch (error) {
+      reportError('advanced-touch-correction-save', error);
       setSaveError(true);
       setIsSaving(false);
     }

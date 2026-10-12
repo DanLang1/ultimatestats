@@ -9,6 +9,7 @@ import { ThemedText } from '@/components/ThemedText';
 import FlashingIcon from '@/components/ui/FlashingIcon';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { reportError } from '@/lib/sentry';
 import { Fonts } from '@/theme/theme';
 
 interface HelpContentProps {
@@ -332,7 +333,7 @@ export default function HelpContent({
         style={[styles.tutorialButton, { backgroundColor: palette.overlay08 }]}
         onPress={() => {
           Linking.openURL('https://u-stat.app/privacy/').catch((error: unknown) => {
-            console.error('Failed to open privacy policy', error);
+            reportError('privacy-policy-open', error);
           });
         }}>
         <MaterialCommunityIcons

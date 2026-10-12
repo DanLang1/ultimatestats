@@ -10,6 +10,8 @@ import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { useVersionCheck } from '@/hooks/useVersionCheck';
 import { CHANGELOG } from '@/lib/changelog';
+import { DISCORD_URL } from '@/lib/constants';
+import { reportError } from '@/lib/sentry';
 import { Fonts } from '@/theme/theme';
 
 export default function AboutScreen() {
@@ -21,7 +23,7 @@ export default function AboutScreen() {
 
   useFocusEffect(() => {
     acknowledge().catch((error: unknown) => {
-      console.error('Failed to acknowledge app version', error);
+      reportError('version-acknowledge', error);
     });
   });
 
@@ -104,7 +106,7 @@ export default function AboutScreen() {
           </ThemedText>
 
           <Pressable
-            onPress={() => Linking.openURL('https://discord.gg/AjsmqhZ2GH')}
+            onPress={() => Linking.openURL(DISCORD_URL)}
             style={({ pressed }) => [
               styles.linkItem,
               { backgroundColor: palette.overlay08 },

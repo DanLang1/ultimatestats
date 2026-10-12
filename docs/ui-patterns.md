@@ -64,6 +64,16 @@ scroll position follows the focused input throughout the keyboard animation. Add
 - Rely on root safe area for top/bottom.
 - Use per-screen/per-modal insets only when specifically needed (commonly left/right padding).
 
+## Error Boundary Pattern
+
+- Every screen already gets `ScreenErrorBoundary` through the root layout's
+  `unstable_settings.screenErrorBoundary`, including screens under nested layouts. Do not export
+  per-screen or per-layout `ErrorBoundary`s.
+- `RootErrorBoundary` (the root `ErrorBoundary` export) is the last resort for errors thrown by
+  layouts themselves. Keep layouts thin so screen errors stay screen-scoped.
+- Use the dev-only `/__dev_crash__` route (Dashboard dev tools) to exercise the screen boundary.
+  Do not add crash triggers to real screens.
+
 ## Theming Pattern
 
 - Do not hardcode colors.

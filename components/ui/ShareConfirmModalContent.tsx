@@ -5,6 +5,7 @@ import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { reportError } from '@/lib/sentry';
 import { Fonts } from '@/theme/theme';
 
 import { AlertModal } from './AlertModal';
@@ -38,7 +39,7 @@ export function ShareConfirmModalContent({
       setShareUrl(url);
       setDidCopy(false);
     } catch (error) {
-      console.error('[ShareConfirmModal] share link creation failed', error);
+      reportError('share-link-create', error);
       setInlineError(errorMessage);
     } finally {
       setIsLoading(false);

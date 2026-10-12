@@ -3,6 +3,7 @@ import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 
+import { reportHydrationError } from '@/lib/sentry';
 import { SavedGame, Tournament, TournamentGameLink, TournamentKind } from '@/lib/storage/types';
 import { generateId } from '@/lib/utils';
 
@@ -265,7 +266,8 @@ export const useTournamentStore = create<TournamentState>()(
       {
         name: 'ultimatestats_tournaments',
         storage: createJSONStorage(() => legacyAwareStorage),
-        onRehydrateStorage: () => (state) => {
+        onRehydrateStorage: () => (state, error) => {
+          reportHydrationError('tournaments', error);
           if (!state) return;
           const persisted = state as TournamentState & TournamentPersistState;
           useTournamentStore.setState({

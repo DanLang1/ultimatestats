@@ -1,3 +1,4 @@
+import { resetSessionThemeModeForTests } from '@/context/ThemeContext';
 import { useSavedAdvancedGamesStore } from '@/store/advancedTracking/savedGamesStore';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { useGameStore } from '@/store/basic/gameStore';
@@ -41,6 +42,7 @@ export function resetDashboardStores() {
 
 export function resetAllStores() {
   resetAdvancedTrackingStorage();
+  resetSessionThemeModeForTests();
   resetDashboardStores();
   useLinePresetsStore.setState(initialLinePresetsState, true);
   useNumberPickerStore.setState(initialNumberPickerState, true);

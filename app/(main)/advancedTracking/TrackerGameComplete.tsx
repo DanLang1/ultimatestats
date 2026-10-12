@@ -9,6 +9,7 @@ import { useTheme } from '@/context/ThemeContext';
 import { useGameSessionActions } from '@/hooks/useGameSessionActions';
 import { getFocusGameOutcome } from '@/lib/advancedTracking/buildAnalyticsGame';
 import { getGameScore, isAdvancedGameOver } from '@/lib/advancedTracking/trackingUtils';
+import { reportError } from '@/lib/sentry';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 
 export default function TrackerGameCompleteScreen() {
@@ -90,7 +91,8 @@ export default function TrackerGameCompleteScreen() {
       } else {
         await finalizeGame();
       }
-    } catch {
+    } catch (error) {
+      reportError('advanced-game-finish', error);
       finishPending.current = false;
       setIsSaving(false);
       showAlert({

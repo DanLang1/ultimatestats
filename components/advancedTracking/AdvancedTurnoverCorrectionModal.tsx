@@ -16,6 +16,7 @@ import {
 } from '@/lib/advancedTracking/advancedTurnoverCorrectionUtils';
 import { getEligibleThrowTypes, THROW_TYPES } from '@/lib/advancedTracking/types';
 import type { Participant, ThrowType } from '@/lib/advancedTracking/types';
+import { reportError } from '@/lib/sentry';
 import { Fonts } from '@/theme/theme';
 
 interface AdvancedTurnoverCorrectionModalProps {
@@ -203,7 +204,8 @@ export function AdvancedTurnoverCorrectionModal({
     try {
       await onSave(input);
       onClose();
-    } catch {
+    } catch (error) {
+      reportError('advanced-turnover-correction-save', error);
       setSaveError(true);
       setIsSaving(false);
     }

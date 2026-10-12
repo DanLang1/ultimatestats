@@ -5,6 +5,16 @@ import type { SharedPayload } from './types';
 import { validatePayload } from './validate';
 
 const SHARE_BASE_URL = 'https://u-stat.app/s';
+// PostgREST's `.single()` error when no row matches the requested ID.
+const NO_MATCHING_ROW_CODE = 'PGRST116';
+
+/** The share ID has no stored payload: the link was deleted, expired, or mistyped. */
+export class SharePayloadNotFoundError extends Error {
+  constructor(id: string) {
+    super(`Shared payload not found: ${id}`);
+    this.name = 'SharePayloadNotFoundError';
+  }
+}
 
 interface UploadResult {
   url: string;
@@ -34,6 +44,9 @@ export async function fetchPayload(id: string): Promise<SharedPayload> {
     .eq('id', id)
     .single();
 
+  if (error?.code === NO_MATCHING_ROW_CODE) {
+    throw new SharePayloadNotFoundError(id);
+  }
   if (error) {
     throw new Error(`Failed to fetch shared payload: ${error.message}`);
   }

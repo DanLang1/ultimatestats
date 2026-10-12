@@ -8,6 +8,7 @@ import { BottomSheet } from '@/components/ui/BottomSheet';
 import { BottomSheetActionRow } from '@/components/ui/BottomSheetActionRow';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { reportError } from '@/lib/sentry';
 import { SavedTeam } from '@/lib/storage';
 import { useGameStore } from '@/store/basic/gameStore';
 import { useLinePresetsStore } from '@/store/linePresetsStore';
@@ -53,7 +54,8 @@ export default function TeamManagementModal() {
       }
       await loadTeam(teamId);
       handleDismiss();
-    } catch {
+    } catch (error) {
+      reportError('team-switch', error);
       setSwitchError('Could not switch teams. Please try again.');
     } finally {
       setIsSwitching(false);
@@ -73,7 +75,8 @@ export default function TeamManagementModal() {
     try {
       await deleteTeam(teamToDelete.id);
       setTeamToDelete(null);
-    } catch {
+    } catch (error) {
+      reportError('team-delete', error);
       setDeleteError('Could not delete the team. Please try again.');
     } finally {
       setIsDeleting(false);

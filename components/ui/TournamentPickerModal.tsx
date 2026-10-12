@@ -8,6 +8,7 @@ import { useAlert } from '@/components/ui/AlertProvider';
 import { useTheme } from '@/context/ThemeContext';
 import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { formatISODateForDisplay } from '@/lib/dateUtils';
+import { reportError } from '@/lib/sentry';
 import { Tournament, TournamentKind } from '@/lib/storage/types';
 import { useTournamentStore } from '@/store/tournamentStore';
 import { Fonts } from '@/theme/theme';
@@ -52,7 +53,8 @@ export function TournamentPickerModal({
           onPress: async () => {
             try {
               await deleteTournament(tournament.id);
-            } catch {
+            } catch (error) {
+              reportError('tournament-delete', error);
               showAlert({
                 title: 'Delete failed',
                 message: 'Could not delete the tournament. Please try again.',

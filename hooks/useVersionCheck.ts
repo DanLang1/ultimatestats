@@ -1,6 +1,7 @@
 import { useFocusEffect } from 'expo-router';
 import { useState } from 'react';
 
+import { reportError } from '@/lib/sentry';
 import { acknowledgeVersion, checkForNewVersion, getCurrentVersion } from '@/lib/versionUtils';
 
 interface VersionCheckResult {
@@ -19,7 +20,7 @@ export function useVersionCheck(): VersionCheckResult {
         setHasNewVersion(result.hasUpdate);
       })
       .catch((error: unknown) => {
-        console.error('Failed to check app version', error);
+        reportError('version-check', error);
       });
   });
 

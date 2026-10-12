@@ -3,6 +3,7 @@ import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 
+import { reportHydrationError } from '@/lib/sentry';
 import { LinePreset } from '@/lib/storage/types';
 import { generateId } from '@/lib/utils';
 
@@ -88,6 +89,7 @@ export const useLinePresetsStore = create<LinePresetsState>()(
       {
         name: 'ultimatestats-line-presets',
         storage: createJSONStorage(() => AsyncStorage),
+        onRehydrateStorage: () => (_state, error) => reportHydrationError('line-presets', error),
       },
     ),
   ),

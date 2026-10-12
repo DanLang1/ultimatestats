@@ -3,6 +3,8 @@ import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 
+import { reportHydrationError } from '@/lib/sentry';
+
 export type StartupMigrationRecord = {
   completedAt: number;
   version: number;
@@ -37,6 +39,8 @@ export const useStartupMigrationStore = create<StartupMigrationState>()(
       {
         name: 'ultimatestats_startup_migrations',
         storage: createJSONStorage(() => AsyncStorage),
+        onRehydrateStorage: () => (_state, error) =>
+          reportHydrationError('startup-migrations', error),
       },
     ),
   ),

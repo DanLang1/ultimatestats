@@ -134,6 +134,7 @@ it.each(['basic', 'advanced'] as const)(
 );
 
 it('reports a CSV export failure on the detail screen', async () => {
+  jest.spyOn(console, 'error').mockImplementation(() => {});
   await arrangeDetail('basic');
   jest.spyOn(File.prototype, 'write').mockImplementationOnce(() => {
     throw new Error('Cache full');

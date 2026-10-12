@@ -10,6 +10,8 @@ import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { AlertProvider } from '@/components/ui/AlertProvider';
+import { RootErrorBoundary } from '@/components/ui/RootErrorBoundary';
+import { ScreenErrorBoundary } from '@/components/ui/ScreenErrorBoundary';
 import { ThemeProvider, useTheme } from '@/context/ThemeContext';
 import { useOrientationLock } from '@/hooks/useOrientationLock';
 import 'react-native-reanimated';
@@ -20,6 +22,11 @@ import { initializeSentry } from '@/lib/sentry';
 import { useSettingsStore } from '@/store/settingsStore';
 
 initializeSentry();
+
+// Root layout and nested layout errors land here.
+export const ErrorBoundary = RootErrorBoundary;
+// Every screen gets its own boundary so recovery only tears down the screen that failed.
+export const unstable_settings = { screenErrorBoundary: ScreenErrorBoundary };
 
 if (__DEV__) {
   const DevMenuPreferences = requireOptionalNativeModule('DevMenuPreferences');

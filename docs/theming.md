@@ -11,6 +11,10 @@ The app supports light and dark palettes selected from Settings > App.
 - `theme/theme.ts` - Color palettes (`darkPalette`, `lightPalette`)
 - `context/ThemeContext.tsx` - `ThemeProvider`, `useTheme()` hook, AsyncStorage persistence
 
+AsyncStorage is the source of truth for the theme. `ThemeContext` also keeps a module-level
+`sessionThemeMode` so a provider remounted mid-session (the root error boundary supplies its own)
+starts on the current theme instead of flashing the default. `resetAllStores()` clears it between tests.
+
 ### Key Colors
 
 | Key           | Dark Mode           | Light Mode         |

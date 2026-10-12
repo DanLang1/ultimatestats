@@ -38,6 +38,7 @@ import { isAdvancedGameAggregateEligible } from '@/lib/advancedTracking/summary'
 import { generateAggregateCSV } from '@/lib/basic/statsUtils';
 import { MAX_SHARE_GAMES } from '@/lib/constants';
 import { resolveTeamName } from '@/lib/playerUtils';
+import { reportError } from '@/lib/sentry';
 import { shareCsvExport } from '@/lib/shareCsvExport';
 import { serializeGames, uploadPayload } from '@/lib/sharing';
 import {
@@ -208,7 +209,8 @@ export default function AggregateStatsScreen() {
         return;
       }
       setSelectedGameIds(new Set());
-    } catch {
+    } catch (error) {
+      reportError('tournament-add-games', error);
       showAlert({
         title: 'Save failed',
         message: 'Could not assign all games to the tournament. Please try again.',

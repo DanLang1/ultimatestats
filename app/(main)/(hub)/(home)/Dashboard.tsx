@@ -16,9 +16,10 @@ import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { useNewGameLauncher } from '@/hooks/useNewGameLauncher';
 import { useRemoteVersionCheck } from '@/hooks/useRemoteVersionCheck';
 import { useVersionCheck } from '@/hooks/useVersionCheck';
-import { APP_STORE_URL, PLAY_STORE_URL } from '@/lib/constants';
+import { APP_STORE_URL, DISCORD_URL, PLAY_STORE_URL } from '@/lib/constants';
 import { seedTestTeam } from '@/lib/maestroUtils';
 import { LAST_DISMISSED_REMOTE_VERSION_KEY } from '@/lib/remoteVersionUtils';
+import { reportError } from '@/lib/sentry';
 import { LAST_SEEN_VERSION_KEY } from '@/lib/versionUtils';
 import { useTutorialStore } from '@/store/tutorialStore';
 import { Fonts } from '@/theme/theme';
@@ -78,10 +79,10 @@ export default function DashboardScreen() {
     ]);
 
     if (dismissResult.status === 'rejected') {
-      console.error('Failed to dismiss app update', dismissResult.reason);
+      reportError('remote-update-dismiss', dismissResult.reason);
     }
     if (openResult.status === 'rejected') {
-      console.error('Failed to open app update', openResult.reason);
+      reportError('remote-update-open', openResult.reason);
     }
   };
 
@@ -90,7 +91,7 @@ export default function DashboardScreen() {
       await AsyncStorage.removeItem(LAST_SEEN_VERSION_KEY);
       console.log('Version check reset - reload app to see badge');
     } catch (error) {
-      console.error('Failed to reset version check', error);
+      reportError('version-check-reset', error);
     }
   };
 
@@ -98,7 +99,7 @@ export default function DashboardScreen() {
     try {
       await AsyncStorage.removeItem(LAST_DISMISSED_REMOTE_VERSION_KEY);
     } catch (error) {
-      console.error('Failed to reset remote version check', error);
+      reportError('remote-version-check-reset', error);
     }
   };
 
@@ -383,7 +384,7 @@ export default function DashboardScreen() {
 
         {/* Discord Banner */}
         <Pressable
-          onPress={() => Linking.openURL('https://discord.gg/AjsmqhZ2GH')}
+          onPress={() => Linking.openURL(DISCORD_URL)}
           style={({ pressed }) => [
             styles.discordBanner,
             { backgroundColor: palette.discordBg },
@@ -408,6 +409,28 @@ export default function DashboardScreen() {
         {/* Dev tools - only visible in development */}
         {__DEV__ && (
           <>
+            <Pressable
+              onPress={() => router.push('/__dev_crash__')}
+              style={({ pressed }) => [
+                styles.discordBanner,
+                { backgroundColor: palette.danger },
+                pressed && styles.menuItemPressed,
+              ]}>
+              <MaterialCommunityIcons
+                name="alert-octagon"
+                size={metrics.bannerIconSize}
+                color={palette.textOnAccent}
+              />
+              <View style={styles.discordText}>
+                <ThemedText style={[styles.discordTitle, { color: palette.textOnAccent }]}>
+                  Open Crashing Screen
+                </ThemedText>
+                <ThemedText style={[styles.discordSubtitle, { color: palette.textOnAccentMuted }]}>
+                  DEV ONLY - Screen throws on render; tests Go to Dashboard
+                </ThemedText>
+              </View>
+            </Pressable>
+
             <Pressable
               onPress={() => {
                 captureException(new Error('U-Stat Sentry test error'));

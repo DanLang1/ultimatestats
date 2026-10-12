@@ -1,3 +1,4 @@
+import { captureException } from '@sentry/react-native';
 import { File, Paths } from 'expo-file-system';
 
 import { shareCsvExport } from '../shareCsvExport';
@@ -55,9 +56,14 @@ describe('shareCsvExport', () => {
       buildExport,
     ],
     ['sharing', () => share.mockRejectedValueOnce(new Error('Native sharing failed')), buildExport],
-  ] as const)('alerts when %s fails', async (_stage, arrange, build) => {
+  ] as const)('alerts and reports to Sentry when %s fails', async (_stage, arrange, build) => {
+    jest.spyOn(console, 'error').mockImplementation(() => {});
     arrange();
     await shareCsvExport(build, showAlert);
+    expect(captureException).toHaveBeenCalledWith(expect.any(Error), {
+      tags: { area: 'csv-export' },
+      extra: undefined,
+    });
     expect(showAlert).toHaveBeenCalledTimes(1);
     expect(showAlert).toHaveBeenCalledWith({
       title: 'Export failed',

@@ -7,9 +7,8 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { DISCORD_URL } from '@/lib/constants';
 import { Fonts } from '@/theme/theme';
-
-const DISCORD_URL = 'https://discord.gg/AjsmqhZ2GH';
 
 export default function NotFoundScreen() {
   const { palette } = useTheme();

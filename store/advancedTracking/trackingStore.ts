@@ -69,6 +69,7 @@ import {
   TrackedPoint,
   getEligibleThrowTypes,
 } from '@/lib/advancedTracking/types';
+import { reportHydrationError } from '@/lib/sentry';
 import { generateId, isRecord } from '@/lib/utils';
 import { useSavedAdvancedGamesStore } from '@/store/advancedTracking/savedGamesStore';
 import { registerActiveAdvancedGameGetter, useGameStore } from '@/store/basic/gameStore';
@@ -1315,7 +1316,8 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
           // Drop the legacy pre-v1 undoStack so a stale stack can never be restored against a newer game.
           undoStack: [],
         }),
-        onRehydrateStorage: () => (state) => {
+        onRehydrateStorage: () => (state, error) => {
+          reportHydrationError('advanced-tracking', error);
           if (state?.currentGameId != null) {
             void state.loadCurrentGame();
           }

@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { captureException } from '@sentry/react-native';
 import { act, screen, userEvent, waitFor } from '@testing-library/react-native';
 import { router } from 'expo-router';
 
@@ -1642,9 +1643,11 @@ describe('advanced tracking routes', () => {
         arrangeWinningAdvancedGame();
       }
       const before = useAdvancedTrackingStore.getState();
+      jest.spyOn(console, 'error').mockImplementation(() => {});
+      const saveError = new Error('disk full');
       const saveSpy = jest
         .spyOn(advancedStorage, 'upsertAdvancedGame')
-        .mockRejectedValueOnce(new Error('disk full'));
+        .mockRejectedValueOnce(saveError);
       await renderScreen(<TrackerGameCompleteScreen />);
       if (mode === 'early') {
         expect(screen.getByText('END GAME')).toBeVisible();
@@ -1655,6 +1658,10 @@ describe('advanced tracking routes', () => {
       }
       await user.press(screen.getByTestId('game-complete-finish'));
       expect(await screen.findByText('Unable to save game')).toBeVisible();
+      expect(captureException).toHaveBeenCalledWith(saveError, {
+        tags: { area: 'advanced-game-finish' },
+        extra: undefined,
+      });
       expect(router.replace).not.toHaveBeenCalled();
       expect(useAdvancedTrackingStore.getState().currentGame).toBe(before.currentGame);
       expect(useAdvancedTrackingStore.getState().undoStack).toBe(before.undoStack);

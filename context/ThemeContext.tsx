@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 
+import { reportError } from '@/lib/sentry';
 import { darkPalette, lightPalette, Palette } from '@/theme/theme';
 
 type ThemeMode = 'light' | 'dark';
@@ -20,13 +21,25 @@ interface ThemeProviderProps {
   initialTheme?: ThemeMode;
 }
 
-export function ThemeProvider({ children, initialTheme = 'dark' }: ThemeProviderProps) {
-  const [themeMode, setThemeModeState] = useState<ThemeMode>(initialTheme);
+// The theme most recently loaded or chosen this session. A provider mounted later (the root error
+// boundary remounts one after a crash) starts here instead of flashing the default.
+let sessionThemeMode: ThemeMode | null = null;
+
+/** Clears the session theme so each test starts from persisted storage. */
+export function resetSessionThemeModeForTests() {
+  sessionThemeMode = null;
+}
+
+export function ThemeProvider({ children, initialTheme }: ThemeProviderProps) {
+  const [themeMode, setThemeModeState] = useState<ThemeMode>(
+    initialTheme ?? sessionThemeMode ?? 'dark',
+  );
 
   useEffect(() => {
     let isActive = true;
 
     void loadPersistedTheme().then((persistedTheme) => {
+      sessionThemeMode = persistedTheme;
       if (isActive) {
         setThemeModeState(persistedTheme);
       }
@@ -38,9 +51,10 @@ export function ThemeProvider({ children, initialTheme = 'dark' }: ThemeProvider
   }, []);
 
   const setThemeMode = (mode: ThemeMode) => {
+    sessionThemeMode = mode;
     setThemeModeState(mode);
     AsyncStorage.setItem(THEME_STORAGE_KEY, mode).catch((error: unknown) => {
-      console.error('Failed to persist theme', error);
+      reportError('theme-persist', error);
     });
   };
 
@@ -66,7 +80,7 @@ export async function loadPersistedTheme(): Promise<ThemeMode> {
     const stored = await AsyncStorage.getItem(THEME_STORAGE_KEY);
     return stored === 'light' ? 'light' : 'dark';
   } catch (error) {
-    console.error('Failed to load persisted theme', error);
+    reportError('theme-load', error);
     return 'dark';
   }
 }

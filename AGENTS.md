@@ -19,6 +19,8 @@ Read `docs/README.md` for the project map and New Screen Checklist. Follow its l
   should stay tightly coupled to their source type.
 - Use semantic palette tokens instead of `themeMode` styling branches. Add theme-specific values to `theme/theme.ts`.
 - Put app-wide limits in `lib/constants.ts`.
+- Report unexpected caught errors with `reportError(area, error)` from `lib/sentry.ts` instead of a
+  bare `console.error`; skip it only for expected outcomes such as validation failures or cancels.
 - Follow `docs/ui-patterns.md`, `docs/navigation-map.md`, and `docs/responsive-layout.md` for screens, modals, navigation, safe areas, and orientation.
 - Use `<Redirect href="..." />` for render-time navigation; never invoke router actions during render.
 
@@ -27,7 +29,9 @@ Read `docs/README.md` for the project map and New Screen Checklist. Follow its l
 - Await persistence before dismissing, navigating, resetting, or otherwise invalidating the state being saved.
 - Persist Zustand state that must survive an app restart with `persist` and
   `createJSONStorage(() => AsyncStorage)` when AsyncStorage is the established boundary; use
-  `onRehydrateStorage` for record migrations when needed. Keep transient stores unpersisted, and
+  `onRehydrateStorage` for record migrations when needed. Every persisted store passes the
+  `onRehydrateStorage` error to `reportHydrationError(store, error)` from `lib/sentry.ts`;
+  zustand otherwise drops hydration failures silently and the store falls back to defaults. Keep transient stores unpersisted, and
   follow an existing domain-specific boundary such as SQLite instead of wrapping it in Zustand
   persistence.
 - For AsyncStorage-backed record collections, store records in one collection with a current-record

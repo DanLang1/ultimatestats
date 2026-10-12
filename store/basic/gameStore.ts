@@ -12,6 +12,7 @@ import { deriveTimeoutState } from '@/lib/basic/timeoutUtils';
 import { DEFAULT_HALFTIME_BREAK_SECONDS, DEFAULT_TIMEOUT_SECONDS } from '@/lib/constants';
 import { getLatestLineForPoint, replacePointLineRecords } from '@/lib/lineUtils';
 import { hasPlayerParticipatedInCurrentGame, UNKNOWN_PLAYER_ID } from '@/lib/playerUtils';
+import { reportHydrationError } from '@/lib/sentry';
 import {
   CURRENT_SCHEMA_VERSION,
   Player,
@@ -1367,7 +1368,8 @@ export const useGameStore = create<GameState>()(
       {
         name: 'ultimatestats-game-storage',
         storage: createJSONStorage(() => AsyncStorage),
-        onRehydrateStorage: () => (state) => {
+        onRehydrateStorage: () => (state, error) => {
+          reportHydrationError('basic-game', error);
           if (!state?.savedGames?.length) return;
           const { games, didChange } = migrateSavedGames(state.savedGames);
           if (didChange) {

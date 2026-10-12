@@ -2,6 +2,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
+import { reportHydrationError } from '@/lib/sentry';
+
 interface TutorialState {
   // Persisted
   hasSeenOnboarding: boolean;
@@ -91,9 +93,7 @@ export const useTutorialStore = create<TutorialState>()(
         hasSeenLongPressSelectHint: state.hasSeenLongPressSelectHint,
       }),
       onRehydrateStorage: (state) => (_rehydratedState, error) => {
-        if (error) {
-          console.error('Failed to hydrate tutorial state', error);
-        }
+        reportHydrationError('tutorial', error);
         state.setHasHydrated(true);
       },
     },

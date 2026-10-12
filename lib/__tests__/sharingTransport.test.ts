@@ -1,7 +1,7 @@
 import { createSavedBasicGame, testTeam } from '@/test/fixtures/domain';
 
 import { serializeGame, serializeGames, serializeTeam } from '../sharing/serialize';
-import { fetchPayload, uploadPayload } from '../sharing/share';
+import { fetchPayload, SharePayloadNotFoundError, uploadPayload } from '../sharing/share';
 import { runPendingShareAction } from '../sharing/shareActionUtils';
 import {
   fetchShowcaseList,
@@ -75,7 +75,15 @@ describe('sharing transport', () => {
     await expect(fetchPayload('abc123')).rejects.toThrow('Invalid team: missing data');
   });
 
-  it('reports a missing shared record', async () => {
+  it('distinguishes a share ID with no stored record', async () => {
+    respond(
+      { code: 'PGRST116', message: 'JSON object requested, multiple (or no) rows returned' },
+      406,
+    );
+    await expect(fetchPayload('abc123')).rejects.toBeInstanceOf(SharePayloadNotFoundError);
+  });
+
+  it('reports a failed shared record request', async () => {
     respond({ message: 'Record not found' }, 404);
     await expect(fetchPayload('abc123')).rejects.toThrow(
       'Failed to fetch shared payload: Record not found',

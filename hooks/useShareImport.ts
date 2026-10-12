@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useAdvancedGameSummaries } from '@/hooks/advancedTracking/useAdvancedGameQueries';
 import type { AdvancedGameSummary } from '@/lib/advancedTracking/summary';
 import type { AdvancedTrackedGame } from '@/lib/advancedTracking/types';
-import { fetchPayload, SharedPayload } from '@/lib/sharing';
+import { fetchPayload, SharedPayload, SharePayloadNotFoundError } from '@/lib/sharing';
 import { SavedGame, SavedTeam } from '@/lib/storage';
 import { supabase } from '@/lib/supabase';
 import { useGameStore } from '@/store/basic/gameStore';
@@ -83,6 +83,7 @@ export function useShareImport(shareId: string | undefined) {
       return payload;
     },
     enabled: !!shareId,
+    meta: { isExpectedError: (error) => error instanceof SharePayloadNotFoundError },
   });
 
   let importState: ShareImportState | null = null;

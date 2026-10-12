@@ -27,6 +27,7 @@ import {
 } from '@/lib/import-team/client';
 import { buildImportedTeam } from '@/lib/import-team/transform';
 import { NAME_FORMAT_OPTIONS, NameFormatOption } from '@/lib/import-team/types';
+import { reportError } from '@/lib/sentry';
 import { useGameStore } from '@/store/basic/gameStore';
 import { Fonts } from '@/theme/theme';
 
@@ -64,7 +65,7 @@ export default function ImportTeamScreen() {
         setLinkError(null);
       }
     } catch (error) {
-      console.error('[ImportTeam] clipboard read error', error);
+      reportError('import-team-clipboard', error);
       showAlert({
         title: 'Paste Failed',
         message: 'Could not read clipboard text. Try again.',
@@ -145,7 +146,7 @@ export default function ImportTeamScreen() {
         });
       }
     } catch (error) {
-      console.error('[ImportTeam] API request error', error);
+      reportError('import-team-api', error);
       showAlert({
         title: 'Network Error',
         message: 'Could not reach local import API. Send a message to the dev.',

@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { captureException } from '@sentry/react-native';
 
 import { buildAnalyticsGame } from '@/lib/advancedTracking/buildAnalyticsGame';
 import {
@@ -441,9 +442,10 @@ describe('advancedTrackingStore', () => {
     loadGameSpy.mockRestore();
   });
 
-  it('rejects an unsupported persisted recovery version instead of misreading it', async () => {
+  it('rejects and reports an unsupported persisted recovery version instead of misreading it', async () => {
     resetStore();
     jest.clearAllMocks();
+    jest.spyOn(console, 'error').mockImplementation(() => {});
     const loadGameSpy = jest.spyOn(useSavedAdvancedGamesStore.getState(), 'loadActiveGameSnapshot');
     mockedAsyncStorage.getItem.mockResolvedValueOnce(
       JSON.stringify({
@@ -463,6 +465,10 @@ describe('advancedTrackingStore', () => {
 
     expect(useAdvancedTrackingStore.getState().currentGameId).toBeNull();
     expect(loadGameSpy).not.toHaveBeenCalled();
+    expect(captureException).toHaveBeenCalledWith(expect.any(Error), {
+      tags: { area: 'store-hydration' },
+      extra: { store: 'advanced-tracking' },
+    });
     loadGameSpy.mockRestore();
   });
 

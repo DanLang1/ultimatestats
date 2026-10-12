@@ -8,6 +8,7 @@ import { BottomSheet } from '@/components/ui/BottomSheet';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { MAX_ADVANCED_GAME_NOTE_LENGTH } from '@/lib/constants';
+import { reportError } from '@/lib/sentry';
 import { Fonts } from '@/theme/theme';
 
 interface AdvancedGameNoteModalProps {
@@ -49,7 +50,8 @@ export function AdvancedGameNoteModal({
     try {
       await onSave(note);
       onClose();
-    } catch {
+    } catch (error) {
+      reportError('advanced-game-note-save', error);
       setSaveError(true);
       setIsSaving(false);
     }

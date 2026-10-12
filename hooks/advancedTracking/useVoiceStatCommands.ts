@@ -22,6 +22,7 @@ import {
   getCaptureRejectionMessage,
   getSpeechErrorMessage,
 } from '@/lib/advancedTracking/voiceMessageUtils';
+import { reportError } from '@/lib/sentry';
 
 const ANDROID_ON_DEVICE_RECOGNITION_SERVICE_PACKAGE = 'com.google.android.as';
 const MAX_SPEECH_ALTERNATIVES = 5;
@@ -409,7 +410,7 @@ export function useVoiceStatCommands(input: UseVoiceStatCommandsInput): VoiceSta
     try {
       await startListening();
     } catch (error) {
-      console.error('Failed to start voice recognition', error);
+      reportError('voice-recognition-start', error);
       recognitionCompletedRef.current = true;
       shouldListenRef.current = false;
       clearListeningWindowTimeout(listeningWindowTimeoutRef);

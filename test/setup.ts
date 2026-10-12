@@ -29,6 +29,13 @@ beforeEach(() => {
   global.fetch = blockUnstubbedFetch;
 });
 
+// Tests silence expected `reportError` logging with `jest.spyOn(console, 'error')`; restore it after
+// every test, including failed ones, so a silenced console never leaks into later tests.
+const originalConsoleError = console.error;
+afterEach(() => {
+  console.error = originalConsoleError;
+});
+
 afterEach(() => {
   const requests = unstubbedRequests.splice(0);
   if (requests.length > 0) {

@@ -55,6 +55,7 @@ Modal route files live in `app/(modals)/`. Their exit contract is defined in
 
 - `+not-found` — fallback for unmatched paths.
 - `__maestro_seed__` — automated-test-only seed endpoint; not part of the user-facing flow.
+- `/__dev_crash__` — dev-only route that throws during render to exercise the screen error boundary; redirects to `/` outside `__DEV__`.
 
 ## Core Flows
 
