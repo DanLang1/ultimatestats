@@ -4,6 +4,10 @@ import { Platform, Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { DefenseActions } from '@/components/advancedTracking/bottomCard/DefenseActions';
+import {
+  OffenseActions,
+  OffenseActionsProps,
+} from '@/components/advancedTracking/bottomCard/OffenseActions';
 import { TrackerVoiceButton } from '@/components/advancedTracking/TrackerVoiceButton';
 import { TrackerVoiceFeedbackPill } from '@/components/advancedTracking/TrackerVoiceFeedbackPill';
 import { ThemedText } from '@/components/ThemedText';
@@ -17,6 +21,7 @@ import {
   getCurrentPossession,
   hasPointEnded,
 } from '@/lib/advancedTracking/trackingUtils';
+import { PassModifier } from '@/lib/advancedTracking/types';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { Fonts } from '@/theme/theme';
 
@@ -28,12 +33,18 @@ const FOOTER_TOP_PADDING = 12;
 
 interface TrackerActionFooterProps {
   onStartNextPoint: () => void;
-  voiceControls?: VoiceStatCommandsControls;
+  voiceControls: VoiceStatCommandsControls;
+  canUseVoice: boolean;
+  offenseActions: OffenseActionsProps;
+  passModifier: PassModifier;
 }
 
 export const TrackerActionFooter = ({
   onStartNextPoint,
   voiceControls,
+  canUseVoice,
+  offenseActions,
+  passModifier,
 }: TrackerActionFooterProps) => {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
@@ -59,7 +70,7 @@ export const TrackerActionFooter = ({
     recordCaptureIntent({ kind: 'anonymous-opponent-goal' });
   };
 
-  let content: React.ReactNode = null;
+  let content: React.ReactNode;
 
   if (pointIsOver) {
     content = (
@@ -87,13 +98,22 @@ export const TrackerActionFooter = ({
     );
   } else if (oppHasDisc) {
     content = <DefenseActions onOppScored={handleOppScored} onOppTurnover={handleOppTurnover} />;
-  } else if (voiceControls != null) {
+  } else {
+    // A modifier (More menu, Goal, or Drop) owns the next tap. Hide the row but keep its
+    // space so the player grid does not resize under the user's finger.
+    const isRowHidden = passModifier !== null;
     content = (
-      <View style={styles.actionRow}>
+      <View
+        testID="tracker-offense-row"
+        pointerEvents={isRowHidden ? 'none' : 'auto'}
+        accessibilityElementsHidden={isRowHidden}
+        importantForAccessibility={isRowHidden ? 'no-hide-descendants' : 'auto'}
+        style={[styles.offenseRow, isRowHidden && styles.hiddenRow]}>
         <View pointerEvents="none" style={styles.voiceFeedbackOverlay}>
           <TrackerVoiceFeedbackPill controls={voiceControls} />
         </View>
-        <TrackerVoiceButton controls={voiceControls} disabled={false} />
+        <TrackerVoiceButton controls={voiceControls} disabled={!canUseVoice} />
+        <OffenseActions {...offenseActions} />
       </View>
     );
   }
@@ -115,10 +135,14 @@ function createStyles(sizeClass: SizeClass, bottomInset: number) {
       paddingTop: FOOTER_TOP_PADDING,
       paddingBottom: bottomInset + scaleBySizeClass(footerBottomPadding, sizeClass),
     },
-    actionRow: {
+    offenseRow: {
       flex: 1,
       flexDirection: 'row',
       position: 'relative',
+      gap: scaleBySizeClass(8, sizeClass),
+    },
+    hiddenRow: {
+      opacity: 0,
     },
     voiceFeedbackOverlay: {
       position: 'absolute',

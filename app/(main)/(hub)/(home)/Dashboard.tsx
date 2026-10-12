@@ -20,6 +20,7 @@ import { APP_STORE_URL, DISCORD_URL, PLAY_STORE_URL } from '@/lib/constants';
 import { seedTestTeam } from '@/lib/maestroUtils';
 import { LAST_DISMISSED_REMOTE_VERSION_KEY } from '@/lib/remoteVersionUtils';
 import { reportError } from '@/lib/sentry';
+import { pluralize } from '@/lib/utils';
 import { LAST_SEEN_VERSION_KEY } from '@/lib/versionUtils';
 import { useTutorialStore } from '@/store/tutorialStore';
 import { Fonts } from '@/theme/theme';
@@ -195,7 +196,10 @@ export default function DashboardScreen() {
         {
           icon: 'history' as const,
           label: 'Saved Games',
-          description: gamesCount > 0 ? `${gamesCount} games saved` : 'No games yet',
+          description:
+            gamesCount > 0
+              ? `${gamesCount} ${pluralize(gamesCount, 'game', 'games')} saved`
+              : 'No games yet',
           onPress: () => router.push('/SavedGameStats'),
           disabled: gamesCount === 0,
         },
@@ -209,7 +213,7 @@ export default function DashboardScreen() {
         {
           icon: 'account-group-outline' as const,
           label: 'Manage Team',
-          description: `${team1Name}${rosterCount > 0 ? ` • ${rosterCount} players` : ''}`,
+          description: `${team1Name}${rosterCount > 0 ? ` • ${rosterCount} ${pluralize(rosterCount, 'player', 'players')}` : ''}`,
           onPress: () =>
             router.push({
               pathname: '/EditRoster',

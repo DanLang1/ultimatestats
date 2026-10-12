@@ -11,6 +11,14 @@ export function getParticipantName(game: AdvancedTrackedGame, participantId: str
   return participant.name;
 }
 
+export function isSamePlayerRef(a: PlayerRef | null, b: PlayerRef): boolean {
+  if (!a) return false;
+  if (a.refType === 'participant' && b.refType === 'participant') {
+    return a.participantId === b.participantId;
+  }
+  return a.refType === b.refType;
+}
+
 export function getParticipantDisplayLabel(participant: Participant): string {
   return participant.number ? `${participant.name} #${participant.number}` : participant.name;
 }

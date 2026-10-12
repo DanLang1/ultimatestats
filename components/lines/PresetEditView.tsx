@@ -6,6 +6,7 @@ import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { Player, PointLineRecord } from '@/lib/storage/types';
+import { pluralize } from '@/lib/utils';
 import { useSettingsStore } from '@/store/settingsStore';
 import { Fonts } from '@/theme/theme';
 
@@ -94,7 +95,7 @@ export function PresetEditView({
           <Pressable
             onPress={onSave}
             disabled={!canSave}
-            accessibilityLabel={`Save preset, ${selectedIds.length} players`}
+            accessibilityLabel={`Save preset, ${selectedIds.length} ${pluralize(selectedIds.length, 'player', 'players')}`}
             accessibilityRole="button"
             testID="line-preset-save"
             style={({ pressed }) => [

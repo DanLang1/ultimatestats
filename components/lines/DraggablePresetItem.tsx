@@ -15,6 +15,7 @@ import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { LinePreset } from '@/lib/storage/types';
+import { pluralize } from '@/lib/utils';
 import { Fonts } from '@/theme/theme';
 
 const ITEM_HEIGHT = 48;
@@ -141,7 +142,7 @@ export function DraggablePresetItem({
           {preset.name}
         </ThemedText>
         <ThemedText style={[styles.presetCount, { color: palette.textMuted }]}>
-          {preset.playerIds.length} players
+          {preset.playerIds.length} {pluralize(preset.playerIds.length, 'player', 'players')}
         </ThemedText>
       </View>
       <View style={styles.actions}>

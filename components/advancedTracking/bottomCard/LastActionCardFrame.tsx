@@ -7,7 +7,23 @@ import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { Fonts, Palette } from '@/theme/theme';
 
+import { THROW_TYPE_PROMPT_HEIGHT } from './ThrowTypePrompt';
+
 const COMPACT_ACTIONS_CARD_WIDTH = 360;
+export const LAST_ACTION_EYEBROW_LINE_HEIGHT = 14;
+export const LAST_ACTION_HEADER_LINE_HEIGHT = 18;
+const CONTENT_GAP = 2;
+const CARD_PADDING_VERTICAL = 12;
+const CARD_BORDER_WIDTH = 1;
+// Sized for the tallest content (eyebrow + header + throw-type row) so the card never grows
+// mid-point; growth would shrink the player grid under the user's finger.
+const CARD_MIN_HEIGHT =
+  LAST_ACTION_EYEBROW_LINE_HEIGHT +
+  LAST_ACTION_HEADER_LINE_HEIGHT +
+  THROW_TYPE_PROMPT_HEIGHT +
+  CONTENT_GAP * 2 +
+  CARD_PADDING_VERTICAL * 2 +
+  CARD_BORDER_WIDTH * 2;
 
 export type ButtonMode =
   | { kind: 'undo-more'; onUndo: () => void; onMore: () => void }
@@ -57,6 +73,9 @@ export const LastActionCardFrame = ({
   if (buttonMode.kind === 'cancel-more') {
     primaryAction = (
       <Pressable
+        testID="tracker-cancel-modifier"
+        accessibilityRole="button"
+        accessibilityLabel="Cancel"
         onPress={buttonMode.onCancel}
         hitSlop={8}
         style={({ pressed }) => [
@@ -128,7 +147,7 @@ export const LastActionCardFrame = ({
 
   return (
     <View style={styles.outerContainer}>
-      <View style={styles.card} onLayout={handleCardLayout}>
+      <View testID="tracker-last-action-card" style={styles.card} onLayout={handleCardLayout}>
         <View style={[styles.accentRail, { backgroundColor: accentColor }]} />
         <View style={styles.headerCenterContent}>{children}</View>
 
@@ -181,19 +200,19 @@ function createStyles(sizeClass: SizeClass, palette: Palette) {
       flexDirection: 'row',
       alignItems: 'center',
       gap: scaleBySizeClass(12, sizeClass),
-      minHeight: scaleBySizeClass(92, sizeClass),
+      minHeight: scaleBySizeClass(CARD_MIN_HEIGHT, sizeClass),
       backgroundColor: palette.trackerActionCardBg,
       borderRadius: 18,
       borderCurve: 'continuous',
       overflow: 'hidden',
       paddingHorizontal: scaleBySizeClass(14, sizeClass),
-      paddingVertical: scaleBySizeClass(12, sizeClass),
+      paddingVertical: scaleBySizeClass(CARD_PADDING_VERTICAL, sizeClass),
       shadowColor: palette.shadow,
       shadowOffset: { width: 0, height: 5 },
       shadowOpacity: 0.12,
       shadowRadius: 16,
       elevation: 4,
-      borderWidth: 1,
+      borderWidth: CARD_BORDER_WIDTH,
       borderColor: palette.trackerActionCardBorder,
     },
     accentRail: {
@@ -207,7 +226,7 @@ function createStyles(sizeClass: SizeClass, palette: Palette) {
       flex: 1,
       minWidth: 0,
       justifyContent: 'center',
-      gap: 2,
+      gap: CONTENT_GAP,
     },
     cardActionGroup: {
       flexDirection: 'row',

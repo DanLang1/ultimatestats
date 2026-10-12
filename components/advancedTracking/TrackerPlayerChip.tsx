@@ -1,3 +1,4 @@
+import { isSamePlayerRef } from '@/lib/advancedTracking/participantUtils';
 import { PlayerRef } from '@/lib/advancedTracking/types';
 
 import { TrackerChipBase } from './TrackerChipBase';
@@ -19,14 +20,6 @@ interface TrackerPlayerChipProps {
   chipWidth: number;
 }
 
-function isSameRef(a: PlayerRef | null, b: PlayerRef): boolean {
-  if (!a) return false;
-  if (a.refType === 'participant' && b.refType === 'participant') {
-    return a.participantId === b.participantId;
-  }
-  return a.refType === b.refType;
-}
-
 export const TrackerPlayerChip = ({
   label,
   playerNumber,
@@ -42,7 +35,7 @@ export const TrackerPlayerChip = ({
   onThrowaway,
   chipWidth,
 }: TrackerPlayerChipProps) => {
-  const isHolder = isSameRef(discHolderRef, playerRef);
+  const isHolder = isSamePlayerRef(discHolderRef, playerRef);
   const isTargetable = !oppHasDisc && discHolderRef !== null && !isHolder;
 
   return (

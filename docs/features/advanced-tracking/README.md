@@ -45,12 +45,12 @@ Returning from line selection and continuing creates a fresh game from the curre
 ## In-game Help
 
 The tracker's top bar keeps a labeled Help button visible. `TrackerHelpSheet` provides a
-“What happened?” reference with a fixed list of core gestures — scored (swipe up), throwaway
-(swipe down), drop (swipe down), and block (tap) — plus a “Something else happened” row that points
-at More for actions like stall and Callahan. Help only opens local UI: it does not record actions or
-change clocks. Users can return directly to tracking or open practice. Tracker-launched practice
-covers six gestures — pass, throwaway, block, drop, pressure, and goal — returns to the tracker, and
-does not run onboarding line selection or roster setup.
+“What happened?” reference with a fixed list of core gestures — scored (swipe up or Goal),
+throwaway (swipe down or T/A), drop (swipe down or Drop), and block (tap) — plus a “Something else
+happened” row that points at More for actions like stall and Callahan. Help only opens local UI: it
+does not record actions or change clocks. Users can return directly to tracking or open practice.
+Tracker-launched practice covers six gestures — pass, throwaway, block, drop, pressure, and goal —
+returns to the tracker, and does not run onboarding line selection or roster setup.
 
 Fresh-install onboarding introduces advanced line selection before gesture practice. That screen is
 a tutorial-owned implementation with local fixture state. It may reuse neutral visual primitives,
@@ -63,6 +63,17 @@ the line is adjusted before confirming; adding players from `Other players` expa
 without reordering the preset lineup. Choosing another preset or clearing the line exits the
 current preset. Recent-line selections are temporary history sources and are cleared when manually
 adjusted.
+
+## Footer Actions
+
+Whenever the tracked team has the disc, the footer shows a compact voice button plus T/A, Drop,
+and Goal as always-on alternatives to the swipe gestures; swipes keep working. T/A records the
+throwaway directly. Drop and Goal arm a `PassModifier` so the next player tap records the drop or
+goal, using the same prompt, cancel control, and chip highlighting as More-menu modifiers. While any
+modifier (More menu, Goal, or Drop) owns the next tap, the whole row, including voice, is hidden
+from view and from assistive tech until that modifier is used or canceled from the prompt; its
+space stays reserved so the player grid does not resize. In scrimmage, the actions apply to
+whichever side holds the disc.
 
 ## State and Persistence
 

@@ -86,9 +86,11 @@ export const TrackerPlayerGrid = ({
   const horizontalPadding = scaleBySizeClass(20, sizeClass);
   const gap = scaleBySizeClass(isLandscape ? 10 : 12, sizeClass);
 
+  const canTargetUnknown =
+    passModifier === null || passModifier === 'goal' || passModifier === 'drop';
   const contentItems: TrackerGridItem[] = [
     ...activeParticipants,
-    ...appendIf(passModifier === null, 'unknown'),
+    ...appendIf(canTargetUnknown, 'unknown'),
     ...appendIf(canChangeLine, 'line-action'),
   ];
   const placeholderCount = (columns - (contentItems.length % columns)) % columns;

@@ -75,12 +75,16 @@ export function ThrowTypePrompt({
   );
 }
 
+const PROMPT_MARGIN_TOP = 4;
+const OPTION_MIN_HEIGHT = 28;
+export const THROW_TYPE_PROMPT_HEIGHT = PROMPT_MARGIN_TOP + OPTION_MIN_HEIGHT;
+
 function createStyles(sizeClass: SizeClass) {
   return StyleSheet.create({
     container: {
       flexDirection: 'row',
       alignItems: 'center',
-      marginTop: scaleBySizeClass(4, sizeClass),
+      marginTop: scaleBySizeClass(PROMPT_MARGIN_TOP, sizeClass),
       flexWrap: 'wrap',
     },
     options: {
@@ -93,7 +97,7 @@ function createStyles(sizeClass: SizeClass) {
       flexDirection: 'row',
       alignItems: 'center',
       gap: scaleBySizeClass(4, sizeClass),
-      minHeight: scaleBySizeClass(28, sizeClass),
+      minHeight: scaleBySizeClass(OPTION_MIN_HEIGHT, sizeClass),
       justifyContent: 'center',
       borderRadius: 9,
       borderWidth: 1,

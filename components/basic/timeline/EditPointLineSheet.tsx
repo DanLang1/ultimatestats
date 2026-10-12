@@ -9,6 +9,7 @@ import { useTheme } from '@/context/ThemeContext';
 import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { MODAL_MAX_WIDTH_LARGE } from '@/lib/constants';
 import { Player, PointLineRecord } from '@/lib/storage/types';
+import { pluralize } from '@/lib/utils';
 import { useSettingsStore } from '@/store/settingsStore';
 import { Fonts } from '@/theme/theme';
 
@@ -84,7 +85,8 @@ export default function EditPointLineSheet({
             Edit Point {pointNumber} Line
           </ThemedText>
           <ThemedText style={[styles.headerSubtitle, { color: palette.modalTextMuted }]}>
-            Select exactly {requiredPlayerCount} players
+            Select exactly {requiredPlayerCount}{' '}
+            {pluralize(requiredPlayerCount, 'player', 'players')}
           </ThemedText>
         </View>
         <Pressable

@@ -79,10 +79,15 @@ export const TrackerChipBase = ({
     passModifier === 'callahan' ||
     passModifier === 'stall' ||
     passModifier === 'block' ||
-    passModifier === 'pressure'
+    passModifier === 'pressure' ||
+    passModifier === 'goal'
   ) {
     modifierColor = palette.success;
-  } else if (passModifier === 'fifty-fifty') modifierColor = palette.danger;
+  } else if (passModifier === 'fifty-fifty' || passModifier === 'drop') {
+    modifierColor = palette.danger;
+  }
+  // A holder can't drop their own throw, so they sit out the drop prompt.
+  const isHolderExcluded = isHolder && passModifier === 'drop';
 
   const { bg, border, textColor, borderWidth, opacity } = (() => {
     if (oppHasDisc) {
@@ -103,7 +108,7 @@ export const TrackerChipBase = ({
         opacity: 1,
       };
     }
-    if (isHolder) {
+    if (isHolder && !isHolderExcluded) {
       if (modifierColor) {
         return {
           bg: modifierColor,
@@ -154,7 +159,7 @@ export const TrackerChipBase = ({
         style={[
           styles.chip,
           { width: chipWidth, opacity },
-          isHolder && { boxShadow: `0 4px 12px ${palette.shadow}40` },
+          isHolder && !isHolderExcluded && { boxShadow: `0 4px 12px ${palette.shadow}40` },
           isTargetable && modifierColor && { boxShadow: `0 0 12px ${modifierColor}30` },
           oppHasDisc && modifierColor && { boxShadow: `0 0 12px ${modifierColor}30` },
         ]}>

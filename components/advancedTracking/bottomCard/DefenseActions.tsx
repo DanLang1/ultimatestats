@@ -24,18 +24,18 @@ export const DefenseActions = ({ onOppScored, onOppTurnover }: DefenseActionsPro
         style={({ pressed }) => [
           styles.btn,
           {
-            backgroundColor: palette.dangerOverlay10,
-            borderColor: palette.dangerOverlay15,
+            backgroundColor: palette.danger,
+            borderColor: palette.danger,
           },
           pressed && { opacity: 0.7 },
         ]}>
         <MaterialCommunityIcons
           name="cancel"
           size={scaleBySizeClass(24, sizeClass)}
-          color={palette.danger}
+          color={palette.textOnAccent}
           style={styles.icon}
         />
-        <ThemedText numberOfLines={1} style={[styles.btnText, { color: palette.danger }]}>
+        <ThemedText numberOfLines={1} style={[styles.btnText, { color: palette.textOnAccent }]}>
           OPP GOAL
         </ThemedText>
       </Pressable>
@@ -45,18 +45,18 @@ export const DefenseActions = ({ onOppScored, onOppTurnover }: DefenseActionsPro
         style={({ pressed }) => [
           styles.btn,
           {
-            backgroundColor: palette.overlay08,
-            borderColor: palette.overlay10,
+            backgroundColor: palette.success,
+            borderColor: palette.success,
           },
           pressed && { opacity: 0.7 },
         ]}>
         <MaterialCommunityIcons
           name="swap-horizontal"
           size={scaleBySizeClass(24, sizeClass)}
-          color={palette.textInverse}
+          color={palette.textOnAccent}
           style={styles.icon}
         />
-        <ThemedText numberOfLines={1} style={[styles.btnText, { color: palette.textInverse }]}>
+        <ThemedText numberOfLines={1} style={[styles.btnText, { color: palette.textOnAccent }]}>
           OPP TURN
         </ThemedText>
       </Pressable>

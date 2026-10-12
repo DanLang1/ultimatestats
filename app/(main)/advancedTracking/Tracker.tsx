@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AdvancedGameNoteModal } from '@/components/advancedTracking/AdvancedGameNoteModal';
 import { AdvancedPointNoteModal } from '@/components/advancedTracking/AdvancedPointNoteModal';
+import { OffenseActionsProps } from '@/components/advancedTracking/bottomCard/OffenseActions';
 import { DevDebugModal } from '@/components/advancedTracking/DevDebugModal';
 import { LandscapeUnsupported } from '@/components/advancedTracking/LandscapeUnsupported';
 import { TrackerActionFooter } from '@/components/advancedTracking/TrackerActionFooter';
@@ -112,7 +113,9 @@ export default function AdvancedTrackerScreen() {
     oppHasDisc,
     discHolderId: discHolderRef?.refType === 'participant' ? discHolderRef.participantId : null,
   });
+  // An armed modifier owns the next tap; disabling voice also stops any active listening.
   const canUseVoice =
+    passModifier === null &&
     !pointIsOver &&
     !activeStoppage &&
     activeGameClockPause === null &&
@@ -139,6 +142,7 @@ export default function AdvancedTrackerScreen() {
     pointIsOver,
     oppHasDisc,
     discHolderRef,
+    canDropOpeningPull: isAwaitingPullPickup,
     passModifier,
     setPassModifier,
     recordCaptureIntent,
@@ -227,6 +231,13 @@ export default function AdvancedTrackerScreen() {
     });
   };
 
+  const offenseActions: OffenseActionsProps = {
+    hasHolder: discHolderRef != null,
+    canDropOpeningPull: isAwaitingPullPickup,
+    onThrowaway: handlers.onThrowaway,
+    onArmTapAction: setPassModifier,
+  };
+
   const surfaceState = getTrackerSurfaceState({
     game,
     activeGameClockPause,
@@ -287,7 +298,10 @@ export default function AdvancedTrackerScreen() {
       {showInPointControls && (
         <TrackerActionFooter
           onStartNextPoint={handleStartNextPoint}
-          voiceControls={canUseVoice ? voiceControls : undefined}
+          voiceControls={voiceControls}
+          canUseVoice={canUseVoice}
+          offenseActions={offenseActions}
+          passModifier={passModifier}
         />
       )}
 

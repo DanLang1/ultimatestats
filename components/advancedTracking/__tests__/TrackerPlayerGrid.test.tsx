@@ -69,11 +69,14 @@ describe('TrackerPlayerGrid', () => {
       },
     );
 
-    it('keeps Unknown available for normal pass tracking', async () => {
-      await renderGrid({ passModifier: null });
+    it.each<PassModifier>([null, 'goal', 'drop'])(
+      'keeps Unknown available for %s targeting',
+      async (passModifier) => {
+        await renderGrid({ passModifier });
 
-      expect(screen.getByTestId('tracker-chip-Unknown')).toBeVisible();
-    });
+        expect(screen.getByTestId('tracker-chip-Unknown')).toBeVisible();
+      },
+    );
   });
 
   describe('Line action tile', () => {

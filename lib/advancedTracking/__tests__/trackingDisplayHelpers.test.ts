@@ -17,8 +17,6 @@ import {
   getSideTimeoutState,
   getSubsForStoppage,
   getTrackerDisplaySideId,
-  getTrackerInstructionColor,
-  getTrackerInstructionText,
   isPullAwaitingPickup,
 } from '../trackingDisplayHelpers';
 import type { AdvancedTrackedGame, PointPossession, PointSub, TrackedPoint } from '../types';
@@ -1276,106 +1274,6 @@ describe('isPullAwaitingPickup', () => {
         discHolderId: 'p1',
       }),
     ).toBe(false);
-  });
-});
-
-describe('getTrackerInstructionText', () => {
-  it('returns null if point is over', () => {
-    expect(
-      getTrackerInstructionText({
-        pointIsOver: true,
-        passModifier: null,
-        oppHasDisc: false,
-        discHolderId: null,
-        isAwaitingPullPickup: false,
-      }),
-    ).toBeNull();
-  });
-
-  it('handles pass modifiers', () => {
-    expect(
-      getTrackerInstructionText({
-        pointIsOver: false,
-        passModifier: 'callahan',
-        oppHasDisc: false,
-        discHolderId: null,
-        isAwaitingPullPickup: false,
-      }),
-    ).toBe('TAP PLAYER FOR CALLAHAN');
-
-    expect(
-      getTrackerInstructionText({
-        pointIsOver: false,
-        passModifier: 'pressure',
-        oppHasDisc: true,
-        discHolderId: null,
-        isAwaitingPullPickup: false,
-      }),
-    ).toBe('TAP PLAYER WHO APPLIED PRESSURE');
-  });
-
-  it('handles opponent having disc', () => {
-    expect(
-      getTrackerInstructionText({
-        pointIsOver: false,
-        passModifier: null,
-        oppHasDisc: true,
-        discHolderId: null,
-        isAwaitingPullPickup: false,
-      }),
-    ).toBe('TAP PLAYER FOR BLOCK');
-  });
-
-  it('handles empty disc holder', () => {
-    expect(
-      getTrackerInstructionText({
-        pointIsOver: false,
-        passModifier: null,
-        oppHasDisc: false,
-        discHolderId: null,
-        isAwaitingPullPickup: true,
-      }),
-    ).toBe('TAP STARTING PLAYER');
-
-    expect(
-      getTrackerInstructionText({
-        pointIsOver: false,
-        passModifier: null,
-        oppHasDisc: false,
-        discHolderId: null,
-        isAwaitingPullPickup: false,
-      }),
-    ).toBe('TAP PLAYER TO PICK UP');
-  });
-
-  it('returns null when everything is normal', () => {
-    expect(
-      getTrackerInstructionText({
-        pointIsOver: false,
-        passModifier: null,
-        oppHasDisc: false,
-        discHolderId: 'p1',
-        isAwaitingPullPickup: false,
-      }),
-    ).toBeNull();
-  });
-});
-
-describe('getTrackerInstructionColor', () => {
-  const palette = { success: 'green', warning: 'orange', textMuted: 'grey' };
-
-  it('returns success for positive defensive modifiers', () => {
-    expect(getTrackerInstructionColor('callahan', palette)).toBe('green');
-    expect(getTrackerInstructionColor('stall', palette)).toBe('green');
-    expect(getTrackerInstructionColor('pressure', palette)).toBe('green');
-  });
-
-  it('returns warning for fifty-fifty', () => {
-    expect(getTrackerInstructionColor('fifty-fifty', palette)).toBe('orange');
-  });
-
-  it('returns textMuted for null modifier', () => {
-    expect(getTrackerInstructionColor(null, palette)).toBe('grey');
   });
 });
 

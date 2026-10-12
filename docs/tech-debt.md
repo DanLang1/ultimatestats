@@ -15,6 +15,23 @@ This document tracks intentionally deferred cleanup work discovered during the d
   `app/(modals)/EditEventModal.tsx`
   `app/(modals)/AdvancedGameSelectorModal.tsx`
 
+## P2 - Advanced Tracker Overflow on Small Phones
+
+- On iPhone SE (3rd generation), the live-point tracker is taller than the screen, so the footer
+  action row (T/A, Drop, Goal on offense; Opp Goal, Opp Turn on defense) is clipped at the bottom.
+  This predates the footer action buttons; the old full-width voice button was clipped the same way.
+- `getTrackerChipWidth` already shrinks chips to the measured surface height, so the extra height
+  comes from elsewhere. Unconfirmed suspects: the Line action tile growing taller than its chip
+  width, and `FOOTER_BOTTOM_PADDING` (48pt) on devices without a home indicator.
+- Related small-chip issues: "Unknown" wraps mid-word, and the Line tile's icon and label crowd
+  the tile edges.
+- References:
+  `app/(main)/advancedTracking/Tracker.tsx`
+  `components/advancedTracking/TrackerActionFooter.tsx`
+  `components/advancedTracking/TrackerPlayerGrid.tsx`
+  `components/advancedTracking/TrackerLineActionTile.tsx`
+  `lib/advancedTracking/trackerLayoutUtils.ts`
+
 ## P2 - BottomSheet Modal Wrapper
 
 - Several bottom-sheet callers manually wrap `BottomSheet` in a transparent React Native `Modal`. `BottomSheet` owns the overlay and sheet layout, but the caller-owned `Modal` is still needed today for native modal presentation and z-order.

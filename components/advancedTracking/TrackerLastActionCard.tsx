@@ -2,7 +2,10 @@ import React, { ReactNode } from 'react';
 import { StyleSheet } from 'react-native';
 
 import { GoalHeader } from '@/components/advancedTracking/bottomCard/GoalHeader';
-import { LastActionCardFrame } from '@/components/advancedTracking/bottomCard/LastActionCardFrame';
+import {
+  LAST_ACTION_EYEBROW_LINE_HEIGHT,
+  LastActionCardFrame,
+} from '@/components/advancedTracking/bottomCard/LastActionCardFrame';
 import { ModifierPrompt } from '@/components/advancedTracking/bottomCard/ModifierPrompt';
 import { PassChainHeader } from '@/components/advancedTracking/bottomCard/PassChainHeader';
 import { ThrowTypePrompt } from '@/components/advancedTracking/bottomCard/ThrowTypePrompt';
@@ -160,6 +163,8 @@ export const TrackerLastActionCard = ({
       style={{
         fontFamily: Fonts.black,
         fontSize: scaleBySizeClass(10, sizeClass),
+        lineHeight: scaleBySizeClass(LAST_ACTION_EYEBROW_LINE_HEIGHT, sizeClass),
+        includeFontPadding: false,
         letterSpacing: 1.4,
         textTransform: 'uppercase',
         color,
@@ -266,15 +271,18 @@ function getTrackerLastActionCardModel({
     : undoRareButtonMode;
 
   if (passModifier) {
-    const isFiftyFifty = passModifier === 'fifty-fifty';
+    const isDangerModifier = passModifier === 'fifty-fifty' || passModifier === 'drop';
+    let accentColor = palette.neutral;
+    if (isDangerModifier) accentColor = palette.danger;
+    else if (passModifier === 'goal') accentColor = palette.success;
     return {
       kind: 'modifier',
-      accentColor: isFiftyFifty ? palette.danger : palette.neutral,
+      accentColor,
       buttonMode: {
         kind: 'cancel-more',
         onCancel: onCancelModifier,
         onMore: onMorePress,
-        isDanger: isFiftyFifty,
+        isDanger: isDangerModifier,
       },
       preferCompactActions: true,
       content: <ModifierPrompt modifier={passModifier} />,

@@ -28,6 +28,7 @@ import {
 import { buildImportedTeam } from '@/lib/import-team/transform';
 import { NAME_FORMAT_OPTIONS, NameFormatOption } from '@/lib/import-team/types';
 import { reportError } from '@/lib/sentry';
+import { pluralize } from '@/lib/utils';
 import { useGameStore } from '@/store/basic/gameStore';
 import { Fonts } from '@/theme/theme';
 
@@ -127,7 +128,7 @@ export default function ImportTeamScreen() {
       if (gameActive) {
         showAlert({
           title: 'Team Imported',
-          message: `Imported ${importedTeam.roster.length} players to "${importedTeam.name}". You can switch to it from Edit Roster after the game.`,
+          message: `Imported ${importedTeam.roster.length} ${pluralize(importedTeam.roster.length, 'player', 'players')} to "${importedTeam.name}". You can switch to it from Edit Roster after the game.`,
           buttons: [
             {
               text: 'OK',

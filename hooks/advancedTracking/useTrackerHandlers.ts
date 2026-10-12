@@ -1,11 +1,13 @@
 import { TrackerPlayerGridHandlers } from '@/components/advancedTracking/TrackerPlayerGrid';
 import { CaptureIntent, CaptureIntentResult } from '@/lib/advancedTracking/captureIntentUtils';
+import { isSamePlayerRef } from '@/lib/advancedTracking/participantUtils';
 import { PassModifier, PlayerRef } from '@/lib/advancedTracking/types';
 
 interface UseTrackerHandlersInput {
   pointIsOver: boolean;
   oppHasDisc: boolean;
   discHolderRef: PlayerRef | null;
+  canDropOpeningPull: boolean;
   passModifier: PassModifier;
   setPassModifier: (modifier: PassModifier) => void;
   recordCaptureIntent: (intent: CaptureIntent) => CaptureIntentResult;
@@ -18,6 +20,7 @@ export function useTrackerHandlers(input: UseTrackerHandlersInput): TrackerPlaye
     pointIsOver,
     oppHasDisc,
     discHolderRef,
+    canDropOpeningPull,
     passModifier,
     setPassModifier,
     recordCaptureIntent,
@@ -26,7 +29,17 @@ export function useTrackerHandlers(input: UseTrackerHandlersInput): TrackerPlaye
 
   const onPlayerTap = (ref: PlayerRef) => {
     if (pointIsOver) return;
-    if (passModifier === 'block') {
+    if (passModifier === 'goal') {
+      if (discHolderRef == null) return;
+      recordCaptureIntent({ kind: 'goal', scorer: ref });
+    } else if (passModifier === 'drop') {
+      if (canDropOpeningPull) {
+        amendOpeningPullAsDropped(ref);
+      } else {
+        if (discHolderRef == null || isSamePlayerRef(discHolderRef, ref)) return;
+        recordCaptureIntent({ kind: 'drop', receiver: ref });
+      }
+    } else if (passModifier === 'block') {
       if (!discHolderRef) return;
       recordCaptureIntent({ kind: 'block', defender: ref });
     } else if (passModifier === 'callahan') {
@@ -64,7 +77,9 @@ export function useTrackerHandlers(input: UseTrackerHandlersInput): TrackerPlaye
       setPassModifier(null);
     },
     onGoal: (scorer) => {
-      if (discHolderRef != null && !pointIsOver) recordCaptureIntent({ kind: 'goal', scorer });
+      if (discHolderRef == null || pointIsOver) return;
+      recordCaptureIntent({ kind: 'goal', scorer });
+      setPassModifier(null);
     },
     onThrowaway: () => {
       if (discHolderRef == null || pointIsOver) return;

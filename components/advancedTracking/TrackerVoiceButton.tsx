@@ -1,13 +1,12 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet } from 'react-native';
 
-import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
 import { VoiceStatCommandsControls } from '@/hooks/advancedTracking/useVoiceStatCommands';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { useTutorialStore } from '@/store/tutorialStore';
-import { Fonts, Palette } from '@/theme/theme';
+import { Palette } from '@/theme/theme';
 
 import { AdvancedVoiceHintModal } from './AdvancedVoiceHintModal';
 
@@ -26,7 +25,6 @@ export const TrackerVoiceButton = ({ controls, disabled }: TrackerVoiceButtonPro
   const [showVoiceHint, setShowVoiceHint] = useState(false);
 
   const isActive = controls.isListening;
-  const label = isActive ? 'CANCEL' : 'TAP TO SPEAK';
   const icon = isActive ? 'stop-circle' : 'microphone';
   const accentColor = getAccentColor(controls.status, palette);
   const dismissVoiceHint = () => {
@@ -58,25 +56,15 @@ export const TrackerVoiceButton = ({ controls, disabled }: TrackerVoiceButtonPro
           {
             backgroundColor: accentColor,
             borderColor: accentColor,
-            opacity: disabled ? 0.5 : 1,
+            opacity: disabled ? 0.4 : 1,
           },
           pressed && styles.pressed,
         ]}>
-        <View style={styles.content}>
-          <View style={styles.titleRow}>
-            <MaterialCommunityIcons
-              name={icon}
-              size={scaleBySizeClass(22, sizeClass)}
-              color={palette.textOnAccent}
-              style={styles.icon}
-            />
-            <ThemedText
-              numberOfLines={1}
-              style={[styles.buttonText, { color: palette.textOnAccent }]}>
-              {label}
-            </ThemedText>
-          </View>
-        </View>
+        <MaterialCommunityIcons
+          name={icon}
+          size={scaleBySizeClass(22, sizeClass)}
+          color={palette.textOnAccent}
+        />
       </Pressable>
       <AdvancedVoiceHintModal
         visible={showVoiceHint}
@@ -96,39 +84,16 @@ function getAccentColor(status: VoiceStatCommandsControls['status'], palette: Pa
 function createStyles(sizeClass: SizeClass) {
   return StyleSheet.create({
     button: {
-      flex: 1,
+      width: scaleBySizeClass(56, sizeClass),
       minHeight: scaleBySizeClass(VOICE_BUTTON_HEIGHT, sizeClass),
       borderRadius: 16,
       borderCurve: 'continuous',
       borderWidth: 1,
-      flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
-      paddingHorizontal: scaleBySizeClass(12, sizeClass),
-    },
-    content: {
-      alignItems: 'center',
-      justifyContent: 'center',
-      minWidth: 0,
-      flex: 1,
-      gap: 2,
-    },
-    titleRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    icon: {
-      marginRight: 8,
     },
     pressed: {
       opacity: 0.7,
-    },
-    buttonText: {
-      fontFamily: Fonts.black,
-      fontSize: scaleBySizeClass(14, sizeClass),
-      letterSpacing: 0.5,
-      textTransform: 'uppercase',
     },
   });
 }

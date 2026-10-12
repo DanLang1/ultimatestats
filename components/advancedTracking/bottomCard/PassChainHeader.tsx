@@ -6,6 +6,8 @@ import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { PassChainEvent } from '@/lib/advancedTracking/trackingDisplayHelpers';
 import { Fonts } from '@/theme/theme';
 
+import { LAST_ACTION_HEADER_LINE_HEIGHT } from './LastActionCardFrame';
+
 interface PassChainHeaderProps {
   events: PassChainEvent[];
 }
@@ -53,6 +55,8 @@ function createStyles(sizeClass: SizeClass) {
     bold: {
       fontFamily: Fonts.black,
       fontSize: scaleBySizeClass(14, sizeClass),
+      lineHeight: scaleBySizeClass(LAST_ACTION_HEADER_LINE_HEIGHT, sizeClass),
+      includeFontPadding: false,
       letterSpacing: 0.5,
       textTransform: 'uppercase',
       flexShrink: 1,
@@ -60,6 +64,8 @@ function createStyles(sizeClass: SizeClass) {
     label: {
       fontFamily: Fonts.bold,
       fontSize: scaleBySizeClass(13, sizeClass),
+      lineHeight: scaleBySizeClass(LAST_ACTION_HEADER_LINE_HEIGHT, sizeClass),
+      includeFontPadding: false,
       letterSpacing: 0.5,
       textTransform: 'uppercase',
       flexShrink: 1,
@@ -67,6 +73,8 @@ function createStyles(sizeClass: SizeClass) {
     sep: {
       fontFamily: Fonts.black,
       fontSize: scaleBySizeClass(13, sizeClass),
+      lineHeight: scaleBySizeClass(LAST_ACTION_HEADER_LINE_HEIGHT, sizeClass),
+      includeFontPadding: false,
     },
   });
 }

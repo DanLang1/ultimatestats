@@ -1,0 +1,72 @@
+appId: com.langdk.ultimatestats.dev
+name: Advanced Tracker Footer Actions
+tags:
+  - advanced
+---
+- runFlow:
+    file: ../flows/setup-game.yaml
+    env:
+      TRACKER_STATE: focusPossession
+
+# Arming an action hides the footer row; the prompt's cancel brings it back.
+- tapOn:
+    id: 'offense-goal'
+- assertVisible:
+    text: 'TAP WHO SCORED'
+- assertNotVisible:
+    id: 'offense-throwaway'
+- tapOn:
+    id: 'tracker-cancel-modifier'
+- assertVisible:
+    id: 'offense-throwaway'
+
+# Drop: arm Drop, then tap the receiver. Possession flips to the opponent.
+- tapOn:
+    id: 'offense-drop'
+- assertVisible:
+    text: 'TAP WHO DROPPED IT'
+- tapOn:
+    id: 'tracker-chip-Kelly'
+- assertVisible:
+    id: 'defense-opp-turn'
+
+# Get the disc back.
+- tapOn:
+    id: 'defense-opp-turn'
+- tapOn:
+    id: 'tracker-chip-Joe'
+
+# A More-menu modifier owns the next tap, so the footer row is hidden until it is canceled.
+- runFlow:
+    file: ../flows/open-rare-menu.yaml
+- tapOn:
+    id: 'rare-menu-50-50'
+- assertNotVisible:
+    id: 'offense-throwaway'
+- tapOn:
+    id: 'tracker-cancel-modifier'
+- assertVisible:
+    id: 'offense-throwaway'
+
+# Throwaway records directly.
+- tapOn:
+    id: 'offense-throwaway'
+- assertVisible:
+    id: 'defense-opp-turn'
+- tapOn:
+    id: 'defense-opp-turn'
+- tapOn:
+    id: 'tracker-chip-Joe'
+
+# Goal: arm Goal, then tap the scorer. The point ends.
+- tapOn:
+    id: 'offense-goal'
+- assertVisible:
+    text: 'TAP WHO SCORED'
+- tapOn:
+    id: 'tracker-chip-Jon'
+- assertVisible:
+    id: 'between-point-start-next'
+
+- takeScreenshot:
+    path: .maestro/screenshots/advanced-tracker-footer-actions

@@ -7,6 +7,7 @@ import { useTheme } from '@/context/ThemeContext';
 import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { RecentLine } from '@/lib/lineUtils';
 import { LinePreset, Player } from '@/lib/storage/types';
+import { pluralize } from '@/lib/utils';
 import { Fonts } from '@/theme/theme';
 
 interface PresetPickerModalProps {
@@ -124,7 +125,8 @@ export function PresetPickerModal({
                         {preset.name}
                       </ThemedText>
                       <ThemedText style={[styles.presetCount, { color: palette.modalTextMuted }]}>
-                        {preset.playerIds.length} players
+                        {preset.playerIds.length}{' '}
+                        {pluralize(preset.playerIds.length, 'player', 'players')}
                       </ThemedText>
                     </View>
                     <ThemedText

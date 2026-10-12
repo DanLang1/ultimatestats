@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { captureException } from '@sentry/react-native';
-import { act, screen, userEvent, waitFor } from '@testing-library/react-native';
+import { act, screen, userEvent, waitFor, within } from '@testing-library/react-native';
 import { router } from 'expo-router';
 
 import AdvancedPreGameConfirm from '@/app/(main)/advancedTracking/PreGameConfirm';
@@ -440,6 +440,91 @@ describe('advanced tracking routes', () => {
       useAdvancedTrackingStore.getState().currentGame?.points[0].possessions[0].actions.at(-1),
     ).toMatchObject({ kind: 'disc_pickup' });
     expect(screen.queryByTestId('throw-type-huck')).not.toBeOnTheScreen();
+  });
+
+  describe('footer offense actions', () => {
+    function arrangeHolderPossession() {
+      arrangeAdvancedGame();
+      recordOpeningPull();
+      useAdvancedTrackingStore.getState().recordCaptureIntent({
+        kind: 'pickup',
+        player: { refType: 'participant', participantId: testTeam.roster[0].id },
+      });
+    }
+
+    function getLastAction() {
+      return useAdvancedTrackingStore
+        .getState()
+        .currentGame?.points[0].possessions[0].actions.at(-1);
+    }
+
+    it('records a goal by tapping Goal and then the scorer', async () => {
+      const user = userEvent.setup();
+      arrangeHolderPossession();
+      await renderScreen(<TrackerScreen />);
+
+      await user.press(screen.getByTestId('offense-goal'));
+      expect(screen.getByText('Tap who scored')).toBeVisible();
+      await user.press(screen.getByTestId(`tracker-chip-${testTeam.roster[1].name}`));
+
+      expect(getLastAction()).toMatchObject({
+        kind: 'throw',
+        result: 'goal',
+        toPlayer: { refType: 'participant', participantId: testTeam.roster[1].id },
+      });
+    });
+
+    it('records a drop by tapping Drop and then the receiver', async () => {
+      const user = userEvent.setup();
+      arrangeHolderPossession();
+      await renderScreen(<TrackerScreen />);
+
+      await user.press(screen.getByTestId('offense-drop'));
+      expect(screen.getByText('Tap who dropped it')).toBeVisible();
+      await user.press(screen.getByTestId(`tracker-chip-${testTeam.roster[1].name}`));
+
+      expect(getLastAction()).toMatchObject({
+        kind: 'throw',
+        result: 'drop',
+        toPlayer: { refType: 'participant', participantId: testTeam.roster[1].id },
+      });
+    });
+
+    it.each([
+      ['50/50 from More', ['tracker-more-button', 'rare-menu-50-50']],
+      ['Drop', ['offense-drop']],
+      ['Goal', ['offense-goal']],
+    ])('hides the footer row while %s owns the next tap', async (_label, armingTestIds) => {
+      const user = userEvent.setup();
+      arrangeHolderPossession();
+      await renderScreen(<TrackerScreen />);
+
+      for (const testID of armingTestIds) await user.press(screen.getByTestId(testID));
+
+      // Hidden from assistive tech as well as invisible, while keeping its layout space.
+      expect(screen.queryByTestId('tracker-offense-row')).not.toBeOnTheScreen();
+      expect(
+        screen.getByTestId('tracker-offense-row', { includeHiddenElements: true }),
+      ).not.toBeVisible();
+      // Voice is disabled too, which stops any listening that was already in progress.
+      expect(
+        screen.getByTestId('tracker-voice-button', { includeHiddenElements: true }),
+      ).toBeDisabled();
+
+      await user.press(screen.getByTestId('tracker-cancel-modifier'));
+
+      expect(screen.getByTestId('tracker-offense-row')).toBeVisible();
+    });
+
+    it('records a throwaway directly from T/A', async () => {
+      const user = userEvent.setup();
+      arrangeHolderPossession();
+      await renderScreen(<TrackerScreen />);
+
+      await user.press(screen.getByTestId('offense-throwaway'));
+
+      expect(getLastAction()).toMatchObject({ kind: 'throw', result: 'throwaway' });
+    });
   });
 
   it('hides the in-point undo control when the undo stack is empty', async () => {
@@ -933,7 +1018,7 @@ describe('advanced tracking routes', () => {
     await renderScreen(<TrackerScreen />);
 
     expect(screen.getByText('Charlotte')).toBeVisible();
-    expect(screen.getByText('DROP')).toBeVisible();
+    expect(within(screen.getByTestId('tracker-last-action-card')).getByText('DROP')).toBeVisible();
     expect(screen.queryByText('OPP TURN')).not.toBeOnTheScreen();
   });
 

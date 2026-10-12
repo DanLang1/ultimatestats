@@ -22,17 +22,17 @@ interface HelpRow {
 const helpRows: HelpRow[] = [
   {
     event: 'We scored',
-    instruction: 'Swipe up on who scored.',
+    instruction: 'Swipe up on who scored, or tap Goal then who scored.',
     icon: 'arrow-up',
   },
   {
     event: 'We threw it away',
-    instruction: 'Swipe down on the thrower.',
+    instruction: 'Swipe down on the thrower, or tap T/A.',
     icon: 'arrow-down',
   },
   {
     event: 'We dropped it',
-    instruction: 'Swipe down on who dropped it.',
+    instruction: 'Swipe down on who dropped it, or tap Drop then who dropped it.',
     icon: 'arrow-down',
   },
   {

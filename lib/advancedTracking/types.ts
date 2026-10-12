@@ -3,7 +3,16 @@
 
 import type { GenderRatio } from '@/lib/genderRatioUtils';
 
-export type PassModifier = 'fifty-fifty' | 'callahan' | 'stall' | 'block' | 'pressure' | null;
+export type PassModifier =
+  | 'fifty-fifty'
+  | 'callahan'
+  | 'stall'
+  | 'block'
+  | 'pressure'
+  // Button-mode alternatives to the goal and drop swipes.
+  | 'goal'
+  | 'drop'
+  | null;
 
 // --- Core Game ---
 

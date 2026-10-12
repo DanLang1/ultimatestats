@@ -12,7 +12,6 @@ import {
   BetweenPointTransition,
   GameClockPause,
   Participant,
-  PassModifier,
   PlayerRef,
   PointPossession,
   PointSub,
@@ -668,52 +667,6 @@ export function canCallTimeout(state: SideTimeoutState): boolean {
   const regularsLeft = state.regularUsedInHalf < state.regularPerHalf;
   const floaterAvailable = state.floaterEnabled && !state.floaterUsed;
   return regularsLeft || floaterAvailable;
-}
-
-/**
- * Returns the instruction text for the current tracker state.
- */
-export function getTrackerInstructionText(params: {
-  pointIsOver: boolean;
-  passModifier: PassModifier;
-  oppHasDisc: boolean;
-  discHolderId: string | null;
-  isAwaitingPullPickup: boolean;
-}): string | null {
-  const { pointIsOver, passModifier, oppHasDisc, discHolderId, isAwaitingPullPickup } = params;
-
-  if (pointIsOver) return null;
-  if (passModifier === 'block') return 'TAP PLAYER WHO GOT THE BLOCK';
-  if (passModifier === 'callahan') return 'TAP PLAYER FOR CALLAHAN';
-  if (passModifier === 'stall') return 'TAP PLAYER WHO STALLED';
-  if (passModifier === 'pressure') return 'TAP PLAYER WHO APPLIED PRESSURE';
-  if (passModifier === 'fifty-fifty') return 'TAP PLAYER FOR 50/50';
-  if (oppHasDisc) return 'TAP PLAYER FOR BLOCK';
-  if (discHolderId === null) {
-    return isAwaitingPullPickup ? 'TAP STARTING PLAYER' : 'TAP PLAYER TO PICK UP';
-  }
-  return null;
-}
-
-/**
- * Returns the color for the instruction text based on the pass modifier.
- */
-export function getTrackerInstructionColor(
-  passModifier: PassModifier,
-  palette: { success: string; warning: string; textMuted: string },
-): string {
-  if (
-    passModifier === 'callahan' ||
-    passModifier === 'stall' ||
-    passModifier === 'block' ||
-    passModifier === 'pressure'
-  ) {
-    return palette.success;
-  }
-  if (passModifier === 'fifty-fifty') {
-    return palette.warning;
-  }
-  return palette.textMuted;
 }
 
 export function isPullAwaitingPickup(params: {
