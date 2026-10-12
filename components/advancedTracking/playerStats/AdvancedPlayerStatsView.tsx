@@ -121,7 +121,7 @@ export default function AdvancedPlayerStatsView({
             };
           })
           .filter((section) =>
-            section.impact.some((point) => point.onField || point.description.length > 0),
+            section.impact.some((point) => point.onField || point.parts.length > 0),
           )
       : [];
   const sortedAggregateImpactSections = [...aggregateImpactSections].sort((a, b) => {

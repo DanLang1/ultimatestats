@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Keyboard, Pressable, StyleSheet, TextInput, View } from 'react-native';
-import Animated, { FadeIn, LinearTransition, SlideInDown } from 'react-native-reanimated';
+import Animated, { FadeIn, SlideInDown } from 'react-native-reanimated';
 
 import { AnimatedThemedView } from '@/components/AnimatedThemedView';
 import { ThemedText } from '@/components/ThemedText';
@@ -255,7 +255,7 @@ export function TurnoverEntryInner({
 
   // Render cancel button (available on all steps) or unknown button (player step)
   const renderCancelButton = () => (
-    <Animated.View layout={LinearTransition} style={styles.footer}>
+    <View style={styles.footer}>
       {/* Cancel button - always visible */}
       <Pressable
         style={[
@@ -285,7 +285,7 @@ export function TurnoverEntryInner({
           <ThemedText style={[styles.skipText, { color: palette.textMuted }]}>Unknown</ThemedText>
         </Pressable>
       )}
-    </Animated.View>
+    </View>
   );
 
   // Compact layout for player step without add player input

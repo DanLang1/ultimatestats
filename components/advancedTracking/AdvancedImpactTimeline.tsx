@@ -10,7 +10,12 @@ import Svg, {
 import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import { AdvancedImpactPoint } from '@/lib/advancedTracking/advancedImpactUtils';
+import {
+  AdvancedImpactPoint,
+  getImpactDrivingPart,
+  ImpactPart,
+  ImpactPartCode,
+} from '@/lib/advancedTracking/advancedImpactUtils';
 import { Fonts } from '@/theme/theme';
 
 const LABEL_GAP = 4;
@@ -25,7 +30,7 @@ interface ChartPoint {
   x: number;
   y: number;
   yValue: number;
-  description: string;
+  parts: ImpactPart[];
   score: string;
   onField: boolean;
   plusMinusDelta: number;
@@ -40,7 +45,7 @@ function clamp01(v: number): number {
   return Math.max(0, Math.min(1, v));
 }
 
-const PART_TO_FULL: Record<string, string> = {
+const PART_TO_FULL: Record<ImpactPartCode, string> = {
   GA: 'Goal + Assist',
   G: 'Goal',
   A: 'Assist',
@@ -57,45 +62,32 @@ const PART_TO_FULL: Record<string, string> = {
   FfS: '50/50 Self',
 };
 
-const PART_TO_ABBREV: Record<string, string> = {
-  GA: 'GA',
-  G: 'G',
-  A: 'A',
-  HA: 'HA',
-  C: 'C',
-  B: 'B',
-  P: 'P',
-  Stl: 'Stl',
-  StlC: 'Stld',
-  T: 'T',
-  D: 'D',
-  FfT: 'T',
-  FfD: 'D',
-  FfS: 'FF',
-};
-
-function parsePart(part: string): { count: number; code: string } {
-  const match = part.trim().match(/^(\d*)(.+)$/);
-  if (!match) return { count: 1, code: part };
-  return { count: match[1] ? parseInt(match[1], 10) : 1, code: match[2] };
-}
-
-function formatFullDescription(description: string): string {
-  if (!description) return '';
-  return description
-    .split(',')
-    .map((p) => {
-      const { count, code } = parsePart(p);
-      const base = PART_TO_FULL[code] ?? code;
+function formatFullDescription(parts: ImpactPart[]): string {
+  return parts
+    .map(({ count, code }) => {
+      const base = PART_TO_FULL[code];
       return count > 1 ? `${count} ${base}s` : base;
     })
     .join(', ');
 }
 
-function eventAbbrev(description: string): string | null {
-  if (!description) return null;
-  const { code } = parsePart(description.split(',')[0]);
-  return (PART_TO_ABBREV[code] ?? code) || null;
+const PART_TO_ABBREV: Partial<Record<ImpactPartCode, string>> = {
+  StlC: 'Stld',
+  FfT: 'T',
+  FfD: 'D',
+  FfS: 'FF',
+};
+
+/**
+ * Short chart label for a point: the driving part's abbreviation with its count, plus a trailing
+ * `+` when the point had other events (the event log lists them all).
+ */
+export function formatImpactChartLabel(parts: ImpactPart[], plusMinusDelta: number): string | null {
+  const driver = getImpactDrivingPart(parts, plusMinusDelta);
+  if (!driver) return null;
+  const countPrefix = driver.count > 1 ? String(driver.count) : '';
+  const multiEventMarker = parts.length > 1 ? '+' : '';
+  return `${countPrefix}${PART_TO_ABBREV[driver.code] ?? driver.code}${multiEventMarker}`;
 }
 
 function isPositiveImpactEvent(plusMinusDelta: number): boolean {
@@ -196,7 +188,7 @@ export default function AdvancedImpactTimeline({ data }: AdvancedImpactTimelineP
     x: 0,
     y: 0,
     yValue: 0,
-    description: 'Start',
+    parts: [],
     score: data[0]?.score ?? '0-0',
     onField: false,
     plusMinusDelta: 0,
@@ -206,7 +198,7 @@ export default function AdvancedImpactTimeline({ data }: AdvancedImpactTimelineP
     x: scaleMode === 'game' ? d.pointIndex : index + 1,
     y: d.cumulativePlusMinus,
     yValue: d.cumulativePlusMinus,
-    description: d.description,
+    parts: d.parts,
     score: d.score,
     onField: d.onField,
     plusMinusDelta: d.plusMinusDelta,
@@ -214,8 +206,8 @@ export default function AdvancedImpactTimeline({ data }: AdvancedImpactTimelineP
 
   const chartData = [startPoint, ...dataPoints];
 
-  // Event log — only on-field events with descriptions
-  const eventLog = data.filter((d) => d.onField && d.description.length > 0);
+  // Event log — only on-field points with impact events
+  const eventLog = data.filter((d) => d.onField && d.parts.length > 0);
 
   // Calculate min/max/final
   const allY = chartData.map((d) => d.y);
@@ -276,7 +268,7 @@ export default function AdvancedImpactTimeline({ data }: AdvancedImpactTimelineP
     x: getX(pt.x),
     y: getY(pt.y),
     yValue: pt.yValue,
-    description: pt.description,
+    parts: pt.parts,
     score: pt.score,
     onField: pt.onField,
     plusMinusDelta: pt.plusMinusDelta,
@@ -292,11 +284,8 @@ export default function AdvancedImpactTimeline({ data }: AdvancedImpactTimelineP
   // Score label positions — show each unique score once
   const scorePositions: { score: string; dataIndex: number; x: number }[] = [];
   chartData.forEach((pt, idx) => {
-    if (
-      pt.score &&
-      pt.description !== 'Start' &&
-      !scorePositions.some((sp) => sp.score === pt.score)
-    ) {
+    const isStartPoint = idx === 0;
+    if (pt.score && !isStartPoint && !scorePositions.some((sp) => sp.score === pt.score)) {
       scorePositions.push({ score: pt.score, dataIndex: idx, x: getX(pt.x) });
     }
   });
@@ -471,11 +460,11 @@ export default function AdvancedImpactTimeline({ data }: AdvancedImpactTimelineP
                 ))}
 
                 {visibleEventPoints.map((pt, i) => {
-                  // On-field with description → colored dot + label
-                  if (!pt.onField || !pt.description) return null;
+                  // On-field with impact events → colored dot + label
+                  if (!pt.onField || pt.parts.length === 0) return null;
                   const isPositive = isPositiveImpactEvent(pt.plusMinusDelta);
                   const dotColor = getImpactEventColor(pt.plusMinusDelta, palette);
-                  const abbrev = eventAbbrev(pt.description);
+                  const abbrev = formatImpactChartLabel(pt.parts, pt.plusMinusDelta);
                   const labelY = isPositive ? pt.y - labelAboveOffset : pt.y + labelBelowOffset;
                   return (
                     <React.Fragment key={`dot-${i}`}>
@@ -497,8 +486,8 @@ export default function AdvancedImpactTimeline({ data }: AdvancedImpactTimelineP
 
                 {scaleMode === 'game' &&
                   visibleEventPoints.map((pt, i) => {
-                    // On-field with no description -> point played with no impact event.
-                    if (!pt.onField || pt.description) return null;
+                    // On-field with no impact events → point played without impact.
+                    if (!pt.onField || pt.parts.length > 0) return null;
                     return (
                       <SvgCircle
                         key={`off-${i}`}
@@ -593,7 +582,7 @@ export default function AdvancedImpactTimeline({ data }: AdvancedImpactTimelineP
                       styles.eventDesc,
                       { color: getImpactEventColor(pt.plusMinusDelta, palette) },
                     ]}>
-                    {formatFullDescription(pt.description ?? '')}
+                    {formatFullDescription(pt.parts)}
                   </ThemedText>
                 </View>
               );

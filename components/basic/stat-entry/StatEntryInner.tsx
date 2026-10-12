@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Keyboard, Pressable, StyleSheet, TextInput, View } from 'react-native';
-import Animated, { FadeIn, LinearTransition, SlideInDown } from 'react-native-reanimated';
+import Animated, { FadeIn, SlideInDown } from 'react-native-reanimated';
 
 import { AnimatedThemedView } from '@/components/AnimatedThemedView';
 import { ThemedText } from '@/components/ThemedText';
@@ -167,7 +167,7 @@ export function StatEntryInner({
 
   // Shared footer buttons
   const renderFooter = () => (
-    <Animated.View layout={LinearTransition} style={styles.footer}>
+    <View style={styles.footer}>
       <Pressable
         style={[
           styles.skipButton,
@@ -238,7 +238,7 @@ export function StatEntryInner({
           <ThemedText style={[styles.skipText, { color: palette.textMuted }]}>Unknown</ThemedText>
         </Pressable>
       </Animated.View>
-    </Animated.View>
+    </View>
   );
 
   // Compact vertical layout when not showing add player input

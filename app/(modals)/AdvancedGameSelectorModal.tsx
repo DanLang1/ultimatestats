@@ -44,7 +44,7 @@ export default function AdvancedGameSelectorModal() {
       const analyticsGame = buildAnalyticsGame(game);
       const gameSideId = resolveAnalyticsSideId(analyticsGame, sideId ?? null);
       const impact = computeAdvancedImpact(analyticsGame, participantId, gameSideId, gameSideId);
-      return impact.some((point) => point.onField || point.description.length > 0);
+      return impact.some((point) => point.onField || point.parts.length > 0);
     })
     .sort((a, b) => getAdvancedGameTimestamp(b) - getAdvancedGameTimestamp(a));
 

@@ -55,6 +55,7 @@ Common columns include:
 - In aggregate player view, the **Game Impact** selector includes games where that player has either impact events or recorded point-line presence (played points).
 - In player detail, **Game Impact** event chips and score markers use the point-start score so all impact events from the same point share one label; if the point is still in progress, they show the current live score.
 - In player detail, a self-assisted goal is shown in **Game Impact** as a single `Goal + Assist` impact event worth `+2`, matching the raw stat totals.
+- In advanced player detail, **Game Impact** chart labels include an event's count when it is more than one (for example `2B`). A point with several events (for example a hockey assist and a block) is labeled by the event that drove its net change, with a trailing `+` (for example `B+`); the event chips below the chart list every event.
 - In player detail, the **Game Impact** chart uses whole-point y-axis grid lines across the player's visible min/max range while still including `0`, reducing empty mirrored space when all impact is on one side of neutral.
 - In player detail, the **Game Breakdown** strip keeps win/loss as solid color pills and uses a dashed mini-tile plus center dot to indicate `did not play`.
 - In player detail, the **Profile** diamond uses raw counts (Goals, Assists, Blocks, Total Turns) on a shared per-player scale so equal counts render equal axis lengths.

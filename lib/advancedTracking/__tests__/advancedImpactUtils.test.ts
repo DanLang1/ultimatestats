@@ -1,8 +1,19 @@
 import { defineAdvancedGameTestContext } from '@/test/fixtures/advancedGameBuilder';
 
-import { computeAdvancedImpact } from '../advancedImpactUtils';
+import {
+  type AdvancedImpactPoint,
+  computeAdvancedImpact,
+  getImpactDrivingPart,
+  type ImpactPart,
+  type ImpactPartCode,
+} from '../advancedImpactUtils';
 import { buildAnalyticsGame } from '../buildAnalyticsGame';
 import type { AdvancedTrackedGame } from '../types';
+
+/** Compact part summary for assertions, e.g. "G, HA" or "2B". */
+function partCodes(point: AdvancedImpactPoint): string {
+  return point.parts.map(({ code, count }) => `${count > 1 ? count : ''}${code}`).join(', ');
+}
 
 // ── Shared fixtures ─────────────────────────────────────────────────���────────
 
@@ -110,13 +121,13 @@ describe('computeAdvancedImpact', () => {
     expect(lightImpact.map((point) => point.onField)).toEqual([true, false]);
     expect(lightImpact.map((point) => point.plusMinusDelta)).toEqual([1, 0]);
     expect(lightImpact.map((point) => point.cumulativePlusMinus)).toEqual([1, 1]);
-    expect(lightImpact.map((point) => point.description)).toEqual(['A', '']);
+    expect(lightImpact.map(partCodes)).toEqual(['A', '']);
 
     const darkImpact = computeAdvancedImpact(buildAnalyticsGame(game), 'p_august', RIVALS, RIVALS);
     expect(darkImpact.map((point) => point.onField)).toEqual([false, true]);
     expect(darkImpact.map((point) => point.plusMinusDelta)).toEqual([0, 1]);
     expect(darkImpact.map((point) => point.cumulativePlusMinus)).toEqual([0, 1]);
-    expect(darkImpact.map((point) => point.description)).toEqual(['', 'A']);
+    expect(darkImpact.map(partCodes)).toEqual(['', 'A']);
   });
 
   it('marks onField false when the participant is not in the point line', () => {
@@ -217,6 +228,10 @@ describe('computeAdvancedImpact', () => {
     expect(impact[0].onField).toBe(true);
     // August gets: goal (+1). No blocks, no throwaways, no drops.
     expect(impact[0].plusMinusDelta).toBe(1);
+    expect(partCodes(impact[0])).toBe('G, HA');
+    expect(impact[0].parts.map((part) => part.plusMinus)).toEqual([1, 0]);
+    // The goal, not the zero-value hockey assist, drove this point's impact.
+    expect(getImpactDrivingPart(impact[0].parts, impact[0].plusMinusDelta)?.code).toBe('G');
   });
 
   it('assist contributes +1 to plusMinusDelta', () => {
@@ -257,7 +272,7 @@ describe('computeAdvancedImpact', () => {
     const analytics = buildAnalyticsGame(game);
     const impact = computeAdvancedImpact(analytics, 'p_august', ZOO);
     expect(impact[0].plusMinusDelta).toBe(1);
-    expect(impact[0].description).toBe('A');
+    expect(partCodes(impact[0])).toBe('A');
   });
 
   it('throwaway contributes -1 to plusMinusDelta', () => {
@@ -311,7 +326,7 @@ describe('computeAdvancedImpact', () => {
     const analytics = buildAnalyticsGame(game);
     const impact = computeAdvancedImpact(analytics, 'p_august', ZOO);
     expect(impact[0].plusMinusDelta).toBe(-1);
-    expect(impact[0].description).toBe('T');
+    expect(partCodes(impact[0])).toBe('T');
   });
 
   it('cumulativePlusMinus accumulates across points', () => {
@@ -468,7 +483,7 @@ describe('computeAdvancedImpact', () => {
     expect(impact[1].score).toBe('1-1');
   });
 
-  it('description shows GA when player has both goal and assist in same point', () => {
+  it('parts show GA when player has both goal and assist in same point', () => {
     // While a single point normally only has one scoring throw (and thus a player can't
     // realistically get both a goal and an assist), we can test the aggregation logic
     // by having a player throw a goal to themselves.
@@ -507,11 +522,11 @@ describe('computeAdvancedImpact', () => {
     };
     const analytics = buildAnalyticsGame(game);
     const impact = computeAdvancedImpact(analytics, 'p_august', ZOO);
-    expect(impact[0].description).toBe('GA');
+    expect(partCodes(impact[0])).toBe('GA');
     expect(impact[0].plusMinusDelta).toBe(2);
   });
 
-  it('description shows block when player gets a block', () => {
+  it('parts show a block when player gets a block', () => {
     // Rivals throws, August blocks: August gets 'block' attribution
     const game: AdvancedTrackedGame = {
       ...baseGame,
@@ -563,7 +578,7 @@ describe('computeAdvancedImpact', () => {
     };
     const analytics = buildAnalyticsGame(game);
     const impact = computeAdvancedImpact(analytics, 'p_august', ZOO);
-    expect(impact[0].description).toContain('B');
+    expect(partCodes(impact[0])).toContain('B');
     expect(impact[0].plusMinusDelta).toBeGreaterThanOrEqual(1); // block (+1) + assist (+1)
   });
 
@@ -606,12 +621,12 @@ describe('computeAdvancedImpact', () => {
 
     const impact = computeAdvancedImpact(buildAnalyticsGame(game), 'p_meves', ZOO);
 
-    expect(impact[0].description).toBe('C');
+    expect(partCodes(impact[0])).toBe('C');
     expect(impact[0].plusMinusDelta).toBe(2);
     expect(impact[0].cumulativePlusMinus).toBe(2);
   });
 
-  it('description and delta show a half-point pressure', () => {
+  it('parts and delta show a half-point pressure', () => {
     const game: AdvancedTrackedGame = {
       ...baseGame,
       status: 'terminated',
@@ -649,7 +664,7 @@ describe('computeAdvancedImpact', () => {
     };
 
     const impact = computeAdvancedImpact(buildAnalyticsGame(game), 'p_august', ZOO);
-    expect(impact[0].description).toBe('P');
+    expect(partCodes(impact[0])).toBe('P');
     expect(impact[0].plusMinusDelta).toBe(0.5);
     expect(impact[0].cumulativePlusMinus).toBe(0.5);
   });
@@ -710,12 +725,12 @@ describe('computeAdvancedImpact', () => {
     const augustImpact = computeAdvancedImpact(analytics, 'p_august', ZOO);
     expect(augustImpact[0].onField).toBe(true);
     expect(augustImpact[0].plusMinusDelta).toBeCloseTo(-0.5);
-    expect(augustImpact[0].description).toBe('FfT');
+    expect(partCodes(augustImpact[0])).toBe('FfT');
 
     const mevesImpact = computeAdvancedImpact(analytics, 'p_meves', ZOO);
     expect(mevesImpact[0].onField).toBe(true);
     expect(mevesImpact[0].plusMinusDelta).toBeCloseTo(-0.5);
-    expect(mevesImpact[0].description).toBe('FfD');
+    expect(partCodes(mevesImpact[0])).toBe('FfD');
   });
 
   it('keeps split and full turnovers distinct when they occur in the same point', () => {
@@ -736,8 +751,8 @@ describe('computeAdvancedImpact', () => {
 
     const augustImpact = computeAdvancedImpact(analytics, 'p_august', ZOO);
     expect(augustImpact[0].plusMinusDelta).toBe(-1.5);
-    expect(augustImpact[0].description).toBe('T, FfT');
-    expect(computeAdvancedImpact(analytics, 'p_meves', ZOO)[0].description).toBe('FfD');
+    expect(partCodes(augustImpact[0])).toBe('T, FfT');
+    expect(partCodes(computeAdvancedImpact(analytics, 'p_meves', ZOO)[0])).toBe('FfD');
   });
 
   it('describes a self 50/50 as one fault worth -1', () => {
@@ -752,6 +767,42 @@ describe('computeAdvancedImpact', () => {
 
     const impact = computeAdvancedImpact(analytics, 'p_august', ZOO);
     expect(impact[0].plusMinusDelta).toBe(-1);
-    expect(impact[0].description).toBe('FfS');
+    expect(partCodes(impact[0])).toBe('FfS');
+  });
+});
+
+describe('getImpactDrivingPart', () => {
+  const part = (code: ImpactPartCode, plusMinus: number, count = 1): ImpactPart => ({
+    code,
+    count,
+    plusMinus,
+  });
+  const driverCode = (parts: ImpactPart[], plusMinusDelta: number) =>
+    getImpactDrivingPart(parts, plusMinusDelta)?.code ?? null;
+
+  it('returns null for points without impact events', () => {
+    expect(getImpactDrivingPart([], 0)).toBeNull();
+  });
+
+  it('returns the only part of a single-event point', () => {
+    expect(driverCode([part('HA', 0)], 0)).toBe('HA');
+    expect(driverCode([part('StlC', -1)], -1)).toBe('StlC');
+  });
+
+  it('picks the largest gain on a net-positive point', () => {
+    expect(driverCode([part('HA', 0), part('B', 1)], 1)).toBe('B');
+    expect(driverCode([part('HA', 0), part('P', 0.5)], 0.5)).toBe('P');
+    expect(driverCode([part('A', 1), part('B', 2, 2)], 3)).toBe('B');
+    expect(driverCode([part('GA', 2), part('T', -1)], 1)).toBe('GA');
+  });
+
+  it('picks the largest loss on a net-negative point', () => {
+    expect(driverCode([part('HA', 0), part('T', -1)], -1)).toBe('T');
+    expect(driverCode([part('P', 0.5), part('FfT', -0.5), part('D', -1)], -1)).toBe('D');
+  });
+
+  it('picks the first part on a net-neutral point', () => {
+    expect(driverCode([part('G', 1), part('T', -1)], 0)).toBe('G');
+    expect(driverCode([part('B', 1), part('D', -1)], 0)).toBe('B');
   });
 });
