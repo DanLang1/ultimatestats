@@ -1,0 +1,115 @@
+appId: com.langdk.ultimatestats.dev
+name: Advanced Tracker Point and Timeout Timers
+---
+- runFlow:
+    file: ../flows/setup-game.yaml
+    env:
+      TRACKER_STATE: focusPossession
+
+# The point timer runs, freezes during a pause, and resumes without counting the pause.
+- runFlow:
+    file: ../flows/assert-timer-running.yaml
+    env:
+      TIMER_ID: scorebar-point-timer
+- tapOn:
+    id: 'scorebar-pause'
+- assertVisible:
+    text: 'PAUSED'
+- runFlow:
+    file: ../flows/assert-timer-paused.yaml
+    env:
+      TIMER_ID: scorebar-point-timer
+- runFlow:
+    file: ../flows/read-timer-seconds.yaml
+    env:
+      TIMER_ID: scorebar-point-timer
+      TIMER_KEY: pausedPointSeconds
+- tapOn:
+    id: 'stoppage-resume'
+- assertVisible:
+    id: 'tracker-menu-button'
+- runFlow:
+    file: ../flows/read-timer-seconds.yaml
+    env:
+      TIMER_ID: scorebar-point-timer
+      TIMER_KEY: resumedPointSeconds
+- assertTrue: ${output.resumedPointSeconds - output.pausedPointSeconds >= 0 && output.resumedPointSeconds - output.pausedPointSeconds <= 2}
+- runFlow:
+    file: ../flows/assert-timer-running.yaml
+    env:
+      TIMER_ID: scorebar-point-timer
+
+# A mid-point timeout counts down and adjusts by 10 seconds while running.
+- tapOn:
+    id: 'timeout-dots-focus'
+- tapOn:
+    id: 'timeout-button-home'
+    retryTapIfNoChange: true
+- assertVisible:
+    id: 'stoppage-timeout-timer'
+- runFlow:
+    file: ../flows/assert-timer-running.yaml
+    env:
+      TIMER_ID: stoppage-timeout-timer
+- runFlow:
+    file: ../flows/read-timer-seconds.yaml
+    env:
+      TIMER_ID: stoppage-timeout-timer
+      TIMER_KEY: beforeIncreaseSeconds
+- tapOn: 'Increase timeout by 10 seconds'
+- runFlow:
+    file: ../flows/read-timer-seconds.yaml
+    env:
+      TIMER_ID: stoppage-timeout-timer
+      TIMER_KEY: afterIncreaseSeconds
+# Allow for ticks between the two reads.
+- assertTrue: ${output.afterIncreaseSeconds - output.beforeIncreaseSeconds >= 7 && output.afterIncreaseSeconds - output.beforeIncreaseSeconds <= 10}
+- runFlow:
+    file: ../flows/read-timer-seconds.yaml
+    env:
+      TIMER_ID: stoppage-timeout-timer
+      TIMER_KEY: beforeDecreaseSeconds
+- tapOn: 'Decrease timeout by 10 seconds'
+- runFlow:
+    file: ../flows/read-timer-seconds.yaml
+    env:
+      TIMER_ID: stoppage-timeout-timer
+      TIMER_KEY: afterDecreaseSeconds
+- assertTrue: ${output.beforeDecreaseSeconds - output.afterDecreaseSeconds >= 10 && output.beforeDecreaseSeconds - output.afterDecreaseSeconds <= 13}
+- tapOn:
+    id: 'stoppage-resume'
+- assertVisible:
+    id: 'tracker-menu-button'
+
+# A between-point timeout starts at the full duration and counts down until ended.
+- runFlow:
+    file: ../flows/open-rare-menu.yaml
+- runFlow:
+    file: ../flows/select-opponent-block.yaml
+- runFlow:
+    file: ../flows/record-opponent-goal.yaml
+# The score bar may already show the timeout page from the mid-point timeout.
+- tapOn:
+    id: 'timeout-dots-focus'
+    optional: true
+- tapOn:
+    id: 'timeout-button-away'
+    retryTapIfNoChange: true
+- assertVisible:
+    id: 'between-point-timeout-timer'
+- runFlow:
+    file: ../flows/read-timer-seconds.yaml
+    env:
+      TIMER_ID: between-point-timeout-timer
+      TIMER_KEY: betweenPointStartSeconds
+- assertTrue: ${output.betweenPointStartSeconds >= 65 && output.betweenPointStartSeconds <= 70}
+- runFlow:
+    file: ../flows/assert-timer-running.yaml
+    env:
+      TIMER_ID: between-point-timeout-timer
+- tapOn:
+    id: 'between-point-end-timeout'
+- assertVisible:
+    id: 'between-point-start-next'
+- assertNotVisible:
+    id: 'between-point-timeout-timer'

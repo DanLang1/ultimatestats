@@ -1,0 +1,9 @@
+appId: com.langdk.ultimatestats.dev
+name: Read Timer Seconds
+---
+# Stores the M:SS value shown by TIMER_ID in output[TIMER_KEY] as signed seconds.
+# Pressable timers expose their whole label (for example "6:56 PAUSE"), so only the
+# first M:SS match is parsed; a leading minus marks overtime.
+- copyTextFrom:
+    id: ${TIMER_ID}
+- evalScript: '${output[TIMER_KEY] = (function (text) { var match = /(-?)(\d+):(\d{2})/.exec(text); return (match[1] ? -1 : 1) * (Number(match[2]) * 60 + Number(match[3])); })(maestro.copiedText)}'

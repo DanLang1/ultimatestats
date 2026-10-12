@@ -1,0 +1,11 @@
+appId: com.langdk.ultimatestats.dev
+name: Assert Timer Running
+---
+# Passes once TIMER_ID shows a different value than when this flow started.
+- copyTextFrom:
+    id: ${TIMER_ID}
+- extendedWaitUntil:
+    notVisible:
+      id: ${TIMER_ID}
+      text: ${maestro.copiedText}
+    timeout: 5000

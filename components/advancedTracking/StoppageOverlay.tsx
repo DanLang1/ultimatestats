@@ -5,8 +5,8 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
-import { useTimestampTimer } from '@/hooks/advancedTracking/useTimer';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { useCountdownSeconds } from '@/hooks/useTimer';
 import {
   formatPointTime,
   getActiveStoppage,
@@ -15,13 +15,10 @@ import {
 } from '@/lib/advancedTracking/trackingDisplayHelpers';
 import { getCurrentPoint, getCurrentPossession } from '@/lib/advancedTracking/trackingUtils';
 import type { AdvancedTrackedGame } from '@/lib/advancedTracking/types';
+import { DEFAULT_TIMEOUT_SECONDS, MAX_TIMEOUT_SECONDS, MIN_TIMEOUT_SECONDS } from '@/lib/constants';
 import { formatTimerSeconds, hasItems } from '@/lib/utils';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { Fonts } from '@/theme/theme';
-
-const TIMEOUT_DURATION_S = 70;
-const TIMEOUT_MIN_S = 0;
-const TIMEOUT_MAX_S = 5 * 60;
 
 interface StoppageOverlayProps {
   game: AdvancedTrackedGame;
@@ -47,15 +44,12 @@ export const StoppageOverlay = ({ game }: StoppageOverlayProps) => {
   }>({ stoppageId: null, offsetSeconds: 0 });
   const durationOffset =
     timeoutAdjustment.stoppageId === activeStoppageId ? timeoutAdjustment.offsetSeconds : 0;
-  const effectiveDuration = TIMEOUT_DURATION_S + durationOffset;
+  const effectiveDuration = DEFAULT_TIMEOUT_SECONDS + durationOffset;
 
-  const timeoutSecondsLeft = useTimestampTimer({
-    timestamp: stoppageTimestamp,
-    mode: 'countdown',
+  const timeoutSecondsLeft = useCountdownSeconds({
+    startedAt: activeStoppage?.reason === 'timeout' ? stoppageTimestamp : null,
     durationSeconds: effectiveDuration,
     intervalMs: 250,
-    enabled: activeStoppage?.reason === 'timeout',
-    allowNegative: true,
   });
 
   const adjustTimeout = (deltaSeconds: number) => {
@@ -63,17 +57,17 @@ export const StoppageOverlay = ({ game }: StoppageOverlayProps) => {
 
     const currentDuration = effectiveDuration;
     const newDuration = Math.max(
-      TIMEOUT_MIN_S,
-      Math.min(TIMEOUT_MAX_S, currentDuration + deltaSeconds),
+      MIN_TIMEOUT_SECONDS,
+      Math.min(MAX_TIMEOUT_SECONDS, currentDuration + deltaSeconds),
     );
     setTimeoutAdjustment({
       stoppageId: activeStoppageId,
-      offsetSeconds: newDuration - TIMEOUT_DURATION_S,
+      offsetSeconds: newDuration - DEFAULT_TIMEOUT_SECONDS,
     });
   };
 
-  const canDecrement = effectiveDuration > TIMEOUT_MIN_S;
-  const canIncrement = effectiveDuration < TIMEOUT_MAX_S;
+  const canDecrement = effectiveDuration > MIN_TIMEOUT_SECONDS;
+  const canIncrement = effectiveDuration < MAX_TIMEOUT_SECONDS;
 
   if (!activeStoppage) return null;
 
@@ -133,7 +127,9 @@ export const StoppageOverlay = ({ game }: StoppageOverlayProps) => {
               color={!canDecrement ? palette.textMuted : palette.textInverse}
             />
           </Pressable>
-          <ThemedText style={[styles.countdownTimer, { color: timerColor }]}>
+          <ThemedText
+            testID="stoppage-timeout-timer"
+            style={[styles.countdownTimer, { color: timerColor }]}>
             {formatTimerSeconds(timeoutSecondsLeft)}
           </ThemedText>
           <Pressable

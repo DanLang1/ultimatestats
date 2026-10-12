@@ -3,8 +3,8 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
-import { useTimestampTimer } from '@/hooks/advancedTracking/useTimer';
 import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { useCountdownSeconds } from '@/hooks/useTimer';
 import { MIN_HALFTIME_BREAK_SECONDS } from '@/lib/constants';
 import { formatTimerSeconds } from '@/lib/utils';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
@@ -29,13 +29,9 @@ export const HalftimeTimer = () => {
     startHalftimeTimer,
   } = useAdvancedTrackingStore();
 
-  const timeLeft = useTimestampTimer({
-    timestamp: halftimeTimerStartedAt,
-    mode: 'countdown',
+  const timeLeft = useCountdownSeconds({
+    startedAt: halftimeTimerStartedAt,
     durationSeconds: halftimeTimerDurationSeconds,
-    intervalMs: 1000,
-    enabled: halftimeTimerStartedAt !== null,
-    allowNegative: true,
   });
   const timerIsRunning = halftimeTimerStartedAt !== null;
   const isOvertime = timeLeft < 0;

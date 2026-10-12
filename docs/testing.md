@@ -100,6 +100,14 @@ asserting the destination. `launchApp` restarts the app without clearing persist
 destination element from the previous screen can remain discoverable underneath the seed route during
 navigation and create a false-positive setup completion.
 
+Timer flows (`advanced-tracker-timers.yml`, `advanced-tracker-halftime-timer.yml`,
+`basic-timers.yml`) assert on displayed values through shared helpers in `.maestro/flows/`:
+`read-timer-seconds.yaml` parses the M:SS value into `output`, `assert-timer-running.yaml` waits for
+the value to change, and `assert-timer-paused.yaml` asserts it holds for a few seconds. Maestro has
+no sleep command, so the paused helper's optional wait reports a warning on success; that warning is
+expected. Adjustments made while paused assert exact deltas; adjustments made while running allow
+for ticks between reads.
+
 The default suite excludes the `extended` multi-point scenarios to keep feedback fast. Use
 `npm run maestro:all` to include them all.
 

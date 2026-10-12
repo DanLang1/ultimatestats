@@ -3,12 +3,11 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
-import { useTimestampTimer } from '@/hooks/advancedTracking/useTimer';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { useNow } from '@/hooks/useTimer';
 import { computeCapState, getCapThresholdMinutes } from '@/lib/advancedTracking/capUtils';
 import {
   getActiveGameClockPause,
-  getCompletedGameClockPauseMs,
   getGameClockElapsedMs,
   formatPointTime,
 } from '@/lib/advancedTracking/trackingDisplayHelpers';
@@ -27,17 +26,8 @@ export const TrackerCapBar = ({ onMenuPress, onHelpPress, game }: TrackerCapBarP
   const { sizeClass } = useLayout();
   const activeGameClockPause = getActiveGameClockPause(game);
   const gameStartedAt = game.points[0]?.startedAt ?? null;
-  const rawGameElapsedMs = useTimestampTimer({
-    timestamp: gameStartedAt,
-    mode: 'elapsed',
-    intervalMs: 1000,
-    enabled: gameStartedAt !== null && activeGameClockPause === null,
-  });
-  const completedGameClockPauseMs = getCompletedGameClockPauseMs(game);
-  const gameElapsedMs =
-    activeGameClockPause !== null
-      ? getGameClockElapsedMs(game, activeGameClockPause.pausedAt)
-      : Math.max(0, rawGameElapsedMs - completedGameClockPauseMs);
+  const now = useNow(gameStartedAt !== null && activeGameClockPause === null);
+  const gameElapsedMs = getGameClockElapsedMs(game, now);
   const hardCapMins = useSettingsStore((state) => state.hardCapMins);
   const advancedSoftCapAtMins = useSettingsStore((state) => state.advancedSoftCapAtMins);
   const capThresholds = getCapThresholdMinutes(game, {

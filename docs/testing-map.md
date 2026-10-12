@@ -61,11 +61,11 @@ Maestro runs against the installed iOS simulator app. Most flows enter through t
 route and then exercise the real tracker UI; `advanced-tracker-ui-setup.yml` separately protects the
 full Dashboard → New Game → setup → line/pull entry path.
 
-| Command                 | Scope                                                                                                                                         |
-| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| `npm run maestro:smoke` | One fast advanced-tracker point/action smoke flow                                                                                             |
-| `npm run maestro`       | Core menus, score bar, pulls, turnovers, stoppages, rare actions, cap modes, midpoint stats, and the full-UI setup smoke; excludes `extended` |
-| `npm run maestro:all`   | All core flows plus extended defense, pass-chain, full-cycle, and completed-game stats scenarios                                              |
+| Command                 | Scope                                                                                                                                                      |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `npm run maestro:smoke` | One fast advanced-tracker point/action smoke flow                                                                                                          |
+| `npm run maestro`       | Core menus, score bar, pulls, turnovers, stoppages, rare actions, cap modes, midpoint stats, live timers, and the full-UI setup smoke; excludes `extended` |
+| `npm run maestro:all`   | All core flows plus extended defense, pass-chain, full-cycle, and completed-game stats scenarios                                                           |
 
 Maestro coverage is intentionally narrower than route-test coverage. The screen suite gives every
 important route a fast deterministic check; Maestro protects the advanced-tracking journeys where

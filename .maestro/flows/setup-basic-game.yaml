@@ -1,0 +1,32 @@
+appId: com.langdk.ultimatestats.dev
+name: Seed Basic Game
+---
+# Live basic game at 0-0, game to 2, with team 1's first regular timeout already
+# consumed and stat tracking enabled.
+- launchApp
+- openLink: ultimatestats-dev:///__maestro_seed__?mode=basicCancelPendingGoal
+- runFlow:
+    when:
+      visible: 'U-Stat (Dev)'
+    commands:
+      - tapOn: 'U-Stat (Dev)'
+      - extendedWaitUntil:
+          notVisible: 'DEVELOPMENT SERVERS'
+          timeout: 15000
+      - openLink: ultimatestats-dev:///__maestro_seed__?mode=basicCancelPendingGoal
+
+- runFlow:
+    when:
+      visible: 'maestro-setup-running'
+    commands:
+      - retry:
+          maxRetries: 1
+          commands:
+            - extendedWaitUntil:
+                notVisible:
+                  id: 'maestro-setup-running'
+                timeout: 15000
+- extendedWaitUntil:
+    visible:
+      text: 'Score for Zoboomafoo'
+    timeout: 10000

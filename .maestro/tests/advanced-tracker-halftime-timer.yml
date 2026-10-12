@@ -1,0 +1,94 @@
+appId: com.langdk.ultimatestats.dev
+name: Advanced Tracker Halftime Timer
+---
+- runFlow:
+    file: ../flows/setup-game.yaml
+    env:
+      TRACKER_STATE: focusPossession
+- runFlow:
+    file: ../flows/open-rare-menu.yaml
+- runFlow:
+    file: ../flows/select-opponent-block.yaml
+- runFlow:
+    file: ../flows/record-opponent-goal.yaml
+- tapOn:
+    id: 'tracker-menu-button'
+- tapOn:
+    id: 'tracker-menu-start-second-half-early'
+- assertVisible:
+    text: 'HALFTIME'
+
+# The timer waits for START and adjusts by whole minutes while stopped.
+- runFlow:
+    file: ../flows/assert-timer-paused.yaml
+    env:
+      TIMER_ID: halftime-between-point-timer-toggle
+- runFlow:
+    file: ../flows/read-timer-seconds.yaml
+    env:
+      TIMER_ID: halftime-between-point-timer-toggle
+      TIMER_KEY: idleSeconds
+- tapOn: 'Decrease halftime by one minute'
+- runFlow:
+    file: ../flows/read-timer-seconds.yaml
+    env:
+      TIMER_ID: halftime-between-point-timer-toggle
+      TIMER_KEY: decreasedSeconds
+- assertTrue: ${output.decreasedSeconds === output.idleSeconds - 60}
+
+# Running: counts down, and adding a minute keeps it running from the new duration.
+- tapOn:
+    id: 'halftime-between-point-timer-toggle'
+- assertVisible:
+    id: 'halftime-between-point-timer-toggle'
+    text: '.*PAUSE.*'
+- runFlow:
+    file: ../flows/assert-timer-running.yaml
+    env:
+      TIMER_ID: halftime-between-point-timer-toggle
+- runFlow:
+    file: ../flows/read-timer-seconds.yaml
+    env:
+      TIMER_ID: halftime-between-point-timer-toggle
+      TIMER_KEY: beforeIncreaseSeconds
+- tapOn: 'Increase halftime by one minute'
+- runFlow:
+    file: ../flows/read-timer-seconds.yaml
+    env:
+      TIMER_ID: halftime-between-point-timer-toggle
+      TIMER_KEY: afterIncreaseSeconds
+# Allow for ticks between the two reads.
+- assertTrue: ${output.afterIncreaseSeconds - output.beforeIncreaseSeconds >= 57 && output.afterIncreaseSeconds - output.beforeIncreaseSeconds <= 60}
+- runFlow:
+    file: ../flows/assert-timer-running.yaml
+    env:
+      TIMER_ID: halftime-between-point-timer-toggle
+
+# Paused: holds its value, adjusts exactly, and resumes counting down.
+- tapOn:
+    id: 'halftime-between-point-timer-toggle'
+- assertVisible:
+    id: 'halftime-between-point-timer-toggle'
+    text: '.*START.*'
+- runFlow:
+    file: ../flows/assert-timer-paused.yaml
+    env:
+      TIMER_ID: halftime-between-point-timer-toggle
+- runFlow:
+    file: ../flows/read-timer-seconds.yaml
+    env:
+      TIMER_ID: halftime-between-point-timer-toggle
+      TIMER_KEY: pausedSeconds
+- tapOn: 'Increase halftime by one minute'
+- runFlow:
+    file: ../flows/read-timer-seconds.yaml
+    env:
+      TIMER_ID: halftime-between-point-timer-toggle
+      TIMER_KEY: pausedIncreasedSeconds
+- assertTrue: ${output.pausedIncreasedSeconds === output.pausedSeconds + 60}
+- tapOn:
+    id: 'halftime-between-point-timer-toggle'
+- runFlow:
+    file: ../flows/assert-timer-running.yaml
+    env:
+      TIMER_ID: halftime-between-point-timer-toggle

@@ -1,0 +1,142 @@
+appId: com.langdk.ultimatestats.dev
+name: Basic Timeout and Halftime Timers
+---
+- runFlow: ../flows/setup-basic-game.yaml
+
+# Timeout modal: waits for START, then counts down from DEFAULT_TIMEOUT_SECONDS.
+- tapOn: 'Use timeout 2 for Zoboomafoo'
+- assertVisible:
+    id: 'timeout-modal-timer-toggle'
+- runFlow:
+    file: ../flows/read-timer-seconds.yaml
+    env:
+      TIMER_ID: timeout-modal-timer-toggle
+      TIMER_KEY: timeoutIdleSeconds
+- assertTrue: ${output.timeoutIdleSeconds === 70}
+- runFlow:
+    file: ../flows/assert-timer-paused.yaml
+    env:
+      TIMER_ID: timeout-modal-timer-toggle
+- tapOn:
+    id: 'timeout-modal-timer-toggle'
+- runFlow:
+    file: ../flows/assert-timer-running.yaml
+    env:
+      TIMER_ID: timeout-modal-timer-toggle
+
+# Adding time while running keeps the deadline moving.
+- runFlow:
+    file: ../flows/read-timer-seconds.yaml
+    env:
+      TIMER_ID: timeout-modal-timer-toggle
+      TIMER_KEY: beforeIncreaseSeconds
+- tapOn: 'Increase timeout by 10 seconds'
+- runFlow:
+    file: ../flows/read-timer-seconds.yaml
+    env:
+      TIMER_ID: timeout-modal-timer-toggle
+      TIMER_KEY: afterIncreaseSeconds
+# Allow for ticks between the two reads.
+- assertTrue: ${output.afterIncreaseSeconds - output.beforeIncreaseSeconds >= 7 && output.afterIncreaseSeconds - output.beforeIncreaseSeconds <= 10}
+- runFlow:
+    file: ../flows/assert-timer-running.yaml
+    env:
+      TIMER_ID: timeout-modal-timer-toggle
+
+# Paused: holds, adjusts exactly, and resumes.
+- tapOn:
+    id: 'timeout-modal-timer-toggle'
+- runFlow:
+    file: ../flows/assert-timer-paused.yaml
+    env:
+      TIMER_ID: timeout-modal-timer-toggle
+- runFlow:
+    file: ../flows/read-timer-seconds.yaml
+    env:
+      TIMER_ID: timeout-modal-timer-toggle
+      TIMER_KEY: pausedSeconds
+- tapOn: 'Decrease timeout by 10 seconds'
+- runFlow:
+    file: ../flows/read-timer-seconds.yaml
+    env:
+      TIMER_ID: timeout-modal-timer-toggle
+      TIMER_KEY: pausedDecreasedSeconds
+- assertTrue: ${output.pausedDecreasedSeconds === output.pausedSeconds - 10}
+- tapOn:
+    id: 'timeout-modal-timer-toggle'
+- runFlow:
+    file: ../flows/assert-timer-running.yaml
+    env:
+      TIMER_ID: timeout-modal-timer-toggle
+- tapOn:
+    id: 'timeout-modal-end'
+- assertNotVisible:
+    id: 'timeout-modal-timer-toggle'
+
+# Score the halftime point (game to 2) to open the halftime modal.
+- tapOn: 'Score for Zoboomafoo'
+- extendedWaitUntil:
+    visible: 'Who scored?'
+    timeout: 5000
+- tapOn: 'Unknown'
+- extendedWaitUntil:
+    visible: 'Who threw the assist?'
+    timeout: 5000
+# The goal chip also reads "Unknown"; target the action button beside Back.
+- tapOn:
+    text: 'Unknown'
+    rightOf: 'Back'
+- extendedWaitUntil:
+    visible:
+      id: 'halftime-modal-timer-toggle'
+    timeout: 5000
+
+# Halftime modal: adjusts by whole minutes while stopped.
+- runFlow:
+    file: ../flows/read-timer-seconds.yaml
+    env:
+      TIMER_ID: halftime-modal-timer-toggle
+      TIMER_KEY: halftimeIdleSeconds
+- tapOn: 'Decrease halftime by one minute'
+- runFlow:
+    file: ../flows/read-timer-seconds.yaml
+    env:
+      TIMER_ID: halftime-modal-timer-toggle
+      TIMER_KEY: halftimeDecreasedSeconds
+- assertTrue: ${output.halftimeDecreasedSeconds === output.halftimeIdleSeconds - 60}
+
+# Running: counts down, and adding a minute keeps it running.
+- tapOn:
+    id: 'halftime-modal-timer-toggle'
+- runFlow:
+    file: ../flows/assert-timer-running.yaml
+    env:
+      TIMER_ID: halftime-modal-timer-toggle
+- runFlow:
+    file: ../flows/read-timer-seconds.yaml
+    env:
+      TIMER_ID: halftime-modal-timer-toggle
+      TIMER_KEY: halftimeBeforeIncreaseSeconds
+- tapOn: 'Increase halftime by one minute'
+- runFlow:
+    file: ../flows/read-timer-seconds.yaml
+    env:
+      TIMER_ID: halftime-modal-timer-toggle
+      TIMER_KEY: halftimeAfterIncreaseSeconds
+- assertTrue: ${output.halftimeAfterIncreaseSeconds - output.halftimeBeforeIncreaseSeconds >= 57 && output.halftimeAfterIncreaseSeconds - output.halftimeBeforeIncreaseSeconds <= 60}
+- runFlow:
+    file: ../flows/assert-timer-running.yaml
+    env:
+      TIMER_ID: halftime-modal-timer-toggle
+
+# Paused: holds its value until continuing.
+- tapOn:
+    id: 'halftime-modal-timer-toggle'
+- runFlow:
+    file: ../flows/assert-timer-paused.yaml
+    env:
+      TIMER_ID: halftime-modal-timer-toggle
+- tapOn:
+    id: 'halftime-modal-continue'
+- assertNotVisible:
+    id: 'halftime-modal-timer-toggle'

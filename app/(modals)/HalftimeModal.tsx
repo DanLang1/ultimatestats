@@ -171,6 +171,8 @@ export default function HalftimeModal() {
               <View style={[styles.timerCompact, { backgroundColor: palette.overlay05 }]}>
                 <Pressable
                   onPress={() => adjustTimer(-1)}
+                  accessibilityRole="button"
+                  accessibilityLabel="Decrease halftime by one minute"
                   disabled={!canDecrement}
                   style={styles.timerBtnCompact}>
                   <MaterialCommunityIcons
@@ -180,7 +182,10 @@ export default function HalftimeModal() {
                   />
                 </Pressable>
 
-                <Pressable onPress={toggleTimer} style={styles.timerDisplayCompact}>
+                <Pressable
+                  testID="halftime-modal-timer-toggle"
+                  onPress={toggleTimer}
+                  style={styles.timerDisplayCompact}>
                   <ThemedText
                     style={[
                       styles.timerValueCompact,
@@ -197,6 +202,8 @@ export default function HalftimeModal() {
 
                 <Pressable
                   onPress={() => adjustTimer(1)}
+                  accessibilityRole="button"
+                  accessibilityLabel="Increase halftime by one minute"
                   disabled={!canIncrement}
                   style={styles.timerBtnCompact}>
                   <MaterialCommunityIcons
@@ -228,6 +235,7 @@ export default function HalftimeModal() {
                     </Pressable>
                   )}
                   <Pressable
+                    testID="halftime-modal-continue"
                     onPress={onContinue}
                     style={({ pressed }) => [
                       styles.continueBtnCompact,
@@ -327,6 +335,7 @@ export default function HalftimeModal() {
                     </Pressable>
                   )}
                   <Pressable
+                    testID="halftime-modal-continue"
                     onPress={onContinue}
                     style={({ pressed }) => [
                       styles.continueBtnCompact,

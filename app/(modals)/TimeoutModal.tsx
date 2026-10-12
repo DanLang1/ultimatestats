@@ -108,6 +108,8 @@ export default function TimeoutModal() {
             <View style={[styles.timerCompact, { backgroundColor: palette.overlay05 }]}>
               <Pressable
                 onPress={() => adjustTimer(-10)}
+                accessibilityRole="button"
+                accessibilityLabel="Decrease timeout by 10 seconds"
                 disabled={!canDecrement}
                 style={[styles.timerBtnCompact]}>
                 <MaterialCommunityIcons
@@ -117,7 +119,10 @@ export default function TimeoutModal() {
                 />
               </Pressable>
 
-              <Pressable onPress={toggleTimer} style={styles.timerDisplayCompact}>
+              <Pressable
+                testID="timeout-modal-timer-toggle"
+                onPress={toggleTimer}
+                style={styles.timerDisplayCompact}>
                 <ThemedText
                   style={[
                     styles.timerValueCompact,
@@ -134,6 +139,8 @@ export default function TimeoutModal() {
 
               <Pressable
                 onPress={() => adjustTimer(10)}
+                accessibilityRole="button"
+                accessibilityLabel="Increase timeout by 10 seconds"
                 disabled={!canIncrement}
                 style={[styles.timerBtnCompact]}>
                 <MaterialCommunityIcons
@@ -146,6 +153,7 @@ export default function TimeoutModal() {
 
             {/* Continue button */}
             <Pressable
+              testID="timeout-modal-end"
               onPress={onContinue}
               style={({ pressed }) => [
                 styles.continueBtnCompact,

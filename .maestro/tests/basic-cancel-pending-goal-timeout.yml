@@ -4,33 +4,7 @@ name: Basic Cancel Pending Goal Preserves Used Timeout
 # This exercises the documented regression scenario:
 # use a timeout, score the halftime point, cancel the pending stat entry, and
 # verify that the timeout cannot be used again.
-- launchApp
-- openLink: ultimatestats-dev:///__maestro_seed__?mode=basicCancelPendingGoal
-- runFlow:
-    when:
-      visible: 'U-Stat (Dev)'
-    commands:
-      - tapOn: 'U-Stat (Dev)'
-      - extendedWaitUntil:
-          notVisible: 'DEVELOPMENT SERVERS'
-          timeout: 15000
-      - openLink: ultimatestats-dev:///__maestro_seed__?mode=basicCancelPendingGoal
-
-- runFlow:
-    when:
-      visible: 'maestro-setup-running'
-    commands:
-      - retry:
-          maxRetries: 1
-          commands:
-            - extendedWaitUntil:
-                notVisible:
-                  id: 'maestro-setup-running'
-                timeout: 15000
-- extendedWaitUntil:
-    visible:
-      text: 'Score for Zoboomafoo'
-    timeout: 10000
+- runFlow: ../flows/setup-basic-game.yaml
 
 # The seed starts a live basic game at 0-0, game to 2, with team 1's first
 # regular timeout already consumed and stat tracking enabled.

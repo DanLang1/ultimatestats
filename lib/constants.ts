@@ -25,6 +25,12 @@ export const MAX_HALFTIME_BREAK_SECONDS = 15 * 60;
 /** Default timeout length in seconds. */
 export const DEFAULT_TIMEOUT_SECONDS = 70;
 
+/** Minimum timeout length in seconds. */
+export const MIN_TIMEOUT_SECONDS = 0;
+
+/** Maximum timeout length in seconds. */
+export const MAX_TIMEOUT_SECONDS = 5 * 60;
+
 /** Cap progress bar turns red when time remaining drops below this (ms). */
 export const CAP_WARNING_THRESHOLD_MS = 5 * 60 * 1000;
 

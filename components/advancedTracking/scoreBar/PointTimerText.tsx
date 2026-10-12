@@ -1,7 +1,7 @@
 import type { StyleProp, TextStyle } from 'react-native';
 
 import { ThemedText } from '@/components/ThemedText';
-import { useTimestampTimer } from '@/hooks/advancedTracking/useTimer';
+import { useNow } from '@/hooks/useTimer';
 import { formatPointTime } from '@/lib/advancedTracking/trackingDisplayHelpers';
 
 interface PointTimerTextProps {
@@ -21,17 +21,16 @@ export function PointTimerText({
   isPointTimerPaused,
   style,
 }: PointTimerTextProps) {
-  const runningPointElapsedMs = useTimestampTimer({
-    timestamp: pointTimerAdjustedTimestamp,
-    mode: 'elapsed',
-    intervalMs: 1000,
-    enabled: showPointTimer && !isPointTimerPaused,
-  });
+  const now = useNow(showPointTimer && !isPointTimerPaused);
   const pointElapsedMs =
-    pointTimerAdjustedTimestamp != null && pointTimerPausedAt != null
-      ? Math.max(0, pointTimerPausedAt - pointTimerAdjustedTimestamp)
-      : runningPointElapsedMs;
+    pointTimerAdjustedTimestamp === null
+      ? 0
+      : Math.max(0, (pointTimerPausedAt ?? now) - pointTimerAdjustedTimestamp);
   const label = showPointTimer || pointIsOver ? formatPointTime(pointElapsedMs) : '-:--';
 
-  return <ThemedText style={style}>{label}</ThemedText>;
+  return (
+    <ThemedText testID="scorebar-point-timer" style={style}>
+      {label}
+    </ThemedText>
+  );
 }

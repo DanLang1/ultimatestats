@@ -1,0 +1,17 @@
+appId: com.langdk.ultimatestats.dev
+name: Assert Timer Paused
+---
+# Gives TIMER_ID a few seconds to change, then asserts it still shows the same value.
+# Maestro has no sleep command, so the optional wait is the delay: it returns early only
+# if the timer moves, which the assertion then catches.
+- copyTextFrom:
+    id: ${TIMER_ID}
+- extendedWaitUntil:
+    notVisible:
+      id: ${TIMER_ID}
+      text: ${maestro.copiedText}
+    timeout: 3000
+    optional: true
+- assertVisible:
+    id: ${TIMER_ID}
+    text: ${maestro.copiedText}

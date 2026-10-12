@@ -33,6 +33,11 @@ export function formatNullablePercent(value: number | null): string {
   return value == null ? '—' : formatPercent(value);
 }
 
+/** Whole seconds until `deadlineMs`, rounded up; negative once the deadline has passed. */
+export function getSecondsUntil(deadlineMs: number, now: number): number {
+  return Math.ceil((deadlineMs - now) / 1000);
+}
+
 /** Format seconds as M:SS, with a leading minus for negative (overtime) values. */
 export function formatTimerSeconds(seconds: number): string {
   const abs = Math.abs(seconds);

@@ -4,8 +4,8 @@ import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 import { PlayerChip } from '@/components/ui/PlayerChip';
 import { useTheme } from '@/context/ThemeContext';
-import { useTimestampTimer } from '@/hooks/advancedTracking/useTimer';
 import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { useCountdownSeconds } from '@/hooks/useTimer';
 import {
   getActiveBetweenPointTimeout,
   getGoalInfo,
@@ -84,13 +84,10 @@ export const BetweenPointDisplay = ({
     ? game.sides.find((side) => side.id === activeTimeout.transition.sideId)
     : null;
 
-  const timeoutSecondsLeft = useTimestampTimer({
-    timestamp: activeTimeout?.transition.startedAt ?? null,
-    mode: 'countdown',
+  const timeoutSecondsLeft = useCountdownSeconds({
+    startedAt: activeTimeout?.transition.startedAt ?? null,
     durationSeconds: DEFAULT_TIMEOUT_SECONDS,
     intervalMs: 250,
-    enabled: activeTimeout !== null && activeTimeout.transition.startedAt != null,
-    allowNegative: true,
   });
 
   let timerColor = palette.success;
@@ -157,7 +154,9 @@ export const BetweenPointDisplay = ({
                 TIMEOUT
               </ThemedText>
             </View>
-            <ThemedText style={[styles.countdownTimer, { color: timerColor }]}>
+            <ThemedText
+              testID="between-point-timeout-timer"
+              style={[styles.countdownTimer, { color: timerColor }]}>
               {formatTimerSeconds(timeoutSecondsLeft)}
             </ThemedText>
           </View>

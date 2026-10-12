@@ -55,7 +55,6 @@ This document tracks intentionally deferred cleanup work discovered during the d
 
 - Extract shared hooks/components to eliminate duplication.
 - References:
-  `hooks/basic/useTimeoutTimer.ts` + `hooks/basic/useHalftimeTimer.ts` — nearly identical drift-proof countdown logic
   `app/(main)/PreGameConfirm.tsx` + `app/(main)/advancedTracking/PreGameConfirm.tsx` — identical card layouts
   `components/view-stats/ImpactTimeline.tsx` + `components/advancedTracking/AdvancedImpactTimeline.tsx` — duplicated impact chart layout, score label fitting, axis labels, step-path, and scale-mode logic; keep basic/advanced event formatting separate
   `store/basic/gameStore.types.ts` + `store/basic/gameStore.ts` — `addTurnoverEvent` parameter type defined inline in both
