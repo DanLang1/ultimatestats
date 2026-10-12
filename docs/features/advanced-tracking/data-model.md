@@ -124,7 +124,11 @@ state reconciliation). PullTracking derives the next receiving side, pulling sid
 from the current game and settings. A pull can start only from a ready selection: every
 `full-roster` side has exactly seven known, unique participants, no participant appears on both
 sides, and an `anonymous` side has an empty line. Missing, stale, partial, or invalid selections
-return to line preparation; undoing a pull does not restore the consumed selection.
+return to line preparation; undoing a pull does not restore the consumed selection. Undoing the
+first point's pull leaves the game with no points, so the tracker redirects to opening line
+selection (the first point's equivalent of returning to between-points). A pull already marked
+dropped cannot be marked dropped again; after a dropped pull the pulling team's pickup is a
+regular pickup, not a drop.
 
 A `PointPossession` is a possession record: it contains a stable ID, the side with the disc,
 ordered actions, and optional `redZone` metadata. `redZone.enteredAt` records when a coach manually

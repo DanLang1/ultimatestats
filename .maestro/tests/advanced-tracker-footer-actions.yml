@@ -30,9 +30,23 @@ tags:
 - assertVisible:
     id: 'defense-opp-turn'
 
-# Get the disc back.
+# A defensive More-menu action hides Opp Goal / Opp Turn until it is used or canceled.
+- runFlow:
+    file: ../flows/open-rare-menu.yaml
+- tapOn:
+    id: 'rare-menu-pressure'
+- assertNotVisible:
+    id: 'defense-opp-goal'
+- tapOn:
+    id: 'tracker-cancel-modifier'
+- assertVisible:
+    id: 'defense-opp-turn'
+
+# Get the disc back. With the disc on the ground, the footer prompts for the pickup.
 - tapOn:
     id: 'defense-opp-turn'
+- assertVisible:
+    text: 'TAP WHO HAS THE DISC'
 - tapOn:
     id: 'tracker-chip-Joe'
 

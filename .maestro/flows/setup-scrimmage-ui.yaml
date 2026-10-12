@@ -98,7 +98,7 @@ name: Setup Scrimmage Through UI
 
 - extendedWaitUntil:
     visible:
-      text: 'TAP WHO STARTS WITH DISC'
+      text: 'TAP WHO HAS THE DISC'
     timeout: 5000
 - assertVisible:
     id: 'tracker-chip-Joe'

@@ -1,6 +1,7 @@
 import React, { ReactNode } from 'react';
 import { StyleSheet } from 'react-native';
 
+import { PICKUP_PROMPT_TEXT } from '@/components/advancedTracking/bottomCard/constants';
 import { GoalHeader } from '@/components/advancedTracking/bottomCard/GoalHeader';
 import {
   LAST_ACTION_EYEBROW_LINE_HEIGHT,
@@ -54,7 +55,6 @@ type BottomCardButtonMode = React.ComponentProps<typeof LastActionCardFrame>['bu
 interface TrackerLastActionCardState {
   passModifier: PassModifier;
   pointIsOver: boolean;
-  isOpeningDefensivePull: boolean;
   point: TrackedPoint | null;
   focusSideId: string;
   tracksBothSides: boolean;
@@ -137,11 +137,6 @@ export const TrackerLastActionCard = ({
     ) ?? null;
   const focusHasStarted =
     !!possession && possession.sideId === perspectiveSideId && possession.actions.length > 0;
-  const isOpeningDefensivePull =
-    game.points.length === 1 &&
-    possession?.sideId !== perspectiveSideId &&
-    possession?.actions.length === 1 &&
-    possession.actions[0]?.kind === 'pull';
   const getTrackedThrowTarget = (candidate: PointPossession | null) => {
     const side = game.sides.find((gameSide) => gameSide.id === candidate?.sideId);
     if (side?.trackingMode !== 'full-roster') return null;
@@ -180,7 +175,6 @@ export const TrackerLastActionCard = ({
   const lastActionCardState: TrackerLastActionCardState = {
     passModifier,
     pointIsOver,
-    isOpeningDefensivePull,
     point,
     focusSideId: perspectiveSideId,
     tracksBothSides,
@@ -246,7 +240,6 @@ function getTrackerLastActionCardModel({
   const {
     passModifier,
     pointIsOver,
-    isOpeningDefensivePull,
     point,
     focusSideId,
     tracksBothSides,
@@ -266,9 +259,6 @@ function getTrackerLastActionCardModel({
   const { palette, onCancelModifier, onMorePress, onUndo, onSelectThrowType, frameLabel, eyebrow } =
     ui;
   const undoRareButtonMode = getUndoRareButtonMode(canUseRareMenu, canUndo, onUndo, onMorePress);
-  const defensiveButtonMode: BottomCardButtonMode = isOpeningDefensivePull
-    ? { kind: 'more-only', onMore: onMorePress }
-    : undoRareButtonMode;
 
   if (passModifier) {
     const isDangerModifier = passModifier === 'fifty-fifty' || passModifier === 'drop';
@@ -342,7 +332,7 @@ function getTrackerLastActionCardModel({
     return {
       kind: 'label',
       accentColor: palette.neutral,
-      buttonMode: defensiveButtonMode,
+      buttonMode: undoRareButtonMode,
       preferCompactActions: true,
       content: frameLabel('DEFENSE'),
     };
@@ -407,7 +397,7 @@ function getTrackerLastActionCardModel({
     accentColor: palette.neutral,
     buttonMode: undoRareButtonMode,
     preferCompactActions: true,
-    content: frameLabel('TAP WHO STARTS WITH DISC'),
+    content: frameLabel(PICKUP_PROMPT_TEXT),
   };
 }
 

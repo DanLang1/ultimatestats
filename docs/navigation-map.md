@@ -77,6 +77,8 @@ Modal route files live in `app/(modals)/`. Their exit contract is defined in
 1. `/advancedTracking/PreGameConfirm` creates the advanced game and captures format/side setup.
 2. `/advancedTracking/TrackerLineSelect` assigns the opening line.
 3. `/advancedTracking/PullTracking` records the pull and enters `/advancedTracking/Tracker`.
+   If the tracker has no point (the first pull was undone, or setup was left before the pull), it
+   redirects back to `/advancedTracking/TrackerLineSelect`.
 4. During halftime, `SET LINE` opens `/advancedTracking/TrackerLineSelect` in preparation mode and
    returns to the active timer after saving. `START 2ND HALF` keeps the normal line-selection and
    pull-tracking path, preloaded with that pending line when available.

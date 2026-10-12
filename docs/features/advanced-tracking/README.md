@@ -69,11 +69,15 @@ adjusted.
 Whenever the tracked team has the disc, the footer shows a compact voice button plus T/A, Drop,
 and Goal as always-on alternatives to the swipe gestures; swipes keep working. T/A records the
 throwaway directly. Drop and Goal arm a `PassModifier` so the next player tap records the drop or
-goal, using the same prompt, cancel control, and chip highlighting as More-menu modifiers. While any
-modifier (More menu, Goal, or Drop) owns the next tap, the whole row, including voice, is hidden
+goal, using the same prompt, cancel control, and chip highlighting as More-menu modifiers. While the
+opponent has the disc, the row shows Opp Goal and Opp Turn instead. While any modifier (More menu,
+Goal, or Drop) owns the next tap, the whole row, offense or defense and including voice, is hidden
 from view and from assistive tech until that modifier is used or canceled from the prompt; its
-space stays reserved so the player grid does not resize. In scrimmage, the actions apply to
-whichever side holds the disc.
+space stays reserved so the player grid does not resize. When the disc is on the ground
+mid-point (after a turnover), a non-interactive “TAP WHO HAS THE DISC” prompt replaces the
+actions until a player picks it up; the opening pull keeps the actions so Drop can record a dropped
+pull, and before the pull the last-action card shows the same prompt. Every footer row shares
+`FOOTER_ACTION_HEIGHT`. In scrimmage, the actions apply to whichever side holds the disc.
 
 ## State and Persistence
 

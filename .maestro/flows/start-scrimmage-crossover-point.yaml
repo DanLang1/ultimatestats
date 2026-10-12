@@ -78,7 +78,7 @@ name: Start Scrimmage Point With Crossovers
 
 - extendedWaitUntil:
     visible:
-      text: 'TAP WHO STARTS WITH DISC'
+      text: 'TAP WHO HAS THE DISC'
     timeout: 5000
 - assertVisible:
     id: 'tracker-chip-Anna'

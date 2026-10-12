@@ -35,7 +35,7 @@ import {
   getEffectiveLineParticipantIds,
   getPointAdjustedTimestamp,
   getSafeDiscHolderRef,
-  isPullAwaitingPickup,
+  getTrackerPickupState,
 } from '@/lib/advancedTracking/trackingDisplayHelpers';
 import { areBothSidesFullyTracked } from '@/lib/advancedTracking/trackingModeUtils';
 import {
@@ -107,11 +107,11 @@ export default function AdvancedTrackerScreen() {
     ? (possession?.sideId ?? game?.focusSideId ?? '')
     : (game?.focusSideId ?? '');
   const discHolderRef = getSafeDiscHolderRef(possession, trackedPossessionSideId, point);
-  const isAwaitingPullPickup = isPullAwaitingPickup({
+  const { canDropOpeningPull, isAwaitingMidPointPickup } = getTrackerPickupState({
     possession,
     pointIsOver,
     oppHasDisc,
-    discHolderId: discHolderRef?.refType === 'participant' ? discHolderRef.participantId : null,
+    discHolderRef,
   });
   // An armed modifier owns the next tap; disabling voice also stops any active listening.
   const canUseVoice =
@@ -142,7 +142,7 @@ export default function AdvancedTrackerScreen() {
     pointIsOver,
     oppHasDisc,
     discHolderRef,
-    canDropOpeningPull: isAwaitingPullPickup,
+    canDropOpeningPull,
     passModifier,
     setPassModifier,
     recordCaptureIntent,
@@ -174,6 +174,12 @@ export default function AdvancedTrackerScreen() {
 
   if (isAdvancedGameOver(game)) {
     return <Redirect href="/advancedTracking/TrackerGameComplete" />;
+  }
+
+  // Undoing the first pull (or resuming before it) leaves no point to track; the game restarts
+  // from opening line selection, the first point's equivalent of returning to between-points.
+  if (game.points.length === 0) {
+    return <Redirect href="/advancedTracking/TrackerLineSelect" />;
   }
 
   if (sizeClass === 'small' && isLandscape) {
@@ -233,7 +239,7 @@ export default function AdvancedTrackerScreen() {
 
   const offenseActions: OffenseActionsProps = {
     hasHolder: discHolderRef != null,
-    canDropOpeningPull: isAwaitingPullPickup,
+    canDropOpeningPull,
     onThrowaway: handlers.onThrowaway,
     onArmTapAction: setPassModifier,
   };
@@ -254,7 +260,7 @@ export default function AdvancedTrackerScreen() {
         isHalftimeBreakActive={isHalftimeBreakActive}
         discHolderRef={discHolderRef}
         oppHasDisc={oppHasDisc}
-        canDropOpeningPull={isAwaitingPullPickup}
+        canDropOpeningPull={canDropOpeningPull}
         passModifier={passModifier}
         handlers={handlers}
         onLineChangePress={() => setShowLineChangeMenu(true)}
@@ -302,6 +308,7 @@ export default function AdvancedTrackerScreen() {
           canUseVoice={canUseVoice}
           offenseActions={offenseActions}
           passModifier={passModifier}
+          isAwaitingMidPointPickup={isAwaitingMidPointPickup}
         />
       )}
 

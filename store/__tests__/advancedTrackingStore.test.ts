@@ -1321,6 +1321,25 @@ describe('advancedTrackingStore', () => {
     expect(getEffectiveLineParticipantIds(point!, homeSideId)).toEqual([august.participantId]);
   });
 
+  it('refuses to mark a pull as dropped a second time', () => {
+    createGame();
+    useAdvancedTrackingStore.getState().recordPull({
+      lines: homeLinesAugust,
+      puller: untracked,
+      receiver: august,
+      result: 'inbound',
+    });
+    useAdvancedTrackingStore.getState().amendOpeningPullAsDropped(august);
+
+    expect(() => useAdvancedTrackingStore.getState().amendOpeningPullAsDropped(meves)).toThrow(
+      'Cannot mark a pull as dropped when it was already dropped.',
+    );
+    expect(getCurrentPoint(getCurrentGame())?.possessions[0].actions[0]).toMatchObject({
+      result: 'dropped',
+      receiver: august,
+    });
+  });
+
   it('undoing the pull removes the entire point', () => {
     createGame();
 

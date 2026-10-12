@@ -3,6 +3,10 @@ import React from 'react';
 import { Platform, Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import {
+  FOOTER_ACTION_HEIGHT,
+  PICKUP_PROMPT_TEXT,
+} from '@/components/advancedTracking/bottomCard/constants';
 import { DefenseActions } from '@/components/advancedTracking/bottomCard/DefenseActions';
 import {
   OffenseActions,
@@ -25,7 +29,6 @@ import { PassModifier } from '@/lib/advancedTracking/types';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { Fonts } from '@/theme/theme';
 
-const NEXT_POINT_BUTTON_HEIGHT = 62;
 const FOOTER_BOTTOM_PADDING = 48;
 const ANDROID_FOOTER_BOTTOM_PADDING = 20;
 const FOOTER_HORIZONTAL_PADDING = 12;
@@ -37,6 +40,7 @@ interface TrackerActionFooterProps {
   canUseVoice: boolean;
   offenseActions: OffenseActionsProps;
   passModifier: PassModifier;
+  isAwaitingMidPointPickup: boolean;
 }
 
 export const TrackerActionFooter = ({
@@ -45,6 +49,7 @@ export const TrackerActionFooter = ({
   canUseVoice,
   offenseActions,
   passModifier,
+  isAwaitingMidPointPickup,
 }: TrackerActionFooterProps) => {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
@@ -96,24 +101,53 @@ export const TrackerActionFooter = ({
         </Pressable>
       </View>
     );
-  } else if (oppHasDisc) {
-    content = <DefenseActions onOppScored={handleOppScored} onOppTurnover={handleOppTurnover} />;
   } else {
     // A modifier (More menu, Goal, or Drop) owns the next tap. Hide the row but keep its
     // space so the player grid does not resize under the user's finger.
     const isRowHidden = passModifier !== null;
-    content = (
-      <View
-        testID="tracker-offense-row"
-        pointerEvents={isRowHidden ? 'none' : 'auto'}
-        accessibilityElementsHidden={isRowHidden}
-        importantForAccessibility={isRowHidden ? 'no-hide-descendants' : 'auto'}
-        style={[styles.offenseRow, isRowHidden && styles.hiddenRow]}>
+    const rowVisibilityProps = {
+      pointerEvents: isRowHidden ? ('none' as const) : ('auto' as const),
+      accessibilityElementsHidden: isRowHidden,
+      importantForAccessibility: isRowHidden ? ('no-hide-descendants' as const) : ('auto' as const),
+    };
+    let offenseRowContent: React.ReactNode = (
+      <>
         <View pointerEvents="none" style={styles.voiceFeedbackOverlay}>
           <TrackerVoiceFeedbackPill controls={voiceControls} />
         </View>
         <TrackerVoiceButton controls={voiceControls} disabled={!canUseVoice} />
         <OffenseActions {...offenseActions} />
+      </>
+    );
+    // A mid-point pickup has nothing to act on but the player grid, so a prompt replaces the
+    // disabled buttons.
+    if (isAwaitingMidPointPickup) {
+      offenseRowContent = (
+        <View
+          testID="tracker-pickup-prompt"
+          accessibilityRole="text"
+          style={[styles.pickupPrompt, { borderColor: palette.overlay10 }]}>
+          <ThemedText
+            numberOfLines={1}
+            style={[styles.pickupPromptText, { color: palette.textMuted }]}>
+            {PICKUP_PROMPT_TEXT}
+          </ThemedText>
+        </View>
+      );
+    }
+    content = oppHasDisc ? (
+      <View
+        testID="tracker-defense-row"
+        {...rowVisibilityProps}
+        style={[styles.defenseRow, isRowHidden && styles.hiddenRow]}>
+        <DefenseActions onOppScored={handleOppScored} onOppTurnover={handleOppTurnover} />
+      </View>
+    ) : (
+      <View
+        testID="tracker-offense-row"
+        {...rowVisibilityProps}
+        style={[styles.offenseRow, isRowHidden && styles.hiddenRow]}>
+        {offenseRowContent}
       </View>
     );
   }
@@ -135,6 +169,10 @@ function createStyles(sizeClass: SizeClass, bottomInset: number) {
       paddingTop: FOOTER_TOP_PADDING,
       paddingBottom: bottomInset + scaleBySizeClass(footerBottomPadding, sizeClass),
     },
+    defenseRow: {
+      flex: 1,
+      flexDirection: 'row',
+    },
     offenseRow: {
       flex: 1,
       flexDirection: 'row',
@@ -143,6 +181,22 @@ function createStyles(sizeClass: SizeClass, bottomInset: number) {
     },
     hiddenRow: {
       opacity: 0,
+    },
+    pickupPrompt: {
+      flex: 1,
+      minHeight: scaleBySizeClass(FOOTER_ACTION_HEIGHT, sizeClass),
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderRadius: 16,
+      borderCurve: 'continuous',
+      borderWidth: 1,
+      borderStyle: 'dashed',
+      paddingHorizontal: scaleBySizeClass(12, sizeClass),
+    },
+    pickupPromptText: {
+      fontFamily: Fonts.bold,
+      fontSize: scaleBySizeClass(13, sizeClass),
+      letterSpacing: 0.8,
     },
     voiceFeedbackOverlay: {
       position: 'absolute',
@@ -161,7 +215,7 @@ function createStyles(sizeClass: SizeClass, bottomInset: number) {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
-      minHeight: scaleBySizeClass(NEXT_POINT_BUTTON_HEIGHT, sizeClass),
+      minHeight: scaleBySizeClass(FOOTER_ACTION_HEIGHT, sizeClass),
       borderRadius: 16,
       borderCurve: 'continuous',
       borderWidth: 1,

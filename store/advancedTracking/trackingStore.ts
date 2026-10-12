@@ -812,6 +812,9 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
           if (currentPossession.actions.length !== 1 || hasPointEnded(currentPoint)) {
             throw new Error('Cannot mark a dropped pull after the point has advanced.');
           }
+          if (openingAction.result === 'dropped') {
+            throw new Error('Cannot mark a pull as dropped when it was already dropped.');
+          }
 
           set((state) => {
             const liveGame = getCurrentGame(state);

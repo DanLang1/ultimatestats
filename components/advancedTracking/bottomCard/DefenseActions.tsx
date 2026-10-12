@@ -6,6 +6,8 @@ import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { Fonts } from '@/theme/theme';
 
+import { FOOTER_ACTION_HEIGHT } from './constants';
+
 interface DefenseActionsProps {
   onOppScored: () => void;
   onOppTurnover: () => void;
@@ -76,7 +78,7 @@ function createStyles(sizeClass: SizeClass) {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
-      minHeight: scaleBySizeClass(62, sizeClass),
+      minHeight: scaleBySizeClass(FOOTER_ACTION_HEIGHT, sizeClass),
       borderRadius: 16,
       borderCurve: 'continuous',
       borderWidth: 1,

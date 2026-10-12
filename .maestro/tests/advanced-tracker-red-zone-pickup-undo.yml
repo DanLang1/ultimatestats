@@ -19,7 +19,7 @@ tags:
 - tapOn:
     id: 'tracker-undo-button'
 - assertVisible:
-    text: 'TAP WHO STARTS WITH DISC'
+    text: 'TAP WHO HAS THE DISC'
 - assertNotVisible:
     id: 'tracker-red-zone-button'
 - runFlow: ../flows/read-tracker-debug-game.yaml
@@ -40,7 +40,7 @@ tags:
 - tapOn:
     id: 'tracker-undo-button'
 - assertVisible:
-    text: 'TAP WHO STARTS WITH DISC'
+    text: 'TAP WHO HAS THE DISC'
 - assertNotVisible:
     id: 'tracker-red-zone-button'
 - runFlow: ../flows/read-tracker-debug-game.yaml

@@ -44,5 +44,5 @@ name: Setup Advanced Tracker Game Through UI
     id: 'pull-skip-timing'
 - extendedWaitUntil:
     visible:
-      text: 'TAP WHO STARTS WITH DISC'
+      text: 'TAP WHO HAS THE DISC'
     timeout: 5000

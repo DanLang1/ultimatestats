@@ -516,6 +516,161 @@ describe('advanced tracking routes', () => {
       expect(screen.getByTestId('tracker-offense-row')).toBeVisible();
     });
 
+    it.each(['rare-menu-pressure', 'rare-menu-callahan', 'rare-menu-stall'])(
+      'hides the defense row while %s owns the next tap',
+      async (rareActionTestId) => {
+        const user = userEvent.setup();
+        arrangeHolderPossession();
+        useAdvancedTrackingStore.getState().recordCaptureIntent({ kind: 'throwaway' });
+        await renderScreen(<TrackerScreen />);
+
+        expect(screen.getByTestId('tracker-defense-row')).toBeVisible();
+
+        await user.press(screen.getByTestId('tracker-more-button'));
+        await user.press(screen.getByTestId(rareActionTestId));
+
+        // Opp Goal / Opp Turn would otherwise end the point or flip possession under the prompt.
+        expect(screen.queryByTestId('defense-opp-goal')).not.toBeOnTheScreen();
+        expect(
+          screen.getByTestId('tracker-defense-row', { includeHiddenElements: true }),
+        ).not.toBeVisible();
+
+        await user.press(screen.getByTestId('tracker-cancel-modifier'));
+
+        expect(screen.getByTestId('tracker-defense-row')).toBeVisible();
+      },
+    );
+
+    it('prompts for a pickup instead of disabled actions after a turnover', async () => {
+      const user = userEvent.setup();
+      arrangeHolderPossession();
+      useAdvancedTrackingStore.getState().recordCaptureIntent({ kind: 'throwaway' });
+      useAdvancedTrackingStore
+        .getState()
+        .recordCaptureIntent({ kind: 'anonymous-opponent-turnover' });
+      await renderScreen(<TrackerScreen />);
+
+      expect(screen.getByTestId('tracker-pickup-prompt')).toHaveTextContent('TAP WHO HAS THE DISC');
+      expect(screen.queryByTestId('offense-throwaway')).not.toBeOnTheScreen();
+
+      await user.press(screen.getByTestId(`tracker-chip-${testTeam.roster[0].name}`));
+
+      expect(screen.queryByTestId('tracker-pickup-prompt')).not.toBeOnTheScreen();
+      expect(screen.getByTestId('offense-throwaway')).toBeEnabled();
+    });
+
+    it('returns to opening line selection when the first pull is undone', async () => {
+      const user = userEvent.setup();
+      arrangeAdvancedGame();
+      recordOpeningPull();
+      await renderScreen(<TrackerScreen />);
+
+      await user.press(screen.getByTestId('tracker-undo-button'));
+
+      expect(useAdvancedTrackingStore.getState().currentGame?.points).toHaveLength(0);
+      expect(router.replace).toHaveBeenCalledWith('/advancedTracking/TrackerLineSelect', {
+        relativeToDirectory: undefined,
+        withAnchor: undefined,
+      });
+    });
+
+    it('undoes a dropped-pull mark without leaving the first point', async () => {
+      const user = userEvent.setup();
+      arrangeAdvancedGame();
+      recordOpeningPull();
+      useAdvancedTrackingStore
+        .getState()
+        .amendOpeningPullAsDropped({ refType: 'participant', participantId: 'player-alex' });
+      await renderScreen(<TrackerScreen />);
+
+      await user.press(screen.getByTestId('tracker-undo-button'));
+
+      const game = useAdvancedTrackingStore.getState().currentGame;
+      expect(game?.points).toHaveLength(1);
+      expect(game?.points[0].possessions[0].actions[0]).toMatchObject({ result: 'inbound' });
+      expect(router.replace).not.toHaveBeenCalledWith(
+        '/advancedTracking/TrackerLineSelect',
+        expect.anything(),
+      );
+    });
+
+    it('offers no Drop when the opponent dropped our pull', async () => {
+      useAdvancedTrackingStore.getState().createGame({
+        id: 'advanced-game-dropped-pull',
+        focusSideId: 'windchill',
+        initialReceivingSideId: 'rivals',
+        sides: [
+          { id: 'windchill', label: 'Windchill', trackingMode: 'full-roster' },
+          { id: 'rivals', label: 'Rivals', trackingMode: 'anonymous' },
+        ],
+        participants: testTeam.roster.map((player) => ({ id: player.id, name: player.name })),
+        format: { gameTo: 15 },
+        metadata: { title: 'Windchill vs Rivals' },
+      });
+      useAdvancedTrackingStore.getState().recordPull({
+        lines: [
+          { sideId: 'windchill', participantIds: testTeam.roster.map((player) => player.id) },
+        ],
+        puller: { refType: 'participant', participantId: testTeam.roster[0].id },
+        receiver: { refType: 'untracked' },
+        result: 'dropped',
+      });
+      await renderScreen(<TrackerScreen />);
+
+      expect(screen.queryByTestId('offense-drop')).not.toBeOnTheScreen();
+      expect(screen.getAllByText('TAP WHO HAS THE DISC')).toHaveLength(1);
+    });
+
+    it('offers no Drop in scrimmage when the receiving side dropped the pull', async () => {
+      const participants = Array.from({ length: 14 }, (_, index) => ({
+        id: `scrim-player-${index + 1}`,
+        name: `Scrim Player ${index + 1}`,
+      }));
+      const lightIds = participants.slice(0, 7).map((participant) => participant.id);
+      const darkIds = participants.slice(7).map((participant) => participant.id);
+      const game = createAdvancedGameScenario({
+        id: 'dual-tracked-dropped-pull',
+        createdAt: 0,
+        updatedAt: 0,
+        gameType: 'scrimmage',
+        settings: {
+          locationMode: 'none',
+          format: { formatType: 'standard', gameTo: 15, halftimeAt: 8 },
+        },
+        focusSideId: 'light',
+        initialReceivingSideId: 'light',
+        sides: [
+          { id: 'light', label: 'Light', trackingMode: 'full-roster' },
+          { id: 'dark', label: 'Dark', trackingMode: 'full-roster' },
+        ],
+        participants,
+        defaultLines: [
+          { sideId: 'light', participantIds: lightIds },
+          { sideId: 'dark', participantIds: darkIds },
+        ],
+      })
+        .startPoint({
+          puller: participantRef(darkIds[0]),
+          receiver: participantRef(lightIds[0]),
+          pullResult: 'dropped',
+        })
+        .build();
+      useAdvancedTrackingStore.setState({ currentGameId: game.id, currentGame: game });
+      await renderScreen(<TrackerScreen />);
+
+      expect(screen.queryByTestId('offense-drop')).not.toBeOnTheScreen();
+      expect(screen.getAllByText('TAP WHO HAS THE DISC')).toHaveLength(1);
+    });
+
+    it('keeps the action row for the opening pull so a dropped pull can be recorded', async () => {
+      arrangeAdvancedGame();
+      recordOpeningPull();
+      await renderScreen(<TrackerScreen />);
+
+      expect(screen.queryByTestId('tracker-pickup-prompt')).not.toBeOnTheScreen();
+      expect(screen.getByTestId('offense-drop')).toBeEnabled();
+    });
+
     it('records a throwaway directly from T/A', async () => {
       const user = userEvent.setup();
       arrangeHolderPossession();

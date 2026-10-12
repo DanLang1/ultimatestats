@@ -11,7 +11,7 @@ tags:
 
 # Before a pickup, swiping down on a receiver amends the opening pull to a dropped pull.
 - assertVisible:
-    text: 'TAP WHO STARTS WITH DISC'
+    text: 'TAP WHO HAS THE DISC'
 - swipe:
     from:
       id: 'tracker-chip-Joe'

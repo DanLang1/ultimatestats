@@ -17,6 +17,7 @@ import {
   getSideTimeoutState,
   getSubsForStoppage,
   getTrackerDisplaySideId,
+  getTrackerPickupState,
   isPullAwaitingPickup,
 } from '../trackingDisplayHelpers';
 import type { AdvancedTrackedGame, PointPossession, PointSub, TrackedPoint } from '../types';
@@ -1219,6 +1220,42 @@ describe('canCallTimeout', () => {
       isSecondHalf: false,
     };
     expect(canCallTimeout(state)).toBe(false);
+  });
+});
+
+describe('getTrackerPickupState', () => {
+  const pullTo = (result: 'inbound' | 'dropped') =>
+    makePossession(AWAY, [
+      { id: 'pull', kind: 'pull', sideId: HOME, receivingSideId: AWAY, puller: august, result },
+    ]);
+  const base = { pointIsOver: false, oppHasDisc: false, discHolderRef: null };
+
+  it('lets the receiving team mark a caught pull as dropped', () => {
+    expect(getTrackerPickupState({ ...base, possession: pullTo('inbound') })).toEqual({
+      canDropOpeningPull: true,
+      isAwaitingMidPointPickup: false,
+    });
+  });
+
+  it('treats a dropped pull as a pickup for the pulling team, not another drop', () => {
+    expect(getTrackerPickupState({ ...base, possession: pullTo('dropped') })).toEqual({
+      canDropOpeningPull: false,
+      isAwaitingMidPointPickup: true,
+    });
+  });
+
+  it('prompts for a pickup on a mid-point possession with no holder', () => {
+    expect(getTrackerPickupState({ ...base, possession: makePossession(HOME) })).toEqual({
+      canDropOpeningPull: false,
+      isAwaitingMidPointPickup: true,
+    });
+  });
+
+  it('leaves the pre-pull state to the last-action card', () => {
+    expect(getTrackerPickupState({ ...base, possession: null })).toEqual({
+      canDropOpeningPull: false,
+      isAwaitingMidPointPickup: false,
+    });
   });
 });
 
